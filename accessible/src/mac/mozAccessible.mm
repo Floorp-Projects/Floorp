@@ -40,7 +40,6 @@
 
 #import "MacUtils.h"
 #import "mozView.h"
-#import "nsRoleMap.h"
 
 #include "Accessible-inl.h"
 #include "nsIAccessibleRelation.h"
@@ -121,10 +120,6 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     mGeckoAccessible = geckoAccessible;
     mIsExpired = NO;
     mRole = geckoAccessible->Role();
-    
-    // Check for OS X "role skew"; the role constants in nsIAccessible.idl need to match the ones
-    // in nsRoleMap.h.
-    NS_ASSERTION([AXRoles[roles::LAST_ENTRY] isEqualToString:@"ROLE_LAST_ENTRY"], "Role skew in the role map!");
   }
    
   return self;
@@ -225,13 +220,8 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     return [NSNumber numberWithBool:[self isEnabled]];
   if ([attribute isEqualToString:NSAccessibilityValueAttribute])
     return [self value];
-  if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute]) {
-    if (mRole == roles::DOCUMENT)
-      return utils::LocalizedString(NS_LITERAL_STRING("htmlContent"));
-
-    return NSAccessibilityRoleDescription([self role], [self subrole]);
-  }
-  
+  if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute]) 
+    return [self roleDescription];  
   if ([attribute isEqualToString:NSAccessibilityDescriptionAttribute])
     return [self customDescription];
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
@@ -467,47 +457,56 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(mGeckoAccessible),
                "Does not support nsIAccessibleText when it should");
 #endif
-  return (NSString*) AXRoles[mRole];
+
+#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role) \
+  case roles::geckoRole: \
+    return macRole;
+
+  switch (mRole) {
+#include "RoleMap.h"
+    default:
+      NS_NOTREACHED("Unknown role.");
+      return NSAccessibilityUnknownRole;
+  }
+
+#undef ROLE
 }
 
 - (NSString*)subrole
 {
-  if (!mGeckoAccessible)
-    return nil;
-
-  nsIContent* content = mGeckoAccessible->GetContent();
-  if (!content || !content->IsHTML())
-    return nil;
-
-  nsIAtom* tag = content->Tag();
-
   switch (mRole) {
     case roles::LIST:
-      if ((tag == nsGkAtoms::ul) || (tag == nsGkAtoms::ol))
-        return NSAccessibilityContentListSubrole;
+      return NSAccessibilityContentListSubrole;
 
-      if (tag == nsGkAtoms::dl)
-        return NSAccessibilityDefinitionListSubrole;
+    case roles::DEFINITION_LIST:
+      return NSAccessibilityDefinitionListSubrole;
 
-      break;
+    case roles::TERM:
+      return @"AXTerm";
 
-    case roles::LISTITEM:
-      if (tag == nsGkAtoms::dt)
-        return @"AXTerm";
-
-      break;
-
-    case roles::PARAGRAPH:
-      if (tag == nsGkAtoms::dd)
-        return @"AXDefinition";
-
-      break;
+    case roles::DEFINITION:
+      return @"AXDefinition";
 
     default:
       break;
   }
 
   return nil;
+}
+
+- (NSString*)roleDescription
+{
+  if (mRole == roles::DOCUMENT)
+    return utils::LocalizedString(NS_LITERAL_STRING("htmlContent"));
+  
+  NSString* subrole = [self subrole];
+  
+  if ((mRole == roles::LISTITEM) && [subrole isEqualToString:@"AXTerm"])
+    return utils::LocalizedString(NS_LITERAL_STRING("term"));
+  if ((mRole == roles::PARAGRAPH) && [subrole isEqualToString:@"AXDefinition"])
+    return utils::LocalizedString(NS_LITERAL_STRING("definition"));
+  
+  return NSAccessibilityRoleDescription([self role], subrole);
 }
 
 - (NSString*)title

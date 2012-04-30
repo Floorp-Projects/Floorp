@@ -390,8 +390,8 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
         return NS_OK; // let it be used for focus switching
       }
 
-      if (nativeKeyEvent->isShift || nativeKeyEvent->isControl ||
-          nativeKeyEvent->isAlt || nativeKeyEvent->isMeta) {
+      if (nativeKeyEvent->IsShift() || nativeKeyEvent->IsControl() ||
+          nativeKeyEvent->IsAlt() || nativeKeyEvent->IsMeta()) {
         return NS_OK;
       }
 
@@ -401,8 +401,8 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
     }
     case nsIDOMKeyEvent::DOM_VK_RETURN:
     case nsIDOMKeyEvent::DOM_VK_ENTER:
-      if (IsSingleLineEditor() || nativeKeyEvent->isControl ||
-          nativeKeyEvent->isAlt || nativeKeyEvent->isMeta) {
+      if (IsSingleLineEditor() || nativeKeyEvent->IsControl() ||
+          nativeKeyEvent->IsAlt() || nativeKeyEvent->IsMeta()) {
         return NS_OK;
       }
       aKeyEvent->PreventDefault();
@@ -411,8 +411,8 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
 
   // NOTE: On some keyboard layout, some characters are inputted with Control
   // key or Alt key, but at that time, widget sets FALSE to these keys.
-  if (nativeKeyEvent->charCode == 0 || nativeKeyEvent->isControl ||
-      nativeKeyEvent->isAlt || nativeKeyEvent->isMeta) {
+  if (nativeKeyEvent->charCode == 0 || nativeKeyEvent->IsControl() ||
+      nativeKeyEvent->IsAlt() || nativeKeyEvent->IsMeta()) {
     // we don't PreventDefault() here or keybindings like control-x won't work
     return NS_OK;
   }

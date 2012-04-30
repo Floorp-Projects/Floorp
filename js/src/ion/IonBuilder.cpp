@@ -55,7 +55,7 @@
 using namespace js;
 using namespace js::ion;
 
-IonBuilder::IonBuilder(JSContext *cx, JSObject *scopeChain, TempAllocator &temp, MIRGraph &graph,
+IonBuilder::IonBuilder(JSContext *cx, HandleObject scopeChain, TempAllocator &temp, MIRGraph &graph,
                        TypeOracle *oracle, CompileInfo &info, size_t inliningDepth, uint32 loopDepth)
   : MIRGenerator(cx, temp, graph, info),
     script(info.script()),
@@ -2448,7 +2448,10 @@ IonBuilder::inlineScriptedCall(JSFunction *target, uint32 argc)
     TypeInferenceOracle oracle;
     if (!oracle.init(cx, target->script()))
         return false;
-    IonBuilder inlineBuilder(cx, NULL, temp(), graph(), &oracle,
+
+    RootedVarObject scopeChain(NULL);
+
+    IonBuilder inlineBuilder(cx, scopeChain, temp(), graph(), &oracle,
                              *info, inliningDepth + 1, loopDepth_);
     return jsop_call_inline(target, argc, inlineBuilder);
 }

@@ -1,5 +1,0 @@
-url-prefix ../../jsreftest.html?test=js1_2/String/
-script charCodeAt.js
-skip script concat.js # obsolete test
-script match.js
-script slice.js

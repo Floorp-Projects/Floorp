@@ -1235,8 +1235,7 @@ GetCompartmentName(JSCompartment *c, bool getAddress, nsCString &name)
             
             if (getAddress) {
                 // ample; 64-bit address max is 18 chars
-                const int maxLength = 31;
-                nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
+                nsPrintfCString address(", 0x%llx", PRUint64(c));
                 name.Append(address);
             }
         }
@@ -1269,8 +1268,7 @@ GetJSUserCompartmentCount()
 // XPConnectJSCompartmentCount to avoid that problem, but then we couldn't
 // easily report them via telemetry, so we live with the small risk of
 // inconsistencies.
-NS_MEMORY_REPORTER_IMPLEMENT(
-    XPConnectJSSystemCompartmentCount,
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSSystemCompartmentCount,
     "js-compartments-system",
     KIND_OTHER,
     nsIMemoryReporter::UNITS_COUNT,
@@ -1280,8 +1278,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(
     "listed under 'js' if a garbage collection occurs at an inopportune time, "
     "but such cases should be rare.")
 
-NS_MEMORY_REPORTER_IMPLEMENT(
-    XPConnectJSUserCompartmentCount,
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
     "js-compartments-user",
     KIND_OTHER,
     nsIMemoryReporter::UNITS_COUNT,
@@ -1916,7 +1913,7 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
 }
 
 bool XPCJSRuntime::gNewDOMBindingsEnabled;
-bool XPCJSRuntime::gParisBindingsEnabled;
+bool XPCJSRuntime::gExperimentalBindingsEnabled;
 
 bool PreserveWrapper(JSContext *cx, JSObject *obj)
 {
@@ -1969,7 +1966,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     DOM_InitInterfaces();
     Preferences::AddBoolVarCache(&gNewDOMBindingsEnabled, "dom.new_bindings",
                                  false);
-    Preferences::AddBoolVarCache(&gParisBindingsEnabled, "dom.paris_bindings",
+    Preferences::AddBoolVarCache(&gExperimentalBindingsEnabled,
+                                 "dom.experimental_bindings",
                                  false);
 
 

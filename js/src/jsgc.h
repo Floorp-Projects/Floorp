@@ -64,7 +64,7 @@
 
 struct JSCompartment;
 
-extern "C" void
+extern void
 js_TraceXML(JSTracer *trc, JSXML* thing);
 
 #if JS_STACK_GROWTH_DIRECTION > 0
@@ -1388,7 +1388,7 @@ MaybeGC(JSContext *cx);
 extern void
 ShrinkGCBuffers(JSRuntime *rt);
 
-extern void
+extern JS_FRIEND_API(void)
 PrepareForFullGC(JSRuntime *rt);
 
 /*
@@ -1871,9 +1871,6 @@ struct GCMarker : public JSTracer {
     void pushValueArray(JSObject *obj, void *start, void *end) {
         checkCompartment(obj);
 
-        if (start == end)
-            return;
-
         JS_ASSERT(start <= end);
         uintptr_t tagged = reinterpret_cast<uintptr_t>(obj) | GCMarker::ValueArrayTag;
         uintptr_t startAddr = reinterpret_cast<uintptr_t>(start);
@@ -1894,6 +1891,7 @@ struct GCMarker : public JSTracer {
     bool restoreValueArray(JSObject *obj, void **vpp, void **endp);
     void saveValueRanges();
     inline void processMarkStackTop(SliceBudget &budget);
+    void processMarkStackOther(uintptr_t tag, uintptr_t addr);
 
     void appendGrayRoot(void *thing, JSGCTraceKind kind);
 

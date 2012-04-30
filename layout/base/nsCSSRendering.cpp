@@ -82,7 +82,7 @@
 #include "nsSVGEffects.h"
 #include "nsSVGIntegrationUtils.h"
 #include "gfxDrawable.h"
-
+#include "sampler.h"
 #include "nsCSSRenderingBorders.h"
 
 using namespace mozilla;
@@ -501,6 +501,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             nsStyleContext* aStyleContext,
                             PRIntn aSkipSides)
 {
+  SAMPLE_LABEL("nsCSSRendering", "PaintBorder");
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
   const nsStyleBorder *styleBorder = aStyleContext->GetStyleBorder();
   // Don't check RelevantLinkVisited here, since we want to take the
@@ -1246,30 +1247,16 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       shadowContext->NewPath();
       if (hasBorderRadius) {
         gfxCornerSizes clipRectRadii;
-        gfxFloat spreadDistance = -shadowItem->mSpread / twipsPerPixel;
-        gfxFloat borderSizes[4] = { 0, 0, 0, 0 };
+        gfxFloat spreadDistance = shadowItem->mSpread / twipsPerPixel;
 
-        // We only give the spread radius to corners with a radius on them, otherwise we'll
-        // give a rounded shadow corner to a frame corner with 0 border radius, should
-        // the author use non-uniform border radii sizes (border-top-left-radius etc)
-        // (bug 514670)
-        if (borderRadii[C_TL].width > 0 || borderRadii[C_BL].width > 0) {
-          borderSizes[NS_SIDE_LEFT] = spreadDistance;
-        }
+        gfxFloat borderSizes[4];
 
-        if (borderRadii[C_TL].height > 0 || borderRadii[C_TR].height > 0) {
-          borderSizes[NS_SIDE_TOP] = spreadDistance;
-        }
+        borderSizes[NS_SIDE_LEFT] = spreadDistance;
+        borderSizes[NS_SIDE_TOP] = spreadDistance;
+        borderSizes[NS_SIDE_RIGHT] = spreadDistance;
+        borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
 
-        if (borderRadii[C_TR].width > 0 || borderRadii[C_BR].width > 0) {
-          borderSizes[NS_SIDE_RIGHT] = spreadDistance;
-        }
-
-        if (borderRadii[C_BL].height > 0 || borderRadii[C_BR].height > 0) {
-          borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
-        }
-
-        nsCSSBorderRenderer::ComputeInnerRadii(borderRadii, borderSizes,
+        nsCSSBorderRenderer::ComputeOuterRadii(borderRadii, borderSizes,
             &clipRectRadii);
         shadowContext->RoundedRectangle(shadowGfxRect, clipRectRadii);
       } else {
@@ -1458,6 +1445,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
                                 PRUint32 aFlags,
                                 nsRect* aBGClipRect)
 {
+  SAMPLE_LABEL("nsCSSRendering", "PaintBackground");
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
 
@@ -1966,6 +1954,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               const nsRect& aOneCellArea,
                               const nsRect& aFillArea)
 {
+  SAMPLE_LABEL("nsCSSRendering", "PaintGradient");
   if (aOneCellArea.IsEmpty())
     return;
 

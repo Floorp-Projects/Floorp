@@ -278,6 +278,49 @@ private:
   LayerRefArray mKeepAlive;
 };
 
+class BasicShadowableThebesLayer;
+class BasicShadowableLayer : public ShadowableLayer
+{
+public:
+  BasicShadowableLayer()
+  {
+    MOZ_COUNT_CTOR(BasicShadowableLayer);
+  }
+
+  ~BasicShadowableLayer();
+
+  void SetShadow(PLayerChild* aShadow)
+  {
+    NS_ABORT_IF_FALSE(!mShadow, "can't have two shadows (yet)");
+    mShadow = aShadow;
+  }
+
+  virtual void SetBackBuffer(const SurfaceDescriptor& aBuffer)
+  {
+    NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
+  }
+  
+  virtual void SetBackBufferYUVImage(gfxSharedImageSurface* aYBuffer,
+                                     gfxSharedImageSurface* aUBuffer,
+                                     gfxSharedImageSurface* aVBuffer)
+  {
+    NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
+  }
+
+  virtual void Disconnect()
+  {
+    // This is an "emergency Disconnect()", called when the compositing
+    // process has died.  |mShadow| and our Shmem buffers are
+    // automatically managed by IPDL, so we don't need to explicitly
+    // free them here (it's hard to get that right on emergency
+    // shutdown anyway).
+    mShadow = nsnull;
+  }
+
+  virtual BasicShadowableThebesLayer* AsThebes() { return nsnull; }
+};
+
+
 }
 }
 

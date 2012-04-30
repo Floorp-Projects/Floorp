@@ -298,6 +298,35 @@ PRInt32 parseSegmentNumber(const char *aValue, PRInt32 aLen)
   return segmentNumber;
 }
 
+// validate a given octet sequence for compliance with the specified
+// encoding
+bool IsValidOctetSequenceForCharset(nsACString& aCharset, const char *aOctets)
+{
+  nsCOMPtr<nsIUTF8ConverterService> cvtUTF8(do_GetService
+    (NS_UTF8CONVERTERSERVICE_CONTRACTID));
+  if (!cvtUTF8) {
+    NS_WARNING("Can't get UTF8ConverterService\n");
+    return false;
+  }
+
+  nsCAutoString tmpRaw;
+  tmpRaw.Assign(aOctets);
+  nsCAutoString tmpDecoded;
+
+  nsresult rv = cvtUTF8->ConvertStringToUTF8(tmpRaw,
+                                             PromiseFlatCString(aCharset).get(),
+                                             true, tmpDecoded);
+
+  if (rv != NS_OK) {
+    // we can't decode; charset may be unsupported, or the octet sequence
+    // is broken (illegal or incomplete octet sequence contained)
+    NS_WARNING("RFC2231/5987 parameter value does not decode according to specified charset\n");
+    return false;
+  }
+
+  return true;
+}
+
 // moved almost verbatim from mimehdrs.cpp
 // char *
 // MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
@@ -617,6 +646,20 @@ increment_str:
 
   caseCDResult = combineContinuations(segments);
 
+  if (caseBResult && !charsetB.IsEmpty()) {
+    // check that the 2231/5987 result decodes properly given the
+    // specified character set
+    if (!IsValidOctetSequenceForCharset(charsetB, caseBResult))
+      caseBResult = NULL;
+  }
+
+  if (caseCDResult && !charsetCD.IsEmpty()) {
+    // check that the 2231/5987 result decodes properly given the
+    // specified character set
+    if (!IsValidOctetSequenceForCharset(charsetCD, caseCDResult))
+      caseCDResult = NULL;
+  }
+
   if (caseBResult) {
     // prefer simple 5987 format over 2231 with continuations
     *aResult = caseBResult;
@@ -716,9 +759,8 @@ nsMIMEHeaderParamImpl::DecodeParameter(const nsACString& aParamValue,
   {
     nsCOMPtr<nsIUTF8ConverterService> cvtUTF8(do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID));
     if (cvtUTF8)
-      // skip ASCIIness/UTF8ness test if aCharset is 7bit non-ascii charset.
       return cvtUTF8->ConvertStringToUTF8(aParamValue, aCharset,
-          IS_7BIT_NON_ASCII_CHARSET(aCharset), aResult);
+          true, aResult);
   }
 
   const nsAFlatCString& param = PromiseFlatCString(aParamValue);

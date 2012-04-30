@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-
 let stateStartup = {windows:[
   {tabs:[{entries:[{url:"about:home"}]}], extData:{"tabview-last-session-group-name":"title"}}
 ]};

@@ -41,6 +41,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/Util.h"
 
 #ifdef MOZ_LOGGING
@@ -106,6 +107,7 @@
 #include "nsIScriptChannel.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsITimedChannel.h"
+#include "nsIPrivacyTransitionObserver.h"
 #include "nsCPrefetchService.h"
 #include "nsJSON.h"
 #include "IHistory.h"
@@ -715,15 +717,35 @@ ConvertLoadTypeToNavigationType(PRUint32 aLoadType)
 static nsISHEntry* GetRootSHEntry(nsISHEntry *entry);
 
 static void
+IncreasePrivateDocShellCount()
+{
+    gNumberOfPrivateDocShells++;
+    if (gNumberOfPrivateDocShells > 1 ||
+        XRE_GetProcessType() != GeckoProcessType_Content) {
+        return;
+    }
+
+    mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+    cc->SendPrivateDocShellsExist(true);
+}
+
+static void
 DecreasePrivateDocShellCount()
 {
     MOZ_ASSERT(gNumberOfPrivateDocShells > 0);
     gNumberOfPrivateDocShells--;
     if (!gNumberOfPrivateDocShells)
     {
+        if (XRE_GetProcessType() == GeckoProcessType_Content) {
+            mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+            cc->SendPrivateDocShellsExist(false);
+            return;
+        }
+
         nsCOMPtr<nsIObserverService> obsvc = mozilla::services::GetObserverService();
-        if (obsvc)
+        if (obsvc) {
             obsvc->NotifyObservers(nsnull, "last-pb-context-exited", nsnull);
+        }
     }
 }
 
@@ -2020,10 +2042,11 @@ nsDocShell::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
 NS_IMETHODIMP
 nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
 {
-    if (aUsePrivateBrowsing != mInPrivateBrowsing) {
+    bool changed = aUsePrivateBrowsing != mInPrivateBrowsing;
+    if (changed) {
         mInPrivateBrowsing = aUsePrivateBrowsing;
         if (aUsePrivateBrowsing) {
-            gNumberOfPrivateDocShells++;
+            IncreasePrivateDocShellCount();
         } else {
             DecreasePrivateDocShellCount();
         }
@@ -2036,7 +2059,30 @@ nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
             shell->SetUsePrivateBrowsing(aUsePrivateBrowsing);
         }
     }
+
+    if (changed) {
+        nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mPrivacyObservers);
+        while (iter.HasMore()) {
+            nsWeakPtr ref = iter.GetNext();
+            nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_QueryReferent(ref);
+            if (!obs) {
+                mPrivacyObservers.RemoveElement(ref);
+            } else {
+                obs->PrivateModeChanged(aUsePrivateBrowsing);
+            }
+        }
+    }
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::AddWeakPrivacyTransitionObserver(nsIPrivacyTransitionObserver* aObserver)
+{
+    nsWeakPtr weakObs = do_GetWeakReference(aObserver);
+    if (!weakObs) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+    return mPrivacyObservers.AppendElement(weakObs) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDocShell::GetAllowMetaRedirects(bool * aReturn)
@@ -3849,6 +3895,10 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     loadInfo->SetHeadersStream(aHeaderStream);
 
     rv = LoadURI(uri, loadInfo, extraFlags, true);
+
+    // Save URI string in case it's needed later when
+    // sending to search engine service in EndPageLoad()
+    mOriginalUriString = uriString; 
 
     return rv;
 }
@@ -6309,27 +6359,33 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
 
                 if (keywordsEnabled && (kNotFound == dotLoc)) {
                     // only send non-qualified hosts to the keyword server
-                    //
-                    // If this string was passed through nsStandardURL by
-                    // chance, then it may have been converted from UTF-8 to
-                    // ACE, which would result in a completely bogus keyword
-                    // query.  Here we try to recover the original Unicode
-                    // value, but this is not 100% correct since the value may
-                    // have been normalized per the IDN normalization rules.
-                    //
-                    // Since we don't have access to the exact original string
-                    // that was entered by the user, this will just have to do.
-                    bool isACE;
-                    nsCAutoString utf8Host;
-                    nsCOMPtr<nsIIDNService> idnSrv =
-                        do_GetService(NS_IDNSERVICE_CONTRACTID);
-                    if (idnSrv &&
-                        NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
-                        NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host)))
-                        sURIFixup->KeywordToURI(utf8Host,
+                    if (!mOriginalUriString.IsEmpty()) {
+                        sURIFixup->KeywordToURI(mOriginalUriString,
                                                 getter_AddRefs(newURI));
-                    else
-                        sURIFixup->KeywordToURI(host, getter_AddRefs(newURI));
+                    }
+                    else {
+                        //
+                        // If this string was passed through nsStandardURL by
+                        // chance, then it may have been converted from UTF-8 to
+                        // ACE, which would result in a completely bogus keyword
+                        // query.  Here we try to recover the original Unicode
+                        // value, but this is not 100% correct since the value may
+                        // have been normalized per the IDN normalization rules.
+                        //
+                        // Since we don't have access to the exact original string
+                        // that was entered by the user, this will just have to do.
+                        bool isACE;
+                        nsCAutoString utf8Host;
+                        nsCOMPtr<nsIIDNService> idnSrv =
+                            do_GetService(NS_IDNSERVICE_CONTRACTID);
+                        if (idnSrv &&
+                            NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
+                            NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host)))
+                            sURIFixup->KeywordToURI(utf8Host,
+                                                    getter_AddRefs(newURI));
+                        else
+                            sURIFixup->KeywordToURI(host, getter_AddRefs(newURI));
+                    }
                 } // end keywordsEnabled
             }
 
@@ -7459,18 +7515,34 @@ nsDocShell::CreateContentViewer(const char *aContentType,
         mLoadType = mFailedLoadType;
 
         nsCOMPtr<nsIChannel> failedChannel = mFailedChannel;
-        nsCOMPtr<nsIURI> failedURI = mFailedURI;
+
+        // Make sure we have a URI to set currentURI.
+        nsCOMPtr<nsIURI> failedURI;
+        if (failedChannel) {
+            NS_GetFinalChannelURI(failedChannel, getter_AddRefs(failedURI));
+        }
+
+        if (!failedURI) {
+            failedURI = mFailedURI;
+        }
+
+        // When we don't have failedURI, something wrong will happen. See
+        // bug 291876.
+        MOZ_ASSERT(failedURI, "We don't have a URI for history APIs.");
+
         mFailedChannel = nsnull;
         mFailedURI = nsnull;
 
-        // Create an shistory entry for the old load, if we have a channel
-        if (failedChannel) {
-            mURIResultedInDocument = true;
-            OnLoadingSite(failedChannel, true, false);
-        } else if (failedURI) {
-            mURIResultedInDocument = true;
-            OnNewURI(failedURI, nsnull, nsnull, mLoadType, true, false,
+        // Create an shistory entry for the old load.
+        if (failedURI) {
+#ifdef DEBUG
+            bool errorOnLocationChangeNeeded =
+#endif
+            OnNewURI(failedURI, failedChannel, nsnull, mLoadType, true, false,
                      false);
+
+            MOZ_ASSERT(!errorOnLocationChangeNeeded,
+                       "We have to fire onLocationChange again.");
         }
 
         // Be sure to have a correct mLSHE, it may have been cleared by
@@ -7486,9 +7558,6 @@ nsDocShell::CreateContentViewer(const char *aContentType,
                                              getter_AddRefs(entry));
             mLSHE = do_QueryInterface(entry);
         }
-
-        // Set our current URI
-        SetCurrentURI(failedURI);
 
         mLoadType = LOAD_ERROR_PAGE;
     }
@@ -8011,6 +8080,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                          nsIRequest** aRequest)
 {
     nsresult rv = NS_OK;
+    mOriginalUriString.Truncate();
 
 #ifdef PR_LOGGING
     if (gDocShellLeakLog && PR_LOG_TEST(gDocShellLeakLog, PR_LOG_DEBUG)) {

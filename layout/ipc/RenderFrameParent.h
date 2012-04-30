@@ -111,7 +111,6 @@ protected:
 private:
   void BuildViewMap();
 
-  LayerManager* GetLayerManager() const;
   ShadowLayersParent* GetShadowLayers() const;
   ContainerLayer* GetRootLayer() const;
 

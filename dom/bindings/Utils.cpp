@@ -25,7 +25,7 @@ DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs)
 }
 
 static JSObject*
-CreateInterfaceObject(JSContext* cx, JSObject* global,
+CreateInterfaceObject(JSContext* cx, JSObject* global, JSObject* receiver,
                       JSClass* constructorClass, JSObject* proto,
                       JSFunctionSpec* staticMethods, ConstantSpec* constants,
                       const char* name)
@@ -54,7 +54,7 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
   }
 
   // This is Enumerable: False per spec.
-  if (!JS_DefineProperty(cx, global, name, OBJECT_TO_JSVAL(constructor), NULL,
+  if (!JS_DefineProperty(cx, receiver, name, OBJECT_TO_JSVAL(constructor), NULL,
                          NULL, 0)) {
     return NULL;
   }
@@ -69,7 +69,8 @@ CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
                                JSPropertySpec* properties,
                                ConstantSpec* constants)
 {
-  JSObject* ourProto = JS_NewObject(cx, protoClass, parentProto, global);
+  JSObject* ourProto = JS_NewObjectWithUniqueType(cx, protoClass, parentProto,
+                                                  global);
   if (!ourProto) {
     return NULL;
   }
@@ -90,11 +91,11 @@ CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
 }
 
 JSObject*
-CreateInterfaceObjects(JSContext *cx, JSObject *global, JSObject *parentProto,
-                       JSClass *protoClass, JSClass *constructorClass,
-                       JSFunctionSpec *methods, JSPropertySpec *properties,
-                       ConstantSpec *constants, JSFunctionSpec *staticMethods,
-                       const char* name)
+CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
+                       JSObject* protoProto, JSClass* protoClass,
+                       JSClass* constructorClass, JSFunctionSpec* methods,
+                       JSPropertySpec* properties, ConstantSpec* constants,
+                       JSFunctionSpec* staticMethods, const char* name)
 {
   MOZ_ASSERT(protoClass || constructorClass, "Need at least one class!");
   MOZ_ASSERT(!(methods || properties) || protoClass,
@@ -106,7 +107,7 @@ CreateInterfaceObjects(JSContext *cx, JSObject *global, JSObject *parentProto,
 
   JSObject* proto;
   if (protoClass) {
-    proto = CreateInterfacePrototypeObject(cx, global, parentProto, protoClass,
+    proto = CreateInterfacePrototypeObject(cx, global, protoProto, protoClass,
                                            methods, properties, constants);
     if (!proto) {
       return NULL;
@@ -118,8 +119,8 @@ CreateInterfaceObjects(JSContext *cx, JSObject *global, JSObject *parentProto,
 
   JSObject* interface;
   if (constructorClass) {
-    interface = CreateInterfaceObject(cx, global, constructorClass, proto,
-                                      staticMethods, constants, name);
+    interface = CreateInterfaceObject(cx, global, receiver, constructorClass,
+                                      proto, staticMethods, constants, name);
     if (!interface) {
       return NULL;
     }

@@ -44,29 +44,46 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = content
 LIBRARY_NAME = gkconmedia_s
 LIBXUL_LIBRARY = 1
+XPIDL_MODULE = content_media
+
+XPIDLSRCS = \
+  nsIDOMMediaStream.idl \
+  $(NULL)
 
 EXPORTS = \
+  AudioSegment.h \
   FileBlockCache.h \
+  MediaResource.h \
+  MediaSegment.h \
+  MediaStreamGraph.h \
   nsAudioAvailableEventManager.h \
-  nsMediaDecoder.h \
-  nsMediaCache.h \
   nsBuiltinDecoder.h \
   nsBuiltinDecoderStateMachine.h \
   nsBuiltinDecoderReader.h \
-  MediaResource.h \
+  nsDOMMediaStream.h \
+  nsMediaCache.h \
+  nsMediaDecoder.h \
+  SharedBuffer.h \
+  StreamBuffer.h \
+  TimeVarying.h \
   VideoFrameContainer.h \
   VideoUtils.h \
+  VideoSegment.h \
   $(NULL)
 
 CPPSRCS = \
+  AudioSegment.cpp \
   FileBlockCache.cpp \
+  MediaResource.cpp \
+  MediaStreamGraph.cpp \
   nsAudioAvailableEventManager.cpp \
-  nsMediaDecoder.cpp \
-  nsMediaCache.cpp \
   nsBuiltinDecoder.cpp \
   nsBuiltinDecoderStateMachine.cpp \
   nsBuiltinDecoderReader.cpp \
-  MediaResource.cpp \
+  nsDOMMediaStream.cpp \
+  nsMediaCache.cpp \
+  nsMediaDecoder.cpp \
+  StreamBuffer.cpp \
   VideoFrameContainer.cpp \
   VideoUtils.cpp \
   $(NULL)
@@ -96,6 +113,10 @@ ifdef MOZ_WEBM
 PARALLEL_DIRS += webm
 endif
 
+ifdef MOZ_GSTREAMER
+PARALLEL_DIRS += gstreamer
+endif
+
 ifdef ENABLE_TESTS
 PARALLEL_DIRS += test
 endif
@@ -110,3 +131,5 @@ INCLUDES += \
   -I$(srcdir)/../base/src \
   -I$(srcdir)/../html/content/src \
   $(NULL)
+
+DEFINES += -D_IMPL_NS_LAYOUT

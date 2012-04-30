@@ -16,6 +16,8 @@ random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 random-if(d2d) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
 HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
 random-if(d2d) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
+random-if(d2d) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
+random-if(d2d) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
 == boxshadow-skiprect.html boxshadow-skiprect-ref.html
 
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref.html

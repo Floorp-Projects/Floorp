@@ -292,6 +292,9 @@ class EncapsulatedValue
     ~EncapsulatedValue() {}
 
   public:
+    inline bool operator==(const EncapsulatedValue &v) const { return value == v.value; }
+    inline bool operator!=(const EncapsulatedValue &v) const { return value != v.value; }
+
     const Value &get() const { return value; }
     Value *unsafeGet() { return &value; }
     operator const Value &() const { return value; }
@@ -365,6 +368,18 @@ class HeapValue : public EncapsulatedValue
     inline void post(JSCompartment *comp);
 };
 
+class RelocatableValue : public EncapsulatedValue
+{
+  public:
+    explicit inline RelocatableValue();
+    explicit inline RelocatableValue(const Value &v);
+    explicit inline RelocatableValue(const RelocatableValue &v);
+    inline ~RelocatableValue();
+
+    inline RelocatableValue &operator=(const Value &v);
+    inline RelocatableValue &operator=(const RelocatableValue &v);
+};
+
 class HeapSlot : public EncapsulatedValue
 {
     /*
@@ -428,21 +443,20 @@ class HeapSlotArray
     HeapSlotArray operator +(uint32_t offset) const { return HeapSlotArray(array + offset); }
 };
 
-class HeapId
+class EncapsulatedId
 {
+  protected:
     jsid value;
 
+    explicit EncapsulatedId() : value(JSID_VOID) {}
+    explicit inline EncapsulatedId(jsid id) : value(id) {}
+    ~EncapsulatedId() {}
+
+  private:
+    EncapsulatedId(const EncapsulatedId &v) MOZ_DELETE;
+    EncapsulatedId &operator=(const EncapsulatedId &v) MOZ_DELETE;
+
   public:
-    explicit HeapId() : value(JSID_VOID) {}
-    explicit inline HeapId(jsid id);
-
-    inline ~HeapId();
-
-    inline void init(jsid id);
-
-    inline HeapId &operator=(jsid id);
-    inline HeapId &operator=(const HeapId &v);
-
     bool operator==(jsid id) const { return value == id; }
     bool operator!=(jsid id) const { return value != id; }
 
@@ -450,11 +464,37 @@ class HeapId
     jsid *unsafeGet() { return &value; }
     operator jsid() const { return value; }
 
-  private:
+  protected:
     inline void pre();
+};
+
+class RelocatableId : public EncapsulatedId
+{
+  public:
+    explicit RelocatableId() : EncapsulatedId() {}
+    explicit inline RelocatableId(jsid id) : EncapsulatedId(id) {}
+    inline ~RelocatableId();
+
+    inline RelocatableId &operator=(jsid id);
+    inline RelocatableId &operator=(const RelocatableId &v);
+};
+
+class HeapId : public EncapsulatedId
+{
+  public:
+    explicit HeapId() : EncapsulatedId() {}
+    explicit inline HeapId(jsid id);
+    inline ~HeapId();
+
+    inline void init(jsid id);
+
+    inline HeapId &operator=(jsid id);
+    inline HeapId &operator=(const HeapId &v);
+
+  private:
     inline void post();
 
-    HeapId(const HeapId &v);
+    HeapId(const HeapId &v) MOZ_DELETE;
 };
 
 /*

@@ -35,15 +35,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 const C_i = Components.interfaces;
-const C_r = Components.results;
 
 const UNORDERED_TYPE = C_i.nsIDOMXPathResult.ANY_UNORDERED_NODE_TYPE;
 
-const INVALID_STATE_ERR = 0x8053000b;     // NS_ERROR_DOM_INVALID_STATE_ERR
-const INDEX_SIZE_ERR = 0x80530001;        // NS_ERROR_DOM_INDEX_SIZE_ERR
-const INVALID_NODE_TYPE_ERR = 0x805c0002; // NS_ERROR_DOM_INVALID_NODE_TYPE_ERR
-const NOT_OBJECT_ERR = 0x805303eb;        // NS_ERROR_DOM_NOT_OBJECT_ERR
-const SECURITY_ERR = 0x80530012;          // NS_ERROR_DOM_SECURITY_ERR
+// Instantiate nsIDOMScriptObjectFactory so that DOMException is usable in xpcshell
+Components.classesByID["{9eb760f0-4380-11d2-b328-00805f8a3859}"].getService(C_i.nsISupports);
 
 /**
  * Determine if the data node has only ignorable white-space.
@@ -369,33 +365,6 @@ function run_extract_test() {
 
     // Clean up after ourselves.
     walker = null;
-
-    /* Whenever a DOM range is detached, we cannot use any methods on
-       it - including extracting its contents or deleting its contents.  It
-       should throw a NS_ERROR_DOM_INVALID_STATE_ERR exception.
-    */
-    dump("Detached range test\n");
-    var compareFrag = getFragment(baseSource);
-    baseFrag = getFragment(baseSource);
-    baseRange = getRange(baseSource, baseFrag);
-    baseRange.detach();
-    try {
-      var cutFragment = baseRange.extractContents();
-      do_throw("Should have thrown INVALID_STATE_ERR!");
-    } catch (e if (e instanceof C_i.nsIException &&
-                   e.result == INVALID_STATE_ERR)) {
-      // do nothing
-    }
-    do_check_true(compareFrag.isEqualNode(baseFrag));
-
-    try {
-      baseRange.deleteContents();
-      do_throw("Should have thrown INVALID_STATE_ERR!");
-    } catch (e if (e instanceof C_i.nsIException &&
-                   e.result == INVALID_STATE_ERR)) {
-      // do nothing
-    }
-    do_check_true(compareFrag.isEqualNode(baseFrag));
   }
 }
 
@@ -429,27 +398,24 @@ function run_miscellaneous_tests() {
     try {
       baseRange.setStart(null, 0);
       do_throw("Should have thrown NOT_OBJECT_ERR!");
-    } catch (e if (e instanceof C_i.nsIException &&
-                   e.result == NOT_OBJECT_ERR)) {
-      // do nothing
+    } catch (e) {
+      do_check_eq(e.name, "NS_ERROR_DOM_NOT_OBJECT_ERR");
     }
 
     // Invalid start node
     try {
       baseRange.setStart({}, 0);
-      do_throw("Should have thrown SECURITY_ERR!");
-    } catch (e if (e instanceof C_i.nsIException &&
-                   e.result == SECURITY_ERR)) {
-      // do nothing
+      do_throw("Should have thrown SecurityError!");
+    } catch (e) {
+      do_check_eq(e.name, "SecurityError");
     }
 
     // Invalid index
     try {
       baseRange.setStart(startContainer, -1);
-      do_throw("Should have thrown INVALID_STATE_ERR!");
-    } catch (e if (e instanceof C_i.nsIException &&
-                   e.result == INDEX_SIZE_ERR)) {
-      // do nothing
+      do_throw("Should have thrown IndexSizeError!");
+    } catch (e) {
+      do_check_eq(e.name, "IndexSizeError");
     }
   
     // Invalid index
@@ -458,10 +424,9 @@ function run_miscellaneous_tests() {
                       startContainer.childNodes.length + 1;
     try {
       baseRange.setStart(startContainer, newOffset);
-      do_throw("Should have thrown INVALID_STATE_ERR!");
-    } catch (e if (e instanceof C_i.nsIException &&
-                   e.result == INDEX_SIZE_ERR)) {
-      // do nothing
+      do_throw("Should have thrown IndexSizeError!");
+    } catch (e) {
+      do_check_eq(e.name, "IndexSizeError");
     }
   
     newOffset--;

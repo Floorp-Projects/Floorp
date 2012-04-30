@@ -58,6 +58,7 @@
 #include "nsCategoryCache.h"
 #include "nsINetworkLinkService.h"
 #include "nsAsyncRedirectVerifyHelper.h"
+#include "nsISpeculativeConnect.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
@@ -74,6 +75,7 @@ class nsIPrefBranch;
 class nsIOService : public nsIIOService2
                   , public nsIObserver
                   , public nsINetUtil
+                  , public nsISpeculativeConnect
                   , public nsSupportsWeakReference
 {
 public:
@@ -82,6 +84,7 @@ public:
     NS_DECL_NSIIOSERVICE2
     NS_DECL_NSIOBSERVER
     NS_DECL_NSINETUTIL
+    NS_DECL_NSISPECULATIVECONNECT
 
     // Gets the singleton instance of the IO Service, creating it as needed
     // Returns nsnull on out of memory or failure to initialize.
@@ -134,6 +137,10 @@ private:
 
     nsresult InitializeSocketTransportService();
     nsresult InitializeNetworkLinkService();
+
+    // consolidated helper function
+    void LookupProxyInfo(nsIURI *aURI, nsIURI *aProxyURI, PRUint32 aProxyFlags,
+                         nsCString *aScheme, nsIProxyInfo **outPI);
 
 private:
     bool                                 mOffline;

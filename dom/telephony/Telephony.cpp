@@ -53,6 +53,7 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "SystemWorkerManager.h"
+#include "nsRadioInterfaceLayer.h"
 
 #include "CallEvent.h"
 #include "TelephonyCall.h"
@@ -131,7 +132,7 @@ Telephony::Telephony()
 Telephony::~Telephony()
 {
   if (mRIL && mRILTelephonyCallback) {
-    mRIL->UnregisterCallback(mRILTelephonyCallback);
+    mRIL->UnregisterTelephonyCallback(mRILTelephonyCallback);
   }
 
   if (mRooted) {
@@ -152,7 +153,7 @@ Telephony::~Telephony()
 
 // static
 already_AddRefed<Telephony>
-Telephony::Create(nsPIDOMWindow* aOwner, nsIRadioInterfaceLayer* aRIL)
+Telephony::Create(nsPIDOMWindow* aOwner, nsIRILContentHelper* aRIL)
 {
   NS_ASSERTION(aOwner, "Null owner!");
   NS_ASSERTION(aRIL, "Null RIL!");
@@ -173,7 +174,7 @@ Telephony::Create(nsPIDOMWindow* aOwner, nsIRadioInterfaceLayer* aRIL)
   nsresult rv = aRIL->EnumerateCalls(telephony->mRILTelephonyCallback);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  rv = aRIL->RegisterCallback(telephony->mRILTelephonyCallback);
+  rv = aRIL->RegisterTelephonyCallback(telephony->mRILTelephonyCallback);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   return telephony.forget();
@@ -571,11 +572,8 @@ NS_NewTelephony(nsPIDOMWindow* aWindow, nsIDOMTelephony** aTelephony)
     }
   }
 
-  // Security checks passed, make a telephony object.
-  nsIInterfaceRequestor* ireq = SystemWorkerManager::GetInterfaceRequestor();
-  NS_ENSURE_TRUE(ireq, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIRadioInterfaceLayer> ril = do_GetInterface(ireq);
+  nsCOMPtr<nsIRILContentHelper> ril =
+    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE(ril, NS_ERROR_UNEXPECTED);
 
   nsRefPtr<Telephony> telephony = Telephony::Create(innerWindow, ril);

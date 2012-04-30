@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=686203
+-->
+
+<head>
+  <title>Test for Bug 686203</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=686203">Mozilla Bug 686203</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 686203 **/
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.waitForFocus(function() {
+        var ce = document.getElementById("ce");
+        var input = document.getElementById("input");
+        ce.focus();
+      
+        var eventDetails = { button : 2 };
+        synthesizeMouseAtCenter(input, eventDetails);
+
+        synthesizeKey("Z", {});
+
+        /* check values */
+        is(input.value, "Z", "input correctly focused after right-click");
+        is(ce.textContent, "abc", "contenteditable correctly blurred after right-click on input"); 
+
+        SimpleTest.finish();
+      });
+   </script>
+  </pre>
+
+  <input type="text" value="" id="input" />
+  <div id="ce" contenteditable="true">abc</div>
+</body>
+</html>

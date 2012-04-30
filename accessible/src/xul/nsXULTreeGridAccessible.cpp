@@ -72,32 +72,21 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeGridAccessible,
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridAccessible: nsIAccessibleTable implementation
 
-NS_IMETHODIMP
-nsXULTreeGridAccessible::GetColumnCount(PRInt32 *aColumnCount)
+PRUint32
+nsXULTreeGridAccessible::ColCount()
 {
-  NS_ENSURE_ARG_POINTER(aColumnCount);
-  *aColumnCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  *aColumnCount = nsCoreUtils::GetSensibleColumnCount(mTree);
-  return NS_OK;
+  return nsCoreUtils::GetSensibleColumnCount(mTree);
 }
 
-NS_IMETHODIMP
-nsXULTreeGridAccessible::GetRowCount(PRInt32* aRowCount)
+PRUint32
+nsXULTreeGridAccessible::RowCount()
 {
-  NS_ENSURE_ARG_POINTER(aRowCount);
-  *aRowCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   if (!mTreeView)
-    return NS_OK;
+    return 0;
 
-  return mTreeView->GetRowCount(aRowCount);
+  PRInt32 rowCount = 0;
+  mTreeView->GetRowCount(&rowCount);
+  return rowCount >= 0 ? rowCount : 0;
 }
 
 NS_IMETHODIMP
@@ -556,23 +545,17 @@ nsXULTreeGridAccessible::SelectColumn(PRInt32 aColumnIndex)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULTreeGridAccessible::UnselectRow(PRInt32 aRowIndex)
+void
+nsXULTreeGridAccessible::UnselectRow(PRUint32 aRowIdx)
 {
   if (!mTreeView)
-    return NS_ERROR_INVALID_ARG;
+    return;
 
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_STATE(selection);
-
-  return selection->ClearRange(aRowIndex, aRowIndex);
-}
-
-NS_IMETHODIMP
-nsXULTreeGridAccessible::UnselectColumn(PRInt32 aColumnIndex)
-{
-  return NS_OK;
+  
+  if (selection)
+    selection->ClearRange(aRowIdx, aRowIdx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -835,14 +818,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTreeGridCellAccessible)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULTreeGridCellAccessible,
                                                   nsLeafAccessible)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTree)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTreeView)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mColumn)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULTreeGridCellAccessible,
                                                 nsLeafAccessible)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTree)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTreeView)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mColumn)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 

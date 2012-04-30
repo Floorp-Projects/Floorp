@@ -192,6 +192,9 @@ public class BrowserContract {
         public static final String TIME_PASSWORD_CHANGED = "timePasswordChanged";
         public static final String TIMES_USED = "timesUsed";
         public static final String GUID = "guid";
+
+        // This needs to be kept in sync with the types defined in toolkit/components/passwordmgr/nsILoginManagerCrypto.idl#45
+        public static final int ENCTYPE_SDR = 1;
     }
 
     public static final class DeletedPasswords implements DeletedColumns {

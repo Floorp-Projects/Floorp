@@ -51,6 +51,10 @@
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "DictionaryHelpers.h"
+#include "mozilla/Util.h"
+#include "mozilla/Assertions.h"
+
+using namespace mozilla;
 
 nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   : nsDOMEvent(aPresContext, aEvent ?
@@ -446,6 +450,106 @@ nsDOMUIEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &mDetail), false);
   return true;
 }
+
+// XXX Following struct and array are used only in
+//     nsDOMUIEvent::ComputeModifierState(), but if we define them in it,
+//     we fail to build on Mac at calling mozilla::ArrayLength().
+struct nsModifierPair
+{
+  mozilla::widget::Modifier modifier;
+  const char* name;
+};
+static const nsModifierPair kPairs[] = {
+  { widget::MODIFIER_ALT,        NS_DOM_KEYNAME_ALT },
+  { widget::MODIFIER_ALTGRAPH,   NS_DOM_KEYNAME_ALTGRAPH },
+  { widget::MODIFIER_CAPSLOCK,   NS_DOM_KEYNAME_CAPSLOCK },
+  { widget::MODIFIER_CONTROL,    NS_DOM_KEYNAME_CONTROL },
+  { widget::MODIFIER_FN,         NS_DOM_KEYNAME_FN },
+  { widget::MODIFIER_META,       NS_DOM_KEYNAME_META },
+  { widget::MODIFIER_NUMLOCK,    NS_DOM_KEYNAME_NUMLOCK },
+  { widget::MODIFIER_SCROLL,     NS_DOM_KEYNAME_SCROLL },
+  { widget::MODIFIER_SHIFT,      NS_DOM_KEYNAME_SHIFT },
+  { widget::MODIFIER_SYMBOLLOCK, NS_DOM_KEYNAME_SYMBOLLOCK },
+  { widget::MODIFIER_WIN,        NS_DOM_KEYNAME_WIN }
+};
+
+/* static */
+mozilla::widget::Modifiers
+nsDOMUIEvent::ComputeModifierState(const nsAString& aModifiersList)
+{
+  if (aModifiersList.IsEmpty()) {
+    return 0;
+  }
+
+  // Be careful about the performance.  If aModifiersList is too long,
+  // parsing it needs too long time.
+  // XXX Should we abort if aModifiersList is too long?
+
+  Modifiers modifiers = 0;
+
+  nsAString::const_iterator listStart, listEnd;
+  aModifiersList.BeginReading(listStart);
+  aModifiersList.EndReading(listEnd);
+
+  for (PRUint32 i = 0; i < mozilla::ArrayLength(kPairs); i++) {
+    nsAString::const_iterator start(listStart), end(listEnd);
+    if (!FindInReadable(NS_ConvertASCIItoUTF16(kPairs[i].name), start, end)) {
+      continue;
+    }
+
+    if ((start != listStart && !NS_IsAsciiWhitespace(*(--start))) ||
+        (end != listEnd && !NS_IsAsciiWhitespace(*(end)))) {
+      continue;
+    }
+    modifiers |= kPairs[i].modifier;
+  }
+
+  return modifiers;
+}
+
+bool
+nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
+{
+  nsInputEvent* inputEvent = static_cast<nsInputEvent*>(mEvent);
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SHIFT)) {
+    return inputEvent->IsShift();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_CONTROL)) {
+    return inputEvent->IsControl();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_META)) {
+    return inputEvent->IsMeta();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_ALT)) {
+    return inputEvent->IsAlt();
+  }
+
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_ALTGRAPH)) {
+    return inputEvent->IsAltGraph();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_WIN)) {
+    return inputEvent->IsWin();
+  }
+
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_CAPSLOCK)) {
+    return inputEvent->IsCapsLocked();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_NUMLOCK)) {
+    return inputEvent->IsNumLocked();
+  }
+
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_FN)) {
+    return inputEvent->IsFn();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SCROLL)) {
+    return inputEvent->IsScrollLocked();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SYMBOLLOCK)) {
+    return inputEvent->IsSymbolLocked();
+  }
+  return false;
+}
+
 
 nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                           nsPresContext* aPresContext,

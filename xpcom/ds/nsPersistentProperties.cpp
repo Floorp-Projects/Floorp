@@ -572,8 +572,7 @@ nsPersistentProperties::SetStringProperty(const nsACString& aKey,
 
   if (entry->mKey) {
     aOldValue = entry->mValue;
-    NS_WARNING(nsPrintfCString(aKey.Length() + 30,
-                               "the property %s already exists\n",
+    NS_WARNING(nsPrintfCString("the property %s already exists\n",
                                flatKey.get()).get());
   }
   else {

@@ -289,7 +289,7 @@ GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
             return false;
         }
 
-        if (!ResizeOffscreenFBO(aNewSize, false)) {
+        if (!ResizeOffscreenFBOs(aNewSize, false)) {
             [pb release];
             return false;
         }
@@ -309,7 +309,7 @@ GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         return true;
     }
 
-    return ResizeOffscreenFBO(aNewSize, true);
+    return ResizeOffscreenFBOs(aNewSize, true);
 }
 
 class TextureImageCGL : public BasicTextureImage
@@ -333,12 +333,13 @@ protected:
     already_AddRefed<gfxASurface>
     GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt)
     {
+        gfxIntSize size(aSize.width + 1, aSize.height + 1);
         mGLContext->MakeCurrent();
         if (!mGLContext->
             IsExtensionSupported(GLContext::ARB_pixel_buffer_object)) 
         {
             return gfxPlatform::GetPlatform()->
-                CreateOffscreenSurface(aSize, 
+                CreateOffscreenSurface(size,
                                        gfxASurface::ContentFromFormat(aFmt));
         }
 
@@ -346,12 +347,12 @@ protected:
             mGLContext->fGenBuffers(1, &mPixelBuffer);
         }
         mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPixelBuffer);
-        PRInt32 size = aSize.width * 4 * aSize.height;
+        PRInt32 length = size.width * 4 * size.height;
 
-        if (size > mPixelBufferSize) {
-            mGLContext->fBufferData(LOCAL_GL_PIXEL_UNPACK_BUFFER, size,
+        if (length > mPixelBufferSize) {
+            mGLContext->fBufferData(LOCAL_GL_PIXEL_UNPACK_BUFFER, length,
                                     NULL, LOCAL_GL_STREAM_DRAW);
-            mPixelBufferSize = size;
+            mPixelBufferSize = length;
         }
         unsigned char* data = 
             (unsigned char*)mGLContext->
@@ -363,18 +364,17 @@ protected:
         if (!data) {
             nsCAutoString failure;
             failure += "Pixel buffer binding failed: ";
-            failure.AppendPrintf("%dx%d\n", aSize.width, aSize.height);
+            failure.AppendPrintf("%dx%d\n", size.width, size.height);
             gfx::LogFailure(failure);
 
             mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
             return gfxPlatform::GetPlatform()->
-                CreateOffscreenSurface(aSize, 
+                CreateOffscreenSurface(size,
                                        gfxASurface::ContentFromFormat(aFmt));
         }
 
         nsRefPtr<gfxQuartzSurface> surf = 
-            new gfxQuartzSurface(data, aSize,
-                                 aSize.width * 4, aFmt);
+            new gfxQuartzSurface(data, size, size.width * 4, aFmt);
 
         mBoundPixelBuffer = true;
         return surf.forget();
@@ -601,7 +601,7 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& aSize,
         glContext = CreateOffscreenPBufferContext(aSize, actualFormat);
         if (glContext &&
             glContext->Init() &&
-            glContext->ResizeOffscreenFBO(aSize, false))
+            glContext->ResizeOffscreenFBOs(aSize, false))
         {
             glContext->mOffscreenSize = aSize;
             glContext->mOffscreenActualSize = aSize;
@@ -614,7 +614,7 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& aSize,
     glContext = CreateOffscreenFBOContext(actualFormat);
     if (glContext &&
         glContext->Init() &&
-        glContext->ResizeOffscreenFBO(aSize, true))
+        glContext->ResizeOffscreenFBOs(aSize, true))
     {
         return glContext.forget();
     }

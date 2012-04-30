@@ -3276,9 +3276,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ])
         elif ptype.isManaged():
             self.cls.addstmts([
-                StmtDecl(Decl(_actorIdType(), p.idVar().name)),
                 StmtDecl(Decl(p.managerInterfaceType(ptr=1),
-                              p.managerVar().name))
+                              p.managerVar().name)),
+                StmtDecl(Decl(_actorIdType(), p.idVar().name))
             ])
         if p.decl.type.isToplevel():
             self.cls.addstmts([

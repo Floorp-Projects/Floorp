@@ -226,7 +226,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
         // The |this| value for global scripts is always an object, and is
         // precomputed in the original frame, so it's safe to re-use that
         // value (it is not included in snapshots or resume points).
-        JSObject *prevScopeChain = &cx->fp()->scopeChain();
+        HandleObject prevScopeChain = cx->fp()->scopeChain();
         Value thisv = cx->fp()->thisValue();
         fp = cx->stack.pushBailoutFrame(cx, in.script(), *prevScopeChain, thisv, br->frameGuard());
     }

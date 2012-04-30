@@ -135,10 +135,17 @@ random-if(!cocoaWidget) == 577380.html 577380-ref.html
 HTTP(..) == arabic-shaping-1.html arabic-shaping-1-ref.html
 # check ligature in Arial Bold on Windows, for bug 644184; may fail on other platforms depending on fonts
 random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.html
+# Fallback (presentation-forms) shaping with a font that lacks GSUB/GPOS
+HTTP(..) == arabic-fallback-1.html arabic-fallback-1-ref.html
+HTTP(..) == arabic-fallback-2.html arabic-fallback-2-ref.html
+HTTP(..) == arabic-fallback-3.html arabic-fallback-3-ref.html
+fails HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notref.html
 
 == 726392-1.html 726392-1-ref.html
 == 726392-2.html 726392-2-ref.html
 == 726392-3.html 726392-3-ref.html
+== 745555-1.html 745555-1-ref.html
+== 745555-2.html 745555-2-ref.html
 
 # tests to compare graphite to opentype (will trivially pass when graphite not enabled)
 HTTP(..) == graphite-05-ot-only.html graphite-05-ref.html

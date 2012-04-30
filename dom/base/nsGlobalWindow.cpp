@@ -1354,6 +1354,18 @@ nsGlobalWindow::FreeInnerObjects()
 
   NotifyWindowIDDestroyed("inner-window-destroyed");
 
+  JSObject* obj = FastGetGlobalJSObject();
+  if (obj) {
+    if (!cx) {
+      nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+    }
+
+    JSAutoRequest ar(cx);
+
+    js::NukeChromeCrossCompartmentWrappersForGlobal(cx, obj,
+                                                    js::DontNukeForGlobalObject);
+  }
+
   if (mDummyJavaPluginOwner) {
     // Tear down the dummy java plugin.
 
@@ -1633,8 +1645,7 @@ nsGlobalWindow::EnsureScriptEnvironment()
                "mJSObject is null, but we have an inner window?");
 
   nsCOMPtr<nsIScriptRuntime> scriptRuntime;
-  nsresult rv = NS_GetScriptRuntimeByID(nsIProgrammingLanguage::JAVASCRIPT,
-                                        getter_AddRefs(scriptRuntime));
+  nsresult rv = NS_GetJSRuntime(getter_AddRefs(scriptRuntime));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIScriptContext> context = scriptRuntime->CreateContext();
@@ -2451,6 +2462,17 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
     if (currentInner) {
+      JSObject* obj = currentInner->FastGetGlobalJSObject();
+      if (obj) {
+        JSContext* cx;
+        nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+
+        JSAutoRequest ar(cx);
+
+        js::NukeChromeCrossCompartmentWrappersForGlobal(cx, obj,
+                                                        js::NukeForGlobalObject);
+      }
+
       NS_ASSERTION(mDoc, "Must have doc!");
       
       // Remember the document's principal.
@@ -5979,23 +6001,7 @@ JSObject* nsGlobalWindow::CallerGlobal()
     return nsnull;
   }
 
-  JSObject *scope = nsnull;
-  JSStackFrame *fp = nsnull;
-  JS_FrameIterator(cx, &fp);
-  if (fp) {
-    while (!JS_IsScriptFrame(cx, fp)) {
-      if (!JS_FrameIterator(cx, &fp))
-        break;
-    }
-
-    if (fp)
-      scope = JS_GetGlobalForFrame(fp);
-  }
-
-  if (!scope)
-    scope = JS_GetGlobalForScopeChain(cx);
-
-  return scope;
+  return JS_GetScriptedGlobal(cx);
 }
 
 nsGlobalWindow*

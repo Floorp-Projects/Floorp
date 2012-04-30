@@ -42,6 +42,7 @@
 #include "chrome/common/ipc_message_utils.h"
 
 #include "mozilla/Util.h"
+#include "mozilla/gfx/2D.h"
 
 #include "prtypes.h"
 #include "nsID.h"
@@ -52,6 +53,7 @@
 #include "gfxColor.h"
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
+#include "gfxPoint.h"
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "gfxASurface.h"
@@ -458,6 +460,27 @@ struct ParamTraits<gfxMatrix>
 };
 
 template<>
+struct ParamTraits<gfxSize>
+{
+  typedef gfxSize paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.width);
+    WriteParam(aMsg, aParam.height);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (ReadParam(aMsg, aIter, &aResult->width) &&
+        ReadParam(aMsg, aIter, &aResult->height))
+      return true;
+
+    return false;
+  }
+};
+
+template<>
 struct ParamTraits<gfx3DMatrix>
 {
   typedef gfx3DMatrix paramType;
@@ -750,6 +773,25 @@ struct ParamTraits<nsIntSize>
             ReadParam(msg, iter, &result->height));
   }
 };
+
+template<>
+struct ParamTraits<mozilla::gfx::Size>
+{
+  typedef mozilla::gfx::Size paramType;
+  
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.width);
+    WriteParam(msg, param.height); 
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->width) &&
+            ReadParam(msg, iter, &result->height));
+  }
+};
+
 
 template<>
 struct ParamTraits<nsRect>

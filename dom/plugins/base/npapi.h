@@ -314,8 +314,7 @@ typedef enum {
   NPDrawingModelSyncX = 6,
   NPDrawingModelAsyncBitmapSurface = 7
 #if defined(XP_WIN)
-  , NPDrawingModelAsyncWindowsDXGISurface = 8,
-  NPDrawingModelAsyncWindowsDX9ExSurface = 9
+  , NPDrawingModelAsyncWindowsDXGISurface = 8
 #endif
 } NPDrawingModel;
 
@@ -415,7 +414,7 @@ typedef enum {
   , NPPVpluginCoreAnimationLayer = 1003
 #endif
 
-#if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
+#if defined(MOZ_PLATFORM_MAEMO) && ((MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6))
   , NPPVpluginWindowlessLocalBool = 2002
 #endif
 } NPPVariable;
@@ -462,11 +461,9 @@ typedef enum {
   , NPNVsupportsCoreAnimationBool = 2003
   , NPNVsupportsInvalidatingCoreAnimationBool = 2004
 #endif
-  , NPNVsupportsSyncDrawingBool = 2005
-  , NPNVsupportsAsyncBitmapSurfaceBool = 2006
+  , NPNVsupportsAsyncBitmapSurfaceBool = 2005
 #if defined(XP_WIN)
-  , NPNVsupportsAsyncWindowsDXGISurfaceBool = 2007
-  , NPNVsupportsAsyncWindowsDX9ExSurfaceBool = 2008
+  , NPNVsupportsAsyncWindowsDXGISurfaceBool = 2006
 #endif
 
 #if defined(XP_MACOSX)
@@ -479,7 +476,7 @@ typedef enum {
   , NPNVsupportsCompositingCoreAnimationPluginsBool = 74656 /* TRUE if the browser supports
                                                                CA model compositing */
 #endif
-#if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
+#if defined(MOZ_PLATFORM_MAEMO) && ((MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6))
   , NPNVSupportsWindowlessLocal = 2002
 #endif
 } NPNVariable;

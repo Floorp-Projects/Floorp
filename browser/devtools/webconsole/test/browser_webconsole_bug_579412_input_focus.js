@@ -40,14 +40,9 @@
 
 // Tests that the input field is focused when the console is opened.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-console.html";
-
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
-});
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
 function test() {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
   browser.addEventListener("DOMContentLoaded", testInputFocus, false);
 }

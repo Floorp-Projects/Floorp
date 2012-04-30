@@ -79,6 +79,9 @@ MOCHI_TESTS = \
     test_bug_627616.html \
     test_master_password.html \
     test_master_password_cleanup.html \
+    test_maxforms_1.html \
+    test_maxforms_2.html \
+    test_maxforms_3.html \
     test_prompt_async.html \
     test_xhr.html \
     test_xml_load.html \

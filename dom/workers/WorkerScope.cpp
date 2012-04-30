@@ -62,6 +62,7 @@
 #include "File.h"
 #include "FileReaderSync.h"
 #include "Location.h"
+#include "ImageData.h"
 #include "Navigator.h"
 #include "Principal.h"
 #include "ScriptLoader.h"
@@ -957,7 +958,8 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
   //          -> EventTarget
   //          -> Object
 
-  JSObject* eventTargetProto = EventTarget_workers::GetProtoObject(aCx, global);
+  JSObject* eventTargetProto =
+    EventTarget_workers::GetProtoObject(aCx, global, global);
   if (!eventTargetProto) {
     return NULL;
   }
@@ -996,13 +998,15 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
       !filereadersync::InitClass(aCx, global) ||
       !exceptions::InitClasses(aCx, global) ||
       !location::InitClass(aCx, global) ||
+      !imagedata::InitClass(aCx, global) ||
       !navigator::InitClass(aCx, global)) {
     return NULL;
   }
 
   // Init other paris-bindings.
-  if (!XMLHttpRequest_workers::CreateInterfaceObjects(aCx, global) ||
-      !XMLHttpRequestUpload_workers::CreateInterfaceObjects(aCx, global)) {
+  if (!XMLHttpRequest_workers::CreateInterfaceObjects(aCx, global, global) ||
+      !XMLHttpRequestUpload_workers::CreateInterfaceObjects(aCx, global,
+                                                            global)) {
     return NULL;
   }
 

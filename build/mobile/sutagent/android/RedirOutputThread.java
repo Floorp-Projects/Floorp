@@ -137,6 +137,11 @@ public class RedirOutputThread extends Thread
                 {
                 e.printStackTrace();
                 }
+            catch (java.lang.IllegalArgumentException e)
+                {
+                // Bug 743766: InputStream.available() unexpectedly throws this sometimes
+                e.printStackTrace();
+                }
             }
 
         pProc.destroy();

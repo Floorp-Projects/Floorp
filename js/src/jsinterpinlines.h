@@ -143,7 +143,7 @@ ValuePropertyBearer(JSContext *cx, StackFrame *fp, const Value &v, int spindex)
     if (v.isObject())
         return &v.toObject();
 
-    GlobalObject &global = fp->scopeChain().global();
+    GlobalObject &global = fp->global();
 
     if (v.isString())
         return global.getOrCreateStringPrototype(cx);
@@ -232,7 +232,7 @@ GetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, Value *vp
                 }
             }
 
-            if (js_IsTypedArray(obj)) {
+            if (obj->isTypedArray()) {
                 JSObject *tarray = TypedArray::getTypedArray(obj);
                 *vp = Int32Value(TypedArray::getLength(tarray));
                 return true;
@@ -288,7 +288,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
         return false;
 
     JS_ASSERT_IF(*pc == JSOP_SETNAME || *pc == JSOP_SETGNAME, lval.isObject());
-    JS_ASSERT_IF(*pc == JSOP_SETGNAME, obj == &cx->fp()->scopeChain().global());
+    JS_ASSERT_IF(*pc == JSOP_SETGNAME, obj == &cx->fp()->global());
 
     PropertyCacheEntry *entry;
     JSObject *obj2;

@@ -22,14 +22,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558973
 var child = document.createTextNode("a");
 
 var text = document.createTextNode("a");
-var exception = 0;
+var exception = "";
+var exceptionCode = 0;
 try {
     text.appendChild(child);
 }
 catch (e) {
-    exception = e.code;
+    exception = e.name;
+    exceptionCode = e.code;
 }
-is(exception, DOMException.HIERARCHY_REQUEST_ERR,
+is(exception, "HierarchyRequestError",
+   "Expected HierarchyRequestError");
+is(exceptionCode, DOMException.HIERARCHY_REQUEST_ERR,
    "Expected DOMException.HIERARCHY_REQUEST_ERR");
 
 </script>

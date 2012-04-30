@@ -1,6 +1,0 @@
-url-prefix ../../jsreftest.html?test=js1_2/statements/
-script break.js
-script continue.js
-script do_while.js
-script switch.js
-script switch2.js

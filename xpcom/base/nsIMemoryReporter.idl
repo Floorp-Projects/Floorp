@@ -209,8 +209,8 @@ interface nsIMemoryReporter : nsISupports
   readonly attribute PRInt32 units;
 
   /*
-   * The numeric value reported by this memory reporter.  -1 means "unknown",
-   * ie. something went wrong when getting the amount.
+   * The numeric value reported by this memory reporter.  Accesses can fail if
+   * something goes wrong when getting the amount.
    */
   readonly attribute PRInt64 amount;
 
@@ -317,7 +317,7 @@ interface nsIMemoryReporterManager : nsISupports
    * Get the resident size (aka. RSS, physical memory used).  This reporter
    * is special-cased because it's interesting, is available on all
    * platforms, and returns a meaningful result on all common platforms.
-   * -1 means unknown.
+   * Accesses can fail.
    */
   readonly attribute PRInt64 resident;
 
@@ -327,7 +327,7 @@ interface nsIMemoryReporterManager : nsISupports
    * calloc, operator new).  (Nb: it covers all heap allocations, but will
    * miss any OS-level ones not covered by memory reporters.)  This reporter
    * is special-cased because it's interesting, and is moderately difficult
-   * to compute in JS.  -1 means unknown.
+   * to compute in JS.  Accesses can fail.
    */
   readonly attribute PRInt64 explicit;
 
@@ -346,12 +346,29 @@ interface nsIMemoryReporterManager : nsISupports
     class MemoryReporter_##_classname MOZ_FINAL : public nsIMemoryReporter {                  \
     public:                                                                                   \
       NS_DECL_ISUPPORTS                                                                       \
-      NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; } \
-      NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.Assign(_path); return NS_OK; } \
+      NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; }        \
+      NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.Assign(_path); return NS_OK; }  \
       NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; }                          \
       NS_IMETHOD GetUnits(int *units) { *units = _units; return NS_OK; }                      \
-      NS_IMETHOD GetAmount(PRInt64 *amount) { *amount = _amountFunction(); return NS_OK; }     \
-      NS_IMETHOD GetDescription(nsACString &desc) { desc.Assign(_desc); return NS_OK; } \
+      NS_IMETHOD GetAmount(PRInt64 *amount) { *amount = _amountFunction(); return NS_OK; }    \
+      NS_IMETHOD GetDescription(nsACString &desc) { desc.Assign(_desc); return NS_OK; }       \
+    };                                                                                        \
+    NS_IMPL##_ts##ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
+
+/*
+ * The only difference between this and NS_MEMORY_REPORTER_IMPLEMENT_HELPER
+ * is that the function used to implement GetAmount is fallible.
+ */
+#define NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT_HELPER(_classname, _path, _kind, _units, _amountFunction, _desc, _ts) \
+    class MemoryReporter_##_classname MOZ_FINAL : public nsIMemoryReporter {                  \
+    public:                                                                                   \
+      NS_DECL_ISUPPORTS                                                                       \
+      NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; }        \
+      NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.Assign(_path); return NS_OK; }  \
+      NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; }                          \
+      NS_IMETHOD GetUnits(int *units) { *units = _units; return NS_OK; }                      \
+      NS_IMETHOD GetAmount(PRInt64 *amount) { return _amountFunction(amount); }               \
+      NS_IMETHOD GetDescription(nsACString &desc) { desc.Assign(_desc); return NS_OK; }       \
     };                                                                                        \
     NS_IMPL##_ts##ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
 
@@ -359,6 +376,10 @@ interface nsIMemoryReporterManager : nsISupports
         NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _)
 #define NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
         NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _THREADSAFE_)
+#define NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
+        NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _)
+#define NS_FALLIBLE_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(_c, _p, _k, _u, _a, _d) \
+        NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT_HELPER(_c, _p, _k, _u, _a, _d, _THREADSAFE_)
 
 #define NS_MEMORY_REPORTER_NAME(_classname)  MemoryReporter_##_classname
 

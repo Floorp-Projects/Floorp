@@ -162,7 +162,6 @@ protected:
 
         nsresult GetTopNode(nsRefPtr<nsXULPrototypeNode>& aNode);
         nsresult GetTopChildren(nsPrototypeArray** aChildren);
-        nsresult GetTopNodeScriptType(PRUint32 *aScriptType);
 
         void Clear();
     };

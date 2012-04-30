@@ -142,7 +142,7 @@ public class Tabs implements GeckoEventListener {
                     notifyListeners(tab, TabEvents.SELECTED);
 
                     if (oldTab != null)
-                        GeckoApp.mAppContext.hidePlugins(oldTab, true);
+                        GeckoApp.mAppContext.hidePlugins(oldTab);
                 }
             }
         });
@@ -204,7 +204,7 @@ public class Tabs implements GeckoEventListener {
                 notifyListeners(tab, TabEvents.CLOSED);
                 GeckoApp.mBrowserToolbar.updateTabCountAndAnimate(Tabs.getInstance().getCount());
                 GeckoApp.mDoorHangerPopup.updatePopup();
-                GeckoApp.mAppContext.hidePlugins(tab, true);
+                GeckoApp.mAppContext.hidePlugins(tab);
                 tab.onDestroy();
             }
         });

@@ -1881,7 +1881,7 @@ printf(" * TakeFocus - moving into new cell\n");
 
         // XXXX We need to REALLY get the current key shift state
         //  (we'd need to add event listener -- let's not bother for now)
-        event.isShift = false; //aContinueSelection;
+        event.modifiers &= ~widget::MODIFIER_SHIFT; //aContinueSelection;
         if (parent)
         {
           mCellParent = cellparent;
@@ -2427,7 +2427,7 @@ printf("HandleTableSelection: Dragged into a new cell\n");
         // Hold down shift, then start selecting in one direction
         // If next cell dragged into is in same row, select entire row,
         //   if next cell is in same column, select entire column
-        if (mStartSelectedCell && aMouseEvent->isShift)
+        if (mStartSelectedCell && aMouseEvent->IsShift())
         {
           result = GetCellIndexes(mStartSelectedCell, startRowIndex, startColIndex);
           if (NS_FAILED(result)) return result;
@@ -2564,7 +2564,7 @@ printf("HandleTableSelection: Mouse UP event. mDragSelectingCells=%d, mStartSele
       if (NS_FAILED(result)) 
         return result;
 
-      if (rangeCount > 0 && aMouseEvent->isShift && 
+      if (rangeCount > 0 && aMouseEvent->IsShift() && 
           mAppendStartSelectedCell && mAppendStartSelectedCell != childContent)
       {
         // Shift key is down: append a block selection
@@ -2583,9 +2583,9 @@ printf("HandleTableSelection: Mouse UP event. mDragSelectingCells=%d, mStartSele
       //  else stop table selection mode
       bool doMouseUpAction = false;
 #ifdef XP_MACOSX
-      doMouseUpAction = aMouseEvent->isMeta;
+      doMouseUpAction = aMouseEvent->IsMeta();
 #else
-      doMouseUpAction = aMouseEvent->isControl;
+      doMouseUpAction = aMouseEvent->IsControl();
 #endif
       if (!doMouseUpAction)
       {

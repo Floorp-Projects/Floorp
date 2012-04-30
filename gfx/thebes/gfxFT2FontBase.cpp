@@ -42,7 +42,7 @@
 
 #include "gfxFT2FontBase.h"
 #include "gfxFT2Utils.h"
-#include "harfbuzz/hb-blob.h"
+#include "harfbuzz/hb.h"
 
 gfxFT2FontBase::gfxFT2FontBase(cairo_scaled_font_t *aScaledFont,
                                gfxFontEntry *aFontEntry,

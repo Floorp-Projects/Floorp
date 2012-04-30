@@ -52,6 +52,7 @@
 
 #include "gfxSharedImageSurface.h"
 
+#include "TiledLayerBuffer.h"
 #include "ImageLayers.h"
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
@@ -314,6 +315,20 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       break;
     }
 
+    case Edit::TOpPaintTiledLayerBuffer: {
+      MOZ_LAYERS_LOG(("[ParentSide] Paint TiledLayerBuffer"));
+      const OpPaintTiledLayerBuffer& op = edit.get_OpPaintTiledLayerBuffer();
+      ShadowLayerParent* shadow = AsShadowLayer(op);
+
+      ShadowThebesLayer* shadowLayer = static_cast<ShadowThebesLayer*>(shadow->AsLayer());
+      TiledLayerComposer* tileComposer = shadowLayer->AsTiledLayerComposer();
+
+      NS_ASSERTION(tileComposer, "shadowLayer is not a tile composer");
+
+      BasicTiledLayerBuffer* p = (BasicTiledLayerBuffer*)op.tiledLayerBuffer();
+      tileComposer->PaintedTiledLayerBuffer(p);
+      break;
+    }
     case Edit::TOpPaintThebesBuffer: {
       MOZ_LAYERS_LOG(("[ParentSide] Paint ThebesLayer"));
 

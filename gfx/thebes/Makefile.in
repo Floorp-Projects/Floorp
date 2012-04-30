@@ -46,7 +46,7 @@ LIBXUL_LIBRARY	= 1
 EXPORT_LIBRARY	= 1
 
 EXPORTS	= \
-        gfx2DGlue.h \
+	gfx2DGlue.h \
 	gfx3DMatrix.h \
 	gfxASurface.h \
 	gfxAlphaRecovery.h \
@@ -58,6 +58,7 @@ EXPORTS	= \
 	gfxFailure.h \
 	gfxFont.h \
 	gfxFontConstants.h \
+	gfxFontFeatures.h \
 	gfxFontUtils.h \
 	gfxFontTest.h \
 	gfxImageSurface.h \
@@ -80,6 +81,7 @@ EXPORTS	= \
 	nsCoreAnimationSupport.h \
 	nsIOSurface.h \
 	gfxSharedImageSurface.h \
+	gfxReusableSurfaceWrapper.h \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
@@ -202,6 +204,7 @@ CPPSRCS	= \
 	gfxScriptItemizer.cpp \
 	gfxHarfBuzzShaper.cpp \
 	gfxSharedImageSurface.cpp \
+	gfxReusableSurfaceWrapper.cpp \
 	$(NULL)
 
 ifdef MOZ_GRAPHITE

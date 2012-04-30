@@ -301,7 +301,7 @@ _try_writable (hb_blob_t *blob)
     return TRUE;
 
 
-  DEBUG_MSG_FUNC (BLOB, blob, "currect data is -> %p\n", blob->data);
+  DEBUG_MSG_FUNC (BLOB, blob, "current data is -> %p\n", blob->data);
 
   char *new_data;
 

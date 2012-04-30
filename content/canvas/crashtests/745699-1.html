@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@font-face {
+  font-family: "z";
+  src: url(invalid);
+}
+</style>
+
+<script>
+function boom()
+{
+  var ctx = document.querySelector("canvas").getContext('2d');
+  ctx.font = "10px serif";
+  document.querySelector("style").appendChild(document.createTextNode(" "));
+  ctx.measureText("123");
+}
+</script>
+</head>
+
+<body onload="boom();">
+<canvas width="100" height="100"></canvas>
+</body>
+</html>

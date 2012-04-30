@@ -112,12 +112,12 @@ static PRInt64 HunspellGetCurrentAllocatedSize() {
 }
 
 NS_MEMORY_REPORTER_IMPLEMENT(Hunspell,
-    "explicit/spell-check",
-    KIND_HEAP,
-    UNITS_BYTES,
-    HunspellGetCurrentAllocatedSize,
-    "Memory used by the Hunspell spell checking engine.  This number accounts "
-    "for the memory in use by Hunspell's internal data structures."
+  "explicit/spell-check",
+  KIND_HEAP,
+  UNITS_BYTES,
+  HunspellGetCurrentAllocatedSize,
+  "Memory used by the Hunspell spell checking engine.  This number accounts "
+  "for the memory in use by Hunspell's internal data structures."
 )
 
 nsresult

@@ -321,15 +321,7 @@ nsHttpHandler::Init()
     rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
 
-#ifdef ANDROID
     mProductSub.AssignLiteral(MOZILLA_UAVERSION);
-#else
-    mProductSub.AssignLiteral(MOZ_UA_BUILDID);
-#endif
-    if (mProductSub.IsEmpty() && appInfo)
-        appInfo->GetPlatformBuildID(mProductSub);
-    if (mProductSub.Length() > 8)
-        mProductSub.SetLength(8);
 
     // Startup the http category
     // Bring alive the objects in the http-protocol-startup category
@@ -1417,12 +1409,13 @@ nsHttpHandler::SetAcceptEncodings(const char *aAcceptEncodings)
 // nsHttpHandler::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsHttpHandler,
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsHttpHandler,
                               nsIHttpProtocolHandler,
                               nsIProxiedProtocolHandler,
                               nsIProtocolHandler,
                               nsIObserver,
-                              nsISupportsWeakReference)
+                              nsISupportsWeakReference,
+                              nsISpeculativeConnect)
 
 //-----------------------------------------------------------------------------
 // nsHttpHandler::nsIProtocolHandler
@@ -1669,15 +1662,75 @@ nsHttpHandler::Observe(nsISupports *subject,
     return NS_OK;
 }
 
+// nsISpeculativeConnect
+
+NS_IMETHODIMP
+nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
+                                  nsIInterfaceRequestor *aCallbacks,
+                                  nsIEventTarget *aTarget)
+{
+    nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
+    bool isStsHost = false;
+    if (!stss)
+        return NS_OK;
+    
+    nsCOMPtr<nsIURI> clone;
+    if (NS_SUCCEEDED(stss->IsStsURI(aURI, &isStsHost)) && isStsHost) {
+        if (NS_SUCCEEDED(aURI->Clone(getter_AddRefs(clone)))) {
+            clone->SetScheme(NS_LITERAL_CSTRING("https"));
+            aURI = clone.get();
+        }
+    }
+
+    nsCAutoString scheme;
+    nsresult rv = aURI->GetScheme(scheme);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // If this is HTTPS, make sure PSM is initialized as the channel
+    // creation path may have been bypassed
+    if (scheme.EqualsLiteral("https")) {
+        if (!IsNeckoChild()) {
+            // make sure PSM gets initialized on the main thread.
+            net_EnsurePSMInit();
+        }
+    }
+    // Ensure that this is HTTP or HTTPS, otherwise we don't do preconnect here
+    else if (!scheme.EqualsLiteral("http"))
+        return NS_ERROR_UNEXPECTED;
+
+    // Construct connection info object
+    bool usingSSL = false;
+    rv = aURI->SchemeIs("https", &usingSSL);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCAutoString host;
+    rv = aURI->GetAsciiHost(host);
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRInt32 port = -1;
+    rv = aURI->GetPort(&port);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsHttpConnectionInfo *ci =
+        new nsHttpConnectionInfo(host, port, nsnull, usingSSL);
+
+    return SpeculativeConnect(ci, aCallbacks, aTarget);
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpsHandler implementation
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsHttpsHandler,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsHttpsHandler,
                               nsIHttpProtocolHandler,
                               nsIProxiedProtocolHandler,
                               nsIProtocolHandler,
-                              nsISupportsWeakReference)
+                              nsISupportsWeakReference,
+                              nsISpeculativeConnect)
 
 nsresult
 nsHttpsHandler::Init()

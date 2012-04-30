@@ -8,9 +8,10 @@
 #define mozilla_dom_bindings_Utils_h__
 
 #include "mozilla/dom/bindings/DOMJSClass.h"
+#include "mozilla/dom/workers/Workers.h"
 
 #include "jsapi.h"
-#include "jstypedarray.h"
+#include "jsfriendapi.h"
 
 #include "XPCQuickStubs.h"
 #include "XPCWrapper.h"
@@ -25,12 +26,14 @@ template<bool mainThread>
 inline bool
 Throw(JSContext* cx, nsresult rv)
 {
+  using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
+
   // XXX Introduce exception machinery.
   if (mainThread) {
     XPCThrower::Throw(rv, cx);
   } else {
     if (!JS_IsExceptionPending(cx)) {
-      JS_ReportError(cx, "Exception thrown (nsresult = %x).", rv);
+      ThrowDOMExceptionForNSResult(cx, rv);
     }
   }
   return false;
@@ -169,7 +172,7 @@ IsPlatformObject(JSContext* cx, JSObject* obj)
     clasp = js::GetObjectJSClass(obj);
   }
   return IS_WRAPPER_CLASS(js::Valueify(clasp)) || IsDOMClass(clasp) ||
-    JS_IsArrayBufferObject(obj);
+    JS_IsArrayBufferObject(obj, cx);
 }
 
 template <class T>
@@ -216,7 +219,11 @@ struct ConstantSpec
  * Create a DOM interface object (if constructorClass is non-null) and/or a
  * DOM interface prototype object (if protoClass is non-null).
  *
- * parentProto is the prototype to use for the interface prototype object.
+ * global is used as the parent of the interface object and the interface
+ *        prototype object
+ * receiver is the object on which we need to define the interface object as a
+ *          property
+ * protoProto is the prototype to use for the interface prototype object.
  * protoClass is the JSClass to use for the interface prototype object.
  *            This is null if we should not create an interface prototype
  *            object.
@@ -239,11 +246,11 @@ struct ConstantSpec
  * returns the interface object.
  */
 JSObject*
-CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* parentProto,
-                       JSClass* protoClass, JSClass* constructorClass,
-                       JSFunctionSpec* methods, JSPropertySpec* properties,
-                       ConstantSpec* constants, JSFunctionSpec* staticMethods,
-                       const char* name);
+CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* receiver,
+                       JSObject* protoProto, JSClass* protoClass,
+                       JSClass* constructorClass, JSFunctionSpec* methods,
+                       JSPropertySpec* properties, ConstantSpec* constants,
+                       JSFunctionSpec* staticMethods, const char* name);
 
 template <class T>
 inline bool
@@ -267,12 +274,12 @@ WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
     }
   }
 
-  // Now make sure that |obj| is wrapped for the compartment of |scope|
-  // correctly.  That means entering the compartment of |scope|.
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, scope)) {
-    return false;
-  }
+  // When called via XrayWrapper, we end up here while running in the
+  // chrome compartment.  But the obj we have would be created in
+  // whatever the content compartment is.  So at this point we need to
+  // make sure it's correctly wrapped for the compartment of |scope|.
+  // cx should already be in the compartment of |scope| here.
+  MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
   *vp = JS::ObjectValue(*obj);
   return JS_WrapValue(cx, vp);
 }

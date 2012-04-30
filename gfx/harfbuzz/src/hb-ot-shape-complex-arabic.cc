@@ -58,8 +58,6 @@ enum {
 
 static unsigned int get_joining_type (hb_codepoint_t u, hb_unicode_general_category_t gen_cat)
 {
-  /* TODO Macroize the magic bit operations */
-
   if (likely (hb_in_range<hb_codepoint_t> (u, JOINING_TABLE_FIRST, JOINING_TABLE_LAST))) {
     unsigned int j_type = joining_table[u - JOINING_TABLE_FIRST];
     if (likely (j_type != JOINING_TYPE_X))
@@ -82,7 +80,23 @@ static unsigned int get_joining_type (hb_codepoint_t u, hb_unicode_general_categ
 	 JOINING_TYPE_T : JOINING_TYPE_U;
 }
 
+static hb_codepoint_t get_arabic_shape (hb_codepoint_t u, unsigned int shape)
+{
+  if (likely (hb_in_range<hb_codepoint_t> (u, SHAPING_TABLE_FIRST, SHAPING_TABLE_LAST)) && shape < 4)
+    return shaping_table[u - SHAPING_TABLE_FIRST][shape];
+  return u;
+}
 
+static uint16_t get_ligature (hb_codepoint_t first, hb_codepoint_t second)
+{
+  if (unlikely (!second)) return 0;
+  for (unsigned i = 0; i < ARRAY_LENGTH (ligature_table); i++)
+    if (ligature_table[i].first == first)
+      for (unsigned j = 0; j < ARRAY_LENGTH (ligature_table[i].ligatures); j++)
+	if (ligature_table[i].ligatures[j].second == second)
+	  return ligature_table[i].ligatures[j].ligature;
+  return 0;
+}
 
 static const hb_tag_t arabic_syriac_features[] =
 {
@@ -183,14 +197,49 @@ _hb_ot_shape_complex_collect_features_arabic (hb_ot_map_builder_t *map, const hb
   map->add_bool_feature (HB_TAG('c','s','w','h'));
 }
 
-bool
-_hb_ot_shape_complex_prefer_decomposed_arabic (void)
+hb_ot_shape_normalization_mode_t
+_hb_ot_shape_complex_normalization_preference_arabic (void)
 {
-  return FALSE;
+  return HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS;
+}
+
+
+static void
+arabic_fallback_shape (hb_font_t *font, hb_buffer_t *buffer)
+{
+  unsigned int count = buffer->len;
+  hb_codepoint_t glyph;
+
+  /* Shape to presentation forms */
+  for (unsigned int i = 0; i < count; i++) {
+    hb_codepoint_t u = buffer->info[i].codepoint;
+    hb_codepoint_t shaped = get_arabic_shape (u, buffer->info[i].arabic_shaping_action());
+    if (shaped != u && hb_font_get_glyph (font, shaped, 0, &glyph))
+      buffer->info[i].codepoint = shaped;
+  }
+
+  /* Mandatory ligatures */
+  buffer->clear_output ();
+  for (buffer->idx = 0; buffer->idx + 1 < count;) {
+    uint16_t ligature = get_ligature (buffer->info[buffer->idx].codepoint,
+				      buffer->info[buffer->idx + 1].codepoint);
+    if (likely (!ligature) || !(hb_font_get_glyph (font, ligature, 0, &glyph))) {
+      buffer->next_glyph ();
+      continue;
+    }
+
+    buffer->replace_glyphs (2, 1, &ligature);
+
+    /* Technically speaking we can skip marks and stuff, like the GSUB path does.
+     * But who cares, we're in fallback! */
+  }
+  for (; buffer->idx < count;)
+      buffer->next_glyph ();
+  buffer->swap_buffers ();
 }
 
 void
-_hb_ot_shape_complex_setup_masks_arabic (hb_ot_map_t *map, hb_buffer_t *buffer)
+_hb_ot_shape_complex_setup_masks_arabic (hb_ot_map_t *map, hb_buffer_t *buffer, hb_font_t *font)
 {
   unsigned int count = buffer->len;
   unsigned int prev = 0, state = 0;
@@ -218,12 +267,27 @@ _hb_ot_shape_complex_setup_masks_arabic (hb_ot_map_t *map, hb_buffer_t *buffer)
   }
 
   hb_mask_t mask_array[TOTAL_NUM_FEATURES + 1] = {0};
+  hb_mask_t total_masks = 0;
   unsigned int num_masks = buffer->props.script == HB_SCRIPT_SYRIAC ? SYRIAC_NUM_FEATURES : COMMON_NUM_FEATURES;
-  for (unsigned int i = 0; i < num_masks; i++)
+  for (unsigned int i = 0; i < num_masks; i++) {
     mask_array[i] = map->get_1_mask (arabic_syriac_features[i]);
+    total_masks |= mask_array[i];
+  }
 
-  for (unsigned int i = 0; i < count; i++)
-    buffer->info[i].mask |= mask_array[buffer->info[i].arabic_shaping_action()];
+  if (total_masks) {
+    /* Has OpenType tables */
+    for (unsigned int i = 0; i < count; i++)
+      buffer->info[i].mask |= mask_array[buffer->info[i].arabic_shaping_action()];
+  } else if (buffer->props.script == HB_SCRIPT_ARABIC) {
+    /* Fallback Arabic shaping to Presentation Forms */
+    /* Pitfalls:
+     * - This path fires if user force-set init/medi/fina/isol off,
+     * - If font does not declare script 'arab', well, what to do?
+     *   Most probably it's safe to assume that init/medi/fina/isol
+     *   still mean Arabic shaping, although they do not have to.
+     */
+    arabic_fallback_shape (font, buffer);
+  }
 
   HB_BUFFER_DEALLOCATE_VAR (buffer, arabic_shaping_action);
 }

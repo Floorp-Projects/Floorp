@@ -542,9 +542,8 @@
             <hbox id="identity-box-inner" align="center">
               <hbox id="page-proxy-stack"
                     onclick="PageProxyClickHandler(event);">
-                <image id="page-proxy-favicon" validate="never"
-                       pageproxystate="invalid"
-                       onerror="this.removeAttribute('src');"/>
+                <image id="page-proxy-favicon"
+                       pageproxystate="invalid"/>
               </hbox>
               <hbox id="identity-icon-labels">
                 <label id="identity-icon-label" class="plain" flex="1"/>
@@ -855,6 +854,9 @@
                      label="&printButton.label;" command="cmd_print"
                      tooltiptext="&printButton.tooltip;"/>
 
+      <!-- This is a placeholder for the Downloads Indicator.  It is visible
+           only during the customization of the toolbar or in the palette, and
+           is replaced when customization is done. -->
       <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      observes="Tools:Downloads"
                      ondrop="DownloadsButtonDNDObserver.onDrop(event)"
@@ -1008,9 +1010,9 @@
                      command="Inspector:Inspect"/>
       <toolbarbutton id="inspector-treepanel-toolbutton"
                      class="devtools-toolbarbutton"
-                     label="&htmlPanel.label;"
-                     accesskey="&htmlPanel.accesskey;"
-                     tooltiptext="&htmlPanel.tooltiptext;"
+                     tabindex="0"
+                     aria-label="&markupButton.arialabel;"
+                     accesskey="&markupButton.accesskey;"
                      command="Inspector:HTMLPanel"/>
       <arrowscrollbox id="inspector-breadcrumbs"
                       flex="1" orient="horizontal"
@@ -1021,11 +1023,13 @@
                        hidden="true"
                        label="&inspect3DViewButton.label;"
                        accesskey="&inspect3DViewButton.accesskey;"
+                       tabindex="0"
                        command="Inspector:Tilt"/>
         <toolbarbutton id="inspector-style-button"
                        class="devtools-toolbarbutton"
                        label="&inspectStyleButton.label;"
                        accesskey="&inspectStyleButton.accesskey;"
+                       tabindex="0"
                        command="Inspector:Sidebar"/>
         <!-- registered tools go here -->
       </hbox>
@@ -1035,6 +1039,60 @@
                      tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
     </toolbar>
+
+    <panel id="gcli-tooltip"
+           type="arrow"
+           noautofocus="true"
+           noautohide="true"
+           class="gcli-panel">
+      <iframe id="gcli-tooltip-frame"
+              src="chrome://browser/content/devtools/gcliblank.xhtml"
+              flex="1"/>
+    </panel>
+    <panel id="gcli-output"
+           type="arrow"
+           noautofocus="true"
+           noautohide="true"
+           class="gcli-panel">
+      <iframe id="gcli-output-frame"
+              src="chrome://browser/content/devtools/gcliblank.xhtml"
+              flex="1"/>
+    </panel>
+
+    <toolbar id="developer-toolbar"
+             class="devtools-toolbar"
+             hidden="true">
+#ifdef XP_MACOSX
+          <toolbarbutton id="developer-toolbar-closebutton"
+                         oncommand="DeveloperToolbar.hide();"
+                         tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
+#endif
+          <stack class="gclitoolbar-stack-node" flex="1">
+            <description class="gclitoolbar-prompt">&#187;</description>
+            <description class="gclitoolbar-complete-node"/>
+            <textbox class="gclitoolbar-input-node" rows="1"/>
+          </stack>
+          <toolbarbutton id="developer-toolbar-webconsole"
+                         label="&webConsoleButton.label;"
+                         class="devtools-toolbarbutton"
+                         command="Tools:WebConsole"/>
+          <toolbarbutton id="developer-toolbar-inspector"
+                         label="&inspectorButton.label;"
+                         class="devtools-toolbarbutton"
+                         hidden="true"
+                         command="Tools:Inspect"/>
+          <toolbarbutton id="developer-toolbar-debugger"
+                         label="&scriptsButton.label;"
+                         class="devtools-toolbarbutton"
+                         hidden="true"
+                         command="Tools:Debugger"/>
+#ifndef XP_MACOSX
+          <toolbarbutton id="developer-toolbar-closebutton"
+                         oncommand="DeveloperToolbar.hide();"
+                         tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
+#endif
+   </toolbar>
+
     <toolbar id="addon-bar"
              toolbarname="&addonBarCmd.label;" accesskey="&addonBarCmd.accesskey;"
              collapsed="true"

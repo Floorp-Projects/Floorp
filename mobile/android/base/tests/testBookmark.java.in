@@ -27,7 +27,7 @@ public class testBookmark extends BaseTest  {
         "about:firefox",
         "about:home",
         "http://support.mozilla.org/en-US/mobile",
-        "https://addons.mozilla.org/en-US/mobile/"
+        "https://addons.mozilla.org/en-US/android/"
     };
 
     public void testBookmark() {

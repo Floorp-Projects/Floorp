@@ -1724,9 +1724,7 @@ void
 CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *linenop,
                                 JSPrincipals **origin)
 {
-    FrameRegsIter iter(cx);
-    while (!iter.done() && !iter.fp()->isScriptFrame())
-        ++iter;
+    ScriptFrameIter iter(cx);
 
     if (iter.done()) {
         *file = NULL;
@@ -1735,9 +1733,9 @@ CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *line
         return;
     }
 
-    JSScript *script = iter.fp()->script();
+    JSScript *script = iter.script();
     *file = script->filename;
-    *linenop = PCToLineNumber(iter.fp()->script(), iter.pc());
+    *linenop = PCToLineNumber(iter.script(), iter.pc());
     *origin = script->originPrincipals;
 }
 
@@ -2061,7 +2059,16 @@ JSScript::applySpeculationFailed(JSContext *cx)
 {
     JS_ASSERT(analyzedArgsUsage());
     JS_ASSERT(argumentsHasLocalBinding());
-    JS_ASSERT(!needsArgsObj());
+
+    /*
+     * It is possible that the apply speculation has already failed, everything
+     * has been fixed up, but there was an outstanding magic value on the
+     * stack that has just now flowed into an apply. In this case, there is
+     * nothing to do; GuardFunApplySpeculation will patch in the real argsobj.
+     */
+    if (needsArgsObj())
+        return true;
+
     needsArgsObj_ = true;
 
     const unsigned slot = argumentsLocalSlot();
@@ -2092,7 +2099,10 @@ JSScript::applySpeculationFailed(JSContext *cx)
                     needsArgsObj_ = false;
                     return false;
                 }
-                fp->localSlot(slot) = ObjectValue(*obj);
+
+                /* Note: 'arguments' may have already been overwritten. */
+                if (fp->localSlot(slot).isMagic(JS_OPTIMIZED_ARGUMENTS))
+                    fp->localSlot(slot) = ObjectValue(*obj);
             }
         }
     }

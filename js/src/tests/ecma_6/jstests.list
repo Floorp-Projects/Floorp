@@ -1,2 +1,0 @@
-include Map/jstests.list
-include Set/jstests.list

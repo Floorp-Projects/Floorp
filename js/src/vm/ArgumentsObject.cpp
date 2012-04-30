@@ -77,7 +77,7 @@ js_PutArgsObject(StackFrame *fp)
     ArgumentsObject &argsobj = fp->argsObj();
     if (argsobj.isNormalArguments()) {
         JS_ASSERT(argsobj.maybeStackFrame() == fp);
-        JSCompartment *comp = fp->scopeChain().compartment();
+        JSCompartment *comp = fp->compartment();
         fp->forEachCanonicalActualArg(PutArg(comp, argsobj));
         argsobj.setStackFrame(NULL);
     } else {
@@ -349,7 +349,7 @@ NormalArgumentsObject::optimizedGetElem(JSContext *cx, StackFrame *fp, const Val
         return true;
     }
 
-    JSObject *proto = fp->scopeChain().global().getOrCreateObjectPrototype(cx);
+    JSObject *proto = fp->global().getOrCreateObjectPrototype(cx);
     if (!proto)
         return false;
 

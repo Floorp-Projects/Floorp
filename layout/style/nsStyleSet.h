@@ -405,6 +405,13 @@ class nsStyleSet
                          // lexicographic tree of matched rules that style
                          // contexts use to look up properties.
 
+  PRUint16 mBatching;
+
+  unsigned mInShutdown : 1;
+  unsigned mAuthorStyleDisabled: 1;
+  unsigned mInReconstruct : 1;
+  unsigned mDirty : 8;  // one dirty bit is used per sheet type
+
   PRUint32 mUnusedRuleNodeCount; // used to batch rule node GC
   nsTArray<nsStyleContext*> mRoots; // style contexts with no parent
 
@@ -416,18 +423,10 @@ class nsStyleSet
   // determining when context-sensitive values are in use.
   nsRefPtr<nsInitialStyleRule> mInitialStyleRule;
 
-  PRUint16 mBatching;
-
   // Old rule trees, which should only be non-empty between
   // BeginReconstruct and EndReconstruct, but in case of bugs that cause
   // style contexts to exist too long, may last longer.
   nsTArray<nsRuleNode*> mOldRuleTrees;
-
-  unsigned mInShutdown : 1;
-  unsigned mAuthorStyleDisabled: 1;
-  unsigned mInReconstruct : 1;
-  unsigned mDirty : 8;  // one dirty bit is used per sheet type
-
 };
 
 #ifdef _IMPL_NS_LAYOUT

@@ -821,7 +821,7 @@ protected:
   nsInputEvent(bool isTrusted, PRUint32 msg, nsIWidget *w,
                PRUint8 structType)
     : nsGUIEvent(isTrusted, msg, w, structType),
-      isShift(false), isControl(false), isAlt(false), isMeta(false)
+      modifiers(0)
   {
   }
 
@@ -832,18 +832,91 @@ protected:
 public:
   nsInputEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsGUIEvent(isTrusted, msg, w, NS_INPUT_EVENT),
-      isShift(false), isControl(false), isAlt(false), isMeta(false)
+      modifiers(0)
   {
   }
 
-  /// true indicates the shift key is down
-  bool            isShift;        
-  /// true indicates the control key is down
-  bool            isControl;      
-  /// true indicates the alt key is down
-  bool            isAlt;          
-  /// true indicates the meta key is down (or, on Mac, the Command key)
-  bool            isMeta;
+  // true indicates the shift key is down
+  bool IsShift() const
+  {
+    return ((modifiers & mozilla::widget::MODIFIER_SHIFT) != 0);
+  }
+  // true indicates the control key is down
+  bool IsControl() const
+  {
+    return ((modifiers & mozilla::widget::MODIFIER_CONTROL) != 0);
+  }
+  // true indicates the alt key is down
+  bool IsAlt() const
+  {
+    return ((modifiers & mozilla::widget::MODIFIER_ALT) != 0);
+  }
+  // true indicates the meta key is down (or, on Mac, the Command key)
+  bool IsMeta() const
+  {
+    return ((modifiers & mozilla::widget::MODIFIER_META) != 0);
+  }
+  // true indicates the win key is down (or, on Linux, the Super or Hyper key)
+  bool IsWin() const
+  {
+    return ((modifiers & mozilla::widget::MODIFIER_WIN) != 0);
+  }
+  // true indicates the alt graph key is down
+  // NOTE: on Mac, the option key press causes both IsAlt() and IsAltGrpah()
+  //       return true.
+  bool IsAltGraph() const
+  {
+    return ((modifiers & mozilla::widget::MODIFIER_ALTGRAPH) != 0);
+  }
+  // true indeicates the CapLock LED is turn on.
+  bool IsCapsLocked() const
+  {
+    return ((modifiers & mozilla::widget::MODIFIER_CAPSLOCK) != 0);
+  }
+  // true indeicates the NumLock LED is turn on.
+  bool IsNumLocked() const
+  {
+    return ((modifiers & mozilla::widget::MODIFIER_NUMLOCK) != 0);
+  }
+  // true indeicates the ScrollLock LED is turn on.
+  bool IsScrollLocked() const
+  {
+    return ((modifiers & mozilla::widget::MODIFIER_SCROLL) != 0);
+  }
+
+  // true indeicates the Fn key is down, but this is not supported by native
+  // key event on any platform.
+  bool IsFn() const
+  {
+    return ((modifiers & mozilla::widget::MODIFIER_FN) != 0);
+  }
+  // true indeicates the ScrollLock LED is turn on.
+  bool IsSymbolLocked() const
+  {
+    return ((modifiers & mozilla::widget::MODIFIER_SYMBOLLOCK) != 0);
+  }
+
+  void InitBasicModifiers(bool aCtrlKey,
+                          bool aAltKey,
+                          bool aShiftKey,
+                          bool aMetaKey)
+  {
+    modifiers = 0;
+    if (aCtrlKey) {
+      modifiers |= mozilla::widget::MODIFIER_CONTROL;
+    }
+    if (aAltKey) {
+      modifiers |= mozilla::widget::MODIFIER_ALT;
+    }
+    if (aShiftKey) {
+      modifiers |= mozilla::widget::MODIFIER_SHIFT;
+    }
+    if (aMetaKey) {
+      modifiers |= mozilla::widget::MODIFIER_META;
+    }
+  }
+
+  mozilla::widget::Modifiers modifiers;
 };
 
 /**
@@ -863,13 +936,14 @@ public:
   }
 
   nsMouseEvent_base(bool isTrusted, PRUint32 msg, nsIWidget *w, PRUint8 type)
-    : nsInputEvent(isTrusted, msg, w, type), button(0), pressure(0)
-    , inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE) {}
+    : nsInputEvent(isTrusted, msg, w, type), button(0), buttons(0),
+      pressure(0), inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE) {}
 
   /// The possible related target
   nsCOMPtr<nsISupports> relatedTarget;
 
   PRInt16               button;
+  PRInt16               buttons;
 
   // Finger or touch pressure of event
   // ranges between 0.0 and 1.0
@@ -887,6 +961,15 @@ private:
 
 public:
   enum buttonType  { eLeftButton = 0, eMiddleButton = 1, eRightButton = 2 };
+  enum buttonsFlag { eLeftButtonFlag   = 0x01,
+                     eRightButtonFlag  = 0x02,
+                     eMiddleButtonFlag = 0x04,
+                     // typicall, "back" button being left side of 5-button
+                     // mice, see "buttons" attribute document of DOM3 Events.
+                     e4thButtonFlag    = 0x08,
+                     // typicall, "forward" button being right side of 5-button
+                     // mice, see "buttons" attribute document of DOM3 Events.
+                     e5thButtonFlag    = 0x10 };
   enum reasonType  { eReal, eSynthesized };
   enum contextType { eNormal, eContextMenuKey };
   enum exitType    { eChild, eTopLevel };
@@ -1563,10 +1646,7 @@ public:
                    aEvent->widget,
                    NS_TOUCH_EVENT)
   {
-    isShift = aEvent->isShift;
-    isControl = aEvent->isControl;
-    isMeta = aEvent->isMeta;
-    isAlt = aEvent->isAlt;
+    modifiers = aEvent->modifiers;
     time = aEvent->time;
     touches.AppendElements(aEvent->touches);
     MOZ_COUNT_CTOR(nsTouchEvent);

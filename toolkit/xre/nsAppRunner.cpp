@@ -2197,6 +2197,12 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
       rv = profile->GetLocalDir(getter_AddRefs(profileLocalDir));
       NS_ENSURE_SUCCESS(rv, rv);
 
+      bool exists;
+      profileLocalDir->Exists(&exists);
+      if (!exists) {
+        return ProfileMissingDialog(aNative);
+      }
+
       return ProfileLockedDialog(profileDir, profileLocalDir, unlocker,
                                  aNative, aResult);
     }
@@ -2270,6 +2276,12 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
       nsCOMPtr<nsILocalFile> profileLocalDir;
       rv = profile->GetRootDir(getter_AddRefs(profileLocalDir));
       NS_ENSURE_SUCCESS(rv, rv);
+
+      bool exists;
+      profileLocalDir->Exists(&exists);
+      if (!exists) {
+        return ProfileMissingDialog(aNative);
+      }
 
       return ProfileLockedDialog(profileDir, profileLocalDir, unlocker,
                                  aNative, aResult);
@@ -2931,8 +2943,8 @@ XREMain::XRE_mainInit(const nsXREAppData* aAppData, bool* aExitFlag)
       SetAllocatedString(mAppData->maxVersion, "1.*");
     }
 
-    if (NS_CompareVersions(mAppData->minVersion, gToolkitVersion) > 0 ||
-        NS_CompareVersions(mAppData->maxVersion, gToolkitVersion) < 0) {
+    if (mozilla::Version(mAppData->minVersion) > gToolkitVersion ||
+        mozilla::Version(mAppData->maxVersion) < gToolkitVersion) {
       Output(true, "Error: Platform version '%s' is not compatible with\n"
              "minVersion >= %s\nmaxVersion <= %s\n",
              gToolkitVersion,

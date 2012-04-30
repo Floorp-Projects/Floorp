@@ -1741,10 +1741,7 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
 
   event.theText = mCompositionString.get();
   nsModifierKeyState modKeyState;
-  event.isShift = modKeyState.mIsShiftDown;
-  event.isControl = modKeyState.mIsControlDown;
-  event.isMeta = false;
-  event.isAlt = modKeyState.mIsAltDown;
+  modKeyState.InitInputEvent(event);
 
   aWindow->DispatchWindowEvent(&event);
 

@@ -9,6 +9,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const DEBUG = false; // set to true to show debug messages
 
@@ -16,6 +17,12 @@ const WIFIWORKER_CONTRACTID = "@mozilla.org/wifi/worker;1";
 const WIFIWORKER_CID        = Components.ID("{a14e8977-d259-433a-a88d-58dd44657e5b}");
 
 const WIFIWORKER_WORKER     = "resource://gre/modules/wifi_worker.js";
+
+const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
+
+XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
+                                   "@mozilla.org/network/manager;1",
+                                   "nsINetworkManager");
 
 // A note about errors and error handling in this file:
 // The libraries that we use in this file are intended for C code. For
@@ -436,8 +443,7 @@ var WifiManager = (function() {
   function runDhcp(ifname, callback) {
     controlMessage({ cmd: "dhcp_do_request", ifname: ifname }, function(data) {
       dhcpInfo = data.status ? null : data;
-      notify("dhcpconnected", { info: dhcpInfo });
-      callback(data.status ? null : data);
+      callback(dhcpInfo);
     });
   }
 
@@ -594,30 +600,33 @@ var WifiManager = (function() {
   }
 
   function dhcpAfterConnect() {
+    // For now we do our own DHCP. In the future, this should be handed
+    // off to the Network Manager.
     runDhcp(manager.ifname, function (data) {
       if (!data) {
         debug("DHCP failed to run");
+        notify("dhcpconnected", { info: data });
         return;
       }
-      setProperty("net.dns1", ipToString(data.dns1), function(ok) {
+      setProperty("net." + manager.ifname + ".dns1", ipToString(data.dns1),
+                  function(ok) {
         if (!ok) {
-          debug("Unable to set net.dns1");
+          debug("Unable to set net.<ifname>.dns1");
           return;
         }
-        setProperty("net.dns2", ipToString(data.dns2), function(ok) {
+        setProperty("net." + manager.ifname + ".dns2", ipToString(data.dns2),
+                    function(ok) {
           if (!ok) {
-            debug("Unable to set net.dns2");
+            debug("Unable to set net.<ifname>.dns2");
             return;
           }
-          getProperty("net.dnschange", "0", function(value) {
-            if (value === null) {
-              debug("Unable to get net.dnschange");
+          setProperty("net." + manager.ifname + ".gw", ipToString(data.gateway),
+                      function(ok) {
+            if (!ok) {
+              debug("Unable to set net.<ifname>.gw");
               return;
             }
-            setProperty("net.dnschange", String(Number(value) + 1), function(ok) {
-              if (!ok)
-                debug("Unable to set net.dnschange");
-            });
+            notify("dhcpconnected", { info: data });
           });
         });
       });
@@ -843,6 +852,17 @@ var WifiManager = (function() {
           return;
         }
         manager.ifname = ifname;
+
+        // Register as network interface.
+        WifiNetworkInterface.name = ifname;
+        if (!WifiNetworkInterface.registered) {
+          gNetworkManager.registerNetworkInterface(WifiNetworkInterface);
+          WifiNetworkInterface.registered = true;
+        }
+        WifiNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
+        Services.obs.notifyObservers(WifiNetworkInterface,
+                                     kNetworkInterfaceStateChangedTopic,
+                                     null);
 
         prepareForStartup(function(already_connected) {
           if (already_connected) {
@@ -1089,6 +1109,39 @@ function isWepHexKey(s) {
   return !/[^a-fA-F0-9]/.test(s);
 }
 
+
+let WifiNetworkInterface = {
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInterface]),
+
+  registered: false,
+
+  // nsINetworkInterface
+
+  NETWORK_STATE_UNKNOWN:       Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN,
+  NETWORK_STATE_CONNECTING:    Ci.nsINetworkInterface.CONNECTING,
+  NETWORK_STATE_CONNECTED:     Ci.nsINetworkInterface.CONNECTED,
+  NETWORK_STATE_SUSPENDED:     Ci.nsINetworkInterface.SUSPENDED,
+  NETWORK_STATE_DISCONNECTING: Ci.nsINetworkInterface.DISCONNECTING,
+  NETWORK_STATE_DISCONNECTED:  Ci.nsINetworkInterface.DISCONNECTED,
+
+  state: Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN,
+
+  NETWORK_TYPE_WIFI:       Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
+  NETWORK_TYPE_MOBILE:     Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
+  NETWORK_TYPE_MOBILE_MMS: Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS,
+
+  type: Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
+
+  name: null,
+
+  // For now we do our own DHCP. In the future this should be handed off
+  // to the Network Manager.
+  dhcp: false,
+
+};
+
+
 // TODO Make the difference between a DOM-based network object and our
 // networks objects much clearer.
 let netToDOM;
@@ -1285,15 +1338,28 @@ function WifiWorker() {
           }
         });
 
+        WifiNetworkInterface.state =
+          Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
+        Services.obs.notifyObservers(WifiNetworkInterface,
+                                     kNetworkInterfaceStateChangedTopic,
+                                     null);
+
         break;
     }
   };
 
   WifiManager.ondhcpconnected = function() {
-    if (this.info)
+    if (this.info) {
+      WifiNetworkInterface.state =
+        Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
+      Services.obs.notifyObservers(WifiNetworkInterface,
+                                   kNetworkInterfaceStateChangedTopic,
+                                   null);
+
       self._fireEvent("onconnect", { network: netToDOM(self.currentNetwork) });
-    else
+    } else {
       WifiManager.disconnect(function(){});
+    }
   };
 
   WifiManager.onscanresultsavailable = function() {

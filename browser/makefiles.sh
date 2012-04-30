@@ -48,6 +48,8 @@ browser/components/about/Makefile
 browser/components/build/Makefile
 browser/components/certerror/Makefile
 browser/components/dirprovider/Makefile
+browser/components/downloads/Makefile
+browser/components/downloads/src/Makefile
 browser/components/feeds/Makefile
 browser/components/feeds/public/Makefile
 browser/components/feeds/src/Makefile
@@ -131,6 +133,8 @@ if [ "$ENABLE_TESTS" ]; then
     browser/base/content/test/newtab/Makefile
     browser/components/certerror/test/Makefile
     browser/components/dirprovider/tests/Makefile
+    browser/components/downloads/test/Makefile
+    browser/components/downloads/test/browser/Makefile
     browser/components/preferences/tests/Makefile
     browser/components/search/test/Makefile
     browser/components/sessionstore/test/Makefile

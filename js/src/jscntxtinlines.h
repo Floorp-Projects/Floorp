@@ -76,7 +76,7 @@ static inline GlobalObject *
 GetGlobalForScopeChain(JSContext *cx)
 {
     if (cx->hasfp())
-        return &cx->fp()->scopeChain().global();
+        return &cx->fp()->global();
 
     JSObject *scope = JS_ObjectToInnerObject(cx, cx->globalObject);
     if (!scope)
@@ -231,7 +231,7 @@ class CompartmentChecker
 
     void check(StackFrame *fp) {
         if (fp)
-            check(&fp->scopeChain());
+            check(fp->scopeChain());
     }
 };
 
@@ -349,7 +349,6 @@ CallJSNativeConstructor(JSContext *cx, Native native, const CallArgs &args)
      * (new Object(Object)) returns the callee.
      */
     JS_ASSERT_IF(native != FunctionProxyClass.construct &&
-                 native != CallableObjectClass.construct &&
                  native != js::CallOrConstructBoundFunction &&
                  (!callee->isFunction() || callee->toFunction()->native() != js_Object),
                  !args.rval().isPrimitive() && callee != &args.rval().toObject());

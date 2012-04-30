@@ -197,8 +197,12 @@ public:
    * the appunits of aFrame. It may be optimized to be faster than
    * aFrame->GetOffsetToCrossDoc(ReferenceFrame()) (but currently isn't).
    */
-  nsPoint ToReferenceFrame(const nsIFrame* aFrame) const {
-    return aFrame->GetOffsetToCrossDoc(ReferenceFrame());
+  const nsPoint& ToReferenceFrame(const nsIFrame* aFrame) {
+    if (aFrame != mCachedOffsetFrame) {
+      mCachedOffsetFrame = aFrame;
+      mCachedOffset = aFrame->GetOffsetToCrossDoc(ReferenceFrame());
+    }
+    return mCachedOffset;
   }
   /**
    * When building the display list, the scrollframe aFrame will be "ignored"
@@ -412,22 +416,44 @@ public:
   
   /**
    * A helper class to temporarily set the value of
-   * mIsAtRootOfPseudoStackingContext.
+   * mIsAtRootOfPseudoStackingContext and temporarily update
+   * mCachedOffsetFrame/mCachedOffset from a frame to its child.
    */
-  class AutoIsRootSetter;
-  friend class AutoIsRootSetter;
-  class AutoIsRootSetter {
+  class AutoBuildingDisplayList;
+  friend class AutoBuildingDisplayList;
+  class AutoBuildingDisplayList {
   public:
-    AutoIsRootSetter(nsDisplayListBuilder* aBuilder, bool aIsRoot)
-      : mBuilder(aBuilder), mOldValue(aBuilder->mIsAtRootOfPseudoStackingContext) { 
+    AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, bool aIsRoot)
+      : mBuilder(aBuilder),
+        mPrevCachedOffsetFrame(aBuilder->mCachedOffsetFrame),
+        mPrevCachedOffset(aBuilder->mCachedOffset),
+        mPrevIsAtRootOfPseudoStackingContext(aBuilder->mIsAtRootOfPseudoStackingContext) {
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
     }
-    ~AutoIsRootSetter() {
-      mBuilder->mIsAtRootOfPseudoStackingContext = mOldValue;
+    AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder,
+                            nsIFrame* aForChild, bool aIsRoot)
+      : mBuilder(aBuilder),
+        mPrevCachedOffsetFrame(aBuilder->mCachedOffsetFrame),
+        mPrevCachedOffset(aBuilder->mCachedOffset),
+        mPrevIsAtRootOfPseudoStackingContext(aBuilder->mIsAtRootOfPseudoStackingContext) {
+      if (mPrevCachedOffsetFrame == aForChild->GetParent()) {
+        aBuilder->mCachedOffset += aForChild->GetPosition();
+      } else {
+        aBuilder->mCachedOffset = aForChild->GetOffsetToCrossDoc(aBuilder->ReferenceFrame());
+      }
+      aBuilder->mCachedOffsetFrame = aForChild;
+      aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
+    }
+    ~AutoBuildingDisplayList() {
+      mBuilder->mCachedOffsetFrame = mPrevCachedOffsetFrame;
+      mBuilder->mCachedOffset = mPrevCachedOffset;
+      mBuilder->mIsAtRootOfPseudoStackingContext = mPrevIsAtRootOfPseudoStackingContext;
     }
   private:
     nsDisplayListBuilder* mBuilder;
-    bool                  mOldValue;
+    const nsIFrame*       mPrevCachedOffsetFrame;
+    nsPoint               mPrevCachedOffset;
+    bool                  mPrevIsAtRootOfPseudoStackingContext;
   };
 
   /**
@@ -438,7 +464,7 @@ public:
   class AutoInTransformSetter {
   public:
     AutoInTransformSetter(nsDisplayListBuilder* aBuilder, bool aInTransform)
-      : mBuilder(aBuilder), mOldValue(aBuilder->mInTransform) { 
+      : mBuilder(aBuilder), mOldValue(aBuilder->mInTransform) {
       aBuilder->mInTransform = aInTransform;
     }
     ~AutoInTransformSetter() {
@@ -447,8 +473,8 @@ public:
   private:
     nsDisplayListBuilder* mBuilder;
     bool                  mOldValue;
-  };  
-  
+  };
+
   // Helpers for tables
   nsDisplayTableItem* GetCurrentTableItem() { return mCurrentTableItem; }
   void SetCurrentTableItem(nsDisplayTableItem* aTableItem) { mCurrentTableItem = aTableItem; }
@@ -497,6 +523,10 @@ private:
   nsAutoTArray<ThemeGeometry,2>  mThemeGeometries;
   nsDisplayTableItem*            mCurrentTableItem;
   const nsRegion*                mFinalTransparentRegion;
+  // When mCachedOffsetFrame is non-null, mCachedOffset is the offset from
+  // mCachedOffsetFrame to mReferenceFrame.
+  const nsIFrame*                mCachedOffsetFrame;
+  nsPoint                        mCachedOffset;
   nsRect                         mDisplayPort;
   nsRegion                       mExcludedGlassRegion;
   Mode                           mMode;
@@ -566,6 +596,15 @@ public:
     if (aFrame) {
       mToReferenceFrame = aBuilder->ToReferenceFrame(aFrame);
     }
+  }
+  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                const nsPoint& aToReferenceFrame)
+    : mFrame(aFrame)
+    , mToReferenceFrame(aToReferenceFrame)
+#ifdef MOZ_DUMP_PAINTING
+    , mPainted(false)
+#endif
+  {
   }
   virtual ~nsDisplayItem() {}
   
@@ -789,6 +828,13 @@ public:
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) {
     return false;
   }
+
+  /**
+   * Appends the underlying frames of all display items that have been
+   * merged into this one (excluding  this item's own underlying frame)
+   * to aFrames.
+   */
+  virtual void GetMergedFrames(nsTArray<nsIFrame*>* aFrames) {}
 
   /**
    * During the visibility computation and after TryMerge, display lists may
@@ -1693,8 +1739,18 @@ public:
                     nsDisplayList* aList);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayItem* aItem);
-  nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
+  nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                    nsDisplayItem* aItem, const nsPoint& aToReferenceFrame);
+  nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame) {}
   virtual ~nsDisplayWrapList();
+  /**
+   * Call this if the wrapped list is changed.
+   */
+  void UpdateBounds(nsDisplayListBuilder* aBuilder)
+  {
+    mBounds = mList.GetBounds(aBuilder);
+  }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap);
@@ -1711,6 +1767,10 @@ public:
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) {
     NS_WARNING("This list should already have been flattened!!!");
     return false;
+  }
+  virtual void GetMergedFrames(nsTArray<nsIFrame*>* aFrames)
+  {
+    aFrames->AppendElements(mMergedFrames);
   }
   NS_DISPLAY_DECL_NAME("WrapList", TYPE_WRAP_LIST)
 
@@ -1748,8 +1808,17 @@ protected:
     mList.AppendToBottom(&aOther->mList);
     mBounds.UnionRect(mBounds, aOther->mBounds);
   }
+  void MergeFromTrackingMergedFrames(nsDisplayWrapList* aOther)
+  {
+    MergeFrom(aOther);
+    mMergedFrames.AppendElement(aOther->mFrame);
+    mMergedFrames.MoveElementsFrom(aOther->mMergedFrames);
+  }
 
   nsDisplayList mList;
+  // The frames from items that have been merged into this item, excluding
+  // this item's own frame.
+  nsTArray<nsIFrame*> mMergedFrames;
   nsRect mBounds;
 };
 
@@ -2077,7 +2146,7 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
     *aSnap = false;
-    return mEffectsBounds + aBuilder->ToReferenceFrame(mEffectsFrame);
+    return mEffectsBounds + ToReferenceFrame();
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx);
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -2086,16 +2155,13 @@ public:
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
   NS_DISPLAY_DECL_NAME("SVGEffects", TYPE_SVG_EFFECTS)
 
-  nsIFrame* GetEffectsFrame() { return mEffectsFrame; }
-
 #ifdef MOZ_DUMP_PAINTING
   void PrintEffects(FILE* aOutput);
 #endif
 
 private:
-  nsIFrame* mEffectsFrame;
-  // relative to mEffectsFrame
-  nsRect    mEffectsBounds;
+  // relative to mFrame
+  nsRect mEffectsBounds;
 };
 
 /* A display item that applies a transformation to all of its descendant

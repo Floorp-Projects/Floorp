@@ -524,10 +524,10 @@ GLContextWGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         MakeCurrent();
         ClearSafely();
 
-        return ResizeOffscreenFBO(aNewSize, false);
+        return ResizeOffscreenFBOs(aNewSize, false);
     }
 
-    return ResizeOffscreenFBO(aNewSize, true);
+    return ResizeOffscreenFBOs(aNewSize, true);
 }
 
 static GLContextWGL *
@@ -782,7 +782,7 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    if (!glContext->ResizeOffscreenFBO(aSize, !glContext->mPBuffer))
+    if (!glContext->ResizeOffscreenFBOs(aSize, !glContext->mPBuffer))
         return nsnull;
 
     glContext->mOffscreenSize = aSize;

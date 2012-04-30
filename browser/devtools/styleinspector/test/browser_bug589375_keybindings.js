@@ -14,19 +14,12 @@ function createDocument()
     '<span class="matches">Some styled text</span>' +
     '</div>';
   doc.title = "Style Inspector key binding test";
-  stylePanel = new StyleInspector(window);
-  Services.obs.addObserver(runStyleInspectorTests, "StyleInspector-opened", false);
-  stylePanel.createPanel(false, function() {
-    stylePanel.open(doc.body);
-  });
+  stylePanel = new ComputedViewPanel(window);
+  stylePanel.createPanel(doc.body, runStyleInspectorTests);
 }
 
 function runStyleInspectorTests()
 {
-  Services.obs.removeObserver(runStyleInspectorTests, "StyleInspector-opened", false);
-
-  ok(stylePanel.isOpen(), "style inspector is open");
-
   Services.obs.addObserver(SI_test, "StyleInspector-populated", false);
   SI_inspectNode();
 }
@@ -66,8 +59,8 @@ function SI_test()
     testKey(iframe.contentWindow, "VK_RETURN", rulesTable);
 
     checkHelpLinkKeybinding();
-    Services.obs.addObserver(finishUp, "StyleInspector-closed", false);
-    stylePanel.close();
+    stylePanel.destroy();
+    finishUp();
   });
 
   info("Adding focus event handler to search filter");
@@ -94,6 +87,7 @@ function getFirstVisiblePropertyView()
       propView = aPropView;
       return true;
     }
+    return false;
   });
 
   return propView;
@@ -127,8 +121,6 @@ function checkHelpLinkKeybinding()
 
 function finishUp()
 {
-  Services.obs.removeObserver(finishUp, "StyleInspector-closed", false);
-  ok(!stylePanel.isOpen(), "style inspector is closed");
   doc = stylePanel = null;
   gBrowser.removeCurrentTab();
   finish();

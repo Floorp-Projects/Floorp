@@ -94,6 +94,14 @@ public:
   SensorRunnable(const sensors_event_t& data)
   {
     mSensorData.sensor() = HardwareSensorToHalSensor(data.type);
+    if (mSensorData.sensor() == SENSOR_UNKNOWN) {
+      // Emulator is broken and gives us events without types set
+      const sensor_t* sensors = NULL;
+      SensorDevice& device = SensorDevice::getInstance();
+      size_t size = device.getSensorList(&sensors);
+      if (data.sensor < size)
+        mSensorData.sensor() = HardwareSensorToHalSensor(sensors[data.sensor].type);
+    }
     mSensorData.accuracy() = HardwareStatusToHalAccuracy(SensorseventStatus(data));
     mSensorData.timestamp() = data.timestamp;
     if (mSensorData.sensor() == SENSOR_GYROSCOPE) {

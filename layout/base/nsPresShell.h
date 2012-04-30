@@ -700,10 +700,7 @@ protected:
     {
       mEvent->time = aEvent->time;
       mEvent->refPoint = aEvent->refPoint;
-      mEvent->isShift = aEvent->isShift;
-      mEvent->isControl = aEvent->isControl;
-      mEvent->isAlt = aEvent->isAlt;
-      mEvent->isMeta = aEvent->isMeta;
+      mEvent->modifiers = aEvent->modifiers;
     }
 
     nsDelayedInputEvent()
@@ -792,6 +789,10 @@ protected:
 
 private:
 
+
+#ifdef ANDROID
+  nsIDocument* GetTouchEventTargetDocument();
+#endif
   bool InZombieDocument(nsIContent *aContent);
   already_AddRefed<nsIPresShell> GetParentPresShell();
   nsresult RetargetEventToParent(nsGUIEvent* aEvent,

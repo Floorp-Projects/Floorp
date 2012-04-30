@@ -537,16 +537,11 @@ public:
     virtual void NotifyEnterCycleCollectionThread();
     virtual void NotifyLeaveCycleCollectionThread();
     virtual void NotifyEnterMainThread();
-    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
-                                          bool explainExpectedLiveGarbage);
+    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb);
     virtual nsresult FinishTraverse();
-    virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
     virtual bool NeedCollect();
     virtual void Collect(PRUint32 reason, PRUint32 kind);
-#ifdef DEBUG_CC
-    virtual void PrintAllReferencesTo(void *p);
-#endif
 
     XPCCallContext *GetCycleCollectionContext()
     {
@@ -598,9 +593,6 @@ private:
     // an 'after' notification without getting an 'on' notification. If we don't
     // watch out for this, we'll do an unmatched |pop| on the context stack.
     PRUint16                   mEventDepth;
-#ifdef DEBUG_CC
-    PLDHashTable             mJSRoots;
-#endif
     nsAutoPtr<XPCCallContext> mCycleCollectionContext;
 
     typedef nsBaseHashtable<nsPtrHashKey<void>, nsISupports*, nsISupports*> ScopeSet;
@@ -795,9 +787,9 @@ public:
         return gNewDOMBindingsEnabled;
     }
 
-    bool ParisBindingsEnabled()
+    bool ExperimentalBindingsEnabled()
     {
-        return gParisBindingsEnabled;
+        return gExperimentalBindingsEnabled;
     }
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
@@ -812,7 +804,7 @@ private:
     static void WatchdogMain(void *arg);
 
     static bool gNewDOMBindingsEnabled;
-    static bool gParisBindingsEnabled;
+    static bool gExperimentalBindingsEnabled;
 
     static const char* mStrings[IDX_TOTAL_COUNT];
     jsid mStrIDs[IDX_TOTAL_COUNT];
@@ -1310,12 +1302,13 @@ public:
     XPCCallContext &GetXPCCallContext()
     {
         if (!mCcx) {
+            XPCCallContext *data = mData.addr();
             mCcxToDestroy = mCcx =
-                new (mData) XPCCallContext(mCallerLanguage, mCx,
-                                           mCallBeginRequest == CALL_BEGINREQUEST,
-                                           mObj,
-                                           mFlattenedJSObject, mWrapper,
-                                           mTearOff);
+                new (data) XPCCallContext(mCallerLanguage, mCx,
+                                          mCallBeginRequest == CALL_BEGINREQUEST,
+                                          mObj,
+                                          mFlattenedJSObject, mWrapper,
+                                          mTearOff);
             if (!mCcx->IsValid()) {
                 NS_ERROR("This is not supposed to fail!");
             }
@@ -1343,7 +1336,7 @@ private:
     JSObject *mFlattenedJSObject;
     XPCWrappedNative *mWrapper;
     XPCWrappedNativeTearOff *mTearOff;
-    char mData[sizeof(XPCCallContext)];
+    mozilla::AlignedStorage2<XPCCallContext> mData;
 };
 
 /***************************************************************************
@@ -1424,7 +1417,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         nsnull, /* deleteSpecial */                                           \
         XPC_WN_JSOp_Enumerate,                                                \
         XPC_WN_JSOp_TypeOf_Function,                                          \
-        nsnull, /* fix            */                                          \
         XPC_WN_JSOp_ThisObject,                                               \
         XPC_WN_JSOp_Clear                                                     \
     }
@@ -1461,7 +1453,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         nsnull, /* deleteSpecial */                                           \
         XPC_WN_JSOp_Enumerate,                                                \
         XPC_WN_JSOp_TypeOf_Object,                                            \
-        nsnull, /* fix            */                                          \
         XPC_WN_JSOp_ThisObject,                                               \
         XPC_WN_JSOp_Clear                                                     \
     }
@@ -1601,6 +1592,7 @@ public:
     IsDyingScope(XPCWrappedNativeScope *scope);
 
     void SetComponents(nsXPCComponents* aComponents);
+    nsXPCComponents *GetComponents();
     void SetGlobal(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative);
 
     static void InitStatics() { gScopes = nsnull; gDyingScopes = nsnull; }
@@ -1629,9 +1621,9 @@ public:
         return mNewDOMBindingsEnabled;
     }
 
-    JSBool ParisBindingsEnabled()
+    JSBool ExperimentalBindingsEnabled()
     {
-        return mParisBindingsEnabled;
+        return mExperimentalBindingsEnabled;
     }
 
 protected:
@@ -1650,7 +1642,7 @@ private:
     Native2WrappedNativeMap*         mWrappedNativeMap;
     ClassInfo2WrappedNativeProtoMap* mWrappedNativeProtoMap;
     ClassInfo2WrappedNativeProtoMap* mMainThreadWrappedNativeProtoMap;
-    nsXPCComponents*                 mComponents;
+    nsRefPtr<nsXPCComponents>        mComponents;
     XPCWrappedNativeScope*           mNext;
     // The JS global object for this scope.  If non-null, this will be the
     // default parent for the XPCWrappedNatives that have us as the scope,
@@ -1675,7 +1667,7 @@ private:
     nsDataHashtable<nsDepCharHashKey, JSObject*> mCachedDOMPrototypes;
 
     JSBool mNewDOMBindingsEnabled;
-    JSBool mParisBindingsEnabled;
+    JSBool mExperimentalBindingsEnabled;
 };
 
 /***************************************************************************/
@@ -3894,19 +3886,21 @@ public:
 
 public:
     static JSBool
-    AttachNewComponentsObject(XPCCallContext& ccx,
-                              XPCWrappedNativeScope* aScope,
-                              JSObject* aGlobal);
+    AttachComponentsObject(XPCCallContext& ccx,
+                           XPCWrappedNativeScope* aScope,
+                           JSObject* aGlobal);
 
     void SystemIsBeingShutDown() {ClearMembers();}
 
     virtual ~nsXPCComponents();
 
 private:
-    nsXPCComponents();
+    nsXPCComponents(XPCWrappedNativeScope* aScope);
     void ClearMembers();
 
 private:
+    friend class XPCWrappedNativeScope;
+    XPCWrappedNativeScope*          mScope;
     nsXPCComponents_Interfaces*     mInterfaces;
     nsXPCComponents_InterfacesByID* mInterfacesByID;
     nsXPCComponents_Classes*        mClasses;

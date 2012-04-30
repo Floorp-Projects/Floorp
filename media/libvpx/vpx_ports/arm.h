@@ -12,7 +12,7 @@
 #ifndef VPX_PORTS_ARM_H
 #define VPX_PORTS_ARM_H
 #include <stdlib.h>
-#include "config.h"
+#include "vpx_config.h"
 
 /*ARMv5TE "Enhanced DSP" instructions.*/
 #define HAS_EDSP  0x01

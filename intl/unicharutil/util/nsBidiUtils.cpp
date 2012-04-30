@@ -41,34 +41,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsBidiUtils.h"
-#include "bidicattable.h"
 #include "nsCharTraits.h"
-
-static nsCharType ebc2ucd[15] = {
-  eCharType_OtherNeutral, /* Placeholder -- there will never be a 0 index value */
-  eCharType_LeftToRight,
-  eCharType_RightToLeft,
-  eCharType_RightToLeftArabic,
-  eCharType_ArabicNumber,
-  eCharType_EuropeanNumber,
-  eCharType_EuropeanNumberSeparator,
-  eCharType_EuropeanNumberTerminator,
-  eCharType_CommonNumberSeparator,
-  eCharType_OtherNeutral,
-  eCharType_DirNonSpacingMark,
-  eCharType_BoundaryNeutral,
-  eCharType_BlockSeparator,
-  eCharType_SegmentSeparator,
-  eCharType_WhiteSpaceNeutral
-};
-
-static nsCharType cc2ucd[5] = {
-  eCharType_LeftToRightEmbedding,
-  eCharType_RightToLeftEmbedding,
-  eCharType_PopDirectionalFormat,
-  eCharType_LeftToRightOverride,
-  eCharType_RightToLeftOverride
-};
+#include "nsUnicodeProperties.h"
 
 #define ARABIC_TO_HINDI_DIGIT_INCREMENT (START_HINDI_DIGITS - START_ARABIC_DIGITS)
 #define PERSIAN_TO_HINDI_DIGIT_INCREMENT (START_HINDI_DIGITS - START_FARSI_DIGITS)
@@ -148,12 +122,14 @@ nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
 }
 
 #define LRM_CHAR 0x200e
+#define LRE_CHAR 0x202a
+#define RLO_CHAR 0x202e
 bool IsBidiControl(PRUint32 aChar)
 {
   // This method is used when stripping Bidi control characters for
-  // display, so it will return TRUE for LRM and RLM as
-  // well as the characters with category eBidiCat_CC
-  return (eBidiCat_CC == GetBidiCat(aChar) || ((aChar)&0xfffffe)==LRM_CHAR);
+  // display, so it will return TRUE for LRM, RLM, LRE, RLE, PDF, LRO and RLO
+  return ((LRE_CHAR <= aChar && aChar <= RLO_CHAR) ||
+          ((aChar)&0xfffffe)==LRM_CHAR);
 }
 
 bool HasRTLChars(const nsAString& aString)
@@ -170,24 +146,4 @@ bool HasRTLChars(const nsAString& aString)
     }
   }
   return false;
-}
-
-nsCharType GetCharType(PRUint32 aChar)
-{
-  nsCharType oResult;
-  eBidiCategory bCat = GetBidiCat(aChar);
-  if (eBidiCat_CC != bCat) {
-    NS_ASSERTION((PRUint32) bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)), "size mismatch");
-    if((PRUint32) bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)))
-      oResult = ebc2ucd[bCat];
-    else 
-      oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
-  } else {
-    NS_ASSERTION((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(nsCharType)), "size mismatch");
-    if((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(nsCharType)))
-      oResult = cc2ucd[aChar - 0x202a];
-    else 
-      oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
-  }
-  return oResult;
 }

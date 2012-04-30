@@ -56,13 +56,14 @@ TEST_HARNESS_FILES := \
   runxpcshelltests.py \
   remotexpcshelltests.py \
   head.js \
+  node-spdy \
+  moz-spdy \
   $(NULL)
 
 # Extra files needed from $(topsrcdir)/build
 EXTRA_BUILD_FILES := \
   automationutils.py \
   manifestparser.py \
-  mozinfo.py \
   $(NULL)
 
 # And files for running xpcshell remotely from $(topsrcdir)/build/mobile
@@ -77,6 +78,9 @@ TEST_HARNESS_COMPONENTS := \
   httpd.manifest \
   $(NULL)
 
+MOZINFO_FILES := \
+  mozinfo.py
+
 # Rules for staging the necessary harness bits for a test package
 PKG_STAGE = $(DIST)/test-package-stage
 
@@ -87,10 +91,11 @@ libs::
 # Run selftests
 check::
 	OBJDIR=$(DEPTH) $(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/build $(srcdir)/selftest.py
+	  -I$(topsrcdir)/build -I$(topsrcdir)/testing/mozbase/mozinfo/mozinfo $(srcdir)/selftest.py
 
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/xpcshell/tests
+	@(cd $(topsrcdir)/testing/mozbase/mozinfo/mozinfo && tar $(TAR_CREATE_FLAGS) - $(MOZINFO_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@(cd $(topsrcdir)/build && tar $(TAR_CREATE_FLAGS) - $(EXTRA_BUILD_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/xpcshell

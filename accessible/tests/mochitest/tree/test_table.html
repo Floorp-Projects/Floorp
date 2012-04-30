@@ -128,6 +128,17 @@
 
       testAccessibleTree("table3", accTree);
 
+      /////////////////////////////////////////////////////////////////////////
+      // table4 (display: table-row)
+      accTree = 
+        { TABLE: [
+          { ROW: [
+            { CELL: [
+              { TEXT_LEAF: [ ] }
+            ] }
+          ] } ]
+        };
+      testAccessibleTree("table4", accTree);
       SimpleTest.finish();
     }
 
@@ -141,6 +152,11 @@
      title="When a table has only one column per row and that column happens to be a column header its role is exposed wrong"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=529621">
     Mozilla Bug 529621
+  </a>
+  <a target="_blank"
+     title="when div has display style table-row"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=727722">
+    Mozilla Bug 727722
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -188,6 +204,12 @@
       <th>rowheader</th>
       <td>cell</td>
     </tr>
+  </table>
+
+  <table id="table4">
+    <div style="display: table-row">
+      <td>cell1</td>
+    </div>
   </table>
 </body>
 </html>

@@ -100,6 +100,7 @@ using mozilla::DefaultXDisplay;
 #include "nsIScrollableFrame.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIObjectLoadingContent.h"
+#include "nsIDocShell.h"
 
 #include "nsContentCID.h"
 #include "nsWidgetsCID.h"
@@ -120,12 +121,10 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
-#include "gfxXlibNativeRenderer.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "ANPBase.h"
-#include "android_npapi.h"
 #include "AndroidBridge.h"
 #include "AndroidMediaLayer.h"
 using namespace mozilla::dom;
@@ -406,10 +405,12 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   }
 }
 
-NS_IMPL_ISUPPORTS3(nsPluginInstanceOwner,
+NS_IMPL_ISUPPORTS5(nsPluginInstanceOwner,
                    nsIPluginInstanceOwner,
                    nsIPluginTagInfo,
-                   nsIDOMEventListener)
+                   nsIDOMEventListener,
+                   nsIPrivacyTransitionObserver,
+                   nsISupportsWeakReference)
 
 nsresult
 nsPluginInstanceOwner::SetInstance(nsNPAPIPluginInstance *aInstance)
@@ -428,6 +429,17 @@ nsPluginInstanceOwner::SetInstance(nsNPAPIPluginInstance *aInstance)
   }
 
   mInstance = aInstance;
+
+  nsCOMPtr<nsIDocument> doc;
+  GetDocument(getter_AddRefs(doc));
+  if (doc) {
+    nsCOMPtr<nsPIDOMWindow> domWindow = doc->GetWindow();
+    if (domWindow) {
+      nsCOMPtr<nsIDocShell> docShell = domWindow->GetDocShell();
+      if (docShell)
+        docShell->AddWeakPrivacyTransitionObserver(this);
+    }
+  }
 
   return NS_OK;
 }
@@ -1761,47 +1773,8 @@ bool nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
     return false;
   }
 
-  JNIEnv* env = GetJNIForThread();
-  if (!env)
-    return false;
-
-  AndroidBridge::AutoLocalJNIFrame frame(env, 1);
-
-  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
-
-#ifdef MOZ_JAVA_COMPOSITOR
-  nsAutoString metadata;
-  nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
-      AndroidBridge::Bridge()->GetDrawMetadataProvider();
-  metadataProvider->GetDrawMetadata(metadata);
-
-  jstring jMetadata = env->NewString(nsPromiseFlatString(metadata).get(), metadata.Length());
-
-  jmethodID method = env->GetStaticMethodID(cls,
-                                            "addPluginView",
-                                            "(Landroid/view/View;IIIILjava/lang/String;)V");
-
-  env->CallStaticVoidMethod(cls,
-                            method,
-                            javaSurface,
-                            (int)aRect.x,
-                            (int)aRect.y,
-                            (int)aRect.width,
-                            (int)aRect.height,
-                            jMetadata);
-#else
-  jmethodID method = env->GetStaticMethodID(cls,
-                                            "addPluginView",
-                                            "(Landroid/view/View;DDDD)V");
-
-  env->CallStaticVoidMethod(cls,
-                            method,
-                            javaSurface,
-                            aRect.x,
-                            aRect.y,
-                            aRect.width,
-                            aRect.height);
-#endif
+  if (AndroidBridge::Bridge())
+    AndroidBridge::Bridge()->AddPluginView((jobject)javaSurface, aRect);
 
   return true;
 }
@@ -1815,7 +1788,8 @@ void nsPluginInstanceOwner::RemovePluginView()
   if (!surface)
     return;
 
-  AndroidBridge::RemovePluginView(surface);
+  if (AndroidBridge::Bridge())
+    AndroidBridge::Bridge()->RemovePluginView((jobject)surface);
 }
 
 void nsPluginInstanceOwner::Invalidate() {
@@ -2111,10 +2085,10 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
 static unsigned int XInputEventState(const nsInputEvent& anEvent)
 {
   unsigned int state = 0;
-  if (anEvent.isShift) state |= ShiftMask;
-  if (anEvent.isControl) state |= ControlMask;
-  if (anEvent.isAlt) state |= Mod1Mask;
-  if (anEvent.isMeta) state |= Mod4Mask;
+  if (anEvent.IsShift()) state |= ShiftMask;
+  if (anEvent.IsControl()) state |= ControlMask;
+  if (anEvent.IsAlt()) state |= Mod1Mask;
+  if (anEvent.IsMeta()) state |= Mod4Mask;
   return state;
 }
 #endif
@@ -2717,33 +2691,13 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
      {
        const nsKeyEvent& keyEvent = static_cast<const nsKeyEvent&>(anEvent);
        LOG("Firing NS_KEY_EVENT %d %d\n", keyEvent.keyCode, keyEvent.charCode);
-       
-       int modifiers = 0;
-       if (keyEvent.isShift)
-         modifiers |= kShift_ANPKeyModifier;
-       if (keyEvent.isAlt)
-         modifiers |= kAlt_ANPKeyModifier;
-
-       ANPEvent event;
-       event.inSize = sizeof(ANPEvent);
-       event.eventType = kKey_ANPEventType;
-       event.data.key.nativeCode = keyEvent.keyCode;
-       event.data.key.virtualCode = keyEvent.charCode;
-       event.data.key.modifiers = modifiers;
-       event.data.key.repeatCount = 0;
-       event.data.key.unichar = 0;
-       switch (anEvent.message)
-         {
-         case NS_KEY_DOWN:
-           event.data.key.action = kDown_ANPKeyAction;
-           mInstance->HandleEvent(&event, nsnull);
-           break;
-           
-         case NS_KEY_UP:
-           event.data.key.action = kUp_ANPKeyAction;
-           mInstance->HandleEvent(&event, nsnull);
-           break;
-         }
+       // pluginEvent is initialized by nsWindow::InitKeyEvent().
+       ANPEvent* pluginEvent = reinterpret_cast<ANPEvent*>(keyEvent.pluginEvent);
+       if (pluginEvent) {
+         MOZ_ASSERT(pluginEvent->inSize == sizeof(ANPEvent));
+         MOZ_ASSERT(pluginEvent->eventType == kKey_ANPEventType);
+         mInstance->HandleEvent(pluginEvent, nsnull);
+       }
      }
     }
     rv = nsEventStatus_eConsumeNoDefault;
@@ -2921,14 +2875,21 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
 
   PRInt32 model = mInstance->GetANPDrawingModel();
 
-  float xResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetXResolution();
-  float yResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetYResolution();
+  // Get the offset of the content relative to the page
 
-  gfxRect scaledFrameRect = aFrameRect;
-  scaledFrameRect.Scale(xResolution, yResolution);
+  nsPoint offset = nsPoint(0, 0);
+  nsIFrame* current = (nsIFrame*)mObjectFrame;
+  while (current && current->GetContent() && current->GetContent()->Tag() != nsGkAtoms::html) {    
+    offset += current->GetPosition();
+    current = current->GetParent();
+  }
+
+  nsRect bounds = nsRect(offset, mObjectFrame->GetSize());
+  nsIntRect intBounds = bounds.ToNearestPixels(mObjectFrame->PresContext()->AppUnitsPerDevPixel());
+  gfxRect pluginRect(intBounds);
 
   if (model == kSurface_ANPDrawingModel) {
-    if (!AddPluginView(scaledFrameRect)) {
+    if (!AddPluginView(pluginRect)) {
       Invalidate();
     }
     return;
@@ -2938,9 +2899,13 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
     if (!mLayer)
       mLayer = new AndroidMediaLayer();
 
-    mLayer->UpdatePosition(scaledFrameRect, xResolution);
+    mLayer->UpdatePosition(pluginRect);
 
-    SendSize((int)scaledFrameRect.width, (int)scaledFrameRect.height);
+    float xResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetXResolution();
+    float yResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetYResolution();
+    pluginRect.Scale(xResolution, yResolution);
+
+    SendSize((int)pluginRect.width, (int)pluginRect.height);
     return;
   }
 
@@ -3062,8 +3027,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   Visual* visual = gdk_x11_visual_get_xvisual(gdkVisual);
   Screen* screen =
     gdk_x11_screen_get_xscreen(gdk_visual_get_screen(gdkVisual));
-#endif
-#ifdef MOZ_WIDGET_QT
+#else
   Display* dpy = mozilla::DefaultXDisplay();
   Screen* screen = DefaultScreenOfDisplay(dpy);
   Visual* visual = DefaultVisualOfScreen(screen);
@@ -3819,6 +3783,11 @@ void nsPluginInstanceOwner::FixUpURLS(const nsString &name, nsAString &value)
     if (!newURL.IsEmpty())
       value = newURL;
   }
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner::PrivateModeChanged(bool aEnabled)
+{
+  return mInstance ? mInstance->PrivateModeStateChanged(aEnabled) : NS_OK;
 }
 
 // nsPluginDOMContextMenuListener class implementation

@@ -101,8 +101,20 @@ gcli.addCommand({
   name: "console close",
   description: gcli.lookup("consolecloseDesc"),
   exec: function Command_consoleClose(args, context) {
-    let tab = HUDService.getHudReferenceById(context.environment.hudId).tab;
+    let tab = context.environment.chromeDocument.defaultView.gBrowser.selectedTab
     HUDService.deactivateHUDForContext(tab);
+  }
+});
+
+/**
+ * 'console open' command
+ */
+gcli.addCommand({
+  name: "console open",
+  description: gcli.lookup("consoleopenDesc"),
+  exec: function Command_consoleOpen(args, context) {
+    let tab = context.environment.chromeDocument.defaultView.gBrowser.selectedTab
+    HUDService.activateHUDForContext(tab);
   }
 });
 

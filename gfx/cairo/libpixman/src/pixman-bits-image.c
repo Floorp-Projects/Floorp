@@ -34,6 +34,7 @@
 #include <string.h>
 #include "pixman-private.h"
 #include "pixman-combine32.h"
+#include "pixman-inlines.h"
 
 /*
  * By default, just evaluate the image at 32bpp and expand.  Individual image
@@ -90,34 +91,6 @@ fetch_pixel_no_alpha (bits_image_t *image,
 typedef uint32_t (* get_pixel_t) (bits_image_t *image,
 				  int x, int y, pixman_bool_t check_bounds);
 
-static force_inline void
-repeat (pixman_repeat_t repeat, int size, int *coord)
-{
-    switch (repeat)
-    {
-    case PIXMAN_REPEAT_NORMAL:
-	*coord = MOD (*coord, size);
-	break;
-
-    case PIXMAN_REPEAT_PAD:
-	*coord = CLIP (*coord, 0, size - 1);
-	break;
-
-    case PIXMAN_REPEAT_REFLECT:
-	*coord = MOD (*coord, size * 2);
-
-	if (*coord >= size)
-	    *coord = size * 2 - *coord - 1;
-	break;
-
-    case PIXMAN_REPEAT_NONE:
-	break;
-
-    default:
-        break;
-    }
-}
-
 static force_inline uint32_t
 bits_image_fetch_pixel_nearest (bits_image_t   *image,
 				pixman_fixed_t  x,
@@ -129,8 +102,8 @@ bits_image_fetch_pixel_nearest (bits_image_t   *image,
 
     if (image->common.repeat != PIXMAN_REPEAT_NONE)
     {
-	repeat (image->common.repeat, image->width, &x0);
-	repeat (image->common.repeat, image->height, &y0);
+	repeat (image->common.repeat, &x0, image->width);
+	repeat (image->common.repeat, &y0, image->height);
 
 	return get_pixel (image, x0, y0, FALSE);
     }
@@ -139,97 +112,6 @@ bits_image_fetch_pixel_nearest (bits_image_t   *image,
 	return get_pixel (image, x0, y0, TRUE);
     }
 }
-
-#if SIZEOF_LONG > 4
-
-static force_inline uint32_t
-bilinear_interpolation (uint32_t tl, uint32_t tr,
-			uint32_t bl, uint32_t br,
-			int distx, int disty)
-{
-    uint64_t distxy, distxiy, distixy, distixiy;
-    uint64_t tl64, tr64, bl64, br64;
-    uint64_t f, r;
-
-    distxy = distx * disty;
-    distxiy = distx * (256 - disty);
-    distixy = (256 - distx) * disty;
-    distixiy = (256 - distx) * (256 - disty);
-
-    /* Alpha and Blue */
-    tl64 = tl & 0xff0000ff;
-    tr64 = tr & 0xff0000ff;
-    bl64 = bl & 0xff0000ff;
-    br64 = br & 0xff0000ff;
-
-    f = tl64 * distixiy + tr64 * distxiy + bl64 * distixy + br64 * distxy;
-    r = f & 0x0000ff0000ff0000ull;
-
-    /* Red and Green */
-    tl64 = tl;
-    tl64 = ((tl64 << 16) & 0x000000ff00000000ull) | (tl64 & 0x0000ff00ull);
-
-    tr64 = tr;
-    tr64 = ((tr64 << 16) & 0x000000ff00000000ull) | (tr64 & 0x0000ff00ull);
-
-    bl64 = bl;
-    bl64 = ((bl64 << 16) & 0x000000ff00000000ull) | (bl64 & 0x0000ff00ull);
-
-    br64 = br;
-    br64 = ((br64 << 16) & 0x000000ff00000000ull) | (br64 & 0x0000ff00ull);
-
-    f = tl64 * distixiy + tr64 * distxiy + bl64 * distixy + br64 * distxy;
-    r |= ((f >> 16) & 0x000000ff00000000ull) | (f & 0xff000000ull);
-
-    return (uint32_t)(r >> 16);
-}
-
-#else
-
-static force_inline uint32_t
-bilinear_interpolation (uint32_t tl, uint32_t tr,
-			uint32_t bl, uint32_t br,
-			int distx, int disty)
-{
-    int distxy, distxiy, distixy, distixiy;
-    uint32_t f, r;
-
-    distxy = distx * disty;
-    distxiy = (distx << 8) - distxy;	/* distx * (256 - disty) */
-    distixy = (disty << 8) - distxy;	/* disty * (256 - distx) */
-    distixiy =
-	256 * 256 - (disty << 8) -
-	(distx << 8) + distxy;		/* (256 - distx) * (256 - disty) */
-
-    /* Blue */
-    r = (tl & 0x000000ff) * distixiy + (tr & 0x000000ff) * distxiy
-      + (bl & 0x000000ff) * distixy  + (br & 0x000000ff) * distxy;
-
-    /* Green */
-    f = (tl & 0x0000ff00) * distixiy + (tr & 0x0000ff00) * distxiy
-      + (bl & 0x0000ff00) * distixy  + (br & 0x0000ff00) * distxy;
-    r |= f & 0xff000000;
-
-    tl >>= 16;
-    tr >>= 16;
-    bl >>= 16;
-    br >>= 16;
-    r >>= 16;
-
-    /* Red */
-    f = (tl & 0x000000ff) * distixiy + (tr & 0x000000ff) * distxiy
-      + (bl & 0x000000ff) * distixy  + (br & 0x000000ff) * distxy;
-    r |= f & 0x00ff0000;
-
-    /* Alpha */
-    f = (tl & 0x0000ff00) * distixiy + (tr & 0x0000ff00) * distxiy
-      + (bl & 0x0000ff00) * distixy  + (br & 0x0000ff00) * distxy;
-    r |= f & 0xff000000;
-
-    return r;
-}
-
-#endif
 
 static force_inline uint32_t
 bits_image_fetch_pixel_bilinear (bits_image_t   *image,
@@ -257,10 +139,10 @@ bits_image_fetch_pixel_bilinear (bits_image_t   *image,
 
     if (repeat_mode != PIXMAN_REPEAT_NONE)
     {
-	repeat (repeat_mode, width, &x1);
-	repeat (repeat_mode, height, &y1);
-	repeat (repeat_mode, width, &x2);
-	repeat (repeat_mode, height, &y2);
+	repeat (repeat_mode, &x1, width);
+	repeat (repeat_mode, &y1, height);
+	repeat (repeat_mode, &x2, width);
+	repeat (repeat_mode, &y2, height);
 
 	tl = get_pixel (image, x1, y1, FALSE);
 	bl = get_pixel (image, x1, y2, FALSE);
@@ -529,8 +411,8 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
 
 		if (repeat_mode != PIXMAN_REPEAT_NONE)
 		{
-		    repeat (repeat_mode, width, &rx);
-		    repeat (repeat_mode, height, &ry);
+		    repeat (repeat_mode, &rx, width);
+		    repeat (repeat_mode, &ry, height);
 
 		    pixel = get_pixel (image, rx, ry, FALSE);
 		}
@@ -812,10 +694,10 @@ bits_image_fetch_bilinear_affine (pixman_image_t * image,
 
 	    mask = PIXMAN_FORMAT_A (format)? 0 : 0xff000000;
 
-	    repeat (repeat_mode, width, &x1);
-	    repeat (repeat_mode, height, &y1);
-	    repeat (repeat_mode, width, &x2);
-	    repeat (repeat_mode, height, &y2);
+	    repeat (repeat_mode, &x1, width);
+	    repeat (repeat_mode, &y1, height);
+	    repeat (repeat_mode, &x2, width);
+	    repeat (repeat_mode, &y2, height);
 
 	    row1 = (uint8_t *)bits->bits + bits->rowstride * 4 * y1;
 	    row2 = (uint8_t *)bits->bits + bits->rowstride * 4 * y2;
@@ -960,8 +842,8 @@ bits_image_fetch_nearest_affine (pixman_image_t * image,
 
 	    if (repeat_mode != PIXMAN_REPEAT_NONE)
 	    {
-		repeat (repeat_mode, width, &x0);
-		repeat (repeat_mode, height, &y0);
+		repeat (repeat_mode, &x0, width);
+		repeat (repeat_mode, &y0, height);
 	    }
 
 	    row = (uint8_t *)bits->bits + bits->rowstride * 4 * y0;
@@ -1053,17 +935,16 @@ MAKE_FETCHERS (reflect_r5g6b5,   r5g6b5,   PIXMAN_REPEAT_REFLECT)
 MAKE_FETCHERS (normal_r5g6b5,    r5g6b5,   PIXMAN_REPEAT_NORMAL)
 
 static void
-bits_image_fetch_solid_32 (pixman_image_t * image,
-                           int              x,
-                           int              y,
-                           int              width,
-                           uint32_t *       buffer,
-                           const uint32_t * mask)
+replicate_pixel_32 (bits_image_t *   bits,
+		    int              x,
+		    int              y,
+		    int              width,
+		    uint32_t *       buffer)
 {
     uint32_t color;
     uint32_t *end;
 
-    color = image->bits.fetch_pixel_32 (&image->bits, 0, 0);
+    color = bits->fetch_pixel_32 (bits, x, y);
 
     end = buffer + width;
     while (buffer < end)
@@ -1071,18 +952,17 @@ bits_image_fetch_solid_32 (pixman_image_t * image,
 }
 
 static void
-bits_image_fetch_solid_64 (pixman_image_t * image,
-                           int              x,
-                           int              y,
-                           int              width,
-                           uint32_t *       b,
-                           const uint32_t * unused)
+replicate_pixel_64 (bits_image_t *   bits,
+		    int              x,
+		    int              y,
+		    int              width,
+		    uint32_t *       b)
 {
     uint64_t color;
     uint64_t *buffer = (uint64_t *)b;
     uint64_t *end;
 
-    color = image->bits.fetch_pixel_64 (&image->bits, 0, 0);
+    color = bits->fetch_pixel_64 (bits, x, y);
 
     end = buffer + width;
     while (buffer < end)
@@ -1148,6 +1028,16 @@ bits_image_fetch_untransformed_repeat_normal (bits_image_t *image,
 
     while (y >= image->height)
 	y -= image->height;
+
+    if (image->width == 1)
+    {
+	if (wide)
+	    replicate_pixel_64 (image, 0, y, width, buffer);
+	else
+	    replicate_pixel_32 (image, 0, y, width, buffer);
+
+	return;
+    }
 
     while (width)
     {
@@ -1219,12 +1109,6 @@ typedef struct
 
 static const fetcher_info_t fetcher_info[] =
 {
-    { PIXMAN_solid,
-      FAST_PATH_NO_ALPHA_MAP,
-      bits_image_fetch_solid_32,
-      bits_image_fetch_solid_64
-    },
-
     { PIXMAN_any,
       (FAST_PATH_NO_ALPHA_MAP			|
        FAST_PATH_ID_TRANSFORM			|
@@ -1382,12 +1266,27 @@ dest_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
     image->bits.fetch_scanline_32 (image, x, y, width, buffer, mask);
     if (image->common.alpha_map)
     {
-	x -= image->common.alpha_origin_x;
-	y -= image->common.alpha_origin_y;
+	uint32_t *alpha;
 
-	image->common.alpha_map->fetch_scanline_32 (
-	    (pixman_image_t *)image->common.alpha_map,
-	    x, y, width, buffer, mask);
+	if ((alpha = malloc (width * sizeof (uint32_t))))
+	{
+	    int i;
+
+	    x -= image->common.alpha_origin_x;
+	    y -= image->common.alpha_origin_y;
+
+	    image->common.alpha_map->fetch_scanline_32 (
+		(pixman_image_t *)image->common.alpha_map,
+		x, y, width, alpha, mask);
+
+	    for (i = 0; i < width; ++i)
+	    {
+		buffer[i] &= ~0xff000000;
+		buffer[i] |= (alpha[i] & 0xff000000);
+	    }
+
+	    free (alpha);
+	}
     }
 
     return iter->buffer;
@@ -1400,17 +1299,33 @@ dest_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
     int             x      = iter->x;
     int             y      = iter->y;
     int             width  = iter->width;
-    uint32_t *	    buffer = iter->buffer;
+    uint64_t *	    buffer = (uint64_t *)iter->buffer;
 
     image->fetch_scanline_64 (
-	(pixman_image_t *)image, x, y, width, buffer, mask);
+	(pixman_image_t *)image, x, y, width, (uint32_t *)buffer, mask);
     if (image->common.alpha_map)
     {
-	x -= image->common.alpha_origin_x;
-	y -= image->common.alpha_origin_y;
+	uint64_t *alpha;
 
-	image->common.alpha_map->fetch_scanline_64 (
-	    (pixman_image_t *)image->common.alpha_map, x, y, width, buffer, mask);
+	if ((alpha = malloc (width * sizeof (uint64_t))))
+	{
+	    int i;
+
+	    x -= image->common.alpha_origin_x;
+	    y -= image->common.alpha_origin_y;
+
+	    image->common.alpha_map->fetch_scanline_64 (
+		(pixman_image_t *)image->common.alpha_map,
+		x, y, width, (uint32_t *)alpha, mask);
+
+	    for (i = 0; i < width; ++i)
+	    {
+		buffer[i] &= ~0xffff000000000000ULL;
+		buffer[i] |= (alpha[i] & 0xffff000000000000ULL);
+	    }
+
+	    free (alpha);
+	}
     }
 
     return iter->buffer;
@@ -1462,43 +1377,22 @@ dest_write_back_wide (pixman_iter_t *iter)
     iter->y++;
 }
 
-static void
-dest_write_back_direct (pixman_iter_t *iter)
-{
-    iter->buffer += iter->image->bits.rowstride;
-}
-
 void
 _pixman_bits_image_dest_iter_init (pixman_image_t *image, pixman_iter_t *iter)
 {
     if (iter->flags & ITER_NARROW)
     {
-	if (((image->common.flags &
-	      (FAST_PATH_NO_ALPHA_MAP | FAST_PATH_NO_ACCESSORS)) ==
-	     (FAST_PATH_NO_ALPHA_MAP | FAST_PATH_NO_ACCESSORS)) &&
-	    (image->bits.format == PIXMAN_a8r8g8b8	||
-	     (image->bits.format == PIXMAN_x8r8g8b8	&&
-	      (iter->flags & ITER_LOCALIZED_ALPHA))))
+	if ((iter->flags & (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA)) ==
+	    (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA))
 	{
-	    iter->buffer = image->bits.bits + iter->y * image->bits.rowstride + iter->x;
-
 	    iter->get_scanline = _pixman_iter_get_scanline_noop;
-	    iter->write_back = dest_write_back_direct;
 	}
 	else
 	{
-	    if ((iter->flags & (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA)) ==
-		(ITER_IGNORE_RGB | ITER_IGNORE_ALPHA))
-	    {
-		iter->get_scanline = _pixman_iter_get_scanline_noop;
-	    }
-	    else
-	    {
-		iter->get_scanline = dest_get_scanline_narrow;
-	    }
-
-	    iter->write_back = dest_write_back_narrow;
+	    iter->get_scanline = dest_get_scanline_narrow;
 	}
+	
+	iter->write_back = dest_write_back_narrow;
     }
     else
     {
@@ -1511,10 +1405,10 @@ static uint32_t *
 create_bits (pixman_format_code_t format,
              int                  width,
              int                  height,
-             int *                rowstride_bytes)
+             int *		  rowstride_bytes)
 {
     int stride;
-    int buf_size;
+    size_t buf_size;
     int bpp;
 
     /* what follows is a long-winded way, avoiding any possibility of integer
@@ -1523,11 +1417,11 @@ create_bits (pixman_format_code_t format,
      */
 
     bpp = PIXMAN_FORMAT_BPP (format);
-    if (pixman_multiply_overflows_int (width, bpp))
+    if (_pixman_multiply_overflows_int (width, bpp))
 	return NULL;
 
     stride = width * bpp;
-    if (pixman_addition_overflows_int (stride, 0x1f))
+    if (_pixman_addition_overflows_int (stride, 0x1f))
 	return NULL;
 
     stride += 0x1f;
@@ -1535,7 +1429,7 @@ create_bits (pixman_format_code_t format,
 
     stride *= sizeof (uint32_t);
 
-    if (pixman_multiply_overflows_int (height, stride))
+    if (_pixman_multiply_overflows_size (height, stride))
 	return NULL;
 
     buf_size = height * stride;
@@ -1546,39 +1440,29 @@ create_bits (pixman_format_code_t format,
     return calloc (buf_size, 1);
 }
 
-PIXMAN_EXPORT pixman_image_t *
-pixman_image_create_bits (pixman_format_code_t format,
-                          int                  width,
-                          int                  height,
-                          uint32_t *           bits,
-                          int                  rowstride_bytes)
+pixman_bool_t
+_pixman_bits_image_init (pixman_image_t *     image,
+                         pixman_format_code_t format,
+                         int                  width,
+                         int                  height,
+                         uint32_t *           bits,
+                         int                  rowstride)
 {
-    pixman_image_t *image;
     uint32_t *free_me = NULL;
-
-    /* must be a whole number of uint32_t's
-     */
-    return_val_if_fail (
-	bits == NULL || (rowstride_bytes % sizeof (uint32_t)) == 0, NULL);
-
-    return_val_if_fail (PIXMAN_FORMAT_BPP (format) >= PIXMAN_FORMAT_DEPTH (format), NULL);
 
     if (!bits && width && height)
     {
+	int rowstride_bytes;
+
 	free_me = bits = create_bits (format, width, height, &rowstride_bytes);
+
 	if (!bits)
-	    return NULL;
+	    return FALSE;
+
+	rowstride = rowstride_bytes / (int) sizeof (uint32_t);
     }
 
-    image = _pixman_image_allocate ();
-
-    if (!image)
-    {
-	if (free_me)
-	    free (free_me);
-
-	return NULL;
-    }
+    _pixman_image_init (image);
 
     image->type = BITS;
     image->bits.format = format;
@@ -1588,15 +1472,43 @@ pixman_image_create_bits (pixman_format_code_t format,
     image->bits.free_me = free_me;
     image->bits.read_func = NULL;
     image->bits.write_func = NULL;
-
-    /* The rowstride is stored in number of uint32_t */
-    image->bits.rowstride = rowstride_bytes / (int) sizeof (uint32_t);
-
+    image->bits.rowstride = rowstride;
     image->bits.indexed = NULL;
 
     image->common.property_changed = bits_image_property_changed;
 
     _pixman_image_reset_clip_region (image);
+
+    return TRUE;
+}
+
+PIXMAN_EXPORT pixman_image_t *
+pixman_image_create_bits (pixman_format_code_t format,
+                          int                  width,
+                          int                  height,
+                          uint32_t *           bits,
+                          int                  rowstride_bytes)
+{
+    pixman_image_t *image;
+
+    /* must be a whole number of uint32_t's
+     */
+    return_val_if_fail (
+	bits == NULL || (rowstride_bytes % sizeof (uint32_t)) == 0, NULL);
+
+    return_val_if_fail (PIXMAN_FORMAT_BPP (format) >= PIXMAN_FORMAT_DEPTH (format), NULL);
+
+    image = _pixman_image_allocate ();
+
+    if (!image)
+	return NULL;
+
+    if (!_pixman_bits_image_init (image, format, width, height, bits,
+				  rowstride_bytes / (int) sizeof (uint32_t)))
+    {
+	free (image);
+	return NULL;
+    }
 
     return image;
 }

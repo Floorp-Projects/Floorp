@@ -1,38 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is content.js.
- *
- * The Initial Developer of the Original Code is the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Tim Taubert <ttaubert@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -53,14 +21,6 @@ __defineGetter__("webProgress", function () {
 // Handles events dispatched by the content window.
 let WindowEventHandler = {
   // ----------
-  // Function: onDOMContentLoaded
-  // Sends an asynchronous message when the "onDOMContentLoaded" event for the
-  // current page is fired.
-  onDOMContentLoaded: function WEH_onDOMContentLoaded(event) {
-    sendAsyncMessage("Panorama:DOMContentLoaded");
-  },
-
-  // ----------
   // Function: onDOMWillOpenModalDialog
   // Sends a synchronous message when the "onDOMWillOpenModalDialog" event
   // is fired right before a modal dialog will be opened by the current page.
@@ -74,12 +34,20 @@ let WindowEventHandler = {
     // as quick as possible, switch the selected tab and hide the tabview
     // before the modal dialog is shown
     sendSyncMessage("Panorama:DOMWillOpenModalDialog");
+  },
+
+  // ----------
+  // Function: onMozAfterPaint
+  // Sends an asynchronous message when the "onMozAfterPaint" event
+  // is fired.
+  onMozAfterPaint: function WEH_onMozAfterPaint(event) {
+    sendAsyncMessage("Panorama:MozAfterPaint");
   }
 };
 
 // add event listeners
-addEventListener("DOMContentLoaded", WindowEventHandler.onDOMContentLoaded, false);
 addEventListener("DOMWillOpenModalDialog", WindowEventHandler.onDOMWillOpenModalDialog, false);
+addEventListener("MozAfterPaint", WindowEventHandler.onMozAfterPaint, false);
 
 // ----------
 // WindowMessageHandler
@@ -90,7 +58,7 @@ let WindowMessageHandler = {
   // Function: isDocumentLoaded
   // Checks if the currently active document is loaded.
   isDocumentLoaded: function WMH_isDocumentLoaded(cx) {
-    let isLoaded = (content.document.readyState == "complete" &&
+    let isLoaded = (content.document.readyState != "uninitialized" &&
                     !webProgress.isLoadingDocument);
 
     sendAsyncMessage(cx.name, {isLoaded: isLoaded});
@@ -110,90 +78,3 @@ let WindowMessageHandler = {
 addMessageListener("Panorama:isDocumentLoaded", WindowMessageHandler.isDocumentLoaded);
 addMessageListener("Panorama:isImageDocument", WindowMessageHandler.isImageDocument);
 
-// ----------
-// WebProgressListener
-//
-// Observe the web progress of content pages loaded into this browser. When the
-// state of a page changes we check if we're still allowed to store page
-// information permanently.
-let WebProgressListener = {
-  // ----------
-  // Function: onStateChange
-  // Called by the webProgress when its state changes.
-  onStateChange: function WPL_onStateChange(webProgress, request, flag, status) {
-    // The browser just started loading (again). Explicitly grant storage
-    // because the browser might have been blocked before (e.g. when navigating
-    // from a https-page to a http-page).
-    if (flag & Ci.nsIWebProgressListener.STATE_START) {
-      // ensure the dom window is the top one
-      if (this._isTopWindow(webProgress))
-        sendAsyncMessage("Panorama:StoragePolicy:granted");
-    }
-
-    // The browser finished loading - check the cache control headers. Send
-    // a message if we're not allowed to store information about this page.
-    if (flag & Ci.nsIWebProgressListener.STATE_STOP) {
-      // ensure the dom window is the top one
-      if (this._isTopWindow(webProgress) &&
-          request && request instanceof Ci.nsIHttpChannel) {
-        request.QueryInterface(Ci.nsIHttpChannel);
-
-        let exclude = false;
-        let reason = "";
-
-        // Check if the "Cache-Control" header is "no-store". In this case we're
-        // not allowed to store information about the current page.
-        if (this._isNoStoreResponse(request)) {
-          exclude = true;
-          reason = "no-store";
-        }
-        // Otherwise we'll deny storage if we're currently viewing a https
-        // page without a "Cache-Control: public" header.
-        else if (request.URI.schemeIs("https")) {
-          let cacheControlHeader = this._getCacheControlHeader(request);
-          if (cacheControlHeader && !(/public/i).test(cacheControlHeader)) {
-            exclude = true;
-            reason = "https";
-          }
-        }
-
-        if (exclude)
-          sendAsyncMessage("Panorama:StoragePolicy:denied", {reason: reason});
-      }
-    }
-  },
-
-  // ----------
-  // Function: _isTopWindow
-  // Returns whether the DOMWindow associated with the webProgress is the
-  // top content window (and not an iframe or similar).
-  _isTopWindow: function WPL__isTopWindow(webProgress) {
-    // can throw if there's no associated DOMWindow
-    return !!Utils.attempt(function () webProgress.DOMWindow == content);
-  },
-
-  // ----------
-  // Function: _isNoStoreResponse
-  // Checks if the "Cache-Control" header is "no-store".
-  _isNoStoreResponse: function WPL__isNoStoreResponse(req) {
-    // can throw if called before the response has been received
-    return !!Utils.attempt(function () req.isNoStoreResponse());
-  },
-
-  // ----------
-  // Function: _getCacheControlHeader
-  // Returns the value of the "Cache-Control" header.
-  _getCacheControlHeader: function WPL__getCacheControlHeader(req) {
-    // can throw when the "Cache-Control" header doesn't exist
-    return Utils.attempt(function () req.getResponseHeader("Cache-Control"));
-  },
-
-  // ----------
-  // Implements progress listener interface.
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference,
-                                         Ci.nsISupports])
-};
-
-// add web progress listener
-webProgress.addProgressListener(WebProgressListener, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);

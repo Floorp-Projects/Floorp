@@ -8,7 +8,7 @@ http://www.cairographics.org/.
 VERSIONS:
 
   cairo (12d521df8acc483b2daa844d4f05dc2fe2765ba6)
-  pixman (2f4f2fb4859931bf6dc5632d8c919e7296736427)
+  pixman (0.24.2)
 
 ==== Patches ====
 
@@ -188,7 +188,7 @@ NOTE: we previously supported ARM assembler on MSVC, this has been removed becau
 
 pixman-export.patch: use cairo_public for PIXMAN_EXPORT to make sure pixman symbols are not exported in libxul
 
-bad-memset.patch: Fix third argument in memcmp call in pixman-image.c
+pixman-limits.patch: include limits.h for SIZE_MAX
 
 ==== disable printing patch ====
 

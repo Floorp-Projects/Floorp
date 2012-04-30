@@ -44,10 +44,6 @@
  * All temp registers can be used freely outside the code block.
  * Assume that symbol(register .req) OUT and MASK are defined at caller of these macro blocks.
  *
- * TODOs
- *  Support 0565 pixel format
- *  Optimization for two and last pixel cases
- *
  * Remarks
  *  There can be lots of pipeline stalls inside code block and between code blocks.
  *  Further optimizations will be done by new macro templates using head/tail_head/tail scheme.
@@ -92,21 +88,19 @@ fname:
  */
 
 .macro bilinear_load_8888 reg1, reg2, tmp
-    mov       TMP2, X, asr #16
+    mov       TMP1, X, asr #16
     add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #2
-    add       TMP2, BOTTOM, TMP2, asl #2
-    vld1.32   {reg1}, [TMP1]
-    vld1.32   {reg2}, [TMP2]
+    add       TMP1, TOP, TMP1, asl #2
+    vld1.32   {reg1}, [TMP1], STRIDE
+    vld1.32   {reg2}, [TMP1]
 .endm
 
 .macro bilinear_load_0565 reg1, reg2, tmp
-    mov       TMP2, X, asr #16
+    mov       TMP1, X, asr #16
     add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    vld1.32   {reg2[0]}, [TMP1]
-    vld1.32   {reg2[1]}, [TMP2]
+    add       TMP1, TOP, TMP1, asl #1
+    vld1.32   {reg2[0]}, [TMP1], STRIDE
+    vld1.32   {reg2[1]}, [TMP1]
     convert_four_0565_to_x888_packed reg2, reg1, reg2, tmp
 .endm
 
@@ -134,18 +128,16 @@ fname:
 .macro bilinear_load_and_vertical_interpolate_two_0565 \
                 acc1, acc2, reg1, reg2, reg3, reg4, acc2lo, acc2hi
 
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #1
     mov       TMP2, X, asr #16
     add       X, X, UX
-    mov       TMP4, X, asr #16
-    add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    add       TMP3, TOP, TMP4, asl #1
-    add       TMP4, BOTTOM, TMP4, asl #1
-    vld1.32   {acc2lo[0]}, [TMP1]
-    vld1.32   {acc2hi[0]}, [TMP3]
-    vld1.32   {acc2lo[1]}, [TMP2]
-    vld1.32   {acc2hi[1]}, [TMP4]
+    add       TMP2, TOP, TMP2, asl #1
+    vld1.32   {acc2lo[0]}, [TMP1], STRIDE
+    vld1.32   {acc2hi[0]}, [TMP2], STRIDE
+    vld1.32   {acc2lo[1]}, [TMP1]
+    vld1.32   {acc2hi[1]}, [TMP2]
     convert_0565_to_x888 acc2, reg3, reg2, reg1
     vzip.u8   reg1, reg3
     vzip.u8   reg2, reg4
@@ -161,34 +153,30 @@ fname:
                 xacc1, xacc2, xreg1, xreg2, xreg3, xreg4, xacc2lo, xacc2hi \
                 yacc1, yacc2, yreg1, yreg2, yreg3, yreg4, yacc2lo, yacc2hi
 
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #1
     mov       TMP2, X, asr #16
     add       X, X, UX
-    mov       TMP4, X, asr #16
-    add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    add       TMP3, TOP, TMP4, asl #1
-    add       TMP4, BOTTOM, TMP4, asl #1
-    vld1.32   {xacc2lo[0]}, [TMP1]
-    vld1.32   {xacc2hi[0]}, [TMP3]
-    vld1.32   {xacc2lo[1]}, [TMP2]
-    vld1.32   {xacc2hi[1]}, [TMP4]
+    add       TMP2, TOP, TMP2, asl #1
+    vld1.32   {xacc2lo[0]}, [TMP1], STRIDE
+    vld1.32   {xacc2hi[0]}, [TMP2], STRIDE
+    vld1.32   {xacc2lo[1]}, [TMP1]
+    vld1.32   {xacc2hi[1]}, [TMP2]
     convert_0565_to_x888 xacc2, xreg3, xreg2, xreg1
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #1
     mov       TMP2, X, asr #16
     add       X, X, UX
-    mov       TMP4, X, asr #16
-    add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    add       TMP3, TOP, TMP4, asl #1
-    add       TMP4, BOTTOM, TMP4, asl #1
-    vld1.32   {yacc2lo[0]}, [TMP1]
+    add       TMP2, TOP, TMP2, asl #1
+    vld1.32   {yacc2lo[0]}, [TMP1], STRIDE
     vzip.u8   xreg1, xreg3
-    vld1.32   {yacc2hi[0]}, [TMP3]
+    vld1.32   {yacc2hi[0]}, [TMP2], STRIDE
     vzip.u8   xreg2, xreg4
-    vld1.32   {yacc2lo[1]}, [TMP2]
+    vld1.32   {yacc2lo[1]}, [TMP1]
     vzip.u8   xreg3, xreg4
-    vld1.32   {yacc2hi[1]}, [TMP4]
+    vld1.32   {yacc2hi[1]}, [TMP2]
     vzip.u8   xreg1, xreg2
     convert_0565_to_x888 yacc2, yreg3, yreg2, yreg1
     vmull.u8  xacc1, xreg1, d28
@@ -252,6 +240,7 @@ fname:
 .else
     .error bilinear_load_mask_8 numpix is unsupported
 .endif
+    pld         [MASK, #prefetch_offset]
 .endm
 
 .macro bilinear_load_mask mask_fmt, numpix, mask
@@ -279,6 +268,7 @@ fname:
 .else
     .error bilinear_load_dst_8888 numpix is unsupported
 .endif
+    pld         [OUT, #(prefetch_offset * 4)]
 .endm
 
 .macro bilinear_load_dst_8888_over numpix, dst0, dst1, dst01
@@ -303,7 +293,7 @@ fname:
  * For two pixel case
  *  (r0, r1, x, x, g0, g1, x, x) x (m0, m1, m0, m1, m0, m1, m0, m1)
  *  (b0, b1, x, x, a0, a1, x, x) x (m0, m1, m0, m1, m0, m1, m0, m1)
- * We can do some optimizations for this including one pixel cases.
+ * We can do some optimizations for this including last pixel cases.
  */
 .macro bilinear_duplicate_mask_x numpix, mask
 .endm
@@ -497,8 +487,7 @@ fname:
     bilinear_load_dst dst_fmt, op, 1, d18, d19, q9
     vmull.u8  q1, d0, d28
     vmlal.u8  q1, d1, d29
-    vshr.u16  d30, d24, #8
-    /* 4 cycles bubble */
+    /* 5 cycles bubble */
     vshll.u16 q0, d2, #8
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
@@ -525,18 +514,18 @@ fname:
                 q1, q11, d0, d1, d20, d21, d22, d23
     bilinear_load_mask mask_fmt, 2, d4
     bilinear_load_dst dst_fmt, op, 2, d18, d19, q9
-    vshr.u16  q15, q12, #8
-    vadd.u16  q12, q12, q13
     vshll.u16 q0, d2, #8
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
     vshll.u16 q10, d22, #8
     vmlsl.u16 q10, d22, d31
     vmlal.u16 q10, d23, d31
-    vshrn.u32 d30, q0, #16
-    vshrn.u32 d31, q10, #16
+    vshrn.u32 d0, q0, #16
+    vshrn.u32 d1, q10, #16
     bilinear_duplicate_mask mask_fmt, 2, d4
-    vmovn.u16 d0, q15
+    vshr.u16  q15, q12, #8
+    vadd.u16  q12, q12, q13
+    vmovn.u16 d0, q0
     bilinear_interleave_src_dst \
                 mask_fmt, op, 2, d0, d1, q0, d18, d19, q9
     bilinear_apply_mask_to_src \
@@ -554,8 +543,7 @@ fname:
                 q1, q11, d0, d1, d20, d21, d22, d23 \
                 q3, q9,  d4, d5, d16, d17, d18, d19
     pld       [TMP1, PF_OFFS]
-    vshr.u16  q15, q12, #8
-    vadd.u16  q12, q12, q13
+    sub       TMP1, TMP1, STRIDE
     vshll.u16 q0, d2, #8
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
@@ -567,9 +555,9 @@ fname:
     vmlsl.u16 q2, d6, d30
     vmlal.u16 q2, d7, d30
     vshll.u16 q8, d18, #8
-    bilinear_load_mask mask_fmt, 4, d30
+    bilinear_load_mask mask_fmt, 4, d22
     bilinear_load_dst dst_fmt, op, 4, d2, d3, q1
-    pld       [TMP2, PF_OFFS]
+    pld       [TMP1, PF_OFFS]
     vmlsl.u16 q8, d18, d31
     vmlal.u16 q8, d19, d31
     vadd.u16  q12, q12, q13
@@ -577,97 +565,88 @@ fname:
     vshrn.u32 d1, q10, #16
     vshrn.u32 d4, q2, #16
     vshrn.u32 d5, q8, #16
-    bilinear_duplicate_mask mask_fmt, 4, d30
+    bilinear_duplicate_mask mask_fmt, 4, d22
+    vshr.u16  q15, q12, #8
     vmovn.u16 d0, q0
     vmovn.u16 d1, q2
+    vadd.u16  q12, q12, q13
     bilinear_interleave_src_dst \
                 mask_fmt, op, 4, d0, d1, q0, d2, d3, q1
     bilinear_apply_mask_to_src \
-                mask_fmt, 4, d0, d1, q0, d30, \
+                mask_fmt, 4, d0, d1, q0, d22, \
                 q3, q8, q9, q10
     bilinear_combine \
                 op, 4, d0, d1, q0, d2, d3, q1, \
-                q3, q8, q9, q10, d22
+                q3, q8, q9, q10, d23
     bilinear_deinterleave_dst mask_fmt, op, 4, d0, d1, q0
     bilinear_store_&dst_fmt 4, q2, q3
 .endm
 
-.macro generate_bilinear_scanline_func_src_dst \
-                fname, src_fmt, dst_fmt, op, \
-                bpp_shift, prefetch_distance
+.set BILINEAR_FLAG_USE_MASK,		1
+.set BILINEAR_FLAG_USE_ALL_NEON_REGS,	2
+
+/*
+ * Main template macro for generating NEON optimized bilinear scanline functions.
+ *
+ * Bilinear scanline generator macro take folling arguments:
+ *  fname			- name of the function to generate
+ *  src_fmt			- source color format (8888 or 0565)
+ *  dst_fmt			- destination color format (8888 or 0565)
+ *  src/dst_bpp_shift		- (1 << bpp_shift) is the size of src/dst pixel in bytes
+ *  process_last_pixel		- code block that interpolate one pixel and does not
+ *				  update horizontal weight
+ *  process_two_pixels		- code block that interpolate two pixels and update
+ *				  horizontal weight
+ *  process_four_pixels		- code block that interpolate four pixels and update
+ *				  horizontal weight
+ *  process_pixblock_head	- head part of middle loop
+ *  process_pixblock_tail	- tail part of middle loop
+ *  process_pixblock_tail_head	- tail_head of middle loop
+ *  pixblock_size		- number of pixels processed in a single middle loop
+ *  prefetch_distance		- prefetch in the source image by that many pixels ahead
+ */
+
+.macro generate_bilinear_scanline_func \
+	fname, \
+	src_fmt, dst_fmt, src_bpp_shift, dst_bpp_shift, \
+	bilinear_process_last_pixel, \
+	bilinear_process_two_pixels, \
+	bilinear_process_four_pixels, \
+	bilinear_process_pixblock_head, \
+	bilinear_process_pixblock_tail, \
+	bilinear_process_pixblock_tail_head, \
+	pixblock_size, \
+	prefetch_distance, \
+	flags
 
 pixman_asm_function fname
-    OUT       .req      r0
-    TOP       .req      r1
-    BOTTOM    .req      r2
-    WT        .req      r3
-    WB        .req      r4
-    X         .req      r5
-    UX        .req      r6
-    WIDTH     .req      ip
-    TMP1      .req      r3
-    TMP2      .req      r4
-    PF_OFFS   .req      r7
-    TMP3      .req      r8
-    TMP4      .req      r9
+.if pixblock_size == 8
+.elseif pixblock_size == 4
+.else
+    .error unsupported pixblock size
+.endif
 
-    mov       ip, sp
-    push      {r4, r5, r6, r7, r8, r9}
-    mov       PF_OFFS, #prefetch_distance
-    ldmia     ip, {WB, X, UX, WIDTH}
-    mul       PF_OFFS, PF_OFFS, UX
+.if ((flags) & BILINEAR_FLAG_USE_MASK) == 0
+    OUT       .req    r0
+    TOP       .req    r1
+    BOTTOM    .req    r2
+    WT        .req    r3
+    WB        .req    r4
+    X         .req    r5
+    UX        .req    r6
+    WIDTH     .req    ip
+    TMP1      .req    r3
+    TMP2      .req    r4
+    PF_OFFS   .req    r7
+    TMP3      .req    r8
+    TMP4      .req    r9
+    STRIDE    .req    r2
 
-    cmp       WIDTH, #0
-    ble       3f
-
-    vdup.u16  q12, X
-    vdup.u16  q13, UX
-    vdup.u8   d28, WT
-    vdup.u8   d29, WB
-    vadd.u16  d25, d25, d26
-    vadd.u16  q13, q13, q13
-
-    subs      WIDTH, WIDTH, #4
-    blt       1f
-    mov       PF_OFFS, PF_OFFS, asr #(16 - bpp_shift)
-0:
-    bilinear_interpolate_four_pixels src_fmt, x, dst_fmt, op
-    subs      WIDTH, WIDTH, #4
-    bge       0b
-1:
-    tst       WIDTH, #2
-    beq       2f
-    bilinear_interpolate_two_pixels src_fmt, x, dst_fmt, op
-2:
-    tst       WIDTH, #1
-    beq       3f
-    bilinear_interpolate_last_pixel src_fmt, x, dst_fmt, op
-3:
-    pop       {r4, r5, r6, r7, r8, r9}
-    bx        lr
-
-    .unreq    OUT
-    .unreq    TOP
-    .unreq    BOTTOM
-    .unreq    WT
-    .unreq    WB
-    .unreq    X
-    .unreq    UX
-    .unreq    WIDTH
-    .unreq    TMP1
-    .unreq    TMP2
-    .unreq    PF_OFFS
-    .unreq    TMP3
-    .unreq    TMP4
-.endfunc
-
-.endm
-
-.macro generate_bilinear_scanline_func_src_a8_dst \
-                fname, src_fmt, dst_fmt, op, \
-                bpp_shift, prefetch_distance
-
-pixman_asm_function fname
+    mov		ip, sp
+    push	{r4, r5, r6, r7, r8, r9}
+    mov		PF_OFFS, #prefetch_distance
+    ldmia	ip, {WB, X, UX, WIDTH}
+.else
     OUT       .req      r0
     MASK      .req      r1
     TOP       .req      r2
@@ -682,12 +661,24 @@ pixman_asm_function fname
     PF_OFFS   .req      r8
     TMP3      .req      r9
     TMP4      .req      r10
+    STRIDE    .req      r3
+
+    .set prefetch_offset, prefetch_distance
 
     mov       ip, sp
     push      {r4, r5, r6, r7, r8, r9, r10, ip}
     mov       PF_OFFS, #prefetch_distance
     ldmia     ip, {WT, WB, X, UX, WIDTH}
+.endif
+
     mul       PF_OFFS, PF_OFFS, UX
+
+.if ((flags) & BILINEAR_FLAG_USE_ALL_NEON_REGS) != 0
+    vpush     {d8-d15}
+.endif
+
+    sub	      STRIDE, BOTTOM, TOP
+    .unreq    BOTTOM
 
     cmp       WIDTH, #0
     ble       3f
@@ -697,73 +688,680 @@ pixman_asm_function fname
     vdup.u8   d28, WT
     vdup.u8   d29, WB
     vadd.u16  d25, d25, d26
-    vadd.u16  q13, q13, q13
 
-    subs      WIDTH, WIDTH, #4
-    blt       1f
-    mov       PF_OFFS, PF_OFFS, asr #(16 - bpp_shift)
+    /* ensure good destination alignment  */
+    cmp       WIDTH, #1
+    blt       0f
+    tst       OUT, #(1 << dst_bpp_shift)
+    beq       0f
+    vshr.u16  q15, q12, #8
+    vadd.u16  q12, q12, q13
+    bilinear_process_last_pixel
+    sub       WIDTH, WIDTH, #1
 0:
-    bilinear_interpolate_four_pixels src_fmt, 8, dst_fmt, op
-    subs      WIDTH, WIDTH, #4
+    vadd.u16  q13, q13, q13
+    vshr.u16  q15, q12, #8
+    vadd.u16  q12, q12, q13
+
+    cmp       WIDTH, #2
+    blt       0f
+    tst       OUT, #(1 << (dst_bpp_shift + 1))
+    beq       0f
+    bilinear_process_two_pixels
+    sub       WIDTH, WIDTH, #2
+0:
+.if pixblock_size == 8
+    cmp       WIDTH, #4
+    blt       0f
+    tst       OUT, #(1 << (dst_bpp_shift + 2))
+    beq       0f
+    bilinear_process_four_pixels
+    sub       WIDTH, WIDTH, #4
+0:
+.endif
+    subs      WIDTH, WIDTH, #pixblock_size
+    blt       1f
+    mov       PF_OFFS, PF_OFFS, asr #(16 - src_bpp_shift)
+    bilinear_process_pixblock_head
+    subs      WIDTH, WIDTH, #pixblock_size
+    blt       5f
+0:
+    bilinear_process_pixblock_tail_head
+    subs      WIDTH, WIDTH, #pixblock_size
     bge       0b
+5:
+    bilinear_process_pixblock_tail
 1:
+.if pixblock_size == 8
+    tst       WIDTH, #4
+    beq       2f
+    bilinear_process_four_pixels
+2:
+.endif
+    /* handle the remaining trailing pixels */
     tst       WIDTH, #2
     beq       2f
-    bilinear_interpolate_two_pixels src_fmt, 8, dst_fmt, op
+    bilinear_process_two_pixels
 2:
     tst       WIDTH, #1
     beq       3f
-    bilinear_interpolate_last_pixel src_fmt, 8, dst_fmt, op
+    bilinear_process_last_pixel
 3:
+.if ((flags) & BILINEAR_FLAG_USE_ALL_NEON_REGS) != 0
+    vpop      {d8-d15}
+.endif
+
+.if ((flags) & BILINEAR_FLAG_USE_MASK) == 0
+    pop       {r4, r5, r6, r7, r8, r9}
+.else
     pop       {r4, r5, r6, r7, r8, r9, r10, ip}
+.endif
     bx        lr
 
     .unreq    OUT
     .unreq    TOP
-    .unreq    BOTTOM
     .unreq    WT
     .unreq    WB
     .unreq    X
     .unreq    UX
     .unreq    WIDTH
-    .unreq    MASK
     .unreq    TMP1
     .unreq    TMP2
     .unreq    PF_OFFS
     .unreq    TMP3
     .unreq    TMP4
+    .unreq    STRIDE
+.if ((flags) & BILINEAR_FLAG_USE_MASK) != 0
+    .unreq    MASK
+.endif
+
 .endfunc
 
 .endm
 
-generate_bilinear_scanline_func_src_dst \
-    pixman_scaled_bilinear_scanline_8888_8888_OVER_asm_neon, \
-    8888, 8888, over, 2, 28
+/* src_8888_8_8888 */
+.macro bilinear_src_8888_8_8888_process_last_pixel
+    bilinear_interpolate_last_pixel 8888, 8, 8888, src
+.endm
 
-generate_bilinear_scanline_func_src_dst \
-    pixman_scaled_bilinear_scanline_8888_8888_ADD_asm_neon, \
-    8888, 8888, add, 2, 28
+.macro bilinear_src_8888_8_8888_process_two_pixels
+    bilinear_interpolate_two_pixels 8888, 8, 8888, src
+.endm
 
-generate_bilinear_scanline_func_src_a8_dst \
+.macro bilinear_src_8888_8_8888_process_four_pixels
+    bilinear_interpolate_four_pixels 8888, 8, 8888, src
+.endm
+
+.macro bilinear_src_8888_8_8888_process_pixblock_head
+    bilinear_src_8888_8_8888_process_four_pixels
+.endm
+
+.macro bilinear_src_8888_8_8888_process_pixblock_tail
+.endm
+
+.macro bilinear_src_8888_8_8888_process_pixblock_tail_head
+    bilinear_src_8888_8_8888_process_pixblock_tail
+    bilinear_src_8888_8_8888_process_pixblock_head
+.endm
+
+/* src_8888_8_0565 */
+.macro bilinear_src_8888_8_0565_process_last_pixel
+    bilinear_interpolate_last_pixel 8888, 8, 0565, src
+.endm
+
+.macro bilinear_src_8888_8_0565_process_two_pixels
+    bilinear_interpolate_two_pixels 8888, 8, 0565, src
+.endm
+
+.macro bilinear_src_8888_8_0565_process_four_pixels
+    bilinear_interpolate_four_pixels 8888, 8, 0565, src
+.endm
+
+.macro bilinear_src_8888_8_0565_process_pixblock_head
+    bilinear_src_8888_8_0565_process_four_pixels
+.endm
+
+.macro bilinear_src_8888_8_0565_process_pixblock_tail
+.endm
+
+.macro bilinear_src_8888_8_0565_process_pixblock_tail_head
+    bilinear_src_8888_8_0565_process_pixblock_tail
+    bilinear_src_8888_8_0565_process_pixblock_head
+.endm
+
+/* src_0565_8_x888 */
+.macro bilinear_src_0565_8_x888_process_last_pixel
+    bilinear_interpolate_last_pixel 0565, 8, 8888, src
+.endm
+
+.macro bilinear_src_0565_8_x888_process_two_pixels
+    bilinear_interpolate_two_pixels 0565, 8, 8888, src
+.endm
+
+.macro bilinear_src_0565_8_x888_process_four_pixels
+    bilinear_interpolate_four_pixels 0565, 8, 8888, src
+.endm
+
+.macro bilinear_src_0565_8_x888_process_pixblock_head
+    bilinear_src_0565_8_x888_process_four_pixels
+.endm
+
+.macro bilinear_src_0565_8_x888_process_pixblock_tail
+.endm
+
+.macro bilinear_src_0565_8_x888_process_pixblock_tail_head
+    bilinear_src_0565_8_x888_process_pixblock_tail
+    bilinear_src_0565_8_x888_process_pixblock_head
+.endm
+
+/* src_0565_8_0565 */
+.macro bilinear_src_0565_8_0565_process_last_pixel
+    bilinear_interpolate_last_pixel 0565, 8, 0565, src
+.endm
+
+.macro bilinear_src_0565_8_0565_process_two_pixels
+    bilinear_interpolate_two_pixels 0565, 8, 0565, src
+.endm
+
+.macro bilinear_src_0565_8_0565_process_four_pixels
+    bilinear_interpolate_four_pixels 0565, 8, 0565, src
+.endm
+
+.macro bilinear_src_0565_8_0565_process_pixblock_head
+    bilinear_src_0565_8_0565_process_four_pixels
+.endm
+
+.macro bilinear_src_0565_8_0565_process_pixblock_tail
+.endm
+
+.macro bilinear_src_0565_8_0565_process_pixblock_tail_head
+    bilinear_src_0565_8_0565_process_pixblock_tail
+    bilinear_src_0565_8_0565_process_pixblock_head
+.endm
+
+/* over_8888_8888 */
+.macro bilinear_over_8888_8888_process_last_pixel
+    bilinear_interpolate_last_pixel 8888, x, 8888, over
+.endm
+
+.macro bilinear_over_8888_8888_process_two_pixels
+    bilinear_interpolate_two_pixels 8888, x, 8888, over
+.endm
+
+.macro bilinear_over_8888_8888_process_four_pixels
+    bilinear_interpolate_four_pixels 8888, x, 8888, over
+.endm
+
+.macro bilinear_over_8888_8888_process_pixblock_head
+    mov         TMP1, X, asr #16
+    add         X, X, UX
+    add         TMP1, TOP, TMP1, asl #2
+    mov         TMP2, X, asr #16
+    add         X, X, UX
+    add         TMP2, TOP, TMP2, asl #2
+
+    vld1.32     {d22}, [TMP1], STRIDE
+    vld1.32     {d23}, [TMP1]
+    mov         TMP3, X, asr #16
+    add         X, X, UX
+    add         TMP3, TOP, TMP3, asl #2
+    vmull.u8    q8, d22, d28
+    vmlal.u8    q8, d23, d29
+
+    vld1.32     {d22}, [TMP2], STRIDE
+    vld1.32     {d23}, [TMP2]
+    mov         TMP4, X, asr #16
+    add         X, X, UX
+    add         TMP4, TOP, TMP4, asl #2
+    vmull.u8    q9, d22, d28
+    vmlal.u8    q9, d23, d29
+
+    vld1.32     {d22}, [TMP3], STRIDE
+    vld1.32     {d23}, [TMP3]
+    vmull.u8    q10, d22, d28
+    vmlal.u8    q10, d23, d29
+
+    vshll.u16   q0, d16, #8
+    vmlsl.u16   q0, d16, d30
+    vmlal.u16   q0, d17, d30
+
+    pld         [TMP4, PF_OFFS]
+    vld1.32     {d16}, [TMP4], STRIDE
+    vld1.32     {d17}, [TMP4]
+    pld         [TMP4, PF_OFFS]
+    vmull.u8    q11, d16, d28
+    vmlal.u8    q11, d17, d29
+
+    vshll.u16   q1, d18, #8
+    vmlsl.u16   q1, d18, d31
+    vmlal.u16   q1, d19, d31
+    vshr.u16    q15, q12, #8
+    vadd.u16    q12, q12, q13
+.endm
+
+.macro bilinear_over_8888_8888_process_pixblock_tail
+    vshll.u16   q2, d20, #8
+    vmlsl.u16   q2, d20, d30
+    vmlal.u16   q2, d21, d30
+    vshll.u16   q3, d22, #8
+    vmlsl.u16   q3, d22, d31
+    vmlal.u16   q3, d23, d31
+    vshrn.u32   d0, q0, #16
+    vshrn.u32   d1, q1, #16
+    vld1.32     {d2, d3}, [OUT, :128]
+    pld         [OUT, #(prefetch_offset * 4)]
+    vshrn.u32   d4, q2, #16
+    vshr.u16    q15, q12, #8
+    vshrn.u32   d5, q3, #16
+    vmovn.u16   d6, q0
+    vmovn.u16   d7, q2
+    vuzp.8      d6, d7
+    vuzp.8      d2, d3
+    vuzp.8      d6, d7
+    vuzp.8      d2, d3
+    vdup.32     d4, d7[1]
+    vmvn.8      d4, d4
+    vmull.u8    q11, d2, d4
+    vmull.u8    q2, d3, d4
+    vrshr.u16   q1, q11, #8
+    vrshr.u16   q10, q2, #8
+    vraddhn.u16 d2, q1, q11
+    vraddhn.u16 d3, q10, q2
+    vqadd.u8    q3, q1, q3
+    vuzp.8      d6, d7
+    vuzp.8      d6, d7
+    vadd.u16    q12, q12, q13
+    vst1.32     {d6, d7}, [OUT, :128]!
+.endm
+
+.macro bilinear_over_8888_8888_process_pixblock_tail_head
+                                            vshll.u16   q2, d20, #8
+    mov         TMP1, X, asr #16
+    add         X, X, UX
+    add         TMP1, TOP, TMP1, asl #2
+                                            vmlsl.u16   q2, d20, d30
+    mov         TMP2, X, asr #16
+    add         X, X, UX
+    add         TMP2, TOP, TMP2, asl #2
+                                            vmlal.u16   q2, d21, d30
+                                            vshll.u16   q3, d22, #8
+    vld1.32     {d20}, [TMP1], STRIDE
+                                            vmlsl.u16   q3, d22, d31
+                                            vmlal.u16   q3, d23, d31
+    vld1.32     {d21}, [TMP1]
+    vmull.u8    q8, d20, d28
+    vmlal.u8    q8, d21, d29
+                                            vshrn.u32   d0, q0, #16
+                                            vshrn.u32   d1, q1, #16
+                                            vld1.32     {d2, d3}, [OUT, :128]
+                                            pld         [OUT, PF_OFFS]
+                                            vshrn.u32   d4, q2, #16
+                                            vshr.u16    q15, q12, #8
+    vld1.32     {d22}, [TMP2], STRIDE
+                                            vshrn.u32   d5, q3, #16
+                                            vmovn.u16   d6, q0
+    vld1.32     {d23}, [TMP2]
+    vmull.u8    q9, d22, d28
+    mov         TMP3, X, asr #16
+    add         X, X, UX
+    add         TMP3, TOP, TMP3, asl #2
+    mov         TMP4, X, asr #16
+    add         X, X, UX
+    add         TMP4, TOP, TMP4, asl #2
+    vmlal.u8    q9, d23, d29
+                                            vmovn.u16   d7, q2
+    vld1.32     {d22}, [TMP3], STRIDE
+                                            vuzp.8      d6, d7
+                                            vuzp.8      d2, d3
+                                            vuzp.8      d6, d7
+                                            vuzp.8      d2, d3
+                                            vdup.32     d4, d7[1]
+    vld1.32     {d23}, [TMP3]
+                                            vmvn.8      d4, d4
+    vmull.u8    q10, d22, d28
+    vmlal.u8    q10, d23, d29
+                                            vmull.u8    q11, d2, d4
+                                            vmull.u8    q2, d3, d4
+    vshll.u16   q0, d16, #8
+    vmlsl.u16   q0, d16, d30
+                                            vrshr.u16   q1, q11, #8
+    vmlal.u16   q0, d17, d30
+                                            vrshr.u16   q8, q2, #8
+                                            vraddhn.u16 d2, q1, q11
+                                            vraddhn.u16 d3, q8, q2
+    pld         [TMP4, PF_OFFS]
+    vld1.32     {d16}, [TMP4], STRIDE
+                                            vqadd.u8    q3, q1, q3
+    vld1.32     {d17}, [TMP4]
+    pld         [TMP4, PF_OFFS]
+    vmull.u8    q11, d16, d28
+    vmlal.u8    q11, d17, d29
+                                            vuzp.8      d6, d7
+    vshll.u16   q1, d18, #8
+                                            vuzp.8      d6, d7
+    vmlsl.u16   q1, d18, d31
+                                            vadd.u16    q12, q12, q13
+    vmlal.u16   q1, d19, d31
+    vshr.u16    q15, q12, #8
+    vadd.u16    q12, q12, q13
+                                            vst1.32     {d6, d7}, [OUT, :128]!
+.endm
+
+/* over_8888_8_8888 */
+.macro bilinear_over_8888_8_8888_process_last_pixel
+    bilinear_interpolate_last_pixel 8888, 8, 8888, over
+.endm
+
+.macro bilinear_over_8888_8_8888_process_two_pixels
+    bilinear_interpolate_two_pixels 8888, 8, 8888, over
+.endm
+
+.macro bilinear_over_8888_8_8888_process_four_pixels
+    bilinear_interpolate_four_pixels 8888, 8, 8888, over
+.endm
+
+.macro bilinear_over_8888_8_8888_process_pixblock_head
+    mov         TMP1, X, asr #16
+    add         X, X, UX
+    add         TMP1, TOP, TMP1, asl #2
+    vld1.32     {d0}, [TMP1], STRIDE
+    mov         TMP2, X, asr #16
+    add         X, X, UX
+    add         TMP2, TOP, TMP2, asl #2
+    vld1.32     {d1}, [TMP1]
+    mov         TMP3, X, asr #16
+    add         X, X, UX
+    add         TMP3, TOP, TMP3, asl #2
+    vld1.32     {d2}, [TMP2], STRIDE
+    mov         TMP4, X, asr #16
+    add         X, X, UX
+    add         TMP4, TOP, TMP4, asl #2
+    vld1.32     {d3}, [TMP2]
+    vmull.u8    q2, d0, d28
+    vmull.u8    q3, d2, d28
+    vmlal.u8    q2, d1, d29
+    vmlal.u8    q3, d3, d29
+    vshll.u16   q0, d4, #8
+    vshll.u16   q1, d6, #8
+    vmlsl.u16   q0, d4, d30
+    vmlsl.u16   q1, d6, d31
+    vmlal.u16   q0, d5, d30
+    vmlal.u16   q1, d7, d31
+    vshrn.u32   d0, q0, #16
+    vshrn.u32   d1, q1, #16
+    vld1.32     {d2}, [TMP3], STRIDE
+    vld1.32     {d3}, [TMP3]
+    pld         [TMP4, PF_OFFS]
+    vld1.32     {d4}, [TMP4], STRIDE
+    vld1.32     {d5}, [TMP4]
+    pld         [TMP4, PF_OFFS]
+    vmull.u8    q3, d2, d28
+    vmlal.u8    q3, d3, d29
+    vmull.u8    q1, d4, d28
+    vmlal.u8    q1, d5, d29
+    vshr.u16    q15, q12, #8
+    vld1.32     {d22[0]}, [MASK]!
+    pld         [MASK, #prefetch_offset]
+    vadd.u16    q12, q12, q13
+    vmovn.u16   d16, q0
+.endm
+
+.macro bilinear_over_8888_8_8888_process_pixblock_tail
+    vshll.u16   q9, d6, #8
+    vshll.u16   q10, d2, #8
+    vmlsl.u16   q9, d6, d30
+    vmlsl.u16   q10, d2, d31
+    vmlal.u16   q9, d7, d30
+    vmlal.u16   q10, d3, d31
+    vshr.u16    q15, q12, #8
+    vadd.u16    q12, q12, q13
+    vdup.32     d22, d22[0]
+    vshrn.u32   d18, q9, #16
+    vshrn.u32   d19, q10, #16
+    vmovn.u16   d17, q9
+    vld1.32     {d18, d19}, [OUT, :128]
+    pld         [OUT, PF_OFFS]
+    vuzp.8      d16, d17
+    vuzp.8      d18, d19
+    vuzp.8      d16, d17
+    vuzp.8      d18, d19
+    vmull.u8    q10, d16, d22
+    vmull.u8    q11, d17, d22
+    vrsra.u16   q10, q10, #8
+    vrsra.u16   q11, q11, #8
+    vrshrn.u16  d16, q10, #8
+    vrshrn.u16  d17, q11, #8
+    vdup.32     d22, d17[1]
+    vmvn.8      d22, d22
+    vmull.u8    q10, d18, d22
+    vmull.u8    q11, d19, d22
+    vrshr.u16   q9, q10, #8
+    vrshr.u16   q0, q11, #8
+    vraddhn.u16 d18, q9, q10
+    vraddhn.u16 d19, q0, q11
+    vqadd.u8    q9, q8, q9
+    vuzp.8      d18, d19
+    vuzp.8      d18, d19
+    vst1.32     {d18, d19}, [OUT, :128]!
+.endm
+
+.macro bilinear_over_8888_8_8888_process_pixblock_tail_head
+                                            vshll.u16   q9, d6, #8
+    mov         TMP1, X, asr #16
+    add         X, X, UX
+    add         TMP1, TOP, TMP1, asl #2
+                                            vshll.u16   q10, d2, #8
+    vld1.32     {d0}, [TMP1], STRIDE
+    mov         TMP2, X, asr #16
+    add         X, X, UX
+    add         TMP2, TOP, TMP2, asl #2
+                                            vmlsl.u16   q9, d6, d30
+                                            vmlsl.u16   q10, d2, d31
+    vld1.32     {d1}, [TMP1]
+    mov         TMP3, X, asr #16
+    add         X, X, UX
+    add         TMP3, TOP, TMP3, asl #2
+                                            vmlal.u16   q9, d7, d30
+                                            vmlal.u16   q10, d3, d31
+    vld1.32     {d2}, [TMP2], STRIDE
+    mov         TMP4, X, asr #16
+    add         X, X, UX
+    add         TMP4, TOP, TMP4, asl #2
+                                            vshr.u16    q15, q12, #8
+                                            vadd.u16    q12, q12, q13
+    vld1.32     {d3}, [TMP2]
+                                            vdup.32     d22, d22[0]
+                                            vshrn.u32   d18, q9, #16
+                                            vshrn.u32   d19, q10, #16
+    vmull.u8    q2, d0, d28
+    vmull.u8    q3, d2, d28
+                                            vmovn.u16   d17, q9
+                                            vld1.32     {d18, d19}, [OUT, :128]
+                                            pld         [OUT, #(prefetch_offset * 4)]
+    vmlal.u8    q2, d1, d29
+    vmlal.u8    q3, d3, d29
+                                            vuzp.8      d16, d17
+                                            vuzp.8      d18, d19
+    vshll.u16   q0, d4, #8
+    vshll.u16   q1, d6, #8
+                                            vuzp.8      d16, d17
+                                            vuzp.8      d18, d19
+    vmlsl.u16   q0, d4, d30
+    vmlsl.u16   q1, d6, d31
+                                            vmull.u8    q10, d16, d22
+                                            vmull.u8    q11, d17, d22
+    vmlal.u16   q0, d5, d30
+    vmlal.u16   q1, d7, d31
+                                            vrsra.u16   q10, q10, #8
+                                            vrsra.u16   q11, q11, #8
+    vshrn.u32   d0, q0, #16
+    vshrn.u32   d1, q1, #16
+                                            vrshrn.u16  d16, q10, #8
+                                            vrshrn.u16  d17, q11, #8
+    vld1.32     {d2}, [TMP3], STRIDE
+                                            vdup.32     d22, d17[1]
+    vld1.32     {d3}, [TMP3]
+                                            vmvn.8      d22, d22
+    pld         [TMP4, PF_OFFS]
+    vld1.32     {d4}, [TMP4], STRIDE
+                                            vmull.u8    q10, d18, d22
+                                            vmull.u8    q11, d19, d22
+    vld1.32     {d5}, [TMP4]
+    pld         [TMP4, PF_OFFS]
+    vmull.u8    q3, d2, d28
+                                            vrshr.u16   q9, q10, #8
+                                            vrshr.u16   q15, q11, #8
+    vmlal.u8    q3, d3, d29
+    vmull.u8    q1, d4, d28
+                                            vraddhn.u16 d18, q9, q10
+                                            vraddhn.u16 d19, q15, q11
+    vmlal.u8    q1, d5, d29
+    vshr.u16    q15, q12, #8
+                                            vqadd.u8    q9, q8, q9
+    vld1.32     {d22[0]}, [MASK]!
+                                            vuzp.8      d18, d19
+    vadd.u16    q12, q12, q13
+                                            vuzp.8      d18, d19
+    vmovn.u16   d16, q0
+                                            vst1.32     {d18, d19}, [OUT, :128]!
+.endm
+
+/* add_8888_8888 */
+.macro bilinear_add_8888_8888_process_last_pixel
+    bilinear_interpolate_last_pixel 8888, x, 8888, add
+.endm
+
+.macro bilinear_add_8888_8888_process_two_pixels
+    bilinear_interpolate_two_pixels 8888, x, 8888, add
+.endm
+
+.macro bilinear_add_8888_8888_process_four_pixels
+    bilinear_interpolate_four_pixels 8888, x, 8888, add
+.endm
+
+.macro bilinear_add_8888_8888_process_pixblock_head
+    bilinear_add_8888_8888_process_four_pixels
+.endm
+
+.macro bilinear_add_8888_8888_process_pixblock_tail
+.endm
+
+.macro bilinear_add_8888_8888_process_pixblock_tail_head
+    bilinear_add_8888_8888_process_pixblock_tail
+    bilinear_add_8888_8888_process_pixblock_head
+.endm
+
+/* add_8888_8_8888 */
+.macro bilinear_add_8888_8_8888_process_last_pixel
+    bilinear_interpolate_last_pixel 8888, 8, 8888, add
+.endm
+
+.macro bilinear_add_8888_8_8888_process_two_pixels
+    bilinear_interpolate_two_pixels 8888, 8, 8888, add
+.endm
+
+.macro bilinear_add_8888_8_8888_process_four_pixels
+    bilinear_interpolate_four_pixels 8888, 8, 8888, add
+.endm
+
+.macro bilinear_add_8888_8_8888_process_pixblock_head
+    bilinear_add_8888_8_8888_process_four_pixels
+.endm
+
+.macro bilinear_add_8888_8_8888_process_pixblock_tail
+.endm
+
+.macro bilinear_add_8888_8_8888_process_pixblock_tail_head
+    bilinear_add_8888_8_8888_process_pixblock_tail
+    bilinear_add_8888_8_8888_process_pixblock_head
+.endm
+
+
+/* Bilinear scanline functions */
+generate_bilinear_scanline_func \
     pixman_scaled_bilinear_scanline_8888_8_8888_SRC_asm_neon, \
-    8888, 8888, src, 2, 28
+    8888, 8888, 2, 2, \
+    bilinear_src_8888_8_8888_process_last_pixel, \
+    bilinear_src_8888_8_8888_process_two_pixels, \
+    bilinear_src_8888_8_8888_process_four_pixels, \
+    bilinear_src_8888_8_8888_process_pixblock_head, \
+    bilinear_src_8888_8_8888_process_pixblock_tail, \
+    bilinear_src_8888_8_8888_process_pixblock_tail_head, \
+    4, 28, BILINEAR_FLAG_USE_MASK
 
-generate_bilinear_scanline_func_src_a8_dst \
+generate_bilinear_scanline_func \
     pixman_scaled_bilinear_scanline_8888_8_0565_SRC_asm_neon, \
-    8888, 0565, src, 2, 28
+    8888, 0565, 2, 1, \
+    bilinear_src_8888_8_0565_process_last_pixel, \
+    bilinear_src_8888_8_0565_process_two_pixels, \
+    bilinear_src_8888_8_0565_process_four_pixels, \
+    bilinear_src_8888_8_0565_process_pixblock_head, \
+    bilinear_src_8888_8_0565_process_pixblock_tail, \
+    bilinear_src_8888_8_0565_process_pixblock_tail_head, \
+    4, 28, BILINEAR_FLAG_USE_MASK
 
-generate_bilinear_scanline_func_src_a8_dst \
+generate_bilinear_scanline_func \
     pixman_scaled_bilinear_scanline_0565_8_x888_SRC_asm_neon, \
-    0565, 8888, src, 1, 28
+    0565, 8888, 1, 2, \
+    bilinear_src_0565_8_x888_process_last_pixel, \
+    bilinear_src_0565_8_x888_process_two_pixels, \
+    bilinear_src_0565_8_x888_process_four_pixels, \
+    bilinear_src_0565_8_x888_process_pixblock_head, \
+    bilinear_src_0565_8_x888_process_pixblock_tail, \
+    bilinear_src_0565_8_x888_process_pixblock_tail_head, \
+    4, 28, BILINEAR_FLAG_USE_MASK
 
-generate_bilinear_scanline_func_src_a8_dst \
+generate_bilinear_scanline_func \
     pixman_scaled_bilinear_scanline_0565_8_0565_SRC_asm_neon, \
-    0565, 0565, src, 1, 28
+    0565, 0565, 1, 1, \
+    bilinear_src_0565_8_0565_process_last_pixel, \
+    bilinear_src_0565_8_0565_process_two_pixels, \
+    bilinear_src_0565_8_0565_process_four_pixels, \
+    bilinear_src_0565_8_0565_process_pixblock_head, \
+    bilinear_src_0565_8_0565_process_pixblock_tail, \
+    bilinear_src_0565_8_0565_process_pixblock_tail_head, \
+    4, 28, BILINEAR_FLAG_USE_MASK
 
-generate_bilinear_scanline_func_src_a8_dst \
+generate_bilinear_scanline_func \
+    pixman_scaled_bilinear_scanline_8888_8888_OVER_asm_neon, \
+    8888, 8888, 2, 2, \
+    bilinear_over_8888_8888_process_last_pixel, \
+    bilinear_over_8888_8888_process_two_pixels, \
+    bilinear_over_8888_8888_process_four_pixels, \
+    bilinear_over_8888_8888_process_pixblock_head, \
+    bilinear_over_8888_8888_process_pixblock_tail, \
+    bilinear_over_8888_8888_process_pixblock_tail_head, \
+    4, 28, 0
+
+generate_bilinear_scanline_func \
     pixman_scaled_bilinear_scanline_8888_8_8888_OVER_asm_neon, \
-    8888, 8888, over, 2, 28
+    8888, 8888, 2, 2, \
+    bilinear_over_8888_8_8888_process_last_pixel, \
+    bilinear_over_8888_8_8888_process_two_pixels, \
+    bilinear_over_8888_8_8888_process_four_pixels, \
+    bilinear_over_8888_8_8888_process_pixblock_head, \
+    bilinear_over_8888_8_8888_process_pixblock_tail, \
+    bilinear_over_8888_8_8888_process_pixblock_tail_head, \
+    4, 28, BILINEAR_FLAG_USE_MASK
 
-generate_bilinear_scanline_func_src_a8_dst \
+generate_bilinear_scanline_func \
+    pixman_scaled_bilinear_scanline_8888_8888_ADD_asm_neon, \
+    8888, 8888, 2, 2, \
+    bilinear_add_8888_8888_process_last_pixel, \
+    bilinear_add_8888_8888_process_two_pixels, \
+    bilinear_add_8888_8888_process_four_pixels, \
+    bilinear_add_8888_8888_process_pixblock_head, \
+    bilinear_add_8888_8888_process_pixblock_tail, \
+    bilinear_add_8888_8888_process_pixblock_tail_head, \
+    4, 28, 0
+
+generate_bilinear_scanline_func \
     pixman_scaled_bilinear_scanline_8888_8_8888_ADD_asm_neon, \
-    8888, 8888, add, 2, 28
+    8888, 8888, 2, 2, \
+    bilinear_add_8888_8_8888_process_last_pixel, \
+    bilinear_add_8888_8_8888_process_two_pixels, \
+    bilinear_add_8888_8_8888_process_four_pixels, \
+    bilinear_add_8888_8_8888_process_pixblock_head, \
+    bilinear_add_8888_8_8888_process_pixblock_tail, \
+    bilinear_add_8888_8_8888_process_pixblock_tail_head, \
+    4, 28, BILINEAR_FLAG_USE_MASK

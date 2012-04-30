@@ -56,6 +56,7 @@
 #include "nsEventStates.h"
 #include "nsIObjectFrame.h"
 #include "nsIPluginDocument.h"
+#include "nsIPermissionManager.h"
 #include "nsPluginHost.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
@@ -514,7 +515,31 @@ nsresult nsObjectLoadingContent::IsPluginEnabledForType(const nsCString& aMIMETy
   }
 
   if (!mShouldPlay) {
-    return NS_ERROR_PLUGIN_CLICKTOPLAY;
+    nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
+    MOZ_ASSERT(thisContent);
+    nsIDocument* ownerDoc = thisContent->OwnerDoc();
+
+    nsCOMPtr<nsIDOMWindow> topWindow;
+    rv = ownerDoc->GetWindow()->GetTop(getter_AddRefs(topWindow));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDOMDocument> topDocument;
+    rv = topWindow->GetDocument(getter_AddRefs(topDocument));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(topDocument);
+    nsIURI* topUri = topDoc->GetDocumentURI();
+
+    nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 permission;
+    rv = permissionManager->TestPermission(topUri,
+                                           "plugins",
+                                           &permission);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (permission == nsIPermissionManager::ALLOW_ACTION) {
+      mShouldPlay = true;
+    } else {
+      return NS_ERROR_PLUGIN_CLICKTOPLAY;
+    }
   }
 
   return NS_OK;
@@ -715,6 +740,7 @@ nsObjectLoadingContent::InstantiatePluginInstance(const char* aMimeType, nsIURI*
     }
   }
 
+  mActivated = true;
   return NS_OK;
 }
 
@@ -775,7 +801,8 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
   // 1) The channel type is application/octet-stream and we have a
   //    type hint and the type hint is not a document type.
   // 2) Our type hint is a type that we support with a plugin.
-  if ((channelType.EqualsASCII(APPLICATION_OCTET_STREAM) && 
+  if (((channelType.EqualsASCII(APPLICATION_OCTET_STREAM) ||
+        channelType.EqualsASCII(BINARY_OCTET_STREAM)) && 
        !mContentType.IsEmpty() &&
        GetTypeOfContent(mContentType) != eType_Document) ||
       // Need to check IsPluginEnabledForType() in addition to GetTypeOfContent()
@@ -797,8 +824,12 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
 
   nsCOMPtr<nsIURI> uri;
   chan->GetURI(getter_AddRefs(uri));
+  if (!uri) {
+    return NS_ERROR_FAILURE;
+  }
 
-  if (mContentType.EqualsASCII(APPLICATION_OCTET_STREAM)) {
+  if (mContentType.EqualsASCII(APPLICATION_OCTET_STREAM) ||
+      mContentType.EqualsASCII(BINARY_OCTET_STREAM)) {
     nsCAutoString extType;
     if (IsPluginEnabledByExtension(uri, extType)) {
       mContentType = extType;
@@ -928,7 +959,8 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
       if (!pluginHost) {
         return NS_ERROR_NOT_AVAILABLE;
       }
-      pluginHost->CreateListenerForChannel(chan, this, getter_AddRefs(mFinalListener));
+      pluginHost->NewEmbeddedPluginStreamListener(uri, this, nsnull,
+                                                  getter_AddRefs(mFinalListener));
       break;
     }
     case eType_Loading:
@@ -1990,8 +2022,14 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
     }
   }
 
-  return hasAlternateContent ? ePluginOtherState :
-    GetPluginDisabledState(aContentType);
+  PluginSupportState pluginDisabledState = GetPluginDisabledState(aContentType);
+  if (pluginDisabledState == ePluginClickToPlay) {
+    return ePluginClickToPlay;
+  } else if (hasAlternateContent) {
+    return ePluginOtherState;
+  } else {
+    return pluginDisabledState;
+  }
 }
 
 PluginSupportState
@@ -2253,7 +2291,6 @@ nsObjectLoadingContent::PlayPlugin()
     return NS_OK;
 
   mShouldPlay = true;
-  mActivated = true;
   return LoadObject(mURI, true, mContentType, true);
 }
 

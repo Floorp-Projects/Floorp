@@ -42,6 +42,7 @@
 #include "nsCoord.h"
 #include "nsStringGlue.h"
 #include "gfxFontConstants.h"
+#include "gfxFontFeatures.h"
 
 // XXX we need a method to enumerate all of the possible fonts on the
 // system across family, weight, style, size, etc. But not here!
@@ -63,6 +64,8 @@ const PRUint8 kGenericFont_monospace    = 0x08;
 const PRUint8 kGenericFont_cursive      = 0x10;
 const PRUint8 kGenericFont_fantasy      = 0x20;
 
+class gfxFontStyle;
+
 // Font structure.
 struct NS_GFX nsFont {
   // The family name of the font
@@ -78,16 +81,16 @@ struct NS_GFX nsFont {
   // The variant of the font (normal, small-caps)
   PRUint8 variant;
 
+  // The decorations on the font (underline, overline,
+  // line-through). The decorations can be binary or'd together.
+  PRUint8 decorations;
+
   // The weight of the font; see gfxFontConstants.h.
   PRUint16 weight;
 
   // The stretch of the font (the sum of various NS_FONT_STRETCH_*
   // constants; see gfxFontConstants.h).
   PRInt16 stretch;
-
-  // The decorations on the font (underline, overline,
-  // line-through). The decorations can be binary or'd together.
-  PRUint8 decorations;
 
   // The logical size of the font, in nscoord units
   nscoord size;
@@ -99,7 +102,7 @@ struct NS_GFX nsFont {
   float sizeAdjust;
 
   // Font features from CSS font-feature-settings
-  nsString featureSettings;
+  nsTArray<gfxFontFeature> fontFeatureSettings;
 
   // Language system tag, to override document language;
   // this is an OpenType "language system" tag represented as a 32-bit integer
@@ -110,14 +113,12 @@ struct NS_GFX nsFont {
   nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
          PRUint16 aWeight, PRInt16 aStretch, PRUint8 aDecoration,
          nscoord aSize, float aSizeAdjust=0.0f,
-         const nsString* aFeatureSettings = nsnull,
          const nsString* aLanguageOverride = nsnull);
 
   // Initialize the font struct with a (potentially) unicode name
   nsFont(const nsString& aName, PRUint8 aStyle, PRUint8 aVariant,
          PRUint16 aWeight, PRInt16 aStretch, PRUint8 aDecoration,
          nscoord aSize, float aSizeAdjust=0.0f,
-         const nsString* aFeatureSettings = nsnull,
          const nsString* aLanguageOverride = nsnull);
 
   // Make a copy of the given font
@@ -135,6 +136,9 @@ struct NS_GFX nsFont {
   bool BaseEquals(const nsFont& aOther) const;
 
   nsFont& operator=(const nsFont& aOther);
+
+  // Add featureSettings into style
+  void AddFontFeaturesToStyle(gfxFontStyle *aStyle) const;
 
   // Utility method to interpret name string
   // enumerates all families specified by this font only

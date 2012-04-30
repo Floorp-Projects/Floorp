@@ -85,6 +85,7 @@
 
   <string name="reload">&reload;</string>
   <string name="forward">&forward;</string>
+  <string name="close_tab">&close_tab;</string>
   <string name="new_tab">&new_tab;</string>
   <string name="new_tab_opened">&new_tab_opened;</string>
   <string name="addons">&addons;</string>
@@ -140,7 +141,7 @@
   <string name="bookmarkdefaults_url_aboutfirefox">about:firefox</string>
 
   <string name="bookmarkdefaults_title_addons">@bookmarks_addons@</string>
-  <string name="bookmarkdefaults_url_addons">https://addons.mozilla.org/@AB_CD@/mobile/</string>
+  <string name="bookmarkdefaults_url_addons">https://addons.mozilla.org/@AB_CD@/android/</string>
 
   <string name="bookmarkdefaults_title_support">@bookmarks_support@</string>
   <string name="bookmarkdefaults_url_support">http://support.mozilla.org/@AB_CD@/mobile</string>

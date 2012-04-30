@@ -35,13 +35,65 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <android/log.h> 
+
+#include "mozilla/Hal.h"
 #include "AudioManager.h"
 #include "gonk/AudioSystem.h"
 
 using namespace mozilla::dom::gonk;
 using namespace android;
+using namespace mozilla::hal;
+using namespace mozilla;
+
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AudioManager" , ## args) 
 
 NS_IMPL_ISUPPORTS1(AudioManager, nsIAudioManager)
+
+static AudioSystem::audio_devices
+GetRoutingMode(int aType) {
+  if (aType == nsIAudioManager::FORCE_SPEAKER) {
+    return AudioSystem::DEVICE_OUT_SPEAKER;
+  } else if (aType == nsIAudioManager::FORCE_HEADPHONES) {
+    return AudioSystem::DEVICE_OUT_WIRED_HEADSET;
+  } else if (aType == nsIAudioManager::FORCE_BT_SCO) {
+    return AudioSystem::DEVICE_OUT_BLUETOOTH_SCO;
+  } else if (aType == nsIAudioManager::FORCE_BT_A2DP) {
+    return AudioSystem::DEVICE_OUT_BLUETOOTH_A2DP;
+  } else {
+    return AudioSystem::DEVICE_IN_DEFAULT;
+  }
+}
+
+static void
+InternalSetAudioRoutes(SwitchState aState)
+{
+  if (aState == SWITCH_STATE_ON) {
+    AudioManager::SetAudioRoute(nsIAudioManager::FORCE_HEADPHONES);
+  } else if (aState == SWITCH_STATE_OFF) {
+    AudioManager::SetAudioRoute(nsIAudioManager::FORCE_SPEAKER);
+  }
+}
+
+class HeadphoneSwitchObserver : public SwitchObserver
+{
+public:
+  void Notify(const SwitchEvent& aEvent) {
+    InternalSetAudioRoutes(aEvent.status());
+  }
+};
+
+AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
+                 mObserver(new HeadphoneSwitchObserver())
+{
+  RegisterSwitchObserver(SWITCH_HEADPHONES, mObserver);
+  
+  InternalSetAudioRoutes(GetCurrentSwitchState(SWITCH_HEADPHONES));
+}
+
+AudioManager::~AudioManager() {
+  UnregisterSwitchObserver(SWITCH_HEADPHONES, mObserver);
+}
 
 NS_IMETHODIMP
 AudioManager::GetMicrophoneMuted(bool* aMicrophoneMuted)
@@ -160,4 +212,22 @@ AudioManager::GetForceForUse(PRInt32 aUsage, PRInt32* aForce) {
     *aForce = AudioSystem::getForceUse((audio_policy_force_use_t)aUsage);
   }
   return NS_OK;
+}
+
+void
+AudioManager::SetAudioRoute(int aRoutes) {
+  audio_io_handle_t handle = 0;
+  if (static_cast<
+      audio_io_handle_t (*)(AudioSystem::stream_type, uint32_t, uint32_t, uint32_t, AudioSystem::output_flags)
+      >(AudioSystem::getOutput)) {
+    handle = AudioSystem::getOutput((AudioSystem::stream_type)AudioSystem::SYSTEM);
+  } else if (static_cast<
+             audio_io_handle_t (*)(audio_stream_type_t, uint32_t, uint32_t, uint32_t, audio_policy_output_flags_t)
+             >(AudioSystem::getOutput)) {
+    handle = AudioSystem::getOutput((audio_stream_type_t)AudioSystem::SYSTEM);
+  }
+  
+  String8 cmd;
+  cmd.appendFormat("routing=%d", GetRoutingMode(aRoutes));
+  AudioSystem::setParameters(handle, cmd);
 }

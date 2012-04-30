@@ -129,6 +129,7 @@
 
 #include "vm/ArgumentsObject.h"
 #include "vm/MethodGuard.h"
+#include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 
 #include "ds/Sort.h"
@@ -1238,25 +1239,6 @@ array_trace(JSTracer *trc, JSObject *obj)
     MarkArraySlots(trc, initLength, obj->getDenseArrayElements(), "element");
 }
 
-static JSBool
-array_fix(JSContext *cx, JSObject *obj_, bool *success, AutoIdVector *props)
-{
-    RootedVarObject obj(cx, obj_);
-
-    JS_ASSERT(obj->isDenseArray());
-
-    /*
-     * We must slowify dense arrays; otherwise, we'd need to detect assignments to holes,
-     * since that is effectively adding a new property to the array.
-     */
-    if (!JSObject::makeDenseArraySlow(cx, obj) ||
-        !GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, props))
-        return false;
-
-    *success = true;
-    return true;
-}
-
 Class js::ArrayClass = {
     "Array",
     Class::NON_NATIVE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array) | JSCLASS_FOR_OF_ITERATION,
@@ -1313,7 +1295,6 @@ Class js::ArrayClass = {
         array_deleteSpecial,
         NULL,       /* enumerate      */
         array_typeOf,
-        array_fix,
         NULL,       /* thisObject     */
         NULL,       /* clear          */
     }
@@ -3715,7 +3696,7 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
         length = uint32_t(i);
     } else {
         double d = args[0].toDouble();
-        length = js_DoubleToECMAUint32(d);
+        length = ToUint32(d);
         if (d != double(length)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
             return false;

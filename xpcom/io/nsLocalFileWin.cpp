@@ -338,6 +338,14 @@ public:
 
     nsresult Init();
     nsresult Resolve(const WCHAR* in, WCHAR* out);
+    nsresult SetShortcut(bool updateExisting,
+                         const WCHAR* shortcutPath,
+                         const WCHAR* targetPath,
+                         const WCHAR* workingDir,
+                         const WCHAR* args,
+                         const WCHAR* description,
+                         const WCHAR* iconFile,
+                         PRInt32 iconIndex);
 
 private:
     Mutex                  mLock;
@@ -386,6 +394,76 @@ ShortcutResolver::Resolve(const WCHAR* in, WCHAR* out)
         FAILED(mShellLink->Resolve(nsnull, SLR_NO_UI)) ||
         FAILED(mShellLink->GetPath(out, MAX_PATH, NULL, SLGP_UNCPRIORITY)))
         return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
+nsresult
+ShortcutResolver::SetShortcut(bool updateExisting,
+                              const WCHAR* shortcutPath,
+                              const WCHAR* targetPath,
+                              const WCHAR* workingDir,
+                              const WCHAR* args,
+                              const WCHAR* description,
+                              const WCHAR* iconPath,
+                              PRInt32 iconIndex)
+{
+    if (!mShellLink) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!shortcutPath) {
+      return NS_ERROR_FAILURE;
+    }
+
+    MutexAutoLock lock(mLock);
+
+    if (updateExisting) {
+      if (FAILED(mPersistFile->Load(shortcutPath, STGM_READWRITE))) {
+        return NS_ERROR_FAILURE;
+      }
+    } else {
+      if (!targetPath) {
+        return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+      }
+
+      // Since we reuse our IPersistFile, we have to clear out any values that
+      // may be left over from previous calls to SetShortcut.
+      if (FAILED(mShellLink->SetWorkingDirectory(L""))
+       || FAILED(mShellLink->SetArguments(L""))
+       || FAILED(mShellLink->SetDescription(L""))
+       || FAILED(mShellLink->SetIconLocation(L"", 0))) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    if (targetPath && FAILED(mShellLink->SetPath(targetPath))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (workingDir && FAILED(mShellLink->SetWorkingDirectory(workingDir))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (args && FAILED(mShellLink->SetArguments(args))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (description && FAILED(mShellLink->SetDescription(description))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (iconPath && FAILED(mShellLink->SetIconLocation(iconPath, iconIndex))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (FAILED(mPersistFile->Save(shortcutPath,
+                                  TRUE))) {
+      // Second argument indicates whether the file path specified in the
+      // first argument should become the "current working file" for this
+      // IPersistFile
+      return NS_ERROR_FAILURE;
+    }
+
     return NS_OK;
 }
 
@@ -1619,6 +1697,66 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
     }
     free(ver);
     
+    return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::SetShortcut(nsILocalFile* targetFile,
+                         nsILocalFile* workingDir,
+                         const PRUnichar* args,
+                         const PRUnichar* description,
+                         nsILocalFile* iconFile,
+                         PRInt32 iconIndex)
+{
+    bool exists;
+    nsresult rv = this->Exists(&exists);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    const WCHAR* targetFilePath = NULL;
+    const WCHAR* workingDirPath = NULL;
+    const WCHAR* iconFilePath = NULL;
+
+    nsAutoString targetFilePathAuto;
+    if (targetFile) {
+        rv = targetFile->GetPath(targetFilePathAuto);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        targetFilePath = targetFilePathAuto.get();
+    }
+
+    nsAutoString workingDirPathAuto;
+    if (workingDir) {
+        rv = workingDir->GetPath(workingDirPathAuto);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        workingDirPath = workingDirPathAuto.get();
+    }
+
+    nsAutoString iconPathAuto;
+    if (iconFile) {
+        rv = iconFile->GetPath(iconPathAuto);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        iconFilePath = iconPathAuto.get();
+    }
+
+    rv = gResolver->SetShortcut(exists,
+                                mWorkingPath.get(),
+                                targetFilePath,
+                                workingDirPath,
+                                args,
+                                description,
+                                iconFilePath,
+                                iconFilePath? iconIndex : 0);
+    if (targetFilePath && NS_SUCCEEDED(rv)) {
+      MakeDirty();
+    }
+
     return rv;
 }
 

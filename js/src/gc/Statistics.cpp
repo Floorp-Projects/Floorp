@@ -108,9 +108,16 @@ class StatisticsSerializer
         va_end(va);
     }
 
+    void appendDecimal(const char *name, const char *units, double d) {
+        if (asJSON_)
+            appendNumber(name, "%d.%d", units, (int)d, (int)(d * 10.) % 10);
+        else
+            appendNumber(name, "%.1f", units, d);
+    }
+
     void appendIfNonzeroMS(const char *name, double v) {
         if (asJSON_ || v >= 0.1)
-            appendNumber(name, "%.1f", "ms", v);
+            appendDecimal(name, "ms", v);
     }
 
     void beginObject(const char *name) {
@@ -327,13 +334,13 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     ss.beginObject(NULL);
     if (ss.isJSON())
         ss.appendNumber("Timestamp", "%llu", "", (unsigned long long)timestamp);
-    ss.appendNumber("Total Time", "%.1f", "ms", t(total));
+    ss.appendDecimal("Total Time", "ms", t(total));
     ss.appendNumber("Compartments Collected", "%d", "", collectedCount);
     ss.appendNumber("Total Compartments", "%d", "", compartmentCount);
     ss.appendNumber("MMU (20ms)", "%d", "%", int(mmu20 * 100));
     ss.appendNumber("MMU (50ms)", "%d", "%", int(mmu50 * 100));
     if (slices.length() > 1 || ss.isJSON())
-        ss.appendNumber("Max Pause", "%.1f", "ms", t(longest));
+        ss.appendDecimal("Max Pause", "ms", t(longest));
     else
         ss.appendString("Reason", ExplainReason(slices[0].reason));
     if (nonincrementalReason || ss.isJSON()) {
@@ -358,9 +365,9 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
             ss.beginObject(NULL);
             ss.extra("    ");
             ss.appendNumber("Slice", "%d", "", i);
-            ss.appendNumber("Time", "%.1f", "ms", t(slices[i].end - slices[0].start));
+            ss.appendDecimal("Time", "ms", t(slices[i].end - slices[0].start));
             ss.extra(" (");
-            ss.appendNumber("Pause", "%.1f", "", t(width));
+            ss.appendDecimal("Pause", "", t(width));
             ss.appendString("Reason", ExplainReason(slices[i].reason));
             if (slices[i].resetReason)
                 ss.appendString("Reset", slices[i].resetReason);

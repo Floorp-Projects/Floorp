@@ -200,6 +200,10 @@ nsBoxFrame::Init(nsIContent*      aContent,
   nsresult  rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER) {
+    AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
+  }
+
   MarkIntrinsicWidthsDirty();
 
   CacheAttributes();
@@ -1338,7 +1342,7 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (GetContent()->IsXUL()) {
       const nsStyleDisplay* styles = mStyleContext->GetStyleDisplay();
       if (styles && styles->mAppearance == NS_THEME_WIN_EXCLUDE_GLASS) {
-        nsRect rect = mRect + aBuilder->ToReferenceFrame(GetParent());
+        nsRect rect = nsRect(aBuilder->ToReferenceFrame(this), GetSize());
         aBuilder->AddExcludedGlassRegion(rect);
       }
   }

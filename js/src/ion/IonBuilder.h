@@ -177,7 +177,7 @@ class IonBuilder : public MIRGenerator
     static int CmpSuccessors(const void *a, const void *b);
 
   public:
-    IonBuilder(JSContext *cx, JSObject *scopeChain, TempAllocator &temp, MIRGraph &graph,
+    IonBuilder(JSContext *cx, HandleObject scopeChain, TempAllocator &temp, MIRGraph &graph,
                TypeOracle *oracle, CompileInfo &info, size_t inliningDepth = 0, uint32 loopDepth = 0);
 
     bool build();
@@ -359,7 +359,7 @@ class IonBuilder : public MIRGenerator
 
   private:
     jsbytecode *pc;
-    JSObject *initialScopeChain_;
+    HandleObject initialScopeChain_;
     MBasicBlock *current;
     uint32 loopDepth_;
 

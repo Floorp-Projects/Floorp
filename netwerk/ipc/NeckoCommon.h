@@ -74,7 +74,7 @@
 
 #define DROP_DEAD()                                                            \
   do {                                                                         \
-    nsPrintfCString msg(1000,"NECKO ERROR: '%s' UNIMPLEMENTED",                \
+    nsPrintfCString msg("NECKO ERROR: '%s' UNIMPLEMENTED",                     \
                         __FUNCTION__);                                         \
     NECKO_MAYBE_ABORT(msg);                                                    \
     return NS_ERROR_NOT_IMPLEMENTED;                                           \
@@ -82,7 +82,7 @@
 
 #define ENSURE_CALLED_BEFORE_ASYNC_OPEN()                                      \
   if (mIsPending || mWasOpened) {                                              \
-    nsPrintfCString msg(1000, "'%s' called after AsyncOpen: %s +%d",           \
+    nsPrintfCString msg("'%s' called after AsyncOpen: %s +%d",                 \
                         __FUNCTION__, __FILE__, __LINE__);                     \
     NECKO_MAYBE_ABORT(msg);                                                    \
   }                                                                            \

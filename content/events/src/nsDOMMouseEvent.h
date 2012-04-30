@@ -65,6 +65,19 @@ public:
 protected:
   // Specific implementation for a mouse event.
   virtual nsresult Which(PRUint32* aWhich);
+
+  nsresult InitMouseEvent(const nsAString& aType,
+                          bool aCanBubble,
+                          bool aCancelable,
+                          nsIDOMWindow* aView,
+                          PRInt32 aDetail,
+                          PRInt32 aScreenX,
+                          PRInt32 aScreenY,
+                          PRInt32 aClientX,
+                          PRInt32 aClientY,
+                          PRUint16 aButton,
+                          nsIDOMEventTarget *aRelatedTarget,
+                          const nsAString& aModifiersList);
 };
 
 #define NS_FORWARD_TO_NSDOMMOUSEEVENT         \

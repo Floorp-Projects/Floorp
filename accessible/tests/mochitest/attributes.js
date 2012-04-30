@@ -237,8 +237,7 @@ const kSansSerifFontFamily =
 const kSerifFontFamily =
   function(aFontFamily) { return aFontFamily != "serif"; }
 
-const kCursiveFontFamily = WIN ? "Comic Sans MS" :
-  (LINUX ? "DejaVu Serif" : "MacFont");
+const kCursiveFontFamily = LINUX ? "DejaVu Serif" : "Comic Sans MS";
 
 /**
  * Return used font from the given computed style.
