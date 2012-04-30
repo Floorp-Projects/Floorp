@@ -60,14 +60,16 @@ CPPSRCS += nsIEHistoryEnumerator.cpp
 EXTRA_PP_COMPONENTS += IEProfileMigrator.js \
                        SafariProfileMigrator.js \
                        $(NULL)
+DEFINES += -DHAS_IE_MIGRATOR -DHAS_SAFARI_MIGRATOR
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_PP_COMPONENTS += SafariProfileMigrator.js \
                        $(NULL)
+DEFINES += -DHAS_SAFARI_MIGRATOR
 endif
 
-EXTRA_COMPONENTS = \
+EXTRA_PP_COMPONENTS += \
 	BrowserProfileMigrators.manifest \
 	$(NULL)
 
