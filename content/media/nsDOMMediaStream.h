@@ -43,6 +43,11 @@ public:
    */
   bool CombineWithPrincipal(nsIPrincipal* aPrincipal);
 
+  /**
+   * Create an nsDOMMediaStream whose underlying stream is a SourceMediaStream.
+   */
+  static already_AddRefed<nsDOMMediaStream> CreateInputStream();
+
 protected:
   // MediaStream is owned by the graph, but we tell it when to die, and it won't
   // die until we let it.

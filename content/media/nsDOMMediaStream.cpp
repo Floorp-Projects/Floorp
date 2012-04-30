@@ -42,6 +42,15 @@ nsDOMMediaStream::GetCurrentTime(double *aCurrentTime)
   return NS_OK;
 }
 
+already_AddRefed<nsDOMMediaStream>
+nsDOMMediaStream::CreateInputStream()
+{
+  nsRefPtr<nsDOMMediaStream> stream = new nsDOMMediaStream();
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
+  stream->mStream = gm->CreateInputStream(stream);
+  return stream.forget();
+}
+
 bool
 nsDOMMediaStream::CombineWithPrincipal(nsIPrincipal* aPrincipal)
 {
