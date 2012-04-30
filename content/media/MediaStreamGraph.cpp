@@ -668,6 +668,13 @@ MediaStreamGraphImpl::UpdateBufferSufficiencyState(SourceMediaStream* aStream)
     MutexAutoLock lock(aStream->mMutex);
     for (PRUint32 i = 0; i < aStream->mUpdateTracks.Length(); ++i) {
       SourceMediaStream::TrackData* data = &aStream->mUpdateTracks[i];
+      if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
+        // This track hasn't been created yet, so we have no sufficiency
+        // data. The track will be created in the next iteration of the
+        // control loop and then we'll fire insufficiency notifications
+        // if necessary.
+        continue;
+      }
       if (data->mCommands & SourceMediaStream::TRACK_END) {
         // This track will end, so no point in firing not-enough-data
         // callbacks.
