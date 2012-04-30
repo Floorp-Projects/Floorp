@@ -450,7 +450,7 @@ CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool)
 
     masm.setupUnalignedABICall(1, dest);
     masm.passABIArg(src);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ToInt32));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
     masm.storeCallResult(dest);
 
     restoreVolatile(dest);
