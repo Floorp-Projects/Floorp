@@ -179,10 +179,13 @@ CodeGeneratorX86::visitDouble(LDouble *ins)
     const LConstantIndex *cindex = ins->getOperand(0)->toConstantIndex();
     const Value &v = graph.getConstant(cindex->index());
 
-    jsdpun dpun;
+    union DoublePun {
+        uint64_t u;
+        double d;
+    } dpun;
     dpun.d = v.toDouble();
 
-    if (dpun.u64 == 0) {
+    if (dpun.u == 0) {
         masm.xorpd(ToFloatRegister(out), ToFloatRegister(out));
         return true;
     }
