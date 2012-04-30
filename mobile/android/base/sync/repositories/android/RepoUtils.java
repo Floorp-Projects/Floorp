@@ -119,20 +119,42 @@ public class RepoUtils {
     }
   }
 
-  //Create a HistoryRecord object from a cursor on a row with a Moz History record in it
+  /**
+   * Create a HistoryRecord object from a cursor row.
+   *
+   * @return a HistoryRecord, or null if this row would produce
+   *         an invalid record (e.g., with a null URI or no visits).
+   */
   public static HistoryRecord historyFromMirrorCursor(Cursor cur) {
+    final String guid = getStringFromCursor(cur, BrowserContract.SyncColumns.GUID);
+    if (guid == null) {
+      Logger.debug(LOG_TAG, "Skipping history record with null GUID.");
+      return null;
+    }
 
-    String guid = getStringFromCursor(cur, BrowserContract.SyncColumns.GUID);
-    String collection = "history";
-    long lastModified = getLongFromCursor(cur, BrowserContract.SyncColumns.DATE_MODIFIED);
-    boolean deleted = getLongFromCursor(cur, BrowserContract.SyncColumns.IS_DELETED) == 1 ? true : false;
-    HistoryRecord rec = new HistoryRecord(guid, collection, lastModified, deleted);
+    final String historyURI = getStringFromCursor(cur, BrowserContract.History.URL);
+    if (historyURI == null || (historyURI.length() == 0)) {
+      Logger.debug(LOG_TAG, "Skipping history record " + guid + " with null or empty URI.");
+      return null;
+    }
 
-    rec.title = getStringFromCursor(cur, BrowserContract.History.TITLE);
-    rec.histURI = getStringFromCursor(cur, BrowserContract.History.URL);
-    rec.androidID = getLongFromCursor(cur, BrowserContract.History._ID);
+    final long visitCount = getLongFromCursor(cur, BrowserContract.History.VISITS);
+    if (visitCount <= 0) {
+      Logger.debug(LOG_TAG, "Skipping history record " + guid + " with <= 0 visit count.");
+      return null;
+    }
+
+    final String collection = "history";
+    final long lastModified = getLongFromCursor(cur, BrowserContract.SyncColumns.DATE_MODIFIED);
+    final boolean deleted = getLongFromCursor(cur, BrowserContract.SyncColumns.IS_DELETED) == 1 ? true : false;
+
+    final HistoryRecord rec = new HistoryRecord(guid, collection, lastModified, deleted);
+
+    rec.androidID         = getLongFromCursor(cur, BrowserContract.History._ID);
     rec.fennecDateVisited = getLongFromCursor(cur, BrowserContract.History.DATE_LAST_VISITED);
-    rec.fennecVisitCount = getLongFromCursor(cur, BrowserContract.History.VISITS);
+    rec.fennecVisitCount  = visitCount;
+    rec.histURI           = historyURI;
+    rec.title             = getStringFromCursor(cur, BrowserContract.History.TITLE);
 
     return logHistory(rec);
   }
