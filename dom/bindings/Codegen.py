@@ -188,9 +188,11 @@ class CGList(CGThing):
     def prepend(self, child):
         self.children.insert(0, child)
     def declare(self):
-        return self.joiner.join([child.declare() for child in self.children])
+        return self.joiner.join([child.declare() for child in self.children
+                                 if child is not None])
     def define(self):
-        return self.joiner.join([child.define() for child in self.children])
+        return self.joiner.join([child.define() for child in self.children
+                                 if child is not None])
 
 class CGGeneric(CGThing):
     """
@@ -237,7 +239,7 @@ class CGWrapper(CGThing):
     """
     def __init__(self, child, pre="", post="", declarePre=None,
                  declarePost=None, definePre=None, definePost=None,
-                 declareOnly=False):
+                 declareOnly=False, reindent=False):
         CGThing.__init__(self)
         self.child = child
         self.declarePre = declarePre or pre
@@ -245,12 +247,25 @@ class CGWrapper(CGThing):
         self.definePre = definePre or pre
         self.definePost = definePost or post
         self.declareOnly = declareOnly
+        self.reindent = reindent
     def declare(self):
-        return self.declarePre + self.child.declare() + self.declarePost
+        decl = self.child.declare()
+        if self.reindent:
+            # We don't use lineStartDetector because we don't want to
+            # insert whitespace at the beginning of our _first_ line.
+            decl = stripTrailingWhitespace(
+                decl.replace("\n", "\n" + (" " * len(self.declarePre))))
+        return self.declarePre + decl + self.declarePost
     def define(self):
         if self.declareOnly:
             return ''
-        return self.definePre + self.child.define() + self.definePost
+        defn = self.child.define()
+        if self.reindent:
+            # We don't use lineStartDetector because we don't want to
+            # insert whitespace at the beginning of our _first_ line.
+            defn = stripTrailingWhitespace(
+                defn.replace("\n", "\n" + (" " * len(self.definePre))))
+        return self.definePre + defn + self.definePost
 
 class CGNamespace(CGWrapper):
     def __init__(self, namespace, child, declareOnly=False):
@@ -324,7 +339,7 @@ class CGHeaders(CGWrapper):
             for t in types:
                 if t.unroll().isInterface():
                     if t.unroll().isArrayBuffer():
-                        bindingHeaders.add("jstypedarray.h")
+                        bindingHeaders.add("jsfriendapi.h")
                     else:
                         typeDesc = d.getDescriptor(t.unroll().inner.identifier.name)
                         if typeDesc is not None:
@@ -786,7 +801,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     properties should be a PropertyArrays instance.
     """
     def __init__(self, descriptor, properties):
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal')]
+        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal'),
+                Argument('JSObject*', 'aReceiver')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'JSObject*', args)
         self.properties = properties
     def definition_body(self):
@@ -795,7 +811,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             getParentProto = "JS_GetObjectPrototype(aCx, aGlobal)"
         else:
             parentProtoName = self.descriptor.prototypeChain[-2]
-            getParentProto = "%s::GetProtoObject(aCx, aGlobal)" % (parentProtoName)
+            getParentProto = "%s::GetProtoObject(aCx, aGlobal, aReceiver)" % (parentProtoName)
 
         needInterfaceObject = self.descriptor.interface.hasInterfaceObject()
         needInterfacePrototypeObject = self.descriptor.interface.hasInterfacePrototypeObject()
@@ -810,45 +826,54 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                 idsToInit.append(props.variableName(False))
             if props.hasChromeOnly() and not self.descriptor.workers:
                 idsToInit.append(props.variableName(True))
-        initIds = ""
         if len(idsToInit) > 0:
-            init = ' ||\n       '.join(["!InitIds(aCx, %s, %s_ids)" % (varname, varname)
-                                        for varname in idsToInit])
+            initIds = CGList(
+                [CGGeneric("!InitIds(aCx, %s, %s_ids)" % (varname, varname)) for
+                 varname in idsToInit], ' ||\n')
             if len(idsToInit) > 1:
-                init = '(' + init + ')'
-            initIds = ("  if (%s_ids[0] == JSID_VOID &&\n" +
-                       "      %s) {\n" +
-                       "    %s_ids[0] = JSID_VOID;\n"
-                       "    return NULL;\n"
-                       "  }\n\n") % (idsToInit[0], init, idsToInit[0])
+                initIds = CGWrapper(initIds, pre="(", post=")", reindent=True)
+            initIds = CGList(
+                [CGGeneric("%s_ids[0] == JSID_VOID &&" % idsToInit[0]), initIds],
+                "\n")
+            initIds = CGWrapper(initIds, pre="if (", post=") {", reindent=True)
+            initIds = CGList(
+                [initIds,
+                 CGGeneric(("  %s_ids[0] = JSID_VOID;\n"
+                            "  return NULL;") % idsToInit[0]),
+                 CGGeneric("}")],
+                "\n")
+        else:
+            initIds = None
             
-        getParentProto = ("  JSObject* parentProto = %s;\n" +
-                          "  if (!parentProto) {\n" +
-                          "    return NULL;\n" +
-                          "  }") % getParentProto
+        getParentProto = ("JSObject* parentProto = %s;\n"
+                          "if (!parentProto) {\n"
+                          "  return NULL;\n"
+                          "}") % getParentProto
 
-        call = """return bindings::CreateInterfaceObjects(aCx, aGlobal, parentProto,
-                                          %s, %s,
-                                          %%(methods)s, %%(attrs)s, %%(consts)s, %%(staticMethods)s,
-                                          %s);""" % (
+        call = CGGeneric(("return bindings::CreateInterfaceObjects(aCx, aGlobal, aReceiver, parentProto,\n"
+                          "                                        %s, %s,\n"
+                          "                                        %%(methods)s, %%(attrs)s, %%(consts)s, %%(staticMethods)s,\n"
+                          "                                        %s);") % (
             "&PrototypeClass" if needInterfacePrototypeObject else "NULL",
             "&InterfaceObjectClass" if needInterfaceObject else "NULL",
-            '"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "NULL")
+            '"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "NULL"))
 
         if self.properties.hasChromeOnly():
             if self.descriptor.workers:
                 accessCheck = "mozilla::dom::workers::GetWorkerPrivateFromContext(aCx)->IsChromeWorker()"
             else:
                 accessCheck = "xpc::AccessCheck::isChrome(js::GetObjectCompartment(aGlobal))"
-            chrome = """
-
-  if (%s) {
-    %s
-  }
-""" % (accessCheck, call.replace("\n  ", "\n    ") % self.properties.variableNames(True))
+            accessCheck = "if (" + accessCheck + ") {\n"
+            chrome = CGWrapper(CGGeneric((CGIndenter(call).define() % self.properties.variableNames(True))),
+                               pre=accessCheck, post="\n}")
         else:
-            chrome = ""
-        return initIds + getParentProto + chrome + "\n  " + call % self.properties.variableNames(False)
+            chrome = None
+
+        functionBody = CGList(
+            [CGGeneric(getParentProto), initIds, chrome,
+             CGGeneric(call.define() % self.properties.variableNames(False))],
+            "\n\n")
+        return CGIndenter(functionBody).define()
 
 class CGGetPerInterfaceObject(CGAbstractMethod):
     """
@@ -856,12 +881,20 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     constructor object).
     """
     def __init__(self, descriptor, name, idPrefix=""):
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal')]
+        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal'),
+                Argument('JSObject*', 'aReceiver')]
         CGAbstractMethod.__init__(self, descriptor, name,
                                   'JSObject*', args, inline=True)
         self.id = idPrefix + "id::" + self.descriptor.name
     def definition_body(self):
         return """
+
+  /* aGlobal and aReceiver are usually the same, but they can be different
+     too. For example a sandbox often has an xray wrapper for a window as the
+     prototype of the sandbox's global. In that case aReceiver is the xray
+     wrapper and aGlobal is the sandbox's global.
+   */
+
   /* Make sure our global is sane.  Hopefully we can remove this sometime */
   if (!(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL)) {
     return NULL;
@@ -870,7 +903,7 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
   JSObject** protoOrIfaceArray = GetProtoOrIfaceArray(aGlobal);
   JSObject* cachedObject = protoOrIfaceArray[%s];
   if (!cachedObject) {
-    protoOrIfaceArray[%s] = cachedObject = CreateInterfaceObjects(aCx, aGlobal);
+    protoOrIfaceArray[%s] = cachedObject = CreateInterfaceObjects(aCx, aGlobal, aReceiver);
   }
 
   /* cachedObject might _still_ be null, but that's OK */
@@ -881,7 +914,6 @@ class CGGetProtoObjectMethod(CGGetPerInterfaceObject):
     A method for getting the interface prototype object.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal')]
         CGGetPerInterfaceObject.__init__(self, descriptor, "GetProtoObject")
     def definition_body(self):
         return """
@@ -893,14 +925,13 @@ class CGGetConstructorObjectMethod(CGGetPerInterfaceObject):
     A method for getting the interface constructor object.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal')]
         CGGetPerInterfaceObject.__init__(self, descriptor, "GetConstructorObject", "constructors::")
     def definition_body(self):
         return """
   /* Get the interface object for this class.  This will create the object as
      needed. */""" + CGGetPerInterfaceObject.definition_body(self)
 
-def CheckPref(descriptor, scopeName, varName, retval, wrapperCache = None):
+def CheckPref(descriptor, globalName, varName, retval, wrapperCache = None):
     """
     Check whether bindings should be enabled for this descriptor.  If not, set
     varName to false and return retval.
@@ -908,15 +939,23 @@ def CheckPref(descriptor, scopeName, varName, retval, wrapperCache = None):
     if not descriptor.prefable:
         return ""
     if wrapperCache:
-       wrapperCache = "%s->ClearIsDOMBinding();\n" % (wrapperCache)
+       wrapperCache = "      %s->ClearIsDOMBinding();\n" % (wrapperCache)
     else:
         wrapperCache = ""
     return """
-  if (!%s->ParisBindingsEnabled()) {
-%s    %s = false;
-    return %s;
+  {
+    XPCWrappedNativeScope* scope =
+      XPCWrappedNativeScope::FindInJSObjectScope(aCx, %s);
+    if (!scope) {
+      return %s;
+    }
+
+    if (!scope->ExperimentalBindingsEnabled()) {
+%s      %s = false;
+      return %s;
+    }
   }
-""" % (scopeName, wrapperCache, varName, retval)
+""" % (globalName, retval, wrapperCache, varName, retval)
 
 class CGDefineDOMInterfaceMethod(CGAbstractMethod):
     """
@@ -924,7 +963,7 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
     a given interface.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'aCx'), Argument('XPCWrappedNativeScope*', 'aScope'),
+        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aReceiver'),
                 Argument('bool*', 'aEnabled')]
         CGAbstractMethod.__init__(self, descriptor, 'DefineDOMInterface', 'bool', args)
 
@@ -946,9 +985,11 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
         else:
             getter = "GetConstructorObject"
 
-        return CheckPref(self.descriptor, "aScope", "*aEnabled", "false") + """
+        return ("  JSObject* global = JS_GetGlobalForObject(aCx, aReceiver);\n" +
+                CheckPref(self.descriptor, "global", "*aEnabled", "false") + 
+                """
   *aEnabled = true;
-  return !!%s(aCx, aScope->GetGlobalJSObject());""" % (getter)
+  return !!%s(aCx, global, aReceiver);""" % (getter))
 
 class CGNativeToSupportsMethod(CGAbstractStaticMethod):
     """
@@ -998,13 +1039,9 @@ class CGWrapMethod(CGAbstractMethod):
     }
   }
 
-  XPCWrappedNativeScope* scope =
-    XPCWrappedNativeScope::FindInJSObjectScope(aCx, parent);
-  if (!scope) {
-    return NULL;
-  }
+  JSObject* global = JS_GetGlobalForObject(aCx, parent);
 %s
-  JSObject* proto = GetProtoObject(aCx, scope->GetGlobalJSObject());
+  JSObject* proto = GetProtoObject(aCx, global, global);
   if (!proto) {
     return NULL;
   }
@@ -1019,7 +1056,7 @@ class CGWrapMethod(CGAbstractMethod):
 
   aObject->SetWrapper(obj);
 
-  return obj;""" % (CheckPref(self.descriptor, "scope", "*aTriedToWrap", "NULL", "aObject"))
+  return obj;""" % (CheckPref(self.descriptor, "global", "*aTriedToWrap", "NULL", "aObject"))
 
 builtinNames = {
     IDLType.Tags.bool: 'bool',
@@ -1189,7 +1226,7 @@ def getArgumentConversionTemplate(type, descriptor):
     if type.isArrayBuffer():
         template = (
             "  JSObject* ${name};\n"
-            "  if (${argVal}.isObject() && JS_IsArrayBufferObject(&${argVal}.toObject())) {\n"
+            "  if (${argVal}.isObject() && JS_IsArrayBufferObject(&${argVal}.toObject(), cx)) {\n"
             "    ${name} = &${argVal}.toObject();\n"
             "  }")
         if type.nullable():
@@ -1219,13 +1256,13 @@ def getArgumentConversionTemplate(type, descriptor):
             nullBehavior = "eNull"
             undefinedBehavior = "eNull"
         else:
-            nullBehavior = "eDefaultNullBehavior"
-            undefinedBehavior = "eDefaultUndefinedBehavior"
+            nullBehavior = "eStringify"
+            undefinedBehavior = "eStringify"
 
         return (
-            "  xpc_qsDOMString ${name}(cx, ${argVal}, ${argPtr},\n"
-            "                       xpc_qsDOMString::%s,\n"
-            "                       xpc_qsDOMString::%s);\n"
+            "  const xpc_qsDOMString ${name}(cx, ${argVal}, ${argPtr},\n"
+            "                             xpc_qsDOMString::%s,\n"
+            "                             xpc_qsDOMString::%s);\n"
             "  if (!${name}.IsValid()) {\n"
             "    return false;\n"
             "  }\n" % (nullBehavior, undefinedBehavior))
@@ -1444,14 +1481,17 @@ def getWrapTemplateForTypeImpl(type, result, descriptorProvider,
   if (WrapNewBindingObject(cx, obj, %s, ${jsvalPtr})) {
     return true;
   }""" % result
-            if descriptor.workers:
-                # Worker bindings can only fail to wrap as a new-binding object
-                # if they already threw an exception
+            # We don't support prefable stuff in workers.
+            assert(not descriptor.prefable or not descriptor.workers)
+            if not descriptor.prefable:
+                # Non-prefable bindings can only fail to wrap as a new-binding object
+                # if they already threw an exception.  Same thing for
+                # non-prefable bindings.
                 wrappingCode += """
   MOZ_ASSERT(JS_IsExceptionPending(cx));
   return false;"""
             else:
-                # Try old-style wrapping for non-worker bindings
+                # Try old-style wrapping for bindings which might be preffed off.
                 wrappingCode += """
   return HandleNewBindingWrappingFailure(cx, obj, %s, ${jsvalPtr});""" % result
         else:
@@ -1488,11 +1528,15 @@ def getWrapTemplateForTypeImpl(type, result, descriptorProvider,
     if type.isCallback() and not type.isInterface():
         # XXXbz we're going to assume that callback types are always
         # nullable and always have [TreatNonCallableAsNull] for now.
+        # See comments in WrapNewBindingObject explaining why we need
+        # to wrap here.
         return """
   ${jsvalRef} = JS::ObjectOrNullValue(%s);
   return JS_WrapValue(cx, ${jsvalPtr});""" % result
 
     if type.tag() == IDLType.Tags.any:
+        # See comments in WrapNewBindingObject explaining why we need
+        # to wrap here.
         return """
   ${jsvalRef} = %s;\n
   return JS_WrapValue(cx, ${jsvalPtr});""" % result
@@ -1736,12 +1780,12 @@ class CGCase(CGList):
     def __init__(self, expression, body, fallThrough=False):
         CGList.__init__(self, [], "\n")
         self.append(CGWrapper(CGGeneric(expression), pre="case ", post=": {"))
-        if body is not None:
-            self.append(CGIndenter(body))
+        bodyList = CGList([body], "\n")
         if fallThrough:
-            self.append(CGIndenter(CGGeneric("/* Fall through */")))
+            bodyList.append(CGGeneric("/* Fall through */"))
         else:
-            self.append(CGIndenter(CGGeneric("break;")))
+            bodyList.append(CGGeneric("break;"))
+        self.append(CGIndenter(bodyList));
         self.append(CGGeneric("}"))
 
 class CGMethodCall(CGThing):
@@ -1900,7 +1944,7 @@ class CGMethodCall(CGThing):
             # other things.
             # XXXbz Do we need to worry about security
             # wrappers around the array buffer?
-            pickFirstSignature("%s.isObject() && JS_IsArrayBufferObject(&%s.toObject())" %
+            pickFirstSignature("%s.isObject() && JS_IsArrayBufferObject(&%s.toObject(), cx)" %
                                (distinguishingArg, distinguishingArg),
                                lambda s: (s[1][distinguishingIndex].type.isArrayBuffer() or
                                           s[1][distinguishingIndex].type.isObject()))

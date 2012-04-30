@@ -44,19 +44,32 @@
 #include "jsobj.h"
 
 inline uint32_t
-JSObject::arrayBufferByteLength()
+js::ArrayBufferObject::byteLength() const
 {
     JS_ASSERT(isArrayBuffer());
     return getElementsHeader()->length;
 }
 
 inline uint8_t *
-JSObject::arrayBufferDataOffset()
+js::ArrayBufferObject::dataPointer() const
 {
     return (uint8_t *) elements;
 }
 
+inline js::ArrayBufferObject &
+JSObject::asArrayBuffer()
+{
+    JS_ASSERT(isArrayBuffer());
+    return *static_cast<js::ArrayBufferObject *>(this);
+}
+
 namespace js {
+
+inline bool
+ArrayBufferObject::hasData() const
+{
+    return getClass() == &ArrayBufferClass;
+}
 
 static inline int32_t
 ClampIntForUint8Array(int32_t x)
@@ -92,10 +105,10 @@ TypedArray::getType(JSObject *obj) {
     return obj->getFixedSlot(FIELD_TYPE).toInt32();
 }
 
-inline JSObject *
+inline ArrayBufferObject *
 TypedArray::getBuffer(JSObject *obj) {
     JS_ASSERT(IsFastOrSlowTypedArray(obj));
-    return &obj->getFixedSlot(FIELD_BUFFER).toObject();
+    return &obj->getFixedSlot(FIELD_BUFFER).toObject().asArrayBuffer();
 }
 
 inline void *
@@ -104,5 +117,6 @@ TypedArray::getDataOffset(JSObject *obj) {
     return (void *)obj->getPrivate(NUM_FIXED_SLOTS);
 }
 
-}
+} /* namespace js */
+
 #endif /* jstypedarrayinlines_h */

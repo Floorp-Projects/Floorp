@@ -153,12 +153,10 @@ var Strings = {};
 
 var MetadataProvider = {
   getDrawMetadata: function getDrawMetadata() {
-    return JSON.stringify(BrowserApp.selectedTab.getViewport());
+    let viewport = BrowserApp.selectedTab.getViewport();
+    viewport.zoom = BrowserApp.selectedTab._drawZoom;
+    return JSON.stringify(viewport);
   },
-
-  paintingSuppressed: function paintingSuppressed() {
-    return false;
-  }
 };
 
 var BrowserApp = {
@@ -1480,7 +1478,7 @@ nsBrowserAccess.prototype = {
 
     if (newTab) {
       let parentId = -1;
-      if (!isExternal) {
+      if (!isExternal && aOpener) {
         let parent = BrowserApp.getTabForWindow(aOpener.top);
         if (parent)
           parentId = parent.id;
@@ -1553,11 +1551,13 @@ Tab.prototype = {
     this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
     BrowserApp.deck.appendChild(this.browser);
 
+    // Must be called after appendChild so the docshell has been created.
+    this.setActive(false);
+
     this.browser.stop();
 
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     frameLoader.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
-    frameLoader.clampScrollPosition = false;
 
     // only set tab uri if uri is valid
     let uri = null;
@@ -1656,7 +1656,7 @@ Tab.prototype = {
 
   // This should be called to update the browser when the tab gets selected/unselected
   setActive: function setActive(aActive) {
-    if (!this.browser)
+    if (!this.browser || !this.browser.docShell)
       return;
 
     if (aActive) {
@@ -1673,7 +1673,7 @@ Tab.prototype = {
       return this.browser.docShellIsActive;
   },
 
-  setDisplayPort: function(aViewportX, aViewportY, aDisplayPort) {
+  setDisplayPort: function(aDisplayPort) {
     let zoom = this._zoom;
     let resolution = aDisplayPort.resolution;
     if (zoom <= 0 || resolution <= 0)
@@ -1684,9 +1684,8 @@ Tab.prototype = {
     // these two may be different if we are, for example, trying to render a
     // large area of the page at low resolution because the user is panning real
     // fast.
-    // The viewport values (aViewportX and aViewportY) correspond to the
-    // gecko scroll position, and are zoom-multiplied. The display port rect
-    // values (aDisplayPort), however, is in CSS pixels multiplied by the desired
+    // The gecko scroll position is in CSS pixels. The display port rect
+    // values (aDisplayPort), however, are in CSS pixels multiplied by the desired
     // rendering resolution. Therefore care must be taken when doing math with
     // these sets of values, to ensure that they are normalized to the same coordinate
     // space first.
@@ -1708,13 +1707,139 @@ Tab.prototype = {
       dump("Warning: setDisplayPort resolution did not match zoom for background tab!");
     }
 
-    // finally, we set the display port, taking care to convert everything into the CSS-pixel
-    // coordinate space, because that is what the function accepts.
-    cwu.setDisplayPortForElement((aDisplayPort.left / resolution) - (aViewportX / zoom),
-                                 (aDisplayPort.top / resolution) - (aViewportY / zoom),
+    // Finally, we set the display port, taking care to convert everything into the CSS-pixel
+    // coordinate space, because that is what the function accepts. Also we have to fudge the
+    // displayport somewhat to make sure it gets through all the conversions gecko will do on it
+    // without deforming too much. See https://bugzilla.mozilla.org/show_bug.cgi?id=737510#c10
+    // for details on what these operations are.
+    let geckoScrollX = this.browser.contentWindow.scrollX;
+    let geckoScrollY = this.browser.contentWindow.scrollY;
+    aDisplayPort = this._dirtiestHackEverToWorkAroundGeckoRounding(aDisplayPort, geckoScrollX, geckoScrollY);
+
+    cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    cwu.setDisplayPortForElement((aDisplayPort.left / resolution) - geckoScrollX,
+                                 (aDisplayPort.top / resolution) - geckoScrollY,
                                  (aDisplayPort.right - aDisplayPort.left) / resolution,
                                  (aDisplayPort.bottom - aDisplayPort.top) / resolution,
                                  element);
+  },
+
+  /*
+   * Yes, this is ugly. But it's currently the safest way to account for the rounding errors that occur
+   * when we pump the displayport coordinates through gecko and they pop out in the compositor.
+   *
+   * In general, the values are converted from page-relative device pixels to viewport-relative app units,
+   * and then back to page-relative device pixels (now as ints). The first half of this is only slightly
+   * lossy, but it's enough to throw off the numbers a little. Because of this, when gecko calls
+   * ScaleToOutsidePixels to generate the final rect, the rect may get expanded more than it should,
+   * ending up a pixel larger than it started off. This is undesirable in general, but specifically
+   * bad for tiling, because it means we means we end up painting one line of pixels from a tile,
+   * causing an otherwise unnecessary upload of the whole tile.
+   *
+   * In order to counteract the rounding error, this code simulates the conversions that will happen
+   * to the display port, and calculates whether or not that final ScaleToOutsidePixels is actually
+   * expanding the rect more than it should. If so, it determines how much rounding error was introduced
+   * up until that point, and adjusts the original values to compensate for that rounding error.
+   */
+  _dirtiestHackEverToWorkAroundGeckoRounding: function(aDisplayPort, aGeckoScrollX, aGeckoScrollY) {
+    const APP_UNITS_PER_CSS_PIXEL = 60.0;
+    const EXTRA_FUDGE = 0.04;
+
+    let resolution = aDisplayPort.resolution;
+
+    // Some helper functions that simulate conversion processes in gecko
+
+    function cssPixelsToAppUnits(aVal) {
+      return Math.floor((aVal * APP_UNITS_PER_CSS_PIXEL) + 0.5);
+    }
+
+    function appUnitsToDevicePixels(aVal) {
+      return aVal / APP_UNITS_PER_CSS_PIXEL * resolution;
+    }
+
+    function devicePixelsToAppUnits(aVal) {
+      return cssPixelsToAppUnits(aVal / resolution);
+    }
+
+    // Stash our original (desired) displayport width and height away, we need it
+    // later and we might modify the displayport in between.
+    let originalWidth = aDisplayPort.right - aDisplayPort.left;
+    let originalHeight = aDisplayPort.bottom - aDisplayPort.top;
+
+    // This is the first conversion the displayport goes through, going from page-relative
+    // device pixels to viewport-relative app units.
+    let appUnitDisplayPort = {
+      x: cssPixelsToAppUnits((aDisplayPort.left / resolution) - aGeckoScrollX),
+      y: cssPixelsToAppUnits((aDisplayPort.top / resolution) - aGeckoScrollY),
+      w: cssPixelsToAppUnits((aDisplayPort.right - aDisplayPort.left) / resolution),
+      h: cssPixelsToAppUnits((aDisplayPort.bottom - aDisplayPort.top) / resolution)
+    };
+
+    // This is the translation gecko applies when converting back from viewport-relative
+    // device pixels to page-relative device pixels.
+    let geckoTransformX = -Math.floor((-aGeckoScrollX * resolution) + 0.5);
+    let geckoTransformY = -Math.floor((-aGeckoScrollY * resolution) + 0.5);
+
+    // The final "left" value as calculated in gecko is:
+    //    left = geckoTransformX + Math.floor(appUnitsToDevicePixels(appUnitDisplayPort.x))
+    // In a perfect world, this value would be identical to aDisplayPort.left, which is what
+    // we started with. However, this may not be the case if the value being floored has accumulated
+    // enough error to drop below what it should be.
+    // For example, assume geckoTransformX is 0, and aDisplayPort.left is 4, but
+    // appUnitsToDevicePixels(appUnitsToDevicePixels.x) comes out as 3.9 because of rounding error.
+    // That's bad, because the -0.1 error has caused it to floor to 3 instead of 4. (If it had errored
+    // the other way and come out as 4.1, there's no problem). In this example, we need to increase the
+    // "left" value by some amount so that the 3.9 actually comes out as >= 4, and it gets floored into
+    // the expected value of 4. The delta values calculated below calculate that error amount (e.g. -0.1).
+    let errorLeft = (geckoTransformX + appUnitsToDevicePixels(appUnitDisplayPort.x)) - aDisplayPort.left;
+    let errorTop = (geckoTransformY + appUnitsToDevicePixels(appUnitDisplayPort.y)) - aDisplayPort.top;
+
+    // If the error was negative, that means it will floor incorrectly, so we need to bump up the
+    // original aDisplayPort.left and/or aDisplayPort.top values. The amount we bump it up by is
+    // the error amount (increased by a small fudge factor to ensure it's sufficient), converted
+    // backwards through the conversion process.
+    if (errorLeft < 0) {
+      aDisplayPort.left += appUnitsToDevicePixels(devicePixelsToAppUnits(EXTRA_FUDGE - errorLeft));
+      // After we modify the left value, we need to re-simulate some values to take that into account
+      appUnitDisplayPort.x = cssPixelsToAppUnits((aDisplayPort.left / resolution) - aGeckoScrollX);
+      appUnitDisplayPort.w = cssPixelsToAppUnits((aDisplayPort.right - aDisplayPort.left) / resolution);
+    }
+    if (errorTop < 0) {
+      aDisplayPort.top += appUnitsToDevicePixels(devicePixelsToAppUnits(EXTRA_FUDGE - errorTop));
+      // After we modify the top value, we need to re-simulate some values to take that into account
+      appUnitDisplayPort.y = cssPixelsToAppUnits((aDisplayPort.top / resolution) - aGeckoScrollY);
+      appUnitDisplayPort.h = cssPixelsToAppUnits((aDisplayPort.bottom - aDisplayPort.top) / resolution);
+    }
+
+    // At this point, the aDisplayPort.left and aDisplayPort.top values have been corrected to account
+    // for the error in conversion such that they end up where we want them. Now we need to also do the
+    // same for the right/bottom values so that the width/height end up where we want them.
+
+    // This is the final conversion that the displayport goes through before gecko spits it back to
+    // us. Note that the width/height calculates are of the form "ceil(transform(right)) - floor(transform(left))"
+    let scaledOutDevicePixels = {
+      x: Math.floor(appUnitsToDevicePixels(appUnitDisplayPort.x)),
+      y: Math.floor(appUnitsToDevicePixels(appUnitDisplayPort.y)),
+      w: Math.ceil(appUnitsToDevicePixels(appUnitDisplayPort.x + appUnitDisplayPort.w)) - Math.floor(appUnitsToDevicePixels(appUnitDisplayPort.x)),
+      h: Math.ceil(appUnitsToDevicePixels(appUnitDisplayPort.y + appUnitDisplayPort.h)) - Math.floor(appUnitsToDevicePixels(appUnitDisplayPort.y))
+    };
+
+    // The final "width" value as calculated in gecko is scaledOutDevicePixels.w.
+    // In a perfect world, this would equal originalWidth. However, things are not perfect, and as before,
+    // we need to calculate how much rounding error has been introduced. In this case the rounding error is causing
+    // the Math.ceil call above to ceiling to the wrong final value. For example, 4 gets converted 4.1 and gets
+    // ceiling'd to 5; in this case the error is 0.1.
+    let errorRight = (appUnitsToDevicePixels(appUnitDisplayPort.x + appUnitDisplayPort.w) - scaledOutDevicePixels.x) - originalWidth;
+    let errorBottom = (appUnitsToDevicePixels(appUnitDisplayPort.y + appUnitDisplayPort.h) - scaledOutDevicePixels.y) - originalHeight;
+
+    // If the error was positive, that means it will ceiling incorrectly, so we need to bump down the
+    // original aDisplayPort.right and/or aDisplayPort.bottom. Again, we back-convert the error amount
+    // with a small fudge factor to figure out how much to adjust the original values.
+    if (errorRight > 0) aDisplayPort.right -= appUnitsToDevicePixels(devicePixelsToAppUnits(errorRight + EXTRA_FUDGE));
+    if (errorBottom > 0) aDisplayPort.bottom -= appUnitsToDevicePixels(devicePixelsToAppUnits(errorBottom + EXTRA_FUDGE));
+
+    // Et voila!
+    return aDisplayPort;
   },
 
   setViewport: function(aViewport) {
@@ -1724,11 +1849,13 @@ Tab.prototype = {
 
     // Set scroll position
     let win = this.browser.contentWindow;
+    win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).setScrollPositionClampingScrollPortSize(
+        gScreenWidth / aViewport.zoom, gScreenHeight / aViewport.zoom);
     win.scrollTo(x, y);
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
     this.setResolution(aViewport.zoom, false);
-    this.setDisplayPort(aViewport.x, aViewport.y, aViewport.displayPort);
+    this.setDisplayPort(aViewport.displayPort);
   },
 
   setResolution: function(aZoom, aForce) {
@@ -1764,22 +1891,30 @@ Tab.prototype = {
     let viewport = {
       width: gScreenWidth,
       height: gScreenHeight,
+      cssWidth: gScreenWidth / this._zoom,
+      cssHeight: gScreenHeight / this._zoom,
       pageWidth: gScreenWidth,
       pageHeight: gScreenHeight,
-      zoom: this._zoom
+      // We make up matching css page dimensions
+      cssPageWidth: gScreenWidth / this._zoom,
+      cssPageHeight: gScreenHeight / this._zoom,
+      zoom: this._zoom,
     };
 
     // Set the viewport offset to current scroll offset
-    viewport.x = this.browser.contentWindow.scrollX || 0;
-    viewport.y = this.browser.contentWindow.scrollY || 0;
+    viewport.cssX = this.browser.contentWindow.scrollX || 0;
+    viewport.cssY = this.browser.contentWindow.scrollY || 0;
 
     // Transform coordinates based on zoom
-    viewport.x = Math.round(viewport.x * viewport.zoom);
-    viewport.y = Math.round(viewport.y * viewport.zoom);
+    viewport.x = Math.round(viewport.cssX * viewport.zoom);
+    viewport.y = Math.round(viewport.cssY * viewport.zoom);
 
     let doc = this.browser.contentDocument;
     if (doc != null) {
-      let [pageWidth, pageHeight] = this.getPageSize(doc, viewport.width, viewport.height);
+      let [pageWidth, pageHeight] = this.getPageSize(doc, viewport.cssWidth, viewport.cssHeight);
+
+      let cssPageWidth = pageWidth;
+      let cssPageHeight = pageHeight;
 
       /* Transform the page width and height based on the zoom factor. */
       pageWidth *= viewport.zoom;
@@ -1791,6 +1926,8 @@ Tab.prototype = {
        * send updates regardless of page size; we'll zoom to fit the content as needed.
        */
       if (doc.readyState === 'complete' || (pageWidth >= gScreenWidth && pageHeight >= gScreenHeight)) {
+        viewport.cssPageWidth = cssPageWidth;
+        viewport.cssPageHeight = cssPageHeight;
         viewport.pageWidth = pageWidth;
         viewport.pageHeight = pageHeight;
       }
@@ -1817,7 +1954,7 @@ Tab.prototype = {
     }
     let displayPort = sendMessageToJava({ gecko: message });
     if (displayPort != null)
-      this.setDisplayPort(message.x, message.y, JSON.parse(displayPort));
+      this.setDisplayPort(JSON.parse(displayPort));
   },
 
   handleEvent: function(aEvent) {
@@ -1983,6 +2120,9 @@ Tab.prototype = {
           return;
         }
 
+        // Force a style flush, so that we ensure our binding is attached.
+        plugin.clientTop;
+
         // If the plugin is hidden, or if the overlay is too small, show a doorhanger notification
         let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
         if (!overlay || PluginHelper.isTooSmall(plugin, overlay)) {
@@ -2026,11 +2166,6 @@ Tab.prototype = {
         return;
       }
 
-      let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
-      let uri = "";
-      if (browser)
-        uri = browser.currentURI.spec;
-
       // Check to see if we restoring the content from a previous presentation (session)
       // since there should be no real network activity
       let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
@@ -2038,6 +2173,10 @@ Tab.prototype = {
 
       // true if the page loaded successfully (i.e., no 404s or other errors)
       let success = false; 
+      let uri = "";
+      try {
+        uri = aRequest.QueryInterface(Components.interfaces.nsIChannel).originalURI.spec;
+      } catch (e) { }
       try {
         success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
       } catch (e) { }
@@ -2068,6 +2207,7 @@ Tab.prototype = {
     let uri = browser.currentURI.spec;
     let documentURI = "";
     let contentType = "";
+    let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0;
     if (browser.contentDocument) {
       documentURI = browser.contentDocument.documentURIObject.spec;
       contentType = browser.contentDocument.contentType;
@@ -2083,13 +2223,14 @@ Tab.prototype = {
         tabID: this.id,
         uri: uri,
         documentURI: documentURI,
-        contentType: contentType
+        contentType: contentType,
+        sameDocument: sameDocument
       }
     };
 
     sendMessageToJava(message);
 
-    if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) == 0) {
+    if (!sameDocument) {
       // XXX This code assumes that this is the earliest hook we have at which
       // browser.contentDocument is changed to the new document we're loading
       this.contentDocumentIsDisplayed = false;
@@ -2505,16 +2646,14 @@ var BrowserEventHandler = {
       let rect = ElementTouchHelper.getBoundingContentRect(element);
 
       let viewport = BrowserApp.selectedTab.getViewport();
-      let vRect = new Rect(viewport.x, viewport.y, viewport.width, viewport.height);
-
-      let zoom = viewport.zoom;
+      let vRect = new Rect(viewport.cssX, viewport.cssY, viewport.cssWidth, viewport.cssHeight);
       let bRect = new Rect(Math.max(0,rect.x - margin),
                            rect.y,
                            rect.w + 2*margin,
                            rect.h);
+
       // constrict the rect to the screen width
-      bRect.width = Math.min(bRect.width, viewport.pageWidth/zoom - bRect.x);
-      bRect.scale(zoom, zoom);
+      bRect.width = Math.min(bRect.width, viewport.cssPageWidth - bRect.x);
 
       let overlap = vRect.intersect(bRect);
       let overlapArea = overlap.width*overlap.height;
@@ -2522,8 +2661,8 @@ var BrowserEventHandler = {
       // on the screen at any time and if its already stretching the width of the screen
       let availHeight = Math.min(bRect.width*vRect.height/vRect.width, bRect.height);
       let showing = overlapArea/(bRect.width*availHeight);
-      let dw = (bRect.width - vRect.width)/zoom;
-      let dx = (bRect.x - vRect.x)/zoom;
+      let dw = (bRect.width - vRect.width);
+      let dx = (bRect.x - vRect.x);
 
       if (showing > 0.9 &&
           dx > minDifference && dx < maxDifference &&
@@ -2964,6 +3103,7 @@ var FormAssistant = {
 
     // We need to use a capturing listener for focus events
     BrowserApp.deck.addEventListener("focus", this, true);
+    BrowserApp.deck.addEventListener("click", this, true);
     BrowserApp.deck.addEventListener("input", this, false);
     BrowserApp.deck.addEventListener("pageshow", this, false);
   },
@@ -2974,6 +3114,7 @@ var FormAssistant = {
     Services.obs.removeObserver(this, "invalidformsubmit");
 
     BrowserApp.deck.removeEventListener("focus", this);
+    BrowserApp.deck.removeEventListener("click", this);
     BrowserApp.deck.removeEventListener("input", this);
     BrowserApp.deck.removeEventListener("pageshow", this);
   },
@@ -2984,9 +3125,7 @@ var FormAssistant = {
         if (!this._currentInputElement)
           break;
 
-        // Remove focus from the textbox to avoid some bad IME interactions
-        this._currentInputElement.blur();
-        this._currentInputElement.value = aData;
+        this._currentInputElement.QueryInterface(Ci.nsIDOMNSEditableElement).setUserInput(aData);
 
         let event = this._currentInputElement.ownerDocument.createEvent("Events");
         event.initEvent("DOMAutoComplete", true, true);
@@ -3021,12 +3160,19 @@ var FormAssistant = {
       case "focus":
         let currentElement = aEvent.target;
 
+        // Only show a validation message on focus.
+        this._showValidationMessage(currentElement);
+        break;
+
+      case "click":
+        currentElement = aEvent.target;
+
         // Prioritize a form validation message over autocomplete suggestions
         // when the element is first focused (a form validation message will
         // only be available if an invalid form was submitted)
         if (this._showValidationMessage(currentElement))
           break;
-        this._showAutoCompleteSuggestions(currentElement)
+        this._showAutoCompleteSuggestions(currentElement);
         break;
 
       case "input":
@@ -3054,7 +3200,7 @@ var FormAssistant = {
 
   // We only want to show autocomplete suggestions for certain elements
   _isAutoComplete: function _isAutoComplete(aElement) {
-    if (!(aElement instanceof HTMLInputElement) ||
+    if (!(aElement instanceof HTMLInputElement) || aElement.readOnly ||
         (aElement.getAttribute("type") == "password") ||
         (aElement.hasAttribute("autocomplete") &&
          aElement.getAttribute("autocomplete").toLowerCase() == "off"))
@@ -4602,8 +4748,9 @@ var ActivityObserver = {
         break;
     }
 
-    if (BrowserApp.selectedTab.getActive() != isForeground) {
-      BrowserApp.selectedTab.setActive(isForeground);
+    let tab = BrowserApp.selectedTab;
+    if (tab && tab.getActive() != isForeground) {
+      tab.setActive(isForeground);
     }
   }
 };
@@ -4646,20 +4793,12 @@ var WebappsUI = {
   },
   
   openURL: function(aURI, aOrigin) {
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    let uri = Services.io.newURI(aURI, null, null);
+    if (!uri)
+      return;
 
-    let tabs = BrowserApp.tabs;
-    let tab = null;
-    for (let i = 0; i < tabs.length; i++) {
-      let appOrigin = ss.getTabValue(tabs[i], "appOrigin");
-      if (appOrigin == aOrigin)
-        tab = tabs[i];
-    }
-
-    if (tab)
-      BrowserApp.selectTab(tab);
-    else
-      BrowserApp.addTab(aURI, { pinned: true });
+    let bwin = window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow;
+    bwin.openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB, Ci.nsIBrowserDOMWindow.OPEN_NEW);
   }
 }
 

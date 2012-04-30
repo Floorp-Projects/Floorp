@@ -10,6 +10,8 @@ srcdir    = @srcdir@
 VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+MAKEUTILS_UNIT_TEST = 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
 
 ##------------------_##
@@ -29,17 +31,30 @@ all::
 check::
 	@true
 
+###########################################################################
 ## Logic processed at compile time so be selective about when to test
-ifneq ($(NULL),$(findstring check,$(MAKECMDGOALS)))
+## Verify istype, isval, isvar, getargv, subargv
+ifneq ($(NULL),$(findstring check,$(MAKECMDGOALS))) #
+
+ifdef VERBOSE
 
 $(info ===========================================================================)
 $(info Running test: $(MAKECMDGOALS): pwd=$(CURDIR))
 $(info ===========================================================================)
 
-## Silent errors are oh so much fun
-ifndef istype
-  $(error makeutils.mk was not included)
+$(info )
+$(info ===========================================================================)
+$(info Running test: istype, getargv)
+$(info ===========================================================================)
 endif
+
+ifndef requiredfunction
+  $(error requiredfunction is not defined)
+endif
+
+include $(topsrcdir)/config/makefiles/test/check_XinY.mk
+
+$(call requiredfunc,istype isvar isval)
 
 # arg_scalar = [scalar|literal]
 arg_list = foo bar
@@ -90,6 +105,38 @@ ifneq (arg_list,$(call getargv,arg_ref))
   $(error getargv(arg_ref)=list, found [$(call getargv,arg_ref)])
 endif
 
-endif # check in MAKECMDGOALS
+ifdef MANUAL_TEST #{
+  # For automated testing a callback is needed that can set an external status
+  # variable that can be tested.  Syntax is tricky to get correct functionality.
+  ifdef VERBOSE
+    $(info )
+    $(info ===========================================================================)
+    $(info Running test: checkIfEmpty)
+    $(info ===========================================================================)
+  endif
 
+  #status =
+  #setTRUE =status=true
+  #setFALSE =status=$(NULL)
+  #$(call checkIfEmpty,setFALSE NULL)
+  #$(if $(status),$(error checkIfEmpty(xyz) failed))
+  #$(call checkIfEmpty,setTRUE xyz)
+  #$(if $(status),$(error checkIfEmpty(xyz) failed))
+  xyz=abc
+  $(info STATUS: warnIfEmpty - two vars)
+  $(call warnIfEmpty,foo xyz bar)
+  $(info STATUS: errorIfEmpty - on first var)
+  $(call errorIfEmpty,foo xyz bar)
+  $(error TEST FAILED: processing should not reach this point)
+endif #}
 
+# Verify subargv expansion
+##########################
+subargs=foo bar tans fans
+subargs_exp=tans fans
+subargs_found=$(call subargv,4,$(subargs))
+ifneq ($(subargs_exp),$(subargs_found))
+  $(error subargv(4,$(subargs)): expected [$(subargs_exp)] found [$(subargs_found)])
+endif
+ 
+endif #} unit_test: istype, isvar, isval, getargv, subargv

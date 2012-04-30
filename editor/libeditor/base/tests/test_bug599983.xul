@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=599983
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 599983" onload="runTest()">
+  <script type="application/javascript"
+    src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=599983"
+     target="_blank">Mozilla Bug 599983</a>
+  <editor xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          id="editor"
+          editortype="html"
+          src="about:blank" />
+  </body>
+  <script type="application/javascript">
+  <![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  const kAllowInteraction = Components.interfaces.nsIPlaintextEditor
+                                                 .eEditorAllowInteraction;
+  const kMailMask = Components.interfaces.nsIPlaintextEditor.eEditorMailMask;
+
+  function runTest() {
+    testEditor(false, false);
+    testEditor(false, true);
+    testEditor(true, false);
+    testEditor(true, true);
+
+    SimpleTest.finish();
+  }
+
+  function testEditor(setAllowInteraction, setMailMask) {
+    var desc = " with " + (setAllowInteraction ? "" : "no ") +
+               "eEditorAllowInteraction and " +
+               (setMailMask ? "" : "no ") + "eEditorMailMask";
+
+    var editorElem = document.getElementById("editor");
+
+    var editorObj = editorElem.getEditor(editorElem.contentWindow);
+    editorObj.flags = (setAllowInteraction ? kAllowInteraction : 0) |
+                      (setMailMask ? kMailMask : 0);
+
+    var editorDoc = editorElem.contentDocument;
+    editorDoc.body.innerHTML = "<p>foo<p>bar";
+    editorDoc.getSelection().selectAllChildren(editorDoc.body.firstChild);
+    editorDoc.execCommand("bold");
+
+    var createsDirty = !setAllowInteraction || setMailMask;
+
+    (createsDirty ? isnot : is)(editorDoc.querySelector("[_moz_dirty]"), null,
+       "Elements with _moz_dirty" + desc);
+
+    // Even if we do create _moz_dirty, we should strip it for innerHTML.
+    is(editorDoc.body.innerHTML, "<p><b>foo</b></p><p>bar</p>",
+       "innerHTML" + desc);
+  }
+
+  ]]>
+  </script>
+</window>

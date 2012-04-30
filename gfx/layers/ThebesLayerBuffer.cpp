@@ -41,6 +41,7 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "nsDeviceContext.h"
+#include "sampler.h"
 
 namespace mozilla {
 namespace layers {
@@ -115,6 +116,7 @@ ThebesLayerBuffer::DrawBufferQuadrant(gfxContext* aTarget,
 void
 ThebesLayerBuffer::DrawBufferWithRotation(gfxContext* aTarget, float aOpacity)
 {
+  SAMPLE_LABEL("ThebesLayerBuffer", "DrawBufferWithRotation");
   // Draw four quadrants. We could use REPEAT_, but it's probably better
   // not to, to be performance-safe.
   DrawBufferQuadrant(aTarget, LEFT, TOP, aOpacity);

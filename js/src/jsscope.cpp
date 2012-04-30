@@ -1082,26 +1082,22 @@ Shape::setObjectParent(JSContext *cx, JSObject *parent, JSObject *proto, Shape *
 }
 
 bool
-JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
+JSObject::preventExtensions(JSContext *cx)
 {
     JS_ASSERT(isExtensible());
 
     RootedVarObject self(cx, this);
 
-    if (props) {
-        if (js::FixOp fix = getOps()->fix) {
-            bool success;
-            if (!fix(cx, this, &success, props))
-                return false;
-            if (!success) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
-                return false;
-            }
-        } else {
-            if (!js::GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, props))
-                return false;
-        }
-    }
+    /*
+     * Force lazy properties to be resolved by iterating over the objects' own
+     * properties.
+     */
+    AutoIdVector props(cx);
+    if (!js::GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+        return false;
+
+    if (this->isDenseArray())
+        this->makeDenseArraySlow(cx, RootedVarObject(cx, this));
 
     return self->setFlag(cx, BaseShape::NOT_EXTENSIBLE, GENERATE_SHAPE);
 }

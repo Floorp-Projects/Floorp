@@ -30,7 +30,6 @@
 #define HB_OT_LAYOUT_COMMON_PRIVATE_HH
 
 #include "hb-ot-layout-private.hh"
-
 #include "hb-open-type-private.hh"
 
 
@@ -272,7 +271,7 @@ typedef RecordListOf<Feature> FeatureList;
 
 struct LookupFlag : USHORT
 {
-  enum {
+  enum Flags {
     RightToLeft		= 0x0001u,
     IgnoreBaseGlyphs	= 0x0002u,
     IgnoreLigatures	= 0x0004u,

@@ -78,6 +78,7 @@ _TEST_FILES = \
 		test_callback_wrapping.xul \
 		window_callback_wrapping.xul \
 		test_sandbox_postMessage.html \
+		test_sandbox_bindings.xul \
 		$(NULL)
 
 ifeq (WINNT,$(OS_ARCH))

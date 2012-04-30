@@ -1073,7 +1073,22 @@ LoginManager.prototype = {
         var previousActionOrigin = null;
         var foundLogins = null;
 
+        // Limit the number of forms we try to fill. If there are too many
+        // forms, just fill some at the beginning and end of the page.
+        const MAX_FORMS = 40; // assumed to be an even number
+        var skip_from = -1, skip_to = -1;
+        if (forms.length > MAX_FORMS) {
+            this.log("fillDocument limiting number of forms filled to " + MAX_FORMS);
+            let chunk_size = MAX_FORMS / 2;
+            skip_from = chunk_size;
+            skip_to   = forms.length - chunk_size;
+        }
+
         for (var i = 0; i < forms.length; i++) {
+            // Skip some in the middle of the document if there were too many.
+            if (i == skip_from)
+              i = skip_to;
+
             var form = forms[i];
 
             // Only the actionOrigin might be changing, so if it's the same

@@ -223,7 +223,9 @@ JSBool
 Library::Open(JSContext* cx, unsigned argc, jsval *vp)
 {
   JSObject* ctypesObj = JS_THIS_OBJECT(cx, vp);
-  if (!ctypesObj || !IsCTypesGlobal(ctypesObj)) {
+  if (!ctypesObj)
+    return JS_FALSE;
+  if (!IsCTypesGlobal(ctypesObj)) {
     JS_ReportError(cx, "not a ctypes object");
     return JS_FALSE;
   }
@@ -245,7 +247,9 @@ JSBool
 Library::Close(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj || !IsLibrary(obj)) {
+  if (!obj)
+    return JS_FALSE;
+  if (!IsLibrary(obj)) {
     JS_ReportError(cx, "not a library");
     return JS_FALSE;
   }
@@ -267,7 +271,9 @@ JSBool
 Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj || !IsLibrary(obj)) {
+  if (!obj)
+    return JS_FALSE;
+  if (!IsLibrary(obj)) {
     JS_ReportError(cx, "not a library");
     return JS_FALSE;
   }

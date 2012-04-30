@@ -27,19 +27,136 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #include "pixman-private.h"
 
+#define N_CACHED_FAST_PATHS 8
+
+typedef struct
+{
+    struct
+    {
+	pixman_implementation_t *	imp;
+	pixman_fast_path_t		fast_path;
+    } cache [N_CACHED_FAST_PATHS];
+} cache_t;
+
+PIXMAN_DEFINE_THREAD_LOCAL (cache_t, fast_path_cache);
+
 pixman_bool_t
-pixman_multiply_overflows_int (unsigned int a,
-                               unsigned int b)
+_pixman_lookup_composite_function (pixman_implementation_t     *toplevel,
+				   pixman_op_t			op,
+				   pixman_format_code_t		src_format,
+				   uint32_t			src_flags,
+				   pixman_format_code_t		mask_format,
+				   uint32_t			mask_flags,
+				   pixman_format_code_t		dest_format,
+				   uint32_t			dest_flags,
+				   pixman_implementation_t    **out_imp,
+				   pixman_composite_func_t     *out_func)
+{
+    pixman_implementation_t *imp;
+    cache_t *cache;
+    int i;
+
+    /* Check cache for fast paths */
+    cache = PIXMAN_GET_THREAD_LOCAL (fast_path_cache);
+
+    for (i = 0; i < N_CACHED_FAST_PATHS; ++i)
+    {
+	const pixman_fast_path_t *info = &(cache->cache[i].fast_path);
+
+	/* Note that we check for equality here, not whether
+	 * the cached fast path matches. This is to prevent
+	 * us from selecting an overly general fast path
+	 * when a more specific one would work.
+	 */
+	if (info->op == op			&&
+	    info->src_format == src_format	&&
+	    info->mask_format == mask_format	&&
+	    info->dest_format == dest_format	&&
+	    info->src_flags == src_flags	&&
+	    info->mask_flags == mask_flags	&&
+	    info->dest_flags == dest_flags	&&
+	    info->func)
+	{
+	    *out_imp = cache->cache[i].imp;
+	    *out_func = cache->cache[i].fast_path.func;
+
+	    goto update_cache;
+	}
+    }
+
+    for (imp = toplevel; imp != NULL; imp = imp->delegate)
+    {
+	const pixman_fast_path_t *info = imp->fast_paths;
+
+	while (info->op != PIXMAN_OP_NONE)
+	{
+	    if ((info->op == op || info->op == PIXMAN_OP_any)		&&
+		/* Formats */
+		((info->src_format == src_format) ||
+		 (info->src_format == PIXMAN_any))			&&
+		((info->mask_format == mask_format) ||
+		 (info->mask_format == PIXMAN_any))			&&
+		((info->dest_format == dest_format) ||
+		 (info->dest_format == PIXMAN_any))			&&
+		/* Flags */
+		(info->src_flags & src_flags) == info->src_flags	&&
+		(info->mask_flags & mask_flags) == info->mask_flags	&&
+		(info->dest_flags & dest_flags) == info->dest_flags)
+	    {
+		*out_imp = imp;
+		*out_func = info->func;
+
+		/* Set i to the last spot in the cache so that the
+		 * move-to-front code below will work
+		 */
+		i = N_CACHED_FAST_PATHS - 1;
+
+		goto update_cache;
+	    }
+
+	    ++info;
+	}
+    }
+    return FALSE;
+
+update_cache:
+    if (i)
+    {
+	while (i--)
+	    cache->cache[i + 1] = cache->cache[i];
+
+	cache->cache[0].imp = *out_imp;
+	cache->cache[0].fast_path.op = op;
+	cache->cache[0].fast_path.src_format = src_format;
+	cache->cache[0].fast_path.src_flags = src_flags;
+	cache->cache[0].fast_path.mask_format = mask_format;
+	cache->cache[0].fast_path.mask_flags = mask_flags;
+	cache->cache[0].fast_path.dest_format = dest_format;
+	cache->cache[0].fast_path.dest_flags = dest_flags;
+	cache->cache[0].fast_path.func = *out_func;
+    }
+
+    return TRUE;
+}
+
+pixman_bool_t
+_pixman_multiply_overflows_size (size_t a, size_t b)
+{
+    return a >= SIZE_MAX / b;
+}
+
+pixman_bool_t
+_pixman_multiply_overflows_int (unsigned int a, unsigned int b)
 {
     return a >= INT32_MAX / b;
 }
 
 pixman_bool_t
-pixman_addition_overflows_int (unsigned int a,
-                               unsigned int b)
+_pixman_addition_overflows_int (unsigned int a, unsigned int b)
 {
     return a > INT32_MAX - b;
 }
@@ -65,31 +182,6 @@ pixman_malloc_abc (unsigned int a,
 	return NULL;
     else
 	return malloc (a * b * c);
-}
-
-/*
- * Helper routine to expand a color component from 0 < n <= 8 bits to 16
- * bits by replication.
- */
-static inline uint64_t
-expand16 (const uint8_t val, int nbits)
-{
-    /* Start out with the high bit of val in the high bit of result. */
-    uint16_t result = (uint16_t)val << (16 - nbits);
-
-    if (nbits == 0)
-	return 0;
-
-    /* Copy the bits in result, doubling the number of bits each time, until
-     * we fill all 16 bits.
-     */
-    while (nbits < 16)
-    {
-	result |= result >> nbits;
-	nbits *= 2;
-    }
-
-    return result;
 }
 
 /*
@@ -129,15 +221,33 @@ pixman_expand (uint64_t *           dst,
     for (i = width - 1; i >= 0; i--)
     {
 	const uint32_t pixel = src[i];
-	const uint8_t a = (pixel >> a_shift) & a_mask,
-	              r = (pixel >> r_shift) & r_mask,
-	              g = (pixel >> g_shift) & g_mask,
-	              b = (pixel >> b_shift) & b_mask;
-	const uint64_t a16 = a_size ? expand16 (a, a_size) : 0xffff,
-	               r16 = expand16 (r, r_size),
-	               g16 = expand16 (g, g_size),
-	               b16 = expand16 (b, b_size);
+	uint8_t a, r, g, b;
+	uint64_t a16, r16, g16, b16;
 
+	if (a_size)
+	{
+	    a = (pixel >> a_shift) & a_mask;
+	    a16 = unorm_to_unorm (a, a_size, 16);
+	}
+	else
+	{
+	    a16 = 0xffff;
+	}
+
+	if (r_size)
+	{
+	    r = (pixel >> r_shift) & r_mask;
+	    g = (pixel >> g_shift) & g_mask;
+	    b = (pixel >> b_shift) & b_mask;
+	    r16 = unorm_to_unorm (r, r_size, 16);
+	    g16 = unorm_to_unorm (g, g_size, 16);
+	    b16 = unorm_to_unorm (b, b_size, 16);
+	}
+	else
+	{
+	    r16 = g16 = b16 = 0;
+	}
+	
 	dst[i] = a16 << 48 | r16 << 32 | g16 << 16 | b16;
     }
 }

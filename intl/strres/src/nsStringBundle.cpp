@@ -697,8 +697,7 @@ nsStringBundleService::insertIntoCache(nsIStringBundle* aBundle,
     NS_ASSERTION(mBundleMap.Exists(cacheEntry->mHashKey),
                  "Element will not be removed!");
 #ifdef DEBUG_alecf
-    NS_WARNING(nsPrintfCString(300,
-                               "Booting %s to make room for %s\n",
+    NS_WARNING(nsPrintfCString("Booting %s to make room for %s\n",
                                cacheEntry->mHashKey->GetString(),
                                aHashKey->GetString()).get());
 #endif

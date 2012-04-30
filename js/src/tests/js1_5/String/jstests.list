@@ -1,9 +1,0 @@
-url-prefix ../../jsreftest.html?test=js1_5/String/
-script regress-107771.js
-script regress-112626.js
-random script regress-157334-01.js # BigO
-script regress-179068.js
-random script regress-314890.js # BigO
-random script regress-322772.js # BigO
-random skip-if(xulRuntime.OS=="Linux"&&!isDebugBuild&&!xulRuntime.XPCOMABI.match(/x86_64/)) script regress-56940-01.js # BigO, slow if Linux 32bit opt
-random script regress-56940-02.js # BigO

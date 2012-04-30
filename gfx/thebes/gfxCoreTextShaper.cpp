@@ -286,8 +286,9 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedWord *aShapedWord,
         positions = positionsArray.get();
     }
 
-    // Remember that the glyphToChar indices relate to the CoreText line
-    // not to the beginning of the textRun, the font run, or the stringRange of the glyph run
+    // Remember that the glyphToChar indices relate to the CoreText line,
+    // not to the beginning of the textRun, the font run,
+    // or the stringRange of the glyph run
     glyphToChar = ::CTRunGetStringIndicesPtr(aCTRun);
     if (!glyphToChar) {
         glyphToCharArray = new (std::nothrow) CFIndex[numGlyphs];
@@ -298,7 +299,8 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedWord *aShapedWord,
         glyphToChar = glyphToCharArray.get();
     }
 
-    double runWidth = ::CTRunGetTypographicBounds(aCTRun, ::CFRangeMake(0, 0), NULL, NULL, NULL);
+    double runWidth = ::CTRunGetTypographicBounds(aCTRun, ::CFRangeMake(0, 0),
+                                                  NULL, NULL, NULL);
 
     nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
     gfxTextRun::CompressedGlyph g;
@@ -351,11 +353,14 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedWord *aShapedWord,
         stringRange.length - 1 : 0; // and this char index (in the stringRange of the glyph run)
 
     while (glyphStart < numGlyphs) { // keep finding groups until all glyphs are accounted for
-
         bool inOrder = true;
         PRInt32 charEnd = glyphToChar[glyphStart] - stringRange.location;
-        NS_ASSERTION(charEnd >= 0 && charEnd < stringRange.length,
-                     "glyph-to-char mapping points outside string range");
+        NS_WARN_IF_FALSE(charEnd >= 0 && charEnd < stringRange.length,
+                         "glyph-to-char mapping points outside string range");
+        // clamp charEnd to the valid range of the string
+        charEnd = NS_MAX(charEnd, 0);
+        charEnd = NS_MIN(charEnd, PRInt32(stringRange.length));
+
         PRInt32 glyphEnd = glyphStart;
         PRInt32 charLimit = isRightToLeft ? -1 : stringRange.length;
         do {
@@ -373,9 +378,19 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedWord *aShapedWord,
             }
 
             // find the maximum glyph index covered by the clump so far
-            for (PRInt32 i = charStart; i != charEnd; i += direction) {
-                if (charToGlyph[i] != NO_GLYPH) {
-                    glyphEnd = NS_MAX(glyphEnd, charToGlyph[i] + 1); // update extent of glyph range
+            if (isRightToLeft) {
+                for (PRInt32 i = charStart; i > charEnd; --i) {
+                    if (charToGlyph[i] != NO_GLYPH) {
+                        // update extent of glyph range
+                        glyphEnd = NS_MAX(glyphEnd, charToGlyph[i] + 1);
+                    }
+                }
+            } else {
+                for (PRInt32 i = charStart; i < charEnd; ++i) {
+                    if (charToGlyph[i] != NO_GLYPH) {
+                        // update extent of glyph range
+                        glyphEnd = NS_MAX(glyphEnd, charToGlyph[i] + 1);
+                    }
                 }
             }
 
@@ -421,8 +436,21 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedWord *aShapedWord,
             }
         } while (charEnd != charLimit);
 
-        NS_ASSERTION(glyphStart < glyphEnd, "character/glyph clump contains no glyphs!");
-        NS_ASSERTION(charStart != charEnd, "character/glyph contains no characters!");
+        NS_WARN_IF_FALSE(glyphStart < glyphEnd,
+                         "character/glyph clump contains no glyphs!");
+        if (glyphStart == glyphEnd) {
+            ++glyphStart; // make progress - avoid potential infinite loop
+            charStart = charEnd;
+            continue;
+        }
+
+        NS_WARN_IF_FALSE(charStart != charEnd,
+                         "character/glyph clump contains no characters!");
+        if (charStart == charEnd) {
+            glyphStart = glyphEnd; // this is bad - we'll discard the glyph(s),
+                                   // as there's nowhere to attach them
+            continue;
+        }
 
         // Now charStart..charEnd is a ligature clump, corresponding to glyphStart..glyphEnd;
         // Set baseCharIndex to the char we'll actually attach the glyphs to (1st of ligature),

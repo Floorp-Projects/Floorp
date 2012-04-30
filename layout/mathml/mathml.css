@@ -205,7 +205,7 @@ math[display="inline"] {
   font-family: MathJax_Script, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
 }
 [mathvariant="fraktur"] {
-  font-style: MathJax_Fraktur, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
+  font-family: MathJax_Fraktur, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
 }
 
 /**************************************************************************/

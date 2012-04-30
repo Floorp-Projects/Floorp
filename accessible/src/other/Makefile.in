@@ -54,6 +54,7 @@ CPPSRCS = \
   $(NULL)
 
 EXPORTS = \
+  ApplicationAccessibleWrap.h \
   ARIAGridAccessibleWrap.h \
   nsAccessNodeWrap.h \
   nsTextAccessibleWrap.h \
@@ -66,7 +67,6 @@ EXPORTS = \
   nsHyperTextAccessibleWrap.h \
   nsHTMLImageAccessibleWrap.h \
   nsHTMLTableAccessibleWrap.h \
-  nsApplicationAccessibleWrap.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

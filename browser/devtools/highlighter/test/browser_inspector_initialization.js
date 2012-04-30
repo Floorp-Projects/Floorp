@@ -77,7 +77,7 @@ function runInspectorTests()
   ok(!InspectorUI.toolbar.hidden, "toolbar is visible");
   ok(InspectorUI.inspecting, "Inspector is inspecting");
   ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  ok(!InspectorUI.isSidebarOpen, "Inspector Sidebar is not open");
+  ok(!InspectorUI.sidebar.visible, "Inspector sidebar should not visible.");
   ok(InspectorUI.highlighter, "Highlighter is up");
   InspectorUI.inspectNode(doc.body);
   InspectorUI.stopInspecting();
@@ -89,25 +89,25 @@ function treePanelTests()
 {
   Services.obs.removeObserver(treePanelTests,
     InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
-  Services.obs.addObserver(stylePanelTests,
-    "StyleInspector-opened", false);
-
   ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
 
-  executeSoon(function() {
-    InspectorUI.showSidebar();
-    document.getElementById(InspectorUI.getToolbarButtonId("styleinspector")).click();
-  });
+  InspectorUI.toggleSidebar();
+  ok(InspectorUI.sidebar.visible, "Inspector Sidebar should be open");
+  InspectorUI.toggleSidebar();
+  ok(!InspectorUI.sidebar.visible, "Inspector Sidebar should be closed");
+  InspectorUI.sidebar.show();
+  InspectorUI.currentInspector.once("sidebaractivated-computedview",
+    stylePanelTests)
+  InspectorUI.sidebar.activatePanel("computedview");
 }
 
 function stylePanelTests()
 {
-  Services.obs.removeObserver(stylePanelTests, "StyleInspector-opened");
+  ok(InspectorUI.sidebar.visible, "Inspector Sidebar is open");
+  is(InspectorUI.sidebar.activePanel, "computedview", "Computed View is open");
+  ok(computedViewTree(), "Computed view has a cssHtmlTree");
 
-  ok(InspectorUI.isSidebarOpen, "Inspector Sidebar is open");
-  ok(InspectorUI.stylePanel.cssHtmlTree, "Style Panel has a cssHtmlTree");
-
-  InspectorUI.ruleButton.click();
+  InspectorUI.sidebar.activatePanel("ruleview");
   executeSoon(function() {
     ruleViewTests();
   });
@@ -118,8 +118,8 @@ function ruleViewTests()
   Services.obs.addObserver(runContextMenuTest,
       InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
 
-  ok(InspectorUI.isRuleViewOpen(), "Rule View is open");
-  ok(InspectorUI.ruleView, "InspectorUI has a cssRuleView");
+  is(InspectorUI.sidebar.activePanel, "ruleview", "Rule View is open");
+  ok(ruleView(), "InspectorUI has a cssRuleView");
 
   executeSoon(function() {
     InspectorUI.closeInspectorUI();
@@ -152,8 +152,6 @@ function inspectNodesFromContextTest()
   Services.obs.addObserver(openInspectorForContextTest, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
   ok(!InspectorUI.inspecting, "Inspector is not actively highlighting");
   is(InspectorUI.selection, salutation, "Inspector is highlighting salutation");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is closed");
-  ok(!InspectorUI.stylePanel.isOpen(), "Inspector Style Panel is closed");
   executeSoon(function() {
     InspectorUI.closeInspectorUI(true);
   });
@@ -207,11 +205,7 @@ function finishInspectorTests(subject, topic, aWinIdString)
   ok(!InspectorUI.highlighter, "Highlighter is gone");
   ok(!InspectorUI.treePanel, "Inspector Tree Panel is closed");
   ok(!InspectorUI.inspecting, "Inspector is not inspecting");
-  ok(!InspectorUI.isSidebarOpen, "Inspector Sidebar is closed");
-  ok(!InspectorUI.stylePanel, "Inspector Style Panel is gone");
-  ok(!InspectorUI.ruleView, "Inspector Rule View is gone");
-  is(InspectorUI.sidebarToolbar.children.length, 0, "No items in the Sidebar toolbar");
-  is(InspectorUI.sidebarDeck.children.length, 0, "No items in the Sidebar deck");
+  ok(!InspectorUI._sidebar, "Inspector Sidebar is closed");
   ok(!InspectorUI.toolbar, "toolbar is hidden");
 
   Services.obs.removeObserver(inspectNodesFromContextTestTrap, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);

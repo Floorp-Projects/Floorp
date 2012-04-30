@@ -86,7 +86,7 @@ struct VP8_COMP;
 extern void vp8_set_quantizer(struct VP8_COMP *cpi, int Q);
 extern void vp8cx_frame_init_quantizer(struct VP8_COMP *cpi);
 extern void vp8_update_zbin_extra(struct VP8_COMP *cpi, MACROBLOCK *x);
-extern void vp8cx_mb_init_quantizer(struct VP8_COMP *cpi, MACROBLOCK *x);
+extern void vp8cx_mb_init_quantizer(struct VP8_COMP *cpi, MACROBLOCK *x, int ok_to_skip);
 extern void vp8cx_init_quantizer(struct VP8_COMP *cpi);
 
 #endif

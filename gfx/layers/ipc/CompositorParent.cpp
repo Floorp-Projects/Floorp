@@ -56,15 +56,28 @@ using base::Thread;
 namespace mozilla {
 namespace layers {
 
-CompositorParent::CompositorParent(nsIWidget* aWidget, base::Thread* aCompositorThread)
-  : mCompositorThread(aCompositorThread)
-  , mWidget(aWidget)
+CompositorParent::CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop, PlatformThreadId aThreadID)
+  : mWidget(aWidget)
   , mCurrentCompositeTask(NULL)
   , mPaused(false)
   , mIsFirstPaint(false)
   , mLayersUpdated(false)
+  , mCompositorLoop(aMsgLoop)
+  , mThreadID(aThreadID)
 {
   MOZ_COUNT_CTOR(CompositorParent);
+}
+
+MessageLoop*
+CompositorParent::CompositorLoop()
+{
+  return mCompositorLoop;
+}
+
+PlatformThreadId
+CompositorParent::CompositorThreadID()
+{
+  return mThreadID;
 }
 
 CompositorParent::~CompositorParent()
@@ -118,13 +131,13 @@ void
 CompositorParent::ScheduleRenderOnCompositorThread()
 {
   CancelableTask *renderTask = NewRunnableMethod(this, &CompositorParent::ScheduleComposition);
-  mCompositorThread->message_loop()->PostTask(FROM_HERE, renderTask);
+  CompositorLoop()->PostTask(FROM_HERE, renderTask);
 }
 
 void
 CompositorParent::PauseComposition()
 {
-  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+  NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "PauseComposition() can only be called on the compositor thread");
   if (!mPaused) {
     mPaused = true;
@@ -138,7 +151,7 @@ CompositorParent::PauseComposition()
 void
 CompositorParent::ResumeComposition()
 {
-  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+  NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "ResumeComposition() can only be called on the compositor thread");
   mPaused = false;
 
@@ -148,19 +161,36 @@ CompositorParent::ResumeComposition()
 }
 
 void
+CompositorParent::ResumeCompositionAndResize(int width, int height)
+{
+  static_cast<LayerManagerOGL*>(mLayerManager.get())->SetSurfaceSize(width, height);
+  ResumeComposition();
+}
+
+void
 CompositorParent::SchedulePauseOnCompositorThread()
 {
   CancelableTask *pauseTask = NewRunnableMethod(this,
                                                 &CompositorParent::PauseComposition);
-  mCompositorThread->message_loop()->PostTask(FROM_HERE, pauseTask);
+  CompositorLoop()->PostTask(FROM_HERE, pauseTask);
 }
 
 void
-CompositorParent::ScheduleResumeOnCompositorThread()
+CompositorParent::ScheduleResumeOnCompositorThread(int width, int height)
 {
-  CancelableTask *resumeTask = NewRunnableMethod(this,
-                                                 &CompositorParent::ResumeComposition);
-  mCompositorThread->message_loop()->PostTask(FROM_HERE, resumeTask);
+  CancelableTask *resumeTask =
+    NewRunnableMethod(this, &CompositorParent::ResumeCompositionAndResize, width, height);
+  CompositorLoop()->PostTask(FROM_HERE, resumeTask);
+}
+
+void
+CompositorParent::ScheduleTask(CancelableTask* task, int time)
+{
+  if (time) {
+    MessageLoop::current()->PostTask(FROM_HERE, task);
+  } else {
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, task, time);
+  }
 }
 
 void
@@ -187,9 +217,9 @@ CompositorParent::ScheduleComposition()
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
     mExpectedComposeTime = mozilla::TimeStamp::Now() + TimeDuration::FromMilliseconds(15 - delta.ToMilliseconds());
 #endif
-    MessageLoop::current()->PostDelayedTask(FROM_HERE, mCurrentCompositeTask, 15 - delta.ToMilliseconds());
+    ScheduleTask(mCurrentCompositeTask, 15 - delta.ToMilliseconds());
   } else {
-    MessageLoop::current()->PostTask(FROM_HERE, mCurrentCompositeTask);
+    ScheduleTask(mCurrentCompositeTask, 0);
   }
 }
 
@@ -204,7 +234,7 @@ CompositorParent::SetTransformation(float aScale, nsIntPoint aScrollOffset)
 void
 CompositorParent::Composite()
 {
-  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+  NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "Composite can only be called on the compositor thread");
   mCurrentCompositeTask = NULL;
 
@@ -231,23 +261,6 @@ CompositorParent::Composite()
 #endif
 }
 
-// Go down shadow layer tree, setting properties to match their non-shadow
-// counterparts.
-static void
-SetShadowProperties(Layer* aLayer)
-{
-  // FIXME: Bug 717688 -- Do these updates in ShadowLayersParent::RecvUpdate.
-  ShadowLayer* shadow = aLayer->AsShadowLayer();
-  shadow->SetShadowTransform(aLayer->GetTransform());
-  shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
-  shadow->SetShadowClipRect(aLayer->GetClipRect());
-
-  for (Layer* child = aLayer->GetFirstChild();
-      child; child = child->GetNextSibling()) {
-    SetShadowProperties(child);
-  }
-}
-
 #ifdef MOZ_WIDGET_ANDROID
 // Do a breadth-first search to find the first layer in the tree that is
 // scrollable.
@@ -255,21 +268,6 @@ Layer*
 CompositorParent::GetPrimaryScrollableLayer()
 {
   Layer* root = mLayerManager->GetRoot();
-
-  // FIXME: We're currently getting passed layers that are not part of our content, but
-  // we are drawing them anyway. This is causing severe rendering corruption to our background
-  // and checkerboarding. The real fix here is to assert that we don't have any useless layers
-  // and ensure that layout isn't giving us any. This is being tracked in bug 728284.
-  // For now just clip them to the empty rect so we don't draw them.
-  Layer* discardLayer = root->GetFirstChild();
-
-  while (discardLayer) {
-    if (!discardLayer->AsContainerLayer()) {
-      discardLayer->IntersectClipRect(nsIntRect());
-      SetShadowProperties(discardLayer);
-    }
-    discardLayer = discardLayer->GetNextSibling();
-  }
 
   nsTArray<Layer*> queue;
   queue.AppendElement(root);
@@ -296,6 +294,23 @@ CompositorParent::GetPrimaryScrollableLayer()
 }
 #endif
 
+// Go down shadow layer tree, setting properties to match their non-shadow
+// counterparts.
+static void
+SetShadowProperties(Layer* aLayer)
+{
+  // FIXME: Bug 717688 -- Do these updates in ShadowLayersParent::RecvUpdate.
+  ShadowLayer* shadow = aLayer->AsShadowLayer();
+  shadow->SetShadowTransform(aLayer->GetTransform());
+  shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
+  shadow->SetShadowClipRect(aLayer->GetClipRect());
+
+  for (Layer* child = aLayer->GetFirstChild();
+      child; child = child->GetNextSibling()) {
+    SetShadowProperties(child);
+  }
+}
+
 void
 CompositorParent::TransformShadowTree()
 {
@@ -315,13 +330,18 @@ CompositorParent::TransformShadowTree()
     nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
     mContentSize = metrics->mContentSize;
     mozilla::AndroidBridge::Bridge()->SetFirstPaintViewport(scrollOffset.x, scrollOffset.y,
-                                                            1/rootScaleX, mContentSize.width,
-                                                            mContentSize.height);
+                                                            1/rootScaleX,
+                                                            mContentSize.width,
+                                                            mContentSize.height,
+                                                            metrics->mCSSContentSize.width,
+                                                            metrics->mCSSContentSize.height);
     mIsFirstPaint = false;
   } else if (metrics && (metrics->mContentSize != mContentSize)) {
     mContentSize = metrics->mContentSize;
     mozilla::AndroidBridge::Bridge()->SetPageSize(1/rootScaleX, mContentSize.width,
-                                                  mContentSize.height);
+                                                  mContentSize.height,
+                                                  metrics->mCSSContentSize.width,
+                                                  metrics->mCSSContentSize.height);
   }
 
   // We synchronise the viewport information with Java after sending the above
@@ -344,11 +364,13 @@ CompositorParent::TransformShadowTree()
   // primary scrollable layer. We compare this to the desired zoom and scroll
   // offset in the view transform we obtained from Java in order to compute the
   // transformation we need to apply.
-  if (metrics && metrics->IsScrollable()) {
+  if (metrics) {
     float tempScaleDiffX = rootScaleX * mXScale;
     float tempScaleDiffY = rootScaleY * mYScale;
 
-    nsIntPoint metricsScrollOffset = metrics->mViewportScrollOffset;
+    nsIntPoint metricsScrollOffset(0, 0);
+    if (metrics->IsScrollable())
+      metricsScrollOffset = metrics->mViewportScrollOffset;
 
     nsIntPoint scrollCompensation(
       (mScrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * mXScale,
@@ -382,7 +404,14 @@ PLayersParent*
 CompositorParent::AllocPLayers(const LayersBackend &backendType)
 {
   if (backendType == LayerManager::LAYERS_OPENGL) {
+#ifdef MOZ_JAVA_COMPOSITOR
+    nsIntRect rect;
+    mWidget->GetBounds(rect);
+    nsRefPtr<LayerManagerOGL> layerManager =
+      new LayerManagerOGL(mWidget, rect.width, rect.height, true);
+#else
     nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(mWidget);
+#endif
     mWidget = NULL;
     mLayerManager = layerManager;
 

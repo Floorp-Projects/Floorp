@@ -692,7 +692,7 @@ progress {
   background-color: #0064b4; /* blue */
 }
 
-%if OSARCH==OS2
+%ifdef XP_OS2
 input {
   font: medium serif; font-family: inherit
 }

@@ -198,6 +198,9 @@ build_all_dep: alldep
 build_all_depend: alldep
 clobber clobber_all: clean
 
+# helper target for mobile
+build_and_deploy: build package install
+
 # Do everything from scratch
 everything: clean build
 
@@ -324,7 +327,11 @@ configure-preqs = \
   configure-files \
   $(call mkdir_deps,$(OBJDIR)) \
   $(if $(MOZ_BUILD_PROJECTS),$(call mkdir_deps,$(MOZ_OBJDIR))) \
+  save-mozconfig \
   $(NULL)
+
+save-mozconfig:
+	-cp $(FOUND_MOZCONFIG) $(OBJDIR)/.mozconfig
 
 configure:: $(configure-preqs)
 	@echo cd $(OBJDIR);

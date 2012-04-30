@@ -151,7 +151,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
          */
         JS_ASSERT_IF(fp->isNonEvalFunctionFrame() && fp->fun()->isHeavyweight(),
                      fp->hasCallObj());
-        return &fp->scopeChain();
+        return fp->scopeChain();
     }
 
     /*
@@ -163,7 +163,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
      */
     JSObject *limitBlock, *limitClone;
     if (fp->isNonEvalFunctionFrame() && !fp->hasCallObj()) {
-        JS_ASSERT_IF(fp->scopeChain().isClonedBlock(), fp->scopeChain().getPrivate() != fp);
+        JS_ASSERT_IF(fp->scopeChain()->isClonedBlock(), fp->scopeChain()->getPrivate() != fp);
         if (!CallObject::createForFunction(cx, fp))
             return NULL;
 
@@ -176,7 +176,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
          * prototype should appear on blockChain; we'll clone blockChain up
          * to, but not including, that prototype.
          */
-        limitClone = &fp->scopeChain();
+        limitClone = fp->scopeChain();
         while (limitClone->isWith())
             limitClone = &limitClone->asWith().enclosingScope();
         JS_ASSERT(limitClone);
@@ -203,7 +203,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
 
         /* If the innermost block has already been cloned, we are done. */
         if (limitBlock == sharedBlock)
-            return &fp->scopeChain();
+            return fp->scopeChain();
     }
 
     /*
@@ -239,7 +239,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
             return NULL;
         newChild = clone;
     }
-    if (!newChild->setEnclosingScope(cx, RootedVarObject(cx, &fp->scopeChain())))
+    if (!newChild->setEnclosingScope(cx, fp->scopeChain()))
         return NULL;
 
     /*
@@ -441,7 +441,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 
     /* FIXME: Once bug 470510 is fixed, make this an assert. */
     if (script->compileAndGo) {
-        if (fp->scopeChain().global().isCleared()) {
+        if (fp->global().isCleared()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
             return false;
         }
@@ -964,7 +964,7 @@ EnterWith(JSContext *cx, int stackIndex)
 static void
 LeaveWith(JSContext *cx)
 {
-    WithObject &withobj = cx->fp()->scopeChain().asWith();
+    WithObject &withobj = cx->fp()->scopeChain()->asWith();
     JS_ASSERT(withobj.maybeStackFrame() == js_FloatingFrameIfGenerator(cx, cx->fp()));
     withobj.setStackFrame(NULL);
     cx->fp()->setScopeChainNoCallObj(withobj.enclosingScope());
@@ -994,7 +994,7 @@ js::UnwindScope(JSContext *cx, uint32_t stackDepth)
     fp->setBlockChain(block);
 
     for (;;) {
-        JSObject &scopeChain = fp->scopeChain();
+        JSObject &scopeChain = *fp->scopeChain();
         if (!IsActiveWithOrBlock(cx, scopeChain, stackDepth))
             break;
         if (scopeChain.isClonedBlock())
@@ -1888,7 +1888,7 @@ BEGIN_CASE(JSOP_POPN)
     JS_ASSERT_IF(block,
                  block->stackDepth() + block->slotCount()
                  <= (size_t) (regs.sp - regs.fp()->base()));
-    for (JSObject *obj = &regs.fp()->scopeChain(); obj; obj = obj->enclosingScope()) {
+    for (JSObject *obj = regs.fp()->scopeChain(); obj; obj = obj->enclosingScope()) {
         if (!obj->isBlock() || !obj->isWith())
             continue;
         if (obj->getPrivate() != js_FloatingFrameIfGenerator(cx, regs.fp()))
@@ -1919,11 +1919,11 @@ BEGIN_CASE(JSOP_ENTERWITH)
      * We set sp[-1] to the current "with" object to help asserting the
      * enter/leave balance in [leavewith].
      */
-    regs.sp[-1].setObject(regs.fp()->scopeChain());
+    regs.sp[-1].setObject(*regs.fp()->scopeChain());
 END_CASE(JSOP_ENTERWITH)
 
 BEGIN_CASE(JSOP_LEAVEWITH)
-    JS_ASSERT(regs.sp[-1].toObject() == regs.fp()->scopeChain());
+    JS_ASSERT(regs.sp[-1].toObject() == *regs.fp()->scopeChain());
     regs.sp--;
     LeaveWith(cx);
 END_CASE(JSOP_LEAVEWITH)
@@ -1946,7 +1946,7 @@ BEGIN_CASE(JSOP_STOP)
   inline_return:
     {
         JS_ASSERT(!regs.fp()->hasBlockChain());
-        JS_ASSERT(!IsActiveWithOrBlock(cx, regs.fp()->scopeChain(), 0));
+        JS_ASSERT(!IsActiveWithOrBlock(cx, *regs.fp()->scopeChain(), 0));
 
         if (cx->compartment->debugMode())
             interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
@@ -2220,7 +2220,7 @@ END_CASE(JSOP_ENUMCONSTELEM)
 #endif
 
 BEGIN_CASE(JSOP_BINDGNAME)
-    PUSH_OBJECT(regs.fp()->scopeChain().global());
+    PUSH_OBJECT(regs.fp()->global());
 END_CASE(JSOP_BINDGNAME)
 
 BEGIN_CASE(JSOP_BINDNAME)
@@ -2243,14 +2243,14 @@ BEGIN_CASE(JSOP_BINDNAME)
          * the rhs. We desire such resolve hook equivalence between the two
          * forms.
          */
-        obj = &regs.fp()->scopeChain();
+        obj = regs.fp()->scopeChain();
         if (obj->isGlobal())
             break;
 
         PropertyName *name;
         LOAD_NAME(0, name);
 
-        obj = FindIdentifierBase(cx, &regs.fp()->scopeChain(), name);
+        obj = FindIdentifierBase(cx, regs.fp()->scopeChain(), name);
         if (!obj)
             goto error;
     } while (0);
@@ -2751,7 +2751,7 @@ END_CASE(JSOP_ENUMELEM)
 BEGIN_CASE(JSOP_EVAL)
 {
     CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-    if (IsBuiltinEvalForScope(&regs.fp()->scopeChain(), args.calleev())) {
+    if (IsBuiltinEvalForScope(regs.fp()->scopeChain(), args.calleev())) {
         if (!DirectEval(cx, args))
             goto error;
     } else {
@@ -2966,7 +2966,7 @@ BEGIN_CASE(JSOP_REGEXP)
      * bytecode at pc.
      */
     uint32_t index = GET_UINT32_INDEX(regs.pc);
-    JSObject *proto = regs.fp()->scopeChain().global().getOrCreateRegExpPrototype(cx);
+    JSObject *proto = regs.fp()->global().getOrCreateRegExpPrototype(cx);
     if (!proto)
         goto error;
     JSObject *obj = CloneRegExpObject(cx, script->getRegExp(index), proto);
@@ -3213,7 +3213,7 @@ BEGIN_CASE(JSOP_DEFFUN)
          * FIXME: bug 476950, although debugger users may also demand some kind
          * of scope link for debugger-assisted eval-in-frame.
          */
-        obj2 = &regs.fp()->scopeChain();
+        obj2 = regs.fp()->scopeChain();
     } else {
         obj2 = GetScopeChain(cx, regs.fp());
         if (!obj2)
@@ -3319,7 +3319,7 @@ BEGIN_CASE(JSOP_LAMBDA)
     do {
         RootedVarObject &parent = rootObject0;
         if (fun->isNullClosure()) {
-            parent = &regs.fp()->scopeChain();
+            parent = regs.fp()->scopeChain();
         } else {
             parent = GetScopeChain(cx, regs.fp());
             if (!parent)
@@ -3992,7 +3992,7 @@ BEGIN_CASE(JSOP_GETFUNNS)
     JS_ASSERT(!script->strictModeCode);
 
     Value rval;
-    if (!cx->fp()->scopeChain().global().getFunctionNamespace(cx, &rval))
+    if (!cx->fp()->global().getFunctionNamespace(cx, &rval))
         goto error;
     PUSH_COPY(rval);
 }
@@ -4031,7 +4031,7 @@ BEGIN_CASE(JSOP_ENTERLET1)
      * anything else we should have popped off fp->scopeChain when we left its
      * static scope.
      */
-    JSObject *obj2 = &regs.fp()->scopeChain();
+    JSObject *obj2 = regs.fp()->scopeChain();
     while (obj2->isWith())
         obj2 = &obj2->asWith().enclosingScope();
     if (obj2->isBlock() &&
@@ -4060,7 +4060,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
      * cloned onto fp->scopeChain, clear its private data, move its locals from
      * the stack into the clone, and pop it off the chain.
      */
-    JSObject &scope = regs.fp()->scopeChain();
+    JSObject &scope = *regs.fp()->scopeChain();
     if (scope.getProto() == &blockObj)
         scope.asClonedBlock().put(cx);
 
@@ -4324,7 +4324,7 @@ END_CASE(JSOP_ARRAYPUSH)
      */
     JS_ASSERT(entryFrame == regs.fp());
     if (!regs.fp()->isGeneratorFrame()) {
-        JS_ASSERT(!IsActiveWithOrBlock(cx, regs.fp()->scopeChain(), 0));
+        JS_ASSERT(!IsActiveWithOrBlock(cx, *regs.fp()->scopeChain(), 0));
         JS_ASSERT(!regs.fp()->hasBlockChain());
     }
 

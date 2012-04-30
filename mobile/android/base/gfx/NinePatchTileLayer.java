@@ -57,7 +57,7 @@ public class NinePatchTileLayer extends TileLayer {
     private static final int TEXTURE_SIZE = 64;
 
     public NinePatchTileLayer(CairoImage image) {
-        super(false, image);
+        super(image, TileLayer.PaintMode.NORMAL);
     }
 
     @Override
@@ -138,6 +138,9 @@ public class NinePatchTileLayer extends TileLayer {
         // up after themselves
         coordBuffer.position(0);
         coordBuffer.put(coords);
+
+        // Unbind any the current array buffer so we can use client side buffers
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 
         // Vertex coordinates are x,y,z starting at position 0 into the buffer.
         coordBuffer.position(0);

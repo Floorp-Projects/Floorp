@@ -51,6 +51,7 @@
 
 class nsIURI;
 class gfxMixedFontFamily;
+class nsFontFaceLoader;
 
 // parsed CSS @font-face rule information
 // lifetime: from when @font-face rule processed until font is loaded
@@ -214,7 +215,7 @@ public:
                               PRUint32 aWeight,
                               PRUint32 aStretch,
                               PRUint32 aItalicStyle,
-                              const nsString& aFeatureSettings,
+                              const nsTArray<gfxFontFeature>& aFeatureSettings,
                               const nsString& aLanguageOverride,
                               gfxSparseBitSet *aUnicodeRanges = nsnull);
 
@@ -340,6 +341,7 @@ public:
 
     nsTArray<gfxFontFaceSrc> mSrcList;
     PRUint32                 mSrcIndex; // index of loading src item
+    nsFontFaceLoader        *mLoader; // current loader for this entry, if any
 };
 
 

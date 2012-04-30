@@ -1110,7 +1110,6 @@ nsEventSource::SetReconnectionTimeout()
     NS_ENSURE_STATE(mTimer);
   }
 
-  NS_ASSERTION(mReconnectionTime >= 0, "mReconnectionTime lies");
   nsresult rv = mTimer->InitWithFuncCallback(TimerCallback, this,
                                              mReconnectionTime,
                                              nsITimer::TYPE_ONE_SHOT);

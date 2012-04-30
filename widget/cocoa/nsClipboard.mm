@@ -87,7 +87,7 @@ GetDataFromPasteboard(NSPasteboard* aPasteboard, NSString* aType)
   @try {
     data = [aPasteboard dataForType:aType];
   } @catch (NSException* e) {
-    NS_WARNING(nsPrintfCString(256, "Exception raised while getting data from the pasteboard: \"%s - %s\"", 
+    NS_WARNING(nsPrintfCString("Exception raised while getting data from the pasteboard: \"%s - %s\"", 
                                [[e name] UTF8String], [[e reason] UTF8String]).get());
   }
   return data;

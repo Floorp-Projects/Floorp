@@ -73,6 +73,7 @@
 #include "sampler.h"
 #include "nsIConsoleService.h"
 #include "base/compiler_specific.h"
+#include "NullHttpTransaction.h"
 
 using namespace mozilla;
 
@@ -231,6 +232,10 @@ nsHttpChannel::Connect(bool firstTime)
 
     // true when called from AsyncOpen
     if (firstTime) {
+
+        // Consider opening a TCP connection right away
+        SpeculativeConnect();
+
         // are we offline?
         bool offline = gIOService->IsOffline();
         if (offline)
@@ -355,6 +360,33 @@ nsHttpChannel::Connect(bool firstTime)
         mTransactionPump->Suspend();
 
     return NS_OK;
+}
+
+void
+nsHttpChannel::SpeculativeConnect()
+{
+    // Before we take the latency hit of dealing with the cache, try and
+    // get the TCP (and SSL) handshakes going so they can overlap.
+
+    // don't speculate on uses of the offline application cache or if
+    // we are actually offline
+    if (mApplicationCache || gIOService->IsOffline())
+        return;
+
+    // Channel loads with this flags are meant to be local only
+    if (mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_FROM_CACHE |
+                      LOAD_NO_NETWORK_IO | LOAD_CHECK_OFFLINE_CACHE))
+        return;
+    
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
+                                           getter_AddRefs(callbacks));
+    if (!callbacks)
+        return;
+
+    mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
+    gHttpHandler->SpeculativeConnect(mConnectionInfo,
+                                     callbacks, NS_GetCurrentThread());
 }
 
 void
@@ -3163,7 +3195,7 @@ nsHttpChannel::InitOfflineCacheEntry()
         return NS_OK;
     }
 
-    if (mResponseHead && mResponseHead->NoStore()) {
+    if (!mResponseHead || mResponseHead->NoStore()) {
         CloseOfflineCacheEntry();
 
         return NS_OK;
@@ -4466,18 +4498,8 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         
         if (mUpgradeProtocolCallback && stickyConn &&
             mResponseHead && mResponseHead->Status() == 101) {
-            nsCOMPtr<nsISocketTransport>    socketTransport;
-            nsCOMPtr<nsIAsyncInputStream>   socketIn;
-            nsCOMPtr<nsIAsyncOutputStream>  socketOut;
-
-            nsresult rv;
-            rv = stickyConn->TakeTransport(getter_AddRefs(socketTransport),
-                                           getter_AddRefs(socketIn),
-                                           getter_AddRefs(socketOut));
-            if (NS_SUCCEEDED(rv))
-                mUpgradeProtocolCallback->OnTransportAvailable(socketTransport,
-                                                               socketIn,
-                                                               socketOut);
+            gHttpHandler->ConnMgr()->CompleteUpgrade(stickyConn,
+                                                     mUpgradeProtocolCallback);
         }
     }
 

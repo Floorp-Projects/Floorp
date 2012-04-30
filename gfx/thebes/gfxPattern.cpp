@@ -132,6 +132,10 @@ gfxPattern::SetMatrix(const gfxMatrix& matrix)
     cairo_pattern_set_matrix(mPattern, &mat);
   } else {
     mTransform = ToMatrix(matrix);
+    // Cairo-pattern matrices specify the conversion from DrawTarget to pattern
+    // space. Azure pattern matrices specify the conversion from pattern to
+    // DrawTarget space.
+    mTransform.Invert();
   }
 }
 

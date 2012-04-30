@@ -177,7 +177,7 @@ NSResultToNameAndMessage(nsresult aNSResult,
 
 nsresult
 NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
-                                   const char** aMessage)
+                                   const char** aMessage, PRUint16* aCode)
 {
   const char* name = nsnull;
   const char* message = nsnull;
@@ -187,6 +187,9 @@ NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
   if (name && message) {
     *aName = name;
     *aMessage = message;
+    if (aCode) {
+      *aCode = code;
+    }
     return NS_OK;
   }
 

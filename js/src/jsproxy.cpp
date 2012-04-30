@@ -82,6 +82,7 @@ GetFunctionProxyConstruct(JSObject *proxy)
     return proxy->getSlotRef(JSSLOT_PROXY_CONSTRUCT);
 }
 
+#ifdef DEBUG
 static bool
 OperationInProgress(JSContext *cx, JSObject *proxy)
 {
@@ -93,9 +94,7 @@ OperationInProgress(JSContext *cx, JSObject *proxy)
     }
     return false;
 }
-
-static bool
-FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp);
+#endif
 
 ProxyHandler::ProxyHandler(void *family) : mFamily(family)
 {
@@ -466,9 +465,9 @@ ParsePropertyDescriptorObject(JSContext *cx, JSObject *obj, jsid id, const Value
     if (!d || !d->initialize(cx, v))
         return false;
     desc->obj = obj;
-    desc->value = d->value;
-    JS_ASSERT(!(d->attrs & JSPROP_SHORTID));
-    desc->attrs = d->attrs;
+    desc->value = d->hasValue() ? d->value() : UndefinedValue();
+    JS_ASSERT(!(d->attributes() & JSPROP_SHORTID));
+    desc->attrs = d->attributes();
     desc->getter = d->getter();
     desc->setter = d->setter();
     desc->shortid = 0;
@@ -534,7 +533,6 @@ class ScriptedProxyHandler : public ProxyHandler {
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props);
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     virtual bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props);
-    virtual bool fix(JSContext *cx, JSObject *proxy, Value *vp);
 
     /* ES5 Harmony derived proxy traps. */
     virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
@@ -645,14 +643,6 @@ ScriptedProxyHandler::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &pr
     return GetFundamentalTrap(cx, handler, ATOM(enumerate), tvr.addr()) &&
            Trap(cx, handler, tvr.value(), 0, NULL, tvr.addr()) &&
            ArrayToIdVector(cx, tvr.value(), props);
-}
-
-bool
-ScriptedProxyHandler::fix(JSContext *cx, JSObject *proxy, Value *vp)
-{
-    JSObject *handler = GetProxyHandlerObject(cx, proxy);
-    return GetFundamentalTrap(cx, handler, ATOM(fix), vp) &&
-           Trap(cx, handler, *vp, 0, NULL, vp);
 }
 
 bool
@@ -838,14 +828,6 @@ Proxy::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
     JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return GetProxyHandler(proxy)->enumerate(cx, proxy, props);
-}
-
-bool
-Proxy::fix(JSContext *cx, JSObject *proxy, Value *vp)
-{
-    JS_CHECK_RECURSION(cx, return false);
-    AutoPendingProxyOperation pending(cx, proxy);
-    return GetProxyHandler(proxy)->fix(cx, proxy, vp);
 }
 
 bool
@@ -1251,6 +1233,8 @@ proxy_DeleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JS
 static void
 proxy_TraceObject(JSTracer *trc, JSObject *obj)
 {
+    // NB: If you add new slots here, make sure to change
+    // js::NukeChromeCrossCompartmentWrappers to cope.
     GetProxyHandler(obj)->trace(trc, obj);
     MarkCrossCompartmentSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_PRIVATE), "private");
     MarkCrossCompartmentSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_EXTRA + 0), "extra0");
@@ -1260,6 +1244,8 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
 static void
 proxy_TraceFunction(JSTracer *trc, JSObject *obj)
 {
+    // NB: If you add new slots here, make sure to change
+    // js::NukeChromeCrossCompartmentWrappers to cope.
     MarkCrossCompartmentSlot(trc, &GetCall(obj), "call");
     MarkCrossCompartmentSlot(trc, &GetFunctionProxyConstruct(obj), "construct");
     proxy_TraceObject(trc, obj);
@@ -1270,19 +1256,6 @@ proxy_Convert(JSContext *cx, JSObject *proxy, JSType hint, Value *vp)
 {
     JS_ASSERT(proxy->isProxy());
     return Proxy::defaultValue(cx, proxy, hint, vp);
-}
-
-static JSBool
-proxy_Fix(JSContext *cx, JSObject *obj, bool *fixed, AutoIdVector *props)
-{
-    JS_ASSERT(obj->isProxy());
-    JSBool isFixed;
-    bool ok = FixProxy(cx, obj, &isFixed);
-    if (ok) {
-        *fixed = isFixed;
-        return GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, props);
-    }
-    return false;
 }
 
 static void
@@ -1359,7 +1332,6 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
         proxy_DeleteSpecial,
         NULL,                /* enumerate       */
         proxy_TypeOf,
-        proxy_Fix,           /* fix             */
         NULL,                /* thisObject      */
         NULL,                /* clear           */
     }
@@ -1418,7 +1390,6 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
         proxy_DeleteSpecial,
         NULL,                /* enumerate       */
         NULL,                /* typeof          */
-        NULL,                /* fix             */
         NULL,                /* thisObject      */
         NULL,                /* clear           */
     }
@@ -1489,7 +1460,6 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
         proxy_DeleteSpecial,
         NULL,                /* enumerate       */
         proxy_TypeOf,
-        proxy_Fix,           /* fix             */
         NULL,                /* thisObject      */
         NULL,                /* clear           */
     }
@@ -1602,116 +1572,11 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-#ifdef DEBUG
-
-static JSBool
-proxy_isTrapping(JSContext *cx, unsigned argc, Value *vp)
-{
-    if (argc < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "isTrapping", "0", "s");
-        return false;
-    }
-    JSObject *obj = NonNullObject(cx, vp[2]);
-    if (!obj)
-        return false;
-    vp->setBoolean(obj->isProxy());
-    return true;
-}
-
-static JSBool
-proxy_fix(JSContext *cx, unsigned argc, Value *vp)
-{
-    if (argc < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "fix", "0", "s");
-        return false;
-    }
-    JSObject *obj = NonNullObject(cx, vp[2]);
-    if (!obj)
-        return false;
-    if (obj->isProxy()) {
-        JSBool flag;
-        if (!FixProxy(cx, obj, &flag))
-            return false;
-        vp->setBoolean(flag);
-    } else {
-        vp->setBoolean(true);
-    }
-    return true;
-}
-
-#endif
-
 static JSFunctionSpec static_methods[] = {
     JS_FN("create",         proxy_create,          2, 0),
     JS_FN("createFunction", proxy_createFunction,  3, 0),
-#ifdef DEBUG
-    JS_FN("isTrapping",     proxy_isTrapping,      1, 0),
-    JS_FN("fix",            proxy_fix,             1, 0),
-#endif
     JS_FS_END
 };
-
-static const uint32_t JSSLOT_CALLABLE_CALL = 0;
-static const uint32_t JSSLOT_CALLABLE_CONSTRUCT = 1;
-
-static JSBool
-callable_Call(JSContext *cx, unsigned argc, Value *vp)
-{
-    JSObject *callable = &JS_CALLEE(cx, vp).toObject();
-    JS_ASSERT(callable->getClass() == &CallableObjectClass);
-    const Value &fval = callable->getSlot(JSSLOT_CALLABLE_CALL);
-    const Value &thisval = vp[1];
-    bool ok = Invoke(cx, thisval, fval, argc, JS_ARGV(cx, vp), vp);
-    return ok;
-}
-
-JSBool
-callable_Construct(JSContext *cx, unsigned argc, Value *vp)
-{
-    JSObject *callable = &vp[0].toObject();
-    JS_ASSERT(callable->getClass() == &CallableObjectClass);
-    Value fval = callable->getSlot(JSSLOT_CALLABLE_CONSTRUCT);
-    if (fval.isUndefined()) {
-        /* We don't have an explicit constructor so allocate a new object and use the call. */
-        fval = callable->getSlot(JSSLOT_CALLABLE_CALL);
-        JS_ASSERT(fval.isObject());
-
-        /* callable is the constructor, so get callable.prototype is the proto of the new object. */
-        Value protov;
-        if (!callable->getProperty(cx, ATOM(classPrototype), &protov))
-            return false;
-
-        JSObject *proto;
-        if (protov.isObject()) {
-            proto = &protov.toObject();
-        } else {
-            proto = callable->global().getOrCreateObjectPrototype(cx);
-            if (!proto)
-                return false;
-        }
-
-        JSObject *newobj = NewObjectWithGivenProto(cx, &ObjectClass, proto, NULL);
-        if (!newobj)
-            return false;
-
-        /* If the call returns an object, return that, otherwise the original newobj. */
-        Value rval;
-        if (!Invoke(cx, ObjectValue(*newobj), callable->getSlot(JSSLOT_CALLABLE_CALL),
-                    argc, vp + 2, &rval)) {
-            return false;
-        }
-        if (rval.isPrimitive())
-            vp->setObject(*newobj);
-        else
-            *vp = rval;
-        return true;
-    }
-
-    bool ok = Invoke(cx, UndefinedValue(), fval, argc, vp + 2, vp);
-    return ok;
-}
 
 Class js::CallableObjectClass = {
     "Function",
@@ -1725,64 +1590,9 @@ Class js::CallableObjectClass = {
     JS_ConvertStub,
     NULL,                    /* finalize    */
     NULL,                    /* checkAccess */
-    callable_Call,
-    callable_Construct,
+    NULL,                    /* call        */
+    NULL                     /* construct   */
 };
-
-static bool
-FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
-{
-    if (OperationInProgress(cx, proxy)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROXY_FIX);
-        return false;
-    }
-
-    AutoValueRooter tvr(cx);
-    if (!Proxy::fix(cx, proxy, tvr.addr()))
-        return false;
-    if (tvr.value().isUndefined()) {
-        *bp = false;
-        return true;
-    }
-
-    JSObject *props = NonNullObject(cx, tvr.value());
-    if (!props)
-        return false;
-
-    JSObject *proto = proxy->getProto();
-    JSObject *parent = proxy->getParent();
-    Class *clasp = IsFunctionProxy(proxy) ? &CallableObjectClass : &ObjectClass;
-
-    /*
-     * Make a blank object from the recipe fix provided to us.  This must have
-     * number of fixed slots as the proxy so that we can swap their contents.
-     */
-    gc::AllocKind kind = proxy->getAllocKind();
-    RootedVarObject newborn(cx);
-    newborn = NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
-    if (!newborn)
-        return false;
-
-    if (clasp == &CallableObjectClass) {
-        newborn->setSlot(JSSLOT_CALLABLE_CALL, GetCall(proxy));
-        newborn->setSlot(JSSLOT_CALLABLE_CONSTRUCT, GetConstruct(proxy));
-    }
-
-    {
-        AutoPendingProxyOperation pending(cx, proxy);
-        if (!js_PopulateObject(cx, newborn, props))
-            return false;
-    }
-
-    /* Trade contents between the newborn object and the proxy. */
-    if (!proxy->swap(cx, newborn))
-        return false;
-
-    /* The GC will dispose of the proxy object. */
-
-    *bp = true;
-    return true;
-}
 
 Class js::ProxyClass = {
     "Proxy",

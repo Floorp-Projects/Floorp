@@ -26,7 +26,7 @@
 #ifndef PIXMAN_ARM_COMMON_H
 #define PIXMAN_ARM_COMMON_H
 
-#include "pixman-fast-path.h"
+#include "pixman-inlines.h"
 
 /* Define some macros which can expand into proxy functions between
  * ARM assembly optimized functions and the rest of pixman fast path API.
@@ -63,26 +63,16 @@ pixman_composite_##name##_asm_##cputype (int32_t   w,                   \
                                                                         \
 static void                                                             \
 cputype##_composite_##name (pixman_implementation_t *imp,               \
-                            pixman_op_t              op,                \
-                            pixman_image_t *         src_image,         \
-                            pixman_image_t *         mask_image,        \
-                            pixman_image_t *         dst_image,         \
-                            int32_t                  src_x,             \
-                            int32_t                  src_y,             \
-                            int32_t                  mask_x,            \
-                            int32_t                  mask_y,            \
-                            int32_t                  dest_x,            \
-                            int32_t                  dest_y,            \
-                            int32_t                  width,             \
-                            int32_t                  height)            \
+                            pixman_composite_info_t *info)              \
 {                                                                       \
-    dst_type *dst_line;                                                 \
+    PIXMAN_COMPOSITE_ARGS (info);                                       \
+    dst_type *dst_line;							\
     src_type *src_line;                                                 \
     int32_t dst_stride, src_stride;                                     \
                                                                         \
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, src_type,           \
                            src_stride, src_line, src_cnt);              \
-    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, dst_type,         \
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, dst_type,        \
                            dst_stride, dst_line, dst_cnt);              \
                                                                         \
     pixman_composite_##name##_asm_##cputype (width, height,             \
@@ -101,30 +91,20 @@ pixman_composite_##name##_asm_##cputype (int32_t    w,                  \
                                                                         \
 static void                                                             \
 cputype##_composite_##name (pixman_implementation_t *imp,               \
-                            pixman_op_t              op,                \
-                            pixman_image_t *         src_image,         \
-                            pixman_image_t *         mask_image,        \
-                            pixman_image_t *         dst_image,         \
-                            int32_t                  src_x,             \
-                            int32_t                  src_y,             \
-                            int32_t                  mask_x,            \
-                            int32_t                  mask_y,            \
-                            int32_t                  dest_x,            \
-                            int32_t                  dest_y,            \
-                            int32_t                  width,             \
-                            int32_t                  height)            \
+			    pixman_composite_info_t *info)              \
 {                                                                       \
+    PIXMAN_COMPOSITE_ARGS (info);					\
     dst_type  *dst_line;                                                \
     int32_t    dst_stride;                                              \
     uint32_t   src;                                                     \
                                                                         \
     src = _pixman_image_get_solid (					\
-	imp, src_image, dst_image->bits.format);			\
+	imp, src_image, dest_image->bits.format);			\
                                                                         \
     if ((flags & SKIP_ZERO_SRC) && src == 0)                            \
 	return;                                                         \
                                                                         \
-    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, dst_type,         \
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, dst_type,        \
                            dst_stride, dst_line, dst_cnt);              \
                                                                         \
     pixman_composite_##name##_asm_##cputype (width, height,             \
@@ -147,31 +127,21 @@ pixman_composite_##name##_asm_##cputype (int32_t    w,                  \
                                                                         \
 static void                                                             \
 cputype##_composite_##name (pixman_implementation_t *imp,               \
-                            pixman_op_t              op,                \
-                            pixman_image_t *         src_image,         \
-                            pixman_image_t *         mask_image,        \
-                            pixman_image_t *         dst_image,         \
-                            int32_t                  src_x,             \
-                            int32_t                  src_y,             \
-                            int32_t                  mask_x,            \
-                            int32_t                  mask_y,            \
-                            int32_t                  dest_x,            \
-                            int32_t                  dest_y,            \
-                            int32_t                  width,             \
-                            int32_t                  height)            \
+                            pixman_composite_info_t *info)              \
 {                                                                       \
-    dst_type  *dst_line;                                                \
+    PIXMAN_COMPOSITE_ARGS (info);                                       \
+    dst_type  *dst_line;						\
     mask_type *mask_line;                                               \
     int32_t    dst_stride, mask_stride;                                 \
     uint32_t   src;                                                     \
                                                                         \
     src = _pixman_image_get_solid (					\
-	imp, src_image, dst_image->bits.format);			\
+	imp, src_image, dest_image->bits.format);			\
                                                                         \
     if ((flags & SKIP_ZERO_SRC) && src == 0)                            \
 	return;                                                         \
                                                                         \
-    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, dst_type,         \
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, dst_type,        \
                            dst_stride, dst_line, dst_cnt);              \
     PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, mask_type,       \
                            mask_stride, mask_line, mask_cnt);           \
@@ -196,31 +166,21 @@ pixman_composite_##name##_asm_##cputype (int32_t    w,                  \
                                                                         \
 static void                                                             \
 cputype##_composite_##name (pixman_implementation_t *imp,               \
-                            pixman_op_t              op,                \
-                            pixman_image_t *         src_image,         \
-                            pixman_image_t *         mask_image,        \
-                            pixman_image_t *         dst_image,         \
-                            int32_t                  src_x,             \
-                            int32_t                  src_y,             \
-                            int32_t                  mask_x,            \
-                            int32_t                  mask_y,            \
-                            int32_t                  dest_x,            \
-                            int32_t                  dest_y,            \
-                            int32_t                  width,             \
-                            int32_t                  height)            \
+                            pixman_composite_info_t *info)              \
 {                                                                       \
-    dst_type  *dst_line;                                                \
+    PIXMAN_COMPOSITE_ARGS (info);                                       \
+    dst_type  *dst_line;						\
     src_type  *src_line;                                                \
     int32_t    dst_stride, src_stride;                                  \
     uint32_t   mask;                                                    \
                                                                         \
     mask = _pixman_image_get_solid (					\
-	imp, mask_image, dst_image->bits.format);			\
+	imp, mask_image, dest_image->bits.format);			\
                                                                         \
     if ((flags & SKIP_ZERO_MASK) && mask == 0)                          \
 	return;                                                         \
                                                                         \
-    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, dst_type,         \
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, dst_type,        \
                            dst_stride, dst_line, dst_cnt);              \
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, src_type,           \
                            src_stride, src_line, src_cnt);              \
@@ -247,25 +207,15 @@ pixman_composite_##name##_asm_##cputype (int32_t    w,                  \
                                                                         \
 static void                                                             \
 cputype##_composite_##name (pixman_implementation_t *imp,               \
-                            pixman_op_t              op,                \
-                            pixman_image_t *         src_image,         \
-                            pixman_image_t *         mask_image,        \
-                            pixman_image_t *         dst_image,         \
-                            int32_t                  src_x,             \
-                            int32_t                  src_y,             \
-                            int32_t                  mask_x,            \
-                            int32_t                  mask_y,            \
-                            int32_t                  dest_x,            \
-                            int32_t                  dest_y,            \
-                            int32_t                  width,             \
-                            int32_t                  height)            \
+                            pixman_composite_info_t *info)              \
 {                                                                       \
-    dst_type  *dst_line;                                                \
+    PIXMAN_COMPOSITE_ARGS (info);                                       \
+    dst_type  *dst_line;						\
     src_type  *src_line;                                                \
     mask_type *mask_line;                                               \
     int32_t    dst_stride, src_stride, mask_stride;                     \
                                                                         \
-    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, dst_type,         \
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, dst_type,        \
                            dst_stride, dst_line, dst_cnt);              \
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, src_type,           \
                            src_stride, src_line, src_cnt);              \
@@ -398,13 +348,17 @@ scaled_bilinear_scanline_##cputype##_##name##_##op (                          \
                                                                               \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_cover_##op,                 \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint32_t, dst_type, COVER, FALSE, FALSE)     \
+                       src_type, uint32_t, dst_type, COVER, FLAG_NONE)        \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_none_##op,                  \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint32_t, dst_type, NONE, FALSE, FALSE)      \
+                       src_type, uint32_t, dst_type, NONE, FLAG_NONE)         \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_pad_##op,                   \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint32_t, dst_type, PAD, FALSE, FALSE)
+                       src_type, uint32_t, dst_type, PAD, FLAG_NONE)          \
+FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_normal_##op,                \
+                       scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+                       src_type, uint32_t, dst_type, NORMAL,                  \
+                       FLAG_NONE)
 
 
 #define PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_A8_DST(flags, cputype, name, op,  \
@@ -443,12 +397,20 @@ scaled_bilinear_scanline_##cputype##_##name##_##op (                          \
                                                                               \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_cover_##op,                 \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint8_t, dst_type, COVER, TRUE, FALSE)       \
+                       src_type, uint8_t, dst_type, COVER,                    \
+                       FLAG_HAVE_NON_SOLID_MASK)                              \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_none_##op,                  \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint8_t, dst_type, NONE, TRUE, FALSE)        \
+                       src_type, uint8_t, dst_type, NONE,                     \
+                       FLAG_HAVE_NON_SOLID_MASK)                              \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_pad_##op,                   \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint8_t, dst_type, PAD, TRUE, FALSE)
+                       src_type, uint8_t, dst_type, PAD,                      \
+                       FLAG_HAVE_NON_SOLID_MASK)                              \
+FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_normal_##op,                \
+                       scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+                       src_type, uint8_t, dst_type, NORMAL,                   \
+                       FLAG_HAVE_NON_SOLID_MASK)
+
 
 #endif

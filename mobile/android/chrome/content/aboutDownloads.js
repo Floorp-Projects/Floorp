@@ -89,7 +89,7 @@ let Downloads = {
             icon: "moz-icon://" + download.displayName + "?size=64",
             date: DownloadUtils.getReadableDates(new Date())[0],
             domain: DownloadUtils.getURIHost(download.source.spec)[0],
-            size: DownloadUtils.convertByteUnits(download.size).join(""),
+            size: DownloadUtils.convertByteUnits(download.size).join("")
           });
           this._list.insertAdjacentHTML("afterbegin", item);
           break;
@@ -109,11 +109,23 @@ let Downloads = {
       "ORDER BY endTime DESC");
   },
 
-  _createItem: function (aTemplate, aValues) {
+  _createItem: function _createItem(aTemplate, aValues) {
+    function htmlEscape(s) {
+      s = s.replace(/&/g, "&amp;");
+      s = s.replace(/>/g, "&gt;");
+      s = s.replace(/</g, "&lt;");
+      s = s.replace(/"/g, "&quot;");
+      s = s.replace(/'/g, "&apos;");
+      return s;
+    }
+
     let t = aTemplate;
-    for (let i in aValues) {
-      let regEx = new RegExp("{" + i + "}", "g");
-      t = t.replace(regEx, aValues[i]);
+    for (let key in aValues) {
+      if (aValues.hasOwnProperty(key)) {
+        let regEx = new RegExp("{" + key + "}", "g");
+        let value = htmlEscape(aValues[key].toString());
+        t = t.replace(regEx, value);
+      }
     }
     return t;
   },
@@ -131,9 +143,9 @@ let Downloads = {
         id: this._stmt.row.id,
         target: this._stmt.row.name,
         icon: "moz-icon://" + this._stmt.row.name + "?size=64",
-        date: DownloadUtils.getReadableDates(new Date(this._stmt.row.endTime/1000))[0],
+        date: DownloadUtils.getReadableDates(new Date(this._stmt.row.endTime / 1000))[0],
         domain: DownloadUtils.getURIHost(this._stmt.row.source)[0],
-        size: DownloadUtils.convertByteUnits(this._stmt.row.maxBytes).join(""),
+        size: DownloadUtils.convertByteUnits(this._stmt.row.maxBytes).join("")
       };
 
       let item = this._createItem(downloadTemplate, attrs);

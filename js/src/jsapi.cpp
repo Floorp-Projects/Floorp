@@ -96,6 +96,7 @@
 #include "js/MemoryMetrics.h"
 #include "yarr/BumpPointerAllocator.h"
 #include "vm/MethodGuard.h"
+#include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
 
@@ -350,7 +351,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
           case 'I':
             if (!JS_ValueToNumber(cx, *sp, &d))
                 return JS_FALSE;
-            *va_arg(ap, double *) = js_DoubleToInteger(d);
+            *va_arg(ap, double *) = ToInteger(d);
             break;
           case 'S':
           case 'W':
@@ -561,13 +562,13 @@ JS_DoubleIsInt32(double d, int32_t *ip)
 JS_PUBLIC_API(int32_t)
 JS_DoubleToInt32(double d)
 {
-    return js_DoubleToECMAInt32(d);
+    return ToInt32(d);
 }
 
 JS_PUBLIC_API(uint32_t)
 JS_DoubleToUint32(double d)
 {
-    return js_DoubleToECMAUint32(d);
+    return ToUint32(d);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1401,7 +1402,7 @@ JS_EnterCrossCompartmentCallStackFrame(JSContext *cx, JSStackFrame *target)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
 
-    return JS_EnterCrossCompartmentCall(cx, &Valueify(target)->scopeChain().global());
+    return JS_EnterCrossCompartmentCall(cx, &Valueify(target)->global());
 }
 
 JS_PUBLIC_API(void)
@@ -1467,7 +1468,7 @@ bool
 AutoEnterFrameCompartment::enter(JSContext *cx, JSStackFrame *target)
 {
     JS_ASSERT(!call);
-    if (cx->compartment == Valueify(target)->scopeChain().compartment()) {
+    if (cx->compartment == Valueify(target)->scopeChain()->compartment()) {
         call = reinterpret_cast<JSCrossCompartmentCall*>(1);
         return true;
     }
@@ -1797,7 +1798,7 @@ static JSStdName standard_class_atoms[] = {
     {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
 #endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
-    {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::slowClass},
+    {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBufferObject::protoClass},
     {js_InitWeakMapClass,               EAGER_CLASS_ATOM(WeakMap), &js::WeakMapClass},
     {js_InitMapClass,                   EAGER_CLASS_ATOM(Map), &js::MapObject::class_},
     {js_InitSetClass,                   EAGER_CLASS_ATOM(Set), &js::SetObject::class_},
@@ -4560,7 +4561,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent_)
 
     if (!parent) {
         if (cx->hasfp())
-            parent = &cx->fp()->scopeChain();
+            parent = cx->fp()->scopeChain();
         if (!parent)
             parent = cx->globalObject;
         JS_ASSERT(parent);
@@ -5246,13 +5247,15 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, unsigned indent)
                                 false, false, js_DecompileFunctionBody);
 }
 
-JS_PUBLIC_API(JSBool)
+JS_NEVER_INLINE JS_PUBLIC_API(JSBool)
 JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *scriptArg, jsval *rval)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
+    if (cx->compartment != obj->compartment())
+        *(volatile int *) 0 = 0xf0;
     AutoLastFrameCheck lfc(cx);
 
     JS::Anchor<JSScript *> script;
@@ -6637,7 +6640,7 @@ JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno)
     if (lineno)
         *lineno = 0;
 
-    FrameRegsIter i(cx);
+    ScriptFrameIter i(cx);
     if (i.done())
         return JS_FALSE;
 
@@ -6738,3 +6741,14 @@ JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
         return NULL;
     return funobj;
 }
+
+JS_PUBLIC_API(JSObject *)
+JS_GetScriptedGlobal(JSContext *cx)
+{
+    ScriptFrameIter i(cx);
+    if (i.done())
+        return JS_GetGlobalForScopeChain(cx);
+
+    return JS_GetGlobalForFrame(Jsvalify(i.fp()));
+}
+

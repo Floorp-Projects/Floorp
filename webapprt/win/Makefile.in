@@ -1,0 +1,125 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+# Build a binary bootstrapping with XRE_main
+PROGRAM   = webapprt-stub$(BIN_SUFFIX)
+
+CPPSRCS   = webapprt.cpp
+
+# Statically link against the CRT
+USE_STATIC_LIBS = 1
+# Don't create a dependency on mozglue, which is impossible (difficult?)
+# to dynamically link into our executable, as we copy it to arbitrary locations.
+MOZ_GLUE_LDFLAGS =
+
+# mozglue uses mfbt's Assertions.cpp, which provides MOZ_ASSERT, which lots
+# of code in libxpcom uses, so we have to do the same.
+VPATH += $(topsrcdir)/mfbt
+CPPSRCS += Assertions.cpp
+
+LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
+LOCAL_INCLUDES += -I$(DEPTH)/build
+
+DEFINES += -DXPCOM_GLUE
+STL_FLAGS=
+
+LIBS = \
+  $(XPCOM_STANDALONE_GLUE_LDOPTS) \
+  $(NULL)
+
+ifndef MOZ_WINCONSOLE
+ifdef MOZ_DEBUG
+MOZ_WINCONSOLE = 1
+else
+MOZ_WINCONSOLE = 0
+endif
+endif
+
+# Installer stuff
+include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
+
+CONFIG_DIR = instgen
+SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
+APP_VERSION := $(shell cat $(topsrcdir)/browser/config/version.txt)
+DEFINES += -DAPP_VERSION=$(APP_VERSION)
+
+ifdef _MSC_VER
+# Always enter a Windows program through wmain, whether or not we're
+# a console application.
+WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
+
+OS_LIBS += $(call EXPAND_LIBNAME,shell32)
+
+RCINCLUDE = webapprt.rc
+ifndef GNU_CC
+RCFLAGS += -I$(srcdir)
+else
+RCFLAGS += --include-dir $(srcdir)
+endif
+ifdef DEBUG
+RCFLAGS += -DDEBUG
+endif
+
+# Uninstaller
+ifdef LOCALE_MERGEDIR
+PPL_LOCALE_ARGS = \
+  --l10n-dir=$(LOCALE_MERGEDIR)/webapprt/webapp-uninstaller \
+  --l10n-dir=$(call EXPAND_LOCALE_SRCDIR,webapprt/locales)/webapp-uninstaller \
+  --l10n-dir=$(topsrcdir)/webapprt/locales/en-US/webapp-uninstaller \
+  $(NULL)
+else
+PPL_LOCALE_ARGS=$(call EXPAND_LOCALE_SRCDIR,webapprt/locales)/webapp-uninstaller
+endif
+
+libs::
+	$(RM) -r $(CONFIG_DIR)
+	$(MKDIR) $(CONFIG_DIR)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py -Fsubstitution \
+		$(DEFINES) $(ACDEFINES) \
+		$(srcdir)/webapp-uninstaller.nsi.in > $(CONFIG_DIR)/webapp-uninstaller.nsi
+	$(PYTHON) \
+		$(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+		--create-nlf-file $(topsrcdir) $(AB_CD) $(CONFIG_DIR)
+	$(PYTHON) \
+		$(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+		--preprocess-single-file $(topsrcdir) $(PPL_LOCALE_ARGS) $(CONFIG_DIR) \
+		webapp-uninstaller.properties webapp-uninstaller-locale.nsh
+	$(MAKE) webapp_uninstaller
+
+GARBAGE_DIRS += instgen
+
+include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk
+
+GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
+DEFINES += -DGRE_BUILDID=$(GRE_BUILDID)
+
+webapprt.$(OBJ_SUFFIX): $(DEPTH)/config/buildid
+
+# Control the default heap size.
+# This is the heap returned by GetProcessHeap().
+# As we use the CRT heap, the default size is too large and wastes VM.
+#
+# The default heap size is 1MB on Win32.
+# The heap will grow if need be.
+#
+# Set it to 256k.  See bug 127069.
+#
+ifndef GNU_CC
+LDFLAGS += /HEAP:0x40000
+ifeq ($(OS_TEST),x86_64)
+# set stack to 2MB on x64 build.  See bug 582910
+LDFLAGS += -STACK:2097152
+endif
+endif

@@ -134,8 +134,9 @@ nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
                        aFont.sizeAdjust,
                        aFont.systemFont,
                        mDeviceContext->IsPrinterSurface(),
-                       aFont.featureSettings,
                        aFont.languageOverride);
+
+    aFont.AddFontFeaturesToStyle(&style);
 
     mFontGroup = gfxPlatform::GetPlatform()->
         CreateFontGroup(aFont.name, &style, aUserFontSet);
@@ -364,20 +365,20 @@ nsFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
                   &provider, nsnull, nsnull);
 }
 
-nsBoundingMetrics
-nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
-                                  nsRenderingContext *aContext)
+static nsBoundingMetrics
+GetTextBoundingMetrics(nsFontMetrics* aMetrics, const PRUnichar *aString, PRUint32 aLength,
+                       nsRenderingContext *aContext, gfxFont::BoundingBoxType aType)
 {
     if (aLength == 0)
         return nsBoundingMetrics();
 
     StubPropertyProvider provider;
-    AutoTextRun textRun(this, aContext, aString, aLength);
+    AutoTextRun textRun(aMetrics, aContext, aString, aLength);
     nsBoundingMetrics m;
     if (textRun.get()) {
         gfxTextRun::Metrics theMetrics =
             textRun->MeasureText(0, aLength,
-                                 gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
+                                 aType,
                                  aContext->ThebesContext(), &provider);
 
         m.leftBearing  = NSToCoordFloor( theMetrics.mBoundingBox.X());
@@ -388,3 +389,19 @@ nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
     }
     return m;
 }
+
+nsBoundingMetrics
+nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
+                                  nsRenderingContext *aContext)
+{
+  return GetTextBoundingMetrics(this, aString, aLength, aContext, gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS);
+  
+}
+
+nsBoundingMetrics
+nsFontMetrics::GetInkBoundsForVisualOverflow(const PRUnichar *aString, PRUint32 aLength,
+                                             nsRenderingContext *aContext)
+{
+  return GetTextBoundingMetrics(this, aString, aLength, aContext, gfxFont::LOOSE_INK_EXTENTS);
+}
+

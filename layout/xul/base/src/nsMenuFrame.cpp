@@ -453,15 +453,15 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     PRUint32 keyCode = keyEvent->keyCode;
 #ifdef XP_MACOSX
     // On mac, open menulist on either up/down arrow or space (w/o Cmd pressed)
-    if (!IsOpen() && ((keyEvent->charCode == NS_VK_SPACE && !keyEvent->isMeta) ||
+    if (!IsOpen() && ((keyEvent->charCode == NS_VK_SPACE && !keyEvent->IsMeta()) ||
         (keyCode == NS_VK_UP || keyCode == NS_VK_DOWN))) {
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
       OpenMenu(false);
     }
 #else
     // On other platforms, toggle menulist on unmodified F4 or Alt arrow
-    if ((keyCode == NS_VK_F4 && !keyEvent->isAlt) ||
-        ((keyCode == NS_VK_UP || keyCode == NS_VK_DOWN) && keyEvent->isAlt)) {
+    if ((keyCode == NS_VK_F4 && !keyEvent->IsAlt()) ||
+        ((keyCode == NS_VK_UP || keyCode == NS_VK_DOWN) && keyEvent->IsAlt())) {
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
       ToggleMenuState();
     }
@@ -1266,10 +1266,10 @@ nsMenuFrame::CreateMenuCommandEvent(nsGUIEvent *aEvent, bool aFlipChecked)
   bool shift = false, control = false, alt = false, meta = false;
   if (aEvent && (aEvent->eventStructType == NS_MOUSE_EVENT ||
                  aEvent->eventStructType == NS_KEY_EVENT)) {
-    shift = static_cast<nsInputEvent *>(aEvent)->isShift;
-    control = static_cast<nsInputEvent *>(aEvent)->isControl;
-    alt = static_cast<nsInputEvent *>(aEvent)->isAlt;
-    meta = static_cast<nsInputEvent *>(aEvent)->isMeta;
+    shift = static_cast<nsInputEvent *>(aEvent)->IsShift();
+    control = static_cast<nsInputEvent *>(aEvent)->IsControl();
+    alt = static_cast<nsInputEvent *>(aEvent)->IsAlt();
+    meta = static_cast<nsInputEvent *>(aEvent)->IsMeta();
   }
 
   // Because the command event is firing asynchronously, a flag is needed to

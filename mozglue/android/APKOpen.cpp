@@ -336,7 +336,7 @@ SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong)
 SHELL_WRAPPER0(bindWidgetTexture)
 SHELL_WRAPPER0(scheduleComposite)
 SHELL_WRAPPER0(schedulePauseComposition)
-SHELL_WRAPPER0(scheduleResumeComposition)
+SHELL_WRAPPER2(scheduleResumeComposition, jint, jint)
 SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong)
 SHELL_WRAPPER6(notifySmsSent, jint, jstring, jstring, jlong, jint, jlong)
 SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong)
@@ -350,6 +350,7 @@ SHELL_WRAPPER8(notifyListCreated, jint, jint, jstring, jstring, jstring, jlong, 
 SHELL_WRAPPER7(notifyGotNextMessage, jint, jstring, jstring, jstring, jlong, jint, jlong)
 SHELL_WRAPPER3(notifyReadingMessageListFailed, jint, jint, jlong)
 SHELL_WRAPPER2(notifyFilePickerResult, jstring, jlong)
+SHELL_WRAPPER1_WITH_RETURN(getSurfaceBits, jobject, jobject)
 
 static void * xul_handle = NULL;
 static void * sqlite_handle = NULL;
@@ -766,6 +767,7 @@ loadGeckoLibs(const char *apkName)
   GETFUNC(notifyGotNextMessage);
   GETFUNC(notifyReadingMessageListFailed);
   GETFUNC(notifyFilePickerResult);
+  GETFUNC(getSurfaceBits);
 #undef GETFUNC
   sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
   gettimeofday(&t1, 0);

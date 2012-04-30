@@ -243,7 +243,7 @@ IsOlderVersion(nsILocalFile *versionFile, const char *appVersion)
   if (strncmp(buf, kNull, sizeof(kNull) - 1) == 0)
     return false;
 
-  if (NS_CompareVersions(appVersion, buf) > 0)
+  if (mozilla::Version(appVersion) > buf)
     return true;
 
   return false;

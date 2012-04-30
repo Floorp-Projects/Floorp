@@ -86,7 +86,6 @@
 #include "nsIScriptChannel.h"
 #include "nsIBlocklistService.h"
 #include "nsVersionComparator.h"
-#include "nsIPrivateBrowsingService.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsPluginStreamListenerPeer.h"
@@ -353,11 +352,12 @@ nsPluginHost::nsPluginHost()
 
   mPluginsDisabled = Preferences::GetBool("plugin.disable", false);
 
+  Preferences::AddStrongObserver(this, "plugin.disable");
+
   nsCOMPtr<nsIObserverService> obsService =
     mozilla::services::GetObserverService();
   if (obsService) {
     obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-    obsService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, false);
 #ifdef MOZ_WIDGET_ANDROID
     obsService->AddObserver(this, "application-foreground", false);
     obsService->AddObserver(this, "application-background", false);
@@ -387,7 +387,7 @@ nsPluginHost::~nsPluginHost()
 {
   PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("nsPluginHost::dtor\n"));
 
-  Destroy();
+  UnloadPlugins();
   sInst = nsnull;
 }
 
@@ -811,14 +811,12 @@ nsresult nsPluginHost::Init()
   return NS_OK;
 }
 
-nsresult nsPluginHost::Destroy()
+nsresult nsPluginHost::UnloadPlugins()
 {
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsPluginHost::Destroy Called\n"));
+  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsPluginHost::UnloadPlugins Called\n"));
 
-  if (mIsDestroyed)
+  if (!mPluginsLoaded)
     return NS_OK;
-
-  mIsDestroyed = true;
 
   // we should call nsIPluginInstance::Stop and nsIPluginInstance::SetWindow
   // for those plugins who want it
@@ -848,6 +846,8 @@ nsresult nsPluginHost::Destroy()
     mPrivateDirServiceProvider = nsnull;
   }
 #endif /* XP_WIN */
+
+  mPluginsLoaded = false;
 
   return NS_OK;
 }
@@ -911,36 +911,6 @@ nsPluginHost::GetPluginTempDir(nsIFile **aDir)
   }
 
   return sPluginTempDir->Clone(aDir);
-}
-
-nsresult nsPluginHost::CreateListenerForChannel(nsIChannel* aChannel,
-                                                nsObjectLoadingContent* aContent,
-                                                nsIStreamListener** aListener)
-{
-  NS_PRECONDITION(aChannel && aContent,
-                  "Invalid arguments to InstantiatePluginForChannel");
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv))
-    return rv;
-
-#ifdef PLUGIN_LOGGING
-  if (PR_LOG_TEST(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL)) {
-    nsCAutoString urlSpec;
-    uri->GetAsciiSpec(urlSpec);
-
-    PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-           ("nsPluginHost::InstantiatePluginForChannel Begin content=%p, url=%s\n",
-           aContent, urlSpec.get()));
-
-    PR_LogFlush();
-  }
-#endif
-
-  // Note that we're not setting up a plugin instance here; the stream
-  // listener's OnStartRequest will handle doing that.
-
-  return NewEmbeddedPluginStreamListener(uri, aContent, nsnull, aListener);
 }
 
 nsresult
@@ -2725,19 +2695,20 @@ nsPluginHost::ReadPluginInfo()
     return rv;
 
   // kPluginRegistryVersion
-  PRInt32 vdiff = NS_CompareVersions(values[1], kPluginRegistryVersion);
+  PRInt32 vdiff = mozilla::CompareVersions(values[1], kPluginRegistryVersion);
+  mozilla::Version version(values[1]);
   // If this is a registry from some future version then don't attempt to read it
   if (vdiff > 0)
     return rv;
   // If this is a registry from before the minimum then don't attempt to read it
-  if (NS_CompareVersions(values[1], kMinimumRegistryVersion) < 0)
+  if (version < kMinimumRegistryVersion)
     return rv;
 
   // Registry v0.10 and upwards includes the plugin version field
-  bool regHasVersion = NS_CompareVersions(values[1], "0.10") >= 0;
+  bool regHasVersion = (version >= "0.10");
 
   // Registry v0.13 and upwards includes the architecture
-  if (NS_CompareVersions(values[1], "0.13") >= 0) {
+  if (version >= "0.13") {
     char* archValues[6];
     
     if (!reader.NextLine()) {
@@ -2771,7 +2742,7 @@ nsPluginHost::ReadPluginInfo()
   }
   
   // Registry v0.13 and upwards includes the list of invalid plugins
-  bool hasInvalidPlugins = (NS_CompareVersions(values[1], "0.13") >= 0);
+  bool hasInvalidPlugins = (version >= "0.13");
 
   if (!ReadSectionHeader(reader, "PLUGINS"))
     return rv;
@@ -2779,7 +2750,7 @@ nsPluginHost::ReadPluginInfo()
 #if defined(XP_MACOSX)
   bool hasFullPathInFileNameField = false;
 #else
-  bool hasFullPathInFileNameField = (NS_CompareVersions(values[1], "0.11") < 0);
+  bool hasFullPathInFileNameField = (version < "0.11");
 #endif
 
   while (reader.NextLine()) {
@@ -3241,31 +3212,23 @@ nsPluginHost::StopPluginInstance(nsNPAPIPluginInstance* aInstance)
   return NS_OK;
 }
 
-nsresult nsPluginHost::NewEmbeddedPluginStreamListener(nsIURI* aURL,
+nsresult nsPluginHost::NewEmbeddedPluginStreamListener(nsIURI* aURI,
                                                        nsObjectLoadingContent *aContent,
                                                        nsNPAPIPluginInstance* aInstance,
-                                                       nsIStreamListener** aListener)
+                                                       nsIStreamListener **aStreamListener)
 {
-  NS_ENSURE_ARG_POINTER(aURL);
+  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(aStreamListener);
 
   nsRefPtr<nsPluginStreamListenerPeer> listener = new nsPluginStreamListenerPeer();
-
-  // If we have an instance, everything has been set up
-  // if we only have an owner, then we need to pass it in
-  // so the listener can set up the instance later after
-  // we've determined the mimetype of the stream.
-  nsresult rv = NS_ERROR_ILLEGAL_VALUE;
-  if (aInstance) {
-    rv = listener->InitializeEmbedded(aURL, aInstance, nsnull);
-  } else if (aContent) {
-    rv = listener->InitializeEmbedded(aURL, nsnull, aContent);
+  nsresult rv = listener->InitializeEmbedded(aURI, aInstance, aContent);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    NS_ADDREF(*aListener = listener);
-  }
+  listener.forget(aStreamListener);
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult nsPluginHost::NewEmbeddedPluginStream(nsIURI* aURL,
@@ -3307,6 +3270,7 @@ nsresult nsPluginHost::NewFullPagePluginStreamListener(nsIURI* aURI,
                                                        nsNPAPIPluginInstance *aInstance,
                                                        nsIStreamListener **aStreamListener)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aStreamListener);
 
   nsRefPtr<nsPluginStreamListenerPeer> listener = new nsPluginStreamListenerPeer();
@@ -3326,14 +3290,8 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
 {
   if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
     OnShutdown();
-    Destroy();
+    UnloadPlugins();
     sInst->Release();
-  }
-  if (!nsCRT::strcmp(NS_PRIVATE_BROWSING_SWITCH_TOPIC, aTopic)) {
-    // inform all active plugins of changed private mode state
-    for (PRUint32 i = 0; i < mInstances.Length(); i++) {
-      mInstances[i]->PrivateModeStateChanged();
-    }
   }
 #ifdef MOZ_WIDGET_ANDROID
   if (!nsCRT::strcmp("application-background", aTopic)) {

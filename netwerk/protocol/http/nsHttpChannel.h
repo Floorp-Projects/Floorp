@@ -166,6 +166,7 @@ private:
 
     bool     RequestIsConditional();
     nsresult Connect(bool firstTime = true);
+    void     SpeculativeConnect();
     nsresult SetupTransaction();
     nsresult CallOnStartRequest();
     nsresult ProcessResponse();

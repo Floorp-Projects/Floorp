@@ -60,6 +60,11 @@ public:
   // nsIAccessibleTable
   NS_DECL_OR_FORWARD_NSIACCESSIBLETABLE_WITH_XPCACCESSIBLETABLE
 
+  // TableAccessible
+  virtual PRUint32 ColCount();
+  virtual PRUint32 RowCount();
+  virtual void UnselectRow(PRUint32 aRowIdx);
+
   // nsAccessNode
   virtual void Shutdown();
 
@@ -205,7 +210,7 @@ protected:
   enum { eAction_Click = 0 };
 
   nsCOMPtr<nsITreeBoxObject> mTree;
-  nsCOMPtr<nsITreeView> mTreeView;
+  nsITreeView* mTreeView;
 
   PRInt32 mRow;
   nsCOMPtr<nsITreeColumn> mColumn;

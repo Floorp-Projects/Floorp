@@ -1,3 +1,4 @@
+// |reftest| skip-if(!xulRuntime.shell) -- these tests sometimes hang in browser, bug 559954, bug 562333
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * Any copyright is dedicated to the Public Domain.

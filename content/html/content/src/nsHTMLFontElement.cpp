@@ -48,6 +48,7 @@
 #include "nsRuleData.h"
 #include "nsIDocument.h"
 #include "nsAlgorithm.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 
@@ -81,6 +82,7 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
 
@@ -116,32 +118,6 @@ NS_IMPL_STRING_ATTR(nsHTMLFontElement, Color, color)
 NS_IMPL_STRING_ATTR(nsHTMLFontElement, Face, face)
 NS_IMPL_STRING_ATTR(nsHTMLFontElement, Size, size)
 
-static const nsAttrValue::EnumTable kRelFontSizeTable[] = {
-  { "-10", -10 },
-  { "-9", -9 },
-  { "-8", -8 },
-  { "-7", -7 },
-  { "-6", -6 },
-  { "-5", -5 },
-  { "-4", -4 },
-  { "-3", -3 },
-  { "-2", -2 },
-  { "-1", -1 },
-  { "-0", 0 },
-  { "+0", 0 },
-  { "+1", 1 },
-  { "+2", 2 },
-  { "+3", 3 },
-  { "+4", 4 },
-  { "+5", 5 },
-  { "+6", 6 },
-  { "+7", 7 },
-  { "+8", 8 },
-  { "+9", 9 },
-  { "+10", 10 },
-  { 0 }
-};
-
 
 bool
 nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
@@ -151,26 +127,12 @@ nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::size) {
-      nsAutoString tmp(aValue);
-      tmp.CompressWhitespace(true, true);
-      PRUnichar ch = tmp.IsEmpty() ? 0 : tmp.First();
-      if ((ch == '+' || ch == '-')) {
-          if (aResult.ParseEnumValue(aValue, kRelFontSizeTable, false))
-              return true;
-
-          // truncate after digit, then parse it again.
-          PRUint32 i;
-          for (i = 1; i < tmp.Length(); i++) {
-              ch = tmp.CharAt(i);
-              if (!nsCRT::IsAsciiDigit(ch)) {
-                  tmp.Truncate(i);
-                  break;
-              }
-          }
-          return aResult.ParseEnumValue(tmp, kRelFontSizeTable, false);
+      PRInt32 size = nsContentUtils::ParseLegacyFontSize(aValue);
+      if (size) {
+        aResult.SetTo(size, &aValue);
+        return true;
       }
-
-      return aResult.ParseIntValue(aValue);
+      return false;
     }
     if (aAttribute == nsGkAtoms::pointSize ||
         aAttribute == nsGkAtoms::fontWeight) {
@@ -207,20 +169,10 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (value && value->Type() == nsAttrValue::eInteger)
         fontSize->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Point);
       else {
-        // size: int, enum , 
+        // size: int
         value = aAttributes->GetAttr(nsGkAtoms::size);
-        if (value) {
-          nsAttrValue::ValueType unit = value->Type();
-          if (unit == nsAttrValue::eInteger || unit == nsAttrValue::eEnum) { 
-            PRInt32 size;
-            if (unit == nsAttrValue::eEnum) // int (+/-)
-              size = value->GetEnumValue() + 3;
-            else
-              size = value->GetIntegerValue();
-
-            size = clamped(size, 1, 7);
-            fontSize->SetIntValue(size, eCSSUnit_Enumerated);
-          }
+        if (value && value->Type() == nsAttrValue::eInteger) {
+          fontSize->SetIntValue(value->GetIntegerValue(), eCSSUnit_Enumerated);
         }
       }
     }

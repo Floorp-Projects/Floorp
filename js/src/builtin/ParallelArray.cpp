@@ -1005,7 +1005,6 @@ Class js::ParallelArrayClass = {
         ParallelArray_deleteSpecial,
         ParallelArray_enumerate,
         NULL,       /* typeof         */
-        NULL,       /* fix            */
         NULL,       /* thisObject     */
         NULL,       /* clear          */
     }

@@ -731,6 +731,7 @@ public:
     bool CanUploadSubTextures();
     bool CanUploadNonPowerOfTwo();
     bool WantsSmallTiles();
+    virtual bool HasLockSurface() { return false; }
 
     /**
      * If this context wraps a double-buffered target, swap the back
@@ -831,7 +832,7 @@ public:
      */
     virtual bool ResizeOffscreen(const gfxIntSize& aNewSize) {
         if (mOffscreenDrawFBO || mOffscreenReadFBO)
-            return ResizeOffscreenFBO(aNewSize, mOffscreenReadFBO != 0);
+            return ResizeOffscreenFBOs(aNewSize, mOffscreenReadFBO != 0);
         return false;
     }
 
@@ -1631,30 +1632,62 @@ protected:
     // Helper to create/resize an offscreen FBO,
     // for offscreen implementations that use FBOs.
     // Note that it does -not- clear the resized buffers.
-    bool ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, const bool aDisableAA);
-    bool ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO) {
-        if (ResizeOffscreenFBO(aSize, aUseReadFBO, false))
-            return true;
-
-        if (!mCreationFormat.samples) {
-            NS_WARNING("ResizeOffscreenFBO failed to resize non-AA context!");
+    bool ResizeOffscreenFBOs(const ContextFormat& aCF, const gfxIntSize& aSize, const bool aNeedsReadBuffer);
+    bool ResizeOffscreenFBOs(const gfxIntSize& aSize, const bool aNeedsReadBuffer) {
+        if (!IsOffscreenSizeAllowed(aSize))
             return false;
-        } else {
-            NS_WARNING("ResizeOffscreenFBO failed to resize AA context! Falling back to no AA...");
+
+        ContextFormat format(mCreationFormat);
+
+        if (format.samples) {
+            // AA path
+            if (ResizeOffscreenFBOs(format, aSize, aNeedsReadBuffer))
+                return true;
+
+            NS_WARNING("ResizeOffscreenFBOs failed to resize an AA context! Falling back to no AA...");
+            format.samples = 0;
         }
 
-        if (DebugMode()) {
-            printf_stderr("Requested level of multisampling is unavailable, continuing without multisampling\n");
-        }
-
-        if (ResizeOffscreenFBO(aSize, aUseReadFBO, true))
+        if (ResizeOffscreenFBOs(format, aSize, aNeedsReadBuffer))
             return true;
 
-        NS_WARNING("ResizeOffscreenFBO failed to resize AA context even without AA!");
+        NS_WARNING("ResizeOffscreenFBOs failed to resize non-AA context!");
         return false;
     }
 
-    void DeleteOffscreenFBO();
+    struct GLFormats {
+        GLFormats()
+            : texColor(0)
+            , texColorType(0)
+            , rbColor(0)
+            , depthStencil(0)
+            , depth(0)
+            , stencil(0)
+            , samples(0)
+        {}
+
+        GLenum texColor;
+        GLenum texColorType;
+        GLenum rbColor;
+        GLenum depthStencil;
+        GLenum depth;
+        GLenum stencil;
+        GLsizei samples;
+    };
+
+    GLFormats ChooseGLFormats(ContextFormat& aCF);
+    void CreateTextureForOffscreen(const GLFormats& aFormats, const gfxIntSize& aSize,
+                                   GLuint& texture);
+    void CreateRenderbuffersForOffscreen(const GLContext::GLFormats& aFormats, const gfxIntSize& aSize,
+                                         GLuint& colorMSRB, GLuint& depthRB, GLuint& stencilRB);
+    bool AssembleOffscreenFBOs(const GLuint colorMSRB,
+                               const GLuint depthRB,
+                               const GLuint stencilRB,
+                               const GLuint texture,
+                               GLuint& drawFBO,
+                               GLuint& readFBO);
+
+    void DeleteOffscreenFBOs();
 
     GLuint mOffscreenDrawFBO;
     GLuint mOffscreenReadFBO;

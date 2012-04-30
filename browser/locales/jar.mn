@@ -31,6 +31,7 @@
     locale/browser/devtools/webConsole.dtd            (%chrome/browser/devtools/webConsole.dtd)
     locale/browser/devtools/sourceeditor.properties   (%chrome/browser/devtools/sourceeditor.properties)
     locale/browser/devtools/sourceeditor.dtd          (%chrome/browser/devtools/sourceeditor.dtd)
+    locale/browser/devtools/layoutview.dtd            (%chrome/browser/devtools/layoutview.dtd)
     locale/browser/newTab.dtd                      (%chrome/browser/newTab.dtd)
     locale/browser/newTab.properties               (%chrome/browser/newTab.properties)
     locale/browser/openLocation.dtd                (%chrome/browser/openLocation.dtd)
@@ -50,6 +51,8 @@
     locale/browser/tabbrowser.properties           (%chrome/browser/tabbrowser.properties)
     locale/browser/tabview.properties              (%chrome/browser/tabview.properties)
     locale/browser/taskbar.properties              (%chrome/browser/taskbar.properties)
+    locale/browser/downloads/downloads.dtd         (%chrome/browser/downloads/downloads.dtd)
+    locale/browser/downloads/downloads.properties  (%chrome/browser/downloads/downloads.properties)
     locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
     locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
     locale/browser/places/editBookmarkOverlay.dtd  (%chrome/browser/places/editBookmarkOverlay.dtd)
@@ -108,3 +111,6 @@
 % locale testpilot @AB_CD@ %locale/feedback/
     locale/feedback/main.dtd                       (%feedback/main.dtd)
     locale/feedback/main.properties                (%feedback/main.properties)
+% locale webapprt @AB_CD@ %locale/webapprt/
+    locale/webapprt/webapp.dtd                     (%webapprt/webapp.dtd)
+    locale/webapprt/webapp.properties              (%webapprt/webapp.properties)

@@ -1,3 +1,16 @@
+# WebappRT doesn't need these instructions, and they don't necessarily work
+# with it, but it does use a GRE directory that the GRE shares with Firefox,
+# so in order to prevent the instructions from being processed for WebappRT,
+# we need to restrict them to the applications that depend on them, i.e.:
+#
+#   b2g:            {3c2e2abc-06d4-11e1-ac3b-374f68613e61}
+#   browser:        {ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+#   mobile/android: {aa3c5121-dab2-40e2-81ca-7ea25febc110}
+#   mobile/xul:     {a23983c0-fd0e-11dc-95ff-0800200c9a66}
+#
+# In theory we should do this for all these instructions, but in practice it is
+# sufficient to do it for the app-startup one, and the file is simpler that way.
+
 component {229fa115-9412-4d32-baf3-2fc407f76fb1} FeedConverter.js
 contract @mozilla.org/streamconv;1?from=application/vnd.mozilla.maybe.feed&to=*/* {229fa115-9412-4d32-baf3-2fc407f76fb1}
 contract @mozilla.org/streamconv;1?from=application/vnd.mozilla.maybe.video.feed&to=*/* {229fa115-9412-4d32-baf3-2fc407f76fb1}
@@ -13,4 +26,4 @@ contract @mozilla.org/browser/feeds/result-writer;1 {49bb6593-3aff-4eb3-a068-271
 category JavaScript-global-constructor BrowserFeedWriter @mozilla.org/browser/feeds/result-writer;1
 component {792a7e82-06a0-437c-af63-b2d12e808acc} WebContentConverter.js
 contract @mozilla.org/embeddor.implemented/web-content-handler-registrar;1 {792a7e82-06a0-437c-af63-b2d12e808acc}
-category app-startup WebContentConverter service,@mozilla.org/embeddor.implemented/web-content-handler-registrar;1
+category app-startup WebContentConverter service,@mozilla.org/embeddor.implemented/web-content-handler-registrar;1 application={3c2e2abc-06d4-11e1-ac3b-374f68613e61} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} application={aa3c5121-dab2-40e2-81ca-7ea25febc110} application={a23983c0-fd0e-11dc-95ff-0800200c9a66}

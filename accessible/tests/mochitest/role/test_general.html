@@ -53,9 +53,9 @@
       testRole("p", ROLE_PARAGRAPH);
 
       // Test dl, dt, dd
-      testRole("definitionlist", ROLE_LIST);
-      testRole("definitionterm", ROLE_LISTITEM);
-      testRole("definitiondescription", ROLE_PARAGRAPH);
+      testRole("definitionlist", ROLE_DEFINITION_LIST);
+      testRole("definitionterm", ROLE_TERM);
+      testRole("definitiondescription", ROLE_DEFINITION);
 
       // Has click, mousedown or mouseup listeners.
       testRole("span1", ROLE_TEXT_CONTAINER);

@@ -241,6 +241,8 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 
+  virtual nsIDOMNode* AsDOMNode() { return this; }
+
   static nsHTMLInputElement* FromContent(nsIContent *aContent)
   {
     if (aContent->NodeInfo()->Equals(nsGkAtoms::input, kNameSpaceID_XHTML))

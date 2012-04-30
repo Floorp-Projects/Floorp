@@ -12,6 +12,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
+const WEBAPP_RUNTIME = Services.appinfo.ID == "webapprt@mozilla.org";
+
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
   return NetUtil;
@@ -24,7 +26,10 @@ XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
 #ifdef MOZ_WIDGET_GONK
   const DIRECTORY_NAME = "webappsDir";
 #else
-  const DIRECTORY_NAME = "ProfD";
+  // If we're executing in the context of the webapp runtime, the data files
+  // are in a different directory (currently the Firefox profile that installed
+  // the webapp); otherwise, they're in the current profile.
+  const DIRECTORY_NAME = WEBAPP_RUNTIME ? "WebappRegD" : "ProfD";
 #endif
 
 let DOMApplicationRegistry = {
@@ -42,16 +47,14 @@ let DOMApplicationRegistry = {
 
     Services.obs.addObserver(this, "xpcom-shutdown", false);
 
-    let appsDir = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true);
     this.appsFile = FileUtils.getFile(DIRECTORY_NAME, ["webapps", "webapps.json"], true);
 
-    if (!this.appsFile.exists())
-      return;
-
-    this._loadJSONAsync(this.appsFile, (function(aData) { this.webapps = aData; }).bind(this));
+    if (this.appsFile.exists()) {
+      this._loadJSONAsync(this.appsFile, (function(aData) { this.webapps = aData; }).bind(this));
+    }
 
     try {
-      let hosts = Services.prefs.getCharPref("dom.mozApps.whitelist")
+      let hosts = Services.prefs.getCharPref("dom.mozApps.whitelist");
       hosts.split(",").forEach(function(aHost) {
         Services.perms.add(Services.io.newURI(aHost, null, null), "webapps-manage",
                            Ci.nsIPermissionManager.ALLOW_ACTION);

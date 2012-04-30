@@ -258,6 +258,11 @@
   background: black;
   width: 100% !important;
   height: 100% !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  max-height: none !important;
 }
 
 /* If there is a full-screen element that is not the root then

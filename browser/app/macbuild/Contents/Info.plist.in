@@ -203,8 +203,6 @@
 	<string>%APP_VERSION%</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
-	<key>CGDisableCoalescedUpdates</key>
-	<true/>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.5</string>
 	<key>LSMinimumSystemVersionByArchitecture</key>

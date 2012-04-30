@@ -1,0 +1,305 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=514437
+https://bugzilla.mozilla.org/show_bug.cgi?id=633913
+-->
+<head>
+  <title>Test for progress element content and layout</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=514437">Mozilla Bug 514437</a>
+and
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633913">Mozilla Bug 633913</a>
+<p id="display"></p>
+<iframe name="submit_frame" style="visibility: hidden;"></iframe>
+<div id="content" style="visibility: hidden;">
+  <form id='f' method='get' target='submit_frame' action='foo'>
+    <progress id='p'></progress>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for progress element content and layout **/
+
+function checkFormIDLAttribute(aElement)
+{
+  var form = document.forms[0];
+  var content = document.getElementById('content');
+
+  content.removeChild(form);
+  content.appendChild(aElement);
+  is(aElement.form, null, "The form IDL attribute should be null");
+
+  // Cleaning-up.
+  content.appendChild(form);
+  form.appendChild(aElement);
+}
+
+function checkAttribute(aElement, aAttribute, aNewValue, aExpectedValueForIDL)
+{
+  var expectedValueForIDL = aNewValue;
+  var expectedValueForContent = aNewValue;
+
+  if (aExpectedValueForIDL !== undefined) {
+    expectedValueForIDL = aExpectedValueForIDL;
+  }
+
+  if (aNewValue != null) {
+    aElement.setAttribute(aAttribute, aNewValue);
+    is(aElement.getAttribute(aAttribute), expectedValueForContent,
+       aAttribute + " content attribute should be " + expectedValueForContent);
+    is(aElement[aAttribute], expectedValueForIDL,
+       aAttribute + " IDL attribute should be " + expectedValueForIDL);
+
+    if (parseFloat(aNewValue) == aNewValue) {
+      aElement[aAttribute] = aNewValue;
+      is(aElement.getAttribute(aAttribute), expectedValueForContent,
+         aAttribute + " content attribute should be " + expectedValueForContent);
+      is(aElement[aAttribute], parseFloat(expectedValueForIDL),
+         aAttribute + " IDL attribute should be " + parseFloat(expectedValueForIDL));
+    }
+  } else {
+    aElement.removeAttribute(aAttribute);
+    is(aElement.getAttribute(aAttribute), expectedValueForContent,
+       aAttribute + " content attribute should be " + expectedValueForContent);
+    is(aElement[aAttribute], expectedValueForIDL,
+       aAttribute + " IDL attribute should be " + expectedValueForIDL);
+  }
+}
+
+function checkValueAttribute()
+{
+  var tests = [
+    // value has to be a valid float, its default value is 0.0 otherwise.
+    [ null, 0.0 ],
+    [ 'fo', 0.0 ],
+    // If value < 0.0, 0.0 is used instead.
+    [ -1.0, 0.0 ],
+    // If value >= max, max is used instead (max default value is 1.0).
+    [  2.0, 1.0 ],
+    [  1.0, 0.5, 0.5 ],
+    [  10.0, 5.0, 5.0 ],
+    [ 13.37, 13.37, 42.0 ],
+    // Regular reflection.
+    [  0.0 ],
+    [  0.5 ],
+    [  1.0 ],
+    // Check double-precision value.
+    [  0.234567898765432 ],
+  ];
+
+  var element = document.createElement('progress');
+
+  for each(var test in tests) {
+    if (test[2]) {
+      element.setAttribute('max', test[2]);
+    }
+
+    checkAttribute(element, 'value', test[0], test[1]);
+
+    element.removeAttribute('max');
+  }
+}
+
+function checkMaxAttribute()
+{
+  var tests = [
+    // max default value is 1.0.
+    [ null, 1.0 ],
+    // If value <= 0.0, 1.0 is used instead.
+    [  0.0, 1.0 ],
+    [ -1.0, 1.0 ],
+    // Regular reflection.
+    [  0.5 ],
+    [  1.0 ],
+    [  2.0 ],
+    // Check double-precision value.
+    [  0.234567898765432 ],
+  ];
+
+  var element = document.createElement('progress');
+
+  for each(var test in tests) {
+    checkAttribute(element, 'max', test[0], test[1]);
+  }
+}
+
+function checkPositionAttribute()
+{
+  function checkPositionValue(aElement, aValue, aMax, aExpected) {
+    if (aValue != null) {
+      aElement.setAttribute('value', aValue);
+    } else {
+      aElement.removeAttribute('value');
+    }
+
+    if (aMax != null) {
+      aElement.setAttribute('max', aMax);
+    } else {
+      aElement.removeAttribute('max');
+    }
+
+    is(aElement.position, aExpected, "position IDL attribute should be " + aExpected);
+  }
+
+  var tests = [
+    // value has to be defined (indeterminate state).
+    [ null, null, -1.0 ],
+    [ null,  1.0, -1.0 ],
+    // value has to be defined to a valid float (indeterminate state).
+    [ 'foo', 1.0, -1.0 ],
+    // If value < 0.0, 0.0 is used instead.
+    [ -1.0,  1.0,  0.0 ],
+    // If value >= max, max is used instead.
+    [  2.0,  1.0,  1.0 ],
+    // If max isn't present, max is set to 1.0.
+    [ 1.0,  null,  1.0 ],
+    // If max isn't a valid float, max is set to 1.0.
+    [ 1.0, 'foo',  1.0 ],
+    // If max isn't > 0, max is set to 1.0.
+    [ 1.0,  -1.0,  1.0 ],
+    // A few simple and valid values.
+    [ 0.0,   1.0,  0.0 ],
+    [ 0.1,   1.0,  0.1/1.0  ],
+    [ 0.1,   2.0,  0.1/2.0  ],
+    [  10,    50,  10/50 ],
+    // Values implying .position is a double.
+    [ 1.0,   3.0,  1.0/3.0 ],
+    [ 0.1,   0.7,  0.1/0.7  ],
+  ];
+
+  var element = document.createElement('progress');
+
+  for each(var test in tests) {
+    checkPositionValue(element, test[0], test[1], test[2], test[3]);
+  }
+}
+
+function checkIndeterminatePseudoClass()
+{
+  function checkIndeterminate(aElement, aValue, aMax, aIndeterminate) {
+    if (aValue != null) {
+      aElement.setAttribute('value', aValue);
+    } else {
+      aElement.removeAttribute('value');
+    }
+
+    if (aMax != null) {
+      aElement.setAttribute('max', aMax);
+    } else {
+      aElement.removeAttribute('max');
+    }
+
+    is(aElement.mozMatchesSelector("progress:indeterminate"), aIndeterminate,
+       "<progress> indeterminate state should be " + aIndeterminate);
+  }
+
+  var tests = [
+    // Indeterminate state: (value is undefined, or not a float)
+    // value has to be defined (indeterminate state).
+    [ null, null, true ],
+    [ null,  1.0, true ],
+    [ 'foo', 1.0, true ],
+    // Determined state:
+    [ -1.0,  1.0, false ],
+    [  2.0,  1.0, false ],
+    [ 1.0,  null, false ],
+    [ 1.0, 'foo', false ],
+    [ 1.0,  -1.0, false ],
+    [ 0.0,   1.0, false ],
+  ];
+
+  var element = document.createElement('progress');
+
+  for each(var test in tests) {
+    checkIndeterminate(element, test[0], test[1], test[2]);
+  }
+}
+
+function checkFormListedElement(aElement)
+{
+  is(document.forms[0].elements.length, 0, "the form should have no element");
+}
+
+function checkNotResetableAndFormSubmission(aElement)
+{
+  // Creating an input element to check the submission worked.
+  var form = document.forms[0];
+  var input = document.createElement('input');
+
+  input.name = 'a';
+  input.value = 'tulip';
+  form.appendChild(input);
+
+  // Setting values.
+  aElement.value = 42.0;
+  aElement.max = 100.0;
+
+  document.getElementsByName('submit_frame')[0].addEventListener("load", function() {
+    document.getElementsByName('submit_frame')[0].removeEventListener("load", arguments.callee, false);
+
+    /**
+     * All elements values have been set just before the submission.
+     * The input element value should be in the submit url but the progress
+     * element value should not appear.
+     */
+    is(frames['submit_frame'].location.href,
+      'http://mochi.test:8888/tests/content/html/content/test/forms/foo?a=tulip',
+       "The progress element value should not be submitted");
+
+    checkNotResetable();
+  }, false);
+
+  form.submit();
+}
+
+function checkNotResetable()
+{
+  // Try to reset the form.
+  var form = document.forms[0];
+  var element = document.getElementById('p');
+
+  element.value = 3.0;
+  element.max = 42.0;
+
+  form.reset();
+
+  SimpleTest.executeSoon(function() {
+    is(element.value, 3.0, "progress.value should not have changed");
+    is(element.max, 42.0, "progress.max should not have changed");
+
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+var p = document.getElementById('p');
+
+ok(p instanceof HTMLProgressElement,
+   "The progress element should be instance of HTMLProgressElement");
+is(p.constructor, HTMLProgressElement,
+   "The progress element constructor should be HTMLProgressElement");
+
+checkFormIDLAttribute(p);
+
+checkValueAttribute();
+
+checkMaxAttribute();
+
+checkPositionAttribute();
+
+checkIndeterminatePseudoClass();
+
+checkFormListedElement(p);
+
+checkNotResetableAndFormSubmission(p);
+
+</script>
+</pre>
+</body>
+</html>

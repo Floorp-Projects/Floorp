@@ -236,6 +236,8 @@ SEC_ERROR_UNKNOWN_PKCS11_ERROR             =	(SEC_ERROR_BASE + 174),
 
 SEC_ERROR_BAD_CRL_DP_URL                   =	(SEC_ERROR_BASE + 175),
 
+SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED =    (SEC_ERROR_BASE + 176),
+
 /* Add new error codes above here. */
 SEC_ERROR_END_OF_LIST 
 } SECErrorCodes;

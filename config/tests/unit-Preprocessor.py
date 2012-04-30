@@ -404,6 +404,15 @@ FAIL
     self.pp.do_include(f)
     self.assertEqual(self.pp.out.getvalue(), "first\rsecond\r")
 
+  def test_filterDefine(self):
+    f = NamedIO('filterDefine.in', '''#filter substitution
+#define VAR AS
+#define VAR2 P@VAR@
+@VAR2@S
+''')
+    self.pp.do_include(f)
+    self.assertEqual(self.pp.out.getvalue(), "PASS\n")
+
   def test_number_value_equals(self):
     f = NamedIO("number_value_equals.in", """#define FOO 1000
 #if FOO == 1000

@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.167 2012/03/06 02:23:25 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.167.2.2 2012/04/20 00:37:53 emaldona%redhat.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"

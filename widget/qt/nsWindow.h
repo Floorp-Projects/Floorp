@@ -419,10 +419,10 @@ private:
             event.refPoint.x = nscoord(mMoveEvent.pos.x());
             event.refPoint.y = nscoord(mMoveEvent.pos.y());
 
-            event.isShift         = ((mMoveEvent.modifiers & Qt::ShiftModifier) != 0);
-            event.isControl       = ((mMoveEvent.modifiers & Qt::ControlModifier) != 0);
-            event.isAlt           = ((mMoveEvent.modifiers & Qt::AltModifier) != 0);
-            event.isMeta          = ((mMoveEvent.modifiers & Qt::MetaModifier) != 0);
+            event.InitBasicModifiers(mMoveEvent.modifiers & Qt::ControlModifier,
+                                     mMoveEvent.modifiers & Qt::AltModifier,
+                                     mMoveEvent.modifiers & Qt::ShiftModifier,
+                                     mMoveEvent.modifiers & Qt::MetaModifier);
             event.clickCount      = 0;
 
             DispatchEvent(&event);

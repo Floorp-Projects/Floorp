@@ -21,6 +21,7 @@
 
   const Cc = Components.classes;
   const Ci = Components.interfaces;
+  const Cr = Components.results;
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
@@ -44,7 +45,6 @@
   // Setup various fake-but-deterministic reporters.
   const KB = 1024;
   const MB = KB * KB;
-  const kUnknown = -1;
   const NONHEAP = Ci.nsIMemoryReporter.KIND_NONHEAP;
   const HEAP    = Ci.nsIMemoryReporter.KIND_HEAP;
   const OTHER   = Ci.nsIMemoryReporter.KIND_OTHER;
@@ -154,7 +154,15 @@
   // - but *not* "explicit/c/d" x 2
   // Check explicit now before we add the fake reporters for the fake 2nd
   // and subsequent processes.
-  is(mgr.explicit, 500*MB + (100 + 13 + 10)*MB + 599*KB, "mgr.explicit");
+  //
+  // Nb: mgr.explicit will throw NS_ERROR_NOT_AVAILABLE if this is a
+  // --enable-trace-malloc build.  Allow for that exception, but *only* that
+  // exception.
+  try {
+    is(mgr.explicit, 500*MB + (100 + 13 + 10)*MB + 599*KB, "mgr.explicit");
+  } catch (ex) {
+    is(ex.result, Cr.NS_ERROR_NOT_AVAILABLE, "mgr.explicit exception");
+  }
  
   let fakeReporters2 = [
     f("2nd", "heap-allocated",  OTHER,  1000 * MB),
@@ -176,19 +184,9 @@
     f("2nd", "smaps/vsize/e",   NONHEAP, 24*4*KB),
     f("2nd", "smaps/vsize/f",   NONHEAP, 24*4*KB),
 
-    // kUnknown should be handled gracefully for "heap-allocated", non-leaf
-    // reporters, leaf-reporters, "other" reporters, and duplicated reporters.
-    f("3rd", "heap-allocated",  OTHER,   kUnknown),
+    // Check that we can handle "heap-allocated" not being present.
     f("3rd", "explicit/a/b",    HEAP,    333 * MB),
     f("3rd", "explicit/a/c",    HEAP,    444 * MB),
-    f("3rd", "explicit/a/c",    HEAP,    kUnknown), // dup: merge
-    f("3rd", "explicit/a/d",    HEAP,    kUnknown),
-    f("3rd", "explicit/a/d",    HEAP,    kUnknown), // dup: merge
-    f("3rd", "explicit/b",      NONHEAP, kUnknown),
-    f2("3rd", "other1",         OTHER,   BYTES, kUnknown),
-    f2("3rd", "other2",         OTHER,   COUNT, kUnknown),
-    f2("3rd", "other3",         OTHER,   COUNT_CUMULATIVE, kUnknown),
-    f2("3rd", "other4",         OTHER,   PERCENTAGE, kUnknown),
 
     // Invalid values (negative, too-big) should be identified.
     f("4th", "heap-allocated",   OTHER,   100 * MB),
@@ -285,22 +283,15 @@ Other Measurements\n\
 \n\
 3rd Process\n\
 \n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is zero and the 'explicit' tree shows less memory than it should.\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
 \n\
 Explicit Allocations\n\
 777.00 MB (100.0%) -- explicit\n\
-├──777.00 MB (100.0%) -- a\n\
-│  ├──444.00 MB (57.14%) ── c [2]\n\
-│  ├──333.00 MB (42.86%) ── b\n\
-│  └────0.00 MB (00.00%) ── d [*] [2]\n\
-└────0.00 MB (00.00%) ++ (2 tiny)\n\
+└──777.00 MB (100.0%) -- a\n\
+   ├──444.00 MB (57.14%) ── c\n\
+   └──333.00 MB (42.86%) ── b\n\
 \n\
 Other Measurements\n\
-0.00 MB ── heap-allocated [*]\n\
-0.00 MB ── other1 [*]\n\
-      0 ── other2 [*]\n\
-      0 ── other3 [*]\n\
-  0.00% ── other4 [*]\n\
 \n\
 4th Process\n\
 \n\
@@ -444,23 +435,15 @@ Other Measurements\n\
 \n\
 3rd Process\n\
 \n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is zero and the 'explicit' tree shows less memory than it should.\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
 \n\
 Explicit Allocations\n\
 814,743,552 B (100.0%) -- explicit\n\
-├──814,743,552 B (100.0%) -- a\n\
-│  ├──465,567,744 B (57.14%) ── c [2]\n\
-│  ├──349,175,808 B (42.86%) ── b\n\
-│  └────────────0 B (00.00%) ── d [*] [2]\n\
-├────────────0 B (00.00%) ── b [*]\n\
-└────────────0 B (00.00%) ── heap-unclassified [*]\n\
+└──814,743,552 B (100.0%) -- a\n\
+   ├──465,567,744 B (57.14%) ── c\n\
+   └──349,175,808 B (42.86%) ── b\n\
 \n\
 Other Measurements\n\
-  0 B ── heap-allocated [*]\n\
-  0 B ── other1 [*]\n\
-    0 ── other2 [*]\n\
-    0 ── other3 [*]\n\
-0.00% ── other4 [*]\n\
 \n\
 4th Process\n\
 \n\

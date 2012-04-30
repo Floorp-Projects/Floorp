@@ -565,8 +565,8 @@ nsXHTMLContentSerializer::CheckElementStart(nsIContent * aContent,
   // The _moz_dirty attribute is emitted by the editor to
   // indicate that this element should be pretty printed
   // even if we're not in pretty printing mode
-  aForceFormat = aContent->HasAttr(kNameSpaceID_None,
-                                   nsGkAtoms::mozdirty);
+  aForceFormat = !(mFlags & nsIDocumentEncoder::OutputIgnoreMozDirty) &&
+                 aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
 
   nsIAtom *name = aContent->Tag();
   PRInt32 namespaceID = aContent->GetNameSpaceID();
@@ -592,8 +592,8 @@ nsXHTMLContentSerializer::CheckElementEnd(nsIContent * aContent,
 {
   NS_ASSERTION(!mIsHTMLSerializer, "nsHTMLContentSerializer shouldn't call this method !");
 
-  aForceFormat = aContent->HasAttr(kNameSpaceID_None,
-                                   nsGkAtoms::mozdirty);
+  aForceFormat = !(mFlags & nsIDocumentEncoder::OutputIgnoreMozDirty) &&
+                 aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
 
   nsIAtom *name = aContent->Tag();
   PRInt32 namespaceID = aContent->GetNameSpaceID();
