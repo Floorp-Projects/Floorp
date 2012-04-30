@@ -54,7 +54,6 @@ CPPSRCS = \
   $(NULL)
 
 EXPORTS = \
-  ApplicationAccessibleWrap.h \
   ARIAGridAccessibleWrap.h \
   nsAccessNodeWrap.h \
   nsTextAccessibleWrap.h \
