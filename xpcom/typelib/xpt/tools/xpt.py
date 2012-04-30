@@ -1321,25 +1321,12 @@ def xpt_dump(file):
 def xpt_link(dest, inputs):
     """
     Link all of the xpt files in |inputs| together and write the
-    result to |dest|.
+    result ot |dest|.
 
     """
-
     if not inputs:
         print >>sys.stderr, "Usage: xpt_link <destination file> <input files>"
         return
-
-    # Don't re-create dest if newer than the input files.
-    if os.path.exists(dest):
-      maxInputChange = 0;
-      for f in inputs:
-        s = os.stat(f).st_mtime
-        if s > maxInputChange:
-          maxInputChange = s
-      if maxInputChange < os.stat(dest).st_mtime:
-        print dest, " is already up-to-date."
-        return
-
     t1 = Typelib.read(inputs[0])
     for f in inputs[1:]:
         t2 = Typelib.read(f)
