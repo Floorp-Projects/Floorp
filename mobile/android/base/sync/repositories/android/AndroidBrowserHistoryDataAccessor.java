@@ -18,7 +18,6 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.net.Uri;
 
 public class AndroidBrowserHistoryDataAccessor extends
@@ -108,17 +107,15 @@ public class AndroidBrowserHistoryDataAccessor extends
    * This inserts all the records (using <code>ContentProvider.bulkInsert</code>),
    * then inserts all the visit information (using the data extender's
    * <code>bulkInsert</code>, which internally uses a single database
-   * transaction), and then optionally updates the <code>androidID</code> of
-   * each record.
+   * transaction).
    *
    * @param records
-   *          The records to insert.
-   * @param fetchFreshAndroidIDs
-   *          <code>true</code> to update the <code>androidID</code> of each
-   *          record; <code>false</code> to invalidate them all.
+   *          the records to insert.
+   * @return
+   *          the number of records actually inserted.
    * @throws NullCursorException
    */
-  public void bulkInsert(ArrayList<HistoryRecord> records, boolean fetchFreshAndroidIDs) throws NullCursorException {
+  public int bulkInsert(ArrayList<HistoryRecord> records) throws NullCursorException {
     if (records.isEmpty()) {
       Logger.debug(LOG_TAG, "No records to insert, returning.");
     }
@@ -149,37 +146,6 @@ public class AndroidBrowserHistoryDataAccessor extends
     }
     // Then update the history visits.
     dataExtender.bulkInsert(records);
-
-    // And finally patch up the androidIDs.
-    if (!fetchFreshAndroidIDs) {
-      return;
-    }
-
-    // We do this here to save a few loops.
-    String guidIn = RepoUtils.computeSQLInClause(guids.length, BrowserContract.History.GUID);
-    Cursor cursor = queryHelper.safeQuery("", GUID_AND_ID, guidIn, guids, null);
-    int guidIndex = cursor.getColumnIndexOrThrow(BrowserContract.History.GUID);
-    int androidIDIndex = cursor.getColumnIndexOrThrow(BrowserContract.History._ID);
-
-    try {
-      cursor.moveToFirst();
-      while (!cursor.isAfterLast()) {
-        String guid = cursor.getString(guidIndex);
-        int androidID = cursor.getInt(androidIDIndex);
-        cursor.moveToNext();
-
-        Record record = guidToRecord.get(guid);
-        if (record == null) {
-          // Should never happen!
-          Logger.warn(LOG_TAG, "Failed to update androidID for record with guid " + guid + ".");
-          continue;
-        }
-        record.androidID = androidID;
-      }
-    } finally {
-      if (cursor != null) {
-        cursor.close();
-      }
-    }
+    return inserted;
   }
 }
