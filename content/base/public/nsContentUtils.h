@@ -1373,6 +1373,23 @@ public:
   static bool IsSystemPrincipal(nsIPrincipal* aPrincipal);
 
   /**
+   * *aResourcePrincipal is a principal describing who may access the contents
+   * of a resource. The resource can only be consumed by a principal that
+   * subsumes *aResourcePrincipal. MAKE SURE THAT NOTHING EVER ACTS WITH THE
+   * AUTHORITY OF *aResourcePrincipal.
+   * It may be null to indicate that the resource has no data from any origin
+   * in it yet and anything may access the resource.
+   * Additional data is being mixed into the resource from aExtraPrincipal
+   * (which may be null; if null, no data is being mixed in and this function
+   * will do nothing). Update *aResourcePrincipal to reflect the new data.
+   * If *aResourcePrincipal subsumes aExtraPrincipal, nothing needs to change,
+   * otherwise *aResourcePrincipal is replaced with the system principal.
+   * Returns true if *aResourcePrincipal changed.
+   */
+  static bool CombineResourcePrincipals(nsCOMPtr<nsIPrincipal>* aResourcePrincipal,
+                                        nsIPrincipal* aExtraPrincipal);
+
+  /**
    * Trigger a link with uri aLinkURI. If aClick is false, this triggers a
    * mouseover on the link, otherwise it triggers a load after doing a
    * security check using aContent's principal.

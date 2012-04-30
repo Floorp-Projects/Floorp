@@ -236,7 +236,6 @@ public:
       mDidNotifyDataEnded(false),
       mIsSeekable(false), mCacheSuspended(false),
       mChannelEnded(false),
-      mUsingNullPrincipal(false),
       mChannelOffset(0), mStreamLength(-1),  
       mStreamOffset(0), mPlaybackBytesPerSecond(10000),
       mPinCount(0), mCurrentMode(MODE_PLAYBACK),
@@ -273,7 +272,8 @@ public:
     return !mClosed &&
       (!mDidNotifyDataEnded || NS_SUCCEEDED(mNotifyDataEndedStatus));
   }
-  // Get the principal for this stream.
+  // Get the principal for this stream. Anything accessing the contents of
+  // this stream must have a principal that subsumes this principal.
   nsIPrincipal* GetCurrentPrincipal() { return mPrincipal; }
   // Ensure a global media cache update has run with this stream present.
   // This ensures the cache has had a chance to suspend or unsuspend this stream.
@@ -490,9 +490,6 @@ private:
   bool mCacheSuspended;
   // True if the channel ended and we haven't seeked it again.
   bool mChannelEnded;
-  // True if mPrincipal is a null principal because we saw data from
-  // multiple origins
-  bool mUsingNullPrincipal;
   // The offset where the next data from the channel will arrive
   PRInt64      mChannelOffset;
   // The reported or discovered length of the data, or -1 if nothing is
