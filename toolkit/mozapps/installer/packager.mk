@@ -778,16 +778,23 @@ ifdef USE_ELF_HACK
 endif
 
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN) elfhack
-	@rm -rf $(DIST)/$(MOZ_PKG_DIR) $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
+	@rm -rf $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
+ifndef MOZ_FAST_PACKAGE
+	@rm -rf $(DIST)/$(MOZ_PKG_DIR)
+endif
 # NOTE: this must be a tar now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
 	@echo "Creating package directory..."
-	@mkdir $(DIST)/$(MOZ_PKG_DIR)
+	if ! test -d $(DIST)/$(MOZ_PKG_DIR) ; then \
+		mkdir $(DIST)/$(MOZ_PKG_DIR); \
+	fi
 ifndef UNIVERSAL_BINARY
 # If UNIVERSAL_BINARY, the package will be made from an already-prepared
 # STAGEPATH
 ifdef MOZ_PKG_MANIFEST
+ifndef MOZ_FAST_PACKAGE
 	$(RM) -rf $(DIST)/xpt $(DIST)/manifests
+endif
 	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
 	  "$(call core_abspath,$(DIST)/$(MOZ_PKG_DIR))", \
 	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1)
