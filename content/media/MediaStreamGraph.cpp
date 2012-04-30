@@ -621,6 +621,13 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream)
     finished = aStream->mUpdateFinished;
     for (PRInt32 i = aStream->mUpdateTracks.Length() - 1; i >= 0; --i) {
       SourceMediaStream::TrackData* data = &aStream->mUpdateTracks[i];
+      for (PRUint32 j = 0; j < aStream->mListeners.Length(); ++j) {
+        MediaStreamListener* l = aStream->mListeners[j];
+        TrackTicks offset = (data->mCommands & SourceMediaStream::TRACK_CREATE)
+            ? data->mStart : aStream->mBuffer.FindTrack(data->mID)->GetSegment()->GetDuration();
+        l->NotifyQueuedTrackChanges(this, data->mID, data->mRate,
+                                    offset, data->mCommands, *data->mData);
+      }
       if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
         MediaSegment* segment = data->mData.forget();
         LOG(PR_LOG_DEBUG, ("SourceMediaStream %p creating track %d, rate %d, start %lld, initial end %lld",
