@@ -62,7 +62,6 @@ CMMSRCS = nsAccessNodeWrap.mm \
 
 
 EXPORTS = \
-  ApplicationAccessibleWrap.h \
   ARIAGridAccessibleWrap.h \
   nsAccessNodeWrap.h \
   nsTextAccessibleWrap.h \
