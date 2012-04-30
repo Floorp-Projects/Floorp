@@ -305,7 +305,7 @@ RadioInterfaceLayer.prototype = {
         break;
       case "cardstatechange":
         this.radioState.cardState = message.cardState;
-        ppmm.sendAsyncMessage("RIL:CardStateChange", message);
+        ppmm.sendAsyncMessage("RIL:CardStateChanged", message);
         break;
       case "sms-received":
         this.handleSmsReceived(message);
