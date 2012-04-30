@@ -45,6 +45,7 @@
 #include "nsXULAppAPI.h"
 #include "nsNetUtil.h"
 #include "prio.h"
+#include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "MediaResource.h"
 #include "nsMathUtils.h"
@@ -1705,35 +1706,7 @@ nsMediaCacheStream::NotifyDataStarted(PRInt64 aOffset)
 void
 nsMediaCacheStream::UpdatePrincipal(nsIPrincipal* aPrincipal)
 {
-  if (!mPrincipal) {
-    NS_ASSERTION(!mUsingNullPrincipal, "Are we using a null principal or not?");
-    if (mUsingNullPrincipal) {
-      // Don't let mPrincipal be set to anything
-      return;
-    }
-    mPrincipal = aPrincipal;
-    return;
-  }
-
-  if (mPrincipal == aPrincipal) {
-    // Common case
-    NS_ASSERTION(!mUsingNullPrincipal, "We can't receive data from a null principal");
-    return;
-  }
-  if (mUsingNullPrincipal) {
-    // We've already fallen back to a null principal, so nothing more
-    // to do.
-    return;
-  }
-
-  bool equal;
-  nsresult rv = mPrincipal->Equals(aPrincipal, &equal);
-  if (NS_SUCCEEDED(rv) && equal)
-    return;
-
-  // Principals are not equal, so set mPrincipal to a null principal.
-  mPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1");
-  mUsingNullPrincipal = true;
+  nsContentUtils::CombineResourcePrincipals(&mPrincipal, aPrincipal);
 }
 
 void
