@@ -7,9 +7,14 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+Cu.import("resource://gre/modules/Services.jsm");
+
+// Always log packets when running tests. runxpcshelltests.py will throw
+// the output away anyway, unless you give it the --verbose flag.
+Services.prefs.setBoolPref("devtools.debugger.log", true);
+
 Cu.import("resource:///modules/devtools/dbg-server.jsm");
 Cu.import("resource:///modules/devtools/dbg-client.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
 
 function check_except(func)
