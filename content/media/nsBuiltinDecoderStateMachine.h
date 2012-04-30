@@ -287,6 +287,7 @@ public:
   // Copy queued audio/video data in the reader to any output MediaStreams that
   // need it.
   void SendOutputStreamData();
+  void FinishOutputStreams();
   bool HaveEnoughDecodedAudio(PRInt64 aAmpleAudioUSecs);
   bool HaveEnoughDecodedVideo();
 
