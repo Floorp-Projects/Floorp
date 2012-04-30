@@ -119,14 +119,6 @@ public class RepoUtils {
     }
   }
 
-  // Returns android id from the URI that we get after inserting a
-  // bookmark into the local Android store.
-  public static long getAndroidIdFromUri(Uri uri) {
-    String path = uri.getPath();
-    int lastSlash = path.lastIndexOf('/');
-    return Long.parseLong(path.substring(lastSlash + 1));
-  }
-
   //Create a HistoryRecord object from a cursor on a row with a Moz History record in it
   public static HistoryRecord historyFromMirrorCursor(Cursor cur) {
 

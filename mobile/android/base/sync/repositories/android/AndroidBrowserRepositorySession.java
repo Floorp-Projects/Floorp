@@ -26,6 +26,7 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSince
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
+import android.content.ContentUris;
 import android.database.Cursor;
 import android.net.Uri;
 
@@ -533,7 +534,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
   protected Record insert(Record record) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
     Record toStore = prepareRecord(record);
     Uri recordURI = dbHelper.insert(toStore);
-    long id = RepoUtils.getAndroidIdFromUri(recordURI);
+    long id = ContentUris.parseId(recordURI);
     Logger.debug(LOG_TAG, "Inserted as " + id);
 
     toStore.androidID = id;
