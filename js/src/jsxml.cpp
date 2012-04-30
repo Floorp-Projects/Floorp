@@ -1783,12 +1783,12 @@ ParseXMLSource(JSContext *cx, JSString *src)
     xml = NULL;
     filename = NULL;
     lineno = 1;
-    FrameRegsIter i(cx);
+    ScriptFrameIter i(cx);
     if (!i.done()) {
         op = (JSOp) *i.pc();
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {
-            filename = i.fp()->script()->filename;
-            lineno = PCToLineNumber(i.fp()->script(), i.pc());
+            filename = i.script()->filename;
+            lineno = PCToLineNumber(i.script(), i.pc());
             for (endp = srcp + srclen; srcp < endp; srcp++) {
                 if (*srcp == '\n')
                     --lineno;
@@ -5164,14 +5164,6 @@ xml_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-static JSBool
-xml_fix(JSContext *cx, JSObject *obj, bool *success, AutoIdVector *props)
-{
-    JS_ASSERT(obj->isExtensible());
-    *success = false;
-    return true;
-}
-
 static void
 xml_clear(JSContext *cx, JSObject *obj)
 {
@@ -5412,7 +5404,6 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
         xml_deleteSpecial,
         xml_enumerate,
         xml_typeOf,
-        xml_fix,
         NULL,       /* thisObject     */
         xml_clear
     }

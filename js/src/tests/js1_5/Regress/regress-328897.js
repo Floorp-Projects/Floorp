@@ -1,4 +1,3 @@
-// |reftest| fails-if(browserIsRemote)
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -52,7 +51,7 @@ if (typeof window == 'undefined')
 }
 else
 {
-  expect = /(Script error.|Permission denied for <file:\/\/> to get property XPCComponents.classes)/;
+  expect = /(Script error.|Permission denied to access property 'classes')/;
 
   window._onerror = window.onerror;
   window.onerror = (function (msg, page, line) { 
@@ -64,7 +63,8 @@ else
 
   gDelayTestDriverEnd = true;
 
-  window.location="javascript:Components.classes";
+  // Trying to set Components.classes will trigger a Permission denied exception
+  window.location="javascript:Components.classes = 42";
   actual = 'No Error';
 }
 

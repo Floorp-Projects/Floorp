@@ -152,21 +152,23 @@ private:
   nsCOMPtr<nsBuiltinDecoder> mDecoder;
 public:
   nsAudioMetadataEventRunner(nsBuiltinDecoder* aDecoder, PRUint32 aChannels,
-                             PRUint32 aRate) :
+                             PRUint32 aRate, bool aHasAudio) :
     mDecoder(aDecoder),
     mChannels(aChannels),
-    mRate(aRate)
+    mRate(aRate),
+    mHasAudio(aHasAudio)
   {
   }
 
   NS_IMETHOD Run()
   {
-    mDecoder->MetadataLoaded(mChannels, mRate);
+    mDecoder->MetadataLoaded(mChannels, mRate, mHasAudio);
     return NS_OK;
   }
 
   const PRUint32 mChannels;
   const PRUint32 mRate;
+  const bool mHasAudio;
 };
 
 // Owns the global state machine thread and counts of
@@ -1515,7 +1517,7 @@ nsresult nsBuiltinDecoderStateMachine::DecodeMetadata()
     mDecoder->RequestFrameBufferLength(frameBufferLength);
   }
   nsCOMPtr<nsIRunnable> metadataLoadedEvent =
-    new nsAudioMetadataEventRunner(mDecoder, mInfo.mAudioChannels, mInfo.mAudioRate);
+    new nsAudioMetadataEventRunner(mDecoder, mInfo.mAudioChannels, mInfo.mAudioRate, HasAudio());
   NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
 
   if (mState == DECODER_STATE_DECODING_METADATA) {

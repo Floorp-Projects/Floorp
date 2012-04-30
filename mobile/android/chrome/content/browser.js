@@ -153,7 +153,9 @@ var Strings = {};
 
 var MetadataProvider = {
   getDrawMetadata: function getDrawMetadata() {
-    return JSON.stringify(BrowserApp.selectedTab.getViewport());
+    let viewport = BrowserApp.selectedTab.getViewport();
+    viewport.zoom = BrowserApp.selectedTab._drawZoom;
+    return JSON.stringify(viewport);
   },
 };
 
@@ -1896,7 +1898,7 @@ Tab.prototype = {
       // We make up matching css page dimensions
       cssPageWidth: gScreenWidth / this._zoom,
       cssPageHeight: gScreenHeight / this._zoom,
-      zoom: this._zoom
+      zoom: this._zoom,
     };
 
     // Set the viewport offset to current scroll offset
@@ -4746,8 +4748,9 @@ var ActivityObserver = {
         break;
     }
 
-    if (BrowserApp.selectedTab.getActive() != isForeground) {
-      BrowserApp.selectedTab.setActive(isForeground);
+    let tab = BrowserApp.selectedTab;
+    if (tab && tab.getActive() != isForeground) {
+      tab.setActive(isForeground);
     }
   }
 };

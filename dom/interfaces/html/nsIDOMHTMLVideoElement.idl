@@ -48,7 +48,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(E3763903-928B-47C4-AC3B-C47EB43884CA)]
+[scriptable, uuid(0a1c8b44-12a4-4316-b39f-feeee48475f8)]
 interface nsIDOMHTMLVideoElement : nsIDOMHTMLMediaElement
 {
            attribute long width; 
@@ -75,5 +75,8 @@ interface nsIDOMHTMLVideoElement : nsIDOMHTMLMediaElement
 
   // Time which the last painted video frame was late by, in seconds.
   readonly attribute double mozFrameDelay;
+
+  // True if the video has an audio track available.
+  readonly attribute bool mozHasAudio;
 };
 

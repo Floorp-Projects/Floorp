@@ -402,7 +402,7 @@ public:
 
   /**
    * Return this node as an Element.  Should only be used for nodes
-   * for which IsElement() is true.
+   * for which IsElement() is true.  This is defined inline in Element.h.
    */
   mozilla::dom::Element* AsElement();
 
@@ -755,9 +755,9 @@ public:
    * Get the parent nsINode for this node if it is an Element.
    * @return the parent node
    */
-  nsINode* GetElementParent() const
+  mozilla::dom::Element* GetElementParent() const
   {
-    return mParent && mParent->IsElement() ? mParent : nsnull;
+    return mParent && mParent->IsElement() ? mParent->AsElement() : nsnull;
   }
 
   /**

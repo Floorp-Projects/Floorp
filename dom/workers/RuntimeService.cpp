@@ -449,7 +449,7 @@ ResolveWorkerClasses(JSContext* aCx, JSObject* aObj, jsid aId, unsigned aFlags,
       return true;
     }
 
-    JSObject* eventTarget = EventTarget_workers::GetProtoObject(aCx, aObj);
+    JSObject* eventTarget = EventTarget_workers::GetProtoObject(aCx, aObj, aObj);
     if (!eventTarget) {
       return false;
     }

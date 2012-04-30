@@ -1,0 +1,232 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import automationutils
+import os
+import re
+import socket
+import shutil
+import sys
+import tempfile
+import time
+
+from automation import Automation
+from devicemanager import DeviceManager, NetworkTools
+
+class B2GRemoteAutomation(Automation):
+    _devicemanager = None
+
+    def __init__(self, deviceManager, appName='', remoteLog=None,
+                 marionette=None):
+        self._devicemanager = deviceManager
+        self._appName = appName
+        self._remoteProfile = None
+        self._remoteLog = remoteLog
+        self.marionette = marionette
+
+        # Default our product to b2g
+        self._product = "b2g"
+        Automation.__init__(self)
+
+    def setDeviceManager(self, deviceManager):
+        self._devicemanager = deviceManager
+
+    def setAppName(self, appName):
+        self._appName = appName
+
+    def setRemoteProfile(self, remoteProfile):
+        self._remoteProfile = remoteProfile
+
+    def setProduct(self, product):
+        self._product = product
+
+    def setRemoteLog(self, logfile):
+        self._remoteLog = logfile
+
+    # Set up what we need for the remote environment
+    def environment(self, env=None, xrePath=None, crashreporter=True):
+        # Because we are running remote, we don't want to mimic the local env
+        # so no copying of os.environ
+        if env is None:
+            env = {}
+
+        return env
+
+    def checkForCrashes(self, directory, symbolsPath):
+        # XXX: This will have to be updated after crash reporting on b2g
+        # is in place.
+        dumpDir = tempfile.mkdtemp()
+        self._devicemanager.getDirectory(self._remoteProfile + '/minidumps/', dumpDir)
+        automationutils.checkForCrashes(dumpDir, symbolsPath, self.lastTestSeen)
+        try:
+          shutil.rmtree(dumpDir)
+        except:
+          print "WARNING: unable to remove directory: %s" % (dumpDir)
+
+    def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
+        # if remote profile is specified, use that instead
+        if (self._remoteProfile):
+            profileDir = self._remoteProfile
+
+        cmd, args = Automation.buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs)
+
+        return app, args
+
+    def getLanIp(self):
+        nettools = NetworkTools()
+        return nettools.getLanIp()
+
+    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime,
+                      debuggerInfo, symbolsPath, logger):
+        """ Wait for mochitest to finish (as evidenced by a signature string
+            in logcat), or for a given amount of time to elapse with no
+            output.
+        """
+        timeout = timeout or 120
+
+        didTimeout = False
+
+        done = time.time() + timeout
+        while True:
+            currentlog = proc.stdout
+            if currentlog:
+                done = time.time() + timeout
+                print currentlog
+                if 'INFO SimpleTest FINISHED' in currentlog:
+                    return 0
+            else:
+                if time.time() > done:
+                    self.log.info("TEST-UNEXPECTED-FAIL | %s | application timed "
+                                  "out after %d seconds with no output",
+                                  self.lastTestSeen, int(timeout))
+                    return 1
+
+    def getDeviceStatus(self, serial=None):
+        # Get the current status of the device.  If we know the device
+        # serial number, we look for that, otherwise we use the (presumably
+        # only) device shown in 'adb devices'.
+        serial = serial or self._devicemanager.deviceSerial
+        status = 'unknown'
+
+        for line in self._devicemanager.runCmd(['devices']).stdout.readlines():
+            result =  re.match('(.*?)\t(.*)', line)
+            if result:
+                thisSerial = result.group(1)
+                if not serial or thisSerial == serial:
+                    serial = thisSerial
+                    status = result.group(2)
+
+        return (serial, status)
+
+    def rebootDevice(self):
+        # find device's current status and serial number
+        serial, status = self.getDeviceStatus()
+
+        # reboot!
+        self._devicemanager.checkCmd(['reboot'])
+
+        # wait for device to come back to previous status
+        print 'waiting for device to come back online after reboot'
+        start = time.time()
+        rserial, rstatus = self.getDeviceStatus(serial)
+        while rstatus != 'device':
+            if time.time() - start > 120:
+                # device hasn't come back online in 2 minutes, something's wrong
+                raise Exception("Device %s (status: %s) not back online after reboot" % (serial, rstatus))
+            time.sleep(5)
+            rserial, rstatus = self.getDeviceStatus(serial)
+        print 'device:', serial, 'status:', rstatus
+
+    def Process(self, cmd, stdout=None, stderr=None, env=None, cwd=None):
+        # On a desktop or fennec run, the Process method invokes a gecko
+        # process in which to run mochitests.  For B2G, we simply
+        # reboot the device (which was configured with a test profile
+        # already), wait for B2G to start up, and then navigate to the
+        # test url using Marionette.  There doesn't seem to be any way
+        # to pass env variables into the B2G process, but this doesn't 
+        # seem to matter.
+
+        instance = self.B2GInstance(self._devicemanager)
+
+        # reboot device so it starts up with the mochitest profile
+        # XXX:  We could potentially use 'stop b2g' + 'start b2g' to achieve
+        # a similar effect; will see which is more stable while attempting
+        # to bring up the continuous integration.
+        self.rebootDevice()
+
+        # Infrequently, gecko comes up before networking does, so wait a little
+        # bit to give the network time to become available.
+        # XXX:  need a more robust mechanism for this
+        time.sleep(20)
+
+        # Set up port forwarding again for Marionette, since any that
+        # existed previously got wiped out by the reboot.
+        self._devicemanager.checkCmd(['forward',
+                                      'tcp:%s' % self.marionette.port,
+                                      'tcp:%s' % self.marionette.port])
+
+        # start a marionette session
+        session = self.marionette.start_session()
+        if 'b2g' not in session:
+            raise Exception("bad session value %s returned by start_session" % session)
+
+        # start the tests by navigating to the mochitest url
+        self.marionette.execute_script("window.location.href='%s';" % self.testURL)
+
+        return instance
+
+    # be careful here as this inner class doesn't have access to outer class members
+    class B2GInstance(object):
+        """Represents a B2G instance running on a device, and exposes
+           some process-like methods/properties that are expected by the
+           automation.
+        """
+
+        def __init__(self, dm):
+            self.dm = dm
+            self.lastloglines = []
+
+        @property
+        def pid(self):
+            # a dummy value to make the automation happy
+            return 0
+
+        @property
+        def stdout(self):
+            # Return any part of logcat output that wasn't returned
+            # previously.  This is done by fetching about the last 50
+            # lines of the log (logcat -t 50 generally fetches 50-58 lines),
+            # and comparing against the previous set to find new lines.
+            t = self.dm.runCmd(['logcat', '-t', '50']).stdout.read()
+            if t == None: return ''
+
+            t = t.strip('\n').strip()
+            loglines = t.split('\n')
+            line_index = 0
+
+            # If there are more than 50 lines, we skip the first 20; this
+            # is because the number of lines returned
+            # by logcat -t 50 varies (usually between 50 and 58).
+            log_index = 20 if len(loglines) > 50 else 0
+
+            for index, line in enumerate(loglines[log_index:]):
+                line_index = index + log_index + 1
+                try:
+                    self.lastloglines.index(line)
+                except ValueError:
+                    break
+
+            newoutput = '\n'.join(loglines[line_index:])
+            self.lastloglines = loglines
+
+            return newoutput
+
+        def wait(self, timeout = None):
+            # this should never happen
+            raise Exception("'wait' called on B2GInstance")
+
+        def kill(self):
+            # this should never happen
+            raise Exception("'kill' called on B2GInstance")
+
