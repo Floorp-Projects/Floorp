@@ -57,6 +57,8 @@ endif
 
 TEST_DIRS = test
 
+SDK_BINARY = run-mozilla.sh
+
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(srcdir)/run-mozilla.sh
