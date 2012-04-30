@@ -1924,8 +1924,13 @@ Tab.prototype = {
        * Avoid sending page sizes of less than screen size before we hit DOMContentLoaded, because
        * this causes the page size to jump around wildly during page load. After the page is loaded,
        * send updates regardless of page size; we'll zoom to fit the content as needed.
+       *
+       * Also, we need to compare the page size returned from getPageSize (in CSS pixels) to the floored
+       * screen size in CSS pixels because the page size returned from getPageSize may also be floored.
        */
-      if (doc.readyState === 'complete' || (pageWidth >= gScreenWidth && pageHeight >= gScreenHeight)) {
+      let pageLargerThanScreen = (cssPageWidth >= Math.floor(viewport.cssWidth))
+                              && (cssPageHeight >= Math.floor(viewport.cssHeight));
+      if (doc.readyState === 'complete' || pageLargerThanScreen) {
         viewport.cssPageWidth = cssPageWidth;
         viewport.cssPageHeight = cssPageHeight;
         viewport.pageWidth = pageWidth;
