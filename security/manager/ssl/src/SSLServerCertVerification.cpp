@@ -958,12 +958,12 @@ AuthCertificate(nsNSSSocketInfo * socketInfo, CERTCertificate * cert)
     if (rv == SECSuccess) {
       // Certificate verification succeeded delete any potential record
       // of certificate error bits.
-      nsSSLIOLayerHelpers::mHostsWithCertErrors->RememberCertHasError(
-        socketInfo, nsnull, rv);
+      RememberCertErrorsTable::GetInstance().RememberCertHasError(socketInfo,
+                                                                  nsnull, rv);
     }
     else {
       // Certificate verification failed, update the status' bits.
-      nsSSLIOLayerHelpers::mHostsWithCertErrors->LookupCertErrorBits(
+      RememberCertErrorsTable::GetInstance().LookupCertErrorBits(
         socketInfo, status);
     }
 

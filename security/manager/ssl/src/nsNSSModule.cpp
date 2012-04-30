@@ -76,7 +76,7 @@
 #include "nsRandomGenerator.h"
 #include "nsRecentBadCerts.h"
 #include "nsSSLStatus.h"
-#include "nsNSSIOLayer.h"
+#include "TransportSecurityInfo.h"
 #include "NSSErrorsService.h"
 #include "nsNSSVersion.h"
 
@@ -211,6 +211,10 @@ _InstanceClassChrome##Constructor(nsISupports *aOuter, REFNSIID aIID,         \
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssLoadingComponent, nsNSSComponent,
                                         Init)
 
+using namespace mozilla::psm;
+  
+namespace {
+
 // Use the special factory constructor for everything this module implements,
 // because all code could potentially require the NSS library.
 // Our factory constructor takes an additional boolean parameter.
@@ -250,7 +254,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssEnsure, nsCertOverrideService, Init)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsRandomGenerator)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssEnsure, nsRecentBadCertsService, Init)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsureOnChromeOnly, nsSSLStatus)
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsureOnChromeOnly, nsNSSSocketInfo)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsureOnChromeOnly, TransportSecurityInfo)
 
 typedef mozilla::psm::NSSErrorsService NSSErrorsService;
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NSSErrorsService, Init)
@@ -289,7 +293,7 @@ NS_DEFINE_NAMED_CID(NS_CERTOVERRIDE_CID);
 NS_DEFINE_NAMED_CID(NS_RANDOMGENERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_RECENTBADCERTS_CID);
 NS_DEFINE_NAMED_CID(NS_SSLSTATUS_CID);
-NS_DEFINE_NAMED_CID(NS_NSSSOCKETINFO_CID);
+NS_DEFINE_NAMED_CID(TRANSPORTSECURITYINFO_CID);
 NS_DEFINE_NAMED_CID(NS_NSSERRORSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NSSVERSION_CID);
 
@@ -327,7 +331,7 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_RANDOMGENERATOR_CID, false, NULL, nsRandomGeneratorConstructor },
   { &kNS_RECENTBADCERTS_CID, false, NULL, nsRecentBadCertsServiceConstructor },
   { &kNS_SSLSTATUS_CID, false, NULL, nsSSLStatusConstructor },
-  { &kNS_NSSSOCKETINFO_CID, false, NULL, nsNSSSocketInfoConstructor },
+  { &kTRANSPORTSECURITYINFO_CID, false, NULL, TransportSecurityInfoConstructor },
   { &kNS_NSSERRORSSERVICE_CID, false, NULL, NSSErrorsServiceConstructor },
   { &kNS_NSSVERSION_CID, false, NULL, nsNSSVersionConstructor },
   { NULL }
@@ -389,5 +393,7 @@ static const mozilla::Module kNSSModule = {
   kNSSContracts,
   kNSSCategories
 };
+
+} // unnamed namespace
 
 NSMODULE_DEFN(NSS) = &kNSSModule;
