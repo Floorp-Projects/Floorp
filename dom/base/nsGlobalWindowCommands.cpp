@@ -565,8 +565,8 @@ nsClipboardImageCommands::DoClipboardCommand(const char *aCommandName, nsIConten
     return aEdit->CopyImage(nsIContentViewerEdit::COPY_IMAGE_TEXT);
   if (!nsCRT::strcmp(sCopyImageContentsString, aCommandName))
     return aEdit->CopyImage(nsIContentViewerEdit::COPY_IMAGE_DATA);
-
-  PRInt32 copyFlags = nsIContentViewerEdit::COPY_IMAGE_ALL;
+  PRInt32 copyFlags = nsIContentViewerEdit::COPY_IMAGE_DATA | 
+                      nsIContentViewerEdit::COPY_IMAGE_HTML;
   if (aParams)
     aParams->GetLongValue("imageCopy", &copyFlags);
   return aEdit->CopyImage(copyFlags);
