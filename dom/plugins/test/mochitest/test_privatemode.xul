@@ -65,6 +65,17 @@ function runTests() {
   is(state1, true, "Private mode state reported incorrectly.");
   is(state2, true, "Private mode state reported incorrectly.");
 
+  var officialState1, officialState2;
+  try {
+    officialState1 = pluginElement1.queryPrivateModeState();
+    officialState2 = pluginElement2.queryPrivateModeState();
+  } catch (e) {
+    exceptionThrown = true;
+  }
+  is(exceptionThrown, false, "Exception thrown getting private mode state.");
+  is(officialState1, state1, "Private mode reported and queried is inconsistent.");
+  is(officialState2, state2, "Private mode reported and queried is inconsistent.");
+
   // reset preference states
   privateBrowsing.privateBrowsingEnabled = false;
   prefs.setBoolPref("browser.privatebrowsing.keep_current_session", keepCurrentSession);
