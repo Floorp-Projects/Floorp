@@ -17,103 +17,105 @@ sym(vp8_short_inv_walsh4x4_sse2):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 2
-    SAVE_XMM 6
-    push        rsi
-    push        rdi
     ; end prolog
 
-    mov     rsi, arg(0)
-    mov     rdi, arg(1)
-    mov     rax, 3
+    mov         rcx, arg(0)
+    mov         rdx, arg(1)
+    mov         rax, 30003h
 
-    movdqa    xmm0, [rsi + 0]       ;ip[4] ip[0]
-    movdqa    xmm1, [rsi + 16]      ;ip[12] ip[8]
+    movdqa      xmm0, [rcx + 0]     ;ip[4] ip[0]
+    movdqa      xmm1, [rcx + 16]    ;ip[12] ip[8]
 
-    shl     rax, 16
-    or      rax, 3            ;00030003h
 
-    pshufd    xmm2, xmm1, 4eh       ;ip[8] ip[12]
-    movdqa    xmm3, xmm0          ;ip[4] ip[0]
+    pshufd      xmm2, xmm1, 4eh     ;ip[8] ip[12]
+    movdqa      xmm3, xmm0          ;ip[4] ip[0]
 
-    paddw   xmm0, xmm2          ;ip[4]+ip[8] ip[0]+ip[12] aka b1 a1
-    psubw   xmm3, xmm2          ;ip[4]-ip[8] ip[0]-ip[12] aka c1 d1
+    paddw       xmm0, xmm2          ;ip[4]+ip[8] ip[0]+ip[12] aka b1 a1
+    psubw       xmm3, xmm2          ;ip[4]-ip[8] ip[0]-ip[12] aka c1 d1
 
-    movdqa    xmm4, xmm0
+    movdqa      xmm4, xmm0
     punpcklqdq  xmm0, xmm3          ;d1 a1
     punpckhqdq  xmm4, xmm3          ;c1 b1
-    movd    xmm6, eax
 
-    movdqa    xmm1, xmm4          ;c1 b1
-    paddw   xmm4, xmm0          ;dl+cl a1+b1 aka op[4] op[0]
-    psubw   xmm0, xmm1          ;d1-c1 a1-b1 aka op[12] op[8]
+    movdqa      xmm1, xmm4          ;c1 b1
+    paddw       xmm4, xmm0          ;dl+cl a1+b1 aka op[4] op[0]
+    psubw       xmm0, xmm1          ;d1-c1 a1-b1 aka op[12] op[8]
 
-;;;temp output
-;;  movdqu  [rdi + 0], xmm4
-;;  movdqu  [rdi + 16], xmm3
-
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ; 13 12 11 10 03 02 01 00
     ;
     ; 33 32 31 30 23 22 21 20
     ;
-    movdqa    xmm3, xmm4          ; 13 12 11 10 03 02 01 00
-    punpcklwd xmm4, xmm0          ; 23 03 22 02 21 01 20 00
-    punpckhwd xmm3, xmm0          ; 33 13 32 12 31 11 30 10
-    movdqa    xmm1, xmm4          ; 23 03 22 02 21 01 20 00
-    punpcklwd xmm4, xmm3          ; 31 21 11 01 30 20 10 00
-    punpckhwd xmm1, xmm3          ; 33 23 13 03 32 22 12 02
+    movdqa      xmm3, xmm4          ; 13 12 11 10 03 02 01 00
+    punpcklwd   xmm4, xmm0          ; 23 03 22 02 21 01 20 00
+    punpckhwd   xmm3, xmm0          ; 33 13 32 12 31 11 30 10
+    movdqa      xmm1, xmm4          ; 23 03 22 02 21 01 20 00
+    punpcklwd   xmm4, xmm3          ; 31 21 11 01 30 20 10 00
+    punpckhwd   xmm1, xmm3          ; 33 23 13 03 32 22 12 02
     ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    pshufd    xmm2, xmm1, 4eh       ;ip[8] ip[12]
-    movdqa    xmm3, xmm4          ;ip[4] ip[0]
+    movd        xmm0, eax
+    pshufd      xmm2, xmm1, 4eh     ;ip[8] ip[12]
+    movdqa      xmm3, xmm4          ;ip[4] ip[0]
 
-    pshufd    xmm6, xmm6, 0       ;03 03 03 03 03 03 03 03
+    pshufd      xmm0, xmm0, 0       ;03 03 03 03 03 03 03 03
 
-    paddw   xmm4, xmm2          ;ip[4]+ip[8] ip[0]+ip[12] aka b1 a1
-    psubw   xmm3, xmm2          ;ip[4]-ip[8] ip[0]-ip[12] aka c1 d1
+    paddw       xmm4, xmm2          ;ip[4]+ip[8] ip[0]+ip[12] aka b1 a1
+    psubw       xmm3, xmm2          ;ip[4]-ip[8] ip[0]-ip[12] aka c1 d1
 
-    movdqa    xmm5, xmm4
+    movdqa      xmm5, xmm4
     punpcklqdq  xmm4, xmm3          ;d1 a1
     punpckhqdq  xmm5, xmm3          ;c1 b1
 
-    movdqa    xmm1, xmm5          ;c1 b1
-    paddw   xmm5, xmm4          ;dl+cl a1+b1 aka op[4] op[0]
-    psubw   xmm4, xmm1          ;d1-c1 a1-b1 aka op[12] op[8]
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ; 13 12 11 10 03 02 01 00
-    ;
-    ; 33 32 31 30 23 22 21 20
-    ;
-    movdqa    xmm0, xmm5          ; 13 12 11 10 03 02 01 00
-    punpcklwd xmm5, xmm4          ; 23 03 22 02 21 01 20 00
-    punpckhwd xmm0, xmm4          ; 33 13 32 12 31 11 30 10
-    movdqa    xmm1, xmm5          ; 23 03 22 02 21 01 20 00
-    punpcklwd xmm5, xmm0          ; 31 21 11 01 30 20 10 00
-    punpckhwd xmm1, xmm0          ; 33 23 13 03 32 22 12 02
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    paddw   xmm5, xmm6
-    paddw   xmm1, xmm6
+    movdqa      xmm1, xmm5          ;c1 b1
+    paddw       xmm5, xmm4          ;dl+cl a1+b1 aka op[4] op[0]
+    psubw       xmm4, xmm1          ;d1-c1 a1-b1 aka op[12] op[8]
 
-    psraw   xmm5, 3
-    psraw   xmm1, 3
+    paddw       xmm5, xmm0
+    paddw       xmm4, xmm0
+    psraw       xmm5, 3
+    psraw       xmm4, 3
 
-    movdqa  [rdi + 0], xmm5
-    movdqa  [rdi + 16], xmm1
+    movd        eax, xmm5
+    movd        ecx, xmm4
+    psrldq      xmm5, 4
+    psrldq      xmm4, 4
+    mov         word ptr[rdx+32*0], ax
+    mov         word ptr[rdx+32*2], cx
+    shr         eax, 16
+    shr         ecx, 16
+    mov         word ptr[rdx+32*4], ax
+    mov         word ptr[rdx+32*6], cx
+    movd        eax, xmm5
+    movd        ecx, xmm4
+    psrldq      xmm5, 4
+    psrldq      xmm4, 4
+    mov         word ptr[rdx+32*8], ax
+    mov         word ptr[rdx+32*10], cx
+    shr         eax, 16
+    shr         ecx, 16
+    mov         word ptr[rdx+32*12], ax
+    mov         word ptr[rdx+32*14], cx
+
+    movd        eax, xmm5
+    movd        ecx, xmm4
+    psrldq      xmm5, 4
+    psrldq      xmm4, 4
+    mov         word ptr[rdx+32*1], ax
+    mov         word ptr[rdx+32*3], cx
+    shr         eax, 16
+    shr         ecx, 16
+    mov         word ptr[rdx+32*5], ax
+    mov         word ptr[rdx+32*7], cx
+    movd        eax, xmm5
+    movd        ecx, xmm4
+    mov         word ptr[rdx+32*9], ax
+    mov         word ptr[rdx+32*11], cx
+    shr         eax, 16
+    shr         ecx, 16
+    mov         word ptr[rdx+32*13], ax
+    mov         word ptr[rdx+32*15], cx
 
     ; begin epilog
-    pop rdi
-    pop rsi
-    RESTORE_XMM
     UNSHADOW_ARGS
     pop         rbp
     ret
-
-SECTION_RODATA
-align 16
-x_s1sqr2:
-    times 4 dw 0x8A8C
-align 16
-x_c1sqr2less1:
-    times 4 dw 0x4E7B
-align 16
-fours:
-    times 4 dw 0x0004

@@ -1,0 +1,29 @@
+# HG changeset patch
+# Parent 919fe109d4a2e1768470d78c59d5b8ecc1a34a53
+# User Timothy B. Terriberry <tterribe@vt.edu>
+fix potential use of uninitialized rate_y
+
+Upstream Change-Id: I8a35831e8f08b549806d0c2c6900d42af883f78f
+
+diff --git a/media/libvpx/vp8/encoder/rdopt.c b/media/libvpx/vp8/encoder/rdopt.c
+--- a/media/libvpx/vp8/encoder/rdopt.c
++++ b/media/libvpx/vp8/encoder/rdopt.c
+@@ -742,17 +742,17 @@ static int rd_pick_intra4x4mby_modes(VP8
+         if(total_rd >= (int64_t)best_rd)
+             break;
+     }
+ 
+     if(total_rd >= (int64_t)best_rd)
+         return INT_MAX;
+ 
+     *Rate = cost;
+-    *rate_y += tot_rate_y;
++    *rate_y = tot_rate_y;
+     *Distortion = distortion;
+ 
+     return RDCOST(mb->rdmult, mb->rddiv, cost, distortion);
+ }
+ 
+ 
+ static int rd_pick_intra16x16mby_mode(VP8_COMP *cpi,
+                                       MACROBLOCK *x,

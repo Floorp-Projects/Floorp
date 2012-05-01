@@ -45,10 +45,6 @@ typedef struct
     unsigned char **base_src;
     int src;
     int src_stride;
-
-//  MV  enc_mv;
-    int force_empty;
-
 } BLOCK;
 
 typedef struct
@@ -90,6 +86,7 @@ typedef struct
     unsigned int * mb_activity_ptr;
     int * mb_norm_activity_ptr;
     signed int act_zbin_adj;
+    signed int last_act_zbin_adj;
 
     int mvcosts[2][MVvals+1];
     int *mvcost[2];
@@ -106,7 +103,6 @@ typedef struct
     int mv_row_min;
     int mv_row_max;
 
-    int vector_range;    // Used to monitor limiting range of recent vectors to guide search.
     int skip;
 
     int encode_breakout;

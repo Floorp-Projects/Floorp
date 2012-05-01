@@ -310,6 +310,7 @@ if test -n "$gonkdir" ; then
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
     android_source="$gonkdir"
     ANDROID_SOURCE="$android_source"
+    ANDROID_NDK="${ANDROID_SOURCE}/ndk"
 
     dnl set up compilers
     AS="$gonk_toolchain_prefix"as
@@ -7518,7 +7519,7 @@ dnl ========================================================
 STDCXX_COMPAT=
 MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
 [  --enable-stdcxx-compat  Enable compatibility with older libstdc++],
-    STDCXX_COMPAT=stdc++compat.cpp)
+    STDCXX_COMPAT=1)
 
 AC_SUBST(STDCXX_COMPAT)
 
@@ -8566,8 +8567,6 @@ AC_SUBST(MOZ_APP_MAXVERSION)
 AC_DEFINE_UNQUOTED(MOZ_UA_FIREFOX_VERSION, "$FIREFOX_VERSION")
 AC_DEFINE_UNQUOTED(FIREFOX_VERSION,$FIREFOX_VERSION)
 AC_SUBST(FIREFOX_VERSION)
-AC_DEFINE_UNQUOTED(MOZ_UA_BUILDID, "$MOZ_UA_BUILDID")
-AC_SUBST(MOZ_UA_BUILDID)
 
 # We can't use the static application.ini data when building against
 # a libxul SDK.

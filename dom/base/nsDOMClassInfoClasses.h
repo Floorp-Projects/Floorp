@@ -449,6 +449,9 @@ DOMCI_CLASS(HTMLSourceElement)
 DOMCI_CLASS(MediaError)
 DOMCI_CLASS(HTMLAudioElement)
 DOMCI_CLASS(TimeRanges)
+
+// Media streams
+DOMCI_CLASS(MediaStream)
 #endif
 
 DOMCI_CLASS(ProgressEvent)
