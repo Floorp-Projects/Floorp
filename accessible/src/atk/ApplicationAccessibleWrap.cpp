@@ -690,14 +690,15 @@ ApplicationAccessibleWrap::Unload()
     // }
 }
 
-NS_IMETHODIMP
-ApplicationAccessibleWrap::GetName(nsAString& aName)
+ENameValueFlag
+ApplicationAccessibleWrap::Name(nsString& aName)
 {
   // ATK doesn't provide a way to obtain an application name (for example,
   // Firefox or Thunderbird) like IA2 does. Thus let's return an application
   // name as accessible name that was used to get a branding name (for example,
   // Minefield aka nightly Firefox or Daily aka nightly Thunderbird).
-  return GetAppName(aName);
+  GetAppName(aName);
+  return eNameOK;
 }
 
 NS_IMETHODIMP
