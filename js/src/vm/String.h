@@ -47,6 +47,8 @@
 #include "jscell.h"
 #include "jsfriendapi.h"
 
+#include "gc/Barrier.h"
+
 class JSString;
 class JSDependentString;
 class JSExtensibleString;
@@ -672,6 +674,10 @@ class JSAtom : public JSFixedString
 };
 
 JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));
+
+namespace js {
+typedef HeapPtr<JSAtom> HeapPtrAtom;
+}
 
 class JSInlineAtom : public JSInlineString /*, JSAtom */
 {

@@ -118,7 +118,6 @@ CPPSRCS		= \
 		jsfriendapi.cpp \
 		jsfun.cpp \
 		jsgc.cpp \
-		jsgcmark.cpp \
 		jscrashreport.cpp \
 		jshash.cpp \
 		jsinfer.cpp \
@@ -172,6 +171,7 @@ CPPSRCS		= \
 		RegExpObject.cpp \
 		RegExpStatics.cpp \
 		RegExp.cpp \
+		Marking.cpp \
 		Memory.cpp \
 		Statistics.cpp \
 		StringBuffer.cpp \

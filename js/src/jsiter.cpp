@@ -54,7 +54,6 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -71,6 +70,7 @@
 
 #include "ds/Sort.h"
 #include "frontend/TokenStream.h"
+#include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 
 #include "jsinferinlines.h"

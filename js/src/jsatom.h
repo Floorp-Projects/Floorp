@@ -478,7 +478,7 @@ namespace js {
  * the list and map->vector must point to pre-allocated memory.
  */
 extern void
-InitAtomMap(JSContext *cx, AtomIndexMap *indices, HeapPtrAtom *atoms);
+InitAtomMap(JSContext *cx, AtomIndexMap *indices, HeapPtr<JSAtom> *atoms);
 
 template<XDRMode mode>
 bool
