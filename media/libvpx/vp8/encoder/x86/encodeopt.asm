@@ -148,7 +148,7 @@ sym(vp8_mbblock_error_mmx_impl):
         pcmpeqw     mm1,        mm7
         mov         rcx,        16
 
-mberror_loop_mmx:
+.mberror_loop_mmx:
         movq        mm3,       [rsi]
         movq        mm4,       [rdi]
 
@@ -186,7 +186,7 @@ mberror_loop_mmx:
         add         rdi,        32
         sub         rcx,        1
 
-        jnz         mberror_loop_mmx
+        jnz         .mberror_loop_mmx
 
         movq        mm0,        mm2
         psrlq       mm2,        32
@@ -226,7 +226,7 @@ sym(vp8_mbblock_error_xmm_impl):
         pcmpeqw     xmm5,       xmm6
         mov         rcx,        16
 
-mberror_loop:
+.mberror_loop:
         movdqa      xmm0,       [rsi]
         movdqa      xmm1,       [rdi]
 
@@ -249,7 +249,7 @@ mberror_loop:
         paddd       xmm4,       xmm2
 
         paddd       xmm4,       xmm0
-        jnz         mberror_loop
+        jnz         .mberror_loop
 
         movdqa      xmm0,       xmm4
         punpckldq   xmm0,       xmm6
@@ -289,7 +289,7 @@ sym(vp8_mbuverror_mmx_impl):
         mov             rcx,        16
         pxor            mm7,        mm7
 
-mbuverror_loop_mmx:
+.mbuverror_loop_mmx:
 
         movq            mm1,        [rsi]
         movq            mm2,        [rdi]
@@ -313,7 +313,7 @@ mbuverror_loop_mmx:
         add             rdi,        16
 
         dec             rcx
-        jnz             mbuverror_loop_mmx
+        jnz             .mbuverror_loop_mmx
 
         movq            mm0,        mm7
         psrlq           mm7,        32
@@ -346,7 +346,7 @@ sym(vp8_mbuverror_xmm_impl):
         mov             rcx,        16
         pxor            xmm3,       xmm3
 
-mbuverror_loop:
+.mbuverror_loop:
 
         movdqa          xmm1,       [rsi]
         movdqa          xmm2,       [rdi]
@@ -360,7 +360,7 @@ mbuverror_loop:
         add             rdi,        16
 
         dec             rcx
-        jnz             mbuverror_loop
+        jnz             .mbuverror_loop
 
         pxor        xmm0,           xmm0
         movdqa      xmm1,           xmm3

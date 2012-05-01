@@ -42,7 +42,7 @@ typedef BOOL_CODER vp8_writer;
 
 /* Both of these return bits, not scaled bits. */
 
-static __inline unsigned int vp8_cost_branch(const unsigned int ct[2], vp8_prob p)
+static unsigned int vp8_cost_branch(const unsigned int ct[2], vp8_prob p)
 {
     /* Imitate existing calculation */
 
@@ -53,7 +53,7 @@ static __inline unsigned int vp8_cost_branch(const unsigned int ct[2], vp8_prob 
 /* Small functions to write explicit values and tokens, as well as
    estimate their lengths. */
 
-static __inline void vp8_treed_write
+static void vp8_treed_write
 (
     vp8_writer *const w,
     vp8_tree t,
@@ -72,7 +72,7 @@ static __inline void vp8_treed_write
     }
     while (n);
 }
-static __inline void vp8_write_token
+static void vp8_write_token
 (
     vp8_writer *const w,
     vp8_tree t,
@@ -83,7 +83,7 @@ static __inline void vp8_write_token
     vp8_treed_write(w, t, p, x->value, x->Len);
 }
 
-static __inline int vp8_treed_cost(
+static int vp8_treed_cost(
     vp8_tree t,
     const vp8_prob *const p,
     int v,
@@ -103,7 +103,7 @@ static __inline int vp8_treed_cost(
 
     return c;
 }
-static __inline int vp8_cost_token
+static int vp8_cost_token
 (
     vp8_tree t,
     const vp8_prob *const p,

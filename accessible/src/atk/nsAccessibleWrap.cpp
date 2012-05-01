@@ -53,7 +53,6 @@
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "prprf.h"
-#include "nsRoleMap.h"
 #include "nsStateMap.h"
 #include "Relation.h"
 #include "States.h"
@@ -722,24 +721,20 @@ getDescriptionCB(AtkObject *aAtkObj)
 AtkRole
 getRoleCB(AtkObject *aAtkObj)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap) {
-        return ATK_ROLE_INVALID;
-    }
+  nsAccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+  if (!accWrap)
+    return ATK_ROLE_INVALID;
 
 #ifdef DEBUG_A11Y
-    NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
-                 "Does not support nsIAccessibleText when it should");
+  NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
+      "Does not support nsIAccessibleText when it should");
 #endif
 
-    if (aAtkObj->role == ATK_ROLE_INVALID) {
-        // map to the actual value
-        PRUint32 atkRole = atkRoleMap[accWrap->Role()];
-        NS_ASSERTION(atkRoleMap[nsIAccessibleRole::ROLE_LAST_ENTRY] ==
-                     kROLE_ATK_LAST_ENTRY, "ATK role map skewed");
-        aAtkObj->role = static_cast<AtkRole>(atkRole);
-    }
+  if (aAtkObj->role != ATK_ROLE_INVALID)
     return aAtkObj->role;
+
+  return aAtkObj->role =
+    static_cast<AtkRole>(nsAccessibleWrap::AtkRoleFor(accWrap->Role()));
 }
 
 AtkAttributeSet*
@@ -1400,3 +1395,19 @@ nsAccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
     return NS_OK;
 }
 
+PRUint32
+nsAccessibleWrap::AtkRoleFor(role aRole)
+{
+#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role) \
+  case roles::geckoRole: \
+    return atkRole;
+
+  switch (aRole) {
+#include "RoleMap.h"
+    default:
+      MOZ_NOT_REACHED("Unknown role.");
+      return ATK_ROLE_UNKNOWN;
+  }
+
+#undef ROLE
+}

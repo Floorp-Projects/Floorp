@@ -17,18 +17,24 @@
     AREA ||.text||, CODE, READONLY, ALIGN=2
 
 ;*************************************************************
-;void vp8_short_idct4x4llm_c(short *input, short *output, int pitch)
+;void vp8_short_idct4x4llm_c(short *input, unsigned char *pred, int pitch,
+;                            unsigned char *dst, int stride)
 ;r0 short * input
-;r1 short * output
+;r1 short * pred
 ;r2 int pitch
+;r3 unsigned char dst
+;sp int stride
 ;*************************************************************
-;static const int cospi8sqrt2minus1=20091;
-;static const int sinpi8sqrt2      =35468;
-;static const int rounding = 0;
-;Optimization note: The resulted data from dequantization are signed 13-bit data that is
-;in the range of [-4096, 4095]. This allows to use "vqdmulh"(neon) instruction since
-;it won't go out of range (13+16+1=30bits<32bits). This instruction gives the high half
-;result of the multiplication that is needed in IDCT.
+
+; static const int cospi8sqrt2minus1=20091;
+; static const int sinpi8sqrt2      =35468;
+; static const int rounding = 0;
+
+; Optimization note: The resulted data from dequantization are signed
+; 13-bit data that is in the range of [-4096, 4095]. This allows to
+; use "vqdmulh"(neon) instruction since it won't go out of range
+; (13+16+1=30bits<32bits). This instruction gives the high half
+; result of the multiplication that is needed in IDCT.
 
 |vp8_short_idct4x4llm_neon| PROC
     adr             r12, idct_coeff
@@ -36,6 +42,7 @@
     vld1.16         {d0}, [r12]
 
     vswp            d3, d4                  ;q2(vp[4] vp[12])
+    ldr             r0, [sp]                ; stride
 
     vqdmulh.s16     q3, q2, d0[2]
     vqdmulh.s16     q4, q2, d0[0]
@@ -94,21 +101,31 @@
     vrshr.s16       d4, d4, #3
     vrshr.s16       d5, d5, #3
 
-    add             r3, r1, r2
-    add             r12, r3, r2
-    add             r0, r12, r2
-
     vtrn.32         d2, d4
     vtrn.32         d3, d5
     vtrn.16         d2, d3
     vtrn.16         d4, d5
 
-    vst1.16         {d2}, [r1]
-    vst1.16         {d3}, [r3]
-    vst1.16         {d4}, [r12]
-    vst1.16         {d5}, [r0]
+    ; load prediction data
+    vld1.32         d6[0], [r1], r2
+    vld1.32         d6[1], [r1], r2
+    vld1.32         d7[0], [r1], r2
+    vld1.32         d7[1], [r1], r2
 
-    bx             lr
+    ; add prediction and residual
+    vaddw.u8        q1, q1, d6
+    vaddw.u8        q2, q2, d7
+
+    vqmovun.s16     d1, q1
+    vqmovun.s16     d2, q2
+
+    ; store to destination
+    vst1.32         d1[0], [r3], r0
+    vst1.32         d1[1], [r3], r0
+    vst1.32         d2[0], [r3], r0
+    vst1.32         d2[1], [r3], r0
+
+    bx              lr
 
     ENDP
 

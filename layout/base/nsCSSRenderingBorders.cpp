@@ -221,6 +221,38 @@ nsCSSBorderRenderer::ComputeInnerRadii(const gfxCornerSizes& aRadii,
   iRadii[C_BL].height = NS_MAX(0.0, aRadii[C_BL].height - aBorderSizes[NS_SIDE_BOTTOM]);
 }
 
+/* static */ void
+nsCSSBorderRenderer::ComputeOuterRadii(const gfxCornerSizes& aRadii,
+                                       const gfxFloat *aBorderSizes,
+                                       gfxCornerSizes *aOuterRadiiRet)
+{
+  gfxCornerSizes& oRadii = *aOuterRadiiRet;
+
+  // default all corners to sharp corners
+  oRadii = gfxCornerSizes(0.0);
+
+  // round the edges that have radii > 0.0 to start with
+  if (aRadii[C_TL].width > 0.0 && aRadii[C_TL].height > 0.0) {
+    oRadii[C_TL].width = NS_MAX(0.0, aRadii[C_TL].width + aBorderSizes[NS_SIDE_LEFT]);
+    oRadii[C_TL].height = NS_MAX(0.0, aRadii[C_TL].height + aBorderSizes[NS_SIDE_TOP]);
+  }
+
+  if (aRadii[C_TR].width > 0.0 && aRadii[C_TR].height > 0.0) {
+    oRadii[C_TR].width = NS_MAX(0.0, aRadii[C_TR].width + aBorderSizes[NS_SIDE_RIGHT]);
+    oRadii[C_TR].height = NS_MAX(0.0, aRadii[C_TR].height + aBorderSizes[NS_SIDE_TOP]);
+  }
+
+  if (aRadii[C_BR].width > 0.0 && aRadii[C_BR].height > 0.0) {
+    oRadii[C_BR].width = NS_MAX(0.0, aRadii[C_BR].width + aBorderSizes[NS_SIDE_RIGHT]);
+    oRadii[C_BR].height = NS_MAX(0.0, aRadii[C_BR].height + aBorderSizes[NS_SIDE_BOTTOM]);
+  }
+
+  if (aRadii[C_BL].width > 0.0 && aRadii[C_BL].height > 0.0) {
+    oRadii[C_BL].width = NS_MAX(0.0, aRadii[C_BL].width + aBorderSizes[NS_SIDE_LEFT]);
+    oRadii[C_BL].height = NS_MAX(0.0, aRadii[C_BL].height + aBorderSizes[NS_SIDE_BOTTOM]);
+  }
+}
+
 /*static*/ void
 ComputeBorderCornerDimensions(const gfxRect& aOuterRect,
                               const gfxRect& aInnerRect,

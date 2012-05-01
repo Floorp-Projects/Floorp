@@ -82,6 +82,35 @@ void nsBuiltinDecoder::SetVolume(double aVolume)
   }
 }
 
+void nsBuiltinDecoder::SetAudioCaptured(bool aCaptured)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  mInitialAudioCaptured = aCaptured;
+  if (mDecoderStateMachine) {
+    mDecoderStateMachine->SetAudioCaptured(aCaptured);
+  }
+}
+
+void nsBuiltinDecoder::AddOutputStream(SourceMediaStream* aStream, bool aFinishWhenEnded)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    OutputMediaStream* ms = mOutputStreams.AppendElement();
+    ms->Init(PRInt64(mCurrentTime*USECS_PER_S), aStream, aFinishWhenEnded);
+  }
+
+  // This can be called before Load(), in which case our mDecoderStateMachine
+  // won't have been created yet and we can rely on Load() to schedule it
+  // once it is created.
+  if (mDecoderStateMachine) {
+    // Make sure the state machine thread runs so that any buffered data
+    // is fed into our stream.
+    ScheduleStateMachineThread();
+  }
+}
+
 double nsBuiltinDecoder::GetDuration()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -690,6 +719,13 @@ void nsBuiltinDecoder::NotifyDownloadEnded(nsresult aStatus)
     NetworkError();
   }
   UpdateReadyStateForData();
+}
+
+void nsBuiltinDecoder::NotifyPrincipalChanged()
+{
+  if (mElement) {
+    mElement->NotifyDecoderPrincipalChanged();
+  }
 }
 
 void nsBuiltinDecoder::NotifyBytesConsumed(PRInt64 aBytes)
