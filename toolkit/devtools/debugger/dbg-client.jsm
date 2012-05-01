@@ -375,10 +375,10 @@ DebuggerClient.prototype = {
    */
   request: function DC_request(aRequest, aOnResponse) {
     if (!this._connected) {
-      throw "Have not yet received a hello packet from the server.";
+      throw Error("Have not yet received a hello packet from the server.");
     }
     if (!aRequest.to) {
-      throw "Request packet has no destination.";
+      throw Error("Request packet has no destination.");
     }
 
     this._pendingRequests.push({ to: aRequest.to,
@@ -449,7 +449,7 @@ DebuggerClient.prototype = {
         onResponse(aPacket);
       }
     } catch(ex) {
-      dumpn("Error handling response: " + ex + " - " + ex.stack);
+      dumpn("Error handling response: " + ex + " - stack:\n" + ex.stack);
       Cu.reportError(ex);
     }
 
@@ -536,7 +536,7 @@ ThreadClient.prototype = {
 
   _assertPaused: function TC_assertPaused(aCommand) {
     if (!this.paused) {
-      throw aCommand + " command sent while not paused.";
+      throw Error(aCommand + " command sent while not paused.");
     }
   },
 
