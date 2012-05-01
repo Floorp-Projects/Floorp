@@ -117,8 +117,7 @@ fails-if(Android) == viewport-translucent-color-3.html viewport-translucent-colo
 # the image aren't the issue, because they're being obscured to avoid sampling
 # algorithm dependencies (at least assuming the sampling algorithm in use
 # doesn't sample too far astray from the boundaries).
-# Android uses FILTER_NEAREST which doesn't suffer from this issue.
-fails-if(!Android) == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
+fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 
 # -moz-default-background-color and -moz-default-color (bug 591341)
 == background-moz-default-background-color.html background-moz-default-background-color-ref.html
