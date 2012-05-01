@@ -51,6 +51,7 @@
 
 #include "gc/Barrier.h"
 #include "js/HashTable.h"
+#include "vm/String.h"
 
 struct JSIdArray {
     int length;

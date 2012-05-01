@@ -60,7 +60,6 @@
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -73,6 +72,7 @@
 #include "jsstr.h"
 #include "jslibmath.h"
 
+#include "gc/Marking.h"
 #include "frontend/BytecodeEmitter.h"
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"

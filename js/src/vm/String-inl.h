@@ -42,9 +42,9 @@
 #define String_inl_h__
 
 #include "jscntxt.h"
-#include "jsgcmark.h"
 #include "jsprobes.h"
 
+#include "gc/Marking.h"
 #include "String.h"
 
 #include "jsgcinlines.h"

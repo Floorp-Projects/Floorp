@@ -41,18 +41,19 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jscompartment.h"
 #include "jsexn.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jswrapper.h"
-#include "methodjit/PolyIC.h"
-#include "methodjit/MonoIC.h"
+
 #ifdef JS_METHODJIT
 # include "assembler/jit/ExecutableAllocator.h"
 #endif
-#include "jscompartment.h"
+#include "gc/Marking.h"
+#include "methodjit/PolyIC.h"
+#include "methodjit/MonoIC.h"
 
 #include "jsobjinlines.h"
 
