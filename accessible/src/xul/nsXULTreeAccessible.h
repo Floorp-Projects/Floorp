@@ -267,13 +267,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULTreeItemAccessible,
                                            nsXULTreeItemAccessibleBase)
 
-  NS_IMETHOD GetName(nsAString& aName);
-
   // nsAccessNode
   virtual bool Init();
   virtual void Shutdown();
 
   // nsAccessible
+  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
   virtual mozilla::a11y::role NativeRole();
 
   // nsXULTreeItemAccessibleBase
