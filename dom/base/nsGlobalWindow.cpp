@@ -452,195 +452,6 @@ static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
 #endif
 static const char sPopStatePrefStr[] = "browser.history.allowPopState";
 
-class nsDummyJavaPluginOwner : public nsIPluginInstanceOwner
-{
-public:
-  nsDummyJavaPluginOwner(nsIDocument *aDocument)
-    : mDocument(aDocument)
-  {
-  }
-
-  void Destroy();
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIPLUGININSTANCEOWNER
-
-  NS_IMETHOD GetURL(const char *aURL, const char *aTarget,
-                    nsIInputStream *aPostStream,
-                    void *aHeadersData, PRUint32 aHeadersDataLen);
-  NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg);
-  NPError ShowNativeContextMenu(NPMenu* menu, void* event);
-  NPBool ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
-                      double *destX, double *destY, NPCoordinateSpace destSpace);
-  void SendIdleEvent();
-  
-  NPError InitAsyncSurface(NPSize *size, NPImageFormat format,
-                           void *initData, NPAsyncSurface *surface)
-  { return NPERR_GENERIC_ERROR; }
-
-  NPError FinalizeAsyncSurface(NPAsyncSurface *surface) { return NPERR_GENERIC_ERROR; }
-  void SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed) { return; }
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDummyJavaPluginOwner)
-
-private:
-  nsRefPtr<nsNPAPIPluginInstance> mInstance;
-  nsCOMPtr<nsIDocument> mDocument;
-};
-
-NS_IMPL_CYCLE_COLLECTION_2(nsDummyJavaPluginOwner, mDocument, mInstance)
-
-// QueryInterface implementation for nsDummyJavaPluginOwner
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDummyJavaPluginOwner)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIPluginInstanceOwner)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDummyJavaPluginOwner)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDummyJavaPluginOwner)
-
-
-void
-nsDummyJavaPluginOwner::Destroy()
-{
-  // If we have a plugin instance, stop it and destroy it now.
-  if (mInstance) {
-    mInstance->Stop();
-    mInstance->InvalidateOwner();
-    mInstance = nsnull;
-  }
-
-  mDocument = nsnull;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::SetInstance(nsNPAPIPluginInstance *aInstance)
-{
-  // If we're going to null out mInstance after use, be sure to call
-  // mInstance->InvalidateOwner() here, since it now won't be called
-  // from nsDummyJavaPluginOwner::Destroy().
-  if (mInstance && !aInstance)
-    mInstance->InvalidateOwner();
-
-  mInstance = aInstance;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetInstance(nsNPAPIPluginInstance **aInstance)
-{
-  *aInstance = mInstance;
-  NS_IF_ADDREF(*aInstance);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetWindow(NPWindow *&aWindow)
-{
-  aWindow = nsnull;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::CallSetWindow()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetMode(PRInt32 *aMode)
-{
-  // This is wrong, but there's no better alternative.
-  *aMode = NP_EMBED;
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::CreateWidget(void)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetURL(const char *aURL, const char *aTarget,
-                               nsIInputStream *aPostStream,
-                               void *aHeadersData, PRUint32 aHeadersDataLen)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::ShowStatus(const char *aStatusMsg)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::ShowStatus(const PRUnichar *aStatusMsg)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NPError
-nsDummyJavaPluginOwner::ShowNativeContextMenu(NPMenu* menu, void* event)
-{
-  return NPERR_GENERIC_ERROR;
-}
-
-NPBool
-nsDummyJavaPluginOwner::ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
-                                     double *destX, double *destY, NPCoordinateSpace destSpace)
-{
-  return false;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetDocument(nsIDocument **aDocument)
-{
-  NS_IF_ADDREF(*aDocument = mDocument);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::InvalidateRect(NPRect *invalidRect)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::InvalidateRegion(NPRegion invalidRegion)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::RedrawPlugin()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetNetscapeWindow(void *value)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::SetEventModel(PRInt32 eventModel)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-void
-nsDummyJavaPluginOwner::SendIdleEvent()
-{
-}
-
 /**
  * An object implementing the window.URL property.
  */
@@ -858,7 +669,6 @@ NewOuterWindowProxy(JSContext *cx, JSObject *parent)
 nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   : nsPIDOMWindow(aOuterWindow),
     mIsFrozen(false),
-    mDidInitJavaProperties(false),
     mFullScreen(false),
     mIsClosed(false), 
     mInClose(false), 
@@ -1366,17 +1176,6 @@ nsGlobalWindow::FreeInnerObjects()
                                                     js::DontNukeForGlobalObject);
   }
 
-  if (mDummyJavaPluginOwner) {
-    // Tear down the dummy java plugin.
-
-    // XXXjst: On a general note, should windows with java stuff in
-    // them ever even make it into the fast-back cache?
-
-    mDummyJavaPluginOwner->Destroy();
-    mDummyJavaPluginOwner = nsnull;
-    mDidInitJavaProperties = false;
-  }
-
   CleanupCachedXBLHandlers(this);
 
 #ifdef DEBUG
@@ -1500,9 +1299,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFrameElement)
 
-  // Traverse mDummyJavaPluginOwner
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDummyJavaPluginOwner)
-
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFocusedNode)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mPendingStorageEvents)
@@ -1537,13 +1333,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFrameElement)
-
-  // Unlink mDummyJavaPluginOwner
-  if (tmp->mDummyJavaPluginOwner) {
-    tmp->mDummyJavaPluginOwner->Destroy();
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDummyJavaPluginOwner)
-    tmp->mDidInitJavaProperties = false;
-  }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFocusedNode)
 
@@ -2297,16 +2086,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
         // XXXmarkh - tell other languages about this?
         ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
-
-        if (mDummyJavaPluginOwner) {
-          // Since we're reusing the inner window, tear down the
-          // dummy Java plugin we created for the old document in
-          // this window.
-          mDummyJavaPluginOwner->Destroy();
-          mDummyJavaPluginOwner = nsnull;
-
-          mDidInitJavaProperties = false;
-        }
       }
     } else {
       rv = newInnerWindow->InnerSetNewDocument(aDocument);
@@ -6923,56 +6702,6 @@ nsGlobalWindow::NotifyDOMWindowThawed(nsGlobalWindow* aWindow) {
                         DOM_WINDOW_THAWED_TOPIC, nsnull);
     }
   }
-}
-
-void
-nsGlobalWindow::InitJavaProperties()
-{
-  nsIScriptContext *scx = GetContextInternal();
-
-  if (mDidInitJavaProperties || IsOuterWindow() || !scx || !mJSObject) {
-    return;
-  }
-
-  // Set mDidInitJavaProperties to true here even if initialization
-  // can fail. If it fails, we won't try again...
-  mDidInitJavaProperties = true;
-
-  mDummyJavaPluginOwner = new nsDummyJavaPluginOwner(mDoc);
-  if (!mDummyJavaPluginOwner) {
-    return;
-  }
-
-  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
-  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
-  if (!pluginHost) {
-    return;
-  }  
-  pluginHost->InstantiateDummyJavaPlugin(mDummyJavaPluginOwner);
-
-  // It's possible for us (or the Java plugin, rather) to process
-  // events during the above call, which can lead to this window being
-  // torn down or what not, so re-check that the dummy plugin is still
-  // around.
-  if (!mDummyJavaPluginOwner) {
-    return;
-  }
-
-  nsRefPtr<nsNPAPIPluginInstance> dummyPlugin;
-  mDummyJavaPluginOwner->GetInstance(getter_AddRefs(dummyPlugin));
-
-  if (dummyPlugin) {
-    // A dummy plugin was instantiated. This means we have a Java
-    // plugin that supports NPRuntime. For such a plugin, the plugin
-    // instantiation code defines the Java properties for us, so we're
-    // done here.
-
-    return;
-  }
-
-  // No NPRuntime enabled Java plugin found, null out the owner we
-  // would have used in that case as it's no longer needed.
-  mDummyJavaPluginOwner = nsnull;
 }
 
 JSObject*
