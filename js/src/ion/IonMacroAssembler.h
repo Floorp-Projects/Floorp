@@ -378,8 +378,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void storeToTypedFloatArray(int arrayType, const S &value, const T &dest) {
         switch (arrayType) {
           case TypedArray::TYPE_FLOAT32:
-            convertDoubleToFloat(value, value);
-            storeFloat(value, dest);
+            convertDoubleToFloat(value, ScratchFloatReg);
+            storeFloat(ScratchFloatReg, dest);
             break;
           case TypedArray::TYPE_FLOAT64:
             storeDouble(value, dest);
