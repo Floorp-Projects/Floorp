@@ -1328,8 +1328,9 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
 
   // dont put text in places that can't have it
   if (!mHTMLEditor->IsTextNode(selNode) &&
-      !mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("#text")))
+      !mHTMLEditor->CanContainTag(selNode, nsGkAtoms::textTagName)) {
     return NS_ERROR_FAILURE;
+  }
 
   // we need to get the doc
   nsCOMPtr<nsIDOMDocument> doc = mHTMLEditor->GetDOMDocument();
@@ -2525,8 +2526,7 @@ nsHTMLEditRules::InsertBRIfNeeded(nsISelection *aSelection)
   {
     // if we are tucked between block boundaries then insert a br
     // first check that we are allowed to
-    if (mHTMLEditor->CanContainTag(node, NS_LITERAL_STRING("br")))
-    {
+    if (mHTMLEditor->CanContainTag(node, nsGkAtoms::br)) {
       nsCOMPtr<nsIDOMNode> brNode;
       res = mHTMLEditor->CreateBR(node, offset, address_of(brNode), nsIEditor::ePrevious);
     }
@@ -2818,14 +2818,9 @@ nsHTMLEditRules::MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *
 {
   NS_ENSURE_TRUE(aSource && aDest && aOffset, NS_ERROR_NULL_POINTER);
 
-  nsAutoString tag;
   nsresult res;
-  res = mHTMLEditor->GetTagString(aSource, tag);
-  NS_ENSURE_SUCCESS(res, res);
-  ToLowerCase(tag);
   // check if this node can go into the destination node
-  if (mHTMLEditor->CanContainTag(aDest, tag))
-  {
+  if (mHTMLEditor->CanContain(aDest, aSource)) {
     // if it can, move it there
     res = mHTMLEditor->MoveNode(aSource, aDest, *aOffset);
     NS_ENSURE_SUCCESS(res, res);
@@ -3027,7 +3022,8 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
     NS_ENSURE_SUCCESS(res, res);
     
     // make sure we can put a list here
-    if (!mHTMLEditor->CanContainTag(parent, *aListType)) {
+    nsCOMPtr<nsIAtom> listTypeAtom = do_GetAtom(*aListType);
+    if (!mHTMLEditor->CanContainTag(parent, listTypeAtom)) {
       *aCancel = true;
       return NS_OK;
     }
@@ -3701,10 +3697,11 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, bool *aCancel, bool * a
         if (!curQuote)
         {
           // First, check that our element can contain a div.
-          NS_NAMED_LITERAL_STRING(divquoteType, "div");
-          if (!mEditor->CanContainTag(curParent, divquoteType))
+          if (!mEditor->CanContainTag(curParent, nsGkAtoms::div)) {
             return NS_OK; // cancelled
+          }
 
+          NS_NAMED_LITERAL_STRING(divquoteType, "div");
           res = SplitAsNeeded(&divquoteType, address_of(curParent), &offset);
           NS_ENSURE_SUCCESS(res, res);
           res = mHTMLEditor->CreateNode(divquoteType, curParent, offset, getter_AddRefs(curQuote));
@@ -3932,8 +3929,9 @@ nsHTMLEditRules::WillHTMLIndent(nsISelection *aSelection, bool *aCancel, bool * 
         if (!curQuote) 
         {
           // First, check that our element can contain a blockquote.
-          if (!mEditor->CanContainTag(curParent, quoteType))
+          if (!mEditor->CanContainTag(curParent, nsGkAtoms::blockquote)) {
             return NS_OK; // cancelled
+          }
 
           res = SplitAsNeeded(&quoteType, address_of(curParent), &offset);
           NS_ENSURE_SUCCESS(res, res);
@@ -4776,8 +4774,9 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     {
       // First, check that our element can contain a div.
       NS_NAMED_LITERAL_STRING(divType, "div");
-      if (!mEditor->CanContainTag(curParent, divType))
+      if (!mEditor->CanContainTag(curParent, nsGkAtoms::div)) {
         return NS_OK; // cancelled
+      }
 
       res = SplitAsNeeded(&divType, address_of(curParent), &offset);
       NS_ENSURE_SUCCESS(res, res);
@@ -7291,6 +7290,7 @@ nsHTMLEditRules::SplitAsNeeded(const nsAString *aTag,
   NS_ENSURE_TRUE(*inOutParent, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMNode> tagParent, temp, splitNode, parent = *inOutParent;
   nsresult res = NS_OK;
+  nsCOMPtr<nsIAtom> tagAtom = do_GetAtom(*aTag);
    
   // check that we have a place that can legally contain the tag
   while (!tagParent)
@@ -7305,8 +7305,7 @@ nsHTMLEditRules::SplitAsNeeded(const nsAString *aTag,
         break;
       }
     }
-    if (mHTMLEditor->CanContainTag(parent, *aTag))
-    {
+    if (mHTMLEditor->CanContainTag(parent, tagAtom)) {
       tagParent = parent;
       break;
     }
@@ -7736,8 +7735,7 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
     res = mHTMLEditor->IsEmptyNode(theblock, &bIsEmptyNode, false, false);
     NS_ENSURE_SUCCESS(res, res);
     // check if br can go into the destination node
-    if (bIsEmptyNode && mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("br")))
-    {
+    if (bIsEmptyNode && mHTMLEditor->CanContainTag(selNode, nsGkAtoms::br)) {
       nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(mHTMLEditor->GetRoot());
       NS_ENSURE_TRUE(rootNode, NS_ERROR_FAILURE);
       if (selNode == rootNode)

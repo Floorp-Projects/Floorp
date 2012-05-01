@@ -324,7 +324,7 @@ public:
   NS_IMETHOD EndOperation();
 
   /** returns true if aParentTag can contain a child of type aChildTag */
-  virtual bool TagCanContainTag(const nsAString& aParentTag, const nsAString& aChildTag);
+  virtual bool TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag);
   
   /** returns true if aNode is a container */
   virtual bool IsContainer(nsINode* aNode);
