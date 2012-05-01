@@ -46,8 +46,8 @@
 #include "jsfriendapi.h"
 #include "jscntxt.h"
 #include "jsobj.h"
-#include "jsgcmark.h"
 
+#include "gc/Marking.h"
 #include "js/HashTable.h"
 
 namespace js {
