@@ -147,7 +147,7 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
  */
 static JSBool
 FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
-                  ParseNode *pn, TreeContext *tc)
+                  ParseNode *pn, Parser *parser)
 {
     double d, d2;
     int32_t i, j;
@@ -214,9 +214,9 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
 
     /* Take care to allow pn1 or pn2 to alias pn. */
     if (pn1 != pn)
-        tc->freeTree(pn1);
+        parser->freeTree(pn1);
     if (pn2 != pn)
-        tc->freeTree(pn2);
+        parser->freeTree(pn2);
     pn->setKind(PNK_NUMBER);
     pn->setOp(JSOP_DOUBLE);
     pn->setArity(PN_NULLARY);
@@ -227,7 +227,7 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
 #if JS_HAS_XML_SUPPORT
 
 static JSBool
-FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
+FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
 {
     JS_ASSERT(pn->isArity(PN_LIST));
     ParseNodeKind kind = pn->getKind();
@@ -303,7 +303,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
 #endif
             } else if (accum && pn1 != pn2) {
                 while (pn1->pn_next != pn2) {
-                    pn1 = tc->freeTree(pn1);
+                    pn1 = parser->freeTree(pn1);
                     --pn->pn_count;
                 }
                 pn1->setKind(PNK_XMLTEXT);
@@ -355,7 +355,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
 
         JS_ASSERT(*pnp == pn1);
         while (pn1->pn_next) {
-            pn1 = tc->freeTree(pn1);
+            pn1 = parser->freeTree(pn1);
             --pn->pn_count;
         }
         pn1->setKind(PNK_XMLTEXT);
@@ -434,7 +434,7 @@ Boolish(ParseNode *pn)
 }
 
 bool
-js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
+js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond)
 {
     ParseNode *pn1 = NULL, *pn2 = NULL, *pn3 = NULL;
 
@@ -443,12 +443,13 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
     switch (pn->getArity()) {
       case PN_FUNC:
       {
+        TreeContext *tc = parser->tc;
         uint32_t oldflags = tc->flags;
         FunctionBox *oldlist = tc->functionList;
 
         tc->flags = pn->pn_funbox->tcflags;
         tc->functionList = pn->pn_funbox->kids;
-        if (!FoldConstants(cx, pn->pn_body, tc))
+        if (!FoldConstants(cx, pn->pn_body, parser))
             return false;
         pn->pn_funbox->kids = tc->functionList;
         tc->flags = oldflags;
@@ -468,7 +469,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
 
         /* Save the list head in pn1 for later use. */
         for (; pn2; pn2 = pn2->pn_next) {
-            if (!FoldConstants(cx, pn2, tc, cond))
+            if (!FoldConstants(cx, pn2, parser, cond))
                 return false;
         }
         break;
@@ -479,17 +480,17 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         pn1 = pn->pn_kid1;
         pn2 = pn->pn_kid2;
         pn3 = pn->pn_kid3;
-        if (pn1 && !FoldConstants(cx, pn1, tc, pn->isKind(PNK_IF)))
+        if (pn1 && !FoldConstants(cx, pn1, parser, pn->isKind(PNK_IF)))
             return false;
         if (pn2) {
-            if (!FoldConstants(cx, pn2, tc, pn->isKind(PNK_FORHEAD)))
+            if (!FoldConstants(cx, pn2, parser, pn->isKind(PNK_FORHEAD)))
                 return false;
             if (pn->isKind(PNK_FORHEAD) && pn2->isOp(JSOP_TRUE)) {
-                tc->freeTree(pn2);
+                parser->freeTree(pn2);
                 pn->pn_kid2 = NULL;
             }
         }
-        if (pn3 && !FoldConstants(cx, pn3, tc))
+        if (pn3 && !FoldConstants(cx, pn3, parser))
             return false;
         break;
 
@@ -499,17 +500,17 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
 
         /* Propagate inCond through logical connectives. */
         if (pn->isKind(PNK_OR) || pn->isKind(PNK_AND)) {
-            if (!FoldConstants(cx, pn1, tc, inCond))
+            if (!FoldConstants(cx, pn1, parser, inCond))
                 return false;
-            if (!FoldConstants(cx, pn2, tc, inCond))
+            if (!FoldConstants(cx, pn2, parser, inCond))
                 return false;
             break;
         }
 
         /* First kid may be null (for default case in switch). */
-        if (pn1 && !FoldConstants(cx, pn1, tc, pn->isKind(PNK_WHILE)))
+        if (pn1 && !FoldConstants(cx, pn1, parser, pn->isKind(PNK_WHILE)))
             return false;
-        if (!FoldConstants(cx, pn2, tc, pn->isKind(PNK_DOWHILE)))
+        if (!FoldConstants(cx, pn2, parser, pn->isKind(PNK_DOWHILE)))
             return false;
         break;
 
@@ -528,7 +529,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         if (pn->isOp(JSOP_TYPEOF) && !pn1->isKind(PNK_NAME))
             pn->setOp(JSOP_TYPEOFEXPR);
 
-        if (pn1 && !FoldConstants(cx, pn1, tc, pn->isOp(JSOP_NOT)))
+        if (pn1 && !FoldConstants(cx, pn1, parser, pn->isOp(JSOP_NOT)))
             return false;
         break;
 
@@ -543,14 +544,14 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             pn1 = pn->pn_expr;
             while (pn1 && pn1->isArity(PN_NAME) && !pn1->isUsed())
                 pn1 = pn1->pn_expr;
-            if (pn1 && !FoldConstants(cx, pn1, tc))
+            if (pn1 && !FoldConstants(cx, pn1, parser))
                 return false;
         }
         break;
 
       case PN_NAMESET:
         pn1 = pn->pn_tree;
-        if (!FoldConstants(cx, pn1, tc))
+        if (!FoldConstants(cx, pn1, parser))
             return false;
         break;
 
@@ -588,7 +589,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
 
 #if JS_HAS_GENERATOR_EXPRS
         /* Don't fold a trailing |if (0)| in a generator expression. */
-        if (!pn2 && (tc->flags & TCF_GENEXP_LAMBDA))
+        if (!pn2 && (parser->tc->flags & TCF_GENEXP_LAMBDA))
             break;
 #endif
 
@@ -606,9 +607,9 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             pn->setArity(PN_LIST);
             pn->makeEmpty();
         }
-        tc->freeTree(pn2);
+        parser->freeTree(pn2);
         if (pn3 && pn3 != pn2)
-            tc->freeTree(pn3);
+            parser->freeTree(pn3);
         break;
 
       case PNK_OR:
@@ -626,7 +627,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
                     if ((t == Truthy) == pn->isKind(PNK_OR)) {
                         for (pn2 = pn1->pn_next; pn2; pn2 = pn3) {
                             pn3 = pn2->pn_next;
-                            tc->freeTree(pn2);
+                            parser->freeTree(pn2);
                             --pn->pn_count;
                         }
                         pn1->pn_next = NULL;
@@ -636,7 +637,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
                     if (pn->pn_count == 1)
                         break;
                     *pnp = pn1->pn_next;
-                    tc->freeTree(pn1);
+                    parser->freeTree(pn1);
                     --pn->pn_count;
                 } while ((pn1 = *pnp) != NULL);
 
@@ -651,17 +652,17 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
                     pn->pn_right = pn2;
                 } else if (pn->pn_count == 1) {
                     pn->become(pn1);
-                    tc->freeTree(pn1);
+                    parser->freeTree(pn1);
                 }
             } else {
                 Truthiness t = Boolish(pn1);
                 if (t != Unknown) {
                     if ((t == Truthy) == pn->isKind(PNK_OR)) {
-                        tc->freeTree(pn2);
+                        parser->freeTree(pn2);
                         pn->become(pn1);
                     } else {
                         JS_ASSERT((t == Truthy) == pn->isKind(PNK_AND));
-                        tc->freeTree(pn1);
+                        parser->freeTree(pn1);
                         pn->become(pn2);
                     }
                 }
@@ -727,7 +728,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             }
 
             /* Fill the buffer, advancing chars and recycling kids as we go. */
-            for (pn2 = pn1; pn2; pn2 = tc->freeTree(pn2)) {
+            for (pn2 = pn1; pn2; pn2 = parser->freeTree(pn2)) {
                 JSAtom *atom = pn2->pn_atom;
                 size_t length2 = atom->length();
                 js_strncpy(chars, atom->chars(), length2);
@@ -763,8 +764,8 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             pn->setKind(PNK_STRING);
             pn->setOp(JSOP_STRING);
             pn->setArity(PN_NULLARY);
-            tc->freeTree(pn1);
-            tc->freeTree(pn2);
+            parser->freeTree(pn1);
+            parser->freeTree(pn2);
             break;
         }
 
@@ -795,11 +796,11 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
 
                 pn2 = pn1->pn_next;
                 pn3 = pn2->pn_next;
-                if (!FoldBinaryNumeric(cx, op, pn1, pn2, pn, tc))
+                if (!FoldBinaryNumeric(cx, op, pn1, pn2, pn, parser))
                     return false;
                 while ((pn2 = pn3) != NULL) {
                     pn3 = pn2->pn_next;
-                    if (!FoldBinaryNumeric(cx, op, pn, pn2, pn, tc))
+                    if (!FoldBinaryNumeric(cx, op, pn, pn2, pn, parser))
                         return false;
                 }
             }
@@ -810,7 +811,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
                 return false;
             }
             if (pn1->isKind(PNK_NUMBER) && pn2->isKind(PNK_NUMBER)) {
-                if (!FoldBinaryNumeric(cx, pn->getOp(), pn1, pn2, pn, tc))
+                if (!FoldBinaryNumeric(cx, pn->getOp(), pn1, pn2, pn, parser))
                     return false;
             }
         }
@@ -858,7 +859,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             pn->setOp(JSOP_DOUBLE);
             pn->setArity(PN_NULLARY);
             pn->pn_dval = d;
-            tc->freeTree(pn1);
+            parser->freeTree(pn1);
         } else if (pn1->isKind(PNK_TRUE) || pn1->isKind(PNK_FALSE)) {
             if (pn->isOp(JSOP_NOT)) {
                 pn->become(pn1);
@@ -869,7 +870,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
                     pn->setKind(PNK_TRUE);
                     pn->setOp(JSOP_TRUE);
                 }
-                tc->freeTree(pn1);
+                parser->freeTree(pn1);
             }
         }
         break;
@@ -883,7 +884,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
       case PNK_XMLNAME:
         if (pn->isArity(PN_LIST)) {
             JS_ASSERT(pn->isKind(PNK_XMLLIST) || pn->pn_count != 0);
-            if (!FoldXMLConstants(cx, pn, tc))
+            if (!FoldXMLConstants(cx, pn, parser))
                 return false;
         }
         break;
@@ -895,7 +896,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
                 return false;
             JS_ASSERT(v.isObject());
 
-            ObjectBox *xmlbox = tc->parser->newObjectBox(&v.toObject());
+            ObjectBox *xmlbox = parser->newObjectBox(&v.toObject());
             if (!xmlbox)
                 return false;
 
@@ -903,7 +904,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             pn->setOp(JSOP_OBJECT);
             pn->setArity(PN_NULLARY);
             pn->pn_objbox = xmlbox;
-            tc->freeTree(pn1);
+            parser->freeTree(pn1);
         }
         break;
 #endif /* JS_HAS_XML_SUPPORT */
@@ -920,7 +921,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
              * a method list corrupts the method list. However, methods are M's in
              * statements of the form 'this.foo = M;', which we never fold, so we're okay.
              */
-            tc->parser->allocator.prepareNodeForMutation(pn);
+            parser->allocator.prepareNodeForMutation(pn);
             if (t == Truthy) {
                 pn->setKind(PNK_TRUE);
                 pn->setOp(JSOP_TRUE);
