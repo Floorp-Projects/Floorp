@@ -270,16 +270,15 @@ IonFrameIterator::machineState() const
 }
 
 static void
-CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32 stackSlot)
+CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32 localSlot)
 {
     SnapshotIterator si = frame.snapshotIterator();
 
-    // Skip stuff that comes before locals.
-    for (unsigned i = 0; i < CountArgSlots(frame.maybeCallee()); i++)
-        si.skip();
-
     // Skip stack slots until we reach the iterator object.
-    for (unsigned i = 0; i < stackSlot; i++)
+    uint32 base = CountArgSlots(frame.maybeCallee()) + frame.script()->nfixed;
+    uint32 skipSlots = base + localSlot - 1;
+
+    for (unsigned i = 0; i < skipSlots; i++)
         si.skip();
 
     Value v = si.read();
@@ -304,7 +303,9 @@ CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
     JSTryNote *tnEnd = tn + script->trynotes()->length;
 
     for (; tn != tnEnd; ++tn) {
-        if (uint32(pc - script->code) - tn->start >= tn->length)
+        if (uint32(pc - script->code) < tn->start)
+            continue;
+        if (uint32(pc - script->code) >= tn->start + tn->length)
             continue;
 
         if (tn->kind != JSTRY_ITER)
@@ -313,7 +314,8 @@ CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
         JS_ASSERT(JSOp(*(script->code + tn->start + tn->length)) == JSOP_ENDITER);
         JS_ASSERT(tn->stackDepth > 0);
 
-        CloseLiveIterator(cx, frame, tn->stackDepth - 1);
+        uint32 localSlot = tn->stackDepth;
+        CloseLiveIterator(cx, frame, localSlot);
     }
 }
 
