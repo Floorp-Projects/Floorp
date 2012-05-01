@@ -16,6 +16,7 @@ import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -249,7 +250,7 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     record.title = AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS_MAP.get(guid);
     record.type = "folder";
     record.androidParentID = parentId;
-    return(RepoUtils.getAndroidIdFromUri(insert(record)));
+    return ContentUris.parseId(insert(record));
   }
 
   @Override
