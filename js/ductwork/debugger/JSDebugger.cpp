@@ -69,17 +69,31 @@ JSDebugger::~JSDebugger()
 }
 
 NS_IMETHODIMP
-JSDebugger::AddClass(JSContext *cx)
+JSDebugger::AddClass(const JS::Value &global, JSContext* cx)
 {
   nsresult rv;
   nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
 
-  JSObject* global = JS_GetGlobalForScopeChain(cx);
-  if (!global) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (!global.isObject()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  
+  JSObject* obj = &global.toObject();
+  obj = JS_UnwrapObjectAndInnerize(obj);
+  if (!obj) {
+    return NS_ERROR_FAILURE;
   }
 
-  if (!JS_DefineDebuggerObject(cx, global)) {
+  JSAutoEnterCompartment aec;
+  if (!aec.enter(cx, obj)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (JS_GetGlobalForObject(cx, obj) != obj) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (!JS_DefineDebuggerObject(cx, obj)) {
     return NS_ERROR_FAILURE;
   }
 
