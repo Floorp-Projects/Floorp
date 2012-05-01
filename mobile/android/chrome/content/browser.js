@@ -416,7 +416,10 @@ var BrowserApp = {
       link: {
         label: learnMoreLabel,
         url: learnMoreUrl
-      }
+      },
+      // We're adding this doorhanger during startup, before the initial onLocationChange
+      // event fires, so we need to set persistence to make sure it doesn't disappear.
+      persistence: 1
     };
     NativeWindow.doorhanger.show(message, "telemetry-optin", buttons, this.selectedTab.id, options);
   },
