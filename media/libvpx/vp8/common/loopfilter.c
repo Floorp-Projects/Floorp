@@ -506,7 +506,8 @@ void vp8_loop_filter_partial_frame
     unsigned char *y_ptr;
     int mb_row;
     int mb_col;
-    int mb_cols = post->y_width  >> 4;
+    int mb_cols = post->y_width >> 4;
+    int mb_rows = post->y_height >> 4;
 
     int linestocopy, i;
 
@@ -521,15 +522,9 @@ void vp8_loop_filter_partial_frame
 
     int lvl_seg[MAX_MB_SEGMENTS];
 
-    mode_info_context = cm->mi + (post->y_height >> 5) * (mb_cols + 1);
-
-    /* 3 is a magic number. 4 is probably magic too */
-    linestocopy = (post->y_height >> (4 + 3));
-
-    if (linestocopy < 1)
-        linestocopy = 1;
-
-    linestocopy <<= 4;
+    /* number of MB rows to use in partial filtering */
+    linestocopy = mb_rows / PARTIAL_FRAME_FRACTION;
+    linestocopy = linestocopy ? linestocopy << 4 : 16;     /* 16 lines per MB */
 
     /* Note the baseline filter values for each segment */
     /* See vp8_loop_filter_frame_init. Rather than call that for each change
@@ -554,8 +549,9 @@ void vp8_loop_filter_partial_frame
         }
     }
 
-    /* Set up the buffer pointers */
-    y_ptr = post->y_buffer + (post->y_height >> 5) * 16 * post->y_stride;
+    /* Set up the buffer pointers; partial image starts at ~middle of frame */
+    y_ptr = post->y_buffer + ((post->y_height >> 5) * 16) * post->y_stride;
+    mode_info_context = cm->mi + (post->y_height >> 5) * (mb_cols + 1);
 
     /* vp8_filter each macro block */
     for (mb_row = 0; mb_row<(linestocopy >> 4); mb_row++)

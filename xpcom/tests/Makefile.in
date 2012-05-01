@@ -205,8 +205,3 @@ check::
 	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) $(regOrderDir)
 
 GARBAGE += TestScriptable.h
-
-ifdef STDCXX_COMPAT
-TestCheckedInt: $(STDCXX_COMPAT:.cpp=.$(OBJ_SUFFIX))
-TestCheckedInt: LIBS += $(STDCXX_COMPAT:.cpp=.$(OBJ_SUFFIX))
-endif

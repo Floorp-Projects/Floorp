@@ -41,67 +41,25 @@
 #ifndef _NSNSSIOLAYER_H
 #define _NSNSSIOLAYER_H
 
-#include "prtypes.h"
-#include "prio.h"
-#include "certt.h"
-#include "mozilla/Mutex.h"
-#include "nsString.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsITransportSecurityInfo.h"
+#include "TransportSecurityInfo.h"
 #include "nsISSLSocketControl.h"
-#include "nsSSLStatus.h"
-#include "nsISSLStatusProvider.h"
-#include "nsIAssociatedContentSecurity.h"
-#include "nsXPIDLString.h"
-#include "nsNSSShutDown.h"
 #include "nsIClientAuthDialogs.h"
 #include "nsAutoPtr.h"
 #include "nsNSSCertificate.h"
 #include "nsDataHashtable.h"
 #include "nsTHashtable.h"
 
-namespace mozilla {
-
-namespace psm {
-
-enum SSLErrorMessageType {
-  OverridableCertErrorMessage  = 1, // for *overridable* certificate errors
-  PlainErrorMessage = 2             // all other errors (or "no error")
-};
-
-} // namespace psm
-
-} // namespace mozilla
-
-class nsNSSSocketInfo : public nsITransportSecurityInfo,
+class nsNSSSocketInfo : public mozilla::psm::TransportSecurityInfo,
                         public nsISSLSocketControl,
-                        public nsIInterfaceRequestor,
-                        public nsISSLStatusProvider,
-                        public nsIAssociatedContentSecurity,
-                        public nsISerializable,
-                        public nsIClassInfo,
-                        public nsIClientAuthUserDecision,
-                        public nsNSSShutDownObject,
-                        public nsOnPK11LogoutCancelObject
+                        public nsIClientAuthUserDecision
 {
 public:
   nsNSSSocketInfo();
-  virtual ~nsNSSSocketInfo();
   
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITRANSPORTSECURITYINFO
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISSLSOCKETCONTROL
-  NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSISSLSTATUSPROVIDER
-  NS_DECL_NSIASSOCIATEDCONTENTSECURITY
-  NS_DECL_NSISERIALIZABLE
-  NS_DECL_NSICLASSINFO
   NS_DECL_NSICLIENTAUTHUSERDECISION
-
-  nsresult SetSecurityState(PRUint32 aState);
-  nsresult SetShortSecurityDescription(const PRUnichar *aText);
-
+ 
   nsresult SetForSTARTTLS(bool aForSTARTTLS);
   nsresult GetForSTARTTLS(bool *aForSTARTTLS);
 
@@ -111,20 +69,7 @@ public:
   nsresult GetHandshakePending(bool *aHandshakePending);
   nsresult SetHandshakePending(bool aHandshakePending);
 
-  const char * GetHostName() const {
-    return mHostName.get();
-  }
-  nsresult GetHostName(char **aHostName);
-  nsresult SetHostName(const char *aHostName);
-
-  nsresult GetPort(PRInt32 *aPort);
-  nsresult SetPort(PRInt32 aPort);
-
   void GetPreviousCert(nsIX509Cert** _result);
-
-  PRErrorCode GetErrorCode() const;
-  void SetCanceled(PRErrorCode errorCode,
-                   ::mozilla::psm::SSLErrorMessageType errorMessageType);
   
   void SetHasCleartextPhase(bool aHasCleartextPhase);
   bool GetHasCleartextPhase();
@@ -135,23 +80,9 @@ public:
 
   void SetAllowTLSIntoleranceTimeout(bool aAllow);
 
-  nsresult RememberCAChain(CERTCertList *aCertList);
-
-  /* Set SSL Status values */
-  nsresult SetSSLStatus(nsSSLStatus *aSSLStatus);
-  nsSSLStatus* SSLStatus() { return mSSLStatus; }
-  void SetStatusErrorBits(nsIX509Cert & cert, PRUint32 collected_errors);
-
   PRStatus CloseSocketAndDestroy(
                 const nsNSSShutDownPreventionLock & proofOfLock);
   
-  bool IsCertIssuerBlacklisted() const {
-    return mIsCertIssuerBlacklisted;
-  }
-  void SetCertIssuerBlacklisted() {
-    mIsCertIssuerBlacklisted = true;
-  }
-
   void SetNegotiatedNPN(const char *value, PRUint32 length);
   void SetHandshakeCompleted() { mHandshakeCompleted = true; }
 
@@ -180,28 +111,13 @@ public:
   void SetSSL3Enabled(bool enabled) { mSSL3Enabled = enabled; }
   bool IsTLSEnabled() const { return mTLSEnabled; }
   void SetTLSEnabled(bool enabled) { mTLSEnabled = enabled; }
-protected:
-  mutable ::mozilla::Mutex mMutex;
-
-  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+private:
   PRFileDesc* mFd;
+
   CertVerificationState mCertVerificationState;
   PRIntervalTime mCertVerificationStarted;
   PRIntervalTime mCertVerificationEnded;
-  PRUint32 mSecurityState;
-  PRInt32 mSubRequestsHighSecurity;
-  PRInt32 mSubRequestsLowSecurity;
-  PRInt32 mSubRequestsBrokenSecurity;
-  PRInt32 mSubRequestsNoSecurity;
-  nsString mShortDesc;
 
-  PRErrorCode mErrorCode;
-  ::mozilla::psm::SSLErrorMessageType mErrorMessageType;
-  nsString mErrorMessageCached;
-  nsresult formatErrorMessage(::mozilla::MutexAutoLock const & proofOfLock);
-
-  bool mDocShellDependentStuffKnown;
-  bool mExternalErrorReporting; // DocShellDependent
   bool mForSTARTTLS;
   bool mSSL3Enabled;
   bool mTLSEnabled;
@@ -211,12 +127,6 @@ protected:
   bool mAllowTLSIntoleranceTimeout;
   bool mRememberClientAuthCertificate;
   PRIntervalTime mHandshakeStartTime;
-  PRInt32 mPort;
-  nsXPIDLCString mHostName;
-  PRErrorCode mIsCertIssuerBlacklisted;
-
-  /* SSL Status */
-  nsRefPtr<nsSSLStatus> mSSLStatus;
 
   nsresult ActivateSSL();
 
@@ -225,35 +135,6 @@ protected:
   bool      mHandshakeCompleted;
   bool      mJoined;
   bool      mSentClientCert;
-
-private:
-  virtual void virtualDestroyNSSReference();
-  void destructorSafeDestroyNSSReference();
-};
-
-class nsSSLStatus;
-class nsNSSSocketInfo;
-
-class nsPSMRememberCertErrorsTable
-{
-private:
-  struct CertStateBits
-  {
-    bool mIsDomainMismatch;
-    bool mIsNotValidAtThisTime;
-    bool mIsUntrusted;
-  };
-  nsDataHashtableMT<nsCStringHashKey, CertStateBits> mErrorHosts;
-  nsresult GetHostPortKey(nsNSSSocketInfo* infoObject, nsCAutoString& result);
-
-public:
-  friend class nsSSLIOLayerHelpers;
-  nsPSMRememberCertErrorsTable();
-  void RememberCertHasError(nsNSSSocketInfo* infoObject,
-                           nsSSLStatus* status,
-                           SECStatus certVerificationResult);
-  void LookupCertErrorBits(nsNSSSocketInfo* infoObject,
-                           nsSSLStatus* status);
 };
 
 class nsSSLIOLayerHelpers
@@ -269,7 +150,6 @@ public:
   static mozilla::Mutex *mutex;
   static nsTHashtable<nsCStringHashKey> *mTLSIntolerantSites;
   static nsTHashtable<nsCStringHashKey> *mTLSTolerantSites;
-  static nsPSMRememberCertErrorsTable* mHostsWithCertErrors;
 
   static nsTHashtable<nsCStringHashKey> *mRenegoUnrestrictedSites;
   static bool mTreatUnsafeNegotiationAsBroken;
@@ -315,11 +195,5 @@ nsresult nsSSLIOLayerAddToSocket(PRInt32 family,
 
 nsresult nsSSLIOLayerFreeTLSIntolerantSites();
 nsresult displayUnknownCertErrorAlert(nsNSSSocketInfo *infoObject, int error);
-
-// 16786594-0296-4471-8096-8f84497ca428
-#define NS_NSSSOCKETINFO_CID \
-{ 0x16786594, 0x0296, 0x4471, \
-    { 0x80, 0x96, 0x8f, 0x84, 0x49, 0x7c, 0xa4, 0x28 } }
-
 
 #endif /* _NSNSSIOLAYER_H */

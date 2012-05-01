@@ -11,12 +11,13 @@
 
 #ifndef __INC_VP8D_INT_H
 #define __INC_VP8D_INT_H
-#include "vpx_ports/config.h"
+#include "vpx_config.h"
 #include "vp8/common/onyxd.h"
 #include "treereader.h"
 #include "vp8/common/onyxc_int.h"
 #include "vp8/common/threading.h"
-#include "dequantize.h"
+
+
 #if CONFIG_ERROR_CONCEALMENT
 #include "ec_types.h"
 #endif
@@ -42,27 +43,8 @@ typedef struct
     int size;
 } DATARATE;
 
-typedef struct
-{
-    int const *scan;
-    UINT8 const *ptr_block2leftabove;
-    vp8_tree_index const *vp8_coef_tree_ptr;
-    unsigned char *norm_ptr;
-    UINT8 *ptr_coef_bands_x;
 
-    ENTROPY_CONTEXT_PLANES *A;
-    ENTROPY_CONTEXT_PLANES *L;
-
-    INT16 *qcoeff_start_ptr;
-    BOOL_DECODER *current_bc;
-
-    vp8_prob const *coef_probs[4];
-
-    UINT8 eob[25];
-
-} DETOK;
-
-typedef struct VP8Decompressor
+typedef struct VP8D_COMP
 {
     DECLARE_ALIGNED(16, MACROBLOCKD, mb);
 
@@ -73,11 +55,9 @@ typedef struct VP8Decompressor
     VP8D_CONFIG oxcf;
 
 
-    const unsigned char *Source;
-    unsigned int   source_sz;
-    const unsigned char *partitions[MAX_PARTITIONS];
-    unsigned int   partition_sizes[MAX_PARTITIONS];
-    unsigned int   num_partitions;
+    const unsigned char *fragments[MAX_PARTITIONS];
+    unsigned int   fragment_sizes[MAX_PARTITIONS];
+    unsigned int   num_fragments;
 
 #if CONFIG_MULTITHREAD
     /* variable for threading */
@@ -114,13 +94,6 @@ typedef struct VP8Decompressor
 
     DATARATE dr[16];
 
-    DETOK detoken;
-
-#if CONFIG_RUNTIME_CPU_DETECT
-    vp8_dequant_rtcd_vtable_t        dequant;
-#endif
-
-
     vp8_prob prob_intra;
     vp8_prob prob_last;
     vp8_prob prob_gf;
@@ -133,7 +106,7 @@ typedef struct VP8Decompressor
 #endif
     int ec_enabled;
     int ec_active;
-    int input_partition;
+    int input_fragments;
     int decoded_key_frame;
     int independent_partitions;
     int frame_corrupt_residual;
