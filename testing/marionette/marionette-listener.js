@@ -61,7 +61,7 @@ function startListeners() {
   addMessageListener("Marionette:findElementContent" + listenerId, findElementContent);
   addMessageListener("Marionette:findElementsContent" + listenerId, findElementsContent);
   addMessageListener("Marionette:clickElement" + listenerId, clickElement);
-  addMessageListener("Marionette:getAttributeValue" + listenerId, getAttributeValue);
+  addMessageListener("Marionette:getElementAttribute" + listenerId, getElementAttribute);
   addMessageListener("Marionette:getElementText" + listenerId, getElementText);
   addMessageListener("Marionette:isElementDisplayed" + listenerId, isElementDisplayed);
   addMessageListener("Marionette:isElementEnabled" + listenerId, isElementEnabled);
@@ -118,7 +118,7 @@ function deleteSession(msg) {
   removeMessageListener("Marionette:findElementContent" + listenerId, findElementContent);
   removeMessageListener("Marionette:findElementsContent" + listenerId, findElementsContent);
   removeMessageListener("Marionette:clickElement" + listenerId, clickElement);
-  removeMessageListener("Marionette:getAttributeValue" + listenerId, getAttributeValue);
+  removeMessageListener("Marionette:getElementAttribute" + listenerId, getElementAttribute);
   removeMessageListener("Marionette:getElementText" + listenerId, getElementText);
   removeMessageListener("Marionette:isElementDisplayed" + listenerId, isElementDisplayed);
   removeMessageListener("Marionette:isElementEnabled" + listenerId, isElementEnabled);
@@ -487,10 +487,10 @@ function clickElement(msg) {
 /**
  * Get a given attribute of an element
  */
-function getAttributeValue(msg) {
+function getElementAttribute(msg) {
   try {
     let el = elementManager.getKnownElement(msg.json.element, win);
-    sendResponse({value: utils.getAttributeValue(el, msg.json.name)});
+    sendResponse({value: utils.getElementAttribute(el, msg.json.name)});
   }
   catch (e) {
     sendError(e.message, e.num, e.stack);
