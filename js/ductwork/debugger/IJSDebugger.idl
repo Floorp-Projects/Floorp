@@ -40,13 +40,14 @@
 /**
  * Do not use this interface. Instead, write:
  *     Components.utils.import("resource://gre/modules/jsdebugger.jsm");
+ *     addDebuggerToGlobal(global);
  */
-[scriptable, uuid(2fc14cc6-4ed0-4bbf-a7dd-e535bf088eb5)]
+[scriptable, uuid(a36fa816-31da-4b23-bc97-6412771f0867)]
 interface IJSDebugger : nsISupports
 {
   /**
-   * Define the global Debugger constructor.
+   * Define the global Debugger constructor on a given global.
    */
   [implicit_jscontext]
-  void addClass();
+  void addClass(in jsval global);
 };
