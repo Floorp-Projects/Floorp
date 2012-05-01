@@ -276,7 +276,7 @@ CodeGeneratorX64::visitStoreSlotT(LStoreSlotT *store)
     MIRType slotType = store->mir()->slotType();
 
     if (store->mir()->needsBarrier())
-        masm.emitPreBarrier(Address(base, offset), ValueTypeFromMIRType(slotType));
+        masm.emitPreBarrier(Address(base, offset), slotType);
 
     storeUnboxedValue(value, valueType, Operand(base, offset), slotType);
     return true;

@@ -3474,6 +3474,8 @@ IonBuilder::jsop_setgname(JSAtom *atom)
             store->setSlotType(MIRTypeFromValueType(knownType));
     }
 
+    JS_ASSERT_IF(store->needsBarrier(), store->slotType() != MIRType_None);
+
     current->push(value);
     return true;
 }
