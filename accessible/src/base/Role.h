@@ -814,7 +814,7 @@ enum Role {
   /**
    * Represent a definition in a definition list (dd in HTML)
    */
-  DEFINITION = 128,
+  DEFINITION = 128
 };
 
 } // namespace role
