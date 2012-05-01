@@ -112,7 +112,7 @@ testxpcsrcdir = $(topsrcdir)/testing/xpcshell
 # See also testsuite-targets.mk 'xpcshell-tests' target for global execution.
 xpcshell-tests:
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/build \
+	  -I$(topsrcdir)/build -I$(DEPTH)/_tests/mozbase/mozinfo \
 	  $(testxpcsrcdir)/runxpcshelltests.py \
 	  --symbols-path=$(DIST)/crashreporter-symbols \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
@@ -142,7 +142,7 @@ xpcshell-tests-remote:
 # attach a debugger and then start the test.
 check-interactive:
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/build \
+	  -I$(topsrcdir)/build -I$(DEPTH)/_tests/mozbase/mozinfo \
 	  $(testxpcsrcdir)/runxpcshelltests.py \
 	  --symbols-path=$(DIST)/crashreporter-symbols \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
@@ -155,7 +155,7 @@ check-interactive:
 # Execute a single test, specified in $(SOLO_FILE)
 check-one:
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/build \
+	  -I$(topsrcdir)/build -I$(DEPTH)/_tests/mozbase/mozinfo \
 	  $(testxpcsrcdir)/runxpcshelltests.py \
 	  --symbols-path=$(DIST)/crashreporter-symbols \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
