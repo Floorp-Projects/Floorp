@@ -354,8 +354,10 @@ js_DumpPCCounts(JSContext *cx, JSScript *script, js::Sprinter *sp)
  * If counts != NULL, include a counter of the number of times each op was executed.
  */
 JS_FRIEND_API(JSBool)
-js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc, Sprinter *sp)
+js_DisassembleAtPC(JSContext *cx, JSScript *script_, JSBool lines, jsbytecode *pc, Sprinter *sp)
 {
+    RootedVar<JSScript*> script(cx, script_);
+
     jsbytecode *next, *end;
     unsigned len;
 
@@ -451,11 +453,13 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
                 return false;
 
             Shape::Range r = obj->lastProperty()->all();
+            Shape::Range::Root root(cx, &r);
+
             while (!r.empty()) {
-                const Shape &shape = r.front();
-                JSAtom *atom = JSID_IS_INT(shape.propid())
+                RootedVar<const Shape*> shape(cx, &r.front());
+                JSAtom *atom = JSID_IS_INT(shape->propid())
                                ? cx->runtime->atomState.emptyAtom
-                               : JSID_TO_ATOM(shape.propid());
+                               : JSID_TO_ATOM(shape->propid());
 
                 JSAutoByteString bytes;
                 if (!js_AtomToPrintableString(cx, atom, &bytes))
@@ -463,7 +467,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 
                 r.popFront();
                 source = JS_sprintf_append(source, "%s: %d%s",
-                                           bytes.ptr(), shape.shortid(),
+                                           bytes.ptr(), shape->shortid(),
                                            !r.empty() ? ", " : "");
                 if (!source)
                     return false;
@@ -5507,7 +5511,9 @@ js_DecompileFunctionBody(JSPrinter *jp)
 JSBool
 js_DecompileFunction(JSPrinter *jp)
 {
-    JSFunction *fun = jp->fun;
+    JSContext *cx = jp->sprinter.context;
+
+    RootedVarFunction fun(cx, jp->fun);
     JS_ASSERT(fun);
     JS_ASSERT(!jp->script);
 
@@ -5537,7 +5543,7 @@ js_DecompileFunction(JSPrinter *jp)
     } else {
         JSScript *script = fun->script();
 #if JS_HAS_DESTRUCTURING
-        SprintStack ss(jp->sprinter.context);
+        SprintStack ss(cx);
 #endif
 
         /* Print the parameters. */
@@ -5567,7 +5573,7 @@ js_DecompileFunction(JSPrinter *jp)
                 pc += js_CodeSpec[*pc].length;
                 LOCAL_ASSERT(*pc == JSOP_DUP);
                 if (!ss.printer) {
-                    ok = InitSprintStack(jp->sprinter.context, &ss, jp, StackDepth(script));
+                    ok = InitSprintStack(cx, &ss, jp, StackDepth(script));
                     if (!ok)
                         break;
                 }

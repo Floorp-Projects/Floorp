@@ -188,7 +188,7 @@ struct JSFunction : public JSObject
 
     /* Bound function accessors. */
 
-    inline bool initBoundFunction(JSContext *cx, const js::Value &thisArg,
+    inline bool initBoundFunction(JSContext *cx, js::HandleValue thisArg,
                                   const js::Value *args, unsigned argslen);
 
     inline JSObject *getBoundFunctionTarget() const;
@@ -323,7 +323,7 @@ extern JSBool
 js_fun_call(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern JSObject*
-js_fun_bind(JSContext *cx, js::HandleObject target, js::Value thisArg,
+js_fun_bind(JSContext *cx, js::HandleObject target, js::HandleValue thisArg,
             js::Value *boundArgs, unsigned argslen);
 
 #endif /* jsfun_h___ */
