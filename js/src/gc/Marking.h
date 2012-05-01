@@ -4,18 +4,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsgcmark_h___
-#define jsgcmark_h___
+#ifndef gc_marking_h___
+#define gc_marking_h___
 
 #include "jsgc.h"
 #include "jscntxt.h"
-#include "jscompartment.h"
 #include "jslock.h"
 
 #include "gc/Barrier.h"
 #include "js/TemplateLib.h"
 
+extern "C" {
+struct JSContext;
+struct JSFunction;
+struct JSObject;
+struct JSScript;
+}
+
+class JSAtom;
+class JSLinearString;
+
 namespace js {
+
+class ArgumentsObject;
+class BaseShape;
+class GlobalObject;
+class UnownedBaseShape;
+struct Shape;
+
+template<class, typename> class HeapPtr;
+
 namespace gc {
 
 /*** Object Marking ***/
@@ -67,6 +85,8 @@ DeclMarker(TypeObject, types::TypeObject)
 #if JS_HAS_XML_SUPPORT
 DeclMarker(XML, JSXML)
 #endif
+
+#undef DeclMarker
 
 /*** Externally Typed Marking ***/
 
@@ -261,4 +281,4 @@ CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
 
 } /* namespace js */
 
-#endif
+#endif /* gc_marking_h___ */

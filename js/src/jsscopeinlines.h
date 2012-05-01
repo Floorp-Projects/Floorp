@@ -47,11 +47,11 @@
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
+#include "jsgc.h"
 #include "jsobj.h"
 #include "jsscope.h"
-#include "jsgc.h"
-#include "jsgcmark.h"
 
+#include "gc/Marking.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ScopeObject.h"
 #include "vm/StringObject.h"
