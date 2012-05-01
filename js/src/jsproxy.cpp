@@ -43,13 +43,13 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsprvtd.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsproxy.h"
 #include "jsscope.h"
 
+#include "gc/Marking.h"
 #include "vm/MethodGuard.h"
 
 #include "jsatominlines.h"

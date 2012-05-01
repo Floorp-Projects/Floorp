@@ -55,7 +55,6 @@
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -63,6 +62,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 
+#include "gc/Marking.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "js/MemoryMetrics.h"

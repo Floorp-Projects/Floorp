@@ -4,16 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsgcmark.h"
 #include "jsprf.h"
 #include "jsscope.h"
 #include "jsstr.h"
+
+#include "gc/Marking.h"
+#include "methodjit/MethodJIT.h"
 
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
 #include "vm/String-inl.h"
-#include "methodjit/MethodJIT.h"
 
 /*
  * There are two mostly separate mark paths. The first is a fast path used
@@ -30,7 +31,7 @@
  * like tail recursion elimination that method also implements the scanning of
  * objects. For other GC things it uses helper methods.
  *
- * Most of the marking code outside jsgcmark uses functions like MarkObject,
+ * Most of the marking code outside Marking.cpp uses functions like MarkObject,
  * MarkString, etc. These functions check if an object is in the compartment
  * currently being GCed. If it is, they call PushMarkStack. Roots are pushed
  * this way as well as pointers traversed inside trace hooks (for things like
