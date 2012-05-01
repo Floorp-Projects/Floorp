@@ -3763,7 +3763,7 @@ class MStoreSlot
     MStoreSlot(MDefinition *slots, uint32 slot, MDefinition *value)
         : MBinaryInstruction(slots, value),
           slot_(slot),
-          slotType_(MIRType_None),
+          slotType_(MIRType_Value),
           needsBarrier_(false)
     {
         JS_ASSERT(slots->type() == MIRType_Slots);

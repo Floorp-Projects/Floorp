@@ -50,6 +50,7 @@
 # include "ion/arm/MacroAssembler-arm.h"
 #endif
 #include "ion/IonCompartment.h"
+#include "ion/TypeOracle.h"
 
 #include "jsscope.h"
 #include "jstypedarray.h"
@@ -319,13 +320,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     template <typename T>
-    void emitPreBarrier(const T &address, JSValueType type) {
-        JS_ASSERT(type == JSVAL_TYPE_UNKNOWN ||
-                  type == JSVAL_TYPE_STRING ||
-                  type == JSVAL_TYPE_OBJECT);
+    void emitPreBarrier(const T &address, MIRType type) {
+        JS_ASSERT(type == MIRType_Value ||
+                  type == MIRType_String ||
+                  type == MIRType_Object);
 
         Label done;
-        if (type == JSVAL_TYPE_UNKNOWN)
+        if (type == MIRType_Value)
             branchTestGCThing(Assembler::NotEqual, address, &done);
 
         Push(PreBarrierReg);
@@ -341,7 +342,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         call(preBarrier);
         Pop(PreBarrierReg);
 
-        if (type == JSVAL_TYPE_UNKNOWN)
+        if (type == MIRType_Value)
             bind(&done);
     }
 
