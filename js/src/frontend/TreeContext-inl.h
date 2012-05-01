@@ -38,11 +38,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef BytecodeEmitter_inl_h__
-#define BytecodeEmitter_inl_h__
+#ifndef TreeContext_inl_h__
+#define TreeContext_inl_h__
 
-#include "frontend/ParseNode.h"
-#include "frontend/TokenStream.h"
+#include "frontend/Parser.h"
+#include "frontend/TreeContext.h"
 
 namespace js {
 
@@ -59,11 +59,41 @@ TreeContext::TreeContext(Parser *prs)
     prs->tc = this;
 }
 
-/*
- * For functions the tree context is constructed and destructed a second
- * time during code generation. To avoid a redundant stats update in such
- * cases, we store UINT16_MAX in maxScopeDepth.
- */
+inline unsigned
+TreeContext::blockid()
+{
+    return topStmt ? topStmt->blockid : bodyid;
+}
+
+inline bool
+TreeContext::atBodyLevel()
+{
+    return !topStmt || (topStmt->flags & SIF_BODY_BLOCK);
+}
+
+inline bool
+TreeContext::needStrictChecks() {
+    return parser->context->hasStrictOption() || inStrictMode();
+}
+
+inline unsigned
+TreeContext::argumentsLocalSlot() const {
+    PropertyName *arguments = parser->context->runtime->atomState.argumentsAtom;
+    unsigned slot;
+    DebugOnly<BindingKind> kind = bindings.lookup(parser->context, arguments, &slot);
+    JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
+    return slot;
+}
+
+inline ParseNode *
+TreeContext::freeTree(ParseNode *pn)
+{
+    return parser->freeTree(pn);
+}
+
+// For functions the tree context is constructed and destructed a second
+// time during code generation. To avoid a redundant stats update in such
+// cases, we store UINT16_MAX in maxScopeDepth.
 inline
 TreeContext::~TreeContext()
 {
@@ -71,6 +101,6 @@ TreeContext::~TreeContext()
     parser->context->delete_(funcStmts);
 }
 
-} /* namespace js */
+} // namespace js
 
-#endif /* BytecodeEmitter_inl_h__ */
+#endif // TreeContext_inl_h__

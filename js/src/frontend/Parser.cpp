@@ -74,9 +74,9 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-#include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/ParseMaps.h"
+#include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 
@@ -87,9 +87,9 @@
 #include "jsatominlines.h"
 #include "jsscriptinlines.h"
 
-#include "frontend/BytecodeEmitter-inl.h"
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
+#include "frontend/TreeContext-inl.h"
 #include "vm/RegExpObject-inl.h"
 
 using namespace js;
@@ -7101,3 +7101,4 @@ Parser::parenExpr(JSBool *genexp)
 
     return pn;
 }
+

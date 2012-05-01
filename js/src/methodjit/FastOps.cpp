@@ -43,7 +43,6 @@
 #include "jslibmath.h"
 #include "jsscope.h"
 
-#include "frontend/BytecodeEmitter.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
