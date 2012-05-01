@@ -65,7 +65,6 @@
 #include "jsversion.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -80,6 +79,7 @@
 #include "frontend/FoldConstants.h"
 #include "frontend/ParseMaps.h"
 #include "frontend/TokenStream.h"
+#include "gc/Marking.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
