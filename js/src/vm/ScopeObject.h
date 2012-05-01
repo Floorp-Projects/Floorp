@@ -42,6 +42,7 @@
 #ifndef ScopeObject_h___
 #define ScopeObject_h___
 
+#include "jscntxt.h"
 #include "jsobj.h"
 
 namespace js {
