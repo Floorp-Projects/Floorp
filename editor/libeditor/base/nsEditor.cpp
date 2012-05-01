@@ -3529,6 +3529,17 @@ nsEditor::IsBlockNode(nsINode *aNode)
 }
 
 bool
+nsEditor::CanContain(nsIDOMNode* aParent, nsIDOMNode* aChild)
+{
+  nsCOMPtr<nsIDOMElement> parentElement = do_QueryInterface(aParent);
+  NS_ENSURE_TRUE(parentElement, false);
+
+  nsAutoString parentStringTag;
+  parentElement->GetTagName(parentStringTag);
+  return TagCanContain(parentStringTag, aChild);
+}
+
+bool
 nsEditor::CanContainTag(nsIDOMNode* aParent, const nsAString &aChildTag)
 {
   nsCOMPtr<nsIDOMElement> parentElement = do_QueryInterface(aParent);
