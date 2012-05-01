@@ -897,6 +897,21 @@ struct Shape : public js::gc::Cell
     }
 };
 
+class RootGetterSetter
+{
+    mozilla::Maybe<RootObject> getterRoot;
+    mozilla::Maybe<RootObject> setterRoot;
+
+  public:
+    RootGetterSetter(JSContext *cx, uint8_t attrs, PropertyOp *pgetter, StrictPropertyOp *psetter)
+    {
+        if (attrs & JSPROP_GETTER)
+            getterRoot.construct(cx, (JSObject **) pgetter);
+        if (attrs & JSPROP_SETTER)
+            setterRoot.construct(cx, (JSObject **) psetter);
+    }
+};
+
 struct EmptyShape : public js::Shape
 {
     EmptyShape(UnownedBaseShape *base, uint32_t nfixed);

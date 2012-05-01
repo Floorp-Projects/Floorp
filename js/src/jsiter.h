@@ -109,7 +109,7 @@ class ElementIteratorObject : public JSObject {
         NumSlots
     };
 
-    static JSObject *create(JSContext *cx, JSObject *target);
+    static JSObject *create(JSContext *cx, HandleObject target);
 
     inline uint32_t getIndex() const;
     inline void setIndex(uint32_t index);
@@ -202,13 +202,13 @@ UnwindIteratorForUncatchableException(JSContext *cx, JSObject *obj);
 }
 
 extern bool
-js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id);
+js_SuppressDeletedProperty(JSContext *cx, js::HandleObject obj, jsid id);
 
 extern bool
-js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32_t index);
+js_SuppressDeletedElement(JSContext *cx, js::HandleObject obj, uint32_t index);
 
 extern bool
-js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32_t begin, uint32_t end);
+js_SuppressDeletedElements(JSContext *cx, js::HandleObject obj, uint32_t begin, uint32_t end);
 
 /*
  * IteratorMore() indicates whether another value is available. It might

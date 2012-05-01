@@ -145,7 +145,7 @@ Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
         slot += nargs + nvars;
     }
 
-    jsid id;
+    RootedVarId id(cx);
     if (!name) {
         JS_ASSERT(kind == ARGUMENT); /* destructuring */
         id = INT_TO_JSID(nargs);
@@ -444,6 +444,8 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
     JS_ASSERT(nvars != Bindings::BINDING_COUNT_LIMIT);
 
     Bindings bindings(cx);
+    Bindings::StackRoot bindingsRoot(cx, &bindings);
+
     uint32_t nameCount = nargs + nvars;
     if (nameCount > 0) {
         LifoAllocScope las(&cx->tempLifoAlloc());
@@ -1282,7 +1284,7 @@ JSScript *
 JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
 {
     uint32_t mainLength, prologLength, nfixed;
-    JSScript *script;
+    RootedVar<JSScript*> script(cx);
     const char *filename;
     JSFunction *fun;
 
@@ -2046,11 +2048,13 @@ JSScript::setNeedsArgsObj(bool needsArgsObj)
     needsArgsObj_ = needsArgsObj;
 }
 
-bool
-JSScript::applySpeculationFailed(JSContext *cx)
+/* static */ bool
+JSScript::applySpeculationFailed(JSContext *cx, JSScript *script_)
 {
-    JS_ASSERT(analyzedArgsUsage());
-    JS_ASSERT(argumentsHasLocalBinding());
+    RootedVar<JSScript*> script(cx, script_);
+
+    JS_ASSERT(script->analyzedArgsUsage());
+    JS_ASSERT(script->argumentsHasLocalBinding());
 
     /*
      * It is possible that the apply speculation has already failed, everything
@@ -2058,12 +2062,12 @@ JSScript::applySpeculationFailed(JSContext *cx)
      * stack that has just now flowed into an apply. In this case, there is
      * nothing to do; GuardFunApplySpeculation will patch in the real argsobj.
      */
-    if (needsArgsObj())
+    if (script->needsArgsObj())
         return true;
 
-    needsArgsObj_ = true;
+    script->needsArgsObj_ = true;
 
-    const unsigned slot = argumentsLocalSlot();
+    const unsigned slot = script->argumentsLocalSlot();
 
     /*
      * By design, the apply-arguments optimization is only made when there
@@ -2079,7 +2083,7 @@ JSScript::applySpeculationFailed(JSContext *cx)
      */
     for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
         StackFrame *fp = i.fp();
-        if (fp->isFunctionFrame() && fp->script() == this) {
+        if (fp->isFunctionFrame() && fp->script() == script) {
             if (!fp->hasArgsObj()) {
                 ArgumentsObject *obj = ArgumentsObject::create(cx, fp);
                 if (!obj) {
@@ -2088,7 +2092,7 @@ JSScript::applySpeculationFailed(JSContext *cx)
                      * and !fp->hasArgsObj. It is, however, safe to leave frames
                      * where fp->hasArgsObj and !fp->script->needsArgsObj.
                      */
-                    needsArgsObj_ = false;
+                    script->needsArgsObj_ = false;
                     return false;
                 }
 
@@ -2100,15 +2104,15 @@ JSScript::applySpeculationFailed(JSContext *cx)
     }
 
 #ifdef JS_METHODJIT
-    if (hasJITCode()) {
-        mjit::Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), this);
-        mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), this);
+    if (script->hasJITCode()) {
+        mjit::Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), script);
+        mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
     }
 #endif
 
-    if (hasAnalysis() && analysis()->ranInference()) {
+    if (script->hasAnalysis() && script->analysis()->ranInference()) {
         types::AutoEnterTypeInference enter(cx);
-        types::TypeScript::MonitorUnknown(cx, this, argumentsBytecode());
+        types::TypeScript::MonitorUnknown(cx, script, script->argumentsBytecode());
     }
 
     return true;

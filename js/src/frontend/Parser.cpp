@@ -948,19 +948,20 @@ static JSBool
 BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc);
 
 struct BindData {
-    BindData() : fresh(true) {}
+    BindData(JSContext *cx) : let(cx), fresh(true) {}
 
     ParseNode       *pn;        /* name node for definition processing and
                                    error source coordinates */
     JSOp            op;         /* prolog bytecode or nop */
     Binder          binder;     /* binder, discriminates u */
-    union {
-        struct {
-            VarContext varContext;
-            StaticBlockObject *blockObj;
-            unsigned   overflow;
-        } let;
-    };
+
+    struct LetData {
+        LetData(JSContext *cx) : blockObj(cx) {}
+        VarContext varContext;
+        RootedVar<StaticBlockObject*> blockObj;
+        unsigned   overflow;
+    } let;
+
     bool fresh;
 
     void initLet(VarContext varContext, StaticBlockObject &blockObj, unsigned overflow) {
@@ -1040,10 +1041,10 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
     RootedVarObject parent(context);
     parent = tc->inFunction() ? NULL : tc->scopeChain();
 
-    JSFunction *fun =
-        js_NewFunction(context, NULL, NULL, 0,
-                       JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0),
-                       parent, atom);
+    RootedVarFunction fun(context);
+    fun = js_NewFunction(context, NULL, NULL, 0,
+                         JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0),
+                         parent, atom);
     if (fun && !tc->compileAndGo()) {
         if (!fun->clearParent(context))
             return NULL;
@@ -1268,7 +1269,7 @@ LeaveFunction(ParseNode *fn, TreeContext *funtc, PropertyName *funName = NULL,
 }
 
 static bool
-DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, PropertyName *name);
+DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, Handle<PropertyName*> name);
 
 /*
  * FIXME? this Parser method was factored from Parser::functionDef with minimal
@@ -1308,7 +1309,7 @@ Parser::functionArguments(TreeContext &funtc, FunctionBox *funbox, ParseNode **l
                  * anonymous positional parameter, so here we must tweak our
                  * binder and its data.
                  */
-                BindData data;
+                BindData data(context);
                 data.pn = NULL;
                 data.op = JSOP_DEFVAR;
                 data.binder = BindDestructuringArg;
@@ -2083,7 +2084,7 @@ OuterLet(TreeContext *tc, StmtInfo *stmt, JSAtom *atom)
  * stack frame slots.
  */
 static bool
-DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, PropertyName *name)
+DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, Handle<PropertyName*> name)
 {
     GlobalScope *globalScope = bce->globalScope;
     HandleObject globalObj = globalScope->globalObj;
@@ -2091,7 +2092,6 @@ DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, PropertyName *name)
     if (!bce->compileAndGo() || !globalObj || bce->compilingForEval())
         return true;
 
-    JS_ASSERT(!IsPoisonedPtr(name));
     AtomIndexAddPtr p = globalScope->names.lookupForAdd(name);
     if (!p) {
         JSContext *cx = bce->parser->context;
@@ -2128,8 +2128,6 @@ DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, PropertyName *name)
 
         if (!globalScope->defs.append(def))
             return false;
-
-        JS_ASSERT(!IsPoisonedPtr(name));
 
         jsatomid index = globalScope->names.count();
         if (!globalScope->names.add(p, name, index))
@@ -2212,7 +2210,8 @@ BindTopLevelVar(JSContext *cx, BindData *data, ParseNode *pn, TreeContext *tc)
      * is present, try to bake in either an already available slot or a
      * predicted slot that will be defined after compiling is completed.
      */
-    return DefineGlobal(pn, tc->asBytecodeEmitter(), pn->pn_atom->asPropertyName());
+    return DefineGlobal(pn, tc->asBytecodeEmitter(),
+                        RootedVarPropertyName(cx, pn->pn_atom->asPropertyName()));
 }
 
 static bool
@@ -2596,7 +2595,7 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, TreeContext *
     }
 
     RootedVar<StaticBlockObject *> blockObj(cx);
-    blockObj = data && data->binder == BindLet ? data->let.blockObj : NULL;
+    blockObj = data && data->binder == BindLet ? data->let.blockObj.reference() : NULL;
     uint32_t blockCountBefore = blockObj ? blockObj->slotCount() : 0;
 
     if (left->isKind(PNK_RB)) {
@@ -2895,7 +2894,7 @@ Parser::letBlock(LetContext letContext)
     if (!pnlet)
         return NULL;
 
-    StaticBlockObject *blockObj = StaticBlockObject::create(context);
+    RootedVar<StaticBlockObject*> blockObj(context, StaticBlockObject::create(context));
     if (!blockObj)
         return NULL;
 
@@ -3185,7 +3184,7 @@ Parser::forStatement()
     bool forDecl = false;
 
     /* Non-null when forDecl is true for a 'for (let ...)' statement. */
-    StaticBlockObject *blockObj = NULL;
+    RootedVar<StaticBlockObject*> blockObj(context);
 
     /* Set to 'x' in 'for (x ;... ;...)' or 'for (x in ...)'. */
     ParseNode *pn1;
@@ -3578,7 +3577,7 @@ Parser::tryStatement()
 
         do {
             ParseNode *pnblock;
-            BindData data;
+            BindData data(context);
 
             /* Check for another catch after unconditional catch. */
             if (lastCatch && !lastCatch->pn_kid2) {
@@ -4320,7 +4319,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
      * var, whereas let is block scoped. ES-Harmony wants block-scoped const so
      * this code will change soon.
      */
-    BindData data;
+    BindData data(context);
     if (blockObj)
         data.initLet(varContext, *blockObj, JSMSG_TOO_MANY_LOCALS);
     else
@@ -5314,7 +5313,7 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
     unsigned adjust;
     ParseNode *pn, *pn2, *pn3, **pnp;
     StmtInfo stmtInfo(context);
-    BindData data;
+    BindData data(context);
     TokenKind tt;
 
     JS_ASSERT(tokenStream.currentToken().type == TOK_FOR);
@@ -5387,7 +5386,7 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
 
         GenexpGuard guard(tc);
 
-        PropertyName *name = NULL;
+        RootedVarPropertyName name(context);
         tt = tokenStream.getToken();
         switch (tt) {
 #if JS_HAS_DESTRUCTURING
@@ -6389,7 +6388,7 @@ Parser::xmlElementOrList(JSBool allowList)
 
     ParseNode *pn, *pn2, *list;
     TokenKind tt;
-    JSAtom *startAtom, *endAtom;
+    RootedVarAtom startAtom(context), endAtom(context);
 
     JS_CHECK_RECURSION(context, return NULL);
 
@@ -6407,7 +6406,7 @@ Parser::xmlElementOrList(JSBool allowList)
         /*
          * XMLElement.  Append the tag and its contents, if any, to pn.
          */
-        pn2 = xmlTagContent(PNK_XMLSTAGO, &startAtom);
+        pn2 = xmlTagContent(PNK_XMLSTAGO, startAtom.address());
         if (!pn2)
             return NULL;
         tokenStream.matchToken(TOK_XMLSPACE);
@@ -6466,7 +6465,7 @@ Parser::xmlElementOrList(JSBool allowList)
             }
 
             /* Parse end tag; check mismatch at compile-time if we can. */
-            pn2 = xmlTagContent(PNK_XMLETAGO, &endAtom);
+            pn2 = xmlTagContent(PNK_XMLETAGO, endAtom.address());
             if (!pn2)
                 return NULL;
             if (pn2->isKind(PNK_XMLETAGO)) {
