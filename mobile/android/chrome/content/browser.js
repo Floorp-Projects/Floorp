@@ -3378,6 +3378,11 @@ var XPInstallObserver = {
         break;
       case "addon-install-blocked":
         let installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
+        let win = installInfo.originatingWindow;
+        let tab = BrowserApp.getTabForWindow(win.top);
+        if (!tab)
+          return;
+
         let host = installInfo.originatingURI.host;
 
         let brandShortName = Strings.brand.GetStringFromName("brandShortName");
@@ -3417,7 +3422,7 @@ var XPInstallObserver = {
             }
           }];
         }
-        NativeWindow.doorhanger.show(message, aTopic, buttons);
+        NativeWindow.doorhanger.show(message, aTopic, buttons, tab.id);
         break;
     }
   },
