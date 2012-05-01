@@ -110,6 +110,13 @@ struct Shape;
 
 enum BindingKind { NONE, ARGUMENT, VARIABLE, CONSTANT };
 
+struct BindingName {
+    JSAtom *maybeAtom;
+    BindingKind kind;
+};
+
+typedef Vector<BindingName, 32> BindingNames;
+
 /*
  * Formal parameters and local variables are stored in a shape tree
  * path encapsulated within this class.  This class represents bindings for
@@ -238,7 +245,7 @@ class Bindings
      * The name at an element will be null when the element is for an argument
      * corresponding to a destructuring pattern.
      */
-    bool getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp);
+    bool getLocalNameArray(JSContext *cx, BindingNames *namesp);
 
     /*
      * Protect stored bindings from mutation.  Subsequent attempts to add

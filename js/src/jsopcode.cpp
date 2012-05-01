@@ -1087,7 +1087,7 @@ struct JSPrinter
     jsbytecode      *dvgfence;      /* DecompileExpression fencepost */
     jsbytecode      **pcstack;      /* DecompileExpression modeled stack */
     JSFunction      *fun;           /* interpreted function */
-    Vector<JSAtom *> *localNames;   /* argument and variable names */
+    BindingNames    *localNames;    /* argument and variable names */
     Vector<DecompiledOpcode> *decompiledOpcodes; /* optional state for decompiled ops */
 
     DecompiledOpcode &decompiled(jsbytecode *pc) {
@@ -1118,7 +1118,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->localNames = NULL;
     jp->decompiledOpcodes = NULL;
     if (fun && fun->isInterpreted() && fun->script()->bindings.count() > 0) {
-        jp->localNames = cx->new_<Vector<JSAtom *> >(cx);
+        jp->localNames = cx->new_<BindingNames>(cx);
         if (!jp->localNames || !fun->script()->bindings.getLocalNameArray(cx, jp->localNames)) {
             js_DestroyPrinter(jp);
             return NULL;
@@ -1767,7 +1767,7 @@ GetArgOrVarAtom(JSPrinter *jp, unsigned slot)
 {
     LOCAL_ASSERT_RV(jp->fun, NULL);
     LOCAL_ASSERT_RV(slot < jp->fun->script()->bindings.count(), NULL);
-    JSAtom *name = (*jp->localNames)[slot];
+    JSAtom *name = (*jp->localNames)[slot].maybeAtom;
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
 #endif
@@ -4663,8 +4663,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 #if JS_HAS_GENERATOR_EXPRS
                 sn = js_GetSrcNote(jp->script, pc);
                 if (sn && SN_TYPE(sn) == SRC_GENEXP) {
-                    Vector<JSAtom *> *innerLocalNames;
-                    Vector<JSAtom *> *outerLocalNames;
+                    BindingNames *innerLocalNames;
+                    BindingNames *outerLocalNames;
                     JSScript *inner, *outer;
                     Vector<DecompiledOpcode> *decompiledOpcodes;
                     SprintStack ss2(cx);
@@ -4680,7 +4680,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      */
                     LifoAllocScope las(&cx->tempLifoAlloc());
                     if (fun->script()->bindings.count() > 0) {
-                        innerLocalNames = cx->new_<Vector<JSAtom *> >(cx);
+                        innerLocalNames = cx->new_<BindingNames>(cx);
                         if (!innerLocalNames ||
                             !fun->script()->bindings.getLocalNameArray(cx, innerLocalNames))
                         {
