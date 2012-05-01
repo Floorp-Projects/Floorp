@@ -1258,7 +1258,7 @@ CodeGeneratorARM::visitStoreSlotT(LStoreSlotT *store)
     MIRType valueType = store->mir()->value()->type();
 
     if (store->mir()->needsBarrier())
-        masm.emitPreBarrier(Address(base, offset), ValueTypeFromMIRType(store->mir()->slotType()));
+        masm.emitPreBarrier(Address(base, offset), store->mir()->slotType());
 
     if (valueType == MIRType_Double) {
         masm.ma_vstr(ToFloatRegister(value), Operand(base, offset));

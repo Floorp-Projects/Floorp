@@ -374,7 +374,7 @@ CodeGenerator::visitStoreSlotV(LStoreSlotV *store)
     const ValueOperand value = ToValue(store, LStoreSlotV::Value);
 
     if (store->mir()->needsBarrier())
-       masm.emitPreBarrier(Address(base, offset), JSVAL_TYPE_UNKNOWN);
+       masm.emitPreBarrier(Address(base, offset), MIRType_Value);
 
     masm.storeValue(value, Address(base, offset));
     return true;
@@ -2264,7 +2264,7 @@ CodeGenerator::visitStoreFixedSlotV(LStoreFixedSlotV *ins)
 
     Address address(obj, JSObject::getFixedSlotOffset(slot));
     if (ins->mir()->needsBarrier())
-        masm.emitPreBarrier(address, JSVAL_TYPE_UNKNOWN);
+        masm.emitPreBarrier(address, MIRType_Value);
 
     masm.storeValue(value, address);
 
@@ -2286,7 +2286,7 @@ CodeGenerator::visitStoreFixedSlotT(LStoreFixedSlotT *ins)
 
     Address address(obj, JSObject::getFixedSlotOffset(slot));
     if (ins->mir()->needsBarrier())
-        masm.emitPreBarrier(address, JSVAL_TYPE_UNKNOWN);
+        masm.emitPreBarrier(address, MIRType_Value);
 
     masm.storeConstantOrRegister(nvalue, address);
 
