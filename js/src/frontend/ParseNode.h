@@ -713,7 +713,7 @@ struct ParseNode {
         pn_next = pn_link = NULL;
     }
 
-    static ParseNode *create(ParseNodeKind kind, ParseNodeArity arity, TreeContext *tc);
+    static ParseNode *create(ParseNodeKind kind, ParseNodeArity arity, Parser *parser);
 
   public:
     /*
@@ -730,7 +730,7 @@ struct ParseNode {
      */
     static ParseNode *
     newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
-                      TreeContext *tc);
+                      Parser *parser);
 
     inline PropertyName *atom() const;
 
@@ -975,8 +975,8 @@ struct ParseNode {
 };
 
 struct NullaryNode : public ParseNode {
-    static inline NullaryNode *create(ParseNodeKind kind, TreeContext *tc) {
-        return (NullaryNode *)ParseNode::create(kind, PN_NULLARY, tc);
+    static inline NullaryNode *create(ParseNodeKind kind, Parser *parser) {
+        return (NullaryNode *)ParseNode::create(kind, PN_NULLARY, parser);
     }
 
 #ifdef DEBUG
@@ -991,8 +991,8 @@ struct UnaryNode : public ParseNode {
         pn_kid = kid;
     }
 
-    static inline UnaryNode *create(ParseNodeKind kind, TreeContext *tc) {
-        return (UnaryNode *)ParseNode::create(kind, PN_UNARY, tc);
+    static inline UnaryNode *create(ParseNodeKind kind, Parser *parser) {
+        return (UnaryNode *)ParseNode::create(kind, PN_UNARY, parser);
     }
 
 #ifdef DEBUG
@@ -1015,8 +1015,8 @@ struct BinaryNode : public ParseNode {
         pn_right = right;
     }
 
-    static inline BinaryNode *create(ParseNodeKind kind, TreeContext *tc) {
-        return (BinaryNode *)ParseNode::create(kind, PN_BINARY, tc);
+    static inline BinaryNode *create(ParseNodeKind kind, Parser *parser) {
+        return (BinaryNode *)ParseNode::create(kind, PN_BINARY, parser);
     }
 
 #ifdef DEBUG
@@ -1035,8 +1035,8 @@ struct TernaryNode : public ParseNode {
         pn_kid3 = kid3;
     }
 
-    static inline TernaryNode *create(ParseNodeKind kind, TreeContext *tc) {
-        return (TernaryNode *)ParseNode::create(kind, PN_TERNARY, tc);
+    static inline TernaryNode *create(ParseNodeKind kind, Parser *parser) {
+        return (TernaryNode *)ParseNode::create(kind, PN_TERNARY, parser);
     }
 
 #ifdef DEBUG
@@ -1045,8 +1045,8 @@ struct TernaryNode : public ParseNode {
 };
 
 struct ListNode : public ParseNode {
-    static inline ListNode *create(ParseNodeKind kind, TreeContext *tc) {
-        return (ListNode *)ParseNode::create(kind, PN_LIST, tc);
+    static inline ListNode *create(ParseNodeKind kind, Parser *parser) {
+        return (ListNode *)ParseNode::create(kind, PN_LIST, parser);
     }
 
 #ifdef DEBUG
@@ -1055,8 +1055,8 @@ struct ListNode : public ParseNode {
 };
 
 struct FunctionNode : public ParseNode {
-    static inline FunctionNode *create(ParseNodeKind kind, TreeContext *tc) {
-        return (FunctionNode *)ParseNode::create(kind, PN_FUNC, tc);
+    static inline FunctionNode *create(ParseNodeKind kind, Parser *parser) {
+        return (FunctionNode *)ParseNode::create(kind, PN_FUNC, parser);
     }
 
 #ifdef DEBUG
@@ -1065,7 +1065,7 @@ struct FunctionNode : public ParseNode {
 };
 
 struct NameNode : public ParseNode {
-    static NameNode *create(ParseNodeKind kind, JSAtom *atom, TreeContext *tc);
+    static NameNode *create(ParseNodeKind kind, JSAtom *atom, Parser *parser, TreeContext *tc);
 
     inline void initCommon(TreeContext *tc);
 
@@ -1075,14 +1075,14 @@ struct NameNode : public ParseNode {
 };
 
 struct NameSetNode : public ParseNode {
-    static inline NameSetNode *create(ParseNodeKind kind, TreeContext *tc) {
-        return (NameSetNode *)ParseNode::create(kind, PN_NAMESET, tc);
+    static inline NameSetNode *create(ParseNodeKind kind, Parser *parser) {
+        return (NameSetNode *)ParseNode::create(kind, PN_NAMESET, parser);
     }
 };
 
 struct LexicalScopeNode : public ParseNode {
-    static inline LexicalScopeNode *create(ParseNodeKind kind, TreeContext *tc) {
-        return (LexicalScopeNode *)ParseNode::create(kind, PN_NAME, tc);
+    static inline LexicalScopeNode *create(ParseNodeKind kind, Parser *parser) {
+        return (LexicalScopeNode *)ParseNode::create(kind, PN_NAME, parser);
     }
 };
 
@@ -1323,7 +1323,7 @@ class PropertyByValue : public ParseNode {
 };
 
 ParseNode *
-CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
+CloneLeftHandSide(ParseNode *opn, Parser *parser);
 
 #ifdef DEBUG
 void DumpParseTree(ParseNode *pn, int indent = 0);
@@ -1511,7 +1511,7 @@ ParseNode::resolve()
 }
 
 inline void
-LinkUseToDef(ParseNode *pn, Definition *dn, TreeContext *tc)
+LinkUseToDef(ParseNode *pn, Definition *dn)
 {
     JS_ASSERT(!pn->isUsed());
     JS_ASSERT(!pn->isDefn());

@@ -116,6 +116,8 @@ struct BytecodeEmitter : public TreeContext
         unsigned    currentLine;    /* line number for tree-based srcnote gen */
     } prolog, main, *current;
 
+    Parser          *parser;        /* the parser */
+
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
     AtomDefnMapPtr  roLexdeps;
     unsigned        firstLine;      /* first line, for JSScript::NewScriptFromEmitter */
@@ -150,10 +152,6 @@ struct BytecodeEmitter : public TreeContext
 
     BytecodeEmitter(Parser *parser, unsigned lineno);
     bool init(JSContext *cx, TreeContext::InitBehavior ib = USED_AS_CODE_GENERATOR);
-
-    JSContext *context() {
-        return parser->context;
-    }
 
     // This is a down-cast.  It's necessary and safe -- although
     // TreeContext::parent is a |TreeContext *|, a BytecodeEmitter's parent is
