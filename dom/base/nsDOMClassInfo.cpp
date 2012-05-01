@@ -309,7 +309,9 @@
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsIDOMHTMLAudioElement.h"
+#if defined (MOZ_MEDIA)
 #include "nsIDOMMediaStream.h"
+#endif
 #include "nsIDOMProgressEvent.h"
 #include "nsIDOMCSS2Properties.h"
 #include "nsIDOMCSSCharsetRule.h"
