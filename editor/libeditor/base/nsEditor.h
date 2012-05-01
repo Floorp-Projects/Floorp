@@ -577,12 +577,12 @@ public:
   virtual bool TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag);
 
   /** returns true if aNode is our root node */
-  bool IsRootNode(nsIDOMNode *inNode);
-  bool IsRootNode(nsINode *inNode);
+  bool IsRoot(nsIDOMNode* inNode);
+  bool IsRoot(nsINode* inNode);
 
   /** returns true if aNode is a descendant of our root node */
-  bool IsDescendantOfBody(nsIDOMNode *inNode);
-  bool IsDescendantOfBody(nsINode *inNode);
+  bool IsDescendantOfRoot(nsIDOMNode* inNode);
+  bool IsDescendantOfRoot(nsINode* inNode);
 
   /** returns true if aNode is a container */
   virtual bool IsContainer(nsIDOMNode *aNode);

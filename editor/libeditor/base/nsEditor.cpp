@@ -3250,7 +3250,7 @@ nsEditor::GetNextNode(nsINode* aParentNode,
       return child;
     }
 
-    if (!IsDescendantOfBody(resultNode)) {
+    if (!IsDescendantOfRoot(resultNode)) {
       return nsnull;
     }
 
@@ -3300,7 +3300,7 @@ nsEditor::GetPriorNode(nsINode* aCurrentNode, bool aEditableNode,
 {
   MOZ_ASSERT(aCurrentNode);
 
-  if (!IsDescendantOfBody(aCurrentNode) ||
+  if (!IsDescendantOfRoot(aCurrentNode) ||
       (aActiveEditorRoot &&
        !nsContentUtils::ContentIsDescendantOf(aCurrentNode,
                                               aActiveEditorRoot))) {
@@ -3318,7 +3318,8 @@ nsEditor::FindNextLeafNode(nsINode  *aCurrentNode,
                            nsIContent *aActiveEditorRoot)
 {
   // called only by GetPriorNode so we don't need to check params.
-  NS_PRECONDITION(IsDescendantOfBody(aCurrentNode) && !IsRootNode(aCurrentNode) &&
+  NS_PRECONDITION(IsDescendantOfRoot(aCurrentNode) &&
+                  !IsRoot(aCurrentNode) &&
                   (!aActiveEditorRoot ||
                    nsContentUtils::ContentIsDescendantOf(aCurrentNode,
                                                          aActiveEditorRoot)),
@@ -3350,11 +3351,11 @@ nsEditor::FindNextLeafNode(nsINode  *aCurrentNode,
       return nsnull;
     }
 
-    NS_ASSERTION(IsDescendantOfBody(parent),
+    NS_ASSERTION(IsDescendantOfRoot(parent),
                  "We started with a proper descendant of root, and should stop "
                  "if we ever hit the root, so we better have a descendant of "
                  "root now!");
-    if (IsRootNode(parent) ||
+    if (IsRoot(parent) ||
         (bNoBlockCrossing && IsBlockNode(parent)) ||
         parent == aActiveEditorRoot) {
       return nsnull;
@@ -3393,7 +3394,7 @@ nsEditor::GetNextNode(nsINode* aCurrentNode,
 {
   MOZ_ASSERT(aCurrentNode);
 
-  if (!IsDescendantOfBody(aCurrentNode) ||
+  if (!IsDescendantOfRoot(aCurrentNode) ||
       (aActiveEditorRoot &&
        !nsContentUtils::ContentIsDescendantOf(aCurrentNode,
                                               aActiveEditorRoot))) {
@@ -3411,8 +3412,7 @@ nsEditor::FindNode(nsINode *aCurrentNode,
                    bool     bNoBlockCrossing,
                    nsIContent *aActiveEditorRoot)
 {
-  if (IsRootNode(aCurrentNode) || aCurrentNode == aActiveEditorRoot)
-  {
+  if (IsRoot(aCurrentNode) || aCurrentNode == aActiveEditorRoot) {
     // Don't allow traversal above the root node! This helps
     // prevent us from accidentally editing browser content
     // when the editor is in a text widget.
@@ -3589,7 +3589,7 @@ nsEditor::TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag)
 }
 
 bool
-nsEditor::IsRootNode(nsIDOMNode *inNode)
+nsEditor::IsRoot(nsIDOMNode* inNode)
 {
   NS_ENSURE_TRUE(inNode, false);
 
@@ -3599,7 +3599,7 @@ nsEditor::IsRootNode(nsIDOMNode *inNode)
 }
 
 bool 
-nsEditor::IsRootNode(nsINode *inNode) 
+nsEditor::IsRoot(nsINode* inNode)
 {
   NS_ENSURE_TRUE(inNode, false);
 
@@ -3609,14 +3609,14 @@ nsEditor::IsRootNode(nsINode *inNode)
 }
 
 bool 
-nsEditor::IsDescendantOfBody(nsIDOMNode *inNode) 
+nsEditor::IsDescendantOfRoot(nsIDOMNode* inNode)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(inNode);
-  return IsDescendantOfBody(node);
+  return IsDescendantOfRoot(node);
 }
 
 bool
-nsEditor::IsDescendantOfBody(nsINode *inNode)
+nsEditor::IsDescendantOfRoot(nsINode* inNode)
 {
   NS_ENSURE_TRUE(inNode, false);
   nsCOMPtr<nsIContent> root = GetRoot();
