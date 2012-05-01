@@ -185,10 +185,16 @@
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
+        <!--
+          Ensure that passwords provider runs in its own process. (Bug 718760.)
+          Process name is per-application to avoid loading CPs from multiple
+          Fennec versions into the same process. (Bug 749727.)
+          Process name is a mangled version to avoid a Talos bug. (Bug 750548.)
+          -->
         <provider android:name="@ANDROID_PACKAGE_NAME@.db.PasswordsProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.passwords"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"
-                  android:process="org.mozilla.gecko.PasswordsProvider"/>
+                  android:process="@MANGLED_ANDROID_PACKAGE_NAME@.PasswordsProvider"/>
 
         <provider android:name="@ANDROID_PACKAGE_NAME@.db.FormHistoryProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.formhistory"
