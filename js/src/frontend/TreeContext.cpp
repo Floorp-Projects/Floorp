@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "frontend/ParseNode.h"
-#include "frontend/Parser.h"
 #include "frontend/TreeContext.h"
 
 #include "jsatominlines.h"
@@ -65,7 +64,7 @@ frontend::SetStaticLevel(TreeContext *tc, unsigned staticLevel)
      * practically speaking it leaves more than enough room for upvars.
      */
     if (UpvarCookie::isLevelReserved(staticLevel)) {
-        JS_ReportErrorNumber(tc->parser->context, js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(tc->context, js_GetErrorMessage, NULL,
                              JSMSG_TOO_DEEP, js_function_str);
         return false;
     }
@@ -77,7 +76,7 @@ bool
 frontend::GenerateBlockId(TreeContext *tc, uint32_t &blockid)
 {
     if (tc->blockidGen == JS_BIT(20)) {
-        JS_ReportErrorNumber(tc->parser->context, js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(tc->context, js_GetErrorMessage, NULL,
                              JSMSG_NEED_DIET, "program");
         return false;
     }
@@ -142,7 +141,7 @@ frontend::LexicalLookup(TreeContext *tc, JSAtom *atom, int *slotp, StmtInfo *stm
             continue;
 
         StaticBlockObject &blockObj = *stmt->blockObj;
-        const Shape *shape = blockObj.nativeLookup(tc->parser->context, AtomToId(atom));
+        const Shape *shape = blockObj.nativeLookup(tc->context, AtomToId(atom));
         if (shape) {
             JS_ASSERT(shape->hasShortID());
 

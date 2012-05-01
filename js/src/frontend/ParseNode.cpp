@@ -361,9 +361,8 @@ ParseNodeAllocator::allocNode()
 /* used only by static create methods of subclasses */
 
 ParseNode *
-ParseNode::create(ParseNodeKind kind, ParseNodeArity arity, TreeContext *tc)
+ParseNode::create(ParseNodeKind kind, ParseNodeArity arity, Parser *parser)
 {
-    Parser *parser = tc->parser;
     const Token &tok = parser->tokenStream.currentToken();
     return parser->new_<ParseNode>(kind, JSOP_NOP, arity, tok.pos);
 }
@@ -407,7 +406,7 @@ ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right
 
 ParseNode *
 ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
-                             TreeContext *tc)
+                             Parser *parser)
 {
     if (!left || !right)
         return NULL;
@@ -429,21 +428,24 @@ ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, Parse
     if (kind == PNK_ADD &&
         left->isKind(PNK_NUMBER) &&
         right->isKind(PNK_NUMBER) &&
-        tc->parser->foldConstants)
+        parser->foldConstants)
     {
         left->pn_dval += right->pn_dval;
         left->pn_pos.end = right->pn_pos.end;
-        tc->freeTree(right);
+        parser->freeTree(right);
         return left;
     }
 
-    return tc->parser->new_<BinaryNode>(kind, op, left, right);
+    return parser->new_<BinaryNode>(kind, op, left, right);
 }
 
+// Nb: unlike most functions that are passed a Parser, this one gets a
+// TreeContext passed in separately, because in this case |tc| may not equal
+// |parser->tc|.
 NameNode *
-NameNode::create(ParseNodeKind kind, JSAtom *atom, TreeContext *tc)
+NameNode::create(ParseNodeKind kind, JSAtom *atom, Parser *parser, TreeContext *tc)
 {
-    ParseNode *pn = ParseNode::create(kind, PN_NAME, tc);
+    ParseNode *pn = ParseNode::create(kind, PN_NAME, parser);
     if (pn) {
         pn->pn_atom = atom;
         ((NameNode *)pn)->initCommon(tc);
@@ -474,12 +476,14 @@ Definition::kindString(Kind kind)
  * binding context as the original tree.
  */
 static ParseNode *
-CloneParseTree(ParseNode *opn, TreeContext *tc)
+CloneParseTree(ParseNode *opn, Parser *parser)
 {
-    JS_CHECK_RECURSION(tc->parser->context, return NULL);
+    TreeContext *tc = parser->tc;
 
-    ParseNode *pn = tc->parser->new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
-                                                opn->pn_pos);
+    JS_CHECK_RECURSION(tc->context, return NULL);
+
+    ParseNode *pn = parser->new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
+                                            opn->pn_pos);
     if (!pn)
         return NULL;
     pn->setInParens(opn->isInParens());
@@ -491,8 +495,8 @@ CloneParseTree(ParseNode *opn, TreeContext *tc)
 
       case PN_FUNC:
         NULLCHECK(pn->pn_funbox =
-                  tc->parser->newFunctionBox(opn->pn_funbox->object, pn, tc));
-        NULLCHECK(pn->pn_body = CloneParseTree(opn->pn_body, tc));
+                  parser->newFunctionBox(opn->pn_funbox->object, pn, tc));
+        NULLCHECK(pn->pn_body = CloneParseTree(opn->pn_body, parser));
         pn->pn_cookie = opn->pn_cookie;
         pn->pn_dflags = opn->pn_dflags;
         pn->pn_blockid = opn->pn_blockid;
@@ -502,22 +506,22 @@ CloneParseTree(ParseNode *opn, TreeContext *tc)
         pn->makeEmpty();
         for (ParseNode *opn2 = opn->pn_head; opn2; opn2 = opn2->pn_next) {
             ParseNode *pn2;
-            NULLCHECK(pn2 = CloneParseTree(opn2, tc));
+            NULLCHECK(pn2 = CloneParseTree(opn2, parser));
             pn->append(pn2);
         }
         pn->pn_xflags = opn->pn_xflags;
         break;
 
       case PN_TERNARY:
-        NULLCHECK(pn->pn_kid1 = CloneParseTree(opn->pn_kid1, tc));
-        NULLCHECK(pn->pn_kid2 = CloneParseTree(opn->pn_kid2, tc));
-        NULLCHECK(pn->pn_kid3 = CloneParseTree(opn->pn_kid3, tc));
+        NULLCHECK(pn->pn_kid1 = CloneParseTree(opn->pn_kid1, parser));
+        NULLCHECK(pn->pn_kid2 = CloneParseTree(opn->pn_kid2, parser));
+        NULLCHECK(pn->pn_kid3 = CloneParseTree(opn->pn_kid3, parser));
         break;
 
       case PN_BINARY:
-        NULLCHECK(pn->pn_left = CloneParseTree(opn->pn_left, tc));
+        NULLCHECK(pn->pn_left = CloneParseTree(opn->pn_left, parser));
         if (opn->pn_right != opn->pn_left)
-            NULLCHECK(pn->pn_right = CloneParseTree(opn->pn_right, tc));
+            NULLCHECK(pn->pn_right = CloneParseTree(opn->pn_right, parser));
         else
             pn->pn_right = pn->pn_left;
         pn->pn_pval = opn->pn_pval;
@@ -525,7 +529,7 @@ CloneParseTree(ParseNode *opn, TreeContext *tc)
         break;
 
       case PN_UNARY:
-        NULLCHECK(pn->pn_kid = CloneParseTree(opn->pn_kid, tc));
+        NULLCHECK(pn->pn_kid = CloneParseTree(opn->pn_kid, parser));
         pn->pn_hidden = opn->pn_hidden;
         break;
 
@@ -542,7 +546,7 @@ CloneParseTree(ParseNode *opn, TreeContext *tc)
             pn->pn_link = dn->dn_uses;
             dn->dn_uses = pn;
         } else if (opn->pn_expr) {
-            NULLCHECK(pn->pn_expr = CloneParseTree(opn->pn_expr, tc));
+            NULLCHECK(pn->pn_expr = CloneParseTree(opn->pn_expr, parser));
 
             /*
              * If the old name is a definition, the new one has pn_defn set.
@@ -550,14 +554,14 @@ CloneParseTree(ParseNode *opn, TreeContext *tc)
              */
             if (opn->isDefn()) {
                 opn->setDefn(false);
-                LinkUseToDef(opn, (Definition *) pn, tc);
+                LinkUseToDef(opn, (Definition *) pn);
             }
         }
         break;
 
       case PN_NAMESET:
         pn->pn_names = opn->pn_names;
-        NULLCHECK(pn->pn_tree = CloneParseTree(opn->pn_tree, tc));
+        NULLCHECK(pn->pn_tree = CloneParseTree(opn->pn_tree, parser));
         break;
 
       case PN_NULLARY:
@@ -583,10 +587,10 @@ CloneParseTree(ParseNode *opn, TreeContext *tc)
  * the original tree.
  */
 ParseNode *
-js::CloneLeftHandSide(ParseNode *opn, TreeContext *tc)
+js::CloneLeftHandSide(ParseNode *opn, Parser *parser)
 {
-    ParseNode *pn = tc->parser->new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
-                                                opn->pn_pos);
+    ParseNode *pn = parser->new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
+                                            opn->pn_pos);
     if (!pn)
         return NULL;
     pn->setInParens(opn->isInParens());
@@ -603,19 +607,19 @@ js::CloneLeftHandSide(ParseNode *opn, TreeContext *tc)
                 JS_ASSERT(opn2->isArity(PN_BINARY));
                 JS_ASSERT(opn2->isKind(PNK_COLON));
 
-                ParseNode *tag = CloneParseTree(opn2->pn_left, tc);
+                ParseNode *tag = CloneParseTree(opn2->pn_left, parser);
                 if (!tag)
                     return NULL;
-                ParseNode *target = CloneLeftHandSide(opn2->pn_right, tc);
+                ParseNode *target = CloneLeftHandSide(opn2->pn_right, parser);
                 if (!target)
                     return NULL;
 
-                pn2 = tc->parser->new_<BinaryNode>(PNK_COLON, JSOP_INITPROP, opn2->pn_pos, tag, target);
+                pn2 = parser->new_<BinaryNode>(PNK_COLON, JSOP_INITPROP, opn2->pn_pos, tag, target);
             } else if (opn2->isArity(PN_NULLARY)) {
                 JS_ASSERT(opn2->isKind(PNK_COMMA));
-                pn2 = CloneParseTree(opn2, tc);
+                pn2 = CloneParseTree(opn2, parser);
             } else {
-                pn2 = CloneLeftHandSide(opn2, tc);
+                pn2 = CloneLeftHandSide(opn2, parser);
             }
 
             if (!pn2)
@@ -646,7 +650,7 @@ js::CloneLeftHandSide(ParseNode *opn, TreeContext *tc)
             pn->pn_dflags &= ~PND_BOUND;
             pn->setDefn(false);
 
-            LinkUseToDef(pn, (Definition *) opn, tc);
+            LinkUseToDef(pn, (Definition *) opn);
         }
     }
     return pn;

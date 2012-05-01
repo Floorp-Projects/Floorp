@@ -100,6 +100,7 @@ SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned w
 
 BytecodeEmitter::BytecodeEmitter(Parser *parser, unsigned lineno)
   : TreeContext(parser),
+    parser(parser),
     atomIndices(parser->context),
     stackDepth(0), maxStackDepth(0),
     ntrynotes(0), lastTryNode(NULL),
@@ -1932,14 +1933,14 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
          */
         left = pn->maybeExpr();
         if (!left) {
-            left = NullaryNode::create(PNK_STRING, bce);
+            left = NullaryNode::create(PNK_STRING, bce->parser);
             if (!left)
                 return false;
             left->setOp(JSOP_BINDNAME);
             left->pn_pos = pn->pn_pos;
             left->pn_atom = pn->pn_atom;
         }
-        right = NullaryNode::create(PNK_STRING, bce);
+        right = NullaryNode::create(PNK_STRING, bce->parser);
         if (!right)
             return false;
         right->setOp(IsIdentifier(pn->pn_atom) ? JSOP_QNAMEPART : JSOP_STRING);

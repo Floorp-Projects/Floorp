@@ -209,6 +209,8 @@ struct Parser;
 struct StmtInfo;
 
 struct TreeContext {                /* tree context for semantic checks */
+    JSContext       *context;
+
     uint32_t        flags;          /* statement state flags, see above */
     uint32_t        bodyid;         /* block number of program/function body */
     uint32_t        blockidGen;     /* preincremented block number generator */
@@ -225,7 +227,6 @@ struct TreeContext {                /* tree context for semantic checks */
     ParseNode       *blockNode;     /* parse node for a block with let declarations
                                        (block with its own lexical scope)  */
     AtomDecls       decls;          /* function, const, and var declarations */
-    Parser          *parser;        /* ptr to common parsing and lexing data */
     ParseNode       *yieldNode;     /* parse node for a yield expression that might
                                        be an error if we turn out to be inside a
                                        generator expression */
@@ -234,6 +235,9 @@ struct TreeContext {                /* tree context for semantic checks */
                                        inside a generator expression */
 
   private:
+    TreeContext     **parserTC;      /* this points to the Parser's active tc
+                                        and holds either |this| or one of
+                                        |this|'s descendents */
     RootedVarFunction fun_;         /* function to store argument and variable
                                        names when flags & TCF_IN_FUNCTION */
     RootedVarObject   scopeChain_;  /* scope chain object for the script */
@@ -363,8 +367,6 @@ struct TreeContext {                /* tree context for semantic checks */
     bool hasExtensibleScope() const {
         return flags & TCF_FUN_EXTENSIBLE_SCOPE;
     }
-
-    ParseNode *freeTree(ParseNode *pn);
 };
 
 /*
