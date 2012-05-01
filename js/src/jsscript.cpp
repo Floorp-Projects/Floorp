@@ -308,7 +308,7 @@ XDRScriptConst(XDRState<mode> *xdr, HeapValue *vp)
     enum ConstTag {
         SCRIPT_INT     = 0,
         SCRIPT_DOUBLE  = 1,
-        SCRIPT_STRING  = 2,
+        SCRIPT_ATOM    = 2,
         SCRIPT_TRUE    = 3,
         SCRIPT_FALSE   = 4,
         SCRIPT_NULL    = 5,
@@ -322,7 +322,7 @@ XDRScriptConst(XDRState<mode> *xdr, HeapValue *vp)
         } else if (vp->isDouble()) {
             tag = SCRIPT_DOUBLE;
         } else if (vp->isString()) {
-            tag = SCRIPT_STRING;
+            tag = SCRIPT_ATOM;
         } else if (vp->isTrue()) {
             tag = SCRIPT_TRUE;
         } else if (vp->isFalse()) {
@@ -359,14 +359,14 @@ XDRScriptConst(XDRState<mode> *xdr, HeapValue *vp)
             vp->init(DoubleValue(d));
         break;
       }
-      case SCRIPT_STRING: {
-        JSString *str;
+      case SCRIPT_ATOM: {
+        JSAtom *atom;
         if (mode == XDR_ENCODE)
-            str = vp->toString();
-        if (!xdr->codeString(&str))
+            atom = &vp->toString()->asAtom();
+        if (!XDRAtom(xdr, &atom))
             return false;
         if (mode == XDR_DECODE)
-            vp->init(StringValue(str));
+            vp->init(StringValue(atom));
         break;
       }
       case SCRIPT_TRUE:

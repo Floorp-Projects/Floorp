@@ -287,7 +287,6 @@ class XDRState {
     }
 
     bool codeChars(jschar *chars, size_t nchars);
-    bool codeString(JSString **strp);
 
     bool codeFunction(JSObject **objp);
     bool codeScript(JSScript **scriptp);
