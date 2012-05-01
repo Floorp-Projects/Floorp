@@ -550,6 +550,9 @@ JS_DumpCompartmentPCCounts(JSContext *cx);
 extern JS_PUBLIC_API(JSObject *)
 JS_UnwrapObject(JSObject *obj);
 
+extern JS_PUBLIC_API(JSObject *)
+JS_UnwrapObjectAndInnerize(JSObject *obj);
+
 /* Call the context debug handler on the topmost scripted frame. */
 extern JS_FRIEND_API(JSBool)
 js_CallContextDebugHandler(JSContext *cx);
