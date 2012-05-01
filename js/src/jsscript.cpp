@@ -214,12 +214,12 @@ Bindings::callObjectShape(JSContext *cx) const
 }
 
 bool
-Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
+Bindings::getLocalNameArray(JSContext *cx, BindingNames *namesp)
 {
     JS_ASSERT(lastBinding);
     JS_ASSERT(count() > 0);
 
-    Vector<JSAtom *> &names = *namesp;
+    BindingNames &names = *namesp;
     JS_ASSERT(names.empty());
 
     unsigned n = count();
@@ -229,7 +229,7 @@ Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
 #ifdef DEBUG
     JSAtom * const POISON = reinterpret_cast<JSAtom *>(0xdeadbeef);
     for (unsigned i = 0; i < n; i++)
-        names[i] = POISON;
+        names[i].maybeAtom = POISON;
 #endif
 
     for (Shape::Range r = lastBinding->all(); !r.empty(); r.popFront()) {
@@ -238,23 +238,25 @@ Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
 
         if (shape.getter() == CallObject::getArgOp) {
             JS_ASSERT(index < nargs);
+            names[index].kind = ARGUMENT;
         } else {
             JS_ASSERT(index < nvars);
             index += nargs;
+            names[index].kind = shape.writable() ? VARIABLE : CONSTANT;
         }
 
         if (JSID_IS_ATOM(shape.propid())) {
-            names[index] = JSID_TO_ATOM(shape.propid());
+            names[index].maybeAtom = JSID_TO_ATOM(shape.propid());
         } else {
             JS_ASSERT(JSID_IS_INT(shape.propid()));
             JS_ASSERT(shape.getter() == CallObject::getArgOp);
-            names[index] = NULL;
+            names[index].maybeAtom = NULL;
         }
     }
 
 #ifdef DEBUG
     for (unsigned i = 0; i < n; i++)
-        JS_ASSERT(names[i] != POISON);
+        JS_ASSERT(names[i].maybeAtom != POISON);
 #endif
 
     return true;
@@ -463,13 +465,13 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
             return false;
         }
 
-        Vector<JSAtom *> names(cx);
+        BindingNames names(cx);
         if (mode == XDR_ENCODE) {
             if (!script->bindings.getLocalNameArray(cx, &names))
                 return false;
             PodZero(bitmap, bitmapLength);
             for (unsigned i = 0; i < nameCount; i++) {
-                if (i < nargs && names[i])
+                if (i < nargs && names[i].maybeAtom)
                     bitmap[i >> JS_BITS_PER_UINT32_LOG2] |= JS_BIT(i & (JS_BITS_PER_UINT32 - 1));
             }
         }
@@ -487,14 +489,14 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
                     if (!bindings.addDestructuring(cx, &dummy))
                         return false;
                 } else {
-                    JS_ASSERT(!names[i]);
+                    JS_ASSERT(!names[i].maybeAtom);
                 }
                 continue;
             }
 
             RootedVarAtom name(cx);
             if (mode == XDR_ENCODE)
-                name = names[i];
+                name = names[i].maybeAtom;
             if (!XDRAtom(xdr, name.address()))
                 return false;
             if (mode == XDR_DECODE) {

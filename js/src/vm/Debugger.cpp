@@ -3667,12 +3667,12 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
         JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
 
         if (fun->nargs > 0) {
-            Vector<JSAtom *> names(cx);
+            BindingNames names(cx);
             if (!fun->script()->bindings.getLocalNameArray(cx, &names))
                 return false;
 
             for (size_t i = 0; i < fun->nargs; i++) {
-                JSAtom *name = names[i];
+                JSAtom *name = names[i].maybeAtom;
                 result->setDenseArrayElement(i, name ? StringValue(name) : UndefinedValue());
             }
         }
