@@ -280,6 +280,9 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
     jsbytecode *pc;
     cache.getScriptedLocation(&script, &pc);
 
+    // Root the object.
+    RootedVarObject objRoot(cx, obj);
+
     // Override the return value if we are invalidated (bug 728188).
     AutoDetectInvalidation adi(cx, vp, topScript);
 
@@ -304,8 +307,17 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
         }
     }
 
-    if (!GetPropertyOperation(cx, pc, ObjectValue(*obj), vp))
+    jsid id = ATOM_TO_JSID(atom);
+    if (!obj->getGeneric(cx, obj, id, vp))
         return false;
+
+#if JS_HAS_NO_SUCH_METHOD
+    // Handle objects with __noSuchMethod__.
+    if (JSOp(*pc) == JSOP_CALLPROP && JS_UNLIKELY(vp->isPrimitive())) {
+        if (!OnUnknownMethod(cx, objRoot, IdToValue(id), vp))
+            return false;
+    }
+#endif
 
     // Monitor changes to cache entry.
     types::TypeScript::Monitor(cx, script, pc, *vp);
