@@ -67,7 +67,6 @@
 #include "jsstr.h"
 
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/BytecodeEmitter.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #include "vm/Debugger.h"

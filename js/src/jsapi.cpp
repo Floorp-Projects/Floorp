@@ -89,7 +89,7 @@
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/BytecodeEmitter.h"
+#include "frontend/TreeContext.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "js/MemoryMetrics.h"

@@ -42,8 +42,8 @@
 
 #include "jsfun.h"
 
-#include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
+#include "frontend/TreeContext.h"
 
 #include "jsobjinlines.h"
 #include "jsfuninlines.h"

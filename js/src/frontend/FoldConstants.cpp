@@ -45,13 +45,15 @@
 #include "jsxml.h"
 #endif
 
-#include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/ParseNode.h"
+#include "frontend/Parser.h"
+#include "frontend/TreeContext.h"
 #include "vm/NumericConversions.h"
 
 #include "jsatominlines.h"
 
+#include "frontend/TreeContext-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;
