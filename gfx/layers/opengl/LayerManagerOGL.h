@@ -331,6 +331,7 @@ public:
   void BindAndDrawQuad(ShaderProgramOGL *aProg,
                        bool aFlipped = false)
   {
+    NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
     BindAndDrawQuad(aProg->AttribLocation(ShaderProgramOGL::VertexCoordAttrib),
                     aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib),
                     aFlipped);
@@ -447,22 +448,14 @@ private:
 
   /**
    * Updates all layer programs with a new projection matrix.
-   *
-   * XXX we need a way to be able to delay setting this until
-   * the program is actually used.  Maybe a DelayedSetUniform
-   * on Program, that will delay the set until the next Activate?
-   *
-   * XXX this is only called once per frame, so it's not awful.
-   * If we have any more similar updates, then we should delay.
    */
   void SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix);
 
   /**
-   * Helper method for Initialize, creates all valid variations of a program,
-   * initialises them, and adds them to mPrograms
-   * returns false if any initialisation fails
+   * Helper method for Initialize, creates all valid variations of a program
+   * and adds them to mPrograms
    */
-  bool InitAndAddPrograms(gl::ShaderProgramType aType);
+  void AddPrograms(gl::ShaderProgramType aType);
 
   /* Thebes layer callbacks; valid at the end of a transaciton,
    * while rendering */

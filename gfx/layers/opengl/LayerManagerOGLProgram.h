@@ -170,10 +170,15 @@ public:
   typedef mozilla::gl::GLContext GLContext;
 
   ShaderProgramOGL(GLContext* aGL, const ProgramProfileOGL& aProfile) :
-    mGL(aGL), mProgram(-1), mProfile(aProfile) { }
+    mGL(aGL), mProgram(0), mProgramState(STATE_NEW),
+    mIsProjectionMatrixStale(false), mProfile(aProfile) { }
 
 
   ~ShaderProgramOGL() {
+    if (mProgram <= 0) {
+      return;
+    }
+
     nsRefPtr<GLContext> ctx = mGL->GetSharedContext();
     if (!ctx) {
       ctx = mGL;
@@ -182,12 +187,27 @@ public:
     ctx->fDeleteProgram(mProgram);
   }
 
+  bool HasInitialized() {
+    NS_ASSERTION(mProgramState != STATE_OK || mProgram > 0, "Inconsistent program state");
+    return mProgramState == STATE_OK;
+  }
+
   void Activate() {
-    NS_ASSERTION(mProgram != 0, "Attempting to activate a program that's not in use!");
+    if (mProgramState == STATE_NEW) {
+      if (!Initialize()) {
+        NS_WARNING("Shader could not be initialised");
+        return;
+      }
+    }
+    NS_ASSERTION(HasInitialized(), "Attempting to activate a program that's not in use!");
     mGL->fUseProgram(mProgram);
 #if CHECK_CURRENT_PROGRAM
     mGL->SetUserData(&sCurrentProgramKey, this);
 #endif
+    // check and set the projection matrix
+    if (mIsProjectionMatrixStale) {
+      SetProjectionMatrix(mProjectionMatrix);
+    }
   }
 
   bool Initialize();
@@ -244,10 +264,17 @@ public:
   }
 
   // activates this program and sets its projection matrix, if the program uses one
-  void CheckAndSetProjectionMatrix(const gfx3DMatrix& aMatrix);
+  void CheckAndSetProjectionMatrix(const gfx3DMatrix& aMatrix)
+  {
+    if (mProfile.mHasMatrixProj) {
+      mIsProjectionMatrixStale = true;
+      mProjectionMatrix = aMatrix;
+    }
+  }
 
   void SetProjectionMatrix(const gfx3DMatrix& aMatrix) {
     SetMatrixUniform(mProfile.LookupUniformLocation("uMatrixProj"), aMatrix);
+    mIsProjectionMatrixStale = false;
   }
 
   void SetRenderOffset(const nsIntPoint& aOffset) {
@@ -307,9 +334,19 @@ public:
   static const char* const TexCoordAttrib;
 
 protected:
+  gfx3DMatrix mProjectionMatrix;
+  // true if the projection matrix needs setting
+  bool mIsProjectionMatrixStale;
+
   nsRefPtr<GLContext> mGL;
+  // the OpenGL id of the program 
   GLuint mProgram;
   ProgramProfileOGL mProfile;
+  enum {
+    STATE_NEW,
+    STATE_OK,
+    STATE_ERROR
+  } mProgramState;
 
   GLint mTexCoordMultiplierUniformLocation;
 #ifdef CHECK_CURRENT_PROGRAM
