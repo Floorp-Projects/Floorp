@@ -2567,7 +2567,7 @@ var BrowserEventHandler = {
           this._scrollableElement = this._findScrollableElement(this._scrollableElement, false);
 
         let doc = BrowserApp.selectedBrowser.contentDocument;
-        if (this._scrollableElement == doc.body || this._scrollableElement == doc.documentElement) {
+        if (this._scrollableElement == null || this._scrollableElement == doc.body || this._scrollableElement == doc.documentElement) {
           sendMessageToJava({ gecko: { type: "Panning:CancelOverride" } });
           return;
         }
