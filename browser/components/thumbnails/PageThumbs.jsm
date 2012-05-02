@@ -4,13 +4,18 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = ["PageThumbs", "PageThumbsCache"];
+let EXPORTED_SYMBOLS = ["PageThumbs", "PageThumbsStorage", "PageThumbsCache"];
 
 const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
+
+/**
+ * Name of the directory in the profile that contains the thumbnails.
+ */
+const THUMBNAIL_DIRECTORY = "thumbnails";
 
 /**
  * The default background color for page thumbnails.
@@ -25,11 +30,29 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+  "resource://gre/modules/FileUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function () {
+  return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+});
+
+XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = 'utf8';
+  return converter;
+});
+
 /**
  * Singleton providing functionality for capturing web page thumbnails and for
  * accessing them if already cached.
  */
 let PageThumbs = {
+  _initialized: false,
 
   /**
    * The calculated width and height of the thumbnails.
@@ -51,6 +74,20 @@ let PageThumbs = {
    * The thumbnails' image type.
    */
   get contentType() "image/png",
+
+  init: function PageThumbs_init() {
+    if (!this._initialized) {
+      this._initialized = true;
+      PlacesUtils.history.addObserver(PageThumbsHistoryObserver, false);
+    }
+  },
+
+  uninit: function PageThumbs_uninit() {
+    if (this._initialized) {
+      this._initialized = false;
+      PlacesUtils.history.removeObserver(PageThumbsHistoryObserver);
+    }
+  },
 
   /**
    * Gets the thumbnail image's url for a given web page's url.
@@ -124,32 +161,14 @@ let PageThumbs = {
           //    Sync and therefore also redirect sources appear on the newtab
           //    page. We also want thumbnails for those.
           if (url != originalURL)
-            PageThumbsCache._copy(url, originalURL);
+            PageThumbsStorage.copy(url, originalURL);
         }
 
         if (aCallback)
           aCallback(aSuccessful);
       }
 
-      // Get a writeable cache entry.
-      PageThumbsCache.getWriteEntry(url, function (aEntry) {
-        if (!aEntry) {
-          finish(false);
-          return;
-        }
-
-        let outputStream = aEntry.openOutputStream(0);
-
-        // Write the image data to the cache entry.
-        NetUtil.asyncCopy(aInputStream, outputStream, function (aResult) {
-          let success = Components.isSuccessCode(aResult);
-          if (success)
-            aEntry.markValid();
-
-          aEntry.close();
-          finish(success);
-        });
-      });
+      PageThumbsStorage.write(url, aInputStream, finish);
     });
   },
 
@@ -208,6 +227,88 @@ let PageThumbs = {
   }
 };
 
+let PageThumbsStorage = {
+  getFileForURL: function Storage_getFileForURL(aURL) {
+    let hash = this._calculateMD5Hash(aURL);
+    let parts = [THUMBNAIL_DIRECTORY, hash[0], hash[1], hash.slice(2) + ".png"];
+    return FileUtils.getFile("ProfD", parts);
+  },
+
+  write: function Storage_write(aURL, aDataStream, aCallback) {
+    let file = this.getFileForURL(aURL);
+    let fos = FileUtils.openSafeFileOutputStream(file);
+
+    NetUtil.asyncCopy(aDataStream, fos, function (aResult) {
+      FileUtils.closeSafeFileOutputStream(fos);
+      aCallback(Components.isSuccessCode(aResult));
+    });
+  },
+
+  copy: function Storage_copy(aSourceURL, aTargetURL) {
+    let sourceFile = this.getFileForURL(aSourceURL);
+    let targetFile = this.getFileForURL(aTargetURL);
+
+    try {
+      sourceFile.copyTo(targetFile.parent, targetFile.leafName);
+    } catch (e) {
+      /* We might not be permitted to write to the file. */
+    }
+  },
+
+  remove: function Storage_remove(aURL) {
+    try {
+      this.getFileForURL(aURL).remove(false);
+    } catch (e) {
+      /* The file might not exist or we're not permitted to remove it. */
+    }
+  },
+
+  wipe: function Storage_wipe() {
+    try {
+      FileUtils.getDir("ProfD", [THUMBNAIL_DIRECTORY]).remove(true);
+    } catch (e) {
+      /* The file might not exist or we're not permitted to remove it. */
+    }
+  },
+
+  _calculateMD5Hash: function Storage_calculateMD5Hash(aValue) {
+    let hash = gCryptoHash;
+    let value = gUnicodeConverter.convertToByteArray(aValue);
+
+    hash.init(hash.MD5);
+    hash.update(value, value.length);
+    return this._convertToHexString(hash.finish(false));
+  },
+
+  _convertToHexString: function Storage_convertToHexString(aData) {
+    let hex = "";
+    for (let i = 0; i < aData.length; i++)
+      hex += ("0" + aData.charCodeAt(i).toString(16)).slice(-2);
+    return hex;
+  },
+
+};
+
+let PageThumbsHistoryObserver = {
+  onDeleteURI: function Thumbnails_onDeleteURI(aURI, aGUID) {
+    PageThumbsStorage.remove(aURI.spec);
+  },
+
+  onClearHistory: function Thumbnails_onClearHistory() {
+    PageThumbsStorage.wipe();
+  },
+
+  onTitleChanged: function () {},
+  onBeginUpdateBatch: function () {},
+  onEndUpdateBatch: function () {},
+  onVisit: function () {},
+  onBeforeDeleteURI: function () {},
+  onPageChanged: function () {},
+  onDeleteVisits: function () {},
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
+};
+
 /**
  * A singleton handling the storage of page thumbnails.
  */
@@ -220,64 +321,6 @@ let PageThumbsCache = {
   getReadEntry: function Cache_getReadEntry(aKey, aCallback) {
     // Try to open the desired cache entry.
     this._openCacheEntry(aKey, Ci.nsICache.ACCESS_READ, aCallback);
-  },
-
-  /**
-   * Calls the given callback with a cache entry opened for writing.
-   * @param aKey The key identifying the desired cache entry.
-   * @param aCallback The callback that is called when the cache entry is ready.
-   */
-  getWriteEntry: function Cache_getWriteEntry(aKey, aCallback) {
-    // Try to open the desired cache entry.
-    this._openCacheEntry(aKey, Ci.nsICache.ACCESS_WRITE, aCallback);
-  },
-
-  /**
-   * Copies an existing cache entry's data to a new cache entry.
-   * @param aSourceKey The key that contains the data to copy.
-   * @param aTargetKey The key that will be the copy of aSourceKey's data.
-   */
-  _copy: function Cache_copy(aSourceKey, aTargetKey) {
-    let sourceEntry, targetEntry, waitingCount = 2;
-
-    function finish() {
-      if (sourceEntry)
-        sourceEntry.close();
-
-      if (targetEntry)
-        targetEntry.close();
-    }
-
-    function copyDataWhenReady() {
-      if (--waitingCount > 0)
-        return;
-
-      if (!sourceEntry || !targetEntry) {
-        finish();
-        return;
-      }
-
-      let inputStream = sourceEntry.openInputStream(0);
-      let outputStream = targetEntry.openOutputStream(0);
-
-      // Copy the image data to a new entry.
-      NetUtil.asyncCopy(inputStream, outputStream, function (aResult) {
-        if (Components.isSuccessCode(aResult))
-          targetEntry.markValid();
-
-        finish();
-      });
-    }
-
-    this.getReadEntry(aSourceKey, function (aSourceEntry) {
-      sourceEntry = aSourceEntry;
-      copyDataWhenReady();
-    });
-
-    this.getWriteEntry(aTargetKey, function (aTargetEntry) {
-      targetEntry = aTargetEntry;
-      copyDataWhenReady();
-    });
   },
 
   /**
