@@ -293,37 +293,43 @@ InspectorUI.prototype = {
   buildButtonsTooltip: function IUI_buildButtonsTooltip()
   {
     let keysbundle = Services.strings.createBundle("chrome://global-platform/locale/platformKeys.properties");
+    let separator = keysbundle.GetStringFromName("MODIFIER_SEPARATOR");
+
+    let button, tooltip;
 
     // Inspect Button - the shortcut string is built from the <key> element
 
     let key = this.chromeDoc.getElementById("key_inspect");
 
-    let modifiersAttr = key.getAttribute("modifiers");
+    if (key) {
+      let modifiersAttr = key.getAttribute("modifiers");
 
-    let combo = [];
+      let combo = [];
 
-    if (modifiersAttr.match("accel"))
+      if (modifiersAttr.match("accel"))
 #ifdef XP_MACOSX
-      combo.push(keysbundle.GetStringFromName("VK_META"));
+        combo.push(keysbundle.GetStringFromName("VK_META"));
 #else
-      combo.push(keysbundle.GetStringFromName("VK_CONTROL"));
+        combo.push(keysbundle.GetStringFromName("VK_CONTROL"));
 #endif
-    if (modifiersAttr.match("shift"))
-      combo.push(keysbundle.GetStringFromName("VK_SHIFT"));
-    if (modifiersAttr.match("alt"))
-      combo.push(keysbundle.GetStringFromName("VK_ALT"));
-    if (modifiersAttr.match("ctrl"))
-      combo.push(keysbundle.GetStringFromName("VK_CONTROL"));
-    if (modifiersAttr.match("meta"))
-      combo.push(keysbundle.GetStringFromName("VK_META"));
+      if (modifiersAttr.match("shift"))
+        combo.push(keysbundle.GetStringFromName("VK_SHIFT"));
+      if (modifiersAttr.match("alt"))
+        combo.push(keysbundle.GetStringFromName("VK_ALT"));
+      if (modifiersAttr.match("ctrl"))
+        combo.push(keysbundle.GetStringFromName("VK_CONTROL"));
+      if (modifiersAttr.match("meta"))
+        combo.push(keysbundle.GetStringFromName("VK_META"));
 
-    combo.push(key.getAttribute("key"));
+      combo.push(key.getAttribute("key"));
 
-    let separator = keysbundle.GetStringFromName("MODIFIER_SEPARATOR");
+      tooltip = this.strings.formatStringFromName("inspectButtonWithShortcutKey.tooltip",
+        [combo.join(separator)], 1);
+    } else {
+      tooltip = this.strings.GetStringFromName("inspectButton.tooltip");
+    }
 
-    let tooltip = this.strings.formatStringFromName("inspectButton.tooltiptext",
-      [combo.join(separator)], 1);
-    let button = this.chromeDoc.getElementById("inspector-inspect-toolbutton");
+    button = this.chromeDoc.getElementById("inspector-inspect-toolbutton");
     button.setAttribute("tooltiptext", tooltip);
 
     // Markup Button - the shortcut string is built from the accesskey attribute
@@ -335,7 +341,6 @@ InspectorUI.prototype = {
 #else
     let altString = keysbundle.GetStringFromName("VK_ALT");
     let accesskey = button.getAttribute("accesskey");
-    let separator = keysbundle.GetStringFromName("MODIFIER_SEPARATOR");
     let shortcut = altString + separator + accesskey;
     tooltip = this.strings.formatStringFromName("markupButton.tooltipWithAccesskey",
       [shortcut], 1);
