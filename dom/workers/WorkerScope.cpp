@@ -844,6 +844,7 @@ private:
     DedicatedWorkerGlobalScope* scope =
       UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj, Class());
     if (scope) {
+      mozilla::dom::TraceProtoOrIfaceCache(aTrc, aObj);
       scope->_Trace(aTrc);
     }
   }
