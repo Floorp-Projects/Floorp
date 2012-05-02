@@ -2213,6 +2213,8 @@ Tab.prototype = {
     if (contentWin != contentWin.top)
         return;
 
+    this._hostChanged = true;
+
     let browser = BrowserApp.getBrowserForWindow(contentWin);
     let uri = browser.currentURI.spec;
     let documentURI = "";
@@ -2249,26 +2251,29 @@ Tab.prototype = {
     }
   },
 
+  // Properties used to cache security state used to update the UI
+  _state: null,
+  _hostChanged: false, // onLocationChange will flip this bit
+
   onSecurityChange: function(aWebProgress, aRequest, aState) {
-    let mode = "unknown";
-    if (aState & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
-      mode = "identified";
-    else if (aState & Ci.nsIWebProgressListener.STATE_SECURE_HIGH)
-      mode = "verified";
-    else if (aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN)
-      mode = "mixed";
-    else
-      mode = "unknown";
+    // Don't need to do anything if the data we use to update the UI hasn't changed
+    if (this._state == aState && !this._hostChanged)
+      return;
+
+    this._state = aState;
+    this._hostChanged = false;
+
+    let identity = IdentityHandler.checkIdentity(aState, this.browser);
 
     let message = {
       gecko: {
         type: "Content:SecurityChange",
         tabID: this.id,
-        mode: mode
+        identity: identity
       }
     };
 
-     sendMessageToJava(message);
+    sendMessageToJava(message);
   },
 
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
@@ -2521,13 +2526,44 @@ Tab.prototype = {
 var BrowserEventHandler = {
   init: function init() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
-    Services.obs.addObserver(this, "Gesture:ShowPress", false);
     Services.obs.addObserver(this, "Gesture:CancelTouch", false);
     Services.obs.addObserver(this, "Gesture:DoubleTap", false);
     Services.obs.addObserver(this, "Gesture:Scroll", false);
     Services.obs.addObserver(this, "dom-touch-listener-added", false);
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
+    BrowserApp.deck.addEventListener("touchstart", this, false);
+  },
+
+  handleEvent: function(aEvent) {
+    if (!BrowserApp.isBrowserContentDocumentDisplayed() || aEvent.touches.length > 1 || aEvent.defaultPrevented)
+      return;
+
+    let closest = aEvent.target;
+
+    if (closest) {
+      // If we've pressed a scrollable element, let Java know that we may
+      // want to override the scroll behaviour (for document sub-frames)
+      this._scrollableElement = this._findScrollableElement(closest, true);
+      this._firstScrollEvent = true;
+
+      if (this._scrollableElement != null) {
+        // Discard if it's the top-level scrollable, we let Java handle this
+        let doc = BrowserApp.selectedBrowser.contentDocument;
+        if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
+          sendMessageToJava({ gecko: { type: "Panning:Override" } });
+      }
+    }
+
+    if (!ElementTouchHelper.isElementClickable(closest))
+      closest = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow,
+                                                    aEvent.changedTouches[0].screenX,
+                                                    aEvent.changedTouches[0].screenY);
+    if (!closest)
+      closest = aEvent.target;
+
+    if (closest)
+      this._doTapHighlight(closest);
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -2562,12 +2598,19 @@ var BrowserEventHandler = {
       // the user wanted, and neither can any non-root sub-frame, cancel the
       // override so that Java can handle panning the main document.
       let data = JSON.parse(aData);
+
+      // round the scroll amounts because they come in as floats and might be
+      // subject to minor rounding errors because of zoom values. I've seen values
+      // like 0.99 come in here and get truncated to 0; this avoids that problem.
+      data.x = Math.round(data.x);
+      data.y = Math.round(data.y);
+
       if (this._firstScrollEvent) {
         while (this._scrollableElement != null && !this._elementCanScroll(this._scrollableElement, data.x, data.y))
           this._scrollableElement = this._findScrollableElement(this._scrollableElement, false);
 
         let doc = BrowserApp.selectedBrowser.contentDocument;
-        if (this._scrollableElement == doc.body || this._scrollableElement == doc.documentElement) {
+        if (this._scrollableElement == null || this._scrollableElement == doc.body || this._scrollableElement == doc.documentElement) {
           sendMessageToJava({ gecko: { type: "Panning:CancelOverride" } });
           return;
         }
@@ -2584,32 +2627,12 @@ var BrowserEventHandler = {
       }
     } else if (aTopic == "Gesture:CancelTouch") {
       this._cancelTapHighlight();
-    } else if (aTopic == "Gesture:ShowPress") {
-      let data = JSON.parse(aData);
-      let closest = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow, data.x, data.y);
-      if (!closest)
-        closest = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow, data.x, data.y);
-      if (closest) {
-        this._doTapHighlight(closest);
-
-        // If we've pressed a scrollable element, let Java know that we may
-        // want to override the scroll behaviour (for document sub-frames)
-        this._scrollableElement = this._findScrollableElement(closest, true);
-        this._firstScrollEvent = true;
-
-        if (this._scrollableElement != null) {
-          // Discard if it's the top-level scrollable, we let Java handle this
-          let doc = BrowserApp.selectedBrowser.contentDocument;
-          if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
-            sendMessageToJava({ gecko: { type: "Panning:Override" } });
-        }
-      }
     } else if (aTopic == "Gesture:SingleTap") {
       let element = this._highlightElement;
       if (element && !SelectHelper.handleClick(element)) {
         try {
           let data = JSON.parse(aData);
-  
+
           this._sendMouseEvent("mousemove", element, data.x, data.y);
           this._sendMouseEvent("mousedown", element, data.x, data.y);
           this._sendMouseEvent("mouseup",   element, data.x, data.y);
@@ -2824,24 +2847,11 @@ var BrowserEventHandler = {
   },
 
   _elementCanScroll: function(elem, x, y) {
-    let scrollX = true;
-    let scrollY = true;
+    let scrollX = (x < 0 && elem.scrollLeft > 0)
+               || (x > 0 && elem.scrollLeft < (elem.scrollWidth - elem.clientWidth));
 
-    if (x < 0) {
-      if (elem.scrollLeft <= 0) {
-        scrollX = false;
-      }
-    } else if (elem.scrollLeft >= (elem.scrollWidth - elem.clientWidth)) {
-      scrollX = false;
-    }
-
-    if (y < 0) {
-      if (elem.scrollTop <= 0) {
-        scrollY = false;
-      }
-    } else if (elem.scrollTop >= (elem.scrollHeight - elem.clientHeight)) {
-      scrollY = false;
-    }
+    let scrollY = (y < 0 && elem.scrollTop > 0)
+               || (y > 0 && elem.scrollTop < (elem.scrollHeight - elem.clientHeight));
 
     return scrollX || scrollY;
   }
@@ -3593,13 +3603,10 @@ var ViewportHandler = {
     if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
       return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
 
-    let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
-    if (handheldFriendly == "true")
-      return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
-
     if (aWindow.document instanceof XULDocument)
       return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
+
+    let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
     // viewport details found here
     // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
@@ -3618,6 +3625,15 @@ var ViewportHandler = {
 
     let allowZoomStr = windowUtils.getDocumentMetadata("viewport-user-scalable");
     let allowZoom = !/^(0|no|false)$/.test(allowZoomStr); // WebKit allows 0, "no", or "false"
+
+
+    if (scale == NaN && minScale == NaN && maxScale == NaN && allowZoomStr == "" && widthStr == "" && heightStr == "") {
+	// Only check for HandheldFriendly if we don't have a viewport meta tag
+	let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
+
+	if (handheldFriendly == "true")
+	    return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
+    }
 
     scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
     minScale = this.clamp(minScale, kViewportMinScale, kViewportMaxScale);
@@ -4602,6 +4618,159 @@ var CharacterEncoding = {
     let docCharset = browser.docShell.QueryInterface(Ci.nsIDocCharset);
     docCharset.charset = aEncoding;
     browser.reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+  }
+};
+
+var IdentityHandler = {
+  // Mode strings used to control CSS display
+  IDENTITY_MODE_IDENTIFIED       : "identified", // High-quality identity information
+  IDENTITY_MODE_DOMAIN_VERIFIED  : "verified",   // Minimal SSL CA-signed domain verification
+  IDENTITY_MODE_UNKNOWN          : "unknown",  // No trusted identity information
+
+  // Cache the most recent SSLStatus and Location seen in getIdentityStrings
+  _lastStatus : null,
+  _lastLocation : null,
+
+  /**
+   * Helper to parse out the important parts of _lastStatus (of the SSL cert in
+   * particular) for use in constructing identity UI strings
+  */
+  getIdentityData : function() {
+    let result = {};
+    let status = this._lastStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+    let cert = status.serverCert;
+
+    // Human readable name of Subject
+    result.subjectOrg = cert.organization;
+
+    // SubjectName fields, broken up for individual access
+    if (cert.subjectName) {
+      result.subjectNameFields = {};
+      cert.subjectName.split(",").forEach(function(v) {
+        let field = v.split("=");
+        this[field[0]] = field[1];
+      }, result.subjectNameFields);
+
+      // Call out city, state, and country specifically
+      result.city = result.subjectNameFields.L;
+      result.state = result.subjectNameFields.ST;
+      result.country = result.subjectNameFields.C;
+    }
+
+    // Human readable name of Certificate Authority
+    result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
+    result.cert = cert;
+
+    return result;
+  },
+
+  getIdentityMode: function getIdentityMode(aState) {
+    if (aState & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
+      return this.IDENTITY_MODE_IDENTIFIED;
+
+    if (aState & Ci.nsIWebProgressListener.STATE_SECURE_HIGH)
+      return this.IDENTITY_MODE_DOMAIN_VERIFIED;
+
+    return this.IDENTITY_MODE_UNKNOWN;
+  },
+
+  /**
+   * Determine the identity of the page being displayed by examining its SSL cert
+   * (if available). Return the data needed to update the UI.
+   */
+  checkIdentity: function checkIdentity(aState, aBrowser) {
+    this._lastStatus = aBrowser.securityUI
+                               .QueryInterface(Components.interfaces.nsISSLStatusProvider)
+                               .SSLStatus;
+
+    // Don't pass in the actual location object, since it can cause us to 
+    // hold on to the window object too long.  Just pass in the fields we
+    // care about. (bug 424829)
+    let locationObj = {};
+    try {
+      let location = aBrowser.contentWindow.location;
+      locationObj.host = location.host;
+      locationObj.hostname = location.hostname;
+      locationObj.port = location.port;
+    } catch (ex) {
+      // Can sometimes throw if the URL being visited has no host/hostname,
+      // e.g. about:blank. The _state for these pages means we won't need these
+      // properties anyways, though.
+    }
+    this._lastLocation = locationObj;
+
+    let mode = this.getIdentityMode(aState);
+    let result = { mode: mode };
+
+    // We can't to do anything else for pages without identity data
+    if (mode == this.IDENTITY_MODE_UNKNOWN)
+      return result;
+
+    // Ideally we'd just make this a Java string
+    result.encrypted = Strings.browser.GetStringFromName("identity.encrypted2");
+    result.host = this.getEffectiveHost();
+
+    let iData = this.getIdentityData();
+    result.verifier = Strings.browser.formatStringFromName("identity.identified.verifier", [iData.caOrg], 1);
+
+    // If the cert is identified, then we can populate the results with credentials
+    if (mode == this.IDENTITY_MODE_IDENTIFIED) {
+      result.owner = iData.subjectOrg;
+
+      // Build an appropriate supplemental block out of whatever location data we have
+      let supplemental = "";
+      if (iData.city)
+        supplemental += iData.city + "\n";
+      if (iData.state && iData.country)
+        supplemental += Strings.browser.formatStringFromName("identity.identified.state_and_country", [iData.state, iData.country], 2);
+      else if (iData.state) // State only
+        supplemental += iData.state;
+      else if (iData.country) // Country only
+        supplemental += iData.country;
+      result.supplemental = supplemental;
+
+      return result;
+    }
+    
+    // Otherwise, we don't know the cert owner
+    result.owner = Strings.browser.GetStringFromName("identity.ownerUnknown2");
+
+    // Cache the override service the first time we need to check it
+    if (!this._overrideService)
+      this._overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(Ci.nsICertOverrideService);
+
+    // Check whether this site is a security exception. XPConnect does the right
+    // thing here in terms of converting _lastLocation.port from string to int, but
+    // the overrideService doesn't like undefined ports, so make sure we have
+    // something in the default case (bug 432241).
+    // .hostname can return an empty string in some exceptional cases -
+    // hasMatchingOverride does not handle that, so avoid calling it.
+    // Updating the tooltip value in those cases isn't critical.
+    // FIXME: Fixing bug 646690 would probably makes this check unnecessary
+    if (this._lastLocation.hostname &&
+        this._overrideService.hasMatchingOverride(this._lastLocation.hostname,
+                                                  (this._lastLocation.port || 443),
+                                                  iData.cert, {}, {}))
+      result.verifier = Strings.browser.GetStringFromName("identity.identified.verified_by_you");
+
+    return result;
+  },
+
+  /**
+   * Return the eTLD+1 version of the current hostname
+   */
+  getEffectiveHost: function getEffectiveHost() {
+    if (!this._IDNService)
+      this._IDNService = Cc["@mozilla.org/network/idn-service;1"]
+                         .getService(Ci.nsIIDNService);
+    try {
+      let baseDomain = Services.eTLD.getBaseDomainFromHost(this._lastLocation.hostname);
+      return this._IDNService.convertToDisplayIDN(baseDomain, {});
+    } catch (e) {
+      // If something goes wrong (e.g. hostname is an IP address) just fail back
+      // to the full domain.
+      return this._lastLocation.hostname;
+    }
   }
 };
 
