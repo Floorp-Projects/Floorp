@@ -23,6 +23,69 @@ DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs)
   return true;
 }
 
+// We should use JSFunction objects for interface objects, but we need a custom
+// hasInstance hook because we have new interface objects on prototype chains of
+// old (XPConnect-based) bindings. Because Function.prototype.toString throws if
+// passed a non-Function object we also need to provide our own toString method
+// for interface objects.
+
+enum {
+  TOSTRING_CLASS_RESERVED_SLOT = 0,
+  TOSTRING_NAME_RESERVED_SLOT = 1
+};
+
+JSBool
+InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
+{
+  JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+
+  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  if (!obj) {
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
+                         "null", "object");
+    return false;
+  }
+
+  jsval v = js::GetFunctionNativeReserved(callee, TOSTRING_CLASS_RESERVED_SLOT);
+  JSClass* clasp = static_cast<JSClass*>(JSVAL_TO_PRIVATE(v));
+
+  v = js::GetFunctionNativeReserved(callee, TOSTRING_NAME_RESERVED_SLOT);
+  JSString* jsname = static_cast<JSString*>(JSVAL_TO_STRING(v));
+  size_t length;
+  const jschar* name = JS_GetInternedStringCharsAndLength(jsname, &length);
+
+  if (js::GetObjectJSClass(obj) != clasp) {
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                         NS_ConvertUTF16toUTF8(name).get(), "toString",
+                         "object");
+    return false;
+  }
+
+  JS::Value* argv = JS_ARGV(cx, vp);
+  uint32_t indent = 0;
+  if (argc != 0 && !JS_ValueToECMAUint32(cx, argv[0], &indent))
+      return false;
+
+  nsAutoString spaces;
+  while (indent-- > 0) {
+    spaces.Append(PRUnichar(' '));
+  }
+
+  nsString str;
+  str.Append(spaces);
+  str.AppendLiteral("function ");
+  str.Append(name, length);
+  str.AppendLiteral("() {");
+  str.Append('\n');
+  str.Append(spaces);
+  str.AppendLiteral("    [native code]");
+  str.Append('\n');
+  str.Append(spaces);
+  str.AppendLiteral("}");
+
+  return xpc::NonVoidStringToJsval(cx, str, vp);
+}
+
 static JSObject*
 CreateInterfaceObject(JSContext* cx, JSObject* global, JSObject* receiver,
                       JSClass* constructorClass, JSNative constructorNative,
@@ -52,6 +115,27 @@ CreateInterfaceObject(JSContext* cx, JSObject* global, JSObject* receiver,
 
   if (staticMethods && !JS_DefineFunctions(cx, constructor, staticMethods)) {
     return NULL;
+  }
+
+  if (constructorClass) {
+    JSFunction* toString = js::DefineFunctionWithReserved(cx, constructor,
+                                                          "toString",
+                                                          InterfaceObjectToString,
+                                                          0, 0);
+    if (!toString) {
+      return NULL;
+    }
+
+    JSObject* toStringObj = JS_GetFunctionObject(toString);
+    js::SetFunctionNativeReserved(toStringObj, TOSTRING_CLASS_RESERVED_SLOT,
+                                  PRIVATE_TO_JSVAL(constructorClass));
+
+    JSString *str = ::JS_InternString(cx, name);
+    if (!str) {
+      return NULL;
+    }
+    js::SetFunctionNativeReserved(toStringObj, TOSTRING_NAME_RESERVED_SLOT,
+                                  STRING_TO_JSVAL(str));
   }
 
   if (constants && !DefineConstants(cx, constructor, constants)) {
