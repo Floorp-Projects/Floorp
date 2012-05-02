@@ -2452,6 +2452,44 @@ NoteLValue(JSContext *cx, ParseNode *pn, TreeContext *tc, unsigned dflag = PND_A
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
 }
 
+static bool
+NoteNameUse(ParseNode *pn, TreeContext *tc)
+{
+    PropertyName *name = pn->pn_atom->asPropertyName();
+    StmtInfo *stmt = LexicalLookup(tc, name, NULL);
+
+    MultiDeclRange mdl = tc->decls.lookupMulti(name);
+
+    Definition *dn;
+    if (!mdl.empty()) {
+        dn = mdl.front();
+    } else {
+        if (AtomDefnAddPtr p = tc->lexdeps->lookupForAdd(name)) {
+            dn = p.value();
+        } else {
+            /*
+             * No definition before this use in any lexical scope.
+             * Create a placeholder definition node to either:
+             * - Be adopted when we parse the real defining
+             *   declaration, or
+             * - Be left as a free variable definition if we never
+             *   see the real definition.
+             */
+            dn = MakePlaceholder(pn, tc);
+            if (!dn || !tc->lexdeps->add(p, name, dn))
+                return false;
+        }
+    }
+
+    JS_ASSERT(dn->isDefn());
+    LinkUseToDef(pn, dn, tc);
+
+    if (stmt && stmt->type == STMT_WITH)
+        pn->pn_dflags |= PND_DEOPTIMIZED;
+
+    return true;
+}
+
 #if JS_HAS_DESTRUCTURING
 
 static JSBool
@@ -2636,6 +2674,15 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, TreeContext *
                 }
                 ok = BindDestructuringVar(cx, data, pn, tc);
             } else {
+                /*
+                 * If right and left point to the same node, then this is
+                 * destructuring shorthand ({x} = ...). In that case,
+                 * identifierName was not used to parse 'x' so 'x' has not been
+                 * officially linked to its def or registered in lexdeps. Do
+                 * that now.
+                 */
+                if (pair->pn_right == pair->pn_left && !NoteNameUse(pn, tc))
+                    return false;
                 ok = BindDestructuringLHS(cx, pn, tc);
             }
             if (!ok)
@@ -6636,36 +6683,8 @@ Parser::identifierName(bool afterDoubleDot)
 #endif
                ) && !(tc->flags & TCF_DECL_DESTRUCTURING))
     {
-        StmtInfo *stmt = LexicalLookup(tc, name, NULL);
-
-        MultiDeclRange mdl = tc->decls.lookupMulti(name);
-
-        Definition *dn;
-        if (!mdl.empty()) {
-            dn = mdl.front();
-        } else {
-            if (AtomDefnAddPtr p = tc->lexdeps->lookupForAdd(name)) {
-                dn = p.value();
-            } else {
-                /*
-                 * No definition before this use in any lexical scope.
-                 * Create a placeholder definition node to either:
-                 * - Be adopted when we parse the real defining
-                 *   declaration, or
-                 * - Be left as a free variable definition if we never
-                 *   see the real definition.
-                 */
-                dn = MakePlaceholder(node, tc);
-                if (!dn || !tc->lexdeps->add(p, name, dn))
-                    return NULL;
-            }
-        }
-
-        JS_ASSERT(dn->isDefn());
-        LinkUseToDef(node, dn, tc);
-
-        if (stmt && stmt->type == STMT_WITH)
-            node->pn_dflags |= PND_DEOPTIMIZED;
+        if (!NoteNameUse(node, tc))
+            return NULL;
     }
 
 #if JS_HAS_XML_SUPPORT
