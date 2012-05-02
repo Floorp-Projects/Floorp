@@ -126,7 +126,8 @@ static const char* const sEventNames[] = {
   "animationend",
   "animationiteration",
   "devicemotion",
-  "deviceorientation"
+  "deviceorientation",
+  "deviceproximity"
 };
 
 static char *sPopupAllowedEvents;
@@ -1553,6 +1554,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_devicemotion];
   case NS_DEVICE_ORIENTATION:
     return sEventNames[eDOMEvents_deviceorientation];
+  case NS_DEVICE_PROXIMITY:
+    return sEventNames[eDOMEvents_deviceproximity];
   case NS_FULLSCREENCHANGE:
     return sEventNames[eDOMEvents_mozfullscreenchange];
   case NS_FULLSCREENERROR:

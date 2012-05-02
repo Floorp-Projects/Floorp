@@ -220,8 +220,35 @@ nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
         FireDOMMotionEvent(domdoc, target, type, x, y, z);
       else if (type == nsIDeviceSensorData::TYPE_ORIENTATION)
         FireDOMOrientationEvent(domdoc, target, x, y, z);
+      else if (type == nsIDeviceSensorData::TYPE_PROXIMITY)
+        FireDOMProximityEvent(target, x, y, z);
     }
   }
+}
+
+void
+nsDeviceSensors::FireDOMProximityEvent(nsIDOMEventTarget *aTarget,
+                                       double aValue,
+                                       double aMin,
+                                       double aMax)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMDeviceProximityEvent(getter_AddRefs(event), nsnull, nsnull);
+  nsCOMPtr<nsIDOMDeviceProximityEvent> oe = do_QueryInterface(event);
+
+  oe->InitDeviceProximityEvent(NS_LITERAL_STRING("deviceproximity"),
+                               true,
+                               false,
+                               aValue,
+                               aMin,
+                               aMax);
+
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  if (privateEvent) {
+    privateEvent->SetTrusted(true);
+  }
+  bool defaultActionEnabled;
+  aTarget->DispatchEvent(event, &defaultActionEnabled);
 }
 
 void

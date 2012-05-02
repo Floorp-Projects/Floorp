@@ -290,6 +290,8 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     }
   } else if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
     EnableDevice(NS_DEVICE_ORIENTATION);
+  } else if (aTypeAtom == nsGkAtoms::ondeviceproximity) {
+    EnableDevice(NS_DEVICE_PROXIMITY);
   } else if (aTypeAtom == nsGkAtoms::ondevicemotion) {
     EnableDevice(NS_DEVICE_MOTION);
   } else if ((aType >= NS_MOZTOUCH_DOWN && aType <= NS_MOZTOUCH_UP) ||
@@ -346,6 +348,9 @@ nsEventListenerManager::EnableDevice(PRUint32 aType)
     case NS_DEVICE_ORIENTATION:
       window->EnableDeviceSensor(SENSOR_ORIENTATION);
       break;
+    case NS_DEVICE_PROXIMITY:
+      window->EnableDeviceSensor(SENSOR_PROXIMITY);
+      break;
     case NS_DEVICE_MOTION:
       window->EnableDeviceSensor(SENSOR_ACCELERATION);
       window->EnableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
@@ -375,6 +380,9 @@ nsEventListenerManager::DisableDevice(PRUint32 aType)
       window->DisableDeviceSensor(SENSOR_ACCELERATION);
       window->DisableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
       window->DisableDeviceSensor(SENSOR_GYROSCOPE);
+      break;
+    case NS_DEVICE_PROXIMITY:
+      window->DisableDeviceSensor(SENSOR_PROXIMITY);
       break;
     default:
       NS_WARNING("Disabling an unknown device sensor.");

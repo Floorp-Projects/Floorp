@@ -44,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "nsIDOMDeviceOrientationEvent.h"
+#include "nsIDOMDeviceProximityEvent.h"
 #include "nsIDOMDeviceMotionEvent.h"
 #include "nsDOMDeviceMotionEvent.h"
 #include "mozilla/TimeStamp.h"
@@ -73,7 +74,12 @@ public:
 private:
   // sensor -> window listener
   nsTArray<nsTArray<nsIDOMWindow*>* > mWindowListeners;
-  
+
+  void FireDOMProximityEvent(nsIDOMEventTarget *aTarget,
+                             double aValue,
+                             double aMin,
+                             double aMax);
+
   void FireDOMOrientationEvent(class nsIDOMDocument *domDoc, 
                                class nsIDOMEventTarget *target,
                                double alpha,
