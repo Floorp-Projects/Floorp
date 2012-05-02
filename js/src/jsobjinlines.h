@@ -975,7 +975,7 @@ JSObject::propertyCount() const
 }
 
 inline bool
-JSObject::hasPropertyTable() const
+JSObject::hasShapeTable() const
 {
     return lastProperty()->hasTable();
 }
