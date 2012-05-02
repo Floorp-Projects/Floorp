@@ -683,16 +683,6 @@ static JSFunctionSpec math_static_methods[] = {
     JS_FS_END
 };
 
-bool
-js_IsMathFunction(Native native)
-{
-    for (size_t i=0; math_static_methods[i].name != NULL; i++) {
-        if (native == math_static_methods[i].call)
-            return true;
-    }
-    return false;
-}
-
 JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj_)
 {
