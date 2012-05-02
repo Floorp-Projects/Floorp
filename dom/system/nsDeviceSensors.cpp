@@ -125,7 +125,7 @@ NS_IMPL_ISUPPORTS1(nsDeviceSensors, nsIDeviceSensors)
 nsDeviceSensors::nsDeviceSensors()
 {
   mLastDOMMotionEventTime = TimeStamp::Now();
-  mEnabled = Preferences::GetBool("device.motion.enabled", true);
+  mEnabled = Preferences::GetBool("device.sensors.enabled", true);
 
   for (int i = 0; i < NUM_SENSOR_TYPE; i++) {
     nsTArray<nsIDOMWindow*> *windows = new nsTArray<nsIDOMWindow*>();
@@ -149,6 +149,9 @@ nsDeviceSensors::~nsDeviceSensors()
 
 NS_IMETHODIMP nsDeviceSensors::AddWindowListener(PRUint32 aType, nsIDOMWindow *aWindow)
 {
+  if (!mEnabled)
+    return NS_OK;
+
   if (mWindowListeners[aType]->IndexOf(aWindow) != NoIndex)
     return NS_OK;
 
@@ -184,9 +187,6 @@ NS_IMETHODIMP nsDeviceSensors::RemoveWindowAsListener(nsIDOMWindow *aWindow)
 void 
 nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
 {
-  if (!mEnabled)
-    return;
-
   PRUint32 type = aSensorData.sensor();
 
   double x = aSensorData.values()[0];
