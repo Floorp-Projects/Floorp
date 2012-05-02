@@ -359,8 +359,11 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
         usingDisplayport ? rootDisplayport : rootFrame->GetVisualOverflowRect(),
         nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
 
-      // Send empty paint transaction in order to release retained layers
-      if (displayport.IsEmpty()) {
+      // If we are hiding something that is a display root then send empty paint
+      // transaction in order to release retained layers because it won't get
+      // any more paint requests when it is hidden.
+      if (displayport.IsEmpty() &&
+          rootFrame == nsLayoutUtils::GetDisplayRootFrame(rootFrame)) {
         nsCOMPtr<nsIWidget> widget = GetWidget();
         if (widget) {
           bool isRetainingManager;

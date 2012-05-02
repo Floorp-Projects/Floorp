@@ -1126,8 +1126,7 @@ _getvalue(NPP aNPP,
         case NPNVasdEnabledBool: // Intentional fall-through
         case NPNVisOfflineBool: // Intentional fall-through
         case NPNVSupportsXEmbedBool: // Intentional fall-through
-        case NPNVSupportsWindowless: // Intentional fall-through
-        case NPNVprivateModeBool: {
+        case NPNVSupportsWindowless: { // Intentional fall-through
             NPError result;
             bool value;
             PluginModuleChild::current()->

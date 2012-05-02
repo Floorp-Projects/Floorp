@@ -394,11 +394,13 @@ RegExpObject::createNoStatics(JSContext *cx, HandleAtom source, RegExpFlag flags
 bool
 RegExpObject::createShared(JSContext *cx, RegExpGuard *g)
 {
+    RootedVar<RegExpObject*> self(cx, this);
+
     JS_ASSERT(!maybeShared());
     if (!cx->compartment->regExps.get(cx, getSource(), getFlags(), g))
         return false;
 
-    setShared(cx, **g);
+    self->setShared(cx, **g);
     return true;
 }
 

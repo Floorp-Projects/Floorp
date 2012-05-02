@@ -226,6 +226,14 @@ struct PropDesc {
 
     bool wrapInto(JSContext *cx, JSObject *obj, const jsid &id, jsid *wrappedId,
                   PropDesc *wrappedDesc) const;
+
+    struct StackRoot {
+        StackRoot(JSContext *cx, PropDesc *pd)
+          : pdRoot(cx, &pd->pd_), valueRoot(cx, &pd->value_),
+            getRoot(cx, &pd->get_), setRoot(cx, &pd->set_)
+        {}
+        RootValue pdRoot, valueRoot, getRoot, setRoot;
+    };
 };
 
 class DenseElementsHeader;

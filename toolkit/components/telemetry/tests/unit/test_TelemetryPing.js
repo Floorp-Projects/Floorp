@@ -186,6 +186,19 @@ function checkHistograms(request, response) {
   do_check_eq(uneval(tc), 
               uneval(expected_tc));
 
+  // The ping should include data from memory reporters.  We can't check that
+  // this data is correct, because we can't control the values returned by the
+  // memory reporters.  But we can at least check that the data is there.
+  //
+  // It's important to check for the presence of reporters with a mix of units,
+  // because TelemetryPing has separate logic for each one.  But we can't
+  // currently check UNITS_COUNT_CUMULATIVE or UNITS_PERCENTAGE because
+  // Telemetry doesn't touch a memory reporter with these units that's
+  // available on all platforms.
+
+  do_check_true('MEMORY_JS_GC_HEAP' in payload.histograms); // UNITS_BYTES
+  do_check_true('MEMORY_JS_COMPARTMENTS_SYSTEM' in payload.histograms); // UNITS_COUNT
+
   do_check_true(("mainThread" in payload.slowSQL) &&
                 ("otherThreads" in payload.slowSQL));
   gFinished = true;
