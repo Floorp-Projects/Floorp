@@ -43,12 +43,12 @@
 #define jsinfer_h___
 
 #include "jsalloc.h"
-#include "jscell.h"
 #include "jsfriendapi.h"
 #include "jsprvtd.h"
 
 #include "ds/LifoAlloc.h"
 #include "gc/Barrier.h"
+#include "gc/Heap.h"
 #include "js/HashTable.h"
 
 namespace JS {
