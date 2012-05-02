@@ -122,8 +122,8 @@ let gBrowserThumbnails = {
     if (aBrowser != gBrowser.selectedBrowser)
       return false;
 
-    // Don't capture in private browsing mode.
-    if (gPrivateBrowsingUI.privateBrowsingEnabled)
+    // Don't capture in per-window private browsing mode.
+    if (gPrivateBrowsingUI.privateWindow)
       return false;
 
     let doc = aBrowser.contentDocument;
