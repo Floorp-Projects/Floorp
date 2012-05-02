@@ -212,6 +212,10 @@ DEFINES += \
   -DUA_BUILDID=$(UA_BUILDID) \
   $(NULL)
 
+ifdef MOZ_LINKER_EXTRACT
+DEFINES += -DMOZ_LINKER_EXTRACT=1
+endif
+
 GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
