@@ -77,11 +77,15 @@ const PARCEL_SIZE_SIZE = UINT32_SIZE;
 
 const PDU_HEX_OCTET_SIZE = 4;
 
+const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
+
 let RILQUIRKS_CALLSTATE_EXTRA_UINT32 = false;
 let RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = false;
 // This flag defaults to true since on RIL v6 and later, we get the
 // version number via the UNSOLICITED_RIL_CONNECTED parcel.
 let RILQUIRKS_V5_LEGACY = true;
+let RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = false;
+let RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE = false;
 
 /**
  * This object contains helpers buffering incoming data & deconstructing it
@@ -688,34 +692,46 @@ let RIL = {
       return;
     }
 
-    // The Samsung Galaxy S2 I-9100 radio sends an extra Uint32 in the
-    // call state.
-    let model_id = libcutils.property_get("ril.model_id");
-    if (DEBUG) debug("Detected RIL model " + model_id);
-    if (model_id == "I9100") {
-      if (DEBUG) {
-        debug("Detected I9100, enabling " +
-              "RILQUIRKS_CALLSTATE_EXTRA_UINT32, " +
-              "RILQUIRKS_DATACALLSTATE_DOWN_IS_UP.");
-      }
-      RILQUIRKS_CALLSTATE_EXTRA_UINT32 = true;
-      RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
-    }
-    if (model_id == "I9023" || model_id == "I9020") {
-      if (DEBUG) {
-        debug("Detected I9020/I9023, enabling " +
-              "RILQUIRKS_DATACALLSTATE_DOWN_IS_UP");
-      }
-      RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
-    }
     let ril_impl = libcutils.property_get("gsm.version.ril-impl");
-    if (ril_impl == "Qualcomm RIL 1.0") {
-      if (DEBUG) {
-        debug("Detected Qualcomm RIL 1.0, " +
-              "disabling RILQUIRKS_V5_LEGACY to false");
-      }
-      RILQUIRKS_V5_LEGACY = false;
+    if (DEBUG) debug("Detected RIL implementation " + ril_impl);
+    switch (ril_impl) {
+      case "Samsung RIL(IPC) v2.0":
+        // The Samsung Galaxy S2 I-9100 radio sends an extra Uint32 in the
+        // call state.
+        let model_id = libcutils.property_get("ril.model_id");
+        if (DEBUG) debug("Detected RIL model " + model_id);
+        if (model_id == "I9100") {
+          if (DEBUG) {
+            debug("Detected I9100, enabling " +
+                  "RILQUIRKS_DATACALLSTATE_DOWN_IS_UP, " +
+                  "RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL.");
+          }
+          RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
+          RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = true;
+          if (RILQUIRKS_V5_LEGACY) {
+            if (DEBUG) debug("...and RILQUIRKS_CALLSTATE_EXTRA_UINT32");
+            RILQUIRKS_CALLSTATE_EXTRA_UINT32 = true;
+          }
+        }
+        if (model_id == "I9023" || model_id == "I9020") {
+          if (DEBUG) {
+            debug("Detected I9020/I9023, enabling " +
+                  "RILQUIRKS_DATACALLSTATE_DOWN_IS_UP");
+          }
+          RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
+        }
+        break;
+      case "Qualcomm RIL 1.0":
+        if (DEBUG) {
+          debug("Detected Qualcomm RIL 1.0, " +
+                "disabling RILQUIRKS_V5_LEGACY and " +
+                "enabling RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE.");
+        }
+        RILQUIRKS_V5_LEGACY = false;
+        RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE = true;
+        break;
     }
+
     this.rilQuirksInitialized = true;
   },
 
@@ -1132,7 +1148,26 @@ let RIL = {
    *        Integer doing something XXX TODO
    */
   dial: function dial(options) {
-    let token = Buf.newParcel(REQUEST_DIAL);
+    let dial_request_type = REQUEST_DIAL;
+    if (this.voiceRegistrationState.emergencyCallsOnly) {
+      if (!this._isEmergencyNumber(options.number)) {
+        if (DEBUG) {
+          // TODO: Notify an error here so that the DOM will see an error event.
+          debug(options.number + " is not a valid emergency number.");
+        }
+        return;
+      }
+      if (RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL) {
+        dial_request_type = REQUEST_DIAL_EMERGENCY_CALL;
+      }
+    } else {
+      if (this._isEmergencyNumber(options.number) &&
+          RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL) {
+        dial_request_type = REQUEST_DIAL_EMERGENCY_CALL;
+      }
+    }
+
+    let token = Buf.newParcel(dial_request_type);
     Buf.writeString(options.number);
     Buf.writeUint32(options.clirMode || 0);
     Buf.writeUint32(options.uusInfo || 0);
@@ -1429,6 +1464,29 @@ let RIL = {
     Buf.simpleRequest(REQUEST_LAST_CALL_FAIL_CAUSE);
   },
 
+  /**
+   * Check a given number against the list of emergency numbers provided by the RIL.
+   *
+   * @param number
+   *        The number to look up.
+   */
+   _isEmergencyNumber: function _isEmergencyNumber(number) {
+     // Check read-write ecclist property first.
+     let numbers = libcutils.property_get("ril.ecclist");
+     if (!numbers) {
+       // Then read-only ecclist property since others RIL only uses this.
+       numbers = libcutils.property_get("ro.ril.ecclist");
+     }
+
+     if (numbers) {
+       numbers = numbers.split(",");
+     } else {
+       // No ecclist system property, so use our own list.
+       numbers = DEFAULT_EMERGENCY_NUMBERS;
+     }
+
+     return numbers.indexOf(number) != -1;
+   },
 
   /**
    * Process ICC status.
@@ -1613,12 +1671,23 @@ let RIL = {
   },
 
   _processVoiceRegistrationState: function _processVoiceRegistrationState(state) {
+    this.initRILQuirks();
+
     let rs = this.voiceRegistrationState;
     let stateChanged = false;
 
     let regState = RIL.parseInt(state[0], NETWORK_CREG_STATE_UNKNOWN);
     if (rs.regState != regState) {
       rs.regState = regState;
+      if (RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE) {
+        rs.emergencyCallsOnly =
+          (regState != NETWORK_CREG_STATE_REGISTERED_HOME) &&
+          (regState != NETWORK_CREG_STATE_REGISTERED_ROAMING);
+      } else {
+        rs.emergencyCallsOnly =
+          (regState >= NETWORK_CREG_STATE_NOT_SEARCHING_EMERGENCY_CALLS) &&
+          (regState <= NETWORK_CREG_STATE_UNKNOWN_EMERGENCY_CALLS);
+      }
       stateChanged = true;
       if (regState == NETWORK_CREG_STATE_REGISTERED_HOME ||
           regState == NETWORK_CREG_STATE_REGISTERED_ROAMING) {
