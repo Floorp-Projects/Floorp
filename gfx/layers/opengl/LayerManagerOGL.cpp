@@ -182,25 +182,17 @@ LayerManagerOGL::CreateContext()
   return context.forget();
 }
 
-bool
-LayerManagerOGL::InitAndAddPrograms(ShaderProgramType aType)
+void
+LayerManagerOGL::AddPrograms(ShaderProgramType aType)
 {
   for (PRUint32 maskType = MaskNone; maskType < NumMaskTypes; ++maskType) {
     if (ProgramProfileOGL::ProgramExists(aType, static_cast<MaskType>(maskType))) {
-      ShaderProgramOGL* p = new ShaderProgramOGL(this->gl(),
+      mPrograms[aType].mVariations[maskType] = new ShaderProgramOGL(this->gl(),
         ProgramProfileOGL::GetProfileFor(aType, static_cast<MaskType>(maskType)));
-      if (!p->Initialize()) {
-        delete p;
-        mPrograms[aType].mVariations[maskType] = nsnull;
-        return false;
-      }
-      mPrograms[aType].mVariations[maskType] = p;
     } else {
       mPrograms[aType].mVariations[maskType] = nsnull;
     }
   }
-
-  return true;
 }
 
 bool
@@ -227,12 +219,16 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
-  // we must initialise shaders in order
   mPrograms.AppendElements(NumProgramTypes);
   for (int type = 0; type < NumProgramTypes; ++type) {
-    if (!InitAndAddPrograms(static_cast<ShaderProgramType>(type)))
-      return false;
+    AddPrograms(static_cast<ShaderProgramType>(type));
   }
+
+  // initialise a common shader to check that we can actually compile a shader
+  if (!mPrograms[gl::RGBALayerProgramType].mVariations[MaskNone]->Initialize()) {
+    return false;
+  }
+
 
   mGLContext->fGenFramebuffers(1, &mBackBufferFBO);
 
@@ -678,6 +674,7 @@ LayerManagerOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
                                                 GLenum aWrapMode /* = LOCAL_GL_REPEAT */,
                                                 bool aFlipped /* = false */)
 {
+  NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
   GLuint vertAttribIndex =
     aProg->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
   GLuint texCoordAttribIndex =

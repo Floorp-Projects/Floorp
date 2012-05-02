@@ -198,10 +198,15 @@ const char* const ShaderProgramOGL::TexCoordAttrib = "aTexCoord";
 bool
 ShaderProgramOGL::Initialize()
 {
+  NS_ASSERTION(mProgramState == STATE_NEW, "Shader program has already been initialised");
+
   if (!CreateProgram(mProfile.mVertexShaderString,
                      mProfile.mFragmentShaderString)) {
+    mProgramState = STATE_ERROR;
     return false;
   }
+
+  mProgramState = STATE_OK;
 
   for (PRUint32 i = 0; i < mProfile.mUniforms.Length(); ++i) {
     mProfile.mUniforms[i].mLocation =
@@ -321,15 +326,6 @@ ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
 
   mProgram = result;
   return true;
-}
-
-void
-ShaderProgramOGL::CheckAndSetProjectionMatrix(const gfx3DMatrix& aMatrix)
-{
-  if (mProfile.mHasMatrixProj) {
-    Activate();
-    SetProjectionMatrix(aMatrix);
-  }
 }
 
 bool
