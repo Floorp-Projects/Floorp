@@ -102,6 +102,12 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+ifndef MOZ_NATIVE_PNG
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libpng/$(LIB_PREFIX)mozpng.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/gfx/angle/$(LIB_PREFIX)angle.$(LIB_SUFFIX) \
 	$(NULL)
