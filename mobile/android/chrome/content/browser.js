@@ -3592,13 +3592,10 @@ var ViewportHandler = {
     if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
       return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
 
-    let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
-    if (handheldFriendly == "true")
-      return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
-
     if (aWindow.document instanceof XULDocument)
       return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
+
+    let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
     // viewport details found here
     // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
@@ -3617,6 +3614,15 @@ var ViewportHandler = {
 
     let allowZoomStr = windowUtils.getDocumentMetadata("viewport-user-scalable");
     let allowZoom = !/^(0|no|false)$/.test(allowZoomStr); // WebKit allows 0, "no", or "false"
+
+
+    if (scale == NaN && minScale == NaN && maxScale == NaN && allowZoomStr == "" && widthStr == "" && heightStr == "") {
+	// Only check for HandheldFriendly if we don't have a viewport meta tag
+	let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
+
+	if (handheldFriendly == "true")
+	    return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
+    }
 
     scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
     minScale = this.clamp(minScale, kViewportMinScale, kViewportMaxScale);
