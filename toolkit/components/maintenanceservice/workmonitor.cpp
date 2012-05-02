@@ -326,7 +326,8 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
   // Check to make sure the udpater.exe module has the unique updater identity.
   // This is a security measure to make sure that the signed executable that
   // we will run is actually an updater.
-  HMODULE updaterModule = LoadLibrary(argv[0]);
+  HMODULE updaterModule = LoadLibraryEx(argv[0], NULL, 
+                                        LOAD_LIBRARY_AS_DATAFILE);
   if (!updaterModule) {
     LOG(("updater.exe module could not be loaded. (%d)\n", GetLastError()));
     result = FALSE;
