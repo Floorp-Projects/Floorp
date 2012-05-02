@@ -54,12 +54,6 @@
 
 #define MOZ_STORAGE_SERVICE_CONTRACTID MOZ_STORAGE_CONTRACTID_PREFIX "/service;1"
 
-/* dab3a846-3a59-4fc2-9745-c6ff48776f00 */
-#define MOZ_STORAGE_STATEMENT_WRAPPER_CID \
-{ 0xdab3a846, 0x3a59, 0x4fc2, {0x97, 0x45, 0xc6, 0xff, 0x48, 0x77, 0x6f, 0x00} }
-
-#define MOZ_STORAGE_STATEMENT_WRAPPER_CONTRACTID MOZ_STORAGE_CONTRACTID_PREFIX "/statement-wrapper;1"
-
 /* 3b667ee0-d2da-4ccc-9c3d-95f2ca6a8b4c */
 #define VACUUMMANAGER_CID \
 { 0x3b667ee0, 0xd2da, 0x4ccc, { 0x9c, 0x3d, 0x95, 0xf2, 0xca, 0x6a, 0x8b, 0x4c } }
