@@ -44,10 +44,10 @@
 #include "mozilla/Attributes.h"
 
 #include "jsapi.h"
-#include "jscell.h"
 #include "jsfriendapi.h"
 
 #include "gc/Barrier.h"
+#include "gc/Heap.h"
 
 class JSString;
 class JSDependentString;
