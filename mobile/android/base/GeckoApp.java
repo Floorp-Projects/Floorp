@@ -722,6 +722,18 @@ abstract public class GeckoApp
         });
     }
 
+    void handlePageShow(final int tabId) {
+        final Tab tab = Tabs.getInstance().getTab(tabId);
+        if (tab == null)
+            return;
+    
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                loadFavicon(tab);
+            }
+        });
+    }
+
     void updateAboutHomeTopSites() {
         if (mAboutHomeContent == null)
             return;
@@ -825,10 +837,8 @@ abstract public class GeckoApp
                 handleShowToast(msg, duration);
             } else if (event.equals("DOMContentLoaded")) {
                 final int tabId = message.getInt("tabID");
-                final String uri = message.getString("uri");
-                final String title = message.getString("title");
                 final String backgroundColor = message.getString("bgColor");
-                handleContentLoaded(tabId, uri, title);
+                handleContentLoaded(tabId);
                 Tab tab = Tabs.getInstance().getTab(tabId);
                 if (backgroundColor != null) {
                     tab.setCheckerboardColor(backgroundColor);
@@ -842,8 +852,6 @@ abstract public class GeckoApp
                 if (getLayerController() != null && Tabs.getInstance().isSelectedTab(tab)) {
                     getLayerController().setCheckerboardColor(tab.getCheckerboardColor());
                 }
-
-                Log.i(LOGTAG, "URI - " + uri + ", title - " + title);
             } else if (event.equals("DOMTitleChanged")) {
                 final int tabId = message.getInt("tabID");
                 final String title = message.getString("title");
@@ -896,6 +904,9 @@ abstract public class GeckoApp
                 final String uri = message.getString("uri");
                 final String title = message.getString("title");
                 handleLoadError(tabId, uri, title);
+            } else if (event.equals("Content:PageShow")) {
+                final int tabId = message.getInt("tabID");
+                handlePageShow(tabId);
             } else if (event.equals("Doorhanger:Add")) {
                 handleDoorHanger(message);
             } else if (event.equals("Doorhanger:Remove")) {
@@ -1259,24 +1270,12 @@ abstract public class GeckoApp
         });
     }
 
-    void handleContentLoaded(int tabId, String uri, String title) {
+    void handleContentLoaded(int tabId) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
 
-        tab.updateTitle(title);
-
-        // Make the UI changes
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                loadFavicon(tab);
-
-                if (Tabs.getInstance().isSelectedTab(tab))
-                    mBrowserToolbar.setTitle(tab.getDisplayTitle());
-
-                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
-            }
-        });
+        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
     }
 
     void handleTitleChanged(int tabId, String title) {
@@ -1681,6 +1680,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Content:PageShow", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Remove", GeckoApp.mAppContext);
@@ -2031,6 +2031,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Content:PageShow", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
