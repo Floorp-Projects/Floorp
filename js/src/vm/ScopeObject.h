@@ -299,6 +299,10 @@ template<XDRMode mode>
 bool
 XDRStaticBlockObject(XDRState<mode> *xdr, JSScript *script, StaticBlockObject **objp);
 
+extern JSObject *
+CloneStaticBlockObject(JSContext *cx, StaticBlockObject &srcBlock,
+                       const AutoObjectVector &objects, JSScript *src);
+
 }  /* namespace js */
 
 #endif /* ScopeObject_h___ */

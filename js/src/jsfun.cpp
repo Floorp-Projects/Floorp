@@ -374,6 +374,7 @@ template<XDRMode mode>
 bool
 js::XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *parentScript)
 {
+    /* NB: Keep this in sync with CloneInterpretedFunction. */
     JSFunction *fun;
     JSAtom *atom;
     uint32_t firstword;           /* flag telling whether fun->atom is non-null,
@@ -441,6 +442,35 @@ js::XDRInterpretedFunction(XDRState<XDR_ENCODE> *xdr, JSObject **objp, JSScript 
 
 template bool
 js::XDRInterpretedFunction(XDRState<XDR_DECODE> *xdr, JSObject **objp, JSScript *parentScript);
+
+JSObject *
+js::CloneInterpretedFunction(JSContext *cx, JSFunction *srcFun)
+{
+    /* NB: Keep this in sync with XDRInterpretedFunction. */
+
+    RootedVarObject parent(cx, NULL);
+    JSFunction *clone = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, parent, NULL);
+    if (!clone)
+        return NULL;
+    if (!clone->clearParent(cx))
+        return NULL;
+    if (!clone->clearType(cx))
+        return NULL;
+
+    JSScript *clonedScript = CloneScript(cx, srcFun->script());
+    if (!clonedScript)
+        return NULL;
+
+    clone->nargs = srcFun->nargs;
+    clone->flags = srcFun->flags;
+    clone->atom.init(srcFun->atom);
+    clone->initScript(clonedScript);
+    if (!clonedScript->typeSetFunction(cx, clone))
+        return NULL;
+
+    js_CallNewScriptHook(cx, clone->script(), clone);
+    return clone;
+}
 
 /*
  * [[HasInstance]] internal method for Function objects: fetch the .prototype
