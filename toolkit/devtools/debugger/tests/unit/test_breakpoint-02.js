@@ -27,8 +27,8 @@ function run_test()
 
 function test_breakpoint_running()
 {
-  let path = getFilePath('test_breakpoint-01.js');
-  let location = { url: path, line: gDebuggee.line0 + 3};
+  let path = getFilePath('test_breakpoint-02.js');
+  let location = { url: path, line: gDebuggee.line0 + 2};
 
   gDebuggee.eval("var line0 = Error().lineNumber;\n" +
                  "var a = 1;\n" +  // line0 + 1
@@ -37,8 +37,6 @@ function test_breakpoint_running()
   // Setting the breakpoint later should interrupt the debuggee.
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     do_check_eq(aPacket.type, "paused");
-    do_check_eq(aPacket.frame.where.url, path);
-    do_check_eq(aPacket.frame.where.line, location);
     do_check_eq(aPacket.why.type, "interrupted");
   });
 
