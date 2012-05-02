@@ -168,14 +168,6 @@ nsSystemPrincipal::CanEnableCapability(const char *capability,
 }
 
 NS_IMETHODIMP 
-nsSystemPrincipal::SetCanEnableCapability(const char *capability, 
-                                          PRInt16 canEnable)
-{
-    return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
 nsSystemPrincipal::IsCapabilityEnabled(const char *capability, 
                                        void *annotation, 
                                        bool *result)
