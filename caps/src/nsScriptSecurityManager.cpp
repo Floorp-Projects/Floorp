@@ -2772,40 +2772,6 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::RevertCapability(const char *capability)
-{
-    JSContext *cx = GetCurrentJSContext();
-    JSStackFrame *fp;
-    nsresult rv;
-    nsIPrincipal* principal = GetPrincipalAndFrame(cx, &fp, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-    if (!principal)
-        return NS_ERROR_NOT_AVAILABLE;
-    void *annotation = JS_GetFrameAnnotation(cx, fp);
-    principal->RevertCapability(capability, &annotation);
-    JS_SetFrameAnnotation(cx, fp, annotation);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::DisableCapability(const char *capability)
-{
-    JSContext *cx = GetCurrentJSContext();
-    JSStackFrame *fp;
-    nsresult rv;
-    nsIPrincipal* principal = GetPrincipalAndFrame(cx, &fp, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-    if (!principal)
-        return NS_ERROR_NOT_AVAILABLE;
-    void *annotation = JS_GetFrameAnnotation(cx, fp);
-    principal->DisableCapability(capability, &annotation);
-    JS_SetFrameAnnotation(cx, fp, annotation);
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////
 // Methods implementing nsIXPCSecurityManager //
 ////////////////////////////////////////////////

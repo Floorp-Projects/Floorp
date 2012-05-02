@@ -52,7 +52,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[scriptable, uuid(fb783979-b3f8-4e0d-980f-f0f83b0f505d)]
+[scriptable, uuid(42ba6a38-d619-49ab-8248-3d247e959d5e)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -119,11 +119,6 @@ interface nsIPrincipal : nsISerializable
                                            in voidPtr annotation);
     [noscript] void enableCapability(in string capability,
                                      inout voidPtr annotation);
-    [noscript] void revertCapability(in string capability,
-                                     inout voidPtr annotation);
-    [noscript] void disableCapability(in string capability,
-                                      inout voidPtr annotation);
-
     /**
      * The codebase URI to which this principal pertains.  This is
      * generally the document URI.
