@@ -148,4 +148,8 @@
 
   <string name="bookmarkdefaults_title_abouthome">@bookmarks_aboutHome@</string>
   <string name="bookmarkdefaults_url_abouthome">about:home</string>
+
+  <!-- Site identity popup -->
+  <string name="identity_connected_to">&identity_connected_to;</string>
+  <string name="identity_run_by">&identity_run_by;</string>
 </resources>
