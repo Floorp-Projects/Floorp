@@ -334,6 +334,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             values.AppendElement(curEvent->Z());
             break;
 
+        case hal::SENSOR_LIGHT:
         case hal::SENSOR_PROXIMITY:
             values.AppendElement(curEvent->X());
             break;

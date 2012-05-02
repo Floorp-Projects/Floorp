@@ -38,6 +38,8 @@ HardwareSensorToHalSensor(int type)
       return SENSOR_ACCELERATION;
     case SENSOR_TYPE_PROXIMITY:
       return SENSOR_PROXIMITY;
+    case SENSOR_TYPE_LIGHT:
+      return SENSOR_LIGHT;
     case SENSOR_TYPE_GYROSCOPE:
       return SENSOR_GYROSCOPE;
     case SENSOR_TYPE_LINEAR_ACCELERATION:
@@ -62,6 +64,8 @@ HalSensorToHardwareSensor(SensorType type)
       return SENSOR_TYPE_ACCELEROMETER;
     case SENSOR_PROXIMITY:
       return SENSOR_TYPE_PROXIMITY;
+    case SENSOR_LIGHT:
+      return SENSOR_TYPE_LIGHT;
     case SENSOR_GYROSCOPE:
       return SENSOR_TYPE_GYROSCOPE;
     case SENSOR_LINEAR_ACCELERATION:
@@ -121,6 +125,8 @@ public:
           mSensorValues.AppendElement(sensors[i].maxRange);     
         }
       }
+    } else if (mSensorData.sensor() == SENSOR_LIGHT) {
+      mSensorValues.AppendElement(data.data[0]);
     } else {
       mSensorValues.AppendElement(data.data[0]);
       mSensorValues.AppendElement(data.data[1]);

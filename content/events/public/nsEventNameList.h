@@ -459,6 +459,10 @@ WINDOW_ONLY_EVENT(deviceproximity,
                   NS_DEVICE_PROXIMITY,
                   EventNameType_None,
                   NS_EVENT)
+WINDOW_ONLY_EVENT(devicelight,
+                  NS_DEVICE_LIGHT,
+                  EventNameType_None,
+                  NS_EVENT)
 
 TOUCH_EVENT(touchstart,
             NS_TOUCH_START,

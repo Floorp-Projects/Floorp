@@ -1715,6 +1715,9 @@ GK_ATOM(ondevicemotion, "ondevicemotion")
 GK_ATOM(ondeviceorientation, "ondeviceorientation")
 GK_ATOM(ondeviceproximity, "ondeviceproximity")
 
+// light sensor support
+GK_ATOM(ondevicelight, "ondevicelight")
+
 //---------------------------------------------------------------------------
 // Special atoms
 //---------------------------------------------------------------------------
