@@ -43,6 +43,7 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
+#include "nsIDOMDeviceLightEvent.h"
 #include "nsIDOMDeviceOrientationEvent.h"
 #include "nsIDOMDeviceProximityEvent.h"
 #include "nsIDOMDeviceMotionEvent.h"
@@ -74,6 +75,9 @@ public:
 private:
   // sensor -> window listener
   nsTArray<nsTArray<nsIDOMWindow*>* > mWindowListeners;
+
+  void FireDOMLightEvent(nsIDOMEventTarget *target,
+                         double value);
 
   void FireDOMProximityEvent(nsIDOMEventTarget *aTarget,
                              double aValue,

@@ -75,6 +75,7 @@ XPIDLSRCS =					\
 	nsIDOMPaintRequestList.idl		\
 	nsIDOMSimpleGestureEvent.idl		\
 	nsIDOMMozTouchEvent.idl			\
+	nsIDOMDeviceLightEvent.idl              \
 	nsIDOMDeviceProximityEvent.idl          \
 	nsIDOMDeviceOrientationEvent.idl        \
 	nsIDOMDeviceMotionEvent.idl		\
