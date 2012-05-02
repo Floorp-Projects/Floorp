@@ -289,6 +289,34 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
     return FALSE;
   }
 
+  // Make sure the path to the updater to use for the update is local.
+  // We do this check to make sure that file locking is available for
+  // race condition security checks.
+  BOOL isLocal = FALSE;
+  if (!IsLocalFile(argv[0], isLocal) || !isLocal) {
+    LOG(("Filesystem in path %ls is not supported"
+         "Last error: %d\n", argv[0], GetLastError()));
+    if (!WriteStatusFailure(argv[1], 
+                            SERVICE_UPDATER_NOT_FIXED_DRIVE)) {
+      LOG(("Could not write update.status service update failure."
+           "Last error: %d\n", GetLastError()));
+    }
+    return FALSE;
+  }
+
+  nsAutoHandle noWriteLock(CreateFileW(argv[0], GENERIC_READ, FILE_SHARE_READ, 
+                                       NULL, OPEN_EXISTING, 0, NULL));
+  if (INVALID_HANDLE_VALUE == noWriteLock) {
+      LOG(("Could not set no write sharing access on file."
+           "Last error: %d\n", GetLastError()));
+    if (!WriteStatusFailure(argv[1], 
+                            SERVICE_COULD_NOT_LOCK_UPDATER)) {
+      LOG(("Could not write update.status service update failure."
+           "Last error: %d\n", GetLastError()));
+    }
+    return FALSE;
+  }
+
   // Verify that the updater.exe that we are executing is the same
   // as the one in the installation directory which we are updating.
   // The installation dir that we are installing to is argv[2].
