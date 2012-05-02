@@ -109,6 +109,18 @@ public:
       mSensorValues.AppendElement(radToDeg(data.data[0]));
       mSensorValues.AppendElement(radToDeg(data.data[1]));
       mSensorValues.AppendElement(radToDeg(data.data[2]));
+    } else if (mSensorData.sensor() == SENSOR_PROXIMITY) {
+      mSensorValues.AppendElement(data.data[0]);
+      mSensorValues.AppendElement(0);     
+
+      // Determine the maxRange for this sensor.
+      const sensor_t* sensors = NULL;
+      size_t size = SensorDevice::getInstance().getSensorList(&sensors);
+      for (size_t i = 0; i < size; i++) {
+        if (sensors[i].type == SENSOR_TYPE_PROXIMITY) {
+          mSensorValues.AppendElement(sensors[i].maxRange);     
+        }
+      }
     } else {
       mSensorValues.AppendElement(data.data[0]);
       mSensorValues.AppendElement(data.data[1]);

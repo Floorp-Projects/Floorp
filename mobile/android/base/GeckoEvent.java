@@ -357,7 +357,10 @@ public class GeckoEvent {
         case Sensor.TYPE_PROXIMITY:
             event = new GeckoEvent(SENSOR_EVENT);
             event.mFlags = GeckoHalDefines.SENSOR_PROXIMITY;
+            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
             event.mX = s.values[0];
+            event.mY = 0;
+            event.mZ = s.sensor.getMaximumRange();
             break;
         }
         return event;
