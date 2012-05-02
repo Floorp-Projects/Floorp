@@ -191,3 +191,17 @@ jpeg_start_output
 jpeg_std_error
 jpeg_write_scanlines
 #endif
+qcms_enable_iccv4
+qcms_profile_create_rgb_with_gamma
+qcms_profile_from_memory
+qcms_profile_from_path
+qcms_profile_from_unicode_path
+qcms_profile_get_color_space
+qcms_profile_get_rendering_intent
+qcms_profile_is_bogus
+qcms_profile_precache_output_transform
+qcms_profile_release
+qcms_profile_sRGB
+qcms_transform_create
+qcms_transform_data
+qcms_transform_release
