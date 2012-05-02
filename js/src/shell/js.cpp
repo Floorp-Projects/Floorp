@@ -1329,7 +1329,7 @@ TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rval,
 {
     JSString *str = JSVAL_TO_STRING(closure);
 
-    FrameRegsIter iter(cx);
+    ScriptFrameIter iter(cx);
     JS_ASSERT(!iter.done());
 
     JSStackFrame *caller = Jsvalify(iter.fp());
@@ -2139,7 +2139,7 @@ DumpStack(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     StackIter iter(cx);
-    JS_ASSERT(iter.isNativeCall() && iter.callee().toFunction()->native() == DumpStack);
+    JS_ASSERT(iter.isNativeCall() && iter.callee()->native() == DumpStack);
     ++iter;
 
     uint32_t index = 0;
@@ -2683,7 +2683,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_ASSERT(cx->hasfp());
 
-    FrameRegsIter fi(cx);
+    ScriptFrameIter fi(cx);
     for (uint32_t i = 0; i < upCount; ++i, ++fi) {
         if (!fi.fp()->prev())
             break;

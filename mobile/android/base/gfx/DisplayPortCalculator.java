@@ -267,7 +267,7 @@ final class DisplayPortCalculator {
         private final float DANGER_ZONE_Y_MULTIPLIER;
 
         FixedMarginStrategy(Map<String, Integer> prefs) {
-            SIZE_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_FM_MULTIPLIER, 1500);
+            SIZE_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_FM_MULTIPLIER, 2000);
             DANGER_ZONE_X_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_FM_DANGER_X, 100);
             DANGER_ZONE_Y_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_FM_DANGER_Y, 200);
         }
@@ -340,7 +340,7 @@ final class DisplayPortCalculator {
         private final float DANGER_ZONE_INCR_Y_MULTIPLIER;
 
         VelocityBiasStrategy(Map<String, Integer> prefs) {
-            SIZE_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_MULTIPLIER, 1500);
+            SIZE_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_MULTIPLIER, 2000);
             VELOCITY_THRESHOLD = GeckoAppShell.getDpi() * getFloatPref(prefs, PREF_DISPLAYPORT_VB_VELOCITY_THRESHOLD, 32);
             REVERSE_BUFFER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_REVERSE_BUFFER, 200);
             DANGER_ZONE_BASE_X_MULTIPLIER = getFloatPref(prefs, PREF_DISPLAYPORT_VB_DANGER_X_BASE, 1000);

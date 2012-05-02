@@ -323,6 +323,15 @@ sub do_copyfile
         print " copy\t$srcpath$srcname$srcsuffix =>\n\t\t$destpath$destname$destsuffix\n";
       }
     }
+
+    if (stat("$destpath$destname$destsuffix") &&
+        stat("$srcpath$srcname$srcsuffix")->mtime < stat("$destpath$destname$destsuffix")->mtime) {
+      if ( $debug >= 3 ) {
+        print "source file older than destination, do not copy\n";
+      }
+      return;
+    }
+
     unlink("$destpath$destname$destsuffix") if ( -e "$destpath$destname$destsuffix");
     # If source is a symbolic link pointing in the same directory, create a
     # symbolic link

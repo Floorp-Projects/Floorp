@@ -13,7 +13,7 @@
 #define __INC_MCOMP_H
 
 #include "block.h"
-#include "variance.h"
+#include "vp8/common/variance.h"
 
 #ifdef ENTROPY_STATS
 extern void init_mv_ref_counts();

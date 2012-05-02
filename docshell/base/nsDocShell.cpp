@@ -3896,6 +3896,10 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
 
     rv = LoadURI(uri, loadInfo, extraFlags, true);
 
+    // Save URI string in case it's needed later when
+    // sending to search engine service in EndPageLoad()
+    mOriginalUriString = uriString; 
+
     return rv;
 }
 
@@ -6355,27 +6359,33 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
 
                 if (keywordsEnabled && (kNotFound == dotLoc)) {
                     // only send non-qualified hosts to the keyword server
-                    //
-                    // If this string was passed through nsStandardURL by
-                    // chance, then it may have been converted from UTF-8 to
-                    // ACE, which would result in a completely bogus keyword
-                    // query.  Here we try to recover the original Unicode
-                    // value, but this is not 100% correct since the value may
-                    // have been normalized per the IDN normalization rules.
-                    //
-                    // Since we don't have access to the exact original string
-                    // that was entered by the user, this will just have to do.
-                    bool isACE;
-                    nsCAutoString utf8Host;
-                    nsCOMPtr<nsIIDNService> idnSrv =
-                        do_GetService(NS_IDNSERVICE_CONTRACTID);
-                    if (idnSrv &&
-                        NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
-                        NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host)))
-                        sURIFixup->KeywordToURI(utf8Host,
+                    if (!mOriginalUriString.IsEmpty()) {
+                        sURIFixup->KeywordToURI(mOriginalUriString,
                                                 getter_AddRefs(newURI));
-                    else
-                        sURIFixup->KeywordToURI(host, getter_AddRefs(newURI));
+                    }
+                    else {
+                        //
+                        // If this string was passed through nsStandardURL by
+                        // chance, then it may have been converted from UTF-8 to
+                        // ACE, which would result in a completely bogus keyword
+                        // query.  Here we try to recover the original Unicode
+                        // value, but this is not 100% correct since the value may
+                        // have been normalized per the IDN normalization rules.
+                        //
+                        // Since we don't have access to the exact original string
+                        // that was entered by the user, this will just have to do.
+                        bool isACE;
+                        nsCAutoString utf8Host;
+                        nsCOMPtr<nsIIDNService> idnSrv =
+                            do_GetService(NS_IDNSERVICE_CONTRACTID);
+                        if (idnSrv &&
+                            NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
+                            NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host)))
+                            sURIFixup->KeywordToURI(utf8Host,
+                                                    getter_AddRefs(newURI));
+                        else
+                            sURIFixup->KeywordToURI(host, getter_AddRefs(newURI));
+                    }
                 } // end keywordsEnabled
             }
 
@@ -8070,6 +8080,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                          nsIRequest** aRequest)
 {
     nsresult rv = NS_OK;
+    mOriginalUriString.Truncate();
 
 #ifdef PR_LOGGING
     if (gDocShellLeakLog && PR_LOG_TEST(gDocShellLeakLog, PR_LOG_DEBUG)) {

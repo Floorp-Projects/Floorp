@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for High Resolution Timer</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <script>
+    ok(window.performance);
+    ok(typeof window.performance.now == 'function');
+    var n = window.performance.now();
+    ok(n >= 0);
+    ok(window.performance.now() >= n);
+    SimpleTest.waitForExplicitFinish();
+    setTimeout(function() {
+      ok(window.performance.now() > n);
+      SimpleTest.finish();
+    }, 20);
+  </script>
+</body>
+</html>

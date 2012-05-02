@@ -330,6 +330,38 @@ var tests = [
   // previously with the fix for 692574:
   // "attachment", "bar.html"],
 
+  // Bug 693806: RFC2231/5987 encoding: charset information should be treated
+  // as authoritative
+
+  // UTF-8 labeled ISO-8859-1
+  ["attachment; filename*=ISO-8859-1''%c3%a4", 
+   "attachment", "\u00c3\u00a4"],
+
+  // UTF-8 labeled ISO-8859-1, but with octets not allowed in ISO-8859-1
+  // accepts x82, understands it as Win1252, maps it to Unicode \u20a1
+  ["attachment; filename*=ISO-8859-1''%e2%82%ac", 
+   "attachment", "\u00e2\u201a\u00ac"],
+
+  // defective UTF-8
+  ["attachment; filename*=UTF-8''A%e4B", 
+   "attachment", Cr.NS_ERROR_INVALID_ARG],
+
+  // defective UTF-8, with fallback
+  ["attachment; filename*=UTF-8''A%e4B; filename=fallback", 
+   "attachment", "fallback"],
+
+  // defective UTF-8 (continuations), with fallback
+  ["attachment; filename*0*=UTF-8''A%e4B; filename=fallback", 
+   "attachment", "fallback"],
+
+  // check that charsets aren't mixed up
+  ["attachment; filename*0*=ISO-8859-15''euro-sign%3d%a4; filename*=ISO-8859-1''currency-sign%3d%a4", 
+   "attachment", "currency-sign=\u00a4"],
+
+  // same as above, except reversed
+  ["attachment; filename*=ISO-8859-1''currency-sign%3d%a4; filename*0*=ISO-8859-15''euro-sign%3d%a4", 
+   "attachment", "currency-sign=\u00a4"],
+
   // Bug 704989: add workaround for broken Outlook Web App (OWA)
   // attachment handling
 

@@ -19,21 +19,6 @@ index f98edae..e536a01 100644
  
    // Computes the shortest string of digits that correctly represent the input
    // number. Depending on decimal_in_shortest_low and decimal_in_shortest_high
-@@ -154,12 +155,12 @@ class DoubleToStringConverter {
-   // Returns true if the conversion succeeds. The conversion always succeeds
-   // except when the input value is special and no infinity_symbol or
-   // nan_symbol has been given to the constructor.
--  bool ToShortest(double value, StringBuilder* result_builder) const {
-+  MFBT_API(bool) ToShortest(double value, StringBuilder* result_builder) const {
-     return ToShortestIeeeNumber(value, result_builder, SHORTEST);
-   }
- 
-   // Same as ToShortest, but for single-precision floats.
--  bool ToShortestSingle(float value, StringBuilder* result_builder) const {
-+  MFBT_API(bool) ToShortestSingle(float value, StringBuilder* result_builder) const {
-     return ToShortestIeeeNumber(value, result_builder, SHORTEST_SINGLE);
-   }
- 
 @@ -197,7 +198,7 @@ class DoubleToStringConverter {
    // The last two conditions imply that the result will never contain more than
    // 1 + kMaxFixedDigitsBeforePoint + 1 + kMaxFixedDigitsAfterPoint characters

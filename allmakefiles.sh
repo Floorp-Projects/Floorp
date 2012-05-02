@@ -89,6 +89,11 @@ if [ "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" ]; then
   add_makefiles "
     build/unix/Makefile
   "
+  if [ "$STDCXX_COMPAT" ]; then
+    add_makefiles "
+      build/unix/stdc++compat/Makefile
+    "
+  fi
   if [ "$USE_ELF_HACK" ]; then
     add_makefiles "
       build/unix/elfhack/Makefile

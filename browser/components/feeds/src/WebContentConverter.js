@@ -448,9 +448,8 @@ WebContentConverterRegistrar.prototype = {
       // Now Ask the user and provide the proper callback
       message = this._getFormattedString("addProtocolHandler",
                                          [aTitle, uri.host, aProtocol]);
-      var fis = Cc["@mozilla.org/browser/favicon-service;1"].
-                getService(Ci.nsIFaviconService);
-      var notificationIcon = fis.getFaviconLinkForIcon(uri);
+
+      var notificationIcon = uri.prePath + "/favicon.ico";
       var notificationValue = "Protocol Registration: " + aProtocol;
       var addButton = {
         label: this._getString("addProtocolHandlerAddButton"),

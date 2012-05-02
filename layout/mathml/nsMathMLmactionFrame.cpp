@@ -217,6 +217,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
 
   mChildCount = count;
   mSelection = selection;
+  TransmitAutomaticData();
 
   return mSelectedFrame;
 }

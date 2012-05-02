@@ -76,6 +76,7 @@ _TEST_FILES = \
 		test_focus_legend_noparent.html \
 		file_clonewrapper.html \
 		file_moving_nodeList.html \
+		test_performance_now.html \
 		$(NULL)
 
 _CHROME_FILES = \

@@ -73,7 +73,7 @@
       // show popup again for the next test
       gQueue.push(new synthClick("popupbutton", new nofocusChecker()));
 
-if (MAC) {
+if (!MAC) {
       // click menubutton of the 'menubutton' button while popup of button open.
       gQueue.push(new synthClick("mbb", new focusChecker("mbb"), { where: "right" }));
       // close popup, focus stays on menubutton, fire focus event
