@@ -345,7 +345,10 @@ class StackFrame
 
         /* Method JIT state */
         DOWN_FRAMES_EXPANDED = 0x100000,  /* inlining in down frames has been expanded */
-        LOWERED_CALL_APPLY   = 0x200000   /* Pushed by a lowered call/apply */
+        LOWERED_CALL_APPLY   = 0x200000,  /* Pushed by a lowered call/apply */
+
+        /* Debugger state */
+        PREV_UP_TO_DATE    =   0x400000   /* see DebugScopes::updateLiveScopes */
     };
 
   private:
@@ -1087,6 +1090,14 @@ class StackFrame
 
     bool isDebuggerFrame() const {
         return !!(flags_ & DEBUGGER);
+    }
+
+    bool prevUpToDate() const {
+        return !!(flags_ & PREV_UP_TO_DATE);
+    }
+
+    void setPrevUpToDate() {
+        flags_ |= PREV_UP_TO_DATE;
     }
 
     bool hasOverflowArgs() const {

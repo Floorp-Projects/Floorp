@@ -259,6 +259,9 @@ StackFrame::popBlock(JSContext *cx)
 void
 StackFrame::popWith(JSContext *cx)
 {
+    if (cx->compartment->debugMode())
+        cx->runtime->debugScopes->onPopWith(this);
+
     setScopeChain(scopeChain()->asWith().enclosingScope());
 }
 

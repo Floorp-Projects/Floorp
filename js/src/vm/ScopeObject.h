@@ -422,8 +422,24 @@ class DebugScopes
      * The map from live frames which have optimized-away scopes to the
      * corresponding debug scopes.
      */
-    typedef HashMap<ScopeIter, DebugScopeObject *, ScopeIter, RuntimeAllocPolicy> MissingScopeMap;
+    typedef HashMap<ScopeIter,
+                    DebugScopeObject *,
+                    ScopeIter,
+                    RuntimeAllocPolicy> MissingScopeMap;
     MissingScopeMap missingScopes;
+
+    /*
+     * The map from scope objects of live frames to the live frame. This map
+     * updated lazily whenever the debugger needs the information. In between
+     * two lazy updates, liveScopes becomes incomplete (but not invalid, onPop*
+     * removes scopes as they are popped). Thus, two consecutive debugger lazy
+     * updates of liveScopes need only fill in the new scopes.
+     */
+    typedef HashMap<ScopeObject *,
+                    StackFrame *,
+                    DefaultHasher<ScopeObject *>,
+                    RuntimeAllocPolicy> LiveScopeMap;
+    LiveScopeMap liveScopes;
 
   public:
     DebugScopes(JSRuntime *rt);
@@ -439,12 +455,17 @@ class DebugScopes
     DebugScopeObject *hasDebugScope(JSContext *cx, ScopeIter si) const;
     bool addDebugScope(JSContext *cx, ScopeIter si, DebugScopeObject &debugScope);
 
+    bool updateLiveScopes(JSContext *cx);
+    StackFrame *hasLiveFrame(ScopeObject &scope);
+
     /*
      * In debug-mode, these must be called whenever exiting a call/block or
      * when activating/yielding a generator.
      */
     void onPopCall(StackFrame *fp);
     void onPopBlock(JSContext *cx, StackFrame *fp);
+    void onPopWith(StackFrame *fp);
+    void onPopStrictEvalScope(StackFrame *fp);
     void onGeneratorFrameChange(StackFrame *from, StackFrame *to);
     void onCompartmentLeaveDebugMode(JSCompartment *c);
 };
