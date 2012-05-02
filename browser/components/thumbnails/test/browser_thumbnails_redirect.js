@@ -4,6 +4,9 @@
 const URL = "http://mochi.test:8888/browser/browser/components/thumbnails/" +
             "test/background_red_redirect.sjs";
 
+let cacheService = Cc["@mozilla.org/network/cache-service;1"]
+                   .getService(Ci.nsICacheService);
+
 /**
  * These tests ensure that we save and provide thumbnails for redirecting sites.
  */
@@ -16,17 +19,33 @@ function runTests() {
   yield addTab(URL);
   yield captureAndCheckColor(255, 0, 0, "we have a red thumbnail");
 
-  // Wait until the referrer's thumbnail's file has been written.
-  yield whenFileExists(URL);
+  // Wait until the referrer's thumbnail's cache entry has been written.
+  yield whenCacheEntryExists(URL);
   yield checkThumbnailColor(URL, 255, 0, 0, "referrer has a red thumbnail");
 }
 
-function whenFileExists(aURL) {
+function whenCacheEntryExists(aKey) {
   let callback = next;
 
-  let file = PageThumbsStorage.getFileForURL(aURL);
-  if (!file.exists())
-    callback = function () whenFileExists(aURL);
+  checkCacheEntryExists(aKey, function (aExists) {
+    if (!aExists)
+      callback = function () whenCacheEntryExists(aKey);
 
-  executeSoon(callback);
+    executeSoon(callback);
+  });
+}
+
+function checkCacheEntryExists(aKey, aCallback) {
+  PageThumbsCache.getReadEntry(aKey, function (aEntry) {
+    let inputStream = aEntry && aEntry.openInputStream(0);
+    let exists = inputStream && inputStream.available();
+
+    if (inputStream)
+      inputStream.close();
+
+    if (aEntry)
+      aEntry.close();
+
+    aCallback(exists);
+  });
 }
