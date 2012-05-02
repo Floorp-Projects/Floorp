@@ -542,7 +542,7 @@ nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPrincipal::SetCanEnableCapability(const char *capability,
                                     PRInt16 canEnable)
 {
