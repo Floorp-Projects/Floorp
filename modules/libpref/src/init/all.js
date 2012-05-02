@@ -187,6 +187,9 @@ pref("media.raw.enabled", true);
 #ifdef MOZ_OGG
 pref("media.ogg.enabled", true);
 #endif
+#ifdef MOZ_OPUS
+pref("media.opus.enabled", false);
+#endif
 #ifdef MOZ_WAVE
 pref("media.wave.enabled", true);
 #endif
