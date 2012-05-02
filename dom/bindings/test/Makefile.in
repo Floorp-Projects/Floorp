@@ -14,6 +14,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
   test_lookupGetter.html \
   test_InstanceOf.html \
+  test_traceProtos.html \
   $(NULL)
 
 libs:: $(_TEST_FILES)

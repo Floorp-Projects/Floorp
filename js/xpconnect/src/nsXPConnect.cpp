@@ -1082,6 +1082,8 @@ TraceXPCGlobal(JSTracer *trc, JSObject *obj)
 
     if (XPCWrappedNativeScope *scope = XPCWrappedNativeScope::GetNativeScope(obj))
         scope->TraceDOMPrototypes(trc);
+
+    mozilla::dom::TraceProtoOrIfaceCache(trc, obj);
 }
 
 #ifdef DEBUG
