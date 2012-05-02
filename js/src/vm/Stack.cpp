@@ -1176,10 +1176,10 @@ StackIter::settleOnNewState()
             if (fp_->runningInIon()) {
                 ionFrames_ = ion::IonFrameIterator(ionActivations_.top());
 
-                while (ionFrames_.more() && !ionFrames_.isScripted())
+                while (!ionFrames_.done() && !ionFrames_.isScripted())
                     ++ionFrames_;
 
-                if (!ionFrames_.more()) {
+                if (ionFrames_.done()) {
                     // In this case, we bailed out the last frame, so we
                     // shouldn't really transition to Ion code.
                     ++ionActivations_;
@@ -1273,9 +1273,7 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
 #endif
 {
 #ifdef JS_METHODJIT
-    CompartmentVector &v = cx->runtime->compartments;
-    for (size_t i = 0; i < v.length(); i++)
-        mjit::ExpandInlineFrames(v[i]);
+    mjit::ExpandInlineFrames(cx->compartment);
 #endif
 
     if (StackSegment *seg = cx->stack.seg_) {
@@ -1298,10 +1296,10 @@ StackIter::popIonFrame()
         script_ = ionInlineFrames_.script();
     } else {
         ++ionFrames_;
-        while (ionFrames_.more() && !ionFrames_.isScripted())
+        while (!ionFrames_.done() && !ionFrames_.isScripted())
             ++ionFrames_;
 
-        if (ionFrames_.more()) {
+        if (!ionFrames_.done()) {
             ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
             pc_ = ionInlineFrames_.pc();
             script_ = ionInlineFrames_.script();
@@ -1410,6 +1408,8 @@ StackIter::isConstructing() const
       case DONE:
         JS_NOT_REACHED("Unexpected state");
         return false;
+      case ION:
+        return ionInlineFrames_.isConstructing(ionActivations_.activation());
       case SCRIPTED:
       case NATIVE:
       case IMPLICIT_NATIVE:
@@ -1456,20 +1456,21 @@ StackIter::calleev() const
     return Value();
 }
 
-Value
-StackIter::thisv() const
+JSObject *
+StackIter::thisObject() const
 {
     switch (state_) {
       case DONE:
-        MOZ_NOT_REACHED("Unexpected state");
-        return Value();
+        break;
+      case ION:
+        return ionInlineFrames_.thisObject();
       case SCRIPTED:
       case NATIVE:
       case IMPLICIT_NATIVE:
-        return fp()->thisValue();
+        return &fp()->thisValue().toObject();
     }
-    MOZ_NOT_REACHED("unexpected state");
-    return Value();
+    JS_NOT_REACHED("Unexpected state");
+    return NULL;
 }
 
 /*****************************************************************************/
