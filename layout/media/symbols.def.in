@@ -167,3 +167,27 @@ MOZ_PNG_write_end
 MOZ_PNG_write_info
 MOZ_PNG_write_row
 #endif
+#ifndef MOZ_NATIVE_JPEG
+jpeg_calc_output_dimensions
+jpeg_consume_input
+jpeg_CreateCompress
+jpeg_CreateDecompress
+jpeg_destroy_compress
+jpeg_destroy_decompress
+jpeg_finish_compress
+jpeg_finish_decompress
+jpeg_finish_output
+jpeg_has_multiple_scans
+jpeg_input_complete
+jpeg_read_header
+jpeg_read_scanlines
+jpeg_resync_to_restart
+jpeg_save_markers
+jpeg_set_defaults
+jpeg_set_quality
+jpeg_start_compress
+jpeg_start_decompress
+jpeg_start_output
+jpeg_std_error
+jpeg_write_scanlines
+#endif
