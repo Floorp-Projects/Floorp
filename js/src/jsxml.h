@@ -41,9 +41,9 @@
 
 #include "jspubtd.h"
 #include "jsobj.h"
-#include "jscell.h"
 
 #include "gc/Barrier.h"
+#include "gc/Heap.h"
 
 extern const char js_AnyName_str[];
 extern const char js_AttributeName_str[];
