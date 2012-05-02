@@ -366,6 +366,21 @@ NS_IMPL_RELEASE_INHERITED(nsNativeAppSupportWin, nsNativeAppSupportBase)
 
 void
 nsNativeAppSupportWin::CheckConsole() {
+    // Try to attach console to the parent process.
+    // It will succeed when the parent process is a command line,
+    // so that stdio will be displayed in it.
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        // Change std handles to refer to new console handles.
+        // Before doing so, ensure that stdout/stderr haven't been redirected to a valid file
+        if (_fileno(stdout) == -1 || _get_osfhandle(fileno(stdout)) == -1)
+            freopen("CONOUT$", "w", stdout);
+        if (_fileno(stderr) == -1 || _get_osfhandle(fileno(stderr)) == -1)
+            freopen("CONERR$", "w", stderr);
+        if (_fileno(stdin) == -1 || _get_osfhandle(fileno(stdin)) == -1)
+            freopen("CONIN$", "r", stdin);
+        return;
+    }
+
     for ( int i = 1; i < gArgc; i++ ) {
         if ( strcmp( "-console", gArgv[i] ) == 0
              ||

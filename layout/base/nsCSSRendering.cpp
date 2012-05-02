@@ -1247,30 +1247,16 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       shadowContext->NewPath();
       if (hasBorderRadius) {
         gfxCornerSizes clipRectRadii;
-        gfxFloat spreadDistance = -shadowItem->mSpread / twipsPerPixel;
-        gfxFloat borderSizes[4] = { 0, 0, 0, 0 };
+        gfxFloat spreadDistance = shadowItem->mSpread / twipsPerPixel;
 
-        // We only give the spread radius to corners with a radius on them, otherwise we'll
-        // give a rounded shadow corner to a frame corner with 0 border radius, should
-        // the author use non-uniform border radii sizes (border-top-left-radius etc)
-        // (bug 514670)
-        if (borderRadii[C_TL].width > 0 || borderRadii[C_BL].width > 0) {
-          borderSizes[NS_SIDE_LEFT] = spreadDistance;
-        }
+        gfxFloat borderSizes[4];
 
-        if (borderRadii[C_TL].height > 0 || borderRadii[C_TR].height > 0) {
-          borderSizes[NS_SIDE_TOP] = spreadDistance;
-        }
+        borderSizes[NS_SIDE_LEFT] = spreadDistance;
+        borderSizes[NS_SIDE_TOP] = spreadDistance;
+        borderSizes[NS_SIDE_RIGHT] = spreadDistance;
+        borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
 
-        if (borderRadii[C_TR].width > 0 || borderRadii[C_BR].width > 0) {
-          borderSizes[NS_SIDE_RIGHT] = spreadDistance;
-        }
-
-        if (borderRadii[C_BL].height > 0 || borderRadii[C_BR].height > 0) {
-          borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
-        }
-
-        nsCSSBorderRenderer::ComputeInnerRadii(borderRadii, borderSizes,
+        nsCSSBorderRenderer::ComputeOuterRadii(borderRadii, borderSizes,
             &clipRectRadii);
         shadowContext->RoundedRectangle(shadowGfxRect, clipRectRadii);
       } else {

@@ -315,7 +315,7 @@ inline bool instanceIsProxy(JSObject *obj)
 }
 
 typedef bool
-(*DefineInterface)(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
+(*DefineInterface)(JSContext *cx, JSObject *global, bool *enabled);
 
 extern bool
 DefineStaticJSVals(JSContext *cx);

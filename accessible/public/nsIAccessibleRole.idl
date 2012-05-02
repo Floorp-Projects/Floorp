@@ -40,11 +40,8 @@
 
 /**
  * Defines cross platform (Gecko) roles.
- *
- * @note - When adding a new role, be sure to also add it to nsRoleMap.h for
- *         each platform.
  */
-[scriptable, uuid(f134da65-39a8-4330-843c-5bd42780b34c)]
+[scriptable, uuid(50db5e86-9a45-4637-a5c3-4ff148c33270)]
 interface nsIAccessibleRole : nsISupports
 {
   /**
@@ -811,11 +808,5 @@ interface nsIAccessibleRole : nsISupports
    * An HTML definition <dd>
    */
   const unsigned long ROLE_DEFINITION = 128;
-
-  /**
-   * It's not role actually. This constant is important to help ensure
-   * nsRoleMap's are synchronized.
-   */
-  const unsigned long ROLE_LAST_ENTRY = 129;
 };
 

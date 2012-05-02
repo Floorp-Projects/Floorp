@@ -17,129 +17,196 @@
     AREA    |.text|, CODE, READONLY  ; name this block of code
 
 ;short vp8_short_walsh4x4_armv6(short *input, short *output, int pitch)
+; r0    short *input,
+; r1    short *output,
+; r2    int pitch
 |vp8_short_walsh4x4_armv6| PROC
 
     stmdb       sp!, {r4 - r11, lr}
 
-    mov         r12, r2              ; ugh. not clean
-    ldr         r2, [r0]             ; [1  |  0]
-    ldr         r3, [r0, #4]         ; [3  |  2]
-    ldr         r4, [r0, r12]!       ; [5  |  4]
-    ldr         r5, [r0, #4]         ; [7  |  6]
-    ldr         r6, [r0, r12]!       ; [9  |  8]
-    ldr         r7, [r0, #4]         ; [11 | 10]
-    ldr         r8, [r0, r12]!       ; [13 | 12]
-    ldr         r9, [r0, #4]         ; [15 | 14]
+    ldrd        r4, r5, [r0], r2
+    ldr         lr, c00040004
+    ldrd        r6, r7, [r0], r2
 
-    qsubaddx    r10, r2, r3          ; [c1|a1] [1-2   |   0+3]
-    qaddsubx    r11, r2, r3          ; [b1|d1] [1+2   |   0-3]
-    qsubaddx    r12, r4, r5          ; [c1|a1] [5-6   |   4+7]
-    qaddsubx    lr, r4, r5           ; [b1|d1] [5+6   |   4-7]
+    ; 0-3
+    qadd16      r3, r4, r5          ; [d1|a1] [1+3   |   0+2]
+    qsub16      r4, r4, r5          ; [c1|b1] [1-3   |   0-2]
 
-    qaddsubx    r2, r10, r11         ; [1 | 2] [c1+d1 | a1-b1]
-    qaddsubx    r3, r11, r10         ; [0 | 3] [b1+a1 | d1-c1]
-    qaddsubx    r4, r12, lr          ; [5 | 6] [c1+d1 | a1-b1]
-    qaddsubx    r5, lr, r12          ; [4 | 7] [b1+a1 | d1-c1]
+    ldrd        r8, r9, [r0], r2
+    ; 4-7
+    qadd16      r5, r6, r7          ; [d1|a1] [5+7   |   4+6]
+    qsub16      r6, r6, r7          ; [c1|b1] [5-7   |   4-6]
 
-    qsubaddx    r10, r6, r7          ; [c1|a1] [9-10  |  8+11]
-    qaddsubx    r11, r6, r7          ; [b1|d1] [9+10  |  8-11]
-    qsubaddx    r12, r8, r9          ; [c1|a1] [13-14 | 12+15]
-    qaddsubx    lr, r8, r9           ; [b1|d1] [13+14 | 12-15]
+    ldrd        r10, r11, [r0]
+    ; 8-11
+    qadd16      r7, r8, r9          ; [d1|a1] [9+11  |  8+10]
+    qsub16      r8, r8, r9          ; [c1|b1] [9-11  |  8-10]
 
-    qaddsubx    r6, r10, r11         ; [9 |10] [c1+d1 | a1-b1]
-    qaddsubx    r7, r11, r10         ; [8 |11] [b1+a1 | d1-c1]
-    qaddsubx    r8, r12, lr          ; [13|14] [c1+d1 | a1-b1]
-    qaddsubx    r9, lr, r12          ; [12|15] [b1+a1 | d1-c1]
+    ; 12-15
+    qadd16      r9, r10, r11        ; [d1|a1] [13+15 | 12+14]
+    qsub16      r10, r10, r11       ; [c1|b1] [13-15 | 12-14]
 
-    ; first transform complete
 
-    qadd16      r10, r3, r9          ; a1 [0+12  |  3+15]
-    qadd16      r11, r5, r7          ; b1 [4+8   |  7+11]
-    qsub16      r12, r5, r7          ; c1 [4-8   |  7-11]
-    qsub16      lr, r3, r9           ; d1 [0-12  |  3-15]
+    lsls        r2, r3, #16
+    smuad       r11, r3, lr         ; A0 = a1<<2 + d1<<2
+    addne       r11, r11, #1        ; A0 += (a1!=0)
 
-    qadd16      r3, r10, r11         ; a2 [a1+b1] [0 | 3]
-    qadd16      r5, r12, lr          ; b2 [c1+d1] [4 | 7]
-    qsub16      r7, r10, r11         ; c2 [a1-b1] [8 |11]
-    qsub16      r9, lr, r12          ; d2 [d1-c1] [12|15]
+    lsls        r2, r7, #16
+    smuad       r12, r7, lr         ; C0 = a1<<2 + d1<<2
+    addne       r12, r12, #1        ; C0 += (a1!=0)
 
-    qadd16      r10, r2, r8          ; a1 [1+13  |  2+14]
-    qadd16      r11, r4, r6          ; b1 [5+9   |  6+10]
-    qsub16      r12, r4, r6          ; c1 [5-9   |  6-10]
-    qsub16      lr, r2, r8           ; d1 [1-13  |  2-14]
+    add         r0, r11, r12        ; a1_0 = A0 + C0
+    sub         r11, r11, r12       ; b1_0 = A0 - C0
 
-    qadd16      r2, r10, r11         ; a2 [a1+b1] [1 | 2]
-    qadd16      r4, r12, lr          ; b2 [c1+d1] [5 | 6]
-    qsub16      r6, r10, r11         ; c2 [a1-b1] [9 |10]
-    qsub16      r8, lr, r12          ; d2 [d1-c1] [13|14]
+    lsls        r2, r5, #16
+    smuad       r12, r5, lr         ; B0 = a1<<2 + d1<<2
+    addne       r12, r12, #1        ; B0 += (a1!=0)
 
-    ; [a-d]2 += ([a-d]2 > 0)
+    lsls        r2, r9, #16
+    smuad       r2, r9, lr          ; D0 = a1<<2 + d1<<2
+    addne       r2, r2, #1          ; D0 += (a1!=0)
 
-    asrs        r10, r3, #16
-    addpl       r10, r10, #1         ; [~0]
-    asrs        r11, r2, #16
-    addpl       r11, r11, #1         ; [~1]
-    lsl         r11, r11, #15        ; [1  |  x]
-    pkhtb       r10, r11, r10, asr #1; [1  |  0]
-    str         r10, [r1], #4
+    add         lr, r12, r2         ; d1_0 = B0 + D0
+    sub         r12, r12, r2        ; c1_0 = B0 - D0
 
-    lsls        r11, r2, #16
-    addpl       r11, r11, #0x10000   ; [~2]
-    lsls        r12, r3, #16
-    addpl       r12, r12, #0x10000   ; [~3]
-    asr         r12, r12, #1         ; [3  |  x]
-    pkhtb       r11, r12, r11, asr #17; [3  |  2]
-    str         r11, [r1], #4
+    ; op[0,4,8,12]
+    adds        r2, r0, lr          ; a2 = a1_0 + d1_0
+    addmi       r2, r2, #1          ; += a2 < 0
+    add         r2, r2, #3          ; += 3
+    subs        r0, r0, lr          ; d2 = a1_0 - d1_0
+    mov         r2, r2, asr #3      ; >> 3
+    strh        r2, [r1]            ; op[0]
 
-    asrs        r2, r5, #16
-    addpl       r2, r2, #1           ; [~4]
-    asrs        r3, r4, #16
-    addpl       r3, r3, #1           ; [~5]
-    lsl         r3, r3, #15          ; [5  |  x]
-    pkhtb       r2, r3, r2, asr #1   ; [5  |  4]
-    str         r2, [r1], #4
+    addmi       r0, r0, #1          ; += a2 < 0
+    add         r0, r0, #3          ; += 3
+    ldr         lr, c00040004
+    mov         r0, r0, asr #3      ; >> 3
+    strh        r0, [r1, #24]       ; op[12]
 
-    lsls        r2, r4, #16
-    addpl       r2, r2, #0x10000     ; [~6]
-    lsls        r3, r5, #16
-    addpl       r3, r3, #0x10000     ; [~7]
-    asr         r3, r3, #1           ; [7  |  x]
-    pkhtb       r2, r3, r2, asr #17  ; [7  |  6]
-    str         r2, [r1], #4
+    adds        r2, r11, r12        ; b2 = b1_0 + c1_0
+    addmi       r2, r2, #1          ; += a2 < 0
+    add         r2, r2, #3          ; += 3
+    subs        r0, r11, r12        ; c2 = b1_0 - c1_0
+    mov         r2, r2, asr #3      ; >> 3
+    strh        r2, [r1, #8]        ; op[4]
 
-    asrs        r2, r7, #16
-    addpl       r2, r2, #1           ; [~8]
-    asrs        r3, r6, #16
-    addpl       r3, r3, #1           ; [~9]
-    lsl         r3, r3, #15          ; [9  |  x]
-    pkhtb       r2, r3, r2, asr #1   ; [9  |  8]
-    str         r2, [r1], #4
+    addmi       r0, r0, #1          ; += a2 < 0
+    add         r0, r0, #3          ; += 3
+    smusd       r3, r3, lr          ; A3 = a1<<2 - d1<<2
+    smusd       r7, r7, lr          ; C3 = a1<<2 - d1<<2
+    mov         r0, r0, asr #3      ; >> 3
+    strh        r0, [r1, #16]       ; op[8]
 
-    lsls        r2, r6, #16
-    addpl       r2, r2, #0x10000     ; [~10]
-    lsls        r3, r7, #16
-    addpl       r3, r3, #0x10000     ; [~11]
-    asr         r3, r3, #1           ; [11 |  x]
-    pkhtb       r2, r3, r2, asr #17  ; [11 | 10]
-    str         r2, [r1], #4
 
-    asrs        r2, r9, #16
-    addpl       r2, r2, #1           ; [~12]
-    asrs        r3, r8, #16
-    addpl       r3, r3, #1           ; [~13]
-    lsl         r3, r3, #15          ; [13 |  x]
-    pkhtb       r2, r3, r2, asr #1   ; [13 | 12]
-    str         r2, [r1], #4
+    ; op[3,7,11,15]
+    add         r0, r3, r7          ; a1_3 = A3 + C3
+    sub         r3, r3, r7          ; b1_3 = A3 - C3
 
-    lsls        r2, r8, #16
-    addpl       r2, r2, #0x10000     ; [~14]
-    lsls        r3, r9, #16
-    addpl       r3, r3, #0x10000     ; [~15]
-    asr         r3, r3, #1           ; [15 |  x]
-    pkhtb       r2, r3, r2, asr #17  ; [15 | 14]
-    str         r2, [r1]
+    smusd       r5, r5, lr          ; B3 = a1<<2 - d1<<2
+    smusd       r9, r9, lr          ; D3 = a1<<2 - d1<<2
+    add         r7, r5, r9          ; d1_3 = B3 + D3
+    sub         r5, r5, r9          ; c1_3 = B3 - D3
+
+    adds        r2, r0, r7          ; a2 = a1_3 + d1_3
+    addmi       r2, r2, #1          ; += a2 < 0
+    add         r2, r2, #3          ; += 3
+    adds        r9, r3, r5          ; b2 = b1_3 + c1_3
+    mov         r2, r2, asr #3      ; >> 3
+    strh        r2, [r1, #6]        ; op[3]
+
+    addmi       r9, r9, #1          ; += a2 < 0
+    add         r9, r9, #3          ; += 3
+    subs        r2, r3, r5          ; c2 = b1_3 - c1_3
+    mov         r9, r9, asr #3      ; >> 3
+    strh        r9, [r1, #14]       ; op[7]
+
+    addmi       r2, r2, #1          ; += a2 < 0
+    add         r2, r2, #3          ; += 3
+    subs        r9, r0, r7          ; d2 = a1_3 - d1_3
+    mov         r2, r2, asr #3      ; >> 3
+    strh        r2, [r1, #22]       ; op[11]
+
+    addmi       r9, r9, #1          ; += a2 < 0
+    add         r9, r9, #3          ; += 3
+    smuad       r3, r4, lr          ; A1 = b1<<2 + c1<<2
+    smuad       r5, r8, lr          ; C1 = b1<<2 + c1<<2
+    mov         r9, r9, asr #3      ; >> 3
+    strh        r9, [r1, #30]       ; op[15]
+
+    ; op[1,5,9,13]
+    add         r0, r3, r5          ; a1_1 = A1 + C1
+    sub         r3, r3, r5          ; b1_1 = A1 - C1
+
+    smuad       r7, r6, lr          ; B1 = b1<<2 + c1<<2
+    smuad       r9, r10, lr         ; D1 = b1<<2 + c1<<2
+    add         r5, r7, r9          ; d1_1 = B1 + D1
+    sub         r7, r7, r9          ; c1_1 = B1 - D1
+
+    adds        r2, r0, r5          ; a2 = a1_1 + d1_1
+    addmi       r2, r2, #1          ; += a2 < 0
+    add         r2, r2, #3          ; += 3
+    adds        r9, r3, r7          ; b2 = b1_1 + c1_1
+    mov         r2, r2, asr #3      ; >> 3
+    strh        r2, [r1, #2]        ; op[1]
+
+    addmi       r9, r9, #1          ; += a2 < 0
+    add         r9, r9, #3          ; += 3
+    subs        r2, r3, r7          ; c2 = b1_1 - c1_1
+    mov         r9, r9, asr #3      ; >> 3
+    strh        r9, [r1, #10]       ; op[5]
+
+    addmi       r2, r2, #1          ; += a2 < 0
+    add         r2, r2, #3          ; += 3
+    subs        r9, r0, r5          ; d2 = a1_1 - d1_1
+    mov         r2, r2, asr #3      ; >> 3
+    strh        r2, [r1, #18]       ; op[9]
+
+    addmi       r9, r9, #1          ; += a2 < 0
+    add         r9, r9, #3          ; += 3
+    smusd       r4, r4, lr          ; A2 = b1<<2 - c1<<2
+    smusd       r8, r8, lr          ; C2 = b1<<2 - c1<<2
+    mov         r9, r9, asr #3      ; >> 3
+    strh        r9, [r1, #26]       ; op[13]
+
+
+    ; op[2,6,10,14]
+    add         r11, r4, r8         ; a1_2 = A2 + C2
+    sub         r12, r4, r8         ; b1_2 = A2 - C2
+
+    smusd       r6, r6, lr          ; B2 = b1<<2 - c1<<2
+    smusd       r10, r10, lr        ; D2 = b1<<2 - c1<<2
+    add         r4, r6, r10         ; d1_2 = B2 + D2
+    sub         r8, r6, r10         ; c1_2 = B2 - D2
+
+    adds        r2, r11, r4         ; a2 = a1_2 + d1_2
+    addmi       r2, r2, #1          ; += a2 < 0
+    add         r2, r2, #3          ; += 3
+    adds        r9, r12, r8         ; b2 = b1_2 + c1_2
+    mov         r2, r2, asr #3      ; >> 3
+    strh        r2, [r1, #4]        ; op[2]
+
+    addmi       r9, r9, #1          ; += a2 < 0
+    add         r9, r9, #3          ; += 3
+    subs        r2, r12, r8         ; c2 = b1_2 - c1_2
+    mov         r9, r9, asr #3      ; >> 3
+    strh        r9, [r1, #12]       ; op[6]
+
+    addmi       r2, r2, #1          ; += a2 < 0
+    add         r2, r2, #3          ; += 3
+    subs        r9, r11, r4         ; d2 = a1_2 - d1_2
+    mov         r2, r2, asr #3      ; >> 3
+    strh        r2, [r1, #20]       ; op[10]
+
+    addmi       r9, r9, #1          ; += a2 < 0
+    add         r9, r9, #3          ; += 3
+    mov         r9, r9, asr #3      ; >> 3
+    strh        r9, [r1, #28]       ; op[14]
+
 
     ldmia       sp!, {r4 - r11, pc}
     ENDP        ; |vp8_short_walsh4x4_armv6|
+
+c00040004
+    DCD         0x00040004
 
     END

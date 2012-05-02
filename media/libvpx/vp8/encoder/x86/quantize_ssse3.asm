@@ -80,6 +80,9 @@ sym(vp8_fast_quantize_b_ssse3):
     mov         rdi, [rsi + vp8_blockd_dequant]
     mov         rcx, [rsi + vp8_blockd_dqcoeff]
 
+    movdqa      xmm2, xmm1                  ;store y for getting eob
+    movdqa      xmm3, xmm5
+
     pxor        xmm1, xmm0
     pxor        xmm5, xmm4
     psubw       xmm1, xmm0
@@ -88,34 +91,31 @@ sym(vp8_fast_quantize_b_ssse3):
     movdqa      [rax], xmm1
     movdqa      [rax + 16], xmm5
 
-    movdqa      xmm2, [rdi]
-    movdqa      xmm3, [rdi + 16]
+    movdqa      xmm0, [rdi]
+    movdqa      xmm4, [rdi + 16]
 
-    pxor        xmm4, xmm4
-    pmullw      xmm2, xmm1
-    pmullw      xmm3, xmm5
+    pmullw      xmm0, xmm1
+    pmullw      xmm4, xmm5
+    pxor        xmm1, xmm1
 
-    pcmpeqw     xmm1, xmm4                  ;non zero mask
-    pcmpeqw     xmm5, xmm4                  ;non zero mask
-    packsswb    xmm1, xmm5
-    pshufb      xmm1, [GLOBAL(zz_shuf)]
+    pcmpgtw     xmm2, xmm1                  ;calculate eob
+    pcmpgtw     xmm3, xmm1
+    packsswb    xmm2, xmm3
+    pshufb      xmm2, [GLOBAL(zz_shuf)]
 
-    pmovmskb    edx, xmm1
+    pmovmskb    edx, xmm2
 
-    xor         rdi, rdi
-    mov         eax, -1
-    xor         dx, ax                      ;flip the bits for bsr
-    bsr         eax, edx
+    movdqa      [rcx], xmm0                 ;store dqcoeff
+    movdqa      [rcx + 16], xmm4            ;store dqcoeff
+    mov         rcx, [rsi + vp8_blockd_eob]
 
-    movdqa      [rcx], xmm2                 ;store dqcoeff
-    movdqa      [rcx + 16], xmm3            ;store dqcoeff
-
-    sub         edi, edx                    ;check for all zeros in bit mask
-    sar         edi, 31                     ;0 or -1
+    bsr         eax, edx                    ;count 0
     add         eax, 1
-    and         eax, edi                    ;if the bit mask was all zero,
-                                            ;then eob = 0
-    mov         [rsi + vp8_blockd_eob], eax
+
+    cmp         edx, 0                      ;if all 0, eob=0
+    cmove       eax, edx
+
+    mov         BYTE PTR [rcx], al          ;store eob
 
     ; begin epilog
 %if ABI_IS_32BIT

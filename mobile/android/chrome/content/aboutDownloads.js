@@ -81,6 +81,7 @@ let Downloads = {
     switch (aTopic) {
       case "dl-failed":
       case "dl-cancel":
+        break;
       case "dl-done":
         if (!this._getElementForDownload(download.id)) {
           let item = this._createItem(downloadTemplate, {
@@ -102,10 +103,10 @@ let Downloads = {
       this._stmt.finalize();
 
     this._stmt = this._dlmgr.DBConnection.createStatement(
-      "SELECT id, name, source, state, startTime, endTime, referrer, " +
-             "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive " +
+      "SELECT id, name, source, startTime, endTime, referrer, " +
+             "currBytes, maxBytes " +
       "FROM moz_downloads " +
-      "WHERE NOT isActive " +
+      "WHERE state = :download_state " +
       "ORDER BY endTime DESC");
   },
 
@@ -177,11 +178,7 @@ let Downloads = {
     clearTimeout(this._timeoutID);
 
     this._stmt.reset();
-    this._stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED);
-    this._stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-    this._stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
-    this._stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
-    this._stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_SCANNING);
+    this._stmt.params.download_state = Ci.nsIDownloadManager.DOWNLOAD_FINISHED;
 
     // Take a quick break before we actually start building the list
     let self = this;

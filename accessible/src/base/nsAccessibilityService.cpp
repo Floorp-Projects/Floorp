@@ -706,13 +706,19 @@ nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
 NS_IMETHODIMP
 nsAccessibilityService::GetStringRole(PRUint32 aRole, nsAString& aString)
 {
-  if ( aRole >= ArrayLength(kRoleNames)) {
-    aString.AssignLiteral("unknown");
+#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role) \
+  case roles::geckoRole: \
+    CopyUTF8toUTF16(stringRole, aString); \
     return NS_OK;
+
+  switch (aRole) {
+#include "RoleMap.h"
+    default:
+      aString.AssignLiteral("unknown");
+      return NS_OK;
   }
 
-  CopyUTF8toUTF16(kRoleNames[aRole], aString);
-  return NS_OK;
+#undef ROLE
 }
 
 NS_IMETHODIMP

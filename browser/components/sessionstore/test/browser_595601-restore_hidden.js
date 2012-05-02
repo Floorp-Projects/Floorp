@@ -94,24 +94,16 @@ let TabsProgressListener = {
 }
 
 // ----------
-function whenWindowLoaded(win, callback) {
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
-    executeSoon(callback);
-  }, false);
-}
-
-// ----------
 function newWindowWithState(state, callback) {
   let opts = "chrome,all,dialog=no,height=800,width=800";
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 
   registerCleanupFunction(function () win.close());
 
-  whenWindowLoaded(win, function () {
-    TabsProgressListener.init(win);
+  whenWindowLoaded(win, function onWindowLoaded(aWin) {
+    TabsProgressListener.init(aWin);
     TabsProgressListener.setCallback(callback);
 
-    ss.setWindowState(win, JSON.stringify(state), true);
+    ss.setWindowState(aWin, JSON.stringify(state), true);
   });
 }

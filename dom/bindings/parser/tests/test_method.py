@@ -15,6 +15,7 @@ def WebIDLTest(parser, harness):
           object getObject();
           void setObject(object arg1);
           void setAny(any arg1);
+          float doFloats(float arg1);
         };
     """)
 
@@ -27,7 +28,7 @@ def WebIDLTest(parser, harness):
                "Should be an IDLInterface")
     harness.check(iface.identifier.QName(), "::TestMethods", "Interface has the right QName")
     harness.check(iface.identifier.name, "TestMethods", "Interface has the right name")
-    harness.check(len(iface.members), 12, "Expect 12 members")
+    harness.check(len(iface.members), 13, "Expect 13 members")
 
     methods = iface.members
 
@@ -112,3 +113,7 @@ def WebIDLTest(parser, harness):
                 "setAny",
        [("Void",
         [("::TestMethods::setAny::arg1", "arg1", "Any", False, False)])])
+    checkMethod(methods[12], "::TestMethods::doFloats",
+                "doFloats",
+       [("Float",
+        [("::TestMethods::doFloats::arg1", "arg1", "Float", False, False)])])

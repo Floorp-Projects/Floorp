@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Login Manager</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Test limiting number of forms filled.
+
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+
+<script>
+var FORMS_TO_CREATE = 40;
+
+function createForm(id) {
+    var template1 = "<form id='form"
+    var template2 = "'><input name='u'><input type='password' name='p'></form>\n";
+    return id + template1 + id + template2;
+}
+
+var formsHtml = "";
+for (var i = 1; i <= FORMS_TO_CREATE; i++) {
+    formsHtml += createForm(i);
+}
+
+var theDiv = document.getElementById("content");
+theDiv.innerHTML = formsHtml;
+</script>
+
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+commonInit();
+/** Test for Login Manager: form fill, multiple forms. **/
+
+function startTest() {
+  for (var i = 1; i <= FORMS_TO_CREATE; i++) {
+    if (true) {
+      is($_(i, "u").value, "testuser", "Checking for filled username in form " + i);
+      is($_(i, "p").value, "testpass", "Checking for filled password in form " + i);
+    } else {
+      is($_(i, "u").value, "", "Checking for unfilled username in form " + i);
+      is($_(i, "p").value, "", "Checking for unfilled password in form " + i);
+    }
+  }
+
+  SimpleTest.finish();
+}
+
+window.onload = startTest;
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+

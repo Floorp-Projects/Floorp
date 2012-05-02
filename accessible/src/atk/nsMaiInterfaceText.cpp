@@ -42,7 +42,6 @@
 
 #include "nsHyperTextAccessible.h"
 #include "nsMai.h"
-#include "nsRoleMap.h"
 
 #include "nsIPersistentProperties2.h"
 
@@ -52,7 +51,7 @@ static void
 ConvertTexttoAsterisks(nsAccessibleWrap* accWrap, nsAString& aString)
 {
     // convert each char to "*" when it's "password text" 
-    PRUint32 atkRole = atkRoleMap[accWrap->NativeRole()];
+    PRUint32 atkRole = nsAccessibleWrap::AtkRoleFor(accWrap->NativeRole());
     if (atkRole == ATK_ROLE_PASSWORD_TEXT) {
         for (PRUint32 i = 0; i < aString.Length(); i++)
             aString.Replace(i, 1, NS_LITERAL_STRING("*"));
@@ -161,7 +160,7 @@ getCharacterAtOffsetCB(AtkText *aText, gint aOffset)
         accText->GetCharacterAtOffset(aOffset, &uniChar);
 
     // convert char to "*" when it's "password text" 
-    PRUint32 atkRole = atkRoleMap[accWrap->NativeRole()];
+    PRUint32 atkRole = nsAccessibleWrap::AtkRoleFor(accWrap->NativeRole());
     if (atkRole == ATK_ROLE_PASSWORD_TEXT)
         uniChar = '*';
 

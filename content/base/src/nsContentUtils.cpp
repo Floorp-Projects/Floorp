@@ -147,6 +147,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIPermissionManager.h"
 #include "nsIContentPrefService.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsNullPrincipal.h"
 #include "nsIRunnable.h"
 #include "nsDOMJSUtils.h"
 #include "nsGenericHTMLElement.h"
@@ -4120,7 +4121,7 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:blank");
   nsCOMPtr<nsIPrincipal> principal =
-    do_CreateInstance("@mozilla.org/nullprincipal;1");
+    do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
   nsCOMPtr<nsIDOMDocument> domDocument;
   nsresult rv = nsContentUtils::CreateDocument(EmptyString(),
                                                EmptyString(),
@@ -4464,6 +4465,29 @@ nsContentUtils::IsSystemPrincipal(nsIPrincipal* aPrincipal)
   bool isSystem;
   nsresult rv = sSecurityManager->IsSystemPrincipal(aPrincipal, &isSystem);
   return NS_SUCCEEDED(rv) && isSystem;
+}
+
+bool
+nsContentUtils::CombineResourcePrincipals(nsCOMPtr<nsIPrincipal>* aResourcePrincipal,
+                                          nsIPrincipal* aExtraPrincipal)
+{
+  if (!aExtraPrincipal) {
+    return false;
+  }
+  if (!*aResourcePrincipal) {
+    *aResourcePrincipal = aExtraPrincipal;
+    return true;
+  }
+  if (*aResourcePrincipal == aExtraPrincipal) {
+    return false;
+  }
+  bool subsumes;
+  if (NS_SUCCEEDED((*aResourcePrincipal)->Subsumes(aExtraPrincipal, &subsumes)) &&
+      subsumes) {
+    return false;
+  }
+  sSecurityManager->GetSystemPrincipal(getter_AddRefs(*aResourcePrincipal));
+  return true;
 }
 
 /* static */

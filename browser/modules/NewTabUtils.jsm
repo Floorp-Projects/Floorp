@@ -27,6 +27,9 @@ const PREF_NEWTAB_ENABLED = "browser.newtabpage.enabled";
 // The maximum number of results we want to retrieve from history.
 const HISTORY_RESULTS_LIMIT = 100;
 
+// The gather telemetry topic.
+const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
+
 /**
  * Singleton that provides storage functionality.
  */
@@ -584,6 +587,47 @@ let Links = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference])
 };
+
+/**
+ * Singleton used to collect telemetry data.
+ *
+ */
+let Telemetry = {
+  /**
+   * Initializes object.
+   */
+  init: function Telemetry_init() {
+    Services.obs.addObserver(this, TOPIC_GATHER_TELEMETRY, false);
+  },
+
+  /**
+   * Collects data.
+   */
+  _collect: function Telemetry_collect() {
+    let probes = [
+      { histogram: "NEWTAB_PAGE_ENABLED",
+        value: AllPages.enabled },
+      { histogram: "NEWTAB_PAGE_PINNED_SITES_COUNT",
+        value: PinnedLinks.links.length },
+      { histogram: "NEWTAB_PAGE_BLOCKED_SITES_COUNT",
+        value: Object.keys(BlockedLinks.links).length }
+    ];
+
+    probes.forEach(function Telemetry_collect_forEach(aProbe) {
+      Services.telemetry.getHistogramById(aProbe.histogram)
+        .add(aProbe.value);
+    });
+  },
+
+  /**
+   * Listens for gather telemetry topic.
+   */
+  observe: function Telemetry_observe(aSubject, aTopic, aData) {
+    this._collect();
+  }
+};
+
+Telemetry.init();
 
 /**
  * Singleton that provides the public API of this JSM.
