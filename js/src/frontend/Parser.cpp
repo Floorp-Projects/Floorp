@@ -6759,8 +6759,12 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                     pn->pn_xflags |= PNX_HOLEY | PNX_NONCONST;
                 } else {
                     pn2 = assignExpr();
-                    if (pn2 && !pn2->isConstant())
-                        pn->pn_xflags |= PNX_NONCONST;
+                    if (pn2) {
+                        if (foldConstants && !FoldConstants(context, pn2, tc))
+                            return NULL;
+                        if (!pn2->isConstant())
+                            pn->pn_xflags |= PNX_NONCONST;
+                    }
                 }
                 if (!pn2)
                     return NULL;
@@ -6973,6 +6977,9 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
             if (tt == TOK_COLON) {
                 pnval = assignExpr();
                 if (!pnval)
+                    return NULL;
+
+                if (foldConstants && !FoldConstants(context, pnval, tc))
                     return NULL;
 
                 /*
