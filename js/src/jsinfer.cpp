@@ -3082,11 +3082,10 @@ TypeObject::clearNewScript(JSContext *cx)
         pcOffsets.append(uint32_t(iter.pc() - iter.script()->code));
         if (iter.isConstructing() &&
             iter.callee() == newScript->fun &&
-            iter.thisv().isObject() &&
-            !iter.thisv().toObject().hasLazyType() &&
-            iter.thisv().toObject().type() == this)
+            !iter.thisObject()->hasLazyType() &&
+            iter.thisObject()->type() == this)
         {
-            JSObject *obj = &iter.thisv().toObject();
+            JSObject *obj = iter.thisObject();
 
             /* Whether all identified 'new' properties have been initialized. */
             bool finished = false;

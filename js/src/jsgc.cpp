@@ -1119,7 +1119,7 @@ MarkRangeConservativelyAndSkipIon(JSTracer *trc, JSRuntime *rt, const uintptr_t 
     // that the conservative scanner will still see them.
     for (ion::IonActivationIterator ion(rt); ion.more(); ++ion) {
         ion::IonFrameIterator frames(ion.top());
-        while (frames.more())
+        while (!frames.done())
             ++frames;
 
         uintptr_t *ionMin = (uintptr_t *)ion.top();

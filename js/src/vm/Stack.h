@@ -1838,11 +1838,7 @@ class StackIter
   private:
     SavedOption  savedOption_;
 
-    enum State { DONE, SCRIPTED, NATIVE, IMPLICIT_NATIVE
-#ifdef JS_ION
-        , ION
-#endif
-    };
+    enum State { DONE, SCRIPTED, NATIVE, IMPLICIT_NATIVE, ION };
 
     State        state_;
 
@@ -1881,6 +1877,7 @@ class StackIter
     bool operator!=(const StackIter &rhs) const { return !(*this == rhs); }
 
     bool isScript() const { JS_ASSERT(!done()); return state_ == SCRIPTED || state_ == ION; }
+    bool isIon() const { JS_ASSERT(!done()); return state_ == ION; }
     bool isImplicitNativeCall() const {
         JS_ASSERT(!done());
         return state_ == IMPLICIT_NATIVE;
@@ -1895,13 +1892,14 @@ class StackIter
     bool isNonEvalFunctionFrame() const;
     bool isConstructing() const;
 
+    // :TODO: Add && !isIon() in JS_ASSERT of fp() and sp().
     StackFrame *fp() const { JS_ASSERT(isScript()); return fp_; }
     Value      *sp() const { JS_ASSERT(isScript()); return sp_; }
     jsbytecode *pc() const { JS_ASSERT(isScript()); return pc_; }
     JSScript   *script() const { JS_ASSERT(isScript()); return script_; }
     JSFunction *callee() const;
     Value       calleev() const;
-    Value       thisv() const;
+    JSObject   *thisObject() const;
 
     CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return args_; }
 };

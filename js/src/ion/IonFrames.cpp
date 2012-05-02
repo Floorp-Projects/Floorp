@@ -451,7 +451,7 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 static void
 MarkIonActivation(JSTracer *trc, uint8 *top)
 {
-    for (IonFrameIterator frames(top); frames.more(); ++frames) {
+    for (IonFrameIterator frames(top); !frames.done(); ++frames) {
         switch (frames.type()) {
           case IonFrame_Exit:
             // The exit frame gets ignored.
@@ -730,3 +730,57 @@ MachineState::FromBailout(uintptr_t regs[Registers::Total],
     return machine;
 }
 
+bool
+InlineFrameIterator::isConstructing(IonActivation *activation) const
+{
+    // Skip the current frame and look at the caller's.
+    if (more()) {
+        InlineFrameIterator parent(*this);
+        ++parent;
+
+        // In the case of a JS frame, look up the pc from the snapshot.
+        JS_ASSERT(js_CodeSpec[*parent.pc()].format & JOF_INVOKE);
+
+        return (JSOp)*parent.pc() == JSOP_NEW;
+    }
+
+    return frame_->isConstructing(activation);
+}
+
+bool
+IonFrameIterator::isConstructing(IonActivation *activation) const
+{
+    IonFrameIterator parent(*this);
+
+    // Skip the current frame and look at the caller's.
+    do {
+        ++parent;
+    } while (!parent.done() && !parent.isScripted());
+
+    if (parent.isScripted()) {
+        // In the case of a JS frame, look up the pc from the snapshot.
+        InlineFrameIterator inlinedParent(&parent);
+        JS_ASSERT(js_CodeSpec[*inlinedParent.pc()].format & JOF_INVOKE);
+
+        return (JSOp)*inlinedParent.pc() == JSOP_NEW;
+    }
+
+    JS_ASSERT(parent.done());
+    return activation->entryfp()->isConstructing();
+}
+
+JSObject *
+InlineFrameIterator::thisObject() const
+{
+    // JS_ASSERT(isConstructing(...));
+    SnapshotIterator s(si_);
+
+    // scopeChain
+    s.skip();
+
+    // In strict modes, |this| may not be an object and thus may not be
+    // readable which can either segv in read or trigger the assertion.
+    Value v = s.read();
+    JS_ASSERT(v.isObject());
+    return &v.toObject();
+}

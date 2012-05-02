@@ -158,9 +158,6 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         return true;
     }
 
-    StackIter prev(iter);
-    ++prev;
-
 #ifdef JS_METHODJIT
     if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom) && fp && fp->prev()) {
         /*
