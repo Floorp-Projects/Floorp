@@ -2831,4 +2831,8 @@ abstract public class GeckoApp
             }
         });
     }
+
+    public boolean linkerExtract() {
+        return false;
+    }
 }
