@@ -196,7 +196,6 @@ INSTALLED_HEADERS = \
 		jsdhash.h \
 		jsfriendapi.h \
 		jsgc.h \
-		jscell.h \
 		jshash.h \
 		jslock.h \
 		json.h \
@@ -223,9 +222,10 @@ EXPORTS_ds = \
 		$(NULL)
 
 EXPORTS_gc = \
-		Statistics.h \
 		Barrier.h \
+		Heap.h \
 		Root.h \
+		Statistics.h \
 		$(NULL)
 
 ######################################################
