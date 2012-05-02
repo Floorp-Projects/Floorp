@@ -6327,6 +6327,7 @@ if test -n "$MOZ_TREE_FREETYPE"; then
    FT2_CFLAGS='-I$(topsrcdir)/modules/freetype2/include'
    CAIRO_FT_CFLAGS='-I$(topsrcdir)/modules/freetype2/include'
    FT2_LIBS='$(call EXPAND_LIBNAME_PATH,freetype,$(DEPTH)/modules/freetype2/.libs)'
+   CAIRO_FT_OSLIBS=''
    CAIRO_FT_LIBS='$(call EXPAND_LIBNAME_PATH,freetype,$(DEPTH)/modules/freetype2/.libs)'
    AC_DEFINE(HAVE_FT_BITMAP_SIZE_Y_PPEM)
    AC_DEFINE(HAVE_FT_GLYPHSLOT_EMBOLDEN)
@@ -8123,7 +8124,8 @@ if test "$MOZ_TREE_CAIRO"; then
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
-        CAIRO_FT_LIBS="-L${MZFTCFGFT2}/lib -lmozft -lmzfntcfg"
+        CAIRO_FT_OSLIBS="-L${MZFTCFGFT2}/lib -lmozft -lmzfntcfg"
+        CAIRO_FT_LIBS=""
         ;;
     esac
     if test "$USE_FC_FREETYPE"; then
@@ -8157,6 +8159,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(TEE_SURFACE_FEATURE)
 
     MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src)'" $CAIRO_FT_LIBS"
+    MOZ_CAIRO_OSLIBS='${CAIRO_FT_OSLIBS}'
 
     if test "$MOZ_TREE_PIXMAN"; then
         AC_DEFINE(MOZ_TREE_PIXMAN)
@@ -8168,7 +8171,7 @@ if test "$MOZ_TREE_CAIRO"; then
     fi
 
     if test "$MOZ_X11"; then
-        MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
+        MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
     fi
 
     CAIRO_FEATURES_H=gfx/cairo/cairo/src/cairo-features.h
@@ -8189,6 +8192,7 @@ fi
 AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST(MOZ_CAIRO_CFLAGS)
 AC_SUBST(MOZ_CAIRO_LIBS)
+AC_SUBST(MOZ_CAIRO_OSLIBS)
 AC_SUBST(MOZ_TREE_PIXMAN)
 
 dnl ========================================================
