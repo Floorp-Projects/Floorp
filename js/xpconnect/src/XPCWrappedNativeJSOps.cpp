@@ -695,6 +695,11 @@ TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper)
 static void
 MarkWrappedNative(JSTracer *trc, JSObject *obj)
 {
+    js::Class* clazz = js::GetObjectClass(obj);
+    if (clazz->flags & JSCLASS_DOM_GLOBAL) {
+        mozilla::dom::TraceProtoOrIfaceCache(trc, obj);
+    }
+
     JSObject *obj2;
 
     // Pass null for the first JSContext* parameter  to skip any security
