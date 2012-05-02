@@ -63,6 +63,17 @@ function dbg_assert(cond, e) {
   }
 }
 
+/* Turn the error e into a string, without fail. */
+function safeErrorString(aError) {
+  try {
+    var s = aError.toString();
+    if (typeof s === "string")
+      return s;
+  } catch (ee) { }
+
+  return "<failed trying to find error description>";
+}
+
 loadSubScript.call(this, "chrome://global/content/devtools/dbg-transport.js");
 
 // XPCOM constructors
@@ -445,11 +456,14 @@ DebuggerServerConnection.prototype = {
       } catch(e) {
         Cu.reportError(e);
         ret = { error: "unknownError",
-                message: "An unknown error has occurred while processing request." };
+                message: ("error occurred while processing '" + aPacket.type +
+                          "' request: " + safeErrorString(e)) };
       }
     } else {
       ret = { error: "unrecognizedPacketType",
-              message: 'Actor "' + actor.actorID + '" does not recognize the packet type "' + aPacket.type + '"' };
+              message: ('Actor "' + actor.actorID +
+                        '" does not recognize the packet type "' +
+                        aPacket.type + '"') };
     }
 
     if (!ret) {
