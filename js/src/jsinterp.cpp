@@ -465,8 +465,11 @@ js::ExecuteKernel(JSContext *cx, JSScript *script_, JSObject &scopeChain, const 
 
     bool ok = RunScript(cx, script, fp);
 
-    if (fp->isStrictEvalFrame())
+    if (fp->isStrictEvalFrame()) {
+        if (cx->compartment->debugMode())
+            cx->runtime->debugScopes->onPopStrictEvalScope(fp);
         js_PutCallObject(fp, fp->callObj());
+    }
 
     Probes::stopExecution(cx, script);
 

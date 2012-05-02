@@ -1468,7 +1468,8 @@ js_IsDebugScopeSlow(const JSObject *obj)
 
 DebugScopes::DebugScopes(JSRuntime *rt)
  : proxiedScopes(rt),
-   missingScopes(rt)
+   missingScopes(rt),
+   liveScopes(rt)
 {}
 
 DebugScopes::~DebugScopes()
@@ -1479,7 +1480,8 @@ DebugScopes::~DebugScopes()
 bool
 DebugScopes::init()
 {
-    if (!proxiedScopes.init() ||
+    if (!liveScopes.init() ||
+        !proxiedScopes.init() ||
         !missingScopes.init())
     {
         return false;
@@ -1504,6 +1506,18 @@ DebugScopes::sweep()
     for (MissingScopeMap::Enum e(missingScopes); !e.empty(); e.popFront()) {
         if (!IsObjectMarked(&e.front().value))
             e.removeFront();
+    }
+
+    /*
+     * Since liveScopes includes entries for suspended generator frames which
+     * may be collected when the generator becomes unreachable we must sweep
+     * liveScopes for dead generator frames.
+     */
+    for (LiveScopeMap::Enum e(liveScopes); !e.empty(); e.popFront()) {
+        if (JS_IsAboutToBeFinalized(e.front().key)) {
+            JS_ASSERT(e.front().value->isGeneratorFrame());
+            e.removeFront();
+        }
     }
 }
 
@@ -1574,7 +1588,15 @@ DebugScopes::onPopCall(StackFrame *fp)
     if (fp->isYielding())
         return;
 
-    if (!fp->fun()->isHeavyweight()) {
+    if (fp->fun()->isHeavyweight()) {
+        /*
+         * When a frame finishes executing in mjit code, the epilogue is called
+         * once from the return and once when the frame is popped.
+         * TODO: bug 659577 will remove this (with HAS_CALL_OBJ).
+         */
+        if (fp->hasCallObj())
+            liveScopes.remove(&fp->scopeChain()->asCall());
+    } else {
         JS_ASSERT(!fp->hasCallObj());
         if (MissingScopeMap::Ptr p = missingScopes.lookup(ScopeIter(fp))) {
             js_PutCallObject(fp, p->value->scope().asCall());
@@ -1587,7 +1609,9 @@ void
 DebugScopes::onPopBlock(JSContext *cx, StackFrame *fp)
 {
     StaticBlockObject &block = *fp->maybeBlockChain();
-    if (!block.needsClone()) {
+    if (block.needsClone()) {
+        liveScopes.remove(&fp->scopeChain()->asClonedBlock());
+    } else {
         JS_ASSERT(!fp->scopeChain()->isBlock() ||
                   fp->scopeChain()->asClonedBlock().staticBlock() != block);
         if (MissingScopeMap::Ptr p = missingScopes.lookup(ScopeIter(fp))) {
@@ -1598,10 +1622,35 @@ DebugScopes::onPopBlock(JSContext *cx, StackFrame *fp)
 }
 
 void
+DebugScopes::onPopWith(StackFrame *fp)
+{
+    liveScopes.remove(&fp->scopeChain()->asWith());
+}
+
+void
+DebugScopes::onPopStrictEvalScope(StackFrame *fp)
+{
+    liveScopes.remove(&fp->scopeChain()->asCall());
+}
+
+void
 DebugScopes::onGeneratorFrameChange(StackFrame *from, StackFrame *to)
 {
     for (ScopeIter toIter(to); !toIter.done(); toIter = toIter.enclosing()) {
-        if (!toIter.hasScopeObject()) {
+        if (toIter.hasScopeObject()) {
+            /*
+             * Not only must we correctly replace mappings [scope -> from] with
+             * mappings [scope -> to], but we must add [scope -> to] if it
+             * doesn't already exist so that if we need to proxy a generator's
+             * scope while it is suspended, we can find its frame (which would
+             * otherwise not be found by AllFramesIter).
+             */
+            LiveScopeMap::AddPtr livePtr = liveScopes.lookupForAdd(&toIter.scope());
+            if (livePtr)
+                livePtr->value = to;
+            else
+                liveScopes.add(livePtr, &toIter.scope(), to);
+        } else {
             if (MissingScopeMap::Ptr p = missingScopes.lookup(ScopeIter(toIter, from))) {
                 DebugScopeObject &debugScope = *p->value;
                 ScopeObject &scope = debugScope.scope();
@@ -1627,6 +1676,59 @@ DebugScopes::onCompartmentLeaveDebugMode(JSCompartment *c)
         if (e.front().key.fp()->compartment() == c)
             e.removeFront();
     }
+    for (LiveScopeMap::Enum e(liveScopes); !e.empty(); e.popFront()) {
+        if (e.front().key->compartment() == c)
+            e.removeFront();
+    }
+}
+
+bool
+DebugScopes::updateLiveScopes(JSContext *cx)
+{
+    JS_CHECK_RECURSION(cx, return false);
+
+    /*
+     * Note that we must always update the top frame's scope objects' entries
+     * in liveScopes because we can't be sure code hasn't run in that frame to
+     * change the scope chain since we were last called. The fp->prevUpToDate()
+     * flag indicates whether the scopes of frames older than fp are already
+     * included in liveScopes. It might seem simpler to have fp instead carry a
+     * flag indicating whether fp itself is accurately described, but then we
+     * would need to clear that flag whenever fp ran code. By storing the 'up
+     * to date' bit for fp->prev() in fp, simply popping fp effectively clears
+     * the flag for us, at exactly the time when execution resumes fp->prev().
+     */
+    for (AllFramesIter i(cx->runtime->stackSpace); !i.done(); ++i) {
+        StackFrame *fp = i.fp();
+        if (fp->isDummyFrame() || fp->scopeChain()->compartment() != cx->compartment)
+            continue;
+
+        for (ScopeIter si(fp); !si.done(); si = si.enclosing()) {
+            if (si.hasScopeObject() && !liveScopes.put(&si.scope(), fp))
+                return false;
+        }
+
+        if (fp->prevUpToDate())
+            return true;
+        JS_ASSERT(fp->compartment()->debugMode());
+        fp->setPrevUpToDate();
+    }
+
+    return true;
+}
+
+StackFrame *
+DebugScopes::hasLiveFrame(ScopeObject &scope)
+{
+    if (LiveScopeMap::Ptr p = liveScopes.lookup(&scope)) {
+        JS_ASSERT_IF(scope.isClonedBlock(),
+                     p->value == js_LiveFrameIfGenerator(scope.maybeStackFrame()));
+        JS_ASSERT_IF(scope.isCall(),
+                     p->value == scope.maybeStackFrame());
+        return p->value;
+    }
+    JS_ASSERT_IF(!scope.isWith(), !scope.maybeStackFrame());
+    return NULL;
 }
 
 /*****************************************************************************/
@@ -1746,20 +1848,9 @@ GetDebugScope(JSContext *cx, JSObject &obj)
         return &obj;
     }
 
-    /*
-     * If 'scope' is a 'with' block, then the chain is fully reified from that
-     * point outwards, and there's no point in bothering with a ScopeIter. If
-     * |scope| has an associated stack frame, we can get more detailed scope
-     * chain information from that.
-     * Note: all this frame hackery will be removed by bug 659577.
-     */
     ScopeObject &scope = obj.asScope();
-    if (!scope.isWith() && scope.maybeStackFrame()) {
-        StackFrame *fp = scope.maybeStackFrame();
-        if (scope.isClonedBlock())
-            fp = js_LiveFrameIfGenerator(fp);
+    if (StackFrame *fp = cx->runtime->debugScopes->hasLiveFrame(scope))
         return GetDebugScope(cx, ScopeIter(fp, scope));
-    }
     return GetDebugScopeForScope(cx, scope, ScopeIter(scope.enclosingScope()));
 }
 
@@ -1782,6 +1873,8 @@ js::GetDebugScopeForFunction(JSContext *cx, JSFunction *fun)
 {
     assertSameCompartment(cx, fun);
     JS_ASSERT(cx->compartment->debugMode());
+    if (!cx->runtime->debugScopes->updateLiveScopes(cx))
+        return NULL;
     return GetDebugScope(cx, *fun->environment());
 }
 
@@ -1789,6 +1882,7 @@ JSObject *
 js::GetDebugScopeForFrame(JSContext *cx, StackFrame *fp)
 {
     assertSameCompartment(cx, fp);
-    /* Unfortunately, we cannot JS_ASSERT(debugMode); see CanUseDebugScopeMaps. */
+    if (CanUseDebugScopeMaps(cx) && !cx->runtime->debugScopes->updateLiveScopes(cx))
+        return NULL;
     return GetDebugScope(cx, ScopeIter(fp));
 }
