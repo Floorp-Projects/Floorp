@@ -311,6 +311,9 @@ template<XDRMode mode>
 bool
 XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *parentScript);
 
+extern JSObject *
+CloneInterpretedFunction(JSContext *cx, JSFunction *fun);
+
 } /* namespace js */
 
 extern JSBool

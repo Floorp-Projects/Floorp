@@ -76,6 +76,8 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#include "vm/RegExpObject-inl.h"
+
 using namespace js;
 using namespace js::gc;
 using namespace js::frontend;
@@ -217,7 +219,8 @@ bool
 Bindings::getLocalNameArray(JSContext *cx, BindingNames *namesp)
 {
     JS_ASSERT(lastBinding);
-    JS_ASSERT(count() > 0);
+    if (count() == 0)
+        return true;
 
     BindingNames &names = *namesp;
     JS_ASSERT(names.empty());
@@ -395,6 +398,8 @@ template<XDRMode mode>
 bool
 js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
 {
+    /* NB: Keep this in sync with CloneScript. */
+
     enum ScriptBits {
         NoScriptRval,
         SavedCallerFun,
@@ -1120,11 +1125,10 @@ JS_STATIC_ASSERT(sizeof(JSConstArray) +
                  < JSScript::INVALID_OFFSET);
 JS_STATIC_ASSERT(JSScript::INVALID_OFFSET <= 255);
 
-JSScript *
-JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
-                    uint32_t nobjects, uint32_t nregexps,
-                    uint32_t ntrynotes, uint32_t nconsts, uint32_t nglobals,
-                    uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets, JSVersion version)
+static inline size_t
+ScriptDataSize(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
+               uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
+               uint32_t nglobals, uint16_t nClosedArgs, uint16_t nClosedVars)
 {
     size_t size = 0;
 
@@ -1146,13 +1150,30 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
 
     size += length * sizeof(jsbytecode);
     size += nsrcnotes * sizeof(jssrcnote);
+    return size;
+}
 
-    /*
-     * We assume that calloc aligns on sizeof(Value) if the size we ask to
-     * allocate divides sizeof(Value).
-     */
-    JS_STATIC_ASSERT(sizeof(Value) == sizeof(double));
+static inline uint8_t *
+AllocScriptData(JSContext *cx, size_t size)
+{
     uint8_t *data = static_cast<uint8_t *>(cx->calloc_(JS_ROUNDUP(size, sizeof(Value))));
+    if (!data)
+        return NULL;
+
+    JS_ASSERT(size_t(data) % sizeof(Value) == 0);
+    return data;
+}
+
+JSScript *
+JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
+                    uint32_t nobjects, uint32_t nregexps,
+                    uint32_t ntrynotes, uint32_t nconsts, uint32_t nglobals,
+                    uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets, JSVersion version)
+{
+    size_t size = ScriptDataSize(cx, length, nsrcnotes, natoms, nobjects, nregexps,
+                                 ntrynotes, nconsts, nglobals, nClosedArgs, nClosedVars);
+
+    uint8_t *data = AllocScriptData(cx, size);
     if (!data)
         return NULL;
 
@@ -1449,6 +1470,10 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         Debugger::onNewScript(cx, script, compileAndGoGlobal);
     }
 
+    /*
+     * initScriptCounts updates scriptCountsMap if necessary. The other script
+     * maps in JSCompartment are populated lazily.
+     */
     if (cx->hasRunOption(JSOPTION_PCCOUNT))
         (void) script->initScriptCounts(cx);
 
@@ -1738,28 +1763,186 @@ CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *line
 
 }  /* namespace js */
 
-JSScript *
-js::CloneScript(JSContext *cx, JSScript *script)
+template <class T>
+static inline T *
+Rebase(JSScript *dst, JSScript *src, T *srcp)
 {
-    JS_ASSERT(cx->compartment != script->compartment());
+    size_t off = reinterpret_cast<uint8_t *>(srcp) - src->data;
+    return reinterpret_cast<T *>(dst->data + off);
+}
 
-    /* Serialize script. */
-    XDREncoder encoder(cx);
+JSScript *
+js::CloneScript(JSContext *cx, JSScript *src)
+{
+    /* NB: Keep this in sync with XDRScript. */
 
-    if (!XDRScript(&encoder, &script, NULL))
+    uint32_t nconsts = JSScript::isValidOffset(src->constsOffset) ? src->consts()->length : 0;
+    uint32_t nobjects = JSScript::isValidOffset(src->objectsOffset) ? src->objects()->length : 0;
+    uint32_t nregexps = JSScript::isValidOffset(src->regexpsOffset) ? src->regexps()->length : 0;
+    uint32_t ntrynotes = JSScript::isValidOffset(src->trynotesOffset) ? src->trynotes()->length : 0;
+    uint32_t nClosedArgs = src->numClosedArgs();
+    uint32_t nClosedVars = src->numClosedVars();
+    JS_ASSERT(!JSScript::isValidOffset(src->globalsOffset));
+    uint32_t nglobals = 0;
+
+    /* Script data */
+
+    size_t size = ScriptDataSize(cx, src->length, src->numNotes(), src->natoms,
+                                 nobjects, nregexps, ntrynotes, nconsts, nglobals,
+                                 nClosedArgs, nClosedVars);
+
+    uint8_t *data = AllocScriptData(cx, size);
+    if (!data)
         return NULL;
 
-    uint32_t nbytes;
-    const void *p = encoder.getData(&nbytes);
+    /* Bindings */
 
-    /* De-serialize script. */
-    XDRDecoder decoder(cx, p, nbytes, cx->compartment->principals, script->originPrincipals);
+    Bindings bindings(cx);
+    BindingNames names(cx);
+    if (!src->bindings.getLocalNameArray(cx, &names))
+        return false;
 
-    JSScript *newScript;
-    if (!XDRScript(&decoder, &newScript, NULL))
+    for (unsigned i = 0; i < names.length(); ++i) {
+        if (JSAtom *atom = names[i].maybeAtom) {
+            if (!bindings.add(cx, RootedVarAtom(cx, atom), names[i].kind))
+                return false;
+        } else {
+            uint16_t _;
+            if (!bindings.addDestructuring(cx, &_))
+                return false;
+        }
+    }
+
+    if (!bindings.ensureShape(cx))
+        return false;
+    bindings.makeImmutable();
+
+    /* Objects */
+
+    AutoObjectVector objects(cx);
+    if (nobjects != 0) {
+        HeapPtrObject *vector = src->objects()->vector;
+        for (unsigned i = 0; i < nobjects; i++) {
+            JSObject *clone = vector[i]->isStaticBlock()
+                              ? CloneStaticBlockObject(cx, vector[i]->asStaticBlock(), objects, src)
+                              : CloneInterpretedFunction(cx, vector[i]->toFunction());
+            if (!clone || !objects.append(clone))
+                return false;
+        }
+    }
+
+    /* RegExps */
+
+    AutoObjectVector regexps(cx);
+    for (unsigned i = 0; i < nregexps; i++) {
+        HeapPtrObject *vector = src->regexps()->vector;
+        for (unsigned i = 0; i < nregexps; i++) {
+            JSObject *clone = CloneScriptRegExpObject(cx, vector[i]->asRegExp());
+            if (!clone || !regexps.append(clone))
+                return false;
+        }
+    }
+
+    /* Now that all fallible allocation is complete, create the GC thing. */
+
+    JSScript *dst = js_NewGCScript(cx);
+    if (!dst) {
+        Foreground::free_(data);
         return NULL;
+    }
 
-    return newScript;
+    PodZero(dst);
+
+    new (&dst->bindings) Bindings(cx);
+    dst->bindings.transfer(cx, &bindings);
+
+    /* This assignment must occur before all the Rebase calls. */
+    dst->data = data;
+    memcpy(data, src->data, size);
+
+    dst->code = Rebase<jsbytecode>(dst, src, src->code);
+
+    /* Script filenames are runtime-wide. */
+    dst->filename = src->filename;
+
+    /* Atoms are runtime-wide. */
+    if (src->natoms != 0)
+        dst->atoms = Rebase<HeapPtrAtom>(dst, src, src->atoms);
+
+    dst->principals = cx->compartment->principals;
+    if (dst->principals)
+        JS_HoldPrincipals(dst->principals);
+
+    /* Establish invariant: principals implies originPrincipals. */
+    dst->originPrincipals = src->originPrincipals;
+    if (!dst->originPrincipals)
+        dst->originPrincipals = dst->principals;
+    if (dst->originPrincipals)
+        JS_HoldPrincipals(dst->originPrincipals);
+
+    dst->length = src->length;
+    dst->lineno = src->lineno;
+    dst->mainOffset = src->mainOffset;
+    dst->natoms = src->natoms;
+    dst->setVersion(src->getVersion());
+    dst->nfixed = src->nfixed;
+    dst->nTypeSets = src->nTypeSets;
+    dst->nslots = src->nslots;
+    dst->staticLevel = src->staticLevel;
+    if (src->argumentsHasLocalBinding()) {
+        dst->setArgumentsHasLocalBinding(src->argumentsLocalSlot());
+        if (src->analyzedArgsUsage())
+            dst->setNeedsArgsObj(src->needsArgsObj());
+    }
+    dst->constsOffset = src->constsOffset;
+    dst->objectsOffset = src->objectsOffset;
+    dst->regexpsOffset = src->regexpsOffset;
+    dst->trynotesOffset = src->trynotesOffset;
+    dst->globalsOffset = src->globalsOffset;
+    dst->closedArgsOffset = src->closedArgsOffset;
+    dst->closedVarsOffset = src->closedVarsOffset;
+    dst->noScriptRval = src->noScriptRval;
+    dst->savedCallerFun = src->savedCallerFun;
+    dst->strictModeCode = src->strictModeCode;
+    dst->compileAndGo = src->compileAndGo;
+    dst->bindingsAccessedDynamically = src->bindingsAccessedDynamically;
+    dst->hasSingletons = src->hasSingletons;
+    dst->isGenerator = src->isGenerator;
+
+    /*
+     * initScriptCounts updates scriptCountsMap if necessary. The other script
+     * maps in JSCompartment are populated lazily.
+     */
+    if (cx->hasRunOption(JSOPTION_PCCOUNT))
+        (void) dst->initScriptCounts(cx);
+
+    if (nconsts != 0) {
+        HeapValue *vector = Rebase<HeapValue>(dst, src, src->consts()->vector);
+        dst->consts()->vector = vector;
+        for (unsigned i = 0; i < nconsts; ++i)
+            JS_ASSERT_IF(vector[i].isMarkable(), vector[i].toString()->isAtom());
+    }
+    if (nobjects != 0) {
+        HeapPtrObject *vector = Rebase<HeapPtr<JSObject> >(dst, src, src->objects()->vector);
+        dst->objects()->vector = vector;
+        for (unsigned i = 0; i < nobjects; ++i)
+            vector[i].init(objects[i]);
+    }
+    if (nregexps != 0) {
+        HeapPtrObject *vector = Rebase<HeapPtr<JSObject> >(dst, src, src->regexps()->vector);
+        dst->regexps()->vector = vector;
+        for (unsigned i = 0; i < nregexps; ++i)
+            vector[i].init(regexps[i]);
+    }
+    if (ntrynotes != 0)
+        dst->trynotes()->vector = Rebase<JSTryNote>(dst, src, src->trynotes()->vector);
+    if (nClosedArgs != 0)
+        dst->closedArgs()->vector = Rebase<uint32_t>(dst, src, src->closedArgs()->vector);
+    if (nClosedVars != 0)
+        dst->closedVars()->vector = Rebase<uint32_t>(dst, src, src->closedVars()->vector);
+    JS_ASSERT(nglobals == 0);
+
+    return dst;
 }
 
 DebugScript *

@@ -592,6 +592,8 @@ struct JSScript : public js::gc::Cell
                                JSVersion version);
     static JSScript *NewScriptFromEmitter(JSContext *cx, js::BytecodeEmitter *bce);
 
+    void setVersion(JSVersion v) { version = v; }
+
     /* See TCF_ARGUMENTS_HAS_LOCAL_BINDING comment. */
     bool argumentsHasLocalBinding() const { return argsHasLocalBinding_; }
     jsbytecode *argumentsBytecode() const { JS_ASSERT(code[0] == JSOP_ARGUMENTS); return code; }
