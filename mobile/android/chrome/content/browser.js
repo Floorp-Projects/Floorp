@@ -2231,15 +2231,10 @@ Tab.prototype = {
 
     this._hostChanged = true;
 
-    let browser = BrowserApp.getBrowserForWindow(contentWin);
-    let uri = browser.currentURI.spec;
-    let documentURI = "";
-    let contentType = "";
+    let uri = aLocationURI.spec;
+    let documentURI = contentWin.document.documentURIObject.spec;
+    let contentType = contentWin.document.contentType;
     let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0;
-    if (browser.contentDocument) {
-      documentURI = browser.contentDocument.documentURIObject.spec;
-      contentType = browser.contentDocument.contentType;
-    }
 
     // Reset state of click-to-play plugin notifications.
     this.clickToPlayPluginDoorhangerShown = false;

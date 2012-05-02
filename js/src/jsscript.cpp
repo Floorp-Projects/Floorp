@@ -145,7 +145,7 @@ Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
         slot += nargs + nvars;
     }
 
-    jsid id;
+    RootedVarId id(cx);
     if (!name) {
         JS_ASSERT(kind == ARGUMENT); /* destructuring */
         id = INT_TO_JSID(nargs);
@@ -428,7 +428,7 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         JS_ASSERT_IF(parentScript, parentScript->compartment() == script->compartment());
     
         /* Should not XDR scripts optimized for a single global object. */
-        JS_ASSERT(!JSScript::isValidOffset(script->globalsOffset));
+        JS_ASSERT(!script->hasGlobals());
 
         nargs = script->bindings.numArgs();
         nvars = script->bindings.numVars();
@@ -444,6 +444,8 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
     JS_ASSERT(nvars != Bindings::BINDING_COUNT_LIMIT);
 
     Bindings bindings(cx);
+    Bindings::StackRoot bindingsRoot(cx, &bindings);
+
     uint32_t nameCount = nargs + nvars;
     if (nameCount > 0) {
         LifoAllocScope las(&cx->tempLifoAlloc());
@@ -533,13 +535,13 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         notes = script->notes();
         nsrcnotes = script->numNotes();
 
-        if (JSScript::isValidOffset(script->constsOffset))
+        if (script->hasConsts())
             nconsts = script->consts()->length;
-        if (JSScript::isValidOffset(script->objectsOffset))
+        if (script->hasObjects())
             nobjects = script->objects()->length;
-        if (JSScript::isValidOffset(script->regexpsOffset))
+        if (script->hasRegexps())
             nregexps = script->regexps()->length;
-        if (JSScript::isValidOffset(script->trynotesOffset))
+        if (script->hasTrynotes())
             ntrynotes = script->trynotes()->length;
         /* no globals when encoding;  see assertion above */
         nClosedArgs = script->numClosedArgs();
@@ -1029,10 +1031,10 @@ js::FreeScriptFilenames(JSCompartment *comp)
  *
  * Array type       Array elements  Offset            Accessor
  * ----------       --------------  ------            --------
- * JSConstArray     Consts          constsOffset      consts()
- * JSObjectArray    Objects         objectsOffset     objects()
- * JSObjectArray    Regexps         regexpsOffset     regexps()
- * JSTryNoteArray   Try notes       tryNotesOffset    trynotes()
+ * ConstArray       Consts          constsOffset      consts()
+ * ObjectArray      Objects         objectsOffset     objects()
+ * ObjectArray      Regexps         regexpsOffset     regexps()
+ * TryNoteArray     Try notes       tryNotesOffset    trynotes()
  * GlobalSlotArray  Globals         globalsOffset     globals()
  * ClosedSlotArray  ClosedArgs      closedArgsOffset  closedArgs()
  * ClosedSlotArray  ClosedVars      closedVarsOffset  closedVars()
@@ -1085,9 +1087,9 @@ js::FreeScriptFilenames(JSCompartment *comp)
  * jsval-aligned.  (There is an assumption that |data| itself is jsval-aligned;
  * we check this below).
  */
-JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(JSConstArray));
-JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(JSObjectArray));     /* there are two of these */
-JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(JSTryNoteArray));
+JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ConstArray));
+JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ObjectArray));       /* there are two of these */
+JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(TryNoteArray));
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(GlobalSlotArray));
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ClosedSlotArray));   /* there are two of these */
 
@@ -1109,12 +1111,12 @@ JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(jsbytecode, jssrcnote));
  * closedVars array -- the last optional array -- still fits in 1 byte and does
  * not coincide with INVALID_OFFSET.
  */
-JS_STATIC_ASSERT(sizeof(JSConstArray) +
-                 sizeof(JSObjectArray) +
-                 sizeof(JSObjectArray) +
-                 sizeof(JSTryNoteArray) +
-                 sizeof(js::GlobalSlotArray) +
-                 sizeof(js::ClosedSlotArray)
+JS_STATIC_ASSERT(sizeof(ConstArray) +
+                 sizeof(ObjectArray) +
+                 sizeof(ObjectArray) +
+                 sizeof(TryNoteArray) +
+                 sizeof(GlobalSlotArray) +
+                 sizeof(ClosedSlotArray)
                  < JSScript::INVALID_OFFSET);
 JS_STATIC_ASSERT(JSScript::INVALID_OFFSET <= 255);
 
@@ -1127,14 +1129,14 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
     size_t size = 0;
 
     if (nconsts != 0)
-        size += sizeof(JSConstArray) + nconsts * sizeof(Value);
+        size += sizeof(ConstArray) + nconsts * sizeof(Value);
     size += sizeof(JSAtom *) * natoms;
     if (nobjects != 0)
-        size += sizeof(JSObjectArray) + nobjects * sizeof(JSObject *);
+        size += sizeof(ObjectArray) + nobjects * sizeof(JSObject *);
     if (nregexps != 0)
-        size += sizeof(JSObjectArray) + nregexps * sizeof(JSObject *);
+        size += sizeof(ObjectArray) + nregexps * sizeof(JSObject *);
     if (ntrynotes != 0)
-        size += sizeof(JSTryNoteArray) + ntrynotes * sizeof(JSTryNote);
+        size += sizeof(TryNoteArray) + ntrynotes * sizeof(JSTryNote);
     if (nglobals != 0)
         size += sizeof(GlobalSlotArray) + nglobals * sizeof(GlobalSlotArray::Entry);
     if (nClosedArgs != 0)
@@ -1169,25 +1171,25 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
     uint8_t *cursor = data;
     if (nconsts != 0) {
         script->constsOffset = uint8_t(cursor - data);
-        cursor += sizeof(JSConstArray);
+        cursor += sizeof(ConstArray);
     } else {
         script->constsOffset = JSScript::INVALID_OFFSET;
     }
     if (nobjects != 0) {
         script->objectsOffset = uint8_t(cursor - data);
-        cursor += sizeof(JSObjectArray);
+        cursor += sizeof(ObjectArray);
     } else {
         script->objectsOffset = JSScript::INVALID_OFFSET;
     }
     if (nregexps != 0) {
         script->regexpsOffset = uint8_t(cursor - data);
-        cursor += sizeof(JSObjectArray);
+        cursor += sizeof(ObjectArray);
     } else {
         script->regexpsOffset = JSScript::INVALID_OFFSET;
     }
     if (ntrynotes != 0) {
         script->trynotesOffset = uint8_t(cursor - data);
-        cursor += sizeof(JSTryNoteArray);
+        cursor += sizeof(TryNoteArray);
     } else {
         script->trynotesOffset = JSScript::INVALID_OFFSET;
     }
@@ -1282,7 +1284,7 @@ JSScript *
 JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
 {
     uint32_t mainLength, prologLength, nfixed;
-    JSScript *script;
+    RootedVar<JSScript*> script(cx);
     const char *filename;
     JSFunction *fun;
 
@@ -1991,18 +1993,18 @@ JSScript::markChildren(JSTracer *trc)
             MarkString(trc, &atoms[i], "atom");
     }
 
-    if (JSScript::isValidOffset(objectsOffset)) {
-        JSObjectArray *objarray = objects();
+    if (hasObjects()) {
+        ObjectArray *objarray = objects();
         MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
     }
 
-    if (JSScript::isValidOffset(regexpsOffset)) {
-        JSObjectArray *objarray = regexps();
+    if (hasRegexps()) {
+        ObjectArray *objarray = regexps();
         MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
     }
 
-    if (JSScript::isValidOffset(constsOffset)) {
-        JSConstArray *constarray = consts();
+    if (hasConsts()) {
+        ConstArray *constarray = consts();
         MarkValueRange(trc, constarray->length, constarray->vector, "consts");
     }
 
@@ -2046,11 +2048,13 @@ JSScript::setNeedsArgsObj(bool needsArgsObj)
     needsArgsObj_ = needsArgsObj;
 }
 
-bool
-JSScript::applySpeculationFailed(JSContext *cx)
+/* static */ bool
+JSScript::applySpeculationFailed(JSContext *cx, JSScript *script_)
 {
-    JS_ASSERT(analyzedArgsUsage());
-    JS_ASSERT(argumentsHasLocalBinding());
+    RootedVar<JSScript*> script(cx, script_);
+
+    JS_ASSERT(script->analyzedArgsUsage());
+    JS_ASSERT(script->argumentsHasLocalBinding());
 
     /*
      * It is possible that the apply speculation has already failed, everything
@@ -2058,12 +2062,12 @@ JSScript::applySpeculationFailed(JSContext *cx)
      * stack that has just now flowed into an apply. In this case, there is
      * nothing to do; GuardFunApplySpeculation will patch in the real argsobj.
      */
-    if (needsArgsObj())
+    if (script->needsArgsObj())
         return true;
 
-    needsArgsObj_ = true;
+    script->needsArgsObj_ = true;
 
-    const unsigned slot = argumentsLocalSlot();
+    const unsigned slot = script->argumentsLocalSlot();
 
     /*
      * By design, the apply-arguments optimization is only made when there
@@ -2079,7 +2083,7 @@ JSScript::applySpeculationFailed(JSContext *cx)
      */
     for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
         StackFrame *fp = i.fp();
-        if (fp->isFunctionFrame() && fp->script() == this) {
+        if (fp->isFunctionFrame() && fp->script() == script) {
             if (!fp->hasArgsObj()) {
                 ArgumentsObject *obj = ArgumentsObject::create(cx, fp);
                 if (!obj) {
@@ -2088,7 +2092,7 @@ JSScript::applySpeculationFailed(JSContext *cx)
                      * and !fp->hasArgsObj. It is, however, safe to leave frames
                      * where fp->hasArgsObj and !fp->script->needsArgsObj.
                      */
-                    needsArgsObj_ = false;
+                    script->needsArgsObj_ = false;
                     return false;
                 }
 
@@ -2100,15 +2104,15 @@ JSScript::applySpeculationFailed(JSContext *cx)
     }
 
 #ifdef JS_METHODJIT
-    if (hasJITCode()) {
-        mjit::Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), this);
-        mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), this);
+    if (script->hasJITCode()) {
+        mjit::Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), script);
+        mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
     }
 #endif
 
-    if (hasAnalysis() && analysis()->ranInference()) {
+    if (script->hasAnalysis() && script->analysis()->ranInference()) {
         types::AutoEnterTypeInference enter(cx);
-        types::TypeScript::MonitorUnknown(cx, this, argumentsBytecode());
+        types::TypeScript::MonitorUnknown(cx, script, script->argumentsBytecode());
     }
 
     return true;

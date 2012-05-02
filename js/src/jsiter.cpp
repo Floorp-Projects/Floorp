@@ -953,7 +953,7 @@ js::CloseIterator(JSContext *cx, JSObject *obj)
 bool
 js::UnwindIteratorForException(JSContext *cx, JSObject *obj)
 {
-    Value v = cx->getPendingException();
+    RootedVarValue v(cx, cx->getPendingException());
     cx->clearPendingException();
     if (!CloseIterator(cx, obj))
         return false;
@@ -992,7 +992,7 @@ js::UnwindIteratorForUncatchableException(JSContext *cx, JSObject *obj)
  */
 template<typename StringPredicate>
 static bool
-SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, StringPredicate predicate)
+SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate predicate)
 {
     JSObject *iterobj = cx->enumerators;
     while (iterobj) {
@@ -1072,25 +1072,25 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, StringPredicate pred
 }
 
 class SingleStringPredicate {
-    JSFlatString *str;
+    Handle<JSFlatString*> str;
 public:
-    SingleStringPredicate(JSFlatString *str) : str(str) {}
+    SingleStringPredicate(JSContext *cx, Handle<JSFlatString*> str) : str(str) {}
 
     bool operator()(JSFlatString *str) { return EqualStrings(str, this->str); }
     bool matchesAtMostOne() { return true; }
 };
 
 bool
-js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
+js_SuppressDeletedProperty(JSContext *cx, HandleObject obj, jsid id)
 {
-    JSFlatString *str = IdToString(cx, id);
+    RootedVar<JSFlatString*> str(cx, IdToString(cx, id));
     if (!str)
         return false;
-    return SuppressDeletedPropertyHelper(cx, obj, SingleStringPredicate(str));
+    return SuppressDeletedPropertyHelper(cx, obj, SingleStringPredicate(cx, str));
 }
 
 bool
-js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32_t index)
+js_SuppressDeletedElement(JSContext *cx, HandleObject obj, uint32_t index)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -1113,7 +1113,7 @@ class IndexRangePredicate {
 };
 
 bool
-js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32_t begin, uint32_t end)
+js_SuppressDeletedElements(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end)
 {
     return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }
@@ -1121,7 +1121,7 @@ js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32_t begin, uint32_
 const uint32_t CLOSED_INDEX = UINT32_MAX;
 
 JSObject *
-ElementIteratorObject::create(JSContext *cx, JSObject *obj)
+ElementIteratorObject::create(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj);
     JSObject *iterobj = NewObjectWithGivenProto(cx, &ElementIteratorClass, NULL, obj);
@@ -1153,14 +1153,16 @@ ElementIteratorObject::setIndex(uint32_t index)
 bool
 ElementIteratorObject::iteratorNext(JSContext *cx, Value *vp)
 {
+    RootedVar<ElementIteratorObject*> self(cx, this);
+
     uint32_t i, length;
     RootedVarObject obj(cx, getTargetObject());
     if (!js_GetLengthProperty(cx, obj, &length))
         goto error;
 
-    i = getIndex();
+    i = self->getIndex();
     if (i >= length) {
-        setIndex(CLOSED_INDEX);
+        self->setIndex(CLOSED_INDEX);
         vp->setMagic(JS_NO_ITER_VALUE);
         return true;
     }
@@ -1170,11 +1172,11 @@ ElementIteratorObject::iteratorNext(JSContext *cx, Value *vp)
         goto error;
 
     /* On success, bump the index. */
-    setIndex(i + 1);
+    self->setIndex(i + 1);
     return true;
 
   error:
-    setIndex(CLOSED_INDEX);
+    self->setIndex(CLOSED_INDEX);
     return false;
 }
 
@@ -1440,7 +1442,7 @@ js_NewGenerator(JSContext *cx)
     JS_ASSERT(stackfp->base() == cx->regs().sp);
     JS_ASSERT(stackfp->actualArgs() <= stackfp->formalArgs());
 
-    GlobalObject *global = &stackfp->global();
+    RootedVar<GlobalObject*> global(cx, &stackfp->global());
     JSObject *proto = global->getOrCreateGeneratorPrototype(cx);
     if (!proto)
         return NULL;
@@ -1728,9 +1730,9 @@ static JSFunctionSpec generator_methods[] = {
 #endif /* JS_HAS_GENERATORS */
 
 static bool
-InitIteratorClass(JSContext *cx, GlobalObject *global)
+InitIteratorClass(JSContext *cx, Handle<GlobalObject*> global)
 {
-    JSObject *iteratorProto = global->createBlankPrototype(cx, &IteratorClass);
+    RootedVarObject iteratorProto(cx, global->createBlankPrototype(cx, &IteratorClass));
     if (!iteratorProto)
         return false;
 
@@ -1742,7 +1744,8 @@ InitIteratorClass(JSContext *cx, GlobalObject *global)
 
     iteratorProto->setNativeIterator(ni);
 
-    JSFunction *ctor = global->createConstructor(cx, Iterator, CLASS_ATOM(cx, Iterator), 2);
+    RootedVarFunction ctor(cx);
+    ctor = global->createConstructor(cx, Iterator, CLASS_ATOM(cx, Iterator), 2);
     if (!ctor)
         return false;
 
@@ -1755,22 +1758,22 @@ InitIteratorClass(JSContext *cx, GlobalObject *global)
     return DefineConstructorAndPrototype(cx, global, JSProto_Iterator, ctor, iteratorProto);
 }
 
-bool
-GlobalObject::initGeneratorClass(JSContext *cx)
+/* static */ bool
+GlobalObject::initGeneratorClass(JSContext *cx, Handle<GlobalObject*> global)
 {
 #if JS_HAS_GENERATORS
-    JSObject *proto = createBlankPrototype(cx, &GeneratorClass);
+    RootedVarObject proto(cx, global->createBlankPrototype(cx, &GeneratorClass));
     if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, generator_methods))
         return false;
-    setReservedSlot(GENERATOR_PROTO, ObjectValue(*proto));
+    global->setReservedSlot(GENERATOR_PROTO, ObjectValue(*proto));
 #endif
     return true;
 }
 
 static JSObject *
-InitStopIterationClass(JSContext *cx, GlobalObject *global)
+InitStopIterationClass(JSContext *cx, Handle<GlobalObject*> global)
 {
-    JSObject *proto = global->createBlankPrototype(cx, &StopIterationClass);
+    RootedVarObject proto(cx, global->createBlankPrototype(cx, &StopIterationClass));
     if (!proto || !proto->freeze(cx))
         return NULL;
 
@@ -1788,7 +1791,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = &obj->asGlobal();
+    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
 
     /*
      * Bail if Iterator has already been initialized.  We test for Iterator
@@ -1802,7 +1805,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (iter)
         return iter;
 
-    if (!InitIteratorClass(cx, global) || !global->initGeneratorClass(cx))
+    if (!InitIteratorClass(cx, global) || !GlobalObject::initGeneratorClass(cx, global))
         return NULL;
     return InitStopIterationClass(cx, global);
 }

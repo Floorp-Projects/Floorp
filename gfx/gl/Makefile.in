@@ -52,7 +52,6 @@ EXPORTS	= \
 	GLContextProvider.h \
 	GLContextProviderImpl.h \
 	GLLibraryLoader.h \
-	EGLUtils.h \
 	ForceDiscreteGPUHelperCGL.h \
 	$(NULL)
 
