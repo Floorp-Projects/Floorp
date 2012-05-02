@@ -9,6 +9,10 @@ function run_test() {
   let mes1 = "hello";
   let mes2 = "world";
 
+  let dig0 = CryptoUtils.UTF8AndSHA1(mes1);
+  do_check_eq(dig0,
+              "\xaa\xf4\xc6\x1d\xdc\xc5\xe8\xa2\xda\xbe\xde\x0f\x3b\x48\x2c\xd9\xae\xa9\x43\x4d");
+
   _("Make sure right sha1 digests are generated");
   let dig1 = CryptoUtils.sha1(mes1);
   do_check_eq(dig1, "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d");
