@@ -48,6 +48,7 @@
 #include "nsIPhonetic.h"
 
 #include "nsIControllers.h"
+#include "nsIStringBundle.h"
 #include "nsFocusManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentCID.h"
@@ -106,6 +107,7 @@
 #include "nsIFilePicker.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIContentPrefService.h"
+#include "nsIMIMEService.h"
 #include "nsIObserverService.h"
 #include "nsIPopupWindowManager.h"
 #include "nsGlobalWindow.h"
@@ -304,19 +306,7 @@ AsyncClickHandler::Run()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mInput->HasAttr(kNameSpaceID_None, nsGkAtoms::accept)) {
-    PRInt32 filters = mInput->GetFilterFromAccept();
-
-    if (filters) {
-      // We add |filterAll| to be sure the user always has a sane fallback.
-      filePicker->AppendFilters(filters | nsIFilePicker::filterAll);
-
-      // If the accept attribute asked for a filter, we need to make it default.
-      // |filterAll| will always use index=0 so we need to set index=1 as the
-      // current filter.
-      filePicker->SetFilterIndex(1);
-    } else {
-      filePicker->AppendFilters(nsIFilePicker::filterAll);
-    }
+    mInput->SetFilePickerFiltersFromAccept(filePicker);
   } else {
     filePicker->AppendFilters(nsIFilePicker::filterAll);
   }
@@ -4142,6 +4132,122 @@ nsHTMLInputElement::FieldSetDisabledChanged(bool aNotify)
   UpdateBarredFromConstraintValidation();
 
   nsGenericHTMLFormElement::FieldSetDisabledChanged(aNotify);
+}
+
+void
+nsHTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
+{
+  // We always add |filterAll|
+  filePicker->AppendFilters(nsIFilePicker::filterAll);
+
+  NS_ASSERTION(HasAttr(kNameSpaceID_None, nsGkAtoms::accept),
+               "You should not call SetFilePickerFiltersFromAccept if the"
+               " element has no accept attribute!");
+  nsAutoString accept;
+  nsTArray<nsFilePickerFilter> filters;
+  nsString allExtensionsList;
+
+  // Services to retrieve image/*, audio/*, video/* filters
+  nsCOMPtr<nsIStringBundleService> stringService =
+    mozilla::services::GetStringBundleService();
+  if (!stringService)
+    return;
+  nsCOMPtr<nsIStringBundle> titleBundle, filterBundle;
+  nsresult rv = stringService->CreateBundle("chrome://global/locale/filepicker.properties",
+                                            getter_AddRefs(titleBundle));
+  if (NS_FAILED(rv))
+    return;
+  rv = stringService->CreateBundle("chrome://global/content/filepicker.properties",
+                                   getter_AddRefs(filterBundle));
+  if (NS_FAILED(rv))
+    return;
+
+  // Service to retrieve mime type information for mime types filters
+  nsCOMPtr<nsIMIMEService> mimeService = do_GetService("@mozilla.org/mime;1");
+  if (!mimeService)
+    return;
+
+  GetAttr(kNameSpaceID_None, nsGkAtoms::accept, accept);
+
+  HTMLSplitOnSpacesTokenizer tokenizer(accept, ',');
+
+  // Retrieve all filters
+  while (tokenizer.hasMoreTokens()) {
+    const nsDependentSubstring& token = tokenizer.nextToken();
+
+    nsString filterName;
+    nsString extensionListStr;
+    bool isTrustedFilter = false;
+
+    // First, check for image/audio/video filters...
+    if (token.EqualsLiteral("image/*")) {
+      titleBundle->GetStringFromName(NS_LITERAL_STRING("imageTitle").get(), getter_Copies(filterName));
+      filterBundle->GetStringFromName(NS_LITERAL_STRING("imageFilter").get(), getter_Copies(extensionListStr));
+      isTrustedFilter = true;
+    } else if (token.EqualsLiteral("audio/*")) {
+      titleBundle->GetStringFromName(NS_LITERAL_STRING("audioTitle").get(), getter_Copies(filterName));
+      filterBundle->GetStringFromName(NS_LITERAL_STRING("audioFilter").get(), getter_Copies(extensionListStr));
+      isTrustedFilter = true;
+    } else if (token.EqualsLiteral("video/*")) {
+      titleBundle->GetStringFromName(NS_LITERAL_STRING("videoTitle").get(), getter_Copies(filterName));
+      filterBundle->GetStringFromName(NS_LITERAL_STRING("videoFilter").get(), getter_Copies(extensionListStr));
+      isTrustedFilter = true;
+    } else {
+      //... if no image/audio/video filter is found, check mime types filters
+      nsCOMPtr<nsIMIMEInfo> mimeInfo;
+      if (!token.IsEmpty() &&
+          NS_SUCCEEDED(mimeService->GetFromTypeAndExtension(NS_ConvertUTF16toUTF8(token),
+                                                            EmptyCString(), // No extension
+                                                            getter_AddRefs(mimeInfo)))) {
+        if (mimeInfo) {
+          // Get mime type name
+          nsCString mimeTypeName;
+          mimeInfo->GetType(mimeTypeName);
+          CopyUTF8toUTF16(mimeTypeName, filterName);
+          // Get extension list
+          nsCOMPtr<nsIUTF8StringEnumerator> extensions;
+          mimeInfo->GetFileExtensions(getter_AddRefs(extensions));
+          bool hasMore;
+          while (NS_SUCCEEDED(extensions->HasMore(&hasMore)) && hasMore) {
+            nsCString extension;
+            if (NS_FAILED(extensions->GetNext(extension)))
+              continue;
+            if (!extensionListStr.IsEmpty())
+              extensionListStr += NS_ConvertUTF8toUTF16("; ");
+            extensionListStr += NS_ConvertUTF8toUTF16("*.") +
+                                NS_ConvertUTF8toUTF16(extension);
+          }
+        }
+      }
+    }
+    nsFilePickerFilter filter(filterName, extensionListStr, isTrustedFilter);
+    if (!extensionListStr.IsEmpty() && !filters.Contains(filter)) {
+      if (!allExtensionsList.IsEmpty())
+        allExtensionsList += NS_ConvertUTF8toUTF16("; ");
+      allExtensionsList += extensionListStr;
+      filters.AppendElement(filter);
+    }
+  }
+
+  // Add "All Supported Types" filter
+  if (filters.Length() > 1) {
+    nsXPIDLString title;
+    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                       "AllSupportedTypes", title);
+    filePicker->AppendFilter(title, allExtensionsList);
+  }
+
+  // Add each filter
+  for (unsigned int i = 0; i < filters.Length(); ++i) {
+    const nsFilePickerFilter& filter = filters[i];
+    filePicker->AppendFilter(filter.mTitle, filter.mFilter);
+  }
+
+  if (filters.Length() == 1 && filters[0].mIsTrusted) {
+    // |filterAll| will always use index=0 so we need to set index=1 as the
+    // current filter.
+    filePicker->SetFilterIndex(1);
+  }
 }
 
 PRInt32
