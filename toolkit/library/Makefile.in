@@ -333,6 +333,7 @@ endif
 
 EXTRA_DSO_LDOPTS += \
   $(LIBS_DIR) \
+  $(PNG_LIBS) \
   $(QCMS_LIBS) \
   $(MOZ_JS_LIBS) \
   $(NSS_LIBS) \
@@ -344,10 +345,6 @@ EXTRA_DSO_LDOPTS += \
 
 ifdef MOZ_NATIVE_JPEG
 EXTRA_DSO_LDOPTS += $(JPEG_LIBS)
-endif
-
-ifdef MOZ_NATIVE_PNG
-EXTRA_DSO_LDOPTS += $(PNG_LIBS)
 endif
 
 ifdef MOZ_NATIVE_ZLIB
