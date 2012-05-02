@@ -42,7 +42,12 @@
 
 const TEST_URI = "chrome://browser/content/browser.xul";
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
   browser.addEventListener("DOMContentLoaded", testChrome, false);
 }

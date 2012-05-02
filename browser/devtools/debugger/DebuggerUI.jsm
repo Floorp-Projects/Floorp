@@ -45,13 +45,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const DBG_XUL = "chrome://browser/content/debugger.xul";
-const REMOTE_PROFILE_NAME = "_remote-debug";
-
-Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let EXPORTED_SYMBOLS = ["DebuggerUI"];
 
@@ -66,20 +60,6 @@ function DebuggerUI(aWindow) {
 }
 
 DebuggerUI.prototype = {
-  /**
-   * Called by the DebuggerPane to update the Debugger toggle switches with the
-   * debugger state.
-   */
-  refreshCommand: function DUI_refreshCommand() {
-    let selectedTab = this.chromeWindow.getBrowser().selectedTab;
-    let command = this.chromeWindow.document.getElementById("Tools:Debugger");
-
-    if (this.getDebugger(selectedTab) != null) {
-      command.setAttribute("checked", "true");
-    } else {
-      command.removeAttribute("checked");
-    }
-  },
 
   /**
    * Starts a debugger for the current tab, or stops it if already started.
@@ -92,22 +72,7 @@ DebuggerUI.prototype = {
       tab._scriptDebugger.close();
       return null;
     }
-    return new DebuggerPane(this, tab);
-  },
-
-  /**
-   * Starts a remote debugger in a new process, or stops it if already started.
-   * @see DebuggerProcess.constructor
-   * @return DebuggerProcess if the debugger is started, null if it's stopped.
-   */
-  toggleRemoteDebugger: function DUI_toggleRemoteDebugger(aOnClose, aOnRun) {
-    let win = this.chromeWindow;
-
-    if (win._remoteDebugger) {
-      win._remoteDebugger.close();
-      return null;
-    }
-    return new DebuggerProcess(win, aOnClose, aOnRun);
+    return new DebuggerPane(tab);
   },
 
   /**
@@ -115,7 +80,7 @@ DebuggerUI.prototype = {
    * @return DebuggerPane if a debugger exists for the tab, null otherwise
    */
   getDebugger: function DUI_getDebugger(aTab) {
-    return '_scriptDebugger' in aTab ? aTab._scriptDebugger : null;
+    return aTab._scriptDebugger;
   },
 
   /**
@@ -123,7 +88,7 @@ DebuggerUI.prototype = {
    * @return object
    */
   get preferences() {
-    return DebuggerPreferences;
+    return DebuggerUIPreferences;
   }
 };
 
@@ -133,24 +98,12 @@ DebuggerUI.prototype = {
  * @param XULElement aTab
  *        The tab in which to create the debugger.
  */
-function DebuggerPane(aDebuggerUI, aTab) {
-  this._globalUI = aDebuggerUI;
+function DebuggerPane(aTab) {
   this._tab = aTab;
-  this._initServer();
   this._create();
 }
 
 DebuggerPane.prototype = {
-
-  /**
-   * Initializes the debugger server.
-   */
-  _initServer: function DP__initServer() {
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
-    }
-  },
 
   /**
    * Creates and initializes the widgets containing the debugger UI.
@@ -165,7 +118,7 @@ DebuggerPane.prototype = {
     this._splitter.setAttribute("class", "hud-splitter");
 
     this._frame = ownerDocument.createElement("iframe");
-    this._frame.height = DebuggerPreferences.height;
+    this._frame.height = DebuggerUIPreferences.height;
 
     this._nbox = gBrowser.getNotificationBox(this._tab.linkedBrowser);
     this._nbox.appendChild(this._splitter);
@@ -186,9 +139,7 @@ DebuggerPane.prototype = {
       self.getBreakpoint = bkp.getBreakpoint;
     }, true);
 
-    this._frame.setAttribute("src", DBG_XUL);
-
-    this._globalUI.refreshCommand();
+    this._frame.setAttribute("src", "chrome://browser/content/debugger.xul");
   },
 
   /**
@@ -198,10 +149,10 @@ DebuggerPane.prototype = {
     if (!this._tab) {
       return;
     }
-    delete this._tab._scriptDebugger;
+    this._tab._scriptDebugger = null;
     this._tab = null;
 
-    DebuggerPreferences.height = this._frame.height;
+    DebuggerUIPreferences.height = this._frame.height;
     this._frame.removeEventListener("Debugger:Close", this.close, true);
     this._frame.removeEventListener("unload", this.close, true);
 
@@ -211,8 +162,6 @@ DebuggerPane.prototype = {
     this._splitter = null;
     this._frame = null;
     this._nbox = null;
-
-    this._globalUI.refreshCommand();
   },
 
   /**
@@ -237,112 +186,9 @@ DebuggerPane.prototype = {
 };
 
 /**
- * Creates a process that will hold the remote debugger.
- *
- * @param function aOnClose
- *        Optional, a function called when the process exits.
- * @param function aOnRun
- *        Optional, a function called when the process starts running.
- * @param nsIDOMWindow aWindow
- *        The chrome window for which the remote debugger instance is created.
+ * Various debugger UI preferences (currently just the pane height).
  */
-function DebuggerProcess(aWindow, aOnClose, aOnRun) {
-  this._win = aWindow;
-  this._closeCallback = aOnClose;
-  this._runCallback = aOnRun;
-  this._initProfile();
-  this._create();
-}
-
-DebuggerProcess.prototype = {
-
-  /**
-   * Initializes the debugger server.
-   */
-  _initServer: function RDP__initServer() {
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
-    }
-    DebuggerServer.closeListener();
-    DebuggerServer.openListener(DebuggerPreferences.remotePort, false);
-  },
-
-  /**
-   * Initializes a profile for the remote debugger process.
-   */
-  _initProfile: function RDP__initProfile() {
-    let profileService = Cc["@mozilla.org/toolkit/profile-service;1"]
-      .createInstance(Ci.nsIToolkitProfileService);
-
-    let dbgProfileName;
-    try {
-      dbgProfileName = profileService.selectedProfile.name + REMOTE_PROFILE_NAME;
-    } catch(e) {
-      dbgProfileName = REMOTE_PROFILE_NAME;
-      Cu.reportError(e);
-    }
-
-    this._dbgProfile = profileService.createProfile(null, null, dbgProfileName);
-    profileService.flush();
-  },
-
-  /**
-   * Creates and initializes the profile & process for the remote debugger.
-   */
-  _create: function RDP__create() {
-    this._win._remoteDebugger = this;
-
-    let file = FileUtils.getFile("CurProcD",
-      [Services.appinfo.OS == "WINNT" ? "firefox.exe"
-                                      : "firefox-bin"]);
-
-    let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-    process.init(file);
-
-    let args = [
-      "-no-remote", "-P", this._dbgProfile.name,
-      "-chrome", DBG_XUL,
-      "-width", DebuggerPreferences.remoteWinWidth,
-      "-height", DebuggerPreferences.remoteWinHeight];
-
-    process.runwAsync(args, args.length, { observe: this.close.bind(this) });
-    this._dbgProcess = process;
-
-    if (typeof this._runCallback === "function") {
-      this._runCallback.call({}, this);
-    }
-  },
-
-  /**
-   * Closes the remote debugger, removing the profile and killing the process.
-   */
-  close: function RDP_close() {
-    if (!this._win) {
-      return;
-    }
-    delete this._win._remoteDebugger;
-    this._win = null;
-
-    if (this._dbgProcess.isRunning) {
-      this._dbgProcess.kill();
-    }
-    if (this._dbgProfile) {
-      this._dbgProfile.remove(false);
-    }
-    if (typeof this._closeCallback === "function") {
-      this._closeCallback.call({}, this);
-    }
-
-    this._dbgProcess = null;
-    this._dbgProfile = null;
-  }
-};
-
-/**
- * Various debugger preferences.
- */
-let DebuggerPreferences = {
+let DebuggerUIPreferences = {
 
   /**
    * Gets the preferred height of the debugger pane.
@@ -364,35 +210,3 @@ let DebuggerPreferences = {
     this._height = value;
   }
 };
-
-/**
- * Gets the preferred width of the remote debugger window.
- * @return number
- */
-XPCOMUtils.defineLazyGetter(DebuggerPreferences, "remoteWinWidth", function() {
-  return Services.prefs.getIntPref("devtools.debugger.ui.remote-win.width");
-});
-
-/**
- * Gets the preferred height of the remote debugger window.
- * @return number
- */
-XPCOMUtils.defineLazyGetter(DebuggerPreferences, "remoteWinHeight", function() {
-  return Services.prefs.getIntPref("devtools.debugger.ui.remote-win.height");
-});
-
-/**
- * Gets the preferred default remote debugging host.
- * @return string
- */
-XPCOMUtils.defineLazyGetter(DebuggerPreferences, "remoteHost", function() {
-  return Services.prefs.getCharPref("devtools.debugger.remote-host");
-});
-
-/**
- * Gets the preferred default remote debugging port.
- * @return number
- */
-XPCOMUtils.defineLazyGetter(DebuggerPreferences, "remotePort", function() {
-  return Services.prefs.getIntPref("devtools.debugger.remote-port");
-});
