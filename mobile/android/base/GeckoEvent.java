@@ -362,6 +362,13 @@ public class GeckoEvent {
             event.mY = 0;
             event.mZ = s.sensor.getMaximumRange();
             break;
+
+        case Sensor.TYPE_LIGHT:
+            event = new GeckoEvent(SENSOR_EVENT);
+            event.mFlags = GeckoHalDefines.SENSOR_LIGHT;
+            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
+            event.mX = s.values[0];
+            break;
         }
         return event;
     }
