@@ -41,7 +41,7 @@
 interface nsIURI;
 interface nsIChannel;
 
-[scriptable, uuid(d6cf287a-476a-43ba-aa03-70af4a01044e)]
+[scriptable, uuid(3708aa92-e2d9-4fd1-9e46-edfa3eb5ebf5)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -226,19 +226,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * script.
      */
     void enableCapability(in string capability);
-
-    /**
-     * Remove 'capability' from the innermost frame of the currently
-     * executing script. Any setting of 'capability' from enclosing
-     * frames thus comes into effect.
-     */
-    void revertCapability(in string capability);
-
-    /**
-     * Disable 'capability' in the innermost frame of the currently executing
-     * script.
-     */
-    void disableCapability(in string capability);
 
     //////////////// Master Certificate Functions ////////////////////
     /**

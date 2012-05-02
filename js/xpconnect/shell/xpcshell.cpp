@@ -1507,20 +1507,6 @@ FullTrustSecMan::EnableCapability(const char *capability)
     return NS_OK;;
 }
 
-/* void revertCapability (in string capability); */
-NS_IMETHODIMP
-FullTrustSecMan::RevertCapability(const char *capability)
-{
-    return NS_OK;
-}
-
-/* void disableCapability (in string capability); */
-NS_IMETHODIMP
-FullTrustSecMan::DisableCapability(const char *capability)
-{
-    return NS_OK;
-}
-
 /* [noscript] nsIPrincipal getObjectPrincipal (in JSContextPtr cx, in JSObjectPtr obj); */
 NS_IMETHODIMP
 FullTrustSecMan::GetObjectPrincipal(JSContext * cx, JSObject * obj,

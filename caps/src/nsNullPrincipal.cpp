@@ -239,21 +239,6 @@ nsNullPrincipal::EnableCapability(const char *aCapability, void **aAnnotation)
 }
 
 NS_IMETHODIMP 
-nsNullPrincipal::RevertCapability(const char *aCapability, void **aAnnotation)
-{
-    *aAnnotation = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsNullPrincipal::DisableCapability(const char *aCapability, void **aAnnotation)
-{
-  // Just a no-op.  They're all disabled anyway.
-  *aAnnotation = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
 nsNullPrincipal::GetURI(nsIURI** aURI)
 {
   return NS_EnsureSafeToReturn(mURI, aURI);
