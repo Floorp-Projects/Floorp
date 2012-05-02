@@ -51,3 +51,5 @@ chrome.jar:
   skin/images/row-bg-light.png              (images/row-bg-light.png)
   skin/images/row-bg-normal.png             (images/row-bg-normal.png)
   skin/images/addons-amo-hdpi.png           (images/addons-amo-hdpi.png)
+  skin/images/handle-start.png              (images/handle-start.png)
+  skin/images/handle-end.png                (images/handle-end.png)
