@@ -116,11 +116,6 @@ public:
       return returnedString.get();
     }
 
-  /**
-   * Function mapping from cross platform roles to ATK roles.
-   */
-  static PRUint32 AtkRoleFor(mozilla::a11y::role aRole);
-
 protected:
     virtual nsresult FirePlatformEvent(AccEvent* aEvent);
 
