@@ -18,18 +18,14 @@
 #include "treecoder.h"
 
 
-static void mv_bias(int refmb_ref_frame_sign_bias, int refframe, int_mv *mvp, const int *ref_frame_sign_bias)
+static void mv_bias(int refmb_ref_frame_sign_bias, int refframe, int_mv *mvp,
+                    const int *ref_frame_sign_bias)
 {
-    MV xmv;
-    xmv = mvp->as_mv;
-
     if (refmb_ref_frame_sign_bias != ref_frame_sign_bias[refframe])
     {
-        xmv.row *= -1;
-        xmv.col *= -1;
+        mvp->as_mv.row *= -1;
+        mvp->as_mv.col *= -1;
     }
-
-    mvp->as_mv = xmv;
 }
 
 #define LEFT_TOP_MARGIN (16 << 3)
@@ -64,10 +60,10 @@ static unsigned int vp8_check_mv_bounds(int_mv *mv, int mb_to_left_edge,
                                 int mb_to_bottom_edge)
 {
     unsigned int need_to_clamp;
-    need_to_clamp = (mv->as_mv.col < mb_to_left_edge) ? 1 : 0;
-    need_to_clamp |= (mv->as_mv.col > mb_to_right_edge) ? 1 : 0;
-    need_to_clamp |= (mv->as_mv.row < mb_to_top_edge) ? 1 : 0;
-    need_to_clamp |= (mv->as_mv.row > mb_to_bottom_edge) ? 1 : 0;
+    need_to_clamp = (mv->as_mv.col < mb_to_left_edge);
+    need_to_clamp |= (mv->as_mv.col > mb_to_right_edge);
+    need_to_clamp |= (mv->as_mv.row < mb_to_top_edge);
+    need_to_clamp |= (mv->as_mv.row > mb_to_bottom_edge);
     return need_to_clamp;
 }
 
@@ -80,6 +76,19 @@ void vp8_find_near_mvs
     int refframe,
     int *ref_frame_sign_bias
 );
+
+
+int vp8_find_near_mvs_bias
+(
+    MACROBLOCKD *xd,
+    const MODE_INFO *here,
+    int_mv mode_mv_sb[2][MB_MODE_COUNT],
+    int_mv best_mv_sb[2],
+    int cnt[4],
+    int refframe,
+    int *ref_frame_sign_bias
+);
+
 
 vp8_prob *vp8_mv_ref_probs(
     vp8_prob p[VP8_MVREFS-1], const int near_mv_ref_ct[4]

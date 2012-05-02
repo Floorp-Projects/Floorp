@@ -237,7 +237,7 @@ AndroidPresenter.prototype.actionInvoked = function(aObject, aActionName) {
     gecko: {
       type: 'Accessibility:Event',
       eventType: ANDROID_TYPE_VIEW_CLICKED,
-      text: [UtteranceGenerator.genForAction(aObject, aActionName)]
+      text: UtteranceGenerator.genForAction(aObject, aActionName)
     }
   });
 };

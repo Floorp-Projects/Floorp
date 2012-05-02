@@ -71,7 +71,7 @@ class DummyFrameGuard;
 class GeneratorFrameGuard;
 
 class CallIter;
-class FrameRegsIter;
+class ScriptFrameIter;
 class AllFramesIter;
 
 class ArgumentsObject;
@@ -582,7 +582,7 @@ class StackFrame
      *   for ( ...; fp; fp = fp->prev())
      *     ... fp->pcQuadratic(cx->stack);
      *
-     * Using next can avoid this, but in most cases prefer FrameRegsIter;
+     * Using next can avoid this, but in most cases prefer ScriptFrameIter;
      * it is amortized O(1).
      *
      *   When I get to the bottom I go back to the top of the stack
@@ -1851,41 +1851,32 @@ class StackIter
     bool isFunctionFrame() const;
     bool isEvalFrame() const;
     bool isNonEvalFunctionFrame() const;
+    bool isConstructing() const;
 
     StackFrame *fp() const { JS_ASSERT(isScript()); return fp_; }
     Value      *sp() const { JS_ASSERT(isScript()); return sp_; }
     jsbytecode *pc() const { JS_ASSERT(isScript()); return pc_; }
     JSScript   *script() const { JS_ASSERT(isScript()); return script_; }
-    JSObject   &callee() const;
+    JSFunction *callee() const;
     Value       calleev() const;
+    Value       thisv() const;
 
     CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return args_; }
 };
 
 /* A filtering of the StackIter to only stop at scripts. */
-class FrameRegsIter
+class ScriptFrameIter : public StackIter
 {
-    StackIter iter_;
-
     void settle() {
-        while (!iter_.done() && !iter_.isScript())
-            ++iter_;
+        while (!done() && !isScript())
+            StackIter::operator++();
     }
 
   public:
-    FrameRegsIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
-        : iter_(cx, opt) { settle(); }
+    ScriptFrameIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
+        : StackIter(cx, opt) { settle(); }
 
-    bool done() const { return iter_.done(); }
-    FrameRegsIter &operator++() { ++iter_; settle(); return *this; }
-
-    bool operator==(const FrameRegsIter &rhs) const { return iter_ == rhs.iter_; }
-    bool operator!=(const FrameRegsIter &rhs) const { return iter_ != rhs.iter_; }
-
-    StackFrame *fp() const { return iter_.fp(); }
-    Value      *sp() const { return iter_.sp(); }
-    jsbytecode *pc() const { return iter_.pc(); }
-    JSScript   *script() const { return iter_.script(); }
+    ScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
 };
 
 /*****************************************************************************/

@@ -14,15 +14,12 @@
 
 void vpx_log(const char *format, ...);
 
-#include "vpx_ports/config.h"
+#include "vpx_config.h"
 #include "vpx_scale/yv12config.h"
 #include "mv.h"
 #include "treecoder.h"
 #include "subpixel.h"
 #include "vpx_ports/mem.h"
-
-#define TRUE    1
-#define FALSE   0
 
 /*#define DCPRED 1*/
 #define DCPREDSIMTHRESH 0
@@ -62,7 +59,7 @@ extern const unsigned char vp8_block2left[25];
 extern const unsigned char vp8_block2above[25];
 
 #define VP8_COMBINEENTROPYCONTEXTS( Dest, A, B) \
-    Dest = ((A)!=0) + ((B)!=0);
+    Dest = (A)+(B);
 
 
 typedef enum
@@ -170,12 +167,23 @@ typedef struct
     union b_mode_info bmi[16];
 } MODE_INFO;
 
+#if CONFIG_MULTI_RES_ENCODING
+/* The information needed to be stored for higher-resolution encoder */
+typedef struct
+{
+    MB_PREDICTION_MODE mode;
+    MV_REFERENCE_FRAME ref_frame;
+    int_mv mv;
+    //union b_mode_info bmi[16];
+    int dissim;    // dissimilarity level of the macroblock
+} LOWER_RES_INFO;
+#endif
+
 typedef struct
 {
     short *qcoeff;
     short *dqcoeff;
     unsigned char  *predictor;
-    short *diff;
     short *dequant;
 
     /* 16 Y blocks, 4 U blocks, 4 V blocks each with 16 entries */
@@ -187,21 +195,26 @@ typedef struct
     int dst;
     int dst_stride;
 
-    int eob;
+    char *eob;
 
     union b_mode_info bmi;
 } BLOCKD;
 
 typedef struct MacroBlockD
 {
-    DECLARE_ALIGNED(16, short, diff[400]);      /* from idct diff */
     DECLARE_ALIGNED(16, unsigned char,  predictor[384]);
     DECLARE_ALIGNED(16, short, qcoeff[400]);
     DECLARE_ALIGNED(16, short, dqcoeff[400]);
     DECLARE_ALIGNED(16, char,  eobs[25]);
 
+    DECLARE_ALIGNED(16, short,  dequant_y1[16]);
+    DECLARE_ALIGNED(16, short,  dequant_y1_dc[16]);
+    DECLARE_ALIGNED(16, short,  dequant_y2[16]);
+    DECLARE_ALIGNED(16, short,  dequant_uv[16]);
+
     /* 16 Y blocks, 4 U, 4 V, 1 DC 2nd order block, each with 16 entries. */
     BLOCKD block[25];
+    int fullpixel_mask;
 
     YV12_BUFFER_CONFIG pre; /* Filtered copy of previous frame reconstruction */
     YV12_BUFFER_CONFIG dst;
@@ -282,21 +295,5 @@ typedef struct MacroBlockD
 
 extern void vp8_build_block_doffsets(MACROBLOCKD *x);
 extern void vp8_setup_block_dptrs(MACROBLOCKD *x);
-
-static void update_blockd_bmi(MACROBLOCKD *xd)
-{
-    int i;
-    int is_4x4;
-    is_4x4 = (xd->mode_info_context->mbmi.mode == SPLITMV) ||
-              (xd->mode_info_context->mbmi.mode == B_PRED);
-
-    if (is_4x4)
-    {
-        for (i = 0; i < 16; i++)
-        {
-            xd->block[i].bmi = xd->mode_info_context->bmi[i];
-        }
-    }
-}
 
 #endif  /* __INC_BLOCKD_H */

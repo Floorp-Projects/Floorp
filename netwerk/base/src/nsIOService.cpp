@@ -640,9 +640,7 @@ nsIOService::LookupProxyInfo(nsIURI *aURI,
         if (NS_FAILED(rv))
             pi = nsnull;
     }
-    *outPI = pi;
-    if (pi)
-        pi.forget();
+    pi.forget(outPI);
 }
 
 
@@ -1281,7 +1279,7 @@ nsIOService::SpeculativeConnect(nsIURI *aURI,
 
     nsCOMPtr<nsISpeculativeConnect> speculativeHandler =
         do_QueryInterface(handler);
-    if (!handler)
+    if (!speculativeHandler)
         return NS_OK;
 
     return speculativeHandler->SpeculativeConnect(aURI,

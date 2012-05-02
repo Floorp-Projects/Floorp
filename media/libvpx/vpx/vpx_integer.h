@@ -31,16 +31,8 @@ typedef signed __int64   int64_t;
 typedef unsigned __int64 uint64_t;
 #endif
 
-#ifdef HAVE_ARMV6
-typedef unsigned int int_fast16_t;
-#else
-typedef signed short int_fast16_t;
-#endif
-typedef signed char int_fast8_t;
-typedef unsigned char uint_fast8_t;
-
 #ifndef _UINTPTR_T_DEFINED
-typedef unsigned int   uintptr_t;
+typedef size_t uintptr_t;
 #endif
 
 #else

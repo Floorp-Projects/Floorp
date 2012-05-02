@@ -27,7 +27,6 @@
 /****************************************************************************
 *  Exports
 ****************************************************************************/
-#ifndef VPX_NO_GLOBALS
 void (*vp8_vertical_band_4_5_scale)(unsigned char *dest, unsigned int dest_pitch, unsigned int dest_width) = 0;
 void (*vp8_last_vertical_band_4_5_scale)(unsigned char *dest, unsigned int dest_pitch, unsigned int dest_width) = 0;
 void (*vp8_vertical_band_2_3_scale)(unsigned char *dest, unsigned int dest_pitch, unsigned int dest_width) = 0;
@@ -51,9 +50,6 @@ void (*vp8_vertical_band_2_1_scale_i)(unsigned char *source, unsigned int src_pi
 void (*vp8_horizontal_line_2_1_scale)(const unsigned char *source, unsigned int source_width, unsigned char *dest, unsigned int dest_width) = 0;
 void (*vp8_horizontal_line_5_3_scale)(const unsigned char *source, unsigned int source_width, unsigned char *dest, unsigned int dest_width) = 0;
 void (*vp8_horizontal_line_5_4_scale)(const unsigned char *source, unsigned int source_width, unsigned char *dest, unsigned int dest_width) = 0;
-#else
-# include "vpxscale_nofp.h"
-#endif
 
 typedef struct
 {

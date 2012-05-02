@@ -49,6 +49,7 @@ richlistitem[type="download"]:not([selected]) button {
                                            .downloadCancelMenuItem,
 
 .download-state:not(:-moz-any([state="1"], /* Finished           */
+                              [state="2"], /* Failed             */
                               [state="3"], /* Canceled           */
                               [state="6"], /* Blocked (parental) */
                               [state="8"], /* Blocked (dirty)    */

@@ -219,7 +219,11 @@ struct ConstantSpec
  * Create a DOM interface object (if constructorClass is non-null) and/or a
  * DOM interface prototype object (if protoClass is non-null).
  *
- * parentProto is the prototype to use for the interface prototype object.
+ * global is used as the parent of the interface object and the interface
+ *        prototype object
+ * receiver is the object on which we need to define the interface object as a
+ *          property
+ * protoProto is the prototype to use for the interface prototype object.
  * protoClass is the JSClass to use for the interface prototype object.
  *            This is null if we should not create an interface prototype
  *            object.
@@ -242,11 +246,11 @@ struct ConstantSpec
  * returns the interface object.
  */
 JSObject*
-CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* parentProto,
-                       JSClass* protoClass, JSClass* constructorClass,
-                       JSFunctionSpec* methods, JSPropertySpec* properties,
-                       ConstantSpec* constants, JSFunctionSpec* staticMethods,
-                       const char* name);
+CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* receiver,
+                       JSObject* protoProto, JSClass* protoClass,
+                       JSClass* constructorClass, JSFunctionSpec* methods,
+                       JSPropertySpec* properties, ConstantSpec* constants,
+                       JSFunctionSpec* staticMethods, const char* name);
 
 template <class T>
 inline bool

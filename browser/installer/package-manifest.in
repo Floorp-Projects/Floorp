@@ -142,6 +142,7 @@
 @BINPATH@/components/content_canvas.xpt
 @BINPATH@/components/content_htmldoc.xpt
 @BINPATH@/components/content_html.xpt
+@BINPATH@/components/content_media.xpt
 @BINPATH@/components/content_xslt.xpt
 @BINPATH@/components/content_xtf.xpt
 @BINPATH@/components/cookie.xpt
@@ -637,6 +638,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/webapprt/chrome/webapprt@JAREXT@
 @BINPATH@/webapprt/chrome/webapprt.manifest
 @BINPATH@/webapprt/components/CommandLineHandler.js
+@BINPATH@/webapprt/components/ContentPolicy.js
 @BINPATH@/webapprt/components/DirectoryProvider.js
 @BINPATH@/webapprt/components/components.manifest
 @BINPATH@/webapprt/defaults/preferences/prefs.js

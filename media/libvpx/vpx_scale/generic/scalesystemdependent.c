@@ -9,22 +9,15 @@
  */
 
 
-#include "vpx_ports/config.h"
+#include "vpx_config.h"
 #include "vpx_scale/vpxscale.h"
-
+#include "vpx_scale/yv12extend.h"
 
 void (*vp8_yv12_extend_frame_borders_ptr)(YV12_BUFFER_CONFIG *ybf);
-extern void vp8_yv12_extend_frame_borders(YV12_BUFFER_CONFIG *ybf);
-
-void (*vp8_yv12_copy_frame_yonly_ptr)(YV12_BUFFER_CONFIG *src_ybc, YV12_BUFFER_CONFIG *dst_ybc);
-extern void vp8_yv12_copy_frame_yonly(YV12_BUFFER_CONFIG *src_ybc, YV12_BUFFER_CONFIG *dst_ybc);
-
 void (*vp8_yv12_copy_frame_ptr)(YV12_BUFFER_CONFIG *src_ybc, YV12_BUFFER_CONFIG *dst_ybc);
-extern void vp8_yv12_copy_frame(YV12_BUFFER_CONFIG *src_ybc, YV12_BUFFER_CONFIG *dst_ybc);
+void (*vp8_yv12_copy_y_ptr)(YV12_BUFFER_CONFIG *src_ybc, YV12_BUFFER_CONFIG *dst_ybc);
 
-/****************************************************************************
-*  Imports
-*****************************************************************************/
+extern void vp8_arch_arm_vpx_scale_init();
 
 /****************************************************************************
  *
@@ -71,8 +64,11 @@ void vp8_scale_machine_specific_config()
     vp8_horizontal_line_5_4_scale         = vp8cx_horizontal_line_5_4_scale_c;
 #endif
 
-    vp8_yv12_extend_frame_borders_ptr      = vp8_yv12_extend_frame_borders;
-    vp8_yv12_copy_frame_yonly_ptr          = vp8_yv12_copy_frame_yonly;
-    vp8_yv12_copy_frame_ptr           = vp8_yv12_copy_frame;
+    vp8_yv12_extend_frame_borders_ptr     = vp8_yv12_extend_frame_borders;
+    vp8_yv12_copy_y_ptr                   = vp8_yv12_copy_y_c;
+    vp8_yv12_copy_frame_ptr               = vp8_yv12_copy_frame;
 
+#if ARCH_ARM
+    vp8_arch_arm_vpx_scale_init();
+#endif
 }

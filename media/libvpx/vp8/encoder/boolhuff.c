@@ -40,15 +40,16 @@ const unsigned int vp8_prob_cost[256] =
     22,   21,   19,   18,   16,   15,   13,   12,   10,    9,    7,    6,    4,    3,    1,   1
 };
 
-void vp8_start_encode(BOOL_CODER *br, unsigned char *source)
+void vp8_start_encode(BOOL_CODER *br, unsigned char *source, unsigned char *source_end)
 {
 
-    br->lowvalue = 0;
-    br->range    = 255;
-    br->value    = 0;
-    br->count    = -24;
-    br->buffer   = source;
-    br->pos      = 0;
+    br->lowvalue   = 0;
+    br->range      = 255;
+    br->value      = 0;
+    br->count      = -24;
+    br->buffer     = source;
+    br->buffer_end = source_end;
+    br->pos        = 0;
 }
 
 void vp8_stop_encode(BOOL_CODER *br)

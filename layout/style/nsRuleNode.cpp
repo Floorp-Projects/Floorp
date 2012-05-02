@@ -5644,14 +5644,14 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
 
     case eCSSUnit_Inherit: {
       canStoreInRuleTree = false;
-      nsBorderColors *parentColors;
-      parentBorder->GetCompositeColors(side, &parentColors);
-      if (parentColors) {
-        border->EnsureBorderColors();
-        border->ClearBorderColors(side);
-        border->mBorderColors[side] = parentColors->Clone();
-      } else {
-        border->ClearBorderColors(side);
+      border->ClearBorderColors(side);
+      if (parentContext) {
+        nsBorderColors *parentColors;
+        parentBorder->GetCompositeColors(side, &parentColors);
+        if (parentColors) {
+          border->EnsureBorderColors();
+          border->mBorderColors[side] = parentColors->Clone();
+        }
       }
       break;
     }

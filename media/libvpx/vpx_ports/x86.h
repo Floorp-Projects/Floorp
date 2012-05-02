@@ -12,7 +12,7 @@
 #ifndef VPX_PORTS_X86_H
 #define VPX_PORTS_X86_H
 #include <stdlib.h>
-#include "config.h"
+#include "vpx_config.h"
 
 typedef enum
 {

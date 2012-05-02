@@ -2720,7 +2720,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
              */
             uint32_t format = cs->format;
             bool matchPC = false;
-            FrameRegsIter iter(cx);
+            ScriptFrameIter iter(cx);
             if (!iter.done()) {
                 jsbytecode *npc = iter.pc();
                 if (pc == npc) {

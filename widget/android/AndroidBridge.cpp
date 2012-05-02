@@ -104,11 +104,14 @@ AndroidBridge::Init(JNIEnv *jEnv,
     ALOG_BRIDGE("AndroidBridge::Init");
     jEnv->GetJavaVM(&mJavaVM);
 
+    AutoLocalJNIFrame frame(jEnv);
+
     mJNIEnv = nsnull;
     mThread = nsnull;
     mOpenedGraphicsLibraries = false;
     mHasNativeBitmapAccess = false;
     mHasNativeWindowAccess = false;
+    mHasNativeWindowFallback = false;
 
     mGeckoAppShellClass = (jclass) jEnv->NewGlobalRef(jGeckoAppShellClass);
 
@@ -200,11 +203,30 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     jStringClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("java/lang/String"));
 
+    jSurfaceClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("android/view/Surface"));
+
+    PRInt32 apiVersion = 0;
+    if (!GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &apiVersion, jEnv))
+        ALOG_BRIDGE("Failed to find API version");
+
+    if (apiVersion <= 8 /* Froyo */)
+        jSurfacePointerField = jEnv->GetFieldID(jSurfaceClass, "mSurface", "I");
+    else /* not Froyo */
+        jSurfacePointerField = jEnv->GetFieldID(jSurfaceClass, "mNativeSurface", "I");
+
 #ifdef MOZ_JAVA_COMPOSITOR
+    jAddPluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "addPluginView", "(Landroid/view/View;IIII)V");
+    jCreateSurface = jEnv->GetStaticMethodID(jGeckoAppShellClass, "createSurface", "()Landroid/view/Surface;");
+    jShowSurface = jEnv->GetStaticMethodID(jGeckoAppShellClass, "showSurface", "(Landroid/view/Surface;IIIIZZ)V");
+    jHideSurface = jEnv->GetStaticMethodID(jGeckoAppShellClass, "hideSurface", "(Landroid/view/Surface;)V");
+    jDestroySurface = jEnv->GetStaticMethodID(jGeckoAppShellClass, "destroySurface", "(Landroid/view/Surface;)V");
+
     jLayerView = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/gfx/LayerView"));
 
     AndroidGLController::Init(jEnv);
     AndroidEGLObject::Init(jEnv);
+#else
+    jAddPluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "addPluginView", "(Landroid/view/View;DDDD)V"); 
 #endif
 
     InitAndroidJavaWrappers(jEnv);
@@ -836,7 +858,7 @@ AndroidBridge::Vibrate(const nsTArray<PRUint32>& aPattern)
     if (!env)
         return;
 
-    AutoLocalJNIFrame frame;
+    AutoLocalJNIFrame jniFrame(env);
 
     ALOG_BRIDGE("AndroidBridge::Vibrate");
 
@@ -1123,12 +1145,15 @@ AndroidBridge::ProvideEGLSurface()
 }
 
 bool
-AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt)
+AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt, JNIEnv* env /* = nsnull */)
 {
     ALOG_BRIDGE("AndroidBridge::GetStaticIntField %s", fieldName);
-    JNIEnv *env = GetJNIEnv();
-    if (!env)
-        return false;
+
+    if (!env) {
+        env = GetJNIEnv();
+        if (!env)
+            return false;
+    }
 
     AutoLocalJNIFrame jniFrame(env, 3);
     jclass cls = env->FindClass(className);
@@ -1145,13 +1170,15 @@ AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, P
 }
 
 bool
-AndroidBridge::GetStaticStringField(const char *className, const char *fieldName, nsAString &result)
+AndroidBridge::GetStaticStringField(const char *className, const char *fieldName, nsAString &result, JNIEnv* env /* = nsnull */)
 {
     ALOG_BRIDGE("AndroidBridge::GetStaticIntField %s", fieldName);
 
-    JNIEnv *env = GetJNIEnv();
-    if (!env)
-        return false;
+    if (!env) {
+        env = GetJNIEnv();
+        if (!env)
+            return false;
+    }
 
     AutoLocalJNIFrame jniFrame(env, 3);
     jclass cls = env->FindClass(className);
@@ -1250,6 +1277,14 @@ AndroidBridge::ExecuteNextRunnable(JNIEnv *env)
     }
 }
 
+void*
+AndroidBridge::GetNativeSurface(JNIEnv* env, jobject surface) {
+    if (!env || !mHasNativeWindowFallback)
+        return nsnull;
+
+    return (void*)env->GetIntField(surface, jSurfacePointerField);
+}
+
 void
 AndroidBridge::OpenGraphicsLibraries()
 {
@@ -1258,6 +1293,7 @@ AndroidBridge::OpenGraphicsLibraries()
         // Android 2.2+ (API level 8)
         mOpenedGraphicsLibraries = true;
         mHasNativeWindowAccess = false;
+        mHasNativeWindowFallback = false;
         mHasNativeBitmapAccess = false;
 
         void *handle = dlopen("libjnigraphics.so", RTLD_LAZY | RTLD_LOCAL);
@@ -1284,6 +1320,24 @@ AndroidBridge::OpenGraphicsLibraries()
             mHasNativeWindowAccess = ANativeWindow_fromSurface && ANativeWindow_release && ANativeWindow_lock && ANativeWindow_unlockAndPost;
 
             ALOG_BRIDGE("Successfully opened libandroid.so, have native window access? %d", mHasNativeWindowAccess);
+        }
+
+        if (mHasNativeWindowAccess)
+            return;
+
+        // Look up Surface functions, used for native window (surface) fallback
+        handle = dlopen("libsurfaceflinger_client.so", RTLD_LAZY);
+        if (handle) {
+            Surface_lock = (int (*)(void*, void*, void*, bool))dlsym(handle, "_ZN7android7Surface4lockEPNS0_11SurfaceInfoEPNS_6RegionEb");
+            Surface_unlockAndPost = (int (*)(void*))dlsym(handle, "_ZN7android7Surface13unlockAndPostEv");
+
+            handle = dlopen("libui.so", RTLD_LAZY);
+            if (handle) {
+                Region_constructor = (void (*)(void*))dlsym(handle, "_ZN7android6RegionC1Ev");
+                Region_set = (void (*)(void*, void*))dlsym(handle, "_ZN7android6Region3setERKNS_4RectE");
+
+                mHasNativeWindowFallback = Surface_lock && Surface_unlockAndPost && Region_constructor && Region_set;
+            }
         }
     }
 }
@@ -1615,7 +1669,7 @@ AndroidBridge::GetMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProc
 {
     ALOG_BRIDGE("AndroidBridge::GetMessage");
 
-    JNIEnv *env = env;
+    JNIEnv *env = GetJNIEnv();
     if (!env)
         return;
 
@@ -1773,20 +1827,21 @@ AndroidBridge::HasNativeWindowAccess()
 {
     OpenGraphicsLibraries();
 
-    return mHasNativeWindowAccess;
+    // We have a fallback hack in place, so return true if that will work as well
+    return mHasNativeWindowAccess || mHasNativeWindowFallback;
 }
 
 void*
-AndroidBridge::AcquireNativeWindow(jobject surface)
+AndroidBridge::AcquireNativeWindow(JNIEnv* aEnv, jobject aSurface)
 {
-    if (!HasNativeWindowAccess())
-        return nsnull;
+    OpenGraphicsLibraries();
 
-    JNIEnv *env = GetJNIEnv();
-    if (!env)
+    if (mHasNativeWindowAccess)
+        return ANativeWindow_fromSurface(aEnv, aSurface);
+    else if (mHasNativeWindowFallback)
+        return GetNativeSurface(aEnv, aSurface);
+    else
         return nsnull;
-
-    return ANativeWindow_fromSurface(env, surface);
 }
 
 void
@@ -1795,13 +1850,20 @@ AndroidBridge::ReleaseNativeWindow(void *window)
     if (!window)
         return;
 
-    ANativeWindow_release(window);
+    if (mHasNativeWindowAccess)
+        ANativeWindow_release(window);
+
+    // XXX: we don't ref the pointer we get from the fallback (GetNativeSurface), so we
+    // have nothing to do here. We should probably ref it.
 }
 
 bool
 AndroidBridge::SetNativeWindowFormat(void *window, int width, int height, int format)
 {
-    return ANativeWindow_setBuffersGeometry(window, width, height, format) == 0;
+    if (mHasNativeWindowAccess)
+        return ANativeWindow_setBuffersGeometry(window, width, height, format) == 0;
+    else
+        return false; //unimplemented in fallback
 }
 
 bool
@@ -1829,21 +1891,49 @@ AndroidBridge::LockWindow(void *window, unsigned char **bits, int *width, int *h
         uint32_t reserved[6];
     } ANativeWindow_Buffer;
 
-    int err;
-    ANativeWindow_Buffer buffer;
+    // Very similar to the above, but the 'usage' field is included. We use this
+    // in the fallback case when NDK support is not available
+    typedef struct SurfaceInfo {
+        uint32_t    w;
+        uint32_t    h;
+        uint32_t    s;
+        uint32_t    usage;
+        uint32_t    format;
+        unsigned char* bits;
+        uint32_t    reserved[2];
+    };
 
+    int err;
     *bits = NULL;
     *width = *height = *format = 0;
-    if ((err = ANativeWindow_lock(window, (void*)&buffer, NULL)) != 0) {
-        ALOG_BRIDGE("ANativeWindow_lock failed! (error %d)", err);
-        return false;
-    }
+    
+    if (mHasNativeWindowAccess) {
+        ANativeWindow_Buffer buffer;
 
-    *bits = (unsigned char*)buffer.bits;
-    *width = buffer.width;
-    *height = buffer.height;
-    *format = buffer.format;
-    *stride = buffer.stride;
+        if ((err = ANativeWindow_lock(window, (void*)&buffer, NULL)) != 0) {
+            ALOG_BRIDGE("ANativeWindow_lock failed! (error %d)", err);
+            return false;
+        }
+
+        *bits = (unsigned char*)buffer.bits;
+        *width = buffer.width;
+        *height = buffer.height;
+        *format = buffer.format;
+        *stride = buffer.stride;
+    } else if (mHasNativeWindowFallback) {
+        SurfaceInfo info;
+
+        if ((err = Surface_lock(window, &info, NULL, true)) != 0) {
+            ALOG_BRIDGE("Surface_lock failed! (error %d)", err);
+            return false;
+        }
+
+        *bits = info.bits;
+        *width = info.w;
+        *height = info.h;
+        *format = info.format;
+        *stride = info.s;
+    } else return false;
 
     return true;
 }
@@ -1852,8 +1942,15 @@ bool
 AndroidBridge::UnlockWindow(void* window)
 {
     int err;
-    if ((err = ANativeWindow_unlockAndPost(window)) != 0) {
+
+    if (!HasNativeWindowAccess())
+        return false;
+
+    if (mHasNativeWindowAccess && (err = ANativeWindow_unlockAndPost(window)) != 0) {
         ALOG_BRIDGE("ANativeWindow_unlockAndPost failed! (error %d)", err);
+        return false;
+    } else if (mHasNativeWindowFallback && (err = Surface_unlockAndPost(window)) != 0) {
+        ALOG_BRIDGE("Surface_unlockAndPost failed! (error %d)", err);
         return false;
     }
 
@@ -1994,18 +2091,15 @@ AndroidBridge::CreateSurface()
 #ifndef MOZ_JAVA_COMPOSITOR
   return NULL;
 #else
-  AutoLocalJNIFrame frame(1);
+  JNIEnv* env = GetJNIEnv();
+  if (!env)
+    return nsnull;
 
-  JNIEnv* env = GetJNIForThread();
-  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+  AutoLocalJNIFrame frame(env);
 
-  jmethodID method = env->GetStaticMethodID(cls,
-                                            "createSurface",
-                                            "()Landroid/view/Surface;");
-
-  jobject surface = env->CallStaticObjectMethod(cls, method);
+  jobject surface = env->CallStaticObjectMethod(mGeckoAppShellClass, jCreateSurface);
   if (surface)
-    env->NewGlobalRef(surface);
+    surface = env->NewGlobalRef(surface);
   
   return surface;
 #endif
@@ -2015,15 +2109,13 @@ void
 AndroidBridge::DestroySurface(jobject surface)
 {
 #ifdef MOZ_JAVA_COMPOSITOR
-  AutoLocalJNIFrame frame(1);
+  JNIEnv* env = GetJNIEnv();
+  if (!env)
+    return;
 
-  JNIEnv* env = GetJNIForThread();
-  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+  AutoLocalJNIFrame frame(env);
 
-  jmethodID method = env->GetStaticMethodID(cls,
-                                            "destroySurface",
-                                            "(Landroid/view/Surface;)V");
-  env->CallStaticVoidMethod(cls, method, surface);
+  env->CallStaticVoidMethod(mGeckoAppShellClass, jDestroySurface, surface);
   env->DeleteGlobalRef(surface);
 #endif
 }
@@ -2032,25 +2124,16 @@ void
 AndroidBridge::ShowSurface(jobject surface, const gfxRect& aRect, bool aInverted, bool aBlend)
 {
 #ifdef MOZ_JAVA_COMPOSITOR
-  AutoLocalJNIFrame frame;
+    JNIEnv* env = GetJNIEnv();
+    if (!env)
+        return;
 
-  JNIEnv* env = GetJNIForThread();
-  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+    AutoLocalJNIFrame frame(env);
 
-  nsAutoString metadata;
-  nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider = GetDrawMetadataProvider();
-  metadataProvider->GetDrawMetadata(metadata);
-
-  jstring jMetadata = env->NewString(nsPromiseFlatString(metadata).get(), metadata.Length());
-
-  jmethodID method = env->GetStaticMethodID(cls,
-                                            "showSurface",
-                                            "(Landroid/view/Surface;IIIIZZLjava/lang/String;)V");
-
-  env->CallStaticVoidMethod(cls, method, surface,
-                            (int)aRect.x, (int)aRect.y,
-                            (int)aRect.width, (int)aRect.height,
-                            aInverted, aBlend, jMetadata);
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jShowSurface, surface,
+                             (int)aRect.x, (int)aRect.y,
+                             (int)aRect.width, (int)aRect.height,
+                             aInverted, aBlend);
 #endif
 }
 
@@ -2058,15 +2141,13 @@ void
 AndroidBridge::HideSurface(jobject surface)
 {
 #ifdef MOZ_JAVA_COMPOSITOR
-  AutoLocalJNIFrame frame(1);
+    JNIEnv* env = GetJNIEnv();
+    if (!env)
+        return;
 
-  JNIEnv* env = GetJNIForThread();
-  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+    AutoLocalJNIFrame frame(env);
 
-  jmethodID method = env->GetStaticMethodID(cls,
-                                            "hideSurface",
-                                            "(Landroid/view/Surface;)V");
-  env->CallStaticVoidMethod(cls, method, surface);
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jHideSurface, surface);
 #endif
 }
 
@@ -2120,14 +2201,32 @@ NS_IMETHODIMP nsAndroidBridge::SetBrowserApp(nsIAndroidBrowserApp *aBrowserApp)
 }
 
 void
-AndroidBridge::RemovePluginView(void* surface) {
-  JNIEnv *env = AndroidBridge::GetJNIEnv();
+AndroidBridge::AddPluginView(jobject view, const gfxRect& rect) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return;
+
+    AndroidBridge::AutoLocalJNIFrame frame(env);
+
+#if MOZ_JAVA_COMPOSITOR
+    env->CallStaticVoidMethod(sBridge->mGeckoAppShellClass,
+                              sBridge->jAddPluginView, view,
+                              (int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
+#else
+    env->CallStaticVoidMethod(sBridge->mGeckoAppShellClass,
+                              sBridge->jAddPluginView, view,
+                              rect.x, rect.y, rect.width, rect.height);
+#endif
+}
+
+void
+AndroidBridge::RemovePluginView(jobject view) {
+  JNIEnv *env = GetJNIEnv();
   if (!env)
     return;
 
-  AndroidBridge::AutoLocalJNIFrame frame(env, 1);
-  env->CallStaticVoidMethod(sBridge->mGeckoAppShellClass,
-                            sBridge->jRemovePluginView, surface);
+  AndroidBridge::AutoLocalJNIFrame frame(env);
+  env->CallStaticVoidMethod(mGeckoAppShellClass, jRemovePluginView, view);
 }
 
 extern "C"

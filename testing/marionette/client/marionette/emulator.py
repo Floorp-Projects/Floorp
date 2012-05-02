@@ -36,24 +36,24 @@ class Emulator(object):
             raise Exception('Must define B2G_HOME or pass the homedir parameter')
 
         self.adb = os.path.join(self.homedir,
-                                'glue/gonk/out/host/linux-x86/bin/adb')
+                                'glue/gonk-ics/out/host/linux-x86/bin/adb')
         if not os.access(self.adb, os.F_OK):
             self.adb = os.path.join(self.homedir, 'bin/adb')
 
         self.binary = os.path.join(self.homedir,
-                                   'glue/gonk/out/host/linux-x86/bin/emulator')
+                                   'glue/gonk-ics/out/host/linux-x86/bin/emulator')
         if not os.access(self.binary, os.F_OK):
             self.binary = os.path.join(self.homedir, 'bin/emulator')
         self._check_file(self.binary)
 
         self.kernelImg = os.path.join(self.homedir,
-                                      'boot/kernel-android-qemu/arch/arm/boot/zImage')
+                                      'glue/gonk-ics/prebuilts/qemu-kernel/arm/kernel-qemu-armv7')
         if not os.access(self.kernelImg, os.F_OK):
-            self.kernelImg = os.path.join(self.homedir, 'zImage')
+            self.kernelImg = os.path.join(self.homedir, 'kernel-qemu-armv7')
         self._check_file(self.kernelImg)
 
         self.sysDir = os.path.join(self.homedir, 
-                                   'glue/gonk/out/target/product/generic/')
+                                   'glue/gonk-ics/out/target/product/generic/')
         if not os.access(self.sysDir, os.F_OK):
             self.sysDir = os.path.join(self.homedir, 'generic/')
         self._check_file(self.sysDir)
