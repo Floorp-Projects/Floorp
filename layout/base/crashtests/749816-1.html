@@ -1,0 +1,15 @@
+<html>
+<head>
+<title>crash in epoll_wait after changing display: table-column style to display:none on body</title>
+<script>
+function doe() {
+document.body.style.display = 'none';
+}
+setTimeout(doe, 1000);
+</script>
+</head>
+
+<body style="display: table-column;">
+This page should not crash Fennec
+</body>
+</html>

@@ -646,7 +646,7 @@ JSBool
 js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
 {
     /* Step 1. */
-    Value fval = vp[1];
+    RootedVarValue fval(cx, vp[1]);
     if (!js_IsCallable(fval)) {
         ReportIncompatibleMethod(cx, CallReceiverFromVp(vp), &FunctionClass);
         return false;
@@ -688,7 +688,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
          * Steps 4-5 (note erratum removing steps originally numbered 5 and 7 in
          * original version of ES5).
          */
-        JSObject *aobj = &vp[3].toObject();
+        RootedVarObject aobj(cx, &vp[3].toObject());
         uint32_t length;
         if (!js_GetLengthProperty(cx, aobj, &length))
             return false;
@@ -732,29 +732,31 @@ static const uint32_t JSSLOT_BOUND_FUNCTION_ARGS_COUNT = 1;
 static const uint32_t BOUND_FUNCTION_RESERVED_SLOTS = 2;
 
 inline bool
-JSFunction::initBoundFunction(JSContext *cx, const Value &thisArg,
+JSFunction::initBoundFunction(JSContext *cx, HandleValue thisArg,
                               const Value *args, unsigned argslen)
 {
     JS_ASSERT(isFunction());
+
+    RootedVarFunction self(cx, this);
 
     /*
      * Convert to a dictionary to set the BOUND_FUNCTION flag and increase
      * the slot span to cover the arguments and additional slots for the 'this'
      * value and arguments count.
      */
-    if (!toDictionaryMode(cx))
+    if (!self->toDictionaryMode(cx))
         return false;
 
-    if (!setFlag(cx, BaseShape::BOUND_FUNCTION))
+    if (!self->setFlag(cx, BaseShape::BOUND_FUNCTION))
         return false;
 
-    if (!setSlotSpan(cx, BOUND_FUNCTION_RESERVED_SLOTS + argslen))
+    if (!self->setSlotSpan(cx, BOUND_FUNCTION_RESERVED_SLOTS + argslen))
         return false;
 
-    setSlot(JSSLOT_BOUND_FUNCTION_THIS, thisArg);
-    setSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT, PrivateUint32Value(argslen));
+    self->setSlot(JSSLOT_BOUND_FUNCTION_THIS, thisArg);
+    self->setSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT, PrivateUint32Value(argslen));
 
-    initSlotRange(BOUND_FUNCTION_RESERVED_SLOTS, args, argslen);
+    self->initSlotRange(BOUND_FUNCTION_RESERVED_SLOTS, args, argslen);
 
     return true;
 }
@@ -895,7 +897,7 @@ fun_bind(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Steps 7-9. */
-    Value thisArg = args.length() >= 1 ? args[0] : UndefinedValue();
+    RootedVarValue thisArg(cx, args.length() >= 1 ? args[0] : UndefinedValue());
 
     JSObject *boundFunction = js_fun_bind(cx, target, thisArg, boundArgs, argslen);
     if (!boundFunction)
@@ -907,7 +909,7 @@ fun_bind(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSObject*
-js_fun_bind(JSContext *cx, HandleObject target, Value thisArg,
+js_fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
             Value *boundArgs, unsigned argslen)
 {
     /* Steps 15-16. */
@@ -921,14 +923,14 @@ js_fun_bind(JSContext *cx, HandleObject target, Value thisArg,
     /* Step 4-6, 10-11. */
     JSAtom *name = target->isFunction() ? target->toFunction()->atom.get() : NULL;
 
-    JSObject *funobj =
-        js_NewFunction(cx, NULL, CallOrConstructBoundFunction, length,
-                       JSFUN_CONSTRUCTOR, target, name);
+    RootedVarObject funobj(cx);
+    funobj = js_NewFunction(cx, NULL, CallOrConstructBoundFunction, length,
+                            JSFUN_CONSTRUCTOR, target, name);
     if (!funobj)
         return NULL;
 
     /* NB: Bound functions abuse |parent| to store their target. */
-    if (!funobj->setParent(cx, target))
+    if (!JSObject::setParent(cx, funobj, target))
         return NULL;
 
     if (!funobj->toFunction()->initBoundFunction(cx, thisArg, boundArgs, argslen))
@@ -983,6 +985,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
     }
 
     Bindings bindings(cx);
+    Bindings::StackRoot bindingsRoot(cx, &bindings);
 
     const char *filename;
     unsigned lineno;
@@ -1112,6 +1115,8 @@ Function(JSContext *cx, unsigned argc, Value *vp)
     const jschar *chars;
     size_t length;
 
+    SkipRoot skip(cx, &chars);
+
     if (args.length()) {
         JSString *str = ToString(cx, args[args.length() - 1]);
         if (!str)
@@ -1130,8 +1135,8 @@ Function(JSContext *cx, unsigned argc, Value *vp)
      * Thus 'var x = 42; f = new Function("return x"); print(f())' prints 42,
      * and so would a call to f from another top-level's script or function.
      */
-    JSFunction *fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                                     global, cx->runtime->atomState.anonymousAtom);
+    RootedVarFunction fun(cx, js_NewFunction(cx, NULL, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
+                                             global, cx->runtime->atomState.anonymousAtom));
     if (!fun)
         return false;
 
@@ -1229,7 +1234,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
     JSObject *cloneobj = NewObjectWithClassProto(cx, &FunctionClass, NULL, SkipScopeParent(parent), kind);
     if (!cloneobj)
         return NULL;
-    JSFunction *clone = static_cast<JSFunction *>(cloneobj);
+    RootedVarFunction clone(cx, static_cast<JSFunction *>(cloneobj));
 
     clone->nargs = fun->nargs;
     clone->flags = fun->flags & ~JSFUN_EXTENDED;
@@ -1354,7 +1359,6 @@ void
 js_ReportIsNotFunction(JSContext *cx, const Value *vp, unsigned flags)
 {
     const char *name = NULL, *source = NULL;
-    AutoValueRooter tvr(cx);
     unsigned error = (flags & JSV2F_CONSTRUCT) ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
 
     /*

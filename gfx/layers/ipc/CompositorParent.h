@@ -114,6 +114,11 @@ protected:
   virtual void ScheduleTask(CancelableTask*, int);
   virtual void Composite();
   virtual void ScheduleComposition();
+  virtual void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight,
+                                     float aCssPageWidth, float aCssPageHeight);
+  virtual void SetPageSize(float aZoom, float aPageWidth, float aPageHeight, float aCssPageWidth, float aCssPageHeight);
+  virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
+                                nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
 
 private:
   void PauseComposition();
@@ -126,13 +131,11 @@ private:
   inline PlatformThreadId CompositorThreadID();
 
   // Platform specific functions
-#ifdef MOZ_WIDGET_ANDROID
   /**
    * Does a breadth-first search to find the first layer in the tree with a
    * displayport set.
    */
   Layer* GetPrimaryScrollableLayer();
-#endif
 
   nsRefPtr<LayerManager> mLayerManager;
   nsIWidget* mWidget;

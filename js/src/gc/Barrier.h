@@ -140,12 +140,10 @@
  * and jsid, respectively.
  *
  * One additional note: not all object writes need to be barriered. Writes to
- * newly allocated objects do not need a barrier as long as the GC is not
- * allowed to run in between the allocation and the write. In these cases, we
- * use the "obj->field.init(value)" method instead of "obj->field = value".
- * We use the init naming idiom in many places to signify that a field is being
- * assigned for the first time, and that no GCs have taken place between the
- * object allocation and the assignment.
+ * newly allocated objects do not need a pre-barrier.  In these cases, we use
+ * the "obj->field.init(value)" method instead of "obj->field = value". We use
+ * the init naming idiom in many places to signify that a field is being
+ * assigned for the first time.
  */
 
 struct JSXML;

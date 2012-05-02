@@ -340,6 +340,8 @@ AtomizeInline(JSContext *cx, const jschar **pchars, size_t length,
 
     JSFixedString *key;
 
+    SkipRoot skip(cx, &chars);
+
     if (ocb == TakeCharOwnership) {
         key = js_NewString(cx, const_cast<jschar *>(chars), length);
         if (!key)
