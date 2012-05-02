@@ -526,9 +526,6 @@ private:
     static void
     FormatCapabilityString(nsAString& aCapability);
 
-    nsresult
-    SavePrincipal(nsIPrincipal* aToSave);
-
     /**
      * Check capability levels for an |aObj| that implements
      * nsISecurityCheckedComponent.

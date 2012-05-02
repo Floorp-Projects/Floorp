@@ -2536,64 +2536,6 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
     return result;
 }
 
-nsresult
-nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
-{
-    //-- Save to mPrincipals
-    mPrincipals.Put(aToSave, aToSave);
-
-    //-- Save to prefs
-    nsXPIDLCString idPrefName;
-    nsXPIDLCString id;
-    nsXPIDLCString subjectName;
-    nsXPIDLCString grantedList;
-    nsXPIDLCString deniedList;
-    bool isTrusted;
-    nsresult rv = aToSave->GetPreferences(getter_Copies(idPrefName),
-                                          getter_Copies(id),
-                                          getter_Copies(subjectName),
-                                          getter_Copies(grantedList),
-                                          getter_Copies(deniedList),
-                                          &isTrusted);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-    nsCAutoString grantedPrefName;
-    nsCAutoString deniedPrefName;
-    nsCAutoString subjectNamePrefName;
-    rv = GetPrincipalPrefNames( idPrefName,
-                                grantedPrefName,
-                                deniedPrefName,
-                                subjectNamePrefName );
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-    mIsWritingPrefs = true;
-    if (grantedList) {
-        Preferences::SetCString(grantedPrefName.get(), grantedList);
-    } else {
-        Preferences::ClearUser(grantedPrefName.get());
-    }
-
-    if (deniedList) {
-        Preferences::SetCString(deniedPrefName.get(), deniedList);
-    } else {
-        Preferences::ClearUser(deniedPrefName.get());
-    }
-
-    if (grantedList || deniedList) {
-        Preferences::SetCString(idPrefName, id);
-        Preferences::SetCString(subjectNamePrefName.get(), subjectName);
-    } else {
-        Preferences::ClearUser(idPrefName);
-        Preferences::ClearUser(subjectNamePrefName.get());
-    }
-
-    mIsWritingPrefs = false;
-
-    nsIPrefService* prefService = Preferences::GetService();
-    NS_ENSURE_TRUE(prefService, NS_ERROR_FAILURE);
-    return prefService->SavePrefFile(nsnull);
-}
-
 ///////////////// Capabilities API /////////////////////
 NS_IMETHODIMP
 nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
@@ -2862,71 +2804,6 @@ nsScriptSecurityManager::DisableCapability(const char *capability)
     principal->DisableCapability(capability, &annotation);
     JS_SetFrameAnnotation(cx, fp, annotation);
     return NS_OK;
-}
-
-//////////////// Master Certificate Functions ///////////////////////////////////////
-NS_IMETHODIMP
-nsScriptSecurityManager::SetCanEnableCapability(const nsACString& certFingerprint,
-                                                const char* capability,
-                                                PRInt16 canEnable)
-{
-    NS_ENSURE_ARG(!certFingerprint.IsEmpty());
-    
-    nsresult rv;
-    nsIPrincipal* subjectPrincipal = doGetSubjectPrincipal(&rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    //-- Get the system certificate
-    if (!mSystemCertificate)
-    {
-        nsCOMPtr<nsIFile> systemCertFile;
-        nsCOMPtr<nsIProperties> directoryService =
-                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-        if (!directoryService) return NS_ERROR_FAILURE;
-        rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
-                              getter_AddRefs(systemCertFile));
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        systemCertFile->AppendNative(NS_LITERAL_CSTRING("systemSignature.jar"));
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        nsCOMPtr<nsIZipReader> systemCertZip = do_CreateInstance(kZipReaderCID, &rv);
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        rv = systemCertZip->Open(systemCertFile);
-        if (NS_SUCCEEDED(rv))
-        {
-            rv = systemCertZip->GetCertificatePrincipal(EmptyCString(),
-                                                        getter_AddRefs(mSystemCertificate));
-            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        }
-    }
-
-    //-- Make sure the caller's principal is the system certificate
-    bool isEqual = false;
-    if (mSystemCertificate)
-    {
-        rv = mSystemCertificate->Equals(subjectPrincipal, &isEqual);
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    }
-    if (!isEqual)
-    {
-        JSContext* cx = GetCurrentJSContext();
-        if (!cx) return NS_ERROR_FAILURE;
-        static const char msg1[] = "Only code signed by the system certificate may call SetCanEnableCapability or Invalidate";
-        static const char msg2[] = "Attempt to call SetCanEnableCapability or Invalidate when no system certificate has been established";
-        SetPendingException(cx, mSystemCertificate ? msg1 : msg2);
-        return NS_ERROR_FAILURE;
-    }
-
-    //-- Get the target principal
-    nsCOMPtr<nsIPrincipal> objectPrincipal;
-    rv = DoGetCertificatePrincipal(certFingerprint, EmptyCString(),
-                                   EmptyCString(), nsnull,
-                                   nsnull, false,
-                                   getter_AddRefs(objectPrincipal));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    rv = objectPrincipal->SetCanEnableCapability(capability, canEnable);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    return SavePrincipal(objectPrincipal);
 }
 
 ////////////////////////////////////////////////

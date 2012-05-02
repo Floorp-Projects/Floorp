@@ -221,14 +221,6 @@ nsNullPrincipal::CanEnableCapability(const char *aCapability,
 }
 
 NS_IMETHODIMP 
-nsNullPrincipal::SetCanEnableCapability(const char *aCapability, 
-                                        PRInt16 aCanEnable)
-{
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-
-NS_IMETHODIMP 
 nsNullPrincipal::IsCapabilityEnabled(const char *aCapability, 
                                      void *aAnnotation, 
                                      bool *aResult)
