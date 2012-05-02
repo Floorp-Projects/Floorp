@@ -396,7 +396,7 @@ struct JSObject : public js::ObjectImpl
 
     inline uint32_t propertyCount() const;
 
-    inline bool hasPropertyTable() const;
+    inline bool hasShapeTable() const;
 
     inline size_t computedSizeOfThisSlotsElements() const;
 

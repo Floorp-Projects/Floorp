@@ -176,7 +176,7 @@ BaseShape::adoptUnowned(UnownedBaseShape *other)
     JS_ASSERT((flags & other->getObjectFlags()) == flags);
 
     uint32_t span = slotSpan();
-    PropertyTable *table = &this->table();
+    ShapeTable *table = &this->table();
 
     *this = *other;
     setOwned(other);
