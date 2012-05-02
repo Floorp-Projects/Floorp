@@ -729,8 +729,21 @@ getRoleCB(AtkObject *aAtkObj)
   if (aAtkObj->role != ATK_ROLE_INVALID)
     return aAtkObj->role;
 
-  return aAtkObj->role =
-    static_cast<AtkRole>(nsAccessibleWrap::AtkRoleFor(accWrap->Role()));
+#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role) \
+  case roles::geckoRole: \
+    aAtkObj->role = atkRole; \
+    break;
+
+  switch (accWrap->Role()) {
+#include "RoleMap.h"
+    default:
+      MOZ_NOT_REACHED("Unknown role.");
+      aAtkObj->role = ATK_ROLE_UNKNOWN;
+  };
+
+#undef ROLE
+
+  return aAtkObj->role;
 }
 
 AtkAttributeSet*
@@ -1389,21 +1402,4 @@ nsAccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
     g_free(signal_name);
 
     return NS_OK;
-}
-
-PRUint32
-nsAccessibleWrap::AtkRoleFor(role aRole)
-{
-#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role) \
-  case roles::geckoRole: \
-    return atkRole;
-
-  switch (aRole) {
-#include "RoleMap.h"
-    default:
-      MOZ_NOT_REACHED("Unknown role.");
-      return ATK_ROLE_UNKNOWN;
-  }
-
-#undef ROLE
 }
