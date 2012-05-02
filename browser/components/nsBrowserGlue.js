@@ -68,9 +68,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "webappsUI", 
                                   "resource:///modules/webappsUI.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
-                                  "resource:///modules/PageThumbs.jsm");
-
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
@@ -361,8 +358,6 @@ BrowserGlue.prototype = {
     // Initialize webapps UI
     webappsUI.init();
 
-    PageThumbs.init();
-
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
   },
 
@@ -384,7 +379,6 @@ BrowserGlue.prototype = {
   _onProfileShutdown: function BG__onProfileShutdown() {
     this._shutdownPlaces();
     this._sanitizer.onShutdown();
-    PageThumbs.uninit();
   },
 
   // All initial windows have opened.
