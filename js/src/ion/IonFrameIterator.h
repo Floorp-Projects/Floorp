@@ -113,6 +113,8 @@ class IonFrameIterator
     }
     bool isFunctionFrame() const;
 
+    bool isConstructing(IonActivation *activation) const;
+
     void *calleeToken() const;
     JSFunction *callee() const;
     JSFunction *maybeCallee() const;
@@ -135,8 +137,8 @@ class IonFrameIterator
 
     // Functions used to iterate on frames. When prevType is IonFrame_Entry,
     // the current frame is the last frame.
-    inline bool more() const {
-        return type_ != IonFrame_Entry;
+    inline bool done() const {
+        return type_ == IonFrame_Entry;
     }
     IonFrameIterator &operator++();
 
@@ -165,7 +167,7 @@ class IonActivationIterator
 
     IonActivationIterator &operator++();
 
-    IonActivation *activation() {
+    IonActivation *activation() const {
         return activation_;
     }
     uint8 *top() const {
@@ -240,6 +242,8 @@ class InlineFrameIterator
         return si_;
     }
     bool isFunctionFrame() const;
+    bool isConstructing(IonActivation *activation) const;
+    JSObject *thisObject() const;
     InlineFrameIterator operator++();
 };
 
