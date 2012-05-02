@@ -179,12 +179,6 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
   }
 });
 
-XPCOMUtils.defineLazyGetter(this, "DeveloperToolbar", function() {
-  let tmp = {};
-  Cu.import("resource:///modules/devtools/DeveloperToolbar.jsm", tmp);
-  return new tmp.DeveloperToolbar(window, document.getElementById("developer-toolbar"));
-});
-
 XPCOMUtils.defineLazyGetter(this, "InspectorUI", function() {
   let tmp = {};
   Cu.import("resource:///modules/inspector.jsm", tmp);
@@ -1702,16 +1696,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
       setUrlAndSearchBarWidthForConditionalForwardButton();
   });
 
-  // Enable developer toolbar?
-  let devToolbarEnabled = gPrefService.getBoolPref("devtools.toolbar.enabled");
-  if (devToolbarEnabled) {
-    document.getElementById("menu_devToolbar").hidden = false;
-    document.getElementById("Tools:DevToolbar").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_devToolbar").hidden = false;
-#endif
-  }
-
   // Enable Inspector?
   let enabled = gPrefService.getBoolPref("devtools.inspector.enabled");
   if (enabled) {
@@ -1720,7 +1704,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 #ifdef MENUBAR_CAN_AUTOHIDE
     document.getElementById("appmenu_pageInspect").hidden = false;
 #endif
-    document.getElementById("developer-toolbar-inspector").hidden = false;
   }
 
   // Enable Debugger?
@@ -1730,17 +1713,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     document.getElementById("Tools:Debugger").removeAttribute("disabled");
 #ifdef MENUBAR_CAN_AUTOHIDE
     document.getElementById("appmenu_debugger").hidden = false;
-#endif
-    document.getElementById("developer-toolbar-debugger").hidden = false;
-  }
-
-  // Enable Remote Debugger?
-  let enabled = gPrefService.getBoolPref("devtools.debugger.remote-enabled");
-  if (enabled) {
-    document.getElementById("menu_remoteDebugger").hidden = false;
-    document.getElementById("Tools:RemoteDebugger").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_remoteDebugger").hidden = false;
 #endif
   }
 
@@ -9308,6 +9280,10 @@ var StyleEditor = {
     return chromeWindow;
   }
 };
+
+function onWebDeveloperMenuShowing() {
+  document.getElementById("Tools:WebConsole").setAttribute("checked", HUDConsoleUI.getOpenHUD() != null);
+}
 
 
 XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
