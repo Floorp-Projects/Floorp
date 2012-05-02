@@ -102,6 +102,12 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+ifndef MOZ_NATIVE_PNG
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libpng/$(LIB_PREFIX)mozpng.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 ifndef MOZ_NATIVE_JPEG
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/media/libjpeg/$(LIB_PREFIX)mozjpeg.$(LIB_SUFFIX) \
