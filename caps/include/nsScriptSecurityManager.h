@@ -523,10 +523,6 @@ private:
                          JSStackFrame** frameResult,
                          nsresult* rv);
 
-    static bool
-    CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal,
-                       const char* aCapability, bool *checkValue);
-
     static void
     FormatCapabilityString(nsAString& aCapability);
 
