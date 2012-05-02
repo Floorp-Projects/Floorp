@@ -948,12 +948,6 @@ public class PanZoomController
     }
 
     @Override
-    public boolean onDown(MotionEvent motionEvent) {
-        sendPointToGecko("Gesture:ShowPress", motionEvent);
-        return false;
-    }
-
-    @Override
     public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
         GeckoApp.mFormAssistPopup.hide();
         sendPointToGecko("Gesture:SingleTap", motionEvent);
