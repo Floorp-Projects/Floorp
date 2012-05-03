@@ -525,13 +525,13 @@ public:
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
-                       bool aUseNearestFilter=false);
+                       TextureImage::Flags aFlags = TextureImage::NoFlags);
 
     // a function to generate Tiles for Tiled Texture Image
     virtual already_AddRefed<TextureImage>
     TileGenFunc(const nsIntSize& aSize,
                 TextureImage::ContentType aContentType,
-                bool aUseNearestFilter = false);
+                TextureImage::Flags aFlags = TextureImage::NoFlags);
     // hold a reference to the given surface
     // for the lifetime of this context.
     void HoldSurface(gfxASurface *aSurf) {
@@ -800,8 +800,9 @@ public:
                     const nsIntSize& aSize,
                     GLenum aWrapMode,
                     ContentType aContentType,
-                    GLContext* aContext)
-        : TextureImage(aSize, aWrapMode, aContentType)
+                    GLContext* aContext,
+                    TextureImage::Flags aFlags = TextureImage::NoFlags)
+        : TextureImage(aSize, aWrapMode, aContentType, aFlags)
         , mGLContext(aContext)
         , mUpdateFormat(gfxASurface::ImageFormatUnknown)
         , mSurface(nsnull)
@@ -1294,16 +1295,16 @@ already_AddRefed<TextureImage>
 GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
                                  TextureImage::ContentType aContentType,
                                  GLenum aWrapMode,
-                                 bool aUseNearestFilter)
+                                 TextureImage::Flags aFlags)
 {
-    nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType, aUseNearestFilter);
+    nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType, aFlags);
     return t.forget();
 }
 
 already_AddRefed<TextureImage>
 GLContextEGL::TileGenFunc(const nsIntSize& aSize,
                                  TextureImage::ContentType aContentType,
-                                 bool aUseNearestFilter)
+                                 TextureImage::Flags aFlags)
 {
   MakeCurrent();
 
@@ -1314,9 +1315,9 @@ GLContextEGL::TileGenFunc(const nsIntSize& aSize,
   fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
 
   nsRefPtr<TextureImageEGL> teximage =
-      new TextureImageEGL(texture, aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, this);
+      new TextureImageEGL(texture, aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, this, aFlags);
 
-  GLint texfilter = aUseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
+  GLint texfilter = aFlags & TextureImage::UseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
   fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
   fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
   fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
