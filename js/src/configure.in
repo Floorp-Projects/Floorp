@@ -173,40 +173,7 @@ MOZ_ARG_WITH_STRING(dist-dir,
     TOP_DIST=dist)
 AC_SUBST(TOP_DIST)
 
-dnl Default to MSVC for win32
-dnl ==============================================================
-if test -z "$CROSS_COMPILE"; then
-case "$target" in
-*-mingw*)
-    if test -z "$CC"; then CC=cl; fi
-    if test -z "$CXX"; then CXX=cl; fi
-    if test -z "$CPP"; then CPP="cl -E -nologo"; fi
-    if test -z "$CXXCPP"; then CXXCPP="cl -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
-    if test -z "$LD"; then LD=link; fi
-    if test -z "$AS"; then
-        case "${target_cpu}" in
-        i*86)
-            AS=ml;
-            ;;
-        x86_64)
-            AS=ml64;
-            ;;
-        esac
-    fi
-    if test -z "$MIDL"; then MIDL=midl; fi
-
-    # need override this flag since we don't use $(LDFLAGS) for this.
-    if test -z "$HOST_LDFLAGS" ; then
-        HOST_LDFLAGS=" "
-    fi
-    ;;
-*-darwin*)
-    # prefer gcc-4.2 to default cc on older xcode
-    MOZ_PATH_PROGS(CC, $CC gcc-4.2 gcc)
-    MOZ_PATH_PROGS(CXX, $CXX g++-4.2 g++)
-    ;;
-esac
-fi
+MOZ_DEFAULT_COMPILER
 
 COMPILE_ENVIRONMENT=1
 MOZ_ARG_DISABLE_BOOL(compile-environment,
