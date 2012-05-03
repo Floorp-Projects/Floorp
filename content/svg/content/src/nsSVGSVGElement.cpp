@@ -1107,7 +1107,8 @@ nsSVGSVGElement::InvalidateTransformNotifyFrame()
     nsISVGSVGFrame* svgframe = do_QueryFrame(frame);
     // might fail this check if we've failed conditional processing
     if (svgframe) {
-      svgframe->NotifyViewportChange();
+      svgframe->NotifyViewportOrTransformChanged(
+                  nsISVGChildFrame::TRANSFORM_CHANGED);
     }
   }
 }
