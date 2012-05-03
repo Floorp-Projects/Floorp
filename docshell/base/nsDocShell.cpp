@@ -1368,7 +1368,6 @@ nsDocShell::LoadURI(nsIURI * aURI,
                         shEntry = nsnull;
                     }
                     else if ((parentLoadType == LOAD_BYPASS_HISTORY) ||
-                             (parentLoadType == LOAD_ERROR_PAGE) ||
                               (shEntry && 
                                ((parentLoadType & LOAD_CMD_HISTORY) || 
                                 (parentLoadType == LOAD_RELOAD_NORMAL) || 
@@ -1378,6 +1377,12 @@ nsDocShell::LoadURI(nsIURI * aURI,
                         // frame too, so that the child frame will also
                         // avoid getting into history. 
                         loadType = parentLoadType;
+                    }
+                    else if (parentLoadType == LOAD_ERROR_PAGE) {
+                        // If the parent document is an error page, we don't
+                        // want to update global/session history. However,
+                        // this child frame is not an error page.
+                        loadType = LOAD_BYPASS_HISTORY;
                     }
                 }
                 else {
