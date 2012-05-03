@@ -178,6 +178,8 @@ expose-snapshot.patch: Make functions to add snapshots public, as well as allow 
 
 fix-build-with-Werror=return-type.patch: Fix builds with -Werror=return-type (bug 737909)
 
+avoid-extend-none.patch: Avoid incorrectly using EXTEND_NONE (bug 751668)
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
