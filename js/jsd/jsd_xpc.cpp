@@ -3358,7 +3358,6 @@ jsdService::~jsdService()
     mThrowHook = nsnull;
     mTopLevelHook = nsnull;
     mFunctionHook = nsnull;
-    gGCRunning = false;
     Off();
     gJsds = nsnull;
 }
