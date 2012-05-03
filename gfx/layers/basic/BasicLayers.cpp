@@ -74,6 +74,8 @@
 #define PIXMAN_DONT_DEFINE_STDINT
 #include "pixman.h"
 
+using namespace mozilla::gfx;
+
 namespace mozilla {
 namespace layers {
 
@@ -1946,19 +1948,40 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 
   bool pushedTargetOpaqueRect = false;
   nsRefPtr<gfxASurface> currentSurface = aTarget->CurrentSurface();
+  DrawTarget *dt = aTarget->GetDrawTarget();
   const nsIntRect& bounds = visibleRegion.GetBounds();
   
-  if (aTarget->IsCairo()) {
-    const gfxRect& targetOpaqueRect = currentSurface->GetOpaqueRect();
+  if (is2D) {
+    if (aTarget->IsCairo()) {
+      const gfxRect& targetOpaqueRect = currentSurface->GetOpaqueRect();
 
-    // Try to annotate currentSurface with a region of pixels that have been
-    // (or will be) painted opaque, if no such region is currently set.
-    if (targetOpaqueRect.IsEmpty() && visibleRegion.GetNumRects() == 1 &&
-        (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
-        !transform.HasNonAxisAlignedTransform()) {
-      currentSurface->SetOpaqueRect(
-          aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height)));
-      pushedTargetOpaqueRect = true;
+      // Try to annotate currentSurface with a region of pixels that have been
+      // (or will be) painted opaque, if no such region is currently set.
+      if (targetOpaqueRect.IsEmpty() && visibleRegion.GetNumRects() == 1 &&
+          (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+          !transform.HasNonAxisAlignedTransform()) {
+        currentSurface->SetOpaqueRect(
+            aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height)));
+        pushedTargetOpaqueRect = true;
+      }
+    } else {
+      const IntRect& targetOpaqueRect = dt->GetOpaqueRect();
+
+      // Try to annotate currentSurface with a region of pixels that have been
+      // (or will be) painted opaque, if no such region is currently set.
+      if (targetOpaqueRect.IsEmpty() && visibleRegion.GetNumRects() == 1 &&
+          (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+          !transform.HasNonAxisAlignedTransform()) {
+
+        Rect opaqueRect = dt->GetTransform().TransformBounds(
+          Rect(bounds.x, bounds.y, bounds.width, bounds.height));
+        opaqueRect.RoundIn();
+        IntRect intOpaqueRect;
+        if (gfxUtils::RectToIntRect(opaqueRect, &intOpaqueRect)) {
+          aTarget->GetDrawTarget()->SetOpaqueRect(intOpaqueRect);
+          pushedTargetOpaqueRect = true;
+        }
+      }
     }
   }
 
@@ -1970,7 +1993,11 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
                                                          gfxASurface::CONTENT_COLOR_ALPHA);
     if (!untransformedSurface) {
       if (pushedTargetOpaqueRect) {
-        currentSurface->SetOpaqueRect(gfxRect(0, 0, 0, 0));
+        if (aTarget->IsCairo()) {
+          currentSurface->SetOpaqueRect(gfxRect(0, 0, 0, 0));
+        } else {
+          dt->SetOpaqueRect(IntRect());
+        }
       }
       NS_ASSERTION(needsSaveRestore, "Should always need to restore with 3d transforms!");
       aTarget->Restore();
@@ -2085,7 +2112,11 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
   }
 
   if (pushedTargetOpaqueRect) {
-    currentSurface->SetOpaqueRect(gfxRect(0, 0, 0, 0));
+    if (aTarget->IsCairo()) {
+      currentSurface->SetOpaqueRect(gfxRect(0, 0, 0, 0));
+    } else {
+      dt->SetOpaqueRect(IntRect());
+    }
   }
 
   if (needsSaveRestore) {

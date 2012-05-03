@@ -574,6 +574,14 @@ gfxUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
   return gfxRect(aOut->x, aOut->y, aOut->width, aOut->height).IsEqualEdges(aIn);
 }
 
+bool
+gfxUtils::RectToIntRect(const Rect& aIn, IntRect* aOut)
+{
+  *aOut = IntRect(int32_t(aIn.X()), int32_t(aIn.Y()),
+                  int32_t(aIn.Width()), int32_t(aIn.Height()));
+  return Rect(aOut->x, aOut->y, aOut->width, aOut->height).IsEqualEdges(aIn);
+}
+
 void
 gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrImage::Data& aData,
                                          gfxASurface::gfxImageFormat& aSuggestedFormat,
