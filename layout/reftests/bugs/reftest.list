@@ -761,7 +761,6 @@ fails == 387344-1.html 387344-1-ref.html # scrolling rowgroups were removed in b
 == 387876-3b.html 387876-3-ref.html
 == 388026-1.html 388026-1-ref.html
 == 388367-1.html about:blank
-== 388980-1.html 388980-1-ref.html
 == 389074-1.html 389074-1-ref.html
 == 389224-1.html 389224-1-ref.html
 == 389224-2.html about:blank
