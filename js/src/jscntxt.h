@@ -628,6 +628,8 @@ struct JSRuntime : js::RuntimeFriendFields
     JSPreWrapCallback    preWrapObjectCallback;
     js::PreserveWrapperCallback preserveWrapperCallback;
 
+    js::ScriptFilenameTable scriptFilenameTable;
+
 #ifdef DEBUG
     size_t              noGCOrAllocationCheck;
 #endif

@@ -852,12 +852,21 @@ JSRuntime::init(uint32_t maxbytes)
     if (!stackSpace.init())
         return false;
 
+    if (!scriptFilenameTable.init())
+        return false;
+
     nativeStackBase = GetNativeStackBase();
     return true;
 }
 
 JSRuntime::~JSRuntime()
 {
+    /*
+     * Even though all objects in the compartment are dead, we may have keep
+     * some filenames around because of gcKeepAtoms.
+     */
+    FreeScriptFilenames(this);
+
     JS_ASSERT(onOwnerThread());
 
     delete_<JSC::ExecutableAllocator>(execAlloc_);

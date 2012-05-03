@@ -950,14 +950,37 @@ CallDestroyScriptHook(FreeOp *fop, JSScript *script);
 extern const char *
 SaveScriptFilename(JSContext *cx, const char *filename);
 
-extern void
-MarkScriptFilename(const char *filename);
+struct ScriptFilenameEntry
+{
+    bool marked;
+    char filename[1];
+
+    static ScriptFilenameEntry *fromFilename(const char *filename) {
+        return (ScriptFilenameEntry *)(filename - offsetof(ScriptFilenameEntry, filename));
+    }
+};
+
+struct ScriptFilenameHasher
+{
+    typedef const char *Lookup;
+    static HashNumber hash(const char *l) { return JS_HashString(l); }
+    static bool match(const ScriptFilenameEntry *e, const char *l) {
+        return strcmp(e->filename, l) == 0;
+    }
+};
+
+typedef HashSet<ScriptFilenameEntry *,
+                ScriptFilenameHasher,
+                SystemAllocPolicy> ScriptFilenameTable;
+
+inline void
+MarkScriptFilename(JSRuntime *rt, const char *filename);
 
 extern void
-SweepScriptFilenames(JSCompartment *comp);
+SweepScriptFilenames(JSRuntime *rt);
 
 extern void
-FreeScriptFilenames(JSCompartment *comp);
+FreeScriptFilenames(JSRuntime *rt);
 
 struct ScriptAndCounts
 {
