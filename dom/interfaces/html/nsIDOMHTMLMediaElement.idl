@@ -93,6 +93,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   readonly attribute double initialTime;
   readonly attribute double duration;
   readonly attribute boolean paused;
+  readonly attribute nsIDOMTimeRanges played;
   readonly attribute nsIDOMTimeRanges seekable;
   readonly attribute boolean ended;
   readonly attribute boolean mozAutoplayEnabled;

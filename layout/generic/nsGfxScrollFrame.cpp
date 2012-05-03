@@ -1333,17 +1333,19 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 const double kCurrentVelocityWeighting = 0.25;
 const double kStopDecelerationWeighting = 0.4;
 
-class nsGfxScrollFrameInner::AsyncScroll {
+// AsyncScroll has ref counting.
+class nsGfxScrollFrameInner::AsyncScroll : public nsARefreshObserver {
 public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  AsyncScroll():
-    mIsFirstIteration(true)
-    {}
+  AsyncScroll()
+    : mIsFirstIteration(true)
+    , mCallee(nsnull)
+  {}
 
   ~AsyncScroll() {
-    if (mScrollTimer) mScrollTimer->Cancel();
+    RemoveObserver();
   }
 
   nsPoint PositionAt(TimeStamp aTime);
@@ -1357,7 +1359,6 @@ public:
     return aTime > mStartTime + mDuration; // XXX or if we've hit the wall
   }
 
-  nsCOMPtr<nsITimer> mScrollTimer;
   TimeStamp mStartTime;
 
   // mPrevStartTime holds previous 3 timestamps for intervals averaging (to
@@ -1403,6 +1404,51 @@ protected:
                           nscoord aDestination);
 
   void InitDuration(nsIAtom *aOrigin);
+
+// The next section is observer/callback management
+// Bodies of WillRefresh and RefreshDriver contain nsGfxScrollFrameInner specific code.
+public:
+  NS_INLINE_DECL_REFCOUNTING(AsyncScroll)
+
+  /*
+   * Set a refresh observer for smooth scroll iterations (and start observing).
+   * Should be used at most once during the lifetime of this object.
+   * Return value: true on success, false otherwise.
+   */
+  bool SetRefreshObserver(nsGfxScrollFrameInner *aCallee) {
+    NS_ASSERTION(aCallee && !mCallee, "AsyncScroll::SetRefreshObserver - Invalid usage.");
+
+    if (!RefreshDriver(aCallee)->AddRefreshObserver(this, Flush_Display)) {
+      return false;
+    }
+
+    mCallee = aCallee;
+    return true;
+  }
+
+  virtual void WillRefresh(mozilla::TimeStamp aTime) {
+    // The callback may release "this".
+    // We don't access members after returning, so no need for KungFuDeathGrip.
+    nsGfxScrollFrameInner::AsyncScrollCallback(mCallee, aTime);
+  }
+
+private:
+  nsGfxScrollFrameInner *mCallee;
+
+  nsRefreshDriver* RefreshDriver(nsGfxScrollFrameInner* aCallee) {
+    return aCallee->mOuter->PresContext()->RefreshDriver();
+  }
+
+  /* 
+   * The refresh driver doesn't hold a reference to its observers,
+   *   so releasing this object can (and is) used to remove the observer on DTOR.
+   * Currently, this object is released once the scrolling ends.
+   */
+  void RemoveObserver() {
+    if (mCallee) {
+      RefreshDriver(mCallee)->RemoveRefreshObserver(this, Flush_Display);
+    }
+  }
 };
 
 nsPoint
@@ -1616,7 +1662,6 @@ nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
     delete gScrollFrameActivityTracker;
     gScrollFrameActivityTracker = nsnull;
   }
-  delete mAsyncScroll;
 
   if (mScrollActivityTimer) {
     mScrollActivityTimer->Cancel();
@@ -1651,28 +1696,23 @@ nsGfxScrollFrameInner::ClampScrollPosition(const nsPoint& aPt) const
 }
 
 /*
- * Callback function from timer used in nsGfxScrollFrameInner::ScrollTo
+ * Callback function from AsyncScroll, used in nsGfxScrollFrameInner::ScrollTo
  */
 void
-nsGfxScrollFrameInner::AsyncScrollCallback(nsITimer *aTimer, void* anInstance)
+nsGfxScrollFrameInner::AsyncScrollCallback(void* anInstance, mozilla::TimeStamp aTime)
 {
   nsGfxScrollFrameInner* self = static_cast<nsGfxScrollFrameInner*>(anInstance);
   if (!self || !self->mAsyncScroll)
     return;
 
   if (self->mAsyncScroll->mIsSmoothScroll) {
-    TimeStamp now = TimeStamp::Now();
-    nsPoint destination = self->mAsyncScroll->PositionAt(now);
-    if (self->mAsyncScroll->IsFinished(now)) {
-      delete self->mAsyncScroll;
+    nsPoint destination = self->mAsyncScroll->PositionAt(aTime);
+    if (self->mAsyncScroll->IsFinished(aTime)) {
       self->mAsyncScroll = nsnull;
     }
-
     self->ScrollToImpl(destination);
   } else {
-    delete self->mAsyncScroll;
     self->mAsyncScroll = nsnull;
-
     self->ScrollToImpl(self->mDestination);
   }
 }
@@ -1695,7 +1735,6 @@ nsGfxScrollFrameInner::ScrollToWithOrigin(nsPoint aScrollPosition,
   if (aMode == nsIScrollableFrame::INSTANT) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
     // async-scrolling process and do an instant scroll
-    delete mAsyncScroll;
     mAsyncScroll = nsnull;
     ScrollToImpl(mDestination);
     return;
@@ -1714,21 +1753,11 @@ nsGfxScrollFrameInner::ScrollToWithOrigin(nsPoint aScrollPosition,
     }
   } else {
     mAsyncScroll = new AsyncScroll;
-    mAsyncScroll->mScrollTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (!mAsyncScroll->mScrollTimer) {
-      delete mAsyncScroll;
+    if (!mAsyncScroll->SetRefreshObserver(this)) {
       mAsyncScroll = nsnull;
-      // allocation failed. Scroll the normal way.
+      // Observer setup failed. Scroll the normal way.
       ScrollToImpl(mDestination);
       return;
-    }
-    if (isSmoothScroll) {
-      mAsyncScroll->mScrollTimer->InitWithFuncCallback(
-        AsyncScrollCallback, this, 1000 / 60,
-        nsITimer::TYPE_REPEATING_SLACK);
-    } else {
-      mAsyncScroll->mScrollTimer->InitWithFuncCallback(
-        AsyncScrollCallback, this, 0, nsITimer::TYPE_ONE_SHOT);
     }
   }
 

@@ -82,13 +82,6 @@ public:
   NoteUsedByProcessType(GeckoProcessType aProcessType);
 
   static nsresult
-  GetDirectory(nsIFile** aDirectory);
-
-  static nsresult
-  GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
-                        nsIFile** aDirectory);
-
-  static nsresult
   LoadDatabaseInformation(mozIStorageConnection* aConnection,
                           nsIAtom* aDatabaseId,
                           PRUint64* aVersion,

@@ -197,6 +197,8 @@ interface nsIMemoryReporter : nsISupports
    *    This allows a fractional percentage to be shown even though |amount| is
    *    an integer.  E.g. if the actual percentage is 12.34%, |amount| should
    *    be 1234.
+   *
+   *    Values greater than 100% are allowed.
    */
   const PRInt32 UNITS_BYTES = 0;
   const PRInt32 UNITS_COUNT = 1;

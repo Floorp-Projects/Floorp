@@ -18,7 +18,7 @@ function runTest() {
   function execNext() {
     try {
       tests.next();
-      setTimeout(execNext, 0);
+      setTimeout(execNext, 20);
     } catch (e) {}
   }
   execNext();

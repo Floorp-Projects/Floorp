@@ -310,21 +310,26 @@ public class GeckoAppShell
 
         File cacheFile = getCacheDir(context);
         putenv("GRE_HOME=" + getGREDir(context).getPath());
-        File[] files = cacheFile.listFiles();
-        if (files != null) {
-            Iterator<File> cacheFiles = Arrays.asList(files).iterator();
-            while (cacheFiles.hasNext()) {
-                File libFile = cacheFiles.next();
-                if (libFile.getName().endsWith(".so"))
-                    libFile.delete();
-            }
-        }
 
         // setup the libs cache
         String linkerCache = System.getenv("MOZ_LINKER_CACHE");
-        if (System.getenv("MOZ_LINKER_CACHE") == null) {
-            GeckoAppShell.putenv("MOZ_LINKER_CACHE=" + cacheFile.getPath());
+        if (linkerCache == null) {
+            linkerCache = cacheFile.getPath();
+            GeckoAppShell.putenv("MOZ_LINKER_CACHE=" + linkerCache);
         }
+
+        if (GeckoApp.mAppContext != null &&
+            GeckoApp.mAppContext.linkerExtract()) {
+            GeckoAppShell.putenv("MOZ_LINKER_EXTRACT=1");
+            // Ensure that the cache dir is world-writable
+            File cacheDir = new File(linkerCache);
+            if (cacheDir.isDirectory()) {
+                cacheDir.setWritable(true, false);
+                cacheDir.setExecutable(true, false);
+                cacheDir.setReadable(true, false);
+            }
+        }
+
         sLibsSetup = true;
     }
 

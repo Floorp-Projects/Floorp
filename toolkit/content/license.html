@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+﻿h<!DOCTYPE HTML>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
@@ -28,26 +28,29 @@
 #ifdef APP_LICENSE_BLOCK
 #includesubst @APP_LICENSE_BLOCK@
 #endif
-    
+
     <p>All of the <b>source code</b> to this product is 
-       <a href="https://developer.mozilla.org/en/Mozilla_Source_Code_%28Mercurial%29">available</a> 
-       under licenses which are both 
+       available under licenses which are both 
        <a href="http://www.gnu.org/philosophy/free-sw.html">free</a> and 
        <a href="http://www.opensource.org/docs/definition.php">open source</a>.
-       Most of it is available under the Mozilla Public License 2.0 (MPL).
+#ifdef SOURCE_REPO
+#ifdef SOURCE_CHANGESET
+       The specific source code for this product is identified by the URL
+       <a href="@SOURCE_REPO@/rev/@SOURCE_CHANGESET@">@SOURCE_REPO@/rev/@SOURCE_CHANGESET@</a>,
+       and you can read 
+       <a href="https://developer.mozilla.org/en/Mozilla_Source_Code_%28Mercurial%29">instructions 
+       on how to download and build it for yourself</a>.
+#endif
+#endif
     </p>
 
-    <ul>
-      <li><a href="about:license#mpl">Mozilla Public License 2.0</a>
-      <ul>
-        <li><a href="http://www.mozilla.org/MPL/2.0/FAQ.html">MPL 2.0 FAQ</a></li>
-      </ul>
-      </li>
-    </ul>
-    
-    <p>The remainder of the software which is not under the MPL is available
-       under one of
-       a variety of other licenses. Those that require reproduction 
+    <p>More specifically, most of the source code is available under the 
+       <a href="about:license#mpl">Mozilla Public License 2.0</a> (MPL).
+       The MPL has a 
+       <a href="http://www.mozilla.org/MPL/2.0/FAQ.html">FAQ</a> to help
+       you understand it. The remainder of the software which is not 
+       under the MPL is available under one of a variety of other 
+       permissive licenses. Those that require reproduction 
        of the license text in the distribution are given below. 
        (Note: your copy of this product may not contain code covered by one 
        or more of the licenses listed here, depending on the exact product 
@@ -55,6 +58,9 @@
     </p>
     
     <ul>
+      <li><a href="about:license#mpl">Mozilla Public License 2.0</a>
+      <br><br>
+      </li>
       <li><a href="about:license#android">Android Open Source License</a></li>
       <li><a href="about:license#angle">ANGLE License</a></li>
       <li><a href="about:license#apache">Apache License 2.0</a></li>

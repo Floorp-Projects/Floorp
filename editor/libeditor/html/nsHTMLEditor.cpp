@@ -1846,17 +1846,13 @@ nsHTMLEditor::InsertNodeAtPoint(nsIDOMNode *aNode,
   NS_ENSURE_TRUE(ioOffset, NS_ERROR_NULL_POINTER);
   
   nsresult res = NS_OK;
-  nsAutoString tagName;
-  aNode->GetNodeName(tagName);
-  ToLowerCase(tagName);
   nsCOMPtr<nsIDOMNode> parent = *ioParent;
   nsCOMPtr<nsIDOMNode> topChild = *ioParent;
   nsCOMPtr<nsIDOMNode> tmp;
   PRInt32 offsetOfInsert = *ioOffset;
    
   // Search up the parent chain to find a suitable container      
-  while (!CanContainTag(parent, tagName))
-  {
+  while (!CanContain(parent, aNode)) {
     // If the current parent is a root (body or table element)
     // then go no further - we can't insert
     if (nsTextEditUtils::IsBody(parent) || nsHTMLEditUtils::IsTableElement(parent))
@@ -2254,8 +2250,8 @@ nsHTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList, cons
       nsCOMPtr<nsIDOMNode> topChild = node;
       nsCOMPtr<nsIDOMNode> tmp;
     
-      while ( !CanContainTag(parent, aListType))
-      {
+      nsCOMPtr<nsIAtom> listAtom = do_GetAtom(aListType);
+      while (!CanContainTag(parent, listAtom)) {
         parent->GetParentNode(getter_AddRefs(tmp));
         NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
         topChild = parent;
@@ -2398,8 +2394,8 @@ nsHTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
       nsCOMPtr<nsIDOMNode> topChild = node;
       nsCOMPtr<nsIDOMNode> tmp;
     
-      while ( !CanContainTag(parent, aBlockType))
-      {
+      nsCOMPtr<nsIAtom> blockAtom = do_GetAtom(aBlockType);
+      while (!CanContainTag(parent, blockAtom)) {
         parent->GetParentNode(getter_AddRefs(tmp));
         NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
         topChild = parent;
@@ -2479,9 +2475,7 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
         nsCOMPtr<nsIDOMNode> parent = node;
         nsCOMPtr<nsIDOMNode> topChild = node;
         nsCOMPtr<nsIDOMNode> tmp;
-        NS_NAMED_LITERAL_STRING(bq, "blockquote");
-        while ( !CanContainTag(parent, bq))
-        {
+        while (!CanContainTag(parent, nsGkAtoms::blockquote)) {
           parent->GetParentNode(getter_AddRefs(tmp));
           NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
           topChild = parent;
@@ -2497,7 +2491,8 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
 
         // make a blockquote
         nsCOMPtr<nsIDOMNode> newBQ;
-        res = CreateNode(bq, parent, offset, getter_AddRefs(newBQ));
+        res = CreateNode(NS_LITERAL_STRING("blockquote"), parent, offset,
+                         getter_AddRefs(newBQ));
         NS_ENSURE_SUCCESS(res, res);
         // put a space in it so layout will draw the list item
         res = selection->Collapse(newBQ,0);
@@ -3782,20 +3777,21 @@ nsHTMLEditor::EndOperation()
 }  
 
 bool 
-nsHTMLEditor::TagCanContainTag(const nsAString& aParentTag, const nsAString& aChildTag)  
+nsHTMLEditor::TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag)
 {
+  MOZ_ASSERT(aParentTag && aChildTag);
+
   nsIParserService* parserService = nsContentUtils::GetParserService();
 
   PRInt32 childTagEnum;
   // XXX Should this handle #cdata-section too?
-  if (aChildTag.EqualsLiteral("#text")) {
+  if (aChildTag == nsGkAtoms::textTagName) {
     childTagEnum = eHTMLTag_text;
-  }
-  else {
-    childTagEnum = parserService->HTMLStringTagToId(aChildTag);
+  } else {
+    childTagEnum = parserService->HTMLAtomTagToId(aChildTag);
   }
 
-  PRInt32 parentTagEnum = parserService->HTMLStringTagToId(aParentTag);
+  PRInt32 parentTagEnum = parserService->HTMLAtomTagToId(aParentTag);
   NS_ASSERTION(parentTagEnum < NS_HTML_TAG_MAX,
                "Fix the caller, this type of node can never contain children.");
 

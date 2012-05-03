@@ -100,7 +100,7 @@ else ifeq (WINNT,$(OS_TARGET))
 CPPSRCS += \
   WindowsHal.cpp \
   WindowsBattery.cpp \
-  FallbackSensor.cpp \
+  WindowsSensor.cpp \
   $(NULL)
 else ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \

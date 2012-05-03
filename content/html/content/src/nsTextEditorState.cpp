@@ -84,6 +84,10 @@ public:
   }
 
   NS_IMETHOD Run() {
+    if (!mTextEditorState) {
+      return NS_OK;
+    }
+
     if (mFrame) {
       // SetSelectionRange leads to Selection::AddRange which flushes Layout -
       // need to block script to avoid nested PrepareEditor calls (bug 642800).
@@ -105,6 +109,7 @@ public:
   // Let the text editor tell us we're no longer relevant - avoids use of nsWeakFrame
   void Revoke() {
     mFrame = nsnull;
+    mTextEditorState = nsnull;
   }
 
 private:

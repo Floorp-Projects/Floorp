@@ -13,7 +13,7 @@ ReusableTileStoreOGL::~ReusableTileStoreOGL()
     return;
 
   mContext->MakeCurrent();
-  for (int i = 0; i < mTiles.Length(); i++)
+  for (PRUint32 i = 0; i < mTiles.Length(); i++)
     mContext->fDeleteTextures(1, &mTiles[i]->mTexture.mTextureHandle);
   mTiles.Clear();
 }
@@ -36,7 +36,7 @@ ReusableTileStoreOGL::HarvestTiles(TiledLayerBufferOGL* aVideoMemoryTiledBuffer,
   // Iterate over existing harvested tiles and release any that are contained
   // within the new valid region, or that fall outside of the layer.
   mContext->MakeCurrent();
-  for (int i = 0; i < mTiles.Length();) {
+  for (PRUint32 i = 0; i < mTiles.Length();) {
     ReusableTiledTextureOGL* tile = mTiles[i];
 
     nsIntRect tileRect;
@@ -122,8 +122,8 @@ ReusableTileStoreOGL::HarvestTiles(TiledLayerBufferOGL* aVideoMemoryTiledBuffer,
         TiledTexture removedTile;
         if (aVideoMemoryTiledBuffer->RemoveTile(nsIntPoint(x, y), removedTile)) {
           ReusableTiledTextureOGL* reusedTile =
-            new ReusableTiledTextureOGL(removedTile, tileRegion, tileSize,
-                                        aOldResolution);
+            new ReusableTiledTextureOGL(removedTile, nsIntPoint(x, y), tileRegion,
+                                        tileSize, aOldResolution);
           mTiles.AppendElement(reusedTile);
         }
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
@@ -163,7 +163,7 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
                                 const nsIntPoint& aRenderOffset)
 {
   // Render old tiles to fill in gaps we haven't had the time to render yet.
-  for (size_t i = 0; i < mTiles.Length(); i++) {
+  for (PRUint32 i = 0; i < mTiles.Length(); i++) {
     ReusableTiledTextureOGL* tile = mTiles[i];
 
     // Work out the scaling factor in case of resolution differences.
@@ -196,12 +196,11 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
     //     semi-transparent layers.
     //     Similarly, if we have multiple tiles covering the same area, we will
     //     end up with rendering artifacts if the aLayer isn't opaque.
-    nsIntRect tileRect = tile->mTileRegion.GetBounds();
-    uint16_t tileStartX = tileRect.x % tile->mTileSize;
-    uint16_t tileStartY = tileRect.y % tile->mTileSize;
-    nsIntRect textureRect(tileStartX, tileStartY, tileRect.width, tileRect.height);
+    uint16_t tileStartX = tile->mTileOrigin.x % tile->mTileSize;
+    uint16_t tileStartY = tile->mTileOrigin.y % tile->mTileSize;
+    nsIntPoint tileOffset(tile->mTileOrigin.x - tileStartX, tile->mTileOrigin.y - tileStartY);
     nsIntSize textureSize(tile->mTileSize, tile->mTileSize);
-    aLayer->RenderTile(tile->mTexture, transform, aRenderOffset, tileRect, textureRect, textureSize);
+    aLayer->RenderTile(tile->mTexture, transform, aRenderOffset, tile->mTileRegion, tileOffset, textureSize);
   }
 }
 

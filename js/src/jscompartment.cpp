@@ -210,7 +210,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
      * we parent all wrappers to the global object in their home compartment.
      * This loses us some transparency, and is generally very cheesy.
      */
-    JSObject *global;
+    RootedVarObject global(cx);
     if (cx->hasfp()) {
         global = &cx->fp()->global();
     } else {
@@ -271,11 +271,11 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(*vp)) {
         *vp = p->value;
         if (vp->isObject()) {
-            JSObject *obj = &vp->toObject();
+            RootedVarObject obj(cx, &vp->toObject());
             JS_ASSERT(obj->isCrossCompartmentWrapper());
             if (global->getClass() != &dummy_class && obj->getParent() != global) {
                 do {
-                    if (!obj->setParent(cx, global))
+                    if (!JSObject::setParent(cx, obj, global))
                         return false;
                     obj = obj->getProto();
                 } while (obj && obj->isCrossCompartmentWrapper());
@@ -285,7 +285,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     }
 
     if (vp->isString()) {
-        Value orig = *vp;
+        RootedVarValue orig(cx, *vp);
         JSString *str = vp->toString();
         const jschar *chars = str->getChars(cx);
         if (!chars)
@@ -297,7 +297,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         return crossCompartmentWrappers.put(orig, *vp);
     }
 
-    JSObject *obj = &vp->toObject();
+    RootedVarObject obj(cx, &vp->toObject());
 
     /*
      * Recurse to wrap the prototype. Long prototype chains will run out of
@@ -309,8 +309,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
      * here (since Object.prototype->parent->proto leads to Object.prototype
      * itself).
      */
-    JSObject *proto = obj->getProto();
-    if (!wrap(cx, &proto))
+    RootedVarObject proto(cx, obj->getProto());
+    if (!wrap(cx, proto.address()))
         return false;
 
     /*
@@ -318,7 +318,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
      * the wrap hook to reason over what wrappers are currently applied
      * to the object.
      */
-    JSObject *wrapper = cx->runtime->wrapObjectCallback(cx, obj, proto, global, flags);
+    RootedVarObject wrapper(cx, cx->runtime->wrapObjectCallback(cx, obj, proto, global, flags));
     if (!wrapper)
         return false;
 
@@ -330,7 +330,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (!crossCompartmentWrappers.put(GetProxyPrivate(wrapper), *vp))
         return false;
 
-    if (!wrapper->setParent(cx, global))
+    if (!JSObject::setParent(cx, wrapper, global))
         return false;
     return true;
 }
@@ -338,20 +338,20 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 bool
 JSCompartment::wrap(JSContext *cx, JSString **strp)
 {
-    AutoValueRooter tvr(cx, StringValue(*strp));
-    if (!wrap(cx, tvr.addr()))
+    RootedVarValue value(cx, StringValue(*strp));
+    if (!wrap(cx, value.address()))
         return false;
-    *strp = tvr.value().toString();
+    *strp = value.reference().toString();
     return true;
 }
 
 bool
 JSCompartment::wrap(JSContext *cx, HeapPtrString *strp)
 {
-    AutoValueRooter tvr(cx, StringValue(*strp));
-    if (!wrap(cx, tvr.addr()))
+    RootedVarValue value(cx, StringValue(*strp));
+    if (!wrap(cx, value.address()))
         return false;
-    *strp = tvr.value().toString();
+    *strp = value.reference().toString();
     return true;
 }
 
@@ -360,10 +360,10 @@ JSCompartment::wrap(JSContext *cx, JSObject **objp)
 {
     if (!*objp)
         return true;
-    AutoValueRooter tvr(cx, ObjectValue(**objp));
-    if (!wrap(cx, tvr.addr()))
+    RootedVarValue value(cx, ObjectValue(**objp));
+    if (!wrap(cx, value.address()))
         return false;
-    *objp = &tvr.value().toObject();
+    *objp = &value.reference().toObject();
     return true;
 }
 
@@ -372,10 +372,10 @@ JSCompartment::wrapId(JSContext *cx, jsid *idp)
 {
     if (JSID_IS_INT(*idp))
         return true;
-    AutoValueRooter tvr(cx, IdToValue(*idp));
-    if (!wrap(cx, tvr.addr()))
+    RootedVarValue value(cx, IdToValue(*idp));
+    if (!wrap(cx, value.address()))
         return false;
-    return ValueToId(cx, tvr.value(), idp);
+    return ValueToId(cx, value.reference(), idp);
 }
 
 bool

@@ -1734,7 +1734,7 @@ date_setTime(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, date_setTime, &DateClass, &ok);
+    RootedVarObject obj(cx, NonGenericMethodGuard(cx, args, date_setTime, &DateClass, &ok));
     if (!obj)
         return ok;
 
@@ -1756,7 +1756,7 @@ date_makeTime(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, native, &DateClass, &ok);
+    RootedVarObject obj(cx, NonGenericMethodGuard(cx, args, native, &DateClass, &ok));
     if (!obj)
         return ok;
 
@@ -1900,7 +1900,7 @@ date_makeDate(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, native, &DateClass, &ok);
+    RootedVarObject obj(cx, NonGenericMethodGuard(cx, args, native, &DateClass, &ok));
     if (!obj)
         return ok;
 
@@ -2018,7 +2018,7 @@ date_setYear(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, date_setYear, &DateClass, &ok);
+    RootedVarObject obj(cx, NonGenericMethodGuard(cx, args, date_setYear, &DateClass, &ok));
     if (!obj)
         return ok;
 

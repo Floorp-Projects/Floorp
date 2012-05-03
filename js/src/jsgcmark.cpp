@@ -963,15 +963,17 @@ GCMarker::restoreValueArray(JSObject *obj, void **vpp, void **endp)
         HeapSlot *vp = obj->fixedSlots();
         unsigned nfixed = obj->numFixedSlots();
         unsigned nslots = obj->slotSpan();
-        if (start < nfixed) {
-            *vpp = vp + start;
-            *endp = vp + Min(nfixed, nslots);
-        } else if (start < nslots) {
-            *vpp = obj->slots + start - nfixed;
-            *endp = obj->slots + nslots - nfixed;
+        if (start < nslots) {
+            if (start < nfixed) {
+                *vpp = vp + start;
+                *endp = vp + Min(nfixed, nslots);
+            } else {
+                *vpp = obj->slots + start - nfixed;
+                *endp = obj->slots + nslots - nfixed;
+            }
         } else {
             /* The object shrunk, in which case no scanning is needed. */
-            *vpp = *endp = obj->slots;
+            *vpp = *endp = vp;
         }
     }
 

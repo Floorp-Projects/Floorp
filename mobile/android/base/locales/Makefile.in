@@ -54,14 +54,21 @@ BRANDPATH = $(call core_abspath,$(DEPTH)/dist/bin/chrome/$(AB_CD)/locale/brandin
 else
 BRANDPATH = $(call core_abspath,$(DIST)/xpi-stage/$(XPI_NAME)/chrome/$(AB_CD)/locale/branding/brand.dtd)
 endif
+$(warnIfEmpty,AB_CD) # todo: $(errorIfEmpty )
 
 DEFINES += -DAB_CD=$(AB_CD)
 
-libs realchrome:: ../res/values/strings.xml ;
+dir-res-values := ../res/values
+strings-xml    := $(dir-res-values)/strings.xml
+strings-xml-in := $(srcdir)/../strings.xml.in
+
+GARBAGE += $(strings-xml)
+
+libs realchrome:: $(strings-xml)
 
 chrome-%:: AB_CD=$*
 chrome-%:: 
-	@$(MAKE) ../res/values-$(AB_rCD)/strings.xml AB_CD=$*
+	@$(MAKE) $(dir-res-values)-$(AB_rCD)/strings.xml AB_CD=$*
 
 # setup the path to bookmarks.inc. copied and tweaked version of MERGE_FILE from config/config.mk
 MOBILE_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/mobile/locales/en-US,$(call core_realpath,$(L10NBASEDIR))/$(AB_CD)/mobile)
@@ -75,14 +82,31 @@ else
 BOOKMARKSPATH = $(call core_abspath,$(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc)
 endif
 
-%/strings.xml: FORCE
-	$(NSINSTALL) -D $*
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
+# Determine the ../res/values[-*]/ path
+strings-xml-bypath  = $(filter %/strings.xml,$(MAKECMDGOALS))
+ifeq (,$(strip $(strings-xml-bypath)))
+  strings-xml-bypath = $(strings-xml)
+endif
+dir-strings-xml = $(patsubst %/,%,$(dir $(strings-xml-bypath)))
+
+strings-xml-preqs =\
+  $(strings-xml-in) \
+  $(BRANDPATH) \
+  $(STRINGSPATH) \
+  $(SYNCSTRINGSPATH) \
+  $(BOOKMARKSPATH) \
+  $(if $(IS_LANGUAGE_REPACK),FORCE) \
+  $(NULL)
+
+$(dir-strings-xml)/strings.xml: $(strings-xml-preqs)
+	$(NSINSTALL) -D $(dir-strings-xml)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+      $(DEFINES) \
 	  -DBRANDPATH="$(BRANDPATH)" \
 	  -DSTRINGSPATH="$(STRINGSPATH)" \
 	  -DSYNCSTRINGSPATH="$(SYNCSTRINGSPATH)" \
 	  -DBOOKMARKSPATH="$(BOOKMARKSPATH)" \
-	  $(srcdir)/../strings.xml.in \
+      $< \
 	  > $@
 
 include $(topsrcdir)/config/rules.mk

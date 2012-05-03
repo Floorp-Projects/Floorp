@@ -282,14 +282,6 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
                                rtStats->gcHeapChunkCleanDecommitted -
                                rtStats->gcHeapChunkDirtyDecommitted;
 
-    // Why 10000x?  100x because it's a percentage, and another 100x
-    // because nsIMemoryReporter requires that for percentage amounts so
-    // they can be fractional.
-    rtStats->gcHeapFragmentationPercentage = (rtStats->gcHeapChunkCleanUnused +
-                                              rtStats->gcHeapChunkDirtyUnused +
-                                              rtStats->gcHeapArenaUnused) * 10000 /
-                                              rtStats->gcHeapCommitted;
-
     return true;
 }
 

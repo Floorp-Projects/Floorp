@@ -358,10 +358,7 @@ StackFrame::functionPrologue(JSContext *cx)
     JS_ASSERT(isNonEvalFunctionFrame());
     JS_ASSERT(!isGeneratorFrame());
 
-    JSFunction *fun = this->fun();
-    JSScript *script = fun->script();
-
-    if (fun->isHeavyweight()) {
+    if (fun()->isHeavyweight()) {
         if (!CallObject::createForFunction(cx, this))
             return false;
     } else {
@@ -369,7 +366,7 @@ StackFrame::functionPrologue(JSContext *cx)
         scopeChain();
     }
 
-    if (script->nesting()) {
+    if (script()->nesting()) {
         JS_ASSERT(maintainNestingState());
         types::NestingPrologue(cx, this);
     }

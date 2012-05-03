@@ -110,27 +110,22 @@ nsRootAccessible::~nsRootAccessible()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIAccessible
+// nsAccessible
 
-/* readonly attribute AString name; */
-NS_IMETHODIMP
-nsRootAccessible::GetName(nsAString& aName)
+ENameValueFlag
+nsRootAccessible::Name(nsString& aName)
 {
   aName.Truncate();
 
-  if (!mDocument) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (mRoleMapEntry) {
-    nsAccessible::GetName(aName);
-    if (!aName.IsEmpty()) {
-      return NS_OK;
-    }
+    nsAccessible::Name(aName);
+    if (!aName.IsEmpty())
+      return eNameOK;
   }
 
   nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(mDocument);
-  return document->GetTitle(aName);
+  document->GetTitle(aName);
+  return eNameOK;
 }
 
 role

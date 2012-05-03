@@ -3,17 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const Ci = Components.interfaces;
-const nsIIndexedDatabaseManager =
-  Ci.nsIIndexedDatabaseManager;
-var idbManager = Components.classes["@mozilla.org/dom/indexeddb/manager;1"]
-                   .getService(nsIIndexedDatabaseManager);
-idbManager.initWindowless(this);
-// in xpcshell profile are not default
-do_get_profile();
-// oddly, if ProfD is requested from some worker thread first instead of the main thread it is crashing... so:
-var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-var file = dirSvc.get("ProfD", Ci.nsIFile);
+const { 'classes': Cc, 'interfaces': Ci } = Components;
 
 const DOMException = Ci.nsIDOMDOMException;
 const IDBCursor = Ci.nsIIDBCursor;
@@ -26,7 +16,12 @@ const IDBIndex = Ci.nsIIDBIndex
 const IDBObjectStore = Ci.nsIIDBObjectStore
 const IDBRequest = Ci.nsIIDBRequest
 
+// XPCShell does not get a profile by default.
+do_get_profile();
 
+var idbManager = Cc["@mozilla.org/dom/indexeddb/manager;1"].
+                 getService(Ci.nsIIndexedDatabaseManager);
+idbManager.initWindowless(this);
 
 function is(a, b, msg) {
   if(a != b)

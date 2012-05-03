@@ -213,26 +213,26 @@ NS_IMPL_RELEASE_INHERITED(nsDocAccessible, nsHyperTextAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
-NS_IMETHODIMP
-nsDocAccessible::GetName(nsAString& aName)
+ENameValueFlag
+nsDocAccessible::Name(nsString& aName)
 {
-  nsresult rv = NS_OK;
   aName.Truncate();
+
   if (mParent) {
-    rv = mParent->GetName(aName); // Allow owning iframe to override the name
+    mParent->Name(aName); // Allow owning iframe to override the name
   }
   if (aName.IsEmpty()) {
     // Allow name via aria-labelledby or title attribute
-    rv = nsAccessible::GetName(aName);
+    nsAccessible::Name(aName);
   }
   if (aName.IsEmpty()) {
-    rv = GetTitle(aName);   // Try title element
+    GetTitle(aName);   // Try title element
   }
   if (aName.IsEmpty()) {   // Last resort: use URL
-    rv = GetURL(aName);
+    GetURL(aName);
   }
-
-  return rv;
+ 
+  return eNameOK;
 }
 
 // nsAccessible public method

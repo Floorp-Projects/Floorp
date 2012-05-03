@@ -190,3 +190,21 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports *aSubject,
     return NS_OK;
 }
 
+static PLDHashOperator
+UnmarkGrayObserverEntry(nsObserverList* aObserverList, void* aClosure)
+{
+    if (aObserverList) {
+        aObserverList->UnmarkGrayStrongObservers();
+    }
+    return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+nsObserverService::UnmarkGrayStrongObservers()
+{
+    NS_ENSURE_VALIDCALL
+
+    mObserverTopicTable.EnumerateEntries(UnmarkGrayObserverEntry, nsnull);
+
+    return NS_OK;
+}

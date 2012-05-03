@@ -1091,7 +1091,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
 }
 
 static bool
-IsDuckTypedErrorObject(JSContext *cx, JSObject *exnObject, const char **filename_strp)
+IsDuckTypedErrorObject(JSContext *cx, HandleObject exnObject, const char **filename_strp)
 {
     JSBool found;
     if (!JS_HasProperty(cx, exnObject, js_message_str, &found) || !found)
@@ -1115,10 +1115,9 @@ IsDuckTypedErrorObject(JSContext *cx, JSObject *exnObject, const char **filename
 JSBool
 js_ReportUncaughtException(JSContext *cx)
 {
-    JSObject *exnObject;
     jsval roots[6];
     JSErrorReport *reportp, report;
-    JSString *str;
+    RootedVarString str(cx);
 
     if (!JS_IsExceptionPending(cx))
         return true;
@@ -1136,6 +1135,7 @@ js_ReportUncaughtException(JSContext *cx)
      * need to root other intermediates, so allocate an operand stack segment
      * to protect all of these values.
      */
+    RootedVarObject exnObject(cx);
     if (JSVAL_IS_PRIMITIVE(exn)) {
         exnObject = NULL;
     } else {
@@ -1157,14 +1157,14 @@ js_ReportUncaughtException(JSContext *cx)
         (exnObject->isError() ||
          IsDuckTypedErrorObject(cx, exnObject, &filename_str)))
     {
-        JSString *name = NULL;
+        RootedVarString name(cx);
         if (JS_GetProperty(cx, exnObject, js_name_str, &roots[2]) &&
             JSVAL_IS_STRING(roots[2]))
         {
             name = JSVAL_TO_STRING(roots[2]);
         }
 
-        JSString *msg = NULL;
+        RootedVarString msg(cx);
         if (JS_GetProperty(cx, exnObject, js_message_str, &roots[3]) &&
             JSVAL_IS_STRING(roots[3]))
         {
@@ -1234,7 +1234,7 @@ js_ReportUncaughtException(JSContext *cx)
 }
 
 extern JSObject *
-js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope)
+js_CopyErrorObject(JSContext *cx, HandleObject errobj, HandleObject scope)
 {
     assertSameCompartment(cx, scope);
     JSExnPrivate *priv = GetExnPrivate(errobj);

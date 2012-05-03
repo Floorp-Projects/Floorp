@@ -1302,8 +1302,8 @@ class ScopeNameCompiler : public PICStubCompiler
   private:
     typedef Vector<Jump, 8> JumpList;
 
-    JSObject *scopeChain;
-    PropertyName *name;
+    RootedVarObject scopeChain;
+    RootedVarPropertyName name;
     GetPropHelper<ScopeNameCompiler> getprop;
     ScopeNameCompiler *thisFromCtor() { return this; }
 
@@ -1360,7 +1360,7 @@ class ScopeNameCompiler : public PICStubCompiler
     ScopeNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
                       PropertyName *name, VoidStubPIC stub)
       : PICStubCompiler("name", f, script, pic, JS_FUNC_TO_DATA_PTR(void *, stub)),
-        scopeChain(scopeChain), name(name),
+        scopeChain(f.cx, scopeChain), name(f.cx, name),
         getprop(f.cx, NULL, name, *thisFromCtor(), f)
     { }
 
@@ -1643,14 +1643,14 @@ class ScopeNameCompiler : public PICStubCompiler
 
 class BindNameCompiler : public PICStubCompiler
 {
-    JSObject *scopeChain;
-    PropertyName *name;
+    RootedVarObject scopeChain;
+    RootedVarPropertyName name;
 
   public:
     BindNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
                      PropertyName *name, VoidStubPIC stub)
       : PICStubCompiler("bind", f, script, pic, JS_FUNC_TO_DATA_PTR(void *, stub)),
-        scopeChain(scopeChain), name(name)
+        scopeChain(f.cx, scopeChain), name(f.cx, name)
     { }
 
     static void reset(Repatcher &repatcher, ic::PICInfo &pic)

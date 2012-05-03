@@ -60,6 +60,8 @@ CompositorParent::CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop, Pl
   : mWidget(aWidget)
   , mCurrentCompositeTask(NULL)
   , mPaused(false)
+  , mXScale(1.0)
+  , mYScale(1.0)
   , mIsFirstPaint(false)
   , mLayersUpdated(false)
   , mCompositorLoop(aMsgLoop)
@@ -244,9 +246,7 @@ CompositorParent::Composite()
     return;
   }
 
-#ifdef MOZ_WIDGET_ANDROID
   TransformShadowTree();
-#endif
 
   Layer* aLayer = mLayerManager->GetRoot();
   mozilla::layers::RenderTraceLayers(aLayer, "0000");
@@ -261,7 +261,6 @@ CompositorParent::Composite()
 #endif
 }
 
-#ifdef MOZ_WIDGET_ANDROID
 // Do a breadth-first search to find the first layer in the tree that is
 // scrollable.
 Layer*
@@ -292,7 +291,6 @@ CompositorParent::GetPrimaryScrollableLayer()
 
   return root;
 }
-#endif
 
 // Go down shadow layer tree, setting properties to match their non-shadow
 // counterparts.
@@ -314,7 +312,6 @@ SetShadowProperties(Layer* aLayer)
 void
 CompositorParent::TransformShadowTree()
 {
-#ifdef MOZ_WIDGET_ANDROID
   Layer* layer = GetPrimaryScrollableLayer();
   ShadowLayer* shadow = layer->AsShadowLayer();
   ContainerLayer* container = layer->AsContainerLayer();
@@ -329,19 +326,19 @@ CompositorParent::TransformShadowTree()
   if (mIsFirstPaint && metrics) {
     nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
     mContentSize = metrics->mContentSize;
-    mozilla::AndroidBridge::Bridge()->SetFirstPaintViewport(scrollOffset.x, scrollOffset.y,
-                                                            1/rootScaleX,
-                                                            mContentSize.width,
-                                                            mContentSize.height,
-                                                            metrics->mCSSContentSize.width,
-                                                            metrics->mCSSContentSize.height);
+    SetFirstPaintViewport(scrollOffset.x, scrollOffset.y,
+                          1/rootScaleX,
+                          mContentSize.width,
+                          mContentSize.height,
+                          metrics->mCSSContentSize.width,
+                          metrics->mCSSContentSize.height);
     mIsFirstPaint = false;
   } else if (metrics && (metrics->mContentSize != mContentSize)) {
     mContentSize = metrics->mContentSize;
-    mozilla::AndroidBridge::Bridge()->SetPageSize(1/rootScaleX, mContentSize.width,
-                                                  mContentSize.height,
-                                                  metrics->mCSSContentSize.width,
-                                                  metrics->mCSSContentSize.height);
+    SetPageSize(1/rootScaleX, mContentSize.width,
+                mContentSize.height,
+                metrics->mCSSContentSize.width,
+                metrics->mCSSContentSize.height);
   }
 
   // We synchronise the viewport information with Java after sending the above
@@ -353,8 +350,8 @@ CompositorParent::TransformShadowTree()
     displayPort.x += scrollOffset.x;
     displayPort.y += scrollOffset.y;
 
-    mozilla::AndroidBridge::Bridge()->SyncViewportInfo(displayPort, 1/rootScaleX, mLayersUpdated,
-                                                       mScrollOffset, mXScale, mYScale);
+    SyncViewportInfo(displayPort, 1/rootScaleX, mLayersUpdated,
+                     mScrollOffset, mXScale, mYScale);
     mLayersUpdated = false;
   }
 
@@ -381,6 +378,38 @@ CompositorParent::TransformShadowTree()
     ViewTransform treeTransform(nsIntPoint(0,0), mXScale, mYScale);
     shadow->SetShadowTransform(gfx3DMatrix(treeTransform) * currentTransform);
   }
+}
+
+void
+CompositorParent::SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom,
+                                        float aPageWidth, float aPageHeight,
+                                        float aCssPageWidth, float aCssPageHeight)
+{
+#ifdef MOZ_WIDGET_ANDROID
+  mozilla::AndroidBridge::Bridge()->SetFirstPaintViewport(aOffsetX, aOffsetY,
+                                                          aZoom, aPageWidth, aPageHeight,
+                                                          aCssPageWidth, aCssPageHeight);
+#endif
+}
+
+void
+CompositorParent::SetPageSize(float aZoom, float aPageWidth, float aPageHeight,
+                              float aCssPageWidth, float aCssPageHeight)
+{
+#ifdef MOZ_WIDGET_ANDROID
+  mozilla::AndroidBridge::Bridge()->SetPageSize(aZoom, aPageWidth, aPageHeight,
+                                                aCssPageWidth, aCssPageHeight);
+#endif
+}
+
+void
+CompositorParent::SyncViewportInfo(const nsIntRect& aDisplayPort,
+                                   float aDisplayResolution, bool aLayersUpdated,
+                                   nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
+{
+#ifdef MOZ_WIDGET_ANDROID
+  mozilla::AndroidBridge::Bridge()->SyncViewportInfo(aDisplayPort, aDisplayResolution, aLayersUpdated,
+                                                     aScrollOffset, aScaleX, aScaleY);
 #endif
 }
 

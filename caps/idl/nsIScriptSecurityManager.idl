@@ -41,7 +41,7 @@
 interface nsIURI;
 interface nsIChannel;
 
-[scriptable, uuid(50eda256-4dd2-4c7c-baed-96983910af9f)]
+[scriptable, uuid(3708aa92-e2d9-4fd1-9e46-edfa3eb5ebf5)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -227,30 +227,11 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      */
     void enableCapability(in string capability);
 
-    /**
-     * Remove 'capability' from the innermost frame of the currently
-     * executing script. Any setting of 'capability' from enclosing
-     * frames thus comes into effect.
-     */
-    void revertCapability(in string capability);
-
-    /**
-     * Disable 'capability' in the innermost frame of the currently executing
-     * script.
-     */
-    void disableCapability(in string capability);
-
     //////////////// Master Certificate Functions ////////////////////
     /**
      * Allow 'certificateID' to enable 'capability.' Can only be performed
      * by code signed by the system certificate.
      */
-    // XXXbz Capabilities can't have non-ascii chars?
-    // XXXbz ideally we'd pass a subjectName here too, and the nsISupports
-    // cert we're enabling for...
-    void setCanEnableCapability(in AUTF8String certificateFingerprint,
-                                in string capability,
-                                in short canEnable);
 
     ///////////////////////
     /**

@@ -114,66 +114,6 @@ void InitGfxDriverInfoShutdownObserver()
   observerService->AddObserver(obs, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 }
 
-extern "C" {
-  void StoreSpline(int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy);
-  void CrashSpline(double tolerance, int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy);
-}
-
-static int crash_ax;
-static int crash_ay;
-static int crash_bx;
-static int crash_by;
-static int crash_cx;
-static int crash_cy;
-static int crash_dx;
-static int crash_dy;
-
-void
-StoreSpline(int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy) {
-    crash_ax = ax;
-    crash_ay = ay;
-    crash_bx = bx;
-    crash_by = by;
-    crash_cx = cx;
-    crash_cy = cy;
-    crash_dx = dx;
-    crash_dy = dy;
-}
-
-void
-CrashSpline(double tolerance, int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy) {
-#if defined(MOZ_CRASHREPORTER)
-  static bool annotated;
-
-  if (!annotated) {
-    nsCAutoString note;
-
-    note.AppendPrintf("curve ");
-    note.AppendPrintf("%x ", crash_ax);
-    note.AppendPrintf("%x, ", crash_ay);
-    note.AppendPrintf("%x ", crash_bx);
-    note.AppendPrintf("%x, ", crash_by);
-    note.AppendPrintf("%x ", crash_cx);
-    note.AppendPrintf("%x, ", crash_cy);
-    note.AppendPrintf("%x ", crash_dx);
-    note.AppendPrintf("%x\n", crash_dy);
-    note.AppendPrintf("crv-crash(%f): ", tolerance);
-    note.AppendPrintf("%x ", ax);
-    note.AppendPrintf("%x, ", ay);
-    note.AppendPrintf("%x ", bx);
-    note.AppendPrintf("%x, ", by);
-    note.AppendPrintf("%x ", cx);
-    note.AppendPrintf("%x, ", cy);
-    note.AppendPrintf("%x ", dx);
-    note.AppendPrintf("%x\n", dy);
-
-    CrashReporter::AppendAppNotesToCrashReport(note);
-    annotated = true;
-  }
-#endif
-}
-
-
 using namespace mozilla::widget;
 using namespace mozilla;
 

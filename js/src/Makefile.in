@@ -606,10 +606,14 @@ ifneq ($(OS_ARCH),WINNT) # FIXME: this should be made work on Windows too.
 #check:: check-malloc-function-usage FIXME: disable on JM until closer to merge time.
 endif
 
+ifndef MOZ_ASAN
+JITTESTPARAMS="--valgrind"
+endif
+
 JITFLAGS = ,m,am,amd,n,mn,amn,amdn,mdn
 check-jit-test::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
-	        --valgrind --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
+	        --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(JITTESTPARAMS) $(DIST)/bin/js$(BIN_SUFFIX)
 
 check:: check-jit-test
 

@@ -170,6 +170,7 @@ struct WrapperHasher
     typedef Value Lookup;
 
     static HashNumber hash(Value key) {
+        JS_ASSERT(!IsPoisonedValue(key));
         uint64_t bits = JSVAL_TO_IMPL(key).asBits;
         return uint32_t(bits) ^ uint32_t(bits >> 32);
     }
@@ -582,10 +583,10 @@ class AutoCompartment
 class ErrorCopier
 {
     AutoCompartment &ac;
-    JSObject *scope;
+    RootedVarObject scope;
 
   public:
-    ErrorCopier(AutoCompartment &ac, JSObject *scope) : ac(ac), scope(scope) {
+    ErrorCopier(AutoCompartment &ac, JSObject *scope) : ac(ac), scope(ac.context, scope) {
         JS_ASSERT(scope->compartment() == ac.origin);
     }
     ~ErrorCopier();

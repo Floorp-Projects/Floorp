@@ -133,6 +133,12 @@ tier_platform_dirs += \
 		$(NULL)
 endif
 
+ifdef MOZ_OPUS
+tier_platform_dirs += \
+  media/libopus \
+  $(NULL)
+endif
+
 ifdef MOZ_WEBM
 tier_platform_dirs += media/libnestegg
 ifndef MOZ_NATIVE_LIBVPX
@@ -263,10 +269,6 @@ ifndef MOZ_ENABLE_LIBCONIC
 ifdef MOZ_ENABLE_DBUS
 tier_platform_dirs    += toolkit/system/dbus
 endif
-endif
-
-ifdef MOZ_LEAKY
-tier_platform_dirs        += tools/leaky
 endif
 
 ifdef MOZ_MAPINFO

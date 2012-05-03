@@ -108,7 +108,6 @@ public:
   nsresult GetDrawingModel(PRInt32* aModel);
   nsresult IsRemoteDrawingCoreAnimation(bool* aDrawing);
   nsresult GetJSObject(JSContext *cx, JSObject** outObject);
-  nsresult DefineJavaProperties();
   bool ShouldCache();
   nsresult IsWindowless(bool* isWindowless);
   nsresult AsyncSetWindow(NPWindow* window);

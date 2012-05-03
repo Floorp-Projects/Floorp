@@ -93,8 +93,8 @@ function runTest() {
         }
         // Revert the effect.
         sendTouchpadScrollMotion(scrollbox, -1, ctrlKey, isMomentum);
-        setTimeout(nextTest, 0);
-      }, 0);
+        setTimeout(nextTest, 20);
+      }, 20);
     }
     nextTest();
   }, win);

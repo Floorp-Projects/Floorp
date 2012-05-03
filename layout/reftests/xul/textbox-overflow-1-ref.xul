@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!-- bug 749658 - The cropped label should *not* cause a scroll bar to appear.
+     If it does, the scrollbars in the testcase and reference will differ
+     because the total scroll-overflow extent will be different. -->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="left">
+  <hbox width="150px" style="overflow: scroll">
+    <label value="A very long label for a small item"
+           width="120px" crop="right"/>
+  </hbox>
+</window>

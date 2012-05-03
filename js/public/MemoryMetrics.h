@@ -122,7 +122,6 @@ struct RuntimeStats
       , gcHeapChunkDirtyDecommitted(0)
       , gcHeapArenaUnused(0)
       , gcHeapChunkAdmin(0)
-      , gcHeapFragmentationPercentage(0)
       , totalObjects(0)
       , totalShapes(0)
       , totalScripts(0)
@@ -154,7 +153,6 @@ struct RuntimeStats
     size_t gcHeapChunkDirtyDecommitted;
     size_t gcHeapArenaUnused;
     size_t gcHeapChunkAdmin;
-    size_t gcHeapFragmentationPercentage;
     size_t totalObjects;
     size_t totalShapes;
     size_t totalScripts;

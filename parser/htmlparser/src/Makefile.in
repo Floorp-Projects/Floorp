@@ -52,7 +52,6 @@ LIBXUL_LIBRARY = 1
 
 
 SHARED_LIBRARY_LIBS = \
-		$(DEPTH)/parser/expat/lib/$(LIB_PREFIX)mozexpat_s.$(LIB_SUFFIX) \
 		$(DEPTH)/parser/xml/src/$(LIB_PREFIX)saxp.$(LIB_SUFFIX) \
 		$(NULL)
 

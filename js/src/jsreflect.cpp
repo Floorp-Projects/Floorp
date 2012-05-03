@@ -3102,6 +3102,8 @@ ASTSerializer::functionBody(ParseNode *pn, TokenPos *pos, Value *dst)
 static JSBool
 reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
 {
+    cx->runtime->gcExactScanningEnabled = false;
+
     if (argc < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "Reflect.parse", "0", "s");

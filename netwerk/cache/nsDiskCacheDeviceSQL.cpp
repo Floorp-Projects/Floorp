@@ -73,7 +73,6 @@
 using namespace mozilla;
 
 static const char OFFLINE_CACHE_DEVICE_ID[] = { "offline" };
-static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 
 #define LOG(args) CACHE_LOG_DEBUG(args)
 
@@ -821,7 +820,7 @@ private:
  * nsOfflineCacheDevice
  */
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsOfflineCacheDevice, nsIApplicationCacheService)
+NS_IMPL_THREADSAFE_ISUPPORTS0(nsOfflineCacheDevice)
 
 nsOfflineCacheDevice::nsOfflineCacheDevice()
   : mDB(nsnull)
@@ -984,23 +983,6 @@ nsOfflineCacheDevice::DeleteData(nsCacheEntry *entry)
 /**
  * nsCacheDevice implementation
  */
-
-/* static */
-nsOfflineCacheDevice *
-nsOfflineCacheDevice::GetInstance()
-{
-  nsresult rv;
-  nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  nsICacheService *iservice = static_cast<nsICacheService*>(serv.get());
-  nsCacheService *cacheService = static_cast<nsCacheService*>(iservice);
-  rv = cacheService->CreateOfflineDevice();
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  NS_IF_ADDREF(cacheService->mOfflineDevice);
-  return cacheService->mOfflineDevice;
-}
 
 // This struct is local to nsOfflineCacheDevice::Init, but ISO C++98 doesn't
 // allow a template (mozilla::ArrayLength) to be instantiated based on a local
@@ -2055,7 +2037,7 @@ nsOfflineCacheDevice::GetUsage(const nsACString &clientID,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsOfflineCacheDevice::GetGroups(PRUint32 *count,
                                  char ***keys)
 {
@@ -2065,7 +2047,7 @@ nsOfflineCacheDevice::GetGroups(PRUint32 *count,
   return RunSimpleQuery(mStatement_EnumerateGroups, 0, count, keys);
 }
 
-NS_IMETHODIMP
+nsresult
 nsOfflineCacheDevice::GetGroupsTimeOrdered(PRUint32 *count,
 					   char ***keys)
 {
@@ -2113,7 +2095,7 @@ nsOfflineCacheDevice::RunSimpleQuery(mozIStorageStatement * statement,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsOfflineCacheDevice::CreateApplicationCache(const nsACString &group,
                                              nsIApplicationCache **out)
 {
@@ -2151,7 +2133,7 @@ nsOfflineCacheDevice::CreateApplicationCache(const nsACString &group,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsOfflineCacheDevice::GetApplicationCache(const nsACString &clientID,
                                           nsIApplicationCache **out)
 {
@@ -2186,7 +2168,7 @@ nsOfflineCacheDevice::GetApplicationCache(const nsACString &clientID,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsOfflineCacheDevice::GetActiveCache(const nsACString &group,
                                      nsIApplicationCache **out)
 {
@@ -2199,7 +2181,7 @@ nsOfflineCacheDevice::GetActiveCache(const nsACString &group,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsOfflineCacheDevice::DeactivateGroup(const nsACString &group)
 {
   nsCString *active = nsnull;
@@ -2248,7 +2230,7 @@ nsOfflineCacheDevice::CanUseCache(nsIURI *keyURI, const nsCString &clientID)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
                                              nsIApplicationCache **out)
 {
@@ -2321,7 +2303,7 @@ nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsOfflineCacheDevice::CacheOpportunistically(nsIApplicationCache* cache,
                                              const nsACString &key)
 {

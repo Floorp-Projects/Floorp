@@ -657,13 +657,10 @@ nsXULTreeGridRowAccessible::NativeRole()
   return roles::ROW;
 }
 
-NS_IMETHODIMP
-nsXULTreeGridRowAccessible::GetName(nsAString& aName)
+ENameValueFlag
+nsXULTreeGridRowAccessible::Name(nsString& aName)
 {
   aName.Truncate();
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
 
   // XXX: the row name sholdn't be a concatenation of cell names (bug 664384).
   nsCOMPtr<nsITreeColumn> column = nsCoreUtils::GetFirstSensibleColumn(mTree);
@@ -678,7 +675,7 @@ nsXULTreeGridRowAccessible::GetName(nsAString& aName)
     column = nsCoreUtils::GetNextSensibleColumn(column);
   }
 
-  return NS_OK;
+  return eNameOK;
 }
 
 nsAccessible*
@@ -844,13 +841,13 @@ nsXULTreeGridCellAccessible::FocusedChild()
   return nsnull;
 }
 
-NS_IMETHODIMP
-nsXULTreeGridCellAccessible::GetName(nsAString& aName)
+ENameValueFlag
+nsXULTreeGridCellAccessible::Name(nsString& aName)
 {
   aName.Truncate();
 
-  if (IsDefunct() || !mTreeView)
-    return NS_ERROR_FAILURE;
+  if (!mTreeView)
+    return eNameOK;
 
   mTreeView->GetCellText(mRow, mColumn, aName);
 
@@ -862,7 +859,7 @@ nsXULTreeGridCellAccessible::GetName(nsAString& aName)
   if (aName.IsEmpty())
     mTreeView->GetCellValue(mRow, mColumn, aName);
 
-  return NS_OK;
+  return eNameOK;
 }
 
 NS_IMETHODIMP

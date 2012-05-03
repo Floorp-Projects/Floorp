@@ -201,7 +201,7 @@ pm_construct(JSContext* cx, unsigned argc, jsval* vp)
     if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "u", &mask))
         return JS_FALSE;
 
-    JSObject *obj = JS_NewObjectForConstructor(cx, &pm_class, vp);
+    js::RootedVarObject obj(cx, JS_NewObjectForConstructor(cx, &pm_class, vp));
     if (!obj)
         return JS_FALSE;
 

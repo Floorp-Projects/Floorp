@@ -143,6 +143,12 @@ public:
 
     static bool      IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy policy);
 
+    /**
+     * Methods called by nsApplicationCacheService
+     */
+
+    nsresult GetOfflineDevice(nsOfflineCacheDevice ** aDevice);
+
     // This method may be called to release an object while the cache service
     // lock is being held.  If a non-null target is specified and the target
     // does not correspond to the current thread, then the release will be

@@ -79,7 +79,6 @@ public:
   NS_IMETHOD GetParent(nsIAccessible **aParent);
   NS_IMETHOD GetNextSibling(nsIAccessible **aNextSibling);
   NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
-  NS_IMETHOD GetName(nsAString &aName);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
   NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel, PRInt32 *aSimilarItemsInGroup,
                            PRInt32 *aPositionInGroup);
@@ -101,6 +100,7 @@ public:
   virtual bool IsPrimaryForNode() const;
 
   // nsAccessible
+  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
   virtual void ApplyARIAState(PRUint64* aState);
   virtual void Description(nsString& aDescription);
   virtual void Value(nsString& aValue);

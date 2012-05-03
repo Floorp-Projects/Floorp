@@ -265,8 +265,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
      * of setting it in case the user has changed the prototype to an object
      * that has a setter for this id.
      */
-    AutoValueRooter tvr(cx);
-    return js_DeleteGeneric(cx, &argsobj, id, tvr.addr(), false) &&
+    RootedVarValue value(cx);
+    return js_DeleteGeneric(cx, &argsobj, id, value.address(), false) &&
            js_DefineProperty(cx, &argsobj, id, vp, NULL, NULL, JSPROP_ENUMERATE);
 }
 
@@ -353,13 +353,13 @@ NormalArgumentsObject::optimizedGetElem(JSContext *cx, StackFrame *fp, const Val
 static JSBool
 args_enumerate(JSContext *cx, JSObject *obj)
 {
-    NormalArgumentsObject &argsobj = obj->asNormalArguments();
+    RootedVar<NormalArgumentsObject*> argsobj(cx, &obj->asNormalArguments());
 
     /*
      * Trigger reflection in args_resolve using a series of js_LookupProperty
      * calls.
      */
-    int argc = int(argsobj.initialLength());
+    int argc = int(argsobj->initialLength());
     for (int i = -2; i != argc; i++) {
         jsid id = (i == -2)
                   ? ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)
@@ -369,7 +369,7 @@ args_enumerate(JSContext *cx, JSObject *obj)
 
         JSObject *pobj;
         JSProperty *prop;
-        if (!js_LookupProperty(cx, &argsobj, id, &pobj, &prop))
+        if (!js_LookupProperty(cx, argsobj, id, &pobj, &prop))
             return false;
     }
     return true;
@@ -424,8 +424,8 @@ StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
      * args_delProperty to clear the corresponding reserved slot so the GC can
      * collect its value.
      */
-    AutoValueRooter tvr(cx);
-    return js_DeleteGeneric(cx, argsobj, id, tvr.addr(), strict) &&
+    RootedVarValue value(cx);
+    return js_DeleteGeneric(cx, argsobj, id, value.address(), strict) &&
            js_SetPropertyHelper(cx, argsobj, id, 0, vp, strict);
 }
 
@@ -434,7 +434,7 @@ strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSObje
 {
     *objp = NULL;
 
-    StrictArgumentsObject &argsobj = obj->asStrictArguments();
+    RootedVar<StrictArgumentsObject*> argsobj(cx, &obj->asStrictArguments());
 
     unsigned attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
     PropertyOp getter = StrictArgGetter;
@@ -442,12 +442,12 @@ strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSObje
 
     if (JSID_IS_INT(id)) {
         uint32_t arg = uint32_t(JSID_TO_INT(id));
-        if (arg >= argsobj.initialLength() || argsobj.isElementDeleted(arg))
+        if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg))
             return true;
 
         attrs |= JSPROP_ENUMERATE;
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
-        if (argsobj.hasOverriddenLength())
+        if (argsobj->hasOverriddenLength())
             return true;
     } else {
         if (!JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom) &&
@@ -456,15 +456,15 @@ strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSObje
         }
 
         attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
-        getter = CastAsPropertyOp(argsobj.global().getThrowTypeError());
-        setter = CastAsStrictPropertyOp(argsobj.global().getThrowTypeError());
+        getter = CastAsPropertyOp(argsobj->global().getThrowTypeError());
+        setter = CastAsStrictPropertyOp(argsobj->global().getThrowTypeError());
     }
 
     Value undef = UndefinedValue();
-    if (!js_DefineProperty(cx, &argsobj, id, &undef, getter, setter, attrs))
+    if (!js_DefineProperty(cx, argsobj, id, &undef, getter, setter, attrs))
         return false;
 
-    *objp = &argsobj;
+    *objp = argsobj;
     return true;
 }
 

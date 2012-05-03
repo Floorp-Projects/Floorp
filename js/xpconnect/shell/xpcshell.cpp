@@ -1507,29 +1507,6 @@ FullTrustSecMan::EnableCapability(const char *capability)
     return NS_OK;;
 }
 
-/* void revertCapability (in string capability); */
-NS_IMETHODIMP
-FullTrustSecMan::RevertCapability(const char *capability)
-{
-    return NS_OK;
-}
-
-/* void disableCapability (in string capability); */
-NS_IMETHODIMP
-FullTrustSecMan::DisableCapability(const char *capability)
-{
-    return NS_OK;
-}
-
-/* void setCanEnableCapability (in AUTF8String certificateFingerprint, in string capability, in short canEnable); */
-NS_IMETHODIMP
-FullTrustSecMan::SetCanEnableCapability(const nsACString & certificateFingerprint,
-                                        const char *capability,
-                                        PRInt16 canEnable)
-{
-    return NS_OK;
-}
-
 /* [noscript] nsIPrincipal getObjectPrincipal (in JSContextPtr cx, in JSObjectPtr obj); */
 NS_IMETHODIMP
 FullTrustSecMan::GetObjectPrincipal(JSContext * cx, JSObject * obj,

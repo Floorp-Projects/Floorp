@@ -961,10 +961,10 @@ JSStructuredCloneReader::read(Value *vp)
         return false;
 
     while (objs.length() != 0) {
-        JSObject *obj = &objs.back().toObject();
+        RootedVarObject obj(context(), &objs.back().toObject());
 
-        jsid id;
-        if (!readId(&id))
+        RootedVarId id(context());
+        if (!readId(id.address()))
             return false;
 
         if (JSID_IS_VOID(id)) {
