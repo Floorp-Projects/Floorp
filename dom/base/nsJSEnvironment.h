@@ -202,7 +202,7 @@ public:
 
   virtual void GC(js::gcreason::Reason aReason);
 
-  static bool CleanupSinceLastGC();
+  static PRUint32 CleanupsSinceLastGC();
 
   nsIScriptGlobalObject* GetCachedGlobalObject()
   {
