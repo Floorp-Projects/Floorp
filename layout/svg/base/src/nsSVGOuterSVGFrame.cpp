@@ -313,54 +313,68 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
                                 PRUint32 aFlags)
 {
-  nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
+  if (IsRootOfImage() || IsRootOfReplacedElementSubDoc()) {
+    // The embedding element has sized itself using the CSS replaced element
+    // sizing rules, using our intrinsic dimensions as necessary. The SVG spec
+    // says that the width and height of embedded SVG is overridden by the
+    // width and height of the embedding element, so we just need to size to
+    // the viewport that the embedding element has established for us.
+    return aCBSize;
+  }
 
+  nsSize cbSize = aCBSize;
   IntrinsicSize intrinsicSize = GetIntrinsicSize();
 
   if (!mContent->GetParent()) {
-    if (IsRootOfImage() || IsRootOfReplacedElementSubDoc()) {
-      // The embedding element has done the replaced element sizing,
-      // using our intrinsic dimensions as necessary. We just need to
-      // fill the viewport.
-      return aCBSize;
-    } else {
-      // We're the root of a browsing context, so we need to honor
-      // widths and heights in percentages.  (GetIntrinsicSize() doesn't
-      // report these since there's no such thing as a percentage
-      // intrinsic size.)
-      nsSVGLength2 &width =
-        content->mLengthAttributes[nsSVGSVGElement::WIDTH];
-      if (width.IsPercentage()) {
-        NS_ABORT_IF_FALSE(intrinsicSize.width.GetUnit() == eStyleUnit_None,
-                          "GetIntrinsicSize should have reported no "
-                          "intrinsic width");
-        float val = width.GetAnimValInSpecifiedUnits() / 100.0f;
-        if (val < 0.0f) val = 0.0f;
-        intrinsicSize.width.SetCoordValue(val * aCBSize.width);
-      }
+    // We're the root of the outermost browsing context, so we need to scale
+    // cbSize by the full-zoom so that SVGs with percentage width/height zoom:
 
-      nsSVGLength2 &height =
-        content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
-      NS_ASSERTION(aCBSize.height != NS_AUTOHEIGHT,
-                   "root should not have auto-height containing block");
-      if (height.IsPercentage()) {
-        NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_None,
-                          "GetIntrinsicSize should have reported no "
-                          "intrinsic height");
-        float val = height.GetAnimValInSpecifiedUnits() / 100.0f;
-        if (val < 0.0f) val = 0.0f;
-        intrinsicSize.height.SetCoordValue(val * aCBSize.height);
-      }
-      NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
-                        intrinsicSize.width.GetUnit() == eStyleUnit_Coord,
-                        "We should have just handled the only situation where"
-                        "we lack an intrinsic height or width.");
+    NS_ASSERTION(aCBSize.width  != NS_AUTOHEIGHT &&
+                 aCBSize.height != NS_AUTOHEIGHT,
+                 "root should not have auto-width/height containing block");
+    cbSize.width  *= PresContext()->GetFullZoom();
+    cbSize.height *= PresContext()->GetFullZoom();
+
+    // We also need to honour the width and height attributes' default values
+    // of 100% when we're the root of a browsing context.  (GetIntrinsicSize()
+    // doesn't report these since there's no such thing as a percentage
+    // intrinsic size.  Also note that explicit percentage values are mapped
+    // into style, so the following isn't for them.)
+
+    nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
+
+    nsSVGLength2 &width =
+      content->mLengthAttributes[nsSVGSVGElement::WIDTH];
+    if (width.IsPercentage()) {
+      NS_ABORT_IF_FALSE(intrinsicSize.width.GetUnit() == eStyleUnit_None,
+                        "GetIntrinsicSize should have reported no "
+                        "intrinsic width");
+      float val = width.GetAnimValInSpecifiedUnits() / 100.0f;
+      if (val < 0.0f) val = 0.0f;
+      intrinsicSize.width.SetCoordValue(val * cbSize.width);
     }
+
+    nsSVGLength2 &height =
+      content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
+    NS_ASSERTION(aCBSize.height != NS_AUTOHEIGHT,
+                 "root should not have auto-height containing block");
+    if (height.IsPercentage()) {
+      NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_None,
+                        "GetIntrinsicSize should have reported no "
+                        "intrinsic height");
+      float val = height.GetAnimValInSpecifiedUnits() / 100.0f;
+      if (val < 0.0f) val = 0.0f;
+      intrinsicSize.height.SetCoordValue(val * cbSize.height);
+    }
+    NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
+                      intrinsicSize.width.GetUnit() == eStyleUnit_Coord,
+                      "We should have just handled the only situation where"
+                      "we lack an intrinsic height or width.");
   }
 
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this,
-                            intrinsicSize, GetIntrinsicRatio(), aCBSize,
+                            intrinsicSize, GetIntrinsicRatio(), cbSize,
                             aMargin, aBorder, aPadding);
 }
 
