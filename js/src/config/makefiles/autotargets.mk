@@ -6,9 +6,13 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
+ifndef INCLUDED_AUTOTARGETS_MK #{
+
+# Conditional does not wrap the entire file so multiple
+# includes will be able to accumulate dependencies.
+
 ###########################################################################
 #      AUTO_DEPS - A list of deps/targets drived from other macros.
-#         *_DEPS - Make dependencies derived from a given macro.
 ###########################################################################
 
 MKDIR ?= mkdir -p
@@ -19,15 +23,6 @@ TOUCH ?= touch
 # GENERATED_DIRS - Automated creation of these directories.
 ###########################################################################
 mkdir_deps =$(foreach dir,$(getargv),$(dir)/.mkdir.done)
-
-ifneq (,$(GENERATED_DIRS))
-  tmpauto :=$(call mkdir_deps,GENERATED_DIRS)
-  GENERATED_DIRS_DEPS +=$(tmpauto)
-  GARBAGE_DIRS        +=$(tmpauto)
-endif
-
-## Only define rules once
-ifndef INCLUDED_AUTOTARGETS_MK
 
 %/.mkdir.done: # mkdir -p -p => mkdir -p
 	$(subst $(SPACE)-p,$(null),$(MKDIR)) -p $(dir $@)
@@ -40,6 +35,14 @@ ifndef INCLUDED_AUTOTARGETS_MK
 	@$(TOUCH) $@
 
 INCLUDED_AUTOTARGETS_MK = 1
+endif #}
+
+
+## Accumulate deps and cleanup
+ifneq (,$(GENERATED_DIRS))
+  tmpauto :=$(call mkdir_deps,GENERATED_DIRS)
+  GENERATED_DIRS_DEPS +=$(tmpauto)
+  GARBAGE_DIRS        +=$(tmpauto)
 endif
 
 #################################################################
