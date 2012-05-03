@@ -90,6 +90,8 @@ struct DebugOnly
         value--;
     }
 
+    T *operator&() { return &value; }
+
     operator T&() { return value; }
     operator const T&() const { return value; }
 
