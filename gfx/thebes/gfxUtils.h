@@ -126,13 +126,6 @@ public:
     static bool GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut);
 
     /**
-     * If aIn can be represented exactly using an nsIntRect (i.e.
-     * integer-aligned edges and coordinates in the PRInt32 range) then we
-     * set aOut to that rectangle, otherwise return failure.
-    */
-    static bool RectToIntRect(const mozilla::gfx::Rect& aIn, mozilla::gfx::IntRect* aOut);
-
-    /**
      * Return the smallest power of kScaleResolution (2) greater than or equal to
      * aVal.
      */
