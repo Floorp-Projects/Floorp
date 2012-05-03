@@ -43,9 +43,9 @@
 #include "XPCWrapper.h"
 #include "jsproxy.h"
 
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 
-using namespace mozilla::dom;
+using namespace mozilla;
 
 /***************************************************************************/
 
@@ -258,8 +258,8 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal,
             // see whether it's what we want.
             priv = static_cast<nsISupports*>(xpc_GetJSPrivate(aGlobal));
         } else if ((jsClass->flags & JSCLASS_IS_DOMJSCLASS) &&
-                   bindings::DOMJSClass::FromJSClass(jsClass)->mDOMObjectIsISupports) {
-            priv = bindings::UnwrapDOMObject<nsISupports>(aGlobal, jsClass);
+                   dom::DOMJSClass::FromJSClass(jsClass)->mDOMObjectIsISupports) {
+            priv = dom::UnwrapDOMObject<nsISupports>(aGlobal, jsClass);
         } else {
             priv = nsnull;
         }

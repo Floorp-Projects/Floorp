@@ -10,16 +10,13 @@
 #include "mozilla/dom/workers/bindings/WorkerFeature.h"
 
 // Need this for XMLHttpRequestResponseType.
-#include "mozilla/dom/bindings/XMLHttpRequestBinding.h"
+#include "mozilla/dom/XMLHttpRequestBinding.h"
 
 BEGIN_WORKERS_NAMESPACE
 
 class Proxy;
 class XMLHttpRequestUpload;
 class WorkerPrivate;
-
-typedef mozilla::dom::bindings::prototypes::XMLHttpRequestResponseType::value
-        XMLHttpRequestResponseType;
 
 class XMLHttpRequest : public XMLHttpRequestEventTarget,
                        public WorkerFeature
