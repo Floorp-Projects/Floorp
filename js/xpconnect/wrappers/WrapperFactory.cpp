@@ -46,7 +46,7 @@
 #include "xpcprivate.h"
 #include "dombindings.h"
 #include "XPCMaps.h"
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "jsfriendapi.h"
 
 using namespace js;
@@ -276,7 +276,7 @@ static XrayType
 GetXrayType(JSObject *obj)
 {
     js::Class* clasp = js::GetObjectClass(obj);
-    if (mozilla::dom::bindings::IsDOMClass(Jsvalify(clasp))) {
+    if (mozilla::dom::IsDOMClass(Jsvalify(clasp))) {
         return XrayForDOMObject;
     }
     if (mozilla::dom::binding::instanceIsProxy(obj)) {
@@ -364,7 +364,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                 wrapper = &FilteringWrapper<Xray, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else if (mozilla::dom::binding::instanceIsProxy(obj)) {
             wrapper = &FilteringWrapper<XrayProxy, CrossOriginAccessiblePropertiesOnly>::singleton;
-        } else if (mozilla::dom::bindings::IsDOMClass(JS_GetClass(obj))) {
+        } else if (mozilla::dom::IsDOMClass(JS_GetClass(obj))) {
             wrapper = &FilteringWrapper<XrayDOM, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else if (IsComponentsObject(obj)) {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,

@@ -44,7 +44,7 @@
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
 #include "nsWrapperCacheInlines.h"
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 
 /***************************************************************************/
 
@@ -620,7 +620,7 @@ XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
 {
     js::Class* clazz = js::GetObjectClass(obj);
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::bindings::DestroyProtoOrIfaceCache(obj);
+        mozilla::dom::DestroyProtoOrIfaceCache(obj);
     }
     nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
     if (!p)
@@ -1049,7 +1049,7 @@ XPC_WN_Helper_Finalize(js::FreeOp *fop, JSObject *obj)
 {
     js::Class* clazz = js::GetObjectClass(obj);
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::bindings::DestroyProtoOrIfaceCache(obj);
+        mozilla::dom::DestroyProtoOrIfaceCache(obj);
     }
     nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
     if (IS_SLIM_WRAPPER(obj)) {

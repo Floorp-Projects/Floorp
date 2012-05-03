@@ -70,7 +70,7 @@
 #include "XPCQuickStubs.h"
 #include "dombindings.h"
 
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMMutationObserver.h"
@@ -908,9 +908,9 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
         cb.NoteXPCOMChild(identity);
     } else if ((clazz->flags & JSCLASS_IS_DOMJSCLASS) &&
-               bindings::DOMJSClass::FromJSClass(clazz)->mDOMObjectIsISupports) {
+               DOMJSClass::FromJSClass(clazz)->mDOMObjectIsISupports) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "UnwrapDOMObject(obj)");
-        nsISupports *identity = bindings::UnwrapDOMObject<nsISupports>(obj, clazz);
+        nsISupports *identity = UnwrapDOMObject<nsISupports>(obj, clazz);
         cb.NoteXPCOMChild(identity);
     }
 
@@ -1174,7 +1174,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
 #endif
 
     if (clasp->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::bindings::AllocateProtoOrIfaceCache(*global);
+        AllocateProtoOrIfaceCache(*global);
     }
 
     return NS_OK;

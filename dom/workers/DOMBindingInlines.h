@@ -6,8 +6,8 @@
 #ifndef mozilla_dom_workers_dombindinginlines_h__
 #define mozilla_dom_workers_dombindinginlines_h__
 
-#include "mozilla/dom/bindings/XMLHttpRequestBinding.h"
-#include "mozilla/dom/bindings/XMLHttpRequestUploadBinding.h"
+#include "mozilla/dom/XMLHttpRequestBinding.h"
+#include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -29,15 +29,15 @@ struct WrapPrototypeTraits
     static inline JSClass*                                                     \
     GetJSClass()                                                               \
     {                                                                          \
-      using namespace mozilla::dom::bindings::prototypes;                      \
-      return _class##_workers::Class.ToJSClass();                              \
+      using namespace mozilla::dom;                                            \
+      return _class##Binding_workers::Class.ToJSClass();                       \
     }                                                                          \
                                                                                \
     static inline JSObject*                                                    \
     GetProtoObject(JSContext* aCx, JSObject* aGlobal)                          \
     {                                                                          \
-      using namespace mozilla::dom::bindings::prototypes;                      \
-      return _class##_workers::GetProtoObject(aCx, aGlobal, aGlobal);          \
+      using namespace mozilla::dom;                                            \
+      return _class##Binding_workers::GetProtoObject(aCx, aGlobal, aGlobal);   \
     }                                                                          \
   };
 

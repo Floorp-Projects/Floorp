@@ -59,12 +59,12 @@
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "nsCCUncollectableMarker.h"
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla::scache;
 using namespace mozilla;
 
-using mozilla::dom::bindings::DestroyProtoOrIfaceCache;
+using mozilla::dom::DestroyProtoOrIfaceCache;
 
 static const char kXBLCachePrefix[] = "xblcache";
 
