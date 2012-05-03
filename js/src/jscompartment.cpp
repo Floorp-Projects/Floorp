@@ -551,8 +551,6 @@ JSCompartment::purge()
             listHeadp = &script->evalHashLink();
         }
     }
-
-    toSourceCache.destroyIfConstructed();
 }
 
 void

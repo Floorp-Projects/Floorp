@@ -190,6 +190,20 @@ struct ConservativeGCData
     }
 };
 
+class ToSourceCache
+{
+    typedef HashMap<JSFunction *,
+                    JSString *,
+                    DefaultHasher<JSFunction *>,
+                    SystemAllocPolicy> Map;
+    Map *map_;
+  public:
+    ToSourceCache() : map_(NULL) {}
+    JSString *lookup(JSFunction *fun);
+    void put(JSFunction *fun, JSString *);
+    void purge();
+};
+
 class NativeIterCache
 {
     static const size_t SIZE = size_t(1) << 8;
@@ -740,6 +754,7 @@ struct JSRuntime : js::RuntimeFriendFields
     js::PropertyCache   propertyCache;
     js::NewObjectCache  newObjectCache;
     js::NativeIterCache nativeIterCache;
+    js::ToSourceCache   toSourceCache;
 
     /* State used by jsdtoa.cpp. */
     DtoaState           *dtoaState;

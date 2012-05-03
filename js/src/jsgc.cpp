@@ -2892,6 +2892,7 @@ PurgeRuntime(JSTracer *trc)
     rt->propertyCache.purge(rt);
     rt->newObjectCache.purge();
     rt->nativeIterCache.purge();
+    rt->toSourceCache.purge();
 
     for (ContextIter acx(rt); !acx.done(); acx.next())
         acx->purge();
