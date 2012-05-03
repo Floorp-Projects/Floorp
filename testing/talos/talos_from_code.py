@@ -48,8 +48,8 @@ def main():
         entity = get_value(jsonFilename, key)
         if passesRestrictions(options.talos_json_url, entity["url"]):
             # the key is at the same time the filename e.g. talos.zip
+            print "INFO: Downloading %s as %s" % (entity["url"], os.path.join(entity["path"], key))
             download_file(entity["url"], entity["path"], key)
-            print "INFO: %s -> %s" % (entity["url"], os.path.join(entity["path"], key))
         else:
             print "ERROR: You have tried to download a file " + \
                   "from: %s " % fileUrl + \

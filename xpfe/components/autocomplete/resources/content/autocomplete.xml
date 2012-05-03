@@ -139,6 +139,10 @@
                 onset="this.setAttribute('timeout', val); return val;"
                 onget="return parseInt(this.getAttribute('timeout')) || 0;"/>
 
+      <property name="searchParam"
+                onget="return this.getAttribute('autocompletesearchparam') || '';"
+                onset="this.setAttribute('autocompletesearchparam', val); return val;"/>
+
       <method name="onSearchBegin">
         <body><![CDATA[
           this._fireEvent("searchbegin");
@@ -378,7 +382,7 @@
           param: this,
           onStartLookup: function(aSearchString, aPreviousSearchResult, aListener) {
             this.session.startSearch(aSearchString,
-                         this.param.getAttribute("autocompletesearchparam") || "",
+                         this.param.searchParam,
                          aPreviousSearchResult && aPreviousSearchResult.lastResult,
                          aListener);
           },

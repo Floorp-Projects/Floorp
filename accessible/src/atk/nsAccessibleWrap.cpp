@@ -678,25 +678,21 @@ finalizeCB(GObject *aObj)
         G_OBJECT_CLASS (parent_class)->finalize(aObj);
 }
 
-const gchar *
-getNameCB(AtkObject *aAtkObj)
+const gchar*
+getNameCB(AtkObject* aAtkObj)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap) {
-        return nsnull;
-    }
+  nsAccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+  if (!accWrap)
+    return nsnull;
 
-    /* nsIAccessible is responsible for the non-NULL name */
-    nsAutoString uniName;
-    nsresult rv = accWrap->GetName(uniName);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+  nsAutoString uniName;
+  accWrap->Name(uniName);
 
-    NS_ConvertUTF8toUTF16 objName(aAtkObj->name);
-    if (!uniName.Equals(objName)) {
-        atk_object_set_name(aAtkObj,
-                            NS_ConvertUTF16toUTF8(uniName).get());
-    }
-    return aAtkObj->name;
+  NS_ConvertUTF8toUTF16 objName(aAtkObj->name);
+  if (!uniName.Equals(objName))
+    atk_object_set_name(aAtkObj, NS_ConvertUTF16toUTF8(uniName).get());
+
+  return aAtkObj->name;
 }
 
 const gchar *
@@ -1043,8 +1039,8 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 
     case nsIAccessibleEvent::EVENT_NAME_CHANGE:
       {
-        nsString newName;
-        accessible->GetName(newName);
+        nsAutoString newName;
+        accessible->Name(newName);
         NS_ConvertUTF16toUTF8 utf8Name(newName);
         if (!atkObj->name || !utf8Name.Equals(atkObj->name))
           atk_object_set_name(atkObj, utf8Name.get());

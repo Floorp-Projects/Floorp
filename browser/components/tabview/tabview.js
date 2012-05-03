@@ -73,4 +73,5 @@ let AllTabs = {
 #include drag.js
 #include trench.js
 #include search.js
+#include telemetry.js
 #include ui.js

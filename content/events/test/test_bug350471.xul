@@ -182,7 +182,7 @@ function testDefaultHandling(aWin, andThen) {
         exec();
       else
         andThen();
-    }, 0);
+    }, 20);
   }
 
   ["horizontal", "vertical"].forEach(function(aAxis) {
@@ -253,7 +253,7 @@ window.onload = function () {
         win.close();
         SimpleTest.finish();
       });
-    }, 0);
+    }, 20);
   }
 }
 

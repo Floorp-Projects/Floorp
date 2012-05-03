@@ -11,11 +11,9 @@
 var url = "bug482935.sjs";
 
 function clearCache() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    Components.classes["@mozilla.org/network/cache-service;1"].
+    SpecialPowers.wrap(Components).classes["@mozilla.org/network/cache-service;1"].
                getService(Components.interfaces.nsICacheService).
                evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
-    netscape.security.PrivilegeManager.disablePrivilege("UniversalXPConnect");
 }
 
 // Tests that the response is cached if the request is cancelled

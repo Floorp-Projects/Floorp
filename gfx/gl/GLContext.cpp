@@ -1748,13 +1748,16 @@ GLContext::MarkDestroyed()
     if (IsDestroyed())
         return;
 
-    MakeCurrent();
-    DeleteOffscreenFBOs();
+    if (MakeCurrent()) {
+        DeleteOffscreenFBOs();
 
-    fDeleteProgram(mBlitProgram);
-    mBlitProgram = 0;
-    fDeleteFramebuffers(1, &mBlitFramebuffer);
-    mBlitFramebuffer = 0;
+        fDeleteProgram(mBlitProgram);
+        mBlitProgram = 0;
+        fDeleteFramebuffers(1, &mBlitFramebuffer);
+        mBlitFramebuffer = 0;
+    } else {
+        NS_WARNING("MakeCurrent() failed during MarkDestroyed! Skipping GL object teardown.");
+    }
 
     mSymbols.Zero();
 }
