@@ -7437,11 +7437,11 @@ nsHTMLEditRules::CacheInlineStyles(nsIDOMNode *aNode)
   {
     bool isSet = false;
     nsAutoString outValue;
-    nsCOMPtr<nsIDOMNode> resultNode;
     if (!useCSS)
     {
-      mHTMLEditor->IsTextPropertySetByContent(aNode, mCachedStyles[j].tag, &(mCachedStyles[j].attr), nsnull,
-                               isSet, getter_AddRefs(resultNode), &outValue);
+      mHTMLEditor->IsTextPropertySetByContent(aNode, mCachedStyles[j].tag,
+                                              &(mCachedStyles[j].attr), nsnull,
+                                              isSet, &outValue);
     }
     else
     {
