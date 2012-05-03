@@ -77,39 +77,6 @@ extern Class dummy_class;
 
 namespace js {
 
-class NativeIterCache {
-    static const size_t SIZE = size_t(1) << 8;
-    
-    /* Cached native iterators. */
-    JSObject            *data[SIZE];
-
-    static size_t getIndex(uint32_t key) {
-        return size_t(key) % SIZE;
-    }
-
-  public:
-    /* Native iterator most recently started. */
-    JSObject            *last;
-
-    NativeIterCache()
-      : last(NULL) {
-        PodArrayZero(data);
-    }
-
-    void purge() {
-        PodArrayZero(data);
-        last = NULL;
-    }
-
-    JSObject *get(uint32_t key) const {
-        return data[getIndex(key)];
-    }
-
-    void set(uint32_t key, JSObject *iterobj) {
-        data[getIndex(key)] = iterobj;
-    }
-};
-
 /*
  * A single-entry cache for some base-10 double-to-string conversions. This
  * helps date-format-xparb.js.  It also avoids skewing the results for
@@ -305,8 +272,6 @@ struct JSCompartment
     unsigned                     debugModeBits;  // see debugMode() below
 
   public:
-    js::NativeIterCache          nativeIterCache;
-
     typedef js::Maybe<js::ToSourceCache> LazyToSourceCache;
     LazyToSourceCache            toSourceCache;
 

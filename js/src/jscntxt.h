@@ -190,6 +190,40 @@ struct ConservativeGCData
     }
 };
 
+class NativeIterCache
+{
+    static const size_t SIZE = size_t(1) << 8;
+
+    /* Cached native iterators. */
+    JSObject            *data[SIZE];
+
+    static size_t getIndex(uint32_t key) {
+        return size_t(key) % SIZE;
+    }
+
+  public:
+    /* Native iterator most recently started. */
+    JSObject            *last;
+
+    NativeIterCache()
+      : last(NULL) {
+        PodArrayZero(data);
+    }
+
+    void purge() {
+        last = NULL;
+        PodArrayZero(data);
+    }
+
+    JSObject *get(uint32_t key) const {
+        return data[getIndex(key)];
+    }
+
+    void set(uint32_t key, JSObject *iterobj) {
+        data[getIndex(key)] = iterobj;
+    }
+};
+
 /*
  * Cache for speeding up repetitive creation of objects in the VM.
  * When an object is created which matches the criteria in the 'key' section
@@ -705,6 +739,7 @@ struct JSRuntime : js::RuntimeFriendFields
     js::GSNCache        gsnCache;
     js::PropertyCache   propertyCache;
     js::NewObjectCache  newObjectCache;
+    js::NativeIterCache nativeIterCache;
 
     /* State used by jsdtoa.cpp. */
     DtoaState           *dtoaState;
