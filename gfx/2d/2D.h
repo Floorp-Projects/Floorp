@@ -779,9 +779,23 @@ public:
   void *GetUserData(UserDataKey *key) {
     return mUserData.Get(key);
   }
+
+  /* Within this rectangle all pixels will be opaque by the time the result of
+   * this DrawTarget is first used for drawing. Either by the underlying surface
+   * being used as an input to external drawing, or Snapshot() being called.
+   * This rectangle is specified in device space.
+   */
+  void SetOpaqueRect(const IntRect &aRect) {
+    mOpaqueRect = aRect;
+  }
+
+  const IntRect &GetOpaqueRect() const {
+    return mOpaqueRect;
+  }
 protected:
   UserData mUserData;
   Matrix mTransform;
+  IntRect mOpaqueRect;
   bool mTransformDirty : 1;
 
   SurfaceFormat mFormat;
