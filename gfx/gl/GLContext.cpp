@@ -739,9 +739,8 @@ already_AddRefed<TextureImage>
 GLContext::CreateTextureImage(const nsIntSize& aSize,
                               TextureImage::ContentType aContentType,
                               GLenum aWrapMode,
-                              TextureImage::Flags aFlags)
+                              bool aUseNearestFilter)
 {
-    bool useNearestFilter = aFlags & TextureImage::UseNearestFilter;
     MakeCurrent();
 
     GLuint texture;
@@ -750,13 +749,13 @@ GLContext::CreateTextureImage(const nsIntSize& aSize,
     fActiveTexture(LOCAL_GL_TEXTURE0);
     fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
 
-    GLint texfilter = useNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
+    GLint texfilter = aUseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
 
-    return CreateBasicTextureImage(texture, aSize, aWrapMode, aContentType, this, aFlags);
+    return CreateBasicTextureImage(texture, aSize, aWrapMode, aContentType, this);
 }
 
 void GLContext::ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter)
@@ -939,13 +938,14 @@ BasicTextureImage::Resize(const nsIntSize& aSize)
 TiledTextureImage::TiledTextureImage(GLContext* aGL,
                                      nsIntSize aSize,
                                      TextureImage::ContentType aContentType,
-                                     TextureImage::Flags aFlags)
-    : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aFlags)
+                                     bool aUseNearestFilter)
+    : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aUseNearestFilter)
     , mCurrentImage(0)
     , mInUpdate(false)
     , mRows(0)
     , mColumns(0)
     , mGL(aGL)
+    , mUseNearestFilter(aUseNearestFilter)
     , mTextureState(Created)
     , mIterationCallback(nsnull)
 {
@@ -975,7 +975,7 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
     int oldCurrentImage = mCurrentImage;
     BeginTileIteration();
     do {
-        nsIntRect tileRect = GetSrcTileRect();
+        nsIntRect tileRect = GetTileRect();
         int xPos = tileRect.x;
         int yPos = tileRect.y;
 
@@ -1187,15 +1187,6 @@ nsIntRect TiledTextureImage::GetTileRect()
     return rect;
 }
 
-nsIntRect TiledTextureImage::GetSrcTileRect()
-{
-    nsIntRect rect = GetTileRect();
-    unsigned int srcY = mFlags & NeedsYFlip
-                        ? mSize.height - rect.height - rect.y
-                        : rect.y;
-    return nsIntRect(rect.x, srcY, rect.width, rect.height);
-}
-
 void
 TiledTextureImage::BindTexture(GLenum aTextureUnit)
 {
@@ -1276,7 +1267,7 @@ void TiledTextureImage::Resize(const nsIntSize& aSize)
 
             // Create a new tile.
             nsRefPtr<TextureImage> teximg =
-                    mGL->TileGenFunc(size, mContentType, mFlags);
+                    mGL->TileGenFunc(size, mContentType, mUseNearestFilter);
             if (replace)
                 mImages.ReplaceElementAt(i, teximg.forget());
             else

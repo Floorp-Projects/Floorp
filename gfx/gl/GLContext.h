@@ -127,12 +127,6 @@ public:
       Valid  // Texture fully ready to use.
     };
 
-    enum Flags {
-        NoFlags          = 0x0,
-        UseNearestFilter = 0x1,
-        NeedsYFlip       = 0x2
-    };
-
     typedef gfxASurface::gfxContentType ContentType;
 
     virtual ~TextureImage() {}
@@ -324,24 +318,18 @@ protected:
      */
     TextureImage(const nsIntSize& aSize,
                  GLenum aWrapMode, ContentType aContentType,
-                 Flags aFlags = NoFlags)
+                 bool aIsRGB = false)
         : mSize(aSize)
         , mWrapMode(aWrapMode)
         , mContentType(aContentType)
         , mFilter(gfxPattern::FILTER_GOOD)
-        , mFlags(aFlags)
     {}
-
-    virtual nsIntRect GetSrcTileRect() {
-        return nsIntRect(nsIntPoint(0,0), mSize);
-    };
 
     nsIntSize mSize;
     GLenum mWrapMode;
     ContentType mContentType;
     ShaderProgramType mShaderType;
     gfxPattern::GraphicsFilter mFilter;
-    Flags mFlags;
 };
 
 /**
@@ -364,9 +352,8 @@ public:
                       const nsIntSize& aSize,
                       GLenum aWrapMode,
                       ContentType aContentType,
-                      GLContext* aContext,
-                      TextureImage::Flags aFlags = TextureImage::NoFlags)
-        : TextureImage(aSize, aWrapMode, aContentType, aFlags)
+                      GLContext* aContext)
+        : TextureImage(aSize, aWrapMode, aContentType)
         , mTexture(aTexture)
         , mTextureState(Created)
         , mGLContext(aContext)
@@ -421,7 +408,7 @@ class TiledTextureImage
 {
 public:
     TiledTextureImage(GLContext* aGL, nsIntSize aSize,
-        TextureImage::ContentType, TextureImage::Flags aFlags = TextureImage::NoFlags);
+        TextureImage::ContentType, bool aUseNearestFilter = false);
     ~TiledTextureImage();
     void DumpDiv();
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
@@ -441,10 +428,7 @@ public:
     virtual bool InUpdate() const { return mInUpdate; };
     virtual void BindTexture(GLenum);
     virtual void ApplyFilter();
-
 protected:
-    virtual nsIntRect GetSrcTileRect();
-
     unsigned int mCurrentImage;
     TileIterationCallback mIterationCallback;
     void* mIterationCallbackData;
@@ -1290,8 +1274,7 @@ public:
      * |aContentType|.  The TextureImage's texture is configured to
      * use |aWrapMode| (usually GL_CLAMP_TO_EDGE or GL_REPEAT) and by
      * default, GL_LINEAR filtering.  Specify
-     * |aFlags=UseNearestFilter| for GL_NEAREST filtering. Specify
-     * |aFlags=NeedsYFlip| if the image is flipped. Return
+     * |aUseNearestFilter=true| for GL_NEAREST filtering.  Return
      * NULL if creating the TextureImage fails.
      *
      * The returned TextureImage may only be used with this GLContext.
@@ -1303,7 +1286,7 @@ public:
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
-                       TextureImage::Flags aFlags = TextureImage::NoFlags);
+                       bool aUseNearestFilter=false);
 
     /**
      * In EGL we want to use Tiled Texture Images, which we return
@@ -1315,7 +1298,7 @@ public:
     virtual already_AddRefed<TextureImage>
     TileGenFunc(const nsIntSize& aSize,
                 TextureImage::ContentType aContentType,
-                TextureImage::Flags aFlags = TextureImage::NoFlags)
+                bool aUseNearestFilter = false)
     {
         return nsnull;
     };
@@ -1745,11 +1728,10 @@ protected:
                             const nsIntSize& aSize,
                             GLenum aWrapMode,
                             TextureImage::ContentType aContentType,
-                            GLContext* aContext,
-                            TextureImage::Flags aFlags = TextureImage::NoFlags)
+                            GLContext* aContext)
     {
         nsRefPtr<BasicTextureImage> teximage(
-            new BasicTextureImage(aTexture, aSize, aWrapMode, aContentType, aContext, aFlags));
+            new BasicTextureImage(aTexture, aSize, aWrapMode, aContentType, aContext));
         return teximage.forget();
     }
 

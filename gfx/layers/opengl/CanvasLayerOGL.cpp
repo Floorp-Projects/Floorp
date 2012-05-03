@@ -339,12 +339,10 @@ ShadowCanvasLayerOGL::Init(const CanvasSurface& aNewFront, bool needYFlip)
 {
   nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront);
 
-  mNeedsYFlip = needYFlip;
-
   mTexImage = gl()->CreateTextureImage(surf->GetSize(),
                                        surf->GetContentType(),
-                                       LOCAL_GL_CLAMP_TO_EDGE,
-                                       mNeedsYFlip ? TextureImage::NeedsYFlip : TextureImage::NoFlags);
+                                       LOCAL_GL_CLAMP_TO_EDGE);
+  mNeedsYFlip = needYFlip;
 }
 
 void
