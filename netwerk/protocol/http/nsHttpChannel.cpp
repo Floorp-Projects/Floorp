@@ -419,8 +419,6 @@ nsHttpChannel::HandleAsyncRedirect()
         rv = AsyncProcessRedirection(mResponseHead->Status());
         if (NS_FAILED(rv)) {
             PopRedirectAsyncFunc(&nsHttpChannel::ContinueHandleAsyncRedirect);
-            // TODO: if !DoNotRender3xxBody(), render redirect body instead.
-            // But first we need to cache 3xx bodies (bug 748510)
             ContinueHandleAsyncRedirect(rv);
         }
     }
@@ -1101,15 +1099,7 @@ nsHttpChannel::ProcessResponse()
         if (NS_FAILED(rv)) {
             PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse);
             LOG(("AsyncProcessRedirection failed [rv=%x]\n", rv));
-            // don't cache failed redirect responses.
-            if (mCacheEntry)
-                mCacheEntry->Doom();
-            if (DoNotRender3xxBody(rv)) {
-                mStatus = rv;
-                DoNotifyListener();
-            } else {
-                rv = ContinueProcessResponse(rv);
-            }
+            rv = ContinueProcessResponse(rv);
         }
         break;
     case 304:
@@ -3563,6 +3553,8 @@ nsHttpChannel::AsyncProcessRedirection(PRUint32 redirectType)
 
     if (mRedirectionLimit == 0) {
         LOG(("redirection limit reached!\n"));
+        // this error code is fatal, and should be conveyed to our listener.
+        Cancel(NS_ERROR_REDIRECT_LOOP);
         return NS_ERROR_REDIRECT_LOOP;
     }
 
@@ -3575,6 +3567,7 @@ nsHttpChannel::AsyncProcessRedirection(PRUint32 redirectType)
 
     if (NS_FAILED(rv)) {
         LOG(("Invalid URI for redirect: Location: %s\n", location));
+        Cancel(NS_ERROR_CORRUPTED_CONTENT);
         return NS_ERROR_CORRUPTED_CONTENT;
     }
 
