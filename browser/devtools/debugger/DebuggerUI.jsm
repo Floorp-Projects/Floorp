@@ -111,21 +111,6 @@ DebuggerUI.prototype = {
   },
 
   /**
-   * Starts a chrome debugger in a new process, or stops it if already started.
-   * @see DebuggerProcess.constructor
-   * @return DebuggerProcess if the debugger is started, null if it's stopped.
-   */
-  toggleChromeDebugger: function DUI_toggleChromeDebugger(aOnClose, aOnRun) {
-    let win = this.chromeWindow;
-
-    if (win._chromeDebugger) {
-      win._chromeDebugger.close();
-      return null;
-    }
-    return new DebuggerProcess(win, aOnClose, aOnRun, true);
-  },
-
-  /**
    * Get the debugger for a specified tab.
    * @return DebuggerPane if a debugger exists for the tab, null otherwise
    */
@@ -151,7 +136,6 @@ DebuggerUI.prototype = {
 function DebuggerPane(aDebuggerUI, aTab) {
   this._globalUI = aDebuggerUI;
   this._tab = aTab;
-  
   this._initServer();
   this._create();
 }
@@ -259,18 +243,13 @@ DebuggerPane.prototype = {
  *        Optional, a function called when the process exits.
  * @param function aOnRun
  *        Optional, a function called when the process starts running.
- * @param boolean aInitServerFlag
- *        True to initialize the server. This should happen only in the chrome
- *        debugging case. This should also be true by default after bug #747429.
  * @param nsIDOMWindow aWindow
  *        The chrome window for which the remote debugger instance is created.
  */
-function DebuggerProcess(aWindow, aOnClose, aOnRun, aInitServerFlag) {
+function DebuggerProcess(aWindow, aOnClose, aOnRun) {
   this._win = aWindow;
   this._closeCallback = aOnClose;
   this._runCallback = aOnRun;
-
-  aInitServerFlag && this._initServer();
   this._initProfile();
   this._create();
 }
