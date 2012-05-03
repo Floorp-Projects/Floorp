@@ -108,6 +108,10 @@ IsPhiObservable(MPhi *phi)
         if (!iter.def()->isPhi())
             return true;
     }
+
+    // If the Phi is of the |this| value, it must always be observable.
+    if (phi->slot() == 1)
+        return true;
     return false;
 }
 
@@ -169,9 +173,6 @@ ion::EliminatePhis(MIRGraph &graph)
         while (iter != block->phisEnd()) {
             if (iter->isInWorklist()) {
                 iter->setNotInWorklist();
-                iter++;
-            } else if (iter->slot() == 1) {
-                // Skip phis of the |this| value.
                 iter++;
             } else {
                 iter->setUnused();
