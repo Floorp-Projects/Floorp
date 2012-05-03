@@ -156,8 +156,10 @@ class CGInterfaceObjectJSClass(CGThing):
         # We're purely for internal consumption
         return ""
     def define(self):
+        if not self.descriptor.hasInstanceInterface:
+            return ""
         ctorname = "NULL" if not self.descriptor.interface.ctor() else CONSTRUCT_HOOK_NAME
-        hasinstance = "NULL" if not self.descriptor.hasInstanceInterface else HASINSTANCE_HOOK_NAME
+        hasinstance = HASINSTANCE_HOOK_NAME
         return """
 static JSClass InterfaceObjectClass = {
   "Function", 0,
@@ -657,18 +659,18 @@ class PropertyDefiner:
             str += self.generateArray(self.chrome, self.variableName(True))
         return str
 
+# The length of a method is the maximum of the lengths of the
+# argument lists of all its overloads.
+def methodLength(method):
+    signatures = method.signatures()
+    return max([len(arguments) for (retType, arguments) in signatures])
+
 class MethodDefiner(PropertyDefiner):
     """
     A class for defining methods on a prototype object.
     """
     def __init__(self, descriptor, name, static):
         PropertyDefiner.__init__(self, descriptor, name)
-
-        # The length of a method is the maximum of the lengths of the
-        # argument lists of all its overloads.
-        def methodLength(method):
-            signatures = method.signatures()
-            return max([len(arguments) for (retType, arguments) in signatures])
 
         methods = [m for m in descriptor.interface.members if
                    m.isMethod() and m.isStatic() == static]
@@ -858,12 +860,25 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                           "  return NULL;\n"
                           "}") % getParentProto
 
+        needInterfaceObjectClass = (needInterfaceObject and
+                                    self.descriptor.hasInstanceInterface)
+        needConstructor = (needInterfaceObject and
+                           not self.descriptor.hasInstanceInterface)
+        if self.descriptor.interface.ctor():
+            constructHook = CONSTRUCT_HOOK_NAME
+            constructArgs = methodLength(self.descriptor.interface.ctor())
+        else:
+            constructHook = "ThrowingConstructorWorkers" if self.descriptor.workers else "ThrowingConstructor"
+            constructArgs = 0
+
         call = CGGeneric(("return dom::CreateInterfaceObjects(aCx, aGlobal, aReceiver, parentProto,\n"
-                          "                                   %s, %s,\n"
+                          "                                   %s, %s, %s, %d,\n"
                           "                                   %%(methods)s, %%(attrs)s, %%(consts)s, %%(staticMethods)s,\n"
                           "                                   %s);") % (
             "&PrototypeClass" if needInterfacePrototypeObject else "NULL",
-            "&InterfaceObjectClass" if needInterfaceObject else "NULL",
+            "&InterfaceObjectClass" if needInterfaceObjectClass else "NULL",
+            constructHook if needConstructor else "NULL",
+            constructArgs,
             '"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "NULL"))
 
         if self.properties.hasChromeOnly():

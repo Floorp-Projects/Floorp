@@ -25,17 +25,27 @@ DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs)
 
 static JSObject*
 CreateInterfaceObject(JSContext* cx, JSObject* global, JSObject* receiver,
-                      JSClass* constructorClass, JSObject* proto,
+                      JSClass* constructorClass, JSNative constructorNative,
+                      unsigned ctorNargs, JSObject* proto,
                       JSFunctionSpec* staticMethods, ConstantSpec* constants,
                       const char* name)
 {
-  JSObject* functionProto = JS_GetFunctionPrototype(cx, global);
-  if (!functionProto) {
-    return NULL;
+  JSObject* constructor;
+  if (constructorClass) {
+    JSObject* functionProto = JS_GetFunctionPrototype(cx, global);
+    if (!functionProto) {
+      return NULL;
+    }
+    constructor = JS_NewObject(cx, constructorClass, functionProto, global);
+  } else {
+    MOZ_ASSERT(constructorNative);
+    JSFunction* fun = JS_NewFunction(cx, constructorNative, ctorNargs,
+                                     JSFUN_CONSTRUCTOR, global, name);
+    if (!fun) {
+      return NULL;
+    }
+    constructor = JS_GetFunctionObject(fun);
   }
-
-  JSObject* constructor =
-    JS_NewObject(cx, constructorClass, functionProto, global);
   if (!constructor) {
     return NULL;
   }
@@ -92,17 +102,20 @@ CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
 JSObject*
 CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
                        JSObject* protoProto, JSClass* protoClass,
-                       JSClass* constructorClass, JSFunctionSpec* methods,
+                       JSClass* constructorClass, JSNative constructor,
+                       unsigned ctorNargs, JSFunctionSpec* methods,
                        JSPropertySpec* properties, ConstantSpec* constants,
                        JSFunctionSpec* staticMethods, const char* name)
 {
-  MOZ_ASSERT(protoClass || constructorClass, "Need at least one class!");
+  MOZ_ASSERT(protoClass || constructorClass || constructor,
+             "Need at least one class or a constructor!");
   MOZ_ASSERT(!(methods || properties) || protoClass,
              "Methods or properties but no protoClass!");
-  MOZ_ASSERT(!staticMethods || constructorClass,
-             "Static methods but no constructorClass!");
-  MOZ_ASSERT(bool(name) == bool(constructorClass),
+  MOZ_ASSERT(!staticMethods || constructorClass || constructor,
+             "Static methods but no constructorClass or constructor!");
+  MOZ_ASSERT(bool(name) == bool(constructorClass || constructor),
              "Must have name precisely when we have an interface object");
+  MOZ_ASSERT(!constructorClass || !constructor);
 
   JSObject* proto;
   if (protoClass) {
@@ -117,9 +130,10 @@ CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
   }
 
   JSObject* interface;
-  if (constructorClass) {
+  if (constructorClass || constructor) {
     interface = CreateInterfaceObject(cx, global, receiver, constructorClass,
-                                      proto, staticMethods, constants, name);
+                                      constructor, ctorNargs, proto,
+                                      staticMethods, constants, name);
     if (!interface) {
       return NULL;
     }
@@ -237,6 +251,18 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   // Lie, otherwise we need to check classinfo or QI
   *vp = thisv;
   return true;
+}
+
+JSBool
+ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+  return Throw<true>(cx, NS_ERROR_FAILURE);
+}
+
+JSBool
+ThrowingConstructorWorkers(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+  return Throw<false>(cx, NS_ERROR_FAILURE);
 }
 
 } // namespace dom
