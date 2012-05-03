@@ -449,12 +449,12 @@ TaskbarPreview::MainWindowHook(void *aContext,
     preview->mWnd = NULL;
   } else {
     nsWindow *window = WinUtils::GetNSWindowPtr(preview->mWnd);
-    NS_ASSERTION(window, "Cannot use taskbar previews in an embedded context!");
+    if (window) {
+      window->SetHasTaskbarIconBeenCreated();
 
-    window->SetHasTaskbarIconBeenCreated();
-
-    if (preview->mVisible)
-      preview->UpdateTaskbarProperties();
+      if (preview->mVisible)
+        preview->UpdateTaskbarProperties();
+    }
   }
   return false;
 }
