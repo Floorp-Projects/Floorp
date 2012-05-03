@@ -538,6 +538,7 @@ public:
           mLangID(aLangID)
 #endif
     {
+        MOZ_ASSERT(aParticipant);
     }
 
 #ifdef DEBUG_CC
@@ -1671,12 +1672,14 @@ private:
     PLDHashTable mPtrToNodeMap;
     PtrInfo *mCurrPi;
     nsCycleCollectionLanguageRuntime **mRuntimes; // weak, from nsCycleCollector
+    nsCycleCollectionParticipant *mJSParticipant;
     nsCString mNextEdgeName;
     nsICycleCollectorListener *mListener;
 
 public:
     GCGraphBuilder(GCGraph &aGraph,
                    nsCycleCollectionLanguageRuntime **aRuntimes,
+                   nsCycleCollectionJSRuntime *aJSRuntime,
                    nsICycleCollectorListener *aListener);
     ~GCGraphBuilder();
     bool Initialized();
@@ -1720,10 +1723,12 @@ private:
                                        const char *objName);
     NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *child,
                                nsCycleCollectionParticipant* participant);
+
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child);
+    NS_IMETHOD_(void) NoteJSChild(void *child);
     NS_IMETHOD_(void) NoteNativeChild(void *child,
                                       nsCycleCollectionParticipant *participant);
-    NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child);
+
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name);
     NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val);
 private:
@@ -1743,16 +1748,22 @@ private:
 
 GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
                                nsCycleCollectionLanguageRuntime **aRuntimes,
+                               nsCycleCollectionJSRuntime *aJSRuntime,
                                nsICycleCollectorListener *aListener)
     : mNodeBuilder(aGraph.mNodes),
       mEdgeBuilder(aGraph.mEdges),
       mWeakMaps(aGraph.mWeakMaps),
       mRuntimes(aRuntimes),
+      mJSParticipant(nsnull),
       mListener(aListener)
 {
     if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nsnull,
                            sizeof(PtrToNodeEntry), 32768))
         mPtrToNodeMap.ops = nsnull;
+
+    if (aJSRuntime) {
+        mJSParticipant = aJSRuntime->GetParticipant();
+    }
 
     PRUint32 flags = 0;
 #ifdef DEBUG_CC
@@ -1945,36 +1956,22 @@ GCGraphBuilder::NoteNativeChild(void *child,
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child) 
+GCGraphBuilder::NoteJSChild(void *child) 
 {
+    if (!child) {
+        return;
+    }
+
     nsCString edgeName;
-    if (WantDebugInfo()) {
+    if (NS_UNLIKELY(WantDebugInfo())) {
         edgeName.Assign(mNextEdgeName);
         mNextEdgeName.Truncate();
     }
-    if (!child)
-        return;
 
-    if (langID > nsIProgrammingLanguage::MAX) {
-        Fault("traversing pointer for unknown language", child);
-        return;
+    if (xpc_GCThingIsGrayCCThing(child) || NS_UNLIKELY(WantAllTraces())) {
+        NoteChild(child, mJSParticipant, nsIProgrammingLanguage::JAVASCRIPT,
+                  edgeName);
     }
-
-    if (!mRuntimes[langID]) {
-        NS_WARNING("Not collecting cycles involving objects for scripting "
-                   "languages that don't participate in cycle collection.");
-        return;
-    }
-
-    // skip over non-grey JS children
-    if (langID == nsIProgrammingLanguage::JAVASCRIPT &&
-        !xpc_GCThingIsGrayCCThing(child) && !WantAllTraces()) {
-        return;
-    }
-
-    nsCycleCollectionParticipant *cp = mRuntimes[langID]->ToParticipant(child);
-    if (cp)
-        NoteChild(child, cp, langID, edgeName);
 }
 
 NS_IMETHODIMP_(void)
@@ -1988,15 +1985,12 @@ GCGraphBuilder::NoteNextEdgeName(const char* name)
 PtrInfo*
 GCGraphBuilder::AddWeakMapNode(void *node)
 {
-    nsCycleCollectionParticipant *cp;
     NS_ASSERTION(node, "Weak map node should be non-null.");
 
     if (!xpc_GCThingIsGrayCCThing(node) && !WantAllTraces())
         return nsnull;
 
-    cp = mRuntimes[nsIProgrammingLanguage::JAVASCRIPT]->ToParticipant(node);
-    NS_ASSERTION(cp, "Javascript runtime participant should be non-null.");
-    return AddNode(node, cp, nsIProgrammingLanguage::JAVASCRIPT);
+    return AddNode(node, mJSParticipant, nsIProgrammingLanguage::JAVASCRIPT);
 }
 
 NS_IMETHODIMP_(void)
@@ -2025,7 +2019,7 @@ public:
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child);
     NS_IMETHOD_(void) NoteNativeChild(void *child,
                                       nsCycleCollectionParticipant *helper);
-    NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child);
+    NS_IMETHOD_(void) NoteJSChild(void *child);
 
     NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refcount,
                                              size_t objsz,
@@ -2065,15 +2059,11 @@ ChildFinder::NoteNativeChild(void *child,
 };
 
 NS_IMETHODIMP_(void)
-ChildFinder::NoteScriptChild(PRUint32 langID, void *child)
+ChildFinder::NoteJSChild(void *child)
 {
-    if (!child)
-        return;
-    if (langID == nsIProgrammingLanguage::JAVASCRIPT &&
-        !xpc_GCThingIsGrayCCThing(child)) {
-        return;
+    if (child && xpc_GCThingIsGrayCCThing(child)) {
+        mMayHaveChild = true;
     }
-    mMayHaveChild = true;
 };
 
 static bool
@@ -2726,7 +2716,7 @@ public:
     NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *root,
                                nsCycleCollectionParticipant* participant) {};
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child) {}
-    NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child) {}
+    NS_IMETHOD_(void) NoteJSChild(void *child) {}
     NS_IMETHOD_(void) NoteNativeChild(void *child,
                                      nsCycleCollectionParticipant *participant) {}
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name) {}
@@ -3096,7 +3086,7 @@ nsCycleCollector::BeginCollection(nsICycleCollectorListener *aListener)
     if (mParams.mDoNothing)
         return false;
 
-    GCGraphBuilder builder(mGraph, mRuntimes, aListener);
+    GCGraphBuilder builder(mGraph, mRuntimes, mJSRuntime, aListener);
     if (!builder.Initialized())
         return false;
 
@@ -3254,7 +3244,7 @@ nsCycleCollector::Shutdown()
     Collect(nsnull, SHUTDOWN_COLLECTIONS(mParams), listener);
 
 #ifdef DEBUG_CC
-    GCGraphBuilder builder(mGraph, mRuntimes, nsnull);
+    GCGraphBuilder builder(mGraph, mRuntimes, mJSRuntime, nsnull);
     mScanInProgress = true;
     SelectPurple(builder);
     mScanInProgress = false;

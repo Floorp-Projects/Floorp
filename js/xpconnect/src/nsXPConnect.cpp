@@ -581,8 +581,12 @@ nsXPConnect::FinishTraverse()
 nsCycleCollectionParticipant *
 nsXPConnect::ToParticipant(void *p)
 {
-    if (!AddToCCKind(js_GetGCThingTraceKind(p)))
-        return NULL;
+    return this;
+}
+
+nsCycleCollectionParticipant *
+nsXPConnect::GetParticipant()
+{
     return this;
 }
 
@@ -746,7 +750,7 @@ NoteJSChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
             }
         }
 #endif
-        tracer->cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
+        tracer->cb.NoteJSChild(thing);
     } else if (kind == JSTRACE_SHAPE) {
         JS_TraceShapeCycleCollectorChildren(trc, thing);
     } else if (kind != JSTRACE_STRING) {
@@ -962,7 +966,7 @@ public:
         cb.DescribeRefCountedNode(refCount, js::SizeOfJSContext(), "JSContext");
         if (JSObject *global = JS_GetGlobalObject(cx)) {
             NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
-            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, global);
+            cb.NoteJSChild(global);
         }
 
         return NS_OK;

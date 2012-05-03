@@ -263,7 +263,7 @@ void
 nsXBLProtoImplMethod::Trace(TraceCallback aCallback, void *aClosure) const
 {
   if (IsCompiled() && mJSMethodObject) {
-    aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSMethodObject, "mJSMethodObject", aClosure);
+    aCallback(mJSMethodObject, "mJSMethodObject", aClosure);
   }
 }
 

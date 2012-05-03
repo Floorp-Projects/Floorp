@@ -478,6 +478,7 @@ public:
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb);
     virtual nsresult FinishTraverse();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
+    virtual nsCycleCollectionParticipant *GetParticipant();
     virtual bool NeedCollect();
     virtual void Collect(PRUint32 reason, PRUint32 kind);
 
