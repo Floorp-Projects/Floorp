@@ -1977,7 +1977,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
           Rect(bounds.x, bounds.y, bounds.width, bounds.height));
         opaqueRect.RoundIn();
         IntRect intOpaqueRect;
-        if (gfxUtils::RectToIntRect(opaqueRect, &intOpaqueRect)) {
+        if (opaqueRect.ToIntRect(&intOpaqueRect)) {
           aTarget->GetDrawTarget()->SetOpaqueRect(intOpaqueRect);
           pushedTargetOpaqueRect = true;
         }
