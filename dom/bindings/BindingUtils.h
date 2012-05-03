@@ -231,7 +231,14 @@ struct ConstantSpec
  *            This is null if we should not create an interface prototype
  *            object.
  * constructorClass is the JSClass to use for the interface object.
- *                  This is null if we should not create an interface object.
+ *                  This is null if we should not create an interface object or
+ *                  if it should be a function object.
+ * constructor is the JSNative to use as a constructor.  If this is non-null, it
+ *             should be used as a JSNative to back the interface object, which
+ *             should be a Function.  If this is null, then we should create an
+ *             object of constructorClass, unless that's also null, in which
+ *             case we should not create an interface object at all.
+ * ctorNargs is the length of the constructor function; 0 if no constructor
  * methods and properties are to be defined on the interface prototype object;
  *                        these arguments are allowed to be null if there are no
  *                        methods or properties respectively.
@@ -251,7 +258,8 @@ struct ConstantSpec
 JSObject*
 CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* receiver,
                        JSObject* protoProto, JSClass* protoClass,
-                       JSClass* constructorClass, JSFunctionSpec* methods,
+                       JSClass* constructorClass, JSNative constructor,
+                       unsigned ctorNargs, JSFunctionSpec* methods,
                        JSPropertySpec* properties, ConstantSpec* constants,
                        JSFunctionSpec* staticMethods, const char* name);
 
@@ -507,6 +515,10 @@ InitIds(JSContext* cx, Spec* specs, jsid* ids)
 
 JSBool
 QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp);
+JSBool
+ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
+JSBool
+ThrowingConstructorWorkers(JSContext* cx, unsigned argc, JS::Value* vp);
 
 } // namespace dom
 } // namespace mozilla
