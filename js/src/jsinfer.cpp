@@ -44,6 +44,7 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinfer.h"
 #include "jsmath.h"
 #include "jsnum.h"
@@ -55,7 +56,6 @@
 #include "jsiter.h"
 
 #include "frontend/TokenStream.h"
-#include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"

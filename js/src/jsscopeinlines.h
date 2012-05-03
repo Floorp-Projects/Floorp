@@ -47,11 +47,11 @@
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
-#include "jsgc.h"
 #include "jsobj.h"
 #include "jsscope.h"
+#include "jsgc.h"
+#include "jsgcmark.h"
 
-#include "gc/Marking.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ScopeObject.h"
 #include "vm/StringObject.h"
@@ -176,7 +176,7 @@ BaseShape::adoptUnowned(UnownedBaseShape *other)
     JS_ASSERT((flags & other->getObjectFlags()) == flags);
 
     uint32_t span = slotSpan();
-    ShapeTable *table = &this->table();
+    PropertyTable *table = &this->table();
 
     *this = *other;
     setOwned(other);

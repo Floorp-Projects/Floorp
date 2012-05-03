@@ -58,9 +58,9 @@
 #include "jspubtd.h"
 #include "jsprvtd.h"
 #include "jslock.h"
+#include "jscell.h"
 
 #include "gc/Barrier.h"
-#include "gc/Heap.h"
 
 #include "vm/ObjectImpl.h"
 #include "vm/String.h"
@@ -396,7 +396,7 @@ struct JSObject : public js::ObjectImpl
 
     inline uint32_t propertyCount() const;
 
-    inline bool hasShapeTable() const;
+    inline bool hasPropertyTable() const;
 
     inline size_t computedSizeOfThisSlotsElements() const;
 

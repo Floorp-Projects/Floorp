@@ -45,9 +45,9 @@
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
+#include "jsgcmark.h"
 #include "jsweakmap.h"
 
-#include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 
 #include "jsgcinlines.h"

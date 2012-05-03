@@ -42,6 +42,7 @@
 #include "vm/Debugger.h"
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsgcmark.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jswrapper.h"
@@ -53,7 +54,6 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
-#include "gc/Marking.h"
 #include "methodjit/Retcon.h"
 #include "js/Vector.h"
 
