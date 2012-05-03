@@ -79,5 +79,12 @@ public class App extends GeckoApp {
 #endif
         return super.onOptionsItemSelected(item);
     }
+
+#ifdef MOZ_LINKER_EXTRACT
+    @Override
+    public boolean linkerExtract() {
+        return true;
+    }
+#endif
 };
 

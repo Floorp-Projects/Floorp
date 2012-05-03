@@ -186,7 +186,7 @@ static PRUint32 sRemovedPurples = 0;
 static PRUint32 sForgetSkippableBeforeCC = 0;
 static PRUint32 sPreviousSuspectedCount = 0;
 
-static bool sCleanupSinceLastGC = true;
+static PRUint32 sCleanupsSinceLastGC = PR_UINT32_MAX;
 static bool sNeedsFullCC = false;
 
 nsScriptNameSpaceManager *gNameSpaceManager;
@@ -2959,14 +2959,18 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
   PRUint32 suspected = nsCycleCollector_suspectedCount();
 
-  for (PRInt32 i = 0; i < aExtraForgetSkippableCalls; ++i) {
-    nsCycleCollector_forgetSkippable();
+  // nsCycleCollector_forgetSkippable may mark some gray js to black.
+  if (sCleanupsSinceLastGC < 2 && aExtraForgetSkippableCalls >= 0) {
+    for (;sCleanupsSinceLastGC < 2; ++sCleanupsSinceLastGC) {
+      nsCycleCollector_forgetSkippable();
+    }
   }
 
-  // nsCycleCollector_forgetSkippable may mark some gray js to black.
-  if (!sCleanupSinceLastGC && aExtraForgetSkippableCalls >= 0) {
+  for (PRInt32 i = 0; i < aExtraForgetSkippableCalls; ++i) {
     nsCycleCollector_forgetSkippable();
+    ++sCleanupsSinceLastGC;
   }
+
   nsCycleCollectorResults ccResults;
   nsCycleCollector_collect(&ccResults, aListener);
   sCCollectedWaitingForGC += ccResults.mFreedRefCounted + ccResults.mFreedGCed;
@@ -3070,7 +3074,6 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   sTotalForgetSkippableTime = 0;
   sRemovedPurples = 0;
   sForgetSkippableBeforeCC = 0;
-  sCleanupSinceLastGC = true;
   sNeedsFullCC = false;
 }
 
@@ -3106,7 +3109,7 @@ TimerFireForgetSkippable(PRUint32 aSuspected, bool aRemoveChildless)
   PRTime startTime = PR_Now();
   nsCycleCollector_forgetSkippable(aRemoveChildless);
   sPreviousSuspectedCount = nsCycleCollector_suspectedCount();
-  sCleanupSinceLastGC = true;
+  ++sCleanupsSinceLastGC;
   PRTime delta = PR_Now() - startTime;
   if (sMinForgetSkippableTime > delta) {
     sMinForgetSkippableTime = delta;
@@ -3175,10 +3178,10 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
 }
 
 // static
-bool
-nsJSContext::CleanupSinceLastGC()
+PRUint32
+nsJSContext::CleanupsSinceLastGC()
 {
-  return sCleanupSinceLastGC;
+  return sCleanupsSinceLastGC;
 }
 
 // static
@@ -3397,7 +3400,7 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
     nsJSContext::KillGCTimer();
 
     sCCollectedWaitingForGC = 0;
-    sCleanupSinceLastGC = false;
+    sCleanupsSinceLastGC = 0;
 
     if (aDesc.isCompartment) {
       // If this is a compartment GC, restart it. We still want

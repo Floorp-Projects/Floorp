@@ -35,43 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function provideWindow(aCallback, aURL, aFeatures) {
-  function callback() {
-    executeSoon(function () {
-      aCallback(win);
-    });
-  }
-
-  let win = openDialog(getBrowserURL(), "", aFeatures || "chrome,all,dialog=no", aURL);
-
-  whenWindowLoaded(win, function () {
-    if (!aURL) {
-      callback();
-      return;
-    }
-    win.gBrowser.selectedBrowser.addEventListener("load", function() {
-      win.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-      callback();
-    }, true);
-  });
-}
-
-function whenWindowLoaded(aWin, aCallback) {
-  aWin.addEventListener("load", function () {
-    aWin.removeEventListener("load", arguments.callee, false);
-    executeSoon(function () {
-      aCallback(aWin);
-    });
-  }, false);
-}
-
 function test() {
   // This test takes quite some time, and timeouts frequently, so we require
   // more time to run.
   // See Bug 518970.
   requestLongerTimeout(2);
 
-  waitForExplicitFinish();  
+  waitForExplicitFinish();
 
   // helper function that does the actual testing
   function openWindowRec(windowsToOpen, expectedResults, recCallback) {
@@ -94,13 +64,14 @@ function test() {
       executeSoon(recCallback);
       return;
     }
+
     // hack to force window to be considered a popup (toolbar=no didn't work)
     let winData = windowsToOpen.shift();
     let settings = "chrome,dialog=no," +
                    (winData.isPopup ? "all=no" : "all");
     let url = "http://example.com/?window=" + windowsToOpen.length;
 
-    provideWindow(function (win) {
+    provideWindow(function onTestURLLoaded(win) {
       win.close();
       openWindowRec(windowsToOpen, expectedResults, recCallback);
     }, url, settings);

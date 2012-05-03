@@ -277,7 +277,7 @@ class StaticBlockObject : public BlockObject
 class ClonedBlockObject : public BlockObject
 {
   public:
-    static ClonedBlockObject *create(JSContext *cx, StaticBlockObject &block, StackFrame *fp);
+    static ClonedBlockObject *create(JSContext *cx, Handle<StaticBlockObject*> block, StackFrame *fp);
 
     /* The static block from which this block was cloned. */
     StaticBlockObject &staticBlock() const;
@@ -298,6 +298,10 @@ class ClonedBlockObject : public BlockObject
 template<XDRMode mode>
 bool
 XDRStaticBlockObject(XDRState<mode> *xdr, JSScript *script, StaticBlockObject **objp);
+
+extern JSObject *
+CloneStaticBlockObject(JSContext *cx, StaticBlockObject &srcBlock,
+                       const AutoObjectVector &objects, JSScript *src);
 
 }  /* namespace js */
 

@@ -741,7 +741,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 Load(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
+    RootedVarObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
     if (!thisobj)
         return JS_FALSE;
 
@@ -1663,7 +1663,7 @@ TryNotes(JSContext *cx, JSScript *script, Sprinter *sp)
 {
     JSTryNote *tn, *tnlimit;
 
-    if (!JSScript::isValidOffset(script->trynotesOffset))
+    if (!script->hasTrynotes())
         return JS_TRUE;
 
     tn = script->trynotes()->vector;
@@ -1700,13 +1700,15 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
         Sprint(sp, "\n");
     }
 
+    Root<JSScript*> scriptRoot(cx, &script);
+
     if (!js_Disassemble(cx, script, lines, sp))
         return false;
     SrcNotes(cx, script, sp);
     TryNotes(cx, script, sp);
 
-    if (recursive && JSScript::isValidOffset(script->objectsOffset)) {
-        JSObjectArray *objects = script->objects();
+    if (recursive && script->hasObjects()) {
+        ObjectArray *objects = script->objects();
         for (unsigned i = 0; i != objects->length; ++i) {
             JSObject *obj = objects->vector[i];
             if (obj->isFunction()) {
@@ -2128,15 +2130,15 @@ DumpObject(JSContext *cx, unsigned argc, jsval *vp)
 JSBool
 DumpStack(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSObject *arr = JS_NewArrayObject(cx, 0, NULL);
+    RootedVarObject arr(cx, JS_NewArrayObject(cx, 0, NULL));
     if (!arr)
         return false;
 
-    JSString *evalStr = JS_NewStringCopyZ(cx, "eval-code");
+    RootedVarString evalStr(cx, JS_NewStringCopyZ(cx, "eval-code"));
     if (!evalStr)
         return false;
 
-    JSString *globalStr = JS_NewStringCopyZ(cx, "global-code");
+    RootedVarString globalStr(cx, JS_NewStringCopyZ(cx, "global-code"));
     if (!globalStr)
         return false;
 
@@ -2530,8 +2532,10 @@ typedef struct ComplexObject {
 } ComplexObject;
 
 static JSBool
-sandbox_enumerate(JSContext *cx, JSObject *obj)
+sandbox_enumerate(JSContext *cx, JSObject *obj_)
 {
+    RootedVarObject obj(cx, obj_);
+
     jsval v;
     JSBool b;
 
@@ -2543,9 +2547,12 @@ sandbox_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-sandbox_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+sandbox_resolve(JSContext *cx, JSObject *obj_, jsid id_, unsigned flags,
                 JSObject **objp)
 {
+    RootedVarObject obj(cx, obj_);
+    RootedVarId id(cx, id_);
+
     jsval v;
     JSBool b, resolved;
 
@@ -2577,7 +2584,7 @@ static JSClass sandbox_class = {
 static JSObject *
 NewSandbox(JSContext *cx, bool lazy)
 {
-    JSObject *obj = JS_NewCompartmentAndGlobalObject(cx, &sandbox_class, NULL);
+    RootedVarObject obj(cx, JS_NewCompartmentAndGlobalObject(cx, &sandbox_class, NULL));
     if (!obj)
         return NULL;
 
@@ -2589,12 +2596,12 @@ NewSandbox(JSContext *cx, bool lazy)
         if (!lazy && !JS_InitStandardClasses(cx, obj))
             return NULL;
 
-        AutoValueRooter root(cx, BooleanValue(lazy));
-        if (!JS_SetProperty(cx, obj, "lazy", root.jsval_addr()))
+        RootedVarValue value(cx, BooleanValue(lazy));
+        if (!JS_SetProperty(cx, obj, "lazy", value.address()))
             return NULL;
     }
 
-    if (!cx->compartment->wrap(cx, &obj))
+    if (!cx->compartment->wrap(cx, obj.address()))
         return NULL;
     return obj;
 }
@@ -2611,6 +2618,8 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     const jschar *src = JS_GetStringCharsAndLength(cx, str, &srclen);
     if (!src)
         return false;
+
+    SkipRoot skip(cx, &src);
 
     bool lazy = false;
     if (srclen == 4) {
@@ -3415,7 +3424,7 @@ Serialize(JSContext *cx, unsigned argc, jsval *vp)
 JSBool
 Deserialize(JSContext *cx, unsigned argc, jsval *vp)
 {
-    jsval v = argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    RootedVar<jsval> v(cx, argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
     JSObject *obj;
     if (JSVAL_IS_PRIMITIVE(v) || !(obj = JSVAL_TO_OBJECT(v))->isTypedArray()) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "deserialize");
@@ -3432,7 +3441,7 @@ Deserialize(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     if (!JS_ReadStructuredClone(cx, (uint64_t *) TypedArray::getDataOffset(array), TypedArray::getByteLength(array),
-                                JS_STRUCTURED_CLONE_VERSION, &v, NULL, NULL)) {
+                                JS_STRUCTURED_CLONE_VERSION, v.address(), NULL, NULL)) {
         return false;
     }
     JS_SET_RVAL(cx, vp, v);

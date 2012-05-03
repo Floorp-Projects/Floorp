@@ -1142,7 +1142,7 @@ CodeGenerator::visitAbsI(LAbsI *ins)
 bool
 CodeGenerator::visitBinaryV(LBinaryV *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
+    typedef bool (*pf)(JSContext *, HandleValue, HandleValue, Value *);
     static const VMFunction AddInfo = FunctionInfo<pf>(js::AddValues);
     static const VMFunction SubInfo = FunctionInfo<pf>(js::SubValues);
     static const VMFunction MulInfo = FunctionInfo<pf>(js::MulValues);
@@ -2459,7 +2459,7 @@ CodeGenerator::visitOutOfLineBindNameCache(OutOfLineCache *ool)
 
     saveLive(ins);
 
-    typedef JSObject *(*pf)(JSContext *, size_t, JSObject *);
+    typedef JSObject *(*pf)(JSContext *, size_t, HandleObject);
     static const VMFunction BindNameCacheInfo = FunctionInfo<pf>(BindNameCache);
 
     pushArg(scopeChain);

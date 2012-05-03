@@ -2242,7 +2242,26 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "transactionManager", function() {
     this.transactionManager.RemoveListener(this);
     this.transactionManager.clear();
   });
-  return tm;
+
+  // Bug 750269
+  // The transaction manager keeps strong references to transactions, and by
+  // that, also to the global for each transaction.  A transaction, however,
+  // could be either the transaction itself (for which the global is this
+  // module) or some js-proxy in another global, usually a window.  The later
+  // would leak because the transaction lifetime (in the manager's stacks)
+  // is independent of the global from which doTransaction was called.
+  // To avoid such a leak, we hide the native doTransaction from callers,
+  // and let each doTransaction call go through this module.
+  // Doing so ensures that, as long as the transaction is any of the
+  // PlacesXXXTransaction objects declared in this module, the object
+  // referenced by the transaction manager has the module itself as global.
+  return Object.create(tm, {
+    "doTransaction": {
+      value: function(aTransaction) {
+        tm.doTransaction(aTransaction);
+      }
+    }
+  });
 });
 
 XPCOMUtils.defineLazyGetter(this, "bundle", function() {

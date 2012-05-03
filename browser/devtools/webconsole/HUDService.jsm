@@ -151,6 +151,24 @@ function LogFactory(aMessagePrefix)
   return log;
 }
 
+/**
+ * Load the various Command JSMs.
+ * Should be called when the console first opens.
+ *
+ * @return an object containing the EXPORTED_SYMBOLS from all the command
+ * modules. In general there is no reason when JSMs need to export symbols
+ * except when they need the host environment to inform them of things like the
+ * current window/document/etc.
+ */
+function loadCommands() {
+  let commandExports = {};
+
+  Cu.import("resource:///modules/GcliCommands.jsm", commandExports);
+  Cu.import("resource:///modules/GcliTiltCommands.jsm", commandExports);
+
+  return commandExports;
+}
+
 let log = LogFactory("*** HUDService:");
 
 const HUD_STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
@@ -1552,7 +1570,6 @@ HUD_SERVICE.prototype =
     if (procInstr.contexts.indexOf(hudId) == -1) {
       procInstr.contexts.push(hudId);
     }
-    HeadsUpDisplayUICommands.refreshCommand();
   },
 
   /**
@@ -1583,7 +1600,6 @@ HUD_SERVICE.prototype =
       this.unregisterDisplay(hudId);
 
       window.focus();
-      HeadsUpDisplayUICommands.refreshCommand();
     }
 
     // Remove this context from the list of contexts that need the GCLI CSS
@@ -3598,7 +3614,7 @@ HeadsUpDisplay.prototype = {
   {
     let usegcli = false;
     try {
-      // usegcli = Services.prefs.getBoolPref("devtools.gcli.enable");
+      usegcli = Services.prefs.getBoolPref("devtools.gcli.enable");
     }
     catch (ex) {}
 
@@ -6319,16 +6335,6 @@ ConsoleUtils = {
 //////////////////////////////////////////////////////////////////////////
 
 HeadsUpDisplayUICommands = {
-  refreshCommand: function UIC_refreshCommand() {
-    var window = HUDService.currentContext();
-    let command = window.document.getElementById("Tools:WebConsole");
-    if (this.getOpenHUD() != null) {
-      command.setAttribute("checked", true);
-    } else {
-      command.removeAttribute("checked");
-    }
-  },
-
   toggleHUD: function UIC_toggleHUD() {
     var window = HUDService.currentContext();
     var gBrowser = window.gBrowser;
@@ -6829,66 +6835,75 @@ function GcliTerm(aContentWindow, aHudId, aDocument, aConsole, aHintNode, aConso
   this.createUI();
   this.createSandbox();
 
-  this.gcliConsole = gcli._internal.createDisplay({
-    contentDocument: aContentWindow.document,
-    chromeDocument: this.document,
-    outputDocument: this.document,
-    chromeWindow: this.document.defaultView,
+  this.show = this.show.bind(this);
+  this.hide = this.hide.bind(this);
 
-    hintElement: this.hintNode,
-    inputElement: this.inputNode,
-    completeElement: this.completeNode,
-    backgroundElement: this.inputStack,
-    consoleWrap: aConsoleWrap,
+  // Allow GCLI:Inputter to decide how and when to open a scratchpad window
+  let scratchpad = {
+    shouldActivate: function Scratchpad_shouldActivate(aEvent) {
+      return aEvent.shiftKey &&
+          aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
+    },
+    activate: function Scratchpad_activate(aValue) {
+      aValue = aValue.replace(/^\s*{\s*/, '');
+      ScratchpadManager.openScratchpad({ text: aValue });
+      return true;
+    },
+    linkText: stringBundle.GetStringFromName('scratchpad.linkText')
+  };
 
-    eval: this.evalInSandbox.bind(this),
-
+  this.opts = {
     environment: {
+      hudId: this.hudId,
       chromeDocument: this.document,
       contentDocument: aContentWindow.document
     },
-
-    tooltipClass: 'gcliterm-tooltip',
-
-    // Allow GCLI:Inputter to decide how and when to open a scratchpad window
-    scratchpad: {
-      shouldActivate: function Scratchpad_shouldActivate(aEvent) {
-        return aEvent.shiftKey &&
-            aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
-      },
-      activate: function Scratchpad_activate(aValue) {
-        aValue = aValue.replace(/^\s*{\s*/, '');
-        ScratchpadManager.openScratchpad({ text: aValue });
-        return true;
-      },
-      linkText: stringBundle.GetStringFromName('scratchpad.linkText')
+    chromeDocument: this.document,
+    contentDocument: aContentWindow.document,
+    jsEnvironment: {
+      globalObject: unwrap(aContentWindow),
+      evalFunction: this.evalInSandbox.bind(this)
     },
-  });
+    inputElement: this.inputNode,
+    completeElement: this.completeNode,
+    inputBackgroundElement: this.inputStack,
+    hintElement: this.hintNode,
+    consoleWrap: aConsoleWrap,
+    scratchpad: scratchpad,
+    gcliTerm: this
+  };
 
-  this.gcliConsole.onVisibilityChange.add(this.onVisibilityChange, this);
-  this.gcliConsole.onOutput.add(this.onOutput, this);
+  gcli._internal.commandOutputManager.addListener(this.onCommandOutput, this);
+  gcli._internal.createView(this.opts);
+
+  if (!commandExports) {
+    commandExports = loadCommands();
+  }
 }
 
 GcliTerm.prototype = {
   /**
-   * Show or remove the hint column from the display.
+   * Remove the hint column from the display.
    */
-  onVisibilityChange: function GcliTerm_onVisibilityChange(ev)
+  hide: function GcliTerm_hide()
   {
-    if (ev.visible) {
-      this.hintNode.parentNode.hidden = false;
+    let permaHint = false;
+    try {
+      permaHint = Services.prefs.getBoolPref("devtools.gcli.permaHint");
     }
-    else {
-      let permaHint = false;
-      try {
-        permaHint = Services.prefs.getBoolPref("devtools.gcli.permaHint");
-      }
-      catch (ex) {}
+    catch (ex) {}
 
-      if (!permaHint) {
-        this.hintNode.parentNode.hidden = true;
-      }
+    if (!permaHint) {
+      this.hintNode.parentNode.hidden = true;
     }
+  },
+
+  /**
+   * Undo the effects of calling hide().
+   */
+  show: function GcliTerm_show()
+  {
+    this.hintNode.parentNode.hidden = false;
   },
 
   /**
@@ -6896,9 +6911,17 @@ GcliTerm.prototype = {
    */
   destroy: function Gcli_destroy()
   {
-    this.gcliConsole.onVisibilityChange.remove(this.onVisibilityChange, this);
-    this.gcliConsole.onOutput.remove(this.onOutput, this);
-    this.gcliConsole.destroy();
+    gcli._internal.removeView(this.opts);
+    gcli._internal.commandOutputManager.removeListener(this.onCommandOutput, this);
+
+    delete this.opts.chromeDocument;
+    delete this.opts.inputElement;
+    delete this.opts.completeElement;
+    delete this.opts.inputBackgroundElement;
+    delete this.opts.hintElement;
+    delete this.opts.contentDocument;
+    delete this.opts.jsEnvironment;
+    delete this.opts.gcliTerm;
 
     delete this.context;
     delete this.document;
@@ -6907,10 +6930,10 @@ GcliTerm.prototype = {
     delete this._window;
 
     delete this.sandbox;
-    delete this.element;
-    delete this.inputStack;
-    delete this.completeNode;
-    delete this.inputNode;
+    delete this.element
+    delete this.inputStack
+    delete this.completeNode
+    delete this.inputNode
   },
 
   /**
@@ -6927,13 +6950,11 @@ GcliTerm.prototype = {
     this.console = aConsole;
     this.createSandbox();
 
-    this.gcliConsole.reattach({
-      contentDocument: aContentWindow.document,
-      environment: {
-        chromeDocument: this.document,
-        contentDocument: aContentWindow.document
-      },
-    });
+    this.opts.environment.contentDocument = aContentWindow.document;
+    this.opts.contentDocument = aContentWindow.document;
+    this.opts.jsEnvironment.globalObject = unwrap(aContentWindow);
+
+    gcli._internal.reattachConsole(this.opts);
   },
 
   /**
@@ -6964,7 +6985,7 @@ GcliTerm.prototype = {
   /**
    * Called by GCLI/canon when command line output changes.
    */
-  onOutput: function Gcli_onOutput(aEvent)
+  onCommandOutput: function Gcli_onCommandOutput(aEvent)
   {
     // When we can update the history of the console, then we should stop
     // filtering incomplete reports.

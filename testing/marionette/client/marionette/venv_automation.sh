@@ -62,7 +62,7 @@ else
   cd ..
 
   # set up mozautolog
-  hg clone http://hg.mozilla.org/users/jgriffin_mozilla.com/mozautolog/
+  hg clone http://hg.mozilla.org/automation/mozautolog/
   cd mozautolog
   python setup.py develop
   cd ..

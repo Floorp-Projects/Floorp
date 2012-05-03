@@ -154,6 +154,8 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
         return fp->scopeChain();
     }
 
+    Root<StaticBlockObject*> sharedBlockRoot(cx, &sharedBlock);
+
     /*
      * We have one or more lexical scopes to reflect into fp->scopeChain, so
      * make sure there's a call object at the current head of the scope chain,
@@ -161,7 +163,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
      *
      * Also, identify the innermost compiler-allocated block we needn't clone.
      */
-    JSObject *limitBlock, *limitClone;
+    RootedVarObject limitBlock(cx), limitClone(cx);
     if (fp->isNonEvalFunctionFrame() && !fp->hasCallObj()) {
         JS_ASSERT_IF(fp->scopeChain()->isClonedBlock(), fp->scopeChain()->getPrivate() != fp);
         if (!CallObject::createForFunction(cx, fp))
@@ -213,7 +215,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
      * create() leaves the clone's enclosingScope unset. We set it below.
      */
     RootedVar<ClonedBlockObject *> innermostNewChild(cx);
-    innermostNewChild = ClonedBlockObject::create(cx, *sharedBlock, fp);
+    innermostNewChild = ClonedBlockObject::create(cx, sharedBlockRoot, fp);
     if (!innermostNewChild)
         return NULL;
 
@@ -231,7 +233,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
             break;
 
         /* As in the call above, we don't know the real parent yet.  */
-        RootedVar<ClonedBlockObject *> clone(cx, ClonedBlockObject::create(cx, *sharedBlock, fp));
+        RootedVar<ClonedBlockObject *> clone(cx, ClonedBlockObject::create(cx, sharedBlockRoot, fp));
         if (!clone)
             return NULL;
 
@@ -330,6 +332,7 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 
     if (thisv.isNullOrUndefined()) {
         JSObject *thisp = call.callee().global().thisObject(cx);
+        JS_ASSERT(!IsPoisonedPtr(thisp));
         if (!thisp)
             return false;
         call.thisv().setObject(*thisp);
@@ -369,21 +372,23 @@ Class js_NoSuchMethodClass = {
  * parameters.
  */
 bool
-js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp)
+js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, Value *vp)
 {
+    RootedVarValue idval(cx, idval_);
+
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
-    AutoValueRooter tvr(cx);
-    if (!js_GetMethod(cx, obj, id, 0, tvr.addr()))
+    RootedVarValue value(cx);
+    if (!js_GetMethod(cx, obj, id, 0, value.address()))
         return false;
     TypeScript::MonitorUnknown(cx);
 
-    if (tvr.value().isPrimitive()) {
-        *vp = tvr.value();
+    if (value.reference().isPrimitive()) {
+        *vp = value;
     } else {
 #if JS_HAS_XML_SUPPORT
         /* Extract the function name from function::name qname. */
-        if (idval.isObject()) {
-            JSObject *obj = &idval.toObject();
+        if (idval.reference().isObject()) {
+            JSObject *obj = &idval.reference().toObject();
             if (js_GetLocalNameFromFunctionQName(obj, &id, cx))
                 idval = IdToValue(id);
         }
@@ -393,7 +398,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp)
         if (!obj)
             return false;
 
-        obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
+        obj->setSlot(JSSLOT_FOUND_FUNCTION, value);
         obj->setSlot(JSSLOT_SAVED_ID, idval);
         vp->setObject(*obj);
     }
@@ -451,9 +456,9 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
     struct CheckStackBalance {
         JSContext *cx;
         StackFrame *fp;
-        JSObject *enumerators;
+        RootedVarObject enumerators;
         CheckStackBalance(JSContext *cx)
-          : cx(cx), fp(cx->fp()), enumerators(cx->enumerators)
+          : cx(cx), fp(cx->fp()), enumerators(cx, cx->enumerators)
         {}
         ~CheckStackBalance() {
             JS_ASSERT(fp == cx->fp());
@@ -524,7 +529,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     }
 
     /* Invoke native functions. */
-    JSFunction *fun = callee.toFunction();
+    RootedVarFunction fun(cx, callee.toFunction());
     JS_ASSERT_IF(construct, !fun->isNativeConstructor());
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
@@ -795,17 +800,17 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
         return true;
     }
 
-    Value lvalue = lval;
-    Value rvalue = rval;
+    RootedVarValue lvalue(cx, lval);
+    RootedVarValue rvalue(cx, rval);
 
-    if (!ToPrimitive(cx, &lvalue))
+    if (!ToPrimitive(cx, lvalue.address()))
         return false;
-    if (!ToPrimitive(cx, &rvalue))
+    if (!ToPrimitive(cx, rvalue.address()))
         return false;
 
-    if (lvalue.isString() && rvalue.isString()) {
-        JSString *l = lvalue.toString();
-        JSString *r = rvalue.toString();
+    if (lvalue.reference().isString() && rvalue.reference().isString()) {
+        JSString *l = lvalue.reference().toString();
+        JSString *r = rvalue.reference().toString();
         return EqualStrings(cx, l, r, result);
     }
 
@@ -1023,7 +1028,7 @@ TryNoteIter::TryNoteIter(const FrameRegs &regs)
     script(regs.fp()->script()),
     pcOffset(regs.pc - script->main())
 {
-    if (JSScript::isValidOffset(script->trynotesOffset)) {
+    if (script->hasTrynotes()) {
         tn = script->trynotes()->vector;
         tnEnd = tn + script->trynotes()->length;
     } else {
@@ -2091,7 +2096,8 @@ BEGIN_CASE(JSOP_IN)
         js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, NULL);
         goto error;
     }
-    JSObject *obj = &rref.toObject();
+    RootedVarObject &obj = rootObject0;
+    obj = &rref.toObject();
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
     JSObject *obj2;
@@ -2247,10 +2253,13 @@ BEGIN_CASE(JSOP_BINDNAME)
         if (obj->isGlobal())
             break;
 
-        PropertyName *name;
+        RootedVarPropertyName &name = rootName0;
         LOAD_NAME(0, name);
 
-        obj = FindIdentifierBase(cx, regs.fp()->scopeChain(), name);
+        RootedVarObject &scopeChain = rootObject0;
+        scopeChain = regs.fp()->scopeChain();
+
+        obj = FindIdentifierBase(cx, scopeChain, name);
         if (!obj)
             goto error;
     } while (0);
@@ -2444,8 +2453,9 @@ END_CASE(JSOP_ADD)
 
 BEGIN_CASE(JSOP_SUB)
 {
-    Value lval = regs.sp[-2];
-    Value rval = regs.sp[-1];
+    RootedVarValue &lval = rootValue0, &rval = rootValue1;
+    lval = regs.sp[-2];
+    rval = regs.sp[-1];
     if (!SubOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
@@ -2454,8 +2464,9 @@ END_CASE(JSOP_SUB)
 
 BEGIN_CASE(JSOP_MUL)
 {
-    Value lval = regs.sp[-2];
-    Value rval = regs.sp[-1];
+    RootedVarValue &lval = rootValue0, &rval = rootValue1;
+    lval = regs.sp[-2];
+    rval = regs.sp[-1];
     if (!MulOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
@@ -2464,8 +2475,9 @@ END_CASE(JSOP_MUL)
 
 BEGIN_CASE(JSOP_DIV)
 {
-    Value lval = regs.sp[-2];
-    Value rval = regs.sp[-1];
+    RootedVarValue &lval = rootValue0, &rval = rootValue1;
+    lval = regs.sp[-2];
+    rval = regs.sp[-1];
     if (!DivOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
@@ -2474,8 +2486,9 @@ END_CASE(JSOP_DIV)
 
 BEGIN_CASE(JSOP_MOD)
 {
-    Value lval = regs.sp[-2];
-    Value rval = regs.sp[-1];
+    RootedVarValue &lval = rootValue0, &rval = rootValue1;
+    lval = regs.sp[-2];
+    rval = regs.sp[-1];
     if (!ModOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
@@ -2557,14 +2570,14 @@ END_CASE(JSOP_DELNAME)
 
 BEGIN_CASE(JSOP_DELPROP)
 {
-    PropertyName *name;
+    RootedVarPropertyName &name = rootName0;
     LOAD_NAME(0, name);
 
     JSObject *obj;
     FETCH_OBJECT(cx, -1, obj);
 
-    Value rval;
-    if (!obj->deleteProperty(cx, name, &rval, script->strictModeCode))
+    RootedVarValue &rval = rootValue0;
+    if (!obj->deleteProperty(cx, name, rval.address(), script->strictModeCode))
         goto error;
 
     regs.sp[-1] = rval;
@@ -2722,7 +2735,7 @@ END_CASE(JSOP_GETELEM)
 
 BEGIN_CASE(JSOP_SETELEM)
 {
-    JSObject *obj;
+    RootedVarObject &obj = rootObject0;
     FETCH_OBJECT(cx, -3, obj);
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
@@ -2736,13 +2749,15 @@ END_CASE(JSOP_SETELEM)
 
 BEGIN_CASE(JSOP_ENUMELEM)
 {
+    RootedVarObject &obj = rootObject0;
+    RootedVarValue &rval = rootValue0;
+
     /* Funky: the value to set is under the [obj, id] pair. */
-    JSObject *obj;
     FETCH_OBJECT(cx, -2, obj);
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
-    Value rval = regs.sp[-3];
-    if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
+    rval = regs.sp[-3];
+    if (!obj->setGeneric(cx, id, rval.address(), script->strictModeCode))
         goto error;
     regs.sp -= 3;
 }
@@ -3204,7 +3219,6 @@ BEGIN_CASE(JSOP_DEFFUN)
      */
     RootedVarFunction &fun = rootFunction0;
     fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
-    JSObject *obj = fun;
 
     RootedVarObject &obj2 = rootObject0;
     if (fun->isNullClosure()) {
@@ -3229,11 +3243,10 @@ BEGIN_CASE(JSOP_DEFFUN)
      * windows, and user-defined JS functions precompiled and then shared among
      * requests in server-side JS.
      */
-    if (obj->toFunction()->environment() != obj2) {
-        obj = CloneFunctionObjectIfNotSingleton(cx, fun, obj2);
-        if (!obj)
+    if (fun->environment() != obj2) {
+        fun = CloneFunctionObjectIfNotSingleton(cx, fun, obj2);
+        if (!fun)
             goto error;
-        JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
     }
 
     /*
@@ -3249,16 +3262,19 @@ BEGIN_CASE(JSOP_DEFFUN)
      * current scope chain even for the case of function expression statements
      * and functions defined by eval inside let or with blocks.
      */
-    JSObject *parent = &regs.fp()->varObj();
+    RootedVarObject &parent = rootObject0;
+    parent = &regs.fp()->varObj();
 
     /* ES5 10.5 (NB: with subsequent errata). */
-    PropertyName *name = fun->atom->asPropertyName();
+    RootedVarPropertyName &name = rootName0;
+    name = fun->atom->asPropertyName();
     JSProperty *prop = NULL;
     JSObject *pobj;
     if (!parent->lookupProperty(cx, name, &pobj, &prop))
         goto error;
 
-    Value rval = ObjectValue(*obj);
+    RootedVarValue &rval = rootValue0;
+    rval = ObjectValue(*fun);
 
     do {
         /* Steps 5d, 5f. */
@@ -3302,7 +3318,7 @@ BEGIN_CASE(JSOP_DEFFUN)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, name, &rval, script->strictModeCode))
+        if (!parent->setProperty(cx, name, rval.address(), script->strictModeCode))
             goto error;
     } while (false);
 }
@@ -3532,10 +3548,12 @@ BEGIN_CASE(JSOP_INITELEM)
     JS_ASSERT(regs.sp - regs.fp()->base() >= 3);
     const Value &rref = regs.sp[-1];
 
+    RootedVarObject &obj = rootObject0;
+
     /* Find the object being initialized at top of stack. */
     const Value &lref = regs.sp[-3];
     JS_ASSERT(lref.isObject());
-    JSObject *obj = &lref.toObject();
+    obj = &lref.toObject();
 
     /* Fetch id now that we have obj. */
     jsid id;
@@ -3680,6 +3698,8 @@ END_CASE(JSOP_DEFXMLNS)
 BEGIN_CASE(JSOP_ANYNAME)
 {
     JS_ASSERT(!script->strictModeCode);
+
+    cx->runtime->gcExactScanningEnabled = false;
 
     jsid id;
     if (!js_GetAnyName(cx, &id))
@@ -3897,6 +3917,8 @@ END_CASE(JSOP_ENDFILTER);
 BEGIN_CASE(JSOP_TOXML)
 {
     JS_ASSERT(!script->strictModeCode);
+
+    cx->runtime->gcExactScanningEnabled = false;
 
     Value rval = regs.sp[-1];
     JSObject *obj = js_ValueToXMLObject(cx, rval);
@@ -4479,37 +4501,37 @@ js::SetObjectElement(JSContext *cx, JSObject *obj, const Value &index, const Val
 }
 
 bool
-js::AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+js::AddValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     return AddOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::SubValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+js::SubValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     return SubOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::MulValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+js::MulValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     return MulOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::DivValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+js::DivValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     return DivOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::ModValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+js::ModValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     return ModOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::UrshValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+js::UrshValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     return UrshOperation(cx, lhs, rhs, res);
 }

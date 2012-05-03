@@ -136,7 +136,7 @@ array_deleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, J
  * js_GetLengthProperty on aobj.
  */
 extern bool
-GetElements(JSContext *cx, JSObject *aobj, uint32_t length, js::Value *vp);
+GetElements(JSContext *cx, HandleObject aobj, uint32_t length, js::Value *vp);
 
 /* Natives exposed for optimization by the interpreter and JITs. */
 

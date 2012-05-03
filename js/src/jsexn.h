@@ -99,7 +99,7 @@ js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
  * (errobj->getPrivate() must not be NULL).
  */
 extern JSObject *
-js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope);
+js_CopyErrorObject(JSContext *cx, js::HandleObject errobj, js::HandleObject scope);
 
 static JS_INLINE JSProtoKey
 GetExceptionProtoKey(int exn)

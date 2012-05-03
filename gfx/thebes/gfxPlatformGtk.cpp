@@ -67,6 +67,7 @@
 #include <gdk/gdkx.h>
 #include "gfxXlibSurface.h"
 #include "cairo-xlib.h"
+#include "mozilla/Preferences.h"
 
 /* Undefine the Status from Xlib since it will conflict with system headers on OSX */
 #if defined(__APPLE__) && defined(Status)
@@ -104,14 +105,20 @@ static void do_gdk_drawable_unref (void *data)
     g_object_unref (d);
 }
 
+#ifdef MOZ_X11
+    bool gfxPlatformGtk::sUseXRender = true;
+#endif
+
 gfxPlatformGtk::gfxPlatformGtk()
 {
     if (!sFontconfigUtils)
         sFontconfigUtils = gfxFontconfigUtils::GetFontconfigUtils();
+#ifdef MOZ_X11
+    sUseXRender = mozilla::Preferences::GetBool("gfx.xrender.enabled");
+#endif
 
 #ifndef MOZ_PANGO
     FT_Init_FreeType(&gPlatformFTLibrary);
-
     gPlatformFonts = new FontTable();
     gPlatformFonts->Init(100);
     gPlatformFontAliases = new FontTable();
@@ -178,7 +185,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
             imageFormat = GetOffscreenFormat();
         }
 
-        if (UseClientSideRendering()) {
+        if (!UseXRender()) {
             // We're not going to use XRender, so we don't need to
             // search for a render format
             newSurface = new gfxImageSurface(size, imageFormat);
