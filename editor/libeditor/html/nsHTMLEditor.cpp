@@ -3907,7 +3907,6 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode        *aNode,
                                               const nsAString   *aAttribute, 
                                               const nsAString   *aValue, 
                                               bool              &aIsSet,
-                                              nsIDOMNode       **aStyleNode,
                                               nsAString *outValue)
 {
   nsresult result;
