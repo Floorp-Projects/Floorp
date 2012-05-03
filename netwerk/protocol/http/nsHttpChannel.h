@@ -288,6 +288,10 @@ private:
                 (tmpHost1 == tmpHost2));
     }
 
+    inline static bool DoNotRender3xxBody(nsresult rv) {
+        return rv == NS_ERROR_REDIRECT_LOOP || rv == NS_ERROR_CORRUPTED_CONTENT;
+    }
+
 private:
     nsCOMPtr<nsISupports>             mSecurityInfo;
     nsCOMPtr<nsICancelable>           mProxyRequest;
