@@ -404,22 +404,22 @@ SetObjectElement(JSContext *cx, JSObject *obj, const Value &index, const Value &
                  JSBool strict);
 
 bool
-AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
+AddValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res);
 
 bool
-SubValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
+SubValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res);
 
 bool
-MulValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
+MulValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res);
 
 bool
-DivValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
+DivValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res);
 
 bool
-ModValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
+ModValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res);
 
 bool
-UrshValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
+UrshValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res);
 
 template <bool strict>
 bool

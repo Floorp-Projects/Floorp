@@ -6,5 +6,7 @@
   <color name="splash_content">#ffffff</color>
   <color name="doorhanger_link">#ACC4D5</color>
   <color name="validation_message_text">#ffffff</color>
+  <color name="identity_verified">#77BAFF</color>
+  <color name="identity_identified">#B7D46A</color>
 </resources>
 

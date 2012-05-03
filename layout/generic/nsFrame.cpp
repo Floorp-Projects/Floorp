@@ -4553,6 +4553,10 @@ void
 nsIFrame::InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
                                         nscoord aY, PRUint32 aFlags)
 {
+  if (aDamageRect.IsEmpty()) {
+    return;
+  }
+
   /* If we're a transformed frame, then we need to apply our transform to the
    * damage rectangle so that the redraw correctly redraws the transformed
    * region.  We're moved over aX and aY from our origin, but since this aX

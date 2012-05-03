@@ -21,7 +21,9 @@ def WebIDLTest(parser, harness):
                 ("::TestAttr%s::rstr", "rstr", "String%s", True),
                 ("::TestAttr%s::obj", "obj", "Object%s", False),
                 ("::TestAttr%s::robj", "robj", "Object%s", True),
-                ("::TestAttr%s::object", "object", "Object%s", False)]
+                ("::TestAttr%s::object", "object", "Object%s", False),
+                ("::TestAttr%s::f", "f", "Float%s", False),
+                ("::TestAttr%s::rf", "rf", "Float%s", True)]
 
     parser.parse("""
         interface TestAttr {
@@ -46,6 +48,8 @@ def WebIDLTest(parser, harness):
           attribute object obj;
           readonly attribute object robj;
           attribute object _object;
+          attribute float f;
+          readonly attribute float rf;
         };
 
         interface TestAttrNullable {
@@ -70,6 +74,8 @@ def WebIDLTest(parser, harness):
           attribute object? obj;
           readonly attribute object? robj;
           attribute object? _object;
+          attribute float? f;
+          readonly attribute float? rf;
         };
 
         interface TestAttrArray {
@@ -94,6 +100,8 @@ def WebIDLTest(parser, harness):
           attribute object[] obj;
           readonly attribute object[] robj;
           attribute object[] _object;
+          attribute float[] f;
+          readonly attribute float[] rf;
         };
 
         interface TestAttrNullableArray {
@@ -118,6 +126,8 @@ def WebIDLTest(parser, harness):
           attribute object[]? obj;
           readonly attribute object[]? robj;
           attribute object[]? _object;
+          attribute float[]? f;
+          readonly attribute float[]? rf;
         };
 
         interface TestAttrArrayOfNullableTypes {
@@ -142,6 +152,8 @@ def WebIDLTest(parser, harness):
           attribute object?[] obj;
           readonly attribute object?[] robj;
           attribute object?[] _object;
+          attribute float?[] f;
+          readonly attribute float?[] rf;
         };
 
         interface TestAttrNullableArrayOfNullableTypes {
@@ -166,6 +178,8 @@ def WebIDLTest(parser, harness):
           attribute object?[]? obj;
           readonly attribute object?[]? robj;
           attribute object?[]? _object;
+          attribute float?[]? f;
+          readonly attribute float?[]? rf;
         };
     """)
 
