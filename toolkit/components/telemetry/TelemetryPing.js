@@ -276,8 +276,13 @@ TelemetryPing.prototype = {
     let ahs = Telemetry.addonHistogramSnapshots;
     let ret = {};
 
-    for (let name in ahs) {
-      ret[name] = this.convertHistogram(ahs[name]);
+    for (let addonName in ahs) {
+      addonHistograms = ahs[addonName];
+      packedHistograms = {};
+      for (let name in addonHistograms) {
+        packedHistograms[name] = this.packHistogram(addonHistograms[name]);
+      }
+      ret[addonName] = packedHistograms;
     }
 
     return ret;
