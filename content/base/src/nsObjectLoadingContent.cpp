@@ -519,8 +519,12 @@ nsresult nsObjectLoadingContent::IsPluginEnabledForType(const nsCString& aMIMETy
     MOZ_ASSERT(thisContent);
     nsIDocument* ownerDoc = thisContent->OwnerDoc();
 
+    nsCOMPtr<nsIDOMWindow> window = ownerDoc->GetWindow();
+    if (!window) {
+      return NS_ERROR_FAILURE;
+    }
     nsCOMPtr<nsIDOMWindow> topWindow;
-    rv = ownerDoc->GetWindow()->GetTop(getter_AddRefs(topWindow));
+    window->GetTop(getter_AddRefs(topWindow));
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDOMDocument> topDocument;
     rv = topWindow->GetDocument(getter_AddRefs(topDocument));
