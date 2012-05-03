@@ -169,7 +169,7 @@ mjit::Compiler::checkAnalysis(JSScript *script)
     if (!script->ensureRanAnalysis(cx, NULL))
         return Compile_Error;
 
-    if (!script->analysis()->compileable()) {
+    if (!script->analysis()->jaegerCompileable()) {
         JaegerSpew(JSpew_Abort, "script has uncompileable opcodes\n");
         return Compile_Abort;
     }
