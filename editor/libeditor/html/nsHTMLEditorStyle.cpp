@@ -302,8 +302,7 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
   }
   else
   {
-    nsCOMPtr<nsIDOMNode> styleNode;
-    IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, bHasProp, getter_AddRefs(styleNode));
+    IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, bHasProp);
   }
 
   if (bHasProp) return NS_OK;
@@ -1040,9 +1039,8 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
         return NS_OK;
       }
       if (!useCSS) {
-        nsCOMPtr<nsIDOMNode> resultNode;
         IsTextPropertySetByContent(collapsedNode, aProperty, aAttribute, aValue,
-                                   isSet, getter_AddRefs(resultNode), outValue);
+                                   isSet, outValue);
         *aFirst = *aAny = *aAll = isSet;
 
         if (!isSet && aCheckDefaults) {
@@ -1111,7 +1109,6 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       }
       if (node) {
         bool isSet = false;
-        nsCOMPtr<nsIDOMNode> resultNode;
         if (first) {
           if (mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty,
                                                    aAttribute) &&
@@ -1129,7 +1126,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
                                                                COMPUTED_STYLE_TYPE);
           } else {
             IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet,
-                                       getter_AddRefs(resultNode), &firstValue);
+                                       &firstValue);
           }
           *aFirst = isSet;
           first = false;
@@ -1152,7 +1149,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
                                                                COMPUTED_STYLE_TYPE);
           } else {
             IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet,
-                                       getter_AddRefs(resultNode), &theValue);
+                                       &theValue);
           }
           if (firstValue != theValue) {
             *aAll = false;
