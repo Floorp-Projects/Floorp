@@ -1189,9 +1189,13 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
                                             const nsIntRect& aDrawRect,
                                             const FrameLayerBuilder::Clip& aClip)
 {
+  if (aState->mBuilder->NeedToForceTransparentSurfaceForItem(aItem)) {
+    mForceTransparentSurface = true;
+  }
+
   nscolor uniformColor;
   bool isUniform = aItem->IsUniform(aState->mBuilder, &uniformColor);
-  
+
   /* Mark as available for conversion to image layer if this is a nsDisplayImage and
    * we are the first visible item in the ThebesLayerData object.
    */
@@ -1238,10 +1242,8 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
     mDrawRegion.SimplifyOutward(4);
   }
   
-  bool forceTransparentSurface;
   bool snap;
-  nsRegion opaque = aItem->GetOpaqueRegion(aState->mBuilder, &snap,
-                                           &forceTransparentSurface);
+  nsRegion opaque = aItem->GetOpaqueRegion(aState->mBuilder, &snap);
   if (!opaque.IsEmpty()) {
     nsRegionRectIterator iter(opaque);
     for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
@@ -1284,7 +1286,6 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
       }
     }
   }
-  mForceTransparentSurface = mForceTransparentSurface || forceTransparentSurface;
 }
 
 already_AddRefed<ThebesLayer>
