@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bindings_Utils_h__
-#define mozilla_dom_bindings_Utils_h__
+#ifndef mozilla_dom_BindingUtils_h__
+#define mozilla_dom_BindingUtils_h__
 
-#include "mozilla/dom/bindings/DOMJSClass.h"
+#include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/workers/Workers.h"
 
 #include "jsapi.h"
@@ -18,9 +18,12 @@
 #include "nsTraceRefcnt.h"
 #include "nsWrapperCacheInlines.h"
 
+// nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
+// try to use it without fixing that first.
+class nsGlobalWindow;
+
 namespace mozilla {
 namespace dom {
-namespace bindings {
 
 template<bool mainThread>
 inline bool
@@ -377,9 +380,6 @@ GetWrapperCache(nsWrapperCache* cache)
   return cache;
 }
 
-// nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
-// try to use it without fixing that first.
-class nsGlobalWindow;
 inline nsWrapperCache*
 GetWrapperCache(nsGlobalWindow* not_allowed);
 
@@ -508,8 +508,7 @@ InitIds(JSContext* cx, Spec* specs, jsid* ids)
 JSBool
 QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp);
 
-} // namespace bindings
 } // namespace dom
 } // namespace mozilla
 
-#endif /* mozilla_dom_bindings_Utils_h__ */
+#endif /* mozilla_dom_BindingUtils_h__ */

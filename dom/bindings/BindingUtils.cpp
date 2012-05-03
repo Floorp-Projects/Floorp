@@ -4,11 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Utils.h"
+#include "BindingUtils.h"
 
 namespace mozilla {
 namespace dom {
-namespace bindings {
 
 static bool
 DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs)
@@ -240,6 +239,5 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   return true;
 }
 
-} // namespace bindings
 } // namespace dom
 } // namespace mozilla

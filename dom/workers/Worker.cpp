@@ -38,8 +38,8 @@
 
 #include "Worker.h"
 
-#include "mozilla/dom/bindings/DOMJSClass.h"
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/DOMJSClass.h"
+#include "mozilla/dom/BindingUtils.h"
 
 #include "EventTarget.h"
 #include "RuntimeService.h"
@@ -55,7 +55,7 @@
 
 USING_WORKERS_NAMESPACE
 
-using namespace mozilla::dom::bindings;
+using namespace mozilla::dom;
 
 namespace {
 

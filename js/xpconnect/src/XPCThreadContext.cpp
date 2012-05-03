@@ -47,10 +47,10 @@
 #include "nsDOMJSUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsNullPrincipal.h"
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
-using mozilla::dom::bindings::DestroyProtoOrIfaceCache;
+using mozilla::dom::DestroyProtoOrIfaceCache;
 
 /***************************************************************************/
 
