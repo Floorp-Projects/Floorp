@@ -43,10 +43,10 @@
 #include "builtin/MapObject.h"
 
 #include "jscntxt.h"
+#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jsobj.h"
 
-#include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/MethodGuard.h"
 #include "vm/Stack.h"

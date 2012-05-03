@@ -113,10 +113,10 @@
  * a linear search. But if the number of searches starting at any particular
  * Shape in the property tree exceeds MAX_LINEAR_SEARCHES and the Shape's
  * lineage has (excluding the EmptyShape) at least MIN_ENTRIES, we create an
- * auxiliary hash table -- the ShapeTable -- that allows faster lookup.
- * Furthermore, a ShapeTable is always created for dictionary mode lists,
- * and it is attached to the last Shape in the lineage. Shape tables for
- * property tree Shapes never change, but shape tables for dictionary mode
+ * auxiliary hash table -- the PropertyTable -- that allows faster lookup.
+ * Furthermore, a PropertyTable is always created for dictionary mode lists,
+ * and it is attached to the last Shape in the lineage. Property tables for
+ * property tree Shapes never change, but property tables for dictionary mode
  * Shapes can grow and shrink.
  *
  * There used to be a long, math-heavy comment here explaining why property
@@ -138,7 +138,7 @@ static const uint32_t SHAPE_MAXIMUM_SLOT = JS_BIT(24) - 2;
  * Shapes use multiplicative hashing, but specialized to
  * minimize footprint.
  */
-struct ShapeTable {
+struct PropertyTable {
     static const uint32_t HASH_BITS     = tl::BitSize<HashNumber>::result;
     static const uint32_t MIN_ENTRIES   = 7;
     static const uint32_t MIN_SIZE_LOG2 = 4;
@@ -153,7 +153,7 @@ struct ShapeTable {
                                            object */
     js::Shape       **entries;          /* table of ptrs to shared tree nodes */
 
-    ShapeTable(uint32_t nentries)
+    PropertyTable(uint32_t nentries)
       : hashShift(HASH_BITS - MIN_SIZE_LOG2),
         entryCount(nentries),
         removedCount(0),
@@ -162,7 +162,7 @@ struct ShapeTable {
         /* NB: entries is set by init, which must be called. */
     }
 
-    ~ShapeTable() {
+    ~PropertyTable() {
         js::UnwantedForeground::free_(entries);
     }
 
@@ -173,7 +173,7 @@ struct ShapeTable {
     static size_t sizeOfEntries(size_t cap) { return cap * sizeof(Shape *); }
 
     /*
-     * This counts the ShapeTable object itself (which must be
+     * This counts the PropertyTable object itself (which must be
      * heap-allocated) and its |entries| array.
      */
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
@@ -226,7 +226,7 @@ class PropertyTree;
  * whose entries are all owned by that dictionary. Unowned Shapes are all in
  * the property tree.
  *
- * Owned BaseShapes are used for shapes which have shape tables, including
+ * Owned BaseShapes are used for shapes which have property tables, including
  * the last properties in all dictionaries. Unowned BaseShapes compactly store
  * information common to many shapes. In a given compartment there is a single
  * BaseShape for each combination of BaseShape information. This information
@@ -247,11 +247,11 @@ class PropertyTree;
  *
  * Unowned Shape, Owned BaseShape:
  *
- *     Property in the property tree which has a shape table.
+ *     Property in the property tree which has a property table.
  *
  * Unowned Shape, Unowned BaseShape:
  *
- *     Property in the property tree which does not have a shape table.
+ *     Property in the property tree which does not have a property table.
  *
  * BaseShapes additionally encode some information about the referring object
  * itself. This includes the object's class, parent and various flags that may
@@ -324,8 +324,8 @@ class BaseShape : public js::gc::Cell
     /* For owned BaseShapes, the canonical unowned BaseShape. */
     HeapPtr<UnownedBaseShape> unowned_;
 
-    /* For owned BaseShapes, the shape's shape table. */
-    ShapeTable       *table_;
+    /* For owned BaseShapes, the shape's property table. */
+    PropertyTable       *table_;
 
   public:
     void finalize(FreeOp *fop);
@@ -358,8 +358,8 @@ class BaseShape : public js::gc::Cell
     JSObject *setterObject() const { JS_ASSERT(hasSetterObject()); return setterObj; }
 
     bool hasTable() const { JS_ASSERT_IF(table_, isOwned()); return table_ != NULL; }
-    ShapeTable &table() const { JS_ASSERT(table_ && isOwned()); return *table_; }
-    void setTable(ShapeTable *table) { JS_ASSERT(isOwned()); table_ = table; }
+    PropertyTable &table() const { JS_ASSERT(table_ && isOwned()); return *table_; }
+    void setTable(PropertyTable *table) { JS_ASSERT(isOwned()); table_ = table; }
 
     uint32_t slotSpan() const { JS_ASSERT(isOwned()); return slotSpan_; }
     void setSlotSpan(uint32_t slotSpan) { JS_ASSERT(isOwned()); slotSpan_ = slotSpan; }
@@ -550,7 +550,7 @@ struct Shape : public js::gc::Cell
 
   public:
     bool hasTable() const { return base()->hasTable(); }
-    js::ShapeTable &table() const { return base()->table(); }
+    js::PropertyTable &table() const { return base()->table(); }
 
     void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
                              size_t *propTableSize, size_t *kidsSize) const {
@@ -852,13 +852,13 @@ struct Shape : public js::gc::Cell
         return count;
     }
 
-    bool isBigEnoughForAShapeTable() const {
+    bool isBigEnoughForAPropertyTable() const {
         JS_ASSERT(!hasTable());
         const js::Shape *shape = this;
         uint32_t count = 0;
         for (js::Shape::Range r = shape->all(); !r.empty(); r.popFront()) {
             ++count;
-            if (count >= ShapeTable::MIN_ENTRIES)
+            if (count >= PropertyTable::MIN_ENTRIES)
                 return true;
         }
         return false;
@@ -1073,7 +1073,7 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
     }
 
     if (start->numLinearSearches() == LINEAR_SEARCHES_MAX) {
-        if (start->isBigEnoughForAShapeTable()) {
+        if (start->isBigEnoughForAPropertyTable()) {
             RootShape startRoot(cx, &start);
             RootId idRoot(cx, &id);
             if (start->hashify(cx)) {

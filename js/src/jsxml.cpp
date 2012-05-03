@@ -57,6 +57,7 @@
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -68,7 +69,6 @@
 
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
-#include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/MethodGuard.h"
 #include "vm/StringBuffer.h"

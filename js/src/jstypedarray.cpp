@@ -53,13 +53,13 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jstypedarray.h"
 
-#include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/NumericConversions.h"
 

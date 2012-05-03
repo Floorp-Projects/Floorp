@@ -40,7 +40,7 @@
 
 #include "mozilla/RangedPtr.h"
 
-#include "gc/Marking.h"
+#include "jsgcmark.h"
 
 #include "String.h"
 #include "String-inl.h"

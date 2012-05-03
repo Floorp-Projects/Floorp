@@ -41,8 +41,8 @@
 #define jsgc_barrier_h___
 
 #include "jsapi.h"
+#include "jscell.h"
 
-#include "gc/Heap.h"
 #include "js/HashTable.h"
 
 /*
@@ -247,6 +247,7 @@ struct Shape;
 class BaseShape;
 namespace types { struct TypeObject; }
 
+typedef HeapPtr<JSAtom> HeapPtrAtom;
 typedef HeapPtr<JSObject> HeapPtrObject;
 typedef HeapPtr<JSFunction> HeapPtrFunction;
 typedef HeapPtr<JSString> HeapPtrString;
