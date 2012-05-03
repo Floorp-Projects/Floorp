@@ -155,6 +155,8 @@ public class GeckoAppShell
 
     private static boolean mLocationHighAccuracy = false;
 
+    private static Handler sGeckoHandler;
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -262,6 +264,10 @@ public class GeckoAppShell
     // Get a Handler for the main java thread
     public static Handler getMainHandler() {
         return GeckoApp.mAppContext.mMainHandler;
+    }
+
+    public static Handler getGeckoHandler() {
+        return sGeckoHandler;
     }
 
     public static Handler getHandler() {
@@ -458,6 +464,9 @@ public class GeckoAppShell
     }
 
     public static void runGecko(String apkPath, String args, String url, String type, boolean restoreSession) {
+        Looper.prepare();
+        sGeckoHandler = new Handler();
+        
         // run gecko -- it will spawn its own thread
         GeckoAppShell.nativeInit();
 
@@ -2118,6 +2127,28 @@ public class GeckoAppShell
 
     public static void unlockScreenOrientation() {
         GeckoScreenOrientationListener.getInstance().unlockScreenOrientation();
+    }
+
+    public static void pumpMessageLoop() {
+        // We're going to run the Looper below, but we need a way to break out, so
+        // we post this Runnable that throws a RuntimeException. This causes the loop
+        // to exit without marking the Looper as dead. The Runnable is added to the
+        // end of the queue, so it will be executed after anything
+        // else that has been added prior.
+        //
+        // A more civilized method would obviously be preferred. Looper.quit(),
+        // however, marks the Looper as dead and it cannot be prepared or run
+        // again. And since you can only have a single Looper per thread,
+        // here we are.
+        sGeckoHandler.post(new Runnable() {
+            public void run() {
+                throw new RuntimeException();
+            }
+        });
+        
+        try {
+            Looper.loop();
+        } catch(Exception ex) {}
     }
 
     static class AsyncResultHandler extends GeckoApp.FilePickerResultHandler {

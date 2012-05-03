@@ -451,6 +451,8 @@ public:
     void LockScreenOrientation(const dom::ScreenOrientationWrapper& aOrientation);
     void UnlockScreenOrientation();
 
+    void PumpMessageLoop();
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -569,6 +571,7 @@ protected:
     jmethodID jDisableScreenOrientationNotifications;
     jmethodID jLockScreenOrientation;
     jmethodID jUnlockScreenOrientation;
+    jmethodID jPumpMessageLoop;
 
     // For native surface stuff
     jclass jSurfaceClass;

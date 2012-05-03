@@ -215,6 +215,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
         jSurfacePointerField = jEnv->GetFieldID(jSurfaceClass, "mNativeSurface", "I");
 
 #ifdef MOZ_JAVA_COMPOSITOR
+    jPumpMessageLoop = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "pumpMessageLoop", "()V");
+
     jAddPluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "addPluginView", "(Landroid/view/View;IIII)V");
     jCreateSurface = jEnv->GetStaticMethodID(jGeckoAppShellClass, "createSurface", "()Landroid/view/Surface;");
     jShowSurface = jEnv->GetStaticMethodID(jGeckoAppShellClass, "showSurface", "(Landroid/view/Surface;IIIIZZ)V");
@@ -2184,6 +2186,23 @@ AndroidBridge::UnlockScreenOrientation()
 {
   ALOG_BRIDGE("AndroidBridge::UnlockScreenOrientation");
   mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jUnlockScreenOrientation);
+}
+
+void
+AndroidBridge::PumpMessageLoop()
+{
+#if MOZ_JAVA_COMPOSITOR
+    JNIEnv* env = GetJNIEnv();
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame frame(env);
+
+    if ((void*)pthread_self() != mThread)
+        return;
+
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jPumpMessageLoop);
+#endif
 }
 
 /* attribute nsIAndroidBrowserApp browserApp; */
