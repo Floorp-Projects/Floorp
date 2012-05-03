@@ -227,13 +227,15 @@ JSObject::deleteProperty(JSContext *cx, js::PropertyName *name, js::Value *rval,
 inline bool
 JSObject::deleteElement(JSContext *cx, uint32_t index, js::Value *rval, bool strict)
 {
+    js::RootedVarObject self(cx, this);
+
     jsid id;
     if (!js::IndexToId(cx, index, &id))
         return false;
-    js::types::AddTypePropertyId(cx, this, id, js::types::Type::UndefinedType());
-    js::types::MarkTypePropertyConfigured(cx, this, id);
-    js::DeleteElementOp op = getOps()->deleteElement;
-    return (op ? op : js_DeleteElement)(cx, this, index, rval, strict);
+    js::types::AddTypePropertyId(cx, self, id, js::types::Type::UndefinedType());
+    js::types::MarkTypePropertyConfigured(cx, self, id);
+    js::DeleteElementOp op = self->getOps()->deleteElement;
+    return (op ? op : js_DeleteElement)(cx, self, index, rval, strict);
 }
 
 inline bool
@@ -1084,16 +1086,19 @@ JSObject::lookupSpecial(JSContext *cx, js::SpecialId sid, JSObject **objp, JSPro
 }
 
 inline JSBool
-JSObject::getElement(JSContext *cx, JSObject *receiver, uint32_t index, js::Value *vp)
+JSObject::getElement(JSContext *cx, JSObject *receiver_, uint32_t index, js::Value *vp)
 {
     js::ElementIdOp op = getOps()->getElement;
     if (op)
-        return op(cx, this, receiver, index, vp);
+        return op(cx, this, receiver_, index, vp);
+
+    js::RootedVarObject self(cx, this);
+    js::RootedVarObject receiver(cx, receiver_);
 
     jsid id;
     if (!js::IndexToId(cx, index, &id))
         return false;
-    return getGeneric(cx, receiver, id, vp);
+    return self->getGeneric(cx, receiver, id, vp);
 }
 
 inline JSBool
@@ -1103,14 +1108,17 @@ JSObject::getElement(JSContext *cx, uint32_t index, js::Value *vp)
 }
 
 inline JSBool
-JSObject::getElementIfPresent(JSContext *cx, JSObject *receiver, uint32_t index, js::Value *vp,
+JSObject::getElementIfPresent(JSContext *cx, JSObject *receiver_, uint32_t index, js::Value *vp,
                               bool *present)
 {
+    js::RootedVarObject self(cx, this), receiver(cx, receiver_);
+
     js::ElementIfPresentOp op = getOps()->getElementIfPresent;
     if (op)
         return op(cx, this, receiver, index, vp, present);
 
-    /* For now, do the index-to-id conversion just once, then use
+    /*
+     * For now, do the index-to-id conversion just once, then use
      * lookupGeneric/getGeneric.  Once lookupElement and getElement stop both
      * doing index-to-id conversions, we can use those here.
      */
@@ -1120,7 +1128,7 @@ JSObject::getElementIfPresent(JSContext *cx, JSObject *receiver, uint32_t index,
 
     JSObject *obj2;
     JSProperty *prop;
-    if (!lookupGeneric(cx, id, &obj2, &prop))
+    if (!self->lookupGeneric(cx, id, &obj2, &prop))
         return false;
 
     if (!prop) {
@@ -1130,7 +1138,7 @@ JSObject::getElementIfPresent(JSContext *cx, JSObject *receiver, uint32_t index,
     }
 
     *present = true;
-    return getGeneric(cx, receiver, id, vp);
+    return self->getGeneric(cx, receiver, id, vp);
 }
 
 inline JSBool
@@ -1269,7 +1277,7 @@ class AutoPropDescArrayRooter : private AutoGCRooter
 {
   public:
     AutoPropDescArrayRooter(JSContext *cx)
-      : AutoGCRooter(cx, DESCRIPTORS), descriptors(cx)
+      : AutoGCRooter(cx, DESCRIPTORS), descriptors(cx), skip(cx, &descriptors)
     { }
 
     PropDesc *append() {
@@ -1291,12 +1299,15 @@ class AutoPropDescArrayRooter : private AutoGCRooter
 
   private:
     PropDescArray descriptors;
+    SkipRoot skip;
 };
 
 class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescriptor
 {
   public:
-    AutoPropertyDescriptorRooter(JSContext *cx) : AutoGCRooter(cx, DESCRIPTOR) {
+    AutoPropertyDescriptorRooter(JSContext *cx)
+      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, this)
+    {
         obj = NULL;
         attrs = 0;
         getter = (PropertyOp) NULL;
@@ -1305,7 +1316,7 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     }
 
     AutoPropertyDescriptorRooter(JSContext *cx, PropertyDescriptor *desc)
-      : AutoGCRooter(cx, DESCRIPTOR)
+      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, this)
     {
         obj = desc->obj;
         attrs = desc->attrs;
@@ -1315,6 +1326,9 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    SkipRoot skip;
 };
 
 inline bool
@@ -1636,7 +1650,7 @@ DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
     JS_ASSERT(proto);
 
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
-    JS_ASSERT(!global->nativeLookup(cx, id));
+    JS_ASSERT(!global->nativeLookupNoAllocation(cx, id));
 
     /* Set these first in case AddTypePropertyId looks for this class. */
     global->setSlot(key, ObjectValue(*ctor));

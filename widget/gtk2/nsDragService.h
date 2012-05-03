@@ -42,17 +42,39 @@
 #define nsDragService_h__
 
 #include "nsBaseDragService.h"
-#include "nsIDragSessionGTK.h"
 #include "nsIObserver.h"
 #include <gtk/gtk.h>
 
+class nsWindow;
+
+#ifndef HAVE_NSGOBJECTREFTRAITS
+#define HAVE_NSGOBJECTREFTRAITS
+template <class T>
+class nsGObjectRefTraits : public nsPointerRefTraits<T> {
+public:
+    static void Release(T *aPtr) { g_object_unref(aPtr); }
+    static void AddRef(T *aPtr) { g_object_ref(aPtr); }
+};
+#endif
+
+#ifndef HAVE_NSAUTOREFTRAITS_GTKWIDGET
+#define HAVE_NSAUTOREFTRAITS_GTKWIDGET
+template <>
+class nsAutoRefTraits<GtkWidget> : public nsGObjectRefTraits<GtkWidget> { };
+#endif
+
+#ifndef HAVE_NSAUTOREFTRAITS_GDKDRAGCONTEXT
+#define HAVE_NSAUTOREFTRAITS_GDKDRAGCONTEXT
+template <>
+class nsAutoRefTraits<GdkDragContext> :
+    public nsGObjectRefTraits<GdkDragContext> { };
+#endif
 
 /**
  * Native GTK DragService wrapper
  */
 
 class nsDragService : public nsBaseDragService,
-                      public nsIDragSessionGTK,
                       public nsIObserver
 {
 public:
@@ -79,16 +101,12 @@ public:
                                       PRUint32 aItemIndex);
     NS_IMETHOD IsDataFlavorSupported (const char *aDataFlavor, bool *_retval);
 
-    // nsIDragSessionGTK
+    // Methods called from nsWindow to handle responding to GTK drag
+    // destination signals
 
-    NS_IMETHOD TargetSetLastContext  (GtkWidget      *aWidget,
-                                      GdkDragContext *aContext,
-                                      guint           aTime);
-    NS_IMETHOD TargetStartDragMotion (void);
-    NS_IMETHOD TargetEndDragMotion   (GtkWidget      *aWidget,
-                                      GdkDragContext *aContext,
-                                      guint           aTime);
-    NS_IMETHOD TargetDataReceived    (GtkWidget         *aWidget,
+    static nsDragService* GetInstance();
+
+    void TargetDataReceived          (GtkWidget         *aWidget,
                                       GdkDragContext    *aContext,
                                       gint               aX,
                                       gint               aY,
@@ -96,7 +114,21 @@ public:
                                       guint              aInfo,
                                       guint32            aTime);
 
-    NS_IMETHOD TargetSetTimeCallback (nsIDragSessionGTKTimeCB aCallback);
+    gboolean ScheduleMotionEvent(nsWindow *aWindow,
+                                 GdkDragContext *aDragContext,
+                                 nsIntPoint aWindowPoint,
+                                 guint aTime);
+    void ScheduleLeaveEvent();
+    gboolean ScheduleDropEvent(nsWindow *aWindow,
+                               GdkDragContext *aDragContext,
+                               nsIntPoint aWindowPoint,
+                               guint aTime);
+
+    nsWindow* GetMostRecentDestWindow()
+    {
+        return mScheduledTask == eDragTaskNone ? mTargetWindow
+            : mPendingWindow;
+    }
 
     //  END PUBLIC API
 
@@ -116,14 +148,48 @@ public:
 
 private:
 
-    // target side vars
+    // mScheduledTask indicates what signal has been received from GTK and
+    // so what needs to be dispatched when the scheduled task is run.  It is
+    // eDragTaskNone when there is no task scheduled (but the
+    // previous task may still not have finished running).
+    enum DragTask {
+        eDragTaskNone,
+        eDragTaskMotion,
+        eDragTaskLeave,
+        eDragTaskDrop,
+        eDragTaskSourceEnd
+    };
+    DragTask mScheduledTask;
+    // mTaskSource is the GSource id for the task that is either scheduled
+    // or currently running.  It is 0 if no task is scheduled or running.
+    guint mTaskSource;
 
-    // the last widget that was the target of a drag
-    GtkWidget      *mTargetWidget;
-    GdkDragContext *mTargetDragContext;
+    // target/destination side vars
+    // These variables keep track of the state of the current drag.
+
+    // mPendingWindow, mPendingWindowPoint, mPendingDragContext, and
+    // mPendingTime, carry information from the GTK signal that will be used
+    // when the scheduled task is run.  mPendingWindow and mPendingDragContext
+    // will be NULL if the scheduled task is eDragTaskLeave.
+    nsRefPtr<nsWindow> mPendingWindow;
+    nsIntPoint mPendingWindowPoint;
+    nsCountedRef<GdkDragContext> mPendingDragContext;
+    guint mPendingTime;
+
+    // mTargetWindow and mTargetWindowPoint record the position of the last
+    // eDragTaskMotion or eDragTaskDrop task that was run or is still running.
+    // mTargetWindow is cleared once the drag has completed or left.
+    nsRefPtr<nsWindow> mTargetWindow;
+    nsIntPoint mTargetWindowPoint;
+    // mTargetWidget and mTargetDragContext are set only while dispatching
+    // motion or drop events.  mTime records the corresponding timestamp.
+    nsCountedRef<GtkWidget> mTargetWidget;
+    nsCountedRef<GdkDragContext> mTargetDragContext;
     guint           mTargetTime;
+
     // is it OK to drop on us?
     bool            mCanDrop;
+
     // have we received our drag data?
     bool            mTargetDragDataReceived;
     // last data received and its length
@@ -159,6 +225,17 @@ private:
                           PRInt32          aYOffset,
                           const nsIntRect &dragRect);
 
+    gboolean Schedule(DragTask aTask, nsWindow *aWindow,
+                      GdkDragContext *aDragContext,
+                      nsIntPoint aWindowPoint, guint aTime);
+
+    // Callback for g_idle_add_full() to run mScheduledTask.
+    static gboolean TaskDispatchCallback(gpointer data);
+    gboolean RunScheduledTask();
+    void UpdateDragAction();
+    void DispatchMotionEvents();
+    void ReplyToDragMotion();
+    gboolean DispatchDropEvent();
 };
 
 #endif // nsDragService_h__

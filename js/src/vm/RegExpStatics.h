@@ -241,17 +241,31 @@ class RegExpStatics
     void getLastParen(JSSubString *out) const;
     void getLeftContext(JSSubString *out) const;
     void getRightContext(JSSubString *out) const;
+
+    class StackRoot
+    {
+        Root<JSLinearString*> matchPairsInputRoot;
+        RootString pendingInputRoot;
+
+      public:
+        StackRoot(JSContext *cx, RegExpStatics *buffer)
+          : matchPairsInputRoot(cx, (JSLinearString**) &buffer->matchPairsInput),
+            pendingInputRoot(cx, (JSString**) &buffer->pendingInput)
+        {}
+    };
 };
 
 class PreserveRegExpStatics
 {
     RegExpStatics * const original;
     RegExpStatics buffer;
+    RegExpStatics::StackRoot bufferRoot;
 
   public:
-    explicit PreserveRegExpStatics(RegExpStatics *original)
+    explicit PreserveRegExpStatics(JSContext *cx, RegExpStatics *original)
      : original(original),
-       buffer(RegExpStatics::InitBuffer())
+       buffer(RegExpStatics::InitBuffer()),
+       bufferRoot(cx, &buffer)
     {}
 
     bool init(JSContext *cx) {

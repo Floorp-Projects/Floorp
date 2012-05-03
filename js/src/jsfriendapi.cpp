@@ -187,7 +187,7 @@ JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape)
 }
 
 static bool
-DefineHelpProperty(JSContext *cx, JSObject *obj, const char *prop, const char *value)
+DefineHelpProperty(JSContext *cx, HandleObject obj, const char *prop, const char *value)
 {
     JSAtom *atom = js_Atomize(cx, value, strlen(value));
     if (!atom)
@@ -212,8 +212,9 @@ JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWit
         if (!atom)
             return false;
 
-        JSFunction *fun = js_DefineFunction(cx, objRoot,
-                                            ATOM_TO_JSID(atom), fs->call, fs->nargs, fs->flags);
+        RootedVarFunction fun(cx);
+        fun = js_DefineFunction(cx, objRoot,
+                                ATOM_TO_JSID(atom), fs->call, fs->nargs, fs->flags);
         if (!fun)
             return false;
 

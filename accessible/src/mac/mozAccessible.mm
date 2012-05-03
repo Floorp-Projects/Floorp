@@ -514,7 +514,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   nsAutoString title;
-  mGeckoAccessible->GetName (title);
+  mGeckoAccessible->Name(title);
   return title.IsEmpty() ? nil : [NSString stringWithCharacters:title.BeginReading() length:title.Length()];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;

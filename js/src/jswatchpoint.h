@@ -79,14 +79,14 @@ class WatchpointMap {
     typedef HashMap<WatchKey, Watchpoint, DefaultHasher<WatchKey>, SystemAllocPolicy> Map;
 
     bool init();
-    bool watch(JSContext *cx, JSObject *obj, jsid id,
-               JSWatchPointHandler handler, JSObject *closure);
+    bool watch(JSContext *cx, HandleObject obj, HandleId id,
+               JSWatchPointHandler handler, HandleObject closure);
     void unwatch(JSObject *obj, jsid id,
                  JSWatchPointHandler *handlerp, JSObject **closurep);
     void unwatchObject(JSObject *obj);
     void clear();
 
-    bool triggerWatchpoint(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    bool triggerWatchpoint(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
 
     static bool markAllIteratively(JSTracer *trc);
     bool markIteratively(JSTracer *trc);

@@ -66,13 +66,13 @@ nsXULAlertAccessible::NativeState()
   return nsAccessible::NativeState() | states::ALERT;
 }
 
-NS_IMETHODIMP
-nsXULAlertAccessible::GetName(nsAString& aName)
+ENameValueFlag
+nsXULAlertAccessible::Name(nsString& aName)
 {
   // Screen readers need to read contents of alert, not the accessible name.
   // If we have both some screen readers will read the alert twice.
   aName.Truncate();
-  return NS_OK;
+  return eNameOK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

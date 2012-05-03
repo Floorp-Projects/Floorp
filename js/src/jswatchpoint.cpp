@@ -56,18 +56,19 @@ class AutoEntryHolder {
     Map &map;
     Map::Ptr p;
     uint32_t gen;
-    WatchKey key;
+    RootedVarObject obj;
+    RootedVarId id;
 
   public:
-    AutoEntryHolder(Map &map, Map::Ptr p)
-        : map(map), p(p), gen(map.generation()), key(p->key) {
+    AutoEntryHolder(JSContext *cx, Map &map, Map::Ptr p)
+        : map(map), p(p), gen(map.generation()), obj(cx, p->key.object), id(cx, p->key.id) {
         JS_ASSERT(!p->value.held);
         p->value.held = true;
     }
 
     ~AutoEntryHolder() {
         if (gen != map.generation())
-            p = map.lookup(key);
+            p = map.lookup(WatchKey(obj, id));
         if (p)
             p->value.held = false;
     }
@@ -80,10 +81,10 @@ WatchpointMap::init()
 }
 
 bool
-WatchpointMap::watch(JSContext *cx, JSObject *obj, jsid id,
-                     JSWatchPointHandler handler, JSObject *closure)
+WatchpointMap::watch(JSContext *cx, HandleObject obj, HandleId id,
+                     JSWatchPointHandler handler, HandleObject closure)
 {
-    JS_ASSERT(id == js_CheckForStringIndex(id));
+    JS_ASSERT(id.value() == js_CheckForStringIndex(id));
     JS_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id));
 
     if (!obj->setWatched(cx))
@@ -131,18 +132,18 @@ WatchpointMap::clear()
 }
 
 bool
-WatchpointMap::triggerWatchpoint(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+WatchpointMap::triggerWatchpoint(JSContext *cx, HandleObject obj, HandleId id, Value *vp)
 {
-    JS_ASSERT(id == js_CheckForStringIndex(id));
+    JS_ASSERT(id.value() == js_CheckForStringIndex(id));
     Map::Ptr p = map.lookup(WatchKey(obj, id));
     if (!p || p->value.held)
         return true;
 
-    AutoEntryHolder holder(map, p);
+    AutoEntryHolder holder(cx, map, p);
 
     /* Copy the entry, since GC would invalidate p. */
     JSWatchPointHandler handler = p->value.handler;
-    JSObject *closure = p->value.closure;
+    RootedVarObject closure(cx, p->value.closure);
 
     /* Determine the property's old value. */
     Value old;

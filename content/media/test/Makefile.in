@@ -134,6 +134,7 @@ _TEST_FILES = \
 		test_paused_after_ended.html \
 		test_play_events.html \
 		test_play_events_2.html \
+		test_played.html \
 		test_playback.html \
 		test_playback_errors.html \
  		test_seekable1.html \

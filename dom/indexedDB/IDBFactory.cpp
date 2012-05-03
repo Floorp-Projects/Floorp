@@ -46,12 +46,10 @@
 
 #include "mozilla/storage.h"
 #include "mozilla/dom/ContentChild.h"
-#include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
-#include "nsDirectoryServiceUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIPrincipal.h"
 #include "nsHashKeys.h"
@@ -178,46 +176,6 @@ IDBFactory::NoteUsedByProcessType(GeckoProcessType aProcessType)
   } else if (aProcessType != gAllowedProcessType) {
     NS_RUNTIMEABORT("More than one process type is accessing IndexedDB!");
   }
-}
-
-// static
-nsresult
-IDBFactory::GetDirectory(nsIFile** aDirectory)
-{
-  nsresult rv;
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, aDirectory);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = (*aDirectory)->Append(NS_LITERAL_STRING("indexedDB"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    nsCOMPtr<nsILocalFile> localDirectory =
-      do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-    rv = localDirectory->InitWithPath(
-      ContentChild::GetSingleton()->GetIndexedDBPath());
-    NS_ENSURE_SUCCESS(rv, rv);
-    localDirectory.forget((nsILocalFile**)aDirectory);
-  }
-  return NS_OK;
-}
-
-// static
-nsresult
-IDBFactory::GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
-                                  nsIFile** aDirectory)
-{
-  nsCOMPtr<nsIFile> directory;
-  nsresult rv = GetDirectory(getter_AddRefs(directory));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ConvertASCIItoUTF16 originSanitized(aASCIIOrigin);
-  originSanitized.ReplaceChar(":/", '+');
-
-  rv = directory->Append(originSanitized);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  directory.forget(aDirectory);
-  return NS_OK;
 }
 
 inline

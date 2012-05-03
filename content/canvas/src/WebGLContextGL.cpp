@@ -4566,17 +4566,6 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
     ShShaderOutput targetShaderSourceLanguage = gl->IsGLES2() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT;
     bool useShaderSourceTranslation = true;
 
-#ifdef ANDROID
-    // see bug 709947. On Android, we can't use the ESSL backend because of strange crashes (might be
-    // an allocator mismatch). So we use the GLSL backend, and discard the output, instead just passing
-    // the original WebGL shader source to the GL (since that's ESSL already). The problem is that means
-    // we can't use shader translations on Android, in particular we can't use long identifier shortening,
-    // which means we can't reach 100% conformance. We need to fix that by debugging the ESSL backend
-    // memory crashes.
-    targetShaderSourceLanguage = SH_GLSL_OUTPUT;
-    useShaderSourceTranslation = false;
-#endif
-
 #if defined(USE_ANGLE)
     if (shader->NeedsTranslation() && mShaderValidation) {
         ShHandle compiler = 0;

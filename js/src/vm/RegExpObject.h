@@ -474,6 +474,9 @@ template<XDRMode mode>
 bool
 XDRScriptRegExpObject(XDRState<mode> *xdr, HeapPtrObject *objp);
 
+extern JSObject *
+CloneScriptRegExpObject(JSContext *cx, RegExpObject &re);
+
 } /* namespace js */
 
 #endif

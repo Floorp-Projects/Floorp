@@ -71,7 +71,7 @@ StringObject::init(JSContext *cx, HandleString str)
         }
     }
 
-    JS_ASSERT(nativeLookupNoAllocation(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot()
+    JS_ASSERT(self->nativeLookupNoAllocation(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot()
               == LENGTH_SLOT);
 
     self->setStringThis(str);

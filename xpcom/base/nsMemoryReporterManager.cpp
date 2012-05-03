@@ -366,7 +366,7 @@ NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(PageFaultsHard,
 
 #define HAVE_HEAP_ALLOCATED_REPORTERS 1
 
-static PRInt64 GetHeapUnallocated()
+static PRInt64 GetHeapUnused()
 {
     jemalloc_stats_t stats;
     jemalloc_stats(&stats);
@@ -387,11 +387,19 @@ static PRInt64 GetHeapCommitted()
     return (PRInt64) stats.committed;
 }
 
-static PRInt64 GetHeapCommittedFragmentation()
+static PRInt64 GetHeapCommittedUnused()
 {
     jemalloc_stats_t stats;
     jemalloc_stats(&stats);
-    return (PRInt64) (10000 * (1 - stats.allocated / (double)stats.committed));
+    return stats.committed - stats.allocated;
+}
+
+static PRInt64 GetHeapCommittedUnusedRatio()
+{
+    jemalloc_stats_t stats;
+    jemalloc_stats(&stats);
+    return (PRInt64) 10000 * (stats.committed - stats.allocated) /
+                              ((double)stats.allocated);
 }
 
 static PRInt64 GetHeapDirty()
@@ -413,15 +421,24 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapCommitted,
     "memory and is unable to decommit it because a small part of that block is "
     "currently in use.")
 
-NS_MEMORY_REPORTER_IMPLEMENT(HeapCommittedFragmentation,
-    "heap-committed-fragmentation",
+NS_MEMORY_REPORTER_IMPLEMENT(HeapCommittedUnused,
+    "heap-committed-unused",
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetHeapCommittedUnused,
+    "Committed bytes which do not correspond to an active allocation; i.e., "
+    "'heap-committed' - 'heap-allocated'.  Although the allocator will waste some "
+    "space under any circumstances, a large value here may indicate that the "
+    "heap is highly fragmented.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(HeapCommittedUnusedRatio,
+    "heap-committed-unused-ratio",
     KIND_OTHER,
     UNITS_PERCENTAGE,
-    GetHeapCommittedFragmentation,
-    "Fraction of committed bytes which do not correspond to an active "
-    "allocation; i.e., 1 - (heap-allocated / heap-committed).  Although the "
-    "allocator will waste some space under any circumstances, a large value here "
-    "may indicate that the heap is highly fragmented.")
+    GetHeapCommittedUnusedRatio,
+    "Ratio of committed, unused bytes to allocated bytes; i.e., "
+    "'heap-committed-unused' / 'heap-allocated'.  This measures the overhead "
+    "of the heap allocator relative to amount of memory allocated.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapDirty,
     "heap-dirty",
@@ -438,7 +455,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapDirty,
 
 #define HAVE_HEAP_ALLOCATED_REPORTERS 1
 
-static PRInt64 GetHeapUnallocated()
+static PRInt64 GetHeapUnused()
 {
     struct mstats stats = mstats();
     return stats.bytes_total - stats.bytes_used;
@@ -489,14 +506,14 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapZone0Used,
 #endif
 
 #ifdef HAVE_HEAP_ALLOCATED_REPORTERS
-NS_MEMORY_REPORTER_IMPLEMENT(HeapUnallocated,
-    "heap-unallocated",
+NS_MEMORY_REPORTER_IMPLEMENT(HeapUnused,
+    "heap-unused",
     KIND_OTHER,
     UNITS_BYTES,
-    GetHeapUnallocated,
+    GetHeapUnused,
     "Memory mapped by the heap allocator that is not part of an active "
-    "allocation. Much of this memory may be uncommitted -- that is, it does "
-    "not take up space in physical memory or in the swap file.")
+    "allocation. Much of this memory may be uncommitted -- that is, it does not "
+    "take up space in physical memory or in the swap file.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapAllocated,
     "heap-allocated",
@@ -566,7 +583,7 @@ nsMemoryReporterManager::Init()
 
 #ifdef HAVE_HEAP_ALLOCATED_REPORTERS
     REGISTER(HeapAllocated);
-    REGISTER(HeapUnallocated);
+    REGISTER(HeapUnused);
 #endif
 
 #ifdef HAVE_EXPLICIT_REPORTER
@@ -589,7 +606,7 @@ nsMemoryReporterManager::Init()
 
 #if defined(HAVE_JEMALLOC_STATS)
     REGISTER(HeapCommitted);
-    REGISTER(HeapCommittedFragmentation);
+    REGISTER(HeapCommittedUnusedRatio);
     REGISTER(HeapDirty);
 #elif defined(HAVE_HEAP_ZONE0_REPORTERS)
     REGISTER(HeapZone0Committed);

@@ -1972,15 +1972,6 @@ RunDebugGC(JSContext *cx);
 void
 SetDeterministicGC(JSContext *cx, bool enabled);
 
-#if defined(JSGC_ROOT_ANALYSIS) && defined(DEBUG) && !defined(JS_THREADSAFE)
-/* Overwrites stack references to GC things which have not been rooted. */
-void CheckStackRoots(JSContext *cx);
-
-inline void MaybeCheckStackRoots(JSContext *cx) { CheckStackRoots(cx); }
-#else
-inline void MaybeCheckStackRoots(JSContext *cx) {}
-#endif
-
 const int ZealPokeValue = 1;
 const int ZealAllocValue = 2;
 const int ZealFrameGCValue = 3;

@@ -413,6 +413,25 @@ IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx);
 
 }  /* namespace js */
 
+namespace JS {
+
+inline bool
+IsPoisonedSpecialId(js::SpecialId iden)
+{
+    if (iden.isObject())
+        return IsPoisonedPtr(iden.toObject());
+    return false;
+}
+
+template <> struct RootMethods<js::SpecialId>
+{
+    static js::SpecialId initial() { return js::SpecialId(); }
+    static ThingRootKind kind() { return THING_ROOT_ID; }
+    static bool poisoned(js::SpecialId id) { return IsPoisonedSpecialId(id); }
+};
+
+} /* namespace JS */
+
 #endif  /* __cplusplus */
 
 #endif  /* jsclass_h__ */

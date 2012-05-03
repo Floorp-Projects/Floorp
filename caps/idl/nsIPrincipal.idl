@@ -52,7 +52,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[scriptable, uuid(f8c4c89a-d726-421b-8415-3e34b241175b)]
+[scriptable, uuid(42ba6a38-d619-49ab-8248-3d247e959d5e)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -115,17 +115,10 @@ interface nsIPrincipal : nsISerializable
     // XXXbz again, what if this lives in our hashtable and someone
     // messes with it?  Is that OK?
     [noscript] short canEnableCapability(in string capability);
-    [noscript] void setCanEnableCapability(in string capability,
-                                           in short canEnable);
     [noscript] boolean isCapabilityEnabled(in string capability,
                                            in voidPtr annotation);
     [noscript] void enableCapability(in string capability,
                                      inout voidPtr annotation);
-    [noscript] void revertCapability(in string capability,
-                                     inout voidPtr annotation);
-    [noscript] void disableCapability(in string capability,
-                                      inout voidPtr annotation);
-
     /**
      * The codebase URI to which this principal pertains.  This is
      * generally the document URI.

@@ -362,7 +362,7 @@ CallJSPropertyOp(JSContext *cx, PropertyOp op, JSObject *receiver, jsid id, Valu
     assertSameCompartment(cx, receiver, id, *vp);
     JSBool ok = op(cx, receiver, id, vp);
     if (ok)
-        assertSameCompartment(cx, receiver, *vp);
+        assertSameCompartment(cx, *vp);
     return ok;
 }
 
@@ -490,6 +490,7 @@ JSContext::ensureGeneratorStackSpace()
 
 inline void
 JSContext::setPendingException(js::Value v) {
+    JS_ASSERT(!IsPoisonedValue(v));
     this->throwing = true;
     this->exception = v;
     js::assertSameCompartment(this, v);

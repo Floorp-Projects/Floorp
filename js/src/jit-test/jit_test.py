@@ -142,15 +142,6 @@ def get_test_cmd(path, jitflags, lib_dir, shell_args):
     return ([ JS ] + list(set(jitflags)) + shell_args +
             [ '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'), '-f', path ])
 
-def set_limits():
-    # resource module not supported on all platforms
-    try:
-        import resource
-        GB = 2**30
-        resource.setrlimit(resource.RLIMIT_AS, (1*GB, 1*GB))
-    except:
-        return
-
 def tmppath(token):
     fd, path = tempfile.mkstemp(prefix=token)
     os.close(fd)
@@ -164,11 +155,9 @@ def read_and_unlink(path):
     return d
 
 def th_run_cmd(cmdline, options, l):
-    # close_fds and preexec_fn are not supported on Windows and will
-    # cause a ValueError.
+    # close_fds is not supported on Windows and will cause a ValueError.
     if sys.platform != 'win32':
         options["close_fds"] = True
-        options["preexec_fn"] = set_limits
     p = Popen(cmdline, stdin=PIPE, stdout=PIPE, stderr=PIPE, **options)
 
     l[0] = p

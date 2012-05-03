@@ -1417,9 +1417,9 @@ def main():
         conf, interfaces = readConfigFile(filename,
                                           includePath=includePath,
                                           cachedir=options.cachedir)
-        writeHeaderFile(options.header_output, conf.name)
         writeStubFile(options.stub_output, options.header_output,
                       conf, interfaces)
+        writeHeaderFile(options.header_output, conf.name)
         if options.makedepend_output is not None:
             writeMakeDependOutput(options.makedepend_output)
     except Exception, exc:
