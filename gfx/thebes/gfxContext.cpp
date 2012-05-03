@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1536,39 +1536,53 @@ gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
 {
   if (mCairo) {
     if (content == gfxASurface::CONTENT_COLOR_ALPHA &&
-        !(GetFlags() & FLAG_DISABLE_COPY_BACKGROUND)) {
-        nsRefPtr<gfxASurface> s = CurrentSurface();
-        if ((s->GetAllowUseAsSource() || s->GetType() == gfxASurface::SurfaceTypeTee) &&
-            (s->GetContentType() == gfxASurface::CONTENT_COLOR ||
-             s->GetOpaqueRect().Contains(GetRoundOutDeviceClipExtents(this)))) {
-            cairo_push_group_with_content(mCairo, CAIRO_CONTENT_COLOR);
-            nsRefPtr<gfxASurface> d = CurrentSurface();
+      !(GetFlags() & FLAG_DISABLE_COPY_BACKGROUND)) {
+      nsRefPtr<gfxASurface> s = CurrentSurface();
+      if ((s->GetAllowUseAsSource() || s->GetType() == gfxASurface::SurfaceTypeTee) &&
+          (s->GetContentType() == gfxASurface::CONTENT_COLOR ||
+              s->GetOpaqueRect().Contains(GetRoundOutDeviceClipExtents(this)))) {
+        cairo_push_group_with_content(mCairo, CAIRO_CONTENT_COLOR);
+        nsRefPtr<gfxASurface> d = CurrentSurface();
 
-            if (d->GetType() == gfxASurface::SurfaceTypeTee) {
-                NS_ASSERTION(s->GetType() == gfxASurface::SurfaceTypeTee, "Mismatched types");
-                nsAutoTArray<nsRefPtr<gfxASurface>,2> ss;
-                nsAutoTArray<nsRefPtr<gfxASurface>,2> ds;
-                static_cast<gfxTeeSurface*>(s.get())->GetSurfaces(&ss);
-                static_cast<gfxTeeSurface*>(d.get())->GetSurfaces(&ds);
-                NS_ASSERTION(ss.Length() == ds.Length(), "Mismatched lengths");
-                gfxPoint translation = d->GetDeviceOffset() - s->GetDeviceOffset();
-                for (PRUint32 i = 0; i < ss.Length(); ++i) {
-                    CopySurface(ss[i], ds[i], translation);
-                }
-            } else {
-                CopySurface(s, d, gfxPoint(0, 0));
-            }
-            d->SetOpaqueRect(s->GetOpaqueRect());
-            return;
+        if (d->GetType() == gfxASurface::SurfaceTypeTee) {
+          NS_ASSERTION(s->GetType() == gfxASurface::SurfaceTypeTee, "Mismatched types");
+          nsAutoTArray<nsRefPtr<gfxASurface>,2> ss;
+          nsAutoTArray<nsRefPtr<gfxASurface>,2> ds;
+          static_cast<gfxTeeSurface*>(s.get())->GetSurfaces(&ss);
+          static_cast<gfxTeeSurface*>(d.get())->GetSurfaces(&ds);
+          NS_ASSERTION(ss.Length() == ds.Length(), "Mismatched lengths");
+          gfxPoint translation = d->GetDeviceOffset() - s->GetDeviceOffset();
+          for (PRUint32 i = 0; i < ss.Length(); ++i) {
+              CopySurface(ss[i], ds[i], translation);
+          }
+        } else {
+          CopySurface(s, d, gfxPoint(0, 0));
         }
+        d->SetOpaqueRect(s->GetOpaqueRect());
+        return;
+      }
     }
-    cairo_push_group_with_content(mCairo, (cairo_content_t) content);
   } else {
-    RefPtr<SourceSurface> source = mDT->Snapshot();
-    PushGroup(content);
-    Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
-    mDT->DrawSurface(source, surfRect, surfRect); 
+    IntRect clipExtents;
+    if (mDT->GetFormat() != FORMAT_B8G8R8X8) {
+      gfxRect clipRect = GetRoundOutDeviceClipExtents(this);
+      clipExtents = IntRect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
+    }
+    if (mDT->GetFormat() == FORMAT_B8G8R8X8 ||
+        mDT->GetOpaqueRect().Contains(clipExtents)) {
+      DrawTarget *oldDT = mDT;
+      RefPtr<SourceSurface> source = mDT->Snapshot();
+      PushGroup(content);
+      Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
+      Matrix oldTransform = mDT->GetTransform();
+      mDT->SetTransform(Matrix());
+      mDT->DrawSurface(source, surfRect, surfRect); 
+      mDT->SetTransform(oldTransform);
+      mDT->SetOpaqueRect(oldDT->GetOpaqueRect());
+      return;
+    }
   }
+  PushGroup(content);
 }
 
 already_AddRefed<gfxPattern>
