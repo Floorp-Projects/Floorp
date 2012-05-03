@@ -859,7 +859,7 @@ TRY_AGAIN_NO_SHARING:
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
-                       bool aUseNearestFilter = false);
+                       TextureImage::Flags aFlags = TextureImage::NoFlags);
 
 private:
     friend class GLContextProviderGLX;
@@ -896,7 +896,7 @@ class TextureImageGLX : public TextureImage
     GLContextGLX::CreateTextureImage(const nsIntSize&,
                                      ContentType,
                                      GLenum,
-                                     bool);
+                                     TextureImage::Flags);
 
 public:
     virtual ~TextureImageGLX()
@@ -960,8 +960,9 @@ private:
                    ContentType aContentType,
                    GLContext* aContext,
                    gfxASurface* aSurface,
-                   GLXPixmap aPixmap)
-        : TextureImage(aSize, aWrapMode, aContentType)
+                   GLXPixmap aPixmap,
+                   TextureImage::Flags aFlags = TextureImage::NoFlags)
+        : TextureImage(aSize, aWrapMode, aContentType, aFlags)
         , mGLContext(aContext)
         , mUpdateSurface(aSurface)
         , mPixmap(aPixmap)
@@ -991,13 +992,13 @@ already_AddRefed<TextureImage>
 GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
                                  TextureImage::ContentType aContentType,
                                  GLenum aWrapMode,
-                                 bool aUseNearestFilter)
+                                 TextureImage::Flags aFlags)
 {
     if (!TextureImageSupportsGetBackingSurface()) {
         return GLContext::CreateTextureImage(aSize, 
                                              aContentType, 
                                              aWrapMode, 
-                                             aUseNearestFilter);
+                                             aFlags & UseNearestFilter);
     }
 
     Display *display = DefaultXDisplay();
@@ -1032,9 +1033,9 @@ GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
     fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
 
     nsRefPtr<TextureImageGLX> teximage =
-        new TextureImageGLX(texture, aSize, aWrapMode, aContentType, this, surface, pixmap);
+        new TextureImageGLX(texture, aSize, aWrapMode, aContentType, this, surface, pixmap, aFlags);
 
-    GLint texfilter = aUseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
+    GLint texfilter = aFlags & UseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
