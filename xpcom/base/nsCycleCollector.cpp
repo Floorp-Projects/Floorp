@@ -176,14 +176,6 @@ using namespace mozilla;
 
 //#define COLLECT_TIME_DEBUG
 
-#ifdef DEBUG_CC
-#define IF_DEBUG_CC_PARAM(_p) , _p
-#define IF_DEBUG_CC_ONLY_PARAM(_p) _p
-#else
-#define IF_DEBUG_CC_PARAM(_p)
-#define IF_DEBUG_CC_ONLY_PARAM(_p)
-#endif
-
 #define DEFAULT_SHUTDOWN_COLLECTIONS 5
 #ifdef DEBUG_CC
 #define SHUTDOWN_COLLECTIONS(params) params.mShutdownCollections
@@ -520,12 +512,9 @@ public:
 #ifdef DEBUG_CC
     size_t mBytes;
     char *mName;
-    PRUint32 mLangID;
 #endif
 
-    PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant
-            IF_DEBUG_CC_PARAM(PRUint32 aLangID)
-            )
+    PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant)
         : mPointer(aPointer),
           mParticipant(aParticipant),
           mColor(grey),
@@ -534,8 +523,7 @@ public:
           mFirstChild()
 #ifdef DEBUG_CC
         , mBytes(0),
-          mName(nsnull),
-          mLangID(aLangID)
+          mName(nsnull)
 #endif
     {
         MOZ_ASSERT(aParticipant);
@@ -645,9 +633,7 @@ public:
             NS_ASSERTION(aPool.mBlocks == nsnull && aPool.mLast == nsnull,
                          "pool not empty");
         }
-        PtrInfo *Add(void *aPointer, nsCycleCollectionParticipant *aParticipant
-                     IF_DEBUG_CC_PARAM(PRUint32 aLangID)
-                    )
+        PtrInfo *Add(void *aPointer, nsCycleCollectionParticipant *aParticipant)
         {
             if (mNext == mBlockEnd) {
                 Block *block;
@@ -660,9 +646,7 @@ public:
                 mNextBlock = &block->mNext;
                 mNumBlocks++;
             }
-            return new (mNext++) PtrInfo(aPointer, aParticipant
-                                         IF_DEBUG_CC_PARAM(aLangID)
-                                        );
+            return new (mNext++) PtrInfo(aPointer, aParticipant);
         }
     private:
         Block **mNextBlock;
@@ -1655,17 +1639,7 @@ public:
 
     PRUint32 Count() const { return mPtrToNodeMap.entryCount; }
 
-#ifdef DEBUG_CC
-    PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant,
-                     PRUint32 aLangID);
-#else
     PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant);
-    PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant,
-                     PRUint32 aLangID)
-    {
-        return AddNode(s, aParticipant);
-    }
-#endif
     PtrInfo* AddWeakMapNode(void* node);
     void Traverse(PtrInfo* aPtrInfo);
     void SetLastChild();
@@ -1703,21 +1677,21 @@ public:
     NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val);
 
 private:
-    NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *root,
+    NS_IMETHOD_(void) NoteRoot(void *root,
                                nsCycleCollectionParticipant *participant)
     {
         MOZ_ASSERT(root);
         MOZ_ASSERT(participant);
 
         if (!participant->CanSkipInCC(root) || NS_UNLIKELY(WantAllTraces())) {
-            AddNode(root, participant, langID);
+            AddNode(root, participant);
         }
     }
 
     NS_IMETHOD_(void) NoteChild(void *child, nsCycleCollectionParticipant *cp,
-                                PRUint32 langID, nsCString edgeName)
+                                nsCString edgeName)
     {
-        PtrInfo *childPi = AddNode(child, cp, langID);
+        PtrInfo *childPi = AddNode(child, cp);
         if (!childPi)
             return;
         mEdgeBuilder.Add(childPi);
@@ -1775,9 +1749,7 @@ GCGraphBuilder::Initialized()
 }
 
 PtrInfo*
-GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant
-                        IF_DEBUG_CC_PARAM(PRUint32 aLangID)
-                       )
+GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
 {
     PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
     if (!e)
@@ -1786,9 +1758,7 @@ GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant
     PtrInfo *result;
     if (!e->mNode) {
         // New entry.
-        result = mNodeBuilder.Add(s, aParticipant
-                                  IF_DEBUG_CC_PARAM(aLangID)
-                                 );
+        result = mNodeBuilder.Add(s, aParticipant);
         if (!result) {
             PL_DHashTableRawRemove(&mPtrToNodeMap, e);
             return nsnull;
@@ -1843,19 +1813,19 @@ GCGraphBuilder::NoteXPCOMRoot(nsISupports *root)
     nsXPCOMCycleCollectionParticipant *cp;
     ToParticipant(root, &cp);
 
-    NoteRoot(nsIProgrammingLanguage::CPLUSPLUS, root, cp);
+    NoteRoot(root, cp);
 }
 
 NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteJSRoot(void *root)
 {
-    NoteRoot(nsIProgrammingLanguage::JAVASCRIPT, root, mJSParticipant);
+    NoteRoot(root, mJSParticipant);
 }
 
 NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteNativeRoot(void *root, nsCycleCollectionParticipant *participant)
 {
-    NoteRoot(nsIProgrammingLanguage::CPLUSPLUS, root, participant);
+    NoteRoot(root, participant);
 }
 
 NS_IMETHODIMP_(void)
@@ -1910,7 +1880,7 @@ GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
     nsXPCOMCycleCollectionParticipant *cp;
     ToParticipant(child, &cp);
     if (cp && (!cp->CanSkipThis(child) || WantAllTraces())) {
-        NoteChild(child, cp, nsIProgrammingLanguage::CPLUSPLUS, edgeName);
+        NoteChild(child, cp, edgeName);
     }
 }
 
@@ -1927,7 +1897,7 @@ GCGraphBuilder::NoteNativeChild(void *child,
         return;
 
     NS_ASSERTION(participant, "Need a nsCycleCollectionParticipant!");
-    NoteChild(child, participant, nsIProgrammingLanguage::CPLUSPLUS, edgeName);
+    NoteChild(child, participant, edgeName);
 }
 
 NS_IMETHODIMP_(void)
@@ -1944,8 +1914,7 @@ GCGraphBuilder::NoteJSChild(void *child)
     }
 
     if (xpc_GCThingIsGrayCCThing(child) || NS_UNLIKELY(WantAllTraces())) {
-        NoteChild(child, mJSParticipant, nsIProgrammingLanguage::JAVASCRIPT,
-                  edgeName);
+        NoteChild(child, mJSParticipant, edgeName);
     }
 }
 
@@ -1965,7 +1934,7 @@ GCGraphBuilder::AddWeakMapNode(void *node)
     if (!xpc_GCThingIsGrayCCThing(node) && !WantAllTraces())
         return nsnull;
 
-    return AddNode(node, mJSParticipant, nsIProgrammingLanguage::JAVASCRIPT);
+    return AddNode(node, mJSParticipant);
 }
 
 NS_IMETHODIMP_(void)
@@ -2053,8 +2022,7 @@ AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root)
     ToParticipant(root, &cp);
 
     if (builder.WantAllTraces() || !cp->CanSkipInCC(root)) {
-        PtrInfo *pinfo = builder.AddNode(root, cp,
-                                         nsIProgrammingLanguage::CPLUSPLUS);
+        PtrInfo *pinfo = builder.AddNode(root, cp);
         if (!pinfo) {
             return false;
         }
@@ -3160,8 +3128,7 @@ nsCycleCollector::FinishCollection(nsICycleCollectorListener *aListener)
     PRUint32 i, count = mWhiteNodes->Length();
     for (i = 0; i < count; ++i) {
         PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
-        if (pinfo->mLangID == nsIProgrammingLanguage::CPLUSPLUS &&
-            mPurpleBuf.Exists(pinfo->mPointer)) {
+        if (mPurpleBuf.Exists(pinfo->mPointer)) {
             printf("nsCycleCollector: %s object @%p is still alive after\n"
                    "  calling RootAndUnlinkJSObjects, Unlink, and Unroot on"
                    " it!  This probably\n"
