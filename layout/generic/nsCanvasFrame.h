@@ -170,15 +170,12 @@ public:
                                              aAllowVisibleRegionExpansion);
   }
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap,
-                                   bool* aForceTransparentSurface)
+                                   bool* aSnap)
   {
     if (NS_GET_A(mExtraBackgroundColor) == 255) {
-      *aForceTransparentSurface = false;
       return nsRegion(GetBounds(aBuilder, aSnap));
     }
-    return nsDisplayBackground::GetOpaqueRegion(aBuilder, aSnap,
-                                                aForceTransparentSurface);
+    return nsDisplayBackground::GetOpaqueRegion(aBuilder, aSnap);
   }
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
   {

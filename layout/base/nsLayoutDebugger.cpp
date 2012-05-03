@@ -192,8 +192,7 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
     }
 #ifdef DEBUG
     if (!list || list->DidComputeVisibility()) {
-      bool forceTransparentSurface;
-      opaque = i->GetOpaqueRegion(aBuilder, &snap, &forceTransparentSurface);
+      opaque = i->GetOpaqueRegion(aBuilder, &snap);
     }
 #endif
     if (i->Painted()) {
