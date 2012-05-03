@@ -427,7 +427,8 @@ nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
 {
   // Note, remember to check that this works also
   // if or when Bug 235441 is fixed.
-  if (mEvent->currentTarget == mEvent->target ||
+  if ((mEvent->currentTarget &&
+       mEvent->currentTarget == mEvent->target) ||
       ((mEvent->flags & NS_EVENT_FLAG_CAPTURE) &&
        (mEvent->flags & NS_EVENT_FLAG_BUBBLE))) {
     *aEventPhase = nsIDOMEvent::AT_TARGET;
@@ -436,7 +437,7 @@ nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
   } else if (mEvent->flags & NS_EVENT_FLAG_BUBBLE) {
     *aEventPhase = nsIDOMEvent::BUBBLING_PHASE;
   } else {
-    *aEventPhase = 0;
+    *aEventPhase = nsIDOMEvent::NONE;
   }
   return NS_OK;
 }

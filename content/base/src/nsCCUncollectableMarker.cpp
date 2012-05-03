@@ -317,7 +317,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
 
   // JS cleanup can be slow. Do it only if there has been a GC.
   bool cleanupJS =
-    !nsJSContext::CleanupSinceLastGC() &&
+    nsJSContext::CleanupsSinceLastGC() == 0 &&
     !strcmp(aTopic, "cycle-collector-forget-skippable");
 
   bool prepareForCC = !strcmp(aTopic, "cycle-collector-begin");
