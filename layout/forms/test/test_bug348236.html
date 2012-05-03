@@ -50,9 +50,9 @@ addLoadEvent(function test() {
     function keypressOnSelect(key, modifiers) {
         sec.PrivilegeManager.enablePrivilege("UniversalXPConnect")
         WinUtils.focus(eSelect)
-        WinUtils.sendKeyEvent("keyup", key, 0, modifiers, true)
-        WinUtils.sendKeyEvent("keypress", key, 0, modifiers, true)
-        WinUtils.sendKeyEvent("keydown", key, 0, modifiers, true)
+        WinUtils.sendKeyEvent("keyup", key, 0, modifiers, WinUtils.KEY_FLAG_PREVENT_DEFAULT)
+        WinUtils.sendKeyEvent("keypress", key, 0, modifiers, WinUtils.KEY_FLAG_PREVENT_DEFAULT)
+        WinUtils.sendKeyEvent("keydown", key, 0, modifiers, WinUtils.KEY_FLAG_PREVENT_DEFAULT)
     }
 
     function testKey(key, modifiers, keyString, functionToContinue) {
