@@ -7535,14 +7535,14 @@ nsDocShell::CreateContentViewer(const char *aContentType,
 
         // Create an shistory entry for the old load.
         if (failedURI) {
-#ifdef DEBUG
             bool errorOnLocationChangeNeeded =
-#endif
-            OnNewURI(failedURI, failedChannel, nsnull, mLoadType, true, false,
-                     false);
+                OnNewURI(failedURI, failedChannel, nsnull, mLoadType, false,
+                         false, false);
 
-            MOZ_ASSERT(!errorOnLocationChangeNeeded,
-                       "We have to fire onLocationChange again.");
+            if (errorOnLocationChangeNeeded) {
+                FireOnLocationChange(this, failedChannel, failedURI,
+                                     LOCATION_CHANGE_ERROR_PAGE);
+            }
         }
 
         // Be sure to have a correct mLSHE, it may have been cleared by
