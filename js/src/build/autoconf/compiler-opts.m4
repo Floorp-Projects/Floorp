@@ -1,5 +1,53 @@
 dnl Add compiler specific options
 
+AC_DEFUN([MOZ_DEFAULT_COMPILER],
+[
+dnl Default to MSVC for win32 and gcc-4.2 for darwin
+dnl ==============================================================
+if test -z "$CROSS_COMPILE"; then
+case "$target" in
+*-mingw*)
+    if test -z "$CC"; then CC=cl; fi
+    if test -z "$CXX"; then CXX=cl; fi
+    if test -z "$CPP"; then CPP="cl -E -nologo"; fi
+    if test -z "$CXXCPP"; then CXXCPP="cl -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
+    if test -z "$LD"; then LD=link; fi
+    if test -z "$AS"; then
+        case "${target_cpu}" in
+        i*86)
+            AS=ml;
+            ;;
+        x86_64)
+            AS=ml64;
+            ;;
+        esac
+    fi
+    if test -z "$MIDL"; then MIDL=midl; fi
+
+    # need override this flag since we don't use $(LDFLAGS) for this.
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
+    ;;
+*-darwin*)
+    # we prefer gcc-4.2 over gcc on older darwin, so
+    # use that specific version if it's available.
+    # On newer versions of darwin, gcc is llvm-gcc while gcc-4.2 is the plain
+    # one, so we also try that first. If that fails, we fall back to clang
+    # as llvm-gcc is an unsupported dead end.
+    MOZ_PATH_PROGS(CC, $CC gcc-4.2 clang gcc)
+    MOZ_PATH_PROGS(CXX, $CXX g++-4.2 clang++ g++)
+    IS_LLVM_GCC=$($CC -v 2>&1 | grep llvm-gcc)
+    if test -n "$IS_LLVM_GCC"
+    then
+      echo llvm-gcc is known to be broken, please use gcc-4.2 or clang.
+      exit 1
+    fi
+    ;;
+esac
+fi
+])
+
 AC_DEFUN([MOZ_COMPILER_OPTS],
 [
 if test "$CLANG_CXX"; then
