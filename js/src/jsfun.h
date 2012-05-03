@@ -121,9 +121,6 @@ struct JSFunction : public JSObject
     /* uint16_t representation bounds number of call object dynamic slots. */
     enum { MAX_ARGS_AND_VARS = 2 * ((1U << 16) - 1) };
 
-#define JS_LOCAL_NAME_TO_ATOM(nameWord)  ((JSAtom *) ((nameWord) & ~uintptr_t(1)))
-#define JS_LOCAL_NAME_IS_CONST(nameWord) ((((nameWord) & uintptr_t(1))) != 0)
-
     /*
      * For an interpreted function, accessors for the initial scope object of
      * activations (stack frames) of the function.
@@ -313,6 +310,9 @@ namespace js {
 template<XDRMode mode>
 bool
 XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *parentScript);
+
+extern JSObject *
+CloneInterpretedFunction(JSContext *cx, JSFunction *fun);
 
 } /* namespace js */
 

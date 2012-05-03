@@ -762,6 +762,8 @@ template<XDRMode mode>
 bool
 js::XDRScriptRegExpObject(XDRState<mode> *xdr, HeapPtrObject *objp)
 {
+    /* NB: Keep this in sync with CloneScriptRegExpObject. */
+
     RootedVarAtom source(xdr->cx());
     uint32_t flagsword = 0;
 
@@ -793,3 +795,19 @@ js::XDRScriptRegExpObject(XDRState<XDR_ENCODE> *xdr, HeapPtrObject *objp);
 
 template bool
 js::XDRScriptRegExpObject(XDRState<XDR_DECODE> *xdr, HeapPtrObject *objp);
+
+JSObject *
+js::CloneScriptRegExpObject(JSContext *cx, RegExpObject &reobj)
+{
+    /* NB: Keep this in sync with XDRScriptRegExpObject. */
+
+    RootedVarAtom source(cx, reobj.getSource());
+    RegExpObject *clone = RegExpObject::createNoStatics(cx, source, reobj.getFlags(), NULL);
+    if (!clone)
+        return NULL;
+    if (!clone->clearParent(cx))
+        return false;
+    if (!clone->clearType(cx))
+        return false;
+    return clone;
+}

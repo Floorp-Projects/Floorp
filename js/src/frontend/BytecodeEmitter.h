@@ -544,7 +544,7 @@ class GCConstList {
     Vector<Value> list;
   public:
     GCConstList(JSContext *cx) : list(cx) {}
-    bool append(Value v) { return list.append(v); }
+    bool append(Value v) { JS_ASSERT_IF(v.isString(), v.toString()->isAtom()); return list.append(v); }
     size_t length() const { return list.length(); }
     void finish(ConstArray *array);
 };
