@@ -2395,6 +2395,42 @@ Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *env, jclass, j
 
 nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstW, PRInt32 dstH, PRInt32 tabId, float scale, PRInt32 token)
 {
+    nsresult rv;
+
+    // take a screenshot, as wide as possible, proportional to the destination size
+    if (!srcW && !srcH) {
+        nsCOMPtr<nsIDOMDocument> doc;
+        rv = window->GetDocument(getter_AddRefs(doc));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIDOMElement> docElement;
+        rv = doc->GetDocumentElement(getter_AddRefs(docElement));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        PRInt32 viewportHeight;
+        PRInt32 pageWidth;
+        PRInt32 pageHeight;
+        window->GetInnerHeight(&viewportHeight);
+        docElement->GetScrollWidth(&pageWidth);
+        docElement->GetScrollHeight(&pageHeight);
+
+        // use the page or viewport dimensions, whichever is larger
+        PRInt32 width = pageWidth;
+        PRInt32 height = viewportHeight > pageHeight ? viewportHeight : pageHeight;
+
+        if (!width || !height)
+            return NS_ERROR_FAILURE;
+
+        float aspectRatio = ((float) dstW) / dstH;
+        if (width / aspectRatio < height) {
+            srcW = width;
+            srcH = width / aspectRatio;
+        } else {
+            srcW = height * aspectRatio;
+            srcH = height;
+        }
+    }
+
     JNIEnv* env = GetJNIEnv();
     if (!env)
         return NS_OK;
@@ -2432,7 +2468,7 @@ nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt
     nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(dstW, dstH), stride, gfxASurface::ImageFormatRGB16_565);
     nsRefPtr<gfxContext> context = new gfxContext(surf);
     context->Scale(scale * dstW / srcW, scale * dstH / srcH);
-    nsresult rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
+    rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
     NS_ENSURE_SUCCESS(rv, rv);
     env->CallStaticVoidMethod(AndroidBridge::Bridge()->mGeckoAppShellClass, AndroidBridge::Bridge()->jNotifyScreenShot, buffer, tabId, srcX * dstW / srcW , srcY * dstH / srcH, dstW, dstH, token);
     return NS_OK;
