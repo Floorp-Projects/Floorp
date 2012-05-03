@@ -75,7 +75,7 @@
 
   <div id="body" class="vbox flex">
     <xul:toolbar id="dbg-toolbar">
-      <xul:button id="close">&debuggerUI.closeButton;</xul:button>
+      <xul:button id="close" hidden="false">&debuggerUI.closeButton;</xul:button>
       <xul:button id="resume"/>
       <xul:button id="step-over">&debuggerUI.stepOverButton;</xul:button>
       <xul:button id="step-in">&debuggerUI.stepInButton;</xul:button>

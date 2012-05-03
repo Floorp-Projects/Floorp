@@ -82,6 +82,14 @@ let DebuggerView = {
    */
   _onEditorLoad: function DV__onEditorLoad() {
     DebuggerController.Breakpoints.initialize();
+  },
+
+  /**
+   * Sets the close button hidden or visible. It's hidden by default.
+   * @param boolean aVisibleFlag
+   */
+  showCloseButton: function DV_showCloseButton(aVisibleFlag) {
+    document.getElementById("close").setAttribute("hidden", !aVisibleFlag);
   }
 };
 
