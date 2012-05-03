@@ -1192,9 +1192,12 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
   if (aState->mBuilder->NeedToForceTransparentSurfaceForItem(aItem)) {
     mForceTransparentSurface = true;
   }
-
-  nscolor uniformColor;
-  bool isUniform = aItem->IsUniform(aState->mBuilder, &uniformColor);
+  if (aState->mParameters.mDisableSubpixelAntialiasingInDescendants) {
+    // Disable component alpha.
+    // Note that the transform (if any) on the ThebesLayer is always an integer translation so
+    // we don't have to factor that in here.
+    aItem->DisableComponentAlpha();
+  }
 
   /* Mark as available for conversion to image layer if this is a nsDisplayImage and
    * we are the first visible item in the ThebesLayerData object.
@@ -1205,6 +1208,23 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
   } else {
     mImage = nsnull;
   }
+
+  if (!mIsSolidColorInVisibleRegion && mOpaqueRegion.Contains(aDrawRect) &&
+      mVisibleRegion.Contains(aVisibleRect)) {
+    // A very common case! Most pages have a ThebesLayer with the page
+    // background (opaque) visible and most or all of the page content over the
+    // top of that background.
+    // The rest of this method won't do anything. mVisibleRegion, mOpaqueRegion
+    // and mDrawRegion don't need updating. mVisibleRegion contains aVisibleRect
+    // already, mOpaqueRegion contains aDrawRect and therefore whatever
+    // the opaque region of the item is. mDrawRegion must contain mOpaqueRegion
+    // and therefore aDrawRect.
+    NS_ASSERTION(mDrawRegion.Contains(aDrawRect), "Draw region not covered");
+    return;
+  }
+
+  nscolor uniformColor;
+  bool isUniform = aItem->IsUniform(aState->mBuilder, &uniformColor);
 
   // Some display items have to exist (so they can set forceTransparentSurface
   // below) but don't draw anything. They'll return true for isUniform but
@@ -1266,13 +1286,8 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
       }
     }
   }
-  if (aState->mParameters.mDisableSubpixelAntialiasingInDescendants) {
-    // Disable component alpha. This is cheaper than calling GetComponentAlphaBounds since for
-    // most items this is a single virtual call that does nothing.
-    // Note that the transform (if any) on the ThebesLayer is always an integer translation so
-    // we don't have to factor that in here.
-    aItem->DisableComponentAlpha();
-  } else {
+
+  if (!aState->mParameters.mDisableSubpixelAntialiasingInDescendants) {
     nsRect componentAlpha = aItem->GetComponentAlphaBounds(aState->mBuilder);
     if (!componentAlpha.IsEmpty()) {
       nsIntRect componentAlphaRect =
