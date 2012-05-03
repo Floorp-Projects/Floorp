@@ -1047,25 +1047,8 @@ nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implement the LanguageRuntime interface for C++/XPCOM 
+// Top level structure for the cycle collector.
 ////////////////////////////////////////////////////////////////////////
-
-
-struct nsCycleCollectionXPCOMRuntime : 
-    public nsCycleCollectionLanguageRuntime 
-{
-    nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb)
-    {
-        return NS_OK;
-    }
-
-    nsresult FinishTraverse() 
-    {
-        return NS_OK;
-    }
-
-    inline nsCycleCollectionParticipant *ToParticipant(void *p);
-};
 
 struct nsCycleCollector
 {
@@ -1075,9 +1058,7 @@ struct nsCycleCollector
     nsCycleCollectorResults *mResults;
     TimeStamp mCollectionStart;
 
-    nsCycleCollectionLanguageRuntime *mRuntimes[nsIProgrammingLanguage::MAX+1];
     nsCycleCollectionJSRuntime *mJSRuntime;
-    nsCycleCollectionXPCOMRuntime mXPCOMRuntime;
 
     GCGraph mGraph;
 
@@ -1095,9 +1076,8 @@ struct nsCycleCollector
 
     nsPurpleBuffer mPurpleBuf;
 
-    void RegisterRuntime(PRUint32 langID, 
-                         nsCycleCollectionLanguageRuntime *rt);
-    void ForgetRuntime(PRUint32 langID);
+    void RegisterJSRuntime(nsCycleCollectionJSRuntime *aJSRuntime);
+    void ForgetJSRuntime();
 
     void SelectPurple(GCGraphBuilder &builder);
     void MarkRoots(GCGraphBuilder &builder);
@@ -1273,15 +1253,6 @@ ToParticipant(nsISupports *s, nsXPCOMCycleCollectionParticipant **cp)
         ++sCollector->mStats.mFailedQI;
 #endif
 }
-
-nsCycleCollectionParticipant *
-nsCycleCollectionXPCOMRuntime::ToParticipant(void *p)
-{
-    nsXPCOMCycleCollectionParticipant *cp;
-    ::ToParticipant(static_cast<nsISupports*>(p), &cp);
-    return cp;
-}
-
 
 template <class Visitor>
 MOZ_NEVER_INLINE void
@@ -1671,14 +1642,12 @@ private:
     nsTArray<WeakMapping> &mWeakMaps;
     PLDHashTable mPtrToNodeMap;
     PtrInfo *mCurrPi;
-    nsCycleCollectionLanguageRuntime **mRuntimes; // weak, from nsCycleCollector
     nsCycleCollectionParticipant *mJSParticipant;
     nsCString mNextEdgeName;
     nsICycleCollectorListener *mListener;
 
 public:
     GCGraphBuilder(GCGraph &aGraph,
-                   nsCycleCollectionLanguageRuntime **aRuntimes,
                    nsCycleCollectionJSRuntime *aJSRuntime,
                    nsICycleCollectorListener *aListener);
     ~GCGraphBuilder();
@@ -1760,13 +1729,11 @@ private:
 };
 
 GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
-                               nsCycleCollectionLanguageRuntime **aRuntimes,
                                nsCycleCollectionJSRuntime *aJSRuntime,
                                nsICycleCollectorListener *aListener)
     : mNodeBuilder(aGraph.mNodes),
       mEdgeBuilder(aGraph.mEdges),
       mWeakMaps(aGraph.mWeakMaps),
-      mRuntimes(aRuntimes),
       mJSParticipant(nsnull),
       mListener(aListener)
 {
@@ -2624,9 +2591,6 @@ nsCycleCollector::nsCycleCollector() :
 #ifdef DEBUG_CC
     mExpectedGarbage.Init();
 #endif
-
-    memset(mRuntimes, 0, sizeof(mRuntimes));
-    mRuntimes[nsIProgrammingLanguage::CPLUSPLUS] = &mXPCOMRuntime;
 }
 
 
@@ -2636,42 +2600,27 @@ nsCycleCollector::~nsCycleCollector()
 
 
 void 
-nsCycleCollector::RegisterRuntime(PRUint32 langID, 
-                                  nsCycleCollectionLanguageRuntime *rt)
+nsCycleCollector::RegisterJSRuntime(nsCycleCollectionJSRuntime *aJSRuntime)
 {
     if (mParams.mDoNothing)
         return;
 
-    if (langID > nsIProgrammingLanguage::MAX)
-        Fault("unknown language runtime in registration");
+    if (mJSRuntime)
+        Fault("multiple registrations of cycle collector JS runtime", aJSRuntime);
 
-    if (mRuntimes[langID])
-        Fault("multiple registrations of language runtime", rt);
-
-    mRuntimes[langID] = rt;
-
-    if (langID == nsIProgrammingLanguage::JAVASCRIPT) {
-        mJSRuntime = static_cast<nsCycleCollectionJSRuntime *>(rt);
-    }
+    mJSRuntime = aJSRuntime;
 }
 
 void 
-nsCycleCollector::ForgetRuntime(PRUint32 langID)
+nsCycleCollector::ForgetJSRuntime()
 {
     if (mParams.mDoNothing)
         return;
 
-    if (langID > nsIProgrammingLanguage::MAX)
-        Fault("unknown language runtime in deregistration");
+    if (!mJSRuntime)
+        Fault("forgetting non-registered cycle collector JS runtime");
 
-    if (! mRuntimes[langID])
-        Fault("forgetting non-registered language runtime");
-
-    mRuntimes[langID] = nsnull;
-
-    if (langID == nsIProgrammingLanguage::JAVASCRIPT) {
-        mJSRuntime = nsnull;
-    }
+    mJSRuntime = nsnull;
 }
 
 #ifdef DEBUG_CC
@@ -3096,16 +3045,14 @@ nsCycleCollector::BeginCollection(nsICycleCollectorListener *aListener)
     if (mParams.mDoNothing)
         return false;
 
-    GCGraphBuilder builder(mGraph, mRuntimes, mJSRuntime, aListener);
+    GCGraphBuilder builder(mGraph, mJSRuntime, aListener);
     if (!builder.Initialized())
         return false;
 
-    for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
-        if (mRuntimes[i])
-            mRuntimes[i]->BeginCycleCollection(builder);
+    if (mJSRuntime) {
+        mJSRuntime->BeginCycleCollection(builder);
+        timeLog.Checkpoint("mJSRuntime->BeginCycleCollection()");
     }
-
-    timeLog.Checkpoint("mRuntimes[*]->BeginCycleCollection()");
 
 #ifdef DEBUG_CC
     PRUint32 purpleStart = builder.Count();
@@ -3183,13 +3130,11 @@ nsCycleCollector::BeginCollection(nsICycleCollectorListener *aListener)
         }
 #endif
 
-        for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
-            if (mRuntimes[i])
-                mRuntimes[i]->FinishTraverse();
+        if (mJSRuntime) {
+            mJSRuntime->FinishTraverse();
+            timeLog.Checkpoint("mJSRuntime->FinishTraverse()");
         }
-        timeLog.Checkpoint("mRuntimes[*]->FinishTraverse()");
-    }
-    else {
+    } else {
         mScanInProgress = false;
     }
 
@@ -3254,7 +3199,7 @@ nsCycleCollector::Shutdown()
     Collect(nsnull, SHUTDOWN_COLLECTIONS(mParams), listener);
 
 #ifdef DEBUG_CC
-    GCGraphBuilder builder(mGraph, mRuntimes, mJSRuntime, nsnull);
+    GCGraphBuilder builder(mGraph, mJSRuntime, nsnull);
     mScanInProgress = true;
     SelectPurple(builder);
     mScanInProgress = false;
@@ -3320,13 +3265,12 @@ NS_MEMORY_REPORTER_IMPLEMENT(CycleCollector,
 // Just functions that redirect into the singleton, once it's built.
 ////////////////////////////////////////////////////////////////////////
 
-void 
-nsCycleCollector_registerRuntime(PRUint32 langID, 
-                                 nsCycleCollectionLanguageRuntime *rt)
+void
+nsCycleCollector_registerJSRuntime(nsCycleCollectionJSRuntime *rt)
 {
     static bool regMemReport = true;
     if (sCollector)
-        sCollector->RegisterRuntime(langID, rt);
+        sCollector->RegisterJSRuntime(rt);
     if (regMemReport) {
         regMemReport = false;
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(CycleCollector));
@@ -3334,10 +3278,10 @@ nsCycleCollector_registerRuntime(PRUint32 langID,
 }
 
 void 
-nsCycleCollector_forgetRuntime(PRUint32 langID)
+nsCycleCollector_forgetJSRuntime()
 {
     if (sCollector)
-        sCollector->ForgetRuntime(langID);
+        sCollector->ForgetJSRuntime();
 }
 
 
