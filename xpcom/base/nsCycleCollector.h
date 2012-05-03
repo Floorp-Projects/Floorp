@@ -45,16 +45,6 @@ class nsICycleCollectorListener;
 class nsCycleCollectionParticipant;
 class nsCycleCollectionTraversalCallback;
 
-// An nsCycleCollectionLanguageRuntime is a per-language object that
-// implements language-specific aspects of the cycle collection task.
-
-struct nsCycleCollectionLanguageRuntime
-{
-    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb) = 0;
-    virtual nsresult FinishTraverse() = 0;
-    virtual nsCycleCollectionParticipant *ToParticipant(void *p) = 0;
-};
-
 // Contains various stats about the cycle collection.
 class nsCycleCollectorResults
 {
@@ -89,13 +79,12 @@ PRUint32 nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdownThreads();
 void nsCycleCollector_shutdown();
 
-// The JS runtime is special, it needs to call cycle collection during its GC.
-// If the JS runtime is registered nsCycleCollector_collect will call
-// nsCycleCollectionJSRuntime::Collect which will call
-// nsCycleCollector_doCollect, else nsCycleCollector_collect will call
-// nsCycleCollector_doCollect directly.
-struct nsCycleCollectionJSRuntime : public nsCycleCollectionLanguageRuntime
+// Various methods the cycle collector needs to deal with Javascript.
+struct nsCycleCollectionJSRuntime
 {
+    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb) = 0;
+    virtual nsresult FinishTraverse() = 0;
+
     /**
      * Called before/after transitioning to/from the main thread.
      *
@@ -124,15 +113,14 @@ struct nsCycleCollectionJSRuntime : public nsCycleCollectionLanguageRuntime
     virtual nsCycleCollectionParticipant *GetParticipant() = 0;
 };
 
+// Helpers for interacting with JS
+void nsCycleCollector_registerJSRuntime(nsCycleCollectionJSRuntime *rt);
+void nsCycleCollector_forgetJSRuntime();
+
 #ifdef DEBUG
 void nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n);
 void nsCycleCollector_DEBUG_wasFreed(nsISupports *n);
 #endif
-
-// Helpers for interacting with language-identified scripts
-
-void nsCycleCollector_registerRuntime(PRUint32 langID, nsCycleCollectionLanguageRuntime *rt);
-void nsCycleCollector_forgetRuntime(PRUint32 langID);
 
 #define NS_CYCLE_COLLECTOR_LOGGER_CID \
 { 0x58be81b4, 0x39d2, 0x437c, \

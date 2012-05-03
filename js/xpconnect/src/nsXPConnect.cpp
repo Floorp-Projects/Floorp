@@ -118,7 +118,7 @@ nsXPConnect::nsXPConnect()
 {
     mRuntime = XPCJSRuntime::newXPCJSRuntime(this);
 
-    nsCycleCollector_registerRuntime(nsIProgrammingLanguage::JAVASCRIPT, this);
+    nsCycleCollector_registerJSRuntime(this);
 
     char* reportableEnv = PR_GetEnv("MOZ_REPORT_ALL_JS_EXCEPTIONS");
     if (reportableEnv && *reportableEnv)
@@ -127,7 +127,7 @@ nsXPConnect::nsXPConnect()
 
 nsXPConnect::~nsXPConnect()
 {
-    nsCycleCollector_forgetRuntime(nsIProgrammingLanguage::JAVASCRIPT);
+    nsCycleCollector_forgetJSRuntime();
 
     JSContext *cx = nsnull;
     if (mRuntime) {
@@ -576,12 +576,6 @@ nsXPConnect::FinishTraverse()
     if (mCycleCollectionContext)
         mCycleCollectionContext = nsnull;
     return NS_OK;
-}
-
-nsCycleCollectionParticipant *
-nsXPConnect::ToParticipant(void *p)
-{
-    return this;
 }
 
 nsCycleCollectionParticipant *
