@@ -173,14 +173,30 @@ class TypelibCompareMixin:
             self.assertEqual(t1.size_is_arg_num, t2.size_is_arg_num)
             self.assertEqual(t1.length_is_arg_num, t2.length_is_arg_num)
 
-#TODO: test flags in various combinations
-class TestTypelibRoundtrip(unittest.TestCase, TypelibCompareMixin):
-    def checkRoundtrip(self, t):
+class TestTypelibReadWrite(unittest.TestCase, TypelibCompareMixin):
+    def test_read_file(self):
+        """
+        Test that a Typelib can be read/written from/to a file.
+        """
+        t = xpt.Typelib()
+        # add an unresolved interface
+        t.interfaces.append(xpt.Interface("IFoo"))
         fd, f = tempfile.mkstemp()
         os.close(fd)
         t.write(f)
         t2 = xpt.Typelib.read(f)
         os.remove(f)
+        self.assert_(t2 is not None)
+        self.assertEqualTypelibs(t, t2)
+
+
+#TODO: test flags in various combinations
+class TestTypelibRoundtrip(unittest.TestCase, TypelibCompareMixin):
+    def checkRoundtrip(self, t):
+        s = StringIO()
+        t.write(s)
+        s.seek(0)
+        t2 = xpt.Typelib.read(s)
         self.assert_(t2 is not None)
         self.assertEqualTypelibs(t, t2)
         
@@ -747,17 +763,6 @@ class TestTypelibMerge(unittest.TestCase):
                          t1.interfaces[0].methods[0].params[0].type.element_type.iface)
 
 class TestXPTLink(unittest.TestCase):
-    def setUp(self):
-        self.tempdir = tempfile.mkdtemp()
-
-    def tearDown(self):
-        shutil.rmtree(self.tempdir, True)
-
-    def gettempfile(self):
-        fd, f = tempfile.mkstemp(dir=self.tempdir)
-        os.close(fd)
-        return f
-
     def test_xpt_link(self):
         """
         Test the xpt_link method.
@@ -766,17 +771,20 @@ class TestXPTLink(unittest.TestCase):
         t1 = xpt.Typelib()
         # add an unresolved interface
         t1.interfaces.append(xpt.Interface("IFoo"))
-        f1 = self.gettempfile()
+        f1 = StringIO()
         t1.write(f1)
+        f1.seek(0)
 
         t2 = xpt.Typelib()
         # add an unresolved interface
         t2.interfaces.append(xpt.Interface("IBar"))
-        f2 = self.gettempfile()
+        f2 = StringIO()
         t2.write(f2)
+        f2.seek(0)
 
-        f3 = self.gettempfile()
+        f3 = StringIO()
         xpt.xpt_link(f3, [f1, f2])
+        f3.seek(0)
         t3 = xpt.Typelib.read(f3)
         
         self.assertEqual(2, len(t3.interfaces))
@@ -788,17 +796,20 @@ class TestXPTLink(unittest.TestCase):
         t1 = xpt.Typelib()
         # add an unresolved interface
         t1.interfaces.append(xpt.Interface("IFoo", iid="11223344-5566-7788-9900-aabbccddeeff"))
-        f1 = self.gettempfile()
+        f1 = StringIO()
         t1.write(f1)
+        f1.seek(0)
 
         t2 = xpt.Typelib()
         # add an unresolved interface
         t2.interfaces.append(xpt.Interface("IBar", iid="44332211-6655-8877-0099-aabbccddeeff"))
-        f2 = self.gettempfile()
+        f2 = StringIO()
         t2.write(f2)
+        f2.seek(0)
 
-        f3 = self.gettempfile()
+        f3 = StringIO()
         xpt.xpt_link(f3, [f1, f2])
+        f3.seek(0)
         t3 = xpt.Typelib.read(f3)
         
         self.assertEqual(2, len(t3.interfaces))
