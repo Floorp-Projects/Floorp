@@ -168,8 +168,8 @@ public:
                                      LayerManager* aManager,
                                      nsDisplayItem* aItem);
 
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager);
+  LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                           LayerManager* aManager);
 
   already_AddRefed<ImageContainer> GetImageContainer();
   /**
@@ -330,7 +330,8 @@ public:
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager)
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters)
   {
     return static_cast<nsObjectFrame*>(mFrame)->GetLayerState(aBuilder,
                                                               aManager);
