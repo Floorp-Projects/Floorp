@@ -82,6 +82,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mFinalTransparentRegion(nsnull),
       mCachedOffsetFrame(aReferenceFrame),
       mCachedOffset(0, 0),
+      mGlassDisplayItem(nsnull),
       mMode(aMode),
       mBuildCaret(aBuildCaret),
       mIgnoreSuppression(false),
@@ -443,11 +444,10 @@ nsDisplayList::ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
 }
 
 static nsRegion
-TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder,
-              bool* aTransparentBackground)
+TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
 {
   bool snap;
-  nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap, aTransparentBackground);
+  nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap);
   if (aBuilder->IsForPluginGeometry()) {
     // Treat all chrome items as opaque, unless their frames are opacity:0.
     // Since opacity:0 frames generate an nsDisplayOpacity, that item will
@@ -535,11 +535,13 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
 
     if (item->ComputeVisibility(aBuilder, aVisibleRegion, aAllowVisibleRegionExpansion)) {
       anyVisible = true;
-      bool transparentBackground = false;
-      nsRegion opaque = TreatAsOpaque(item, aBuilder, &transparentBackground);
+      nsRegion opaque = TreatAsOpaque(item, aBuilder);
       // Subtract opaque item from the visible region
       aBuilder->SubtractFromVisibleRegion(aVisibleRegion, opaque);
-      forceTransparentSurface = forceTransparentSurface || transparentBackground;
+      if (aBuilder->NeedToForceTransparentSurfaceForItem(item) ||
+          (list && list->NeedsTransparentSurface())) {
+        forceTransparentSurface = true;
+      }
     }
     AppendToBottom(item);
   }
@@ -930,8 +932,7 @@ bool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
   if (!ComputeVisibility(aBuilder, aVisibleRegion, nsRect()))
     return false;
 
-  bool forceTransparentBackground;
-  nsRegion opaque = TreatAsOpaque(this, aBuilder, &forceTransparentBackground);
+  nsRegion opaque = TreatAsOpaque(this, aBuilder);
   aBuilder->SubtractFromVisibleRegion(aVisibleRegion, opaque);
   return true;
 }
@@ -983,6 +984,9 @@ nsDisplayBackground::nsDisplayBackground(nsDisplayListBuilder* aBuilder,
     if (disp->mAppearance == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
         disp->mAppearance == NS_THEME_TOOLBAR) {
       RegisterThemeGeometry(aBuilder, aFrame);
+    } else if (disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
+               disp->mAppearance == NS_THEME_WIN_GLASS) {
+      aBuilder->SetGlassDisplayItem(this);
     }
   } else {
     // Set HasFixedItems if we construct a background-attachment:fixed item
@@ -1170,18 +1174,11 @@ nsDisplayBackground::GetInsideClipRegion(nsPresContext* aPresContext,
 
 nsRegion
 nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                     bool* aSnap,
-                                     bool* aForceTransparentSurface) {
+                                     bool* aSnap) {
   nsRegion result;
   *aSnap = false;
-  *aForceTransparentSurface = false;
   // theme background overrides any other background
   if (mIsThemed) {
-    if (aForceTransparentSurface) {
-      const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
-      *aForceTransparentSurface = disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
-                                  disp->mAppearance == NS_THEME_WIN_GLASS;
-    }
     if (mThemeTransparency == nsITheme::eOpaque) {
       result = GetBounds(aBuilder, aSnap);
     }
@@ -1629,9 +1626,7 @@ nsDisplayWrapList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 nsRegion
 nsDisplayWrapList::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap,
-                                   bool* aForceTransparentSurface) {
-  *aForceTransparentSurface = false;
+                                   bool* aSnap) {
   *aSnap = false;
   nsRegion result;
   if (mList.IsOpaque()) {
@@ -1776,9 +1771,7 @@ nsDisplayOpacity::~nsDisplayOpacity() {
 #endif
 
 nsRegion nsDisplayOpacity::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                           bool* aSnap,
-                                           bool* aForceTransparentSurface) {
-  *aForceTransparentSurface = false;
+                                           bool* aSnap) {
   *aSnap = false;
   // We are never opaque, if our opacity was < 1 then we wouldn't have
   // been created.
@@ -2213,11 +2206,9 @@ nsDisplayClipRoundedRect::~nsDisplayClipRoundedRect()
 
 nsRegion
 nsDisplayClipRoundedRect::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                          bool* aSnap,
-                                          bool* aForceTransparentSurface)
+                                          bool* aSnap)
 {
   *aSnap = false;
-  *aForceTransparentSurface = false;
   return nsRegion();
 }
 
@@ -2852,10 +2843,8 @@ nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder, bool* aSnap
  * certainly contains the actual (non-axis-aligned) untransformed rect.
  */
 nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
-                                             bool* aSnap,
-                                             bool* aForceTransparentSurface)
+                                             bool* aSnap)
 {
-  *aForceTransparentSurface = false;
   *aSnap = false;
   nsRect untransformedVisible;
   float factor = nsPresContext::AppUnitsPerCSSPixel();
@@ -2868,11 +2857,9 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
   nsRegion result;
   gfxMatrix matrix2d;
   bool tmpSnap;
-  bool forceTransparentSurface;
   if (matrix.Is2D(&matrix2d) &&
       matrix2d.PreservesAxisAlignedRectangles() &&
-      mStoredList.GetOpaqueRegion(aBuilder, &tmpSnap, &forceTransparentSurface).
-        Contains(untransformedVisible)) {
+      mStoredList.GetOpaqueRegion(aBuilder, &tmpSnap).Contains(untransformedVisible)) {
     result = mVisibleRect;
   }
   return result;
@@ -3032,10 +3019,8 @@ nsDisplaySVGEffects::~nsDisplaySVGEffects()
 #endif
 
 nsRegion nsDisplaySVGEffects::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                              bool* aSnap,
-                                              bool* aForceTransparentSurface)
+                                              bool* aSnap)
 {
-  *aForceTransparentSurface = false;
   *aSnap = false;
   return nsRegion();
 }
