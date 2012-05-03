@@ -682,6 +682,47 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   aKeyEvent.keyCode =
     TextInputHandler::ComputeGeckoKeyCode([aNativeKeyEvent keyCode], str);
 
+  switch ([aNativeKeyEvent keyCode]) {
+    case kCommandKeyCode:
+    case kShiftKeyCode:
+    case kOptionkeyCode:
+    case kControlKeyCode:
+      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
+      break;
+
+    case kRCommandKeyCode:
+    case kRShiftKeyCode:
+    case kROptionKeyCode:
+    case kRControlKeyCode:
+      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
+      break;
+
+    case kKeypad0KeyCode:
+    case kKeypad1KeyCode:
+    case kKeypad2KeyCode:
+    case kKeypad3KeyCode:
+    case kKeypad4KeyCode:
+    case kKeypad5KeyCode:
+    case kKeypad6KeyCode:
+    case kKeypad7KeyCode:
+    case kKeypad8KeyCode:
+    case kKeypad9KeyCode:
+    case kKeypadMultiplyKeyCode:
+    case kKeypadAddKeyCode:
+    case kKeypadSubtractKeyCode:
+    case kKeypadDecimalKeyCode:
+    case kKeypadDivideKeyCode:
+    case kKeypadEqualsKeyCode:
+    case kEnterKeyCode:
+    case kPowerbookEnterKeyCode:
+      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+      break;
+
+    default:
+      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+      break;
+  }
+
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TISInputSourceWrapper::InitKeyEvent, "
      "shift=%s, ctrl=%s, alt=%s, meta=%s",
