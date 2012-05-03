@@ -23,11 +23,6 @@
 <!ENTITY view.sortDescending.label      "Z > A Sort Order">
 <!ENTITY view.sortDescending.accesskey  "Z">
 
-<!ENTITY cmd.findInBookmarks.label      "Find in Bookmarks…">
-<!ENTITY cmd.findInBookmarks.accesskey  "F">
-<!ENTITY cmd.findCurrent.label          "Find in Current Collection…">
-<!ENTITY cmd.findCurrent.accesskey      "i">
-
 <!ENTITY importBookmarksFromHTML.label     "Import Bookmarks from HTML…">
 <!ENTITY importBookmarksFromHTML.accesskey "I">
 <!ENTITY exportBookmarksToHTML.label       "Export Bookmarks to HTML…">
