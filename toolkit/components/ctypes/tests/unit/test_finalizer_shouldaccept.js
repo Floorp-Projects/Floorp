@@ -86,23 +86,24 @@ function test_to_int()
 {
   let value = 2;
   let wrapped, converted, finalizable;
-  wrapped   = ctypes.int32_t(value);
-  finalizable= ctypes.CDataFinalizer(acquire(value), dispose);
+  wrapped = ctypes.int32_t(value);
+  finalizable = ctypes.CDataFinalizer(acquire(value), dispose);
   converted = ctypes.int32_t(finalizable);
 
   structural_check_eq(converted, wrapped);
   structural_check_eq(converted, ctypes.int32_t(finalizable.forget()));
 
-  wrapped   = ctypes.int64_t(value);
-  converted = ctypes.int64_t(ctypes.CDataFinalizer(acquire(value),
-                                                   dispose));
+  finalizable = ctypes.CDataFinalizer(acquire(value), dispose);
+  wrapped = ctypes.int64_t(value);
+  converted = ctypes.int64_t(finalizable);
   structural_check_eq(converted, wrapped);
+  finalizable.dispose();
 }
 
 /**
  * Test that dispose can change errno but finalization cannot
  */
-function test_errno(size)
+function test_errno(size, tc, cleanup)
 {
   reset_errno();
   do_check_eq(ctypes.errno, 0);
@@ -115,6 +116,7 @@ function test_errno(size)
   do_check_eq(ctypes.errno, 0);
   for (let i = 0; i < size; ++i) {
     finalizable = ctypes.CDataFinalizer(acquire(i), dispose_errno);
+    cleanup.add(finalizable);
   }
 
   trigger_gc();
