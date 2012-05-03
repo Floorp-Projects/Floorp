@@ -1093,6 +1093,136 @@ static bool RoundedRectContainsRect(const nsRect& aRoundedRect,
   return rgn.Contains(aContainedRect);
 }
 
+bool
+nsDisplayBackground::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder)
+{
+  if (mIsThemed)
+    return false;
+
+  nsPresContext* presContext = mFrame->PresContext();
+  nsStyleContext* bgSC;
+  if (!nsCSSRendering::FindBackground(presContext, mFrame, &bgSC))
+    return false;
+
+  bool drawBackgroundImage;
+  bool drawBackgroundColor;
+  nsCSSRendering::DetermineBackgroundColor(presContext,
+                                           bgSC,
+                                           mFrame,
+                                           drawBackgroundImage,
+                                           drawBackgroundColor);
+
+  // For now we don't know how to draw image layers with a background color.
+  if (!drawBackgroundImage || drawBackgroundColor)
+    return false;
+
+  const nsStyleBackground *bg = bgSC->GetStyleBackground();
+
+  // We could pretty easily support multiple image layers, but for now we
+  // just punt here.
+  if (bg->mLayers.Length() != 1)
+    return false;
+
+  PRUint32 flags = aBuilder->GetBackgroundPaintFlags();
+  nsPoint offset = ToReferenceFrame();
+  nsRect borderArea = nsRect(offset, mFrame->GetSize());
+
+  const nsStyleBackground::Layer &layer = bg->mLayers[0];
+
+  nsBackgroundLayerState state =
+    nsCSSRendering::PrepareBackgroundLayer(presContext,
+                                           mFrame,
+                                           flags,
+                                           borderArea,
+                                           borderArea,
+                                           *bg,
+                                           layer);
+
+  // We only care about images here, not gradients.
+  if (!state.mImageRenderer.IsRasterImage())
+    return false;
+
+  // We currently can't handle tiled or partial backgrounds.
+  if (!state.mDestArea.IsEqualEdges(state.mFillArea)) {
+    return false;
+  }
+
+  // Sub-pixel alignment is hard, lets punt on that.
+  if (state.mAnchor != nsPoint(0.0f, 0.0f)) {
+    return false;
+  }
+
+  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  mDestRect = nsLayoutUtils::RectToGfxRect(state.mDestArea, appUnitsPerDevPixel);
+  mImageContainer = state.mImageRenderer.GetContainer();
+
+  // Ok, we can turn this into a layer if needed.
+  return true;
+}
+
+LayerState
+nsDisplayBackground::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const FrameLayerBuilder::ContainerParameters& aParameters)
+{
+  if (!aManager->IsCompositingCheap() ||
+      !nsLayoutUtils::GPUImageScalingEnabled() ||
+      !TryOptimizeToImageLayer(aBuilder)) {
+    return LAYER_NONE;
+  }
+
+  gfxSize imageSize = mImageContainer->GetCurrentSize();
+  NS_ASSERTION(imageSize.width != 0 && imageSize.height != 0, "Invalid image size!");
+
+  gfxRect destRect = mDestRect;
+
+  destRect.width *= aParameters.mXScale;
+  destRect.height *= aParameters.mYScale;
+
+  // Calculate the scaling factor for the frame.
+  gfxSize scale = gfxSize(destRect.width / imageSize.width, destRect.height / imageSize.height);
+
+  // If we are not scaling at all, no point in separating this into a layer.
+  if (scale.width == 1.0f && scale.height == 1.0f) {
+    return LAYER_INACTIVE;
+  }
+
+  // If the target size is pretty small, no point in using a layer.
+  if (destRect.width * destRect.height < 64 * 64) {
+    return LAYER_INACTIVE;
+  }
+
+  return LAYER_ACTIVE;
+}
+
+already_AddRefed<Layer>
+nsDisplayBackground::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                LayerManager* aManager,
+                                const ContainerParameters& aParameters)
+{
+  nsRefPtr<ImageLayer> layer = aManager->CreateImageLayer();
+  layer->SetContainer(mImageContainer);
+  ConfigureLayer(layer);
+  return layer.forget();
+}
+
+void
+nsDisplayBackground::ConfigureLayer(ImageLayer* aLayer)
+{
+  aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
+
+  gfxIntSize imageSize = mImageContainer->GetCurrentSize();
+  NS_ASSERTION(imageSize.width != 0 && imageSize.height != 0, "Invalid image size!");
+
+  gfxMatrix transform;
+  transform.Translate(mDestRect.TopLeft());
+  transform.Scale(mDestRect.width/imageSize.width,
+                  mDestRect.height/imageSize.height);
+  aLayer->SetTransform(gfx3DMatrix::From2D(transform));
+
+  aLayer->SetVisibleRegion(nsIntRect(0, 0, imageSize.width, imageSize.height));
+}
+
 void
 nsDisplayBackground::HitTest(nsDisplayListBuilder* aBuilder,
                              const nsRect& aRect,

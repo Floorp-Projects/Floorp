@@ -56,6 +56,7 @@
 #include "nsRegion.h"
 #include "FrameLayerBuilder.h"
 #include "nsThemeConstants.h"
+#include "ImageLayers.h"
 
 #include "mozilla/StandardInteger.h"
 
@@ -1604,6 +1605,14 @@ public:
   }
 #endif
 
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters);
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerParameters& aContainerParameters);
+
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -1622,12 +1631,22 @@ public:
   bool IsThemed() { return mIsThemed; }
 
 protected:
+  typedef class mozilla::layers::ImageContainer ImageContainer;
+  typedef class mozilla::layers::ImageLayer ImageLayer;
+
   nsRegion GetInsideClipRegion(nsPresContext* aPresContext, PRUint8 aClip,
                                const nsRect& aRect, bool* aSnap);
+
+  bool TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder);
+  void ConfigureLayer(ImageLayer* aLayer);
 
   /* Used to cache mFrame->IsThemed() since it isn't a cheap call */
   bool mIsThemed;
   nsITheme::Transparency mThemeTransparency;
+
+  /* If this background can be a simple image layer, we store the format here. */
+  nsRefPtr<ImageContainer> mImageContainer;
+  gfxRect mDestRect;
 };
 
 /**

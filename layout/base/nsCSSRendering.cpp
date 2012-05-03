@@ -1651,6 +1651,16 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
       bgColor = NS_RGBA(0,0,0,0);
   }
 
+  const nsStyleBackground *bg = aStyleContext->GetStyleBackground();
+
+  // We can skip painting the background color if a background image is opaque.
+  if (aDrawBackgroundColor &&
+      bg->BottomLayer().mRepeat.mXRepeat == NS_STYLE_BG_REPEAT_REPEAT &&
+      bg->BottomLayer().mRepeat.mYRepeat == NS_STYLE_BG_REPEAT_REPEAT &&
+      bg->BottomLayer().mImage.IsOpaque()) {
+    aDrawBackgroundColor = false;
+  }
+
   return bgColor;
 }
 
@@ -2278,13 +2288,6 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // this here because this might be the only code that knows about the
   // association of the style data with the frame.
   aPresContext->SetupBackgroundImageLoaders(aForFrame, bg);
-
-  // We can skip painting the background color if a background image is opaque.
-  if (drawBackgroundColor &&
-      bg->BottomLayer().mRepeat.mXRepeat == NS_STYLE_BG_REPEAT_REPEAT &&
-      bg->BottomLayer().mRepeat.mYRepeat == NS_STYLE_BG_REPEAT_REPEAT &&
-      bg->BottomLayer().mImage.IsOpaque())
-    drawBackgroundColor = false;
 
   // The background color is rendered over the entire dirty area,
   // even if the image isn't.
