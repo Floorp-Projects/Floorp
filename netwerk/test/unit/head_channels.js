@@ -128,7 +128,7 @@ ChannelListener.prototype = {
   onStopRequest: function(request, context, status) {
     try {
       var success = Components.isSuccessCode(status);
-      if (!this._got_onstartrequest)
+      if (!this._got_onstartrequest && success)
         do_throw("onStopRequest without onStartRequest event!");
       if (this._got_onstoprequest)
         do_throw("Got second onStopRequest event!");
