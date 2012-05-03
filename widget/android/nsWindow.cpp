@@ -1741,6 +1741,7 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key,
                              key.IsAltPressed(),
                              key.IsShiftPressed(),
                              false);
+    event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
     event.time = key.Time();
 
     if (gMenu)
