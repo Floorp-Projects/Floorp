@@ -667,14 +667,18 @@ bool
 js::XDRAtom(XDRState<mode> *xdr, JSAtom **atomp)
 {
     if (mode == XDR_ENCODE) {
-        JSString *str = *atomp;
-        return xdr->codeString(&str);
+        uint32_t nchars = (*atomp)->length();
+        if (!xdr->codeUint32(&nchars))
+            return false;
+
+        jschar *chars = const_cast<jschar *>((*atomp)->getChars(xdr->cx()));
+        if (!chars)
+            return false;
+
+        return xdr->codeChars(chars, nchars);
     }
 
-    /*
-     * Inline XDRState::codeString when decoding to avoid JSString allocation
-     * for already existing atoms. See bug 321985.
-     */
+    /* Avoid JSString allocation for already existing atoms. See bug 321985. */
     uint32_t nchars;
     if (!xdr->codeUint32(&nchars))
         return false;

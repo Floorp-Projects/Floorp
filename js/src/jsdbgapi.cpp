@@ -436,7 +436,7 @@ JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
 extern JS_PUBLIC_API(uintptr_t *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
 {
-    Vector<JSAtom *> localNames(cx);
+    BindingNames localNames(cx);
     if (!fun->script()->bindings.getLocalNameArray(cx, &localNames))
         return NULL;
 
@@ -449,15 +449,16 @@ JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
         return NULL;
     }
 
-    JS_ASSERT(sizeof(*names) == sizeof(*localNames.begin()));
-    js_memcpy(names, localNames.begin(), localNames.length() * sizeof(*names));
+    for (size_t i = 0; i < localNames.length(); i++)
+        names[i] = reinterpret_cast<uintptr_t>(localNames[i].maybeAtom);
+
     return names;
 }
 
 extern JS_PUBLIC_API(JSAtom *)
 JS_LocalNameToAtom(uintptr_t w)
 {
-    return JS_LOCAL_NAME_TO_ATOM(w);
+    return reinterpret_cast<JSAtom *>(w);
 }
 
 extern JS_PUBLIC_API(JSString *)
