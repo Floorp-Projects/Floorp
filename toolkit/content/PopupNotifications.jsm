@@ -46,6 +46,9 @@ const NOTIFICATION_EVENT_DISMISSED = "dismissed";
 const NOTIFICATION_EVENT_REMOVED = "removed";
 const NOTIFICATION_EVENT_SHOWN = "shown";
 
+const ICON_SELECTOR = ".notification-anchor-icon";
+const ICON_ATTRIBUTE_SHOWING = "showing";
+
 /**
  * Notification object describes a single popup notification.
  *
@@ -82,15 +85,18 @@ Notification.prototype = {
   },
 
   get anchorElement() {
-    if (!this.owner.iconBox)
+    let iconBox = this.owner.iconBox;
+    if (!iconBox)
       return null;
 
     let anchorElement = null;
     if (this.anchorID)
-      anchorElement = this.owner.iconBox.querySelector("#"+this.anchorID);
+      anchorElement = iconBox.querySelector("#"+this.anchorID);
 
+    // Use a default anchor icon if it's available
     if (!anchorElement)
-      anchorElement = this.owner.iconBox;
+      anchorElement = iconBox.querySelector("#default-notification-icon") ||
+                      iconBox;
 
     return anchorElement;
   }
@@ -393,6 +399,8 @@ PopupNotifications.prototype = {
     if (index == -1)
       return;
 
+    notification.anchorElement.removeAttribute(ICON_ATTRIBUTE_SHOWING);
+
     // remove the notification
     notifications.splice(index, 1);
     this._fireCallback(notification, NOTIFICATION_EVENT_REMOVED);
@@ -502,21 +510,27 @@ PopupNotifications.prototype = {
    * selection changes.
    */
   _update: function PopupNotifications_update(anchor) {
+    if (this.iconBox) {
+      // hide icons of the previous tab.
+      this._hideIcons();
+    }
+
     let anchorElement, notificationsToShow = [];
-    let haveNotifications = this._currentNotifications.length > 0;
+    let currentNotifications = this._currentNotifications;
+    let haveNotifications = currentNotifications.length > 0;
     if (haveNotifications) {
       // Only show the notifications that have the passed-in anchor (or the
       // first notification's anchor, if none was passed in). Other
       // notifications will be shown once these are dismissed.
-      anchorElement = anchor || this._currentNotifications[0].anchorElement;
+      anchorElement = anchor || currentNotifications[0].anchorElement;
 
       if (this.iconBox) {
+        this._showIcons(currentNotifications);
         this.iconBox.hidden = false;
-        this.iconBox.setAttribute("anchorid", anchorElement.id);
       }
 
       // Also filter out notifications that have been dismissed.
-      notificationsToShow = this._currentNotifications.filter(function (n) {
+      notificationsToShow = currentNotifications.filter(function (n) {
         return !n.dismissed && n.anchorElement == anchorElement &&
                !n.options.neverShow;
       });
@@ -536,6 +550,22 @@ PopupNotifications.prototype = {
       // to not having any showable notifications)
       if (this.iconBox && !haveNotifications)
         this.iconBox.hidden = true;
+    }
+  },
+
+  _showIcons: function PopupNotifications_showIcons(aCurrentNotifications) {
+    for (let notification of aCurrentNotifications) {
+      let anchorElm = notification.anchorElement;
+      if (anchorElm) {
+        anchorElm.setAttribute(ICON_ATTRIBUTE_SHOWING, "true");
+      }
+    }
+  },
+
+  _hideIcons: function PopupNotifications_hideIcons() {
+    let icons = this.iconBox.querySelectorAll(ICON_SELECTOR);
+    for (let icon of icons) {
+      icon.removeAttribute(ICON_ATTRIBUTE_SHOWING);
     }
   },
 
