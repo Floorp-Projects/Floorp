@@ -71,6 +71,18 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
   }
 
   @Override
+  public boolean shouldIgnore(Record record) {
+    if (super.shouldIgnore(record)) {
+      return true;
+    }
+    if (!(record instanceof HistoryRecord)) {
+      return true;
+    }
+    HistoryRecord r = (HistoryRecord) record;
+    return !RepoUtils.isValidHistoryURI(r.histURI);
+  }
+
+  @Override
   protected Record transformRecord(Record record) throws NullCursorException {
     return addVisitsToRecord(record);
   }
