@@ -68,6 +68,7 @@ InterfaceType()        - construct a new object representing a type that
 from __future__ import with_statement
 import os, sys
 import struct
+import operator
 
 # header magic
 XPT_MAGIC = "XPCOM\nTypeLib\r\n\x1a"
@@ -878,6 +879,9 @@ class Interface(object):
     def __str__(self):
         return "Interface(name='%s', iid='%s')" % (self.name, self.iid)
 
+    def __hash__(self):
+        return hash((self.name, self.iid))
+
     def __cmp__(self, other):
         c = cmp(self.iid, other.iid)
         if c != 0:
@@ -1186,94 +1190,6 @@ class Typelib(object):
         else:
             self.writefd(output_file)
 
-    def merge(self, other, sanitycheck=True):
-        """
-        Merge the contents of Typelib |other| into this typelib.
-        If |sanitycheck| is False, don't sort the interface table
-        after merging.
-
-        """
-        # This will be a list of (replaced interface, replaced with)
-        # containing interfaces that were replaced with interfaces from
-        # another typelib, and the interface that replaced them.
-        merged_interfaces = []
-        for i in other.interfaces:
-            if i in self.interfaces:
-                continue
-            # See if there's a copy of this interface with different
-            # resolved status or IID value.
-            merged = False
-            for j in self.interfaces:
-                if i.name == j.name:
-                    if i.resolved != j.resolved:
-                        # prefer resolved interfaces over unresolved
-                        if j.resolved:
-                            # keep j
-                            merged_interfaces.append((i, j))
-                            merged = True
-                            # Fixup will happen after processing all interfaces.
-                        else:
-                            # replace j with i
-                            merged_interfaces.append((j, i))
-                            merged = True
-                            self.interfaces[self.interfaces.index(j)] = i
-                    elif i.iid != j.iid:
-                        # Prefer unresolved interfaces with valid IIDs
-                        if j.iid == Interface.UNRESOLVED_IID:
-                            # replace j with i
-                            merged_interfaces.append((j, i))
-                            merged = True
-                            self.interfaces[self.interfaces.index(j)] = i
-                        elif i.iid == Interface.UNRESOLVED_IID:
-                            # keep j
-                            merged_interfaces.append((i, j))
-                            merged = True
-                            # Fixup will happen after processing all interfaces.
-                        else:
-                            # Same name but different IIDs: raise an exception.
-                            # self.* is the (target) Typelib being merged into,
-                            #   not the one which j.iid was from.
-                            raise DataError, \
-                                  "Typelibs contain definitions of interface %s" \
-                                    " with different IIDs (%s (%s) vs %s (%s))!" % \
-                                    (i.name, i.iid, i.xpt_filename or other.filename, \
-                                             j.iid, j.xpt_filename or self.filename)
-                elif i.iid == j.iid and i.iid != Interface.UNRESOLVED_IID:
-                    # Same IID but different names: raise an exception.
-                    # self.* is the (target) Typelib being merged into,
-                    #   not the one which j.name was from.
-                    raise DataError, \
-                          "Typelibs contain definitions of interface %s" \
-                            " with different names (%s (%s) vs %s (%s))!" % \
-                            (i.iid, i.name, i.xpt_filename or other.filename, \
-                                    j.name, j.xpt_filename or self.filename)
-            if not merged:
-                # No partially matching interfaces, so just take this interface
-                self.interfaces.append(i)
-
-        # Now fixup any merged interfaces
-        def checkType(t, replaced_from, replaced_to):
-            if isinstance(t, InterfaceType) and t.iface == replaced_from:
-                t.iface = replaced_to
-            elif isinstance(t, ArrayType) and \
-                 isinstance(t.element_type, InterfaceType) and \
-                 t.element_type.iface == replaced_from:
-                t.element_type.iface = replaced_to
-
-        for replaced_from, replaced_to in merged_interfaces:
-            for i in self.interfaces:
-                # Replace parent references
-                if i.parent is not None and i.parent == replaced_from:
-                    i.parent = replaced_to
-                for m in i.methods:
-                    # Replace InterfaceType params and return values
-                    checkType(m.result.type, replaced_from, replaced_to)
-                    for p in m.params:
-                        checkType(p.type, replaced_from, replaced_to)
-        if sanitycheck:
-            self._sanityCheck()
-        #TODO: do we care about annotations? probably not
-
     def dump(self, out):
         """
         Print a human-readable listing of the contents of this typelib
@@ -1335,21 +1251,126 @@ def xpt_dump(file):
     t = Typelib.read(file)
     t.dump(sys.stdout)
 
-def xpt_link(dest, inputs):
+def xpt_link(inputs):
     """
-    Link all of the xpt files in |inputs| together and write the
-    result to |dest|. All parameters may be filenames or file-like objects.
+    Link all of the xpt files in |inputs| together and return the result
+    as a Typelib object. All entries in inputs may be filenames or
+    file-like objects.
 
     """
+    def read_input(i):
+        if isinstance(i, Typelib):
+            return i
+        return Typelib.read(i)
+
     if not inputs:
         print >>sys.stderr, "Usage: xpt_link <destination file> <input files>"
-        return
-    t1 = Typelib.read(inputs[0])
-    for f in inputs[1:]:
-        t2 = Typelib.read(f)
-        # write will call sanitycheck, so skip it here.
-        t1.merge(t2, sanitycheck=False)
-    t1.write(dest)
+        return None
+    # This is the aggregate list of interfaces.
+    interfaces = []
+    # This will be a dict of replaced interface -> replaced with
+    # containing interfaces that were replaced with interfaces from
+    # another typelib, and the interface that replaced them.
+    merged_interfaces = {}
+    for f in inputs:
+        t = read_input(f)
+        interfaces.extend(t.interfaces)
+    # Sort interfaces by name so we can merge adjacent duplicates
+    interfaces.sort(key=operator.attrgetter('name'))
+
+    Result = enum('Equal',     # Interfaces the same, doesn't matter
+                  'NotEqual',  # Interfaces differ, keep both
+                  'KeepFirst', # Replace second interface with first
+                  'KeepSecond')# Replace first interface with second
+        
+    def compare(i, j):
+        """
+        Compare two interfaces, determine if they're equal or
+        completely different, or should be merged (and indicate which
+        one to keep in that case).
+
+        """
+        if i == j:
+            # Arbitrary, just pick one
+            return Result.Equal
+        if i.name != j.name:
+            if i.iid == j.iid and i.iid != Interface.UNRESOLVED_IID:
+                # Same IID but different names: raise an exception.
+                raise DataError, \
+                    "Typelibs contain definitions of interface %s" \
+                    " with different names (%s (%s) vs %s (%s))!" % \
+                    (i.iid, i.name, i.xpt_filename, j.name, j.xpt_filename)
+            # Otherwise just different interfaces.
+            return Result.NotEqual
+        # Interfaces have the same name, so either they need to be merged
+        # or there's a data error. Sort out which one to keep
+        if i.resolved != j.resolved:
+            # prefer resolved interfaces over unresolved
+            if j.resolved:
+                assert i.iid == j.iid or i.iid == Interface.UNRESOLVED_IID
+                # keep j
+                return Result.KeepSecond
+            else:
+                assert i.iid == j.iid or j.iid == Interface.UNRESOLVED_IID
+                # replace j with i
+                return Result.KeepFirst
+        elif i.iid != j.iid:
+            # Prefer unresolved interfaces with valid IIDs
+            if j.iid == Interface.UNRESOLVED_IID:
+                # replace j with i
+                assert not j.resolved
+                return Result.KeepFirst
+            elif i.iid == Interface.UNRESOLVED_IID:
+                # keep j
+                assert not i.resolved
+                return Result.KeepSecond
+            else:
+                # Same name but different IIDs: raise an exception.
+                raise DataError, \
+                    "Typelibs contain definitions of interface %s" \
+                                " with different IIDs (%s (%s) vs %s (%s))!" % \
+                                (i.name, i.iid, i.xpt_filename, \
+                                 j.iid, j.xpt_filename)
+        raise DataError, "No idea what happened here: %s:%s (%s), %s:%s (%s)" % \
+            (i.name, i.iid, i.xpt_filename, j.name, j.iid, j.xpt_filename)
+    
+    # Compare interfaces pairwise to find duplicates that should be merged.
+    i = 1
+    while i < len(interfaces):
+        res = compare(interfaces[i-1], interfaces[i])
+        if res == Result.NotEqual:
+            i += 1
+        elif res == Result.Equal:
+            # Need to drop one but it doesn't matter which
+            del interfaces[i]
+        elif res == Result.KeepFirst:
+            merged_interfaces[interfaces[i]] = interfaces[i-1]
+            del interfaces[i]
+        elif res == Result.KeepSecond:
+            merged_interfaces[interfaces[i-1]] = interfaces[i]
+            del interfaces[i-1]
+    
+    # Now fixup any merged interfaces
+    def checkType(t):
+        if isinstance(t, InterfaceType) and t.iface in merged_interfaces:
+            t.iface = merged_interfaces[t.iface]
+        elif isinstance(t, ArrayType) and \
+             isinstance(t.element_type, InterfaceType) and \
+             t.element_type.iface in merged_interfaces:
+            t.element_type.iface = merged_interfaces[t.element_type.iface]
+
+    for i in interfaces:
+        # Replace parent references
+        if i.parent in merged_interfaces:
+            i.parent = merged_interfaces[i.parent]
+        for m in i.methods:
+            # Replace InterfaceType params and return values
+            checkType(m.result.type)
+            for p in m.params:
+                checkType(p.type)
+    # Re-sort interfaces (by IID)
+    interfaces.sort()
+    return Typelib(interfaces=interfaces)
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
@@ -1358,4 +1379,5 @@ if __name__ == '__main__':
     if sys.argv[1] == 'dump':
         xpt_dump(sys.argv[2])
     elif sys.argv[1] == 'link':
-        xpt_link(sys.argv[2], sys.argv[3:])
+        xpt_link(sys.argv[3:]).write(sys.argv[2])
+        
