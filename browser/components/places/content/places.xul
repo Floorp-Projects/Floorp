@@ -99,13 +99,7 @@
 
   <commandset id="organizerCommandSet">
     <command id="OrganizerCommand_find:all"
-             label="&cmd.findInBookmarks.label;"
-             accesskey="&cmd.findInBookmarks.accesskey;"
              oncommand="PlacesSearchBox.findAll();"/>
-    <command id="OrganizerCommand_find:current"
-             label="&cmd.findCurrent.label;"
-             accesskey="&cmd.findCurrent.accesskey;"
-             oncommand="PlacesSearchBox.findCurrent();"/>
     <command id="OrganizerCommand_export"
              oncommand="PlacesOrganizer.exportBookmarks();"/>
     <command id="OrganizerCommand_import"
@@ -137,10 +131,6 @@
          command="OrganizerCommand_find:all" 
          key="&cmd.find.key;"
          modifiers="accel"/>
-    <key id="placesKey_find:current"
-         command="OrganizerCommand_find:current" 
-         key="&cmd.find.key;"
-         modifiers="accel,shift"/>
 
     <!-- Back/Forward Keys Support -->
 #ifndef XP_MACOSX
