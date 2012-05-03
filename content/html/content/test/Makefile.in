@@ -137,7 +137,6 @@ _TEST_FILES = \
 		test_bug401160.xhtml \
 		test_bug405242.html \
 		test_bug406596.html \
-		test_bug408231.html \
 		test_bug417760.html \
 		file_bug417760.png \
 		test_formSubmission.html \
