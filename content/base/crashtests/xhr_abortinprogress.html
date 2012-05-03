@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset=UTF-8>
+<script>"use strict";
+(function(){
+  var req = new XMLHttpRequest();
+  req.open('GET', '?' + Date.now());
+  req.responseType = 'moz-blob';
+  var b = null;
+  req.onprogress = function(e) {
+    b = req.response;
+  };
+  req.onreadystatechange = function(e) {
+    if (req.readyState == 3) {
+      req.abort();
+    }
+    if (req.readyState == 4) {
+      document.documentElement.removeAttribute('class');
+    }
+  };
+  req.send();
+})();
+</script>

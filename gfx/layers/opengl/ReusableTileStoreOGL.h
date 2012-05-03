@@ -23,10 +23,12 @@ class ReusableTiledTextureOGL
 {
 public:
   ReusableTiledTextureOGL(TiledTexture aTexture,
+                          const nsIntPoint& aTileOrigin,
                           const nsIntRegion& aTileRegion,
                           uint16_t aTileSize,
                           gfxSize aResolution)
     : mTexture(aTexture)
+    , mTileOrigin(aTileOrigin)
     , mTileRegion(aTileRegion)
     , mTileSize(aTileSize)
     , mResolution(aResolution)
@@ -35,6 +37,7 @@ public:
   ~ReusableTiledTextureOGL() {}
 
   TiledTexture mTexture;
+  const nsIntPoint mTileOrigin;
   const nsIntRegion mTileRegion;
   uint16_t mTileSize;
   gfxSize mResolution;

@@ -1033,6 +1033,11 @@ nsXMLHttpRequest::CreatePartialBlob()
     return NS_OK;
   }
 
+  // mBuilder can be null if the request has been canceled
+  if (!mBuilder) {
+    return NS_OK;
+  }
+
   nsCAutoString contentType;
   if (mLoadTotal == mLoadTransferred) {
     mChannel->GetContentType(contentType);

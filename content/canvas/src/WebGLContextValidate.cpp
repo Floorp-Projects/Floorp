@@ -518,6 +518,20 @@ WebGLContext::InitAndValidateGL()
         return false;
     }
 
+#ifdef ANDROID
+    // bug 736123, blacklist WebGL on Adreno because they do not implement
+    // glTexSubImage2D in a way that is safe to expose to WebGL </euphemism>
+    // We don't rely on GfxInfo for this blacklisting, because GfxInfo on Android doesn't know
+    // about GL strings and GL strings are the only way I know to detect Adreno (EGL Vendor only
+    // says 'Android'), and it is not convenient to have to create a GL context before GfxInfo::Init()
+    // is first called.
+    if (gl->Renderer() == gl::GLContext::RendererAdreno200 ||
+        gl->Renderer() == gl::GLContext::RendererAdreno205)
+    {
+        return false;
+    }
+#endif
+
     mMinCapability = Preferences::GetBool("webgl.min_capability_mode", false);
     mDisableExtensions = Preferences::GetBool("webgl.disable-extensions", false);
 

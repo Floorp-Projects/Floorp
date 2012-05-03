@@ -178,6 +178,8 @@ BackfillIndexInCharBuffer(uint32_t index, mozilla::RangedPtr<T> end)
 inline bool
 IndexToId(JSContext *cx, uint32_t index, jsid *idp)
 {
+    MaybeCheckStackRoots(cx);
+
     if (index <= JSID_INT_MAX) {
         *idp = INT_TO_JSID(index);
         return true;
