@@ -12,6 +12,7 @@ const special_type = "application/x-our-special-type";
   test_read_dir_1,
   test_read_dir_2,
   test_upload_file,
+  test_load_replace,
   do_test_finished
 ].forEach(add_test);
 
@@ -220,6 +221,28 @@ function test_upload_file() {
 
   chan.contentType = special_type;
   chan.asyncOpen(new FileStreamListener(on_upload_complete), null);
+}
+
+function test_load_replace() {
+  // lnk files should resolve to their targets
+  const isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
+  if (isWindows) {
+    dump("*** test_load_replace\n");
+    file = do_get_file("data/system_root.lnk", false);
+    var chan = new_file_channel(file);
+
+    // The LOAD_REPLACE flag should be set
+    do_check_eq(chan.loadFlags & chan.LOAD_REPLACE, chan.LOAD_REPLACE);
+
+    // The original URI path should differ from the URI path
+    do_check_neq(chan.URI.path, chan.originalURI.path);
+
+    // The original URI path should be the same as the lnk file path
+    var ios = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
+    do_check_eq(chan.originalURI.path, ios.newFileURI(file).path);
+  }
+  run_next_test();
 }
 
 function run_test() {
