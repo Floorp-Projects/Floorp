@@ -75,22 +75,22 @@ struct JSTryNote {
     uint32_t        length;     /* length of the try statement or for-in loop */
 };
 
-typedef struct JSTryNoteArray {
-    JSTryNote       *vector;    /* array of indexed try notes */
-    uint32_t        length;     /* count of indexed try notes */
-} JSTryNoteArray;
+namespace js {
 
-typedef struct JSObjectArray {
-    js::HeapPtrObject *vector;  /* array of indexed objects */
-    uint32_t        length;     /* count of indexed objects */
-} JSObjectArray;
-
-typedef struct JSConstArray {
+struct ConstArray {
     js::HeapValue   *vector;    /* array of indexed constant values */
     uint32_t        length;
-} JSConstArray;
+};
 
-namespace js {
+struct ObjectArray {
+    js::HeapPtrObject *vector;  /* array of indexed objects */
+    uint32_t        length;     /* count of indexed objects */
+};
+
+struct TryNoteArray {
+    JSTryNote       *vector;    /* array of indexed try notes */
+    uint32_t        length;     /* count of indexed try notes */
+};
 
 struct GlobalSlotArray {
     struct Entry {
@@ -109,6 +109,13 @@ struct ClosedSlotArray {
 struct Shape;
 
 enum BindingKind { NONE, ARGUMENT, VARIABLE, CONSTANT };
+
+struct BindingName {
+    JSAtom *maybeAtom;
+    BindingKind kind;
+};
+
+typedef Vector<BindingName, 32> BindingNames;
 
 /*
  * Formal parameters and local variables are stored in a shape tree
@@ -238,7 +245,7 @@ class Bindings
      * The name at an element will be null when the element is for an argument
      * corresponding to a destructuring pattern.
      */
-    bool getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp);
+    bool getLocalNameArray(JSContext *cx, BindingNames *namesp);
 
     /*
      * Protect stored bindings from mutation.  Subsequent attempts to add
@@ -273,7 +280,7 @@ class Bindings
 } /* namespace js */
 
 #define JS_OBJECT_ARRAY_SIZE(length)                                          \
-    (offsetof(JSObjectArray, vector) + sizeof(JSObject *) * (length))
+    (offsetof(ObjectArray, vector) + sizeof(JSObject *) * (length))
 
 #ifdef JS_METHODJIT
 namespace JSC {
@@ -585,6 +592,8 @@ struct JSScript : public js::gc::Cell
                                JSVersion version);
     static JSScript *NewScriptFromEmitter(JSContext *cx, js::BytecodeEmitter *bce);
 
+    void setVersion(JSVersion v) { version = v; }
+
     /* See TCF_ARGUMENTS_HAS_LOCAL_BINDING comment. */
     bool argumentsHasLocalBinding() const { return argsHasLocalBinding_; }
     jsbytecode *argumentsBytecode() const { JS_ASSERT(code[0] == JSOP_ARGUMENTS); return code; }
@@ -604,7 +613,7 @@ struct JSScript : public js::gc::Cell
     bool analyzedArgsUsage() const { return !needsArgsAnalysis_; }
     bool needsArgsObj() const { JS_ASSERT(analyzedArgsUsage()); return needsArgsObj_; }
     void setNeedsArgsObj(bool needsArgsObj);
-    bool applySpeculationFailed(JSContext *cx);
+    static bool applySpeculationFailed(JSContext *cx, JSScript *script);
 
     /* Hash table chaining for JSCompartment::evalCache. */
     JSScript *&evalHashLink() { return *globalObject.unsafeGetUnioned(); }
@@ -736,47 +745,55 @@ struct JSScript : public js::gc::Cell
     static const uint8_t INVALID_OFFSET = 0xFF;
     static bool isValidOffset(uint8_t offset) { return offset != INVALID_OFFSET; }
 
-    JSConstArray *consts() {
-        JS_ASSERT(isValidOffset(constsOffset));
-        return reinterpret_cast<JSConstArray *>(data + constsOffset);
+    bool hasConsts()        { return isValidOffset(constsOffset);     }
+    bool hasObjects()       { return isValidOffset(objectsOffset);    }
+    bool hasRegexps()       { return isValidOffset(regexpsOffset);    }
+    bool hasTrynotes()      { return isValidOffset(trynotesOffset);   }
+    bool hasGlobals()       { return isValidOffset(globalsOffset);    }
+    bool hasClosedArgs()    { return isValidOffset(closedArgsOffset); }
+    bool hasClosedVars()    { return isValidOffset(closedVarsOffset); }
+
+    js::ConstArray *consts() {
+        JS_ASSERT(hasConsts());
+        return reinterpret_cast<js::ConstArray *>(data + constsOffset);
     }
 
-    JSObjectArray *objects() {
-        JS_ASSERT(isValidOffset(objectsOffset));
-        return reinterpret_cast<JSObjectArray *>(data + objectsOffset);
+    js::ObjectArray *objects() {
+        JS_ASSERT(hasObjects());
+        return reinterpret_cast<js::ObjectArray *>(data + objectsOffset);
     }
 
-    JSObjectArray *regexps() {
-        JS_ASSERT(isValidOffset(regexpsOffset));
-        return reinterpret_cast<JSObjectArray *>(data + regexpsOffset);
+    js::ObjectArray *regexps() {
+        JS_ASSERT(hasRegexps());
+        return reinterpret_cast<js::ObjectArray *>(data + regexpsOffset);
     }
 
-    JSTryNoteArray *trynotes() {
-        JS_ASSERT(isValidOffset(trynotesOffset));
-        return reinterpret_cast<JSTryNoteArray *>(data + trynotesOffset);
+    js::TryNoteArray *trynotes() {
+        JS_ASSERT(hasTrynotes());
+        return reinterpret_cast<js::TryNoteArray *>(data + trynotesOffset);
     }
 
     js::GlobalSlotArray *globals() {
-        JS_ASSERT(isValidOffset(globalsOffset));
+        JS_ASSERT(hasGlobals());
         return reinterpret_cast<js::GlobalSlotArray *>(data + globalsOffset);
     }
 
     js::ClosedSlotArray *closedArgs() {
-        JS_ASSERT(isValidOffset(closedArgsOffset));
+        JS_ASSERT(hasClosedArgs());
         return reinterpret_cast<js::ClosedSlotArray *>(data + closedArgsOffset);
     }
 
     js::ClosedSlotArray *closedVars() {
-        JS_ASSERT(isValidOffset(closedVarsOffset));
+        JS_ASSERT(hasClosedVars());
         return reinterpret_cast<js::ClosedSlotArray *>(data + closedVarsOffset);
     }
 
     uint32_t numClosedArgs() {
-        return isValidOffset(closedArgsOffset) ? closedArgs()->length : 0;
+        return hasClosedArgs() ? closedArgs()->length : 0;
     }
 
     uint32_t numClosedVars() {
-        return isValidOffset(closedVarsOffset) ? closedVars()->length : 0;
+        return hasClosedVars() ? closedVars()->length : 0;
     }
 
     js::HeapPtrAtom &getAtom(size_t index) const {
@@ -789,7 +806,7 @@ struct JSScript : public js::gc::Cell
     }
 
     JSObject *getObject(size_t index) {
-        JSObjectArray *arr = objects();
+        js::ObjectArray *arr = objects();
         JS_ASSERT(index < arr->length);
         return arr->vector[index];
     }
@@ -804,7 +821,7 @@ struct JSScript : public js::gc::Cell
     inline JSObject *getRegExp(size_t index);
 
     const js::Value &getConst(size_t index) {
-        JSConstArray *arr = consts();
+        js::ConstArray *arr = consts();
         JS_ASSERT(index < arr->length);
         return arr->vector[index];
     }

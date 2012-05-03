@@ -1045,9 +1045,6 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 // Disable the error console
 pref("devtools.errorconsole.enabled", false);
 
-// Enable the developer toolbar
-pref("devtools.toolbar.enabled", false);
-
 // Enable the Inspector
 pref("devtools.inspector.enabled", true);
 pref("devtools.inspector.htmlHeight", 112);
@@ -1061,14 +1058,9 @@ pref("devtools.layoutview.open", false);
 
 // Enable the Debugger
 pref("devtools.debugger.enabled", false);
-pref("devtools.debugger.remote-enabled", false);
-pref("devtools.debugger.remote-host", "localhost");
-pref("devtools.debugger.remote-port", 6000);
 
 // The default Debugger UI height
 pref("devtools.debugger.ui.height", 250);
-pref("devtools.debugger.ui.remote-win.width", 900);
-pref("devtools.debugger.ui.remote-win.height", 400);
 
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
@@ -1091,14 +1083,8 @@ pref("devtools.styleeditor.transitions", true);
 // Enable tools for Chrome development.
 pref("devtools.chrome.enabled", false);
 
-// Display the introductory text
-pref("devtools.gcli.hideIntro", false);
-
-// How eager are we to show help: never=1, sometimes=2, always=3
-pref("devtools.gcli.eagerHelper", 2);
-
-// Do we allow the 'pref set' command
-pref("devtools.gcli.allowSet", false);
+// Disable the GCLI enhanced command line.
+pref("devtools.gcli.enable", false);
 
 // The last Web Console height. This is initially 0 which means that the Web
 // Console will use the default height next time it shows.

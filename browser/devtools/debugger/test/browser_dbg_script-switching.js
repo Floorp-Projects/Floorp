@@ -8,6 +8,10 @@
 
 const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
 
+let tempScope = {};
+Cu.import("resource:///modules/source-editor.jsm", tempScope);
+let SourceEditor = tempScope.SourceEditor;
+
 var gPane = null;
 var gTab = null;
 var gDebuggee = null;
@@ -18,39 +22,33 @@ function test()
 {
   let scriptShown = false;
   let framesAdded = false;
-  let resumed = false;
-  let testStarted = false;
 
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
     gDebugger = gPane.debuggerWindow;
-    resumed = true;
 
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
-      executeSoon(startTest);
+      runTest();
     });
 
-    executeSoon(function() {
-      gDebuggee.firstCall();
-    });
+    gDebuggee.firstCall();
   });
 
-  function onScriptShown(aEvent)
-  {
-    scriptShown = aEvent.detail.url.indexOf("-02.js") != -1;
-    executeSoon(startTest);
-  }
+  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+    let url = aEvent.detail.url;
+    if (url.indexOf("-02.js") != -1) {
+      scriptShown = true;
+      window.removeEventListener(aEvent.type, _onEvent);
+      runTest();
+    }
+  });
 
-  window.addEventListener("Debugger:ScriptShown", onScriptShown);
-
-  function startTest()
+  function runTest()
   {
-    if (scriptShown && framesAdded && resumed && !testStarted) {
-      window.removeEventListener("Debugger:ScriptShown", onScriptShown);
-      testStarted = true;
+    if (scriptShown && framesAdded) {
       Services.tm.currentThread.dispatch({ run: testScriptsDisplay }, 0);
     }
   }
@@ -81,6 +79,8 @@ function testScriptsDisplay() {
   ok(gDebugger.DebuggerView.Scripts.containsLabel(
     label2), "Second script label is incorrect.");
 
+  dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
+
   ok(gDebugger.editor.getText().search(/debugger/) != -1,
     "The correct script was loaded initially.");
 
@@ -100,6 +100,8 @@ function testScriptsDisplay() {
 
 function testSwitchPaused()
 {
+  dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
+
   ok(gDebugger.editor.getText().search(/debugger/) == -1,
     "The second script is no longer displayed.");
 
@@ -125,8 +127,6 @@ function testSwitchPaused()
 
 function testSwitchRunning()
 {
-  dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
-
   ok(gDebugger.editor.getText().search(/debugger/) != -1,
     "The second script is displayed again.");
 

@@ -1,0 +1,76 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH = ../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = opus
+LIBRARY_NAME = opus
+FORCE_STATIC_LIB= 1
+
+DEFINES += \
+  -DOPUS_BUILD \
+  -DOPUS_VERSION='"draft-11-mozilla"' \
+  -DUSE_ALLOCA \
+  -Drestrict= \
+  $(NULL)
+
+ifneq ($(filter $(OS_ARCH),Linux Darwin),)
+  DEFINES += -DHAVE_LRINTF
+endif
+ifeq ($(OS_ARCH), WINNT)
+  DEFINES += -Dinline=__inline
+endif
+ifeq ($(OS_ARCH),AIX)
+DEFINES += -Dalloca=__alloca
+endif
+
+EXPORTS_NAMESPACES = opus
+
+EXPORTS_opus = \
+  include/opus.h \
+  include/opus_defines.h \
+  include/opus_types.h \
+  include/opus_multistream.h \
+  $(NULL)
+
+LOCAL_INCLUDES += \
+  -I$(srcdir)/include \
+  -I$(srcdir)/celt \
+  -I$(srcdir)/silk \
+  -I$(srcdir)/src \
+  $(NULL)
+
+VPATH += \
+  $(srcdir)/celt \
+  $(srcdir)/silk \
+  $(srcdir)/src \
+  $(NULL)
+
+include $(srcdir)/celt_sources.mk
+include $(srcdir)/silk_sources.mk
+include $(srcdir)/opus_sources.mk
+
+CSRCS = \
+  $(notdir $(CELT_SOURCES)) \
+  $(notdir $(SILK_SOURCES)) \
+  $(notdir $(OPUS_SOURCES)) \
+  $(NULL)
+
+ifdef MOZ_OPUS_FIXED
+DEFINES += -DFIXED_POINT=1 -DDISABLE_FLOAT_API
+LOCAL_INCLUDES += -I$(srcdir)/silk/fixed
+VPATH += $(srcdir)/silk/fixed
+CSRCS += $(notdir $(SILK_SOURCES_FIXED))
+else
+LOCAL_INCLUDES += -I$(srcdir)/silk/float
+VPATH += $(srcdir)/silk/float
+CSRCS += $(notdir $(SILK_SOURCES_FLOAT))
+endif
+
+include $(topsrcdir)/config/rules.mk

@@ -542,6 +542,8 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
     RootId idRoot(cx, &id);
     RootedVarObject self(cx, this);
 
+    RootGetterSetter gsRoot(cx, attrs, &getter, &setter);
+
     PropertyTable *table = NULL;
     if (!inDictionaryMode()) {
         bool stableSlot =
@@ -650,6 +652,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
     NormalizeGetterAndSetter(cx, this, id, attrs, flags, getter, setter);
 
     RootedVarObject self(cx, this);
+    RootGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
     /* Search for id in order to claim its entry if table has been allocated. */
     Shape **spp;
@@ -861,21 +864,21 @@ JSObject::removeProperty(JSContext *cx, jsid id)
      * return deleted DictionaryShapes! See bug 595365. Do this before changing
      * the object or table, so the remaining removal is infallible.
      */
-    Shape *spare = NULL;
+    RootedVarShape spare(cx);
     if (self->inDictionaryMode()) {
         spare = js_NewGCShape(cx);
         if (!spare)
             return false;
         new (spare) Shape(shape->base()->unowned(), 0);
-        if (shape == lastProperty()) {
+        if (shape == self->lastProperty()) {
             /*
              * Get an up to date unowned base shape for the new last property
              * when removing the dictionary's last property. Information in
              * base shapes for non-last properties may be out of sync with the
              * object's state.
              */
-            Shape *previous = lastProperty()->parent;
-            StackBaseShape base(lastProperty()->base());
+            RootedVarShape previous(cx, self->lastProperty()->parent);
+            StackBaseShape base(self->lastProperty()->base());
             base.updateGetterSetter(previous->attrs, previous->getter(), previous->setter());
             BaseShape *nbase = BaseShape::getUnowned(cx, base);
             if (!nbase)
@@ -1041,31 +1044,31 @@ JSObject::shadowingShapeChange(JSContext *cx, const Shape &shape)
 bool
 JSObject::clearParent(JSContext *cx)
 {
-    return setParent(cx, NULL);
+    return setParent(cx, RootedVarObject(cx, this), RootedVarObject(cx));
 }
 
-bool
-JSObject::setParent(JSContext *cx, JSObject *parent)
+/* static */ bool
+JSObject::setParent(JSContext *cx, HandleObject obj, HandleObject parent)
 {
     if (parent && !parent->setDelegate(cx))
         return false;
 
-    if (inDictionaryMode()) {
-        StackBaseShape base(lastProperty());
+    if (obj->inDictionaryMode()) {
+        StackBaseShape base(obj->lastProperty());
         base.parent = parent;
         UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return false;
 
-        lastProperty()->base()->adoptUnowned(nbase);
+        obj->lastProperty()->base()->adoptUnowned(nbase);
         return true;
     }
 
-    Shape *newShape = Shape::setObjectParent(cx, parent, getProto(), shape_);
+    Shape *newShape = Shape::setObjectParent(cx, parent, obj->getProto(), obj->shape_);
     if (!newShape)
         return false;
 
-    shape_ = newShape;
+    obj->shape_ = newShape;
     return true;
 }
 

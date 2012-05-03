@@ -180,6 +180,62 @@ add_test(function test_sync_key() {
   run_next_test();
 });
 
+add_test(function test_sync_key_changes() {
+  _("Ensure changes to Sync Key have appropriate side-effects.");
+
+  let im = new IdentityManager();
+  let sk1 = Utils.generatePassphrase();
+  let sk2 = Utils.generatePassphrase();
+
+  im.account = "johndoe";
+  do_check_eq(im.syncKey, null);
+  do_check_eq(im.syncKeyBundle, null);
+
+  im.syncKey = sk1;
+  do_check_neq(im.syncKeyBundle, null);
+
+  let ek1 = im.syncKeyBundle.encryptionKeyB64;
+  let hk1 = im.syncKeyBundle.hmacKeyB64;
+
+  // Change the Sync Key and ensure the Sync Key Bundle is updated.
+  im.syncKey = sk2;
+  let ek2 = im.syncKeyBundle.encryptionKeyB64;
+  let hk2 = im.syncKeyBundle.hmacKeyB64;
+
+  do_check_neq(ek1, ek2);
+  do_check_neq(hk1, hk2);
+
+  im.account = null;
+
+  run_next_test();
+});
+
+add_test(function test_current_auth_state() {
+  _("Ensure current auth state is reported properly.");
+
+  let im = new IdentityManager();
+  do_check_eq(im.currentAuthState, LOGIN_FAILED_NO_USERNAME);
+
+  im.account = "johndoe";
+  do_check_eq(im.currentAuthState, LOGIN_FAILED_NO_PASSWORD);
+
+  im.basicPassword = "ilovejane";
+  do_check_eq(im.currentAuthState, LOGIN_FAILED_NO_PASSPHRASE);
+
+  im.syncKey = "foobar";
+  do_check_eq(im.currentAuthState, LOGIN_FAILED_INVALID_PASSPHRASE);
+
+  im.syncKey = null;
+  do_check_eq(im.currentAuthState, LOGIN_FAILED_NO_PASSPHRASE);
+
+  im.syncKey = Utils.generatePassphrase();
+  do_check_eq(im.currentAuthState, STATUS_OK);
+
+  im.account = null;
+
+  run_next_test();
+});
+
 add_test(function test_sync_key_persistence() {
   _("Ensure Sync Key persistence works as expected.");
 

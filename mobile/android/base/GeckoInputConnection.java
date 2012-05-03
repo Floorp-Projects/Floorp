@@ -1029,10 +1029,10 @@ public class GeckoInputConnection
                 instance = null;
             }
 
-            View v = GeckoApp.mAppContext.getLayerController().getView();
+            final View v = GeckoApp.mAppContext.getLayerController().getView();
             if (DEBUG) Log.d(LOGTAG, "IME: v=" + v);
 
-            InputMethodManager imm = getInputMethodManager();
+            final InputMethodManager imm = getInputMethodManager();
             if (imm == null)
                 return;
 
@@ -1042,10 +1042,20 @@ public class GeckoInputConnection
             if (!mEnable)
                 return;
 
-            if (mIMEState != IME_STATE_DISABLED)
-                imm.showSoftInput(v, 0);
-            else
+            if (mIMEState != IME_STATE_DISABLED) {
+                if (!v.isFocused()) {
+                    GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                        public void run() {
+                            v.requestFocus();
+                            imm.showSoftInput(v, 0);
+                        }
+                    });
+                } else {
+                    imm.showSoftInput(v, 0);
+                }
+            } else {
                 imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+            }
         }
     }
 

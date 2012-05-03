@@ -77,7 +77,7 @@ public final class Tab {
     private String mTitle;
     private Drawable mFavicon;
     private String mFaviconUrl;
-    private String mSecurityMode;
+    private JSONObject mIdentityData;
     private Drawable mThumbnail;
     private List<HistoryEntry> mHistory;
     private int mHistoryIndex;
@@ -119,7 +119,7 @@ public final class Tab {
         mTitle = title;
         mFavicon = null;
         mFaviconUrl = null;
-        mSecurityMode = "unknown";
+        mIdentityData = null;
         mThumbnail = null;
         mHistory = new ArrayList<HistoryEntry>();
         mHistoryIndex = -1;
@@ -270,7 +270,16 @@ public final class Tab {
     }
 
     public String getSecurityMode() {
-        return mSecurityMode;
+        try {
+            return mIdentityData.getString("mode");
+        } catch (Exception e) {
+            // If mIdentityData is null, or we get a JSONException
+            return SiteIdentityPopup.UNKNOWN;
+        }
+    }
+
+    public JSONObject getIdentityData() {
+        return mIdentityData;
     }
 
     public boolean isBookmark() {
@@ -368,8 +377,9 @@ public final class Tab {
         Log.i(LOGTAG, "Updated favicon URL for tab with id: " + mId);
     }
 
-    public void updateSecurityMode(String mode) {
-        mSecurityMode = mode;
+
+    public void updateIdentityData(JSONObject identityData) {
+        mIdentityData = identityData;
     }
 
     private void updateBookmark() {
