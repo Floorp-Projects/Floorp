@@ -698,7 +698,7 @@ nsDOMWindowUtils::SendKeyEvent(const nsAString& aType,
                                PRInt32 aKeyCode,
                                PRInt32 aCharCode,
                                PRInt32 aModifiers,
-                               bool aPreventDefault,
+                               PRUint32 aAdditionalFlags,
                                bool* aDefaultActionTaken)
 {
   if (!IsUniversalXPConnectCapable()) {
@@ -723,12 +723,78 @@ nsDOMWindowUtils::SendKeyEvent(const nsAString& aType,
   nsKeyEvent event(true, msg, widget);
   event.modifiers = GetWidgetModifiers(aModifiers);
 
-  event.keyCode = aKeyCode;
-  event.charCode = aCharCode;
+  if (msg == NS_KEY_PRESS) {
+    event.keyCode = aCharCode ? 0 : aKeyCode;
+    event.charCode = aCharCode;
+  } else {
+    event.keyCode = aKeyCode;
+    event.charCode = 0;
+  }
+
+  PRUint32 locationFlag = (aAdditionalFlags &
+    (KEY_FLAG_LOCATION_STANDARD | KEY_FLAG_LOCATION_LEFT |
+     KEY_FLAG_LOCATION_RIGHT | KEY_FLAG_LOCATION_NUMPAD |
+     KEY_FLAG_LOCATION_MOBILE | KEY_FLAG_LOCATION_JOYSTICK));
+  switch (locationFlag) {
+    case KEY_FLAG_LOCATION_STANDARD:
+      event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+      break;
+    case KEY_FLAG_LOCATION_LEFT:
+      event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
+      break;
+    case KEY_FLAG_LOCATION_RIGHT:
+      event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
+      break;
+    case KEY_FLAG_LOCATION_NUMPAD:
+      event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+      break;
+    case KEY_FLAG_LOCATION_MOBILE:
+      event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
+      break;
+    case KEY_FLAG_LOCATION_JOYSTICK:
+      event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_JOYSTICK;
+      break;
+    default:
+      if (locationFlag != 0) {
+        return NS_ERROR_INVALID_ARG;
+      }
+      // If location flag isn't set, choose the location from keycode.
+      switch (aKeyCode) {
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD0:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD1:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD2:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD3:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD4:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD5:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD6:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD7:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD8:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD9:
+        case nsIDOMKeyEvent::DOM_VK_MULTIPLY:
+        case nsIDOMKeyEvent::DOM_VK_ADD:
+        case nsIDOMKeyEvent::DOM_VK_SEPARATOR:
+        case nsIDOMKeyEvent::DOM_VK_SUBTRACT:
+        case nsIDOMKeyEvent::DOM_VK_DECIMAL:
+        case nsIDOMKeyEvent::DOM_VK_DIVIDE:
+          event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+          break;
+        case nsIDOMKeyEvent::DOM_VK_SHIFT:
+        case nsIDOMKeyEvent::DOM_VK_CONTROL:
+        case nsIDOMKeyEvent::DOM_VK_ALT:
+        case nsIDOMKeyEvent::DOM_VK_META:
+          event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
+          break;
+        default:
+          event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+          break;
+      }
+      break;
+  }
+
   event.refPoint.x = event.refPoint.y = 0;
   event.time = PR_IntervalNow();
 
-  if (aPreventDefault) {
+  if (aAdditionalFlags & KEY_FLAG_PREVENT_DEFAULT) {
     event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
   }
 
