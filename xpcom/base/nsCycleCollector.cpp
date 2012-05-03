@@ -1701,9 +1701,6 @@ public:
     void Traverse(PtrInfo* aPtrInfo);
     void SetLastChild();
 
-    // nsCycleCollectionTraversalCallback methods.
-    NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root);
-
 private:
     void DescribeNode(PRUint32 refCount,
                       size_t objSz,
@@ -1717,12 +1714,16 @@ private:
 #endif
     }
 
+public:
+    // nsCycleCollectionTraversalCallback methods.
     NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
                                              const char *objName);
     NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, size_t objSz,
                                        const char *objName);
-    NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *child,
-                               nsCycleCollectionParticipant* participant);
+
+    NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root);
+    NS_IMETHOD_(void) NoteJSRoot(void *root);
+    NS_IMETHOD_(void) NoteNativeRoot(void *root, nsCycleCollectionParticipant *participant);
 
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child);
     NS_IMETHOD_(void) NoteJSChild(void *child);
@@ -1731,7 +1732,19 @@ private:
 
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name);
     NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val);
+
 private:
+    NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *root,
+                               nsCycleCollectionParticipant *participant)
+    {
+        MOZ_ASSERT(root);
+        MOZ_ASSERT(participant);
+
+        if (!participant->CanSkipInCC(root) || NS_UNLIKELY(WantAllTraces())) {
+            AddNode(root, participant, langID);
+        }
+    }
+
     NS_IMETHOD_(void) NoteChild(void *child, nsCycleCollectionParticipant *cp,
                                 PRUint32 langID, nsCString edgeName)
     {
@@ -1866,21 +1879,16 @@ GCGraphBuilder::NoteXPCOMRoot(nsISupports *root)
     NoteRoot(nsIProgrammingLanguage::CPLUSPLUS, root, cp);
 }
 
+NS_IMETHODIMP_(void)
+GCGraphBuilder::NoteJSRoot(void *root)
+{
+    NoteRoot(nsIProgrammingLanguage::JAVASCRIPT, root, mJSParticipant);
+}
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteRoot(PRUint32 langID, void *root,
-                         nsCycleCollectionParticipant* participant)
+GCGraphBuilder::NoteNativeRoot(void *root, nsCycleCollectionParticipant *participant)
 {
-    NS_ASSERTION(root, "Don't add a null root!");
-
-    if (langID > nsIProgrammingLanguage::MAX || !mRuntimes[langID]) {
-        Fault("adding root for unregistered language", root);
-        return;
-    }
-
-    if (!participant->CanSkipInCC(root) || WantAllTraces()) {
-        AddNode(root, participant, langID);
-    }
+    NoteRoot(nsIProgrammingLanguage::CPLUSPLUS, root, participant);
 }
 
 NS_IMETHODIMP_(void)
@@ -2028,8 +2036,9 @@ public:
                                        size_t objsz,
                                        const char *objname) {};
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) {};
-    NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *root,
-                               nsCycleCollectionParticipant* helper) {};
+    NS_IMETHOD_(void) NoteJSRoot(void *root) {};
+    NS_IMETHOD_(void) NoteNativeRoot(void *root,
+                                     nsCycleCollectionParticipant *helper) {};
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name) {};
     NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val) {};
     bool MayHaveChild() {
@@ -2712,9 +2721,10 @@ public:
         mSuppressThisNode = (PL_strstr(sSuppressionList, objName) != nsnull);
     }
 
-    NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) {};
-    NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *root,
-                               nsCycleCollectionParticipant* participant) {};
+    NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) {}
+    NS_IMETHOD_(void) NoteJSRoot(void *root) {}
+    NS_IMETHOD_(void) NoteNativeRoot(void *root,
+                                     nsCycleCollectionParticipant *participant) {}
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child) {}
     NS_IMETHOD_(void) NoteJSChild(void *child) {}
     NS_IMETHOD_(void) NoteNativeChild(void *child,

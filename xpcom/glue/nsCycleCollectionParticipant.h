@@ -90,9 +90,10 @@ public:
     NS_IMETHOD_(void) DescribeGCedNode(bool ismarked,
                                        size_t objsz,
                                        const char *objname) = 0;
+
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) = 0;
-    NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *root,
-                               nsCycleCollectionParticipant* helper) = 0;
+    NS_IMETHOD_(void) NoteJSRoot(void *root) = 0;
+    NS_IMETHOD_(void) NoteNativeRoot(void *root, nsCycleCollectionParticipant *participant) = 0;
 
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child) = 0;
     NS_IMETHOD_(void) NoteJSChild(void *child) = 0;
