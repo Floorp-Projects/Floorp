@@ -120,6 +120,45 @@ public class RepoUtils {
   }
 
   /**
+   * Return true if the provided URI is non-empty and acceptable to Fennec
+   * (i.e., not an undesirable scheme).
+   *
+   * This code is pilfered from Fennec, which pilfered from Places.
+   */
+  public static boolean isValidHistoryURI(String uri) {
+    if (uri == null || uri.length() == 0) {
+      return false;
+    }
+
+    // First, check the most common cases (HTTP, HTTPS) to avoid most of the work.
+    if (uri.startsWith("http:") || uri.startsWith("https:")) {
+      return true;
+    }
+
+    String scheme = Uri.parse(uri).getScheme();
+    if (scheme == null) {
+      return false;
+    }
+
+    // Now check for all bad things.
+    if (scheme.equals("about") ||
+        scheme.equals("imap") ||
+        scheme.equals("news") ||
+        scheme.equals("mailbox") ||
+        scheme.equals("moz-anno") ||
+        scheme.equals("view-source") ||
+        scheme.equals("chrome") ||
+        scheme.equals("resource") ||
+        scheme.equals("data") ||
+        scheme.equals("wyciwyg") ||
+        scheme.equals("javascript")) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Create a HistoryRecord object from a cursor row.
    *
    * @return a HistoryRecord, or null if this row would produce
@@ -133,8 +172,8 @@ public class RepoUtils {
     }
 
     final String historyURI = getStringFromCursor(cur, BrowserContract.History.URL);
-    if (historyURI == null || (historyURI.length() == 0)) {
-      Logger.debug(LOG_TAG, "Skipping history record " + guid + " with null or empty URI.");
+    if (!isValidHistoryURI(historyURI)) {
+      Logger.debug(LOG_TAG, "Skipping history record " + guid + " with unwanted/invalid URI " + historyURI);
       return null;
     }
 
