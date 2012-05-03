@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=750051
+-->
+<head>
+  <title>Test for Bug 750051</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=750051">Mozilla Bug 750051</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 750051 **/
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_find", true]]}, function() {
+  var caughtException = false;
+  try {
+    window.find();
+  } catch (e) {
+    caughtException = true;
+  }
+  ok(caughtException, "window.find should throw an exception");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
