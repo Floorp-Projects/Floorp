@@ -182,6 +182,20 @@ nsLayoutUtils::UseBackgroundNearestFiltering()
   return sUseBackgroundNearestFilteringEnabled;
 }
 
+bool
+nsLayoutUtils::GPUImageScalingEnabled()
+{
+  static bool sGPUImageScalingEnabled;
+  static bool sGPUImageScalingPrefInitialised = false;
+
+  if (!sGPUImageScalingPrefInitialised) {
+    sGPUImageScalingPrefInitialised = true;
+    sGPUImageScalingEnabled = mozilla::Preferences::GetBool("layout.gpu-image-scaling.enabled", false);
+  }
+
+  return sGPUImageScalingEnabled;
+}
+
 void
 nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
                                   nsOverflowAreas& aOverflowAreas)

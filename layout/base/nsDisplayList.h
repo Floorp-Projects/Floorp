@@ -596,6 +596,7 @@ protected:
  */
 class nsDisplayItem : public nsDisplayItemLink {
 public:
+  typedef mozilla::FrameLayerBuilder::ContainerParameters ContainerParameters;
   typedef mozilla::layers::FrameMetrics::ViewID ViewID;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -765,7 +766,8 @@ public:
    * every time we paint.
    */
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager)
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters)
   { return mozilla::LAYER_NONE; }
   /**
    * Actually paint this item to some rendering context.
@@ -800,7 +802,6 @@ public:
    * FrameLayerBuilder::BuildContainerLayerFor if a ContainerLayer is
    * constructed.
    */
-  typedef mozilla::FrameLayerBuilder::ContainerParameters ContainerParameters;
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters)
@@ -1805,9 +1806,10 @@ public:
    * and they all have the given aActiveScrolledRoot.
    */
   static bool ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
-                                      LayerManager* aManager,
-                                      const nsDisplayList& aList,
-                                      nsIFrame* aActiveScrolledRoot);
+                                    LayerManager* aManager,
+                                    const ContainerParameters& aParameters,
+                                    const nsDisplayList& aList,
+                                    nsIFrame* aActiveScrolledRoot);
 
 protected:
   nsDisplayWrapList() {}
@@ -1875,7 +1877,8 @@ public:
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters);
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager);
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters);
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    const nsRect& aAllowVisibleRegionExpansion);  
@@ -1899,7 +1902,8 @@ public:
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters);
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager)
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters)
   {
     return mozilla::LAYER_ACTIVE;
   }
@@ -1966,7 +1970,8 @@ public:
                                    const nsRect& aAllowVisibleRegionExpansion);
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager);
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters);
 
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder,
                           nsDisplayItem* aItem);
@@ -2007,7 +2012,8 @@ public:
 #endif
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager);
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters);
 
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder,
                           nsDisplayItem* aItem);
@@ -2230,7 +2236,8 @@ public:
                                    bool* aSnap);
   virtual bool IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor);
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager);
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters);
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters);
