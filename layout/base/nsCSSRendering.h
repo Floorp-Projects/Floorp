@@ -44,11 +44,128 @@
 #include "gfxBlur.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
+#include "nsLayoutUtils.h"
 
 struct nsPoint;
 class nsStyleContext;
 class nsPresContext;
 class nsRenderingContext;
+
+/**
+ * This is a small wrapper class to encapsulate image drawing that can draw an
+ * nsStyleImage image, which may internally be a real image, a sub image, or a
+ * CSS gradient.
+ *
+ * @note Always call the member functions in the order of PrepareImage(),
+ * ComputeSize(), and Draw().
+ */
+class nsImageRenderer {
+public:
+  typedef mozilla::layers::ImageContainer ImageContainer;
+
+  enum {
+    FLAG_SYNC_DECODE_IMAGES = 0x01
+  };
+  nsImageRenderer(nsIFrame* aForFrame, const nsStyleImage* aImage, PRUint32 aFlags);
+  ~nsImageRenderer();
+  /**
+   * Populates member variables to get ready for rendering.
+   * @return true iff the image is ready, and there is at least a pixel to
+   * draw.
+   */
+  bool PrepareImage();
+  /**
+   * @return the image size in appunits when rendered, after accounting for the
+   * background positioning area, background-size, and the image's intrinsic
+   * dimensions (if any).
+   */
+  nsSize ComputeSize(const nsStyleBackground::Size& aLayerSize,
+                     const nsSize& aBgPositioningArea);
+  /**
+   * Draws the image to the target rendering context.
+   * @see nsLayoutUtils::DrawImage() for other parameters
+   */
+  void Draw(nsPresContext*       aPresContext,
+            nsRenderingContext& aRenderingContext,
+            const nsRect&        aDest,
+            const nsRect&        aFill,
+            const nsPoint&       aAnchor,
+            const nsRect&        aDirty);
+
+
+  bool IsRasterImage();
+  already_AddRefed<ImageContainer> GetContainer();
+private:
+  /*
+   * Compute the "unscaled" dimensions of the image in aUnscaled{Width,Height}
+   * and aRatio.  Whether the image has a height and width are indicated by
+   * aHaveWidth and aHaveHeight.  If the image doesn't have a ratio, aRatio will
+   * be (0, 0).
+   */
+  void ComputeUnscaledDimensions(const nsSize& aBgPositioningArea,
+                                 nscoord& aUnscaledWidth, bool& aHaveWidth,
+                                 nscoord& aUnscaledHeight, bool& aHaveHeight,
+                                 nsSize& aRatio);
+
+  /*
+   * Using the previously-computed unscaled width and height (if each are
+   * valid, as indicated by aHaveWidth/aHaveHeight), compute the size at which
+   * the image should actually render.
+   */
+  nsSize
+  ComputeDrawnSize(const nsStyleBackground::Size& aLayerSize,
+                   const nsSize& aBgPositioningArea,
+                   nscoord aUnscaledWidth, bool aHaveWidth,
+                   nscoord aUnscaledHeight, bool aHaveHeight,
+                   const nsSize& aIntrinsicRatio);
+
+  nsIFrame*                 mForFrame;
+  const nsStyleImage*       mImage;
+  nsStyleImageType          mType;
+  nsCOMPtr<imgIContainer>   mImageContainer;
+  nsRefPtr<nsStyleGradient> mGradientData;
+  nsIFrame*                 mPaintServerFrame;
+  nsLayoutUtils::SurfaceFromElementResult mImageElementSurface;
+  bool                      mIsReady;
+  nsSize                    mSize; // unscaled size of the image, in app units
+  PRUint32                  mFlags;
+};
+
+/**
+ * A struct representing all the information needed to paint a background
+ * image to some target, taking into account all CSS background-* properties.
+ * See PrepareBackgroundLayer.
+ */
+struct nsBackgroundLayerState {
+  /**
+   * @param aFlags some combination of nsCSSRendering::PAINTBG_* flags
+   */
+  nsBackgroundLayerState(nsIFrame* aForFrame, const nsStyleImage* aImage, PRUint32 aFlags)
+    : mImageRenderer(aForFrame, aImage, aFlags) {}
+
+  /**
+   * The nsImageRenderer that will be used to draw the background.
+   */
+  nsImageRenderer mImageRenderer;
+  /**
+   * A rectangle that one copy of the image tile is mapped onto. Same
+   * coordinate system as aBorderArea/aBGClipRect passed into
+   * PrepareBackgroundLayer.
+   */
+  nsRect mDestArea;
+  /**
+   * The actual rectangle that should be filled with (complete or partial)
+   * image tiles. Same coordinate system as aBorderArea/aBGClipRect passed into
+   * PrepareBackgroundLayer.
+   */
+  nsRect mFillArea;
+  /**
+   * The anchor point that should be snapped to a pixel corner. Same
+   * coordinate system as aBorderArea/aBGClipRect passed into
+   * PrepareBackgroundLayer.
+   */
+  nsPoint mAnchor;
+};
 
 struct nsCSSRendering {
   /**
@@ -211,7 +328,18 @@ struct nsCSSRendering {
   static nscolor
   DetermineBackgroundColor(nsPresContext* aPresContext,
                            nsStyleContext* aStyleContext,
-                           nsIFrame* aFrame);
+                           nsIFrame* aFrame,
+                           bool& aDrawBackgroundImage,
+                           bool& aDrawBackgroundColor);
+
+  static nsBackgroundLayerState
+  PrepareBackgroundLayer(nsPresContext* aPresContext,
+                         nsIFrame* aForFrame,
+                         PRUint32 aFlags,
+                         const nsRect& aBorderArea,
+                         const nsRect& aBGClipRect,
+                         const nsStyleBackground& aBackground,
+                         const nsStyleBackground::Layer& aLayer);
 
   /**
    * Render the background for an element using css rendering rules
