@@ -20,3 +20,4 @@ HTTP(..) == all-title.html all-title-ref.html
 HTTP(..) != small-caps-turkish-1.html small-caps-turkish-1-notref.html
 == greek-uppercase-1.html greek-uppercase-1-ref.html
 == greek-uppercase-2.html greek-uppercase-2-ref.html
+== greek-small-caps-1.html greek-small-caps-1-ref.html
