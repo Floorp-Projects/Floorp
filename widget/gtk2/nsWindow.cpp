@@ -3367,7 +3367,7 @@ CreateGdkWindow(GdkWindow *parent, GtkWidget *widget)
                              GDK_VISIBILITY_NOTIFY_MASK |
                              GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
                              GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-#ifdef HAVE_GTK_MOTION_HINTS
+#ifdef MOZ_PLATFORM_MAEMO
                              GDK_POINTER_MOTION_HINT_MASK |
 #endif
                              GDK_POINTER_MOTION_MASK);
@@ -4458,7 +4458,7 @@ nsWindow::GrabPointer(guint32 aTime)
                                              GDK_BUTTON_RELEASE_MASK |
                                              GDK_ENTER_NOTIFY_MASK |
                                              GDK_LEAVE_NOTIFY_MASK |
-#ifdef HAVE_GTK_MOTION_HINTS
+#ifdef MOZ_PLATFORM_MAEMO
                                              GDK_POINTER_MOTION_HINT_MASK |
 #endif
                                              GDK_POINTER_MOTION_MASK),
@@ -5266,7 +5266,7 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 
     window->OnMotionNotifyEvent(widget, event);
 
-#ifdef HAVE_GTK_MOTION_HINTS
+#ifdef MOZ_PLATFORM_MAEMO
     gdk_event_request_motions(event);
 #endif
     return TRUE;
