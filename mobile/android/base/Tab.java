@@ -422,8 +422,6 @@ public final class Tab {
     }
 
     public boolean doReload() {
-        if (mHistory.isEmpty())
-            return false;
         GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", "");
         GeckoAppShell.sendEventToGecko(e);
         return true;
