@@ -43,8 +43,8 @@ a typelib in a high-level manner, as well as methods for reading
 and writing them from files.
 
 The usable public interfaces are currently:
-Typelib.read(filename) - read a typelib from a file on disk, return
-                         a Typelib object.
+Typelib.read(input_file) - read a typelib from a file on disk or file-like
+                           object, return a Typelib object.
 
 xpt_dump(filename)     - read a typelib from a file on disk, dump
                          the contents to stdout in a human-readable
@@ -1051,55 +1051,68 @@ class Typelib(object):
         return map[data_pool + offset - 1:sz]
 
     @staticmethod
-    def read(filename):
+    def read(input_file):
         """
-        Read a typelib from the file named |filename| and return
-        the constructed Typelib object.
+        Read a typelib from |input_file| and return
+        the constructed Typelib object. |input_file| can be a filename
+        or a file-like object.
 
         """
-        with open(filename, "r+b") as f:
-            st = os.fstat(f.fileno())
-            map = f.read(st.st_size)
-            data = Typelib._header.unpack(map[:Typelib._header.size])
-            if data[0] != XPT_MAGIC:
-                raise FileFormatError, "Bad magic: %s" % data[0]
-            xpt = Typelib((data[1], data[2]))
-            xpt.filename = filename
-            num_interfaces = data[3]
-            file_length = data[4]
-            if file_length != st.st_size:
-                raise FileFormatError, "File is of wrong length, got %d bytes, expected %d" % (st.st_size, file_length)
-            #XXX: by spec this is a zero-based file offset. however,
-            # the xpt_xdr code always subtracts 1 from data offsets
-            # (because that's what you do in the data pool) so it
-            # winds up accidentally treating this as 1-based.
-            # Filed as: https://bugzilla.mozilla.org/show_bug.cgi?id=575343
-            interface_directory_offset = data[5] - 1
-            data_pool_offset = data[6]
-            # make a half-hearted attempt to read Annotations,
-            # since XPIDL doesn't produce any anyway.
-            start = Typelib._header.size
-            (anno, ) = struct.unpack(">B", map[start:start + struct.calcsize(">B")])
-            islast = anno & 0x80
-            tag = anno & 0x7F
-            if tag == 0: # EmptyAnnotation
-                xpt.annotations.append(None)
-            # We don't bother handling PrivateAnnotations or anything
-            
-            for i in range(num_interfaces):
-                # iid, name, namespace, interface_descriptor
-                start = interface_directory_offset + i * Interface._direntry.size
-                end = interface_directory_offset + (i+1) * Interface._direntry.size
-                ide = Interface._direntry.unpack(map[start:end])
-                iid = Typelib.iid_to_string(ide[0])
-                name = Typelib.read_string(map, data_pool_offset, ide[1])
-                namespace = Typelib.read_string(map, data_pool_offset, ide[2])
-                iface = Interface(name, iid, namespace)
-                iface._descriptor_offset = ide[3]
-                iface.xpt_filename = xpt.filename
-                xpt.interfaces.append(iface)
-            for iface in xpt.interfaces:
-                iface.read_descriptor(xpt, map, data_pool_offset)
+        filename = ""
+        data = None
+        expected_size = None
+        if isinstance(input_file, basestring):
+            filename = input_file
+            with open(input_file, "r+b") as f:
+                st = os.fstat(f.fileno())
+                data = f.read(st.st_size)
+                expected_size = st.st_size
+        else:
+            data = input_file.read()
+
+        (magic,
+         major_ver,
+         minor_ver,
+         num_interfaces,
+         file_length,
+         interface_directory_offset,
+         data_pool_offset) = Typelib._header.unpack(data[:Typelib._header.size])
+        if magic != XPT_MAGIC:
+            raise FileFormatError, "Bad magic: %s" % magic
+        xpt = Typelib((major_ver, minor_ver))
+        xpt.filename = filename
+        if expected_size and file_length != expected_size:
+            raise FileFormatError, "File is of wrong length, got %d bytes, expected %d" % (expected_size, file_length)
+        #XXX: by spec this is a zero-based file offset. however,
+        # the xpt_xdr code always subtracts 1 from data offsets
+        # (because that's what you do in the data pool) so it
+        # winds up accidentally treating this as 1-based.
+        # Filed as: https://bugzilla.mozilla.org/show_bug.cgi?id=575343
+        interface_directory_offset -= 1
+        # make a half-hearted attempt to read Annotations,
+        # since XPIDL doesn't produce any anyway.
+        start = Typelib._header.size
+        (anno, ) = struct.unpack(">B", data[start:start + struct.calcsize(">B")])
+        islast = anno & 0x80
+        tag = anno & 0x7F
+        if tag == 0: # EmptyAnnotation
+            xpt.annotations.append(None)
+        # We don't bother handling PrivateAnnotations or anything
+
+        for i in range(num_interfaces):
+            # iid, name, namespace, interface_descriptor
+            start = interface_directory_offset + i * Interface._direntry.size
+            end = interface_directory_offset + (i+1) * Interface._direntry.size
+            ide = Interface._direntry.unpack(data[start:end])
+            iid = Typelib.iid_to_string(ide[0])
+            name = Typelib.read_string(data, data_pool_offset, ide[1])
+            namespace = Typelib.read_string(data, data_pool_offset, ide[2])
+            iface = Interface(name, iid, namespace)
+            iface._descriptor_offset = ide[3]
+            iface.xpt_filename = xpt.filename
+            xpt.interfaces.append(iface)
+        for iface in xpt.interfaces:
+            iface.read_descriptor(xpt, data, data_pool_offset)
         return xpt
 
     def __repr__(self):
@@ -1160,14 +1173,18 @@ class Typelib(object):
         for i in self.interfaces:
             i.write_directory_entry(fd)
 
-    def write(self, filename):
+    def write(self, output_file):
         """
-        Write the contents of this typelib to the file named |filename|.
+        Write the contents of this typelib to |output_file|,
+        which can be either a filename or a file-like object.
 
         """
         self._sanityCheck()
-        with open(filename, "wb") as f:
-            self.writefd(f)
+        if isinstance(output_file, basestring):
+            with open(output_file, "wb") as f:
+                self.writefd(f)
+        else:
+            self.writefd(output_file)
 
     def merge(self, other, sanitycheck=True):
         """
@@ -1321,7 +1338,7 @@ def xpt_dump(file):
 def xpt_link(dest, inputs):
     """
     Link all of the xpt files in |inputs| together and write the
-    result ot |dest|.
+    result to |dest|. All parameters may be filenames or file-like objects.
 
     """
     if not inputs:
