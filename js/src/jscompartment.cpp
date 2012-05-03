@@ -615,17 +615,19 @@ JSCompartment::updateForDebugMode(FreeOp *fop)
     else if (hasScriptsOnStack())
         return;
 
-    /*
-     * Discard JIT code and bytecode analyses for any scripts that change
-     * debugMode.
-     */
     for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        if (script->debugMode != enabled) {
-            mjit::ReleaseScriptCode(fop, script);
-            script->clearAnalysis();
-            script->debugMode = enabled;
-        }
+        mjit::ReleaseScriptCode(fop, script);
+        script->debugMode = enabled;
+    }
+
+    // Discard JIT code and bytecode analysis for all scripts in this
+    // compartment. Because !hasScriptsOnStack(), it suffices to do a garbage
+    // collection cycle or to finish the ongoing GC cycle. The necessary
+    // cleanup happens in JSCompartment::sweep.
+    if (!rt->gcRunning) {
+        PrepareCompartmentForGC(this);
+        GC(rt, GC_NORMAL, gcreason::DEBUG_MODE_GC);
     }
 #endif
 }
