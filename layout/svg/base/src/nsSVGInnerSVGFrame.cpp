@@ -236,9 +236,14 @@ nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
 // nsISVGSVGFrame methods:
 
 void
-nsSVGInnerSVGFrame::NotifyViewportChange()
+nsSVGInnerSVGFrame::NotifyViewportOrTransformChanged(PRUint32 aFlags)
 {
-  NS_ERROR("Inner SVG frames should not get Viewport changes.");
+  // The dimensions of inner-<svg> frames are purely defined by their "width"
+  // and "height" attributes, and transform changes can only occur as a result
+  // of changes to their "width", "height", "viewBox" or "preserveAspectRatio"
+  // attributes. Changes to all of these attributes are handled in
+  // AttributeChanged(), so we should never be called.
+  NS_ERROR("Not called for nsSVGInnerSVGFrame");
 }
 
 //----------------------------------------------------------------------
