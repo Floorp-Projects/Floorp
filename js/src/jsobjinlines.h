@@ -48,6 +48,7 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsfun.h"
+#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -62,8 +63,8 @@
 #include "jswrapper.h"
 
 #include "gc/Barrier.h"
-#include "gc/Marking.h"
 #include "js/TemplateLib.h"
+
 #include "vm/BooleanObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/NumberObject.h"
@@ -975,7 +976,7 @@ JSObject::propertyCount() const
 }
 
 inline bool
-JSObject::hasShapeTable() const
+JSObject::hasPropertyTable() const
 {
     return lastProperty()->hasTable();
 }

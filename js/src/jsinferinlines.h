@@ -42,10 +42,9 @@
 #include "jsarray.h"
 #include "jsanalyze.h"
 #include "jscompartment.h"
+#include "jsgcmark.h"
 #include "jsinfer.h"
 #include "jsprf.h"
-
-#include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 
 #include "vm/Stack-inl.h"

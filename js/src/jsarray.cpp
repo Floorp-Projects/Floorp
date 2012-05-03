@@ -115,6 +115,7 @@
 #include "jsversion.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -126,7 +127,6 @@
 #include "methodjit/StubCalls.h"
 #include "methodjit/StubCalls-inl.h"
 
-#include "gc/Marking.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/MethodGuard.h"
 #include "vm/NumericConversions.h"

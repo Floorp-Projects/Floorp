@@ -10,12 +10,12 @@
 
 #include "mozilla/Assertions.h"
 
+#include "jscell.h"
 #include "jscompartment.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 
-#include "gc/Heap.h"
-#include "gc/Marking.h"
 #include "js/TemplateLib.h"
 
 #include "ObjectImpl.h"

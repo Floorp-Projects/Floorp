@@ -45,6 +45,7 @@
 #include "jsatom.h"
 #include "jsprvtd.h"
 #include "jslock.h"
+#include "jscell.h"
 #include "jsutil.h"
 
 #include "js/HashTable.h"

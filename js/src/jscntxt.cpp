@@ -65,6 +65,7 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsmath.h"
@@ -80,7 +81,6 @@
 # include "assembler/assembler/MacroAssembler.h"
 # include "methodjit/MethodJIT.h"
 #endif
-#include "gc/Marking.h"
 #include "frontend/TokenStream.h"
 #include "frontend/ParseMaps.h"
 #include "yarr/BumpPointerAllocator.h"
