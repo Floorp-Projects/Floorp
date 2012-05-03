@@ -749,8 +749,8 @@ js::CloneScriptRegExpObject(JSContext *cx, RegExpObject &reobj)
     if (!clone)
         return NULL;
     if (!clone->clearParent(cx))
-        return false;
+        return NULL;
     if (!clone->clearType(cx))
-        return false;
+        return NULL;
     return clone;
 }
