@@ -131,6 +131,35 @@ public:
                        PRUint8* aFinalShiftState) const;
 };
 
+class NativeKey {
+public:
+  NativeKey() :
+    mVirtualKeyCode(0), mOriginalVirtualKeyCode(0),
+    mScanCode(0), mIsExtended(false)
+  {
+  }
+
+  NativeKey(HKL aKeyboardLayout,
+            HWND aWnd,
+            const MSG& aKeyOrCharMessage);
+
+  // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
+  PRUint32 GetKeyLocation() const;
+  PRUint8 GetVirtualKeyCode() const { return mVirtualKeyCode; }
+  PRUint8 GetOriginalVirtualKeyCode() const { return mOriginalVirtualKeyCode; }
+
+private:
+  // mVirtualKeyCode distinguishes left key or right key of modifier key.
+  PRUint8 mVirtualKeyCode;
+  // mOriginalVirtualKeyCode doesn't distinguish left key or right key of
+  // modifier key.  However, if the given keycode is VK_PROCESS, it's resolved
+  // to a keycode before it's handled by IME.
+  PRUint8 mOriginalVirtualKeyCode;
+  WORD    mScanCode;
+  bool    mIsExtended;
+
+  UINT GetScanCodeWithExtendedFlag() const;
+};
 
 class KeyboardLayout
 {
