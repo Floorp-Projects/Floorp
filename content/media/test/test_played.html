@@ -162,14 +162,13 @@ var tests = [
   setup : function(element) {
     let index = 1;
 
-    element.addEventListener('ended', function() {
-      is(element.played.length, 0, "element.played.length should be 0");
-      finish_test(element);
-    }, false);
-
     element.addEventListener('seeked', function() {
       index++;
       element.currentTime = index * element.duration / 5;
+      is(element.played.length, 0, "element.played.length should be 0");
+      if (index == 5) {
+        finish_test(element);
+      }
     }, false);
 
     element.addEventListener('loadedmetadata', function() {
