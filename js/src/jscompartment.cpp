@@ -102,12 +102,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
-    /*
-     * Even though all objects in the compartment are dead, we may have keep
-     * some filenames around because of gcKeepAtoms.
-     */
-    FreeScriptFilenames(this);
-
 #ifdef JS_METHODJIT
     Foreground::delete_(jaegerCompartment_);
 #endif
@@ -136,9 +130,6 @@ JSCompartment::init(JSContext *cx)
         return false;
 
     if (!regExps.init(cx))
-        return false;
-
-    if (!scriptFilenameTable.init())
         return false;
 
     return debuggees.init();
