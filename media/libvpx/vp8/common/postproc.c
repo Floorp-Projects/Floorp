@@ -806,8 +806,10 @@ static void multiframe_quality_enhance_block
 
 #if CONFIG_RUNTIME_CPU_DETECT
 #define RTCD_VTABLE(oci) (&(oci)->rtcd.postproc)
+#define RTCD_VARIANCE(oci) (&(oci)->rtcd.variance)
 #else
 #define RTCD_VTABLE(oci) NULL
+#define RTCD_VARIANCE(oci) NULL
 #endif
 
 void vp8_multiframe_quality_enhance
@@ -866,7 +868,7 @@ void vp8_multiframe_quality_enhance
                                                              vd_ptr + 4*(i*dest->uv_stride+j),
                                                              dest->y_stride,
                                                              dest->uv_stride,
-                                                             &cm->rtcd.variance);
+                                                             RTCD_VARIANCE(cm));
                 }
                 else
                 {
@@ -883,7 +885,7 @@ void vp8_multiframe_quality_enhance
                                                      vd_ptr,
                                                      dest->y_stride,
                                                      dest->uv_stride,
-                                                     &cm->rtcd.variance);
+                                                     RTCD_VARIANCE(cm));
 
                 }
             }
