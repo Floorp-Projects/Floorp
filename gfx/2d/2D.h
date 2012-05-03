@@ -787,7 +787,7 @@ protected:
   SurfaceFormat mFormat;
 };
 
-class Factory
+class GFX2D_API Factory
 {
 public:
   static TemporaryRef<DrawTarget> CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface);
