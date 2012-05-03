@@ -703,6 +703,9 @@ JSRuntime::JSRuntime()
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc_(NULL),
     bumpAlloc_(NULL),
+#ifdef JS_METHODJIT
+    jaegerRuntime_(NULL),
+#endif
     nativeStackBase(0),
     nativeStackQuota(0),
     interpreterFrames(NULL),
@@ -784,6 +787,7 @@ JSRuntime::JSRuntime()
     decimalSeparator(0),
     numGrouping(0),
     waiveGCQuota(false),
+    mathCache_(NULL),
     dtoaState(NULL),
     pendingProxyOperation(NULL),
     trustedPrincipals_(NULL),
@@ -869,9 +873,6 @@ JSRuntime::~JSRuntime()
 
     JS_ASSERT(onOwnerThread());
 
-    delete_<JSC::ExecutableAllocator>(execAlloc_);
-    delete_<WTF::BumpPointerAllocator>(bumpAlloc_);
-
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
     if (!JS_CLIST_IS_EMPTY(&contextList)) {
@@ -899,6 +900,13 @@ JSRuntime::~JSRuntime()
     if (gcLock)
         PR_DestroyLock(gcLock);
 #endif
+
+    delete_(bumpAlloc_);
+    delete_(mathCache_);
+#ifdef JS_METHODJIT
+    delete_(jaegerRuntime_);
+#endif
+    delete_(execAlloc_);  /* Delete after jaegerRuntime_. */
 }
 
 #ifdef JS_THREADSAFE

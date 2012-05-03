@@ -80,9 +80,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     typeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     data(NULL),
     active(false),
-#ifdef JS_METHODJIT
-    jaegerCompartment_(NULL),
-#endif
     regExps(rt),
     propertyTree(thisForCtor()),
     emptyTypeObject(NULL),
@@ -90,7 +87,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerMallocAndFreeBytes(0),
     gcMallocBytes(0),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
-    mathCache(NULL),
     watchpointMap(NULL),
     scriptCountsMap(NULL),
     sourceMapMap(NULL),
@@ -102,11 +98,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
-#ifdef JS_METHODJIT
-    Foreground::delete_(jaegerCompartment_);
-#endif
-
-    Foreground::delete_(mathCache);
     Foreground::delete_(watchpointMap);
     Foreground::delete_(scriptCountsMap);
     Foreground::delete_(sourceMapMap);
@@ -134,38 +125,6 @@ JSCompartment::init(JSContext *cx)
 
     return debuggees.init();
 }
-
-#ifdef JS_METHODJIT
-bool
-JSCompartment::ensureJaegerCompartmentExists(JSContext *cx)
-{
-    if (jaegerCompartment_)
-        return true;
-
-    mjit::JaegerCompartment *jc = cx->new_<mjit::JaegerCompartment>();
-    if (!jc)
-        return false;
-    if (!jc->Initialize(cx)) {
-        cx->delete_(jc);
-        return false;
-    }
-    jaegerCompartment_ = jc;
-    return true;
-}
-
-size_t
-JSCompartment::sizeOfMjitCode() const
-{
-    if (!jaegerCompartment_)
-        return 0;
-
-    size_t method, regexp, unused;
-    jaegerCompartment_->execAlloc()->sizeOfCode(&method, &regexp, &unused);
-    JS_ASSERT(regexp == 0);
-    return method + unused;
-}
-
-#endif
 
 bool
 JSCompartment::wrap(JSContext *cx, Value *vp)
@@ -624,16 +583,6 @@ JSCompartment::onTooMuchMalloc()
     TriggerCompartmentGC(this, gcreason::TOO_MUCH_MALLOC);
 }
 
-
-MathCache *
-JSCompartment::allocMathCache(JSContext *cx)
-{
-    JS_ASSERT(!mathCache);
-    mathCache = cx->new_<MathCache>();
-    if (!mathCache)
-        js_ReportOutOfMemory(cx);
-    return mathCache;
-}
 
 bool
 JSCompartment::hasScriptsOnStack()

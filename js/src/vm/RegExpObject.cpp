@@ -220,11 +220,9 @@ RegExpCode::compile(JSContext *cx, JSLinearString &pattern, unsigned *parenCount
 
 #if ENABLE_YARR_JIT && defined(JS_METHODJIT)
     if (isJITRuntimeEnabled(cx) && !yarrPattern.m_containsBackreferences) {
-        JSC::ExecutableAllocator *execAlloc = cx->runtime->getExecutableAllocator(cx);
-        if (!execAlloc) {
-            js_ReportOutOfMemory(cx);
+        JSC::ExecutableAllocator *execAlloc = cx->runtime->getExecAlloc(cx);
+        if (!execAlloc)
             return false;
-        }
 
         JSGlobalData globalData(execAlloc);
         jitCompile(yarrPattern, &globalData, codeBlock);

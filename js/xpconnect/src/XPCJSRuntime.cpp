@@ -1495,18 +1495,11 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   "Memory allocated for JSScript bytecode and various "
                   "variable-length tables.");
 
-#ifdef JS_METHODJIT
-    REPORT_BYTES0(MakePath(pathPrefix, cStats, "mjit/code"),
-                  nsIMemoryReporter::KIND_NONHEAP, cStats.mjitCode,
-                  "Memory used by the method JIT to hold the compartment's "
-                  "generated code.");
-
     REPORT_BYTES0(MakePath(pathPrefix, cStats, "mjit/data"),
                   nsIMemoryReporter::KIND_HEAP, cStats.mjitData,
                   "Memory used by the method JIT for the compartment's "
                   "compilation data: JITScripts, native maps, and inline "
                   "cache structs.");
-#endif
 
     REPORT_BYTES0(MakePath(pathPrefix, cStats, "type-inference/script-main"),
                   nsIMemoryReporter::KIND_HEAP,
@@ -1576,9 +1569,19 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                  "Memory held transiently in JSRuntime and used during "
                  "compilation.  It mostly holds parse nodes.");
 
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/mjit-code"),
+                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeMjitCode,
+                 "Memory used by the method JIT to hold the runtime's "
+                 "generated code.");
+
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/regexp-code"),
                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeRegexpCode,
                  "Memory used by the regexp JIT to hold generated code.");
+
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/unused-code-memory"),
+                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeUnusedCodeMemory,
+                 "Memory allocated by the method and/or regexp JIT to hold the "
+                 "runtime's code, but which is currently unused.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/stack-committed"),
                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeStackCommitted,
@@ -1842,13 +1845,12 @@ public:
                      "JSRuntime. This is the sum of all compartments' "
                      "'gc-heap/strings' and 'string-chars' numbers.");
 
-#ifdef JS_METHODJIT
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-mjit"),
                      nsIMemoryReporter::KIND_OTHER, rtStats.totalMjit,
                      "Memory used by the method JIT in the main JSRuntime.  "
                      "This is the sum of all compartments' 'mjit/code', and "
                      "'mjit/data' numbers.");
-#endif
+
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-type-inference"),
                      nsIMemoryReporter::KIND_OTHER, rtStats.totalTypeInference,
                      "Non-transient memory used by type inference in the main "
