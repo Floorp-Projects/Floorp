@@ -1938,7 +1938,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    if (!(aFlags & GLContext::ContextFlagsGlobal) && !glContext->ResizeOffscreenFBO(aSize, true)) {
+    if (!(aFlags & GLContext::ContextFlagsGlobal) && !glContext->ResizeOffscreenFBOs(aSize, true)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
         return nsnull;
