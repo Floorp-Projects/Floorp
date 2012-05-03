@@ -185,6 +185,15 @@ nsDOMKeyboardEvent::Which(PRUint32* aWhich)
 }
 
 NS_IMETHODIMP
+nsDOMKeyboardEvent::GetLocation(PRUint32* aLocation)
+{
+  NS_ENSURE_ARG_POINTER(aLocation);
+
+  *aLocation = static_cast<nsKeyEvent*>(mEvent)->location;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMKeyboardEvent::InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                                  nsIDOMWindow* aView, bool aCtrlKey, bool aAltKey,
                                  bool aShiftKey, bool aMetaKey,
