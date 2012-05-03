@@ -415,12 +415,18 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
 
   nsSVGSVGElement *svgElem = static_cast<nsSVGSVGElement*>(mContent);
 
-  if (newViewportSize != svgElem->GetViewportSize() ||
-      mFullZoom != PresContext()->GetFullZoom()) {
+  PRUint32 changeBits = 0;
+  if (newViewportSize != svgElem->GetViewportSize()) {
+    changeBits |= COORD_CONTEXT_CHANGED;
     svgElem->SetViewportSize(newViewportSize);
-    mViewportInitialized = true;
+  }
+  if (mFullZoom != PresContext()->GetFullZoom()) {
+    changeBits |= TRANSFORM_CHANGED;
     mFullZoom = PresContext()->GetFullZoom();
-    NotifyViewportChange();
+  }
+  mViewportInitialized = true;
+  if (changeBits) {
+    NotifyViewportOrTransformChanged(changeBits);
   }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
@@ -705,30 +711,41 @@ nsSVGOuterSVGFrame::GetType() const
 // nsISVGSVGFrame methods:
 
 void
-nsSVGOuterSVGFrame::NotifyViewportChange()
+nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(PRUint32 aFlags)
 {
-  // no point in doing anything when were not init'ed yet:
+  NS_ABORT_IF_FALSE(aFlags &&
+                    !(aFlags & ~(COORD_CONTEXT_CHANGED | TRANSFORM_CHANGED)),
+                    "Unexpected aFlags value");
+
+  // No point in doing anything when were not init'ed yet:
   if (!mViewportInitialized) {
     return;
   }
 
-  PRUint32 flags = COORD_CONTEXT_CHANGED;
+  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
 
-  // viewport changes only affect our transform if we have a viewBox attribute
-#if 1
-  {
-#else
-  // XXX this caused reftest failures (bug 413960)
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
-#endif
-    // make sure canvas transform matrix gets (lazily) recalculated:
-    mCanvasTM = nsnull;
-
-    flags |= TRANSFORM_CHANGED;
+  if (aFlags & COORD_CONTEXT_CHANGED) {
+    if (content->HasViewBox() || content->ShouldSynthesizeViewBox()) {
+      // Percentage lengths on children resolve against the viewBox rect so we
+      // don't need to notify them of the viewport change, but the viewBox
+      // transform will have changed, so we need to notify them of that instead.
+      aFlags = TRANSFORM_CHANGED;
+    }
+    else if (mCanvasTM && mCanvasTM->IsSingular()) {
+      // A width/height of zero will result in us having a singular mCanvasTM
+      // even when we don't have a viewBox. So we also want to recompute our
+      // mCanvasTM for this width/height change even though we don't have a
+      // viewBox.
+      aFlags |= TRANSFORM_CHANGED;
+    }
   }
 
-  // inform children
-  nsSVGUtils::NotifyChildrenOfSVGChange(this, flags);
+  if (aFlags & TRANSFORM_CHANGED) {
+    // Make sure our canvas transform matrix gets (lazily) recalculated:
+    mCanvasTM = nsnull;
+  }
+
+  nsSVGUtils::NotifyChildrenOfSVGChange(this, aFlags);
 }
 
 //----------------------------------------------------------------------

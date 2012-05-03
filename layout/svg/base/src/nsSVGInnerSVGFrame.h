@@ -91,7 +91,7 @@ public:
   virtual gfxMatrix GetCanvasTM();
 
   // nsISVGSVGFrame interface:
-  virtual void NotifyViewportChange();
+  virtual void NotifyViewportOrTransformChanged(PRUint32 aFlags);
 
 protected:
 
