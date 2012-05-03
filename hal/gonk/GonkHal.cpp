@@ -32,7 +32,6 @@
 #include <time.h>
 #include <sys/syscall.h>
 #include <cutils/properties.h>
-#include "mozilla/dom/network/Constants.h"
 #include <android/log.h>
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
@@ -591,22 +590,6 @@ SetTimezone(const nsCString& aTimezoneSpec)
   // this function is automatically called by the other time conversion 
   // functions that depend on the timezone. To be safe, we call it manually.  
   tzset();
-}
-
-
-void
-EnableNetworkNotifications()
-{}
-
-void
-DisableNetworkNotifications()
-{}
-
-void
-GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
-{
-  aNetworkInfo->bandwidth() = dom::network::kDefaultBandwidth;
-  aNetworkInfo->canBeMetered() = dom::network::kDefaultCanBeMetered;
 }
 
 } // hal_impl
