@@ -5036,9 +5036,14 @@ void PresShell::UpdateCanvasBackground()
     // style frame but we don't have access to the canvasframe here. It isn't
     // a problem because only a few frames can return something other than true
     // and none of them would be a canvas frame or root element style frame.
+    bool drawBackgroundImage;
+    bool drawBackgroundColor;
+
     mCanvasBackgroundColor =
       nsCSSRendering::DetermineBackgroundColor(mPresContext, bgStyle,
-                                               rootStyleFrame);
+                                               rootStyleFrame,
+                                               drawBackgroundImage,
+                                               drawBackgroundColor);
     if (GetPresContext()->IsRootContentDocument() &&
         !IsTransparentContainerElement(mPresContext)) {
       mCanvasBackgroundColor =
