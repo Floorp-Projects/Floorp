@@ -554,17 +554,16 @@ WeaveSvc.prototype = {
     // Furthermore, we assume that our sync key is already upgraded,
     // and fail if that assumption is invalidated.
 
-    let syncKeyBundle = this._identity.syncKeyBundle;
-    if (!syncKeyBundle) {
-      this._log.error("No sync key: cannot fetch symmetric keys.");
+    if (!this._identity.syncKey) {
       Status.login = LOGIN_FAILED_NO_PASSPHRASE;
-      Status.sync = CREDENTIALS_CHANGED;             // For want of a better option.
+      Status.sync = CREDENTIALS_CHANGED;
       return false;
     }
 
-    // Not sure this validation is necessary now.
-    if (!Utils.isPassphrase(this._identity.syncKey)) {
-      this._log.warn("Sync key input is invalid: cannot fetch symmetric keys.");
+    let syncKeyBundle = this._identity.syncKeyBundle;
+    if (!syncKeyBundle) {
+      this._log.error("Sync Key Bundle not set. Invalid Sync Key?");
+
       Status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
       Status.sync = CREDENTIALS_CHANGED;
       return false;
