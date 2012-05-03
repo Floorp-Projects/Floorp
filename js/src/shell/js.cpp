@@ -2300,22 +2300,6 @@ BuildDate(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-Clear(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JSObject *obj;
-    if (argc == 0) {
-        obj = JS_GetGlobalForScopeChain(cx);
-        if (!obj)
-            return false;
-    } else if (!JS_ValueToObject(cx, JS_ARGV(cx, vp)[0], &obj)) {
-        return false;
-    }
-    JS_ClearScope(cx, obj);
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return true;
-}
-
-static JSBool
 Intern(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSString *str = JS_ValueToString(cx, argc == 0 ? JSVAL_VOID : vp[2]);
@@ -3700,10 +3684,6 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("build", BuildDate, 0, 0,
 "build()",
 "  Show build date and time."),
-
-    JS_FN_HELP("clear", Clear, 0, 0,
-"clear([obj])",
-"  Clear properties of object."),
 
     JS_FN_HELP("intern", Intern, 1, 0,
 "intern(str)",
