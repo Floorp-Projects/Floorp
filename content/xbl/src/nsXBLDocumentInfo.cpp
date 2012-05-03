@@ -494,11 +494,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXBLDocumentInfo)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 static void
-UnmarkXBLJSObject(PRUint32 aLangID, void* aP, const char* aName, void* aClosure)
+UnmarkXBLJSObject(void* aP, const char* aName, void* aClosure)
 {
-  if (aLangID == nsIProgrammingLanguage::JAVASCRIPT) {
-    xpc_UnmarkGrayObject(static_cast<JSObject*>(aP));
-  }
+  xpc_UnmarkGrayObject(static_cast<JSObject*>(aP));
 }
 
 static bool

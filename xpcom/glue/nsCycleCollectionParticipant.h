@@ -93,13 +93,14 @@ public:
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) = 0;
     NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *root,
                                nsCycleCollectionParticipant* helper) = 0;
-    NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child) = 0;
+
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child) = 0;
+    NS_IMETHOD_(void) NoteJSChild(void *child) = 0;
     NS_IMETHOD_(void) NoteNativeChild(void *child,
                                       nsCycleCollectionParticipant *helper) = 0;
 
     // Give a name to the edge associated with the next call to
-    // NoteScriptChild, NoteXPCOMChild, or NoteNativeChild.
+    // NoteXPCOMChild, NoteJSChild, or NoteNativeChild.
     // Callbacks who care about this should set WANT_DEBUG_INFO in the
     // flags.
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name) = 0;
@@ -192,7 +193,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
 #define IMETHOD_VISIBILITY NS_COM_GLUE
 
 typedef void
-(* TraceCallback)(PRUint32 langID, void *p, const char *name, void *closure);
+(* TraceCallback)(void *p, const char *name, void *closure);
 
 class NS_NO_VTABLE nsScriptObjectTracer : public nsCycleCollectionParticipant
 {
@@ -557,16 +558,9 @@ public:
   {                                                                            \
     _class *tmp = static_cast<_class*>(p);
 
-#define NS_IMPL_CYCLE_COLLECTION_TRACE_CALLBACK(_langID, _object, _name)       \
-  if (_object)                                                                 \
-    aCallback(_langID, _object, _name, aClosure);
-
-#define NS_IMPL_CYCLE_COLLECTION_TRACE_MEMBER_CALLBACK(_langID, _field)        \
-  NS_IMPL_CYCLE_COLLECTION_TRACE_CALLBACK(_langID, tmp->_field, #_field)
-
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(_object, _name)             \
-  NS_IMPL_CYCLE_COLLECTION_TRACE_CALLBACK(nsIProgrammingLanguage::JAVASCRIPT,  \
-                                          _object, _name)
+  if (_object)                                                                 \
+    aCallback(_object, _name, aClosure);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(_field)              \
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->_field, #_field)
