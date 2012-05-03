@@ -72,6 +72,9 @@ installer:
 package:
 	@$(MAKE) -C mobile/android/installer
 
+fast-package:
+	@$(MAKE) package MOZ_FAST_PACKAGE=1
+
 ifeq ($(OS_TARGET),Android)
 ifeq ($(MOZ_ANDROID_INSTALL_TARGET),)
 # Determine if there's more than one device connected
