@@ -554,6 +554,11 @@ abstract public class GeckoApp
         boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
         final Bitmap bitmap = isSelectedTab ? mLayerClient.getBitmap() : null;
         
+        if ("about:home".equals(tab.getURL())) {
+            tab.updateThumbnail(null);
+            return;
+        }
+
         if (bitmap != null) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
@@ -566,11 +571,9 @@ abstract public class GeckoApp
                 return;
             }
 
-            int sw = tab.getMinScreenshotWidth();
-            int sh = tab.getMinScreenshotHeight();
             int dw = tab.getThumbnailWidth();
             int dh = tab.getThumbnailHeight();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, sw, sh, 0, 0, dw, dh, GeckoAppShell.SCREENSHOT_THUMBNAIL));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, 0, 0, 0, 0, dw, dh, GeckoAppShell.SCREENSHOT_THUMBNAIL));
         }
     }
     
@@ -583,10 +586,6 @@ abstract public class GeckoApp
             }
         }
 
-        if ("about:home".equals(thumbnailTab.getURL())) {
-            thumbnailTab.updateThumbnail(null);
-            return;
-        }
         try {
             if (bitmap == null)
                 bitmap = BitmapFactory.decodeByteArray(compressed, 0, compressed.length);
