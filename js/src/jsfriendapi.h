@@ -610,7 +610,7 @@ SizeOfJSContext();
     D(TOO_MUCH_MALLOC)                          \
     D(ALLOC_TRIGGER)                            \
     D(DEBUG_GC)                                 \
-    D(UNUSED2) /* was SHAPE */                  \
+    D(DEBUG_MODE_GC)                            \
     D(UNUSED3) /* was REFILL */                 \
                                                 \
     /* Reasons from Firefox */                  \
