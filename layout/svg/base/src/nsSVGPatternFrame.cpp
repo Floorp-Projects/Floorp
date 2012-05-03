@@ -420,7 +420,7 @@ nsSVGPatternFrame::GetViewBox(nsIContent* aDefault)
   const nsSVGViewBox &thisViewBox =
     static_cast<nsSVGPatternElement *>(mContent)->mViewBox;
 
-  if (thisViewBox.IsValid())
+  if (thisViewBox.IsExplicitlySet())
     return thisViewBox;
 
   AutoPatternReferencer patternRef(this);
@@ -581,7 +581,7 @@ nsSVGPatternFrame::ConstructCTM(const gfxRect &callerBBox,
   }
 
   const nsSVGViewBox& viewBox = GetViewBox();
-  if (!viewBox.IsValid()) {
+  if (!viewBox.IsExplicitlySet()) {
     return tCTM;
   }
   const nsSVGViewBoxRect viewBoxRect = GetViewBox().GetAnimValue();

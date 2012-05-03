@@ -134,7 +134,7 @@ nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
     if (!(aFlags & TRANSFORM_CHANGED) &&
         (svg->mLengthAttributes[nsSVGSVGElement::X].IsPercentage() ||
          svg->mLengthAttributes[nsSVGSVGElement::Y].IsPercentage() ||
-         (svg->mViewBox.IsValid() &&
+         (svg->HasViewBox() &&
           (svg->mLengthAttributes[nsSVGSVGElement::WIDTH].IsPercentage() ||
            svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].IsPercentage())))) {
     
@@ -175,7 +175,7 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
         aAttribute == nsGkAtoms::height) {
 
       nsSVGSVGElement* svg = static_cast<nsSVGSVGElement*>(mContent);
-      if (svg->mViewBox.IsValid()) {
+      if (svg->HasViewBox()) {
 
         // make sure our cached transform matrix gets (lazily) updated
         mCanvasTM = nsnull;

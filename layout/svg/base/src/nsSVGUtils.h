@@ -637,16 +637,6 @@ public:
                             NS_MIN(double(PR_INT32_MAX), aVal)));
   }
 
-  /**
-   * Given a nsIContent* that is actually an nsSVGSVGElement*, this method
-   * checks whether it currently has a valid viewBox, and returns true if so.
-   *
-   * No other type of element should be passed to this method.
-   * (In debug builds, anything non-<svg> will trigger an abort; in non-debug
-   * builds, it will trigger a false return-value as a safe fallback.)
-   */
-  static bool RootSVGElementHasViewbox(const nsIContent *aRootSVGElem);
-
   static void GetFallbackOrPaintColor(gfxContext *aContext,
                                       nsStyleContext *aStyleContext,
                                       nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
