@@ -955,9 +955,9 @@ js::SaveScriptFilename(JSContext *cx, const char *filename)
     if (!filename)
         return NULL;
 
-    JSCompartment *comp = cx->compartment;
+    JSRuntime *rt = cx->runtime;
 
-    ScriptFilenameTable::AddPtr p = comp->scriptFilenameTable.lookupForAdd(filename);
+    ScriptFilenameTable::AddPtr p = rt->scriptFilenameTable.lookupForAdd(filename);
     if (!p) {
         size_t size = offsetof(ScriptFilenameEntry, filename) + strlen(filename) + 1;
         ScriptFilenameEntry *entry = (ScriptFilenameEntry *) cx->malloc_(size);
@@ -966,7 +966,7 @@ js::SaveScriptFilename(JSContext *cx, const char *filename)
         entry->marked = false;
         strcpy(entry->filename, filename);
 
-        if (!comp->scriptFilenameTable.add(p, entry)) {
+        if (!rt->scriptFilenameTable.add(p, entry)) {
             Foreground::free_(entry);
             JS_ReportOutOfMemory(cx);
             return NULL;
@@ -981,36 +981,23 @@ js::SaveScriptFilename(JSContext *cx, const char *filename)
      * scripts or exceptions pointing to the filename may no longer be
      * reachable.
      */
-    if (comp->needsBarrier() && !sfe->marked)
+    if (cx->compartment->needsBarrier() && rt->gcIsFull)
         sfe->marked = true;
 #endif
 
     return sfe->filename;
 }
 
-/*
- * Back up from a saved filename by its offset within its hash table entry.
- */
-#define FILENAME_TO_SFE(fn) \
-    ((ScriptFilenameEntry *) ((fn) - offsetof(ScriptFilenameEntry, filename)))
-
 void
-js::MarkScriptFilename(const char *filename)
+js::SweepScriptFilenames(JSRuntime *rt)
 {
-    JS_ASSERT(filename);
-    ScriptFilenameEntry *sfe = FILENAME_TO_SFE(filename);
-    sfe->marked = true;
-}
-
-void
-js::SweepScriptFilenames(JSCompartment *comp)
-{
-    ScriptFilenameTable &table = comp->scriptFilenameTable;
+    JS_ASSERT(rt->gcIsFull);
+    ScriptFilenameTable &table = rt->scriptFilenameTable;
     for (ScriptFilenameTable::Enum e(table); !e.empty(); e.popFront()) {
         ScriptFilenameEntry *entry = e.front();
         if (entry->marked) {
             entry->marked = false;
-        } else if (!comp->rt->gcKeepAtoms) {
+        } else if (!rt->gcKeepAtoms) {
             Foreground::free_(entry);
             e.removeFront();
         }
@@ -1018,9 +1005,9 @@ js::SweepScriptFilenames(JSCompartment *comp)
 }
 
 void
-js::FreeScriptFilenames(JSCompartment *comp)
+js::FreeScriptFilenames(JSRuntime *rt)
 {
-    ScriptFilenameTable &table = comp->scriptFilenameTable;
+    ScriptFilenameTable &table = rt->scriptFilenameTable;
     for (ScriptFilenameTable::Enum e(table); !e.empty(); e.popFront())
         Foreground::free_(e.front());
 
@@ -2200,7 +2187,7 @@ JSScript::markChildren(JSTracer *trc)
         MarkObject(trc, &globalObject, "object");
 
     if (IS_GC_MARKING_TRACER(trc) && filename)
-        MarkScriptFilename(filename);
+        MarkScriptFilename(trc->runtime, filename);
 
     bindings.trace(trc);
 
