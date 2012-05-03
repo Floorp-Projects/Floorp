@@ -278,9 +278,9 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
   nsresult res = aTextNode->GetParentNode(getter_AddRefs(parent));
   NS_ENSURE_SUCCESS(res, res);
 
-  nsAutoString tagString;
-  aProperty->ToString(tagString);
-  if (!CanContainTag(parent, tagString)) return NS_OK;
+  if (!CanContainTag(parent, aProperty)) {
+    return NS_OK;
+  }
   
   // don't need to do anything if no characters actually selected
   if (aStartOffset == aEndOffset) return NS_OK;
@@ -370,7 +370,7 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIDOMNode *aNode,
 
   // If this is an element that can't be contained in a span, we have to
   // recurse to its children.
-  if (!TagCanContain(NS_LITERAL_STRING("span"), aNode)) {
+  if (!TagCanContain(nsGkAtoms::span, aNode)) {
     nsCOMPtr<nsIDOMNodeList> childNodes;
     res = aNode->GetChildNodes(getter_AddRefs(childNodes));
     NS_ENSURE_SUCCESS(res, res);
@@ -1454,9 +1454,9 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
       NS_ENSURE_SUCCESS(res, res);
       selectedNode = parent;
     }
-    nsAutoString tag;
-    atom->ToString(tag);
-    if (!CanContainTag(selectedNode, tag)) return NS_OK;
+    if (!CanContainTag(selectedNode, atom)) {
+      return NS_OK;
+    }
 
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
     return mTypeInState->SetProp(atom, EmptyString(), EmptyString());
@@ -1599,7 +1599,9 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
   nsCOMPtr<nsIDOMNode> parent;
   res = aTextNode->GetParentNode(getter_AddRefs(parent));
   NS_ENSURE_SUCCESS(res, res);
-  if (!CanContainTag(parent, NS_LITERAL_STRING("big"))) return NS_OK;
+  if (!CanContainTag(parent, nsGkAtoms::big)) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIDOMNode> tmp, node = do_QueryInterface(aTextNode);
 
@@ -1730,9 +1732,12 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
 
   nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> tmp;
-  nsAutoString tag;
-  if (aSizeChange == 1) tag.AssignLiteral("big");
-  else tag.AssignLiteral("small");
+  nsIAtom* atom;
+  if (aSizeChange == 1) {
+    atom = nsGkAtoms::big;
+  } else {
+    atom = nsGkAtoms::small;
+  }
   
   // is it the opposite of what we want?  
   if ( ((aSizeChange == 1) && nsHTMLEditUtils::IsSmall(aNode)) || 
@@ -1746,8 +1751,7 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
     return res;
   }
   // can it be put inside a "big" or "small"?
-  if (TagCanContain(tag, aNode))
-  {
+  if (TagCanContain(atom, aNode)) {
     // first populate any nested font tags that have the size attr set
     res = RelativeFontChangeHelper(aSizeChange, aNode);
     NS_ENSURE_SUCCESS(res, res);
@@ -1771,7 +1775,7 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
       return res;
     }
     // else insert it above aNode
-    res = InsertContainerAbove(aNode, address_of(tmp), tag);
+    res = InsertContainerAbove(aNode, address_of(tmp), nsAtomString(atom));
     return res;
   }
   // none of the above?  then cycle through the children.

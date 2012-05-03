@@ -51,10 +51,8 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIAccessible
-  NS_IMETHOD GetName(nsAString& aName);
-
   // nsAccessible
+  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 

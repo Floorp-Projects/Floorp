@@ -1228,6 +1228,13 @@ NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
 JS_PUBLIC_API(bool)
 ToNumberSlow(JSContext *cx, Value v, double *out)
 {
+#ifdef DEBUG
+    {
+        SkipRoot skip(cx, &v);
+        MaybeCheckStackRoots(cx);
+    }
+#endif
+
     JS_ASSERT(!v.isNumber());
     goto skip_int_double;
     for (;;) {

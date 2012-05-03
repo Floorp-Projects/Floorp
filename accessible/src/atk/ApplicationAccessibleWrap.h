@@ -57,8 +57,7 @@ public:
     virtual bool Init();
 
     // nsAccessible
-    NS_IMETHOD GetName(nsAString &aName);
-
+    virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
     virtual bool AppendChild(nsAccessible* aChild);
     virtual bool RemoveChild(nsAccessible* aChild);
 

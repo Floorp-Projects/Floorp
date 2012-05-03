@@ -87,7 +87,8 @@ using namespace JSC;
 void JS_FASTCALL
 stubs::BindName(VMFrame &f, PropertyName *name)
 {
-    JSObject *obj = FindIdentifierBase(f.cx, f.fp()->scopeChain(), name);
+    JSObject *obj = FindIdentifierBase(f.cx, f.fp()->scopeChain(),
+                                       RootedVarPropertyName(f.cx, name));
     if (!obj)
         THROW();
     f.regs.sp[0].setObject(*obj);

@@ -836,63 +836,6 @@ nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
 }
 
 nsresult
-nsNPAPIPluginInstance::DefineJavaProperties()
-{
-  NPObject *plugin_obj = nsnull;
-
-  // The dummy Java plugin's scriptable object is what we want to
-  // expose as window.Packages. And Window.Packages.java will be
-  // exposed as window.java.
-
-  // Get the scriptable plugin object.
-  nsresult rv = GetValueFromPlugin(NPPVpluginScriptableNPObject, &plugin_obj);
-
-  if (NS_FAILED(rv) || !plugin_obj) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Get the NPObject wrapper for window.
-  NPObject *window_obj = _getwindowobject(&mNPP);
-
-  if (!window_obj) {
-    _releaseobject(plugin_obj);
-
-    return NS_ERROR_FAILURE;
-  }
-
-  NPIdentifier java_id = _getstringidentifier("java");
-  NPIdentifier packages_id = _getstringidentifier("Packages");
-
-  NPObject *java_obj = nsnull;
-  NPVariant v;
-  OBJECT_TO_NPVARIANT(plugin_obj, v);
-
-  // Define the properties.
-
-  bool ok = _setproperty(&mNPP, window_obj, packages_id, &v);
-  if (ok) {
-    ok = _getproperty(&mNPP, plugin_obj, java_id, &v);
-
-    if (ok && NPVARIANT_IS_OBJECT(v)) {
-      // Set java_obj so that we properly release it at the end of
-      // this function.
-      java_obj = NPVARIANT_TO_OBJECT(v);
-
-      ok = _setproperty(&mNPP, window_obj, java_id, &v);
-    }
-  }
-
-  _releaseobject(window_obj);
-  _releaseobject(plugin_obj);
-  _releaseobject(java_obj);
-
-  if (!ok)
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-nsresult
 nsNPAPIPluginInstance::SetCached(bool aCache)
 {
   mCached = aCache;

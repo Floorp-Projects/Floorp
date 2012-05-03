@@ -285,9 +285,7 @@ __try {
     return CO_E_OBJNOTCONNECTED;
 
   nsAutoString name;
-  nsresult rv = xpAccessible->GetName(name);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  xpAccessible->Name(name);
 
   // The name was not provided, e.g. no alt attribute for an image. A screen
   // reader may choose to invent its own accessible name, e.g. from an image src

@@ -101,6 +101,7 @@ EXPORTS		= \
 		nsIByteBuffer.h \
 		nsIUnicharBuffer.h \
 		nsMathUtils.h \
+		nsObserverList.h \
 		nsObserverService.h \
 		nsStaticNameTable.h \
 		nsStaticAtom.h \

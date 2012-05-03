@@ -884,8 +884,9 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
     NS_ENSURE_SUCCESS(res, res);
 
     // don't put text in places that can't have it
-    if (!IsTextNode(selNode) && !CanContainTag(selNode, NS_LITERAL_STRING("#text")))
+    if (!IsTextNode(selNode) && !CanContainTag(selNode, nsGkAtoms::textTagName)) {
       return NS_ERROR_FAILURE;
+    }
 
     // we need to get the doc
     nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();

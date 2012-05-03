@@ -60,6 +60,7 @@
 #include "nsCacheService.h"
 #include "nsDiskCacheDeviceSQL.h"
 #include "nsApplicationCache.h"
+#include "nsApplicationCacheService.h"
 #include "nsMimeTypes.h"
 #include "nsNetStrings.h"
 #include "nsDNSPrefetch.h"
@@ -215,7 +216,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNestedAboutURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
 #endif
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsOfflineCacheDevice, nsOfflineCacheDevice::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsApplicationCacheService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsApplicationCacheNamespace)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsApplicationCache)
 
@@ -902,7 +903,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_SOCKS4SOCKETPROVIDER_CID, false, NULL, nsSOCKSSocketProvider::CreateV4 },
     { &kNS_UDPSOCKETPROVIDER_CID, false, NULL, nsUDPSocketProviderConstructor },
     { &kNS_CACHESERVICE_CID, false, NULL, nsCacheService::Create },
-    { &kNS_APPLICATIONCACHESERVICE_CID, false, NULL, nsOfflineCacheDeviceConstructor },
+    { &kNS_APPLICATIONCACHESERVICE_CID, false, NULL, nsApplicationCacheServiceConstructor },
     { &kNS_APPLICATIONCACHENAMESPACE_CID, false, NULL, nsApplicationCacheNamespaceConstructor },
     { &kNS_APPLICATIONCACHE_CID, false, NULL, nsApplicationCacheConstructor },
 #ifdef NECKO_COOKIES

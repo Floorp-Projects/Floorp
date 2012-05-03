@@ -4772,7 +4772,7 @@ xml_lookupGeneric(JSContext *cx, JSObject *obj, jsid id, JSObject **objp, JSProp
         *propp = NULL;
     } else {
         const Shape *shape =
-            js_AddNativeProperty(cx, obj, id, GetProperty, PutProperty,
+            js_AddNativeProperty(cx, RootedVarObject(cx, obj), id, GetProperty, PutProperty,
                                  SHAPE_INVALID_SLOT, JSPROP_ENUMERATE,
                                  0, 0);
         if (!shape)
@@ -4807,7 +4807,7 @@ xml_lookupElement(JSContext *cx, JSObject *obj, uint32_t index, JSObject **objp,
         return false;
 
     const Shape *shape =
-        js_AddNativeProperty(cx, obj, id, GetProperty, PutProperty,
+        js_AddNativeProperty(cx, RootedVarObject(cx, obj), id, GetProperty, PutProperty,
                              SHAPE_INVALID_SLOT, JSPROP_ENUMERATE,
                              0, 0);
     if (!shape)
@@ -7259,6 +7259,8 @@ uint32_t  xml_serial;
 JSXML *
 js_NewXML(JSContext *cx, JSXMLClass xml_class)
 {
+    cx->runtime->gcExactScanningEnabled = false;
+
     JSXML *xml = js_NewGCXML(cx);
     if (!xml)
         return NULL;
@@ -7391,8 +7393,9 @@ js_GetXMLObject(JSContext *cx, JSXML *xml)
 JSObject *
 js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(obj->isNative());
+    cx->runtime->gcExactScanningEnabled = false;
 
+    JS_ASSERT(obj->isNative());
     GlobalObject *global = &obj->asGlobal();
 
     JSObject *namespaceProto = global->createBlankPrototype(cx, &NamespaceClass);
@@ -7423,8 +7426,9 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(obj->isNative());
+    cx->runtime->gcExactScanningEnabled = false;
 
+    JS_ASSERT(obj->isNative());
     GlobalObject *global = &obj->asGlobal();
 
     JSObject *qnameProto = global->createBlankPrototype(cx, &QNameClass);
@@ -7455,8 +7459,9 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitXMLClass(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(obj->isNative());
+    cx->runtime->gcExactScanningEnabled = false;
 
+    JS_ASSERT(obj->isNative());
     GlobalObject *global = &obj->asGlobal();
 
     JSObject *xmlProto = global->createBlankPrototype(cx, &XMLClass);

@@ -1590,6 +1590,18 @@ nsCacheService::CreateDiskDevice()
 }
 
 nsresult
+nsCacheService::GetOfflineDevice(nsOfflineCacheDevice **aDevice)
+{
+    if (!mOfflineDevice) {
+        nsresult rv = CreateOfflineDevice();
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    NS_ADDREF(*aDevice = mOfflineDevice);
+    return NS_OK;
+}
+
+nsresult
 nsCacheService::CreateOfflineDevice()
 {
     CACHE_LOG_ALWAYS(("Creating offline device"));

@@ -1070,7 +1070,7 @@ class AutoArrayRooter : private AutoGCRooter {
   public:
     AutoArrayRooter(JSContext *cx, size_t len, Value *vec
                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, len), array(vec)
+      : AutoGCRooter(cx, len), array(vec), skip(cx, array, len)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(tag >= 0);
@@ -1092,6 +1092,8 @@ class AutoArrayRooter : private AutoGCRooter {
 
   private:
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+    SkipRoot skip;
 };
 
 /* The auto-root for enumeration object and its state. */
@@ -2381,8 +2383,10 @@ JS_ALWAYS_INLINE bool
 ToNumber(JSContext *cx, const Value &v, double *out)
 {
     AssertArgumentsAreSane(cx, v);
+
     if (v.isNumber()) {
         *out = v.toNumber();
+        MaybeCheckStackRoots(cx);
         return true;
     }
     return js::ToNumberSlow(cx, v, out);
