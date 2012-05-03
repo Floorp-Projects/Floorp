@@ -251,8 +251,8 @@ IdentityManager.prototype = {
     this._log.info("Sync Key being updated.");
     this._syncKey = value;
 
-    // Calling the getter has the side-effect of populating the object, which
-    // we desire.
+    // Clear any cached Sync Key Bundle and regenerate it.
+    this._syncKeyBundle = null;
     let bundle = this.syncKeyBundle;
 
     this._syncKeyUpdated = true;
@@ -313,6 +313,12 @@ IdentityManager.prototype = {
 
     if (!this.syncKey) {
       return LOGIN_FAILED_NO_PASSPHRASE;
+    }
+
+    // If we have a Sync Key but no bundle, bundle creation failed, which
+    // implies a bad Sync Key.
+    if (!this._syncKeyBundle) {
+      return LOGIN_FAILED_INVALID_PASSPHRASE;
     }
 
     return STATUS_OK;
