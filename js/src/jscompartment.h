@@ -283,9 +283,6 @@ struct JSCompartment
 
     js::types::TypeObject *getLazyType(JSContext *cx, JSObject *proto);
 
-    /* Cache to speed up object creation. */
-    js::NewObjectCache           newObjectCache;
-
     /*
      * Keeps track of the total number of malloc bytes connected to a
      * compartment's GC things. This counter should be used in preference to

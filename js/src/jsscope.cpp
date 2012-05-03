@@ -1397,7 +1397,7 @@ EmptyShape::insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto)
      * the appropriate properties if found. Clearing the cache entry avoids
      * this duplicate regeneration.
      */
-    cx->compartment->newObjectCache.invalidateEntriesForShape(cx, shape, proto);
+    cx->runtime->newObjectCache.invalidateEntriesForShape(cx, shape, proto);
 }
 
 void

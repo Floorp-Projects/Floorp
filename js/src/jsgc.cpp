@@ -2887,10 +2887,10 @@ PurgeRuntime(JSTracer *trc)
     }
 
     rt->tempLifoAlloc.freeUnused();
-    rt->gsnCache.purge();
 
-    /* FIXME: bug 506341 */
+    rt->gsnCache.purge();
     rt->propertyCache.purge(rt);
+    rt->newObjectCache.purge();
 
     for (ContextIter acx(rt); !acx.done(); acx.next())
         acx->purge();
