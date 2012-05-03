@@ -73,8 +73,8 @@ function testCreateCommands() {
     pane._frame.removeEventListener("Debugger:Connecting", dbgConnected, true);
 
     // Wait for the initial resume.
-    pane.debuggerWindow.gClient.addOneTimeListener("resumed", function() {
-      pane.debuggerWindow.gClient.activeThread.addOneTimeListener("framesadded", function() {
+    pane.contentWindow.gClient.addOneTimeListener("resumed", function() {
+      pane.contentWindow.gClient.activeThread.addOneTimeListener("framesadded", function() {
         type("break add line " + TEST_URI + " " + content.wrappedJSObject.line0);
         is(requisition.getStatus().toString(), "VALID", "break add line is VALID");
         requisition.exec();
@@ -83,7 +83,7 @@ function testCreateCommands() {
         is(requisition.getStatus().toString(), "VALID", "break list is VALID");
         requisition.exec();
 
-        pane.debuggerWindow.gClient.activeThread.resume(function() {
+        pane.contentWindow.gClient.activeThread.resume(function() {
           type("break del 0");
           is(requisition.getStatus().toString(), "VALID", "break del 0 is VALID");
           requisition.exec();
