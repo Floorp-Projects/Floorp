@@ -552,7 +552,6 @@ JSCompartment::purge()
         }
     }
 
-    nativeIterCache.purge();
     toSourceCache.destroyIfConstructed();
 }
 
