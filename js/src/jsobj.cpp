@@ -744,8 +744,27 @@ AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
 # define EVAL_CACHE_CHAIN_LIMIT 4
 #endif
 
-static inline JSScript **
-EvalCacheHash(JSContext *cx, JSLinearString *str)
+void
+EvalCache::purge()
+{
+    /*
+     * Purge all scripts from the eval cache. In addition to removing them from
+     * table_, null out the evalHashLink field of any script removed. Since
+     * evalHashLink is in a union with globalObject, this allows the GC to
+     * indiscriminately use the union as a nullable globalObject pointer.
+     */
+    for (size_t i = 0; i < ArrayLength(table_); ++i) {
+        for (JSScript **listHeadp = &table_[i]; *listHeadp; ) {
+            JSScript *script = *listHeadp;
+            JS_ASSERT(GetGCThingTraceKind(script) == JSTRACE_SCRIPT);
+            *listHeadp = script->evalHashLink();
+            script->evalHashLink() = NULL;
+        }
+    }
+}
+
+inline JSScript **
+EvalCache::bucket(JSLinearString *str)
 {
     const jschar *s = str->chars();
     size_t n = str->length();
@@ -757,8 +776,9 @@ EvalCacheHash(JSContext *cx, JSLinearString *str)
         h = JS_ROTATE_LEFT32(h, 4) ^ *s;
 
     h *= JS_GOLDEN_RATIO;
-    h >>= 32 - JS_EVAL_CACHE_SHIFT;
-    return &cx->compartment->evalCache[h];
+    h >>= 32 - SHIFT;
+    JS_ASSERT(h < ArrayLength(table_));
+    return &table_[h];
 }
 
 static JS_ALWAYS_INLINE JSScript *
@@ -857,7 +877,7 @@ class EvalScriptGuard
       : cx_(cx),
         str_(str),
         script_(cx) {
-        bucket_ = EvalCacheHash(cx, str);
+        bucket_ = cx->runtime->evalCache.bucket(str);
     }
 
     ~EvalScriptGuard() {

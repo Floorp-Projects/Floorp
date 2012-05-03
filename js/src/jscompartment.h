@@ -61,17 +61,6 @@ namespace js {
 /* Defined in jsapi.cpp */
 extern Class dummy_class;
 
-} /* namespace js */
-
-#ifndef JS_EVAL_CACHE_SHIFT
-# define JS_EVAL_CACHE_SHIFT        6
-#endif
-
-/* Number of buckets in the hash of eval scripts. */
-#define JS_EVAL_CACHE_SIZE          JS_BIT(JS_EVAL_CACHE_SHIFT)
-
-namespace js {
-
 /*
  * A single-entry cache for some base-10 double-to-string conversions. This
  * helps date-format-xparb.js.  It also avoids skewing the results for
@@ -206,10 +195,6 @@ struct JSCompartment
 
     /* Type information about the scripts and objects in this compartment. */
     js::types::TypeCompartment   types;
-
-  public:
-    /* Hashed lists of scripts created by eval to garbage-collect. */
-    JSScript                     *evalCache[JS_EVAL_CACHE_SIZE];
 
     void                         *data;
     bool                         active;  // GC flag, whether there are active frames

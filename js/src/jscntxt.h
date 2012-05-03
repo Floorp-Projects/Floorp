@@ -204,6 +204,18 @@ class ToSourceCache
     void purge();
 };
 
+class EvalCache
+{
+    static const unsigned SHIFT = 6;
+    static const unsigned LENGTH = 1 << SHIFT;
+    JSScript *table_[LENGTH];
+
+  public:
+    EvalCache() { PodArrayZero(table_); }
+    JSScript **bucket(JSLinearString *str);
+    void purge();
+};
+
 class NativeIterCache
 {
     static const size_t SIZE = size_t(1) << 8;
@@ -755,6 +767,7 @@ struct JSRuntime : js::RuntimeFriendFields
     js::NewObjectCache  newObjectCache;
     js::NativeIterCache nativeIterCache;
     js::ToSourceCache   toSourceCache;
+    js::EvalCache       evalCache;
 
     /* State used by jsdtoa.cpp. */
     DtoaState           *dtoaState;
