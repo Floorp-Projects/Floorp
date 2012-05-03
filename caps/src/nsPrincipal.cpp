@@ -542,7 +542,7 @@ nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPrincipal::SetCanEnableCapability(const char *capability,
                                     PRInt16 canEnable)
 {
@@ -613,34 +613,6 @@ NS_IMETHODIMP
 nsPrincipal::EnableCapability(const char *capability, void **annotation)
 {
   return SetCapability(capability, annotation, AnnotationEnabled);
-}
-
-NS_IMETHODIMP
-nsPrincipal::DisableCapability(const char *capability, void **annotation)
-{
-  return SetCapability(capability, annotation, AnnotationDisabled);
-}
-
-NS_IMETHODIMP
-nsPrincipal::RevertCapability(const char *capability, void **annotation)
-{
-  if (*annotation) {
-    nsHashtable *ht = (nsHashtable *) *annotation;
-    const char *start = capability;
-    for(;;) {
-      const char *space = PL_strchr(start, ' ');
-      int len = space ? space - start : strlen(start);
-      nsCAutoString capString(start, len);
-      nsCStringKey key(capString);
-      ht->Remove(&key);
-      if (!space) {
-        return NS_OK;
-      }
-
-      start = space + 1;
-    }
-  }
-  return NS_OK;
 }
 
 nsresult

@@ -523,7 +523,7 @@ struct JSObject : public js::ObjectImpl
 
     /* Access the parent link of an object. */
     inline JSObject *getParent() const;
-    bool setParent(JSContext *cx, JSObject *newParent);
+    static bool setParent(JSContext *cx, js::HandleObject obj, js::HandleObject newParent);
 
     /*
      * Get the enclosing scope of an object. When called on non-scope object,
@@ -1041,7 +1041,7 @@ class ValueArray {
 
 /* For manipulating JSContext::sharpObjectMap. */
 extern bool
-js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap, bool *alreadySeen, bool *isSharp);
+js_EnterSharpObject(JSContext *cx, js::HandleObject obj, JSIdArray **idap, bool *alreadySeen, bool *isSharp);
 
 extern void
 js_LeaveSharpObject(JSContext *cx, JSIdArray **idap);
@@ -1215,7 +1215,7 @@ js_CheckForStringIndex(jsid id);
  * and setter, slot, attributes, and other members.
  */
 extern js::Shape *
-js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
+js_AddNativeProperty(JSContext *cx, js::HandleObject obj, jsid id,
                      JSPropertyOp getter, JSStrictPropertyOp setter, uint32_t slot,
                      unsigned attrs, unsigned flags, int shortid);
 
@@ -1310,7 +1310,7 @@ FindProperty(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
              JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 extern JSObject *
-FindIdentifierBase(JSContext *cx, JSObject *scopeChain, PropertyName *name);
+FindIdentifierBase(JSContext *cx, HandleObject scopeChain, HandlePropertyName name);
 
 }
 
@@ -1466,7 +1466,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
 namespace js {
 
 extern bool
-SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles);
+SetProto(JSContext *cx, HandleObject obj, HandleObject proto, bool checkForCycles);
 
 extern JSString *
 obj_toStringHelper(JSContext *cx, JSObject *obj);

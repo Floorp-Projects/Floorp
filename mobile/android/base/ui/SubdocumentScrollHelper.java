@@ -57,15 +57,31 @@ class SubdocumentScrollHelper implements GeckoEventListener {
     private final PanZoomController mPanZoomController;
     private final Handler mUiHandler;
 
+    /* This is the amount of displacement we have accepted but not yet sent to JS; this is
+     * only valid when mOverrideScrollPending is true. */
+    private final PointF mPendingDisplacement;
+
+    /* When this is true, we're sending scroll events to JS to scroll the active subdocument. */
     private boolean mOverridePanning;
+
+    /* When this is true, we have received an ack for the last scroll event we sent to JS, and
+     * are ready to send the next scroll event. Note we only ever have one scroll event inflight
+     * at a time. */
     private boolean mOverrideScrollAck;
+
+    /* When this is true, we have a pending scroll that we need to send to JS; we were unable
+     * to send it when it was initially requested because mOverrideScrollAck was not true. */
     private boolean mOverrideScrollPending;
+
+    /* When this is true, the last scroll event we sent actually did some amount of scrolling on
+     * the subdocument; we use this to decide when we have reached the end of the subdocument. */
     private boolean mScrollSucceeded;
 
     SubdocumentScrollHelper(PanZoomController controller) {
         mPanZoomController = controller;
         // mUiHandler will be bound to the UI thread since that's where this constructor runs
         mUiHandler = new Handler();
+        mPendingDisplacement = new PointF();
 
         GeckoAppShell.registerGeckoEventListener(MESSAGE_PANNING_OVERRIDE, this);
         GeckoAppShell.registerGeckoEventListener(MESSAGE_CANCEL_OVERRIDE, this);
@@ -79,11 +95,10 @@ class SubdocumentScrollHelper implements GeckoEventListener {
 
         if (! mOverrideScrollAck) {
             mOverrideScrollPending = true;
+            mPendingDisplacement.x += displacement.x;
+            mPendingDisplacement.y += displacement.y;
             return true;
         }
-
-        mOverrideScrollAck = false;
-        mOverrideScrollPending = false;
 
         JSONObject json = new JSONObject();
         try {
@@ -93,6 +108,13 @@ class SubdocumentScrollHelper implements GeckoEventListener {
             Log.e(LOGTAG, "Error forming subwindow scroll message: ", e);
         }
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(MESSAGE_SCROLL, json.toString()));
+
+        mOverrideScrollAck = false;
+        mOverrideScrollPending = false;
+        // clear the |mPendingDisplacement| after serializing |displacement| to
+        // JSON because they might be the same object
+        mPendingDisplacement.x = 0;
+        mPendingDisplacement.y = 0;
 
         return true;
     }
@@ -128,7 +150,7 @@ class SubdocumentScrollHelper implements GeckoEventListener {
                         mOverrideScrollAck = true;
                         mScrollSucceeded = message.getBoolean("scrolled");
                         if (mOverridePanning && mOverrideScrollPending) {
-                            scrollBy(mPanZoomController.getDisplacement());
+                            scrollBy(mPendingDisplacement);
                         }
                     }
                 } catch (Exception e) {

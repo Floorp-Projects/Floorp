@@ -31,7 +31,7 @@
 
     is(root.parentDocument, null,
        "Wrong parent document of root accessible");
-    is(root.childDocumentCount, SEAMONKEY ? 1 : 3,
+    is(root.childDocumentCount, 1,
        "Wrong child document count of root accessible");
     is(root.getChildDocumentAt(0), tabDoc,
        "Wrong child document at index 0 of root accessible");

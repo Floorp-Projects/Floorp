@@ -852,11 +852,11 @@ IsCacheableScopeChain(JSObject *scopeChain, JSObject *holder)
 }
 
 JSObject *
-js::ion::BindNameCache(JSContext *cx, size_t cacheIndex, JSObject *scopeChain)
+js::ion::BindNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain)
 {
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();
     IonCacheBindName &cache = ion->getCache(cacheIndex).toBindName();
-    PropertyName *name = cache.name();
+    HandlePropertyName name = cache.name();
 
     JSObject *holder;
     if (scopeChain->isGlobal()) {

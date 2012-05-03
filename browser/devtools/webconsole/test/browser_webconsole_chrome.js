@@ -40,7 +40,12 @@
 
 // Tests that code completion works properly.
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(getBrowserURL());
   browser.addEventListener("DOMContentLoaded", testChrome, false);
 }

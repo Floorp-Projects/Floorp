@@ -44,10 +44,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= png
 LIBRARY_NAME	= mozpng
+FORCE_STATIC_LIB= 1
 ifeq ($(OS_ARCH),WINNT)
-LIBRARY_NAME	= png
+VISIBILITY_FLAGS=
 endif
-LIBXUL_LIBRARY = 1
 
 
 CSRCS		= \

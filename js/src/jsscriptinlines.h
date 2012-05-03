@@ -170,7 +170,7 @@ JSScript::getCallerFunction()
 inline js::RegExpObject *
 JSScript::getRegExp(size_t index)
 {
-    JSObjectArray *arr = regexps();
+    js::ObjectArray *arr = regexps();
     JS_ASSERT(uint32_t(index) < arr->length);
     JSObject *obj = arr->vector[index];
     JS_ASSERT(obj->isRegExp());
