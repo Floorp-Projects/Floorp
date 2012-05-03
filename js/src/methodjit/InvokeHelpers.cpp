@@ -485,20 +485,20 @@ RemoveOrphanedNative(JSContext *cx, StackFrame *fp)
      * pools. We don't release pools piecemeal as a pool can be referenced by
      * multiple frames.
      */
-    JaegerCompartment *jc = cx->compartment->jaegerCompartment();
-    if (jc->orphanedNativeFrames.empty())
+    JaegerRuntime &jr = cx->jaegerRuntime();
+    if (jr.orphanedNativeFrames.empty())
         return;
-    for (unsigned i = 0; i < jc->orphanedNativeFrames.length(); i++) {
-        if (fp == jc->orphanedNativeFrames[i]) {
-            jc->orphanedNativeFrames[i] = jc->orphanedNativeFrames.back();
-            jc->orphanedNativeFrames.popBack();
+    for (unsigned i = 0; i < jr.orphanedNativeFrames.length(); i++) {
+        if (fp == jr.orphanedNativeFrames[i]) {
+            jr.orphanedNativeFrames[i] = jr.orphanedNativeFrames.back();
+            jr.orphanedNativeFrames.popBack();
             break;
         }
     }
-    if (jc->orphanedNativeFrames.empty()) {
-        for (unsigned i = 0; i < jc->orphanedNativePools.length(); i++)
-            jc->orphanedNativePools[i]->release();
-        jc->orphanedNativePools.clear();
+    if (jr.orphanedNativeFrames.empty()) {
+        for (unsigned i = 0; i < jr.orphanedNativePools.length(); i++)
+            jr.orphanedNativePools[i]->release();
+        jr.orphanedNativePools.clear();
     }
 }
 
@@ -542,7 +542,7 @@ js_InternalThrow(VMFrame &f)
                 case JSTRAP_RETURN:
                     cx->clearPendingException();
                     cx->fp()->setReturnValue(rval);
-                    return cx->jaegerCompartment()->forceReturnFromExternC();
+                    return cx->jaegerRuntime().forceReturnFromExternC();
 
                 case JSTRAP_THROW:
                     cx->setPendingException(rval);
@@ -572,7 +572,7 @@ js_InternalThrow(VMFrame &f)
             // we will run ScriptDebugEpilogue again (from AnyFrameEpilogue);
             // ScriptDebugEpilogue is prepared for this eventuality.
             if (js::ScriptDebugEpilogue(cx, f.fp(), false))
-                return cx->jaegerCompartment()->forceReturnFromExternC();
+                return cx->jaegerRuntime().forceReturnFromExternC();
         }
                 
 
@@ -603,7 +603,7 @@ js_InternalThrow(VMFrame &f)
      * thus can only enter JIT code via EnterMethodJIT (which overwrites
      * its entry frame's ncode). See ClearAllFrames.
      */
-    cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
+    cx->jaegerRuntime().setLastUnfinished(Jaeger_Unfinished);
 
     if (!script->ensureRanAnalysis(cx, NULL)) {
         js_ReportOutOfMemory(cx);
@@ -657,7 +657,7 @@ stubs::ScriptDebugPrologue(VMFrame &f)
       case JSTRAP_CONTINUE:
         break;
       case JSTRAP_RETURN:
-        *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromFastCall();
+        *f.returnAddressLocation() = f.cx->jaegerRuntime().forceReturnFromFastCall();
         return;
       case JSTRAP_ERROR:
       case JSTRAP_THROW:
@@ -919,7 +919,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
               case JSTRAP_CONTINUE:
                 break;
               case JSTRAP_RETURN:
-                *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromExternC();
+                *f.returnAddressLocation() = f.cx->jaegerRuntime().forceReturnFromExternC();
                 return NULL;
               case JSTRAP_THROW:
               case JSTRAP_ERROR:
@@ -1102,7 +1102,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
     /* Mark the entry frame as unfinished, and update the regs to resume at. */
     JaegerStatus status = skipTrap ? Jaeger_UnfinishedAtTrap : Jaeger_Unfinished;
-    cx->compartment->jaegerCompartment()->setLastUnfinished(status);
+    cx->jaegerRuntime().setLastUnfinished(status);
     *f.oldregs = f.regs;
 
     return NULL;
