@@ -1911,6 +1911,7 @@ GK_ATOM(az, "az")
 GK_ATOM(ba, "ba")
 GK_ATOM(crh, "crh")
 GK_ATOM(nl, "nl")
+GK_ATOM(el, "el")
 
 // Names for editor transactions
 GK_ATOM(TypingTxnName, "Typing")
