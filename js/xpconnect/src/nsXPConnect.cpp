@@ -1135,28 +1135,14 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     CheckTypeInference(cx, clasp, principal);
 
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "using a principal off the main thread?");
-    NS_ABORT_IF_FALSE(principal, "bad key");
 
-    XPCCompartmentMap& map = nsXPConnect::GetRuntimeInstance()->GetCompartmentMap();
-    xpc::PtrAndPrincipalHashKey key(ptr, principal);
-    if (!map.Get(&key, compartment)) {
-        xpc::PtrAndPrincipalHashKey *priv_key =
-            new xpc::PtrAndPrincipalHashKey(ptr, principal);
-        xpc::CompartmentPrivate *priv = new xpc::CompartmentPrivate(priv_key, wantXrays);
-        if (!CreateNewCompartment(cx, clasp, principal, priv,
-                                  global, compartment)) {
-            return UnexpectedFailure(NS_ERROR_FAILURE);
-        }
+    xpc::CompartmentPrivate *priv = new xpc::CompartmentPrivate(wantXrays);
+    if (!CreateNewCompartment(cx, clasp, principal, priv, global, compartment))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
-        map.Put(&key, *compartment);
-    } else {
-        js::AutoSwitchCompartment sc(cx, *compartment);
-
-        JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
-        if (!tempGlobal)
-            return UnexpectedFailure(NS_ERROR_FAILURE);
-        *global = tempGlobal;
-    }
+    XPCCompartmentSet& set = nsXPConnect::GetRuntimeInstance()->GetCompartmentSet();
+    if (!set.put(*compartment))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
 #ifdef DEBUG
     // Verify that the right trace hook is called. Note that this doesn't

@@ -82,26 +82,6 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(void *p)
     return NS_OK;
 }
 
-struct TraverseExpandoObjectClosure
-{
-    XPCWrappedNative *wn;
-    nsCycleCollectionTraversalCallback &cb;
-};
-
-static PLDHashOperator
-TraverseExpandoObjects(xpc::PtrAndPrincipalHashKey *aKey, JSCompartment *compartment, void *aClosure)
-{
-    TraverseExpandoObjectClosure *closure = static_cast<TraverseExpandoObjectClosure*>(aClosure);
-    xpc::CompartmentPrivate *priv =
-        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
-
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(closure->cb, "XPCWrappedNative expando object");
-    closure->cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                                priv->LookupExpandoObjectPreserveColor(closure->wn));
-
-    return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
                                                           nsCycleCollectionTraversalCallback &cb)
@@ -144,8 +124,14 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
 
     if (tmp->MightHaveExpandoObject()) {
         XPCJSRuntime *rt = tmp->GetRuntime();
-        TraverseExpandoObjectClosure closure = { tmp, cb };
-        rt->GetCompartmentMap().EnumerateRead(TraverseExpandoObjects, &closure);
+        XPCCompartmentSet &set = rt->GetCompartmentSet();
+        for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
+            xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
+                JS_GetCompartmentPrivate(r.front());
+            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "XPCWrappedNative expando object");
+            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                               priv->LookupExpandoObjectPreserveColor(tmp));
+        }
     }
 
     // XPCWrappedNative keeps its native object alive.
