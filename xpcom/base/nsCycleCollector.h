@@ -117,6 +117,11 @@ struct nsCycleCollectionJSRuntime : public nsCycleCollectionLanguageRuntime
      * |kind| is a nsGCType from nsIXPConnect.idl.
      */
     virtual void Collect(PRUint32 reason, PRUint32 kind) = 0;
+
+    /**
+     * Get the JS cycle collection participant.
+     */
+    virtual nsCycleCollectionParticipant *GetParticipant() = 0;
 };
 
 #ifdef DEBUG

@@ -119,7 +119,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
 
         JSObject *obj = tmp->GetFlatJSObjectPreserveColor();
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mFlatJSObject");
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, obj);
+        cb.NoteJSChild(obj);
     }
 
     if (tmp->MightHaveExpandoObject()) {
@@ -129,8 +129,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
             xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
                 JS_GetCompartmentPrivate(r.front());
             NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "XPCWrappedNative expando object");
-            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                               priv->LookupExpandoObjectPreserveColor(tmp));
+            cb.NoteJSChild(priv->LookupExpandoObjectPreserveColor(tmp));
         }
     }
 
