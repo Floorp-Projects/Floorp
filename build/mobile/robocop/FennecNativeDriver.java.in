@@ -70,7 +70,7 @@ import org.json.*;
 import com.jayway.android.robotium.solo.Solo;
 
 public class FennecNativeDriver implements Driver {
-    private static final int FRAME_TIME_THRESHOLD = 17;     // allow 17ms per frame (~60fps)
+    private static final int FRAME_TIME_THRESHOLD = 25;     // allow 25ms per frame (40fps)
 
     // Map of IDs to element names.
     private HashMap mLocators = null;
@@ -231,20 +231,27 @@ public class FennecNativeDriver implements Driver {
         try {
             Object [] params = null;
             List<Long> frames = (List<Long>)_stopFrameRecording.invoke(null, params);
-            int numDelays = 0;
+            int badness = 0;
             for (int i = 1; i < frames.size(); i++) {
-                if (frames.get(i) - frames.get(i-1) > FRAME_TIME_THRESHOLD) {
-                    numDelays++;
+                long frameTime = frames.get(i) - frames.get(i - 1);
+                int delay = (int)(frameTime - FRAME_TIME_THRESHOLD);
+                // for each frame we miss, add the square of the delay. This
+                // makes large delays much worse than small delays.
+                if (delay > 0) {
+                    badness += delay * delay;
                 }
             }
-            return numDelays;
+            // Don't do any averaging of the numbers because really we want to
+            // know how bad the jank was at its worst
+            return badness;
         } catch (IllegalAccessException e) {
             log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
             log(LogLevel.ERROR, e);
         }
 
-        return 0;
+        // higher values are worse, and the test failing is the worst!
+        return Integer.MAX_VALUE;
     }
 
     public void startCheckerboardRecording() {
