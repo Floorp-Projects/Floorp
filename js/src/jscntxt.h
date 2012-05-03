@@ -97,9 +97,10 @@ struct JSSharpObjectMap {
 namespace js {
 
 namespace mjit {
-class JaegerCompartment;
+class JaegerRuntime;
 }
 
+class MathCache;
 class WeakMapBase;
 class InterpreterFrames;
 
@@ -274,17 +275,37 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     JSC::ExecutableAllocator *execAlloc_;
     WTF::BumpPointerAllocator *bumpAlloc_;
+#ifdef JS_METHODJIT
+    js::mjit::JaegerRuntime *jaegerRuntime_;
+#endif
 
     JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
     WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
+    js::mjit::JaegerRuntime *createJaegerRuntime(JSContext *cx);
 
   public:
-    JSC::ExecutableAllocator *getExecutableAllocator(JSContext *cx) {
+    JSC::ExecutableAllocator *getExecAlloc(JSContext *cx) {
         return execAlloc_ ? execAlloc_ : createExecutableAllocator(cx);
+    }
+    JSC::ExecutableAllocator &execAlloc() {
+        JS_ASSERT(execAlloc_);
+        return *execAlloc_;
     }
     WTF::BumpPointerAllocator *getBumpPointerAllocator(JSContext *cx) {
         return bumpAlloc_ ? bumpAlloc_ : createBumpPointerAllocator(cx);
     }
+#ifdef JS_METHODJIT
+    js::mjit::JaegerRuntime *getJaegerRuntime(JSContext *cx) {
+        return jaegerRuntime_ ? jaegerRuntime_ : createJaegerRuntime(cx);
+    }
+    bool hasJaegerRuntime() const {
+        return jaegerRuntime_;
+    }
+    js::mjit::JaegerRuntime &jaegerRuntime() {
+        JS_ASSERT(hasJaegerRuntime());
+        return *jaegerRuntime_;
+    }
+#endif
 
     /* Base address of the native stack for the current thread. */
     uintptr_t           nativeStackBase;
@@ -595,13 +616,15 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     bool                waiveGCQuota;
 
-    /*
-     * The GSN cache is per thread since even multi-cx-per-thread embeddings
-     * do not interleave js_GetSrcNote calls.
-     */
-    js::GSNCache        gsnCache;
+  private:
+    js::MathCache *mathCache_;
+    js::MathCache *createMathCache(JSContext *cx);
+  public:
+    js::MathCache *getMathCache(JSContext *cx) {
+        return mathCache_ ? mathCache_ : createMathCache(cx);
+    }
 
-    /* Property cache for faster call/get/set invocation. */
+    js::GSNCache        gsnCache;
     js::PropertyCache   propertyCache;
 
     /* State used by jsdtoa.cpp. */
@@ -742,7 +765,8 @@ struct JSRuntime : js::RuntimeFriendFields
     }
 
     void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
-                             size_t *regexpCode, size_t *stackCommitted, size_t *gcMarker);
+                             size_t *mjitCode, size_t *regexpCode, size_t *unusedCodeMemory,
+                             size_t *stackCommitted, size_t *gcMarker);
 };
 
 /* Common macros to access thread-local caches in JSRuntime. */
@@ -1055,7 +1079,7 @@ struct JSContext : js::ContextFriendFields
 #ifdef JS_METHODJIT
     bool                 methodJitEnabled;
 
-    inline js::mjit::JaegerCompartment *jaegerCompartment();
+    js::mjit::JaegerRuntime &jaegerRuntime() { return runtime->jaegerRuntime(); }
 #endif
 
     bool                 inferenceEnabled;

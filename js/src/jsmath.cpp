@@ -152,7 +152,7 @@ math_acos(JSContext *cx, unsigned argc, Value *vp)
         return JS_TRUE;
     }
 #endif
-    MathCache *mathCache = GetMathCache(cx);
+    MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
     z = mathCache->lookup(acos, x);
@@ -177,7 +177,7 @@ math_asin(JSContext *cx, unsigned argc, Value *vp)
         return JS_TRUE;
     }
 #endif
-    MathCache *mathCache = GetMathCache(cx);
+    MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
     z = mathCache->lookup(asin, x);
@@ -196,7 +196,7 @@ math_atan(JSContext *cx, unsigned argc, Value *vp)
     }
     if (!ToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    MathCache *mathCache = GetMathCache(cx);
+    MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
     z = mathCache->lookup(atan, x);
@@ -287,7 +287,7 @@ math_cos(JSContext *cx, unsigned argc, Value *vp)
     }
     if (!ToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    MathCache *mathCache = GetMathCache(cx);
+    MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
     z = mathCache->lookup(cos, x);
@@ -320,7 +320,7 @@ math_exp(JSContext *cx, unsigned argc, Value *vp)
     }
     if (!ToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    MathCache *mathCache = GetMathCache(cx);
+    MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
     z = mathCache->lookup(math_exp_body, x);
@@ -367,7 +367,7 @@ math_log(JSContext *cx, unsigned argc, Value *vp)
         return JS_TRUE;
     }
 #endif
-    MathCache *mathCache = GetMathCache(cx);
+    MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
     z = mathCache->lookup(log, x);
@@ -603,7 +603,7 @@ math_sin(JSContext *cx, unsigned argc, Value *vp)
     }
     if (!ToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    MathCache *mathCache = GetMathCache(cx);
+    MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
     z = mathCache->lookup(sin, x);
@@ -622,7 +622,7 @@ js_math_sqrt(JSContext *cx, unsigned argc, Value *vp)
     }
     if (!ToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    MathCache *mathCache = GetMathCache(cx);
+    MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
     z = mathCache->lookup(sqrt, x);
@@ -641,7 +641,7 @@ math_tan(JSContext *cx, unsigned argc, Value *vp)
     }
     if (!ToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    MathCache *mathCache = GetMathCache(cx);
+    MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
     z = mathCache->lookup(tan, x);

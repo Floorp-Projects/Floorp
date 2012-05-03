@@ -63,10 +63,6 @@ typedef HashMap<JSFunction *,
                 DefaultHasher<JSFunction *>,
                 SystemAllocPolicy> ToSourceCache;
 
-namespace mjit {
-class JaegerCompartment;
-}
-
 /* Defined in jsapi.cpp */
 extern Class dummy_class;
 
@@ -113,8 +109,6 @@ class NativeIterCache {
         data[getIndex(key)] = iterobj;
     }
 };
-
-class MathCache;
 
 /*
  * A single-entry cache for some base-10 double-to-string conversions. This
@@ -259,31 +253,6 @@ struct JSCompartment
     bool                         active;  // GC flag, whether there are active frames
     js::WrapperMap               crossCompartmentWrappers;
 
-#ifdef JS_METHODJIT
-  private:
-    /* This is created lazily because many compartments don't need it. */
-    js::mjit::JaegerCompartment  *jaegerCompartment_;
-    /*
-     * This function is here so that xpconnect/src/xpcjsruntime.cpp doesn't
-     * need to see the declaration of JaegerCompartment, which would require
-     * #including MethodJIT.h into xpconnect/src/xpcjsruntime.cpp, which is
-     * difficult due to reasons explained in bug 483677.
-     */
-  public:
-    bool hasJaegerCompartment() {
-        return !!jaegerCompartment_;
-    }
-
-    js::mjit::JaegerCompartment *jaegerCompartment() const {
-        JS_ASSERT(jaegerCompartment_);
-        return jaegerCompartment_;
-    }
-
-    bool ensureJaegerCompartmentExists(JSContext *cx);
-
-    size_t sizeOfMjitCode() const;
-#endif
-
     js::RegExpCompartment        regExps;
 
     size_t sizeOfShapeTable(JSMallocSizeOfFun mallocSizeOf);
@@ -394,10 +363,6 @@ struct JSCompartment
     js::DtoaCache dtoaCache;
 
   private:
-    js::MathCache                *mathCache;
-
-    js::MathCache *allocMathCache(JSContext *cx);
-
     /*
      * Weak reference to each global in this compartment that is a debuggee.
      * Each global has its own list of debuggers.
@@ -408,10 +373,6 @@ struct JSCompartment
     JSCompartment *thisForCtor() { return this; }
 
   public:
-    js::MathCache *getMathCache(JSContext *cx) {
-        return mathCache ? mathCache : allocMathCache(cx);
-    }
-
     /*
      * There are dueling APIs for debug mode. It can be enabled or disabled via
      * JS_SetDebugModeForCompartment. It is automatically enabled and disabled
@@ -452,14 +413,6 @@ struct JSCompartment
 };
 
 #define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)
-
-namespace js {
-static inline MathCache *
-GetMathCache(JSContext *cx)
-{
-    return cx->compartment->getMathCache(cx);
-}
-}
 
 inline void
 JSContext::setCompartment(JSCompartment *compartment)

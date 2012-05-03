@@ -466,13 +466,6 @@ JSContext::assertValidStackDepth(unsigned depth)
 #endif
 }
 
-#ifdef JS_METHODJIT
-inline js::mjit::JaegerCompartment *JSContext::jaegerCompartment()
-{
-    return compartment->jaegerCompartment();
-}
-#endif
-
 inline js::LifoAlloc &
 JSContext::typeLifoAlloc()
 {
