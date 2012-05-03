@@ -211,6 +211,14 @@ abstract public class GeckoApp
     public ArrayList<PackageInfo> mPackageInfoCache = new ArrayList<PackageInfo>();
 
     String[] getPluginDirectories() {
+
+        // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            File tegraDriverPath = new File("/system/lib/hw/gralloc.tegra.so");
+            if (tegraDriverPath.exists())
+                return new String[0];
+        }
+
         // we don't support Honeycomb
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
             Build.VERSION.SDK_INT < 14 /*Build.VERSION_CODES.ICE_CREAM_SANDWICH*/ )
