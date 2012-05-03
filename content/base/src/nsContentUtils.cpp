@@ -6079,13 +6079,18 @@ public:
                                      const char *objName)
   {
   }
+
   NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root)
   {
   }
-  NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void* root,
-                             nsCycleCollectionParticipant* helper)
+  NS_IMETHOD_(void) NoteJSRoot(void* root)
   {
   }
+  NS_IMETHOD_(void) NoteNativeRoot(void* root,
+                                   nsCycleCollectionParticipant* helper)
+  {
+  }
+
   NS_IMETHOD_(void) NoteJSChild(void* child)
   {
     if (child == mWrapper) {
