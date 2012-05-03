@@ -19,6 +19,8 @@ const SERVER = "http://localhost:4444";
 const IGNORE_HISTOGRAM = "test::ignore_me";
 const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
 const IGNORE_CLONED_HISTOGRAM = "test::ignore_me_also";
+const ADDON_NAME = "Telemetry test addon";
+const ADDON_HISTOGRAM = "addon-histogram";
 
 const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
@@ -64,6 +66,12 @@ function telemetryObserver(aSubject, aTopic, aData) {
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
   TelemetryPing.observe(histogramsFile, "test-save-histograms", gTestUUID);
   TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
+
+  Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM, 1, 5, 6,
+                                   Telemetry.HISTOGRAM_LINEAR);
+  h1 = Telemetry.getAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM);
+  h1.add(1);
+
   telemetry_ping();
 }
 
@@ -198,6 +206,11 @@ function checkHistograms(request, response) {
 
   do_check_true('MEMORY_JS_GC_HEAP' in payload.histograms); // UNITS_BYTES
   do_check_true('MEMORY_JS_COMPARTMENTS_SYSTEM' in payload.histograms); // UNITS_COUNT
+
+  // We should have included addon histograms.
+  do_check_true("addonHistograms" in payload);
+  do_check_true(ADDON_NAME in payload.addonHistograms);
+  do_check_true(ADDON_HISTOGRAM in payload.addonHistograms[ADDON_NAME]);
 
   do_check_true(("mainThread" in payload.slowSQL) &&
                 ("otherThreads" in payload.slowSQL));
