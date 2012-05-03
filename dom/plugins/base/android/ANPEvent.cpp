@@ -67,20 +67,11 @@ anp_event_postEvent(NPP inst, const ANPEvent* event)
 {
   LOG("%s", __PRETTY_FUNCTION__);
 
-  JNIEnv* env = GetJNIForThread();
-  if (!env)
-    return;
-
-  if (!mozilla::AndroidBridge::Bridge()) {
-    LOG("no bridge in %s!!!!", __PRETTY_FUNCTION__);
-    return;
-  }
-
   nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(inst->ndata);
   NPPluginFuncs* pluginFunctions = pinst->GetPlugin()->PluginFuncs();
-  mozilla::AndroidBridge::Bridge()->PostToJavaThread(env,
-                                                     new PluginEventRunnable(inst, const_cast<ANPEvent*>(event), pluginFunctions),
-                                                     true);
+  PluginEventRunnable* e = new PluginEventRunnable(inst, const_cast<ANPEvent*>(event), pluginFunctions);
+  
+  NS_DispatchToMainThread(e);
   LOG("returning from %s", __PRETTY_FUNCTION__);
 }
 
