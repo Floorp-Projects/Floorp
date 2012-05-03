@@ -92,7 +92,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     sourceMapMap(NULL),
     debugScriptMap(NULL)
 {
-    PodArrayZero(evalCache);
     setGCMaxMallocBytes(rt->gcMaxMallocBytes * 0.9);
 }
 
@@ -102,11 +101,6 @@ JSCompartment::~JSCompartment()
     Foreground::delete_(scriptCountsMap);
     Foreground::delete_(sourceMapMap);
     Foreground::delete_(debugScriptMap);
-
-#ifdef DEBUG
-    for (size_t i = 0; i < ArrayLength(evalCache); ++i)
-        JS_ASSERT(!evalCache[i]);
-#endif
 }
 
 bool
@@ -536,21 +530,6 @@ void
 JSCompartment::purge()
 {
     dtoaCache.purge();
-
-    /*
-     * Clear the hash and reset all evalHashLink to null before the GC. This
-     * way MarkChildren(trc, JSScript *) can assume that JSScript::u.object is
-     * not null when we have script owned by an object and not from the eval
-     * cache.
-     */
-    for (size_t i = 0; i < ArrayLength(evalCache); ++i) {
-        for (JSScript **listHeadp = &evalCache[i]; *listHeadp; ) {
-            JSScript *script = *listHeadp;
-            JS_ASSERT(GetGCThingTraceKind(script) == JSTRACE_SCRIPT);
-            *listHeadp = NULL;
-            listHeadp = &script->evalHashLink();
-        }
-    }
 }
 
 void
