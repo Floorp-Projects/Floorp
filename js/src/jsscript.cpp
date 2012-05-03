@@ -1789,21 +1789,21 @@ js::CloneScript(JSContext *cx, JSScript *src)
     Bindings bindings(cx);
     BindingNames names(cx);
     if (!src->bindings.getLocalNameArray(cx, &names))
-        return false;
+        return NULL;
 
     for (unsigned i = 0; i < names.length(); ++i) {
         if (JSAtom *atom = names[i].maybeAtom) {
             if (!bindings.add(cx, RootedVarAtom(cx, atom), names[i].kind))
-                return false;
+                return NULL;
         } else {
             uint16_t _;
             if (!bindings.addDestructuring(cx, &_))
-                return false;
+                return NULL;
         }
     }
 
     if (!bindings.ensureShape(cx))
-        return false;
+        return NULL;
     bindings.makeImmutable();
 
     /* Objects */
@@ -1816,7 +1816,7 @@ js::CloneScript(JSContext *cx, JSScript *src)
                               ? CloneStaticBlockObject(cx, vector[i]->asStaticBlock(), objects, src)
                               : CloneInterpretedFunction(cx, vector[i]->toFunction());
             if (!clone || !objects.append(clone))
-                return false;
+                return NULL;
         }
     }
 
@@ -1828,7 +1828,7 @@ js::CloneScript(JSContext *cx, JSScript *src)
         for (unsigned i = 0; i < nregexps; i++) {
             JSObject *clone = CloneScriptRegExpObject(cx, vector[i]->asRegExp());
             if (!clone || !regexps.append(clone))
-                return false;
+                return NULL;
         }
     }
 
