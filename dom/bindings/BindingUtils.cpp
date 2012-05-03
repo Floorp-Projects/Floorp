@@ -9,7 +9,7 @@
 namespace mozilla {
 namespace dom {
 
-bool
+static bool
 DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs)
 {
   for (; cs->name; ++cs) {
