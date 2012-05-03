@@ -13,11 +13,16 @@
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
 
+   - Neither the name of Internet Society, IETF or IETF Trust, nor the
+   names of specific contributors, may be used to endorse or promote
+   products derived from this software without specific prior written
+   permission.
+
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-   A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
-   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+   OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
    PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
@@ -70,14 +75,7 @@ static void exp_rotation(celt_norm *X, int len, int dir, int stride, int K, int 
    opus_val16 gain, theta;
    int stride2=0;
    int factor;
-   /*int i;
-   if (len>=30)
-   {
-      for (i=0;i<len;i++)
-         X[i] = 0;
-      X[14] = 1;
-      K=5;
-   }*/
+
    if (2*K>=len || spread==SPREAD_NONE)
       return;
    factor = SPREAD_FACTOR[spread-1];
@@ -91,9 +89,8 @@ static void exp_rotation(celt_norm *X, int len, int dir, int stride, int K, int 
    if (len>=8*stride)
    {
       stride2 = 1;
-      /* This is just a simple way of computing sqrt(len/stride) with rounding.
-         It's basically incrementing long as (stride2+0.5)^2 < len/stride.
-         I _think_ it is bit-exact */
+      /* This is just a simple (equivalent) way of computing sqrt(len/stride) with rounding.
+         It's basically incrementing long as (stride2+0.5)^2 < len/stride. */
       while ((stride2*stride2+stride2)*stride + (stride>>2) < len)
          stride2++;
    }
@@ -113,13 +110,6 @@ static void exp_rotation(celt_norm *X, int len, int dir, int stride, int K, int 
             exp_rotation1(X+i*len, len, stride2, s, -c);
       }
    }
-   /*if (len>=30)
-   {
-      for (i=0;i<len;i++)
-         printf ("%f ", X[i]);
-      printf ("\n");
-      exit(0);
-   }*/
 }
 
 /** Takes the pitch vector and the decoded residual vector, computes the gain
@@ -233,7 +223,6 @@ unsigned alg_quant(celt_norm *X, int N, int K, int spread, int B, ec_enc *enc
          while (++j<N);
          sum = QCONST16(1.f,14);
       }
-      /* Do we have sufficient accuracy here? */
       rcp = EXTRACT16(MULT16_32_Q16(K-1, celt_rcp(sum)));
       j=0; do {
 #ifdef FIXED_POINT
