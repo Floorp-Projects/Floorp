@@ -4393,8 +4393,8 @@ xpc_GetJSPrivate(JSObject *obj)
 // and used.
 nsresult
 xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop,
-                        JSObject *proto, bool preferXray, const nsACString &sandboxName,
-                        nsISupports *identityPtr = nsnull);
+                        JSObject *proto, bool preferXray, const nsACString &sandboxName);
+
 // Helper for evaluating scripts in a sandbox object created with
 // xpc_CreateSandboxObject(). The caller is responsible of ensuring
 // that *rval doesn't get collected during the call or usage after the
