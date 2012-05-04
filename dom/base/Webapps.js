@@ -232,7 +232,7 @@ WebappsApplication.prototype = {
   launch: function(aStartPoint) {
     let request = this.createRequest();
     cpmm.sendAsyncMessage("Webapps:Launch", { origin: this._origin,
-                                              startPoint: aStartPoint,
+                                              startPoint: aStartPoint || "",
                                               oid: this._id,
                                               requestID: this.getRequestId(request) });
     return request;

@@ -487,7 +487,11 @@ var WebappsHelper = {
             return;
 
           let manifest = new DOMApplicationManifest(aManifest, json.origin);
-          shell.sendEvent(content, "mozChromeEvent", { type: "webapps-launch", url: manifest.fullLaunchPath(), origin: json.origin });
+          shell.sendEvent(content, "mozChromeEvent", {
+            "type": "webapps-launch",
+            "url": manifest.fullLaunchPath(json.startPoint),
+            "origin": json.origin
+          });
         });
         break;
       case "webapps-ask-install":
