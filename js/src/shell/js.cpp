@@ -822,7 +822,7 @@ EvaluateWithLocation(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-Evaluate(JSContext *cx, unsigned argc, jsval *vp)
+EvaluateCommon(JSContext *cx, unsigned argc, jsval *vp, bool compileAndGo)
 {
     if (argc != 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
@@ -848,7 +848,30 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    return JS_EvaluateUCScript(cx, thisobj, codeChars, codeLength, "@evaluate", 0, vp);
+    if (compileAndGo) {
+        // JS_EvaluateUCScript always enables the compile-and-go option.
+        return JS_EvaluateUCScript(cx, thisobj, codeChars, codeLength, "@evaluate", 1, vp);
+    } else {
+        uint32_t saved = JS_GetOptions(cx);
+
+        JS_SetOptions(cx, saved & ~JSOPTION_COMPILE_N_GO);
+        JSScript *script = JS_CompileUCScript(cx, thisobj, codeChars, codeLength, "@evaluate", 1);
+        JS_SetOptions(cx, saved);
+
+        return script && JS_ExecuteScript(cx, thisobj, script, vp);
+    }
+}
+
+static JSBool
+Evaluate(JSContext *cx, unsigned argc, jsval *vp)
+{
+    return EvaluateCommon(cx, argc, vp, true);
+}
+
+static JSBool
+EvaluateNonCompileAndGo(JSContext *cx, unsigned argc, jsval *vp)
+{
+    return EvaluateCommon(cx, argc, vp, false);
 }
 
 static JSString *
@@ -3484,6 +3507,10 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("evaluate", Evaluate, 1, 0,
 "evaluate(code)",
 "  Evaluate code as though it were the contents of a file."),
+
+    JS_FN_HELP("evaluateNonCompileAndGo", EvaluateNonCompileAndGo, 1, 0,
+"evaluateNonCompileAndGo(code)",
+"  Evaluate code like evaluate() but with compile-and-go turned off."),
 
     JS_FN_HELP("evalWithLocation", EvaluateWithLocation, 3, 0,
 "evalWithLocation(code, filename, lineno)",
