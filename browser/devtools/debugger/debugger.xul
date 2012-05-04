@@ -81,6 +81,8 @@
       <xul:button id="step-in">&debuggerUI.stepInButton;</xul:button>
       <xul:button id="step-out">&debuggerUI.stepOutButton;</xul:button>
       <xul:menulist id="scripts"/>
+      <xul:textbox id="scripts-search" type="search"
+                   emptytext="&debuggerUI.emptyFilterText;"/>
     </xul:toolbar>
     <div id="dbg-content" class="hbox flex">
       <div id="stack" class="vbox">
