@@ -271,6 +271,7 @@ NativeKey::NativeKey(HKL aKeyboardLayout,
       mVirtualKeyCode = mOriginalVirtualKeyCode = static_cast<PRUint8>(
         ::MapVirtualKeyEx(GetScanCodeWithExtendedFlag(),
                           MAPVK_VSC_TO_VK_EX, aKeyboardLayout));
+      break;
     default:
       MOZ_NOT_REACHED("Unsupported message");
       break;
