@@ -8,23 +8,23 @@ See the adjacent README.txt for more details.
 import os, sys
 from subprocess import list2cmdline, call
 
-from results import NullTestOutput
-from tests import TestCase
-from results import ResultsSink
+from lib.results import NullTestOutput
+from lib.tests import TestCase
+from lib.results import ResultsSink
 
 if (sys.platform.startswith('linux') or
     sys.platform.startswith('darwin')
    ):
-    from tasks_unix import run_all_tests
+    from lib.tasks_unix import run_all_tests
 else:
-    from tasks_win import run_all_tests
+    from lib.tasks_win import run_all_tests
 
 def run_tests(options, tests, results):
     """Run the given tests, sending raw results to the given results accumulator."""
     pb = None
     if not options.hide_progress:
         try:
-            from progressbar import ProgressBar
+            from lib.progressbar import ProgressBar
             pb = ProgressBar('', len(tests), 16)
         except ImportError:
             pass
@@ -170,7 +170,7 @@ def load_tests(options, js_shell, requested_paths, excluded_paths):
         skip_list: [iterable<Test>] Tests found but skipped.
         test_list: [iterable<Test>] Tests found that should be run.
     """
-    import manifest
+    import lib.manifest as manifest
 
     if js_shell is None:
         xul_tester = manifest.NullXULInfoTester()
