@@ -1716,14 +1716,16 @@ nsOverflowContinuationTracker::Finish(nsIFrame* aChild)
 {
   NS_PRECONDITION(aChild, "null ptr");
   NS_PRECONDITION(aChild->GetNextInFlow(),
-                "supposed to call Finish *before* deleting next-in-flow!");
+                  "supposed to call Finish *before* deleting next-in-flow!");
 
-  for (nsIFrame* f = aChild; f; f = f->GetNextInFlow()) {
-    // Make sure we drop all references if the only frame
-    // in the overflow containers list is about to be destroyed
+  for (nsIFrame* f = aChild; f; ) {
+    // Make sure we drop all references if all the frames in the
+    // overflow containers list are about to be destroyed.
+    nsIFrame* nif = f->GetNextInFlow();
     if (mOverflowContList &&
-        mOverflowContList->FirstChild() == f->GetNextInFlow() &&
-        !f->GetNextInFlow()->GetNextSibling()) {
+        mOverflowContList->FirstChild() == nif &&
+        (!nif->GetNextSibling() ||
+         nif->GetNextSibling() == nif->GetNextInFlow())) {
       mOverflowContList = nsnull;
       mPrevOverflowCont = nsnull;
       mSentry = nsnull;
@@ -1734,12 +1736,13 @@ nsOverflowContinuationTracker::Finish(nsIFrame* aChild)
       // Step past aChild
       nsIFrame* prevOverflowCont = mPrevOverflowCont;
       StepForward();
-      if (mPrevOverflowCont == f->GetNextInFlow()) {
+      if (mPrevOverflowCont == nif) {
         // Pull mPrevOverflowChild back to aChild's prevSibling:
         // aChild will be removed from our list by our caller
         mPrevOverflowCont = prevOverflowCont;
       }
     }
+    f = nif;
   }
 }
 
