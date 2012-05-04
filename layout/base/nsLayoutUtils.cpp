@@ -4725,8 +4725,7 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
     nsIContent* content = f->GetContent();
     // Also, if there is more than one frame corresponding to a single
     // content node, we want the outermost one.
-    if (!(f->GetParent() &&
-          f->GetParent()->GetContent() == content) &&
+    if (!(f->GetParent() && f->GetParent()->GetContent() == content) &&
         f->GetType() != nsGkAtoms::inlineFrame) {
       nsStyleCoord stylePosWidth = f->GetStylePosition()->mWidth;
       nsStyleCoord stylePosHeight = f->GetStylePosition()->mHeight;
