@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,17 +15,16 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bolian Yin (bolian.yin@sun.com)
- *   Ginn Chen (ginn.chen@sun.com)
+ *   Original Author: Håkan Waara <hwaara@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -38,23 +36,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_ROOT_ACCESSIBLE_WRAP_H__
-#define __NS_ROOT_ACCESSIBLE_WRAP_H__
-
-#include "nsRootAccessible.h"
-
-typedef nsRootAccessible nsRootAccessibleWrap;
-
-/* nsNativeRootAccessibleWrap is the accessible class for gtk+ native window.
- * The instance of nsNativeRootAccessibleWrap is a child of MaiAppRoot instance.
- * It is added into root when the toplevel window is created, and removed
- * from root when the toplevel window is destroyed.
+/* For documentation of the accessibility architecture, 
+ * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
-class nsNativeRootAccessibleWrap: public nsRootAccessible
+
+#ifndef mozilla_a11y_RootAccessibleWrap_h__
+#define mozilla_a11y_RootAccessibleWrap_h__
+
+#include "RootAccessible.h"
+
+namespace mozilla {
+namespace a11y {
+
+struct objc_class;
+
+class RootAccessibleWrap : public RootAccessible
 {
 public:
-    nsNativeRootAccessibleWrap(AtkObject *aAccessible);
-    ~nsNativeRootAccessibleWrap();
+  RootAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
+                     nsIPresShell* aPresShell);
+  virtual ~RootAccessibleWrap();
+
+    Class GetNativeType ();
+    
+    // let's our native accessible get in touch with the
+    // native cocoa view that is our accessible parent.
+    void GetNativeWidget (void **aOutView);
 };
 
-#endif   /* __NS_ROOT_ACCESSIBLE_WRAP_H__ */
+} // namespace a11y
+} // namespace mozilla
+
+#endif

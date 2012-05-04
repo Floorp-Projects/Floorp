@@ -15,12 +15,13 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: Håkan Waara <hwaara@gmail.com>
+ *   Aaron Leventhal <aaronl@netscape.com> (original author)
+ *   Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,30 +37,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+#ifndef mozilla_a11y_RootAccessibleWrap_h__
+#define mozilla_a11y_RootAccessibleWrap_h__
 
-#ifndef _nsRootAccessibleWrap_H_
-#define _nsRootAccessibleWrap_H_
+#include "RootAccessible.h"
 
-#include "nsRootAccessible.h"
+namespace mozilla {
+namespace a11y {
 
-struct objc_class;
-
-class nsRootAccessibleWrap : public nsRootAccessible
+class RootAccessibleWrap : public RootAccessible
 {
 public:
-  nsRootAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
-                       nsIPresShell* aPresShell);
-  virtual ~nsRootAccessibleWrap();
+  RootAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
+                     nsIPresShell* aPresShell);
+  virtual ~RootAccessibleWrap();
 
-    Class GetNativeType ();
-    
-    // let's our native accessible get in touch with the
-    // native cocoa view that is our accessible parent.
-    void GetNativeWidget (void **aOutView);
+  // RootAccessible
+  virtual void DocumentActivated(nsDocAccessible* aDocument);
 };
 
+} // namespace a11y
+} // namespace mozilla
 
 #endif
