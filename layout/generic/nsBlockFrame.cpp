@@ -281,7 +281,6 @@ DestroyOverflowLines(void* aPropertyValue)
   NS_ERROR("Overflow lines should never be destroyed by the FramePropertyTable");
 }
 
-NS_DECLARE_FRAME_PROPERTY(LineCursorProperty, nsnull)
 NS_DECLARE_FRAME_PROPERTY(OverflowLinesProperty, DestroyOverflowLines)
 NS_DECLARE_FRAME_PROPERTY(OverflowOutOfFlowsProperty,
                           nsContainerFrame::DestroyFrameList)
@@ -312,13 +311,12 @@ nsBlockFrame::~nsBlockFrame()
 void
 nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
+  ClearLineCursor();
   DestroyAbsoluteFrames(aDestructRoot);
-
   mFloats.DestroyFramesFrom(aDestructRoot);
-
   nsPresContext* presContext = PresContext();
-
   nsLineBox::DeleteLineList(presContext, mLines, aDestructRoot);
+
   // Now clear mFrames, since we've destroyed all the frames in it.
   mFrames.Clear();
 
@@ -2269,10 +2267,13 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         // The line is empty. Try the next one.
         NS_ASSERTION(pulledLine->GetChildCount() == 0 &&
                      !pulledLine->mFirstChild, "bad empty line");
-        FreeLineBox(pulledLine);
+        nextInFlow->FreeLineBox(pulledLine);
         continue;
       }
 
+      if (pulledLine == nextInFlow->GetLineCursor()) {
+        nextInFlow->ClearLineCursor();
+      }
       ReparentFrames(pulledFrames, nextInFlow, this);
 
       NS_ASSERTION(pulledFrames.LastChild() == pulledLine->LastChild(),
@@ -2387,6 +2388,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   }
 
 #ifdef DEBUG
+  VerifyLines(true);
+  VerifyOverflowSituation();
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent - 1);
     ListTag(stdout);
@@ -2462,7 +2465,7 @@ nsBlockFrame::DeleteLine(nsBlockReflowState& aState,
     NS_ASSERTION(aState.mCurrentLine == aLine,
                  "using function more generally than designed, "
                  "but perhaps OK now");
-    nsLineBox *line = aLine;
+    nsLineBox* line = aLine;
     aLine = mLines.erase(aLine);
     FreeLineBox(line);
     // Mark the previous margin of the next line dirty since we need to
@@ -2694,7 +2697,7 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState&  aState,
     Invalidate(fromLine->GetVisualOverflowArea());
     fromLineList->erase(aFromLine);
     // aFromLine is now invalid
-    FreeLineBox(fromLine);
+    aFromContainer->FreeLineBox(fromLine);
 
     // Put any remaining overflow lines back.
     if (aFromOverflowLine) {
@@ -2710,6 +2713,7 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState&  aState,
 
 #ifdef DEBUG
   VerifyLines(true);
+  VerifyOverflowSituation();
 #endif
 
   return frame;
@@ -4469,6 +4473,7 @@ nsBlockFrame::DrainOverflowLines()
   // First grab the prev-in-flows overflow lines
   nsBlockFrame* prevBlock = (nsBlockFrame*) GetPrevInFlow();
   if (prevBlock) {
+    prevBlock->ClearLineCursor();
     overflowLines = prevBlock->RemoveOverflowLines();
     if (overflowLines) {
       NS_ASSERTION(!overflowLines->mLines.empty(),
@@ -5228,8 +5233,7 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
     return;
 
   // Try to use the cursor if it exists, otherwise fall back to the first line
-  nsLineBox* cursor = static_cast<nsLineBox*>
-    (aFrame->Properties().Get(LineCursorProperty()));
+  nsLineBox* cursor = aFrame->GetLineCursor();
   if (!cursor) {
     line_iterator iter = aFrame->begin_lines();
     if (iter != aFrame->end_lines()) {
@@ -5412,8 +5416,6 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
     return NS_OK;
   }
 
-  nsIPresShell* presShell = presContext->PresShell();
-
   // Find the line that contains deletedFrame
   nsLineList::iterator line_start = mLines.begin(),
                        line_end = mLines.end();
@@ -5562,7 +5564,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
           line = line_end;
         }
       }
-      cur->Destroy(presShell);
+      FreeLineBox(cur);
 
       // If we're removing a line, ReflowDirtyLines isn't going to
       // know that it needs to slide lines unless something is marked
@@ -5624,6 +5626,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
 
 #ifdef DEBUG
   VerifyLines(true);
+  VerifyOverflowSituation();
 #endif
 
   // Advance to next flow block if the frame has more continuations
@@ -5705,7 +5708,7 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
           } else {
             line = mLines.erase(line);
           }
-          lineBox->Destroy(aPresContext->PresShell());
+          FreeLineBox(lineBox);
           if (line != line_end) {
             // Line disappeared, so tell next line it may have to change position
             line->MarkPreviousMarginDirty();
@@ -7151,6 +7154,8 @@ nsBlockFrame::VerifyLines(bool aFinalCheckOK)
     return;
   }
 
+  nsLineBox* cursor = GetLineCursor();
+
   // Add up the counts on each line. Also validate that IsFirstLine is
   // set properly.
   PRInt32 count = 0;
@@ -7158,6 +7163,9 @@ nsBlockFrame::VerifyLines(bool aFinalCheckOK)
   for (line = begin_lines(), line_end = end_lines();
        line != line_end;
        ++line) {
+    if (line == cursor) {
+      cursor = nsnull;
+    }
     if (aFinalCheckOK) {
       NS_ABORT_IF_FALSE(line->GetChildCount(), "empty line");
       if (line->IsBlock()) {
@@ -7190,17 +7198,29 @@ nsBlockFrame::VerifyLines(bool aFinalCheckOK)
       NS_ASSERTION(frame == line->mFirstChild, "bad line list");
     }
   }
+
+  if (cursor) {
+    FrameLines* overflowLines = GetOverflowLines();
+    if (overflowLines) {
+      line_iterator line = overflowLines->mLines.begin();
+      line_iterator line_end = overflowLines->mLines.end();
+      for (; line != line_end; ++line) {
+        if (line == cursor) {
+          cursor = nsnull;
+          break;
+        }
+      }
+    }
+  }
+  NS_ASSERTION(!cursor, "stale LineCursorProperty");
 }
 
-// Its possible that a frame can have some frames on an overflow
-// list. But its never possible for multiple frames to have overflow
-// lists. Check that this fact is actually true.
 void
 nsBlockFrame::VerifyOverflowSituation()
 {
   nsBlockFrame* flow = static_cast<nsBlockFrame*>(GetFirstInFlow());
   while (flow) {
-    FrameLines* overflowLines = GetOverflowLines();
+    FrameLines* overflowLines = flow->GetOverflowLines();
     if (overflowLines) {
       NS_ASSERTION(!overflowLines->mLines.empty(),
                    "should not be empty if present");
@@ -7209,6 +7229,20 @@ nsBlockFrame::VerifyOverflowSituation()
       NS_ASSERTION(overflowLines->mLines.front()->mFirstChild ==
                    overflowLines->mFrames.FirstChild(),
                    "bad overflow frames / lines");
+    }
+    nsLineBox* cursor = flow->GetLineCursor();
+    if (cursor) {
+      line_iterator line = flow->begin_lines();
+      line_iterator line_end = flow->end_lines();
+      for (; line != line_end && line != cursor; ++line)
+        ;
+      if (line == line_end && overflowLines) {
+        line = overflowLines->mLines.begin();
+        line_end = overflowLines->mLines.end();
+        for (; line != line_end && line != cursor; ++line)
+          ;
+        }
+      MOZ_ASSERT(line != line_end, "stale LineCursorProperty");
     }
     flow = static_cast<nsBlockFrame*>(flow->GetNextInFlow());
   }
