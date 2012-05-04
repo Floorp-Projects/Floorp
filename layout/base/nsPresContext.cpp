@@ -1200,10 +1200,10 @@ nsPresContext::Observe(nsISupports* aSubject,
   return NS_ERROR_FAILURE;
 }
 
-nsPresContext*
-nsPresContext::GetParentPresContext()
+static nsPresContext*
+GetParentPresContext(nsPresContext* aPresContext)
 {
-  nsIPresShell* shell = GetPresShell();
+  nsIPresShell* shell = aPresContext->GetPresShell();
   if (shell) {
     nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
     if (rootFrame) {
@@ -1215,27 +1215,13 @@ nsPresContext::GetParentPresContext()
   return nsnull;
 }
 
-nsPresContext*
-nsPresContext::GetToplevelContentDocumentPresContext()
-{
-  if (IsChrome())
-    return nsnull;
-  nsPresContext* pc = this;
-  for (;;) {
-    nsPresContext* parent = pc->GetParentPresContext();
-    if (!parent || parent->IsChrome())
-      return pc;
-    pc = parent;
-  }
-}
-
 // We may want to replace this with something faster, maybe caching the root prescontext
 nsRootPresContext*
 nsPresContext::GetRootPresContext()
 {
   nsPresContext* pc = this;
   for (;;) {
-    nsPresContext* parent = pc->GetParentPresContext();
+    nsPresContext* parent = GetParentPresContext(pc);
     if (!parent)
       break;
     pc = parent;
@@ -2157,7 +2143,7 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags)
     return;
 
   nsPresContext* pc;
-  for (pc = this; pc; pc = pc->GetParentPresContext()) {
+  for (pc = this; pc; pc = GetParentPresContext(pc)) {
     if (pc->mFireAfterPaintEvents)
       break;
     pc->mFireAfterPaintEvents = true;

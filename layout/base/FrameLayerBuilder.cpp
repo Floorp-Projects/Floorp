@@ -1643,8 +1643,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         ownLayer->SetTransform(transform);
       }
 
-      ownLayer->SetIsFixedPosition(
-        !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(
+      ownLayer->SetIsFixedPosition(!nsLayoutUtils::ScrolledByViewportScrolling(
                                       activeScrolledRoot, mBuilder));
 
       // Update that layer's clip and visible rects.
