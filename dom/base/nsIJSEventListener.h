@@ -40,6 +40,7 @@
 
 #include "nsIScriptContext.h"
 #include "jsapi.h"
+#include "xpcpublic.h"
 #include "nsIDOMEventListener.h"
 
 class nsIScriptObjectOwner;
@@ -86,12 +87,12 @@ public:
 
   JSObject* GetEventScope() const
   {
-    return mScopeObject;
+    return xpc_UnmarkGrayObject(mScopeObject);
   }
 
   JSObject *GetHandler() const
   {
-    return mHandler;
+    return xpc_UnmarkGrayObject(mHandler);
   }
 
   // Set a handler for this event listener.  Must not be called if

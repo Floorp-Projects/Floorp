@@ -67,7 +67,7 @@ using namespace js;
 using namespace js::gc;
 
 bool
-PropertyTable::init(JSRuntime *rt, Shape *lastProp)
+ShapeTable::init(JSRuntime *rt, Shape *lastProp)
 {
     /*
      * Either we're creating a table for a large scope that was populated
@@ -82,7 +82,7 @@ PropertyTable::init(JSRuntime *rt, Shape *lastProp)
 
     /*
      * Use rt->calloc_ for memory accounting and overpressure handling
-     * without OOM reporting. See PropertyTable::change.
+     * without OOM reporting. See ShapeTable::change.
      */
     entries = (Shape **) rt->calloc_(sizeOfEntries(JS_BIT(sizeLog2)));
     if (!entries)
@@ -154,7 +154,7 @@ Shape::hashify(JSContext *cx)
         return false;
 
     JSRuntime *rt = cx->runtime;
-    PropertyTable *table = rt->new_<PropertyTable>(self->entryCount());
+    ShapeTable *table = rt->new_<ShapeTable>(self->entryCount());
     if (!table)
         return false;
 
@@ -175,7 +175,7 @@ Shape::hashify(JSContext *cx)
 #define HASH2(hash0,log2,shift) ((((hash0) << (log2)) >> (shift)) | 1)
 
 Shape **
-PropertyTable::search(jsid id, bool adding)
+ShapeTable::search(jsid id, bool adding)
 {
     JSHashNumber hash0, hash1, hash2;
     int sizeLog2;
@@ -253,7 +253,7 @@ PropertyTable::search(jsid id, bool adding)
 }
 
 bool
-PropertyTable::change(int log2Delta, JSContext *cx)
+ShapeTable::change(int log2Delta, JSContext *cx)
 {
     JS_ASSERT(entries);
 
@@ -291,7 +291,7 @@ PropertyTable::change(int log2Delta, JSContext *cx)
 }
 
 bool
-PropertyTable::grow(JSContext *cx)
+ShapeTable::grow(JSContext *cx)
 {
     JS_ASSERT(needsToGrow());
 
@@ -544,7 +544,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
 
     RootGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
-    PropertyTable *table = NULL;
+    ShapeTable *table = NULL;
     if (!inDictionaryMode()) {
         bool stableSlot =
             (slot == SHAPE_INVALID_SLOT) ||
@@ -899,7 +899,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
      * list and hash in place.
      */
     if (self->inDictionaryMode()) {
-        PropertyTable &table = self->lastProperty()->table();
+        ShapeTable &table = self->lastProperty()->table();
 
         if (SHAPE_HAD_COLLISION(*spp)) {
             *spp = SHAPE_REMOVED;
@@ -933,11 +933,11 @@ JSObject::removeProperty(JSContext *cx, jsid id)
 
         /* Consider shrinking table if its load factor is <= .25. */
         uint32_t size = table.capacity();
-        if (size > PropertyTable::MIN_SIZE && table.entryCount <= size >> 2)
+        if (size > ShapeTable::MIN_SIZE && table.entryCount <= size >> 2)
             (void) table.change(-1, cx);
     } else {
         /*
-         * Non-dictionary-mode property tables are shared immutables, so all we
+         * Non-dictionary-mode shape tables are shared immutables, so all we
          * need do is retract the last property and we'll either get or else
          * lazily make via a later hashify the exact table for the new property
          * lineage.
@@ -1012,7 +1012,7 @@ JSObject::replaceWithNewEquivalentShape(JSContext *cx, Shape *oldShape, Shape *n
         new (newShape) Shape(oldShape->base()->unowned(), 0);
     }
 
-    PropertyTable &table = self->lastProperty()->table();
+    ShapeTable &table = self->lastProperty()->table();
     Shape **spp = oldShape->isEmptyShape()
                   ? NULL
                   : table.search(oldShape->propidRef(), false);

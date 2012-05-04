@@ -6632,9 +6632,9 @@ nsDocument::RemoveFromRadioGroup(const nsAString& aName,
   nsCOMPtr<nsIContent> element = do_QueryInterface(aRadio);
   NS_ASSERTION(element, "radio controls have to be content elements");
   if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+    NS_ASSERTION(radioGroup->mRequiredRadioCount != 0,
+                 "mRequiredRadioCount about to wrap below 0!");
     radioGroup->mRequiredRadioCount--;
-    NS_ASSERTION(radioGroup->mRequiredRadioCount >= 0,
-                 "mRequiredRadioCount shouldn't be negative!");
   }
   return NS_OK;
 }
@@ -6685,9 +6685,9 @@ nsDocument::RadioRequiredChanged(const nsAString& aName, nsIFormControl* aRadio)
   if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
     radioGroup->mRequiredRadioCount++;
   } else {
+    NS_ASSERTION(radioGroup->mRequiredRadioCount != 0,
+                 "mRequiredRadioCount about to wrap below 0!");
     radioGroup->mRequiredRadioCount--;
-    NS_ASSERTION(radioGroup->mRequiredRadioCount >= 0,
-                 "mRequiredRadioCount shouldn't be negative!");
   }
 }
 

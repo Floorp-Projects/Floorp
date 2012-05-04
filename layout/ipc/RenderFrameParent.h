@@ -161,7 +161,8 @@ public:
 
   NS_OVERRIDE
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager)
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters)
   { return mozilla::LAYER_ACTIVE; }  
 
   NS_OVERRIDE
