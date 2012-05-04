@@ -152,13 +152,7 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
 
   // Bug 742100, this gfxContext really should live on the stack.
   nsRefPtr<gfxContext> ctxt = new gfxContext(writableSurface);
- if (!mThebesLayer->CanUseOpaqueSurface()) {
-    ctxt->NewPath();
-    ctxt->SetOperator(gfxContext::OPERATOR_CLEAR);
-    ctxt->Rectangle(drawRect, true);
-    ctxt->Fill();
-    ctxt->SetOperator(gfxContext::OPERATOR_OVER);
-  }
+  ctxt->SetOperator(gfxContext::OPERATOR_SOURCE);
   if (mSinglePaintBuffer) {
     ctxt->NewPath();
     ctxt->SetSource(mSinglePaintBuffer.get(),
