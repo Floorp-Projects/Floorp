@@ -1217,22 +1217,22 @@ PresShell::AllocateStackMemory(size_t aSize)
 }
 
 void
-PresShell::FreeFrame(nsQueryFrame::FrameIID aCode, void* aPtr)
+PresShell::FreeFrame(nsQueryFrame::FrameIID aID, void* aPtr)
 {
 #ifdef DEBUG
   mPresArenaAllocCount--;
 #endif
   if (PRESARENA_MUST_FREE_DURING_DESTROY || !mIsDestroying)
-    mFrameArena.FreeByCode(aCode, aPtr);
+    mFrameArena.FreeByFrameID(aID, aPtr);
 }
 
 void*
-PresShell::AllocateFrame(nsQueryFrame::FrameIID aCode, size_t aSize)
+PresShell::AllocateFrame(nsQueryFrame::FrameIID aID, size_t aSize)
 {
 #ifdef DEBUG
   mPresArenaAllocCount++;
 #endif
-  void* result = mFrameArena.AllocateByCode(aCode, aSize);
+  void* result = mFrameArena.AllocateByFrameID(aID, aSize);
 
   if (result) {
     memset(result, 0, aSize);
