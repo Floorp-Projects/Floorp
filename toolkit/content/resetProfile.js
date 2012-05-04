@@ -51,12 +51,11 @@ function resetSupported() {
 }
 
 function getMigratedData() {
+  Components.utils.import("resource:///modules/MigrationUtils.jsm");
+
 #expand const MOZ_BUILD_APP = "__MOZ_BUILD_APP__";
 #expand const MOZ_APP_NAME = "__MOZ_APP_NAME__";
   const MAX_MIGRATED_TYPES = 16;
-
-  let bundle = Services.strings.createBundle("chrome://" + MOZ_BUILD_APP +
-                                             "/locale/migration/migration.properties");
 
   // Loop over possible data to migrate to give the user a list of what will be preserved. This
   // assumes that if the string for the data exists, then it will be migrated because calling
@@ -65,7 +64,7 @@ function getMigratedData() {
   for (let i = 1; i < MAX_MIGRATED_TYPES; ++i) {
     let itemID = Math.pow(2, i);
     try {
-      let typeName = bundle.GetStringFromName(itemID + "_" + MOZ_APP_NAME);
+      let typeName = MigrationUtils.getLocalizedString(itemID + "_" + MOZ_APP_NAME);
       dataTypes.push(typeName);
     } catch (x) {
       // Catch exceptions when the string for a data type doesn't exist because it's not migrated
