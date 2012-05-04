@@ -86,7 +86,7 @@
 }
 
 .addon-info[type="dictionary"] #icon {
-  list-style-image: url("chrome://mozapps/skin/plugins/dictionaryGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.png");
 }
 
 #name {

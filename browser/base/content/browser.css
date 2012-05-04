@@ -430,20 +430,11 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 /* notification anchors should only be visible when their associated
    notifications are */
 .notification-anchor-icon {
-  display: none;
   -moz-user-focus: normal;
 }
 
-/* We use the iconBox as the notification anchor when a popup notification is
-   created with a null anchorID, so in that case use a default anchor icon. */
-#notification-popup-box[anchorid="notification-popup-box"] > #default-notification-icon,
-#notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon,
-#notification-popup-box[anchorid="indexedDB-notification-icon"] > #indexedDB-notification-icon,
-#notification-popup-box[anchorid="addons-notification-icon"] > #addons-notification-icon,
-#notification-popup-box[anchorid="password-notification-icon"] > #password-notification-icon,
-#notification-popup-box[anchorid="webapps-notification-icon"] > #webapps-notification-icon,
-#notification-popup-box[anchorid="plugins-notification-icon"] > #plugins-notification-icon {
-  display: -moz-box;
+.notification-anchor-icon:not([showing]) {
+  display: none;
 }
 
 #invalid-form-popup > description {

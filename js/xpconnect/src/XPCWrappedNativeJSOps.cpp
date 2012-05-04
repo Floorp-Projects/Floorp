@@ -652,11 +652,11 @@ TraceScopeJSObjects(JSTracer *trc, XPCWrappedNativeScope* scope)
 
     JSObject* obj;
 
-    obj = scope->GetGlobalJSObject();
+    obj = scope->GetGlobalJSObjectPreserveColor();
     NS_ASSERTION(obj, "bad scope JSObject");
     JS_CALL_OBJECT_TRACER(trc, obj, "XPCWrappedNativeScope::mGlobalJSObject");
 
-    obj = scope->GetPrototypeJSObject();
+    obj = scope->GetPrototypeJSObjectPreserveColor();
     if (obj) {
         JS_CALL_OBJECT_TRACER(trc, obj,
                               "XPCWrappedNativeScope::mPrototypeJSObject");

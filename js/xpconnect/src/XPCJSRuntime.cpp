@@ -363,13 +363,10 @@ void XPCJSRuntime::TraceGrayJS(JSTracer* trc, void* data)
 }
 
 static void
-TraceJSObject(PRUint32 aLangID, void *aScriptThing, const char *name,
-              void *aClosure)
+TraceJSObject(void *aScriptThing, const char *name, void *aClosure)
 {
-    if (aLangID == nsIProgrammingLanguage::JAVASCRIPT) {
-        JS_CALL_TRACER(static_cast<JSTracer*>(aClosure), aScriptThing,
-                       js_GetGCThingTraceKind(aScriptThing), name);
-    }
+    JS_CALL_TRACER(static_cast<JSTracer*>(aClosure), aScriptThing,
+                   js_GetGCThingTraceKind(aScriptThing), name);
 }
 
 static JSDHashOperator
@@ -441,16 +438,14 @@ struct Closure
 };
 
 static void
-CheckParticipatesInCycleCollection(PRUint32 aLangID, void *aThing,
-                                   const char *name, void *aClosure)
+CheckParticipatesInCycleCollection(void *aThing, const char *name, void *aClosure)
 {
     Closure *closure = static_cast<Closure*>(aClosure);
 
     if (closure->cycleCollectionEnabled)
         return;
 
-    if (aLangID == nsIProgrammingLanguage::JAVASCRIPT &&
-        AddToCCKind(js_GetGCThingTraceKind(aThing)) &&
+    if (AddToCCKind(js_GetGCThingTraceKind(aThing)) &&
         xpc_IsGrayGCThing(aThing))
     {
         closure->cycleCollectionEnabled = true;
@@ -470,8 +465,7 @@ NoteJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number,
     if (!closure->cycleCollectionEnabled)
         return JS_DHASH_NEXT;
 
-    closure->cb->NoteRoot(nsIProgrammingLanguage::CPLUSPLUS, entry->holder,
-                          entry->tracer);
+    closure->cb->NoteNativeRoot(entry->holder, entry->tracer);
 
     return JS_DHASH_NEXT;
 }
@@ -491,8 +485,7 @@ XPCJSRuntime::SuspectWrappedNative(XPCWrappedNative *wrapper,
     // the callback wants all traces (a debug feature).
     JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
     if (xpc_IsGrayGCThing(obj) || cb.WantAllTraces())
-        cb.NoteRoot(nsIProgrammingLanguage::JAVASCRIPT, obj,
-                    nsXPConnect::GetXPConnect());
+        cb.NoteJSRoot(obj);
 }
 
 static PLDHashOperator
@@ -537,8 +530,7 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
 
     JSContext *iter = nsnull, *acx;
     while ((acx = JS_ContextIterator(GetJSRuntime(), &iter))) {
-        cb.NoteRoot(nsIProgrammingLanguage::CPLUSPLUS, acx,
-                    nsXPConnect::JSContextParticipant());
+        cb.NoteNativeRoot(acx, nsXPConnect::JSContextParticipant());
     }
 
     XPCAutoLock lock(mMapLock);

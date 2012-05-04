@@ -48,7 +48,6 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsfun.h"
-#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -63,8 +62,8 @@
 #include "jswrapper.h"
 
 #include "gc/Barrier.h"
+#include "gc/Marking.h"
 #include "js/TemplateLib.h"
-
 #include "vm/BooleanObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/NumberObject.h"
@@ -791,6 +790,7 @@ inline bool JSObject::isBlock() const { return hasClass(&js::BlockClass); }
 inline bool JSObject::isBoolean() const { return hasClass(&js::BooleanClass); }
 inline bool JSObject::isCall() const { return hasClass(&js::CallClass); }
 inline bool JSObject::isClonedBlock() const { return isBlock() && !!getProto(); }
+inline bool JSObject::isDataView() const { return hasClass(&js::DataViewClass); }
 inline bool JSObject::isDate() const { return hasClass(&js::DateClass); }
 inline bool JSObject::isDeclEnv() const { return hasClass(&js::DeclEnvClass); }
 inline bool JSObject::isElementIterator() const { return hasClass(&js::ElementIteratorClass); }
@@ -812,7 +812,7 @@ inline bool JSObject::isStaticBlock() const { return isBlock() && !getProto(); }
 inline bool JSObject::isStopIteration() const { return hasClass(&js::StopIterationClass); }
 inline bool JSObject::isStrictArguments() const { return hasClass(&js::StrictArgumentsObjectClass); }
 inline bool JSObject::isString() const { return hasClass(&js::StringClass); }
-inline bool JSObject::isTypedArray() const { return IsFastTypedArrayClass(getClass()); }
+inline bool JSObject::isTypedArray() const { return IsTypedArrayClass(getClass()); }
 inline bool JSObject::isWeakMap() const { return hasClass(&js::WeakMapClass); }
 inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
 inline bool JSObject::isXML() const { return hasClass(&js::XMLClass); }
@@ -976,7 +976,7 @@ JSObject::propertyCount() const
 }
 
 inline bool
-JSObject::hasPropertyTable() const
+JSObject::hasShapeTable() const
 {
     return lastProperty()->hasTable();
 }
@@ -1304,9 +1304,13 @@ class AutoPropDescArrayRooter : private AutoGCRooter
 
 class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescriptor
 {
+    SkipRoot skip;
+
+    AutoPropertyDescriptorRooter *thisDuringConstruction() { return this; }
+
   public:
     AutoPropertyDescriptorRooter(JSContext *cx)
-      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, this)
+      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, thisDuringConstruction())
     {
         obj = NULL;
         attrs = 0;
@@ -1316,7 +1320,7 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     }
 
     AutoPropertyDescriptorRooter(JSContext *cx, PropertyDescriptor *desc)
-      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, this)
+      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, thisDuringConstruction())
     {
         obj = desc->obj;
         attrs = desc->attrs;
@@ -1326,9 +1330,6 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-
-  private:
-    SkipRoot skip;
 };
 
 inline void

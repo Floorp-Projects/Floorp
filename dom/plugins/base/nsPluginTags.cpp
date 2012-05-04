@@ -159,19 +159,6 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
       continue;
     }
 
-    // If we already marked this as a Java plugin, a later MIME type will tell
-    // us if it is npruntime-enabled. We don't actually care any more because we
-    // don't support Java access via the "java" and "packages" DOM objects, so
-    // we don't save the value, but we skip the MIME type.
-    if (mIsJavaPlugin) {
-      if (strcmp(aMimeTypes[i], "application/x-java-vm-npruntime") == 0) {
-        // This "magic MIME type" should not be exposed, but is just a signal
-        // to the browser that this is new-style java.
-        // Don't add it or its associated information to our arrays.
-        continue;
-      }
-    }
-
     // Look for certain special plugins.
     if (nsPluginHost::IsJavaMIMEType(aMimeTypes[i])) {
       mIsJavaPlugin = true;

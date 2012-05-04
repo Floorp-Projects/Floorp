@@ -58,7 +58,6 @@
 #include "jsversion.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -81,6 +80,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
+#include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
 #include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
@@ -1663,9 +1663,7 @@ GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, Value *vp
            NewPropertyDescriptorObject(cx, &desc, vp);
 }
 
-}
-
-static bool
+bool
 GetFirstArgumentAsObject(JSContext *cx, unsigned argc, Value *vp, const char *method, JSObject **objp)
 {
     if (argc == 0) {
@@ -1688,6 +1686,8 @@ GetFirstArgumentAsObject(JSContext *cx, unsigned argc, Value *vp, const char *me
     *objp = &v.toObject();
     return true;
 }
+
+} /* namespace js */
 
 static JSBool
 obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
@@ -4325,10 +4325,10 @@ JSObject::allocSlot(JSContext *cx, uint32_t *slotp)
 
     /*
      * If this object is in dictionary mode, try to pull a free slot from the
-     * property table's slot-number freelist.
+     * shape table's slot-number freelist.
      */
     if (inDictionaryMode()) {
-        PropertyTable &table = lastProperty()->table();
+        ShapeTable &table = lastProperty()->table();
         uint32_t last = table.freelist;
         if (last != SHAPE_INVALID_SLOT) {
 #ifdef DEBUG
@@ -6178,8 +6178,8 @@ JSObject::dump()
     if (obj->isNative()) {
         if (obj->inDictionaryMode())
             fprintf(stderr, " inDictionaryMode");
-        if (obj->hasPropertyTable())
-            fprintf(stderr, " hasPropertyTable");
+        if (obj->hasShapeTable())
+            fprintf(stderr, " hasShapeTable");
     }
     fprintf(stderr, "\n");
 

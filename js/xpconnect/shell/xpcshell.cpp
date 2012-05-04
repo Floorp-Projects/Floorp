@@ -661,19 +661,6 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
 #endif /* DEBUG */
 
 static JSBool
-Clear(JSContext *cx, unsigned argc, jsval *vp)
-{
-    if (argc > 0 && !JSVAL_IS_PRIMITIVE(JS_ARGV(cx, vp)[0])) {
-        JS_ClearScope(cx, JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
-    } else {
-        JS_ReportError(cx, "'clear' requires an object");
-        return false;
-    }
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return true;
-}
-
-static JSBool
 SendCommand(JSContext* cx,
             unsigned argc,
             jsval* vp)
@@ -843,7 +830,6 @@ static JSFunctionSpec glob_functions[] = {
 #ifdef JS_GC_ZEAL
     {"gczeal",          GCZeal,         1,0},
 #endif
-    {"clear",           Clear,          1,0},
     {"options",         Options,        0,0},
     JS_FN("parent",     Parent,         1,0),
 #ifdef DEBUG

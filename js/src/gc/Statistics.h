@@ -116,6 +116,12 @@ struct Statistics {
     FILE *fp;
     bool fullFormat;
 
+    /*
+     * GCs can't really nest, but a second GC can be triggered from within the
+     * JSGC_END callback.
+     */
+    int gcDepth;
+
     int collectedCount;
     int compartmentCount;
     const char *nonincrementalReason;
