@@ -80,6 +80,7 @@ EXPORTS		= \
 		nsIReflowCallback.h \
 		nsLayoutErrors.h \
 		nsLayoutUtils.h \
+		nsPresArena.h \
 		nsPresContext.h \
 		nsPresState.h \
 		nsRefreshDriver.h \

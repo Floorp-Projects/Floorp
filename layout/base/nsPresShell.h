@@ -195,6 +195,11 @@ public:
   virtual NS_HIDDEN_(void)  FreeFrame(nsQueryFrame::FrameIID aID,
                                       void* aChunk);
 
+  virtual NS_HIDDEN_(void*) AllocateByObjectID(nsPresArena::ObjectID aID,
+                                               size_t aSize);
+  virtual NS_HIDDEN_(void)  FreeByObjectID(nsPresArena::ObjectID aID,
+                                           void* aPtr);
+
   virtual NS_HIDDEN_(void*) AllocateMisc(size_t aSize);
   virtual NS_HIDDEN_(void)  FreeMisc(size_t aSize, void* aChunk);
 
