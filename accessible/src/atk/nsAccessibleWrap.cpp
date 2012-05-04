@@ -45,8 +45,7 @@
 #include "InterfaceInitFuncs.h"
 #include "nsAccUtils.h"
 #include "nsIAccessibleRelation.h"
-#include "nsRootAccessible.h"
-#include "nsDocAccessibleWrap.h"
+#include "RootAccessible.h"
 #include "nsIAccessibleValue.h"
 #include "nsMai.h"
 #include "nsMaiHyperlink.h"
@@ -55,6 +54,7 @@
 #include "prprf.h"
 #include "nsStateMap.h"
 #include "Relation.h"
+#include "RootAccessible.h"
 #include "States.h"
 
 #include "mozilla/Util.h"
@@ -729,8 +729,21 @@ getRoleCB(AtkObject *aAtkObj)
   if (aAtkObj->role != ATK_ROLE_INVALID)
     return aAtkObj->role;
 
-  return aAtkObj->role =
-    static_cast<AtkRole>(nsAccessibleWrap::AtkRoleFor(accWrap->Role()));
+#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role) \
+  case roles::geckoRole: \
+    aAtkObj->role = atkRole; \
+    break;
+
+  switch (accWrap->Role()) {
+#include "RoleMap.h"
+    default:
+      MOZ_NOT_REACHED("Unknown role.");
+      aAtkObj->role = ATK_ROLE_UNKNOWN;
+  };
+
+#undef ROLE
+
+  return aAtkObj->role;
 }
 
 AtkAttributeSet*
@@ -1027,7 +1040,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
     case nsIAccessibleEvent::EVENT_FOCUS:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_FOCUS\n"));
-        nsRootAccessible* rootAccWrap = accWrap->RootAccessible();
+        a11y::RootAccessible* rootAccWrap = accWrap->RootAccessible();
         if (rootAccWrap && rootAccWrap->mActivated) {
             atk_focus_tracker_notify(atkObj);
             // Fire state change event for focus
@@ -1220,9 +1233,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
     case nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_ACTIVATED\n"));
-        nsRootAccessible *rootAcc =
-          static_cast<nsRootAccessible *>(accessible);
-        rootAcc->mActivated = true;
+        accessible->AsRoot()->mActivated = true;
         guint id = g_signal_lookup ("activate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
 
@@ -1233,9 +1244,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
     case nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_DEACTIVATED\n"));
-        nsRootAccessible *rootAcc =
-          static_cast<nsRootAccessible *>(accessible);
-        rootAcc->mActivated = false;
+        accessible->AsRoot()->mActivated = false;
         guint id = g_signal_lookup ("deactivate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
       } break;
@@ -1389,21 +1398,4 @@ nsAccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
     g_free(signal_name);
 
     return NS_OK;
-}
-
-PRUint32
-nsAccessibleWrap::AtkRoleFor(role aRole)
-{
-#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role) \
-  case roles::geckoRole: \
-    return atkRole;
-
-  switch (aRole) {
-#include "RoleMap.h"
-    default:
-      MOZ_NOT_REACHED("Unknown role.");
-      return ATK_ROLE_UNKNOWN;
-  }
-
-#undef ROLE
 }

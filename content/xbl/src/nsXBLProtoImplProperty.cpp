@@ -344,13 +344,11 @@ void
 nsXBLProtoImplProperty::Trace(TraceCallback aCallback, void *aClosure) const
 {
   if (mJSAttributes & JSPROP_GETTER) {
-    aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSGetterObject,
-              "mJSGetterObject", aClosure);
+    aCallback(mJSGetterObject, "mJSGetterObject", aClosure);
   }
 
   if (mJSAttributes & JSPROP_SETTER) {
-    aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSSetterObject,
-              "mJSSetterObject", aClosure);
+    aCallback(mJSSetterObject, "mJSSetterObject", aClosure);
   }
 }
 

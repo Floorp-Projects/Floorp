@@ -43,7 +43,11 @@
 #include "nsToolkit.h"
 #include "nsQuickSort.h"
 #include "nsAlgorithm.h"
+#include "WinUtils.h"
 
+#include "nsIDOMKeyEvent.h"
+
+#include <windows.h>
 #include <winuser.h>
 
 #ifndef WINABLEAPI
@@ -221,6 +225,131 @@ VirtualKey::GetNativeUniChars(PRUint8 aShiftState,
   }
   return index;
 }
+
+NativeKey::NativeKey(HKL aKeyboardLayout,
+                     HWND aWnd,
+                     const MSG& aKeyOrCharMessage) :
+  mVirtualKeyCode(0), mOriginalVirtualKeyCode(0)
+{
+  mScanCode = WinUtils::GetScanCode(aKeyOrCharMessage.lParam);
+  mIsExtended = WinUtils::IsExtendedScanCode(aKeyOrCharMessage.lParam);
+  switch (aKeyOrCharMessage.message) {
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+      mOriginalVirtualKeyCode = static_cast<PRUint8>(aKeyOrCharMessage.wParam);
+      switch (aKeyOrCharMessage.wParam) {
+        case VK_CONTROL:
+        case VK_MENU:
+        case VK_SHIFT:
+          mVirtualKeyCode = static_cast<PRUint8>(
+            ::MapVirtualKeyEx(GetScanCodeWithExtendedFlag(),
+                              MAPVK_VSC_TO_VK_EX, aKeyboardLayout));
+          break;
+        case VK_PROCESSKEY:
+          mVirtualKeyCode = mOriginalVirtualKeyCode =
+            static_cast<PRUint8>(::ImmGetVirtualKey(aWnd));
+          break;
+        default:
+          mVirtualKeyCode = mOriginalVirtualKeyCode;
+          break;
+      }
+      break;
+    case WM_CHAR:
+    case WM_UNICHAR:
+    case WM_SYSCHAR:
+      // We cannot compute the virtual key code from WM_CHAR message on WinXP
+      // and 
+      if (mIsExtended &&
+          WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
+        break;
+      }
+      mVirtualKeyCode = mOriginalVirtualKeyCode = static_cast<PRUint8>(
+        ::MapVirtualKeyEx(GetScanCodeWithExtendedFlag(),
+                          MAPVK_VSC_TO_VK_EX, aKeyboardLayout));
+    default:
+      MOZ_NOT_REACHED("Unsupported message");
+      break;
+  }
+
+  if (!mVirtualKeyCode) {
+    mVirtualKeyCode = mOriginalVirtualKeyCode;
+  }
+}
+
+UINT
+NativeKey::GetScanCodeWithExtendedFlag() const
+{
+  // MapVirtualKeyEx() has been improved for supporting extended keys since
+  // Vista.  When we call it for mapping a scancode of an extended key and
+  // a virtual keycode, we need to add 0xE000 to the scancode.
+  // On Win XP and Win Server 2003, this doesn't support. On them, we have
+  // no way to get virtual keycodes from scancode of extended keys.
+  if (!mIsExtended ||
+      WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
+    return mScanCode;
+  }
+  return (0xE000 | mScanCode);
+}
+
+PRUint32
+NativeKey::GetKeyLocation() const
+{
+  switch (mVirtualKeyCode) {
+    case VK_LSHIFT:
+    case VK_LCONTROL:
+    case VK_LMENU:
+    case VK_LWIN:
+      return nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
+
+    case VK_RSHIFT:
+    case VK_RCONTROL:
+    case VK_RMENU:
+    case VK_RWIN:
+      return nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
+
+    case VK_RETURN:
+      return !mIsExtended ? nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD :
+                            nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+
+    case VK_INSERT:
+    case VK_DELETE:
+    case VK_END:
+    case VK_DOWN:
+    case VK_NEXT:
+    case VK_LEFT:
+    case VK_CLEAR:
+    case VK_RIGHT:
+    case VK_HOME:
+    case VK_UP:
+    case VK_PRIOR:
+      return mIsExtended ? nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD :
+                           nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+
+    // NumLock key isn't included due to IE9's behavior.
+    case VK_NUMPAD0:
+    case VK_NUMPAD1:
+    case VK_NUMPAD2:
+    case VK_NUMPAD3:
+    case VK_NUMPAD4:
+    case VK_NUMPAD5:
+    case VK_NUMPAD6:
+    case VK_NUMPAD7:
+    case VK_NUMPAD8:
+    case VK_NUMPAD9:
+    case VK_DECIMAL:
+    case VK_DIVIDE:
+    case VK_MULTIPLY:
+    case VK_SUBTRACT:
+    case VK_ADD:
+      return nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+
+    default:
+      return nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+  }
+}
+
 
 KeyboardLayout::KeyboardLayout() :
   mKeyboardLayout(0)

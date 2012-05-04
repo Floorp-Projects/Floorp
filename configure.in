@@ -180,41 +180,7 @@ then
 fi
 MOZ_BUILD_ROOT=`pwd`
 
-dnl Default to MSVC for win32 and gcc for darwin
-dnl ==============================================================
-if test -z "$CROSS_COMPILE"; then
-case "$target" in
-*-mingw*)
-    if test -z "$CC"; then CC=cl; fi
-    if test -z "$CXX"; then CXX=cl; fi
-    if test -z "$CPP"; then CPP="cl -E -nologo"; fi
-    if test -z "$CXXCPP"; then CXXCPP="cl -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
-    if test -z "$LD"; then LD=link; fi
-    if test -z "$AS"; then
-        case "${target_cpu}" in
-        i*86)
-            AS=ml;
-            ;;
-        x86_64)
-            AS=ml64;
-            ;;
-        esac
-    fi
-    if test -z "$MIDL"; then MIDL=midl; fi
-
-    # need override this flag since we don't use $(LDFLAGS) for this.
-    if test -z "$HOST_LDFLAGS" ; then
-        HOST_LDFLAGS=" "
-    fi
-    ;;
-*-darwin*)
-    # we prefer gcc-4.2 over gcc on older darwin, so
-    # use that specific version if it's available.
-    MOZ_PATH_PROGS(CC, $CC gcc-4.2 gcc)
-    MOZ_PATH_PROGS(CXX, $CXX g++-4.2 g++)
-    ;;
-esac
-fi
+MOZ_DEFAULT_COMPILER
 
 COMPILE_ENVIRONMENT=1
 MOZ_ARG_DISABLE_BOOL(compile-environment,
@@ -2266,8 +2232,6 @@ case "$target" in
     if test "$HAVE_64BIT_OS"; then
         MOZ_MEMORY=1
     fi
-    CFLAGS="$CFLAGS -fno-common"
-    CXXFLAGS="$CXXFLAGS -fno-common"
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
@@ -7187,7 +7151,13 @@ elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin" -o "${OS_TARGET}
   fi
 else
   dnl On other Unix systems, we only want to link executables against mozglue
-  MOZ_GLUE_PROGRAM_LDFLAGS='$(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib) $(MKSHLIB_UNFORCE_ALL)'
+  MOZ_GLUE_PROGRAM_LDFLAGS='$(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib)'
+  dnl On other Unix systems, where mozglue is a static library, jemalloc is
+  dnl separated for the SDK, so we need to add it here.
+  if test "$MOZ_MEMORY" = 1; then
+    MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS "'$(call EXPAND_LIBNAME_PATH,memory,$(LIBXUL_DIST)/lib)'
+  fi
+  MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS "'$(MKSHLIB_UNFORCE_ALL)'
   if test -n "$GNU_CC"; then
     dnl And we need mozglue symbols to be exported.
     MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS -rdynamic"

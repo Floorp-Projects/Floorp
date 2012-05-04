@@ -271,9 +271,6 @@ static void    drag_data_received_event_cb(GtkWidget *aWidget,
 /* initialization static functions */
 static nsresult    initialize_prefs        (void);
 
-// Time of the last button release event. We use it to detect when the
-// drag ended before we could properly setup drag and drop.
-static guint32 sLastButtonReleaseTime = 0;
 static guint32 sLastUserInputTime = GDK_CURRENT_TIME;
 static guint32 sRetryGrabTime;
 
@@ -680,8 +677,9 @@ nsWindow::Destroy(void)
         gRollupListener = nsnull;
     }
 
+    // dragService will be null after shutdown of the service manager.
     nsDragService *dragService = nsDragService::GetInstance();
-    if (this == dragService->GetMostRecentDestWindow()) {
+    if (dragService && this == dragService->GetMostRecentDestWindow()) {
         dragService->ScheduleLeaveEvent();
     }
 
@@ -2630,8 +2628,6 @@ nsWindow::DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent)
             synthEvent.button = buttonType;
             nsEventStatus status;
             DispatchEvent(&synthEvent, status);
-
-            sLastButtonReleaseTime = aGdkEvent->time;
         }
     }
 }
@@ -2711,9 +2707,6 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
         if (type == GDK_2BUTTON_PRESS || type == GDK_3BUTTON_PRESS)
             return;
     }
-
-    // We haven't received the corresponding release event yet.
-    sLastButtonReleaseTime = 0;
 
     nsWindow *containerWindow = GetContainerWindow();
     if (!gFocusWindow && containerWindow) {
@@ -2798,8 +2791,6 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     LOG(("Button %u release on %p\n", aEvent->button, (void *)this));
 
     PRUint16 domButton;
-    sLastButtonReleaseTime = aEvent->time;
-
     switch (aEvent->button) {
     case 1:
         domButton = nsMouseEvent::eLeftButton;
@@ -3367,7 +3358,7 @@ CreateGdkWindow(GdkWindow *parent, GtkWidget *widget)
                              GDK_VISIBILITY_NOTIFY_MASK |
                              GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
                              GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-#ifdef HAVE_GTK_MOTION_HINTS
+#ifdef MOZ_PLATFORM_MAEMO
                              GDK_POINTER_MOTION_HINT_MASK |
 #endif
                              GDK_POINTER_MOTION_MASK);
@@ -4458,7 +4449,7 @@ nsWindow::GrabPointer(guint32 aTime)
                                              GDK_BUTTON_RELEASE_MASK |
                                              GDK_ENTER_NOTIFY_MASK |
                                              GDK_LEAVE_NOTIFY_MASK |
-#ifdef HAVE_GTK_MOTION_HINTS
+#ifdef MOZ_PLATFORM_MAEMO
                                              GDK_POINTER_MOTION_HINT_MASK |
 #endif
                                              GDK_POINTER_MOTION_MASK),
@@ -5266,7 +5257,7 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 
     window->OnMotionNotifyEvent(widget, event);
 
-#ifdef HAVE_GTK_MOTION_HINTS
+#ifdef MOZ_PLATFORM_MAEMO
     gdk_event_request_motions(event);
 #endif
     return TRUE;
@@ -5655,24 +5646,6 @@ drag_motion_event_cb(GtkWidget *aWidget,
     nsRefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
     if (!window)
         return FALSE;
-
-    if (sLastButtonReleaseTime) {
-      // The drag ended before it was even setup to handle the end of the drag
-      // So, we fake the button getting released again to release the drag
-      GtkWidget *widget = gtk_grab_get_current();
-      GdkEvent event;
-      gboolean retval;
-      memset(&event, 0, sizeof(event));
-      event.type = GDK_BUTTON_RELEASE;
-      event.button.time = sLastButtonReleaseTime;
-      event.button.button = 1;
-      sLastButtonReleaseTime = 0;
-      if (widget) {
-        g_signal_emit_by_name(widget, "button_release_event", &event, &retval);
-        // FALSE means we won't reply with a status message.
-        return FALSE;
-      }
-    }
 
     // figure out which internal widget this drag motion actually happened on
     nscoord retx = 0;

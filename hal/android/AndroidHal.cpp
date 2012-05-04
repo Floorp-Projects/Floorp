@@ -121,26 +121,6 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
   bridge->GetCurrentBatteryInformation(aBatteryInfo);
 }
 
-bool
-GetScreenEnabled()
-{
-  return true;
-}
-
-void
-SetScreenEnabled(bool enabled)
-{}
-
-double
-GetScreenBrightness()
-{
-  return 1;
-}
-
-void
-SetScreenBrightness(double brightness)
-{}
-
 void
 EnableNetworkNotifications()
 {
@@ -173,14 +153,6 @@ GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
 
   bridge->GetCurrentNetworkInformation(aNetworkInfo);
 }
-
-void
-Reboot()
-{}
-
-void
-PowerOff()
-{}
 
 void
 EnableScreenOrientationNotifications()

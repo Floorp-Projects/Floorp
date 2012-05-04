@@ -766,6 +766,72 @@ KeymapWrapper::InitKeyEvent(nsKeyEvent& aKeyEvent,
     }
     InitInputEvent(aKeyEvent, modifierState);
 
+#ifdef MOZ_PLATFORM_MAEMO
+    aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
+#else // #ifdef MOZ_PLATFORM_MAEMO
+    switch (aGdkKeyEvent->keyval) {
+        case GDK_Shift_L:
+        case GDK_Control_L:
+        case GDK_Alt_L:
+        case GDK_Super_L:
+        case GDK_Hyper_L:
+        case GDK_Meta_L:
+            aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
+            break;
+
+        case GDK_Shift_R:
+        case GDK_Control_R:
+        case GDK_Alt_R:
+        case GDK_Super_R:
+        case GDK_Hyper_R:
+        case GDK_Meta_R:
+            aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
+            break;
+
+        case GDK_KP_0:
+        case GDK_KP_1:
+        case GDK_KP_2:
+        case GDK_KP_3:
+        case GDK_KP_4:
+        case GDK_KP_5:
+        case GDK_KP_6:
+        case GDK_KP_7:
+        case GDK_KP_8:
+        case GDK_KP_9:
+        case GDK_KP_Space:
+        case GDK_KP_Tab:
+        case GDK_KP_Enter:
+        case GDK_KP_F1:
+        case GDK_KP_F2:
+        case GDK_KP_F3:
+        case GDK_KP_F4:
+        case GDK_KP_Home:
+        case GDK_KP_Left:
+        case GDK_KP_Up:
+        case GDK_KP_Right:
+        case GDK_KP_Down:
+        case GDK_KP_Prior: // same as GDK_KP_Page_Up
+        case GDK_KP_Next:  // same as GDK_KP_Page_Down
+        case GDK_KP_End:
+        case GDK_KP_Begin:
+        case GDK_KP_Insert:
+        case GDK_KP_Delete:
+        case GDK_KP_Equal:
+        case GDK_KP_Multiply:
+        case GDK_KP_Add:
+        case GDK_KP_Separator:
+        case GDK_KP_Subtract:
+        case GDK_KP_Decimal:
+        case GDK_KP_Divide:
+            aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+            break;
+
+        default:
+            aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+            break;
+    }
+#endif // #ifdef MOZ_PLATFORM_MAEMO #else
+
     PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
         ("KeymapWrapper(%p): InitKeyEvent, modifierState=0x%08X "
          "aGdkKeyEvent={ type=%s, keyval=%s(0x%X), state=0x%08X, "

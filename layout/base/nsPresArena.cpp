@@ -469,15 +469,27 @@ nsPresArena::FreeBySize(size_t aSize, void* aPtr)
 }
 
 void*
-nsPresArena::AllocateByCode(nsQueryFrame::FrameIID aCode, size_t aSize)
+nsPresArena::AllocateByFrameID(nsQueryFrame::FrameIID aID, size_t aSize)
 {
-  return mState->Allocate(aCode, aSize);
+  return mState->Allocate(aID, aSize);
 }
 
 void
-nsPresArena::FreeByCode(nsQueryFrame::FrameIID aCode, void* aPtr)
+nsPresArena::FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr)
 {
-  mState->Free(aCode, aPtr);
+  mState->Free(aID, aPtr);
+}
+
+void*
+nsPresArena::AllocateByObjectID(ObjectID aID, size_t aSize)
+{
+  return mState->Allocate(aID, aSize);
+}
+
+void
+nsPresArena::FreeByObjectID(ObjectID aID, void* aPtr)
+{
+  mState->Free(aID, aPtr);
 }
 
 /* static */ uintptr_t

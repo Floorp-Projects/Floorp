@@ -118,7 +118,7 @@ FileStreamListener.prototype = {
 function test_read_file() {
   dump("*** test_read_file\n");
 
-  var file = getFile("XpcomLib");
+  var file = do_get_file("../unit/data/test_readline6.txt");
   var chan = new_file_channel(file);
 
   function on_read_complete(data) {
@@ -175,7 +175,7 @@ function test_read_dir_2() {
 function test_upload_file() {
   dump("*** test_upload_file\n");
 
-  var file = getFile("XpcomLib");  // file to upload
+  var file = do_get_file("../unit/data/test_readline6.txt"); // file to upload
   var dest = getFile("TmpD");      // file upload destination
   dest.append("junk.dat");
   dest.createUnique(dest.NORMAL_FILE_TYPE, 0600);

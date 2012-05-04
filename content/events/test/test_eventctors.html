@@ -369,6 +369,25 @@ is(e.storageArea, localStorage, "Wrong value");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
 
+// DeviceProximityEvent
+e = new DeviceProximityEvent("hello", {min: 0, value: 1, max: 2});
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event should not be trusted");
+is(e.value, 1, "value should be 1");
+is(e.min, 0, "min should be 0");
+is(e.max, 2, "max should be 2");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+// DeviceLightEvent
+e = new DeviceLightEvent("hello", {value: 1} );
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event should not be trusted");
+is(e.value, 1, "value should be 1");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+
 // MouseEvent
 
 try {

@@ -54,6 +54,7 @@
 #include "Accessible2_i.c"
 #include "AccessibleRole.h"
 #include "AccessibleStates.h"
+#include "RootAccessible.h"
 
 #include "nsIMutableArray.h"
 #include "nsIDOMDocument.h"
@@ -61,7 +62,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
-#include "nsRootAccessible.h"
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
 #include "nsIView.h"
@@ -75,19 +75,6 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 const PRUint32 USE_ROLE_STRING = 0;
-
-#ifndef ROLE_SYSTEM_SPLITBUTTON
-const PRUint32 ROLE_SYSTEM_SPLITBUTTON  = 0x3e; // Not defined in all oleacc.h versions
-#endif
-
-#ifndef ROLE_SYSTEM_IPADDRESS
-const PRUint32 ROLE_SYSTEM_IPADDRESS = 0x3f; // Not defined in all oleacc.h versions
-#endif
-
-#ifndef ROLE_SYSTEM_OUTLINEBUTTON
-const PRUint32 ROLE_SYSTEM_OUTLINEBUTTON = 0x40; // Not defined in all oleacc.h versions
-#endif
-
 
 /* For documentation of the accessibility architecture,
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -1893,7 +1880,7 @@ void nsAccessibleWrap::UpdateSystemCaret()
   // off-screen model can follow the caret
   ::DestroyCaret();
 
-  nsRootAccessible* rootAccessible = RootAccessible();
+  a11y::RootAccessible* rootAccessible = RootAccessible();
   if (!rootAccessible) {
     return;
   }

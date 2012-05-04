@@ -585,7 +585,6 @@ void doSampleStackTrace(ProfileStack *aStack, ThreadProfile &aProfile, TickSampl
   }
 #ifdef ENABLE_SPS_LEAF_DATA
   if (sample) {
-    Address pc = sample->pc;
     aProfile.addTag(ProfileEntry('l', sample->pc));
   }
 #endif

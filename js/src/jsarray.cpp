@@ -115,7 +115,6 @@
 #include "jsversion.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -127,6 +126,7 @@
 #include "methodjit/StubCalls.h"
 #include "methodjit/StubCalls-inl.h"
 
+#include "gc/Marking.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/MethodGuard.h"
 #include "vm/NumericConversions.h"
@@ -2015,8 +2015,8 @@ CompareStringValues(JSContext *cx, const Value &a, const Value &b, bool *lessOrE
     return true;
 }
 
-static uint32_t const powersOf10[] = {
-    1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000
+static uint64_t const powersOf10[] = {
+    1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 1000000000000ULL
 };
 
 static inline unsigned
@@ -2083,12 +2083,15 @@ CompareLexicographicInt32(JSContext *cx, const Value &a, const Value &b, bool *l
          */
         unsigned digitsa = NumDigitsBase10(auint);
         unsigned digitsb = NumDigitsBase10(buint);
-        if (digitsa == digitsb)
+        if (digitsa == digitsb) {
             *lessOrEqualp = (auint <= buint);
-        else if (digitsa > digitsb)
+        } else if (digitsa > digitsb) {
+            JS_ASSERT((digitsa - digitsb) < ArrayLength(powersOf10));
             *lessOrEqualp = (uint64_t(auint) < uint64_t(buint) * powersOf10[digitsa - digitsb]);
-        else /* if (digitsb > digitsa) */
+        } else { /* if (digitsb > digitsa) */
+            JS_ASSERT((digitsb - digitsa) < ArrayLength(powersOf10));
             *lessOrEqualp = (uint64_t(auint) * powersOf10[digitsb - digitsa] <= uint64_t(buint));
+        }
     }
 
     return true;
@@ -3789,7 +3792,7 @@ NewArray(JSContext *cx, uint32_t length, JSObject *proto)
 
     GlobalObject *parent = GetCurrentGlobal(cx);
 
-    NewObjectCache &cache = cx->compartment->newObjectCache;
+    NewObjectCache &cache = cx->runtime->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
     if (cache.lookupGlobal(&ArrayClass, parent, kind, &entry)) {
