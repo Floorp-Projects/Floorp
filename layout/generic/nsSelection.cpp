@@ -1313,11 +1313,23 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
 NS_IMETHODIMP
 nsTypedSelection::ToString(PRUnichar **aReturn)
 {
+  if (!aReturn) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  // We need Flush_Style here to make sure frames have been created for
+  // the selected content.
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = GetPresShell(getter_AddRefs(shell));
+  if (NS_FAILED(rv) || !shell) {
+    *aReturn = ToNewUnicode(EmptyString());
+    return NS_OK;
+  }
+  shell->FlushPendingNotifications(Flush_Style);
+
   return ToStringWithFormat("text/plain",
                             nsIDocumentEncoder::SkipInvisibleContent,
                             0, aReturn);
 }
-
 
 NS_IMETHODIMP
 nsTypedSelection::ToStringWithFormat(const char * aFormatType, PRUint32 aFlags, 
