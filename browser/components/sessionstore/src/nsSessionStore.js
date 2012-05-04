@@ -2901,11 +2901,6 @@ SessionStoreService.prototype = {
       ScratchpadManager.restoreSession(aState.scratchpads);
     }
 
-    // This will force the keypress listener that Panorama has to attach if it
-    // isn't already. This will be the case if tab view wasn't entered or there
-    // were only visible tabs when TabView.init was first called.
-    aWindow.TabView.init();
-
     // set smoothScroll back to the original value
     tabstrip.smoothScroll = smoothScroll;
 
