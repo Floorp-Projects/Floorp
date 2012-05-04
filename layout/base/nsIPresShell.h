@@ -218,18 +218,23 @@ public:
 
   bool IsDestroying() { return mIsDestroying; }
 
-  // All frames owned by the shell are allocated from an arena.  They
-  // are also recycled using free lists.  Separate free lists are
-  // maintained for each frame type (aCode), which must always
-  // correspond to the same aSize value. AllocateFrame clears the
-  // memory that it returns.
-  virtual void* AllocateFrame(nsQueryFrame::FrameIID aCode, size_t aSize) = 0;
-  virtual void  FreeFrame(nsQueryFrame::FrameIID aCode, void* aChunk) = 0;
+  /**
+   * All frames owned by the shell are allocated from an arena.  They
+   * are also recycled using free lists.  Separate free lists are
+   * maintained for each frame type (aID), which must always correspond
+   * to the same aSize value.  AllocateFrame returns zero-filled memory.
+   * AllocateFrame is fallible, it returns nsnull on out-of-memory.
+   */
+  virtual void* AllocateFrame(nsQueryFrame::FrameIID aID, size_t aSize) = 0;
+  virtual void  FreeFrame(nsQueryFrame::FrameIID aID, void* aChunk) = 0;
 
-  // Objects closely related to the frame tree, but that are not
-  // actual frames (subclasses of nsFrame) are also allocated from the
-  // arena, and recycled via a separate set of per-size free lists.
-  // AllocateMisc does *not* clear the memory that it returns.
+  /**
+   * Other objects closely related to the frame tree, but that are not
+   * actual frames (subclasses of nsFrame) are also allocated from the
+   * arena, and recycled via a separate set of per-size free lists.
+   * AllocateMisc does *not* clear the memory that it returns.
+   * AllocateMisc is fallible, it returns nsnull on out-of-memory.
+   */
   virtual void* AllocateMisc(size_t aSize) = 0;
   virtual void  FreeMisc(size_t aSize, void* aChunk) = 0;
 
