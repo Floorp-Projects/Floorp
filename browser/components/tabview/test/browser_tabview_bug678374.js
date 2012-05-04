@@ -25,12 +25,12 @@ function test() {
       is(newTabItemOne.$favImage[0].src, ICON_URL, "The tab item is showing the right icon.");
 
       // test pin tab
-      whenAppTabIconAdded(function() {
+      whenAppTabIconAdded(groupItem, function() {
         let icon = cw.iQ(".appTabIcon", groupItem.$appTabTray)[0];
         is(icon.src, ICON_URL, "The app tab is showing the right icon");
 
         finish();
-      }, win);
+      });
       win.gBrowser.pinTab(newTabTwo);
     });
   }, function(win) {
