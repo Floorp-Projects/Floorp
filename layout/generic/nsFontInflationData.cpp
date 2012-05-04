@@ -219,7 +219,7 @@ nsFontInflationData::UpdateWidth(const nsHTMLReflowState &aReflowState)
                                                    lastInflatableDescendant,
                                                    bfc);
   while (!nsLayoutUtils::IsContainerForFontSizeInflation(nca)) {
-    nca = nca->GetParent();
+    nca = nca->GetParent()->GetFirstInFlow();
   }
 
   nscoord newNCAWidth = ComputeDescendantWidth(aReflowState, nca);
