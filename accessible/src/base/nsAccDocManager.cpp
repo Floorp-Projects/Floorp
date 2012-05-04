@@ -42,7 +42,7 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
-#include "nsRootAccessibleWrap.h"
+#include "RootAccessibleWrap.h"
 #include "States.h"
 
 #include "nsCURILoader.h"
@@ -356,7 +356,7 @@ nsAccDocManager::AddListeners(nsIDocument *aDocument,
 }
 
 nsDocAccessible*
-nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
+nsAccDocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
 {
   // Ignore temporary, hiding, resource documents and documents without
   // docshell.
@@ -391,7 +391,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   // We only create root accessibles for the true root, otherwise create a
   // doc accessible.
   nsRefPtr<nsDocAccessible> docAcc = isRootDoc ?
-    new nsRootAccessibleWrap(aDocument, rootElm, presShell) :
+    new RootAccessibleWrap(aDocument, rootElm, presShell) :
     new nsDocAccessibleWrap(aDocument, rootElm, presShell);
 
   // Cache the document accessible into document cache.

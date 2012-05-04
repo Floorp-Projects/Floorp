@@ -36,16 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsRootAccessibleWrap.h"
 #include "nsObjCExceptions.h"
+#include "RootAccessibleWrap.h"
 
 #import "mozDocAccessible.h"
 
 #import "mozView.h"
 
-static id <mozAccessible, mozView> getNativeViewFromRootAccessible (nsAccessible *accessible)
+using namespace mozilla::a11y;
+
+static id <mozAccessible, mozView> 
+getNativeViewFromRootAccessible(nsAccessible* aAccessible)
 {
-  nsRootAccessibleWrap *root = static_cast<nsRootAccessibleWrap*>(accessible);
+  RootAccessibleWrap* root =
+    static_cast<RootAccessibleWrap*>(aAccessible->AsRoot());
   id <mozAccessible, mozView> nativeView = nil;
   root->GetNativeWidget ((void**)&nativeView);
   return nativeView;

@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsRootAccessibleWrap.h"
+#include "RootAccessibleWrap.h"
 
 #include "mozDocAccessible.h"
 
@@ -45,19 +45,21 @@
 #include "nsIWidget.h"
 #include "nsIViewManager.h"
 
-nsRootAccessibleWrap::
-  nsRootAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
-                       nsIPresShell* aPresShell) :
-  nsRootAccessible(aDocument, aRootContent, aPresShell)
+using namespace mozilla::a11y;
+
+RootAccessibleWrap::
+  RootAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
+                     nsIPresShell* aPresShell) :
+  RootAccessible(aDocument, aRootContent, aPresShell)
 {
 }
 
-nsRootAccessibleWrap::~nsRootAccessibleWrap()
+RootAccessibleWrap::~RootAccessibleWrap()
 {
 }
 
 Class
-nsRootAccessibleWrap::GetNativeType ()
+RootAccessibleWrap::GetNativeType()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -67,7 +69,7 @@ nsRootAccessibleWrap::GetNativeType ()
 }
 
 void
-nsRootAccessibleWrap::GetNativeWidget (void **aOutView)
+RootAccessibleWrap::GetNativeWidget(void** aOutView)
 {
   nsIFrame *frame = GetFrame();
   if (frame) {
