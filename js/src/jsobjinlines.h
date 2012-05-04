@@ -1304,9 +1304,13 @@ class AutoPropDescArrayRooter : private AutoGCRooter
 
 class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescriptor
 {
+    SkipRoot skip;
+
+    AutoPropertyDescriptorRooter *thisDuringConstruction() { return this; }
+
   public:
     AutoPropertyDescriptorRooter(JSContext *cx)
-      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, this)
+      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, thisDuringConstruction())
     {
         obj = NULL;
         attrs = 0;
@@ -1316,7 +1320,7 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     }
 
     AutoPropertyDescriptorRooter(JSContext *cx, PropertyDescriptor *desc)
-      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, this)
+      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, thisDuringConstruction())
     {
         obj = desc->obj;
         attrs = desc->attrs;
@@ -1326,9 +1330,6 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-
-  private:
-    SkipRoot skip;
 };
 
 inline void
