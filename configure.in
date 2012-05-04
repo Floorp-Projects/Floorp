@@ -7157,7 +7157,7 @@ else
   dnl On other Unix systems, where mozglue is a static library, jemalloc is
   dnl separated for the SDK, so we need to add it here.
   if test "$MOZ_MEMORY" = 1; then
-    MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS "'$(call EXPAND_LIBNAME_PATH,jemalloc,$(LIBXUL_DIST)/lib)'
+    MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS "'$(call EXPAND_LIBNAME_PATH,memory,$(LIBXUL_DIST)/lib)'
   fi
   MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS "'$(MKSHLIB_UNFORCE_ALL)'
   if test -n "$GNU_CC"; then
