@@ -55,9 +55,6 @@
 
 namespace mozilla {
 
-typedef PRUint8  uint8_t;
-typedef PRUint16 uint16_t;
-
 namespace WebGLTexelConversions {
 
 /****** BEGIN CODE SHARED WITH WEBKIT ******/
