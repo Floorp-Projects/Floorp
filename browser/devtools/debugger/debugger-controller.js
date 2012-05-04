@@ -114,6 +114,7 @@ let DebuggerController = {
 
     this.dispatchEvent("Debugger:Unloaded");
     this._disconnect();
+    this._isRemote && this._quitApp();
   },
 
   /**
@@ -121,12 +122,10 @@ let DebuggerController = {
    * wiring event handlers as necessary.
    */
   _connect: function DC__connect() {
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
-    }
+    let transport =
+      this._isRemote ? debuggerSocketConnect(Prefs.remoteHost, Prefs.remotePort)
+                     : DebuggerServer.connectPipe();
 
-    let transport = DebuggerServer.connectPipe();
     let client = this.client = new DebuggerClient(transport);
 
     client.addListener("tabNavigated", this._onTabNavigated);
@@ -218,6 +217,31 @@ let DebuggerController = {
 
       }.bind(this));
     }.bind(this));
+  },
+
+  /**
+   * Returns true if this is a remote debugger instance.
+   * @return boolean
+   */
+  get _isRemote() {
+    return !window.parent.content;
+  },
+
+  /**
+   * Attempts to quit the current process if allowed.
+   */
+  _quitApp: function DC__quitApp() {
+    let canceled = Cc["@mozilla.org/supports-PRBool;1"]
+      .createInstance(Ci.nsISupportsPRBool);
+
+    Services.obs.notifyObservers(canceled, "quit-application-requested", null);
+
+    // Somebody canceled our quit request.
+    if (canceled.data) {
+      return;
+    }
+
+    Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
   },
 
   /**
@@ -470,6 +494,38 @@ StackFrames.prototype = {
       this._addExpander(thisVar, frame.this);
     }
 
+    if (frame.environment) {
+      // Add nodes for every argument.
+      let variables = frame.environment.bindings.arguments;
+      for each (let variable in variables) {
+        let name = Object.getOwnPropertyNames(variable)[0];
+        let paramVar = localScope.addVar(name);
+        let paramVal = variable[name].value;
+        paramVar.setGrip(paramVal);
+        this._addExpander(paramVar, paramVal);
+      }
+
+      // Add nodes for every other variable in scope.
+      variables = frame.environment.bindings.variables;
+      for (let variable in variables) {
+        let paramVar = localScope.addVar(variable);
+        let paramVal = variables[variable].value;
+        paramVar.setGrip(paramVal);
+        this._addExpander(paramVar, paramVal);
+      }
+
+      // If we already found 'arguments', we are done here.
+      if ("arguments" in frame.environment.bindings.variables) {
+        // Signal that variables have been fetched.
+        DebuggerController.dispatchEvent("Debugger:FetchedVariables");
+        return;
+      }
+    }
+
+    // Sometimes in call frames with arguments we don't get 'arguments' in the
+    // environment (bug 746601) and we have to construct it manually. Note, that
+    // in this case arguments.callee will be absent, even in the cases where it
+    // shouldn't be.
     if (frame.arguments && frame.arguments.length > 0) {
       // Add "arguments".
       let argsVar = localScope.addVar("arguments");
@@ -479,33 +535,20 @@ StackFrames.prototype = {
       });
       this._addExpander(argsVar, frame.arguments);
 
-      // Add variables for every argument.
-      let objClient = this.activeThread.pauseGrip(frame.callee);
-      objClient.getSignature(function SF_getSignature(aResponse) {
-        for (let i = 0, l = aResponse.parameters.length; i < l; i++) {
-          let param = aResponse.parameters[i];
-          let paramVar = localScope.addVar(param);
-          let paramVal = frame.arguments[i];
-
-          paramVar.setGrip(paramVal);
-          this._addExpander(paramVar, paramVal);
-        }
-
-        // Signal that call parameters have been fetched.
-        DebuggerController.dispatchEvent("Debugger:FetchedParameters");
-
-      }.bind(this));
+      // Signal that variables have been fetched.
+      DebuggerController.dispatchEvent("Debugger:FetchedVariables");
     }
+
   },
 
   /**
-   * Adds a onexpand callback for a variable, lazily handling the addition of
+   * Adds an 'onexpand' callback for a variable, lazily handling the addition of
    * new properties.
    */
   _addExpander: function SF__addExpander(aVar, aObject) {
     // No need for expansion for null and undefined values, but we do need them
     // for frame.arguments which is a regular array.
-    if (!aObject || typeof aObject !== "object" ||
+    if (!aVar || !aObject || typeof aObject !== "object" ||
         (aObject.type !== "object" && !Array.isArray(aObject))) {
       return;
     }
@@ -686,7 +729,7 @@ SourceScripts.prototype = {
    * Handler for the debugger client's unsolicited newScript notification.
    */
   _onNewScript: function SS__onNewScript(aNotification, aPacket) {
-    this._addScript({ url: aPacket.url, startLine: aPacket.startLine });
+    this._addScript({ url: aPacket.url, startLine: aPacket.startLine }, true);
   },
 
   /**
@@ -694,8 +737,9 @@ SourceScripts.prototype = {
    */
   _onScriptsAdded: function SS__onScriptsAdded() {
     for each (let script in this.activeThread.cachedScripts) {
-      this._addScript(script);
+      this._addScript(script, false);
     }
+    DebuggerView.Scripts.commitScripts();
   },
 
   /**
@@ -748,6 +792,22 @@ SourceScripts.prototype = {
   },
 
   /**
+   * Gets the prePath for a script URL.
+   *
+   * @param string aUrl
+   *        The script url.
+   * @return string
+   *         The script prePath if the url is valid, null otherwise.
+   */
+  _getScriptPrePath: function SS__getScriptDomain(aUrl) {
+    try {
+      return Services.io.newURI(aUrl, null, null).prePath + "/";
+    } catch (e) {
+    }
+    return null;
+  },
+
+  /**
    * Gets a unique, simplified label from a script url.
    * ex: a). ici://some.address.com/random/subrandom/
    *     b). ni://another.address.org/random/subrandom/page.html
@@ -763,7 +823,7 @@ SourceScripts.prototype = {
    *        The script url.
    * @param string aHref
    *        The content location href to be used. If unspecified, it will
-   *        defalult to debugged panrent window location.
+   *        default to the script url prepath.
    * @return string
    *         The simplified label.
    */
@@ -774,15 +834,18 @@ SourceScripts.prototype = {
       return this._labelsCache[url];
     }
 
-    let href = aHref || window.parent.content.location.href;
+    let content = window.parent.content;
+    let domain = content ? content.location.href : this._getScriptPrePath(aUrl);
+
+    let href = aHref || domain;
     let pathElements = url.split("/");
     let label = pathElements.pop() || (pathElements.pop() + "/");
 
-    // if the label as a leaf name is alreay present in the scripts list
+    // If the label as a leaf name is already present in the scripts list.
     if (DebuggerView.Scripts.containsLabel(label)) {
       label = url.replace(href.substring(0, href.lastIndexOf("/") + 1), "");
 
-      // if the path/to/script is exactly the same, we're in different domains
+      // If the path/to/script is exactly the same, we're in different domains.
       if (DebuggerView.Scripts.containsLabel(label)) {
         label = url;
       }
@@ -800,15 +863,16 @@ SourceScripts.prototype = {
   },
 
   /**
-   * Add the specified script to the list and display it in the editor if the
-   * editor is empty.
+   * Add the specified script to the list.
+   *
+   * @param object aScript
+   *        The script object coming from the active thread.
+   * @param boolean aForceFlag
+   *        True to force the script to be immediately added.
    */
-  _addScript: function SS__addScript(aScript) {
-    DebuggerView.Scripts.addScript(this._getScriptLabel(aScript.url), aScript);
-
-    if (DebuggerView.editor.getCharCount() == 0) {
-      this.showScript(aScript);
-    }
+  _addScript: function SS__addScript(aScript, aForceFlag) {
+    DebuggerView.Scripts.addScript(
+      this._getScriptLabel(aScript.url), aScript, aForceFlag);
   },
 
   /**
@@ -876,7 +940,7 @@ SourceScripts.prototype = {
    * Handles notifications to load a source script from the cache or from a
    * local file.
    *
-   * XXX: Tt may be better to use nsITraceableChannel to get to the sources
+   * XXX: It may be better to use nsITraceableChannel to get to the sources
    * without relying on caching when we can (not for eval, etc.):
    * http://www.softwareishard.com/blog/firebug/nsitraceablechannel-intercept-http-traffic/
    */
@@ -967,7 +1031,7 @@ SourceScripts.prototype = {
    *        The failure status code.
    */
   _logError: function SS__logError(aUrl, aStatus) {
-    Components.utils.reportError(L10N.getFormatStr("loadingError", [aUrl, aStatus]));
+    Cu.reportError(L10N.getFormatStr("loadingError", [aUrl, aStatus]));
   },
 };
 
@@ -1256,6 +1320,27 @@ let L10N = {
 
 XPCOMUtils.defineLazyGetter(L10N, "stringBundle", function() {
   return Services.strings.createBundle(DBG_STRINGS_URI);
+});
+
+/**
+ * Shortcuts for accessing various debugger preferences.
+ */
+let Prefs = {};
+
+/**
+ * Gets the preferred default remote debugging host.
+ * @return string
+ */
+XPCOMUtils.defineLazyGetter(Prefs, "remoteHost", function() {
+  return Services.prefs.getCharPref("devtools.debugger.remote-host");
+});
+
+/**
+ * Gets the preferred default remote debugging port.
+ * @return number
+ */
+XPCOMUtils.defineLazyGetter(Prefs, "remotePort", function() {
+  return Services.prefs.getIntPref("devtools.debugger.remote-port");
 });
 
 /**
