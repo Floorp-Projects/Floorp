@@ -5181,10 +5181,11 @@ var TabsProgressListener = {
                               aFlags) {
     // Filter out any sub-frame loads
     if (aBrowser.contentWindow == aWebProgress.DOMWindow) {
-      // initialize the click-to-play state
-      aBrowser._clickToPlayDoorhangerShown = false;
-      aBrowser._clickToPlayPluginsActivated = false;
-
+      if (aRequest) {
+        // Initialize the click-to-play state.
+        aBrowser._clickToPlayDoorhangerShown = false;
+        aBrowser._clickToPlayPluginsActivated = false;
+      }
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     }
   },
