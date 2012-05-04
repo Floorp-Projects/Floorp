@@ -10908,8 +10908,20 @@ WebGLExtensionSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
   WebGLExtension *ext = static_cast<WebGLExtension*>(nativeObj);
   WebGLContext *webgl = ext->Context();
-  nsHTMLCanvasElement *canvas = webgl->HTMLCanvasElement();
-  nsINode *node = static_cast<nsINode*>(canvas);
+  nsINode *node = webgl->GetParentObject();
+
+  return WrapNativeParent(cx, globalObj, node, node, parentObj);
+}
+
+NS_IMETHODIMP
+nsWebGLViewportHandlerSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                                    JSObject *globalObj, JSObject **parentObj)
+{
+  *parentObj = globalObj;
+
+  WebGLContext *webgl = static_cast<WebGLContext*>(
+    static_cast<nsIDOMWebGLRenderingContext*>(nativeObj));
+  nsINode *node = webgl->GetParentObject();
 
   return WrapNativeParent(cx, globalObj, node, node, parentObj);
 }
