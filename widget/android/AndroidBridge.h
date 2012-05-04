@@ -289,68 +289,6 @@ public:
 
     void FireAndWaitForTracerEvent();
 
-    class AutoLocalJNIFrame {
-    public:
-        AutoLocalJNIFrame(int nEntries = 128)
-            : mEntries(nEntries)
-        {
-            mJNIEnv = AndroidBridge::GetJNIEnv();
-            Push();
-        }
-
-        AutoLocalJNIFrame(JNIEnv* aJNIEnv, int nEntries = 128)
-            : mEntries(nEntries)
-        {
-            mJNIEnv = aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv();
-
-            Push();
-        }
-
-        // Note! Calling Purge makes all previous local refs created in
-        // the AutoLocalJNIFrame's scope INVALID; be sure that you locked down
-        // any local refs that you need to keep around in global refs!
-        void Purge() {
-            if (mJNIEnv) {
-                mJNIEnv->PopLocalFrame(NULL);
-                Push();
-            }
-        }
-
-        bool CheckForException() {
-            jthrowable exception = mJNIEnv->ExceptionOccurred();
-            if (exception) {
-                mJNIEnv->ExceptionDescribe();
-                mJNIEnv->ExceptionClear();
-                return true;
-            }
-
-            return false;
-        }
-
-        ~AutoLocalJNIFrame() {
-            if (!mJNIEnv)
-                return;
-
-            CheckForException();
-
-            mJNIEnv->PopLocalFrame(NULL);
-        }
-
-    private:
-        void Push() {
-            if (!mJNIEnv)
-                return;
-
-            // Make sure there is enough space to store a local ref to the
-            // exception.  I am not completely sure this is needed, but does
-            // not hurt.
-            mJNIEnv->PushLocalFrame(mEntries + 1);
-        }
-
-        int mEntries;
-        JNIEnv* mJNIEnv;
-    };
-
     /* See GLHelpers.java as to why this is needed */
     void *CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView& surfaceView);
 
@@ -607,6 +545,71 @@ protected:
     int (* Surface_unlockAndPost)(void* surface);
     void (* Region_constructor)(void* region);
     void (* Region_set)(void* region, void* rect);
+};
+
+class AutoLocalJNIFrame {
+public:
+    AutoLocalJNIFrame(int nEntries = 128)
+        : mEntries(nEntries)
+    {
+        mJNIEnv = AndroidBridge::GetJNIEnv();
+        Push();
+    }
+
+    AutoLocalJNIFrame(JNIEnv* aJNIEnv, int nEntries = 128)
+        : mEntries(nEntries)
+    {
+        mJNIEnv = aJNIEnv ? aJNIEnv : AndroidBridge::GetJNIEnv();
+
+        Push();
+    }
+
+    // Note! Calling Purge makes all previous local refs created in
+    // the AutoLocalJNIFrame's scope INVALID; be sure that you locked down
+    // any local refs that you need to keep around in global refs!
+    void Purge() {
+        if (mJNIEnv) {
+            mJNIEnv->PopLocalFrame(NULL);
+            Push();
+        }
+    }
+
+    bool CheckForException() {
+        if (mJNIEnv->ExceptionCheck()) {
+            mJNIEnv->ExceptionDescribe();
+            mJNIEnv->ExceptionClear();
+            return true;
+        }
+
+        return false;
+    }
+
+    ~AutoLocalJNIFrame() {
+        if (!mJNIEnv)
+            return;
+
+        CheckForException();
+
+        mJNIEnv->PopLocalFrame(NULL);
+    }
+
+private:
+    void Push() {
+        if (!mJNIEnv)
+            return;
+
+        // Make sure there is enough space to store a local ref to the
+        // exception.  I am not completely sure this is needed, but does
+        // not hurt.
+        jint ret = mJNIEnv->PushLocalFrame(mEntries + 1);
+        NS_ABORT_IF_FALSE(ret == 0, "Failed to push local JNI frame");
+        if (ret < 0) {
+            CheckForException();
+        }
+    }
+
+    int mEntries;
+    JNIEnv* mJNIEnv;
 };
 
 }
