@@ -932,7 +932,8 @@ public:
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager)
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters)
   {
     return LAYER_ACTIVE;
   }

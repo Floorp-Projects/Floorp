@@ -155,9 +155,8 @@ TiledThebesLayerOGL::ProcessUploadQueue()
       resolution.height *= metrics.mResolution.height;
     }
 
-    const FrameMetrics& metrics = GetParent()->GetFrameMetrics();
-    mReusableTileStore->HarvestTiles(&mVideoMemoryTiledBuffer,
-                                     metrics.mContentSize,
+    mReusableTileStore->HarvestTiles(this,
+                                     &mVideoMemoryTiledBuffer,
                                      mVideoMemoryTiledBuffer.GetValidRegion(),
                                      mMainMemoryTiledBuffer.GetValidRegion(),
                                      mVideoMemoryTiledBuffer.GetResolution(),
@@ -225,8 +224,7 @@ TiledThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer, const nsIntPoint& aOf
 
   // Render old tiles to fill in gaps we haven't had the time to render yet.
   if (mReusableTileStore) {
-    const FrameMetrics& metrics = GetParent()->GetFrameMetrics();
-    mReusableTileStore->DrawTiles(this, metrics.mContentSize,
+    mReusableTileStore->DrawTiles(this,
                                   mVideoMemoryTiledBuffer.GetValidRegion(),
                                   mVideoMemoryTiledBuffer.GetResolution(),
                                   GetEffectiveTransform(), aOffset, maskLayer);

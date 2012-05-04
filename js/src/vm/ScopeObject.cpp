@@ -1025,7 +1025,7 @@ js::CloneStaticBlockObject(JSContext *cx, StaticBlockObject &srcBlock,
 
     StaticBlockObject *clone = StaticBlockObject::create(cx);
     if (!clone)
-        return false;
+        return NULL;
 
     uint32_t parentId = FindObjectIndex(src, srcBlock.enclosingBlock());
     clone->setEnclosingBlock(parentId == NO_PARENT_INDEX
@@ -1037,7 +1037,7 @@ js::CloneStaticBlockObject(JSContext *cx, StaticBlockObject &srcBlock,
     /* Shape::Range is reverse order, so build a list in forward order. */
     AutoShapeVector shapes(cx);
     if (!shapes.growBy(srcBlock.slotCount()))
-        return false;
+        return NULL;
     for (Shape::Range r = srcBlock.lastProperty()->all(); !r.empty(); r.popFront())
         shapes[r.front().shortid()] = &r.front();
 
@@ -1048,7 +1048,7 @@ js::CloneStaticBlockObject(JSContext *cx, StaticBlockObject &srcBlock,
         bool redeclared;
         if (!clone->addVar(cx, id, i, &redeclared)) {
             JS_ASSERT(!redeclared);
-            return false;
+            return NULL;
         }
 
         clone->setAliased(i, srcBlock.isAliased(i));

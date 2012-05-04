@@ -65,7 +65,6 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -91,6 +90,7 @@
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
+#include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "js/MemoryMetrics.h"
 #include "yarr/BumpPointerAllocator.h"
@@ -1741,7 +1741,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 }
 
 #define CLASP(name)                 (&name##Class)
-#define TYPED_ARRAY_CLASP(type)     (&TypedArray::fastClasses[TypedArray::type])
+#define TYPED_ARRAY_CLASP(type)     (&TypedArray::classes[TypedArray::type])
 #define EAGER_ATOM(name)            ATOM_OFFSET(name), NULL
 #define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name), NULL
 #define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
@@ -1862,6 +1862,7 @@ static JSStdName standard_class_names[] = {
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), TYPED_ARRAY_CLASP(TYPE_FLOAT64)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray),
                                 TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(DataView),     &DataViewClass},
 
     {js_InitWeakMapClass,       EAGER_ATOM_AND_CLASP(WeakMap)},
     {js_InitProxyClass,         EAGER_ATOM_AND_CLASP(Proxy)},

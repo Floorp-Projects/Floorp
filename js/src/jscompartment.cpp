@@ -41,7 +41,6 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jsmath.h"
 #include "jsproxy.h"
@@ -50,6 +49,7 @@
 #include "jswrapper.h"
 
 #include "assembler/wtf/Platform.h"
+#include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"

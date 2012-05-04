@@ -72,6 +72,7 @@
 #include "nsGUIEvent.h"
 #include "nsInterfaceHashtable.h"
 #include "nsEventStates.h"
+#include "nsPresArena.h"
 
 class nsIContent;
 class nsIDocument;
@@ -146,9 +147,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-#define NS_IPRESSHELL_IID    \
-        { 0x4dc4db09, 0x03d4, 0x4427, \
-          { 0xbe, 0xfb, 0xc9, 0x29, 0xac, 0x5c, 0x62, 0xab } }
+// a0d9bae4-2257-4b0b-b08a-3d95122419e2
+#define NS_IPRESSHELL_IID \
+  { 0xa0d9bae4, 0x2257, 0x4b0b, \
+    { 0xb0, 0x8a, 0x3d, 0x95, 0x12, 0x24, 0x19, 0xe2 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -218,39 +220,36 @@ public:
 
   bool IsDestroying() { return mIsDestroying; }
 
-  // All frames owned by the shell are allocated from an arena.  They
-  // are also recycled using free lists.  Separate free lists are
-  // maintained for each frame type (aCode), which must always
-  // correspond to the same aSize value. AllocateFrame clears the
-  // memory that it returns.
-  virtual void* AllocateFrame(nsQueryFrame::FrameIID aCode, size_t aSize) = 0;
-  virtual void  FreeFrame(nsQueryFrame::FrameIID aCode, void* aChunk) = 0;
-
-  // Objects closely related to the frame tree, but that are not
-  // actual frames (subclasses of nsFrame) are also allocated from the
-  // arena, and recycled via a separate set of per-size free lists.
-  // AllocateMisc does *not* clear the memory that it returns.
-  virtual void* AllocateMisc(size_t aSize) = 0;
-  virtual void  FreeMisc(size_t aSize, void* aChunk) = 0;
+  /**
+   * All frames owned by the shell are allocated from an arena.  They
+   * are also recycled using free lists.  Separate free lists are
+   * maintained for each frame type (aID), which must always correspond
+   * to the same aSize value.  AllocateFrame returns zero-filled memory.
+   * AllocateFrame is fallible, it returns nsnull on out-of-memory.
+   */
+  virtual void* AllocateFrame(nsQueryFrame::FrameIID aID, size_t aSize) = 0;
+  virtual void  FreeFrame(nsQueryFrame::FrameIID aID, void* aChunk) = 0;
 
   /**
-   * Stack memory allocation:
-   *
-   * Callers who wish to allocate memory whose lifetime corresponds to
-   * the lifetime of a stack-allocated object can use this API.  The
-   * caller must use a pair of calls to PushStackMemory and
-   * PopStackMemory, such that all stack object lifetimes are either
-   * entirely between the calls or containing both calls.
-   *
-   * Then, between the calls, the caller can call AllocateStackMemory to
-   * allocate memory from an arena pool that will be freed by the call
-   * to PopStackMemory.
-   *
-   * The allocations cannot be for more than 4044 bytes.
+   * This is for allocating other types of objects (not frames).  Separate free
+   * lists are maintained for each type (aID), which must always correspond to
+   * the same aSize value.  AllocateByObjectID returns zero-filled memory.
+   * AllocateByObjectID is fallible, it returns nsnull on out-of-memory.
    */
-  virtual void PushStackMemory() = 0;
-  virtual void PopStackMemory() = 0;
-  virtual void* AllocateStackMemory(size_t aSize) = 0;
+  virtual void* AllocateByObjectID(nsPresArena::ObjectID aID, size_t aSize) = 0;
+  virtual void  FreeByObjectID(nsPresArena::ObjectID aID, void* aPtr) = 0;
+
+  /**
+   * Other objects closely related to the frame tree that are allocated
+   * from a separate set of per-size free lists.  Note that different types
+   * of objects that has the same size are allocated from the same list.
+   * AllocateMisc does *not* clear the memory that it returns.
+   * AllocateMisc is fallible, it returns nsnull on out-of-memory.
+   *
+   * @deprecated use AllocateByObjectID/FreeByObjectID instead
+   */
+  virtual void* AllocateMisc(size_t aSize) = 0;
+  virtual void  FreeMisc(size_t aSize, void* aChunk) = 0;
 
   nsIDocument* GetDocument() const { return mDocument; }
 

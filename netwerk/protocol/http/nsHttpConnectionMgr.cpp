@@ -1191,11 +1191,40 @@ nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent)
     // don't create any new ssl connections until the result of the
     // negotiation is known.
     
-    return ent->mConnInfo->UsingSSL() &&
+    bool doRestrict = ent->mConnInfo->UsingSSL() &&
         gHttpHandler->IsSpdyEnabled() &&
         !ent->mConnInfo->UsingHttpProxy() &&
         (!ent->mTestedSpdy || ent->mUsingSpdy) &&
         (ent->mHalfOpens.Length() || ent->mActiveConns.Length());
+
+    // If there are no restrictions, we are done
+    if (!doRestrict)
+        return false;
+    
+    // If the restriction is based on a tcp handshake in progress
+    // let that connect and then see if it was SPDY or not
+    if (ent->mHalfOpens.Length())
+        return true;
+
+    // There is a concern that a host is using a mix of HTTP/1 and SPDY.
+    // In that case we don't want to restrict connections just because
+    // there is a single active HTTP/1 session in use.
+    if (ent->mUsingSpdy && ent->mActiveConns.Length()) {
+        bool confirmedRestrict = false;
+        for (PRUint32 index = 0; index < ent->mActiveConns.Length(); ++index) {
+            nsHttpConnection *conn = ent->mActiveConns[index];
+            if (!conn->ReportedNPN() || conn->CanDirectlyActivate()) {
+                confirmedRestrict = true;
+                break;
+            }
+        }
+        doRestrict = confirmedRestrict;
+        if (!confirmedRestrict) {
+            LOG(("nsHttpConnectionMgr spdy connection restriction to "
+                 "%s bypassed.\n", ent->mConnInfo->Host()));
+        }
+    }
+    return doRestrict;
 }
 
 bool
