@@ -717,7 +717,7 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
              * objects here, as they are not inserted into the cache and
              * will result in a miss.
              */
-            JSObject *last = cx->compartment->nativeIterCache.last;
+            JSObject *last = cx->runtime->nativeIterCache.last;
             JSObject *proto = obj->getProto();
             if (last) {
                 NativeIterator *lastni = last->getNativeIterator();
@@ -756,7 +756,7 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
                 pobj = pobj->getProto();
             } while (pobj);
 
-            JSObject *iterobj = cx->compartment->nativeIterCache.get(key);
+            JSObject *iterobj = cx->runtime->nativeIterCache.get(key);
             if (iterobj) {
                 NativeIterator *ni = iterobj->getNativeIterator();
                 if (!(ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
@@ -768,7 +768,7 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
                     UpdateNativeIterator(ni, obj);
                     RegisterEnumerator(cx, iterobj, ni);
                     if (shapes.length() == 2)
-                        cx->compartment->nativeIterCache.last = iterobj;
+                        cx->runtime->nativeIterCache.last = iterobj;
                     return true;
                 }
             }
@@ -807,10 +807,10 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
 
     /* Cache the iterator object if possible. */
     if (shapes.length())
-        cx->compartment->nativeIterCache.set(key, iterobj);
+        cx->runtime->nativeIterCache.set(key, iterobj);
 
     if (shapes.length() == 2)
-        cx->compartment->nativeIterCache.last = iterobj;
+        cx->runtime->nativeIterCache.last = iterobj;
     return true;
 }
 

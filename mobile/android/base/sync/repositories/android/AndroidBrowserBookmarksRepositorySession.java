@@ -498,7 +498,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   }
 
   @Override
-  protected boolean shouldIgnore(Record record) {
+  public boolean shouldIgnore(Record record) {
     if (!(record instanceof BookmarkRecord)) {
       return true;
     }

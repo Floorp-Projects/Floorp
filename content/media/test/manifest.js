@@ -9,6 +9,7 @@ var gSmallTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
+  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -143,6 +144,10 @@ var gPlayTests = [
   // hardware.
   { name:"spacestorm-1000Hz-100ms.ogg", type:"audio/ogg", duration:0.099 },
 
+  // Opus data in an ogg container
+  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
+
+  // Invalid file
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN }
 ];
 
@@ -253,6 +258,7 @@ var gSeekTests = [
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"bug516323.indexed.ogv", type:"video/ogg", duration:4.208 },
   { name:"split.webm", type:"video/webm", duration:1.967 },
+  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
 
@@ -468,16 +474,23 @@ function mediaTestCleanup() {
   var branch = prefService.getBranch("media.");
   var oldDefault = 2;
   var oldAuto = 3;
+  var oldOpus = undefined;
   try {
     oldDefault = branch.getIntPref("preload.default");
     oldAuto    = branch.getIntPref("preload.auto");
+    oldOpus    = branch.getBoolPref("opus.enabled");
   } catch(ex) { }
   branch.setIntPref("preload.default", 2); // preload_metadata
   branch.setIntPref("preload.auto", 3); // preload_enough
+  // test opus playback iff the pref exists
+  if (oldOpus !== undefined)
+    branch.setBoolPref("opus.enabled", true);
 
   window.addEventListener("unload", function() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     branch.setIntPref("preload.default", oldDefault);
     branch.setIntPref("preload.auto", oldAuto);
+    if (oldOpus !== undefined)
+      branch.setBoolPref("opus.enabled", oldOpus);
   }, false);
  })();

@@ -70,7 +70,7 @@
 #include "XPCQuickStubs.h"
 #include "dombindings.h"
 
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMMutationObserver.h"
@@ -908,9 +908,9 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
         cb.NoteXPCOMChild(identity);
     } else if ((clazz->flags & JSCLASS_IS_DOMJSCLASS) &&
-               bindings::DOMJSClass::FromJSClass(clazz)->mDOMObjectIsISupports) {
+               DOMJSClass::FromJSClass(clazz)->mDOMObjectIsISupports) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "UnwrapDOMObject(obj)");
-        nsISupports *identity = bindings::UnwrapDOMObject<nsISupports>(obj, clazz);
+        nsISupports *identity = UnwrapDOMObject<nsISupports>(obj, clazz);
         cb.NoteXPCOMChild(identity);
     }
 
@@ -1082,6 +1082,8 @@ TraceXPCGlobal(JSTracer *trc, JSObject *obj)
 
     if (XPCWrappedNativeScope *scope = XPCWrappedNativeScope::GetNativeScope(obj))
         scope->TraceDOMPrototypes(trc);
+
+    mozilla::dom::TraceProtoOrIfaceCache(trc, obj);
 }
 
 #ifdef DEBUG
@@ -1135,28 +1137,14 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     CheckTypeInference(cx, clasp, principal);
 
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "using a principal off the main thread?");
-    NS_ABORT_IF_FALSE(principal, "bad key");
 
-    XPCCompartmentMap& map = nsXPConnect::GetRuntimeInstance()->GetCompartmentMap();
-    xpc::PtrAndPrincipalHashKey key(ptr, principal);
-    if (!map.Get(&key, compartment)) {
-        xpc::PtrAndPrincipalHashKey *priv_key =
-            new xpc::PtrAndPrincipalHashKey(ptr, principal);
-        xpc::CompartmentPrivate *priv = new xpc::CompartmentPrivate(priv_key, wantXrays);
-        if (!CreateNewCompartment(cx, clasp, principal, priv,
-                                  global, compartment)) {
-            return UnexpectedFailure(NS_ERROR_FAILURE);
-        }
+    xpc::CompartmentPrivate *priv = new xpc::CompartmentPrivate(wantXrays);
+    if (!CreateNewCompartment(cx, clasp, principal, priv, global, compartment))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
-        map.Put(&key, *compartment);
-    } else {
-        js::AutoSwitchCompartment sc(cx, *compartment);
-
-        JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
-        if (!tempGlobal)
-            return UnexpectedFailure(NS_ERROR_FAILURE);
-        *global = tempGlobal;
-    }
+    XPCCompartmentSet& set = nsXPConnect::GetRuntimeInstance()->GetCompartmentSet();
+    if (!set.put(*compartment))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
 #ifdef DEBUG
     // Verify that the right trace hook is called. Note that this doesn't
@@ -1174,7 +1162,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
 #endif
 
     if (clasp->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::bindings::AllocateProtoOrIfaceCache(*global);
+        AllocateProtoOrIfaceCache(*global);
     }
 
     return NS_OK;

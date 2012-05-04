@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bindings_Utils_h__
-#define mozilla_dom_bindings_Utils_h__
+#ifndef mozilla_dom_BindingUtils_h__
+#define mozilla_dom_BindingUtils_h__
 
-#include "mozilla/dom/bindings/DOMJSClass.h"
+#include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/workers/Workers.h"
 
 #include "jsapi.h"
@@ -18,9 +18,12 @@
 #include "nsTraceRefcnt.h"
 #include "nsWrapperCacheInlines.h"
 
+// nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
+// try to use it without fixing that first.
+class nsGlobalWindow;
+
 namespace mozilla {
 namespace dom {
-namespace bindings {
 
 template<bool mainThread>
 inline bool
@@ -200,6 +203,20 @@ AllocateProtoOrIfaceCache(JSObject* obj)
 }
 
 inline void
+TraceProtoOrIfaceCache(JSTracer* trc, JSObject* obj)
+{
+  MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
+
+  JSObject** protoOrIfaceArray = GetProtoOrIfaceArray(obj);
+  for (size_t i = 0; i < kProtoOrIfaceCacheCount; ++i) {
+    JSObject* proto = protoOrIfaceArray[i];
+    if (proto) {
+      JS_CALL_OBJECT_TRACER(trc, proto, "protoOrIfaceArray[i]");
+    }
+  }
+}
+
+inline void
 DestroyProtoOrIfaceCache(JSObject* obj)
 {
   MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
@@ -228,7 +245,14 @@ struct ConstantSpec
  *            This is null if we should not create an interface prototype
  *            object.
  * constructorClass is the JSClass to use for the interface object.
- *                  This is null if we should not create an interface object.
+ *                  This is null if we should not create an interface object or
+ *                  if it should be a function object.
+ * constructor is the JSNative to use as a constructor.  If this is non-null, it
+ *             should be used as a JSNative to back the interface object, which
+ *             should be a Function.  If this is null, then we should create an
+ *             object of constructorClass, unless that's also null, in which
+ *             case we should not create an interface object at all.
+ * ctorNargs is the length of the constructor function; 0 if no constructor
  * methods and properties are to be defined on the interface prototype object;
  *                        these arguments are allowed to be null if there are no
  *                        methods or properties respectively.
@@ -248,7 +272,8 @@ struct ConstantSpec
 JSObject*
 CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* receiver,
                        JSObject* protoProto, JSClass* protoClass,
-                       JSClass* constructorClass, JSFunctionSpec* methods,
+                       JSClass* constructorClass, JSNative constructor,
+                       unsigned ctorNargs, JSFunctionSpec* methods,
                        JSPropertySpec* properties, ConstantSpec* constants,
                        JSFunctionSpec* staticMethods, const char* name);
 
@@ -377,9 +402,6 @@ GetWrapperCache(nsWrapperCache* cache)
   return cache;
 }
 
-// nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
-// try to use it without fixing that first.
-class nsGlobalWindow;
 inline nsWrapperCache*
 GetWrapperCache(nsGlobalWindow* not_allowed);
 
@@ -507,9 +529,12 @@ InitIds(JSContext* cx, Spec* specs, jsid* ids)
 
 JSBool
 QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp);
+JSBool
+ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
+JSBool
+ThrowingConstructorWorkers(JSContext* cx, unsigned argc, JS::Value* vp);
 
-} // namespace bindings
 } // namespace dom
 } // namespace mozilla
 
-#endif /* mozilla_dom_bindings_Utils_h__ */
+#endif /* mozilla_dom_BindingUtils_h__ */

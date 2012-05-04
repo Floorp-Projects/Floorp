@@ -52,7 +52,7 @@ Presenter.prototype = {
   /**
    * Text has changed, either by the user or by the system. TODO.
    */
-  textChanged: function textChanged() {},
+  textChanged: function textChanged(aIsInserted, aStartOffset, aLength, aText, aModifiedText) {},
 
   /**
    * Text selection has changed. TODO.
@@ -252,6 +252,27 @@ AndroidPresenter.prototype.tabSelected = function(aObject) {
   context.reverse();
 
   this.pivotChanged(vcDoc.virtualCursor.position || aObject, context);
+};
+
+AndroidPresenter.prototype.textChanged = function(aIsInserted, aStart, aLength, aText, aModifiedText) {
+  let androidEvent = {
+    type: 'Accessibility:Event',
+    eventType: ANDROID_TYPE_VIEW_TEXT_CHANGED,
+    text: [aText],
+    fromIndex: aStart
+  };
+
+  if (aIsInserted) {
+    androidEvent.addedCount = aLength;
+    androidEvent.beforeText =
+      aText.substring(0, aStart) + aText.substring(aStart + aLength);
+  } else {
+    androidEvent.removedCount = aLength;
+    androidEvent.beforeText =
+      aText.substring(0, aStart) + aModifiedText + aText.substring(aStart);
+  }
+
+  this.sendMessageToJava({gecko: androidEvent});
 };
 
 AndroidPresenter.prototype.sendMessageToJava = function(aMessage) {

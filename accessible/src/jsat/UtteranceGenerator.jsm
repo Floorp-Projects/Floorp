@@ -50,7 +50,7 @@ var UtteranceGenerator = {
     if (aForceName)
       flags |= INCLUDE_NAME;
 
-    return func(aAccessible, roleString, flags);
+    return func.apply(this, [aAccessible, roleString, flags]);
   },
 
   genForAction: function(aObject, aActionName) {
@@ -113,8 +113,7 @@ var UtteranceGenerator = {
   objectUtteranceFunctions: {
     defaultFunc: function defaultFunc(aAccessible, aRoleStr, aFlags) {
       let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
-      let desc = (aFlags & INCLUDE_ROLE) ?
-        gStringBundle.GetStringFromName(aRoleStr) : '';
+      let desc = (aFlags & INCLUDE_ROLE) ? this._getLocalizedRole(aRoleStr) : '';
 
       if (!name && !desc)
         return [];
@@ -149,7 +148,7 @@ var UtteranceGenerator = {
 
     listitem: function(aAccessible, aRoleStr, aFlags) {
       let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
-      let localizedRole = gStringBundle.GetStringFromName(aRoleStr);
+      let localizedRole = this._getLocalizedRole(aRoleStr);
       let itemno = {};
       let itemof = {};
       aAccessible.groupPosition({}, itemof, itemno);
@@ -157,6 +156,14 @@ var UtteranceGenerator = {
           'objItemOf', [localizedRole, itemno.value, itemof.value], 3);
 
       return [desc, name];
+    }
+  },
+
+  _getLocalizedRole: function _getLocalizedRole(aRoleStr) {
+    try {
+      return gStringBundle.GetStringFromName(aRoleStr.replace(' ', ''));
+    } catch (x) {
+      return '';
     }
   }
 };

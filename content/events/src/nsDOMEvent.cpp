@@ -680,6 +680,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       isInputEvent = true;
       keyEvent->keyCode = oldKeyEvent->keyCode;
       keyEvent->charCode = oldKeyEvent->charCode;
+      keyEvent->location = oldKeyEvent->location;
       keyEvent->isChar = oldKeyEvent->isChar;
       newEvent = keyEvent;
       break;

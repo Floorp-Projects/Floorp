@@ -1767,11 +1767,6 @@ nsDocAccessible::ProcessPendingEvent(AccEvent* aEvent)
     PRInt32 caretOffset;
     if (hyperText &&
         NS_SUCCEEDED(hyperText->GetCaretOffset(&caretOffset))) {
-#ifdef DEBUG_A11Y
-      PRUnichar chAtOffset;
-      hyperText->GetCharacterAtOffset(caretOffset, &chAtOffset);
-      printf("\nCaret moved to %d with char %c", caretOffset, chAtOffset);
-#endif
       nsRefPtr<AccEvent> caretMoveEvent =
         new AccCaretMoveEvent(hyperText, caretOffset);
       nsEventShell::FireEvent(caretMoveEvent);

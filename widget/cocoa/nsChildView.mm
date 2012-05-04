@@ -1874,8 +1874,8 @@ nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 
   TextureImage::ScopedBindTexture texBind(mResizerImage, LOCAL_GL_TEXTURE0);
 
-  ColorTextureLayerProgram *program =
-    manager->GetColorTextureLayerProgram(mResizerImage->GetShaderProgramType());
+  ShaderProgramOGL *program =
+    manager->GetProgram(mResizerImage->GetShaderProgramType());
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(bottomX - 15,
                                       bottomY - 15,

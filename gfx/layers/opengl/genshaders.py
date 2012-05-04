@@ -42,34 +42,85 @@ import string
 
 defines = dict()
 
-def emitShader(fp, shadername, shaderlines):
-    eolContinue = "\\n\\\n";
-    fp.write("const char %s[] = \"/* %s */%s" % (shadername,shadername,eolContinue))
-    for line in shaderlines:
-        line.replace("\\", "\\\\")
-        while line.find('$') != -1:
-            expansions = re.findall('\$\S+\$', line)
-            for m in expansions:
-                mkey = m[1:-1]
-                if not defines.has_key(mkey):
-                    print "Error: Undefined expansion used: '%s'" % (m,)
-                    sys.exit(1)
-                mval = defines[mkey]
-                if type(mval) == str:
-                    line = line.replace(m, mval)
-                elif type(mval) == list:
-                    line = line.replace(m, eolContinue.join(mval) + eolContinue);
-                else:
-                    print "Internal Error: Unknown type in defines array: '%s'" % (str(type(mval)),)
+def parseShaderName(shadername):
+  name = ""
+  params = {}
+  inparams = None
+  inparam = None
+  curparams = []
+  for c in shadername:
+    if c == '<':
+      inparams = ''
+    elif c == ':':
+      if inparams is None:
+        raise Exception(": in shader name")
+      inparam = ''
+    elif c == ',':
+      if inparams is None:
+        raise Exception(", in shader name")
+      if inparam is None:
+        raise Exception("no values for parameter " + inparams)
+      curparams.append(inparam)
+      inparam = ''
+    elif c == '>':
+      if inparams is None:
+        raise Exception("> in shader name")
+      if inparam is None:
+        raise Exception("no values for parameter " + inparams)
+      curparams.append(inparam)
+      params[inparams] = curparams
+      name += '$' + inparams + '$'
+      inparams = None
+      inparam = None
+    else:
+      if inparam is not None:
+        inparam += c
+      elif inparams is not None:
+        inparams += c
+      else:
+        name += c
+  return (name, params)
 
-        fp.write("%s%s" % (line,eolContinue))
-    fp.write("\";\n\n");
+def emitShader(fp, shadername, shaderlines):
+    (parsedname, params) = parseShaderName(shadername)
+    eolContinue = "\\n\\\n";
+    pvals = ['']
+    pname = ''
+    pnames = params.keys()
+    if len(pnames) > 1:
+      raise Exception("Currently only supports zero or one parameters to a @shader")
+    if pnames:
+      pname = pnames[0]
+      pvals = params[pname]
+    for pval in pvals:
+      name = parsedname.replace('$' + pname + '$', pval, 1);
+      fp.write("static const char %s[] = \"/* %s */%s" % (name,name,eolContinue))
+      for line in shaderlines:
+          line = line.replace("\\", "\\\\")
+          while line.find('$') != -1:
+              expansions = re.findall('\$\S+\$', line)
+              for m in expansions:
+                  mkey = m[1:-1]
+                  mkey = mkey.replace('<' + pname + '>', '<' + pval + '>')
+                  if not defines.has_key(mkey):
+                      print "Error: Undefined expansion used: '%s'" % (m,)
+                      sys.exit(1)
+                  mval = defines[mkey]
+                  if type(mval) == str:
+                      line = line.replace(m, mval)
+                  elif type(mval) == list:
+                      line = line.replace(m, eolContinue.join(mval) + eolContinue);
+                  else:
+                      print "Internal Error: Unknown type in defines array: '%s'" % (str(type(mval)),)
+
+          fp.write("%s%s" % (line,eolContinue))
+      fp.write("\";\n\n");
 
 def genShaders(infile, outfile):
     source = open(infile, "r").readlines()
     desthdr = open(outfile, "w+")
 
-    desthdr.write("/* AUTOMATICALLY GENERATED */\n");
+    desthdr.write("/* AUTOMATICALLY GENERATED from " + infile + " */\n");
     desthdr.write("/* DO NOT EDIT! */\n\n");
 
     global defines

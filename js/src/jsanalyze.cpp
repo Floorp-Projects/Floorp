@@ -188,7 +188,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     bool heavyweight = script->function() && script->function()->isHeavyweight();
 
-    isCompileable = true;
+    isJaegerCompileable = true;
 
     isInlineable = true;
     if (script->numClosedArgs() || script->numClosedVars() || heavyweight ||
@@ -340,7 +340,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           case JSOP_QNAMEPART:
           case JSOP_QNAMECONST:
-            isCompileable = false;
+            isJaegerCompileable = false;
+            /* FALL THROUGH */
           case JSOP_NAME:
           case JSOP_CALLNAME:
           case JSOP_BINDNAME:
@@ -375,7 +376,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           case JSOP_ENTERWITH:
             addsScopeObjects_ = true;
-            isCompileable = isInlineable = canTrackVars = false;
+            isJaegerCompileable = isInlineable = canTrackVars = false;
             break;
 
           case JSOP_ENTERLET0:
@@ -625,7 +626,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           default:
             if (!(js_CodeSpec[op].format & JOF_DECOMPOSE))
-                isCompileable = isInlineable = false;
+                isJaegerCompileable = isInlineable = false;
             break;
         }
 

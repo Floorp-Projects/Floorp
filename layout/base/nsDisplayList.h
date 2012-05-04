@@ -496,6 +496,20 @@ public:
   const nsRegion& GetExcludedGlassRegion() {
     return mExcludedGlassRegion;
   }
+  void SetGlassDisplayItem(nsDisplayItem* aItem) {
+    if (mGlassDisplayItem) {
+      // Web pages or extensions could trigger this by using
+      // -moz-appearance:win-borderless-glass etc on their own elements.
+      // Keep the first one, since that will be the background of the root
+      // window
+      NS_WARNING("Multiple glass backgrounds found?");
+    } else {
+      mGlassDisplayItem = aItem;
+    }
+  }
+  bool NeedToForceTransparentSurfaceForItem(nsDisplayItem* aItem) {
+    return aItem == mGlassDisplayItem;
+  }
 
 private:
   void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
@@ -529,6 +543,8 @@ private:
   nsPoint                        mCachedOffset;
   nsRect                         mDisplayPort;
   nsRegion                       mExcludedGlassRegion;
+  // The display item for the Windows window glass background, if any
+  nsDisplayItem*                 mGlassDisplayItem;
   Mode                           mMode;
   bool                           mBuildCaret;
   bool                           mIgnoreSuppression;
@@ -699,11 +715,9 @@ public:
    * culling.
    */
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap,
-                                   bool* aForceTransparentSurface)
+                                   bool* aSnap)
   {
     *aSnap = false;
-    *aForceTransparentSurface = false;
     return nsRegion();
   }
   /**
@@ -1217,8 +1231,7 @@ private:
   // opaque content in this list).
   bool mIsOpaque;
   // This is set to true by ComputeVisibility if any display item in this
-  // list needs to force the surface to be transparent (e.g. if the
-  // item "punch holes" on the surface by clearing part of its area).
+  // list needs to force the surface containing this list to be transparent.
   bool mForceTransparentSurface;
 #ifdef DEBUG
   bool mDidComputeVisibility;
@@ -1554,10 +1567,8 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap);
 
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap,
-                                   bool* aOutTransparentBackground) {
+                                   bool* aSnap) {
     *aSnap = false;
-    *aOutTransparentBackground = false;
     nsRegion result;
     if (NS_GET_A(mColor) == 255) {
       result = GetBounds(aBuilder, aSnap);
@@ -1598,8 +1609,7 @@ public:
                                    nsRegion* aVisibleRegion,
                                    const nsRect& aAllowVisibleRegionExpansion);
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap,
-                                   bool* aForceTransparentSurface);
+                                   bool* aSnap);
   virtual bool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
                                                 nsIFrame* aFrame);
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
@@ -1755,8 +1765,7 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap);
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap,
-                                   bool* aForceTransparentSurface);
+                                   bool* aSnap);
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
   virtual bool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
                                                 nsIFrame* aFrame);
@@ -1861,8 +1870,7 @@ public:
 #endif
   
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap,
-                                   bool* aForceTransparentSurface);
+                                   bool* aSnap);
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters);
@@ -2068,8 +2076,7 @@ public:
 #endif
 
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap,
-                                   bool* aForceTransparentSurface);
+                                   bool* aSnap);
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -2140,8 +2147,7 @@ public:
 #endif
   
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap,
-                                   bool* aForceTransparentSurface);
+                                   bool* aSnap);
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
@@ -2221,8 +2227,7 @@ public:
                        HitTestState *aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder *aBuilder, bool* aSnap);
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
-                                   bool* aSnap,
-                                   bool* aForceTransparentSurface);
+                                   bool* aSnap);
   virtual bool IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor);
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager);
