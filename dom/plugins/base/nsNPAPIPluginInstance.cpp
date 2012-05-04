@@ -69,6 +69,29 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
 #include "AndroidBridge.h"
+
+class PluginEventRunnable : public nsRunnable
+{
+public:
+  PluginEventRunnable(nsNPAPIPluginInstance* instance, ANPEvent* event)
+    : mInstance(instance), mEvent(*event), mCanceled(false) {}
+
+  virtual nsresult Run() {
+    if (mCanceled)
+      return NS_OK;
+
+    mInstance->HandleEvent(&mEvent, nsnull);
+    mInstance->PopPostedEvent(this);
+    return NS_OK;
+  }
+
+  void Cancel() { mCanceled = true; }
+private:
+  nsNPAPIPluginInstance* mInstance;
+  ANPEvent mEvent;
+  bool mCanceled;
+};
+
 #endif
 
 using namespace mozilla;
@@ -214,6 +237,14 @@ nsresult nsNPAPIPluginInstance::Stop()
                    ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, &mNPP, error));
   }
   mRunning = DESTROYED;
+
+#if MOZ_WIDGET_ANDROID
+  for (PRUint32 i = 0; i < mPostedEvents.Length(); i++) {
+    mPostedEvents[i]->Cancel();
+  }
+
+  mPostedEvents.Clear();
+#endif
 
   nsJSNPRuntime::OnPluginDestroy(&mNPP);
 
@@ -790,6 +821,19 @@ void nsNPAPIPluginInstance::RequestJavaSurface()
   mSurfaceGetter = new SurfaceGetter(this, mPlugin->PluginFuncs(), mNPP);
 
   ((SurfaceGetter*)mSurfaceGetter.get())->RequestSurface();
+}
+
+void nsNPAPIPluginInstance::PostEvent(void* event)
+{
+  PluginEventRunnable *r = new PluginEventRunnable(this, (ANPEvent*)event);
+  mPostedEvents.AppendElement(nsRefPtr<PluginEventRunnable>(r));
+
+  NS_DispatchToMainThread(r);
+}
+
+void nsNPAPIPluginInstance::PopPostedEvent(PluginEventRunnable* r)
+{
+  mPostedEvents.RemoveElement(r);
 }
 
 #endif
