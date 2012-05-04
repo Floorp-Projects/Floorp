@@ -14,36 +14,31 @@ Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/ContactService.jsm');
 Cu.import('resource://gre/modules/Webapps.jsm');
 
-XPCOMUtils.defineLazyGetter(Services, 'env', function() {
-  return Cc['@mozilla.org/process/environment;1']
-           .getService(Ci.nsIEnvironment);
-});
+XPCOMUtils.defineLazyServiceGetter(Services, 'env',
+                                   '@mozilla.org/process/environment;1',
+                                   'nsIEnvironment');
 
-XPCOMUtils.defineLazyGetter(Services, 'ss', function() {
-  return Cc['@mozilla.org/content/style-sheet-service;1']
-           .getService(Ci.nsIStyleSheetService);
-});
+XPCOMUtils.defineLazyServiceGetter(Services, 'ss',
+                                   '@mozilla.org/content/style-sheet-service;1',
+                                   'nsIStyleSheetService');
 
-XPCOMUtils.defineLazyGetter(Services, 'idle', function() {
-  return Cc['@mozilla.org/widget/idleservice;1']
-           .getService(Ci.nsIIdleService);
-});
+XPCOMUtils.defineLazyServiceGetter(Services, 'idle',
+                                   '@mozilla.org/widget/idleservice;1',
+                                   'nsIIdleService');
 
-XPCOMUtils.defineLazyGetter(Services, 'audioManager', function() {
 #ifdef MOZ_WIDGET_GONK
-  return Cc['@mozilla.org/telephony/audiomanager;1']
-           .getService(Ci.nsIAudioManager);
+XPCOMUtils.defineLazyServiceGetter(Services, 'audioManager',
+                                   '@mozilla.org/telephony/audiomanager;1',
+                                   'nsIAudioManager');
 #else
-  return {
-    "masterVolume": 0
-  };
+Services.audioManager = {
+  'masterVolume': 0
+};
 #endif
-});
 
-XPCOMUtils.defineLazyServiceGetter(Services, 'fm', function() {
-  return Cc['@mozilla.org/focus-manager;1']
-           .getService(Ci.nsFocusManager);
-});
+XPCOMUtils.defineLazyServiceGetter(Services, 'fm',
+                                   '@mozilla.org/focus-manager;1',
+                                   'nsIFocusManager');
 
 XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
   Cu.import('resource://gre/modules/devtools/dbg-server.jsm');
@@ -144,9 +139,20 @@ var shell = {
   },
 
   stop: function shell_stop() {
+    ['keydown', 'keypress', 'keyup'].forEach((function unlistenKey(type) {
+      window.removeEventListener(type, this, false, true);
+      window.removeEventListener(type, this, true, true);
+    }).bind(this));
+
+    window.addEventListener('MozApplicationManifest', this);
     window.removeEventListener('MozApplicationManifest', this);
     window.removeEventListener('mozfullscreenchange', this);
     window.removeEventListener('sizemodechange', this);
+    this.contentBrowser.removeEventListener('load', this, true);
+
+#ifndef MOZ_WIDGET_GONK
+    delete Services.audioManager;
+#endif
   },
 
   toggleDebug: function shell_toggleDebug() {
@@ -313,7 +319,7 @@ var shell = {
     }
   }
 
-  let wakeLockHandler = function wakeLockHandler(topic, state) {
+  let wakeLockHandler = function(topic, state) {
     // Turn off the screen when no one needs the it or all of them are
     // invisible, otherwise turn the screen on. Note that the CPU
     // might go to sleep as soon as the screen is turned off and
@@ -353,6 +359,11 @@ var shell = {
       power.addWakeLockListener(wakeLockHandler);
     }
   };
+
+  window.addEventListener('unload', function removeIdleObjects() {
+    Services.idle.removeIdleObserver(idleHandler, idleTimeout);
+    power.removeWakeLockListener(wakeLockHandler);
+  });
 
   // XXX We may override other's callback here, but this is the only
   // user of mozSettings in shell.js at this moment.
