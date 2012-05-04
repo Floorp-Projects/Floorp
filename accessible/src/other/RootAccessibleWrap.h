@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,17 +15,16 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bolian Yin (bolian.yin@sun.com)
- *   Ginn Chen (ginn.chen@sun.com)
+ *   Original Author: Aaron Leventhal (aaronl@netscape.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -38,22 +36,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMai.h"
-#include "nsRootAccessibleWrap.h"
+/* For documentation of the accessibility architecture, 
+ * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
+ */
 
-nsNativeRootAccessibleWrap::nsNativeRootAccessibleWrap(AtkObject *aAccessible):
-    nsRootAccessible(nsnull, nsnull, nsnull)
-{
-  // XXX: mark the object as defunct to ensure no single internal method is
-  // running on it.
-  mFlags |= eIsDefunct;
+#ifndef mozilla_a11y_RootAccessibleWrap_h__
+#define mozilla_a11y_RootAccessibleWrap_h__
 
-  g_object_ref(aAccessible);
-  mAtkObject = aAccessible;
-}
+#include "RootAccessible.h"
 
-nsNativeRootAccessibleWrap::~nsNativeRootAccessibleWrap()
-{
-    g_object_unref(mAtkObject);
-    mAtkObject = nsnull;
-}
+namespace mozilla {
+namespace a11y {
+
+typedef RootAccessible RootAccessibleWrap;
+
+} // namespace a11y
+} // namespace mozilla
+
+#endif

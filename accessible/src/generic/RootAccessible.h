@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsRootAccessible_H_
-#define _nsRootAccessible_H_
+#ifndef mozilla_a11y_RootAccessible_h__
+#define mozilla_a11y_RootAccessible_h__
 
 #include "nsCaretAccessible.h"
 #include "nsDocAccessibleWrap.h"
@@ -50,17 +50,18 @@
 class nsXULTreeAccessible;
 class Relation;
 
-const PRInt32 SCROLL_HASH_START_SIZE = 6;
+namespace mozilla {
+namespace a11y {
 
-class nsRootAccessible : public nsDocAccessibleWrap,
-                         public nsIDOMEventListener
+class RootAccessible : public nsDocAccessibleWrap,
+                       public nsIDOMEventListener
 {
   NS_DECL_ISUPPORTS_INHERITED
 
 public:
-  nsRootAccessible(nsIDocument* aDocument, nsIContent* aRootContent,
-                   nsIPresShell* aPresShell);
-  virtual ~nsRootAccessible();
+  RootAccessible(nsIDocument* aDocument, nsIContent* aRootContent,
+                 nsIPresShell* aPresShell);
+  virtual ~RootAccessible();
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -74,7 +75,7 @@ public:
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
-  // nsRootAccessible
+  // RootAccessible
   nsCaretAccessible* GetCaretAccessible();
 
   /**
@@ -117,11 +118,14 @@ protected:
     nsRefPtr<nsCaretAccessible> mCaretAccessible;
 };
 
-inline nsRootAccessible*
+} // namespace a11y
+} // namespace mozilla
+
+inline mozilla::a11y::RootAccessible*
 nsAccessible::AsRoot()
 {
   return mFlags & eRootAccessible ?
-    static_cast<nsRootAccessible*>(this) : nsnull;
+    static_cast<mozilla::a11y::RootAccessible*>(this) : nsnull;
 }
 
 #endif
