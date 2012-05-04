@@ -2248,6 +2248,9 @@ public class GeckoAppShell
     }
 
     public static void screenshotWholePage(Tab tab) {
+        if (GeckoApp.mAppContext.isApplicationInBackground())
+            return;
+
         if (sMaxTextureSize == 0) {
             int[] maxTextureSize = new int[1];
             GLES20.glGetIntegerv(GLES20.GL_MAX_TEXTURE_SIZE, maxTextureSize, 0);
