@@ -7,7 +7,7 @@ function destroy_transient_docshell() {
   var docshell = Cc["@mozilla.org/docshell;1"].createInstance(Ci.nsIDocShell);
   docshell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing = true;
   do_test_pending();
-  Components.utils.schedulePreciseGC(function(){});
+  do_timeout(0, Components.utils.forceGC);
 }
 
 function run_test() {
