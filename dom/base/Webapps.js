@@ -40,12 +40,9 @@ WebappsRegistry.prototype = {
       return false;
 
     if (aManifest.installs_allowed_from) {
-      ok = false;
-      aManifest.installs_allowed_from.forEach(function(aOrigin) {
-        if (aOrigin == "*" || aOrigin == aInstallOrigin)
-          ok = true;
+      return aManifest.installs_allowed_from.some(function(aOrigin) {
+        return aOrigin == "*" || aOrigin == aInstallOrigin;
       });
-      return ok;
     }
     return true;
   },
