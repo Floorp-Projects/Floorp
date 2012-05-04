@@ -563,7 +563,8 @@ nsEventListenerManager::AddScriptEventListener(nsIAtom *aName,
     // Try to get context from doc
     // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
     // if that's the XBL document?
-    global = node->OwnerDoc()->GetScriptGlobalObject();
+    doc = node->OwnerDoc();
+    global = doc->GetScriptGlobalObject();
   } else {
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mTarget));
     if (win) {

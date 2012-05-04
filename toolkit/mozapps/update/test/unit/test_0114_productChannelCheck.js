@@ -47,6 +47,10 @@ const TEST_FILES = [];
 const MAR_CHANNEL_MISMATCH_ERROR = "22";
 
 function run_test() {
+  if (!IS_MAR_CHECKS_ENABLED) {
+    return;
+  }
+
   // Setup a wrong channel MAR file
   do_register_cleanup(cleanupUpdaterTest);
   setupUpdaterTest(MAR_WRONG_CHANNEL_FILE);
