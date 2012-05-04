@@ -8183,30 +8183,19 @@ var gIdentityHandler = {
    * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
    */
   setIdentityMessages : function(newMode) {
-    if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
-      var iData = this.getIdentityData();
+    let icon_label = "";
+    let tooltip = "";
+    let icon_country_label = "";
+    let icon_labels_dir = "ltr";
 
-      // It would be sort of nice to use the CN= field in the cert, since that's
-      // typically what we want here, but thanks to x509 certs being extensible,
-      // it's not the only place you have to check, there can be more than one domain,
-      // et cetera, ad nauseum.  We know the cert is valid for location.host, so
-      // let's just use that. Check the pref to determine how much of the verified
-      // hostname to show
-      var icon_label = "";
-      var icon_country_label = "";
-      var icon_labels_dir = "ltr";
-      switch (gPrefService.getIntPref("browser.identity.ssl_domain_display")) {
-        case 2 : // Show full domain
-          icon_label = this._lastLocation.hostname;
-          break;
-        case 1 : // Show eTLD.
-          icon_label = this.getEffectiveHost();
-      }
+    switch (newMode) {
+    case this.IDENTITY_MODE_DOMAIN_VERIFIED: {
+      let iData = this.getIdentityData();
 
       // Verifier is either the CA Org, for a normal cert, or a special string
       // for certs that are trusted because of a security exception.
-      var tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
-                                                        [iData.caOrg]);
+      tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
+                                                    [iData.caOrg]);
 
       // Check whether this site is a security exception. XPConnect does the right
       // thing here in terms of converting _lastLocation.port from string to int, but
@@ -8221,15 +8210,16 @@ var gIdentityHandler = {
                                                     (this._lastLocation.port || 443),
                                                     iData.cert, {}, {}))
         tooltip = gNavigatorBundle.getString("identity.identified.verified_by_you");
-    }
-    else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
+      break; }
+    case this.IDENTITY_MODE_IDENTIFIED: {
       // If it's identified, then we can populate the dialog with credentials
-      iData = this.getIdentityData();
+      let iData = this.getIdentityData();
       tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
                                                     [iData.caOrg]);
       icon_label = iData.subjectOrg;
       if (iData.country)
         icon_country_label = "(" + iData.country + ")";
+
       // If the organization name starts with an RTL character, then
       // swap the positions of the organization and country code labels.
       // The Unicode ranges reflect the definition of the UCS2_CHAR_IS_BIDI
@@ -8238,18 +8228,11 @@ var gIdentityHandler = {
       // Unicode Bidirectional Algorithm proper (at the paragraph level).
       icon_labels_dir = /^[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufefc]/.test(icon_label) ?
                         "rtl" : "ltr";
-    }
-    else if (newMode == this.IDENTITY_MODE_CHROMEUI) {
-      icon_label = "";
-      tooltip = "";
-      icon_country_label = "";
-      icon_labels_dir = "ltr";
-    }
-    else {
+      break; }
+    case this.IDENTITY_MODE_CHROMEUI:
+      break;
+    default:
       tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");
-      icon_label = "";
-      icon_country_label = "";
-      icon_labels_dir = "ltr";
     }
 
     // Push the appropriate strings out to the UI
@@ -8279,19 +8262,20 @@ var gIdentityHandler = {
     this._identityPopupEncLabel.textContent = this._encryptionLabel[newMode];
 
     // Initialize the optional strings to empty values
-    var supplemental = "";
-    var verifier = "";
+    let supplemental = "";
+    let verifier = "";
+    let host = "";
+    let owner = "";
 
-    if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
-      var iData = this.getIdentityData();
-      var host = this.getEffectiveHost();
-      var owner = gNavigatorBundle.getString("identity.ownerUnknown2");
+    switch (newMode) {
+    case this.IDENTITY_MODE_DOMAIN_VERIFIED:
+      host = this.getEffectiveHost();
+      owner = gNavigatorBundle.getString("identity.ownerUnknown2");
       verifier = this._identityBox.tooltipText;
-      supplemental = "";
-    }
-    else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
+      break;
+    case this.IDENTITY_MODE_IDENTIFIED: {
       // If it's identified, then we can populate the dialog with credentials
-      iData = this.getIdentityData();
+      let iData = this.getIdentityData();
       host = this.getEffectiveHost();
       owner = iData.subjectOrg;
       verifier = this._identityBox.tooltipText;
@@ -8306,11 +8290,7 @@ var gIdentityHandler = {
         supplemental += iData.state;
       else if (iData.country) // Country only
         supplemental += iData.country;
-    }
-    else {
-      // These strings will be hidden in CSS anyhow
-      host = "";
-      owner = "";
+      break; }
     }
 
     // Push the appropriate strings out to the UI
