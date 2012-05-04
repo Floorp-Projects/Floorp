@@ -198,8 +198,7 @@ protected:
   typedef mozilla::layers::LayerManager LayerManager;
 
   enum {
-    STATE_IGNORING_VIEWPORT_SCROLLING = 0x1,
-    STATE_USING_DISPLAYPORT = 0x2
+    STATE_IGNORING_VIEWPORT_SCROLLING = 0x1
   };
 
 public:
