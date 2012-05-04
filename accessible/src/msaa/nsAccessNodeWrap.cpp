@@ -45,8 +45,8 @@
 #include "Compatibility.h"
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
-#include "nsRootAccessible.h"
 #include "nsWinUtils.h"
+#include "RootAccessible.h"
 #include "Statistics.h"
 
 #include "nsAttrName.h"

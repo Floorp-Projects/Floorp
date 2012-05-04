@@ -52,6 +52,7 @@ _TEST_FILES = \
 		test_bug332636.html \
 		test_bug332636.html^headers^ \
 		test_bug372345.html \
+		test_bug404320.html \
 		test_bug410986.html \
 		test_bug414526.html \
 		test_bug417418.html \
@@ -62,6 +63,7 @@ _TEST_FILES = \
 		test_bug455992.html \
 		test_bug456244.html \
 		test_bug460740.html \
+		test_bug468353.html \
 		test_bug478725.html \
 		test_bug480647.html \
 		test_bug480972.html \

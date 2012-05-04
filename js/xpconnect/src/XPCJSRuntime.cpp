@@ -59,7 +59,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "jsfriendapi.h"
 #include "js/MemoryMetrics.h"
-#include "mozilla/dom/bindings/DOMJSClass.h"
+#include "mozilla/dom/DOMJSClass.h"
 
 #include "nsJSPrincipals.h"
 
@@ -256,22 +256,27 @@ CompartmentDestroyedCallback(JSFreeOp *fop, JSCompartment *compartment)
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if (!self)
         return;
+    XPCCompartmentSet &set = self->GetCompartmentSet();
 
+    // Get the current compartment private into an AutoPtr (which will do the
+    // cleanup for us), and null out the private (which may already be null).
     nsAutoPtr<xpc::CompartmentPrivate>
-        priv(static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment)));
-    if (!priv)
-        return;
-
+      priv(static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment)));
     JS_SetCompartmentPrivate(compartment, nsnull);
 
-    xpc::PtrAndPrincipalHashKey *key = priv->key;
-    XPCCompartmentMap &map = self->GetCompartmentMap();
-#ifdef DEBUG
-    JSCompartment *current = NULL;
-    NS_ASSERTION(map.Get(key, &current), "no compartment?");
-    NS_ASSERTION(current == compartment, "compartment mismatch");
-#endif
-    map.Remove(key);
+    // JSD creates compartments in our runtime without going through our creation
+    // code. This means that those compartments aren't in our set, and don't have
+    // compartment privates. JSD is on the way out, so let's just handle that
+    // case for now.
+    if (!priv) {
+        MOZ_ASSERT(!set.has(compartment));
+        return;
+    }
+
+    // Remove the compartment from the set.
+    MOZ_ASSERT(set.has(compartment));
+    set.remove(compartment);
+    return;
 }
 
 struct ObjectHolder : public JSDHashEntryHdr
@@ -358,13 +363,10 @@ void XPCJSRuntime::TraceGrayJS(JSTracer* trc, void* data)
 }
 
 static void
-TraceJSObject(PRUint32 aLangID, void *aScriptThing, const char *name,
-              void *aClosure)
+TraceJSObject(void *aScriptThing, const char *name, void *aClosure)
 {
-    if (aLangID == nsIProgrammingLanguage::JAVASCRIPT) {
-        JS_CALL_TRACER(static_cast<JSTracer*>(aClosure), aScriptThing,
-                       js_GetGCThingTraceKind(aScriptThing), name);
-    }
+    JS_CALL_TRACER(static_cast<JSTracer*>(aClosure), aScriptThing,
+                   js_GetGCThingTraceKind(aScriptThing), name);
 }
 
 static JSDHashOperator
@@ -395,18 +397,6 @@ TraceDOMExpandos(nsPtrHashKey<JSObject> *expando, void *aClosure)
     return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator
-TraceCompartment(xpc::PtrAndPrincipalHashKey *aKey, JSCompartment *compartment, void *aClosure)
-{
-    xpc::CompartmentPrivate *priv =
-        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
-    if (priv->expandoMap)
-        priv->expandoMap->Enumerate(TraceExpandos, aClosure);
-    if (priv->domExpandoMap)
-        priv->domExpandoMap->EnumerateEntries(TraceDOMExpandos, aClosure);
-    return PL_DHASH_NEXT;
-}
-
 void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 {
     JSContext *iter = nsnull;
@@ -430,7 +420,15 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
         JS_DHashTableEnumerate(&mJSHolders, TraceJSHolder, trc);
 
     // Trace compartments.
-    GetCompartmentMap().EnumerateRead(TraceCompartment, trc);
+    XPCCompartmentSet &set = GetCompartmentSet();
+    for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
+        xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
+            JS_GetCompartmentPrivate(r.front());
+        if (priv->expandoMap)
+            priv->expandoMap->Enumerate(TraceExpandos, trc);
+        if (priv->domExpandoMap)
+            priv->domExpandoMap->EnumerateEntries(TraceDOMExpandos, trc);
+    }
 }
 
 struct Closure
@@ -440,16 +438,14 @@ struct Closure
 };
 
 static void
-CheckParticipatesInCycleCollection(PRUint32 aLangID, void *aThing,
-                                   const char *name, void *aClosure)
+CheckParticipatesInCycleCollection(void *aThing, const char *name, void *aClosure)
 {
     Closure *closure = static_cast<Closure*>(aClosure);
 
     if (closure->cycleCollectionEnabled)
         return;
 
-    if (aLangID == nsIProgrammingLanguage::JAVASCRIPT &&
-        AddToCCKind(js_GetGCThingTraceKind(aThing)) &&
+    if (AddToCCKind(js_GetGCThingTraceKind(aThing)) &&
         xpc_IsGrayGCThing(aThing))
     {
         closure->cycleCollectionEnabled = true;
@@ -469,8 +465,7 @@ NoteJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number,
     if (!closure->cycleCollectionEnabled)
         return JS_DHASH_NEXT;
 
-    closure->cb->NoteRoot(nsIProgrammingLanguage::CPLUSPLUS, entry->holder,
-                          entry->tracer);
+    closure->cb->NoteNativeRoot(entry->holder, entry->tracer);
 
     return JS_DHASH_NEXT;
 }
@@ -490,8 +485,7 @@ XPCJSRuntime::SuspectWrappedNative(XPCWrappedNative *wrapper,
     // the callback wants all traces (a debug feature).
     JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
     if (xpc_IsGrayGCThing(obj) || cb.WantAllTraces())
-        cb.NoteRoot(nsIProgrammingLanguage::JAVASCRIPT, obj,
-                    nsXPConnect::GetXPConnect());
+        cb.NoteJSRoot(obj);
 }
 
 static PLDHashOperator
@@ -515,23 +509,11 @@ SuspectDOMExpandos(nsPtrHashKey<JSObject> *key, void *arg)
         native = static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
     }
     else {
-        NS_ASSERTION(mozilla::dom::bindings::DOMJSClass::FromJSClass(JS_GetClass(obj))->mDOMObjectIsISupports,
+        NS_ASSERTION(mozilla::dom::DOMJSClass::FromJSClass(JS_GetClass(obj))->mDOMObjectIsISupports,
                      "Someone added a wrapper for a non-nsISupports native to DOMExpandos!");
         native = static_cast<nsISupports*>(js::GetReservedSlot(obj, DOM_OBJECT_SLOT).toPrivate());
     }
     closure->cb->NoteXPCOMRoot(native);
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-SuspectCompartment(xpc::PtrAndPrincipalHashKey *key, JSCompartment *compartment, void *arg)
-{
-    xpc::CompartmentPrivate *priv =
-        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
-    if (priv->expandoMap)
-        priv->expandoMap->EnumerateRead(SuspectExpandos, arg);
-    if (priv->domExpandoMap)
-        priv->domExpandoMap->EnumerateEntries(SuspectDOMExpandos, arg);
     return PL_DHASH_NEXT;
 }
 
@@ -548,8 +530,7 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
 
     JSContext *iter = nsnull, *acx;
     while ((acx = JS_ContextIterator(GetJSRuntime(), &iter))) {
-        cb.NoteRoot(nsIProgrammingLanguage::CPLUSPLUS, acx,
-                    nsXPConnect::JSContextParticipant());
+        cb.NoteNativeRoot(acx, nsXPConnect::JSContextParticipant());
     }
 
     XPCAutoLock lock(mMapLock);
@@ -590,7 +571,15 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
     }
 
     // Suspect wrapped natives with expando objects.
-    GetCompartmentMap().EnumerateRead(SuspectCompartment, &closure);
+    XPCCompartmentSet &set = GetCompartmentSet();
+    for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
+        xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
+            JS_GetCompartmentPrivate(r.front());
+        if (priv->expandoMap)
+            priv->expandoMap->EnumerateRead(SuspectExpandos, &closure);
+        if (priv->domExpandoMap)
+            priv->domExpandoMap->EnumerateEntries(SuspectDOMExpandos, &closure);
+    }
 }
 
 static JSDHashOperator
@@ -641,19 +630,6 @@ SweepExpandos(XPCWrappedNative *wn, JSObject *&expando, void *arg)
     return JS_IsAboutToBeFinalized(wn->GetFlatJSObjectPreserveColor())
            ? PL_DHASH_REMOVE
            : PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-SweepCompartment(nsCStringHashKey& aKey, JSCompartment *compartment, void *aClosure)
-{
-    MOZ_ASSERT(!aClosure);
-    xpc::CompartmentPrivate *priv =
-        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
-    if (priv->waiverWrapperMap)
-        priv->waiverWrapperMap->Sweep();
-    if (priv->expandoMap)
-        priv->expandoMap->Enumerate(SweepExpandos, nsnull);
-    return PL_DHASH_NEXT;
 }
 
 /* static */ void
@@ -732,8 +708,15 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status)
             XPCWrappedNativeScope::StartFinalizationPhaseOfGC(fop, self);
 
             // Sweep compartments.
-            self->GetCompartmentMap().EnumerateRead((XPCCompartmentMap::EnumReadFunction)
-                                                    SweepCompartment, nsnull);
+            XPCCompartmentSet &set = self->GetCompartmentSet();
+            for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
+                xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
+                    JS_GetCompartmentPrivate(r.front());
+                if (priv->waiverWrapperMap)
+                    priv->waiverWrapperMap->Sweep();
+                if (priv->expandoMap)
+                    priv->expandoMap->Enumerate(SweepExpandos, NULL);
+            }
 
             self->mDoingFinalization = true;
             break;
@@ -1504,18 +1487,11 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   "Memory allocated for JSScript bytecode and various "
                   "variable-length tables.");
 
-#ifdef JS_METHODJIT
-    REPORT_BYTES0(MakePath(pathPrefix, cStats, "mjit/code"),
-                  nsIMemoryReporter::KIND_NONHEAP, cStats.mjitCode,
-                  "Memory used by the method JIT to hold the compartment's "
-                  "generated code.");
-
     REPORT_BYTES0(MakePath(pathPrefix, cStats, "mjit/data"),
                   nsIMemoryReporter::KIND_HEAP, cStats.mjitData,
                   "Memory used by the method JIT for the compartment's "
                   "compilation data: JITScripts, native maps, and inline "
                   "cache structs.");
-#endif
 
     REPORT_BYTES0(MakePath(pathPrefix, cStats, "type-inference/script-main"),
                   nsIMemoryReporter::KIND_HEAP,
@@ -1585,9 +1561,19 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                  "Memory held transiently in JSRuntime and used during "
                  "compilation.  It mostly holds parse nodes.");
 
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/mjit-code"),
+                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeMjitCode,
+                 "Memory used by the method JIT to hold the runtime's "
+                 "generated code.");
+
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/regexp-code"),
                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeRegexpCode,
                  "Memory used by the regexp JIT to hold generated code.");
+
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/unused-code-memory"),
+                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeUnusedCodeMemory,
+                 "Memory allocated by the method and/or regexp JIT to hold the "
+                 "runtime's code, but which is currently unused.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/stack-committed"),
                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeStackCommitted,
@@ -1851,13 +1837,12 @@ public:
                      "JSRuntime. This is the sum of all compartments' "
                      "'gc-heap/strings' and 'string-chars' numbers.");
 
-#ifdef JS_METHODJIT
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-mjit"),
                      nsIMemoryReporter::KIND_OTHER, rtStats.totalMjit,
                      "Memory used by the method JIT in the main JSRuntime.  "
                      "This is the sum of all compartments' 'mjit/code', and "
                      "'mjit/data' numbers.");
-#endif
+
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-type-inference"),
                      nsIMemoryReporter::KIND_OTHER, rtStats.totalTypeInference,
                      "Non-transient memory used by type inference in the main "
@@ -2038,7 +2023,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
                            sizeof(ObjectHolder), 512))
         mJSHolders.ops = nsnull;
 
-    mCompartmentMap.Init();
+    mCompartmentSet.init();
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
@@ -2072,17 +2057,18 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
 
     XPCJSRuntime* self = new XPCJSRuntime(aXPConnect);
 
-    if (self                                  &&
-        self->GetJSRuntime()                  &&
-        self->GetWrappedJSMap()               &&
-        self->GetWrappedJSClassMap()          &&
-        self->GetIID2NativeInterfaceMap()     &&
-        self->GetClassInfo2NativeSetMap()     &&
-        self->GetNativeSetMap()               &&
-        self->GetThisTranslatorMap()          &&
-        self->GetNativeScriptableSharedMap()  &&
-        self->GetDyingWrappedNativeProtoMap() &&
-        self->GetMapLock()                    &&
+    if (self                                    &&
+        self->GetJSRuntime()                    &&
+        self->GetWrappedJSMap()                 &&
+        self->GetWrappedJSClassMap()            &&
+        self->GetIID2NativeInterfaceMap()       &&
+        self->GetClassInfo2NativeSetMap()       &&
+        self->GetNativeSetMap()                 &&
+        self->GetThisTranslatorMap()            &&
+        self->GetNativeScriptableSharedMap()    &&
+        self->GetDyingWrappedNativeProtoMap()   &&
+        self->GetMapLock()                      &&
+        self->GetCompartmentSet().initialized() &&
         self->mWatchdogThread) {
         return self;
     }

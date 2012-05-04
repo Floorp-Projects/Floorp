@@ -57,11 +57,11 @@
 #include "nsHTMLTableAccessibleWrap.h"
 #include "nsHTMLTextAccessible.h"
 #include "nsHyperTextAccessibleWrap.h"
-#include "nsRootAccessibleWrap.h"
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
 #include "OuterDocAccessible.h"
 #include "Role.h"
+#include "RootAccessibleWrap.h"
 #include "States.h"
 #include "Statistics.h"
 #ifdef XP_WIN
@@ -657,7 +657,7 @@ nsAccessibilityService::PresShellActivated(nsIPresShell* aPresShell)
   if (DOMDoc) {
     nsDocAccessible* document = GetDocAccessibleFromCache(DOMDoc);
     if (document) {
-      nsRootAccessible* rootDocument = document->RootAccessible();
+      RootAccessible* rootDocument = document->RootAccessible();
       NS_ASSERTION(rootDocument, "Entirely broken tree: no root document!");
       if (rootDocument)
         rootDocument->DocumentActivated(document);
@@ -1728,15 +1728,15 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
 
 nsAccessible*
 nsAccessibilityService::AddNativeRootAccessible(void* aAtkAccessible)
- {
+{
 #ifdef MOZ_ACCESSIBILITY_ATK
   ApplicationAccessible* applicationAcc =
     nsAccessNode::GetApplicationAccessible();
   if (!applicationAcc)
     return nsnull;
 
-  nsRefPtr<nsNativeRootAccessibleWrap> nativeRootAcc =
-     new nsNativeRootAccessibleWrap((AtkObject*)aAtkAccessible);
+  nsRefPtr<NativeRootAccessibleWrap> nativeRootAcc =
+    new NativeRootAccessibleWrap(static_cast<AtkObject*>(aAtkAccessible));
   if (!nativeRootAcc)
     return nsnull;
 
@@ -1745,7 +1745,7 @@ nsAccessibilityService::AddNativeRootAccessible(void* aAtkAccessible)
 #endif
 
   return nsnull;
- }
+}
 
 void
 nsAccessibilityService::RemoveNativeRootAccessible(nsAccessible* aAccessible)

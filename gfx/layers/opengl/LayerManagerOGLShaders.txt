@@ -38,6 +38,11 @@
 // ***** END LICENSE BLOCK *****
 
 //
+// This file is compiled by genshaders.py, use genshaders.sh, no arguments necessary.
+// The compiled shaders will be in LayerManagerOGLShaders.h.
+// This file must be compiled after editing, it is not compiled as part of the
+// build process.
+//
 // Syntax:
 //
 // // comments (only at the start of a line)
@@ -54,44 +59,39 @@
 //
 // $FOO$ to paste
 //
-// To generate a constant string named ShaderName:
+// To generate a constant string named ShaderName (shader name should not
+// use '<', '>', ',', ':', except for parameters, see below):
 // @shader ShaderName
 // ...
 // @end
 //
+// @shader may have a single parameter with multiple values using
+// <param:val1,val2> an empty value is allowed. The shader is expanded for
+// each value, <param> in the body of the shader will be expanded to
+// the current value, as will the declaration of the parameter. The name of
+// defines may include <...> and this should work as expected.
+// 
+// For example:
+//
+// @Shader<name:Name1,Name2>
+// string name = "<name>";
+// @end
+//
+// will be expanded to
+//
+// @ShaderName1
+// string name = "Name1";
+// @end
+// @ShaderName2
+// string name = "Name2";
+// @end
+//
+// This will be straightaway compiled to two constant strings named
+// ShaderName1 and ShaderName2.
 // 
 
-@define VERTEX_SHADER_HEADER
+@define VERTEX_SHADER_HEADER<>
 /* Vertex Shader */
-@end
-
-@define FRAGMENT_SHADER_HEADER
-/* Fragment Shader */
-#ifdef GL_ES
-precision lowp float;
-#endif
-@end
-
-// fragment shader header for all layers
-@define LAYER_FRAGMENT
-$FRAGMENT_SHADER_HEADER$
-
-#ifndef NO_LAYER_OPACITY
-uniform float uLayerOpacity;
-#endif
-
-#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range
-varying mediump vec2 vTexCoord;
-#else
-varying vec2 vTexCoord;
-#endif
-@end
-
-// This is a basic Layer vertex shader.  It's used for all
-// the Layer programs.
-
-@shader sLayerVS
-$VERTEX_SHADER_HEADER$
 
 uniform mat4 uMatrixProj;
 uniform mat4 uLayerQuadTransform;
@@ -106,6 +106,43 @@ varying mediump vec2 vTexCoord;
 #else
 varying vec2 vTexCoord;
 #endif
+@end
+
+@define VERTEX_SHADER_HEADER<Mask>
+$VERTEX_SHADER_HEADER<>$
+
+uniform mat4 uMaskQuadTransform;
+varying vec2 vMaskCoord;
+@end
+
+@define VERTEX_SHADER_HEADER<Mask3D>
+$VERTEX_SHADER_HEADER<>$
+
+uniform mat4 uMaskQuadTransform;
+varying vec3 vMaskCoord;
+@end
+
+@define VERTEX_MASK_STUFF<>
+@end
+
+@define VERTEX_MASK_STUFF<Mask>
+  vMaskCoord = (uMaskQuadTransform * finalPosition).xy;
+@end
+
+@define VERTEX_MASK_STUFF<Mask3D> 
+  vMaskCoord.xy = (uMaskQuadTransform * vec4(finalPosition.xyz, 1.0)).xy;
+  // correct for perspective correct interpolation, see comment in D3D10 shader
+  vMaskCoord.z = 1.0;
+  vMaskCoord *= finalPosition.w;
+@end
+
+
+// This is a basic Layer vertex shader.  It's used for all
+// Layer programs.
+
+@shader sLayer<mask:,Mask,Mask3D>VS
+$VERTEX_SHADER_HEADER<mask>$
+
 
 void main()
 {
@@ -113,6 +150,9 @@ void main()
   finalPosition = uLayerQuadTransform * finalPosition;
   finalPosition = uLayerTransform * finalPosition;
   finalPosition.xyz /= finalPosition.w;
+
+$VERTEX_MASK_STUFF<mask>$
+
   finalPosition = finalPosition - uRenderTargetOffset;
   finalPosition.xyz *= finalPosition.w;
   finalPosition = uMatrixProj * finalPosition;
@@ -122,37 +162,96 @@ void main()
 }
 @end
 
+
+/*
+ * Fragment shaders
+ */
+
+@define FRAGMENT_SHADER_HEADER
+/* Fragment Shader */
+#ifdef GL_ES
+precision lowp float;
+#endif
+@end
+
+// fragment shader header for layers
+@define LAYER_FRAGMENT<>
+$FRAGMENT_SHADER_HEADER$
+
+#ifndef NO_LAYER_OPACITY
+uniform float uLayerOpacity;
+#endif
+
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range
+varying mediump vec2 vTexCoord;
+#else
+varying vec2 vTexCoord;
+#endif
+@end
+
+// fragment shader header for layers with masks
+@define LAYER_FRAGMENT<Mask>
+$LAYER_FRAGMENT<>$
+
+varying vec2 vMaskCoord;
+uniform sampler2D uMaskTexture;
+@end
+
+// fragment shader header for layers with masks and 3D transforms
+@define LAYER_FRAGMENT<Mask3D>
+$LAYER_FRAGMENT<>$
+
+varying vec3 vMaskCoord;
+uniform sampler2D uMaskTexture;
+@end
+
+@define FRAGMENT_CALC_MASK<>
+  float mask = 1.0;
+@end
+
+@define FRAGMENT_CALC_MASK<Mask>
+  float mask = texture2D(uMaskTexture, vMaskCoord).a;
+@end
+
+@define FRAGMENT_CALC_MASK<Mask3D>
+  vec2 maskCoords = vMaskCoord.xy / vMaskCoord.z;
+  float mask = texture2D(uMaskTexture, maskCoords).a;
+@end
+
 // Solid color rendering.
 // texcoords are ignored (no texture to sample).
 // The layer opacity is baked in to the color.
-@shader sSolidColorLayerFS
+@shader sSolidColorLayer<mask:,Mask>FS
 #define NO_LAYER_OPACITY 1
-$LAYER_FRAGMENT$
+$LAYER_FRAGMENT<mask>$
 uniform vec4 uRenderColor;
 
 void main()
 {
-  gl_FragColor = uRenderColor;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = mask * uRenderColor;
 }
 @end
 
 // Single texture in RGBA format
-@shader sRGBATextureLayerFS
-$LAYER_FRAGMENT$
+@shader sRGBATextureLayer<mask:,Mask,Mask3D>FS
+$LAYER_FRAGMENT<mask>$
 uniform sampler2D uTexture;
 
 void main()
 {
-  gl_FragColor = texture2D(uTexture, vTexCoord) * uLayerOpacity;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = texture2D(uTexture, vTexCoord) * uLayerOpacity * mask;
 }
 @end
 
+
 // Single texture in RGBA format, but with a Rect texture.
 // Container layer needs this to render a FBO group.
-@shader sRGBARectTextureLayerFS
+@shader sRGBARectTextureLayer<mask:,Mask,Mask3D>FS
 #extension GL_ARB_texture_rectangle : enable
 
-$LAYER_FRAGMENT$
+$LAYER_FRAGMENT<mask>$
 
 /* This should not be used on GL ES */
 #ifndef GL_ES
@@ -160,7 +259,8 @@ uniform sampler2DRect uTexture;
 uniform vec2 uTexCoordMultiplier;
 void main()
 {
-  gl_FragColor = texture2DRect(uTexture, vec2(vTexCoord * uTexCoordMultiplier)) * uLayerOpacity;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = texture2DRect(uTexture, vec2(vTexCoord * uTexCoordMultiplier)) * uLayerOpacity * mask;
 }
 #else
 void main()
@@ -171,41 +271,44 @@ void main()
 @end
 
 // Single texture in BGRA format (via swizzle)
-@shader sBGRATextureLayerFS
-$LAYER_FRAGMENT$
+@shader sBGRATextureLayer<mask:,Mask>FS
+$LAYER_FRAGMENT<mask>$
 uniform sampler2D uTexture;
 
 void main()
 {
-  gl_FragColor = texture2D(uTexture, vTexCoord).bgra * uLayerOpacity;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = texture2D(uTexture, vTexCoord).bgra * uLayerOpacity * mask;
 }
 @end
 
 // Single texture in RGBX format
-@shader sRGBXTextureLayerFS
-$LAYER_FRAGMENT$
+@shader sRGBXTextureLayer<mask:,Mask>FS
+$LAYER_FRAGMENT<mask>$
 uniform sampler2D uTexture;
 
 void main()
 {
-  gl_FragColor = vec4(texture2D(uTexture, vTexCoord).rgb, 1.0) * uLayerOpacity;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = vec4(texture2D(uTexture, vTexCoord).rgb, 1.0) * uLayerOpacity * mask; 
 }
 @end
 
 // Single texture in BGRX format (via swizzle)
-@shader sBGRXTextureLayerFS
-$LAYER_FRAGMENT$
+@shader sBGRXTextureLayer<mask:,Mask>FS
+$LAYER_FRAGMENT<mask>$
 uniform sampler2D uTexture;
 
 void main()
 {
-  gl_FragColor = vec4(texture2D(uTexture, vTexCoord).bgr, 1.0) * uLayerOpacity;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = vec4(texture2D(uTexture, vTexCoord).bgr, 1.0) * uLayerOpacity * mask;
 }
 @end
 
 // Three textures, representing YCbCr planes of a video image
-@shader sYCbCrTextureLayerFS
-$LAYER_FRAGMENT$
+@shader sYCbCrTextureLayer<mask:,Mask>FS
+$LAYER_FRAGMENT<mask>$
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -224,9 +327,45 @@ void main()
   color.g = yuv.g * 1.164 - 0.813 * yuv.r - 0.391 * yuv.b;
   color.b = yuv.g * 1.164 + yuv.b * 2.018;
   color.a = 1.0;
-  gl_FragColor = color * uLayerOpacity;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = color * uLayerOpacity * mask;
 }
 @end
+
+// Two textures and two passes for component alpha rendering
+@shader sComponentPass<mask:,Mask>1FS
+
+$LAYER_FRAGMENT<mask>$
+uniform sampler2D uBlackTexture;
+uniform sampler2D uWhiteTexture;
+
+void main()
+{
+  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).bgr;
+  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).bgr;
+  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = alphas * uLayerOpacity * mask;
+}
+@end
+
+@shader sComponentPass<mask:,Mask>2FS
+
+$LAYER_FRAGMENT<mask>$
+uniform sampler2D uBlackTexture;
+uniform sampler2D uWhiteTexture;
+
+void main()
+{
+  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).bgr;
+  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).bgr;
+  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = vec4(onBlack, alphas.a) * uLayerOpacity * mask;
+}
+@end
+
+
 
 //
 // The "Copy" program is used for blitting a texture to a destination
@@ -243,7 +382,7 @@ void main()
 //
 
 @shader sCopyVS
-$VERTEX_SHADER_HEADER$
+/* Vertex Shader */
 
 attribute vec4 aVertexCoord;
 attribute vec2 aTexCoord;
@@ -291,33 +430,3 @@ void main()
 #endif
 @end
 
-// Two textures and two passes for component alpha rendering
-@shader sComponentPass1FS
-
-$LAYER_FRAGMENT$
-uniform sampler2D uBlackTexture;
-uniform sampler2D uWhiteTexture;
-
-void main()
-{
-  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).bgr;
-  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).bgr;
-  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
-  gl_FragColor = alphas * uLayerOpacity;
-}
-@end
-
-@shader sComponentPass2FS
-
-$LAYER_FRAGMENT$
-uniform sampler2D uBlackTexture;
-uniform sampler2D uWhiteTexture;
-
-void main()
-{
-  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).bgr;
-  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).bgr;
-  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
-  gl_FragColor = vec4(onBlack, alphas.a) * uLayerOpacity;
-}
-@end

@@ -355,7 +355,7 @@ nsHttpAuthEntry::AddPath(const char *aPath)
     nsHttpAuthPath *tempPtr = mRoot;
     while (tempPtr) {
         const char *curpath = tempPtr->mPath;
-        if (strncmp(aPath, curpath, nsCRT::strlen(curpath)) == 0)
+        if (strncmp(aPath, curpath, strlen(curpath)) == 0)
             return NS_OK; // subpath already exists in the list
 
         tempPtr = tempPtr->mNext;
@@ -364,7 +364,7 @@ nsHttpAuthEntry::AddPath(const char *aPath)
     
     //Append the aPath
     nsHttpAuthPath *newAuthPath;
-    int newpathLen = nsCRT::strlen(aPath);
+    int newpathLen = strlen(aPath);
     newAuthPath = (nsHttpAuthPath *) malloc(sizeof(nsHttpAuthPath) + newpathLen);
     if (!newAuthPath)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -392,9 +392,9 @@ nsHttpAuthEntry::Set(const char *path,
 {
     char *newRealm, *newCreds, *newChall;
 
-    int realmLen = realm ? nsCRT::strlen(realm) : 0;
-    int credsLen = creds ? nsCRT::strlen(creds) : 0;
-    int challLen = chall ? nsCRT::strlen(chall) : 0;
+    int realmLen = realm ? strlen(realm) : 0;
+    int credsLen = creds ? strlen(creds) : 0;
+    int challLen = chall ? strlen(chall) : 0;
 
     int len = realmLen + 1 + credsLen + 1 + challLen + 1;
     newRealm = (char *) malloc(len);
@@ -489,7 +489,7 @@ nsHttpAuthNode::LookupEntryByPath(const char *path)
                 if (path[0] == '\0')
                     return entry;
             }
-            else if (strncmp(path, entryPath, nsCRT::strlen(entryPath)) == 0)
+            else if (strncmp(path, entryPath, strlen(entryPath)) == 0)
                 return entry;
 
             authPath = authPath->mNext;

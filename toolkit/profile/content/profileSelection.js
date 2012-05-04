@@ -125,7 +125,7 @@ function acceptDialog()
       var missingTitle = gProfileManagerBundle.getString("profileMissingTitle");
       var missing =
         gProfileManagerBundle.getFormattedString("profileMissing", [appName]);
-      gPromptService.alert(window, missingTitle, missing);
+      Services.prompt.alert(window, missingTitle, missing);
       return false;
     }
 

@@ -47,6 +47,10 @@ const TEST_FILES = [];
 const VERSION_DOWNGRADE_ERROR = "23";
 
 function run_test() {
+  if (!IS_MAR_CHECKS_ENABLED) {
+    return;
+  }
+
   // Setup an old version MAR file
   do_register_cleanup(cleanupUpdaterTest);
   setupUpdaterTest(MAR_OLD_VERSION_FILE);

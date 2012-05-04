@@ -302,8 +302,7 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
   }
   else
   {
-    nsCOMPtr<nsIDOMNode> styleNode;
-    IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, bHasProp, getter_AddRefs(styleNode));
+    IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, bHasProp);
   }
 
   if (bHasProp) return NS_OK;
@@ -995,8 +994,6 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
   *aFirst = false;
   bool first = true;
 
-  bool useCSS = IsCSSEnabled();
-
   nsCOMPtr<nsISelection> selection;
   result = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(result, result);
@@ -1024,9 +1021,9 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       range->GetStartContainer(getter_AddRefs(collapsedNode));
       NS_ENSURE_TRUE(collapsedNode, NS_ERROR_FAILURE);
       bool isSet, theSetting;
+      nsString tOutString;
       if (aAttribute) {
-        nsString tString(*aAttribute); //MJUDGE SCC NEED HELP
-        nsString tOutString; //MJUDGE SCC NEED HELP
+        nsString tString(*aAttribute);
         mTypeInState->GetTypingState(isSet, theSetting, aProperty, tString,
                                      &tOutString);
         if (outValue) {
@@ -1039,28 +1036,41 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
         *aFirst = *aAny = *aAll = theSetting;
         return NS_OK;
       }
-      if (!useCSS) {
-        nsCOMPtr<nsIDOMNode> resultNode;
-        IsTextPropertySetByContent(collapsedNode, aProperty, aAttribute, aValue,
-                                   isSet, getter_AddRefs(resultNode), outValue);
-        *aFirst = *aAny = *aAll = isSet;
 
-        if (!isSet && aCheckDefaults) {
-          // style not set, but if it is a default then it will appear if
-          // content is inserted, so we should report it as set (analogous to
-          // TypeInState).
-          PRInt32 index;
-          if (aAttribute && TypeInState::FindPropInList(aProperty, *aAttribute,
-                                                        outValue, mDefaultStyles,
-                                                        index)) {
-            *aFirst = *aAny = *aAll = true;
-            if (outValue) {
-              outValue->Assign(mDefaultStyles[index]->value);
-            }
-          }
+      // Bug 747889: we don't support CSS for fontSize values
+      if ((aProperty != nsEditProperty::font ||
+           !aAttribute->EqualsLiteral("size")) &&
+          mHTMLCSSUtils->IsCSSEditableProperty(collapsedNode, aProperty,
+                                               aAttribute)) {
+        mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
+          collapsedNode, aProperty, aAttribute, isSet, tOutString,
+          COMPUTED_STYLE_TYPE);
+        if (outValue) {
+          outValue->Assign(tOutString);
         }
+        *aFirst = *aAny = *aAll = isSet;
         return NS_OK;
       }
+
+      IsTextPropertySetByContent(collapsedNode, aProperty, aAttribute, aValue,
+                                 isSet, outValue);
+      *aFirst = *aAny = *aAll = isSet;
+
+      if (!isSet && aCheckDefaults) {
+        // style not set, but if it is a default then it will appear if
+        // content is inserted, so we should report it as set (analogous to
+        // TypeInState).
+        PRInt32 index;
+        if (aAttribute && TypeInState::FindPropInList(aProperty, *aAttribute,
+                                                      outValue, mDefaultStyles,
+                                                      index)) {
+          *aFirst = *aAny = *aAll = true;
+          if (outValue) {
+            outValue->Assign(mDefaultStyles[index]->value);
+          }
+        }
+      }
+      return NS_OK;
     }
 
     // non-collapsed selection
@@ -1111,7 +1121,6 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       }
       if (node) {
         bool isSet = false;
-        nsCOMPtr<nsIDOMNode> resultNode;
         if (first) {
           if (mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty,
                                                    aAttribute) &&
@@ -1129,7 +1138,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
                                                                COMPUTED_STYLE_TYPE);
           } else {
             IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet,
-                                       getter_AddRefs(resultNode), &firstValue);
+                                       &firstValue);
           }
           *aFirst = isSet;
           first = false;
@@ -1152,7 +1161,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
                                                                COMPUTED_STYLE_TYPE);
           } else {
             IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet,
-                                       getter_AddRefs(resultNode), &theValue);
+                                       &theValue);
           }
           if (firstValue != theValue) {
             *aAll = false;

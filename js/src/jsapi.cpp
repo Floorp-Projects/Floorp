@@ -65,7 +65,6 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -91,6 +90,7 @@
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
+#include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "js/MemoryMetrics.h"
 #include "yarr/BumpPointerAllocator.h"
@@ -703,6 +703,9 @@ JSRuntime::JSRuntime()
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc_(NULL),
     bumpAlloc_(NULL),
+#ifdef JS_METHODJIT
+    jaegerRuntime_(NULL),
+#endif
     nativeStackBase(0),
     nativeStackQuota(0),
     interpreterFrames(NULL),
@@ -784,6 +787,7 @@ JSRuntime::JSRuntime()
     decimalSeparator(0),
     numGrouping(0),
     waiveGCQuota(false),
+    mathCache_(NULL),
     dtoaState(NULL),
     pendingProxyOperation(NULL),
     trustedPrincipals_(NULL),
@@ -852,16 +856,22 @@ JSRuntime::init(uint32_t maxbytes)
     if (!stackSpace.init())
         return false;
 
+    if (!scriptFilenameTable.init())
+        return false;
+
     nativeStackBase = GetNativeStackBase();
     return true;
 }
 
 JSRuntime::~JSRuntime()
 {
-    JS_ASSERT(onOwnerThread());
+    /*
+     * Even though all objects in the compartment are dead, we may have keep
+     * some filenames around because of gcKeepAtoms.
+     */
+    FreeScriptFilenames(this);
 
-    delete_<JSC::ExecutableAllocator>(execAlloc_);
-    delete_<WTF::BumpPointerAllocator>(bumpAlloc_);
+    JS_ASSERT(onOwnerThread());
 
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
@@ -890,6 +900,13 @@ JSRuntime::~JSRuntime()
     if (gcLock)
         PR_DestroyLock(gcLock);
 #endif
+
+    delete_(bumpAlloc_);
+    delete_(mathCache_);
+#ifdef JS_METHODJIT
+    delete_(jaegerRuntime_);
+#endif
+    delete_(execAlloc_);  /* Delete after jaegerRuntime_. */
 }
 
 #ifdef JS_THREADSAFE
@@ -1724,7 +1741,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 }
 
 #define CLASP(name)                 (&name##Class)
-#define TYPED_ARRAY_CLASP(type)     (&TypedArray::fastClasses[TypedArray::type])
+#define TYPED_ARRAY_CLASP(type)     (&TypedArray::classes[TypedArray::type])
 #define EAGER_ATOM(name)            ATOM_OFFSET(name), NULL
 #define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name), NULL
 #define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
@@ -1845,6 +1862,7 @@ static JSStdName standard_class_names[] = {
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), TYPED_ARRAY_CLASP(TYPE_FLOAT64)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray),
                                 TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(DataView),     &DataViewClass},
 
     {js_InitWeakMapClass,       EAGER_ATOM_AND_CLASP(WeakMap)},
     {js_InitProxyClass,         EAGER_ATOM_AND_CLASP(Proxy)},

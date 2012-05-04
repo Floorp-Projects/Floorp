@@ -61,7 +61,7 @@
 
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 
 JSBool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,

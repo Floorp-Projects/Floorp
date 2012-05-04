@@ -54,7 +54,6 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsstr.h"
@@ -62,6 +61,7 @@
 #include "jsxml.h"
 
 #include "frontend/Parser.h"
+#include "gc/Marking.h"
 
 #include "jsstrinlines.h"
 #include "jsatominlines.h"

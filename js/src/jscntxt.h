@@ -97,9 +97,10 @@ struct JSSharpObjectMap {
 namespace js {
 
 namespace mjit {
-class JaegerCompartment;
+class JaegerRuntime;
 }
 
+class MathCache;
 class WeakMapBase;
 class InterpreterFrames;
 
@@ -189,6 +190,144 @@ struct ConservativeGCData
     }
 };
 
+class ToSourceCache
+{
+    typedef HashMap<JSFunction *,
+                    JSString *,
+                    DefaultHasher<JSFunction *>,
+                    SystemAllocPolicy> Map;
+    Map *map_;
+  public:
+    ToSourceCache() : map_(NULL) {}
+    JSString *lookup(JSFunction *fun);
+    void put(JSFunction *fun, JSString *);
+    void purge();
+};
+
+class EvalCache
+{
+    static const unsigned SHIFT = 6;
+    static const unsigned LENGTH = 1 << SHIFT;
+    JSScript *table_[LENGTH];
+
+  public:
+    EvalCache() { PodArrayZero(table_); }
+    JSScript **bucket(JSLinearString *str);
+    void purge();
+};
+
+class NativeIterCache
+{
+    static const size_t SIZE = size_t(1) << 8;
+
+    /* Cached native iterators. */
+    JSObject            *data[SIZE];
+
+    static size_t getIndex(uint32_t key) {
+        return size_t(key) % SIZE;
+    }
+
+  public:
+    /* Native iterator most recently started. */
+    JSObject            *last;
+
+    NativeIterCache()
+      : last(NULL) {
+        PodArrayZero(data);
+    }
+
+    void purge() {
+        last = NULL;
+        PodArrayZero(data);
+    }
+
+    JSObject *get(uint32_t key) const {
+        return data[getIndex(key)];
+    }
+
+    void set(uint32_t key, JSObject *iterobj) {
+        data[getIndex(key)] = iterobj;
+    }
+};
+
+/*
+ * Cache for speeding up repetitive creation of objects in the VM.
+ * When an object is created which matches the criteria in the 'key' section
+ * below, an entry is filled with the resulting object.
+ */
+class NewObjectCache
+{
+    /* Statically asserted to be equal to sizeof(JSObject_Slots16) */
+    static const unsigned MAX_OBJ_SIZE = 4 * sizeof(void*) + 16 * sizeof(Value);
+    static inline void staticAsserts();
+
+    struct Entry
+    {
+        /* Class of the constructed object. */
+        Class *clasp;
+
+        /*
+         * Key with one of three possible values:
+         *
+         * - Global for the object. The object must have a standard class for
+         *   which the global's prototype can be determined, and the object's
+         *   parent will be the global.
+         *
+         * - Prototype for the object (cannot be global). The object's parent
+         *   will be the prototype's parent.
+         *
+         * - Type for the object. The object's parent will be the type's
+         *   prototype's parent.
+         */
+        gc::Cell *key;
+
+        /* Allocation kind for the constructed object. */
+        gc::AllocKind kind;
+
+        /* Number of bytes to copy from the template object. */
+        uint32_t nbytes;
+
+        /*
+         * Template object to copy from, with the initial values of fields,
+         * fixed slots (undefined) and private data (NULL).
+         */
+        char templateObject[MAX_OBJ_SIZE];
+    };
+
+    Entry entries[41];  // TODO: reconsider size
+
+  public:
+
+    typedef int EntryIndex;
+
+    NewObjectCache() { PodZero(this); }
+    void purge() { PodZero(this); }
+
+    /*
+     * Get the entry index for the given lookup, return whether there was a hit
+     * on an existing entry.
+     */
+    inline bool lookupProto(Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry);
+    inline bool lookupGlobal(Class *clasp, js::GlobalObject *global, gc::AllocKind kind, EntryIndex *pentry);
+    inline bool lookupType(Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, EntryIndex *pentry);
+
+    /* Return a new object from a cache hit produced by a lookup method. */
+    inline JSObject *newObjectFromHit(JSContext *cx, EntryIndex entry);
+
+    /* Fill an entry after a cache miss. */
+    inline void fillProto(EntryIndex entry, Class *clasp, JSObject *proto, gc::AllocKind kind, JSObject *obj);
+    inline void fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj);
+    inline void fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, JSObject *obj);
+
+    /* Invalidate any entries which might produce an object with shape/proto. */
+    void invalidateEntriesForShape(JSContext *cx, Shape *shape, JSObject *proto);
+
+  private:
+    inline bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry);
+    inline void fill(EntryIndex entry, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj);
+    static inline void copyCachedToObject(JSObject *dst, JSObject *src);
+};
+
 /*
  * A FreeOp can do one thing: free memory. For convenience, it has delete_
  * convenience methods that also call destructors.
@@ -274,17 +413,37 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     JSC::ExecutableAllocator *execAlloc_;
     WTF::BumpPointerAllocator *bumpAlloc_;
+#ifdef JS_METHODJIT
+    js::mjit::JaegerRuntime *jaegerRuntime_;
+#endif
 
     JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
     WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
+    js::mjit::JaegerRuntime *createJaegerRuntime(JSContext *cx);
 
   public:
-    JSC::ExecutableAllocator *getExecutableAllocator(JSContext *cx) {
+    JSC::ExecutableAllocator *getExecAlloc(JSContext *cx) {
         return execAlloc_ ? execAlloc_ : createExecutableAllocator(cx);
+    }
+    JSC::ExecutableAllocator &execAlloc() {
+        JS_ASSERT(execAlloc_);
+        return *execAlloc_;
     }
     WTF::BumpPointerAllocator *getBumpPointerAllocator(JSContext *cx) {
         return bumpAlloc_ ? bumpAlloc_ : createBumpPointerAllocator(cx);
     }
+#ifdef JS_METHODJIT
+    js::mjit::JaegerRuntime *getJaegerRuntime(JSContext *cx) {
+        return jaegerRuntime_ ? jaegerRuntime_ : createJaegerRuntime(cx);
+    }
+    bool hasJaegerRuntime() const {
+        return jaegerRuntime_;
+    }
+    js::mjit::JaegerRuntime &jaegerRuntime() {
+        JS_ASSERT(hasJaegerRuntime());
+        return *jaegerRuntime_;
+    }
+#endif
 
     /* Base address of the native stack for the current thread. */
     uintptr_t           nativeStackBase;
@@ -435,12 +594,6 @@ struct JSRuntime : js::RuntimeFriendFields
     js::Vector<SavedGCRoot, 0, js::SystemAllocPolicy> gcSavedRoots;
 #endif
 
-    /*
-     * We can pack these flags as only the GC thread writes to them. Atomic
-     * updates to packed bytes are not guaranteed, so stores issued by one
-     * thread may be lost due to unsynchronized read-modify-write cycles on
-     * other threads.
-     */
     bool                gcPoke;
     bool                gcRunning;
 
@@ -595,14 +748,20 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     bool                waiveGCQuota;
 
-    /*
-     * The GSN cache is per thread since even multi-cx-per-thread embeddings
-     * do not interleave js_GetSrcNote calls.
-     */
-    js::GSNCache        gsnCache;
+  private:
+    js::MathCache *mathCache_;
+    js::MathCache *createMathCache(JSContext *cx);
+  public:
+    js::MathCache *getMathCache(JSContext *cx) {
+        return mathCache_ ? mathCache_ : createMathCache(cx);
+    }
 
-    /* Property cache for faster call/get/set invocation. */
+    js::GSNCache        gsnCache;
     js::PropertyCache   propertyCache;
+    js::NewObjectCache  newObjectCache;
+    js::NativeIterCache nativeIterCache;
+    js::ToSourceCache   toSourceCache;
+    js::EvalCache       evalCache;
 
     /* State used by jsdtoa.cpp. */
     DtoaState           *dtoaState;
@@ -627,6 +786,8 @@ struct JSRuntime : js::RuntimeFriendFields
     JSWrapObjectCallback wrapObjectCallback;
     JSPreWrapCallback    preWrapObjectCallback;
     js::PreserveWrapperCallback preserveWrapperCallback;
+
+    js::ScriptFilenameTable scriptFilenameTable;
 
 #ifdef DEBUG
     size_t              noGCOrAllocationCheck;
@@ -740,7 +901,8 @@ struct JSRuntime : js::RuntimeFriendFields
     }
 
     void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
-                             size_t *regexpCode, size_t *stackCommitted, size_t *gcMarker);
+                             size_t *mjitCode, size_t *regexpCode, size_t *unusedCodeMemory,
+                             size_t *stackCommitted, size_t *gcMarker);
 };
 
 /* Common macros to access thread-local caches in JSRuntime. */
@@ -1053,7 +1215,7 @@ struct JSContext : js::ContextFriendFields
 #ifdef JS_METHODJIT
     bool                 methodJitEnabled;
 
-    inline js::mjit::JaegerCompartment *jaegerCompartment();
+    js::mjit::JaegerRuntime &jaegerRuntime() { return runtime->jaegerRuntime(); }
 #endif
 
     bool                 inferenceEnabled;

@@ -1711,20 +1711,6 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 
 // ----------------------------------------------------------------------
 
-/* static */ bool
-nsSVGUtils::RootSVGElementHasViewbox(const nsIContent *aRootSVGElem)
-{
-  if (!aRootSVGElem->IsSVG(nsGkAtoms::svg)) {
-    NS_ABORT_IF_FALSE(false, "Expecting an SVG <svg> node");
-    return false;
-  }
-
-  const nsSVGSVGElement *svgSvgElem =
-    static_cast<const nsSVGSVGElement*>(aRootSVGElem);
-
-  return svgSvgElem->HasValidViewbox();
-}
-
 /* static */ void
 nsSVGUtils::GetFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,
                                     nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,

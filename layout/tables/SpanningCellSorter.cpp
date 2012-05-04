@@ -53,7 +53,6 @@ SpanningCellSorter::SpanningCellSorter(nsIPresShell *aPresShell)
 {
     memset(mArray, 0, sizeof(mArray));
     mHashTable.entryCount = 0;
-    mPresShell->PushStackMemory();
 }
 
 SpanningCellSorter::~SpanningCellSorter()
@@ -63,7 +62,6 @@ SpanningCellSorter::~SpanningCellSorter()
         mHashTable.entryCount = 0;
     }
     delete [] mSortedHashTable;
-    mPresShell->PopStackMemory();
 }
 
 /* static */ PLDHashTableOps
@@ -99,7 +97,7 @@ SpanningCellSorter::AddCell(PRInt32 aColSpan, PRInt32 aRow, PRInt32 aCol)
     NS_ASSERTION(mState == ADDING, "cannot call AddCell after GetNext");
     NS_ASSERTION(aColSpan >= ARRAY_BASE, "cannot add cells with colspan<2");
 
-    Item *i = (Item*) mPresShell->AllocateStackMemory(sizeof(Item));
+    Item *i = (Item*) mozilla::AutoStackArena::Allocate(sizeof(Item));
     NS_ENSURE_TRUE(i != nsnull, false);
 
     i->row = aRow;

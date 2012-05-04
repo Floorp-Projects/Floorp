@@ -8,7 +8,7 @@
 #include "nsIJSContextStack.h"
 
 #include "jsfriendapi.h"
-#include "mozilla/dom/bindings/DOMJSClass.h"
+#include "mozilla/dom/DOMJSClass.h"
 #include "nsContentUtils.h"
 #include "nsWrapperCacheInlines.h"
 
