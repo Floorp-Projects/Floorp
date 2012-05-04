@@ -723,6 +723,12 @@ public:
     Mutated();
   }
 
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * A layer is "fixed position" when it draws content from a content
+   * (not chrome) document, the topmost content document has a root scrollframe
+   * with a displayport, but the layer does not move when that displayport scrolls.
+   */
   void SetIsFixedPosition(bool aFixedPosition) { mIsFixedPosition = aFixedPosition; }
 
   // These getters can be used anytime.

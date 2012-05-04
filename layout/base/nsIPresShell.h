@@ -163,8 +163,7 @@ protected:
   typedef mozilla::layers::LayerManager LayerManager;
 
   enum eRenderFlag {
-    STATE_IGNORING_VIEWPORT_SCROLLING = 0x1,
-    STATE_USING_DISPLAYPORT = 0x2
+    STATE_IGNORING_VIEWPORT_SCROLLING = 0x1
   };
   typedef PRUint8 RenderFlags; // for storing the above flags
 
