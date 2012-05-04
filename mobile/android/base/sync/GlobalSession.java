@@ -410,7 +410,15 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     this.config.infoCollections.fetch(callback);
   }
 
-  public void uploadKeys(CryptoRecord keysRecord,
+  /**
+   * Upload new crypto/keys.
+   *
+   * @param keys
+   *          new keys.
+   * @param keyUploadDelegate
+   *          a delegate.
+   */
+  public void uploadKeys(final CollectionKeys keys,
                          final KeyUploadDelegate keyUploadDelegate) {
     SyncStorageRecordRequest request;
     final GlobalSession self = this;
@@ -452,8 +460,10 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
       }
     };
 
-    keysRecord.setKeyBundle(config.syncKeyBundle);
+    CryptoRecord keysRecord;
     try {
+      keysRecord = keys.asCryptoRecord();
+      keysRecord.setKeyBundle(config.syncKeyBundle);
       keysRecord.encrypt();
     } catch (UnsupportedEncodingException e) {
       keyUploadDelegate.onKeyUploadFailed(e);
@@ -461,7 +471,12 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     } catch (CryptoException e) {
       keyUploadDelegate.onKeyUploadFailed(e);
       return;
+    } catch (NoCollectionKeysSetException e) {
+      // Should not occur.
+      keyUploadDelegate.onKeyUploadFailed(e);
+      return;
     }
+
     request.put(keysRecord);
   }
 
@@ -563,7 +578,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
 
             // Generate and upload new keys.
             try {
-              session.uploadKeys(CollectionKeys.generateCollectionKeys().asCryptoRecord(), new KeyUploadDelegate() {
+              session.uploadKeys(CollectionKeys.generateCollectionKeys(), new KeyUploadDelegate() {
                 @Override
                 public void onKeysUploaded() {
                   // Now we can download them.
@@ -576,9 +591,6 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
                   freshStartDelegate.onFreshStartFailed(e);
                 }
               });
-            } catch (NoCollectionKeysSetException e) {
-              Log.e(LOG_TAG, "Got exception generating new keys.", e);
-              freshStartDelegate.onFreshStartFailed(e);
             } catch (CryptoException e) {
               Log.e(LOG_TAG, "Got exception generating new keys.", e);
               freshStartDelegate.onFreshStartFailed(e);
@@ -729,15 +741,16 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
   }
 
   public void resetStagesByName(Collection<String> names) {
+    Collection<GlobalSyncStage> stages = new ArrayList<GlobalSyncStage>();
     for (String name : names) {
       try {
         GlobalSyncStage stage = this.getSyncStageByName(name);
-        Logger.info(LOG_TAG, "Resetting " + name + "(" + stage + ")");
-        stage.resetLocal();
+        stages.add(stage);
       } catch (NoSuchStageException e) {
         Logger.warn(LOG_TAG, "Cannot reset stage " + name + ": no such stage.");
       }
     }
+    GlobalSession.resetStages(stages);
   }
 
   /**
