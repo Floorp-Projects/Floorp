@@ -1415,7 +1415,7 @@ OtherReport.prototype = {
       case UNITS_BYTES:
       case UNITS_COUNT:
       case UNITS_COUNT_CUMULATIVE: return n < 0;
-      case UNITS_PERCENTAGE:       return n < 0; /* percentages may be greater than 100% */
+      case UNITS_PERCENTAGE:       return !(0 <= n && n <= 10000);
       default:
         assert(false, "bad units in OtherReport.isInvalid");
     }
