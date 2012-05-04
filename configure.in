@@ -2232,8 +2232,6 @@ case "$target" in
     if test "$HAVE_64BIT_OS"; then
         MOZ_MEMORY=1
     fi
-    CFLAGS="$CFLAGS -fno-common"
-    CXXFLAGS="$CXXFLAGS -fno-common"
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
