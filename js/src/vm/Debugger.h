@@ -283,6 +283,7 @@ class Debugger {
     inline bool observesNewScript() const;
     inline bool observesGlobal(GlobalObject *global) const;
     inline bool observesFrame(StackFrame *fp) const;
+    bool observesScript(JSScript *script) const;
 
     /*
      * If env is NULL, call vp->setNull() and return true. Otherwise, find or
