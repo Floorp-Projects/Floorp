@@ -523,7 +523,8 @@ class WebGLContext :
     public nsICanvasRenderingContextInternal,
     public nsSupportsWeakReference,
     public nsITimerCallback,
-    public WebGLRectangleObject
+    public WebGLRectangleObject,
+    public nsWrapperCache
 {
     friend class WebGLMemoryMultiReporterWrapper;
     friend class WebGLExtensionLoseContext;
@@ -536,7 +537,12 @@ public:
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(WebGLContext, nsIDOMWebGLRenderingContext)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(WebGLContext,
+                                                           nsIDOMWebGLRenderingContext)
+
+    nsINode* GetParentObject() {
+        return HTMLCanvasElement();
+    }
 
     NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 
