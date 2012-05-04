@@ -90,7 +90,7 @@ public:
                                  const gfxRect&   aImageRect,
                                  const gfxRect&   aFill,
                                  const gfxImageSurface::gfxImageFormat aFormat,
-                                 gfxPattern::GraphicsFilter aFilter,
+                                 const gfxPattern::GraphicsFilter& aFilter,
                                  PRUint32         aImageFlags = imgIContainer::FLAG_NONE);
 
     /**
