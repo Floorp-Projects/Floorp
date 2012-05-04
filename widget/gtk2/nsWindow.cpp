@@ -2118,9 +2118,25 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 #endif
         return TRUE;
     }
+    // If this widget uses OMTC...
+    if (GetLayerManager()->AsShadowForwarder() && GetLayerManager()->AsShadowForwarder()->HasShadowManager()) {
+        nsEventStatus status;
+#if defined(MOZ_WIDGET_GTK2)
+        nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface());
+#else
+        nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface(cr));
+#endif
+        nsBaseWidget::AutoLayerManagerSetup
+          setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
+        DispatchEvent(&event, status);
 
-    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL)
-    {
+        g_free(rects);
+
+        DispatchDidPaint(this);
+
+        return TRUE;
+    
+    } else if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL) {
         LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
         manager->SetClippingRegion(event.region);
 
