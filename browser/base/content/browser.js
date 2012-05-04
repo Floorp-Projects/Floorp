@@ -1025,27 +1025,31 @@ let gGestureSupport = {
     switch (aEvent.type) {
       case "MozSwipeGesture":
         aEvent.preventDefault();
-        return this.onSwipe(aEvent);
+        this.onSwipe(aEvent);
+        break;
       case "MozMagnifyGestureStart":
         aEvent.preventDefault();
 #ifdef XP_WIN
-        return this._setupGesture(aEvent, "pinch", def(25, 0), "out", "in");
+        this._setupGesture(aEvent, "pinch", def(25, 0), "out", "in");
 #else
-        return this._setupGesture(aEvent, "pinch", def(150, 1), "out", "in");
+        this._setupGesture(aEvent, "pinch", def(150, 1), "out", "in");
 #endif
+        break;
       case "MozRotateGestureStart":
         aEvent.preventDefault();
-        return this._setupGesture(aEvent, "twist", def(25, 0), "right", "left");
+        this._setupGesture(aEvent, "twist", def(25, 0), "right", "left");
+        break;
       case "MozMagnifyGestureUpdate":
       case "MozRotateGestureUpdate":
         aEvent.preventDefault();
-        return this._doUpdate(aEvent);
+        this._doUpdate(aEvent);
+        break;
       case "MozTapGesture":
         aEvent.preventDefault();
-        return this._doAction(aEvent, ["tap"]);
-      case "MozPressTapGesture":
-      // Fall through to default behavior
-      return;
+        this._doAction(aEvent, ["tap"]);
+        break;
+      /* case "MozPressTapGesture":
+        break; */
     }
   },
 
@@ -1130,8 +1134,6 @@ let gGestureSupport = {
    *        The original gesture event to convert into a fake click event
    * @param aGesture
    *        Array of gesture name parts (to be joined by periods)
-   * @return Name of the command found for the event's keys and gesture. If no
-   *         command is found, no value is returned (undefined).
    */
   _doAction: function GS__doAction(aEvent, aGesture) {
     // Create an array of pressed keys in a fixed order so that a command for
@@ -1169,9 +1171,8 @@ let gGestureSupport = {
         goDoCommand(command);
       }
 
-      return command;
+      break;
     }
-    return null;
   },
 
   /**
@@ -1192,10 +1193,12 @@ let gGestureSupport = {
    */
   onSwipe: function GS_onSwipe(aEvent) {
     // Figure out which one (and only one) direction was triggered
-    ["UP", "RIGHT", "DOWN", "LEFT"].forEach(function (dir) {
-      if (aEvent.direction == aEvent["DIRECTION_" + dir])
-        return this._doAction(aEvent, ["swipe", dir.toLowerCase()]);
-    }, this);
+    for (let dir of ["UP", "RIGHT", "DOWN", "LEFT"]) {
+      if (aEvent.direction == aEvent["DIRECTION_" + dir]) {
+        this._doAction(aEvent, ["swipe", dir.toLowerCase()]);
+        break;
+      }
+    }
   },
 
   /**
