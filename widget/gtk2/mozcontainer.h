@@ -83,11 +83,6 @@ extern "C" {
 #define IS_MOZ_CONTAINER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), MOZ_CONTAINER_TYPE))
 #define MOZ_CONAINTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), MOZ_CONTAINER_TYPE, MozContainerClass))
 
-#if (GTK_CHECK_VERSION(2, 12, 0) || \
-    (GTK_CHECK_VERSION(2, 10, 0) && defined(MOZ_PLATFORM_MAEMO)))
-#define HAVE_GTK_MOTION_HINTS
-#endif
-
 typedef struct _MozContainer      MozContainer;
 typedef struct _MozContainerClass MozContainerClass;
 

@@ -2,7 +2,8 @@
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
-<svg xmlns="http://www.w3.org/2000/svg" reftest-zoom="2">
+<svg xmlns="http://www.w3.org/2000/svg" reftest-zoom="2"
+     width="50%" height="50%">
   <title>Test stroke-dasharray with text and zooming</title>
   <g fill="none" stroke-width="1" stroke="black" stroke-dasharray="10">
     <text font-size="50" x="50" y="50">|</text>

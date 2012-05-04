@@ -43,9 +43,9 @@
 #include "nsAccessiblePivot.h"
 #include "nsAccTreeWalker.h"
 #include "nsAccUtils.h"
-#include "nsRootAccessible.h"
 #include "nsTextEquivUtils.h"
 #include "Role.h"
+#include "RootAccessible.h"
 #include "States.h"
 
 #include "nsIMutableArray.h"
@@ -764,7 +764,7 @@ nsresult nsDocAccessible::AddEventListeners()
   nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
   docShellTreeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
   if (rootTreeItem) {
-    nsRootAccessible* rootAccessible = RootAccessible();
+    a11y::RootAccessible* rootAccessible = RootAccessible();
     NS_ENSURE_TRUE(rootAccessible, NS_ERROR_FAILURE);
     nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
     if (caretAccessible) {
@@ -811,7 +811,7 @@ nsresult nsDocAccessible::RemoveEventListeners()
     NS_RELEASE_THIS(); // Kung fu death grip
   }
 
-  nsRootAccessible* rootAccessible = RootAccessible();
+  a11y::RootAccessible* rootAccessible = RootAccessible();
   if (rootAccessible) {
     nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
     if (caretAccessible)
@@ -1767,11 +1767,6 @@ nsDocAccessible::ProcessPendingEvent(AccEvent* aEvent)
     PRInt32 caretOffset;
     if (hyperText &&
         NS_SUCCEEDED(hyperText->GetCaretOffset(&caretOffset))) {
-#ifdef DEBUG_A11Y
-      PRUnichar chAtOffset;
-      hyperText->GetCharacterAtOffset(caretOffset, &chAtOffset);
-      printf("\nCaret moved to %d with char %c", caretOffset, chAtOffset);
-#endif
       nsRefPtr<AccEvent> caretMoveEvent =
         new AccCaretMoveEvent(hyperText, caretOffset);
       nsEventShell::FireEvent(caretMoveEvent);

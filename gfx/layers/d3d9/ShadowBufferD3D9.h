@@ -66,6 +66,12 @@ public:
       return nsIntSize(mTextureRect.Width(), mTextureRect.Height());
     return nsIntSize(0, 0);
   }
+
+  already_AddRefed<IDirect3DTexture9> GetTexture()
+  {
+    nsRefPtr<IDirect3DTexture9> result = mTexture;
+    return result.forget();
+  }
 protected:
   nsRefPtr<IDirect3DTexture9> mTexture;
   nsIntRect mTextureRect;

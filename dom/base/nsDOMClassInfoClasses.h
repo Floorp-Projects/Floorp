@@ -79,6 +79,8 @@ DOMCI_CLASS(DragEvent)
 DOMCI_CLASS(KeyboardEvent)
 DOMCI_CLASS(CompositionEvent)
 DOMCI_CLASS(PopupBlockedEvent)
+DOMCI_CLASS(DeviceLightEvent)
+DOMCI_CLASS(DeviceProximityEvent)
 DOMCI_CLASS(DeviceOrientationEvent)
 DOMCI_CLASS(DeviceMotionEvent)
 DOMCI_CLASS(DeviceAcceleration)
@@ -547,7 +549,6 @@ DOMCI_CLASS(CallEvent)
 
 #ifdef MOZ_B2G_BT
 DOMCI_CLASS(BluetoothAdapter)
-DOMCI_CLASS(BluetoothDevice)
 #endif
 
 DOMCI_CLASS(DOMError)

@@ -240,6 +240,7 @@ function createMochitestServer(serverBasePath)
   server.registerContentType("pdf", "application/pdf");
   server.registerContentType("ogv", "video/ogg");
   server.registerContentType("oga", "audio/ogg");
+  server.registerContentType("opus", "audio/ogg; codecs=opus");
   server.registerContentType("dat", "text/plain; charset=utf-8");
   server.registerContentType("frag", "text/plain"); // .frag == WebGL fragment shader
   server.registerContentType("vert", "text/plain"); // .vert == WebGL vertex shader

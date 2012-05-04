@@ -55,7 +55,6 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -64,6 +63,7 @@
 #include "jsscript.h"
 #include "jswrapper.h"
 
+#include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/StringBuffer.h"
 
@@ -385,7 +385,7 @@ exn_trace(JSTracer *trc, JSObject *obj)
             if (elem.funName)
                 MarkString(trc, &elem.funName, "stack trace function name");
             if (IS_GC_MARKING_TRACER(trc) && elem.filename)
-                MarkScriptFilename(elem.filename);
+                MarkScriptFilename(trc->runtime, elem.filename);
         }
     }
 }

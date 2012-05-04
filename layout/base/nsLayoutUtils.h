@@ -1503,6 +1503,12 @@ public:
   static bool UseBackgroundNearestFiltering();
 
   /**
+   * Checks whether we want to use the GPU to scale images when
+   * possible.
+   */
+  static bool GPUImageScalingEnabled();
+
+  /**
    * Unions the overflow areas of all non-popup children of aFrame with
    * aOverflowAreas.
    */

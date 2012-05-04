@@ -1965,43 +1965,6 @@ DisassWithSrc(JSContext *cx, unsigned argc, jsval *vp)
 #undef LINE_BUF_LEN
 }
 
-static void
-DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
-{
-    unsigned i = 0;
-    for (JSScopeProperty *sprop = NULL; JS_PropertyIterator(obj, &sprop);) {
-        fprintf(fp, "%3u %p ", i++, (void *) sprop);
-        ((Shape *) sprop)->dump(cx, fp);
-    }
-}
-
-static JSBool
-DumpStats(JSContext *cx, unsigned argc, jsval *vp)
-{
-    jsval *argv = JS_ARGV(cx, vp);
-    for (unsigned i = 0; i < argc; i++) {
-        JSString *str = JS_ValueToString(cx, argv[i]);
-        if (!str)
-            return JS_FALSE;
-        argv[i] = STRING_TO_JSVAL(str);
-        JSFlatString *flatStr = JS_FlattenString(cx, str);
-        if (!flatStr)
-            return JS_FALSE;
-        if (JS_FlatStringEqualsAscii(flatStr, "atom")) {
-            js_DumpAtoms(cx, gOutFile);
-        } else if (JS_FlatStringEqualsAscii(flatStr, "global")) {
-            DumpScope(cx, cx->globalObject, stdout);
-        } else {
-            fputs("js: invalid stats argument ", gErrFile);
-            JS_FileEscapedString(gErrFile, str, 0);
-            putc('\n', gErrFile);
-            continue;
-        }
-    }
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
-}
-
 static JSBool
 DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -2297,22 +2260,6 @@ BuildDate(JSContext *cx, unsigned argc, jsval *vp)
     fprintf(gOutFile, "built on %s at %s%s", __DATE__, __TIME__, version);
     *vp = JSVAL_VOID;
     return JS_TRUE;
-}
-
-static JSBool
-Clear(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JSObject *obj;
-    if (argc == 0) {
-        obj = JS_GetGlobalForScopeChain(cx);
-        if (!obj)
-            return false;
-    } else if (!JS_ValueToObject(cx, JS_ARGV(cx, vp)[0], &obj)) {
-        return false;
-    }
-    JS_ClearScope(cx, obj);
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return true;
 }
 
 static JSBool
@@ -3425,17 +3372,16 @@ Deserialize(JSContext *cx, unsigned argc, jsval *vp)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "deserialize");
         return false;
     }
-    JSObject *array = TypedArray::getTypedArray(obj);
-    if ((TypedArray::getByteLength(array) & 7) != 0) {
+    if ((TypedArray::getByteLength(obj) & 7) != 0) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "deserialize");
         return false;
     }
-    if ((uintptr_t(TypedArray::getDataOffset(array)) & 7) != 0) {
+    if ((uintptr_t(TypedArray::getDataOffset(obj)) & 7) != 0) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_BAD_ALIGNMENT);
         return false;
     }
 
-    if (!JS_ReadStructuredClone(cx, (uint64_t *) TypedArray::getDataOffset(array), TypedArray::getByteLength(array),
+    if (!JS_ReadStructuredClone(cx, (uint64_t *) TypedArray::getDataOffset(obj), TypedArray::getByteLength(obj),
                                 JS_STRUCTURED_CLONE_VERSION, v.address(), NULL, NULL)) {
         return false;
     }
@@ -3657,10 +3603,6 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "notes([fun])",
 "  Show source notes for functions."),
 
-    JS_FN_HELP("stats", DumpStats, 1, 0,
-"stats([string ...])",
-"  Dump 'atom' or 'global' stats."),
-
     JS_FN_HELP("findReferences", FindReferences, 1, 0,
 "findReferences(target)",
 "  Walk the entire heap, looking for references to |target|, and return a\n"
@@ -3700,10 +3642,6 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("build", BuildDate, 0, 0,
 "build()",
 "  Show build date and time."),
-
-    JS_FN_HELP("clear", Clear, 0, 0,
-"clear([obj])",
-"  Clear properties of object."),
 
     JS_FN_HELP("intern", Intern, 1, 0,
 "intern(str)",

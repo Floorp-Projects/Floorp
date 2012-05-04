@@ -43,11 +43,9 @@
 
 #include "nsISelectionListener.h"
 
-class nsRootAccessible;
-
 /*
  * This special accessibility class is for the caret, which is really the currently focused selection.
- * There is only 1 visible caret per top level window (nsRootAccessible),
+ * There is only 1 visible caret per top level window (RootAccessible),
  * However, there may be several visible selections.
  *
  * The important selections are the one owned by each document, and the one in the currently focused control.
@@ -59,8 +57,8 @@ class nsRootAccessible;
  * For ATK and Iaccessible2, the caret accessible is used to fire
  * caret move and selection change events.
  *
- * The caret accessible is owned by the nsRootAccessible for the top level window that it's in.
- * The nsRootAccessible needs to tell the nsCaretAccessible about focus changes via
+ * The caret accessible is owned by the RootAccessible for the top level window that it's in.
+ * The RootAccessible needs to tell the nsCaretAccessible about focus changes via
  * setControlSelectionListener().
  * Each nsDocAccessible needs to tell the nsCaretAccessible owned by the root to
  * listen for selection events via addDocSelectionListener() and then needs to remove the 
@@ -72,7 +70,7 @@ class nsCaretAccessible : public nsISelectionListener
 public:
   NS_DECL_ISUPPORTS
 
-  nsCaretAccessible(nsRootAccessible *aRootAccessible);
+  nsCaretAccessible(mozilla::a11y::RootAccessible* aRootAccessible);
   virtual ~nsCaretAccessible();
   void Shutdown();
 
@@ -155,7 +153,7 @@ private:
   nsRefPtr<nsHyperTextAccessible> mLastTextAccessible;
   PRInt32 mLastCaretOffset;
 
-  nsRootAccessible *mRootAccessible;
+  mozilla::a11y::RootAccessible* mRootAccessible;
 };
 
 #endif

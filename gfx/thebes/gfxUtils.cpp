@@ -414,6 +414,73 @@ DeviceToImageTransform(gfxContext* aContext,
     return gfxMatrix(deviceToUser).Multiply(aUserSpaceToImageSpace);
 }
 
+/* These heuristics are based on Source/WebCore/platform/graphics/skia/ImageSkia.cpp:computeResamplingMode() */
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFilter aFilter,
+                                                         int aImgWidth, int aImgHeight,
+                                                         float aSourceWidth, float aSourceHeight)
+{
+    // Images smaller than this in either direction are considered "small" and
+    // are not resampled ever (see below).
+    const int kSmallImageSizeThreshold = 8;
+
+    // The amount an image can be stretched in a single direction before we
+    // say that it is being stretched so much that it must be a line or
+    // background that doesn't need resampling.
+    const float kLargeStretch = 3.0f;
+
+    if (aImgWidth <= kSmallImageSizeThreshold
+        || aImgHeight <= kSmallImageSizeThreshold) {
+        // Never resample small images. These are often used for borders and
+        // rules (think 1x1 images used to make lines).
+        return gfxPattern::FILTER_NEAREST;
+    }
+
+    if (aImgHeight * kLargeStretch <= aSourceHeight || aImgWidth * kLargeStretch <= aSourceWidth) {
+        // Large image tiling detected.
+
+        // Don't resample if it is being tiled a lot in only one direction.
+        // This is trying to catch cases where somebody has created a border
+        // (which might be large) and then is stretching it to fill some part
+        // of the page.
+        if (fabs(aSourceWidth - aImgWidth)/aImgWidth < 0.5 || fabs(aSourceHeight - aImgHeight)/aImgHeight < 0.5)
+            return gfxPattern::FILTER_NEAREST;
+
+        // The image is growing a lot and in more than one direction. Resampling
+        // is slow and doesn't give us very much when growing a lot.
+        return aFilter;
+    }
+
+    /* Some notes on other heuristics:
+       The Skia backend also uses nearest for backgrounds that are stretched by
+       a large amount. I'm not sure this is common enough for us to worry about
+       now. It also uses nearest for backgrounds/avoids high quality for images
+       that are very slightly scaled.  I'm also not sure that very slightly
+       scaled backgrounds are common enough us to worry about.
+
+       We don't currently have much support for doing high quality interpolation.
+       The only place this currently happens is on Quartz and we don't have as
+       much control over it as would be needed. Webkit avoids using high quality
+       resampling during load. It also avoids high quality if the transformation
+       is not just a scale and translation
+
+       WebKit bug #40045 added code to avoid resampling different parts
+       of an image with different methods by using a resampling hint size.
+       It currently looks unused in WebKit but it's something to watch out for.
+    */
+
+    return aFilter;
+}
+#else
+static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFilter aFilter,
+                                                          int aImgWidth, int aImgHeight,
+                                                          int aSourceWidth, int aSourceHeight)
+{
+    // Just pass the filter through unchanged
+    return aFilter;
+}
+#endif
+
 /* static */ void
 gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
                            gfxDrawable*     aDrawable,
@@ -423,7 +490,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
                            const gfxRect&   aImageRect,
                            const gfxRect&   aFill,
                            const gfxImageSurface::gfxImageFormat aFormat,
-                           const gfxPattern::GraphicsFilter& aFilter,
+                           gfxPattern::GraphicsFilter aFilter,
                            PRUint32         aImageFlags)
 {
     SAMPLE_LABEL("gfxUtils", "DrawPixelSnapped");
@@ -440,6 +507,8 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
         return;
 
     nsRefPtr<gfxDrawable> drawable = aDrawable;
+
+    aFilter = ReduceResamplingFilter(aFilter, aImageRect.Width(), aImageRect.Height(), aSourceRect.Width(), aSourceRect.Height());
 
     // OK now, the hard part left is to account for the subimage sampling
     // restriction. If all the transforms involved are just integer

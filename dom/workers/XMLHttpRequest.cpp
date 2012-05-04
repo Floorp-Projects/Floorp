@@ -31,9 +31,6 @@
 
 USING_WORKERS_NAMESPACE
 
-namespace XMLHttpRequestResponseTypeValues = 
-  mozilla::dom::bindings::prototypes::XMLHttpRequestResponseType;
-
 using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
 
 // XXX Need to figure this out...
@@ -215,10 +212,11 @@ END_WORKERS_NAMESPACE
 namespace {
 
 inline void
-ConvertResponseTypeToString(XMLHttpRequestResponseType aType, nsString& aString)
+ConvertResponseTypeToString(XMLHttpRequestResponseType aType,
+                            nsString& aString)
 {
   using namespace
-    mozilla::dom::bindings::prototypes::XMLHttpRequestResponseType;
+    mozilla::dom::XMLHttpRequestResponseTypeValues;
 
   size_t index = static_cast<size_t>(aType);
   MOZ_ASSERT(index < ArrayLength(strings), "Codegen gave us a bad value!");
@@ -230,7 +228,7 @@ inline XMLHttpRequestResponseType
 ConvertStringToResponseType(const nsAString& aString)
 {
   using namespace
-    mozilla::dom::bindings::prototypes::XMLHttpRequestResponseType;
+    mozilla::dom::XMLHttpRequestResponseTypeValues;
 
   for (size_t index = 0; index < ArrayLength(strings) - 1; index++) {
     if (aString.EqualsASCII(strings[index].value, strings[index].length)) {
@@ -239,7 +237,7 @@ ConvertStringToResponseType(const nsAString& aString)
   }
 
   MOZ_NOT_REACHED("Don't know anything about this response type!");
-  return XMLHttpRequestResponseTypeValues::_empty;
+  return _empty;
 }
 
 enum

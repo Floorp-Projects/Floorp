@@ -16,6 +16,10 @@ Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/accessibility/Presenters.jsm');
 Cu.import('resource://gre/modules/accessibility/VirtualCursorController.jsm');
 
+const ACCESSFU_DISABLE = 0;
+const ACCESSFU_ENABLE = 1;
+const ACCESSFU_AUTO = 2;
+
 var AccessFu = {
   /**
    * Attach chrome-layer accessibility functionality to the given chrome window.
@@ -26,27 +30,25 @@ var AccessFu = {
    *  AccessFu.
    */
   attach: function attach(aWindow) {
+    if (this.chromeWin)
+      // XXX: only supports attaching to one window now.
+      throw new Error('Only one window could be attached to AccessFu');
+
     dump('AccessFu attach!! ' + Services.appinfo.OS + '\n');
     this.chromeWin = aWindow;
     this.presenters = [];
 
-    function checkA11y() {
-      if (Services.appinfo.OS == 'Android') {
-        let msg = Cc['@mozilla.org/android/bridge;1'].
-          getService(Ci.nsIAndroidBridge).handleGeckoMessage(
-            JSON.stringify(
-                { gecko: {
-                    type: 'Accessibility:IsEnabled',
-                    eventType: 1,
-                    text: []
-                  }
-                }));
-        return JSON.parse(msg).enabled;
-      }
-      return false;
+    this.prefsBranch = Cc['@mozilla.org/preferences-service;1']
+      .getService(Ci.nsIPrefService).getBranch('accessibility.');
+    this.prefsBranch.addObserver('accessfu', this, false);
+
+    let accessPref = ACCESSFU_DISABLE;
+    try {
+      accessPref = this.prefsBranch.getIntPref('accessfu');
+    } catch (x) {
     }
 
-    if (checkA11y())
+    if (this.amINeeded(accessPref))
       this.enable();
   },
 
@@ -92,6 +94,28 @@ var AccessFu = {
     this.chromeWin.removeEventListener('TabOpen', this);
     this.chromeWin.removeEventListener('TabSelect', this);
     this.chromeWin.removeEventListener('TabClose', this);
+  },
+
+  amINeeded: function(aPref) {
+    switch (aPref) {
+      case ACCESSFU_ENABLE:
+        return true;
+      case ACCESSFU_AUTO:
+        if (Services.appinfo.OS == 'Android') {
+          let msg = Cc['@mozilla.org/android/bridge;1'].
+            getService(Ci.nsIAndroidBridge).handleGeckoMessage(
+              JSON.stringify(
+                { gecko: {
+                    type: 'Accessibility:IsEnabled',
+                    eventType: 1,
+                    text: []
+                  }
+                }));
+          return JSON.parse(msg).enabled;
+        }
+      default:
+        return false;
+    }
   },
 
   addPresenter: function addPresenter(presenter) {
@@ -150,6 +174,14 @@ var AccessFu = {
 
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case 'nsPref:changed':
+        if (aData == 'accessfu') {
+          if (this.amINeeded(this.prefsBranch.getIntPref('accessfu')))
+            this.enable();
+          else
+            this.disable();
+        }
+        break;
       case 'accessible-event':
         let event;
         try {
@@ -204,6 +236,34 @@ var AccessFu = {
           }
           break;
         }
+      case Ci.nsIAccessibleEvent.EVENT_TEXT_INSERTED:
+      case Ci.nsIAccessibleEvent.EVENT_TEXT_REMOVED:
+      {
+        if (aEvent.isFromUserInput) {
+          // XXX support live regions as well.
+          let event = aEvent.QueryInterface(Ci.nsIAccessibleTextChangeEvent);
+          let isInserted = event.isInserted();
+          let textIface = aEvent.accessible.QueryInterface(Ci.nsIAccessibleText);
+
+          let text = '';
+          try {
+            text = textIface.
+              getText(0, Ci.nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT);
+          } catch (x) {
+            // XXX we might have gotten an exception with of a
+            // zero-length text. If we did, ignore it (bug #749810).
+            if (textIface.characterCount)
+              throw x;
+          }
+
+          this.presenters.forEach(
+            function(p) {
+              p.textChanged(isInserted, event.start, event.length, text, event.modifiedText);
+            }
+          );
+        }
+        break;
+      }
       default:
         break;
     }

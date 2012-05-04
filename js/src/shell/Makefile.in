@@ -81,3 +81,8 @@ endif
 # People expect the js shell to wind up in the top-level JS dir.
 libs::
 	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(DEPTH)
+
+GARBAGE += $(DEPTH)/$(PROGRAM)
+
+install:: $(PROGRAM)
+	$(SYSINSTALL) $^ $(DESTDIR)$(bindir)

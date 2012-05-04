@@ -83,7 +83,7 @@ public:
     return retSize;
   }
 
-  Rect TransformBounds(const Rect& rect) const;
+  GFX2D_API Rect TransformBounds(const Rect& rect) const;
 
   // Apply a scale to this matrix. This scale will be applied -before- the
   // existing transformation of the matrix.
@@ -138,7 +138,7 @@ public:
     return _11 * _22 - _12 * _21;
   }
   
-  static Matrix Rotation(Float aAngle);
+  GFX2D_API static Matrix Rotation(Float aAngle);
 
   Matrix operator*(const Matrix &aMatrix) const
   {

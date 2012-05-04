@@ -360,7 +360,8 @@ public:
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager)
+                                   LayerManager* aManager,
+                                   const FrameLayerBuilder::ContainerParameters& aParameters)
   {
     if (aManager->GetBackendType() != LayerManager::LAYERS_BASIC) {
       // For non-basic layer managers we can assume that compositing
