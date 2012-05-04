@@ -52,9 +52,6 @@
  */
 class JSONParser
 {
-    JSONParser(const JSONParser &other) MOZ_DELETE;
-    void operator=(const JSONParser &other) MOZ_DELETE;
-
   public:
     enum ErrorHandling { RaiseError, NoError };
     enum ParsingMode { StrictJSON, LegacyJSON };
@@ -83,6 +80,8 @@ class JSONParser
     Token lastToken;
 #endif
 
+    JSONParser *thisDuringConstruction() { return this; }
+
   public:
     /* Public API */
 
@@ -98,7 +97,7 @@ class JSONParser
       : cx(cx),
         current(data, length),
         end(data + length, data, length),
-        root(cx, this),
+        root(cx, thisDuringConstruction()),
         parsingMode(parsingMode),
         errorHandling(errorHandling)
 #ifdef DEBUG
@@ -178,6 +177,10 @@ class JSONParser
 
     void error(const char *msg);
     bool errorReturn();
+
+  private:
+    JSONParser(const JSONParser &other) MOZ_DELETE;
+    void operator=(const JSONParser &other) MOZ_DELETE;
 };
 
 #endif /* jsonparser_h___ */
