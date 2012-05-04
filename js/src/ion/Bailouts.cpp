@@ -473,6 +473,18 @@ ion::ThunkToInterpreter(Value *vp)
     IonActivation *activation = cx->runtime->ionActivation;
     BailoutClosure *br = activation->takeBailout();
 
+    // By default we set the forbidOsr flag on the ion script, but if a GC
+    // happens just after we re-enter the interpreter, the ion script get
+    // invalidated and we do not see the forbidOsr flag.  This may cause a loop
+    // which apear with eager compilation and gc zeal enabled.  This code is a
+    // workaround to avoid recompiling with OSR just after a bailout followed by
+    // a GC. (see Bug 746691 & Bug 751383)
+    jsbytecode *pc = cx->regs().pc;
+    while (JSOp(*pc) == JSOP_GOTO)
+        pc += GET_JUMP_OFFSET(pc);
+    if (JSOp(*pc) == JSOP_LOOPENTRY)
+        cx->regs().pc = GetNextPc(pc);
+
     bool ok = Interpret(cx, br->entryfp(), JSINTERP_BAILOUT);
 
     if (ok)
