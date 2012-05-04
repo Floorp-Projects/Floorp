@@ -90,6 +90,7 @@ let DebuggerView = {
  */
 function ScriptsView() {
   this._onScriptsChange = this._onScriptsChange.bind(this);
+  this._onScriptsSearch = this._onScriptsSearch.bind(this);
 }
 
 ScriptsView.prototype = {
@@ -104,6 +105,14 @@ ScriptsView.prototype = {
   },
 
   /**
+   * Removes the input in the searchbox and unhides all the scripts.
+   */
+  clearSearch: function DVS_clearSearch() {
+    this._searchbox.value = "";
+    this._onScriptsSearch({});
+  },
+
+  /**
    * Checks whether the script with the specified URL is among the scripts
    * known to the debugger and shown in the list.
    *
@@ -112,6 +121,11 @@ ScriptsView.prototype = {
    * @return boolean
    */
   contains: function DVS_contains(aUrl) {
+    if (this._tmpScripts.some(function(element) {
+      return element.script.url == aUrl;
+    })) {
+      return true;
+    }
     if (this._scripts.getElementsByAttribute("value", aUrl).length > 0) {
       return true;
     }
@@ -127,6 +141,11 @@ ScriptsView.prototype = {
    * @return boolean
    */
   containsLabel: function DVS_containsLabel(aLabel) {
+    if (this._tmpScripts.some(function(element) {
+      return element.label == aLabel;
+    })) {
+      return true;
+    }
     if (this._scripts.getElementsByAttribute("label", aLabel).length > 0) {
       return true;
     }
@@ -172,6 +191,18 @@ ScriptsView.prototype = {
   },
 
   /**
+   * Returns the list of labels in the scripts container.
+   * @return array
+   */
+  get scriptLabels() {
+    let labels = [];
+    for (let i = 0, l = this._scripts.itemCount; i < l; i++) {
+      labels.push(this._scripts.getItemAtIndex(i).label);
+    }
+    return labels;
+  },
+
+  /**
    * Returns the list of URIs for scripts in the page.
    * @return array
    */
@@ -184,50 +215,212 @@ ScriptsView.prototype = {
   },
 
   /**
-   * Adds a script to the scripts container.
-   * If the script already exists (was previously added), null is returned.
-   * Otherwise, the newly created element is returned.
+   * Gets the number of visible (hidden=false) scripts in the container.
+   * @return number
+   */
+  get visibleItemsCount() {
+    let count = 0;
+    for (let i = 0, l = this._scripts.itemCount; i < l; i++) {
+      count += this._scripts.getItemAtIndex(i).hidden ? 0 : 1;
+    }
+    return count;
+  },
+
+  /**
+   * Prepares a script to be added to the scripts container. This allows
+   * for a large number of scripts to be batched up before being
+   * alphabetically sorted and added in the container.
+   * @see ScriptsView.commitScripts
+   *
+   * If aForceFlag is true, the script will be immediately inserted at the
+   * necessary position in the container so that all the scripts remain sorted.
+   * This can be much slower than batching up multiple scripts.
    *
    * @param string aLabel
    *        The simplified script location to be shown.
    * @param string aScript
    *        The source script.
-   * @return object
-   *         The newly created html node representing the added script.
+   * @param boolean aForceFlag
+   *        True to force the script to be immediately added.
    */
-  addScript: function DVS_addScript(aLabel, aScript) {
-    // Make sure we don't duplicate anything.
-    if (this.containsLabel(aLabel)) {
-      return null;
+  addScript: function DVS_addScript(aLabel, aScript, aForceFlag) {
+    // Batch the script to be added later.
+    if (!aForceFlag) {
+      this._tmpScripts.push({ label: aLabel, script: aScript });
+      return;
     }
 
-    let script = this._scripts.appendItem(aLabel, aScript.url);
-    script.setAttribute("tooltiptext", aScript.url);
-    script.setUserData("sourceScript", aScript, null);
-
-    this._scripts.selectedItem = script;
-    return script;
+    // Find the target position in the menulist and insert the script there.
+    for (let i = 0, l = this._scripts.itemCount; i < l; i++) {
+      if (this._scripts.getItemAtIndex(i).label > aLabel) {
+        this._createScriptElement(aLabel, aScript, i);
+        return;
+      }
+    }
+    // The script is alphabetically the last one.
+    this._createScriptElement(aLabel, aScript, -1, true);
   },
 
   /**
-   * The cached click listener for the scripts container.
+   * Adds all the prepared scripts to the scripts container.
+   * If a script already exists (was previously added), nothing happens.
+   */
+  commitScripts: function DVS_commitScripts() {
+    let newScripts = this._tmpScripts;
+    this._tmpScripts = [];
+
+    if (!newScripts || !newScripts.length) {
+      return;
+    }
+    newScripts.sort(function(a, b) {
+      return a.label.toLowerCase() > b.label.toLowerCase();
+    });
+
+    for (let i = 0, l = newScripts.length; i < l; i++) {
+      let item = newScripts[i];
+      this._createScriptElement(item.label, item.script, -1, true);
+    }
+  },
+
+  /**
+   * Creates a custom script element and adds it to the scripts container.
+   * If the script with the specified label already exists, nothing happens.
+   *
+   * @param string aLabel
+   *        The simplified script location to be shown.
+   * @param string aScript
+   *        The source script.
+   * @param number aIndex
+   *        The index where to insert to new script in the container.
+   *        Pass -1 to append the script at the end.
+   * @param boolean aSelectIfEmptyFlag
+   *        True to set the newly created script as the currently selected item
+   *        if there are no other existing scripts in the container.
+   */
+  _createScriptElement: function DVS__createScriptElement(
+    aLabel, aScript, aIndex, aSelectIfEmptyFlag)
+  {
+    // Make sure we don't duplicate anything.
+    if (aLabel == "null" || this.containsLabel(aLabel)) {
+      return;
+    }
+
+    let scriptItem =
+      aIndex == -1 ? this._scripts.appendItem(aLabel, aScript.url)
+                   : this._scripts.insertItemAt(aIndex, aLabel, aScript.url);
+
+    scriptItem.setAttribute("tooltiptext", aScript.url);
+    scriptItem.setUserData("sourceScript", aScript, null);
+
+    if (this._scripts.itemCount == 1 && aSelectIfEmptyFlag) {
+      this._scripts.selectedItem = scriptItem;
+    }
+  },
+
+  /**
+   * The click listener for the scripts container.
    */
   _onScriptsChange: function DVS__onScriptsChange() {
     let script = this._scripts.selectedItem.getUserData("sourceScript");
+    this._preferredScript = script;
     DebuggerController.SourceScripts.showScript(script);
   },
 
   /**
-   * The cached scripts container.
+   * The search listener for the scripts search box.
+   */
+  _onScriptsSearch: function DVS__onScriptsSearch(e) {
+    let editor = DebuggerView.editor;
+    let scripts = this._scripts;
+    let rawValue = this._searchbox.value.toLowerCase();
+
+    let rawLength = rawValue.length;
+    let lastColon = rawValue.lastIndexOf(":");
+    let lastAt = rawValue.lastIndexOf("@");
+
+    let fileEnd = lastColon != -1 ? lastColon : lastAt != -1 ? lastAt : rawLength;
+    let lineEnd = lastAt != -1 ? lastAt : rawLength;
+
+    let file = rawValue.slice(0, fileEnd);
+    let line = window.parseInt(rawValue.slice(fileEnd + 1, lineEnd)) || -1;
+    let token = rawValue.slice(lineEnd + 1);
+
+    // Presume we won't find anything.
+    scripts.selectedItem = this._preferredScript;
+
+    // If we're not searching for a file anymore, unhide all the scripts.
+    if (!file) {
+      for (let i = 0, l = scripts.itemCount; i < l; i++) {
+        scripts.getItemAtIndex(i).hidden = false;
+      }
+    } else {
+      for (let i = 0, l = scripts.itemCount, found = false; i < l; i++) {
+        let item = scripts.getItemAtIndex(i);
+        let target = item.value.toLowerCase();
+
+        // Search is not case sensitive, and is tied to the url not the label.
+        if (target.match(file)) {
+          item.hidden = false;
+
+          if (!found) {
+            found = true;
+            scripts.selectedItem = item;
+          }
+        }
+        // Hide what doesn't match our search.
+        else {
+          item.hidden = true;
+        }
+      }
+    }
+    if (line > -1) {
+      editor.setCaretPosition(line - 1);
+    }
+    if (token) {
+      let offset = editor.find(token, { ignoreCase: true });
+      if (offset > -1) {
+        editor.setCaretPosition(0);
+        editor.setCaretOffset(offset);
+      }
+    }
+  },
+
+  /**
+   * The keyup listener for the scripts search box.
+   */
+  _onScriptsKeyUp: function DVS__onScriptsKeyUp(e) {
+    if (e.keyCode === e.DOM_VK_ESCAPE) {
+      DebuggerView.editor.focus();
+      return;
+    }
+
+    if (e.keyCode === e.DOM_VK_RETURN || e.keyCode === e.DOM_VK_ENTER) {
+      let editor = DebuggerView.editor;
+      let offset = editor.findNext(true);
+      if (offset > -1) {
+        editor.setCaretPosition(0);
+        editor.setCaretOffset(offset);
+      }
+    }
+  },
+
+  /**
+   * The cached scripts container and search box.
    */
   _scripts: null,
+  _searchbox: null,
 
   /**
    * Initialization function, called when the debugger is initialized.
    */
   initialize: function DVS_initialize() {
     this._scripts = document.getElementById("scripts");
+    this._searchbox = document.getElementById("scripts-search");
     this._scripts.addEventListener("select", this._onScriptsChange, false);
+    this._searchbox.addEventListener("select", this._onScriptsSearch, false);
+    this._searchbox.addEventListener("input", this._onScriptsSearch, false);
+    this._searchbox.addEventListener("keyup", this._onScriptsKeyUp, false);
+    this.commitScripts();
   },
 
   /**
@@ -235,7 +428,11 @@ ScriptsView.prototype = {
    */
   destroy: function DVS_destroy() {
     this._scripts.removeEventListener("select", this._onScriptsChange, false);
+    this._searchbox.removeEventListener("select", this._onScriptsSearch, false);
+    this._searchbox.removeEventListener("input", this._onScriptsSearch, false);
+    this._searchbox.removeEventListener("keyup", this._onScriptsKeyUp, false);
     this._scripts = null;
+    this._searchbox = null;
   }
 };
 
@@ -277,6 +474,8 @@ StackFramesView.prototype = {
     else {
       status.textContent = "";
     }
+
+    DebuggerView.Scripts.clearSearch();
   },
 
   /**
@@ -300,7 +499,7 @@ StackFramesView.prototype = {
 
     // The empty node should look grayed out to avoid confusion.
     item.className = "empty list-item";
-    item.appendChild(document.createTextNode(L10N.getStr("emptyText")));
+    item.appendChild(document.createTextNode(L10N.getStr("emptyStackText")));
 
     this._frames.appendChild(item);
   },
@@ -381,7 +580,7 @@ StackFramesView.prototype = {
    *        The frame depth specified by the debugger.
    */
   unhighlightFrame: function DVF_unhighlightFrame(aDepth) {
-    this.highlightFrame(aDepth, true)
+    this.highlightFrame(aDepth, true);
   },
 
   /**

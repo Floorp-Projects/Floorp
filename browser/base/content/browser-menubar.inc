@@ -551,6 +551,14 @@
                             label="&debuggerMenu.label;"
                             key="key_debugger"
                             command="Tools:Debugger"/>
+                  <menuitem id="menu_remoteDebugger"
+                            hidden="true"
+                            label="&remoteDebuggerMenu.label;"
+                            command="Tools:RemoteDebugger"/>
+                  <menuitem id="menu_chromeDebugger"
+                            hidden="true"
+                            label="&chromeDebuggerMenu.label;"
+                            command="Tools:ChromeDebugger"/>
                   <menuitem id="menu_scratchpad"
                             hidden="true"
                             label="&scratchpad.label;"

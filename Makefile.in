@@ -237,6 +237,10 @@ maybe_clobber_profiledbuild:
 	find $(DIST)/$(MOZ_APP_NAME) -name "*.pgc" -exec mv {} $(DIST)/bin \;
 endif
 
+# put in our default gdbinit so that the gdb debugging experience is happier.
+libs:: .gdbinit
+	$(INSTALL) $< $(DIST)/bin
+
 .PHONY: maybe_clobber_profiledbuild
 
 # Look for R_386_PC32 relocations in shared libs, these

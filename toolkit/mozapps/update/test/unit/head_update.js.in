@@ -80,6 +80,13 @@ const IS_ANDROID = true;
 const IS_ANDROID = false;
 #endif
 
+
+#ifdef MOZ_VERIFY_MAR_SIGNATURE
+const IS_MAR_CHECKS_ENABLED = true;
+#else
+const IS_MAR_CHECKS_ENABLED = false;
+#endif
+
 const URL_HOST = "http://localhost:4444/";
 const URL_PATH = "data";
 
