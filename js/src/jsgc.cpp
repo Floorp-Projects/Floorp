@@ -2887,10 +2887,13 @@ PurgeRuntime(JSTracer *trc)
     }
 
     rt->tempLifoAlloc.freeUnused();
-    rt->gsnCache.purge();
 
-    /* FIXME: bug 506341 */
+    rt->gsnCache.purge();
     rt->propertyCache.purge(rt);
+    rt->newObjectCache.purge();
+    rt->nativeIterCache.purge();
+    rt->toSourceCache.purge();
+    rt->evalCache.purge();
 
     for (ContextIter acx(rt); !acx.done(); acx.next())
         acx->purge();
@@ -3209,8 +3212,8 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
          * script and calls rt->destroyScriptHook, the hook can still access the
          * script's filename. See bug 323267.
          */
-        for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            SweepScriptFilenames(c);
+        if (rt->gcIsFull)
+            SweepScriptFilenames(rt);
 
         /*
          * This removes compartments from rt->compartment, so we do it last to make

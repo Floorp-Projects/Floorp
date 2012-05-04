@@ -122,20 +122,28 @@ var VirtualCursorController = {
       Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
 
     match: function(aAccessible) {
-      let rv = Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
-      if (aAccessible.childCount == 0) {
-        // TODO: Find a better solution for ROLE_STATICTEXT.
-        // Right now it helps filter list bullets, but it is also used
-        // in CSS generated content.
-        let ignoreRoles = [Ci.nsIAccessibleRole.ROLE_WHITESPACE,
-                           Ci.nsIAccessibleRole.ROLE_STATICTEXT];
-        let state = {};
-        aAccessible.getState(state, {});
-        if ((state.value & Ci.nsIAccessibleStates.STATE_FOCUSABLE) ||
-          (aAccessible.name && ignoreRoles.indexOf(aAccessible.role) < 0))
-          rv = Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-        }
-      return rv;
+      if (aAccessible.childCount)
+        // Non-leafs do not interest us.
+        return Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
+
+      // XXX: Find a better solution for ROLE_STATICTEXT.
+      // It allows to filter list bullets but the same time it
+      // filters CSS generated content too as unwanted side effect.
+      let ignoreRoles = [Ci.nsIAccessibleRole.ROLE_WHITESPACE,
+                         Ci.nsIAccessibleRole.ROLE_STATICTEXT];
+
+      if (ignoreRoles.indexOf(aAccessible.role) < 0) {
+        let name = aAccessible.name;
+        if (name && name.trim())
+          return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
+      }
+
+      let state = {};
+      aAccessible.getState(state, {});
+      if (state.value & Ci.nsIAccessibleStates.STATE_FOCUSABLE)
+        return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
+
+      return Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
     },
 
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])

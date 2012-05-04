@@ -59,7 +59,7 @@
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
 
-#include "mozilla/dom/bindings/Common.h"
+#include "mozilla/dom/RegisterBindings.h"
 
 #include "nscore.h"
 #include "nsDOMClassInfo.h"
@@ -4491,7 +4491,7 @@ nsDOMClassInfo::Init()
   mozilla::dom::binding::Register(nameSpaceManager);
 
   // Non-proxy bindings
-  mozilla::dom::bindings::Register(nameSpaceManager);
+  mozilla::dom::Register(nameSpaceManager);
 
   sIsInitialized = true;
 

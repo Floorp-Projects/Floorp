@@ -79,7 +79,8 @@ public:
                  const nsIntRegion& aValidRegion,
                  const gfxSize& aResolution,
                  const gfx3DMatrix& aTransform,
-                 const nsIntPoint& aRenderOffset);
+                 const nsIntPoint& aRenderOffset,
+                 Layer* aMaskLayer);
 
 private:
   // This GLContext should correspond to the one used in any TiledLayerBufferOGL

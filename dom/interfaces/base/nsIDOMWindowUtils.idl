@@ -70,7 +70,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 
-[scriptable, uuid(66a68858-df38-40e1-a792-fda04ebcc084)]
+[scriptable, uuid(f75d0a14-e278-4716-a151-637862451a2f)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -347,17 +347,30 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aKeyCode key code
    * @param aCharCode character code
    * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
-   * @param aPreventDefault if true, preventDefault() the event before dispatch
+   * @param aAdditionalFlags special flags for the key event, see KEY_FLAG_*.
    *
    * @return false if the event had preventDefault() called on it,
    *               true otherwise.  In other words, true if and only if the
    *               default action was taken.
    */
+
+  // If this is set, preventDefault() the event before dispatch.
+  const unsigned long KEY_FLAG_PREVENT_DEFAULT   = 0x0001;
+
+  // if one of these flags is set, the KeyboardEvent.location will be the value.
+  // Otherwise, it will be computed from aKeyCode.
+  const unsigned long KEY_FLAG_LOCATION_STANDARD = 0x0010;
+  const unsigned long KEY_FLAG_LOCATION_LEFT     = 0x0020;
+  const unsigned long KEY_FLAG_LOCATION_RIGHT    = 0x0040;
+  const unsigned long KEY_FLAG_LOCATION_NUMPAD   = 0x0080;
+  const unsigned long KEY_FLAG_LOCATION_MOBILE   = 0x0100;
+  const unsigned long KEY_FLAG_LOCATION_JOYSTICK = 0x0200;
+
   boolean sendKeyEvent(in AString aType,
                        in long aKeyCode,
                        in long aCharCode,
                        in long aModifiers,
-                       [optional] in boolean aPreventDefault);
+                       [optional] in unsigned long aAdditionalFlags);
 
   /**
    * See nsIWidget::SynthesizeNativeKeyEvent

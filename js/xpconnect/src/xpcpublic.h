@@ -53,7 +53,7 @@
 #include "nsWrapperCache.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
-#include "mozilla/dom/bindings/DOMJSClass.h"
+#include "mozilla/dom/DOMJSClass.h"
 
 class nsIPrincipal;
 class nsIXPConnectWrappedJS;
@@ -152,13 +152,6 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
     }
 
     return nsnull;
-}
-
-inline JSObject*
-xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope)
-{
-    jsval dummy;
-    return xpc_FastGetCachedWrapper(cache, scope, &dummy);
 }
 
 // The JS GC marks objects gray that are held alive directly or

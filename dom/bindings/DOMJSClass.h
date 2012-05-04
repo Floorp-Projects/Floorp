@@ -3,13 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bindings_DOMJSClass_h
-#define mozilla_dom_bindings_DOMJSClass_h
+#ifndef mozilla_dom_DOMJSClass_h
+#define mozilla_dom_DOMJSClass_h
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
-#include "mozilla/dom/bindings/PrototypeList.h" // auto-generated
+#include "mozilla/dom/PrototypeList.h" // auto-generated
 
 // For non-global objects we use slot 0 for holding the raw object.
 #define DOM_OBJECT_SLOT 0
@@ -26,7 +26,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace bindings {
 
 typedef bool
 (* ResolveProperty)(JSContext* cx, JSObject* wrapper, jsid id, bool set,
@@ -97,8 +96,7 @@ GetProtoOrIfaceArray(JSObject* global)
     js::GetReservedSlot(global, DOM_PROTOTYPE_SLOT).toPrivate());
 }
 
-} // namespace bindings
 } // namespace dom
 } // namespace mozilla
 
-#endif /* mozilla_dom_bindings_DOMJSClass_h */
+#endif /* mozilla_dom_DOMJSClass_h */

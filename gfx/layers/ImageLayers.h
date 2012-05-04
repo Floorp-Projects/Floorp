@@ -633,6 +633,7 @@ public:
     mEffectiveTransform =
         SnapTransform(GetLocalTransform(), snap, nsnull)*
         SnapTransform(aTransformToSurface, gfxRect(0, 0, 0, 0), nsnull);
+    ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
 protected:

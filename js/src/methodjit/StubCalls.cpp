@@ -801,7 +801,7 @@ stubs::DebuggerStatement(VMFrame &f, jsbytecode *pc)
           case JSTRAP_RETURN:
             f.cx->clearPendingException();
             f.cx->fp()->setReturnValue(rval);
-            *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromFastCall();
+            *f.returnAddressLocation() = f.cx->jaegerRuntime().forceReturnFromFastCall();
             break;
 
           case JSTRAP_ERROR:
@@ -866,7 +866,7 @@ stubs::Trap(VMFrame &f, uint32_t trapTypes)
       case JSTRAP_RETURN:
         f.cx->clearPendingException();
         f.cx->fp()->setReturnValue(rval);
-        *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromFastCall();
+        *f.returnAddressLocation() = f.cx->jaegerRuntime().forceReturnFromFastCall();
         break;
 
       case JSTRAP_ERROR:

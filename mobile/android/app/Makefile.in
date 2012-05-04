@@ -126,10 +126,14 @@ else
 APPFILES = MacOS
 endif
 
-libs repackage::
-	mkdir -p $(dist_dest)/Contents/MacOS
+libs-preqs = \
+  $(call mkdir_deps,$(dist_dest)/Contents/MacOS) \
+  $(call mkdir_deps,$(dist_dest)/Contents/Resources/$(AB).lproj) \
+  $(NULL)
+
+.PHONY: repackage
+libs repackage:: $(libs-preqs)
 	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents $(dist_dest) --exclude English.lproj
-	mkdir -p $(dist_dest)/Contents/Resources/$(AB).lproj
 	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(dist_dest)/Contents/Resources/$(AB).lproj
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" -e "s/%APP_BINARY%/$(APP_BINARY)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(dist_dest)/Contents/Info.plist
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(dist_dest)/Contents/Resources/$(AB).lproj/InfoPlist.strings
