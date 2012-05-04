@@ -67,14 +67,14 @@ public:
   nsPresArena();
   ~nsPresArena();
 
-  // Pool allocation with recycler lists indexed by object size.
+  // Pool allocation with recycler lists indexed by object size, aSize.
   NS_HIDDEN_(void*) AllocateBySize(size_t aSize);
   NS_HIDDEN_(void)  FreeBySize(size_t aSize, void* aPtr);
 
-  // Pool allocation with recycler lists indexed by object-type code.
-  // Every type code must always be used with the same object size.
-  NS_HIDDEN_(void*) AllocateByCode(nsQueryFrame::FrameIID aCode, size_t aSize);
-  NS_HIDDEN_(void)  FreeByCode(nsQueryFrame::FrameIID aCode, void* aPtr);
+  // Pool allocation with recycler lists indexed by frame-type ID.
+  // Every aID must always be used with the same object size, aSize.
+  NS_HIDDEN_(void*) AllocateByFrameID(nsQueryFrame::FrameIID aID, size_t aSize);
+  NS_HIDDEN_(void)  FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr);
 
   size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 

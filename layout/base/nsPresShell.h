@@ -190,9 +190,9 @@ public:
                                    nsCompatibility aCompatMode);
   virtual NS_HIDDEN_(void) Destroy();
 
-  virtual NS_HIDDEN_(void*) AllocateFrame(nsQueryFrame::FrameIID aCode,
+  virtual NS_HIDDEN_(void*) AllocateFrame(nsQueryFrame::FrameIID aID,
                                           size_t aSize);
-  virtual NS_HIDDEN_(void)  FreeFrame(nsQueryFrame::FrameIID aCode,
+  virtual NS_HIDDEN_(void)  FreeFrame(nsQueryFrame::FrameIID aID,
                                       void* aChunk);
 
   virtual NS_HIDDEN_(void*) AllocateMisc(size_t aSize);
