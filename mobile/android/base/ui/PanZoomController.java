@@ -852,7 +852,7 @@ public class PanZoomController
         if (GeckoApp.mDOMFullScreen)
             return false;
 
-        if (mState == PanZoomState.ANIMATED_ZOOM)
+        if (mState != PanZoomState.PINCHING)
             return false;
 
         float prevSpan = detector.getPreviousSpan();
