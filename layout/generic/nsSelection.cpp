@@ -1809,12 +1809,6 @@ nsFrameSelection::TakeFocus(nsIContent *aNewFocus,
   mStartSelectedCell = nsnull;
   mEndSelectedCell = nsnull;
   mAppendStartSelectedCell = nsnull;
-
-  //HACKHACKHACK
-  if (!aNewFocus->GetParent())
-    return NS_ERROR_FAILURE;
-  //END HACKHACKHACK /checking for root frames/content
-
   mHint = aHint;
   
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
