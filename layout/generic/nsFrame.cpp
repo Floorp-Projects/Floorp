@@ -463,6 +463,12 @@ IsFontSizeInflationContainer(nsIFrame* aFrame,
    * thing to count as a container, so we don't try, and blocks are
    * always containers.
    */
+
+  // The root frame should always be an inflation container.
+  if (!aFrame->GetParent()) {
+    return true;
+  }
+
   nsIContent *content = aFrame->GetContent();
   bool isInline = (aStyleDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE ||
                    (aStyleDisplay->IsFloating() &&
@@ -470,13 +476,11 @@ IsFontSizeInflationContainer(nsIFrame* aFrame,
                    // Given multiple frames for the same node, only the
                    // outer one should be considered a container.
                    // (Important, e.g., for nsSelectsAreaFrame.)
-                   (aFrame->GetParent() &&
-                    aFrame->GetParent()->GetContent() == content) ||
+                   (aFrame->GetParent()->GetContent() == content) ||
                    (content && (content->IsHTML(nsGkAtoms::option) ||
                                 content->IsHTML(nsGkAtoms::optgroup) ||
                                 content->IsInNativeAnonymousSubtree()))) &&
-                  !(aFrame->IsBoxFrame() && aFrame->GetParent() &&
-                    aFrame->GetParent()->IsBoxFrame());
+                  !(aFrame->IsBoxFrame() && aFrame->GetParent()->IsBoxFrame());
   NS_ASSERTION(!aFrame->IsFrameOfType(nsIFrame::eLineParticipant) ||
                isInline ||
                // br frames and mathml frames report being line
