@@ -5,7 +5,6 @@
 package org.mozilla.gecko.sync.stage;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 
 import org.json.simple.parser.ParseException;
@@ -123,7 +122,9 @@ implements SyncStorageRequestDelegate, KeyUploadDelegate {
   @Override
   public void handleRequestFailure(SyncStorageResponse response) {
     if (retrying) {
-      session.handleHTTPError(response, "Failure in refetching uploaded keys.");
+      // Should happen very rarely -- this means we uploaded our crypto/keys
+      // successfully, but failed to re-download.
+      session.handleHTTPError(response, "Failure while re-downloading already uploaded keys.");
       return;
     }
 
@@ -131,25 +132,14 @@ implements SyncStorageRequestDelegate, KeyUploadDelegate {
     Logger.debug(LOG_TAG, "Got " + statusCode + " fetching keys.");
     if (statusCode == 404) {
       // No keys. Generate and upload, then refetch.
-      CryptoRecord keysWBO;
+      CollectionKeys keys;
       try {
-        keysWBO = CollectionKeys.generateCollectionKeysRecord();
+        keys = CollectionKeys.generateCollectionKeys();
       } catch (CryptoException e) {
         session.abort(e, "Couldn't generate new key bundle.");
         return;
       }
-      keysWBO.keyBundle = session.config.syncKeyBundle;
-      try {
-        keysWBO.encrypt();
-      } catch (UnsupportedEncodingException e) {
-        // Shouldn't occur, so let's not waste too much time on niceties. TODO
-        session.abort(e, "Couldn't encrypt new key bundle: unsupported encoding.");
-        return;
-      } catch (CryptoException e) {
-        session.abort(e, "Couldn't encrypt new key bundle.");
-        return;
-      }
-      session.uploadKeys(keysWBO, this);
+      session.uploadKeys(keys, this);
       return;
     }
     session.handleHTTPError(response, "Failure fetching keys.");
@@ -162,7 +152,7 @@ implements SyncStorageRequestDelegate, KeyUploadDelegate {
 
   @Override
   public void onKeysUploaded() {
-    Logger.debug(LOG_TAG, "New keys uploaded. Starting stage again to fetch them.");
+    Logger.debug(LOG_TAG, "New keys uploaded. Persisting before starting stage again.");
     try {
       retrying = true;
       this.execute();
