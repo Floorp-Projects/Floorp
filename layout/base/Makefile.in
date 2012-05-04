@@ -86,6 +86,7 @@ EXPORTS		= \
 		nsRefreshDriver.h \
 		nsStyleChangeList.h \
 		nsStyleConsts.h \
+		StackArena.h \
 		$(NULL)
 
 EXPORTS_mozilla = \
@@ -120,6 +121,7 @@ CPPSRCS		= \
 		nsStyleChangeList.cpp \
 		nsStyleSheetService.cpp \
 		PaintTracker.cpp \
+		StackArena.cpp \
 		$(NULL)
 
 ifndef MOZ_XUL
