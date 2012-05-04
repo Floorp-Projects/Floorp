@@ -587,23 +587,23 @@ AndroidGeckoLayerClient::Init(jobject jobj)
 }
 
 void
-AndroidLayerRendererFrame::Init(jobject jobj)
+AndroidLayerRendererFrame::Init(JNIEnv *env, jobject jobj)
 {
     if (!isNull()) {
-        Dispose();
+        Dispose(env);
     }
 
-    wrapped_obj = GetJNIForThread()->NewGlobalRef(jobj);
+    wrapped_obj = env->NewGlobalRef(jobj);
 }
 
 void
-AndroidLayerRendererFrame::Dispose()
+AndroidLayerRendererFrame::Dispose(JNIEnv *env)
 {
     if (isNull()) {
         return;
     }
 
-    GetJNIForThread()->DeleteGlobalRef(wrapped_obj);
+    env->DeleteGlobalRef(wrapped_obj);
     wrapped_obj = 0;
 }
 
@@ -754,88 +754,46 @@ AndroidGeckoSurfaceView::GetSurfaceHolder()
 }
 
 void
-AndroidGeckoLayerClient::CreateFrame(AndroidLayerRendererFrame& aFrame)
+AndroidGeckoLayerClient::CreateFrame(JNIEnv *env, AndroidLayerRendererFrame& aFrame)
 {
-    JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at CreateFrame()!");
-    if (!env) {
-        return;
-    }
-
     jobject frameJObj = env->CallObjectMethod(wrapped_obj, jCreateFrameMethod);
     NS_ABORT_IF_FALSE(frameJObj, "No frame object!");
-    aFrame.Init(frameJObj);
+    aFrame.Init(env, frameJObj);
 }
 
 void
-AndroidGeckoLayerClient::ActivateProgram()
+AndroidGeckoLayerClient::ActivateProgram(JNIEnv *env)
 {
-    JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at ActivateProgram()!");
-    if (!env) {
-        return;
-    }
-
     env->CallVoidMethod(wrapped_obj, jActivateProgramMethod);
 }
 
 void
-AndroidGeckoLayerClient::DeactivateProgram()
+AndroidGeckoLayerClient::DeactivateProgram(JNIEnv *env)
 {
-    JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at DeactivateProgram()!");
-    if (!env) {
-        return;
-    }
-
     env->CallVoidMethod(wrapped_obj, jDeactivateProgramMethod);
 }
 
 void
-AndroidLayerRendererFrame::BeginDrawing()
+AndroidLayerRendererFrame::BeginDrawing(JNIEnv *env)
 {
-    JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at BeginDrawing()!");
-    if (!env) {
-        return;
-    }
-
     env->CallVoidMethod(wrapped_obj, jBeginDrawingMethod);
 }
 
 void
-AndroidLayerRendererFrame::DrawBackground()
+AndroidLayerRendererFrame::DrawBackground(JNIEnv *env)
 {
-    JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at DrawBackground()!");
-    if (!env) {
-        return;
-    }
-
     env->CallVoidMethod(wrapped_obj, jDrawBackgroundMethod);
 }
 
 void
-AndroidLayerRendererFrame::DrawForeground()
+AndroidLayerRendererFrame::DrawForeground(JNIEnv *env)
 {
-    JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at DrawForeground()!");
-    if (!env) {
-        return;
-    }
-
     env->CallVoidMethod(wrapped_obj, jDrawForegroundMethod);
 }
 
 void
-AndroidLayerRendererFrame::EndDrawing()
+AndroidLayerRendererFrame::EndDrawing(JNIEnv *env)
 {
-    JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at EndDrawing()!");
-    if (!env) {
-        return;
-    }
-
     env->CallVoidMethod(wrapped_obj, jEndDrawingMethod);
 }
 

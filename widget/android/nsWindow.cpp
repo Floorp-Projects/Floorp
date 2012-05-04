@@ -2220,31 +2220,40 @@ nsWindow::GetIMEUpdatePreference()
 #ifdef MOZ_JAVA_COMPOSITOR
 void
 nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {
-    AndroidBridge::AutoLocalJNIFrame jniFrame(GetJNIForThread());
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowUnderlay()!");
+    if (!env)
+        return;
+
+    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
 
     AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
-    client.CreateFrame(mLayerRendererFrame);
-
-    client.ActivateProgram();
-    mLayerRendererFrame.BeginDrawing();
-    mLayerRendererFrame.DrawBackground();
-    client.DeactivateProgram();
+    client.CreateFrame(env, mLayerRendererFrame);
+    client.ActivateProgram(env);
+    mLayerRendererFrame.BeginDrawing(env);
+    mLayerRendererFrame.DrawBackground(env);
+    client.DeactivateProgram(env);
 }
 
 void
 nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {
-    AndroidBridge::AutoLocalJNIFrame jniFrame(GetJNIForThread());
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowOverlay()!");
+    if (!env)
+        return;
+
+    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
     NS_ABORT_IF_FALSE(!mLayerRendererFrame.isNull(),
                       "Frame should have been created in DrawWindowUnderlay()!");
 
     AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
 
-    client.ActivateProgram();
-    mLayerRendererFrame.DrawForeground();
-    mLayerRendererFrame.EndDrawing();
-    client.DeactivateProgram();
+    client.ActivateProgram(env);
+    mLayerRendererFrame.DrawForeground(env);
+    mLayerRendererFrame.EndDrawing(env);
+    client.DeactivateProgram(env);
 
-    mLayerRendererFrame.Dispose();
+    mLayerRendererFrame.Dispose(env);
 }
 
 // off-main-thread compositor fields and functions
