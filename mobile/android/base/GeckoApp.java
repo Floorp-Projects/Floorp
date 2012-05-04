@@ -509,10 +509,14 @@ abstract public class GeckoApp
                 }
                 return true;
             case R.id.reload:
-                doReload();
+                tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null)
+                    tab.doReload();
                 return true;
             case R.id.forward:
-                doForward();
+                tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null)
+                    tab.doForward();
                 return true;
             case R.id.save_as_pdf:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SaveAs:PDF", null));
@@ -2531,33 +2535,6 @@ abstract public class GeckoApp
         }
         startActivityForResult(intent, mActivityResultHandlerMap.put(mAwesomebarResultHandler));
         return true;
-    }
-
-    public boolean doReload() {
-        Log.i(LOGTAG, "Reload requested");
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null)
-            return false;
-
-        return tab.doReload();
-    }
-
-    public boolean doForward() {
-        Log.i(LOGTAG, "Forward requested");
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null)
-            return false;
-
-        return tab.doForward();
-    }
-
-    public boolean doStop() {
-        Log.i(LOGTAG, "Stop requested");
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null)
-            return false;
-
-        return tab.doStop();
     }
 
     @Override
