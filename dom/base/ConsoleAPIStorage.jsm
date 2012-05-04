@@ -45,12 +45,10 @@ const STORAGE_MAX_EVENTS = 200;
 
 XPCOMUtils.defineLazyGetter(this, "gPrivBrowsing", function () {
   // private browsing may not be available in some Gecko Apps
-  try {
-    return Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService);
-  }
-  catch (ex) {
+  if (!(["@mozilla.org/privatebrowsing;1"] in Cc))
     return null;
-  }
+
+  return Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService);
 });
 
 var EXPORTED_SYMBOLS = ["ConsoleAPIStorage"];
