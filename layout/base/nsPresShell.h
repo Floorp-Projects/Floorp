@@ -84,88 +84,6 @@ struct nsCallbackEventRequest;
 class ReflowCountMgr;
 #endif
 
-#define STACK_ARENA_MARK_INCREMENT 50
-/* a bit under 4096, for malloc overhead */
-#define STACK_ARENA_BLOCK_INCREMENT 4044
-
-/**A block of memory that the stack will 
- * chop up and hand out
- */
-struct StackBlock {
-   
-   // a block of memory.  Note that this must be first so that it will
-   // be aligned.
-   char mBlock[STACK_ARENA_BLOCK_INCREMENT];
-
-   // another block of memory that would only be created
-   // if our stack overflowed. Yes we have the ability
-   // to grow on a stack overflow
-   StackBlock* mNext;
-
-   StackBlock() : mNext(nsnull) { }
-   ~StackBlock() { }
-};
-
-/* we hold an array of marks. A push pushes a mark on the stack
- * a pop pops it off.
- */
-struct StackMark {
-   // the block of memory we are currently handing out chunks of
-   StackBlock* mBlock;
-   
-   // our current position in the memory
-   size_t mPos;
-};
-
-
-/* A stack arena allows a stack based interface to a block of memory.
- * It should be used when you need to allocate some temporary memory that
- * you will immediately return.
- */
-class StackArena {
-public:
-  StackArena();
-  ~StackArena();
-
-  nsresult Init() { return mBlocks ? NS_OK : NS_ERROR_OUT_OF_MEMORY; }
-
-  // Memory management functions
-  void* Allocate(size_t aSize);
-  void Push();
-  void Pop();
-
-  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
-    size_t n = 0;
-    StackBlock *block = mBlocks;
-    while (block) {
-      n += aMallocSizeOf(block);
-      block = block->mNext;
-    }
-    n += aMallocSizeOf(mMarks);
-    return n;
-  }
-
-private:
-  // our current position in memory
-  size_t mPos;
-
-  // a list of memory block. Usually there is only one
-  // but if we overrun our stack size we can get more memory.
-  StackBlock* mBlocks;
-
-  // the current block of memory we are passing our chucks of
-  StackBlock* mCurBlock;
-
-  // our stack of mark where push has been called
-  StackMark* mMarks;
-
-  // the current top of the mark list
-  PRUint32 mStackTop;
-
-  // the size of the mark array
-  PRUint32 mMarkLength;
-};
-
 class nsPresShellEventCB;
 class nsAutoCauseReflowNotifier;
 
@@ -202,11 +120,6 @@ public:
 
   virtual NS_HIDDEN_(void*) AllocateMisc(size_t aSize);
   virtual NS_HIDDEN_(void)  FreeMisc(size_t aSize, void* aChunk);
-
-  // Dynamic stack memory allocation
-  virtual NS_HIDDEN_(void) PushStackMemory();
-  virtual NS_HIDDEN_(void) PopStackMemory();
-  virtual NS_HIDDEN_(void*) AllocateStackMemory(size_t aSize);
 
   virtual NS_HIDDEN_(nsresult) SetPreferenceStyleRules(bool aForceReflow);
 
@@ -658,7 +571,6 @@ protected:
   nsRefPtr<nsCaret>             mCaret;
   nsRefPtr<nsCaret>             mOriginalCaret;
   nsPresArena                   mFrameArena;
-  StackArena                    mStackArena;
   nsCOMPtr<nsIDragService>      mDragService;
   
 #ifdef DEBUG
