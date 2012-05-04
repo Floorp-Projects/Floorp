@@ -116,8 +116,7 @@ static bool IsFixedItem(nsDisplayItem *aItem, nsDisplayListBuilder* aBuilder)
   nsIFrame* activeScrolledRoot =
     nsLayoutUtils::GetActiveScrolledRootFor(aItem, aBuilder);
   return activeScrolledRoot &&
-         !nsLayoutUtils::ScrolledByViewportScrolling(activeScrolledRoot,
-                                                     aBuilder);
+    !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(activeScrolledRoot, aBuilder);
 }
 
 static bool ForceVisiblityForFixedItem(nsDisplayListBuilder* aBuilder,
