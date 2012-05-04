@@ -3,11 +3,15 @@
 
 // Tests that the DOM Template engine works properly
 
-let tempScope = {};
-Cu.import("resource:///modules/devtools/Templater.jsm", tempScope);
-Cu.import("resource:///modules/devtools/Promise.jsm", tempScope);
-let template = tempScope.template;
-let Promise = tempScope.Promise;
+/*
+ * These tests run both in Mozilla/Mochitest and plain browsers (as does
+ * domtemplate)
+ * We should endevour to keep the source in sync.
+ */
+
+var imports = {};
+Cu.import("resource:///modules/devtools/Templater.jsm", imports);
+Cu.import("resource:///modules/devtools/Promise.jsm", imports);
 
 function test() {
   addTab("http://example.com/browser/browser/devtools/shared/test/browser_templater_basic.html", function() {
@@ -25,7 +29,7 @@ function runTest(index) {
   holder.innerHTML = options.template;
 
   info('Running ' + options.name);
-  template(holder, options.data, options.options);
+  imports.template(holder, options.data, options.options);
 
   if (typeof options.result == 'string') {
     is(holder.innerHTML, options.result, options.name);
@@ -238,11 +242,43 @@ var tests = [
     name: 'propertyFail',
     template: '<p>${Math.max(1, 2)}</p>',
     result: '<p>${Math.max(1, 2)}</p>'
+  };},
+
+  // Bug 723431: DOMTemplate should allow customisation of display of
+  // null/undefined values
+  function() { return {
+    name: 'propertyUndefAttrFull',
+    template: '<p>${nullvar}|${undefinedvar1}|${undefinedvar2}</p>',
+    data: { nullvar: null, undefinedvar1: undefined },
+    result: '<p>null|undefined|undefined</p>'
+  };},
+
+  function() { return {
+    name: 'propertyUndefAttrBlank',
+    template: '<p>${nullvar}|${undefinedvar1}|${undefinedvar2}</p>',
+    data: { nullvar: null, undefinedvar1: undefined },
+    options: { blankNullUndefined: true },
+    result: '<p>||</p>'
+  };},
+
+  function() { return {
+    name: 'propertyUndefAttrFull',
+    template: '<div><p value="${nullvar}"></p><p value="${undefinedvar1}"></p><p value="${undefinedvar2}"></p></div>',
+    data: { nullvar: null, undefinedvar1: undefined },
+    result: '<div><p value="null"></p><p value="undefined"></p><p value="undefined"></p></div>'
+  };},
+
+  function() { return {
+    name: 'propertyUndefAttrBlank',
+    template: '<div><p value="${nullvar}"></p><p value="${undefinedvar1}"></p><p value="${undefinedvar2}"></p></div>',
+    data: { nullvar: null, undefinedvar1: undefined },
+    options: { blankNullUndefined: true },
+    result: '<div><p value=""></p><p value=""></p><p value=""></p></div>'
   };}
 ];
 
 function delayReply(data) {
-  var p = new Promise();
+  var p = new imports.Promise();
   executeSoon(function() {
     p.resolve(data);
   });

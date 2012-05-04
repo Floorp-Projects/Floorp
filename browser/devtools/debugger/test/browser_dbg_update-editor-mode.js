@@ -22,32 +22,38 @@ function test()
 {
   let scriptShown = false;
   let framesAdded = false;
+  let testStarted = false;
+  let resumed = false;
 
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
     gDebugger = gPane.debuggerWindow;
+    resumed = true;
 
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
-      runTest();
+      executeSoon(startTest);
     });
-    gDebuggee.firstCall();
+
+    executeSoon(function() {
+      gDebuggee.firstCall();
+    });
   });
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
-    let url = aEvent.detail.url;
-    if (url.indexOf("editor-mode") != -1) {
-      scriptShown = true;
-      window.removeEventListener(aEvent.type, _onEvent);
-      runTest();
-    }
-  });
+  function onScriptShown(aEvent) {
+    scriptShown = aEvent.detail.url.indexOf("test-editor-mode") != -1;
+    executeSoon(startTest);
+  }
 
-  function runTest()
+  window.addEventListener("Debugger:ScriptShown", onScriptShown);
+
+  function startTest()
   {
-    if (scriptShown && framesAdded) {
+    if (scriptShown && framesAdded && resumed && !testStarted) {
+      window.removeEventListener("Debugger:ScriptShown", onScriptShown);
+      testStarted = true;
       Services.tm.currentThread.dispatch({ run: testScriptsDisplay }, 0);
     }
   }
