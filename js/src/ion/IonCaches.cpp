@@ -515,6 +515,10 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, jsid id, uint32_t oldSl
     if (!shape || shape->inDictionary() || !shape->hasSlot() || !shape->hasDefaultSetter())
         return false;
 
+    // If object has a non-default resolve hook, don't inline
+    if (obj->getClass()->resolve != JS_ResolveStub)
+        return false;
+
     // walk up the object prototype chain and ensure that all prototypes
     // are native, and that all prototypes have no getter or setter
     // defined on the property
@@ -527,6 +531,11 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, jsid id, uint32_t oldSl
         const Shape *protoShape = proto->nativeLookup(cx, id);
         if (protoShape && !protoShape->hasDefaultSetter())
             return false;
+
+        // Otherise, if there's no such property, watch out for a resolve hook that would need
+        // to be invoked and thus prevent inlining of property addition.
+        if (proto->getClass()->resolve != JS_ResolveStub)
+             return false;
     }
 
     // Only add a IC entry if the dynamic slots didn't change when the shapes
