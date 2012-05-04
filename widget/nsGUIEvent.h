@@ -1113,7 +1113,8 @@ public:
 
   nsKeyEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsInputEvent(isTrusted, msg, w, NS_KEY_EVENT),
-      keyCode(0), charCode(0), isChar(0)
+      keyCode(0), charCode(0),
+      location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD), isChar(0)
   {
   }
 
@@ -1121,6 +1122,8 @@ public:
   PRUint32        keyCode;   
   /// OS translated Unicode char
   PRUint32        charCode;
+  // One of nsIDOMKeyEvent::DOM_KEY_LOCATION_*
+  PRUint32        location;
   // OS translated Unicode chars which are used for accesskey and accelkey
   // handling. The handlers will try from first character to last character.
   nsTArray<nsAlternativeCharCode> alternativeCharCodes;

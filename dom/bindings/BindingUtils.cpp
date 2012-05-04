@@ -4,11 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Utils.h"
+#include "BindingUtils.h"
 
 namespace mozilla {
 namespace dom {
-namespace bindings {
 
 static bool
 DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs)
@@ -24,25 +23,119 @@ DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs)
   return true;
 }
 
+// We should use JSFunction objects for interface objects, but we need a custom
+// hasInstance hook because we have new interface objects on prototype chains of
+// old (XPConnect-based) bindings. Because Function.prototype.toString throws if
+// passed a non-Function object we also need to provide our own toString method
+// for interface objects.
+
+enum {
+  TOSTRING_CLASS_RESERVED_SLOT = 0,
+  TOSTRING_NAME_RESERVED_SLOT = 1
+};
+
+JSBool
+InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
+{
+  JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+
+  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  if (!obj) {
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
+                         "null", "object");
+    return false;
+  }
+
+  jsval v = js::GetFunctionNativeReserved(callee, TOSTRING_CLASS_RESERVED_SLOT);
+  JSClass* clasp = static_cast<JSClass*>(JSVAL_TO_PRIVATE(v));
+
+  v = js::GetFunctionNativeReserved(callee, TOSTRING_NAME_RESERVED_SLOT);
+  JSString* jsname = static_cast<JSString*>(JSVAL_TO_STRING(v));
+  size_t length;
+  const jschar* name = JS_GetInternedStringCharsAndLength(jsname, &length);
+
+  if (js::GetObjectJSClass(obj) != clasp) {
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                         NS_ConvertUTF16toUTF8(name).get(), "toString",
+                         "object");
+    return false;
+  }
+
+  JS::Value* argv = JS_ARGV(cx, vp);
+  uint32_t indent = 0;
+  if (argc != 0 && !JS_ValueToECMAUint32(cx, argv[0], &indent))
+      return false;
+
+  nsAutoString spaces;
+  while (indent-- > 0) {
+    spaces.Append(PRUnichar(' '));
+  }
+
+  nsString str;
+  str.Append(spaces);
+  str.AppendLiteral("function ");
+  str.Append(name, length);
+  str.AppendLiteral("() {");
+  str.Append('\n');
+  str.Append(spaces);
+  str.AppendLiteral("    [native code]");
+  str.Append('\n');
+  str.Append(spaces);
+  str.AppendLiteral("}");
+
+  return xpc::NonVoidStringToJsval(cx, str, vp);
+}
+
 static JSObject*
 CreateInterfaceObject(JSContext* cx, JSObject* global, JSObject* receiver,
-                      JSClass* constructorClass, JSObject* proto,
+                      JSClass* constructorClass, JSNative constructorNative,
+                      unsigned ctorNargs, JSObject* proto,
                       JSFunctionSpec* staticMethods, ConstantSpec* constants,
                       const char* name)
 {
-  JSObject* functionProto = JS_GetFunctionPrototype(cx, global);
-  if (!functionProto) {
-    return NULL;
+  JSObject* constructor;
+  if (constructorClass) {
+    JSObject* functionProto = JS_GetFunctionPrototype(cx, global);
+    if (!functionProto) {
+      return NULL;
+    }
+    constructor = JS_NewObject(cx, constructorClass, functionProto, global);
+  } else {
+    MOZ_ASSERT(constructorNative);
+    JSFunction* fun = JS_NewFunction(cx, constructorNative, ctorNargs,
+                                     JSFUN_CONSTRUCTOR, global, name);
+    if (!fun) {
+      return NULL;
+    }
+    constructor = JS_GetFunctionObject(fun);
   }
-
-  JSObject* constructor =
-    JS_NewObject(cx, constructorClass, functionProto, global);
   if (!constructor) {
     return NULL;
   }
 
   if (staticMethods && !JS_DefineFunctions(cx, constructor, staticMethods)) {
     return NULL;
+  }
+
+  if (constructorClass) {
+    JSFunction* toString = js::DefineFunctionWithReserved(cx, constructor,
+                                                          "toString",
+                                                          InterfaceObjectToString,
+                                                          0, 0);
+    if (!toString) {
+      return NULL;
+    }
+
+    JSObject* toStringObj = JS_GetFunctionObject(toString);
+    js::SetFunctionNativeReserved(toStringObj, TOSTRING_CLASS_RESERVED_SLOT,
+                                  PRIVATE_TO_JSVAL(constructorClass));
+
+    JSString *str = ::JS_InternString(cx, name);
+    if (!str) {
+      return NULL;
+    }
+    js::SetFunctionNativeReserved(toStringObj, TOSTRING_NAME_RESERVED_SLOT,
+                                  STRING_TO_JSVAL(str));
   }
 
   if (constants && !DefineConstants(cx, constructor, constants)) {
@@ -53,8 +146,14 @@ CreateInterfaceObject(JSContext* cx, JSObject* global, JSObject* receiver,
     return NULL;
   }
 
+  JSBool alreadyDefined;
+  if (!JS_AlreadyHasOwnProperty(cx, receiver, name, &alreadyDefined)) {
+    return NULL;
+  }
+
   // This is Enumerable: False per spec.
-  if (!JS_DefineProperty(cx, receiver, name, OBJECT_TO_JSVAL(constructor), NULL,
+  if (!alreadyDefined &&
+      !JS_DefineProperty(cx, receiver, name, OBJECT_TO_JSVAL(constructor), NULL,
                          NULL, 0)) {
     return NULL;
   }
@@ -93,17 +192,20 @@ CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
 JSObject*
 CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
                        JSObject* protoProto, JSClass* protoClass,
-                       JSClass* constructorClass, JSFunctionSpec* methods,
+                       JSClass* constructorClass, JSNative constructor,
+                       unsigned ctorNargs, JSFunctionSpec* methods,
                        JSPropertySpec* properties, ConstantSpec* constants,
                        JSFunctionSpec* staticMethods, const char* name)
 {
-  MOZ_ASSERT(protoClass || constructorClass, "Need at least one class!");
+  MOZ_ASSERT(protoClass || constructorClass || constructor,
+             "Need at least one class or a constructor!");
   MOZ_ASSERT(!(methods || properties) || protoClass,
              "Methods or properties but no protoClass!");
-  MOZ_ASSERT(!staticMethods || constructorClass,
-             "Static methods but no constructorClass!");
-  MOZ_ASSERT(bool(name) == bool(constructorClass),
+  MOZ_ASSERT(!staticMethods || constructorClass || constructor,
+             "Static methods but no constructorClass or constructor!");
+  MOZ_ASSERT(bool(name) == bool(constructorClass || constructor),
              "Must have name precisely when we have an interface object");
+  MOZ_ASSERT(!constructorClass || !constructor);
 
   JSObject* proto;
   if (protoClass) {
@@ -118,9 +220,10 @@ CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
   }
 
   JSObject* interface;
-  if (constructorClass) {
+  if (constructorClass || constructor) {
     interface = CreateInterfaceObject(cx, global, receiver, constructorClass,
-                                      proto, staticMethods, constants, name);
+                                      constructor, ctorNargs, proto,
+                                      staticMethods, constants, name);
     if (!interface) {
       return NULL;
     }
@@ -240,6 +343,17 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   return true;
 }
 
-} // namespace bindings
+JSBool
+ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+  return Throw<true>(cx, NS_ERROR_FAILURE);
+}
+
+JSBool
+ThrowingConstructorWorkers(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+  return Throw<false>(cx, NS_ERROR_FAILURE);
+}
+
 } // namespace dom
 } // namespace mozilla

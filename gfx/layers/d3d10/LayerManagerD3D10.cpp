@@ -842,6 +842,87 @@ LayerD3D10::LayerD3D10(LayerManagerD3D10 *aManager)
 {
 }
 
+ID3D10EffectTechnique*
+LayerD3D10::SelectShader(PRUint8 aFlags)
+{
+  switch (aFlags) {
+  case (SHADER_RGBA | SHADER_NON_PREMUL | SHADER_LINEAR | SHADER_MASK):
+    return effect()->GetTechniqueByName("RenderRGBALayerNonPremulMask");
+  case (SHADER_RGBA | SHADER_NON_PREMUL | SHADER_LINEAR | SHADER_NO_MASK):
+    return effect()->GetTechniqueByName("RenderRGBALayerNonPremul");
+  case (SHADER_RGBA | SHADER_NON_PREMUL | SHADER_POINT | SHADER_NO_MASK):
+    return effect()->GetTechniqueByName("RenderRGBALayerNonPremulPoint");
+  case (SHADER_RGBA | SHADER_NON_PREMUL | SHADER_POINT | SHADER_MASK):
+    return effect()->GetTechniqueByName("RenderRGBALayerNonPremulPointMask");
+  case (SHADER_RGBA | SHADER_PREMUL | SHADER_LINEAR | SHADER_MASK_3D):
+    return effect()->GetTechniqueByName("RenderRGBALayerPremulMask3D");
+  case (SHADER_RGBA | SHADER_PREMUL | SHADER_LINEAR | SHADER_MASK):
+    return effect()->GetTechniqueByName("RenderRGBALayerPremulMask");
+  case (SHADER_RGBA | SHADER_PREMUL | SHADER_LINEAR | SHADER_NO_MASK):
+    return effect()->GetTechniqueByName("RenderRGBALayerPremul");
+  case (SHADER_RGBA | SHADER_PREMUL | SHADER_POINT | SHADER_MASK):
+    return effect()->GetTechniqueByName("RenderRGBALayerPremulPointMask");
+  case (SHADER_RGBA | SHADER_PREMUL | SHADER_POINT | SHADER_NO_MASK):
+    return effect()->GetTechniqueByName("RenderRGBALayerPremulPoint");
+  case (SHADER_RGB | SHADER_PREMUL | SHADER_POINT | SHADER_MASK):
+    return effect()->GetTechniqueByName("RenderRGBLayerPremulPointMask");
+  case (SHADER_RGB | SHADER_PREMUL | SHADER_POINT | SHADER_NO_MASK):
+    return effect()->GetTechniqueByName("RenderRGBLayerPremulPoint");
+  case (SHADER_RGB | SHADER_PREMUL | SHADER_LINEAR | SHADER_MASK):
+    return effect()->GetTechniqueByName("RenderRGBLayerPremulMask");
+  case (SHADER_RGB | SHADER_PREMUL | SHADER_LINEAR | SHADER_NO_MASK):
+    return effect()->GetTechniqueByName("RenderRGBLayerPremul");
+  case (SHADER_SOLID | SHADER_MASK):
+    return effect()->GetTechniqueByName("RenderSolidColorLayerMask");
+  case (SHADER_SOLID | SHADER_NO_MASK):
+    return effect()->GetTechniqueByName("RenderSolidColorLayer");
+  case (SHADER_COMPONENT_ALPHA | SHADER_MASK):
+    return effect()->GetTechniqueByName("RenderComponentAlphaLayerMask");
+  case (SHADER_COMPONENT_ALPHA | SHADER_NO_MASK):
+    return effect()->GetTechniqueByName("RenderComponentAlphaLayer");
+  case (SHADER_YCBCR | SHADER_MASK):
+    return effect()->GetTechniqueByName("RenderYCbCrLayerMask");
+  case (SHADER_YCBCR | SHADER_NO_MASK):
+    return effect()->GetTechniqueByName("RenderYCbCrLayer");
+  default:
+    NS_ERROR("Invalid shader.");
+    return nsnull;
+  }
+}
+
+PRUint8
+LayerD3D10::LoadMaskTexture()
+{
+  if (Layer* maskLayer = GetLayer()->GetMaskLayer()) {
+    gfxIntSize size;
+    nsRefPtr<ID3D10ShaderResourceView> maskSRV =
+      static_cast<LayerD3D10*>(maskLayer->ImplData())->GetAsTexture(&size);
+  
+    if (!maskSRV) {
+      return SHADER_NO_MASK;
+    }
+
+    gfxMatrix maskTransform;
+    bool maskIs2D = maskLayer->GetEffectiveTransform().CanDraw2D(&maskTransform);
+    NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
+    gfxRect bounds = gfxRect(gfxPoint(), size);
+    bounds = maskTransform.TransformBounds(bounds);
+
+    effect()->GetVariableByName("vMaskQuad")->AsVector()->SetFloatVector(
+      ShaderConstantRectD3D10(
+        (float)bounds.x,
+        (float)bounds.y,
+        (float)bounds.width,
+        (float)bounds.height)
+      );
+
+    effect()->GetVariableByName("tMask")->AsShaderResource()->SetResource(maskSRV);
+    return SHADER_MASK;
+  }
+
+  return SHADER_NO_MASK; 
+}
+
 WindowLayer::WindowLayer(LayerManagerD3D10* aManager)
   : ThebesLayer(aManager, nsnull)
 {

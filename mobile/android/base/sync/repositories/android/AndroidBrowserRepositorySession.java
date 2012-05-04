@@ -91,7 +91,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
    *
    * For example, a session subclass might skip records of an unsupported type.
    */
-  protected boolean shouldIgnore(Record record) {
+  public boolean shouldIgnore(Record record) {
     return false;
   }
 

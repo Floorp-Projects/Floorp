@@ -1,11 +1,11 @@
 # HG changeset patch
-# Parent f294d64ffb01bf6d8190377708405bf5f4fe30fa
+# Parent 083d1e9553e5878ce8adabfc9301bcc2156122c9
 # User Timothy B. Terriberry <tterribe@vt.edu>
 Bug 730907 - Use VARIANCE_INVOKE in multiframe_quality_enhance_block()
 
-diff --git a/media/libvpx/vp8/common/postproc.c b/media/libvpx/vp8/common/postproc.c
---- a/media/libvpx/vp8/common/postproc.c
-+++ b/media/libvpx/vp8/common/postproc.c
+diff -r 083d1e9553e5 media/libvpx/vp8/common/postproc.c
+--- a/media/libvpx/vp8/common/postproc.c	Tue May 01 09:05:51 2012 -0700
++++ b/media/libvpx/vp8/common/postproc.c	Tue May 01 09:48:07 2012 -0700
 @@ -706,17 +706,18 @@ static void multiframe_quality_enhance_b
      unsigned char *u,
      unsigned char *v,
@@ -61,7 +61,28 @@ diff --git a/media/libvpx/vp8/common/postproc.c b/media/libvpx/vp8/common/postpr
      if (sad < thr)
      {
          static const int roundoff = (1 << (MFQE_PRECISION - 1));
-@@ -859,33 +860,35 @@ void vp8_multiframe_quality_enhance
+@@ -800,18 +801,20 @@ static void multiframe_quality_enhance_b
+             for (vp = v, vdp = vd, i = 0; i < blksizeby2; ++i, vp += uv_stride, vdp += uvd_stride)
+                 vpx_memcpy(vdp, vp, blksizeby2);
+         }
+     }
+ }
+ 
+ #if CONFIG_RUNTIME_CPU_DETECT
+ #define RTCD_VTABLE(oci) (&(oci)->rtcd.postproc)
++#define RTCD_VARIANCE(oci) (&(oci)->rtcd.variance)
+ #else
+ #define RTCD_VTABLE(oci) NULL
++#define RTCD_VARIANCE(oci) NULL
+ #endif
+ 
+ void vp8_multiframe_quality_enhance
+ (
+     VP8_COMMON *cm
+ )
+ {
+     YV12_BUFFER_CONFIG *show = cm->frame_to_show;
+@@ -859,33 +862,35 @@ void vp8_multiframe_quality_enhance
                                                               u_ptr + 4*(i*show->uv_stride+j),
                                                               v_ptr + 4*(i*show->uv_stride+j),
                                                               show->y_stride,
@@ -72,7 +93,7 @@ diff --git a/media/libvpx/vp8/common/postproc.c b/media/libvpx/vp8/common/postpr
                                                               dest->y_stride,
 -                                                             dest->uv_stride);
 +                                                             dest->uv_stride,
-+                                                             &cm->rtcd.variance);
++                                                             RTCD_VARIANCE(cm));
                  }
                  else
                  {
@@ -90,7 +111,7 @@ diff --git a/media/libvpx/vp8/common/postproc.c b/media/libvpx/vp8/common/postpr
                                                       dest->y_stride,
 -                                                     dest->uv_stride);
 +                                                     dest->uv_stride,
-+                                                     &cm->rtcd.variance);
++                                                     RTCD_VARIANCE(cm));
  
                  }
              }

@@ -204,6 +204,34 @@ var AccessFu = {
           }
           break;
         }
+      case Ci.nsIAccessibleEvent.EVENT_TEXT_INSERTED:
+      case Ci.nsIAccessibleEvent.EVENT_TEXT_REMOVED:
+      {
+        if (aEvent.isFromUserInput) {
+          // XXX support live regions as well.
+          let event = aEvent.QueryInterface(Ci.nsIAccessibleTextChangeEvent);
+          let isInserted = event.isInserted();
+          let textIface = aEvent.accessible.QueryInterface(Ci.nsIAccessibleText);
+
+          let text = '';
+          try {
+            text = textIface.
+              getText(0, Ci.nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT);
+          } catch (x) {
+            // XXX we might have gotten an exception with of a
+            // zero-length text. If we did, ignore it (bug #749810).
+            if (textIface.characterCount)
+              throw x;
+          }
+
+          this.presenters.forEach(
+            function(p) {
+              p.textChanged(isInserted, event.start, event.length, text, event.modifiedText);
+            }
+          );
+        }
+        break;
+      }
       default:
         break;
     }

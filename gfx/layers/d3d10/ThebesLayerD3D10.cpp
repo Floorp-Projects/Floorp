@@ -134,13 +134,13 @@ ThebesLayerD3D10::RenderLayer()
   ID3D10EffectTechnique *technique;
   switch (mCurrentSurfaceMode) {
   case SURFACE_COMPONENT_ALPHA:
-    technique = effect()->GetTechniqueByName("RenderComponentAlphaLayer");
+    technique = SelectShader(SHADER_COMPONENT_ALPHA | LoadMaskTexture());
     break;
   case SURFACE_OPAQUE:
-    technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
+    technique = SelectShader(SHADER_RGB | SHADER_PREMUL | LoadMaskTexture());
     break;
   case SURFACE_SINGLE_CHANNEL_ALPHA:
-    technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
+    technique = SelectShader(SHADER_RGBA | SHADER_PREMUL | LoadMaskTexture());
     break;
   default:
     NS_ERROR("Unknown mode");
@@ -635,8 +635,7 @@ ShadowThebesLayerD3D10::RenderLayer()
 
   SetEffectTransformAndOpacity();
 
-  ID3D10EffectTechnique *technique =
-      effect()->GetTechniqueByName("RenderRGBLayerPremul");
+  ID3D10EffectTechnique *technique = SelectShader(SHADER_RGB | SHADER_PREMUL | LoadMaskTexture());
 
   effect()->GetVariableByName("tRGB")->AsShaderResource()->SetResource(srView);
 

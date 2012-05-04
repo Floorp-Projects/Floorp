@@ -1152,6 +1152,9 @@ js::NukeChromeCrossCompartmentWrappersForGlobal(JSContext *cx, JSObject *obj,
             JSObject *wobj = &e.front().value.get().toObject();
             JSObject *wrapped = UnwrapObject(wobj, false);
 
+            if (js::IsSystemCompartment(wrapped->compartment()))
+                continue; // Not interested in chrome->chrome wrappers.
+
             if (nukeGlobal == DontNukeForGlobalObject && wrapped == global)
                 continue;
 

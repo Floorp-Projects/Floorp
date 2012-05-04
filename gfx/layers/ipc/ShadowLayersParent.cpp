@@ -230,6 +230,11 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       if (fixedPositionLayersEnabled) {
         layer->SetIsFixedPosition(common.isFixedPosition());
       }
+      if (PLayerParent* maskLayer = common.maskLayerParent()) {
+        layer->SetMaskLayer(cast(maskLayer)->AsLayer());
+      } else {
+        layer->SetMaskLayer(NULL);
+      }
 
       typedef SpecificLayerAttributes Specific;
       const SpecificLayerAttributes& specific = attrs.specific();
