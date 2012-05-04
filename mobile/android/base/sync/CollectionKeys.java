@@ -7,7 +7,9 @@ package org.mozilla.gecko.sync;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.json.simple.JSONArray;
 import org.json.simple.parser.ParseException;
@@ -16,20 +18,8 @@ import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 
 public class CollectionKeys {
-  private static final String LOG_TAG = "CollectionKeys";
   private KeyBundle                  defaultKeyBundle     = null;
   private HashMap<String, KeyBundle> collectionKeyBundles = new HashMap<String, KeyBundle>();
-
-  public static CryptoRecord generateCollectionKeysRecord() throws CryptoException {
-    CollectionKeys ck = generateCollectionKeys();
-    try {
-      return ck.asCryptoRecord();
-    } catch (NoCollectionKeysSetException e) {
-      // Cannot occur.
-      Logger.error(LOG_TAG, "generateCollectionKeys returned a value with no default key.", e);
-      throw new IllegalStateException("CollectionKeys should not have null default key.");
-    }
-  }
 
   /**
    * Randomly generate a basic CollectionKeys object.
@@ -51,12 +41,16 @@ public class CollectionKeys {
     return this.defaultKeyBundle;
   }
 
+  public boolean keyBundleForCollectionIsNotDefault(String collection) {
+    return collectionKeyBundles.containsKey(collection);
+  }
+
   public KeyBundle keyBundleForCollection(String collection)
-                                                      throws NoCollectionKeysSetException {
+      throws NoCollectionKeysSetException {
     if (this.defaultKeyBundle == null) {
       throw new NoCollectionKeysSetException();
     }
-    if (collectionKeyBundles.containsKey(collection)) {
+    if (keyBundleForCollectionIsNotDefault(collection)) {
       return collectionKeyBundles.get(collection);
     }
     return this.defaultKeyBundle;
@@ -144,5 +138,36 @@ public class CollectionKeys {
   public void clear() {
     this.defaultKeyBundle = null;
     this.collectionKeyBundles = new HashMap<String, KeyBundle>();
+  }
+
+  /**
+   * Return set of collections where key is either missing from one collection
+   * or not the same in both collections.
+   * <p>
+   * Does not check for different default keys.
+   */
+  public static Set<String> differences(CollectionKeys a, CollectionKeys b) {
+    Set<String> differences = new HashSet<String>();
+
+    // Iterate through one collection, collecting missing and differences.
+    for (String collection : a.collectionKeyBundles.keySet()) {
+      KeyBundle key = b.collectionKeyBundles.get(collection);
+      if (key == null) {
+        differences.add(collection);
+        continue;
+      }
+      if (!key.equals(a.collectionKeyBundles.get(collection))) {
+        differences.add(collection);
+      }
+    }
+
+    // Now iterate through the other collection, collecting just the missing.
+    for (String collection : b.collectionKeyBundles.keySet()) {
+      if (!a.collectionKeyBundles.containsKey(collection)) {
+        differences.add(collection);
+      }
+    }
+
+    return differences;
   }
 }
