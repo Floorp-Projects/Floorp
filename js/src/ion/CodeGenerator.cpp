@@ -2503,23 +2503,19 @@ CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
     ConstantOrRegister value = getSetPropertyValue(ins);
 
     const Register objReg = ToRegister(ins->getOperand(0));
+    bool isSetName = JSOp(*ins->mir()->resumePoint()->pc()) == JSOP_SETNAME;
+
+    pushArg(Imm32(isSetName));
+    pushArg(Imm32(ins->mir()->strict()));
 
     pushArg(value);
     pushArg(ImmGCPtr(ins->mir()->atom()));
     pushArg(objReg);
 
-    typedef bool (*pf)(JSContext *, JSObject *, JSAtom *, const Value &);
-    if (ins->mir()->strict()) {
-        static const VMFunction info = FunctionInfo<pf>(SetProperty<true>);
-        if (!callVM(info, ins))
-            return false;
-    } else {
-        static const VMFunction info = FunctionInfo<pf>(SetProperty<false>);
-        if (!callVM(info, ins))
-            return false;
-    }
+    typedef bool (*pf)(JSContext *, HandleObject, JSAtom *, const HandleValue, bool, bool);
+    static const VMFunction info = FunctionInfo<pf>(SetProperty);
 
-    return true;
+    return callVM(info, ins);
 }
 
 bool
@@ -2556,14 +2552,16 @@ CodeGenerator::visitOutOfLineSetPropertyCache(OutOfLineCache *ool)
                               mir->strict());
 
     size_t cacheIndex = allocateCache(cache);
+    bool isSetName = JSOp(*mir->resumePoint()->pc()) == JSOP_SETNAME;
 
     saveLive(ins);
 
+    pushArg(Imm32(isSetName));
     pushArg(value);
     pushArg(objReg);
     pushArg(Imm32(cacheIndex));
 
-    typedef bool (*pf)(JSContext *, size_t, JSObject *, const Value&);
+    typedef bool (*pf)(JSContext *, size_t, HandleObject, HandleValue, bool);
     static const VMFunction info = FunctionInfo<pf>(ion::SetPropertyCache);
 
     if (!callVM(info, ool->cache()))

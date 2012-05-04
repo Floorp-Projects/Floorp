@@ -382,7 +382,8 @@ bool
 GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp);
 
 bool
-SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &value);
+SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue value,
+                 bool isSetName);
 
 bool
 GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &idval, Value *res);
