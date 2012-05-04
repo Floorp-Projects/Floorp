@@ -24,7 +24,7 @@
 #define LOG(text) printf("Profiler: %s\n", text)
 #endif
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(XP_WIN)
 #define ENABLE_SPS_LEAF_DATA
 #endif
 
