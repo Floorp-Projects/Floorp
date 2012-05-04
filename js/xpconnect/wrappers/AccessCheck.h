@@ -120,14 +120,13 @@ struct LocationPolicy : public Policy {
         perm = DenyAccess;
 
         // Location object security is complicated enough. Don't allow punctures.
-        if (act == js::Wrapper::PUNCTURE)
-            return false;
-
-        if (AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act) ||
-            AccessCheck::isLocationObjectSameOrigin(cx, wrapper)) {
+        if (act != js::Wrapper::PUNCTURE &&
+            (AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act) ||
+             AccessCheck::isLocationObjectSameOrigin(cx, wrapper))) {
             perm = PermitPropertyAccess;
             return true;
         }
+
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, wrapper))
             return false;
