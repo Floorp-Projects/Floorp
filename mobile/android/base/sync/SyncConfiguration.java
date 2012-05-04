@@ -6,6 +6,7 @@ package org.mozilla.gecko.sync;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -185,6 +186,17 @@ public class SyncConfiguration implements CredentialsSource {
   public String          password;
   public String          syncID;
 
+  /**
+   * Persisted collection of enabledEngineNames.
+   * <p>
+   * Can contain engines Android Sync is not currently aware of, such as "prefs"
+   * or "addons".
+   * <p>
+   * Copied from latest downloaded meta/global record and used to generate a
+   * fresh meta/global record for upload.
+   */
+  public Set<String>     enabledEngineNames;
+
   // Fields that maintain a reference to a SharedPreferences instance, used for
   // persistence.
   // Behavior is undefined if the PrefsSource is switched out in flight.
@@ -196,6 +208,7 @@ public class SyncConfiguration implements CredentialsSource {
 
   public static final String PREF_CLUSTER_URL = "clusterURL";
   public static final String PREF_SYNC_ID = "syncID";
+  public static final String PREF_ENABLED_ENGINE_NAMES = "enabledEngineNames";
 
   /**
    * Create a new SyncConfiguration instance. Pass in a PrefsSource to
@@ -237,6 +250,15 @@ public class SyncConfiguration implements CredentialsSource {
       syncID = prefs.getString(PREF_SYNC_ID, null);
       Logger.info(LOG_TAG, "Set syncID from bundle: " + syncID);
     }
+    if (prefs.contains(PREF_ENABLED_ENGINE_NAMES)) {
+      String json = prefs.getString(PREF_ENABLED_ENGINE_NAMES, null);
+      try {
+        ExtendedJSONObject o = ExtendedJSONObject.parseJSONObject(json);
+        enabledEngineNames = new HashSet<String>(o.keySet());
+      } catch (Exception e) {
+        // enabledEngineNames can be null.
+      }
+    }
     // We don't set crypto/keys here because we need the syncKeyBundle to decrypt the JSON
     // and we won't have it on construction.
     // TODO: MetaGlobal, password, infoCollections.
@@ -255,6 +277,15 @@ public class SyncConfiguration implements CredentialsSource {
     }
     if (syncID != null) {
       edit.putString(PREF_SYNC_ID, syncID);
+    }
+    if (enabledEngineNames == null) {
+      edit.remove(PREF_ENABLED_ENGINE_NAMES);
+    } else {
+      ExtendedJSONObject o = new ExtendedJSONObject();
+      for (String engineName : enabledEngineNames) {
+        o.put(engineName, 0);
+      }
+      edit.putString(PREF_ENABLED_ENGINE_NAMES, o.toJSONString());
     }
     edit.commit();
     // TODO: keys.

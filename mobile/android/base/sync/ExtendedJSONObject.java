@@ -44,6 +44,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -239,6 +240,11 @@ public class ExtendedJSONObject {
     return this.object.entrySet();
   }
 
+  @SuppressWarnings("unchecked")
+  public Set<String> keySet() {
+    return this.object.keySet();
+  }
+
   public org.json.simple.JSONArray getArray(String key) throws NonArrayJSONException {
     Object o = this.object.get(key);
     if (o == null) {
@@ -248,5 +254,9 @@ public class ExtendedJSONObject {
       return (JSONArray) o;
     }
     throw new NonArrayJSONException(o);
+  }
+
+  public int size() {
+    return this.object.size();
   }
 }
