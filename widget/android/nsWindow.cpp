@@ -914,11 +914,15 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
             if (AndroidBridge::Bridge()->HasNativeWindowAccess()) {
                 AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
-                jobject surface = sview.GetSurface();
-                if (surface) {
-                    sNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(AndroidBridge::GetJNIEnv(), surface);
-                    if (sNativeWindow) {
-                        AndroidBridge::Bridge()->SetNativeWindowFormat(sNativeWindow, 0, 0, AndroidBridge::WINDOW_FORMAT_RGB_565);
+                JNIEnv *env = AndroidBridge::GetJNIEnv();
+                if (env) {
+                    AutoLocalJNIFrame jniFrame(env);
+                    jobject surface = sview.GetSurface(env, &jniFrame);
+                    if (surface) {
+                        sNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(env, surface);
+                        if (sNativeWindow) {
+                            AndroidBridge::Bridge()->SetNativeWindowFormat(sNativeWindow, 0, 0, AndroidBridge::WINDOW_FORMAT_RGB_565);
+                        }
                     }
                 }
             }
@@ -1109,7 +1113,11 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
-    AndroidBridge::AutoLocalJNIFrame jniFrame;
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return;
+    AutoLocalJNIFrame jniFrame;
+
 #ifdef MOZ_JAVA_COMPOSITOR
     // We're paused, or we haven't been given a window-size yet, so do nothing
     if (sCompositorPaused || gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0) {
@@ -1173,7 +1181,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
             AndroidBridge::Bridge()->UnlockWindow(sNativeWindow);
         } else if (AndroidBridge::Bridge()->HasNativeBitmapAccess()) {
-            jobject bitmap = sview.GetSoftwareDrawBitmap();
+            jobject bitmap = sview.GetSoftwareDrawBitmap(env, &jniFrame);
             if (!bitmap) {
                 ALOG("no bitmap to draw into - skipping draw");
                 return;
@@ -1202,15 +1210,11 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
             AndroidBridge::Bridge()->UnlockBitmap(bitmap);
             sview.Draw2D(bitmap, mBounds.width, mBounds.height);
         } else {
-            jobject bytebuf = sview.GetSoftwareDrawBuffer();
+            jobject bytebuf = sview.GetSoftwareDrawBuffer(env, &jniFrame);
             if (!bytebuf) {
                 ALOG("no buffer to draw into - skipping draw");
                 return;
             }
-
-            JNIEnv *env = AndroidBridge::GetJNIEnv();
-            if (!env)
-                return;
 
             void *buf = env->GetDirectBufferAddress(bytebuf);
             int cap = env->GetDirectBufferCapacity(bytebuf);
@@ -2219,39 +2223,50 @@ nsWindow::GetIMEUpdatePreference()
 
 #ifdef MOZ_JAVA_COMPOSITOR
 void
-nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {
+nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
+{
     JNIEnv *env = GetJNIForThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowUnderlay()!");
     if (!env)
         return;
 
-    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
+    AutoLocalJNIFrame jniFrame(env);
 
     AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
-    client.CreateFrame(env, mLayerRendererFrame);
+    if (!client.CreateFrame(env, mLayerRendererFrame))
+        return;
     client.ActivateProgram(env);
+    if (jniFrame.CheckForException()) return;
     mLayerRendererFrame.BeginDrawing(env);
+    if (jniFrame.CheckForException()) return;
     mLayerRendererFrame.DrawBackground(env);
+    if (jniFrame.CheckForException()) return;
     client.DeactivateProgram(env);
 }
 
 void
-nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {
+nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
+{
     JNIEnv *env = GetJNIForThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowOverlay()!");
     if (!env)
         return;
 
-    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
+    AutoLocalJNIFrame jniFrame(env);
+
     NS_ABORT_IF_FALSE(!mLayerRendererFrame.isNull(),
                       "Frame should have been created in DrawWindowUnderlay()!");
 
     AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
 
     client.ActivateProgram(env);
+    if (jniFrame.CheckForException()) return;
     mLayerRendererFrame.DrawForeground(env);
+    if (jniFrame.CheckForException()) return;
     mLayerRendererFrame.EndDrawing(env);
+    if (jniFrame.CheckForException()) return;
     client.DeactivateProgram(env);
+    if (jniFrame.CheckForException()) return;
 
     mLayerRendererFrame.Dispose(env);
 }
