@@ -77,6 +77,8 @@ public:
   NS_HIDDEN_(void)  FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr);
 
   enum ObjectID {
+    nsLineBox_id = nsQueryFrame::NON_FRAME_MARKER,
+
     // The PresArena implementation uses this bit to distinguish objects
     // allocated by size from objects allocated by type ID (that is, frames
     // using AllocateByFrameID and other objects using AllocateByObjectID).
