@@ -1325,89 +1325,19 @@ def getArgumentConversionTemplate(type, descriptor):
     if not type.isPrimitive():
         raise TypeError("Need conversion for argument type '%s'" % type)
 
-    tag = type.tag()
-    replacements = dict()
+    # XXXbz need to add support for [EnforceRange] and [Clamp]
     if type.nullable():
-        replacements["declareArg"] = (
-            "  Nullable<${typeName}> ${name};\n"
-            "  if (${argVal}.isNullOrUndefined()) {\n"
-            "    ${name}.SetNull();\n"
-            "  } else"
-            )
-        replacements["finalValueSetter"] = "${name}.SetValue"
+        return ("  Nullable<${typeName}> ${name};\n"
+                "  if (${argVal}.isNullOrUndefined()) {\n"
+                "    ${name}.SetNull();\n"
+                "  } else if (!ValueToPrimitive<${typeName}>(cx, ${argVal}, &${name}.SetValue())) {\n"
+                "    return false;\n"
+                "  }\n")
     else:
-        replacements["declareArg"] = "  ${typeName} ${name};\n"
-        replacements["finalValueSetter"] = "${name} = "
-
-    replacements["intermediateCast"] = ""
-        
-    if tag == IDLType.Tags.bool:
-        replacements["jstype"] = "JSBool"
-        replacements["converter"] = "JS_ValueToBoolean"
-    elif tag in [IDLType.Tags.int8, IDLType.Tags.uint8, IDLType.Tags.int16,
-                 IDLType.Tags.uint16, IDLType.Tags.int32, IDLType.Tags.uint32]:
-        # XXXbz need to add support for [EnforceRange] and [Clamp]
-        # The output of JS_ValueToECMAInt32 is determined as follows:
-        #   1) The value is converted to a double
-        #   2) Anything that's not a finite double returns 0
-        #   3) The double is rounded towards zero to the nearest integer
-        #   4) The resulting integer is reduced mod 2^32.  The output of this
-        #      operation is an integer in the range [0, 2^32).
-        #   5) If the resulting number is >= 2^31, 2^32 is subtracted from it.
-        #
-        # The result of all this is a number in the range [-2^31, 2^31)
-        #
-        # WebIDL conversions for the 8-bit, 16-bit, and 32-bit integer types
-        # are defined in the same way, except that step 4 uses reduction mod
-        # 2^8 and 2^16 for the 8-bit and 16-bit types respectively, and step 5
-        # is only done for the signed types.
-        #
-        # C/C++ define integer conversion semantics to unsigned types as taking
-        # your input integer mod (1 + largest value representable in the
-        # unsigned type).  Since 2^32 is zero mod 2^8, 2^16, and 2^32,
-        # converting to the unsigned int of the relevant width will correctly
-        # perform step 4; in particular, the 2^32 possibly subtracted in step 5
-        # will become 0.
-        #
-        # Once we have step 4 done, we're just going to assume 2s-complement
-        # representation and cast directly to the type we really want.
-        #
-        # So we can cast directly for all unsigned types and for int32_t; for
-        # the smaller-width signed types we need to cast through the
-        # corresponding unsigned type.
-        replacements["jstype"] = "int32_t"
-        replacements["converter"] = "JS::ToInt32"
-        if tag is IDLType.Tags.int8:
-            replacements["intermediateCast"] = "(uint8_t)"
-        elif tag is IDLType.Tags.int16:
-            replacements["intermediateCast"] = "(uint16_t)"
-        else:
-            replacements["intermediateCast"] = ""
-    elif tag is IDLType.Tags.int64:
-        # XXXbz this may not match what WebIDL says to do in terms of reducing
-        # mod 2^64.  Should we check?
-        replacements["jstype"] = "int64_t"
-        replacements["converter"] = "xpc::ValueToInt64"
-    elif tag is IDLType.Tags.uint64:
-        # XXXbz this may not match what WebIDL says to do in terms of reducing
-        # mod 2^64.  Should we check?
-        replacements["jstype"] = "uint64_t"
-        replacements["converter"] = "xpc::ValueToUint64"
-    elif tag in [IDLType.Tags.float, IDLType.Tags.double]:
-        replacements["jstype"] = "double"
-        replacements["converter"] = "JS::ToNumber"
-    else:
-        raise TypeError("Unknown primitive type '%s'" % type);
-
-    # We substitute the %(name)s things here.  Our caller will
-    # substitute the ${name} things.
-    return ("  %(jstype)s ${name}_jstype;\n"
-            "%(declareArg)s" # No leading whitespace or newline here, on purpose
-            "  if (%(converter)s(cx, ${argVal}, &${name}_jstype)) {\n"
-            "    %(finalValueSetter)s((${typeName})%(intermediateCast)s${name}_jstype);\n"
-            "  } else {\n"
-            "    return false;\n"
-            "  }\n" % replacements)
+        return ("  ${typeName} ${name};\n"
+                "  if (!ValueToPrimitive<${typeName}>(cx, ${argVal}, &${name})) {\n"
+                "    return false;\n"
+                "  }\n")
 
 def convertConstIDLValueToJSVal(value):
     if isinstance(value, IDLNullValue):
@@ -2952,6 +2882,7 @@ class CGBindingRoot(CGThing):
                          ['mozilla/dom/BindingUtils.h',
                           'mozilla/dom/DOMJSClass.h'],
                          ['mozilla/dom/Nullable.h',
+                          'mozilla/dom/PrimitiveConversions.h',
                           'XPCQuickStubs.h',
                           'AccessCheck.h',
                           'WorkerPrivate.h',
