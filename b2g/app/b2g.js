@@ -503,3 +503,8 @@ pref("app.update.download.backgroundInterval", 0);
 // field.
 pref("app.update.log", true);
 #endif
+
+// Extensions preferences
+pref("extensions.update.enabled", false);
+pref("extensions.getAddons.cache.enabled", false);
+
