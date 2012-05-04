@@ -677,8 +677,9 @@ nsWindow::Destroy(void)
         gRollupListener = nsnull;
     }
 
+    // dragService will be null after shutdown of the service manager.
     nsDragService *dragService = nsDragService::GetInstance();
-    if (this == dragService->GetMostRecentDestWindow()) {
+    if (dragService && this == dragService->GetMostRecentDestWindow()) {
         dragService->ScheduleLeaveEvent();
     }
 
