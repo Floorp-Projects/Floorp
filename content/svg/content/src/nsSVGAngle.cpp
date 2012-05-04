@@ -72,7 +72,7 @@ public:
   NS_IMETHOD SetValue(float aValue)
     {
       NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
-      mVal.SetBaseValue(aValue, nsnull, true);
+      mVal.SetBaseValue(aValue, nsnull, false);
       return NS_OK;
     }
 
@@ -283,7 +283,10 @@ nsSVGAngle::ConvertToSpecifiedUnits(PRUint16 unitType,
   if (mBaseValUnit == PRUint8(unitType))
     return NS_OK;
 
-  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeAngle(mAttrEnum);
+  nsAttrValue emptyOrOldValue;
+  if (aSVGElement) {
+    emptyOrOldValue = aSVGElement->WillChangeAngle(mAttrEnum);
+  }
 
   float valueInUserUnits = mBaseVal * GetDegreesPerUnit(mBaseValUnit);
   mBaseValUnit = PRUint8(unitType);
@@ -291,7 +294,9 @@ nsSVGAngle::ConvertToSpecifiedUnits(PRUint16 unitType,
   // Will/DidChangeAngle a second time (and dispatch duplicate notifications).
   SetBaseValue(valueInUserUnits, aSVGElement, false);
 
-  aSVGElement->DidChangeAngle(mAttrEnum, emptyOrOldValue);
+  if (aSVGElement) {
+    aSVGElement->DidChangeAngle(mAttrEnum, emptyOrOldValue);
+  }
 
   return NS_OK;
 }
