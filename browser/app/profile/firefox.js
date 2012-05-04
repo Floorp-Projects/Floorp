@@ -1058,9 +1058,14 @@ pref("devtools.layoutview.open", false);
 
 // Enable the Debugger
 pref("devtools.debugger.enabled", false);
+pref("devtools.debugger.remote-enabled", false);
+pref("devtools.debugger.remote-host", "localhost");
+pref("devtools.debugger.remote-port", 6000);
 
 // The default Debugger UI height
 pref("devtools.debugger.ui.height", 250);
+pref("devtools.debugger.ui.remote-win.width", 900);
+pref("devtools.debugger.ui.remote-win.height", 400);
 
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
