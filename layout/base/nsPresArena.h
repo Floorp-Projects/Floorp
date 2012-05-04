@@ -76,6 +76,21 @@ public:
   NS_HIDDEN_(void*) AllocateByFrameID(nsQueryFrame::FrameIID aID, size_t aSize);
   NS_HIDDEN_(void)  FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr);
 
+  enum ObjectID {
+    // The PresArena implementation uses this bit to distinguish objects
+    // allocated by size from objects allocated by type ID (that is, frames
+    // using AllocateByFrameID and other objects using AllocateByObjectID).
+    // It should not collide with any Object ID (above) or frame ID (in
+    // nsQueryFrame.h).  It is not 0x80000000 to avoid the question of
+    // whether enumeration constants are signed.
+    NON_OBJECT_MARKER = 0x40000000
+  };
+
+  // Pool allocation with recycler lists indexed by object-type ID (see above).
+  // Every aID must always be used with the same object size, aSize.
+  NS_HIDDEN_(void*) AllocateByObjectID(ObjectID aID, size_t aSize);
+  NS_HIDDEN_(void)  FreeByObjectID(ObjectID aID, void* aPtr);
+
   size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
   /**

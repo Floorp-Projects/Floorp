@@ -1240,6 +1240,30 @@ PresShell::AllocateFrame(nsQueryFrame::FrameIID aID, size_t aSize)
   return result;
 }
 
+void*
+PresShell::AllocateByObjectID(nsPresArena::ObjectID aID, size_t aSize)
+{
+#ifdef DEBUG
+  mPresArenaAllocCount++;
+#endif
+  void* result = mFrameArena.AllocateByObjectID(aID, aSize);
+
+  if (result) {
+    memset(result, 0, aSize);
+  }
+  return result;
+}
+
+void
+PresShell::FreeByObjectID(nsPresArena::ObjectID aID, void* aPtr)
+{
+#ifdef DEBUG
+  mPresArenaAllocCount--;
+#endif
+  if (PRESARENA_MUST_FREE_DURING_DESTROY || !mIsDestroying)
+    mFrameArena.FreeByObjectID(aID, aPtr);
+}
+
 void
 PresShell::FreeMisc(size_t aSize, void* aPtr)
 {
