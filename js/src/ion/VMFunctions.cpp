@@ -225,7 +225,7 @@ JSObject*
 NewInitObject(JSContext *cx, HandleObject baseObj, types::TypeObject *type)
 {
     RootedVarObject obj(cx);
-    if (*baseObj.address()) {
+    if (baseObj.value()) {
         // JSOP_NEWOBJECT
         obj = CopyInitializerObject(cx, baseObj);
     } else {
@@ -296,7 +296,20 @@ ArrayShiftDense(JSContext *cx, JSObject *obj, Value *rval)
     return true;
 }
 
+bool
+SetProperty(JSContext *cx, HandleObject obj, JSAtom *atom, HandleValue value,
+            bool strict, bool isSetName)
+{
+    Value v = value;
+    jsid id = ATOM_TO_JSID(atom);
+
+    if (JS_LIKELY(!obj->getOps()->setProperty)) {
+        unsigned defineHow = isSetName ? DNP_UNQUALIFIED : 0;
+        return js_SetPropertyHelper(cx, obj, id, defineHow, &v, strict);
+    }
+
+    return obj->setGeneric(cx, id, &v, strict);
+}
 
 } // namespace ion
 } // namespace js
-
