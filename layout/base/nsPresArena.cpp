@@ -480,6 +480,18 @@ nsPresArena::FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr)
   mState->Free(aID, aPtr);
 }
 
+void*
+nsPresArena::AllocateByObjectID(ObjectID aID, size_t aSize)
+{
+  return mState->Allocate(aID, aSize);
+}
+
+void
+nsPresArena::FreeByObjectID(ObjectID aID, void* aPtr)
+{
+  mState->Free(aID, aPtr);
+}
+
 /* static */ uintptr_t
 nsPresArena::GetPoisonValue()
 {
