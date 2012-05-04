@@ -181,6 +181,7 @@ _BROWSER_FILES = \
                  browser_bug664672.js \
                  browser_bug710878.js \
                  browser_bug719271.js \
+                 browser_bug743421.js \
                  browser_canonizeURL.js \
                  browser_findbarClose.js \
                  browser_homeDrop.js \
@@ -253,6 +254,7 @@ _BROWSER_FILES = \
                  plugin_alternate_content.html \
                  plugin_both.html \
                  plugin_both2.html \
+                 plugin_bug743421.html \
                  plugin_clickToPlayAllow.html \
                  plugin_clickToPlayDeny.html \
                  alltabslistener.html \
