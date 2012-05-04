@@ -4016,7 +4016,6 @@ IonBuilder::jsop_getprop(JSAtom *atom)
 bool
 IonBuilder::jsop_setprop(JSAtom *atom)
 {
-
     MDefinition *value = current->pop();
     MDefinition *obj = current->pop();
 
