@@ -31,4 +31,34 @@ wrap(strdup)(const char *src)
   size_t len = strlen(src);
   return wrap(strndup)(src, len);
 }
+
+#ifdef XP_WIN
+/*
+ *  There's a fun allocator mismatch in (at least) the VS 2010 CRT
+ *  (see the giant comment in this directory's Makefile.in
+ *  that gets redirected here to avoid a crash on shutdown.
+ */
+void
+wrap(dumb_free_thunk)(void *ptr)
+{
+  return; /* shutdown leaks that we don't care about */
+}
+
+#include <wchar.h>
+
+/*
+ *  We also need to provide our own impl of wcsdup so that we don't ask
+ *  the CRT for memory from its heap (which will then be unfreeable).
+ */
+wchar_t *
+wrap(wcsdup)(const wchar_t *src)
+{
+  size_t len = wcslen(src);
+  wchar_t *dst = (wchar_t*) wrap(malloc)((len + 1) * sizeof(wchar_t));
+  if (dst)
+    wcsncpy(dst, src, len + 1);
+  return dst;
+}
+#endif /* XP_WIN */
+
 #endif

@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Assembler-x64.h"
-#include "jsgcmark.h"
+#include "gc/Marking.h"
 
 using namespace js;
 using namespace js::ion;

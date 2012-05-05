@@ -69,8 +69,8 @@
 #include "nsDOMBlobBuilder.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "mozilla/dom/bindings/XMLHttpRequestBinding.h"
-#include "mozilla/dom/bindings/XMLHttpRequestUploadBinding.h"
+#include "mozilla/dom/XMLHttpRequestBinding.h"
+#include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 
 #include "mozilla/Assertions.h"
 
@@ -95,7 +95,7 @@ class nsXHREventTarget : public nsDOMEventTargetHelper,
                          public nsIXMLHttpRequestEventTarget
 {
 public:
-  typedef mozilla::dom::bindings::prototypes::XMLHttpRequestResponseType::value
+  typedef mozilla::dom::XMLHttpRequestResponseType
           XMLHttpRequestResponseType;
 
   virtual ~nsXHREventTarget() {}
@@ -170,7 +170,7 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
-    return mozilla::dom::bindings::prototypes::XMLHttpRequestUpload::Wrap(cx, scope, this, triedToWrap);
+    return mozilla::dom::XMLHttpRequestUploadBinding::Wrap(cx, scope, this, triedToWrap);
   }
   nsISupports* GetParentObject()
   {
@@ -202,7 +202,7 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
-    return mozilla::dom::bindings::prototypes::XMLHttpRequest::Wrap(cx, scope, this, triedToWrap);
+    return mozilla::dom::XMLHttpRequestBinding::Wrap(cx, scope, this, triedToWrap);
   }
   nsISupports* GetParentObject()
   {

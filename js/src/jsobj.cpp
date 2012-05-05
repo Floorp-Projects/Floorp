@@ -58,7 +58,6 @@
 #include "jsversion.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -81,6 +80,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
+#include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
 #include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
@@ -744,8 +744,27 @@ AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
 # define EVAL_CACHE_CHAIN_LIMIT 4
 #endif
 
-static inline JSScript **
-EvalCacheHash(JSContext *cx, JSLinearString *str)
+void
+EvalCache::purge()
+{
+    /*
+     * Purge all scripts from the eval cache. In addition to removing them from
+     * table_, null out the evalHashLink field of any script removed. Since
+     * evalHashLink is in a union with globalObject, this allows the GC to
+     * indiscriminately use the union as a nullable globalObject pointer.
+     */
+    for (size_t i = 0; i < ArrayLength(table_); ++i) {
+        for (JSScript **listHeadp = &table_[i]; *listHeadp; ) {
+            JSScript *script = *listHeadp;
+            JS_ASSERT(GetGCThingTraceKind(script) == JSTRACE_SCRIPT);
+            *listHeadp = script->evalHashLink();
+            script->evalHashLink() = NULL;
+        }
+    }
+}
+
+inline JSScript **
+EvalCache::bucket(JSLinearString *str)
 {
     const jschar *s = str->chars();
     size_t n = str->length();
@@ -757,8 +776,9 @@ EvalCacheHash(JSContext *cx, JSLinearString *str)
         h = JS_ROTATE_LEFT32(h, 4) ^ *s;
 
     h *= JS_GOLDEN_RATIO;
-    h >>= 32 - JS_EVAL_CACHE_SHIFT;
-    return &cx->compartment->evalCache[h];
+    h >>= 32 - SHIFT;
+    JS_ASSERT(h < ArrayLength(table_));
+    return &table_[h];
 }
 
 static JS_ALWAYS_INLINE JSScript *
@@ -857,7 +877,7 @@ class EvalScriptGuard
       : cx_(cx),
         str_(str),
         script_(cx) {
-        bucket_ = EvalCacheHash(cx, str);
+        bucket_ = cx->runtime->evalCache.bucket(str);
     }
 
     ~EvalScriptGuard() {
@@ -1643,9 +1663,7 @@ GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, Value *vp
            NewPropertyDescriptorObject(cx, &desc, vp);
 }
 
-}
-
-static bool
+bool
 GetFirstArgumentAsObject(JSContext *cx, unsigned argc, Value *vp, const char *method, JSObject **objp)
 {
     if (argc == 0) {
@@ -1668,6 +1686,8 @@ GetFirstArgumentAsObject(JSContext *cx, unsigned argc, Value *vp, const char *me
     *objp = &v.toObject();
     return true;
 }
+
+} /* namespace js */
 
 static JSBool
 obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
@@ -2771,7 +2791,7 @@ js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto, JS
     if (CanBeFinalizedInBackground(kind, clasp))
         kind = GetBackgroundAllocKind(kind);
 
-    NewObjectCache &cache = cx->compartment->newObjectCache;
+    NewObjectCache &cache = cx->runtime->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
     if (proto && (!parent || parent == proto->getParent()) && !proto->isGlobal()) {
@@ -2827,7 +2847,7 @@ js::NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto, JS
      */
     JSProtoKey protoKey = GetClassProtoKey(clasp);
 
-    NewObjectCache &cache = cx->compartment->newObjectCache;
+    NewObjectCache &cache = cx->runtime->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
     if (parent->isGlobal() && protoKey != JSProto_Null) {
@@ -2863,7 +2883,7 @@ js::NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc
     if (CanBeFinalizedInBackground(kind, &ObjectClass))
         kind = GetBackgroundAllocKind(kind);
 
-    NewObjectCache &cache = cx->compartment->newObjectCache;
+    NewObjectCache &cache = cx->runtime->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
     if (parent == type->proto->getParent()) {
@@ -4305,10 +4325,10 @@ JSObject::allocSlot(JSContext *cx, uint32_t *slotp)
 
     /*
      * If this object is in dictionary mode, try to pull a free slot from the
-     * property table's slot-number freelist.
+     * shape table's slot-number freelist.
      */
     if (inDictionaryMode()) {
-        PropertyTable &table = lastProperty()->table();
+        ShapeTable &table = lastProperty()->table();
         uint32_t last = table.freelist;
         if (last != SHAPE_INVALID_SLOT) {
 #ifdef DEBUG
@@ -6158,8 +6178,8 @@ JSObject::dump()
     if (obj->isNative()) {
         if (obj->inDictionaryMode())
             fprintf(stderr, " inDictionaryMode");
-        if (obj->hasPropertyTable())
-            fprintf(stderr, " hasPropertyTable");
+        if (obj->hasShapeTable())
+            fprintf(stderr, " hasShapeTable");
     }
     fprintf(stderr, "\n");
 

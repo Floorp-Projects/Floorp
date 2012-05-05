@@ -217,6 +217,11 @@ InitKeyEvent(nsKeyEvent &aEvent, QKeyEvent *aQEvent)
                               aQEvent->modifiers() & Qt::AltModifier,
                               aQEvent->modifiers() & Qt::ShiftModifier,
                               aQEvent->modifiers() & Qt::MetaModifier);
+
+    // TODO: Needs to set .location for desktop Qt build.
+#ifdef MOZ_PLATFORM_MAEMO
+    aEvent.location  = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
+#endif
     aEvent.time      = 0;
 
     if (sAltGrModifier) {

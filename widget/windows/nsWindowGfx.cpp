@@ -253,9 +253,15 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
       ::GetPropW(mWnd, L"PluginInstanceParentProperty"));
     if (instance) {
       instance->CallUpdateWindow();
-      ValidateRect(mWnd, NULL);
-      return true;
+    } else {
+      // We should never get here since in-process plugins should have
+      // subclassed our HWND and handled WM_PAINT, but in some cases that
+      // could fail. Return without asserting since it's not our fault.
+      NS_WARNING("Plugin failed to subclass our window");
     }
+
+    ValidateRect(mWnd, NULL);
+    return true;
   }
 
   nsPaintEvent willPaintEvent(true, NS_WILL_PAINT, this);

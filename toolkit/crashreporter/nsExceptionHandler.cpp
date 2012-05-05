@@ -57,6 +57,8 @@
 #include "client/windows/handler/exception_handler.h"
 #include <DbgHelp.h>
 #include <string.h>
+
+#include "nsWindowsDllInterceptor.h"
 #elif defined(XP_MACOSX)
 #include "client/mac/crash_generation/client_info.h"
 #include "client/mac/crash_generation/crash_generation_server.h"
@@ -263,6 +265,31 @@ static const char* kSubprocessBlacklist[] = {
 // they queue up here.
 class DelayedNote;
 nsTArray<nsAutoPtr<DelayedNote> >* gDelayedAnnotations;
+
+#if defined(XP_WIN)
+// the following are used to prevent other DLLs reverting the last chance
+// exception handler to the windows default. Any attempt to change the 
+// unhandled exception filter or to reset it is ignored and our crash
+// reporter is loaded instead (in case it became unloaded somehow)
+typedef LPTOP_LEVEL_EXCEPTION_FILTER (WINAPI *SetUnhandledExceptionFilter_func)
+  (LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter);
+static SetUnhandledExceptionFilter_func stub_SetUnhandledExceptionFilter = 0;
+static WindowsDllInterceptor gKernel32Intercept;
+static bool gBlockUnhandledExceptionFilter = true;
+
+static LPTOP_LEVEL_EXCEPTION_FILTER WINAPI
+patched_SetUnhandledExceptionFilter (LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
+{
+  if (!gBlockUnhandledExceptionFilter ||
+      lpTopLevelExceptionFilter == google_breakpad::ExceptionHandler::HandleException) {
+    // don't intercept
+    return stub_SetUnhandledExceptionFilter(lpTopLevelExceptionFilter);
+  }
+
+  // intercept attempts to change the filter
+  return NULL;
+}
+#endif
 
 #ifdef XP_MACOSX
 static cpu_type_t pref_cpu_types[2] = {
@@ -822,6 +849,17 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
 #ifdef XP_WIN
   gExceptionHandler->set_handle_debug_exceptions(true);
+  
+  // protect the crash reporter from being unloaded
+  gKernel32Intercept.Init("kernel32.dll");
+  bool ok = gKernel32Intercept.AddHook("SetUnhandledExceptionFilter",
+          reinterpret_cast<intptr_t>(patched_SetUnhandledExceptionFilter),
+          (void**) &stub_SetUnhandledExceptionFilter);
+
+#ifdef DEBUG
+  if (!ok)
+    printf_stderr ("SetUnhandledExceptionFilter hook failed; crash reporter is vulnerable.\n");
+#endif
 #endif
 
   // store application start time
@@ -1082,6 +1120,11 @@ static void OOPDeinit();
 
 nsresult UnsetExceptionHandler()
 {
+#ifdef XP_WIN
+  // allow SetUnhandledExceptionFilter
+  gBlockUnhandledExceptionFilter = false;
+#endif
+
   delete gExceptionHandler;
 
   // do this here in the unlikely case that we succeeded in allocating

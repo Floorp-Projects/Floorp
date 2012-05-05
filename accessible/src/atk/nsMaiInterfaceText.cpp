@@ -45,17 +45,18 @@
 
 #include "nsIPersistentProperties2.h"
 
+using namespace mozilla::a11y;
+
 AtkAttributeSet* ConvertToAtkAttributeSet(nsIPersistentProperties* aAttributes);
 
 static void
 ConvertTexttoAsterisks(nsAccessibleWrap* accWrap, nsAString& aString)
 {
-    // convert each char to "*" when it's "password text" 
-    PRUint32 atkRole = nsAccessibleWrap::AtkRoleFor(accWrap->NativeRole());
-    if (atkRole == ATK_ROLE_PASSWORD_TEXT) {
-        for (PRUint32 i = 0; i < aString.Length(); i++)
-            aString.Replace(i, 1, NS_LITERAL_STRING("*"));
-    }
+  // convert each char to "*" when it's "password text" 
+  if (accWrap->NativeRole() == roles::PASSWORD_TEXT) {
+    for (PRUint32 i = 0; i < aString.Length(); i++)
+      aString.Replace(i, 1, NS_LITERAL_STRING("*"));
+  }
 }
 
 extern "C" {
@@ -142,29 +143,29 @@ getTextAtOffsetCB(AtkText *aText, gint aOffset,
 }
 
 static gunichar
-getCharacterAtOffsetCB(AtkText *aText, gint aOffset)
+getCharacterAtOffsetCB(AtkText* aText, gint aOffset)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    if (!accWrap)
-        return 0;
+  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (!accWrap)
+    return 0;
 
-    nsCOMPtr<nsIAccessibleText> accText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
-                            getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, 0);
+  nsCOMPtr<nsIAccessibleText> accText;
+  accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
+                          getter_AddRefs(accText));
+  NS_ENSURE_TRUE(accText, 0);
 
-    /* PRUnichar is unsigned short in Mozilla */
-    /* gnuichar is guint32 in glib */
-    PRUnichar uniChar;
-    nsresult rv =
-        accText->GetCharacterAtOffset(aOffset, &uniChar);
+  // PRUnichar is unsigned short in Mozilla
+  // gnuichar is guint32 in glib
+  PRUnichar uniChar = 0;
+  nsresult rv = accText->GetCharacterAtOffset(aOffset, &uniChar);
+  if (NS_FAILED(rv))
+    return 0;
 
-    // convert char to "*" when it's "password text" 
-    PRUint32 atkRole = nsAccessibleWrap::AtkRoleFor(accWrap->NativeRole());
-    if (atkRole == ATK_ROLE_PASSWORD_TEXT)
-        uniChar = '*';
+  // Convert char to "*" when it's "password text".
+  if (accWrap->NativeRole() == roles::PASSWORD_TEXT)
+    uniChar = '*';
 
-    return (NS_FAILED(rv)) ? 0 : static_cast<gunichar>(uniChar);
+  return static_cast<gunichar>(uniChar);
 }
 
 static gchar*

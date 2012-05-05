@@ -44,7 +44,7 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsobj.h"
-#include "jsgcmark.h"
+#include "gc/Marking.h"
 
 namespace js {
 

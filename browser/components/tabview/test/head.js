@@ -411,15 +411,9 @@ function goToNextGroup(win) {
 }
 
 // ----------
-function whenAppTabIconAdded(callback, win) {
-  win = win || window;
-
-  let contentWindow = win.TabView.getContentWindow();
-  let groupItems = contentWindow.GroupItems.groupItems;
-  let groupItem = groupItems[(groupItems.length - 1)];
-
+function whenAppTabIconAdded(groupItem, callback) {
   groupItem.addSubscriber("appTabIconAdded", function onAppTabIconAdded() {
     groupItem.removeSubscriber("appTabIconAdded", onAppTabIconAdded);
-    callback();
+    executeSoon(callback);
   });
 }

@@ -18,6 +18,20 @@ var vout = document.getElementById('vout');
 var stream = v.mozCaptureStream();
 vout.src = stream;
 
+function dumpEvent(event) {
+  var detail;
+  if (event.type == "timeupdate") {
+    detail = " currentTime=" + event.target.currentTime;
+  } else {
+    detail = "";
+  }
+  dump("GOT EVENT " + event.type + detail + "\n");
+}
+var events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];
+for (var i = 0; i < events.length; ++i) {
+  v.addEventListener(events[i], dumpEvent, false);
+}
+
 function startTest(test) {
   var seekTime = test.duration/2;
 

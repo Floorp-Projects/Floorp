@@ -976,7 +976,7 @@ nsSVGSVGElement::GetViewBoxTransform() const
   }
 
   nsSVGViewBoxRect viewBox;
-  if (mViewBox.IsValid()) {
+  if (HasViewBox()) {
     viewBox = mViewBox.GetAnimValue();
   } else {
     viewBox.x = viewBox.y = 0.0f;
@@ -1107,7 +1107,8 @@ nsSVGSVGElement::InvalidateTransformNotifyFrame()
     nsISVGSVGFrame* svgframe = do_QueryFrame(frame);
     // might fail this check if we've failed conditional processing
     if (svgframe) {
-      svgframe->NotifyViewportChange();
+      svgframe->NotifyViewportOrTransformChanged(
+                  nsISVGChildFrame::TRANSFORM_CHANGED);
     }
   }
 }
@@ -1127,7 +1128,7 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
 {
   float h, w;
 
-  if (mViewBox.IsValid()) {
+  if (HasViewBox()) {
     const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue();
     w = viewbox.width;
     h = viewbox.height;
@@ -1248,7 +1249,7 @@ nsSVGSVGElement::GetPreserveAspectRatio()
 bool
 nsSVGSVGElement::ShouldSynthesizeViewBox() const
 {
-  NS_ABORT_IF_FALSE(!HasValidViewbox(),
+  NS_ABORT_IF_FALSE(!HasViewBox(),
                     "Should only be called if we lack a viewBox");
 
   nsIDocument* doc = GetCurrentDoc();
@@ -1280,7 +1281,7 @@ nsSVGSVGElement::
                     "should only override preserveAspectRatio in images");
 #endif
 
-  if (!HasValidViewbox() && ShouldSynthesizeViewBox()) {
+  if (!HasViewBox() && ShouldSynthesizeViewBox()) {
     // My non-<svg:image> clients will have been painting me with a synthesized
     // viewBox, but my <svg:image> client that's about to paint me now does NOT
     // want that.  Need to tell ourselves to flush our transform.
@@ -1288,7 +1289,7 @@ nsSVGSVGElement::
   }
   mIsPaintingSVGImageElement = true;
 
-  if (!mViewBox.IsValid()) {
+  if (!HasViewBox()) {
     return; // preserveAspectRatio irrelevant (only matters if we have viewBox)
   }
 
@@ -1320,7 +1321,7 @@ nsSVGSVGElement::ClearImageOverridePreserveAspectRatio()
 #endif
 
   mIsPaintingSVGImageElement = false;
-  if (!HasValidViewbox() && ShouldSynthesizeViewBox()) {
+  if (!HasViewBox() && ShouldSynthesizeViewBox()) {
     // My non-<svg:image> clients will want to paint me with a synthesized
     // viewBox, but my <svg:image> client that just painted me did NOT
     // use that.  Need to tell ourselves to flush our transform.

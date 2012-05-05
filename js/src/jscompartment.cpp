@@ -41,7 +41,6 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jsmath.h"
 #include "jsproxy.h"
@@ -50,6 +49,7 @@
 #include "jswrapper.h"
 
 #include "assembler/wtf/Platform.h"
+#include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
@@ -81,9 +81,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     typeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     data(NULL),
     active(false),
-#ifdef JS_METHODJIT
-    jaegerCompartment_(NULL),
-#endif
     regExps(rt),
     propertyTree(thisForCtor()),
     emptyTypeObject(NULL),
@@ -91,7 +88,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerMallocAndFreeBytes(0),
     gcMallocBytes(0),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
-    mathCache(NULL),
 	watchpointMap(NULL),
     scriptCountsMap(NULL),
     sourceMapMap(NULL),
@@ -100,36 +96,20 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     , ionCompartment_(NULL)
 #endif
 {
-    PodArrayZero(evalCache);
     setGCMaxMallocBytes(rt->gcMaxMallocBytes * 0.9);
 }
 
 JSCompartment::~JSCompartment()
 {
-    /*
-     * Even though all objects in the compartment are dead, we may have keep
-     * some filenames around because of gcKeepAtoms.
-     */
-    FreeScriptFilenames(this);
 
 #ifdef JS_ION
     Foreground::delete_(ionCompartment_);
 #endif
 
-#ifdef JS_METHODJIT
-    Foreground::delete_(jaegerCompartment_);
-#endif
-
-    Foreground::delete_(mathCache);
     Foreground::delete_(watchpointMap);
     Foreground::delete_(scriptCountsMap);
     Foreground::delete_(sourceMapMap);
     Foreground::delete_(debugScriptMap);
-
-#ifdef DEBUG
-    for (size_t i = 0; i < ArrayLength(evalCache); ++i)
-        JS_ASSERT(!evalCache[i]);
-#endif
 }
 
 bool
@@ -138,15 +118,10 @@ JSCompartment::init(JSContext *cx)
     activeAnalysis = activeInference = false;
     types.init(cx);
 
-    newObjectCache.reset();
-
     if (!crossCompartmentWrappers.init())
         return false;
 
     if (!regExps.init(cx))
-        return false;
-
-    if (!scriptFilenameTable.init())
         return false;
 
     return debuggees.init();
@@ -172,38 +147,6 @@ JSCompartment::ensureIonCompartmentExists(JSContext *cx)
 
     return true;
 }
-#endif
-
-#ifdef JS_METHODJIT
-bool
-JSCompartment::ensureJaegerCompartmentExists(JSContext *cx)
-{
-    if (jaegerCompartment_)
-        return true;
-
-    mjit::JaegerCompartment *jc = cx->new_<mjit::JaegerCompartment>();
-    if (!jc)
-        return false;
-    if (!jc->Initialize(cx)) {
-        cx->delete_(jc);
-        return false;
-    }
-    jaegerCompartment_ = jc;
-    return true;
-}
-
-size_t
-JSCompartment::sizeOfMjitCode() const
-{
-    if (!jaegerCompartment_)
-        return 0;
-
-    size_t method, regexp, unused;
-    jaegerCompartment_->execAlloc()->sizeOfCode(&method, &regexp, &unused);
-    JS_ASSERT(regexp == 0);
-    return method + unused;
-}
-
 #endif
 
 bool
@@ -542,8 +485,6 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
     if (emptyTypeObject && IsAboutToBeFinalized(emptyTypeObject))
         emptyTypeObject = NULL;
 
-    newObjectCache.reset();
-
     sweepBreakpoints(fop);
 
     {
@@ -617,24 +558,6 @@ void
 JSCompartment::purge()
 {
     dtoaCache.purge();
-
-    /*
-     * Clear the hash and reset all evalHashLink to null before the GC. This
-     * way MarkChildren(trc, JSScript *) can assume that JSScript::u.object is
-     * not null when we have script owned by an object and not from the eval
-     * cache.
-     */
-    for (size_t i = 0; i < ArrayLength(evalCache); ++i) {
-        for (JSScript **listHeadp = &evalCache[i]; *listHeadp; ) {
-            JSScript *script = *listHeadp;
-            JS_ASSERT(GetGCThingTraceKind(script) == JSTRACE_SCRIPT);
-            *listHeadp = NULL;
-            listHeadp = &script->evalHashLink();
-        }
-    }
-
-    nativeIterCache.purge();
-    toSourceCache.destroyIfConstructed();
 }
 
 void
@@ -660,16 +583,6 @@ JSCompartment::onTooMuchMalloc()
     TriggerCompartmentGC(this, gcreason::TOO_MUCH_MALLOC);
 }
 
-
-MathCache *
-JSCompartment::allocMathCache(JSContext *cx)
-{
-    JS_ASSERT(!mathCache);
-    mathCache = cx->new_<MathCache>();
-    if (!mathCache)
-        js_ReportOutOfMemory(cx);
-    return mathCache;
-}
 
 bool
 JSCompartment::hasScriptsOnStack()

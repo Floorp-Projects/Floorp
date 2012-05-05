@@ -49,9 +49,7 @@
 #include "jsprvtd.h"
 #include "vm/String.h"
 #include "assembler/wtf/Platform.h"
-#if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
-#endif
 
 namespace JSC { namespace Yarr {
 

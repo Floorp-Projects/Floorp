@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=748961
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 748961</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=748961">Mozilla Bug 748961</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 748961 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var f = document.createElement('iframe');
+document.body.appendChild(f);
+
+src = "data:text/html,<meta charset='utf-8'><body><p id='sel'>Selection</p><scr" + "ipt>"
+src += "try {"
+src += "var range = document.createRange();"
+src += "range.selectNode(document.getElementById('sel'));"
+src += "var sel = window.getSelection();"
+src += "sel.addRange(range);"
+src += "parent.is(sel.toString(), 'Selection', 'Selection.toString()');"
+src += "document.body.offsetHeight;"
+src += "parent.is(sel.toString(), 'Selection', 'Selection.toString() after explicit flush');"
+src += "} finally { parent.ok(true,'silence no test run warning'); parent.SimpleTest.finish(); }"
+src += "</scr"+"ipt>";
+
+f.src = src;
+
+</script>
+</pre>
+</body>
+</html>

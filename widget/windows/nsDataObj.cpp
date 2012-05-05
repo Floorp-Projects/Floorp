@@ -69,32 +69,7 @@
 #include "nsITimer.h"
 #include "nsThreadUtils.h"
 
-// XXX Duped from profile/src/nsProfile.cpp.
-#include <stdlib.h>
-
 using namespace mozilla;
-
-#define TABLE_SIZE 36
-static const char table[] =
-    { 'a','b','c','d','e','f','g','h','i','j',
-      'k','l','m','n','o','p','q','r','s','t',
-      'u','v','w','x','y','z','0','1','2','3',
-      '4','5','6','7','8','9' };
-static void
-MakeRandomString(char *buf, PRInt32 bufLen)
-{
-    // turn PR_Now() into milliseconds since epoch
-    // and salt rand with that.
-    double fpTime;
-    LL_L2D(fpTime, PR_Now());
-    srand((uint)(fpTime * 1e-6 + 0.5));   // use 1e-6, granularity of PR_Now() on the mac is seconds
-
-    PRInt32 i;
-    for (i=0;i<bufLen;i++) {
-        *buf++ = table[rand()%TABLE_SIZE];
-    }
-    *buf = 0;
-}
 
 NS_IMPL_ISUPPORTS1(nsDataObj::CStream, nsIStreamListener)
 
@@ -1467,7 +1442,7 @@ HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG)
     // Photoshop which handle multiple drags into a single window.
     char buf[13];
     nsCString filename;
-    MakeRandomString(buf, 8);
+    NS_MakeRandomString(buf, 8);
     memcpy(buf+8, ".bmp", 5);
     filename.Append(nsDependentCString(buf, 12));
     dropFile->AppendNative(filename);

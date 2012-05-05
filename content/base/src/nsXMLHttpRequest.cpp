@@ -105,7 +105,7 @@
 #include "mozilla/Telemetry.h"
 #include "jsfriendapi.h"
 #include "sampler.h"
-#include "mozilla/dom/bindings/XMLHttpRequestBinding.h"
+#include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "nsIDOMFormData.h"
 
 #include "nsWrapperCacheInlines.h"
@@ -1091,8 +1091,8 @@ nsXMLHttpRequest::StaticAssertions()
 {
 #define ASSERT_ENUM_EQUAL(_lc, _uc) \
   MOZ_STATIC_ASSERT(\
-    bindings::prototypes::XMLHttpRequestResponseType::_lc \
-      == bindings::prototypes::XMLHttpRequestResponseType::value(XML_HTTP_RESPONSE_TYPE_ ## _uc), \
+    XMLHttpRequestResponseTypeValues::_lc                \
+    == XMLHttpRequestResponseType(XML_HTTP_RESPONSE_TYPE_ ## _uc), \
     #_uc " should match")
 
   ASSERT_ENUM_EQUAL(_empty, DEFAULT);

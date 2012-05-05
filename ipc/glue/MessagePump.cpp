@@ -47,6 +47,10 @@
 #include "base/logging.h"
 #include "base/scoped_nsautorelease_pool.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#endif
+
 using mozilla::ipc::DoWorkRunnable;
 using mozilla::ipc::MessagePump;
 using mozilla::ipc::MessagePumpForChildProcess;
@@ -114,6 +118,13 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
     did_work |= aDelegate->DoWork();
     if (!keep_running_)
       break;
+
+#ifdef MOZ_WIDGET_ANDROID
+    // This processes messages in the Android Looper. Note that we only
+    // get here if the normal Gecko event loop has been awoken above.
+    // Bug 750713
+    AndroidBridge::Bridge()->PumpMessageLoop();
+#endif
 
     did_work |= aDelegate->DoDelayedWork(&delayed_work_time_);
 

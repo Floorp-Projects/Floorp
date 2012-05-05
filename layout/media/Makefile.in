@@ -119,6 +119,10 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/parser/expat/lib/$(LIB_PREFIX)mozexpat_s.$(LIB_SUFFIX) \
 	$(NULL)
 
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/gfx/2d/$(LIB_PREFIX)gfx2d.$(LIB_SUFFIX) \
+	$(NULL)
+
 ifeq (WINNT,$(OS_TARGET))
 EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB) $(NSPR_LIBS)
 

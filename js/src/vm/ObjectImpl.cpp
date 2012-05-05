@@ -170,7 +170,7 @@ js::ObjectImpl::checkShapeConsistency()
     if (inDictionaryMode()) {
         MOZ_ASSERT(shape->hasTable());
 
-        PropertyTable &table = shape->table();
+        ShapeTable &table = shape->table();
         for (uint32_t fslot = table.freelist; fslot != SHAPE_INVALID_SLOT;
              fslot = getSlot(fslot).toPrivateUint32()) {
             MOZ_ASSERT(fslot < slotSpan());
@@ -197,7 +197,7 @@ js::ObjectImpl::checkShapeConsistency()
     } else {
         for (int n = throttle; --n >= 0 && shape->parent; shape = shape->parent) {
             if (shape->hasTable()) {
-                PropertyTable &table = shape->table();
+                ShapeTable &table = shape->table();
                 MOZ_ASSERT(shape->parent);
                 for (Shape::Range r(shape); !r.empty(); r.popFront()) {
                     Shape **spp = table.search(r.front().propid(), false);
@@ -322,14 +322,14 @@ SparseElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t ind
 
 template<typename T>
 static Value
-ElementToValue(const T t)
+ElementToValue(const T &t)
 {
     return NumberValue(t);
 }
 
 template<>
 /* static */ Value
-ElementToValue(const uint8_clamped u)
+ElementToValue(const uint8_clamped &u)
 {
     return NumberValue(uint8_t(u));
 }
