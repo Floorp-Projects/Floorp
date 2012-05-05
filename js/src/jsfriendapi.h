@@ -651,6 +651,9 @@ PrepareCompartmentForGC(JSCompartment *comp);
 extern JS_FRIEND_API(void)
 PrepareForFullGC(JSRuntime *rt);
 
+extern JS_FRIEND_API(bool)
+IsGCScheduled(JSRuntime *rt);
+
 /*
  * When triggering a GC using one of the functions below, it is first necessary
  * to select the compartments to be collected. To do this, you can call
