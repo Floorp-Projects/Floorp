@@ -4591,6 +4591,9 @@ nsHTMLEditor::GetLastEditableLeaf(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutL
 bool
 nsHTMLEditor::IsTextInDirtyFrameVisible(nsIContent *aNode)
 {
+  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(aNode->NodeType() == nsIDOMNode::TEXT_NODE);
+
   bool isEmptyTextNode;
   nsresult rv = IsVisTextNode(aNode, &isEmptyTextNode, false);
   if (NS_FAILED(rv)) {
@@ -4611,13 +4614,11 @@ nsHTMLEditor::IsVisTextNode(nsIContent* aNode,
                             bool* outIsEmptyNode,
                             bool aSafeToAskFrames)
 {
-  NS_ENSURE_TRUE(aNode && outIsEmptyNode, NS_ERROR_NULL_POINTER);
-  *outIsEmptyNode = true;
+  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(aNode->NodeType() == nsIDOMNode::TEXT_NODE);
+  MOZ_ASSERT(outIsEmptyNode);
 
-  // callers job to only call us with text nodes
-  if (!aNode->IsNodeOfType(nsINode::eTEXT)) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  *outIsEmptyNode = true;
 
   PRUint32 length = aNode->TextLength();
   if (aSafeToAskFrames)
