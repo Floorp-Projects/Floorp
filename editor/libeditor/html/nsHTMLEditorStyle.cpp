@@ -350,49 +350,39 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
 
 
 nsresult
-nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIDOMNode *aNode,
-                                          nsIAtom *aProperty,
-                                          const nsAString *aAttribute,
-                                          const nsAString *aValue)
+nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
+                                          nsIAtom* aProperty,
+                                          const nsAString* aAttribute,
+                                          const nsAString* aValue)
 {
   MOZ_ASSERT(aNode && aProperty);
   MOZ_ASSERT(aValue);
 
-  nsresult res;
-  nsCOMPtr<nsIDOMNode> tmp;
   nsAutoString tag;
   aProperty->ToString(tag);
   ToLowerCase(tag);
 
   // If this is an element that can't be contained in a span, we have to
   // recurse to its children.
-  if (!TagCanContain(nsGkAtoms::span, aNode)) {
-    nsCOMPtr<nsIDOMNodeList> childNodes;
-    res = aNode->GetChildNodes(getter_AddRefs(childNodes));
-    NS_ENSURE_SUCCESS(res, res);
-    if (childNodes) {
-      PRInt32 j;
-      PRUint32 childCount;
-      childNodes->GetLength(&childCount);
-      if (childCount) {
-        nsCOMArray<nsIDOMNode> arrayOfNodes;
+  if (!TagCanContain(nsGkAtoms::span, aNode->AsDOMNode())) {
+    if (aNode->HasChildren()) {
+      nsCOMArray<nsIContent> arrayOfNodes;
 
-        // populate the list
-        for (j = 0; j < (PRInt32)childCount; j++) {
-          nsCOMPtr<nsIDOMNode> childNode;
-          res = childNodes->Item(j, getter_AddRefs(childNode));
-          if (NS_SUCCEEDED(res) && childNode && IsEditable(childNode)) {
-            arrayOfNodes.AppendObject(childNode);
-          }
+      // Populate the list.
+      for (nsIContent* child = aNode->GetFirstChild();
+           child;
+           child = child->GetNextSibling()) {
+        if (IsEditable(child)) {
+          arrayOfNodes.AppendObject(child);
         }
+      }
 
-        // then loop through the list, set the property on each node
-        PRInt32 listCount = arrayOfNodes.Count();
-        for (j = 0; j < listCount; j++) {
-          res = SetInlinePropertyOnNode(arrayOfNodes[j], aProperty,
-                                        aAttribute, aValue);
-          NS_ENSURE_SUCCESS(res, res);
-        }
+      // Then loop through the list, set the property on each node.
+      PRInt32 listCount = arrayOfNodes.Count();
+      for (PRInt32 j = 0; j < listCount; ++j) {
+        nsresult rv = SetInlinePropertyOnNode(arrayOfNodes[j], aProperty,
+                                              aAttribute, aValue);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
     }
     return NS_OK;
@@ -404,14 +394,14 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIDOMNode *aNode,
                 // bgcolor is always done using CSS
                 aAttribute->EqualsLiteral("bgcolor");
 
+  nsresult res;
   if (useCSS) {
-    tmp = aNode;
+    nsCOMPtr<nsIDOMNode> tmp = aNode->AsDOMNode();
     // We only add style="" to <span>s with no attributes (bug 746515).  If we
     // don't have one, we need to make one.
-    nsCOMPtr<dom::Element> element = do_QueryInterface(tmp);
-    if (!element || !element->IsHTML(nsGkAtoms::span) ||
-        element->GetAttrCount()) {
-      res = InsertContainerAbove(aNode, address_of(tmp),
+    if (!aNode->IsElement() || !aNode->AsElement()->IsHTML(nsGkAtoms::span) ||
+        aNode->AsElement()->GetAttrCount()) {
+      res = InsertContainerAbove(aNode->AsDOMNode(), address_of(tmp),
                                  NS_LITERAL_STRING("span"),
                                  nsnull, nsnull);
       NS_ENSURE_SUCCESS(res, res);
@@ -447,7 +437,7 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIDOMNode *aNode,
   }
 
   // is it already the right kind of node, but with wrong attribute?
-  if (NodeIsType(aNode, aProperty)) {
+  if (aNode->Tag() == aProperty) {
     // Just set the attribute on it.
     nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
     return SetAttribute(elem, *aAttribute, *aValue);
@@ -455,27 +445,28 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIDOMNode *aNode,
 
   // Either put it inside a neighboring node, or make a new one.
   // is either of its neighbors the right kind of node?
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (node && aAttribute) {
-    nsIContent* priorNode = GetPriorHTMLSibling(node);
+  if (aAttribute) {
+    nsIContent* priorNode = GetPriorHTMLSibling(aNode);
     if (priorNode && priorNode->Tag() == aProperty &&
         HasAttrVal(priorNode, aAttribute, *aValue) &&
         IsOnlyAttribute(priorNode, *aAttribute)) {
       // previous sib is already right kind of inline node; slide this over into it
-      return MoveNode(aNode, priorNode->AsDOMNode(), -1);
+      return MoveNode(aNode->AsDOMNode(), priorNode->AsDOMNode(), -1);
     }
 
-    nsIContent* nextNode = GetNextHTMLSibling(node);
+    nsIContent* nextNode = GetNextHTMLSibling(aNode);
     if (nextNode && nextNode->Tag() == aProperty &&
         HasAttrVal(nextNode, aAttribute, *aValue) &&
         IsOnlyAttribute(priorNode, *aAttribute)) {
       // following sib is already right kind of inline node; slide this over into it
-      return MoveNode(aNode, nextNode->AsDOMNode(), 0);
+      return MoveNode(aNode->AsDOMNode(), nextNode->AsDOMNode(), 0);
     }
   }
 
   // ok, chuck it in its very own container
-  return InsertContainerAbove(aNode, address_of(tmp), tag, aAttribute, aValue);
+  nsCOMPtr<nsIDOMNode> tmp;
+  return InsertContainerAbove(aNode->AsDOMNode(), address_of(tmp), tag,
+                              aAttribute, aValue);
 }
 
 
@@ -494,15 +485,28 @@ nsHTMLEditor::SetInlinePropertyOnNode(nsIDOMNode *aNode,
 
   nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
   NS_ENSURE_STATE(node);
-  nsCOMPtr<nsIContent> previousSibling = node->GetPreviousSibling(),
-                       nextSibling = node->GetNextSibling();
-  nsCOMPtr<nsINode> parent = node->GetNodeParent();
+
+  return SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
+}
+
+nsresult
+nsHTMLEditor::SetInlinePropertyOnNode(nsIContent* aNode,
+                                      nsIAtom* aProperty,
+                                      const nsAString* aAttribute,
+                                      const nsAString* aValue)
+{
+  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(aProperty);
+
+  nsCOMPtr<nsIContent> previousSibling = aNode->GetPreviousSibling(),
+                       nextSibling = aNode->GetNextSibling();
+  nsCOMPtr<nsINode> parent = aNode->GetNodeParent();
   NS_ENSURE_STATE(parent);
 
-  nsresult res = RemoveStyleInside(aNode, aProperty, aAttribute);
+  nsresult res = RemoveStyleInside(aNode->AsDOMNode(), aProperty, aAttribute);
   NS_ENSURE_SUCCESS(res, res);
 
-  if (node->GetNodeParent()) {
+  if (aNode->GetNodeParent()) {
     // The node is still where it was
     return SetInlinePropertyOnNodeImpl(aNode, aProperty,
                                        aAttribute, aValue);
@@ -527,8 +531,7 @@ nsHTMLEditor::SetInlinePropertyOnNode(nsIDOMNode *aNode,
 
   PRInt32 nodesToSetCount = nodesToSet.Count();
   for (PRInt32 k = 0; k < nodesToSetCount; k++) {
-    nsCOMPtr<nsIDOMNode> nodeToSet = do_QueryInterface(nodesToSet[k]);
-    res = SetInlinePropertyOnNodeImpl(nodeToSet, aProperty,
+    res = SetInlinePropertyOnNodeImpl(nodesToSet[k], aProperty,
                                       aAttribute, aValue);
     NS_ENSURE_SUCCESS(res, res);
   }
