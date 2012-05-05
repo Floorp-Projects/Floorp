@@ -228,6 +228,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
           env["GRE_HOME"]=self.appRoot
         env["XPCSHELL_TEST_PROFILE_DIR"]=self.profileDir
         env["TMPDIR"]=self.remoteTmpDir
+        env["HOME"]=self.profileDir
         outputFile = "xpcshelloutput"
         f = open(outputFile, "w+")
         self.shellReturnCode = self.device.shell(cmd, f, cwd=self.remoteHere, env=env)

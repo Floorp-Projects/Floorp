@@ -45,3 +45,28 @@ $(call errorifneq,3,$(words $(call isTargetStemClean)))
 TEST_MAKECMDGOALS := invalid
 $(call errorifneq,$(zero),$(words $(call isTargetStemClean)))
 
+
+#############################
+ifdef VERBOSE
+  $(call banner,Unit test: isTargetStem)
+endif
+
+# Verify list argument processing
+TEST_MAKECMDGOALS := echo
+$(call errorifneq,$(one),$(words $(call isTargetStem,echo,show)))
+
+TEST_MAKECMDGOALS := echo-123
+$(call errorifneq,$(one),$(words $(call isTargetStem,echo,show)))
+
+TEST_MAKECMDGOALS := show
+$(call errorifneq,$(one),$(words $(call isTargetStem,echo,show)))
+
+TEST_MAKECMDGOALS := show-123
+$(call errorifneq,$(one),$(words $(call isTargetStem,echo,show)))
+
+TEST_MAKECMDGOALS := show-123-echo
+$(call errorifneq,$(one),$(words $(call isTargetStem,echo,show)))
+
+TEST_MAKECMDGOALS := invalid
+$(call errorifneq,$(zero),$(words $(call isTargetStem,echo,show)))
+
