@@ -4373,7 +4373,6 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
   PRInt32 offset;
   nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
   NS_ENSURE_SUCCESS(res, res);
-  nsAutoPtr<PropItem> item;
   
   // if we deleted selection then also for cached styles
   if (mDidDeleteSelection && 
@@ -4421,7 +4420,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
   NS_ENSURE_SUCCESS(res, res);
 
   // process clearing any styles first
-  mHTMLEditor->mTypeInState->TakeClearProperty(getter_Transfers(item));
+  nsAutoPtr<PropItem> item(mHTMLEditor->mTypeInState->TakeClearProperty());
   while (item && node != rootElement)
   {
     nsCOMPtr<nsIDOMNode> leftNode, rightNode, secondSplitParent, newSelParent, savedBR;
@@ -4487,17 +4486,13 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
       node = newSelParent;
       offset = newSelOffset;
     }
-    mHTMLEditor->mTypeInState->TakeClearProperty(getter_Transfers(item));
+    item = mHTMLEditor->mTypeInState->TakeClearProperty();
     weDidSometing = true;
   }
   
   // then process setting any styles
-  PRInt32 relFontSize;
-  
-  res = mHTMLEditor->mTypeInState->TakeRelativeFontSize(&relFontSize);
-  NS_ENSURE_SUCCESS(res, res);
-  res = mHTMLEditor->mTypeInState->TakeSetProperty(getter_Transfers(item));
-  NS_ENSURE_SUCCESS(res, res);
+  PRInt32 relFontSize = mHTMLEditor->mTypeInState->TakeRelativeFontSize();
+  item = mHTMLEditor->mTypeInState->TakeSetProperty();
   
   if (item || relFontSize) // we have at least one style to add; make a
   {                        // new text node to insert style nodes above.
@@ -4542,7 +4537,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
     {
       res = mHTMLEditor->SetInlinePropertyOnNode(node, item->tag, &item->attr, &item->value);
       NS_ENSURE_SUCCESS(res, res);
-      mHTMLEditor->mTypeInState->TakeSetProperty(getter_Transfers(item));
+      item = mHTMLEditor->mTypeInState->TakeSetProperty();
     }
   }
   if (weDidSometing)
