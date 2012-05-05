@@ -5,6 +5,30 @@
 // Functional tests for inline autocomplete
 
 add_autocomplete_test([
+  "Check disabling autocomplete disables autofill",
+  "vis",
+  "vis",
+  function ()
+  {
+    Services.prefs.setBoolPref("browser.urlbar.autocomplete.enabled", false);
+    addVisits({ uri: NetUtil.newURI("http://visit.mozilla.org"),
+                transition: TRANSITION_TYPED });
+  }
+]);
+
+add_autocomplete_test([
+  "Check disabling autofill disables autofill",
+  "vis",
+  "vis",
+  function ()
+  {
+    Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
+    addVisits({ uri: NetUtil.newURI("http://visit.mozilla.org"),
+                transition: TRANSITION_TYPED });
+  }
+]);
+
+add_autocomplete_test([
   "Add urls, check for correct order",
   "vis",
   "visit2.mozilla.org/",
