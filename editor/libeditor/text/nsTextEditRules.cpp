@@ -1089,37 +1089,34 @@ nsresult
 nsTextEditRules::CreateTrailingBRIfNeeded()
 {
   // but only if we aren't a single line edit field
-  if (IsSingleLineEditor())
+  if (IsSingleLineEditor()) {
     return NS_OK;
-  nsCOMPtr<nsIDOMNode> body = do_QueryInterface(mEditor->GetRoot());
+  }
+
+  dom::Element* body = mEditor->GetRoot();
   NS_ENSURE_TRUE(body, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode> lastChild;
-  nsresult res = body->GetLastChild(getter_AddRefs(lastChild));
+
+  nsIContent* lastChild = body->GetLastChild();
   // assuming CreateBogusNodeIfNeeded() has been called first
-  NS_ENSURE_SUCCESS(res, res);  
   NS_ENSURE_TRUE(lastChild, NS_ERROR_NULL_POINTER);
 
-  if (!nsTextEditUtils::IsBreak(lastChild))
-  {
+  if (!lastChild->IsHTML(nsGkAtoms::br)) {
     nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
-    PRUint32 rootLen;
-    res = mEditor->GetLengthOfDOMNode(body, rootLen);
-    NS_ENSURE_SUCCESS(res, res); 
-    nsCOMPtr<nsIDOMNode> unused;
-    res = CreateMozBR(body, rootLen, address_of(unused));
-  } else {
-    // Check to see if the trailing BR is a former bogus node - this will have stuck
-    // around if we previously morphed a trailing node into a bogus node
-    nsCOMPtr<nsIContent> lastBR = do_QueryInterface(lastChild);
-    if (!mEditor->IsMozEditorBogusNode(lastBR))
-      return NS_OK;
-
-    // Morph it back to a mozBR
-    dom::Element* elem = lastBR->AsElement();
-    elem->UnsetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom, false);
-    elem->SetAttr(kNameSpaceID_None, nsGkAtoms::type, NS_LITERAL_STRING("_moz"), true);
+    nsCOMPtr<nsIDOMNode> domBody = do_QueryInterface(body);
+    return CreateMozBR(domBody, body->Length());
   }
-  return res;
+
+  // Check to see if the trailing BR is a former bogus node - this will have
+  // stuck around if we previously morphed a trailing node into a bogus node.
+  if (!mEditor->IsMozEditorBogusNode(lastChild)) {
+    return NS_OK;
+  }
+
+  // Morph it back to a mozBR
+  lastChild->UnsetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom, false);
+  lastChild->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
+                     NS_LITERAL_STRING("_moz"), true);
+  return NS_OK;
 }
 
 nsresult
@@ -1336,21 +1333,26 @@ nsTextEditRules::FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength)
 // CreateMozBR: put a BR node with moz attribute at {aNode, aOffset}
 //                       
 nsresult 
-nsTextEditRules::CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode)
+nsTextEditRules::CreateMozBR(nsIDOMNode* inParent, PRInt32 inOffset,
+                             nsIDOMNode** outBRNode)
 {
-  NS_ENSURE_TRUE(inParent && outBRNode, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(inParent, NS_ERROR_NULL_POINTER);
 
-  nsresult res = mEditor->CreateBR(inParent, inOffset, outBRNode);
+  nsCOMPtr<nsIDOMNode> brNode;
+  nsresult res = mEditor->CreateBR(inParent, inOffset, address_of(brNode));
   NS_ENSURE_SUCCESS(res, res);
 
   // give it special moz attr
-  nsCOMPtr<nsIDOMElement> brElem = do_QueryInterface(*outBRNode);
-  if (brElem)
-  {
+  nsCOMPtr<nsIDOMElement> brElem = do_QueryInterface(brNode);
+  if (brElem) {
     res = mEditor->SetAttribute(brElem, NS_LITERAL_STRING("type"), NS_LITERAL_STRING("_moz"));
     NS_ENSURE_SUCCESS(res, res);
   }
-  return res;
+
+  if (outBRNode) {
+    brNode.forget(outBRNode);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

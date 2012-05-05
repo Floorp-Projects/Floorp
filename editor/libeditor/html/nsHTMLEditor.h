@@ -388,8 +388,15 @@ public:
   // aSelection is optional -- if null, we get current seletion
   nsresult CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode);
 
+  /**
+   * aNode must be a non-null text node.
+   */
   virtual bool IsTextInDirtyFrameVisible(nsIContent *aNode);
 
+  /**
+   * aNode must be a non-null text node.
+   * outIsEmptyNode must be non-null.
+   */
   nsresult IsVisTextNode(nsIContent* aNode,
                          bool* outIsEmptyNode,
                          bool aSafeToAskFrames);
@@ -691,6 +698,10 @@ protected:
                                     nsIAtom *aProperty, 
                                     const nsAString *aAttribute,
                                     const nsAString *aValue);
+  nsresult SetInlinePropertyOnNode(nsIContent* aNode,
+                                   nsIAtom* aProperty,
+                                   const nsAString* aAttribute,
+                                   const nsAString* aValue);
 
   nsresult PromoteInlineRange(nsIDOMRange *inRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsIDOMRange *inRange);
@@ -712,19 +723,21 @@ protected:
 
   bool NodeIsProperty(nsIDOMNode *aNode);
   bool HasAttr(nsIDOMNode *aNode, const nsAString *aAttribute);
-  bool HasAttrVal(nsIDOMNode *aNode, const nsAString *aAttribute, const nsAString *aValue);
+  bool HasAttrVal(const nsIContent* aNode, const nsAString* aAttribute,
+                  const nsAString& aValue);
   bool IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
   bool IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
   bool IsOnlyAttribute(nsIDOMNode *aElement, const nsAString *aAttribute);
+  bool IsOnlyAttribute(const nsIContent* aElement, const nsAString& aAttribute);
 
   nsresult RemoveBlockContainer(nsIDOMNode *inNode);
-  nsINode* GetPriorHTMLSibling(nsINode* aNode);
+  nsIContent* GetPriorHTMLSibling(nsINode* aNode);
   nsresult GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsINode* GetPriorHTMLSibling(nsINode* aParent, PRInt32 aOffset);
+  nsIContent* GetPriorHTMLSibling(nsINode* aParent, PRInt32 aOffset);
   nsresult GetPriorHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
-  nsINode* GetNextHTMLSibling(nsINode* aNode);
+  nsIContent* GetNextHTMLSibling(nsINode* aNode);
   nsresult GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsINode* GetNextHTMLSibling(nsINode* aParent, PRInt32 aOffset);
+  nsIContent* GetNextHTMLSibling(nsINode* aParent, PRInt32 aOffset);
   nsresult GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
   nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
@@ -972,10 +985,10 @@ friend class nsHTMLEditorEventListener;
 
 private:
   // Helper
-  nsresult SetInlinePropertyOnNodeImpl(nsIDOMNode *aNode,
-                                       nsIAtom *aProperty,
-                                       const nsAString *aAttribute,
-                                       const nsAString *aValue);
+  nsresult SetInlinePropertyOnNodeImpl(nsIContent* aNode,
+                                       nsIAtom* aProperty,
+                                       const nsAString* aAttribute,
+                                       const nsAString* aValue);
 
 };
 #endif //nsHTMLEditor_h__

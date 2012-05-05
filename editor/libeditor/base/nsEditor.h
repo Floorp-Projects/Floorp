@@ -461,6 +461,9 @@ public:
                         nsCOMPtr<nsIDOMNode> *aResultNode,
                         bool         bNoBlockCrossing = false,
                         nsIContent  *aActiveEditorRoot = nsnull);
+  nsIContent* GetPriorNode(nsINode* aCurrentNode, bool aEditableNode,
+                           bool aNoBlockCrossing = false,
+                           nsIContent* aActiveEditorRoot = nsnull);
 
   // and another version that takes a {parent,offset} pair rather than a node
   nsresult GetPriorNode(nsIDOMNode  *aParentNode, 
@@ -469,7 +472,13 @@ public:
                         nsCOMPtr<nsIDOMNode> *aResultNode,
                         bool         bNoBlockCrossing = false,
                         nsIContent  *aActiveEditorRoot = nsnull);
-                       
+  nsIContent* GetPriorNode(nsINode* aParentNode,
+                           PRInt32 aOffset,
+                           bool aEditableNode,
+                           bool aNoBlockCrossing = false,
+                           nsIContent* aActiveEditorRoot = nsnull);
+
+
   /** get the node immediately after to aCurrentNode
     * @param aCurrentNode   the node from which we start the search
     * @param aEditableNode  if true, only return an editable node
@@ -494,6 +503,11 @@ public:
                        nsCOMPtr<nsIDOMNode> *aResultNode,
                        bool         bNoBlockCrossing = false,
                        nsIContent  *aActiveEditorRoot = nsnull);
+  nsIContent* GetNextNode(nsINode* aParentNode,
+                          PRInt32 aOffset,
+                          bool aEditableNode,
+                          bool aNoBlockCrossing = false,
+                          nsIContent* aActiveEditorRoot = nsnull);
 
   // Helper for GetNextNode and GetPriorNode
   nsIContent* FindNode(nsINode *aCurrentNode,
@@ -554,6 +568,9 @@ public:
   bool IsEditable(nsIDOMNode *aNode);
   bool IsEditable(nsIContent *aNode);
 
+  /**
+   * aNode must be a non-null text node.
+   */
   virtual bool IsTextInDirtyFrameVisible(nsIContent *aNode);
 
   /** returns true if aNode is a MozEditorBogus node */
