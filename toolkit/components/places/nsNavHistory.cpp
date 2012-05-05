@@ -2714,29 +2714,6 @@ nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
 }
 
 
-// nsNavHistory::GetCount
-//
-//    This function is used in legacy code to see if there is any history to
-//    clear. Counting the actual number of history entries is very slow, so
-//    we just see if there are any and return 0 or 1, which is enough to make
-//    all the code that uses this function happy.
-
-NS_IMETHODIMP
-nsNavHistory::GetCount(PRUint32 *aCount)
-{
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-  NS_ENSURE_ARG_POINTER(aCount);
-
-  bool hasEntries = false;
-  nsresult rv = GetHasHistoryEntries(&hasEntries);
-  if (hasEntries)
-    *aCount = 1;
-  else
-    *aCount = 0;
-  return rv;
-}
-
-
 // nsNavHistory::RemovePagesInternal
 //
 //    Deletes a list of placeIds from history.
