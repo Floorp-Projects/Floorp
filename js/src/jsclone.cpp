@@ -519,7 +519,9 @@ class AutoEnterCompartmentAndPushPrincipal : public JSAutoEnterCompartment
 
         // Push.
         const JSSecurityCallbacks *cb = cx->runtime->securityCallbacks;
-        return cb->pushContextPrincipal(cx, target->principals(cx));
+        if (cb->pushContextPrincipal)
+          return cb->pushContextPrincipal(cx, target->principals(cx));
+        return true;
     };
 
     ~AutoEnterCompartmentAndPushPrincipal() {
@@ -527,7 +529,8 @@ class AutoEnterCompartmentAndPushPrincipal : public JSAutoEnterCompartment
         if (state == STATE_OTHER_COMPARTMENT) {
             AutoCompartment *ac = getAutoCompartment();
             const JSSecurityCallbacks *cb = ac->context->runtime->securityCallbacks;
-            cb->popContextPrincipal(ac->context);
+            if (cb->popContextPrincipal)
+              cb->popContextPrincipal(ac->context);
         }
     };
 };
