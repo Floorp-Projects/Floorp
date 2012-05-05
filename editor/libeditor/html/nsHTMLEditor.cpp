@@ -1742,7 +1742,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
 
   // hand off to the rules system, see if it has anything to say about this
   bool cancel, handled;
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
+  nsTextRulesInfo ruleInfo(kOpInsertElement);
   ruleInfo.insertElement = aElement;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
@@ -2222,7 +2222,7 @@ nsHTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList, cons
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kMakeList);
+  nsTextRulesInfo ruleInfo(kOpMakeList);
   ruleInfo.blockType = &aListType;
   ruleInfo.entireList = entireList;
   ruleInfo.bulletType = &aBulletType;
@@ -2303,7 +2303,7 @@ nsHTMLEditor::RemoveList(const nsAString& aListType)
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kRemoveList);
+  nsTextRulesInfo ruleInfo(kOpRemoveList);
   if (aListType.LowerCaseEqualsLiteral("ol"))
     ruleInfo.bOrdered = true;
   else  ruleInfo.bOrdered = false;
@@ -2335,7 +2335,7 @@ nsHTMLEditor::MakeDefinitionItem(const nsAString& aItemType)
   res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kMakeDefListItem);
+  nsTextRulesInfo ruleInfo(kOpMakeDefListItem);
   ruleInfo.blockType = &aItemType;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
@@ -2368,7 +2368,7 @@ nsHTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
   res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kMakeBasicBlock);
+  nsTextRulesInfo ruleInfo(kOpMakeBasicBlock);
   ruleInfo.blockType = &aBlockType;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
@@ -2434,11 +2434,9 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   bool cancel, handled;
-  PRInt32 theAction = nsTextEditRules::kIndent;
-  PRInt32 opID = kOpIndent;
+  OperationID opID = kOpIndent;
   if (aIndent.LowerCaseEqualsLiteral("outdent"))
   {
-    theAction = nsTextEditRules::kOutdent;
     opID = kOpOutdent;
   }
   nsAutoEditBatch beginBatching(this);
@@ -2450,7 +2448,7 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  nsTextRulesInfo ruleInfo(theAction);
+  nsTextRulesInfo ruleInfo(opID);
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
   
@@ -2530,7 +2528,7 @@ nsHTMLEditor::Align(const nsAString& aAlignType)
   nsresult res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kAlign);
+  nsTextRulesInfo ruleInfo(kOpAlign);
   ruleInfo.alignType = &aAlignType;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(res))
@@ -3750,7 +3748,8 @@ nsHTMLEditor::StyleSheetLoaded(nsCSSStyleSheet* aSheet, bool aWasAlternate,
 /** All editor operations which alter the doc should be prefaced
  *  with a call to StartOperation, naming the action and direction */
 NS_IMETHODIMP
-nsHTMLEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
+nsHTMLEditor::StartOperation(OperationID opID,
+                             nsIEditor::EDirection aDirection)
 {
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
@@ -4939,7 +4938,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
   nsAutoTxnsConserveSelection dontSpazMySelection(this);
   
   bool cancel, handled;
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kSetTextProperty);
+  nsTextRulesInfo ruleInfo(kOpSetTextProperty);
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(res, res);
   if (!cancel && !handled)
