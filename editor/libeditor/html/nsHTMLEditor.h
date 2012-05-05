@@ -388,8 +388,15 @@ public:
   // aSelection is optional -- if null, we get current seletion
   nsresult CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode);
 
+  /**
+   * aNode must be a non-null text node.
+   */
   virtual bool IsTextInDirtyFrameVisible(nsIContent *aNode);
 
+  /**
+   * aNode must be a non-null text node.
+   * outIsEmptyNode must be non-null.
+   */
   nsresult IsVisTextNode(nsIContent* aNode,
                          bool* outIsEmptyNode,
                          bool aSafeToAskFrames);

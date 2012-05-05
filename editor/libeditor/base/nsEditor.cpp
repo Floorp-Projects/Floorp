@@ -3645,6 +3645,9 @@ nsEditor::IsContainer(nsIDOMNode *aNode)
 bool
 nsEditor::IsTextInDirtyFrameVisible(nsIContent *aNode)
 {
+  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(aNode->NodeType() == nsIDOMNode::TEXT_NODE);
+
   // virtual method
   //
   // If this is a simple non-html editor,
