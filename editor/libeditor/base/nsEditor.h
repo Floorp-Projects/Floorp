@@ -568,6 +568,9 @@ public:
   bool IsEditable(nsIDOMNode *aNode);
   bool IsEditable(nsIContent *aNode);
 
+  /**
+   * aNode must be a non-null text node.
+   */
   virtual bool IsTextInDirtyFrameVisible(nsIContent *aNode);
 
   /** returns true if aNode is a MozEditorBogus node */
