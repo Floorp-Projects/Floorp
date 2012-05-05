@@ -214,6 +214,9 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
 
     // Make sure that the channel remembers where it was
     // originally loaded from.
+    nsLoadFlags loadFlags = 0;
+    result->GetLoadFlags(&loadFlags);
+    result->SetLoadFlags(loadFlags & ~nsIChannel::LOAD_REPLACE);
     rv = result->SetOriginalURI(aURI);
     if (NS_FAILED(rv)) return rv;
 
