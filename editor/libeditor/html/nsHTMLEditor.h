@@ -719,13 +719,13 @@ protected:
   bool IsOnlyAttribute(const nsIContent* aElement, const nsAString& aAttribute);
 
   nsresult RemoveBlockContainer(nsIDOMNode *inNode);
-  nsINode* GetPriorHTMLSibling(nsINode* aNode);
+  nsIContent* GetPriorHTMLSibling(nsINode* aNode);
   nsresult GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsINode* GetPriorHTMLSibling(nsINode* aParent, PRInt32 aOffset);
+  nsIContent* GetPriorHTMLSibling(nsINode* aParent, PRInt32 aOffset);
   nsresult GetPriorHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
-  nsINode* GetNextHTMLSibling(nsINode* aNode);
+  nsIContent* GetNextHTMLSibling(nsINode* aNode);
   nsresult GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
-  nsINode* GetNextHTMLSibling(nsINode* aParent, PRInt32 aOffset);
+  nsIContent* GetNextHTMLSibling(nsINode* aParent, PRInt32 aOffset);
   nsresult GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
   nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);

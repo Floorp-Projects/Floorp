@@ -4214,7 +4214,7 @@ nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
 // GetPriorHTMLSibling: returns the previous editable sibling, if there is
 //                   one within the parent
 //                       
-nsINode*
+nsIContent*
 nsHTMLEditor::GetPriorHTMLSibling(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
@@ -4247,7 +4247,7 @@ nsHTMLEditor::GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outN
 //                   one within the parent.  just like above routine but
 //                   takes a parent/offset instead of a node.
 //                       
-nsINode*
+nsIContent*
 nsHTMLEditor::GetPriorHTMLSibling(nsINode* aParent, PRInt32 aOffset)
 {
   MOZ_ASSERT(aParent);
@@ -4279,7 +4279,7 @@ nsHTMLEditor::GetPriorHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMP
 // GetNextHTMLSibling: returns the next editable sibling, if there is
 //                   one within the parent
 //                       
-nsINode*
+nsIContent*
 nsHTMLEditor::GetNextHTMLSibling(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
@@ -4311,7 +4311,7 @@ nsHTMLEditor::GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNo
 // GetNextHTMLSibling: returns the next editable sibling, if there is
 //                   one within the parent.  just like above routine but
 //                   takes a parent/offset instead of a node.
-nsINode*
+nsIContent*
 nsHTMLEditor::GetNextHTMLSibling(nsINode* aParent, PRInt32 aOffset)
 {
   MOZ_ASSERT(aParent);
