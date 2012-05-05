@@ -165,13 +165,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         break;
     }
     case JSTRACE_IONCODE:
-    {
-#ifdef JS_ION
-        ion::IonCode *code = static_cast<ion::IonCode *>(thing);
-	    cStats->mjitCode += code->bufferSize();
-#endif
         break;
-    }
     case JSTRACE_TYPE_OBJECT:
     {
         types::TypeObject *obj = static_cast<types::TypeObject *>(thing);
