@@ -13,6 +13,9 @@ import ch.boye.httpclientandroidlib.HttpResponse;
 
 public class SyncStorageResponse extends SyncResponse {
 
+  // Responses that are actionable get constant status codes.
+  public static final String RESPONSE_CLIENT_UPGRADE_REQUIRED = "16";
+
   private static final String LOG_TAG = "SyncStorageResponse";
   public static HashMap<String, String> SERVER_ERROR_MESSAGES;
   static {
@@ -34,6 +37,7 @@ public class SyncStorageResponse extends SyncResponse {
     errors.put("13", "Invalid collection");
     errors.put("14", "User over quota");
     errors.put("15", "The email does not match the username");
+    errors.put(RESPONSE_CLIENT_UPGRADE_REQUIRED, "Client upgrade required");
     errors.put("255", "An unexpected server error occurred: pool is empty.");
 
     // Infrastructure-generated errors.

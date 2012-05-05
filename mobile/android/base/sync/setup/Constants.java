@@ -16,6 +16,7 @@ public class Constants {
   public static final String ACCOUNT_GUID         = "account.guid";
   public static final String CLIENT_NAME          = "account.clientName";
   public static final String NUM_CLIENTS          = "account.numClients";
+  public static final String DATA_ENABLE_ON_UPGRADE = "data.enableOnUpgrade";
 
   // Constants for Activities.
   public static final String INTENT_EXTRA_IS_SETUP = "isSetup";
