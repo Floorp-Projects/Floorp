@@ -485,6 +485,7 @@ ValueNumberer::breakClass(MDefinition *def)
                 continue;
             IonSpew(IonSpew_GVN, "Moving to a new congruence class: %d", tmp->id());
             tmp->setValueNumber(newRep->id());
+            markConsumers(tmp);
             markDefinition(tmp);
         }
 
