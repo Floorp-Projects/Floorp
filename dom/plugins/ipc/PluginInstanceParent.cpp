@@ -421,15 +421,21 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
         mNotifySink = new NotificationSink(this);
 
         container->SetCompositionNotifySink(mNotifySink);
-    } else if (drawingModel == NPDrawingModelSyncWin ||
-#ifdef XP_MACOSX
+    } else if (
+#if defined(XP_WIN)
+               drawingModel == NPDrawingModelSyncWin
+#elif defined(XP_MACOSX)
 #ifndef NP_NO_QUICKDRAW
                drawingModel == NPDrawingModelQuickDraw ||
 #endif
                drawingModel == NPDrawingModelOpenGL ||
-               drawingModel == NPDrawingModelCoreGraphics ||
+               drawingModel == NPDrawingModelCoreGraphics
+#elif defined(MOZ_X11)
+               drawingModel == NPDrawingModelSyncX
+#else
+               false
 #endif
-               drawingModel == NPDrawingModelSyncX) {
+               ) {
         *shmem = null_t();
 
         ImageContainer *container = GetImageContainer();
