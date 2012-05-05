@@ -762,20 +762,31 @@ bool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
                                      const nsAString *aAttribute)
 {
   NS_ENSURE_TRUE(aNode && aAttribute, false);  // ooops
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(content, false);  // ooops
-  
-  PRUint32 i, attrCount = content->GetAttrCount();
-  for (i = 0; i < attrCount; ++i) {
-    nsAutoString attrString;
-    const nsAttrName* name = content->GetAttrNameAt(i);
+
+  return IsOnlyAttribute(content, *aAttribute);
+}
+
+bool
+nsHTMLEditor::IsOnlyAttribute(const nsIContent* aContent,
+                              const nsAString& aAttribute)
+{
+  MOZ_ASSERT(aContent);
+
+  PRUint32 attrCount = aContent->GetAttrCount();
+  for (PRUint32 i = 0; i < attrCount; ++i) {
+    const nsAttrName* name = aContent->GetAttrNameAt(i);
     if (!name->NamespaceEquals(kNameSpaceID_None)) {
       return false;
     }
+
+    nsAutoString attrString;
     name->LocalName()->ToString(attrString);
     // if it's the attribute we know about, or a special _moz attribute,
     // keep looking
-    if (!attrString.Equals(*aAttribute, nsCaseInsensitiveStringComparator()) &&
+    if (!attrString.Equals(aAttribute, nsCaseInsensitiveStringComparator()) &&
         !StringBeginsWith(attrString, NS_LITERAL_STRING("_moz"))) {
       return false;
     }
