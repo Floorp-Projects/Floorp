@@ -134,10 +134,6 @@ static PRLogModuleInfo* gJSDiagnostics;
 // doing the first GC.
 #define NS_FIRST_GC_DELAY           10000 // ms
 
-#define NS_FULL_GC_DELAY            30000 // ms
-
-#define NS_MAX_COMPARTMENT_GC_COUNT 10
-
 // Maximum amount of time that should elapse between incremental GC slices
 #define NS_INTERSLICE_GC_DELAY      100 // ms
 
@@ -163,7 +159,6 @@ static PRLogModuleInfo* gJSDiagnostics;
 static nsITimer *sGCTimer;
 static nsITimer *sShrinkGCBuffersTimer;
 static nsITimer *sCCTimer;
-static nsITimer *sFullGCTimer;
 
 static PRTime sLastCCEndTime;
 
@@ -183,7 +178,6 @@ static bool sLoadingInProgress;
 
 static PRUint32 sCCollectedWaitingForGC;
 static bool sPostGCEventsToConsole;
-static bool sDisableExplicitCompartmentGC;
 static PRUint32 sCCTimerFireCount = 0;
 static PRUint32 sMinForgetSkippableTime = PR_UINT32_MAX;
 static PRUint32 sMaxForgetSkippableTime = 0;
@@ -191,9 +185,7 @@ static PRUint32 sTotalForgetSkippableTime = 0;
 static PRUint32 sRemovedPurples = 0;
 static PRUint32 sForgetSkippableBeforeCC = 0;
 static PRUint32 sPreviousSuspectedCount = 0;
-static PRUint32 sCompartmentGCCount = NS_MAX_COMPARTMENT_GC_COUNT;
-static bool sContextDeleted = false;
-static bool sDidRunInitialGC = false;
+
 static PRUint32 sCleanupsSinceLastGC = PR_UINT32_MAX;
 static bool sNeedsFullCC = false;
 
@@ -237,8 +229,7 @@ nsMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                   const PRUnichar* aData)
 {
   if (sGCOnMemoryPressure) {
-    nsJSContext::GarbageCollectNow(js::gcreason::MEM_PRESSURE, nsGCShrinking,
-                                   true);
+    nsJSContext::GarbageCollectNow(js::gcreason::MEM_PRESSURE, nsGCShrinking);
     nsJSContext::CycleCollectNow();
   }
   return NS_OK;
@@ -938,8 +929,6 @@ static const char js_pccounts_content_str[]   = JS_OPTIONS_DOT_STR "pccounts.con
 static const char js_pccounts_chrome_str[]    = JS_OPTIONS_DOT_STR "pccounts.chrome";
 static const char js_jit_hardening_str[]      = JS_OPTIONS_DOT_STR "jit_hardening";
 static const char js_memlog_option_str[] = JS_OPTIONS_DOT_STR "mem.log";
-static const char js_disable_explicit_compartment_gc[] =
-  JS_OPTIONS_DOT_STR "disable_explicit_compartment_gc";
 
 int
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
@@ -949,8 +938,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   PRUint32 newDefaultJSOptions = oldDefaultJSOptions;
 
   sPostGCEventsToConsole = Preferences::GetBool(js_memlog_option_str);
-  sDisableExplicitCompartmentGC =
-    Preferences::GetBool(js_disable_explicit_compartment_gc);
 
   bool strict = Preferences::GetBool(js_strict_option_str);
   if (strict)
@@ -1128,7 +1115,6 @@ nsJSContext::DestroyJSContext()
                                   js_options_dot_str, this);
 
   if (mGCOnDestruction) {
-    sContextDeleted = true;
     PokeGC(js::gcreason::NSJSCONTEXT_DESTROY);
   }
         
@@ -2863,11 +2849,6 @@ nsJSContext::ScriptEvaluated(bool aTerminated)
   if (aTerminated) {
     mOperationCallbackTime = 0;
     mModalStateTime = 0;
-
-    JSObject* global = GetNativeGlobal();
-    if (global) {
-      js::PrepareCompartmentForGC(js::GetObjectCompartment(global));
-    }
   }
 }
 
@@ -2935,20 +2916,9 @@ nsJSContext::ScriptExecuted()
   return NS_OK;
 }
 
-void
-FullGCTimerFired(nsITimer* aTimer, void* aClosure)
-{
-  NS_RELEASE(sFullGCTimer);
-
-  uintptr_t reason = reinterpret_cast<uintptr_t>(aClosure);
-  nsJSContext::GarbageCollectNow(static_cast<js::gcreason::Reason>(reason),
-                                 nsGCNormal, true);
-}
-
 //static
 void
-nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason, PRUint32 aGckind,
-                               bool aGlobal)
+nsJSContext::GarbageCollectNow(js::gcreason::Reason reason, PRUint32 gckind)
 {
   NS_TIME_FUNCTION_MIN(1.0);
   SAMPLE_LABEL("GC", "GarbageCollectNow");
@@ -2965,36 +2935,9 @@ nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason, PRUint32 aGckind,
   sPendingLoadCount = 0;
   sLoadingInProgress = false;
 
-  if (!nsContentUtils::XPConnect()) {
-    return;
+  if (nsContentUtils::XPConnect()) {
+    nsContentUtils::XPConnect()->GarbageCollect(reason, gckind);
   }
-  
-  // Use compartment GC when we're not asked to do a shrinking GC nor
-  // global GC and compartment GC has been called less than
-  // NS_MAX_COMPARTMENT_GC_COUNT times after the previous global GC. If a top
-  // level browsing context has been deleted, we do a global GC.
-  if (sDidRunInitialGC &&
-      !sDisableExplicitCompartmentGC &&
-      aGckind != nsGCShrinking && !aGlobal &&
-      !sContextDeleted && sCompartmentGCCount < NS_MAX_COMPARTMENT_GC_COUNT) {
-    if (!sFullGCTimer) {
-      CallCreateInstance("@mozilla.org/timer;1", &sFullGCTimer);
-    }
-    if (sFullGCTimer) {
-      sFullGCTimer->Cancel();
-      js::gcreason::Reason reason = js::gcreason::FULL_GC_TIMER;
-      sFullGCTimer->InitWithFuncCallback(FullGCTimerFired,
-                                         reinterpret_cast<void *>(reason),
-                                         NS_FULL_GC_DELAY,
-                                         nsITimer::TYPE_ONE_SHOT);
-    }
-    if (js::IsGCScheduled(nsJSRuntime::sRuntime)) {
-      js::IncrementalGC(nsJSRuntime::sRuntime, aReason);
-    }
-    return;
-  }
-
-  nsContentUtils::XPConnect()->GarbageCollect(aReason, aGckind);
 }
 
 //static
@@ -3020,7 +2963,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
   if (sCCLockedOut) {
     // We're in the middle of an incremental GC; finish it first
-    nsJSContext::GarbageCollectNow(js::gcreason::CC_FORCED, nsGCNormal, true);
+    nsJSContext::GarbageCollectNow(js::gcreason::CC_FORCED, nsGCNormal);
   }
 
   SAMPLE_LABEL("GC", "CycleCollectNow");
@@ -3157,8 +3100,7 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
   NS_RELEASE(sGCTimer);
 
   uintptr_t reason = reinterpret_cast<uintptr_t>(aClosure);
-  nsJSContext::GarbageCollectNow(static_cast<js::gcreason::Reason>(reason),
-                                 nsGCNormal, false);
+  nsJSContext::GarbageCollectNow(static_cast<js::gcreason::Reason>(reason), nsGCIncremental);
 }
 
 void
@@ -3214,7 +3156,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
     }
 
     // Finish the current incremental GC
-    nsJSContext::GarbageCollectNow(js::gcreason::CC_FORCED, nsGCNormal, true);
+    nsJSContext::GarbageCollectNow(js::gcreason::CC_FORCED, nsGCNormal);
   }
 
   ++sCCTimerFireCount;
@@ -3367,15 +3309,6 @@ nsJSContext::KillGCTimer()
   }
 }
 
-void
-nsJSContext::KillFullGCTimer()
-{
-  if (sFullGCTimer) {
-    sFullGCTimer->Cancel();
-    NS_RELEASE(sFullGCTimer);
-  }
-}
-
 //static
 void
 nsJSContext::KillShrinkGCBuffersTimer()
@@ -3403,8 +3336,6 @@ nsJSContext::KillCCTimer()
 void
 nsJSContext::GC(js::gcreason::Reason aReason)
 {
-  // Force full gc.
-  sCompartmentGCCount = NS_MAX_COMPARTMENT_GC_COUNT;
   PokeGC(aReason);
 }
 
@@ -3488,7 +3419,6 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
     sCleanupsSinceLastGC = 0;
 
     if (aDesc.isCompartment) {
-      ++sCompartmentGCCount;
       // If this is a compartment GC, restart it. We still want
       // a full GC to happen. Compartment GCs usually happen as a
       // result of last-ditch or MaybeGC. In both cases it is
@@ -3501,11 +3431,6 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
     nsJSContext::MaybePokeCC();
 
     if (!aDesc.isCompartment) {
-      sDidRunInitialGC = true;
-      sContextDeleted = false;
-      sCompartmentGCCount = 0;
-      nsJSContext::KillFullGCTimer();
-
       // Avoid shrinking during heavy activity, which is suggested by
       // compartment GC.
       nsJSContext::PokeShrinkGCBuffers();
@@ -3605,7 +3530,7 @@ void
 nsJSRuntime::Startup()
 {
   // initialize all our statics, so that we can restart XPCOM
-  sGCTimer = sFullGCTimer = sCCTimer = nsnull;
+  sGCTimer = sCCTimer = nsnull;
   sCCLockedOut = false;
   sCCLockedOutTime = 0;
   sLastCCEndTime = 0;
@@ -3613,7 +3538,6 @@ nsJSRuntime::Startup()
   sLoadingInProgress = false;
   sCCollectedWaitingForGC = 0;
   sPostGCEventsToConsole = false;
-  sDisableExplicitCompartmentGC = false;
   sNeedsFullCC = false;
   gNameSpaceManager = nsnull;
   sRuntimeService = nsnull;
@@ -3905,7 +3829,6 @@ nsJSRuntime::Shutdown()
   nsJSContext::KillGCTimer();
   nsJSContext::KillShrinkGCBuffersTimer();
   nsJSContext::KillCCTimer();
-  nsJSContext::KillFullGCTimer();
 
   NS_IF_RELEASE(gNameSpaceManager);
 
