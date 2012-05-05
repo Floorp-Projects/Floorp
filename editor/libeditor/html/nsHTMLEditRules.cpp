@@ -4687,7 +4687,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     NS_ENSURE_SUCCESS(res, res);
     *aHandled = true;
     // put in a moz-br so that it won't get deleted
-    res = CreateMozBR(theDiv, 0, address_of(brNode));
+    res = CreateMozBR(theDiv, 0);
     NS_ENSURE_SUCCESS(res, res);
     res = aSelection->Collapse(theDiv, 0);
     selectionResetter.Abort();  // don't reset our selection in this case.
@@ -6538,10 +6538,8 @@ nsHTMLEditRules::ReturnInHeader(nsISelection *aSelection,
     bool bIsEmptyNode;
     res = mHTMLEditor->IsEmptyNode(prevItem, &bIsEmptyNode);
     NS_ENSURE_SUCCESS(res, res);
-    if (bIsEmptyNode)
-    {
-      nsCOMPtr<nsIDOMNode> brNode;
-      res = CreateMozBR(prevItem, 0, address_of(brNode));
+    if (bIsEmptyNode) {
+      res = CreateMozBR(prevItem, 0);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
@@ -6853,14 +6851,10 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
     bool bIsEmptyNode;
     res = mHTMLEditor->IsEmptyNode(prevItem, &bIsEmptyNode);
     NS_ENSURE_SUCCESS(res, res);
-    if (bIsEmptyNode)
-    {
-      nsCOMPtr<nsIDOMNode> brNode;
-      res = CreateMozBR(prevItem, 0, address_of(brNode));
+    if (bIsEmptyNode) {
+      res = CreateMozBR(prevItem, 0);
       NS_ENSURE_SUCCESS(res, res);
-    }
-    else 
-    {
+    } else {
       res = mHTMLEditor->IsEmptyNode(aListItem, &bIsEmptyNode, true);
       NS_ENSURE_SUCCESS(res, res);
       if (bIsEmptyNode) 
@@ -7551,11 +7545,11 @@ nsHTMLEditRules::AdjustSpecialBreaks(bool aSafeToAskFrames)
     // and we want the br's to be after them.  Also, we want the br
     // to be after the selection if the selection is in this node.
     PRUint32 len;
-    nsCOMPtr<nsIDOMNode> brNode, theNode = arrayOfNodes[0];
+    nsCOMPtr<nsIDOMNode> theNode = arrayOfNodes[0];
     arrayOfNodes.RemoveObjectAt(0);
     res = nsEditor::GetLengthOfDOMNode(theNode, len);
     NS_ENSURE_SUCCESS(res, res);
-    res = CreateMozBR(theNode, (PRInt32)len, address_of(brNode));
+    res = CreateMozBR(theNode, (PRInt32)len);
     NS_ENSURE_SUCCESS(res, res);
   }
   
@@ -7746,9 +7740,8 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
         return NS_OK;
       }
 
-      nsCOMPtr<nsIDOMNode> brNode;
       // we know we can skip the rest of this routine given the cirumstance
-      return CreateMozBR(selNode, selOffset, address_of(brNode));
+      return CreateMozBR(selNode, selOffset);
     }
   }
   
@@ -7782,7 +7775,7 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
           // the user will see no new line for the break.  Also, things
           // like table cells won't grow in height.
           nsCOMPtr<nsIDOMNode> brNode;
-          res = CreateMozBR(selNode, selOffset, address_of(brNode));
+          res = CreateMozBR(selNode, selOffset, getter_AddRefs(brNode));
           NS_ENSURE_SUCCESS(res, res);
           res = nsEditor::GetNodeLocation(brNode, address_of(selNode), &selOffset);
           NS_ENSURE_SUCCESS(res, res);
@@ -8444,14 +8437,13 @@ nsHTMLEditRules::InsertMozBRIfNeeded(nsIDOMNode *aNode)
   if (!IsBlockNode(aNode)) return NS_OK;
   
   bool isEmpty;
-  nsCOMPtr<nsIDOMNode> brNode;
   nsresult res = mHTMLEditor->IsEmptyNode(aNode, &isEmpty);
   NS_ENSURE_SUCCESS(res, res);
-  if (isEmpty)
-  {
-    res = CreateMozBR(aNode, 0, address_of(brNode));
+  if (!isEmpty) {
+    return NS_OK;
   }
-  return res;
+
+  return CreateMozBR(aNode, 0);
 }
 
 NS_IMETHODIMP 
