@@ -41,6 +41,9 @@
 #include "FramePropertyTable.h"
 #include "nsTextFragment.h"
 #include "nsIFormControlFrame.h"
+#include "nsTextControlFrame.h"
+#include "nsListControlFrame.h"
+#include "nsComboboxControlFrame.h"
 #include "nsHTMLReflowState.h"
 #include "nsTextFrameUtils.h"
 
@@ -298,6 +301,41 @@ nsFontInflationData::ScanText()
   mInflationEnabled = mTextAmount >= mTextThreshold;
 }
 
+static PRUint32
+DoCharCountOfLargestOption(nsIFrame *aContainer)
+{
+  PRUint32 result = 0;
+  for (nsIFrame* option = aContainer->GetFirstPrincipalChild();
+       option; option = option->GetNextSibling()) {
+    PRUint32 optionResult;
+    if (option->GetContent()->IsHTML(nsGkAtoms::optgroup)) {
+      optionResult = DoCharCountOfLargestOption(option);
+    } else {
+      // REVIEW: Check the frame structure for this!
+      optionResult = 0;
+      for (nsIFrame *optionChild = option->GetFirstPrincipalChild();
+           optionChild; optionChild = optionChild->GetNextSibling()) {
+        if (optionChild->GetType() == nsGkAtoms::textFrame) {
+          optionResult += nsTextFrameUtils::
+            ComputeApproximateLengthWithWhitespaceCompression(
+              optionChild->GetContent(), optionChild->GetStyleText());
+        }
+      }
+    }
+    if (optionResult > result) {
+      result = optionResult;
+    }
+  }
+  return result;
+}
+
+static PRUint32
+CharCountOfLargestOption(nsIFrame *aListControlFrame)
+{
+  return DoCharCountOfLargestOption(
+    static_cast<nsListControlFrame*>(aListControlFrame)->GetOptionsContainer());
+}
+
 void
 nsFontInflationData::ScanTextIn(nsIFrame *aFrame)
 {
@@ -316,7 +354,8 @@ nsFontInflationData::ScanTextIn(nsIFrame *aFrame)
         continue;
       }
 
-      if (kid->GetType() == nsGkAtoms::textFrame) {
+      nsIAtom *fType = kid->GetType();
+      if (fType == nsGkAtoms::textFrame) {
         nsIContent *content = kid->GetContent();
         if (content && kid == content->GetPrimaryFrame()) {
           PRUint32 len = nsTextFrameUtils::
@@ -329,6 +368,25 @@ nsFontInflationData::ScanTextIn(nsIFrame *aFrame)
             }
           }
         }
+      } else if (fType == nsGkAtoms::textInputFrame) {
+        // We don't want changes to the amount of text in a text input
+        // to change what we count towards inflation.
+        nscoord fontSize = kid->GetStyleFont()->mFont.size;
+        PRInt32 charCount = static_cast<nsTextControlFrame*>(kid)->GetCols();
+        mTextAmount += charCount * fontSize;
+      } else if (fType == nsGkAtoms::comboboxControlFrame) {
+        // See textInputFrame above (with s/amount of text/selected option/).
+        // Don't just recurse down to the list control inside, since we
+        // need to exclude the display frame.
+        nscoord fontSize = kid->GetStyleFont()->mFont.size;
+        PRInt32 charCount = CharCountOfLargestOption(
+          static_cast<nsComboboxControlFrame*>(kid)->GetDropDown());
+        mTextAmount += charCount * fontSize;
+      } else if (fType == nsGkAtoms::listControlFrame) {
+        // See textInputFrame above (with s/amount of text/selected option/).
+        nscoord fontSize = kid->GetStyleFont()->mFont.size;
+        PRInt32 charCount = CharCountOfLargestOption(kid);
+        mTextAmount += charCount * fontSize;
       } else {
         // recursive step
         ScanTextIn(kid);
