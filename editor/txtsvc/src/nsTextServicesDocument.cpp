@@ -59,7 +59,6 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLDocument.h"
 
-#include "nsLWBrkCIID.h"
 #include "nsIWordBreaker.h"
 #include "nsIServiceManager.h"
 
@@ -3746,19 +3745,10 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
   const PRUnichar *str = aBlockStr->get();
   PRUint32 strLen = aBlockStr->Length();
 
-  nsIWordBreaker *aWordBreaker;
-
-  result = CallGetService(NS_WBRK_CONTRACTID, &aWordBreaker);
-  NS_ENSURE_SUCCESS(result, result);
-
-  nsWordRange res = aWordBreaker->FindWord(str, strLen, strOffset);
-  NS_IF_RELEASE(aWordBreaker);
-  if(res.mBegin > strLen)
-  {
-    if(!str)
-      return NS_ERROR_NULL_POINTER;
-    else
-      return NS_ERROR_ILLEGAL_VALUE;
+  nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
+  nsWordRange res = wordBreaker->FindWord(str, strLen, strOffset);
+  if (res.mBegin > strLen) {
+    return str ? NS_ERROR_ILLEGAL_VALUE : NS_ERROR_NULL_POINTER;
   }
 
   // Strip out the NBSPs at the ends
