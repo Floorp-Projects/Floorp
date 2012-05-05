@@ -132,8 +132,8 @@ bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
 typedef gfxPattern::GraphicsFilter GraphicsFilter;
 typedef FrameMetrics::ViewID ViewID;
 
-static PRUint32 sFontSizeInflationEmPerLine;
-static PRUint32 sFontSizeInflationMinTwips;
+/* static */ PRUint32 nsLayoutUtils::sFontSizeInflationEmPerLine;
+/* static */ PRUint32 nsLayoutUtils::sFontSizeInflationMinTwips;
 /* static */ PRUint32 nsLayoutUtils::sFontSizeInflationLineThreshold;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
@@ -4671,7 +4671,9 @@ nsReflowFrameRunnable::Run()
 static nscoord
 MinimumFontSizeFor(nsPresContext* aPresContext, nscoord aContainerWidth)
 {
-  if (sFontSizeInflationEmPerLine == 0 && sFontSizeInflationMinTwips == 0) {
+  PRUint32 emPerLine = nsLayoutUtils::FontSizeInflationEmPerLine();
+  PRUint32 minTwips = nsLayoutUtils::FontSizeInflationMinTwips();
+  if (emPerLine == 0 && minTwips == 0) {
     return 0;
   }
 
@@ -4680,17 +4682,17 @@ MinimumFontSizeFor(nsPresContext* aPresContext, nscoord aContainerWidth)
   nscoord effectiveContainerWidth = NS_MIN(iFrameWidth, aContainerWidth);
 
   nscoord byLine = 0, byInch = 0;
-  if (sFontSizeInflationEmPerLine != 0) {
-    byLine = effectiveContainerWidth / sFontSizeInflationEmPerLine;
+  if (emPerLine != 0) {
+    byLine = effectiveContainerWidth / emPerLine;
   }
-  if (sFontSizeInflationMinTwips != 0) {
+  if (minTwips != 0) {
     // REVIEW: Is this giving us app units and sizes *not* counting
     // viewport scaling?
     float deviceWidthInches =
       aPresContext->ScreenWidthInchesForFontInflation();
     byInch = NSToCoordRound(effectiveContainerWidth /
                             (deviceWidthInches * 1440 /
-                             sFontSizeInflationMinTwips ));
+                             minTwips ));
   }
   return NS_MAX(byLine, byInch);
 }

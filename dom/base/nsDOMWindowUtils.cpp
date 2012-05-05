@@ -78,6 +78,9 @@
 #include "nsDOMFile.h"
 #include "BasicLayers.h"
 #include "nsTArrayHelpers.h"
+#include "nsIDocShell.h"
+#include "nsIContentViewer.h"
+#include "nsIMarkupDocumentViewer.h"
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
@@ -283,6 +286,40 @@ static void DestroyNsRect(void* aObject, nsIAtom* aPropertyName,
   delete rect;
 }
 
+static void
+MaybeReflowForInflationScreenWidthChange(nsPresContext *aPresContext)
+{
+  if (aPresContext &&
+      nsLayoutUtils::FontSizeInflationEnabled(aPresContext) &&
+      nsLayoutUtils::FontSizeInflationMinTwips() != 0) {
+    bool changed;
+    aPresContext->ScreenWidthInchesForFontInflation(&changed);
+    if (changed) {
+      nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+      if (docShell) {
+        nsCOMPtr<nsIContentViewer> cv;
+        docShell->GetContentViewer(getter_AddRefs(cv));
+        nsCOMPtr<nsIMarkupDocumentViewer> mudv = do_QueryInterface(cv);
+        if (mudv) {
+          nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> > array;
+          mudv->AppendSubtree(array);
+          for (PRUint32 i = 0, iEnd = array.Length(); i < iEnd; ++i) {
+            nsCOMPtr<nsIPresShell> shell;
+            nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(array[i]);
+            cv->GetPresShell(getter_AddRefs(shell));
+            nsIFrame *rootFrame = shell->GetRootFrame();
+            if (rootFrame) {
+              shell->FrameNeedsReflow(rootFrame, nsIPresShell::eResize,
+                                      NS_FRAME_IS_DIRTY);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                                            float aWidthPx, float aHeightPx,
@@ -331,6 +368,14 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
       // We are setting a root displayport for a document.
       // The pres shell needs a special flag set.
       presShell->SetIgnoreViewportScrolling(true);
+
+      // When the "font.size.inflation.minTwips" preference is set, the
+      // layout depends on the size of the screen.  Since when the size
+      // of the screen changes, the root displayport also changes, we
+      // hook in the needed updates here rather than adding a
+      // separate notification just for this change.
+      nsPresContext* presContext = GetPresContext();
+      MaybeReflowForInflationScreenWidthChange(presContext);
     }
   }
 
