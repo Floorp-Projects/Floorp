@@ -75,3 +75,20 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineTh
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-cell-1.html threshold-scope-cell-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-cell-2.html threshold-scope-cell-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-cell-3.html threshold-scope-cell-3-ref.html
+
+fuzzy-if(gtk2Widget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-textarea-contents-under-1.html threshold-textarea-contents-under-1.html
+fuzzy-if(gtk2Widget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-textarea-contents-under-2.html threshold-textarea-contents-under-2.html
+fuzzy-if(gtk2Widget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-textarea-contents-at-1.html threshold-textarea-contents-at-1-ref.html
+fuzzy-if(gtk2Widget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-textarea-contents-at-2.html threshold-textarea-contents-at-2-ref.html
+fuzzy-if(gtk2Widget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-input-text-contents-under-1.html threshold-input-text-contents-under-1.html
+fuzzy-if(gtk2Widget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-input-text-contents-under-2.html threshold-input-text-contents-under-2.html
+fuzzy-if(gtk2Widget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-input-text-contents-at-1.html threshold-input-text-contents-at-1-ref.html
+fuzzy-if(gtk2Widget,1,10) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-input-text-contents-at-2.html threshold-input-text-contents-at-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-under-1.html threshold-select-listbox-contents-under-1.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-under-2.html threshold-select-listbox-contents-under-2.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-at-1.html threshold-select-listbox-contents-at-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-at-2.html threshold-select-listbox-contents-at-2-ref.html
+fuzzy-if(gtk2Widget,1,8) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-combobox-contents-under-1.html threshold-select-combobox-contents-under-1.html
+fuzzy-if(gtk2Widget,1,8) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-combobox-contents-under-2.html threshold-select-combobox-contents-under-2.html
+fuzzy-if(gtk2Widget,1,8) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-combobox-contents-at-1.html threshold-select-combobox-contents-at-1-ref.html
+fuzzy-if(gtk2Widget,1,8) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-combobox-contents-at-2.html threshold-select-combobox-contents-at-2-ref.html
