@@ -144,6 +144,8 @@ Parser::init(const jschar *base, size_t length, const char *filename, unsigned l
         cx->tempLifoAlloc().release(tempPoolMark);
         return false;
     }
+    if (context->hasRunOption(JSOPTION_STRICT_MODE))
+        tokenStream.setStrictMode();
     return true;
 }
 
