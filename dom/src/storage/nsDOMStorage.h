@@ -447,9 +447,9 @@ public:
   void BroadcastChangeNotification(const nsSubstring &aKey,
                                    const nsSubstring &aOldValue,
                                    const nsSubstring &aNewValue);
-  nsresult InitAsSessionStorageFork(nsIPrincipal *aPrincipal,
-                                    const nsSubstring &aDocumentURI,
-                                    nsIDOMStorageObsolete* aStorage);
+  void InitAsSessionStorageFork(nsIPrincipal *aPrincipal,
+                                const nsSubstring &aDocumentURI,
+                                nsDOMStorage* aStorage);
 
 private:
   // storages bound to an origin hold the principal to
