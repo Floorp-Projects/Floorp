@@ -361,6 +361,9 @@ interface nsIXPCComponents_Utils : nsISupports
     attribute boolean methodjit_always;
 
     [implicit_jscontext]
+    attribute boolean strict_mode;
+
+    [implicit_jscontext]
     void setGCZeal(in long zeal);
 };
 
