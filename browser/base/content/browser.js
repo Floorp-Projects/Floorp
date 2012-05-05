@@ -4456,10 +4456,10 @@ var FullScreen = {
 XPCOMUtils.defineLazyGetter(FullScreen, "useLionFullScreen", function() {
   // We'll only use OS X Lion full screen if we're
   // * on OS X
-  // * on Lion (Darwin 11.x) -- this will need to be updated for OS X 10.8
+  // * on Lion or higher (Darwin 11+)
   // * have fullscreenbutton="true"
 #ifdef XP_MACOSX
-  return /^11\./.test(Services.sysinfo.getProperty("version")) &&
+  return parseFloat(Services.sysinfo.getProperty("version")) >= 11 &&
          document.documentElement.getAttribute("fullscreenbutton") == "true";
 #else
   return false;
