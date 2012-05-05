@@ -184,9 +184,7 @@ public:
   static void LoadStart();
   static void LoadEnd();
 
-  static void GarbageCollectNow(js::gcreason::Reason reason,
-                                PRUint32 aGckind,
-                                bool aGlobal);
+  static void GarbageCollectNow(js::gcreason::Reason reason, PRUint32 gckind = nsGCNormal);
   static void ShrinkGCBuffersNow();
   // If aExtraForgetSkippableCalls is -1, forgetSkippable won't be
   // called even if the previous collection was GC.
@@ -201,7 +199,6 @@ public:
 
   static void MaybePokeCC();
   static void KillCCTimer();
-  static void KillFullGCTimer();
 
   virtual void GC(js::gcreason::Reason aReason);
 
