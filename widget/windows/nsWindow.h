@@ -477,7 +477,6 @@ protected:
   /**
    * Misc.
    */
-  UINT                    MapFromNativeToDOM(UINT aNativeKeyCode);
   void                    StopFlashing();
   static bool             IsTopLevelMouseExit(HWND aWnd);
   nsresult                SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
