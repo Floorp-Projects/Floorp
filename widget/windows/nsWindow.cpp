@@ -380,6 +380,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mBorderStyle          = eBorderStyle_default;
   mPopupType            = ePopupTypeAny;
   mOldSizeMode          = nsSizeMode_Normal;
+  mLastSizeMode         = nsSizeMode_Normal;
   mLastPoint.x          = 0;
   mLastPoint.y          = 0;
   mLastSize.width       = 0;
@@ -1568,6 +1569,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
     return NS_OK;
 
   // save the requested state
+  mLastSizeMode = mSizeMode;
   rv = nsBaseWidget::SetSizeMode(aMode);
   if (NS_SUCCEEDED(rv) && mIsVisible) {
     int mode;
@@ -1607,7 +1609,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
     }
     // we dispatch an activate event here to ensure that the right child window
     // is focused
-    if (mode == SW_RESTORE || mode == SW_MAXIMIZE || mode == SW_SHOW)
+    if (mode == SW_MAXIMIZE || mode == SW_SHOW)
       DispatchFocusToTopLevelWindow(NS_ACTIVATE);
   }
   return rv;
@@ -5908,6 +5910,12 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
     InitEvent(event);
 
     result = DispatchWindowEvent(&event);
+
+    // If window was restored, NS_ACTIVATE dispatch was bypassed during the 
+    // SetSizeMode call originating from OnWindowPosChanging to avoid saving
+    // pre-restore attributes. Force dispatch now to get correct attributes.
+    if (mLastSizeMode != nsSizeMode_Normal && mSizeMode == nsSizeMode_Normal)
+      DispatchFocusToTopLevelWindow(NS_ACTIVATE);
 
     // Skip window size change events below on minimization.
     if (mSizeMode == nsSizeMode_Minimized)

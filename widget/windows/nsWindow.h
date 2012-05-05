@@ -516,6 +516,7 @@ protected:
   HKL                   mLastKeyboardLayout;
   nsPopupType           mPopupType;
   nsSizeMode            mOldSizeMode;
+  nsSizeMode            mLastSizeMode;
   WindowHook            mWindowHook;
   DWORD                 mAssumeWheelIsZoomUntil;
   PRUint32              mPickerDisplayCount;
