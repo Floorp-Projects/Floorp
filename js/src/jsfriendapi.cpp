@@ -144,6 +144,17 @@ js::PrepareForFullGC(JSRuntime *rt)
         c->scheduleGC();
 }
 
+JS_FRIEND_API(bool)
+js::IsGCScheduled(JSRuntime *rt)
+{
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        if (c->isGCScheduled())
+            return true;
+    }
+
+    return false;
+}
+
 JS_FRIEND_API(void)
 js::GCForReason(JSRuntime *rt, gcreason::Reason reason)
 {
