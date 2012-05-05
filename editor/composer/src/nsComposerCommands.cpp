@@ -63,8 +63,7 @@ nsresult GetListState(nsIHTMLEditor* aEditor, bool* aMixed,
                       nsAString& aLocalName);
 nsresult RemoveOneProperty(nsIHTMLEditor* aEditor, const nsAString& aProp);
 nsresult RemoveTextProperty(nsIHTMLEditor* aEditor, const nsAString& aProp);
-nsresult SetTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
-                         const PRUnichar *attr, const PRUnichar *value);
+nsresult SetTextProperty(nsIHTMLEditor *aEditor, const nsAString& aProp);
 
 
 //defines
@@ -282,7 +281,7 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
       rv = RemoveTextProperty(htmlEditor, tagName);
     }
     if (NS_SUCCEEDED(rv))
-      rv = SetTextProperty(aEditor, tagName.get(), nsnull, nsnull);
+      rv = SetTextProperty(htmlEditor, tagName);
 
     aEditor->EndTransaction();
   }
@@ -1589,25 +1588,13 @@ RemoveTextProperty(nsIHTMLEditor* aEditor, const nsAString& aProp)
 // the name of the attribute here should be the contents of the appropriate
 // tag, e.g. 'b' for bold, 'i' for italics.
 nsresult
-SetTextProperty(nsIEditor *aEditor, const PRUnichar *prop, 
-                const PRUnichar *attr, const PRUnichar *value)
+SetTextProperty(nsIHTMLEditor* aEditor, const nsAString& aProp)
 {
-  //static initialization 
-  static const PRUnichar sEmptyStr = PRUnichar('\0');
-  
-  NS_ENSURE_TRUE(aEditor, NS_ERROR_NOT_INITIALIZED);
+  MOZ_ASSERT(aEditor);
 
   /// XXX Hack alert! Look in nsIEditProperty.h for this
-  nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(prop);
-  NS_ENSURE_TRUE( styleAtom, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(aProp);
+  NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult  err = NS_NOINTERFACE;
-
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor,&err);
-  if (htmlEditor)
-    err = htmlEditor->SetInlineProperty(styleAtom,
-                                nsDependentString(attr?attr:&sEmptyStr),
-                                nsDependentString(value?value:&sEmptyStr));
-
-  return err;
+  return aEditor->SetInlineProperty(styleAtom, EmptyString(), EmptyString());
 }
