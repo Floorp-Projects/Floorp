@@ -53,7 +53,7 @@
 #include "nsWrapperCache.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
-#include "mozilla/dom/bindings/DOMJSClass.h"
+#include "mozilla/dom/DOMJSClass.h"
 
 class nsIPrincipal;
 class nsIXPConnectWrappedJS;
@@ -154,13 +154,6 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
     return nsnull;
 }
 
-inline JSObject*
-xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope)
-{
-    jsval dummy;
-    return xpc_FastGetCachedWrapper(cache, scope, &dummy);
-}
-
 // The JS GC marks objects gray that are held alive directly or
 // indirectly by an XPConnect root. The cycle collector explores only
 // this subset of the JS heap.
@@ -177,20 +170,57 @@ xpc_GCThingIsGrayCCThing(void *thing);
 
 // Implemented in nsXPConnect.cpp.
 extern void
-xpc_UnmarkGrayObjectRecursive(JSObject* obj);
+xpc_UnmarkGrayGCThingRecursive(void *thing, JSGCTraceKind kind);
 
 // Remove the gray color from the given JSObject and any other objects that can
 // be reached through it.
-inline void
+inline JSObject *
 xpc_UnmarkGrayObject(JSObject *obj)
 {
     if (obj) {
         if (xpc_IsGrayGCThing(obj))
-            xpc_UnmarkGrayObjectRecursive(obj);
+            xpc_UnmarkGrayGCThingRecursive(obj, JSTRACE_OBJECT);
         else if (js::IsIncrementalBarrierNeededOnObject(obj))
             js::IncrementalReferenceBarrier(obj);
     }
+    return obj;
 }
+
+inline JSScript *
+xpc_UnmarkGrayScript(JSScript *script)
+{
+    if (script) {
+        if (xpc_IsGrayGCThing(script))
+            xpc_UnmarkGrayGCThingRecursive(script, JSTRACE_SCRIPT);
+        else if (js::IsIncrementalBarrierNeededOnScript(script))
+            js::IncrementalReferenceBarrier(script);
+    }
+    return script;
+}
+
+inline JSContext *
+xpc_UnmarkGrayContext(JSContext *cx)
+{
+    if (cx) {
+        JSObject *global = JS_GetGlobalObject(cx);
+        xpc_UnmarkGrayObject(global);
+        if (JS_IsInRequest(JS_GetRuntime(cx))) {
+            JSObject *scope = JS_GetGlobalForScopeChain(cx);
+            if (scope != global)
+                xpc_UnmarkGrayObject(scope);
+        }
+    }
+    return cx;
+}
+
+#ifdef __cplusplus
+class XPCAutoRequest : public JSAutoRequest {
+public:
+    XPCAutoRequest(JSContext *cx) : JSAutoRequest(cx) {
+        xpc_UnmarkGrayContext(cx);
+    }
+};
+#endif
 
 // If aVariant is an XPCVariant, this marks the object to be in aGeneration.
 // This also unmarks the gray JSObject.

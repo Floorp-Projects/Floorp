@@ -65,7 +65,6 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsmath.h"
@@ -82,6 +81,7 @@
 # include "assembler/assembler/MacroAssembler.h"
 # include "methodjit/MethodJIT.h"
 #endif
+#include "gc/Marking.h"
 #include "frontend/TokenStream.h"
 #include "frontend/ParseMaps.h"
 #include "yarr/BumpPointerAllocator.h"
@@ -96,7 +96,8 @@ using namespace js::gc;
 
 void
 JSRuntime::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
-                               size_t *regexpCode, size_t *stackCommitted, size_t *gcMarkerSize)
+                               size_t *mjitCode, size_t *regexpCode, size_t *unusedCodeMemory,
+                               size_t *stackCommitted, size_t *gcMarkerSize)
 {
     if (normal)
         *normal = mallocSizeOf(dtoaState);
@@ -104,13 +105,10 @@ JSRuntime::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, s
     if (temporary)
         *temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
-    if (regexpCode) {
-        size_t method = 0, regexp = 0, unused = 0;
-        if (execAlloc_)
-            execAlloc_->sizeOfCode(&method, &regexp, &unused);
-        JS_ASSERT(method == 0);     /* this execAlloc is only used for regexp code */
-        *regexpCode = regexp + unused;
-    }
+    if (execAlloc_)
+        execAlloc_->sizeOfCode(mjitCode, regexpCode, unusedCodeMemory);
+    else
+        *mjitCode = *regexpCode = *unusedCodeMemory = 0;
 
     if (stackCommitted)
         *stackCommitted = stackSpace.sizeOfCommitted();
@@ -162,6 +160,41 @@ JSRuntime::createBumpPointerAllocator(JSContext *cx)
         js_ReportOutOfMemory(cx);
     return bumpAlloc_;
 }
+
+MathCache *
+JSRuntime::createMathCache(JSContext *cx)
+{
+    JS_ASSERT(!mathCache_);
+    JS_ASSERT(cx->runtime == this);
+
+    MathCache *newMathCache = new_<MathCache>();
+    if (!newMathCache) {
+        js_ReportOutOfMemory(cx);
+        return NULL;
+    }
+
+    mathCache_ = newMathCache;
+    return mathCache_;
+}
+
+#ifdef JS_METHODJIT
+mjit::JaegerRuntime *
+JSRuntime::createJaegerRuntime(JSContext *cx)
+{
+    JS_ASSERT(!jaegerRuntime_);
+    JS_ASSERT(cx->runtime == this);
+
+    mjit::JaegerRuntime *jr = new_<mjit::JaegerRuntime>();
+    if (!jr || !jr->init(cx)) {
+        js_ReportOutOfMemory(cx);
+        delete_(jr);
+        return NULL;
+    }
+
+    jaegerRuntime_ = jr;
+    return jaegerRuntime_;
+}
+#endif
 
 JSScript *
 js_GetCurrentScript(JSContext *cx)
@@ -1199,9 +1232,6 @@ void
 JSContext::updateJITEnabled()
 {
 #ifdef JS_METHODJIT
-    // This allocator randomization is actually a compartment-wide option.
-    if (compartment && compartment->hasJaegerCompartment())
-        compartment->jaegerCompartment()->execAlloc()->setRandomize(runtime->getJitHardening());
     methodJitEnabled = (runOptions & JSOPTION_METHODJIT) && !IsJITBrokenHere();
 #endif
 }

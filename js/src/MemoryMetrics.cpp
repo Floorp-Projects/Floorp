@@ -67,9 +67,6 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
     rtStats->currCompartmentStats = &cStats;
 
     // Get the compartment-level numbers.
-#ifdef JS_METHODJIT
-    cStats.mjitCode = compartment->sizeOfMjitCode();
-#endif
     compartment->sizeOfTypeInferenceData(&cStats.typeInferenceSizes, rtStats->mallocSizeOf);
     cStats.shapesCompartmentTables = compartment->sizeOfShapeTable(rtStats->mallocSizeOf);
 }
@@ -215,7 +212,9 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
     rt->sizeOfExcludingThis(rtStats->mallocSizeOf,
                             &rtStats->runtimeNormal,
                             &rtStats->runtimeTemporary,
+                            &rtStats->runtimeMjitCode,
                             &rtStats->runtimeRegexpCode,
+                            &rtStats->runtimeUnusedCodeMemory,
                             &rtStats->runtimeStackCommitted,
                             &rtStats->runtimeGCMarker);
     
@@ -231,6 +230,8 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
                                       rtStats->gcHeapChunkCleanUnused -
                                       rtStats->gcHeapChunkCleanDecommitted -
                                       rtStats->gcHeapChunkDirtyDecommitted;
+
+    rtStats->totalMjit = rtStats->runtimeMjitCode;
 
     for (size_t index = 0;
          index < rtStats->compartmentStatsVector.length();
@@ -267,10 +268,7 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
                                  cStats.scriptData;
         rtStats->totalStrings += cStats.gcHeapStrings +
                                  cStats.stringChars;
-#ifdef JS_METHODJIT
-        rtStats->totalMjit    += cStats.mjitCode +
-                                 cStats.mjitData;
-#endif
+        rtStats->totalMjit    += cStats.mjitData;
         rtStats->totalTypeInference += cStats.gcHeapTypeObjects +
                                        cStats.typeInferenceSizes.objects +
                                        cStats.typeInferenceSizes.scripts +
@@ -297,35 +295,28 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
     return true;
 }
 
-static void
-ExplicitNonHeapCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
-{
-#ifdef JS_METHODJIT
-    size_t *n = static_cast<size_t *>(data);
-    *n += compartment->sizeOfMjitCode();
-#endif
-}
-
 JS_PUBLIC_API(int64_t)
 GetExplicitNonHeapForRuntime(JSRuntime *rt, JSMallocSizeOfFun mallocSizeOf)
 {
     // explicit/<compartment>/gc-heap/*
     size_t n = size_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) * gc::ChunkSize;
 
-    // explicit/<compartment>/mjit-code
-    JS_IterateCompartments(rt, &n, ExplicitNonHeapCompartmentCallback);
-    
+    // explicit/runtime/mjit-code
     // explicit/runtime/regexp-code
     // explicit/runtime/stack-committed
-    size_t regexpCode, stackCommitted;
+    // explicit/runtime/unused-code-memory
+    size_t dummy, mjitCode, regexpCode, unusedCodeMemory, stackCommitted;
     rt->sizeOfExcludingThis(mallocSizeOf,
-                            NULL,
-                            NULL,
+                            &dummy,
+                            &dummy,
+                            &mjitCode,
                             &regexpCode,
+                            &unusedCodeMemory,
                             &stackCommitted,
                             NULL);
-    
+    n += mjitCode;
     n += regexpCode;
+    n += unusedCodeMemory;
     n += stackCommitted;
 
     return int64_t(n);

@@ -50,7 +50,6 @@ LIBXUL_LIBRARY = 1
   
 CMMSRCS = nsAccessNodeWrap.mm \
           nsDocAccessibleWrap.mm \
-          nsRootAccessibleWrap.mm \
           nsAccessibleWrap.mm \
           mozAccessible.mm \
           mozDocAccessible.mm \
@@ -58,6 +57,7 @@ CMMSRCS = nsAccessNodeWrap.mm \
           mozTextAccessible.mm \
           mozHTMLAccessible.mm \
           MacUtils.mm \
+          RootAccessibleWrap.mm \
           $(NULL)
 
 
@@ -67,7 +67,6 @@ EXPORTS = \
   nsTextAccessibleWrap.h \
   nsAccessibleWrap.h \
   nsDocAccessibleWrap.h \
-  nsRootAccessibleWrap.h \
   nsXULMenuAccessibleWrap.h \
   nsXULListboxAccessibleWrap.h \
   nsXULTreeGridAccessibleWrap.h \

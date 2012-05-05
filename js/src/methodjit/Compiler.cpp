@@ -169,7 +169,7 @@ mjit::Compiler::checkAnalysis(JSScript *script)
     if (!script->ensureRanAnalysis(cx, NULL))
         return Compile_Error;
 
-    if (!script->analysis()->compileable()) {
+    if (!script->analysis()->jaegerCompileable()) {
         JaegerSpew(JSpew_Abort, "script has uncompileable opcodes\n");
         return Compile_Abort;
     }
@@ -955,7 +955,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
         return Compile_Skipped;
     }
 
-    if (!cx->compartment->ensureJaegerCompartmentExists(cx))
+    if (!cx->runtime->getJaegerRuntime(cx))
         return Compile_Error;
 
     // Ensure that constructors have at least one slot.
@@ -1311,9 +1311,9 @@ mjit::Compiler::finishThisUp()
     if (!chunkJumps.reserve(jumpTableEdges.length()))
         return Compile_Error;
 
+    JSC::ExecutableAllocator &execAlloc = cx->runtime->execAlloc();
     JSC::ExecutablePool *execPool;
-    uint8_t *result = (uint8_t *)script->compartment()->jaegerCompartment()->execAlloc()->
-                    alloc(codeSize, &execPool, JSC::METHOD_CODE);
+    uint8_t *result = (uint8_t *)execAlloc.alloc(codeSize, &execPool, JSC::METHOD_CODE);
     if (!result) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
@@ -5878,7 +5878,7 @@ mjit::Compiler::iter(unsigned flags)
     frame.unpinReg(reg);
 
     /* Fetch the most recent iterator. */
-    masm.loadPtr(&script->compartment()->nativeIterCache.last, ioreg);
+    masm.loadPtr(&cx->runtime->nativeIterCache.last, ioreg);
 
     /* Test for NULL. */
     Jump nullIterator = masm.branchTest32(Assembler::Zero, ioreg, ioreg);

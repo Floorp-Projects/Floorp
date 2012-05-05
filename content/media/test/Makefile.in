@@ -232,6 +232,7 @@ _TEST_FILES += \
 		spacestorm-1000Hz-100ms.ogg \
 		video-overhang.ogg \
 		file_a4_tone.ogg \
+		detodos.opus \
 		$(NULL)
 
 # Wave sample files

@@ -1716,6 +1716,26 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 #endif
   }
 
+  // Enable Remote Debugger?
+  let enabled = gPrefService.getBoolPref("devtools.debugger.remote-enabled");
+  if (enabled) {
+    document.getElementById("menu_remoteDebugger").hidden = false;
+    document.getElementById("Tools:RemoteDebugger").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+    document.getElementById("appmenu_remoteDebugger").hidden = false;
+#endif
+  }
+
+  // Enable Chrome Debugger?
+  let enabled = gPrefService.getBoolPref("devtools.chrome.enabled");
+  if (enabled) {
+    document.getElementById("menu_chromeDebugger").hidden = false;
+    document.getElementById("Tools:ChromeDebugger").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+    document.getElementById("appmenu_chromeDebugger").hidden = false;
+#endif
+  }
+
   // Enable Error Console?
   // XXX Temporarily always-enabled, see bug 601201
   let consoleEnabled = true || gPrefService.getBoolPref("devtools.errorconsole.enabled");
@@ -4433,10 +4453,10 @@ var FullScreen = {
 XPCOMUtils.defineLazyGetter(FullScreen, "useLionFullScreen", function() {
   // We'll only use OS X Lion full screen if we're
   // * on OS X
-  // * on Lion (Darwin 11.x) -- this will need to be updated for OS X 10.8
+  // * on Lion or higher (Darwin 11+)
   // * have fullscreenbutton="true"
 #ifdef XP_MACOSX
-  return /^11\./.test(Services.sysinfo.getProperty("version")) &&
+  return parseFloat(Services.sysinfo.getProperty("version")) >= 11 &&
          document.documentElement.getAttribute("fullscreenbutton") == "true";
 #else
   return false;

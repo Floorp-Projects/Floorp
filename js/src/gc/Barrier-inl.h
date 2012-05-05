@@ -40,9 +40,8 @@
 #ifndef jsgc_barrier_inl_h___
 #define jsgc_barrier_inl_h___
 
-#include "jsgcmark.h"
-
 #include "gc/Barrier.h"
+#include "gc/Marking.h"
 
 #include "vm/ObjectImpl-inl.h"
 #include "vm/String-inl.h"

@@ -932,7 +932,8 @@ public:
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager)
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters)
   {
     return LAYER_ACTIVE;
   }
@@ -1000,10 +1001,8 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 nsRegion
 nsDisplayPlugin::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                 bool* aSnap,
-                                 bool* aForceTransparentSurface)
+                                 bool* aSnap)
 {
-  *aForceTransparentSurface = false;
   *aSnap = false;
   nsRegion result;
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);

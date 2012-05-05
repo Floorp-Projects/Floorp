@@ -94,11 +94,8 @@ struct CompartmentStats
     size_t shapesExtraTreeShapeKids;
     size_t shapesCompartmentTables;
     size_t scriptData;
-
-#ifdef JS_METHODJIT
-    size_t mjitCode;
     size_t mjitData;
-#endif
+
     TypeInferenceSizes typeInferenceSizes;
 };
 
@@ -110,7 +107,9 @@ struct RuntimeStats
       , runtimeContexts(0)
       , runtimeNormal(0)
       , runtimeTemporary(0)
+      , runtimeMjitCode(0)
       , runtimeRegexpCode(0)
+      , runtimeUnusedCodeMemory(0)
       , runtimeStackCommitted(0)
       , runtimeGCMarker(0)
       , gcHeapChunkTotal(0)
@@ -126,9 +125,7 @@ struct RuntimeStats
       , totalShapes(0)
       , totalScripts(0)
       , totalStrings(0)
-#ifdef JS_METHODJIT
       , totalMjit(0)
-#endif
       , totalTypeInference(0)
       , totalAnalysisTemp(0)
       , compartmentStatsVector()
@@ -141,7 +138,9 @@ struct RuntimeStats
     size_t runtimeContexts;
     size_t runtimeNormal;
     size_t runtimeTemporary;
+    size_t runtimeMjitCode;
     size_t runtimeRegexpCode;
+    size_t runtimeUnusedCodeMemory;
     size_t runtimeStackCommitted;
     size_t runtimeGCMarker;
     size_t gcHeapChunkTotal;
@@ -157,9 +156,7 @@ struct RuntimeStats
     size_t totalShapes;
     size_t totalScripts;
     size_t totalStrings;
-#ifdef JS_METHODJIT
     size_t totalMjit;
-#endif
     size_t totalTypeInference;
     size_t totalAnalysisTemp;
 

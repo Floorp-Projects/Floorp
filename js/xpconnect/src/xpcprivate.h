@@ -100,15 +100,15 @@
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "nsAutoJSValHolder.h"
+
+#include "js/HashTable.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Mutex.h"
-#include "nsDataHashtable.h"
 
 #include "nsThreadUtils.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSEngineTelemetryStats.h"
-#include "nsDeque.h"
 
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
@@ -123,6 +123,8 @@
 #include "nsHashKeys.h"
 #include "nsWrapperCache.h"
 #include "nsStringBuffer.h"
+#include "nsDataHashtable.h"
+#include "nsDeque.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
@@ -235,75 +237,11 @@ extern const char XPC_SCRIPT_ERROR_CONTRACTID[];
 extern const char XPC_ID_CONTRACTID[];
 extern const char XPC_XPCONNECT_CONTRACTID[];
 
-namespace xpc {
+typedef js::HashSet<JSCompartment *,
+                    js::DefaultHasher<JSCompartment *>,
+                    js::SystemAllocPolicy> XPCCompartmentSet;
 
-class PtrAndPrincipalHashKey : public PLDHashEntryHdr
-{
-  public:
-    typedef PtrAndPrincipalHashKey *KeyType;
-    typedef const PtrAndPrincipalHashKey *KeyTypePointer;
-
-    PtrAndPrincipalHashKey(const PtrAndPrincipalHashKey *aKey)
-      : mPtr(aKey->mPtr), mPrincipal(aKey->mPrincipal),
-        mSavedHash(aKey->mSavedHash)
-    {
-        MOZ_COUNT_CTOR(PtrAndPrincipalHashKey);
-    }
-
-    PtrAndPrincipalHashKey(nsISupports *aPtr, nsIPrincipal *aPrincipal)
-      : mPtr(aPtr), mPrincipal(aPrincipal)
-    {
-        MOZ_COUNT_CTOR(PtrAndPrincipalHashKey);
-        nsCOMPtr<nsIURI> uri;
-        aPrincipal->GetURI(getter_AddRefs(uri));
-        mSavedHash = uri
-                     ? NS_SecurityHashURI(uri)
-                     : (NS_PTR_TO_UINT32(mPtr.get()) >> 2);
-    }
-
-    ~PtrAndPrincipalHashKey()
-    {
-        MOZ_COUNT_DTOR(PtrAndPrincipalHashKey);
-    }
-
-    PtrAndPrincipalHashKey* GetKey() const
-    {
-        return const_cast<PtrAndPrincipalHashKey*>(this);
-    }
-    const PtrAndPrincipalHashKey* GetKeyPointer() const { return this; }
-
-    inline bool KeyEquals(const PtrAndPrincipalHashKey* aKey) const;
-
-    static const PtrAndPrincipalHashKey*
-    KeyToPointer(PtrAndPrincipalHashKey* aKey) { return aKey; }
-    static PLDHashNumber HashKey(const PtrAndPrincipalHashKey* aKey)
-    {
-        return aKey->mSavedHash;
-    }
-
-    nsISupports* GetPtr()
-    {
-        return mPtr;
-    }
-
-    enum { ALLOW_MEMMOVE = true };
-
-  protected:
-    nsCOMPtr<nsISupports> mPtr;
-    nsCOMPtr<nsIPrincipal> mPrincipal;
-
-    // During shutdown, when we GC, we need to remove these keys from the hash
-    // table. However, computing the saved hash, NS_SecurityHashURI calls back
-    // into XPCOM (which is illegal during shutdown). In order to avoid this,
-    // we compute the hash up front, so when we're in GC during shutdown, we
-    // don't have to call into XPCOM.
-    PLDHashNumber mSavedHash;
-};
-
-}
-
-// This map is only used on the main thread.
-typedef nsDataHashtable<xpc::PtrAndPrincipalHashKey, JSCompartment *> XPCCompartmentMap;
+typedef XPCCompartmentSet::Range XPCCompartmentRange;
 
 /***************************************************************************/
 // Useful macros...
@@ -539,7 +477,7 @@ public:
     virtual void NotifyEnterMainThread();
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb);
     virtual nsresult FinishTraverse();
-    virtual nsCycleCollectionParticipant *ToParticipant(void *p);
+    virtual nsCycleCollectionParticipant *GetParticipant();
     virtual bool NeedCollect();
     virtual void Collect(PRUint32 reason, PRUint32 kind);
 
@@ -677,8 +615,8 @@ public:
     XPCWrappedNativeProtoMap* GetDetachedWrappedNativeProtoMap() const
         {return mDetachedWrappedNativeProtoMap;}
 
-    XPCCompartmentMap& GetCompartmentMap()
-        {return mCompartmentMap;}
+    XPCCompartmentSet& GetCompartmentSet()
+        {return mCompartmentSet;}
 
     XPCLock* GetMapLock() const {return mMapLock;}
 
@@ -822,7 +760,7 @@ private:
     XPCNativeScriptableSharedMap* mNativeScriptableSharedMap;
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
     XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
-    XPCCompartmentMap        mCompartmentMap;
+    XPCCompartmentSet        mCompartmentSet;
     XPCLock* mMapLock;
     PRThread* mThreadRunningGC;
     nsTArray<nsXPCWrappedJS*> mWrappedJSToReleaseArray;
@@ -1281,7 +1219,7 @@ public:
         if (mCcx)
             return mCcx->GetScopeForNewJSObjects();
 
-        return mObj;
+        return xpc_UnmarkGrayObject(mObj);
     }
     void SetScopeForNewJSObjects(JSObject *obj)
     {
@@ -1297,7 +1235,7 @@ public:
         if (mCcx)
             return mCcx->GetFlattenedJSObject();
 
-        return mFlattenedJSObject;
+        return xpc_UnmarkGrayObject(mFlattenedJSObject);
     }
     XPCCallContext &GetXPCCallContext()
     {
@@ -1306,8 +1244,9 @@ public:
             mCcxToDestroy = mCcx =
                 new (data) XPCCallContext(mCallerLanguage, mCx,
                                           mCallBeginRequest == CALL_BEGINREQUEST,
-                                          mObj,
-                                          mFlattenedJSObject, mWrapper,
+                                           xpc_UnmarkGrayObject(mObj),
+                                           xpc_UnmarkGrayObject(mFlattenedJSObject),
+                                           mWrapper,
                                           mTearOff);
             if (!mCcx->IsValid()) {
                 NS_ERROR("This is not supposed to fail!");
@@ -1514,10 +1453,18 @@ public:
     GetComponents() const {return mComponents;}
 
     JSObject*
-    GetGlobalJSObject() const {return mGlobalJSObject;}
+    GetGlobalJSObject() const
+        {return xpc_UnmarkGrayObject(mGlobalJSObject);}
 
     JSObject*
-    GetPrototypeJSObject() const {return mPrototypeJSObject;}
+    GetGlobalJSObjectPreserveColor() const {return mGlobalJSObject;}
+
+    JSObject*
+    GetPrototypeJSObject() const
+        {return xpc_UnmarkGrayObject(mPrototypeJSObject);}
+
+    JSObject*
+    GetPrototypeJSObjectPreserveColor() const {return mPrototypeJSObject;}
 
     // Getter for the prototype that we use for wrappers that have no
     // helper.
@@ -2230,7 +2177,7 @@ public:
     GetRuntime() const {return mScope->GetRuntime();}
 
     JSObject*
-    GetJSProtoObject() const {return mJSProtoObject;}
+    GetJSProtoObject() const {return xpc_UnmarkGrayObject(mJSProtoObject);}
 
     nsIClassInfo*
     GetClassInfo()     const {return mClassInfo;}
@@ -3018,8 +2965,7 @@ public:
      * This getter clears the gray bit before handing out the JSObject which
      * means that the object is guaranteed to be kept alive past the next CC.
      */
-    JSObject* GetJSObject() const {xpc_UnmarkGrayObject(mJSObj);
-                                   return mJSObj;}
+    JSObject* GetJSObject() const {return xpc_UnmarkGrayObject(mJSObj);}
 
     /**
      * This getter does not change the color of the JSObject meaning that the
@@ -4393,8 +4339,8 @@ xpc_GetJSPrivate(JSObject *obj)
 // and used.
 nsresult
 xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop,
-                        JSObject *proto, bool preferXray, const nsACString &sandboxName,
-                        nsISupports *identityPtr = nsnull);
+                        JSObject *proto, bool preferXray, const nsACString &sandboxName);
+
 // Helper for evaluating scripts in a sandbox object created with
 // xpc_CreateSandboxObject(). The caller is responsible of ensuring
 // that *rval doesn't get collected during the call or usage after the
@@ -4434,16 +4380,14 @@ namespace xpc {
 
 struct CompartmentPrivate
 {
-    CompartmentPrivate(PtrAndPrincipalHashKey *key, bool wantXrays)
-        : key(key),
-          wantXrays(wantXrays)
+    CompartmentPrivate(bool wantXrays)
+        : wantXrays(wantXrays)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
 
     ~CompartmentPrivate();
 
-    nsAutoPtr<PtrAndPrincipalHashKey> key;
     bool wantXrays;
     nsAutoPtr<JSObject2JSObjectMap> waiverWrapperMap;
     // NB: we don't want this map to hold a strong reference to the wrapper.
@@ -4481,8 +4425,7 @@ struct CompartmentPrivate
      */
     JSObject *LookupExpandoObject(XPCWrappedNative *wn) {
         JSObject *obj = LookupExpandoObjectPreserveColor(wn);
-        xpc_UnmarkGrayObject(obj);
-        return obj;
+        return xpc_UnmarkGrayObject(obj);
     }
 
     bool RegisterDOMExpandoObject(JSObject *expando) {

@@ -42,9 +42,9 @@
 #define RegExpStatics_h__
 
 #include "jscntxt.h"
-#include "jsgcmark.h"
 
 #include "gc/Barrier.h"
+#include "gc/Marking.h"
 #include "js/Vector.h"
 
 #include "vm/MatchPairs.h"

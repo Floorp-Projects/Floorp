@@ -3,6 +3,7 @@
 <head>
   <title>Test for DOM KeyboardEvent</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -139,9 +140,165 @@ function testInitializingUntrustedEvent()
   }
 }
 
+function testSynthesizedKeyLocation()
+{
+  const kTests = [
+    { key: "a", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    },
+    { key: "VK_SHIFT", isModifier: true,
+      event: { shiftKey: true, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
+    },
+    { key: "VK_SHIFT", isModifier: true,
+      event: { shiftKey: true, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
+    },
+    { key: "VK_CONTROL", isModifier: true,
+      event: { shiftKey: false, ctrlKey: true, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
+    },
+    { key: "VK_CONTROL", isModifier: true,
+      event: { shiftKey: false, ctrlKey: true, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
+    },
+/* XXX Alt key activates menubar even if we consume the key events.
+    { key: "VK_ALT", isModifier: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: true, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
+    },
+    { key: "VK_ALT", isModifier: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: true, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
+    },
+*/
+    { key: "VK_META", isModifier: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: true,
+               location: KeyboardEvent.DOM_KEY_LOCATION_LEFT },
+    },
+    { key: "VK_META", isModifier: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: true,
+               location: KeyboardEvent.DOM_KEY_LOCATION_RIGHT },
+    },
+    { key: "VK_DOWN", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    },
+    { key: "VK_DOWN", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    },
+    { key: "VK_DOWN", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_JOYSTICK },
+    },
+    { key: "5", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    },
+    { key: "VK_NUMPAD5", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    },
+    { key: "5", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_MOBILE },
+    },
+    { key: "VK_NUMPAD5", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_MOBILE },
+    },
+    { key: "+", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    },
+    { key: "VK_ADD", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    },
+    { key: "VK_ENTER", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    },
+    { key: "VK_ENTER", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    },
+    { key: "VK_NUM_LOCK", isModifier: true,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    },
+    { key: "VK_INSERT", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
+    },
+    { key: "VK_INSERT", isModifier: false,
+      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
+               location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
+    },
+  ];
+
+  function getLocationName(aLocation)
+  {
+    switch (aLocation) {
+      case KeyboardEvent.DOM_KEY_LOCATION_STANDARD:
+        return "DOM_KEY_LOCATION_STANDARD";
+      case KeyboardEvent.DOM_KEY_LOCATION_LEFT:
+        return "DOM_KEY_LOCATION_LEFT";
+      case KeyboardEvent.DOM_KEY_LOCATION_RIGHT:
+        return "DOM_KEY_LOCATION_RIGHT";
+      case KeyboardEvent.DOM_KEY_LOCATION_MOBILE:
+        return "DOM_KEY_LOCATION_MOBILE";
+      case KeyboardEvent.DOM_KEY_LOCATION_NUMPAD:
+        return "DOM_KEY_LOCATION_NUMPAD";
+      case KeyboardEvent.DOM_KEY_LOCATION_JOYSTICK:
+        return "DOM_KEY_LOCATION_JOYSTICK";
+      default:
+        return "Invalid value (" + aLocation + ")";
+    }
+  }
+
+  var currentTest, description;
+  var events = { keydown: false, keypress: false, keyup: false };
+
+  function handler(aEvent)
+  {
+    is(aEvent.location, currentTest.event.location,
+       description + "location of " + aEvent.type + " was invalid");
+    events[aEvent.type] = true;
+    aEvent.preventDefault();
+  }
+
+  window.addEventListener("keydown", handler, true);
+  window.addEventListener("keypress", handler, true);
+  window.addEventListener("keyup", handler, true);
+
+  for (var i = 0; i < kTests.length; i++) {
+    currentTest = kTests[i];
+    events = { keydown: false, keypress: false, keyup: false };
+    description = "testSynthesizedKeyLocation, " + i + ", key: " +
+      currentTest.key + ", location: " +
+      getLocationName(currentTest.event.location) + ": ";
+    synthesizeKey(currentTest.key, currentTest.event);
+    ok(events.keydown, description + "keydown event wasn't fired");
+    if (currentTest.isModifier) {
+      todo(events.keypress, description + "keypress event was fired for modifier key");
+    } else {
+      ok(events.keypress, description + "keypress event wasn't fired");
+    }
+    ok(events.keyup, description + "keyup event wasn't fired");
+  }
+
+  window.removeEventListener("keydown", handler, true);
+  window.removeEventListener("keypress", handler, true);
+  window.removeEventListener("keyup", handler, true);
+}
+
 function runTests()
 {
   testInitializingUntrustedEvent();
+  testSynthesizedKeyLocation();
   SimpleTest.finish();
 }
 

@@ -60,7 +60,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -110,8 +110,8 @@ XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
         return true;
     }
     if (jsclass && (jsclass->flags & JSCLASS_IS_DOMJSCLASS) &&
-        bindings::DOMJSClass::FromJSClass(jsclass)->mDOMObjectIsISupports) {
-        *iface = bindings::UnwrapDOMObject<nsISupports>(obj, jsclass);
+        DOMJSClass::FromJSClass(jsclass)->mDOMObjectIsISupports) {
+        *iface = UnwrapDOMObject<nsISupports>(obj, jsclass);
         return true;
     }
     return false;
