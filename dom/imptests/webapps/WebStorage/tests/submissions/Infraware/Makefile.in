@@ -5,7 +5,7 @@ DEPTH = ../../../../../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
-relativesrcdir = dom/imported-tests/webapps/WebStorage/tests/submissions/Infraware
+relativesrcdir = dom/imptests/webapps/WebStorage/tests/submissions/Infraware
 
 DIRS = \
   iframe \
