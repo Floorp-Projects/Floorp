@@ -791,13 +791,13 @@
           return;
 
         if (this != this.parentNode.selectedItem) { // Not selected yet
-          // Set '-moz-user-focus' to 'ignore' so that PostHandleEvent() doesn't
-          // see the tab as selected yet, otherwise it will focus the tab for us.
-          // After a short timeout we'll reset '-moz-user-focus' so that tabs
-          // can be selected by keyboard again.
-          this.setAttribute("ignorefocus", "true");
-          this.parentNode._selectNewTab(this);
-          setTimeout(function (tab) tab.removeAttribute("ignorefocus"), 0, this);
+          // Select new tab after short delay so that PostHandleEvent() doesn't see
+          // the tab as selected yet, otherwise it will focus the tab for us --
+          // the CSS for tab has -moz-user-focus: normal only for selected="true".
+          function setTab(tab) {
+            tab.parentNode._selectNewTab(tab);
+          }
+          setTimeout(setTab, 0, this);
         }
         // Otherwise this tab is already selected and we will fall
         // through to mousedown behavior which sets focus on the current tab,
