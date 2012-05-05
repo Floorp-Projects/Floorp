@@ -3214,21 +3214,6 @@ nsNavHistory::RemoveAllPages()
 }
 
 
-// nsNavHistory::HidePage
-//
-//    Sets the 'hidden' column to true. If we've not heard of the page, we
-//    succeed and do nothing.
-
-NS_IMETHODIMP
-nsNavHistory::HidePage(nsIURI *aURI)
-{
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-  NS_ENSURE_ARG(aURI);
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 // Call this method before visiting a URL in order to help determine the
 // transition type of the visit.
 // Later, in AddVisitChain() the next visit to this page will be associated to
