@@ -1103,39 +1103,28 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
 }
 
 NS_IMETHODIMP
-nsEditor::EndOfDocument() 
+nsEditor::EndOfDocument()
 { 
-  if (!mDocWeak) { return NS_ERROR_NOT_INITIALIZED; } 
-  nsresult res; 
+  NS_ENSURE_TRUE(mDocWeak, NS_ERROR_NOT_INITIALIZED);
 
   // get selection 
   nsCOMPtr<nsISelection> selection; 
-  res = GetSelection(getter_AddRefs(selection)); 
-  NS_ENSURE_SUCCESS(res, res); 
+  nsresult rv = GetSelection(getter_AddRefs(selection)); 
+  NS_ENSURE_SUCCESS(rv, rv); 
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER); 
   
   // get the root element 
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(GetRoot());
+  nsINode* node = GetRoot();
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER); 
-  nsCOMPtr<nsIDOMNode> child;
+  nsINode* child = node->GetLastChild();
 
-  do {
-    node->GetLastChild(getter_AddRefs(child));
+  while (child && IsContainer(child->AsDOMNode())) {
+    node = child;
+    child = node->GetLastChild();
+  }
 
-    if (child) {
-      if (IsContainer(child)) {
-        node = child;
-      } else {
-        break;
-      }
-    }
-  } while (child);
-
-  PRUint32 length = 0;
-  res = GetLengthOfDOMNode(node, length);
-  NS_ENSURE_SUCCESS(res, res);
-
-  return selection->Collapse(node, (PRInt32)length);
+  PRUint32 length = node->Length();
+  return selection->CollapseNative(node, PRInt32(length));
 } 
   
 NS_IMETHODIMP
