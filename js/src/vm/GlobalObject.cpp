@@ -359,7 +359,7 @@ GlobalObject::clear(JSContext *cx)
      * Reset the new object cache in the compartment, which assumes that
      * prototypes cached on the global object are immutable.
      */
-    cx->compartment->newObjectCache.reset();
+    cx->runtime->newObjectCache.purge();
 
 #ifdef JS_METHODJIT
     /*

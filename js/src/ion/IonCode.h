@@ -42,8 +42,8 @@
 #ifndef jsion_coderef_h__
 #define jsion_coderef_h__
 
-#include "jscell.h"
 #include "IonTypes.h"
+#include "gc/Heap.h"
 
 namespace JSC {
     class ExecutablePool;

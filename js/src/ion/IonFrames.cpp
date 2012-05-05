@@ -49,7 +49,7 @@
 #include "Safepoints.h"
 #include "IonSpewer.h"
 #include "IonMacroAssembler.h"
-#include "jsgcmark.h"
+#include "gc/Marking.h"
 #include "SnapshotReader.h"
 #include "Safepoints.h"
 

@@ -84,7 +84,7 @@ CPPSRCS	+= \
 	   $(NULL)
 endif
 
-DEFINES += -DMOZ_GFX -DUSE_CAIRO
+DEFINES += -DMOZ_GFX -DUSE_CAIRO -DGFX2D_INTERNAL
 
 ifdef MOZ_ENABLE_SKIA
 CPPSRCS	+= \
@@ -125,7 +125,7 @@ CPPSRCS	+= \
         PathD2D.cpp \
         ScaledFontDWrite.cpp \
         $(NULL)
-DEFINES += -DWIN32
+DEFINES += -DWIN32 -DINITGUID
 
 ifdef MOZ_ENABLE_SKIA
 CPPSRCS += \

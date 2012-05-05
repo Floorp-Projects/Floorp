@@ -1260,6 +1260,7 @@ toolbar[iconsize="small"] #feed-button {
 .notification-anchor-icon {
   width: 16px;
   height: 16px;
+  margin: 0 2px;
 }
 
 .notification-anchor-icon:-moz-focusring {

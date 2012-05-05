@@ -126,7 +126,9 @@ static const char* const sEventNames[] = {
   "animationend",
   "animationiteration",
   "devicemotion",
-  "deviceorientation"
+  "deviceorientation",
+  "deviceproximity",
+  "devicelight"
 };
 
 static char *sPopupAllowedEvents;
@@ -680,6 +682,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       isInputEvent = true;
       keyEvent->keyCode = oldKeyEvent->keyCode;
       keyEvent->charCode = oldKeyEvent->charCode;
+      keyEvent->location = oldKeyEvent->location;
       keyEvent->isChar = oldKeyEvent->isChar;
       newEvent = keyEvent;
       break;
@@ -1552,6 +1555,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_devicemotion];
   case NS_DEVICE_ORIENTATION:
     return sEventNames[eDOMEvents_deviceorientation];
+  case NS_DEVICE_PROXIMITY:
+    return sEventNames[eDOMEvents_deviceproximity];
+  case NS_DEVICE_LIGHT:
+    return sEventNames[eDOMEvents_devicelight];
   case NS_FULLSCREENCHANGE:
     return sEventNames[eDOMEvents_mozfullscreenchange];
   case NS_FULLSCREENERROR:

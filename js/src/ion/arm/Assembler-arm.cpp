@@ -41,7 +41,7 @@
 
 #include "Assembler-arm.h"
 #include "MacroAssembler-arm.h"
-#include "jsgcmark.h"
+#include "gc/Marking.h"
 
 #include "assembler/jit/ExecutableAllocator.h"
 

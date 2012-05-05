@@ -136,7 +136,8 @@ public:
                   const nsIntPoint& aOffset,
                   nsIntRegion aScreenRegion,
                   nsIntPoint aTextureOffset,
-                  nsIntSize aTextureBounds);
+                  nsIntSize aTextureBounds,
+                  Layer* aMaskLayer);
 
 private:
   nsIntRegion                  mRegionToUpload;

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     reftest-zoom="1.5">
+     reftest-zoom="1.5" width="10" height="10">
   <title>Testcase to ensure that full-page-zoom will zoom raster
          images the right amount.</title>
   <image width="10" height="10" xlink:href="blueRect10x10.png"/>

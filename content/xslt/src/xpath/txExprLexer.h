@@ -128,16 +128,14 @@ public:
         : mStart(aStart),
           mEnd(aEnd),
           mType(aType),
-          mNext(nsnull),
-          mPrevious(nsnull)
+          mNext(nsnull)
     {
     }
     Token(iterator aChar, Type aType)
         : mStart(aChar),
           mEnd(aChar + 1),
           mType(aType),
-          mNext(nsnull),
-          mPrevious(nsnull)
+          mNext(nsnull)
     {
     }
 
@@ -149,8 +147,6 @@ public:
     iterator mStart, mEnd;
     Type mType;
     Token* mNext;
-    // XXX mPrevious needed for pushBack(), do we pushBack more than once?
-    Token* mPrevious;
 };
 
 /**
@@ -186,12 +182,19 @@ public:
     Token* nextToken();
     Token* peek()
     {
+        NS_ASSERTION(mCurrentItem, "peek called uninitialized lexer");
         return mCurrentItem;
     }
-    void pushBack();
+    Token* peekAhead()
+    {
+        NS_ASSERTION(mCurrentItem, "peekAhead called on uninitialized lexer");
+        // Don't peek past the end node
+        return (mCurrentItem && mCurrentItem->mNext) ? mCurrentItem->mNext : mCurrentItem;
+    }
     bool hasMoreTokens()
     {
-        return (mCurrentItem->mType != Token::END);
+        NS_ASSERTION(mCurrentItem, "HasMoreTokens called on uninitialized lexer");
+        return (mCurrentItem && mCurrentItem->mType != Token::END);
     }
 
     /**

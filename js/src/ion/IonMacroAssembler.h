@@ -54,6 +54,7 @@
 
 #include "jsscope.h"
 #include "jstypedarray.h"
+#include "jscompartment.h"
 
 namespace js {
 namespace ion {

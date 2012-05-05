@@ -42,7 +42,7 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
-#include "nsRootAccessible.h"
+#include "RootAccessible.h"
 
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -58,6 +58,8 @@
 #include "nsFocusManager.h"
 #include "nsPresContext.h"
 #include "mozilla/Services.h"
+
+using namespace mozilla::a11y;
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -92,9 +94,6 @@ nsAccessNode::
   nsAccessNode(nsIContent* aContent, nsDocAccessible* aDoc) :
   mContent(aContent), mDoc(aDoc)
 {
-#ifdef DEBUG_A11Y
-  mIsInitialized = false;
-#endif
 }
 
 nsAccessNode::~nsAccessNode()
@@ -207,7 +206,7 @@ void nsAccessNode::ShutdownXPAccessibility()
   NotifyA11yInitOrShutdown(false);
 }
 
-nsRootAccessible*
+RootAccessible*
 nsAccessNode::RootAccessible() const
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =

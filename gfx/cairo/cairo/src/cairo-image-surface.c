@@ -1395,15 +1395,6 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 
 	type = source->base.backend->type;
 	if (type == CAIRO_SURFACE_TYPE_IMAGE) {
-	    if (extend != CAIRO_EXTEND_NONE &&
-		sample.x >= 0 &&
-		sample.y >= 0 &&
-		sample.x + sample.width  <= source->width &&
-		sample.y + sample.height <= source->height)
-	    {
-		extend = CAIRO_EXTEND_NONE;
-	    }
-
 	    if (sample.width == 1 && sample.height == 1) {
 		if (sample.x < 0 ||
 		    sample.y < 0 ||

@@ -2055,6 +2055,9 @@ LoopState::adjustConstantForIncrement(jsbytecode *pc, uint32_t slot)
 bool
 LoopState::getEntryValue(const CrossSSAValue &iv, uint32_t *pslot, int32_t *pconstant)
 {
+    *pslot = UNASSIGNED;
+    *pconstant = 1;
+
     CrossSSAValue cv = ssa->foldValue(iv);
 
     JSScript *script = ssa->getFrame(cv.frame).script;

@@ -2319,17 +2319,16 @@ GetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, const Value &v, jsid i
                  ? Int32Key::FromConstant(v.toInt32())
                  : Int32Key::FromRegister(idRemat.dataReg());
 
-    JSObject *tarray = js::TypedArray::getTypedArray(obj);
     if (!masm.supportsFloatingPoint() &&
-        (TypedArray::getType(tarray) == js::TypedArray::TYPE_FLOAT32 ||
-         TypedArray::getType(tarray) == js::TypedArray::TYPE_FLOAT64 ||
-         TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT32))
+        (TypedArray::getType(obj) == TypedArray::TYPE_FLOAT32 ||
+         TypedArray::getType(obj) == TypedArray::TYPE_FLOAT64 ||
+         TypedArray::getType(obj) == TypedArray::TYPE_UINT32))
     {
         return disable(f, "fpu not supported");
     }
 
     MaybeRegisterID tempReg;
-    masm.loadFromTypedArray(TypedArray::getType(tarray), objReg, key, typeReg, objReg, tempReg);
+    masm.loadFromTypedArray(TypedArray::getType(obj), objReg, key, typeReg, objReg, tempReg);
 
     Jump done = masm.jump();
 
@@ -2633,18 +2632,17 @@ SetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, int32_t key)
     // Load the array's packed data vector.
     masm.loadPtr(Address(objReg, TypedArray::dataOffset()), objReg);
 
-    JSObject *tarray = js::TypedArray::getTypedArray(obj);
     if (!masm.supportsFloatingPoint() &&
-        (TypedArray::getType(tarray) == js::TypedArray::TYPE_FLOAT32 ||
-         TypedArray::getType(tarray) == js::TypedArray::TYPE_FLOAT64))
+        (TypedArray::getType(obj) == TypedArray::TYPE_FLOAT32 ||
+         TypedArray::getType(obj) == TypedArray::TYPE_FLOAT64))
     {
         return disable(f, "fpu not supported");
     }
 
-    int shift = js::TypedArray::slotWidth(obj);
+    int shift = TypedArray::slotWidth(obj);
     if (hasConstantKey) {
         Address addr(objReg, keyValue * shift);
-        if (!StoreToTypedArray(cx, masm, tarray, addr, vr, volatileMask))
+        if (!StoreToTypedArray(cx, masm, obj, addr, vr, volatileMask))
             return error(cx);
     } else {
         Assembler::Scale scale = Assembler::TimesOne;
@@ -2660,7 +2658,7 @@ SetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, int32_t key)
             break;
         }
         BaseIndex addr(objReg, keyReg, scale);
-        if (!StoreToTypedArray(cx, masm, tarray, addr, vr, volatileMask))
+        if (!StoreToTypedArray(cx, masm, obj, addr, vr, volatileMask))
             return error(cx);
     }
 
