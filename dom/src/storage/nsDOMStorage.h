@@ -54,7 +54,6 @@
 #include "nsIDOMToString.h"
 #include "nsDOMEvent.h"
 #include "nsIDOMStorageEvent.h"
-#include "nsIDOMStorageEventObsolete.h"
 #include "nsIDOMStorageManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
@@ -554,30 +553,6 @@ protected:
   nsString mUrl;
   nsCOMPtr<nsIDOMStorage> mStorageArea;
 };
-
-class nsDOMStorageEventObsolete : public nsDOMEvent,
-                          public nsIDOMStorageEventObsolete
-{
-public:
-  nsDOMStorageEventObsolete()
-    : nsDOMEvent(nsnull, nsnull)
-  {
-  }
-
-  virtual ~nsDOMStorageEventObsolete()
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMSTORAGEEVENTOBSOLETE
-  NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
-
-protected:
-  nsString mDomain;
-};
-
-nsresult
-NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult);
