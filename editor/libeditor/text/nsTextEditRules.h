@@ -226,7 +226,8 @@ protected:
   /** Remove IME composition text from password buffer */
   nsresult RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString);
 
-  nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
+  nsresult CreateMozBR(nsIDOMNode* inParent, PRInt32 inOffset,
+                       nsIDOMNode** outBRNode = nsnull);
 
   nsresult CheckBidiLevelForDeletion(nsISelection         *aSelection,
                                      nsIDOMNode           *aSelNode, 

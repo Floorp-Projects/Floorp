@@ -300,10 +300,6 @@ public:
 
   virtual nsIScriptContext *GetScriptContext();
 
-  // Set a new script language context for this global.  The native global
-  // for the context is created by the context's GetNativeGlobal() method.
-  virtual nsresult SetScriptContext(nsIScriptContext *aContext);
-  
   virtual void OnFinalize(JSObject* aObject);
   virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
 

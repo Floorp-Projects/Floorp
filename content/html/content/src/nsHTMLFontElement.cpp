@@ -134,10 +134,6 @@ nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
       }
       return false;
     }
-    if (aAttribute == nsGkAtoms::pointSize ||
-        aAttribute == nsGkAtoms::fontWeight) {
-      return aResult.ParseIntValue(aValue);
-    }
     if (aAttribute == nsGkAtoms::color) {
       return aResult.ParseColor(aValue);
     }
@@ -162,27 +158,13 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       }
     }
 
-    // pointSize: int
+    // size: int
     nsCSSValue* fontSize = aData->ValueForFontSize();
     if (fontSize->GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::pointSize);
-      if (value && value->Type() == nsAttrValue::eInteger)
-        fontSize->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Point);
-      else {
-        // size: int
-        value = aAttributes->GetAttr(nsGkAtoms::size);
-        if (value && value->Type() == nsAttrValue::eInteger) {
-          fontSize->SetIntValue(value->GetIntegerValue(), eCSSUnit_Enumerated);
-        }
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::size);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        fontSize->SetIntValue(value->GetIntegerValue(), eCSSUnit_Enumerated);
       }
-    }
-
-    // fontWeight: int
-    nsCSSValue* fontWeight = aData->ValueForFontWeight();
-    if (fontWeight->GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::fontWeight);
-      if (value && value->Type() == nsAttrValue::eInteger) // +/-
-        fontWeight->SetIntValue(value->GetIntegerValue(), eCSSUnit_Integer);
     }
   }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
@@ -222,9 +204,7 @@ nsHTMLFontElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::face },
-    { &nsGkAtoms::pointSize },
     { &nsGkAtoms::size },
-    { &nsGkAtoms::fontWeight },
     { &nsGkAtoms::color },
     { nsnull }
   };
