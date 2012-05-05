@@ -53,7 +53,7 @@ function onTabViewShown(win) {
      "$appTabTray container is not visible");
 
   // pin the tab, make sure the TabItem goes away and the icon comes on
-  whenAppTabIconAdded(function() {
+  whenAppTabIconAdded(groupItem, function () {
     is(groupItem._children.length, 0,
        "the app tab's TabItem was removed from the group");
     is(appTabCount(groupItem), 1, "there's now one app tab icon");
@@ -80,7 +80,7 @@ function onTabViewShown(win) {
 
       // add one more tab
       xulTabs.push(gBrowser.loadOneTab("about:blank"));
-      whenAppTabIconAdded(function() {
+      whenAppTabIconAdded(groupItem, function () {
         is(tray.css("-moz-column-count"), 3,
            "$appTabTray column count is 3");
 
@@ -129,7 +129,7 @@ function onTabViewShown(win) {
 
           executeSoon(finish);
         }, win);
-      }, win);
+      });
       win.gBrowser.pinTab(xulTabs[xulTabs.length-1]);
     };
 
@@ -137,13 +137,13 @@ function onTabViewShown(win) {
     let returnCount = 0;
     for (let i = 1; i < icons; i++) {
       xulTabs.push(gBrowser.loadOneTab("about:blank"));
-      whenAppTabIconAdded(function() {
+      whenAppTabIconAdded(groupItem, function () {
         if (++returnCount == (icons - 1))
           executeSoon(pinnedSomeTabs);
-      }, win);
+      });
       win.gBrowser.pinTab(xulTabs[i]);
     }
-  }, win);
+  });
   win.gBrowser.pinTab(xulTabs[0]);
 }
 

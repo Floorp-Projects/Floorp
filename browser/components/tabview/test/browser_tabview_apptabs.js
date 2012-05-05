@@ -34,7 +34,7 @@ function onTabViewWindowLoaded() {
   is(appTabCount(groupItemOne), 0, "there are no app tab icons");
 
   // pin the tab, make sure the TabItem goes away and the icon comes on
-  whenAppTabIconAdded(function() {
+  whenAppTabIconAdded(groupItemOne, function () {
     is(groupItemOne._children.length, 0,
        "the app tab's TabItem was removed from the group");
     is(appTabCount(groupItemOne), 1, "there's now one app tab icon");
@@ -43,7 +43,7 @@ function onTabViewWindowLoaded() {
     box.offset(box.width + 20, 0);
     let groupItemTwo = new contentWindow.GroupItem([],
         { bounds: box, title: "test2" });
-    whenAppTabIconAdded(function() {
+    whenAppTabIconAdded(groupItemTwo, function() {
       is(contentWindow.GroupItems.groupItems.length, 3, "we now have three groups");
       is(appTabCount(groupItemTwo), 1,
          "there's an app tab icon in the second group");
@@ -58,7 +58,7 @@ function onTabViewWindowLoaded() {
       is(appTabCount(groupItemOne), 0, "the icon is gone from group one");
       is(appTabCount(groupItemTwo), 0, "the icon is gone from group two");
 
-      whenAppTabIconAdded(function() {
+      whenAppTabIconAdded(groupItemOne, function() {
         // close the second group
         groupItemTwo.close();
 

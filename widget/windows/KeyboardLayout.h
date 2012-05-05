@@ -47,6 +47,8 @@
 #define VK_OEM_PLUS             0xBB   // '+' any country
 #define VK_OEM_MINUS            0xBD   // '-' any country
 
+class nsWindow;
+
 namespace mozilla {
 namespace widget {
 
@@ -134,21 +136,25 @@ public:
 class NativeKey {
 public:
   NativeKey() :
-    mVirtualKeyCode(0), mOriginalVirtualKeyCode(0),
+    mDOMKeyCode(0), mVirtualKeyCode(0), mOriginalVirtualKeyCode(0),
     mScanCode(0), mIsExtended(false)
   {
   }
 
   NativeKey(HKL aKeyboardLayout,
-            HWND aWnd,
+            nsWindow* aWindow,
             const MSG& aKeyOrCharMessage);
+
+  PRUint32 GetDOMKeyCode() const { return mDOMKeyCode; }
 
   // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
   PRUint32 GetKeyLocation() const;
+  WORD GetScanCode() const { return mScanCode; }
   PRUint8 GetVirtualKeyCode() const { return mVirtualKeyCode; }
   PRUint8 GetOriginalVirtualKeyCode() const { return mOriginalVirtualKeyCode; }
 
 private:
+  PRUint32 mDOMKeyCode;
   // mVirtualKeyCode distinguishes left key or right key of modifier key.
   PRUint8 mVirtualKeyCode;
   // mOriginalVirtualKeyCode doesn't distinguish left key or right key of
