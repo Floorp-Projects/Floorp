@@ -2139,23 +2139,12 @@ nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *a
     // The range should begin at (aParent, aOffset) and
     // extend to the end of the document.
 
-    nsCOMPtr<nsIDOMNodeList> nodeList;
-    PRUint32 nodeListLength;
-
     startNode   = aParent;
     startOffset = aOffset;
     endNode     = bodyNode;
-    endOffset   = 0;
 
-    rv = bodyNode->GetChildNodes(getter_AddRefs(nodeList));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-    if (nodeList) {
-      rv = nodeList->GetLength(&nodeListLength);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-      endOffset = (PRInt32)nodeListLength;
-    }
+    nsCOMPtr<nsINode> body = do_QueryInterface(bodyNode);
+    endOffset = body ? PRInt32(body->GetChildCount()) : 0;
   }
 
   return nsRange::CreateRange(startNode, startOffset, endNode, endOffset,
