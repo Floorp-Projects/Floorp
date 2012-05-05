@@ -1808,16 +1808,8 @@ already_AddRefed<nsIDOMStorage>
 nsDOMStorage2::Fork(const nsSubstring &aDocumentURI)
 {
   nsRefPtr<nsDOMStorage2> storage = new nsDOMStorage2();
-  if (!storage)
-    return nsnull;
-
-  nsresult rv = storage->InitAsSessionStorageFork(mPrincipal, aDocumentURI, mStorage);
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  nsIDOMStorage* result = static_cast<nsIDOMStorage*>(storage.get());
-  storage.forget();
-  return result;
+  storage->InitAsSessionStorageFork(mPrincipal, aDocumentURI, mStorage);
+  return storage.forget();
 }
 
 bool nsDOMStorage2::IsForkOf(nsIDOMStorage* aThat)
@@ -1829,14 +1821,12 @@ bool nsDOMStorage2::IsForkOf(nsIDOMStorage* aThat)
   return mStorage == storage->mStorage;
 }
 
-nsresult
-nsDOMStorage2::InitAsSessionStorageFork(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI, nsIDOMStorageObsolete* aStorage)
+void
+nsDOMStorage2::InitAsSessionStorageFork(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI, nsDOMStorage* aStorage)
 {
   mPrincipal = aPrincipal;
   mDocumentURI = aDocumentURI;
-  mStorage = static_cast<nsDOMStorage*>(aStorage);
-
-  return NS_OK;
+  mStorage = aStorage;
 }
 
 nsTArray<nsString> *
