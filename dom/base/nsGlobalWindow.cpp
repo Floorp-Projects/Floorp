@@ -1167,7 +1167,7 @@ nsGlobalWindow::FreeInnerObjects()
   JSObject* obj = FastGetGlobalJSObject();
   if (obj) {
     if (!cx) {
-      nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+      cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
     }
 
     JSAutoRequest ar(cx);
@@ -2236,8 +2236,8 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     if (currentInner) {
       JSObject* obj = currentInner->FastGetGlobalJSObject();
       if (obj) {
-        JSContext* cx;
-        nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+        JSContext* cx =
+          nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
 
         JSAutoRequest ar(cx);
 
@@ -5973,7 +5973,7 @@ PostMessageEvent::Run()
     // we need to find a JSContext.
     nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
     if (cxStack) {
-      cxStack->GetSafeJSContext(&cx);
+      cx = cxStack->GetSafeJSContext();
     }
 
     if (!cx) {
