@@ -5,7 +5,7 @@ DEPTH = ../../../../../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
-relativesrcdir = dom/imported-tests/webapps/DOMCore/tests/submissions/Opera
+relativesrcdir = dom/imptests/webapps/DOMCore/tests/submissions/Opera
 
 DIRS = \
   $(NULL)

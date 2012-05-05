@@ -174,4 +174,4 @@ if __name__ == "__main__":
   if len(sys.argv) != 2:
     print "Need one argument."
   else:
-    importRepo(sys.argv[1], "dom/imported-tests")
+    importRepo(sys.argv[1], "dom/imptests")
