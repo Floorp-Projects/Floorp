@@ -238,7 +238,7 @@ typedef enum {
   /* 32-bit per pixel 8-bit per channel - 1 unused channel */
   NPImageFormatBGRX32     = 0x2 
 } NPImageFormat;
- 
+
 typedef struct _NPAsyncSurface
 {
   uint32_t version;
@@ -301,24 +301,28 @@ typedef struct
 #endif /* XP_UNIX */
 
 typedef enum {
+#if defined(XP_MACOSX)
 #ifndef NP_NO_QUICKDRAW
   NPDrawingModelQuickDraw = 0,
 #endif
-#if defined(XP_MACOSX)
   NPDrawingModelCoreGraphics = 1,
   NPDrawingModelOpenGL = 2,
   NPDrawingModelCoreAnimation = 3,
   NPDrawingModelInvalidatingCoreAnimation = 4,
 #endif
+#if defined(XP_WIN)
   NPDrawingModelSyncWin = 5,
+#endif
+#if defined(MOZ_X11)
   NPDrawingModelSyncX = 6,
+#endif
   NPDrawingModelAsyncBitmapSurface = 7
 #if defined(XP_WIN)
   , NPDrawingModelAsyncWindowsDXGISurface = 8
 #endif
 } NPDrawingModel;
 
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
 typedef enum {
 #ifndef NP_NO_CARBON
   NPEventModelCarbon = 0,
@@ -403,10 +407,10 @@ typedef enum {
 
   NPPVsupportsAdvancedKeyHandling = 21,
 
-  NPPVpluginUsesDOMForCursorBool = 22
+  NPPVpluginUsesDOMForCursorBool = 22,
 
   /* Used for negotiating drawing models */
-  , NPPVpluginDrawingModel = 1000
+  NPPVpluginDrawingModel = 1000
 #if defined(XP_MACOSX)
   /* Used for negotiating event models */
   , NPPVpluginEventModel = 1001
@@ -448,11 +452,11 @@ typedef enum {
 
   NPNVsupportsAdvancedKeyHandling = 21,
 
-  NPNVdocumentOrigin = 22
+  NPNVdocumentOrigin = 22,
 
-  /* Used for negotiating drawing models */
-  , NPNVpluginDrawingModel = 1000
+  NPNVpluginDrawingModel = 1000 /* Get the current drawing model (NPDrawingModel) */
 #if defined(XP_MACOSX)
+  , NPNVcontentsScaleFactor = 1001
 #ifndef NP_NO_QUICKDRAW
   , NPNVsupportsQuickDrawBool = 2000
 #endif
@@ -461,11 +465,10 @@ typedef enum {
   , NPNVsupportsCoreAnimationBool = 2003
   , NPNVsupportsInvalidatingCoreAnimationBool = 2004
 #endif
-  , NPNVsupportsAsyncBitmapSurfaceBool = 2005
+  , NPNVsupportsAsyncBitmapSurfaceBool = 2007
 #if defined(XP_WIN)
-  , NPNVsupportsAsyncWindowsDXGISurfaceBool = 2006
+  , NPNVsupportsAsyncWindowsDXGISurfaceBool = 2008
 #endif
-
 #if defined(XP_MACOSX)
 #ifndef NP_NO_CARBON
   , NPNVsupportsCarbonBool = 3000 /* TRUE if the browser supports the Carbon event model */
