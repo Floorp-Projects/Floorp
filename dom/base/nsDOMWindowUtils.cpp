@@ -295,7 +295,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
   nsIPresShell* presShell = GetPresShell();
   if (!presShell) {
     return NS_ERROR_FAILURE;
-  } 
+  }
 
   nsRect displayport(nsPresContext::CSSPixelsToAppUnits(aXPx),
                      nsPresContext::CSSPixelsToAppUnits(aYPx),
@@ -334,33 +334,31 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
     }
   }
 
-  if (presShell) {
-    nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
-    if (rootFrame) {
-      nsIContent* rootContent =
-        rootScrollFrame ? rootScrollFrame->GetContent() : nsnull;
-      nsRect rootDisplayport;
-      bool usingDisplayport = rootContent &&
-        nsLayoutUtils::GetDisplayPort(rootContent, &rootDisplayport);
-      rootFrame->InvalidateWithFlags(
-        usingDisplayport ? rootDisplayport : rootFrame->GetVisualOverflowRect(),
-        nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+  nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
+  if (rootFrame) {
+    nsIContent* rootContent =
+      rootScrollFrame ? rootScrollFrame->GetContent() : nsnull;
+    nsRect rootDisplayport;
+    bool usingDisplayport = rootContent &&
+      nsLayoutUtils::GetDisplayPort(rootContent, &rootDisplayport);
+    rootFrame->InvalidateWithFlags(
+      usingDisplayport ? rootDisplayport : rootFrame->GetVisualOverflowRect(),
+      nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
 
-      // If we are hiding something that is a display root then send empty paint
-      // transaction in order to release retained layers because it won't get
-      // any more paint requests when it is hidden.
-      if (displayport.IsEmpty() &&
-          rootFrame == nsLayoutUtils::GetDisplayRootFrame(rootFrame)) {
-        nsCOMPtr<nsIWidget> widget = GetWidget();
-        if (widget) {
-          bool isRetainingManager;
-          LayerManager* manager = widget->GetLayerManager(&isRetainingManager);
-          if (isRetainingManager) {
-            manager->BeginTransaction();
-            nsLayoutUtils::PaintFrame(nsnull, rootFrame, nsRegion(), NS_RGB(255, 255, 255),
-                                      nsLayoutUtils::PAINT_WIDGET_LAYERS |
-                                      nsLayoutUtils::PAINT_EXISTING_TRANSACTION);
-          }
+    // If we are hiding something that is a display root then send empty paint
+    // transaction in order to release retained layers because it won't get
+    // any more paint requests when it is hidden.
+    if (displayport.IsEmpty() &&
+        rootFrame == nsLayoutUtils::GetDisplayRootFrame(rootFrame)) {
+      nsCOMPtr<nsIWidget> widget = GetWidget();
+      if (widget) {
+        bool isRetainingManager;
+        LayerManager* manager = widget->GetLayerManager(&isRetainingManager);
+        if (isRetainingManager) {
+          manager->BeginTransaction();
+          nsLayoutUtils::PaintFrame(nsnull, rootFrame, nsRegion(), NS_RGB(255, 255, 255),
+                                    nsLayoutUtils::PAINT_WIDGET_LAYERS |
+                                    nsLayoutUtils::PAINT_EXISTING_TRANSACTION);
         }
       }
     }
