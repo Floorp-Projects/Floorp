@@ -1279,7 +1279,9 @@ protected:
                              const GLvoid *data);
 
     void MaybeRestoreContext();
-    bool IsContextStable() const;
+    bool IsContextStable() const {
+        return mContextStatus == ContextStable;
+    }
     void ForceLoseContext();
     void ForceRestoreContext();
 
