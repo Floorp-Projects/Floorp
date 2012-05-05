@@ -133,9 +133,8 @@ nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   if (isCollapsed) {
     // manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
-    nsString tAttr(aAttribute);//MJUDGE SCC NEED HELP
-    nsString tVal(aValue);//MJUDGE SCC NEED HELP
-    return mTypeInState->SetProp(aProperty, tAttr, tVal);
+    mTypeInState->SetProp(aProperty, aAttribute, aValue);
+    return NS_OK;
   }
 
   nsAutoEditBatch batchIt(this);
@@ -1239,6 +1238,7 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsASt
 
 nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAString *aAttribute)
 {
+  MOZ_ASSERT_IF(aProperty, aAttribute);
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
   ForceCompositionEnd();
 
@@ -1253,8 +1253,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
   selection->GetIsCollapsed(&isCollapsed);
 
   bool useCSS = IsCSSEnabled();
-  if (isCollapsed)
-  {
+  if (isCollapsed) {
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
 
     // For links, aProperty uses "href", use "a" instead
@@ -1262,9 +1261,14 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
         aProperty == nsEditProperty::name)
       aProperty = nsEditProperty::a;
 
-    if (aProperty) return mTypeInState->ClearProp(aProperty, nsAutoString(*aAttribute));
-    else return mTypeInState->ClearAllProps();
+    if (aProperty) {
+      mTypeInState->ClearProp(aProperty, *aAttribute);
+    } else {
+      mTypeInState->ClearAllProps();
+    }
+    return NS_OK;
   }
+
   nsAutoEditBatch batchIt(this);
   nsAutoRules beginRulesSniffing(this, kOpRemoveTextProperty, nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
@@ -1468,7 +1472,8 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
     }
 
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-    return mTypeInState->SetProp(atom, EmptyString(), EmptyString());
+    mTypeInState->SetProp(atom, EmptyString(), EmptyString());
+    return NS_OK;
   }
   
   // wrap with txn batching, rules sniffing, and selection preservation code
