@@ -180,6 +180,19 @@
 #  define MOZ_NORETURN          /* no support */
 #endif
 
+/*
+ * MOZ_ASAN_BLACKLIST is a macro to tell AddressSanitizer (a compile-time
+ * instrumentation shipped with Clang) to not instrument the annotated function.
+ * Furthermore, it will prevent the compiler from inlining the function because
+ * inlining currently breaks the blacklisting mechanism of AddressSanitizer.
+ */
+#if defined(MOZ_ASAN)
+#  define MOZ_ASAN_BLACKLIST MOZ_NEVER_INLINE __attribute__((no_address_safety_analysis))
+# else
+#  define MOZ_ASAN_BLACKLIST
+#endif
+
+
 #ifdef __cplusplus
 
 /*
