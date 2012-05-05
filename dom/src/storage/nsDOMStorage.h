@@ -386,11 +386,6 @@ public:
 
   nsIDOMStorageItem* GetNamedItem(const nsAString& aKey, nsresult* aResult);
 
-  static nsDOMStorage* FromSupports(nsISupports* aSupports)
-  {
-    return static_cast<nsDOMStorage*>(static_cast<nsIDOMStorageObsolete*>(aSupports));
-  }
-
   nsresult SetSecure(const nsAString& aKey, bool aSecure)
   {
     return mStorageImpl->SetSecure(aKey, aSecure);
