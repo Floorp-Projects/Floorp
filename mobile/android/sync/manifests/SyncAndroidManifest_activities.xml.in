@@ -18,3 +18,9 @@
             android:name="org.mozilla.gecko.sync.setup.activities.SetupFailureActivity" />
         <activity
             android:name="org.mozilla.gecko.sync.setup.activities.SetupSuccessActivity" />
+        <receiver
+            android:name="org.mozilla.gecko.sync.receivers.UpgradeReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>

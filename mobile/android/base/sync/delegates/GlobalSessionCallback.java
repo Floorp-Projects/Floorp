@@ -51,10 +51,16 @@ public interface GlobalSessionCallback {
    */
   void informNodeAuthenticationFailed(GlobalSession globalSession, URI failedClusterURL);
 
+  /**
+   * Called when an HTTP failure indicates that a software upgrade is required.
+   */
+  void informUpgradeRequiredResponse(GlobalSession session);
+
   void handleAborted(GlobalSession globalSession, String reason);
   void handleError(GlobalSession globalSession, Exception ex);
   void handleSuccess(GlobalSession globalSession);
   void handleStageCompleted(Stage currentState, GlobalSession globalSession);
 
   boolean shouldBackOff();
+
 }
