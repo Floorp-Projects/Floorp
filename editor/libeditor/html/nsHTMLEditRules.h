@@ -290,7 +290,7 @@ protected:
                                   nsCOMPtr<nsIDOMNode> *outSelectableNode);
   nsresult InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2, bool *aResult);
   nsresult RemoveEmptyNodes();
-  nsresult SelectionEndpointInNode(nsIDOMNode *aNode, bool *aResult);
+  nsresult SelectionEndpointInNode(nsINode *aNode, bool *aResult);
   nsresult UpdateDocChangeRange(nsIDOMRange *aRange);
   nsresult ConfirmSelectionInBody();
   nsresult InsertMozBRIfNeeded(nsIDOMNode *aNode);
