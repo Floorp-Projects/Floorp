@@ -154,68 +154,58 @@ void TypeInState::Reset()
 }
 
 
-nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue)
+void
+TypeInState::SetProp(nsIAtom* aProp, const nsAString& aAttr,
+                     const nsAString& aValue)
 {
   // special case for big/small, these nest
-  if (nsEditProperty::big == aProp)
-  {
+  if (nsEditProperty::big == aProp) {
     mRelativeFontSize++;
-    return NS_OK;
+    return;
   }
-  if (nsEditProperty::small == aProp)
-  {
+  if (nsEditProperty::small == aProp) {
     mRelativeFontSize--;
-    return NS_OK;
+    return;
   }
 
   PRInt32 index;
-  PropItem *item;
-
-  if (IsPropSet(aProp,aAttr,nsnull,index))
-  {
+  if (IsPropSet(aProp, aAttr, NULL, index)) {
     // if it's already set, update the value
-    item = mSetArray[index];
-    item->value = aValue;
+    mSetArray[index]->value = aValue;
+    return;
   }
-  else 
-  {
-    // make a new propitem
-    item = new PropItem(aProp,aAttr,aValue);
-    NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
-    
-    // add it to the list of set properties
-    mSetArray.AppendElement(item);
-    
-    // remove it from the list of cleared properties, if we have a match
-    RemovePropFromClearedList(aProp,aAttr);  
-  }
-    
-  return NS_OK;
+
+  // Make a new propitem and add it to the list of set properties.
+  mSetArray.AppendElement(new PropItem(aProp, aAttr, aValue));
+
+  // remove it from the list of cleared properties, if we have a match
+  RemovePropFromClearedList(aProp, aAttr);
 }
 
 
-nsresult TypeInState::ClearAllProps()
+void
+TypeInState::ClearAllProps()
 {
   // null prop means "all" props
-  return ClearProp(nsnull,EmptyString());
+  ClearProp(nsnull, EmptyString());
 }
 
-nsresult TypeInState::ClearProp(nsIAtom *aProp, const nsString &aAttr)
+void
+TypeInState::ClearProp(nsIAtom* aProp, const nsAString& aAttr)
 {
   // if it's already cleared we are done
-  if (IsPropCleared(aProp,aAttr)) return NS_OK;
-  
+  if (IsPropCleared(aProp, aAttr)) {
+    return;
+  }
+
   // make a new propitem
-  PropItem *item = new PropItem(aProp,aAttr,EmptyString());
-  NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
-  
+  PropItem* item = new PropItem(aProp, aAttr, EmptyString());
+
   // remove it from the list of set properties, if we have a match
-  RemovePropFromSetList(aProp,aAttr);
-  
+  RemovePropFromSetList(aProp, aAttr);
+
   // add it to the list of cleared properties
   mClearedArray.AppendElement(item);
-  
-  return NS_OK;
 }
 
 
@@ -223,47 +213,46 @@ nsresult TypeInState::ClearProp(nsIAtom *aProp, const nsString &aAttr)
  *    TakeClearProperty: hands back next property item on the clear list.
  *                       caller assumes ownership of PropItem and must delete it.
  */  
-nsresult TypeInState::TakeClearProperty(PropItem **outPropItem)
+PropItem*
+TypeInState::TakeClearProperty()
 {
-  NS_ENSURE_TRUE(outPropItem, NS_ERROR_NULL_POINTER);
-  *outPropItem = nsnull;
   PRUint32 count = mClearedArray.Length();
-  if (count)
-  {
-    count--; // indizes are zero based
-    *outPropItem = mClearedArray[count];
-    mClearedArray.RemoveElementAt(count);
+  if (!count) {
+    return NULL;
   }
-  return NS_OK;
+
+  --count; // indices are zero based
+  PropItem* propItem = mClearedArray[count];
+  mClearedArray.RemoveElementAt(count);
+  return propItem;
 }
 
 /***************************************************************************
  *    TakeSetProperty: hands back next poroperty item on the set list.
  *                     caller assumes ownership of PropItem and must delete it.
  */  
-nsresult TypeInState::TakeSetProperty(PropItem **outPropItem)
+PropItem*
+TypeInState::TakeSetProperty()
 {
-  NS_ENSURE_TRUE(outPropItem, NS_ERROR_NULL_POINTER);
-  *outPropItem = nsnull;
   PRUint32 count = mSetArray.Length();
-  if (count)
-  {
-    count--; // indizes are zero based
-    *outPropItem = mSetArray[count];
-    mSetArray.RemoveElementAt(count);
+  if (!count) {
+    return NULL;
   }
-  return NS_OK;
+  count--; // indices are zero based
+  PropItem* propItem = mSetArray[count];
+  mSetArray.RemoveElementAt(count);
+  return propItem;
 }
 
 //**************************************************************************
 //    TakeRelativeFontSize: hands back relative font value, which is then
 //                          cleared out.
-nsresult TypeInState::TakeRelativeFontSize(PRInt32 *outRelSize)
+PRInt32
+TypeInState::TakeRelativeFontSize()
 {
-  NS_ENSURE_TRUE(outRelSize, NS_ERROR_NULL_POINTER);
-  *outRelSize = mRelativeFontSize;
+  PRInt32 relSize = mRelativeFontSize;
   mRelativeFontSize = 0;
-  return NS_OK;
+  return relSize;
 }
 
 nsresult TypeInState::GetTypingState(bool &isSet, bool &theSetting, nsIAtom *aProp)
@@ -300,8 +289,8 @@ nsresult TypeInState::GetTypingState(bool &isSet,
  *                   protected methods
  *******************************************************************/
  
-nsresult TypeInState::RemovePropFromSetList(nsIAtom *aProp, 
-                                            const nsString &aAttr)
+nsresult TypeInState::RemovePropFromSetList(nsIAtom* aProp,
+                                            const nsAString& aAttr)
 {
   PRInt32 index;
   if (!aProp)
@@ -322,8 +311,8 @@ nsresult TypeInState::RemovePropFromSetList(nsIAtom *aProp,
 }
 
 
-nsresult TypeInState::RemovePropFromClearedList(nsIAtom *aProp, 
-                                            const nsString &aAttr)
+nsresult TypeInState::RemovePropFromClearedList(nsIAtom* aProp,
+                                                const nsAString& aAttr)
 {
   PRInt32 index;
   if (FindPropInList(aProp, aAttr, nsnull, mClearedArray, index))
@@ -335,19 +324,19 @@ nsresult TypeInState::RemovePropFromClearedList(nsIAtom *aProp,
 }
 
 
-bool TypeInState::IsPropSet(nsIAtom *aProp, 
-                              const nsString &aAttr,
-                              nsString* outValue)
+bool TypeInState::IsPropSet(nsIAtom *aProp,
+                            const nsAString& aAttr,
+                            nsAString* outValue)
 {
   PRInt32 i;
   return IsPropSet(aProp, aAttr, outValue, i);
 }
 
 
-bool TypeInState::IsPropSet(nsIAtom *aProp, 
-                              const nsString &aAttr,
-                              nsString *outValue,
-                              PRInt32 &outIndex)
+bool TypeInState::IsPropSet(nsIAtom* aProp,
+                            const nsAString& aAttr,
+                            nsAString* outValue,
+                            PRInt32& outIndex)
 {
   // linear search.  list should be short.
   PRUint32 i, count = mSetArray.Length();
@@ -366,17 +355,17 @@ bool TypeInState::IsPropSet(nsIAtom *aProp,
 }
 
 
-bool TypeInState::IsPropCleared(nsIAtom *aProp, 
-                                  const nsString &aAttr)
+bool TypeInState::IsPropCleared(nsIAtom* aProp,
+                                const nsAString& aAttr)
 {
   PRInt32 i;
   return IsPropCleared(aProp, aAttr, i);
 }
 
 
-bool TypeInState::IsPropCleared(nsIAtom *aProp, 
-                                  const nsString &aAttr,
-                                  PRInt32 &outIndex)
+bool TypeInState::IsPropCleared(nsIAtom* aProp,
+                                const nsAString& aAttr,
+                                PRInt32& outIndex)
 {
   if (FindPropInList(aProp, aAttr, nsnull, mClearedArray, outIndex))
     return true;

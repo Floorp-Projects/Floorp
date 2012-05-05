@@ -4214,7 +4214,7 @@ nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
 // GetPriorHTMLSibling: returns the previous editable sibling, if there is
 //                   one within the parent
 //                       
-nsINode*
+nsIContent*
 nsHTMLEditor::GetPriorHTMLSibling(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
@@ -4247,7 +4247,7 @@ nsHTMLEditor::GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outN
 //                   one within the parent.  just like above routine but
 //                   takes a parent/offset instead of a node.
 //                       
-nsINode*
+nsIContent*
 nsHTMLEditor::GetPriorHTMLSibling(nsINode* aParent, PRInt32 aOffset)
 {
   MOZ_ASSERT(aParent);
@@ -4279,7 +4279,7 @@ nsHTMLEditor::GetPriorHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMP
 // GetNextHTMLSibling: returns the next editable sibling, if there is
 //                   one within the parent
 //                       
-nsINode*
+nsIContent*
 nsHTMLEditor::GetNextHTMLSibling(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
@@ -4311,7 +4311,7 @@ nsHTMLEditor::GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNo
 // GetNextHTMLSibling: returns the next editable sibling, if there is
 //                   one within the parent.  just like above routine but
 //                   takes a parent/offset instead of a node.
-nsINode*
+nsIContent*
 nsHTMLEditor::GetNextHTMLSibling(nsINode* aParent, PRInt32 aOffset)
 {
   MOZ_ASSERT(aParent);
@@ -4591,6 +4591,9 @@ nsHTMLEditor::GetLastEditableLeaf(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutL
 bool
 nsHTMLEditor::IsTextInDirtyFrameVisible(nsIContent *aNode)
 {
+  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(aNode->NodeType() == nsIDOMNode::TEXT_NODE);
+
   bool isEmptyTextNode;
   nsresult rv = IsVisTextNode(aNode, &isEmptyTextNode, false);
   if (NS_FAILED(rv)) {
@@ -4611,13 +4614,11 @@ nsHTMLEditor::IsVisTextNode(nsIContent* aNode,
                             bool* outIsEmptyNode,
                             bool aSafeToAskFrames)
 {
-  NS_ENSURE_TRUE(aNode && outIsEmptyNode, NS_ERROR_NULL_POINTER);
-  *outIsEmptyNode = true;
+  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(aNode->NodeType() == nsIDOMNode::TEXT_NODE);
+  MOZ_ASSERT(outIsEmptyNode);
 
-  // callers job to only call us with text nodes
-  if (!aNode->IsNodeOfType(nsINode::eTEXT)) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  *outIsEmptyNode = true;
 
   PRUint32 length = aNode->TextLength();
   if (aSafeToAskFrames)
