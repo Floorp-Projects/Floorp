@@ -154,7 +154,7 @@ nsEditor::nsEditor()
 ,  mFlags(0)
 ,  mUpdateCount(0)
 ,  mPlaceHolderBatch(0)
-,  mAction(nsnull)
+,  mAction(kOpNone)
 ,  mHandlingActionCount(0)
 ,  mIMETextOffset(0)
 ,  mIMEBufferLength(0)
@@ -2157,7 +2157,7 @@ nsEditor::GetRootElement(nsIDOMElement **aRootElement)
 /** All editor operations which alter the doc should be prefaced
  *  with a call to StartOperation, naming the action and direction */
 NS_IMETHODIMP
-nsEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
+nsEditor::StartOperation(OperationID opID, nsIEditor::EDirection aDirection)
 {
   mAction = opID;
   mDirection = aDirection;
@@ -2170,7 +2170,7 @@ nsEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 NS_IMETHODIMP
 nsEditor::EndOperation()
 {
-  mAction = nsnull;
+  mAction = kOpNone;
   mDirection = eNone;
   return NS_OK;
 }
@@ -5129,7 +5129,7 @@ nsEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
 }
 
 nsresult
-nsEditor::HandleInlineSpellCheck(PRInt32 action,
+nsEditor::HandleInlineSpellCheck(OperationID action,
                                    nsISelection *aSelection,
                                    nsIDOMNode *previousSelectedNode,
                                    PRInt32 previousSelectedOffset,
