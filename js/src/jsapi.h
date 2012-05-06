@@ -1999,7 +1999,7 @@ JSID_TO_INT(jsid id)
 }
 
 #define JSID_INT_MIN  0
-#define JSID_INT_MAX  ((1 << 31) - 1)
+#define JSID_INT_MAX  INT32_MAX
 
 static JS_ALWAYS_INLINE JSBool
 INT_FITS_IN_JSID(int32_t i)
