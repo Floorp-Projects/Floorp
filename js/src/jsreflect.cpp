@@ -206,7 +206,7 @@ class NodeBuilder
             JSAtom *atom = js_Atomize(cx, name, strlen(name));
             if (!atom)
                 return false;
-            RootedVarId id(cx, ATOM_TO_JSID(atom));
+            RootedVarId id(cx, AtomToId(atom));
             if (!GetPropertyDefault(cx, userobj, id, NullValue(), &funv))
                 return false;
 
@@ -3135,7 +3135,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         Value prop;
 
         /* config.loc */
-        RootedVarId locId(cx, ATOM_TO_JSID(cx->runtime->atomState.locAtom));
+        RootedVarId locId(cx, NameToId(cx->runtime->atomState.locAtom));
         if (!GetPropertyDefault(cx, config, locId, BooleanValue(true), &prop))
             return JS_FALSE;
 
@@ -3143,7 +3143,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
 
         if (loc) {
             /* config.source */
-            RootedVarId sourceId(cx, ATOM_TO_JSID(cx->runtime->atomState.sourceAtom));
+            RootedVarId sourceId(cx, NameToId(cx->runtime->atomState.sourceAtom));
             if (!GetPropertyDefault(cx, config, sourceId, NullValue(), &prop))
                 return JS_FALSE;
 
@@ -3164,7 +3164,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
             }
 
             /* config.line */
-            RootedVarId lineId(cx, ATOM_TO_JSID(cx->runtime->atomState.lineAtom));
+            RootedVarId lineId(cx, NameToId(cx->runtime->atomState.lineAtom));
             if (!GetPropertyDefault(cx, config, lineId, Int32Value(1), &prop) ||
                 !ToUint32(cx, prop, &lineno)) {
                 return JS_FALSE;
@@ -3172,7 +3172,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         }
 
         /* config.builder */
-        RootedVarId builderId(cx, ATOM_TO_JSID(cx->runtime->atomState.builderAtom));
+        RootedVarId builderId(cx, NameToId(cx->runtime->atomState.builderAtom));
         if (!GetPropertyDefault(cx, config, builderId, NullValue(), &prop))
             return JS_FALSE;
 

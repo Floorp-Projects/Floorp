@@ -526,8 +526,8 @@ void
 ReportUsageError(JSContext *cx, JSObject *callee, const char *msg)
 {
     const char *usageStr = "usage";
-    JSAtom *usageAtom = js_Atomize(cx, usageStr, strlen(usageStr));
-    DebugOnly<const Shape *> shape = callee->nativeLookup(cx, ATOM_TO_JSID(usageAtom));
+    PropertyName *usageAtom = js_Atomize(cx, usageStr, strlen(usageStr))->asPropertyName();
+    DebugOnly<const Shape *> shape = callee->nativeLookup(cx, NameToId(usageAtom));
     JS_ASSERT(!shape->configurable());
     JS_ASSERT(!shape->writable());
     JS_ASSERT(shape->hasDefaultGetter());

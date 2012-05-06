@@ -714,7 +714,6 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
             jsid id;
             if (!ValueToId(cx, StringValue(ni->begin()[i]), &id))
                 return false;
-            id = js_CheckForStringIndex(id);
             keys.infallibleAppend(id);
             if (!origin->wrapId(cx, &keys[i]))
                 return false;

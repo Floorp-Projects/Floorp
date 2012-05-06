@@ -167,7 +167,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
     booleanProto->setFixedSlot(BooleanObject::PRIMITIVE_VALUE_SLOT, BooleanValue(false));
 
     RootedVarFunction ctor(cx);
-    ctor = global->createConstructor(cx, Boolean, CLASS_ATOM(cx, Boolean), 1);
+    ctor = global->createConstructor(cx, Boolean, CLASS_NAME(cx, Boolean), 1);
     if (!ctor)
         return NULL;
 
