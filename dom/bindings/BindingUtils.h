@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/workers/Workers.h"
-#include "mozilla/ErrorResult.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -45,11 +44,11 @@ Throw(JSContext* cx, nsresult rv)
 
 template<bool mainThread>
 inline bool
-ThrowMethodFailedWithDetails(JSContext* cx, const ErrorResult& rv,
+ThrowMethodFailedWithDetails(JSContext* cx, nsresult rv,
                              const char* /* ifaceName */,
                              const char* /* memberName */)
 {
-  return Throw<mainThread>(cx, rv.ErrorCode());
+  return Throw<mainThread>(cx, rv);
 }
 
 inline bool

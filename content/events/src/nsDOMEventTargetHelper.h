@@ -49,7 +49,6 @@
 #include "nsEventListenerManager.h"
 #include "nsIScriptContext.h"
 #include "nsWrapperCache.h"
-#include "mozilla/ErrorResult.h"
 
 class nsDOMEventListenerWrapper : public nsIDOMEventListener
 {
@@ -81,7 +80,7 @@ public:
   void AddEventListener(const nsAString& aType,
                         nsIDOMEventListener* aCallback, // XXX nullable
                         bool aCapture, Nullable<bool>& aWantsUntrusted,
-                        mozilla::ErrorResult& aRv)
+                        nsresult& aRv)
   {
     aRv = AddEventListener(aType, aCallback, aCapture,
                            !aWantsUntrusted.IsNull() && aWantsUntrusted.Value(),
@@ -89,11 +88,11 @@ public:
   }
   void RemoveEventListener(const nsAString& aType,
                            nsIDOMEventListener* aCallback,
-                           bool aCapture, mozilla::ErrorResult& aRv)
+                           bool aCapture, nsresult& aRv)
   {
     aRv = RemoveEventListener(aType, aCallback, aCapture);
   }
-  bool DispatchEvent(nsIDOMEvent* aEvent, mozilla::ErrorResult& aRv)
+  bool DispatchEvent(nsIDOMEvent* aEvent, nsresult& aRv)
   {
     bool result = false;
     aRv = DispatchEvent(aEvent, &result);

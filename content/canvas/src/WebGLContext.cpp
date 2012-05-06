@@ -785,17 +785,16 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 NS_IMETHODIMP
 WebGLContext::GetContextAttributes(jsval *aResult)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     JSObject* obj = GetContextAttributes(rv);
-    if (rv.Failed())
-        return rv.ErrorCode();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     *aResult = JS::ObjectOrNullValue(obj);
     return NS_OK;
 }
 
 JSObject*
-WebGLContext::GetContextAttributes(ErrorResult &rv)
+WebGLContext::GetContextAttributes(nsresult &rv)
 {
     if (!IsContextStable())
     {
@@ -804,13 +803,13 @@ WebGLContext::GetContextAttributes(ErrorResult &rv)
 
     JSContext *cx = nsContentUtils::GetCurrentJSContext();
     if (!cx) {
-        rv.Throw(NS_ERROR_FAILURE);
+        rv = NS_ERROR_FAILURE;
         return NULL;
     }
 
     JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
     if (!obj) {
-        rv.Throw(NS_ERROR_FAILURE);
+        rv = NS_ERROR_FAILURE;
         return NULL;
     }
 
@@ -831,7 +830,7 @@ WebGLContext::GetContextAttributes(ErrorResult &rv)
                            mOptions.preserveDrawingBuffer ? JSVAL_TRUE : JSVAL_FALSE,
                            NULL, NULL, JSPROP_ENUMERATE))
     {
-        rv.Throw(NS_ERROR_FAILURE);
+        rv = NS_ERROR_FAILURE;
         return NULL;
     }
 
