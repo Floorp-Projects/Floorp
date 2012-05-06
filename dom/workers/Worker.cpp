@@ -56,6 +56,7 @@
 USING_WORKERS_NAMESPACE
 
 using namespace mozilla::dom;
+using mozilla::ErrorResult;
 
 namespace {
 
@@ -198,10 +199,10 @@ private:
     }
 
     NS_ConvertASCIItoUTF16 nameStr(name + 2);
-    nsresult rv = NS_OK;
+    ErrorResult rv;
     JSObject* listener = worker->GetEventListener(nameStr, rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to get listener!");
     }
 
@@ -228,10 +229,10 @@ private:
     }
 
     NS_ConvertASCIItoUTF16 nameStr(name + 2);
-    nsresult rv = NS_OK;
+    ErrorResult rv;
     worker->SetEventListener(nameStr, listener, rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to set listener!");
       return false;
     }
