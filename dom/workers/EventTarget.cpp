@@ -6,7 +6,6 @@
 #include "EventTarget.h"
 
 USING_WORKERS_NAMESPACE
-using mozilla::ErrorResult;
 
 void
 EventTarget::_Trace(JSTracer* aTrc)
@@ -23,14 +22,14 @@ EventTarget::_Finalize(JSFreeOp* aFop)
 }
 
 JSObject*
-EventTarget::GetEventListener(const nsAString& aType, ErrorResult& aRv) const
+EventTarget::GetEventListener(const nsAString& aType, nsresult& aRv) const
 {
   JSContext* cx = GetJSContext();
 
   JSString* type =
     JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
   if (!type || !(type = JS_InternJSString(cx, type))) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv = NS_ERROR_OUT_OF_MEMORY;
     return NULL;
   }
 
@@ -39,14 +38,14 @@ EventTarget::GetEventListener(const nsAString& aType, ErrorResult& aRv) const
 
 void
 EventTarget::SetEventListener(const nsAString& aType, JSObject* aListener,
-                              ErrorResult& aRv)
+                              nsresult& aRv)
 {
   JSContext* cx = GetJSContext();
 
   JSString* type =
     JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
   if (!type || !(type = JS_InternJSString(cx, type))) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv = NS_ERROR_OUT_OF_MEMORY;
     return;
   }
 
@@ -57,7 +56,7 @@ EventTarget::SetEventListener(const nsAString& aType, JSObject* aListener,
 void
 EventTarget::AddEventListener(const nsAString& aType, JSObject* aListener,
                               bool aCapturing, Nullable<bool> aWantsUntrusted,
-                              ErrorResult& aRv)
+                              nsresult& aRv)
 {
   if (!aListener) {
     return;
@@ -68,7 +67,7 @@ EventTarget::AddEventListener(const nsAString& aType, JSObject* aListener,
   JSString* type =
     JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
   if (!type || !(type = JS_InternJSString(cx, type))) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv = NS_ERROR_OUT_OF_MEMORY;
     return;
   }
 
@@ -80,7 +79,7 @@ EventTarget::AddEventListener(const nsAString& aType, JSObject* aListener,
 
 void
 EventTarget::RemoveEventListener(const nsAString& aType, JSObject* aListener,
-                                 bool aCapturing, ErrorResult& aRv)
+                                 bool aCapturing, nsresult& aRv)
 {
   if (!aListener) {
     return;
@@ -91,7 +90,7 @@ EventTarget::RemoveEventListener(const nsAString& aType, JSObject* aListener,
   JSString* type =
     JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
   if (!type || !(type = JS_InternJSString(cx, type))) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv = NS_ERROR_OUT_OF_MEMORY;
     return;
   }
 

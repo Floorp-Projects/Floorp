@@ -68,7 +68,7 @@ public:
   _Finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   static XMLHttpRequest*
-  _Constructor(JSContext* aCx, JSObject* aGlobal, ErrorResult& aRv);
+  _Constructor(JSContext* aCx, JSObject* aGlobal, nsresult& aRv);
 
   void
   Unpin();
@@ -78,13 +78,13 @@ public:
 
 #define IMPL_GETTER_AND_SETTER(_type)                                          \
   JSObject*                                                                    \
-  GetOn##_type(ErrorResult& aRv)                                               \
+  GetOn##_type(nsresult& aRv)                                                  \
   {                                                                            \
     return GetEventListener(NS_LITERAL_STRING(#_type), aRv);                   \
   }                                                                            \
                                                                                \
   void                                                                         \
-  SetOn##_type(JSObject* aListener, ErrorResult& aRv)                          \
+  SetOn##_type(JSObject* aListener, nsresult& aRv)                             \
   {                                                                            \
     SetEventListener(NS_LITERAL_STRING(#_type), aListener, aRv);               \
   }
@@ -101,68 +101,68 @@ public:
 
   void
   Open(const nsAString& aMethod, const nsAString& aUrl, bool aAsync,
-       const nsAString& aUser, const nsAString& aPassword, ErrorResult& aRv);
+       const nsAString& aUser, const nsAString& aPassword, nsresult& aRv);
 
   void
   SetRequestHeader(const nsAString& aHeader, const nsAString& aValue,
-                   ErrorResult& aRv);
+                   nsresult& aRv);
 
   uint32_t
-  GetTimeout() const
+  GetTimeout(nsresult& aRv) const
   {
     return mTimeout;
   }
 
   void
-  SetTimeout(uint32_t aTimeout, ErrorResult& aRv);
+  SetTimeout(uint32_t aTimeout, nsresult& aRv);
 
   bool
-  GetWithCredentials() const
+  GetWithCredentials(nsresult& aRv) const
   {
     return mWithCredentials;
   }
 
   void
-  SetWithCredentials(bool aWithCredentials, ErrorResult& aRv);
+  SetWithCredentials(bool aWithCredentials, nsresult& aRv);
 
   bool
-  GetMultipart() const
+  GetMultipart(nsresult& aRv) const
   {
     return mMultipart;
   }
 
   void
-  SetMultipart(bool aMultipart, ErrorResult& aRv);
+  SetMultipart(bool aMultipart, nsresult& aRv);
 
   bool
-  GetMozBackgroundRequest() const
+  GetMozBackgroundRequest(nsresult& aRv) const
   {
     return mBackgroundRequest;
   }
 
   void
-  SetMozBackgroundRequest(bool aBackgroundRequest, ErrorResult& aRv);
+  SetMozBackgroundRequest(bool aBackgroundRequest, nsresult& aRv);
 
   XMLHttpRequestUpload*
-  GetUpload(ErrorResult& aRv);
+  GetUpload(nsresult& aRv);
 
   void
-  Send(ErrorResult& aRv);
+  Send(nsresult& aRv);
 
   void
-  Send(const nsAString& aBody, ErrorResult& aRv);
+  Send(const nsAString& aBody, nsresult& aRv);
 
   void
-  Send(JSObject* aBody, ErrorResult& aRv);
+  Send(JSObject* aBody, nsresult& aRv);
 
   void
-  SendAsBinary(const nsAString& aBody, ErrorResult& aRv);
+  SendAsBinary(const nsAString& aBody, nsresult& aRv);
 
   void
-  Abort(ErrorResult& aRv);
+  Abort(nsresult& aRv);
 
   uint16_t
-  GetStatus(ErrorResult& aRv) const
+  GetStatus(nsresult& aRv) const
   {
     aRv = mStateData.mStatusResult;
     return mStateData.mStatus;
@@ -176,45 +176,45 @@ public:
 
   void
   GetResponseHeader(const nsAString& aHeader, nsAString& aResponseHeader,
-                    ErrorResult& aRv);
+                    nsresult& aRv);
 
   void
-  GetAllResponseHeaders(nsAString& aResponseHeaders, ErrorResult& aRv);
+  GetAllResponseHeaders(nsAString& aResponseHeaders, nsresult& aRv);
 
   void
-  OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv);
+  OverrideMimeType(const nsAString& aMimeType, nsresult& aRv);
 
   XMLHttpRequestResponseType
-  GetResponseType() const
+  GetResponseType(nsresult& aRv) const
   {
     return mResponseType;
   }
 
   void
-  SetResponseType(XMLHttpRequestResponseType aResponseType, ErrorResult& aRv);
+  SetResponseType(XMLHttpRequestResponseType aResponseType, nsresult& aRv);
 
   jsval
-  GetResponse(ErrorResult& aRv);
+  GetResponse(nsresult& aRv);
 
   void
-  GetResponseText(nsAString& aResponseText, ErrorResult& aRv);
+  GetResponseText(nsAString& aResponseText, nsresult& aRv);
 
   JSObject*
-  GetResponseXML() const
+  GetResponseXML(nsresult& aRv) const
   {
     return NULL;
   }
 
   JSObject*
-  GetChannel() const
+  GetChannel(nsresult& aRv) const
   {
     return NULL;
   }
 
   JS::Value
-  GetInterface(JSObject* aIID, ErrorResult& aRv)
+  GetInterface(JSObject* aIID, nsresult& aRv)
   {
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv = NS_ERROR_FAILURE;
     return JSVAL_NULL;
   }
 
@@ -244,14 +244,14 @@ private:
   ReleaseProxy(ReleaseType aType = Default);
 
   void
-  MaybePin(ErrorResult& aRv);
+  MaybePin(nsresult& aRv);
 
   void
-  MaybeDispatchPrematureAbortEvents(ErrorResult& aRv);
+  MaybeDispatchPrematureAbortEvents(nsresult& aRv);
 
   void
   DispatchPrematureAbortEvent(JSObject* aTarget, uint8_t aEventType,
-                              bool aUploadTarget, ErrorResult& aRv);
+                              bool aUploadTarget, nsresult& aRv);
 
   bool
   SendInProgress() const
@@ -263,7 +263,7 @@ private:
   SendInternal(const nsAString& aStringBody,
                JSAutoStructuredCloneBuffer& aBody,
                nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects,
-               ErrorResult& aRv);
+               nsresult& aRv);
 };
 
 END_WORKERS_NAMESPACE

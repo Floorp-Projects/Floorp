@@ -2321,20 +2321,19 @@ WebGLContext::GetAttribLocation(WebGLProgram *prog, const nsAString& name)
 NS_IMETHODIMP
 WebGLContext::GetParameter(PRUint32 pname, JSContext* cx, JS::Value *retval)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     JS::Value v = GetParameter(cx, pname, rv);
-    if (rv.Failed())
-        return rv.ErrorCode();
+    NS_ENSURE_SUCCESS(rv, rv);
     *retval = v;
     return NS_OK;
 }
 
 static JS::Value
-StringValue(JSContext* cx, const char* chars, ErrorResult& rv)
+StringValue(JSContext* cx, const char* chars, nsresult& rv)
 {
     JSString* str = JS_NewStringCopyZ(cx, chars);
     if (!str) {
-        rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        rv = NS_ERROR_OUT_OF_MEMORY;
         return JS::NullValue();
     }
 
@@ -2342,7 +2341,7 @@ StringValue(JSContext* cx, const char* chars, ErrorResult& rv)
 }
 
 JS::Value
-WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
+WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, nsresult& rv)
 {
     if (!IsContextStable())
         return JS::NullValue();
@@ -2748,11 +2747,10 @@ WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname)
 NS_IMETHODIMP
 WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum attachment, WebGLenum pname, JSContext* cx, JS::Value *retval)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     JS::Value v =
         GetFramebufferAttachmentParameter(cx, target, attachment, pname, rv);
-    if (rv.Failed())
-        return rv.ErrorCode();
+    NS_ENSURE_SUCCESS(rv, rv);
     *retval = v;
     return NS_OK;
 }
@@ -2762,7 +2760,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                                                 WebGLenum target,
                                                 WebGLenum attachment,
                                                 WebGLenum pname,
-                                                ErrorResult& rv)
+                                                nsresult& rv)
 {
     if (!IsContextStable())
         return JS::NullValue();
@@ -2803,7 +2801,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                 if (!dom::WrapObject(cx, GetWrapper(),
                                      const_cast<WebGLRenderbuffer*>(fba.Renderbuffer()),
                                      &v)) {
-                    rv.Throw(NS_ERROR_FAILURE);
+                    rv = NS_ERROR_FAILURE;
                     return JS::NullValue();
                 }
                 return v;
@@ -3024,14 +3022,14 @@ WebGLContext::GetProgramParameter(WebGLProgram *prog, WebGLenum pname)
 NS_IMETHODIMP
 WebGLContext::GetProgramInfoLog(nsIWebGLProgram *pobj, nsAString& retval)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     GetProgramInfoLog(static_cast<WebGLProgram*>(pobj), retval, rv);
-    return rv.ErrorCode();
+    return rv;
 }
 
 void
 WebGLContext::GetProgramInfoLog(WebGLProgram *prog, nsAString& retval,
-                                ErrorResult& rv)
+                                nsresult& rv)
 {
     if (!IsContextStable())
     {
@@ -3251,18 +3249,17 @@ NS_IMETHODIMP
 WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc,
                          JSContext *cx, JS::Value *retval)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     JS::Value v = GetUniform(cx, static_cast<WebGLProgram*>(pobj),
                              static_cast<WebGLUniformLocation*>(ploc), rv);
-    if (rv.Failed())
-        return rv.ErrorCode();
+    NS_ENSURE_SUCCESS(rv, rv);
     *retval = v;
     return NS_OK;
 }
 
 JS::Value
 WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
-                         WebGLUniformLocation *location, ErrorResult& rv)
+                         WebGLUniformLocation *location, nsresult& rv)
 {
     if (!IsContextStable())
         return JS::NullValue();
@@ -3331,20 +3328,20 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
     }
 
     if (index == uniforms) {
-        rv.Throw(NS_ERROR_FAILURE); // XXX GL error? shouldn't happen.
+        rv = NS_ERROR_FAILURE; // XXX GL error? shouldn't happen.
         return JS::NullValue();
     }
 
     GLenum baseType;
     GLint unitSize;
     if (!BaseTypeAndSizeFromUniformType(uniformType, &baseType, &unitSize)) {
-        rv.Throw(NS_ERROR_FAILURE);
+        rv = NS_ERROR_FAILURE;
         return JS::NullValue();
     }
 
     // this should never happen
     if (unitSize > 16) {
-        rv.Throw(NS_ERROR_FAILURE);
+        rv = NS_ERROR_FAILURE;
         return JS::NullValue();
     }
 
@@ -3356,7 +3353,7 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
         } else {
             JSObject* obj = Float32Array::Create(cx, unitSize, fv);
             if (!obj) {
-                rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+                rv = NS_ERROR_OUT_OF_MEMORY;
             }
             return JS::ObjectOrNullValue(obj);
         }
@@ -3368,7 +3365,7 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
         } else {
             JSObject* obj = Int32Array::Create(cx, unitSize, iv);
             if (!obj) {
-                rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+                rv = NS_ERROR_OUT_OF_MEMORY;
             }
             return JS::ObjectOrNullValue(obj);
         }
@@ -3383,7 +3380,7 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
                 uv[k] = JS::BooleanValue(iv[k] ? true : false);
             JSObject* obj = JS_NewArrayObject(cx, unitSize, uv);
             if (!obj) {
-                rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+                rv = NS_ERROR_OUT_OF_MEMORY;
             }
             return JS::ObjectOrNullValue(obj);
         }
@@ -3436,17 +3433,16 @@ NS_IMETHODIMP
 WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname, JSContext* cx,
                               JS::Value *retval)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     JS::Value v = GetVertexAttrib(cx, index, pname, rv);
-    if (rv.Failed())
-        return rv.ErrorCode();
+    NS_ENSURE_SUCCESS(rv, rv);
     *retval = v;
     return NS_OK;
 }
 
 JS::Value
 WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
-                              ErrorResult& rv)
+                              nsresult& rv)
 {
     if (!IsContextStable())
         return JS::NullValue();
@@ -3462,7 +3458,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
             JS::Value v;
             if (!dom::WrapObject(cx, GetWrapper(),
                                  mAttribBuffers[index].buf.get(), &v)) {
-                rv.Throw(NS_ERROR_FAILURE);
+                rv = NS_ERROR_FAILURE;
                 return JS::NullValue();
             }
             return v;
@@ -3496,7 +3492,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
             }
             JSObject* obj = Float32Array::Create(cx, 4, vec);
             if (!obj) {
-                rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+                rv = NS_ERROR_OUT_OF_MEMORY;
             }
             return JS::ObjectOrNullValue(obj);
         }
@@ -3705,13 +3701,13 @@ GL_SAME_METHOD_1(LineWidth, LineWidth, WebGLfloat)
 NS_IMETHODIMP
 WebGLContext::LinkProgram(nsIWebGLProgram *pobj)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     LinkProgram(static_cast<WebGLProgram*>(pobj), rv);
-    return rv.ErrorCode();
+    return rv;
 }
 
 void
-WebGLContext::LinkProgram(WebGLProgram *program, ErrorResult& rv)
+WebGLContext::LinkProgram(WebGLProgram *program, nsresult& rv)
 {
     if (!IsContextStable())
         return;
@@ -3722,7 +3718,8 @@ WebGLContext::LinkProgram(WebGLProgram *program, ErrorResult& rv)
     GLuint progname = program->GLName();
 
     if (!program->NextGeneration()) {
-        return rv.Throw(NS_ERROR_FAILURE);
+        rv = NS_ERROR_FAILURE;
+        return;
     }
 
     if (!program->HasBothShaderTypesAttached()) {
@@ -3803,16 +3800,16 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei he
     }
 
     ArrayBufferView pixels(cx, &pixelsVal.toObject());
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     ReadPixels(x, y, width, height, format, type, &pixels, rv);
-    return rv.ErrorCode();
+    return rv;
 }
 
 void
 WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
                          WebGLsizei height, WebGLenum format,
                          WebGLenum type, ArrayBufferView* pixels,
-                         ErrorResult& rv)
+                         nsresult& rv)
 {
     if (!IsContextStable()) {
         return;
@@ -3820,7 +3817,8 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
 
     if (HTMLCanvasElement()->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
         LogMessageIfVerbose("ReadPixels: Not allowed");
-        return rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        rv = NS_ERROR_DOM_SECURITY_ERR;
+        return;
     }
 
     if (width < 0 || height < 0)
@@ -4023,7 +4021,8 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
                 }
             } else {
                 NS_WARNING("Unhandled case, how'd we get here?");
-                return rv.Throw(NS_ERROR_FAILURE);
+                rv = NS_ERROR_FAILURE;
+                return;
             }
         }            
     }
@@ -5361,14 +5360,13 @@ WebGLContext::GetShaderParameter(WebGLShader *shader, WebGLenum pname)
 NS_IMETHODIMP
 WebGLContext::GetShaderInfoLog(nsIWebGLShader *sobj, nsAString& retval)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     GetShaderInfoLog(static_cast<WebGLShader*>(sobj), retval, rv);
-    return rv.ErrorCode();
+    return rv;
 }
 
 void
-WebGLContext::GetShaderInfoLog(WebGLShader *shader, nsAString& retval,
-                               ErrorResult& rv)
+WebGLContext::GetShaderInfoLog(WebGLShader *shader, nsAString& retval, nsresult& rv)
 {
     if (!IsContextStable())
     {
@@ -5391,7 +5389,8 @@ WebGLContext::GetShaderInfoLog(WebGLShader *shader, nsAString& retval,
     GLint k = -1;
     gl->fGetShaderiv(shadername, LOCAL_GL_INFO_LOG_LENGTH, &k);
     if (k == -1) {
-        return rv.Throw(NS_ERROR_FAILURE); // XXX GL Error? should never happen.
+        rv = NS_ERROR_FAILURE; // XXX GL Error? should never happen.
+        return;
     }
 
     if (k == 0) {
@@ -5791,7 +5790,7 @@ WebGLContext::TexImage2D_array(WebGLenum target, WebGLint level, WebGLenum inter
                                WebGLenum format, WebGLenum type,
                                JSObject *pixels, JSContext *cx)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     if (!pixels) {
         TexImage2D(cx, target, level, internalformat, width, height, border,
                    format, type, nsnull, rv);
@@ -5800,14 +5799,14 @@ WebGLContext::TexImage2D_array(WebGLenum target, WebGLint level, WebGLenum inter
         TexImage2D(cx, target, level, internalformat, width, height, border,
                    format, type, &view, rv);
     }
-    return rv.ErrorCode();
+    return rv;
 }
 
 void
 WebGLContext::TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
                          WebGLenum internalformat, WebGLsizei width,
                          WebGLsizei height, WebGLint border, WebGLenum format,
-                         WebGLenum type, ArrayBufferView *pixels, ErrorResult& rv)
+                         WebGLenum type, ArrayBufferView *pixels, nsresult& rv)
 {
     if (!IsContextStable())
         return;
@@ -5841,7 +5840,7 @@ WebGLContext::TexImage2D_imageData(WebGLenum target, WebGLint level, WebGLenum i
 void
 WebGLContext::TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
                          WebGLenum internalformat, WebGLenum format,
-                         WebGLenum type, ImageData* pixels, ErrorResult& rv)
+                         WebGLenum type, ImageData* pixels, nsresult& rv)
 {
     if (!IsContextStable())
         return;
@@ -5863,16 +5862,16 @@ NS_IMETHODIMP
 WebGLContext::TexImage2D_dom(WebGLenum target, WebGLint level, WebGLenum internalformat,
                              WebGLenum format, GLenum type, Element* elt)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     TexImage2D(NULL, target, level, internalformat, format, type, elt, rv);
-    return rv.ErrorCode();
+    return rv;
 }
 
 void
 WebGLContext::TexImage2D(JSContext* /* unused */, WebGLenum target,
                          WebGLint level, WebGLenum internalformat,
                          WebGLenum format, WebGLenum type, Element* elt,
-                         ErrorResult& rv)
+                         nsresult& rv)
 {
     if (!IsContextStable())
         return;
@@ -5881,7 +5880,7 @@ WebGLContext::TexImage2D(JSContext* /* unused */, WebGLenum target,
 
     int srcFormat;
     rv = DOMElementToImageSurface(elt, getter_AddRefs(isurf), &srcFormat);
-    if (rv.Failed())
+    if (NS_FAILED(rv))
         return;
 
     PRUint32 byteLength = isurf->Stride() * isurf->Height();
@@ -6023,7 +6022,7 @@ WebGLContext::TexSubImage2D_array(WebGLenum target, WebGLint level,
                                   WebGLenum format, WebGLenum type,
                                   JSObject *pixels, JSContext *cx)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     if (!pixels) {
         TexSubImage2D(cx, target, level, xoffset, yoffset, width, height,
                       format, type, nsnull, rv);
@@ -6032,7 +6031,7 @@ WebGLContext::TexSubImage2D_array(WebGLenum target, WebGLint level,
         TexSubImage2D(cx, target, level, xoffset, yoffset, width, height,
                       format, type, &view, rv);
     }
-    return rv.ErrorCode();
+    return rv;
 }
 
 void
@@ -6041,7 +6040,7 @@ WebGLContext::TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
                             WebGLsizei width, WebGLsizei height,
                             WebGLenum format, WebGLenum type,
                             ArrayBufferView* pixels,
-                            ErrorResult& rv)
+                            nsresult& rv)
 {
     if (!IsContextStable())
         return;
@@ -6085,7 +6084,7 @@ void
 WebGLContext::TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
                             WebGLint xoffset, WebGLint yoffset,
                             WebGLenum format, WebGLenum type, ImageData* pixels,
-                            ErrorResult& rv)
+                            nsresult& rv)
 {
     if (!IsContextStable())
         return;
@@ -6108,16 +6107,16 @@ WebGLContext::TexSubImage2D_dom(WebGLenum target, WebGLint level,
                                 WebGLenum format, WebGLenum type,
                                 Element *elt)
 {
-    ErrorResult rv;
+    nsresult rv = NS_OK;
     TexSubImage2D(NULL, target, level, xoffset, yoffset, format, type, elt, rv);
-    return rv.ErrorCode();
+    return rv;
 }
 
 void
 WebGLContext::TexSubImage2D(JSContext* /* unused */, WebGLenum target,
                             WebGLint level, WebGLint xoffset, WebGLint yoffset,
                             WebGLenum format, WebGLenum type,
-                            dom::Element* elt, ErrorResult& rv)
+                            dom::Element* elt, nsresult& rv)
 {
     if (!IsContextStable())
         return;
@@ -6126,7 +6125,7 @@ WebGLContext::TexSubImage2D(JSContext* /* unused */, WebGLenum target,
 
     int srcFormat;
     rv = DOMElementToImageSurface(elt, getter_AddRefs(isurf), &srcFormat);
-    if (rv.Failed())
+    if (NS_FAILED(rv))
         return;
 
     PRUint32 byteLength = isurf->Stride() * isurf->Height();

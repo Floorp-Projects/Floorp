@@ -10,8 +10,6 @@
 
 #include "prclist.h"
 
-#include "mozilla/ErrorResult.h"
-
 BEGIN_WORKERS_NAMESPACE
 
 class EventTarget;
@@ -58,7 +56,7 @@ public:
 
   void
   AddEventListener(JSContext* aCx, const jsid& aType, JSObject* aListener,
-                   bool aCapturing, bool aWantsUntrusted, ErrorResult& aRv)
+                   bool aCapturing, bool aWantsUntrusted, nsresult& aRv)
   {
     Add(aCx, aType, aListener, aCapturing ? Capturing : Bubbling,
         aWantsUntrusted, aRv);
@@ -76,14 +74,14 @@ public:
 
   bool
   DispatchEvent(JSContext* aCx, const EventTarget& aTarget, JSObject* aEvent,
-                ErrorResult& aRv) const;
+                nsresult& aRv) const;
 
   JSObject*
   GetEventListener(const jsid& aType) const;
 
   void
   SetEventListener(JSContext* aCx, const jsid& aType, JSObject* aListener,
-                   ErrorResult& aRv)
+                   nsresult& aRv)
   {
     JSObject* existing = GetEventListener(aType);
     if (existing) {
@@ -116,7 +114,7 @@ private:
 
   void
   Add(JSContext* aCx, const jsid& aType, JSObject* aListener, Phase aPhase,
-      bool aWantsUntrusted, ErrorResult& aRv);
+      bool aWantsUntrusted, nsresult& aRv);
 
   void
   Remove(JSContext* aCx, const jsid& aType, JSObject* aListener, Phase aPhase,

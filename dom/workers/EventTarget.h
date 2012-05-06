@@ -12,7 +12,6 @@
 #include "mozilla/dom/workers/bindings/EventListenerManager.h"
 
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/ErrorResult.h"
 
 using namespace mozilla::dom;
 
@@ -39,25 +38,24 @@ public:
 
   void
   AddEventListener(const nsAString& aType, JSObject* aListener,
-                   bool aCapture, Nullable<bool> aWantsUntrusted,
-                   ErrorResult& aRv);
+                   bool aCapture, Nullable<bool> aWantsUntrusted, nsresult& aRv);
 
   void
   RemoveEventListener(const nsAString& aType, JSObject* aListener,
-                      bool aCapture, ErrorResult& aRv);
+                      bool aCapture, nsresult& aRv);
 
   bool
-  DispatchEvent(JSObject* aEvent, ErrorResult& aRv) const
+  DispatchEvent(JSObject* aEvent, nsresult& aRv) const
   {
     return mListenerManager.DispatchEvent(GetJSContext(), *this, aEvent, aRv);
   }
 
   JSObject*
-  GetEventListener(const nsAString& aType, ErrorResult& aRv) const;
+  GetEventListener(const nsAString& aType, nsresult& aRv) const;
 
   void
   SetEventListener(const nsAString& aType, JSObject* aListener,
-                   ErrorResult& aRv);
+                   nsresult& aRv);
 
   bool
   HasListeners() const
