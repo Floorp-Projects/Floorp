@@ -763,9 +763,7 @@ struct Shape : public js::gc::Cell
      * If SHORTID is set in shape->flags, we use shape->shortid rather
      * than id when calling shape's getter or setter.
      */
-    jsid getUserId() const {
-        return hasShortID() ? INT_TO_JSID(shortid()) : propid();
-    }
+    inline bool getUserId(JSContext *cx, jsid *idp) const;
 
     uint8_t attributes() const { return attrs; }
     bool configurable() const { return (attrs & JSPROP_PERMANENT) == 0; }

@@ -174,7 +174,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         if (!ctor)
             return NULL;
         objectCtor = js_NewFunction(cx, ctor, js_Object, 1, JSFUN_CONSTRUCTOR, self,
-                                    CLASS_ATOM(cx, Object));
+                                    CLASS_NAME(cx, Object));
         if (!objectCtor)
             return NULL;
     }
@@ -193,7 +193,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         if (!ctor)
             return NULL;
         functionCtor = js_NewFunction(cx, ctor, Function, 1, JSFUN_CONSTRUCTOR, self,
-                                      CLASS_ATOM(cx, Function));
+                                      CLASS_NAME(cx, Function));
         if (!functionCtor)
             return NULL;
         JS_ASSERT(ctor == functionCtor);
@@ -220,17 +220,17 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     }
 
     /* Add the global Function and Object properties now. */
-    jsid objectId = ATOM_TO_JSID(CLASS_ATOM(cx, Object));
+    jsid objectId = NameToId(CLASS_NAME(cx, Object));
     if (!self->addDataProperty(cx, objectId, JSProto_Object + JSProto_LIMIT * 2, 0))
         return NULL;
-    jsid functionId = ATOM_TO_JSID(CLASS_ATOM(cx, Function));
+    jsid functionId = NameToId(CLASS_NAME(cx, Function));
     if (!self->addDataProperty(cx, functionId, JSProto_Function + JSProto_LIMIT * 2, 0))
         return NULL;
 
     /* Heavy lifting done, but lingering tasks remain. */
 
     /* ES5 15.1.2.1. */
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.evalAtom);
+    jsid id = NameToId(cx->runtime->atomState.evalAtom);
     JSObject *evalobj = js_DefineFunction(cx, self, id, eval, 1, JSFUN_STUB_GSOPS);
     if (!evalobj)
         return NULL;

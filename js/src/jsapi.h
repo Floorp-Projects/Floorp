@@ -1982,20 +1982,8 @@ JS_StringHasBeenInterned(JSContext *cx, JSString *str);
  * N.B. if a jsid is backed by a string which has not been interned, that
  * string must be appropriately rooted to avoid being collected by the GC.
  */
-static JS_ALWAYS_INLINE jsid
-INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str)
-{
-    jsid id;
-    JS_ASSERT(str);
-    JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
-#ifdef DEBUG
-    JS_ASSERT(JS_StringHasBeenInterned(cx, str));
-#else
-    (void)cx;
-#endif
-    JSID_BITS(id) = (size_t)str;
-    return id;
-}
+JS_PUBLIC_API(jsid)
+INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str);
 
 static JS_ALWAYS_INLINE JSBool
 JSID_IS_INT(jsid id)
@@ -2007,21 +1995,16 @@ static JS_ALWAYS_INLINE int32_t
 JSID_TO_INT(jsid id)
 {
     JS_ASSERT(JSID_IS_INT(id));
-    return ((int32_t)JSID_BITS(id)) >> 1;
+    return ((uint32_t)JSID_BITS(id)) >> 1;
 }
 
-/*
- * Note: when changing these values, verify that their use in
- * js_CheckForStringIndex is still valid.
- */
-#define JSID_INT_MIN  (-(1 << 30))
-#define JSID_INT_MAX  ((1 << 30) - 1)
+#define JSID_INT_MIN  0
+#define JSID_INT_MAX  ((1 << 31) - 1)
 
 static JS_ALWAYS_INLINE JSBool
 INT_FITS_IN_JSID(int32_t i)
 {
-    return ((uint32_t)(i) - (uint32_t)JSID_INT_MIN <=
-            (uint32_t)(JSID_INT_MAX - JSID_INT_MIN));
+    return i >= 0;
 }
 
 static JS_ALWAYS_INLINE jsid

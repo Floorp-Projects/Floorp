@@ -470,7 +470,7 @@ class SetPropCompiler : public PICStubCompiler
         JS_ASSERT(pic.typeMonitored);
 
         RecompilationMonitor monitor(cx);
-        jsid id = ATOM_TO_JSID(name);
+        jsid id = NameToId(name);
 
         if (!obj->getType(cx)->unknownProperties()) {
             types::AutoEnterTypeInference enter(cx);
@@ -1053,7 +1053,7 @@ class GetPropCompiler : public PICStubCompiler
         return Lookup_Cacheable;
     }
 
-    void generateGetterStub(Assembler &masm, const Shape *shape,
+    void generateGetterStub(Assembler &masm, const Shape *shape, jsid userid,
                             Label start, Vector<Jump, 8> &shapeMismatches)
     {
         /*
@@ -1115,7 +1115,7 @@ class GetPropCompiler : public PICStubCompiler
         masm.restoreStackBase();
         masm.setupABICall(Registers::NormalCall, 4);
         masm.storeArg(3, vpReg);
-        masm.storeArg(2, ImmPtr((void *) JSID_BITS(shape->getUserId())));
+        masm.storeArg(2, ImmPtr((void *) JSID_BITS(userid)));
         masm.storeArg(1, holdObjReg);
         masm.storeArg(0, cxReg);
 
@@ -1201,7 +1201,11 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         if (!shape->hasDefaultGetter()) {
-            generateGetterStub(masm, shape, start, shapeMismatches);
+            jsid userid;
+            if (!shape->getUserId(cx, &userid))
+                return error();
+
+            generateGetterStub(masm, shape, userid, start, shapeMismatches);
             if (setStubShapeOffset)
                 pic.getPropLabels().setStubShapeJump(masm, start, stubShapeJumpLabel);
             return Lookup_Cacheable;
@@ -2438,7 +2442,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     if (idval.isInt32() && INT_FITS_IN_JSID(idval.toInt32())) {
         id = INT_TO_JSID(idval.toInt32());
     } else {
-        if (!js_InternNonIntElementId(cx, obj, idval, &id))
+        if (!InternNonIntElementId(cx, obj, idval, &id))
             THROW();
     }
 
