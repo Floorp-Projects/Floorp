@@ -3604,6 +3604,13 @@ nsEditor::IsDescendantOfRoot(nsINode* inNode)
 }
 
 bool
+nsEditor::IsDescendantOfEditorRoot(nsIDOMNode* aNode)
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  return IsDescendantOfEditorRoot(node);
+}
+
+bool
 nsEditor::IsDescendantOfEditorRoot(nsINode* aNode)
 {
   NS_ENSURE_TRUE(aNode, false);
