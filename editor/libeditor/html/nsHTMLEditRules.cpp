@@ -109,6 +109,22 @@ static bool IsInlineNode(nsIDOMNode* node)
 {
   return !IsBlockNode(node);
 }
+
+static bool
+IsStyleCachePreservingAction(nsEditor::OperationID action)
+{
+  return action == nsEditor::kOpDeleteSelection ||
+         action == nsEditor::kOpInsertBreak ||
+         action == nsEditor::kOpMakeList ||
+         action == nsEditor::kOpIndent ||
+         action == nsEditor::kOpOutdent ||
+         action == nsEditor::kOpAlign ||
+         action == nsEditor::kOpMakeBasicBlock ||
+         action == nsEditor::kOpRemoveList ||
+         action == nsEditor::kOpMakeDefListItem ||
+         action == nsEditor::kOpInsertElement ||
+         action == nsEditor::kOpInsertQuotation;
+}
  
 class nsTableCellAndListItemFunctor : public nsBoolDomIterFunctor
 {
@@ -335,11 +351,10 @@ nsHTMLEditRules::BeforeEdit(nsEditor::OperationID action,
     }
 
     // remember current inline styles for deletion and normal insertion operations
-    if ((action == nsEditor::kOpInsertText)      || 
-        (action == nsEditor::kOpInsertIMEText)   ||
-        (action == nsEditor::kOpDeleteSelection) ||
-        (action == nsEditor::kOpInsertBreak))
-    {
+    if (action == nsEditor::kOpInsertText ||
+        action == nsEditor::kOpInsertIMEText ||
+        action == nsEditor::kOpDeleteSelection ||
+        IsStyleCachePreservingAction(action)) {
       nsCOMPtr<nsIDOMNode> selNode = selStartNode;
       if (aDirection == nsIEditor::eNext)
         selNode = selEndNode;
@@ -502,11 +517,10 @@ nsHTMLEditRules::AfterEditInner(nsEditor::OperationID action,
     }
 
     // check for any styles which were removed inappropriately
-    if ((action == nsEditor::kOpInsertText)      || 
-        (action == nsEditor::kOpInsertIMEText)   ||
-        (action == nsEditor::kOpDeleteSelection) ||
-        (action == nsEditor::kOpInsertBreak))
-    {
+    if (action == nsEditor::kOpInsertText ||
+        action == nsEditor::kOpInsertIMEText ||
+        action == nsEditor::kOpDeleteSelection ||
+        IsStyleCachePreservingAction(action)) {
       mHTMLEditor->mTypeInState->UpdateSelState(selection);
       res = ReapplyCachedStyles();
       NS_ENSURE_SUCCESS(res, res);
@@ -1267,14 +1281,16 @@ nsHTMLEditRules::WillInsert(nsISelection *aSelection, bool *aCancel)
   if (mDidDeleteSelection &&
       (mTheAction == nsEditor::kOpInsertText ||
        mTheAction == nsEditor::kOpInsertIMEText ||
-       mTheAction == nsEditor::kOpInsertBreak ||
        mTheAction == nsEditor::kOpDeleteSelection)) {
     res = ReapplyCachedStyles();
     NS_ENSURE_SUCCESS(res, res);
   }
-  // either way we clear the cached styles array
-  res = ClearCachedStyles();
-  NS_ENSURE_SUCCESS(res, res);
+  // For most actions we want to clear the cached styles, but there are
+  // exceptions
+  if (!IsStyleCachePreservingAction(mTheAction)) {
+    res = ClearCachedStyles();
+    NS_ENSURE_SUCCESS(res, res);
+  }
 
   return NS_OK;
 }    
@@ -7309,10 +7325,6 @@ nsHTMLEditRules::ReapplyCachedStyles()
   // and see if any have been removed.  If so, add typeinstate
   // for them, so that they will be reinserted when new 
   // content is added.
-  
-  // When we apply cached styles to TypeInState, we always want
-  // to blow away prior TypeInState:
-  mHTMLEditor->mTypeInState->Reset();
 
   // remember if we are in css mode
   bool useCSS = mHTMLEditor->IsCSSEnabled();
@@ -7346,8 +7358,7 @@ nsHTMLEditRules::ReapplyCachedStyles()
         NS_ENSURE_SUCCESS(res, res);
       }
       // this style has disappeared through deletion.  Add it onto our typeinstate:
-      if (!bAny) 
-      {
+      if (!bAny || IsStyleCachePreservingAction(mTheAction)) {
         mHTMLEditor->mTypeInState->SetProp(mCachedStyles[j].tag, mCachedStyles[j].attr, mCachedStyles[j].value);
       }
     }
