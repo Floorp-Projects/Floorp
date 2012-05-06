@@ -14,7 +14,6 @@
 #include "EventTarget.h"
 
 USING_WORKERS_NAMESPACE
-using mozilla::ErrorResult;
 
 namespace {
 
@@ -195,7 +194,7 @@ EventListenerManager::FinalizeInternal(JSFreeOp* aFop)
 void
 EventListenerManager::Add(JSContext* aCx, const jsid& aType,
                           JSObject* aListener, Phase aPhase,
-                          bool aWantsUntrusted, ErrorResult& aRv)
+                          bool aWantsUntrusted, nsresult& aRv)
 {
   MOZ_ASSERT(aListener);
 
@@ -206,7 +205,7 @@ EventListenerManager::Add(JSContext* aCx, const jsid& aType,
       static_cast<ListenerCollection*>(&mCollectionHead);
     collection = ListenerCollection::Add(aCx, head, aType);
     if (!collection) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      aRv = NS_ERROR_OUT_OF_MEMORY;
       return;
     }
   }
@@ -226,7 +225,7 @@ EventListenerManager::Add(JSContext* aCx, const jsid& aType,
                       static_cast<ListenerData*>(&collection->mListenerHead),
                       aListener, aPhase, aWantsUntrusted);
   if (!listenerData) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aRv = NS_ERROR_OUT_OF_MEMORY;
     return;
   }
 }
@@ -280,24 +279,24 @@ EventListenerManager::GetEventListener(const jsid& aType) const
 
 bool
 EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
-                                    JSObject* aEvent, ErrorResult& aRv) const
+                                    JSObject* aEvent, nsresult& aRv) const
 {
   using namespace mozilla::dom::workers::events;
 
   if (!IsSupportedEventClass(aEvent)) {
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv = NS_ERROR_FAILURE;
     return false;
   }
 
   jsval val;
   if (!JS_GetProperty(aCx, aEvent, "target", &val)) {
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv = NS_ERROR_FAILURE;
     return false;
   }
 
   if (!JSVAL_IS_NULL(val)) {
     // Already has a target, must be recursively dispatched. Throw.
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv = NS_ERROR_FAILURE;
     return false;
   }
 
@@ -311,7 +310,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
   if (!JS_GetProperty(aCx, aEvent, "type", &val) ||
       !(eventType = JS_ValueToString(aCx, val)) ||
       !(eventType = JS_InternJSString(aCx, eventType))) {
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv = NS_ERROR_FAILURE;
     return false;
   }
 
@@ -319,7 +318,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
   // there is no need to worry about this property being faked.
   if (!JS_GetProperty(aCx, aEvent, "isTrusted", &val) ||
       !JS_ValueToBoolean(aCx, val, &eventIsTrusted)) {
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv = NS_ERROR_FAILURE;
     return false;
   }
 
@@ -342,7 +341,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
     // untrusted event.
     if ((eventIsTrusted || listenerData->mWantsUntrusted) &&
         !listeners.append(listenerData->mListener)) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      aRv = NS_ERROR_OUT_OF_MEMORY;
       return false;
     }
   }
@@ -369,7 +368,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
     JSObject* listenerObj;
     if (!JS_ValueToObject(aCx, listenerVal, &listenerObj)) {
       if (!JS_ReportPendingException(aCx)) {
-        aRv.Throw(NS_ERROR_FAILURE);
+        aRv = NS_ERROR_FAILURE;
         return false;
       }
       continue;
@@ -382,7 +381,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
     JSBool hasHandleEvent;
     if (!JS_HasProperty(aCx, listenerObj, sHandleEventChars, &hasHandleEvent)) {
       if (!JS_ReportPendingException(aCx)) {
-        aRv.Throw(NS_ERROR_FAILURE);
+        aRv = NS_ERROR_FAILURE;
         return false;
       }
       continue;
@@ -391,7 +390,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
     if (hasHandleEvent) {
       if (!JS_GetProperty(aCx, listenerObj, sHandleEventChars, &listenerVal)) {
         if (!JS_ReportPendingException(aCx)) {
-          aRv.Throw(NS_ERROR_FAILURE);
+          aRv = NS_ERROR_FAILURE;
           return false;
         }
         continue;
@@ -405,7 +404,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
     if (!JS_CallFunctionValue(aCx, thisObj, listenerVal, ArrayLength(argv),
                               argv, &rval)) {
       if (!JS_ReportPendingException(aCx)) {
-        aRv.Throw(NS_ERROR_FAILURE);
+        aRv = NS_ERROR_FAILURE;
         return false;
       }
       continue;
