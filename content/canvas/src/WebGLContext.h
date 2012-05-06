@@ -694,7 +694,7 @@ public:
         return mHeight;
     }
         
-    JSObject *GetContextAttributes(nsresult &rv);
+    JSObject *GetContextAttributes(ErrorResult &rv);
     bool IsContextLost() const { return !IsContextStable(); }
     void GetSupportedExtensions(dom::Nullable< nsTArray<nsString> > &retval);
     nsIWebGLExtension* GetExtension(const nsAString& aName);
@@ -797,28 +797,28 @@ public:
                             dom::Nullable< nsTArray<WebGLShader*> > &retval);
     WebGLint GetAttribLocation(WebGLProgram* prog, const nsAString& name);
     JS::Value GetBufferParameter(WebGLenum target, WebGLenum pname);
-    JS::Value GetParameter(JSContext* cx, WebGLenum pname, nsresult& rv);
+    JS::Value GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv);
     WebGLenum GetError();
     JS::Value GetFramebufferAttachmentParameter(JSContext* cx,
                                                 WebGLenum target,
                                                 WebGLenum attachment,
                                                 WebGLenum pname,
-                                                nsresult& rv);
+                                                ErrorResult& rv);
     JS::Value GetProgramParameter(WebGLProgram *prog, WebGLenum pname);
-    void GetProgramInfoLog(WebGLProgram *prog, nsAString& retval, nsresult& rv);
+    void GetProgramInfoLog(WebGLProgram *prog, nsAString& retval, ErrorResult& rv);
     JS::Value GetRenderbufferParameter(WebGLenum target, WebGLenum pname);
     JS::Value GetShaderParameter(WebGLShader *shader, WebGLenum pname);
     already_AddRefed<WebGLShaderPrecisionFormat>
       GetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype);
-    void GetShaderInfoLog(WebGLShader *shader, nsAString& retval, nsresult& rv);
+    void GetShaderInfoLog(WebGLShader *shader, nsAString& retval, ErrorResult& rv);
     void GetShaderSource(WebGLShader *shader, nsAString& retval);
     JS::Value GetTexParameter(WebGLenum target, WebGLenum pname);
     JS::Value GetUniform(JSContext* cx, WebGLProgram *prog,
-                         WebGLUniformLocation *location, nsresult& rv);
+                         WebGLUniformLocation *location, ErrorResult& rv);
     already_AddRefed<WebGLUniformLocation>
       GetUniformLocation(WebGLProgram *prog, const nsAString& name);
     JS::Value GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
-                              nsresult& rv);
+                              ErrorResult& rv);
     WebGLsizeiptr GetVertexAttribOffset(WebGLuint index, WebGLenum pname);
     void Hint(WebGLenum target, WebGLenum mode);
     bool IsBuffer(WebGLBuffer *buffer);
@@ -834,7 +834,7 @@ public:
         MakeContextCurrent();
         gl->fLineWidth(width);
     }
-    void LinkProgram(WebGLProgram *program, nsresult& rv);
+    void LinkProgram(WebGLProgram *program, ErrorResult& rv);
     void PixelStorei(WebGLenum pname, WebGLint param);
     void PolygonOffset(WebGLfloat factor, WebGLfloat units) {
         if (!IsContextStable())
@@ -844,7 +844,7 @@ public:
     }
     void ReadPixels(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
                     WebGLenum format, WebGLenum type,
-                    dom::ArrayBufferView* pixels, nsresult& rv);
+                    dom::ArrayBufferView* pixels, ErrorResult& rv);
     void RenderbufferStorage(WebGLenum target, WebGLenum internalformat,
                              WebGLsizei width, WebGLsizei height);
     void SampleCoverage(WebGLclampf value, WebGLboolean invert) {
@@ -866,13 +866,14 @@ public:
     void TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLsizei width,
                     WebGLsizei height, WebGLint border, WebGLenum format,
-                    WebGLenum type, dom::ArrayBufferView *pixels, nsresult& rv);
+                    WebGLenum type, dom::ArrayBufferView *pixels,
+                    ErrorResult& rv);
     void TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLenum format, WebGLenum type,
-                    dom::ImageData* pixels, nsresult& rv);
+                    dom::ImageData* pixels, ErrorResult& rv);
     void TexImage2D(JSContext* /* unused */, WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLenum format, WebGLenum type,
-                    dom::Element* elt, nsresult& rv);
+                    dom::Element* elt, ErrorResult& rv);
     void TexParameterf(WebGLenum target, WebGLenum pname, WebGLfloat param) {
         TexParameter_base(target, pname, nsnull, &param);
     }
@@ -884,13 +885,13 @@ public:
                        WebGLint xoffset, WebGLint yoffset,
                        WebGLsizei width, WebGLsizei height, WebGLenum format,
                        WebGLenum type, dom::ArrayBufferView* pixels,
-                       nsresult& rv);
+                       ErrorResult& rv);
     void TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset, WebGLenum format,
-                       WebGLenum type, dom::ImageData* pixels, nsresult& rv);
+                       WebGLenum type, dom::ImageData* pixels, ErrorResult& rv);
     void TexSubImage2D(JSContext* /* unused */, WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset, WebGLenum format,
-                       WebGLenum type, dom::Element* elt, nsresult& rv);
+                       WebGLenum type, dom::Element* elt, ErrorResult& rv);
 
     void Uniform1i(WebGLUniformLocation* location, WebGLint x);
     void Uniform2i(WebGLUniformLocation* location, WebGLint x, WebGLint y);
