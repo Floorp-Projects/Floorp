@@ -91,7 +91,7 @@ Bindings::lookup(JSContext *cx, JSAtom *name, unsigned *indexp) const
         return NONE;
 
     Shape **spp;
-    Shape *shape = Shape::search(cx, lastBinding, ATOM_TO_JSID(name), &spp);
+    Shape *shape = Shape::search(cx, lastBinding, AtomToId(name), &spp);
     if (!shape)
         return NONE;
 
@@ -152,7 +152,7 @@ Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
         JS_ASSERT(kind == ARGUMENT); /* destructuring */
         id = INT_TO_JSID(nargs);
     } else {
-        id = ATOM_TO_JSID(name);
+        id = AtomToId(name);
     }
 
     StackBaseShape base(&CallClass, NULL, BaseShape::VAROBJ);

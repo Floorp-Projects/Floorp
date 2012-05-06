@@ -274,7 +274,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, uint32_t index, JSBool createAtom,
             return JS_FALSE;
     }
 
-    *idp = ATOM_TO_JSID(atom);
+    *idp = NON_INTEGER_ATOM_TO_JSID(atom);
     return JS_TRUE;
 }
 
@@ -310,7 +310,7 @@ JSObject::willBeSparseDenseArray(unsigned requiredCapacity, unsigned newElements
 static bool
 ReallyBigIndexToId(JSContext* cx, double index, jsid* idp)
 {
-    return js_ValueToStringId(cx, DoubleValue(index), idp);
+    return ValueToId(cx, DoubleValue(index), idp);
 }
 
 static bool
@@ -749,7 +749,7 @@ static JSBool
 array_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name, JSObject **objp,
                      JSProperty **propp)
 {
-    return array_lookupGeneric(cx, obj, ATOM_TO_JSID(name), objp, propp);
+    return array_lookupGeneric(cx, obj, NameToId(name), objp, propp);
 }
 
 static JSBool
@@ -813,7 +813,7 @@ array_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName
         return js_GetProperty(cx,
                               RootedVarObject(cx, obj),
                               RootedVarObject(cx, receiver),
-                              ATOM_TO_JSID(name),
+                              NameToId(name),
                               vp);
     }
 
@@ -956,7 +956,7 @@ array_setGeneric(JSContext *cx, JSObject *obj_, jsid id_, Value *vp, JSBool stri
 static JSBool
 array_setProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict)
 {
-    return array_setGeneric(cx, obj, ATOM_TO_JSID(name), vp, strict);
+    return array_setGeneric(cx, obj, NameToId(name), vp, strict);
 }
 
 static JSBool
@@ -1069,7 +1069,7 @@ static JSBool
 array_defineProperty(JSContext *cx, JSObject *obj, PropertyName *name, const Value *value,
                      JSPropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    return array_defineGeneric(cx, obj, ATOM_TO_JSID(name), value, getter, setter, attrs);
+    return array_defineGeneric(cx, obj, NameToId(name), value, getter, setter, attrs);
 }
 
 namespace js {
@@ -1349,7 +1349,7 @@ AddLengthProperty(JSContext *cx, JSObject *obj)
      * as accesses to 'length' will use the elements header.
      */
 
-    const jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
+    const jsid lengthId = NameToId(cx->runtime->atomState.lengthAtom);
     JS_ASSERT(!obj->nativeLookup(cx, lengthId));
 
     if (!obj->allocateSlowArrayElements(cx))
@@ -1685,7 +1685,7 @@ array_toString_sub(JSContext *cx, HandleObject obj, JSBool locale,
                     JSObject *robj = ToObject(cx, &elt);
                     if (!robj)
                         return false;
-                    jsid id = ATOM_TO_JSID(cx->runtime->atomState.toLocaleStringAtom);
+                    jsid id = NameToId(cx->runtime->atomState.toLocaleStringAtom);
                     if (!robj->callMethod(cx, id, 0, NULL, &elt))
                         return false;
                 }
@@ -1847,7 +1847,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
     Value idval = DoubleValue(MAX_ARRAY_INDEX + 1);
     do {
         value = *vector++;
-        if (!js_ValueToStringId(cx, idval, id.address()) ||
+        if (!ValueToId(cx, idval, id.address()) ||
             !obj->setGeneric(cx, id, value.address(), true)) {
             return false;
         }
@@ -3729,7 +3729,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     arrayProto->setArrayLength(cx, 0);
 
     RootedVarFunction ctor(cx);
-    ctor = global->createConstructor(cx, js_Array, CLASS_ATOM(cx, Array), 1);
+    ctor = global->createConstructor(cx, js_Array, CLASS_NAME(cx, Array), 1);
     if (!ctor)
         return NULL;
 

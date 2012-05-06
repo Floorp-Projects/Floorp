@@ -131,7 +131,7 @@ JSObject::setGeneric(JSContext *cx, jsid id, js::Value *vp, JSBool strict)
 inline JSBool
 JSObject::setProperty(JSContext *cx, js::PropertyName *name, js::Value *vp, JSBool strict)
 {
-    return setGeneric(cx, ATOM_TO_JSID(name), vp, strict);
+    return setGeneric(cx, js::NameToId(name), vp, strict);
 }
 
 inline JSBool
@@ -159,7 +159,7 @@ JSObject::setGenericAttributes(JSContext *cx, jsid id, unsigned *attrsp)
 inline JSBool
 JSObject::setPropertyAttributes(JSContext *cx, js::PropertyName *name, unsigned *attrsp)
 {
-    return setGenericAttributes(cx, ATOM_TO_JSID(name), attrsp);
+    return setGenericAttributes(cx, js::NameToId(name), attrsp);
 }
 
 inline JSBool
@@ -198,7 +198,7 @@ JSObject::getGeneric(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
 inline JSBool
 JSObject::getProperty(JSContext *cx, JSObject *receiver, js::PropertyName *name, js::Value *vp)
 {
-    return getGeneric(cx, receiver, ATOM_TO_JSID(name), vp);
+    return getGeneric(cx, receiver, js::NameToId(name), vp);
 }
 
 inline JSBool
@@ -210,13 +210,13 @@ JSObject::getGeneric(JSContext *cx, jsid id, js::Value *vp)
 inline JSBool
 JSObject::getProperty(JSContext *cx, js::PropertyName *name, js::Value *vp)
 {
-    return getGeneric(cx, ATOM_TO_JSID(name), vp);
+    return getGeneric(cx, js::NameToId(name), vp);
 }
 
 inline bool
 JSObject::deleteProperty(JSContext *cx, js::PropertyName *name, js::Value *rval, bool strict)
 {
-    jsid id = js_CheckForStringIndex(ATOM_TO_JSID(name));
+    jsid id = js::NameToId(name);
     js::types::AddTypePropertyId(cx, this, id, js::types::Type::UndefinedType());
     js::types::MarkTypePropertyConfigured(cx, this, id);
     js::DeletePropertyOp op = getOps()->deleteProperty;
@@ -398,7 +398,7 @@ JSObject::setArrayLength(JSContext *cx, uint32_t length)
         js::types::MarkTypeObjectFlags(cx, this,
                                        js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
                                        js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
-        jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
+        jsid lengthId = js::NameToId(cx->runtime->atomState.lengthAtom);
         js::types::AddTypePropertyId(cx, this, lengthId,
                                      js::types::Type::DoubleType());
     }
@@ -1030,7 +1030,7 @@ JSObject::lookupGeneric(JSContext *cx, jsid id, JSObject **objp, JSProperty **pr
 inline JSBool
 JSObject::lookupProperty(JSContext *cx, js::PropertyName *name, JSObject **objp, JSProperty **propp)
 {
-    return lookupGeneric(cx, ATOM_TO_JSID(name), objp, propp);
+    return lookupGeneric(cx, js::NameToId(name), objp, propp);
 }
 
 inline JSBool
@@ -1050,7 +1050,7 @@ JSObject::defineProperty(JSContext *cx, js::PropertyName *name, const js::Value 
                         JSStrictPropertyOp setter /* = JS_StrictPropertyStub */,
                         unsigned attrs /* = JSPROP_ENUMERATE */)
 {
-    return defineGeneric(cx, ATOM_TO_JSID(name), value, getter, setter, attrs);
+    return defineGeneric(cx, js::NameToId(name), value, getter, setter, attrs);
 }
 
 inline JSBool
@@ -1157,7 +1157,7 @@ JSObject::getGenericAttributes(JSContext *cx, jsid id, unsigned *attrsp)
 inline JSBool
 JSObject::getPropertyAttributes(JSContext *cx, js::PropertyName *name, unsigned *attrsp)
 {
-    return getGenericAttributes(cx, ATOM_TO_JSID(name), attrsp);
+    return getGenericAttributes(cx, js::NameToId(name), attrsp);
 }
 
 inline JSBool
@@ -1548,7 +1548,7 @@ DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
     JS_ASSERT(ctor);
     JS_ASSERT(proto);
 
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
+    jsid id = NameToId(cx->runtime->atomState.classAtoms[key]);
     JS_ASSERT(!global->nativeLookupNoAllocation(cx, id));
 
     /* Set these first in case AddTypePropertyId looks for this class. */

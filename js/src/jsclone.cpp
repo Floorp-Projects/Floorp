@@ -944,7 +944,7 @@ JSStructuredCloneReader::readId(jsid *idp)
         JSAtom *atom = js_AtomizeString(context(), str);
         if (!atom)
             return false;
-        *idp = ATOM_TO_JSID(atom);
+        *idp = NON_INTEGER_ATOM_TO_JSID(atom);
         return true;
     }
     if (tag == SCTAG_NULL) {
