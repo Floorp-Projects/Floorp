@@ -228,6 +228,10 @@ SystemWorkerManager::~SystemWorkerManager()
 nsresult
 SystemWorkerManager::Init()
 {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   NS_ASSERTION(NS_IsMainThread(), "We can only initialize on the main thread");
   NS_ASSERTION(!mShutdown, "Already shutdown!");
 
