@@ -426,8 +426,6 @@ struct TreeContext {                /* tree context for semantic checks */
     };
 
     bool init(JSContext *cx, InitBehavior ib = USED_AS_TREE_CONTEXT) {
-        if (cx->hasRunOption(JSOPTION_STRICT_MODE))
-            flags |= TCF_STRICT_MODE_CODE;
         if (ib == USED_AS_CODE_GENERATOR)
             return true;
         return decls.init() && lexdeps.ensureMap(cx);
