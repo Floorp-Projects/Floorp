@@ -573,6 +573,7 @@ public:
   /** returns true if aNode is a descendant of our root node */
   bool IsDescendantOfRoot(nsIDOMNode* inNode);
   bool IsDescendantOfRoot(nsINode* inNode);
+  bool IsDescendantOfEditorRoot(nsIDOMNode* aNode);
   bool IsDescendantOfEditorRoot(nsINode* aNode);
 
   /** returns true if aNode is a container */
