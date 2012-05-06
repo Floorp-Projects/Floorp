@@ -51,7 +51,15 @@ interface nsIContentFilter;
 #define NS_EDITOR_ELEMENT_NOT_FOUND \
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_EDITOR, 1)
 
+namespace mozilla {
+namespace dom {
+class Element;
+}
+}
 %}
+
+[ptr] native Element (mozilla::dom::Element);
+
 [scriptable, uuid(833f30de-94c7-4630-a852-2300ef329d7b)]
 
 interface nsIHTMLEditor : nsISupports
@@ -590,6 +598,6 @@ interface nsIHTMLEditor : nsISupports
    * Get an active editor's editing host in DOM window.  If this editor isn't
    * active in the DOM window, this returns NULL.
    */
-  [noscript, notxpcom] nsIContent GetActiveEditingHost();
+  [noscript, notxpcom] Element GetActiveEditingHost();
 };
 

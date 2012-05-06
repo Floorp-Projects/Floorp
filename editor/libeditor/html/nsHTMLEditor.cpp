@@ -5474,7 +5474,7 @@ nsHTMLEditor::IsActiveInDOMWindow()
   return true;
 }
 
-nsIContent*
+dom::Element*
 nsHTMLEditor::GetActiveEditingHost()
 {
   NS_ENSURE_TRUE(mDocWeak, nsnull);
