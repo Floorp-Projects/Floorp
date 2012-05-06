@@ -136,6 +136,7 @@ public:
   virtual already_AddRefed<nsIContent> GetFocusedContent();
   virtual bool IsActiveInDOMWindow();
   virtual already_AddRefed<nsIDOMEventTarget> GetDOMEventTarget();
+  virtual mozilla::dom::Element* GetEditorRoot() MOZ_OVERRIDE;
   virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
   virtual bool IsAcceptableInputEvent(nsIDOMEvent* aEvent);
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent();
