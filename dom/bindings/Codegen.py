@@ -1610,8 +1610,8 @@ class CGCallGenerator(CGThing):
         self.cgRoot.append(call)
 
         if isFallible:
-            self.cgRoot.prepend(CGGeneric("nsresult rv = NS_OK;"))
-            self.cgRoot.append(CGGeneric("if (NS_FAILED(rv)) {"))
+            self.cgRoot.prepend(CGGeneric("ErrorResult rv;"))
+            self.cgRoot.append(CGGeneric("if (rv.Failed()) {"))
             self.cgRoot.append(CGIndenter(CGGeneric(errorReport)))
             self.cgRoot.append(CGGeneric("}"))
 
