@@ -4353,7 +4353,8 @@ nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode
     return NS_OK;
   }
 
-  nsresult res = GetPriorNode(inNode, true, address_of(*outNode), bNoBlockCrossing, activeEditingHost);
+  nsresult res = GetPriorNode(inNode, true, address_of(*outNode),
+                              bNoBlockCrossing);
   NS_ENSURE_SUCCESS(res, res);
   
   NS_ASSERTION(!*outNode || IsNodeInActiveEditor(*outNode),
@@ -4376,7 +4377,8 @@ nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<
     return NS_OK;
   }
 
-  nsresult res = GetPriorNode(inParent, inOffset, true, address_of(*outNode), bNoBlockCrossing, activeEditingHost);
+  nsresult res = GetPriorNode(inParent, inOffset, true, address_of(*outNode),
+                              bNoBlockCrossing);
   NS_ENSURE_SUCCESS(res, res);
   
   NS_ASSERTION(!*outNode || IsNodeInActiveEditor(*outNode),
@@ -5714,4 +5716,11 @@ nsHTMLEditor::GetInputEventTargetContent()
 {
   nsCOMPtr<nsIContent> target = GetActiveEditingHost();
   return target.forget();
+}
+
+// virtual MOZ_OVERRIDE
+dom::Element*
+nsHTMLEditor::GetEditorRoot()
+{
+  return GetActiveEditingHost();
 }
