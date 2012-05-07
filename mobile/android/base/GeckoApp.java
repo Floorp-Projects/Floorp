@@ -138,7 +138,6 @@ abstract public class GeckoApp
 
     public static BrowserToolbar mBrowserToolbar;
     public static DoorHangerPopup mDoorHangerPopup;
-    public static SiteIdentityPopup mSiteIdentityPopup;
     public static FormAssistPopup mFormAssistPopup;
     public Favicons mFavicons;
 
@@ -1658,7 +1657,6 @@ abstract public class GeckoApp
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
 
         mDoorHangerPopup = new DoorHangerPopup(this);
-        mSiteIdentityPopup = new SiteIdentityPopup(this);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - UI almost up");
@@ -1949,8 +1947,7 @@ abstract public class GeckoApp
         // Undo whatever we did in onPause.
         super.onResume();
 
-        if (mSiteIdentityPopup != null)
-            mSiteIdentityPopup.dismiss();
+        SiteIdentityPopup.getInstance().dismiss();
 
         int newOrientation = getResources().getConfiguration().orientation;
 
@@ -2079,8 +2076,7 @@ abstract public class GeckoApp
             mOrientation = newConfig.orientation;
             if (mFormAssistPopup != null)
                 mFormAssistPopup.hide();
-            if (mSiteIdentityPopup != null)
-                mSiteIdentityPopup.dismiss();
+            SiteIdentityPopup.getInstance().dismiss();
             refreshActionBar();
         }
     }
@@ -2524,8 +2520,9 @@ abstract public class GeckoApp
             return;
         }
 
-        if (mSiteIdentityPopup.isShowing()) {
-            mSiteIdentityPopup.dismiss();
+        SiteIdentityPopup identityPopup = SiteIdentityPopup.getInstance();
+        if (identityPopup.isShowing()) {
+            identityPopup.dismiss();
             return;
         }
 
