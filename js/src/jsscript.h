@@ -508,14 +508,8 @@ struct JSScript : public js::gc::Cell
 
     // 8-bit fields.
 
-  private:
-    // The bits in this field indicate the presence/non-presence of several
-    // optional arrays in |data|.  See the comments above NewScript() for
-    // details.
-    uint8_t         hasArrayBits;
-
-    // The kinds of the optional arrays.
   public:
+    // The kinds of the optional arrays.
     enum ArrayKind {
         CONSTS,
         OBJECTS,
@@ -526,7 +520,14 @@ struct JSScript : public js::gc::Cell
         CLOSED_VARS,
         LIMIT
     };
-    JS_STATIC_ASSERT(sizeof(hasArrayBits) * 8 >= LIMIT);
+
+    typedef uint8_t ArrayBitsT;
+
+  private:
+    // The bits in this field indicate the presence/non-presence of several
+    // optional arrays in |data|.  See the comments above NewScript() for
+    // details.
+    ArrayBitsT      hasArrayBits;
 
     // 1-bit fields.
 
@@ -936,6 +937,8 @@ struct JSScript : public js::gc::Cell
 
     void markChildren(JSTracer *trc);
 };
+
+JS_STATIC_ASSERT(sizeof(JSScript::ArrayBitsT) * 8 >= JSScript::LIMIT);
 
 /* If this fails, add/remove padding within JSScript. */
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);
