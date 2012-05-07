@@ -340,6 +340,16 @@ RadioInterfaceLayer.prototype = {
       case "iccunlockcardlock":
         this.handleICCUnlockCardLock(message);
         break;
+      case "icccontacts":
+        if (!this._contactsCallbacks) {
+          return;
+        }
+        let callback = this._contactsCallbacks[message.requestId];
+        if (callback) {
+          delete this._contactsCallbacks[message.requestId];
+          callback.receiveContactsList(message.contactType, message.contacts);
+        }
+        break;
       default:
         throw new Error("Don't know about this message type: " + message.type);
     }
@@ -1346,6 +1356,29 @@ RadioInterfaceLayer.prototype = {
       message.type = "setICCPinLock";
     }
     this.worker.postMessage(message);
+  },
+
+  _contactsCallbacks: null,
+  getICCContacts: function getICCContacts(type, callback) {
+    if (!this._contactsCallbacks) {
+      this._contactsCallbacks = {};
+    } 
+    let requestId = Math.floor(Math.random() * 1000);
+    this._contactsCallbacks[requestId] = callback;
+    
+    let msgType;
+    switch (type) {
+      case "ADN": 
+        msgType = "getPBR";
+        break;
+      case "FDN":
+        msgType = "getFDN";
+        break;
+      default:
+        debug("Unknown contact type. " + type);
+        return;
+    }
+    this.worker.postMessage({type: msgType, requestId: requestId});
   }
 };
 
