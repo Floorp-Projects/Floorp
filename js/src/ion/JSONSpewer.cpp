@@ -56,6 +56,17 @@ JSONSpewer::~JSONSpewer()
 }
 
 void
+JSONSpewer::indent()
+{
+    if (!fp_)
+        return;
+    JS_ASSERT(indentLevel_ >= 0);
+    fprintf(fp_, "\n");
+    for (int i = 0; i < indentLevel_; i++)
+        fprintf(fp_, "  ");
+}
+
+void
 JSONSpewer::property(const char *name)
 {
     if (!fp_)
@@ -63,6 +74,7 @@ JSONSpewer::property(const char *name)
 
     if (!first_)
         fprintf(fp_, ",");
+    indent();
     fprintf(fp_, "\"%s\":", name);
     first_ = false;
 }
@@ -73,9 +85,12 @@ JSONSpewer::beginObject()
     if (!fp_)
         return;
 
-    if (!first_)
+    if (!first_) {
         fprintf(fp_, ",");
+        indent();
+    }
     fprintf(fp_, "{");
+    indentLevel_++;
     first_ = true;
 }
 
@@ -87,6 +102,7 @@ JSONSpewer::beginObjectProperty(const char *name)
 
     property(name);
     fprintf(fp_, "{");
+    indentLevel_++;
     first_ = true;
 }
 
@@ -165,6 +181,8 @@ JSONSpewer::endObject()
     if (!fp_)
         return;
 
+    indentLevel_--;
+    indent();
     fprintf(fp_, "}");
     first_ = false;
 }
