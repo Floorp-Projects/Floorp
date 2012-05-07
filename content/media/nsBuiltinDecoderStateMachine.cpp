@@ -1146,50 +1146,56 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
       mAudioEndTime = playedUsecs.value();
     }
   }
-  if (mReader->mAudioQueue.AtEndOfStream() &&
-      mState != DECODER_STATE_SHUTDOWN &&
-      !mStopAudioThread)
   {
-    // Last frame pushed to audio hardware, wait for the audio to finish,
-    // before the audio thread terminates.
-    bool seeking = false;
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    if (mReader->mAudioQueue.AtEndOfStream() &&
+        mState != DECODER_STATE_SHUTDOWN &&
+        !mStopAudioThread)
     {
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      PRInt64 unplayedFrames = audioDuration % minWriteFrames;
-      if (minWriteFrames > 1 && unplayedFrames > 0) {
-        // Sound is written by libsydneyaudio to the hardware in blocks of
-        // frames of size minWriteFrames. So if the number of frames we've
-        // written isn't an exact multiple of minWriteFrames, we'll have
-        // left over audio data which hasn't yet been written to the hardware,
-        // and so that audio will not start playing. Write silence to ensure
-        // the last block gets pushed to hardware, so that playback starts.
-        PRInt64 framesToWrite = minWriteFrames - unplayedFrames;
-        if (framesToWrite < PR_UINT32_MAX / channels) {
-          // Write silence manually rather than using PlaySilence(), so that
-          // the AudioAPI doesn't get a copy of the audio frames.
-          WriteSilence(mAudioStream, framesToWrite);
-        }
-      }
-
-      PRInt64 oldPosition = -1;
-      PRInt64 position = GetMediaTime();
-      while (oldPosition != position &&
-             mAudioEndTime - position > 0 &&
-             mState != DECODER_STATE_SEEKING &&
-             mState != DECODER_STATE_SHUTDOWN)
+      // Last frame pushed to audio hardware, wait for the audio to finish,
+      // before the audio thread terminates.
+      bool seeking = false;
       {
-        const PRInt64 DRAIN_BLOCK_USECS = 100000;
-        Wait(NS_MIN(mAudioEndTime - position, DRAIN_BLOCK_USECS));
-        oldPosition = position;
-        position = GetMediaTime();
-      }
-      seeking = mState == DECODER_STATE_SEEKING;
-    }
+        PRInt64 unplayedFrames = audioDuration % minWriteFrames;
+        if (minWriteFrames > 1 && unplayedFrames > 0) {
+          // Sound is written by libsydneyaudio to the hardware in blocks of
+          // frames of size minWriteFrames. So if the number of frames we've
+          // written isn't an exact multiple of minWriteFrames, we'll have
+          // left over audio data which hasn't yet been written to the hardware,
+          // and so that audio will not start playing. Write silence to ensure
+          // the last block gets pushed to hardware, so that playback starts.
+          PRInt64 framesToWrite = minWriteFrames - unplayedFrames;
+          if (framesToWrite < PR_UINT32_MAX / channels) {
+            // Write silence manually rather than using PlaySilence(), so that
+            // the AudioAPI doesn't get a copy of the audio frames.
+            ReentrantMonitorAutoExit exit(mDecoder->GetReentrantMonitor());
+            WriteSilence(mAudioStream, framesToWrite);
+          }
+        }
 
-    if (!seeking && !mAudioStream->IsPaused()) {
-      mAudioStream->Drain();
-      // Fire one last event for any extra frames that didn't fill a framebuffer.
-      mEventManager.Drain(mAudioEndTime);
+        PRInt64 oldPosition = -1;
+        PRInt64 position = GetMediaTime();
+        while (oldPosition != position &&
+               mAudioEndTime - position > 0 &&
+               mState != DECODER_STATE_SEEKING &&
+               mState != DECODER_STATE_SHUTDOWN)
+        {
+          const PRInt64 DRAIN_BLOCK_USECS = 100000;
+          Wait(NS_MIN(mAudioEndTime - position, DRAIN_BLOCK_USECS));
+          oldPosition = position;
+          position = GetMediaTime();
+        }
+        seeking = mState == DECODER_STATE_SEEKING;
+      }
+
+      if (!seeking && !mAudioStream->IsPaused()) {
+        {
+          ReentrantMonitorAutoExit exit(mDecoder->GetReentrantMonitor());
+          mAudioStream->Drain();
+        }
+        // Fire one last event for any extra frames that didn't fill a framebuffer.
+        mEventManager.Drain(mAudioEndTime);
+      }
     }
   }
   LOG(PR_LOG_DEBUG, ("%p Reached audio stream end.", mDecoder.get()));
