@@ -227,16 +227,6 @@ DumpHeapComplete(JSRuntime *rt, FILE *fp);
 
 #endif
 
-class JS_FRIEND_API(AutoPreserveCompartment) {
-  private:
-    JSContext *cx;
-    JSCompartment *oldCompartment;
-  public:
-    AutoPreserveCompartment(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~AutoPreserveCompartment();
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 class JS_FRIEND_API(AutoSwitchCompartment) {
   private:
     JSContext *cx;

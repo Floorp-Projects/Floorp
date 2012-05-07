@@ -509,10 +509,14 @@ abstract public class GeckoApp
                 }
                 return true;
             case R.id.reload:
-                doReload();
+                tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null)
+                    tab.doReload();
                 return true;
             case R.id.forward:
-                doForward();
+                tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null)
+                    tab.doForward();
                 return true;
             case R.id.save_as_pdf:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SaveAs:PDF", null));
@@ -956,13 +960,6 @@ abstract public class GeckoApp
                 String host = message.getString("host");
                 JSONArray permissions = message.getJSONArray("permissions");
                 showSiteSettingsDialog(host, permissions);
-            } else if (event.equals("Downloads:Done")) {
-                String displayName = message.getString("displayName");
-                String path = message.getString("path");
-                String mimeType = message.getString("mimeType");
-                int size = message.getInt("size");
-
-                handleDownloadDone(displayName, path, mimeType, size);
             } else if (event.equals("CharEncoding:Data")) {
                 final JSONArray charsets = message.getJSONArray("charsets");
                 int selected = message.getInt("selected");
@@ -1328,17 +1325,6 @@ abstract public class GeckoApp
         tabs.closeTab(tab);
     }
 
-    void handleDownloadDone(String displayName, String path, String mimeType, int size) {
-        // DownloadManager.addCompletedDownload is supported in level 12 and higher
-        if (Build.VERSION.SDK_INT >= 12) {
-            DownloadManager dm = (DownloadManager) mAppContext.getSystemService(Context.DOWNLOAD_SERVICE);
-            dm.addCompletedDownload(displayName, displayName,
-                false /* do not use media scanner */,
-                mimeType, path, size,
-                false /* no notification */);
-        }
-    }
-
     void addPluginView(final View view, final Rect rect) {
         mMainHandler.post(new Runnable() { 
             public void run() {
@@ -1701,7 +1687,6 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Focus", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("CharEncoding:State", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Update:Restart", GeckoApp.mAppContext);
@@ -2049,7 +2034,6 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Focus", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("CharEncoding:State", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:HasTouchListener", GeckoApp.mAppContext);
@@ -2531,33 +2515,6 @@ abstract public class GeckoApp
         }
         startActivityForResult(intent, mActivityResultHandlerMap.put(mAwesomebarResultHandler));
         return true;
-    }
-
-    public boolean doReload() {
-        Log.i(LOGTAG, "Reload requested");
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null)
-            return false;
-
-        return tab.doReload();
-    }
-
-    public boolean doForward() {
-        Log.i(LOGTAG, "Forward requested");
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null)
-            return false;
-
-        return tab.doForward();
-    }
-
-    public boolean doStop() {
-        Log.i(LOGTAG, "Stop requested");
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null)
-            return false;
-
-        return tab.doStop();
     }
 
     @Override
