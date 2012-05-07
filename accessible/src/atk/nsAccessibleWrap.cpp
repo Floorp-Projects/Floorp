@@ -721,7 +721,7 @@ getRoleCB(AtkObject *aAtkObj)
   if (!accWrap)
     return ATK_ROLE_INVALID;
 
-#ifdef DEBUG_A11Y
+#ifdef DEBUG
   NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
       "Does not support nsIAccessibleText when it should");
 #endif
