@@ -4289,12 +4289,6 @@ oom:
     js_free(trc);
 }
 
-static void
-MarkFromAutorooter(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
-{
-    static_cast<Cell *>(*thingp)->markIfUnmarked();
-}
-
 static bool
 IsMarkedOrAllocated(Cell *cell)
 {
