@@ -1221,7 +1221,8 @@ public:
   virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                    size_t *aArenasSize,
                                    size_t *aStyleSetsSize,
-                                   size_t *aTextRunsSize) const = 0;
+                                   size_t *aTextRunsSize,
+                                   size_t *aPresContextSize) const = 0;
 
   /**
    * Refresh observer management.
