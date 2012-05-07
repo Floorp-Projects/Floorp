@@ -2656,23 +2656,6 @@ panel[dimmed="true"] {
   background-color: rgba(25, 25, 25, 0.5);
 }
 
-#highlighter-closebutton {
-  list-style-image: url("chrome://browser/skin/devtools/toolbarbutton-close.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-  min-width: 16px;
-  width: 16px;
-  -moz-appearance: none;
-  border-style: none;
-}
-
-#highlighter-closebutton:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-#highlighter-closebutton:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
 #highlighter-veil-transparentbox {
   box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
   outline: 1px dashed rgba(255,255,255,0.5);
@@ -2866,7 +2849,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   border: 1px solid hsla(210,8%,5%,.45);
   background: -moz-linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
   box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
-  margin: 0 0 1px;
+  margin: 1px 0 1px;
 }
 
 #inspector-breadcrumbs > .scrollbutton-up {
@@ -2916,6 +2899,10 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   min-height: 25px;
   margin: 0 -11px 0 0;
   padding: 0 9px;
+}
+
+.inspector-breadcrumbs-button:-moz-focusring > .button-box {
+  border-width: 0;
 }
 
 .inspector-breadcrumbs-button:-moz-focusring > label {
