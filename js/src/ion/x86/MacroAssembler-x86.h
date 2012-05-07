@@ -377,6 +377,8 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return testl(lhs, rhs);
     }
 
+    Condition testNegativeZero(const FloatRegister &reg, const Register &scratch);
+
     /////////////////////////////////////////////////////////////////
     // Common interface.
     /////////////////////////////////////////////////////////////////

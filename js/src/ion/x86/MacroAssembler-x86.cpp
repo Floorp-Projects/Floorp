@@ -203,3 +203,25 @@ MacroAssemblerX86::branchTestValue(Condition cond, const ValueOperand &value, co
         j(NotEqual, label);
     }
 }
+
+Assembler::Condition
+MacroAssemblerX86::testNegativeZero(const FloatRegister &reg, const Register &scratch)
+{
+    // Determines whether the single double contained in the XMM register reg
+    // is equal to double-precision -0.
+
+    Label nonZero;
+
+    // Compare to zero. Lets through {0, -0}.
+    xorpd(ScratchFloatReg, ScratchFloatReg);
+    // If reg is non-zero, then a test of Zero is false.
+    branchDouble(DoubleNotEqual, reg, ScratchFloatReg, &nonZero);
+
+    // Input register is either zero or negative zero. Test sign bit.
+    movmskpd(reg, scratch);
+    // If reg is -0, then a test of Zero is true.
+    cmpl(scratch, Imm32(1));
+
+    bind(&nonZero);
+    return Zero;
+}

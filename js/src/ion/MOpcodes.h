@@ -145,6 +145,7 @@ namespace ion {
     _(IteratorMore)                                                         \
     _(IteratorEnd)                                                          \
     _(StringLength)                                                         \
+    _(Floor)                                                                \
     _(Round)
 
 // Forward declarations of MIR types.

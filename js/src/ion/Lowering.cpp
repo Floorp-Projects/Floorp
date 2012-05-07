@@ -515,10 +515,20 @@ LIRGenerator::visitUrsh(MUrsh *ins)
 }
 
 bool
+LIRGenerator::visitFloor(MFloor *ins)
+{
+    JS_ASSERT(ins->num()->type() == MIRType_Double);
+    LFloor *lir = new LFloor(useRegister(ins->num()));
+    if (!assignSnapshot(lir))
+        return false;
+    return define(lir, ins);
+}
+
+bool
 LIRGenerator::visitRound(MRound *ins)
 {
     JS_ASSERT(ins->num()->type() == MIRType_Double);
-    LRound *lir = new LRound(useRegister(ins->num()));
+    LRound *lir = new LRound(useRegister(ins->num()), tempFloat());
     if (!assignSnapshot(lir))
         return false;
     return define(lir, ins);

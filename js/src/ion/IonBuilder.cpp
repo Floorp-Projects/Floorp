@@ -129,9 +129,13 @@ JSFunction *
 IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
 {
     types::TypeSet *calleeTypes = oracle->getCallTarget(script, argc, pc);
+    if (!calleeTypes)
+        return NULL;
+
     JSObject *obj = calleeTypes->getSingleton(cx, false);
     if (!obj || !obj->isFunction())
         return NULL;
+
     return obj->toFunction();
 }
 
@@ -2495,6 +2499,8 @@ IonBuilder::getSingletonPrototype(JSFunction *target)
 
     jsid protoid = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
     types::TypeSet *protoTypes = target->getType(cx)->getProperty(cx, protoid, false);
+    if (!protoTypes)
+        return NULL;
 
     return protoTypes->getSingleton(cx, true); // freeze the singleton if existent.
 }

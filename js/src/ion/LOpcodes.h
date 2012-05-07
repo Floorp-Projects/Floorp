@@ -172,6 +172,7 @@
     _(StringLength)                 \
     _(TypeOfV)                      \
     _(ToIdV)                        \
+    _(Floor)                        \
     _(Round)
 
 #if defined(JS_CPU_X86)
