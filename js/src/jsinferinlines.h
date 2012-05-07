@@ -1014,6 +1014,33 @@ HashSetLookup(U **values, unsigned count, T key)
     return NULL;
 }
 
+inline TypeObjectKey *
+Type::objectKey() const
+{
+    JS_ASSERT(isObject());
+    if (isTypeObject())
+        TypeObject::readBarrier((TypeObject *) data);
+    else
+        JSObject::readBarrier((JSObject *) (data ^ 1));
+    return (TypeObjectKey *) data;
+}
+
+inline JSObject *
+Type::singleObject() const
+{
+    JS_ASSERT(isSingleObject());
+    JSObject::readBarrier((JSObject *) (data ^ 1));
+    return (JSObject *) (data ^ 1);
+}
+
+inline TypeObject *
+Type::typeObject() const
+{
+    JS_ASSERT(isTypeObject());
+    TypeObject::readBarrier((TypeObject *) data);
+    return (TypeObject *) data;
+}
+
 inline bool
 TypeSet::hasType(Type type)
 {
