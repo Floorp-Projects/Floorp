@@ -190,15 +190,17 @@ public abstract class Layer {
     public static class RenderContext {
         public final RectF viewport;
         public final FloatSize pageSize;
+        public final IntSize screenSize;
         public final float zoomFactor;
         public final int positionHandle;
         public final int textureHandle;
         public final FloatBuffer coordBuffer;
 
-        public RenderContext(RectF aViewport, FloatSize aPageSize, float aZoomFactor,
+        public RenderContext(RectF aViewport, FloatSize aPageSize, IntSize aScreenSize, float aZoomFactor,
                              int aPositionHandle, int aTextureHandle, FloatBuffer aCoordBuffer) {
             viewport = aViewport;
             pageSize = aPageSize;
+            screenSize = aScreenSize;
             zoomFactor = aZoomFactor;
             positionHandle = aPositionHandle;
             textureHandle = aTextureHandle;
