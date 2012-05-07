@@ -1392,6 +1392,11 @@ js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
 #if OLD_GETTER_SETTER_METHODS
 
+const char js_defineGetter_str[] = "__defineGetter__";
+const char js_defineSetter_str[] = "__defineSetter__";
+const char js_lookupGetter_str[] = "__lookupGetter__";
+const char js_lookupSetter_str[] = "__lookupSetter__";
+
 enum DefineType { Getter, Setter };
 
 template<DefineType Type>
@@ -2668,6 +2673,14 @@ obj_isSealed(JSContext *cx, unsigned argc, Value *vp)
     vp->setBoolean(sealed);
     return true;
 }
+
+#if JS_HAS_OBJ_WATCHPOINT
+const char js_watch_str[] = "watch";
+const char js_unwatch_str[] = "unwatch";
+#endif
+const char js_hasOwnProperty_str[] = "hasOwnProperty";
+const char js_isPrototypeOf_str[] = "isPrototypeOf";
+const char js_propertyIsEnumerable_str[] = "propertyIsEnumerable";
 
 JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
