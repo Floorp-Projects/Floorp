@@ -3878,7 +3878,7 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
  */
 enum its_tinyid {
     ITS_COLOR, ITS_HEIGHT, ITS_WIDTH, ITS_FUNNY, ITS_ARRAY, ITS_RDONLY,
-    ITS_CUSTOM, ITS_CUSTOMRDONLY
+    ITS_CUSTOM, ITS_CUSTOMRDONLY, ITS_CUSTOMNATIVE
 };
 
 static JSBool
@@ -3886,6 +3886,12 @@ its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
 its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
+
+static JSBool
+its_get_customNative(JSContext *cx, unsigned argc, jsval *vp);
+
+static JSBool
+its_set_customNative(JSContext *cx, unsigned argc, jsval *vp);
 
 static JSPropertySpec its_props[] = {
     {"color",           ITS_COLOR,      JSPROP_ENUMERATE,       NULL, NULL},
@@ -3898,6 +3904,10 @@ static JSPropertySpec its_props[] = {
                         its_getter,     its_setter},
     {"customRdOnly",    ITS_CUSTOMRDONLY, JSPROP_ENUMERATE | JSPROP_READONLY,
                         its_getter,     its_setter},
+    {"customNative",    ITS_CUSTOMNATIVE,
+                        JSPROP_ENUMERATE | JSPROP_NATIVE_ACCESSORS,
+                        (JSPropertyOp)its_get_customNative,
+                        (JSStrictPropertyOp)its_set_customNative },
     {NULL,0,0,NULL,NULL}
 };
 
@@ -4096,6 +4106,58 @@ its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 
     *val = *vp;
     return JS_TRUE;
+}
+
+static JSBool
+its_get_customNative(JSContext *cx, unsigned argc, jsval *vp)
+{
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return false;
+
+    if (JS_GetClass(obj) == &its_class) {
+        jsval *val = (jsval *) JS_GetPrivate(obj);
+        *vp = val ? *val : JSVAL_VOID;
+    } else {
+        *vp = JSVAL_VOID;
+    }
+
+    return true;
+}
+
+static JSBool
+its_set_customNative(JSContext *cx, unsigned argc, jsval *vp)
+{
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return false;
+
+    if (JS_GetClass(obj) != &its_class)
+        return true;
+
+    jsval *argv = JS_ARGV(cx, vp);
+
+    jsval *val = (jsval *) JS_GetPrivate(obj);
+    if (val) {
+        *val = *argv;
+        return true;
+    }
+
+    val = new jsval;
+    if (!val) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    if (!JS_AddValueRoot(cx, val)) {
+        delete val;
+        return false;
+    }
+
+    JS_SetPrivate(obj, (void *)val);
+
+    *val = *argv;
+    return true;
 }
 
 JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {

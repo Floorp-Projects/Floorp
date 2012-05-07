@@ -755,8 +755,11 @@ struct GetPropHelper {
 
     LookupStatus testForGet() {
         if (!shape->hasDefaultGetter()) {
-            if (shape->hasGetterValue())
-                return ic.disable(f, "getter value shape");
+            if (shape->hasGetterValue()) {
+                JSObject *getterObj = shape->getterObject();
+                if (!getterObj->isFunction() || !getterObj->toFunction()->isNative())
+                    return ic.disable(f, "getter object not a native function");
+            }
             if (shape->hasSlot() && holder != obj)
                 return ic.disable(f, "slotful getter hook through prototype");
             if (!ic.canCallHook)
@@ -1053,6 +1056,7 @@ class GetPropCompiler : public PICStubCompiler
         return Lookup_Cacheable;
     }
 
+    /* For JSPropertyOp getters. */
     void generateGetterStub(Assembler &masm, const Shape *shape, jsid userid,
                             Label start, Vector<Jump, 8> &shapeMismatches)
     {
@@ -1085,8 +1089,7 @@ class GetPropCompiler : public PICStubCompiler
         /*
          * Initialize vp, which is either a slot in the object (the holder,
          * actually, which must equal the object here) or undefined.
-         * Use vp == sp (which for CALLPROP will actually be the original
-         * sp + 1), to avoid clobbering stack values.
+         * Use vp == sp to avoid clobbering stack values.
          */
         int32_t vpOffset = (char *) f.regs.sp - (char *) f.fp();
         if (shape->hasSlot()) {
@@ -1097,7 +1100,8 @@ class GetPropCompiler : public PICStubCompiler
             masm.storeValue(UndefinedValue(), Address(JSFrameReg, vpOffset));
         }
 
-        int32_t initialFrameDepth = f.regs.sp - f.fp()->slots();
+        /* sp + 1 to avoid clobbering vp if the getter calls scripted functions. */
+        int32_t initialFrameDepth = f.regs.sp + 1 - f.fp()->slots();
         masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.regs.pc, initialFrameDepth);
 
         /* Grab cx. */
@@ -1120,6 +1124,98 @@ class GetPropCompiler : public PICStubCompiler
         masm.storeArg(0, cxReg);
 
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, getter), false);
+
+        NativeStubLinker::FinalJump done;
+        if (!NativeStubEpilogue(f, masm, &done, 0, vpOffset, pic.shapeReg, pic.objReg))
+            return;
+        NativeStubLinker linker(masm, f.chunk(), f.regs.pc, done);
+        if (!linker.init(f.cx))
+            THROW();
+
+        if (!linker.verifyRange(pic.lastCodeBlock(f.chunk())) ||
+            !linker.verifyRange(f.chunk())) {
+            disable("code memory is out of range");
+            return;
+        }
+
+        linker.patchJump(pic.fastPathRejoin);
+
+        linkerEpilogue(linker, start, shapeMismatches);
+    }
+
+    /* For getters backed by a JSNative. */
+    void generateNativeGetterStub(Assembler &masm, const Shape *shape,
+                                  Label start, Vector<Jump, 8> &shapeMismatches)
+    {
+        /*
+         * Getter hook needs to be called from the stub. The state is fully
+         * synced and no registers are live except the result registers.
+         */
+        JS_ASSERT(pic.canCallHook);
+
+        JSFunction *fun = shape->getterObject()->toFunction();
+        Native native = fun->native();
+
+        masm.storePtr(ImmPtr((void *) REJOIN_NATIVE_GETTER),
+                      FrameAddress(offsetof(VMFrame, stubRejoin)));
+
+        Registers tempRegs = Registers::tempCallRegMask();
+        if (tempRegs.hasReg(Registers::ClobberInCall))
+            tempRegs.takeReg(Registers::ClobberInCall);
+
+        /* Get a register to hold obj while we set up the rest of the frame. */
+        RegisterID holdObjReg = pic.objReg;
+        if (tempRegs.hasReg(pic.objReg)) {
+            tempRegs.takeReg(pic.objReg);
+        } else {
+            holdObjReg = tempRegs.takeAnyReg().reg();
+            masm.move(pic.objReg, holdObjReg);
+        }
+
+        RegisterID t0 = tempRegs.takeAnyReg().reg();
+        masm.bumpStubCount(f.script(), f.pc(), t0);
+
+        /*
+         * A JSNative has the following signature:
+         *
+         *   JSBool native(JSContext *cx, unsigned argc, Value *vp);
+         *
+         * Since we are calling a getter, argc is always 0. vp must point to two
+         * values, the callee and the holder. We use vp == sp to avoid clobbering
+         * stack values.
+         */
+        int32_t vpOffset = (char *) f.regs.sp - (char *) f.fp();
+
+        masm.storeValue(ObjectValue(*fun), Address(JSFrameReg, vpOffset));
+        masm.storeValueFromComponents(ImmType(JSVAL_TYPE_OBJECT), holdObjReg,
+                                      Address(JSFrameReg, vpOffset + sizeof(js::Value)));
+
+        /*
+         * sp + 2 to avoid clobbering vp[0] and vp[1] if the getter calls
+         * scripted functions.
+         */
+        int32_t initialFrameDepth = f.regs.sp + 2 - f.fp()->slots();
+        masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.regs.pc, initialFrameDepth);
+
+        /* Grab cx. */
+#ifdef JS_CPU_X86
+        RegisterID cxReg = tempRegs.takeAnyReg().reg();
+#else
+        RegisterID cxReg = Registers::ArgReg0;
+#endif
+        masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxReg);
+
+        /* Grap vp. */
+        RegisterID vpReg = t0;
+        masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
+
+        masm.restoreStackBase();
+        masm.setupABICall(Registers::NormalCall, 3);
+        masm.storeArg(2, vpReg);
+        masm.storeArg(1, Imm32(0)); // argc
+        masm.storeArg(0, cxReg);
+
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, native), false);
 
         NativeStubLinker::FinalJump done;
         if (!NativeStubEpilogue(f, masm, &done, 0, vpOffset, pic.shapeReg, pic.objReg))
@@ -1201,11 +1297,14 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         if (!shape->hasDefaultGetter()) {
-            jsid userid;
-            if (!shape->getUserId(cx, &userid))
-                return error();
-
-            generateGetterStub(masm, shape, userid, start, shapeMismatches);
+            if (shape->hasGetterValue()) {
+                generateNativeGetterStub(masm, shape, start, shapeMismatches);
+            } else {
+                jsid userid;
+                if (!shape->getUserId(cx, &userid))
+                    return error();
+                generateGetterStub(masm, shape, userid, start, shapeMismatches);
+            }
             if (setStubShapeOffset)
                 pic.getPropLabels().setStubShapeJump(masm, start, stubShapeJumpLabel);
             return Lookup_Cacheable;

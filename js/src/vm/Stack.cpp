@@ -1171,8 +1171,16 @@ StackIter::settleOnNewState()
 
             state_ = SCRIPTED;
             script_ = fp_->script();
-            JS_ASSERT_IF(op != JSOP_FUNAPPLY,
-                         sp_ >= fp_->base() && sp_ <= fp_->slots() + script_->nslots);
+
+            /*
+             * Check sp and pc. JM's getter ICs may push 2 extra values on the
+             * stack; this is okay since the methodjit reserves some extra slots
+             * for loop temporaries.
+             */
+            if (op == JSOP_GETPROP || op == JSOP_CALLPROP)
+                JS_ASSERT(sp_ >= fp_->base() && sp_ <= fp_->slots() + script_->nslots + 2);
+            else if (op != JSOP_FUNAPPLY)
+                JS_ASSERT(sp_ >= fp_->base() && sp_ <= fp_->slots() + script_->nslots);
             JS_ASSERT(pc_ >= script_->code && pc_ < script_->code + script_->length);
             return;
         }
