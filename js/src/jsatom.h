@@ -308,7 +308,38 @@ struct JSAtomState
 #undef DEFINE_PROTOTYPE_ATOM
 #undef DEFINE_KEYWORD_ATOM
 
+    /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */
+    struct {
+        js::PropertyName *XMLListAtom;
+        js::PropertyName *decodeURIAtom;
+        js::PropertyName *decodeURIComponentAtom;
+        js::PropertyName *defineGetterAtom;
+        js::PropertyName *defineSetterAtom;
+        js::PropertyName *encodeURIAtom;
+        js::PropertyName *encodeURIComponentAtom;
+        js::PropertyName *escapeAtom;
+        js::PropertyName *hasOwnPropertyAtom;
+        js::PropertyName *isFiniteAtom;
+        js::PropertyName *isNaNAtom;
+        js::PropertyName *isPrototypeOfAtom;
+        js::PropertyName *isXMLNameAtom;
+        js::PropertyName *lookupGetterAtom;
+        js::PropertyName *lookupSetterAtom;
+        js::PropertyName *parseFloatAtom;
+        js::PropertyName *parseIntAtom;
+        js::PropertyName *propertyIsEnumerableAtom;
+        js::PropertyName *unescapeAtom;
+        js::PropertyName *unevalAtom;
+        js::PropertyName *unwatchAtom;
+        js::PropertyName *watchAtom;
+    } lazy;
+
     static const size_t commonAtomsOffset;
+    static const size_t lazyAtomsOffset;
+
+    void clearLazyAtoms() {
+        memset(&lazy, 0, sizeof(lazy));
+    }
 
     void junkAtoms() {
 #ifdef DEBUG

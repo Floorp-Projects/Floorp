@@ -372,6 +372,16 @@ str_uneval(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
+const char js_escape_str[] = "escape";
+const char js_unescape_str[] = "unescape";
+#if JS_HAS_UNEVAL
+const char js_uneval_str[] = "uneval";
+#endif
+const char js_decodeURI_str[] = "decodeURI";
+const char js_encodeURI_str[] = "encodeURI";
+const char js_decodeURIComponent_str[] = "decodeURIComponent";
+const char js_encodeURIComponent_str[] = "encodeURIComponent";
+
 static JSFunctionSpec string_functions[] = {
     JS_FN(js_escape_str,             str_escape,                1,0),
     JS_FN(js_unescape_str,           str_unescape,              1,0),
