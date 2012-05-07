@@ -912,37 +912,13 @@ CodeGeneratorARM::visitRound(LRound *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
     Register output = ToRegister(lir->output());
-
-    Label belowZero, end, fail;
-    // round(x) == floor(x + 0.5)
-    masm.ma_vimm(0.5, ScratchFloatReg);
-    masm.ma_vadd(ScratchFloatReg, input, input);
-
-    //              +2  +1.5  +1  +0.5  +0  -0.5  -1  -1.5  -2
-    // vcvt:          }-------> }-------><-------{ <-------{
-    // floor:         }-------> }-------> }-------> }------->
-
-    masm.ma_vcmpz(input);
-    masm.as_vmrs(pc);
-    masm.ma_b(&belowZero, Assembler::VFP_LessThanOrEqual);
-
-    // input > 0
-    emitRoundDouble(input, output, &fail);
-    masm.jump(&end);
-
-    masm.bind(&fail);
-    if (!bailoutIf(Assembler::Always, lir->snapshot()))
+    FloatRegister tmp = ToFloatRegister(lir->temp());
+    Label bail;
+    // Output is either correct, or clamped.  All -0 cases have been translated to a clamped
+    // case.a
+    masm.round(input, output, &bail, tmp);
+    if (!bailoutFrom(&bail, lir->snapshot()))
         return false;
-
-    // input =< 0
-    masm.bind(&belowZero);
-    masm.ma_vneg(input, input);
-    emitRoundDouble(input, output, &fail);
-    masm.ma_rsb(Imm32(0), output, SetCond); // neg
-    // We also need to bailout for '-0'.
-    if (!bailoutIf(Assembler::Equal, lir->snapshot()))
-        return false;
-    masm.bind(&end);
     return true;
 }
 
