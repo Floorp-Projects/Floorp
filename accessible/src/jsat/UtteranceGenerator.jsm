@@ -179,35 +179,45 @@ var UtteranceGenerator = {
       let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
       let desc = (aFlags & INCLUDE_ROLE) ? this._getLocalizedRole(aRoleStr) : '';
 
-      if (!name && !desc)
-        return [];
+      let utterance = [];
 
-      let state = {};
-      let extState = {};
-      aAccessible.getState(state, extState);
+      if (desc) {
+        let state = {};
+        let extState = {};
+        aAccessible.getState(state, extState);
 
-      if (state.value & Ci.nsIAccessibleStates.STATE_CHECKABLE) {
-        let stateStr = (state.value & Ci.nsIAccessibleStates.STATE_CHECKED) ?
-          'objChecked' : 'objNotChecked';
-        desc = gStringBundle.formatStringFromName(stateStr, [desc], 1);
+        if (state.value & Ci.nsIAccessibleStates.STATE_CHECKABLE) {
+          let stateStr = (state.value & Ci.nsIAccessibleStates.STATE_CHECKED) ?
+            'objChecked' : 'objNotChecked';
+          desc = gStringBundle.formatStringFromName(stateStr, [desc], 1);
+        }
+
+        if (extState.value & Ci.nsIAccessibleStates.EXT_STATE_EXPANDABLE) {
+          let stateStr = (state.value & Ci.nsIAccessibleStates.STATE_EXPANDED) ?
+            'objExpanded' : 'objCollapsed';
+          desc = gStringBundle.formatStringFromName(stateStr, [desc], 1);
+        }
+
+        utterance.push(desc);
       }
 
-      if (extState.value & Ci.nsIAccessibleStates.EXT_STATE_EXPANDABLE) {
-        let stateStr = (state.value & Ci.nsIAccessibleStates.STATE_EXPANDED) ?
-          'objExpanded' : 'objCollapsed';
-        desc = gStringBundle.formatStringFromName(stateStr, [desc], 1);
-      }
+      if (name)
+        utterance.push(name);
 
-      return [desc, name];
+      return utterance;
     },
 
     heading: function(aAccessible, aRoleStr, aFlags) {
       let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
       let level = {};
       aAccessible.groupPosition(level, {}, {});
-      let desc = gStringBundle.formatStringFromName('headingLevel',
-                                                   [level.value], 1);
-      return [desc, name];
+      let utterance =
+        [gStringBundle.formatStringFromName('headingLevel', [level.value], 1)];
+
+      if (name)
+        utterance.push(name);
+
+      return utterance;
     },
 
     listitem: function(aAccessible, aRoleStr, aFlags) {
@@ -216,10 +226,14 @@ var UtteranceGenerator = {
       let itemno = {};
       let itemof = {};
       aAccessible.groupPosition({}, itemof, itemno);
-      let desc = gStringBundle.formatStringFromName(
-          'objItemOf', [localizedRole, itemno.value, itemof.value], 3);
+      let utterance =
+        [gStringBundle.formatStringFromName(
+           'objItemOf', [localizedRole, itemno.value, itemof.value], 3)];
 
-      return [desc, name];
+      if (name)
+        utterance.push(name);
+
+      return utterance;
     }
   },
 
