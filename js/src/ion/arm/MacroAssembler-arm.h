@@ -300,9 +300,11 @@ class MacroAssemblerARM : public Assembler
 
     // source is F64, dest is I32
     void ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest);
+    void ma_vcvt_F64_U32(FloatRegister src, FloatRegister dest);
 
     // source is I32, dest is F64
     void ma_vcvt_I32_F64(FloatRegister src, FloatRegister dest);
+    void ma_vcvt_U32_F64(FloatRegister src, FloatRegister dest);
 
     void ma_vxfer(FloatRegister src, Register dest);
     void ma_vxfer(FloatRegister src, Register dest1, Register dest2);
@@ -979,7 +981,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void breakpoint();
 
-    void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs);
+    void compareDouble(FloatRegister lhs, FloatRegister rhs);
     void branchDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
                       Label *label);
 
@@ -1030,6 +1032,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         if (address.offset)
             ma_add(dest, Imm32(address.offset), dest, NoSetCond);
     }
+    void floor(FloatRegister input, Register output, Label *handleNotAnInt);
 };
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;
