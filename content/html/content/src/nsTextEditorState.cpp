@@ -1743,11 +1743,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
     // PrepareEditor cannot be called prematurely.
     nsAutoScriptBlocker scriptBlocker;
 
-    bool fireChangeEvent = mBoundFrame->GetFireChangeEventState();
-    if (aUserInput) {
-      mBoundFrame->SetFireChangeEventState(true);
-    }
-
 #ifdef DEBUG
     if (IsSingleLineTextControl()) {
       NS_ASSERTION(mEditorInitialized || mInitializing,
@@ -1774,8 +1769,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
     // this is necessary to avoid infinite recursion
     if (!currentValue.Equals(aValue))
     {
-      nsTextControlFrame::ValueSetter valueSetter(mBoundFrame, mEditor,
-                                                  mBoundFrame->mFocusedValue.Equals(currentValue));
+      nsTextControlFrame::ValueSetter valueSetter(mBoundFrame, mEditor);
 
       // \r is an illegal character in the dom, but people use them,
       // so convert windows and mac platform linebreaks to \n:
@@ -1894,9 +1888,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
       scrollableFrame->ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
     }
 
-    if (aUserInput) {
-      mBoundFrame->SetFireChangeEventState(fireChangeEvent);
-    }
   } else {
     if (!mValue) {
       mValue = new nsCString;

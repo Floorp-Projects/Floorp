@@ -143,7 +143,6 @@ public:
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor);
   NS_IMETHOD    GetTextLength(PRInt32* aTextLength);
-  NS_IMETHOD    CheckFireOnChange();
   NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart);
   NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);
   NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart,
@@ -192,19 +191,7 @@ public:
 
 public: //for methods who access nsTextControlFrame directly
   void SetValueChanged(bool aValueChanged);
-  /** Called when the frame is focused, to remember the value for onChange. */
-  nsresult InitFocusedValue();
-
-  void SetFireChangeEventState(bool aNewState)
-  {
-    mFireChangeEventState = aNewState;
-  }
-
-  bool GetFireChangeEventState() const
-  {
-    return mFireChangeEventState;
-  }    
-
+  
   // called by the focus listener
   nsresult MaybeBeginSecureKeyboardInput();
   void MaybeEndSecureKeyboardInput();
@@ -212,16 +199,9 @@ public: //for methods who access nsTextControlFrame directly
   NS_STACK_CLASS class ValueSetter {
   public:
     ValueSetter(nsTextControlFrame* aFrame,
-                nsIEditor* aEditor,
-                bool aHasFocusValue)
+                nsIEditor* aEditor)
       : mFrame(aFrame)
       , mEditor(aEditor)
-      // This method isn't used for user-generated changes, except for calls
-      // from nsFileControlFrame which sets mFireChangeEventState==true and
-      // restores it afterwards (ie. we want 'change' events for those changes).
-      // Focused value must be updated to prevent incorrect 'change' events,
-      // but only if user hasn't changed the value.
-      , mFocusValueInit(!mFrame->mFireChangeEventState && aHasFocusValue)
       , mCanceled(false)
     {
       MOZ_ASSERT(aFrame);
@@ -244,17 +224,11 @@ public: //for methods who access nsTextControlFrame directly
       if (mCanceled) {
         return;
       }
-
-      if (mFocusValueInit) {
-        // Reset mFocusedValue so the onchange event doesn't fire incorrectly.
-        mFrame->InitFocusedValue();
-      }
     }
 
   private:
     nsTextControlFrame* mFrame;
     nsCOMPtr<nsIEditor> mEditor;
-    bool mFocusValueInit;
     bool mOuterTransaction;
     bool mCanceled;
   };
@@ -415,9 +389,6 @@ private:
   // these packed bools could instead use the high order bits on mState, saving 4 bytes 
   bool mUseEditor;
   bool mIsProcessing;
-  // Calls to SetValue will be treated as user values (i.e. trigger onChange
-  // eventually) when mFireChangeEventState==true, this is used by nsFileControlFrame.
-  bool mFireChangeEventState;
   // Keep track if we have asked a placeholder node creation.
   bool mUsePlaceholder;
 
@@ -426,7 +397,6 @@ private:
   friend class EditorInitializerEntryTracker;
 #endif
 
-  nsString mFocusedValue;
   nsRevocableEventPtr<ScrollOnFocusEvent> mScrollEvent;
 };
 
