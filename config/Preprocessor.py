@@ -169,7 +169,7 @@ class Preprocessor:
       args = [sys.stdin]
     includes.extend(args)
     for f in includes:
-      self.do_include(f)
+      self.do_include(f, False)
     pass
 
   def getCommandLineParser(self, unescapeDefines = False):
@@ -414,7 +414,7 @@ class Preprocessor:
   def filter_attemptSubstitution(self, aLine):
     return self.filter_substitution(aLine, fatal=False)
   # File ops
-  def do_include(self, args):
+  def do_include(self, args, filters=True):
     """
     Preprocess a given file.
     args can either be a file name, or a file-like object.
@@ -427,10 +427,13 @@ class Preprocessor:
     if isName:
       try:
         args = str(args)
-        args = self.applyFilters(args)
+        if filters:
+          args = self.applyFilters(args)
         if not os.path.isabs(args):
           args = os.path.join(self.context['DIRECTORY'], args)
         args = open(args, 'rU')
+      except Preprocessor.Error:
+        raise
       except:
         raise Preprocessor.Error(self, 'FILE_NOT_FOUND', str(args))
     self.checkLineNumbers = bool(re.search('\.(js|java)(?:\.in)?$', args.name))
@@ -476,7 +479,7 @@ def preprocess(includes=[sys.stdin], defines={},
   pp.setMarker(marker)
   pp.out = output
   for f in includes:
-    pp.do_include(f)
+    pp.do_include(f, False)
 
 if __name__ == "__main__":
   main()
