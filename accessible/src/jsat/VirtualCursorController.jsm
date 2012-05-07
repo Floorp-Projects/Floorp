@@ -24,7 +24,7 @@ var VirtualCursorController = {
   },
 
   detach: function detach() {
-    this.chromeWin.document.removeEventListener('keypress', this.onkeypress);
+    this.chromeWin.document.removeEventListener('keypress', this.onkeypress, true);
   },
 
   getBrowserApp: function getBrowserApp() {

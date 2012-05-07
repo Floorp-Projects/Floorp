@@ -84,11 +84,11 @@ var AccessFu = {
 
     VirtualCursorController.detach();
 
-    Services.obs.addObserver(this, 'accessible-event', false);
-    this.chromeWin.removeEventListener('DOMActivate', this);
-    this.chromeWin.removeEventListener('resize', this);
-    this.chromeWin.removeEventListener('scroll', this);
-    this.chromeWin.removeEventListener('TabOpen', this);
+    Services.obs.removeObserver(this, 'accessible-event');
+    this.chromeWin.removeEventListener('DOMActivate', this, true);
+    this.chromeWin.removeEventListener('resize', this, true);
+    this.chromeWin.removeEventListener('scroll', this, true);
+    this.chromeWin.removeEventListener('TabOpen', this, true);
   },
 
   amINeeded: function(aPref) {
