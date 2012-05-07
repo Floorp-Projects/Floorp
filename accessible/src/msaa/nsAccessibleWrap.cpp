@@ -372,7 +372,7 @@ __try {
   if (xpAccessible->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-#ifdef DEBUG_A11Y
+#ifdef DEBUG
   NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(xpAccessible),
                "Does not support nsIAccessibleText when it should");
 #endif
@@ -1670,7 +1670,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
       aid->ToUTF8String(id);
   }
 
-#ifdef DEBUG_A11Y
+#ifdef DEBUG
   printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %d\n\n",
          eventType, NS_ConvertUTF16toUTF8(tag).get(), id.get(),
          childID, hWnd);
