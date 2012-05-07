@@ -599,11 +599,18 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   };
   RunCaseState runCase = kUpperOrCaseless;
 
-  PRUint32 i;
-  for (i = 0; i <= length; ++i) {
+  // Note that this loop runs from 0 to length *inclusive*, so the last
+  // iteration is in effect beyond the end of the input text, to give a
+  // chance to finish the last casing run we've found.
+  // The last iteration, when i==length, must not attempt to look at the
+  // character position [i] or the style data for styles[i], as this would
+  // be beyond the valid length of the textrun or its style array.
+  for (PRUint32 i = 0; i <= length; ++i) {
     RunCaseState chCase = kUpperOrCaseless;
-    nsStyleContext* styleContext = styles[i];
+    // Unless we're at the end, figure out what treatment the current
+    // character will need.
     if (i < length) {
+      nsStyleContext* styleContext = styles[i];
       // Characters that aren't the start of a cluster are ignored here. They
       // get added to whatever lowercase/non-lowercase run we're in.
       if (!inner->IsClusterStart(i)) {
@@ -634,6 +641,11 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       }
     }
 
+    // At the end of the text, or when the current character needs different
+    // casing treatment from the current run, finish the run-in-progress
+    // and prepare to accumulate a new run.
+    // Note that we do not look at any source data for offset [i] here,
+    // as that would be invalid in the case where i==length.
     if ((i == length || runCase != chCase) && runStart < i) {
       nsAutoPtr<nsTransformedTextRun> transformedChild;
       nsAutoPtr<gfxTextRun> cachedChild;
@@ -681,7 +693,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 
     if (i < length) {
       runCase = chCase;
-      styleArray.AppendElement(styleContext);
+      styleArray.AppendElement(styles[i]);
       canBreakBeforeArray.AppendElement(aTextRun->CanBreakLineBefore(i));
     }
   }
