@@ -898,8 +898,13 @@ CodeGeneratorARM::visitMathD(LMathD *math)
 bool
 CodeGeneratorARM::visitFloor(LFloor *lir)
 {
-    JS_NOT_REACHED("ARM floor() unimplemented.");
-    return false;
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+    Label bail;
+    masm.floor(input, output, &bail);
+    if (!bailoutFrom(&bail, lir->snapshot()))
+        return false;
+    return true;
 }
 
 bool
@@ -1163,7 +1168,7 @@ CodeGeneratorARM::visitCompareD(LCompareD *comp)
     FloatRegister rhs = ToFloatRegister(comp->right());
 
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->jsop());
-    masm.compareDouble(cond, lhs, rhs);
+    masm.compareDouble(lhs, rhs);
     emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()));
     return false;
 }
@@ -1175,7 +1180,7 @@ CodeGeneratorARM::visitCompareDAndBranch(LCompareDAndBranch *comp)
     FloatRegister rhs = ToFloatRegister(comp->right());
 
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->jsop());
-    masm.compareDouble(cond, lhs, rhs);
+    masm.compareDouble(lhs, rhs);
     emitBranch(Assembler::ConditionFromDoubleCondition(cond), comp->ifTrue(), comp->ifFalse());
     return true;
 }
