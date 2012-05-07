@@ -264,7 +264,7 @@ static bool
 EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, unsigned flags,
                               IdSet &ht, AutoIdVector *props)
 {
-    if (!Enumerate(cx, obj, pobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), false,
+    if (!Enumerate(cx, obj, pobj, NameToId(cx->runtime->atomState.lengthAtom), false,
                    flags, ht, props)) {
         return false;
     }
@@ -458,8 +458,8 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
     }
 
     /* Check whether we have a valid __iterator__ method. */
-    JSAtom *atom = cx->runtime->atomState.iteratorAtom;
-    if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), 0, vp))
+    PropertyName *name = cx->runtime->atomState.iteratorAtom;
+    if (!js_GetMethod(cx, obj, NameToId(name), 0, vp))
         return false;
 
     /* If there is no custom __iterator__ method, we are done here. */
@@ -481,7 +481,7 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
          * trace, so the object we are iterating over is on top of the stack (-1).
          */
         JSAutoByteString bytes;
-        if (!js_AtomToPrintableString(cx, atom, &bytes))
+        if (!js_AtomToPrintableString(cx, name, &bytes))
             return false;
         js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
                              -1, ObjectValue(*obj), NULL, bytes.ptr());
@@ -1016,7 +1016,6 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                         jsid id;
                         if (!ValueToId(cx, StringValue(*idp), &id))
                             return false;
-                        id = js_CheckForStringIndex(id);
                         if (!proto->lookupGeneric(cx, id, &obj2, &prop))
                             return false;
                         if (prop) {
@@ -1217,7 +1216,6 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, Value *rval)
         jsid id;
         if (!ValueToId(cx, StringValue(*ni->current()), &id))
             return false;
-        id = js_CheckForStringIndex(id);
         ni->incCursor();
         if (!ni->obj->getGeneric(cx, id, rval))
             return false;
@@ -1244,7 +1242,7 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, Value *rval)
         }
     } else {
         /* Call the iterator object's .next method. */
-        jsid id = ATOM_TO_JSID(cx->runtime->atomState.nextAtom);
+        jsid id = NameToId(cx->runtime->atomState.nextAtom);
         if (!js_GetMethod(cx, iterobj, id, 0, rval))
             return false;
         if (!Invoke(cx, ObjectValue(*iterobj), *rval, 0, NULL, rval)) {
@@ -1745,7 +1743,7 @@ InitIteratorClass(JSContext *cx, Handle<GlobalObject*> global)
     iteratorProto->setNativeIterator(ni);
 
     RootedVarFunction ctor(cx);
-    ctor = global->createConstructor(cx, Iterator, CLASS_ATOM(cx, Iterator), 2);
+    ctor = global->createConstructor(cx, Iterator, CLASS_NAME(cx, Iterator), 2);
     if (!ctor)
         return false;
 

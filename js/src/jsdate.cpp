@@ -2675,7 +2675,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     SetDateToNaN(cx, dateProto);
 
     RootedVarFunction ctor(cx);
-    ctor = global->createConstructor(cx, js_Date, CLASS_ATOM(cx, Date), MAXARGS);
+    ctor = global->createConstructor(cx, js_Date, CLASS_NAME(cx, Date), MAXARGS);
     if (!ctor)
         return NULL;
 
@@ -2693,8 +2693,8 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, dateProto, date_methods))
         return NULL;
     Value toUTCStringFun;
-    jsid toUTCStringId = ATOM_TO_JSID(cx->runtime->atomState.toUTCStringAtom);
-    jsid toGMTStringId = ATOM_TO_JSID(cx->runtime->atomState.toGMTStringAtom);
+    jsid toUTCStringId = NameToId(cx->runtime->atomState.toUTCStringAtom);
+    jsid toGMTStringId = NameToId(cx->runtime->atomState.toGMTStringAtom);
     if (!js_GetProperty(cx, dateProto, toUTCStringId, &toUTCStringFun) ||
         !js_DefineProperty(cx, dateProto, toGMTStringId, &toUTCStringFun,
                            JS_PropertyStub, JS_StrictPropertyStub, 0))

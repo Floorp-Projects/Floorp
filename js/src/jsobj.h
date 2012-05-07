@@ -134,7 +134,7 @@ inline bool
 LookupProperty(JSContext *cx, JSObject *obj, PropertyName *name,
                JSObject **objp, JSProperty **propp)
 {
-    return js_LookupProperty(cx, obj, ATOM_TO_JSID(name), objp, propp);
+    return js_LookupProperty(cx, obj, NameToId(name), objp, propp);
 }
 
 }
@@ -186,7 +186,7 @@ inline bool
 SetPropertyHelper(JSContext *cx, HandleObject obj, PropertyName *name, unsigned defineHow,
                   Value *vp, JSBool strict)
 {
-    return !!js_SetPropertyHelper(cx, obj, ATOM_TO_JSID(name), defineHow, vp, strict);
+    return !!js_SetPropertyHelper(cx, obj, NameToId(name), defineHow, vp, strict);
 }
 
 } /* namespace js */
@@ -797,7 +797,7 @@ struct JSObject : public js::ObjectImpl
     putProperty(JSContext *cx, js::PropertyName *name,
                 JSPropertyOp getter, JSStrictPropertyOp setter,
                 uint32_t slot, unsigned attrs, unsigned flags, int shortid) {
-        return putProperty(cx, js_CheckForStringIndex(ATOM_TO_JSID(name)), getter, setter, slot, attrs, flags, shortid);
+        return putProperty(cx, js::NameToId(name), getter, setter, slot, attrs, flags, shortid);
     }
 
     /* Change the given property into a sibling with the same id in this scope. */
@@ -1132,9 +1132,6 @@ js_CreateThisForFunction(JSContext *cx, js::HandleObject callee, bool newType);
 extern JSObject *
 js_CreateThis(JSContext *cx, js::Class *clasp, JSObject *callee);
 
-extern jsid
-js_CheckForStringIndex(jsid id);
-
 /*
  * Find or create a property named by id in obj's scope, with the given getter
  * and setter, slot, attributes, and other members.
@@ -1173,7 +1170,7 @@ DefineNativeProperty(JSContext *cx, HandleObject obj, PropertyName *name, const 
                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
                      unsigned flags, int shortid, unsigned defineHow = 0)
 {
-    return DefineNativeProperty(cx, obj, ATOM_TO_JSID(name), value, getter, setter, attrs, flags,
+    return DefineNativeProperty(cx, obj, NameToId(name), value, getter, setter, attrs, flags,
                                 shortid, defineHow);
 }
 
@@ -1188,7 +1185,7 @@ inline bool
 LookupPropertyWithFlags(JSContext *cx, JSObject *obj, PropertyName *name, unsigned flags,
                         JSObject **objp, JSProperty **propp)
 {
-    return LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(name), flags, objp, propp);
+    return LookupPropertyWithFlags(cx, obj, NameToId(name), flags, objp, propp);
 }
 
 /*
@@ -1267,7 +1264,7 @@ GetPropertyHelper(JSContext *cx, HandleObject obj, jsid id, uint32_t getHow, Val
 inline bool
 GetPropertyHelper(JSContext *cx, HandleObject obj, PropertyName *name, uint32_t getHow, Value *vp)
 {
-    return GetPropertyHelper(cx, obj, ATOM_TO_JSID(name), getHow, vp);
+    return GetPropertyHelper(cx, obj, NameToId(name), getHow, vp);
 }
 
 bool
@@ -1289,7 +1286,7 @@ namespace js {
 inline bool
 GetMethod(JSContext *cx, HandleObject obj, PropertyName *name, unsigned getHow, Value *vp)
 {
-    return js_GetMethod(cx, obj, ATOM_TO_JSID(name), getHow, vp);
+    return js_GetMethod(cx, obj, NameToId(name), getHow, vp);
 }
 
 } /* namespace js */
@@ -1298,16 +1295,15 @@ namespace js {
 
 /*
  * If obj has an already-resolved data property for id, return true and
- * store the property value in *vp. This helper assumes the caller has already
- * called js_CheckForStringIndex.
+ * store the property value in *vp.
  */
 extern bool
 HasDataProperty(JSContext *cx, HandleObject obj, jsid id, Value *vp);
 
 inline bool
-HasDataProperty(JSContext *cx, HandleObject obj, JSAtom *atom, Value *vp)
+HasDataProperty(JSContext *cx, HandleObject obj, PropertyName *name, Value *vp)
 {
-    return HasDataProperty(cx, obj, js_CheckForStringIndex(ATOM_TO_JSID(atom)), vp);
+    return HasDataProperty(cx, obj, NameToId(name), vp);
 }
 
 extern JSBool

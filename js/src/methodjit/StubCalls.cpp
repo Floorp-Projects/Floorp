@@ -1087,7 +1087,7 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     JS_ASSERT(obj->isNative());
 
     /* Get the immediate property name into id. */
-    jsid id = ATOM_TO_JSID(name);
+    jsid id = NameToId(name);
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
         ? !js_SetPropertyHelper(cx, obj, id, 0, &rval, false)

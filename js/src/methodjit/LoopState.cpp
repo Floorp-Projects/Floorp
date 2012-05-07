@@ -917,7 +917,7 @@ LoopState::invariantProperty(const CrossSSAValue &obj, jsid id)
     if (skipAnalysis)
         return NULL;
 
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
+    if (id == NameToId(cx->runtime->atomState.lengthAtom))
         return NULL;
 
     uint32_t objSlot;
@@ -1870,8 +1870,8 @@ LoopState::analyzeLoopBody(unsigned frame)
           }
 
           case JSOP_SETPROP: {
-            JSAtom *atom = script->getAtom(GET_UINT32_INDEX(pc));
-            jsid id = MakeTypeId(cx, ATOM_TO_JSID(atom));
+            PropertyName *name = script->getName(GET_UINT32_INDEX(pc));
+            jsid id = MakeTypeId(cx, NameToId(name));
 
             TypeSet *objTypes = analysis->poppedTypes(pc, 1);
             if (objTypes->unknownObject()) {
@@ -2184,8 +2184,8 @@ LoopState::getEntryValue(const CrossSSAValue &iv, uint32_t *pslot, int32_t *pcon
       }
 
       case JSOP_GETPROP: {
-        JSAtom *atom = script->getAtom(GET_UINT32_INDEX(pc));
-        jsid id = ATOM_TO_JSID(atom);
+        PropertyName *name = script->getName(GET_UINT32_INDEX(pc));
+        jsid id = NameToId(name);
         CrossSSAValue objcv(cv.frame, analysis->poppedValue(v.pushedOffset(), 0));
         FrameEntry *tmp = invariantProperty(objcv, id);
         if (!tmp)

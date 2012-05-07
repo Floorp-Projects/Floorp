@@ -768,7 +768,7 @@ frontend::LexicalLookup(TreeContext *tc, JSAtom *atom, int *slotp, StmtInfo *stm
             continue;
 
         StaticBlockObject &blockObj = *stmt->blockObj;
-        const Shape *shape = blockObj.nativeLookup(tc->parser->context, ATOM_TO_JSID(atom));
+        const Shape *shape = blockObj.nativeLookup(tc->parser->context, AtomToId(atom));
         if (shape) {
             JS_ASSERT(shape->hasShortID());
 
@@ -823,7 +823,7 @@ LookupCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, Val
                 JS_ASSERT(bce->compileAndGo());
                 JSObject *obj = bce->scopeChain();
 
-                const Shape *shape = obj->nativeLookup(cx, ATOM_TO_JSID(atom));
+                const Shape *shape = obj->nativeLookup(cx, AtomToId(atom));
                 if (shape) {
                     /*
                      * We're compiling code that will be executed immediately,
@@ -3975,14 +3975,14 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
                 jsid id;
                 if (idvalue.isInt32() && INT_FITS_IN_JSID(idvalue.toInt32()))
                     id = INT_TO_JSID(idvalue.toInt32());
-                else if (!js_InternNonIntElementId(cx, obj, idvalue, &id))
+                else if (!InternNonIntElementId(cx, obj, idvalue, &id))
                     return false;
                 if (!obj->defineGeneric(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
                     return false;
             } else {
                 JS_ASSERT(pnid->isKind(PNK_NAME) || pnid->isKind(PNK_STRING));
                 JS_ASSERT(pnid->pn_atom != cx->runtime->atomState.protoAtom);
-                jsid id = ATOM_TO_JSID(pnid->pn_atom);
+                jsid id = AtomToId(pnid->pn_atom);
                 if (!DefineNativeProperty(cx, obj, id, value, NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0)) {
                     return false;
@@ -5979,7 +5979,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());
-                if (!DefineNativeProperty(cx, obj, ATOM_TO_JSID(pn3->pn_atom),
+                if (!DefineNativeProperty(cx, obj, AtomToId(pn3->pn_atom),
                                           UndefinedValue(), NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0))
                 {

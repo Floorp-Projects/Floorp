@@ -275,7 +275,7 @@ MarkIdInternal(JSTracer *trc, jsid *id)
     if (JSID_IS_STRING(*id)) {
         JSString *str = JSID_TO_STRING(*id);
         MarkInternal(trc, &str);
-        *id = ATOM_TO_JSID(reinterpret_cast<JSAtom *>(str));
+        *id = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom *>(str));
     } else if (JS_UNLIKELY(JSID_IS_OBJECT(*id))) {
         JSObject *obj = JSID_TO_OBJECT(*id);
         MarkInternal(trc, &obj);

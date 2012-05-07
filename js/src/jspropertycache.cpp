@@ -227,7 +227,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     if (pobj->lastProperty() == entry->pshape) {
 #ifdef DEBUG
         PropertyName *name = GetNameFromBytecode(cx, pc, op, cs);
-        JS_ASSERT(pobj->nativeContains(cx, js_CheckForStringIndex(ATOM_TO_JSID(name))));
+        JS_ASSERT(pobj->nativeContains(cx, NameToId(name)));
 #endif
         *pobjp = pobj;
         return NULL;
