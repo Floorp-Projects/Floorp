@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import unittest
 
 from StringIO import StringIO
@@ -12,6 +13,33 @@ class NamedIO(StringIO):
   def __init__(self, name, content):
     self.name = name
     StringIO.__init__(self, content)
+
+class MockedOpen(object):
+  """
+  Context manager diverting the open builtin such that opening files
+  can open NamedIO instances given when creating a MockedOpen.
+
+  with MockedOpen(NamedIO('foo', 'foo'), NamedIO('bar', 'bar')):
+    f = open('foo', 'r')
+
+  will thus assign the NamedIO instance for the file 'foo' to f.
+  """
+  def __init__(self, *files):
+    self.files = {}
+    for f in files:
+      self.files[os.path.abspath(f.name)] = f
+  def __call__(self, name, args):
+    absname = os.path.abspath(name)
+    if absname in self.files:
+      return self.files[absname]
+    return self.open(name, args)
+  def __enter__(self):
+    import __builtin__
+    self.open = __builtin__.open
+    __builtin__.open = self
+  def __exit__(self, type, value, traceback):
+    import __builtin__
+    __builtin__.open = self.open
 
 class TestPreprocessor(unittest.TestCase):
   """
@@ -498,6 +526,70 @@ octal value is not equal
     self.pp.handleCommandLine(['-DFOO="0100"'])
     self.pp.do_include(f)
     self.assertEqual(self.pp.out.getvalue(), "octal value is not equal\n")
+
+  def test_undefined_variable(self):
+    f = NamedIO("undefined_variable.in", """#filter substitution
+@foo@
+""")
+    try:
+      self.pp.do_include(f)
+    except Preprocessor.Error, exception:
+      self.assertEqual(exception.key, 'UNDEFINED_VAR')
+    else:
+      self.fail("Expected a Preprocessor.Error")
+
+  def test_include(self):
+    with MockedOpen(NamedIO("foo/test", """#define foo foobarbaz
+#include @inc@
+@bar@
+"""),
+                      NamedIO("bar", """#define bar barfoobaz
+@foo@
+""")):
+      f = NamedIO("include.in", """#filter substitution
+#define inc ../bar
+#include foo/test""")
+      self.pp.do_include(f)
+      self.assertEqual(self.pp.out.getvalue(), """foobarbaz
+barfoobaz
+""")
+
+  def test_include_missing_file(self):
+    f = NamedIO("include_missing_file.in", "#include foo")
+    try:
+      self.pp.do_include(f)
+    except Preprocessor.Error, exception:
+      self.assertEqual(exception.key, 'FILE_NOT_FOUND')
+    else:
+      self.fail("Expected a Preprocessor.Error")
+
+  def test_include_undefined_variable(self):
+    f = NamedIO("include_undefined_variable.in", """#filter substitution
+#include @foo@
+""")
+    try:
+      self.pp.do_include(f)
+    except Preprocessor.Error, exception:
+      self.assertEqual(exception.key, 'UNDEFINED_VAR')
+    else:
+      self.fail("Expected a Preprocessor.Error")
+
+  def test_include_literal_at(self):
+    with MockedOpen(NamedIO("@foo@", "#define foo foobarbaz")):
+      f = NamedIO("include_literal_at.in", """#include @foo@
+#filter substitution
+@foo@
+""")
+      self.pp.do_include(f)
+      self.assertEqual(self.pp.out.getvalue(), """foobarbaz
+""")
+
+  def test_command_line_literal_at(self):
+    with MockedOpen(NamedIO("@foo@.in", """@foo@
+""")):
+      self.pp.handleCommandLine(['-Fsubstitution', '-Dfoo=foobarbaz', '@foo@.in'])
+      self.assertEqual(self.pp.out.getvalue(), """foobarbaz
+""")
 
 if __name__ == '__main__':
   unittest.main()
