@@ -201,6 +201,12 @@ public:
    */
   nsresult Reset(bool* aTrailingBreak);
 
+  /*
+   * Set word-break mode for linebreaker.  This is set by word-break property.
+   * @param aMode is nsILineBreaker::kWordBreak_* value.
+   */
+  void SetWordBreak(PRUint8 aMode) { mWordBreak = aMode; }
+
 private:
   // This is a list of text sources that make up the "current word" (i.e.,
   // run of text which does not contain any whitespace). All the mLengths
@@ -243,6 +249,8 @@ private:
   // True if a break must be allowed at the current position because
   // a run of breakable whitespace ends here
   bool                        mBreakHere;
+  // line break mode by "word-break" style
+  PRUint8                     mWordBreak;
 };
 
 #endif /*NSLINEBREAKER_H_*/
