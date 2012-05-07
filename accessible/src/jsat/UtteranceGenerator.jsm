@@ -57,6 +57,24 @@ var UtteranceGenerator = {
     return [gStringBundle.GetStringFromName(this.gActionMap[aActionName])];
   },
 
+  genForTabStateChange: function (aObject, aTabState) {
+    switch (aTabState) {
+      case 'newtab':
+        return [gStringBundle.GetStringFromName('tabNew')];
+      case 'loading':
+        return [gStringBundle.GetStringFromName('tabLoading')];
+      case 'loaded':
+        return [aObject.name || '',
+                gStringBundle.GetStringFromName('tabLoaded')];
+      case 'loadstopped':
+        return [gStringBundle.GetStringFromName('tabLoadStopped')];
+      case 'reload':
+        return [gStringBundle.GetStringFromName('tabReload')];
+      default:
+        return [];
+    }
+  },
+
   verbosityRoleMap: {
     'menubar': INCLUDE_ROLE,
     'scrollbar': INCLUDE_ROLE,
