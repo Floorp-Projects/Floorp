@@ -41,6 +41,7 @@
 #include "CompositorParent.h"
 #include "RenderTrace.h"
 #include "ShadowLayersParent.h"
+#include "BasicLayers.h"
 #include "LayerManagerOGL.h"
 #include "nsIWidget.h"
 #include "nsGkAtoms.h"
@@ -449,6 +450,16 @@ CompositorParent::AllocPLayers(const LayersBackend &backendType)
       return NULL;
     }
 
+    ShadowLayerManager* slm = layerManager->AsShadowManager();
+    if (!slm) {
+      return NULL;
+    }
+    return new ShadowLayersParent(slm, this);
+  } else if (backendType == LayerManager::LAYERS_BASIC) {
+    // This require Cairo to be thread-safe
+    nsRefPtr<LayerManager> layerManager = new BasicShadowLayerManager(mWidget);
+    mWidget = NULL;
+    mLayerManager = layerManager;
     ShadowLayerManager* slm = layerManager->AsShadowManager();
     if (!slm) {
       return NULL;
