@@ -2273,6 +2273,13 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(PRInt32, void *param)
     nsConnectionEntry *ent =
         GetOrCreateConnectionEntry(trans->ConnectionInfo());
 
+    // If spdy has previously made a preferred entry for this host via
+    // the ip pooling rules. If so, connect to the preferred host instead of
+    // the one directly passed in here.
+    nsConnectionEntry *preferredEntry = GetSpdyPreferredEnt(ent);
+    if (preferredEntry)
+        ent = preferredEntry;
+
     if (!ent->mIdleConns.Length() && !RestrictConnections(ent) &&
         !AtActiveConnectionLimit(ent, trans->Caps())) {
         CreateTransport(ent, trans, trans->Caps(), true);
