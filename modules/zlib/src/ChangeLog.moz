@@ -52,3 +52,9 @@ Mozilla.org changes:
   Sync'ed with 1.2.6 release
   (keeping '#include "mozzconf.h"' in zconf.h)
   See bug #722391
+  
+- 4 May 2012
+  Sync'ed with 1.2.7 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bug #751697
+  
