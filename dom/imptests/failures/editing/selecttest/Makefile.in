@@ -1,0 +1,22 @@
+DEPTH = ../../../../..
+
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+relativesrcdir = dom/imptests/failures/editing/selecttest
+
+DIRS = \
+  $(NULL)
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_TESTS = \
+  test_addRange.html.json \
+  test_Document-open.html.json \
+  test_getSelection.html.json \
+  test_interfaces.html.json \
+  $(NULL)
+
+libs:: $(_TESTS)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
