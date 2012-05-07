@@ -1015,6 +1015,7 @@
              hidden="true">
 #ifdef XP_MACOSX
       <toolbarbutton id="highlighter-closebutton"
+                     class="devtools-closebutton"
                      oncommand="InspectorUI.closeInspectorUI(false);"
                      tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
@@ -1048,6 +1049,7 @@
       </hbox>
 #ifndef XP_MACOSX
       <toolbarbutton id="highlighter-closebutton"
+                     class="devtools-closebutton"
                      oncommand="InspectorUI.closeInspectorUI(false);"
                      tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
