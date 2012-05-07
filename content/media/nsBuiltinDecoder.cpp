@@ -246,6 +246,7 @@ nsresult nsBuiltinDecoder::Load(MediaResource* aResource,
     mDecoderStateMachine->SetSeekable(mSeekable);
     mDecoderStateMachine->SetDuration(mDuration);
     mDecoderStateMachine->SetVolume(mInitialVolume);
+    mDecoderStateMachine->SetAudioCaptured(mInitialAudioCaptured);
     
     if (mFrameBufferLength > 0) {
       // The valid mFrameBufferLength value was specified earlier

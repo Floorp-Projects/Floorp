@@ -375,7 +375,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, Value *vp)
 {
     RootedVarValue idval(cx, idval_);
 
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
+    jsid id = NameToId(cx->runtime->atomState.noSuchMethodAtom);
     RootedVarValue value(cx);
     if (!js_GetMethod(cx, obj, id, 0, value.address()))
         return false;
@@ -896,28 +896,6 @@ js::TypeOfValue(JSContext *cx, const Value &vref)
         return v.toObject().typeOf(cx);
     JS_ASSERT(v.isBoolean());
     return JSTYPE_BOOLEAN;
-}
-
-bool
-js::ValueToId(JSContext *cx, const Value &v, jsid *idp)
-{
-    int32_t i;
-    if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
-        *idp = INT_TO_JSID(i);
-        return true;
-    }
-
-#if JS_HAS_XML_SUPPORT
-    if (v.isObject()) {
-        JSObject *obj = &v.toObject();
-        if (obj->isXMLId()) {
-            *idp = OBJECT_TO_JSID(obj);
-            return JS_TRUE;
-        }
-    }
-#endif
-
-    return js_ValueToStringId(cx, v, idp);
 }
 
 /*
@@ -2023,13 +2001,8 @@ END_CASE(JSOP_AND)
 #define FETCH_ELEMENT_ID(obj, n, id)                                          \
     JS_BEGIN_MACRO                                                            \
         const Value &idval_ = regs.sp[n];                                     \
-        int32_t i_;                                                           \
-        if (ValueFitsInInt32(idval_, &i_) && INT_FITS_IN_JSID(i_)) {          \
-            id = INT_TO_JSID(i_);                                             \
-        } else {                                                              \
-            if (!js_InternNonIntElementId(cx, obj, idval_, &id, &regs.sp[n])) \
-                goto error;                                                   \
-        }                                                                     \
+        if (!ValueToId(cx, obj, idval_, &id))                                 \
+            goto error;                                                       \
     JS_END_MACRO
 
 #define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
@@ -3328,7 +3301,7 @@ BEGIN_CASE(JSOP_SETTER)
       {
         PropertyName *name;
         LOAD_NAME(0, name);
-        id = ATOM_TO_JSID(name);
+        id = NameToId(name);
         rval = regs.sp[-1];
         i = -1;
         goto gs_pop_lval;
@@ -3348,7 +3321,7 @@ BEGIN_CASE(JSOP_SETTER)
         i = -1;
         PropertyName *name;
         LOAD_NAME(0, name);
-        id = ATOM_TO_JSID(name);
+        id = NameToId(name);
         goto gs_get_lval;
       }
       default:
@@ -3482,11 +3455,11 @@ BEGIN_CASE(JSOP_INITPROP)
     obj = &regs.sp[-2].toObject();
     JS_ASSERT(obj->isObject());
 
-    JSAtom *atom;
-    LOAD_ATOM(0, atom);
-    jsid id = ATOM_TO_JSID(atom);
+    PropertyName *name;
+    LOAD_NAME(0, name);
+    jsid id = NameToId(name);
 
-    if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
+    if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
         ? !js_SetPropertyHelper(cx, obj, id, 0, &rval, script->strictModeCode)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {

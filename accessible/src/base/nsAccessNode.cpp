@@ -49,7 +49,6 @@
 #include "nsIDOMWindow.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIPresShell.h"
@@ -168,23 +167,6 @@ void nsAccessNode::InitXPAccessibility()
   if (prefBranch) {
     prefBranch->GetBoolPref("browser.formfill.enable", &gIsFormFillEnabled);
   }
-
-  NotifyA11yInitOrShutdown(true);
-}
-
-// nsAccessNode protected static
-void nsAccessNode::NotifyA11yInitOrShutdown(bool aIsInit)
-{
-  nsCOMPtr<nsIObserverService> obsService =
-    mozilla::services::GetObserverService();
-  NS_ASSERTION(obsService, "No observer service to notify of a11y init/shutdown");
-  if (!obsService)
-    return;
-
-  static const PRUnichar kInitIndicator[] = { '1', 0 };
-  static const PRUnichar kShutdownIndicator[] = { '0', 0 }; 
-  obsService->NotifyObservers(nsnull, "a11y-init-or-shutdown",
-                              aIsInit ? kInitIndicator  : kShutdownIndicator);
 }
 
 void nsAccessNode::ShutdownXPAccessibility()
@@ -202,8 +184,6 @@ void nsAccessNode::ShutdownXPAccessibility()
     gApplicationAccessible->Shutdown();
     NS_RELEASE(gApplicationAccessible);
   }
-
-  NotifyA11yInitOrShutdown(false);
 }
 
 RootAccessible*
