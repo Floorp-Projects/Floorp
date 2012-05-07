@@ -66,15 +66,21 @@ Presenter.prototype = {
   selectionChanged: function selectionChanged(aObject) {},
 
   /**
-   * The page state has changed, loading, stopped loading, etc. TODO.
+   * The tab, or the tab's document state has changed.
+   * @param {nsIAccessible} aDocObj the tab document accessible that has had its
+   *    state changed, or null if the tab has no associated document yet.
+   * @param {string} aPageState the state name for the tab, valid states are:
+   *    'newtab', 'loading', 'newdoc', 'loaded', 'stopped', and 'reload'.
    */
-  pageStateChanged: function pageStateChanged() {},
+  tabStateChanged: function tabStateChanged(aDocObj, aPageState) {},
 
   /**
-   * The tab has changed.
-   * @param {nsIAccessible} aObject the document contained in the tab.
+   * The current tab has changed.
+   * @param {nsIAccessible} aObject the document contained by the tab
+   *    accessible, or null if it is a new tab with no attached
+   *    document yet.
    */
-  tabSelected: function tabSelected(aObject) {},
+  tabSelected: function tabSelected(aDocObj) {},
 
   /**
    * The viewport has changed, either a scroll, pan, zoom, or
@@ -147,9 +153,17 @@ VisualPresenter.prototype.pivotChanged = function(aObject, aNewContext) {
   }
 };
 
-VisualPresenter.prototype.tabSelected = function(aObject) {
-  let vcDoc = aObject.QueryInterface(Ci.nsIAccessibleCursorable);
-  this.pivotChanged(vcDoc.virtualCursor.position);
+VisualPresenter.prototype.tabSelected = function(aDocObj) {
+  let vcPos = aDocObj ?
+    aDocObj.QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor.position :
+    null;
+
+  this.pivotChanged(vcPos);
+};
+
+VisualPresenter.prototype.tabStateChanged = function(aDocObj, aPageState) {
+  if (aPageState == "newdoc")
+    this.pivotChanged(null);
 };
 
 // Internals
@@ -242,16 +256,40 @@ AndroidPresenter.prototype.actionInvoked = function(aObject, aActionName) {
   });
 };
 
-AndroidPresenter.prototype.tabSelected = function(aObject) {
-  let vcDoc = aObject.QueryInterface(Ci.nsIAccessibleCursorable);
+AndroidPresenter.prototype.tabSelected = function(aDocObj) {
+  // Send a pivot change message with the full context utterance for this doc.
+  let vcDoc = aDocObj.QueryInterface(Ci.nsIAccessibleCursorable);
   let context = [];
 
-  let parent = vcDoc.virtualCursor.position || aObject;
-  while ((parent = parent.parent))
+  let parent = vcDoc.virtualCursor.position || aDocObj;
+  while ((parent = parent.parent)) {
     context.push(parent);
+    if (parent == aDocObj)
+      break;
+  }
+
   context.reverse();
 
-  this.pivotChanged(vcDoc.virtualCursor.position || aObject, context);
+  this.pivotChanged(vcDoc.virtualCursor.position || aDocObj, context);
+};
+
+AndroidPresenter.prototype.tabStateChanged = function(aDocObj, aPageState) {
+  let stateUtterance = UtteranceGenerator.
+    genForTabStateChange(aDocObj, aPageState);
+
+  if (!stateUtterance.length)
+    return;
+
+  this.sendMessageToJava({
+    gecko: {
+      type: 'Accessibility:Event',
+      eventType: ANDROID_TYPE_VIEW_TEXT_CHANGED,
+      text: stateUtterance,
+      addedCount: stateUtterance.join(' ').length,
+      removedCount: 0,
+      fromIndex: 0
+    }
+  });
 };
 
 AndroidPresenter.prototype.textChanged = function(aIsInserted, aStart, aLength, aText, aModifiedText) {
