@@ -424,9 +424,6 @@ class RegExpObject : public JSObject
     bool createShared(JSContext *cx, RegExpGuard *g);
     RegExpShared *maybeShared() const;
 
-    RegExpObject() MOZ_DELETE;
-    RegExpObject &operator=(const RegExpObject &reo) MOZ_DELETE;
-
     /* Call setShared in preference to setPrivate. */
     void setPrivate(void *priv) MOZ_DELETE;
 };
