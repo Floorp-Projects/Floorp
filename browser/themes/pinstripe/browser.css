@@ -980,6 +980,7 @@ toolbar[mode="icons"] #zoom-in-button {
   padding-bottom: 1px;
   -moz-padding-start: 4px;
   -moz-padding-end: 0;
+  font-size: .9em;
 }
 
 #identity-box:-moz-locale-dir(ltr) {
@@ -1025,9 +1026,19 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 #identity-box.verifiedIdentity {
-  color: hsl(92,100%,20%);
-  -moz-border-end: 1px solid hsla(92,81%,16%,.2);
+  color: hsl(92,100%,30%);
   -moz-padding-end: 4px;
+  background-image: -moz-linear-gradient(hsla(92,81%,16%,0),
+                                         hsla(92,81%,16%,.2) 25%,
+                                         hsla(92,81%,16%,.2) 75%,
+                                         hsla(92,81%,16%,0));
+  background-position: right;
+  background-size: 1px;
+  background-repeat: no-repeat;
+}
+
+#identity-box.verifiedIdentity:-moz-locale-dir(rtl) {
+  background-position: left;
 }
 
 #identity-box:-moz-focusring {
