@@ -822,7 +822,8 @@ public:
   void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                            size_t *aArenasSize,
                            size_t *aStyleSetsSize,
-                           size_t *aTextRunsSize) const;
+                           size_t *aTextRunsSize,
+                           size_t *aPresContextSize) const;
   size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const;
 
 protected:

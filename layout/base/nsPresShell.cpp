@@ -8976,7 +8976,8 @@ void
 PresShell::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                size_t *aArenasSize,
                                size_t *aStyleSetsSize,
-                               size_t *aTextRunsSize) const
+                               size_t *aTextRunsSize,
+                               size_t *aPresContextSize) const
 {
   *aArenasSize = aMallocSizeOf(this);
   *aArenasSize += mFrameArena.SizeOfExcludingThis(aMallocSizeOf);
@@ -8984,6 +8985,8 @@ PresShell::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
   *aStyleSetsSize = StyleSet()->SizeOfIncludingThis(aMallocSizeOf);
 
   *aTextRunsSize = SizeOfTextRuns(aMallocSizeOf);
+
+  *aPresContextSize = mPresContext->SizeOfIncludingThis(aMallocSizeOf);
 }
 
 size_t
