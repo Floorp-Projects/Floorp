@@ -43,6 +43,7 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/unused.h"
 #include "HttpChannelParentListener.h"
+#include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
 #include "nsNetUtil.h"
 #include "nsISupportsPriority.h"
@@ -393,11 +394,8 @@ HttpChannelParent::RecvDocumentChannelCleanup()
 bool 
 HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
 {
-  if (mOfflineForeignMarker) {
-    mOfflineForeignMarker->MarkAsForeign();
-    mOfflineForeignMarker = 0;
-  }
-
+  nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
+  httpChan->MarkOfflineCacheEntryAsForeign();
   return true;
 }
 
@@ -423,7 +421,6 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   bool loadedFromApplicationCache;
   chan->GetLoadedFromApplicationCache(&loadedFromApplicationCache);
   if (loadedFromApplicationCache) {
-    mOfflineForeignMarker = chan->GetOfflineCacheEntryAsForeignMarker();
     nsCOMPtr<nsIApplicationCache> appCache;
     chan->GetApplicationCache(getter_AddRefs(appCache));
     nsCString appCacheGroupId;
