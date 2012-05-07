@@ -7,7 +7,11 @@ export MOZILLA_OFFICIAL=1
 
 mk_add_options MOZ_MAKE_FLAGS=-j1
 
-. $topsrcdir/build/win32/mozconfig.vs2010
+if test "$PROCESSOR_ARCHITECTURE" = "AMD64" -o "$PROCESSOR_ARCHITEW6432" = "AMD64"; then
+  . $topsrcdir/build/win32/mozconfig.vs2010-win64
+else
+  . $topsrcdir/build/win32/mozconfig.vs2010
+fi
 
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1

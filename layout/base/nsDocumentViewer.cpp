@@ -3253,6 +3253,21 @@ NS_IMETHODIMP DocumentViewerImpl::GetBidiOptions(PRUint32* aBidiOptions)
   return NS_OK;
 }
 
+static void
+AppendChildSubtree(nsIMarkupDocumentViewer* aChild, void* aClosure)
+{
+  nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> >& array =
+    *static_cast<nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> >*>(aClosure);
+  aChild->AppendSubtree(array);
+}
+
+NS_IMETHODIMP DocumentViewerImpl::AppendSubtree(nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> >& aArray)
+{
+  aArray.AppendElement(this);
+  CallChildren(AppendChildSubtree, &aArray);
+  return NS_OK;
+}
+
 NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
 {
    NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);

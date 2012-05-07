@@ -2518,7 +2518,7 @@ JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
         return false;
 
     AutoIdVector props(cx);
-    if (!GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+    if (!GetPropertyNames(cx, self, JSITER_HIDDEN | JSITER_OWNONLY, &props))
         return false;
 
     /* preventExtensions must slowify dense arrays, so we can assign to holes without checks. */

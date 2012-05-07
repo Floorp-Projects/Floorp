@@ -1096,11 +1096,11 @@ JSObject::preventExtensions(JSContext *cx)
      * properties.
      */
     AutoIdVector props(cx);
-    if (!js::GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+    if (!js::GetPropertyNames(cx, self, JSITER_HIDDEN | JSITER_OWNONLY, &props))
         return false;
 
-    if (this->isDenseArray())
-        this->makeDenseArraySlow(cx, RootedVarObject(cx, this));
+    if (self->isDenseArray())
+        self->makeDenseArraySlow(cx, self);
 
     return self->setFlag(cx, BaseShape::NOT_EXTENSIBLE, GENERATE_SHAPE);
 }

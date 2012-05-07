@@ -1926,6 +1926,11 @@ MOZ_ARG_ENABLE_BOOL(profiling,
     MOZ_PROFILING=1,
     MOZ_PROFILING= )
 
+# For profiling builds keep the symbol information
+if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
+    STRIP_FLAGS="--strip-debug"
+fi
+
 dnl ========================================================
 dnl = Use Valgrind
 dnl ========================================================
@@ -7437,6 +7442,13 @@ MOZ_ARG_DISABLE_BOOL(elf-hack,
 [  --disable-elf-hack      Disable elf hacks],
     USE_ELF_HACK=,
     USE_ELF_HACK=1)
+
+# Disable elf hack for profiling because the built in profiler
+# doesn't read the segments properly with elf hack. This is
+# temporary and should be fixed soon in the profiler.
+if test "$MOZ_PROFILING" = 1; then
+  USE_ELF_HACK=
+fi
 
 # Only enable elfhack where supported
 if test "$USE_ELF_HACK" = 1; then

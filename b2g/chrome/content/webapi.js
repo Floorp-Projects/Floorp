@@ -13,10 +13,9 @@ Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/Geometry.jsm');
 
-XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
-  return Cc['@mozilla.org/focus-manager;1']
-           .getService(Ci.nsIFocusManager);
-});
+XPCOMUtils.defineLazyServiceGetter(Services, 'fm',
+                                   '@mozilla.org/focus-manager;1',
+                                   'nsIFocusManager');
 
 // MozKeyboard
 (function VirtualKeyboardManager() {

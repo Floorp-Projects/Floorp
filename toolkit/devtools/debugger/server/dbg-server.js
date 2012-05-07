@@ -51,6 +51,9 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 
+Cu.import("resource://gre/modules/jsdebugger.jsm");
+addDebuggerToGlobal(this);
+
 function dumpn(str) {
   if (wantLogging) {
     dump("DBG-SERVER: " + str + "\n");
@@ -96,13 +99,6 @@ var DebuggerServer = {
     if (this.initialized) {
       return;
     }
-
-    // Hack: Merely loading jsdebugger.jsm will not work, because it will load
-    // in the chrome compartment, and then we'd get a cross-compartment wrapper
-    // of that. The Debugger object must be created in the sandbox compartment,
-    // that is, this file's compartment.
-    const init = Cc["@mozilla.org/jsdebugger;1"].createInstance(Ci.IJSDebugger);
-    init.addClass();  // adds global variable Debugger to this global.
 
     this.xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
     this.initTransport();

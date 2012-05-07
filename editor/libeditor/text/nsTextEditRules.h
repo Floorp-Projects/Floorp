@@ -70,45 +70,15 @@ public:
   // nsIEditRules methods
   NS_IMETHOD Init(nsPlaintextEditor *aEditor);
   NS_IMETHOD DetachEditor();
-  NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
-  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
+  NS_IMETHOD BeforeEdit(nsEditor::OperationID action,
+                        nsIEditor::EDirection aDirection);
+  NS_IMETHOD AfterEdit(nsEditor::OperationID action,
+                       nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, bool *aCancel, bool *aHandled);
   NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD DocumentIsEmpty(bool *aDocumentIsEmpty);
   NS_IMETHOD DocumentModified();
 
-  // nsTextEditRules action id's
-  enum 
-  {
-    kDefault             = 0,
-    // any editor that has a txn mgr
-    kUndo                = 1000,
-    kRedo                = 1001,
-    // text actions
-    kInsertText          = 2000,
-    kInsertTextIME       = 2001,
-    kDeleteSelection     = 2002,
-    kSetTextProperty     = 2003,
-    kRemoveTextProperty  = 2004,
-    kOutputText          = 2005,
-    // html only action
-    kInsertBreak         = 3000,
-    kMakeList            = 3001,
-    kIndent              = 3002,
-    kOutdent             = 3003,
-    kAlign               = 3004,
-    kMakeBasicBlock      = 3005,
-    kRemoveList          = 3006,
-    kMakeDefListItem     = 3007,
-    kInsertElement       = 3008,
-    kLoadHTML            = 3013,
-    kSetAbsolutePosition = 3015,
-    kRemoveAbsolutePosition = 3016,
-    kDecreaseZIndex      = 3017,
-    kIncreaseZIndex      = 3018
-
-  };
-  
 public:
   nsresult ResetIMETextPWBuf();
 
@@ -151,7 +121,7 @@ public:
 protected:
 
   // nsTextEditRules implementation methods
-  nsresult WillInsertText(  PRInt32          aAction,
+  nsresult WillInsertText(  nsEditor::OperationID aAction,
                             nsISelection *aSelection, 
                             bool            *aCancel,
                             bool            *aHandled,
@@ -226,7 +196,8 @@ protected:
   /** Remove IME composition text from password buffer */
   nsresult RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString);
 
-  nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
+  nsresult CreateMozBR(nsIDOMNode* inParent, PRInt32 inOffset,
+                       nsIDOMNode** outBRNode = nsnull);
 
   nsresult CheckBidiLevelForDeletion(nsISelection         *aSelection,
                                      nsIDOMNode           *aSelNode, 
@@ -282,7 +253,7 @@ protected:
                                                // characters not visually 
                                                // adjacent to the caret without
                                                // moving the caret first.
-  PRInt32              mTheAction;     // the top level editor action
+  nsEditor::OperationID mTheAction;     // the top level editor action
   nsCOMPtr<nsITimer>   mTimer;
   PRUint32             mLastStart, mLastLength;
 
@@ -297,7 +268,7 @@ class nsTextRulesInfo : public nsRulesInfo
 {
  public:
  
-  nsTextRulesInfo(int aAction) : 
+  nsTextRulesInfo(nsEditor::OperationID aAction) :
     nsRulesInfo(aAction),
     inString(0),
     outString(0),
