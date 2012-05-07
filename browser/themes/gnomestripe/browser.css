@@ -1069,6 +1069,7 @@ toolbar[iconsize="small"] #feed-button {
   padding: 1px;
   margin: -1px;
   -moz-margin-end: 0;
+  font-size: .9em;
 }
 
 #identity-box:-moz-locale-dir(ltr) {
@@ -1093,9 +1094,19 @@ toolbar[iconsize="small"] #feed-button {
 
 #identity-box.verifiedIdentity {
   background-color: #fff;
-  color: hsl(92,81%,16%);
-  -moz-border-end: 1px solid hsla(92,81%,16%,.2);
+  color: hsl(92,100%,30%);
   -moz-margin-end: 4px;
+  background-image: -moz-linear-gradient(hsla(92,81%,16%,0),
+                                         hsla(92,81%,16%,.2) 25%,
+                                         hsla(92,81%,16%,.2) 75%,
+                                         hsla(92,81%,16%,0));
+  background-position: right;
+  background-size: 1px;
+  background-repeat: no-repeat;
+}
+
+#identity-box.verifiedIdentity:-moz-locale-dir(rtl) {
+  background-position: left;
 }
 
 /* Identity popup icons */
