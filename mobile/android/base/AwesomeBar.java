@@ -569,7 +569,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                             @Override
                             public Void doInBackground(Void... params) {
                                 String newUrl = locationText.getText().toString().trim();
-                                BrowserDB.updateBookmark(mResolver, url, newUrl, nameText.getText().toString(),
+                                BrowserDB.updateBookmark(mResolver, id, newUrl, nameText.getText().toString(),
                                                          keywordText.getText().toString());
                                 return null;
                             }
