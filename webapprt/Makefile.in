@@ -7,13 +7,16 @@ topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 
+include $(DEPTH)/config/autoconf.mk
+
+DIRS = $(NULL)
+
+# Include config.mk explicitly so we can override FINAL_TARGET.
 include $(topsrcdir)/config/config.mk
 
 # config.mk sets FINAL_TARGET to $(DIST)/bin, but we want to copy build products
 # into a WebappRT-specific subdirectory, so we redefine it here.
 FINAL_TARGET = $(DIST)/bin/webapprt
-
-DIRS = $(NULL)
 
 ifneq (,$(filter WINNT,$(OS_ARCH)))
 DIRS += win
