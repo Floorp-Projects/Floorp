@@ -243,19 +243,6 @@ JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWit
     return true;
 }
 
-AutoPreserveCompartment::AutoPreserveCompartment(JSContext *cx
-                                                 JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT)
-  : cx(cx), oldCompartment(cx->compartment)
-{
-    JS_GUARD_OBJECT_NOTIFIER_INIT;
-}
-
-AutoPreserveCompartment::~AutoPreserveCompartment()
-{
-    /* The old compartment may have been destroyed, so we can't use cx->setCompartment. */
-    cx->compartment = oldCompartment;
-}
-
 AutoSwitchCompartment::AutoSwitchCompartment(JSContext *cx, JSCompartment *newCompartment
                                              JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT)
   : cx(cx), oldCompartment(cx->compartment)

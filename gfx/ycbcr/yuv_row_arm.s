@@ -330,3 +330,7 @@ s42xbily_neon_done:
     LDMFD       r13!,{r4-r9,PC}        @ 8 words.
     .fnend
     .size ScaleYCbCr42xToRGB565_BilinearY_Row_NEON, .-ScaleYCbCr42xToRGB565_BilinearY_Row_NEON
+
+#if defined(__ELF__)&&defined(__linux__)
+    .section .note.GNU-stack,"",%progbits
+#endif
