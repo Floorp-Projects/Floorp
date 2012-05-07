@@ -1193,7 +1193,6 @@ nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent)
     
     bool doRestrict = ent->mConnInfo->UsingSSL() &&
         gHttpHandler->IsSpdyEnabled() &&
-        !ent->mConnInfo->UsingHttpProxy() &&
         (!ent->mTestedSpdy || ent->mUsingSpdy) &&
         (ent->mHalfOpens.Length() || ent->mActiveConns.Length());
 
@@ -2701,7 +2700,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
 
     // if we are doing spdy coalescing and haven't recorded the ip address
     // for this entry before then make the hash key if our dns lookup
-    // just completed
+    // just completed. We can't do coalescing if using a proxy because the
+    // ip addresses are not available to the client.
 
     if (status == nsISocketTransport::STATUS_CONNECTED_TO &&
         gHttpHandler->IsSpdyEnabled() &&
