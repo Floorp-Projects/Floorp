@@ -477,9 +477,9 @@ DOMApplicationManifest.prototype = {
     return icon;
   },
 
-  fullLaunchPath: function() {
-    let launchPath = this._localeProp("launch_path");
-    return this._origin.resolve(launchPath ? launchPath : "");
+  fullLaunchPath: function(aStartPoint) {
+    let launchPath = this._localeProp("launch_path") || "";
+    return this._origin.resolve(launchPath + aStartPoint);
   }
 };
 

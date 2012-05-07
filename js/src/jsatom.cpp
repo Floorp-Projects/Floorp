@@ -396,9 +396,6 @@ js_AtomizeString(JSContext *cx, JSString *str, InternBehavior ib)
         return &atom;
     }
 
-    if (str->isAtom())
-        return &str->asAtom();
-
     size_t length = str->length();
     const jschar *chars = str->getChars(cx);
     if (!chars)

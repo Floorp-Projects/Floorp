@@ -503,3 +503,12 @@ pref("app.update.download.backgroundInterval", 0);
 // field.
 pref("app.update.log", true);
 #endif
+
+// Extensions preferences
+pref("extensions.update.enabled", false);
+pref("extensions.getAddons.cache.enabled", false);
+
+// Context Menu
+pref("ui.click_hold_context_menus", true);
+pref("ui.click_hold_context_menus.delay", 1000);
+

@@ -38,10 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * The nsIContentViewerEdit    
- */
-
-/**
  * The nsIMarkupDocumentViewer
  * This interface describes the properties of a content viewer 
  * for a markup document - HTML or XML
@@ -51,8 +47,16 @@
 
 interface nsIDOMNode;
 
+%{C++
+#include "nsCOMPtr.h"
+#include "nsTArray.h"
+%}
 
-[scriptable, uuid(79286cd6-8293-4def-ba26-76422efc3d2a)]
+interface nsIMarkupDocumentViewer;
+
+[ref] native nsIMarkupDocumentViewerTArray(nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> >);
+
+[scriptable, uuid(1016d5e8-690f-4d97-8ac5-d50ffa341c46)]
 interface nsIMarkupDocumentViewer : nsISupports
 {
 
@@ -147,7 +151,13 @@ interface nsIMarkupDocumentViewer : nsISupports
    */
   attribute PRUint32 bidiOptions;
 
-	/** The minimum font size  */
-	attribute long minFontSize;
+  /** The minimum font size  */
+  attribute long minFontSize;
+
+  /**
+   * Append |this| and all of its descendants to the given array,
+   * in depth-first pre-order traversal.
+   */
+  [noscript] void appendSubtree(in nsIMarkupDocumentViewerTArray array);
 
 };

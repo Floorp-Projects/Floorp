@@ -53,7 +53,7 @@ let historyObserver = {
     PlacesUtils.history.removeObserver(this, false);
 
     // check browserHistory returns no entries
-    do_check_eq(0, PlacesUtils.bhistory.count);
+    do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
 
     Services.obs.addObserver(function observeExpiration(aSubject, aTopic, aData)
     {

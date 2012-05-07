@@ -563,7 +563,18 @@ public:
   nscoord GetAutoQualityMinFontSize() {
     return DevPixelsToAppUnits(mAutoQualityMinFontSizePixelsPref);
   }
-  
+
+  /**
+   * Return the device's screen width in inches, for font size
+   * inflation.
+   *
+   * Set |aChanged| to true if the result returned is different from a
+   * previous call to this method.  If a caller passes |aChanged| as
+   * null, then something else must have already checked whether there
+   * was a change (by calling this method).
+   */
+  float ScreenWidthInchesForFontInflation(bool* aChanged = nsnull);
+
   static PRInt32 AppUnitsPerCSSPixel() { return nsDeviceContext::AppUnitsPerCSSPixel(); }
   PRUint32 AppUnitsPerDevPixel() const  { return mDeviceContext->AppUnitsPerDevPixel(); }
   static PRInt32 AppUnitsPerCSSInch() { return nsDeviceContext::AppUnitsPerCSSInch(); }
@@ -1142,6 +1153,8 @@ protected:
   PRInt32               mMinFontSize;   // Min font size, defaults to 0
   float                 mTextZoom;      // Text zoom, defaults to 1.0
   float                 mFullZoom;      // Page zoom, defaults to 1.0
+
+  float                 mLastFontInflationScreenWidth;
 
   PRInt32               mCurAppUnitsPerDevPixel;
   PRInt32               mAutoQualityMinFontSizePixelsPref;

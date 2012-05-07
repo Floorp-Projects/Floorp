@@ -177,12 +177,12 @@ private:
       return false;
     }
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
 
     JSObject* listener =
       scope->GetEventListener(NS_ConvertASCIItoUTF16(name + 2), rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to get event listener!");
       return false;
     }
@@ -209,10 +209,10 @@ private:
       return false;
     }
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
     scope->SetEventListener(NS_ConvertASCIItoUTF16(name + 2),
                             JSVAL_TO_OBJECT(*aVp), rv);
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to set event listener!");
       return false;
     }
@@ -341,12 +341,12 @@ private:
       return false;
     }
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
 
     JSObject* adaptor =
       scope->GetEventListener(NS_ConvertASCIItoUTF16(name + 2), rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to get event listener!");
       return false;
     }
@@ -394,11 +394,11 @@ private:
                                   OBJECT_TO_JSVAL(aObj));
     js::SetFunctionNativeReserved(listener, SLOT_wrappedFunction, *aVp);
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
 
     scope->SetEventListener(NS_ConvertASCIItoUTF16(name + 2), listener, rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to set event listener!");
       return false;
     }
@@ -745,12 +745,12 @@ private:
       return false;
     }
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
 
     JSObject* listener =
       scope->GetEventListener(NS_ConvertASCIItoUTF16(name + 2), rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to get event listener!");
       return false;
     }
@@ -777,12 +777,12 @@ private:
       return false;
     }
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
 
     scope->SetEventListener(NS_ConvertASCIItoUTF16(name + 2),
                             JSVAL_TO_OBJECT(*aVp), rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to set event listener!");
       return false;
     }

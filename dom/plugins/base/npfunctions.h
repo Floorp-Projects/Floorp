@@ -285,14 +285,14 @@ typedef struct _NPPluginData {   /* Alternate OS2 Plugin interface */
   unsigned long dwProductVersionMS;
   unsigned long dwProductVersionLS;
 } NPPluginData;
-typedef NPError     (*NP_GetPluginDataFunc)(NPPluginData*);
+typedef NPError     (OSCALL *NP_GetPluginDataFunc)(NPPluginData*);
 NPError OSCALL      NP_GetPluginData(NPPluginData * pPluginData);
 #endif
-typedef NPError     (*NP_GetEntryPointsFunc)(NPPluginFuncs*);
+typedef NPError     (OSCALL *NP_GetEntryPointsFunc)(NPPluginFuncs*);
 NPError OSCALL      NP_GetEntryPoints(NPPluginFuncs* pFuncs);
-typedef NPError     (*NP_InitializeFunc)(NPNetscapeFuncs*);
+typedef NPError     (OSCALL *NP_InitializeFunc)(NPNetscapeFuncs*);
 NPError OSCALL      NP_Initialize(NPNetscapeFuncs* bFuncs);
-typedef NPError     (*NP_ShutdownFunc)(void);
+typedef NPError     (OSCALL *NP_ShutdownFunc)(void);
 NPError OSCALL      NP_Shutdown(void);
 typedef const char* (*NP_GetMIMEDescriptionFunc)(void);
 const char*         NP_GetMIMEDescription(void);

@@ -18,6 +18,7 @@ import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.SyncConfigurationException;
 import org.mozilla.gecko.sync.SyncException;
+import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
@@ -531,5 +532,23 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   @Override
   public void informUnauthorizedResponse(GlobalSession session, URI oldClusterURL) {
     setClusterURLIsStale(true);
+  }
+
+  @Override
+  public void informUpgradeRequiredResponse(final GlobalSession session) {
+    final AccountManager manager = mAccountManager;
+    final Account toDisable      = localAccount;
+    if (toDisable == null || manager == null) {
+      Logger.warn(LOG_TAG, "Attempting to disable account, but null found.");
+      return;
+    }
+    // Sync needs to be upgraded. Don't automatically sync anymore.
+    ThreadPool.run(new Runnable() {
+      @Override
+      public void run() {
+        manager.setUserData(toDisable, Constants.DATA_ENABLE_ON_UPGRADE, "1");
+        SyncAccounts.setSyncAutomatically(toDisable, false);
+      }
+    });
   }
 }
