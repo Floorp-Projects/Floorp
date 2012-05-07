@@ -60,11 +60,6 @@ public:
 
   NS_IMETHOD    GetTextLength(PRInt32* aTextLength) = 0;
   
-  /**
-   * Fire onChange if the value has changed since it was focused or since it
-   * was last fired.
-   */
-  NS_IMETHOD    CheckFireOnChange() = 0;
   NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart) = 0;
   NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd) = 0;
   
