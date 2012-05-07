@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <style type="text/css">
+    @font-face {
+      font-family: test;
+	  src: url(../fonts/dejavu-sans/DejaVuSans.ttf);
+    }
+    body {
+      font-family: test;
+      line-height: 1.5em;
+    }
+  </style>
+  <title>Test - word-break: break-all with rtl and diacritics, no ligatures</title>
+  </head>
+  <body>
+    <div>
+    &#x0627;<br>&#xFEDF;<br>&#xFECC;<br>&#xFEAE;<br>&#xFE91;<br>&#xFEF2;<br>
+    &#x0627;<br>&#xFEDF;<br>&#xFEC0;&#x064E;&#x0651;<br>&#xFE8E;<br>&#xFEDF;&#x0650;&#x0651;<br>&#xFEF4;<br>&#xFEE6;&#x064E;
+    </div>
+    <br>
+    <div>
+    &#x0627;&#x0644;&#x0639;&#x0631;&#x0628;&#x064A;<br>
+    &#x0627;&#x0644;&#x0636;&#x064E;&#x0651;&#x0627;&#x0644;&#x0650;&#x0651;&#x064A;&#x0646;&#x064E;
+    </div>
+  </body>
+</html>
