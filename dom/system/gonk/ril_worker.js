@@ -997,7 +997,7 @@ let RIL = {
         debug("ICC_EF_MSISDN: invalid length of BCD number/SSC contents - " + len);
         return;
       }
-      this.iccInfo.MSISDN = GsmPDUHelper.readAddress(len);
+      this.iccInfo.MSISDN = GsmPDUHelper.readDiallingNumber(len);
       Buf.readStringDelimiter(length);
 
       if (DEBUG) debug("MSISDN: " + this.iccInfo.MSISDN);
@@ -1110,6 +1110,212 @@ let RIL = {
       pin2:      null,
       type:      EF_TYPE_TRANSPARENT,
       callback:  callback,
+    });
+  },
+
+  /**
+   *  Helper to parse Dialling number from TS 131.102
+   *
+   *  @param options
+   *         The 'options' object passed from RIL.iccIO
+   *  @param addCallback
+   *         The function should be invoked when the ICC record is processed 
+   *         succesfully.
+   *  @param finishCallback
+   *         The function should be invoked when the final ICC record is 
+   *         processed.
+   *
+   */
+  parseDiallingNumber: function parseDiallingNumber(options,
+                                                    addCallback,
+                                                    finishCallback) {
+    let ffLen; // The length of trailing 0xff to be read.
+    let length = Buf.readUint32();
+
+    let alphaLen = options.recordSize - MSISDN_FOOTER_SIZE_BYTES;
+    let alphaId = GsmPDUHelper.readAlphaIdentifier(alphaLen);
+
+    let numLen = GsmPDUHelper.readHexOctet();
+    if (numLen != 0xff) {
+      if (numLen > MSISDN_MAX_NUMBER_SIZE_BYTES) {
+        debug("ICC_EF_FDN: invalid length of BCD number/SSC contents - " + numLen);
+        return;
+      }
+
+      if (addCallback) {
+        addCallback.call(this, {alphaId: alphaId,
+                                number: GsmPDUHelper.readDiallingNumber(numLen)});
+      }
+
+      ffLen = length / 2 - alphaLen - numLen - 1; // Minus 1 for the numLen field.
+    } else {
+      ffLen = MSISDN_FOOTER_SIZE_BYTES - 1; // Minus 1 for the numLen field.
+    }
+
+    // Consumes the remaining 0xff
+    for (let i = 0; i < ffLen; i++) {
+      GsmPDUHelper.readHexOctet();
+    }
+    
+    Buf.readStringDelimiter(length);
+    
+    if (options.loadAll &&
+        options.p1 < options.totalRecords) {
+      options.p1++;
+      this.iccIO(options);
+    } else {
+      if (finishCallback) {
+        finishCallback.call(this);
+      }
+    }
+  },
+  
+  /**
+   *  Get ICC FDN.
+   *
+   *  @paran requestId
+   *         Request id from RadioInterfaceLayer.
+   */
+  getFDN: function getFDN(options) {
+    function callback(options) {
+      function add(contact) {
+        this.iccInfo.FDN.push(contact);
+      };
+      function finish() {
+        if (DEBUG) {
+          for (let i = 0; i < this.iccInfo.FDN.length; i++) {
+            debug("FDN[" + i + "] alphaId = " + this.iccInfo.FDN[i].alphaId +
+                                " number = " + this.iccInfo.FDN[i].number);
+          }
+        }
+        this.sendDOMMessage({type: "icccontacts",
+                             contactType: "FDN",
+                             contacts: this.iccInfo.FDN,
+                             requestId: options.requestId});
+      };
+      this.parseDiallingNumber(options, add, finish);
+    }
+    
+    this.iccInfo.FDN = [];
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_FDN,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_LINEAR_FIXED,
+      callback:  callback,
+      loadAll:   true,
+      requestId: options.requestId
+    });
+  },
+
+  /**
+   *  Get ICC ADN.
+   *
+   *  @param fileId
+   *         EF id of the ADN.
+   *  @paran requestId
+   *         Request id from RadioInterfaceLayer.
+   */
+  getADN: function getADN(options) {
+    function callback(options) {
+      function add(contact) {
+        this.iccInfo.ADN.push(contact);
+      };
+      function finish() {
+        if (DEBUG) {
+          for (let i = 0; i < this.iccInfo.ADN.length; i++) {
+            debug("ADN[" + i + "] alphaId = " + this.iccInfo.ADN[i].alphaId +
+                                " number = " + this.iccInfo.ADN[i].number);
+          }
+        }
+        this.sendDOMMessage({type: "icccontacts",
+                             contactType: "ADN",
+                             contacts: this.iccInfo.ADN,
+                             requestId: options.requestId});
+      };
+      this.parseDiallingNumber(options, add, finish);
+    }
+
+    this.iccInfo.ADN = [];
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    options.fileId,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_LINEAR_FIXED,
+      callback:  callback,
+      loadAll:   true,
+      requestId: options.requestId
+    });
+  },
+
+  decodeSimTlvs: function decodeSimTlvs(tlvsLen) {
+    let index = 0;
+    let tlvs = [];
+    while (index < tlvsLen) {
+      let simTlv = {
+        tag : GsmPDUHelper.readHexOctet(),
+        length : GsmPDUHelper.readHexOctet(),
+      };
+      simTlv.value = GsmPDUHelper.readHexOctetArray(simTlv.length)
+      tlvs.push(simTlv);
+      index += simTlv.length + 2 /* The length of 'tag' and 'length' field */;
+    }
+    return tlvs;
+  },
+
+  _searchForIccUsimTag: function _searchForIccUsimTag(tlvs, tag) {
+    for (let i = 0; i < tlvs.length; i++) {
+      if (tlvs[i].tag == tag) {
+        return tlvs[i];
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Get ICC Phonebook.
+   *
+   * @params requestId
+   *         Request id from RadioInterfaceLayer.
+   */
+  getPBR: function getPBR(options) {
+    function callback(options) {
+      let bufLen = Buf.readUint32();
+
+      let tag = GsmPDUHelper.readHexOctet();
+      let length = GsmPDUHelper.readHexOctet();
+      let value = this.decodeSimTlvs(length);
+
+      let adn = this._searchForIccUsimTag(value, ICC_USIM_EFADN_TAG);
+      let adnEfid = (adn.value[0] << 8) | adn.value[1];
+      this.getADN({fileId: adnEfid,
+                   requestId: options.requestId});
+
+      Buf.readStringDelimiter(bufLen);
+    }
+
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_PBR,
+      pathId:    EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK,
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_LINEAR_FIXED,
+      callback:  callback,
+      requestId: options.requestId,
     });
   },
 
@@ -1678,7 +1884,8 @@ let RIL = {
     }
 
     // Length of a record, data[14]
-    let recordSize = GsmPDUHelper.readHexOctet();
+    options.recordSize = GsmPDUHelper.readHexOctet();
+    options.totalRecords = fileSize / options.recordSize;
 
     Buf.readStringDelimiter(length);
 
@@ -1688,7 +1895,7 @@ let RIL = {
         options.command = ICC_COMMAND_READ_RECORD;
         options.p1 = 1; // Record number, always use the 1st record
         options.p2 = READ_RECORD_ABSOLUTE_MODE;
-        options.p3 = recordSize;
+        options.p3 = options.recordSize;
         this.iccIO(options);
         break;
       case EF_TYPE_TRANSPARENT:
@@ -1705,7 +1912,7 @@ let RIL = {
    */
   _processICCIOReadRecord: function _processICCIOReadRecord(options) {
     if (options.callback) {
-      options.callback.call(this);
+      options.callback.call(this, options);
     }
   },
 
@@ -3540,6 +3747,85 @@ let GsmPDUHelper = {
     }
 
     return addr;
+  },
+  
+  /**
+   * Read Alpha Identifier.
+   *
+   * @see TS 131.102
+   *
+   * @param len
+   *        The length of Alpha Identifier in bytes.
+   *
+   * it uses either
+   *  1. SMS default 7-bit alphabet with bit 8 set to 0.
+   *  2. UCS2 string.
+   *
+   * Unused bytes should be set to 0xff.
+   */
+  readAlphaIdentifier: function readAlphaIdentifier(len) {
+    let temp, isUCS2 = false;
+    let alphaId = "";
+
+    // Read the 1st byte to determine the encoding.
+    if ((temp = GsmPDUHelper.readHexOctet()) == 0x80) {
+      isUCS2 = true;
+    } else if (temp != 0xff) {
+      alphaId += String.fromCharCode(temp);
+    }
+    len--;
+
+    while (len) {
+      if ((temp = GsmPDUHelper.readHexOctet()) != 0xff) {
+        if (isUCS2) {
+          let temp2 = GsmPDUHelper.readHexOctet();
+          len--;
+          alphaId += String.fromCharCode((temp << 8) | temp2);
+        } else {
+          alphaId += String.fromCharCode(temp);
+        }
+      }
+      len--;
+    }
+    return alphaId;
+  },
+
+  /**
+   * Read Dialling number.
+   *
+   * @see TS 131.102
+   *
+   * @param len
+   *        The Length of BCD number.
+   *
+   * From TS 131.102, in EF_ADN, EF_FDN, the field 'Length of BCD number'
+   * means the total bytes should be allocated to store the TON/NPI and 
+   * the dialing number.
+   * For example, if the dialing number is 1234567890,
+   * and the TON/NPI is 0x81,
+   * The field 'Length of BCD number' should be 06, which is 
+   * 1 byte to store the TON/NPI, 0x81
+   * 5 bytes to store the BCD number 2143658709.
+   *
+   * Here the definition of the length is different from SMS spec, 
+   * TS 23.040 9.1.2.5, which the length means 
+   * "number of useful semi-octets within the Address-Value field".
+   */
+  readDiallingNumber: function readDiallingNumber(len) {
+    if (DEBUG) debug("PDU: Going to read Dialling number: " + len);
+
+    // TOA = TON + NPI
+    let toa = this.readHexOctet();
+
+    let number = this.readSwappedNibbleBcdString(len - 1).toString();
+    if (number.length <= 0) {
+      if (DEBUG) debug("PDU error: no number provided");
+      return null;
+    }
+    if ((toa >> 4) == (PDU_TOA_INTERNATIONAL >> 4)) {
+      number = '+' + number;
+    }
+    return number;
   },
 
   /**
