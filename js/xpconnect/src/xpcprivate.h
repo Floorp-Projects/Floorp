@@ -1780,7 +1780,7 @@ private:
 
 class XPCNativeInterface
 {
-public:
+  public:
     static XPCNativeInterface* GetNewOrUsed(XPCCallContext& ccx,
                                             const nsIID* iid);
     static XPCNativeInterface* GetNewOrUsed(XPCCallContext& ccx,
@@ -1798,19 +1798,29 @@ public:
 
     inline JSBool HasAncestor(const nsIID* iid) const;
 
-    PRUint16 GetMemberCount() const
-        {NS_ASSERTION(!IsMarked(), "bad"); return mMemberCount;}
-    XPCNativeMember* GetMemberAt(PRUint16 i)
-        {NS_ASSERTION(i < mMemberCount, "bad index"); return &mMembers[i];}
+    PRUint16 GetMemberCount() const {
+        return mMemberCount;
+    }
+    XPCNativeMember* GetMemberAt(PRUint16 i) {
+        NS_ASSERTION(i < mMemberCount, "bad index");
+        return &mMembers[i];
+    }
 
     void DebugDump(PRInt16 depth);
 
 #define XPC_NATIVE_IFACE_MARK_FLAG ((PRUint16)JS_BIT(15)) // only high bit of 16 is set
 
-    void Mark()     {mMemberCount |= XPC_NATIVE_IFACE_MARK_FLAG;}
-    void Unmark()   {mMemberCount &= ~XPC_NATIVE_IFACE_MARK_FLAG;}
-    JSBool IsMarked() const
-                    {return 0 != (mMemberCount & XPC_NATIVE_IFACE_MARK_FLAG);}
+    void Mark() {
+        mMarked = 1;
+    }
+
+    void Unmark() {
+        mMarked = 0;
+    }
+
+    bool IsMarked() const {
+        return mMarked != 0;
+    }
 
     // NOP. This is just here to make the AutoMarkingPtr code compile.
     inline void TraceJS(JSTracer* trc) {}
@@ -1820,15 +1830,19 @@ public:
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
 
-protected:
+  protected:
     static XPCNativeInterface* NewInstance(XPCCallContext& ccx,
                                            nsIInterfaceInfo* aInfo);
 
     XPCNativeInterface();   // not implemented
     XPCNativeInterface(nsIInterfaceInfo* aInfo, jsid aName)
-        : mInfo(aInfo), mName(aName), mMemberCount(0)
-                          {MOZ_COUNT_CTOR(XPCNativeInterface);}
-    ~XPCNativeInterface() {MOZ_COUNT_DTOR(XPCNativeInterface);}
+      : mInfo(aInfo), mName(aName), mMemberCount(0), mMarked(0)
+    {
+        MOZ_COUNT_CTOR(XPCNativeInterface);
+    }
+    ~XPCNativeInterface() {
+        MOZ_COUNT_DTOR(XPCNativeInterface);
+    }
 
     void* operator new(size_t, void* p) CPP_THROW_NEW {return p;}
 
@@ -1838,8 +1852,9 @@ protected:
 private:
     nsCOMPtr<nsIInterfaceInfo> mInfo;
     jsid                       mName;
-    PRUint16          mMemberCount;
-    XPCNativeMember   mMembers[1]; // always last - object sized for array
+    PRUint16                   mMemberCount : 15;
+    PRUint16                   mMarked : 1;
+    XPCNativeMember            mMembers[1]; // always last - object sized for array
 };
 
 /***************************************************************************/
@@ -1897,7 +1912,7 @@ private:
 
 class XPCNativeSet
 {
-public:
+  public:
     static XPCNativeSet* GetNewOrUsed(XPCCallContext& ccx, const nsIID* iid);
     static XPCNativeSet* GetNewOrUsed(XPCCallContext& ccx,
                                       nsIClassInfo* classInfo);
@@ -1940,10 +1955,15 @@ public:
 
     inline XPCNativeInterface* FindNamedInterface(jsid name) const;
 
-    PRUint16 GetMemberCount() const {return mMemberCount;}
-    PRUint16 GetInterfaceCount() const
-        {NS_ASSERTION(!IsMarked(), "bad"); return mInterfaceCount;}
-    XPCNativeInterface** GetInterfaceArray() {return mInterfaces;}
+    PRUint16 GetMemberCount() const {
+        return mMemberCount;
+    }
+    PRUint16 GetInterfaceCount() const {
+        return mInterfaceCount;
+    }
+    XPCNativeInterface **GetInterfaceArray() {
+        return mInterfaces;
+    }
 
     XPCNativeInterface* GetInterfaceAt(PRUint16 i)
         {NS_ASSERTION(i < mInterfaceCount, "bad index"); return mInterfaces[i];}
@@ -1959,12 +1979,18 @@ public:
     inline void TraceJS(JSTracer* trc) {}
     inline void AutoTrace(JSTracer* trc) {}
 
-private:
-    void MarkSelfOnly() {mInterfaceCount |= XPC_NATIVE_SET_MARK_FLAG;}
-public:
-    void Unmark()       {mInterfaceCount &= ~XPC_NATIVE_SET_MARK_FLAG;}
-    JSBool IsMarked() const
-                  {return 0 != (mInterfaceCount & XPC_NATIVE_SET_MARK_FLAG);}
+  private:
+    void MarkSelfOnly() {
+        mMarked = 1;
+    }
+
+  public:
+    void Unmark() {
+        mMarked = 0;
+    }
+    bool IsMarked() const {
+        return !!mMarked;
+    }
 
 #ifdef DEBUG
     inline void ASSERT_NotMarked();
@@ -1976,20 +2002,27 @@ public:
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
 
-protected:
+  protected:
     static XPCNativeSet* NewInstance(XPCCallContext& ccx,
                                      XPCNativeInterface** array,
                                      PRUint16 count);
     static XPCNativeSet* NewInstanceMutate(XPCNativeSet*       otherSet,
                                            XPCNativeInterface* newInterface,
                                            PRUint16            position);
-    XPCNativeSet()  {MOZ_COUNT_CTOR(XPCNativeSet);}
-    ~XPCNativeSet() {MOZ_COUNT_DTOR(XPCNativeSet);}
+    XPCNativeSet()
+      : mMemberCount(0), mInterfaceCount(0), mMarked(0)
+    {
+        MOZ_COUNT_CTOR(XPCNativeSet);
+    }
+    ~XPCNativeSet() {
+        MOZ_COUNT_DTOR(XPCNativeSet);
+    }
     void* operator new(size_t, void* p) CPP_THROW_NEW {return p;}
 
-private:
+  private:
     PRUint16                mMemberCount;
-    PRUint16                mInterfaceCount;
+    PRUint16                mInterfaceCount : 15;
+    PRUint16                mMarked : 1;
     XPCNativeInterface*     mInterfaces[1];  // always last - object sized for array
 };
 
@@ -2336,8 +2369,11 @@ public:
             JS_CALL_OBJECT_TRACER(trc, mJSProtoObject,
                                   "XPCWrappedNativeProto::mJSProtoObject");
         }
-        if (mScriptableInfo && JS_IsGCMarkingTracer(trc))
-            mScriptableInfo->Mark();
+        if (JS_IsGCMarkingTracer(trc)) {
+            mSet->Mark();
+            if (mScriptableInfo)
+                mScriptableInfo->Mark();
+        }
     }
 
     void WriteBarrierPre(JSRuntime* rt)
@@ -2716,15 +2752,21 @@ public:
     // Yes, we *do* need to mark the mScriptableInfo in both cases.
     inline void TraceJS(JSTracer* trc)
     {
-        if (mScriptableInfo && JS_IsGCMarkingTracer(trc))
-            mScriptableInfo->Mark();
-        if (HasProto()) GetProto()->TraceJS(trc);
+        if (JS_IsGCMarkingTracer(trc)) {
+            mSet->Mark();
+            if (mScriptableInfo)
+                mScriptableInfo->Mark();
+        }
+        if (HasProto())
+            GetProto()->TraceJS(trc);
         JSObject* wrapper = GetWrapperPreserveColor();
         if (wrapper)
             JS_CALL_OBJECT_TRACER(trc, wrapper, "XPCWrappedNative::mWrapper");
         if (mScriptableInfo &&
             (mScriptableInfo->GetJSClass()->flags & JSCLASS_XPCONNECT_GLOBAL))
+        {
             TraceXPCGlobal(trc, mFlatJSObject);
+        }
 
     }
 
