@@ -1573,6 +1573,16 @@ public:
     static void
     TraceJS(JSTracer* trc, XPCJSRuntime* rt);
 
+    void TraceSelf(JSTracer *trc) {
+        JSObject *obj = GetGlobalJSObjectPreserveColor();
+        MOZ_ASSERT(obj);
+        JS_CALL_OBJECT_TRACER(trc, obj, "XPCWrappedNativeScope::mGlobalJSObject");
+
+        JSObject *proto = GetPrototypeJSObjectPreserveColor();
+        if (proto)
+            JS_CALL_OBJECT_TRACER(trc, proto, "XPCWrappedNativeScope::mPrototypeJSObject");
+    }
+
     static void
     SuspectAllWrappers(XPCJSRuntime* rt, nsCycleCollectionTraversalCallback &cb);
 
@@ -2363,17 +2373,22 @@ public:
 
     void DebugDump(PRInt16 depth);
 
-    void TraceJS(JSTracer* trc)
-    {
-        if (mJSProtoObject) {
-            JS_CALL_OBJECT_TRACER(trc, mJSProtoObject,
-                                  "XPCWrappedNativeProto::mJSProtoObject");
-        }
+    void TraceSelf(JSTracer *trc) {
+        if (mJSProtoObject)
+            JS_CALL_OBJECT_TRACER(trc, mJSProtoObject, "XPCWrappedNativeProto::mJSProtoObject");
+    }
+
+    void TraceInside(JSTracer *trc) {
         if (JS_IsGCMarkingTracer(trc)) {
             mSet->Mark();
             if (mScriptableInfo)
                 mScriptableInfo->Mark();
         }
+    }
+
+    void TraceJS(JSTracer *trc) {
+        TraceSelf(trc);
+        TraceInside(trc);
     }
 
     void WriteBarrierPre(JSRuntime* rt)
@@ -2750,8 +2765,7 @@ public:
     }
 
     // Yes, we *do* need to mark the mScriptableInfo in both cases.
-    inline void TraceJS(JSTracer* trc)
-    {
+    inline void TraceInside(JSTracer *trc) {
         if (JS_IsGCMarkingTracer(trc)) {
             mSet->Mark();
             if (mScriptableInfo)
@@ -2767,11 +2781,13 @@ public:
         {
             TraceXPCGlobal(trc, mFlatJSObject);
         }
-
     }
 
-    inline void AutoTrace(JSTracer* trc)
-    {
+    void TraceJS(JSTracer *trc) {
+        TraceInside(trc);
+    }
+
+    void TraceSelf(JSTracer *trc) {
         // If this got called, we're being kept alive by someone who really
         // needs us alive and whole.  Do not let our mFlatJSObject go away.
         // This is the only time we should be tracing our mFlatJSObject,
@@ -2781,6 +2797,10 @@ public:
             JS_CALL_OBJECT_TRACER(trc, mFlatJSObject,
                                   "XPCWrappedNative::mFlatJSObject");
         }
+    }
+
+    void AutoTrace(JSTracer *trc) {
+        TraceSelf(trc);
     }
 
 #ifdef DEBUG

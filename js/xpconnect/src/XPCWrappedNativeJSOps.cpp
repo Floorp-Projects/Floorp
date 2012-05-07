@@ -648,19 +648,7 @@ XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
 static void
 TraceScopeJSObjects(JSTracer *trc, XPCWrappedNativeScope* scope)
 {
-    NS_ASSERTION(scope, "bad scope");
-
-    JSObject* obj;
-
-    obj = scope->GetGlobalJSObjectPreserveColor();
-    NS_ASSERTION(obj, "bad scope JSObject");
-    JS_CALL_OBJECT_TRACER(trc, obj, "XPCWrappedNativeScope::mGlobalJSObject");
-
-    obj = scope->GetPrototypeJSObjectPreserveColor();
-    if (obj) {
-        JS_CALL_OBJECT_TRACER(trc, obj,
-                              "XPCWrappedNativeScope::mPrototypeJSObject");
-    }
+    scope->TraceSelf(trc);
 }
 
 static void
