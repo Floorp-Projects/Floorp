@@ -4113,28 +4113,40 @@ class MStringLength
     }
 };
 
-// Inlined assembly version of the math function calls.
+// Inlined version of Math.floor().
+class MFloor
+  : public MUnaryInstruction,
+    public DoublePolicy<0>
+{
+  public:
+    MFloor(MDefinition *num)
+      : MUnaryInstruction(num)
+    {
+        setResultType(MIRType_Int32);
+        setMovable();
+    }
+
+    INSTRUCTION_HEADER(Floor);
+
+    MDefinition *num() const {
+        return getOperand(0);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
+// Inlined version of Math.round().
 class MRound
   : public MUnaryInstruction,
     public DoublePolicy<0>
 {
   public:
-    enum RoundingMode {
-        // 1.5 -> 2, -1.5 -> -1
-        RoundingMode_Round,
-        // 1.6 -> 1, -1.5 -> -2
-        RoundingMode_Floor
-        // RoundingMode_Ceil // NYI
-    };
-
-  private:
-    RoundingMode mode_;
-
-  public:
-
-    MRound(MDefinition *num, RoundingMode mode)
-      : MUnaryInstruction(num),
-        mode_(mode)
+    MRound(MDefinition *num)
+      : MUnaryInstruction(num)
     {
         setResultType(MIRType_Int32);
         setMovable();
@@ -4144,9 +4156,6 @@ class MRound
 
     MDefinition *num() const {
         return getOperand(0);
-    }
-    RoundingMode mode() const {
-        return mode_;
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();

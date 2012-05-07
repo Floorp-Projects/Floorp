@@ -191,6 +191,14 @@ public:
         return (ix < 0 || ix > 15) ? "??" : names[ix];
     }
 
+    // Rounding modes for ROUNDSD.
+    typedef enum {
+        RoundToNearest = 0x0,
+        RoundDown      = 0x1,
+        RoundUp        = 0x2,
+        RoundToZero    = 0x3
+    } RoundingMode;
+
 private:
     typedef enum {
         OP_ADD_EvGv                     = 0x01,
@@ -290,13 +298,15 @@ private:
     } TwoByteOpcodeID;
 
     typedef enum {
-        OP3_PINSRD_VsdWsd   = 0x22,
-        OP3_PTEST_VdVd      = 0x17 
+        OP3_ROUNDSD_VsdWsd  = 0x0B,
+        OP3_PTEST_VdVd      = 0x17,
+        OP3_PINSRD_VsdWsd   = 0x22
     } ThreeByteOpcodeID;
 
     typedef enum {
         ESCAPE_PTEST        = 0x38,
-        ESCAPE_PINSRD       = 0x3A 
+        ESCAPE_PINSRD       = 0x3A,
+        ESCAPE_ROUNDSD      = 0x3A 
     } ThreeByteEscape;
 
     TwoByteOpcodeID jccRel32(Condition cond)
@@ -2175,7 +2185,7 @@ public:
                        IPFX "movmskpd   %s, %s\n", MAYBE_PAD,
                        nameFPReg(src), nameIReg(dst));
         m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_MOVMSKPD_EdVd, (RegisterID)src, dst);
+        m_formatter.twoByteOp(OP2_MOVMSKPD_EdVd, dst, (RegisterID)src);
     }
 
     void ptest_rr(XMMRegisterID lhs, XMMRegisterID rhs) {
@@ -2412,6 +2422,16 @@ public:
                        nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_SQRTSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void roundsd_rr(XMMRegisterID src, XMMRegisterID dst, RoundingMode mode)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "roundsd     %s, %s, %d\n", MAYBE_PAD,
+                       nameFPReg(src), nameFPReg(dst), (int)mode);
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_ROUNDSD_VsdWsd, ESCAPE_ROUNDSD, (RegisterID)dst, (RegisterID)src);
+        m_formatter.immediate8(mode);
     }
 
     void pinsrd_rr(RegisterID src, XMMRegisterID dst)

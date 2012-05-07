@@ -179,3 +179,10 @@ MacroAssemblerX64::handleException()
     ret();
 }
 
+Assembler::Condition
+MacroAssemblerX64::testNegativeZero(const FloatRegister &reg, const Register &scratch)
+{
+    movqsd(reg, scratch);
+    subq(Imm32(1), scratch);
+    return Overflow;
+}
