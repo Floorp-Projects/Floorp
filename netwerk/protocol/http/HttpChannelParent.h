@@ -49,7 +49,6 @@
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsITabParent.h"
-#include "nsHttpChannel.h"
 
 using namespace mozilla::dom;
 
@@ -128,8 +127,6 @@ private:
 
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
-
-  nsAutoPtr<class nsHttpChannel::OfflineCacheEntryAsForeignMarker> mOfflineForeignMarker;
 
   // state for combining OnStatus/OnProgress with OnDataAvailable
   // into one IPDL call to child.
