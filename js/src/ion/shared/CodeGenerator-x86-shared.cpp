@@ -927,56 +927,155 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
 }
 
 bool
+CodeGeneratorX86Shared::visitFloor(LFloor *lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    FloatRegister scratch = ScratchFloatReg;
+    Register output = ToRegister(lir->output());
+
+    if (AssemblerX86Shared::HasSSE41()) {
+        // Bail on negative-zero.
+        Assembler::Condition bailCond = masm.testNegativeZero(input, output);
+        if (!bailoutIf(bailCond, lir->snapshot()))
+            return false;
+
+        // Round toward -Infinity.
+        masm.roundsd(input, scratch, JSC::X86Assembler::RoundDown);
+
+        masm.cvttsd2si(scratch, output);
+        masm.cmp32(output, Imm32(INT_MIN));
+        if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+            return false;
+    } else {
+        Label negative, end;
+
+        // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
+        masm.xorpd(scratch, scratch);
+        masm.branchDouble(Assembler::DoubleLessThan, input, scratch, &negative);
+
+        // Bail on negative-zero.
+        Assembler::Condition bailCond = masm.testNegativeZero(input, output);
+        if (!bailoutIf(bailCond, lir->snapshot()))
+            return false;
+
+        // Input is non-negative, so truncation correctly rounds.
+        masm.cvttsd2si(input, output);
+        masm.cmp32(output, Imm32(INT_MIN));
+        if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+            return false;
+
+        masm.jump(&end);
+
+        // Input is negative, but isn't -0.
+        // Negative values go on a comparatively expensive path, since no
+        // native rounding mode matches JS semantics. Still better than callVM.
+        masm.bind(&negative);
+        {
+            // Truncate and round toward zero.
+            // This is off-by-one for everything but integer-valued inputs.
+            masm.cvttsd2si(input, output);
+            masm.cmp32(output, Imm32(INT_MIN));
+            if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+                return false;
+        
+            // Test whether the input double was integer-valued.
+            masm.cvtsi2sd(output, scratch);
+            masm.branchDouble(Assembler::DoubleEqualOrUnordered, input, scratch, &end);
+
+            // Input is not integer-valued, so we rounded off-by-one in the
+            // wrong direction. Correct by subtraction.
+            masm.subl(Imm32(1), output);
+            // Cannot overflow: output was already checked against INT_MIN.
+        }
+
+        masm.bind(&end);
+    }
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitRound(LRound *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
+    FloatRegister pointFive = ToFloatRegister(lir->temp());
+    FloatRegister scratch = ScratchFloatReg;
     Register output = ToRegister(lir->output());
 
-    if (!lir->snapshot())
+    Label negative, end;
+
+    static const double PointFive = 0.5;
+    masm.loadStaticDouble(&PointFive, pointFive);
+
+    // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
+    masm.xorpd(scratch, scratch);
+    masm.branchDouble(Assembler::DoubleLessThan, input, scratch, &negative);
+
+    // Bail on negative-zero.
+    Assembler::Condition bailCond = masm.testNegativeZero(input, output);
+    if (!bailoutIf(bailCond, lir->snapshot()))
         return false;
 
-    Label belowZero, end;
+    // Input is non-negative. Add 0.5 and truncate, rounding down.
+    masm.addsd(pointFive, input);
 
-    // if (masm.HasSSE41()) {
-    //     // FIXME use roundsd
-    // }
-
-    // Assume SSE2.
-    if (lir->mir()->mode() == MRound::RoundingMode_Round) {
-        // round(x) == floor(x + 0.5)
-        static const double ZeroFive = 0.5;
-        masm.loadStaticDouble(&ZeroFive, ScratchFloatReg);
-        masm.addsd(ScratchFloatReg, input);
-    }
-
-    //              +2  +1.5  +1  +0.5  +0  -0.5  -1  -1.5  -2
-    // cvttsd2si:     }-------> }-------><-------{ <-------{
-    // floor:         }-------> }-------> }-------> }------->
-
-    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
-    masm.ucomisd(input, ScratchFloatReg);
-    masm.j(Assembler::Below, &belowZero);
-
-    // input >= 0
     masm.cvttsd2si(input, output);
-    masm.cmp32(output, Imm32(0x80000000));
-    // INT_MIN is used to mark impossible convertion.
+    masm.cmp32(output, Imm32(INT_MIN));
     if (!bailoutIf(Assembler::Equal, lir->snapshot()))
         return false;
+
     masm.jump(&end);
 
-    // input < 0
-    masm.bind(&belowZero);
-    masm.subsd(input, ScratchFloatReg);
-    masm.cvttsd2si(ScratchFloatReg, output);
-    masm.negl(output);
-    // In case of impossible convertion, INT_MIN is stored in output, which
-    // cause an overflow.
-    if (!bailoutIf(Assembler::Overflow, lir->snapshot()))
-        return false;
-    // We also need to bailout for '-0'.
-    if (!bailoutIf(Assembler::Equal, lir->snapshot()))
-        return false;
+
+    // Input is negative, but isn't -0.
+    masm.bind(&negative);
+
+    if (AssemblerX86Shared::HasSSE41()) {
+        // Add 0.5 and round toward -Infinity.
+        masm.addsd(pointFive, input);
+        masm.roundsd(input, scratch, JSC::X86Assembler::RoundDown);
+
+        // Truncate.
+        masm.cvttsd2si(scratch, output);
+        masm.cmp32(output, Imm32(INT_MIN));
+        if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+            return false;
+
+        // If the result is positive zero, then the actual result is -0. Bail.
+        // Otherwise, the truncation will have produced the correct negative integer.
+        masm.testl(output, output);
+        if (!bailoutIf(Assembler::Zero, lir->snapshot()))
+            return false;
+
+    } else {
+        masm.addsd(pointFive, input);
+
+        // Round toward -Infinity without the benefit of ROUNDSD.
+        Label testZero;
+        {
+            // Truncate and round toward zero.
+            // This is off-by-one for everything but integer-valued inputs.
+            masm.cvttsd2si(input, output);
+            masm.cmp32(output, Imm32(INT_MIN));
+            if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+                return false;
+
+            // Test whether the truncated double was integer-valued.
+            masm.cvtsi2sd(output, scratch);
+            masm.branchDouble(Assembler::DoubleEqualOrUnordered, input, scratch, &testZero);
+
+            // Input is not integer-valued, so we rounded off-by-one in the
+            // wrong direction. Correct by subtraction.
+            masm.subl(Imm32(1), output);
+            // Cannot overflow: output was already checked against INT_MIN.
+
+            // Fall through to testZero.
+        }
+
+        masm.bind(&testZero);
+        if (!bailoutIf(Assembler::Zero, lir->snapshot()))
+            return false;
+    }
+
     masm.bind(&end);
     return true;
 }

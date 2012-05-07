@@ -1038,6 +1038,11 @@ class AssemblerX86Shared
     void sqrtsd(const FloatRegister &src, const FloatRegister &dest) {
         masm.sqrtsd_rr(src.code(), dest.code());
     }
+    void roundsd(const FloatRegister &src, const FloatRegister &dest,
+                 JSC::X86Assembler::RoundingMode mode)
+    {
+        masm.roundsd_rr(src.code(), dest.code(), mode);
+    }
     void fstp(const Operand &src) {
          switch (src.kind()) {
            case Operand::REG_DISP:

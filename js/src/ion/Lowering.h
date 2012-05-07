@@ -131,6 +131,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitLsh(MLsh *ins);
     bool visitRsh(MRsh *ins);
     bool visitUrsh(MUrsh *ins);
+    bool visitFloor(MFloor *ins);
     bool visitRound(MRound *ins);
     bool visitAbs(MAbs *ins);
     bool visitSqrt(MSqrt *ins);
