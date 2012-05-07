@@ -547,8 +547,8 @@ JS_FRIEND_DATA(Class) js::FunctionClass = {
     NULL,                    /* finalize    */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
-    NULL,                    /* construct   */
     fun_hasInstance,
+    NULL,                    /* construct   */
     fun_trace
 };
 
