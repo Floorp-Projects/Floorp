@@ -82,7 +82,6 @@ CPPSRCS += \
 	WebGLExtensionStandardDerivatives.cpp \
 	WebGLExtensionTextureFilterAnisotropic.cpp \
 	WebGLExtensionLoseContext.cpp \
-	WebGLTexelConversions.cpp \
 	$(NULL)
 
 DEFINES += -DUSE_ANGLE

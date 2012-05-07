@@ -128,51 +128,16 @@ struct BackbufferClearingStatus {
     enum { NotClearedSinceLastPresented, ClearedToDefaultValues, HasBeenDrawnTo };
 };
 
-namespace WebGLTexelConversions {
-
-/*
- * The formats that may participate, either as source or destination formats,
- * in WebGL texture conversions. This includes:
- *  - all the formats accepted by WebGL.texImage2D, e.g. RGBA4444
- *  - additional formats provided by extensions, e.g. RGB32F
- *  - additional source formats, depending on browser details, used when uploading
- *    textures from DOM elements. See gfxImageSurface::Format().
- */
-enum WebGLTexelFormat
-{
-    // dummy error code returned by GetWebGLTexelFormat in error cases,
-    // after assertion failure (so this never happens in debug builds)
-    BadFormat,
-    // dummy pseudo-format meaning "use the other format".
-    // For example, if SrcFormat=Auto and DstFormat=RGB8, then the source
-    // is implicitly treated as being RGB8 itself.
-    Auto,
-    // 1-channel formats
-    R8,
-    A8,
-    R32F, // used for OES_texture_float extension
-    A32F, // used for OES_texture_float extension
-    // 2-channel formats
-    RA8,
-    RA32F,
-    // 3-channel formats
-    RGB8,
-    BGRX8, // used for DOM elements. Source format only.
-    RGB565,
-    RGB32F, // used for OES_texture_float extension
-    // 4-channel formats
-    RGBA8,
-    BGRA8, // used for DOM elements
-    RGBA5551,
-    RGBA4444,
-    RGBA32F // used for OES_texture_float extension
+struct WebGLTexelFormat {
+    enum { Generic, Auto, RGBA8, RGB8, RGBX8, BGRA8, BGR8, BGRX8, RGBA5551, RGBA4444, RGB565, R8, RA8, A8,
+           RGBA32F, RGB32F, A32F, R32F, RA32F };
 };
 
-} // end namespace WebGLTexelConversions
+struct WebGLTexelPremultiplicationOp {
+    enum { Generic, None, Premultiply, Unmultiply };
+};
 
-using WebGLTexelConversions::WebGLTexelFormat;
-
-WebGLTexelFormat GetWebGLTexelFormat(GLenum format, GLenum type);
+int GetWebGLTexelFormat(GLenum format, GLenum type);
 
 // Zero is not an integer power of two.
 inline bool is_pot_assuming_nonnegative(WebGLsizei x)
@@ -1240,26 +1205,26 @@ protected:
                          WebGLenum format, WebGLenum type,
                          void *data, PRUint32 byteLength,
                          int jsArrayType,
-                         WebGLTexelFormat srcFormat, bool srcPremultiplied);
+                         int srcFormat, bool srcPremultiplied);
     void TexSubImage2D_base(WebGLenum target, WebGLint level,
                             WebGLint xoffset, WebGLint yoffset,
                             WebGLsizei width, WebGLsizei height, WebGLsizei srcStrideOrZero,
                             WebGLenum format, WebGLenum type,
                             void *pixels, PRUint32 byteLength,
                             int jsArrayType,
-                            WebGLTexelFormat srcFormat, bool srcPremultiplied);
+                            int srcFormat, bool srcPremultiplied);
     void TexParameter_base(WebGLenum target, WebGLenum pname,
                            WebGLint *intParamPtr, WebGLfloat *floatParamPtr);
 
     void ConvertImage(size_t width, size_t height, size_t srcStride, size_t dstStride,
                       const PRUint8*src, PRUint8 *dst,
-                      WebGLTexelFormat srcFormat, bool srcPremultiplied,
-                      WebGLTexelFormat dstFormat, bool dstPremultiplied,
+                      int srcFormat, bool srcPremultiplied,
+                      int dstFormat, bool dstPremultiplied,
                       size_t dstTexelSize);
 
     nsresult DOMElementToImageSurface(dom::Element* imageOrCanvas,
                                       gfxImageSurface **imageOut,
-                                      WebGLTexelFormat *format);
+                                      int *format);
 
     void CopyTexSubImage2D_base(WebGLenum target,
                                 WebGLint level,
