@@ -5989,10 +5989,6 @@ MOZ_ARG_DISABLE_BOOL(angle,
     MOZ_ANGLE=1)
 
 if test -n "$MOZ_ANGLE"; then
-  if test -z "$_WIN32_MSVC"; then
-    AC_MSG_ERROR([Building ANGLE requires MSVC.  To build without ANGLE, reconfigure with --disable-angle.])
-  fi
-
   # Get the SDK path from the registry.
   # First try to get the June 2010 SDK
   MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK (June 2010)' | head -n 1`
