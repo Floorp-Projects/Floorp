@@ -292,6 +292,7 @@ class MacroAssemblerARM : public Assembler
 
     void ma_vneg(FloatRegister src, FloatRegister dest);
     void ma_vmov(FloatRegister src, FloatRegister dest);
+    void ma_vabs(FloatRegister src, FloatRegister dest);
 
     void ma_vimm(double value, FloatRegister dest);
 
@@ -1033,6 +1034,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
             ma_add(dest, Imm32(address.offset), dest, NoSetCond);
     }
     void floor(FloatRegister input, Register output, Label *handleNotAnInt);
+    void round(FloatRegister input, Register output, Label *handleNotAnInt, FloatRegister tmp);
+
+    void clampCheck(Register r, Label *handleNotAnInt) {
+        // check explicitly for r == INT_MIN || r == INT_MAX
+        // this is the instruction sequence that gcc generated for this
+        // operation.
+        ma_sub(r, Imm32(0x80000001), ScratchRegister);
+        ma_cmn(ScratchRegister, Imm32(3));
+        ma_b(handleNotAnInt, Above);
+    }
 };
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;
