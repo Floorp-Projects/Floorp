@@ -455,11 +455,6 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-const char js_isNaN_str[]      = "isNaN";
-const char js_isFinite_str[]   = "isFinite";
-const char js_parseFloat_str[] = "parseFloat";
-const char js_parseInt_str[]   = "parseInt";
-
 static JSFunctionSpec number_functions[] = {
     JS_FN(js_isNaN_str,         num_isNaN,           1,0),
     JS_FN(js_isFinite_str,      num_isFinite,        1,0),

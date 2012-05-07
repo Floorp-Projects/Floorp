@@ -1742,35 +1742,20 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 
 #define CLASP(name)                 (&name##Class)
 #define TYPED_ARRAY_CLASP(type)     (&TypedArray::classes[TypedArray::type])
-#define EAGER_ATOM(name)            NAME_OFFSET(name), NULL
-#define EAGER_CLASS_ATOM(name)      CLASS_NAME_OFFSET(name), NULL
+#define EAGER_ATOM(name)            ATOM_OFFSET(name)
+#define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name)
 #define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
-#define LAZY_ATOM(name)             NAME_OFFSET(lazy.name), js_##name##_str
 
 typedef struct JSStdName {
     JSObjectOp  init;
     size_t      atomOffset;     /* offset of atom pointer in JSAtomState */
-    const char  *name;          /* null if atom is pre-pinned, else name */
     Class       *clasp;
 } JSStdName;
 
 static PropertyName *
 StdNameToPropertyName(JSContext *cx, JSStdName *stdn)
 {
-    size_t offset;
-    PropertyName *atom;
-    const char *name;
-
-    offset = stdn->atomOffset;
-    atom = OFFSET_TO_NAME(cx->runtime, offset);
-    if (!atom) {
-        name = stdn->name;
-        if (name) {
-            atom = js_Atomize(cx, name, strlen(name), InternAtom)->asPropertyName();
-            OFFSET_TO_NAME(cx->runtime, offset) = atom;
-        }
-    }
-    return atom;
+    return OFFSET_TO_ATOM(cx->runtime, stdn->atomOffset);
 }
 
 /*
@@ -1801,7 +1786,7 @@ static JSStdName standard_class_atoms[] = {
     {js_InitWeakMapClass,               EAGER_CLASS_ATOM(WeakMap), &js::WeakMapClass},
     {js_InitMapClass,                   EAGER_CLASS_ATOM(Map), &js::MapObject::class_},
     {js_InitSetClass,                   EAGER_CLASS_ATOM(Set), &js::SetObject::class_},
-    {NULL,                              0, NULL, NULL}
+    {NULL,                              0, NULL}
 };
 
 /*
@@ -1815,20 +1800,20 @@ static JSStdName standard_class_names[] = {
     /* Global properties and functions defined by the Number class. */
     {js_InitNumberClass,        EAGER_ATOM(NaN), CLASP(Number)},
     {js_InitNumberClass,        EAGER_ATOM(Infinity), CLASP(Number)},
-    {js_InitNumberClass,        LAZY_ATOM(isNaN), CLASP(Number)},
-    {js_InitNumberClass,        LAZY_ATOM(isFinite), CLASP(Number)},
-    {js_InitNumberClass,        LAZY_ATOM(parseFloat), CLASP(Number)},
-    {js_InitNumberClass,        LAZY_ATOM(parseInt), CLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(isNaN), CLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(isFinite), CLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(parseFloat), CLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(parseInt), CLASP(Number)},
 
     /* String global functions. */
-    {js_InitStringClass,        LAZY_ATOM(escape), CLASP(String)},
-    {js_InitStringClass,        LAZY_ATOM(unescape), CLASP(String)},
-    {js_InitStringClass,        LAZY_ATOM(decodeURI), CLASP(String)},
-    {js_InitStringClass,        LAZY_ATOM(encodeURI), CLASP(String)},
-    {js_InitStringClass,        LAZY_ATOM(decodeURIComponent), CLASP(String)},
-    {js_InitStringClass,        LAZY_ATOM(encodeURIComponent), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(escape), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(unescape), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(decodeURI), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(encodeURI), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(decodeURIComponent), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(encodeURIComponent), CLASP(String)},
 #if JS_HAS_UNEVAL
-    {js_InitStringClass,        LAZY_ATOM(uneval), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(uneval), CLASP(String)},
 #endif
 
     /* Exception constructors. */
@@ -1842,8 +1827,8 @@ static JSStdName standard_class_names[] = {
     {js_InitExceptionClasses,   EAGER_CLASS_ATOM(URIError), CLASP(Error)},
 
 #if JS_HAS_XML_SUPPORT
-    {js_InitXMLClass,           LAZY_ATOM(XMLList), CLASP(XML)},
-    {js_InitXMLClass,           LAZY_ATOM(isXMLName), CLASP(XML)},
+    {js_InitXMLClass,           EAGER_ATOM(XMLList), CLASP(XML)},
+    {js_InitXMLClass,           EAGER_ATOM(isXMLName), CLASP(XML)},
 #endif
 
 #if JS_HAS_GENERATORS
@@ -1867,7 +1852,7 @@ static JSStdName standard_class_names[] = {
     {js_InitWeakMapClass,       EAGER_ATOM_AND_CLASP(WeakMap)},
     {js_InitProxyClass,         EAGER_ATOM_AND_CLASP(Proxy)},
 
-    {NULL,                      0, NULL, NULL}
+    {NULL,                      0, NULL}
 };
 
 static JSStdName object_prototype_names[] = {
@@ -1880,20 +1865,20 @@ static JSStdName object_prototype_names[] = {
     {js_InitObjectClass,        EAGER_ATOM(toLocaleString), CLASP(Object)},
     {js_InitObjectClass,        EAGER_ATOM(valueOf), CLASP(Object)},
 #if JS_HAS_OBJ_WATCHPOINT
-    {js_InitObjectClass,        LAZY_ATOM(watch), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(unwatch), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(watch), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(unwatch), CLASP(Object)},
 #endif
-    {js_InitObjectClass,        LAZY_ATOM(hasOwnProperty), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(isPrototypeOf), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(propertyIsEnumerable), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(hasOwnProperty), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(isPrototypeOf), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(propertyIsEnumerable), CLASP(Object)},
 #if OLD_GETTER_SETTER_METHODS
-    {js_InitObjectClass,        LAZY_ATOM(defineGetter), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(defineSetter), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(lookupGetter), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(lookupSetter), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(defineGetter), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(defineSetter), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(lookupGetter), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(lookupSetter), CLASP(Object)},
 #endif
 
-    {NULL,                      0, NULL, NULL}
+    {NULL,                      0, NULL}
 };
 
 JS_PUBLIC_API(JSBool)
@@ -2149,7 +2134,6 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj, JSIdArray *ida
 #undef EAGER_ATOM
 #undef EAGER_CLASS_ATOM
 #undef EAGER_ATOM_CLASP
-#undef LAZY_ATOM
 
 JS_PUBLIC_API(JSBool)
 JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objp)
