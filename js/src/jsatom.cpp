@@ -75,6 +75,7 @@ using namespace js;
 using namespace js::gc;
 
 const size_t JSAtomState::commonAtomsOffset = offsetof(JSAtomState, emptyAtom);
+const size_t JSAtomState::lazyAtomsOffset = offsetof(JSAtomState, lazy);
 
 /*
  * ATOM_HASH assumes that JSHashNumber is 32-bit even on 64-bit systems.
@@ -150,6 +151,9 @@ JSAtomState::checkStaticInvariants()
                      offsetof(JSAtomState, booleanAtoms) - commonAtomsOffset);
     JS_STATIC_ASSERT((1 + 2) * sizeof(JSAtom *) ==
                      offsetof(JSAtomState, typeAtoms) - commonAtomsOffset);
+
+    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) * sizeof(JSAtom *) ==
+                     lazyAtomsOffset - commonAtomsOffset);
 }
 
 /*
@@ -232,6 +236,7 @@ js::InitCommonAtoms(JSContext *cx)
         *atoms = atom->asPropertyName();
     }
 
+    state->clearLazyAtoms();
     cx->runtime->emptyString = state->emptyAtom;
     return true;
 }
