@@ -255,7 +255,8 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
 
     if (aSink) {
       breakState[offset] =
-        mBreakHere || (mAfterBreakableSpace && !isBreakableSpace) ?
+        mBreakHere || (mAfterBreakableSpace && !isBreakableSpace) ||
+        (mWordBreak == nsILineBreaker::kWordBreak_BreakAll)  ?
           gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL :
           gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NONE;
     }
