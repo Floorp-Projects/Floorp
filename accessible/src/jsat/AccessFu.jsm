@@ -53,9 +53,8 @@ var AccessFu = {
   },
 
   /**
-   * Start the special AccessFu mode, this primarily means controlling the virtual
-   * cursor with arrow keys. Currently, on platforms other than Android this needs
-   * to be called explicitly.
+   * Start AccessFu mode, this primarily means controlling the virtual cursor
+   * with arrow keys.
    */
   enable: function enable() {
     dump('AccessFu enable');

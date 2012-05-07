@@ -22,6 +22,22 @@ var gAccRetrieval = Cc['@mozilla.org/accessibleRetrieval;1'].
 
 var EXPORTED_SYMBOLS = ['UtteranceGenerator'];
 
+/**
+ * Generates speech utterances from objects, actions and state changes.
+ * An utterance is an array of strings.
+ *
+ * It should not be assumed that flattening an utterance array would create a
+ * gramatically correct sentence. For example, {@link genForObject} might
+ * return: ['graphic', 'Welcome to my home page'].
+ * Each string element in an utterance should be gramatically correct in itself.
+ * Another example from {@link genForObject}: ['list item 2 of 5', 'Alabama'].
+ *
+ * An utterance is ordered from the least to the most important. Speaking the
+ * last string usually makes sense, but speaking the first often won't.
+ * For example {@link genForAction} might return ['button', 'clicked'] for a
+ * clicked event. Speaking only 'clicked' makes sense. Speaking 'button' does
+ * not.
+ */
 var UtteranceGenerator = {
   gActionMap: {
     jump: 'jumpAction',
@@ -39,6 +55,19 @@ var UtteranceGenerator = {
     cycle: 'cycleAction'
   },
 
+
+  /**
+   * Generates an utterance for an object.
+   * @param {nsIAccessible} aAccessible accessible object to generate utterance
+   *    for.
+   * @param {boolean} aForceName include the object's name in the utterance
+   *    even if this object type does not usually have it's name uttered.
+   * @return {Array} Two string array. The first string describes the object
+   *    and its states. The second string is the object's name. Some object
+   *    types may have the description or name omitted, instead an empty string
+   *    is returned as a placeholder. Whether the object's description or it's role
+   *    is included is determined by {@link verbosityRoleMap}.
+   */
   genForObject: function(aAccessible, aForceName) {
     let roleString = gAccRetrieval.getStringRole(aAccessible.role);
 
@@ -53,10 +82,27 @@ var UtteranceGenerator = {
     return func.apply(this, [aAccessible, roleString, flags]);
   },
 
+  /**
+   * Generates an utterance for an action performed.
+   * TODO: May become more verbose in the future.
+   * @param {nsIAccessible} aAccessible accessible object that the action was
+   *    invoked in.
+   * @param {string} aActionName the name of the action, one of the keys in
+   *    {@link gActionMap}.
+   * @return {Array} A one string array with the action.
+   */
   genForAction: function(aObject, aActionName) {
     return [gStringBundle.GetStringFromName(this.gActionMap[aActionName])];
   },
 
+  /**
+   * Generates an utterance for a tab state change.
+   * @param {nsIAccessible} aAccessible accessible object of the tab's attached
+   *    document.
+   * @param {string} aTabState the tab state name, see
+   *    {@link Presenter.tabStateChanged}.
+   * @return {Array} The tab state utterace.
+   */
   genForTabStateChange: function (aObject, aTabState) {
     switch (aTabState) {
       case 'newtab':
