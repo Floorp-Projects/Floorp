@@ -2536,6 +2536,15 @@ CSS_PROP_UIRESET(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_TEXT(
+    word-break,
+    word_break,
+    WordBreak,
+    CSS_PROPERTY_PARSE_VALUE,
+    VARIANT_HK,
+    kWordBreakKTable,
+    offsetof(nsStyleText, mWordBreak),
+    eStyleAnimType_EnumU8)
+CSS_PROP_TEXT(
     word-spacing,
     word_spacing,
     WordSpacing,
@@ -2551,7 +2560,7 @@ CSS_PROP_TEXT(
     WordWrap,
     CSS_PROPERTY_PARSE_VALUE,
     VARIANT_HK,
-    kWordwrapKTable,
+    kWordWrapKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_TEXT(

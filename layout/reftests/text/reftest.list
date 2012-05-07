@@ -100,6 +100,8 @@ HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
 == white-space-2.html white-space-2-ref.html
+== wordbreak-1.html wordbreak-1-ref.html
+== wordbreak-2.html wordbreak-2-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
 HTTP(..) == wordwrap-02.html wordwrap-02-ref.html
 HTTP(..) == wordwrap-03.html wordwrap-03-ref.html
