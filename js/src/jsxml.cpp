@@ -139,8 +139,6 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, void *rval)
  * Random utilities and global functions.
  */
 const char js_AttributeName_str[] = "AttributeName";
-const char js_isXMLName_str[]     = "isXMLName";
-const char js_XMLList_str[]       = "XMLList";
 const char js_localName_str[]     = "localName";
 const char js_xml_parent_str[]    = "parent";
 const char js_prefix_str[]        = "prefix";
