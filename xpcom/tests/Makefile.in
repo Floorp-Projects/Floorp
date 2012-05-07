@@ -193,7 +193,7 @@ else
 getnativepath = $(1)
 endif
 
-abs_srcdir = $(shell cd $(srcdir) && pwd)
+abs_srcdir = $(call core_abspath,$(srcdir))
 
 DIST_PATH = $(DIST)/bin/
 RM_DIST = rm -f
