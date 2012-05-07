@@ -137,7 +137,7 @@ _TEST_FILES = \
 		test_played.html \
 		test_playback.html \
 		test_playback_errors.html \
- 		test_seekable1.html \
+		test_seekable1.html \
 		test_preload_actions.html \
 		test_preload_attribute.html \
 		test_progress.html \
@@ -150,6 +150,7 @@ _TEST_FILES = \
 		test_seek_out_of_range.html \
 		test_source.html \
 		test_source_write.html \
+	        test_source_null.html \
 		test_standalone.html \
 		test_streams_element_capture.html \
 		test_streams_element_capture_reset.html \
