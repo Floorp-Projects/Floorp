@@ -380,6 +380,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mBorderStyle          = eBorderStyle_default;
   mPopupType            = ePopupTypeAny;
   mOldSizeMode          = nsSizeMode_Normal;
+  mLastSizeMode         = nsSizeMode_Normal;
   mLastPoint.x          = 0;
   mLastPoint.y          = 0;
   mLastSize.width       = 0;
@@ -1568,6 +1569,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
     return NS_OK;
 
   // save the requested state
+  mLastSizeMode = mSizeMode;
   rv = nsBaseWidget::SetSizeMode(aMode);
   if (NS_SUCCEEDED(rv) && mIsVisible) {
     int mode;
@@ -1607,7 +1609,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
     }
     // we dispatch an activate event here to ensure that the right child window
     // is focused
-    if (mode == SW_RESTORE || mode == SW_MAXIMIZE || mode == SW_SHOW)
+    if (mode == SW_MAXIMIZE || mode == SW_SHOW)
       DispatchFocusToTopLevelWindow(NS_ACTIVATE);
   }
   return rv;
@@ -5569,7 +5571,7 @@ LRESULT nsWindow::ProcessCharMessage(const MSG &aMsg, bool *aEventDispatched)
   // These must be checked here too as a lone WM_CHAR could be received
   // if a child window didn't handle it (for example Alt+Space in a content window)
   nsModifierKeyState modKeyState;
-  NativeKey nativeKey(gKbdLayout.GetLayout(), mWnd, aMsg);
+  NativeKey nativeKey(gKbdLayout.GetLayout(), this, aMsg);
   return OnChar(aMsg, nativeKey, modKeyState, aEventDispatched);
 }
 
@@ -5909,6 +5911,12 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
 
     result = DispatchWindowEvent(&event);
 
+    // If window was restored, NS_ACTIVATE dispatch was bypassed during the 
+    // SetSizeMode call originating from OnWindowPosChanging to avoid saving
+    // pre-restore attributes. Force dispatch now to get correct attributes.
+    if (mLastSizeMode != nsSizeMode_Normal && mSizeMode == nsSizeMode_Normal)
+      DispatchFocusToTopLevelWindow(NS_ACTIVATE);
+
     // Skip window size change events below on minimization.
     if (mSizeMode == nsSizeMode_Minimized)
       return;
@@ -6226,16 +6234,6 @@ StringCaseInsensitiveEquals(const PRUnichar* aChars1, const PRUint32 aNumChars1,
   return comp(aChars1, aChars2, aNumChars1, aNumChars2) == 0;
 }
 
-UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
-{
-  switch (aNativeKeyCode) {
-    case VK_OEM_1:     return NS_VK_SEMICOLON;     // 0xBA, For the US standard keyboard, the ';:' key
-    case VK_OEM_PLUS:  return NS_VK_ADD;           // 0xBB, For any country/region, the '+' key
-    case VK_OEM_MINUS: return NS_VK_SUBTRACT;      // 0xBD, For any country/region, the '-' key
-  }
-  return aNativeKeyCode;
-}
-
 /* static */
 bool nsWindow::IsRedirectedKeyDownMessage(const MSG &aMsg)
 {
@@ -6258,14 +6256,13 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
                             bool *aEventDispatched,
                             nsFakeCharMessage* aFakeCharMessage)
 {
-  NativeKey nativeKey(gKbdLayout.GetLayout(), mWnd, aMsg);
+  NativeKey nativeKey(gKbdLayout.GetLayout(), this, aMsg);
   UINT virtualKeyCode = nativeKey.GetOriginalVirtualKeyCode();
   gKbdLayout.OnKeyDown(virtualKeyCode);
 
   // Use only DOMKeyCode for XP processing.
   // Use virtualKeyCode for gKbdLayout and native processing.
-  UINT DOMKeyCode = nsIMM32Handler::IsComposingOn(this) ?
-                      virtualKeyCode : MapFromNativeToDOM(virtualKeyCode);
+  PRUint32 DOMKeyCode = nativeKey.GetDOMKeyCode();
 
 #ifdef DEBUG
   //PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("In OnKeyDown virt: %d\n", DOMKeyCode));
@@ -6608,20 +6605,14 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
                           nsModifierKeyState &aModKeyState,
                           bool *aEventDispatched)
 {
-  UINT virtualKeyCode = aMsg.wParam;
-
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
-         ("nsWindow::OnKeyUp VK=%d\n", virtualKeyCode));
-
-  if (!nsIMM32Handler::IsComposingOn(this)) {
-    virtualKeyCode = MapFromNativeToDOM(virtualKeyCode);
-  }
+         ("nsWindow::OnKeyUp wParam(VK)=%d\n", aMsg.wParam));
 
   if (aEventDispatched)
     *aEventDispatched = true;
   nsKeyEvent keyupEvent(true, NS_KEY_UP, this);
-  keyupEvent.keyCode = virtualKeyCode;
-  NativeKey nativeKey(gKbdLayout.GetLayout(), mWnd, aMsg);
+  NativeKey nativeKey(gKbdLayout.GetLayout(), this, aMsg);
+  keyupEvent.keyCode = nativeKey.GetDOMKeyCode();
   InitKeyEvent(keyupEvent, nativeKey, aModKeyState);
   return DispatchKeyEvent(keyupEvent, &aMsg);
 }
@@ -6650,19 +6641,17 @@ LRESULT nsWindow::OnChar(const MSG &aMsg,
   if (aModKeyState.mIsAltDown && aModKeyState.mIsControlDown)
     aModKeyState.mIsAltDown = aModKeyState.mIsControlDown = false;
 
-  wchar_t uniChar;
-
   if (nsIMM32Handler::IsComposingOn(this)) {
     ResetInputState();
   }
 
+  wchar_t uniChar;
   if (aModKeyState.mIsControlDown && charCode <= 0x1A) { // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details
     // need to account for shift here.  bug 16486
     if (aModKeyState.mIsShiftDown)
       uniChar = charCode - 1 + 'A';
     else
       uniChar = charCode - 1 + 'a';
-    charCode = 0;
   }
   else if (aModKeyState.mIsControlDown && charCode <= 0x1F) {
     // Fix for 50255 - <ctrl><[> and <ctrl><]> are not being processed.
@@ -6670,20 +6659,18 @@ LRESULT nsWindow::OnChar(const MSG &aMsg,
     // for some reason the keypress handler need to have the uniChar code set
     // with the addition of a upper case A not the lower case.
     uniChar = charCode - 1 + 'A';
-    charCode = 0;
   } else { // 0x20 - SPACE, 0x3D - EQUALS
     if (charCode < 0x20 || (charCode == 0x3D && aModKeyState.mIsControlDown)) {
       uniChar = 0;
     } else {
       uniChar = charCode;
-      charCode = 0;
     }
   }
 
   // Keep the characters unshifted for shortcuts and accesskeys and make sure
   // that numbers are always passed as such (among others: bugs 50255 and 351310)
   if (uniChar && (aModKeyState.mIsControlDown || aModKeyState.mIsAltDown)) {
-    UINT virtualKeyCode = ::MapVirtualKeyEx(WinUtils::GetScanCode(aMsg.lParam),
+    UINT virtualKeyCode = ::MapVirtualKeyEx(aNativeKey.GetScanCode(),
                                             MAPVK_VSC_TO_VK,
                                             gKbdLayout.GetLayout());
     UINT unshiftedCharCode =
@@ -6706,6 +6693,9 @@ LRESULT nsWindow::OnChar(const MSG &aMsg,
   nsKeyEvent keypressEvent(true, NS_KEY_PRESS, this);
   keypressEvent.flags |= aFlags;
   keypressEvent.charCode = uniChar;
+  if (!keypressEvent.charCode) {
+    keypressEvent.keyCode = aNativeKey.GetDOMKeyCode();
+  }
   InitKeyEvent(keypressEvent, aNativeKey, aModKeyState);
   bool result = DispatchKeyEvent(keypressEvent, &aMsg);
   if (aEventDispatched)

@@ -78,6 +78,10 @@ public class PersistedCrypto5Keys {
     }
   }
 
+  public boolean persistedKeysExist() {
+    return lastModified() > 0;
+  }
+
   public long lastModified() {
     return prefs.getLong(CRYPTO5_KEYS_LAST_MODIFIED, -1);
   }

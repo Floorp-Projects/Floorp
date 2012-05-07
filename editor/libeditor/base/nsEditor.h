@@ -129,12 +129,34 @@ public:
     kOpDeleteNode,
     kOpSplitNode,
     kOpJoinNode,
-    kOpDeleteSelection,
+    kOpDeleteText = 1003,
+
     // text commands
-    kOpInsertBreak    = 1000,
-    kOpInsertText     = 1001,
-    kOpInsertIMEText  = 1002,
-    kOpDeleteText     = 1003
+    kOpInsertText         = 2000,
+    kOpInsertIMEText      = 2001,
+    kOpDeleteSelection    = 2002,
+    kOpSetTextProperty    = 2003,
+    kOpRemoveTextProperty = 2004,
+    kOpOutputText         = 2005,
+
+    // html only action
+    kOpInsertBreak         = 3000,
+    kOpMakeList            = 3001,
+    kOpIndent              = 3002,
+    kOpOutdent             = 3003,
+    kOpAlign               = 3004,
+    kOpMakeBasicBlock      = 3005,
+    kOpRemoveList          = 3006,
+    kOpMakeDefListItem     = 3007,
+    kOpInsertElement       = 3008,
+    kOpInsertQuotation     = 3009,
+    kOpHTMLPaste           = 3012,
+    kOpLoadHTML            = 3013,
+    kOpResetTextProperties = 3014,
+    kOpSetAbsolutePosition = 3015,
+    kOpRemoveAbsolutePosition = 3016,
+    kOpDecreaseZIndex      = 3017,
+    kOpIncreaseZIndex      = 3018
   };
 
   /** The default constructor. This should suffice. the setting of the interfaces is done
@@ -384,7 +406,8 @@ public:
 
   /** All editor operations which alter the doc should be prefaced
    *  with a call to StartOperation, naming the action and direction */
-  NS_IMETHOD StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
+  NS_IMETHOD StartOperation(OperationID opID,
+                            nsIEditor::EDirection aDirection);
 
   /** All editor operations which alter the doc should be followed
    *  with a call to EndOperation */
@@ -461,6 +484,9 @@ public:
                         nsCOMPtr<nsIDOMNode> *aResultNode,
                         bool         bNoBlockCrossing = false,
                         nsIContent  *aActiveEditorRoot = nsnull);
+  nsIContent* GetPriorNode(nsINode* aCurrentNode, bool aEditableNode,
+                           bool aNoBlockCrossing = false,
+                           nsIContent* aActiveEditorRoot = nsnull);
 
   // and another version that takes a {parent,offset} pair rather than a node
   nsresult GetPriorNode(nsIDOMNode  *aParentNode, 
@@ -469,7 +495,13 @@ public:
                         nsCOMPtr<nsIDOMNode> *aResultNode,
                         bool         bNoBlockCrossing = false,
                         nsIContent  *aActiveEditorRoot = nsnull);
-                       
+  nsIContent* GetPriorNode(nsINode* aParentNode,
+                           PRInt32 aOffset,
+                           bool aEditableNode,
+                           bool aNoBlockCrossing = false,
+                           nsIContent* aActiveEditorRoot = nsnull);
+
+
   /** get the node immediately after to aCurrentNode
     * @param aCurrentNode   the node from which we start the search
     * @param aEditableNode  if true, only return an editable node
@@ -494,6 +526,11 @@ public:
                        nsCOMPtr<nsIDOMNode> *aResultNode,
                        bool         bNoBlockCrossing = false,
                        nsIContent  *aActiveEditorRoot = nsnull);
+  nsIContent* GetNextNode(nsINode* aParentNode,
+                          PRInt32 aOffset,
+                          bool aEditableNode,
+                          bool aNoBlockCrossing = false,
+                          nsIContent* aActiveEditorRoot = nsnull);
 
   // Helper for GetNextNode and GetPriorNode
   nsIContent* FindNode(nsINode *aCurrentNode,
@@ -554,6 +591,9 @@ public:
   bool IsEditable(nsIDOMNode *aNode);
   bool IsEditable(nsIContent *aNode);
 
+  /**
+   * aNode must be a non-null text node.
+   */
   virtual bool IsTextInDirtyFrameVisible(nsIContent *aNode);
 
   /** returns true if aNode is a MozEditorBogus node */
@@ -618,7 +658,7 @@ public:
 
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
 
-  nsresult HandleInlineSpellCheck(PRInt32 action,
+  nsresult HandleInlineSpellCheck(OperationID action,
                                     nsISelection *aSelection,
                                     nsIDOMNode *previousSelectedNode,
                                     PRInt32 previousSelectedOffset,
@@ -829,7 +869,7 @@ protected:
   PRInt32           mUpdateCount;
 
   PRInt32           mPlaceHolderBatch;   // nesting count for batching
-  PRInt32           mAction;             // the current editor action
+  OperationID       mAction;             // the current editor action
   PRUint32          mHandlingActionCount;
 
   PRUint32          mIMETextOffset;    // offset in text node where IME comp string begins
