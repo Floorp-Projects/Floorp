@@ -796,9 +796,8 @@ MediaStreamGraphImpl::UpdateCurrentTime()
   }
   mCurrentTimeStamp = now;
 
-  LOG(PR_LOG_DEBUG, ("Updating current time to %f (minBufferEndTime %f, real %f, mBlockingDecisionsMadeUntilTime %f)",
+  LOG(PR_LOG_DEBUG, ("Updating current time to %f (real %f, mBlockingDecisionsMadeUntilTime %f)",
                      MediaTimeToSeconds(nextCurrentTime),
-                     MediaTimeToSeconds(minBufferEndTime),
                      (now - mInitialTimeStamp).ToSeconds(),
                      MediaTimeToSeconds(mBlockingDecisionsMadeUntilTime)));
 
