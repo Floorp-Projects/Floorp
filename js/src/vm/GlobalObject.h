@@ -94,10 +94,8 @@ class Debugger;
  * even deletable) Object, Array, &c. properties (although a slot won't be used
  * again if its property is deleted and readded).
  */
-class GlobalObject : public JSObject {
-    GlobalObject(const GlobalObject &other) MOZ_DELETE;
-    void operator=(const GlobalObject &other) MOZ_DELETE;
-
+class GlobalObject : public JSObject
+{
     /*
      * Count of slots to store built-in constructors, prototypes, and initial
      * visible properties for the constructors.
