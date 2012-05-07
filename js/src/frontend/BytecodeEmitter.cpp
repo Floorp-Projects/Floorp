@@ -2468,6 +2468,14 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                             switchOp = JSOP_CONDSWITCH;
                             continue;
                         }
+                        if (constVal.isString()) {
+                            JSAtom *atom = js_AtomizeString(cx, constVal.toString());
+                            if (!atom) {
+                                ok = JS_FALSE;
+                                goto release;
+                            }
+                            constVal.setString(atom);
+                        }
                         constPropagated = JS_TRUE;
                         break;
                     }
