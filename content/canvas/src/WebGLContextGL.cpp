@@ -4617,7 +4617,7 @@ GetFloat32Array(JSContext* aCx, const JS::Value& aValue)
         return ErrorInvalidOperation("%s: This uniform location is obsolete since the program has been relinked", info); \
     GLint location = location_object->Location();
 
-#define SIMPLE_ARRAY_METHOD_UNIFORM(name, cnt, arrayType, ptrType)              \
+#define SIMPLE_ARRAY_METHOD_UNIFORM(name, expectedElemSize, arrayType, ptrType) \
 NS_IMETHODIMP                                                                   \
 WebGLContext::name(nsIWebGLUniformLocation *aLocation, const JS::Value& aValue, \
                    JSContext* aCx)                                              \
@@ -4638,38 +4638,36 @@ WebGLContext::name##_base(WebGLUniformLocation *location_object,                
     }                                                                           \
                                                                                 \
     OBTAIN_UNIFORM_LOCATION(#name ": location")                                 \
-    int elementSize = location_object->ElementSize();                           \
-    if (cnt != elementSize) {                                                   \
+    int uniformElemSize = location_object->ElementSize();                           \
+    if (expectedElemSize != uniformElemSize) {                                                   \
         return ErrorInvalidOperation(                                           \
             #name ": this function expected a uniform of element size %d,"      \
             " got a uniform of element size %d",                                \
-            cnt,                                                                \
-            elementSize);                                                       \
+            expectedElemSize,                                                                \
+            uniformElemSize);                                                       \
     }                                                                           \
     const WebGLUniformInfo& info = location_object->Info();                     \
-    PRUint32 expectedArrayLength = cnt * info.arraySize;                        \
-    if (arrayLength < expectedArrayLength ||                                    \
-        (arrayLength % cnt))                                                    \
+    if (arrayLength == 0 ||                                                     \
+        arrayLength % expectedElemSize)                                                      \
     {                                                                           \
         return ErrorInvalidValue("%s: expected an array of length a multiple of" \
-                                 " %d and at least %d, got an array of length %d", \
+                                 " %d, got an array of length %d",              \
                                  #name,                                         \
-                                 cnt,                                           \
-                                 expectedArrayLength,                           \
+                                 expectedElemSize,                                           \
                                  arrayLength);                                  \
     }                                                                           \
     if (!info.isArray &&                                                        \
-        arrayLength > expectedArrayLength) {                                    \
+        arrayLength != expectedElemSize) {                                                   \
         return ErrorInvalidOperation("%s: expected an array of length exactly %d" \
                                      " (since this uniform is not an array uniform)," \
-                                     " got an array of length %d", \
+                                     " got an array of length %d",              \
                                  #name,                                         \
-                                 expectedArrayLength,                           \
+                                 expectedElemSize,                           \
                                  arrayLength);                                  \
     }                                                                           \
                                                                                 \
-    MakeContextCurrent();                                                       \
-    gl->f##name(location, info.arraySize, data);                                \
+    PRUint32 numElementsToUpload = NS_MIN(info.arraySize, arrayLength/expectedElemSize);     \
+    gl->f##name(location, numElementsToUpload, data);    \
 }
 
 #define SIMPLE_MATRIX_METHOD_UNIFORM(name, dim)                                 \
@@ -4690,38 +4688,37 @@ WebGLContext::name##_base(WebGLUniformLocation* location_object,                
                           WebGLboolean aTranspose, uint32_t arrayLength,        \
                           float* data)                                          \
 {                                                                               \
+    PRUint32 expectedElemSize = (dim)*(dim);                                                     \
     if (!IsContextStable()) {                                                   \
         return;                                                                 \
     }                                                                           \
                                                                                 \
     OBTAIN_UNIFORM_LOCATION(#name ": location")                                 \
-    int elementSize = location_object->ElementSize();                           \
-    if (dim*dim != elementSize) {                                               \
+    PRUint32 uniformElemSize = location_object->ElementSize();                           \
+    if (expectedElemSize != uniformElemSize) {                                               \
         return ErrorInvalidOperation(                                           \
             #name ": this function expected a uniform of element size %d,"      \
             " got a uniform of element size %d",                                \
-            dim*dim,                                                            \
-            elementSize);                                                       \
+            expectedElemSize,                                                            \
+            uniformElemSize);                                                       \
     }                                                                           \
     const WebGLUniformInfo& info = location_object->Info();                     \
-    PRUint32 expectedArrayLength = dim * dim * info.arraySize;                  \
-    if (arrayLength < expectedArrayLength ||                                    \
-        (arrayLength % (dim*dim)))                                              \
+    if (arrayLength == 0 ||                                                     \
+        arrayLength % expectedElemSize)                                                \
     {                                                                           \
         return ErrorInvalidValue("%s: expected an array of length a multiple of" \
-                                 " %d and at least %d, got an array of length %d", \
+                                 " %d, got an array of length %d",              \
                                  #name,                                         \
-                                 dim*dim,                                       \
-                                 expectedArrayLength,                           \
+                                 expectedElemSize,                                       \
                                  arrayLength);                                  \
     }                                                                           \
-    if (!info.isArray &&                                          \
-        arrayLength > expectedArrayLength) {                                    \
+    if (!info.isArray &&                                                        \
+        arrayLength != expectedElemSize) {                                               \
         return ErrorInvalidOperation("%s: expected an array of length exactly %d" \
                                      " (since this uniform is not an array uniform)," \
                                      " got an array of length %d", \
                                  #name,                                         \
-                                 expectedArrayLength,                           \
+                                 expectedElemSize,                           \
                                  arrayLength);                                  \
     }                                                                           \
     if (aTranspose) {                                                           \
@@ -4730,7 +4727,8 @@ WebGLContext::name##_base(WebGLUniformLocation* location_object,                
     }                                                                           \
                                                                                 \
     MakeContextCurrent();                                                       \
-    gl->f##name(location, info.arraySize, false,  data);                        \
+    PRUint32 numElementsToUpload = NS_MIN(info.arraySize, arrayLength/(expectedElemSize));  \
+    gl->f##name(location, numElementsToUpload, false, data); \
 }
 
 #define SIMPLE_METHOD_UNIFORM_1(glname, name, t1)        \

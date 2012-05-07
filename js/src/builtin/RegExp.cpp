@@ -57,7 +57,7 @@ class RegExpMatchBuilder
     RootedVarObject array;
 
     bool setProperty(JSAtom *name, Value v) {
-        return !!js_DefineProperty(cx, array, ATOM_TO_JSID(name), &v,
+        return !!js_DefineProperty(cx, array, AtomToId(name), &v,
                                    JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE);
     }
 
@@ -500,7 +500,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     RootedVarFunction ctor(cx);
-    ctor = global->createConstructor(cx, regexp_construct, CLASS_ATOM(cx, RegExp), 2);
+    ctor = global->createConstructor(cx, regexp_construct, CLASS_NAME(cx, RegExp), 2);
     if (!ctor)
         return NULL;
 

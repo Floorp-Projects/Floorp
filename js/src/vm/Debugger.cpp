@@ -791,11 +791,11 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Va
 
     switch (status) {
       case JSTRAP_RETURN:
-        key = ATOM_TO_JSID(cx->runtime->atomState.returnAtom);
+        key = NameToId(cx->runtime->atomState.returnAtom);
         break;
 
       case JSTRAP_THROW:
-        key = ATOM_TO_JSID(cx->runtime->atomState.throwAtom);
+        key = NameToId(cx->runtime->atomState.throwAtom);
         break;
 
       case JSTRAP_ERROR:
@@ -852,8 +852,8 @@ Debugger::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Va
     JSContext *cx = ac.context;
     JSObject *obj;
     const Shape *shape;
-    jsid returnId = ATOM_TO_JSID(cx->runtime->atomState.returnAtom);
-    jsid throwId = ATOM_TO_JSID(cx->runtime->atomState.throwAtom);
+    jsid returnId = NameToId(cx->runtime->atomState.returnAtom);
+    jsid throwId = NameToId(cx->runtime->atomState.throwAtom);
     bool okResumption = rv.isObject();
     if (okResumption) {
         obj = &rv.toObject();
@@ -890,7 +890,7 @@ CallMethodIfPresent(JSContext *cx, HandleObject obj, const char *name, int argc,
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     Value fval;
     return atom &&
-           js_GetMethod(cx, obj, ATOM_TO_JSID(atom), 0, &fval) &&
+           js_GetMethod(cx, obj, AtomToId(atom), 0, &fval) &&
            (!js_IsCallable(fval) ||
             Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
 }
@@ -3212,7 +3212,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
 
         JS_ASSERT(fp->numActualArgs() <= 0x7fffffff);
         int32_t fargc = int32_t(fp->numActualArgs());
-        if (!DefineNativeProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+        if (!DefineNativeProperty(cx, argsobj, NameToId(cx->runtime->atomState.lengthAtom),
                                   Int32Value(fargc), NULL, NULL,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))
         {

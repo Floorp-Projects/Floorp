@@ -389,7 +389,7 @@ JSBool
 ArrayBufferObject::obj_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name,
                                       JSObject **objp, JSProperty **propp)
 {
-    return obj_lookupGeneric(cx, obj, ATOM_TO_JSID(name), objp, propp);
+    return obj_lookupGeneric(cx, obj, NameToId(name), objp, propp);
 }
 
 JSBool
@@ -454,7 +454,7 @@ ArrayBufferObject::obj_defineProperty(JSContext *cx, JSObject *obj,
                                       PropertyName *name, const Value *v,
                                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    return obj_defineGeneric(cx, obj, ATOM_TO_JSID(name), v, getter, setter, attrs);
+    return obj_defineGeneric(cx, obj, NameToId(name), v, getter, setter, attrs);
 }
 
 JSBool
@@ -520,7 +520,7 @@ ArrayBufferObject::obj_getProperty(JSContext *cx, JSObject *obj_,
     RootedVarObject delegate(cx, DelegateObject(cx, obj));
     if (!delegate)
         return false;
-    return js_GetProperty(cx, delegate, receiver, ATOM_TO_JSID(name), vp);
+    return js_GetProperty(cx, delegate, receiver, NameToId(name), vp);
 }
 
 JSBool
@@ -616,7 +616,7 @@ JSBool
 ArrayBufferObject::obj_setProperty(JSContext *cx, JSObject *obj,
                                    PropertyName *name, Value *vp, JSBool strict)
 {
-    return obj_setGeneric(cx, obj, ATOM_TO_JSID(name), vp, strict);
+    return obj_setGeneric(cx, obj, NameToId(name), vp, strict);
 }
 
 JSBool
@@ -661,7 +661,7 @@ JSBool
 ArrayBufferObject::obj_getPropertyAttributes(JSContext *cx, JSObject *obj,
                                              PropertyName *name, unsigned *attrsp)
 {
-    return obj_getGenericAttributes(cx, obj, ATOM_TO_JSID(name), attrsp);
+    return obj_getGenericAttributes(cx, obj, NameToId(name), attrsp);
 }
 
 JSBool
@@ -706,7 +706,7 @@ JSBool
 ArrayBufferObject::obj_setPropertyAttributes(JSContext *cx, JSObject *obj,
                                              PropertyName *name, unsigned *attrsp)
 {
-    return obj_setGenericAttributes(cx, obj, ATOM_TO_JSID(name), attrsp);
+    return obj_setGenericAttributes(cx, obj, NameToId(name), attrsp);
 }
 
 JSBool
@@ -907,7 +907,7 @@ JSBool
 TypedArray::obj_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name,
                                JSObject **objp, JSProperty **propp)
 {
-    return obj_lookupGeneric(cx, obj, ATOM_TO_JSID(name), objp, propp);
+    return obj_lookupGeneric(cx, obj, NameToId(name), objp, propp);
 }
 
 JSBool
@@ -1289,7 +1289,7 @@ class TypedArrayTemplate
     static JSBool
     obj_setProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict)
     {
-        return obj_setGeneric(cx, obj, ATOM_TO_JSID(name), vp, strict);
+        return obj_setGeneric(cx, obj, NameToId(name), vp, strict);
     }
 
     static JSBool
@@ -1332,7 +1332,7 @@ class TypedArrayTemplate
     obj_defineProperty(JSContext *cx, JSObject *obj, PropertyName *name, const Value *v,
                        PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
     {
-        return obj_defineGeneric(cx, obj, ATOM_TO_JSID(name), v, getter, setter, attrs);
+        return obj_defineGeneric(cx, obj, NameToId(name), v, getter, setter, attrs);
     }
 
     static JSBool
@@ -1411,7 +1411,7 @@ class TypedArrayTemplate
 
           case JSENUMERATE_NEXT:
             if (statep->isTrue()) {
-                *idp = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
+                *idp = NameToId(cx->runtime->atomState.lengthAtom);
                 statep->setInt32(0);
             } else {
                 uint32_t index = statep->toInt32();
@@ -3054,7 +3054,7 @@ InitArrayBufferClass(JSContext *cx, Handle<GlobalObject*> global)
 
     RootedVarFunction ctor(cx);
     ctor = global->createConstructor(cx, ArrayBufferObject::class_constructor,
-                                     CLASS_ATOM(cx, ArrayBuffer), 1);
+                                     CLASS_NAME(cx, ArrayBuffer), 1);
     if (!ctor)
         return NULL;
 
@@ -3141,7 +3141,7 @@ DataViewObject::initClass(JSContext *cx, GlobalObject *global)
 
     JSFunction *ctor =
         global->createConstructor(cx, DataViewObject::class_constructor,
-                                  CLASS_ATOM(cx, DataView), 3);
+                                  CLASS_NAME(cx, DataView), 3);
     if (!ctor)
         return NULL;
 

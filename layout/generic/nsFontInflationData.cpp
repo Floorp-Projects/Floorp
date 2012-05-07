@@ -159,7 +159,7 @@ ComputeDescendantWidth(const nsHTMLReflowState& aAncestorReflowState,
 
   AutoInfallibleTArray<nsIFrame*, 16> frames;
   for (nsIFrame *f = aDescendantFrame; f != ancestorFrame;
-       f = f->GetParent()) {
+       f = f->GetParent()->GetFirstInFlow()) {
     frames.AppendElement(f);
   }
 

@@ -1026,7 +1026,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     numberProto->asNumber().setPrimitiveValue(0);
 
     RootedVarFunction ctor(cx);
-    ctor = global->createConstructor(cx, Number, CLASS_ATOM(cx, Number), 1);
+    ctor = global->createConstructor(cx, Number, CLASS_NAME(cx, Number), 1);
     if (!ctor)
         return NULL;
 
@@ -1044,10 +1044,10 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* ES5 15.1.1.1, 15.1.1.2 */
-    if (!DefineNativeProperty(cx, global, ATOM_TO_JSID(cx->runtime->atomState.NaNAtom),
+    if (!DefineNativeProperty(cx, global, NameToId(cx->runtime->atomState.NaNAtom),
                               cx->runtime->NaNValue, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_PERMANENT | JSPROP_READONLY, 0, 0) ||
-        !DefineNativeProperty(cx, global, ATOM_TO_JSID(cx->runtime->atomState.InfinityAtom),
+        !DefineNativeProperty(cx, global, NameToId(cx->runtime->atomState.InfinityAtom),
                               cx->runtime->positiveInfinityValue,
                               JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))

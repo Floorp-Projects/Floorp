@@ -91,7 +91,7 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 
     RecompilationMonitor monitor(f.cx);
 
-    const Shape *shape = obj.nativeLookup(f.cx, js_CheckForStringIndex(ATOM_TO_JSID(name)));
+    const Shape *shape = obj.nativeLookup(f.cx, NameToId(name));
 
     if (monitor.recompiled()) {
         stubs::Name(f);
@@ -196,7 +196,7 @@ ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
 
     RecompilationMonitor monitor(f.cx);
 
-    const Shape *shape = obj.nativeLookup(f.cx, ATOM_TO_JSID(name));
+    const Shape *shape = obj.nativeLookup(f.cx, NameToId(name));
 
     if (!monitor.recompiled()) {
         LookupStatus status = UpdateSetGlobalName(f, ic, &obj, shape);

@@ -260,9 +260,6 @@ TypeOfValue(JSContext *cx, const Value &v);
 extern JSBool
 HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
 
-extern bool
-ValueToId(JSContext *cx, const Value &v, jsid *idp);
-
 /*
  * A linked list of the |FrameRegs regs;| variables belonging to all
  * js::Interpret C++ frames on this thread's stack.

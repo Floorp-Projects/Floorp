@@ -766,55 +766,38 @@ MediaStreamGraphImpl::GetAudioPosition(MediaStream* aStream)
   if (!aStream->mAudioOutput) {
     return mCurrentTime;
   }
+  PRInt64 positionInFrames = aStream->mAudioOutput->GetPositionInFrames();
+  if (positionInFrames < 0) {
+    return mCurrentTime;
+  }
   return aStream->mAudioPlaybackStartTime +
       TicksToTimeRoundDown(aStream->mAudioOutput->GetRate(),
-                           aStream->mAudioOutput->GetPositionInFrames());
+                           positionInFrames);
 }
 
 void
 MediaStreamGraphImpl::UpdateCurrentTime()
 {
   GraphTime prevCurrentTime = mCurrentTime;
-
   TimeStamp now = TimeStamp::Now();
-  // The earliest buffer end time for streams that haven't finished. We can't
-  // advance the current time past this point.
-  GraphTime minBufferEndTime = GRAPH_TIME_MAX;
-  for (PRUint32 i = 0; i < mStreams.Length(); ++i) {
-    MediaStream* stream = mStreams[i];
-    GraphTime blockedBufferEndTime =
-      StreamTimeToGraphTime(stream, stream->GetBufferEnd(), INCLUDE_TRAILING_BLOCKED_INTERVAL);
-    if (stream->mAudioOutput &&
-        (!stream->mFinished || mBlockingDecisionsMadeUntilTime <= blockedBufferEndTime)) {
-      // XXX We should take audio positions into account when determining how
-      // far to advance the current time. Basically the current time should
-      // track the average or minimum of the audio positions. We don't do this
-      // currently since the audio positions aren't accurate enough. This
-      // logging code is helpful to track the accuracy of audio positions.
-      GraphTime audioPosition = GetAudioPosition(stream);
-      LOG(PR_LOG_DEBUG, ("Audio position for stream %p is %f", stream,
-                         MediaTimeToSeconds(audioPosition)));
-    }
-    if (!stream->mFinished) {
-      minBufferEndTime = NS_MIN(minBufferEndTime, blockedBufferEndTime);
-    }
-  }
-
-  NS_ASSERTION(mCurrentTime <= minBufferEndTime,
-               "We shouldn't have already advanced beyond buffer end!");
   GraphTime nextCurrentTime =
     SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds()) + mCurrentTime;
-  if (minBufferEndTime < nextCurrentTime) {
-    LOG(PR_LOG_WARNING, ("Reducing current time to minimum buffer end"));
-    nextCurrentTime = minBufferEndTime;
+  if (mBlockingDecisionsMadeUntilTime < nextCurrentTime) {
+    LOG(PR_LOG_WARNING, ("Media graph global underrun detected"));
+    LOG(PR_LOG_DEBUG, ("Advancing mBlockingDecisionsMadeUntilTime from %f to %f",
+                       MediaTimeToSeconds(mBlockingDecisionsMadeUntilTime),
+                       MediaTimeToSeconds(nextCurrentTime)));
+    // Advance mBlockingDecisionsMadeUntilTime to nextCurrentTime by
+    // adding blocked time to all streams starting at mBlockingDecisionsMadeUntilTime
+    for (PRUint32 i = 0; i < mStreams.Length(); ++i) {
+      mStreams[i]->mBlocked.SetAtAndAfter(mBlockingDecisionsMadeUntilTime, true);
+    }
+    mBlockingDecisionsMadeUntilTime = nextCurrentTime;
   }
   mCurrentTimeStamp = now;
 
-  mBlockingDecisionsMadeUntilTime =
-    NS_MAX(nextCurrentTime, mBlockingDecisionsMadeUntilTime);
-  LOG(PR_LOG_DEBUG, ("Updating current time to %f (minBufferEndTime %f, real %f, mBlockingDecisionsMadeUntilTime %f)",
+  LOG(PR_LOG_DEBUG, ("Updating current time to %f (real %f, mBlockingDecisionsMadeUntilTime %f)",
                      MediaTimeToSeconds(nextCurrentTime),
-                     MediaTimeToSeconds(minBufferEndTime),
                      (now - mInitialTimeStamp).ToSeconds(),
                      MediaTimeToSeconds(mBlockingDecisionsMadeUntilTime)));
 
