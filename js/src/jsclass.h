@@ -259,8 +259,8 @@ typedef void
     /* Optionally non-null members start here. */                             \
     JSCheckAccessOp     checkAccess;                                          \
     JSNative            call;                                                 \
-    JSNative            construct;                                            \
     JSHasInstanceOp     hasInstance;                                          \
+    JSNative            construct;                                            \
     JSTraceOp           trace
 
 /*
