@@ -164,11 +164,6 @@ protected:
   nsCOMPtr<nsIContent> mContent;
   nsDocAccessible* mDoc;
 
-  /**
-   * Notify global nsIObserver's that a11y is getting init'd or shutdown.
-   */
-  static void NotifyA11yInitOrShutdown(bool aIsInit);
-
   // Static data, we do our own refcounting for our static data.
   static nsIStringBundle* gStringBundle;
 
