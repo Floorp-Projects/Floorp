@@ -41,6 +41,82 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * XPConnect allows JS code to manipulate C++ object and C++ code to manipulate
+ * JS objects. JS manipulation of C++ objects tends to be significantly more
+ * complex. This comment explains how it is orchestrated by XPConnect.
+ *
+ * For each C++ object to be manipulated in JS, there is a corresponding JS
+ * object. This is called the "flattened JS object". By default, there is an
+ * additional C++ object involved of type XPCWrappedNative. The XPCWrappedNative
+ * holds pointers to the C++ object and the flat JS object.
+ *
+ * As an optimization, some C++ objects don't have XPCWrappedNatives, although
+ * they still have a corresponding flattened JS object. These are called "slim
+ * wrappers": all the wrapping information is stored in extra fields of the C++
+ * object and the JS object. Slim wrappers are only used for DOM objects. As a
+ * deoptimization, slim wrappers can be "morphed" into XPCWrappedNatives if the
+ * extra fields of the XPCWrappedNative become necessary.
+ *
+ * All XPCWrappedNative objects belong to an XPCWrappedNativeScope. These scopes
+ * are essentially in 1:1 correspondence with JS global objects. The
+ * XPCWrappedNativeScope has a pointer to the JS global object. The parent of a
+ * flattened JS object is, by default, the global JS object corresponding to the
+ * wrapper's XPCWrappedNativeScope (the exception to this rule is when a
+ * PreCreate hook asks for a different parent; see nsIXPCScriptable below).
+ *
+ * Some C++ objects (notably DOM objects) have information associated with them
+ * that lists the interfaces implemented by these objects. A C++ object exposes
+ * this information by implementing nsIClassInfo. If a C++ object implements
+ * nsIClassInfo, then JS code can call its methods without needing to use
+ * QueryInterface first. Typically, all instances of a C++ class share the same
+ * nsIClassInfo instance. (That is, obj->QueryInterface(nsIClassInfo) returns
+ * the same result for every obj of a given class.)
+ *
+ * XPConnect tracks nsIClassInfo information in an XPCWrappedNativeProto object.
+ * A given XPCWrappedNativeScope will have one XPCWrappedNativeProto for each
+ * nsIClassInfo instance being used. The XPCWrappedNativeProto has an associated
+ * JS object, which is used as the prototype of all flattened JS objects created
+ * for C++ objects with the given nsIClassInfo.
+ *
+ * Each XPCWrappedNativeProto has a pointer to its XPCWrappedNativeScope. If an
+ * XPCWrappedNative wraps a C++ object with class info, then it points to its
+ * XPCWrappedNativeProto. Otherwise it points to its XPCWrappedNativeScope. (The
+ * pointers are smooshed together in a tagged union.) Either way it can reach
+ * its scope.
+ *
+ * In the case of slim wrappers (where there is no XPCWrappedNative), the
+ * flattened JS object has a pointer to the XPCWrappedNativeProto stored in a
+ * reserved slot.
+ *
+ * An XPCWrappedNativeProto keeps track of the set of interfaces implemented by
+ * the C++ object in an XPCNativeSet. (The list of interfaces is obtained by
+ * calling a method on the nsIClassInfo.) An XPCNativeSet is a collection of
+ * XPCNativeInterfaces. Each interface stores the list of members, which can be
+ * methods, constants, getters, or setters.
+ *
+ * An XPCWrappedNative also points to an XPCNativeSet. Initially this starts out
+ * the same as the XPCWrappedNativeProto's set. If there is no proto, it starts
+ * out as a singleton set containing nsISupports. If JS code QI's new interfaces
+ * outside of the existing set, the set will grow. All QueryInterface results
+ * are cached in XPCWrappedNativeTearOff objects, which are linked off of the
+ * XPCWrappedNative.
+ *
+ * Besides having class info, a C++ object may be "scriptable" (i.e., implement
+ * nsIXPCScriptable). This allows it to implement a more DOM-like interface,
+ * besides just exposing XPCOM methods and constants. An nsIXPCScriptable
+ * instance has hooks that correspond to all the normal JSClass hooks. Each
+ * nsIXPCScriptable instance is mirrored by an XPCNativeScriptableInfo in
+ * XPConnect. These can have pointers from XPCWrappedNativeProto and
+ * XPCWrappedNative (since C++ objects can have scriptable info without having
+ * class info).
+ *
+ * Most data in an XPCNativeScriptableInfo is shared between instances. The
+ * shared data is stored in an XPCNativeScriptableShared object. This type is
+ * important because it holds the JSClass of the flattened JS objects with the
+ * given scriptable info.
+ */
+
 /* All the XPConnect private declarations - only include locally. */
 
 #ifndef xpcprivate_h___
