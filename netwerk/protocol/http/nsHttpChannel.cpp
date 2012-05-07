@@ -5176,20 +5176,40 @@ nsHttpChannel::SetChooseApplicationCache(bool aChoose)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHttpChannel::MarkOfflineCacheEntryAsForeign()
+nsHttpChannel::OfflineCacheEntryAsForeignMarker*
+nsHttpChannel::GetOfflineCacheEntryAsForeignMarker()
 {
     if (!mApplicationCache)
-        return NS_ERROR_NOT_AVAILABLE;
+        return nsnull;
 
     nsresult rv;
 
     nsCAutoString cacheKey;
     rv = GenerateCacheKey(mPostID, cacheKey);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, nsnull);
 
-    rv = mApplicationCache->MarkEntry(cacheKey,
-                                      nsIApplicationCache::ITEM_FOREIGN);
+    return new OfflineCacheEntryAsForeignMarker(mApplicationCache, cacheKey);
+}
+
+nsresult
+nsHttpChannel::OfflineCacheEntryAsForeignMarker::MarkAsForeign()
+{
+    return mApplicationCache->MarkEntry(mCacheKey,
+                                        nsIApplicationCache::ITEM_FOREIGN);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::MarkOfflineCacheEntryAsForeign()
+{
+    nsresult rv;
+
+    nsAutoPtr<OfflineCacheEntryAsForeignMarker> marker(
+        GetOfflineCacheEntryAsForeignMarker());
+
+    if (!marker)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    rv = marker->MarkAsForeign();
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
