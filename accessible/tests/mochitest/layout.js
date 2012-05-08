@@ -94,10 +94,10 @@ function getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild)
 /**
  * Test the accessible boundaries.
  */
-function testBounds(aID)
+function testBounds(aID, aRect)
 {
   var [expectedX, expectedY, expectedWidth, expectedHeight] =
-    getBoundsForDOMElm(aID);
+    (aRect != undefined) ? aRect : getBoundsForDOMElm(aID);
 
   var [x, y, width, height] = getBounds(aID);
   is(x, expectedX, "Wrong x coordinate of " + prettyName(aID));
@@ -166,6 +166,9 @@ function CSSToDevicePixels(aWindow, aX, aY, aWidth, aHeight)
     getInterface(Components.interfaces.nsIDOMWindowUtils);
 
   var ratio = winUtil.screenPixelsPerCSSPixel;
-  return [aX * ratio, aY * ratio, aWidth * ratio, aHeight * ratio];
-}
 
+  // CSS pixels and ratio can be not integer. Device pixels are always integer.
+  // Do our best and hope it works.
+  return [ Math.round(aX * ratio), Math.round(aY * ratio),
+           Math.round(aWidth * ratio), Math.round(aHeight * ratio) ];
+}
