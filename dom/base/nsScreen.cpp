@@ -82,8 +82,10 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
   nsRefPtr<nsScreen> screen = new nsScreen();
   screen->BindToOwner(aWindow);
 
-  hal::RegisterScreenOrientationObserver(screen);
-  hal::GetCurrentScreenOrientation(&(screen->mOrientation));
+  hal::RegisterScreenConfigurationObserver(screen);
+  hal::ScreenConfiguration config;
+  hal::GetCurrentScreenConfiguration(&config);
+  screen->mOrientation = config.orientation();
 
   return screen.forget();
 }
@@ -95,7 +97,7 @@ nsScreen::nsScreen()
 
 nsScreen::~nsScreen()
 {
-  hal::UnregisterScreenOrientationObserver(this);
+  hal::UnregisterScreenConfigurationObserver(this);
 }
 
 
@@ -285,10 +287,10 @@ nsScreen::GetAvailRect(nsRect& aRect)
 }
 
 void
-nsScreen::Notify(const ScreenOrientationWrapper& aOrientation)
+nsScreen::Notify(const hal::ScreenConfiguration& aConfiguration)
 {
   ScreenOrientation previousOrientation = mOrientation;
-  mOrientation = aOrientation.orientation;
+  mOrientation = aConfiguration.orientation();
 
   NS_ASSERTION(mOrientation != eScreenOrientation_None &&
                mOrientation != eScreenOrientation_EndGuard &&

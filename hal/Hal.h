@@ -40,13 +40,9 @@ namespace mozilla {
 template <class T>
 class Observer;
 
-namespace dom {
-class ScreenOrientationWrapper;
-}
-
 namespace hal {
 
-typedef Observer<dom::ScreenOrientationWrapper> ScreenOrientationObserver;
+typedef Observer<ScreenConfiguration> ScreenConfigurationObserver;
 
 class WindowIdentifier;
 
@@ -312,27 +308,27 @@ void GetWakeLockInfo(const nsAString &aTopic, hal::WakeLockInformation *aWakeLoc
 void NotifyWakeLockChange(const hal::WakeLockInformation& aWakeLockInfo);
 
 /**
- * Inform the backend there is a new screen orientation observer.
- * @param aScreenOrientationObserver The observer that should be added.
+ * Inform the backend there is a new screen configuration observer.
+ * @param aScreenConfigurationObserver The observer that should be added.
  */
-void RegisterScreenOrientationObserver(hal::ScreenOrientationObserver* aScreenOrientationObserver);
+void RegisterScreenConfigurationObserver(hal::ScreenConfigurationObserver* aScreenConfigurationObserver);
 
 /**
- * Inform the backend a screen orientation observer unregistered.
- * @param aScreenOrientationObserver The observer that should be removed.
+ * Inform the backend a screen configuration observer unregistered.
+ * @param aScreenConfigurationObserver The observer that should be removed.
  */
-void UnregisterScreenOrientationObserver(hal::ScreenOrientationObserver* aScreenOrientationObserver);
+void UnregisterScreenConfigurationObserver(hal::ScreenConfigurationObserver* aScreenConfigurationObserver);
 
 /**
- * Returns the current screen orientation.
+ * Returns the current screen configuration.
  */
-void GetCurrentScreenOrientation(dom::ScreenOrientation* aScreenOrientation);
+void GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration);
 
 /**
- * Notify of a change in the screen orientation.
- * @param aScreenOrientation The new screen orientation.
+ * Notify of a change in the screen configuration.
+ * @param aScreenConfiguration The new screen orientation.
  */
-void NotifyScreenOrientationChange(const dom::ScreenOrientation& aScreenOrientation);
+void NotifyScreenConfigurationChange(const hal::ScreenConfiguration& aScreenConfiguration);
 
 /**
  * Lock the screen orientation to the specific orientation.
