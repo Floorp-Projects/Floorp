@@ -183,15 +183,13 @@ function test_tabbox_focus()
   var tabbox = $("tabbox-nofocus");
   var tab = $("tab-nofocus");
 
-  tab.addEventListener("focus", function () {
-    tab.removeEventListener("focus", arguments.callee, true);
+  when_tab_focused(tab, function () {
     ok(document.activeElement, tab, "focus in tab with no focusable elements");
 
     tabbox.selectedIndex = 0;
     $("tab-nofocus-button").focus();
 
-    tab.addEventListener("focus", function () {
-      tab.removeEventListener("focus", arguments.callee, true);
+    when_tab_focused(tab, function () {
       ok(document.activeElement, tab, "focus in tab with no focusable elements, but with something in another tab focused");
 
       var textboxExtra = $("textbox-extra");
@@ -205,12 +203,19 @@ function test_tabbox_focus()
       tabbox.selectedIndex = 0;
       textboxExtra.hidden = false;
       synthesizeMouseAtCenter(tab, { });
-    }, true);
+    });
 
     synthesizeMouseAtCenter(tab, { });
-  }, true);
+  });
 
   synthesizeMouseAtCenter(tab, { });
+}
+
+function when_tab_focused(tab, callback) {
+  tab.addEventListener("focus", function onFocused() {
+    tab.removeEventListener("focus", onFocused, true);
+    SimpleTest.executeSoon(callback);
+  }, true);
 }
 
 ]]>
