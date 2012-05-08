@@ -80,9 +80,10 @@
     (void)0
 #endif
 
-using namespace mozilla;
 using namespace android;
-using namespace hal;
+using namespace mozilla;
+using namespace mozilla::dom;
+using namespace mozilla::hal;
 
 bool gDrawRequest = false;
 static nsAppShell *gAppShell = NULL;
@@ -710,4 +711,6 @@ nsAppShell::NotifyScreenRotation()
 {
     gAppShell->mReaderPolicy->setDisplayInfo();
     gAppShell->mReader->requestRefreshConfiguration(InputReaderConfiguration::CHANGE_DISPLAY_INFO);
+
+    hal::NotifyScreenConfigurationChange(nsScreenGonk::GetConfiguration());
 }

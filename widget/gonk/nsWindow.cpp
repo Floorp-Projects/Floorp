@@ -62,6 +62,8 @@
 #define IS_TOPLEVEL() (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog)
 
 using namespace mozilla;
+using namespace mozilla::dom;
+using namespace mozilla::hal;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
@@ -611,11 +613,18 @@ nsScreenGonk::GetAvailRect(PRInt32 *outLeft,  PRInt32 *outTop,
     return GetRect(outLeft, outTop, outWidth, outHeight);
 }
 
+static uint32_t
+ColorDepth()
+{
+    return gNativeWindow->getDevice()->format == GGL_PIXEL_FORMAT_RGB_565 ? 16 : 24;
+}
 
 NS_IMETHODIMP
 nsScreenGonk::GetPixelDepth(PRInt32 *aPixelDepth)
 {
-    *aPixelDepth = gNativeWindow->getDevice()->format == GGL_PIXEL_FORMAT_RGB_565 ? 16 : 24;
+    // XXX: this should actually return 32 when we're using 24-bit
+    // color, because we use RGBX.
+    *aPixelDepth = ColorDepth();
     return NS_OK;
 }
 
@@ -680,10 +689,49 @@ nsScreenGonk::SetRotation(PRUint32 aRotation)
     return NS_OK;
 }
 
-uint32_t
+// NB: This isn't gonk-specific, but gonk is the only widget backend
+// that does this calculation itself, currently.
+static ScreenOrientation
+ComputeOrientation(uint32_t aRotation, const nsIntSize& aScreenSize)
+{
+    bool naturallyPortrait = (aScreenSize.height > aScreenSize.width);
+    switch (aRotation) {
+    case nsIScreen::ROTATION_0_DEG:
+        return (naturallyPortrait ? eScreenOrientation_PortraitPrimary : 
+                eScreenOrientation_LandscapePrimary);
+    case nsIScreen::ROTATION_90_DEG:
+        // Arbitrarily choosing 90deg to be primary "unnatural"
+        // rotation.
+        return (naturallyPortrait ? eScreenOrientation_LandscapePrimary : 
+                eScreenOrientation_PortraitPrimary);
+    case nsIScreen::ROTATION_180_DEG:
+        return (naturallyPortrait ? eScreenOrientation_PortraitSecondary : 
+                eScreenOrientation_LandscapeSecondary);
+    case nsIScreen::ROTATION_270_DEG:
+        return (naturallyPortrait ? eScreenOrientation_LandscapeSecondary : 
+                eScreenOrientation_PortraitSecondary);
+    default:
+        MOZ_NOT_REACHED("Gonk screen must always have a known rotation");
+        return eScreenOrientation_None;
+    }
+}
+
+/*static*/ uint32_t
 nsScreenGonk::GetRotation()
 {
     return sScreenRotation;
+}
+
+/*static*/ ScreenConfiguration
+nsScreenGonk::GetConfiguration()
+{
+    ScreenOrientation orientation = ComputeOrientation(sScreenRotation,
+                                                       gScreenBounds.Size());
+    uint32_t colorDepth = ColorDepth();
+    // NB: perpetuating colorDepth == pixelDepth illusion here, for
+    // consistency.
+    return ScreenConfiguration(sVirtualBounds, orientation,
+                               colorDepth, colorDepth);
 }
 
 NS_IMPL_ISUPPORTS1(nsScreenManagerGonk, nsIScreenManager)
