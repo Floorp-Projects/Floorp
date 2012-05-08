@@ -461,6 +461,19 @@ JSHistogram_Snapshot(JSContext *cx, unsigned argc, jsval *vp)
   }
 }
 
+JSBool
+JSHistogram_Clear(JSContext *cx, unsigned argc, jsval *vp)
+{
+  JSObject *obj = JS_THIS_OBJECT(cx, vp);
+  if (!obj) {
+    return JS_FALSE;
+  }
+
+  Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
+  h->Clear();
+  return JS_TRUE;
+}
+
 nsresult 
 WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
 {
@@ -475,8 +488,9 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
   if (!obj)
     return NS_ERROR_FAILURE;
   JS::AutoObjectRooter root(cx, obj);
-  if (!(JS_DefineFunction (cx, obj, "add", JSHistogram_Add, 1, 0)
-        && JS_DefineFunction (cx, obj, "snapshot", JSHistogram_Snapshot, 1, 0))) {
+  if (!(JS_DefineFunction(cx, obj, "add", JSHistogram_Add, 1, 0)
+        && JS_DefineFunction(cx, obj, "snapshot", JSHistogram_Snapshot, 0, 0)
+        && JS_DefineFunction(cx, obj, "clear", JSHistogram_Clear, 0, 0))) {
     return NS_ERROR_FAILURE;
   }
   *ret = OBJECT_TO_JSVAL(obj);
