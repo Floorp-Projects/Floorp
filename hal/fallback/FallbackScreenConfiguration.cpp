@@ -40,8 +40,8 @@ GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration)
   screen->GetColorDepth(&colorDepth);
   screen->GetPixelDepth(&pixelDepth);
   orientation = rect.width >= rect.height
-      ? dom::eScreenOrientation_LandscapePrimary
-      : dom::eScreenOrientation_PortraitPrimary;
+                ? dom::eScreenOrientation_LandscapePrimary
+                : dom::eScreenOrientation_PortraitPrimary;
 
   *aScreenConfiguration =
       hal::ScreenConfiguration(rect, orientation, colorDepth, pixelDepth);
