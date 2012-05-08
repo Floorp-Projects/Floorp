@@ -380,7 +380,6 @@ public class GeckoAppShell
 
     public static void setupGeckoEnvironment(Context context) {
         GeckoProfile profile = GeckoProfile.get(context);
-        profile.moveProfilesToAppInstallLocation();
 
         setupPluginEnvironment((GeckoApp) context);
         setupDownloadEnvironment((GeckoApp) context);
