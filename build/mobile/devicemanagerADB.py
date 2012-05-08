@@ -95,9 +95,16 @@ class DeviceManagerADB(DeviceManager):
   # success: <return code>
   # failure: None
   def shell(self, cmd, outputfile, env=None, cwd=None):
-    # need to quote special characters here
+    # need to quote and escape special characters here
     for (index, arg) in enumerate(cmd):
-      if arg.find(" ") or arg.find("(") or arg.find(")") or arg.find("\""):
+      arg.replace('&', '\&')
+
+      needsQuoting = False
+      for char in [ ' ', '(', ')', '"', '&' ]:
+        if arg.find(char):
+          needsQuoting = True
+          break
+      if needsQuoting:
         cmd[index] = '\'%s\'' % arg
 
     # This is more complex than you'd think because adb doesn't actually
