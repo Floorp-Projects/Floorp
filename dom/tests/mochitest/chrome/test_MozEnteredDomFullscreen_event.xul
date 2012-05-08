@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  Test that "MozShowFullScreenWarning" is dispatched to chrome on restricted keypress.
+  -->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="400" height="400">
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+
+<script>
+SimpleTest.waitForExplicitFinish();
+
+// Ensure the full-screen api is enabled, and will be disabled on test exit.
+var gPrevEnabled = SpecialPowers.getBoolPref("full-screen-api.enabled");
+SpecialPowers.setBoolPref("full-screen-api.enabled", true);
+
+var gPrevTrusted = SpecialPowers.getBoolPref("full-screen-api.allow-trusted-requests-only");
+SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+function make_uri(url) {
+  var ios = Cc["@mozilla.org/network/io-service;1"].
+            getService(Ci.nsIIOService);
+  return ios.newURI(url, null, null);
+}
+
+// Ensure "fullscreen" permissions are not present on the test URI.
+var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+var uri = make_uri("http://mochi.test:8888");
+pm.remove(uri.host, "fullscreen");
+
+newwindow = window.open("MozEnteredDomFullscreen_chrome.xul", "_blank","chrome,resizable=yes,width=400,height=400");
+
+function done()
+{
+  newwindow.close();
+  SpecialPowers.setBoolPref("full-screen-api.enabled", gPrevEnabled);
+  SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", gPrevTrusted);
+  SimpleTest.finish();
+}
+
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+</window>

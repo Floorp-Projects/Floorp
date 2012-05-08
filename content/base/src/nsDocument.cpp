@@ -8758,6 +8758,21 @@ nsDocument::RestorePreviousFullScreenState()
     } else {
       // Else we popped the top of the stack, and there's still another
       // element in there, so that will become the full-screen element.
+      if (fullScreenDoc != doc) {
+        // We've popped so enough off the stack that we've rolled back to
+        // a fullscreen element in a parent document. If this document isn't
+        // authorized for fullscreen, dispatch an event to chrome so it
+        // knows to show the authorization UI.
+        if (!nsContentUtils::IsSitePermAllow(doc->NodePrincipal(), "fullscreen")) {
+          nsRefPtr<nsAsyncDOMEvent> e =
+            new nsAsyncDOMEvent(doc,
+                                NS_LITERAL_STRING("MozEnteredDomFullscreen"),
+                                true,
+                                true);
+          e->PostDOMEvent();
+        }
+
+      }
       sFullScreenDoc = do_GetWeakReference(doc);
       break;
     }
@@ -9075,6 +9090,13 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   for (PRUint32 i = 0; i < changed.Length(); ++i) {
     DispatchFullScreenChange(changed[changed.Length() - i - 1]);
   }
+
+  nsRefPtr<nsAsyncDOMEvent> e =
+    new nsAsyncDOMEvent(this,
+                        NS_LITERAL_STRING("MozEnteredDomFullscreen"),
+                        true,
+                        true);
+  e->PostDOMEvent();
 
   // Remember this is the requesting full-screen document.
   sFullScreenDoc = do_GetWeakReference(static_cast<nsIDocument*>(this));
