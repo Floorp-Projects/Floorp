@@ -62,12 +62,13 @@ class nsAccessible;
 class nsHyperTextAccessible;
 class nsHTMLImageAccessible;
 class nsHTMLImageMapAccessible;
-class nsHTMLLIAccessible;
 struct nsRoleMapEntry;
 class Relation;
 
 namespace mozilla {
 namespace a11y {
+
+class HTMLLIAccessible;
 class TableAccessible;
 
 /**
@@ -476,7 +477,7 @@ public:
   inline bool IsHTMLFileInput() const { return mFlags & eHTMLFileInputAccessible; }
 
   inline bool IsHTMLListItem() const { return mFlags & eHTMLListItemAccessible; }
-  nsHTMLLIAccessible* AsHTMLListItem();
+  mozilla::a11y::HTMLLIAccessible* AsHTMLListItem();
 
   inline bool IsImageAccessible() const { return mFlags & eImageAccessible; }
   nsHTMLImageAccessible* AsImage();
