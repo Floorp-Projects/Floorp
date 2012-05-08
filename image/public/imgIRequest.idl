@@ -52,7 +52,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(d35a9adb-8328-4b64-b06f-72a165acd080)]
+[scriptable, uuid(a5a785a8-9881-11e1-aaff-001fbc092072)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -131,6 +131,11 @@ interface imgIRequest : nsIRequest
    * The principal gotten from the channel the image was loaded from.
    */
   readonly attribute nsIPrincipal imagePrincipal;
+
+  /**
+   * Whether the request is multipart (ie, multipart/x-mixed-replace)
+   */
+  readonly attribute bool multipart;
 
   /**
    * CORS modes images can be loaded with.

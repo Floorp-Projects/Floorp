@@ -652,7 +652,10 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  if (loadType == nsIImageLoadingContent::PENDING_REQUEST) {
+  bool multipart = false;
+  aRequest->GetMultipart(&multipart);
+
+  if (loadType == nsIImageLoadingContent::PENDING_REQUEST || multipart) {
     NotifyNewCurrentRequest(aRequest, aStatus);
   }
 
