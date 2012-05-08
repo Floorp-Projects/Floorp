@@ -42,6 +42,7 @@
 #define Stack_h__
 
 #include "jsfun.h"
+#include "jsautooplen.h"
 
 struct JSContext;
 struct JSCompartment;
@@ -1288,12 +1289,24 @@ class FrameRegs
         fp_ = (StackFrame *) newfp;
     }
 
+    /* For EnterMethodJIT: */
+    void refreshFramePointer(StackFrame *fp) {
+        fp_ = fp;
+    }
+
     /* For stubs::CompileFunction, ContextStack: */
     void prepareToRun(StackFrame &fp, JSScript *script) {
         pc = script->code;
         sp = fp.slots() + script->nfixed;
         fp_ = &fp;
         inlined_ = NULL;
+    }
+
+    void setToEndOfScript() {
+        JSScript *script = fp()->script();
+        sp = fp()->base();
+        pc = script->code + script->length - JSOP_STOP_LENGTH;
+        JS_ASSERT(*pc == JSOP_STOP);
     }
 
     /* For pushDummyFrame: */

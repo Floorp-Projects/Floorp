@@ -107,10 +107,7 @@ class Type
         return data > JSVAL_TYPE_UNKNOWN;
     }
 
-    TypeObjectKey *objectKey() const {
-        JS_ASSERT(isObject());
-        return (TypeObjectKey *) data;
-    }
+    inline TypeObjectKey *objectKey() const;
 
     /* Accessors for JSObject types */
 
@@ -118,10 +115,7 @@ class Type
         return isObject() && !!(data & 1);
     }
 
-    JSObject *singleObject() const {
-        JS_ASSERT(isSingleObject());
-        return (JSObject *) (data ^ 1);
-    }
+    inline JSObject *singleObject() const;
 
     /* Accessors for TypeObject types */
 
@@ -129,10 +123,7 @@ class Type
         return isObject() && !(data & 1);
     }
 
-    TypeObject *typeObject() const {
-        JS_ASSERT(isTypeObject());
-        return (TypeObject *) data;
-    }
+    inline TypeObject *typeObject() const;
 
     bool operator == (Type o) const { return data == o.data; }
     bool operator != (Type o) const { return data != o.data; }
