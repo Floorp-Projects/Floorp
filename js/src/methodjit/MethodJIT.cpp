@@ -1076,6 +1076,9 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
         return ok ? Jaeger_Returned : Jaeger_Throwing;
     }
 
+    cx->regs().refreshFramePointer(fp);
+    cx->regs().setToEndOfScript();
+
     /* The entry frame should have finished. */
     JS_ASSERT(fp == cx->fp());
 

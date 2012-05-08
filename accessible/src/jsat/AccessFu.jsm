@@ -53,9 +53,8 @@ var AccessFu = {
   },
 
   /**
-   * Start the special AccessFu mode, this primarily means controlling the virtual
-   * cursor with arrow keys. Currently, on platforms other than Android this needs
-   * to be called explicitly.
+   * Start AccessFu mode, this primarily means controlling the virtual cursor
+   * with arrow keys.
    */
   enable: function enable() {
     dump('AccessFu enable');
@@ -72,8 +71,6 @@ var AccessFu = {
     this.chromeWin.addEventListener('resize', this, true);
     this.chromeWin.addEventListener('scroll', this, true);
     this.chromeWin.addEventListener('TabOpen', this, true);
-    this.chromeWin.addEventListener('TabSelect', this, true);
-    this.chromeWin.addEventListener('TabClosed', this, true);
   },
 
   /**
@@ -82,18 +79,16 @@ var AccessFu = {
   disable: function disable() {
     dump('AccessFu disable');
 
-    this.presenters.forEach(function(p) {p.detach();});
+    this.presenters.forEach(function(p) { p.detach(); });
     this.presenters = [];
 
     VirtualCursorController.detach();
 
-    Services.obs.addObserver(this, 'accessible-event', false);
-    this.chromeWin.removeEventListener('DOMActivate', this);
-    this.chromeWin.removeEventListener('resize', this);
-    this.chromeWin.removeEventListener('scroll', this);
-    this.chromeWin.removeEventListener('TabOpen', this);
-    this.chromeWin.removeEventListener('TabSelect', this);
-    this.chromeWin.removeEventListener('TabClose', this);
+    Services.obs.removeObserver(this, 'accessible-event');
+    this.chromeWin.removeEventListener('DOMActivate', this, true);
+    this.chromeWin.removeEventListener('resize', this, true);
+    this.chromeWin.removeEventListener('scroll', this, true);
+    this.chromeWin.removeEventListener('TabOpen', this, true);
   },
 
   amINeeded: function(aPref) {
@@ -125,14 +120,17 @@ var AccessFu = {
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
-      case 'TabSelect':
-        {
-          this.getDocAccessible(
-              function(docAcc) {
-                this.presenters.forEach(function(p) {p.tabSelected(docAcc);});
-              });
-          break;
-        }
+      case 'TabOpen':
+      {
+        let browser = aEvent.target.linkedBrowser || aEvent.target;
+        // Store the new browser node. We will need to check later when a new
+        // content document is attached if it has been attached to this new tab.
+        // If it has, than we will need to send a 'loading' message along with
+        // the usual 'newdoc' to presenters.
+        this._pendingDocuments[browser] = true;
+        this.presenters.forEach(function(p) { p.tabStateChanged(null, 'newtab'); });
+        break;
+      }
       case 'DOMActivate':
       {
         let activatedAcc = getAccessible(aEvent.originalTarget);
@@ -153,22 +151,9 @@ var AccessFu = {
       case 'scroll':
       case 'resize':
       {
-        this.presenters.forEach(function(p) {p.viewportChanged();});
+        this.presenters.forEach(function(p) { p.viewportChanged(); });
         break;
       }
-    }
-  },
-
-  getDocAccessible: function getDocAccessible(aCallback) {
-    let browserApp = (Services.appinfo.OS == 'Android') ?
-      this.chromeWin.BrowserApp : this.chromeWin.gBrowser;
-
-    let docAcc = getAccessible(browserApp.selectedBrowser.contentDocument);
-    if (!docAcc) {
-      // Wait for a reorder event fired by the parent of the new doc.
-      this._pendingDocuments[browserApp.selectedBrowser] = aCallback;
-    } else {
-      aCallback.apply(this, [docAcc]);
     }
   },
 
@@ -223,16 +208,86 @@ var AccessFu = {
               }
             );
           }
+          else if (event.state == Ci.nsIAccessibleStates.STATE_BUSY &&
+                   !(event.isExtraState()) && event.isEnabled()) {
+            let role = event.accessible.role;
+            if ((role == Ci.nsIAccessibleRole.ROLE_DOCUMENT ||
+                 role == Ci.nsIAccessibleRole.ROLE_APPLICATION)) {
+              // An existing document has changed to state "busy", this means
+              // something is loading. Send a 'loading' message to presenters.
+              this.presenters.forEach(
+                function(p) {
+                  p.tabStateChanged(event.accessible, 'loading');
+                }
+              );
+            }
+          }
           break;
         }
       case Ci.nsIAccessibleEvent.EVENT_REORDER:
         {
-          let node = aEvent.accessible.DOMNode;
-          let callback = this._pendingDocuments[node];
-          if (callback && aEvent.accessible.childCount) {
-            // We have a callback associated with a document.
-            callback.apply(this, [aEvent.accessible.getChildAt(0)]);
-            delete this._pendingDocuments[node];
+          let acc = aEvent.accessible;
+          if (acc.childCount) {
+            let docAcc = acc.getChildAt(0);
+            if (this._pendingDocuments[aEvent.DOMNode]) {
+              // This is a document in a new tab. Check if it is
+              // in a BUSY state (i.e. loading), and inform presenters.
+              // We need to do this because a state change event will not be
+              // fired when an object is created with the BUSY state.
+              // If this is not a new tab, don't bother because we sent 'loading'
+              // when the previous doc changed its state to BUSY.
+              let state = {};
+              docAcc.getState(state, {});
+              if (state.value & Ci.nsIAccessibleStates.STATE_BUSY &&
+                  this.isNotChromeDoc(docAcc))
+                this.presenters.forEach(
+                  function(p) { p.tabStateChanged(docAcc, 'loading'); }
+                );
+              delete this._pendingDocuments[aEvent.DOMNode];
+            }
+            if (this.isBrowserDoc(docAcc))
+              // A new top-level content document has been attached
+              this.presenters.forEach(
+                function(p) { p.tabStateChanged(docAcc, 'newdoc'); }
+              );
+          }
+          break;
+        }
+      case Ci.nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_COMPLETE:
+        {
+          if (this.isNotChromeDoc(aEvent.accessible)) {
+            this.presenters.forEach(
+              function(p) {
+                p.tabStateChanged(aEvent.accessible, 'loaded');
+              }
+            );
+          }
+          break;
+        }
+      case Ci.nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_STOPPED:
+        {
+          this.presenters.forEach(
+            function(p) {
+              p.tabStateChanged(aEvent.accessible, 'loadstopped');
+            }
+          );
+          break;
+        }
+      case Ci.nsIAccessibleEvent.EVENT_DOCUMENT_RELOAD:
+        {
+          this.presenters.forEach(
+            function(p) {
+              p.tabStateChanged(aEvent.accessible, 'reload');
+            }
+          );
+          break;
+        }
+      case Ci.nsIAccessibleEvent.EVENT_FOCUS:
+        {
+          if (this.isBrowserDoc(aEvent.accessible)) {
+            // The document recieved focus, call tabSelected to present current tab.
+            this.presenters.forEach(
+              function(p) { p.tabSelected(aEvent.accessible); });
           }
           break;
         }
@@ -267,6 +322,38 @@ var AccessFu = {
       default:
         break;
     }
+  },
+
+  /**
+   * Check if accessible is a top-level content document (i.e. a child of a XUL
+   * browser node).
+   * @param {nsIAccessible} aDocAcc the accessible to check.
+   * @return {boolean} true if this is a top-level content document.
+   */
+  isBrowserDoc: function isBrowserDoc(aDocAcc) {
+    let parent = aDocAcc.parent;
+    if (!parent)
+      return false;
+
+    let domNode = parent.DOMNode;
+    if (!domNode)
+      return false;
+
+    const ns = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
+    return (domNode.localName == 'browser' && domNode.namespaceURI == ns);
+  },
+
+  /**
+   * Check if document is not a local "chrome" document, like about:home.
+   * @param {nsIDOMDocument} aDocument the document to check.
+   * @return {boolean} true if this is not a chrome document.
+   */
+  isNotChromeDoc: function isNotChromeDoc(aDocument) {
+    let location = aDocument.DOMNode.location;
+    if (!location)
+      return false;
+
+    return location.protocol != "about:";
   },
 
   getNewContext: function getNewContext(aOldObject, aNewObject) {
