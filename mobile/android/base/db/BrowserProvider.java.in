@@ -1501,14 +1501,13 @@ public class BrowserProvider extends ContentProvider {
             }
 
             if (wantHistory || wantBookmarks) {
-                ProfileMigrator migrator =
-                    new ProfileMigrator(mContext, profileDir);
+                ProfileMigrator migrator = new ProfileMigrator(mContext);
 
                 boolean needBookmarks = wantBookmarks && !migrator.areBookmarksMigrated();
                 boolean needHistory = wantHistory && !migrator.isHistoryMigrated();
 
                 if (needBookmarks || needHistory) {
-                    migrator.launchPlaces();
+                    migrator.launchPlaces(profileDir);
 
                     needBookmarks = wantBookmarks && !migrator.areBookmarksMigrated();
                     needHistory = wantHistory && !migrator.isHistoryMigrated();
