@@ -2260,21 +2260,21 @@ AndroidBridge::HideSurface(jobject surface)
 #endif
 }
 
-void
-AndroidBridge::GetScreenOrientation(dom::ScreenOrientationWrapper& aOrientation)
+uint32_t
+AndroidBridge::GetScreenOrientation()
 {
     ALOG_BRIDGE("AndroidBridge::GetScreenOrientation");
     JNIEnv* env = GetJNIEnv();
     if (!env)
-        return;
+        return dom::eScreenOrientation_None;
 
     AutoLocalJNIFrame jniFrame(env, 0);
 
     jshort orientation = env->CallStaticShortMethod(mGeckoAppShellClass, jGetScreenOrientation);
     if (jniFrame.CheckForException())
-        return;
+        return dom::eScreenOrientation_None;
 
-    aOrientation.orientation = static_cast<dom::ScreenOrientation>(orientation);
+    return static_cast<dom::ScreenOrientation>(orientation);
 }
 
 void
@@ -2302,7 +2302,7 @@ AndroidBridge::DisableScreenOrientationNotifications()
 }
 
 void
-AndroidBridge::LockScreenOrientation(const dom::ScreenOrientationWrapper& aOrientation)
+AndroidBridge::LockScreenOrientation(uint32_t aOrientation)
 {
     ALOG_BRIDGE("AndroidBridge::LockScreenOrientation");
     JNIEnv* env = GetJNIEnv();
@@ -2310,7 +2310,7 @@ AndroidBridge::LockScreenOrientation(const dom::ScreenOrientationWrapper& aOrien
         return;
 
     AutoLocalJNIFrame jniFrame(env, 0);
-    env->CallStaticVoidMethod(mGeckoAppShellClass, jLockScreenOrientation, aOrientation.orientation);
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jLockScreenOrientation, aOrientation);
 }
 
 void

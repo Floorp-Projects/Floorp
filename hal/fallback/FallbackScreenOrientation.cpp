@@ -10,35 +10,41 @@ namespace mozilla {
 namespace hal_impl {
 
 void
-EnableScreenOrientationNotifications()
+EnableScreenConfigurationNotifications()
 {
 }
 
 void
-DisableScreenOrientationNotifications()
+DisableScreenConfigurationNotifications()
 {
 }
 
 void
-GetCurrentScreenOrientation(dom::ScreenOrientation* aScreenOrientation)
+GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration)
 {
-  nsresult result;
+  nsresult rv;
   nsCOMPtr<nsIScreenManager> screenMgr =
-    do_GetService("@mozilla.org/gfx/screenmanager;1", &result);
-  if (NS_FAILED(result)) {
+    do_GetService("@mozilla.org/gfx/screenmanager;1", &rv);
+  if (NS_FAILED(rv)) {
     NS_ERROR("Can't find nsIScreenManager!");
     return;
   }
 
-  PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
+  nsIntRect rect;
+  PRInt32 colorDepth, pixelDepth;
+  dom::ScreenOrientation orientation;
   nsCOMPtr<nsIScreen> screen;
 
   screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
-  screen->GetRect(&screenLeft, &screenTop, &screenWidth, &screenHeight);
+  screen->GetRect(&rect.x, &rect.y, &rect.width, &rect.height);
+  screen->GetColorDepth(&colorDepth);
+  screen->GetPixelDepth(&pixelDepth);
+  orientation = rect.width >= rect.height
+      ? dom::eScreenOrientation_LandscapePrimary
+      : dom::eScreenOrientation_PortraitPrimary;
 
-  *aScreenOrientation = screenWidth >= screenHeight
-                          ? dom::eScreenOrientation_LandscapePrimary
-                          : dom::eScreenOrientation_PortraitPrimary;
+  *aScreenConfiguration =
+      hal::ScreenConfiguration(rect, orientation, colorDepth, pixelDepth);
 }
 
 bool
