@@ -103,6 +103,7 @@ CPP_UNIT_TESTS = \
                  TestObserverService.cpp \
                  TestPipe.cpp \
                  TestRefPtr.cpp \
+                 TestSettingsAPI.cpp \
                  TestTextFormatter.cpp \
                  TestCheckedInt.cpp \
                  TestTArray.cpp \
