@@ -151,6 +151,8 @@ endif
 #EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime -framework AppKit -framework QuartzCore
 #endif
 
+include $(topsrcdir)/config/rules.mk
+
 # The file uses SSE2 intrinsics, so it needs special compile flags on some
 # compilers.
 ifneq (,$(INTEL_ARCHITECTURE))
@@ -162,7 +164,5 @@ ifdef SOLARIS_SUNPRO_CXX
 ImageScalingSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
 endif
 endif
-
-include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
