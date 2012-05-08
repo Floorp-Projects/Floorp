@@ -7348,12 +7348,23 @@ var gPluginHandler = {
         let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
         if (notification)
           notification.remove();
+        gPluginHandler._removeClickToPlayOverlays(contentWindow);
       }
     }];
     let options = { dismissed: true };
     PopupNotifications.show(aBrowser, "click-to-play-plugins",
                             messageString, "plugins-notification-icon",
                             mainAction, secondaryActions, options);
+  },
+
+  _removeClickToPlayOverlays: function PH_removeClickToPlayOverlays(aContentWindow) {
+    let doc = aContentWindow.document;
+    let cwu = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+    for (let plugin of cwu.plugins) {
+      let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+      overlay.style.visibility = "hidden";
+    }
   },
 
   // event listener for missing/blocklisted/outdated/carbonFailure plugins.
