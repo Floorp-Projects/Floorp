@@ -914,7 +914,7 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
 
   // Initialization area
   *aBoundingFrame = nsnull;
-  nsIFrame *firstFrame = GetBoundsFrame();
+  nsIFrame* firstFrame = GetFrame();
   if (!firstFrame)
     return;
 
@@ -1027,13 +1027,6 @@ nsAccessible::GetBounds(PRInt32* aX, PRInt32* aY,
   *aY += orgRectPixels.y;
 
   return NS_OK;
-}
-
-// helpers
-
-nsIFrame* nsAccessible::GetBoundsFrame()
-{
-  return GetFrame();
 }
 
 NS_IMETHODIMP nsAccessible::SetSelected(bool aSelect)
@@ -2109,7 +2102,7 @@ nsAccessible::RelationByType(PRUint32 aType)
           if (form) {
             nsCOMPtr<nsIContent> formContent =
               do_QueryInterface(form->GetDefaultSubmitElement());
-            return Relation(formContent);
+            return Relation(mDoc, formContent);
           }
         }
       } else {
@@ -2150,13 +2143,13 @@ nsAccessible::RelationByType(PRUint32 aType)
             }
           }
           nsCOMPtr<nsIContent> relatedContent(do_QueryInterface(buttonEl));
-          return Relation(relatedContent);
+          return Relation(mDoc, relatedContent);
         }
       }
       return Relation();
     }
     case nsIAccessibleRelation::RELATION_MEMBER_OF:
-      return Relation(GetAtomicRegion());
+      return Relation(mDoc, GetAtomicRegion());
     case nsIAccessibleRelation::RELATION_SUBWINDOW_OF:
     case nsIAccessibleRelation::RELATION_EMBEDS:
     case nsIAccessibleRelation::RELATION_EMBEDDED_BY:

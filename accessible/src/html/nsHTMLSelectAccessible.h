@@ -122,16 +122,13 @@ public:
   virtual PRUint64 NativeState();
 
   virtual PRInt32 GetLevelInternal();
+  virtual void GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame);
 
   // ActionAccessible
   virtual PRUint8 ActionCount();
 
   // Widgets
   virtual nsAccessible* ContainerWidget() const;
-
-protected:
-  // nsAccessible
-  virtual nsIFrame* GetBoundsFrame();
 
 private:
   
@@ -141,6 +138,19 @@ private:
    * @return Select element content, returns null if not avaliable
    */ 
   nsIContent* GetSelectState(PRUint64* aState);
+
+  /**
+   * Return a combobox accessible the option belongs to if any.
+   */
+  nsAccessible* GetCombobox() const
+  {
+    if (mParent && mParent->IsListControl()) {
+      nsAccessible* combobox = mParent->Parent();
+      return combobox->IsCombobox() ? combobox : nsnull;
+    }
+
+    return nsnull;
+  }
 };
 
 /*

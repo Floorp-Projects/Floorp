@@ -105,6 +105,7 @@ public:
   virtual PRUint64 NativeState();
   virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                      EWhichChildAtPoint aWhichChild);
+  virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
 
   // HyperLinkAccessible
   virtual PRUint32 StartOffset();
@@ -114,7 +115,6 @@ protected:
 
   // nsAccessible
   virtual void CacheChildren();
-  virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
 };
 
 #endif  

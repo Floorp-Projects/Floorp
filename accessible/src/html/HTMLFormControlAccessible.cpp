@@ -704,7 +704,7 @@ HTMLGroupboxAccessible::RelationByType(PRUint32 aType)
   Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
     // No override for label, so use <legend> for this <fieldset>
   if (aType == nsIAccessibleRelation::RELATION_LABELLED_BY)
-    rel.AppendTarget(GetLegend());
+    rel.AppendTarget(mDoc, GetLegend());
 
   return rel;
 }
@@ -790,7 +790,7 @@ HTMLFigureAccessible::RelationByType(PRUint32 aType)
 {
   Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
   if (aType == nsIAccessibleRelation::RELATION_LABELLED_BY)
-    rel.AppendTarget(Caption());
+    rel.AppendTarget(mDoc, Caption());
 
   return rel;
 }

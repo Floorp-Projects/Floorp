@@ -2546,6 +2546,7 @@ var BrowserEventHandler = {
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
     BrowserApp.deck.addEventListener("touchstart", this, false);
+    BrowserApp.deck.addEventListener("click", SelectHelper, true);
   },
 
   handleEvent: function(aEvent) {
@@ -2642,7 +2643,7 @@ var BrowserEventHandler = {
       this._cancelTapHighlight();
     } else if (aTopic == "Gesture:SingleTap") {
       let element = this._highlightElement;
-      if (element && !SelectHelper.handleClick(element)) {
+      if (element) {
         try {
           let data = JSON.parse(aData);
 

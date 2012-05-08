@@ -998,6 +998,10 @@ struct JSObject : public js::ObjectImpl
         MOZ_STATIC_ASSERT(sizeof(JSObject) % sizeof(js::Value) == 0,
                           "fixed slots after an object must be aligned");
     }
+
+    JSObject() MOZ_DELETE;
+    JSObject(const JSObject &other) MOZ_DELETE;
+    void operator=(const JSObject &other) MOZ_DELETE;
 };
 
 /*

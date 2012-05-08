@@ -73,6 +73,7 @@
 #define gzputs MOZ_Z_gzputs
 #define gzgets MOZ_Z_gzgets
 #define gzputc MOZ_Z_gzputc
+#define gzgetc MOZ_Z_gzgetc
 #define gzungetc MOZ_Z_gzungetc
 #define gzflush MOZ_Z_gzflush
 #define gzseek MOZ_Z_gzseek
@@ -144,7 +145,9 @@
 #define deflatePending MOZ_Z_deflatePending
 #define deflateResetKeep MOZ_Z_deflateResetKeep
 #define inflateResetKeep MOZ_Z_inflateResetKeep
-#define gzflags MOZ_Z_gzflags
 #define gzgetc_ MOZ_Z_gzgetc_
+
+/* New as of zlib-1.2.7 */
+#define gzopen_w MOZ_Z_gzopen_w
 
 #endif
