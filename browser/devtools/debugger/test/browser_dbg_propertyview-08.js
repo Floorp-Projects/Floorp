@@ -96,17 +96,17 @@ function testFrameParameters()
                         .textContent, 1,
           "Should have the right value for 'c.a'.");
 
-        is(localNodes[10].querySelector(".info").textContent,
-          "[object Arguments]",
-          "Should have the right property value for 'arguments'.");
+        //is(localNodes[10].querySelector(".info").textContent,
+        //  "[object Arguments]",
+        //  "Should have the right property value for 'arguments'.");
 
-        is(localNodes[10].querySelector(".property > .title > .key")
-                        .textContent, "length",
-          "Should have the right property name for 'length'.");
+        //is(localNodes[10].querySelector(".property > .title > .key")
+        //                .textContent, "length",
+        //  "Should have the right property name for 'length'.");
 
-        is(localNodes[10].querySelector(".property > .title > .value")
-                        .textContent, 5,
-          "Should have the right argument length.");
+        //is(localNodes[10].querySelector(".property > .title > .value")
+        //                .textContent, 5,
+        //  "Should have the right argument length.");
 
         resumeAndFinish();
       }, 100);
