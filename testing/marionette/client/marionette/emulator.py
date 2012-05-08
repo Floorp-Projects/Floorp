@@ -1,4 +1,6 @@
 import datetime
+from mozprocess import ProcessHandlerMixin
+import multiprocessing
 import os
 import re
 import shutil
@@ -11,11 +13,26 @@ import time
 from emulator_battery import EmulatorBattery
 
 
+class LogcatProc(ProcessHandlerMixin):
+    """Process handler for logcat which saves all output to a logfile.
+    """
+
+    def __init__(self, logfile, cmd, **kwargs):
+        self.logfile = logfile
+        kwargs.setdefault('processOutputLine', []).append(self.log_output)
+        ProcessHandlerMixin.__init__(self, cmd, **kwargs)
+
+    def log_output(self, line):
+        f = open(self.logfile, 'a')
+        f.write(line + "\n")
+        f.flush()
+
+
 class Emulator(object):
 
     deviceRe = re.compile(r"^emulator-(\d+)(\s*)(.*)$")
 
-    def __init__(self, homedir=None, noWindow=False):
+    def __init__(self, homedir=None, noWindow=False, logcat_dir=None):
         self.port = None
         self._emulator_launched = False
         self.proc = None
@@ -23,6 +40,8 @@ class Emulator(object):
         self.telnet = None
         self._tmp_userdata = None
         self._adb_started = False
+        self.logcat_dir = logcat_dir
+        self.logcat_proc = None
         self.battery = EmulatorBattery(self)
         self.homedir = homedir
         self.noWindow = noWindow
@@ -152,6 +171,8 @@ class Emulator(object):
                 os.remove(self._tmp_userdata)
                 self._tmp_userdata = None
             return retcode
+        if self.logcat_proc:
+            self.logcat_proc.kill()
         return 0
 
     def _get_adb_devices(self):
@@ -223,8 +244,44 @@ class Emulator(object):
         self.port = int(list(online - original_online)[0])
         self._emulator_launched = True
 
+        if self.logcat_dir:
+            self.save_logcat()
+
+    def _save_logcat_proc(self, filename, cmd):
+        self.logcat_proc = LogcatProc(filename, cmd)
+        self.logcat_proc.run()
+        self.logcat_proc.waitForFinish()
+        self.logcat_proc = None
+
+    def rotate_log(self, srclog, index=1):
+        """ Rotate a logfile, by recursively rotating logs further in the sequence,
+            deleting the last file if necessary.
+        """
+        destlog = os.path.join(self.logcat_dir, 'emulator-%d.%d.log' % (self.port, index))
+        if os.access(destlog, os.F_OK):
+            if index == 3:
+                os.remove(destlog)
+            else:
+                self.rotate_log(destlog, index+1)
+        shutil.move(srclog, destlog)
+
+    def save_logcat(self):
+        """ Save the output of logcat to a file.
+        """
+        filename = os.path.join(self.logcat_dir, "emulator-%d.log" % self.port)
+        if os.access(filename, os.F_OK):
+            self.rotate_log(filename)
+        cmd = [self.adb, '-s', 'emulator-%d' % self.port, 'logcat']
+
+        # We do this in a separate process because we call mozprocess's
+        # waitForFinish method to process logcat's output, and this method
+        # blocks.
+        proc = multiprocessing.Process(target=self._save_logcat_proc, args=(filename, cmd))
+        proc.daemon = True
+        proc.start()
+
     def setup_port_forwarding(self, remote_port):
-        """ Setup TCP port forwarding to the specified port on the device,
+        """ Set up TCP port forwarding to the specified port on the device,
             using any availble local port, and return the local port.
         """
 
