@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cu = Components.utils; 
+const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -176,27 +176,25 @@ let DOMApplicationRegistry = {
         dir.remove(true);
       } catch(e) {
       }
+    } else {
+      id = this.makeAppId();
     }
-    else {
-      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-      id = uuidGenerator.generateUUID().toString();
-    }
+
+    let appObject = this._cloneAppObject(app);
+    appObject.installTime = (new Date()).getTime();
+    let appNote = JSON.stringify(appObject);
+    appNote.id = id;
 
     let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
-
     let manFile = dir.clone();
     manFile.append("manifest.json");
     this._writeFile(manFile, JSON.stringify(app.manifest));
+    this.webapps[id] = appObject;
 
-    this.webapps[id] = this._cloneAppObject(app);
-    delete this.webapps[id].manifest;
-    this.webapps[id].installTime = (new Date()).getTime()
-
-    
     if (!aFromSync)
       this._saveApps((function() {
         ppmm.sendAsyncMessage("Webapps:Install:Return:OK", aData);
-        Services.obs.notifyObservers(this, "webapps-sync-install", id);
+        Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
       }).bind(this));
   },
 
@@ -206,6 +204,11 @@ let DOMApplicationRegistry = {
         return id;
     }
     return null;
+  },
+
+  makeAppId: function() {
+    let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+    return uuidGenerator.generateUUID().toString();
   },
 
   _saveApps: function(aCallback) {
@@ -233,7 +236,7 @@ let DOMApplicationRegistry = {
         aFinalCallback(aData);
       else
         this._readManifests(aData, aFinalCallback, index + 1);
-    }).bind(this)); 
+    }).bind(this));
   },
 
   uninstall: function(aData) {
@@ -242,15 +245,19 @@ let DOMApplicationRegistry = {
       let app = this.webapps[id];
       if (app.origin == aData.origin) {
         found = true;
+        let appNote = JSON.stringify(this._cloneAppObject(app));
+        appNote.id = id;
+
         delete this.webapps[id];
         let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
         try {
           dir.remove(true);
         } catch (e) {
         }
+
         this._saveApps((function() {
           ppmm.sendAsyncMessage("Webapps:Uninstall:Return:OK", aData);
-          Services.obs.notifyObservers(this, "webapps-sync-uninstall", id);
+          Services.obs.notifyObservers(this, "webapps-sync-uninstall", appNote);
         }).bind(this));
       }
     }
@@ -299,7 +306,7 @@ let DOMApplicationRegistry = {
     aData.apps = [];
     let tmp = [];
 
-    for (id in this.webapps) {
+    for (let id in this.webapps) {
       let app = this._cloneAppObject(this.webapps[id]);
       aData.apps.push(app);
       tmp.push({ id: id });
@@ -327,18 +334,26 @@ let DOMApplicationRegistry = {
     });
   },
 
-  /** added to support the sync engine */
+  /** Added to support AITC and classic sync */
+  itemExists: function(aId) {
+    return !!this.webapps[aId];
+  },
 
   getAppById: function(aId) {
     if (!this.webapps[aId])
       return null;
-
+    
     let app = this._cloneAppObject(this.webapps[aId]);
     return app;
   },
   
-  itemExists: function(aId) {
-    return !!this.webapps[aId];
+  getAllWithoutManifests: function(aCallback) {
+    let result = {};
+    for (let id in this.webapps) {
+      let app = this._cloneAppObject(this.webapps[id]);
+      result[id] = app;
+    }
+    aCallback(result);
   },
 
   updateApps: function(aRecords, aCallback) {
@@ -356,11 +371,10 @@ let DOMApplicationRegistry = {
         }
         ppmm.sendAsyncMessage("Webapps:Uninstall:Return:OK", { origin: origin });
       } else {
-        if (!!this.webapps[record.id]) {
+        if (this.webapps[record.id]) {
           this.webapps[record.id] = record.value;
           delete this.webapps[record.id].manifest;
-        }
-        else {
+        } else {
           let data = { app: record.value };
           this.confirmInstall(data, true);
           ppmm.sendAsyncMessage("Webapps:Install:Return:OK", data);
@@ -370,9 +384,6 @@ let DOMApplicationRegistry = {
     this._saveApps(aCallback);
   },
 
-  /*
-   * May be removed once sync API change
-   */
   getAllIDs: function() {
     let apps = {};
     for (let id in this.webapps) {
@@ -394,7 +405,7 @@ let DOMApplicationRegistry = {
       }
     }
     this._saveApps(aCallback);
-   }
+  }
 };
 
 /**
@@ -407,7 +418,7 @@ DOMApplicationManifest = function(aManifest, aOrigin) {
                                                           .QueryInterface(Ci.nsIToolkitChromeRegistry);
   let locale = chrome.getSelectedLocale("browser").toLowerCase();
   this._localeRoot = this._manifest;
-  
+
   if (this._manifest.locales && this._manifest.locales[locale]) {
     this._localeRoot = this._manifest.locales[locale];
   }
@@ -417,7 +428,7 @@ DOMApplicationManifest = function(aManifest, aOrigin) {
     if (lang != locale && this._manifest.locales[lang])
       this._localeRoot = this._manifest.locales[lang];
   }
-}
+};
 
 DOMApplicationManifest.prototype = {
   _localeProp: function(aProp) {
@@ -429,27 +440,27 @@ DOMApplicationManifest.prototype = {
   get name() {
     return this._localeProp("name");
   },
-  
+
   get description() {
     return this._localeProp("description");
   },
-  
+
   get version() {
     return this._localeProp("version");
   },
-  
+
   get launch_path() {
     return this._localeProp("launch_path");
   },
-  
+
   get developer() {
     return this._localeProp("developer");
   },
-  
+
   get icons() {
     return this._localeProp("icons");
   },
-  
+
   iconURLForSize: function(aSize) {
     let icons = this._localeProp("icons");
     if (!icons)
@@ -465,11 +476,11 @@ DOMApplicationManifest.prototype = {
     }
     return icon;
   },
-  
+
   fullLaunchPath: function(aStartPoint) {
     let launchPath = this._localeProp("launch_path") || "";
     return this._origin.resolve(launchPath + aStartPoint);
   }
-}
+};
 
 DOMApplicationRegistry.init();
