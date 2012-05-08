@@ -174,6 +174,11 @@ struct BidiParagraphData {
     }
   }
 
+  void EmptyBuffer()
+  {
+    mBuffer.SetLength(0);
+  }
+
   nsresult SetPara()
   {
     return mBidiEngine->SetPara(mBuffer.get(), BufferLength(),
@@ -631,6 +636,10 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
     bpd.PopBidiControl();
   }
 
+  BidiParagraphData* subParagraph = bpd.GetSubParagraph();
+  if (subParagraph->BufferLength()) {
+    ResolveParagraph(aBlockFrame, subParagraph);
+  }
   return ResolveParagraph(aBlockFrame, &bpd);
 }
 
@@ -1137,11 +1146,15 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
            */
           bool isLastContinuation = !frame->GetNextContinuation();
           if (!frame->GetPrevContinuation() || !subParagraph->mReset) {
+            if (subParagraph->BufferLength()) {
+              ResolveParagraph(aBlockFrame, subParagraph);
+            }
             subParagraph->Reset(frame, aBpd);
           }
           TraverseFrames(aBlockFrame, aLineIter, kid, subParagraph);
           if (isLastContinuation) {
             ResolveParagraph(aBlockFrame, subParagraph);
+            subParagraph->EmptyBuffer();
           }
 
           // Treat the element as a neutral character within its containing
