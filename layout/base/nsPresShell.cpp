@@ -6240,8 +6240,7 @@ IsFullScreenAndRestrictedKeyEvent(nsIContent* aTarget, const nsEvent* aEvent)
       aEvent->message != NS_KEY_UP &&
       aEvent->message != NS_KEY_PRESS) ||
       !(root = nsContentUtils::GetRootDocument(aTarget->OwnerDoc())) ||
-      !root->IsFullScreenDoc() ||
-      !nsContentUtils::IsFullScreenKeyInputRestricted()) {
+      !root->IsFullScreenDoc()) {
     return false;
   }
 
