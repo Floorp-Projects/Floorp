@@ -874,7 +874,15 @@ void nsBaseWidget::CreateCompositor()
 {
   mCompositorThread = new Thread("CompositorThread");
   if (mCompositorThread->Start()) {
-    mCompositorParent = new CompositorParent(this, mCompositorThread->message_loop(), mCompositorThread->thread_id());
+    bool renderToEGLSurface = false;
+#ifdef MOZ_JAVA_COMPOSITOR
+    renderToEGLSurface = true;
+#endif
+    nsIntRect rect;
+    GetBounds(rect);
+    mCompositorParent =
+      new CompositorParent(this, mCompositorThread->message_loop(), mCompositorThread->thread_id(),
+                           renderToEGLSurface, rect.width, rect.height);
     LayerManager* lm = CreateBasicLayerManager();
     MessageLoop *childMessageLoop = mCompositorThread->message_loop();
     mCompositorChild = new CompositorChild(lm);

@@ -57,7 +57,9 @@ using base::Thread;
 namespace mozilla {
 namespace layers {
 
-CompositorParent::CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop, PlatformThreadId aThreadID)
+CompositorParent::CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop,
+                                   PlatformThreadId aThreadID, bool aRenderToEGLSurface,
+                                   int aSurfaceWidth, int aSurfaceHeight)
   : mWidget(aWidget)
   , mCurrentCompositeTask(NULL)
   , mPaused(false)
@@ -67,6 +69,8 @@ CompositorParent::CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop, Pl
   , mLayersUpdated(false)
   , mCompositorLoop(aMsgLoop)
   , mThreadID(aThreadID)
+  , mRenderToEGLSurface(aRenderToEGLSurface)
+  , mEGLSurfaceSize(aSurfaceWidth, aSurfaceHeight)
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -164,9 +168,19 @@ CompositorParent::ResumeComposition()
 }
 
 void
+CompositorParent::SetEGLSurfaceSize(int width, int height)
+{
+  NS_ASSERTION(mRenderToEGLSurface, "Compositor created without RenderToEGLSurface ar provided");
+  mEGLSurfaceSize.SizeTo(width, height);
+  if (mLayerManager) {
+    static_cast<LayerManagerOGL*>(mLayerManager.get())->SetSurfaceSize(mEGLSurfaceSize.width, mEGLSurfaceSize.height);
+  }
+}
+
+void
 CompositorParent::ResumeCompositionAndResize(int width, int height)
 {
-  static_cast<LayerManagerOGL*>(mLayerManager.get())->SetSurfaceSize(width, height);
+  SetEGLSurfaceSize(width, height);
   ResumeComposition();
 }
 
@@ -434,14 +448,9 @@ PLayersParent*
 CompositorParent::AllocPLayers(const LayersBackend &backendType)
 {
   if (backendType == LayerManager::LAYERS_OPENGL) {
-#ifdef MOZ_JAVA_COMPOSITOR
-    nsIntRect rect;
-    mWidget->GetBounds(rect);
-    nsRefPtr<LayerManagerOGL> layerManager =
-      new LayerManagerOGL(mWidget, rect.width, rect.height, true);
-#else
-    nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(mWidget);
-#endif
+    nsRefPtr<LayerManagerOGL> layerManager;
+    layerManager =
+      new LayerManagerOGL(mWidget, mEGLSurfaceSize.width, mEGLSurfaceSize.height, mRenderToEGLSurface);
     mWidget = NULL;
     mLayerManager = layerManager;
 
