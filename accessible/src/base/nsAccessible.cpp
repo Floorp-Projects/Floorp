@@ -2109,7 +2109,7 @@ nsAccessible::RelationByType(PRUint32 aType)
           if (form) {
             nsCOMPtr<nsIContent> formContent =
               do_QueryInterface(form->GetDefaultSubmitElement());
-            return Relation(formContent);
+            return Relation(mDoc, formContent);
           }
         }
       } else {
@@ -2150,13 +2150,13 @@ nsAccessible::RelationByType(PRUint32 aType)
             }
           }
           nsCOMPtr<nsIContent> relatedContent(do_QueryInterface(buttonEl));
-          return Relation(relatedContent);
+          return Relation(mDoc, relatedContent);
         }
       }
       return Relation();
     }
     case nsIAccessibleRelation::RELATION_MEMBER_OF:
-      return Relation(GetAtomicRegion());
+      return Relation(mDoc, GetAtomicRegion());
     case nsIAccessibleRelation::RELATION_SUBWINDOW_OF:
     case nsIAccessibleRelation::RELATION_EMBEDS:
     case nsIAccessibleRelation::RELATION_EMBEDDED_BY:
