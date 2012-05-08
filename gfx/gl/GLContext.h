@@ -658,7 +658,30 @@ public:
 
     virtual bool MakeCurrentImpl() = 0;
 
+    void CheckOwningThreadInDebugMode() {
+#ifdef DEBUG
+        if (!NS_GetCurrentThread()) {
+            // happens during shutdown. Drop this check in that case.
+            return;
+        }
+        if (!IsOwningThreadCurrent())
+        {
+            printf_stderr(
+                "This GL context (%p) is owned by thread %p, but the current thread is %p. "
+                "That's fine by itself, but our current code in GLContext::MakeCurrent, checking "
+                "if the context is already current, relies on the assumption that GL calls on a given "
+                "GLContext are only made by the thread that created that GLContext. If you want to "
+                "start making GL calls from non-owning threads, you'll have to change a few things "
+                "around here, see Bug 749678 comments 13 and 15.\n",
+                this, mOwningThread.get(), NS_GetCurrentThread());
+            NS_ABORT();
+        }
+#endif
+    }
+
     bool MakeCurrent(bool aForce = false) {
+        CheckOwningThreadInDebugMode();
+
         if (!aForce &&
             this == CurrentGLContext())
         {
@@ -1879,6 +1902,7 @@ public:
         if (DebugMode()) {
             if (DebugMode() & DebugTrace)
                 printf_stderr("[gl:%p] > %s\n", this, glFunction);
+            CheckOwningThreadInDebugMode();
             if (this != CurrentGLContext()) {
                 printf_stderr("Fatal: %s called on non-current context %p. "
                               "The current context for this thread is %p.\n",
