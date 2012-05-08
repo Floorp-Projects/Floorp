@@ -64,9 +64,8 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace gl {
 
-#ifdef DEBUG
-PRUintn GLContext::sCurrentGLContextTLS = -1;
-#endif
+tls::key GLContextTLSStorage::sTLSKey;
+bool GLContextTLSStorage::sTLSKeyAlreadyCreated = false;
 
 PRUint32 GLContext::sDebugMode = 0;
 
