@@ -420,7 +420,7 @@ public:
         return true;
     }
 
-    bool MakeCurrentImpl(bool aForce = false) {
+    bool MakeCurrentImpl() {
         bool succeeded = true;
 
         // Assume that EGL has the same problem as WGL does,
@@ -442,25 +442,24 @@ public:
             return succeeded;
         }
 #endif
-        if (aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
+
 #ifdef MOZ_WIDGET_QT
-            // Shared Qt GL context need to be informed about context switch
-            if (mSharedContext) {
-                QGLContext* qglCtx = static_cast<QGLContext*>(static_cast<GLContextEGL*>(mSharedContext.get())->mPlatformContext);
-                if (qglCtx) {
-                    qglCtx->doneCurrent();
-                }
+        // Shared Qt GL context need to be informed about context switch
+        if (mSharedContext) {
+            QGLContext* qglCtx = static_cast<QGLContext*>(static_cast<GLContextEGL*>(mSharedContext.get())->mPlatformContext);
+            if (qglCtx) {
+                qglCtx->doneCurrent();
             }
-#endif
-            succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
-                                                 mSurface, mSurface,
-                                                 mContext);
-            if (!succeeded && sEGLLibrary.fGetError() == LOCAL_EGL_CONTEXT_LOST) {
-                mContextLost = true;
-                NS_WARNING("EGL context has been lost.");
-            }
-            NS_ASSERTION(succeeded, "Failed to make GL context current!");
         }
+#endif
+        succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
+                                                mSurface, mSurface,
+                                                mContext);
+        if (!succeeded && sEGLLibrary.fGetError() == LOCAL_EGL_CONTEXT_LOST) {
+            mContextLost = true;
+            NS_WARNING("EGL context has been lost.");
+        }
+        NS_ASSERTION(succeeded, "Failed to make GL context current!");
 
         return succeeded;
     }
