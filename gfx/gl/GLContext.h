@@ -656,7 +656,7 @@ public:
 
     virtual GLContextType GetContextType() { return ContextTypeUnknown; }
 
-    virtual bool MakeCurrentImpl(bool aForce = false) = 0;
+    virtual bool MakeCurrentImpl() = 0;
 
     bool MakeCurrent(bool aForce = false) {
         if (!aForce &&
@@ -665,7 +665,7 @@ public:
             return true;
         }
 
-        bool success = MakeCurrentImpl(aForce);
+        bool success = MakeCurrentImpl();
         if (success) {
             SetCurrentGLContext(this);
         }

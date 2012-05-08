@@ -213,7 +213,7 @@ public:
         return InitWithPrefix("gl", true);
     }
 
-    bool MakeCurrentImpl(bool aForce = false)
+    bool MakeCurrentImpl()
     {
         bool succeeded
           = sOSMesaLibrary.fMakeCurrent(mContext, mThebesSurface->Data(),
