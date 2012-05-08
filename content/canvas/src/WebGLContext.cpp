@@ -501,6 +501,41 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     }
 #endif
 
+
+#ifdef ANDROID
+    // bug 736123, blacklist WebGL on Adreno
+    //
+    // The Adreno driver in WebGL context creation, specifically in the first MakeCurrent
+    // call on the newly created OpenGL context.
+    //
+    // Notice that we can't rely on GfxInfo for this blacklisting,
+    // as GfxInfo on Android currently doesn't know the GL strings, which are,
+    // AFAIK, the only way to identify Adreno GPUs.
+    //
+    // Somehow, the Layers' OpenGL context creation doesn't crash, and neither does
+    // the global GL context creation. So we currently use the Renderer() id from the
+    // global context. This is not future-proof, as the plan is to get rid of the global
+    // context soon with OMTC. We need to replace this by getting the renderer id from
+    // the Layers' GL context, but as with OMTC the LayerManager lives on a different
+    // thread, this will have to involve some message-passing.
+    if (!forceEnabled) {
+        GLContext *globalContext = GLContextProvider::GetGlobalContext();
+        if (!globalContext) {
+            // make sure that we don't forget to update this code once the globalContext
+            // is removed
+            NS_RUNTIMEABORT("No global context anymore? Then you need to update "
+                            "this code, or force-enable WebGL.");
+        }
+        int renderer = globalContext->Renderer();
+        if (renderer == gl::GLContext::RendererAdreno200 ||
+            renderer == gl::GLContext::RendererAdreno205)
+        {
+            LogMessage("WebGL blocked on this Adreno driver!");
+            return NS_ERROR_FAILURE;
+        }
+    }
+#endif
+
     // if we're forcing osmesa, do it first
     if (forceOSMesa) {
         gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
