@@ -981,7 +981,7 @@ js::SaveScriptFilename(JSContext *cx, const char *filename)
      * scripts or exceptions pointing to the filename may no longer be
      * reachable.
      */
-    if (cx->compartment->needsBarrier() && rt->gcIsFull)
+    if (rt->gcIncrementalState == MARK && rt->gcIsFull)
         sfe->marked = true;
 #endif
 
