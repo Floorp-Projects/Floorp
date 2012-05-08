@@ -4085,7 +4085,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, bool *aCancel, bool *aHan
       curBlockQuoteIsIndentedWithCSS = false;
       // keep looking up the hierarchy as long as we don't hit the body or the
       // active editing host or a table element (other than an entire table)
-      while (!nsTextEditUtils::IsBody(n) && mHTMLEditor->IsNodeInActiveEditor(n)
+      while (!nsTextEditUtils::IsBody(n) && mHTMLEditor->IsDescendantOfEditorRoot(n)
           && (nsHTMLEditUtils::IsTable(n) || !nsHTMLEditUtils::IsTableElement(n)))
       {
         n->GetParentNode(getter_AddRefs(tmp));
@@ -5597,8 +5597,8 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode,
                              || (actionID == nsHTMLEditor::kOpOutdent)
                              || (actionID == nsHTMLEditor::kOpAlign)
                              || (actionID == nsHTMLEditor::kOpMakeBasicBlock);
-      if (!mHTMLEditor->IsNodeInActiveEditor(parent) &&
-          (blockLevelAction || !mHTMLEditor->IsNodeInActiveEditor(node))) {
+      if (!mHTMLEditor->IsDescendantOfEditorRoot(parent) &&
+          (blockLevelAction || !mHTMLEditor->IsDescendantOfEditorRoot(node))) {
         break;
       }
 
@@ -5653,8 +5653,8 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode,
       // before walking up to a parent because we need to return the parent
       // object, so the parent itself might not be in the editable area, but
       // it's OK.
-      if (!mHTMLEditor->IsNodeInActiveEditor(node) &&
-          !mHTMLEditor->IsNodeInActiveEditor(parent)) {
+      if (!mHTMLEditor->IsDescendantOfEditorRoot(node) &&
+          !mHTMLEditor->IsDescendantOfEditorRoot(parent)) {
         break;
       }
 
@@ -5787,8 +5787,8 @@ nsHTMLEditRules::PromoteRange(nsIDOMRange *inRange,
   NS_ENSURE_SUCCESS(res, res);
 
   // Make sure that the new range ends up to be in the editable section.
-  if (!mHTMLEditor->IsNodeInActiveEditor(nsEditor::GetNodeAtRangeOffsetPoint(opStartNode, opStartOffset)) ||
-      !mHTMLEditor->IsNodeInActiveEditor(nsEditor::GetNodeAtRangeOffsetPoint(opEndNode, opEndOffset - 1))) {
+  if (!mHTMLEditor->IsDescendantOfEditorRoot(nsEditor::GetNodeAtRangeOffsetPoint(opStartNode, opStartOffset)) ||
+      !mHTMLEditor->IsDescendantOfEditorRoot(nsEditor::GetNodeAtRangeOffsetPoint(opEndNode, opEndOffset - 1))) {
     return NS_OK;
   }
 
@@ -6492,7 +6492,7 @@ nsHTMLEditRules::IsInListItem(nsINode* aNode)
   }
 
   nsINode* parent = aNode->GetNodeParent();
-  while (parent && mHTMLEditor->IsNodeInActiveEditor(parent) &&
+  while (parent && mHTMLEditor->IsDescendantOfEditorRoot(parent) &&
          !(parent->IsElement() &&
            nsHTMLEditUtils::IsTableElement(parent->AsElement()))) {
     if (nsHTMLEditUtils::IsListItem(parent->AsElement())) {
@@ -7294,7 +7294,7 @@ nsHTMLEditRules::SplitAsNeeded(const nsAString *aTag,
     // a legal place for the block
     if (!parent) break;
     // Don't leave the active editing host
-    if (!mHTMLEditor->IsNodeInActiveEditor(parent)) {
+    if (!mHTMLEditor->IsDescendantOfEditorRoot(parent)) {
       nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parent);
       if (parentContent != mHTMLEditor->GetActiveEditingHost()) {
         break;
@@ -8356,8 +8356,7 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
   nsCOMPtr<nsIDOMNode> startNode;
   res = aRange->GetStartContainer(getter_AddRefs(startNode));
   NS_ENSURE_SUCCESS(res, res);
-  if (!mHTMLEditor->IsDescendantOfBody(startNode))
-  {
+  if (!mHTMLEditor->IsDescendantOfRoot(startNode)) {
     // just return - we don't need to adjust mDocChangeRange in this case
     return NS_OK;
   }
@@ -8893,7 +8892,7 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, PRInt
   nsCOMPtr<dom::Element> node = do_QueryInterface(aNode);
   if (!node || !node->IsHTML(nsGkAtoms::div) ||
       node == mHTMLEditor->GetActiveEditingHost() ||
-      !mHTMLEditor->IsNodeInActiveEditor(node) ||
+      !mHTMLEditor->IsDescendantOfEditorRoot(node) ||
       nsHTMLEditor::HasAttributes(node)) {
     return NS_OK;
   }

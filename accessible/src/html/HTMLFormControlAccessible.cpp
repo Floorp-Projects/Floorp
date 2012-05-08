@@ -63,6 +63,9 @@
 #include "nsIServiceManager.h"
 #include "nsITextControlFrame.h"
 
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -496,7 +499,7 @@ HTMLTextFieldAccessible::NativeState()
 
   // No parent can mean a fake widget created for XUL textbox. If accessible
   // is unattached from tree then we don't care.
-  if (mParent && gIsFormFillEnabled) {
+  if (mParent && Preferences::GetBool("browser.formfill.enable")) {
     // Check to see if autocompletion is allowed on this input. We don't expose
     // it for password fields even though the entire password can be remembered
     // for a page if the user asks it to be. However, the kind of autocomplete

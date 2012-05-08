@@ -1154,7 +1154,7 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
      * We can't do it from java, because the EGLConfigImpl constructor is private.
      */
 
-    jobject surfaceHolder = sview.GetSurfaceHolder(env, &jniFrame);
+    jobject surfaceHolder = sview.GetSurfaceHolder(&jniFrame);
     if (!surfaceHolder)
         return nsnull;
 

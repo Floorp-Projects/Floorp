@@ -3148,8 +3148,7 @@ nsEditor::GetPriorNode(nsIDOMNode  *aParentNode,
                        PRInt32      aOffset, 
                        bool         aEditableNode, 
                        nsCOMPtr<nsIDOMNode> *aResultNode,
-                       bool         bNoBlockCrossing,
-                       nsIContent  *aActiveEditorRoot)
+                       bool         bNoBlockCrossing)
 {
   NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
   *aResultNode = nsnull;
@@ -3158,8 +3157,8 @@ nsEditor::GetPriorNode(nsIDOMNode  *aParentNode,
   NS_ENSURE_TRUE(parentNode, NS_ERROR_NULL_POINTER);
 
   *aResultNode = do_QueryInterface(GetPriorNode(parentNode, aOffset,
-                                                aEditableNode, bNoBlockCrossing,
-                                                aActiveEditorRoot));
+                                                aEditableNode,
+                                                bNoBlockCrossing));
   return NS_OK;
 }
 
@@ -3167,8 +3166,7 @@ nsIContent*
 nsEditor::GetPriorNode(nsINode* aParentNode,
                        PRInt32 aOffset,
                        bool aEditableNode,
-                       bool aNoBlockCrossing,
-                       nsIContent* aActiveEditorRoot)
+                       bool aNoBlockCrossing)
 {
   MOZ_ASSERT(aParentNode);
 
@@ -3179,14 +3177,12 @@ nsEditor::GetPriorNode(nsINode* aParentNode,
       // If we aren't allowed to cross blocks, don't look before this block.
       return nsnull;
     }
-    return GetPriorNode(aParentNode, aEditableNode,
-                        aNoBlockCrossing, aActiveEditorRoot);
+    return GetPriorNode(aParentNode, aEditableNode, aNoBlockCrossing);
   }
 
   // else look before the child at 'aOffset'
   if (nsIContent* child = aParentNode->GetChildAt(aOffset)) {
-    return GetPriorNode(child, aEditableNode, aNoBlockCrossing,
-                        aActiveEditorRoot);
+    return GetPriorNode(child, aEditableNode, aNoBlockCrossing);
   }
 
   // unless there isn't one, in which case we are at the end of the node
@@ -3197,7 +3193,7 @@ nsEditor::GetPriorNode(nsINode* aParentNode,
   }
 
   // restart the search from the non-editable node we just found
-  return GetPriorNode(resultNode, aEditableNode, aNoBlockCrossing, aActiveEditorRoot);
+  return GetPriorNode(resultNode, aEditableNode, aNoBlockCrossing);
 }
 
 
@@ -3206,8 +3202,7 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
                       PRInt32      aOffset, 
                       bool         aEditableNode, 
                       nsCOMPtr<nsIDOMNode> *aResultNode,
-                      bool         bNoBlockCrossing,
-                      nsIContent  *aActiveEditorRoot)
+                      bool         bNoBlockCrossing)
 {
   NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
   *aResultNode = nsnull;
@@ -3216,8 +3211,8 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
   NS_ENSURE_TRUE(parentNode, NS_ERROR_NULL_POINTER);
 
   *aResultNode = do_QueryInterface(GetNextNode(parentNode, aOffset,
-                                               aEditableNode, bNoBlockCrossing,
-                                               aActiveEditorRoot));
+                                               aEditableNode,
+                                               bNoBlockCrossing));
   return NS_OK;
 }
 
@@ -3225,8 +3220,7 @@ nsIContent*
 nsEditor::GetNextNode(nsINode* aParentNode,
                       PRInt32 aOffset,
                       bool aEditableNode,
-                      bool aNoBlockCrossing,
-                      nsIContent* aActiveEditorRoot)
+                      bool aNoBlockCrossing)
 {
   MOZ_ASSERT(aParentNode);
 
@@ -3250,7 +3244,7 @@ nsEditor::GetNextNode(nsINode* aParentNode,
       return child;
     }
 
-    if (!IsDescendantOfBody(resultNode)) {
+    if (!IsDescendantOfEditorRoot(resultNode)) {
       return nsnull;
     }
 
@@ -3259,8 +3253,7 @@ nsEditor::GetNextNode(nsINode* aParentNode,
     }
 
     // restart the search from the non-editable node we just found
-    return GetNextNode(resultNode, aEditableNode, aNoBlockCrossing,
-                       aActiveEditorRoot);
+    return GetNextNode(resultNode, aEditableNode, aNoBlockCrossing);
   }
     
   // unless there isn't one, in which case we are at the end of the node
@@ -3270,8 +3263,7 @@ nsEditor::GetNextNode(nsINode* aParentNode,
     return NS_OK;
   }
 
-  return GetNextNode(aParentNode, aEditableNode, aNoBlockCrossing,
-                     aActiveEditorRoot);
+  return GetNextNode(aParentNode, aEditableNode, aNoBlockCrossing);
 }
 
 
@@ -3279,8 +3271,7 @@ nsresult
 nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode, 
                        bool         aEditableNode, 
                        nsCOMPtr<nsIDOMNode> *aResultNode,
-                       bool         bNoBlockCrossing,
-                       nsIContent  *aActiveEditorRoot)
+                       bool         bNoBlockCrossing)
 {
   NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
 
@@ -3288,40 +3279,31 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
   NS_ENSURE_TRUE(currentNode, NS_ERROR_NULL_POINTER);
 
   *aResultNode = do_QueryInterface(GetPriorNode(currentNode, aEditableNode,
-                                                bNoBlockCrossing,
-                                                aActiveEditorRoot));
+                                                bNoBlockCrossing));
   return NS_OK;
 }
 
 nsIContent*
 nsEditor::GetPriorNode(nsINode* aCurrentNode, bool aEditableNode,
-                       bool aNoBlockCrossing /* = false */,
-                       nsIContent* aActiveEditorRoot /* = null */)
+                       bool aNoBlockCrossing /* = false */)
 {
   MOZ_ASSERT(aCurrentNode);
 
-  if (!IsDescendantOfBody(aCurrentNode) ||
-      (aActiveEditorRoot &&
-       !nsContentUtils::ContentIsDescendantOf(aCurrentNode,
-                                              aActiveEditorRoot))) {
+  if (!IsDescendantOfEditorRoot(aCurrentNode)) {
     return nsnull;
   }
 
-  return FindNode(aCurrentNode, false, aEditableNode, aNoBlockCrossing,
-                  aActiveEditorRoot);
+  return FindNode(aCurrentNode, false, aEditableNode, aNoBlockCrossing);
 }
 
 nsIContent*
 nsEditor::FindNextLeafNode(nsINode  *aCurrentNode, 
                            bool      aGoForward,
-                           bool      bNoBlockCrossing,
-                           nsIContent *aActiveEditorRoot)
+                           bool      bNoBlockCrossing)
 {
   // called only by GetPriorNode so we don't need to check params.
-  NS_PRECONDITION(IsDescendantOfBody(aCurrentNode) && !IsRootNode(aCurrentNode) &&
-                  (!aActiveEditorRoot ||
-                   nsContentUtils::ContentIsDescendantOf(aCurrentNode,
-                                                         aActiveEditorRoot)),
+  NS_PRECONDITION(IsDescendantOfEditorRoot(aCurrentNode) &&
+                  !IsEditorRoot(aCurrentNode),
                   "Bogus arguments");
 
   nsINode* cur = aCurrentNode;
@@ -3350,13 +3332,12 @@ nsEditor::FindNextLeafNode(nsINode  *aCurrentNode,
       return nsnull;
     }
 
-    NS_ASSERTION(IsDescendantOfBody(parent),
+    NS_ASSERTION(IsDescendantOfEditorRoot(parent),
                  "We started with a proper descendant of root, and should stop "
                  "if we ever hit the root, so we better have a descendant of "
                  "root now!");
-    if (IsRootNode(parent) ||
-        (bNoBlockCrossing && IsBlockNode(parent)) ||
-        parent == aActiveEditorRoot) {
+    if (IsEditorRoot(parent) ||
+        (bNoBlockCrossing && IsBlockNode(parent))) {
       return nsnull;
     }
 
@@ -3371,8 +3352,7 @@ nsresult
 nsEditor::GetNextNode(nsIDOMNode* aCurrentNode,
                       bool aEditableNode,
                       nsCOMPtr<nsIDOMNode> *aResultNode,
-                      bool bNoBlockCrossing,
-                      nsIContent* aActiveEditorRoot)
+                      bool bNoBlockCrossing)
 {
   nsCOMPtr<nsINode> currentNode = do_QueryInterface(aCurrentNode);
   if (!currentNode || !aResultNode) {
@@ -3380,39 +3360,31 @@ nsEditor::GetNextNode(nsIDOMNode* aCurrentNode,
   }
 
   *aResultNode = do_QueryInterface(GetNextNode(currentNode, aEditableNode,
-                                               bNoBlockCrossing,
-                                               aActiveEditorRoot));
+                                               bNoBlockCrossing));
   return NS_OK;
 }
 
 nsIContent*
 nsEditor::GetNextNode(nsINode* aCurrentNode,
                       bool aEditableNode,
-                      bool bNoBlockCrossing,
-                      nsIContent* aActiveEditorRoot)
+                      bool bNoBlockCrossing)
 {
   MOZ_ASSERT(aCurrentNode);
 
-  if (!IsDescendantOfBody(aCurrentNode) ||
-      (aActiveEditorRoot &&
-       !nsContentUtils::ContentIsDescendantOf(aCurrentNode,
-                                              aActiveEditorRoot))) {
+  if (!IsDescendantOfEditorRoot(aCurrentNode)) {
     return nsnull;
   }
 
-  return FindNode(aCurrentNode, true, aEditableNode, bNoBlockCrossing,
-                  aActiveEditorRoot);
+  return FindNode(aCurrentNode, true, aEditableNode, bNoBlockCrossing);
 }
 
 nsIContent*
 nsEditor::FindNode(nsINode *aCurrentNode,
                    bool     aGoForward,
                    bool     aEditableNode,
-                   bool     bNoBlockCrossing,
-                   nsIContent *aActiveEditorRoot)
+                   bool     bNoBlockCrossing)
 {
-  if (IsRootNode(aCurrentNode) || aCurrentNode == aActiveEditorRoot)
-  {
+  if (IsEditorRoot(aCurrentNode)) {
     // Don't allow traversal above the root node! This helps
     // prevent us from accidentally editing browser content
     // when the editor is in a text widget.
@@ -3421,8 +3393,7 @@ nsEditor::FindNode(nsINode *aCurrentNode,
   }
 
   nsIContent* candidate =
-    FindNextLeafNode(aCurrentNode, aGoForward, bNoBlockCrossing,
-                     aActiveEditorRoot);
+    FindNextLeafNode(aCurrentNode, aGoForward, bNoBlockCrossing);
   
   if (!candidate) {
     return nsnull;
@@ -3432,8 +3403,7 @@ nsEditor::FindNode(nsINode *aCurrentNode,
     return candidate;
   }
 
-  return FindNode(candidate, aGoForward, aEditableNode, bNoBlockCrossing,
-                  aActiveEditorRoot);
+  return FindNode(candidate, aGoForward, aEditableNode, bNoBlockCrossing);
 }
 
 already_AddRefed<nsIDOMNode>
@@ -3589,7 +3559,7 @@ nsEditor::TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag)
 }
 
 bool
-nsEditor::IsRootNode(nsIDOMNode *inNode)
+nsEditor::IsRoot(nsIDOMNode* inNode)
 {
   NS_ENSURE_TRUE(inNode, false);
 
@@ -3599,7 +3569,7 @@ nsEditor::IsRootNode(nsIDOMNode *inNode)
 }
 
 bool 
-nsEditor::IsRootNode(nsINode *inNode) 
+nsEditor::IsRoot(nsINode* inNode)
 {
   NS_ENSURE_TRUE(inNode, false);
 
@@ -3608,21 +3578,46 @@ nsEditor::IsRootNode(nsINode *inNode)
   return inNode == rootNode;
 }
 
+bool
+nsEditor::IsEditorRoot(nsINode* aNode)
+{
+  NS_ENSURE_TRUE(aNode, false);
+  nsCOMPtr<nsINode> rootNode = GetEditorRoot();
+  return aNode == rootNode;
+}
+
 bool 
-nsEditor::IsDescendantOfBody(nsIDOMNode *inNode) 
+nsEditor::IsDescendantOfRoot(nsIDOMNode* inNode)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(inNode);
-  return IsDescendantOfBody(node);
+  return IsDescendantOfRoot(node);
 }
 
 bool
-nsEditor::IsDescendantOfBody(nsINode *inNode)
+nsEditor::IsDescendantOfRoot(nsINode* inNode)
 {
   NS_ENSURE_TRUE(inNode, false);
   nsCOMPtr<nsIContent> root = GetRoot();
   NS_ENSURE_TRUE(root, false);
 
   return nsContentUtils::ContentIsDescendantOf(inNode, root);
+}
+
+bool
+nsEditor::IsDescendantOfEditorRoot(nsIDOMNode* aNode)
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  return IsDescendantOfEditorRoot(node);
+}
+
+bool
+nsEditor::IsDescendantOfEditorRoot(nsINode* aNode)
+{
+  NS_ENSURE_TRUE(aNode, false);
+  nsCOMPtr<nsIContent> root = GetEditorRoot();
+  NS_ENSURE_TRUE(root, false);
+
+  return nsContentUtils::ContentIsDescendantOf(aNode, root);
 }
 
 bool 
@@ -5231,6 +5226,12 @@ nsEditor::GetRoot()
   }
 
   return mRootElement;
+}
+
+dom::Element*
+nsEditor::GetEditorRoot()
+{
+  return GetRoot();
 }
 
 nsresult
