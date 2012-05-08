@@ -46,6 +46,7 @@
 
 #include "methodjit/MethodJIT.h"
 #include "vm/Stack.h"
+#include "ion/IonFrameIterator-inl.h"
 
 #include "jsscriptinlines.h"
 
@@ -660,6 +661,27 @@ inline HandleObject
 ContextStack::currentScriptedScopeChain() const
 {
     return fp()->scopeChain();
+}
+
+template <class Op>
+inline bool
+StackIter::forEachCanonicalActualArg(Op op, unsigned start /* = 0 */, unsigned count /* = unsigned(-1) */)
+{
+    switch (state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        JS_ASSERT(isFunctionFrame());
+        return fp()->forEachCanonicalActualArg(op, start, count);
+      case ION:
+        return ionInlineFrames_.forEachCanonicalActualArg(op, start, count);
+      case NATIVE:
+      case IMPLICIT_NATIVE:
+        JS_NOT_REACHED("Unused ?");
+        return false;
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return false;
 }
 
 } /* namespace js */

@@ -153,13 +153,7 @@ class ArgumentsObject : public JSObject
      * This allows function-local analysis to determine that formals are
      * not aliased and generally simplifies arguments objects.
      */
-    static ArgumentsObject *createUnexpected(JSContext *cx, StackFrame *fp);
-
-    /*
-     * Cannot recover any fields of the arguments object, and replace it by
-     * the poison value.
-     */
-    static ArgumentsObject *createPoison(JSContext *cx, uint32_t argc, HandleObject callee);
+    static ArgumentsObject *createUnexpected(JSContext *cx, StackIter& iter);
 
     /*
      * Return the initial length of the arguments.  This may differ from the

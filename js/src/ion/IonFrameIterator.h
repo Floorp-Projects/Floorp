@@ -64,6 +64,7 @@ enum FrameType
 class IonCommonFrameLayout;
 class IonActivation;
 class IonJSFrameLayout;
+class IonActivationIterator;
 
 class IonFrameIterator
 {
@@ -72,6 +73,7 @@ class IonFrameIterator
     uint8 *returnAddressToFp_;
     size_t frameSize_;
     mutable const SafepointIndex *cachedSafepointIndex_;
+    const IonActivation *activation_;
 
   public:
     IonFrameIterator(uint8 *top)
@@ -79,9 +81,11 @@ class IonFrameIterator
         type_(IonFrame_Exit),
         returnAddressToFp_(NULL),
         frameSize_(0),
-        cachedSafepointIndex_(NULL)
+        cachedSafepointIndex_(NULL),
+        activation_(NULL)
     { }
 
+    IonFrameIterator(const IonActivationIterator &activations);
     IonFrameIterator(IonJSFrameLayout *fp);
 
     // Current frame information.
@@ -113,11 +117,12 @@ class IonFrameIterator
     }
     bool isFunctionFrame() const;
 
-    bool isConstructing(IonActivation *activation) const;
+    bool isConstructing() const;
 
     void *calleeToken() const;
     JSFunction *callee() const;
     JSFunction *maybeCallee() const;
+    unsigned numActualArgs() const;
     JSScript *script() const;
 
     // Returns the return address of the frame above this one (that is, the
@@ -188,10 +193,12 @@ class SnapshotIterator : public SnapshotReader
     IonScript *ionScript_;
 
   private:
+    bool hasLocation(const SnapshotReader::Location &loc);
     uintptr_t fromLocation(const SnapshotReader::Location &loc);
     static Value FromTypedPayload(JSValueType type, uintptr_t payload);
 
     Value slotValue(const Slot &slot);
+    bool slotReadable(const Slot &slot);
 
   public:
     SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
@@ -201,6 +208,13 @@ class SnapshotIterator : public SnapshotReader
 
     Value read() {
         return slotValue(readSlot());
+    }
+    Value maybeRead() {
+        Slot s = readSlot();
+        if (slotReadable(s))
+            return slotValue(s);
+        JS_NOT_REACHED("Crossing fingers: Unable to read snapshot slot.");
+        return UndefinedValue();
     }
 };
 
@@ -232,6 +246,11 @@ class InlineFrameIterator
     JSFunction *maybeCallee() const {
         return callee_;
     }
+    unsigned numActualArgs() const;
+
+    template <class Op>
+    inline bool forEachCanonicalActualArg(Op op, unsigned start, unsigned count);
+
     JSScript *script() const {
         return script_;
     }
@@ -242,7 +261,7 @@ class InlineFrameIterator
         return si_;
     }
     bool isFunctionFrame() const;
-    bool isConstructing(IonActivation *activation) const;
+    bool isConstructing() const;
     JSObject *thisObject() const;
     InlineFrameIterator operator++();
 };
