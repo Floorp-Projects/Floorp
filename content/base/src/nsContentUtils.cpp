@@ -2801,18 +2801,44 @@ nsContentUtils::IsDraggableLink(const nsIContent* aContent) {
   return aContent->IsLink(getter_AddRefs(absURI));
 }
 
-bool
-nsContentUtils::IsSitePermAllow(nsIURI* aURI, const char* aType)
+static bool
+TestSitePerm(nsIPrincipal* aPrincipal, const char* aType, PRUint32 aPerm)
 {
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    // System principal is always allowed and never denied permission.
+    return aPerm == nsIPermissionManager::ALLOW_ACTION;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(!aPrincipal ||
+      aPrincipal->GetURI(getter_AddRefs(uri))) ||
+      !uri) {
+    // We always deny (i.e. don't allow) the permission if we don't
+    // have a principal or we don't know the URI.
+    return aPerm != nsIPermissionManager::ALLOW_ACTION;
+  }
+
   nsCOMPtr<nsIPermissionManager> permMgr =
     do_GetService("@mozilla.org/permissionmanager;1");
   NS_ENSURE_TRUE(permMgr, false);
 
   PRUint32 perm;
-  nsresult rv = permMgr->TestPermission(aURI, aType, &perm);
+  nsresult rv = permMgr->TestPermission(uri, aType, &perm);
   NS_ENSURE_SUCCESS(rv, false);
   
-  return perm == nsIPermissionManager::ALLOW_ACTION;
+  return perm == aPerm;
+}
+
+bool
+nsContentUtils::IsSitePermAllow(nsIPrincipal* aPrincipal, const char* aType)
+{
+  return TestSitePerm(aPrincipal, aType, nsIPermissionManager::ALLOW_ACTION);
+}
+
+bool
+nsContentUtils::IsSitePermDeny(nsIPrincipal* aPrincipal, const char* aType)
+{
+  return TestSitePerm(aPrincipal, aType, nsIPermissionManager::DENY_ACTION);
 }
 
 static const char *gEventNames[] = {"event"};
@@ -6326,7 +6352,7 @@ nsContentUtils::AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal)
   
   return princURI &&
          ((sAllowXULXBL_for_file && SchemeIs(princURI, "file")) ||
-          IsSitePermAllow(princURI, "allowXULXBL"));
+          IsSitePermAllow(aPrincipal, "allowXULXBL"));
 }
 
 already_AddRefed<nsIDocumentLoaderFactory>
