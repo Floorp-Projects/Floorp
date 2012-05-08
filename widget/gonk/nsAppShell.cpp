@@ -517,18 +517,27 @@ GeckoInputDispatcher::unregisterInputChannel(const sp<InputChannel>& inputChanne
     return OK;
 }
 
+static already_AddRefed<nsIScreen>
+Screen()
+{
+    nsCOMPtr<nsIScreenManager> screenMgr =
+        do_GetService("@mozilla.org/gfx/screenmanager;1");
+    nsCOMPtr<nsIScreen> screen;
+    screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
+    return screen.forget();
+}
+
 class ScreenRotateEvent : public nsRunnable {
 public:
-  ScreenRotateEvent(nsIScreen* aScreen, PRUint32 aRotation)
-    : mScreen(aScreen),
-      mRotation(aRotation) {
+  ScreenRotateEvent(PRUint32 aRotation)
+    : mRotation(aRotation) {
   }
   NS_IMETHOD Run() {
-    return mScreen->SetRotation(mRotation);
+    nsCOMPtr<nsIScreen> screen = Screen();
+    return screen->SetRotation(mRotation);
   }
 
 private:
-  nsCOMPtr<nsIScreen> mScreen;
   PRUint32 mRotation;
 };
 
@@ -538,11 +547,6 @@ public:
     : mLastUpdate(0) {
   }
   void Notify(const SensorData& aSensorData) {
-    nsCOMPtr<nsIScreenManager> screenMgr =
-        do_GetService("@mozilla.org/gfx/screenmanager;1");
-    nsCOMPtr<nsIScreen> screen;
-    screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
-
     MOZ_ASSERT(aSensorData.sensor() == SensorType::SENSOR_ORIENTATION);
     InfallibleTArray<float> values = aSensorData.values();
     // float azimuth = values[0]; // unused
@@ -560,10 +564,8 @@ public:
     else
       return;  // don't rotate if undecidable
 
-    PRUint32 currRotation;
-    nsresult res;
-    res = screen->GetRotation(&currRotation);
-    if (NS_FAILED(res) || rotation == currRotation)
+    // This check is racy, but that's OK.
+    if (rotation == nsScreenGonk::GetRotation())
       return;
 
     PRTime now = PR_Now();
@@ -572,9 +574,9 @@ public:
       return;
 
     mLastUpdate = now;
-    NS_DispatchToMainThread(new ScreenRotateEvent(screen, rotation));
-
+    NS_DispatchToMainThread(new ScreenRotateEvent(rotation));
   }
+
 private:
   PRTime mLastUpdate;
   static const PRTime sMinUpdateInterval = 500 * 1000; // 500 ms
