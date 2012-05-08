@@ -71,7 +71,7 @@ private:
   friend class DrawTargetD2D;
 
   RefPtr<ID2D1Bitmap> mBitmap;
-  uint8_t *mRawData;
+  std::vector<unsigned char> mRawData;
   SurfaceFormat mFormat;
   IntSize mSize;
 };
