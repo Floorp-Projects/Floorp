@@ -397,6 +397,15 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
   return ReflectHistogramAndSamples(cx, obj, h, ss);
 }
 
+bool
+IsEmpty(const Histogram *h)
+{
+  Histogram::SampleSet ss;
+  h->SnapshotSample(&ss);
+
+  return ss.counts(0) == 0 && ss.sum() == 0;
+}
+
 JSBool
 JSHistogram_Add(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -860,7 +869,7 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
   // OK, now we can actually reflect things.
   for (HistogramIterator it = hs.begin(); it != hs.end(); ++it) {
     Histogram *h = *it;
-    if (!ShouldReflectHistogram(h)) {
+    if (!ShouldReflectHistogram(h) || IsEmpty(h)) {
       continue;
     }
 
@@ -921,6 +930,10 @@ TelemetryImpl::AddonHistogramReflector(AddonHistogramEntryType *entry,
     if (!CreateHistogramForAddon(entry->GetKey(), info)) {
       return false;
     }
+  }
+
+  if (IsEmpty(info.h)) {
+    return true;
   }
 
   JSObject *snapshot = JS_NewObject(cx, NULL, NULL, NULL);
@@ -1431,6 +1444,11 @@ TelemetrySessionData::SerializeHistogramData(Pickle &pickle)
        ++it) {
     const Histogram *h = *it;
     const char *name = h->histogram_name().c_str();
+
+    // We don't check IsEmpty(h) here.  We discard no-data histograms on
+    // read-in, instead.  It's easier to write out the number of
+    // histograms required that way.  (The pickle interface doesn't make
+    // it easy to go back and overwrite previous data.)
 
     Histogram::SampleSet ss;
     h->SnapshotSample(&ss);
