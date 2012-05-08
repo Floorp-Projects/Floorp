@@ -4255,6 +4255,24 @@ var FullScreen = {
                          "fullscreen",
                          isApproved ? Services.perms.ALLOW_ACTION : Services.perms.DENY_ACTION,
                          Services.perms.EXPIRE_NEVER);
+    else if (isApproved) {
+      // The user has only temporarily approved fullscren for this domain.
+      // Add the permission (so Gecko knows fullscreen is approved) but add a
+      // listener to remove the permission when the chrome document exits fullscreen.
+      Services.perms.add(this.fullscreenDocUri,
+                         "fullscreen",
+                         Services.perms.ALLOW_ACTION,
+                         Services.perms.EXPIRE_SESSION);
+      let host = this.fullscreenDocUri.host;
+      function onFullscreenchange(event) {
+        if (event.target == document && document.mozFullScreenElement == null) {
+          // The chrome document has left fullscreen. Remove the temporary permission grant.
+          Services.perms.remove(host, "fullscreen");
+          document.removeEventListener("mozfullscreenchange", onFullscreenchange);
+        }
+      }
+      document.addEventListener("mozfullscreenchange", onFullscreenchange);
+    }
     if (this.warningBox)
       this.warningBox.setAttribute("fade-warning-out", "true");
     if (!isApproved)
