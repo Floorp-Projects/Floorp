@@ -1207,8 +1207,8 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
   color: inherit !important;
 }
 
-.autocomplete-treebody::-moz-tree-cell-text(suggesthint, treecolAutoCompleteComment), 
-.autocomplete-treebody::-moz-tree-cell-text(suggestfirst, treecolAutoCompleteComment) 
+.autocomplete-treebody::-moz-tree-cell-text(suggesthint, treecolAutoCompleteComment),
+.autocomplete-treebody::-moz-tree-cell-text(suggestfirst, treecolAutoCompleteComment)
 {
   color: GrayText;
   font-size: smaller;
@@ -1224,8 +1224,8 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 #go-button,
 #urlbar > toolbarbutton {
   margin: 0;
-  -moz-padding-start: 2px; 
-  -moz-padding-end: 1px; 
+  -moz-padding-start: 2px;
+  -moz-padding-end: 1px;
   background-origin: border-box;
   list-style-image: url("chrome://browser/skin/reload-stop-go.png");
 }
@@ -2901,7 +2901,6 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 #full-screen-warning-message {
   background-color: hsl(0,0%,15%);
   color: white;
-  font-size: 32px;
   border-radius: 8px;
   margin-top: 30px;
   padding: 30px 50px;
@@ -2909,13 +2908,20 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 }
 
 #full-screen-warning-container[obscure-browser] {
-  background-color: rgba(0,0,0,0.75);
+  background-color: rgba(0,0,0,0.3);
 }
 
-#full-screen-warning-container[stop-obscuring-browser] {
-  -moz-transition-property: background-color;
-  -moz-transition-duration: 500ms;
-  background-color: rgba(0,0,0,0);
+.full-screen-description {
+  font-size: 150%;
+}
+
+#full-screen-domain-text {
+  font-size: 300%;
+}
+
+.full-screen-approval-button,
+#full-screen-remember-decision {
+  font-size: 120%;
 }
 
 /* Highlighter toolbar - breadcrumbs */
