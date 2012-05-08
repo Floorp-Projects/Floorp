@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
 	browser_dbg_createRemote.js \
+	browser_dbg_createChrome.js \
 	browser_dbg_debuggerstatement.js \
 	browser_dbg_listtabs.js \
 	browser_dbg_tabactor-01.js \
