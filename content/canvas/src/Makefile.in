@@ -69,6 +69,7 @@ CPPSRCS	= \
 	DocumentRendererParent.cpp \
 	DocumentRendererChild.cpp \
 	ImageData.cpp \
+	WebGLExtensionCompressedTextureS3TC.cpp \
 	$(NULL)
 
 ifdef MOZ_WEBGL
