@@ -883,9 +883,12 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ei)
         case WebGL_EXT_texture_filter_anisotropic:
             isSupported = gl->IsExtensionSupported(GLContext::EXT_texture_filter_anisotropic);
             break;
-        case WebGL_MOZ_WEBGL_lose_context:
+        case WebGL_WEBGL_lose_context:
             // We always support this extension.
             isSupported = true;
+            break;
+        case WebGL_WEBGL_compressed_texture_s3tc:
+            isSupported = gl->IsExtensionSupported(GLContext::EXT_texture_compression_s3tc);
             break;
         default:
             isSupported = false;
@@ -927,8 +930,12 @@ WebGLContext::GetExtension(const nsAString& aName)
             ei = WebGL_EXT_texture_filter_anisotropic;
     }
     else if (aName.EqualsLiteral("MOZ_WEBGL_lose_context")) {
-        if (IsExtensionSupported(WebGL_MOZ_WEBGL_lose_context))
-            ei = WebGL_MOZ_WEBGL_lose_context;
+        if (IsExtensionSupported(WebGL_WEBGL_lose_context))
+            ei = WebGL_WEBGL_lose_context;
+    }
+    else if (aName.EqualsLiteral("MOZ_WEBGL_compressed_texture_s3tc")) {
+        if (IsExtensionSupported(WebGL_WEBGL_compressed_texture_s3tc))
+            ei = WebGL_WEBGL_compressed_texture_s3tc;
     }
 
     if (ei != WebGLExtensionID_Max) {
@@ -940,8 +947,11 @@ WebGLContext::GetExtension(const nsAString& aName)
                 case WebGL_EXT_texture_filter_anisotropic:
                     mEnabledExtensions[ei] = new WebGLExtensionTextureFilterAnisotropic(this);
                     break;
-                case WebGL_MOZ_WEBGL_lose_context:
+                case WebGL_WEBGL_lose_context:
                     mEnabledExtensions[ei] = new WebGLExtensionLoseContext(this);
+                    break;
+                case WebGL_WEBGL_compressed_texture_s3tc:
+                    mEnabledExtensions[ei] = new WebGLExtensionCompressedTextureS3TC(this);
                     break;
                 // create an extension for any types that don't
                 // have any additional tokens or methods
@@ -1518,8 +1528,10 @@ WebGLContext::GetSupportedExtensions(Nullable< nsTArray<nsString> > &retval)
         arr.AppendElement(NS_LITERAL_STRING("OES_standard_derivatives"));
     if (IsExtensionSupported(WebGL_EXT_texture_filter_anisotropic))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_EXT_texture_filter_anisotropic"));
-    if (IsExtensionSupported(WebGL_MOZ_WEBGL_lose_context))
+    if (IsExtensionSupported(WebGL_WEBGL_lose_context))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_lose_context"));
+    if (IsExtensionSupported(WebGL_WEBGL_compressed_texture_s3tc))
+        arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_s3tc"));
 }
 
 NS_IMETHODIMP
