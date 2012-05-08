@@ -614,10 +614,17 @@ public:
   static void SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
                              nsIAtom **aTagName, PRInt32 *aNameSpaceID);
 
-  // Get a permission-manager setting for the given uri and type.
+  // Get a permission-manager setting for the given principal and type.
   // If the pref doesn't exist or if it isn't ALLOW_ACTION, false is
-  // returned, otherwise true is returned.
-  static bool IsSitePermAllow(nsIURI* aURI, const char* aType);
+  // returned, otherwise true is returned. Always returns true for the
+  // system principal, and false for a null principal.
+  static bool IsSitePermAllow(nsIPrincipal* aPrincipal, const char* aType);
+
+  // Get a permission-manager setting for the given principal and type.
+  // If the pref doesn't exist or if it isn't DENY_ACTION, false is
+  // returned, otherwise true is returned. Always returns false for the
+  // system principal, and true for a null principal.
+  static bool IsSitePermDeny(nsIPrincipal* aPrincipal, const char* aType);
 
   static nsILineBreaker* LineBreaker()
   {
