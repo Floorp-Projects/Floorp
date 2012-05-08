@@ -19,10 +19,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       <script type="application/javascript">
         /**
          * Pointer Lock tests for bug 633602.  These depend on the fullscreen api
-         * which doesn't work well on all platforms when run in an iframe, even
-         * when allowing fullscreen on the iframe.  To get around this, all tests
-         * are run in a child window, which can go fullscreen.  This method is
-         * borrowed from content/html/content/test/test_fullscreen-api.html.
+         * which doesn't work when run in the mochitests' iframe, since the
+         * mochitests' iframe doesn't have a mozallowfullscreen attribute.  To get
+         * around this, all tests are run in a child window, which can go fullscreen.
+         * This method is borrowed from content/html/content/test/test_fullscreen-api.html.
          **/
 
         SimpleTest.waitForExplicitFinish();
@@ -33,10 +33,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         // Disable the requirement for trusted contexts only, so the tests are easier to write.
         SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
 
+        // Grant "fullscreen" permission on the test domain. This means fullscreen will be
+        // automatically approved, so pointer lock in the tests will be too.
+        SpecialPowers.setFullscreenAllowed(document);
+        
         // Run the tests which go full-screen in new window, as Mochitests
         // normally run in an iframe, which by default will not have the
         // mozallowfullscreen attribute set, so full-screen won't work.
         var gTestFiles = [
+          "file_approval.html",
           "file_screenClientXYConst.html",
           "file_childIframe.html",
           "file_doubleLock.html",
@@ -63,15 +68,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
         const isOSXLion = navigator.userAgent.indexOf("Mac OS X 10.7") != -1;
 
+        function finish() {
+          SpecialPowers.clearUserPref("full-screen-api.enabled");
+          SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");        
+          SpecialPowers.removeFullscreenAllowed(document)
+          SimpleTest.finish();
+        }
+        
         function nextTest() {
           if (isWinXP) {
             todo(false, "Can't reliably run full-screen tests on Windows XP due to bug 704010");
-            SimpleTest.finish();
+            finish();
             return;
           }
           if (isOSXLion) {
             todo(false, "Can't reliably run full-screen tests on OS X Lion, see bug 744125");
-            SimpleTest.finish();
+            finish();
             return;
           }
           if (gTestWindow) {
@@ -85,9 +97,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
             gTestWindow = window.open(gTestFiles[gTestIndex], "", "width=500,height=500");
             gTestIndex++;
           } else {
-            SpecialPowers.clearUserPref("full-screen-api.enabled");
-            SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
-            SimpleTest.finish();
+            finish();
           }
         }
 
