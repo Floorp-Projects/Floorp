@@ -178,7 +178,6 @@ struct JSCompartment
 
     size_t                       gcBytes;
     size_t                       gcTriggerBytes;
-    size_t                       gcMaxMallocBytes;
 
     bool                         hold;
     bool                         isSystemCompartment;
@@ -245,7 +244,8 @@ struct JSCompartment
      * gcMaxMallocBytes down to zero. This counter should be used only when it's
      * not possible to know the size of a free.
      */
-    ptrdiff_t                    gcMallocBytes;
+    size_t                       gcMallocBytes;
+    size_t                       gcMaxMallocBytes;
 
     enum { DebugFromC = 1, DebugFromJS = 2 };
 
@@ -281,12 +281,18 @@ struct JSCompartment
     void resetGCMallocBytes();
     void setGCMaxMallocBytes(size_t value);
     void updateMallocCounter(size_t nbytes) {
-        ptrdiff_t oldCount = gcMallocBytes;
-        ptrdiff_t newCount = oldCount - ptrdiff_t(nbytes);
+        size_t oldCount = gcMallocBytes;
+        size_t newCount = oldCount - nbytes;
         gcMallocBytes = newCount;
-        if (JS_UNLIKELY(newCount <= 0 && oldCount > 0))
+        // gcMallocBytes will wrap around and be bigger than gcMaxAllocBytes if a signed value
+        // would be < 0
+        if (JS_UNLIKELY(oldCount <= gcMaxMallocBytes && newCount > gcMaxMallocBytes))
             onTooMuchMalloc();
     }
+
+    bool isTooMuchMalloc() const {
+        return gcMallocBytes > gcMaxMallocBytes;
+     }
 
     void onTooMuchMalloc();
 
