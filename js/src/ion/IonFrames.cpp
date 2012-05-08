@@ -357,6 +357,13 @@ ion::HandleException(ResumeFromException *rfe)
         ++iter;
     }
 
+    // Clear any Ion return override that's been set.
+    // This may happen if a callVM function causes an invalidation (setting the
+    // override), and then fails, bypassing the bailout handlers that would
+    // otherwise clear the return override.
+    if (cx->runtime->hasIonReturnOverride())
+        cx->runtime->takeIonReturnOverride();
+
     rfe->stackPointer = iter.fp();
 }
 
