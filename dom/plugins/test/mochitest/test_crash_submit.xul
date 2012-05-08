@@ -93,12 +93,6 @@ function onPluginCrashed(aEvent) {
 }
 
 function runTests() {
-  if (navigator.userAgent.match(/ SeaMonkey\//)) {
-    todo(false, "Skipping this test on Seamonkey ftb. (Bug 604129)");
-    SimpleTest.finish();
-    return;
-  }
-
   if (!SimpleTest.testPluginIsOOP()) {
     todo(false, "Skipping this test when test plugin is not OOP.");
     SimpleTest.finish();
@@ -130,4 +124,3 @@ function runTests() {
 ]]>
 </script>
 </window>
-
