@@ -46,6 +46,7 @@
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+//#include "nsIDOMHTMLCanvasElement.h"
 
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
@@ -2482,8 +2483,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
             return JS::Int32Value(0);
         case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS:
         {
-            PRUint32 length = mCompressedTextureFormats.Length();
-            JSObject* obj = Uint32Array::Create(cx, length, mCompressedTextureFormats.Elements());
+            JSObject* obj = Uint32Array::Create(cx, 0);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -5082,37 +5082,11 @@ WebGLContext::CompressedTexImage2D(WebGLenum target, WebGLint level, WebGLenum i
         return;
     }
 
-    if (!ValidateTexImage2DTarget(target, width, height, "compressedTexImage2D")) {
-        return;
-    }
-
     WebGLTexture *tex = activeBoundTextureForTarget(target);
-    if (!tex) {
-        ErrorInvalidOperation("compressedTexImage2D: no texture is bound to this target");
-        return;
-    }
+    if (!tex)
+        return ErrorInvalidOperation("compressedTexImage2D: no texture is bound to this target");
 
-    if (!mCompressedTextureFormats.Contains(internalformat)) {
-        ErrorInvalidEnum("compressedTexImage2D: compressed texture format 0x%x is not supported", internalformat);
-        return;
-    }
-
-    if (!ValidateLevelWidthHeightForTarget(target, level, width, height, "compressedTexImage2D")) {
-        return;
-    }
-
-    if (border) {
-        ErrorInvalidValue("compressedTexImage2D: border is not 0");
-        return;
-    }
-
-    uint32_t byteLength = view.mLength;
-    if (!ValidateCompressedTextureSize(level, internalformat, width, height, byteLength, "compressedTexImage2D")) {
-        return;
-    }
-
-    gl->fCompressedTexImage2D(target, level, internalformat, width, height, border, byteLength, view.mData);
-    tex->SetImageInfo(target, level, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE);
+    return ErrorInvalidEnum("compressedTexImage2D: compressed textures are not supported");
 }
 
 NS_IMETHODIMP
@@ -5139,82 +5113,12 @@ WebGLContext::CompressedTexSubImage2D(WebGLenum target, WebGLint level, WebGLint
         return;
     }
 
-    switch (target) {
-        case LOCAL_GL_TEXTURE_2D:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-            break;
-        default:
-            return ErrorInvalidEnumInfo("texSubImage2D: target", target);
-    }
-
     WebGLTexture *tex = activeBoundTextureForTarget(target);
     if (!tex) {
-        ErrorInvalidOperation("compressedTexSubImage2D: no texture is bound to this target");
-        return;
+        return ErrorInvalidOperation("compressedTexSubImage2D: no texture is bound to this target");
     }
 
-    if (!mCompressedTextureFormats.Contains(format)) {
-        ErrorInvalidEnum("compressedTexSubImage2D: compressed texture format 0x%x is not supported", format);
-        return;
-    }
-
-    if (!ValidateLevelWidthHeightForTarget(target, level, width, height, "compressedTexSubImage2D")) {
-        return;
-    }
-
-    uint32_t byteLength = view.mLength;
-    if (!ValidateCompressedTextureSize(level, format, width, height, byteLength, "compressedTexSubImage2D")) {
-        return;
-    }
-
-    size_t face = WebGLTexture::FaceForTarget(target);
-
-    if (!tex->HasImageInfoAt(level, face)) {
-        ErrorInvalidOperation("compressedTexSubImage2D: no texture image previously defined for this level and face");
-        return;
-    }
-
-    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
-
-    if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, imageInfo.Width(), imageInfo.Height())) {
-        ErrorInvalidValue("compressedTexSubImage2D: subtexture rectangle out of bounds");
-        return;
-    }
-
-    switch (format) {
-        case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-        {
-            if (xoffset < 0 || xoffset % 4 != 0) {
-                ErrorInvalidOperation("compressedTexSubImage2D: xoffset is not a multiple of 4");
-                return;
-            }
-            if (yoffset < 0 || yoffset % 4 != 0) {
-                ErrorInvalidOperation("compressedTexSubImage2D: yoffset is not a multiple of 4");
-                return;
-            }
-            if (width % 4 != 0 && width != imageInfo.Width()) {
-                ErrorInvalidOperation("compressedTexSubImage2D: width is not a multiple of 4 or equal to texture width");
-                return;
-            }
-            if (height % 4 != 0 && height != imageInfo.Height()) {
-                ErrorInvalidOperation("compressedTexSubImage2D: height is not a multiple of 4 or equal to texture height");
-                return;
-            }
-            break;
-        }
-    }
-
-    gl->fCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, byteLength, view.mData);
-
-    return;
+    return ErrorInvalidEnum("compressedTexSubImage2D: compressed textures are not supported");
 }
 
 NS_IMETHODIMP
@@ -5553,8 +5457,20 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
                               int jsArrayType, // a TypedArray format enum, or -1 if not relevant
                               WebGLTexelFormat srcFormat, bool srcPremultiplied)
 {
-    if (!ValidateTexImage2DTarget(target, width, height, "texImage2D")) {
-        return;
+    switch (target) {
+        case LOCAL_GL_TEXTURE_2D:
+            break;
+        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+            if (width != height)
+                return ErrorInvalidValue("texImage2D: with cube map targets, width and height must be equal");
+            break;
+        default:
+            return ErrorInvalidEnumInfo("texImage2D: target", target);
     }
 
     switch (format) {
@@ -5571,9 +5487,19 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     if (format != internalformat)
         return ErrorInvalidOperation("texImage2D: format does not match internalformat");
 
-    if (!ValidateLevelWidthHeightForTarget(target, level, width, height, "texImage2D")) {
-        return;
-    }
+    WebGLsizei maxTextureSize = MaxTextureSizeForTarget(target);
+
+    if (level < 0)
+        return ErrorInvalidValue("texImage2D: level must be >= 0");
+
+    if (!(maxTextureSize >> level))
+        return ErrorInvalidValue("texImage2D: 2^level exceeds maximum texture size");
+
+    if (width < 0 || height < 0)
+        return ErrorInvalidValue("texImage2D: width and height must be >= 0");
+
+    if (width > maxTextureSize || height > maxTextureSize)
+        return ErrorInvalidValue("texImage2D: width or height exceeds maximum texture size");
 
     if (level >= 1) {
         if (!(is_pot_assuming_nonnegative(width) &&
@@ -5812,9 +5738,19 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
             return ErrorInvalidEnumInfo("texSubImage2D: target", target);
     }
 
-    if (!ValidateLevelWidthHeightForTarget(target, level, width, height, "texSubImage2D")) {
-        return;
-    }
+    WebGLsizei maxTextureSize = MaxTextureSizeForTarget(target);
+
+    if (level < 0)
+        return ErrorInvalidValue("texSubImage2D: level must be >= 0");
+
+    if (!(maxTextureSize >> level))
+        return ErrorInvalidValue("texSubImage2D: 2^level exceeds maximum texture size");
+
+    if (width < 0 || height < 0)
+        return ErrorInvalidValue("texSubImage2D: width and height must be >= 0");
+
+    if (width > maxTextureSize || height > maxTextureSize)
+        return ErrorInvalidValue("texSubImage2D: width or height exceeds maximum texture size");
 
     if (level >= 1) {
         if (!(is_pot_assuming_nonnegative(width) &&
