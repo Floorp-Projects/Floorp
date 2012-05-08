@@ -99,7 +99,7 @@ var W3CTest = {
   "finish": function(tests, status) {
     var url = this.getURL();
     this.report({
-      "message": "Finished test",
+      "message": "Finished test, status " + status.status,
       "result": status.status === status.OK,
       "todo":
         url in this.expectedFailures &&
