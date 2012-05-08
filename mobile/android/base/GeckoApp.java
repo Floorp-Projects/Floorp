@@ -2242,8 +2242,7 @@ abstract public class GeckoApp
                 public void run() {
                     Log.i(LOGTAG, "Checking profile migration in: " + profileDir.getAbsolutePath());
 
-                    ProfileMigrator profileMigrator =
-                        new ProfileMigrator(app, profileDir);
+                    ProfileMigrator profileMigrator = new ProfileMigrator(app);
 
                     // Do a migration run on the first start after an upgrade.
                     if (!profileMigrator.hasMigrationRun()) {
@@ -2273,7 +2272,7 @@ abstract public class GeckoApp
 
                         profileMigrator.setLongOperationCallbacks(startCallback,
                                                                   stopCallback);
-                        profileMigrator.launchPlaces();
+                        profileMigrator.launchPlaces(profileDir);
 
                         long timeDiff = SystemClock.uptimeMillis() - currentTime;
                         Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
@@ -2290,8 +2289,7 @@ abstract public class GeckoApp
         final File profileDir = getProfile().getDir();
         if (profileDir != null) {
             final GeckoApp app = GeckoApp.mAppContext;
-            ProfileMigrator profileMigrator =
-                new ProfileMigrator(app, profileDir);
+            ProfileMigrator profileMigrator = new ProfileMigrator(app);
             if (!profileMigrator.hasSyncMigrated()) {
                 Log.i(LOGTAG, "Checking Sync settings in: " + profileDir.getAbsolutePath());
                 profileMigrator.launchSyncPrefs();
