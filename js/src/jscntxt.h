@@ -644,13 +644,6 @@ struct JSRuntime : js::RuntimeFriendFields
     js::GCSliceCallback gcSliceCallback;
     JSFinalizeCallback  gcFinalizeCallback;
 
-  private:
-    /*
-     * Malloc counter to measure memory pressure for GC scheduling. It runs
-     * from gcMaxMallocBytes down to zero.
-     */
-    volatile ptrdiff_t  gcMallocBytes;
-
   public:
     /*
      * The trace operations to trace embedding-specific GC roots. One is for
@@ -855,17 +848,8 @@ struct JSRuntime : js::RuntimeFriendFields
     JS_DECLARE_NEW_METHODS(malloc_, JS_ALWAYS_INLINE)
     JS_DECLARE_DELETE_METHODS(free_, JS_ALWAYS_INLINE)
 
-    bool isGCMallocLimitReached() const { return gcMallocBytes <= 0; }
-
-    void resetGCMallocBytes() { gcMallocBytes = ptrdiff_t(gcMaxMallocBytes); }
-
     void setGCMaxMallocBytes(size_t value) {
-        /*
-         * For compatibility treat any value that exceeds PTRDIFF_T_MAX to
-         * mean that value.
-         */
-        gcMaxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
-        resetGCMallocBytes();
+        gcMaxMallocBytes = value;
     }
 
     /*
@@ -877,12 +861,6 @@ struct JSRuntime : js::RuntimeFriendFields
      * the caller must ensure that no deadlock possible during OOM reporting.
      */
     void updateMallocCounter(JSContext *cx, size_t nbytes);
-
-    /*
-     * The function must be called outside the GC lock.
-     */
-    JS_FRIEND_API(void) onTooMuchMalloc();
-
     /*
      * This should be called after system malloc/realloc returns NULL to try
      * to recove some memory or to report an error. Failures in malloc and
