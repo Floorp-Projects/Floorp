@@ -139,6 +139,7 @@ __cpuid(int CPUInfo[4], int InfoType)
 #endif
 #endif
 
+#ifdef USE_SSE2
 static bool
 HasCPUIDBit(unsigned int level, CPUIDRegister reg, unsigned int bit)
 {
@@ -150,7 +151,7 @@ HasCPUIDBit(unsigned int level, CPUIDRegister reg, unsigned int bit)
   __cpuid((int *)regs, level);
   return !!(unsigned(regs[reg]) & bit);
 }
-
+#endif
 #endif
 
 namespace mozilla {
