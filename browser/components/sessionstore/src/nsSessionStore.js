@@ -137,8 +137,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
                                   "resource:///modules/devtools/scratchpad-manager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "XPathGenerator",
-                                  "resource:///modules/sessionstore/XPathGenerator.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
+                                  "resource:///modules/sessionstore/DocumentUtils.jsm");
 
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -2243,18 +2243,29 @@ SessionStoreService.prototype = {
     let isAboutSR = aContent.top.document.location.href == "about:sessionrestore";
     if (aFullData || this._checkPrivacyLevel(isHTTPS, aIsPinned) || isAboutSR) {
       if (aFullData || aUpdateFormData) {
-        let formData = this._collectFormDataForFrame(aContent.document);
+        let formData = DocumentUtils.getFormData(aContent.document);
 
         // We want to avoid saving data for about:sessionrestore as a string.
         // Since it's stored in the form as stringified JSON, stringifying further
         // causes an explosion of escape characters. cf. bug 467409
-        if (formData && isAboutSR)
-          formData["#sessionData"] = JSON.parse(formData["#sessionData"]);
+        if (formData && isAboutSR) {
+          formData.id["sessionData"] = JSON.parse(formData.id["sessionData"]);
+        }
 
-        if (formData)
-          aData.formdata = formData;
-        else if (aData.formdata)
+        // For backwards compatibility in SessionStore, the structure of the
+        // stored object is modified slightly.
+        if (Object.keys(formData.id).length ||
+            Object.keys(formData.xpath).length) {
+          // The object returned from getFormData() is not shared, so we reuse
+          // the xpath sub-object for our storage.
+          aData.formdata = formData.xpath;
+
+          for each (let [k, v] in Iterator(formData.id)) {
+            aData.formdata["#" + k] = v;
+          }
+        } else if (aData.formdata) {
           delete aData.formdata;
+        }
       }
       
       // designMode is undefined e.g. for XUL documents (as about:config)
@@ -2299,83 +2310,6 @@ SessionStoreService.prototype = {
         return selectedPageStyle;
     }
     return "";
-  },
-
-  /**
-   * collect the state of all form elements
-   * @param aDocument
-   *        document reference
-   */
-  _collectFormDataForFrame: function sss_collectFormDataForFrame(aDocument) {
-    let formNodes = aDocument.evaluate(XPathGenerator.restorableFormNodes, aDocument,
-                                       XPathGenerator.resolveNS,
-                                       Ci.nsIDOMXPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-    let node = formNodes.iterateNext();
-    if (!node)
-      return null;
-
-    const MAX_GENERATED_XPATHS = 100;
-    let generatedCount = 0;
-
-    let data = {};
-    do {
-      let nId = node.id;
-      let hasDefaultValue = true;
-      let value;
-
-      // Only generate a limited number of XPath expressions for perf reasons (cf. bug 477564)
-      if (!nId && generatedCount > MAX_GENERATED_XPATHS)
-        continue;
-
-      if (node instanceof Ci.nsIDOMHTMLInputElement ||
-          node instanceof Ci.nsIDOMHTMLTextAreaElement) {
-        switch (node.type) {
-          case "checkbox":
-          case "radio":
-            value = node.checked;
-            hasDefaultValue = value == node.defaultChecked;
-            break;
-          case "file":
-            value = { type: "file", fileList: node.mozGetFileNameArray() };
-            hasDefaultValue = !value.fileList.length;
-            break;
-          default: // text, textarea
-            value = node.value;
-            hasDefaultValue = value == node.defaultValue;
-            break;
-        }
-      }
-      else if (!node.multiple) {
-        // <select>s without the multiple attribute are hard to determine the
-        // default value, so assume we don't have the default.
-        hasDefaultValue = false;
-        value = node.selectedIndex;
-      }
-      else {
-        // <select>s with the multiple attribute are easier to determine the
-        // default value since each <option> has a defaultSelected
-        let options = Array.map(node.options, function(aOpt, aIx) {
-          let oSelected = aOpt.selected;
-          hasDefaultValue = hasDefaultValue && (oSelected == aOpt.defaultSelected);
-          return oSelected ? aIx : -1;
-        });
-        value = options.filter(function(aIx) aIx >= 0);
-      }
-      // In order to reduce XPath generation (which is slow), we only save data
-      // for form fields that have been changed. (cf. bug 537289)
-      if (!hasDefaultValue) {
-        if (nId) {
-          data["#" + nId] = value;
-        }
-        else {
-          generatedCount++;
-          data[XPathGenerator.generate(node)] = value;
-        }
-      }
-
-    } while ((node = formNodes.iterateNext()));
-
-    return data;
   },
 
   /**
@@ -3479,77 +3413,36 @@ SessionStoreService.prototype = {
     function hasExpectedURL(aDocument, aURL)
       !aURL || aURL.replace(/#.*/, "") == aDocument.location.href.replace(/#.*/, "");
 
-    function restoreFormData(aDocument, aData, aURL) {
-      for (let key in aData) {
-        if (!hasExpectedURL(aDocument, aURL))
-          return;
-
-        let node = key.charAt(0) == "#" ? aDocument.getElementById(key.slice(1)) :
-                                          XPathGenerator.resolve(aDocument, key);
-        if (!node)
-          continue;
-
-        let eventType;
-        let value = aData[key];
-
-        // for about:sessionrestore we saved the field as JSON to avoid nested
-        // instances causing humongous sessionstore.js files. cf. bug 467409
-        if (aURL == "about:sessionrestore" && typeof value == "object") {
-          value = JSON.stringify(value);
-        }
-
-        if (typeof value == "string" && node.type != "file") {
-          if (node.value == value)
-            continue; // don't dispatch an input event for no change
-
-          node.value = value;
-          eventType = "input";
-        }
-        else if (typeof value == "boolean") {
-          if (node.checked == value)
-            continue; // don't dispatch a change event for no change
-
-          node.checked = value;
-          eventType = "change";
-        }
-        else if (typeof value == "number") {
-          // We saved the value blindly since selects take more work to determine
-          // default values. So now we should check to avoid unnecessary events.
-          if (node.selectedIndex == value)
-            continue;
-
-          try {
-            node.selectedIndex = value;
-            eventType = "change";
-          } catch (ex) { /* throws for invalid indices */ }
-        }
-        else if (value && value.fileList && value.type == "file" && node.type == "file") {
-          node.mozSetFileNameArray(value.fileList, value.fileList.length);
-          eventType = "input";
-        }
-        else if (value && typeof value.indexOf == "function" && node.options) {
-          Array.forEach(node.options, function(aOpt, aIx) {
-            aOpt.selected = value.indexOf(aIx) > -1;
-
-            // Only fire the event here if this wasn't selected by default
-            if (!aOpt.defaultSelected)
-              eventType = "change";
-          });
-        }
-
-        // Fire events for this node if applicable
-        if (eventType) {
-          let event = aDocument.createEvent("UIEvents");
-          event.initUIEvent(eventType, true, true, aDocument.defaultView, 0);
-          node.dispatchEvent(event);
-        }
-      }
-    }
-
     let selectedPageStyle = aBrowser.__SS_restore_pageStyle;
     function restoreTextDataAndScrolling(aContent, aData, aPrefix) {
-      if (aData.formdata)
-        restoreFormData(aContent.document, aData.formdata, aData.url);
+      if (aData.formdata && hasExpectedURL(aContent.document, aData.url)) {
+        let formdata = aData.formdata;
+
+        // handle backwards compatibility
+        if (!("xpath" in formdata || "id" in formdata)) {
+          formdata = {xpath: {}, id: {}};
+
+          for each (let [key, value] in Iterator(aData.formdata)) {
+            if (key.charAt(0) == "#") {
+              formdata.id[key.slice(1)] = value;
+            } else {
+              formdata.xpath[key] = value;
+            }
+          }
+        }
+
+        // for about:sessionrestore we saved the field as JSON to avoid
+        // nested instances causing humongous sessionstore.js files.
+        // cf. bug 467409
+        if (aData.url == "about:sessionrestore" &&
+            typeof formdata.id["sessionData"] == "object") {
+          formdata.id["sessionData"] =
+            JSON.stringify(formdata.id["sessionData"]);
+        }
+
+        DocumentUtils.mergeFormData(aContent.document, formdata);
+      }
+
       if (aData.innerHTML) {
         aWindow.setTimeout(function() {
           if (aContent.document.designMode == "on" &&
