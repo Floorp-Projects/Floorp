@@ -169,20 +169,14 @@ ArgumentsObject::create(JSContext *cx, StackFrame *fp)
 }
 
 ArgumentsObject *
-ArgumentsObject::createUnexpected(JSContext *cx, StackFrame *fp)
+ArgumentsObject::createUnexpected(JSContext *cx, StackIter &iter)
 {
-    ArgumentsObject *argsobj = create(cx, fp->numActualArgs(), RootedVarObject(cx, &fp->callee()));
+    ArgumentsObject *argsobj = create(cx, iter.numActualArgs(), RootedVarFunction(cx, iter.callee()));
     if (!argsobj)
         return NULL;
 
-    fp->forEachCanonicalActualArg(PutArg(cx->compartment, *argsobj));
+    iter.forEachCanonicalActualArg(PutArg(cx->compartment, *argsobj));
     return argsobj;
-}
-
-ArgumentsObject *
-ArgumentsObject::createPoison(JSContext *cx, uint32_t argc, HandleObject callee)
-{
-    return ArgumentsObject::create(cx, argc, callee);
 }
 
 static JSBool

@@ -132,10 +132,6 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     if (iter.done())
         return true;
 
-    StackFrame *fp = NULL;
-    if (iter.isScript())
-        fp = iter.fp();
-
     if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
         /* Warn if strict about f.arguments or equivalent unqualified uses. */
         if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING | JSREPORT_STRICT, js_GetErrorMessage,
@@ -143,14 +139,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             return false;
         }
 
-        ArgumentsObject *argsobj;
-        if (!fp) {
-            RootedVarFunction f(cx, iter.callee());
-            argsobj = ArgumentsObject::createPoison(cx, f->nargs, f);
-        } else {
-            argsobj = ArgumentsObject::createUnexpected(cx, fp);
-        }
-
+        ArgumentsObject *argsobj = ArgumentsObject::createUnexpected(cx, iter);
         if (!argsobj)
             return false;
 
@@ -159,6 +148,10 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     }
 
 #ifdef JS_METHODJIT
+    StackFrame *fp = NULL;
+    if (iter.isScript() && !iter.isIon())
+        fp = iter.fp();
+
     if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom) && fp && fp->prev()) {
         /*
          * If the frame was called from within an inlined frame, mark the

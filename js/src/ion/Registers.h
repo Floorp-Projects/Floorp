@@ -136,6 +136,12 @@ class MachineState
         fpregs_[reg.code()] = dp;
     }
 
+    bool has(Register reg) const {
+        return regs_[reg.code()] != NULL;
+    }
+    bool has(FloatRegister reg) const {
+        return fpregs_[reg.code()] != NULL;
+    }
     uintptr_t read(Register reg) const {
         return *regs_[reg.code()];
     }
