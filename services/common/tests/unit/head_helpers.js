@@ -4,6 +4,9 @@
 
 Cu.import("resource://services-common/log4moz.js");
 
+let btoa = Cu.import("resource://services-common/log4moz.js").btoa;
+let atob = Cu.import("resource://services-common/log4moz.js").atob;
+
 function do_check_empty(obj) {
   do_check_attribute_count(obj, 0);
 }
