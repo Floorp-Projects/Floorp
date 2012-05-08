@@ -39,11 +39,16 @@
 
 #include "TestBase.h"
 
-class TestPoint : public TestBase
+class TestScaling : public TestBase
 {
 public:
-  TestPoint();
+  TestScaling();
 
-  void Addition();
-  void Subtraction();
+  void BasicHalfScale();
+  void DoubleHalfScale();
+  void UnevenHalfScale();
+  void OddStrideHalfScale();
+  void VerticalHalfScale();
+  void HorizontalHalfScale();
+  void MixedHalfScale();
 };
