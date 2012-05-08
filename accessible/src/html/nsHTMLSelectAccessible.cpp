@@ -256,22 +256,6 @@ nsHTMLSelectOptionAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-// nsAccessible protected
-nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
-{
-  PRUint64 state = 0;
-  nsIContent* content = GetSelectState(&state);
-  if (state & states::COLLAPSED) {
-    if (content) {
-      return content->GetPrimaryFrame();
-    }
-
-    return nsnull;
-  }
-
-  return nsAccessible::GetBoundsFrame();
-}
-
 PRUint64
 nsHTMLSelectOptionAccessible::NativeState()
 {
@@ -348,8 +332,16 @@ nsHTMLSelectOptionAccessible::GetLevelInternal()
   return level;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLSelectOptionAccessible: nsIAccessible
+void
+nsHTMLSelectOptionAccessible::GetBoundsRect(nsRect& aTotalBounds,
+                                            nsIFrame** aBoundingFrame)
+{
+  nsAccessible* combobox = GetCombobox();
+  if (combobox && (combobox->State() & states::COLLAPSED))
+    combobox->GetBoundsRect(aTotalBounds, aBoundingFrame);
+  else
+    nsHyperTextAccessibleWrap::GetBoundsRect(aTotalBounds, aBoundingFrame);
+}
 
 /** select us! close combo box if necessary*/
 NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
