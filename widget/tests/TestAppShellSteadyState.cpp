@@ -279,7 +279,7 @@ public:
   ScheduleTimer(nsIDOMWindowUtils* aWindowUtils)
   {
 #ifdef XP_WIN
-    UINT_PTR timerId = SetTimer(NULL, 0, 1000, TimerCallback);
+    UINT_PTR timerId = SetTimer(NULL, 0, 1000, (TIMERPROC)TimerCallback);
     if (!timerId) {
       fail("SetTimer failed!");
       return false;
