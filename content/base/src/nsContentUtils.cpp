@@ -3451,18 +3451,9 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
   if (!aDoc->GetWindow())
     return NS_ERROR_INVALID_ARG;
 
-  nsIDOMEventTarget* piTarget = aDoc->GetWindow()->GetChromeEventHandler();
+  nsIDOMEventTarget* piTarget = aDoc->GetWindow()->GetParentTarget();
   if (!piTarget)
     return NS_ERROR_INVALID_ARG;
-
-  nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(piTarget);
-  if (flo) {
-    nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
-    if (fl) {
-      nsIDOMEventTarget* t = fl->GetTabChildGlobalAsEventTarget();
-      piTarget = t ? t : piTarget;
-    }
-  }
 
   nsEventStatus status = nsEventStatus_eIgnore;
   rv = piTarget->DispatchDOMEvent(nsnull, event, nsnull, &status);

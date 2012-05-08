@@ -530,17 +530,8 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     if (!nsContentUtils::IsChromeDoc(doc)) {
       nsPIDOMWindow* win = doc ? doc->GetInnerWindow() : nsnull;
       // If we can't dispatch the event to chrome, do nothing.
-      nsIDOMEventTarget* piTarget = win ? win->GetChromeEventHandler() : nsnull;
+      nsIDOMEventTarget* piTarget = win ? win->GetParentTarget() : nsnull;
       NS_ENSURE_TRUE(piTarget, NS_OK);
-
-      nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(piTarget);
-      if (flo) {
-        nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
-        if (fl) {
-          nsIDOMEventTarget* t = fl->GetTabChildGlobalAsEventTarget();
-          piTarget = t ? t : piTarget;
-        }
-      }
       
       // Set the target to be the original dispatch target,
       aEvent->target = target;
