@@ -1899,9 +1899,13 @@ class StackIter
     JSScript   *script() const { JS_ASSERT(isScript()); return script_; }
     JSFunction *callee() const;
     Value       calleev() const;
+    unsigned    numActualArgs() const;
     JSObject   *thisObject() const;
 
     CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return args_; }
+
+    template <class Op>
+    inline bool forEachCanonicalActualArg(Op op, unsigned start = 0, unsigned count = unsigned(-1));
 };
 
 /* A filtering of the StackIter to only stop at scripts. */

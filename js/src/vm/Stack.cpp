@@ -1174,7 +1174,7 @@ StackIter::settleOnNewState()
 
 #ifdef JS_ION
             if (fp_->runningInIon()) {
-                ionFrames_ = ion::IonFrameIterator(ionActivations_.top());
+                ionFrames_ = ion::IonFrameIterator(ionActivations_);
 
                 while (!ionFrames_.done() && !ionFrames_.isScripted())
                     ++ionFrames_;
@@ -1411,7 +1411,7 @@ StackIter::isConstructing() const
         JS_NOT_REACHED("Unexpected state");
         return false;
       case ION:
-        return ionInlineFrames_.isConstructing(ionActivations_.activation());
+        return ionInlineFrames_.isConstructing();
       case SCRIPTED:
       case NATIVE:
       case IMPLICIT_NATIVE:
@@ -1456,6 +1456,30 @@ StackIter::calleev() const
     }
     JS_NOT_REACHED("Unexpected state");
     return Value();
+}
+
+unsigned
+StackIter::numActualArgs() const
+{
+    switch (state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        JS_ASSERT(isFunctionFrame());
+        return fp()->numActualArgs();
+      case ION:
+        // :TODO: We need to handle actual arguments in IonMonkey.  Currently we
+        // cannot easily read all arguments used for the call and we do not want
+        // to hack around it because a part of Bug 735406 is to instrucment Ion
+        // frames to provide actual arguments.
+        JS_ASSERT(ionInlineFrames_.numActualArgs() <= ionInlineFrames_.callee()->nargs);
+        return ionInlineFrames_.numActualArgs();
+      case NATIVE:
+      case IMPLICIT_NATIVE:
+        return nativeArgs().length();
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return 0;
 }
 
 JSObject *
