@@ -12,7 +12,7 @@ function test() {
   debug_tab_pane(STACK_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gPane = aPane;
-    gDebugger = gPane.debuggerWindow;
+    gDebugger = gPane.contentWindow;
 
     testPause();
   });
