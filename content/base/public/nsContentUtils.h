@@ -1843,13 +1843,6 @@ public:
   static bool IsRequestFullScreenAllowed();
 
   /**
-   * Returns true if key input is restricted in DOM full-screen mode
-   * to non-alpha-numeric key codes only. This mirrors the
-   * "full-screen-api.key-input-restricted" pref.
-   */
-  static bool IsFullScreenKeyInputRestricted();
-
-  /**
    * Returns true if the doc tree branch which contains aDoc contains any
    * plugins which we don't control event dispatch for, i.e. do any plugins
    * in the same tab as this document receive key events outside of our
@@ -2121,7 +2114,6 @@ private:
   static bool sAllowXULXBL_for_file;
   static bool sIsFullScreenApiEnabled;
   static bool sTrustedFullScreenOnly;
-  static bool sFullScreenKeyInputRestricted;
   static PRUint32 sHandlingInputTimeout;
 
   static nsHtml5StringParser* sHTMLFragmentParser;

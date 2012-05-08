@@ -288,7 +288,6 @@ nsString* nsContentUtils::sModifierSeparator = nsnull;
 bool nsContentUtils::sInitialized = false;
 bool nsContentUtils::sIsFullScreenApiEnabled = false;
 bool nsContentUtils::sTrustedFullScreenOnly = true;
-bool nsContentUtils::sFullScreenKeyInputRestricted = true;
 
 PRUint32 nsContentUtils::sHandlingInputTimeout = 1000;
 
@@ -424,9 +423,6 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sTrustedFullScreenOnly,
                                "full-screen-api.allow-trusted-requests-only");
-
-  Preferences::AddBoolVarCache(&sFullScreenKeyInputRestricted,
-                               "full-screen-api.key-input-restricted");
 
   Preferences::AddUintVarCache(&sHandlingInputTimeout,
                                "dom.event.handling-user-input-time-limit",
@@ -6503,17 +6499,12 @@ nsContentUtils::IsFullScreenApiEnabled()
   return sIsFullScreenApiEnabled;
 }
 
-bool nsContentUtils::IsRequestFullScreenAllowed()
+bool
+nsContentUtils::IsRequestFullScreenAllowed()
 {
   return !sTrustedFullScreenOnly ||
          nsEventStateManager::IsHandlingUserInput() ||
          IsCallerChrome();
-}
-
-bool
-nsContentUtils::IsFullScreenKeyInputRestricted()
-{
-  return sFullScreenKeyInputRestricted;
 }
 
 static void
