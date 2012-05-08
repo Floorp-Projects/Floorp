@@ -39,6 +39,20 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
   var s = h.snapshot().counts;
   do_check_eq(s[0], 2)
   do_check_eq(s[1], 2)
+
+  // Check that clearing works.
+  h.clear();
+  var s = h.snapshot();
+  for each(var i in s.counts) {
+    do_check_eq(i, 0);
+  }
+  do_check_eq(s.sum, 0);
+
+  h.add(0);
+  h.add(1);
+  var c = h.snapshot().counts;
+  do_check_eq(c[0], 1);
+  do_check_eq(c[1], 1);
 }
 
 function expect_fail(f) {
