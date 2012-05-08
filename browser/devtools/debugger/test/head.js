@@ -49,12 +49,16 @@ function removeTab(aTab) {
   gBrowser.removeTab(aTab);
 }
 
-function closeDebuggerAndFinish(aTab) {
+function closeDebuggerAndFinish(aTab, aRemoteFlag) {
   DebuggerUI.chromeWindow.addEventListener("Debugger:Shutdown", function cleanup() {
     DebuggerUI.chromeWindow.removeEventListener("Debugger:Shutdown", cleanup, false);
     finish();
   }, false);
-  DebuggerUI.getDebugger(aTab).close();
+  if (!aRemoteFlag) {
+    DebuggerUI.getDebugger(aTab).close();
+  } else {
+    DebuggerUI.getRemoteDebugger().close();
+  }
 }
 
 function get_tab_actor_for_url(aClient, aURL, aCallback) {
@@ -99,20 +103,41 @@ function debug_tab_pane(aURL, aOnDebugging)
       pane._frame.removeEventListener("Debugger:Connecting", dbgConnected, true);
 
       // Wait for the initial resume...
-      pane.debuggerWindow.gClient.addOneTimeListener("resumed", function() {
+      pane.contentWindow.gClient.addOneTimeListener("resumed", function() {
         aOnDebugging(tab, debuggee, pane);
       });
     }, true);
   });
 }
 
-function remote_debug_tab_pane(aURL, aOnClosing, aOnDebugging)
+function debug_remote(aURL, aOnDebugging, aBeforeTabAdded)
+{
+  // Make any necessary preparations (start the debugger server etc.)
+  aBeforeTabAdded();
+
+  let tab = addTab(aURL, function() {
+    gBrowser.selectedTab = gTab;
+    let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
+
+    let win = DebuggerUI.toggleRemoteDebugger();
+    win._dbgwin.addEventListener("Debugger:Connecting", function dbgConnected() {
+      win._dbgwin.removeEventListener("Debugger:Connecting", dbgConnected, true);
+
+      // Wait for the initial resume...
+      win.contentWindow.gClient.addOneTimeListener("resumed", function() {
+        aOnDebugging(tab, debuggee, win);
+      });
+    }, true);
+  });
+}
+
+function debug_chrome(aURL, aOnClosing, aOnDebugging)
 {
   let tab = addTab(aURL, function() {
     gBrowser.selectedTab = gTab;
     let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
 
-    DebuggerUI.toggleRemoteDebugger(aOnClosing, function dbgRan(process) {
+    DebuggerUI.toggleChromeDebugger(aOnClosing, function dbgRan(process) {
 
       // Wait for the remote debugging process to start...
       aOnDebugging(tab, debuggee, process);
