@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Accessible boundaries when page is zoomed</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function openComboboxNCheckBounds(aID)
+    {
+      this.combobox = getAccessible(aID);
+      this.comboboxList = this.combobox.firstChild;
+      this.comboboxOption = this.comboboxList.firstChild;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, this.comboboxOption)
+      ];
+
+      this.invoke = function openComboboxNCheckBounds_invoke()
+      {
+        getNode(aID).focus();
+        synthesizeKey("VK_DOWN", { altKey: true });
+      }
+
+      this.finalCheck = function openComboboxNCheckBounds_invoke()
+      {
+        testBounds(this.comboboxOption);
+      }
+
+      this.getID = function openComboboxNCheckBounds_getID()
+      {
+        return "open combobox and test boundaries";
+      }
+    }
+
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      // Combobox
+      testBounds("combobox");
+
+      // Option boundaries matches to combobox boundaries when collapsed.
+      var selectBounds = getBoundsForDOMElm("combobox");
+      testBounds("option1", selectBounds);
+
+      // Open combobox and test option boundaries.
+      gQueue = new eventQueue();
+      gQueue.push(new openComboboxNCheckBounds("combobox"));
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <select id="combobox">
+    <option id="option1">item1</option>
+    <option>item2</option>
+  </select>
+</body>
+</html>
