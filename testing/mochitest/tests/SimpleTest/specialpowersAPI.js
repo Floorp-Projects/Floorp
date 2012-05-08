@@ -1070,4 +1070,16 @@ SpecialPowersAPI.prototype = {
                                   .frameLoader
                                   .messageManager);
   },
+  
+  setFullscreenAllowed: function(document) {
+    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+    var uri = this.getDocumentURIObject(document);
+    pm.add(uri, "fullscreen", Ci.nsIPermissionManager.ALLOW_ACTION);
+  },
+  
+  removeFullscreenAllowed: function(document) {
+    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+    var uri = this.getDocumentURIObject(document);
+    pm.remove(uri.host, "fullscreen");
+  }
 };
