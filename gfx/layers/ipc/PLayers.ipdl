@@ -244,6 +244,10 @@ parent:
   sync Update(Edit[] cset, bool isFirstPaint)
     returns (EditReply[] reply);
 
+  // We don't need to send a sync transaction if
+  // no transaction operate require a swap.
+  async UpdateNoSwap(Edit[] cset, bool isFirstPaint);
+
   async __delete__();
 };
 

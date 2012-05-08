@@ -27,8 +27,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=726949
           is(t, window.top, "Should have gotten the right thing back");
           desc = Cu.evalInSandbox('Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this), "Cu")', s);
           isnot(desc, undefined,
-		"Should have an own 'Cu' property");
-	  is(desc.value, Cu, "Should have the right value");
+                "Should have an own 'Cu' property");
+          is(desc.value, Cu, "Should have the right value");
+          var loc = Cu.evalInSandbox('location', s);
+          is(loc.href, location.href, "Should have the right location");
       } catch (e) {
           ok(false, "Should not get an exception: " + e);
       }

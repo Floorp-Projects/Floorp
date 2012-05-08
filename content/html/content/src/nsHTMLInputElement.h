@@ -303,6 +303,11 @@ public:
     return HasAttr(kNameSpaceID_None, nsGkAtoms::checked);
   }
 
+  /**
+   * Fires change event if mFocusedValue and current value held are unequal.
+   */
+  void FireChangeEventIfNeeded();
+
 protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.
@@ -585,6 +590,15 @@ protected:
   nsRefPtr<nsDOMFileList>  mFileList;
 
   nsString mStaticDocFileList;
+  
+  /** 
+   * The value of the input element when first initialized and it is updated
+   * when the element is either changed through a script, focused or dispatches   
+   * a change event. This is to ensure correct future change event firing.
+   * NB: This is ONLY applicable where the element is a text control. ie,
+   * where type= "text", "email", "search", "tel", "url" or "password".
+   */
+  nsString mFocusedValue;  
 
   /**
    * The type of this input (<input type=...>) as an integer.
