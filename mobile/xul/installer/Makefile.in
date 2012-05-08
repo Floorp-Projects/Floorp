@@ -141,8 +141,8 @@ endif
 ifeq ($(OS_TARGET),Linux)
 GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
 GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
-ABS_OBJDIR=`cd $(DEPTH); pwd`
-ABS_TOPSRCDIR=$(shell cd $(topsrcdir); pwd)
+ABS_OBJDIR=$(call core_abspath,$(DEPTH))
+ABS_TOPSRCDIR=$(call core_abspath,$(topsrcdir))
 BASE64_ICON = dist/branding/fennec_maemo_icon26.txt
 MOZ_DEB_TIMESTAMP = "$(shell date  +"%a, %d  %b %Y %T %z" )"
 

@@ -9700,7 +9700,7 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
   if (!suspended) {
     nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
     if (ac) {
-      for (int i = 0; i < mEnabledSensors.Length(); i++)
+      for (PRUint32 i = 0; i < mEnabledSensors.Length(); i++)
         ac->RemoveWindowListener(mEnabledSensors[i], this);
     }
 
@@ -9780,7 +9780,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
   if (shouldResume) {
     nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
     if (ac) {
-      for (int i = 0; i < mEnabledSensors.Length(); i++)
+      for (PRUint32 i = 0; i < mEnabledSensors.Length(); i++)
         ac->AddWindowListener(mEnabledSensors[i], this);
     }
 
@@ -9888,7 +9888,7 @@ void
 nsGlobalWindow::EnableDeviceSensor(PRUint32 aType)
 {
   bool alreadyEnabled = false;
-  for (int i = 0; i < mEnabledSensors.Length(); i++) {
+  for (PRUint32 i = 0; i < mEnabledSensors.Length(); i++) {
     if (mEnabledSensors[i] == aType) {
       alreadyEnabled = true;
       break;
@@ -9908,8 +9908,8 @@ nsGlobalWindow::EnableDeviceSensor(PRUint32 aType)
 void
 nsGlobalWindow::DisableDeviceSensor(PRUint32 aType)
 {
-  PRUint32 doomedElement = -1;
-  for (int i = 0; i < mEnabledSensors.Length(); i++) {
+  PRInt32 doomedElement = -1;
+  for (PRUint32 i = 0; i < mEnabledSensors.Length(); i++) {
     if (mEnabledSensors[i] == aType) {
       doomedElement = i;
       break;

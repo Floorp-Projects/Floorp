@@ -308,10 +308,13 @@ MaybeReflowForInflationScreenWidthChange(nsPresContext *aPresContext)
             nsCOMPtr<nsIPresShell> shell;
             nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(array[i]);
             cv->GetPresShell(getter_AddRefs(shell));
-            nsIFrame *rootFrame = shell->GetRootFrame();
-            if (rootFrame) {
-              shell->FrameNeedsReflow(rootFrame, nsIPresShell::eResize,
-                                      NS_FRAME_IS_DIRTY);
+            nsFrameManager *fm = shell->FrameManager();
+            if (fm) {
+              nsIFrame *rootFrame = fm->GetRootFrame();
+              if (rootFrame) {
+                shell->FrameNeedsReflow(rootFrame, nsIPresShell::eResize,
+                                        NS_FRAME_IS_DIRTY);
+              }
             }
           }
         }

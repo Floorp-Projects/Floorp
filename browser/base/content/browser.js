@@ -5204,6 +5204,8 @@ var TabsProgressListener = {
                               aFlags) {
     // Filter out any sub-frame loads
     if (aBrowser.contentWindow == aWebProgress.DOMWindow) {
+      // Filter out any onLocationChanges triggered by anchor navigation
+      // or history.push/pop/replaceState.
       if (aRequest) {
         // Initialize the click-to-play state.
         aBrowser._clickToPlayDoorhangerShown = false;
