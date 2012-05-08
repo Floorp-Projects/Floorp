@@ -873,7 +873,7 @@ public:
    * host content.  When the content is in designMode, this returns its body
    * element.  Also, when the content isn't editable, this returns null.
    */
-  nsIContent* GetEditingHost();
+  mozilla::dom::Element* GetEditingHost();
 
   /**
    * Determing language. Look at the nearest ancestor element that has a lang
