@@ -171,7 +171,8 @@ ArgumentsObject::create(JSContext *cx, StackFrame *fp)
 ArgumentsObject *
 ArgumentsObject::createUnexpected(JSContext *cx, StackIter &iter)
 {
-    ArgumentsObject *argsobj = create(cx, iter.numActualArgs(), RootedVarFunction(cx, iter.callee()));
+    RootedVarFunction callee(cx, iter.callee());
+    ArgumentsObject *argsobj = create(cx, iter.numActualArgs(), callee);
     if (!argsobj)
         return NULL;
 
