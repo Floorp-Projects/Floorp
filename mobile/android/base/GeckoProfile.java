@@ -229,17 +229,17 @@ public final class GeckoProfile {
                     continue;
                 }
             } catch (SecurityException se) {
-                Log.e(LOGTAG, "Unable to rename file to " + target.getAbsolutePath() + " while moving profiles", se);
+                Log.w(LOGTAG, "Unable to rename file to " + target.getAbsolutePath() + " while moving profiles", se);
             }
             // rename failed, try moving manually
             if (f.isDirectory()) {
-                if (target.mkdirs()) {
+                if (target.exists() || target.mkdirs()) {
                     moveDirContents(f, target);
                 } else {
                     Log.e(LOGTAG, "Unable to create folder " + target.getAbsolutePath() + " while moving profiles");
                 }
             } else {
-                if (! moveFile(f, target)) {
+                if (!moveFile(f, target)) {
                     Log.e(LOGTAG, "Unable to move file " + target.getAbsolutePath() + " while moving profiles");
                 }
             }
