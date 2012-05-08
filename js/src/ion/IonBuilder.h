@@ -102,6 +102,7 @@ class IonBuilder : public MIRGenerator
             FOR_LOOP_BODY,      // for (; ;) { x }
             FOR_LOOP_UPDATE,    // for (; ; x) { }
             TABLE_SWITCH,       // switch() { x }
+            LOOKUP_SWITCH,      // switch() { x }
             AND_OR              // && x, || x
         };
 
@@ -152,6 +153,19 @@ class IonBuilder : public MIRGenerator
                 uint32 currentBlock;
 
             } tableswitch;
+            struct {
+                // pc immediately after the switch.
+                jsbytecode *exitpc;
+
+                // Deferred break and continue targets.
+                DeferredEdge *breaks;
+
+                // Vector of body blocks to process
+                FixedList<MBasicBlock *> *bodies;
+
+                // The number of current successor that get mapped into a block. 
+                uint32 currentBlock;
+            } lookupswitch;
         };
 
         inline bool isLoop() const {
@@ -172,6 +186,8 @@ class IonBuilder : public MIRGenerator
         static CFGState If(jsbytecode *join, MBasicBlock *ifFalse);
         static CFGState IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse);
         static CFGState AndOr(jsbytecode *join, MBasicBlock *joinStart);
+        static CFGState TableSwitch(jsbytecode *exitpc, MTableSwitch *ins);
+        static CFGState LookupSwitch(jsbytecode *exitpc);
     };
 
     static int CmpSuccessors(const void *a, const void *b);
@@ -216,6 +232,8 @@ class IonBuilder : public MIRGenerator
     ControlStatus processForUpdateEnd(CFGState &state);
     ControlStatus processNextTableSwitchCase(CFGState &state);
     ControlStatus processTableSwitchEnd(CFGState &state);
+    ControlStatus processNextLookupSwitchCase(CFGState &state);
+    ControlStatus processLookupSwitchEnd(CFGState &state);
     ControlStatus processAndOrEnd(CFGState &state);
     ControlStatus processSwitchBreak(JSOp op, jssrcnote *sn);
     ControlStatus processReturn(JSOp op);
@@ -258,6 +276,7 @@ class IonBuilder : public MIRGenerator
     ControlStatus whileOrForInLoop(JSOp op, jssrcnote *sn);
     ControlStatus doWhileLoop(JSOp op, jssrcnote *sn);
     ControlStatus tableSwitch(JSOp op, jssrcnote *sn);
+    ControlStatus lookupSwitch(JSOp op, jssrcnote *sn);
 
     // Please see the Big Honkin' Comment about how resume points work in
     // IonBuilder.cpp, near the definition for this function.
