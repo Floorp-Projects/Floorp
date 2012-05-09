@@ -210,7 +210,8 @@ public:
                             const nsIntSize& aSize,
                             GLenum aWrapMode,
                             TextureImage::ContentType aContentType,
-                            GLContext* aContext);
+                            GLContext* aContext,
+                            TextureImage::Flags aFlags = TextureImage::NoFlags);
 
     NSOpenGLContext *mContext;
     NSOpenGLPixelBuffer *mPBuffer;
@@ -315,7 +316,8 @@ class TextureImageCGL : public BasicTextureImage
                                           const nsIntSize&,
                                           GLenum,
                                           TextureImage::ContentType,
-                                          GLContext*);
+                                          GLContext*,
+                                          TextureImage::Flags);
 public:
     ~TextureImageCGL()
     {
@@ -401,8 +403,9 @@ private:
                     const nsIntSize& aSize,
                     GLenum aWrapMode,
                     ContentType aContentType,
-                    GLContext* aContext)
-        : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType, aContext)
+                    GLContext* aContext,
+                    TextureImage::Flags aFlags = TextureImage::NoFlags)
+        : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType, aContext, aFlags)
         , mPixelBuffer(0)
         , mPixelBufferSize(0)
         , mBoundPixelBuffer(false)
@@ -418,10 +421,11 @@ GLContextCGL::CreateBasicTextureImage(GLuint aTexture,
                                       const nsIntSize& aSize,
                                       GLenum aWrapMode,
                                       TextureImage::ContentType aContentType,
-                                      GLContext* aContext)
+                                      GLContext* aContext,
+                                      TextureImage::Flags aFlags)
 {
     nsRefPtr<TextureImageCGL> teximage
-        (new TextureImageCGL(aTexture, aSize, aWrapMode, aContentType, aContext));
+        (new TextureImageCGL(aTexture, aSize, aWrapMode, aContentType, aContext, aFlags));
     return teximage.forget();
 }
 

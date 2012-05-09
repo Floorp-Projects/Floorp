@@ -1845,7 +1845,7 @@ nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
     mResizerImage = manager->gl()->CreateTextureImage(nsIntSize(15, 15),
                                                       gfxASurface::CONTENT_COLOR_ALPHA,
                                                       LOCAL_GL_CLAMP_TO_EDGE,
-                                                      /* aUseNearestFilter = */ true);
+                                                      TextureImage::UseNearestFilter);
 
     // Creation of texture images can fail.
     if (!mResizerImage)
