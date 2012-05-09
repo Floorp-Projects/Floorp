@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=749367
+-->
+<window title="Mozilla Bug 749367"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="setTimeout(runTests, 0);">
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=486990"
+     target="_blank">Mozilla Bug 486990</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="text/template">
+  <![CDATA[
+  SimpleTest.waitForExplicitFinish();
+  function runTests() {
+  ok(false, "Shouldn't execute");
+  SimpleTest.finish();
+  }
+  ]]>
+  </script>
+
+  <script type="text/javascript">
+  <![CDATA[
+  SimpleTest.waitForExplicitFinish();
+  function runTests() {
+  ok(true, "Should execute");
+  SimpleTest.finish();
+  }
+  ]]>
+  </script>
+
+</window>
