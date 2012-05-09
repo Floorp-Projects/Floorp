@@ -5,7 +5,7 @@ try {
 } catch(e) {
 }
 
-let acquire, dispose, reset_errno, dispose_errno;
+let acquire, dispose, reset_errno, dispose_errno, acquire_ptr, dispose_ptr;
 
 function run_test()
 {
@@ -32,10 +32,20 @@ function run_test()
                                   ctypes.default_abi,
                                   ctypes.void_t,
                                   ctypes.size_t);
+  acquire_ptr = library.declare("test_finalizer_acq_int32_ptr_t",
+                                ctypes.default_abi,
+                                ctypes.int32_t.ptr,
+                                ctypes.size_t);
+  dispose_ptr = library.declare("test_finalizer_rel_int32_ptr_t",
+                                ctypes.default_abi,
+                                ctypes.void_t,
+                                ctypes.int32_t.ptr);
+
   tester.launch(10, test_to_string);
   tester.launch(10, test_to_source);
   tester.launch(10, test_to_int);
   tester.launch(10, test_errno);
+  tester.launch(10, test_to_pointer);
 }
 
 /**
@@ -121,4 +131,18 @@ function test_errno(size, tc, cleanup)
 
   trigger_gc();
   do_check_eq(ctypes.errno, 0);
+}
+
+/**
+ * Check that a finalizable of a pointer can be used as a pointer
+ */
+function test_to_pointer()
+{
+  let ptr = ctypes.int32_t(2).address();
+  let finalizable = ctypes.CDataFinalizer(ptr, dispose_ptr);
+  let unwrapped = ctypes.int32_t.ptr(finalizable);
+
+  do_check_eq(""+ptr, ""+unwrapped);
+
+  finalizable.forget(); // Do not dispose: This is not a real pointer.
 }
