@@ -81,7 +81,7 @@ var W3CTest = {
   "result": function(test) {
     var url = this.getURL();
     this.report({
-      "message": test.message || test.name,
+      "message": test.name + (test.message ? "; " + test.message : ""),
       "result": test.status === test.PASS,
       "todo": this._todo(test)
     });
