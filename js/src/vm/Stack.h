@@ -797,8 +797,8 @@ class StackFrame
      * Callee
      *
      * Only function frames have a callee. An eval frame in a function has the
-     * same caller as its containing function frame. maybeCalleev can be used
-     * to return a value that is either caller object (for function frames) or
+     * same callee as its containing function frame. maybeCalleev can be used
+     * to return a value that is either the callee object (for function frames) or
      * null (for global frames).
      */
 
