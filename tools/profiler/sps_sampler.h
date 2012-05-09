@@ -38,7 +38,7 @@
 
 #include <stdlib.h>
 #include <signal.h>
-#include "thread_helper.h"
+#include "mozilla/ThreadLocal.h"
 #include "nscore.h"
 #include "jsapi.h"
 #include "mozilla/TimeStamp.h"
@@ -47,8 +47,11 @@
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
-extern mozilla::tls::key pkey_stack;
-extern mozilla::tls::key pkey_ticker;
+struct ProfileStack;
+class TableTicker;
+
+extern mozilla::ThreadLocal<ProfileStack> pkey_stack;
+extern mozilla::ThreadLocal<TableTicker> pkey_ticker;
 extern bool stack_key_initialized;
 
 #ifndef SAMPLE_FUNCTION_NAME
@@ -280,7 +283,7 @@ inline void* mozilla_sampler_call_enter(const char *aInfo)
   if (!stack_key_initialized)
     return NULL;
 
-  ProfileStack *stack = mozilla::tls::get<ProfileStack>(pkey_stack);
+  ProfileStack *stack = pkey_stack.get();
   // we can't infer whether 'stack' has been initialized
   // based on the value of stack_key_intiailized because
   // 'stack' is only intialized when a thread is being
@@ -309,7 +312,7 @@ inline void mozilla_sampler_call_exit(void *aHandle)
 
 inline void mozilla_sampler_add_marker(const char *aMarker)
 {
-  ProfileStack *stack = mozilla::tls::get<ProfileStack>(pkey_stack);
+  ProfileStack *stack = pkey_stack.get();
   if (!stack) {
     return;
   }
