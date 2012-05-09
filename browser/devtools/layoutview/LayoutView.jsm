@@ -254,6 +254,9 @@ LayoutView.prototype = {
     if (aUserAction) {
       this.inspector._layoutViewIsOpen = true;
       Services.prefs.setBoolPref("devtools.layoutview.open", true);
+      this.view.removeAttribute("disable-transitions");
+    } else {
+      this.view.setAttribute("disable-transitions", "true");
     }
     this.iframe.setAttribute("open", "true");
     this.update();
@@ -272,6 +275,9 @@ LayoutView.prototype = {
     if (aUserAction) {
       this.inspector._layoutViewIsOpen = false;
       Services.prefs.setBoolPref("devtools.layoutview.open", false);
+      this.view.removeAttribute("disable-transitions");
+    } else {
+      this.view.setAttribute("disable-transitions", "true");
     }
     this.iframe.removeAttribute("open");
   },
