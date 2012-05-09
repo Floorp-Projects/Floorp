@@ -58,7 +58,7 @@
 
   <popupset id="debugger-popups">
     <menupopup id="sourceEditorContextMenu"
-	       onpopupshowing="goUpdateSourceEditorMenuItems()">
+               onpopupshowing="goUpdateSourceEditorMenuItems()">
       <menuitem id="se-cMenu-copy"/>
       <menuseparator/>
       <menuitem id="se-cMenu-selectAll"/>
@@ -77,21 +77,21 @@
   <vbox id="body" flex="1">
     <toolbar id="dbg-toolbar" class="devtools-toolbar">
 #ifdef XP_MACOSX
-      <button id="close"  class="devtools-closebutton"/>
+      <toolbarbutton id="close" class="devtools-closebutton"/>
 #endif
-      <button id="resume"
+      <toolbarbutton id="resume"
               class="devtools-toolbarbutton"
               type="checkbox"
               tabindex="0"/>
-      <button id="step-over"
+      <toolbarbutton id="step-over"
               class="devtools-toolbarbutton"
               label="&debuggerUI.stepOverButton;"
               tabindex="0"/>
-      <button id="step-in"
+      <toolbarbutton id="step-in"
               class="devtools-toolbarbutton"
               label="&debuggerUI.stepInButton;"
               tabindex="0"/>
-      <button id="step-out"
+      <toolbarbutton id="step-out"
               class="devtools-toolbarbutton"
               label="&debuggerUI.stepOutButton;"
               tabindex="0"/>
@@ -106,17 +106,15 @@
     </toolbar>
     <hbox id="dbg-content" flex="1">
       <vbox id="stack" flex="1">
-        <div id="stackframes" class="vbox flex"/>
+        <vbox id="stackframes" class="dbg-default" flex="1"/>
       </vbox>
       <splitter id="stack-script-splitter"
                 class="devtools-side-splitter"/>
-      <vbox id="script" flex="1">
-        <div id="editor" class="vbox flex"/>
-      </vbox>
+      <vbox id="editor" class="dbg-default" flex="1"/>
       <splitter id="script-properties-splitter"
                 class="devtools-side-splitter"/>
       <vbox id="properties" flex="1">
-        <div id="variables" class="vbox flex"/>
+        <vbox id="variables" class="dbg-default" flex="1"/>
       </vbox>
     </hbox>
   </vbox>
