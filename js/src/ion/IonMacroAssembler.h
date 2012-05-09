@@ -401,19 +401,21 @@ class MacroAssembler : public MacroAssemblerSpecific
     // If the IonCode that created this assembler needs to transition into the VM,
     // we want to store the IonCode on the stack in order to mark it during a GC.
     // This is a reference to a patch location where the IonCode* will be written.
-    CodeOffsetLabel exitCodePatch;
+  private:
+    CodeOffsetLabel exitCodePatch_;
+  public:
     void linkExitFrameAndCode() {
         linkExitFrame();
         // Push the ioncode for this bailout onto the stack
-        exitCodePatch = PushWithPatch(ImmWord(-1));
+        exitCodePatch_ = PushWithPatch(ImmWord(-1));
     }
     void link(IonCode *code) {
 
         // If this code can transition to C++ code and witness a GC, then we need to store
         // the IonCode onto the stack in order to GC it correctly.  exitCodePatch should
         // be unset if the code never needed to push its IonCode*.
-        if (exitCodePatch.offset() != 0) {
-            patchDataWithValueCheck(CodeLocationLabel(code, exitCodePatch),
+        if (exitCodePatch_.offset() != 0) {
+            patchDataWithValueCheck(CodeLocationLabel(code, exitCodePatch_),
                                     ImmWord(uintptr_t(code)),
                                     ImmWord(uintptr_t(-1)));
         }
