@@ -18,7 +18,6 @@ def skip_if_b2g(target):
 class CommonTestCase(unittest.TestCase):
 
     def __init__(self, methodName):
-        self._qemu = []
         unittest.TestCase.__init__(self, methodName)
 
     def kill_gaia_app(self, url):
@@ -56,26 +55,27 @@ window.addEventListener('message', function frameload(e) {
     def tearDown(self):
         if self.marionette.session is not None:
             self.marionette.delete_session()
-        for _qemu in self._qemu:
-            _qemu.emulator.close()
-            _qemu = None
-        self._qemu = []
 
 
 class MarionetteTestCase(CommonTestCase):
 
     def __init__(self, marionette, methodName='runTest', **kwargs):
         self.marionette = marionette
+        self.extra_emulator_index = -1
         CommonTestCase.__init__(self, methodName, **kwargs)
 
     def get_new_emulator(self):
-        _qemu  = Marionette(emulator=True,
-                            homedir=self.marionette.homedir,
-                            baseurl=self.marionette.baseurl,
-                            noWindow=self.marionette.noWindow)
-        _qemu.start_session()
-        self._qemu.append(_qemu)
-        return _qemu
+        self.extra_emulator_index += 1
+        if len(self.marionette.extra_emulators) == self.extra_emulator_index:
+            qemu  = Marionette(emulator=True,
+                               homedir=self.marionette.homedir,
+                               baseurl=self.marionette.baseurl,
+                               noWindow=self.marionette.noWindow)
+            qemu.start_session()
+            self.marionette.extra_emulators.append(qemu)
+        else:
+            qemu = self.marionette.extra_emulators[self.extra_emulator_index]
+        return qemu
 
 
 class MarionetteJSTestCase(CommonTestCase):
