@@ -1191,9 +1191,7 @@ class StackFrame
     }
 
 #ifdef JS_METHODJIT
-    mjit::JITScript *jit() {
-        return script()->getJIT(isConstructing());
-    }
+    inline mjit::JITScript *jit();
 #endif
 
     void methodjitStaticAsserts();

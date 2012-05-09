@@ -704,7 +704,7 @@ mjit::Compiler::compileArrayConcat(types::TypeSet *thisTypes, types::TypeSet *ar
     templateObject->setType(thisType);
 
     RegisterID result = Registers::ReturnReg;
-    Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
+    Jump emptyFreeList = getNewObject(cx, result, templateObject);
     stubcc.linkExit(emptyFreeList, Uses(3));
 
     masm.storeValueFromComponents(ImmType(JSVAL_TYPE_OBJECT), result, frame.addressOf(frame.peek(-3)));
@@ -747,7 +747,7 @@ mjit::Compiler::compileArrayWithLength(uint32_t argc)
     templateObject->setType(type);
 
     RegisterID result = frame.allocReg();
-    Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
+    Jump emptyFreeList = getNewObject(cx, result, templateObject);
 
     stubcc.linkExit(emptyFreeList, Uses(0));
     stubcc.leave();
@@ -790,7 +790,7 @@ mjit::Compiler::compileArrayWithArgs(uint32_t argc)
     JS_ASSERT(templateObject->getDenseArrayCapacity() >= argc);
 
     RegisterID result = frame.allocReg();
-    Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
+    Jump emptyFreeList = getNewObject(cx, result, templateObject);
     stubcc.linkExit(emptyFreeList, Uses(0));
 
     int offset = JSObject::offsetOfFixedElements();

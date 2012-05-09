@@ -113,8 +113,9 @@ Recompiler::patchNative(JSCompartment *compartment, JITChunk *chunk, StackFrame 
      * for the IC so it doesn't get freed with the JITChunk, and patch up the
      * jump at the end to go to the interpoline.
      *
-     * When doing this, we do not reset the the IC itself; the JITChunk must
-     * be dead and about to be released due to the recompilation (or a GC).
+     * When doing this, we do not reset the the IC itself; there may be other
+     * native calls from this chunk on the stack and we need to find and patch
+     * all live stubs before purging the chunk's caches.
      */
     fp->setRejoin(StubRejoin(rejoin));
 
@@ -195,15 +196,15 @@ Recompiler::patchFrame(JSCompartment *compartment, VMFrame *f, JSScript *script)
             f->stubRejoin = 0;
         }
     } else {
-        if (script->jitHandleCtor.isValid()) {
-            JITChunk *chunk = script->jitHandleCtor.getValid()->findCodeChunk(*addr);
-            if (chunk)
-                patchCall(chunk, fp, addr);
-        }
-        if (script->jitHandleNormal.isValid()) {
-            JITChunk *chunk = script->jitHandleNormal.getValid()->findCodeChunk(*addr);
-            if (chunk)
-                patchCall(chunk, fp, addr);
+        for (int constructing = 0; constructing <= 1; constructing++) {
+            for (int barriers = 0; barriers <= 1; barriers++) {
+                JITScript *jit = script->getJIT((bool) constructing, (bool) barriers);
+                if (jit) {
+                    JITChunk *chunk = jit->findCodeChunk(*addr);
+                    if (chunk)
+                        patchCall(chunk, fp, addr);
+                }
+            }
         }
     }
 }
@@ -387,6 +388,21 @@ ClearAllFrames(JSCompartment *compartment)
         for (StackFrame *fp = f->fp(); fp != f->entryfp; fp = fp->prev())
             fp->setNativeReturnAddress(NULL);
     }
+
+    // Purge all ICs in chunks for which we patched any native frames, see patchNative.
+    for (VMFrame *f = compartment->rt->jaegerRuntime().activeFrame();
+         f != NULL;
+         f = f->previous)
+    {
+        if (f->entryfp->compartment() != compartment)
+            continue;
+
+        JS_ASSERT(f->stubRejoin != REJOIN_NATIVE &&
+                  f->stubRejoin != REJOIN_NATIVE_LOWERED &&
+                  f->stubRejoin != REJOIN_NATIVE_GETTER);
+        if (f->stubRejoin == REJOIN_NATIVE_PATCHED && f->jit() && f->chunk())
+            f->chunk()->purgeCaches();
+    }
 }
 
 /*
@@ -435,6 +451,9 @@ Recompiler::clearStackReferences(FreeOp *fop, JSScript *script)
          f != NULL;
          f = f->previous)
     {
+        if (f->entryfp->compartment() != comp)
+            continue;
+
         // Scan all frames owned by this VMFrame.
         StackFrame *end = f->entryfp->prev();
         StackFrame *next = NULL;
@@ -463,40 +482,20 @@ Recompiler::clearStackReferences(FreeOp *fop, JSScript *script)
     }
 
     comp->types.recompilations++;
-}
 
-void
-Recompiler::clearStackReferencesAndChunk(FreeOp *fop, JSScript *script,
-                                         JITScript *jit, size_t chunkIndex,
-                                         bool resetUses)
-{
-    Recompiler::clearStackReferences(fop, script);
-
-    bool releaseChunk = true;
-    if (jit->nchunks > 1) {
-        // If we are in the middle of a native call from a native or getter IC,
-        // we need to make sure all JIT code for the script is purged, as
-        // otherwise we will have orphaned the native stub but pointers to it
-        // still exist in the containing chunk.
-        for (VMFrame *f = fop->runtime()->jaegerRuntime().activeFrame();
-             f != NULL;
-             f = f->previous)
-        {
-            if (f->fp()->script() == script) {
-                JS_ASSERT(f->stubRejoin != REJOIN_NATIVE &&
-                          f->stubRejoin != REJOIN_NATIVE_LOWERED &&
-                          f->stubRejoin != REJOIN_NATIVE_GETTER);
-                if (f->stubRejoin == REJOIN_NATIVE_PATCHED) {
-                    mjit::ReleaseScriptCode(fop, script);
-                    releaseChunk = false;
-                    break;
-                }
-            }
+    // Purge all ICs in chunks for which we patched any native frames, see patchNative.
+    for (VMFrame *f = fop->runtime()->jaegerRuntime().activeFrame();
+         f != NULL;
+         f = f->previous)
+    {
+        if (f->fp()->script() == script) {
+            JS_ASSERT(f->stubRejoin != REJOIN_NATIVE &&
+                      f->stubRejoin != REJOIN_NATIVE_LOWERED &&
+                      f->stubRejoin != REJOIN_NATIVE_GETTER);
+            if (f->stubRejoin == REJOIN_NATIVE_PATCHED && f->jit() && f->chunk())
+                f->chunk()->purgeCaches();
         }
     }
-
-    if (releaseChunk)
-        jit->destroyChunk(fop, chunkIndex, resetUses);
 }
 
 } /* namespace mjit */

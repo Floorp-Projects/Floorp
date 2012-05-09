@@ -138,25 +138,18 @@ struct SetGlobalNameIC : public GlobalNameIC
 {
     JSC::CodeLocationLabel  slowPathStart;
 
-    /* Dynamically generted stub for method-write checks. */
-    JSC::JITCode            extraStub;
-
     /* SET only, if we had to generate an out-of-line path. */
     int32_t inlineShapeJump : 10;   /* Offset into inline path for shape jump. */
-    int32_t extraShapeGuard : 6;    /* Offset into stub for shape guard. */
     bool objConst : 1;          /* True if the object is constant. */
     RegisterID objReg   : 5;    /* Register for object, if objConst is false. */
     RegisterID shapeReg : 5;    /* Register for shape; volatile. */
-    bool hasExtraStub : 1;      /* Extra stub is preset. */
 
     int32_t fastRejoinOffset : 16;  /* Offset from fastPathStart to rejoin. */
-    int32_t extraStoreOffset : 16;  /* Offset into store code. */
 
     /* SET only. */
     ValueRemat vr;              /* RHS value. */
 
     void patchInlineShapeGuard(Repatcher &repatcher, const Shape *shape);
-    void patchExtraShapeGuard(Repatcher &repatcher, const Shape *shape);
 };
 
 void JS_FASTCALL GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic);
@@ -221,7 +214,7 @@ struct CallICInfo {
     /* Out of line slow call. */
     uint32_t oolCallOffset   : 16;
 
-    /* Jump to patch for out-of-line scripted calls. */
+    /* Jump/rejoin to patch for out-of-line scripted calls. */
     uint32_t oolJumpOffset   : 16;
 
     /* Label for out-of-line call to IC function. */
@@ -238,19 +231,6 @@ struct CallICInfo {
     bool hasJsFunCheck : 1;
     bool typeMonitored : 1;
 
-    inline void reset() {
-        fastGuardedObject = NULL;
-        fastGuardedNative = NULL;
-        hit = false;
-        hasJsFunCheck = false;
-        PodArrayZero(pools);
-    }
-
-    inline void releasePools() {
-        releasePool(Pool_ScriptStub);
-        releasePool(Pool_ClosureStub);
-    }
-
     inline void releasePool(PoolIndex index) {
         if (pools[index]) {
             pools[index]->release();
@@ -264,6 +244,25 @@ struct CallICInfo {
         hasJsFunCheck = false;
         fastGuardedObject = NULL;
         JS_REMOVE_LINK(&links);
+    }
+
+    inline void reset(Repatcher &repatcher) {
+        if (fastGuardedObject) {
+            repatcher.repatch(funGuard, NULL);
+            repatcher.relink(funJump, slowPathStart);
+            purgeGuardedObject();
+        }
+        if (fastGuardedNative) {
+            repatcher.relink(funJump, slowPathStart);
+            fastGuardedNative = NULL;
+        }
+        if (pools[Pool_ScriptStub]) {
+            JSC::CodeLocationJump oolJump = slowPathStart.jumpAtOffset(oolJumpOffset);
+            JSC::CodeLocationLabel icCall = slowPathStart.labelAtOffset(icCallOffset);
+            repatcher.relink(oolJump, icCall);
+            releasePool(Pool_ScriptStub);
+        }
+        hit = false;
     }
 };
 

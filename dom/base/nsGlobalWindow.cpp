@@ -3753,6 +3753,9 @@ nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
 
+  if (mJSObject)
+    js::NotifyAnimationActivity(mJSObject);
+
   return mDoc->ScheduleFrameRequestCallback(aCallback, aHandle);
 }
 
