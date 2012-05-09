@@ -64,7 +64,7 @@ const PRUint8 kGenericFont_monospace    = 0x08;
 const PRUint8 kGenericFont_cursive      = 0x10;
 const PRUint8 kGenericFont_fantasy      = 0x20;
 
-class gfxFontStyle;
+struct gfxFontStyle;
 
 // Font structure.
 struct NS_GFX nsFont {

@@ -17,7 +17,7 @@
 
 <!-- LOCALIZATION NOTE (chromeDebuggerMenu.label): This is the label for the
   -  application menu item that opens the browser debugger UI. -->
-<!ENTITY chromeDebuggerMenu.label   "Browser Debugger">
+<!ENTITY chromeDebuggerMenu.label    "Browser Debugger">
 
 <!-- LOCALIZATION NOTE (debuggerMenu.commandkey): This is the command key that
   -  launches the debugger UI. Do not translate this one! -->

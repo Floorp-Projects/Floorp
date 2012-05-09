@@ -414,8 +414,7 @@ nsHttpConnection::SetupNPN(PRUint8 caps)
 
         mNPNComplete = true;
 
-        if (mConnInfo->UsingSSL() &&
-            !mConnInfo->UsingHttpProxy()) {
+        if (mConnInfo->UsingSSL()) {
             LOG(("nsHttpConnection::SetupNPN Setting up "
                  "Next Protocol Negotiation"));
             nsCOMPtr<nsISupports> securityInfo;

@@ -299,8 +299,7 @@ XPCPerThreadData::XPCPerThreadData()
 void
 XPCPerThreadData::Cleanup()
 {
-    while (mAutoRoots)
-        mAutoRoots->Unlink();
+    MOZ_ASSERT(!mAutoRoots);
     NS_IF_RELEASE(mExceptionManager);
     NS_IF_RELEASE(mException);
     delete mJSContextStack;
@@ -369,13 +368,13 @@ void XPCPerThreadData::TraceJS(JSTracer *trc)
 #endif
 
     if (mAutoRoots)
-        mAutoRoots->TraceJS(trc);
+        mAutoRoots->TraceJSAll(trc);
 }
 
 void XPCPerThreadData::MarkAutoRootsAfterJSFinalize()
 {
     if (mAutoRoots)
-        mAutoRoots->MarkAfterJSFinalize();
+        mAutoRoots->MarkAfterJSFinalizeAll();
 }
 
 // static

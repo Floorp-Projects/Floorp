@@ -46,6 +46,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
   Cu.import("resource://gre/modules/PluralForm.jsm");
@@ -242,6 +243,7 @@ var BrowserApp = {
     ActivityObserver.init();
     WebappsUI.init();
     RemoteDebugger.init();
+    AccessFu.attach(window);
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -2544,6 +2546,7 @@ var BrowserEventHandler = {
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
     BrowserApp.deck.addEventListener("touchstart", this, false);
+    BrowserApp.deck.addEventListener("click", SelectHelper, true);
   },
 
   handleEvent: function(aEvent) {
@@ -2579,7 +2582,7 @@ var BrowserEventHandler = {
 
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "dom-touch-listener-added") {
-      let tab = BrowserApp.getTabForWindow(aSubject);
+      let tab = BrowserApp.getTabForWindow(aSubject.top);
       if (!tab)
         return;
 
@@ -2640,7 +2643,7 @@ var BrowserEventHandler = {
       this._cancelTapHighlight();
     } else if (aTopic == "Gesture:SingleTap") {
       let element = this._highlightElement;
-      if (element && !SelectHelper.handleClick(element)) {
+      if (element) {
         try {
           let data = JSON.parse(aData);
 

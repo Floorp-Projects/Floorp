@@ -17,6 +17,7 @@ const STATE_COLLAPSED = nsIAccessibleStates.STATE_COLLAPSED;
 const STATE_DEFAULT = nsIAccessibleStates.STATE_DEFAULT;
 const STATE_EXPANDED = nsIAccessibleStates.STATE_EXPANDED;
 const STATE_EXTSELECTABLE = nsIAccessibleStates.STATE_EXTSELECTABLE;
+const STATE_FLOATING = nsIAccessibleStates.STATE_FLOATING;
 const STATE_FOCUSABLE = nsIAccessibleStates.STATE_FOCUSABLE;
 const STATE_FOCUSED = nsIAccessibleStates.STATE_FOCUSED;
 const STATE_HASPOPUP = nsIAccessibleStates.STATE_HASPOPUP;

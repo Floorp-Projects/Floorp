@@ -46,6 +46,7 @@
 #include "AtkSocketAccessible.h"
 #endif
 #include "FocusManager.h"
+#include "HTMLListAccessible.h"
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
@@ -222,7 +223,7 @@ nsAccessibilityService::CreateHTMLLIAccessible(nsIContent* aContent,
                                                nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLLIAccessible(aContent, GetDocAccessible(aPresShell));
+    new HTMLLIAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -599,7 +600,7 @@ nsAccessibilityService::UpdateListBullet(nsIPresShell* aPresShell,
   if (document) {
     nsAccessible* accessible = document->GetAccessible(aHTMLListItemContent);
     if (accessible) {
-      nsHTMLLIAccessible* listItem = accessible->AsHTMLListItem();
+      HTMLLIAccessible* listItem = accessible->AsHTMLListItem();
       if (listItem)
         listItem->UpdateBullet(aHasBullet);
     }
@@ -1271,6 +1272,9 @@ nsAccessibilityService::Init()
 
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
+  static const PRUnichar kInitIndicator[] = { '1', 0 };
+  observerService->NotifyObservers(nsnull, "a11y-init-or-shutdown", kInitIndicator);
+
   // Initialize accessibility.
   nsAccessNodeWrap::InitAccessibility();
 
@@ -1284,8 +1288,12 @@ nsAccessibilityService::Shutdown()
   // Remove observers.
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
-  if (observerService)
+  if (observerService) {
     observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+
+    static const PRUnichar kShutdownIndicator[] = { '0', 0 };
+    observerService->NotifyObservers(nsnull, "a11y-init-or-shutdown", kShutdownIndicator);
+  }
 
   // Stop accessible document loader.
   nsAccDocManager::Shutdown();
@@ -1651,7 +1659,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
 
   if (tag == nsGkAtoms::ul || tag == nsGkAtoms::ol ||
       tag == nsGkAtoms::dl) {
-    nsAccessible* accessible = new nsHTMLListAccessible(aContent, aDoc);
+    nsAccessible* accessible = new HTMLListAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
@@ -1678,7 +1686,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
     // Normally for li, it is created by the list item frame (in nsBlockFrame)
     // which knows about the bullet frame; however, in this case the list item
     // must have been styled using display: foo
-    nsAccessible* accessible = new nsHTMLLIAccessible(aContent, aDoc);
+    nsAccessible* accessible = new HTMLLIAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }

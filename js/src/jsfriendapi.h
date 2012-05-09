@@ -227,16 +227,6 @@ DumpHeapComplete(JSRuntime *rt, FILE *fp);
 
 #endif
 
-class JS_FRIEND_API(AutoPreserveCompartment) {
-  private:
-    JSContext *cx;
-    JSCompartment *oldCompartment;
-  public:
-    AutoPreserveCompartment(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~AutoPreserveCompartment();
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 class JS_FRIEND_API(AutoSwitchCompartment) {
   private:
     JSContext *cx;
@@ -610,7 +600,7 @@ SizeOfJSContext();
     D(TOO_MUCH_MALLOC)                          \
     D(ALLOC_TRIGGER)                            \
     D(DEBUG_GC)                                 \
-    D(UNUSED2) /* was SHAPE */                  \
+    D(DEBUG_MODE_GC)                            \
     D(UNUSED3) /* was REFILL */                 \
                                                 \
     /* Reasons from Firefox */                  \
@@ -649,6 +639,9 @@ PrepareCompartmentForGC(JSCompartment *comp);
 
 extern JS_FRIEND_API(void)
 PrepareForFullGC(JSRuntime *rt);
+
+extern JS_FRIEND_API(bool)
+IsGCScheduled(JSRuntime *rt);
 
 /*
  * When triggering a GC using one of the functions below, it is first necessary

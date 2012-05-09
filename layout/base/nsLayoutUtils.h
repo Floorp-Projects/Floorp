@@ -1568,6 +1568,22 @@ public:
   static bool FontSizeInflationEnabled(nsPresContext *aPresContext);
 
   /**
+   * See comment above "font.size.inflation.emPerLine" in
+   * modules/libpref/src/init/all.js .
+   */
+  static PRUint32 FontSizeInflationEmPerLine() {
+    return sFontSizeInflationEmPerLine;
+  }
+
+  /**
+   * See comment above "font.size.inflation.minTwips" in
+   * modules/libpref/src/init/all.js .
+   */
+  static PRUint32 FontSizeInflationMinTwips() {
+    return sFontSizeInflationMinTwips;
+  }
+
+  /**
    * See comment above "font.size.inflation.lineThreshold" in
    * modules/libpref/src/init/all.js .
    */
@@ -1655,6 +1671,8 @@ public:
 #endif
 
 private:
+  static PRUint32 sFontSizeInflationEmPerLine;
+  static PRUint32 sFontSizeInflationMinTwips;
   static PRUint32 sFontSizeInflationLineThreshold;
 };
 

@@ -225,7 +225,7 @@ function optionsInit() {
     relimit:    true,
     methodjit:  true,
     methodjit_always: true,
-    ion:        true
+    strict_mode: true
   };
 
   // record initial values to support resetting

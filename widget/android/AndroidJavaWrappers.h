@@ -59,6 +59,7 @@
 namespace mozilla {
 
 class AndroidGeckoLayerClient;
+class AutoLocalJNIFrame;
 
 void InitAndroidJavaWrappers(JNIEnv *jEnv);
 
@@ -177,13 +178,13 @@ class AndroidLayerRendererFrame : public WrappedJavaObject {
 public:
     static void InitLayerRendererFrameClass(JNIEnv *jEnv);
 
-    void Init(jobject jobj);
-    void Dispose();
+    void Init(JNIEnv *env, jobject jobj);
+    void Dispose(JNIEnv *env);
 
-    void BeginDrawing();
-    void DrawBackground();
-    void DrawForeground();
-    void EndDrawing();
+    bool BeginDrawing(AutoLocalJNIFrame *jniFrame);
+    bool DrawBackground(AutoLocalJNIFrame *jniFrame);
+    bool DrawForeground(AutoLocalJNIFrame *jniFrame);
+    bool EndDrawing(AutoLocalJNIFrame *jniFrame);
 
 private:
     static jclass jLayerRendererFrameClass;
@@ -207,9 +208,9 @@ public:
     void SetPageSize(float aZoom, float aPageWidth, float aPageHeight, float aCssPageWidth, float aCssPageHeight);
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
-    void CreateFrame(AndroidLayerRendererFrame& aFrame);
-    void ActivateProgram();
-    void DeactivateProgram();
+    bool CreateFrame(AutoLocalJNIFrame *jniFrame, AndroidLayerRendererFrame& aFrame);
+    bool ActivateProgram(AutoLocalJNIFrame *jniFrame);
+    bool DeactivateProgram(AutoLocalJNIFrame *jniFrame);
 
 protected:
     static jclass jGeckoLayerClientClass;
@@ -241,17 +242,14 @@ public:
     };
 
     int BeginDrawing();
-    jobject GetSoftwareDrawBitmap();
-    jobject GetSoftwareDrawBuffer();
+    jobject GetSoftwareDrawBitmap(AutoLocalJNIFrame *jniFrame);
+    jobject GetSoftwareDrawBuffer(AutoLocalJNIFrame *jniFrame);
     void EndDrawing();
     void Draw2D(jobject bitmap, int width, int height);
     void Draw2D(jobject buffer, int stride);
 
-    jobject GetSurface();
-
-    // must have a JNI local frame when calling this,
-    // and you'd better know what you're doing
-    jobject GetSurfaceHolder();
+    jobject GetSurface(AutoLocalJNIFrame *jniFrame);
+    jobject GetSurfaceHolder(AutoLocalJNIFrame *jniFrame);
 
 protected:
     static jclass jGeckoSurfaceViewClass;

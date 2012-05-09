@@ -108,7 +108,7 @@ endif
 
 TEST_DIRS += \
   tests \
-  imported-tests \
+  imptests \
   $(NULL)
 
 ifneq (,$(filter gtk2 cocoa windows android qt os2,$(MOZ_WIDGET_TOOLKIT)))

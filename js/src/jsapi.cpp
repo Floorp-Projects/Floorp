@@ -1757,35 +1757,20 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 
 #define CLASP(name)                 (&name##Class)
 #define TYPED_ARRAY_CLASP(type)     (&TypedArray::classes[TypedArray::type])
-#define EAGER_ATOM(name)            ATOM_OFFSET(name), NULL
-#define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name), NULL
+#define EAGER_ATOM(name)            NAME_OFFSET(name)
+#define EAGER_CLASS_ATOM(name)      CLASS_NAME_OFFSET(name)
 #define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
-#define LAZY_ATOM(name)             ATOM_OFFSET(lazy.name), js_##name##_str
 
 typedef struct JSStdName {
     JSObjectOp  init;
     size_t      atomOffset;     /* offset of atom pointer in JSAtomState */
-    const char  *name;          /* null if atom is pre-pinned, else name */
     Class       *clasp;
 } JSStdName;
 
-static JSAtom *
-StdNameToAtom(JSContext *cx, JSStdName *stdn)
+static PropertyName *
+StdNameToPropertyName(JSContext *cx, JSStdName *stdn)
 {
-    size_t offset;
-    JSAtom *atom;
-    const char *name;
-
-    offset = stdn->atomOffset;
-    atom = OFFSET_TO_ATOM(cx->runtime, offset);
-    if (!atom) {
-        name = stdn->name;
-        if (name) {
-            atom = js_Atomize(cx, name, strlen(name), InternAtom);
-            OFFSET_TO_ATOM(cx->runtime, offset) = atom;
-        }
-    }
-    return atom;
+    return OFFSET_TO_NAME(cx->runtime, stdn->atomOffset);
 }
 
 /*
@@ -1817,7 +1802,7 @@ static JSStdName standard_class_atoms[] = {
     {js_InitMapClass,                   EAGER_CLASS_ATOM(Map), &js::MapObject::class_},
     {js_InitSetClass,                   EAGER_CLASS_ATOM(Set), &js::SetObject::class_},
     {js_InitParallelArrayClass,         EAGER_CLASS_ATOM(ParallelArray), &js::ParallelArrayClass},
-    {NULL,                              0, NULL, NULL}
+    {NULL,                              0, NULL}
 };
 
 /*
@@ -1831,20 +1816,20 @@ static JSStdName standard_class_names[] = {
     /* Global properties and functions defined by the Number class. */
     {js_InitNumberClass,        EAGER_ATOM(NaN), CLASP(Number)},
     {js_InitNumberClass,        EAGER_ATOM(Infinity), CLASP(Number)},
-    {js_InitNumberClass,        LAZY_ATOM(isNaN), CLASP(Number)},
-    {js_InitNumberClass,        LAZY_ATOM(isFinite), CLASP(Number)},
-    {js_InitNumberClass,        LAZY_ATOM(parseFloat), CLASP(Number)},
-    {js_InitNumberClass,        LAZY_ATOM(parseInt), CLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(isNaN), CLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(isFinite), CLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(parseFloat), CLASP(Number)},
+    {js_InitNumberClass,        EAGER_ATOM(parseInt), CLASP(Number)},
 
     /* String global functions. */
-    {js_InitStringClass,        LAZY_ATOM(escape), CLASP(String)},
-    {js_InitStringClass,        LAZY_ATOM(unescape), CLASP(String)},
-    {js_InitStringClass,        LAZY_ATOM(decodeURI), CLASP(String)},
-    {js_InitStringClass,        LAZY_ATOM(encodeURI), CLASP(String)},
-    {js_InitStringClass,        LAZY_ATOM(decodeURIComponent), CLASP(String)},
-    {js_InitStringClass,        LAZY_ATOM(encodeURIComponent), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(escape), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(unescape), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(decodeURI), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(encodeURI), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(decodeURIComponent), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(encodeURIComponent), CLASP(String)},
 #if JS_HAS_UNEVAL
-    {js_InitStringClass,        LAZY_ATOM(uneval), CLASP(String)},
+    {js_InitStringClass,        EAGER_ATOM(uneval), CLASP(String)},
 #endif
 
     /* Exception constructors. */
@@ -1858,8 +1843,8 @@ static JSStdName standard_class_names[] = {
     {js_InitExceptionClasses,   EAGER_CLASS_ATOM(URIError), CLASP(Error)},
 
 #if JS_HAS_XML_SUPPORT
-    {js_InitXMLClass,           LAZY_ATOM(XMLList), CLASP(XML)},
-    {js_InitXMLClass,           LAZY_ATOM(isXMLName), CLASP(XML)},
+    {js_InitXMLClass,           EAGER_ATOM(XMLList), CLASP(XML)},
+    {js_InitXMLClass,           EAGER_ATOM(isXMLName), CLASP(XML)},
 #endif
 
 #if JS_HAS_GENERATORS
@@ -1883,7 +1868,7 @@ static JSStdName standard_class_names[] = {
     {js_InitWeakMapClass,       EAGER_ATOM_AND_CLASP(WeakMap)},
     {js_InitProxyClass,         EAGER_ATOM_AND_CLASP(Proxy)},
 
-    {NULL,                      0, NULL, NULL}
+    {NULL,                      0, NULL}
 };
 
 static JSStdName object_prototype_names[] = {
@@ -1896,20 +1881,20 @@ static JSStdName object_prototype_names[] = {
     {js_InitObjectClass,        EAGER_ATOM(toLocaleString), CLASP(Object)},
     {js_InitObjectClass,        EAGER_ATOM(valueOf), CLASP(Object)},
 #if JS_HAS_OBJ_WATCHPOINT
-    {js_InitObjectClass,        LAZY_ATOM(watch), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(unwatch), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(watch), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(unwatch), CLASP(Object)},
 #endif
-    {js_InitObjectClass,        LAZY_ATOM(hasOwnProperty), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(isPrototypeOf), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(propertyIsEnumerable), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(hasOwnProperty), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(isPrototypeOf), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(propertyIsEnumerable), CLASP(Object)},
 #if OLD_GETTER_SETTER_METHODS
-    {js_InitObjectClass,        LAZY_ATOM(defineGetter), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(defineSetter), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(lookupGetter), CLASP(Object)},
-    {js_InitObjectClass,        LAZY_ATOM(lookupSetter), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(defineGetter), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(defineSetter), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(lookupGetter), CLASP(Object)},
+    {js_InitObjectClass,        EAGER_ATOM(lookupSetter), CLASP(Object)},
 #endif
 
-    {NULL,                      0, NULL, NULL}
+    {NULL,                      0, NULL}
 };
 
 JS_PUBLIC_API(JSBool)
@@ -1947,7 +1932,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
     stdnm = NULL;
     for (i = 0; standard_class_atoms[i].init; i++) {
         JS_ASSERT(standard_class_atoms[i].clasp);
-        atom = OFFSET_TO_ATOM(rt, standard_class_atoms[i].atomOffset);
+        atom = OFFSET_TO_NAME(rt, standard_class_atoms[i].atomOffset);
         if (idstr == atom) {
             stdnm = &standard_class_atoms[i];
             break;
@@ -1958,7 +1943,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
         /* Try less frequently used top-level functions and constants. */
         for (i = 0; standard_class_names[i].init; i++) {
             JS_ASSERT(standard_class_names[i].clasp);
-            atom = StdNameToAtom(cx, &standard_class_names[i]);
+            atom = StdNameToPropertyName(cx, &standard_class_names[i]);
             if (!atom)
                 return JS_FALSE;
             if (idstr == atom) {
@@ -1975,7 +1960,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
              */
             for (i = 0; object_prototype_names[i].init; i++) {
                 JS_ASSERT(object_prototype_names[i].clasp);
-                atom = StdNameToAtom(cx, &object_prototype_names[i]);
+                atom = StdNameToPropertyName(cx, &object_prototype_names[i]);
                 if (!atom)
                     return JS_FALSE;
                 if (idstr == atom) {
@@ -2023,7 +2008,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj_)
      * Since ES5 15.1.1.3 undefined can't be deleted.
      */
     PropertyName *name = rt->atomState.typeAtoms[JSTYPE_VOID];
-    if (!obj->nativeContains(cx, ATOM_TO_JSID(name)) &&
+    if (!obj->nativeContains(cx, NameToId(name)) &&
         !obj->defineProperty(cx, name, UndefinedValue(),
                              JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY)) {
@@ -2074,7 +2059,7 @@ SetIdArrayLength(JSContext *cx, JSIdArray *ida, int length)
 }
 
 static JSIdArray *
-AddAtomToArray(JSContext *cx, JSAtom *atom, JSIdArray *ida, int *ip)
+AddNameToArray(JSContext *cx, PropertyName *name, JSIdArray *ida, int *ip)
 {
     int i = *ip;
     int length = ida->length;
@@ -2084,18 +2069,18 @@ AddAtomToArray(JSContext *cx, JSAtom *atom, JSIdArray *ida, int *ip)
             return NULL;
         JS_ASSERT(i < ida->length);
     }
-    ida->vector[i].init(ATOM_TO_JSID(atom));
+    ida->vector[i].init(NameToId(name));
     *ip = i + 1;
     return ida;
 }
 
 static JSIdArray *
-EnumerateIfResolved(JSContext *cx, JSObject *obj, JSAtom *atom, JSIdArray *ida,
+EnumerateIfResolved(JSContext *cx, JSObject *obj, PropertyName *name, JSIdArray *ida,
                     int *ip, JSBool *foundp)
 {
-    *foundp = obj->nativeContains(cx, ATOM_TO_JSID(atom));
+    *foundp = obj->nativeContains(cx, NameToId(name));
     if (*foundp)
-        ida = AddAtomToArray(cx, atom, ida, ip);
+        ida = AddNameToArray(cx, name, ida, ip);
     return ida;
 }
 
@@ -2104,7 +2089,7 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj, JSIdArray *ida
 {
     JSRuntime *rt;
     int i, j, k;
-    JSAtom *atom;
+    PropertyName *name;
     JSBool found;
     JSObjectOp init;
 
@@ -2122,15 +2107,15 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj, JSIdArray *ida
     }
 
     /* Check whether 'undefined' has been resolved and enumerate it if so. */
-    atom = rt->atomState.typeAtoms[JSTYPE_VOID];
-    ida = EnumerateIfResolved(cx, obj, atom, ida, &i, &found);
+    name = rt->atomState.typeAtoms[JSTYPE_VOID];
+    ida = EnumerateIfResolved(cx, obj, name, ida, &i, &found);
     if (!ida)
         return NULL;
 
     /* Enumerate only classes that *have* been resolved. */
     for (j = 0; standard_class_atoms[j].init; j++) {
-        atom = OFFSET_TO_ATOM(rt, standard_class_atoms[j].atomOffset);
-        ida = EnumerateIfResolved(cx, obj, atom, ida, &i, &found);
+        name = OFFSET_TO_NAME(rt, standard_class_atoms[j].atomOffset);
+        ida = EnumerateIfResolved(cx, obj, name, ida, &i, &found);
         if (!ida)
             return NULL;
 
@@ -2139,8 +2124,8 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj, JSIdArray *ida
 
             for (k = 0; standard_class_names[k].init; k++) {
                 if (standard_class_names[k].init == init) {
-                    atom = StdNameToAtom(cx, &standard_class_names[k]);
-                    ida = AddAtomToArray(cx, atom, ida, &i);
+                    name = StdNameToPropertyName(cx, &standard_class_names[k]);
+                    ida = AddNameToArray(cx, name, ida, &i);
                     if (!ida)
                         return NULL;
                 }
@@ -2148,8 +2133,8 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj, JSIdArray *ida
 
             if (init == js_InitObjectClass) {
                 for (k = 0; object_prototype_names[k].init; k++) {
-                    atom = StdNameToAtom(cx, &object_prototype_names[k]);
-                    ida = AddAtomToArray(cx, atom, ida, &i);
+                    name = StdNameToPropertyName(cx, &object_prototype_names[k]);
+                    ida = AddNameToArray(cx, name, ida, &i);
                     if (!ida)
                         return NULL;
                 }
@@ -2165,7 +2150,6 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj, JSIdArray *ida
 #undef EAGER_ATOM
 #undef EAGER_CLASS_ATOM
 #undef EAGER_ATOM_CLASP
-#undef LAZY_ATOM
 
 JS_PUBLIC_API(JSBool)
 JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objp)
@@ -3476,7 +3460,6 @@ LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
     assertSameCompartment(cx, obj, id);
 
     JSAutoResolveFlags rf(cx, flags);
-    id = js_CheckForStringIndex(id);
     return obj->lookupGeneric(cx, id, objp, propp);
 }
 
@@ -3542,14 +3525,14 @@ JS_PUBLIC_API(JSBool)
 JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && JS_LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
+    return atom && JS_LookupPropertyById(cx, obj, AtomToId(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_LookupUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen, jsval *vp)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
+    return atom && JS_LookupPropertyById(cx, obj, AtomToId(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3573,7 +3556,7 @@ JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name, unsig
 {
     JSObject *obj2;
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && JS_LookupPropertyWithFlagsById(cx, obj, ATOM_TO_JSID(atom), flags, &obj2, vp);
+    return atom && JS_LookupPropertyWithFlagsById(cx, obj, AtomToId(atom), flags, &obj2, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3602,14 +3585,14 @@ JS_PUBLIC_API(JSBool)
 JS_HasProperty(JSContext *cx, JSObject *obj, const char *name, JSBool *foundp)
 {
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && JS_HasPropertyById(cx, obj, ATOM_TO_JSID(atom), foundp);
+    return atom && JS_HasPropertyById(cx, obj, AtomToId(atom), foundp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_HasUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen, JSBool *foundp)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_HasPropertyById(cx, obj, ATOM_TO_JSID(atom), foundp);
+    return atom && JS_HasPropertyById(cx, obj, AtomToId(atom), foundp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3650,7 +3633,7 @@ JS_PUBLIC_API(JSBool)
 JS_AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, const char *name, JSBool *foundp)
 {
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && JS_AlreadyHasOwnPropertyById(cx, obj, ATOM_TO_JSID(atom), foundp);
+    return atom && JS_AlreadyHasOwnPropertyById(cx, obj, AtomToId(atom), foundp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3658,7 +3641,7 @@ JS_AlreadyHasOwnUCProperty(JSContext *cx, JSObject *obj, const jschar *name, siz
                            JSBool *foundp)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_AlreadyHasOwnPropertyById(cx, obj, ATOM_TO_JSID(atom), foundp);
+    return atom && JS_AlreadyHasOwnPropertyById(cx, obj, AtomToId(atom), foundp);
 }
 
 static JSBool
@@ -3762,7 +3745,7 @@ DefineProperty(JSContext *cx, JSObject *obj_, const char *name, const Value &val
         JSAtom *atom = js_Atomize(cx, name, strlen(name));
         if (!atom)
             return JS_FALSE;
-        id = ATOM_TO_JSID(atom);
+        id = AtomToId(atom);
     }
 
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, flags, tinyid);
@@ -3793,7 +3776,7 @@ DefineUCProperty(JSContext *cx, JSObject *obj_, const jschar *name, size_t namel
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
     if (!atom)
         return false;
-    RootedVarId id(cx, ATOM_TO_JSID(atom));
+    RootedVarId id(cx, AtomToId(atom));
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, flags, tinyid);
 }
 
@@ -3959,7 +3942,7 @@ JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
                          unsigned *attrsp, JSBool *foundp)
 {
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, ATOM_TO_JSID(atom),
+    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, AtomToId(atom),
                                                           attrsp, foundp, NULL, NULL);
 }
 
@@ -3968,7 +3951,7 @@ JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj, const jschar *name, siz
                            unsigned *attrsp, JSBool *foundp)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, ATOM_TO_JSID(atom),
+    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, AtomToId(atom),
                                                           attrsp, foundp, NULL, NULL);
 }
 
@@ -3978,7 +3961,7 @@ JS_GetPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj, const char *nam
                                    JSPropertyOp *getterp, JSStrictPropertyOp *setterp)
 {
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, ATOM_TO_JSID(atom),
+    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, AtomToId(atom),
                                                           attrsp, foundp, getterp, setterp);
 }
 
@@ -3989,7 +3972,7 @@ JS_GetUCPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
                                      JSPropertyOp *getterp, JSStrictPropertyOp *setterp)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, ATOM_TO_JSID(atom),
+    return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, AtomToId(atom),
                                                           attrsp, foundp, getterp, setterp);
 }
 
@@ -4027,7 +4010,7 @@ JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
                          unsigned attrs, JSBool *foundp)
 {
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && SetPropertyAttributesById(cx, obj, ATOM_TO_JSID(atom), attrs, foundp);
+    return atom && SetPropertyAttributesById(cx, obj, AtomToId(atom), attrs, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4035,7 +4018,7 @@ JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj, const jschar *name, siz
                            unsigned attrs, JSBool *foundp)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && SetPropertyAttributesById(cx, obj, ATOM_TO_JSID(atom), attrs, foundp);
+    return atom && SetPropertyAttributesById(cx, obj, AtomToId(atom), attrs, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4096,7 +4079,7 @@ JS_GetProperty(JSContext *cx, JSObject *obj_, const char *name, jsval *vp)
 {
     RootedVarObject obj(cx, obj_);
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && JS_GetPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
+    return atom && JS_GetPropertyById(cx, obj, AtomToId(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4104,7 +4087,7 @@ JS_GetPropertyDefault(JSContext *cx, JSObject *obj_, const char *name, jsval def
 {
     RootedVarObject obj(cx, obj_);
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && JS_GetPropertyByIdDefault(cx, obj, ATOM_TO_JSID(atom), def, vp);
+    return atom && JS_GetPropertyByIdDefault(cx, obj, AtomToId(atom), def, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4112,7 +4095,7 @@ JS_GetUCProperty(JSContext *cx, JSObject *obj_, const jschar *name, size_t namel
 {
     RootedVarObject obj(cx, obj_);
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_GetPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
+    return atom && JS_GetPropertyById(cx, obj, AtomToId(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4132,7 +4115,7 @@ JS_PUBLIC_API(JSBool)
 JS_GetMethod(JSContext *cx, JSObject *obj, const char *name, JSObject **objp, jsval *vp)
 {
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && JS_GetMethodById(cx, obj, ATOM_TO_JSID(atom), objp, vp);
+    return atom && JS_GetMethodById(cx, obj, AtomToId(atom), objp, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4163,14 +4146,14 @@ JS_SetProperty(JSContext *cx, JSObject *obj_, const char *name, jsval *vp)
     RootedVarObject obj(cx, obj_);
     RootValue vpRoot(cx, vp);
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && JS_SetPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
+    return atom && JS_SetPropertyById(cx, obj, AtomToId(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen, jsval *vp)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_SetPropertyById(cx, obj, ATOM_TO_JSID(atom), vp);
+    return atom && JS_SetPropertyById(cx, obj, AtomToId(atom), vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4278,8 +4261,6 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
     JSIdArray *ida;
     if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props) || !VectorToIdArray(cx, props, &ida))
         return NULL;
-    for (size_t n = 0; n < size_t(ida->length); ++n)
-        JS_ASSERT(js_CheckForStringIndex(ida->vector[n]) == ida->vector[n]);
     return ida;
 }
 
@@ -4730,7 +4711,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             }
 
             flags &= ~JSFUN_GENERIC_NATIVE;
-            fun = js_DefineFunction(cx, ctor, ATOM_TO_JSID(atom),
+            fun = js_DefineFunction(cx, ctor, AtomToId(atom),
                                     js_generic_native_method_dispatcher,
                                     fs->nargs + 1,
                                     flags,
@@ -4746,7 +4727,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
         }
 
         fun = js_DefineFunction(cx, objRoot,
-                                ATOM_TO_JSID(atom), fs->call, fs->nargs, flags);
+                                AtomToId(atom), fs->call, fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
     }
@@ -4766,7 +4747,7 @@ JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, objRoot, ATOM_TO_JSID(atom), call, nargs, attrs);
+    return js_DefineFunction(cx, objRoot, AtomToId(atom), call, nargs, attrs);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4783,7 +4764,7 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj,
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, objRoot, ATOM_TO_JSID(atom), call, nargs, attrs);
+    return js_DefineFunction(cx, objRoot, AtomToId(atom), call, nargs, attrs);
 }
 
 extern JS_PUBLIC_API(JSFunction *)
@@ -5150,7 +5131,7 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
     }
 
     if (obj && funAtom &&
-        !obj->defineGeneric(cx, ATOM_TO_JSID(funAtom), ObjectValue(*fun), NULL, NULL,
+        !obj->defineGeneric(cx, AtomToId(funAtom), ObjectValue(*fun), NULL, NULL,
                             JSPROP_ENUMERATE))
     {
         return NULL;
@@ -5452,7 +5433,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj_, const char *name, unsigned ar
     Value v;
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     return atom &&
-           js_GetMethod(cx, obj, ATOM_TO_JSID(atom), 0, &v) &&
+           js_GetMethod(cx, obj, AtomToId(atom), 0, &v) &&
            Invoke(cx, ObjectOrNullValue(obj), v, argc, argv, rval);
 }
 
@@ -5622,6 +5603,15 @@ JS_StringHasBeenInterned(JSContext *cx, JSString *str)
         return false;
 
     return AtomIsInterned(cx, &str->asAtom());
+}
+
+JS_PUBLIC_API(jsid)
+INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str)
+{
+    JS_ASSERT(str);
+    JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
+    JS_ASSERT_IF(cx, JS_StringHasBeenInterned(cx, str));
+    return AtomToId(&str->asAtom());
 }
 
 JS_PUBLIC_API(JSString *)

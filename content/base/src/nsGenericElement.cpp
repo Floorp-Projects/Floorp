@@ -1552,7 +1552,7 @@ nsIContent::HasIndependentSelection()
   return (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION);
 }
 
-nsIContent*
+dom::Element*
 nsIContent::GetEditingHost()
 {
   // If this isn't editable, return NULL.
@@ -1566,12 +1566,12 @@ nsIContent::GetEditingHost()
   }
 
   nsIContent* content = this;
-  for (nsIContent* parent = GetParent();
+  for (dom::Element* parent = GetElementParent();
        parent && parent->HasFlag(NODE_IS_EDITABLE);
-       parent = content->GetParent()) {
+       parent = content->GetElementParent()) {
     content = parent;
   }
-  return content;
+  return content->AsElement();
 }
 
 nsresult

@@ -181,7 +181,7 @@ public class BrowserToolbar {
 
                 // Calculate the left margin for the arrow based on the position of the lock icon.
                 int leftMargin = lockLocation[0] - lockLayoutParams.rightMargin;
-                GeckoApp.mSiteIdentityPopup.show(leftMargin);
+                SiteIdentityPopup.getInstance().show(leftMargin);
             }
         });
 
@@ -190,7 +190,9 @@ public class BrowserToolbar {
         mStop = (ImageButton) mLayout.findViewById(R.id.stop);
         mStop.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                doStop();
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null)
+                    tab.doStop();
             }
         });
 
@@ -219,10 +221,6 @@ public class BrowserToolbar {
 
     private void showTabs() {
         GeckoApp.mAppContext.showTabs();
-    }
-
-    private void doStop() {
-        GeckoApp.mAppContext.doStop();
     }
 
     public int getHighlightColor() {

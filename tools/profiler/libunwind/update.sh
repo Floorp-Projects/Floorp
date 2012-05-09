@@ -6,14 +6,13 @@ cd `dirname $0`
 
 source upstream.info
 
-hg rm -f src
 rm -rf src
 git clone "$UPSTREAM_REPO" src
 cd src
 git checkout "$UPSTREAM_COMMIT"
 autoreconf -i
-rm -rf .git .gitignore
+rm -rf .git .gitignore autom4te.cache
 cd ..
-hg add src
+hg addremove -q src
 
 echo "libunwind has now been updated.  Don't forget to run hg commit!"

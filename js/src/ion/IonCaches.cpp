@@ -293,8 +293,7 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
     if (cache.stubCount() < MAX_STUBS && obj->isNative()) {
         cache.incrementStubCount();
 
-        jsid id = ATOM_TO_JSID(atom);
-        id = js_CheckForStringIndex(id);
+        jsid id = AtomToId(atom);
 
         JSObject *holder;
         JSProperty *prop;
@@ -308,7 +307,7 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
         }
     }
 
-    jsid id = ATOM_TO_JSID(atom);
+    jsid id = AtomToId(atom);
     if (!obj->getGeneric(cx, obj, id, vp))
         return false;
 
@@ -481,8 +480,7 @@ IsPropertyInlineable(JSObject *obj, IonCacheSetProperty &cache)
 static bool
 IsPropertySetInlineable(JSContext *cx, HandleObject obj, JSAtom *atom, jsid *pId, const Shape **pShape)
 {
-    jsid id = ATOM_TO_JSID(atom);
-    id = js_CheckForStringIndex(id);
+    jsid id = AtomToId(atom);
     *pId = id;
 
     const Shape *shape = obj->nativeLookup(cx, id);

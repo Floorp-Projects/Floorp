@@ -27,7 +27,7 @@ module_dir = $(FINAL_TARGET)/modules/services-common
 
 libs::
 	$(NSINSTALL) -D $(module_dir)
-	$(NSINSTALL) -R $(source_modules) $(module_dir)
+	$(NSINSTALL) $(source_modules) $(module_dir)
 
 TEST_DIRS += tests
 

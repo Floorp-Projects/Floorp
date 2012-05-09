@@ -54,7 +54,6 @@
 #include "nsIDOMToString.h"
 #include "nsDOMEvent.h"
 #include "nsIDOMStorageEvent.h"
-#include "nsIDOMStorageEventObsolete.h"
 #include "nsIDOMStorageManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
@@ -387,11 +386,6 @@ public:
 
   nsIDOMStorageItem* GetNamedItem(const nsAString& aKey, nsresult* aResult);
 
-  static nsDOMStorage* FromSupports(nsISupports* aSupports)
-  {
-    return static_cast<nsDOMStorage*>(static_cast<nsIDOMStorageObsolete*>(aSupports));
-  }
-
   nsresult SetSecure(const nsAString& aKey, bool aSecure)
   {
     return mStorageImpl->SetSecure(aKey, aSecure);
@@ -448,9 +442,9 @@ public:
   void BroadcastChangeNotification(const nsSubstring &aKey,
                                    const nsSubstring &aOldValue,
                                    const nsSubstring &aNewValue);
-  nsresult InitAsSessionStorageFork(nsIPrincipal *aPrincipal,
-                                    const nsSubstring &aDocumentURI,
-                                    nsIDOMStorageObsolete* aStorage);
+  void InitAsSessionStorageFork(nsIPrincipal *aPrincipal,
+                                const nsSubstring &aDocumentURI,
+                                nsDOMStorage* aStorage);
 
 private:
   // storages bound to an origin hold the principal to
@@ -554,30 +548,6 @@ protected:
   nsString mUrl;
   nsCOMPtr<nsIDOMStorage> mStorageArea;
 };
-
-class nsDOMStorageEventObsolete : public nsDOMEvent,
-                          public nsIDOMStorageEventObsolete
-{
-public:
-  nsDOMStorageEventObsolete()
-    : nsDOMEvent(nsnull, nsnull)
-  {
-  }
-
-  virtual ~nsDOMStorageEventObsolete()
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMSTORAGEEVENTOBSOLETE
-  NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
-
-protected:
-  nsString mDomain;
-};
-
-nsresult
-NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult);

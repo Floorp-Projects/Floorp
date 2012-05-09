@@ -363,10 +363,7 @@ JSContext *
 nsScriptSecurityManager::GetSafeJSContext()
 {
     // Get JSContext from stack.
-    JSContext *cx;
-    if (NS_FAILED(sJSContextStack->GetSafeJSContext(&cx)))
-        return nsnull;
-    return cx;
+    return sJSContextStack->GetSafeJSContext();
 }
 
 /* static */

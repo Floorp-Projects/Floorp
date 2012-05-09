@@ -1951,7 +1951,7 @@ nsXULDocument::RemoveElementFromRefMap(Element* aElement)
 //
 
 NS_IMETHODIMP
-nsXULDocument::CloneNode(bool aDeep, nsIDOMNode** aReturn)
+nsXULDocument::CloneNode(bool aDeep, PRUint8 aOptionalArgc, nsIDOMNode** aReturn)
 {
     // We don't allow cloning of a document
     *aReturn = nsnull;

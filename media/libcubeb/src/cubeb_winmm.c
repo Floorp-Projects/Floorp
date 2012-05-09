@@ -216,6 +216,8 @@ cubeb_init(cubeb ** context, char const * context_name)
     return CUBEB_ERROR;
   }
 
+  SetThreadPriority(ctx->thread, THREAD_PRIORITY_TIME_CRITICAL);
+
   InitializeCriticalSection(&ctx->lock);
   ctx->active_streams = 0;
 
