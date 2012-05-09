@@ -94,6 +94,7 @@
 #include tabs.xul
 #include privacy.xul
 #include advanced.xul
+#include applications.xul
     </prefpane>
   </hbox>
   
