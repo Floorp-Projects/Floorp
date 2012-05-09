@@ -50,10 +50,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "mozilla/Hal.h"
+#include "base/basictypes.h"
 #include "nscore.h"
 #include "mozilla/FileUtils.h"
-#include "mozilla/HalSensor.h"
+#include "mozilla/Hal.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Services.h"
 #include "nsAppShell.h"
@@ -64,6 +64,7 @@
 #include "nsIScreen.h"
 #include "nsScreenManagerGonk.h"
 #include "nsWindow.h"
+#include "OrientationObserver.h"
 
 #include "android/log.h"
 #include "libui/EventHub.h"
@@ -83,7 +84,6 @@
 using namespace android;
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::hal;
 
 bool gDrawRequest = false;
 static nsAppShell *gAppShell = NULL;
@@ -518,83 +518,15 @@ GeckoInputDispatcher::unregisterInputChannel(const sp<InputChannel>& inputChanne
     return OK;
 }
 
-static already_AddRefed<nsIScreen>
-Screen()
-{
-    nsCOMPtr<nsIScreenManager> screenMgr =
-        do_GetService("@mozilla.org/gfx/screenmanager;1");
-    nsCOMPtr<nsIScreen> screen;
-    screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
-    return screen.forget();
-}
-
-class ScreenRotateEvent : public nsRunnable {
-public:
-  ScreenRotateEvent(PRUint32 aRotation)
-    : mRotation(aRotation) {
-  }
-  NS_IMETHOD Run() {
-    nsCOMPtr<nsIScreen> screen = Screen();
-    return screen->SetRotation(mRotation);
-  }
-
-private:
-  PRUint32 mRotation;
-};
-
-class OrientationSensorObserver : public ISensorObserver {
-public:
-  OrientationSensorObserver ()
-    : mLastUpdate(0) {
-  }
-  void Notify(const SensorData& aSensorData) {
-    MOZ_ASSERT(aSensorData.sensor() == SensorType::SENSOR_ORIENTATION);
-    InfallibleTArray<float> values = aSensorData.values();
-    // float azimuth = values[0]; // unused
-    float pitch = values[1];
-    float roll = values[2];
-    PRUint32 rotation;
-    if (roll > 45)
-      rotation = nsIScreen::ROTATION_90_DEG;
-    else if (roll < -45)
-      rotation = nsIScreen::ROTATION_270_DEG;
-    else if (pitch < -45)
-      rotation = nsIScreen::ROTATION_0_DEG;
-    else if (pitch > 45)
-      rotation = nsIScreen::ROTATION_180_DEG;
-    else
-      return;  // don't rotate if undecidable
-
-    // This check is racy, but that's OK.
-    if (rotation == nsScreenGonk::GetRotation())
-      return;
-
-    PRTime now = PR_Now();
-    MOZ_ASSERT(now > mLastUpdate);
-    if (now - mLastUpdate < sMinUpdateInterval)
-      return;
-
-    mLastUpdate = now;
-    NS_DispatchToMainThread(new ScreenRotateEvent(rotation));
-  }
-
-private:
-  PRTime mLastUpdate;
-  static const PRTime sMinUpdateInterval = 500 * 1000; // 500 ms
-};
-
 nsAppShell::nsAppShell()
     : mNativeCallbackRequest(false)
     , mHandlers()
-    , mObserver(new OrientationSensorObserver())
 {
     gAppShell = this;
-    RegisterSensorObserver(SENSOR_ORIENTATION, mObserver);
 }
 
 nsAppShell::~nsAppShell()
 {
-    UnregisterSensorObserver(SENSOR_ORIENTATION, mObserver);
     status_t result = mReaderThread->requestExitAndWait();
     if (result)
         LOG("Could not stop reader thread - %d", result);
@@ -704,6 +636,9 @@ nsAppShell::NotifyNativeEvent()
 nsAppShell::NotifyScreenInitialized()
 {
     gAppShell->InitInputDevices();
+
+    // Getting the instance of OrientationObserver to initialize it.
+    OrientationObserver::GetInstance();
 }
 
 /* static */ void

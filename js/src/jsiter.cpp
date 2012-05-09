@@ -1325,8 +1325,8 @@ Class js::StopIterationClass = {
     NULL,                    /* finalize    */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
-    NULL,                    /* construct   */
-    stopiter_hasInstance
+    stopiter_hasInstance,
+    NULL                     /* construct   */
 };
 
 #if JS_HAS_GENERATORS

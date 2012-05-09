@@ -9323,7 +9323,10 @@ nsDocShell::ScrollToAnchor(nsACString & aCurHash, nsACString & aNewHash,
             // success condition for us (we want to update the session history
             // with the new URI no matter whether we actually scrolled
             // somewhere).
-            shell->GoToAnchor(uStr, scroll);
+            //
+            // When newHashName contains "%00", unescaped string may be empty.
+            // And GoToAnchor asserts if we ask it to scroll to an empty ref.
+            shell->GoToAnchor(uStr, scroll && !uStr.IsEmpty());
         }
     }
     else {
