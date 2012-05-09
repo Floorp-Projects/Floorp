@@ -1060,5 +1060,26 @@ SpecialPowersAPI.prototype = {
     delete this.isDebugBuild;
     var debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
     return this.isDebugBuild = debug.isDebugBuild;
+  },
+
+  /**
+   * Get the message manager associated with an <iframe mozbrowser>.
+   */
+  getBrowserFrameMessageManager: function(aFrameElement) {
+    return this.wrap(aFrameElement.QueryInterface(Ci.nsIFrameLoaderOwner)
+                                  .frameLoader
+                                  .messageManager);
+  },
+  
+  setFullscreenAllowed: function(document) {
+    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+    var uri = this.getDocumentURIObject(document);
+    pm.add(uri, "fullscreen", Ci.nsIPermissionManager.ALLOW_ACTION);
+  },
+  
+  removeFullscreenAllowed: function(document) {
+    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+    var uri = this.getDocumentURIObject(document);
+    pm.remove(uri.host, "fullscreen");
   }
 };

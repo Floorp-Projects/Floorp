@@ -9,9 +9,8 @@ import StringIO
 class DroidMixin(object):
   """Mixin to extend DeviceManager with Android-specific functionality"""
 
-  def launchApplication(self, app, activity="App",
-                        intent="android.intent.action.VIEW", env=None,
-                        url=None, extra_args=None):
+  def launchApplication(self, appName, activityName, intent, url=None,
+                        extras=None):
     """
     Launches an Android application
     returns:
@@ -19,26 +18,26 @@ class DroidMixin(object):
     failure: False
     """
     # only one instance of an application may be running at once
-    if self.processExist(app):
+    if self.processExist(appName):
       return False
 
-    acmd = [ "am", "start", "-W", "-n", "%s/.%s" % (app, activity)]
+    acmd = [ "am", "start", "-W", "-n", "%s/%s" % (appName, activityName)]
 
     if intent:
       acmd.extend(["-a", intent])
 
-    if extra_args:
-      acmd.extend(["--es", "args", " ".join(extra_args)])
-
-    if env:
-      envCnt = 0
-      # env is expected to be a dict of environment variables
-      for envkey, envval in env.iteritems():
-        acmd.extend(["--es", "env" + str(envCnt), envkey + "=" + envval])
-        envCnt += 1
+    if extras:
+      for (key, val) in extras.iteritems():
+        if type(val) is int:
+          extraTypeParam = "--ei"
+        elif type(val) is bool:
+          extraTypeParam = "--ez"
+        else:
+          extraTypeParam = "--es"
+        acmd.extend([extraTypeParam, str(key), str(val)])
 
     if url:
-      acmd.extend(["-d", ''.join(["'", url, "'"])])
+      acmd.extend(["-d", url])
 
     # shell output not that interesting and debugging logs should already
     # show what's going on here... so just create an empty memory buffer
@@ -48,6 +47,34 @@ class DroidMixin(object):
       return True
 
     return False
+
+  def launchFennec(self, appName, intent="android.intent.action.VIEW",
+                   mozEnv=None, extraArgs=None, url=None):
+    """
+    Convenience method to launch Fennec on Android with various debugging
+    arguments
+    WARNING: FIXME: This would go better in mozrunner. Please do not
+    use this method if you are not comfortable with it going away sometime
+    in the near future
+    returns:
+    success: True
+    failure: False
+    """
+    extras = {}
+
+    if mozEnv:
+      # mozEnv is expected to be a dictionary of environment variables: Fennec
+      # itself will set them when launched
+      for (envCnt, (envkey, envval)) in enumerate(mozEnv.iteritems()):
+        extras["env" + str(envCnt)] = envkey + "=" + envval
+
+    # Additional command line arguments that fennec will read and use (e.g.
+    # with a custom profile)
+    if extraArgs:
+      extras['args'] = " ".join(extraArgs)
+
+    return self.launchApplication(appName, ".App", intent, url=url,
+                                  extras=extras)
 
 class DroidADB(DeviceManagerADB, DroidMixin):
   pass

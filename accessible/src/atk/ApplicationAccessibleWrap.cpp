@@ -632,9 +632,9 @@ ApplicationAccessibleWrap::Init()
         if (NS_SUCCEEDED(rv)) {
             // init atk-bridge
             (*sAtkBridge.init)();
-        }
-        else
+        } else {
             MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
+        }
 
         if (!sToplevel_event_hook_added) {
           sToplevel_event_hook_added = true;

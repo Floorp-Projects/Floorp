@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/
+   - https://bugzilla.mozilla.org/show_bug.cgi?id=741549
+-->
+
+<window title="Mozilla Bug 741549"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="apphelper.js"/>
+  <script type="application/javascript" src="jshelper.js"/>
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
+     target="_blank">Mozilla Bug 741549</a>
+  <iframe id="no_delegated_install" onload="go();" src="http://sub2.test2.example.org:80/chrome/dom/tests/mochitest/webapps/apps/include.html"/>
+  </body>
+
+<script> 
+
+function go() {
+  runAll(steps);
+}
+
+steps = [setUp, no_args, parse_error, invalid_manifest, permission_denied, invalid_content,
+         mgmt_api_errors, mgmt_api_add_listener, tearDown];
+
+function setUp(next) {
+  debug("in " + arguments.callee.name);
+  uninstallAll(next);
+}
+
+function no_args(next)  {
+  debug("in " + arguments.callee.name);
+  try { 
+    navigator.mozApps.install();
+  } catch (e) {
+    ok(e.message == "Not enough arguments \[mozIDOMApplicationRegistry.install\]", "install returned " + e.message);
+    next();
+  }
+}
+
+function parse_error(next)  {
+  debug("in " + arguments.callee.name);  
+  mozAppscb(navigator.mozApps.install(SERVERS['json_syntax_error'], null), 
+          [{ status: "== \"error\"",
+            name: "== \"MANIFEST_PARSE_ERROR\""}], ok, next);
+}
+
+function invalid_manifest(next) {
+  debug("in " + arguments.callee.name);
+  mozAppscb(navigator.mozApps.install(SERVERS['missing_required_field'], null),
+          [{ status: "== \"error\"",
+            name: "== \"INVALID_MANIFEST\""}], ok, next);
+}
+
+function permission_denied(next) {
+  debug("in " + arguments.callee.name);
+  mozAppscb(navigator.mozApps.install(SERVERS['no_delegated_install'], null),
+          [{ status: "== \"error\"",
+            name: "== \"DENIED\""}], todo, next);
+}
+
+function invalid_content(next) {
+  debug("in " + arguments.callee.name);
+  mozAppscb(navigator.mozApps.install(SERVERS['bad_content_type'], null),
+          [{ status: "== \"error\"",
+             name: "== \"INVALID_MANIFEST\""}], todo, next);
+}
+
+function mgmt_api_errors(next) {
+  debug("in " + arguments.callee.name);
+  onIframeLoad("no_delegated_install", ok, next);
+  document.getElementById("no_delegated_install").contentWindow.postMessage("mgmt.getAll", '*');
+}
+
+function mgmt_api_add_listener(next) {
+  debug("in " + arguments.callee.name);
+  onIframeLoad("no_delegated_install", todo, next);
+  document.getElementById("no_delegated_install").contentWindow.postMessage("mgmt.event_error", '*');
+}
+
+</script> 
+
+</window>
+
