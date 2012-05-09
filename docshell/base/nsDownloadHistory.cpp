@@ -40,7 +40,6 @@
 #include "nsDownloadHistory.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIGlobalHistory.h"
 #include "nsIGlobalHistory2.h"
 #include "nsIObserverService.h"
 #include "nsIURI.h"
