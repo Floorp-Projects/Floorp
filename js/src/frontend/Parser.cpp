@@ -1269,9 +1269,6 @@ LeaveFunction(ParseNode *fn, TreeContext *funtc, PropertyName *funName = NULL,
     return true;
 }
 
-static bool
-DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, Handle<PropertyName*> name);
-
 /*
  * FIXME? this Parser method was factored from Parser::functionDef with minimal
  * change, hence the funtc ref param and funbox. It probably should match
@@ -1709,11 +1706,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         pn->pn_body = body;
     }
 
-    if (!outertc->inFunction() && bodyLevel && kind == Statement && outertc->compiling()) {
-        JS_ASSERT(pn->pn_cookie.isFree());
-        if (!DefineGlobal(pn, outertc->asBytecodeEmitter(), funName))
-            return NULL;
-    }
+    JS_ASSERT_IF(!outertc->inFunction() && bodyLevel && kind == Statement, pn->pn_cookie.isFree());
 
     pn->pn_blockid = outertc->blockid();
 
@@ -2069,152 +2062,6 @@ OuterLet(TreeContext *tc, StmtInfo *stmt, JSAtom *atom)
     return false;
 }
 
-/*
- * If we are generating global or eval-called-from-global code, bind a "gvar"
- * here, as soon as possible. The JSOP_GETGVAR, etc., ops speed up interpreted
- * global variable access by memoizing name-to-slot mappings during execution
- * of the script prolog (via JSOP_DEFVAR/JSOP_DEFCONST). If the memoization
- * can't be done due to a pre-existing property of the same name as the var or
- * const but incompatible attributes/getter/setter/etc, these ops devolve to
- * JSOP_NAME, etc.
- *
- * For now, don't try to lookup eval frame variables at compile time. This is
- * sub-optimal: we could handle eval-called-from-global-code gvars since eval
- * gets its own script and frame. The eval-from-function-code case is harder,
- * since functions do not atomize gvars and then reserve their atom indexes as
- * stack frame slots.
- */
-static bool
-DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, Handle<PropertyName*> name)
-{
-    GlobalScope *globalScope = bce->globalScope;
-    HandleObject globalObj = globalScope->globalObj;
-
-    if (!bce->compileAndGo() || !globalObj || bce->compilingForEval())
-        return true;
-
-    AtomIndexAddPtr p = globalScope->names.lookupForAdd(name);
-    if (!p) {
-        JSContext *cx = bce->parser->context;
-
-        JSObject *holder;
-        JSProperty *prop;
-        if (!globalObj->lookupProperty(cx, name, &holder, &prop))
-            return false;
-
-        FunctionBox *funbox = pn->isKind(PNK_FUNCTION) ? pn->pn_funbox : NULL;
-
-        GlobalScope::GlobalDef def;
-        if (prop) {
-            /*
-             * A few cases where we don't bother aggressively caching:
-             *   1) Function value changes.
-             *   2) Configurable properties.
-             *   3) Properties without slots, or with getters/setters.
-             */
-            const Shape *shape = (const Shape *)prop;
-            if (funbox ||
-                globalObj != holder ||
-                shape->configurable() ||
-                !shape->hasSlot() ||
-                !shape->hasDefaultGetter() ||
-                !shape->hasDefaultSetter()) {
-                return true;
-            }
-
-            def = GlobalScope::GlobalDef(shape->slot());
-        } else {
-            def = GlobalScope::GlobalDef(name, funbox);
-        }
-
-        if (!globalScope->defs.append(def))
-            return false;
-
-        jsatomid index = globalScope->names.count();
-        if (!globalScope->names.add(p, name, index))
-            return false;
-
-        JS_ASSERT(index == globalScope->defs.length() - 1);
-    } else {
-        /*
-         * Functions can be redeclared, and the last one takes effect. Check
-         * for this and make sure to rewrite the definition.
-         *
-         * Note: This could overwrite an existing variable declaration, for
-         * example:
-         *   var c = []
-         *   function c() { }
-         *
-         * This rewrite is allowed because the function will be statically
-         * hoisted to the top of the script, and the |c = []| will just
-         * overwrite it at runtime.
-         */
-        if (pn->isKind(PNK_FUNCTION)) {
-            JS_ASSERT(pn->isArity(PN_FUNC));
-            jsatomid index = p.value();
-            globalScope->defs[index].funbox = pn->pn_funbox;
-        }
-    }
-
-    pn->pn_dflags |= PND_GVAR;
-
-    return true;
-}
-
-static bool
-BindTopLevelVar(JSContext *cx, BindData *data, ParseNode *pn, TreeContext *tc)
-{
-    JS_ASSERT(pn->isOp(JSOP_NAME));
-    JS_ASSERT(!tc->inFunction());
-
-    /* There's no need to optimize bindings if we're not compiling code. */
-    if (!tc->compiling())
-        return true;
-
-    /*
-     * Bindings at top level in eval code aren't like bindings at top level in
-     * regular code, and we must handle them specially.
-     */
-    if (tc->parser->callerFrame) {
-        /*
-         * If the eval code is not strict mode code, such bindings are created
-         * from scratch in the the caller's environment (if the eval is direct)
-         * or in the global environment (if the eval is indirect) -- and they
-         * can be deleted.  Therefore we can't bind early.
-         */
-        if (!tc->inStrictMode())
-            return true;
-
-        /*
-         * But if the eval code is strict mode code, bindings are added to a
-         * new environment specifically for that eval code's compilation, and
-         * they can't be deleted.  Thus strict mode eval code does not affect
-         * the caller's environment, and we can bind such names early.  (But
-         * note: strict mode eval code can still affect the global environment
-         * by performing an indirect eval of non-strict mode code.)
-         *
-         * However, optimizing such bindings requires either precarious
-         * type-punning or, ideally, a new kind of Call object specifically for
-         * strict mode eval frames.  Further, strict mode eval is not (yet)
-         * common.  So for now (until we rewrite the scope chain to not use
-         * objects?) just disable optimizations for top-level names in eval
-         * code.
-         */
-        return true;
-    }
-
-    if (pn->pn_dflags & PND_CONST)
-        return true;
-
-    /*
-     * If this is a global variable, we're compile-and-go, and a global object
-     * is present, try to bake in either an already available slot or a
-     * predicted slot that will be defined after compiling is completed.
-     */
-    return DefineGlobal(pn, tc->asBytecodeEmitter(),
-                        RootedVarPropertyName(cx, pn->pn_atom->asPropertyName()));
-}
-
 static bool
 BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, TreeContext *tc)
 {
@@ -2396,7 +2243,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
     if (tc->inFunction())
         return BindFunctionLocal(cx, data, mdl, tc);
 
-    return BindTopLevelVar(cx, data, pn, tc);
+    return true;
 }
 
 static bool
@@ -2506,12 +2353,12 @@ BindDestructuringVar(JSContext *cx, BindData *data, ParseNode *pn, TreeContext *
      * Select the appropriate name-setting opcode, respecting eager selection
      * done by the data->binder function.
      */
-    if (pn->pn_dflags & PND_BOUND) {
-        JS_ASSERT(!(pn->pn_dflags & PND_GVAR));
+    if (pn->pn_dflags & PND_BOUND)
         pn->setOp(JSOP_SETLOCAL);
-    } else {
-        pn->setOp((data->op == JSOP_DEFCONST) ? JSOP_SETCONST : JSOP_SETNAME);
-    }
+    else if (data->op == JSOP_DEFCONST)
+        pn->setOp(JSOP_SETCONST);
+    else
+        pn->setOp(JSOP_SETNAME);
 
     if (data->op == JSOP_DEFCONST)
         pn->pn_dflags |= PND_CONST;
@@ -4416,8 +4263,6 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
             } else {
                 pn2->pn_expr = init;
             }
-
-            JS_ASSERT_IF(pn2->pn_dflags & PND_GVAR, !(pn2->pn_dflags & PND_BOUND));
 
             pn2->setOp((pn2->pn_dflags & PND_BOUND)
                        ? JSOP_SETLOCAL
