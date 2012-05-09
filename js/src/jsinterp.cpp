@@ -1106,7 +1106,8 @@ CheckLocalAccess(StackFrame *fp, unsigned index, bool aliased = false)
 static inline void
 CheckArgAccess(StackFrame *fp, unsigned index)
 {
-    JS_ASSERT(fp->script()->argLivesInArgumentsObject(index) == fp->script()->needsArgsObj());
+    JS_ASSERT(fp->script()->formalLivesInArgumentsObject(index) ==
+              fp->script()->argsObjAliasesFormals());
 }
 
 /*
@@ -1120,7 +1121,7 @@ AliasedVar(StackFrame *fp, ScopeCoordinate sc)
 #ifdef DEBUG
     JS_ASSERT(sc.hops == 0);  /* Temporary */
     if (script->bindings.bindingIsArg(sc.binding))
-        JS_ASSERT(script->argLivesInCallObject(script->bindings.bindingToArg(sc.binding)));
+        JS_ASSERT(script->formalLivesInCallObject(script->bindings.bindingToArg(sc.binding)));
     else
         CheckLocalAccess(fp, script->bindings.bindingToLocal(sc.binding), true);
 #endif
