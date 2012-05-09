@@ -3538,13 +3538,6 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
         return;
     }
 
-#ifdef ANDROID
-    JS_ASSERT(rt->gcIncrementalState == NO_INCREMENTAL);
-    *budget = SliceBudget::Unlimited;
-    rt->gcStats.nonincremental("Android");
-    return;
-#endif
-
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         if (c->gcBytes > c->gcTriggerBytes) {
             *budget = SliceBudget::Unlimited;
