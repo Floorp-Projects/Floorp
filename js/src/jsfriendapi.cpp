@@ -747,7 +747,7 @@ NotifyDidPaint(JSRuntime *rt)
 extern JS_FRIEND_API(bool)
 IsIncrementalGCEnabled(JSRuntime *rt)
 {
-    return rt->gcIncrementalEnabled;
+    return rt->gcIncrementalEnabled && rt->gcMode == JSGC_MODE_INCREMENTAL;
 }
 
 extern JS_FRIEND_API(void)
