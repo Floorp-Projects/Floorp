@@ -114,8 +114,6 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, unsigned lineno)
     constMap(parser->context),
     constList(parser->context),
     globalScope(NULL),
-    globalUses(parser->context),
-    globalMap(parser->context),
     closedArgs(parser->context),
     closedVars(parser->context),
     typesetCount(0)
@@ -1226,11 +1224,11 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
 static bool
 TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
 {
-    if (bce->compileAndGo() && 
+    if (bce->compileAndGo() &&
         bce->globalScope->globalObj &&
         !bce->mightAliasLocals() &&
         !pn->isDeoptimized() &&
-        !(bce->flags & TCF_STRICT_MODE_CODE)) { 
+        !(bce->flags & TCF_STRICT_MODE_CODE)) {
         switch (*op) {
           case JSOP_NAME:     *op = JSOP_GETGNAME; break;
           case JSOP_SETNAME:  *op = JSOP_SETGNAME; break;
@@ -1247,74 +1245,6 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
         return true;
     }
     return false;
-}
-
-// Binds a global, given a |dn| that is known to have the PND_GVAR bit, and a pn
-// that is |dn| or whose definition is |dn|. |pn->pn_cookie| is an outparam
-// that will be free (meaning no binding), or a slot number.
-static bool
-BindKnownGlobal(JSContext *cx, BytecodeEmitter *bce, ParseNode *dn, ParseNode *pn, JSAtom *atom)
-{
-    // Cookie is an outparam; make sure caller knew to clear it.
-    JS_ASSERT(pn->pn_cookie.isFree());
-
-    if (bce->mightAliasLocals())
-        return true;
-
-    GlobalScope *globalScope = bce->globalScope;
-
-    jsatomid index;
-    if (dn->pn_cookie.isFree()) {
-        // The definition wasn't bound, so find its atom's index in the
-        // mapping of defined globals.
-        AtomIndexPtr p = globalScope->names.lookup(atom);
-        JS_ASSERT(!!p);
-        index = p.value();
-    } else {
-        BytecodeEmitter *globalbce = globalScope->bce;
-
-        // If the definition is bound, and we're in the same bce, we can re-use
-        // its cookie.
-        if (globalbce == bce) {
-            pn->pn_cookie = dn->pn_cookie;
-            pn->pn_dflags |= PND_BOUND;
-            return true;
-        }
-
-        // Otherwise, find the atom's index by using the originating bce's
-        // global use table.
-        index = globalbce->globalUses[dn->pn_cookie.slot()].slot;
-    }
-
-    if (!bce->addGlobalUse(atom, index, &pn->pn_cookie))
-        return false;
-
-    if (!pn->pn_cookie.isFree())
-        pn->pn_dflags |= PND_BOUND;
-
-    return true;
-}
-
-// See BindKnownGlobal()'s comment.
-static bool
-BindGlobal(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSAtom *atom)
-{
-    pn->pn_cookie.makeFree();
-
-    Definition *dn;
-    if (pn->isUsed()) {
-        dn = pn->pn_lexdef;
-    } else {
-        if (!pn->isDefn())
-            return true;
-        dn = (Definition *)pn;
-    }
-
-    // Only optimize for defined globals.
-    if (!dn->isGlobal())
-        return true;
-
-    return BindKnownGlobal(cx, bce, dn, pn, atom);
 }
 
 /*
@@ -1411,29 +1341,6 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             }
             pn->setOp(op = JSOP_NAME);
         }
-    }
-
-    if (dn->isGlobal()) {
-        if (op == JSOP_NAME) {
-            /*
-             * If the definition is a defined global, not potentially aliased
-             * by a local variable, and not mutating the variable, try and
-             * optimize to a fast, unguarded global access.
-             */
-            if (!pn->pn_cookie.isFree()) {
-                pn->setOp(JSOP_GETGNAME);
-                pn->pn_dflags |= PND_BOUND;
-                return JS_TRUE;
-            }
-        }
-
-        /*
-         * The locally stored cookie here should really come from |pn|, not
-         * |dn|. For example, we could have a SETGNAME op's lexdef be a
-         * GETGNAME op, and their cookies have very different meanings. As
-         * a workaround, just make the cookie free.
-         */
-        cookie.makeFree();
     }
 
     if (cookie.isFree()) {
@@ -1582,40 +1489,6 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     pn->pn_cookie.set(0, cookie.slot());
     pn->pn_dflags |= PND_BOUND;
     return JS_TRUE;
-}
-
-bool
-BytecodeEmitter::addGlobalUse(JSAtom *atom, uint32_t slot, UpvarCookie *cookie)
-{
-    if (!globalMap.ensureMap(context()))
-        return false;
-
-    AtomIndexAddPtr p = globalMap->lookupForAdd(atom);
-    if (p) {
-        jsatomid index = p.value();
-        cookie->set(0, index);
-        return true;
-    }
-
-    /* Don't bother encoding indexes >= uint16_t */
-    if (globalUses.length() >= UINT16_LIMIT) {
-        cookie->makeFree();
-        return true;
-    }
-
-    /* Find or add an existing atom table entry. */
-    jsatomid allAtomIndex;
-    if (!makeAtomIndex(atom, &allAtomIndex))
-        return false;
-
-    jsatomid globalUseIndex = globalUses.length();
-    cookie->set(0, globalUseIndex);
-
-    GlobalSlotArray::Entry entry = { allAtomIndex, slot };
-    if (!globalUses.append(entry))
-        return false;
-
-    return globalMap->add(p, atom, globalUseIndex);
 }
 
 /*
@@ -2889,8 +2762,7 @@ MaybeEmitVarDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *
     }
 
     if (JOF_OPTYPE(pn->getOp()) == JOF_ATOM &&
-        (!bce->inFunction() || (bce->flags & TCF_FUN_HEAVYWEIGHT)) &&
-        !(pn->pn_dflags & PND_GVAR))
+        (!bce->inFunction() || (bce->flags & TCF_FUN_HEAVYWEIGHT)))
     {
         bce->switchToProlog();
         if (!UpdateLineNumberNotes(cx, bce, pn->pn_pos.begin.lineno))
@@ -3755,8 +3627,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
                 if (!EmitIndex32(cx, JSOP_GETXPROP, atomIndex, bce))
                     return false;
             } else if (lhs->isOp(JSOP_SETGNAME)) {
-                if (!BindGlobal(cx, bce, lhs, lhs->pn_atom))
-                    return false;
+                JS_ASSERT(lhs->pn_cookie.isFree());
                 if (!EmitAtomOp(cx, lhs, JSOP_GETGNAME, bce))
                     return false;
             } else {
@@ -5110,8 +4981,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      */
     if (!bce->inFunction()) {
         JS_ASSERT(!bce->topStmt);
-        if (!BindGlobal(cx, bce, pn, fun->atom))
-            return false;
+        JS_ASSERT(pn->pn_cookie.isFree());
         if (pn->pn_cookie.isFree()) {
             bce->switchToProlog();
             if (!EmitFunctionOp(cx, JSOP_DEFFUN, index, bce))
@@ -5574,8 +5444,8 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
      * in jsinterp.cpp for JSOP_LAMBDA followed by JSOP_{SET,INIT}PROP.
      *
      * Then (or in a call case that has no explicit reference-base
-     * object) we emit JSOP_UNDEFINED to produce the undefined |this| 
-     * value required for calls (which non-strict mode functions 
+     * object) we emit JSOP_UNDEFINED to produce the undefined |this|
+     * value required for calls (which non-strict mode functions
      * will box into the global object).
      */
     ParseNode *pn2 = pn->pn_head;
