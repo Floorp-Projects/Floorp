@@ -52,4 +52,6 @@ window.navigator.mozTelephony.dial("%s");
         # Verify the phone number of the incoming call.
         self.assertEqual(received, fromPhoneNumber)
 
+        sender.execute_script("window.navigator.mozTelephony.calls[0].hangUp();")
+        receiver.execute_script("window.navigator.mozTelephony.calls[0].hangUp();")
 
