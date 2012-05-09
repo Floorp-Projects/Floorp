@@ -16,3 +16,5 @@ browser.jar:
    content/browser/preferences/in-content/content.js
    content/browser/preferences/in-content/sync.xul
    content/browser/preferences/in-content/sync.js
+   content/browser/preferences/in-content/security.xul
+   content/browser/preferences/in-content/security.js
