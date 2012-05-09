@@ -1891,9 +1891,10 @@ DisabledGetPropNoCacheIC(VMFrame &f, ic::PICInfo *pic)
     stubs::GetPropNoCache(f, pic->name);
 }
 
-static inline void
-GetPropMaybeCached(VMFrame &f, ic::PICInfo *pic, bool cached)
+void JS_FASTCALL
+ic::GetProp(VMFrame &f, ic::PICInfo *pic)
 {
+    bool cached = pic->cached;
     VoidStubPIC stub = cached ? DisabledGetPropIC : DisabledGetPropNoCacheIC;
 
     JSScript *script = f.fp()->script();
@@ -1968,18 +1969,6 @@ GetPropMaybeCached(VMFrame &f, ic::PICInfo *pic, bool cached)
     }
 
     f.regs.sp[-1] = v;
-}
-
-void JS_FASTCALL
-ic::GetProp(VMFrame &f, ic::PICInfo *pic)
-{
-    GetPropMaybeCached(f, pic, /* cache = */ true);
-}
-
-void JS_FASTCALL
-ic::GetPropNoCache(VMFrame &f, ic::PICInfo *pic)
-{
-    GetPropMaybeCached(f, pic, /* cache = */ false);
 }
 
 template <JSBool strict>
@@ -2152,6 +2141,30 @@ BaseIC::shouldUpdate(JSContext *cx)
     }
     JS_ASSERT(stubsGenerated < MAX_PIC_STUBS);
     return true;
+}
+
+void
+PICInfo::purge(Repatcher &repatcher)
+{
+    switch (kind) {
+      case SET:
+        SetPropCompiler::reset(repatcher, *this);
+        break;
+      case NAME:
+      case XNAME:
+        ScopeNameCompiler::reset(repatcher, *this);
+        break;
+      case BIND:
+        BindNameCompiler::reset(repatcher, *this);
+        break;
+      case GET:
+        GetPropCompiler::reset(repatcher, *this);
+        break;
+      default:
+        JS_NOT_REACHED("Unhandled PIC kind");
+        break;
+    }
+    reset();
 }
 
 static void JS_FASTCALL

@@ -119,11 +119,15 @@ struct JSCompartment
 
     js::gc::ArenaLists           arenas;
 
+  private:
     bool                         needsBarrier_;
+  public:
 
     bool needsBarrier() const {
         return needsBarrier_;
     }
+
+    void setNeedsBarrier(bool needs);
 
     js::GCMarker *barrierTracer() {
         JS_ASSERT(needsBarrier_);
@@ -138,6 +142,7 @@ struct JSCompartment
     };
 
     CompartmentGCState           gcState;
+    bool                         gcPreserveCode;
 
   public:
     bool isCollecting() const {
@@ -148,6 +153,10 @@ struct JSCompartment
             JS_ASSERT(gcState != GCRunning);
             return needsBarrier();
         }
+    }
+
+    bool isPreservingCode() const {
+        return gcPreserveCode;
     }
 
     /*
@@ -176,11 +185,17 @@ struct JSCompartment
         return gcState == GCScheduled;
     }
 
+    void setPreservingCode(bool preserving) {
+        gcPreserveCode = preserving;
+    }
+
     size_t                       gcBytes;
     size_t                       gcTriggerBytes;
 
     bool                         hold;
     bool                         isSystemCompartment;
+
+    int64_t                      lastCodeRelease;
 
     /*
      * Pool for analysis and intermediate type information in this compartment.
@@ -198,6 +213,9 @@ struct JSCompartment
     void                         *data;
     bool                         active;  // GC flag, whether there are active frames
     js::WrapperMap               crossCompartmentWrappers;
+
+    /* Last time at which an animation was played for a global in this compartment. */
+    int64_t                      lastAnimationTime;
 
     js::RegExpCompartment        regExps;
 
