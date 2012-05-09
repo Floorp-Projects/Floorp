@@ -45,6 +45,11 @@ BrowserElementChild.prototype = {
                      this._titleChangedHandler.bind(this),
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
+
+    addEventListener('DOMLinkAdded',
+                     this._iconChangedHandler.bind(this),
+                     /* useCapture = */ true,
+                     /* wantsUntrusted = */ false);
   },
 
   _titleChangedHandler: function(e) {
@@ -58,6 +63,25 @@ BrowserElementChild.prototype = {
     }
     else {
       debug("Not top level!");
+    }
+  },
+
+  _iconChangedHandler: function(e) {
+    debug("Got iconchanged: (" + e.target.href + ")");
+    var hasIcon = e.target.rel.split(' ').some(function(x) {
+      return x.toLowerCase() === 'icon';
+    });
+
+    if (hasIcon) {
+      var win = e.target.ownerDocument.defaultView;
+      // Ignore iconchanges which don't come from the top-level
+      // <iframe mozbrowser> window.
+      if (win == content) {
+        sendAsyncMsg('iconchange', e.target.href);
+      }
+      else {
+        debug("Not top level!");
+      }
     }
   },
 
