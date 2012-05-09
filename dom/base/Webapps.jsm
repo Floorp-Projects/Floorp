@@ -478,8 +478,9 @@ DOMApplicationManifest.prototype = {
   },
 
   fullLaunchPath: function(aStartPoint) {
+    let startPoint = aStartPoint || "";
     let launchPath = this._localeProp("launch_path") || "";
-    return this._origin.resolve(launchPath + aStartPoint);
+    return this._origin.resolve(launchPath + startPoint);
   }
 };
 

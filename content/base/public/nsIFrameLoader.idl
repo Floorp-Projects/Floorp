@@ -44,6 +44,7 @@ interface nsIURI;
 interface nsIFrame;
 interface nsIChromeFrameMessageManager;
 interface nsIVariant;
+interface nsIDOMElement;
 
 typedef unsigned long long nsContentViewId;
 
@@ -141,7 +142,7 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, uuid(efc0b731-45dc-4189-8ffa-d3eeeb850977)]
+[scriptable, uuid(fc338eea-47dc-475e-add7-a3933fcfa07c)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -272,6 +273,14 @@ interface nsIFrameLoader : nsISupports
    * Defaults to true.
    */
   attribute boolean clampScrollPosition;
+
+  /**
+   * The element which owns this frame loader.
+   *
+   * For example, if this is a frame loader for an <iframe>, this attribute
+   * returns the iframe element.
+   */
+  readonly attribute nsIDOMElement ownerElement;
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);

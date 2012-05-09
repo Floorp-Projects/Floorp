@@ -104,7 +104,7 @@ class Marionette(object):
 
     def __init__(self, host='localhost', port=2828, b2gbin=False,
                  emulator=False, connectToRunningEmulator=False,
-                 homedir=None, baseurl=None, noWindow=False):
+                 homedir=None, baseurl=None, noWindow=False, logcat_dir=None):
         self.host = host
         self.port = self.local_port = port
         self.b2gbin = b2gbin
@@ -114,19 +114,22 @@ class Marionette(object):
         self.homedir = homedir
         self.baseurl = baseurl
         self.noWindow = noWindow
+        self.logcat_dir = logcat_dir
 
         if b2gbin:
             self.b2ginstance = B2GInstance(host=self.host, port=self.port, b2gbin=self.b2gbin)
             self.b2ginstance.start()
             assert(self.b2ginstance.wait_for_port())
         if emulator:
-            self.emulator = Emulator(homedir=homedir, noWindow=self.noWindow)
+            self.emulator = Emulator(homedir=homedir,
+                                     noWindow=self.noWindow,
+                                     logcat_dir=self.logcat_dir)
             self.emulator.start()
             self.port = self.emulator.setup_port_forwarding(self.port)
             assert(self.emulator.wait_for_port())
 
         if connectToRunningEmulator:
-            self.emulator = Emulator(homedir=homedir)
+            self.emulator = Emulator(homedir=homedir, logcat_dir=self.logcat_dir)
             self.emulator.connect()
             self.port = self.emulator.setup_port_forwarding(self.port)
             assert(self.emulator.wait_for_port())
