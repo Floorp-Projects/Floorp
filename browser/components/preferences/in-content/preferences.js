@@ -21,6 +21,7 @@ function init_all() {
 #ifdef XP_WIN
   gTabsPane.init();
 #endif
+  gPrivacyPane.init();
   var initFinished = document.createEvent("Event");
   initFinished.initEvent("Initialized", true, true);
   document.dispatchEvent(initFinished);
