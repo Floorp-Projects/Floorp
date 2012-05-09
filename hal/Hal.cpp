@@ -304,23 +304,23 @@ protected:
 
 static WakeLockObserversManager sWakeLockObservers;
 
-class ScreenOrientationObserversManager : public CachingObserversManager<dom::ScreenOrientationWrapper>
+class ScreenConfigurationObserversManager : public CachingObserversManager<ScreenConfiguration>
 {
 protected:
   void EnableNotifications() {
-    PROXY_IF_SANDBOXED(EnableScreenOrientationNotifications());
+    PROXY_IF_SANDBOXED(EnableScreenConfigurationNotifications());
   }
 
   void DisableNotifications() {
-    PROXY_IF_SANDBOXED(DisableScreenOrientationNotifications());
+    PROXY_IF_SANDBOXED(DisableScreenConfigurationNotifications());
   }
 
-  void GetCurrentInformationInternal(dom::ScreenOrientationWrapper* aInfo) {
-    PROXY_IF_SANDBOXED(GetCurrentScreenOrientation(&(aInfo->orientation)));
+  void GetCurrentInformationInternal(ScreenConfiguration* aInfo) {
+    PROXY_IF_SANDBOXED(GetCurrentScreenConfiguration(aInfo));
   }
 };
 
-static ScreenOrientationObserversManager sScreenOrientationObservers;
+static ScreenConfigurationObserversManager sScreenConfigurationObservers;
 
 void
 RegisterBatteryObserver(BatteryObserver* aObserver)
@@ -555,31 +555,31 @@ NotifyWakeLockChange(const WakeLockInformation& aInfo)
 }
 
 void
-RegisterScreenOrientationObserver(hal::ScreenOrientationObserver* aObserver)
+RegisterScreenConfigurationObserver(ScreenConfigurationObserver* aObserver)
 {
   AssertMainThread();
-  sScreenOrientationObservers.AddObserver(aObserver);
+  sScreenConfigurationObservers.AddObserver(aObserver);
 }
 
 void
-UnregisterScreenOrientationObserver(hal::ScreenOrientationObserver* aObserver)
+UnregisterScreenConfigurationObserver(ScreenConfigurationObserver* aObserver)
 {
   AssertMainThread();
-  sScreenOrientationObservers.RemoveObserver(aObserver);
+  sScreenConfigurationObservers.RemoveObserver(aObserver);
 }
 
 void
-GetCurrentScreenOrientation(dom::ScreenOrientation* aScreenOrientation)
+GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 {
   AssertMainThread();
-  *aScreenOrientation = sScreenOrientationObservers.GetCurrentInformation().orientation;
+  *aScreenConfiguration = sScreenConfigurationObservers.GetCurrentInformation();
 }
 
 void
-NotifyScreenOrientationChange(const dom::ScreenOrientation& aScreenOrientation)
+NotifyScreenConfigurationChange(const ScreenConfiguration& aScreenConfiguration)
 {
-  sScreenOrientationObservers.CacheInformation(dom::ScreenOrientationWrapper(aScreenOrientation));
-  sScreenOrientationObservers.BroadcastCachedInformation();
+  sScreenConfigurationObservers.CacheInformation(aScreenConfiguration);
+  sScreenConfigurationObservers.BroadcastCachedInformation();
 }
 
 bool

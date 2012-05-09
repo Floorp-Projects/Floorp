@@ -128,6 +128,11 @@ public:
     , mTagName(aTagName)
   { }
 
+  ProfileEntry(char aTagName, void *aTagPtr)
+    : mTagPtr(aTagPtr)
+    , mTagName(aTagName)
+  { }
+
   ProfileEntry(char aTagName, double aTagFloat)
     : mTagFloat(aTagFloat)
     , mTagName(aTagName)
@@ -149,6 +154,7 @@ private:
   friend class ThreadProfile;
   union {
     const char* mTagData;
+    void* mTagPtr;
     double mTagFloat;
     Address mTagAddress;
     uintptr_t mTagOffset;
@@ -284,7 +290,10 @@ public:
             if (sample) {
               JSObject *frame = b.CreateObject();
               char tagBuff[1024];
-              unsigned long long pc = (unsigned long long)entry.mTagData;
+              // Bug 753041
+              // We need a double cast here to tell GCC that we don't want to sign
+              // extend 32-bit addresses starting with 0xFXXXXXX.
+              unsigned long long pc = (unsigned long long)(uintptr_t)entry.mTagPtr;
               snprintf(tagBuff, 1024, "%#llx", pc);
               b.DefineProperty(frame, "location", tagBuff);
               b.ArrayPush(frames, frame);
@@ -463,7 +472,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 
   for (int i = 0; i < count; i++) {
     if( (intptr_t)array[i] == -1 ) break;
-    aProfile.addTag(ProfileEntry('l', (const char*)array[i]));
+    aProfile.addTag(ProfileEntry('l', (void*)array[i]));
   }
 }
 #endif
@@ -516,7 +525,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
     aProfile.addTag(ProfileEntry('s', "(root)"));
 
     for (size_t i = array.count; i > 0; --i) {
-      aProfile.addTag(ProfileEntry('l', (const char*)array.array[i - 1]));
+      aProfile.addTag(ProfileEntry('l', (void*)array.array[i - 1]));
     }
   }
 }
@@ -565,7 +574,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 
   aProfile.addTag(ProfileEntry('s', "(root)"));
   for (size_t i = count; i > 0; --i) {
-    aProfile.addTag(ProfileEntry('l', reinterpret_cast<const char*>(pc_array[i - 1])));
+    aProfile.addTag(ProfileEntry('l', reinterpret_cast<void*>(pc_array[i - 1])));
   }
 }
 #endif
@@ -585,7 +594,7 @@ void doSampleStackTrace(ProfileStack *aStack, ThreadProfile &aProfile, TickSampl
   }
 #ifdef ENABLE_SPS_LEAF_DATA
   if (sample) {
-    aProfile.addTag(ProfileEntry('l', sample->pc));
+    aProfile.addTag(ProfileEntry('l', (void*)sample->pc));
   }
 #endif
 }
@@ -670,7 +679,7 @@ std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry)
     // Bug 739800 - Force l-tag addresses to have a "0x" prefix on all platforms
     // Additionally, stringstream seemed to be ignoring formatter flags.
     char tagBuff[1024];
-    unsigned long long pc = (unsigned long long)entry.mTagData;
+    unsigned long long pc = (unsigned long long)(uintptr_t)entry.mTagPtr;
     snprintf(tagBuff, 1024, "l-%#llx\n", pc);
     stream << tagBuff;
   } else {

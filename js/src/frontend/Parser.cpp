@@ -2734,11 +2734,6 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, TreeContext *
  * to cover the entire initializer, so that the initialized bindings do not
  * appear to dominate any closures in the initializer. See bug 496134.
  *
- * The quick-and-dirty dominance computation in Parser::setFunctionKinds is not
- * very precise. With one-pass SSA construction from structured source code
- * (see "Single-Pass Generation of Static Single Assignment Form for Structured
- * Languages", Brandis and Mössenböck), we could do much better.
- *
  * See CheckDestructuring, immediately above. If you change either of these
  * functions, you might have to change the other to match.
  */

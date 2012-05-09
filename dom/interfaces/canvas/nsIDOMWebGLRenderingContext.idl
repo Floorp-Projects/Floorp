@@ -178,6 +178,16 @@ interface nsIWebGLExtensionTextureFilterAnisotropic : nsIWebGLExtension
   const WebGLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 };
 
+[scriptable, builtinclass, uuid(a1508b6f-f2ab-44cf-bbb4-3cfb339e1e8a)]
+interface nsIWebGLExtensionCompressedTextureS3TC : nsIWebGLExtension
+{
+    /* Compressed Texture Formats */
+    const WebGLenum COMPRESSED_RGB_S3TC_DXT1_EXT        = 0x83F0;
+    const WebGLenum COMPRESSED_RGBA_S3TC_DXT1_EXT       = 0x83F1;
+    const WebGLenum COMPRESSED_RGBA_S3TC_DXT3_EXT       = 0x83F2;
+    const WebGLenum COMPRESSED_RGBA_S3TC_DXT5_EXT       = 0x83F3;
+};
+
 [scriptable, builtinclass, uuid(a1fdfb76-6a08-4a1a-b0c9-d92ef3357cb9)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {

@@ -603,7 +603,7 @@ menuitem.bookmark-item {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
-.bookmark-item[container][livemark] { 
+.bookmark-item[container][livemark] {
   list-style-image: url("chrome://browser/skin/livemark-folder.png");
   -moz-image-region: auto;
 }
@@ -1299,7 +1299,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 .urlbar-textbox-container {
   -moz-box-align: stretch;
 }
- 
+
 .urlbar-input-box {
   -moz-margin-start: 0;
 }
@@ -1504,7 +1504,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/editBookmark.png");
   -moz-image-region: rect(0px 16px 16px 0px);
-  width: 16px; 
+  width: 16px;
   height: 16px;
 }
 
@@ -1519,7 +1519,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 .ac-result-type-tag,
 .autocomplete-treebody::-moz-tree-image(tag, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/tag.png");
-  width: 16px; 
+  width: 16px;
   height: 16px;
 }
 
@@ -1565,8 +1565,8 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
   color: inherit !important;
 }
 
-.autocomplete-treebody::-moz-tree-cell-text(suggesthint, treecolAutoCompleteComment), 
-.autocomplete-treebody::-moz-tree-cell-text(suggestfirst, treecolAutoCompleteComment) 
+.autocomplete-treebody::-moz-tree-cell-text(suggesthint, treecolAutoCompleteComment),
+.autocomplete-treebody::-moz-tree-cell-text(suggestfirst, treecolAutoCompleteComment)
 {
   color: GrayText;
   font-size: smaller;
@@ -1670,7 +1670,7 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
 
 #star-button:hover {
   background-image: -moz-radial-gradient(center, circle closest-side, hsla(45,100%,73%,.3), hsla(45,100%,73%,0));
-  -moz-image-region: rect(0px 32px 16px 16px); 
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 #star-button:hover:active {
@@ -2822,7 +2822,6 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 #full-screen-warning-message {
   background-color: hsl(0,0%,15%);
   color: white;
-  font-size: 32px;
   border-radius: 8px;
   margin-top: 30px;
   padding: 30px 50px;
@@ -2830,13 +2829,20 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 }
 
 #full-screen-warning-container[obscure-browser] {
-  background-color: rgba(0,0,0,0.75);
+  background-color: rgba(0,0,0,0.3);
 }
 
-#full-screen-warning-container[stop-obscuring-browser] {
-  -moz-transition-property: background-color;
-  -moz-transition-duration: 500ms;
-  background-color: rgba(0,0,0,0);
+.full-screen-description {
+  font-size: 150%;
+}
+
+#full-screen-domain-text {
+  font-size: 300%;
+}
+
+.full-screen-approval-button,
+#full-screen-remember-decision {
+  font-size: 120%;
 }
 
 /* Highlighter toolbar - breadcrumbs */
