@@ -4942,14 +4942,6 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('O', "print-alloc", "Print the number of allocations at exit")
 #endif
         || !op.addBoolOption('U', "utf8", "C strings passed to the JSAPI are UTF-8 encoded")
-#ifdef JS_GC_ZEAL
-        || !op.addStringOption('Z', "gc-zeal", "N[,F[,C]]",
-                               "N indicates \"zealousness\":\n"
-                               "  0: no additional GCs\n"
-                               "  1: additional GCs at common danger points\n"
-                               "  2: GC every F allocations (default: 100)\n"
-                               "If C is 1, compartmental GCs are performed; otherwise, full")
-#endif
         || !op.addOptionalStringArg("script", "A script to execute (after all options)")
         || !op.addOptionalMultiStringArg("scriptArgs",
                                          "String arguments to bind as |arguments| in the "
@@ -5017,6 +5009,9 @@ main(int argc, char **argv, char **envp)
 
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
+#ifdef JS_GC_ZEAL
+    JS_SetGCZeal(cx, 0, 0);
+#endif
 
     /* Must be done before creating the global object */
     if (op.getBoolOption('D'))
