@@ -175,6 +175,10 @@ public:
    */
   int stepStatement(sqlite3_stmt* aStatement);
 
+  bool ConnectionReady() {
+    return mDBConn != nsnull;
+  }
+
   /**
    * True if this is an async connection, it is shutting down and it is not
    * closed yet.
