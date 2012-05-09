@@ -769,6 +769,7 @@ JSRuntime::JSRuntime()
     emptyString(NULL),
     debugMode(false),
     profilingScripts(false),
+    alwaysPreserveCode(false),
     hadOutOfMemory(false),
     data(NULL),
 #ifdef JS_THREADSAFE

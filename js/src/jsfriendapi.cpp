@@ -295,6 +295,12 @@ js::GetGlobalForObjectCrossCompartment(JSObject *obj)
     return &obj->global();
 }
 
+JS_FRIEND_API(void)
+js::NotifyAnimationActivity(JSObject *obj)
+{
+    obj->compartment()->lastAnimationTime = PRMJ_Now();
+}
+
 JS_FRIEND_API(uint32_t)
 js::GetObjectSlotSpan(JSObject *obj)
 {

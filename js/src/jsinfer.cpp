@@ -2097,9 +2097,11 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
 
     for (unsigned i = 0; i < pending->length(); i++) {
         const RecompileInfo &info = (*pending)[i];
-        mjit::JITScript *jit = info.script->getJIT(info.constructing);
-        if (jit && jit->chunkDescriptor(info.chunkIndex).chunk)
-            mjit::Recompiler::clearStackReferencesAndChunk(fop, info.script, jit, info.chunkIndex);
+        mjit::JITScript *jit = info.script->getJIT(info.constructing, info.barriers);
+        if (jit && jit->chunkDescriptor(info.chunkIndex).chunk) {
+            mjit::Recompiler::clearStackReferences(fop, info.script);
+            jit->destroyChunk(fop, info.chunkIndex);
+        }
     }
 
 #endif /* JS_METHODJIT */
@@ -2172,7 +2174,7 @@ void
 TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 {
 #ifdef JS_METHODJIT
-    mjit::JITScript *jit = info.script->getJIT(info.constructing);
+    mjit::JITScript *jit = info.script->getJIT(info.constructing, info.barriers);
     if (!jit || !jit->chunkDescriptor(info.chunkIndex).chunk) {
         /* Scripts which haven't been compiled yet don't need to be recompiled. */
         return;
@@ -2205,16 +2207,15 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode
     RecompileInfo info;
     info.script = script;
 
-    if (script->jitHandleNormal.isValid()) {
-        info.constructing = false;
-        info.chunkIndex = script->jitHandleNormal.getValid()->chunkIndex(pc);
-        addPendingRecompile(cx, info);
-    }
-
-    if (script->jitHandleCtor.isValid()) {
-        info.constructing = true;
-        info.chunkIndex = script->jitHandleCtor.getValid()->chunkIndex(pc);
-        addPendingRecompile(cx, info);
+    for (int constructing = 0; constructing <= 1; constructing++) {
+        for (int barriers = 0; barriers <= 1; barriers++) {
+            if (mjit::JITScript *jit = script->getJIT((bool) constructing, (bool) barriers)) {
+                info.constructing = constructing;
+                info.barriers = barriers;
+                info.chunkIndex = jit->chunkIndex(pc);
+                addPendingRecompile(cx, info);
+            }
+        }
     }
 #endif
 }

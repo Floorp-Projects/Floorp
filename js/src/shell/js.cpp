@@ -1239,8 +1239,7 @@ AssertJit(JSContext *cx, unsigned argc, jsval *vp)
          * with METHODJIT_ALWAYS recompilation can happen and discard the
          * script's jitcode.
          */
-        if (!cx->typeInferenceEnabled() &&
-            !cx->fp()->script()->getJIT(cx->fp()->isConstructing())) {
+        if (!cx->typeInferenceEnabled() && !cx->fp()->jit()) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_JIT_FAILED);
             return JS_FALSE;
         }
