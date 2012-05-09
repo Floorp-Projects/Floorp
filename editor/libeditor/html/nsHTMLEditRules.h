@@ -140,9 +140,6 @@ protected:
 
   // nsHTMLEditRules implementation methods
   nsresult WillInsert(nsISelection *aSelection, bool *aCancel);
-#ifdef XXX_DEAD_CODE
-  nsresult DidInsert(nsISelection *aSelection, nsresult aResult);
-#endif
   nsresult WillInsertText(  nsEditor::OperationID aAction,
                             nsISelection *aSelection, 
                             bool            *aCancel,
@@ -232,10 +229,6 @@ protected:
   nsresult ExpandSelectionForDeletion(nsISelection *aSelection);
   bool IsFirstNode(nsIDOMNode *aNode);
   bool IsLastNode(nsIDOMNode *aNode);
-#ifdef XXX_DEAD_CODE
-  bool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
-  bool AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
-#endif
   nsresult NormalizeSelection(nsISelection *inSelection);
   nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode,
                             PRInt32 aOffset, nsEditor::OperationID actionID,
