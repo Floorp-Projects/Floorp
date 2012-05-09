@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const PROPERTY_VIEW_FLASH_DURATION = 400; // ms
+
 /**
  * Object mediating visual changes and event listeners between the debugger and
  * the html view.
@@ -515,7 +517,7 @@ StackFramesView.prototype = {
 
     // The empty node should look grayed out to avoid confusion.
     item.className = "empty list-item";
-    item.appendChild(document.createTextNode(L10N.getStr("emptyStackText")));
+    item.textContent = L10N.getStr("emptyStackText");
 
     this._frames.appendChild(item);
   },
@@ -551,8 +553,8 @@ StackFramesView.prototype = {
     // This list should display the name and details for the frame.
     frameName.className = "dbg-stackframe-name";
     frameDetails.className = "dbg-stackframe-details";
-    frameName.appendChild(document.createTextNode(aFrameNameText));
-    frameDetails.appendChild(document.createTextNode(aFrameDetailsText));
+    frameName.textContent = aFrameNameText;
+    frameDetails.textContent = aFrameDetailsText;
 
     frame.appendChild(frameName);
     frame.appendChild(frameDetails);
@@ -850,7 +852,7 @@ PropertiesView.prototype = {
 
       // Separator shouldn't be selectable.
       separator.className = "unselectable";
-      separator.appendChild(document.createTextNode(": "));
+      separator.textContent = ": ";
 
       // The variable information (type, class and/or value).
       value.className = "value";
@@ -873,6 +875,12 @@ PropertiesView.prototype = {
       title.appendChild(separator);
       title.appendChild(value);
 
+      // Remember a simple hierarchy between the parent and the element.
+      this._saveHierarchy({
+        parent: aScope,
+        element: element,
+        value: value
+      });
     }.bind(this));
 
     // Return the element for later use if necessary.
@@ -1060,16 +1068,16 @@ PropertiesView.prototype = {
 
       // Use a key element to specify the property name.
       name.className = "key";
-      name.appendChild(document.createTextNode(pKey));
+      name.textContent = pKey;
 
       // Use a value element to specify the property value.
       value.className = "value";
-      value.appendChild(document.createTextNode(propertyString));
+      value.textContent = propertyString;
       value.classList.add(propertyColor);
 
       // Separator shouldn't be selected.
       separator.className = "unselectable";
-      separator.appendChild(document.createTextNode(": "));
+      separator.textContent = ": ";
 
       if ("undefined" !== typeof pKey) {
         title.appendChild(name);
@@ -1092,6 +1100,13 @@ PropertiesView.prototype = {
         writable: false,
         enumerable: true,
         configurable: true
+      });
+
+      // Remember a simple hierarchy between the parent and the element.
+      this._saveHierarchy({
+        parent: aVar,
+        element: element,
+        value: value
       });
 
       // Save the property to the variable for easier access.
@@ -1279,6 +1294,8 @@ PropertiesView.prototype = {
   /**
    * Creates an element which contains generic nodes and functionality used by
    * any scope, variable or property added to the tree.
+   * If the variable or property already exists, null is returned.
+   * Otherwise, the newly created element is returned.
    *
    * @param string aName
    *        A generic name used in a title strip.
@@ -1316,7 +1333,7 @@ PropertiesView.prototype = {
 
     // The name element.
     name.className = "name unselectable";
-    name.appendChild(document.createTextNode(aName || ""));
+    name.textContent = aName || "";
 
     // The title element, containing the arrow and the name.
     title.className = "title";
@@ -1585,6 +1602,95 @@ PropertiesView.prototype = {
   },
 
   /**
+   * Remember a simple hierarchy of parent->element->children.
+   *
+   * @param object aProperties
+   *        Container for the parent, element and the associated value node.
+   */
+  _saveHierarchy: function DVP__saveHierarchy(aProperties) {
+    let parent = aProperties.parent;
+    let element = aProperties.element;
+    let value = aProperties.value;
+    let store = aProperties.store || parent._children;
+
+    // Make sure we have a valid element and a children storage object.
+    if (!element || !store) {
+      return;
+    }
+
+    let relation = {
+      root: parent ? (parent._root || parent) : null,
+      parent: parent || null,
+      element: element,
+      value: value,
+      children: {}
+    };
+
+    store[element.id] = relation;
+    element._root = relation.root;
+    element._children = relation.children;
+  },
+
+  /**
+   * Creates an object to store a hierarchy of scopes, variables and properties
+   * and saves the previous store.
+   */
+  createHierarchyStore: function DVP_createHierarchyStore() {
+    this._prevHierarchy = this._currHierarchy;
+    this._currHierarchy = {};
+
+    this._saveHierarchy({ element: this._globalScope, store: this._currHierarchy });
+    this._saveHierarchy({ element: this._localScope, store: this._currHierarchy });
+    this._saveHierarchy({ element: this._withScope, store: this._currHierarchy });
+    this._saveHierarchy({ element: this._closureScope, store: this._currHierarchy });
+  },
+
+  /**
+   * Briefly flash the variables that changed between pauses.
+   */
+  commitHierarchy: function DVS_commitHierarchy() {
+    for (let i in this._currHierarchy) {
+      let currScope = this._currHierarchy[i];
+      let prevScope = this._prevHierarchy[i];
+
+      for (let v in currScope.children) {
+        let currVar = currScope.children[v];
+        let prevVar = prevScope.children[v];
+
+        let action = "";
+
+        if (prevVar) {
+          let prevValue = prevVar.value.textContent;
+          let currValue = currVar.value.textContent;
+
+          if (currValue != prevValue) {
+            action = "changed";
+          } else {
+            action = "unchanged";
+          }
+        } else {
+          action = "added";
+        }
+
+        if (action) {
+          currVar.element.setAttribute(action, "");
+
+          window.setTimeout(function() {
+           currVar.element.removeAttribute(action);
+         }, PROPERTY_VIEW_FLASH_DURATION);
+        }
+      }
+    }
+  },
+
+  /**
+   * A simple model representation of all the scopes, variables and properties,
+   * with parent-child relations.
+   */
+  _currHierarchy: null,
+  _prevHierarchy: null,
+
+  /**
    * Returns the global scope container.
    */
   get globalScope() {
@@ -1685,6 +1791,8 @@ PropertiesView.prototype = {
    * Initialization function, called when the debugger is initialized.
    */
   initialize: function DVP_initialize() {
+    this.createHierarchyStore();
+
     this._vars = document.getElementById("variables");
     this._localScope = this._addScope(L10N.getStr("localScope")).expand();
     this._withScope = this._addScope(L10N.getStr("withScope")).hide();
@@ -1696,6 +1804,8 @@ PropertiesView.prototype = {
    * Destruction function, called when the debugger is shut down.
    */
   destroy: function DVP_destroy() {
+    this._currHierarchy = null;
+    this._prevHierarchy = null;
     this._vars = null;
     this._globalScope = null;
     this._localScope = null;
