@@ -13,7 +13,7 @@ import android.content.ComponentName;
 
 public class GeckoActivity extends Activity {
     private boolean hasStarted = false;
-    private boolean isGeckoActivityOpened = false;
+    private boolean mGeckoActivityOpened = false;
 
     @Override
     public void onPause() {
@@ -31,7 +31,7 @@ public class GeckoActivity extends Activity {
         // Avoid resume notifications in startup path.
         if (hasStarted && (getApplication() instanceof GeckoApplication)) {
             ((GeckoApplication) getApplication()).onActivityResume(this);
-            isGeckoActivityOpened = false;
+            mGeckoActivityOpened = false;
         } else {
             hasStarted = true;
         }
@@ -54,15 +54,19 @@ public class GeckoActivity extends Activity {
         // If we call an activity from another package, or an open intent (leaving android to resolve)
         // component has a different package name or it is null.
         ComponentName component = intent.getComponent();
-        isGeckoActivityOpened = false;
+        mGeckoActivityOpened = false;
         if (component != null &&
             component.getPackageName() != null &&
             component.getPackageName().equals("@ANDROID_PACKAGE_NAME@")) {
-            isGeckoActivityOpened = true;
+            mGeckoActivityOpened = true;
         }
     }
 
+    public boolean isGeckoActivityOpened() {
+        return mGeckoActivityOpened;
+    }
+
     public boolean isApplicationInBackground() {
-        return !isGeckoActivityOpened;
+        return ((GeckoApplication) getApplication()).isApplicationInBackground();
     } 
 }
