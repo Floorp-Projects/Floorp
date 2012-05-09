@@ -434,7 +434,7 @@ function findChildShell(aDocument, aDocShell, aSoughtURI) {
 
 var gPopupBlockerObserver = {
   _reportButton: null,
-  
+
   onReportButtonClick: function (aEvent)
   {
     if (aEvent.button != 0 || aEvent.target != this._reportButton)
@@ -564,7 +564,7 @@ var gPopupBlockerObserver = {
     if (pageReport) {
       for (var i = 0; i < pageReport.length; ++i) {
         // popupWindowURI will be null if the file picker popup is blocked.
-        // xxxdz this should make the option say "Show file picker" and do it (Bug 590306) 
+        // xxxdz this should make the option say "Show file picker" and do it (Bug 590306)
         if (!pageReport[i].popupWindowURI)
           continue;
         var popupURIspec = pageReport[i].popupWindowURI.spec;
@@ -1674,16 +1674,12 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   // Called when we enter DOM full-screen mode. Note we can already be in browser
   // full-screen mode when we enter DOM full-screen mode.
-  window.addEventListener("mozfullscreenchange", onMozFullScreenChange, true);
-
-  // When a restricted key is pressed in DOM full-screen mode, we should display
-  // the "Press ESC to exit" warning message.
-  window.addEventListener("MozShowFullScreenWarning", onShowFullScreenWarning, true);
+  window.addEventListener("MozEnteredDomFullscreen", onMozEnteredDomFullscreen, true);
 
   if (window.fullScreen)
     onFullScreen();
   if (document.mozFullScreen)
-    onMozFullScreenChange();
+    onMozEnteredDomFullscreen();
 
 #ifdef MOZ_SERVICES_SYNC
   // initialize the sync UI
@@ -2929,12 +2925,8 @@ function onFullScreen(event) {
   FullScreen.toggle(event);
 }
 
-function onMozFullScreenChange(event) {
-  FullScreen.enterDomFullScreen(event);
-}
-
-function onShowFullScreenWarning(event) {
-  FullScreen.showWarning(false);
+function onMozEnteredDomFullscreen(event) {
+  FullScreen.enterDomFullscreen(event);
 }
 
 function getWebNavigation()
@@ -3148,7 +3140,7 @@ function FillInHTMLTooltip(tipElement)
 
   [titleText, XLinkTitleText, SVGTitleText].forEach(function (t) {
     if (t && /\S/.test(t)) {
-      // Make CRLF and CR render one line break each.  
+      // Make CRLF and CR render one line break each.
       t = t.replace(/\r\n?/g, '\n');
 
       tipNode.setAttribute("label", t);
@@ -3483,7 +3475,7 @@ const BrowserSearch = {
         }
         win = window.openDialog(getBrowserURL(), "_blank",
                                 "chrome,all,dialog=no", "about:blank");
-        Services.obs.addObserver(observer, "browser-delayed-startup-finished", false); 
+        Services.obs.addObserver(observer, "browser-delayed-startup-finished", false);
       }
       return;
     }
@@ -4019,33 +4011,29 @@ var FullScreen = {
         // middle of window lowering. See bug 729872.
         setTimeout(this.exitDomFullScreen.bind(this), 0);
         break;
+      case "transitionend":
+        if (event.propertyName == "opacity")
+          this.cancelWarning();
+        break;
     }
   },
 
-  enterDomFullScreen : function(event) {
-    if (!document.mozFullScreen) {
+  enterDomFullscreen : function(event) {
+    if (!document.mozFullScreen)
+      return;
+
+    // However, if we receive a "MozEnteredDomFullScreen" event for a document
+    // which is not a subdocument of the currently selected tab, we know that
+    // we've switched tabs since the request to enter full-screen was made,
+    // so we should exit full-screen since the "full-screen document" isn't
+    // acutally visible.
+    if (event.target.defaultView.top != gBrowser.contentWindow) {
+      document.mozCancelFullScreen();
       return;
     }
 
-    // We receive "mozfullscreenchange" events for each subdocument which
-    // is an ancestor of the document containing the element which requested
-    // full-screen. Only add listeners and show warning etc when the event we
-    // receive is targeted at the chrome document, i.e. only once every time
-    // we enter DOM full-screen mode.
-    if (event.target != document) {
-      // However, if we receive a "mozfullscreenchange" event for a document
-      // which is not a subdocument of the currently selected tab, we know that
-      // we've switched tabs since the request to enter full-screen was made,
-      // so we should exit full-screen since the "full-screen document" isn't
-      // acutally visible.
-      if (event.target.defaultView.top != gBrowser.contentWindow) {
-        document.mozCancelFullScreen();
-      }
-      return;
-    }
-
-    let focusManger = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-    if (focusManger.activeWindow != window) {
+    let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+    if (focusManager.activeWindow != window) {
       // The top-level window has lost focus since the request to enter
       // full-screen was made. Cancel full-screen.
       document.mozCancelFullScreen();
@@ -4059,7 +4047,7 @@ var FullScreen = {
     if (gFindBarInitialized)
       gFindBar.close();
 
-    this.showWarning(true);
+    this.showWarning(event.target);
 
     // Exit DOM full-screen mode upon open, close, or change tab.
     gBrowser.tabContainer.addEventListener("TabOpen", this.exitDomFullScreen);
@@ -4104,9 +4092,8 @@ var FullScreen = {
       gBrowser.tabContainer.removeEventListener("TabOpen", this.exitDomFullScreen);
       gBrowser.tabContainer.removeEventListener("TabClose", this.exitDomFullScreen);
       gBrowser.tabContainer.removeEventListener("TabSelect", this.exitDomFullScreen);
-      if (!this.useLionFullScreen) {
+      if (!this.useLionFullScreen)
         window.removeEventListener("deactivate", this);
-      }
     }
   },
 
@@ -4240,81 +4227,116 @@ var FullScreen = {
   },
 
   cancelWarning: function(event) {
-    if (!this.warningBox) {
+    if (!this.warningBox)
       return;
-    }
-    if (this.onWarningHidden) {
-      this.warningBox.removeEventListener("transitionend", this.onWarningHidden, false);
-      this.onWarningHidden = null;
-    }
+    this.fullscreenDocUri = null;
+    this.warningBox.removeEventListener("transitionend", this);
     if (this.warningFadeOutTimeout) {
       clearTimeout(this.warningFadeOutTimeout);
       this.warningFadeOutTimeout = null;
     }
-    if (this.revealBrowserTimeout) {
-      clearTimeout(this.revealBrowserTimeout);
-      this.revealBrowserTimeout = null;
-    }
-    this.warningBox.removeAttribute("fade-warning-out");
-    this.warningBox.removeAttribute("stop-obscuring-browser");
-    this.warningBox.removeAttribute("obscure-browser");
+
+    // Ensure focus switches away from the (now hidden) warning box. If the user
+    // clicked buttons in the fullscreen key authorization UI, it would have been
+    // focused, and any key events would be directed at the (now hidden) chrome
+    // document instead of the target document.
+    gBrowser.selectedBrowser.focus();
+
     this.warningBox.setAttribute("hidden", true);
+    this.warningBox.removeAttribute("fade-warning-out");
+    this.warningBox.removeAttribute("obscure-browser");
     this.warningBox = null;
+  },
+
+  setFullscreenAllowed: function(isApproved) {
+    let remember = document.getElementById("full-screen-remember-decision").checked;
+    if (remember)
+      Services.perms.add(this.fullscreenDocUri,
+                         "fullscreen",
+                         isApproved ? Services.perms.ALLOW_ACTION : Services.perms.DENY_ACTION,
+                         Services.perms.EXPIRE_NEVER);
+    else if (isApproved) {
+      // The user has only temporarily approved fullscren for this domain.
+      // Add the permission (so Gecko knows fullscreen is approved) but add a
+      // listener to remove the permission when the chrome document exits fullscreen.
+      Services.perms.add(this.fullscreenDocUri,
+                         "fullscreen",
+                         Services.perms.ALLOW_ACTION,
+                         Services.perms.EXPIRE_SESSION);
+      let host = this.fullscreenDocUri.host;
+      function onFullscreenchange(event) {
+        if (event.target == document && document.mozFullScreenElement == null) {
+          // The chrome document has left fullscreen. Remove the temporary permission grant.
+          Services.perms.remove(host, "fullscreen");
+          document.removeEventListener("mozfullscreenchange", onFullscreenchange);
+        }
+      }
+      document.addEventListener("mozfullscreenchange", onFullscreenchange);
+    }
+    if (this.warningBox)
+      this.warningBox.setAttribute("fade-warning-out", "true");
+    if (!isApproved)
+      document.mozCancelFullScreen();
   },
 
   warningBox: null,
   warningFadeOutTimeout: null,
-  revealBrowserTimeout: null,  
-  onWarningHidden: null,
+  fullscreenDocUri: null,
 
-  // Fade in a warning that document has entered full-screen, and then fade it
-  // out after a few seconds.
-  showWarning: function(obscureBackground) {
-    if (!document.mozFullScreen || !gPrefService.getBoolPref("full-screen-api.warning.enabled")) {
+  // Shows the fullscreen approval UI, or if the domain has already been approved
+  // for fullscreen, shows a warning that the site has entered fullscreen for a short
+  // duration.
+  showWarning: function(targetDoc) {
+    if (!document.mozFullScreen ||
+        !gPrefService.getBoolPref("full-screen-api.approval-required"))
       return;
-    }
-    if (this.warningBox) {
-      // Warning is already showing. Reset the timer which fades out the warning message,
-      // and we'll restart the timer down below.
-      if (this.warningFadeOutTimeout) {
-        clearTimeout(this.warningFadeOutTimeout);
-        this.warningFadeOutTimeout = null;
-      }
-    } else {
+
+    // Set the strings on the fullscreen approval UI.
+    this.fullscreenDocUri = targetDoc.nodePrincipal.URI;
+    let utils = {};
+    Cu.import("resource://gre/modules/DownloadUtils.jsm", utils);
+    let [displayHost, fullHost] = utils.DownloadUtils.getURIHost(this.fullscreenDocUri.spec);
+    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    let domainText = bundle.formatStringFromName("fullscreen.entered", [displayHost], 1);
+    document.getElementById("full-screen-domain-text").textContent = domainText;
+    let rememberText = bundle.formatStringFromName("fullscreen.rememberDecision", [displayHost], 1);
+    document.getElementById("full-screen-remember-decision").label = rememberText;
+
+    // Note: the warning box can be non-null if the warning box from the previous request
+    // wasn't hidden before another request was made.
+    if (!this.warningBox) {
       this.warningBox = document.getElementById("full-screen-warning-container");
       // Add a listener to clean up state after the warning is hidden.
-      this.onWarningHidden =
-        function(event) {
-          if (event.propertyName != "opacity")
-            return;
-          this.cancelWarning();
-        }.bind(this);
-      this.warningBox.addEventListener("transitionend", this.onWarningHidden, false);
+      this.warningBox.addEventListener("transitionend", this);
       this.warningBox.removeAttribute("hidden");
     }
 
-    if (obscureBackground) {
-      // Partially obscure the <browser> element underneath the warning panel...
+    // If fullscreen mode has not yet been approved for the fullscreen
+    // document's domain, show the approval UI and don't auto fade out the
+    // fullscreen warning box. Otherwise, we're just notifying of entry into
+    // fullscreen mode.
+    let isApproved =
+      Services.perms.testPermission(this.fullscreenDocUri, "fullscreen") == Services.perms.ALLOW_ACTION;
+    let authUI = document.getElementById("full-screen-approval-pane");
+    document.getElementById("full-screen-remember-decision").checked = false;
+    if (isApproved)
+      authUI.setAttribute("hidden", "true");
+    else {
+      // Partially obscure the <browser> element underneath the approval UI.
       this.warningBox.setAttribute("obscure-browser", "true");
-      // ...But set a timeout to stop obscuring the browser after a few moments.
-      this.warningBox.removeAttribute("stop-obscuring-browser");
-      this.revealBrowserTimeout =
+      authUI.removeAttribute("hidden");
+    }
+
+    // If we're not showing the fullscreen approval UI, we're just notifying the user
+    // of the transition, so set a timeout to fade the warning out after a few moments.
+    if (isApproved)
+      this.warningFadeOutTimeout =
         setTimeout(
           function() {
             if (this.warningBox)
-              this.warningBox.setAttribute("stop-obscuring-browser", "true");
+              this.warningBox.setAttribute("fade-warning-out", "true");
           }.bind(this),
-          1250);
-    }
-
-    // Set a timeout to fade the warning out after a few moments.
-    this.warningFadeOutTimeout =
-      setTimeout(
-        function() {
-          if (this.warningBox)
-            this.warningBox.setAttribute("fade-warning-out", "true");
-        }.bind(this),
-        3000);
+          3000);
   },
 
   mouseoverToggle: function(aShow, forceHide)
@@ -4494,7 +4516,8 @@ var XULBrowserWindow = {
   startTime: 0,
   statusText: "",
   isBusy: false,
-  inContentWhitelist: ["about:addons", "about:permissions", "about:sync-progress"],
+  inContentWhitelist: ["about:addons", "about:permissions", 
+                       "about:sync-progress", "about:preferences"],
 
   QueryInterface: function (aIID) {
     if (aIID.equals(Ci.nsIWebProgressListener) ||
@@ -6146,7 +6169,7 @@ function UpdateCharsetDetector(target) {
     prefvalue = gPrefService.getComplexValue("intl.charset.detector", Ci.nsIPrefLocalizedString).data;
   }
   catch (ex) {}
-  
+
   if (!prefvalue)
     prefvalue = "off";
 
@@ -9127,12 +9150,12 @@ XPCOMUtils.defineLazyGetter(this, "HUDConsoleUI", function () {
   }
 });
 
-// Prompt user to restart the browser in safe mode 
+// Prompt user to restart the browser in safe mode
 function safeModeRestart()
 {
-  // prompt the user to confirm 
+  // prompt the user to confirm
   let promptTitle = gNavigatorBundle.getString("safeModeRestartPromptTitle");
-  let promptMessage = 
+  let promptMessage =
     gNavigatorBundle.getString("safeModeRestartPromptMessage");
   let restartText = gNavigatorBundle.getString("safeModeRestartButton");
   let buttonFlags = (Services.prompt.BUTTON_POS_0 *

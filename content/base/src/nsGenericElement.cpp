@@ -6482,6 +6482,20 @@ nsINode::Length() const
   }
 }
 
+static const char*
+GetFullScreenError(nsIDocument* aDoc)
+{
+  if (!nsContentUtils::IsRequestFullScreenAllowed()) {
+    return "FullScreenDeniedNotInputDriven";
+  }
+  
+  if (nsContentUtils::IsSitePermDeny(aDoc->NodePrincipal(), "fullscreen")) {
+    return "FullScreenDeniedBlocked";
+  }
+
+  return nsnull;
+}
+
 nsresult nsGenericElement::MozRequestFullScreen()
 {
   // Only grant full-screen requests if this is called from inside a trusted
@@ -6489,11 +6503,12 @@ nsresult nsGenericElement::MozRequestFullScreen()
   // This stops the full-screen from being abused similar to the popups of old,
   // and it also makes it harder for bad guys' script to go full-screen and
   // spoof the browser chrome/window and phish logins etc.
-  if (!nsContentUtils::IsRequestFullScreenAllowed()) {
+  const char* error = GetFullScreenError(OwnerDoc());
+  if (error) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     "DOM", OwnerDoc(),
                                     nsContentUtils::eDOM_PROPERTIES,
-                                    "FullScreenDeniedNotInputDriven");
+                                    error);
     nsRefPtr<nsAsyncDOMEvent> e =
       new nsAsyncDOMEvent(OwnerDoc(),
                           NS_LITERAL_STRING("mozfullscreenerror"),

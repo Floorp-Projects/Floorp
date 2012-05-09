@@ -34,7 +34,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-ifneq ($(OS_TARGET),Android)
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 MOZ_CHILD_PROCESS_NAME := plugin-container$(BIN_SUFFIX)
 else
 # We want to let Android unpack the file at install time, but it only does

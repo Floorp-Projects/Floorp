@@ -1546,6 +1546,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(WebGLExtensionLoseContext, WebGLExtensionSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_ADDPROPERTY)
+  NS_DEFINE_CLASSINFO_DATA(WebGLExtensionCompressedTextureS3TC, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
 
   NS_DEFINE_CLASSINFO_DATA(PaintRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -4248,6 +4251,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionLoseContext, nsIWebGLExtensionLoseContext)
     DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionLoseContext)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLExtensionCompressedTextureS3TC, nsIWebGLExtensionCompressedTextureS3TC)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLExtensionCompressedTextureS3TC)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(PaintRequest, nsIDOMPaintRequest)
@@ -8656,30 +8663,43 @@ static JSClass sHTMLDocumentAllClass = {
   "HTML document.all class",
   JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_NEW_RESOLVE |
   JSCLASS_HAS_RESERVED_SLOTS(1),
-  JS_PropertyStub, JS_PropertyStub, nsHTMLDocumentSH::DocumentAllGetProperty,
-  JS_StrictPropertyStub, JS_EnumerateStub,
-  (JSResolveOp)nsHTMLDocumentSH::DocumentAllNewResolve, JS_ConvertStub,
-  nsHTMLDocumentSH::ReleaseDocument, nsnull, nsnull,
+  JS_PropertyStub,                                         /* addProperty */
+  JS_PropertyStub,                                         /* delProperty */
+  nsHTMLDocumentSH::DocumentAllGetProperty,                /* getProperty */
+  JS_StrictPropertyStub,                                   /* setProperty */
+  JS_EnumerateStub,
+  (JSResolveOp)nsHTMLDocumentSH::DocumentAllNewResolve,
+  JS_ConvertStub,
+  nsHTMLDocumentSH::ReleaseDocument,
+  nsnull,                                                  /* checkAccess */
   nsHTMLDocumentSH::CallToGetPropMapper
 };
 
 
 static JSClass sHTMLDocumentAllHelperClass = {
   "HTML document.all helper class", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
-  JS_PropertyStub, JS_PropertyStub,
-  nsHTMLDocumentSH::DocumentAllHelperGetProperty,
-  JS_StrictPropertyStub, JS_EnumerateStub,
-  (JSResolveOp)nsHTMLDocumentSH::DocumentAllHelperNewResolve, JS_ConvertStub,
-  nsnull
+  JS_PropertyStub,                                         /* addProperty */
+  JS_PropertyStub,                                         /* delProperty */
+  nsHTMLDocumentSH::DocumentAllHelperGetProperty,          /* getProperty */
+  JS_StrictPropertyStub,                                   /* setProperty */
+  JS_EnumerateStub,
+  (JSResolveOp)nsHTMLDocumentSH::DocumentAllHelperNewResolve,
+  JS_ConvertStub
 };
 
 
 static JSClass sHTMLDocumentAllTagsClass = {
   "HTML document.all.tags class",
   JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, (JSResolveOp)nsHTMLDocumentSH::DocumentAllTagsNewResolve,
-  JS_ConvertStub, nsHTMLDocumentSH::ReleaseDocument, nsnull, nsnull,
+  JS_PropertyStub,                                         /* addProperty */
+  JS_PropertyStub,                                         /* delProperty */
+  JS_PropertyStub,                                         /* getProperty */
+  JS_StrictPropertyStub,                                   /* setProperty */
+  JS_EnumerateStub,
+  (JSResolveOp)nsHTMLDocumentSH::DocumentAllTagsNewResolve,
+  JS_ConvertStub,
+  nsHTMLDocumentSH::ReleaseDocument,
+  nsnull,                                                  /* checkAccess */
   nsHTMLDocumentSH::CallToGetPropMapper
 };
 

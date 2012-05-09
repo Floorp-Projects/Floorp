@@ -204,6 +204,7 @@
 @BINPATH@/components/intl.xpt
 @BINPATH@/components/jar.xpt
 @BINPATH@/components/jetpack.xpt
+@BINPATH@/components/jsdebugger.xpt
 @BINPATH@/components/jsdservice.xpt
 @BINPATH@/components/layout_base.xpt
 @BINPATH@/components/layout_forms.xpt
@@ -300,8 +301,8 @@
 ; JavaScript components
 @BINPATH@/components/ConsoleAPI.manifest
 @BINPATH@/components/ConsoleAPI.js
-@BINPATH@/components/BrowserElementAPI.manifest
-@BINPATH@/components/BrowserElementAPI.js
+@BINPATH@/components/BrowserElementParent.manifest
+@BINPATH@/components/BrowserElementParent.js
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
 @BINPATH@/components/FeedProcessor.manifest

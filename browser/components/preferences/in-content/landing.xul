@@ -1,0 +1,59 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<vbox data-category="landing">
+  <html:h1 class="indent-small">&brandShortName;</html:h1>
+
+  <hbox id="preferences-home" flex="1">
+
+    <button label="&paneGeneral.title;" class="landingButton"
+            oncommand="gotoPref('paneGeneral');">
+      <image class="landingButton-icon" type="general"/>
+      <label class="landingButton-label">&paneGeneral.title;</label>
+    </button>
+
+    <button label="&paneTabs.title;" class="landingButton"
+            oncommand="gotoPref('paneTabs');">
+      <image class="landingButton-icon" type="tabs"/>
+      <label class="landingButton-label">&paneTabs.title;</label>
+    </button>
+
+    <button label="&paneContent.title;" class="landingButton"
+            oncommand="gotoPref('paneContent');">
+      <image class="landingButton-icon" type="content"/>
+      <label class="landingButton-label">&paneContent.title;</label>
+    </button>
+
+    <button label="&paneApplications.title;" class="landingButton"
+            oncommand="gotoPref('paneApplications');">
+      <image class="landingButton-icon" type="applications"/>
+      <label class="landingButton-label">&paneApplications.title;</label>
+    </button>
+
+    <button label="&panePrivacy.title;" class="landingButton"
+            oncommand="gotoPref('panePrivacy');">
+      <image class="landingButton-icon" type="privacy"/>
+      <label class="landingButton-label">&panePrivacy.title;</label>
+    </button>
+
+    <button label="&paneSecurity.title;" class="landingButton"
+            oncommand="gotoPref('paneSecurity');">
+      <image class="landingButton-icon" type="security"/>
+      <label class="landingButton-label">&paneSecurity.title;</label>
+    </button>
+
+    <button label="&paneSync.title;" class="landingButton"
+            oncommand="gotoPref('paneSync');">
+      <image class="landingButton-icon" type="sync"/>
+      <label class="landingButton-label">&paneSync.title;</label>
+    </button>
+
+    <button label="&paneAdvanced.title;" class="landingButton"
+            oncommand="gotoPref('paneAdvanced');">
+      <image class="landingButton-icon" type="advanced"/>
+      <label class="landingButton-label">&paneAdvanced.title;</label>
+    </button>
+
+  </hbox>
+</vbox>

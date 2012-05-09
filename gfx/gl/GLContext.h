@@ -67,6 +67,7 @@
 #include "nsRegion.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "thread_helper.h"
 
 typedef char realGLboolean;
 
@@ -509,6 +510,77 @@ struct THEBES_API ContextFormat
     int colorBits() const { return red + green + blue; }
 };
 
+/*
+ * This is a helper class to do the little bit of TLS storage that we need
+ * to allow GLContext to keep track of the current GLContext for a given thread.
+ *
+ * This is mostly an optimization to avoid calling MakeCurrent on an
+ * already-current context,which depending on OpenGL libraries/drivers can be
+ * very expensive. An earlier optimization consisted in calling
+ * getCurrentContext to check if the context was already current, but
+ * even that was shown to be very slow at least on Mac and on Linux NVIDIA,
+ * see bug 749678.
+ *
+ * In a general setting, we would have to do a TLS lookup on every MakeCurrent
+ * call. But in GLContext, we currently assume that we only ever make GL calls
+ * on a given GLContext in the same thread that created it (the "owning thread").
+ * That assumption allows us to avoid doing a TLS lookup on every MakeCurrent
+ * call. It's checked by assertions in MOZ_GL_DEBUG mode.
+ *
+ * The way this works is that inside each GLContext, we store a pointer to the
+ * TLS pointer to the current context for this thread. This pointer-to-pointer
+ * (mStorage->mCurrentGLContext) is set during GL context creation: that's where
+ * we rely on the assumption that all GL calls on a given context are made on
+ * the same thread that created that context.
+ */
+class GLContextTLSStorage
+{
+    struct Storage
+    {
+        GLContext *mCurrentGLContext;
+
+        NS_INLINE_DECL_REFCOUNTING(Storage)
+
+        Storage() : mCurrentGLContext(nsnull) {}
+
+        ~Storage() {
+            // avoid keeping a dangling TLS pointer to the Storage object being destroyed
+            tls::set<Storage>(sTLSKey, nsnull);
+        }
+    };
+
+    nsRefPtr<Storage> mStorage;
+    static tls::key sTLSKey;
+    static bool sTLSKeyAlreadyCreated;
+
+public:
+
+    GLContextTLSStorage() {
+        if (!sTLSKeyAlreadyCreated) {
+            tls::create(&sTLSKey);
+            sTLSKeyAlreadyCreated = true;
+        }
+
+        mStorage = tls::get<Storage>(sTLSKey);
+
+        if (!mStorage) {
+            mStorage = new Storage;
+            tls::set<Storage>(sTLSKey, mStorage);
+        }
+    }
+
+    ~GLContextTLSStorage() {
+    }
+
+    GLContext *CurrentGLContext() const {
+        return mStorage->mCurrentGLContext;
+    }
+
+    void SetCurrentGLContext(GLContext *c) {
+        mStorage->mCurrentGLContext = c;
+    }
+};
+
 class GLContext
     : public GLLibraryLoader
 {
@@ -560,7 +632,7 @@ public:
     }
 
     virtual ~GLContext() {
-        NS_ASSERTION(IsDestroyed(), "GLContext implementation must call MarkDestroyed in destructor!");
+        NS_ABORT_IF_FALSE(IsDestroyed(), "GLContext implementation must call MarkDestroyed in destructor!");
 #ifdef DEBUG
         if (mSharedContext) {
             GLContext *tip = mSharedContext;
@@ -570,6 +642,8 @@ public:
             tip->ReportOutstandingNames();
         }
 #endif
+        if (this == CurrentGLContext())
+            SetCurrentGLContext(nsnull);
     }
 
     enum ContextFlags {
@@ -588,19 +662,43 @@ public:
 
     virtual GLContextType GetContextType() { return ContextTypeUnknown; }
 
-    virtual bool MakeCurrentImpl(bool aForce = false) = 0;
+    virtual bool MakeCurrentImpl() = 0;
 
+    void CheckOwningThreadInDebugMode() {
 #ifdef DEBUG
-    static void StaticInit() {
-        PR_NewThreadPrivateIndex(&sCurrentGLContextTLS, NULL);
-    }
+        if (!NS_GetCurrentThread()) {
+            // happens during shutdown. Drop this check in that case.
+            return;
+        }
+        if (!IsOwningThreadCurrent())
+        {
+            printf_stderr(
+                "This GL context (%p) is owned by thread %p, but the current thread is %p. "
+                "That's fine by itself, but our current code in GLContext::MakeCurrent, checking "
+                "if the context is already current, relies on the assumption that GL calls on a given "
+                "GLContext are only made by the thread that created that GLContext. If you want to "
+                "start making GL calls from non-owning threads, you'll have to change a few things "
+                "around here, see Bug 749678 comments 13 and 15.\n",
+                this, mOwningThread.get(), NS_GetCurrentThread());
+            NS_ABORT();
+        }
 #endif
+    }
 
     bool MakeCurrent(bool aForce = false) {
-#ifdef DEBUG
-        PR_SetThreadPrivate(sCurrentGLContextTLS, this);
-#endif
-        return MakeCurrentImpl(aForce);
+        CheckOwningThreadInDebugMode();
+
+        if (!aForce &&
+            this == CurrentGLContext())
+        {
+            return true;
+        }
+
+        bool success = MakeCurrentImpl();
+        if (success) {
+            SetCurrentGLContext(this);
+        }
+        return success;
     }
 
     bool IsContextLost() { return mContextLost; }
@@ -1087,6 +1185,16 @@ public:
     }
 
 private:
+
+    GLContext *CurrentGLContext() const {
+        return mTLSStorage.CurrentGLContext();
+    }
+
+    void SetCurrentGLContext(GLContext *c) {
+        mTLSStorage.SetCurrentGLContext(c);
+    }
+
+
     bool mOffscreenFBOsDirty;
 
     void GetShaderPrecisionFormatNonES2(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {
@@ -1512,6 +1620,7 @@ public:
         EXT_unpack_subimage,
         OES_standard_derivatives,
         EXT_texture_filter_anisotropic,
+        EXT_texture_compression_s3tc,
         EXT_framebuffer_blit,
         ANGLE_framebuffer_blit,
         EXT_framebuffer_multisample,
@@ -1612,15 +1721,6 @@ protected:
 
     GLContextSymbols mSymbols;
 
-#ifdef DEBUG
-    // GLDebugMode will check that we don't send call
-    // to a GLContext that isn't current on the current
-    // thread.
-    // Store the current context when binding to thread local
-    // storage to support DebugMode on an arbitrary thread.
-    static PRUintn sCurrentGLContextTLS;
-#endif
-
     void UpdateActualFormat();
     ContextFormat mActualFormat;
 
@@ -1628,6 +1728,8 @@ protected:
     gfxIntSize mOffscreenActualSize;
     GLuint mOffscreenTexture;
     bool mFlipped;
+
+    GLContextTLSStorage mTLSStorage;
 
     // lazy-initialized things
     GLuint mBlitProgram, mBlitFramebuffer;
@@ -1805,16 +1907,13 @@ public:
 
     void BeforeGLCall(const char* glFunction) {
         if (DebugMode()) {
-            GLContext *currentGLContext = NULL;
-
-            currentGLContext = (GLContext*)PR_GetThreadPrivate(sCurrentGLContextTLS);
-
             if (DebugMode() & DebugTrace)
                 printf_stderr("[gl:%p] > %s\n", this, glFunction);
-            if (this != currentGLContext) {
+            CheckOwningThreadInDebugMode();
+            if (this != CurrentGLContext()) {
                 printf_stderr("Fatal: %s called on non-current context %p. "
                               "The current context for this thread is %p.\n",
-                               glFunction, this, currentGLContext);
+                               glFunction, this, CurrentGLContext());
                 NS_ABORT();
             }
         }
@@ -2108,6 +2207,18 @@ public:
     void fColorMask(realGLboolean red, realGLboolean green, realGLboolean blue, realGLboolean alpha) {
         BEFORE_GL_CALL;
         mSymbols.fColorMask(red, green, blue, alpha);
+        AFTER_GL_CALL;
+    }
+
+    void fCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *pixels) {
+        BEFORE_GL_CALL;
+        mSymbols.fCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, pixels);
+        AFTER_GL_CALL;
+    }
+
+    void fCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid *pixels) {
+        BEFORE_GL_CALL;
+        mSymbols.fCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, pixels);
         AFTER_GL_CALL;
     }
 

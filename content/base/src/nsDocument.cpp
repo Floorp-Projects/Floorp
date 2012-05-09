@@ -1702,6 +1702,7 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentTouch)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsITouchEventReceiver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIInlineEventHandlers)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIObserver)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
@@ -8758,6 +8759,20 @@ nsDocument::RestorePreviousFullScreenState()
     } else {
       // Else we popped the top of the stack, and there's still another
       // element in there, so that will become the full-screen element.
+      if (fullScreenDoc != doc) {
+        // We've popped so enough off the stack that we've rolled back to
+        // a fullscreen element in a parent document. If this document isn't
+        // authorized for fullscreen, dispatch an event to chrome so it
+        // knows to show the authorization UI.
+        if (!nsContentUtils::IsSitePermAllow(doc->NodePrincipal(), "fullscreen")) {
+          nsRefPtr<nsAsyncDOMEvent> e =
+            new nsAsyncDOMEvent(doc,
+                                NS_LITERAL_STRING("MozEnteredDomFullscreen"),
+                                true,
+                                true);
+          e->PostDOMEvent();
+        }
+      }
       sFullScreenDoc = do_GetWeakReference(doc);
       break;
     }
@@ -9076,6 +9091,13 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
     DispatchFullScreenChange(changed[changed.Length() - i - 1]);
   }
 
+  nsRefPtr<nsAsyncDOMEvent> e =
+    new nsAsyncDOMEvent(this,
+                        NS_LITERAL_STRING("MozEnteredDomFullscreen"),
+                        true,
+                        true);
+  e->PostDOMEvent();
+
   // Remember this is the requesting full-screen document.
   sFullScreenDoc = do_GetWeakReference(static_cast<nsIDocument*>(this));
 
@@ -9225,6 +9247,159 @@ DispatchPointerLockError(nsIDocument* aTarget)
   e->PostDOMEvent();
 }
 
+// Manages asynchronously requesting pointer lock. Used to dispatch an
+// event to request pointer lock once fullscreen has been approved.
+class nsAsyncPointerLockRequest : public nsRunnable
+{
+public:
+  NS_IMETHOD Run()
+  {
+    sInstance = nsnull;
+    if (mDocument && mElement) {
+      mDocument->RequestPointerLock(mElement);
+    }
+    return NS_OK;
+  }
+
+  static void Request(Element* aElement, nsIDocument* aDocument)
+  {
+    if (sInstance) {
+      // We already have an event instance pending. Change the requestee
+      // to the new pointer lock requestee.
+      sInstance->mElement = aElement;
+      sInstance->mDocument = aDocument;
+    } else {
+      // Create a new event instance. Owning ref is held by the nsIEventTarget
+      // to which this is dispatched.
+      sInstance = new nsAsyncPointerLockRequest(aElement, aDocument);
+      NS_DispatchToCurrentThread(sInstance);
+    }
+  }
+
+  static void Cancel()
+  {
+    if (sInstance) {
+      // Revoke references to requesting element/document, when the
+      // dispatched event runs. The event will do nothing, and then be
+      // destroyed.
+      sInstance->mElement = nsnull;
+      sInstance->mDocument = nsnull;
+    }
+  }
+
+private:
+  nsAsyncPointerLockRequest(Element* aElement, nsIDocument* aDocument)
+    : mElement(aElement),
+      mDocument(aDocument)
+  {
+    MOZ_COUNT_CTOR(nsAsyncPointerLockRequest);
+  }
+
+  ~nsAsyncPointerLockRequest()
+  {
+    MOZ_COUNT_DTOR(nsAsyncPointerLockRequest);
+  }
+
+  // Reference to the instance of any pending event. This is not an owning
+  // reference; the nsIEventTarget to which this is dispatched holds the only
+  // owning reference to this instance. This reference is valid between
+  // an instance being created, and its Run() method being called.
+  static nsAsyncPointerLockRequest* sInstance;
+
+  // Element and document which reqested pointer lock.
+  nsCOMPtr<Element> mElement;
+  nsCOMPtr<nsIDocument> mDocument;
+};
+
+nsAsyncPointerLockRequest* nsAsyncPointerLockRequest::sInstance = nsnull;
+nsWeakPtr nsDocument::sPendingPointerLockDoc;
+nsWeakPtr nsDocument::sPendingPointerLockElement;
+
+/* static */
+void
+nsDocument::ClearPendingPointerLockRequest(bool aDispatchErrorEvents)
+{
+  nsAsyncPointerLockRequest::Cancel();
+
+  if (!sPendingPointerLockDoc) {
+    // No pending request.
+    return;
+  }
+  nsCOMPtr<nsIDocument> doc(do_QueryReferent(sPendingPointerLockDoc));
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (!os) {
+    NS_WARNING("Lost observer service in ClearPendingPointerLockRequest()!");
+    return;
+  }
+
+  nsCOMPtr<nsIObserver> obs(do_QueryInterface(doc));
+  if (!os) {
+    NS_WARNING("Document must implement nsIObserver");
+    return;
+  }
+  os->RemoveObserver(obs, "perm-changed");
+
+  if (aDispatchErrorEvents) {
+    DispatchPointerLockError(doc);
+  }
+  nsCOMPtr<Element> element(do_QueryReferent(sPendingPointerLockElement));
+#ifdef DEBUG
+  nsCOMPtr<Element> pointerLockedElement =
+    do_QueryReferent(nsEventStateManager::sPointerLockedElement);
+  NS_ASSERTION(pointerLockedElement != element,
+    "We shouldn't be clearing pointer locked flag on pointer locked element!");
+#endif
+  if (element) {
+    element->ClearPointerLock();
+  }
+  sPendingPointerLockDoc = nsnull;
+  sPendingPointerLockElement = nsnull;
+}
+
+/* static */
+nsresult
+nsDocument::SetPendingPointerLockRequest(Element* aElement)
+{
+  // If there's an existing pending pointer lock request, deny it.
+  ClearPendingPointerLockRequest(true);
+
+  NS_ENSURE_TRUE(aElement != nsnull, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  NS_ENSURE_TRUE(os != nsnull, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIObserver> obs(do_QueryInterface(aElement->OwnerDoc()));
+  NS_ENSURE_TRUE(obs != nsnull, NS_ERROR_FAILURE);
+
+  nsresult res = os->AddObserver(obs, "perm-changed", true);
+  NS_ENSURE_SUCCESS(res, res);
+
+  sPendingPointerLockDoc = do_GetWeakReference(aElement->OwnerDoc());
+  sPendingPointerLockElement = do_GetWeakReference(aElement);
+
+  // Set the pointer lock flag, so that if the element is removed from
+  // its document we know to cancel the pending request.
+  aElement->SetPointerLock();
+
+  return NS_OK;
+}
+
+nsresult
+nsDocument::Observe(nsISupports *aSubject,
+                    const char *aTopic,
+                    const PRUnichar *aData)
+{
+  if (strcmp("perm-changed", aTopic) == 0) {
+    nsCOMPtr<nsIDocument> doc(do_QueryReferent(sPendingPointerLockDoc));
+    if (nsContentUtils::IsSitePermAllow(doc->NodePrincipal(), "fullscreen")) {
+      nsCOMPtr<Element> element(do_QueryReferent(sPendingPointerLockElement));
+      nsDocument::ClearPendingPointerLockRequest(false);
+      nsAsyncPointerLockRequest::Request(element, doc);
+    }
+  }
+  return NS_OK;
+}
+
 void
 nsDocument::RequestPointerLock(Element* aElement)
 {
@@ -9238,8 +9413,25 @@ nsDocument::RequestPointerLock(Element* aElement)
     return;
   }
 
-  if (!ShouldLockPointer(aElement) ||
-      !SetPointerLock(aElement, NS_STYLE_CURSOR_NONE)) {
+  if (!ShouldLockPointer(aElement)) {
+    DispatchPointerLockError(this);
+    return;
+  }
+    
+  if (!nsContentUtils::IsSitePermAllow(NodePrincipal(), "fullscreen")) {
+    // Domain isn't yet approved for fullscreen, so we must wait until
+    // it's been approved.
+    if (NS_FAILED(SetPendingPointerLockRequest(aElement))) {
+      NS_WARNING("Failed to make pointer lock request pending!");
+      DispatchPointerLockError(this);
+    }
+    return;
+  }
+
+  // If there's an existing pending pointer lock request, deny it.
+  nsDocument::ClearPendingPointerLockRequest(true);
+
+  if (!SetPointerLock(aElement, NS_STYLE_CURSOR_NONE)) {
     DispatchPointerLockError(this);
     return;
   }
@@ -9353,6 +9545,10 @@ nsDocument::SetPointerLock(Element* aElement, int aCursorStyle)
 void
 nsDocument::UnlockPointer()
 {
+  // If our pointer lock request is pending awaiting authorization, deny the
+  // request.
+  ClearPendingPointerLockRequest(true);
+
   if (!nsEventStateManager::sIsPointerLocked) {
     return;
   }

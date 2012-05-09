@@ -2203,7 +2203,13 @@ public:
     void
     SetScriptableShared(XPCNativeScriptableShared* shared) {mShared = shared;}
 
-    void Mark() {if (mShared) mShared->Mark();}
+    void Mark() {
+        if (mShared)
+            mShared->Mark();
+    }
+
+    void TraceJS(JSTracer *trc) {}
+    void AutoTrace(JSTracer *trc) {}
 
 protected:
     XPCNativeScriptableInfo(nsIXPCScriptable* scriptable = nsnull,
@@ -4229,6 +4235,7 @@ typedef TypedAutoMarkingPtr<XPCWrappedNative> AutoMarkingWrappedNativePtr;
 typedef TypedAutoMarkingPtr<XPCWrappedNativeTearOff> AutoMarkingWrappedNativeTearOffPtr;
 typedef TypedAutoMarkingPtr<XPCWrappedNativeProto> AutoMarkingWrappedNativeProtoPtr;
 typedef TypedAutoMarkingPtr<XPCMarkableJSVal> AutoMarkingJSVal;
+typedef TypedAutoMarkingPtr<XPCNativeScriptableInfo> AutoMarkingNativeScriptableInfoPtr;
 
 template<class T>
 class ArrayAutoMarkingPtr : public AutoMarkingPtr
@@ -4279,12 +4286,6 @@ class ArrayAutoMarkingPtr : public AutoMarkingPtr
 };
 
 typedef ArrayAutoMarkingPtr<XPCNativeInterface> AutoMarkingNativeInterfacePtrArrayPtr;
-
-// Note: It looked like I would need one of these AutoMarkingPtr types for
-// XPCNativeScriptableInfo in order to manage marking its
-// XPCNativeScriptableShared member during construction. But AFAICT we build
-// these and bind them to rooted things so immediately that this just is not
-// needed.
 
 #define AUTO_MARK_JSVAL_HELPER2(tok, line) tok##line
 #define AUTO_MARK_JSVAL_HELPER(tok, line) AUTO_MARK_JSVAL_HELPER2(tok, line)

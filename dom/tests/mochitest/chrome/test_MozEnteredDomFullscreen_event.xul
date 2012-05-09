@@ -18,8 +18,21 @@ SpecialPowers.setBoolPref("full-screen-api.enabled", true);
 var gPrevTrusted = SpecialPowers.getBoolPref("full-screen-api.allow-trusted-requests-only");
 SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
-newwindow = window.open("dom_fullscreen_warning.xul", "_blank","chrome,resizable=yes,width=400,height=400");
+function make_uri(url) {
+  var ios = Cc["@mozilla.org/network/io-service;1"].
+            getService(Ci.nsIIOService);
+  return ios.newURI(url, null, null);
+}
+
+// Ensure "fullscreen" permissions are not present on the test URI.
+var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+var uri = make_uri("http://mochi.test:8888");
+pm.remove(uri.host, "fullscreen");
+
+newwindow = window.open("MozEnteredDomFullscreen_chrome.xul", "_blank","chrome,resizable=yes,width=400,height=400");
 
 function done()
 {
