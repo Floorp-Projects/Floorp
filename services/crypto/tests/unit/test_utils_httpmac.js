@@ -2,7 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-crypto/utils.js");
 
 function run_test() {
   initTestLogging();
@@ -18,10 +19,10 @@ add_test(function test_sha1() {
   let ts = 1329181221;
   let method = "GET";
   let nonce = "wGX71";
-  let uri = Utils.makeURI("http://10.250.2.176/alias/");
+  let uri = CommonUtils.makeURI("http://10.250.2.176/alias/");
 
-  let result = Utils.computeHTTPMACSHA1(id, key, method, uri, {ts: ts,
-                                                               nonce: nonce});
+  let result = CryptoUtils.computeHTTPMACSHA1(id, key, method, uri,
+                                              {ts: ts, nonce: nonce});
 
   do_check_eq(btoa(result.mac), "jzh5chjQc2zFEvLbyHnPdX11Yck=");
 
@@ -31,9 +32,8 @@ add_test(function test_sha1() {
 
   let ext = "EXTRA DATA; foo,bar=1";
 
-  let result = Utils.computeHTTPMACSHA1(id, key, method, uri, {ts: ts,
-                                                               nonce: nonce,
-                                                               ext: ext});
+  let result = CryptoUtils.computeHTTPMACSHA1(id, key, method, uri,
+                                              {ts: ts, nonce: nonce, ext: ext});
   do_check_eq(btoa(result.mac), "bNf4Fnt5k6DnhmyipLPkuZroH68=");
   do_check_eq(result.getHeader(),
               'MAC id="vmo1txkttblmn51u2p3zk2xiy16hgvm5ok8qiv1yyi86ffjzy9zj0ez9x6wnvbx7", ' +
@@ -47,8 +47,8 @@ add_test(function test_nonce_length() {
   _("Ensure custom nonce lengths are honoured.");
 
   function get_mac(length) {
-    let uri = Utils.makeURI("http://example.com/");
-    return Utils.computeHTTPMACSHA1("foo", "bar", "GET", uri, {
+    let uri = CommonUtils.makeURI("http://example.com/");
+    return CryptoUtils.computeHTTPMACSHA1("foo", "bar", "GET", uri, {
       nonce_bytes: length
     });
   }
