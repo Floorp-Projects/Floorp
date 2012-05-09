@@ -383,9 +383,6 @@ public:
                             bool aForward,
                             PRInt32* aIndex NS_OUTPARAM);
 
-  /** Whether or not there are optgroups in this select */
-  NS_IMETHOD GetHasOptGroups(bool* aHasGroups);
-
   /**
    * Called when an attribute is about to be changed
    */

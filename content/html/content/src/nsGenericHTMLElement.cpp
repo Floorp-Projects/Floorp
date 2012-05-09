@@ -2312,19 +2312,6 @@ nsGenericHTMLElement::SetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aValue)
 }
 
 nsresult
-nsGenericHTMLElement::GetDoubleAttr(nsIAtom* aAttr, double aDefault, double* aResult)
-{
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
-  if (attrVal && attrVal->Type() == nsAttrValue::eDoubleValue) {
-    *aResult = attrVal->GetDoubleValue();
-  }
-  else {
-    *aResult = aDefault;
-  }
-  return NS_OK;
-}
-
-nsresult
 nsGenericHTMLElement::SetDoubleAttr(nsIAtom* aAttr, double aValue)
 {
   nsAutoString value;
