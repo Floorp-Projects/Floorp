@@ -322,7 +322,7 @@ public:
     enum {
         WINDOW_FORMAT_RGBA_8888          = 1,
         WINDOW_FORMAT_RGBX_8888          = 2,
-        WINDOW_FORMAT_RGB_565            = 4,
+        WINDOW_FORMAT_RGB_565            = 4
     };
 
     bool HasNativeWindowAccess();

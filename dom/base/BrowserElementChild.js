@@ -9,7 +9,7 @@ let Ci = Components.interfaces;
 let Cc = Components.classes;
 
 function debug(msg) {
-  dump("BrowserElementChild - " + msg + "\n");
+  //dump("BrowserElementChild - " + msg + "\n");
 }
 
 function sendAsyncMsg(msg, data) {

@@ -1204,14 +1204,17 @@ GetCompartmentName(JSCompartment *c, nsCString &name)
     } else if (JSPrincipals *principals = JS_GetCompartmentPrincipals(c)) {
         nsJSPrincipals::get(principals)->GetScriptLocation(name);
 
-        // For system compartments we append the location, if there is one.
-        if (js::IsSystemCompartment(c)) {
-            xpc::CompartmentPrivate *compartmentPrivate =
-                static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(c));
-            if (compartmentPrivate && !compartmentPrivate->location.IsEmpty()) {
-                name.AppendLiteral(", ");
-                name.Append(compartmentPrivate->location);
-            }
+        // If the compartment's location (name) differs from the principal's
+        // script location, append the compartment's location to allow
+        // differentiation of multiple compartments owned by the same principal
+        // (e.g. components owned by the system or null principal).
+        xpc::CompartmentPrivate *compartmentPrivate =
+            static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(c));
+        if (compartmentPrivate &&
+            !compartmentPrivate->location.IsEmpty() &&
+            !compartmentPrivate->location.Equals(name)) {
+            name.AppendLiteral(", ");
+            name.Append(compartmentPrivate->location);
         }
         
         // A hack: replace forward slashes with '\\' so they aren't

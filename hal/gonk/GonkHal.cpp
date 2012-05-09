@@ -35,6 +35,7 @@
 #include "nsThreadUtils.h"
 #include "nsIThread.h"
 #include "nsXULAppAPI.h"
+#include "OrientationObserver.h"
 #include "UeventPoller.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
@@ -616,14 +617,13 @@ GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration)
 bool
 LockScreenOrientation(const dom::ScreenOrientation& aOrientation)
 {
-  // FIXME/bug 743638: implement
-  return false;
+  return OrientationObserver::GetInstance()->LockScreenOrientation(aOrientation);
 }
 
 void
 UnlockScreenOrientation()
 {
-  // FIXME/bug 743638: implement
+  OrientationObserver::GetInstance()->UnlockScreenOrientation();
 }
 
 } // hal_impl
