@@ -1815,7 +1815,12 @@ SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment)
 {
   {
     MutexAutoLock lock(mMutex);
-    FindDataForTrack(aID)->mData->AppendFrom(aSegment);
+    TrackData *track = FindDataForTrack(aID);
+    if (track) {
+      track->mData->AppendFrom(aSegment);
+    } else {
+      NS_ERROR("Append to non-existant track!");
+    }
   }
   GraphImpl()->EnsureNextIteration();
 }
@@ -1824,7 +1829,12 @@ bool
 SourceMediaStream::HaveEnoughBuffered(TrackID aID)
 {
   MutexAutoLock lock(mMutex);
-  return FindDataForTrack(aID)->mHaveEnough;
+  TrackData *track = FindDataForTrack(aID);
+  if (track) {
+    return track->mHaveEnough;
+  }
+  NS_ERROR("No track in HaveEnoughBuffered!");
+  return true;
 }
 
 void
@@ -1833,6 +1843,11 @@ SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
 {
   MutexAutoLock lock(mMutex);
   TrackData* data = FindDataForTrack(aID);
+  if (!data) {
+    NS_ERROR("No track in DispatchWhenNotEnoughBuffered");
+    return;
+  }
+
   if (data->mHaveEnough) {
     data->mDispatchWhenNotEnough.AppendElement()->Init(aSignalThread, aSignalRunnable);
   } else {
@@ -1845,7 +1860,12 @@ SourceMediaStream::EndTrack(TrackID aID)
 {
   {
     MutexAutoLock lock(mMutex);
-    FindDataForTrack(aID)->mCommands |= TRACK_END;
+    TrackData *track = FindDataForTrack(aID);
+    if (track) {
+      track->mCommands |= TRACK_END;
+    } else {
+      NS_ERROR("End of non-existant track");
+    }
   }
   GraphImpl()->EnsureNextIteration();
 }

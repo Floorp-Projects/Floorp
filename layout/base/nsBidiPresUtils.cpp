@@ -164,12 +164,18 @@ struct BidiParagraphData {
     mPrevFrame = aBpd->mPrevFrame;
     mParagraphDepth = aBpd->mParagraphDepth + 1;
 
+    const nsStyleTextReset* text = aBDIFrame->GetStyleTextReset();
     bool isRTL = (NS_STYLE_DIRECTION_RTL ==
                   aBDIFrame->GetStyleVisibility()->mDirection);
-    mParaLevel = mParagraphDepth * 2;
-    if (isRTL) ++mParaLevel;
 
-    if (aBDIFrame->GetStyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_OVERRIDE) {
+    if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
+      mParaLevel = NSBIDI_DEFAULT_LTR;
+    } else {
+      mParaLevel = mParagraphDepth * 2;
+      if (isRTL) ++mParaLevel;
+    }
+
+    if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_OVERRIDE) {
       PushBidiControl(isRTL ? kRLO : kLRO);
     }
   }
@@ -1131,7 +1137,8 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
       nsIFrame* kid = frame->GetFirstPrincipalChild();
       if (kid) {
         const nsStyleTextReset* text = frame->GetStyleTextReset();
-        if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_ISOLATE) {
+        if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_ISOLATE ||
+            text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
           // css "unicode-bidi: isolate" and html5 bdi: 
           //  resolve the element as a separate paragraph
           BidiParagraphData* subParagraph = aBpd->GetSubParagraph();
