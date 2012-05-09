@@ -72,6 +72,7 @@ fails-if(Android) != spellcheck-hyphen-invalid.html spellcheck-hyphen-invalid-re
 == spellcheck-hyphen-multiple-valid.html spellcheck-hyphen-multiple-valid-ref.html
 fails-if(Android) != spellcheck-hyphen-multiple-invalid.html spellcheck-hyphen-multiple-invalid-ref.html
 == spellcheck-dotafterquote-valid.html spellcheck-dotafterquote-valid-ref.html
+== spellcheck-url-valid.html spellcheck-url-valid-ref.html
 == unneeded_scroll.html unneeded_scroll-ref.html
 == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html
 == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html
