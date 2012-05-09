@@ -15,8 +15,10 @@
             android:name="org.mozilla.gecko.sync.setup.activities.AccountActivity"
             android:windowSoftInputMode="adjustPan|stateHidden"/>
         <activity
+            android:noHistory="true"
             android:name="org.mozilla.gecko.sync.setup.activities.SetupFailureActivity" />
         <activity
+            android:noHistory="true"
             android:name="org.mozilla.gecko.sync.setup.activities.SetupSuccessActivity" />
         <receiver
             android:name="org.mozilla.gecko.sync.receivers.UpgradeReceiver">

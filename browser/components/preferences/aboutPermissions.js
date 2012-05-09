@@ -364,6 +364,17 @@ let PermissionDefaults = {
   set plugins(aValue) {
     let value = (aValue != this.ALLOW);
     Services.prefs.setBoolPref("plugins.click_to_play", value);
+  },
+  
+  get fullscreen() {
+    if (!Services.prefs.getBoolPref("full-screen-api.enabled")) {
+      return this.DENY;
+    }
+    return this.UNKNOWN;
+  },
+  set fullscreen(aValue) {
+    let value = (aValue != this.DENY);
+    Services.prefs.setBoolPref("full-screen-api.enabled", value);
   }
 }
 
@@ -403,12 +414,12 @@ let AboutPermissions = {
    *
    * Potential future additions: "sts/use", "sts/subd"
    */
-  _supportedPermissions: ["password", "cookie", "geo", "indexedDB", "popup", "plugins"],
+  _supportedPermissions: ["password", "cookie", "geo", "indexedDB", "popup", "plugins", "fullscreen"],
 
   /**
    * Permissions that don't have a global "Allow" option.
    */
-  _noGlobalAllow: ["geo", "indexedDB"],
+  _noGlobalAllow: ["geo", "indexedDB", "fullscreen"],
 
   /**
    * Permissions that don't have a global "Deny" option.
@@ -436,6 +447,7 @@ let AboutPermissions = {
     Services.prefs.addObserver("dom.indexedDB.enabled", this, false);
     Services.prefs.addObserver("dom.disable_open_during_load", this, false);
     Services.prefs.addObserver("plugins.click_to_play", this, false);
+    Services.prefs.addObserver("full-screen-api.enabled", this, false);
 
     Services.obs.addObserver(this, "perm-changed", false);
     Services.obs.addObserver(this, "passwordmgr-storage-changed", false);
@@ -457,6 +469,7 @@ let AboutPermissions = {
       Services.prefs.removeObserver("dom.indexedDB.enabled", this, false);
       Services.prefs.removeObserver("dom.disable_open_during_load", this, false);
       Services.prefs.removeObserver("plugins.click_to_play", this, false);
+      Services.prefs.removeObserver("full-screen-api.enabled", this, false);
 
       Services.obs.removeObserver(this, "perm-changed", false);
       Services.obs.removeObserver(this, "passwordmgr-storage-changed", false);

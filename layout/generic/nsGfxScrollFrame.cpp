@@ -80,6 +80,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/StandardInteger.h"
+#include "mozilla/Util.h"
 #include "FrameLayerBuilder.h"
 #include "nsSMILKeySpline.h"
 #include "nsSubDocumentFrame.h"
@@ -2245,33 +2246,18 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
        (scrollRange.width > 0 || scrollRange.height > 0) &&
        (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument())));
 
-  if (ShouldBuildLayer()) {
-    // ScrollLayerWrapper must always be created because it initializes the
-    // scroll layer count. The display lists depend on this.
-    ScrollLayerWrapper wrapper(mOuter, mScrolledFrame);
-
-    if (usingDisplayport) {
-      // Once a displayport is set, assume that scrolling needs to be fast
-      // so create a layer with all the content inside. The compositor
-      // process will be able to scroll the content asynchronously.
-      wrapper.WrapListsInPlace(aBuilder, mOuter, set);
-    }
-
-    // In case we are not using displayport or the nsDisplayScrollLayers are
-    // flattened during visibility computation, we still need to export the
-    // metadata about this scroll box to the compositor process.
-    nsDisplayScrollInfoLayer* layerItem = new (aBuilder) nsDisplayScrollInfoLayer(
-      aBuilder, mScrolledFrame, mOuter);
-    set.BorderBackground()->AppendNewToBottom(layerItem);
-  }
-
   nsRect clip;
-  clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
-
   nscoord radii[8];
-  // Our override of GetBorderRadii ensures we never have a radius at
-  // the corners where we have a scrollbar.
-  mOuter->GetPaddingBoxBorderRadii(radii);
+
+  if (usingDisplayport) {
+    clip = displayPort + aBuilder->ToReferenceFrame(mOuter);
+    memset(radii, 0, sizeof(nscoord) * ArrayLength(radii));
+  } else {
+    clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+    // Our override of GetBorderRadii ensures we never have a radius at
+    // the corners where we have a scrollbar.
+    mOuter->GetPaddingBoxBorderRadii(radii);
+  }
 
   // mScrolledFrame may have given us a background, e.g., the scrolled canvas
   // frame below the viewport. If so, we want it to be clipped. We also want
@@ -2281,6 +2267,26 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   rv = mOuter->OverflowClip(aBuilder, set, aLists, clip, radii,
                             true, mIsRoot);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (ShouldBuildLayer()) {
+    // ScrollLayerWrapper must always be created because it initializes the
+    // scroll layer count. The display lists depend on this.
+    ScrollLayerWrapper wrapper(mOuter, mScrolledFrame);
+
+    if (usingDisplayport) {
+      // Once a displayport is set, assume that scrolling needs to be fast
+      // so create a layer with all the content inside. The compositor
+      // process will be able to scroll the content asynchronously.
+      wrapper.WrapListsInPlace(aBuilder, mOuter, aLists);
+    }
+
+    // In case we are not using displayport or the nsDisplayScrollLayers are
+    // flattened during visibility computation, we still need to export the
+    // metadata about this scroll box to the compositor process.
+    nsDisplayScrollInfoLayer* layerItem = new (aBuilder) nsDisplayScrollInfoLayer(
+      aBuilder, mScrolledFrame, mOuter);
+    aLists.BorderBackground()->AppendNewToBottom(layerItem);
+  }
 
   // Now display overlay scrollbars and the resizer, if we have one.
   AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, createLayersForScrollbars,

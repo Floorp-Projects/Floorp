@@ -196,6 +196,9 @@ BrowserRootActor.prototype = {
   onWindowTitleChange: function BRA_onWindowTitleChange(aWindow, aTitle) { },
   onOpenWindow: function BRA_onOpenWindow(aWindow) { },
   onCloseWindow: function BRA_onCloseWindow(aWindow) {
+    // An nsIWindowMediatorListener's onCloseWindow method gets passed all
+    // sorts of windows; we only care about the tab containers. Those have
+    // 'getBrowser' methods.
     if (aWindow.getBrowser) {
       this.unwatchWindow(aWindow);
     }

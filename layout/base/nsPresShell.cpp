@@ -6227,57 +6227,6 @@ static bool CanHandleContextMenuEvent(nsMouseEvent* aMouseEvent,
   return true;
 }
 
-static bool
-IsFullScreenAndRestrictedKeyEvent(nsIContent* aTarget, const nsEvent* aEvent)
-{
-  NS_ABORT_IF_FALSE(aEvent, "Must have an event to check.");
-
-  // Bail out if the event is not a key event, or the target's document is
-  // not in DOM full screen mode, or full-screen key input is not restricted.
-  nsIDocument *root = nsnull;
-  if (!aTarget ||
-      (aEvent->message != NS_KEY_DOWN &&
-      aEvent->message != NS_KEY_UP &&
-      aEvent->message != NS_KEY_PRESS) ||
-      !(root = nsContentUtils::GetRootDocument(aTarget->OwnerDoc())) ||
-      !root->IsFullScreenDoc() ||
-      !nsContentUtils::IsFullScreenKeyInputRestricted()) {
-    return false;
-  }
-
-  // We're in full-screen mode. We whitelist key codes, and we will
-  // show a warning when keys not in this list are pressed.
-  const nsKeyEvent* keyEvent = static_cast<const nsKeyEvent*>(aEvent);
-  int key = keyEvent->keyCode ? keyEvent->keyCode : keyEvent->charCode;
-  switch (key) {
-    case NS_VK_TAB:
-    case NS_VK_SPACE:
-    case NS_VK_PAGE_UP:
-    case NS_VK_PAGE_DOWN:
-    case NS_VK_END:
-    case NS_VK_HOME:
-    case NS_VK_LEFT:
-    case NS_VK_UP:
-    case NS_VK_RIGHT:
-    case NS_VK_DOWN:
-    case NS_VK_SHIFT:
-    case NS_VK_CONTROL:
-    case NS_VK_ALT:
-    case NS_VK_META:
-#ifdef XP_WIN
-    case VK_VOLUME_MUTE:
-    case VK_VOLUME_DOWN:
-    case VK_VOLUME_UP:
-#endif
-      // Unrestricted key code.
-      return false;
-    default:
-      // Otherwise, fullscreen is enabled, key input is restricted, and the key
-      // code is not an allowed key code.
-      return true;
-  }
-}
-
 nsresult
 PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
 {
@@ -6336,18 +6285,10 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
                             NS_EVENT_FLAG_ONLY_CHROME_DISPATCH);
 
           if (aEvent->message == NS_KEY_UP) {
-           // ESC key released while in DOM full-screen mode.
-           // Exit full-screen mode.
+             // ESC key released while in DOM full-screen mode.
+             // Exit full-screen mode.
             nsIDocument::ExitFullScreen(true);
           }
-        } else if (IsFullScreenAndRestrictedKeyEvent(mCurrentEventContent, aEvent)) {
-          // Restricted key press while in DOM full-screen mode. Dispatch
-          // an event to chrome so it knows to show a warning message
-          // informing the user how to exit full-screen.
-          nsRefPtr<nsAsyncDOMEvent> e =
-            new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozShowFullScreenWarning"),
-                                true, true);
-          e->PostDOMEvent();
         }
         // Else not full-screen mode or key code is unrestricted, fall
         // through to normal handling.

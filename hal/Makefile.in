@@ -91,6 +91,7 @@ CPPSRCS += \
 else ifeq (Linux,$(OS_TARGET))
 CPPSRCS += \
   LinuxPower.cpp \
+  FallbackScreenConfiguration.cpp \
   FallbackSensor.cpp \
   FallbackVibration.cpp \
   $(NULL)
@@ -104,6 +105,7 @@ CPPSRCS += \
   WindowsBattery.cpp \
   WindowsSensor.cpp \
   FallbackVibration.cpp \
+  FallbackScreenConfiguration.cpp \
   FallbackPower.cpp \
   $(NULL)
 else ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
@@ -111,6 +113,7 @@ CPPSRCS += \
   FallbackBattery.cpp \
   FallbackVibration.cpp \
   FallbackPower.cpp \
+  FallbackScreenConfiguration.cpp \
   $(NULL)
 CMMSRCS += \
   CocoaSensor.mm \
@@ -122,6 +125,7 @@ CPPSRCS += \
   FallbackSensor.cpp \
   FallbackVibration.cpp \
   FallbackPower.cpp \
+  FallbackScreenConfiguration.cpp \
   $(NULL)
 endif
 
@@ -138,10 +142,7 @@ endif #}
 
 # Fallbacks for backends implemented on Android only.
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += \
-  FallbackNetwork.cpp \
-  FallbackScreenOrientation.cpp \
-  $(NULL)
+CPPSRCS += FallbackNetwork.cpp
 endif
 
 include $(topsrcdir)/config/config.mk
@@ -150,3 +151,9 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS          += $(MOZ_DBUS_GLIB_CFLAGS)
 CXXFLAGS        += $(MOZ_DBUS_GLIB_CFLAGS)
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+# So that we can call nsScreenManagerGonk::GetConfiguration().
+LOCAL_INCLUDES += -I$(topsrcdir)/widget/gonk
+LOCAL_INCLUDES += -I$(topsrcdir)/widget/xpwidgets
+endif

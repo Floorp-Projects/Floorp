@@ -71,8 +71,10 @@
 
 USING_WORKERS_NAMESPACE
 using namespace mozilla::dom::gonk;
-using namespace mozilla::dom::bluetooth;
 using namespace mozilla::ipc;
+#ifdef MOZ_B2G_BT
+using namespace mozilla::dom::bluetooth;
+#endif
 
 namespace {
 
@@ -226,6 +228,10 @@ SystemWorkerManager::~SystemWorkerManager()
 nsresult
 SystemWorkerManager::Init()
 {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   NS_ASSERTION(NS_IsMainThread(), "We can only initialize on the main thread");
   NS_ASSERTION(!mShutdown, "Already shutdown!");
 
@@ -395,9 +401,7 @@ SystemWorkerManager::InitBluetooth(JSContext *cx)
   // it's an emulator and don't start the bluetooth thread.
   if(EnsureBluetoothInit()) {
 #endif
-#endif
     StartDBus();
-#ifdef MOZ_B2G_BT
 #ifdef MOZ_WIDGET_GONK
   }
   else {

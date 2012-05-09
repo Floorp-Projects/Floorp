@@ -9,3 +9,13 @@ def WebIDLTest(parser, harness):
     """)
 
     results = parser.finish()
+
+    parser = parser.reset()
+    parser.parse("""
+        [Flippety="foo.bar",Floppety=flop]
+        interface TestExtendedAttr {
+          [Foopy="foo.bar"] attribute byte b;
+        };
+    """)
+
+    results = parser.finish()

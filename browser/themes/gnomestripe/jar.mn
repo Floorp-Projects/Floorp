@@ -77,6 +77,7 @@ browser.jar:
   skin/classic/browser/preferences/Options-sync.png   (preferences/Options-sync.png)
 #endif
 * skin/classic/browser/preferences/preferences.css    (preferences/preferences.css)
+  skin/classic/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
   skin/classic/browser/preferences/applications.css   (preferences/applications.css)
   skin/classic/browser/preferences/aboutPermissions.css (preferences/aboutPermissions.css)
   skin/classic/browser/tabbrowser/alltabs.png          (tabbrowser/alltabs.png)
