@@ -3332,10 +3332,6 @@ AutoGCSession::AutoGCSession(JSRuntime *rt)
     runtime->gcInterFrameGC = true;
 
     runtime->gcNumber++;
-
-    /* Clear gcMallocBytes for all compartments */
-    for (CompartmentsIter c(runtime); !c.done(); c.next())
-        c->resetGCMallocBytes();
 }
 
 AutoGCSession::~AutoGCSession()
@@ -3352,6 +3348,10 @@ AutoGCSession::~AutoGCSession()
     /* Keeping these around after a GC is dangerous. */
     runtime->gcSelectedForMarking.clearAndFree();
 #endif
+
+    /* Clear gcMallocBytes for all compartments */
+    for (CompartmentsIter c(runtime); !c.done(); c.next())
+        c->resetGCMallocBytes();
 }
 
 static void
@@ -3549,6 +3549,12 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
         if (c->gcBytes > c->gcTriggerBytes) {
             *budget = SliceBudget::Unlimited;
             rt->gcStats.nonincremental("allocation trigger");
+            return;
+        }
+
+        if (c->isTooMuchMalloc()) {
+            *budget = SliceBudget::Unlimited;
+            rt->gcStats.nonincremental("malloc bytes trigger");
             return;
         }
 
