@@ -2111,7 +2111,7 @@ nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     nsRect boundedRect;
     boundedRect.IntersectRect(childVisibleRegion.GetBounds(), mList.GetBounds(aBuilder));
     nsRect allowExpansion;
-    allowExpansion.IntersectRect(allowExpansion, boundedRect);
+    allowExpansion.IntersectRect(boundedRect, aAllowVisibleRegionExpansion);
     bool visible = mList.ComputeVisibilityForSublist(
       aBuilder, &childVisibleRegion, boundedRect, allowExpansion);
     mVisibleRect = boundedRect;
