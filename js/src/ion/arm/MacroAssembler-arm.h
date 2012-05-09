@@ -847,6 +847,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_vpush(VFPRegister(t));
         adjustFrame(r.size());
     }
+
+    CodeOffsetLabel PushWithPatch(const ImmWord &word) {
+        framePushed_ += sizeof(word.value);
+        return pushWithPatch(word);
+    }
+
     void Pop(const Register &reg) {
         ma_pop(reg);
         adjustFrame(-STACK_SLOT_SIZE);

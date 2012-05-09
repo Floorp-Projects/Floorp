@@ -65,7 +65,7 @@ class IonCommonFrameLayout;
 class IonActivation;
 class IonJSFrameLayout;
 class IonActivationIterator;
-
+class IonExitFrameLayout;
 class IonFrameIterator
 {
     uint8 *current_;
@@ -102,6 +102,11 @@ class IonFrameIterator
     IonJSFrameLayout *jsFrame() const {
         JS_ASSERT(type() == IonFrame_JS);
         return (IonJSFrameLayout *) fp();
+    }
+
+    IonExitFrameLayout *exitFrame() const {
+        JS_ASSERT(type() == IonFrame_Exit);
+        return (IonExitFrameLayout *) fp();
     }
 
     // Returns whether the JS frame has been invalidated and, if so,

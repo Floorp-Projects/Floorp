@@ -178,6 +178,11 @@ class MacroAssemblerX86Shared : public Assembler
         push(t);
         framePushed_ += sizeof(double);
     }
+    CodeOffsetLabel PushWithPatch(const ImmWord &word) {
+        framePushed_ += sizeof(word.value);
+        return pushWithPatch(word);
+    }
+
     void Pop(const Register &reg) {
         pop(reg);
         framePushed_ -= STACK_SLOT_SIZE;

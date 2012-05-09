@@ -87,6 +87,7 @@ class Linker
         if (!code)
             return NULL;
         code->copyFrom(masm);
+        masm.link(code);
         return code;
     }
 

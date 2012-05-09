@@ -189,7 +189,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 static void
 GenerateBailoutTail(MacroAssembler &masm)
 {
-    masm.linkExitFrame();
+    masm.linkExitFrameAndCode();
 
     Label reflow;
     Label interpret;
@@ -244,6 +244,9 @@ GenerateBailoutTail(MacroAssembler &masm)
     // Check for an exception.
     masm.testl(eax, eax);
     masm.j(Assembler::Zero, &exception);
+
+    // remove the exitCode pointer from the stack.
+    masm.freeStack(sizeof(IonCode *));
 
     // Return to the caller.
     masm.ret();
@@ -497,13 +500,13 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     //  +0  returnAddress
     //
     // We're aligned to an exit frame, so link it up.
-    masm.linkExitFrame();
+    masm.linkExitFrameAndCode();
 
     // Save the current stack pointer as the base for copying arguments.
     Register argsBase = InvalidReg;
     if (f.explicitArgs) {
         argsBase = regs.takeAny();
-        masm.lea(Operand(esp, sizeof(IonExitFrameLayout)), argsBase);
+        masm.lea(Operand(esp, IonExitFrameLayout::SizeWithFooter()), argsBase);
     }
 
     // Reserve space for the outparameter.
@@ -601,7 +604,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
         JS_ASSERT(f.outParam == Type_Void);
         break;
     }
-
+    masm.freeStack(sizeof(IonCode*));
     masm.retn(Imm32(sizeof(IonExitFrameLayout) + f.explicitStackSlots() * sizeof(void *)));
 
     masm.bind(&exception);
