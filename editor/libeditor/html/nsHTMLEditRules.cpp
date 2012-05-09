@@ -1271,14 +1271,6 @@ nsHTMLEditRules::WillInsert(nsISelection *aSelection, bool *aCancel)
   return CreateStyleForInsertText(aSelection, doc);
 }    
 
-#ifdef XXX_DEAD_CODE
-nsresult
-nsHTMLEditRules::DidInsert(nsISelection *aSelection, nsresult aResult)
-{
-  return nsTextEditRules::DidInsert(aSelection, aResult);
-}
-#endif
-
 nsresult
 nsHTMLEditRules::WillInsertText(nsEditor::OperationID aAction,
                                 nsISelection *aSelection, 
@@ -5234,69 +5226,6 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
   
   return res;
 }
-
-#ifdef XXX_DEAD_CODE
-///////////////////////////////////////////////////////////////////////////
-// AtStartOfBlock: is node/offset at the start of the editable material in this block?
-//                  
-bool
-nsHTMLEditRules::AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock)
-{
-  nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(aNode);
-  if (nodeAsText && aOffset) return false;  // there are chars in front of us
-  
-  nsCOMPtr<nsIDOMNode> priorNode;
-  nsresult  res = mHTMLEditor->GetPriorHTMLNode(aNode, aOffset, address_of(priorNode));
-  NS_ENSURE_SUCCESS(res, true);
-  NS_ENSURE_TRUE(priorNode, true);
-  nsCOMPtr<nsIDOMNode> blockParent = mHTMLEditor->GetBlockNodeParent(priorNode);
-  if (blockParent && (blockParent == aBlock)) return false;
-  return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// AtEndOfBlock: is node/offset at the end of the editable material in this block?
-//                  
-bool
-nsHTMLEditRules::AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock)
-{
-  nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(aNode);
-  if (nodeAsText)   
-  {
-    PRUint32 strLength;
-    nodeAsText->GetLength(&strLength);
-    if ((PRInt32)strLength > aOffset) return false;  // there are chars in after us
-  }
-  nsCOMPtr<nsIDOMNode> nextNode;
-  nsresult  res = mHTMLEditor->GetNextHTMLNode(aNode, aOffset, address_of(nextNode));
-  NS_ENSURE_SUCCESS(res, true);
-  NS_ENSURE_TRUE(nextNode, true);
-  nsCOMPtr<nsIDOMNode> blockParent = mHTMLEditor->GetBlockNodeParent(nextNode);
-  if (blockParent && (blockParent == aBlock)) return false;
-  return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// CreateMozDiv: makes a div with type = _moz
-//                       
-nsresult
-nsHTMLEditRules::CreateMozDiv(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outDiv)
-{
-  NS_ENSURE_TRUE(inParent && outDiv, NS_ERROR_NULL_POINTER);
-  nsAutoString divType= "div";
-  *outDiv = nsnull;
-  nsresult res = mHTMLEditor->CreateNode(divType, inParent, inOffset, getter_AddRefs(*outDiv));
-  NS_ENSURE_SUCCESS(res, res);
-  // give it special moz attr
-  nsCOMPtr<nsIDOMElement> mozDivElem = do_QueryInterface(*outDiv);
-  res = mHTMLEditor->SetAttribute(mozDivElem, "type", "_moz");
-  NS_ENSURE_SUCCESS(res, res);
-  res = AddTrailerBR(*outDiv);
-  return res;
-}
-#endif    
 
 
 ///////////////////////////////////////////////////////////////////////////
