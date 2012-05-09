@@ -96,6 +96,10 @@
 #include advanced.xul
 #include applications.xul
 #include content.xul
+
+#ifdef MOZ_SERVICES_SYNC
+#include sync.xul
+#endif
     </prefpane>
   </hbox>
   
