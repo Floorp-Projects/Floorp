@@ -131,8 +131,15 @@ AppTracker.prototype = {
       case "webapps-sync-uninstall":
         // ask for immediate sync. not sure if we really need this or
         // if a lower score increment would be enough
+        let app;
         this.score += SCORE_INCREMENT_XLARGE;
-        this.addChangedID(aData);
+        try {
+          app = JSON.parse(aData);
+        } catch (e) {
+          this._log.error("JSON.parse failed in observer " + e);
+          return;
+        }
+        this.addChangedID(app.id);
         break;
       case "weave:engine:start-tracking":
         this._enabled = true;
