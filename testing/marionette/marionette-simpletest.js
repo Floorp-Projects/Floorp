@@ -11,10 +11,11 @@ function Marionette(is_async, window, context, logObj) {
   this.tests = [];
   this.logObj = logObj;
   this.context = context;
-  this.exports = ['ok', 'is', 'isnot', 'log', 'getLogs', 'generate_results', 'waitFor'];
 }
 
 Marionette.prototype = {
+  exports: ['ok', 'is', 'isnot', 'log', 'getLogs', 'generate_results', 'waitFor'],
+
   ok: function Marionette__ok(condition, name, diag) {
     let test = {'result': !!condition, 'name': name, 'diag': diag};
     this.logResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
@@ -62,6 +63,8 @@ Marionette.prototype = {
                        'diag': this.tests[i].diag});
       }
     }
+    // Reset state in case this object is reused for more tests.
+    this.tests = [];
     return {"passed": passed, "failed": failed, "failures": failures};
   },
 
