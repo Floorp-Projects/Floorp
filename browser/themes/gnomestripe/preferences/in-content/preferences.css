@@ -100,6 +100,18 @@ prefpane > .content-box {
   overflow: auto;
 }
 
+/* Applications Pane Styles */
+
+#applications-content {
+  padding: 15px;
+}
+
+#handlersView {
+  -moz-appearance: none;
+  border: 1px solid ThreeDShadow;
+  overflow-y: auto;
+}
+
 /* XXX This style is for bug 740213 and should be removed once that
    bug has a solution. */
 description > html|a {
