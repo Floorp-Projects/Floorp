@@ -22,6 +22,7 @@ function init_all() {
   gTabsPane.init();
 #endif
   gPrivacyPane.init();
+  gAdvancedPane.init();
   var initFinished = document.createEvent("Event");
   initFinished.initEvent("Initialized", true, true);
   document.dispatchEvent(initFinished);
