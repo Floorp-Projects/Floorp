@@ -757,7 +757,6 @@ JSRuntime::JSRuntime()
     gcCallback(NULL),
     gcSliceCallback(NULL),
     gcFinalizeCallback(NULL),
-    gcMallocBytes(0),
     gcBlackRootsTraceOp(NULL),
     gcBlackRootsData(NULL),
     gcGrayRootsTraceOp(NULL),
@@ -6574,13 +6573,22 @@ JS_AbortIfWrongThread(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
 {
-#ifdef JS_GC_ZEAL
     const char *env = getenv("JS_GC_ZEAL");
     if (env) {
+        if (0 == strcmp(env, "help")) {
+            printf("Format: JS_GC_ZEAL=N[,F]\n"
+                   "N indicates \"zealousness\":\n"
+                   "  0: no additional GCs\n"
+                   "  1: additional GCs at common danger points\n"
+                   "  2: GC every F allocations (default: 100)\n"
+                   "  3: GC when the window paints (browser only)\n"
+                   "  4: Verify write barriers between instructions\n"
+                   "  5: Verify write barriers between paints\n");
+        }
+        const char *p = strchr(env, ',');
         zeal = atoi(env);
-        frequency = 1;
+        frequency = p ? atoi(p + 1) : JS_DEFAULT_ZEAL_FREQ;
     }
-#endif
 
     bool schedule = zeal >= js::gc::ZealAllocValue;
     cx->runtime->gcZeal_ = zeal;

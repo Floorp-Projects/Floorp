@@ -373,7 +373,9 @@ nsHttpChannel::SpeculativeConnect()
     if (mApplicationCache || gIOService->IsOffline())
         return;
 
-    // Channel loads with this flags are meant to be local only
+    // LOAD_ONLY_FROM_CACHE and LOAD_NO_NETWORK_IO must not hit network.
+    // LOAD_FROM_CACHE and LOAD_CHECK_OFFLINE_CACHE are unlikely to hit network,
+    // so skip preconnects for them.
     if (mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_FROM_CACHE |
                       LOAD_NO_NETWORK_IO | LOAD_CHECK_OFFLINE_CACHE))
         return;

@@ -13,7 +13,7 @@ const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 const BROWSER_FRAMES_ENABLED_PREF = "dom.mozBrowserFramesEnabled";
 
 function debug(msg) {
-  dump("BrowserElementParent - " + msg + "\n");
+  //dump("BrowserElementParent - " + msg + "\n");
 }
 
 /**

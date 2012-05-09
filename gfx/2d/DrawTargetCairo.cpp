@@ -616,21 +616,38 @@ DrawTargetCairo::Mask(const Pattern &aSource,
                       const DrawOptions &aOptions /* = DrawOptions() */)
 {
   AutoPrepareForDrawing prep(this, mContext);
+  // TODO
 }
 
 void
 DrawTargetCairo::PushClip(const Path *aPath)
 {
+  if (aPath->GetBackendType() != BACKEND_CAIRO) {
+    return;
+  }
+
+  WillChange(aPath);
+  PathCairo* path = const_cast<PathCairo*>(static_cast<const PathCairo*>(aPath));
+
+  cairo_save(mContext);
+  path->CopyPathTo(mContext, this);
+  cairo_clip_preserve(mContext);
 }
 
 void
 DrawTargetCairo::PushClipRect(const Rect& aRect)
 {
+  WillChange();
+  cairo_save(mContext);
+  cairo_rectangle(mContext, aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
+  cairo_clip_preserve(mContext);
 }
 
 void
 DrawTargetCairo::PopClip()
 {
+  // save/restore does not affect the path, so no need to cal WillChange()
+  cairo_restore(mContext);
 }
 
 TemporaryRef<PathBuilder>
@@ -768,7 +785,8 @@ DrawTargetCairo::WillChange(const Path* aPath /* = NULL */)
     mSnapshots.clear();
   }
 
-  if (aPath && mPathObserver && !mPathObserver->ContainsPath(aPath)) {
+  if (mPathObserver &&
+      (!aPath || !mPathObserver->ContainsPath(aPath))) {
     mPathObserver->PathWillChange();
     mPathObserver = NULL;
   }

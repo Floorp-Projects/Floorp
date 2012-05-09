@@ -329,13 +329,13 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
           case hal::SENSOR_LINEAR_ACCELERATION:
           case hal::SENSOR_ACCELERATION:
           case hal::SENSOR_GYROSCOPE:
+          case hal::SENSOR_PROXIMITY:
             values.AppendElement(curEvent->X());
             values.AppendElement(curEvent->Y()); 
             values.AppendElement(curEvent->Z());
             break;
 
         case hal::SENSOR_LIGHT:
-        case hal::SENSOR_PROXIMITY:
             values.AppendElement(curEvent->X());
             break;
 
