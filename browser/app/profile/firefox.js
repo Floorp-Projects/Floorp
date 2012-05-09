@@ -631,6 +631,9 @@ pref("browser.preferences.animateFadeIn", true);
 pref("browser.preferences.animateFadeIn", false);
 #endif
 
+// Toggles between the two Preferences implementations, pop-up window and in-content
+pref("browser.preferences.inContent", false);
+
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
 
