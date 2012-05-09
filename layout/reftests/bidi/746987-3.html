@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <style>
+      body {
+        font-size:2em;
+        text-align:left;
+      }
+      .test {
+        border: medium solid gray;
+        padding: 10px;
+        width: 400px;
+        margin: 20px;
+      }
+      .plaintext {
+        unicode-bidi: -moz-plaintext;
+        unicode-bidi: -webkit-plaintext;
+        unicode-bidi: plaintext;
+      }
+      .isolate {
+        unicode-bidi: -moz-isolate;
+        unicode-bidi: -webkit-isolate;
+        unicode-bidi: isolate;
+      }
+    </style>
+    <title>unicode-bidi:plaintext does not apply to embedded unicode-bidi:isolate</title>
+  </head>
+  <body>
+    <div class="test">
+      <span class="plaintext"><span class="isolate">&#x05D0;-></span>=></span>
+      <span class="plaintext"><span>&#x05D1;-></span>=></span>
+    </div>
+  </body>
+</html>
