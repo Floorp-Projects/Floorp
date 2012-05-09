@@ -5,7 +5,7 @@ try {
 } catch(e) {
 }
 
-let acquire, dispose, null_dispose, compare;
+let acquire, dispose, null_dispose, compare, dispose_64;
 
 function run_test()
 {
@@ -31,6 +31,11 @@ function run_test()
                             ctypes.size_t,
                             ctypes.size_t);
 
+  dispose_64 = library.declare("test_finalizer_rel_int64_t",
+                               ctypes.default_abi,
+                               ctypes.void_t,
+                               ctypes.int64_t);
+
   let type_afun = ctypes.FunctionType(ctypes.default_abi,
                                       ctypes.void_t,
                                       [ctypes.size_t]).ptr;
@@ -46,6 +51,7 @@ function run_test()
   tester.launch(10, test_finalize_bad_construction);
   tester.launch(10, test_null_dispose);
   tester.launch(10, test_pass_disposed);
+  tester.launch(10, test_wrong_type);
 }
 
 
@@ -153,4 +159,18 @@ function test_pass_disposed()
     exception = true;
   }
   do_check_true(exception);
+}
+
+function test_wrong_type()
+{
+  let int32_v = ctypes.int32_t(99);
+  let exception;
+  try {
+    ctypes.CDataFinalizer(int32_v, dispose_64);
+  } catch (x) {
+    exception = x;
+  }
+
+  do_check_true(!!exception);
+  do_check_eq(exception.constructor.name, "TypeError");
 }
