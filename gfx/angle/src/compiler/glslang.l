@@ -1,6 +1,6 @@
 /*
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -15,7 +15,7 @@ WHICH GENERATES THE GLSL ES LEXER (glslang_lex.cpp).
 
 %top{
 //
-// Copyright (c) 2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -24,9 +24,14 @@ WHICH GENERATES THE GLSL ES LEXER (glslang_lex.cpp).
 
 // Ignore errors in auto-generated code.
 #if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wswitch-enum"
 #elif defined(_MSC_VER)
 #pragma warning(disable: 4065)
+#pragma warning(disable: 4189)
+#pragma warning(disable: 4505)
+#pragma warning(disable: 4701)
 #endif
 }
 
@@ -154,6 +159,7 @@ O           [0-7]
 "extern"       { return reserved_word(yyscanner); }
 "external"     { return reserved_word(yyscanner); }
 "interface"    { return reserved_word(yyscanner); }
+"flat"         { return reserved_word(yyscanner); }
 
 "long"         { return reserved_word(yyscanner); }
 "short"        { return reserved_word(yyscanner); }
@@ -161,6 +167,7 @@ O           [0-7]
 "half"         { return reserved_word(yyscanner); }
 "fixed"        { return reserved_word(yyscanner); }
 "unsigned"     { return reserved_word(yyscanner); }
+"superp"       { return reserved_word(yyscanner); }
 
 "input"        { return reserved_word(yyscanner); }
 "output"       { return reserved_word(yyscanner); }
@@ -168,12 +175,21 @@ O           [0-7]
 "hvec2"        { return reserved_word(yyscanner); }
 "hvec3"        { return reserved_word(yyscanner); }
 "hvec4"        { return reserved_word(yyscanner); }
-"fvec2"        { return reserved_word(yyscanner); }
-"fvec3"        { return reserved_word(yyscanner); }
-"fvec4"        { return reserved_word(yyscanner); }
 "dvec2"        { return reserved_word(yyscanner); }
 "dvec3"        { return reserved_word(yyscanner); }
 "dvec4"        { return reserved_word(yyscanner); }
+"fvec2"        { return reserved_word(yyscanner); }
+"fvec3"        { return reserved_word(yyscanner); }
+"fvec4"        { return reserved_word(yyscanner); }
+
+"sampler1D"    { return reserved_word(yyscanner); }
+"sampler3D"    { return reserved_word(yyscanner); }
+
+"sampler1DShadow" { return reserved_word(yyscanner); }
+"sampler2DShadow" { return reserved_word(yyscanner); }
+
+"sampler3DRect" { return reserved_word(yyscanner); }
+"sampler2DRectShadow" { return reserved_word(yyscanner); }
 
 "sizeof"       { return reserved_word(yyscanner); }
 "cast"         { return reserved_word(yyscanner); }
@@ -563,19 +579,15 @@ int glslang_finalize(TParseContext* context) {
     return yylex_destroy(scanner);
 }
 
-void glslang_scan(int count, const char* const string[], const int length[],
-                  TParseContext* context) {
+int glslang_scan(int count, const char* const string[], const int length[],
+                 TParseContext* context) {
     yyrestart(NULL, context->scanner);
     yyset_lineno(EncodeSourceLoc(0, 1), context->scanner);
     context->AfterEOF = false;
     
     // Init preprocessor.
     cpp->pC = context;
-    cpp->PaWhichStr = 0;
-    cpp->PaArgv     = string;
-    cpp->PaArgc     = count;
-    cpp->PaStrLen   = length;
     cpp->pastFirstStatement = 0;
-    ScanFromString(string[0]);
+    return InitScannerInput(cpp, count, string, length);
 }
 

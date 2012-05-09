@@ -709,6 +709,11 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_WHITESPACE_PRE_LINE            4
 
 // See nsStyleText
+#define NS_STYLE_WORDBREAK_NORMAL               0
+#define NS_STYLE_WORDBREAK_BREAK_ALL            1
+#define NS_STYLE_WORDBREAK_KEEP_ALL             2
+
+// See nsStyleText
 #define NS_STYLE_WORDWRAP_NORMAL                0
 #define NS_STYLE_WORDWRAP_BREAK_WORD            1
 

@@ -1,0 +1,11 @@
+IETF Opus audio codec reference implementation.
+
+The source in this directory was copied from an opus
+repository checkout by running the ./update.sh script.
+Any changes made to this version of the source should
+be reflected in that script, e.g. by applying patch
+files after the copy step.
+
+The upstream repository is https://git.xiph.org/opus.git
+
+The git tag/revision used was draft-12.

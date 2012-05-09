@@ -57,7 +57,7 @@ struct vpx_codec_alg_priv
     vp8_stream_info_t       si;
     int                     defer_alloc;
     int                     decoder_init;
-    VP8D_PTR                pbi;
+    struct VP8D_COMP       *pbi;
     int                     postproc_cfg_set;
     vp8_postproc_cfg_t      postproc_cfg;
 #if CONFIG_POSTPROC_VISUALIZER
@@ -181,9 +181,11 @@ static void vp8_finalize_mmaps(vpx_codec_alg_priv_t *ctx)
     /* nothing to clean up */
 }
 
-static vpx_codec_err_t vp8_init(vpx_codec_ctx_t *ctx)
+static vpx_codec_err_t vp8_init(vpx_codec_ctx_t *ctx,
+                                vpx_codec_priv_enc_mr_cfg_t *data)
 {
     vpx_codec_err_t        res = VPX_CODEC_OK;
+    (void) data;
 
     /* This function only allocates space for the vpx_codec_alg_priv_t
      * structure. More memory may be required at the time the stream
@@ -387,7 +389,7 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t  *ctx,
         if (!res)
         {
             VP8D_CONFIG oxcf;
-            VP8D_PTR optr;
+            struct VP8D_COMP* optr;
 
             vp8dx_initialize();
 
@@ -398,8 +400,8 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t  *ctx,
             oxcf.max_threads = ctx->cfg.threads;
             oxcf.error_concealment =
                     (ctx->base.init_flags & VPX_CODEC_USE_ERROR_CONCEALMENT);
-            oxcf.input_partition =
-                    (ctx->base.init_flags & VPX_CODEC_USE_INPUT_PARTITION);
+            oxcf.input_fragments =
+                    (ctx->base.init_flags & VPX_CODEC_USE_INPUT_FRAGMENTS);
 
             optr = vp8dx_create_decompressor(&oxcf);
 
@@ -410,7 +412,7 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t  *ctx,
                 && (ctx->base.init_flags & VPX_CODEC_USE_POSTPROC))
             {
                 ctx->postproc_cfg.post_proc_flag =
-                    VP8_DEBLOCK | VP8_DEMACROBLOCK;
+                    VP8_DEBLOCK | VP8_DEMACROBLOCK | VP8_MFQE;
                 ctx->postproc_cfg.deblocking_level = 4;
                 ctx->postproc_cfg.noise_level = 0;
             }
@@ -564,7 +566,7 @@ static vpx_codec_err_t vp8_xma_set_mmap(vpx_codec_ctx_t         *ctx,
     if (done && !res)
     {
         vp8_finalize_mmaps(ctx->priv->alg_priv);
-        res = ctx->iface->init(ctx);
+        res = ctx->iface->init(ctx, NULL);
     }
 
     return res;
@@ -698,6 +700,27 @@ static vpx_codec_err_t vp8_get_last_ref_updates(vpx_codec_alg_priv_t *ctx,
         return VPX_CODEC_INVALID_PARAM;
 }
 
+extern int vp8dx_references_buffer( VP8_COMMON *oci, int ref_frame );
+static vpx_codec_err_t vp8_get_last_ref_frame(vpx_codec_alg_priv_t *ctx,
+                                              int ctrl_id,
+                                              va_list args)
+{
+    int *ref_info = va_arg(args, int *);
+    VP8D_COMP *pbi = (VP8D_COMP *)ctx->pbi;
+    VP8_COMMON *oci = &pbi->common;
+
+    if (ref_info)
+    {
+        *ref_info =
+            (vp8dx_references_buffer( oci, ALTREF_FRAME )?VP8_ALTR_FRAME:0) |
+            (vp8dx_references_buffer( oci, GOLDEN_FRAME )?VP8_GOLD_FRAME:0) |
+            (vp8dx_references_buffer( oci, LAST_FRAME )?VP8_LAST_FRAME:0);
+
+        return VPX_CODEC_OK;
+    }
+    else
+        return VPX_CODEC_INVALID_PARAM;
+}
 
 static vpx_codec_err_t vp8_get_frame_corrupted(vpx_codec_alg_priv_t *ctx,
                                                int ctrl_id,
@@ -729,6 +752,7 @@ vpx_codec_ctrl_fn_map_t vp8_ctf_maps[] =
     {VP8_SET_DBG_DISPLAY_MV,        vp8_set_dbg_options},
     {VP8D_GET_LAST_REF_UPDATES,     vp8_get_last_ref_updates},
     {VP8D_GET_FRAME_CORRUPTED,      vp8_get_frame_corrupted},
+    {VP8D_GET_LAST_REF_USED,        vp8_get_last_ref_frame},
     { -1, NULL},
 };
 
@@ -741,7 +765,7 @@ CODEC_INTERFACE(vpx_codec_vp8_dx) =
     "WebM Project VP8 Decoder" VERSION_STRING,
     VPX_CODEC_INTERNAL_ABI_VERSION,
     VPX_CODEC_CAP_DECODER | VP8_CAP_POSTPROC | VP8_CAP_ERROR_CONCEALMENT |
-    VPX_CODEC_CAP_INPUT_PARTITION,
+    VPX_CODEC_CAP_INPUT_FRAGMENTS,
     /* vpx_codec_caps_t          caps; */
     vp8_init,         /* vpx_codec_init_fn_t       init; */
     vp8_destroy,      /* vpx_codec_destroy_fn_t    destroy; */

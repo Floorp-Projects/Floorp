@@ -137,12 +137,17 @@ public:
     static
     nsCacheService * GlobalInstance()   { return gService; }
 
-    static
-    PRInt64 MemoryDeviceSize();
+    static PRInt64   MemoryDeviceSize();
     
     static nsresult  DoomEntry(nsCacheEntry * entry);
 
     static bool      IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy policy);
+
+    /**
+     * Methods called by nsApplicationCacheService
+     */
+
+    nsresult GetOfflineDevice(nsOfflineCacheDevice ** aDevice);
 
     // This method may be called to release an object while the cache service
     // lock is being held.  If a non-null target is specified and the target
@@ -290,6 +295,7 @@ private:
     nsCOMPtr<nsITimer>              mSmartSizeTimer;
     
     bool                            mInitialized;
+    bool                            mClearingEntries;
     
     bool                            mEnableMemoryDevice;
     bool                            mEnableDiskDevice;

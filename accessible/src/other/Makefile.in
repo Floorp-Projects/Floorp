@@ -50,23 +50,20 @@ LIBXUL_LIBRARY = 1
 CPPSRCS = \
   nsAccessNodeWrap.cpp \
   nsAccessibleWrap.cpp \
-  nsRootAccessibleWrap.cpp \
   $(NULL)
 
 EXPORTS = \
+  ARIAGridAccessibleWrap.h \
   nsAccessNodeWrap.h \
-  nsARIAGridAccessibleWrap.h \
   nsTextAccessibleWrap.h \
   nsAccessibleWrap.h \
   nsDocAccessibleWrap.h \
-  nsRootAccessibleWrap.h \
   nsXULMenuAccessibleWrap.h \
   nsXULListboxAccessibleWrap.h \
   nsXULTreeGridAccessibleWrap.h \
   nsHyperTextAccessibleWrap.h \
   nsHTMLImageAccessibleWrap.h \
   nsHTMLTableAccessibleWrap.h \
-  nsApplicationAccessibleWrap.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

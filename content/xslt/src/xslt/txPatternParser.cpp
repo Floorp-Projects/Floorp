@@ -316,10 +316,11 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
         aLexer.nextToken();
         isAttr = true;
     }
-    tok = aLexer.nextToken();
 
     txNodeTest* nodeTest;
-    if (tok->mType == Token::CNAME) {
+    if (aLexer.peek()->mType == Token::CNAME) {
+        tok = aLexer.nextToken();
+
         // resolve QName
         nsCOMPtr<nsIAtom> prefix, lName;
         PRInt32 nspace;
@@ -339,7 +340,6 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
         }
     }
     else {
-        aLexer.pushBack();
         rv = createNodeTypeTest(aLexer, &nodeTest);
         NS_ENSURE_SUCCESS(rv, rv);
     }

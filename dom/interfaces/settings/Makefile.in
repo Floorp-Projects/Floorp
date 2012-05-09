@@ -15,6 +15,7 @@ GRE_MODULE     = 1
 
 XPIDLSRCS =                           \
             nsIDOMSettingsManager.idl \
+            nsISettingsService.idl    \
             $(NULL)
 
 include $(topsrcdir)/config/rules.mk

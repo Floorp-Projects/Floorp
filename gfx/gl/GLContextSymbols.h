@@ -101,6 +101,10 @@ struct GLContextSymbols
     PFNGLCLEARSTENCILPROC fClearStencil;
     typedef void (GLAPIENTRY * PFNGLCOLORMASKPROC) (realGLboolean red, realGLboolean green, realGLboolean blue, realGLboolean alpha);
     PFNGLCOLORMASKPROC fColorMask;
+    typedef void (GLAPIENTRY * PFNGLCOMPRESSEDTEXIMAGE2D) (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *pixels);
+    PFNGLCOMPRESSEDTEXIMAGE2D fCompressedTexImage2D;
+    typedef void (GLAPIENTRY * PFNGLCOMPRESSEDTEXSUBIMAGE2D) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid *pixels);
+    PFNGLCOMPRESSEDTEXSUBIMAGE2D fCompressedTexSubImage2D;
     typedef void (GLAPIENTRY * PFNGLCULLFACEPROC) (GLenum mode);
     PFNGLCULLFACEPROC fCullFace;
     typedef void (GLAPIENTRY * PFNGLDETACHSHADERPROC) (GLuint program, GLuint shader);

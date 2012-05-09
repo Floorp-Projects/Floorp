@@ -25,6 +25,7 @@ CPPSRCS = \
 
 XPIDLSRCS = \
   nsIAudioManager.idl \
+  nsINetworkManager.idl \
   nsIRadioInterfaceLayer.idl \
   nsIWorkerHolder.idl \
   $(NULL)
@@ -34,6 +35,7 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/src/geolocation \
   -I$(topsrcdir)/dom/telephony \
   -I$(topsrcdir)/dom/wifi \
+  -I$(topsrcdir)/dom/bluetooth \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
 
@@ -47,8 +49,11 @@ LOCAL_INCLUDES += -I$(topsrcdir)/media/libsydneyaudio/src
 endif
 
 EXTRA_COMPONENTS = \
+  NetworkManager.manifest \
+  NetworkManager.js \
   RadioInterfaceLayer.manifest \
   RadioInterfaceLayer.js \
+  RILContentHelper.js \
   $(NULL)
 
 EXTRA_JS_MODULES = \
@@ -63,3 +68,4 @@ XPCSHELL_TESTS = tests
 endif
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk

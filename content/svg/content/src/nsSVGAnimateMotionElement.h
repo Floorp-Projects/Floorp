@@ -84,6 +84,8 @@ public:
   void MpathChanged() { mAnimationFunction.MpathChanged(); }
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
 #endif // NS_SVGANIMATEMOTIONELEMENT_H_

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -79,14 +79,16 @@ class Display
     virtual bool getVertexTextureSupport() const;
     virtual bool getNonPower2TextureSupport() const;
     virtual bool getOcclusionQuerySupport() const;
+    virtual bool getInstancingSupport() const;
     virtual D3DPOOL getBufferPool(DWORD usage) const;
     virtual D3DPOOL getTexturePool(bool renderable) const;
 
     virtual void notifyDeviceLost();
     bool isDeviceLost();
 
-    bool isD3d9ExDevice() { return mD3d9Ex != NULL; }
+    bool isD3d9ExDevice() const { return mD3d9Ex != NULL; }
     const char *getExtensionString() const;
+    bool shareHandleSupported() const;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Display);

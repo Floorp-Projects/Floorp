@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -287,6 +287,12 @@ bool Display::initialize()
     static const TCHAR className[] = TEXT("STATIC");
 
     mDeviceWindow = CreateWindowEx(WS_EX_NOACTIVATE, className, windowName, WS_DISABLED | WS_POPUP, 0, 0, 1, 1, HWND_MESSAGE, NULL, GetModuleHandle(NULL), NULL);
+
+    if (!createDevice())
+    {
+        terminate();
+        return false;
+    }
 
     return true;
 }
@@ -1131,7 +1137,6 @@ D3DPRESENT_PARAMETERS Display::getDefaultPresentParameters()
 void Display::initExtensionString()
 {
     HMODULE swiftShader = GetModuleHandle(TEXT("swiftshader_d3d9.dll"));
-    bool isd3d9ex = isD3d9ExDevice();
 
     mExtensionString = "";
 
@@ -1139,7 +1144,7 @@ void Display::initExtensionString()
     mExtensionString += "EGL_EXT_create_context_robustness ";
 
     // ANGLE-specific extensions
-    if (isd3d9ex)
+    if (shareHandleSupported())
     {
         mExtensionString += "EGL_ANGLE_d3d_share_handle_client_buffer ";
     }
@@ -1151,7 +1156,7 @@ void Display::initExtensionString()
         mExtensionString += "EGL_ANGLE_software_display ";
     }
 
-    if (isd3d9ex)
+    if (shareHandleSupported())
     {
         mExtensionString += "EGL_ANGLE_surface_d3d_texture_2d_share_handle ";
     }
@@ -1168,6 +1173,12 @@ void Display::initExtensionString()
 const char *Display::getExtensionString() const
 {
     return mExtensionString.c_str();
+}
+
+bool Display::shareHandleSupported() const 
+{
+    // PIX doesn't seem to support using share handles, so disable them.
+    return isD3d9ExDevice() && !gl::perfActive();
 }
 
 // Only Direct3D 10 ready devices support all the necessary vertex texture formats.
@@ -1213,6 +1224,11 @@ bool Display::getOcclusionQuerySupport() const
     {
         return false;
     }
+}
+
+bool Display::getInstancingSupport() const
+{
+    return mDeviceCaps.PixelShaderVersion >= D3DPS_VERSION(3, 0); 
 }
 
 }

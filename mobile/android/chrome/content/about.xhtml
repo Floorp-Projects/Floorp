@@ -56,6 +56,7 @@
   <meta name="viewport" content="width=480; initial-scale=.6667; user-scalable=no"/>
   <title>&aboutPage.title;</title>
   <link rel="stylesheet" href="chrome://browser/skin/aboutPage.css" type="text/css"/>
+  <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
 </head>
 
 <body dir="&locale.dir;">
@@ -74,6 +75,9 @@
       <span id="update-message-found">&aboutPage.checkForUpdates.found;</span>
     </div>
 #endif
+    <div id="aboutTelemetry" hidden="true">
+      <p id="telemetry">&aboutPage.warningVersion;&aboutPage.telemetryStart;<a href="http://www.mozilla.org/">&aboutPage.telemetryMozillaLink;</a>&aboutPage.telemetryEnd;</p>
+    </div>
   </div>
 
     <ul id="aboutLinks">
@@ -97,7 +101,8 @@
       Cu.import("resource://gre/modules/XPCOMUtils.jsm");
       Cu.import("resource://gre/modules/Services.jsm");
 
-      // Include the build date if this is an "a#" (nightly or aurora) build
+      // Include the build date and a warning about Telemetry
+      // if this is an "a#" (nightly or aurora) build
 #expand const version = "__MOZ_APP_VERSION__";
       if (/a\d+$/.test(version)) {
         let buildID = Services.appinfo.appBuildID;
@@ -107,6 +112,7 @@
         versionPara.appendChild(br);
         let date = document.createTextNode("(" + buildDate + ")");
         versionPara.appendChild(date);
+        document.getElementById("aboutTelemetry").hidden = false;
       }
 
       // get URLs from prefs

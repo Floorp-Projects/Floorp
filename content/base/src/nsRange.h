@@ -108,11 +108,6 @@ public:
     return mIsPositioned;
   }
 
-  bool IsDetached() const
-  {
-    return mIsDetached;
-  }
-  
   bool Collapsed() const
   {
     return mIsPositioned && mStartParent == mEndParent &&
@@ -138,7 +133,7 @@ public:
    */
   void SetInSelection(bool aInSelection)
   {
-    if (mInSelection == aInSelection || mIsDetached) {
+    if (mInSelection == aInSelection) {
       return;
     }
     mInSelection = aInSelection;
@@ -245,7 +240,6 @@ protected:
         return;
       }
       mIsNested = true;
-      NS_ASSERTION(!mRange->IsDetached(), "detached range in selection");
       mCommonAncestor = mRange->GetRegisteredCommonAncestor();
     }
     ~AutoInvalidateSelection();

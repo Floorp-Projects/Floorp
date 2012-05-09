@@ -161,8 +161,8 @@ function testRichListbox(id, andThen)
           helper();
         else
           andThen();
-      }, 0);
-    }, 0);
+      }, 20);
+    }, 20);
   }
 
   // richlistbox currently uses native XUL scrolling, so the "line"

@@ -50,8 +50,7 @@ function test3()
 
     setFinishedCallback(function(result, exception) {
       ok(!result, "No database");
-      is(exception, IDBDatabaseException.NOT_ALLOWED_ERR.toString(),
-         "Correct exception");
+      is(exception, "InvalidStateError", "Correct exception");
       gBrowser.removeCurrentTab();
 
       executeSoon(test4);

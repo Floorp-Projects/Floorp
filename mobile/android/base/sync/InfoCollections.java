@@ -1,45 +1,12 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- * Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -56,29 +23,54 @@ public class InfoCollections implements SyncStorageRequestDelegate {
   protected String infoURL;
   protected String credentials;
 
-  // Fetched objects.
-  protected SyncStorageResponse response;
-  private ExtendedJSONObject    record;
+  /**
+   * Fields fetched from the server, or <code>null</code> if not yet fetched.
+   * <p>
+   * Rather than storing decimal/double timestamps, as provided by the server,
+   * we convert immediately to milliseconds since epoch.
+   */
+  private Map<String, Long> timestamps = null;
 
-  // Fields.
-  // Rather than storing decimal/double timestamps, as provided by the
-  // server, we convert immediately to milliseconds since epoch.
-  private HashMap<String, Long> timestamps;
-
-  public HashMap<String, Long> getTimestamps() {
-    if (!this.wasSuccessful()) {
-      throw new IllegalStateException("No record fetched.");
-    }
-    return this.timestamps;
-  }
-
+  /**
+   * Return the timestamp for the given collection, or null if the timestamps
+   * have not been fetched or the given collection does not have a timestamp.
+   *
+   * @param collection
+   *          The collection to inspect.
+   * @return the timestamp in milliseconds since epoch.
+   */
   public Long getTimestamp(String collection) {
-    return this.getTimestamps().get(collection);
+    if (timestamps == null) {
+      return null;
+    }
+    return timestamps.get(collection);
   }
 
-  public boolean wasSuccessful() {
-    return this.response.wasSuccessful() &&
-           this.timestamps != null;
+  /**
+   * Test if a given collection needs to be updated.
+   *
+   * @param collection
+   *          The collection to test.
+   * @param lastModified
+   *          Timestamp when local record was last modified.
+   */
+  public boolean updateNeeded(String collection, long lastModified) {
+    Logger.trace(LOG_TAG, "Testing " + collection + " for updateNeeded. Local last modified is " + lastModified + ".");
+
+    // No local record of modification time? Need an update.
+    if (lastModified <= 0) {
+      return true;
+    }
+
+    // No meta/global on the server? We need an update. The server fetch will fail and
+    // then we will upload a fresh meta/global.
+    Long serverLastModified = getTimestamp(collection);
+    if (serverLastModified == null) {
+      return true;
+    }
+
+    // Otherwise, we need an update if our modification time is stale.
+    return (serverLastModified.longValue() > lastModified);
   }
 
   // Temporary location to store our callback.
@@ -90,12 +82,8 @@ public class InfoCollections implements SyncStorageRequestDelegate {
   }
 
   public void fetch(InfoCollectionsDelegate callback) {
-    if (this.response == null) {
-      this.callback = callback;
-      this.doFetch();
-      return;
-    }
-    callback.handleSuccess(this);
+    this.callback = callback;
+    this.doFetch();
   }
 
   private void doFetch() {
@@ -118,29 +106,12 @@ public class InfoCollections implements SyncStorageRequestDelegate {
     }
   }
 
-  public SyncStorageResponse getResponse() {
-    return this.response;
-  }
-
-  protected ExtendedJSONObject ensureRecord() {
-    if (record == null) {
-      record = new ExtendedJSONObject();
-    }
-    return record;
-  }
-
-  protected void setRecord(ExtendedJSONObject record) {
-    this.record = record;
-  }
-
   @SuppressWarnings("unchecked")
-  private void unpack(SyncStorageResponse response) throws IllegalStateException, IOException, ParseException, NonObjectJSONException {
-    this.response = response;
-    this.setRecord(response.jsonObjectBody());
-    Log.i(LOG_TAG, "info/collections is " + this.record.toJSONString());
+  public void setFromRecord(ExtendedJSONObject record) throws IllegalStateException, IOException, ParseException, NonObjectJSONException {
+    Log.i(LOG_TAG, "info/collections is " + record.toJSONString());
     HashMap<String, Long> map = new HashMap<String, Long>();
 
-    Set<Entry<String, Object>> entrySet = this.record.object.entrySet();
+    Set<Entry<String, Object>> entrySet = record.object.entrySet();
     for (Entry<String, Object> entry : entrySet) {
       // These objects are most likely going to be Doubles. Regardless, we
       // want to get them in a more sane time format.
@@ -175,7 +146,7 @@ public class InfoCollections implements SyncStorageRequestDelegate {
   public void handleRequestSuccess(SyncStorageResponse response) {
     if (response.wasSuccessful()) {
       try {
-        this.unpack(response);
+        this.setFromRecord(response.jsonObjectBody());
         this.callback.handleSuccess(this);
         this.callback = null;
       } catch (Exception e) {

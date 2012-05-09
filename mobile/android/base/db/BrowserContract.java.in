@@ -60,6 +60,8 @@ public class BrowserContract {
     public static final String PARAM_IS_SYNC = "sync";
     public static final String PARAM_SHOW_DELETED = "show_deleted";
     public static final String PARAM_IS_TEST = "test";
+    public static final String PARAM_INSERT_IF_NEEDED = "insert_if_needed";
+    public static final String PARAM_INCREMENT_VISITS = "increment_visits";
 
     public interface CommonColumns {
         public static final String _ID = "_id";
@@ -164,6 +166,7 @@ public class BrowserContract {
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "control");
 
+        // These return 1 if done/finished, 0 if not.
         // Check if history was completely migrated, do a bunch if it wasn't.
         public static final String ENSURE_HISTORY_MIGRATED = "ensure_history_migrated";
         // Check if bookmarks were completely migrated, migrate them if not.
@@ -189,6 +192,9 @@ public class BrowserContract {
         public static final String TIME_PASSWORD_CHANGED = "timePasswordChanged";
         public static final String TIMES_USED = "timesUsed";
         public static final String GUID = "guid";
+
+        // This needs to be kept in sync with the types defined in toolkit/components/passwordmgr/nsILoginManagerCrypto.idl#45
+        public static final int ENCTYPE_SDR = 1;
     }
 
     public static final class DeletedPasswords implements DeletedColumns {

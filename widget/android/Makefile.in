@@ -106,6 +106,7 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/toolkit/components/places \
 	-I$(topsrcdir)/docshell/base \
 	-I$(topsrcdir)/content/events/src \
+	-I$(topsrcdir)/netwerk/cache \
 	-I$(srcdir) \
 	$(NULL)
 

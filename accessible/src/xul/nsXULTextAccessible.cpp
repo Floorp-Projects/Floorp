@@ -40,6 +40,7 @@
 // NOTE: groups are alphabetically ordered
 #include "nsXULTextAccessible.h"
 
+#include "Accessible-inl.h"
 #include "nsAccUtils.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsCoreUtils.h"
@@ -151,16 +152,12 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXULLinkAccessible, nsHyperTextAccessibleWrap,
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULLinkAccessible. nsIAccessible
 
-NS_IMETHODIMP
-nsXULLinkAccessible::GetValue(nsAString& aValue)
+void
+nsXULLinkAccessible::Value(nsString& aValue)
 {
   aValue.Truncate();
 
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, aValue);
-  return NS_OK;
 }
 
 nsresult

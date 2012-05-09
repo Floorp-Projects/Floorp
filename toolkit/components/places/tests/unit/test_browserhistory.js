@@ -59,14 +59,14 @@ function add_page(aURL, aTime)
 add_test(function test_addPageWithDetails()
 {
   add_page(TEST_URL);
-  do_check_eq(1, PlacesUtils.bhistory.count);
+  do_check_eq(1, PlacesUtils.history.hasHistoryEntries);
   run_next_test();
 });
 
 add_test(function test_removePage()
 {
   PlacesUtils.bhistory.removePage(NetUtil.newURI(TEST_URL));
-  do_check_eq(0, PlacesUtils.bhistory.count);
+  do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
   run_next_test();
 });
 
@@ -95,7 +95,7 @@ add_test(function test_removePages()
                                             Ci.nsIAnnotationService.EXPIRE_NEVER);
 
   PlacesUtils.bhistory.removePages(pages, pages.length);
-  do_check_eq(0, PlacesUtils.bhistory.count);
+  do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
 
   // Check that the bookmark and its annotation still exist.
   do_check_true(PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0) > 0);
@@ -131,7 +131,7 @@ add_test(function test_removePagesByTimeframe()
 
   // Clear remaining items and check that all pages have been removed.
   PlacesUtils.bhistory.removePagesByTimeframe(startDate, startDate + 9);
-  do_check_eq(0, PlacesUtils.bhistory.count);
+  do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
   run_next_test();
 });
 
@@ -139,7 +139,7 @@ add_test(function test_removePagesFromHost()
 {
   add_page(TEST_URL);
   PlacesUtils.bhistory.removePagesFromHost("mozilla.com", true);
-  do_check_eq(0, PlacesUtils.bhistory.count);
+  do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
   run_next_test();
 });
 
@@ -148,14 +148,14 @@ add_test(function test_removePagesFromHost_keepSubdomains()
   add_page(TEST_URL);
   add_page(TEST_SUBDOMAIN_URL);
   PlacesUtils.bhistory.removePagesFromHost("mozilla.com", false);
-  do_check_eq(1, PlacesUtils.bhistory.count);
+  do_check_eq(1, PlacesUtils.history.hasHistoryEntries);
   run_next_test();
 });
 
 add_test(function test_removeAllPages()
 {
   PlacesUtils.bhistory.removeAllPages();
-  do_check_eq(0, PlacesUtils.bhistory.count);
+  do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
   run_next_test();
 });
 

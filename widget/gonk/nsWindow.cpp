@@ -62,6 +62,8 @@
 #define IS_TOPLEVEL() (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog)
 
 using namespace mozilla;
+using namespace mozilla::dom;
+using namespace mozilla::hal;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
@@ -79,7 +81,7 @@ static android::FramebufferNativeWindow *gNativeWindow = nsnull;
 static bool sFramebufferOpen;
 static bool sUsingOMTC;
 static nsRefPtr<gfxASurface> sOMTCSurface;
-static nsCOMPtr<nsIThread> sFramebufferWatchThread;
+static pthread_t sFramebufferWatchThread;
 
 namespace {
 
@@ -112,23 +114,21 @@ private:
 static const char* kSleepFile = "/sys/power/wait_for_fb_sleep";
 static const char* kWakeFile = "/sys/power/wait_for_fb_wake";
 
-class FramebufferWatcher : public nsRunnable {
-public:
-    FramebufferWatcher()
-        : mScreenOnEvent(new ScreenOnOffEvent(true))
-        , mScreenOffEvent(new ScreenOnOffEvent(false))
-    {}
+static void *frameBufferWatcher(void *) {
 
-    NS_IMETHOD Run() {
-        int len = 0;
-        char buf;
+    int len = 0;
+    char buf;
 
+    nsRefPtr<ScreenOnOffEvent> mScreenOnEvent = new ScreenOnOffEvent(true);
+    nsRefPtr<ScreenOnOffEvent> mScreenOffEvent = new ScreenOnOffEvent(false);
+
+    while (true) {
         // Cannot use epoll here because kSleepFile and kWakeFile are
         // always ready to read and blocking.
         {
             ScopedClose fd(open(kSleepFile, O_RDONLY, 0));
             do {
-                len = read(fd.mFd, &buf, 1);
+                len = read(fd.get(), &buf, 1);
             } while (len < 0 && errno == EINTR);
             NS_WARN_IF_FALSE(len >= 0, "WAIT_FOR_FB_SLEEP failed");
             NS_DispatchToMainThread(mScreenOffEvent);
@@ -137,22 +137,15 @@ public:
         {
             ScopedClose fd(open(kWakeFile, O_RDONLY, 0));
             do {
-                len = read(fd.mFd, &buf, 1);
+                len = read(fd.get(), &buf, 1);
             } while (len < 0 && errno == EINTR);
             NS_WARN_IF_FALSE(len >= 0, "WAIT_FOR_FB_WAKE failed");
             NS_DispatchToMainThread(mScreenOnEvent);
         }
-
-        // Dispatch to ourself.
-        NS_DispatchToCurrentThread(this);
-
-        return NS_OK;
     }
-
-private:
-    nsRefPtr<ScreenOnOffEvent> mScreenOnEvent;
-    nsRefPtr<ScreenOnOffEvent> mScreenOffEvent;
-};
+    
+    return NULL;
+}
 
 } // anonymous namespace
 
@@ -162,8 +155,11 @@ nsWindow::nsWindow()
         // workaround Bug 725143
         hal::SetScreenEnabled(true);
 
-        // Watching screen on/off state
-        NS_NewThread(getter_AddRefs(sFramebufferWatchThread), new FramebufferWatcher());
+        // Watching screen on/off state by using a pthread
+        // which implicitly calls exit() when the main thread ends
+        if (pthread_create(&sFramebufferWatchThread, NULL, frameBufferWatcher, NULL)) {
+            NS_RUNTIMEABORT("Failed to create framebufferWatcherThread, aborting...");
+        }
 
         sUsingOMTC = Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
 
@@ -617,11 +613,18 @@ nsScreenGonk::GetAvailRect(PRInt32 *outLeft,  PRInt32 *outTop,
     return GetRect(outLeft, outTop, outWidth, outHeight);
 }
 
+static uint32_t
+ColorDepth()
+{
+    return gNativeWindow->getDevice()->format == GGL_PIXEL_FORMAT_RGB_565 ? 16 : 24;
+}
 
 NS_IMETHODIMP
 nsScreenGonk::GetPixelDepth(PRInt32 *aPixelDepth)
 {
-    *aPixelDepth = gNativeWindow->getDevice()->format == GGL_PIXEL_FORMAT_RGB_565 ? 16 : 24;
+    // XXX: this should actually return 32 when we're using 24-bit
+    // color, because we use RGBX.
+    *aPixelDepth = ColorDepth();
     return NS_OK;
 }
 
@@ -681,13 +684,54 @@ nsScreenGonk::SetRotation(PRUint32 aRotation)
                                sVirtualBounds.height,
                                !i);
 
+    nsAppShell::NotifyScreenRotation();
+
     return NS_OK;
 }
 
-uint32_t
+// NB: This isn't gonk-specific, but gonk is the only widget backend
+// that does this calculation itself, currently.
+static ScreenOrientation
+ComputeOrientation(uint32_t aRotation, const nsIntSize& aScreenSize)
+{
+    bool naturallyPortrait = (aScreenSize.height > aScreenSize.width);
+    switch (aRotation) {
+    case nsIScreen::ROTATION_0_DEG:
+        return (naturallyPortrait ? eScreenOrientation_PortraitPrimary : 
+                eScreenOrientation_LandscapePrimary);
+    case nsIScreen::ROTATION_90_DEG:
+        // Arbitrarily choosing 90deg to be primary "unnatural"
+        // rotation.
+        return (naturallyPortrait ? eScreenOrientation_LandscapePrimary : 
+                eScreenOrientation_PortraitPrimary);
+    case nsIScreen::ROTATION_180_DEG:
+        return (naturallyPortrait ? eScreenOrientation_PortraitSecondary : 
+                eScreenOrientation_LandscapeSecondary);
+    case nsIScreen::ROTATION_270_DEG:
+        return (naturallyPortrait ? eScreenOrientation_LandscapeSecondary : 
+                eScreenOrientation_PortraitSecondary);
+    default:
+        MOZ_NOT_REACHED("Gonk screen must always have a known rotation");
+        return eScreenOrientation_None;
+    }
+}
+
+/*static*/ uint32_t
 nsScreenGonk::GetRotation()
 {
     return sScreenRotation;
+}
+
+/*static*/ ScreenConfiguration
+nsScreenGonk::GetConfiguration()
+{
+    ScreenOrientation orientation = ComputeOrientation(sScreenRotation,
+                                                       gScreenBounds.Size());
+    uint32_t colorDepth = ColorDepth();
+    // NB: perpetuating colorDepth == pixelDepth illusion here, for
+    // consistency.
+    return ScreenConfiguration(sVirtualBounds, orientation,
+                               colorDepth, colorDepth);
 }
 
 NS_IMPL_ISUPPORTS1(nsScreenManagerGonk, nsIScreenManager)

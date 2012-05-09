@@ -76,7 +76,7 @@ enum VersionComparisonOp {
   DRIVER_BETWEEN_EXCLUSIVE,     // driver > version && driver < versionMax
   DRIVER_BETWEEN_INCLUSIVE,     // driver >= version && driver <= versionMax
   DRIVER_BETWEEN_INCLUSIVE_START, // driver >= version && driver < versionMax
-  DRIVER_UNKNOWN_COMPARISON
+  DRIVER_COMPARISON_IGNORED
 };
 
 enum DeviceFamily {

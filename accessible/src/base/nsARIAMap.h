@@ -40,12 +40,12 @@
 #ifndef _nsARIAMap_H_
 #define _nsARIAMap_H_
 
-#include "mozilla/a11y/ARIAStateMap.h"
+#include "ARIAStateMap.h"
 #include "mozilla/a11y/Role.h"
-#include "prtypes.h"
 
 class nsIAtom;
 class nsIContent;
+class nsINode;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Value constants
@@ -212,18 +212,6 @@ struct nsRoleMapEntry
 struct nsARIAMap
 {
   /**
-   * Array of supported ARIA role map entries and its length.
-   */
-  static nsRoleMapEntry gWAIRoleMap[];
-  static PRUint32 gWAIRoleMapLength;
-
-  /**
-   * Landmark role map entry. Used when specified ARIA role isn't mapped to
-   * accessibility API.
-   */
-  static nsRoleMapEntry gLandmarkRoleMap;
-
-  /**
    * Empty role map entry. Used by accessibility service to create an accessible
    * if the accessible can't use role of used accessible class. For example,
    * it is used for table cells that aren't contained by table.
@@ -257,5 +245,23 @@ struct nsARIAMap
     return state;
   }
 };
+
+namespace mozilla {
+namespace a11y {
+namespace aria {
+
+/**
+ * Get the role map entry for a given DOM node. This will use the first
+ * ARIA role if the role attribute provides a space delimited list of roles.
+ *
+ * @param aNode  [in] the DOM node to get the role map entry for
+ * @return        a pointer to the role map entry for the ARIA role, or nsnull
+ *                if none
+ */
+nsRoleMapEntry* GetRoleMap(nsINode* aNode);
+
+} // namespace aria
+} // namespace a11y
+} // namespace mozilla
 
 #endif

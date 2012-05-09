@@ -36,8 +36,9 @@ function testSteps()
     db.transaction("foo");
     ok(false, "Transactions should be disallowed now!");
   } catch (e) {
-    ok(e instanceof IDBDatabaseException, "Expect an IDBException");
-    is(e.code, IDBDatabaseException.NOT_ALLOWED_ERR, "Expect a NOT_ALLOWED_ERR");
+    ok(e instanceof DOMException, "Expect a DOMException");
+    is(e.name, "InvalidStateError", "Expect an InvalidStateError");
+    is(e.code, DOMException.INVALID_STATE_ERR, "Expect an INVALID_STATE_ERR");
   }
 
   request.transaction.oncomplete = grabEventAndContinueHandler;
@@ -49,8 +50,9 @@ function testSteps()
     db.transaction("foo");
     ok(false, "Transactions should be disallowed now!");
   } catch (e) {
-    ok(e instanceof IDBDatabaseException, "Expect an IDBException");
-    is(e.code, IDBDatabaseException.NOT_ALLOWED_ERR, "Expect a NOT_ALLOWED_ERR");
+    ok(e instanceof DOMException, "Expect a DOMException");
+    is(e.name, "InvalidStateError", "Expect an InvalidStateError");
+    is(e.code, DOMException.INVALID_STATE_ERR, "Expect an INVALID_STATE_ERR");
   }
 
   request.onsuccess = grabEventAndContinueHandler;

@@ -65,9 +65,11 @@ class ShadowColorLayer;
 class ShadowCanvasLayer;
 class SurfaceDescriptor;
 class ThebesBuffer;
+class TiledLayerComposer;
 class Transaction;
 class SharedImage;
 class CanvasSurface;
+class BasicTiledLayerBuffer;
 
 /**
  * We want to share layer trees across thread contexts and address
@@ -171,6 +173,16 @@ public:
                    ShadowableLayer* aChild);
 
   /**
+   * Set aMaskLayer as the mask on aLayer.
+   * Note that only image layers are properly supported
+   * ShadowLayersParent::UpdateMask and accompanying ipdl
+   * will need changing to update properties for other kinds
+   * of mask layer.
+   */
+  void SetMask(ShadowableLayer* aLayer,
+               ShadowableLayer* aMaskLayer);
+
+  /**
    * Notify the shadow manager that the specified layer's back buffer
    * has new pixels and should become the new front buffer, and be
    * re-rendered, in the compositing process.  The former front buffer
@@ -187,6 +199,17 @@ public:
                            const nsIntRect& aBufferRect,
                            const nsIntPoint& aBufferRotation,
                            const SurfaceDescriptor& aNewFrontBuffer);
+
+  /**
+   * Notify the compositor that a tiled layer buffer has changed
+   * that needs to be synced to the shadow retained copy. The tiled
+   * layer buffer will operate directly on the shadow retained buffer
+   * and is free to choose it's own internal representation (double buffering,
+   * copy on write, tiling).
+   */
+  void PaintedTiledLayerBuffer(ShadowableLayer* aThebes,
+                               BasicTiledLayerBuffer* aTiledLayerBuffer);
+
   /**
    * NB: this initial implementation only forwards RGBA data for
    * ImageLayers.  This is slow, and will be optimized.
@@ -467,6 +490,8 @@ public:
   const nsIntRect* GetShadowClipRect() { return mUseShadowClipRect ? &mShadowClipRect : nsnull; }
   const nsIntRegion& GetShadowVisibleRegion() { return mShadowVisibleRegion; }
   const gfx3DMatrix& GetShadowTransform() { return mShadowTransform; }
+
+  virtual TiledLayerComposer* AsTiledLayerComposer() { return NULL; }
 
 protected:
   ShadowLayer()

@@ -50,6 +50,9 @@
 #include "nsTableColFrame.h"
 #include "nsCOMPtr.h"
 #include "nsDisplayList.h"
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif
 
 using namespace mozilla;
 
@@ -1346,7 +1349,19 @@ void nsTableRowFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
       NS_ERROR("invalid NS_SIDE arg");
   }
 }
+#ifdef ACCESSIBILITY
+already_AddRefed<nsAccessible>
+nsTableRowFrame::CreateAccessible()
+{
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    return accService->CreateHTMLTableRowAccessible(mContent,
+                                                    PresContext()->PresShell());
+  }
 
+  return nsnull;
+}
+#endif
 /**
  * Sets the NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT bit to indicate whether
  * this row has any cells that have non-auto-height.  (Row-spanning

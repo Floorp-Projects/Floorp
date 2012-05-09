@@ -77,6 +77,10 @@ public:
   virtual void FinishInternal();
 
 private:
+  // Writes to the contained decoder and sets the appropriate errors
+  // Returns true if there are no errors.
+  bool WriteToContainedDecoder(const char* aBuffer, PRUint32 aCount);
+
   // Processes a single dir entry of the icon resource
   void ProcessDirEntry(IconDirEntry& aTarget);
   // Sets the hotspot property of if we have a cursor

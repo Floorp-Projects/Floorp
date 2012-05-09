@@ -44,8 +44,12 @@
 #include "mozilla/Attributes.h"
 
 #include "jsapi.h"
-#include "jscell.h"
+#include "jsatom.h"
 #include "jsfriendapi.h"
+#include "jsstr.h"
+
+#include "gc/Barrier.h"
+#include "gc/Heap.h"
 
 class JSString;
 class JSDependentString;
@@ -418,6 +422,11 @@ class JSString : public js::gc::Cell
     void dump();
     bool equals(const char *s);
 #endif
+
+  private:
+    JSString() MOZ_DELETE;
+    JSString(const JSString &other) MOZ_DELETE;
+    void operator=(const JSString &other) MOZ_DELETE;
 };
 
 class JSRope : public JSString
@@ -432,8 +441,8 @@ class JSRope : public JSString
     void init(JSString *left, JSString *right, size_t length);
 
   public:
-    static inline JSRope *new_(JSContext *cx, JSString *left,
-                               JSString *right, size_t length);
+    static inline JSRope *new_(JSContext *cx, js::HandleString left,
+                               js::HandleString right, size_t length);
 
     inline JSString *leftChild() const {
         JS_ASSERT(isRope());
@@ -498,6 +507,7 @@ class JSFlatString : public JSLinearString
 {
     friend class JSRope;
     void morphExtensibleIntoDependent(JSLinearString *base) {
+        JS_ASSERT(!js::IsPoisonedPtr(base));
         d.lengthAndFlags = buildLengthAndFlags(length(), DEPENDENT_BIT);
         d.s.u2.base = base;
     }
@@ -506,6 +516,8 @@ class JSFlatString : public JSLinearString
     JSFlatString *ensureFlat(JSContext *cx) MOZ_DELETE;
     bool isFlat() const MOZ_DELETE;
     JSFlatString &asFlat() const MOZ_DELETE;
+
+    bool isIndexSlow(uint32_t *indexp) const;
 
   public:
     JS_ALWAYS_INLINE
@@ -520,7 +532,10 @@ class JSFlatString : public JSLinearString
      * calling isIndex returns true, js::IndexToString(cx, *indexp) will be a
      * string equal to this string.)
      */
-    bool isIndex(uint32_t *indexp) const;
+    inline bool isIndex(uint32_t *indexp) const {
+        const jschar *s = chars();
+        return JS7_ISDEC(*s) && isIndexSlow(indexp);
+    }
 
     /*
      * Returns a property name represented by this string, or null on failure.
@@ -672,6 +687,10 @@ class JSAtom : public JSFixedString
 
 JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));
 
+namespace js {
+typedef HeapPtr<JSAtom> HeapPtrAtom;
+}
+
 class JSInlineAtom : public JSInlineString /*, JSAtom */
 {
     /*
@@ -768,6 +787,12 @@ class PropertyName : public JSAtom
 {};
 
 JS_STATIC_ASSERT(sizeof(PropertyName) == sizeof(JSString));
+
+static JS_ALWAYS_INLINE jsid
+NameToId(PropertyName *name)
+{
+    return NON_INTEGER_ATOM_TO_JSID(name);
+}
 
 } /* namespace js */
 

@@ -166,31 +166,28 @@ const char* gPropertyArgs[] = { "val" };
 nsresult
 nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
                                       nsIContent* aBoundElement, 
-                                      void* aScriptObject,
-                                      void* aTargetClassObject,
+                                      JSObject* aScriptObject,
+                                      JSObject* aTargetClassObject,
                                       const nsCString& aClassStr)
 {
   NS_PRECONDITION(mIsCompiled,
                   "Should not be installing an uncompiled property");
   JSContext* cx = aContext->GetNativeContext();
 
-  nsIDocument *ownerDoc = aBoundElement->OwnerDoc();
-  nsIScriptGlobalObject *sgo;
+  nsIScriptGlobalObject* sgo = aBoundElement->OwnerDoc()->GetScopeObject();
 
-  if (!(sgo = ownerDoc->GetScopeObject())) {
+  if (!sgo) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  JSObject * scriptObject = (JSObject *) aScriptObject;
-  NS_ASSERTION(scriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
-  if (!scriptObject)
+  NS_ASSERTION(aScriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
+  if (!aScriptObject)
     return NS_ERROR_FAILURE;
 
-  JSObject * targetClassObject = (JSObject *) aTargetClassObject;
   JSObject * globalObject = sgo->GetGlobalJSObject();
 
   // now we want to reevaluate our property using aContext and the script object for this window...
-  if ((mJSGetterObject || mJSSetterObject) && targetClassObject) {
+  if ((mJSGetterObject || mJSSetterObject) && aTargetClassObject) {
     JSObject * getter = nsnull;
     JSAutoRequest ar(cx);
     JSAutoEnterCompartment ac;
@@ -208,8 +205,8 @@ nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsDependentString name(mName);
-    if (!::JS_DefineUCProperty(cx, targetClassObject,
-                               reinterpret_cast<const jschar*>(mName),
+    if (!::JS_DefineUCProperty(cx, aTargetClassObject,
+                               static_cast<const jschar*>(mName),
                                name.Length(), JSVAL_VOID,
                                JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter),
                                JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter),
@@ -344,13 +341,11 @@ void
 nsXBLProtoImplProperty::Trace(TraceCallback aCallback, void *aClosure) const
 {
   if (mJSAttributes & JSPROP_GETTER) {
-    aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSGetterObject,
-              "mJSGetterObject", aClosure);
+    aCallback(mJSGetterObject, "mJSGetterObject", aClosure);
   }
 
   if (mJSAttributes & JSPROP_SETTER) {
-    aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSSetterObject,
-              "mJSSetterObject", aClosure);
+    aCallback(mJSSetterObject, "mJSSetterObject", aClosure);
   }
 }
 

@@ -8,13 +8,52 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
           src="../common.js"></script>
   <script type="application/javascript"
           src="../role.js"></script>
   <script type="application/javascript"
           src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
 
   <script type="application/javascript">
+    function openComboboxNCheckStates(aID)
+    {
+      this.combobox = getAccessible(aID);
+      this.comboboxList = this.combobox.firstChild;
+      this.comboboxOption = this.comboboxList.firstChild;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, this.comboboxOption)
+      ];
+
+      this.invoke = function openComboboxNCheckStates_invoke()
+      {
+        getNode(aID).focus();
+        synthesizeKey("VK_DOWN", { altKey: true });
+      }
+
+      this.finalCheck = function openComboboxNCheckStates_invoke()
+      {
+        // Expanded state on combobox.
+        testStates(this.combobox, STATE_EXPANDED);
+
+        // Floating state on combobox list.
+        testStates(this.comboboxList, STATE_FLOATING);
+      }
+
+      this.getID = function openComboboxNCheckStates_getID()
+      {
+        return "open combobox and test states";
+      }
+    }
+
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
     function doTest()
     {
       // combobox
@@ -24,7 +63,7 @@
                  STATE_FOCUSED, 0);
 
       var comboboxList = combobox.firstChild;
-      testStates(comboboxList, 0, 0, STATE_FOCUSABLE, 0);
+      testStates(comboboxList, STATE_INVISIBLE, 0, STATE_FOCUSABLE, 0);
 
       var opt1 = comboboxList.firstChild;
       testStates(opt1, STATE_SELECTABLE | STATE_SELECTED | STATE_FOCUSABLE,
@@ -46,7 +85,10 @@
                  STATE_SELECTED | STATE_FOCUSED | STATE_FOCUSED,
                  0, 0, EXT_STATE_ACTIVE);
 
-      SimpleTest.finish();
+      // open combobox
+      gQueue = new eventQueue();
+      gQueue.push(new openComboboxNCheckStates("combobox"));
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

@@ -86,8 +86,9 @@ include empty/reftest.list
 == tall--contain--percent-width-percent-height-viewbox.html ref-tall-lime48x384-aqua48x384.html
 
 # We smear the background image when scaling it in these two tests...
-fails == tall--cover--nonpercent-width-nonpercent-height.html ref-tall-lime256x512-aqua256x256.html
-fails == tall--cover--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime256x512-aqua256x256.html
+# Android uses FILTER_NEAREST for background images so the smear doesn't occur
+fails-if(!Android) == tall--cover--nonpercent-width-nonpercent-height.html ref-tall-lime256x512-aqua256x256.html
+fails-if(!Android) == tall--cover--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime256x512-aqua256x256.html
 
 # ...but we don't in identical tests with image-rendering: -moz-crisp-edges.
 == tall--cover--nonpercent-width-nonpercent-height--crisp.html ref-tall-lime256x512-aqua256x256.html

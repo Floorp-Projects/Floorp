@@ -4,33 +4,39 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <errno.h>
+#include <fcntl.h>
+#include <math.h>
+#include <stdio.h>
+#include <sys/syscall.h>
+#include <time.h>
+
+#include "android/log.h"
+#include "cutils/properties.h"
+#include "hardware/hardware.h"
+#include "hardware/lights.h"
 #include "hardware_legacy/uevent.h"
+#include "hardware_legacy/vibrator.h"
+
+#include "base/message_loop.h"
+
 #include "Hal.h"
 #include "HalImpl.h"
 #include "mozilla/dom/battery/Constants.h"
 #include "mozilla/FileUtils.h"
-#include "nsAlgorithm.h"
-#include "nsThreadUtils.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Services.h"
-#include "mozilla/FileUtils.h"
-#include "nsThreadUtils.h"
-#include "nsIRunnable.h"
-#include "nsIThread.h"
+#include "nsAlgorithm.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "hardware/lights.h"
-#include "hardware/hardware.h"
-#include "hardware_legacy/vibrator.h"
-#include <stdio.h>
-#include <math.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <time.h>
-#include <sys/syscall.h>
-#include <cutils/properties.h>
-#include "mozilla/dom/network/Constants.h"
-#include <android/log.h>
+#include "nsIRunnable.h"
+#include "nsScreenManagerGonk.h"
+#include "nsThreadUtils.h"
+#include "nsThreadUtils.h"
+#include "nsIThread.h"
+#include "nsXULAppAPI.h"
+#include "OrientationObserver.h"
+#include "UeventPoller.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
 #define NsecPerMsec  1000000
@@ -196,70 +202,74 @@ public:
   }
 };
 
-class UEventWatcher : public nsRunnable {
+} // anonymous namespace
+
+class BatteryObserver : public IUeventObserver,
+                        public RefCounted<BatteryObserver>
+{
 public:
-  UEventWatcher()
-    : mUpdater(new BatteryUpdater())
-    , mRunning(false)
+  BatteryObserver()
+    :mUpdater(new BatteryUpdater())
   {
   }
 
-  NS_IMETHOD Run()
+  virtual void Notify(const NetlinkEvent &aEvent)
   {
-    while (mRunning) {
-      char buf[1024];
-      int count = uevent_next_event(buf, sizeof(buf) - 1);
-      if (!count) {
-        NS_WARNING("uevent_next_event() returned 0!");
-        continue;
-      }
-
-      buf[sizeof(buf) - 1] = 0;
-      if (strstr(buf, "battery"))
-        NS_DispatchToMainThread(mUpdater);
+    // this will run on IO thread
+    NetlinkEvent *event = const_cast<NetlinkEvent*>(&aEvent);
+    const char *subsystem = event->getSubsystem();
+    // e.g. DEVPATH=/devices/platform/sec-battery/power_supply/battery
+    const char *devpath = event->findParam("DEVPATH");
+    if (strcmp(subsystem, "power_supply") == 0 &&
+        strstr(devpath, "battery")) {
+      // aEvent will be valid only in this method.
+      NS_DispatchToMainThread(mUpdater);
     }
-    return NS_OK;
   }
-
-  bool mRunning;
 
 private:
   nsRefPtr<BatteryUpdater> mUpdater;
 };
 
-} // anonymous namespace
+// sBatteryObserver is owned by the IO thread. Only the IO thread may
+// create or destroy it.
+static BatteryObserver *sBatteryObserver = NULL;
 
-static bool sUEventInitialized = false;
-static UEventWatcher *sWatcher = NULL;
-static nsIThread *sWatcherThread = NULL;
+static void
+RegisterBatteryObserverIOThread()
+{
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+  MOZ_ASSERT(!sBatteryObserver);
+
+  sBatteryObserver = new BatteryObserver();
+  RegisterUeventListener(sBatteryObserver);
+}
 
 void
 EnableBatteryNotifications()
 {
-  if (!sUEventInitialized)
-    sUEventInitialized = uevent_init();
-  if (!sUEventInitialized) {
-    NS_WARNING("uevent_init() failed!");
-    return;
-  }
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(RegisterBatteryObserverIOThread));
+}
 
-  if (!sWatcher)
-    sWatcher = new UEventWatcher();
-  NS_ADDREF(sWatcher);
+static void
+UnregisterBatteryObserverIOThread()
+{
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+  MOZ_ASSERT(sBatteryObserver);
 
-  sWatcher->mRunning = true;
-  nsresult rv = NS_NewThread(&sWatcherThread, sWatcher);
-  if (NS_FAILED(rv))
-    NS_WARNING("Failed to get new thread for uevent watching");
+  UnregisterUeventListener(sBatteryObserver);
+  delete sBatteryObserver;
+  sBatteryObserver = NULL;
 }
 
 void
 DisableBatteryNotifications()
 {
-  sWatcher->mRunning = false;
-  sWatcherThread->Shutdown();
-  NS_IF_RELEASE(sWatcherThread);
-  delete sWatcher;
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(UnregisterBatteryObserverIOThread));
 }
 
 void
@@ -322,6 +332,8 @@ namespace {
  * RAII class to help us remember to close file descriptors.
  */
 const char *screenEnabledFilename = "/sys/power/state";
+const char *wakeLockFilename = "/sys/power/wake_lock";
+const char *wakeUnlockFilename = "/sys/power/wake_unlock";
 
 template<ssize_t n>
 bool ReadFromFile(const char *filename, char (&buf)[n])
@@ -362,6 +374,12 @@ void WriteToFile(const char *filename, const char *toWrite)
 // we read, we always get "mem"!  So we have to keep track ourselves whether
 // the screen is on or not.
 bool sScreenEnabled = true;
+
+// We can read wakeLockFilename to find out whether the cpu wake lock
+// is already acquired, but reading and parsing it is a lot more work
+// than tracking it ourselves, and it won't be accurate anyway (kernel
+// internal wake locks aren't counted here.)
+bool sCpuSleepAllowed = true;
 
 } // anonymous namespace
 
@@ -413,6 +431,19 @@ SetScreenBrightness(double brightness)
   aConfig.color() = color;
   hal::SetLight(hal::eHalLightID_Backlight, aConfig);
   hal::SetLight(hal::eHalLightID_Buttons, aConfig);
+}
+
+bool
+GetCpuSleepAllowed()
+{
+  return sCpuSleepAllowed;
+}
+
+void
+SetCpuSleepAllowed(bool aAllowed)
+{
+  WriteToFile(aAllowed ? wakeUnlockFilename : wakeLockFilename, "gecko");
+  sCpuSleepAllowed = aAllowed;
 }
 
 static light_device_t* sLights[hal::eHalLightID_Count];	// will be initialized to NULL
@@ -565,20 +596,34 @@ SetTimezone(const nsCString& aTimezoneSpec)
   tzset();
 }
 
-
+// Nothing to do here.  Gonk widgetry always listens for screen
+// orientation changes.
 void
-EnableNetworkNotifications()
-{}
-
-void
-DisableNetworkNotifications()
-{}
-
-void
-GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
+EnableScreenConfigurationNotifications()
 {
-  aNetworkInfo->bandwidth() = dom::network::kDefaultBandwidth;
-  aNetworkInfo->canBeMetered() = dom::network::kDefaultCanBeMetered;
+}
+
+void
+DisableScreenConfigurationNotifications()
+{
+}
+
+void
+GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration)
+{
+  *aScreenConfiguration = nsScreenGonk::GetConfiguration();
+}
+
+bool
+LockScreenOrientation(const dom::ScreenOrientation& aOrientation)
+{
+  return OrientationObserver::GetInstance()->LockScreenOrientation(aOrientation);
+}
+
+void
+UnlockScreenOrientation()
+{
+  OrientationObserver::GetInstance()->UnlockScreenOrientation();
 }
 
 } // hal_impl

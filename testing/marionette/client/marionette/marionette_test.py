@@ -64,9 +64,9 @@ window.addEventListener('message', function frameload(e) {
 
 class MarionetteTestCase(CommonTestCase):
 
-    def __init__(self, marionette, methodName='runTest'):
+    def __init__(self, marionette, methodName='runTest', **kwargs):
         self.marionette = marionette
-        CommonTestCase.__init__(self, methodName)
+        CommonTestCase.__init__(self, methodName, **kwargs)
 
     def get_new_emulator(self):
         _qemu  = Marionette(emulator=True,

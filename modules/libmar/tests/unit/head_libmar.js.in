@@ -5,6 +5,13 @@ const BIN_SUFFIX = "@BIN_SUFFIX@";
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+#ifdef XP_WIN
+  let refMARPrefix = "win_";
+#else
+  let refMARPrefix = "";
+#endif
+
+
 /**
  * Compares binary data of 2 arrays and throws if they aren't the same.
  * Throws on mismatch, does nothing on match.
@@ -16,7 +23,8 @@ function compareBinaryData(arr1, arr2) {
   do_check_eq(arr1.length, arr2.length);
   for (let i = 0; i < arr1.length; i++) {
     if (arr1[i] != arr2[i]) {
-      throw "Data differs at index " + i;
+      throw "Data differs at index " + i + 
+            ", arr1: " + arr1[i] + ", arr2: " + arr2[i];
     }
   }
 }
@@ -96,7 +104,8 @@ function createMAR(outMAR, dataDir, files) {
   do_check_true(signmarBin.isExecutable());
 
   // Setup the command line arguments to create the MAR.
-  let args = ["-C", dataDir.path, "-c", outMAR.path];
+  let args = ["-C", dataDir.path, "-H", "\@MAR_CHANNEL_ID\@", 
+              "-V", "13.0a1", "-c", outMAR.path];
   args = args.concat(files);
 
   do_print('Running: ' + signmarBin.path);

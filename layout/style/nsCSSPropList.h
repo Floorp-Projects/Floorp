@@ -57,10 +57,11 @@
   lowercase characters.
 
   -. 'id' should be the same as 'name' except that all hyphens ('-')
-  in 'name' are converted to underscores ('_') in 'id'. This lets us
-  do nice things with the macros without having to copy/convert strings
-  at runtime.  These are the names used for the enum values of the
-  nsCSSProperty enumeration defined in nsCSSProps.h.
+  in 'name' are converted to underscores ('_') in 'id'. For properties
+  on a standards track, any '-moz-' prefix is removed in 'id'. This
+  lets us do nice things with the macros without having to copy/convert
+  strings at runtime.  These are the names used for the enum values of
+  the nsCSSProperty enumeration defined in nsCSSProps.h.
 
   -. 'method' is designed to be as input for CSS2Properties and similar
   callers.  It must always be the same as 'name' except it must use
@@ -1470,8 +1471,9 @@ CSS_PROP_FONT(
     font_feature_settings,
     CSS_PROP_DOMPROP_PREFIXED(FontFeatureSettings),
     CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
-    VARIANT_NORMAL | VARIANT_INHERIT | VARIANT_STRING,
+    0,
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -2318,7 +2320,7 @@ CSS_PROP_TEXT(
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
     -moz-transform,
-    _moz_transform,
+    transform,
     CSS_PROP_DOMPROP_PREFIXED(Transform),
     CSS_PROPERTY_PARSE_FUNCTION,
     0,
@@ -2327,7 +2329,7 @@ CSS_PROP_DISPLAY(
     eStyleAnimType_Custom)
 CSS_PROP_DISPLAY(
     -moz-transform-origin,
-    _moz_transform_origin,
+    transform_origin,
     CSS_PROP_DOMPROP_PREFIXED(TransformOrigin),
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_STORES_CALC,
@@ -2534,6 +2536,15 @@ CSS_PROP_UIRESET(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_TEXT(
+    word-break,
+    word_break,
+    WordBreak,
+    CSS_PROPERTY_PARSE_VALUE,
+    VARIANT_HK,
+    kWordBreakKTable,
+    offsetof(nsStyleText, mWordBreak),
+    eStyleAnimType_EnumU8)
+CSS_PROP_TEXT(
     word-spacing,
     word_spacing,
     WordSpacing,
@@ -2549,7 +2560,7 @@ CSS_PROP_TEXT(
     WordWrap,
     CSS_PROPERTY_PARSE_VALUE,
     VARIANT_HK,
-    kWordwrapKTable,
+    kWordWrapKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_TEXT(

@@ -56,7 +56,13 @@ include $(srcdir)/files.mk
 
 MODULE         = graphite2
 LIBRARY_NAME   = mozgraphite2
+
+# on Windows, we're going to link graphite with gkmedias instead of libxul
+ifeq (WINNT,$(OS_TARGET))
+VISIBILITY_FLAGS =
+else
 LIBXUL_LIBRARY = 1
+endif
 
 # MSVC doesn't like the paths in _SOURCES, so strip off the prefix
 # and leave bare filenames
@@ -68,6 +74,13 @@ EXPORTS_graphite2 = $(_PUBLIC_HEADERS)
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 
+ifeq (WINNT,$(OS_TARGET))
+DEFINES += -DGRAPHITE2_EXPORTING
+else
+# tell graphite2 not to export symbols, we'll be linking it directly with thebes
+DEFINES += -DGRAPHITE2_STATIC
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DPACKAGE_VERSION="\"moz\""
@@ -75,9 +88,6 @@ DEFINES += -DPACKAGE_BUGREPORT="\"http://bugzilla.mozilla.org/\""
 
 # disable features we don't need in the graphite2 code, to reduce code size
 DEFINES += -DGRAPHITE2_NFILEFACE -DGRAPHITE2_NTRACING -DGRAPHITE2_NSEGCACHE
-
-# tell graphite2 not to export symbols, we'll be linking it directly with thebes
-DEFINES += -DGRAPHITE2_STATIC
 
 # provide a custom header that overrides malloc() and friends,
 # to ensure safe OOM handling

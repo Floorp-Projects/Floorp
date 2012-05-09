@@ -468,6 +468,7 @@ pixman_bool_t           pixman_region_equal              (pixman_region16_t *reg
 pixman_bool_t           pixman_region_selfcheck          (pixman_region16_t *region);
 void                    pixman_region_reset              (pixman_region16_t *region,
 							  pixman_box16_t    *box);
+void			pixman_region_clear		 (pixman_region16_t *region);
 /*
  * 32 bit regions
  */
@@ -562,6 +563,7 @@ pixman_bool_t           pixman_region32_equal              (pixman_region32_t *r
 pixman_bool_t           pixman_region32_selfcheck          (pixman_region32_t *region);
 void                    pixman_region32_reset              (pixman_region32_t *region,
 							    pixman_box32_t    *box);
+void			pixman_region32_clear		   (pixman_region32_t *region);
 
 
 /* Copy / Fill / Misc */
@@ -573,8 +575,8 @@ pixman_bool_t pixman_blt                (uint32_t           *src_bits,
 					 int                 dst_bpp,
 					 int                 src_x,
 					 int                 src_y,
-					 int                 dst_x,
-					 int                 dst_y,
+					 int                 dest_x,
+					 int                 dest_y,
 					 int                 width,
 					 int                 height);
 pixman_bool_t pixman_fill               (uint32_t           *bits,
@@ -813,7 +815,7 @@ pixman_bool_t   pixman_image_fill_boxes              (pixman_op_t               
 pixman_bool_t pixman_compute_composite_region (pixman_region16_t *region,
 					       pixman_image_t    *src_image,
 					       pixman_image_t    *mask_image,
-					       pixman_image_t    *dst_image,
+					       pixman_image_t    *dest_image,
 					       int16_t            src_x,
 					       int16_t            src_y,
 					       int16_t            mask_x,

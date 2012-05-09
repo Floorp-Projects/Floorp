@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+-->
+<head>
+  <title>Bug 633602 - file_childIframe.html</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="pointerlock_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #parent, #childDiv, #iframe, #table, #table td {
+      margin: 0;
+      padding: 0;
+      border: none;
+    }
+    #iframe, #table {
+      background-color: red;
+      width: 100%;
+      height: 100%;
+    }
+    #childDiv, #table td {
+      background-color: blue;
+      width: 50%;
+      height: 50%;
+    }
+  </style>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+    Mozilla Bug 633602
+  </a>
+
+  <div id="parent">
+    <table id="childTable">
+      <tr>
+        <td>
+          <iframe id="iframe" src="iframe_differentDOM.html" onload="start();">
+          </iframe>
+        </td>
+        <td>
+          <div id="childDiv">
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+      /*
+       * Test for Bug 633602
+       * Check if pointer is locked when over a child iframe of
+       * the locked element
+       * Check if pointer is being repositioned back to center of
+       * the locked element even when pointer goes over a child ifame
+       */
+
+      SimpleTest.waitForExplicitFinish();
+
+      var parent = document.getElementById("parent")
+        , childDiv = document.getElementById("childDiv")
+        , iframe = document.getElementById("iframe");
+
+      function MozMovementStats() {
+        this.mozMovementX = false;
+        this.mozMovementY = false;
+      }
+
+      var firstMove = new MozMovementStats()
+        , secondMove = new MozMovementStats()
+        , hoverIframe = false;
+
+      function runTests () {
+        ok(hoverIframe, "Pointer should be locked even when pointer " +
+          "hovers over a child iframe");
+        is(firstMove.mozMovementX, secondMove.mozMovementX, "MovementX of first " +
+          "move to childDiv should be equal to movementX of second move " +
+          "to child div");
+        is(firstMove.mozMovementY, secondMove.mozMovementY, "MovementY of first " +
+          "move to childDiv should be equal to movementY of second move " +
+          "to child div");
+      }
+
+      var firstMoveChild = function (e) {
+        firstMove.mozMovementX = e.mozMovementX;
+        firstMove.mozMovementY = e.mozMovementY;
+
+        parent.removeEventListener("mousemove", firstMoveChild);
+        parent.addEventListener("mousemove", moveIframe);
+
+        synthesizeMouseAtCenter(iframe, {type: "mousemove"}, window);
+      };
+
+      var moveIframe = function (e) {
+        hoverIframe = !!document.mozPointerLockElement;
+
+        parent.removeEventListener("mousemove", moveIframe);
+        parent.addEventListener("mousemove", secondMoveChild);
+
+        synthesizeMouseAtCenter(childDiv, {type: "mousemove"}, window);
+      };
+
+      var secondMoveChild = function (e) {
+        secondMove.mozMovementX = e.mozMovementX;
+        secondMove.mozMovementY = e.mozMovementY;
+        parent.removeEventListener("mousemove", secondMoveChild);
+
+        document.mozCancelFullScreen();
+      };
+
+      document.addEventListener("mozpointerlockchange", function () {
+        if (document.mozPointerLockElement === parent) {
+          parent.addEventListener("mousemove", firstMoveChild);
+          synthesizeMouseAtCenter(childDiv, {type: "mousemove"}, window);
+        }
+      }, false);
+
+      document.addEventListener("mozpointerlockerror", function () {
+        document.mozCancelFullScreen();
+      }, false);
+
+      document.addEventListener("mozfullscreenchange", function (e)  {
+        if (document.mozFullScreenElement === parent) {
+          parent.mozRequestPointerLock();
+        }
+        else {
+          runTests();
+          SimpleTest.finish();
+        }
+      }, false);
+
+      function start() {
+        parent.mozRequestFullScreen();
+      }
+    </script>
+  </pre>
+</body>
+</html>

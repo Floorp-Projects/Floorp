@@ -352,10 +352,10 @@ HeapReverser::getEdgeDescription()
 class ReferenceFinder {
   public:
     ReferenceFinder(JSContext *cx, const HeapReverser &reverser) 
-      : context(cx), reverser(reverser) { }
+      : context(cx), reverser(reverser), result(cx) { }
 
     /* Produce an object describing all references to |target|. */
-    JSObject *findReferences(JSObject *target);
+    JSObject *findReferences(HandleObject target);
 
   private:
     /* The context in which to do allocation and error-handling. */
@@ -365,7 +365,7 @@ class ReferenceFinder {
     const HeapReverser &reverser;
 
     /* The results object we're currently building. */
-    JSObject *result;
+    RootedVarObject result;
 
     /* A list of edges we've traversed to get to a certain point. */
     class Path {
@@ -513,6 +513,8 @@ ReferenceFinder::addReferrer(jsval referrer, Path *path)
         return false;
     AutoReleasePtr releasePathName(context, pathName);
 
+    Root<jsval> referrerRoot(context, &referrer);
+
     /* Find the property of the results object named |pathName|. */
     jsval v;
     if (!JS_GetProperty(context, result, pathName, &v))
@@ -528,7 +530,7 @@ ReferenceFinder::addReferrer(jsval referrer, Path *path)
 
     /* The property's value had better be an array. */
     JS_ASSERT(JSVAL_IS_OBJECT(v) && !JSVAL_IS_NULL(v));
-    JSObject *array = JSVAL_TO_OBJECT(v);
+    RootedVarObject array(context, JSVAL_TO_OBJECT(v));
     JS_ASSERT(JS_IsArrayObject(context, array));
 
     /* Append our referrer to this array. */
@@ -538,7 +540,7 @@ ReferenceFinder::addReferrer(jsval referrer, Path *path)
 }
 
 JSObject *
-ReferenceFinder::findReferences(JSObject *target)
+ReferenceFinder::findReferences(HandleObject target)
 {
     result = JS_NewObject(context, NULL, NULL, NULL);
     if (!result)
@@ -573,7 +575,7 @@ FindReferences(JSContext *cx, unsigned argc, jsval *vp)
 
     /* Given the reversed map, find the referents of target. */
     ReferenceFinder finder(cx, reverser);
-    JSObject *references = finder.findReferences(JSVAL_TO_OBJECT(target));
+    JSObject *references = finder.findReferences(RootedVarObject(cx, JSVAL_TO_OBJECT(target)));
     if (!references)
         return false;
     

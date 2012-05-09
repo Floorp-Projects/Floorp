@@ -38,7 +38,7 @@ function ended(e) {
   try {
     b.start(-1);
   } catch (e) {
-    caught = e.code == DOMException.INDEX_SIZE_ERR;
+    caught = e.name == "IndexSizeError" && e.code == DOMException.INDEX_SIZE_ERR;
   }
   is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on under start bounds range");
   
@@ -46,7 +46,7 @@ function ended(e) {
   try {
     b.end(-1);
   } catch (e) {
-    caught = e.code == DOMException.INDEX_SIZE_ERR;
+    caught = e.name == "IndexSizeError" && e.code == DOMException.INDEX_SIZE_ERR;
   }
   is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on under end bounds range");
 
@@ -54,7 +54,7 @@ function ended(e) {
   try {
     b.start(b.length);
   } catch (e) {
-    caught = e.code == DOMException.INDEX_SIZE_ERR;
+    caught = e.name == "IndexSizeError" && e.code == DOMException.INDEX_SIZE_ERR;
   }
   is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on over start bounds range");
   
@@ -62,7 +62,7 @@ function ended(e) {
   try {
     b.end(b.length);
   } catch (e) {
-    caught = e.code == DOMException.INDEX_SIZE_ERR;
+    caught = e.name == "IndexSizeError" && e.code == DOMException.INDEX_SIZE_ERR;
   }
   is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on over end bounds range");
 

@@ -54,6 +54,7 @@
 #include "nsFrameLoader.h"
 #include "nsDOMTouchEvent.h"
 #include "nsDOMStorage.h"
+#include "sampler.h"
 
 #define NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH  (1 << 0)
 #define NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT (1 << 1)
@@ -422,7 +423,7 @@ public:
         static const size_t kBucketSizes[] = { sizeof(nsEventTargetChainItem) };
         static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
         static const PRInt32 kInitialPoolSize =
-          NS_SIZE_IN_HEAP(sizeof(nsEventTargetChainItem)) * NS_CHAIN_POOL_SIZE;
+          sizeof(nsEventTargetChainItem) * NS_CHAIN_POOL_SIZE;
         nsresult rv = sEtciPool->Init("EventTargetChainItem Pool", kBucketSizes,
                                       kNumBuckets, kInitialPoolSize);
         if (NS_FAILED(rv)) {
@@ -480,6 +481,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
                             nsDispatchingCallback* aCallback,
                             nsCOMArray<nsIDOMEventTarget>* aTargets)
 {
+  SAMPLE_LABEL("nsEventDispatcher", "Dispatch");
   NS_ASSERTION(aEvent, "Trying to dispatch without nsEvent!");
   NS_ENSURE_TRUE(!NS_IS_EVENT_IN_DISPATCH(aEvent),
                  NS_ERROR_ILLEGAL_VALUE);
@@ -528,17 +530,8 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     if (!nsContentUtils::IsChromeDoc(doc)) {
       nsPIDOMWindow* win = doc ? doc->GetInnerWindow() : nsnull;
       // If we can't dispatch the event to chrome, do nothing.
-      nsIDOMEventTarget* piTarget = win ? win->GetChromeEventHandler() : nsnull;
+      nsIDOMEventTarget* piTarget = win ? win->GetParentTarget() : nsnull;
       NS_ENSURE_TRUE(piTarget, NS_OK);
-
-      nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(piTarget);
-      if (flo) {
-        nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
-        if (fl) {
-          nsIDOMEventTarget* t = fl->GetTabChildGlobalAsEventTarget();
-          piTarget = t ? t : piTarget;
-        }
-      }
       
       // Set the target to be the original dispatch target,
       aEvent->target = target;

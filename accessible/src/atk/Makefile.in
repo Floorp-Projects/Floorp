@@ -52,8 +52,7 @@ CPPSRCS = \
   nsAccessNodeWrap.cpp \
   nsAccessibleWrap.cpp \
   nsDocAccessibleWrap.cpp \
-  nsRootAccessibleWrap.cpp \
-  nsApplicationAccessibleWrap.cpp \
+  ApplicationAccessibleWrap.cpp \
   nsMaiInterfaceComponent.cpp \
   nsMaiInterfaceAction.cpp \
   nsMaiInterfaceText.cpp \
@@ -66,15 +65,15 @@ CPPSRCS = \
   nsMaiInterfaceTable.cpp \
   nsMaiInterfaceDocument.cpp \
   nsMaiInterfaceImage.cpp \
+  RootAccessibleWrap.cpp \
   $(NULL)
 
 EXPORTS = \
+  ARIAGridAccessibleWrap.h \
   AtkSocketAccessible.h \
   nsAccessNodeWrap.h \
-  nsARIAGridAccessibleWrap.h \
   nsAccessibleWrap.h \
   nsDocAccessibleWrap.h \
-  nsRootAccessibleWrap.h \
   nsTextAccessibleWrap.h \
   nsXULMenuAccessibleWrap.h \
   nsXULListboxAccessibleWrap.h \

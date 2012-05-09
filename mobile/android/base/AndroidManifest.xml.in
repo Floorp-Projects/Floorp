@@ -10,7 +10,7 @@
 #endif
       >
     <uses-sdk android:minSdkVersion="8"
-              android:targetSdkVersion="11"/>
+              android:targetSdkVersion="14"/>
 
 #include ../sync/manifests/SyncAndroidManifest_permissions.xml.in
 
@@ -18,7 +18,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION"/>
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
 
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
@@ -32,9 +31,6 @@
     <uses-permission android:name="android.permission.WRITE_SMS"/>
     <uses-permission android:name="android.permission.READ_SMS"/>
 #endif
-
-    <uses-permission android:name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/> 
-    <uses-permission android:name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS"/> 
 
     <uses-feature android:name="android.hardware.location" android:required="false"/>
     <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
@@ -58,7 +54,7 @@
 
         <activity android:name="App"
                   android:label="@MOZ_APP_DISPLAYNAME@"
-                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:launchMode="singleTask"
                   android:theme="@style/Gecko.App">
@@ -165,7 +161,7 @@
 
         <activity android:name="org.mozilla.gecko.AwesomeBar"
                   android:theme="@style/Gecko.Light.AwesomeBar"
-                  android:configChanges="orientation"
+                  android:configChanges="orientation|screenSize"
                   android:windowSoftInputMode="stateAlwaysVisible|adjustResize"/>
 
         <activity android:name="org.mozilla.gecko.TabsTray"
@@ -185,10 +181,16 @@
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
+        <!--
+          Ensure that passwords provider runs in its own process. (Bug 718760.)
+          Process name is per-application to avoid loading CPs from multiple
+          Fennec versions into the same process. (Bug 749727.)
+          Process name is a mangled version to avoid a Talos bug. (Bug 750548.)
+          -->
         <provider android:name="@ANDROID_PACKAGE_NAME@.db.PasswordsProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.passwords"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"
-                  android:process="org.mozilla.gecko.PasswordsProvider"/>
+                  android:process="@MANGLED_ANDROID_PACKAGE_NAME@.PasswordsProvider"/>
 
         <provider android:name="@ANDROID_PACKAGE_NAME@.db.FormHistoryProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.formhistory"

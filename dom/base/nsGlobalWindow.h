@@ -98,6 +98,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsIDOMTouchEvent.h"
 #include "nsIInlineEventHandlers.h"
+#include "nsWrapperCacheInlines.h"
 
 // JS includes
 #include "jsapi.h"
@@ -129,7 +130,6 @@ class nsIDocShellLoadInfo;
 class WindowStateHolder;
 class nsGlobalWindowObserver;
 class nsGlobalWindow;
-class nsDummyJavaPluginOwner;
 class PostMessageEvent;
 class nsRunnable;
 class nsDOMEventTargetHelper;
@@ -300,10 +300,6 @@ public:
 
   virtual nsIScriptContext *GetScriptContext();
 
-  // Set a new script language context for this global.  The native global
-  // for the context is created by the context's GetNativeGlobal() method.
-  virtual nsresult SetScriptContext(nsIScriptContext *aContext);
-  
   virtual void OnFinalize(JSObject* aObject);
   virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
 
@@ -491,8 +487,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsGlobalWindow,
                                                                    nsIScriptGlobalObject)
-
-  void InitJavaProperties();
 
   virtual NS_HIDDEN_(JSObject*)
     GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey);
@@ -824,10 +818,6 @@ protected:
   // where we don't want to force creation of a new inner window since
   // we're in the middle of doing just that.
   bool                          mIsFrozen : 1;
-
-  // True if the Java properties have been initialized on this
-  // window. Only used on inner windows.
-  bool                          mDidInitJavaProperties : 1;
   
   // These members are only used on outer window objects. Make sure
   // you never set any of these on an inner object!
@@ -928,10 +918,6 @@ protected:
   nsRefPtr<nsLocation>          mLocation;
   nsRefPtr<nsHistory>           mHistory;
 
-  // Holder of the dummy java plugin, used to expose window.java and
-  // window.packages.
-  nsRefPtr<nsDummyJavaPluginOwner> mDummyJavaPluginOwner;
-
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIDocument> mDoc;  // For fast access to principals
@@ -939,7 +925,6 @@ protected:
 
   typedef nsCOMArray<nsIDOMStorageEvent> nsDOMStorageEventArray;
   nsDOMStorageEventArray mPendingStorageEvents;
-  nsAutoPtr< nsDataHashtable<nsStringHashKey, bool> > mPendingStorageEventsObsolete;
 
   PRUint32 mTimeoutsSuspendDepth;
 
@@ -1058,8 +1043,20 @@ protected:
 };
 
 /* factory function */
-nsresult
-NS_NewScriptGlobalObject(bool aIsChrome, bool aIsModalContentWindow,
-                         nsIScriptGlobalObject **aResult);
+inline already_AddRefed<nsGlobalWindow>
+NS_NewScriptGlobalObject(bool aIsChrome, bool aIsModalContentWindow)
+{
+  nsRefPtr<nsGlobalWindow> global;
+
+  if (aIsChrome) {
+    global = new nsGlobalChromeWindow(nsnull);
+  } else if (aIsModalContentWindow) {
+    global = new nsGlobalModalWindow(nsnull);
+  } else {
+    global = new nsGlobalWindow(nsnull);
+  }
+
+  return global.forget();
+}
 
 #endif /* nsGlobalWindow_h___ */

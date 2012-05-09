@@ -216,13 +216,8 @@ var nonFocusableElements = [
     "<input type=\"checkbox\" tabindex=\"0\" disabled>",
     "<input type=\"checkbox\" disabled>",
 
-    "<input type=\"file\">",
-    "<input type=\"file\" tabindex=\"-1\">",
-    "<input type=\"file\" tabindex=\"0\">",
     "<input type=\"file\" tabindex=\"0\" disabled>",
-    "<input type=\"file\" tabindex=\"1\">",
     "<input type=\"file\" disabled>",
-    "<input type=\"file\" contenteditable=\"true\">",
 
     "<input type=\"hidden\">",
     "<input type=\"hidden\" tabindex=\"-1\">",
@@ -325,6 +320,12 @@ var focusableInContentEditable = [
     "<input type=\"button\" tabindex=\"0\">",
     "<input type=\"button\" tabindex=\"1\">",
     "<input type=\"button\" contenteditable=\"true\">",
+
+    "<input type=\"file\">",
+    "<input type=\"file\" tabindex=\"-1\">",
+    "<input type=\"file\" tabindex=\"0\">",
+    "<input type=\"file\" tabindex=\"1\">",
+    "<input type=\"file\" contenteditable=\"true\">",
 
     "<input type=\"checkbox\">",
     "<input type=\"checkbox\" tabindex=\"-1\">",
@@ -456,6 +457,13 @@ function testElements(parent, tags, shouldBeFocusable)
         var errorPrefix = serializer.serializeToString(element) + " in " +
                           serializer.serializeToString(parent);
 
+        try {
+          // Make sure activeElement doesn't point to a
+          // native anonymous element.
+          parent.ownerDocument.activeElement.localName;
+        } catch (ex) {
+          ok(false, ex + errorPrefix + errorSuffix);
+        }
         if (focusable ? focusable.indexOf(tag) > -1 : shouldBeFocusable) {
             is(parent.ownerDocument.activeElement, element,
                errorPrefix + " should be focusable" + errorSuffix);

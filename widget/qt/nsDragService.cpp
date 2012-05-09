@@ -38,6 +38,8 @@
 
 #include "qmimedata.h"
 #include "qwidget.h"
+#include "qapplication.h"
+#include "qthread.h"
 
 #include "nsDragService.h"
 #include "nsISupportsPrimitives.h"
@@ -158,6 +160,11 @@ nsDragService::SetupDragSession(
         }
     }
 
+    if (qApp->thread() != QThread::currentThread()) {
+        NS_WARNING("Cannot initialize drag session in non main thread");
+        return NS_OK;
+    }
+
     if (!mHiddenWidget) {
       mHiddenWidget = new QWidget();
     }
@@ -191,7 +198,9 @@ nsDragService::InvokeDragSession(
 NS_IMETHODIMP
 nsDragService::ExecuteDrag()
 {
-    Qt::DropAction dropAction = mDrag->exec( mDropAction );
+    if (qApp->thread() == QThread::currentThread()) {
+        mDrag->exec(mDropAction);
+    }
 
     return NS_OK;
 }

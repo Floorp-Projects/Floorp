@@ -46,10 +46,10 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(7f4b6b5d-7982-417c-bcd4-2fcddd35b404)]
+[scriptable, uuid(7FB67F1D-F1FF-450A-9A63-261344E13AC4)]
 interface nsIDOMXULElement : nsIDOMElement {};
 
-[scriptable, uuid(318f68f5-1840-475f-a656-7c3f09bd3252)]
+[scriptable, uuid(E3F0D263-10A2-4703-BD5F-E68F32F4DC31)]
 interface nsIDOMXULTreeElement : nsIDOMXULElement {};
 
 [scriptable, uuid(f3c50361-14fe-11d3-bf87-00105a1b0627)]

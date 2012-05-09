@@ -36,10 +36,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <jni.h>
+
+#ifdef MOZ_MEMORY
 // Wrap malloc and free to use jemalloc
 #define malloc __wrap_malloc
 #define free __wrap_free
+#endif
+
 #include <stdlib.h>
+#include <fcntl.h>
 
 extern "C"
 __attribute__ ((visibility("default")))
@@ -72,3 +77,34 @@ Java_org_mozilla_gecko_GeckoAppShell_freeDirectBuffer(JNIEnv *jenv, jclass, jobj
     free(jenv->GetDirectBufferAddress(buf));
 }
 
+extern "C"
+__attribute__ ((visibility("default")))
+void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_unlockDatabaseFile(JNIEnv *jenv, jclass, jstring jDatabasePath)
+{
+    const char *databasePath = jenv->GetStringUTFChars(jDatabasePath, NULL);
+    int fd = open(databasePath, O_RDWR);
+    jenv->ReleaseStringUTFChars(jDatabasePath, databasePath);
+
+    // File could not be open, do nothing
+    if (fd < 0) {
+        return;
+    }
+
+    struct flock lock;
+
+    lock.l_type = F_WRLCK;
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;
+    lock.l_len = 0;
+
+    int result = fcntl(fd, F_GETLK, &lock);
+
+    // Release any existing lock in the file
+    if (result != -1 && lock.l_type == F_WRLCK) {
+        lock.l_type = F_UNLCK;
+        fcntl(fd, F_SETLK, &lock);
+    }
+
+    close(fd);
+}

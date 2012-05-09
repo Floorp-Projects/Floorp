@@ -210,7 +210,8 @@ function reflectUnsignedInt(aParameters)
     element[attr] = 0;
   } catch(e) {
     caught = true;
-    is(e.code, DOMException.INDEX_SIZE_ERR, "exception should be INDEX_SIZE_ERR");
+    is(e.name, "IndexSizeError", "exception should be IndexSizeError");
+    is(e.code, DOMException.INDEX_SIZE_ERR, "exception code should be INDEX_SIZE_ERR");
   }
 
   if (nonZero) {
@@ -550,10 +551,12 @@ function reflectInt(aParameters)
     if (nonNegative && expectedIdlAttributeResult(v) < 0) {
       try {
         element[attr] = v;
-        ok(false, element.localName + "[" + attr + "] = " + v + " should throw NS_ERROR_DOM_INDEX_SIZE_ERR");
+        ok(false, element.localName + "[" + attr + "] = " + v + " should throw IndexSizeError");
       } catch(e) {
+        is(e.name, "IndexSizeError", element.localName + "[" + attr + "] = " + v +
+          " should throw IndexSizeError");
         is(e.code, DOMException.INDEX_SIZE_ERR, element.localName + "[" + attr + "] = " + v +
-          " should throw NS_ERROR_DOM_INDEX_SIZE_ERR");
+          " should throw INDEX_SIZE_ERR");
       }
     } else {
       element[attr] = v;

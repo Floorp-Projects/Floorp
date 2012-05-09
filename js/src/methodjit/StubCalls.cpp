@@ -38,18 +38,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/FloatingPoint.h"
+
 #include "jscntxt.h"
 #include "jsscope.h"
 #include "jsobj.h"
 #include "jslibmath.h"
 #include "jsiter.h"
-#include "jsgcmark.h"
 #include "jsnum.h"
 #include "jsxml.h"
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "jstypes.h"
+
+#include "gc/Marking.h"
 #include "vm/Debugger.h"
+#include "vm/NumericConversions.h"
 #include "vm/String.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -83,7 +87,8 @@ using namespace JSC;
 void JS_FASTCALL
 stubs::BindName(VMFrame &f, PropertyName *name)
 {
-    JSObject *obj = FindIdentifierBase(f.cx, &f.fp()->scopeChain(), name);
+    JSObject *obj = FindIdentifierBase(f.cx, f.fp()->scopeChain(),
+                                       RootedVarPropertyName(f.cx, name));
     if (!obj)
         THROW();
     f.regs.sp[0].setObject(*obj);
@@ -92,7 +97,7 @@ stubs::BindName(VMFrame &f, PropertyName *name)
 JSObject * JS_FASTCALL
 stubs::BindGlobalName(VMFrame &f)
 {
-    return &f.fp()->scopeChain().global();
+    return &f.fp()->global();
 }
 
 template<JSBool strict>
@@ -216,11 +221,14 @@ stubs::ToId(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::ImplicitThis(VMFrame &f, PropertyName *name)
+stubs::ImplicitThis(VMFrame &f, PropertyName *name_)
 {
+    RootedVarObject scopeObj(f.cx, f.cx->stack.currentScriptedScopeChain());
+    RootedVarPropertyName name(f.cx, name_);
+
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindPropertyHelper(f.cx, name, false, f.cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
+    if (!FindPropertyHelper(f.cx, name, false, scopeObj, &obj, &obj2, &prop))
         THROW();
 
     if (!ComputeImplicitThis(f.cx, obj, &f.regs.sp[0]))
@@ -316,9 +324,9 @@ stubs::Ursh(VMFrame &f)
 
 template<JSBool strict>
 void JS_FASTCALL
-stubs::DefFun(VMFrame &f, JSFunction *fun)
+stubs::DefFun(VMFrame &f, JSFunction *fun_)
 {
-    JSObject *obj2;
+    RootedVarFunction fun(f.cx, fun_);
 
     JSContext *cx = f.cx;
     StackFrame *fp = f.fp();
@@ -331,13 +339,14 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      */
     JSObject *obj = fun;
 
+    RootedVarObject obj2(f.cx);
     if (fun->isNullClosure()) {
         /*
          * Even a null closure needs a parent for principals finding.
          * FIXME: bug 476950, although debugger users may also demand some kind
          * of scope link for debugger-assisted eval-in-frame.
          */
-        obj2 = &fp->scopeChain();
+        obj2 = fp->scopeChain();
     } else {
         obj2 = GetScopeChain(cx, fp);
         if (!obj2)
@@ -620,7 +629,7 @@ stubs::Add(VMFrame &f)
     /* The string + string case is easily the hottest;  try it first. */
     bool lIsString = lval.isString();
     bool rIsString = rval.isString();
-    JSString *lstr, *rstr;
+    RootedVarString lstr(cx), rstr(cx);
     if (lIsString && rIsString) {
         lstr = lval.toString();
         rstr = rval.toString();
@@ -726,13 +735,13 @@ stubs::Div(VMFrame &f)
         const Value *vp;
 #ifdef XP_WIN
         /* XXX MSVC miscompiles such that (NaN == 0) */
-        if (JSDOUBLE_IS_NaN(d2))
+        if (MOZ_DOUBLE_IS_NaN(d2))
             vp = &rt->NaNValue;
         else
 #endif
-        if (d1 == 0 || JSDOUBLE_IS_NaN(d1))
+        if (d1 == 0 || MOZ_DOUBLE_IS_NaN(d1))
             vp = &rt->NaNValue;
-        else if (JSDOUBLE_IS_NEG(d1) != JSDOUBLE_IS_NEG(d2))
+        else if (MOZ_DOUBLE_IS_NEGATIVE(d1) != MOZ_DOUBLE_IS_NEGATIVE(d2))
             vp = &rt->negativeInfinityValue;
         else
             vp = &rt->positiveInfinityValue;
@@ -792,7 +801,7 @@ stubs::DebuggerStatement(VMFrame &f, jsbytecode *pc)
           case JSTRAP_RETURN:
             f.cx->clearPendingException();
             f.cx->fp()->setReturnValue(rval);
-            *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromFastCall();
+            *f.returnAddressLocation() = f.cx->jaegerRuntime().forceReturnFromFastCall();
             break;
 
           case JSTRAP_ERROR:
@@ -857,7 +866,7 @@ stubs::Trap(VMFrame &f, uint32_t trapTypes)
       case JSTRAP_RETURN:
         f.cx->clearPendingException();
         f.cx->fp()->setReturnValue(rval);
-        *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromFastCall();
+        *f.returnAddressLocation() = f.cx->jaegerRuntime().forceReturnFromFastCall();
         break;
 
       case JSTRAP_ERROR:
@@ -924,7 +933,7 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     JSObject *obj;
 
     if (baseobj) {
-        obj = CopyInitializerObject(cx, baseobj);
+        obj = CopyInitializerObject(cx, RootedVarObject(cx, baseobj));
     } else {
         gc::AllocKind kind = GuessObjectGCKind(0);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
@@ -988,7 +997,7 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
      * Push a regexp object cloned from the regexp literal object mapped by the
      * bytecode at pc.
      */
-    JSObject *proto = f.fp()->scopeChain().global().getOrCreateRegExpPrototype(f.cx);
+    JSObject *proto = f.fp()->global().getOrCreateRegExpPrototype(f.cx);
     if (!proto)
         THROW();
     JS_ASSERT(proto);
@@ -999,11 +1008,13 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
 }
 
 JSObject * JS_FASTCALL
-stubs::Lambda(VMFrame &f, JSFunction *fun)
+stubs::Lambda(VMFrame &f, JSFunction *fun_)
 {
-    JSObject *parent;
+    RootedVarFunction fun(f.cx, fun_);
+
+    RootedVarObject parent(f.cx);
     if (fun->isNullClosure()) {
-        parent = &f.fp()->scopeChain();
+        parent = f.fp()->scopeChain();
     } else {
         parent = GetScopeChain(f.cx, f.fp());
         if (!parent)
@@ -1072,11 +1083,11 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     rval = regs.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
-    JSObject *obj = &regs.sp[-2].toObject();
+    RootedVarObject obj(cx, &regs.sp[-2].toObject());
     JS_ASSERT(obj->isNative());
 
     /* Get the immediate property name into id. */
-    jsid id = ATOM_TO_JSID(name);
+    jsid id = NameToId(name);
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
         ? !js_SetPropertyHelper(cx, obj, id, 0, &rval, false)
@@ -1113,7 +1124,7 @@ stubs::IterMore(VMFrame &f)
 
     Value v;
     JSObject *iterobj = &f.regs.sp[-1].toObject();
-    if (!js_IteratorMore(f.cx, iterobj, &v))
+    if (!js_IteratorMore(f.cx, RootedVarObject(f.cx, iterobj), &v))
         THROWV(JS_FALSE);
 
     return v.toBoolean();
@@ -1172,16 +1183,10 @@ stubs::Throw(VMFrame &f)
 void JS_FASTCALL
 stubs::Arguments(VMFrame &f)
 {
-    if (!f.fp()->hasArgsObj()) {
-        /*
-         * This case occurs when checkCallApplySpeculation detects that
-         * 'f.apply' is not actually js_fun_apply. In this case, we need to
-         * report the mis-speculation which will bail
-         */
-        if (!f.fp()->script()->applySpeculationFailed(f.cx))
-            THROW();
-    }
-    f.regs.sp[0] = ObjectValue(f.fp()->argsObj());
+    ArgumentsObject *obj = ArgumentsObject::create(f.cx, f.fp());
+    if (!obj)
+        THROW();
+    f.regs.sp[0] = ObjectValue(*obj);
 }
 
 JSBool JS_FASTCALL
@@ -1251,7 +1256,7 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
      * anything else we should have popped off fp->scopeChain() when we left its
      * static scope.
      */
-    JSObject *obj2 = &fp->scopeChain();
+    JSObject *obj2 = fp->scopeChain();
     while (obj2->isWith())
         obj2 = &obj2->asWith().enclosingScope();
     if (obj2->isBlock() &&
@@ -1280,7 +1285,7 @@ stubs::LeaveBlock(VMFrame &f)
      * cloned onto fp->scopeChain(), clear its private data, move its locals from
      * the stack into the clone, and pop it off the chain.
      */
-    JSObject &obj = fp->scopeChain();
+    JSObject &obj = *fp->scopeChain();
     if (obj.getProto() == &blockObj)
         obj.asClonedBlock().put(cx);
 
@@ -1386,7 +1391,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
         if (d == 0) {
             /* Treat -0 (double) as 0. */
             tableIdx = 0;
-        } else if (!JSDOUBLE_IS_INT32(d, &tableIdx)) {
+        } else if (!MOZ_DOUBLE_IS_INT32(d, &tableIdx)) {
             goto finally;
         }
     } else {
@@ -1422,11 +1427,14 @@ stubs::Pos(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::DelName(VMFrame &f, PropertyName *name)
+stubs::DelName(VMFrame &f, PropertyName *name_)
 {
+    RootedVarObject scopeObj(f.cx, f.cx->stack.currentScriptedScopeChain());
+    RootedVarPropertyName name(f.cx, name_);
+
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindProperty(f.cx, name, f.cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
+    if (!FindProperty(f.cx, name, scopeObj, &obj, &obj2, &prop))
         THROW();
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
@@ -1489,7 +1497,7 @@ stubs::DefVarOrConst(VMFrame &f, PropertyName *dn)
 
     JSObject &obj = f.fp()->varObj();
 
-    if (!DefVarOrConstOperation(f.cx, obj, dn, attrs))
+    if (!DefVarOrConstOperation(f.cx, RootedVarObject(f.cx, &obj), dn, attrs))
         THROW();
 }
 
@@ -1728,8 +1736,8 @@ stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
 
     if (vp->isDouble()) {
         if (Clamped)
-            return js_TypedArray_uint8_clamp_double(vp->toDouble());
-        return js_DoubleToECMAInt32(vp->toDouble());
+            return ClampDoubleToUint8(vp->toDouble());
+        return ToInt32(vp->toDouble());
     }
 
     if (vp->isNull() || vp->isObject() || vp->isUndefined())

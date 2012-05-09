@@ -141,6 +141,7 @@ private:
     // XXX need soft/hard limits, currentTotal
     nsDiskCacheMap          mCacheMap;
     bool                    mInitialized;
+    bool                    mClearingDiskCache;
 };
 
 #endif // _nsDiskCacheDevice_h_

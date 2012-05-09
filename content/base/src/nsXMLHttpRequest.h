@@ -69,8 +69,8 @@
 #include "nsDOMBlobBuilder.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "mozilla/dom/bindings/XMLHttpRequestBinding.h"
-#include "mozilla/dom/bindings/XMLHttpRequestUploadBinding.h"
+#include "mozilla/dom/XMLHttpRequestBinding.h"
+#include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 
 #include "mozilla/Assertions.h"
 
@@ -84,7 +84,7 @@ class nsIDOMFormData;
   {                                                                     \
     return GetListenerAsJSObject(mOn##_capitalized##Listener);          \
   }                                                                     \
-  void SetOn##_lowercase(JSContext* aCx, JSObject* aCallback, nsresult& aRv) \
+  void SetOn##_lowercase(JSContext* aCx, JSObject* aCallback, ErrorResult& aRv) \
   {                                                                     \
     aRv = SetJSObjectListener(aCx, NS_LITERAL_STRING(#_lowercase),      \
                               mOn##_capitalized##Listener,              \
@@ -95,7 +95,7 @@ class nsXHREventTarget : public nsDOMEventTargetHelper,
                          public nsIXMLHttpRequestEventTarget
 {
 public:
-  typedef mozilla::dom::bindings::prototypes::XMLHttpRequestResponseType::value
+  typedef mozilla::dom::XMLHttpRequestResponseType
           XMLHttpRequestResponseType;
 
   virtual ~nsXHREventTarget() {}
@@ -170,7 +170,7 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
-    return mozilla::dom::bindings::prototypes::XMLHttpRequestUpload::Wrap(cx, scope, this, triedToWrap);
+    return mozilla::dom::XMLHttpRequestUploadBinding::Wrap(cx, scope, this, triedToWrap);
   }
   nsISupports* GetParentObject()
   {
@@ -202,7 +202,7 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
-    return mozilla::dom::bindings::prototypes::XMLHttpRequest::Wrap(cx, scope, this, triedToWrap);
+    return mozilla::dom::XMLHttpRequestBinding::Wrap(cx, scope, this, triedToWrap);
   }
   nsISupports* GetParentObject()
   {
@@ -211,12 +211,12 @@ public:
 
   // The WebIDL parser converts constructors into methods called _Constructor.
   static already_AddRefed<nsXMLHttpRequest>
-  _Constructor(nsISupports* aGlobal, nsresult& aRv)
+  _Constructor(nsISupports* aGlobal, ErrorResult& aRv)
   {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
     nsCOMPtr<nsIScriptObjectPrincipal> principal = do_QueryInterface(aGlobal);
     if (!window || ! principal) {
-      aRv = NS_ERROR_FAILURE;
+      aRv.Throw(NS_ERROR_FAILURE);
       return NULL;
     }
 
@@ -283,13 +283,13 @@ public:
 
   // request
   void Open(const nsAString& aMethod, const nsAString& aUrl, bool aAsync,
-            const nsAString& aUser, const nsAString& aPassword, nsresult& aRv)
+            const nsAString& aUser, const nsAString& aPassword, ErrorResult& aRv)
   {
     aRv = Open(NS_ConvertUTF16toUTF8(aMethod), NS_ConvertUTF16toUTF8(aUrl),
                aAsync, aUser, aPassword);
   }
   void SetRequestHeader(const nsAString& aHeader, const nsAString& aValue,
-                        nsresult& aRv)
+                        ErrorResult& aRv)
   {
     aRv = SetRequestHeader(NS_ConvertUTF16toUTF8(aHeader),
                            NS_ConvertUTF16toUTF8(aValue));
@@ -298,7 +298,7 @@ public:
   {
     return mTimeoutMilliseconds;
   }
-  void SetTimeout(uint32_t aTimeout, nsresult& aRv);
+  void SetTimeout(uint32_t aTimeout, ErrorResult& aRv);
   bool GetWithCredentials();
   void SetWithCredentials(bool aWithCredentials, nsresult& aRv);
   nsXMLHttpRequestUpload* GetUpload();
@@ -370,61 +370,62 @@ private:
   };
 
   static nsresult GetRequestBody(nsIVariant* aVariant,
+                                 JSContext* aCx,
                                  const Nullable<RequestBody>& aBody,
                                  nsIInputStream** aResult,
                                  nsACString& aContentType,
                                  nsACString& aCharset);
 
-  nsresult Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody);
-  nsresult Send(const Nullable<RequestBody>& aBody)
+  nsresult Send(JSContext *aCx, nsIVariant* aVariant, const Nullable<RequestBody>& aBody);
+  nsresult Send(JSContext *aCx, const Nullable<RequestBody>& aBody)
   {
-    return Send(nsnull, aBody);
+    return Send(aCx, nsnull, aBody);
   }
-  nsresult Send(const RequestBody& aBody)
+  nsresult Send(JSContext *aCx, const RequestBody& aBody)
   {
-    return Send(Nullable<RequestBody>(aBody));
+    return Send(aCx, Nullable<RequestBody>(aBody));
   }
 
 public:
-  void Send(nsresult& aRv)
+  void Send(JSContext *aCx, ErrorResult& aRv)
   {
-    aRv = Send(Nullable<RequestBody>());
+    aRv = Send(aCx, Nullable<RequestBody>());
   }
-  void Send(JSObject* aArrayBuffer, nsresult& aRv)
+  void Send(JSContext *aCx, JSObject* aArrayBuffer, ErrorResult& aRv)
   {
     NS_ASSERTION(aArrayBuffer, "Null should go to string version");
-    aRv = Send(RequestBody(aArrayBuffer));
+    aRv = Send(aCx, RequestBody(aArrayBuffer));
   }
-  void Send(nsIDOMBlob* aBlob, nsresult& aRv)
+  void Send(JSContext *aCx, nsIDOMBlob* aBlob, ErrorResult& aRv)
   {
     NS_ASSERTION(aBlob, "Null should go to string version");
-    aRv = Send(RequestBody(aBlob));
+    aRv = Send(aCx, RequestBody(aBlob));
   }
-  void Send(nsIDocument* aDoc, nsresult& aRv)
+  void Send(JSContext *aCx, nsIDocument* aDoc, ErrorResult& aRv)
   {
     NS_ASSERTION(aDoc, "Null should go to string version");
-    aRv = Send(RequestBody(aDoc));
+    aRv = Send(aCx, RequestBody(aDoc));
   }
-  void Send(const nsAString& aString, nsresult& aRv)
+  void Send(JSContext *aCx, const nsAString& aString, ErrorResult& aRv)
   {
     if (DOMStringIsNull(aString)) {
-      Send(aRv);
+      Send(aCx, aRv);
     }
     else {
-      aRv = Send(RequestBody(aString));
+      aRv = Send(aCx, RequestBody(aString));
     }
   }
-  void Send(nsIDOMFormData* aFormData, nsresult& aRv)
+  void Send(JSContext *aCx, nsIDOMFormData* aFormData, ErrorResult& aRv)
   {
     NS_ASSERTION(aFormData, "Null should go to string version");
-    aRv = Send(RequestBody(aFormData));
+    aRv = Send(aCx, RequestBody(aFormData));
   }
-  void Send(nsIInputStream* aStream, nsresult& aRv)
+  void Send(JSContext *aCx, nsIInputStream* aStream, ErrorResult& aRv)
   {
     NS_ASSERTION(aStream, "Null should go to string version");
-    aRv = Send(RequestBody(aStream));
+    aRv = Send(aCx, RequestBody(aStream));
   }
-  void SendAsBinary(const nsAString& aBody, nsresult& aRv);
+  void SendAsBinary(JSContext *aCx, const nsAString& aBody, ErrorResult& aRv);
 
   void Abort();
 
@@ -432,9 +433,9 @@ public:
   uint32_t GetStatus();
   void GetStatusText(nsString& aStatusText);
   void GetResponseHeader(const nsACString& aHeader, nsACString& aResult,
-                         nsresult& aRv);
+                         ErrorResult& aRv);
   void GetResponseHeader(const nsAString& aHeader, nsString& aResult,
-                         nsresult& aRv)
+                         ErrorResult& aRv)
   {
     nsCString result;
     GetResponseHeader(NS_ConvertUTF16toUTF8(aHeader), result, aRv);
@@ -459,10 +460,10 @@ public:
   {
     return XMLHttpRequestResponseType(mResponseType);
   }
-  void SetResponseType(XMLHttpRequestResponseType aType, nsresult& aRv);
-  JS::Value GetResponse(JSContext* aCx, nsresult& aRv);
-  void GetResponseText(nsString& aResponseText, nsresult& aRv);
-  nsIDocument* GetResponseXML(nsresult& aRv);
+  void SetResponseType(XMLHttpRequestResponseType aType, ErrorResult& aRv);
+  JS::Value GetResponse(JSContext* aCx, ErrorResult& aRv);
+  void GetResponseText(nsString& aResponseText, ErrorResult& aRv);
+  nsIDocument* GetResponseXML(ErrorResult& aRv);
 
   bool GetMozBackgroundRequest();
   void SetMozBackgroundRequest(bool aMozBackgroundRequest, nsresult& aRv);
@@ -475,7 +476,7 @@ public:
   }
 
   // We need a GetInterface callable from JS for chrome JS
-  JS::Value GetInterface(JSContext*aCx, nsIJSIID* aIID, nsresult& aRv);
+  JS::Value GetInterface(JSContext* aCx, nsIJSIID* aIID, ErrorResult& aRv);
 
   // This creates a trusted readystatechange event, which is not cancelable and
   // doesn't bubble.
@@ -632,7 +633,7 @@ protected:
     XML_HTTP_RESPONSE_TYPE_MOZ_BLOB
   };
 
-  void SetResponseType(nsXMLHttpRequest::ResponseType aType, nsresult& aRv);
+  void SetResponseType(nsXMLHttpRequest::ResponseType aType, ErrorResult& aRv);
 
   ResponseType mResponseType;
 

@@ -37,6 +37,7 @@ let dm = Cc["@mozilla.org/download-manager;1"]
 let os = Cc["@mozilla.org/observer-service;1"]
            .getService(Ci.nsIObserverService);
 
+Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
 
 let checkDestination = false,
@@ -114,6 +115,10 @@ let downloadListener = {
 };
 
 function init() {
+  // Ensure that the download manager callbacks always use the window UI instead
+  // of the panel in the browser's window.
+  Services.prefs.setBoolPref("browser.download.useToolkitUI", true);
+
   ww.registerNotification(windowObserver);
   PlacesUtils.annotations.addObserver(annoObserver, false);
   dm.addListener(downloadListener);
@@ -161,6 +166,8 @@ function endTest() {
     .getService(Ci.nsIWindowMediator)
     .getMostRecentWindow("Download:Manager")
     .close();
+
+  Services.prefs.clearUserPref("browser.download.useToolkitUI");
 
   waitForClearHistory(SimpleTest.finish);
 }

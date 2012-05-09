@@ -280,7 +280,7 @@ XULDescriptionIterator::Next()
 IDRefsIterator::
   IDRefsIterator(nsDocAccessible* aDoc, nsIContent* aContent,
                  nsIAtom* aIDRefsAttr) :
-  mCurrIdx(0), mContent(aContent), mDoc(aDoc)
+  mContent(aContent), mDoc(aDoc), mCurrIdx(0)
 {
   if (mContent->IsInDoc())
     mContent->GetAttr(kNameSpaceID_None, aIDRefsAttr, mIDs);

@@ -97,9 +97,10 @@ struct JSSharpObjectMap {
 namespace js {
 
 namespace mjit {
-class JaegerCompartment;
+class JaegerRuntime;
 }
 
+class MathCache;
 class WeakMapBase;
 class InterpreterFrames;
 
@@ -128,7 +129,8 @@ GetGSNCache(JSContext *cx);
 
 struct PendingProxyOperation {
     PendingProxyOperation   *next;
-    JSObject                *object;
+    RootedVarObject         object;
+    PendingProxyOperation(JSContext *cx, JSObject *object) : next(NULL), object(cx, object) {}
 };
 
 typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
@@ -141,14 +143,26 @@ struct ConservativeGCData
      */
     uintptr_t           *nativeStackTop;
 
+#if defined(JSGC_ROOT_ANALYSIS) && (JS_STACK_GROWTH_DIRECTION < 0)
+    /*
+     * Record old contents of the native stack from the last time there was a
+     * scan, to reduce the overhead involved in repeatedly rescanning the
+     * native stack during root analysis. oldStackData stores words in reverse
+     * order starting at oldStackEnd.
+     */
+    uintptr_t           *oldStackMin, *oldStackEnd;
+    uintptr_t           *oldStackData;
+    size_t              oldStackCapacity; // in sizeof(uintptr_t)
+#endif
+
     union {
         jmp_buf         jmpbuf;
         uintptr_t       words[JS_HOWMANY(sizeof(jmp_buf), sizeof(uintptr_t))];
     } registerSnapshot;
 
-    ConservativeGCData()
-      : nativeStackTop(NULL)
-    {}
+    ConservativeGCData() {
+        PodZero(this);
+    }
 
     ~ConservativeGCData() {
 #ifdef JS_THREADSAFE
@@ -174,6 +188,144 @@ struct ConservativeGCData
     bool hasStackToScan() const {
         return !!nativeStackTop;
     }
+};
+
+class ToSourceCache
+{
+    typedef HashMap<JSFunction *,
+                    JSString *,
+                    DefaultHasher<JSFunction *>,
+                    SystemAllocPolicy> Map;
+    Map *map_;
+  public:
+    ToSourceCache() : map_(NULL) {}
+    JSString *lookup(JSFunction *fun);
+    void put(JSFunction *fun, JSString *);
+    void purge();
+};
+
+class EvalCache
+{
+    static const unsigned SHIFT = 6;
+    static const unsigned LENGTH = 1 << SHIFT;
+    JSScript *table_[LENGTH];
+
+  public:
+    EvalCache() { PodArrayZero(table_); }
+    JSScript **bucket(JSLinearString *str);
+    void purge();
+};
+
+class NativeIterCache
+{
+    static const size_t SIZE = size_t(1) << 8;
+
+    /* Cached native iterators. */
+    JSObject            *data[SIZE];
+
+    static size_t getIndex(uint32_t key) {
+        return size_t(key) % SIZE;
+    }
+
+  public:
+    /* Native iterator most recently started. */
+    JSObject            *last;
+
+    NativeIterCache()
+      : last(NULL) {
+        PodArrayZero(data);
+    }
+
+    void purge() {
+        last = NULL;
+        PodArrayZero(data);
+    }
+
+    JSObject *get(uint32_t key) const {
+        return data[getIndex(key)];
+    }
+
+    void set(uint32_t key, JSObject *iterobj) {
+        data[getIndex(key)] = iterobj;
+    }
+};
+
+/*
+ * Cache for speeding up repetitive creation of objects in the VM.
+ * When an object is created which matches the criteria in the 'key' section
+ * below, an entry is filled with the resulting object.
+ */
+class NewObjectCache
+{
+    /* Statically asserted to be equal to sizeof(JSObject_Slots16) */
+    static const unsigned MAX_OBJ_SIZE = 4 * sizeof(void*) + 16 * sizeof(Value);
+    static inline void staticAsserts();
+
+    struct Entry
+    {
+        /* Class of the constructed object. */
+        Class *clasp;
+
+        /*
+         * Key with one of three possible values:
+         *
+         * - Global for the object. The object must have a standard class for
+         *   which the global's prototype can be determined, and the object's
+         *   parent will be the global.
+         *
+         * - Prototype for the object (cannot be global). The object's parent
+         *   will be the prototype's parent.
+         *
+         * - Type for the object. The object's parent will be the type's
+         *   prototype's parent.
+         */
+        gc::Cell *key;
+
+        /* Allocation kind for the constructed object. */
+        gc::AllocKind kind;
+
+        /* Number of bytes to copy from the template object. */
+        uint32_t nbytes;
+
+        /*
+         * Template object to copy from, with the initial values of fields,
+         * fixed slots (undefined) and private data (NULL).
+         */
+        char templateObject[MAX_OBJ_SIZE];
+    };
+
+    Entry entries[41];  // TODO: reconsider size
+
+  public:
+
+    typedef int EntryIndex;
+
+    NewObjectCache() { PodZero(this); }
+    void purge() { PodZero(this); }
+
+    /*
+     * Get the entry index for the given lookup, return whether there was a hit
+     * on an existing entry.
+     */
+    inline bool lookupProto(Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry);
+    inline bool lookupGlobal(Class *clasp, js::GlobalObject *global, gc::AllocKind kind, EntryIndex *pentry);
+    inline bool lookupType(Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, EntryIndex *pentry);
+
+    /* Return a new object from a cache hit produced by a lookup method. */
+    inline JSObject *newObjectFromHit(JSContext *cx, EntryIndex entry);
+
+    /* Fill an entry after a cache miss. */
+    inline void fillProto(EntryIndex entry, Class *clasp, JSObject *proto, gc::AllocKind kind, JSObject *obj);
+    inline void fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj);
+    inline void fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, JSObject *obj);
+
+    /* Invalidate any entries which might produce an object with shape/proto. */
+    void invalidateEntriesForShape(JSContext *cx, Shape *shape, JSObject *proto);
+
+  private:
+    inline bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry);
+    inline void fill(EntryIndex entry, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj);
+    static inline void copyCachedToObject(JSObject *dst, JSObject *src);
 };
 
 /*
@@ -261,17 +413,37 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     JSC::ExecutableAllocator *execAlloc_;
     WTF::BumpPointerAllocator *bumpAlloc_;
+#ifdef JS_METHODJIT
+    js::mjit::JaegerRuntime *jaegerRuntime_;
+#endif
 
     JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
     WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
+    js::mjit::JaegerRuntime *createJaegerRuntime(JSContext *cx);
 
   public:
-    JSC::ExecutableAllocator *getExecutableAllocator(JSContext *cx) {
+    JSC::ExecutableAllocator *getExecAlloc(JSContext *cx) {
         return execAlloc_ ? execAlloc_ : createExecutableAllocator(cx);
+    }
+    JSC::ExecutableAllocator &execAlloc() {
+        JS_ASSERT(execAlloc_);
+        return *execAlloc_;
     }
     WTF::BumpPointerAllocator *getBumpPointerAllocator(JSContext *cx) {
         return bumpAlloc_ ? bumpAlloc_ : createBumpPointerAllocator(cx);
     }
+#ifdef JS_METHODJIT
+    js::mjit::JaegerRuntime *getJaegerRuntime(JSContext *cx) {
+        return jaegerRuntime_ ? jaegerRuntime_ : createJaegerRuntime(cx);
+    }
+    bool hasJaegerRuntime() const {
+        return jaegerRuntime_;
+    }
+    js::mjit::JaegerRuntime &jaegerRuntime() {
+        JS_ASSERT(hasJaegerRuntime());
+        return *jaegerRuntime_;
+    }
+#endif
 
     /* Base address of the native stack for the current thread. */
     uintptr_t           nativeStackBase;
@@ -362,6 +534,9 @@ struct JSRuntime : js::RuntimeFriendFields
     /* The gcNumber at the time of the most recent GC's first slice. */
     uint64_t            gcStartNumber;
 
+    /* Whether all compartments are being collected in first GC slice. */
+    bool                gcIsFull;
+
     /* The reason that an interrupt-triggered GC should be called. */
     js::gcreason::Reason gcTriggerReason;
 
@@ -397,6 +572,13 @@ struct JSRuntime : js::RuntimeFriendFields
     bool                gcIncrementalEnabled;
 
     /*
+     * Whether exact stack scanning is enabled for this runtime. This is
+     * currently only used for dynamic root analysis. Exact scanning starts out
+     * enabled, and is disabled if e4x has been used.
+     */
+    bool                gcExactScanningEnabled;
+
+    /*
      * We save all conservative scanned roots in this vector so that
      * conservative scanning can be "replayed" deterministically. In DEBUG mode,
      * this allows us to run a non-incremental GC after every incremental GC to
@@ -412,12 +594,6 @@ struct JSRuntime : js::RuntimeFriendFields
     js::Vector<SavedGCRoot, 0, js::SystemAllocPolicy> gcSavedRoots;
 #endif
 
-    /*
-     * We can pack these flags as only the GC thread writes to them. Atomic
-     * updates to packed bytes are not guaranteed, so stores issued by one
-     * thread may be lost due to unsynchronized read-modify-write cycles on
-     * other threads.
-     */
     bool                gcPoke;
     bool                gcRunning;
 
@@ -467,13 +643,6 @@ struct JSRuntime : js::RuntimeFriendFields
     JSGCCallback        gcCallback;
     js::GCSliceCallback gcSliceCallback;
     JSFinalizeCallback  gcFinalizeCallback;
-
-  private:
-    /*
-     * Malloc counter to measure memory pressure for GC scheduling. It runs
-     * from gcMaxMallocBytes down to zero.
-     */
-    volatile ptrdiff_t  gcMallocBytes;
 
   public:
     /*
@@ -567,29 +736,25 @@ struct JSRuntime : js::RuntimeFriendFields
     const char          *numGrouping;
 
     /*
-     * Weak references to lazily-created, well-known XML singletons.
-     *
-     * NB: Singleton objects must be carefully disconnected from the rest of
-     * the object graph usually associated with a JSContext's global object,
-     * including the set of standard class objects.  See jsxml.c for details.
-     */
-    JSObject            *anynameObject;
-    JSObject            *functionNamespaceObject;
-
-    /*
      * Flag indicating that we are waiving any soft limits on the GC heap
      * because we want allocations to be infallible (except when we hit OOM).
      */
     bool                waiveGCQuota;
 
-    /*
-     * The GSN cache is per thread since even multi-cx-per-thread embeddings
-     * do not interleave js_GetSrcNote calls.
-     */
-    js::GSNCache        gsnCache;
+  private:
+    js::MathCache *mathCache_;
+    js::MathCache *createMathCache(JSContext *cx);
+  public:
+    js::MathCache *getMathCache(JSContext *cx) {
+        return mathCache_ ? mathCache_ : createMathCache(cx);
+    }
 
-    /* Property cache for faster call/get/set invocation. */
+    js::GSNCache        gsnCache;
     js::PropertyCache   propertyCache;
+    js::NewObjectCache  newObjectCache;
+    js::NativeIterCache nativeIterCache;
+    js::ToSourceCache   toSourceCache;
+    js::EvalCache       evalCache;
 
     /* State used by jsdtoa.cpp. */
     DtoaState           *dtoaState;
@@ -614,6 +779,8 @@ struct JSRuntime : js::RuntimeFriendFields
     JSWrapObjectCallback wrapObjectCallback;
     JSPreWrapCallback    preWrapObjectCallback;
     js::PreserveWrapperCallback preserveWrapperCallback;
+
+    js::ScriptFilenameTable scriptFilenameTable;
 
 #ifdef DEBUG
     size_t              noGCOrAllocationCheck;
@@ -681,17 +848,8 @@ struct JSRuntime : js::RuntimeFriendFields
     JS_DECLARE_NEW_METHODS(malloc_, JS_ALWAYS_INLINE)
     JS_DECLARE_DELETE_METHODS(free_, JS_ALWAYS_INLINE)
 
-    bool isGCMallocLimitReached() const { return gcMallocBytes <= 0; }
-
-    void resetGCMallocBytes() { gcMallocBytes = ptrdiff_t(gcMaxMallocBytes); }
-
     void setGCMaxMallocBytes(size_t value) {
-        /*
-         * For compatibility treat any value that exceeds PTRDIFF_T_MAX to
-         * mean that value.
-         */
-        gcMaxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
-        resetGCMallocBytes();
+        gcMaxMallocBytes = value;
     }
 
     /*
@@ -703,12 +861,6 @@ struct JSRuntime : js::RuntimeFriendFields
      * the caller must ensure that no deadlock possible during OOM reporting.
      */
     void updateMallocCounter(JSContext *cx, size_t nbytes);
-
-    /*
-     * The function must be called outside the GC lock.
-     */
-    JS_FRIEND_API(void) onTooMuchMalloc();
-
     /*
      * This should be called after system malloc/realloc returns NULL to try
      * to recove some memory or to report an error. Failures in malloc and
@@ -727,7 +879,8 @@ struct JSRuntime : js::RuntimeFriendFields
     }
 
     void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
-                             size_t *regexpCode, size_t *stackCommitted, size_t *gcMarker);
+                             size_t *mjitCode, size_t *regexpCode, size_t *unusedCodeMemory,
+                             size_t *stackCommitted, size_t *gcMarker);
 };
 
 /* Common macros to access thread-local caches in JSRuntime. */
@@ -751,9 +904,6 @@ struct JSArgumentFormatMap {
 #endif
 
 namespace js {
-
-template <typename T> class Root;
-class CheckRoot;
 
 struct AutoResolving;
 
@@ -1031,29 +1181,6 @@ struct JSContext : js::ContextFriendFields
                                                JS_EndRequest. */
 #endif
 
-
-#ifdef JSGC_ROOT_ANALYSIS
-
-    /*
-     * Stack allocated GC roots for stack GC heap pointers, which may be
-     * overwritten if moved during a GC.
-     */
-    js::Root<js::gc::Cell*> *thingGCRooters[js::THING_ROOT_COUNT];
-
-#ifdef DEBUG
-    /*
-     * Stack allocated list of stack locations which hold non-relocatable
-     * GC heap pointers (where the target is rooted somewhere else) or integer
-     * values which may be confused for GC heap pointers. These are used to
-     * suppress false positives which occur when a rooting analysis treats the
-     * location as holding a relocatable pointer, but have no other effect on
-     * GC behavior.
-     */
-    js::CheckRoot *checkGCRooters;
-#endif
-
-#endif /* JSGC_ROOT_ANALYSIS */
-
     /* Stored here to avoid passing it around as a parameter. */
     unsigned               resolveFlags;
 
@@ -1066,7 +1193,7 @@ struct JSContext : js::ContextFriendFields
 #ifdef JS_METHODJIT
     bool                 methodJitEnabled;
 
-    inline js::mjit::JaegerCompartment *jaegerCompartment();
+    js::mjit::JaegerRuntime &jaegerRuntime() { return runtime->jaegerRuntime(); }
 #endif
 
     bool                 inferenceEnabled;
@@ -1546,15 +1673,6 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 #endif
 
 /*
- * If the operation callback flag was set, call the operation callback.
- * This macro can run the full GC. Return true if it is OK to continue and
- * false otherwise.
- */
-#define JS_CHECK_OPERATION_LIMIT(cx)                                          \
-    (JS_ASSERT_REQUEST_DEPTH(cx),                                             \
-     (!cx->runtime->interrupt || js_InvokeOperationCallback(cx)))
-
-/*
  * Invoke the operation callback and return false if the current execution
  * is to be terminated.
  */
@@ -1569,6 +1687,18 @@ js_GetCurrentBytecodePC(JSContext* cx);
 
 extern JSScript *
 js_GetCurrentScript(JSContext* cx);
+
+/*
+ * If the operation callback flag was set, call the operation callback.
+ * This macro can run the full GC. Return true if it is OK to continue and
+ * false otherwise.
+ */
+static MOZ_ALWAYS_INLINE bool
+JS_CHECK_OPERATION_LIMIT(JSContext *cx)
+{
+    JS_ASSERT_REQUEST_DEPTH(cx);
+    return !cx->runtime->interrupt || js_InvokeOperationCallback(cx);
+}
 
 namespace js {
 
@@ -1683,11 +1813,12 @@ class AutoValueArray : public AutoGCRooter
 {
     js::Value *start_;
     unsigned length_;
+    SkipRoot skip;
 
   public:
     AutoValueArray(JSContext *cx, js::Value *start, unsigned length
                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoGCRooter(cx, VALARRAY), start_(start), length_(length)
+      : AutoGCRooter(cx, VALARRAY), start_(start), length_(length), skip(cx, start, length)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }

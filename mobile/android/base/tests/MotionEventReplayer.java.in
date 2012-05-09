@@ -4,15 +4,18 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import android.app.Instrumentation;
+import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -24,6 +27,7 @@ class MotionEventReplayer {
     private final int mSurfaceOffsetX;
     private final int mSurfaceOffsetY;
     private final Map<String, Integer> mActionTypes;
+    private Method mObtainNanoMethod;
 
     public MotionEventReplayer(Instrumentation inst, int surfaceOffsetX, int surfaceOffsetY) {
         mInstrumentation = inst;
@@ -65,7 +69,9 @@ class MotionEventReplayer {
         return Integer.parseInt(value);
     }
 
-    public void replayEvents(InputStream eventDescriptions) throws IOException {
+    public void replayEvents(InputStream eventDescriptions)
+            throws IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException
+    {
         // As an example, a line in the input stream might look like:
         //
         // MotionEvent { action=ACTION_DOWN, id[0]=0, x[0]=424.41055, y[0]=825.2412,
@@ -119,12 +125,31 @@ class MotionEventReplayer {
 
                 int pointerCount = parseInt(eventProperties.get("pointerCount"));
                 int[] pointerIds = new int[pointerCount];
-                MotionEvent.PointerCoords[] pointerCoords = new MotionEvent.PointerCoords[pointerCount];
-                for (int i = 0; i < pointerCount; i++) {
-                    pointerIds[i] = Integer.parseInt(eventProperties.get("id[" + i + "]"));
-                    pointerCoords[i] = new MotionEvent.PointerCoords();
-                    pointerCoords[i].x = mSurfaceOffsetX + Float.parseFloat(eventProperties.get("x[" + i + "]"));
-                    pointerCoords[i].y = mSurfaceOffsetY + Float.parseFloat(eventProperties.get("y[" + i + "]"));
+                Object pointerData;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+                    MotionEvent.PointerCoords[] pointerCoords = new MotionEvent.PointerCoords[pointerCount];
+                    for (int i = 0; i < pointerCount; i++) {
+                        pointerIds[i] = Integer.parseInt(eventProperties.get("id[" + i + "]"));
+                        pointerCoords[i] = new MotionEvent.PointerCoords();
+                        pointerCoords[i].x = mSurfaceOffsetX + Float.parseFloat(eventProperties.get("x[" + i + "]"));
+                        pointerCoords[i].y = mSurfaceOffsetY + Float.parseFloat(eventProperties.get("y[" + i + "]"));
+                    }
+                    pointerData = pointerCoords;
+                } else {
+                    // pre-gingerbread we have to use a hidden API to create the motion event, and we have
+                    // to create a flattened list of floats rather than an array of PointerCoords
+                    final int NUM_SAMPLE_DATA = 4; // MotionEvent.NUM_SAMPLE_DATA
+                    final int SAMPLE_X = 0; // MotionEvent.SAMPLE_X
+                    final int SAMPLE_Y = 1; // MotionEvent.SAMPLE_Y
+                    float[] sampleData = new float[pointerCount * NUM_SAMPLE_DATA];
+                    for (int i = 0; i < pointerCount; i++) {
+                        pointerIds[i] = Integer.parseInt(eventProperties.get("id[" + i + "]"));
+                        sampleData[(i * NUM_SAMPLE_DATA) + SAMPLE_X] =
+                                mSurfaceOffsetX + Float.parseFloat(eventProperties.get("x[" + i + "]"));
+                        sampleData[(i * NUM_SAMPLE_DATA) + SAMPLE_Y] =
+                                mSurfaceOffsetY + Float.parseFloat(eventProperties.get("y[" + i + "]"));
+                    }
+                    pointerData = sampleData;
                 }
 
                 // we want to adjust the timestamps on all the generated events so that they line up with
@@ -147,9 +172,23 @@ class MotionEventReplayer {
                 }
 
                 // and finally we dispatch the event
-                MotionEvent event = MotionEvent.obtain(downTime, eventTime, action, pointerCount,
-                        pointerIds, pointerCoords, metaState, xPrecision, yPrecision, deviceId, edgeFlags,
-                        source, flags);
+                MotionEvent event;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+                    event = MotionEvent.obtain(downTime, eventTime, action, pointerCount,
+                            pointerIds, (MotionEvent.PointerCoords[])pointerData, metaState,
+                            xPrecision, yPrecision, deviceId, edgeFlags, source, flags);
+                } else {
+                    // pre-gingerbread we have to use a hidden API to accomplish this
+                    if (mObtainNanoMethod == null) {
+                        mObtainNanoMethod = MotionEvent.class.getMethod("obtainNano", long.class,
+                            long.class, long.class, int.class, int.class, pointerIds.getClass(),
+                            pointerData.getClass(), int.class, float.class, float.class,
+                            int.class, int.class);
+                    }
+                    event = (MotionEvent)mObtainNanoMethod.invoke(null, downTime, eventTime,
+                            eventTime * 1000000, action, pointerCount, pointerIds, (float[])pointerData,
+                            metaState, xPrecision, yPrecision, deviceId, edgeFlags);
+                }
                 Log.v(LOGTAG, "Injecting " + event.toString());
                 mInstrumentation.sendPointerSync(event);
 

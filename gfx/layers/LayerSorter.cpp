@@ -156,7 +156,7 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
     }
   }
   // If layers have the same depth keep the original order
-  if (highest >= 0) {
+  if (fabs(highest) < 0.1 || highest >= 0) {
     return ABeforeB;
   } else {
     return BBeforeA;
@@ -166,10 +166,61 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
 #ifdef DEBUG
 static bool gDumpLayerSortList = getenv("MOZ_DUMP_LAYER_SORT_LIST") != 0;
 
+#define BLACK       0
+#define RED         1
+#define GREEN       2
+#define YELLOW      3
+#define BLUE        4
+#define MAGENTA     5
+#define CYAN        6
+#define WHITE       7
+
+//#define USE_XTERM_COLORING
+#ifdef USE_XTERM_COLORING
+
+#define RESET       0
+#define BRIGHT      1
+#define DIM         2
+#define UNDERLINE   3
+#define BLINK       4
+#define REVERSE     7
+#define HIDDEN      8
+
+static void SetTextColor(PRUint32 aColor)
+{
+  char command[13];
+
+  /* Command is the control command to the terminal */
+  sprintf(command, "%c[%d;%d;%dm", 0x1B, RESET, aColor + 30, BLACK + 40);
+  printf("%s", command);
+}
+
+static void print_layer_internal(FILE* aFile, Layer* aLayer, PRUint32 aColor)
+{
+  SetTextColor(aColor);
+  fprintf(aFile, "%p", aLayer);
+  SetTextColor(GREEN);
+}
+#else
+
+const char *colors[] = { "Black", "Red", "Green", "Yellow", "Blue", "Magenta", "Cyan", "White" };
+
+static void print_layer_internal(FILE* aFile, Layer* aLayer, PRUint32 aColor)
+{
+  fprintf(aFile, "%p(%s)", aLayer, colors[aColor]);
+}
+#endif
+
+static void print_layer(FILE* aFile, Layer* aLayer)
+{
+  print_layer_internal(aFile, aLayer, aLayer->GetDebugColorIndex());
+}
+
 static void DumpLayerList(nsTArray<Layer*>& aLayers)
 {
   for (PRUint32 i = 0; i < aLayers.Length(); i++) {
-    fprintf(stderr, "%p, ", aLayers.ElementAt(i));
+    print_layer(stderr, aLayers.ElementAt(i));
+    fprintf(stderr, " ");
   }
   fprintf(stderr, "\n");
 }
@@ -179,7 +230,11 @@ static void DumpEdgeList(DirectedGraph<Layer*>& aGraph)
   nsTArray<DirectedGraph<Layer*>::Edge> edges = aGraph.GetEdgeList();
   
   for (PRUint32 i = 0; i < edges.Length(); i++) {
-    fprintf(stderr, "From: %p, To: %p\n", edges.ElementAt(i).mFrom, edges.ElementAt(i).mTo);
+    fprintf(stderr, "From: ");
+    print_layer(stderr, edges.ElementAt(i).mFrom);
+    fprintf(stderr, ", To: ");
+    print_layer(stderr, edges.ElementAt(i).mTo);
+    fprintf(stderr, "\n");
   }
 }
 #endif
@@ -188,6 +243,9 @@ static void DumpEdgeList(DirectedGraph<Layer*>& aGraph)
 // greater than this will be left unsorted. We should consider enabling
 // depth buffering for the scene in this case.
 #define MAX_SORTABLE_LAYERS 100
+
+
+PRUint32 gColorIndex = 1;
 
 void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
 {
@@ -199,6 +257,14 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
 
 #ifdef DEBUG
   if (gDumpLayerSortList) {
+    for (PRUint32 i = 0; i < nodeCount; i++) {
+      if (aLayers.ElementAt(i)->GetDebugColorIndex() == 0) {
+        aLayers.ElementAt(i)->SetDebugColorIndex(gColorIndex++);
+        if (gColorIndex > 7) {
+          gColorIndex = 1;
+        }
+      }
+    }
     fprintf(stderr, " --- Layers before sorting: --- \n");
     DumpLayerList(aLayers);
   }

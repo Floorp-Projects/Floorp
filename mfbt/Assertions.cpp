@@ -38,54 +38,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Types.h"
-
-#include <cstdio>
-#include <cstdlib>
-#ifndef WIN32
-#include <signal.h>
-#endif
+#include "mozilla/Assertions.h"
 
 /* Implementations of runtime and static assertion macros for C and C++. */
 
 extern "C" {
 
 MOZ_EXPORT_API(void)
-MOZ_Crash()
-{
-  /*
-   * We write 123 here so that the machine code for this function is
-   * unique. Otherwise the linker, trying to be smart, might use the
-   * same code for MOZ_Crash and for some other function. That
-   * messes up the signature in minidumps.
-   */
-
-#if defined(WIN32)
-  /*
-   * We used to call DebugBreak() on Windows, but amazingly, it causes
-   * the MSVS 2010 debugger not to be able to recover a call stack.
-   */
-  *((volatile int *) NULL) = 123;
-  exit(3);
-#elif defined(__APPLE__)
-  /*
-   * On Mac OS X, Breakpad ignores signals. Only real Mach exceptions are
-   * trapped.
-   */
-  *((volatile int *) NULL) = 123;  /* To continue from here in GDB: "return" then "continue". */
-  raise(SIGABRT);  /* In case above statement gets nixed by the optimizer. */
-#else
-  raise(SIGABRT);  /* To continue from here in GDB: "signal 0". */
-#endif
-}
-
-MOZ_EXPORT_API(void)
 MOZ_Assert(const char* s, const char* file, int ln)
 {
-  fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
-  fflush(stderr);
-  MOZ_Crash();
+  MOZ_OutputAssertMessage(s, file, ln);
+  MOZ_CRASH();
 }
 
 }

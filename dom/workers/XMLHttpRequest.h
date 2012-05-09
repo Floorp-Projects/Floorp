@@ -10,16 +10,13 @@
 #include "mozilla/dom/workers/bindings/WorkerFeature.h"
 
 // Need this for XMLHttpRequestResponseType.
-#include "mozilla/dom/bindings/XMLHttpRequestBinding.h"
+#include "mozilla/dom/XMLHttpRequestBinding.h"
 
 BEGIN_WORKERS_NAMESPACE
 
 class Proxy;
 class XMLHttpRequestUpload;
 class WorkerPrivate;
-
-typedef mozilla::dom::bindings::prototypes::XMLHttpRequestResponseType::value
-        XMLHttpRequestResponseType;
 
 class XMLHttpRequest : public XMLHttpRequestEventTarget,
                        public WorkerFeature
@@ -71,7 +68,7 @@ public:
   _Finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   static XMLHttpRequest*
-  _Constructor(JSContext* aCx, JSObject* aGlobal, nsresult& aRv);
+  _Constructor(JSContext* aCx, JSObject* aGlobal, ErrorResult& aRv);
 
   void
   Unpin();
@@ -81,13 +78,13 @@ public:
 
 #define IMPL_GETTER_AND_SETTER(_type)                                          \
   JSObject*                                                                    \
-  GetOn##_type(nsresult& aRv)                                                  \
+  GetOn##_type(ErrorResult& aRv)                                               \
   {                                                                            \
     return GetEventListener(NS_LITERAL_STRING(#_type), aRv);                   \
   }                                                                            \
                                                                                \
   void                                                                         \
-  SetOn##_type(JSObject* aListener, nsresult& aRv)                             \
+  SetOn##_type(JSObject* aListener, ErrorResult& aRv)                          \
   {                                                                            \
     SetEventListener(NS_LITERAL_STRING(#_type), aListener, aRv);               \
   }
@@ -104,68 +101,68 @@ public:
 
   void
   Open(const nsAString& aMethod, const nsAString& aUrl, bool aAsync,
-       const nsAString& aUser, const nsAString& aPassword, nsresult& aRv);
+       const nsAString& aUser, const nsAString& aPassword, ErrorResult& aRv);
 
   void
   SetRequestHeader(const nsAString& aHeader, const nsAString& aValue,
-                   nsresult& aRv);
+                   ErrorResult& aRv);
 
   uint32_t
-  GetTimeout(nsresult& aRv) const
+  GetTimeout() const
   {
     return mTimeout;
   }
 
   void
-  SetTimeout(uint32_t aTimeout, nsresult& aRv);
+  SetTimeout(uint32_t aTimeout, ErrorResult& aRv);
 
   bool
-  GetWithCredentials(nsresult& aRv) const
+  GetWithCredentials() const
   {
     return mWithCredentials;
   }
 
   void
-  SetWithCredentials(bool aWithCredentials, nsresult& aRv);
+  SetWithCredentials(bool aWithCredentials, ErrorResult& aRv);
 
   bool
-  GetMultipart(nsresult& aRv) const
+  GetMultipart() const
   {
     return mMultipart;
   }
 
   void
-  SetMultipart(bool aMultipart, nsresult& aRv);
+  SetMultipart(bool aMultipart, ErrorResult& aRv);
 
   bool
-  GetMozBackgroundRequest(nsresult& aRv) const
+  GetMozBackgroundRequest() const
   {
     return mBackgroundRequest;
   }
 
   void
-  SetMozBackgroundRequest(bool aBackgroundRequest, nsresult& aRv);
+  SetMozBackgroundRequest(bool aBackgroundRequest, ErrorResult& aRv);
 
   XMLHttpRequestUpload*
-  GetUpload(nsresult& aRv);
+  GetUpload(ErrorResult& aRv);
 
   void
-  Send(nsresult& aRv);
+  Send(ErrorResult& aRv);
 
   void
-  Send(const nsAString& aBody, nsresult& aRv);
+  Send(const nsAString& aBody, ErrorResult& aRv);
 
   void
-  Send(JSObject* aBody, nsresult& aRv);
+  Send(JSObject* aBody, ErrorResult& aRv);
 
   void
-  SendAsBinary(const nsAString& aBody, nsresult& aRv);
+  SendAsBinary(const nsAString& aBody, ErrorResult& aRv);
 
   void
-  Abort(nsresult& aRv);
+  Abort(ErrorResult& aRv);
 
   uint16_t
-  GetStatus(nsresult& aRv) const
+  GetStatus(ErrorResult& aRv) const
   {
     aRv = mStateData.mStatusResult;
     return mStateData.mStatus;
@@ -179,45 +176,45 @@ public:
 
   void
   GetResponseHeader(const nsAString& aHeader, nsAString& aResponseHeader,
-                    nsresult& aRv);
+                    ErrorResult& aRv);
 
   void
-  GetAllResponseHeaders(nsAString& aResponseHeaders, nsresult& aRv);
+  GetAllResponseHeaders(nsAString& aResponseHeaders, ErrorResult& aRv);
 
   void
-  OverrideMimeType(const nsAString& aMimeType, nsresult& aRv);
+  OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv);
 
   XMLHttpRequestResponseType
-  GetResponseType(nsresult& aRv) const
+  GetResponseType() const
   {
     return mResponseType;
   }
 
   void
-  SetResponseType(XMLHttpRequestResponseType aResponseType, nsresult& aRv);
+  SetResponseType(XMLHttpRequestResponseType aResponseType, ErrorResult& aRv);
 
   jsval
-  GetResponse(nsresult& aRv);
+  GetResponse(ErrorResult& aRv);
 
   void
-  GetResponseText(nsAString& aResponseText, nsresult& aRv);
+  GetResponseText(nsAString& aResponseText, ErrorResult& aRv);
 
   JSObject*
-  GetResponseXML(nsresult& aRv) const
+  GetResponseXML() const
   {
     return NULL;
   }
 
   JSObject*
-  GetChannel(nsresult& aRv) const
+  GetChannel() const
   {
     return NULL;
   }
 
   JS::Value
-  GetInterface(JSObject* aIID, nsresult& aRv)
+  GetInterface(JSObject* aIID, ErrorResult& aRv)
   {
-    aRv = NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
     return JSVAL_NULL;
   }
 
@@ -247,14 +244,14 @@ private:
   ReleaseProxy(ReleaseType aType = Default);
 
   void
-  MaybePin(nsresult& aRv);
+  MaybePin(ErrorResult& aRv);
 
   void
-  MaybeDispatchPrematureAbortEvents(nsresult& aRv);
+  MaybeDispatchPrematureAbortEvents(ErrorResult& aRv);
 
   void
   DispatchPrematureAbortEvent(JSObject* aTarget, uint8_t aEventType,
-                              bool aUploadTarget, nsresult& aRv);
+                              bool aUploadTarget, ErrorResult& aRv);
 
   bool
   SendInProgress() const
@@ -266,7 +263,7 @@ private:
   SendInternal(const nsAString& aStringBody,
                JSAutoStructuredCloneBuffer& aBody,
                nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects,
-               nsresult& aRv);
+               ErrorResult& aRv);
 };
 
 END_WORKERS_NAMESPACE

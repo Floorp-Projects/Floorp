@@ -1,4 +1,2 @@
 conformance/glsl/misc/glsl-function-nodes.html
 conformance/programs/program-test.html
-conformance/textures/texture-mips.html
-conformance/textures/texture-npot.html

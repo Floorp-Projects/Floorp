@@ -54,7 +54,6 @@
 #include "nsIDOMToString.h"
 #include "nsDOMEvent.h"
 #include "nsIDOMStorageEvent.h"
-#include "nsIDOMStorageEventObsolete.h"
 #include "nsIDOMStorageManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
@@ -339,6 +338,8 @@ private:
   nsDOMStorage* mOwner;
 };
 
+class nsDOMStorage2;
+
 class nsDOMStorage : public nsIDOMStorageObsolete,
                      public nsPIDOMStorage
 {
@@ -366,9 +367,6 @@ public:
   virtual nsIPrincipal* Principal();
   virtual bool CanAccess(nsIPrincipal *aPrincipal);
   virtual nsDOMStorageType StorageType();
-  virtual void BroadcastChangeNotification(const nsSubstring &aKey,
-                                           const nsSubstring &aOldValue,
-                                           const nsSubstring &aNewValue);
 
   // Check whether storage may be used by the caller, and whether it
   // is session only.  Returns true if storage may be used.
@@ -387,11 +385,6 @@ public:
   CacheStoragePermissions();
 
   nsIDOMStorageItem* GetNamedItem(const nsAString& aKey, nsresult* aResult);
-
-  static nsDOMStorage* FromSupports(nsISupports* aSupports)
-  {
-    return static_cast<nsDOMStorage*>(static_cast<nsIDOMStorageObsolete*>(aSupports));
-  }
 
   nsresult SetSecure(const nsAString& aKey, bool aSecure)
   {
@@ -419,7 +412,7 @@ public:
 
   friend class nsIDOMStorage2;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsPIDOMStorage* mEventBroadcaster;
+  nsDOMStorage2* mEventBroadcaster;
 };
 
 class nsDOMStorage2 : public nsIDOMStorage,
@@ -445,13 +438,13 @@ public:
   virtual nsIPrincipal* Principal();
   virtual bool CanAccess(nsIPrincipal *aPrincipal);
   virtual nsDOMStorageType StorageType();
-  virtual void BroadcastChangeNotification(const nsSubstring &aKey,
-                                           const nsSubstring &aOldValue,
-                                           const nsSubstring &aNewValue);
 
-  nsresult InitAsSessionStorageFork(nsIPrincipal *aPrincipal,
-                                    const nsSubstring &aDocumentURI,
-                                    nsIDOMStorageObsolete* aStorage);
+  void BroadcastChangeNotification(const nsSubstring &aKey,
+                                   const nsSubstring &aOldValue,
+                                   const nsSubstring &aNewValue);
+  void InitAsSessionStorageFork(nsIPrincipal *aPrincipal,
+                                const nsSubstring &aDocumentURI,
+                                nsDOMStorage* aStorage);
 
 private:
   // storages bound to an origin hold the principal to
@@ -555,30 +548,6 @@ protected:
   nsString mUrl;
   nsCOMPtr<nsIDOMStorage> mStorageArea;
 };
-
-class nsDOMStorageEventObsolete : public nsDOMEvent,
-                          public nsIDOMStorageEventObsolete
-{
-public:
-  nsDOMStorageEventObsolete()
-    : nsDOMEvent(nsnull, nsnull)
-  {
-  }
-
-  virtual ~nsDOMStorageEventObsolete()
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMSTORAGEEVENTOBSOLETE
-  NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
-
-protected:
-  nsString mDomain;
-};
-
-nsresult
-NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult);

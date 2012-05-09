@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: derive.c,v 1.13 2011/03/22 22:15:22 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: derive.c,v 1.13.2.2 2012/04/20 00:37:53 emaldona%redhat.com Exp $ */
 
 #include "ssl.h" 	/* prereq to sslimpl.h */
 #include "certt.h"	/* prereq to sslimpl.h */

@@ -21,7 +21,7 @@
           testResult = event.target.result;
         }
         else {
-          testException = event.target.errorCode;
+          testException = event.target.error.name;
         }
 
         finishTest()

@@ -72,7 +72,15 @@ bool
 nsHTMLEditUtils::IsInlineStyle(nsIDOMNode *node)
 {
   NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsInlineStyle");
-  nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(node);
+  nsCOMPtr<dom::Element> element = do_QueryInterface(node);
+  return element && IsInlineStyle(element);
+}
+
+bool
+nsHTMLEditUtils::IsInlineStyle(dom::Element* aElement)
+{
+  MOZ_ASSERT(aElement);
+  nsIAtom* nodeAtom = aElement->Tag();
   return (nodeAtom == nsEditProperty::b)
       || (nodeAtom == nsEditProperty::i)
       || (nodeAtom == nsEditProperty::u)
@@ -94,7 +102,15 @@ bool
 nsHTMLEditUtils::IsFormatNode(nsIDOMNode *node)
 {
   NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsFormatNode");
-  nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(node);
+  nsCOMPtr<dom::Element> element = do_QueryInterface(node);
+  return element && IsFormatNode(element);
+}
+
+bool
+nsHTMLEditUtils::IsFormatNode(dom::Element* aElement)
+{
+  MOZ_ASSERT(aElement);
+  nsIAtom* nodeAtom = aElement->Tag();
   return (nodeAtom == nsEditProperty::p)
       || (nodeAtom == nsEditProperty::pre)
       || (nodeAtom == nsEditProperty::h1)
@@ -423,34 +439,29 @@ nsHTMLEditUtils::IsMozDiv(nsIDOMNode *node)
 ///////////////////////////////////////////////////////////////////////////
 // IsMailCite: true if node an html blockquote with type=cite
 //                  
-bool 
-nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
+bool
+nsHTMLEditUtils::IsMailCite(nsIDOMNode* aNode)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsMailCite");
-  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(node);
-  if (!elem) {
-    return false;
-  }
-  nsAutoString attrName (NS_LITERAL_STRING("type")); 
-  
+  NS_PRECONDITION(aNode, "null parent passed to nsHTMLEditUtils::IsMailCite");
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
+  return element && IsMailCite(element);
+}
+
+bool
+nsHTMLEditUtils::IsMailCite(dom::Element* aElement)
+{
+  MOZ_ASSERT(aElement);
+
   // don't ask me why, but our html mailcites are id'd by "type=cite"...
-  nsAutoString attrVal;
-  nsresult res = elem->GetAttribute(attrName, attrVal);
-  ToLowerCase(attrVal);
-  if (NS_SUCCEEDED(res))
-  {
-    if (attrVal.EqualsLiteral("cite"))
-      return true;
+  if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            NS_LITERAL_STRING("cite"), eIgnoreCase)) {
+    return true;
   }
 
   // ... but our plaintext mailcites by "_moz_quote=true".  go figure.
-  attrName.AssignLiteral("_moz_quote");
-  res = elem->GetAttribute(attrName, attrVal);
-  if (NS_SUCCEEDED(res))
-  {
-    ToLowerCase(attrVal);
-    if (attrVal.EqualsLiteral("true"))
-      return true;
+  if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mozquote,
+                            NS_LITERAL_STRING("true"), eIgnoreCase)) {
+    return true;
   }
 
   return false;

@@ -17,11 +17,11 @@ class MultiEmulatorDialTest(MarionetteTestCase):
         # a global variable when an incoming call is received.
         receiver.set_context("chrome")
         self.assertTrue(receiver.execute_script("""
-return navigator.mozTelephony != undefined && navigator.mozTelephony != null;
+return window.navigator.mozTelephony != undefined && window.navigator.mozTelephony != null;
 """))
         receiver.execute_script("""
 window.wrappedJSObject.incoming = "none";
-navigator.mozTelephony.addEventListener("incoming", function(e) {
+window.navigator.mozTelephony.addEventListener("incoming", function(e) {
     window.wrappedJSObject.incoming = e.call.number;
 });
 """)
@@ -31,7 +31,7 @@ navigator.mozTelephony.addEventListener("incoming", function(e) {
         fromPhoneNumber = "1555521%d" % sender.emulator.port
         sender.set_context("chrome")
         sender.execute_script("""
-navigator.mozTelephony.dial("%s");
+window.navigator.mozTelephony.dial("%s");
 """ % toPhoneNumber)
 
         # On the receiver, wait up to 30s for an incoming call to be 

@@ -500,7 +500,8 @@ class nsDocument : public nsIDocument,
                    public nsIApplicationCacheContainer,
                    public nsStubMutationObserver,
                    public nsIDOMDocumentTouch,
-                   public nsIInlineEventHandlers
+                   public nsIInlineEventHandlers,
+                   public nsIObserver
 {
 public:
   typedef mozilla::dom::Element Element;
@@ -754,8 +755,7 @@ public:
   virtual void SetValueMissingState(const nsAString& aName, bool aValue);
 
   // for radio group
-  nsresult GetRadioGroup(const nsAString& aName,
-                         nsRadioGroupStruct **aRadioGroup);
+  nsRadioGroupStruct* GetRadioGroup(const nsAString& aName);
 
   // nsIDOMNode
   NS_DECL_NSIDOMNODE
@@ -788,6 +788,9 @@ public:
 
   // nsIInlineEventHandlers
   NS_DECL_NSIINLINEEVENTHANDLERS
+
+  // nsIObserver
+  NS_DECL_NSIOBSERVER
 
   virtual nsresult Init();
   
@@ -986,6 +989,11 @@ public:
   // Returns the top element from the full-screen stack.
   Element* FullScreenStackTop();
 
+  void RequestPointerLock(Element* aElement);
+  bool ShouldLockPointer(Element* aElement);
+  bool SetPointerLock(Element* aElement, int aCursorStyle);
+  static void UnlockPointer();
+
   // This method may fire a DOM event; if it does so it will happen
   // synchronously.
   void UpdateVisibilityState();
@@ -995,6 +1003,7 @@ public:
   virtual void DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const;
   // DocSizeOfIncludingThis is inherited from nsIDocument.
 
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   friend class nsNodeUtils;
 
@@ -1129,6 +1138,15 @@ protected:
   // document is hidden/navigation occurs.
   static nsWeakPtr sFullScreenRootDoc;
 
+  // Weak reference to the document which owned the pending pointer lock
+  // element, at the time it requested pointer lock.
+  static nsWeakPtr sPendingPointerLockDoc;
+
+  // Weak reference to the element which requested pointer lock. This request
+  // is "pending", and will be processed once the element's document has had
+  // the "fullscreen" permission granted.
+  static nsWeakPtr sPendingPointerLockElement;
+
   // Stack of full-screen elements. When we request full-screen we push the
   // full-screen element onto this stack, and when we cancel full-screen we
   // pop one off this stack, restoring the previous full-screen state
@@ -1189,9 +1207,6 @@ protected:
   // "mozaudioavailable" event.
   bool mHasAudioAvailableListener:1;
 
-  // Whether we are currently in full-screen mode, as per the DOM API.
-  bool mIsFullScreen:1;
-
   // Whether we're currently under a FlushPendingNotifications call to
   // our presshell.  This is used to handle flush reentry correctly.
   bool mInFlush:1;
@@ -1238,6 +1253,16 @@ private:
 
   nsresult CheckFrameOptions();
   nsresult InitCSP();
+
+  // Sets aElement to be the pending pointer lock element. Once this document's
+  // node principal's URI is granted the "fullscreen" permission, the pointer
+  // lock request will be processed. At any one time there can be only one
+  // pending pointer lock request; calling this clears the previous pending
+  // request.
+  static nsresult SetPendingPointerLockRequest(Element* aElement);
+
+  // Clears any pending pointer lock request.
+  static void ClearPendingPointerLockRequest(bool aDispatchErrorEvents);
 
   /**
    * See if aDocument is a child of this.  If so, return the frame element in

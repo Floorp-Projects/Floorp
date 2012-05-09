@@ -2,7 +2,7 @@
 #
 # This includes classes for representing and parsing JS manifests.
 
-import os, re, sys
+import os, os.path, re, sys
 from subprocess import *
 
 from tests import TestCase
@@ -49,10 +49,10 @@ class XULInfo:
 
         path = None
         for dir in dirs:
-          _path = os.path.join(dir, 'config/autoconf.mk')
-          if os.path.isfile(_path):
-              path = _path
-              break
+            _path = os.path.join(dir, 'config/autoconf.mk')
+            if os.path.isfile(_path):
+                path = _path
+                break
 
         if path == None:
             print ("Can't find config/autoconf.mk on a directory containing the JS shell"
@@ -105,128 +105,222 @@ class NullXULInfoTester:
     def test(self, cond):
         return False
 
-def parse(filename, xul_tester, reldir = ''):
-    ans = []
-    comment_re = re.compile(r'#.*')
-    dirname = os.path.dirname(filename)
+def _parse_one(parts, xul_tester):
+    script = None
+    enable = True
+    expect = True
+    random = False
+    slow = False
+    debugMode = False
 
-    try:
-        f = open(filename)
-    except IOError:
-        print "warning: include file not found: '%s'"%filename
-        return ans
-
-    for line in f:
-        sline = comment_re.sub('', line)
-        parts = sline.split()
-        if len(parts) == 0:
-            # line is empty or just a comment, skip
-            pass
-        elif parts[0] == 'include':
-            include_file = parts[1]
-            include_reldir = os.path.join(reldir, os.path.dirname(include_file))
-            ans += parse(os.path.join(dirname, include_file), xul_tester, include_reldir)
-        elif parts[0] == 'url-prefix':
-            # Doesn't apply to shell tests
-            pass
-        else:
-            script = None
-            enable = True
-            expect = True
-            random = False
-            slow = False
-            debugMode = False
-
-            pos = 0
-            while pos < len(parts):
-                if parts[pos] == 'fails':
-                    expect = False
-                    pos += 1
-                elif parts[pos] == 'skip':
-                    expect = enable = False
-                    pos += 1
-                elif parts[pos] == 'random':
-                    random = True
-                    pos += 1
-                elif parts[pos].startswith('fails-if'):
-                    cond = parts[pos][len('fails-if('):-1]
-                    if xul_tester.test(cond):
-                        expect = False
-                    pos += 1
-                elif parts[pos].startswith('asserts-if'):
-                    # This directive means we may flunk some number of
-                    # NS_ASSERTIONs in the browser. For the shell, ignore it.
-                    pos += 1
-                elif parts[pos].startswith('skip-if'):
-                    cond = parts[pos][len('skip-if('):-1]
-                    if xul_tester.test(cond):
-                        expect = enable = False
-                    pos += 1
-                elif parts[pos].startswith('random-if'):
-                    cond = parts[pos][len('random-if('):-1]
-                    if xul_tester.test(cond):
-                        random = True
-                    pos += 1
-                elif parts[pos].startswith('require-or'):
-                    cond = parts[pos][len('require-or('):-1]
-                    (preconditions, fallback_action) = re.split(",", cond)
-                    for precondition in re.split("&&", preconditions):
-                        if precondition == 'debugMode':
-                            debugMode = True
-                        elif precondition == 'true':
-                            pass
-                        else:
-                            if fallback_action == "skip":
-                                expect = enable = False
-                            elif fallback_action == "fail":
-                                expect = False
-                            elif fallback_action == "random":
-                                random = True
-                            else:
-                                raise Exception(("Invalid precondition '%s' or fallback " +
-                                                 " action '%s'") % (precondition, fallback_action))
-                            break
-                    pos += 1
-                elif parts[pos] == 'script':
-                    script = parts[pos+1]
-                    pos += 2
-                elif parts[pos] == 'slow':
-                    slow = True
-                    pos += 1
-                elif parts[pos] == 'silentfail':
-                    # silentfails use tons of memory, and Darwin doesn't support ulimit.
-                    if xul_tester.test("xulRuntime.OS == 'Darwin'"):
-                        expect = enable = False
-                    pos += 1
+    pos = 0
+    while pos < len(parts):
+        if parts[pos] == 'fails':
+            expect = False
+            pos += 1
+        elif parts[pos] == 'skip':
+            expect = enable = False
+            pos += 1
+        elif parts[pos] == 'random':
+            random = True
+            pos += 1
+        elif parts[pos].startswith('fails-if'):
+            cond = parts[pos][len('fails-if('):-1]
+            if xul_tester.test(cond):
+                expect = False
+            pos += 1
+        elif parts[pos].startswith('asserts-if'):
+            # This directive means we may flunk some number of
+            # NS_ASSERTIONs in the browser. For the shell, ignore it.
+            pos += 1
+        elif parts[pos].startswith('skip-if'):
+            cond = parts[pos][len('skip-if('):-1]
+            if xul_tester.test(cond):
+                expect = enable = False
+            pos += 1
+        elif parts[pos].startswith('random-if'):
+            cond = parts[pos][len('random-if('):-1]
+            if xul_tester.test(cond):
+                random = True
+            pos += 1
+        elif parts[pos].startswith('require-or'):
+            cond = parts[pos][len('require-or('):-1]
+            (preconditions, fallback_action) = re.split(",", cond)
+            for precondition in re.split("&&", preconditions):
+                if precondition == 'debugMode':
+                    debugMode = True
+                elif precondition == 'true':
+                    pass
                 else:
-                    print 'warning: invalid manifest line element "%s"'%parts[pos]
-                    pos += 1
+                    if fallback_action == "skip":
+                        expect = enable = False
+                    elif fallback_action == "fail":
+                        expect = False
+                    elif fallback_action == "random":
+                        random = True
+                    else:
+                        raise Exception(("Invalid precondition '%s' or fallback " +
+                                         " action '%s'") % (precondition, fallback_action))
+                    break
+            pos += 1
+        elif parts[pos] == 'script':
+            script = parts[pos+1]
+            pos += 2
+        elif parts[pos] == 'slow':
+            slow = True
+            pos += 1
+        elif parts[pos] == 'silentfail':
+            # silentfails use tons of memory, and Darwin doesn't support ulimit.
+            if xul_tester.test("xulRuntime.OS == 'Darwin'"):
+                expect = enable = False
+            pos += 1
+        else:
+            print 'warning: invalid manifest line element "%s"'%parts[pos]
+            pos += 1
 
-            assert script is not None
-            ans.append(TestCase(os.path.join(reldir, script),
-                                enable, expect, random, slow, debugMode))
-    return ans
+    return script, (enable, expect, random, slow, debugMode)
 
-def check_manifest(test_list):
-    test_set = set([ _.path for _ in test_list ])
+def _map_prefixes_left(test_list):
+    """
+    Splits tests into a dictionary keyed on the first component of the test
+    path, aggregating tests with a common base path into a list.
+    """
+    byprefix = {}
+    for t in test_list:
+        left, sep, remainder = t.path.partition(os.sep)
+        if left not in byprefix:
+            byprefix[left] = []
+        if remainder:
+            t.path = remainder
+        byprefix[left].append(t)
+    return byprefix
 
-    missing = []
+def _emit_manifest_at(location, relative, test_list, depth):
+    manifests = _map_prefixes_left(test_list)
 
-    for dirpath, dirnames, filenames in os.walk('.'):
-        for filename in filenames:
-            if dirpath == '.': continue
-            if not filename.endswith('.js'): continue
-            if filename in ('browser.js', 'shell.js', 'jsref.js', 'template.js'): continue
+    filename = os.path.join(location, 'jstests.list')
+    manifest = []
+    numTestFiles = 0
+    for k, test_list in manifests.iteritems():
+        fullpath = os.path.join(location, k)
+        if os.path.isdir(fullpath):
+            manifest.append("include " + k + "/jstests.list")
+            relpath = os.path.join(relative, k)
+            _emit_manifest_at(fullpath, relpath, test_list, depth + 1)
+        else:
+            numTestFiles += 1
+            assert(len(test_list) == 1)
+            t = test_list[0]
+            line = []
+            if t.terms:
+                line.append(t.terms)
+            line.append("script")
+            line.append(k)
+            if t.comment:
+                line.append("#")
+                line.append(t.comment)
+            manifest.append(' '.join(line))
 
-            path = os.path.join(dirpath, filename)
-            if path.startswith('./'):
-                path = path[2:]
-            if path not in test_set:
-                missing.append(path)
+    # Always present our manifest in sorted order.
+    manifest.sort()
 
-    if missing:
-        print "Test files not contained in any manifest:"
-        for path in missing:
-            print path
-    else:
-        print 'All test files are listed in manifests'
+    # If we have tests, we have to set the url-prefix so reftest can find them.
+    if numTestFiles > 0:
+        manifest = (["url-prefix %sjsreftest.html?test=%s/" % ('../' * depth, relative)]
+                    + manifest)
+
+    fp = open(filename, 'w')
+    try:
+        fp.write('\n'.join(manifest) + '\n')
+    finally:
+        fp.close()
+
+def make_manifests(location, test_list):
+    _emit_manifest_at(location, '', test_list, 0)
+
+def _find_all_js_files(base, location):
+    for root, dirs, files in os.walk(location):
+        root = root[len(base) + 1:]
+        for fn in files:
+            if fn.endswith('.js'):
+                yield root, fn
+
+TEST_HEADER_PATTERN_INLINE = re.compile(r'//\s*\|(.*?)\|\s*(.*?)\s*(--\s*(.*))?$')
+TEST_HEADER_PATTERN_MULTI  = re.compile(r'/\*\s*\|(.*?)\|\s*(.*?)\s*(--\s*(.*))?\*/')
+
+def _parse_test_header(fullpath, testcase, xul_tester):
+    """
+    This looks a bit weird.  The reason is that it needs to be efficient, since
+    it has to be done on every test
+    """
+    fp = open(fullpath, 'r')
+    try:
+        buf = fp.read(512)
+    finally:
+        fp.close()
+
+    # Bail early if we do not start with a single comment.
+    if not buf.startswith("//"):
+        return
+
+    # Extract the token.
+    buf, _, _ = buf.partition('\n')
+    matches = TEST_HEADER_PATTERN_INLINE.match(buf)
+
+    if not matches:
+        matches = TEST_HEADER_PATTERN_MULTI.match(buf)
+        if not matches:
+            return
+
+    testcase.tag = matches.group(1)
+    testcase.terms = matches.group(2)
+    testcase.comment = matches.group(4)
+
+    _, properties = _parse_one(testcase.terms.split(), xul_tester)
+    testcase.enable = properties[0]
+    testcase.expect = properties[1]
+    testcase.random = properties[2]
+    testcase.slow = properties[3]
+    testcase.debugMode = properties[4]
+
+def load(location, xul_tester, reldir = ''):
+    """
+    Locates all tests by walking the filesystem starting at |location|.
+    Uses xul_tester to evaluate any test conditions in the test header.
+    """
+    # The list of tests that we are collecting.
+    tests = []
+
+    # Any file who's basename matches something in this set is ignored.
+    EXCLUDED = set(('browser.js', 'shell.js', 'jsref.js', 'template.js',
+                    'user.js', 'js-test-driver-begin.js', 'js-test-driver-end.js'))
+
+    for root, basename in _find_all_js_files(location, location):
+        # Skip js files in the root test directory.
+        if not root:
+            continue
+
+        # Skip files that we know are not tests.
+        if basename in EXCLUDED:
+            continue
+
+        # Get the full path and relative location of the file.
+        filename = os.path.join(root, basename)
+        fullpath = os.path.join(location, filename)
+
+        # Skip empty files.
+        statbuf = os.stat(fullpath)
+        if statbuf.st_size == 0:
+            continue
+
+        # Parse the test header and load the test.
+        testcase = TestCase(os.path.join(reldir, filename),
+                            enable = True,
+                            expect = True,
+                            random = False,
+                            slow = False,
+                            debugMode = False)
+        _parse_test_header(fullpath, testcase, xul_tester)
+        tests.append(testcase)
+    return tests
+

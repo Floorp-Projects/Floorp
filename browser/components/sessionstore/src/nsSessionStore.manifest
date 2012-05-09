@@ -1,5 +1,18 @@
+# WebappRT doesn't need these instructions, and they don't necessarily work
+# with it, but it does use a GRE directory that the GRE shares with Firefox,
+# so in order to prevent the instructions from being processed for WebappRT,
+# we need to restrict them to the applications that depend on them, i.e.:
+#
+#   b2g:            {3c2e2abc-06d4-11e1-ac3b-374f68613e61}
+#   browser:        {ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+#   mobile/android: {aa3c5121-dab2-40e2-81ca-7ea25febc110}
+#   mobile/xul:     {a23983c0-fd0e-11dc-95ff-0800200c9a66}
+#
+# In theory we should do this for all these instructions, but in practice it is
+# sufficient to do it for the app-startup one, and the file is simpler that way.
+
 component {5280606b-2510-4fe0-97ef-9b5a22eafe6b} nsSessionStore.js
 contract @mozilla.org/browser/sessionstore;1 {5280606b-2510-4fe0-97ef-9b5a22eafe6b}
 component {ec7a6c20-e081-11da-8ad9-0800200c9a66} nsSessionStartup.js
 contract @mozilla.org/browser/sessionstartup;1 {ec7a6c20-e081-11da-8ad9-0800200c9a66}
-category app-startup nsSessionStartup service,@mozilla.org/browser/sessionstartup;1
+category app-startup nsSessionStartup service,@mozilla.org/browser/sessionstartup;1 application={3c2e2abc-06d4-11e1-ac3b-374f68613e61} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} application={aa3c5121-dab2-40e2-81ca-7ea25febc110} application={a23983c0-fd0e-11dc-95ff-0800200c9a66}

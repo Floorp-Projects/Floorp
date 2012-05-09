@@ -129,44 +129,6 @@ XDRState<mode>::codeChars(jschar *chars, size_t nchars)
     return true;
 }
 
-/*
- * Convert between a JS (Unicode) string and the XDR representation.
- */
-template<XDRMode mode>
-bool
-XDRState<mode>::codeString(JSString **strp)
-{
-    uint32_t nchars;
-    jschar *chars;
-
-    if (mode == XDR_ENCODE)
-        nchars = (*strp)->length();
-    if (!codeUint32(&nchars))
-        return false;
-
-    if (mode == XDR_DECODE)
-        chars = (jschar *) cx()->malloc_((nchars + 1) * sizeof(jschar));
-    else
-        chars = const_cast<jschar *>((*strp)->getChars(cx()));
-    if (!chars)
-        return false;
-
-    if (!codeChars(chars, nchars))
-        goto bad;
-    if (mode == XDR_DECODE) {
-        chars[nchars] = 0;
-        *strp = JS_NewUCString(cx(), chars, nchars);
-        if (!*strp)
-            goto bad;
-    }
-    return true;
-
-bad:
-    if (mode == XDR_DECODE)
-        Foreground::free_(chars);
-    return false;
-}
-
 template<XDRMode mode>
 static bool
 VersionCheck(XDRState<mode> *xdr)

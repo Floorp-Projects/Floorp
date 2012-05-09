@@ -386,7 +386,7 @@
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            <!-- Droppable is currently used for the Firefox bookmarks dialog only -->
+            // Droppable is currently used for the Firefox bookmarks dialog only
             return (this.getAttribute("droppable") == "false") ?
                    Components.interfaces.nsIAccessibleProvider.XULTextBox :
                    Components.interfaces.nsIAccessibleProvider.XULCombobox;

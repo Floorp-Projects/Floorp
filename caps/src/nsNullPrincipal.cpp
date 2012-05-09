@@ -221,14 +221,6 @@ nsNullPrincipal::CanEnableCapability(const char *aCapability,
 }
 
 NS_IMETHODIMP 
-nsNullPrincipal::SetCanEnableCapability(const char *aCapability, 
-                                        PRInt16 aCanEnable)
-{
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-
-NS_IMETHODIMP 
 nsNullPrincipal::IsCapabilityEnabled(const char *aCapability, 
                                      void *aAnnotation, 
                                      bool *aResult)
@@ -242,21 +234,6 @@ NS_IMETHODIMP
 nsNullPrincipal::EnableCapability(const char *aCapability, void **aAnnotation)
 {
   NS_NOTREACHED("Didn't I say it?  NO CAPABILITIES!");
-  *aAnnotation = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsNullPrincipal::RevertCapability(const char *aCapability, void **aAnnotation)
-{
-    *aAnnotation = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsNullPrincipal::DisableCapability(const char *aCapability, void **aAnnotation)
-{
-  // Just a no-op.  They're all disabled anyway.
   *aAnnotation = nsnull;
   return NS_OK;
 }

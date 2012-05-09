@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=743049
+-->
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 743049</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=743049">Mozilla Bug 743049</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="frame"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/** Test for Bug 743049 **/
+
+var expected = [
+{ name: "Error", message: "foo", filename: location, lineNumber: 45 },
+{ name: "Error", message: "foo", filename: "bar", lineNumber: 123 },
+{ name: "", message: "uncaught exception: [object Object]" },
+{ name: "DuckError", message: "foo", filename: "bar", lineNumber: 123 },
+{ name: "", message: "uncaught exception: [object Object]" },
+{ name: "", message: "foo", filename: "baz", lineNumber: 123 },
+{ name: "", message: "uncaught exception: [object Object]" },
+{ name: "InvalidStateError", message: "An attempt was made to use an object that is not, or is no longer, usable", filename: location, lineNumber: 60 },
+{ name: "ReferenceError", message: "xxx is not defined", filename: location, lineNumber: 64 },
+{ name: "ReferenceError", message: "xxx is not defined", filename: location, lineNumber: 66 }
+];
+
+var counter = 0;
+var origin = location.protocol + "//" + location.host;
+postMessage(counter, origin);
+window.onmessage = function(e) {
+	if (e.origin !== origin)
+		return;
+	try {
+		if (e.data == 0) {
+			throw new Error("foo");
+		} else if (e.data == 1) {
+			throw new Error("foo","bar",123);
+		} else if (e.data == 2) {
+			throw {};
+		} else if (e.data == 3) {
+			throw {name:"DuckError",message:"foo",filename:"bar",lineNumber:123};
+		} else if (e.data == 4) {
+			throw {name:"DuckError",filename:"bar",lineNumber:123};
+		} else if (e.data == 5) {
+			throw {message:"foo",fileName:"baz",lineNumber:123};
+		} else if (e.data == 6) {
+			throw {name:3,message:4,lineNumber:123};
+		} else if (e.data == 7) {
+			var x = new XMLHttpRequest();
+			x.responseType = "arraybuffer";
+			x.open("GET", location, false);
+			var a = x.send();
+		} else if (e.data == 8) {
+			throw new ReferenceError("xxx is not defined");
+		} else if (e.data == 9) {
+			new xxx;
+		} else {
+			SimpleTest.finish();
+			return;
+		}
+	} catch (e) {
+		if (e instanceof Error || typeof e.message=="string" &&
+			("filename" in e || "fileName" in e) && "lineNumber" in e) {
+			is(e.message, expected[counter].message, counter + " catch message");
+			is(e.filename || e.fileName, expected[counter].filename, counter + " catch filename");
+			is(e.lineNumber, expected[counter].lineNumber, counter + " catch lineno");
+		} else {
+			is("uncaught exception: " + e, expected[counter].message, counter + " catch message");
+			is(undefined, expected[counter].filename, counter + " catch filename");
+			is(undefined, expected[counter].lineNumber, counter + " catch lineno");
+		}
+		throw e;
+	}
+	ok(false, counter + " Error should be thrown or test should finish");
+};
+window.onerror = function(message, filename, lineno) {
+	is(message, Error.prototype.toString.call(expected[counter]), counter + " onerror message");
+	is(filename, expected[counter].filename || "", counter + " onerror filename");
+	is(lineno, expected[counter].lineNumber || 0, counter + " onerror lineno");
+	postMessage(++counter, origin);
+	return true;
+};
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

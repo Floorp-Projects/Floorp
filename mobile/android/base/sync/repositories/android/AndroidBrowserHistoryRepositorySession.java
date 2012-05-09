@@ -71,6 +71,18 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
   }
 
   @Override
+  public boolean shouldIgnore(Record record) {
+    if (super.shouldIgnore(record)) {
+      return true;
+    }
+    if (!(record instanceof HistoryRecord)) {
+      return true;
+    }
+    HistoryRecord r = (HistoryRecord) record;
+    return !RepoUtils.isValidHistoryURI(r.histURI);
+  }
+
+  @Override
   protected Record transformRecord(Record record) throws NullCursorException {
     return addVisitsToRecord(record);
   }
@@ -127,13 +139,19 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
 
   @Override
   public void abort() {
-    ((AndroidBrowserHistoryDataAccessor) dbHelper).closeExtender();
+    if (dbHelper != null) {
+      ((AndroidBrowserHistoryDataAccessor) dbHelper).closeExtender();
+      dbHelper = null;
+    }
     super.abort();
   }
 
   @Override
   public void finish(final RepositorySessionFinishDelegate delegate) throws InactiveSessionException {
-    ((AndroidBrowserHistoryDataAccessor) dbHelper).closeExtender();
+    if (dbHelper != null) {
+      ((AndroidBrowserHistoryDataAccessor) dbHelper).closeExtender();
+      dbHelper = null;
+    }
     super.finish(delegate);
   }
 
@@ -148,17 +166,10 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
    *
    * @param record
    *          A <code>Record</code> with a GUID that is not present locally.
-   * @return The <code>Record</code> to be inserted. <b>Warning:</b> the
-   *         <code>androidID</code> is not valid! It will be set after the
-   *         records are flushed to the database.
    */
   @Override
-  protected Record insert(Record record) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
-    HistoryRecord toStore = (HistoryRecord) prepareRecord(record);
-    toStore.androidID = -111; // Hopefully this special value will make it easy to catch future errors.
-    updateBookkeeping(toStore); // Does not use androidID -- just GUID -> String map.
-    enqueueNewRecord(toStore);
-    return toStore;
+  protected void insert(Record record) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
+    enqueueNewRecord((HistoryRecord) prepareRecord(record));
   }
 
   /**
@@ -198,7 +209,33 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
     recordsBuffer = new ArrayList<HistoryRecord>();
     Logger.debug(LOG_TAG, "Flushing " + outgoing.size() + " records to database.");
     // TODO: move bulkInsert to AndroidBrowserDataAccessor?
-    ((AndroidBrowserHistoryDataAccessor) dbHelper).bulkInsert(outgoing, false); // Don't need to update any androidIDs.
+    int inserted = ((AndroidBrowserHistoryDataAccessor) dbHelper).bulkInsert(outgoing);
+    if (inserted != outgoing.size()) {
+      // Something failed; most pessimistic action is to declare that all insertions failed.
+      // TODO: perform the bulkInsert in a transaction and rollback unless all insertions succeed?
+      for (HistoryRecord failed : outgoing) {
+        delegate.onRecordStoreFailed(new RuntimeException("Failed to insert history item with guid " + failed.guid + "."));
+      }
+      return;
+    }
+
+    // All good, everybody succeeded.
+    for (HistoryRecord succeeded : outgoing) {
+      try {
+        // Does not use androidID -- just GUID -> String map.
+        updateBookkeeping(succeeded);
+      } catch (NoGuidForIdException e) {
+        // Should not happen.
+        throw new NullCursorException(e);
+      } catch (ParentNotFoundException e) {
+        // Should not happen.
+        throw new NullCursorException(e);
+      } catch (NullCursorException e) {
+        throw e;
+      }
+      trackRecord(succeeded);
+      delegate.onRecordStoreSucceeded(succeeded); // At this point, we are really inserted.
+    }
   }
 
   @Override
@@ -209,7 +246,7 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
         synchronized (recordsBufferMonitor) {
           try {
             flushNewRecords();
-          } catch (NullCursorException e) {
+          } catch (Exception e) {
             Logger.warn(LOG_TAG, "Error flushing records to database.", e);
           }
         }

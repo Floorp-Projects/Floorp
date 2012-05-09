@@ -39,12 +39,10 @@
 
 @media not print {
   body {
-    background-color: #222;
     margin: 0;
   }
 
   img {
-    color: #eee;
     text-align: center;
     position: absolute;
     margin: auto;

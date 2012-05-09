@@ -112,14 +112,17 @@ function populateDB(aArray) {
             // as redirects and get hidden state, the API doesn't have that
             // power (And actually doesn't make much sense to add redirects
             // through the API).
-            let stmt = DBConn().createStatement(
+            // This must be async cause otherwise the updateFrecency call
+            // done by addVisits may randomly happen after it, overwriting the
+            // value.
+            let stmt = DBConn().createAsyncStatement(
               "UPDATE moz_places SET hidden = 1 WHERE url = :url");
             stmt.params.url = qdata.uri;
             try {
-              stmt.execute();
+              stmt.executeAsync();
             }
             catch (ex) {
-              print("Error while setting visit_count.");
+              print("Error while setting hidden.");
             }
             finally {
               stmt.finalize();
@@ -134,10 +137,6 @@ function populateDB(aArray) {
 
           if (qdata.markPageAsTyped){
             PlacesUtils.bhistory.markPageAsTyped(uri(qdata.uri));
-          }
-
-          if (qdata.hidePage){
-            PlacesUtils.bhistory.hidePage(uri(qdata.uri));
           }
 
           if (qdata.isPageAnnotation) {
@@ -273,7 +272,6 @@ function queryData(obj) {
   this.isDetails = obj.isDetails ? obj.isDetails : false;
   this.title = obj.title ? obj.title : "";
   this.markPageAsTyped = obj.markPageAsTyped ? obj.markPageAsTyped : false;
-  this.hidePage = obj.hidePage ? obj.hidePage : false;
   this.isPageAnnotation = obj.isPageAnnotation ? obj.isPageAnnotation : false;
   this.removeAnnotation= obj.removeAnnotation ? true : false;
   this.annoName = obj.annoName ? obj.annoName : "";

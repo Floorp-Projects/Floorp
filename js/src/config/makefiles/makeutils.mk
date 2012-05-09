@@ -5,13 +5,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Usage: $(call banner,foo bar tans)
-banner =\
-$(info )\
-$(info ***************************************************************************)\
-$(info ** BANNER: $(1) $(2) $(3) $(4) $(5) $(6) $(7) $(8) $(9))\
-$(info ***************************************************************************)\
-
 ## Identify function argument types
 istype =$(if $(value ${1}),list,scalar)
 isval  =$(if $(filter-out list,$(call istype,${1})),true)
@@ -34,3 +27,76 @@ argv +=)
 ##    $(call banner,ref) ; ref=foo bar tans
 ## getarglist() would be a more accurate name but is longer to type
 getargv = $(if $(call isvar,$(1)),$($(1)),$(argv))
+
+###########################################################################
+# Strip [n] leading options from an argument list.  This will allow passing
+# extra args to user functions that will not propogate to sub-$(call )'s
+# Usage: $(call subargv,2)
+subargv =$(wordlist $(1),$(words $(getargv)),$(getargv))
+
+###########################################################################
+# Intent: Display a distinct banner heading in the output stream
+# Usage: $(call banner,BUILDING: foo bar tans)
+# Debug:
+#   target-preqs = \
+#     $(call banner,target-preqs-BEGIN) \
+#     foo bar tans \
+#     $(call banner,target-preqs-END) \
+#     $(NULL)
+#   target: $(target-preqs)
+
+banner =\
+$(info )\
+$(info ***************************************************************************)\
+$(info ** $(getargv))\
+$(info ***************************************************************************)\
+$(NULL)
+
+#####################################################################
+# Intent: Determine if a string or pattern is contained in a list
+# Usage: strcmp  - $(call if_XinY,clean,$(MAKECMDGOALS))
+#      : pattern - $(call if_XinY,clean%,$(MAKECMDGOALS))
+is_XinY =$(filter $(1),$(call subargv,3,$(getargv)))
+
+#####################################################################
+# Provide an alternate var to support testing
+ifdef MAKEUTILS_UNIT_TEST
+  mcg_goals=TEST_MAKECMDGOALS
+else
+  mcg_goals=MAKECMDGOALS
+endif
+
+# Intent: Conditionals for detecting common/tier target use
+#   Todo: are check, install, test needed ?
+isTargetStem       = $(sort $(foreach pat, $(1)% %$(1), $(call is_XinY,$(pat),${$(mcg_goals)})))
+isTargetStemClean  = $(call isTargetStem,clean)
+isTargetStemExport = $(call isTargetStem,export)
+isTargetStemLibs   = $(call isTargetStem,libs)
+isTargetStemTools  = $(call isTargetStem,tools)
+
+##################################################
+# Intent: Validation functions / unit test helpers
+
+errorifneq =$(if $(subst $(strip $(1)),$(NULL),$(strip $(2))),$(error expected [$(1)] but found [$(2)]))
+
+# Intent: verify function declaration exists
+requiredfunction =$(foreach func,$(1) $(2) $(3) $(4) $(5) $(6) $(7) $(8) $(9),$(if $(value $(func)),$(NULL),$(error required function [$(func)] is unavailable)))
+
+
+
+## http://www.gnu.org/software/make/manual/make.html#Call-Function
+## Usage: o = $(call map,origin,o map $(MAKE))
+map = $(foreach val,$(2),$(call $(1),$(val)))
+
+
+## Disable checking for clean targets
+ifeq (,$(filter %clean clean%,$(MAKECMDGOALS)))
+
+# Usage: $(call checkIfEmpty,[error|warning] foo NULL bar)
+checkIfEmpty =$(foreach var,$(wordlist 2,100,$(argv)),$(if $(strip $($(var))),$(NOP),$(call $(1),Variable $(var) does not contain a value)))
+
+# Usage: $(call errorIfEmpty,foo NULL bar)
+errorIfEmpty =$(call checkIfEmpty,error $(argv))
+warnIfEmpty  =$(call checkIfEmpty,warning $(argv))
+
+endif

@@ -102,6 +102,8 @@ public:
   bool IsImageSrcSetDisabled() const;
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   nsresult LoadSVGImage(bool aForce, bool aNotify);
 

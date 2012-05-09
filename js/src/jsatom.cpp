@@ -54,7 +54,6 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsgc.h"
-#include "jsgcmark.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsstr.h"
@@ -62,6 +61,7 @@
 #include "jsxml.h"
 
 #include "frontend/Parser.h"
+#include "gc/Marking.h"
 
 #include "jsstrinlines.h"
 #include "jsatominlines.h"
@@ -75,7 +75,6 @@ using namespace js;
 using namespace js::gc;
 
 const size_t JSAtomState::commonAtomsOffset = offsetof(JSAtomState, emptyAtom);
-const size_t JSAtomState::lazyAtomsOffset = offsetof(JSAtomState, lazy);
 
 /*
  * ATOM_HASH assumes that JSHashNumber is 32-bit even on 64-bit systems.
@@ -151,9 +150,6 @@ JSAtomState::checkStaticInvariants()
                      offsetof(JSAtomState, booleanAtoms) - commonAtomsOffset);
     JS_STATIC_ASSERT((1 + 2) * sizeof(JSAtom *) ==
                      offsetof(JSAtomState, typeAtoms) - commonAtomsOffset);
-
-    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) * sizeof(JSAtom *) ==
-                     lazyAtomsOffset - commonAtomsOffset);
 }
 
 /*
@@ -236,7 +232,6 @@ js::InitCommonAtoms(JSContext *cx)
         *atoms = atom->asPropertyName();
     }
 
-    state->clearLazyAtoms();
     cx->runtime->emptyString = state->emptyAtom;
     return true;
 }
@@ -340,6 +335,8 @@ AtomizeInline(JSContext *cx, const jschar **pchars, size_t length,
 
     JSFixedString *key;
 
+    SkipRoot skip(cx, &chars);
+
     if (ocb == TakeCharOwnership) {
         key = js_NewString(cx, const_cast<jschar *>(chars), length);
         if (!key)
@@ -393,9 +390,6 @@ js_AtomizeString(JSContext *cx, JSString *str, InternBehavior ib)
         p->setTagged(bool(ib));
         return &atom;
     }
-
-    if (str->isAtom())
-        return &str->asAtom();
 
     size_t length = str->length();
     const jschar *chars = str->getChars(cx);
@@ -541,138 +535,65 @@ IndexToIdSlow(JSContext *cx, uint32_t index, jsid *idp)
     if (!atom)
         return false;
 
-    *idp = ATOM_TO_JSID(atom);
-    JS_ASSERT(js_CheckForStringIndex(*idp) == *idp);
+    *idp = JSID_FROM_BITS((size_t)atom);
+    return true;
+}
+
+bool
+InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval,
+                      jsid *idp, Value *vp)
+{
+#if JS_HAS_XML_SUPPORT
+    if (idval.isObject()) {
+        JSObject *idobj = &idval.toObject();
+
+        if (obj && obj->isXML()) {
+            *idp = OBJECT_TO_JSID(idobj);
+            *vp = idval;
+            return true;
+        }
+
+        if (js_GetLocalNameFromFunctionQName(idobj, idp, cx)) {
+            *vp = IdToValue(*idp);
+            return true;
+        }
+
+        if (!obj && idobj->isXMLId()) {
+            *idp = OBJECT_TO_JSID(idobj);
+            *vp = idval;
+            return JS_TRUE;
+        }
+    }
+#endif
+
+    JSAtom *atom;
+    if (!js_ValueToAtom(cx, idval, &atom))
+        return false;
+
+    *idp = AtomToId(atom);
+    vp->setString(atom);
     return true;
 }
 
 } /* namespace js */
-
-/* JSBOXEDWORD_INT_MAX as a string */
-#define JSBOXEDWORD_INT_MAX_STRING "1073741823"
-
-/*
- * Convert string indexes that convert to int jsvals as ints to save memory.
- * Care must be taken to use this macro every time a property name is used, or
- * else double-sets, incorrect property cache misses, or other mistakes could
- * occur.
- */
-jsid
-js_CheckForStringIndex(jsid id)
-{
-    if (!JSID_IS_ATOM(id))
-        return id;
-
-    JSAtom *atom = JSID_TO_ATOM(id);
-    const jschar *s = atom->chars();
-    jschar ch = *s;
-
-    JSBool negative = (ch == '-');
-    if (negative)
-        ch = *++s;
-
-    if (!JS7_ISDEC(ch))
-        return id;
-
-    size_t n = atom->length() - negative;
-    if (n > sizeof(JSBOXEDWORD_INT_MAX_STRING) - 1)
-        return id;
-
-    const jschar *cp = s;
-    const jschar *end = s + n;
-
-    uint32_t index = JS7_UNDEC(*cp++);
-    uint32_t oldIndex = 0;
-    uint32_t c = 0;
-
-    if (index != 0) {
-        while (JS7_ISDEC(*cp)) {
-            oldIndex = index;
-            c = JS7_UNDEC(*cp);
-            index = 10 * index + c;
-            cp++;
-        }
-    }
-
-    /*
-     * Non-integer indexes can't be represented as integers.  Also, distinguish
-     * index "-0" from "0", because JSBOXEDWORD_INT cannot.
-     */
-    if (cp != end || (negative && index == 0))
-        return id;
-
-    if (negative) {
-        if (oldIndex < -(JSID_INT_MIN / 10) ||
-            (oldIndex == -(JSID_INT_MIN / 10) && c <= (-JSID_INT_MIN % 10)))
-        {
-            id = INT_TO_JSID(-int32_t(index));
-        }
-    } else {
-        if (oldIndex < JSID_INT_MAX / 10 ||
-            (oldIndex == JSID_INT_MAX / 10 && c <= (JSID_INT_MAX % 10)))
-        {
-            id = INT_TO_JSID(int32_t(index));
-        }
-    }
-
-    return id;
-}
-
-#if JS_HAS_XML_SUPPORT
-bool
-js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
-                             jsid *idp)
-{
-    JS_ASSERT(idval.isObject());
-    if (obj->isXML()) {
-        *idp = OBJECT_TO_JSID(&idval.toObject());
-        return true;
-    }
-
-    if (js_GetLocalNameFromFunctionQName(&idval.toObject(), idp, cx))
-        return true;
-
-    return js_ValueToStringId(cx, idval, idp);
-}
-
-bool
-js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
-                             jsid *idp, Value *vp)
-{
-    JS_ASSERT(idval.isObject());
-    if (obj->isXML()) {
-        JSObject &idobj = idval.toObject();
-        *idp = OBJECT_TO_JSID(&idobj);
-        vp->setObject(idobj);
-        return true;
-    }
-
-    if (js_GetLocalNameFromFunctionQName(&idval.toObject(), idp, cx)) {
-        *vp = IdToValue(*idp);
-        return true;
-    }
-
-    if (js_ValueToStringId(cx, idval, idp)) {
-        vp->setString(JSID_TO_STRING(*idp));
-        return true;
-    }
-    return false;
-}
-#endif
 
 template<XDRMode mode>
 bool
 js::XDRAtom(XDRState<mode> *xdr, JSAtom **atomp)
 {
     if (mode == XDR_ENCODE) {
-        JSString *str = *atomp;
-        return xdr->codeString(&str);
+        uint32_t nchars = (*atomp)->length();
+        if (!xdr->codeUint32(&nchars))
+            return false;
+
+        jschar *chars = const_cast<jschar *>((*atomp)->getChars(xdr->cx()));
+        if (!chars)
+            return false;
+
+        return xdr->codeChars(chars, nchars);
     }
 
-    /*
-     * Inline XDRState::codeString when decoding to avoid JSString allocation
-     * for already existing atoms. See bug 321985.
-     */
+    /* Avoid JSString allocation for already existing atoms. See bug 321985. */
     uint32_t nchars;
     if (!xdr->codeUint32(&nchars))
         return false;

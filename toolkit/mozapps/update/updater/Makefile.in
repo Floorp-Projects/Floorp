@@ -49,6 +49,12 @@ CPPSRCS = \
   archivereader.cpp \
   $(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += \
+  loaddlls.cpp \
+  $(NULL)
+endif
+
 PROGRAM = updater$(BIN_SUFFIX)
 
 # Don't link the updater against libmozglue. See bug 687139
@@ -73,7 +79,7 @@ RCINCLUDE = updater.rc
 CPPSRCS += \
   progressui_win.cpp \
   $(NULL)
-OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
+OS_LIBS += $(call EXPAND_LIBNAME,delayimp comctl32 ws2_32 shell32)
 DEFINES += -DUNICODE -D_UNICODE
 ifndef GNU_CC
 RCFLAGS += -I$(srcdir)
@@ -125,6 +131,7 @@ DEFINES += -DNS_NO_XPCOM \
 
 ifdef _MSC_VER
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+WIN32_EXE_LDFLAGS += -DELAYLOAD:wsock32.dll -DELAYLOAD:crypt32.dll
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)

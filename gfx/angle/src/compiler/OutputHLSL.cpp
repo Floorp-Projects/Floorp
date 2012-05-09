@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -67,7 +67,10 @@ OutputHLSL::OutputHLSL(TParseContext &context) : TIntermTraverser(true, true, tr
     mUsesEqualBVec2 = false;
     mUsesEqualBVec3 = false;
     mUsesEqualBVec4 = false;
-    mUsesAtan2 = false;
+    mUsesAtan2_1 = false;
+    mUsesAtan2_2 = false;
+    mUsesAtan2_3 = false;
+    mUsesAtan2_4 = false;
 
     mScopeDepth = 0;
 
@@ -703,12 +706,45 @@ void OutputHLSL::header()
                "}\n";
     }
 
-    if (mUsesAtan2)
+    if (mUsesAtan2_1)
     {
         out << "float atanyx(float y, float x)\n"
                "{\n"
                "    if(x == 0 && y == 0) x = 1;\n"   // Avoid producing a NaN
                "    return atan2(y, x);\n"
+               "}\n";
+    }
+
+    if (mUsesAtan2_2)
+    {
+        out << "float2 atanyx(float2 y, float2 x)\n"
+               "{\n"
+               "    if(x[0] == 0 && y[0] == 0) x[0] = 1;\n"
+               "    if(x[1] == 0 && y[1] == 0) x[1] = 1;\n"
+               "    return float2(atan2(y[0], x[0]), atan2(y[1], x[1]));\n"
+               "}\n";
+    }
+
+    if (mUsesAtan2_3)
+    {
+        out << "float3 atanyx(float3 y, float3 x)\n"
+               "{\n"
+               "    if(x[0] == 0 && y[0] == 0) x[0] = 1;\n"
+               "    if(x[1] == 0 && y[1] == 0) x[1] = 1;\n"
+               "    if(x[2] == 0 && y[2] == 0) x[2] = 1;\n"
+               "    return float3(atan2(y[0], x[0]), atan2(y[1], x[1]), atan2(y[2], x[2]));\n"
+               "}\n";
+    }
+
+    if (mUsesAtan2_4)
+    {
+        out << "float4 atanyx(float4 y, float4 x)\n"
+               "{\n"
+               "    if(x[0] == 0 && y[0] == 0) x[0] = 1;\n"
+               "    if(x[1] == 0 && y[1] == 0) x[1] = 1;\n"
+               "    if(x[2] == 0 && y[2] == 0) x[2] = 1;\n"
+               "    if(x[3] == 0 && y[3] == 0) x[3] = 1;\n"
+               "    return float4(atan2(y[0], x[0]), atan2(y[1], x[1]), atan2(y[2], x[2]), atan2(y[3], x[3]));\n"
                "}\n";
     }
 }
@@ -861,7 +897,7 @@ bool OutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
       case EOpIndexDirectStruct:
         if (visit == InVisit)
         {
-            out << "." + node->getType().getFieldName();
+            out << "." + decorateField(node->getType().getFieldName(), node->getLeft()->getType());
 
             return false;
         }
@@ -937,9 +973,9 @@ bool OutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
                 const TType *fieldType = (*fields)[i].type;
 
                 node->getLeft()->traverse(this);
-                out << "." + fieldType->getFieldName() + " == ";
+                out << "." + decorateField(fieldType->getFieldName(), node->getLeft()->getType()) + " == ";
                 node->getRight()->traverse(this);
-                out << "." + fieldType->getFieldName();
+                out << "." + decorateField(fieldType->getFieldName(), node->getLeft()->getType());
 
                 if (i < fields->size() - 1)
                 {
@@ -1032,8 +1068,6 @@ bool OutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
 
 bool OutputHLSL::visitUnary(Visit visit, TIntermUnary *node)
 {
-    TInfoSinkBase &out = mBody;
-
     switch (node->getOp())
     {
       case EOpNegative:         outputTriplet(visit, "(-", "", ")");  break;
@@ -1110,7 +1144,6 @@ bool OutputHLSL::visitUnary(Visit visit, TIntermUnary *node)
 
 bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
 {
-    ShShaderType shaderType = mContext.shaderType;
     TInfoSinkBase &out = mBody;
 
     switch (node->getOp())
@@ -1252,7 +1285,7 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
             return false;
         }
         break;
-      case EOpComma:            outputTriplet(visit, "", ", ", "");                break;
+      case EOpComma:            outputTriplet(visit, "(", ", ", ")");                break;
       case EOpFunction:
         {
             TString name = TFunction::unmangleName(node->getName());
@@ -1279,6 +1312,11 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
 
                     if (symbol)
                     {
+                        if (symbol->getType().getStruct())
+                        {
+                            addConstructor(symbol->getType(), scopedStruct(symbol->getType().getTypeName()), NULL);
+                        }
+
                         out << argumentString(symbol);
 
                         if (i < arguments.size() - 1)
@@ -1497,7 +1535,14 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
       case EOpPow:              outputTriplet(visit, "pow(", ", ", ")");               break;
       case EOpAtan:
         ASSERT(node->getSequence().size() == 2);   // atan(x) is a unary operator
-        mUsesAtan2 = true;
+        switch (node->getSequence()[0]->getAsTyped()->getNominalSize())
+        {
+          case 1: mUsesAtan2_1 = true; break;
+          case 2: mUsesAtan2_2 = true; break;
+          case 3: mUsesAtan2_3 = true; break;
+          case 4: mUsesAtan2_4 = true; break;
+          default: UNREACHABLE();
+        }
         outputTriplet(visit, "atanyx(", ", ", ")");
         break;
       case EOpMin:           outputTriplet(visit, "min(", ", ", ")");           break;
@@ -1595,14 +1640,14 @@ bool OutputHLSL::visitLoop(Visit visit, TIntermLoop *node)
 
     if (node->getType() == ELoopDoWhile)
     {
-        out << "do\n";
+        out << "{do\n";
 
         outputLineDirective(node->getLine());
         out << "{\n";
     }
     else
     {
-        out << "for(";
+        out << "{for(";
         
         if (node->getInit())
         {
@@ -1644,10 +1689,10 @@ bool OutputHLSL::visitLoop(Visit visit, TIntermLoop *node)
 
         node->getCondition()->traverse(this);
 
-        out << ")";
+        out << ");";
     }
 
-    out << ";\n";
+    out << "}\n";
 
     return false;
 }
@@ -1839,7 +1884,6 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
 
             while (iterations > 0)
             {
-                int remainder = (limit - initial) % increment;
                 int clampedLimit = initial + increment * std::min(255, iterations);
 
                 // for(int index = initial; index < clampedLimit; index += increment)
@@ -1968,7 +2012,7 @@ TString OutputHLSL::typeString(const TType &type)
             {
                 const TType &field = *fields[i].type;
 
-                string += "    " + typeString(field) + " " + field.getFieldName() + arrayString(field) + ";\n";
+                string += "    " + typeString(field) + " " + decorate(field.getFieldName()) + arrayString(field) + ";\n";
             }
 
             string += "} ";
@@ -2062,6 +2106,11 @@ void OutputHLSL::addConstructor(const TType &type, const TString &name, const TI
         return;   // Nameless structures don't have constructors
     }
 
+    if (type.getStruct() && mStructNames.find(decorate(name)) != mStructNames.end())
+    {
+        return;   // Already added
+    }
+
     TType ctorType = type;
     ctorType.clearArrayness();
     ctorType.setPrecision(EbpHigh);
@@ -2086,7 +2135,7 @@ void OutputHLSL::addConstructor(const TType &type, const TString &name, const TI
         {
             const TType &field = *fields[i].type;
 
-            structure += "    " + typeString(field) + " " + field.getFieldName() + arrayString(field) + ";\n";
+            structure += "    " + typeString(field) + " " + decorateField(field.getFieldName(), type) + arrayString(field) + ";\n";
         }
 
         structure += "};\n";
@@ -2384,5 +2433,15 @@ TString OutputHLSL::decorateUniform(const TString &string, const TType &type)
     }
     
     return decorate(string);
+}
+
+TString OutputHLSL::decorateField(const TString &string, const TType &structure)
+{
+    if (structure.getTypeName().compare(0, 3, "gl_") != 0)
+    {
+        return decorate(string);
+    }
+
+    return string;
 }
 }

@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH = ../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+relativesrcdir = dom/imported-tests
+
+DIRS = \
+  $(NULL)
+
+include $(srcdir)/html.mk
+include $(srcdir)/webapps.mk
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_SUPPORT_FILES = \
+  testharness.js \
+  testharnessreport.js \
+  testharness.css \
+  idlharness.js \
+  WebIDLParser.js \
+  $(NULL)
+
+testharnessreport.js: testharnessreport.js.in writeReporter.py html.json webapps.json
+	$(PYTHON_PATH) $(srcdir)/writeReporter.py $<
+
+libs:: $(_SUPPORT_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/resources

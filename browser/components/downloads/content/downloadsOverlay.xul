@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+# -*- Mode: HTML; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# vim: set ts=2 et sw=2 tw=80:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://browser/content/downloads/downloads.css"?>
+<?xml-stylesheet href="chrome://browser/skin/downloads/downloads.css"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://browser/locale/downloads/downloads.dtd">
+
+<overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+         id="downloadsOverlay">
+
+  <commandset>
+    <command id="downloadsCmd_doDefault"
+             oncommand="goDoCommand('downloadsCmd_doDefault')"/>
+    <command id="downloadsCmd_pauseResume"
+             oncommand="goDoCommand('downloadsCmd_pauseResume')"/>
+    <command id="downloadsCmd_cancel"
+             oncommand="goDoCommand('downloadsCmd_cancel')"/>
+    <command id="downloadsCmd_open"
+             oncommand="goDoCommand('downloadsCmd_open')"/>
+    <command id="downloadsCmd_show"
+             oncommand="goDoCommand('downloadsCmd_show')"/>
+    <command id="downloadsCmd_retry"
+             oncommand="goDoCommand('downloadsCmd_retry')"/>
+    <command id="downloadsCmd_openReferrer"
+             oncommand="goDoCommand('downloadsCmd_openReferrer')"/>
+    <command id="downloadsCmd_copyLocation"
+             oncommand="goDoCommand('downloadsCmd_copyLocation')"/>
+    <command id="downloadsCmd_clearList"
+             oncommand="goDoCommand('downloadsCmd_clearList')"/>
+  </commandset>
+
+  <popupset>
+    <!-- The panel has level="top" to ensure that it is never hidden by the
+         taskbar on Windows.  See bug 672365.  For accessibility to screen
+         readers, we use a label on the panel instead of the anchor because the
+         panel can also be displayed without an anchor. -->
+    <panel id="downloadsPanel"
+           aria-label="&downloads.title;"
+           role="group"
+           type="arrow"
+           orient="vertical"
+           level="top"
+           onpopupshown="DownloadsPanel.onPopupShown(event);"
+           onpopuphidden="DownloadsPanel.onPopupHidden(event);">
+      <!-- The following popup menu should be a child of the panel element,
+           otherwise flickering may occur when the cursor is moved over the area
+           of a disabled menu item that overlaps the panel.  See bug 492960. -->
+      <menupopup id="downloadsContextMenu"
+                 class="download-state">
+        <menuitem command="downloadsCmd_pauseResume"
+                  class="downloadPauseMenuItem"
+                  label="&cmd.pause.label;"
+                  accesskey="&cmd.pause.accesskey;"/>
+        <menuitem command="downloadsCmd_pauseResume"
+                  class="downloadResumeMenuItem"
+                  label="&cmd.resume.label;"
+                  accesskey="&cmd.resume.accesskey;"/>
+        <menuitem command="downloadsCmd_cancel"
+                  class="downloadCancelMenuItem"
+                  label="&cmd.cancel.label;"
+                  accesskey="&cmd.cancel.accesskey;"/>
+        <menuitem command="cmd_delete"
+                  class="downloadRemoveFromListMenuItem"
+                  label="&cmd.removeFromList.label;"
+                  accesskey="&cmd.removeFromList.accesskey;"/>
+        <menuitem command="downloadsCmd_show"
+                  class="downloadShowMenuItem"
+#ifdef XP_MACOSX
+                  label="&cmd.showMac.label;"
+                  accesskey="&cmd.showMac.accesskey;"
+#else
+                  label="&cmd.show.label;"
+                  accesskey="&cmd.show.accesskey;"
+#endif
+                  />
+
+        <menuseparator class="downloadCommandsSeparator"/>
+
+        <menuitem command="downloadsCmd_openReferrer"
+                  label="&cmd.goToDownloadPage.label;"
+                  accesskey="&cmd.goToDownloadPage.accesskey;"/>
+        <menuitem command="downloadsCmd_copyLocation"
+                  label="&cmd.copyDownloadLink.label;"
+                  accesskey="&cmd.copyDownloadLink.accesskey;"/>
+
+        <menuseparator/>
+
+        <menuitem command="downloadsCmd_clearList"
+                  label="&cmd.clearList.label;"
+                  accesskey="&cmd.clearList.accesskey;"/>
+      </menupopup>
+
+      <richlistbox id="downloadsListBox"
+                   class="plain"
+                   flex="1"
+                   context="downloadsContextMenu"
+                   onkeypress="DownloadsView.onDownloadKeyPress(event);"
+                   oncontextmenu="DownloadsView.onDownloadContextMenu(event);"
+                   ondragstart="DownloadsView.onDownloadDragStart(event);"/>
+
+      <button id="downloadsHistory"
+              class="plain"
+              label="&downloadshistory.label;"
+              accesskey="&downloadshistory.accesskey;"
+              oncommand="DownloadsPanel.showDownloadsHistory();"/>
+    </panel>
+  </popupset>
+</overlay>

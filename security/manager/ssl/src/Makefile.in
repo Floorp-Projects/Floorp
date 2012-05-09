@@ -67,6 +67,7 @@ CPPSRCS = 				\
 	nsNSSErrors.cpp			\
 	nsNSSIOLayer.cpp		\
 	SSLServerCertVerification.cpp   \
+	TransportSecurityInfo.cpp       \
 	nsSSLStatus.cpp		\
 	nsNSSModule.cpp			\
 	nsSSLSocketProvider.cpp		\

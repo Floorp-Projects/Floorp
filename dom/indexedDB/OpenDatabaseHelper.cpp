@@ -2201,11 +2201,11 @@ OpenDatabaseHelper::DispatchErrorEvent()
     return;
   }
 
-  PRUint16 errorCode = 0;
+  nsCOMPtr<nsIDOMDOMError> error;
   DebugOnly<nsresult> rv =
-    mOpenDBRequest->GetErrorCode(&errorCode);
+    mOpenDBRequest->GetError(getter_AddRefs(error));
   NS_ASSERTION(NS_SUCCEEDED(rv), "This shouldn't be failing at this point!");
-  if (!errorCode) {
+  if (!error) {
     mOpenDBRequest->SetError(mResultCode);
   }
 
@@ -2337,9 +2337,12 @@ DeleteDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_ASSERTION(!aConnection, "How did we get a connection here?");
 
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
+  NS_ASSERTION(mgr, "This should never fail!");
+
   nsCOMPtr<nsIFile> directory;
-  nsresult rv = IDBFactory::GetDirectoryForOrigin(mASCIIOrigin,
-                                                  getter_AddRefs(directory));
+  nsresult rv = mgr->GetDirectoryForOrigin(mASCIIOrigin,
+                                           getter_AddRefs(directory));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   NS_ASSERTION(directory, "What?");

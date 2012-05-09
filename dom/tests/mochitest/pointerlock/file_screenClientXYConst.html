@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+-->
+<head>
+  <title>Bug 633602 - constantXY.html</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="pointerlock_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+    Mozilla Bug 633602
+  </a>
+  <div id="div"></div>
+  <script type="application/javascript">
+      /*
+       * Test for Bug 633602
+       * Confirm that screenX/Y and clientX/Y are constants when the pointer
+       * is locked.
+       */
+
+      SimpleTest.waitForExplicitFinish();
+
+      var div
+        , divRect
+        , unLockedCoords
+        , lockedCoords
+        , isUnlocked = false
+        , isLocked = false;
+
+      function runTests () {
+        ok(isUnlocked, "Pointer should be unlocked");
+        ok(isLocked, "Pointer should be locked");
+
+        // Confirm that pointer coords are constant while locked
+        is(unLockedCoords.clientX, lockedCoords.clientX,
+           "clientX should be equal to where the mouse was originaly locked");
+        is(unLockedCoords.clientY, lockedCoords.clientY,
+           "clientY should be equal to where the mouse was originaly locked");
+        is(unLockedCoords.screenX, lockedCoords.screenX,
+           "screenX should be equal to where the mouse was originaly locked");
+        is(unLockedCoords.screenY, lockedCoords.screenY,
+           "screenY should be equal to where the mouse was originaly locked");
+      }
+
+      function moveUnlocked(e) {
+        div.removeEventListener("mousemove", moveUnlocked, false);
+
+        isUnlocked = !document.mozPointerLockElement;
+        unLockedCoords = {
+          screenX: e.screenX,
+          screenY: e.screenY,
+          clientX: e.clientX,
+          clientY: e.clientY
+        };
+
+        div.mozRequestPointerLock();
+      }
+
+      function moveLocked(e) {
+        div.removeEventListener("mousemove", moveLocked, false);
+
+        isLocked = !!document.mozPointerLockElement;
+        lockedCoords = {
+          screenX: e.screenX,
+          screenY: e.screenY,
+          clientX: e.clientX,
+          clientY: e.clientY
+        };
+
+        document.mozCancelFullScreen();
+      }
+
+      document.addEventListener("mozpointerlockchange", function (e) {
+        if (document.mozPointerLockElement === div) {
+          div.addEventListener("mousemove", moveLocked, false);
+          divRect = div.getBoundingClientRect();
+          synthesizeMouse(div, (divRect.width / 4) * 3, (divRect.height / 4) * 3, {
+            type: "mousemove"
+          }, window);
+        }
+      }, false);
+
+      document.addEventListener("mozfullscreenchange", function() {
+        if (document.mozFullScreenElement === div) {
+          div.addEventListener("mousemove", moveUnlocked, false);
+          synthesizeMouseAtCenter(div, { type: "mousemove" }, window);
+        } else {
+          runTests();
+          SimpleTest.finish();
+        }
+      }, false);
+
+      function start() {
+        div = document.getElementById("div");
+        div.mozRequestFullScreen();
+      }
+  </script>
+</body>
+</html>

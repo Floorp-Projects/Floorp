@@ -45,11 +45,14 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
+		test_bug408231.html \
 		test_bug502673.html \
 		test_bug514156.html \
 		test_bug567213.html \
 		file_bug586662.html \
 		test_bug586662.html \
+		test_bug599983.html \
+		test_bug742261.html \
 		$(NULL)
 
 _CHROME_TEST_FILES = \
@@ -57,6 +60,7 @@ _CHROME_TEST_FILES = \
                 test_bug46555.html \
 		test_bug646194.xul \
 		test_dragdrop.html \
+		test_bug599983.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

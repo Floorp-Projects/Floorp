@@ -213,6 +213,13 @@ class nsCocoaUtils
    */
   static void InitPluginEvent(nsPluginEvent &aPluginEvent,
                               NPCocoaEvent &aCocoaEvent);
+  /**
+   * Initializes nsInputEvent for aNativeEvent or aModifiers.
+   */
+  static void InitInputEvent(nsInputEvent &aInputEvent,
+                             NSEvent* aNativeEvent);
+  static void InitInputEvent(nsInputEvent &aInputEvent,
+                             NSUInteger aModifiers);
 };
 
 #endif // nsCocoaUtils_h_

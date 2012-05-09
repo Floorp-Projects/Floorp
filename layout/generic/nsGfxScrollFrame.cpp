@@ -79,6 +79,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/StandardInteger.h"
+#include "mozilla/Util.h"
 #include "FrameLayerBuilder.h"
 #include "nsSMILKeySpline.h"
 #include "nsSubDocumentFrame.h"
@@ -124,6 +126,16 @@ nsHTMLScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
   mInner.Destroy();
   DestroyAbsoluteFrames(aDestructRoot);
   nsContainerFrame::DestroyFrom(aDestructRoot);
+}
+
+NS_IMETHODIMP
+nsHTMLScrollFrame::Init(nsIContent* aContent,
+                        nsIFrame*   aParent,
+                        nsIFrame*   aPrevInFlow)
+{
+  nsresult rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  mInner.Init();
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1062,6 +1074,16 @@ nsXULScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 NS_IMETHODIMP
+nsXULScrollFrame::Init(nsIContent* aContent,
+                       nsIFrame*   aParent,
+                       nsIFrame*   aPrevInFlow)
+{
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  mInner.Init();
+  return rv;
+}
+
+NS_IMETHODIMP
 nsXULScrollFrame::SetInitialChildList(ChildListID     aListID,
                                       nsFrameList&    aChildList)
 {
@@ -1312,17 +1334,19 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 const double kCurrentVelocityWeighting = 0.25;
 const double kStopDecelerationWeighting = 0.4;
 
-class nsGfxScrollFrameInner::AsyncScroll {
+// AsyncScroll has ref counting.
+class nsGfxScrollFrameInner::AsyncScroll : public nsARefreshObserver {
 public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  AsyncScroll():
-    mIsFirstIteration(true)
-    {}
+  AsyncScroll()
+    : mIsFirstIteration(true)
+    , mCallee(nsnull)
+  {}
 
   ~AsyncScroll() {
-    if (mScrollTimer) mScrollTimer->Cancel();
+    RemoveObserver();
   }
 
   nsPoint PositionAt(TimeStamp aTime);
@@ -1336,7 +1360,6 @@ public:
     return aTime > mStartTime + mDuration; // XXX or if we've hit the wall
   }
 
-  nsCOMPtr<nsITimer> mScrollTimer;
   TimeStamp mStartTime;
 
   // mPrevStartTime holds previous 3 timestamps for intervals averaging (to
@@ -1382,6 +1405,51 @@ protected:
                           nscoord aDestination);
 
   void InitDuration(nsIAtom *aOrigin);
+
+// The next section is observer/callback management
+// Bodies of WillRefresh and RefreshDriver contain nsGfxScrollFrameInner specific code.
+public:
+  NS_INLINE_DECL_REFCOUNTING(AsyncScroll)
+
+  /*
+   * Set a refresh observer for smooth scroll iterations (and start observing).
+   * Should be used at most once during the lifetime of this object.
+   * Return value: true on success, false otherwise.
+   */
+  bool SetRefreshObserver(nsGfxScrollFrameInner *aCallee) {
+    NS_ASSERTION(aCallee && !mCallee, "AsyncScroll::SetRefreshObserver - Invalid usage.");
+
+    if (!RefreshDriver(aCallee)->AddRefreshObserver(this, Flush_Display)) {
+      return false;
+    }
+
+    mCallee = aCallee;
+    return true;
+  }
+
+  virtual void WillRefresh(mozilla::TimeStamp aTime) {
+    // The callback may release "this".
+    // We don't access members after returning, so no need for KungFuDeathGrip.
+    nsGfxScrollFrameInner::AsyncScrollCallback(mCallee, aTime);
+  }
+
+private:
+  nsGfxScrollFrameInner *mCallee;
+
+  nsRefreshDriver* RefreshDriver(nsGfxScrollFrameInner* aCallee) {
+    return aCallee->mOuter->PresContext()->RefreshDriver();
+  }
+
+  /* 
+   * The refresh driver doesn't hold a reference to its observers,
+   *   so releasing this object can (and is) used to remove the observer on DTOR.
+   * Currently, this object is released once the scrolling ends.
+   */
+  void RemoveObserver() {
+    if (mCallee) {
+      RefreshDriver(mCallee)->RemoveRefreshObserver(this, Flush_Display);
+    }
+  }
 };
 
 nsPoint
@@ -1595,11 +1663,18 @@ nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
     delete gScrollFrameActivityTracker;
     gScrollFrameActivityTracker = nsnull;
   }
-  delete mAsyncScroll;
 
   if (mScrollActivityTimer) {
     mScrollActivityTimer->Cancel();
     mScrollActivityTimer = nsnull;
+  }
+}
+
+void
+nsGfxScrollFrameInner::Init()
+{
+  if (mOuter->GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER) {
+    mOuter->AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
   }
 }
 
@@ -1616,34 +1691,29 @@ Clamp(nscoord aLower, nscoord aVal, nscoord aUpper)
 nsPoint
 nsGfxScrollFrameInner::ClampScrollPosition(const nsPoint& aPt) const
 {
-  nsRect range = GetScrollRange();
+  nsRect range = GetScrollRangeForClamping();
   return nsPoint(Clamp(range.x, aPt.x, range.XMost()),
                  Clamp(range.y, aPt.y, range.YMost()));
 }
 
 /*
- * Callback function from timer used in nsGfxScrollFrameInner::ScrollTo
+ * Callback function from AsyncScroll, used in nsGfxScrollFrameInner::ScrollTo
  */
 void
-nsGfxScrollFrameInner::AsyncScrollCallback(nsITimer *aTimer, void* anInstance)
+nsGfxScrollFrameInner::AsyncScrollCallback(void* anInstance, mozilla::TimeStamp aTime)
 {
   nsGfxScrollFrameInner* self = static_cast<nsGfxScrollFrameInner*>(anInstance);
   if (!self || !self->mAsyncScroll)
     return;
 
   if (self->mAsyncScroll->mIsSmoothScroll) {
-    TimeStamp now = TimeStamp::Now();
-    nsPoint destination = self->mAsyncScroll->PositionAt(now);
-    if (self->mAsyncScroll->IsFinished(now)) {
-      delete self->mAsyncScroll;
+    nsPoint destination = self->mAsyncScroll->PositionAt(aTime);
+    if (self->mAsyncScroll->IsFinished(aTime)) {
       self->mAsyncScroll = nsnull;
     }
-
     self->ScrollToImpl(destination);
   } else {
-    delete self->mAsyncScroll;
     self->mAsyncScroll = nsnull;
-
     self->ScrollToImpl(self->mDestination);
   }
 }
@@ -1666,7 +1736,6 @@ nsGfxScrollFrameInner::ScrollToWithOrigin(nsPoint aScrollPosition,
   if (aMode == nsIScrollableFrame::INSTANT) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
     // async-scrolling process and do an instant scroll
-    delete mAsyncScroll;
     mAsyncScroll = nsnull;
     ScrollToImpl(mDestination);
     return;
@@ -1685,21 +1754,11 @@ nsGfxScrollFrameInner::ScrollToWithOrigin(nsPoint aScrollPosition,
     }
   } else {
     mAsyncScroll = new AsyncScroll;
-    mAsyncScroll->mScrollTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (!mAsyncScroll->mScrollTimer) {
-      delete mAsyncScroll;
+    if (!mAsyncScroll->SetRefreshObserver(this)) {
       mAsyncScroll = nsnull;
-      // allocation failed. Scroll the normal way.
+      // Observer setup failed. Scroll the normal way.
       ScrollToImpl(mDestination);
       return;
-    }
-    if (isSmoothScroll) {
-      mAsyncScroll->mScrollTimer->InitWithFuncCallback(
-        AsyncScrollCallback, this, 1000 / 60,
-        nsITimer::TYPE_REPEATING_SLACK);
-    } else {
-      mAsyncScroll->mScrollTimer->InitWithFuncCallback(
-        AsyncScrollCallback, this, 0, nsITimer::TYPE_ONE_SHOT);
     }
   }
 
@@ -1755,10 +1814,6 @@ CanScrollWithBlitting(nsIFrame* aFrame)
         f->IsFrameOfType(nsIFrame::eSVG)) {
       return false;
     }
-    nsIScrollableFrame* sf = do_QueryFrame(f);
-    if ((sf || f->IsFrameOfType(nsIFrame::eReplaced)) &&
-        nsLayoutUtils::HasNonZeroCorner(f->GetStyleBorder()->mBorderRadius))
-      return false;
     if (nsLayoutUtils::IsPopup(f))
       break;
   }
@@ -1942,7 +1997,7 @@ nsGfxScrollFrameInner::RestrictToDevPixels(const nsPoint& aPt,
   // pixels. But we also need to make sure that our position remains
   // inside the allowed region.
   if (aShouldClamp) {
-    nsRect scrollRange = GetScrollRange();
+    nsRect scrollRange = GetScrollRangeForClamping();
     *aPtDevPx = nsIntPoint(ClampInt(scrollRange.x, aPt.x, scrollRange.XMost(), appUnitsPerDevPixel),
                            ClampInt(scrollRange.y, aPt.y, scrollRange.YMost(), appUnitsPerDevPixel));
   } else {
@@ -2100,11 +2155,11 @@ public:
   }
 
 protected:
-  void SetCount(PRWord aCount) {
+  void SetCount(intptr_t aCount) {
     mProps.Set(nsIFrame::ScrollLayerCount(), reinterpret_cast<void*>(aCount));
   }
 
-  PRWord mCount;
+  intptr_t mCount;
   FrameProperties mProps;
   nsIFrame* mScrollFrame;
   nsIFrame* mScrolledFrame;
@@ -2166,8 +2221,13 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   dirtyRect.IntersectRect(aDirtyRect, mScrollPort);
 
   // Override the dirty rectangle if the displayport has been set.
+  nsRect displayPort;
   bool usingDisplayport =
-    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &dirtyRect);
+    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort) &&
+    !aBuilder->IsForEventDelivery();
+  if (usingDisplayport) {
+    dirtyRect = displayPort;
+  }
 
   nsDisplayListCollection set;
   rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
@@ -2186,33 +2246,18 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
        (scrollRange.width > 0 || scrollRange.height > 0) &&
        (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument())));
 
-  if (ShouldBuildLayer()) {
-    // ScrollLayerWrapper must always be created because it initializes the
-    // scroll layer count. The display lists depend on this.
-    ScrollLayerWrapper wrapper(mOuter, mScrolledFrame);
-
-    if (usingDisplayport) {
-      // Once a displayport is set, assume that scrolling needs to be fast
-      // so create a layer with all the content inside. The compositor
-      // process will be able to scroll the content asynchronously.
-      wrapper.WrapListsInPlace(aBuilder, mOuter, set);
-    }
-
-    // In case we are not using displayport or the nsDisplayScrollLayers are
-    // flattened during visibility computation, we still need to export the
-    // metadata about this scroll box to the compositor process.
-    nsDisplayScrollInfoLayer* layerItem = new (aBuilder) nsDisplayScrollInfoLayer(
-      aBuilder, mScrolledFrame, mOuter);
-    set.BorderBackground()->AppendNewToBottom(layerItem);
-  }
-
   nsRect clip;
-  clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
-
   nscoord radii[8];
-  // Our override of GetBorderRadii ensures we never have a radius at
-  // the corners where we have a scrollbar.
-  mOuter->GetPaddingBoxBorderRadii(radii);
+
+  if (usingDisplayport) {
+    clip = displayPort + aBuilder->ToReferenceFrame(mOuter);
+    memset(radii, 0, sizeof(nscoord) * ArrayLength(radii));
+  } else {
+    clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+    // Our override of GetBorderRadii ensures we never have a radius at
+    // the corners where we have a scrollbar.
+    mOuter->GetPaddingBoxBorderRadii(radii);
+  }
 
   // mScrolledFrame may have given us a background, e.g., the scrolled canvas
   // frame below the viewport. If so, we want it to be clipped. We also want
@@ -2222,6 +2267,26 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   rv = mOuter->OverflowClip(aBuilder, set, aLists, clip, radii,
                             true, mIsRoot);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (ShouldBuildLayer()) {
+    // ScrollLayerWrapper must always be created because it initializes the
+    // scroll layer count. The display lists depend on this.
+    ScrollLayerWrapper wrapper(mOuter, mScrolledFrame);
+
+    if (usingDisplayport) {
+      // Once a displayport is set, assume that scrolling needs to be fast
+      // so create a layer with all the content inside. The compositor
+      // process will be able to scroll the content asynchronously.
+      wrapper.WrapListsInPlace(aBuilder, mOuter, aLists);
+    }
+
+    // In case we are not using displayport or the nsDisplayScrollLayers are
+    // flattened during visibility computation, we still need to export the
+    // metadata about this scroll box to the compositor process.
+    nsDisplayScrollInfoLayer* layerItem = new (aBuilder) nsDisplayScrollInfoLayer(
+      aBuilder, mScrolledFrame, mOuter);
+    aLists.BorderBackground()->AppendNewToBottom(layerItem);
+  }
 
   // Now display overlay scrollbars and the resizer, if we have one.
   AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, createLayersForScrollbars,
@@ -2293,9 +2358,15 @@ AlignToDevPixelRoundingToZero(nscoord aVal, PRInt32 aAppUnitsPerDevPixel)
 nsRect
 nsGfxScrollFrameInner::GetScrollRange() const
 {
+  return GetScrollRange(mScrollPort.width, mScrollPort.height);
+}
+
+nsRect
+nsGfxScrollFrameInner::GetScrollRange(nscoord aWidth, nscoord aHeight) const
+{
   nsRect range = GetScrolledRect();
-  range.width -= mScrollPort.width;
-  range.height -= mScrollPort.height;
+  range.width -= aWidth;
+  range.height -= aHeight;
 
   nsPresContext* presContext = mOuter->PresContext();
   PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
@@ -2306,6 +2377,17 @@ nsGfxScrollFrameInner::GetScrollRange() const
   range.x = AlignToDevPixelRoundingToZero(range.x, appUnitsPerDevPixel);
   range.y = AlignToDevPixelRoundingToZero(range.y, appUnitsPerDevPixel);
   return range;
+}
+
+nsRect
+nsGfxScrollFrameInner::GetScrollRangeForClamping() const
+{
+  nsIPresShell* presShell = mOuter->PresContext()->PresShell();
+  if (mIsRoot && presShell->IsScrollPositionClampingScrollPortSizeSet()) {
+    nsSize size = presShell->GetScrollPositionClampingScrollPortSize();
+    return GetScrollRange(size.width, size.height);
+  }
+  return GetScrollRange();
 }
 
 static void

@@ -49,12 +49,10 @@ _BROWSER_FILES = \
 		browser_inspector_highlighter.js \
 		browser_inspector_iframeTest.js \
 		browser_inspector_scrolling.js \
-		browser_inspector_store.js \
 		browser_inspector_tab_switch.js \
 		browser_inspector_treePanel_output.js \
 		browser_inspector_treePanel_input.html \
 		browser_inspector_treePanel_result.html \
-		browser_inspector_registertools.js \
 		browser_inspector_bug_665880.js \
 		browser_inspector_bug_674871.js \
 		browser_inspector_editor.js \
@@ -69,11 +67,11 @@ _BROWSER_FILES = \
 		browser_inspector_bug_699308_iframe_navigation.js \
 		browser_inspector_changes.js \
 		browser_inspector_ruleviewstore.js \
-		browser_inspector_duplicate_ruleview.js \
 		browser_inspector_invalidate.js \
 		browser_inspector_sidebarstate.js \
 		browser_inspector_treePanel_menu.js \
 		browser_inspector_pseudoclass_lock.js \
+		browser_inspector_pseudoClass_menu.js \
 		head.js \
 		$(NULL)
 

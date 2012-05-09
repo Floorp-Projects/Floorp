@@ -465,22 +465,6 @@ FinalizeCount(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 JSBool
-MJitCodeStats(JSContext *cx, unsigned argc, jsval *vp)
-{
-#ifdef JS_METHODJIT
-    JSRuntime *rt = cx->runtime;
-    size_t n = 0;
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
-        n += (*c)->sizeOfMjitCode();
-    }
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));
-#else
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-#endif
-    return true;
-}
-
-JSBool
 MJitChunkLimit(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc != 1) {
@@ -578,12 +562,6 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "internalConst(name)",
 "  Query an internal constant for the engine. See InternalConst source for\n"
 "  the list of constant names."),
-
-#ifdef JS_METHODJIT
-    JS_FN_HELP("mjitcodestats", MJitCodeStats, 0, 0,
-"mjitcodestats()",
-"Return stats on mjit code memory usage."),
-#endif
 
     JS_FN_HELP("mjitChunkLimit", MJitChunkLimit, 1, 0,
 "mjitChunkLimit(N)",

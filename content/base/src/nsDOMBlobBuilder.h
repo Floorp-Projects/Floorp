@@ -113,7 +113,7 @@ public:
   nsresult AppendVoidPtr(const void* aData, PRUint32 aLength);
   nsresult AppendString(JSString* aString, bool nativeEOL, JSContext* aCx);
   nsresult AppendBlob(nsIDOMBlob* aBlob);
-  nsresult AppendArrayBuffer(JSObject* aBuffer);
+  nsresult AppendArrayBuffer(JSObject* aBuffer, JSContext *aCx);
   nsresult AppendBlobs(const nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlob);
 
   nsTArray<nsCOMPtr<nsIDOMBlob> >& GetBlobs() { Flush(); return mBlobs; }

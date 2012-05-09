@@ -177,7 +177,7 @@ enum vp8e_enc_control_id
      * to a keyframe, set this to 450.
      *
      */
-    VP8E_SET_MAX_INTRA_BITRATE_PCT,
+    VP8E_SET_MAX_INTRA_BITRATE_PCT
 };
 
 /*!\brief vpx 1-D scaling mode
@@ -258,7 +258,7 @@ typedef enum
     VP8_ONE_TOKENPARTITION   = 0,
     VP8_TWO_TOKENPARTITION   = 1,
     VP8_FOUR_TOKENPARTITION  = 2,
-    VP8_EIGHT_TOKENPARTITION = 3,
+    VP8_EIGHT_TOKENPARTITION = 3
 } vp8e_token_partitions;
 
 

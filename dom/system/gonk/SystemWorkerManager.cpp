@@ -46,19 +46,35 @@
 #include "nsIWorkerHolder.h"
 #include "nsIXPConnect.h"
 
-#include "jstypedarray.h"
+#include "jsfriendapi.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ipc/Ril.h"
+#ifdef MOZ_B2G_BT
+#include "mozilla/ipc/DBusThread.h"
+#include "BluetoothFirmware.h"
+#endif
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsRadioInterfaceLayer.h"
 #include "WifiWorker.h"
 
+#undef LOG
+#if defined(MOZ_WIDGET_GONK)
+#include <android/log.h>
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GonkBluetooth", args);
+#else
+#define BTDEBUG true
+#define LOG(args...) if(BTDEBUG) printf(args);
+#endif
+
 
 USING_WORKERS_NAMESPACE
 using namespace mozilla::dom::gonk;
 using namespace mozilla::ipc;
+#ifdef MOZ_B2G_BT
+using namespace mozilla::dom::bluetooth;
+#endif
 
 namespace {
 
@@ -100,21 +116,21 @@ PostToRIL(JSContext *cx, unsigned argc, jsval *vp)
     data = abs.ptr();
   } else if (!JSVAL_IS_PRIMITIVE(v)) {
     JSObject *obj = JSVAL_TO_OBJECT(v);
-    if (!js_IsTypedArray(obj)) {
+    if (!JS_IsTypedArrayObject(obj, cx)) {
       JS_ReportError(cx, "Object passed in wasn't a typed array");
       return false;
     }
 
-    uint32_t type = JS_GetTypedArrayType(obj);
-    if (type != js::TypedArray::TYPE_INT8 &&
-        type != js::TypedArray::TYPE_UINT8 &&
-        type != js::TypedArray::TYPE_UINT8_CLAMPED) {
+    uint32_t type = JS_GetTypedArrayType(obj, cx);
+    if (type != js::ArrayBufferView::TYPE_INT8 &&
+        type != js::ArrayBufferView::TYPE_UINT8 &&
+        type != js::ArrayBufferView::TYPE_UINT8_CLAMPED) {
       JS_ReportError(cx, "Typed array data is not octets");
       return false;
     }
 
-    size = JS_GetTypedArrayByteLength(obj);
-    data = JS_GetTypedArrayData(obj);
+    size = JS_GetTypedArrayByteLength(obj, cx);
+    data = JS_GetArrayBufferViewData(obj, cx);
   } else {
     JS_ReportError(cx,
                    "Incorrect argument. Expecting a string or a typed array");
@@ -181,13 +197,12 @@ RILReceiver::DispatchRILEvent::RunTask(JSContext *aCx)
 {
   JSObject *obj = JS_GetGlobalObject(aCx);
 
-  JSObject *array =
-    js_CreateTypedArray(aCx, js::TypedArray::TYPE_UINT8, mMessage->mSize);
+  JSObject *array = JS_NewUint8Array(aCx, mMessage->mSize);
   if (!array) {
     return false;
   }
 
-  memcpy(JS_GetTypedArrayData(array), mMessage->mData, mMessage->mSize);
+  memcpy(JS_GetArrayBufferViewData(array, aCx), mMessage->mData, mMessage->mSize);
   jsval argv[] = { OBJECT_TO_JSVAL(array) };
   return JS_CallFunctionName(aCx, obj, "onRILMessage", NS_ARRAY_LENGTH(argv),
                              argv, argv);
@@ -213,23 +228,31 @@ SystemWorkerManager::~SystemWorkerManager()
 nsresult
 SystemWorkerManager::Init()
 {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   NS_ASSERTION(NS_IsMainThread(), "We can only initialize on the main thread");
   NS_ASSERTION(!mShutdown, "Already shutdown!");
 
-  JSContext *cx;
-  nsresult rv = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
+  JSContext* cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
   nsCxPusher pusher;
-  if (!cx || !pusher.Push(cx, false)) {
+  if (!pusher.Push(cx, false)) {
     return NS_ERROR_FAILURE;
   }
 
-  rv = InitRIL(cx);
+  nsresult rv = InitRIL(cx);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = InitWifi(cx);
   NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef MOZ_B2G_BT
+  rv = InitBluetooth(cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
   nsCOMPtr<nsIObserverService> obs =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
@@ -252,7 +275,9 @@ SystemWorkerManager::Shutdown()
   mShutdown = true;
 
   StopRil();
-
+#ifdef MOZ_B2G_BT
+  StopDBus();
+#endif
   mRILWorker = nsnull;
   nsCOMPtr<nsIWifi> wifi(do_QueryInterface(mWifiWorker));
   if (wifi) {
@@ -362,6 +387,28 @@ SystemWorkerManager::InitWifi(JSContext *cx)
   NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
 
   mWifiWorker = worker;
+  return NS_OK;
+}
+
+nsresult
+SystemWorkerManager::InitBluetooth(JSContext *cx)
+{
+#ifdef MOZ_B2G_BT
+#ifdef MOZ_WIDGET_GONK
+  // We need a platform specific check here to make sure of when we're
+  // running on an emulator. Therefore, if we're compiled with gonk,
+  // see if we can load functions out of bluedroid. If not, assume
+  // it's an emulator and don't start the bluetooth thread.
+  if(EnsureBluetoothInit()) {
+#endif
+    StartDBus();
+#ifdef MOZ_WIDGET_GONK
+  }
+  else {
+    LOG("Bluedroid functions not available, assuming running on simulator. Not starting DBus thread.");
+  }
+#endif
+#endif
   return NS_OK;
 }
 

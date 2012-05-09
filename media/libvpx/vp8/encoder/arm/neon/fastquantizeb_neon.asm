@@ -98,7 +98,7 @@
     vmul.s16        q2, q6, q4          ; x * Dequant
     vmul.s16        q3, q7, q5
 
-    ldr             r0, _inv_zig_zag_   ; load ptr of inverse zigzag table
+    adr             r0, inv_zig_zag     ; load ptr of inverse zigzag table
 
     vceq.s16        q8, q8              ; set q8 to all 1
 
@@ -135,17 +135,16 @@
     vmovl.u16       q0, d0
     vmovl.u16       q10, d20
 
-
     vmax.u32        d0, d0, d1
     vmax.u32        d20, d20, d21
     vpmax.u32       d0, d0, d0
     vpmax.u32       d20, d20, d20
 
-    add             r4, r2, #vp8_blockd_eob
-    add             r5, r3, #vp8_blockd_eob
+    ldr             r4, [r2, #vp8_blockd_eob]
+    ldr             r5, [r3, #vp8_blockd_eob]
 
-    vst1.32         {d0[0]}, [r4@32]
-    vst1.32         {d20[0]}, [r5@32]
+    vst1.8          {d0[0]}, [r4]       ; store eob
+    vst1.8          {d20[0]}, [r5]      ; store eob
 
     vldmia          sp!, {q4-q7}
     ldmfd           sp!, {r4-r9}
@@ -182,7 +181,7 @@
     vadd.s16        q12, q14            ; x + Round
     vadd.s16        q13, q15
 
-    ldr             r0, _inv_zig_zag_   ; load ptr of inverse zigzag table
+    adr             r0, inv_zig_zag     ; load ptr of inverse zigzag table
 
     vqdmulh.s16     q12, q8             ; y = ((Round+abs(z)) * Quant) >> 16
     vqdmulh.s16     q13, q9
@@ -195,6 +194,8 @@
 
     vshr.s16        q12, #1             ; right shift 1 after vqdmulh
     vshr.s16        q13, #1
+
+    ldr             r5, [r1, #vp8_blockd_eob]
 
     orr             r2, r2, r3          ; check if all zero (step 4)
     cmp             r2, #0              ; check if all zero (step 5)
@@ -230,14 +231,13 @@
 
     vst1.s16        {q2, q3}, [r7@128]  ; store dqcoeff = x * Dequant
 
-    add             r4, r1, #vp8_blockd_eob
-    vst1.32         {d0[0]}, [r4@32]
+    vst1.8          {d0[0]}, [r5]       ; store eob
 
     ldmfd           sp!, {r4-r7}
     bx              lr
 
 zero_output
-    str             r2, [r1, #vp8_blockd_eob]
+    strb            r2, [r5]            ; store eob
     vst1.s16        {q0, q1}, [r6@128]  ; qcoeff = 0
     vst1.s16        {q0, q1}, [r7@128]  ; dqcoeff = 0
 
@@ -247,9 +247,6 @@ zero_output
     ENDP
 
 ; default inverse zigzag table is defined in vp8/common/entropy.c
-_inv_zig_zag_
-    DCD inv_zig_zag
-
     ALIGN 16    ; enable use of @128 bit aligned loads
 inv_zig_zag
     DCW 0x0001, 0x0002, 0x0006, 0x0007

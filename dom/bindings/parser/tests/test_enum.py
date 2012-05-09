@@ -47,7 +47,7 @@ def WebIDLTest(parser, harness):
     harness.check(len(signatures), 1, "Expect one signature")
 
     (returnType, arguments) = signatures[0]
-    harness.check(str(returnType), "TestEnum", "Method type is the correct name")
+    harness.check(str(returnType), "TestEnum (Wrapper)", "Method type is the correct name")
     harness.check(len(arguments), 1, "Method has the right number of arguments")
     arg = arguments[0]
     harness.ok(isinstance(arg, WebIDL.IDLArgument), "Should be an IDLArgument")
@@ -58,4 +58,4 @@ def WebIDLTest(parser, harness):
                   "Attr has correct QName")
     harness.check(attr.identifier.name, "foo", "Attr has correct name")
 
-    harness.check(str(attr.type), "TestEnum", "Attr type is the correct name")
+    harness.check(str(attr.type), "TestEnum (Wrapper)", "Attr type is the correct name")

@@ -83,10 +83,6 @@ using mozilla::TimeStamp;
 PRLogModuleInfo* gAudioStreamLog = nsnull;
 #endif
 
-#if defined(MOZ_CUBEB)
-static cubeb* gCubebContext;
-#endif
-
 static const PRUint32 FAKE_BUFFER_SIZE = 176400;
 
 // Number of milliseconds per second.
@@ -319,10 +315,15 @@ class AudioShutdownEvent : public nsRunnable
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
 #define PREF_USE_CUBEB "media.use_cubeb"
+#define PREF_CUBEB_LATENCY "media.cubeb_latency_ms"
 
 static mozilla::Mutex* gAudioPrefsLock = nsnull;
 static double gVolumeScale = 1.0;
 static bool gUseCubeb = false;
+
+// Arbitrary default stream latency.  The higher this value, the longer stream
+// volume changes will take to become audible.
+static PRUint32 gCubebLatency = 100;
 
 static int PrefChanged(const char* aPref, void* aClosure)
 {
@@ -336,9 +337,13 @@ static int PrefChanged(const char* aPref, void* aClosure)
       gVolumeScale = NS_MAX<double>(0, PR_strtod(utf8.get(), nsnull));
     }
   } else if (strcmp(aPref, PREF_USE_CUBEB) == 0) {
-    bool value = Preferences::GetBool(aPref, false);
+    bool value = Preferences::GetBool(aPref, true);
     mozilla::MutexAutoLock lock(*gAudioPrefsLock);
     gUseCubeb = value;
+  } else if (strcmp(aPref, PREF_CUBEB_LATENCY) == 0) {
+    PRUint32 value = Preferences::GetUint(aPref);
+    mozilla::MutexAutoLock lock(*gAudioPrefsLock);
+    gCubebLatency = NS_MIN<PRUint32>(NS_MAX<PRUint32>(value, 20), 1000);
   }
   return 0;
 }
@@ -355,6 +360,25 @@ static bool GetUseCubeb()
   mozilla::MutexAutoLock lock(*gAudioPrefsLock);
   return gUseCubeb;
 }
+
+static cubeb* gCubebContext;
+
+static cubeb* GetCubebContext()
+{
+  mozilla::MutexAutoLock lock(*gAudioPrefsLock);
+  if (gCubebContext ||
+      cubeb_init(&gCubebContext, "nsAudioStream") == CUBEB_OK) {
+    return gCubebContext;
+  }
+  NS_WARNING("cubeb_init failed");
+  return nsnull;
+}
+
+static PRUint32 GetCubebLatency()
+{
+  mozilla::MutexAutoLock lock(*gAudioPrefsLock);
+  return gCubebLatency;
+}
 #endif
 
 void nsAudioStream::InitLibrary()
@@ -368,9 +392,6 @@ void nsAudioStream::InitLibrary()
 #if defined(MOZ_CUBEB)
   PrefChanged(PREF_USE_CUBEB, nsnull);
   Preferences::RegisterCallback(PrefChanged, PREF_USE_CUBEB);
-  if (cubeb_init(&gCubebContext, "nsAudioStream") != 0) {
-    NS_WARNING("cubeb_init failed");
-  }
 #endif
 }
 
@@ -799,6 +820,71 @@ public:
   static void Release(cubeb_stream* aStream) { cubeb_stream_destroy(aStream); }
 };
 
+class nsCircularByteBuffer
+{
+public:
+  nsCircularByteBuffer()
+    : mBuffer(nsnull), mCapacity(0), mStart(0), mCount(0)
+  {}
+
+  // Set the capacity of the buffer in bytes.  Must be called before any
+  // call to append or pop elements.
+  void SetCapacity(PRUint32 aCapacity) {
+    NS_ABORT_IF_FALSE(!mBuffer, "Buffer allocated.");
+    mCapacity = aCapacity;
+    mBuffer = new PRUint8[mCapacity];
+  }
+
+  PRUint32 Length() {
+    return mCount;
+  }
+
+  PRUint32 Capacity() {
+    return mCapacity;
+  }
+
+  PRUint32 Available() {
+    return Capacity() - Length();
+  }
+
+  // Append aLength bytes from aSrc to the buffer.  Caller must check that
+  // sufficient space is available.
+  void AppendElements(const PRUint8* aSrc, PRUint32 aLength) {
+    NS_ABORT_IF_FALSE(mBuffer && mCapacity, "Buffer not initialized.");
+    NS_ABORT_IF_FALSE(aLength <= Available(), "Buffer full.");
+
+    PRUint32 end = (mStart + mCount) % mCapacity;
+
+    PRUint32 toCopy = NS_MIN(mCapacity - end, aLength);
+    memcpy(&mBuffer[end], aSrc, toCopy);
+    memcpy(&mBuffer[0], aSrc + toCopy, aLength - toCopy);
+    mCount += aLength;
+  }
+
+  // Remove aSize bytes from the buffer.  Caller must check returned size in
+  // aSize{1,2} before using the pointer returned in aData{1,2}.  Caller
+  // must not specify an aSize larger than Length().
+  void PopElements(PRUint32 aSize, void** aData1, PRUint32* aSize1,
+                   void** aData2, PRUint32* aSize2) {
+    NS_ABORT_IF_FALSE(mBuffer && mCapacity, "Buffer not initialized.");
+    NS_ABORT_IF_FALSE(aSize <= Length(), "Request too large.");
+
+    *aData1 = &mBuffer[mStart];
+    *aSize1 = NS_MIN(mCapacity - mStart, aSize);
+    *aData2 = &mBuffer[0];
+    *aSize2 = aSize - *aSize1;
+    mCount -= *aSize1 + *aSize2;
+    mStart += *aSize1 + *aSize2;
+    mStart %= mCapacity;
+  }
+
+private:
+  nsAutoArrayPtr<PRUint8> mBuffer;
+  PRUint32 mCapacity;
+  PRUint32 mStart;
+  PRUint32 mCount;
+};
+
 class nsBufferedAudioStream : public nsAudioStream
 {
  public:
@@ -849,11 +935,10 @@ private:
   PRUint64 mLostFrames;
 
   // Temporary audio buffer.  Filled by Write() and consumed by
-  // DataCallback().  Once mBufferLimit is reached, Write() blocks until
-  // sufficient space becomes available in mBuffer.  The buffer and buffer
-  // limit deal in bytes, not frames.
-  nsTArray<PRUint8> mBuffer;
-  PRUint32 mBufferLimit;
+  // DataCallback().  Once mBuffer is full, Write() blocks until sufficient
+  // space becomes available in mBuffer.  mBuffer is sized in bytes, not
+  // frames.
+  nsCircularByteBuffer mBuffer;
 
   // Software volume level.  Applied during the servicing of DataCallback().
   double mVolume;
@@ -872,14 +957,11 @@ private:
                  // once the remaining contents of mBuffer are requested by
                  // cubeb, after which StateCallback will indicate drain
                  // completion.
-    DRAINED      // StateCallback has indicated that the drain is complete.
+    DRAINED,     // StateCallback has indicated that the drain is complete.
+    ERRORED      // Stream disabled due to an internal error.
   };
 
   StreamState mState;
-
-  // Arbitrary default stream latency.  The higher this value, the longer stream
-  // volume changes will take to become audible.
-  static const unsigned int DEFAULT_LATENCY_MS = 100;
 };
 #endif
 
@@ -915,7 +997,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsBufferedAudioStream)
 nsresult
 nsBufferedAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat)
 {
-  if (!gCubebContext || aNumChannels < 0 || aRate < 0) {
+  cubeb* cubebContext = GetCubebContext();
+
+  if (!cubebContext || aNumChannels < 0 || aRate < 0) {
     return NS_ERROR_FAILURE;
   }
 
@@ -941,8 +1025,8 @@ nsBufferedAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aF
 
   {
     cubeb_stream* stream;
-    if (cubeb_stream_init(gCubebContext, &stream, "nsBufferedAudioStream", params,
-                          DEFAULT_LATENCY_MS, DataCallback_S, StateCallback_S, this) == CUBEB_OK) {
+    if (cubeb_stream_init(cubebContext, &stream, "nsBufferedAudioStream", params,
+                          GetCubebLatency(), DataCallback_S, StateCallback_S, this) == CUBEB_OK) {
       mCubebStream.own(stream);
     }
   }
@@ -951,16 +1035,12 @@ nsBufferedAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aF
     return NS_ERROR_FAILURE;
   }
 
-  // Limit mBuffer to one second of audio.  This value is arbitrary, and was
+  // Size mBuffer for one second of audio.  This value is arbitrary, and was
   // selected based on the observed behaviour of the existing nsAudioStream
   // implementations.
-  mBufferLimit = aRate * mBytesPerFrame;
-  NS_ABORT_IF_FALSE(mBufferLimit % mBytesPerFrame == 0, "Must buffer complete frames");
-
-  // Pre-allocate the buffer.  nsTArray::RemoveElementsAt shrinks the buffer
-  // only if its length reaches zero, so allocator thrashing should be
-  // minimal.
-  mBuffer.SetCapacity(mBufferLimit);
+  PRUint32 bufferLimit = aRate * mBytesPerFrame;
+  NS_ABORT_IF_FALSE(bufferLimit % mBytesPerFrame == 0, "Must buffer complete frames");
+  mBuffer.SetCapacity(bufferLimit);
 
   return NS_OK;
 }
@@ -978,7 +1058,7 @@ nsresult
 nsBufferedAudioStream::Write(const void* aBuf, PRUint32 aFrames)
 {
   MonitorAutoLock mon(mMonitor);
-  if (!mCubebStream) {
+  if (!mCubebStream || mState == ERRORED) {
     return NS_ERROR_FAILURE;
   }
   NS_ASSERTION(mState == INITIALIZED || mState == STARTED, "Stream write in unexpected state.");
@@ -987,9 +1067,7 @@ nsBufferedAudioStream::Write(const void* aBuf, PRUint32 aFrames)
   PRUint32 bytesToCopy = aFrames * mBytesPerFrame;
 
   while (bytesToCopy > 0) {
-    NS_ABORT_IF_FALSE(mBuffer.Length() <= mBufferLimit, "Buffer invariant violated.");
-
-    PRUint32 available = NS_MIN(bytesToCopy, mBufferLimit - mBuffer.Length());
+    PRUint32 available = NS_MIN(bytesToCopy, mBuffer.Available());
     NS_ABORT_IF_FALSE(available % mBytesPerFrame == 0, "Must copy complete frames.");
 
     mBuffer.AppendElements(src, available);
@@ -1000,8 +1078,12 @@ nsBufferedAudioStream::Write(const void* aBuf, PRUint32 aFrames)
       mState = STARTED;
     }
 
-    if (bytesToCopy > 0) {
+    if (mState == STARTED && bytesToCopy > 0) {
       mon.Wait();
+    }
+
+    if (mState != STARTED) {
+      return NS_ERROR_FAILURE;
     }
   }
 
@@ -1012,9 +1094,8 @@ PRUint32
 nsBufferedAudioStream::Available()
 {
   MonitorAutoLock mon(mMonitor);
-  NS_ABORT_IF_FALSE(mBuffer.Length() <= mBufferLimit, "Buffer invariant violated.");
   NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Buffer invariant violated.");
-  return (mBufferLimit - mBuffer.Length()) / mBytesPerFrame;
+  return mBuffer.Available() / mBytesPerFrame;
 }
 
 PRInt32 nsBufferedAudioStream::GetMinWriteSize()
@@ -1038,7 +1119,7 @@ nsBufferedAudioStream::Drain()
     return;
   }
   mState = DRAINING;
-  while (mState != DRAINED) {
+  while (mState == DRAINING) {
     mon.Wait();
   }
 }
@@ -1091,7 +1172,7 @@ nsBufferedAudioStream::GetPositionInFramesUnlocked()
 {
   mMonitor.AssertCurrentThreadOwns();
 
-  if (!mCubebStream) {
+  if (!mCubebStream || mState == ERRORED) {
     return -1;
   }
 
@@ -1116,18 +1197,6 @@ nsBufferedAudioStream::IsPaused()
   return mState == STOPPED;
 }
 
-template<typename T>
-void
-SampleCopy(void* aDst, const PRUint8* aSrc, PRUint32 aSamples, double aVolume)
-{
-  const T* src = reinterpret_cast<const T*>(aSrc);
-  double scaled_volume = GetVolumeScale() * aVolume;
-  T* dst = static_cast<T*>(aDst);
-  for (PRUint32 i = 0; i < aSamples; ++i) {
-    dst[i] = T(src[i] * scaled_volume);
-  }
-}
-
 long
 nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
 {
@@ -1138,30 +1207,61 @@ nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
   PRUint32 available = NS_MIN(bytesWanted, mBuffer.Length());
   NS_ABORT_IF_FALSE(available % mBytesPerFrame == 0, "Must copy complete frames");
 
-  // Copy each sample from mBuffer to aBuffer, adjusting the volume during the copy.
-  PRUint32 samplesToCopy = available / mBytesPerFrame * mChannels;
-  switch (mFormat) {
-  case FORMAT_S16_LE:
-    SampleCopy<PRInt16>(aBuffer, mBuffer.Elements(), samplesToCopy, mVolume);
-    break;
-  case FORMAT_FLOAT32:
-    SampleCopy<float>(aBuffer, mBuffer.Elements(), samplesToCopy, mVolume);
-    break;
-  default:
-    return -1;
+  if (available > 0) {
+    // Copy each sample from mBuffer to aBuffer, adjusting the volume during the copy.
+    double scaled_volume = GetVolumeScale() * mVolume;
+
+    // Fetch input pointers from the ring buffer.
+    void* input[2];
+    PRUint32 input_size[2];
+    mBuffer.PopElements(available, &input[0], &input_size[0], &input[1], &input_size[1]);
+
+    PRUint8* output = reinterpret_cast<PRUint8*>(aBuffer);
+    for (int i = 0; i < 2; ++i) {
+      // Fast path for unity volume case.
+      if (scaled_volume == 1.0) {
+        memcpy(output, input[i], input_size[i]);
+        output += input_size[i];
+      } else {
+        // Adjust volume as each sample is copied out.
+        switch (mFormat) {
+        case FORMAT_S16_LE: {
+          PRInt32 volume = PRInt32(1 << 16) * scaled_volume;
+
+          const short* src = static_cast<const short*>(input[i]);
+          short* dst = reinterpret_cast<short*>(output);
+          for (PRUint32 j = 0; j < input_size[i] / (mBytesPerFrame / mChannels); ++j) {
+            dst[j] = short((PRInt32(src[j]) * volume) >> 16);
+          }
+          output += input_size[i];
+          break;
+        }
+        case FORMAT_FLOAT32: {
+          const float* src = static_cast<const float*>(input[i]);
+          float* dst = reinterpret_cast<float*>(output);
+          for (PRUint32 j = 0; j < input_size[i] / (mBytesPerFrame / mChannels); ++j) {
+            dst[j] = src[j] * scaled_volume;
+          }
+          output += input_size[i];
+          break;
+        }
+        default:
+          return -1;
+        }
+      }
+    }
+
+    NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Must copy complete frames");
+
+    // Notify any blocked Write() call that more space is available in mBuffer.
+    mon.NotifyAll();
+
+    // Calculate remaining bytes requested by caller.  If the stream is not
+    // draining an underrun has occurred, so fill the remaining buffer with
+    // silence.
+    bytesWanted -= available;
   }
 
-  // Remove copied data from the temporary audio buffer.
-  mBuffer.RemoveElementsAt(0, available);
-  NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Must copy complete frames");
-
-  // Notify any blocked Write() call that more space is available in mBuffer.
-  mon.NotifyAll();
-
-  // Calculate remaining bytes requested by caller.  If the stream is not
-  // draining an underrun has occurred, so fill the remaining buffer with
-  // silence.
-  bytesWanted -= available;
   if (mState != DRAINING) {
     memset(static_cast<PRUint8*>(aBuffer) + available, 0, bytesWanted);
     mLostFrames += bytesWanted / mBytesPerFrame;
@@ -1177,6 +1277,10 @@ nsBufferedAudioStream::StateCallback(cubeb_state aState)
   if (aState == CUBEB_STATE_DRAINED) {
     MonitorAutoLock mon(mMonitor);
     mState = DRAINED;
+    mon.NotifyAll();
+  } else if (aState == CUBEB_STATE_ERROR) {
+    MonitorAutoLock mon(mMonitor);
+    mState = ERRORED;
     mon.NotifyAll();
   }
   return CUBEB_OK;

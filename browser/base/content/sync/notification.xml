@@ -57,7 +57,7 @@
     <implementation>
       <constructor><![CDATA[
         let temp = {};
-        Cu.import("resource://services-sync/ext/Observers.js", temp);
+        Cu.import("resource://services-common/observers.js", temp);
         temp.Observers.add("weave:notification:added", this.onNotificationAdded, this);
         temp.Observers.add("weave:notification:removed", this.onNotificationRemoved, this);
 
@@ -67,7 +67,7 @@
 
       <destructor><![CDATA[
         let temp = {};
-        Cu.import("resource://services-sync/ext/Observers.js", temp);
+        Cu.import("resource://services-common/observers.js", temp);
         temp.Observers.remove("weave:notification:added", this.onNotificationAdded, this);
         temp.Observers.remove("weave:notification:removed", this.onNotificationRemoved, this);
       ]]></destructor>

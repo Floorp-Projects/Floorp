@@ -132,10 +132,9 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
       //                               'body' (test within a <body contenteditable="true">)
 
       if (UPDATE_TEST_RESULTS) {
-        var testResults = {};
+        var newKnownFailures = {value: {}, select: {}};
         for (var i = 0; i < tests.length; ++i) {
           var category = tests[i];
-          testResults[category.id] = {};
           for (var group in results[category.id]) {
             switch (group) {
             // Skip the known properties
@@ -145,7 +144,6 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
             case "time":
               break;
             default:
-              testResults[category.id][group] = {};
               for (var test_id in results[category.id][group]) {
                 switch (test_id) {
                 // Skip the known properties
@@ -154,15 +152,18 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
                 case "selscore":
                   break;
                 default:
-                  testResults[category.id][group][test_id] = {};
                   for (var structure in results[category.id][group][test_id]) {
                     switch (structure) {
                     // Only look at each test structure
                     case "dM":
                     case "body":
                     case "div":
-                      var row = results[category.id][group][test_id][structure];
-                      testResults[category.id][group][test_id][structure] = row;
+                      if (!results[category.id][group][test_id][structure].valscore) {
+                        newKnownFailures.value[category.id + "-" + group + "-" + test_id + "-" + structure] = true;
+                      }
+                      if (!results[category.id][group][test_id][structure].selscore) {
+                        newKnownFailures.select[category.id + "-" + group + "-" + test_id + "-" + structure] = true;
+                      }
                     }
                   }
                 }
@@ -172,7 +173,7 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
         }
         var resultContainer = document.getElementById("results");
         resultContainer.style.display = "";
-        resultContainer.textContent = JSON.stringify(testResults);
+        resultContainer.textContent = JSON.stringify(newKnownFailures);
       } else {
         for (var i = 0; i < tests.length; ++i) {
           var category = tests[i];
@@ -200,57 +201,11 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
                     case "body":
                     case "div":
                       var row = results[category.id][group][test_id][structure];
-                      var expected = TEST_RESULTS[category.id][group][test_id][structure];
-                      var testName = "[" + [category.id, group, test_id, structure].join(", ") + "]";
-                      // There are three possible cases here:
-                      // a) If row.valscore == 1 and expected.valscore == 1, then the test has passed successfully.
-                      // b) If row.valscore == 1 and expected.valscore == 0, a previously failing test has started to pass.
-                      //    In this case, the respective currentStatus.js entry should be modified.
-                      // c) If row.valscore == 0 && expected.valscore == 0, then the test is known to fail.
-                      // d) If row.valscore == 0 && expected.valscore == 1, then we've found a regression, which should be fixed.
-                      // The same logic goes for selscore too.
-                      if (row.valscore == 1 && expected.valscore == 1) {
-                        // successful
-                        is(row.valscore, expected.valscore, testName + " passed successfully");
-                      } else if (row.valscore == 1 && expected.valscore == 0) {
-                        // unexpected pass
-                        todo_is(row.valscore, 1, testName + " used to fail, but it just started passing");
-                        // debugging information
-                        info("HTML test result comparison - got " +
-                             row.output + ", expected " + expected.output);
-                      } else if (row.valscore == 0 && expected.valscore == 0) {
-                        // known failure
-                        todo_is(row.valscore, 1, testName + " is known to fail");
-                      } else if (row.valscore == 0 && expected.valscore == 1) {
-                        // regression
-                        is(row.valscore, expected.valscore, testName + " has regressed");
-                        // debugging information
-                        is(row.output, expected.output, "HTML test result comparison");
-                      } else {
-                        // sanity check: this shouldn't happen!
-                        ok(false, "Unexpected result: row = " + row.toSource() + ", expected: " + expected.toSource());
-                      }
-                      if (row.selscore == 1 && expected.selscore == 1) {
-                        // successful
-                        is(row.selscore, expected.selscore, testName + " passed successfully");
-                      } else if (row.selscore == 1 && expected.selscore == 0) {
-                        // unexpected pass
-                        todo_is(row.selscore, 1, testName + " used to fail, but it just started passing");
-                        // debugging information
-                        info("HTML test result comparison - got " +
-                             row.output + ", expected " + expected.output);
-                      } else if (row.selscore == 0 && expected.selscore == 0) {
-                        // known failure
-                        todo_is(row.selscore, 1, testName + " is known to fail");
-                      } else if (row.selscore == 0 && expected.selscore == 1) {
-                        // regression
-                        is(row.selscore, expected.selscore, testName + " has regressed");
-                        // debugging information
-                        is(row.output, expected.output, "HTML test result comparison");
-                      } else {
-                        // sanity check: this shouldn't happen!
-                        ok(false, "Unexpected result: row = " + row.toSource() + ", expected: " + expected.toSource());
-                      }
+                      var testName = [category.id, group, test_id, structure].join("-");
+                      (testName in knownFailures.value ? todo_is : is)(
+                        row.valscore, 1, "Browserscope richtext2 value: " + testName);
+                      (testName in knownFailures.select ? todo_is : is)(
+                        row.selscore, 1, "Browserscope richtext2 selection: " + testName);
                     }
                   }
                 }

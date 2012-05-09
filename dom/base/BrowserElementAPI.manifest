@@ -1,3 +1,0 @@
-component {5d6fcab3-6c12-4db6-80fb-352df7a41602} BrowserElementAPI.js
-contract @mozilla.org/browser-element-api;1 {5d6fcab3-6c12-4db6-80fb-352df7a41602}
-category app-startup BrowserElementAPI service,@mozilla.org/browser-element-api;1

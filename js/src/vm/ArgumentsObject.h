@@ -138,14 +138,14 @@ class ArgumentsObject : public JSObject
 
     void initInitialLength(uint32_t length);
     void initData(ArgumentsData *data);
-    static ArgumentsObject *create(JSContext *cx, uint32_t argc, JSObject &callee);
+    static ArgumentsObject *create(JSContext *cx, uint32_t argc, HandleObject callee);
 
   public:
     static const uint32_t RESERVED_SLOTS = 3;
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
 
     /* Create an arguments object for a frame that is expecting them. */
-    static bool create(JSContext *cx, StackFrame *fp);
+    static ArgumentsObject *create(JSContext *cx, StackFrame *fp);
 
     /*
      * Purposefully disconnect the returned arguments object from the frame

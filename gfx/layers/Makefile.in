@@ -61,8 +61,11 @@ endif
 
 EXPORTS = \
         BasicLayers.h \
+        BasicTiledThebesLayer.h \
+        BasicImplData.h \
         ImageLayers.h \
         Layers.h \
+        LayerManagerOGLShaders.h \
         LayerManagerOGL.h \
         LayerManagerOGLProgram.h \
         ReadbackLayer.h \
@@ -72,6 +75,7 @@ EXPORTS = \
 CPPSRCS = \
         BasicImages.cpp \
         BasicLayers.cpp \
+        BasicTiledThebesLayer.cpp \
         Layers.cpp \
         RenderTrace.cpp \
         ReadbackProcessor.cpp \
@@ -82,6 +86,9 @@ CPPSRCS = \
         ImageLayerOGL.cpp \
         LayerManagerOGL.cpp \
         ThebesLayerOGL.cpp \
+        TiledThebesLayerOGL.cpp \
+        ReusableTileStoreOGL.cpp \
+        LayerManagerOGLProgram.cpp \
         LayerSorter.cpp \
         ImageLayers.cpp \
         $(NULL)
@@ -153,13 +160,6 @@ EXPORTS_mozilla/layers += ShadowLayerUtilsX11.h
 CPPSRCS += ShadowLayerUtilsX11.cpp
 endif #}
 
-# Enable GLES2.0 under maemo
-ifdef MOZ_X11
-ifdef MOZ_PLATFORM_MAEMO
-DEFINES += -DUSE_GLES2
-endif
-endif
-
 ifdef MOZ_ENABLE_D3D10_LAYER
 EXPORTS_mozilla/layers += ShadowLayerUtilsD3D10.h
 DEFINES	+= -DMOZ_ENABLE_D3D10_LAYER
@@ -170,10 +170,3 @@ include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
-
-LayerManagerOGLShaders.h: LayerManagerOGLShaders.txt genshaders.py $(GLOBAL_DEPS)
-	$(PYTHON) $(srcdir)/opengl/genshaders.py $< $@
-
-LayerManagerOGL.$(OBJ_SUFFIX): LayerManagerOGLShaders.h
-
-GARBAGE += LayerManagerOGLShaders.h

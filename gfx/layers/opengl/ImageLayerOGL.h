@@ -135,10 +135,12 @@ public:
   // LayerOGL Implementation
   virtual void Destroy() { mDestroyed = true; }
   virtual Layer* GetLayer();
+  virtual bool LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize);
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
   virtual void CleanupResources() {}
+
 
   void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage);
   void AllocateTexturesCairo(CairoImage *aImage);
@@ -175,6 +177,7 @@ struct CairoOGLBackendData : public ImageBackendData
   CairoOGLBackendData() : mLayerProgram(gl::RGBALayerProgramType) {}
   GLTexture mTexture;
   gl::ShaderProgramType mLayerProgram;
+  gfxIntSize mTextureSize;
 };
 
 class ShadowImageLayerOGL : public ShadowImageLayer,
@@ -194,6 +197,7 @@ public:
 
   // LayerOGL impl
   virtual void Destroy();
+  virtual bool LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize);
 
   virtual Layer* GetLayer();
 

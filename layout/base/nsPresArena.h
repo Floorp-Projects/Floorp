@@ -48,6 +48,8 @@
 #include "nscore.h"
 #include "nsQueryFrame.h"
 
+#include "mozilla/StandardInteger.h"
+
 // Uncomment this to disable arenas, instead forwarding to
 // malloc for every allocation.
 //#define DEBUG_TRACEMALLOC_PRESARENA 1
@@ -65,14 +67,31 @@ public:
   nsPresArena();
   ~nsPresArena();
 
-  // Pool allocation with recycler lists indexed by object size.
+  // Pool allocation with recycler lists indexed by object size, aSize.
   NS_HIDDEN_(void*) AllocateBySize(size_t aSize);
   NS_HIDDEN_(void)  FreeBySize(size_t aSize, void* aPtr);
 
-  // Pool allocation with recycler lists indexed by object-type code.
-  // Every type code must always be used with the same object size.
-  NS_HIDDEN_(void*) AllocateByCode(nsQueryFrame::FrameIID aCode, size_t aSize);
-  NS_HIDDEN_(void)  FreeByCode(nsQueryFrame::FrameIID aCode, void* aPtr);
+  // Pool allocation with recycler lists indexed by frame-type ID.
+  // Every aID must always be used with the same object size, aSize.
+  NS_HIDDEN_(void*) AllocateByFrameID(nsQueryFrame::FrameIID aID, size_t aSize);
+  NS_HIDDEN_(void)  FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr);
+
+  enum ObjectID {
+    nsLineBox_id = nsQueryFrame::NON_FRAME_MARKER,
+
+    // The PresArena implementation uses this bit to distinguish objects
+    // allocated by size from objects allocated by type ID (that is, frames
+    // using AllocateByFrameID and other objects using AllocateByObjectID).
+    // It should not collide with any Object ID (above) or frame ID (in
+    // nsQueryFrame.h).  It is not 0x80000000 to avoid the question of
+    // whether enumeration constants are signed.
+    NON_OBJECT_MARKER = 0x40000000
+  };
+
+  // Pool allocation with recycler lists indexed by object-type ID (see above).
+  // Every aID must always be used with the same object size, aSize.
+  NS_HIDDEN_(void*) AllocateByObjectID(ObjectID aID, size_t aSize);
+  NS_HIDDEN_(void)  FreeByObjectID(ObjectID aID, void* aPtr);
 
   size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
@@ -83,7 +102,7 @@ public:
    * The caller is responsible for ensuring that a pres shell has been
    * initialized before calling this.
    */
-  static PRUword GetPoisonValue();
+  static uintptr_t GetPoisonValue();
 
 private:
   struct State;

@@ -11,6 +11,7 @@
 #include <mach/mach.h>
 #elif defined(OS_LINUX)
 #include <sys/syscall.h>
+#include <sys/prctl.h>
 #include <unistd.h>
 #endif
 
@@ -66,12 +67,19 @@ void PlatformThread::Sleep(int duration_ms) {
 
 // static
 void PlatformThread::SetName(const char* name) {
-  // The POSIX standard does not provide for naming threads, and neither Linux
-  // nor Mac OS X (our two POSIX targets) provide any non-portable way of doing
-  // it either. (Some BSDs provide pthread_set_name_np but that isn't much of a
-  // consolation prize.)
-  // TODO(darin): decide whether stuffing the name in TLS or other in-memory
-  // structure would be useful for debugging or not.
+  // On linux we can get the thread names to show up in the debugger by setting
+  // the process name for the LWP.  We don't want to do this for the main
+  // thread because that would rename the process, causing tools like killall
+  // to stop working.
+  if (PlatformThread::CurrentId() == getpid())
+    return;
+
+  // http://0pointer.de/blog/projects/name-your-threads.html
+  // Set the name for the LWP (which gets truncated to 15 characters).
+  // Note that glibc also has a 'pthread_setname_np' api, but it may not be
+  // available everywhere and it's only benefit over using prctl directly is
+  // that it can set the name of threads other than the current thread.
+  prctl(PR_SET_NAME, reinterpret_cast<uintptr_t>(name), 0, 0, 0); 
 }
 #endif // !OS_MACOSX
 

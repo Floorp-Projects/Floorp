@@ -77,6 +77,7 @@ _TEST_FILES = \
 # test_contextmenu.html is disabled on Linux due to bug 513558
 ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 _TEST_FILES += \
+		audio.ogg \
 		test_contextmenu.html \
 		subtst_contextmenu.html \
 		$(NULL)
@@ -180,6 +181,8 @@ _BROWSER_FILES = \
                  browser_bug664672.js \
                  browser_bug710878.js \
                  browser_bug719271.js \
+                 browser_bug743421.js \
+                 browser_bug749738.js \
                  browser_canonizeURL.js \
                  browser_findbarClose.js \
                  browser_homeDrop.js \
@@ -249,8 +252,12 @@ _BROWSER_FILES = \
                  plugin_test.html \
                  plugin_test2.html \
                  plugin_test3.html \
+                 plugin_alternate_content.html \
                  plugin_both.html \
                  plugin_both2.html \
+                 plugin_bug743421.html \
+                 plugin_clickToPlayAllow.html \
+                 plugin_clickToPlayDeny.html \
                  alltabslistener.html \
                  zoom_test.html \
                  dummy_page.html \
@@ -273,6 +280,8 @@ _BROWSER_FILES = \
                  browser_middleMouse_inherit.js \
                  redirect_bug623155.sjs \
                  browser_tabDrop.js \
+                 browser_lastAccessedTab.js \
+                 browser_bug734076.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

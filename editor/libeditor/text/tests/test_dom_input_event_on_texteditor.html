@@ -104,7 +104,7 @@ function runTests()
 
     inputEvent = null;
     synthesizeKey("z", { accelKey: true });
-    is(aElement.value, (aIsTextarea ? " \n" : " "), aDescription + "Accel+Z key didn't undo the value");
+    is(aElement.value, " ", aDescription + "Accel+Z key didn't undo the value");
     ok(inputEvent, aDescription + "input event wasn't fired by Undo");
     ok(inputEvent.isTrusted, aDescription + "input event by Undo wasn't trusted event");
 

@@ -21,41 +21,47 @@ function test()
   let contextMenu = null;
   let scriptShown = false;
   let framesAdded = false;
+  let resumed = false;
+  let testStarted = false;
 
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.debuggerWindow;
+    gDebugger = gPane.contentWindow;
+    resumed = true;
 
-    gPane.activeThread.addOneTimeListener("framesadded", function() {
+    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
-      runTest();
+      executeSoon(startTest);
     });
-    gDebuggee.firstCall();
+
+    executeSoon(function() {
+      gDebuggee.firstCall();
+    });
   });
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
-    let url = aEvent.detail.url;
-    if (url.indexOf("-02.js") != -1) {
-      scriptShown = true;
-      window.removeEventListener(aEvent.type, _onEvent);
-      runTest();
-    }
-  });
+  function onScriptShown(aEvent) {
+    scriptShown = aEvent.detail.url.indexOf("-02.js") != -1;
+    executeSoon(startTest);
+  }
 
-  function runTest()
+  window.addEventListener("Debugger:ScriptShown", onScriptShown);
+
+  function startTest()
   {
-    if (scriptShown && framesAdded) {
-      Services.tm.currentThread.dispatch({ run: onScriptShown }, 0);
+    if (scriptShown && framesAdded && resumed && !testStarted) {
+      testStarted = true;
+      window.removeEventListener("Debugger:ScriptShown", onScriptShown);
+      Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
   }
 
-  function onScriptShown()
+  function performTest()
   {
     let scripts = gDebugger.DebuggerView.Scripts._scripts;
 
-    is(gDebugger.StackFrames.activeThread.state, "paused",
+    is(gDebugger.DebuggerController.activeThread.state, "paused",
       "Should only be getting stack frames while paused.");
 
     is(scripts.itemCount, 2, "Found the expected number of scripts.");
@@ -107,7 +113,7 @@ function test()
 
     executeSoon(function() {
       contextMenu.hidePopup();
-      gDebugger.StackFrames.activeThread.resume(finish);
+      gDebugger.DebuggerController.activeThread.resume(finish);
     });
   }
 

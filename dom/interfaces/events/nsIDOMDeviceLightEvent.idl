@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+[scriptable, uuid(c6f68e93-9eaf-4bba-852b-c9c534a8d079)]
+interface nsIDOMDeviceLightEvent : nsIDOMEvent
+{
+  [noscript] void initDeviceLightEvent(in DOMString eventTypeArg,
+                                       in boolean canBubbleArg,
+                                       in boolean cancelableArg,
+                                       in double value);
+
+  readonly attribute double value;
+};
+
+dictionary DeviceLightEventInit : EventInit
+{
+   double value;
+};

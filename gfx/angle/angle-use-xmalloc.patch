@@ -1,9 +1,9 @@
 # HG changeset patch
-# Parent 93033f21b121382b50e5bc9787edf704d6906508
+# Parent 6ccfe6b908da8ade8b37e772ed8a9f3c494d8ef9
 diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
 --- a/gfx/angle/Makefile.in
 +++ b/gfx/angle/Makefile.in
-@@ -129,16 +129,18 @@ CSRCS   = \
+@@ -127,16 +127,18 @@ CSRCS   = \
  	$(NULL)
  
  DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD -DCOMPILER_IMPLEMENTATION

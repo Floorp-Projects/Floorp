@@ -20,6 +20,7 @@
   <script type="application/javascript">
     function doTest()
     {
+if (!MAC) {
       var tabDocument = currentTabDocument();
       var p1 = tabDocument.body.firstElementChild;
       var p2 = tabDocument.body.lastElementChild;
@@ -33,6 +34,9 @@
       hitTest(tabDocument, p2, p2.firstChild);
 
       closeBrowserWindow();
+} else {
+      todo(false, "Bug 746974 - deepest child must be correct on all platforms, disabling on Mac!");
+}
       SimpleTest.finish();
     }
 

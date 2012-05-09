@@ -1,0 +1,11 @@
+{
+  "name": "application-name",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "2.5.x",
+    "jade": ">= 0.0.1",
+    "socket.io": "0.8.x",
+    "ntwitter": "0.2.x"
+  }
+}

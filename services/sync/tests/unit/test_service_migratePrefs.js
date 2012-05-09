@@ -1,4 +1,4 @@
-Cu.import("resource://services-sync/ext/Preferences.js");
+Cu.import("resource://services-common/preferences.js");
 
 function test_migrate_logging() {
   _("Testing log pref migration.");

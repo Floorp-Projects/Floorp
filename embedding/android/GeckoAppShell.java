@@ -62,8 +62,6 @@ import android.webkit.MimeTypeMap;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.provider.Settings;
-import android.view.accessibility.AccessibilityManager;
-import android.view.accessibility.AccessibilityEvent;
 
 import android.util.*;
 import android.net.Uri;
@@ -605,9 +603,13 @@ public class GeckoAppShell
                 imm, text, start, end, newEnd);
     }
 
-    public static void notifyScreenShot(ByteBuffer data, int tabId, int width, int height) {
-        // this stub is never called in XUL Fennec, but we need it so that the JNI code
-        // shared between XUL and Native Fennec doesn't die.
+    // these 2 stubs are never called in XUL Fennec, but we need them so that
+    // the JNI code shared between XUL and Native Fennec doesn't die.
+    public static void notifyScreenShot(final ByteBuffer data, final int tabId, final int x, final int y,
+                                        final int width, final int height, final int token) {
+    }
+
+    public static void notifyPaintedRect(float top, float left, float bottom, float right) {
     }
 
     private static CountDownLatch sGeckoPendingAcks = null;
@@ -1442,12 +1444,6 @@ public class GeckoAppShell
         }
     }
 
-    public static boolean getAccessibilityEnabled() {
-        AccessibilityManager accessibilityManager =
-            (AccessibilityManager) GeckoApp.mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
-        return accessibilityManager.isEnabled();
-    }
-
     public static void addPluginView(final View view,
                                      final double x, final double y,
                                      final double w, final double h) {
@@ -1828,9 +1824,6 @@ public class GeckoAppShell
             }
         }
         return false;
-    }
-
-    public static void emitGeckoAccessibilityEvent (int eventType, String[] textList, String description, boolean enabled, boolean checked, boolean password) {
     }
 
     public static double[] getCurrentNetworkInformation() {

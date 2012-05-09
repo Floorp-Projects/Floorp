@@ -1,7 +1,6 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* vim: set sw=4 ts=8 et tw=80 : */
-/*
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -1139,6 +1138,7 @@ nsCacheService::nsCacheService()
     : mLock("nsCacheService.mLock"),
       mCondVar(mLock, "nsCacheService.mCondVar"),
       mInitialized(false),
+      mClearingEntries(false),
       mEnableMemoryDevice(true),
       mEnableDiskDevice(true),
       mMemoryDevice(nsnull),
@@ -1387,35 +1387,36 @@ nsCacheService::EvictEntriesForClient(const char *          clientID,
         storagePolicy == nsICache::STORE_ON_DISK) {
 
         if (mEnableDiskDevice) {
-            nsresult rv;
+            nsresult rv = NS_OK;
             if (!mDiskDevice)
                 rv = CreateDiskDevice();
             if (mDiskDevice)
                 rv = mDiskDevice->EvictEntries(clientID);
-            if (NS_FAILED(rv)) res = rv;
+            if (NS_FAILED(rv))
+                res = rv;
         }
     }
 
     // Only clear the offline cache if it has been specifically asked for.
     if (storagePolicy == nsICache::STORE_OFFLINE) {
         if (mEnableOfflineDevice) {
-            nsresult rv;
+            nsresult rv = NS_OK;
             if (!mOfflineDevice)
                 rv = CreateOfflineDevice();
             if (mOfflineDevice)
                 rv = mOfflineDevice->EvictEntries(clientID);
-            if (NS_FAILED(rv)) res = rv;
+            if (NS_FAILED(rv))
+                res = rv;
         }
     }
 
     if (storagePolicy == nsICache::STORE_ANYWHERE ||
         storagePolicy == nsICache::STORE_IN_MEMORY) {
-
         // If there is no memory device, there is no need to evict it...
         if (mMemoryDevice) {
-            nsresult rv;
-            rv = mMemoryDevice->EvictEntries(clientID);
-            if (NS_FAILED(rv)) res = rv;
+            nsresult rv = mMemoryDevice->EvictEntries(clientID);
+            if (NS_FAILED(rv))
+                res = rv;
         }
     }
 
@@ -1585,6 +1586,18 @@ nsCacheService::CreateDiskDevice()
     // Ignore state of the timer and return success since the purpose of the
     // method (create the disk-device) has been fulfilled
 
+    return NS_OK;
+}
+
+nsresult
+nsCacheService::GetOfflineDevice(nsOfflineCacheDevice **aDevice)
+{
+    if (!mOfflineDevice) {
+        nsresult rv = CreateOfflineDevice();
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    NS_ADDREF(*aDevice = mOfflineDevice);
     return NS_OK;
 }
 
@@ -1892,7 +1905,9 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
                               nsCacheEntry ** doomedEntry)
 {
     CACHE_LOG_DEBUG(("Activate entry for request %p\n", request));
-    
+    if (!mInitialized || mClearingEntries)
+        return NS_ERROR_NOT_AVAILABLE;
+
     nsresult        rv = NS_OK;
 
     NS_ASSERTION(request != nsnull, "ActivateEntry called with no request");
@@ -2174,6 +2189,7 @@ nsCacheService::OnProfileShutdown(bool cleanse)
         return;
     }
     nsCacheServiceAutoLock lock;
+    gService->mClearingEntries = true;
 
     gService->DoomActiveEntries();
     gService->ClearDoomList();
@@ -2203,6 +2219,7 @@ nsCacheService::OnProfileShutdown(bool cleanse)
         gService->mMemoryDevice->EvictEntries(nsnull);
     }
 
+    gService->mClearingEntries = false;
 }
 
 

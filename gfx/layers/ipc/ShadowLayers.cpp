@@ -51,6 +51,8 @@
 #include "ShadowLayerChild.h"
 #include "gfxipc/ShadowLayerUtils.h"
 #include "RenderTrace.h"
+#include "sampler.h"
+#include "nsXULAppAPI.h"
 
 using namespace mozilla::ipc;
 
@@ -64,7 +66,10 @@ typedef std::set<ShadowableLayer*> ShadowableLayerSet;
 class Transaction
 {
 public:
-  Transaction() : mOpen(false) {}
+  Transaction()
+    : mOpen(false)
+    , mSwapRequired(false)
+  {}
 
   void Begin() { mOpen = true; }
 
@@ -74,6 +79,11 @@ public:
     mCset.push_back(aEdit);
   }
   void AddPaint(const Edit& aPaint)
+  {
+    AddNoSwapPaint(aPaint);
+    mSwapRequired = true;
+  }
+  void AddNoSwapPaint(const Edit& aPaint)
   {
     NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
     mPaints.push_back(aPaint);
@@ -100,6 +110,7 @@ public:
     mDyingBuffers.Clear();
     mMutants.clear();
     mOpen = false;
+    mSwapRequired = false;
   }
 
   bool Empty() const {
@@ -111,6 +122,7 @@ public:
   EditVector mPaints;
   BufferArray mDyingBuffers;
   ShadowableLayerSet mMutants;
+  bool mSwapRequired;
 
 private:
   bool mOpen;
@@ -238,6 +250,17 @@ ShadowLayerForwarder::PaintedThebesBuffer(ShadowableLayer* aThebes,
                                                   aBufferRotation),
                                      aUpdatedRegion));
 }
+
+void
+ShadowLayerForwarder::PaintedTiledLayerBuffer(ShadowableLayer* aLayer,
+                                              BasicTiledLayerBuffer* aTiledLayerBuffer)
+{
+  if (XRE_GetProcessType() != GeckoProcessType_Default)
+    NS_RUNTIMEABORT("PaintedTiledLayerBuffer must be made IPC safe (not share pointers)");
+  mTxn->AddNoSwapPaint(OpPaintTiledLayerBuffer(NULL, Shadow(aLayer),
+                                         uintptr_t(aTiledLayerBuffer)));
+}
+
 void
 ShadowLayerForwarder::PaintedImage(ShadowableLayer* aImage,
                                    const SharedImage& aNewFrontImage)
@@ -258,6 +281,7 @@ ShadowLayerForwarder::PaintedCanvas(ShadowableLayer* aCanvas,
 bool
 ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 {
+  SAMPLE_LABEL("ShadowLayerForwarder", "EndTranscation");
   RenderTraceScope rendertrace("Foward Transaction", "000091");
   NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
   NS_ABORT_IF_FALSE(!mTxn->Finished(), "forgot BeginTransaction?");
@@ -298,6 +322,12 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
     common.clipRect() = (common.useClipRect() ?
                          *mutant->GetClipRect() : nsIntRect());
     common.isFixedPosition() = mutant->GetIsFixedPosition();
+    if (Layer* maskLayer = mutant->GetMaskLayer()) {
+      common.maskLayerChild() = Shadow(maskLayer->AsShadowableLayer());
+    } else {
+      common.maskLayerChild() = NULL;
+    }
+    common.maskLayerParent() = NULL;
     attrs.specific() = null_t();
     mutant->FillSpecificAttributes(attrs.specific());
 
@@ -321,11 +351,22 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
   MOZ_LAYERS_LOG(("[LayersForwarder] syncing before send..."));
   PlatformSyncBeforeUpdate();
 
-  MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
-  RenderTraceScope rendertrace3("Foward Transaction", "000093");
-  if (!mShadowManager->SendUpdate(cset, mIsFirstPaint, aReplies)) {
-    MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
-    return false;
+  if (mTxn->mSwapRequired) {
+    MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
+    RenderTraceScope rendertrace3("Forward Transaction", "000093");
+    if (!mShadowManager->SendUpdate(cset, mIsFirstPaint, aReplies)) {
+      MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
+      return false;
+    }
+  } else {
+    // If we don't require a swap we can call SendUpdateNoSwap which
+    // assumes that aReplies is empty (DEBUG assertion)
+    MOZ_LAYERS_LOG(("[LayersForwarder] sending no swap transaction..."));
+    RenderTraceScope rendertrace3("Forward NoSwap Transaction", "000093");
+    if (!mShadowManager->SendUpdateNoSwap(cset, mIsFirstPaint)) {
+      MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
+      return false;
+    }
   }
 
   mIsFirstPaint = false;

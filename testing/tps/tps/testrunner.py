@@ -524,7 +524,12 @@ class TPSTestRunner(object):
               text = test['message'],
               logfile = errorlog_filename
             )
-    group.submit()
+    try:
+        group.submit()
+    except:
+        self.sendEmail('<pre>%s</pre>' % traceback.format_exc(),
+                       sendTo='crossweave@mozilla.com')
+        return
 
     # Iterate through all testfailure objects, and update the postdata
     # dict with the testfailure logurl's, if any.

@@ -336,7 +336,7 @@ SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong)
 SHELL_WRAPPER0(bindWidgetTexture)
 SHELL_WRAPPER0(scheduleComposite)
 SHELL_WRAPPER0(schedulePauseComposition)
-SHELL_WRAPPER0(scheduleResumeComposition)
+SHELL_WRAPPER2(scheduleResumeComposition, jint, jint)
 SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong)
 SHELL_WRAPPER6(notifySmsSent, jint, jstring, jstring, jlong, jint, jlong)
 SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong)
@@ -350,6 +350,7 @@ SHELL_WRAPPER8(notifyListCreated, jint, jint, jstring, jstring, jstring, jlong, 
 SHELL_WRAPPER7(notifyGotNextMessage, jint, jstring, jstring, jstring, jlong, jint, jlong)
 SHELL_WRAPPER3(notifyReadingMessageListFailed, jint, jint, jlong)
 SHELL_WRAPPER2(notifyFilePickerResult, jstring, jlong)
+SHELL_WRAPPER1_WITH_RETURN(getSurfaceBits, jobject, jobject)
 
 static void * xul_handle = NULL;
 static void * sqlite_handle = NULL;
@@ -766,6 +767,7 @@ loadGeckoLibs(const char *apkName)
   GETFUNC(notifyGotNextMessage);
   GETFUNC(notifyReadingMessageListFailed);
   GETFUNC(notifyFilePickerResult);
+  GETFUNC(getSurfaceBits);
 #undef GETFUNC
   sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
   gettimeofday(&t1, 0);
@@ -1039,46 +1041,3 @@ ChildProcessInit(int argc, char* argv[])
   return fXRE_InitChildProcess(argc, argv, proctype);
 }
 
-/* Android doesn't have pthread_atfork(), so we need to use our own. */
-struct AtForkFuncs {
-  void (*prepare)(void);
-  void (*parent)(void);
-  void (*child)(void);
-};
-static std::vector<AtForkFuncs> atfork;
-
-extern "C" NS_EXPORT int
-__wrap_pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void))
-{
-  AtForkFuncs funcs;
-  funcs.prepare = prepare;
-  funcs.parent = parent;
-  funcs.child = child;
-  atfork.push_back(funcs);
-  return 0;
-}
-
-extern "C" NS_EXPORT pid_t
-__wrap_fork(void)
-{
-  pid_t pid;
-  for (std::vector<AtForkFuncs>::reverse_iterator it = atfork.rbegin();
-       it < atfork.rend(); ++it)
-    if (it->prepare)
-      it->prepare();
-
-  switch ((pid = fork())) {
-  case 0:
-    for (std::vector<AtForkFuncs>::iterator it = atfork.begin();
-         it < atfork.end(); ++it)
-      if (it->child)
-        it->child();
-    break;
-  default:
-    for (std::vector<AtForkFuncs>::iterator it = atfork.begin();
-         it < atfork.end(); ++it)
-      if (it->parent)
-        it->parent();
-  }
-  return pid;
-}

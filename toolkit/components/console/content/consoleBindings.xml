@@ -80,7 +80,12 @@
           
           this.mConsoleListener = {
             console: this, 
-            observe : function(aObject) { this.console.appendItem(aObject); }
+            observe : function(aObject) {
+              // The message can arrive a little bit after the xbl binding has been
+              // unbind. So node.appendItem will not be available anymore.
+              if ('appendItem' in this.console)
+                this.console.appendItem(aObject);
+            }
           };
           
           this.mConsoleRowBox = document.getAnonymousElementByAttribute(this, "role", "console-rows");

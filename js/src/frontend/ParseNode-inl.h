@@ -46,6 +46,14 @@
 
 namespace js {
 
+inline PropertyName *
+ParseNode::atom() const
+{
+    JS_ASSERT(isKind(PNK_FUNCTION) || isKind(PNK_NAME));
+    JSAtom *atom = isKind(PNK_FUNCTION) ? pn_funbox->function()->atom : pn_atom;
+    return atom->asPropertyName();
+}
+
 inline bool
 ParseNode::isConstant()
 {

@@ -86,6 +86,8 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 
+  virtual nsIDOMNode* AsDOMNode() { return this; }
+
   virtual bool IsDisabled() const {
     return HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
   }

@@ -100,6 +100,34 @@ int arm_cpu_caps(void)
 }
 
 #elif defined(__linux__)
+#if defined(__ANDROID__)
+#include <cpu-features.h>
+
+int arm_cpu_caps(void)
+{
+    int flags;
+    int mask;
+    uint64_t features;
+    if (!arm_cpu_env_flags(&flags))
+    {
+        return flags;
+    }
+    mask = arm_cpu_env_mask();
+    features = android_getCpuFeatures();
+
+#if defined(HAVE_ARMV5TE)
+    flags |= HAS_EDSP;
+#endif
+#if defined(HAVE_ARMV6)
+    flags |= HAS_MEDIA;
+#endif
+#if defined(HAVE_ARMV7)
+    if (features & ANDROID_CPU_ARM_FEATURE_NEON)
+        flags |= HAS_NEON;
+#endif
+    return flags & mask;
+}
+#else // !defined(__ANDROID__)
 #include <stdio.h>
 
 int arm_cpu_caps(void)
@@ -160,7 +188,7 @@ int arm_cpu_caps(void)
     }
     return flags & mask;
 }
-
+#endif // defined(__linux__)
 #elif !CONFIG_RUNTIME_CPU_DETECT
 
 int arm_cpu_caps(void)

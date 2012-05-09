@@ -51,7 +51,7 @@ class TPSPulseMonitor(PulseBuildMonitor):
   def __init__(self, extensionDir, platform='linux', config=None,
                autolog=False, emailresults=False, testfile=None,
                logfile=None, rlock=None, **kwargs):
-    self.buildtype = 'opt'
+    self.buildtype = ['opt']
     self.autolog = autolog
     self.emailresults = emailresults
     self.testfile = testfile
@@ -59,8 +59,8 @@ class TPSPulseMonitor(PulseBuildMonitor):
     self.rlock = rlock
     self.extensionDir = extensionDir
     self.config = config
-    self.tree = self.config.get('tree', ['services-central', 'places'])
-    self.platform = self.config.get('platform', 'linux')
+    self.tree = self.config.get('tree', ['services-central'])
+    self.platform = [self.config.get('platform', 'linux')]
     self.label=('crossweave@mozilla.com|tps_build_monitor_' +
                 socket.gethostname())
 
@@ -70,10 +70,12 @@ class TPSPulseMonitor(PulseBuildMonitor):
     self.logger.addHandler(handler)
 
     PulseBuildMonitor.__init__(self,
-                               tree=self.tree,
+                               trees=self.tree,
                                label=self.label,
-                               mobile=False,
                                logger=self.logger,
+                               platforms=self.platform,
+                               buildtypes=self.buildtype,
+                               builds=True,
                                **kwargs)
 
   def onPulseMessage(self, data):
@@ -84,12 +86,7 @@ class TPSPulseMonitor(PulseBuildMonitor):
     print "================================================================="
     print json.dumps(builddata)
     print "================================================================="
-    try:
-      if not (builddata['platform'] == self.platform and
-              builddata['buildtype'] == self.buildtype):
-        return
-    except KeyError:
-      return
+
     thread = TPSTestThread(self.extensionDir,
                            builddata=builddata,
                            emailresults=self.emailresults,

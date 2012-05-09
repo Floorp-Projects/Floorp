@@ -9,7 +9,6 @@
 ;
 
     EXPORT |vp8_short_inv_walsh4x4_v6|
-    EXPORT |vp8_short_inv_walsh4x4_1_v6|
 
     ARM
     REQUIRE8
@@ -17,19 +16,19 @@
 
     AREA    |.text|, CODE, READONLY  ; name this block of code
 
-;short vp8_short_inv_walsh4x4_v6(short *input, short *output)
+;short vp8_short_inv_walsh4x4_v6(short *input, short *mb_dqcoeff)
 |vp8_short_inv_walsh4x4_v6| PROC
 
-    stmdb       sp!, {r4 - r11, lr}
+    stmdb       sp!, {r4 - r12, lr}
 
-    ldr         r2, [r0], #4         ; [1  |  0]
-    ldr         r3, [r0], #4         ; [3  |  2]
-    ldr         r4, [r0], #4         ; [5  |  4]
-    ldr         r5, [r0], #4         ; [7  |  6]
-    ldr         r6, [r0], #4         ; [9  |  8]
-    ldr         r7, [r0], #4         ; [11 | 10]
-    ldr         r8, [r0], #4         ; [13 | 12]
-    ldr         r9, [r0]             ; [15 | 14]
+    ldr         r2, [r0, #0]         ; [1  |  0]
+    ldr         r3, [r0, #4]         ; [3  |  2]
+    ldr         r4, [r0, #8]         ; [5  |  4]
+    ldr         r5, [r0, #12]        ; [7  |  6]
+    ldr         r6, [r0, #16]        ; [9  |  8]
+    ldr         r7, [r0, #20]        ; [11 | 10]
+    ldr         r8, [r0, #24]        ; [13 | 12]
+    ldr         r9, [r0, #28]        ; [15 | 14]
 
     qadd16      r10, r2, r8          ; a1 [1+13  |  0+12]
     qadd16      r11, r4, r6          ; b1 [5+9   |  4+8]
@@ -69,24 +68,27 @@
     qadd16      r4, r4, r10          ; [b2+3|c2+3]
     qadd16      r5, r5, r10          ; [a2+3|d2+3]
 
-    asr         r12, r2, #3          ; [1  |  x]
-    pkhtb       r12, r12, r3, asr #19; [1  |  0]
-    lsl         lr, r3, #16          ; [~3 |  x]
-    lsl         r2, r2, #16          ; [~2 |  x]
-    asr         lr, lr, #3           ; [3  |  x]
-    pkhtb       lr, lr, r2, asr #19  ; [3  |  2]
+    asr         r12, r3, #19         ; [0]
+    strh        r12, [r1], #32
+    asr         lr, r2, #19          ; [1]
+    strh        lr, [r1], #32
+    sxth        r2, r2
+    sxth        r3, r3
+    asr         r2, r2, #3           ; [2]
+    strh        r2, [r1], #32
+    asr         r3, r3, #3           ; [3]
+    strh        r3, [r1], #32
 
-    asr         r2, r4, #3           ; [5  |  x]
-    pkhtb       r2, r2, r5, asr #19  ; [5  |  4]
-    lsl         r3, r5, #16          ; [~7 |  x]
-    lsl         r4, r4, #16          ; [~6 |  x]
-    asr         r3, r3, #3           ; [7  |  x]
-    pkhtb       r3, r3, r4, asr #19  ; [7  |  6]
-
-    str         r12, [r1], #4
-    str         lr, [r1], #4
-    str         r2, [r1], #4
-    str         r3, [r1], #4
+    asr         r12, r5, #19         ; [4]
+    strh        r12, [r1], #32
+    asr         lr, r4, #19          ; [5]
+    strh        lr, [r1], #32
+    sxth        r4, r4
+    sxth        r5, r5
+    asr         r4, r4, #3           ; [6]
+    strh        r4, [r1], #32
+    asr         r5, r5, #3           ; [7]
+    strh        r5, [r1], #32
 
     qsubaddx    r2, r6, r7           ; [c1|a1] [9-10  |  8+11]
     qaddsubx    r3, r6, r7           ; [b1|d1] [9+10  |  8-11]
@@ -103,49 +105,31 @@
     qadd16      r8, r8, r10          ; [b2+3|c2+3]
     qadd16      r9, r9, r10          ; [a2+3|d2+3]
 
-    asr         r2, r6, #3           ; [9  |  x]
-    pkhtb       r2, r2, r7, asr #19  ; [9  |  8]
-    lsl         r3, r7, #16          ; [~11|  x]
-    lsl         r4, r6, #16          ; [~10|  x]
-    asr         r3, r3, #3           ; [11 |  x]
-    pkhtb       r3, r3, r4, asr #19  ; [11 | 10]
+    asr         r12, r7, #19         ; [8]
+    strh        r12, [r1], #32
+    asr         lr, r6, #19          ; [9]
+    strh        lr, [r1], #32
+    sxth        r6, r6
+    sxth        r7, r7
+    asr         r6, r6, #3           ; [10]
+    strh        r6, [r1], #32
+    asr         r7, r7, #3           ; [11]
+    strh        r7, [r1], #32
 
-    asr         r4, r8, #3           ; [13 |  x]
-    pkhtb       r4, r4, r9, asr #19  ; [13 | 12]
-    lsl         r5, r9, #16          ; [~15|  x]
-    lsl         r6, r8, #16          ; [~14|  x]
-    asr         r5, r5, #3           ; [15 |  x]
-    pkhtb       r5, r5, r6, asr #19  ; [15 | 14]
+    asr         r12, r9, #19         ; [12]
+    strh        r12, [r1], #32
+    asr         lr, r8, #19          ; [13]
+    strh        lr, [r1], #32
+    sxth        r8, r8
+    sxth        r9, r9
+    asr         r8, r8, #3           ; [14]
+    strh        r8, [r1], #32
+    asr         r9, r9, #3           ; [15]
+    strh        r9, [r1], #32
 
-    str         r2, [r1], #4
-    str         r3, [r1], #4
-    str         r4, [r1], #4
-    str         r5, [r1]
-
-    ldmia       sp!, {r4 - r11, pc}
+    ldmia       sp!, {r4 - r12, pc}
     ENDP        ; |vp8_short_inv_walsh4x4_v6|
 
-
-;short vp8_short_inv_walsh4x4_1_v6(short *input, short *output)
-|vp8_short_inv_walsh4x4_1_v6| PROC
-
-    ldrsh       r2, [r0]             ; [0]
-    add         r2, r2, #3           ; [0] + 3
-    asr         r2, r2, #3           ; a1 ([0]+3) >> 3
-    lsl         r2, r2, #16          ; [a1 |  x]
-    orr         r2, r2, r2, lsr #16  ; [a1 | a1]
-
-    str         r2, [r1], #4
-    str         r2, [r1], #4
-    str         r2, [r1], #4
-    str         r2, [r1], #4
-    str         r2, [r1], #4
-    str         r2, [r1], #4
-    str         r2, [r1], #4
-    str         r2, [r1]
-
-    bx          lr
-    ENDP        ; |vp8_short_inv_walsh4x4_1_v6|
 
 ; Constant Pool
 c0x00030003 DCD 0x00030003

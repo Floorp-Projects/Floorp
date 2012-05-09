@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.lang.IllegalArgumentException;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Random;
 
 import org.mozilla.gecko.GeckoApp;
@@ -59,6 +61,30 @@ public abstract class GeckoProvider extends ContentProvider {
     private HashMap<String, SQLiteBridge> mDatabasePerProfile;
     protected Context mContext = null;
 
+    @Override
+    public void shutdown() {
+        if (mDatabasePerProfile == null)
+          return;
+
+        Collection<SQLiteBridge> bridges = mDatabasePerProfile.values();
+        Iterator<SQLiteBridge> it = bridges.iterator();
+
+        while (it.hasNext()) {
+            SQLiteBridge bridge = it.next();
+            if (bridge != null) {
+                try {
+                    bridge.close();
+                } catch (Exception ex) { }
+            }
+        }
+
+        mDatabasePerProfile = null;
+    }
+
+    public void finalize() {
+        shutdown();
+    }
+
     protected void setLogTag(String aLogTag) {
         mLogTag = aLogTag;
     }
@@ -91,11 +117,14 @@ public abstract class GeckoProvider extends ContentProvider {
             String resourcePath = context.getPackageResourcePath();
             GeckoAppShell.loadSQLiteLibs(context, resourcePath);
             GeckoAppShell.loadNSSLibs(context, resourcePath);
-            bridge = new SQLiteBridge(databasePath);
+            bridge = SQLiteBridge.openDatabase(databasePath, null, 0);
             int version = bridge.getVersion();
-            Log.i(mLogTag, version + " == " + mDBVersion);
             dbNeedsSetup = version != mDBVersion;
-        } catch(SQLiteBridgeException ex) {
+        } catch (SQLiteBridgeException ex) {
+            // close the database
+            if (bridge != null)
+                bridge.close();
+
             // this will throw if the database can't be found
             // we should attempt to set it up if Gecko is running
             dbNeedsSetup = true;
@@ -117,7 +146,8 @@ public abstract class GeckoProvider extends ContentProvider {
             bridge = null;
             initGecko();
         }
-        mDatabasePerProfile.put(databasePath, bridge);
+        if (bridge != null)
+            mDatabasePerProfile.put(databasePath, bridge);
 
         return bridge;
     }
@@ -130,9 +160,10 @@ public abstract class GeckoProvider extends ContentProvider {
 
         SQLiteBridge db = null;
         synchronized (this) {
-          db = mDatabasePerProfile.get(profile);
+          String dbPath = getDatabasePathForProfile(profile);
+          db = mDatabasePerProfile.get(dbPath);
           if (db == null) {
-              db = getDB(mContext, getDatabasePathForProfile(profile));
+              db = getDB(mContext, dbPath);
           }
         }
 
@@ -204,6 +235,7 @@ public abstract class GeckoProvider extends ContentProvider {
             deleted = db.delete(getTable(uri), selection, selectionArgs);
         } catch (SQLiteBridgeException ex) {
             Log.e(mLogTag, "Error deleting record", ex);
+            throw ex;
         }
 
         return deleted;
@@ -222,15 +254,63 @@ public abstract class GeckoProvider extends ContentProvider {
 
         setupDefaults(uri, values);
 
-        onPreInsert(values, uri, db);
-
+        boolean useTransaction = !db.inTransaction();
         try {
+            if (useTransaction) {
+                db.beginTransaction();
+            }
+ 
+            // onPreInsert does a check for the item in the deleted table in some cases
+            // so we put it inside this transaction
+            onPreInsert(values, uri, db);
             id = db.insert(getTable(uri), null, values);
-        } catch(SQLiteBridgeException ex) {
+
+            if (useTransaction) {
+                db.setTransactionSuccessful();
+            }
+        } catch (SQLiteBridgeException ex) {
             Log.e(mLogTag, "Error inserting in db", ex);
+            throw ex;
+        } finally {
+            if (useTransaction) {
+                db.endTransaction();
+            }
         }
 
         return ContentUris.withAppendedId(uri, id);
+    }
+
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] allValues) {
+        final SQLiteBridge db = getDatabase(uri);
+        // If we can not get a SQLiteBridge instance, its likely that the database
+        // has not been set up and Gecko is not running. We return 0 and expect
+        // callers to try again later
+        if (db == null)
+            return 0;
+
+        long id = -1;
+        int rowsAdded = 0;
+
+        String table = getTable(uri);
+
+        try {
+            db.beginTransaction();
+            for (ContentValues initialValues : allValues) {
+                ContentValues values = new ContentValues(initialValues);
+                setupDefaults(uri, values);
+                onPreInsert(values, uri, db);
+                id = db.insert(table, null, values);
+                rowsAdded++;
+            }
+            db.setTransactionSuccessful();
+        } catch (SQLiteBridgeException ex) {
+            Log.e(mLogTag, "Error inserting in db", ex);
+            throw ex;
+        } finally {
+            db.endTransaction();
+        }
+        return rowsAdded;
     }
 
     @Override
@@ -249,8 +329,9 @@ public abstract class GeckoProvider extends ContentProvider {
 
         try {
             updated = db.update(getTable(uri), values, selection, selectionArgs);
-        } catch(SQLiteBridgeException ex) {
+        } catch (SQLiteBridgeException ex) {
             Log.e(mLogTag, "Error updating table", ex);
+            throw ex;
         }
 
         return updated;
@@ -275,6 +356,7 @@ public abstract class GeckoProvider extends ContentProvider {
             onPostQuery(cursor, uri, db);
         } catch (SQLiteBridgeException ex) {
             Log.e(mLogTag, "Error querying database", ex);
+            throw ex;
         }
 
         return cursor;

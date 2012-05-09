@@ -820,7 +820,7 @@ nsBaseWidget::GetShouldAccelerate()
 #endif
 
   // we should use AddBoolPrefVarCache
-  bool disableAcceleration =
+  bool disableAcceleration = (mWindowType == eWindowType_popup) || 
     Preferences::GetBool("layers.acceleration.disabled", false);
   mForceLayersAcceleration =
     Preferences::GetBool("layers.acceleration.force-enabled", false);
@@ -873,8 +873,16 @@ nsBaseWidget::GetShouldAccelerate()
 void nsBaseWidget::CreateCompositor()
 {
   mCompositorThread = new Thread("CompositorThread");
-  mCompositorParent = new CompositorParent(this, mCompositorThread);
   if (mCompositorThread->Start()) {
+    bool renderToEGLSurface = false;
+#ifdef MOZ_JAVA_COMPOSITOR
+    renderToEGLSurface = true;
+#endif
+    nsIntRect rect;
+    GetBounds(rect);
+    mCompositorParent =
+      new CompositorParent(this, mCompositorThread->message_loop(), mCompositorThread->thread_id(),
+                           renderToEGLSurface, rect.width, rect.height);
     LayerManager* lm = CreateBasicLayerManager();
     MessageLoop *childMessageLoop = mCompositorThread->message_loop();
     mCompositorChild = new CompositorChild(lm);

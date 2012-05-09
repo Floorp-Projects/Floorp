@@ -106,7 +106,8 @@ class NS_STACK_CLASS nsAutoRules
 {
   public:
   
-  nsAutoRules(nsEditor *ed, PRInt32 action, nsIEditor::EDirection aDirection) : 
+  nsAutoRules(nsEditor *ed, nsEditor::OperationID action,
+              nsIEditor::EDirection aDirection) :
          mEd(ed), mDoNothing(false)
   { 
     if (mEd && !mEd->mAction) // mAction will already be set if this is nested call

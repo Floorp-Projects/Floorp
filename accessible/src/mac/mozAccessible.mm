@@ -40,24 +40,20 @@
 
 #import "MacUtils.h"
 #import "mozView.h"
-#import "nsRoleMap.h"
 
-#include "nsRect.h"
-#include "nsCocoaUtils.h"
-#include "nsCoord.h"
-#include "nsObjCExceptions.h"
-
-#include "nsIAccessible.h"
+#include "Accessible-inl.h"
 #include "nsIAccessibleRelation.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleEditableText.h"
 #include "Relation.h"
 #include "Role.h"
-
-#include "nsAccessNode.h"
-#include "nsRootAccessible.h"
+#include "RootAccessible.h"
 
 #include "mozilla/Services.h"
+#include "nsRect.h"
+#include "nsCocoaUtils.h"
+#include "nsCoord.h"
+#include "nsObjCExceptions.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -124,10 +120,6 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     mGeckoAccessible = geckoAccessible;
     mIsExpired = NO;
     mRole = geckoAccessible->Role();
-    
-    // Check for OS X "role skew"; the role constants in nsIAccessible.idl need to match the ones
-    // in nsRoleMap.h.
-    NS_ASSERTION([AXRoles[roles::LAST_ENTRY] isEqualToString:@"ROLE_LAST_ENTRY"], "Role skew in the role map!");
   }
    
   return self;
@@ -228,13 +220,8 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     return [NSNumber numberWithBool:[self isEnabled]];
   if ([attribute isEqualToString:NSAccessibilityValueAttribute])
     return [self value];
-  if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute]) {
-    if (mRole == roles::DOCUMENT)
-      return utils::LocalizedString(NS_LITERAL_STRING("htmlContent"));
-
-    return NSAccessibilityRoleDescription([self role], nil);
-  }
-  
+  if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute]) 
+    return [self roleDescription];  
   if ([attribute isEqualToString:NSAccessibilityDescriptionAttribute])
     return [self customDescription];
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
@@ -366,7 +353,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   // (which might be the owning NSWindow in the application, for example).
   //
   // get the native root accessible, and tell it to return its first parent unignored accessible.
-  nsRootAccessible* root = mGeckoAccessible->RootAccessible();
+  RootAccessible* root = mGeckoAccessible->RootAccessible();
   id nativeParent = GetNativeFromGeckoAccessible(static_cast<nsIAccessible*>(root));
   NSAssert1 (nativeParent, @"!!! we can't find a parent for %@", self);
   
@@ -466,16 +453,60 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 
 - (NSString*)role
 {
-#ifdef DEBUG_A11Y
+#ifdef DEBUG
   NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(mGeckoAccessible),
                "Does not support nsIAccessibleText when it should");
 #endif
-  return (NSString*) AXRoles[mRole];
+
+#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role) \
+  case roles::geckoRole: \
+    return macRole;
+
+  switch (mRole) {
+#include "RoleMap.h"
+    default:
+      NS_NOTREACHED("Unknown role.");
+      return NSAccessibilityUnknownRole;
+  }
+
+#undef ROLE
 }
 
 - (NSString*)subrole
 {
+  switch (mRole) {
+    case roles::LIST:
+      return NSAccessibilityContentListSubrole;
+
+    case roles::DEFINITION_LIST:
+      return NSAccessibilityDefinitionListSubrole;
+
+    case roles::TERM:
+      return @"AXTerm";
+
+    case roles::DEFINITION:
+      return @"AXDefinition";
+
+    default:
+      break;
+  }
+
   return nil;
+}
+
+- (NSString*)roleDescription
+{
+  if (mRole == roles::DOCUMENT)
+    return utils::LocalizedString(NS_LITERAL_STRING("htmlContent"));
+  
+  NSString* subrole = [self subrole];
+  
+  if ((mRole == roles::LISTITEM) && [subrole isEqualToString:@"AXTerm"])
+    return utils::LocalizedString(NS_LITERAL_STRING("term"));
+  if ((mRole == roles::PARAGRAPH) && [subrole isEqualToString:@"AXDefinition"])
+    return utils::LocalizedString(NS_LITERAL_STRING("definition"));
+  
+  return NSAccessibilityRoleDescription([self role], subrole);
 }
 
 - (NSString*)title
@@ -483,7 +514,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   nsAutoString title;
-  mGeckoAccessible->GetName (title);
+  mGeckoAccessible->Name(title);
   return title.IsEmpty() ? nil : [NSString stringWithCharacters:title.BeginReading() length:title.Length()];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;

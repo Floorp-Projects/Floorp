@@ -22,10 +22,12 @@ import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
+import android.content.ContentUris;
 import android.database.Cursor;
 import android.net.Uri;
 
@@ -52,9 +54,9 @@ import android.net.Uri;
  *
  */
 public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepositorySession {
+  public static final String LOG_TAG = "BrowserRepoSession";
 
   protected AndroidBrowserRepositoryDataAccessor dbHelper;
-  public static final String LOG_TAG = "BrowserRepoSession";
   private HashMap<String, String> recordToGuid;
 
   public AndroidBrowserRepositorySession(Repository repository) {
@@ -89,12 +91,28 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
    *
    * For example, a session subclass might skip records of an unsupported type.
    */
-  protected boolean shouldIgnore(Record record) {
+  public boolean shouldIgnore(Record record) {
     return false;
   }
 
   /**
+   * Perform any necessary transformation of a record prior to searching by
+   * any field other than GUID.
+   *
+   * Example: translating remote folder names into local names.
+   */
+  protected void fixupRecord(Record record) {
+    return;
+  }
+
+  /**
    * Override in subclass to implement record extension.
+   *
+   * Populate any fields of the record that are expensive to calculate,
+   * prior to reconciling.
+   *
+   * Example: computing children arrays.
+   *
    * Return null if this record should not be processed.
    *
    * @param record
@@ -129,6 +147,13 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     }
     storeTracker = createStoreTracker();
     deferredDelegate.onBeginSucceeded(this);
+  }
+
+  @Override
+  public void finish(RepositorySessionFinishDelegate delegate) throws InactiveSessionException {
+    dbHelper = null;
+    recordToGuid = null;
+    super.finish(delegate);
   }
 
   protected abstract String buildRecordString(Record record);
@@ -336,6 +361,8 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     this.fetchSince(0, delegate);
   }
 
+  protected int storeCount = 0;
+
   @Override
   public void store(final Record record) throws NoStoreDelegateException {
     if (delegate == null) {
@@ -345,6 +372,9 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
       Logger.error(LOG_TAG, "Record sent to store was null");
       throw new IllegalArgumentException("Null record passed to AndroidBrowserRepositorySession.store().");
     }
+
+    storeCount += 1;
+    Logger.debug(LOG_TAG, "Storing record with GUID " + record.guid + " (stored " + storeCount + " records this session).");
 
     // Store Runnables *must* complete synchronously. It's OK, they
     // run on a background thread.
@@ -408,14 +438,14 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
             boolean locallyModified = existingRecord.lastModified > lastLocalRetrieval;
             if (!locallyModified) {
               trace("Remote modified, local not. Deleting.");
-              storeRecordDeletion(record);
+              storeRecordDeletion(record, existingRecord);
               return;
             }
 
             trace("Both local and remote records have been modified.");
             if (record.lastModified > existingRecord.lastModified) {
               trace("Remote is newer, and deleted. Deleting local.");
-              storeRecordDeletion(record);
+              storeRecordDeletion(record, existingRecord);
               return;
             }
 
@@ -429,6 +459,9 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
           // End deletion logic.
 
           // Now we're processing a non-deleted incoming record.
+          // Apply any changes we need in order to correctly find existing records.
+          fixupRecord(record);
+
           if (existingRecord == null) {
             trace("Looking up match for record " + record.guid);
             existingRecord = findExistingRecord(record);
@@ -437,9 +470,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
           if (existingRecord == null) {
             // The record is new.
             trace("No match. Inserting.");
-            Record inserted = insert(record);
-            trackRecord(inserted);
-            delegate.onRecordStoreSucceeded(inserted);
+            insert(record);
             return;
           }
 
@@ -497,23 +528,33 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     storeWorkQueue.execute(command);
   }
 
-  protected void storeRecordDeletion(final Record record) {
+  /**
+   * Process a request for deletion of a record.
+   * Neither argument will ever be null.
+   *
+   * @param record the incoming record. This will be mostly blank, given that it's a deletion.
+   * @param existingRecord the existing record. Use this to decide how to process the deletion.
+   */
+  protected void storeRecordDeletion(final Record record, final Record existingRecord) {
     // TODO: we ought to mark the record as deleted rather than purging it,
     // in order to support syncing to multiple destinations. Bug 722607.
     dbHelper.purgeGuid(record.guid);
     delegate.onRecordStoreSucceeded(record);
   }
 
-  protected Record insert(Record record) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
+  protected void insert(Record record) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
     Record toStore = prepareRecord(record);
     Uri recordURI = dbHelper.insert(toStore);
-    long id = RepoUtils.getAndroidIdFromUri(recordURI);
-    Logger.debug(LOG_TAG, "Inserted as " + id);
+    if (recordURI == null) {
+      throw new NullCursorException(new RuntimeException("Got null URI inserting record with guid " + record.guid));
+    }
+    toStore.androidID = ContentUris.parseId(recordURI);
 
-    toStore.androidID = id;
     updateBookkeeping(toStore);
-    Logger.debug(LOG_TAG, "insert() returning record " + toStore.guid);
-    return toStore;
+    trackRecord(toStore);
+    delegate.onRecordStoreSucceeded(toStore);
+
+    Logger.debug(LOG_TAG, "Inserted record with guid " + toStore.guid + " as androidID " + toStore.androidID);
   }
 
   protected Record replace(Record newRecord, Record existingRecord) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
@@ -642,26 +683,31 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
   }
 
   protected abstract Record prepareRecord(Record record);
+
   protected void updateBookkeeping(Record record) throws NoGuidForIdException,
                                                  NullCursorException,
                                                  ParentNotFoundException {
     putRecordToGuidMap(buildRecordString(record), record.guid);
   }
 
-  // Wipe method and thread.
+  protected WipeRunnable getWipeRunnable(RepositorySessionWipeDelegate delegate) {
+    return new WipeRunnable(delegate);
+  }
+
   @Override
   public void wipe(RepositorySessionWipeDelegate delegate) {
-    Runnable command = new WipeRunnable(delegate);
+    Runnable command = getWipeRunnable(delegate);
     storeWorkQueue.execute(command);
   }
 
   class WipeRunnable implements Runnable {
-    private RepositorySessionWipeDelegate delegate;
+    protected RepositorySessionWipeDelegate delegate;
 
     public WipeRunnable(RepositorySessionWipeDelegate delegate) {
       this.delegate = delegate;
     }
 
+    @Override
     public void run() {
       if (!isActive()) {
         delegate.onWipeFailed(new InactiveSessionException(null));

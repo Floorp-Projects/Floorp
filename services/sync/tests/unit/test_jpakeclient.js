@@ -1,4 +1,4 @@
-Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/jpakeclient.js");
 Cu.import("resource://services-sync/constants.js");
@@ -190,7 +190,8 @@ function run_test() {
 
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Sync.JPAKEClient").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.RESTRequest").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Common.RESTRequest").level =
+    Log4Moz.Level.Trace;
   run_next_test();
 }
 

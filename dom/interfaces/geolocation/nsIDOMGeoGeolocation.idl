@@ -41,16 +41,27 @@ interface nsIDOMGeoPositionOptions;
 interface nsIDOMGeoPositionCallback;
 interface nsIDOMGeoPositionErrorCallback;
 
-[scriptable, uuid(37687DAF-B85F-4E4D-8881-85A0AD24CF78)]
+dictionary GeoPositionOptions
+{
+  boolean enableHighAccuracy;
+  long timeout;
+  long maximumAge;
+};
+
+[scriptable, uuid(b9a301f7-285b-4be9-b739-fb869019c77a)]
 interface nsIDOMGeoGeolocation : nsISupports
 {
+  [implicit_jscontext]
   void getCurrentPosition(in nsIDOMGeoPositionCallback successCallback,
                           [optional] in nsIDOMGeoPositionErrorCallback errorCallback,
-                          [optional] in nsIDOMGeoPositionOptions options);
+                          /* GeoPositionOptions */
+                          [optional] in jsval options);
 
+  [implicit_jscontext]
   long watchPosition(in nsIDOMGeoPositionCallback successCallback,
                      [optional] in nsIDOMGeoPositionErrorCallback errorCallback,
-                     [optional] in nsIDOMGeoPositionOptions options);
+                     /* GeoPositionOptions */
+                     [optional] in jsval options);
 
   void clearWatch(in long watchId);
 };

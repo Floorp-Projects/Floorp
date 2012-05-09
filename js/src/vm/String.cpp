@@ -40,7 +40,7 @@
 
 #include "mozilla/RangedPtr.h"
 
-#include "jsgcmark.h"
+#include "gc/Marking.h"
 
 #include "String.h"
 #include "String-inl.h"
@@ -306,7 +306,7 @@ JSRope::flatten(JSContext *maybecx)
 }
 
 JSString * JS_FASTCALL
-js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
+js_ConcatStrings(JSContext *cx, HandleString left, HandleString right)
 {
     JS_ASSERT_IF(!left->isAtom(), left->compartment() == cx->compartment);
     JS_ASSERT_IF(!right->isAtom(), right->compartment() == cx->compartment);
@@ -372,7 +372,7 @@ JSDependentString::undepend(JSContext *cx)
 }
 
 bool
-JSFlatString::isIndex(uint32_t *indexp) const
+JSFlatString::isIndexSlow(uint32_t *indexp) const
 {
     const jschar *s = charsZ();
     jschar ch = *s;

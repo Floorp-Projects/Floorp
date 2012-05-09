@@ -116,14 +116,9 @@ struct VMFrame
             void *ptr2;
         } x;
         struct {
-            uint32_t lazyArgsObj;
             uint32_t dynamicArgc;
         } call;
     } u;
-
-    static size_t offsetOfLazyArgsObj() {
-        return offsetof(VMFrame, u.call.lazyArgsObj);
-    }
 
     static size_t offsetOfDynamicArgc() {
         return offsetof(VMFrame, u.call.dynamicArgc);
@@ -471,30 +466,21 @@ JaegerStatusToSuccess(JaegerStatus status)
     return status == Jaeger_Returned;
 }
 
-/*
- * Method JIT compartment data. Currently, there is exactly one per
- * JS compartment. It would be safe for multiple JS compartments to
- * share a JaegerCompartment as long as only one thread can enter
- * the JaegerCompartment at a time.
- */
-class JaegerCompartment {
-    JSC::ExecutableAllocator *execAlloc_;    // allocator for jit code
+/* Method JIT data associated with the JSRuntime. */
+class JaegerRuntime
+{
     Trampolines              trampolines;    // force-return trampolines
     VMFrame                  *activeFrame_;  // current active VMFrame
     JaegerStatus             lastUnfinished_;// result status of last VM frame,
                                              // if unfinished
 
-    void Finish();
+    void finish();
 
   public:
-    bool Initialize(JSContext *cx);
+    bool init(JSContext *cx);
 
-    JaegerCompartment();
-    ~JaegerCompartment() { Finish(); }
-
-    JSC::ExecutableAllocator *execAlloc() {
-        return execAlloc_;
-    }
+    JaegerRuntime();
+    ~JaegerRuntime() { finish(); }
 
     VMFrame *activeFrame() {
         return activeFrame_;
@@ -978,6 +964,17 @@ inline void * bsearch_nmap(NativeMapEntry *nmap, size_t nPairs, size_t bcOff)
         }
         return nmap[mid-1].ncode;
     }
+}
+
+static inline bool
+IsLowerableFunCallOrApply(jsbytecode *pc)
+{
+#ifdef JS_MONOIC
+    return (*pc == JSOP_FUNCALL && GET_ARGC(pc) >= 1) ||
+           (*pc == JSOP_FUNAPPLY && GET_ARGC(pc) == 2);
+#else
+    return false;
+#endif
 }
 
 } /* namespace mjit */

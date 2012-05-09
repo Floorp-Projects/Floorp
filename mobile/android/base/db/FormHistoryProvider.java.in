@@ -152,17 +152,14 @@ public class FormHistoryProvider extends GeckoProvider {
         if (!values.containsKey(FormHistory.GUID)) {
             return;
         }
+
         String guid = values.getAsString(FormHistory.GUID);
-        try {
-            if (guid == null) {
-                db.delete(TABLE_DELETED_FORM_HISTORY, WHERE_GUID_IS_NULL, null);
-                return;
-            }
-            String[] args = new String[] { guid };
-            db.delete(TABLE_DELETED_FORM_HISTORY, WHERE_GUID_IS_VALUE, args);
-        } catch(SQLiteBridgeException ex) {
-            Log.w(getLogTag(), "Error removing entry with GUID " + guid, ex);
+        if (guid == null) {
+            db.delete(TABLE_DELETED_FORM_HISTORY, WHERE_GUID_IS_NULL, null);
+            return;
         }
+        String[] args = new String[] { guid };
+        db.delete(TABLE_DELETED_FORM_HISTORY, WHERE_GUID_IS_VALUE, args);
      }
 
     @Override

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head>
+<title>unicode-bidi:plaintext</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+  .plaintext {
+    unicode-bidi:-webkit-plaintext;
+    unicode-bidi:-moz-plaintext;
+    unicode-bidi:plaintext;
+  }
+  textarea { text-align: left; resize: none; }
+</style>
+</head><body>
+<div>
+The exclamation mark should be on the left side of the first line
+and on the right side of the second line.
+</div>
+<textarea rows=4 cols=50 dir="rtl" class="plaintext">
+שלום!
+hello!
+</textarea>
+</body></html>

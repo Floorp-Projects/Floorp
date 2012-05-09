@@ -8,8 +8,8 @@ function test() {
     let tab = gBrowser.addTab();
     registerCleanupFunction(function () gBrowser.removeTab(tab));
 
-    whenAppTabIconAdded(function() {
-      let cw = TabView.getContentWindow();
+    let cw = TabView.getContentWindow();
+    whenAppTabIconAdded(cw.GroupItems.groupItems[0], function() {
       let body = cw.document.body;
       let [appTabIcon] = cw.iQ(".appTabTray .appTabIcon");
 

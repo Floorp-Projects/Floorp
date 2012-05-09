@@ -379,7 +379,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 {
   JSContext* ctx = mContext ? mContext : aContext;
   if (!ctx) {
-    nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&ctx);
+    ctx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
   }
   if (mListeners.Length()) {
     nsCOMPtr<nsIAtom> name = do_GetAtom(aMessage);
@@ -723,8 +723,7 @@ void
 nsFrameScriptExecutor::Shutdown()
 {
   if (sCachedScripts) {
-    JSContext* cx = nsnull;
-    nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+    JSContext* cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
     if (cx) {
 #ifdef DEBUG_smaug
       printf("Will clear cached frame manager scripts!\n");

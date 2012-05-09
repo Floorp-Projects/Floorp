@@ -37,9 +37,11 @@
 #include "nsISupports.idl"
 
 interface nsIDOMMozConnection;
+interface nsIDOMMozMobileConnection;
 
-[scriptable, uuid(1dd6773e-30dc-419b-9766-b05458fd96c8)]
+[scriptable, uuid(fb7c3429-aa2c-4ccc-948a-467c0de29fff)]
 interface nsIDOMMozNavigatorNetwork : nsISupports
 {
   readonly attribute nsIDOMMozConnection mozConnection;
+  readonly attribute nsIDOMMozMobileConnection mozMobileConnection;
 };

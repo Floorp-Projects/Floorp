@@ -128,7 +128,7 @@ public:
   NS_IMETHOD_(nsRect) GetCoveredRegion();
   virtual void UpdateBounds();
   virtual void NotifySVGChanged(PRUint32 aFlags);
-  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+  virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                       PRUint32 aFlags);
   NS_IMETHOD_(bool) IsDisplayContainer() { return true; }
   NS_IMETHOD_(bool) HasValidCoveredRect() { return false; }

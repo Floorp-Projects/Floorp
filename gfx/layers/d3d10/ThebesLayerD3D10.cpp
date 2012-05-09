@@ -134,13 +134,13 @@ ThebesLayerD3D10::RenderLayer()
   ID3D10EffectTechnique *technique;
   switch (mCurrentSurfaceMode) {
   case SURFACE_COMPONENT_ALPHA:
-    technique = effect()->GetTechniqueByName("RenderComponentAlphaLayer");
+    technique = SelectShader(SHADER_COMPONENT_ALPHA | LoadMaskTexture());
     break;
   case SURFACE_OPAQUE:
-    technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
+    technique = SelectShader(SHADER_RGB | SHADER_PREMUL | LoadMaskTexture());
     break;
   case SURFACE_SINGLE_CHANNEL_ALPHA:
-    technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
+    technique = SelectShader(SHADER_RGBA | SHADER_PREMUL | LoadMaskTexture());
     break;
   default:
     NS_ERROR("Unknown mode");
@@ -353,6 +353,8 @@ ThebesLayerD3D10::VerifyContentType(SurfaceMode aMode)
         NS_WARNING("Failed to create drawtarget for ThebesLayerD3D10.");
         return;
       }
+
+      mValidRegion.SetEmpty();
     }
   }    
 
@@ -363,36 +365,6 @@ ThebesLayerD3D10::VerifyContentType(SurfaceMode aMode)
     mTextureOnWhite = nsnull;
     mValidRegion.SetEmpty();
   }
-}
-
-void
-ThebesLayerD3D10::SetupDualViewports(const gfxIntSize &aSize)
-{
-    D3D10_VIEWPORT viewport;
-    viewport.MaxDepth = 1.0f;
-    viewport.MinDepth = 0;
-    viewport.Width = aSize.width;
-    viewport.Height = aSize.height;
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-
-    D3D10_VIEWPORT vps[2] = { viewport, viewport };
-    device()->RSSetViewports(2, vps);
-
-    gfx3DMatrix projection;
-    /*
-     * Matrix to transform to viewport space ( <-1.0, 1.0> topleft,
-     * <1.0, -1.0> bottomright)
-     */
-    projection._11 = 2.0f / aSize.width;
-    projection._22 = -2.0f / aSize.height;
-    projection._33 = 0.0f;
-    projection._41 = -1.0f;
-    projection._42 = 1.0f;
-    projection._44 = 1.0f;
-
-    effect()->GetVariableByName("mProjection")->
-      SetRawValue(&projection._11, 0, 64);
 }
 
 void
@@ -410,12 +382,20 @@ ThebesLayerD3D10::FillTexturesBlackWhite(const nsIntRegion& aRegion, const nsInt
     device()->CreateRenderTargetView(mTexture, NULL, getter_AddRefs(viewBlack));
     device()->CreateRenderTargetView(mTextureOnWhite, NULL, getter_AddRefs(viewWhite));
 
+    D3D10_RECT oldScissor;
+    UINT numRects = 1;
+    device()->RSGetScissorRects(&numRects, &oldScissor);
+
     D3D10_TEXTURE2D_DESC desc;
     mTexture->GetDesc(&desc);
 
+    D3D10_RECT scissor = { 0, 0, desc.Width, desc.Height };
+    device()->RSSetScissorRects(1, &scissor);
+
+    mD3DManager->SetupInputAssembler();
     nsIntSize oldVP = mD3DManager->GetViewport();
 
-    SetupDualViewports(gfxIntSize(desc.Width, desc.Height));
+    mD3DManager->SetViewport(nsIntSize(desc.Width, desc.Height));
 
     ID3D10RenderTargetView *views[2] = { viewBlack, viewWhite };
     device()->OMSetRenderTargets(2, views, NULL);
@@ -447,6 +427,7 @@ ThebesLayerD3D10::FillTexturesBlackWhite(const nsIntRegion& aRegion, const nsInt
     views[0] = oldRT;
     device()->OMSetRenderTargets(1, views, NULL);
     mD3DManager->SetViewport(oldVP);
+    device()->RSSetScissorRects(1, &oldScissor);
   }
 }
 
@@ -654,8 +635,7 @@ ShadowThebesLayerD3D10::RenderLayer()
 
   SetEffectTransformAndOpacity();
 
-  ID3D10EffectTechnique *technique =
-      effect()->GetTechniqueByName("RenderRGBLayerPremul");
+  ID3D10EffectTechnique *technique = SelectShader(SHADER_RGB | SHADER_PREMUL | LoadMaskTexture());
 
   effect()->GetVariableByName("tRGB")->AsShaderResource()->SetResource(srView);
 

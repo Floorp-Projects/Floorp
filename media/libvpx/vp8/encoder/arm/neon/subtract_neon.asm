@@ -61,19 +61,24 @@
 
 
 ;==========================================
-;void vp8_subtract_mby_neon(short *diff, unsigned char *src, unsigned char *pred, int stride)
+;void vp8_subtract_mby_neon(short *diff, unsigned char *src, int src_stride
+;                           unsigned char *pred, int pred_stride)
 |vp8_subtract_mby_neon| PROC
+    push            {r4-r7}
     mov             r12, #4
+    ldr             r4, [sp, #16]           ; pred_stride
+    mov             r6, #32                 ; "diff" stride x2
+    add             r5, r0, #16             ; second diff pointer
 
 subtract_mby_loop
-    vld1.8          {q0}, [r1], r3          ;load src
-    vld1.8          {q1}, [r2]!             ;load pred
-    vld1.8          {q2}, [r1], r3
-    vld1.8          {q3}, [r2]!
-    vld1.8          {q4}, [r1], r3
-    vld1.8          {q5}, [r2]!
-    vld1.8          {q6}, [r1], r3
-    vld1.8          {q7}, [r2]!
+    vld1.8          {q0}, [r1], r2          ;load src
+    vld1.8          {q1}, [r3], r4          ;load pred
+    vld1.8          {q2}, [r1], r2
+    vld1.8          {q3}, [r3], r4
+    vld1.8          {q4}, [r1], r2
+    vld1.8          {q5}, [r3], r4
+    vld1.8          {q6}, [r1], r2
+    vld1.8          {q7}, [r3], r4
 
     vsubl.u8        q8, d0, d2
     vsubl.u8        q9, d1, d3
@@ -84,46 +89,53 @@ subtract_mby_loop
     vsubl.u8        q14, d12, d14
     vsubl.u8        q15, d13, d15
 
-    vst1.16         {q8}, [r0]!             ;store diff
-    vst1.16         {q9}, [r0]!
-    vst1.16         {q10}, [r0]!
-    vst1.16         {q11}, [r0]!
-    vst1.16         {q12}, [r0]!
-    vst1.16         {q13}, [r0]!
-    vst1.16         {q14}, [r0]!
-    vst1.16         {q15}, [r0]!
+    vst1.16         {q8}, [r0], r6          ;store diff
+    vst1.16         {q9}, [r5], r6
+    vst1.16         {q10}, [r0], r6
+    vst1.16         {q11}, [r5], r6
+    vst1.16         {q12}, [r0], r6
+    vst1.16         {q13}, [r5], r6
+    vst1.16         {q14}, [r0], r6
+    vst1.16         {q15}, [r5], r6
 
     subs            r12, r12, #1
     bne             subtract_mby_loop
 
+    pop             {r4-r7}
     bx              lr
     ENDP
 
 ;=================================
-;void vp8_subtract_mbuv_neon(short *diff, unsigned char *usrc, unsigned char *vsrc, unsigned char *pred, int stride)
+;void vp8_subtract_mbuv_c(short *diff, unsigned char *usrc, unsigned char *vsrc,
+;                         int src_stride, unsigned char *upred,
+;                         unsigned char *vpred, int pred_stride)
+
 |vp8_subtract_mbuv_neon| PROC
-    ldr             r12, [sp]
+    push            {r4-r7}
+    ldr             r4, [sp, #16]       ; upred
+    ldr             r5, [sp, #20]       ; vpred
+    ldr             r6, [sp, #24]       ; pred_stride
+    add             r0, r0, #512        ; short *udiff = diff + 256;
+    mov             r12, #32            ; "diff" stride x2
+    add             r7, r0, #16         ; second diff pointer
 
 ;u
-    add             r0, r0, #512        ;   short *udiff = diff + 256;
-    add             r3, r3, #256        ;   unsigned char *upred = pred + 256;
-
-    vld1.8          {d0}, [r1], r12         ;load src
-    vld1.8          {d1}, [r3]!             ;load pred
-    vld1.8          {d2}, [r1], r12
-    vld1.8          {d3}, [r3]!
-    vld1.8          {d4}, [r1], r12
-    vld1.8          {d5}, [r3]!
-    vld1.8          {d6}, [r1], r12
-    vld1.8          {d7}, [r3]!
-    vld1.8          {d8}, [r1], r12
-    vld1.8          {d9}, [r3]!
-    vld1.8          {d10}, [r1], r12
-    vld1.8          {d11}, [r3]!
-    vld1.8          {d12}, [r1], r12
-    vld1.8          {d13}, [r3]!
-    vld1.8          {d14}, [r1], r12
-    vld1.8          {d15}, [r3]!
+    vld1.8          {d0}, [r1], r3      ;load usrc
+    vld1.8          {d1}, [r4], r6      ;load upred
+    vld1.8          {d2}, [r1], r3
+    vld1.8          {d3}, [r4], r6
+    vld1.8          {d4}, [r1], r3
+    vld1.8          {d5}, [r4], r6
+    vld1.8          {d6}, [r1], r3
+    vld1.8          {d7}, [r4], r6
+    vld1.8          {d8}, [r1], r3
+    vld1.8          {d9}, [r4], r6
+    vld1.8          {d10}, [r1], r3
+    vld1.8          {d11}, [r4], r6
+    vld1.8          {d12}, [r1], r3
+    vld1.8          {d13}, [r4], r6
+    vld1.8          {d14}, [r1], r3
+    vld1.8          {d15}, [r4], r6
 
     vsubl.u8        q8, d0, d1
     vsubl.u8        q9, d2, d3
@@ -134,32 +146,32 @@ subtract_mby_loop
     vsubl.u8        q14, d12, d13
     vsubl.u8        q15, d14, d15
 
-    vst1.16         {q8}, [r0]!             ;store diff
-    vst1.16         {q9}, [r0]!
-    vst1.16         {q10}, [r0]!
-    vst1.16         {q11}, [r0]!
-    vst1.16         {q12}, [r0]!
-    vst1.16         {q13}, [r0]!
-    vst1.16         {q14}, [r0]!
-    vst1.16         {q15}, [r0]!
+    vst1.16         {q8}, [r0], r12     ;store diff
+    vst1.16         {q9}, [r7], r12
+    vst1.16         {q10}, [r0], r12
+    vst1.16         {q11}, [r7], r12
+    vst1.16         {q12}, [r0], r12
+    vst1.16         {q13}, [r7], r12
+    vst1.16         {q14}, [r0], r12
+    vst1.16         {q15}, [r7], r12
 
 ;v
-    vld1.8          {d0}, [r2], r12         ;load src
-    vld1.8          {d1}, [r3]!             ;load pred
-    vld1.8          {d2}, [r2], r12
-    vld1.8          {d3}, [r3]!
-    vld1.8          {d4}, [r2], r12
-    vld1.8          {d5}, [r3]!
-    vld1.8          {d6}, [r2], r12
-    vld1.8          {d7}, [r3]!
-    vld1.8          {d8}, [r2], r12
-    vld1.8          {d9}, [r3]!
-    vld1.8          {d10}, [r2], r12
-    vld1.8          {d11}, [r3]!
-    vld1.8          {d12}, [r2], r12
-    vld1.8          {d13}, [r3]!
-    vld1.8          {d14}, [r2], r12
-    vld1.8          {d15}, [r3]!
+    vld1.8          {d0}, [r2], r3      ;load vsrc
+    vld1.8          {d1}, [r5], r6      ;load vpred
+    vld1.8          {d2}, [r2], r3
+    vld1.8          {d3}, [r5], r6
+    vld1.8          {d4}, [r2], r3
+    vld1.8          {d5}, [r5], r6
+    vld1.8          {d6}, [r2], r3
+    vld1.8          {d7}, [r5], r6
+    vld1.8          {d8}, [r2], r3
+    vld1.8          {d9}, [r5], r6
+    vld1.8          {d10}, [r2], r3
+    vld1.8          {d11}, [r5], r6
+    vld1.8          {d12}, [r2], r3
+    vld1.8          {d13}, [r5], r6
+    vld1.8          {d14}, [r2], r3
+    vld1.8          {d15}, [r5], r6
 
     vsubl.u8        q8, d0, d1
     vsubl.u8        q9, d2, d3
@@ -170,16 +182,18 @@ subtract_mby_loop
     vsubl.u8        q14, d12, d13
     vsubl.u8        q15, d14, d15
 
-    vst1.16         {q8}, [r0]!             ;store diff
-    vst1.16         {q9}, [r0]!
-    vst1.16         {q10}, [r0]!
-    vst1.16         {q11}, [r0]!
-    vst1.16         {q12}, [r0]!
-    vst1.16         {q13}, [r0]!
-    vst1.16         {q14}, [r0]!
-    vst1.16         {q15}, [r0]!
+    vst1.16         {q8}, [r0], r12     ;store diff
+    vst1.16         {q9}, [r7], r12
+    vst1.16         {q10}, [r0], r12
+    vst1.16         {q11}, [r7], r12
+    vst1.16         {q12}, [r0], r12
+    vst1.16         {q13}, [r7], r12
+    vst1.16         {q14}, [r0], r12
+    vst1.16         {q15}, [r7], r12
 
+    pop             {r4-r7}
     bx              lr
+
     ENDP
 
     END

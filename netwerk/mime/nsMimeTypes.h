@@ -108,6 +108,8 @@
 #define AUDIO_WAV                           "audio/x-wav"
 #define AUDIO_WEBM                          "audio/webm"
 
+#define BINARY_OCTET_STREAM                 "binary/octet-stream"
+
 #define IMAGE_GIF                           "image/gif"
 #define IMAGE_JPG                           "image/jpeg"
 #define IMAGE_PJPG                          "image/pjpeg"

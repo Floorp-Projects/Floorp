@@ -131,12 +131,8 @@ var PlacesUtils = {
   TYPE_X_MOZ_PLACE_ACTION: "text/x-moz-place-action",
 
   EXCLUDE_FROM_BACKUP_ANNO: "places/excludeFromBackup",
-  GUID_ANNO: "placesInternal/GUID",
   LMANNO_FEEDURI: "livemark/feedURI",
   LMANNO_SITEURI: "livemark/siteURI",
-  LMANNO_EXPIRATION: "livemark/expiration",
-  LMANNO_LOADFAILED: "livemark/loadfailed",
-  LMANNO_LOADING: "livemark/loading",
   POST_DATA_ANNO: "bookmarkProperties/POSTData",
   READ_ONLY_ANNO: "placesInternal/READ_ONLY",
 
@@ -1388,10 +1384,6 @@ var PlacesUtils = {
               case this.LMANNO_SITEURI:
                 siteURI = this._uri(aAnno.value);
                 return false;
-              case this.LMANNO_EXPIRATION:
-              case this.LMANNO_LOADING:
-              case this.LMANNO_LOADFAILED:
-                return false;
               default:
                 return true;
             }
@@ -2250,7 +2242,26 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "transactionManager", function() {
     this.transactionManager.RemoveListener(this);
     this.transactionManager.clear();
   });
-  return tm;
+
+  // Bug 750269
+  // The transaction manager keeps strong references to transactions, and by
+  // that, also to the global for each transaction.  A transaction, however,
+  // could be either the transaction itself (for which the global is this
+  // module) or some js-proxy in another global, usually a window.  The later
+  // would leak because the transaction lifetime (in the manager's stacks)
+  // is independent of the global from which doTransaction was called.
+  // To avoid such a leak, we hide the native doTransaction from callers,
+  // and let each doTransaction call go through this module.
+  // Doing so ensures that, as long as the transaction is any of the
+  // PlacesXXXTransaction objects declared in this module, the object
+  // referenced by the transaction manager has the module itself as global.
+  return Object.create(tm, {
+    "doTransaction": {
+      value: function(aTransaction) {
+        tm.doTransaction(aTransaction);
+      }
+    }
+  });
 });
 
 XPCOMUtils.defineLazyGetter(this, "bundle", function() {
@@ -2302,7 +2313,6 @@ TransactionItemCache.prototype = {
     this._parentId || -1,
   keyword: null,
   title: null,
-  guid: null,
   dateAdded: null,
   lastModified: null,
   postData: null,
@@ -2486,9 +2496,6 @@ PlacesCreateFolderTransaction.prototype = {
                                                 this.childTransactions);
       txn.doTransaction();
     }
-
-    if (this.item.guid)
-      PlacesUtils.bookmarks.setItemGUID(this.item.id, this.item.guid);
   },
 
   undoTransaction: function CFTXN_undoTransaction()
@@ -2498,11 +2505,6 @@ PlacesCreateFolderTransaction.prototype = {
                                                 this.childTransactions);
       txn.undoTransaction();
     }
-
-    // If a GUID exists for this item, preserve it before removing the item.
-    if (PlacesUtils.annotations.itemHasAnnotation(this.item.id,
-                                                  PlacesUtils.GUID_ANNO))
-      this.item.guid = PlacesUtils.bookmarks.getItemGUID(this.item.id);
 
     // Remove item only after all child transactions have been reverted.
     PlacesUtils.bookmarks.removeItem(this.item.id);
@@ -2574,8 +2576,6 @@ PlacesCreateBookmarkTransaction.prototype = {
                                                 this.childTransactions);
       txn.doTransaction();
     }
-    if (this.item.guid)
-      PlacesUtils.bookmarks.setItemGUID(this.item.id, this.item.guid);
   },
 
   undoTransaction: function CITXN_undoTransaction()
@@ -2586,11 +2586,6 @@ PlacesCreateBookmarkTransaction.prototype = {
                                                 this.childTransactions);
       txn.undoTransaction();
     }
-
-    // If a GUID exists for this item, preserve it before removing the item.
-    if (PlacesUtils.annotations
-                   .itemHasAnnotation(this.item.id, PlacesUtils.GUID_ANNO))
-      this.item.guid = PlacesUtils.bookmarks.getItemGUID(this.item.id);
 
     // Remove item only after all child transactions have been reverted.
     PlacesUtils.bookmarks.removeItem(this.item.id);
@@ -2622,17 +2617,10 @@ PlacesCreateSeparatorTransaction.prototype = {
   {
     this.item.id =
       PlacesUtils.bookmarks.insertSeparator(this.item.parentId, this.item.index);
-    if (this.item.guid)
-      PlacesUtils.bookmarks.setItemGUID(this.item.id, this.item.guid);
   },
 
   undoTransaction: function CSTXN_undoTransaction()
   {
-    // If a GUID exists for this item, preserve it before removing the item.
-    if (PlacesUtils.annotations
-                   .itemHasAnnotation(this.item.id, PlacesUtils.GUID_ANNO))
-      this.item.guid = PlacesUtils.bookmarks.getItemGUID(this.item.id);
-
     PlacesUtils.bookmarks.removeItem(this.item.id);
   }
 };
@@ -2689,8 +2677,6 @@ PlacesCreateLivemarkTransaction.prototype = {
             PlacesUtils.setAnnotationsForItem(this.item.id,
                                               this.item.annotations);
           }
-          if (this.item.guid)
-            PlacesUtils.bookmarks.setItemGUID(this.item.id, this.item.guid);
         }
       }).bind(this)
     );
@@ -2703,10 +2689,6 @@ PlacesCreateLivemarkTransaction.prototype = {
     PlacesUtils.livemarks.getLivemark(
       { id: this.item.id },
       (function (aStatus, aLivemark) {
-        // If a GUID exists for this item, preserve it before removing the item.
-        if (PlacesUtils.annotations.itemHasAnnotation(this.item.id, PlacesUtils.GUID_ANNO))
-          this.item.guid = PlacesUtils.bookmarks.getItemGUID(this.item.id);
-
         PlacesUtils.bookmarks.removeItem(this.item.id);
       }).bind(this)
     );
@@ -2733,10 +2715,7 @@ function PlacesRemoveLivemarkTransaction(aLivemarkId)
   let annos = PlacesUtils.getAnnotationsForItem(this.item.id);
   // Exclude livemark service annotations, those will be recreated automatically
   let annosToExclude = [PlacesUtils.LMANNO_FEEDURI,
-                        PlacesUtils.LMANNO_SITEURI,
-                        PlacesUtils.LMANNO_EXPIRATION,
-                        PlacesUtils.LMANNO_LOADFAILED,
-                        PlacesUtils.LMANNO_LOADING];
+                        PlacesUtils.LMANNO_SITEURI];
   this.item.annotations = annos.filter(function(aValue, aIndex, aArray) {
       return annosToExclude.indexOf(aValue.name) == -1;
     });
@@ -3437,8 +3416,6 @@ PlacesTagURITransaction.prototype = {
                                    this.item.uri,
                                    PlacesUtils.bookmarks.DEFAULT_INDEX,
                                    PlacesUtils.history.getPageTitle(this.item.uri));
-      if (this.item.guid)
-        PlacesUtils.bookmarks.setItemGUID(this.item.id, this.item.guid);
     }
     PlacesUtils.tagging.tagURI(this.item.uri, this.item.tags);
   },
@@ -3446,11 +3423,6 @@ PlacesTagURITransaction.prototype = {
   undoTransaction: function TUTXN_undoTransaction()
   {
     if (this.item.id != -1) {
-      // If a GUID exists for this item, preserve it before removing the item.
-      if (PlacesUtils.annotations
-                     .itemHasAnnotation(this.item.id, PlacesUtils.GUID_ANNO)) {
-        this.item.guid = PlacesUtils.bookmarks.getItemGUID(this.item.id);
-      }
       PlacesUtils.bookmarks.removeItem(this.item.id);
       this.item.id = -1;
     }

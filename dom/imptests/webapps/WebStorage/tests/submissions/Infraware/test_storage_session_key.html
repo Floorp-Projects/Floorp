@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>Web Storage</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+ </head>
+ <body>
+    <h1>storage_session_key</h1>
+    <div id="log"></div>
+    <script>
+        test(function() {
+            sessionStorage.clear();
+
+            sessionStorage.setItem("name", "user1");
+            sessionStorage.setItem("age", "20");
+            sessionStorage.setItem("a", "1");
+            sessionStorage.setItem("b", "2");
+
+            var keys = ["name", "age", "a", "b"];
+            function doTest(index) {
+                test(function() {
+                    var key = sessionStorage.key(index);
+                    assert_not_equals(key, null);
+                    assert_true(keys.indexOf(key) >= 0,
+                                "Unexpected key " + key + " found.");
+                }, "key(" + index + ") should return the right thing.");
+            }
+            for (var i = 0; i < keys.length; ++i) {
+                doTest(i);
+                doTest(i + 0x100000000);
+            }
+            test(function() {
+                assert_equals(sessionStorage.key(-1), null, "sessionStorage.key(-1)");
+                assert_equals(sessionStorage.key(4), null, "sessionStorage.key(4)");
+            }, "key() should return null for out-of-range arguments.");
+        });
+    </script>
+ </body>
+</html>

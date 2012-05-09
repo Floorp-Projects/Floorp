@@ -13,17 +13,17 @@ import org.mozilla.gecko.db.BrowserContract;
 import android.net.Uri;
 
 public class BrowserContractHelpers extends BrowserContract {
-  protected static Uri withSync(Uri u) {
-    return u.buildUpon()
-            .appendQueryParameter(PARAM_IS_SYNC, "true")
-            .build();
-  }
 
   protected static Uri withSyncAndDeleted(Uri u) {
     return u.buildUpon()
             .appendQueryParameter(PARAM_IS_SYNC, "true")
             .appendQueryParameter(PARAM_SHOW_DELETED, "true")
             .build();
+  }
+  protected static Uri withSync(Uri u) {
+    return u.buildUpon()
+        .appendQueryParameter(PARAM_IS_SYNC, "true")
+        .build();
   }
 
   public static final Uri IMAGES_CONTENT_URI               = withSyncAndDeleted(Images.CONTENT_URI);
@@ -32,20 +32,13 @@ public class BrowserContractHelpers extends BrowserContract {
   public static final Uri BOOKMARKS_POSITIONS_CONTENT_URI  = withSyncAndDeleted(Bookmarks.POSITIONS_CONTENT_URI);
   public static final Uri HISTORY_CONTENT_URI              = withSyncAndDeleted(History.CONTENT_URI);
   public static final Uri SCHEMA_CONTENT_URI               = withSyncAndDeleted(Schema.CONTENT_URI);
-
-  public static final Uri PASSWORDS_CONTENT_URI            = null;
-  /*
   public static final Uri PASSWORDS_CONTENT_URI            = withSyncAndDeleted(Passwords.CONTENT_URI);
-   */
+  public static final Uri DELETED_PASSWORDS_CONTENT_URI    = withSyncAndDeleted(DeletedPasswords.CONTENT_URI);
   public static final Uri FORM_HISTORY_CONTENT_URI         = withSync(FormHistory.CONTENT_URI);
   public static final Uri DELETED_FORM_HISTORY_CONTENT_URI = withSync(DeletedFormHistory.CONTENT_URI);
 
   public static final String[] PasswordColumns = new String[] {
-    CommonColumns._ID,
-    SyncColumns.GUID,
-    SyncColumns.DATE_CREATED,
-    SyncColumns.DATE_MODIFIED,
-    SyncColumns.IS_DELETED,
+    Passwords.ID,
     Passwords.HOSTNAME,
     Passwords.HTTP_REALM,
     Passwords.FORM_SUBMIT_URL,
@@ -54,8 +47,11 @@ public class BrowserContractHelpers extends BrowserContract {
     Passwords.ENCRYPTED_USERNAME,
     Passwords.ENCRYPTED_PASSWORD,
     Passwords.ENC_TYPE,
+    Passwords.TIME_CREATED,
     Passwords.TIME_LAST_USED,
-    Passwords.TIMES_USED
+    Passwords.TIME_PASSWORD_CHANGED,
+    Passwords.TIMES_USED,
+    Passwords.GUID
   };
 
   public static final String[] HistoryColumns = new String[] {
@@ -86,7 +82,6 @@ public class BrowserContractHelpers extends BrowserContract {
     Bookmarks.KEYWORD
   };
 
-
   public static final String[] FormHistoryColumns = new String[] {
     FormHistory.ID,
     FormHistory.GUID,
@@ -98,9 +93,9 @@ public class BrowserContractHelpers extends BrowserContract {
   };
 
   public static final String[] DeletedColumns = new String[] {
-    DeletedFormHistory.ID,
-    DeletedFormHistory.GUID,
-    DeletedFormHistory.TIME_DELETED
+    BrowserContract.DeletedColumns.ID,
+    BrowserContract.DeletedColumns.GUID,
+    BrowserContract.DeletedColumns.TIME_DELETED
   };
 
   // Mapping from Sync types to Fennec types.

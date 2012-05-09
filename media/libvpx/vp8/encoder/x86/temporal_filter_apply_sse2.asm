@@ -71,26 +71,26 @@ sym(vp8_temporal_filter_apply_sse2):
 
         lea         rcx,            [rdx + 16*16*1]
         cmp         dword ptr [rsp + block_size], 8
-        jne         temporal_filter_apply_load_16
+        jne         .temporal_filter_apply_load_16
         lea         rcx,            [rdx + 8*8*1]
 
-temporal_filter_apply_load_8:
+.temporal_filter_apply_load_8:
         movq        xmm0,           [rsi]  ; first row
         lea         rsi,            [rsi + rbp] ; += stride
         punpcklbw   xmm0,           xmm7   ; src[ 0- 7]
         movq        xmm1,           [rsi]  ; second row
         lea         rsi,            [rsi + rbp] ; += stride
         punpcklbw   xmm1,           xmm7   ; src[ 8-15]
-        jmp         temporal_filter_apply_load_finished
+        jmp         .temporal_filter_apply_load_finished
 
-temporal_filter_apply_load_16:
+.temporal_filter_apply_load_16:
         movdqa      xmm0,           [rsi]  ; src (frame1)
         lea         rsi,            [rsi + rbp] ; += stride
         movdqa      xmm1,           xmm0
         punpcklbw   xmm0,           xmm7   ; src[ 0- 7]
         punpckhbw   xmm1,           xmm7   ; src[ 8-15]
 
-temporal_filter_apply_load_finished:
+.temporal_filter_apply_load_finished:
         movdqa      xmm2,           [rdx]  ; predictor (frame2)
         movdqa      xmm3,           xmm2
         punpcklbw   xmm2,           xmm7   ; pred[ 0- 7]
@@ -176,13 +176,13 @@ temporal_filter_apply_load_finished:
         lea         rdi,            [rdi + 16*4] ; accumulator += 16*(sizeof(int))
 
         cmp         rdx,            rcx
-        je          temporal_filter_apply_epilog
+        je          .temporal_filter_apply_epilog
         pxor        xmm7,           xmm7   ; zero for extraction
         cmp         dword ptr [rsp + block_size], 16
-        je          temporal_filter_apply_load_16
-        jmp         temporal_filter_apply_load_8
+        je          .temporal_filter_apply_load_16
+        jmp         .temporal_filter_apply_load_8
 
-temporal_filter_apply_epilog:
+.temporal_filter_apply_epilog:
     ; begin epilog
     mov         rbp,            [rsp + rbp_backup]
     add         rsp,            stack_size

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+
+  Test DOM tree in full screen
+  -->
+  <head>
+    <title>Bug 633602 - file_DOMtree.html</title>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js">
+    </script>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script type="application/javascript" src="pointerlock_utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <style>
+    </style>
+  </head>
+  <body>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+      Mozilla Bug 633602
+    </a>
+    <pre id="test">
+      <script type="text/javascript">
+        /*
+         * Test for Bug 633602
+         * Checks if element is attached to the DOM Tree before locking
+         * the pointer
+         */
+
+        SimpleTest.waitForExplicitFinish();
+
+        var div = document.createElement("div")
+          , withouthDOM = false;
+
+        function runTests () {
+          ok(withouthDOM, "If an element is NOT in the " +
+            "DOM Tree pointer should NOT be locked");
+        }
+
+        document.addEventListener("mozpointerlockerror", function (e) {
+          withouthDOM = true;
+          runTests();
+          SimpleTest.finish();
+        }, false);
+
+        function start() {
+          div.mozRequestPointerLock();
+        }
+      </script>
+    </pre>
+  </body>
+</html>

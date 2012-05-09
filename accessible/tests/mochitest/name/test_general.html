@@ -14,6 +14,7 @@
           src="../name.js"></script>
 
   <script type="application/javascript">
+
     function doTest()
     {
       // aria-label
@@ -136,6 +137,8 @@
       // acronym content.
       testName("label_with_acronym", "O A T F World Wide Web");
 
+      testName("testArticle", "Test article");
+
       //////////////////////////////////////////////////////////////////////////
       // title attribute
 
@@ -193,6 +196,10 @@
       testName("ph_textarea2", "a label");
       testName("ph_text3", "a label");
 
+      // Test equation image
+      testName("img_eq", "x^2 + y^2 + z^2")
+      testName("txt_eq", "x^2 + y^2 + z^2")
+
       SimpleTest.finish();
     }
 
@@ -204,6 +211,16 @@
 
 <body>
 
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=428479"
+     title="Bug 428479 - Support ARIA role=math">
+    Mozilla Bug 428479
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=429666"
+     title="Expose ROLE_DOCUMENT for ARIA landmarks that inherit from document">
+    Mozilla Bug 429666
+  </a><br>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=444279"
      title="mochitest for accessible name calculating">
@@ -409,6 +426,10 @@
     <abbr title="World Wide Web">WWW</abbr>
   </label>
 
+  <div id="testArticle" role="article" title="Test article">
+    <p>This is a paragraph inside the article.</p>
+  </div>
+
   <!-- name from title attribute -->
   <span id="btn_title" role="group" title="title">15</span>
 
@@ -492,6 +513,14 @@
 
   <label for="ph_text3">a label</label>
   <input id="ph_text3" placeholder="meh" />
+
+  <p>Image: 
+    <img id="img_eq" role="math" src="foo" alt="x^2 + y^2 + z^2">
+  </p>
+
+  <p>Text: 
+    <span id="txt_eq" role="math" title="x^2 + y^2 + z^2">x<sup>2</sup> + 
+      y<sup>2</sup> + z<sup>2</sup></span>
 
 </body>
 </html>

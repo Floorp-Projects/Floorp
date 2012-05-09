@@ -144,7 +144,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mResponseHeadTaken(false)
 {
     LOG(("Creating nsHttpTransaction @%x\n", this));
-    gHttpHandler->GetMaxPipelineObjectSize(mMaxPipelineObjectSize);
+    gHttpHandler->GetMaxPipelineObjectSize(&mMaxPipelineObjectSize);
 }
 
 nsHttpTransaction::~nsHttpTransaction()
@@ -1226,6 +1226,12 @@ nsHttpTransaction::HandleContentStart()
             LOG(("this response should not contain a body.\n"));
             break;
         }
+        
+        if (mResponseHead->Status() == 200 &&
+            mConnection->IsProxyConnectInProgress()) {
+            // successful CONNECTs do not have response bodies
+            mNoContent = true;
+        }
         mConnection->SetLastTransactionExpectedNoContent(mNoContent);
         if (mInvalidResponseBytesRead)
             gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
@@ -1366,8 +1372,10 @@ nsHttpTransaction::HandleContent(char *buf,
     // for this response reschedule the pipeline
     if ((mClassification != CLASS_SOLO) &&
         mChunkedDecoder &&
-        (mContentRead > mMaxPipelineObjectSize))
+        ((mContentRead + mChunkedDecoder->GetChunkRemaining()) >
+         mMaxPipelineObjectSize)) {
         CancelPipeline(nsHttpConnectionMgr::BadUnexpectedLarge);
+    }
 
     // check for end-of-file
     if ((mContentRead == mContentLength) ||
@@ -1479,7 +1487,7 @@ nsHttpTransaction::CancelPipeline(PRUint32 reason)
         static_cast<nsHttpConnectionMgr::PipelineFeedbackInfoType>(reason),
         nsnull, mClassification);
 
-    mConnection->CancelPipeline(NS_ERROR_CORRUPTED_CONTENT);
+    mConnection->CancelPipeline(NS_ERROR_ABORT);
 
     // Avoid pipelining this transaction on restart by classifying it as solo.
     // This also prevents BadUnexpectedLarge from being reported more

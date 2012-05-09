@@ -23,9 +23,9 @@ function test() {
 
     groupItem = contentWindow.GroupItems.groupItems[0];
 
-    whenAppTabIconAdded(function() {
-      whenAppTabIconAdded(function() {
-        whenAppTabIconAdded(function() {
+    whenAppTabIconAdded(groupItem, function () {
+      whenAppTabIconAdded(groupItem, function () {
+        whenAppTabIconAdded(groupItem, function () {
 
           is(xulTabForAppTabIcon(0), newTabOne,
             "New tab one matches the first app tab icon in tabview");

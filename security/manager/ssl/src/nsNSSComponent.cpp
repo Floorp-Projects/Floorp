@@ -124,6 +124,7 @@ extern "C" {
 }
 
 using namespace mozilla;
+using namespace mozilla::psm;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gPIPNSSLog = nsnull;
@@ -437,6 +438,7 @@ nsNSSComponent::~nsNSSComponent()
 
   ShutdownNSS();
   nsSSLIOLayerHelpers::Cleanup();
+  RememberCertErrorsTable::Cleanup();
   --mInstanceCount;
   delete mShutdownObjectList;
 
@@ -2028,6 +2030,7 @@ nsNSSComponent::Init()
     return rv;
   }
 
+  RememberCertErrorsTable::Init();
   nsSSLIOLayerHelpers::Init();
   char *unrestricted_hosts=nsnull;
   mPrefBranch->GetCharPref("security.ssl.renego_unrestricted_hosts", &unrestricted_hosts);

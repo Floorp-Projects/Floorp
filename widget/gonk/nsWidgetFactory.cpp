@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "base/basictypes.h"
+
 #include "mozilla/ModuleUtils.h"
 
 #include "nsCOMPtr.h"
@@ -52,8 +54,13 @@
 #include "nsHTMLFormatConverter.h"
 #include "nsXULAppAPI.h"
 
+#include "PuppetWidget.h"
+
+using namespace mozilla::widget;
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGonk)
+NS_GENERIC_FACTORY_CONSTRUCTOR(PuppetScreenManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceGonk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -66,11 +73,19 @@ NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
 
+static nsresult
+ScreenManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    return (XRE_GetProcessType() == GeckoProcessType_Default) ?
+        nsScreenManagerGonkConstructor(aOuter, aIID, aResult) :
+        PuppetScreenManagerConstructor(aOuter, aIID, aResult);
+}
+
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_WINDOW_CID, false, NULL, nsWindowConstructor },
     { &kNS_CHILD_CID, false, NULL, nsWindowConstructor },
     { &kNS_APPSHELL_CID, false, NULL, nsAppShellConstructor },
-    { &kNS_SCREENMANAGER_CID, false, NULL, nsScreenManagerGonkConstructor },
+    { &kNS_SCREENMANAGER_CID, false, NULL, ScreenManagerConstructor },
     { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
     { &kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceGonkConstructor },
     { &kNS_TRANSFERABLE_CID, false, NULL, nsTransferableConstructor },

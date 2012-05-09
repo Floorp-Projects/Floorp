@@ -22,12 +22,12 @@ class DialListenerTest(MarionetteTestCase):
         # Setup the event listsener on the receiver, which should store
         # a global variable when an incoming call is received.
         self.assertTrue(receiver.execute_script("""
-return navigator.mozTelephony != undefined && navigator.mozTelephony != null;
+return window.navigator.mozTelephony != undefined && window.navigator.mozTelephony != null;
 """))
         receiver.execute_script("""
 window.wrappedJSObject.incoming = null;
-navigator.mozTelephony.addEventListener("incoming", function test_incoming(e) {
-    navigator.mozTelephony.removeEventListener("incoming", test_incoming);
+window.navigator.mozTelephony.addEventListener("incoming", function test_incoming(e) {
+    window.navigator.mozTelephony.removeEventListener("incoming", test_incoming);
     window.wrappedJSObject.incoming = e.call;
 });
 """)
@@ -35,7 +35,7 @@ navigator.mozTelephony.addEventListener("incoming", function test_incoming(e) {
         # dial the receiver from the sender
         sender.execute_script("""
 window.wrappedJSObject.sender_state = [];
-window.wrappedJSObject.sender_call = navigator.mozTelephony.dial("%s");
+window.wrappedJSObject.sender_call = window.navigator.mozTelephony.dial("%s");
 window.wrappedJSObject.sender_call.addEventListener("statechange", function test_sender_statechange(e) {
     if (e.call.state == 'disconnected')
         window.wrappedJSObject.sender_call.removeEventListener("statechange", test_sender_statechange);

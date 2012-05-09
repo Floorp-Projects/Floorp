@@ -91,7 +91,7 @@ class ResultsSink:
     def push(self, output):
         if isinstance(output, NullTestOutput):
             if self.options.tinderbox:
-                print_tinderbox_result('TEST-KNOWN-FAIL', output.test.path, time=output.dt, skip=True)
+                self.print_tinderbox_result('TEST-KNOWN-FAIL', output.test.path, time=output.dt, skip=True)
             self.counts[2] += 1
             self.n += 1
         else:
@@ -125,8 +125,8 @@ class ResultsSink:
                         label = self.LABELS[(sub_ok, result.test.expect, result.test.random)][0]
                         if label == 'TEST-UNEXPECTED-PASS':
                             label = 'TEST-PASS (EXPECTED RANDOM)'
-                        print_tinderbox_result(label, result.test.path, time=output.dt, message=msg)
-                print_tinderbox_result(self.LABELS[
+                        self.print_tinderbox_result(label, result.test.path, time=output.dt, message=msg)
+                self.print_tinderbox_result(self.LABELS[
                     (result.result, result.test.expect, result.test.random)][0],
                     result.test.path, time=output.dt)
 
@@ -165,8 +165,12 @@ class ResultsSink:
         if self.options.failure_file:
               failure_file = open(self.options.failure_file, 'w')
               if not self.all_passed():
-                  for path in self.groups['REGRESSIONS'] + self.groups['TIMEOUTS']:
-                      print >> failure_file, path
+                  if 'REGRESSIONS' in self.groups:
+                      for path in self.groups['REGRESSIONS']:
+                          print >> failure_file, path
+                  if 'TIMEOUTS' in self.groups:
+                      for path in self.groups['TIMEOUTS']:
+                          print >> failure_file, path
               failure_file.close()
 
         suffix = '' if self.finished else ' (partial run -- interrupted by user)'

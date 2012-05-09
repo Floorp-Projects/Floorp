@@ -42,9 +42,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CONFIG_DIR=$(shell cd $(srcdir) && pwd)
-OBJ_DIR=$(shell cd $(DEPTH) && pwd)
-SRC_DIR=$(shell cd $(topsrcdir) && pwd)
+CONFIG_DIR=$(call core_abspath,$(srcdir))
+OBJ_DIR=$(call core_abspath,$(DEPTH))
+SRC_DIR=$(call core_abspath,$(topsrcdir))
 
 include $(topsrcdir)/config/rules.mk
 

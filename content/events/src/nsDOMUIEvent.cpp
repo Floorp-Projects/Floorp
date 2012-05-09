@@ -49,15 +49,21 @@
 #include "nsContentUtils.h"
 #include "nsEventStateManager.h"
 #include "nsIFrame.h"
-#include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
 #include "DictionaryHelpers.h"
+#include "mozilla/Util.h"
+#include "mozilla/Assertions.h"
+
+using namespace mozilla;
 
 nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   : nsDOMEvent(aPresContext, aEvent ?
                static_cast<nsEvent *>(aEvent) :
                static_cast<nsEvent *>(new nsUIEvent(false, 0, 0)))
   , mClientPoint(0, 0), mLayerPoint(0, 0), mPagePoint(0, 0)
+  , mIsPointerLocked(nsEventStateManager::sIsPointerLocked)
+  , mLastScreenPoint(nsEventStateManager::sLastScreenPoint)
+  , mLastClientPoint(nsEventStateManager::sLastClientPoint)
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -124,9 +130,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMUIEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 nsIntPoint
-nsDOMUIEvent::GetScreenPoint()
+nsDOMUIEvent::GetMovementPoint()
 {
-  if (!mEvent || 
+  if (!mEvent ||
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
         mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
@@ -136,43 +142,41 @@ nsDOMUIEvent::GetScreenPoint()
     return nsIntPoint(0, 0);
   }
 
-  if (!((nsGUIEvent*)mEvent)->widget ) {
-    return mEvent->refPoint;
+  if (!((nsGUIEvent*)mEvent)->widget) {
+    return mEvent->lastRefPoint;
   }
 
-  nsIntPoint offset = mEvent->refPoint + 
+  // Calculate the delta between the previous screen point and the current one.
+  nsIntPoint currentPoint = CalculateScreenPoint(mPresContext, mEvent);
+
+  // Adjust previous event's refPoint so it compares to current screenX, screenY
+  nsIntPoint offset = mEvent->lastRefPoint +
     ((nsGUIEvent*)mEvent)->widget->WidgetToScreenOffset();
   nscoord factor = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
-  return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
-                    nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
+  nsIntPoint lastPoint = nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
+                                    nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
+
+  return currentPoint - lastPoint;
+}
+
+nsIntPoint
+nsDOMUIEvent::GetScreenPoint()
+{
+  if (mIsPointerLocked) {
+    return mLastScreenPoint;
+  }
+
+  return CalculateScreenPoint(mPresContext, mEvent);
 }
 
 nsIntPoint
 nsDOMUIEvent::GetClientPoint()
 {
-  if (!mEvent ||
-      (mEvent->eventStructType != NS_MOUSE_EVENT &&
-       mEvent->eventStructType != NS_POPUP_EVENT &&
-       mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-       mEvent->eventStructType != NS_MOZTOUCH_EVENT &&
-       mEvent->eventStructType != NS_DRAG_EVENT &&
-       mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
-      !mPresContext ||
-      !((nsGUIEvent*)mEvent)->widget) {
-    return mClientPoint;
+  if (mIsPointerLocked) {
+    return mLastClientPoint;
   }
 
-  nsPoint pt(0, 0);
-  nsIPresShell* shell = mPresContext->GetPresShell();
-  if (!shell) {
-    return nsIntPoint(0, 0);
-  }
-  nsIFrame* rootFrame = shell->GetRootFrame();
-  if (rootFrame)
-    pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, rootFrame);
-
-  return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
-                    nsPresContext::AppUnitsToIntCSSPixels(pt.y));
+  return CalculateClientPoint(mPresContext, mEvent, &mClientPoint);
 }
 
 NS_IMETHODIMP
@@ -446,6 +450,106 @@ nsDOMUIEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &mDetail), false);
   return true;
 }
+
+// XXX Following struct and array are used only in
+//     nsDOMUIEvent::ComputeModifierState(), but if we define them in it,
+//     we fail to build on Mac at calling mozilla::ArrayLength().
+struct nsModifierPair
+{
+  mozilla::widget::Modifier modifier;
+  const char* name;
+};
+static const nsModifierPair kPairs[] = {
+  { widget::MODIFIER_ALT,        NS_DOM_KEYNAME_ALT },
+  { widget::MODIFIER_ALTGRAPH,   NS_DOM_KEYNAME_ALTGRAPH },
+  { widget::MODIFIER_CAPSLOCK,   NS_DOM_KEYNAME_CAPSLOCK },
+  { widget::MODIFIER_CONTROL,    NS_DOM_KEYNAME_CONTROL },
+  { widget::MODIFIER_FN,         NS_DOM_KEYNAME_FN },
+  { widget::MODIFIER_META,       NS_DOM_KEYNAME_META },
+  { widget::MODIFIER_NUMLOCK,    NS_DOM_KEYNAME_NUMLOCK },
+  { widget::MODIFIER_SCROLL,     NS_DOM_KEYNAME_SCROLL },
+  { widget::MODIFIER_SHIFT,      NS_DOM_KEYNAME_SHIFT },
+  { widget::MODIFIER_SYMBOLLOCK, NS_DOM_KEYNAME_SYMBOLLOCK },
+  { widget::MODIFIER_WIN,        NS_DOM_KEYNAME_WIN }
+};
+
+/* static */
+mozilla::widget::Modifiers
+nsDOMUIEvent::ComputeModifierState(const nsAString& aModifiersList)
+{
+  if (aModifiersList.IsEmpty()) {
+    return 0;
+  }
+
+  // Be careful about the performance.  If aModifiersList is too long,
+  // parsing it needs too long time.
+  // XXX Should we abort if aModifiersList is too long?
+
+  Modifiers modifiers = 0;
+
+  nsAString::const_iterator listStart, listEnd;
+  aModifiersList.BeginReading(listStart);
+  aModifiersList.EndReading(listEnd);
+
+  for (PRUint32 i = 0; i < mozilla::ArrayLength(kPairs); i++) {
+    nsAString::const_iterator start(listStart), end(listEnd);
+    if (!FindInReadable(NS_ConvertASCIItoUTF16(kPairs[i].name), start, end)) {
+      continue;
+    }
+
+    if ((start != listStart && !NS_IsAsciiWhitespace(*(--start))) ||
+        (end != listEnd && !NS_IsAsciiWhitespace(*(end)))) {
+      continue;
+    }
+    modifiers |= kPairs[i].modifier;
+  }
+
+  return modifiers;
+}
+
+bool
+nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
+{
+  nsInputEvent* inputEvent = static_cast<nsInputEvent*>(mEvent);
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SHIFT)) {
+    return inputEvent->IsShift();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_CONTROL)) {
+    return inputEvent->IsControl();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_META)) {
+    return inputEvent->IsMeta();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_ALT)) {
+    return inputEvent->IsAlt();
+  }
+
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_ALTGRAPH)) {
+    return inputEvent->IsAltGraph();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_WIN)) {
+    return inputEvent->IsWin();
+  }
+
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_CAPSLOCK)) {
+    return inputEvent->IsCapsLocked();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_NUMLOCK)) {
+    return inputEvent->IsNumLocked();
+  }
+
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_FN)) {
+    return inputEvent->IsFn();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SCROLL)) {
+    return inputEvent->IsScrollLocked();
+  }
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SYMBOLLOCK)) {
+    return inputEvent->IsSymbolLocked();
+  }
+  return false;
+}
+
 
 nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                           nsPresContext* aPresContext,

@@ -8,10 +8,6 @@
 
 const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
 
-let tempScope = {};
-Cu.import("resource:///modules/source-editor.jsm", tempScope);
-let SourceEditor = tempScope.SourceEditor;
-
 var gPane = null;
 var gTab = null;
 var gDebuggee = null;
@@ -22,33 +18,39 @@ function test()
 {
   let scriptShown = false;
   let framesAdded = false;
+  let resumed = false;
+  let testStarted = false;
 
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.debuggerWindow;
+    gDebugger = gPane.contentWindow;
+    resumed = true;
 
-    gPane.activeThread.addOneTimeListener("framesadded", function() {
+    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
-      runTest();
+      executeSoon(startTest);
     });
 
-    gDebuggee.firstCall();
+    executeSoon(function() {
+      gDebuggee.firstCall();
+    });
   });
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
-    let url = aEvent.detail.url;
-    if (url.indexOf("-02.js") != -1) {
-      scriptShown = true;
-      window.removeEventListener(aEvent.type, _onEvent);
-      runTest();
-    }
-  });
-
-  function runTest()
+  function onScriptShown(aEvent)
   {
-    if (scriptShown && framesAdded) {
+    scriptShown = aEvent.detail.url.indexOf("-02.js") != -1;
+    executeSoon(startTest);
+  }
+
+  window.addEventListener("Debugger:ScriptShown", onScriptShown);
+
+  function startTest()
+  {
+    if (scriptShown && framesAdded && resumed && !testStarted) {
+      window.removeEventListener("Debugger:ScriptShown", onScriptShown);
+      testStarted = true;
       Services.tm.currentThread.dispatch({ run: testScriptsDisplay }, 0);
     }
   }
@@ -57,7 +59,7 @@ function test()
 function testScriptsDisplay() {
   gScripts = gDebugger.DebuggerView.Scripts._scripts;
 
-  is(gDebugger.StackFrames.activeThread.state, "paused",
+  is(gDebugger.DebuggerController.activeThread.state, "paused",
     "Should only be getting stack frames while paused.");
 
   is(gScripts.itemCount, 2, "Found the expected number of scripts.");
@@ -107,7 +109,7 @@ function testSwitchPaused()
   is(gDebugger.editor.getDebugLocation(), -1,
      "editor debugger location has been cleared.");
 
-  gDebugger.StackFrames.activeThread.resume(function() {
+  gDebugger.DebuggerController.activeThread.resume(function() {
     window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
       let url = aEvent.detail.url;
       if (url.indexOf("-02.js") != -1) {
@@ -123,6 +125,8 @@ function testSwitchPaused()
 
 function testSwitchRunning()
 {
+  dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
+
   ok(gDebugger.editor.getText().search(/debugger/) != -1,
     "The second script is displayed again.");
 

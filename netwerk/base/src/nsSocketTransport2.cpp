@@ -343,7 +343,7 @@ nsSocketInputStream::Read(char *buf, PRUint32 count, PRUint32 *countRead)
 
     *countRead = 0;
 
-    PRFileDesc *fd;
+    PRFileDesc* fd = nsnull;
     {
         MutexAutoLock lock(mTransport->mLock);
 
@@ -364,7 +364,7 @@ nsSocketInputStream::Read(char *buf, PRUint32 count, PRUint32 *countRead)
 
     SOCKET_LOG(("  PR_Read returned [n=%d]\n", n));
 
-    nsresult rv;
+    nsresult rv = NS_OK;
     {
         MutexAutoLock lock(mTransport->mLock);
 
@@ -567,7 +567,7 @@ nsSocketOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *countWrit
     if (count == 0 && mByteCount)
         return NS_OK;
 
-    PRFileDesc *fd;
+    PRFileDesc* fd = nsnull;
     {
         MutexAutoLock lock(mTransport->mLock);
 
@@ -588,13 +588,13 @@ nsSocketOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *countWrit
 
     SOCKET_LOG(("  PR_Write returned [n=%d]\n", n));
 
-    nsresult rv;
+    nsresult rv = NS_OK;
     {
         MutexAutoLock lock(mTransport->mLock);
 
 #ifdef ENABLE_SOCKET_TRACING
-    if (n > 0)
-        mTransport->TraceOutBuf(buf, n);
+        if (n > 0)
+            mTransport->TraceOutBuf(buf, n);
 #endif
 
         mTransport->ReleaseFD_Locked(fd);
@@ -1875,7 +1875,7 @@ nsSocketTransport::IsAlive(bool *result)
 {
     *result = false;
 
-    PRFileDesc *fd;
+    PRFileDesc* fd = nsnull;
     {
         MutexAutoLock lock(mLock);
         if (NS_FAILED(mCondition))

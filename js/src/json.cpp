@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/FloatingPoint.h"
+
 #include <string.h>
 #include "jsapi.h"
 #include "jsarray.h"
@@ -211,10 +213,10 @@ class StringifyContext
 {
   public:
     StringifyContext(JSContext *cx, StringBuffer &sb, const StringBuffer &gap,
-                     JSObject *replacer, const AutoIdVector &propertyList)
+                     HandleObject replacer, const AutoIdVector &propertyList)
       : sb(sb),
         gap(gap),
-        replacer(replacer),
+        replacer(cx, replacer),
         propertyList(propertyList),
         depth(0),
         objectStack(cx)
@@ -230,7 +232,7 @@ class StringifyContext
 
     StringBuffer &sb;
     const StringBuffer &gap;
-    JSObject * const replacer;
+    RootedVarObject replacer;
     const AutoIdVector &propertyList;
     uint32_t depth;
     HashSet<JSObject *> objectStack;
@@ -256,8 +258,8 @@ WriteIndent(JSContext *cx, StringifyContext *scx, uint32_t limit)
 class CycleDetector
 {
   public:
-    CycleDetector(StringifyContext *scx, JSObject *obj)
-      : objectStack(scx->objectStack), obj(obj) {
+    CycleDetector(JSContext *cx, StringifyContext *scx, JSObject *obj)
+      : objectStack(scx->objectStack), obj(cx, obj) {
     }
 
     bool init(JSContext *cx) {
@@ -275,7 +277,7 @@ class CycleDetector
 
   private:
     HashSet<JSObject *> &objectStack;
-    JSObject *const obj;
+    RootedVarObject obj;
 };
 
 template<typename KeyType>
@@ -311,8 +313,8 @@ PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, Stringi
     /* Step 2. */
     if (vp->isObject()) {
         Value toJSON;
-        jsid id = ATOM_TO_JSID(cx->runtime->atomState.toJSONAtom);
-        if (!js_GetMethod(cx, &vp->toObject(), id, 0, &toJSON))
+        jsid id = NameToId(cx->runtime->atomState.toJSONAtom);
+        if (!js_GetMethod(cx, RootedVarObject(cx, &vp->toObject()), id, 0, &toJSON))
             return false;
 
         if (js_IsCallable(toJSON)) {
@@ -394,7 +396,7 @@ IsFilteredValue(const Value &v)
 
 /* ES5 15.12.3 JO. */
 static JSBool
-JO(JSContext *cx, JSObject *obj, StringifyContext *scx)
+JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
 {
     /*
      * This method implements the JO algorithm in ES5 15.12.3, but:
@@ -407,7 +409,7 @@ JO(JSContext *cx, JSObject *obj, StringifyContext *scx)
      */
 
     /* Steps 1-2, 11. */
-    CycleDetector detect(scx, obj);
+    CycleDetector detect(cx, scx, obj);
     if (!detect.init(cx))
         return JS_FALSE;
 
@@ -479,7 +481,7 @@ JO(JSContext *cx, JSObject *obj, StringifyContext *scx)
 
 /* ES5 15.12.3 JA. */
 static JSBool
-JA(JSContext *cx, JSObject *obj, StringifyContext *scx)
+JA(JSContext *cx, HandleObject obj, StringifyContext *scx)
 {
     /*
      * This method implements the JA algorithm in ES5 15.12.3, but:
@@ -492,7 +494,7 @@ JA(JSContext *cx, JSObject *obj, StringifyContext *scx)
      */
 
     /* Steps 1-2, 11. */
-    CycleDetector detect(scx, obj);
+    CycleDetector detect(cx, scx, obj);
     if (!detect.init(cx))
         return JS_FALSE;
 
@@ -584,7 +586,7 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
     /* Step 9. */
     if (v.isNumber()) {
         if (v.isDouble()) {
-            if (!JSDOUBLE_IS_FINITE(v.toDouble()))
+            if (!MOZ_DOUBLE_IS_FINITE(v.toDouble()))
                 return scx->sb.append("null");
         }
 
@@ -597,7 +599,7 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 
     /* Step 10. */
     JS_ASSERT(v.isObject());
-    JSObject *obj = &v.toObject();
+    RootedVarObject obj(cx, &v.toObject());
 
     scx->depth++;
     JSBool ok;
@@ -612,8 +614,11 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 
 /* ES5 15.12.3. */
 JSBool
-js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBuffer &sb)
+js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space, StringBuffer &sb)
 {
+    RootedVarObject replacer(cx, replacer_);
+    RootValue spaceRoot(cx, &space);
+
     /* Step 4. */
     AutoIdVector propertyList(cx);
     if (replacer) {
@@ -675,9 +680,8 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
                     if (v.isNumber() && ValueFitsInInt32(v, &n) && INT_FITS_IN_JSID(n)) {
                         id = INT_TO_JSID(n);
                     } else {
-                        if (!js_ValueToStringId(cx, v, &id))
+                        if (!ValueToId(cx, v, &id))
                             return false;
-                        id = js_CheckForStringIndex(id);
                     }
                 } else if (v.isString() ||
                            (v.isObject() &&
@@ -685,9 +689,8 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
                              ObjectClassIs(v.toObject(), ESClass_Number, cx))))
                 {
                     /* Step 4b(iv)(3), 4b(iv)(5). */
-                    if (!js_ValueToStringId(cx, v, &id))
+                    if (!ValueToId(cx, v, &id))
                         return false;
-                    id = js_CheckForStringIndex(id);
                 } else {
                     continue;
                 }
@@ -745,12 +748,12 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
     }
 
     /* Step 9. */
-    JSObject *wrapper = NewBuiltinClassInstance(cx, &ObjectClass);
+    RootedVarObject wrapper(cx, NewBuiltinClassInstance(cx, &ObjectClass));
     if (!wrapper)
         return false;
 
     /* Step 10. */
-    jsid emptyId = ATOM_TO_JSID(cx->runtime->atomState.emptyAtom);
+    jsid emptyId = NameToId(cx->runtime->atomState.emptyAtom);
     if (!DefineNativeProperty(cx, wrapper, emptyId, *vp, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_ENUMERATE, 0, 0))
     {
@@ -783,7 +786,7 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
 
     /* Step 2. */
     if (val.isObject()) {
-        JSObject *obj = &val.toObject();
+        RootedVarObject obj(cx, &val.toObject());
 
         /* 'val' must have been produced by the JSON parser, so not a proxy. */
         JS_ASSERT(!obj->isProxy());
@@ -884,7 +887,7 @@ Revive(JSContext *cx, const Value &reviver, Value *vp)
     if (!obj->defineProperty(cx, cx->runtime->atomState.emptyAtom, *vp))
         return false;
 
-    return Walk(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom), reviver, vp);
+    return Walk(cx, obj, NameToId(cx->runtime->atomState.emptyAtom), reviver, vp);
 }
 
 namespace js {
@@ -911,7 +914,7 @@ ParseJSONWithReviver(JSContext *cx, const jschar *chars, size_t length, const Va
 static JSBool
 json_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
-    vp->setString(CLASS_ATOM(cx, JSON));
+    vp->setString(CLASS_NAME(cx, JSON));
     return JS_TRUE;
 }
 #endif
@@ -926,9 +929,11 @@ static JSFunctionSpec json_static_methods[] = {
 };
 
 JSObject *
-js_InitJSONClass(JSContext *cx, JSObject *obj)
+js_InitJSONClass(JSContext *cx, JSObject *obj_)
 {
-    JSObject *JSON = NewObjectWithClassProto(cx, &JSONClass, NULL, obj);
+    RootedVarObject obj(cx, obj_);
+
+    RootedVarObject JSON(cx, NewObjectWithClassProto(cx, &JSONClass, NULL, obj));
     if (!JSON || !JSON->setSingletonType(cx))
         return NULL;
 

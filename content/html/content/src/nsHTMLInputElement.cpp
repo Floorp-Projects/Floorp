@@ -573,8 +573,7 @@ nsHTMLInputElement::nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   , mCanShowInvalidUI(true)
 {
   mInputData.mState = new nsTextEditorState(this);
-  NS_ADDREF(mInputData.mState);
-  
+
   if (!gUploadLastDir)
     nsHTMLInputElement::InitUploadLastDir();
 
@@ -605,7 +604,8 @@ nsHTMLInputElement::FreeData()
     mInputData.mValue = nsnull;
   } else {
     UnbindFromFrame(nsnull);
-    NS_IF_RELEASE(mInputData.mState);
+    delete mInputData.mState;
+    mInputData.mState = nsnull;
   }
 }
 
@@ -630,7 +630,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLInputElement,
                                                   nsGenericHTMLFormElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mControllers)
   if (tmp->IsSingleLineTextControl(false)) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mInputData.mState, nsTextEditorState)
+    tmp->mInputData.mState->Traverse(cb);
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mFiles)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFileList)
@@ -643,6 +643,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLInputElement,
   if (tmp->mFileList) {
     tmp->mFileList->Disconnect();
     tmp->mFileList = nsnull;
+  }
+  if (tmp->IsSingleLineTextControl(false)) {
+    tmp->mInputData.mState->Unlink();
   }
   //XXX should unlink more?
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -1018,6 +1021,9 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
   }
   else {
     SetValueInternal(aValue, false, true);
+    if (IsSingleLineTextControl(false)) {
+      GetValueInternal(mFocusedValue);
+    }
   }
 
   return NS_OK;
@@ -1325,6 +1331,24 @@ nsHTMLInputElement::AfterSetFiles(bool aSetValueChanged)
   }
 
   UpdateAllValidityStates(true);
+}
+
+void
+nsHTMLInputElement::FireChangeEventIfNeeded()
+{
+  nsString value;
+  GetValueInternal(value);
+
+  if (!IsSingleLineTextControl(false) || mFocusedValue.Equals(value)) {
+    return;
+  }
+
+  // Dispatch the change event.
+  mFocusedValue = value;
+  nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
+                                       static_cast<nsIContent*>(this), 
+                                       NS_LITERAL_STRING("change"), true,
+                                       false);
 }
 
 const nsCOMArray<nsIDOMFile>&
@@ -1805,7 +1829,7 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   //FIXME Allow submission etc. also when there is no prescontext, Bug 329509.
   if (!aVisitor.mPresContext) {
     return nsGenericHTMLElement::PreHandleEvent(aVisitor);
-  }
+  } 
   //
   // Web pages expect the value of a radio button or checkbox to be set
   // *before* onclick and DOMActivate fire, and they expect that if they set
@@ -1905,13 +1929,7 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // Fire onchange (if necessary), before we do the blur, bug 357684.
   if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
-    nsIFrame* primaryFrame = GetPrimaryFrame();
-    if (primaryFrame) {
-      nsITextControlFrame* textFrame = do_QueryFrame(primaryFrame);
-      if (textFrame) {
-        textFrame->CheckFireOnChange();
-      }
-    }
+    FireChangeEventIfNeeded();
   }
 
   return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
@@ -1944,6 +1962,10 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
   if (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
       aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+    if (aVisitor.mEvent->message == NS_FOCUS_CONTENT && 
+        IsSingleLineTextControl(false)) {
+      GetValueInternal(mFocusedValue);
+    }
 
     UpdateValidityUIBits(aVisitor.mEvent->message == NS_FOCUS_CONTENT);
 
@@ -2136,8 +2158,8 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             } // switch
           }
           if (aVisitor.mEvent->message == NS_KEY_PRESS &&
-              mType == NS_FORM_INPUT_RADIO && !keyEvent->isAlt &&
-              !keyEvent->isControl && !keyEvent->isMeta) {
+              mType == NS_FORM_INPUT_RADIO && !keyEvent->IsAlt() &&
+              !keyEvent->IsControl() && !keyEvent->IsMeta()) {
             bool isMovingBack = false;
             switch (keyEvent->keyCode) {
               case NS_VK_UP: 
@@ -2192,16 +2214,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               (keyEvent->keyCode == NS_VK_RETURN ||
                keyEvent->keyCode == NS_VK_ENTER) &&
                IsSingleLineTextControl(false, mType)) {
-            nsIFrame* primaryFrame = GetPrimaryFrame();
-            if (primaryFrame) {
-              nsITextControlFrame* textFrame = do_QueryFrame(primaryFrame);
-
-              // Fire onChange (if necessary)
-              if (textFrame) {
-                textFrame->CheckFireOnChange();
-              }
-            }
-
+            FireChangeEventIfNeeded();   
             rv = MaybeSubmitForm(aVisitor.mPresContext);
             NS_ENSURE_SUCCESS(rv, rv);
           }
@@ -2396,7 +2409,6 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
   if (isNewTypeSingleLine && !isCurrentTypeSingleLine) {
     FreeData();
     mInputData.mState = new nsTextEditorState(this);
-    NS_ADDREF(mInputData.mState);
   } else if (isCurrentTypeSingleLine && !isNewTypeSingleLine) {
     FreeData();
   }
@@ -2439,6 +2451,14 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
         // There is no value sanitizing algorithm for elements in this mode.
         break;
     }
+    
+    //Updating mFocusedValue in consequence.
+    if (isNewTypeSingleLine && !isCurrentTypeSingleLine) {
+      GetValueInternal(mFocusedValue);
+    }
+    else if (!isNewTypeSingleLine && isCurrentTypeSingleLine) {
+      mFocusedValue.Truncate();
+    } 
   }
 
   // Do not notify, it will be done after if needed.

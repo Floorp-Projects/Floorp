@@ -59,7 +59,6 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES	+= \
 		-I$(srcdir) \
 		-I$(srcdir)/../../../xml/document/src \
-		-I$(srcdir)/../../../html/base/src \
 		-I$(srcdir)/../../../html/document/src \
 		-I$(srcdir)/../../../../layout/style \
 		-I$(srcdir)/../../../base/src \

@@ -62,14 +62,14 @@ def WebIDLTest(parser, harness):
                "Should be an IDLInterface")
 
     checkMethod(results[0].ctor(), "::TestConstructorNoArgs::constructor",
-                "constructor", [("TestConstructorNoArgs", [])])
+                "constructor", [("TestConstructorNoArgs (Wrapper)", [])])
     checkMethod(results[1].ctor(), "::TestConstructorWithArgs::constructor",
                 "constructor",
-                [("TestConstructorWithArgs",
+                [("TestConstructorWithArgs (Wrapper)",
                  [("::TestConstructorWithArgs::constructor::name", "name", "String", False, False)])])
     checkMethod(results[2].ctor(), "::TestConstructorOverloads::constructor",
                 "constructor",
-                [("TestConstructorOverloads",
+                [("TestConstructorOverloads (Wrapper)",
                  [("::TestConstructorOverloads::constructor::foo", "foo", "Object", False, False)]),
-                 ("TestConstructorOverloads",
+                 ("TestConstructorOverloads (Wrapper)",
                  [("::TestConstructorOverloads::constructor::bar", "bar", "Boolean", False, False)])])

@@ -100,8 +100,8 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0x8f19a761, 0x0717, 0x4b3f, \
-  { 0x80, 0xc5, 0xed, 0x7e, 0x9c, 0xbc, 0x40, 0xb1 } }
+{ 0xd1549969, 0x92df, 0x4a75, \
+  { 0x8c, 0x12, 0x35, 0x14, 0xd1, 0x0b, 0xbc, 0x18 } }
 
 /**
  * The global object which keeps a script context for each supported script
@@ -130,16 +130,9 @@ public:
   
   virtual JSObject* GetGlobalJSObject() = 0;
 
-  virtual nsIScriptContext *GetContext() {
-        return GetScriptContext();
+  nsIScriptContext* GetContext() {
+    return GetScriptContext();
   }
-
-  /**
-   * Set a new language context for this global.  The native global for the
-   * context is created by the context's GetNativeGlobal() method.
-   */
-
-  virtual nsresult SetScriptContext(nsIScriptContext *aContext) = 0;
 
   /**
    * Called when the global script for a language is finalized, typically as

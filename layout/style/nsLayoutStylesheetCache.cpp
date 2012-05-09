@@ -59,11 +59,11 @@ GetStylesheetCacheSize()
 }
 
 NS_MEMORY_REPORTER_IMPLEMENT(Sheets,
-                             "explicit/layout/style-sheet-cache",
-                             KIND_HEAP,
-                             nsIMemoryReporter::UNITS_BYTES,
-                             GetStylesheetCacheSize,
-                             "Memory used for some built-in style sheets.")
+  "explicit/layout/style-sheet-cache",
+  KIND_HEAP,
+  nsIMemoryReporter::UNITS_BYTES,
+  GetStylesheetCacheSize,
+  "Memory used for some built-in style sheets.")
 
 NS_IMPL_ISUPPORTS1(nsLayoutStylesheetCache, nsIObserver)
 

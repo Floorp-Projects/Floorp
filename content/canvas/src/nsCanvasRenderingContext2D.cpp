@@ -113,7 +113,7 @@
 #include <algorithm>
 
 #include "jsapi.h"
-#include "jstypedarray.h"
+#include "jsfriendapi.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/ContentParent.h"
@@ -955,13 +955,13 @@ nsCanvasRenderingContext2D::StyleColorToString(const nscolor& aColor, nsAString&
     // We can't reuse the normal CSS color stringification code,
     // because the spec calls for a different algorithm for canvas.
     if (NS_GET_A(aColor) == 255) {
-        CopyUTF8toUTF16(nsPrintfCString(100, "#%02x%02x%02x",
+        CopyUTF8toUTF16(nsPrintfCString("#%02x%02x%02x",
                                         NS_GET_R(aColor),
                                         NS_GET_G(aColor),
                                         NS_GET_B(aColor)),
                         aStr);
     } else {
-        CopyUTF8toUTF16(nsPrintfCString(100, "rgba(%d, %d, %d, ",
+        CopyUTF8toUTF16(nsPrintfCString("rgba(%d, %d, %d, ",
                                         NS_GET_R(aColor),
                                         NS_GET_G(aColor),
                                         NS_GET_B(aColor)),
@@ -2584,8 +2584,9 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                        fontStyle->mFont.sizeAdjust,
                        fontStyle->mFont.systemFont,
                        printerFont,
-                       fontStyle->mFont.featureSettings,
                        fontStyle->mFont.languageOverride);
+
+    fontStyle->mFont.AddFontFeaturesToStyle(&style);
 
     CurrentState().fontGroup =
         gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name,
@@ -2753,6 +2754,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
 {
     virtual void SetText(const PRUnichar* text, PRInt32 length, nsBidiDirection direction)
     {
+        mFontgrp->UpdateFontList(); // ensure user font generation is current
         mTextRun = mFontgrp->MakeTextRun(text,
                                          length,
                                          mThebes,
@@ -2970,6 +2972,7 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     processor.mPt.x -= anchorX * totalWidth;
 
     // offset pt.y based on text baseline
+    processor.mFontgrp->UpdateFontList(); // ensure user font generation is current
     NS_ASSERTION(processor.mFontgrp->FontListLength()>0, "font group contains no fonts");
     const gfxFont::Metrics& fontMetrics = processor.mFontgrp->GetFontAt(0)->GetMetrics();
 
@@ -3149,6 +3152,7 @@ nsCanvasRenderingContext2D::MakeTextRun(const PRUnichar* aText,
     gfxFontGroup* currentFontStyle = GetCurrentFontStyle();
     if (!currentFontStyle)
         return nsnull;
+    currentFontStyle->UpdateFontList(); // ensure user font generation is current
     return currentFontStyle->MakeTextRun(aText, aLength,
                                          mThebes, aAppUnitsPerDevUnit, aFlags);
 }
@@ -3933,13 +3937,12 @@ nsCanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
-    JSObject* darray =
-      js_CreateTypedArray(aCx, js::TypedArray::TYPE_UINT8_CLAMPED, len.value());
+    JSObject* darray = JS_NewUint8ClampedArray(aCx, len.value());
     if (!darray) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    uint8_t* data = static_cast<uint8_t*>(JS_GetTypedArrayData(darray));
+    uint8_t* data = JS_GetUint8ClampedArrayData(darray, aCx);
 
     /* Copy the surface contents to the buffer */
     nsRefPtr<gfxImageSurface> tmpsurf =

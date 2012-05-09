@@ -74,25 +74,25 @@ public:
   // nsISelectionListener
   NS_DECL_NSISELECTIONLISTENER
 
-  nsresult SetProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
+  void SetProp(nsIAtom* aProp, const nsAString& aAttr, const nsAString& aValue);
 
-  nsresult ClearAllProps();
-  nsresult ClearProp(nsIAtom *aProp, const nsString &aAttr);
+  void ClearAllProps();
+  void ClearProp(nsIAtom* aProp, const nsAString& aAttr);
   
   //**************************************************************************
   //    TakeClearProperty: hands back next property item on the clear list.
   //                       caller assumes ownership of PropItem and must delete it.
-  nsresult TakeClearProperty(PropItem **outPropItem);
+  PropItem* TakeClearProperty();
 
   //**************************************************************************
   //    TakeSetProperty: hands back next property item on the set list.
   //                     caller assumes ownership of PropItem and must delete it.
-  nsresult TakeSetProperty(PropItem **outPropItem);
+  PropItem* TakeSetProperty();
 
   //**************************************************************************
   //    TakeRelativeFontSize: hands back relative font value, which is then
   //                          cleared out.
-  nsresult TakeRelativeFontSize(PRInt32 *outRelSize);
+  PRInt32 TakeRelativeFontSize();
 
   nsresult GetTypingState(bool &isSet, bool &theSetting, nsIAtom *aProp);
   nsresult GetTypingState(bool &isSet, bool &theSetting, nsIAtom *aProp, 
@@ -102,12 +102,12 @@ public:
 
 protected:
 
-  nsresult RemovePropFromSetList(nsIAtom *aProp, const nsString &aAttr);
-  nsresult RemovePropFromClearedList(nsIAtom *aProp, const nsString &aAttr);
-  bool IsPropSet(nsIAtom *aProp, const nsString &aAttr, nsString* outValue);
-  bool IsPropSet(nsIAtom *aProp, const nsString &aAttr, nsString* outValue, PRInt32 &outIndex);
-  bool IsPropCleared(nsIAtom *aProp, const nsString &aAttr);
-  bool IsPropCleared(nsIAtom *aProp, const nsString &aAttr, PRInt32 &outIndex);
+  nsresult RemovePropFromSetList(nsIAtom* aProp, const nsAString& aAttr);
+  nsresult RemovePropFromClearedList(nsIAtom* aProp, const nsAString& aAttr);
+  bool IsPropSet(nsIAtom* aProp, const nsAString& aAttr, nsAString* outValue);
+  bool IsPropSet(nsIAtom* aProp, const nsAString& aAttr, nsAString* outValue, PRInt32& outIndex);
+  bool IsPropCleared(nsIAtom* aProp, const nsAString& aAttr);
+  bool IsPropCleared(nsIAtom* aProp, const nsAString& aAttr, PRInt32& outIndex);
 
   nsTArray<PropItem*> mSetArray;
   nsTArray<PropItem*> mClearedArray;

@@ -58,6 +58,9 @@ WINDOWS_BRANDING_FILES = \
 	wizHeader.bmp \
 	wizHeaderRTL.bmp \
 	wizWatermark.bmp \
+	newwindow.ico \
+	newtab.ico \
+	pbmode.ico \
 	$(NULL)
 
 OSX_BRANDING_FILES = \

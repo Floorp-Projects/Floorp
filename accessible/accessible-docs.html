@@ -837,11 +837,11 @@ which is handled in <a
 via the creation of an <a
  href="http://lxr.mozilla.org/seamonkey/find?string=msaa/nsDocAccessibleWrap">nsDocAccessibleWrap</a>
 for an inner window or <a
- href="http://lxr.mozilla.org/seamonkey/find?string=msaa/nsRootAccessibleWrap">nsRootAccessibleWrap</a>
+ href="http://lxr.mozilla.org/seamonkey/find?string=msaa/RootAccessibleWrap">RootAccessibleWrap</a>
 for a top level window. These classes implement both nsIAccessible, our
 cross platform API, as well as IAccessible, which is specific to
 Windows/MSAA/COM. The cross-platform nsDocAccessible and
-nsRootAccessible classes they inherit from are then told to start
+RootAccessible classes they inherit from are then told to start
 listening for DOM, page load and scroll events.&nbsp; These events cause
 MSAA-specific events, such as EVENT_OBJECT_FOCUS or
 EVENT_OBJECT_STATECHANGE, to fire on UI and document objects within the
@@ -970,7 +970,7 @@ important one is EVENT_OBJECT_FOCUS.<br>
   </p>
   <p>When a potential accessibility-related event occurs within
 Mozilla, it is typically listened for by nsDocAccessible or
-nsRootAccessible. The event listeners on these classes call
+RootAccessible. The event listeners on these classes call
 FireToolkitEvent(), which is implemented for every accessible.
 Eventually, the event ends up at nsDocAccessibleWrap::FireToolkitEvent()
 which calls NotifyWinEvent from the Win32 API. NotifyWinEvent is passed

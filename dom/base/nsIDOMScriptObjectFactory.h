@@ -41,14 +41,14 @@
 #include "nsISupports.h"
 #include "nsIDOMClassInfo.h"
 #include "nsStringGlue.h"
+#include "nsIScriptRuntime.h"
 
-#define NS_IDOM_SCRIPT_OBJECT_FACTORY_IID   \
-{ 0x8c0eb687, 0xa859, 0x4a62, \
- { 0x99, 0x82, 0xea, 0xbf, 0x9e, 0xf5, 0x59, 0x5f } }
+#define NS_IDOM_SCRIPT_OBJECT_FACTORY_IID \
+{ 0x2a50e17c, 0x46ff, 0x4150, \
+  { 0xbb, 0x46, 0xd8, 0x07, 0xb3, 0x36, 0xde, 0xab } }
 
 class nsIScriptContext;
 class nsIScriptGlobalObject;
-class nsIScriptRuntime;
 class nsIDOMEventListener;
 
 typedef nsXPCClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
@@ -57,27 +57,6 @@ typedef nsXPCClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
 class nsIDOMScriptObjectFactory : public nsISupports {
 public:  
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOM_SCRIPT_OBJECT_FACTORY_IID)
-
-  // Get a script language given its "name" (ie, the mime-type)
-  // Note that to fetch javascript from this function, you must currently
-  // use the name "application/javascript" (but also note that all existing
-  // callers of this function optimize the detection of JS, so do not
-  // ask this function for JS)
-  NS_IMETHOD GetScriptRuntime(const nsAString &aLanguageName,
-                              nsIScriptRuntime **aLanguage) = 0;
-
-  // Get a script language given its nsIProgrammingLanguage ID.
-  NS_IMETHOD GetScriptRuntimeByID(PRUint32 aScriptTypeID, 
-                                  nsIScriptRuntime **aLanguage) = 0;
-
-  // Get the ID for a language given its name - but like GetScriptRuntime,
-  // only "application/javascript" is currently supported for JS.
-  NS_IMETHOD GetIDForScriptType(const nsAString &aLanguageName,
-                                PRUint32 *aScriptTypeID) = 0;
-
-  NS_IMETHOD NewScriptGlobalObject(bool aIsChrome,
-                                   bool aIsModalContentWindow,
-                                   nsIScriptGlobalObject **aGlobal) = 0;
 
   NS_IMETHOD_(nsISupports *) GetClassInfoInstance(nsDOMClassInfoID aID) = 0;
   NS_IMETHOD_(nsISupports *) GetExternalClassInfoInstance(const nsAString& aName) = 0;
@@ -94,6 +73,14 @@ public:
                                   PRUint32 aScriptableFlags,
                                   bool aHasClassInterface,
                                   const nsCID *aConstructorCID) = 0;
+
+  nsIScriptRuntime* GetJSRuntime()
+  {
+    return mJSRuntime;
+  }
+
+protected:
+  nsCOMPtr<nsIScriptRuntime> mJSRuntime;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMScriptObjectFactory,

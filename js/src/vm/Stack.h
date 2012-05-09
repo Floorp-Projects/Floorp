@@ -42,6 +42,7 @@
 #define Stack_h__
 
 #include "jsfun.h"
+#include "jsautooplen.h"
 
 struct JSContext;
 struct JSCompartment;
@@ -71,7 +72,7 @@ class DummyFrameGuard;
 class GeneratorFrameGuard;
 
 class CallIter;
-class FrameRegsIter;
+class ScriptFrameIter;
 class AllFramesIter;
 
 class ArgumentsObject;
@@ -544,7 +545,7 @@ class StackFrame
 
     Value &varSlot(unsigned i) {
         JS_ASSERT(i < script()->nfixed);
-        JS_ASSERT_IF(maybeFun(), i < script()->bindings.countVars());
+        JS_ASSERT_IF(maybeFun(), i < script()->bindings.numVars());
         return slots()[i];
     }
 
@@ -582,7 +583,7 @@ class StackFrame
      *   for ( ...; fp; fp = fp->prev())
      *     ... fp->pcQuadratic(cx->stack);
      *
-     * Using next can avoid this, but in most cases prefer FrameRegsIter;
+     * Using next can avoid this, but in most cases prefer ScriptFrameIter;
      * it is amortized O(1).
      *
      *   When I get to the bottom I go back to the top of the stack
@@ -726,6 +727,8 @@ class StackFrame
     inline bool forEachCanonicalActualArg(Op op, unsigned start = 0, unsigned count = unsigned(-1));
     template <class Op> inline bool forEachFormalArg(Op op);
 
+    /* XXX: all these argsObj functions will be removed with bug 659577. */
+
     bool hasArgsObj() const {
         /*
          * HAS_ARGS_OBJ is still technically not equivalent to
@@ -859,7 +862,8 @@ class StackFrame
      *   !fp->hasCall() && fp->scopeChain().isCall()
      */
 
-    inline JSObject &scopeChain() const;
+    inline HandleObject scopeChain() const;
+    inline GlobalObject &global() const;
 
     bool hasCallObj() const {
         bool ret = !!(flags_ & HAS_CALL_OBJ);
@@ -1285,12 +1289,24 @@ class FrameRegs
         fp_ = (StackFrame *) newfp;
     }
 
+    /* For EnterMethodJIT: */
+    void refreshFramePointer(StackFrame *fp) {
+        fp_ = fp;
+    }
+
     /* For stubs::CompileFunction, ContextStack: */
     void prepareToRun(StackFrame &fp, JSScript *script) {
         pc = script->code;
         sp = fp.slots() + script->nfixed;
         fp_ = &fp;
         inlined_ = NULL;
+    }
+
+    void setToEndOfScript() {
+        JSScript *script = fp()->script();
+        sp = fp()->base();
+        pc = script->code + script->length - JSOP_STOP_LENGTH;
+        JS_ASSERT(*pc == JSOP_STOP);
     }
 
     /* For pushDummyFrame: */
@@ -1693,7 +1709,7 @@ class ContextStack
     inline JSScript *currentScriptWithDiagnostics(jsbytecode **pc = NULL) const;
 
     /* Get the scope chain for the topmost scripted call on the stack. */
-    inline JSObject *currentScriptedScopeChain() const;
+    inline HandleObject currentScriptedScopeChain() const;
 
     /*
      * Called by the methodjit for an arity mismatch. Arity mismatch can be
@@ -1836,39 +1852,44 @@ class StackIter
     bool operator!=(const StackIter &rhs) const { return !(*this == rhs); }
 
     bool isScript() const { JS_ASSERT(!done()); return state_ == SCRIPTED; }
-    StackFrame *fp() const { JS_ASSERT(!done() && isScript()); return fp_; }
-    Value      *sp() const { JS_ASSERT(!done() && isScript()); return sp_; }
-    jsbytecode *pc() const { JS_ASSERT(!done() && isScript()); return pc_; }
-    JSScript   *script() const { JS_ASSERT(!done() && isScript()); return script_; }
+    bool isImplicitNativeCall() const {
+        JS_ASSERT(!done());
+        return state_ == IMPLICIT_NATIVE;
+    }
+    bool isNativeCall() const {
+        JS_ASSERT(!done());
+        return state_ == NATIVE || state_ == IMPLICIT_NATIVE;
+    }
 
-    bool isNativeCall() const { JS_ASSERT(!done()); return state_ != SCRIPTED; }
-    CallArgs nativeArgs() const { JS_ASSERT(!done() && isNativeCall()); return args_; }
+    bool isFunctionFrame() const;
+    bool isEvalFrame() const;
+    bool isNonEvalFunctionFrame() const;
+    bool isConstructing() const;
+
+    StackFrame *fp() const { JS_ASSERT(isScript()); return fp_; }
+    Value      *sp() const { JS_ASSERT(isScript()); return sp_; }
+    jsbytecode *pc() const { JS_ASSERT(isScript()); return pc_; }
+    JSScript   *script() const { JS_ASSERT(isScript()); return script_; }
+    JSFunction *callee() const;
+    Value       calleev() const;
+    Value       thisv() const;
+
+    CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return args_; }
 };
 
 /* A filtering of the StackIter to only stop at scripts. */
-class FrameRegsIter
+class ScriptFrameIter : public StackIter
 {
-    StackIter iter_;
-
     void settle() {
-        while (!iter_.done() && !iter_.isScript())
-            ++iter_;
+        while (!done() && !isScript())
+            StackIter::operator++();
     }
 
   public:
-    FrameRegsIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
-        : iter_(cx, opt) { settle(); }
+    ScriptFrameIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
+        : StackIter(cx, opt) { settle(); }
 
-    bool done() const { return iter_.done(); }
-    FrameRegsIter &operator++() { ++iter_; settle(); return *this; }
-
-    bool operator==(const FrameRegsIter &rhs) const { return iter_ == rhs.iter_; }
-    bool operator!=(const FrameRegsIter &rhs) const { return iter_ != rhs.iter_; }
-
-    StackFrame *fp() const { return iter_.fp(); }
-    Value      *sp() const { return iter_.sp(); }
-    jsbytecode *pc() const { return iter_.pc(); }
-    JSScript   *script() const { return iter_.script(); }
+    ScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
 };
 
 /*****************************************************************************/

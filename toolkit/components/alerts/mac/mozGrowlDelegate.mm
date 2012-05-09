@@ -74,9 +74,8 @@ GetWindowOfObserver(nsIObserver* aObserver)
     do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  JSContext* cx;
-  rv = stack->GetSafeJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  JSContext* cx = stack->GetSafeJSContext();
+  NS_ENSURE_TRUE(cx, nsnull);
 
   JSAutoRequest ar(cx);
   JSAutoEnterCompartment ac;

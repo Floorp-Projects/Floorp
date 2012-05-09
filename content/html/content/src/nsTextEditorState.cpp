@@ -84,6 +84,10 @@ public:
   }
 
   NS_IMETHOD Run() {
+    if (!mTextEditorState) {
+      return NS_OK;
+    }
+
     if (mFrame) {
       // SetSelectionRange leads to Selection::AddRange which flushes Layout -
       // need to block script to avoid nested PrepareEditor calls (bug 642800).
@@ -105,6 +109,7 @@ public:
   // Let the text editor tell us we're no longer relevant - avoids use of nsWeakFrame
   void Revoke() {
     mFrame = nsnull;
+    mTextEditorState = nsnull;
   }
 
 private:
@@ -970,22 +975,24 @@ nsTextEditorState::Clear()
   NS_IF_RELEASE(mTextListener);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsTextEditorState)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsTextEditorState, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsTextEditorState, Release)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsTextEditorState)
+void nsTextEditorState::Unlink()
+{
+  nsTextEditorState* tmp = this;
   tmp->Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSelCon)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRootNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPlaceholderDiv)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsTextEditorState)
+}
+
+void nsTextEditorState::Traverse(nsCycleCollectionTraversalCallback& cb)
+{
+  nsTextEditorState* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mSelCon, nsISelectionController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRootNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPlaceholderDiv)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+}
 
 nsFrameSelection*
 nsTextEditorState::GetConstFrameSelection() {
@@ -1736,11 +1743,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
     // PrepareEditor cannot be called prematurely.
     nsAutoScriptBlocker scriptBlocker;
 
-    bool fireChangeEvent = mBoundFrame->GetFireChangeEventState();
-    if (aUserInput) {
-      mBoundFrame->SetFireChangeEventState(true);
-    }
-
 #ifdef DEBUG
     if (IsSingleLineTextControl()) {
       NS_ASSERTION(mEditorInitialized || mInitializing,
@@ -1767,8 +1769,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
     // this is necessary to avoid infinite recursion
     if (!currentValue.Equals(aValue))
     {
-      nsTextControlFrame::ValueSetter valueSetter(mBoundFrame, mEditor,
-                                                  mBoundFrame->mFocusedValue.Equals(currentValue));
+      nsTextControlFrame::ValueSetter valueSetter(mBoundFrame, mEditor);
 
       // \r is an illegal character in the dom, but people use them,
       // so convert windows and mac platform linebreaks to \n:
@@ -1887,9 +1888,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
       scrollableFrame->ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
     }
 
-    if (aUserInput) {
-      mBoundFrame->SetFireChangeEventState(fireChangeEvent);
-    }
   } else {
     if (!mValue) {
       mValue = new nsCString;

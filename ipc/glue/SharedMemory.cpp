@@ -53,18 +53,19 @@ static PRInt64 GetShmemAllocated() { return gShmemAllocated; }
 static PRInt64 GetShmemMapped() { return gShmemMapped; }
 
 NS_MEMORY_REPORTER_IMPLEMENT(ShmemAllocated,
-    "shmem-allocated",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetShmemAllocated,
-    "Memory shared with other processes that is accessible (but not "
-    "necessarily mapped).")
+  "shmem-allocated",
+  KIND_OTHER,
+  UNITS_BYTES,
+  GetShmemAllocated,
+  "Memory shared with other processes that is accessible (but not "
+  "necessarily mapped).")
+
 NS_MEMORY_REPORTER_IMPLEMENT(ShmemMapped,
-    "shmem-mapped",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetShmemMapped,
-    "Memory shared with other processes that is mapped into the address space.")
+  "shmem-mapped",
+  KIND_OTHER,
+  UNITS_BYTES,
+  GetShmemMapped,
+  "Memory shared with other processes that is mapped into the address space.")
 
 SharedMemory::SharedMemory()
   : mAllocSize(0)

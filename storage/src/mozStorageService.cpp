@@ -347,6 +347,8 @@ public:
     NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
     nsresult rv = os->AddObserver(mObserver, "xpcom-shutdown", false);
     NS_ENSURE_SUCCESS(rv, rv);
+    rv = os->AddObserver(mObserver, "xpcom-shutdown-threads", false);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // We cache XPConnect for our language helpers.  XPConnect can only be
     // used on the main thread.
@@ -529,7 +531,7 @@ Service::shutdown()
 
 sqlite3_vfs *ConstructTelemetryVFS();
 
-#ifdef MOZ_MEMORY
+#ifdef MOZ_STORAGE_MEMORY
 #  include "jemalloc.h"
 
 namespace {
@@ -599,7 +601,7 @@ const sqlite3_mem_methods memMethods = {
 
 } // anonymous namespace
 
-#endif  // MOZ_MEMORY
+#endif  // MOZ_STORAGE_MEMORY
 
 nsresult
 Service::initialize()
@@ -608,7 +610,7 @@ Service::initialize()
 
   int rc;
 
-#ifdef MOZ_MEMORY
+#ifdef MOZ_STORAGE_MEMORY
   rc = ::sqlite3_config(SQLITE_CONFIG_MALLOC, &memMethods);
   if (rc != SQLITE_OK)
     return convertResultCode(rc);
@@ -854,6 +856,32 @@ Service::Observe(nsISupports *, const char *aTopic, const PRUnichar *)
 {
   if (strcmp(aTopic, "xpcom-shutdown") == 0)
     shutdown();
+  if (strcmp(aTopic, "xpcom-shutdown-threads") == 0) {
+    nsCOMPtr<nsIObserverService> os =
+      mozilla::services::GetObserverService();
+    os->RemoveObserver(this, "xpcom-shutdown-threads");
+    bool anyOpen = false;
+    do {
+      nsTArray<nsRefPtr<Connection> > connections;
+      getConnections(connections);
+      anyOpen = false;
+      for (PRUint32 i = 0; i < connections.Length(); i++) {
+        nsRefPtr<Connection> &conn = connections[i];
+
+        // While it would be nice to close all connections, we only
+        // check async ones for now.
+        if (conn->isAsyncClosing()) {
+          anyOpen = true;
+          break;
+        }
+      }
+      if (anyOpen) {
+        nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
+        NS_ProcessNextEvent(thread);
+      }
+    } while (anyOpen);
+  }
+
   return NS_OK;
 }
 

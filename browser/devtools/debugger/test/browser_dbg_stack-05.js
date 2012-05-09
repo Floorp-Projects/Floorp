@@ -22,9 +22,9 @@ function test() {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.debuggerWindow;
+    gDebugger = gPane.contentWindow;
 
-    gPane.activeThread.addOneTimeListener("framesadded", function() {
+    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       framesAdded = true;
       runTest();
     });
@@ -51,7 +51,7 @@ function test() {
 
 function testRecurse()
 {
-  let frames = gDebugger.DebuggerView.Stackframes._frames;
+  let frames = gDebugger.DebuggerView.StackFrames._frames;
   let childNodes = frames.childNodes;
 
   is(frames.querySelectorAll(".dbg-stackframe").length, 4,
@@ -95,7 +95,7 @@ function testRecurse()
   is(gDebugger.editor.getDebugLocation(), 5,
      "editor debugger location is correct (frame 0 again).");
 
-  gDebugger.StackFrames.activeThread.resume(function() {
+  gDebugger.DebuggerController.activeThread.resume(function() {
     is(gDebugger.editor.getDebugLocation(), -1,
        "editor debugger location is correct after resume.");
     closeDebuggerAndFinish(gTab);

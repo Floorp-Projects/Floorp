@@ -41,33 +41,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsNetUtil.h"
-
-// XXX this code is ripped from profile/src/nsProfile.cpp and is further
-//     duplicated in uriloader/exthandler.  this should probably be moved
-//     into xpcom or some other shared library.
-#include <stdlib.h>
-#define TABLE_SIZE 36
-static const char table[] =
-    { 'a','b','c','d','e','f','g','h','i','j',
-      'k','l','m','n','o','p','q','r','s','t',
-      'u','v','w','x','y','z','0','1','2','3',
-      '4','5','6','7','8','9' };
-static void
-MakeRandomString(char *buf, PRInt32 bufLen)
-{
-    // turn PR_Now() into milliseconds since epoch
-    // and salt rand with that.
-    double fpTime;
-    LL_L2D(fpTime, PR_Now());
-    srand((uint)(fpTime * 1e-6 + 0.5));   // use 1e-6, granularity of PR_Now() on the mac is seconds
-
-    PRInt32 i;
-    for (i=0;i<bufLen;i++) {
-        *buf++ = table[rand()%TABLE_SIZE];
-    }
-    *buf = 0;
-}
-// XXX
+#include "nsCRTGlue.h"
 
 nsDownloader::~nsDownloader()
 {
@@ -116,7 +90,7 @@ nsDownloader::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
             if (NS_FAILED(rv)) return rv;
 
             char buf[13];
-            MakeRandomString(buf, 8);
+            NS_MakeRandomString(buf, 8);
             memcpy(buf+8, ".tmp", 5);
             rv = mLocation->AppendNative(nsDependentCString(buf, 12));
             if (NS_FAILED(rv)) return rv;

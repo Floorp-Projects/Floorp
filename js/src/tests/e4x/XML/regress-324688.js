@@ -1,3 +1,4 @@
+// |reftest| skip -- bug 528404 - disable due to random timeouts
 /* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /* ***** BEGIN LICENSE BLOCK *****

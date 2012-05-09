@@ -47,5 +47,6 @@ BOOL WriteStatusPending(LPCWSTR updateDirPath);
 DWORD WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds);
 DWORD WaitForProcessExit(LPCWSTR filename, DWORD maxSeconds);
 BOOL DoesFallbackKeyExist();
+BOOL IsLocalFile(LPCWSTR file, BOOL &isLocal);
 
 #define SVC_NAME L"MozillaMaintenance"

@@ -9,7 +9,7 @@ const Cu = Components.utils;
 const kIMig = Ci.nsIBrowserProfileMigrator;
 const kIPStartup = Ci.nsIProfileStartup;
 
-Cu.import("resource://gre/modules/MigrationUtils.jsm");
+Cu.import("resource:///modules/MigrationUtils.jsm");
 
 var MigrationWizard = {
   _source: "",                  // Source Profile Migrator ContractID suffix
@@ -18,7 +18,6 @@ var MigrationWizard = {
   _wiz: null,
   _migrator: null,
   _autoMigrate: null,
-  _bookmarks: false,
 
   init: function ()
   {
@@ -64,34 +63,15 @@ var MigrationWizard = {
   // 1 - Import Source
   onImportSourcePageShow: function ()
   {
-    // Reference to the "From File" radio button 
-    var fromfile = null;
-
-    // init is not called when openDialog opens the wizard, so check for bookmarks here.
-    if ("arguments" in window && window.arguments[0] == "bookmarks") {
-      this._bookmarks = true;
-
-      fromfile = document.getElementById("fromfile");
-      fromfile.hidden = false;
-
-      var importBookmarks = document.getElementById("importBookmarks");
-      importBookmarks.hidden = false;
-
-      var importAll = document.getElementById("importAll");
-      importAll.hidden = true;
-    }
-
     this._wiz.canRewind = false;
 
-    // The migrator to select. If the "fromfile" migrator is available, use it
-    // as the default in case we have no other migrators.
-    var selectedMigrator = fromfile;
+    var selectedMigrator = null;
 
     // Figure out what source apps are are available to import from:
     var group = document.getElementById("importSourceGroup");
     for (var i = 0; i < group.childNodes.length; ++i) {
       var migratorKey = group.childNodes[i].id;
-      if (migratorKey != "nothing" && migratorKey != "fromfile") {
+      if (migratorKey != "nothing") {
         var migrator = MigrationUtils.getMigrator(migratorKey);
         if (migrator) {
           // Save this as the first selectable item, if we don't already have
@@ -128,9 +108,7 @@ var MigrationWizard = {
   {
     var newSource = document.getElementById("importSourceGroup").selectedItem.id;
     
-    if (newSource == "nothing" || newSource == "fromfile") {
-      if(newSource == "fromfile")
-        window.opener.fromFile = true;
+    if (newSource == "nothing") {
       document.documentElement.cancel();
       return false;
     }
@@ -152,8 +130,6 @@ var MigrationWizard = {
     else {
       if (this._autoMigrate)
         this._wiz.currentPage.next = "homePageImport";
-      else if (this._bookmarks)
-        this._wiz.currentPage.next = "migrating"
       else
         this._wiz.currentPage.next = "importItems";
 
@@ -205,8 +181,6 @@ var MigrationWizard = {
     // If we're automigrating or just doing bookmarks don't show the item selection page
     if (this._autoMigrate)
       this._wiz.currentPage.next = "homePageImport";
-    else if (this._bookmarks)
-      this._wiz.currentPage.next = "migrating"
   },
   
   // 3 - ImportItems
@@ -215,16 +189,15 @@ var MigrationWizard = {
     var dataSources = document.getElementById("dataSources");
     while (dataSources.hasChildNodes())
       dataSources.removeChild(dataSources.firstChild);
-    
-    var bundle = document.getElementById("bundle");
-    
+
     var items = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
     for (var i = 0; i < 16; ++i) {
       var itemID = (items >> i) & 0x1 ? Math.pow(2, i) : 0;
       if (itemID > 0) {
         var checkbox = document.createElement("checkbox");
         checkbox.id = itemID;
-        checkbox.setAttribute("label", bundle.getString(itemID + "_" + this._source));
+        checkbox.setAttribute("label", 
+          MigrationUtils.getLocalizedString(itemID + "_" + this._source));
         dataSources.appendChild(checkbox);
         if (!this._itemsFlags || this._itemsFlags & itemID)
           checkbox.checked = true;
@@ -274,13 +247,13 @@ var MigrationWizard = {
       return;
     }
 
-    var bundle = document.getElementById("brandBundle");
+    var brandBundle = document.getElementById("brandBundle");
     // These strings don't exist when not using official branding. If that's
     // the case, just skip this page.
     try {
-      var pageTitle = bundle.getString("homePageMigrationPageTitle");
-      var pageDesc = bundle.getString("homePageMigrationDescription");
-      var mainStr = bundle.getString("homePageSingleStartMain");
+      var pageTitle = brandBundle.getString("homePageMigrationPageTitle");
+      var pageDesc = brandBundle.getString("homePageMigrationDescription");
+      var mainStr = brandBundle.getString("homePageSingleStartMain");
     }
     catch (e) {
       this._wiz.advance();
@@ -318,10 +291,9 @@ var MigrationWizard = {
     var oldHomePageURL = this._migrator.sourceHomePageURL;
 
     if (oldHomePageURL && source) {
-      var bundle2 = document.getElementById("bundle");
-      var appName = bundle2.getString(source);
-      var oldHomePageLabel = bundle.getFormattedString("homePageImport",
-                                                       [appName]);
+      var appName = MigrationUtils.getLocalizedString(source);
+      var oldHomePageLabel =
+        brandBundle.getFormattedString("homePageImport", [appName]);
       var oldHomePage = document.getElementById("oldHomePage");
       oldHomePage.setAttribute("label", oldHomePageLabel);
       oldHomePage.setAttribute("value", oldHomePageURL);
@@ -354,10 +326,6 @@ var MigrationWizard = {
     if (this._autoMigrate)
       this._itemsFlags = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
 
-    // When importing bookmarks, show only bookmarks
-    if (this._bookmarks)
-      this._itemsFlags = 32;
-
     this._listItems("migratingItems");
     setTimeout(this.onMigratingMigrate, 0, this);
   },
@@ -372,8 +340,7 @@ var MigrationWizard = {
     var items = document.getElementById(aID);
     while (items.hasChildNodes())
       items.removeChild(items.firstChild);
-    
-    var bundle = document.getElementById("bundle");
+
     var brandBundle = document.getElementById("brandBundle");
     var itemID;
     for (var i = 0; i < 16; ++i) {
@@ -382,7 +349,8 @@ var MigrationWizard = {
         var label = document.createElement("label");
         label.id = itemID + "_migrated";
         try {
-          label.setAttribute("value", bundle.getString(itemID + "_" + this._source));
+          label.setAttribute("value",
+            MigrationUtils.getLocalizedString(itemID + "_" + this._source));
           items.appendChild(label);
         }
         catch (e) {

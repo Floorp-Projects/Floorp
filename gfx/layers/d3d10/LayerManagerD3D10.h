@@ -165,6 +165,9 @@ public:
     CreateOptimalSurface(const gfxIntSize &aSize,
                          gfxASurface::gfxImageFormat imageFormat);
 
+  virtual gfxASurface::gfxImageFormat MaskImageFormat() 
+  { return gfxASurface::ImageFormatARGB32; }
+
   virtual TemporaryRef<mozilla::gfx::DrawTarget>
     CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
                      mozilla::gfx::SurfaceFormat aFormat);
@@ -184,6 +187,7 @@ public:
 
   ReadbackManagerD3D10 *readbackManager();
 
+  void SetupInputAssembler();
   void SetViewport(const nsIntSize &aViewport);
   const nsIntSize &GetViewport() { return mViewport; }
 
@@ -287,6 +291,20 @@ public:
    */
   Nv3DVUtils *GetNv3DVUtils()  { return mD3DManager->GetNv3DVUtils(); }
 
+  /*
+   * Returns a shader resource view of a texture containing the contents of this
+   * layer. Will try to return an existing texture if possible, or a temporary
+   * one if not. It is the callee's responsibility to release the shader
+   * resource view. Will return null if a texture could not be constructed.
+   * The texture will not be transformed, i.e., it will be in the same coord
+   * space as this.
+   * Any layer that can be used as a mask layer should override this method.
+   * If aSize is non-null, it will contain the size of the texture.
+   */
+  virtual already_AddRefed<ID3D10ShaderResourceView> GetAsTexture(gfxIntSize* aSize)
+  {
+    return nsnull;
+  }
 
   void SetEffectTransformAndOpacity()
   {
@@ -298,6 +316,37 @@ public:
   }
 
 protected:
+  /*
+   * Finds a texture for this layer's mask layer (if it has one) and sets it
+   * as an input to the shaders.
+   * Returns SHADER_MASK if a texture is loaded, SHADER_NO_MASK if there was no 
+   * mask layer, or a texture for the mask layer could not be loaded.
+   */
+  PRUint8 LoadMaskTexture();
+
+  /**
+   * Select a shader technique using a combination of the following flags.
+   * Not all combinations of flags are supported, and might cause an error,
+   * check the fx file to see which shaders exist. In particular, aFlags should
+   * include any combination of the 0x20 bit = 0 flags OR one of the 0x20 bit = 1
+   * flags. Mask flags can be used in either case.
+   */
+  ID3D10EffectTechnique* SelectShader(PRUint8 aFlags);
+  const static PRUint8 SHADER_NO_MASK = 0;
+  const static PRUint8 SHADER_MASK = 0x1;
+  const static PRUint8 SHADER_MASK_3D = 0x2;
+  // 0x20 bit = 0
+  const static PRUint8 SHADER_RGB = 0;
+  const static PRUint8 SHADER_RGBA = 0x4;
+  const static PRUint8 SHADER_NON_PREMUL = 0;
+  const static PRUint8 SHADER_PREMUL = 0x8;
+  const static PRUint8 SHADER_LINEAR = 0;
+  const static PRUint8 SHADER_POINT = 0x10;
+  // 0x20 bit = 1
+  const static PRUint8 SHADER_YCBCR = 0x20;
+  const static PRUint8 SHADER_COMPONENT_ALPHA = 0x24;
+  const static PRUint8 SHADER_SOLID = 0x28;
+
   LayerManagerD3D10 *mD3DManager;
 };
 

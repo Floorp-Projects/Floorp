@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that a MediaStream captured from one element plays back in another</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var manager = new MediaTestManager;
+
+function checkDrawImage(vout) {
+  var canvas = document.createElement("canvas");
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(vout, 0, 0);
+  var imgData = ctx.getImageData(0, 0, 1, 1);
+  is(imgData.data[3], 255, "Check video frame pixel has been drawn");
+}
+
+function startTest(test, token) {
+  manager.started(token);
+
+  var v = document.createElement('video');
+  var vout = document.createElement('video');
+  vout.token = token;
+
+  v.src = test.name;
+  var stream = v.mozCaptureStreamUntilEnded();
+  is(stream.currentTime, 0, test.name + " stream initial currentTime");
+  vout.src = stream;
+  is(vout.src, stream, test.name + " set output element .src correctly");
+
+  var checkEnded = function(test, vout, stream) { return function() {
+    is(stream.currentTime, vout.currentTime, test.name + " stream final currentTime");
+    if (test.duration) {
+      ok(Math.abs(vout.currentTime - test.duration) < 0.1,
+         test.name + " current time at end: " + vout.currentTime + " should be: " + test.duration);
+    }
+    is(vout.readyState, vout.HAVE_CURRENT_DATA, test.name + " checking readyState");
+    ok(vout.ended, test.name + " checking playback has ended");
+    if (test.type.match(/^video/)) {
+      checkDrawImage(vout);
+    }
+    vout.parentNode.removeChild(vout);
+    manager.finished(vout.token);
+  }}(test, vout, stream);
+  vout.addEventListener("ended", checkEnded, false);
+
+  document.body.appendChild(vout);
+  v.play();
+  vout.play();
+}
+
+manager.runTests(gSmallTests, startTest);
+</script>
+</pre>
+</body>
+</html>

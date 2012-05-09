@@ -28,9 +28,17 @@ HTTP(..) == font-features-turkish.html font-features-noliga.html
 
 # compare feature specified within @font-face to same feature in style rule
 HTTP(..) == font-features-hlig-2.html font-features-hlig.html
+HTTP(..) == font-features-hlig-4.html font-features-hlig.html
+HTTP(..) != font-features-hlig-5.html font-features-hlig.html
 
 # check that feature in style rule overrides @font-face
 HTTP(..) == font-features-hlig-3.html font-features-noliga.html
+
+# make sure old syntax usage never interferes with new syntax usage
+HTTP(..) == font-features-oldsyntax-1.html font-features-ref.html
+HTTP(..) == font-features-oldsyntax-2.html font-features-ref.html
+HTTP(..) == font-features-oldsyntax-3.html font-features-hlig.html
+HTTP(..) == font-features-oldsyntax-4.html font-features-hlig.html
 
 # compare -moz-font-language-override rendering to lang-tagged rendering
 HTTP(..) == font-features-turkish-override-1.html font-features-turkish.html

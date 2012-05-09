@@ -56,6 +56,8 @@
 
 #include "nsWindowsDllInterceptor.h"
 
+using namespace mozilla;
+
 #if defined(MOZ_CRASHREPORTER) && !defined(NO_BLOCKLIST_CRASHREPORTER)
 #include "nsExceptionHandler.h"
 #endif
@@ -174,7 +176,8 @@ struct RVAMap {
     mRealView = ::MapViewOfFile(map, FILE_MAP_READ, 0, alignedOffset,
                                 sizeof(T) + (offset - alignedOffset));
 
-    mMappedView = reinterpret_cast<T*>((char*)mRealView + (offset - alignedOffset));
+    mMappedView = mRealView ? reinterpret_cast<T*>((char*)mRealView + (offset - alignedOffset)) :
+                              nsnull;
   }
   ~RVAMap() {
     if (mRealView) {
@@ -187,6 +190,18 @@ private:
   const T* mMappedView;
   void* mRealView;
 };
+
+bool
+IsVistaOrLater()
+{
+  OSVERSIONINFO info;
+
+  ZeroMemory(&info, sizeof(OSVERSIONINFO));
+  info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+  GetVersionEx(&info);
+
+  return info.dwMajorVersion >= 6;
+}
 
 bool
 CheckASLR(const wchar_t* path)
@@ -451,7 +466,7 @@ continue_loading:
       return STATUS_DLL_NOT_FOUND;
     }
 
-    if (!CheckASLR(full_fname)) {
+    if (IsVistaOrLater() && !CheckASLR(full_fname)) {
       printf_stderr("LdrLoadDll: Blocking load of '%s'.  XPCOM components must support ASLR.\n", dllName);
       return STATUS_DLL_NOT_FOUND;
     }

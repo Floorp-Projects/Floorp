@@ -14,7 +14,7 @@ add_autocomplete_test([
 add_autocomplete_test([
   "Searching for cased entry 2",
   "mozilla.org/T",
-  { autoFilled: "mozilla.org/Test/", completed: "mozilla.org/test/" },
+  { autoFilled: "mozilla.org/T", completed: "mozilla.org/T" },
   function () {
     addBookmark({ url: "http://mozilla.org/test/" });
   }
@@ -22,8 +22,26 @@ add_autocomplete_test([
 
 add_autocomplete_test([
   "Searching for cased entry 3",
+  "mozilla.org/T",
+  { autoFilled: "mozilla.org/Test/", completed: "mozilla.org/Test/" },
+  function () {
+    addBookmark({ url: "http://mozilla.org/Test/" });
+  }
+]);
+
+add_autocomplete_test([
+  "Searching for cased entry 4",
   "mOzilla.org/t",
-  { autoFilled: "mOzilla.org/test/", completed: "mozilla.org/Test/" },
+  { autoFilled: "mOzilla.org/t", completed: "mOzilla.org/t" },
+  function () {
+    addBookmark({ url: "http://mozilla.org/Test/" });
+  },
+]);
+
+add_autocomplete_test([
+  "Searching for cased entry 5",
+  "mOzilla.org/T",
+  { autoFilled: "mOzilla.org/Test/", completed: "mozilla.org/Test/" },
   function () {
     addBookmark({ url: "http://mozilla.org/Test/" });
   },
@@ -50,7 +68,16 @@ add_autocomplete_test([
 add_autocomplete_test([
   "Searching for untrimmed cased entry with path",
   "http://mOzilla.org/t",
-  { autoFilled: "http://mOzilla.org/test/", completed: "http://mozilla.org/Test/" },
+  { autoFilled: "http://mOzilla.org/t", completed: "http://mOzilla.org/t" },
+  function () {
+    addBookmark({ url: "http://mozilla.org/Test/" });
+  },
+]);
+
+add_autocomplete_test([
+  "Searching for untrimmed cased entry with path 2",
+  "http://mOzilla.org/T",
+  { autoFilled: "http://mOzilla.org/Test/", completed: "http://mozilla.org/Test/" },
   function () {
     addBookmark({ url: "http://mozilla.org/Test/" });
   },
@@ -59,7 +86,16 @@ add_autocomplete_test([
 add_autocomplete_test([
   "Searching for untrimmed cased entry with www and path",
   "http://www.mOzilla.org/t",
-  { autoFilled: "http://www.mOzilla.org/test/", completed: "http://www.mozilla.org/Test/" },
+  { autoFilled: "http://www.mOzilla.org/t", completed: "http://www.mOzilla.org/t" },
+  function () {
+    addBookmark({ url: "http://www.mozilla.org/Test/" });
+  },
+]);
+
+add_autocomplete_test([
+  "Searching for untrimmed cased entry with www and path 2",
+  "http://www.mOzilla.org/T",
+  { autoFilled: "http://www.mOzilla.org/Test/", completed: "http://www.mozilla.org/Test/" },
   function () {
     addBookmark({ url: "http://www.mozilla.org/Test/" });
   },

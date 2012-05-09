@@ -1,35 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="140dip"
-              android:layout_height="wrap_content">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="146dip"
+                android:layout_height="wrap_content"
+                android:paddingTop="4dip">
 
-    <LinearLayout android:orientation="vertical"
-                  android:layout_width="fill_parent"
-                  android:layout_height="fill_parent">
+    <ImageView android:id="@+id/thumbnail"
+               android:layout_width="136dip"
+               android:layout_height="78dip"
+               android:layout_centerHorizontal="true"
+               android:paddingTop="2dip"
+               android:layout_alignParentTop="true"
+               android:src="@drawable/tab_thumbnail_default"
+               android:scaleType="fitCenter"/>
 
-        <LinearLayout android:orientation="vertical"
-                      android:layout_width="138dip"
-                      android:layout_height="80dip"
-                      android:background="@drawable/tab_thumbnail_shadow"
-                      android:padding="1dip"
-                      android:paddingBottom="2dip">
+    <ImageView android:id="@+id/shadow"
+               android:layout_width="138dip"
+               android:layout_height="80dip"
+               android:layout_centerHorizontal="true"
+               android:layout_alignParentTop="true"
+               android:src="@drawable/tab_thumbnail_shadow"
+               android:scaleType="fitCenter"/>
 
-            <ImageView android:id="@+id/thumbnail"
-                       android:layout_width="136dip"
-                       android:layout_height="78dip"
-                       android:scaleType="centerCrop"/>
+   <TextView android:id="@+id/title"
+             android:layout_width="fill_parent"
+             android:layout_height="15dip"
+             android:layout_marginTop="3dip"
+             android:layout_below="@id/shadow"
+             android:singleLine="true"
+             android:textColor="#000000"
+             android:textSize="9dip"
+             android:gravity="center_horizontal"/>
 
-        </LinearLayout>
-
-        <TextView android:id="@+id/title"
-                  android:layout_width="fill_parent"
-                  android:layout_height="15dip"
-                  android:layout_marginTop="3dip"
-                  android:singleLine="true"
-                  android:textColor="#000000"
-                  android:textSize="9dip"
-                  android:gravity="center_horizontal"/>
-
-    </LinearLayout>
-
-</LinearLayout>
+</RelativeLayout>

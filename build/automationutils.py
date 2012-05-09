@@ -459,7 +459,7 @@ class ShutdownLeakLogger(object):
   DOM windows (that are still around after test suite shutdown, despite running
   the GC) to the tests that created them and prints leak statistics.
   """
-  MAX_LEAK_COUNT = 121
+  MAX_LEAK_COUNT = 21
 
   def __init__(self, logger):
     self.logger = logger
@@ -507,6 +507,10 @@ class ShutdownLeakLogger(object):
     created = line[:2] == "++"
     id = self._parseValue(line, "serial")
 
+    # log line has invalid format
+    if not id:
+      return
+
     if self.currentTest:
       windows = self.currentTest["windows"]
       if created:
@@ -520,6 +524,10 @@ class ShutdownLeakLogger(object):
     created = line[:2] == "++"
     id = self._parseValue(line, "id")
 
+    # log line has invalid format
+    if not id:
+      return
+
     if self.currentTest:
       docShells = self.currentTest["docShells"]
       if created:
@@ -530,7 +538,10 @@ class ShutdownLeakLogger(object):
       self.leakedDocShells.add(id)
 
   def _parseValue(self, line, name):
-    return re.search("\[%s = (.+?)\]" % name, line).group(1)
+    match = re.search("\[%s = (.+?)\]" % name, line)
+    if match:
+      return match.group(1)
+    return None
 
   def _parseLeakingTests(self):
     leakingTests = []

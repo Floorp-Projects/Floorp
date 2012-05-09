@@ -77,6 +77,18 @@ public:
     NS_DECL_NSIWEBGLEXTENSION
 };
 
+class WebGLExtensionCompressedTextureS3TC :
+    public nsIWebGLExtensionCompressedTextureS3TC,
+    public WebGLExtension
+{
+public:
+    WebGLExtensionCompressedTextureS3TC(WebGLContext* context);
+    virtual ~WebGLExtensionCompressedTextureS3TC();
+
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIWEBGLEXTENSION
+};
+
 }
 
 #endif // WEBGLEXTENSIONS_H_

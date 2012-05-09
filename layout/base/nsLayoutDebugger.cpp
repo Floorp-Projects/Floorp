@@ -170,7 +170,8 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
       f->GetFrameName(fName);
     }
 #endif
-    nsRect rect = i->GetBounds(aBuilder);
+    bool snap;
+    nsRect rect = i->GetBounds(aBuilder, &snap);
     switch (i->GetType()) {
       case nsDisplayItem::TYPE_CLIP:
       case nsDisplayItem::TYPE_CLIP_ROUNDED_RECT: {
@@ -191,7 +192,7 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
     }
 #ifdef DEBUG
     if (!list || list->DidComputeVisibility()) {
-      opaque = i->GetOpaqueRegion(aBuilder);
+      opaque = i->GetOpaqueRegion(aBuilder, &snap);
     }
 #endif
     if (i->Painted()) {

@@ -813,6 +813,15 @@ Connection::setClosedState()
   return NS_OK;
 }
 
+bool
+Connection::isAsyncClosing() {
+  MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
+  bool isReady;
+  (void)GetConnectionReady(&isReady);
+  return mAsyncExecutionThreadShuttingDown && !!mAsyncExecutionThread &&
+    isReady;
+}
+
 nsresult
 Connection::internalClose()
 {

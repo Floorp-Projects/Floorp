@@ -45,6 +45,32 @@ registerCleanupFunction(function () {
   Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
 });
 
+// This kicks off the search service used on about:home and allows the
+// session restore tests to be run standalone without triggering errors.
+Cc["@mozilla.org/browser/clh;1"].getService(Ci.nsIBrowserHandler).defaultArgs;
+
+function provideWindow(aCallback, aURL, aFeatures) {
+  function callbackSoon(aWindow) {
+    executeSoon(function executeCallbackSoon() {
+      aCallback(aWindow);
+    });
+  }
+
+  let win = openDialog(getBrowserURL(), "", aFeatures || "chrome,all,dialog=no", aURL);
+  whenWindowLoaded(win, function onWindowLoaded(aWin) {
+    if (!aURL) {
+      info("Loaded a blank window.");
+      callbackSoon(aWin);
+      return;
+    }
+
+    aWin.gBrowser.selectedBrowser.addEventListener("load", function selectedBrowserLoadListener() {
+      aWin.gBrowser.selectedBrowser.removeEventListener("load", selectedBrowserLoadListener, true);
+      callbackSoon(aWin);
+    }, true);
+  });
+}
+
 // This assumes that tests will at least have some state/entries
 function waitForBrowserState(aState, aSetStateCallback) {
   let windows = [window];
@@ -128,6 +154,27 @@ function waitForBrowserState(aState, aSetStateCallback) {
   ss.setBrowserState(JSON.stringify(aState));
 }
 
+// Doesn't assume that the tab needs to be closed in a cleanup function.
+// If that's the case, the test author should handle that in the test.
+function waitForTabState(aTab, aState, aCallback) {
+  let listening = true;
+
+  function onSSTabRestored() {
+    aTab.removeEventListener("SSTabRestored", onSSTabRestored, false);
+    listening = false;
+    aCallback();
+  }
+
+  aTab.addEventListener("SSTabRestored", onSSTabRestored, false);
+
+  registerCleanupFunction(function() {
+    if (listening) {
+      aTab.removeEventListener("SSTabRestored", onSSTabRestored, false);
+    }
+  });
+  ss.setTabState(aTab, JSON.stringify(aState));
+}
+
 // waitForSaveState waits for a state write but not necessarily for the state to
 // turn dirty.
 function waitForSaveState(aSaveStateCallback) {
@@ -165,6 +212,22 @@ function waitForSaveState(aSaveStateCallback) {
   observing = true;
   Services.obs.addObserver(observer, topic, false);
 };
+
+function whenBrowserLoaded(aBrowser, aCallback) {
+  aBrowser.addEventListener("load", function onLoad() {
+    aBrowser.removeEventListener("load", onLoad, true);
+    executeSoon(aCallback);
+  }, true);
+}
+
+function whenWindowLoaded(aWindow, aCallback) {
+  aWindow.addEventListener("load", function windowLoadListener() {
+    aWindow.removeEventListener("load", windowLoadListener, false);
+    executeSoon(function executeWhenWindowLoaded() {
+      aCallback(aWindow);
+    });
+  }, false);
+}
 
 var gUniqueCounter = 0;
 function r() {

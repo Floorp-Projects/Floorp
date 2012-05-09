@@ -158,6 +158,8 @@ _TEST_FILES =	\
 		     bug664087-2-ref.html \
 		     bug682712-1.html \
 		     bug682712-1-ref.html \
+		     bug746993-1.html \
+		     bug746993-1-ref.html \
 		test_bug514127.html \
 		test_bug518777.html \
 		test_bug548545.xhtml \
@@ -183,7 +185,6 @@ _TEST_FILES =	\
 		test_bug629838.html \
 		test_bug646757.html \
 		test_bug718809.html \
-		test_font_inflation_reftests.html \
 		test_bug725426.html \
 		test_bug731777.html \
 		$(NULL)
@@ -383,18 +384,10 @@ _BROWSER_FILES = \
 	browser_bug617076.js \
 	$(NULL)
 
-_INFLATION_REFTEST_FILES = \
-		$(shell find $(srcdir)/font-inflation/ -name '*.html' -o -name '*.xhtml') \
-		$(srcdir)/../../reftests/webm-video/black140x100.webm \
-		$(srcdir)/../../reftests/fonts/Ahem.ttf \
-		$(NULL)
-
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 libs:: $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-libs:: $(_INFLATION_REFTEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/font-inflation/
 
 check::
 	@$(EXIT_ON_ERROR) \

@@ -41,6 +41,7 @@
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsIAccessibleEvent.h"
+#include "RootAccessible.h"
 
 #include "nsCaret.h"
 #include "nsIDOMDocument.h"
@@ -49,15 +50,16 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
-#include "nsRootAccessible.h"
 #include "nsISelectionPrivate.h"
 #include "nsServiceManagerUtils.h"
 
 class nsIWidget;
 
+using namespace mozilla::a11y;
+
 NS_IMPL_ISUPPORTS1(nsCaretAccessible, nsISelectionListener)
   
-nsCaretAccessible::nsCaretAccessible( nsRootAccessible *aRootAccessible):
+nsCaretAccessible::nsCaretAccessible(RootAccessible* aRootAccessible) :
 mLastCaretOffset(-1), mRootAccessible(aRootAccessible)
 {
 }
@@ -68,8 +70,8 @@ nsCaretAccessible::~nsCaretAccessible()
 
 void nsCaretAccessible::Shutdown()
 {
-  // The caret accessible isn't shut down until the nsRootAccessible owning it is shut down
-  // Each nsDocAccessible, including the nsRootAccessible, is responsible for clearing the
+  // The caret accessible isn't shut down until the RootAccessible owning it is shut down
+  // Each nsDocAccessible, including the RootAccessible, is responsible for clearing the
   // doc selection listeners they registered in this nsCaretAccessible
 
   ClearControlSelectionListener(); // Clear the selection listener for the currently focused control

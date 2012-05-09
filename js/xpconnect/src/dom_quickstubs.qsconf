@@ -457,7 +457,6 @@ members = [
     'nsIIDBCursor.*',
     'nsIIDBCursorWithValue.*',
     'nsIIDBDatabase.*',
-    'nsIIDBDatabaseException.*',
     'nsIIDBIndex.*',
     'nsIIDBKeyRange.*',
     'nsIIDBObjectStore.*',
@@ -468,6 +467,11 @@ members = [
     'nsIIDBVersionChangeEvent.*',
     'nsIIndexedDatabaseUsageCallback.*',
     'nsIIndexedDatabaseManager.*',
+
+    # Performance
+    'nsIDOMPerformance.*',
+    'nsIDOMPerformanceTiming.*',
+    'nsIDOMPerformanceNavigation.*',
 
     'nsIDOMDOMError.*',
     ]
@@ -504,6 +508,7 @@ irregularFilenames = {
     'nsIWebGLExtensionStandardDerivatives' : 'nsIDOMWebGLRenderingContext',
     'nsIWebGLExtensionTextureFilterAnisotropic' : 'nsIDOMWebGLRenderingContext',
     'nsIWebGLExtensionLoseContext' : 'nsIDOMWebGLRenderingContext',
+    'nsIWebGLExtensionCompressedTextureS3TC' : 'nsIDOMWebGLRenderingContext',
 
     'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
 

@@ -73,8 +73,7 @@ ColorLayerD3D10::RenderLayer()
   effect()->GetVariableByName("mLayerTransform")->SetRawValue(raw, 0, 64);
   effect()->GetVariableByName("fLayerColor")->AsVector()->SetFloatVector(color);
 
-  ID3D10EffectTechnique *technique;
-  technique = effect()->GetTechniqueByName("RenderSolidColorLayer");
+  ID3D10EffectTechnique *technique = SelectShader(SHADER_SOLID | LoadMaskTexture());
 
   nsIntRegionRectIterator iter(mVisibleRegion);
 

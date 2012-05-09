@@ -341,6 +341,7 @@ let PlacesDBUtils = {
       "WHERE anno_attribute_id IN ( "               +
       "  SELECT id FROM moz_anno_attributes "       +
       "  WHERE name = 'sync/children' "             +
+      "     OR name = 'placesInternal/GUID' "       +
       "     OR name BETWEEN 'weave/' AND 'weave0' " +
       ")");
     cleanupStatements.push(deleteObsoleteItemsAnnos);

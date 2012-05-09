@@ -1,5 +1,8 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://services-common/stringbundle.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/ext/StringBundle.js");
 
 function run_test() {
     let fn = Utils.lazyStrings("sync");

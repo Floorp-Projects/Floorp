@@ -333,18 +333,10 @@ public:
         return true;
     }
 
-    bool MakeCurrentImpl(bool aForce = false)
+    bool MakeCurrentImpl()
     {
-        BOOL succeeded = true;
-
-        // wglGetCurrentContext seems to just pull the HGLRC out
-        // of its TLS slot, so no need to do our own tls slot.
-        // You would think that wglMakeCurrent would avoid doing
-        // work if mContext was already current, but not so much..
-        if (aForce || sWGLLibrary.fGetCurrentContext() != mContext) {
-            succeeded = sWGLLibrary.fMakeCurrent(mDC, mContext);
-            NS_ASSERTION(succeeded, "Failed to make GL context current!");
-        }
+        bool succeeded = sWGLLibrary.fMakeCurrent(mDC, mContext);
+        NS_ASSERTION(succeeded, "Failed to make GL context current!");
 
         return succeeded;
     }
@@ -524,10 +516,10 @@ GLContextWGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         MakeCurrent();
         ClearSafely();
 
-        return ResizeOffscreenFBO(aNewSize, false);
+        return ResizeOffscreenFBOs(aNewSize, false);
     }
 
-    return ResizeOffscreenFBO(aNewSize, true);
+    return ResizeOffscreenFBOs(aNewSize, true);
 }
 
 static GLContextWGL *
@@ -782,7 +774,7 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    if (!glContext->ResizeOffscreenFBO(aSize, !glContext->mPBuffer))
+    if (!glContext->ResizeOffscreenFBOs(aSize, !glContext->mPBuffer))
         return nsnull;
 
     glContext->mOffscreenSize = aSize;

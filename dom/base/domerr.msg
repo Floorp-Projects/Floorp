@@ -38,33 +38,33 @@
 /* Error Message definitions. */
 
 
-/* DOM error codes from http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#domexception */
+/* DOM4 errors from http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#domexception */
 
-DOM_MSG_DEF_(INDEX_SIZE_ERR, "IndexSizeError", "Index or size is negative or greater than the allowed amount")
-DOM_MSG_DEF_(DOMSTRING_SIZE_ERR, "DOMStringSizeError", "The specified range of text does not fit in a DOM string")
-DOM_MSG_DEF_(HIERARCHY_REQUEST_ERR, "HierarchyRequestError", "Node cannot be inserted at the specified point in the hierarchy")
-DOM_MSG_DEF_(WRONG_DOCUMENT_ERR, "WrongDocumentError", "Node cannot be used in a document other than the one in which it was created")
-DOM_MSG_DEF_(INVALID_CHARACTER_ERR, "InvalidCharacterError", "String contains an invalid character")
-DOM_MSG_DEF_(NO_DATA_ALLOWED_ERR, "NoDataAllowedError", "Node does not contain data")
-DOM_MSG_DEF_(NO_MODIFICATION_ALLOWED_ERR, "NoModificationAllowedError", "Modifications are not allowed for this document")
-DOM_MSG_DEF_(NOT_FOUND_ERR, "NotFoundError", "Node was not found")
-DOM_MSG_DEF_(NOT_SUPPORTED_ERR, "NotSupportedError", "Operation is not supported")
-DOM_MSG_DEF_(INUSE_ATTRIBUTE_ERR, "InUseAttributeError", "Attribute already in use")
-DOM_MSG_DEF_(INVALID_STATE_ERR, "InvalidStateError", "An attempt was made to use an object that is not, or is no longer, usable")
-DOM_MSG_DEF_(SYNTAX_ERR, "SyntaxError", "An invalid or illegal string was specified")
-DOM_MSG_DEF_(INVALID_MODIFICATION_ERR, "InvalidModificationError", "An attempt was made to modify the type of the underlying objec")
-DOM_MSG_DEF_(NAMESPACE_ERR, "NamespaceError", "An attempt was made to create or change an object in a way which is incorrect with regard to namespaces")
-DOM_MSG_DEF_(INVALID_ACCESS_ERR, "InvalidAccessError", "A parameter or an operation is not supported by the underlying object")
-DOM_MSG_DEF_(VALIDATION_ERR, "ValidationError", "A call to a method would make the Node invalid with respect to \"partial validity\", so the operation was not done")
-DOM_MSG_DEF_(TYPE_MISMATCH_ERR, "TypeMismatchError", "The type of an object is incompatible with the expected type of the parameter associated to the object")
-DOM_MSG_DEF_(SECURITY_ERR, "SecurityError", "The operation is insecure.")
-DOM_MSG_DEF_(NETWORK_ERR, "NetworkError", "A network error occurred.")
-DOM_MSG_DEF_(ABORT_ERR, "AbortError", "The operation was aborted. ")
-DOM_MSG_DEF_(URL_MISMATCH_ERR, "URLMismatchError", "The given URL does not match another URL.")
-DOM_MSG_DEF_(QUOTA_EXCEEDED_ERR, "QuotaExceededError", "The quota has been exceeded.")
-DOM_MSG_DEF_(TIMEOUT_ERR, "TimeoutError", "The operation timed out.")
-DOM_MSG_DEF_(INVALID_NODE_TYPE_ERR, "InvalidNodeTypeError", "The supplied node is incorrect or has an incorrect ancestor for this operation.")
-DOM_MSG_DEF_(DATA_CLONE_ERR, "DataCloneError", "The object could not be cloned.")
+DOM4_MSG_DEF(IndexSizeError, "Index or size is negative or greater than the allowed amount", NS_ERROR_DOM_INDEX_SIZE_ERR)
+DOM4_MSG_DEF(HierarchyRequestError, "Node cannot be inserted at the specified point in the hierarchy", NS_ERROR_DOM_HIERARCHY_REQUEST_ERR)
+DOM4_MSG_DEF(WrongDocumentError, "Node cannot be used in a document other than the one in which it was created", NS_ERROR_DOM_WRONG_DOCUMENT_ERR)
+DOM4_MSG_DEF(InvalidCharacterError, "String contains an invalid character", NS_ERROR_DOM_INVALID_CHARACTER_ERR)
+DOM4_MSG_DEF(NoModificationAllowedError, "Modifications are not allowed for this document", NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)
+DOM4_MSG_DEF(NotFoundError, "Node was not found", NS_ERROR_DOM_NOT_FOUND_ERR)
+DOM4_MSG_DEF(NotSupportedError, "Operation is not supported", NS_ERROR_DOM_NOT_SUPPORTED_ERR)
+DOM4_MSG_DEF(InUseAttributeError, "Attribute already in use", NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR)
+DOM4_MSG_DEF(InvalidStateError, "An attempt was made to use an object that is not, or is no longer, usable", NS_ERROR_DOM_INVALID_STATE_ERR)
+DOM4_MSG_DEF(SyntaxError, "An invalid or illegal string was specified", NS_ERROR_DOM_SYNTAX_ERR)
+DOM4_MSG_DEF(InvalidModificationError, "An attempt was made to modify the type of the underlying objec", NS_ERROR_DOM_INVALID_MODIFICATION_ERR)
+DOM4_MSG_DEF(NamespaceError, "An attempt was made to create or change an object in a way which is incorrect with regard to namespaces", NS_ERROR_DOM_NAMESPACE_ERR)
+DOM4_MSG_DEF(InvalidAccessError, "A parameter or an operation is not supported by the underlying object", NS_ERROR_DOM_INVALID_ACCESS_ERR)
+DOM4_MSG_DEF(TypeMismatchError, "The type of an object is incompatible with the expected type of the parameter associated to the object", NS_ERROR_DOM_TYPE_MISMATCH_ERR)
+DOM4_MSG_DEF(SecurityError, "The operation is insecure.", NS_ERROR_DOM_SECURITY_ERR)
+DOM4_MSG_DEF(NetworkError, "A network error occurred.", NS_ERROR_DOM_NETWORK_ERR)
+DOM4_MSG_DEF(AbortError, "The operation was aborted. ", NS_ERROR_DOM_ABORT_ERR)
+DOM4_MSG_DEF(URLMismatchError, "The given URL does not match another URL.", NS_ERROR_DOM_URL_MISMATCH_ERR)
+DOM4_MSG_DEF(QuotaExceededError, "The quota has been exceeded.", NS_ERROR_DOM_QUOTA_EXCEEDED_ERR)
+DOM4_MSG_DEF(TimeoutError, "The operation timed out.", NS_ERROR_DOM_TIMEOUT_ERR)
+DOM4_MSG_DEF(InvalidNodeTypeError, "The supplied node is incorrect or has an incorrect ancestor for this operation.", NS_ERROR_DOM_INVALID_NODE_TYPE_ERR)
+DOM4_MSG_DEF(DataCloneError, "The object could not be cloned.", NS_ERROR_DOM_DATA_CLONE_ERR)
+
+/* XXX Should be JavaScript native TypeError */
+DOM4_MSG_DEF(TypeError, "The method parameter is missing or invalid.", NS_ERROR_TYPE_ERR)
 
 /* SVG DOM error codes from http://www.w3.org/TR/SVG11/svgdom.html */
 
@@ -77,23 +77,24 @@ DOM_MSG_DEF(NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE, "The matrix could not be com
 DOM_MSG_DEF(NS_ERROR_DOM_INVALID_EXPRESSION_ERR, "The expression is not a legal expression.")
 DOM_MSG_DEF(NS_ERROR_DOM_TYPE_ERR, "The expression cannot be converted to return the specified type.")
 
-/* IndexedDB error codes http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html */
+/* IndexedDB errors http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#exceptions */
 
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, "The operation failed for reasons unrelated to the database itself and not covered by any other error code.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR, "This error occurred because an operation was not allowed on an object. A retry of the same operation would fail unless the cause of the error is corrected.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR, "The operation failed because the requested database object could not be found. For example, an object store did not exist but was being opened.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR, "A mutation operation in the transaction failed because a constraint was not satisfied. For example, an object such as an object store or index already exists and a new one was being attempted to be created.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_DATA_ERR, "Data provided to an operation does not meet requirements.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR, "A mutation operation was attempted on a database that did not allow mutations.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR, "A request was placed against a transaction which is currently not active, or which is finished.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR, "A request was aborted, for example through a call to IDBTransaction.abort.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR, "A mutation operation was attempted in a READ_ONLY transaction.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_TIMEOUT_ERR, "A lock for the transaction could not be obtained in a reasonable time.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR, "The current transaction exceeded its quota limitations.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_VERSION_ERR, "The operation failed because the stored database is a higher version than the version requested.")
+DOM4_MSG_DEF(UnknownError, "The operation failed for reasons unrelated to the database itself and not covered by any other error code.", NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR)
+DOM4_MSG_DEF(ConstraintError, "A mutation operation in the transaction failed because a constraint was not satisfied. For example, an object such as an object store or index already exists and a new one was being attempted to be created.", NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR)
+DOM4_MSG_DEF(DataError, "Data provided to an operation does not meet requirements.", NS_ERROR_DOM_INDEXEDDB_DATA_ERR)
+DOM4_MSG_DEF(TransactionInactiveError, "A request was placed against a transaction which is currently not active, or which is finished.", NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR)
+DOM4_MSG_DEF(ReadOnlyError, "A mutation operation was attempted in a READ_ONLY transaction.", NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR)
+DOM4_MSG_DEF(VersionError, "The operation failed because the stored database is a higher version than the version requested.", NS_ERROR_DOM_INDEXEDDB_VERSION_ERR)
+
+DOM4_MSG_DEF(NotFoundError, "The operation failed because the requested database object could not be found. For example, an object store did not exist but was being opened.", NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR)
+DOM4_MSG_DEF(InvalidStateError, "A mutation operation was attempted on a database that did not allow mutations.", NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR)
+DOM4_MSG_DEF(AbortError, "A request was aborted, for example through a call to IDBTransaction.abort.", NS_ERROR_DOM_INDEXEDDB_ABORT_ERR)
+DOM4_MSG_DEF(TimeoutError, "A lock for the transaction could not be obtained in a reasonable time.", NS_ERROR_DOM_INDEXEDDB_TIMEOUT_ERR)
+DOM4_MSG_DEF(QuotaExceededError, "The current transaction exceeded its quota limitations.", NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR)
+
+/* A Non-standard IndexedDB error */
 
 DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_RECOVERABLE_ERR, "The operation failed because the database was prevented from taking an action. The operation might be able to succeed if the application performs some recovery steps and retries the entire transaction. For example, there was not enough remaining storage space, or the storage quota was reached and the user declined to give more space to the database.")
-DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_DEADLOCK_ERR, "The current transaction was automatically rolled back by the database because of deadlock or other transaction serialization failures.")
 
 /* DOM error codes defined by us */
 
@@ -113,8 +114,8 @@ DOM_MSG_DEF(NS_ERROR_DOM_BAD_URI, "Access to restricted URI denied")
 DOM_MSG_DEF(NS_ERROR_DOM_RETVAL_UNDEFINED, "Return value is undefined")
 DOM_MSG_DEF(NS_ERROR_DOM_QUOTA_REACHED, "Persistent storage maximum size reached")
 
-DOM_MSG_DEF(NS_ERROR_DOM_FILE_NOT_FOUND_ERR, "File was not found")
-DOM_MSG_DEF(NS_ERROR_DOM_FILE_NOT_READABLE_ERR, "File could not be read")
+DOM4_MSG_DEF(NotFoundError, "File was not found", NS_ERROR_DOM_FILE_NOT_FOUND_ERR)
+DOM4_MSG_DEF(NotReadableError, "File could not be read", NS_ERROR_DOM_FILE_NOT_READABLE_ERR)
 
 /* common global codes (from nsError.h) */
 
