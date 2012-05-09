@@ -23,6 +23,7 @@ function init_all() {
 }
 
 function gotoPref(page) {
+  search(page, "data-category");
   window.history.pushState(page, document.title);
   updateCommands();
 }
@@ -55,4 +56,12 @@ function canGoForward() {
   return window.QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIWebNavigation)
                .canGoForward;
+}
+
+function search(aQuery, aAttribute) {
+  let elements = document.getElementById("mainPrefPane").children;
+  for (let element of elements) {
+    let attributeValue = element.getAttribute(aAttribute);
+    element.hidden = (attributeValue != aQuery);
+  }
 }
