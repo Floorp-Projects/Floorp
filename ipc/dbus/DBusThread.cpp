@@ -276,6 +276,14 @@ static void HandleWatchRemove(DBusThread* aDbt) {
   p.fd = removeFD;
   p.events = events;
   int index = aDbt->mPollData.IndexOf(p, 0, PollFdComparator());
+  // There are times where removes can be requested for watches that
+  // haven't been added (for example, whenever gecko comes up after
+  // adapters have already been enabled), so check to make sure we're
+  // using the watch in the first place
+  if(index < 0) {
+    LOG("DBus requested watch removal of non-existant socket, ignoring...");
+    return;
+  }
   aDbt->mPollData.RemoveElementAt(index);
 
   // DBusWatch pointers are maintained by DBus, so we won't leak by
