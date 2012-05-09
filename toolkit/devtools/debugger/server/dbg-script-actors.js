@@ -133,6 +133,9 @@ ThreadActor.prototype = {
     this._threadLifetimePool = null;
     this.conn.removeActorPool(this._breakpointPool);
     this._breakpointPool = null;
+    // Unless we carefully take apart the scripts table this way, we end up
+    // leaking documents. It would be nice to track this down carefully, once
+    // we have the appropriate tools.
     for (let url in this._scripts) {
       delete this._scripts[url];
     }
