@@ -171,3 +171,16 @@
 .devtools-closebutton:hover:active {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
+
+/* Splitter */
+
+.devtools-horizontal-splitter {
+  -moz-appearance: none;
+  border-width: 1px 0 0 0;
+  -moz-border-top-colors: black;
+  background-color: transparent;
+  min-height: 3px;
+  height: 3px;
+  margin-bottom: -3px;
+  position: relative;
+}

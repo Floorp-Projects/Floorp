@@ -197,7 +197,7 @@ DebuggerPane.prototype = {
     let ownerDocument = gBrowser.parentNode.ownerDocument;
 
     this._splitter = ownerDocument.createElement("splitter");
-    this._splitter.setAttribute("class", "hud-splitter");
+    this._splitter.setAttribute("class", "devtools-horizontal-splitter");
 
     this._frame = ownerDocument.createElement("iframe");
     this._frame.height = DebuggerPreferences.height;

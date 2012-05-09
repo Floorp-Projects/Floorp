@@ -3151,16 +3151,6 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   border-radius: 0 @toolbarbuttonCornerRadius@ @toolbarbuttonCornerRadius@ 0;
 }
 
-#inspector-tree-splitter {
-  -moz-appearance: none;
-  border-top: 1px solid black;
-  border-bottom-width: 0;
-  min-height: 3px;
-  height: 3px;
-  margin-bottom: -3px;
-  position: relative;
-}
-
 .gcli-panel-inner-arrowcontent {
   padding: 0;
 }
