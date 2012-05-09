@@ -111,6 +111,7 @@ class Marionette(object):
         self.session = None
         self.window = None
         self.emulator = None
+        self.extra_emulators = []
         self.homedir = homedir
         self.baseurl = baseurl
         self.noWindow = noWindow
@@ -141,6 +142,8 @@ class Marionette(object):
             self.emulator.close()
         if self.b2gbin:
             self.b2ginstance.close()
+        for qemu in self.extra_emulators:
+            qemu.emulator.close()
 
     def _send_message(self, command, response_key, **kwargs):
         if not self.session and command not in ('newSession', 'getStatus'):
