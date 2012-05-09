@@ -187,5 +187,30 @@ function run_http_test4() {
 
 function run_chrome_about_test_4() {
   info("Chrome about: tests");
-  test_url("about:Addons", true, end_test);
+  test_url("about:Addons", true, run_http_test5);
+ }
+
+function run_http_test5() {
+  info("HTTP tests");
+  test_url(HTTPSRC + "disablechrome.html", false, run_chrome_about_test_5);
+}
+
+// Should hide the chrome
+function run_chrome_about_test_5() {
+  info("Chrome about: tests");
+  test_url("about:preferences", true, function(){
+    info("Tabs on bottom");
+    TabsOnTop.enabled = false;
+    run_http_test6();
+  });
+}
+
+function run_http_test6() {
+  info("HTTP tests");
+  test_url(HTTPSRC + "disablechrome.html", false, run_chrome_about_test_6);
+}
+
+function run_chrome_about_test_6() {
+  info("Chrome about: tests");
+  test_url("about:preferences", true, end_test);
 }
