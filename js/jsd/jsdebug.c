@@ -387,11 +387,11 @@ JSD_ScriptCreated(JSDContext* jsdc,
 
 JSD_PUBLIC_API(void)
 JSD_ScriptDestroyed(JSDContext* jsdc,
-                    JSContext   *cx,
+                    JSFreeOp    *fop,
                     JSScript    *script)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
-    jsd_ScriptDestroyed(jsdc, cx, script);
+    jsd_ScriptDestroyed(jsdc, fop, script);
 }
 
 /***************************************************************************/

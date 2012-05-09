@@ -43,7 +43,6 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/unused.h"
 #include "HttpChannelParentListener.h"
-#include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
 #include "nsNetUtil.h"
 #include "nsISupportsPriority.h"
@@ -331,12 +330,15 @@ HttpChannelParent::RecvUpdateAssociatedContentSecurity(const PRInt32& high,
   return true;
 }
 
-// Bug 621446 investigation, we don't want conditional PR_Aborts bellow to be
+// Bug 621446 investigation, we don't want conditional PR_Aborts below to be
 // merged to a single address.
 #ifdef _MSC_VER
 #pragma warning(disable : 4068)
 #endif
+#ifdef ANDROID
+// Compiling this with GCC <= 4.4 fails with an internal compiler error
 #pragma GCC optimize ("O0")
+#endif
 
 bool
 HttpChannelParent::RecvRedirect2Verify(const nsresult& result, 
@@ -391,8 +393,11 @@ HttpChannelParent::RecvDocumentChannelCleanup()
 bool 
 HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
 {
-  nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
-  httpChan->MarkOfflineCacheEntryAsForeign();
+  if (mOfflineForeignMarker) {
+    mOfflineForeignMarker->MarkAsForeign();
+    mOfflineForeignMarker = 0;
+  }
+
   return true;
 }
 
@@ -418,6 +423,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   bool loadedFromApplicationCache;
   chan->GetLoadedFromApplicationCache(&loadedFromApplicationCache);
   if (loadedFromApplicationCache) {
+    mOfflineForeignMarker = chan->GetOfflineCacheEntryAsForeignMarker();
     nsCOMPtr<nsIApplicationCache> appCache;
     chan->GetApplicationCache(getter_AddRefs(appCache));
     nsCString appCacheGroupId;

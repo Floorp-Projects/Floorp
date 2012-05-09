@@ -62,6 +62,11 @@ public:
   virtual void RenderLayer();
 
   void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage);
+
+  virtual already_AddRefed<ID3D10ShaderResourceView> GetAsTexture(gfxIntSize* aSize);
+
+private:
+ ID3D10ShaderResourceView* GetImageSRView(Image* aImage, bool& aHasAlpha);
 };
 
 struct PlanarYCbCrD3D10BackendData : public ImageBackendData

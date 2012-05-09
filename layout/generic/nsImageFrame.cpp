@@ -1234,11 +1234,9 @@ nsDisplayImage::GetContainer()
   return container.forget();
 }
 
-void
-nsDisplayImage::ConfigureLayer(ImageLayer* aLayer)
+gfxRect
+nsDisplayImage::GetDestRect()
 {
-  aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
-  
   PRInt32 factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
 
@@ -1246,10 +1244,76 @@ nsDisplayImage::ConfigureLayer(ImageLayer* aLayer)
   gfxRect destRect(dest.x, dest.y, dest.width, dest.height);
   destRect.ScaleInverse(factor); 
 
+  return destRect;
+}
+
+LayerState
+nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
+                              LayerManager* aManager,
+                              const FrameLayerBuilder::ContainerParameters& aParameters)
+{
+  if (mImage->GetType() != imgIContainer::TYPE_RASTER ||
+      !aManager->IsCompositingCheap() ||
+      !nsLayoutUtils::GPUImageScalingEnabled()) {
+    return LAYER_NONE;
+  }
+
   PRInt32 imageWidth;
   PRInt32 imageHeight;
   mImage->GetWidth(&imageWidth);
   mImage->GetHeight(&imageHeight);
+
+  NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
+
+  gfxRect destRect = GetDestRect();
+
+  destRect.width *= aParameters.mXScale;
+  destRect.height *= aParameters.mYScale;
+
+  // Calculate the scaling factor for the frame.
+  gfxSize scale = gfxSize(destRect.width / imageWidth, destRect.height / imageHeight);
+
+  // If we are not scaling at all, no point in separating this into a layer.
+  if (scale.width == 1.0f && scale.height == 1.0f) {
+    return LAYER_INACTIVE;
+  }
+
+  // If the target size is pretty small, no point in using a layer.
+  if (destRect.width * destRect.height < 64 * 64) {
+    return LAYER_INACTIVE;
+  }
+
+  return LAYER_ACTIVE;
+}
+
+already_AddRefed<Layer>
+nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
+                           LayerManager* aManager,
+                           const ContainerParameters& aParameters)
+{
+  nsRefPtr<ImageContainer> container;
+  nsresult rv = mImage->GetImageContainer(getter_AddRefs(container));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsRefPtr<ImageLayer> layer = aManager->CreateImageLayer();
+  layer->SetContainer(container);
+  ConfigureLayer(layer);
+  return layer.forget();
+}
+
+void
+nsDisplayImage::ConfigureLayer(ImageLayer *aLayer)
+{
+  aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
+
+  PRInt32 imageWidth;
+  PRInt32 imageHeight;
+  mImage->GetWidth(&imageWidth);
+  mImage->GetHeight(&imageHeight);
+
+  NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
+
+  const gfxRect destRect = GetDestRect();
 
   gfxMatrix transform;
   transform.Translate(destRect.TopLeft());

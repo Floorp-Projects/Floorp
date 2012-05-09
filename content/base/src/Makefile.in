@@ -74,7 +74,8 @@ EXPORTS_mozilla/dom = \
   Link.h \
   $(NULL)
 
-LOCAL_INCLUDES = -I$(srcdir)/js/xpconnect/src
+LOCAL_INCLUDES = \
+		$(NULL)
 
 CPPSRCS		= \
 		nsAtomListUtils.cpp \

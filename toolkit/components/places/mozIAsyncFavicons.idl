@@ -160,14 +160,18 @@ interface mozIAsyncFavicons : nsISupports
                                      [optional] in PRTime aExpiration);
 
   /**
-   * Retrieve the URL of the favicon for the given page.
+   * Retrieves the favicon URI associated to the given page, if any.
    *
    * @param aPageURI
-   *        URI of the page whose favicon's URL we're looking up
+   *        URI of the page whose favicon URI we're looking up.
    * @param aCallback
-   *        Once we've found the favicon's URL, we invoke this callback.  Note
-   *        that the callback's aDataLen will be 0, aData will be null, and
-   *        aMimeType will be empty -- only aURI will be non-zero/null/empty.
+   *        This callback is always invoked to notify the result of the lookup.
+   *        The aURI parameter will be the favicon URI, or null when no favicon
+   *        is associated with the page or an error occurred while fetching it.
+   *
+   * @note When the callback is invoked, aDataLen will be always 0, aData will
+   *       be an empty array, and aMimeType will be an empty string, regardless
+   *       of whether a favicon is associated with the page.
    *
    * @see nsIFaviconDataCallback in nsIFaviconService.idl.
    */
@@ -175,13 +179,18 @@ interface mozIAsyncFavicons : nsISupports
                             in nsIFaviconDataCallback aCallback);
 
   /**
-   * Retrieve the URL and data of the favicon for the given page.
+   * Retrieves the favicon URI and data associated to the given page, if any.
    *
    * @param aPageURI
-   *        URI of the page whose favicon's URL and data we're looking up
+   *        URI of the page whose favicon URI and data we're looking up.
    * @param aCallback
-   *        Once we've found the favicon's URL, we invoke this callback with
-   *        the favicon data.
+   *        This callback is always invoked to notify the result of the lookup.  The aURI
+   *        parameter will be the favicon URI, or null when no favicon is
+   *        associated with the page or an error occurred while fetching it.  If
+   *        aURI is not null, the other parameters may contain the favicon data.
+   *        However, if no favicon data is currently associated with the favicon
+   *        URI, aDataLen will be 0, aData will be an empty array, and aMimeType
+   *        will be an empty string.
    *
    * @see nsIFaviconDataCallback in nsIFaviconService.idl.
    */

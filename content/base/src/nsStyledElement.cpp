@@ -161,7 +161,7 @@ nsStyledElementNotElementCSSInlineStyle::AfterSetAttr(PRInt32 aNamespaceID,
                                         aNotify);
 }
 
-NS_IMETHODIMP
+nsresult
 nsStyledElementNotElementCSSInlineStyle::SetInlineStyleRule(css::StyleRule* aStyleRule,
                                                             const nsAString* aSerialized,
                                                             bool aNotify)

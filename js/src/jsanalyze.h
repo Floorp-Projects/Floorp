@@ -49,6 +49,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "js/TemplateLib.h"
+#include "vm/ScopeObject.h"
 
 struct JSScript;
 
@@ -389,6 +390,17 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
       case JSOP_LOCALINC:
       case JSOP_LOCALDEC:
         return LocalSlot(script, GET_SLOTNO(pc));
+
+      case JSOP_GETALIASEDVAR:
+      case JSOP_CALLALIASEDVAR:
+      case JSOP_SETALIASEDVAR:
+      {
+          ScopeCoordinate sc = ScopeCoordinate(pc);
+          return script->bindings.bindingIsArg(sc.binding)
+                 ? ArgSlot(script->bindings.bindingToArg(sc.binding))
+                 : LocalSlot(script, script->bindings.bindingToLocal(sc.binding));
+      }
+
 
       case JSOP_THIS:
         return ThisSlot();
@@ -828,6 +840,8 @@ class SlotValue
     SlotValue(uint32_t slot, const SSAValue &value) : slot(slot), value(value) {}
 };
 
+struct NeedsArgsObjState;
+
 /* Analysis information about a script. */
 class ScriptAnalysis
 {
@@ -866,7 +880,7 @@ class ScriptAnalysis
     bool addsScopeObjects_:1;
     bool localsAliasStack_:1;
     bool isInlineable:1;
-    bool isCompileable:1;
+    bool isJaegerCompileable:1;
     bool canTrackVars:1;
 
     uint32_t numReturnSites_;
@@ -901,7 +915,7 @@ class ScriptAnalysis
     bool OOM() { return outOfMemory; }
     bool failed() { return hadFailure; }
     bool inlineable(uint32_t argc) { return isInlineable && argc == script->function()->nargs; }
-    bool compileable() { return isCompileable; }
+    bool jaegerCompileable() { return isJaegerCompileable; }
 
     /* Whether there are POPV/SETRVAL bytecodes which can write to the frame's rval. */
     bool usesReturnValue() const { return usesReturnValue_; }
@@ -1067,7 +1081,7 @@ class ScriptAnalysis
     bool trackUseChain(const SSAValue &v) {
         JS_ASSERT_IF(v.kind() == SSAValue::VAR, trackSlot(v.varSlot()));
         return v.kind() != SSAValue::EMPTY &&
-            (v.kind() != SSAValue::VAR || !v.varInitial());
+               (v.kind() != SSAValue::VAR || !v.varInitial());
     }
 
     /*
@@ -1128,7 +1142,7 @@ class ScriptAnalysis
      * presence of NAME opcodes which could alias local variables or arguments
      * keeps us from tracking variable values at each point.
      */
-    bool trackSlot(uint32_t slot) { return !slotEscapes(slot) && canTrackVars; }
+    bool trackSlot(uint32_t slot) { return !slotEscapes(slot) && canTrackVars && slot < 1000; }
 
     const LifetimeVariable & liveness(uint32_t slot) {
         JS_ASSERT(script->compartment()->activeAnalysis);
@@ -1172,7 +1186,6 @@ class ScriptAnalysis
     inline bool addJump(JSContext *cx, unsigned offset,
                         unsigned *currentOffset, unsigned *forwardJump, unsigned *forwardLoop,
                         unsigned stackDepth);
-    void checkAliasedName(JSContext *cx, jsbytecode *pc);
 
     /* Lifetime helpers */
     inline void addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
@@ -1225,8 +1238,9 @@ class ScriptAnalysis
 
     /* Type inference helpers */
     bool analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferenceState &state);
-    bool followEscapingArguments(JSContext *cx, const SSAValue &v, Vector<SSAValue> *seen);
-    bool followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<SSAValue> *seen);
+    bool needsArgsObj(NeedsArgsObjState &state, const SSAValue &v);
+    bool needsArgsObj(NeedsArgsObjState &state, SSAUseChain *use);
+    bool needsArgsObj(JSContext *cx);
 
   public:
 #ifdef DEBUG
@@ -1352,14 +1366,6 @@ class CrossScriptSSA
 #ifdef DEBUG
 void PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc);
 #endif
-
-static inline bool
-SpeculateApplyOptimization(jsbytecode *pc)
-{
-    JS_ASSERT(*pc == JSOP_ARGUMENTS);
-    jsbytecode *nextpc = pc + JSOP_ARGUMENTS_LENGTH;
-    return *nextpc == JSOP_FUNAPPLY && GET_ARGC(nextpc) == 2;
-}
 
 } /* namespace analyze */
 } /* namespace js */

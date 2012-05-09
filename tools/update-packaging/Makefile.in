@@ -88,13 +88,14 @@ MOZ_EXTERNAL_SIGNING_FORMAT := $(filter-out signcode,$(MOZ_EXTERNAL_SIGNING_FORM
 MOZ_EXTERNAL_SIGNING_FORMAT := mar $(MOZ_EXTERNAL_SIGNING_FORMAT)
 endif
 
-complete-patch::
+dir-stage := $(call mkdir_deps,$(STAGE_DIR))
+
+complete-patch:: $(dir-stage)
 ifeq ($(OS_TARGET), WINNT)
 	test -f $(UNPACKAGE)
 	$(RM) -rf "$(PACKAGE_DIR)"
 	cd $(PACKAGE_BASE_DIR) && $(INNER_UNMAKE_PACKAGE)
 endif
-	mkdir -p $(STAGE_DIR)
 	MAR=$(MAR_BIN) \
 	  $(srcdir)/make_full_update.sh \
 	  "$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).complete.mar" \
@@ -103,8 +104,7 @@ ifdef MOZ_SIGN_PACKAGE_CMD
 	$(MOZ_SIGN_PACKAGE_CMD) "$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).complete.mar"
 endif
 
-partial-patch::
-	mkdir -p $(STAGE_DIR)
+partial-patch:: $(dir-stage)
 	MAR=$(MAR_BIN) \
 	MBSDIFF=$(MBSDIFF_BIN) \
 	  $(srcdir)/make_incremental_update.sh \

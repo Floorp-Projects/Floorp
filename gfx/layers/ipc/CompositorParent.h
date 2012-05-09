@@ -56,10 +56,6 @@
 
 class nsIWidget;
 
-namespace base {
-class Thread;
-}
-
 namespace mozilla {
 namespace layers {
 
@@ -90,7 +86,10 @@ class CompositorParent : public PCompositorParent,
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorParent)
 public:
-  CompositorParent(nsIWidget* aWidget, base::Thread* aCompositorThread);
+  CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop,
+                   PlatformThreadId aThreadID, bool aRenderToEGLSurface = false,
+                   int aSurfaceWidth = -1, int aSurfaceHeight = -1);
+
   virtual ~CompositorParent();
 
   virtual bool RecvWillStop() MOZ_OVERRIDE;
@@ -109,31 +108,39 @@ public:
   // Can be called from any thread
   void ScheduleRenderOnCompositorThread();
   void SchedulePauseOnCompositorThread();
-  void ScheduleResumeOnCompositorThread();
+  void ScheduleResumeOnCompositorThread(int width, int height);
 
 protected:
   virtual PLayersParent* AllocPLayers(const LayersBackend &backendType);
   virtual bool DeallocPLayers(PLayersParent* aLayers);
+  virtual void ScheduleTask(CancelableTask*, int);
+  virtual void Composite();
+  virtual void ScheduleComposition();
+  virtual void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight,
+                                     float aCssPageWidth, float aCssPageHeight);
+  virtual void SetPageSize(float aZoom, float aPageWidth, float aPageHeight, float aCssPageWidth, float aCssPageHeight);
+  virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
+                                nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
+  void SetEGLSurfaceSize(int width, int height);
 
 private:
   void PauseComposition();
   void ResumeComposition();
+  void ResumeCompositionAndResize(int width, int height);
 
-  void Composite();
-  void ScheduleComposition();
   void TransformShadowTree();
 
+  inline MessageLoop* CompositorLoop();
+  inline PlatformThreadId CompositorThreadID();
+
   // Platform specific functions
-#ifdef MOZ_WIDGET_ANDROID
   /**
    * Does a breadth-first search to find the first layer in the tree with a
    * displayport set.
    */
   Layer* GetPrimaryScrollableLayer();
-#endif
 
   nsRefPtr<LayerManager> mLayerManager;
-  base::Thread* mCompositorThread;
   nsIWidget* mWidget;
   CancelableTask *mCurrentCompositeTask;
   TimeStamp mLastCompose;
@@ -157,6 +164,11 @@ private:
   // This flag is set during a layers update, so that the first composition
   // after a layers update has it set. It is cleared after that first composition.
   bool mLayersUpdated;
+
+  MessageLoop* mCompositorLoop;
+  PlatformThreadId mThreadID;
+  bool mRenderToEGLSurface;
+  nsIntSize mEGLSurfaceSize;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

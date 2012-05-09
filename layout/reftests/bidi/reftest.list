@@ -1,3 +1,4 @@
+fails-if(Android) == bdi-element.html bdi-element-ref.html # sub-pixel AA
 == bidi-000.html bidi-000-ref.html
 == bidi-001.html bidi-001-ref.html
 == bidi-001-j.html bidi-001-ref.html
@@ -14,6 +15,7 @@ random-if(cocoaWidget) == bidi-006-j.html bidi-006-ref.html # bug 734313
 == bidiSVG-03.svg bidiSVG-03-ref.svg
 == bidiSVG-04.svg bidiSVG-04-ref.svg
 == bidiSVG-05.svg bidiSVG-05-ref.svg
+== bidiMirroring.svg bidiMirroring-ref.svg
 random-if(layersGPUAccelerated) == visualmarquee.html marquee-ref.html
 random-if(layersGPUAccelerated) == logicalmarquee.html marquee-ref.html
 == visualmarquee.html logicalmarquee.html
@@ -32,6 +34,13 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == mixedChartype-03-j.html mixedChartype-03-ref.html
 == unicode-bidi-anonymous-001.html unicode-bidi-anonymous-001-ref.html
 == unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002-ref.html
+fails == unicode-bidi-isolate-basic.html unicode-bidi-isolate-basic-ref.html # bug 712600
+fails == unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon-ref.html # bug 712600
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == unicode-bidi-plaintext.html unicode-bidi-plaintext-ref.html # sub-pixel AA
+== unicode-bidi-plaintext-textarea-1.html unicode-bidi-plaintext-textarea-ref.html
+== unicode-bidi-plaintext-textarea-2.html unicode-bidi-plaintext-textarea-ref.html
+== unicode-bidi-plaintext-textarea-3.html unicode-bidi-plaintext-textarea-ref.html
+== unicode-bidi-plaintext-textarea-4.html unicode-bidi-plaintext-textarea-ref.html
 == with-first-letter-1a.html with-first-letter-1-ref.html
 == with-first-letter-1b.html with-first-letter-1-ref.html
 random-if(cocoaWidget) == with-first-letter-2a.html with-first-letter-2-ref.html # bug 734313

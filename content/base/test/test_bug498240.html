@@ -77,12 +77,12 @@ function testInsertNode(node) {
   p = create('g<b>h</b>');
   select(p.childNodes[0],0,p.childNodes[0],0);
   insertClone(node);
-  check(p.childNodes[0],0,p.childNodes[0],0);
+  check(p.childNodes[0],0,p,2);
 
   p = create('i<b>j</b>');
   select(p.childNodes[0],1,p.childNodes[0],1);
   insertClone(node);
-  check(p.childNodes[0],1,p.childNodes[0],1);
+  check(p.childNodes[0],1,p,2);
 
   p = create('k<b>l</b>');
   select(p.childNodes[0],0,p.childNodes[1].childNodes[0],0);
@@ -137,12 +137,12 @@ function testInsertNode(node) {
   p = create('<i>O</i><b>P</b>');
   select(p,1,p,1);
   insertClone(node);
-  check(p,1,p,1);
+  check(p,1,p,2);
 
   p = create('<i>Q</i><b>R</b>');
   select(p,2,p,2);
   insertClone(node);
-  check(p,2,p,2);
+  check(p,2,p,3);
 
   p = create('<i>S</i><b>T</b>');
   select(p,1,p,1);
@@ -175,13 +175,13 @@ function testInsertNode(node) {
   check(p,0,p.childNodes[1],1);
 }
 function testInvalidNodeType(node) {
-  const INVALID_NODE_TYPE_ERR = 2;
   try { 
     testInsertNode(node); 
-    ok(false,"Expected a RangeException::INVALID_NODE_TYPE_ERR"); 
+    ok(false,"Expected an InvalidNodeTypeError"); 
   } catch(e) {
-    ok(e instanceof RangeException, "Wrong type of exception: " + e);
-    is(e.code, INVALID_NODE_TYPE_ERR, "Wrong exception code, expected INVALID_NODE_TYPE_ERR");
+    is(e.name, "InvalidNodeTypeError", "Wrong exception, expected InvalidNodeTypeError");
+    ok(e instanceof DOMException, "Wrong type of exception: " + e);
+    is(e.code, DOMException.INVALID_NODE_TYPE_ERR, "Wrong exception code, expected INVALID_NODE_TYPE_ERR");
   }
 }
 
@@ -205,41 +205,38 @@ function runTest() {
   // TODO: testInvalidNodeType(document.createNotation());
   // BUG: testInvalidNodeType(document.implementation.createDocument('http://www.w3.org/1999/xhtml', 'html', null));
 
-  todo(false, "test that Range::insertNode() throws DOMException::WRONG_DOCUMENT_ERR when it should");
-/* TODO: This works but shouldn't:
-  const WRONG_DOCUMENT_ERR = 4;
+  // Intentionally fails because of bug 418755.
+  todo(false, "test that Range::insertNode() throws WrongDocumentError when it should");
   i = document.implementation.createDocument('http://www.w3.org/1999/xhtml', 'html', null).createElement('html');
   try { 
     testInsertNode(i);
-    ok(false,"Expected a DOMException::WRONG_DOCUMENT_ERR"); 
+    todo(false,"Expected a WrongDocumentError"); 
   } catch(e) {
+    is(e.name, "WrongDocumentError", "Wrong exception, expected WrongDocumentError");
     ok(e instanceof DOMException, "Wrong type of exception: " + e);
-    is(e.code, WRONG_DOCUMENT_ERR, "Wrong exception code, expected WRONG_DOCUMENT_ERR");
+    is(e.code, DOMException.WRONG_DOCUMENT_ERR, "Wrong exception code, expected WRONG_DOCUMENT_ERR");
   }
-*/
 
-  // Inserting an ancestor of the start container should throw HIERARCHY_REQUEST_ERR
-  todo(false, "test that Range::insertNode() throws HIERARCHY_REQUEST_ERR when it should");
-/* TODO: This works but shouldn't:
-  const HIERARCHY_REQUEST_ERR = 3;
+  // Inserting an ancestor of the start container should throw HierarchyRequestError
+  todo(false, "test that Range::insertNode() throws HierarchyRequestError when it should");
   var p = create('<b>IJK</b>');
   select(p.childNodes[0],0,p.childNodes[0],1);
   var sel = getSelection();
   var range = sel.getRangeAt(0);
   try { 
     range.insertNode(p);
-    ok(false,"Expected a DOMException::HIERARCHY_REQUEST_ERR"); 
+    ok(false,"Expected a HierarchyRequestError"); 
   } catch(e) {
+    is(e.name, "HierarchyRequestError", "Wrong exception, expected HierarchyRequestError");
     ok(e instanceof DOMException, "Wrong type of exception: " + e);
-    is(e.code, HIERARCHY_REQUEST_ERR, "Wrong exception code, expected HIERARCHY_REQUEST_ERR");
+    is(e.code, DOMException.HIERARCHY_REQUEST_ERR, "Wrong exception code, expected HIERARCHY_REQUEST_ERR");
   }
-*/
 
   // TODO: we should also have a test for:
-  /// "HIERARCHY_REQUEST_ERR: Raised if the container of the start of the Range is of a type
+  /// "HierarchyRequestError: Raised if the container of the start of the Range is of a type
   ///   that does not allow children of the type of newNode"
 
-  todo(false, "INVALID_STATE_ERR test goes here...");
+  todo(false, "InvalidStateError test goes here...");
 
   var sel = getSelection();
   sel.removeAllRanges();

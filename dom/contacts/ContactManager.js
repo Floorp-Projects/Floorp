@@ -175,7 +175,7 @@ Contact.prototype = {
 // ContactManager
 
 const CONTACTMANAGER_CONTRACTID = "@mozilla.org/contactManager;1";
-const CONTACTMANAGER_CID        = Components.ID("{50a820b0-ced0-11e0-9572-0800200c9a66}");
+const CONTACTMANAGER_CID        = Components.ID("{d9ca0950-93d1-11e1-b0c4-0800200c9a66}");
 const nsIDOMContactManager      = Components.interfaces.nsIDOMContactManager;
 
 function ContactManager()
@@ -185,6 +185,18 @@ function ContactManager()
 
 ContactManager.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
+  _oncontactchange: null,
+
+  set oncontactchange(aCallback) {
+    if (this.hasPrivileges)
+      this._oncontactchange = aCallback;
+    else
+      throw Components.results.NS_ERROR_FAILURE;
+  },
+
+  get oncontactchange() {
+    return this._oncontactchange;
+  },
 
   save: function save(aContact) {
     let request;
@@ -216,17 +228,21 @@ ContactManager.prototype = {
       for (let field in newContact.properties)
         newContact.properties[field] = aContact[field];
 
+      let reason;
       if (aContact.id == "undefined") {
         // for example {25c00f01-90e5-c545-b4d4-21E2ddbab9e0} becomes
         // 25c00f0190e5c545b4d421E2ddbab9e0
-        aContact.id = this._getRandomId().replace('-', '').replace('{', '').replace('}', '');
+        aContact.id = this._getRandomId().replace('-', '', 'g').replace('{', '').replace('}', '');
+        reason = "create";
+      } else {
+        reason = "update";
       }
 
       this._setMetaData(newContact, aContact);
       debug("send: " + JSON.stringify(newContact));
       request = this.createRequest();
       cpmm.sendAsyncMessage("Contact:Save", {contact: newContact,
-                                             requestID: this.getRequestId(request)});
+                                             requestID: this.getRequestId({request: request, reason: reason })});
       return request;
     } else {
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -238,7 +254,7 @@ ContactManager.prototype = {
     if (this.hasPrivileges) {
       request = this.createRequest();
       cpmm.sendAsyncMessage("Contact:Remove", {id: aRecord.id,
-                                               requestID: this.getRequestId(request)});
+                                               requestID: this.getRequestId({request: request, reason: "remove"})});
       return request;
     } else {
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -273,7 +289,7 @@ ContactManager.prototype = {
         if (req) {
           let result = this._convertContactsArray(contacts);
           debug("result: " + JSON.stringify(result));
-          Services.DOMRequest.fireSuccess(req, result);
+          Services.DOMRequest.fireSuccess(req.request, result);
         } else {
           debug("no request stored!" + msg.requestID);
         }
@@ -283,7 +299,13 @@ ContactManager.prototype = {
       case "Contact:Remove:Return:OK":
         req = this.getRequest(msg.requestID);
         if (req)
-          Services.DOMRequest.fireSuccess(req, null);
+          Services.DOMRequest.fireSuccess(req.request, null);
+
+        // Fire oncontactchange event
+        if (this._oncontactchange) {
+          let event = new MozContactEvent(msg.contactID, req.reason);
+          this._oncontactchange.handleEvent(event);
+        }
         break;
       case "Contacts:Find:Return:KO":
       case "Contact:Save:Return:KO":
@@ -291,7 +313,7 @@ ContactManager.prototype = {
       case "Contacts:Clear:Return:KO":
         req = this.getRequest(msg.requestID);
         if (req)
-          Services.DOMRequest.fireError(req, msg.errorMsg);
+          Services.DOMRequest.fireError(req.request, msg.errorMsg);
         break;
       default: 
         debug("Wrong message: " + aMessage.name);
@@ -304,7 +326,7 @@ ContactManager.prototype = {
     if (this.hasPrivileges) {
       request = this.createRequest();
       cpmm.sendAsyncMessage("Contacts:Find", {findOptions: aOptions, 
-                                              requestID: this.getRequestId(request)});
+                                              requestID: this.getRequestId({request: request, reason: "find"})});
       return request;
     } else {
       debug("find not allowed");
@@ -316,7 +338,7 @@ ContactManager.prototype = {
     let request;
     if (this.hasPrivileges) {
       request = this.createRequest();
-      cpmm.sendAsyncMessage("Contacts:Clear", {requestID: this.getRequestId(request)});
+      cpmm.sendAsyncMessage("Contacts:Clear", {requestID: this.getRequestId({request: request, reason: "remove"})});
       return request;
     } else {
       debug("clear not allowed");
@@ -334,8 +356,6 @@ ContactManager.prototype = {
                      "Contact:Save:Return:OK", "Contact:Save:Return:KO",
                      "Contact:Remove:Return:OK", "Contact:Remove:Return:KO"]);
 
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
-
     let principal = aWindow.document.nodePrincipal;
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 
@@ -348,6 +368,13 @@ ContactManager.prototype = {
     debug("has privileges :" + this.hasPrivileges);
   },
 
+  // Called from DOMRequestIpcHelper
+  uninit: function uninit() {
+    debug("uninit call");
+    if (this._oncontactchange)
+      this._oncontactchange = null;
+  },
+
   classID : CONTACTMANAGER_CID,
   QueryInterface : XPCOMUtils.generateQI([nsIDOMContactManager, Ci.nsIDOMGlobalPropertyInitializer]),
 
@@ -356,6 +383,33 @@ ContactManager.prototype = {
                                      classDescription: "ContactManager",
                                      interfaces: [nsIDOMContactManager],
                                      flags: nsIClassInfo.DOM_OBJECT})
+}
+
+// MozContactEvent object
+function MozContactEvent(aContactID, aReason) {
+  debug("ContactEventConstr: " + aContactID + ", " + aReason);
+  this._contactID = aContactID;
+  this._reason = aReason;
+}
+
+MozContactEvent.prototype = {
+  get contactID() {
+    return this._contactID;
+  },
+
+  get reason() {
+    return this._reason;
+  },
+
+  classID: Components.ID("{a8cd4ba0-93d1-11e1-b0c4-0800200c9a66}"),
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.mozIDOMContactEvent]),
+
+  classInfo: XPCOMUtils.generateCI({classID: Components.ID("{a8cd4ba0-93d1-11e1-b0c4-0800200c9a66}"),
+                                    contractID: "@mozilla.org/contact-event;1",
+                                    interfaces: [Ci.mozIDOMContactEvent],
+                                    flags: Ci.nsIClassInfo.DOM_OBJECT,
+                                    classDescription: "Contact Change Event"})
 }
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([Contact, ContactManager, ContactProperties, ContactAddress, ContactFindOptions])

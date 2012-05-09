@@ -402,9 +402,9 @@ ElementManager.prototype = {
         elements = this.findByXPathAll(rootNode, value, startNode);
         break;
       case NAME:
-        element = startNode.getElementsByName ?
-                  startNode.getElementsByName(value)[0] : 
-                  this.findByXPathAll(rootNode, './/*[@name="' + value + '"]', startNode);
+        elements = startNode.getElementsByName ?
+                   startNode.getElementsByName(value) : 
+                   this.findByXPathAll(rootNode, './/*[@name="' + value + '"]', startNode);
         break;
       case CLASS_NAME:
         elements = startNode.getElementsByClassName(value);
@@ -427,7 +427,7 @@ ElementManager.prototype = {
         }
         break;
       case SELECTOR:
-        elements = rootNode.querySelectorAll(value);
+        elements = Array.slice(rootNode.querySelectorAll(value));
         break;
       default:
         throw new ElementException("No such strategy", 500, null);

@@ -244,12 +244,13 @@ public:
     nsXULScrollFrame_id,
     ViewportFrame_id,
 
-    // The PresArena implementation uses this bit to distinguish
-    // objects allocated by size (that is, non-frames) from objects
-    // allocated by code (that is, frames).  It should not collide
-    // with any frame ID.  It is not 0x80000000 to avoid the question
-    // of whether enumeration constants are signed.
-    NON_FRAME_MARKER = 0x40000000
+    // The PresArena implementation uses this bit to distinguish objects
+    // allocated by size from objects allocated by type ID (that is, frames
+    // using AllocateByFrameID, and other objects using AllocateByObjectID).
+    // It should not collide with any frame ID (above) or Object ID (in
+    // nsPresArena.h).  It is not 0x80000000 to avoid the question of
+    // whether enumeration constants are signed.
+    NON_FRAME_MARKER = 0x20000000
   };
 
   virtual void* QueryFrame(FrameIID id) = 0;

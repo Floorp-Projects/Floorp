@@ -201,6 +201,12 @@ public:
                                       nsIDOMNode **aEndNode,
                                       PRInt32 *aEndOffset);
 
+  /**
+   * Return true if the used ARIA role (if any) allows the hypertext accessible
+   * to expose text interfaces.
+   */
+  bool IsTextRole();
+
   //////////////////////////////////////////////////////////////////////////////
   // TextAccessible
 
@@ -390,9 +396,9 @@ protected:
   nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
 
   // Helpers
-  nsresult GetDOMPointByFrameOffset(nsIFrame *aFrame, PRInt32 aOffset,
-                                    nsIAccessible *aAccessible,
-                                    nsIDOMNode **aNode, PRInt32 *aNodeOffset);
+  nsresult GetDOMPointByFrameOffset(nsIFrame* aFrame, PRInt32 aOffset,
+                                    nsAccessible* aAccessible,
+                                    nsIDOMNode** aNode, PRInt32* aNodeOffset);
 
   
   /**

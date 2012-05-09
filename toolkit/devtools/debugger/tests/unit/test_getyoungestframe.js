@@ -1,6 +1,7 @@
 function run_test()
 {
   Components.utils.import("resource://gre/modules/jsdebugger.jsm");
+  addDebuggerToGlobal(this);
   var xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
   var g = testGlobal("test1");
 

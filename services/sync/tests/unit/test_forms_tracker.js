@@ -1,6 +1,6 @@
 Cu.import("resource://services-sync/engines/forms.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-common/log4moz.js");
 
 function run_test() {
   _("Verify we've got an empty tracker to work with.");

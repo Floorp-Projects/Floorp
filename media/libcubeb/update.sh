@@ -5,6 +5,7 @@ cp $1/include/cubeb/cubeb.h include
 cp $1/src/cubeb_alsa.c src
 cp $1/src/cubeb_winmm.c src
 cp $1/src/cubeb_audiounit.c src
+cp $1/src/cubeb_pulse.c src
 cp $1/LICENSE .
 cp $1/README .
 cp $1/AUTHORS .

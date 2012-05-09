@@ -58,6 +58,7 @@
 #include "nsICSSRuleList.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
+#include "nsRuleNode.h"
 
 #include "nsContentUtils.h"
 #include "nsStyleConsts.h"
@@ -1449,7 +1450,7 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     return NS_OK;
 
   case eCSSFontDesc_FontFeatureSettings:
-    val.AppendToString(eCSSProperty_font_feature_settings, aResult);
+    nsStyleUtil::AppendFontFeatureSettings(val, aResult);
     return NS_OK;
 
   case eCSSFontDesc_FontLanguageOverride:

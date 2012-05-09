@@ -55,7 +55,7 @@
       <Description>
         <em:id>{a23983c0-fd0e-11dc-95ff-0800200c9a66}</em:id>
         <em:minVersion>@MOZ_APP_VERSION@</em:minVersion>
-        <em:maxVersion>@MOZ_APP_VERSION@</em:maxVersion>
+        <em:maxVersion>@MOZ_APP_MAXVERSION@</em:maxVersion>
       </Description>
     </em:targetApplication>
   </Description>

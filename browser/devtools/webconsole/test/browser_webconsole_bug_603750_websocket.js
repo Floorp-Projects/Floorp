@@ -30,8 +30,6 @@ let TestObserver = {
           "sourceName is correct");
 
     if (++errors == 2) {
-      is(lastWindowId, aSubject.outerWindowID,
-         "same window ID (" + lastWindowId + ") for both errors");
       executeSoon(performTest);
     }
     else {

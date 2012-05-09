@@ -40,6 +40,12 @@ probes/Makefile
 extensions/Makefile
 "
 
+if [ "$MOZ_WEBAPP_RUNTIME" ]; then
+  add_makefiles "
+webapprt/Makefile
+  "
+fi
+
 if [ ! "$LIBXUL_SDK" ]; then
   if [ "$STLPORT_SOURCES" ]; then
     add_makefiles "
@@ -83,6 +89,11 @@ if [ "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" ]; then
   add_makefiles "
     build/unix/Makefile
   "
+  if [ "$STDCXX_COMPAT" ]; then
+    add_makefiles "
+      build/unix/stdc++compat/Makefile
+    "
+  fi
   if [ "$USE_ELF_HACK" ]; then
     add_makefiles "
       build/unix/elfhack/Makefile

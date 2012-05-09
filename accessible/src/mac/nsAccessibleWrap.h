@@ -101,7 +101,7 @@ public: // construction, destruction
    */
   void GetUnignoredChildren(nsTArray<nsAccessible*>* aChildrenArray);
   nsAccessible* GetUnignoredParent() const;
-    
+
 protected:
 
   virtual nsresult FirePlatformEvent(AccEvent* aEvent);

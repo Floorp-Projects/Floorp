@@ -38,16 +38,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "frontend/FoldConstants.h"
+#include "mozilla/FloatingPoint.h"
 
 #include "jslibmath.h"
-
-#include "frontend/BytecodeEmitter.h"
-#include "frontend/ParseNode.h"
-
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
+
+#include "frontend/BytecodeEmitter.h"
+#include "frontend/FoldConstants.h"
+#include "frontend/ParseNode.h"
+#include "vm/NumericConversions.h"
 
 #include "jsatominlines.h"
 
@@ -155,16 +156,16 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
     switch (op) {
       case JSOP_LSH:
       case JSOP_RSH:
-        i = js_DoubleToECMAInt32(d);
-        j = js_DoubleToECMAInt32(d2);
+        i = ToInt32(d);
+        j = ToInt32(d2);
         j &= 31;
         d = (op == JSOP_LSH) ? i << j : i >> j;
         break;
 
       case JSOP_URSH:
-        j = js_DoubleToECMAInt32(d2);
+        j = ToInt32(d2);
         j &= 31;
-        d = js_DoubleToECMAUint32(d) >> j;
+        d = ToUint32(d) >> j;
         break;
 
       case JSOP_ADD:
@@ -183,13 +184,13 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
         if (d2 == 0) {
 #if defined(XP_WIN)
             /* XXX MSVC miscompiles such that (NaN == 0) */
-            if (JSDOUBLE_IS_NaN(d2))
+            if (MOZ_DOUBLE_IS_NaN(d2))
                 d = js_NaN;
             else
 #endif
-            if (d == 0 || JSDOUBLE_IS_NaN(d))
+            if (d == 0 || MOZ_DOUBLE_IS_NaN(d))
                 d = js_NaN;
-            else if (JSDOUBLE_IS_NEG(d) != JSDOUBLE_IS_NEG(d2))
+            else if (MOZ_DOUBLE_IS_NEGATIVE(d) != MOZ_DOUBLE_IS_NEGATIVE(d2))
                 d = js_NegativeInfinity;
             else
                 d = js_PositiveInfinity;
@@ -230,8 +231,8 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
     ParseNodeKind kind = pn->getKind();
     ParseNode **pnp = &pn->pn_head;
     ParseNode *pn1 = *pnp;
-    JSString *accum = NULL;
-    JSString *str = NULL;
+    RootedVarString accum(cx);
+    RootedVarString str(cx);
     if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
         if (kind == PNK_XMLETAGO)
             accum = cx->runtime->atomState.etagoAtom;
@@ -392,7 +393,7 @@ Boolish(ParseNode *pn)
 {
     switch (pn->getOp()) {
       case JSOP_DOUBLE:
-        return (pn->pn_dval != 0 && !JSDOUBLE_IS_NaN(pn->pn_dval)) ? Truthy : Falsy;
+        return (pn->pn_dval != 0 && !MOZ_DOUBLE_IS_NaN(pn->pn_dval)) ? Truthy : Falsy;
 
       case JSOP_STRING:
         return (pn->pn_atom->length() > 0) ? Truthy : Falsy;
@@ -565,7 +566,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         /* Reduce 'if (C) T; else E' into T for true C, E for false. */
         switch (pn1->getKind()) {
           case PNK_NUMBER:
-            if (pn1->pn_dval == 0 || JSDOUBLE_IS_NaN(pn1->pn_dval))
+            if (pn1->pn_dval == 0 || MOZ_DOUBLE_IS_NaN(pn1->pn_dval))
                 pn2 = pn3;
             break;
           case PNK_STRING:
@@ -745,15 +746,13 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
         /* Handle a binary string concatenation. */
         JS_ASSERT(pn->isArity(PN_BINARY));
         if (pn1->isKind(PNK_STRING) || pn2->isKind(PNK_STRING)) {
-            JSString *left, *right, *str;
-
             if (!FoldType(cx, !pn1->isKind(PNK_STRING) ? pn1 : pn2, PNK_STRING))
                 return false;
             if (!pn1->isKind(PNK_STRING) || !pn2->isKind(PNK_STRING))
                 return true;
-            left = pn1->pn_atom;
-            right = pn2->pn_atom;
-            str = js_ConcatStrings(cx, left, right);
+            RootedVarString left(cx, pn1->pn_atom);
+            RootedVarString right(cx, pn2->pn_atom);
+            RootedVarString str(cx, js_ConcatStrings(cx, left, right));
             if (!str)
                 return false;
             pn->pn_atom = js_AtomizeString(cx, str);
@@ -828,7 +827,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             d = pn1->pn_dval;
             switch (pn->getOp()) {
               case JSOP_BITNOT:
-                d = ~js_DoubleToECMAInt32(d);
+                d = ~ToInt32(d);
                 break;
 
               case JSOP_NEG:
@@ -839,7 +838,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
                 break;
 
               case JSOP_NOT:
-                if (d == 0 || JSDOUBLE_IS_NaN(d)) {
+                if (d == 0 || MOZ_DOUBLE_IS_NaN(d)) {
                     pn->setKind(PNK_TRUE);
                     pn->setOp(JSOP_TRUE);
                 } else {

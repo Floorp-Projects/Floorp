@@ -422,12 +422,10 @@ InputDevice* InputReader::createDeviceLocked(int32_t deviceId,
         device->addMapper(new KeyboardInputMapper(device, keyboardSource, keyboardType));
     }
 
-#if 0
     // Cursor-like devices.
     if (classes & INPUT_DEVICE_CLASS_CURSOR) {
         device->addMapper(new CursorInputMapper(device));
     }
-#endif
 
     // Touchscreens and touchpad devices.
     if (classes & INPUT_DEVICE_CLASS_TOUCH_MT) {
@@ -2004,7 +2002,6 @@ void KeyboardInputMapper::updateLedStateForModifier(LedState& ledState,
 
 // --- CursorInputMapper ---
 
-#ifdef HAVE_ANDROID_OS
 CursorInputMapper::CursorInputMapper(InputDevice* device) :
         InputMapper(device) {
 }
@@ -2021,12 +2018,10 @@ void CursorInputMapper::populateDeviceInfo(InputDeviceInfo* info) {
 
     if (mParameters.mode == Parameters::MODE_POINTER) {
         float minX, minY, maxX, maxY;
-#if 0
         if (mPointerController->getBounds(&minX, &minY, &maxX, &maxY)) {
             info->addMotionRange(AMOTION_EVENT_AXIS_X, mSource, minX, maxX, 0.0f, 0.0f);
             info->addMotionRange(AMOTION_EVENT_AXIS_Y, mSource, minY, maxY, 0.0f, 0.0f);
         }
-#endif
     } else {
         info->addMotionRange(AMOTION_EVENT_AXIS_X, mSource, -1.0f, 1.0f, 0.0f, mXScale);
         info->addMotionRange(AMOTION_EVENT_AXIS_Y, mSource, -1.0f, 1.0f, 0.0f, mYScale);
@@ -2078,7 +2073,7 @@ void CursorInputMapper::configure(nsecs_t when,
             mYPrecision = 1.0f;
             mXScale = 1.0f;
             mYScale = 1.0f;
-            //mPointerController = getPolicy()->obtainPointerController(getDeviceId());
+            mPointerController = getPolicy()->obtainPointerController(getDeviceId());
             break;
         case Parameters::MODE_NAVIGATION:
             mSource = AINPUT_SOURCE_TRACKBALL;
@@ -2225,7 +2220,6 @@ void CursorInputMapper::sync(nsecs_t when) {
 
     mPointerVelocityControl.move(when, &deltaX, &deltaY);
 
-#if 0
     if (mPointerController != NULL) {
         if (moved || scrolled || buttonsChanged) {
             mPointerController->setPresentation(
@@ -2247,10 +2241,9 @@ void CursorInputMapper::sync(nsecs_t when) {
         pointerCoords.setAxisValue(AMOTION_EVENT_AXIS_X, x);
         pointerCoords.setAxisValue(AMOTION_EVENT_AXIS_Y, y);
     } else {
-#endif
         pointerCoords.setAxisValue(AMOTION_EVENT_AXIS_X, deltaX);
         pointerCoords.setAxisValue(AMOTION_EVENT_AXIS_Y, deltaY);
-//    }
+    }
 
     pointerCoords.setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, down ? 1.0f : 0.0f);
 
@@ -2273,8 +2266,7 @@ void CursorInputMapper::sync(nsecs_t when) {
         int32_t motionEventAction;
         if (downChanged) {
             motionEventAction = down ? AMOTION_EVENT_ACTION_DOWN : AMOTION_EVENT_ACTION_UP;
-        //} else if (down || mPointerController == NULL) {
-        } else if (1) {
+        } else if (down || mPointerController == NULL) {
             motionEventAction = AMOTION_EVENT_ACTION_MOVE;
         } else {
             motionEventAction = AMOTION_EVENT_ACTION_HOVER_MOVE;
@@ -2286,7 +2278,6 @@ void CursorInputMapper::sync(nsecs_t when) {
         getListener()->notifyMotion(&args);
 
         // Send hover move after UP to tell the application that the mouse is hovering now.
-#if 0
         if (motionEventAction == AMOTION_EVENT_ACTION_UP
                 && mPointerController != NULL) {
             NotifyMotionArgs hoverArgs(when, getDeviceId(), mSource, policyFlags,
@@ -2295,7 +2286,6 @@ void CursorInputMapper::sync(nsecs_t when) {
                     1, &pointerProperties, &pointerCoords, mXPrecision, mYPrecision, downTime);
             getListener()->notifyMotion(&hoverArgs);
         }
-#endif
 
         // Send scroll events.
         if (scrolled) {
@@ -2332,7 +2322,6 @@ void CursorInputMapper::fadePointer() {
     }
 }
 
-#endif // HAVE_ANDROID_OS
 
 // --- TouchInputMapper ---
 
@@ -2701,13 +2690,11 @@ void TouchInputMapper::configureSurface(nsecs_t when, bool* outResetNeeded) {
     // Create pointer controller if needed.
     if (mDeviceMode == DEVICE_MODE_POINTER ||
             (mDeviceMode == DEVICE_MODE_DIRECT && mConfig.showTouches)) {
-#if 0
         if (mPointerController == NULL) {
             mPointerController = getPolicy()->obtainPointerController(getDeviceId());
         }
-#endif
     } else {
-        //mPointerController.clear();
+        mPointerController.clear();
     }
 
     bool orientationChanged = mSurfaceOrientation != orientation;
@@ -3295,12 +3282,10 @@ void TouchInputMapper::reset(nsecs_t when) {
     mPointerGesture.reset();
     mPointerSimple.reset();
 
-#if 0
     if (mPointerController != NULL) {
         mPointerController->fade(PointerControllerInterface::TRANSITION_GRADUAL);
         mPointerController->clearSpots();
     }
-#endif
 
     InputMapper::reset(when);
 }
@@ -3437,7 +3422,6 @@ void TouchInputMapper::sync(nsecs_t when) {
 
             dispatchPointerUsage(when, policyFlags, pointerUsage);
         } else {
-#if 0
             if (mDeviceMode == DEVICE_MODE_DIRECT
                     && mConfig.showTouches && mPointerController != NULL) {
                 mPointerController->setPresentation(PointerControllerInterface::PRESENTATION_SPOT);
@@ -3448,7 +3432,6 @@ void TouchInputMapper::sync(nsecs_t when) {
                         mCurrentCookedPointerData.idToIndex,
                         mCurrentCookedPointerData.touchingIdBits);
             }
-#endif
 
             dispatchHoverExit(when, policyFlags);
             dispatchTouches(when, policyFlags);
@@ -3982,7 +3965,6 @@ void TouchInputMapper::dispatchPointerGestures(nsecs_t when, uint32_t policyFlag
     }
 
     // Update the pointer presentation and spots.
-#if 0
     if (mParameters.gestureMode == Parameters::GESTURE_MODE_SPOTS) {
         mPointerController->setPresentation(PointerControllerInterface::PRESENTATION_SPOT);
         if (finishPreviousGesture || cancelPreviousGesture) {
@@ -4026,7 +4008,6 @@ void TouchInputMapper::dispatchPointerGestures(nsecs_t when, uint32_t policyFlag
         }
         break;
     }
-#endif
 
     // Send events!
     int32_t metaState = getContext()->getGlobalMetaState();
@@ -4139,7 +4120,6 @@ void TouchInputMapper::dispatchPointerGestures(nsecs_t when, uint32_t policyFlag
         // the pointer is hovering again even if the user is not currently touching
         // the touch pad.  This ensures that a view will receive a fresh hover enter
         // event after a tap.
-#if 0
         float x, y;
         mPointerController->getPosition(&x, &y);
 
@@ -4158,7 +4138,6 @@ void TouchInputMapper::dispatchPointerGestures(nsecs_t when, uint32_t policyFlag
                 metaState, buttonState, AMOTION_EVENT_EDGE_FLAG_NONE,
                 1, &pointerProperties, &pointerCoords, 0, 0, mPointerGesture.downTime);
         getListener()->notifyMotion(&args);
-#endif
     }
 
     // Update state.
@@ -4198,12 +4177,10 @@ void TouchInputMapper::abortPointerGestures(nsecs_t when, uint32_t policyFlags) 
     mPointerVelocityControl.reset();
 
     // Remove any current spots.
-#if 0
     if (mPointerController != NULL) {
         mPointerController->fade(PointerControllerInterface::TRANSITION_GRADUAL);
         mPointerController->clearSpots();
     }
-#endif
 }
 
 bool TouchInputMapper::preparePointerGestures(nsecs_t when,
@@ -4393,13 +4370,13 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
             // Move the pointer using a relative motion.
             // When using spots, the click will occur at the position of the anchor
             // spot and all other spots will move there.
-            //mPointerController->move(deltaX, deltaY);
+            mPointerController->move(deltaX, deltaY);
         } else {
             mPointerVelocityControl.reset();
         }
 
         float x, y;
-        //mPointerController->getPosition(&x, &y);
+        mPointerController->getPosition(&x, &y);
 
         mPointerGesture.currentGestureMode = PointerGesture::BUTTON_CLICK_OR_DRAG;
         mPointerGesture.currentGestureIdBits.clear();
@@ -4426,7 +4403,7 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
                 && lastFingerCount == 1) {
             if (when <= mPointerGesture.tapDownTime + mConfig.pointerGestureTapInterval) {
                 float x, y;
-                //mPointerController->getPosition(&x, &y);
+                mPointerController->getPosition(&x, &y);
                 if (fabs(x - mPointerGesture.tapX) <= mConfig.pointerGestureTapSlop
                         && fabs(y - mPointerGesture.tapY) <= mConfig.pointerGestureTapSlop) {
 #if DEBUG_GESTURES
@@ -4494,7 +4471,7 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
         if (mPointerGesture.lastGestureMode == PointerGesture::TAP) {
             if (when <= mPointerGesture.tapUpTime + mConfig.pointerGestureTapDragInterval) {
                 float x, y;
-                //mPointerController->getPosition(&x, &y);
+                mPointerController->getPosition(&x, &y);
                 if (fabs(x - mPointerGesture.tapX) <= mConfig.pointerGestureTapSlop
                         && fabs(y - mPointerGesture.tapY) <= mConfig.pointerGestureTapSlop) {
                     mPointerGesture.currentGestureMode = PointerGesture::TAP_DRAG;
@@ -4530,7 +4507,7 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
 
             // Move the pointer using a relative motion.
             // When using spots, the hover or drag will occur at the position of the anchor spot.
-            //mPointerController->move(deltaX, deltaY);
+            mPointerController->move(deltaX, deltaY);
         } else {
             mPointerVelocityControl.reset();
         }
@@ -4553,7 +4530,7 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
         }
 
         float x, y;
-        //mPointerController->getPosition(&x, &y);
+        mPointerController->getPosition(&x, &y);
 
         mPointerGesture.currentGestureIdBits.clear();
         mPointerGesture.currentGestureIdBits.markBit(mPointerGesture.activeGestureId);
@@ -4627,8 +4604,8 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
             mCurrentRawPointerData.getCentroidOfTouchingPointers(
                     &mPointerGesture.referenceTouchX,
                     &mPointerGesture.referenceTouchY);
-            //mPointerController->getPosition(&mPointerGesture.referenceGestureX,
-             //       &mPointerGesture.referenceGestureY);
+            mPointerController->getPosition(&mPointerGesture.referenceGestureX,
+                    &mPointerGesture.referenceGestureY);
         }
 
         // Clear the reference deltas for fingers not yet included in the reference calculation.
@@ -4920,7 +4897,7 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
         }
     }
 
-    //mPointerController->setButtonState(mCurrentButtonState);
+    mPointerController->setButtonState(mCurrentButtonState);
 
 #if DEBUG_GESTURES
     ALOGD("Gestures: finishPreviousGesture=%s, cancelPreviousGesture=%s, "
@@ -4967,12 +4944,12 @@ void TouchInputMapper::dispatchPointerStylus(nsecs_t when, uint32_t policyFlags)
         uint32_t index = mCurrentCookedPointerData.idToIndex[id];
         float x = mCurrentCookedPointerData.pointerCoords[index].getX();
         float y = mCurrentCookedPointerData.pointerCoords[index].getY();
-        //mPointerController->setPosition(x, y);
+        mPointerController->setPosition(x, y);
 
         hovering = mCurrentCookedPointerData.hoveringIdBits.hasBit(id);
         down = !hovering;
 
-        //mPointerController->getPosition(&x, &y);
+        mPointerController->getPosition(&x, &y);
         mPointerSimple.currentCoords.copyFrom(mCurrentCookedPointerData.pointerCoords[index]);
         mPointerSimple.currentCoords.setAxisValue(AMOTION_EVENT_AXIS_X, x);
         mPointerSimple.currentCoords.setAxisValue(AMOTION_EVENT_AXIS_Y, y);
@@ -5011,7 +4988,7 @@ void TouchInputMapper::dispatchPointerMouse(nsecs_t when, uint32_t policyFlags) 
             rotateDelta(mSurfaceOrientation, &deltaX, &deltaY);
             mPointerVelocityControl.move(when, &deltaX, &deltaY);
 
-            //mPointerController->move(deltaX, deltaY);
+            mPointerController->move(deltaX, deltaY);
         } else {
             mPointerVelocityControl.reset();
         }
@@ -5020,7 +4997,7 @@ void TouchInputMapper::dispatchPointerMouse(nsecs_t when, uint32_t policyFlags) 
         hovering = !down;
 
         float x, y;
-        //mPointerController->getPosition(&x, &y);
+        mPointerController->getPosition(&x, &y);
         mPointerSimple.currentCoords.copyFrom(
                 mCurrentCookedPointerData.pointerCoords[currentIndex]);
         mPointerSimple.currentCoords.setAxisValue(AMOTION_EVENT_AXIS_X, x);
@@ -5050,7 +5027,6 @@ void TouchInputMapper::dispatchPointerSimple(nsecs_t when, uint32_t policyFlags,
         bool down, bool hovering) {
     int32_t metaState = getContext()->getGlobalMetaState();
 
-#if 0
     if (mPointerController != NULL) {
         if (down || hovering) {
             mPointerController->setPresentation(PointerControllerInterface::PRESENTATION_POINTER);
@@ -5061,7 +5037,6 @@ void TouchInputMapper::dispatchPointerSimple(nsecs_t when, uint32_t policyFlags,
             mPointerController->fade(PointerControllerInterface::TRANSITION_GRADUAL);
         }
     }
-#endif
 
     if (mPointerSimple.down && !down) {
         mPointerSimple.down = false;
@@ -5240,11 +5215,9 @@ bool TouchInputMapper::updateMovedPointers(const PointerProperties* inProperties
 }
 
 void TouchInputMapper::fadePointer() {
-#if 0
     if (mPointerController != NULL) {
         mPointerController->fade(PointerControllerInterface::TRANSITION_GRADUAL);
     }
-#endif
 }
 
 bool TouchInputMapper::isPointInsideSurface(int32_t x, int32_t y) {

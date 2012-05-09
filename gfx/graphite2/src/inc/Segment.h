@@ -53,7 +53,7 @@ class Segment;
 enum SpliceParam {
 /** sub-Segments longer than this are not cached
  * (in Unicode code points) */
-    eMaxSpliceSize = 16
+    eMaxSpliceSize = 96
 };
 
 enum justFlags {
@@ -92,8 +92,9 @@ public:
     SegmentScopeState setScope(Slot * firstSlot, Slot * lastSlot, size_t subLength);
     void removeScope(SegmentScopeState & state);
     void append(const Segment &other);
-    void splice(size_t offset, size_t length, Slot * startSlot, Slot * endSlot, 
-                const Slot * firstSpliceSlot, size_t numGlyphs);
+    void splice(size_t offset, size_t length, Slot * const startSlot,
+            Slot * endSlot, const Slot * srcSlot,
+            const size_t numGlyphs);
 #endif
     Slot *first() { return m_first; }
     void first(Slot *p) { m_first = p; }
@@ -103,6 +104,7 @@ public:
     Slot *newSlot();
     void freeSlot(Slot *);
     Position positionSlots(const Font *font, Slot *first=0, Slot *last=0);
+    void associateChars();
     void linkClusters(Slot *first, Slot *last);
     uint16 getClassGlyph(uint16 cid, uint16 offset) const { return m_silf->getClassGlyph(cid, offset); }
     uint16 findClassIndex(uint16 cid, uint16 gid) const { return m_silf->findClassIndex(cid, gid); }
@@ -110,15 +112,7 @@ public:
     uint16 getFeature(int index, uint8 findex) const { const FeatureRef* pFR=m_face->theSill().theFeatureMap().featureRef(findex); if (!pFR) return 0; else return pFR->getFeatureVal(m_feats[index]); }
     void dir(int8 val) { m_dir = val; }
     uint16 glyphAttr(uint16 gid, uint8 gattr) const { return m_face->glyphAttr(gid, gattr); }
-    uint16 getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel) const {
-        if (attrLevel > 0)
-        {
-            Slot *is = findRoot(iSlot);
-            return is->clusterMetric(this, metric, attrLevel);
-        }
-        else
-            return m_face->getGlyphMetric(iSlot->gid(), metric);
-    }
+    uint16 getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel) const;
     float glyphAdvance(uint16 gid) const { return m_face->getAdvance(gid, 1.0); }
     const Rect &theGlyphBBoxTemporary(uint16 gid) const { return m_face->theBBoxTemporary(gid); }   //warning value may become invalid when another glyph is accessed
     Slot *findRoot(Slot *is) const { return is->attachedTo() ? findRoot(is->attachedTo()) : is; }
@@ -159,6 +153,29 @@ private:		//defensive on m_charinfo
     Segment(const Segment&);
     Segment& operator=(const Segment&);
 };
+
+
+
+inline
+void Segment::finalise(const Font *font)
+{
+	if (!m_first) return;
+
+    m_advance = positionSlots(font);
+    associateChars();
+    linkClusters(m_first, m_last);
+}
+
+inline
+uint16 Segment::getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel) const {
+    if (attrLevel > 0)
+    {
+        Slot *is = findRoot(iSlot);
+        return is->clusterMetric(this, metric, attrLevel);
+    }
+    else
+        return m_face->getGlyphMetric(iSlot->gid(), metric);
+}
 
 } // namespace graphite2
 

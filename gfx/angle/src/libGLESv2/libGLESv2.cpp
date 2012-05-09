@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -1932,7 +1932,34 @@ void __stdcall glDrawArrays(GLenum mode, GLint first, GLsizei count)
 
         if (context)
         {
-            context->drawArrays(mode, first, count);
+            context->drawArrays(mode, first, count, 0);
+        }
+    }
+    catch(std::bad_alloc&)
+    {
+        return error(GL_OUT_OF_MEMORY);
+    }
+}
+
+void __stdcall glDrawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+{
+    EVENT("(GLenum mode = 0x%X, GLint first = %d, GLsizei count = %d, GLsizei primcount = %d)", mode, first, count, primcount);
+
+    try
+    {
+        if (count < 0 || first < 0 || primcount < 0)
+        {
+            return error(GL_INVALID_VALUE);
+        }
+
+        if (primcount > 0)
+        {
+            gl::Context *context = gl::getNonLostContext();
+
+            if (context)
+            {
+                context->drawArrays(mode, first, count, primcount);
+            }
         }
     }
     catch(std::bad_alloc&)
@@ -1972,7 +1999,50 @@ void __stdcall glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLv
                 return error(GL_INVALID_ENUM);
             }
         
-            context->drawElements(mode, count, type, indices);
+            context->drawElements(mode, count, type, indices, 0);
+        }
+    }
+    catch(std::bad_alloc&)
+    {
+        return error(GL_OUT_OF_MEMORY);
+    }
+}
+
+void __stdcall glDrawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)
+{
+    EVENT("(GLenum mode = 0x%X, GLsizei count = %d, GLenum type = 0x%X, const GLvoid* indices = 0x%0.8p, GLsizei primcount = %d)",
+          mode, count, type, indices, primcount);
+
+    try
+    {
+        if (count < 0 || primcount < 0)
+        {
+            return error(GL_INVALID_VALUE);
+        }
+
+        if (primcount > 0)
+        {
+            gl::Context *context = gl::getNonLostContext();
+
+            if (context)
+            {
+                switch (type)
+                {
+                  case GL_UNSIGNED_BYTE:
+                  case GL_UNSIGNED_SHORT:
+                    break;
+                  case GL_UNSIGNED_INT:
+                    if (!context->supports32bitIndices())
+                    {
+                        return error(GL_INVALID_ENUM);    
+                    }
+                    break;
+                  default:
+                    return error(GL_INVALID_ENUM);
+                }
+            
+                context->drawElements(mode, count, type, indices, primcount);
+            }
         }
     }
     catch(std::bad_alloc&)
@@ -2969,7 +3039,11 @@ void __stdcall glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attac
             {
                 attachmentObjectType = GL_TEXTURE;
             }
-            else UNREACHABLE();
+            else
+            {
+                UNREACHABLE();
+                return;
+            }
 
             switch (pname)
             {
@@ -3244,7 +3318,6 @@ void __stdcall glGetQueryObjectuivEXT(GLuint id, GLenum pname, GLuint *params)
 
         if (context)
         {
-
             gl::Query *queryObject = context->getQuery(id, false, GL_NONE);
 
             if (!queryObject)
@@ -3547,8 +3620,6 @@ const GLubyte* __stdcall glGetString(GLenum name)
     {
         return error(GL_OUT_OF_MEMORY, (GLubyte*)NULL);
     }
-
-    return NULL;
 }
 
 void __stdcall glGetTexParameterfv(GLenum target, GLenum pname, GLfloat* params)
@@ -3907,6 +3978,9 @@ void __stdcall glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params)
                     params[i] = attribState.mCurrentValue[i];
                 }
                 break;
+              case GL_VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE:
+                *params = (GLfloat)attribState.mDivisor;
+                break;
               default: return error(GL_INVALID_ENUM);
             }
         }
@@ -3960,6 +4034,9 @@ void __stdcall glGetVertexAttribiv(GLuint index, GLenum pname, GLint* params)
                     float currentValue = attribState.mCurrentValue[i];
                     params[i] = (GLint)(currentValue > 0.0f ? floor(currentValue + 0.5f) : ceil(currentValue - 0.5f));
                 }
+                break;
+              case GL_VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE:
+                *params = (GLint)attribState.mDivisor;
                 break;
               default: return error(GL_INVALID_ENUM);
             }
@@ -4919,7 +4996,7 @@ void __stdcall glTexImage2D(GLenum target, GLint level, GLint internalformat, GL
             return error(GL_INVALID_VALUE);
         }
 
-        if (internalformat != format)
+        if (internalformat != GLint(format))
         {
             return error(GL_INVALID_OPERATION);
         }
@@ -6212,6 +6289,30 @@ void __stdcall glVertexAttrib4fv(GLuint index, const GLfloat* values)
     }
 }
 
+void __stdcall glVertexAttribDivisorANGLE(GLuint index, GLuint divisor)
+{
+    EVENT("(GLuint index = %d, GLuint divisor = %d)", index, divisor);
+
+    try
+    {
+        if (index >= gl::MAX_VERTEX_ATTRIBS)
+        {
+            return error(GL_INVALID_VALUE);
+        }
+
+        gl::Context *context = gl::getNonLostContext();
+
+        if (context)
+        {
+            context->setVertexAttribDivisor(index, divisor);
+        }
+    }
+    catch(std::bad_alloc&)
+    {
+        return error(GL_OUT_OF_MEMORY);
+    }
+}
+
 void __stdcall glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
 {
     EVENT("(GLuint index = %d, GLint size = %d, GLenum type = 0x%X, "
@@ -6384,6 +6485,9 @@ __eglMustCastToProperFunctionPointerType __stdcall glGetProcAddress(const char *
         {"glEndQueryEXT", (__eglMustCastToProperFunctionPointerType)glEndQueryEXT},
         {"glGetQueryivEXT", (__eglMustCastToProperFunctionPointerType)glGetQueryivEXT},
         {"glGetQueryObjectuivEXT", (__eglMustCastToProperFunctionPointerType)glGetQueryObjectuivEXT},
+        {"glVertexAttribDivisorANGLE", (__eglMustCastToProperFunctionPointerType)glVertexAttribDivisorANGLE},
+        {"glDrawArraysInstancedANGLE", (__eglMustCastToProperFunctionPointerType)glDrawArraysInstancedANGLE},
+        {"glDrawElementsInstancedANGLE", (__eglMustCastToProperFunctionPointerType)glDrawElementsInstancedANGLE},
     };
 
     for (int ext = 0; ext < sizeof(glExtensions) / sizeof(Extension); ext++)

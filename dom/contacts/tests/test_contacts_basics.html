@@ -231,6 +231,12 @@ var steps = [
     ok(true, "Adding a new contact1");
     createResult1 = new mozContact();
     createResult1.init(properties1);
+
+    mozContacts.oncontactchange = function(event) {
+      is(event.contactID, createResult1.id, "Same contactID");
+      is(event.reason, "create", "Same reason");
+    }
+
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -256,10 +262,134 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
+    ok(true, "Retrieving by substring and update");
+    mozContacts.oncontactchange = function(event) {
+       is(event.contactID, findResult1.id, "Same contactID");
+       is(event.reason, "update", "Same reason");
+     }
+    var options = {filterBy: ["name"],
+                   filterOp: "contains",
+                   filterValue: properties1.name.substring(0,3)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      findResult1.jobTitle = ["new Job"];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding a new contact");
+    mozContacts.oncontactchange = function(event) {
+       is(event.contactID, createResult2.id, "Same contactID");
+       is(event.reason, "create", "Same reason");
+     }
+    createResult2 = new mozContact();
+    createResult2.init({name: "newName"});
+    req = navigator.mozContacts.save(createResult2);
+    req.onsuccess = function () {
+      ok(createResult2.id, "The contact now has an ID.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring");
+    var options = {filterBy: ["name"],
+                   filterOp: "contains",
+                   filterValue: properties1.name.substring(0,3)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      checkContacts(createResult1, findResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Remove contact1");
+    mozContacts.oncontactchange = function(event) {
+      is(event.contactID, createResult1.id, "Same contactID");
+      is(event.reason, "remove", "Same reason");
+    }
+    req = navigator.mozContacts.remove(createResult1);
+    req.onsuccess = function () {
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring");
+    var options = {filterBy: ["name"],
+                   filterOp: "contains",
+                   filterValue: properties1.name.substring(0,3)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 0, "Found no contact.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Remove contact2");
+    mozContacts.oncontactchange = function(event) {
+      is(event.contactID, createResult2.id, "Same contactID");
+      is(event.reason, "remove", "Same reason");
+    }
+    req = navigator.mozContacts.remove(createResult2);
+    req.onsuccess = function () {
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring");
+    var options = {filterBy: ["name"],
+                   filterOp: "contains",
+                   filterValue: properties1.name.substring(0,3)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 0, "Found no contact.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    mozContacts.oncontactchange = function(event) {
+      is(event.contactID, "undefined", "Same contactID");
+      is(event.reason, "remove", "Same reason");
+    }
+    req = mozContacts.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding a new contact with properties1");
+    createResult1 = new mozContact();
+    createResult1.init(properties1);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      checkContacts(properties1, createResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
     ok(true, "Retrieving by substring tel1");
     var options = {filterBy: ["tel"],
                    filterOp: "contains",
                    filterValue: properties1.tel[1].substring(1,5)};
+    mozContacts.oncontactchange = null;
     req = mozContacts.find(options);
     req.onsuccess = function () {
       ok(req.result.length == 1, "Found exactly 1 contact.");

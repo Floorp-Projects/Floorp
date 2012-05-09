@@ -58,6 +58,8 @@ _TEST_FILES =	bug408328-data.xml \
 		test_bug589543.html \
 		bug589543-data.xml \
 		test_registerHandler.html \
+		valid-feed.xml \
+		valid-unsniffable-feed.xml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

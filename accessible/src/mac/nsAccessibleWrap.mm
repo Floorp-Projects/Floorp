@@ -39,8 +39,7 @@
 #include "nsDocAccessible.h"
 #include "nsObjCExceptions.h"
 
-#import "nsRoleMap.h"
-
+#include "Accessible-inl.h"
 #include "Role.h"
 
 #import "mozAccessible.h"
@@ -118,10 +117,10 @@ nsAccessibleWrap::GetNativeType ()
       
     case roles::ENTRY:
     case roles::STATICTEXT:
-    case roles::LABEL:
     case roles::CAPTION:
     case roles::ACCEL_LABEL:
     case roles::TEXT_LEAF:
+    case roles::PASSWORD_TEXT:
       // normal textfield (static or editable)
       return [mozTextAccessible class]; 
 

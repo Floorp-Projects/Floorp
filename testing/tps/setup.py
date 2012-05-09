@@ -40,7 +40,7 @@ from setuptools import setup, find_packages
 
 version = '0.2.40'
 
-deps = ['pulsebuildmonitor >= 0.2', 'MozillaPulse == .4', 
+deps = ['pulsebuildmonitor >= 0.62', 'MozillaPulse == 0.61', 
         'mozinfo == 0.3.1', 'mozprofile == 0.1t',
         'mozprocess == 0.1a', 'mozrunner == 3.0a', 'mozregression == 0.3',
         'mozautolog >= 0.2.1']

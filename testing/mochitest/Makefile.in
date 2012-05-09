@@ -79,6 +79,7 @@ include $(topsrcdir)/build/automation-build.mk
 _SERV_FILES = 	\
 		runtests.py \
 		automation.py \
+		runtestsb2g.py \
 		runtestsremote.py \
 		runtestsvmware.py \
 		$(topsrcdir)/build/mobile/devicemanager.py \
@@ -87,6 +88,7 @@ _SERV_FILES = 	\
 		$(topsrcdir)/build/automationutils.py \
 		$(topsrcdir)/build/manifestparser.py \
 		$(topsrcdir)/build/mobile/remoteautomation.py \
+		$(topsrcdir)/build/mobile/b2gautomation.py \
 		gen_template.pl \
 		server.js \
 		harness-overlay.xul \

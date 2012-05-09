@@ -447,16 +447,6 @@ function start() {
   if (kIsWindows && !kIsWindowsVistaOrHigher)
     testsExpectedToFail.push('conformance/textures/texture-mips.html');
 
-  if (kIsMac && kDarwinVersion < 11.0) {    // Darwin 11 == Mac OS 10.7
-    testsExpectedToFail.push('conformance/more/functions/uniformfBadArgs.html');
-    testsExpectedToFail.push('conformance/more/functions/uniformiBadArgs.html');
-  }
-
-  if (kIsMac && kDarwinVersion >= 11.0) {
-    testsExpectedToFail.push('conformance/textures/texture-mips.html');
-    testsExpectedToFail.push('conformance/textures/texture-npot.html');
-  }
-
   var testsToIgnore = [];
 
   runTestSuite();

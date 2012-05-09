@@ -41,6 +41,9 @@
 #include "nsCRTGlue.h"
 #include "nsXPCOM.h"
 #include "nsDebug.h"
+#include "prtime.h"
+
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -270,6 +273,32 @@ bool NS_IsAsciiDigit(PRUnichar aChar)
   return aChar >= '0' && aChar <= '9';
 }
 
+
+#ifndef XPCOM_GLUE_AVOID_NSPR
+#define TABLE_SIZE 36
+static const char table[] = {
+  'a','b','c','d','e','f','g','h','i','j',
+  'k','l','m','n','o','p','q','r','s','t',
+  'u','v','w','x','y','z','0','1','2','3',
+  '4','5','6','7','8','9'
+};
+
+void NS_MakeRandomString(char *aBuf, PRInt32 aBufLen)
+{
+  // turn PR_Now() into milliseconds since epoch
+  // and salt rand with that.
+  double fpTime;
+  LL_L2D(fpTime, PR_Now());
+  srand((uint)(fpTime * 1e-6 + 0.5));   // use 1e-6, granularity of PR_Now() on the mac is seconds
+
+  PRInt32 i;
+  for (i=0;i<aBufLen;i++) {
+    *aBuf++ = table[rand()%TABLE_SIZE];
+  }
+  *aBuf = 0;
+}
+
+#endif
 #if defined(XP_WIN)
 void
 printf_stderr(const char *fmt, ...)

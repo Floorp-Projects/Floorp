@@ -220,6 +220,9 @@ function testReadOnly(g)
   try {
     roList.consolidate();
   } catch (e) {
+    is(e.name, "NoModificationAllowedError",
+      "Got unexpected exception " + e +
+      ", expected NoModificationAllowedError");
     is(e.code, DOMException.NO_MODIFICATION_ALLOWED_ERR,
       "Got unexpected exception " + e +
       ", expected NO_MODIFICATION_ALLOWED_ERR");
@@ -239,6 +242,9 @@ function testReadOnly(g)
     var m = createMatrix(1, 2, 3, 4, 5, 6);
     roTransform.setMatrix(m);
   } catch (e) {
+    is(e.name, "NoModificationAllowedError",
+      "Got unexpected exception " + e +
+      ", expected NoModificationAllowedError");
     is(e.code, DOMException.NO_MODIFICATION_ALLOWED_ERR,
       "Got unexpected exception " + e +
       ", expected NO_MODIFICATION_ALLOWED_ERR");
@@ -294,6 +300,9 @@ function testReadOnly(g)
   try {
     roMatrix.a = 1;
   } catch (e) {
+    is(e.name, "NoModificationAllowedError",
+      "Got unexpected exception " + e +
+      ", expected NoModificationAllowedError");
     is(e.code, DOMException.NO_MODIFICATION_ALLOWED_ERR,
       "Got unexpected exception " + e +
       ", expected NO_MODIFICATION_ALLOWED_ERR");

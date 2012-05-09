@@ -24,6 +24,10 @@
 #define LOG(text) printf("Profiler: %s\n", text)
 #endif
 
+#if defined(XP_MACOSX) || defined(XP_WIN)
+#define ENABLE_SPS_LEAF_DATA
+#endif
+
 typedef uint8_t* Address;
 
 // ----------------------------------------------------------------------------

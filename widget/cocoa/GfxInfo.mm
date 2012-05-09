@@ -364,7 +364,7 @@ GfxInfo::AddCrashReportAnnotations()
 // We don't support checking driver versions on Mac.
 #define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn) \
   APPEND_TO_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn,           \
-                             DRIVER_UNKNOWN_COMPARISON, V(0,0,0,0), "")
+                             DRIVER_COMPARISON_IGNORED, V(0,0,0,0), "")
 
 
 const nsTArray<GfxDriverInfo>&

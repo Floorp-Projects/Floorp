@@ -858,7 +858,7 @@ pref_LoadPrefsInDir(nsIFile* aDir, char const *const *aSpecialFiles, PRUint32 aS
   if (NS_FAILED(rv)) {
     // If the directory doesn't exist, then we have no reason to complain.  We
     // loaded everything (and nothing) successfully.
-    if (rv == NS_ERROR_FILE_NOT_FOUND)
+    if (rv == NS_ERROR_FILE_NOT_FOUND || rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
       rv = NS_OK;
     return rv;
   }
@@ -1015,6 +1015,10 @@ static nsresult pref_InitInitialObjects()
   // - $app/defaults/preferences/*.js
   // and in non omni.jar case:
   // - $app/defaults/preferences/*.js
+  // When $app == $gre, we additionally load, in omni.jar case:
+  // - jar:$gre/omni.jar!/defaults/preferences/*.js
+  // Thus, in omni.jar case, we always load app-specific default preferences
+  // from omni.jar, whether or not $app == $gre.
 
   nsZipFind *findPtr;
   nsAutoPtr<nsZipFind> find;
@@ -1088,7 +1092,12 @@ static nsresult pref_InitInitialObjects()
     NS_WARNING("Error parsing application default preferences.");
 
   // Load jar:$app/omni.jar!/defaults/preferences/*.js
+  // or jar:$gre/omni.jar!/defaults/preferences/*.js.
   nsRefPtr<nsZipArchive> appJarReader = mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
+  // GetReader(mozilla::Omnijar::APP) returns null when $app == $gre, in which
+  // case we look for app-specific default preferences in $gre.
+  if (!appJarReader)
+    appJarReader = mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
   if (appJarReader) {
     rv = appJarReader->FindInit("defaults/preferences/*.js$", &findPtr);
     NS_ENSURE_SUCCESS(rv, rv);

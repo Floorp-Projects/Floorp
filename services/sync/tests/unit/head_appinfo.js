@@ -49,10 +49,10 @@ function addResourceAlias() {
   Cu.import("resource://gre/modules/Services.jsm");
   const resProt = Services.io.getProtocolHandler("resource")
                           .QueryInterface(Ci.nsIResProtocolHandler);
-  let uri;
-  uri = Services.io.newURI("resource:///modules/services-sync/", null, null);
-  resProt.setSubstitution("services-sync", uri);
-  uri = Services.io.newURI("resource:///modules/services-crypto/", null, null);
-  resProt.setSubstitution("services-crypto", uri);
+  for each (let s in ["common", "sync", "crypto"]) {
+    let uri = Services.io.newURI("resource:///modules/services-" + s + "/", null,
+                                 null);
+    resProt.setSubstitution("services-" + s, uri);
+  }
 }
 addResourceAlias();

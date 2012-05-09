@@ -25,6 +25,7 @@ function t(n) {
     ok(false, "Should not be here");
   } catch(e) {
     ok(e instanceof DOMException, "Should be a DOMException");
+    is(e.name, "IndexSizeError", "Should be an IndexSizeError");
     is(e.code, DOMException.INDEX_SIZE_ERR, "Should be an INDEX_SIZE_ERR");
   }
 }

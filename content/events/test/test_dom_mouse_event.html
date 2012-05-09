@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOM MouseEvent</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+function testInitializingUntrustedEvent()
+{
+  const kTests = [
+    { createEventArg: "MouseEvent",
+      type: "mousedown", bubbles: true, cancelable: true, view: null, detail: 1,
+      screenX: 0, screenY: 0, clientX: 0, clientY: 0,
+      ctrlKey: false, altKey: false, shiftKey: false, metaKey: false,
+      button: 6, relatedTarget: null },
+
+    { createEventArg: "mouseevent",
+      type: "mouseup", bubbles: false, cancelable: true, view: window, detail: 2,
+      screenX: 0, screenY: 0, clientX: 0, clientY: 400,
+      ctrlKey: true, altKey: false, shiftKey: false, metaKey: false,
+      button: 1, relatedTarget: document.getElementById("content") },
+
+    { createEventArg: "Mouseevent",
+      type: "click", bubbles: true, cancelable: false, view: null, detail: -5,
+      screenX: 0, screenY: 0, clientX: 300, clientY: 0,
+      ctrlKey: false, altKey: true, shiftKey: false, metaKey: false,
+      button: 2, relatedTarget: document.getElementById("test") },
+
+    { createEventArg: "mouseEvent",
+      type: "dblclick", bubbles: false, cancelable: false, view: window, detail: -1,
+      screenX: 0, screenY: 200, clientX: 0, clientY: 0,
+      ctrlKey: false, altKey: false, shiftKey: true, metaKey: false,
+      button: 12, relatedTarget: document.getElementById("content") },
+
+    { createEventArg: "MouseEvents",
+      type: "mouseenter", bubbles: true, cancelable: true, view: null, detail: 111000,
+      screenX: 100, screenY: 0, clientX: 0, clientY: 0,
+      ctrlKey: false, altKey: false, shiftKey: false, metaKey: true,
+      button: 2, relatedTarget: document.getElementById("test") },
+
+    { createEventArg: "mouseevents",
+      type: "mouseleave", bubbles: false, cancelable: true, view: window, detail: 500,
+      screenX: 100, screenY: 500, clientX: 0, clientY: 0,
+      ctrlKey: true, altKey: true, shiftKey: false, metaKey: false,
+      button: 8, relatedTarget: document.getElementById("content") },
+
+    { createEventArg: "Mouseevents",
+      type: "mouseover", bubbles: true, cancelable: false, view: null, detail: 3,
+      screenX: 0, screenY: 0, clientX: 200, clientY: 300,
+      ctrlKey: false, altKey: true, shiftKey: false, metaKey: true,
+      button: 7, relatedTarget: document.getElementById("test") },
+
+    { createEventArg: "mouseEvents",
+      type: "mouseout", bubbles: false, cancelable: false, view: window, detail: 5,
+      screenX: -100, screenY: 300, clientX: 600, clientY: -500,
+      ctrlKey: true, altKey: false, shiftKey: true, metaKey: false,
+      button: 8, relatedTarget: document.getElementById("content") },
+
+    { createEventArg: "MouseEvent",
+      type: "mousemove", bubbles: false, cancelable: false, view: window, detail: 30,
+      screenX: 500, screenY: -100, clientX: -8888, clientY: -5000,
+      ctrlKey: true, altKey: false, shiftKey: true, metaKey: true,
+      button: 8, relatedTarget: document.getElementById("test") },
+
+    { createEventArg: "MouseEvent",
+      type: "foo", bubbles: false, cancelable: false, view: window, detail: 100,
+      screenX: 2000, screenY: 6000, clientX: 5000, clientY: 3000,
+      ctrlKey: true, altKey: true, shiftKey: true, metaKey: true,
+      button: 8, relatedTarget: document.getElementById("test") },
+  ];
+
+  const kOtherModifierName = [
+    "CapsLock", "NumLock", "Scroll", "SymbolLock", "Fn", "Win", "AltGraph"
+  ];
+
+  const kInvalidModifierName = [
+    "shift", "control", "alt", "meta", "capslock", "numlock", "scroll",
+    "symbollock", "fn", "win", "altgraph", "Invalid", "Shift Control"
+  ];
+
+  for (var i = 0; i < kTests.length; i++) {
+    var description = "testInitializingUntrustedEvent, Index: " + i + ", ";
+    const kTest = kTests[i];
+    var e = document.createEvent(kTest.createEventArg);
+    e.initMouseEvent(kTest.type, kTest.bubbles, kTest.cancelable, kTest.view,
+                     kTest.detail, kTest.screenX, kTest.screenY, kTest.clientX, kTest.clientY,
+                     kTest.ctrlKey, kTest.altKey, kTest.shiftKey, kTest.metaKey,
+                     kTest.button, kTest.relatedTarget);
+
+    for (var attr in kTest) {
+      if (attr == "createEventArg") {
+        continue;
+      }
+      is(e[attr], kTest[attr], description + attr + " returns wrong value");
+    }
+    is(e.isTrusted, false, description + "isTrusted returns wrong value");
+    is(e.buttons, 0, description + "buttons returns wrong value");
+
+    // getModifierState() tests
+    is(e.getModifierState("Shift"), kTest.shiftKey,
+       description + "getModifierState(\"Shift\") returns wrong value");
+    is(e.getModifierState("Control"), kTest.ctrlKey,
+       description + "getModifierState(\"Control\") returns wrong value");
+    is(e.getModifierState("Alt"), kTest.altKey,
+       description + "getModifierState(\"Alt\") returns wrong value");
+    is(e.getModifierState("Meta"), kTest.metaKey,
+       description + "getModifierState(\"Meta\") returns wrong value");
+
+    for (var j = 0; j < kOtherModifierName.length; j++) {
+      ok(!e.getModifierState(kOtherModifierName[j]),
+         description + "getModifierState(\"" + kOtherModifierName[j] + "\") returns wrong value");
+    }
+    for (var k = 0; k < kInvalidModifierName.length; k++) {
+      ok(!e.getModifierState(kInvalidModifierName[k]),
+         description + "getModifierState(\"" + kInvalidModifierName[k] + "\") returns wrong value");
+    }
+  }
+}
+
+function runTests()
+{
+  testInitializingUntrustedEvent();
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

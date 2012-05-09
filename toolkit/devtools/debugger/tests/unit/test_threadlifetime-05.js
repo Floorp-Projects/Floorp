@@ -70,10 +70,10 @@ function release_grips(aFrameArgs, aThreadGrips)
       arg_grips(aFrameArgs, function (aNewGrips) {
         for (let i = 0; i < aNewGrips.length; i++) {
           do_check_neq(aThreadGrips[i].actor, aNewGrips[i].actor);
-          gThreadClient.resume(function () {
-            finishClient(gClient);
-          });
         }
+        gThreadClient.resume(function () {
+          finishClient(gClient);
+        });
       });
     });
   });

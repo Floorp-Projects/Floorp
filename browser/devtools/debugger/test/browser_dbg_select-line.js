@@ -24,18 +24,18 @@ function test()
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.debuggerWindow;
+    gDebugger = gPane.contentWindow;
 
     testSelectLine();
   });
 }
 
 function testSelectLine() {
-  gPane.activeThread.addOneTimeListener("scriptsadded", function() {
+  gDebugger.DebuggerController.activeThread.addOneTimeListener("scriptsadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
       gScripts = gDebugger.DebuggerView.Scripts._scripts;
 
-      is(gDebugger.StackFrames.activeThread.state, "paused",
+      is(gDebugger.DebuggerController.activeThread.state, "paused",
         "Should only be getting stack frames while paused.");
 
       is(gScripts.itemCount, 2, "Found the expected number of scripts.");
@@ -67,7 +67,7 @@ function testSelectLine() {
             is(gDebugger.editor.getCaretPosition().line, 4,
                "The correct line is selected.");
 
-            gDebugger.StackFrames.activeThread.resume(function() {
+            gDebugger.DebuggerController.activeThread.resume(function() {
               closeDebuggerAndFinish(gTab);
             });
           });

@@ -38,6 +38,7 @@ HBSOURCES =  \
 	hb-tt-font.cc \
 	hb-unicode-private.hh \
 	hb-unicode.cc \
+	hb-warning.cc \
 	$(NULL)
 HBHEADERS = \
 	hb.h \
@@ -69,13 +70,13 @@ HBSOURCES += \
 	hb-ot-shape-complex-indic-table.hh \
 	hb-ot-shape-complex-misc.cc \
 	hb-ot-shape-complex-private.hh \
+	hb-ot-shape-normalize-private.hh \
 	hb-ot-shape-normalize.cc \
 	hb-ot-shape-private.hh \
 	$(NULL)
 HBHEADERS += \
 	hb-ot.h \
 	hb-ot-layout.h \
-	hb-ot-shape.h \
 	hb-ot-tag.h \
 	$(NULL)
 endif
@@ -116,17 +117,17 @@ HBSOURCES += hb-ft.cc
 HBHEADERS += hb-ft.h
 endif
 
-if HAVE_GRAPHITE
-HBCFLAGS += $(GRAPHITE_CFLAGS)
-HBLIBS   += $(GRAPHITE_LIBS)
-HBSOURCES += hb-graphite2.cc
+if HAVE_GRAPHITE2
+HBCFLAGS += $(GRAPHITE2_CFLAGS)
+HBLIBS   += $(GRAPHITE2_LIBS)
+HBSOURCES += hb-graphite2.cc hb-graphite2-private.hh
 HBHEADERS += hb-graphite2.h
 endif
 
 if HAVE_UNISCRIBE
 HBCFLAGS += $(UNISCRIBE_CFLAGS)
 HBLIBS   += $(UNISCRIBE_LIBS)
-HBSOURCES += hb-uniscribe.cc
+HBSOURCES += hb-uniscribe.cc hb-uniscribe-private.hh
 HBHEADERS += hb-uniscribe.h
 endif
 
@@ -146,6 +147,21 @@ GENERATORS = \
 	$(NULL)
 
 EXTRA_DIST += $(GENERATORS)
+
+unicode-tables: arabic-table indic-table
+
+indic-table: gen-indic-table.py IndicSyllabicCategory.txt IndicMatraCategory.txt Blocks.txt
+	$(AM_V_GEN) $(builddir)/$^ > hb-ot-shape-complex-indic-table.hh.tmp && \
+	mv hb-ot-shape-complex-indic-table.hh.tmp $(srcdir)/hb-ot-shape-complex-indic-table.hh || \
+	($(RM) hb-ot-shape-complex-indic-table.hh.tmp; false)
+
+arabic-table: gen-arabic-table.py ArabicShaping.txt UnicodeData.txt
+	$(AM_V_GEN) $(builddir)/$^ > hb-ot-shape-complex-arabic-table.hh.tmp && \
+	mv hb-ot-shape-complex-arabic-table.hh.tmp $(srcdir)/hb-ot-shape-complex-arabic-table.hh || \
+	($(RM) hb-ot-shape-complex-arabic-table.hh.tmp; false)
+
+
+.PHONY: unicode-tables arabic-table indic-table
 
 BUILT_SOURCES += hb-ot-shape-complex-indic-machine.hh
 EXTRA_DIST += hb-ot-shape-complex-indic-machine.rl

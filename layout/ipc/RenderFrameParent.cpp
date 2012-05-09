@@ -52,6 +52,7 @@
 #include "nsViewportFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsIObserver.h"
+#include "nsContentUtils.h"
 
 typedef nsContentView::ViewConfig ViewConfig;
 using namespace mozilla::layers;
@@ -411,8 +412,8 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
       NSIntPixelsToAppUnits(metrics.mViewport.width, auPerDevPixel) * aXScale,
       NSIntPixelsToAppUnits(metrics.mViewport.height, auPerDevPixel) * aYScale);
     view->mContentSize = nsSize(
-      NSIntPixelsToAppUnits(metrics.mContentSize.width, auPerDevPixel) * aXScale,
-      NSIntPixelsToAppUnits(metrics.mContentSize.height, auPerDevPixel) * aYScale);
+      nsPresContext::CSSPixelsToAppUnits(metrics.mCSSContentSize.width) * aXScale,
+      nsPresContext::CSSPixelsToAppUnits(metrics.mCSSContentSize.height) * aYScale);
 
     newContentViews[scrollId] = view;
   }
@@ -641,7 +642,9 @@ RenderFrameParent::AllocPLayers(LayerManager::LayersBackend* aBackendType)
     *aBackendType = LayerManager::LAYERS_NONE;
     return nsnull;
   }
-  LayerManager* lm = GetLayerManager();
+
+  nsRefPtr<LayerManager> lm = 
+    nsContentUtils::LayerManagerForDocument(mFrameLoader->OwnerDoc());
   ShadowLayerManager* slm = lm->AsShadowManager();
   if (!slm) {
     *aBackendType = LayerManager::LAYERS_NONE;
@@ -690,13 +693,6 @@ RenderFrameParent::BuildViewMap()
   }
 
   mContentViews = newContentViews;
-}
-
-LayerManager*
-RenderFrameParent::GetLayerManager() const
-{
-  nsIDocument* doc = mFrameLoader->OwnerDoc();
-  return doc->GetShell()->GetLayerManager();
 }
 
 ShadowLayersParent*

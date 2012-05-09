@@ -77,7 +77,8 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
              gfxSparseBitSet *aUnicodeRanges)
     : gfxFontEntry(NS_LITERAL_STRING("Proxy"), aFamily),
       mLoadingState(NOT_LOADING),
-      mUnsupportedFormat(false)
+      mUnsupportedFormat(false),
+      mLoader(nsnull)
 {
     mIsProxy = true;
     mSrcList = aFontFaceSrcList;
@@ -117,7 +118,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                             PRUint32 aWeight,
                             PRUint32 aStretch,
                             PRUint32 aItalicStyle,
-                            const nsString& aFeatureSettings,
+                            const nsTArray<gfxFontFeature>& aFeatureSettings,
                             const nsString& aLanguageOverride,
                             gfxSparseBitSet *aUnicodeRanges)
 {
@@ -140,15 +141,12 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     }
 
     // construct a new face and add it into the family
-    nsTArray<gfxFontFeature> featureSettings;
-    gfxFontStyle::ParseFontFeatureSettings(aFeatureSettings,
-                                           featureSettings);
     PRUint32 languageOverride =
         gfxFontStyle::ParseFontLanguageOverride(aLanguageOverride);
     proxyEntry =
         new gfxProxyFontEntry(aFontFaceSrcList, family, aWeight, aStretch,
                               aItalicStyle,
-                              featureSettings,
+                              aFeatureSettings,
                               languageOverride,
                               aUnicodeRanges);
     family->AddFontEntry(proxyEntry);
@@ -459,6 +457,10 @@ gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
                                const PRUint8 *aFontData, PRUint32 aLength,
                                nsresult aDownloadStatus)
 {
+    // forget about the loader, as we no longer potentially need to cancel it
+    // if the entry is obsoleted
+    aProxy->mLoader = nsnull;
+
     // download successful, make platform font using font data
     if (NS_SUCCEEDED(aDownloadStatus)) {
         gfxFontEntry *fe = LoadFont(aProxy, aFontData, aLength);
@@ -625,6 +627,14 @@ gfxFontEntry*
 gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
                          const PRUint8 *aFontData, PRUint32 &aLength)
 {
+    // if the proxy doesn't belong to a family, we just bail as it won't be
+    // accessible/usable anyhow (maybe the font set got modified right as
+    // the load was completing?)
+    if (!aProxy->Family()) {
+        NS_Free(const_cast<PRUint8*>(aFontData));
+        return nsnull;
+    }
+
     gfxFontEntry *fe = nsnull;
 
     gfxUserFontType fontType =

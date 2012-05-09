@@ -37,10 +37,11 @@
 
 #include "FocusManager.h"
 
+#include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsRootAccessible.h"
 #include "Role.h"
+#include "RootAccessible.h"
 
 #include "nsEventStateManager.h"
 #include "nsFocusManager.h"
@@ -156,7 +157,7 @@ FocusManager::NotifyOfDOMFocus(nsISupports* aTarget)
     if (document) {
       // Set selection listener for focused element.
       if (targetNode->IsElement()) {
-        nsRootAccessible* root = document->RootAccessible();
+        RootAccessible* root = document->RootAccessible();
         nsCaretAccessible* caretAcc = root->GetCaretAccessible();
         caretAcc->SetControlSelectionListener(targetNode->AsElement());
       }

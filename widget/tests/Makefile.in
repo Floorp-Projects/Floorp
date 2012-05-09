@@ -60,6 +60,8 @@ endif
 #                 $(NULL)
 endif
 
+CPP_UNIT_TESTS += TestAppShellSteadyState.cpp
+
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =

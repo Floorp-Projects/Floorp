@@ -52,6 +52,7 @@
 
 #include "gfxSharedImageSurface.h"
 
+#include "TiledLayerBuffer.h"
 #include "ImageLayers.h"
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
@@ -146,6 +147,17 @@ ShadowLayersParent::Destroy()
   }
 }
 
+/* virtual */
+bool
+ShadowLayersParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,
+                 const bool& isFirstPaint)
+{
+  InfallibleTArray<EditReply> noReplies;
+  bool success = RecvUpdate(cset, isFirstPaint, &noReplies);
+  NS_ABORT_IF_FALSE(noReplies.Length() == 0, "RecvUpdateNoSwap requires a sync Update to carry Edits");
+  return success;
+}
+
 bool
 ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                const bool& isFirstPaint,
@@ -228,6 +240,11 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       static bool fixedPositionLayersEnabled = getenv("MOZ_ENABLE_FIXED_POSITION_LAYERS") != 0;
       if (fixedPositionLayersEnabled) {
         layer->SetIsFixedPosition(common.isFixedPosition());
+      }
+      if (PLayerParent* maskLayer = common.maskLayerParent()) {
+        layer->SetMaskLayer(cast(maskLayer)->AsLayer());
+      } else {
+        layer->SetMaskLayer(NULL);
       }
 
       typedef SpecificLayerAttributes Specific;
@@ -314,6 +331,20 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       break;
     }
 
+    case Edit::TOpPaintTiledLayerBuffer: {
+      MOZ_LAYERS_LOG(("[ParentSide] Paint TiledLayerBuffer"));
+      const OpPaintTiledLayerBuffer& op = edit.get_OpPaintTiledLayerBuffer();
+      ShadowLayerParent* shadow = AsShadowLayer(op);
+
+      ShadowThebesLayer* shadowLayer = static_cast<ShadowThebesLayer*>(shadow->AsLayer());
+      TiledLayerComposer* tileComposer = shadowLayer->AsTiledLayerComposer();
+
+      NS_ASSERTION(tileComposer, "shadowLayer is not a tile composer");
+
+      BasicTiledLayerBuffer* p = (BasicTiledLayerBuffer*)op.tiledLayerBuffer();
+      tileComposer->PaintedTiledLayerBuffer(p);
+      break;
+    }
     case Edit::TOpPaintThebesBuffer: {
       MOZ_LAYERS_LOG(("[ParentSide] Paint ThebesLayer"));
 

@@ -64,6 +64,8 @@ PIXMAN_ARM_BIND_FAST_PATH_SRC_DST (neon, over_8888_8888,
                                    uint32_t, 1, uint32_t, 1)
 PIXMAN_ARM_BIND_FAST_PATH_SRC_DST (neon, out_reverse_8_0565,
                                    uint8_t, 1, uint16_t, 1)
+PIXMAN_ARM_BIND_FAST_PATH_SRC_DST (neon, out_reverse_8_8888,
+                                   uint8_t, 1, uint32_t, 1)
 
 PIXMAN_ARM_BIND_FAST_PATH_N_DST (SKIP_ZERO_SRC, neon, over_n_0565,
                                  uint16_t, 1)
@@ -88,6 +90,10 @@ PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (SKIP_ZERO_SRC, neon, add_n_8_8,
                                       uint8_t, 1, uint8_t, 1)
 PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (SKIP_ZERO_SRC, neon, add_n_8_8888,
                                       uint8_t, 1, uint32_t, 1)
+PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (0, neon, src_n_8_8888,
+                                      uint8_t, 1, uint32_t, 1)
+PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (0, neon, src_n_8_8,
+                                      uint8_t, 1, uint8_t, 1)
 
 PIXMAN_ARM_BIND_FAST_PATH_SRC_N_DST (SKIP_ZERO_MASK, neon, over_8888_n_8888,
                                      uint32_t, 1, uint32_t, 1)
@@ -229,8 +235,8 @@ pixman_blt_neon (uint32_t *src_bits,
                  int       dst_bpp,
                  int       src_x,
                  int       src_y,
-                 int       dst_x,
-                 int       dst_y,
+                 int       dest_x,
+                 int       dest_y,
                  int       width,
                  int       height)
 {
@@ -243,7 +249,7 @@ pixman_blt_neon (uint32_t *src_bits,
 	pixman_composite_src_0565_0565_asm_neon (
 		width, height,
 		(uint16_t *)(((char *) dst_bits) +
-		dst_y * dst_stride * 4 + dst_x * 2), dst_stride * 2,
+		dest_y * dst_stride * 4 + dest_x * 2), dst_stride * 2,
 		(uint16_t *)(((char *) src_bits) +
 		src_y * src_stride * 4 + src_x * 2), src_stride * 2);
 	return TRUE;
@@ -251,7 +257,7 @@ pixman_blt_neon (uint32_t *src_bits,
 	pixman_composite_src_8888_8888_asm_neon (
 		width, height,
 		(uint32_t *)(((char *) dst_bits) +
-		dst_y * dst_stride * 4 + dst_x * 4), dst_stride,
+		dest_y * dst_stride * 4 + dest_x * 4), dst_stride,
 		(uint32_t *)(((char *) src_bits) +
 		src_y * src_stride * 4 + src_x * 4), src_stride);
 	return TRUE;
@@ -287,6 +293,12 @@ static const pixman_fast_path_t arm_neon_fast_paths[] =
     PIXMAN_STD_FAST_PATH (SRC,  pixbuf,   pixbuf,   a8b8g8r8, neon_composite_src_rpixbuf_8888),
     PIXMAN_STD_FAST_PATH (SRC,  rpixbuf,  rpixbuf,  a8r8g8b8, neon_composite_src_rpixbuf_8888),
     PIXMAN_STD_FAST_PATH (SRC,  rpixbuf,  rpixbuf,  a8b8g8r8, neon_composite_src_pixbuf_8888),
+    PIXMAN_STD_FAST_PATH (SRC,  solid,    a8,       a8r8g8b8, neon_composite_src_n_8_8888),
+    PIXMAN_STD_FAST_PATH (SRC,  solid,    a8,       x8r8g8b8, neon_composite_src_n_8_8888),
+    PIXMAN_STD_FAST_PATH (SRC,  solid,    a8,       a8b8g8r8, neon_composite_src_n_8_8888),
+    PIXMAN_STD_FAST_PATH (SRC,  solid,    a8,       x8b8g8r8, neon_composite_src_n_8_8888),
+    PIXMAN_STD_FAST_PATH (SRC,  solid,    a8,       a8,       neon_composite_src_n_8_8),
+
     PIXMAN_STD_FAST_PATH (OVER, solid,    a8,       a8,       neon_composite_over_n_8_8),
     PIXMAN_STD_FAST_PATH (OVER, solid,    a8,       r5g6b5,   neon_composite_over_n_8_0565),
     PIXMAN_STD_FAST_PATH (OVER, solid,    a8,       b5g6r5,   neon_composite_over_n_8_0565),
@@ -345,6 +357,8 @@ static const pixman_fast_path_t arm_neon_fast_paths[] =
     PIXMAN_STD_FAST_PATH (OVER_REVERSE, solid, null, a8b8g8r8, neon_composite_over_reverse_n_8888),
     PIXMAN_STD_FAST_PATH (OUT_REVERSE,  a8,    null, r5g6b5,   neon_composite_out_reverse_8_0565),
     PIXMAN_STD_FAST_PATH (OUT_REVERSE,  a8,    null, b5g6r5,   neon_composite_out_reverse_8_0565),
+    PIXMAN_STD_FAST_PATH (OUT_REVERSE,  a8,    null, a8r8g8b8, neon_composite_out_reverse_8_8888),
+    PIXMAN_STD_FAST_PATH (OUT_REVERSE,  a8,    null, a8b8g8r8, neon_composite_out_reverse_8_8888),
 
     PIXMAN_ARM_SIMPLE_NEAREST_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, neon_8888_8888),
     PIXMAN_ARM_SIMPLE_NEAREST_FAST_PATH (OVER, a8b8g8r8, a8b8g8r8, neon_8888_8888),
@@ -418,20 +432,20 @@ arm_neon_blt (pixman_implementation_t *imp,
               int                      dst_bpp,
               int                      src_x,
               int                      src_y,
-              int                      dst_x,
-              int                      dst_y,
+              int                      dest_x,
+              int                      dest_y,
               int                      width,
               int                      height)
 {
     if (!pixman_blt_neon (
             src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
-            src_x, src_y, dst_x, dst_y, width, height))
+            src_x, src_y, dest_x, dest_y, width, height))
 
     {
 	return _pixman_implementation_blt (
 	    imp->delegate,
 	    src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
-	    src_x, src_y, dst_x, dst_y, width, height);
+	    src_x, src_y, dest_x, dest_y, width, height);
     }
 
     return TRUE;

@@ -66,9 +66,9 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 #include "xpcpublic.h"
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 
-using mozilla::dom::bindings::DestroyProtoOrIfaceCache;
+using mozilla::dom::DestroyProtoOrIfaceCache;
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -91,7 +91,6 @@ public:
     virtual nsresult EnsureScriptEnvironment();
 
     virtual nsIScriptContext *GetScriptContext();
-    virtual nsresult SetScriptContext(nsIScriptContext *ctx);
 
     // nsIScriptObjectPrincipal methods
     virtual nsIPrincipal* GetPrincipal();
@@ -204,8 +203,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPrototypeDocument)
     if (nsCCUncollectableMarker::InGeneration(cb, tmp->mCCGeneration)) {
         return NS_SUCCESS_INTERRUPTED_TRAVERSE;
     }
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mRoot,
-                                                    nsXULPrototypeElement)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRoot)
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mGlobalObject");
     cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObject*>(tmp->mGlobalObject));
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mNodeInfoManager,
@@ -688,34 +686,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULPDGlobalObject)
 //
 
 nsresult
-nsXULPDGlobalObject::SetScriptContext(nsIScriptContext *aScriptContext)
-{
-  // almost a clone of nsGlobalWindow
-  if (!aScriptContext) {
-    NS_WARNING("Possibly early removal of script object, see bug #41608");
-  } else {
-    // should probably assert the context is clean???
-    aScriptContext->WillInitializeContext();
-    nsresult rv = aScriptContext->InitContext();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  NS_ASSERTION(!aScriptContext || !mContext, "Bad call to SetContext()!");
-
-  JSObject* global = NULL;
-
-  if (aScriptContext) {
-    aScriptContext->SetGCOnDestruction(false);
-    aScriptContext->DidInitializeContext();
-    global = aScriptContext->GetNativeGlobal();
-    NS_ASSERTION(global, "GetNativeGlobal returned NULL!");
-  }
-  mContext = aScriptContext;
-  mJSObject = global;
-  return NS_OK;
-}
-
-nsresult
 nsXULPDGlobalObject::EnsureScriptEnvironment()
 {
   if (mContext) {
@@ -724,13 +694,14 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
   NS_ASSERTION(!mJSObject, "Have global without context?");
 
   nsCOMPtr<nsIScriptRuntime> languageRuntime;
-  nsresult rv = NS_GetScriptRuntimeByID(nsIProgrammingLanguage::JAVASCRIPT,
-                                        getter_AddRefs(languageRuntime));
+  nsresult rv = NS_GetJSRuntime(getter_AddRefs(languageRuntime));
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
   nsCOMPtr<nsIScriptContext> ctxNew = languageRuntime->CreateContext();
+  MOZ_ASSERT(ctxNew);
+
   // We have to setup a special global object.  We do this then
-  // attach it as the global for this context.  Then, ::SetScriptContext
+  // attach it as the global for this context.  Then, we
   // will re-fetch the global and set it up in our language globals array.
   {
     JSContext *cx = ctxNew->GetNativeContext();
@@ -752,9 +723,20 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
     NS_ADDREF(this);
   }
 
+  // should probably assert the context is clean???
+  ctxNew->WillInitializeContext();
+  rv = ctxNew->InitContext();
   NS_ENSURE_SUCCESS(rv, NS_OK);
-  rv = SetScriptContext(ctxNew);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  ctxNew->SetGCOnDestruction(false);
+  ctxNew->DidInitializeContext();
+
+  JSObject* global = ctxNew->GetNativeGlobal();
+  NS_ASSERTION(global, "GetNativeGlobal returned NULL!");
+
+  mContext = ctxNew;
+  mJSObject = global;
+
   return NS_OK;
 }
 
@@ -774,7 +756,7 @@ nsXULPDGlobalObject::GetScriptContext()
 JSObject*
 nsXULPDGlobalObject::GetGlobalJSObject()
 {
-  return mJSObject;
+  return xpc_UnmarkGrayObject(mJSObject);
 }
 
 

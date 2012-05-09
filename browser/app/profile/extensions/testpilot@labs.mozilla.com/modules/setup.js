@@ -344,7 +344,7 @@ let TestPilotSetup = {
       appcontent.addEventListener("DOMContentLoaded", function(event) {
         let newUrl =  event.originalTarget.URL;
         self._feedbackManager.fillInFeedbackPage(newUrl, window);
-        for (i = 0; i < self.taskList.length; i++) {
+        for (let i = 0; i < self.taskList.length; i++) {
           self.taskList[i].onUrlLoad(newUrl, event);
         }
       }, true);

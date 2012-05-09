@@ -506,8 +506,8 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     // escaping is required).
     nsCAutoString encUsername, encPassword, encHost, encDirectory,
       encBasename, encExtension, encQuery, encRef;
-    bool useEncUsername, useEncPassword, useEncHost, useEncDirectory,
-      useEncBasename, useEncExtension, useEncQuery, useEncRef;
+    bool useEncUsername, useEncPassword, useEncHost = false,
+      useEncDirectory, useEncBasename, useEncExtension, useEncQuery, useEncRef;
     nsCAutoString portbuf;
 
     //

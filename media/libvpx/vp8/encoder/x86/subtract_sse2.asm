@@ -71,83 +71,10 @@ sym(vp8_subtract_b_sse2_impl):
     ret
 
 
-;void vp8_subtract_mby_sse2(short *diff, unsigned char *src, unsigned char *pred, int stride)
+;void vp8_subtract_mby_sse2(short *diff, unsigned char *src, int src_stride,
+;unsigned char *pred, int pred_stride)
 global sym(vp8_subtract_mby_sse2)
 sym(vp8_subtract_mby_sse2):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 4
-    SAVE_XMM 7
-    GET_GOT     rbx
-    push rsi
-    push rdi
-    ; end prolog
-
-            mov         rsi,            arg(1) ;src
-            mov         rdi,            arg(0) ;diff
-
-            mov         rax,            arg(2) ;pred
-            movsxd      rdx,            dword ptr arg(3) ;stride
-
-            mov         rcx,            8      ; do two lines at one time
-
-submby_loop:
-            movdqa      xmm0,           XMMWORD PTR [rsi]   ; src
-            movdqa      xmm1,           XMMWORD PTR [rax]   ; pred
-
-            movdqa      xmm2,           xmm0
-            psubb       xmm0,           xmm1
-
-            pxor        xmm1,           [GLOBAL(t80)]   ;convert to signed values
-            pxor        xmm2,           [GLOBAL(t80)]
-            pcmpgtb     xmm1,           xmm2            ; obtain sign information
-
-            movdqa      xmm2,    xmm0
-            movdqa      xmm3,    xmm1
-            punpcklbw   xmm0,    xmm1            ; put sign back to subtraction
-            punpckhbw   xmm2,    xmm3            ; put sign back to subtraction
-
-            movdqa      XMMWORD PTR [rdi],   xmm0
-            movdqa      XMMWORD PTR [rdi +16], xmm2
-
-            movdqa      xmm4,           XMMWORD PTR [rsi + rdx]
-            movdqa      xmm5,           XMMWORD PTR [rax + 16]
-
-            movdqa      xmm6,           xmm4
-            psubb       xmm4,           xmm5
-
-            pxor        xmm5,           [GLOBAL(t80)]   ;convert to signed values
-            pxor        xmm6,           [GLOBAL(t80)]
-            pcmpgtb     xmm5,           xmm6            ; obtain sign information
-
-            movdqa      xmm6,    xmm4
-            movdqa      xmm7,    xmm5
-            punpcklbw   xmm4,    xmm5            ; put sign back to subtraction
-            punpckhbw   xmm6,    xmm7            ; put sign back to subtraction
-
-            movdqa      XMMWORD PTR [rdi +32], xmm4
-            movdqa      XMMWORD PTR [rdi +48], xmm6
-
-            add         rdi,            64
-            add         rax,            32
-            lea         rsi,            [rsi+rdx*2]
-
-            sub         rcx,            1
-            jnz         submby_loop
-
-    pop rdi
-    pop rsi
-    ; begin epilog
-    RESTORE_GOT
-    RESTORE_XMM
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-
-;void vp8_subtract_mbuv_sse2(short *diff, unsigned char *usrc, unsigned char *vsrc, unsigned char *pred, int stride)
-global sym(vp8_subtract_mbuv_sse2)
-sym(vp8_subtract_mbuv_sse2):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 5
@@ -156,192 +83,154 @@ sym(vp8_subtract_mbuv_sse2):
     push rdi
     ; end prolog
 
-            mov     rdi,        arg(0) ;diff
-            mov     rax,        arg(3) ;pred
-            mov     rsi,        arg(1) ;z = usrc
-            add     rdi,        256*2  ;diff = diff + 256 (shorts)
-            add     rax,        256    ;Predictor = pred + 256
-            movsxd  rdx,        dword ptr arg(4) ;stride;
-            lea     rcx,        [rdx + rdx*2]
+    mov         rdi,        arg(0)          ;diff
+    mov         rsi,        arg(1)          ;src
+    movsxd      rdx,        dword ptr arg(2);src_stride
+    mov         rax,        arg(3)          ;pred
+    movdqa      xmm4,       [GLOBAL(t80)]
+    push        rbx
+    mov         rcx,        8               ; do two lines at one time
+    movsxd      rbx,        dword ptr arg(4);pred_stride
 
-            ;u
-            ;line 0 1
-            movq       xmm0,    MMWORD PTR [rsi]  ; src
-            movq       xmm2,    MMWORD PTR [rsi+rdx]
-            movdqa     xmm1,    XMMWORD PTR [rax]  ; pred
-            punpcklqdq xmm0,    xmm2
+.submby_loop:
+    movdqa      xmm0,       [rsi]           ; src
+    movdqa      xmm1,       [rax]           ; pred
 
-            movdqa     xmm2,    xmm0
-            psubb      xmm0,    xmm1            ; subtraction with sign missed
+    movdqa      xmm2,       xmm0
+    psubb       xmm0,       xmm1
 
-            pxor       xmm1,    [GLOBAL(t80)]   ;convert to signed values
-            pxor       xmm2,    [GLOBAL(t80)]
-            pcmpgtb    xmm1,    xmm2            ; obtain sign information
+    pxor        xmm1,       xmm4            ;convert to signed values
+    pxor        xmm2,       xmm4
+    pcmpgtb     xmm1,       xmm2            ; obtain sign information
 
-            movdqa     xmm2,    xmm0
-            movdqa     xmm3,    xmm1
-            punpcklbw  xmm0,    xmm1            ; put sign back to subtraction
-            punpckhbw  xmm2,    xmm3            ; put sign back to subtraction
+    movdqa      xmm2,       xmm0
+    punpcklbw   xmm0,       xmm1            ; put sign back to subtraction
+    punpckhbw   xmm2,       xmm1            ; put sign back to subtraction
 
-            movdqa     XMMWORD PTR [rdi],   xmm0
-            movdqa     XMMWORD PTR [rdi +16],   xmm2
+    movdqa      xmm3,       [rsi + rdx]
+    movdqa      xmm5,       [rax + rbx]
 
-            ;line 2 3
-            movq       xmm0,    MMWORD PTR [rsi+rdx*2]  ; src
-            movq       xmm2,    MMWORD PTR [rsi+rcx]
-            movdqa     xmm1,    XMMWORD PTR [rax+16]  ; pred
-            punpcklqdq xmm0,    xmm2
+    lea         rsi,        [rsi+rdx*2]
+    lea         rax,        [rax+rbx*2]
 
-            movdqa     xmm2,    xmm0
-            psubb      xmm0,    xmm1            ; subtraction with sign missed
+    movdqa      [rdi],      xmm0
+    movdqa      [rdi +16],  xmm2
 
-            pxor       xmm1,    [GLOBAL(t80)]   ;convert to signed values
-            pxor       xmm2,    [GLOBAL(t80)]
-            pcmpgtb    xmm1,    xmm2            ; obtain sign information
+    movdqa      xmm1,       xmm3
+    psubb       xmm3,       xmm5
 
-            movdqa     xmm2,    xmm0
-            movdqa     xmm3,    xmm1
-            punpcklbw  xmm0,    xmm1            ; put sign back to subtraction
-            punpckhbw  xmm2,    xmm3            ; put sign back to subtraction
+    pxor        xmm5,       xmm4            ;convert to signed values
+    pxor        xmm1,       xmm4
+    pcmpgtb     xmm5,       xmm1            ; obtain sign information
 
-            movdqa     XMMWORD PTR [rdi + 32],   xmm0
-            movdqa     XMMWORD PTR [rdi + 48],   xmm2
+    movdqa      xmm1,       xmm3
+    punpcklbw   xmm3,       xmm5            ; put sign back to subtraction
+    punpckhbw   xmm1,       xmm5            ; put sign back to subtraction
 
-            ;line 4 5
-            lea        rsi,     [rsi + rdx*4]
+    movdqa      [rdi +32],  xmm3
+    movdqa      [rdi +48],  xmm1
 
-            movq       xmm0,    MMWORD PTR [rsi]  ; src
-            movq       xmm2,    MMWORD PTR [rsi+rdx]
-            movdqa     xmm1,    XMMWORD PTR [rax + 32]  ; pred
-            punpcklqdq xmm0,    xmm2
+    add         rdi,        64
+    dec         rcx
+    jnz         .submby_loop
 
-            movdqa     xmm2,    xmm0
-            psubb      xmm0,    xmm1            ; subtraction with sign missed
+    pop rbx
+    pop rdi
+    pop rsi
+    ; begin epilog
+    RESTORE_GOT
+    UNSHADOW_ARGS
+    pop         rbp
+    ret
 
-            pxor       xmm1,    [GLOBAL(t80)]   ;convert to signed values
-            pxor       xmm2,    [GLOBAL(t80)]
-            pcmpgtb    xmm1,    xmm2            ; obtain sign information
+;vp8_subtract_mbuv_sse2(short *diff, unsigned char *usrc, unsigned char *vsrc,
+;                         int src_stride, unsigned char *upred,
+;                         unsigned char *vpred, int pred_stride)
+global sym(vp8_subtract_mbuv_sse2)
+sym(vp8_subtract_mbuv_sse2):
+    push        rbp
+    mov         rbp, rsp
+    SHADOW_ARGS_TO_STACK 7
+    GET_GOT     rbx
+    push rsi
+    push rdi
+    ; end prolog
 
-            movdqa     xmm2,    xmm0
-            movdqa     xmm3,    xmm1
-            punpcklbw  xmm0,    xmm1            ; put sign back to subtraction
-            punpckhbw  xmm2,    xmm3            ; put sign back to subtraction
+    movdqa      xmm4,       [GLOBAL(t80)]
+    mov         rdi,        arg(0)          ;diff
+    mov         rsi,        arg(1)          ;usrc
+    movsxd      rdx,        dword ptr arg(3);src_stride;
+    mov         rax,        arg(4)          ;upred
+    add         rdi,        256*2           ;diff = diff + 256 (shorts)
+    mov         rcx,        4
+    push        rbx
+    movsxd      rbx,        dword ptr arg(6);pred_stride
 
-            movdqa     XMMWORD PTR [rdi + 64],   xmm0
-            movdqa     XMMWORD PTR [rdi + 80],   xmm2
+    ;u
+.submbu_loop:
+    movq        xmm0,       [rsi]           ; src
+    movq        xmm2,       [rsi+rdx]       ; src -- next line
+    movq        xmm1,       [rax]           ; pred
+    movq        xmm3,       [rax+rbx]       ; pred -- next line
+    lea         rsi,        [rsi + rdx*2]
+    lea         rax,        [rax + rbx*2]
 
-            ;line 6 7
-            movq       xmm0,    MMWORD PTR [rsi+rdx*2]  ; src
-            movq       xmm2,    MMWORD PTR [rsi+rcx]
-            movdqa     xmm1,    XMMWORD PTR [rax+ 48]  ; pred
-            punpcklqdq xmm0,    xmm2
+    punpcklqdq  xmm0,       xmm2
+    punpcklqdq  xmm1,       xmm3
 
-            movdqa     xmm2,    xmm0
-            psubb      xmm0,    xmm1            ; subtraction with sign missed
+    movdqa      xmm2,       xmm0
+    psubb       xmm0,       xmm1            ; subtraction with sign missed
 
-            pxor       xmm1,    [GLOBAL(t80)]   ;convert to signed values
-            pxor       xmm2,    [GLOBAL(t80)]
-            pcmpgtb    xmm1,    xmm2            ; obtain sign information
+    pxor        xmm1,       xmm4            ;convert to signed values
+    pxor        xmm2,       xmm4
+    pcmpgtb     xmm1,       xmm2            ; obtain sign information
 
-            movdqa     xmm2,    xmm0
-            movdqa     xmm3,    xmm1
-            punpcklbw  xmm0,    xmm1            ; put sign back to subtraction
-            punpckhbw  xmm2,    xmm3            ; put sign back to subtraction
+    movdqa      xmm2,       xmm0
+    movdqa      xmm3,       xmm1
+    punpcklbw   xmm0,       xmm1            ; put sign back to subtraction
+    punpckhbw   xmm2,       xmm3            ; put sign back to subtraction
 
-            movdqa     XMMWORD PTR [rdi + 96],   xmm0
-            movdqa     XMMWORD PTR [rdi + 112],  xmm2
+    movdqa      [rdi],      xmm0            ; store difference
+    movdqa      [rdi +16],  xmm2            ; store difference
+    add         rdi,        32
+    sub         rcx, 1
+    jnz         .submbu_loop
 
-            ;v
-            mov     rsi,        arg(2) ;z = vsrc
-            add     rdi,        64*2  ;diff = diff + 320 (shorts)
-            add     rax,        64    ;Predictor = pred + 320
+    mov         rsi,        arg(2)          ;vsrc
+    mov         rax,        arg(5)          ;vpred
+    mov         rcx,        4
 
-            ;line 0 1
-            movq       xmm0,    MMWORD PTR [rsi]  ; src
-            movq       xmm2,    MMWORD PTR [rsi+rdx]
-            movdqa     xmm1,    XMMWORD PTR [rax]  ; pred
-            punpcklqdq xmm0,    xmm2
+    ;v
+.submbv_loop:
+    movq        xmm0,       [rsi]           ; src
+    movq        xmm2,       [rsi+rdx]       ; src -- next line
+    movq        xmm1,       [rax]           ; pred
+    movq        xmm3,       [rax+rbx]       ; pred -- next line
+    lea         rsi,        [rsi + rdx*2]
+    lea         rax,        [rax + rbx*2]
 
-            movdqa     xmm2,    xmm0
-            psubb      xmm0,    xmm1            ; subtraction with sign missed
+    punpcklqdq  xmm0,       xmm2
+    punpcklqdq  xmm1,       xmm3
 
-            pxor       xmm1,    [GLOBAL(t80)]   ;convert to signed values
-            pxor       xmm2,    [GLOBAL(t80)]
-            pcmpgtb    xmm1,    xmm2            ; obtain sign information
+    movdqa      xmm2,       xmm0
+    psubb       xmm0,       xmm1            ; subtraction with sign missed
 
-            movdqa     xmm2,    xmm0
-            movdqa     xmm3,    xmm1
-            punpcklbw  xmm0,    xmm1            ; put sign back to subtraction
-            punpckhbw  xmm2,    xmm3            ; put sign back to subtraction
+    pxor        xmm1,       xmm4            ;convert to signed values
+    pxor        xmm2,       xmm4
+    pcmpgtb     xmm1,       xmm2            ; obtain sign information
 
-            movdqa     XMMWORD PTR [rdi],   xmm0
-            movdqa     XMMWORD PTR [rdi +16],   xmm2
+    movdqa      xmm2,       xmm0
+    movdqa      xmm3,       xmm1
+    punpcklbw   xmm0,       xmm1            ; put sign back to subtraction
+    punpckhbw   xmm2,       xmm3            ; put sign back to subtraction
 
-            ;line 2 3
-            movq       xmm0,    MMWORD PTR [rsi+rdx*2]  ; src
-            movq       xmm2,    MMWORD PTR [rsi+rcx]
-            movdqa     xmm1,    XMMWORD PTR [rax+16]  ; pred
-            punpcklqdq xmm0,    xmm2
+    movdqa      [rdi],      xmm0            ; store difference
+    movdqa      [rdi +16],  xmm2            ; store difference
+    add         rdi,        32
+    sub         rcx, 1
+    jnz         .submbv_loop
 
-            movdqa     xmm2,    xmm0
-            psubb      xmm0,    xmm1            ; subtraction with sign missed
-
-            pxor       xmm1,    [GLOBAL(t80)]   ;convert to signed values
-            pxor       xmm2,    [GLOBAL(t80)]
-            pcmpgtb    xmm1,    xmm2            ; obtain sign information
-
-            movdqa     xmm2,    xmm0
-            movdqa     xmm3,    xmm1
-            punpcklbw  xmm0,    xmm1            ; put sign back to subtraction
-            punpckhbw  xmm2,    xmm3            ; put sign back to subtraction
-
-            movdqa     XMMWORD PTR [rdi + 32],   xmm0
-            movdqa     XMMWORD PTR [rdi + 48],   xmm2
-
-            ;line 4 5
-            lea        rsi,     [rsi + rdx*4]
-
-            movq       xmm0,    MMWORD PTR [rsi]  ; src
-            movq       xmm2,    MMWORD PTR [rsi+rdx]
-            movdqa     xmm1,    XMMWORD PTR [rax + 32]  ; pred
-            punpcklqdq xmm0,    xmm2
-
-            movdqa     xmm2,    xmm0
-            psubb      xmm0,    xmm1            ; subtraction with sign missed
-
-            pxor       xmm1,    [GLOBAL(t80)]   ;convert to signed values
-            pxor       xmm2,    [GLOBAL(t80)]
-            pcmpgtb    xmm1,    xmm2            ; obtain sign information
-
-            movdqa     xmm2,    xmm0
-            movdqa     xmm3,    xmm1
-            punpcklbw  xmm0,    xmm1            ; put sign back to subtraction
-            punpckhbw  xmm2,    xmm3            ; put sign back to subtraction
-
-            movdqa     XMMWORD PTR [rdi + 64],   xmm0
-            movdqa     XMMWORD PTR [rdi + 80],   xmm2
-
-            ;line 6 7
-            movq       xmm0,    MMWORD PTR [rsi+rdx*2]  ; src
-            movq       xmm2,    MMWORD PTR [rsi+rcx]
-            movdqa     xmm1,    XMMWORD PTR [rax+ 48]  ; pred
-            punpcklqdq xmm0,    xmm2
-
-            movdqa     xmm2,    xmm0
-            psubb      xmm0,    xmm1            ; subtraction with sign missed
-
-            pxor       xmm1,    [GLOBAL(t80)]   ;convert to signed values
-            pxor       xmm2,    [GLOBAL(t80)]
-            pcmpgtb    xmm1,    xmm2            ; obtain sign information
-
-            movdqa     xmm2,    xmm0
-            movdqa     xmm3,    xmm1
-            punpcklbw  xmm0,    xmm1            ; put sign back to subtraction
-            punpckhbw  xmm2,    xmm3            ; put sign back to subtraction
-
-            movdqa     XMMWORD PTR [rdi + 96],   xmm0
-            movdqa     XMMWORD PTR [rdi + 112],  xmm2
-
+    pop         rbx
     ; begin epilog
     pop rdi
     pop rsi

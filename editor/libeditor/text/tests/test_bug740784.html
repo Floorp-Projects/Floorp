@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=740784
+-->
+
+<head>
+  <title>Test for Bug 740784</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=740784">Mozilla Bug 740784</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 740784 **/
+
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.waitForFocus(function() {
+        var t1 = $("t1");
+
+        t1.focus();
+        synthesizeKey("VK_END", {});
+        synthesizeKey("VK_BACK_SPACE", {});
+        synthesizeKey("Z", {accelKey: true});
+
+        // Was the former bogus node changed to a mozBR?
+        is(t1.value, "a", "trailing <br> correctly ignored");
+
+        SimpleTest.finish();
+      });
+   </script>
+  </pre>
+
+  <textarea id="t1" rows="2" columns="80">a</textarea>
+</body>
+</html>

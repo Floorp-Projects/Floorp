@@ -15,9 +15,11 @@ function closeWindow(aClose, aPromptFunction)
 
   var inPrivateBrowsing = false;
   try {
-    var pbSvc = Components.classes["@mozilla.org/privatebrowsing;1"]
-                          .getService(Components.interfaces.nsIPrivateBrowsingService);
-    inPrivateBrowsing = pbSvc.privateBrowsingEnabled;
+    if (["@mozilla.org/privatebrowsing;1"] in Components.classes) {
+      var pbSvc = Components.classes["@mozilla.org/privatebrowsing;1"]
+                            .getService(Components.interfaces.nsIPrivateBrowsingService);
+      inPrivateBrowsing = pbSvc.privateBrowsingEnabled;
+    }
   } catch(e) {
     // safe to ignore
   }

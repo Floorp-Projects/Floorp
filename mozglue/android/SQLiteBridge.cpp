@@ -168,27 +168,94 @@ Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCall(JNIEnv* jenv, jclass,
 {
     JNI_Setup(jenv);
 
+    int rc;
+    jobject jCursor = NULL;
+    const char* dbPath;
+    sqlite3 *db;
+    char* errorMsg;
+
+    dbPath = jenv->GetStringUTFChars(jDb, NULL);
+    rc = f_sqlite3_open(dbPath, &db);
+    jenv->ReleaseStringUTFChars(jDb, dbPath);
+    if (rc != SQLITE_OK) {
+        asprintf(&errorMsg, "Can't open database: %s\n", f_sqlite3_errmsg(db));
+        LOG("Error in SQLiteBridge: %s\n", errorMsg);
+        JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException", errorMsg);
+        free(errorMsg);
+    } else {
+      jCursor = sqliteInternalCall(jenv, db, jQuery, jParams, jQueryRes);
+    }
+    f_sqlite3_close(db);
+    return jCursor;
+}
+
+extern "C" NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCallWithDb(JNIEnv* jenv, jclass,
+                                                            jlong jDb,
+                                                            jstring jQuery,
+                                                            jobjectArray jParams,
+                                                            jlongArray jQueryRes)
+{
+    JNI_Setup(jenv);
+
+    jobject jCursor = NULL;
+    sqlite3 *db = (sqlite3*)jDb;
+    jCursor = sqliteInternalCall(jenv, db, jQuery, jParams, jQueryRes);
+    return jCursor;
+}
+
+extern "C" NS_EXPORT jlong JNICALL
+Java_org_mozilla_gecko_sqlite_SQLiteBridge_openDatabase(JNIEnv* jenv, jclass,
+                                                        jstring jDb)
+{
+    JNI_Setup(jenv);
+
+    int rc;
+    const char* dbPath;
+    sqlite3 *db;
+    char* errorMsg;
+
+    dbPath = jenv->GetStringUTFChars(jDb, NULL);
+    rc = f_sqlite3_open(dbPath, &db);
+    jenv->ReleaseStringUTFChars(jDb, dbPath);
+    if (rc != SQLITE_OK) {
+        asprintf(&errorMsg, "Can't open database: %s\n", f_sqlite3_errmsg(db));
+        LOG("Error in SQLiteBridge: %s\n", errorMsg);
+        JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException", errorMsg);
+        free(errorMsg);
+    }
+    return (jlong)db;
+}
+
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_sqlite_SQLiteBridge_closeDatabase(JNIEnv* jenv, jclass,
+                                                        jlong jDb)
+{
+    JNI_Setup(jenv);
+
+    sqlite3 *db = (sqlite3*)jDb;
+    f_sqlite3_close(db);
+}
+
+static jobject
+sqliteInternalCall(JNIEnv* jenv,
+                   sqlite3 *db,
+                   jstring jQuery,
+                   jobjectArray jParams,
+                   jlongArray jQueryRes)
+{
+    JNI_Setup(jenv);
+
     jobject jCursor = NULL;
     char* errorMsg;
     jsize numPars = 0;
 
-    const char* queryStr;
-    queryStr = jenv->GetStringUTFChars(jQuery, NULL);
-
-    const char* dbPath;
-    dbPath = jenv->GetStringUTFChars(jDb, NULL);
-
     const char *pzTail;
     sqlite3_stmt *ppStmt;
-    sqlite3 *db;
     int rc;
-    rc = f_sqlite3_open(dbPath, &db);
-    jenv->ReleaseStringUTFChars(jDb, dbPath);
 
-    if (rc != SQLITE_OK) {
-        asprintf(&errorMsg, "Can't open database: %s\n", f_sqlite3_errmsg(db));
-        goto error_close;
-    }
+    const char* queryStr;
+    queryStr = jenv->GetStringUTFChars(jQuery, NULL);
 
     rc = f_sqlite3_prepare_v2(db, queryStr, -1, &ppStmt, &pzTail);
     if (rc != SQLITE_OK || ppStmt == NULL) {
@@ -353,11 +420,9 @@ Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCall(JNIEnv* jenv, jclass,
         goto error_close;
     }
 
-    f_sqlite3_close(db);
     return jCursor;
 
 error_close:
-    f_sqlite3_close(db);
     LOG("Error in SQLiteBridge: %s\n", errorMsg);
     JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException", errorMsg);
     free(errorMsg);

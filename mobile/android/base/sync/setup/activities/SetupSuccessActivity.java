@@ -38,6 +38,7 @@
 package org.mozilla.gecko.sync.setup.activities;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.setup.Constants;
 
 import android.app.Activity;
@@ -49,7 +50,6 @@ import android.view.View;
 import android.widget.TextView;
 
 public class SetupSuccessActivity extends Activity {
-  @SuppressWarnings("unused")
   private final static String LOG_TAG = "SetupSuccessActivity";
   private TextView setupSubtitle;
   private Context mContext;
@@ -70,12 +70,17 @@ public class SetupSuccessActivity extends Activity {
     }
   }
 
+  @Override
+  public void onDestroy() {
+    Logger.debug(LOG_TAG, "onDestroy() called.");
+    super.onDestroy();
+  }
+
   /* Click Handlers */
   public void settingsClickHandler(View target) {
     Intent intent = new Intent(Settings.ACTION_SYNC_SETTINGS);
-    intent.setFlags(Constants.FLAG_ACTIVITY_REORDER_TO_FRONT_NO_ANIMATION);
+    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
     startActivity(intent);
-    finish();
   }
 
   public void pairClickHandler(View target) {

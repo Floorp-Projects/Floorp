@@ -52,6 +52,7 @@ import org.mozilla.gecko.gfx.TileLayer;
 import org.mozilla.gecko.GeckoAppShell;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -90,8 +91,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     private final LayerView mView;
     private final SingleTileLayer mBackgroundLayer;
-    private final CheckerboardImage mCheckerboardImage;
-    private final SingleTileLayer mCheckerboardLayer;
+    private final ScreenshotLayer mCheckerboardLayer;
     private final NinePatchTileLayer mShadowLayer;
     private TextLayer mFrameRateLayer;
     private final ScrollbarLayer mHorizScrollLayer;
@@ -100,6 +100,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private final FloatBuffer mCoordBuffer;
     private RenderContext mLastPageContext;
     private int mMaxTextureSize;
+    private int mBackgroundColor;
 
     private ArrayList<Layer> mExtraLayers = new ArrayList<Layer>();
 
@@ -122,6 +123,9 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private int mTextureHandle;
     private int mSampleHandle;
     private int mTMatrixHandle;
+
+    private int mSurfaceWidth;
+    private int mSurfaceHeight;
 
     // column-major matrix applied to each vertex to shift the viewport from
     // one ranging from (-1, -1),(1,1) to (0,0),(1,1) and to scale all sizes by
@@ -158,6 +162,36 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         "    gl_FragColor = texture2D(sTexture, vec2(vTexCoord.x, 1.0 - vTexCoord.y));\n" +
         "}\n";
 
+    public void setCheckerboardBitmap(Bitmap bitmap, float pageWidth, float pageHeight) {
+        mCheckerboardLayer.setBitmap(bitmap);
+        mCheckerboardLayer.beginTransaction();
+        try {
+            mCheckerboardLayer.setPosition(new Rect(0, 0, Math.round(pageWidth),
+                                                    Math.round(pageHeight)));
+            mCheckerboardLayer.invalidate();
+        } finally {
+            mCheckerboardLayer.endTransaction();
+        }
+    }
+
+    public void updateCheckerboardBitmap(Bitmap bitmap, float x, float y,
+                                         float width, float height,
+                                         float pageWidth, float pageHeight) {
+        mCheckerboardLayer.updateBitmap(bitmap, x, y, width, height);
+        mCheckerboardLayer.beginTransaction();
+        try {
+            mCheckerboardLayer.setPosition(new Rect(0, 0, Math.round(pageWidth),
+                                                    Math.round(pageHeight)));
+            mCheckerboardLayer.invalidate();
+        } finally {
+            mCheckerboardLayer.endTransaction();
+        }
+    }
+
+    public void resetCheckerboard() {
+        mCheckerboardLayer.reset();
+    }
+
     public LayerRenderer(LayerView view) {
         mView = view;
 
@@ -166,8 +200,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         CairoImage backgroundImage = new BufferedCairoImage(controller.getBackgroundPattern());
         mBackgroundLayer = new SingleTileLayer(true, backgroundImage);
 
-        mCheckerboardImage = new CheckerboardImage();
-        mCheckerboardLayer = new SingleTileLayer(true, mCheckerboardImage);
+        mCheckerboardLayer = ScreenshotLayer.create();
 
         CairoImage shadowImage = new BufferedCairoImage(controller.getShadowPattern());
         mShadowLayer = new NinePatchTileLayer(shadowImage);
@@ -268,9 +301,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 gl) {
 	/* This code is causing crashes when the surface changes. (bug 738188)
 	 * I'm not sure if it actually works, so I'm disabling it now to avoid the crash.
-        RenderContext pageContext = createPageContext(mView.getController().getViewportMetrics());
-        RenderContext screenContext = createScreenContext();
-        Frame frame = createFrame(pageContext, screenContext);
+        Frame frame = createFrame(mView.getController().getViewportMetrics());
         synchronized (mView.getController()) {
             frame.beginDrawing();
             frame.drawBackground();
@@ -302,15 +333,13 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         return pixelBuffer;
     }
 
-    public RenderContext createScreenContext() {
-        LayerController layerController = mView.getController();
-        IntSize viewportSize = new IntSize(layerController.getViewportSize());
-        RectF viewport = new RectF(0.0f, 0.0f, viewportSize.width, viewportSize.height);
-        FloatSize pageSize = new FloatSize(layerController.getPageSize());
+    private RenderContext createScreenContext(ImmutableViewportMetrics metrics) {
+        RectF viewport = new RectF(0.0f, 0.0f, metrics.getWidth(), metrics.getHeight());
+        FloatSize pageSize = new FloatSize(metrics.getPageSize());
         return createContext(viewport, pageSize, 1.0f);
     }
 
-    public RenderContext createPageContext(ImmutableViewportMetrics metrics) {
+    private RenderContext createPageContext(ImmutableViewportMetrics metrics) {
         Rect viewport = RectUtils.round(metrics.getViewport());
         FloatSize pageSize = metrics.getPageSize();
         float zoomFactor = metrics.zoomFactor;
@@ -318,36 +347,14 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     }
 
     private RenderContext createContext(RectF viewport, FloatSize pageSize, float zoomFactor) {
-        return new RenderContext(viewport, pageSize, zoomFactor, mPositionHandle, mTextureHandle,
+        return new RenderContext(viewport, pageSize, new IntSize(mSurfaceWidth, mSurfaceHeight), zoomFactor, mPositionHandle, mTextureHandle,
                                  mCoordBuffer);
     }
 
-    private Rect getPageRect() {
-        LayerController controller = mView.getController();
-
-        Point origin = PointUtils.round(controller.getOrigin());
-        IntSize pageSize = new IntSize(controller.getPageSize());
-
-        origin.negate();
-
-        return new Rect(origin.x, origin.y,
-                        origin.x + pageSize.width, origin.y + pageSize.height);
-    }
-
-    private Rect transformToScissorRect(Rect rect) {
-        LayerController controller = mView.getController();
-        IntSize screenSize = new IntSize(controller.getViewportSize());
-
-        int left = Math.max(0, rect.left);
-        int top = Math.max(0, rect.top);
-        int right = Math.min(screenSize.width, rect.right);
-        int bottom = Math.min(screenSize.height, rect.bottom);
-
-        return new Rect(left, screenSize.height - bottom, right,
-                        (screenSize.height - bottom) + (bottom - top));
-    }
-
     public void onSurfaceChanged(GL10 gl, final int width, final int height) {
+        mSurfaceWidth = width;
+        mSurfaceHeight = height;
+
         GLES20.glViewport(0, 0, width, height);
 
         if (mFrameRateLayer != null) {
@@ -417,25 +424,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         }).start();
     }
 
-    private void updateCheckerboardLayer(RenderContext renderContext) {
-        int checkerboardColor = mView.getController().getCheckerboardColor();
-        boolean showChecks = mView.getController().checkerboardShouldShowChecks();
-        if (checkerboardColor == mCheckerboardImage.getColor() &&
-            showChecks == mCheckerboardImage.getShowChecks()) {
-            return;
-        }
-
-        mCheckerboardLayer.beginTransaction();  // called on compositor thread
-        try {
-            mCheckerboardImage.update(showChecks, checkerboardColor);
-            mCheckerboardLayer.invalidate();
-        } finally {
-            mCheckerboardLayer.endTransaction();
-        }
-
-        mCheckerboardLayer.update(renderContext);   // called on compositor thread
-    }
-
     /*
      * create a vertex shader type (GLES20.GL_VERTEX_SHADER)
      * or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
@@ -447,8 +435,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         return shader;
     }
 
-    public Frame createFrame(RenderContext pageContext, RenderContext screenContext) {
-        return new Frame(pageContext, screenContext);
+    public Frame createFrame(ImmutableViewportMetrics metrics) {
+        return new Frame(metrics);
     }
 
     class FadeRunnable implements Runnable {
@@ -490,21 +478,48 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     public class Frame {
         // The timestamp recording the start of this frame.
         private long mFrameStartTime;
+        // A fixed snapshot of the viewport metrics that this frame is using to render content.
+        private ImmutableViewportMetrics mFrameMetrics;
         // A rendering context for page-positioned layers, and one for screen-positioned layers.
         private RenderContext mPageContext, mScreenContext;
         // Whether a layer was updated.
         private boolean mUpdated;
+        private final Rect mPageRect;
 
-        public Frame(RenderContext pageContext, RenderContext screenContext) {
-            mPageContext = pageContext;
-            mScreenContext = screenContext;
+        public Frame(ImmutableViewportMetrics metrics) {
+            mFrameMetrics = metrics;
+            mPageContext = createPageContext(metrics);
+            mScreenContext = createScreenContext(metrics);
+            mPageRect = getPageRect();
         }
 
         private void setScissorRect() {
-            Rect scissorRect = transformToScissorRect(getPageRect());
+            Rect scissorRect = transformToScissorRect(mPageRect);
             GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
             GLES20.glScissor(scissorRect.left, scissorRect.top,
                              scissorRect.width(), scissorRect.height());
+        }
+
+        private Rect transformToScissorRect(Rect rect) {
+            IntSize screenSize = new IntSize(mFrameMetrics.getSize());
+
+            int left = Math.max(0, rect.left);
+            int top = Math.max(0, rect.top);
+            int right = Math.min(screenSize.width, rect.right);
+            int bottom = Math.min(screenSize.height, rect.bottom);
+
+            return new Rect(left, screenSize.height - bottom, right,
+                            (screenSize.height - bottom) + (bottom - top));
+        }
+
+        private Rect getPageRect() {
+            Point origin = PointUtils.round(mFrameMetrics.getOrigin());
+            IntSize pageSize = new IntSize(mFrameMetrics.getPageSize());
+
+            origin.negate();
+
+            return new Rect(origin.x, origin.y,
+                            origin.x + pageSize.width, origin.y + pageSize.height);
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
@@ -516,8 +531,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
             mUpdated = true;
 
-            LayerController controller = mView.getController();
-            Layer rootLayer = controller.getRoot();
+            Layer rootLayer = mView.getController().getRoot();
 
             if (!mPageContext.fuzzyEquals(mLastPageContext)) {
                 // the viewport or page changed, so show the scrollbars again
@@ -537,45 +551,95 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             if (rootLayer != null) mUpdated &= rootLayer.update(mPageContext);  // called on compositor thread
             mUpdated &= mBackgroundLayer.update(mScreenContext);    // called on compositor thread
             mUpdated &= mShadowLayer.update(mPageContext);  // called on compositor thread
-            updateCheckerboardLayer(mScreenContext);
+            mUpdated &= mCheckerboardLayer.update(mPageContext);   // called on compositor thread
             if (mFrameRateLayer != null) mUpdated &= mFrameRateLayer.update(mScreenContext); // called on compositor thread
             mUpdated &= mVertScrollLayer.update(mPageContext);  // called on compositor thread
             mUpdated &= mHorizScrollLayer.update(mPageContext); // called on compositor thread
 
             for (Layer layer : mExtraLayers)
                 mUpdated &= layer.update(mPageContext); // called on compositor thread
+        }
 
-            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
+        /** Retrieves the bounds for the layer, rounded in such a way that it
+         * can be used as a mask for something that will render underneath it.
+         * This will round the bounds inwards, but stretch the mask towards any
+         * near page edge, where near is considered to be 'within 2 pixels'.
+         * Returns null if the given layer is null.
+         */
+        private Rect getMaskForLayer(Layer layer) {
+            if (layer == null) {
+                return null;
+            }
+
+            RectF bounds = RectUtils.contract(layer.getBounds(mPageContext), 1.0f, 1.0f);
+            Rect mask = RectUtils.roundIn(bounds);
+
+            // If the mask is within two pixels of any page edge, stretch it over
+            // that edge. This is to avoid drawing thin slivers when masking
+            // layers.
+            if (mask.top <= 2) {
+                mask.top = -1;
+            }
+            if (mask.left <= 2) {
+                mask.left = -1;
+            }
+
+            // Because we're drawing relative to the page-rect, we only need to
+            // take into account its width and height (and not its origin)
+            int pageRight = mPageRect.width();
+            int pageBottom = mPageRect.height();
+
+            if (mask.right >= pageRight - 2) {
+                mask.right = pageRight + 1;
+            }
+            if (mask.bottom >= pageBottom - 2) {
+                mask.bottom = pageBottom + 1;
+            }
+
+            return mask;
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
         public void drawBackground() {
+            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
+
+            /* Update background color. */
+            mBackgroundColor = mView.getController().getCheckerboardColor();
+
+            /* Clear to the page background colour. The bits set here need to
+             * match up with those used in gfx/layers/opengl/LayerManagerOGL.cpp.
+             */
+            GLES20.glClearColor(((mBackgroundColor>>16)&0xFF) / 255.0f,
+                                ((mBackgroundColor>>8)&0xFF) / 255.0f,
+                                (mBackgroundColor&0xFF) / 255.0f,
+                                0.0f);
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT |
+                           GLES20.GL_DEPTH_BUFFER_BIT);
+
             /* Draw the background. */
-            mBackgroundLayer.setMask(getPageRect());
+            mBackgroundLayer.setMask(mPageRect);
             mBackgroundLayer.draw(mScreenContext);
 
             /* Draw the drop shadow, if we need to. */
-            Rect pageRect = getPageRect();
-            RectF untransformedPageRect = new RectF(0.0f, 0.0f, pageRect.width(),
-                                                    pageRect.height());
+            RectF untransformedPageRect = new RectF(0.0f, 0.0f, mPageRect.width(),
+                                                    mPageRect.height());
             if (!untransformedPageRect.contains(mView.getController().getViewport()))
                 mShadowLayer.draw(mPageContext);
 
-            /* Find the area the root layer will render into, to mask the scissor rect */
-            Rect rootMask = null;
-            Layer rootLayer = mView.getController().getRoot();
-            if (rootLayer != null) {
-                RectF rootBounds = rootLayer.getBounds(mPageContext);
-                rootBounds.offset(-mPageContext.viewport.left, -mPageContext.viewport.top);
-                rootMask = new Rect();
-                rootBounds.roundOut(rootMask);
-            }
+            /* Draw the 'checkerboard'. We use gfx.show_checkerboard_pattern to
+             * determine whether to draw the screenshot layer.
+             */
+            if (mView.getController().checkerboardShouldShowChecks()) {
+                /* Find the area the root layer will render into, to mask the checkerboard layer */
+                Rect rootMask = getMaskForLayer(mView.getController().getRoot());
+                mCheckerboardLayer.setMask(rootMask);
 
-            /* Draw the checkerboard. */
-            setScissorRect();
-            mCheckerboardLayer.setMask(rootMask);
-            mCheckerboardLayer.draw(mScreenContext);
-            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
+                /* Scissor around the page-rect, in case the page has shrunk
+                 * since the screenshot layer was last updated.
+                 */
+                setScissorRect(); // Calls glEnable(GL_SCISSOR_TEST))
+                mCheckerboardLayer.draw(mPageContext);
+            }
         }
 
         // Draws the layer the client added to us.
@@ -590,43 +654,49 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         /** This function is invoked via JNI; be careful when modifying signature. */
         public void drawForeground() {
-            Rect pageRect = getPageRect();
-            LayerController controller = mView.getController();
-
             /* Draw any extra layers that were added (likely plugins) */
             if (mExtraLayers.size() > 0) {
-                // This is a hack. SurfaceTextureLayer draws with its own program, so disable ours here
-                // and re-enable when done. If we end up adding other types of Layer here we'll need
-                // to do something different.
-                deactivateDefaultProgram();
-                
-                for (Layer layer : mExtraLayers)
+                for (Layer layer : mExtraLayers) {
+                    if (!layer.usesDefaultProgram())
+                        deactivateDefaultProgram();
+
                     layer.draw(mPageContext);
 
-                activateDefaultProgram();
+                    if (!layer.usesDefaultProgram())
+                        activateDefaultProgram();
+                }
             }
 
             /* Draw the vertical scrollbar. */
-            IntSize screenSize = new IntSize(controller.getViewportSize());
-            if (pageRect.height() > screenSize.height)
+            if (mPageRect.height() > mFrameMetrics.getHeight())
                 mVertScrollLayer.draw(mPageContext);
 
             /* Draw the horizontal scrollbar. */
-            if (pageRect.width() > screenSize.width)
+            if (mPageRect.width() > mFrameMetrics.getWidth())
                 mHorizScrollLayer.draw(mPageContext);
 
             /* Measure how much of the screen is checkerboarding */
-            Layer rootLayer = controller.getRoot();
+            Layer rootLayer = mView.getController().getRoot();
             if ((rootLayer != null) &&
                 (mProfileRender || PanningPerfAPI.isRecordingCheckerboard())) {
                 // Find out how much of the viewport area is valid
                 Rect viewport = RectUtils.round(mPageContext.viewport);
                 Region validRegion = rootLayer.getValidRegion(mPageContext);
+
+                /* restrict the viewport to page bounds so we don't
+                 * count overscroll as checkerboard */
+                if (!viewport.intersect(0, 0, mPageRect.width(), mPageRect.height())) {
+                    /* if the rectangles don't intersect
+                       intersect() doesn't change viewport
+                       so we set it to empty by hand */
+                    viewport.setEmpty();
+                }
                 validRegion.op(viewport, Region.Op.INTERSECT);
 
                 float checkerboard = 0.0f;
-                if (!(validRegion.isRect() && validRegion.getBounds().equals(viewport))) {
-                    int screenArea = viewport.width() * viewport.height();
+
+                int screenArea = viewport.width() * viewport.height();
+                if (screenArea > 0 && !(validRegion.isRect() && validRegion.getBounds().equals(viewport))) {
                     validRegion.op(viewport, Region.Op.REVERSE_DIFFERENCE);
 
                     // XXX The assumption here is that a Region never has overlapping

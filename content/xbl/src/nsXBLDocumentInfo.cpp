@@ -59,12 +59,12 @@
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "nsCCUncollectableMarker.h"
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla::scache;
 using namespace mozilla;
 
-using mozilla::dom::bindings::DestroyProtoOrIfaceCache;
+using mozilla::dom::DestroyProtoOrIfaceCache;
 
 static const char kXBLCachePrefix[] = "xblcache";
 
@@ -83,7 +83,10 @@ public:
   
   // nsIScriptGlobalObject methods
   virtual nsresult EnsureScriptEnvironment();
-  virtual nsresult SetScriptContext(nsIScriptContext *aContext);
+  void ClearScriptContext()
+  {
+    mScriptContext = NULL;
+  }
 
   virtual nsIScriptContext *GetContext();
   virtual JSObject *GetGlobalJSObject();
@@ -106,7 +109,6 @@ public:
 protected:
   virtual ~nsXBLDocGlobalObject();
 
-  void SetContext(nsIScriptContext *aContext);
   nsIScriptContext *GetScriptContext();
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
@@ -264,33 +266,6 @@ XBL_ProtoErrorReporter(JSContext *cx,
 // nsIScriptGlobalObject methods
 //
 
-void
-nsXBLDocGlobalObject::SetContext(nsIScriptContext *aScriptContext)
-{
-  if (!aScriptContext) {
-    mScriptContext = nsnull;
-    return;
-  }
-  aScriptContext->WillInitializeContext();
-  // NOTE: We init this context with a NULL global, so we automatically
-  // hook up to the existing nsIScriptGlobalObject global setup by
-  // nsGlobalWindow.
-  DebugOnly<nsresult> rv;
-  rv = aScriptContext->InitContext();
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Script Language's InitContext failed");
-  aScriptContext->SetGCOnDestruction(false);
-  aScriptContext->DidInitializeContext();
-  // and we set up our global manually
-  mScriptContext = aScriptContext;
-}
-
-nsresult
-nsXBLDocGlobalObject::SetScriptContext(nsIScriptContext *aContext)
-{
-  SetContext(aContext);
-  return NS_OK;
-}
-
 nsIScriptContext *
 nsXBLDocGlobalObject::GetScriptContext()
 {
@@ -300,19 +275,28 @@ nsXBLDocGlobalObject::GetScriptContext()
 nsresult
 nsXBLDocGlobalObject::EnsureScriptEnvironment()
 {
-  if (mScriptContext)
-    return NS_OK; // already initialized for this lang
-  nsCOMPtr<nsIDOMScriptObjectFactory> factory = do_GetService(kDOMScriptObjectFactoryCID);
-  NS_ENSURE_TRUE(factory, NS_OK);
-
-  nsresult rv;
+  if (mScriptContext) {
+    // Already initialized.
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIScriptRuntime> scriptRuntime;
-  rv = NS_GetScriptRuntimeByID(nsIProgrammingLanguage::JAVASCRIPT,
-                               getter_AddRefs(scriptRuntime));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_GetJSRuntime(getter_AddRefs(scriptRuntime));
+  NS_ENSURE_TRUE(scriptRuntime, NS_OK);
+
   nsCOMPtr<nsIScriptContext> newCtx = scriptRuntime->CreateContext();
-  rv = SetScriptContext(newCtx);
+  MOZ_ASSERT(newCtx);
+
+  newCtx->WillInitializeContext();
+  // NOTE: We init this context with a NULL global, so we automatically
+  // hook up to the existing nsIScriptGlobalObject global setup by
+  // nsGlobalWindow.
+  nsresult rv = newCtx->InitContext();
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Script Language's InitContext failed");
+  newCtx->SetGCOnDestruction(false);
+  newCtx->DidInitializeContext();
+
+  mScriptContext = newCtx;
 
   JSContext *cx = mScriptContext->GetNativeContext();
   JSAutoRequest ar(cx);
@@ -495,11 +479,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXBLDocumentInfo)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 static void
-UnmarkXBLJSObject(PRUint32 aLangID, void* aP, const char* aName, void* aClosure)
+UnmarkXBLJSObject(void* aP, const char* aName, void* aClosure)
 {
-  if (aLangID == nsIProgrammingLanguage::JAVASCRIPT) {
-    xpc_UnmarkGrayObject(static_cast<JSObject*>(aP));
-  }
+  xpc_UnmarkGrayObject(static_cast<JSObject*>(aP));
 }
 
 static bool
@@ -560,7 +542,7 @@ nsXBLDocumentInfo::~nsXBLDocumentInfo()
   /* destructor code */
   if (mGlobalObject) {
     // remove circular reference
-    mGlobalObject->SetScriptContext(nsnull);
+    mGlobalObject->ClearScriptContext();
     mGlobalObject->ClearGlobalObjectOwner(); // just in case
   }
   if (mBindingTable) {

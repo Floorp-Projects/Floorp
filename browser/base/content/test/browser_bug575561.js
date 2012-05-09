@@ -66,10 +66,11 @@ function testLink(aLinkIndex, pinTab, expectNewTab, nextTest, testSubFrame) {
 
     info("Clicking " + links[aLinkIndex].textContent);
     EventUtils.sendMouseEvent({type:"click"}, links[aLinkIndex], browser.contentWindow);
+    let linkLocation = links[aLinkIndex].href;
 
     function onPageLoad() {
       browser.removeEventListener("load", onPageLoad, true);
-      is(browser.contentDocument.location.href, links[aLinkIndex].href, "Link should not open in a new tab");
+      is(browser.contentDocument.location.href, linkLocation, "Link should not open in a new tab");
       executeSoon(function(){
         gBrowser.removeTab(appTab);
         nextTest();

@@ -51,7 +51,7 @@ EXPORTS		= \
 		nsEventListenerManager.h \
 		nsDOMEventTargetHelper.h \
 		$(NULL)
-		
+
 CPPSRCS		= \
 		nsEventListenerManager.cpp \
 		nsEventStateManager.cpp \
@@ -65,6 +65,8 @@ CPPSRCS		= \
 		nsDOMDragEvent.cpp \
 		nsDOMMutationEvent.cpp \
 		nsDOMPopupBlockedEvent.cpp \
+		nsDOMDeviceProximityEvent.cpp \
+		nsDOMDeviceLightEvent.cpp \
 		nsDOMDeviceOrientationEvent.cpp \
 		nsDOMDeviceMotionEvent.cpp \
 		nsDOMBeforeUnloadEvent.cpp \
@@ -110,7 +112,6 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES	+= \
              -I$(srcdir)/../../base/src \
              -I$(srcdir)/../../html/content/src \
-             -I$(srcdir)/../../html/base/src \
              -I$(srcdir)/../../xul/content/src \
              -I$(srcdir)/../../xml/content/src \
              -I$(srcdir)/../../../dom/base \

@@ -35,7 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This must always match the CID given in RadioInterfaceLayer.manifest!
+// These must always match the values given in RadioInterfaceLayer.manifest!
+
 #define NS_RADIOINTERFACELAYER_CID \
     { 0x2d831c8d, 0x6017, 0x435b, \
       { 0xa8, 0x0c, 0xe5, 0xd4, 0x22, 0x81, 0x0c, 0xea } }
+
+#define NS_RILCONTENTHELPER_CID \
+    { 0x472816e1, 0x1fd6, 0x4405, \
+      { 0x99, 0x6c, 0x80, 0x6f, 0x9e, 0xa6, 0x81, 0x74 } }
+#define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"

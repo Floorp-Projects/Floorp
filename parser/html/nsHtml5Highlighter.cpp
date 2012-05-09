@@ -163,9 +163,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
         StartSpan();
         mAmpersand = CurrentNode();
       } else {
-        EndCharacters();
-        StartSpan();
-        mCurrentRun = CurrentNode();
+        EndCharactersAndStartMarkupRun();
       }
       break;
     case NS_HTML5TOKENIZER_TAG_OPEN:
@@ -413,6 +411,8 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
     case NS_HTML5TOKENIZER_SCRIPT_DATA_LESS_THAN_SIGN:
     case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN:
       if (aState == NS_HTML5TOKENIZER_NON_DATA_END_TAG_NAME) {
+        FlushCurrent();
+        StartSpan(); // don't know if it is "end-tag" yet :-(
         break;
       }
       FinishTag();
@@ -421,8 +421,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
     case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED:
     case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_DASH:
       if (aState == NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN) {
-        EndCharacters();
-        StartSpan();
+        EndCharactersAndStartMarkupRun();
       }
       break;
       // Lots of double escape states omitted, because they don't highlight.
@@ -555,12 +554,15 @@ nsHtml5Highlighter::StartCharacters()
 }
 
 void
-nsHtml5Highlighter::EndCharacters()
+nsHtml5Highlighter::EndCharactersAndStartMarkupRun()
 {
   NS_PRECONDITION(mInCharacters, "Not in characters!");
   FlushChars();
   Pop();
   mInCharacters = false;
+  // Now start markup run
+  StartSpan();
+  mCurrentRun = CurrentNode();
 }
 
 void

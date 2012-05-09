@@ -47,10 +47,10 @@ MODULE		= dom
 DIRS = \
   interfaces/base \
   interfaces/canvas \
-  interfaces/contacts \
   interfaces/core \
   interfaces/html \
   interfaces/events \
+  interfaces/contacts \
   interfaces/settings \
   interfaces/stylesheets \
   interfaces/sidebar \
@@ -105,7 +105,12 @@ DIRS += \
   bluetooth \
   $(NULL)
 endif
-TEST_DIRS += tests
+
+TEST_DIRS += \
+  tests \
+  imptests \
+  $(NULL)
+
 ifneq (,$(filter gtk2 cocoa windows android qt os2,$(MOZ_WIDGET_TOOLKIT)))
 TEST_DIRS += plugins/test
 endif

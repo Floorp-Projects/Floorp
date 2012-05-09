@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<title>font.size.inflation.lineThreshold test</title>
+<style>
+body { width: 600px; }
+body, textarea { font-size: 12px }
+p { margin: 0 }
+</style>
+<!--
+In a 600px container, the minimum font size at 15em per line is 40px.
+This means we map 0px-60px into 40px-60px, so 12px gets mapped to 44px.
+
+Further, with a lineThreshold of 100, we need 50 characters of 12px
+text to meet the line threshold.
+-->
+<p>123456789
+123456789
+<textarea rows="2" cols="9">
+this is a lot of text but it doesn't have an effect
+</textarea>
+123456789
+1234567890</p>

@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/
+   - https://bugzilla.mozilla.org/show_bug.cgi?id=741549
+-->
+<window title="Mozilla Bug 741549"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="apphelper.js"/>
+  <script type="application/javascript" src="jshelper.js"/> 
+
+  <!-- test results are displayed in the html:body -->
+  <head></head>
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
+     target="_blank">Mozilla Bug 741549</a>
+  <iframe id="super_crazy" onload="go();" src="http://www.example.com:80/chrome/dom/tests/mochitest/webapps/apps/include.html"/>
+  <iframe id="no_delegated_install" onload="go();" src="http://sub2.test2.example.org:80/chrome/dom/tests/mochitest/webapps/apps/include.html"/>
+
+  </body>
+
+<script> 
+
+steps = [setUp, verify_no_apps, get_installed_returns_nothing, install_super_crazy, check_event_listener_fired, get_self_returns_nothing, 
+         get_self_on_domain, install_on_domain, check_event_listener_fired, get_all_installed, 
+         get_installed_on_domain, uninstall_on_domain, get_all_on_domain, tearDown];
+var iframes_loaded = 0 ;
+
+function go() {
+  ++iframes_loaded;
+  if (iframes_loaded >= 2) {
+    runAll(steps);
+  } 
+}
+
+
+function setUp(next) { 
+  debug("in " + arguments.callee.name);
+  
+  uninstallAll(next);
+}
+
+function verify_no_apps(next)  {
+  debug("in " + arguments.callee.name);
+  mozAppscb(navigator.mozApps.mgmt.getAll(),
+            [{ status: "== \"success\""}],
+            ok,
+            next);
+}
+
+function get_installed_returns_nothing(next) {
+  debug("in " + arguments.callee.name);
+  mozAppscb(navigator.mozApps.getInstalled(), 
+            [{ status: "== \"success\""}], 
+            ok, 
+            next);
+}
+
+function install_super_crazy(next)  {
+  debug("in " + arguments.callee.name);
+  var appURL = SERVERS['super_crazy'];
+
+  install(appURL, ok, function() {
+    getInstalled([appURL], ok, next);
+  });
+}
+
+function get_self_returns_nothing(next) {
+  debug("in " + arguments.callee.name);
+  mozAppscb(navigator.mozApps.getSelf(), 
+            [{ status: "== \"success\""}],
+            ok, 
+            next);
+}
+
+function get_self_on_domain(next)  {
+  debug("in " + arguments.callee.name);
+  onIframeLoad("super_crazy", ok, next);
+  document.getElementById("super_crazy").contentWindow.postMessage("getSelf", '*');
+}
+
+function install_on_domain(next) {
+  debug("in " + arguments.callee.name);
+  onIframeLoad("no_delegated_install", ok, next);
+  document.getElementById("no_delegated_install").contentWindow.postMessage("install", '*');
+}
+
+function get_all_installed(next) {
+  debug("in " + arguments.callee.name);
+  var appURLs = [SERVERS['super_crazy'], SERVERS['no_delegated_install']];
+  getInstalled(appURLs, ok, next);
+}
+
+function uninstall_on_domain(next) {
+  debug("in " + arguments.callee.name);
+  onIframeLoad("super_crazy", ok, next);
+  document.getElementById("super_crazy").contentWindow.postMessage("uninstall", '*');
+}
+
+function get_all_on_domain(next) {
+  debug("in " + arguments.callee.name);
+  onIframeLoad("super_crazy", ok, next);
+  document.getElementById("super_crazy").contentWindow.postMessage("mgmt.getAll", '*');
+}
+
+function get_installed_on_domain(next) {
+  debug("in " + arguments.callee.name);
+  onIframeLoad("super_crazy", ok, next);
+  document.getElementById("super_crazy").contentWindow.postMessage("getInstalled", '*');
+}
+
+</script> 
+
+</window>
+

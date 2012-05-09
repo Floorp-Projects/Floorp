@@ -38,13 +38,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIRunnable.idl"
+
+interface nsIRunnable;
 
 /**
  * Interface for the native event system layer.  This interface is designed
  * to be used on the main application thread only.
  */
-[uuid(40bc6280-ad83-471e-b197-80ab90e2065e)]
+[uuid(2d10ca53-f143-439a-bb2e-c1fbc71f6a05)]
 interface nsIAppShell : nsISupports
 {
   /**
@@ -112,5 +113,12 @@ interface nsIAppShell : nsISupports
    * finishes. If called multiple times per task/event, all the runnables will
    * be executed, in the order in which runInStableState() was called.
    */
-  void runInStableState(in nsIRunnable aRunnable);
+  void runInStableState(in nsIRunnable runnable);
+
+  /**
+   * Run the given runnable before the next iteration of the event loop (this
+   * includes native events too). If a nested loop is spawned within the current
+   * event then the runnable will not be run until that loop has terminated.
+   */
+  void runBeforeNextEvent(in nsIRunnable runnable);
 };

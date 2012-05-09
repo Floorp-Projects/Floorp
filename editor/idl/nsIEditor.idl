@@ -55,7 +55,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(2e14b183-29d4-4282-9475-589277a70654)]
+[scriptable, uuid(7861fe14-9977-413f-a893-3e1000c40817)]
 
 interface nsIEditor  : nsISupports
 {
@@ -496,6 +496,12 @@ interface nsIEditor  : nsISupports
    * @param aChild    The node to delete
    */
   void deleteNode(in nsIDOMNode child);
+
+  /**
+   * Returns true if markNodeDirty() has any effect.  Returns false if
+   * markNodeDirty() is a no-op.
+   */
+  [notxpcom] boolean outputsMozDirty();
 
   /** 
    * markNodeDirty() sets a special dirty attribute on the node.

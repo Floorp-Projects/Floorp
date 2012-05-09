@@ -41,16 +41,18 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jslibmath.h"
-#include "jsnum.h"
 #include "jsscope.h"
-#include "jsobjinlines.h"
-#include "jsscriptinlines.h"
-#include "jstypedarrayinlines.h"
 
 #include "frontend/BytecodeEmitter.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
+#include "vm/NumericConversions.h"
+
+#include "jsobjinlines.h"
+#include "jsscriptinlines.h"
+#include "jstypedarrayinlines.h"
+
 #include "methodjit/FrameState-inl.h"
 
 #include "jsautooplen.h"
@@ -1261,8 +1263,8 @@ mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
                     i32 = ClampIntForUint8Array(i32);
             } else {
                 i32 = (atype == TypedArray::TYPE_UINT8_CLAMPED)
-                    ? js_TypedArray_uint8_clamp_double(v.toDouble())
-                    : js_DoubleToECMAInt32(v.toDouble());
+                    ? ClampDoubleToUint8(v.toDouble())
+                    : ToInt32(v.toDouble());
             }
             *vr = ValueRemat::FromConstant(Int32Value(i32));
         }
@@ -1698,9 +1700,8 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     ic.fastPathRejoin = masm.label();
 
     // When generating typed array stubs, it may be necessary to call
-    // js_DoubleToECMAInt32(), which would clobber registers. To deal with
-    // this, we tell the IC exactly which registers need to be saved
-    // across calls.
+    // ToInt32(), which would clobber registers. To deal with this, we tell the
+    // IC exactly which registers need to be saved across calls.
     ic.volatileMask = frame.regsInUse();
 
     // If the RHS will be popped, and doesn't overlap any live values, then
@@ -2127,7 +2128,7 @@ mjit::Compiler::jsop_getelem()
     // we can generate code directly without using an inline cache.
     if (cx->typeInferenceEnabled() && !id->isType(JSVAL_TYPE_STRING)) {
         types::TypeSet *types = analysis->poppedTypes(PC, 1);
-        if (types->isLazyArguments(cx) && !outerScript->analysis()->modifiesArguments()) {
+        if (types->isMagicArguments(cx) && !outerScript->analysis()->modifiesArguments()) {
             // Inline arguments path.
             jsop_getelem_args();
             return true;
@@ -2663,13 +2664,13 @@ mjit::Compiler::jsop_initprop()
 {
     FrameEntry *obj = frame.peek(-2);
     FrameEntry *fe = frame.peek(-1);
-    JSAtom *atom = script->getAtom(GET_UINT32_INDEX(PC));
+    PropertyName *name = script->getName(GET_UINT32_INDEX(PC));
 
     JSObject *baseobj = frame.extra(obj).initObject;
 
     if (!baseobj || monitored(PC)) {
         prepareStubCall(Uses(2));
-        masm.move(ImmPtr(atom), Registers::ArgReg1);
+        masm.move(ImmPtr(name), Registers::ArgReg1);
         INLINE_STUBCALL(stubs::InitProp, REJOIN_FALLTHROUGH);
         return;
     }
@@ -2679,7 +2680,7 @@ mjit::Compiler::jsop_initprop()
 #ifdef DEBUG
     bool res =
 #endif
-    LookupPropertyWithFlags(cx, baseobj, ATOM_TO_JSID(atom),
+    LookupPropertyWithFlags(cx, baseobj, NameToId(name),
                             JSRESOLVE_QUALIFIED, &holder, &prop);
     JS_ASSERT(res && prop && holder == baseobj);
 

@@ -285,15 +285,21 @@ public:
   nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
 
   mozilla::dom::Element* GetOwnerContent() { return mOwnerContent; }
-  void SetOwnerContent(mozilla::dom::Element* aContent);
-
   bool ShouldClipSubdocument() { return mClipSubdocument; }
 
   bool ShouldClampScrollPosition() { return mClampScrollPosition; }
 
 private:
 
+  void SetOwnerContent(mozilla::dom::Element* aContent);
+
   bool ShouldUseRemoteProcess();
+
+  /**
+   * Is this a frameloader for a bona fide <iframe mozbrowser>?  (I.e., does
+   * the frame return true for nsIMozBrowserFrame::GetReallyIsBrowser()?)
+   */
+  bool OwnerIsBrowserFrame();
 
   /**
    * If we are an IPC frame, set mRemoteFrame. Otherwise, create and

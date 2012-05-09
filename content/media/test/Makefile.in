@@ -134,9 +134,10 @@ _TEST_FILES = \
 		test_paused_after_ended.html \
 		test_play_events.html \
 		test_play_events_2.html \
+		test_played.html \
 		test_playback.html \
 		test_playback_errors.html \
- 		test_seekable1.html \
+		test_seekable1.html \
 		test_preload_actions.html \
 		test_preload_attribute.html \
 		test_progress.html \
@@ -149,13 +150,17 @@ _TEST_FILES = \
 		test_seek_out_of_range.html \
 		test_source.html \
 		test_source_write.html \
+	        test_source_null.html \
 		test_standalone.html \
+		test_streams_element_capture.html \
+		test_streams_element_capture_reset.html \
 		test_timeupdate_small_files.html \
 		test_too_many_elements.html \
 		test_volume.html \
 		test_video_to_canvas.html \
 		use_large_cache.js \
 		test_audiowrite.html \
+		test_mozHasAudio.html \
 		$(NULL)
 
 # Don't run in suite
@@ -228,6 +233,7 @@ _TEST_FILES += \
 		spacestorm-1000Hz-100ms.ogg \
 		video-overhang.ogg \
 		file_a4_tone.ogg \
+		detodos.opus \
 		$(NULL)
 
 # Wave sample files

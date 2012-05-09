@@ -85,7 +85,7 @@ bool Face::readGraphite()
 {
     size_t lSilf;
     const byte * const pSilf = getTable(Tag::Silf, &lSilf),
-    		   *      p = pSilf;
+    		   *           p = pSilf;
     if (!p) return false;
 
     const uint32 version = be::read<uint32>(p);

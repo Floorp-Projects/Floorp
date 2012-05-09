@@ -1,9 +1,9 @@
 load 257752-1-recursion.xul
 load 329335-1.xul
 load 329884-1.xul
-HTTP load 330010-1.xul
-load 330012-1.xul
-load 397148-1.xul
+skip-if(winWidget) HTTP load 330010-1.xul # bug 742455
+skip-if(winWidget) load 330012-1.xul # bug 742455
+skip-if(winWidget) load 397148-1.xul # bug 742455
 load 404346-1.xul
 load 415019-1.xul
 load 417840-1.xul

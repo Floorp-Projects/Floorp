@@ -4,7 +4,7 @@
   Check that pausing the base time container makes dependent times unresolved.
  -->
 <head>
-<script>
+<script><!----><![CDATA[
 function snapshot() {
   var a = document.getElementById("svg-a");
   var b = document.getElementById("svg-b");
@@ -17,13 +17,14 @@ function snapshot() {
   try {
     document.getElementById("a").getStartTime();
   } catch (e) {
-    if (e.code == DOMException.INVALID_STATE_ERR) {
+    if (e.name == "InvalidStateError" &&
+        e.code == DOMException.INVALID_STATE_ERR) {
       wrong.style.setProperty('visibility', 'hidden', '');
     }
   }
   document.documentElement.removeAttribute("class");
 }
-</script>
+//]]></script>
 </head>
 <body onload="snapshot()">
 <svg xmlns="http://www.w3.org/2000/svg" width="120px" height="120px" id="svg-a">

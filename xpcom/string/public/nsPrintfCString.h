@@ -42,46 +42,33 @@
 #include "nsString.h"
 #endif
 
-
-  /**
-   * |nsPrintfCString| lets you use a formated |printf| string as an |const nsACString|.
-   *
-   *   myCStr += nsPrintfCString("%f", 13.917);
-   *     // ...a general purpose substitute for |AppendFloat|
-   *
-   * For longer patterns, you'll want to use the constructor that takes a length
-   *
-   *   nsPrintfCString(128, "%f, %f, %f, %f, %f, %f, %f, %i, %f", x, y, z, 3.2, j, k, l, 3, 3.1);
-   *
-   * Exceding the default size (which you must specify in the constructor, it is not determined)
-   * causes an allocation, so avoid that.  If your formatted string exceeds the allocated space, it is
-   * cut off at the size of the buffer, no error is reported (and no out-of-bounds writing occurs).
-   * This class is intended to be useful for numbers and short
-   * strings, not arbitrary formatting of other strings (e.g., with %s).  There is currently no
-   * wide version of this class, since wide |printf| is not generally available.  That means
-   * to get a wide version of your formatted data, you must, e.g.,
-   *
-   *   CopyASCIItoUTF16(nsPrintfCString("%f", 13.917"), myStr);
-   *
-   * That's another good reason to avoid this class for anything but numbers ... as strings can be
-   * much more efficiently handled with |NS_LITERAL_[C]STRING| and |nsLiteral[C]String|.
-   */
-
-class nsPrintfCString : public nsCString
+/**
+ * |nsPrintfCString| is syntactic sugar for a printf used as a
+ * |const nsACString| with a small builtin autobuffer. In almost all cases
+ * it is better to just use AppendPrintf. Example usage:
+ *
+ *   NS_WARNING(nsPrintfCString("Unexpected value: %f", 13.917).get());
+ */
+class nsPrintfCString : public nsFixedCString
   {
     typedef nsCString string_type;
 
-    enum { kLocalBufferSize=15 };
+    public:
+      explicit nsPrintfCString( const char_type* format, ... )
+        : nsFixedCString(mLocalBuffer, kLocalBufferSize, 0)
+        {
+          va_list ap;
+          va_start(ap, format);
+          AppendPrintf(format, ap);
+          va_end(ap);
+        }
+
+    private:
+      enum { kLocalBufferSize=15 };
       // ought to be large enough for most things ... a |long long| needs at most 20 (so you'd better ask)
       //  pinkerton suggests 7.  We should measure and decide what's appropriate
 
-    public:
-      // XXX don't these need to be declared CDECL ??
-      explicit nsPrintfCString( const char_type* format, ... );
-      nsPrintfCString( size_type n, const char_type* format, ...);
-
-    private:
-      char_type  mLocalBuffer[ kLocalBufferSize + 1 ];
+      char_type  mLocalBuffer[ kLocalBufferSize ];
   };
 
 #endif // !defined(nsPrintfCString_h___)

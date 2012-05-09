@@ -54,6 +54,8 @@ toolkit.jar:
         skin/classic/global/textbox.css
 *       skin/classic/global/toolbar.css
         skin/classic/global/toolbarbutton.css
+        skin/classic/global/TopLevelImageDocument.css
+        skin/classic/global/TopLevelVideoDocument.css
         skin/classic/global/tree.css
         skin/classic/global/wizard.css
         skin/classic/global/alerts/alert.css                     (alerts/alert.css)
@@ -229,6 +231,8 @@ toolkit.jar:
 *       skin/classic/aero/global/textbox.css                             (textbox-aero.css)
 *       skin/classic/aero/global/toolbar.css
 *       skin/classic/aero/global/toolbarbutton.css                       (toolbarbutton-aero.css)
+        skin/classic/aero/global/TopLevelImageDocument.css
+        skin/classic/aero/global/TopLevelVideoDocument.css
 *       skin/classic/aero/global/tree.css                                (tree-aero.css)
         skin/classic/aero/global/wizard.css
         skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)

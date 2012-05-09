@@ -247,11 +247,12 @@ class HashTable : private AllocPolicy
          * a new key at the new Lookup position.  |front()| is invalid after
          * this operation until the next call to |popFront()|.
          */
-        void rekeyFront(Key &k) {
+        void rekeyFront(const Key &k) {
             JS_ASSERT(&k != &HashPolicy::getKey(this->cur->t));
-            JS_ASSERT(!table.match(*this->cur, k));
+            if (table.match(*this->cur, k))
+                return;
             Entry e = *this->cur;
-            HashPolicy::setKey(e.t, k);
+            HashPolicy::setKey(e.t, const_cast<Key &>(k));
             table.remove(*this->cur);
             table.add(k, e);
             added = true;
@@ -384,7 +385,7 @@ class HashTable : private AllocPolicy
         mutationCount(0)
     {}
 
-    bool init(uint32_t length)
+    MOZ_WARN_UNUSED_RESULT bool init(uint32_t length)
     {
         /* Make sure that init isn't called twice. */
         JS_ASSERT(table == NULL);
@@ -619,23 +620,20 @@ class HashTable : private AllocPolicy
 
     bool checkOverloaded()
     {
-        if (overloaded()) {
-            /* Compress if a quarter or more of all entries are removed. */
-            int deltaLog2;
-            if (removedCount >= (capacity() >> 2)) {
-                METER(stats.compresses++);
-                deltaLog2 = 0;
-            } else {
-                METER(stats.grows++);
-                deltaLog2 = 1;
-            }
+        if (!overloaded())
+            return false;
 
-            (void) changeTableSize(deltaLog2);
-
-            return true;
+        /* Compress if a quarter or more of all entries are removed. */
+        int deltaLog2;
+        if (removedCount >= (capacity() >> 2)) {
+            METER(stats.compresses++);
+            deltaLog2 = 0;
+        } else {
+            METER(stats.grows++);
+            deltaLog2 = 1;
         }
 
-        return false;
+        return changeTableSize(deltaLog2);
     }
 
     void remove(Entry &e)

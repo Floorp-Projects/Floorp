@@ -1,0 +1,105 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEventTarget.idl"
+
+interface nsIDOMEventListener;
+interface nsIDOMDOMRequest;
+interface nsIDOMMozMobileConnectionInfo;
+
+[scriptable, uuid(ba2be619-fed6-4652-865a-c61f88ffeaa8)]
+interface nsIDOMMozMobileConnection : nsIDOMEventTarget
+{
+  /**
+   * Indicates the state of the device's ICC card.
+   *
+   * Possible values: null, 'absent', 'pinRequired', 'pukRequired',
+   * 'networkLocked', 'ready'.
+   */
+  readonly attribute DOMString cardState;
+
+  /**
+   * Information about the voice connection.
+   */
+  readonly attribute nsIDOMMozMobileConnectionInfo voice;
+
+  /**
+   * Information about the data connection.
+   */
+  readonly attribute nsIDOMMozMobileConnectionInfo data;
+
+  /**
+   * Search for available networks.
+   *
+   * If successful, the request result will be an array of operator names.
+   */
+  nsIDOMDOMRequest getNetworks();
+
+  /**
+   * The 'cardstatechange' event is notified when the 'cardState' attribute
+   * changes value.
+   */
+  attribute nsIDOMEventListener oncardstatechange;
+
+  /**
+   * The 'voicechange' event is notified whenever the voice connection object
+   * changes.
+   */
+  attribute nsIDOMEventListener onvoicechange;
+
+  /**
+   * The 'datachange' event is notified whenever the data connection object
+   * changes values.
+   */
+  attribute nsIDOMEventListener ondatachange;
+
+};
+
+[scriptable, uuid(f3bb0611-5e4a-46f1-a8f5-cf592b37596e)]
+interface nsIDOMMozMobileConnectionInfo : nsISupports
+{
+  /**
+   * Indicates whether the device is connected to a mobile network.
+   */
+  readonly attribute bool connected;
+
+  /**
+   * Indicates whether only emergency calls are possible.
+   *
+   * This flag is only relevant to voice connections and when 'connected' is
+   * false.
+   */
+  readonly attribute bool emergencyCallsOnly;
+
+  /**
+   * Indicates whether the connection is going through a foreign operator
+   * (roaming) or not.
+   */
+  readonly attribute bool roaming;
+
+  /**
+   * Operator name.
+   */
+  readonly attribute DOMString operator;
+
+  /**
+   * Type of connection.
+   *
+   * Possible values: 'gsm', 'cdma', gprs', 'edge', 'umts', 'hsdpa', 'evdo0',
+   * 'evdoa', 'evdob', etc.
+   */
+  readonly attribute DOMString type;
+
+  /**
+   * Signal strength in dBm, or null if no service is available.
+   */
+  readonly attribute jsval signalStrength;
+
+  /**
+   * Signal strength, represented linearly as a number between 0 (weakest
+   * signal) and 100 (full signal).
+   */
+  readonly attribute jsval relSignalStrength;
+
+};

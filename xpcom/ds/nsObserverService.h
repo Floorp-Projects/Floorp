@@ -62,6 +62,10 @@ public:
   static nsresult
   Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
+  // Unmark any strongly held observers implemented in JS so the cycle
+  // collector will not traverse them.
+  NS_IMETHOD UnmarkGrayStrongObservers();
+
 private:
   ~nsObserverService(void);
 

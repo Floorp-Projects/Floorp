@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=741267
+-->
+<window title="Mozilla Bug 741267"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <iframe id="t"></iframe>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741267"
+     target="_blank">Mozilla Bug 741267</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 741267 **/
+    function doTest() {
+      var win = $("t").contentWindow;
+      var sandbox = Components.utils.Sandbox(win, { sandboxPrototype: win });
+      try {
+        var nl = Components.utils.evalInSandbox("NodeList", sandbox);
+        is(nl, "[object NodeList]", "'NodeList' in a sandbox should return the NodeList interface prototype object");
+      } catch (e) {
+        ok(false, "'NodeList' shouldn't throw in a sandbox");
+      }
+      try {
+        var et = Components.utils.evalInSandbox("EventTarget", sandbox);
+        ok(et, "'EventTarget' in a sandbox should return the EventTarget interface prototype object");
+      } catch (e) {
+        ok(false, "'EventTarget' shouldn't throw in a sandbox");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest()", sandbox);
+        is(xhr, "[object XMLHttpRequest]", "'XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
+      } catch (e) {
+        ok(false, "'XMLHttpRequest()' shouldn't throw in a sandbox");
+      }
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  ]]>
+  </script>
+</window>

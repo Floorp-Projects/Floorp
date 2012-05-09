@@ -21,6 +21,7 @@ try {
   document.doctype.appendChild(document.createTextNode("test"));
   ok(false, "Should have thrown an exception");
 } catch (e) {
+  is(e.name, "HierarchyRequestError");
   ok(e instanceof DOMException, "Should be a DOMException");
   is(e.code, DOMException.HIERARCHY_REQUEST_ERR);
 }

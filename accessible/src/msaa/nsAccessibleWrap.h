@@ -46,7 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsAccessible.h"
 #include "Accessible2.h"
-#include "CAccessibleComponent.h"
+#include "ia2AccessibleComponent.h"
 #include "CAccessibleHyperlink.h"
 #include "CAccessibleValue.h"
 
@@ -97,7 +97,7 @@ Class::QueryInterface(REFIID iid, void** ppv)                                 \
 
 
 class nsAccessibleWrap : public nsAccessible,
-                         public CAccessibleComponent,
+                         public ia2AccessibleComponent,
                          public CAccessibleHyperlink,
                          public CAccessibleValue,
                          public IAccessible2,

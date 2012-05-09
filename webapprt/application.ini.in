@@ -1,0 +1,18 @@
+#if 0
+; This Source Code Form is subject to the terms of the Mozilla Public
+; License, v. 2.0. If a copy of the MPL was not distributed with this file,
+; You can obtain one at http://mozilla.org/MPL/2.0/.
+#endif
+
+#filter substitution
+
+[App]
+ID=webapprt@mozilla.org
+Vendor=Mozilla
+Name=Webapp Runtime
+Version=@GRE_MILESTONE@
+BuildID=@GRE_BUILDID@
+
+[Gecko]
+MinVersion=@GRE_MILESTONE@
+MaxVersion=@GRE_MILESTONE@

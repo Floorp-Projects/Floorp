@@ -4,3 +4,11 @@ component {4cec1de4-1671-4fc3-a53e-6c539dc77a26} ChromeProfileMigrator.js
 contract @mozilla.org/profile/migrator;1?app=browser&type=chrome {4cec1de4-1671-4fc3-a53e-6c539dc77a26}
 component {91185366-ba97-4438-acba-48deaca63386} FirefoxProfileMigrator.js
 contract @mozilla.org/profile/migrator;1?app=browser&type=firefox {91185366-ba97-4438-acba-48deaca63386}
+#ifdef HAS_IE_MIGRATOR
+component {3d2532e3-4932-4774-b7ba-968f5899d3a4} IEProfileMigrator.js
+contract @mozilla.org/profile/migrator;1?app=browser&type=ie {3d2532e3-4932-4774-b7ba-968f5899d3a4}
+#endif
+#ifdef HAS_SAFARI_MIGRATOR
+component {4b609ecf-60b2-4655-9df4-dc149e474da1} SafariProfileMigrator.js
+contract @mozilla.org/profile/migrator;1?app=browser&type=safari {4b609ecf-60b2-4655-9df4-dc149e474da1}
+#endif

@@ -1,6 +1,0 @@
-url-prefix ../../jsreftest.html?test=ecma_5/Date/
-script 15.9.4.2.js
-script defaultvalue.js
-script equality-to-boolean.js
-script toJSON-01.js
-script toISOString.js

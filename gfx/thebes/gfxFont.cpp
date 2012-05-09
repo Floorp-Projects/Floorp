@@ -65,7 +65,6 @@
 #include "nsMathUtils.h"
 #include "nsBidiUtils.h"
 #include "nsUnicodeRange.h"
-#include "nsCompressedCharMap.h"
 #include "nsStyleConsts.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -74,9 +73,10 @@
 #include "cairo.h"
 #include "gfxFontTest.h"
 
-#include "harfbuzz/hb-blob.h"
+#include "harfbuzz/hb.h"
 
 #include "nsCRT.h"
+#include "sampler.h"
 
 #include <algorithm>
 
@@ -103,6 +103,16 @@ static PRUint32 gGlyphExtentsSetupLazyTight = 0;
 static PRUint32 gGlyphExtentsSetupFallBackToTight = 0;
 #endif
 
+void
+gfxCharacterMap::NotifyReleased()
+{
+    gfxPlatformFontList *fontlist = gfxPlatformFontList::PlatformFontList();
+    if (mShared) {
+        fontlist->RemoveCmap(this);
+    }
+    delete this;
+}
+
 gfxFontEntry::~gfxFontEntry() 
 {
     delete mUserFontData;
@@ -115,18 +125,20 @@ bool gfxFontEntry::IsSymbolFont()
 
 bool gfxFontEntry::TestCharacterMap(PRUint32 aCh)
 {
-    if (!mCmapInitialized) {
+    if (!mCharacterMap) {
         ReadCMAP();
+        NS_ASSERTION(mCharacterMap, "failed to initialize character map");
     }
-    return mCharacterMap.test(aCh);
+    return mCharacterMap->test(aCh);
 }
 
 nsresult gfxFontEntry::InitializeUVSMap()
 {
     // mUVSOffset will not be initialized
     // until cmap is initialized.
-    if (!mCmapInitialized) {
+    if (!mCharacterMap) {
         ReadCMAP();
+        NS_ASSERTION(mCharacterMap, "failed to initialize character map");
     }
 
     if (!mUVSOffset) {
@@ -170,7 +182,8 @@ PRUint16 gfxFontEntry::GetUVSGlyph(PRUint32 aCh, PRUint32 aVS)
 
 nsresult gfxFontEntry::ReadCMAP()
 {
-    mCmapInitialized = true;
+    NS_ASSERTION(false, "using default no-op implementation of ReadCMAP");
+    mCharacterMap = new gfxCharacterMap();
     return NS_OK;
 }
 
@@ -433,7 +446,12 @@ gfxFontEntry::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                   FontListSizes*    aSizes) const
 {
     aSizes->mFontListSize += mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-    aSizes->mCharMapsSize += mCharacterMap.SizeOfExcludingThis(aMallocSizeOf);
+
+    // cmaps are shared so only non-shared cmaps are included here
+    if (mCharacterMap && mCharacterMap->mBuildOnTheFly) {
+        aSizes->mCharMapsSize +=
+            mCharacterMap->SizeOfIncludingThis(aMallocSizeOf);
+    }
     aSizes->mFontTableCacheSize +=
         mFontTableCache.SizeOfExcludingThis(
             FontTableHashEntry::SizeOfEntryExcludingThis,
@@ -770,7 +788,7 @@ CalcStyleMatch(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle)
 void
 gfxFontFamily::FindFontForChar(GlobalFontMatch *aMatchData)
 {
-    if (mCharacterMapInitialized && !TestCharacterMap(aMatchData->mCh)) {
+    if (mFamilyCharacterMapInitialized && !TestCharacterMap(aMatchData->mCh)) {
         // none of the faces in the family support the required char,
         // so bail out immediately
         return;
@@ -1028,7 +1046,8 @@ gfxFontFamily::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 {
     aSizes->mFontListSize +=
         mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-    aSizes->mCharMapsSize += mCharacterMap.SizeOfExcludingThis(aMallocSizeOf);
+    aSizes->mCharMapsSize +=
+        mFamilyCharacterMap.SizeOfExcludingThis(aMallocSizeOf);
 
     aSizes->mFontListSize +=
         mAvailableFonts.SizeOfExcludingThis(aMallocSizeOf);
@@ -1331,6 +1350,48 @@ gfxFontCache::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
     SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
+/* static */ bool
+gfxFontShaper::MergeFontFeatures(
+    const nsTArray<gfxFontFeature>& aStyleRuleFeatures,
+    const nsTArray<gfxFontFeature>& aFontFeatures,
+    bool aDisableLigatures,
+    nsDataHashtable<nsUint32HashKey,PRUint32>& aMergedFeatures)
+{
+    // bail immediately if nothing to do
+    if (aStyleRuleFeatures.IsEmpty() &&
+        aFontFeatures.IsEmpty() &&
+        !aDisableLigatures) {
+        return false;
+    }
+
+    aMergedFeatures.Init();
+
+    // Ligature features are enabled by default in the generic shaper,
+    // so we explicitly turn them off if necessary (for letter-spacing)
+    if (aDisableLigatures) {
+        aMergedFeatures.Put(HB_TAG('l','i','g','a'), 0);
+        aMergedFeatures.Put(HB_TAG('c','l','i','g'), 0);
+    }
+
+    // add feature values from font
+    PRUint32 i, count;
+
+    count = aFontFeatures.Length();
+    for (i = 0; i < count; i++) {
+        const gfxFontFeature& feature = aFontFeatures.ElementAt(i);
+        aMergedFeatures.Put(feature.mTag, feature.mValue);
+    }
+
+    // add feature values from style rules
+    count = aStyleRuleFeatures.Length();
+    for (i = 0; i < count; i++) {
+        const gfxFontFeature& feature = aStyleRuleFeatures.ElementAt(i);
+        aMergedFeatures.Put(feature.mTag, feature.mValue);
+    }
+
+    return aMergedFeatures.Count() != 0;
+}
+
 void
 gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther, bool aOtherIsOnLeft)
 {
@@ -1438,6 +1499,7 @@ struct GlyphBuffer {
             cairo_glyph_path(aCR, mGlyphBuffer, mNumGlyphs);
         } else {
             if (aDrawMode & gfxFont::GLYPH_FILL) {
+                SAMPLE_LABEL("GlyphBuffer", "cairo_show_glyphs");
                 cairo_show_glyphs(aCR, mGlyphBuffer, mNumGlyphs);
             }
 
@@ -1500,23 +1562,24 @@ struct GlyphBufferAzure {
 
                 if (invFontMatrix) {
                     // The brush matrix needs to be multiplied with the inverted matrix
-	                // as well, to move the brush into the space of the glyphs. Before
-	                // the render target transformation
+                    // as well, to move the brush into the space of the glyphs. Before
+                    // the render target transformation
 
                     // This relies on the returned Pattern not to be reused by
                     // others, but regenerated on GetPattern calls. This is true!
-                    Matrix *mat;
+                    Matrix *mat = nsnull;
                     if (pat->GetType() == PATTERN_LINEAR_GRADIENT) {
                         mat = &static_cast<LinearGradientPattern*>(pat)->mMatrix;
                     } else if (pat->GetType() == PATTERN_RADIAL_GRADIENT) {
-                        mat = &static_cast<LinearGradientPattern*>(pat)->mMatrix;
+                        mat = &static_cast<RadialGradientPattern*>(pat)->mMatrix;
                     } else if (pat->GetType() == PATTERN_SURFACE) {
-                        mat = &static_cast<LinearGradientPattern*>(pat)->mMatrix;
+                        mat = &static_cast<SurfacePattern*>(pat)->mMatrix;
                     }
 
-                    *mat = (*mat) * (*invFontMatrix);
+                    if (mat) {
+                        *mat = (*mat) * (*invFontMatrix);
+                    }
                 }
-
 
                 aDT->FillGlyphs(aFont, buf, *pat,
                                 DrawOptions(), aOptions);
@@ -2785,12 +2848,13 @@ gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont *aFont,
             return false;
         }
 
-        aFont->SetupCairoFont(aContext);
+        if (aFont->SetupCairoFont(aContext)) {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
-        ++gGlyphExtentsSetupLazyTight;
+            ++gGlyphExtentsSetupLazyTight;
 #endif
-        aFont->SetupGlyphExtents(aContext, aGlyphID, true, this);
-        entry = mTightGlyphExtents.GetEntry(aGlyphID);
+            aFont->SetupGlyphExtents(aContext, aGlyphID, true, this);
+            entry = mTightGlyphExtents.GetEntry(aGlyphID);
+        }
         if (!entry) {
             NS_WARNING("Could not get glyph extents");
             return false;
@@ -3647,7 +3711,9 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
 
         // check other faces of the family
         gfxFontFamily *family = font->GetFontEntry()->Family();
-        if (family && family->TestCharacterMap(aCh)) {
+        if (family && !font->GetFontEntry()->mIsProxy &&
+            family->TestCharacterMap(aCh))
+        {
             GlobalFontMatch matchData(aCh, aRunScript, &mStyle);
             family->SearchAllFontsForChar(&matchData);
             gfxFontEntry *fe = matchData.mBestMatch;
@@ -3939,57 +4005,6 @@ nsILanguageAtomService* gfxFontGroup::gLangService = nsnull;
 
 #define DEFAULT_PIXEL_FONT_SIZE 16.0f
 
-/*static*/ void
-gfxFontStyle::ParseFontFeatureSettings(const nsString& aFeatureString,
-                                       nsTArray<gfxFontFeature>& aFeatures)
-{
-  aFeatures.Clear();
-  PRUint32 offset = 0;
-  while (offset < aFeatureString.Length()) {
-    // skip whitespace
-    while (offset < aFeatureString.Length() &&
-           nsCRT::IsAsciiSpace(aFeatureString[offset])) {
-      ++offset;
-    }
-    PRInt32 limit = aFeatureString.FindChar(',', offset);
-    if (limit < 0) {
-      limit = aFeatureString.Length();
-    }
-    // check that we have enough text for a 4-char tag,
-    // the '=' sign, and at least one digit
-    if (offset + 6 <= PRUint32(limit) &&
-      aFeatureString[offset+4] == '=') {
-      gfxFontFeature setting;
-      setting.mTag =
-        ((aFeatureString[offset] & 0xff) << 24) +
-        ((aFeatureString[offset+1] & 0xff) << 16) +
-        ((aFeatureString[offset+2] & 0xff) << 8) +
-         (aFeatureString[offset+3] & 0xff);
-      nsString valString;
-      aFeatureString.Mid(valString, offset+5, limit-offset-5);
-      PRInt32 rv;
-      setting.mValue = valString.ToInteger(&rv);
-      if (rv == NS_OK) {
-        PRUint32 i;
-        // could optimize this based on the fact that the features array
-        // is sorted, but it's unlikely to be more than a few entries
-        for (i = 0; i < aFeatures.Length(); i++) {
-          if (aFeatures[i].mTag == setting.mTag) {
-            aFeatures[i].mValue = setting.mValue;
-            break;
-          }
-        }
-        if (i == aFeatures.Length()) {
-          // we keep the features array sorted so that we can
-          // use nsTArray<>::Equals() to compare feature lists
-          aFeatures.InsertElementSorted(setting);
-        }
-      }
-    }
-    offset = limit + 1;
-  }
-}
-
 /*static*/ PRUint32
 gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
 {
@@ -4024,7 +4039,6 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
                            gfxFloat aSize, nsIAtom *aLanguage,
                            float aSizeAdjust, bool aSystemFont,
                            bool aPrinterFont,
-                           const nsString& aFeatureSettings,
                            const nsString& aLanguageOverride):
     language(aLanguage),
     size(aSize), sizeAdjust(aSizeAdjust),
@@ -4033,8 +4047,6 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
     systemFont(aSystemFont), printerFont(aPrinterFont),
     style(aStyle)
 {
-    ParseFontFeatureSettings(aFeatureSettings, featureSettings);
-
     if (weight > 900)
         weight = 900;
     if (weight < 100)
@@ -4147,13 +4159,13 @@ gfxShapedWord::SetGlyphs(PRUint32 aIndex, CompressedGlyph aGlyph,
     mCharacterGlyphs[aIndex] = aGlyph;
 }
 
-#include "ignorable.x-ccmap"
-DEFINE_X_CCMAP(gIgnorableCCMapExt, const);
-
+#define ZWNJ 0x200C
+#define ZWJ  0x200D
 static inline bool
 IsDefaultIgnorable(PRUint32 aChar)
 {
-    return CCMAP_HAS_CHAR_EXT(gIgnorableCCMapExt, aChar);
+    return GetIdentifierModification(aChar) == XIDMOD_DEFAULT_IGNORABLE ||
+           aChar == ZWNJ || aChar == ZWJ;
 }
 
 void
@@ -5452,8 +5464,11 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
                     PRUint32 glyphIndex = glyphData->GetSimpleGlyph();
                     if (!extents->IsGlyphKnown(glyphIndex)) {
                         if (!fontIsSetup) {
-                            font->SetupCairoFont(aRefContext);
-                             fontIsSetup = true;
+                            if (!font->SetupCairoFont(aRefContext)) {
+                                NS_WARNING("failed to set up font for glyph extents");
+                                break;
+                            }
+                            fontIsSetup = true;
                         }
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
                         ++gGlyphExtentsSetupEagerSimple;
@@ -5474,7 +5489,10 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
                     PRUint32 glyphIndex = details->mGlyphID;
                     if (!extents->IsGlyphKnownWithTightExtents(glyphIndex)) {
                         if (!fontIsSetup) {
-                            font->SetupCairoFont(aRefContext);
+                            if (!font->SetupCairoFont(aRefContext)) {
+                                NS_WARNING("failed to set up font for glyph extents");
+                                break;
+                            }
                             fontIsSetup = true;
                         }
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS

@@ -5,3 +5,7 @@ load 647480.html
 load 0px-size-font-667225.html
 load texImage2D.html
 load 729116.html
+load 745699-1.html
+# this test crashes in a bunch places still
+#load 745818-large-source.html
+load 743499-negative-size.html

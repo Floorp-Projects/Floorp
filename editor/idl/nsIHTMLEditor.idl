@@ -51,8 +51,16 @@ interface nsIContentFilter;
 #define NS_EDITOR_ELEMENT_NOT_FOUND \
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_EDITOR, 1)
 
+namespace mozilla {
+namespace dom {
+class Element;
+}
+}
 %}
-[scriptable, uuid(FF67AD39-ED58-4CD1-A1A3-DCD988390A97)]
+
+[ptr] native Element (mozilla::dom::Element);
+
+[scriptable, uuid(833f30de-94c7-4630-a852-2300ef329d7b)]
 
 interface nsIHTMLEditor : nsISupports
 {
@@ -118,9 +126,6 @@ interface nsIHTMLEditor : nsISupports
    *                    Example: aProperty="font", aAttribute="color",
    *                             aValue="0x00FFFF"
    */
-  void setCSSInlineProperty(in nsIAtom aProperty, 
-                            in AString aAttribute,
-                            in AString aValue);
   void setInlineProperty(in nsIAtom aProperty, 
                          in AString aAttribute,
                          in AString aValue);
@@ -593,6 +598,6 @@ interface nsIHTMLEditor : nsISupports
    * Get an active editor's editing host in DOM window.  If this editor isn't
    * active in the DOM window, this returns NULL.
    */
-  [noscript, notxpcom] nsIContent GetActiveEditingHost();
+  [noscript, notxpcom] Element GetActiveEditingHost();
 };
 

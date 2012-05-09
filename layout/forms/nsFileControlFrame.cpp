@@ -374,10 +374,6 @@ nsFileControlFrame::CaptureMouseListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   rv = capturePicker->Init(win, title, mMode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Tell our text control frame to remember the currently focused value.
-  nsTextControlFrame* textControlFrame = mFrame->GetTextControlFrame();
-  textControlFrame->InitFocusedValue();
-
   // Show dialog
   PRUint32 result;
   rv = capturePicker->Show(&result);
@@ -408,16 +404,15 @@ nsFileControlFrame::CaptureMouseListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   // uneditable text box with the file name inside.
   // Set new selected files
   if (newFiles.Count()) {
-    // Tell our text control frame that this update of the value is a user
+    // Tell our input element that this update of the value is a user
     // initiated change. Otherwise it'll think that the value is being set by
     // a script and not fire onchange when it should.
-    bool oldState = textControlFrame->GetFireChangeEventState();
-    textControlFrame->SetFireChangeEventState(true);
+   
     inputElement->SetFiles(newFiles, true);
-    textControlFrame->SetFireChangeEventState(oldState);
-
-    // May need to fire an onchange here
-    textControlFrame->CheckFireOnChange();
+    
+    // Should fire a change event here since the SetFiles() call above ensures 
+    // a different value from the mFocusedValue of the inputElement. 
+    inputElement->FireChangeEventIfNeeded();
   }
 
   return NS_OK;
@@ -478,12 +473,9 @@ nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIDOMFileList> fileList;
     dataTransfer->GetFiles(getter_AddRefs(fileList));
 
-    nsTextControlFrame* textControlFrame = mFrame->GetTextControlFrame();
-    bool oldState = textControlFrame->GetFireChangeEventState();
-    textControlFrame->SetFireChangeEventState(true);
+    
     inputElement->SetFiles(fileList, true);
-    textControlFrame->SetFireChangeEventState(oldState);
-    textControlFrame->CheckFireOnChange();
+    inputElement->FireChangeEventIfNeeded();
   }
 
   return NS_OK;

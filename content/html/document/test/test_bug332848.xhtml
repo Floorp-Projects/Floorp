@@ -27,6 +27,8 @@ function test() {
     document.open();
     is(0, 1, "document.open succeeded");
   } catch (e) {
+    is (e.name, "InvalidStateError",
+        "Wrong exception from document.open");
     is (e.code, DOMException.INVALID_STATE_ERR,
         "Wrong exception from document.open");
   }
@@ -35,6 +37,8 @@ function test() {
     document.write("aaa");
     is(0, 1, "document.write succeeded");
   } catch (e) {
+    is (e.name, "InvalidStateError",
+        "Wrong exception from document.write");
     is (e.code, DOMException.INVALID_STATE_ERR,
         "Wrong exception from document.write");
   }
@@ -43,6 +47,8 @@ function test() {
     document.writeln("aaa");
     is(0, 1, "document.write succeeded");
   } catch (e) {
+    is (e.name, "InvalidStateError",
+        "Wrong exception from document.write");
     is (e.code, DOMException.INVALID_STATE_ERR,
         "Wrong exception from document.write");
   }
@@ -51,6 +57,8 @@ function test() {
     document.close();
     is(0, 1, "document.close succeeded");
   } catch (e) {
+    is (e.name, "InvalidStateError",
+        "Wrong exception from document.close");
     is (e.code, DOMException.INVALID_STATE_ERR,
         "Wrong exception from document.close");
   }

@@ -272,7 +272,7 @@ moz_container_realize (GtkWidget *widget)
                              GDK_VISIBILITY_NOTIFY_MASK |
                              GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
                              GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-#ifdef HAVE_GTK_MOTION_HINTS
+#ifdef MOZ_PLATFORM_MAEMO
                              GDK_POINTER_MOTION_HINT_MASK |
 #endif
                              GDK_POINTER_MOTION_MASK);

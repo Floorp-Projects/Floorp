@@ -13,12 +13,12 @@
 #define __INC_VP8_INT_H
 
 #include <stdio.h>
-#include "vpx_ports/config.h"
+#include "vpx_config.h"
 #include "vp8/common/onyx.h"
 #include "treewriter.h"
 #include "tokenize.h"
 #include "vp8/common/onyxc_int.h"
-#include "variance.h"
+#include "vp8/common/variance.h"
 #include "dct.h"
 #include "encodemb.h"
 #include "quantize.h"
@@ -55,6 +55,11 @@
 #if !(CONFIG_REALTIME_ONLY)
 #define VP8_TEMPORAL_ALT_REF 1
 #endif
+
+#define MAX_PERIODICITY 16
+
+#define MAX(x,y) (((x)>(y))?(x):(y))
+#define MIN(x,y) (((x)<(y))?(x):(y))
 
 typedef struct
 {
@@ -108,6 +113,7 @@ typedef struct
     double MVrv;
     double MVcv;
     double mv_in_out_count;
+    double new_mv_count;
     double duration;
     double count;
 }
@@ -130,34 +136,34 @@ typedef struct
 
 typedef enum
 {
-    THR_ZEROMV         = 0,
+    THR_ZERO1          = 0,
     THR_DC             = 1,
 
-    THR_NEARESTMV      = 2,
-    THR_NEARMV         = 3,
+    THR_NEAREST1       = 2,
+    THR_NEAR1          = 3,
 
-    THR_ZEROG          = 4,
-    THR_NEARESTG       = 5,
+    THR_ZERO2          = 4,
+    THR_NEAREST2       = 5,
 
-    THR_ZEROA          = 6,
-    THR_NEARESTA       = 7,
+    THR_ZERO3          = 6,
+    THR_NEAREST3       = 7,
 
-    THR_NEARG          = 8,
-    THR_NEARA          = 9,
+    THR_NEAR2          = 8,
+    THR_NEAR3          = 9,
 
     THR_V_PRED         = 10,
     THR_H_PRED         = 11,
     THR_TM             = 12,
 
-    THR_NEWMV          = 13,
-    THR_NEWG           = 14,
-    THR_NEWA           = 15,
+    THR_NEW1           = 13,
+    THR_NEW2           = 14,
+    THR_NEW3           = 15,
 
-    THR_SPLITMV        = 16,
-    THR_SPLITG         = 17,
-    THR_SPLITA         = 18,
+    THR_SPLIT1         = 16,
+    THR_SPLIT2         = 17,
+    THR_SPLIT3         = 18,
 
-    THR_B_PRED         = 19,
+    THR_B_PRED         = 19
 }
 THR_MODES;
 
@@ -219,7 +225,6 @@ typedef struct
 typedef struct VP8_ENCODER_RTCD
 {
     VP8_COMMON_RTCD            *common;
-    vp8_variance_rtcd_vtable_t  variance;
     vp8_fdct_rtcd_vtable_t      fdct;
     vp8_encodemb_rtcd_vtable_t  encodemb;
     vp8_quantize_rtcd_vtable_t  quantize;
@@ -236,6 +241,55 @@ enum
     BLOCK_16X16,
     BLOCK_MAX_SEGMENTS
 };
+
+typedef struct
+{
+    // Layer configuration
+    double frame_rate;
+    int target_bandwidth;
+
+    // Layer specific coding parameters
+    int starting_buffer_level;
+    int optimal_buffer_level;
+    int maximum_buffer_size;
+    int starting_buffer_level_in_ms;
+    int optimal_buffer_level_in_ms;
+    int maximum_buffer_size_in_ms;
+
+    int avg_frame_size_for_layer;
+
+    int buffer_level;
+    int bits_off_target;
+
+    int64_t total_actual_bits;
+    int total_target_vs_actual;
+
+    int worst_quality;
+    int active_worst_quality;
+    int best_quality;
+    int active_best_quality;
+
+    int ni_av_qi;
+    int ni_tot_qi;
+    int ni_frames;
+    int avg_frame_qindex;
+
+    double rate_correction_factor;
+    double key_frame_rate_correction_factor;
+    double gf_rate_correction_factor;
+
+    int zbin_over_quant;
+
+    int inter_frame_target;
+    int64_t total_byte_count;
+
+    int filter_level;
+
+    int last_frame_percent_intra;
+
+    int count_mb_ref_frame_usage[MAX_REF_FRAMES];
+
+} LAYER_CONTEXT;
 
 typedef struct VP8_COMP
 {
@@ -265,8 +319,7 @@ typedef struct VP8_COMP
 
     MACROBLOCK mb;
     VP8_COMMON common;
-    vp8_writer bc, bc2;
-    // bool_writer *bc2;
+    vp8_writer bc[9]; // one boolcoder for each partition
 
     VP8_CONFIG oxcf;
 
@@ -288,7 +341,7 @@ typedef struct VP8_COMP
     int gold_is_alt;  // don't do both alt and gold search ( just do gold).
 
     //int refresh_alt_ref_frame;
-    YV12_BUFFER_CONFIG last_frame_uf;
+    YV12_BUFFER_CONFIG pick_lf_lvl_frame;
 
     TOKENEXTRA *tok;
     unsigned int tok_count;
@@ -362,12 +415,16 @@ typedef struct VP8_COMP
     int zbin_over_quant;
     int zbin_mode_boost;
     int zbin_mode_boost_enabled;
+    int last_zbin_over_quant;
+    int last_zbin_mode_boost;
 
     int64_t total_byte_count;
 
     int buffered_mode;
 
-    int buffer_level;
+    double frame_rate;
+    double ref_frame_rate;
+    int64_t buffer_level;
     int bits_off_target;
 
     int rolling_target_bits;
@@ -514,15 +571,21 @@ typedef struct VP8_COMP
 
     int base_skip_false_prob[128];
 
+    FRAME_CONTEXT lfc_n; /* last frame entropy */
+    FRAME_CONTEXT lfc_a; /* last alt ref entropy */
+    FRAME_CONTEXT lfc_g; /* last gold ref entropy */
+
+
     struct twopass_rc
     {
         unsigned int section_intra_rating;
         double section_max_qfactor;
         unsigned int next_iiratio;
         unsigned int this_iiratio;
-        FIRSTPASS_STATS *total_stats;
-        FIRSTPASS_STATS *this_frame_stats;
+        FIRSTPASS_STATS total_stats;
+        FIRSTPASS_STATS this_frame_stats;
         FIRSTPASS_STATS *stats_in, *stats_in_end, *stats_in_start;
+        FIRSTPASS_STATS total_left_stats;
         int first_pass_done;
         int64_t bits_left;
         int64_t clip_bits_total;
@@ -530,10 +593,6 @@ typedef struct VP8_COMP
         double modified_error_total;
         double modified_error_used;
         double modified_error_left;
-        double total_error_left;
-        double total_intra_error_left;
-        double total_coded_error_left;
-        double start_tot_err_left;
         double kf_intra_err_min;
         double gf_intra_err_min;
         int frames_to_key;
@@ -552,7 +611,7 @@ typedef struct VP8_COMP
 
         int gf_group_bits;                // Projected Bits available for a group of frames including 1 GF or ARF
         int gf_bits;                     // Bits for the golden frame or ARF - 2 pass only
-        int mid_gf_extra_bits;             // A few extra bits for the frame half way between two gfs.
+        int alt_extra_bits;
         double est_max_qcorrection_factor;
     } twopass;
 
@@ -609,17 +668,40 @@ typedef struct VP8_COMP
     int *lf_ref_frame_sign_bias;
     int *lf_ref_frame;
 
-#if CONFIG_REALTIME_ONLY
     int force_next_frame_intra; /* force next frame to intra when kf_auto says so */
-#endif
+
     int droppable;
+
+    // Coding layer state variables
+    unsigned int current_layer;
+    LAYER_CONTEXT layer_context[MAX_LAYERS];
+
+    int64_t frames_in_layer[MAX_LAYERS];
+    int64_t bytes_in_layer[MAX_LAYERS];
+    double sum_psnr[MAX_LAYERS];
+    double sum_psnr_p[MAX_LAYERS];
+    double total_error2[MAX_LAYERS];
+    double total_error2_p[MAX_LAYERS];
+    double sum_ssim[MAX_LAYERS];
+    double sum_weights[MAX_LAYERS];
+
+    double total_ssimg_y_in_layer[MAX_LAYERS];
+    double total_ssimg_u_in_layer[MAX_LAYERS];
+    double total_ssimg_v_in_layer[MAX_LAYERS];
+    double total_ssimg_all_in_layer[MAX_LAYERS];
+
+#if CONFIG_MULTI_RES_ENCODING
+    /* Number of MBs per row at lower-resolution level */
+    int    mr_low_res_mb_cols;
+#endif
+
 } VP8_COMP;
 
 void control_data_rate(VP8_COMP *cpi);
 
 void vp8_encode_frame(VP8_COMP *cpi);
 
-void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned long *size);
+void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned char *dest_end, unsigned long *size);
 
 void vp8_activity_masking(VP8_COMP *cpi, MACROBLOCK *x);
 

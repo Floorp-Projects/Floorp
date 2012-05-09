@@ -120,6 +120,7 @@ public:
   virtual nsEventStates IntrinsicState() const;
 
   virtual nsXPCClassInfo* GetClassInfo();
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline);
   virtual void GetStyleSheetInfo(nsAString& aTitle,

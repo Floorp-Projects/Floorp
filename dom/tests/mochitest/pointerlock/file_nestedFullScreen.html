@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+  -->
+  <head>
+    <title>Bug 633602 - file_nestedFullScreen.html</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js">
+    </script>
+    <script type="application/javascript" src="pointerlock_utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+      Mozilla Bug 633602
+    </a>
+
+    <div id="parentDiv">
+      <div id="childDiv"></div>
+    </div>
+
+    <script type="application/javascript">
+      /*
+       * Test for Bug 633602
+       * Requesting fullscreen on a child element of the element with
+       * the pointer locked should unlock the pointer
+       */
+
+      SimpleTest.waitForExplicitFinish();
+
+      var parentDiv = document.getElementById("parentDiv")
+        , childDiv = document.getElementById("childDiv")
+        , parentDivLocked = false
+        , parentDivFullScreen = false
+        , pointerLocked = false;
+
+      function runTests () {
+        ok(parentDivLocked, "After requesting pointerlock on parentDiv " +
+          "document.mozPointerLockElement should be equal to " +
+          " parentDiv element");
+        isnot(pointerLocked, true, "Requesting fullscreen on " +
+          "childDiv while parentDiv still in fullscreen should " +
+          "unlock the pointer");
+      }
+
+      document.addEventListener("mozpointerlockchange", function (e) {
+        if (document.mozPointerLockElement === parentDiv) {
+          parentDivLocked = true;
+          childDiv.mozRequestFullScreen();
+        }
+      }, false);
+
+      document.addEventListener("mozfullscreenchange", function() {
+        if (document.mozFullScreenElement === parentDiv) {
+          if (parentDivFullScreen === true) {
+            document.mozCancelFullScreen();
+          }
+          parentDivFullScreen = true;
+          parentDiv.mozRequestPointerLock();
+        }
+        else if (document.mozFullScreenElement === childDiv) {
+          pointerLocked = !!document.mozPointerLockElement;
+          document.mozCancelFullScreen();
+        }
+        else {
+          runTests();
+          SimpleTest.finish();
+        }
+      }, false);
+
+      function start() {
+        parentDiv.mozRequestFullScreen();
+      }
+    </script>
+  </body>
+</html>

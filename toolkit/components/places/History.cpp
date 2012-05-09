@@ -1434,18 +1434,17 @@ NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(HistoryLinksHashtableMallocSizeOf,
 PRInt64 GetHistoryObserversSize()
 {
   History* history = History::GetService();
-  if (!history)
-    return 0;
-  return history->SizeOfIncludingThis(HistoryLinksHashtableMallocSizeOf);
+  return history ?
+         history->SizeOfIncludingThis(HistoryLinksHashtableMallocSizeOf) : 0;
 }
 
 NS_MEMORY_REPORTER_IMPLEMENT(HistoryService,
-    "explicit/history-links-hashtable",
-    KIND_HEAP,
-    UNITS_BYTES,
-    GetHistoryObserversSize,
-    "Memory used by the hashtable of observers Places uses to notify objects of "
-    "changes to links' visited state.")
+  "explicit/history-links-hashtable",
+  KIND_HEAP,
+  UNITS_BYTES,
+  GetHistoryObserversSize,
+  "Memory used by the hashtable of observers Places uses to notify objects of "
+  "changes to links' visited state.")
 
 } // anonymous namespace
 

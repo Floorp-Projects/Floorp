@@ -409,7 +409,7 @@
       <label class="tooltip-label" value="&backForwardButtonMenu.tooltip;"/>
 #endif
     </tooltip>
-  
+
     <tooltip id="forward-button-tooltip">
       <label class="tooltip-label" value="&forwardButton.tooltip;"/>
 #ifdef XP_MACOSX
@@ -529,6 +529,7 @@
             <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="password-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="webapps-notification-icon" class="notification-anchor-icon" role="button"/>
+            <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"/>
           </box>
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.
@@ -541,9 +542,8 @@
             <hbox id="identity-box-inner" align="center">
               <hbox id="page-proxy-stack"
                     onclick="PageProxyClickHandler(event);">
-                <image id="page-proxy-favicon" validate="never"
-                       pageproxystate="invalid"
-                       onerror="this.removeAttribute('src');"/>
+                <image id="page-proxy-favicon"
+                       pageproxystate="invalid"/>
               </hbox>
               <hbox id="identity-icon-labels">
                 <label id="identity-icon-label" class="plain" flex="1"/>
@@ -854,6 +854,9 @@
                      label="&printButton.label;" command="cmd_print"
                      tooltiptext="&printButton.tooltip;"/>
 
+      <!-- This is a placeholder for the Downloads Indicator.  It is visible
+           only during the customization of the toolbar or in the palette, and
+           is replaced when customization is done. -->
       <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      observes="Tools:Downloads"
                      ondrop="DownloadsButtonDNDObserver.onDrop(event)"
@@ -986,9 +989,22 @@
 
   <hbox id="full-screen-warning-container" hidden="true" fadeout="true">
     <hbox style="width: 100%;" pack="center"> <!-- Inner hbox needed due to bug 579776. -->
-      <hbox id="full-screen-warning-message">
-        <description id="full-screen-warning-text" value="&domFullScreenWarning.label;"></description>
-      </hbox>
+      <vbox id="full-screen-warning-message" align="center">
+        <description id="full-screen-domain-text"/>
+        <description class="full-screen-description" value="&fullscreenExitHint.value;"/>
+        <vbox id="full-screen-approval-pane" align="center">
+          <description class="full-screen-description" value="&fullscreenApproval.value;"/>
+          <hbox>
+            <button label="&fullscreenAllowButton.label;"
+                    oncommand="FullScreen.setFullscreenAllowed(true);"
+                    class="full-screen-approval-button"/>
+            <button label="&fullscreenExitButton.label;"
+                    oncommand="FullScreen.setFullscreenAllowed(false);"
+                    class="full-screen-approval-button"/>
+          </hbox>
+          <checkbox id="full-screen-remember-decision"/>
+        </vbox>
+      </vbox>
     </hbox>
   </hbox>
 
@@ -1007,9 +1023,9 @@
                      command="Inspector:Inspect"/>
       <toolbarbutton id="inspector-treepanel-toolbutton"
                      class="devtools-toolbarbutton"
-                     label="&htmlPanel.label;"
-                     accesskey="&htmlPanel.accesskey;"
-                     tooltiptext="&htmlPanel.tooltiptext;"
+                     tabindex="0"
+                     aria-label="&markupButton.arialabel;"
+                     accesskey="&markupButton.accesskey;"
                      command="Inspector:HTMLPanel"/>
       <arrowscrollbox id="inspector-breadcrumbs"
                       flex="1" orient="horizontal"
@@ -1020,11 +1036,13 @@
                        hidden="true"
                        label="&inspect3DViewButton.label;"
                        accesskey="&inspect3DViewButton.accesskey;"
+                       tabindex="0"
                        command="Inspector:Tilt"/>
         <toolbarbutton id="inspector-style-button"
                        class="devtools-toolbarbutton"
                        label="&inspectStyleButton.label;"
                        accesskey="&inspectStyleButton.accesskey;"
+                       tabindex="0"
                        command="Inspector:Sidebar"/>
         <!-- registered tools go here -->
       </hbox>

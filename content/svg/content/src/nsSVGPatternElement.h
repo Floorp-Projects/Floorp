@@ -96,6 +96,8 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 
+  virtual nsIDOMNode* AsDOMNode() { return this; }
+
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const;
 

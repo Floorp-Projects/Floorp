@@ -133,7 +133,7 @@ class MarionetteTestRunner(object):
     def __init__(self, address=None, emulator=False, homedir=None,
                  b2gbin=None, autolog=False, revision=None, es_server=None,
                  rest_server=None, logger=None, testgroup="marionette",
-                 noWindow=False):
+                 noWindow=False, logcat_dir=None):
         self.address = address
         self.emulator = emulator
         self.homedir = homedir
@@ -148,6 +148,7 @@ class MarionetteTestRunner(object):
         self.httpd = None
         self.baseurl = None
         self.marionette = None
+        self.logcat_dir = logcat_dir
 
         self.reset_test_stats()
 
@@ -155,6 +156,10 @@ class MarionetteTestRunner(object):
             self.logger = logging.getLogger('Marionette')
             self.logger.setLevel(logging.INFO)
             self.logger.addHandler(logging.StreamHandler())
+
+        if self.logcat_dir:
+            if not os.access(self.logcat_dir, os.F_OK):
+                os.mkdir(self.logcat_dir)
 
     def reset_test_stats(self):
         self.passed = 0
@@ -181,18 +186,25 @@ class MarionetteTestRunner(object):
             host, port = self.address.split(':')
             if self.emulator:
                 self.marionette = Marionette(host=host, port=int(port),
-                                            connectToRunningEmulator=True,
-                                            homedir=self.homedir,
-                                            baseurl=self.baseurl)
+                                             connectToRunningEmulator=True,
+                                             homedir=self.homedir,
+                                             baseurl=self.baseurl,
+                                             logcat_dir=self.logcat_dir)
             if self.b2gbin:
-                self.marionette = Marionette(host=host, port=int(port), b2gbin=self.b2gbin, baseurl=self.baseurl)
+                self.marionette = Marionette(host=host,
+                                             port=int(port),
+                                             b2gbin=self.b2gbin,
+                                             baseurl=self.baseurl)
             else:
-                self.marionette = Marionette(host=host, port=int(port), baseurl=self.baseurl)
+                self.marionette = Marionette(host=host,
+                                             port=int(port),
+                                             baseurl=self.baseurl)
         elif self.emulator:
             self.marionette = Marionette(emulator=True,
                                          homedir=self.homedir,
                                          baseurl=self.baseurl,
-                                         noWindow=self.noWindow)
+                                         noWindow=self.noWindow,
+                                         logcat_dir=self.logcat_dir)
         else:
             raise Exception("must specify address or emulator")
 
@@ -353,6 +365,8 @@ if __name__ == "__main__":
                       default = False,
                       help = "when Marionette launches an emulator, start it "
                       "with the -no-window argument")
+    parser.add_option('--logcat-dir', dest='logcat_dir', action='store',
+                      help='directory to store logcat dump files')
     parser.add_option('--address', dest='address', action='store',
                       help='host:port of running Gecko instance to connect to')
     parser.add_option('--type', dest='type', action='store',
@@ -381,9 +395,14 @@ if __name__ == "__main__":
         print "must specify --emulator or --address"
         parser.exit()
 
+    # default to storing logcat output for emulator runs
+    if options.emulator and not options.logcat_dir:
+        options.logcat_dir = 'logcat'
+
     runner = MarionetteTestRunner(address=options.address,
                                   emulator=options.emulator,
                                   homedir=options.homedir,
+                                  logcat_dir=options.logcat_dir,
                                   b2gbin=options.b2gbin,
                                   noWindow=options.noWindow,
                                   revision=options.revision,

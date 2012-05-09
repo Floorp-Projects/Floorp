@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:focusable="true"
+                android:nextFocusLeft="@+id/close"
                 android:id="@+id/info"
                 android:layout_width="fill_parent"
                 android:layout_height="100dip"
@@ -41,7 +43,7 @@
               android:textAppearance="?android:attr/textAppearanceSmall"
               android:textColor="#E5F2FF"
               android:singleLine="false"
-              android:maxLines="3"
+              android:maxLines="4"
               android:ellipsize="middle"
               android:shadowColor="#000000"
               android:shadowRadius="1"
@@ -49,6 +51,7 @@
               android:shadowDy="1"/>
 
     <ImageButton android:id="@+id/close"
+                 android:nextFocusRight="@+id/info"
                  android:layout_width="34dip"
                  android:layout_height="34dip"
                  android:layout_alignParentLeft="true"
@@ -56,6 +59,7 @@
                  android:background="@drawable/tabs_tray_close_button"
                  android:padding="10dip"
                  android:scaleType="centerInside"
+                 android:contentDescription="@string/close_tab"
                  android:src="@drawable/tab_close"/>
 
 </RelativeLayout>

@@ -19,6 +19,9 @@ browser.jar:
   skin/classic/browser/Geolocation-64.png
   skin/classic/browser/Go-arrow.png
   skin/classic/browser/identity.png
+  skin/classic/browser/identity-icons-generic.png
+  skin/classic/browser/identity-icons-https.png
+  skin/classic/browser/identity-icons-https-ev.png
   skin/classic/browser/Info.png
   skin/classic/browser/KUI-close.png
   skin/classic/browser/monitor.png
@@ -35,6 +38,10 @@ browser.jar:
   skin/classic/browser/Toolbar.png
   skin/classic/browser/Toolbar-small.png
   skin/classic/browser/urlbar-arrow.png
+  skin/classic/browser/downloads/buttons.png          (downloads/buttons.png)
+  skin/classic/browser/downloads/download-glow.png    (downloads/download-glow.png)
+  skin/classic/browser/downloads/download-notification.png (downloads/download-notification.png)
+  skin/classic/browser/downloads/downloads.css        (downloads/downloads.css)
   skin/classic/browser/feeds/feedIcon.png             (feeds/feedIcon.png)
   skin/classic/browser/feeds/feedIcon16.png           (feeds/feedIcon16.png)
   skin/classic/browser/feeds/videoFeedIcon.png        (feeds/feedIcon.png)
@@ -99,6 +106,7 @@ browser.jar:
   skin/classic/browser/devtools/orion-task.png        (devtools/orion-task.png)
   skin/classic/browser/devtools/orion-breakpoint.png  (devtools/orion-breakpoint.png)
   skin/classic/browser/devtools/orion-debug-location.png (devtools/orion-debug-location.png)
+  skin/classic/browser/devtools/breadcrumbs-scrollbutton.png                 (devtools/breadcrumbs-scrollbutton.png)
   skin/classic/browser/devtools/breadcrumbs/ltr-end-pressed.png              (devtools/breadcrumbs/ltr-end-pressed.png)
   skin/classic/browser/devtools/breadcrumbs/ltr-end-selected-pressed.png     (devtools/breadcrumbs/ltr-end-selected-pressed.png)
   skin/classic/browser/devtools/breadcrumbs/ltr-end-selected.png             (devtools/breadcrumbs/ltr-end-selected.png)
@@ -131,6 +139,11 @@ browser.jar:
   skin/classic/browser/devtools/itemArrow-rtl.png     (devtools/itemArrow-rtl.png)
   skin/classic/browser/devtools/itemArrow-ltr.png     (devtools/itemArrow-ltr.png)
   skin/classic/browser/devtools/inspect-button.png    (devtools/inspect-button.png)
+  skin/classic/browser/devtools/dropmarker.png        (devtools/dropmarker.png)
+  skin/classic/browser/devtools/treepanel-button.png  (devtools/treepanel-button.png)
+  skin/classic/browser/devtools/layout-background.png (devtools/layout-background.png)
+  skin/classic/browser/devtools/layoutview.css        (devtools/layoutview.css)
+  skin/classic/browser/devtools/layout-buttons.png    (devtools/layout-buttons.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16-throbber.png
   skin/classic/browser/sync-16.png

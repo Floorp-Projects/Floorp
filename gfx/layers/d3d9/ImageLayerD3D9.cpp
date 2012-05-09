@@ -308,6 +308,69 @@ ImageLayerD3D9::GetLayer()
   return this;
 }
 
+/*
+  * Returns a texture which backs aImage
+  * Will only work if aImage is a cairo or remote image.
+  * Returns nsnull if unsuccessful.
+  * If successful, aHasAlpha will be set to true if the texture has an
+  * alpha component, false otherwise.
+  */
+IDirect3DTexture9*
+ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
+{
+  NS_ASSERTION(aImage, "Null image.");
+
+  if (aImage->GetFormat() == Image::REMOTE_IMAGE_BITMAP) {
+    RemoteBitmapImage *remoteImage =
+      static_cast<RemoteBitmapImage*>(aImage);
+      
+    if (!aImage->GetBackendData(LayerManager::LAYERS_D3D9)) {
+      nsAutoPtr<TextureD3D9BackendData> dat = new TextureD3D9BackendData();
+      dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize);
+      if (dat->mTexture) {
+        aImage->SetBackendData(LayerManager::LAYERS_D3D9, dat.forget());
+      }
+    }
+
+    aHasAlpha = remoteImage->mFormat == RemoteImageData::BGRA32;
+  } else if (aImage->GetFormat() == Image::CAIRO_SURFACE) {
+    CairoImage *cairoImage =
+      static_cast<CairoImage*>(aImage);
+
+    if (!cairoImage->mSurface) {
+      return nsnull;
+    }
+
+    if (!aImage->GetBackendData(LayerManager::LAYERS_D3D9)) {
+      nsAutoPtr<TextureD3D9BackendData> dat = new TextureD3D9BackendData();
+      dat->mTexture = SurfaceToTexture(device(), cairoImage->mSurface, cairoImage->mSize);
+      if (dat->mTexture) {
+        aImage->SetBackendData(LayerManager::LAYERS_D3D9, dat.forget());
+      }
+    }
+
+    aHasAlpha = cairoImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
+  } else {
+    NS_WARNING("Inappropriate image type.");
+    return nsnull;
+  }
+
+  TextureD3D9BackendData *data =
+    static_cast<TextureD3D9BackendData*>(aImage->GetBackendData(LayerManager::LAYERS_D3D9));
+
+  if (!data) {
+    return nsnull;
+  }
+
+  nsRefPtr<IDirect3DDevice9> dev;
+  data->mTexture->GetDevice(getter_AddRefs(dev));
+  if (dev != device()) {
+    return nsnull;
+  }
+
+  return data->mTexture;
+}
+
 void
 ImageLayerD3D9::RenderLayer()
 {
@@ -327,54 +390,11 @@ ImageLayerD3D9::RenderLayer()
 
   gfxIntSize size = mScaleMode == SCALE_NONE ? image->GetSize() : mScaleToSize;
 
-  if (image->GetFormat() == Image::CAIRO_SURFACE || image->GetFormat() == Image::REMOTE_IMAGE_BITMAP)
+  if (image->GetFormat() == Image::CAIRO_SURFACE ||
+      image->GetFormat() == Image::REMOTE_IMAGE_BITMAP)
   {
     bool hasAlpha = false;
-
-    if (image->GetFormat() == Image::REMOTE_IMAGE_BITMAP) {
-      RemoteBitmapImage *remoteImage =
-        static_cast<RemoteBitmapImage*>(image);
-      
-      if (!image->GetBackendData(LayerManager::LAYERS_D3D9)) {
-        nsAutoPtr<TextureD3D9BackendData> dat = new TextureD3D9BackendData();
-        dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize);
-        if (dat->mTexture) {
-          image->SetBackendData(LayerManager::LAYERS_D3D9, dat.forget());
-        }
-      }
-
-      hasAlpha = remoteImage->mFormat == RemoteImageData::BGRA32;
-    } else {
-      CairoImage *cairoImage =
-        static_cast<CairoImage*>(image);
-
-      if (!cairoImage->mSurface) {
-        return;
-      }
-
-      if (!image->GetBackendData(LayerManager::LAYERS_D3D9)) {
-        nsAutoPtr<TextureD3D9BackendData> dat = new TextureD3D9BackendData();
-        dat->mTexture = SurfaceToTexture(device(), cairoImage->mSurface, cairoImage->mSize);
-        if (dat->mTexture) {
-          image->SetBackendData(LayerManager::LAYERS_D3D9, dat.forget());
-        }
-      }
-
-      hasAlpha = cairoImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
-    }
-
-    TextureD3D9BackendData *data =
-      static_cast<TextureD3D9BackendData*>(image->GetBackendData(LayerManager::LAYERS_D3D9));
-
-    if (!data) {
-      return;
-    }
-
-    nsRefPtr<IDirect3DDevice9> dev;
-    data->mTexture->GetDevice(getter_AddRefs(dev));
-    if (dev != device()) {
-      return;
-    }
+    nsRefPtr<IDirect3DTexture9> texture = GetTexture(image, hasAlpha);
 
     device()->SetVertexShaderConstantF(CBvLayerQuad,
                                        ShaderConstantRect(0,
@@ -384,19 +404,18 @@ ImageLayerD3D9::RenderLayer()
                                        1);
 
     if (hasAlpha) {
-      mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
+      mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER, GetMaskLayer());
     } else {
-      mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
+      mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER, GetMaskLayer());
     }
 
     if (mFilter == gfxPattern::FILTER_NEAREST) {
       device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
       device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
     }
-    device()->SetTexture(0, data->mTexture);
+    device()->SetTexture(0, texture);
 
     image = nsnull;
-    data = nsnull;
     autoLock.Unlock();
 
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
@@ -445,7 +464,7 @@ ImageLayerD3D9::RenderLayer()
       ),
       1);
 
-    mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER, GetMaskLayer());
 
     /*
      * Send 3d control data and metadata
@@ -502,6 +521,33 @@ ImageLayerD3D9::RenderLayer()
 
   GetContainer()->NotifyPaintedImage(image);
 }
+
+already_AddRefed<IDirect3DTexture9>
+ImageLayerD3D9::GetAsTexture(gfxIntSize* aSize)
+{
+  if (!GetContainer()) {
+    return nsnull;
+  }
+
+  AutoLockImage autoLock(GetContainer());
+
+  Image *image = autoLock.GetImage();
+
+  if (!image) {
+    return nsnull;
+  }
+
+  if (image->GetFormat() != Image::CAIRO_SURFACE &&
+      image->GetFormat() != Image::REMOTE_IMAGE_BITMAP) {
+    return nsnull;
+  }
+  
+  bool dontCare;
+  *aSize = image->GetSize();
+  nsRefPtr<IDirect3DTexture9> result = GetTexture(image, dontCare);
+  return result.forget();
+}
+
 
 ShadowImageLayerD3D9::ShadowImageLayerD3D9(LayerManagerD3D9* aManager)
   : ShadowImageLayer(aManager, nsnull)
@@ -611,7 +657,7 @@ ShadowImageLayerD3D9::RenderLayer()
                                                           mYCbCrImage->mSize.height),
                                        1);
 
-    mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER, GetMaskLayer());
 
     /*
      * Send 3d control data and metadata
@@ -634,6 +680,17 @@ ShadowImageLayerD3D9::RenderLayer()
 
 }
 
+already_AddRefed<IDirect3DTexture9>
+ShadowImageLayerD3D9::GetAsTexture(gfxIntSize* aSize)
+{
+  if (!mBuffer) {
+    return nsnull;
+  }
+  
+  *aSize = mBuffer->GetSize();
+  nsRefPtr<IDirect3DTexture9> result = mBuffer->GetTexture();
+  return result.forget();
+}
 
 } /* layers */
 } /* mozilla */

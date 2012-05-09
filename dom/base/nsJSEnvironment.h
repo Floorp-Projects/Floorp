@@ -135,6 +135,8 @@ public:
                                    JSObject** aFunctionObject);
 
   virtual nsIScriptGlobalObject *GetGlobalObject();
+  inline nsIScriptGlobalObject *GetGlobalObjectRef() { return mGlobalObjectRef; };
+
   virtual JSContext* GetNativeContext();
   virtual JSObject* GetNativeGlobal();
   virtual nsresult CreateNativeGlobalForInner(
@@ -200,7 +202,7 @@ public:
 
   virtual void GC(js::gcreason::Reason aReason);
 
-  static bool CleanupSinceLastGC();
+  static PRUint32 CleanupsSinceLastGC();
 
   nsIScriptGlobalObject* GetCachedGlobalObject()
   {

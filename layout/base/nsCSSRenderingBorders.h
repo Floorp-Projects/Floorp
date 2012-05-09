@@ -236,6 +236,14 @@ struct nsCSSBorderRenderer {
   static void ComputeInnerRadii(const gfxCornerSizes& aRadii,
                                 const gfxFloat *aBorderSizes,
                                 gfxCornerSizes *aInnerRadiiRet);
+
+  // Given aRadii as the border radii for a rectangle, compute the
+  // appropriate radii for another rectangle *outside* that rectangle
+  // by increasing the radii, except keeping sharp corners sharp.
+  // Used for spread box-shadows
+  static void ComputeOuterRadii(const gfxCornerSizes& aRadii,
+                                const gfxFloat *aBorderSizes,
+                                gfxCornerSizes *aOuterRadiiRet);
 };
 
 #ifdef DEBUG_NEW_BORDERS

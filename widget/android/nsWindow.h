@@ -43,10 +43,6 @@
 
 #include "nsTArray.h"
 
-#ifdef ACCESSIBILITY
-#include "nsAccessible.h"
-#endif
-
 #ifdef MOZ_JAVA_COMPOSITOR
 #include "AndroidJavaWrappers.h"
 #include "Layers.h"
@@ -54,6 +50,8 @@
 
 class gfxASurface;
 class nsIdleService;
+
+struct ANPEvent;
 
 namespace mozilla {
     class AndroidGeckoEvent;
@@ -78,6 +76,7 @@ public:
 
     static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
     static gfxIntSize GetAndroidScreenBounds();
+    static nsWindow* TopWindow();
 
     nsWindow* FindWindowForPoint(const nsIntPoint& pt);
 
@@ -181,10 +180,6 @@ public:
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 
-#ifdef ACCESSIBILITY
-    static bool sAccessibilityEnabled;
-#endif
-
 #ifdef MOZ_JAVA_COMPOSITOR
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect);
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
@@ -194,7 +189,9 @@ public:
                               ::base::Thread* aCompositorThread);
     static void ScheduleComposite();
     static void SchedulePauseComposition();
-    static void ScheduleResumeComposition();
+    static void ScheduleResumeComposition(int width, int height);
+
+    virtual bool WidgetPaintsBackground() { return true; }
 #endif
 
 protected:
@@ -237,7 +234,8 @@ protected:
     static void LogWindow(nsWindow *win, int index, int indent);
 
 private:
-    void InitKeyEvent(nsKeyEvent& event, mozilla::AndroidGeckoEvent& key);
+    void InitKeyEvent(nsKeyEvent& event, mozilla::AndroidGeckoEvent& key,
+                      ANPEvent* pluginEvent);
     bool DispatchMultitouchEvent(nsTouchEvent &event,
                              mozilla::AndroidGeckoEvent *ae);
     void DispatchMotionEvent(nsInputEvent &event,
@@ -247,21 +245,6 @@ private:
                               const nsIntPoint &refPoint, PRUint64 time);
     void HandleSpecialKey(mozilla::AndroidGeckoEvent *ae);
     void RedrawAll();
-
-#ifdef ACCESSIBILITY
-    nsRefPtr<nsAccessible> mRootAccessible;
-
-    /**
-     * Request to create the accessible for this window if it is top level.
-     */
-    void CreateRootAccessible();
-
-    /**
-     * Generate the NS_GETACCESSIBLE event to get accessible for this window
-     * and return it.
-     */
-    nsAccessible *DispatchAccessibleEvent();
-#endif // ACCESSIBILITY
 
 #ifdef MOZ_JAVA_COMPOSITOR
     mozilla::AndroidLayerRendererFrame mLayerRendererFrame;

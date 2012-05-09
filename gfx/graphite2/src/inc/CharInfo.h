@@ -34,7 +34,7 @@ class CharInfo
 {
 
 public:
-    CharInfo() : m_before(-1), m_after(0) {}
+    CharInfo() : m_before(-1), m_after(0), m_flags(0) {}
     void init(int cid) { m_char = cid; }
     unsigned int unicodeChar() const { return m_char; }
     void feats(int offset) { m_featureid = offset; }
@@ -47,6 +47,8 @@ public:
     void before(int val) { m_before = val; }
     size_t base() const { return m_base; }
     void base(size_t offset) { m_base = offset; }
+    void addflags(uint8 val) { m_flags |= val; }
+    uint8 flags() const { return m_flags; }
 
     CLASS_NEW_DELETE
 private:
@@ -56,6 +58,7 @@ private:
     size_t  m_base; // offset into input string corresponding to this charinfo
     uint8 m_featureid;	// index into features list in the segment
     int8 m_break;	// breakweight coming from lb table
+    uint8 m_flags;  // 0,1 segment split.
 };
 
 } // namespace graphite2

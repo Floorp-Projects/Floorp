@@ -42,11 +42,11 @@
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "mozilla/Util.h"
-#include "mozilla/dom/bindings/DOMJSClass.h"
-#include "mozilla/dom/bindings/EventTargetBinding.h"
-#include "mozilla/dom/bindings/Utils.h"
-#include "mozilla/dom/bindings/XMLHttpRequestBinding.h"
-#include "mozilla/dom/bindings/XMLHttpRequestUploadBinding.h"
+#include "mozilla/dom/DOMJSClass.h"
+#include "mozilla/dom/EventTargetBinding.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/XMLHttpRequestBinding.h"
+#include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "nsTraceRefcnt.h"
 #include "xpcpublic.h"
 
@@ -62,6 +62,7 @@
 #include "File.h"
 #include "FileReaderSync.h"
 #include "Location.h"
+#include "ImageData.h"
 #include "Navigator.h"
 #include "Principal.h"
 #include "ScriptLoader.h"
@@ -78,7 +79,6 @@
   JSPROP_ENUMERATE
 
 using namespace mozilla;
-using namespace mozilla::dom::bindings;
 USING_WORKERS_NAMESPACE
 
 namespace {
@@ -177,12 +177,12 @@ private:
       return false;
     }
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
 
     JSObject* listener =
       scope->GetEventListener(NS_ConvertASCIItoUTF16(name + 2), rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to get event listener!");
       return false;
     }
@@ -209,10 +209,10 @@ private:
       return false;
     }
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
     scope->SetEventListener(NS_ConvertASCIItoUTF16(name + 2),
                             JSVAL_TO_OBJECT(*aVp), rv);
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to set event listener!");
       return false;
     }
@@ -341,12 +341,12 @@ private:
       return false;
     }
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
 
     JSObject* adaptor =
       scope->GetEventListener(NS_ConvertASCIItoUTF16(name + 2), rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to get event listener!");
       return false;
     }
@@ -394,11 +394,11 @@ private:
                                   OBJECT_TO_JSVAL(aObj));
     js::SetFunctionNativeReserved(listener, SLOT_wrappedFunction, *aVp);
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
 
     scope->SetEventListener(NS_ConvertASCIItoUTF16(name + 2), listener, rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to set event listener!");
       return false;
     }
@@ -706,7 +706,7 @@ public:
   {
     JS_ASSERT(JS_GetClass(aObj) == Class());
 
-    mozilla::dom::bindings::AllocateProtoOrIfaceCache(aObj);
+    dom::AllocateProtoOrIfaceCache(aObj);
 
     nsRefPtr<DedicatedWorkerGlobalScope> scope =
       new DedicatedWorkerGlobalScope(aCx, aWorkerPrivate);
@@ -745,12 +745,12 @@ private:
       return false;
     }
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
 
     JSObject* listener =
       scope->GetEventListener(NS_ConvertASCIItoUTF16(name + 2), rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to get event listener!");
       return false;
     }
@@ -777,12 +777,12 @@ private:
       return false;
     }
 
-    nsresult rv = NS_OK;
+    ErrorResult rv;
 
     scope->SetEventListener(NS_ConvertASCIItoUTF16(name + 2),
                             JSVAL_TO_OBJECT(*aVp), rv);
 
-    if (NS_FAILED(rv)) {
+    if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to set event listener!");
       return false;
     }
@@ -844,6 +844,7 @@ private:
     DedicatedWorkerGlobalScope* scope =
       UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj, Class());
     if (scope) {
+      mozilla::dom::TraceProtoOrIfaceCache(aTrc, aObj);
       scope->_Trace(aTrc);
     }
   }
@@ -929,7 +930,7 @@ BEGIN_WORKERS_NAMESPACE
 JSObject*
 CreateDedicatedWorkerGlobalScope(JSContext* aCx)
 {
-  using namespace mozilla::dom::bindings::prototypes;
+  using namespace mozilla::dom;
 
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   JS_ASSERT(worker);
@@ -957,7 +958,8 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
   //          -> EventTarget
   //          -> Object
 
-  JSObject* eventTargetProto = EventTarget_workers::GetProtoObject(aCx, global);
+  JSObject* eventTargetProto =
+    EventTargetBinding_workers::GetProtoObject(aCx, global, global);
   if (!eventTargetProto) {
     return NULL;
   }
@@ -996,13 +998,16 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
       !filereadersync::InitClass(aCx, global) ||
       !exceptions::InitClasses(aCx, global) ||
       !location::InitClass(aCx, global) ||
+      !imagedata::InitClass(aCx, global) ||
       !navigator::InitClass(aCx, global)) {
     return NULL;
   }
 
   // Init other paris-bindings.
-  if (!XMLHttpRequest_workers::CreateInterfaceObjects(aCx, global) ||
-      !XMLHttpRequestUpload_workers::CreateInterfaceObjects(aCx, global)) {
+  if (!XMLHttpRequestBinding_workers::CreateInterfaceObjects(aCx, global,
+                                                             global) ||
+      !XMLHttpRequestUploadBinding_workers::CreateInterfaceObjects(aCx, global,
+                                                                   global)) {
     return NULL;
   }
 

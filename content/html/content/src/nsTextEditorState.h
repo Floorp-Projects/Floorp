@@ -154,8 +154,8 @@ public:
   explicit nsTextEditorState(nsITextControlElement* aOwningElement);
   ~nsTextEditorState();
 
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTextEditorState)
-  NS_INLINE_DECL_REFCOUNTING(nsTextEditorState)
+  void Traverse(nsCycleCollectionTraversalCallback& cb);
+  void Unlink();
 
   nsIEditor* GetEditor();
   nsISelectionController* GetSelectionController() const;

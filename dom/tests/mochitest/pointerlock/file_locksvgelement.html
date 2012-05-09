@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+  -->
+  <head>
+    <title>Bug 633602</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js">
+    </script>
+    <script type="application/javascript" src="pointerlock_utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+      Mozilla Bug 633602</a>
+    <p id="display"></p>
+
+    <svg width="100" height="100" viewbox="0 0 100 100">
+        <rect id="svg-elem" x="10" y="10" width="50" height="50"
+        fill="black" stroke="blue" stroke-width="2"/>
+    </svg>
+
+    <pre id="test">
+      <script type="application/javascript">
+        /*
+         * Test for Bug 633602
+         * Test locking non-html element.
+         */
+
+        SimpleTest.waitForExplicitFinish(1);
+
+        var elem,
+          elemWasLocked = false;
+
+        document.addEventListener("mozpointerlockchange", function (e) {
+          if (document.mozFullScreen &&
+              document.mozPointerLockElement === elem) {
+            elemWasLocked = true;
+            document.mozExitPointerLock();
+          } else {
+            document.mozCancelFullScreen();
+          }
+        }, false);
+
+        document.addEventListener("mozfullscreenchange", function (e) {
+          if (document.mozFullScreenElement === elem) {
+            elem.mozRequestPointerLock();
+          } else {
+            ok(elemWasLocked, "Expected SVG elem to become locked.");
+            SimpleTest.finish();
+          }
+        }, false);
+
+        function start() {
+          elem = document.getElementById("svg-elem");
+          elem.mozRequestFullScreen();
+        }
+      </script>
+    </pre>
+  </body>
+</html>

@@ -18,7 +18,7 @@
     void sym(unsigned char *src, int src_pitch, unsigned char *dst, int dst_pitch)
 
 #define prototype_recon_block(sym) \
-    void sym(unsigned char *pred, short *diff, unsigned char *dst, int pitch)
+    void sym(unsigned char *pred, short *diff, int diff_stride, unsigned char *dst, int pitch)
 
 #define prototype_recon_macroblock(sym) \
     void sym(const struct vp8_recon_rtcd_vtable *rtcd, MACROBLOCKD *x)
@@ -27,7 +27,8 @@
     void sym(MACROBLOCKD *x)
 
 #define prototype_intra4x4_predict(sym) \
-    void sym(BLOCKD *x, int b_mode, unsigned char *predictor)
+    void sym(unsigned char *src, int src_stride, int b_mode, \
+             unsigned char *dst, int dst_stride)
 
 struct vp8_recon_rtcd_vtable;
 
@@ -54,31 +55,6 @@ extern prototype_copy_block(vp8_recon_copy8x8);
 #endif
 extern prototype_copy_block(vp8_recon_copy8x4);
 
-#ifndef vp8_recon_recon
-#define vp8_recon_recon vp8_recon_b_c
-#endif
-extern prototype_recon_block(vp8_recon_recon);
-
-#ifndef vp8_recon_recon2
-#define vp8_recon_recon2 vp8_recon2b_c
-#endif
-extern prototype_recon_block(vp8_recon_recon2);
-
-#ifndef vp8_recon_recon4
-#define vp8_recon_recon4 vp8_recon4b_c
-#endif
-extern prototype_recon_block(vp8_recon_recon4);
-
-#ifndef vp8_recon_recon_mb
-#define vp8_recon_recon_mb vp8_recon_mb_c
-#endif
-extern prototype_recon_macroblock(vp8_recon_recon_mb);
-
-#ifndef vp8_recon_recon_mby
-#define vp8_recon_recon_mby vp8_recon_mby_c
-#endif
-extern prototype_recon_macroblock(vp8_recon_recon_mby);
-
 #ifndef vp8_recon_build_intra_predictors_mby
 #define vp8_recon_build_intra_predictors_mby vp8_build_intra_predictors_mby
 #endif
@@ -104,15 +80,13 @@ extern prototype_build_intra_predictors\
     (vp8_recon_build_intra_predictors_mbuv_s);
 
 #ifndef vp8_recon_intra4x4_predict
-#define vp8_recon_intra4x4_predict vp8_intra4x4_predict
+#define vp8_recon_intra4x4_predict vp8_intra4x4_predict_c
 #endif
 extern prototype_intra4x4_predict\
     (vp8_recon_intra4x4_predict);
 
 
 typedef prototype_copy_block((*vp8_copy_block_fn_t));
-typedef prototype_recon_block((*vp8_recon_fn_t));
-typedef prototype_recon_macroblock((*vp8_recon_mb_fn_t));
 typedef prototype_build_intra_predictors((*vp8_build_intra_pred_fn_t));
 typedef prototype_intra4x4_predict((*vp8_intra4x4_pred_fn_t));
 typedef struct vp8_recon_rtcd_vtable
@@ -120,11 +94,7 @@ typedef struct vp8_recon_rtcd_vtable
     vp8_copy_block_fn_t  copy16x16;
     vp8_copy_block_fn_t  copy8x8;
     vp8_copy_block_fn_t  copy8x4;
-    vp8_recon_fn_t       recon;
-    vp8_recon_fn_t       recon2;
-    vp8_recon_fn_t       recon4;
-    vp8_recon_mb_fn_t    recon_mb;
-    vp8_recon_mb_fn_t    recon_mby;
+
     vp8_build_intra_pred_fn_t  build_intra_predictors_mby_s;
     vp8_build_intra_pred_fn_t  build_intra_predictors_mby;
     vp8_build_intra_pred_fn_t  build_intra_predictors_mbuv_s;
@@ -138,5 +108,4 @@ typedef struct vp8_recon_rtcd_vtable
 #define RECON_INVOKE(ctx,fn) vp8_recon_##fn
 #endif
 
-void vp8_recon_intra_mbuv(const vp8_recon_rtcd_vtable_t *rtcd, MACROBLOCKD *x);
 #endif

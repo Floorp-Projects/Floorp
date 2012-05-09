@@ -1,7 +1,0 @@
-include decompilation/jstests.list
-include extensions/jstests.list
-include JSON/jstests.list
-include regress/jstests.list
-include String/jstests.list
-include strict/jstests.list
-include jit/jstests.list

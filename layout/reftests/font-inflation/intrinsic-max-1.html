@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<style>
+@font-face { font-family: Ahem; src: url(../fonts/Ahem.ttf); }
+html, body { margin: 0; padding: 0; }
+body { width: 450px }
+p {
+  margin: 0;
+  background: yellow;
+  color: blue;
+  width: -moz-max-content; /* computes to 300px */
+  font: 12px Ahem;
+}
+</style>
+<!--
+In a 300px container, the minimum font size at 15em per line is 20px.
+This means we map 0px-30px into 20px-30px, so 12px gets mapped to 24px.
+-->
+<p>This is tiny bit of text.</p>

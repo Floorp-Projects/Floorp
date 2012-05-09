@@ -63,6 +63,10 @@
 
 #include "gfxCrashReporterUtils.h"
 
+#ifdef MOZ_WIDGET_GTK2
+#include "gfxPlatformGtk.h"
+#endif
+
 namespace mozilla {
 namespace gl {
 
@@ -251,8 +255,13 @@ GLXLibrary::EnsureInitialized()
         GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap, 
                                          (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
     {
-        mHasTextureFromPixmap = true;
+#ifdef MOZ_WIDGET_GTK2
+        mUseTextureFromPixmap = gfxPlatformGtk::UseXRender();
+#else
+        mUseTextureFromPixmap = true;
+#endif
     } else {
+        mUseTextureFromPixmap = false;
         NS_WARNING("Texture from pixmap disabled");
     }
 
@@ -278,7 +287,7 @@ GLXLibrary::SupportsTextureFromPixmap(gfxASurface* aSurface)
         return false;
     }
     
-    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mHasTextureFromPixmap) {
+    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mUseTextureFromPixmap) {
         return false;
     }
 
@@ -328,7 +337,7 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
 void
 GLXLibrary::DestroyPixmap(GLXPixmap aPixmap)
 {
-    if (!mHasTextureFromPixmap) {
+    if (!mUseTextureFromPixmap) {
         return;
     }
 
@@ -339,7 +348,7 @@ GLXLibrary::DestroyPixmap(GLXPixmap aPixmap)
 void
 GLXLibrary::BindTexImage(GLXPixmap aPixmap)
 {    
-    if (!mHasTextureFromPixmap) {
+    if (!mUseTextureFromPixmap) {
         return;
     }
 
@@ -352,7 +361,7 @@ GLXLibrary::BindTexImage(GLXPixmap aPixmap)
 void
 GLXLibrary::ReleaseTexImage(GLXPixmap aPixmap)
 {
-    if (!mHasTextureFromPixmap) {
+    if (!mUseTextureFromPixmap) {
         return;
     }
 
@@ -784,20 +793,10 @@ TRY_AGAIN_NO_SHARING:
         return true;
     }
 
-    bool MakeCurrentImpl(bool aForce = false)
+    bool MakeCurrentImpl()
     {
-        bool succeeded = true;
-
-        // With the ATI FGLRX driver, glxMakeCurrent is very slow even when the context doesn't change.
-        // (This is not the case with other drivers such as NVIDIA).
-        // So avoid calling it more than necessary. Since GLX documentation says that:
-        //     "glXGetCurrentContext returns client-side information.
-        //      It does not make a round trip to the server."
-        // I assume that it's not worth using our own TLS slot here.
-        if (aForce || sGLXLibrary.xGetCurrentContext() != mContext) {
-            succeeded = sGLXLibrary.xMakeCurrent(mDisplay, mDrawable, mContext);
-            NS_ASSERTION(succeeded, "Failed to make GL context current!");
-        }
+        bool succeeded = sGLXLibrary.xMakeCurrent(mDisplay, mDrawable, mContext);
+        NS_ASSERTION(succeeded, "Failed to make GL context current!");
 
         return succeeded;
     }
@@ -843,7 +842,7 @@ TRY_AGAIN_NO_SHARING:
 
     bool TextureImageSupportsGetBackingSurface()
     {
-        return sGLXLibrary.HasTextureFromPixmap();
+        return sGLXLibrary.UseTextureFromPixmap();
     }
 
     virtual already_AddRefed<TextureImage>
@@ -1307,7 +1306,7 @@ GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    if (!glContext->ResizeOffscreenFBO(aSize, true)) {
+    if (!glContext->ResizeOffscreenFBOs(aSize, true)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
         return nsnull;

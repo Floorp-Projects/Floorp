@@ -39,6 +39,7 @@
 #ifndef nsScreenManagerGonk_h___
 #define nsScreenManagerGonk_h___
 
+#include "mozilla/Hal.h"
 #include "nsCOMPtr.h"
 
 #include "nsBaseScreen.h"
@@ -46,6 +47,8 @@
 
 class nsScreenGonk : public nsBaseScreen
 {
+    typedef mozilla::hal::ScreenConfiguration ScreenConfiguration;
+
 public:
     nsScreenGonk(void* nativeScreen);
     ~nsScreenGonk();
@@ -58,6 +61,7 @@ public:
     NS_IMETHOD SetRotation(PRUint32  aRotation);
 
     static uint32_t GetRotation();
+    static ScreenConfiguration GetConfiguration();
 };
 
 class nsScreenManagerGonk : public nsIScreenManager

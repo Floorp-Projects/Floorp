@@ -347,8 +347,8 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
     --mDisableEntityEncoding;
   }
 
-  bool forceFormat = content->HasAttr(kNameSpaceID_None,
-                                        nsGkAtoms::mozdirty);
+  bool forceFormat = !(mFlags & nsIDocumentEncoder::OutputIgnoreMozDirty) &&
+                     content->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
 
   if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
     DecrIndentation(name);

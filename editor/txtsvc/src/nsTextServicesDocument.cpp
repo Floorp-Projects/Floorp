@@ -59,7 +59,6 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLDocument.h"
 
-#include "nsLWBrkCIID.h"
 #include "nsIWordBreaker.h"
 #include "nsIServiceManager.h"
 
@@ -1893,26 +1892,18 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
   // fflush(stdout);
   //**** KDEBUG ****
 
-  // Make sure that both nodes are text nodes!
+  // Make sure that both nodes are text nodes -- otherwise we don't care.
 
   result = aLeftNode->GetNodeType(&type);
-
   NS_ENSURE_SUCCESS(result, false);
-
-  if (nsIDOMNode::TEXT_NODE != type)
-  {
-    NS_ERROR("JoinNode called with a non-text left node!");
-    return NS_ERROR_FAILURE;
+  if (nsIDOMNode::TEXT_NODE != type) {
+    return NS_OK;
   }
 
   result = aRightNode->GetNodeType(&type);
-
   NS_ENSURE_SUCCESS(result, false);
-
-  if (nsIDOMNode::TEXT_NODE != type)
-  {
-    NS_ERROR("JoinNode called with a non-text right node!");
-    return NS_ERROR_FAILURE;
+  if (nsIDOMNode::TEXT_NODE != type) {
+    return NS_OK;
   }
 
   // Note: The editor merges the contents of the left node into the
@@ -2148,23 +2139,12 @@ nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *a
     // The range should begin at (aParent, aOffset) and
     // extend to the end of the document.
 
-    nsCOMPtr<nsIDOMNodeList> nodeList;
-    PRUint32 nodeListLength;
-
     startNode   = aParent;
     startOffset = aOffset;
     endNode     = bodyNode;
-    endOffset   = 0;
 
-    rv = bodyNode->GetChildNodes(getter_AddRefs(nodeList));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-    if (nodeList) {
-      rv = nodeList->GetLength(&nodeListLength);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-      endOffset = (PRInt32)nodeListLength;
-    }
+    nsCOMPtr<nsINode> body = do_QueryInterface(bodyNode);
+    endOffset = body ? PRInt32(body->GetChildCount()) : 0;
   }
 
   return nsRange::CreateRange(startNode, startOffset, endNode, endOffset,
@@ -3754,19 +3734,10 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
   const PRUnichar *str = aBlockStr->get();
   PRUint32 strLen = aBlockStr->Length();
 
-  nsIWordBreaker *aWordBreaker;
-
-  result = CallGetService(NS_WBRK_CONTRACTID, &aWordBreaker);
-  NS_ENSURE_SUCCESS(result, result);
-
-  nsWordRange res = aWordBreaker->FindWord(str, strLen, strOffset);
-  NS_IF_RELEASE(aWordBreaker);
-  if(res.mBegin > strLen)
-  {
-    if(!str)
-      return NS_ERROR_NULL_POINTER;
-    else
-      return NS_ERROR_ILLEGAL_VALUE;
+  nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
+  nsWordRange res = wordBreaker->FindWord(str, strLen, strOffset);
+  if (res.mBegin > strLen) {
+    return str ? NS_ERROR_ILLEGAL_VALUE : NS_ERROR_NULL_POINTER;
   }
 
   // Strip out the NBSPs at the ends

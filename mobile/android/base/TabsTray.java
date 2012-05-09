@@ -20,6 +20,7 @@ import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView.RecyclerListener;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -60,6 +61,16 @@ public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListene
         mWaitingForClose = false;
 
         mList = (ListView) findViewById(R.id.list);
+        mList.setItemsCanFocus(true);
+
+        mList.setRecyclerListener(new RecyclerListener() {
+            @Override
+            public void onMovedToScrapHeap(View view) {
+                TabRow row = (TabRow) view.getTag();
+                row.thumbnail.setImageDrawable(null);
+            }
+        });
+
         mListContainer = (TabsListContainer) findViewById(R.id.list_container);
 
         ImageButton addTab = (ImageButton) findViewById(R.id.add_tab);
@@ -156,7 +167,11 @@ public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListene
             mListContainer.requestLayout();
         } else {
             View view = mList.getChildAt(position - mList.getFirstVisiblePosition());
-            mTabsAdapter.assignValues(view, tab);
+            if (view == null)
+                return;
+
+            TabRow row = (TabRow) view.getTag();
+            mTabsAdapter.assignValues(row, tab);
         }
     }
 
@@ -203,8 +218,30 @@ public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListene
         }
     }
 
+    // ViewHolder for a row in the list
+    private class TabRow {
+        int id;
+        TextView title;
+        ImageView thumbnail;
+        ImageView selectedIndicator;
+        ImageButton close;
+
+        public TabRow(View view) {
+            title = (TextView) view.findViewById(R.id.title);
+            thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
+            selectedIndicator = (ImageView) view.findViewById(R.id.selected_indicator);
+            close = (ImageButton) view.findViewById(R.id.close);
+        }
+    }
+
     // Adapter to bind tabs into a list
     private class TabsAdapter extends BaseAdapter {
+        private Context mContext;
+        private ArrayList<Tab> mTabs;
+        private LayoutInflater mInflater;
+        private View.OnClickListener mOnInfoClickListener;
+        private Button.OnClickListener mOnCloseClickListener;
+
         public TabsAdapter(Context context, ArrayList<Tab> tabs) {
             mContext = context;
             mInflater = LayoutInflater.from(mContext);
@@ -219,7 +256,7 @@ public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListene
 
             mOnInfoClickListener = new View.OnClickListener() {
                 public void onClick(View v) {
-                    Tabs.getInstance().selectTab(Integer.parseInt((String) v.getTag()));
+                    Tabs.getInstance().selectTab(((TabRow) v.getTag()).id);
                     finishActivity();
                 }
             };
@@ -262,45 +299,48 @@ public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListene
             mTabs.remove(tab);
         }
 
-        public void assignValues(View view, Tab tab) {
-            if (view == null || tab == null)
+        public void assignValues(TabRow row, Tab tab) {
+            if (row == null || tab == null)
                 return;
 
-            ImageView thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
+            row.id = tab.getId();
 
             Drawable thumbnailImage = tab.getThumbnail();
             if (thumbnailImage != null)
-                thumbnail.setImageDrawable(thumbnailImage);
+                row.thumbnail.setImageDrawable(thumbnailImage);
             else if (TextUtils.equals(tab.getURL(), ABOUT_HOME))
-                thumbnail.setImageResource(R.drawable.abouthome_thumbnail);
+                row.thumbnail.setImageResource(R.drawable.abouthome_thumbnail);
             else
-                thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
+                row.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
 
             if (Tabs.getInstance().isSelectedTab(tab))
-                ((ImageView) view.findViewById(R.id.selected_indicator)).setVisibility(View.VISIBLE);
+                row.selectedIndicator.setVisibility(View.VISIBLE);
+            else
+                row.selectedIndicator.setVisibility(View.GONE);
 
-            TextView title = (TextView) view.findViewById(R.id.title);
-            title.setText(tab.getDisplayTitle());
+            row.title.setText(tab.getDisplayTitle());
+
+            row.close.setTag(String.valueOf(row.id));
+            row.close.setVisibility(mTabs.size() > 1 ? View.VISIBLE : View.GONE);
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {
-            convertView = mInflater.inflate(R.layout.tabs_row, null);
+            TabRow row;
+
+            if (convertView == null) {
+                convertView = mInflater.inflate(R.layout.tabs_row, null);
+                convertView.setOnClickListener(mOnInfoClickListener);
+
+                row = new TabRow(convertView);
+                row.close.setOnClickListener(mOnCloseClickListener);
+
+                convertView.setTag(row);
+            } else {
+                row = (TabRow) convertView.getTag();
+            }
 
             Tab tab = mTabs.get(position);
-
-            RelativeLayout info = (RelativeLayout) convertView.findViewById(R.id.info);
-            info.setTag(String.valueOf(tab.getId()));
-            info.setOnClickListener(mOnInfoClickListener);
-
-            assignValues(convertView, tab);
-
-            ImageButton close = (ImageButton) convertView.findViewById(R.id.close);
-            if (mTabs.size() > 1) {
-                close.setTag(String.valueOf(tab.getId()));
-                close.setOnClickListener(mOnCloseClickListener);
-            } else {
-                close.setVisibility(View.GONE);
-            }
+            assignValues(row, tab);
 
             return convertView;
         }
@@ -312,11 +352,5 @@ public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListene
         @Override
         public void notifyDataSetInvalidated() {
         }
-
-        private Context mContext;
-        private ArrayList<Tab> mTabs;
-        private LayoutInflater mInflater;
-        private View.OnClickListener mOnInfoClickListener;
-        private Button.OnClickListener mOnCloseClickListener;
     }
 }

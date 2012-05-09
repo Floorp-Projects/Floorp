@@ -1,3 +1,0 @@
-url-prefix ../../jsreftest.html?test=ecma_5/Boolean/
-script 15.6.4.2.js
-script no-boolean-toJSON.js

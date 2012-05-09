@@ -48,57 +48,55 @@ LIBXUL_LIBRARY = 1
 
 
 CPPSRCS = \
+  ApplicationAccessibleWrap.cpp \
+  ARIAGridAccessibleWrap.cpp \
   nsAccessNodeWrap.cpp \
   nsAccessibleWrap.cpp \
   nsTextAccessibleWrap.cpp \
   nsDocAccessibleWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
-  nsARIAGridAccessibleWrap.cpp \
-  nsRootAccessibleWrap.cpp \
   nsXULMenuAccessibleWrap.cpp \
   nsXULListboxAccessibleWrap.cpp \
   nsXULTreeGridAccessibleWrap.cpp \
   nsHyperTextAccessibleWrap.cpp \
   nsHTMLImageAccessibleWrap.cpp \
   nsHTMLTableAccessibleWrap.cpp \
-  nsApplicationAccessibleWrap.cpp \
   nsWinUtils.cpp \
   ia2AccessibleAction.cpp \
+  ia2AccessibleComponent.cpp \
   CAccessibleImage.cpp \
-  CAccessibleComponent.cpp \
   CAccessibleText.cpp \
   CAccessibleEditableText.cpp \
   CAccessibleHyperlink.cpp \
-  CAccessibleHypertext.cpp \
+  ia2AccessibleHypertext.cpp \
   ia2AccessibleRelation.cpp \
   CAccessibleTable.cpp \
   CAccessibleTableCell.cpp \
   CAccessibleValue.cpp \
   Compatibility.cpp \
+  RootAccessibleWrap.cpp \
   $(NULL)
 
 EXPORTS = \
+  ARIAGridAccessibleWrap.h \
   nsAccessNodeWrap.h \
   nsAccessibleWrap.h \
   nsTextAccessibleWrap.h \
   nsDocAccessibleWrap.h \
-  nsRootAccessibleWrap.h \
   nsHTMLWin32ObjectAccessible.h \
-  nsARIAGridAccessibleWrap.h \
   nsXULMenuAccessibleWrap.h \
   nsXULListboxAccessibleWrap.h \
   nsXULTreeGridAccessibleWrap.h \
   nsHyperTextAccessibleWrap.h \
   nsHTMLImageAccessibleWrap.h \
   nsHTMLTableAccessibleWrap.h \
-  nsApplicationAccessibleWrap.h \
   ia2AccessibleAction.h \
+  ia2AccessibleComponent.h \
   CAccessibleImage.h \
-  CAccessibleComponent.h \
   CAccessibleText.h \
   CAccessibleEditableText.h \
   CAccessibleHyperlink.h \
-  CAccessibleHypertext.h \
+  ia2AccessibleHypertext.h \
   CAccessibleTable.h \
   CAccessibleTableCell.h \
   CAccessibleValue.h \

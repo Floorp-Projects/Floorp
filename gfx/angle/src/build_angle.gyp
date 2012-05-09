@@ -3,9 +3,6 @@
 # found in the LICENSE file.
 
 {
-  'variables': {
-    'chromium_code': 1,
-  },
   'target_defaults': {
     'defines': [
       'ANGLE_DISABLE_TRACE',
@@ -14,8 +11,26 @@
   },
   'targets': [
     {
+      'target_name': 'preprocessor',
+      'type': 'static_library',
+      'include_dirs': [
+      ],
+      'sources': [
+        'compiler/preprocessor/new/Input.cpp',
+        'compiler/preprocessor/new/Input.h',
+        'compiler/preprocessor/new/Lexer.cpp',
+        'compiler/preprocessor/new/Lexer.h',
+        'compiler/preprocessor/new/pp_lex.cpp',
+        'compiler/preprocessor/new/Preprocessor.cpp',
+        'compiler/preprocessor/new/Preprocessor.h',
+        'compiler/preprocessor/new/Token.cpp',
+        'compiler/preprocessor/new/Token.h',
+      ],
+    },
+    {
       'target_name': 'translator_common',
       'type': 'static_library',
+      'dependencies': ['preprocessor'],
       'include_dirs': [
         '.',
         '../include',
@@ -76,6 +91,7 @@
         'compiler/ValidateLimitations.h',
         'compiler/VariableInfo.cpp',
         'compiler/VariableInfo.h',
+        # Old preprocessor
         'compiler/preprocessor/atom.c',
         'compiler/preprocessor/atom.h',
         'compiler/preprocessor/compile.h',
@@ -83,6 +99,8 @@
         'compiler/preprocessor/cpp.h',
         'compiler/preprocessor/cppstruct.c',
         'compiler/preprocessor/length_limits.h',
+        'compiler/preprocessor/lexer_glue.cpp',
+        'compiler/preprocessor/lexer_glue.h',
         'compiler/preprocessor/memory.c',
         'compiler/preprocessor/memory.h',
         'compiler/preprocessor/parser.h',
@@ -131,34 +149,34 @@
         'compiler/VersionGLSL.h',
       ],
     },
-    {
-      'target_name': 'translator_hlsl',
-      'type': '<(component)',
-      'dependencies': ['translator_common'],
-      'include_dirs': [
-        '.',
-        '../include',
-      ],
-      'defines': [
-        'COMPILER_IMPLEMENTATION',
-      ],
-      'sources': [
-        'compiler/ShaderLang.cpp',
-        'compiler/CodeGenHLSL.cpp',
-        'compiler/OutputHLSL.cpp',
-        'compiler/OutputHLSL.h',
-        'compiler/TranslatorHLSL.cpp',
-        'compiler/TranslatorHLSL.h',
-        'compiler/UnfoldSelect.cpp',
-        'compiler/UnfoldSelect.h',
-        'compiler/SearchSymbol.cpp',
-        'compiler/SearchSymbol.h',
-      ],
-    },
   ],
   'conditions': [
     ['OS=="win"', {
       'targets': [
+        {
+          'target_name': 'translator_hlsl',
+          'type': '<(component)',
+          'dependencies': ['translator_common'],
+          'include_dirs': [
+            '.',
+            '../include',
+          ],
+          'defines': [
+            'COMPILER_IMPLEMENTATION',
+          ],
+          'sources': [
+            'compiler/ShaderLang.cpp',
+            'compiler/CodeGenHLSL.cpp',
+            'compiler/OutputHLSL.cpp',
+            'compiler/OutputHLSL.h',
+            'compiler/TranslatorHLSL.cpp',
+            'compiler/TranslatorHLSL.h',
+            'compiler/UnfoldSelect.cpp',
+            'compiler/UnfoldSelect.h',
+            'compiler/SearchSymbol.cpp',
+            'compiler/SearchSymbol.h',
+          ],
+        },
         {
           'target_name': 'libGLESv2',
           'type': 'shared_library',

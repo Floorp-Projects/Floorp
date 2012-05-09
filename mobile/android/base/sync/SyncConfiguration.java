@@ -6,10 +6,12 @@ package org.mozilla.gecko.sync;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.mozilla.gecko.sync.crypto.PersistedCrypto5Keys;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -184,13 +186,29 @@ public class SyncConfiguration implements CredentialsSource {
   public String          password;
   public String          syncID;
 
+  /**
+   * Persisted collection of enabledEngineNames.
+   * <p>
+   * Can contain engines Android Sync is not currently aware of, such as "prefs"
+   * or "addons".
+   * <p>
+   * Copied from latest downloaded meta/global record and used to generate a
+   * fresh meta/global record for upload.
+   */
+  public Set<String>     enabledEngineNames;
+
   // Fields that maintain a reference to a SharedPreferences instance, used for
   // persistence.
   // Behavior is undefined if the PrefsSource is switched out in flight.
   public String          prefsPath;
   public PrefsSource     prefsSource;
 
-  public static final String CLIENT_RECORD_TIMESTAMP = "serverClientRecordTimestamp";
+  public static final String CLIENTS_COLLECTION_TIMESTAMP = "serverClientsTimestamp";  // When the collection was touched.
+  public static final String CLIENT_RECORD_TIMESTAMP = "serverClientRecordTimestamp";  // When our record was touched.
+
+  public static final String PREF_CLUSTER_URL = "clusterURL";
+  public static final String PREF_SYNC_ID = "syncID";
+  public static final String PREF_ENABLED_ENGINE_NAMES = "enabledEngineNames";
 
   /**
    * Create a new SyncConfiguration instance. Pass in a PrefsSource to
@@ -219,8 +237,8 @@ public class SyncConfiguration implements CredentialsSource {
 
   public void loadFromPrefs(SharedPreferences prefs) {
 
-    if (prefs.contains("clusterURL")) {
-      String u = prefs.getString("clusterURL", null);
+    if (prefs.contains(PREF_CLUSTER_URL)) {
+      String u = prefs.getString(PREF_CLUSTER_URL, null);
       try {
         clusterURL = new URI(u);
         Logger.info(LOG_TAG, "Set clusterURL from bundle: " + u);
@@ -228,11 +246,22 @@ public class SyncConfiguration implements CredentialsSource {
         Logger.warn(LOG_TAG, "Ignoring bundle clusterURL (" + u + "): invalid URI.", e);
       }
     }
-    if (prefs.contains("syncID")) {
-      syncID = prefs.getString("syncID", null);
+    if (prefs.contains(PREF_SYNC_ID)) {
+      syncID = prefs.getString(PREF_SYNC_ID, null);
       Logger.info(LOG_TAG, "Set syncID from bundle: " + syncID);
     }
-    // TODO: MetaGlobal, password, infoCollections, collectionKeys.
+    if (prefs.contains(PREF_ENABLED_ENGINE_NAMES)) {
+      String json = prefs.getString(PREF_ENABLED_ENGINE_NAMES, null);
+      try {
+        ExtendedJSONObject o = ExtendedJSONObject.parseJSONObject(json);
+        enabledEngineNames = new HashSet<String>(o.keySet());
+      } catch (Exception e) {
+        // enabledEngineNames can be null.
+      }
+    }
+    // We don't set crypto/keys here because we need the syncKeyBundle to decrypt the JSON
+    // and we won't have it on construction.
+    // TODO: MetaGlobal, password, infoCollections.
   }
 
   public void persistToPrefs() {
@@ -242,12 +271,21 @@ public class SyncConfiguration implements CredentialsSource {
   public void persistToPrefs(SharedPreferences prefs) {
     Editor edit = prefs.edit();
     if (clusterURL == null) {
-      edit.remove("clusterURL");
+      edit.remove(PREF_CLUSTER_URL);
     } else {
-      edit.putString("clusterURL", clusterURL.toASCIIString());
+      edit.putString(PREF_CLUSTER_URL, clusterURL.toASCIIString());
     }
     if (syncID != null) {
-      edit.putString("syncID", syncID);
+      edit.putString(PREF_SYNC_ID, syncID);
+    }
+    if (enabledEngineNames == null) {
+      edit.remove(PREF_ENABLED_ENGINE_NAMES);
+    } else {
+      ExtendedJSONObject o = new ExtendedJSONObject();
+      for (String engineName : enabledEngineNames) {
+        o.put(engineName, 0);
+      }
+      edit.putString(PREF_ENABLED_ENGINE_NAMES, o.toJSONString());
     }
     edit.commit();
     // TODO: keys.
@@ -258,14 +296,8 @@ public class SyncConfiguration implements CredentialsSource {
     return username + ":" + password;
   }
 
-  @Override
   public CollectionKeys getCollectionKeys() {
     return collectionKeys;
-  }
-
-  @Override
-  public KeyBundle keyForCollection(String collection) throws NoCollectionKeysSetException {
-    return getCollectionKeys().keyBundleForCollection(collection);
   }
 
   public void setCollectionKeys(CollectionKeys k) {
@@ -297,6 +329,10 @@ public class SyncConfiguration implements CredentialsSource {
   public String storageURL(boolean trailingSlash) {
     return clusterURL + GlobalSession.API_VERSION + "/" + username +
            (trailingSlash ? "/storage/" : "/storage");
+  }
+
+  public URI collectionURI(String collection) throws URISyntaxException {
+    return new URI(storageURL(true) + collection);
   }
 
   public URI collectionURI(String collection, boolean full) throws URISyntaxException {
@@ -342,7 +378,7 @@ public class SyncConfiguration implements CredentialsSource {
     clusterURL = u;
     if (shouldPersist) {
       Editor edit = prefs.edit();
-      edit.putString("clusterURL", clusterURL.toASCIIString());
+      edit.putString(PREF_CLUSTER_URL, clusterURL.toASCIIString());
       edit.commit();
     }
   }
@@ -372,11 +408,38 @@ public class SyncConfiguration implements CredentialsSource {
     return this.getPrefs().edit();
   }
 
+  /**
+   * We persist two different clients timestamps: our own record's,
+   * and the timestamp for the collection.
+   */
   public void persistServerClientRecordTimestamp(long timestamp) {
     getEditor().putLong(SyncConfiguration.CLIENT_RECORD_TIMESTAMP, timestamp).commit();
   }
 
   public long getPersistedServerClientRecordTimestamp() {
     return getPrefs().getLong(SyncConfiguration.CLIENT_RECORD_TIMESTAMP, 0);
+  }
+
+  public void persistServerClientsTimestamp(long timestamp) {
+    getEditor().putLong(SyncConfiguration.CLIENTS_COLLECTION_TIMESTAMP, timestamp).commit();
+  }
+
+  public long getPersistedServerClientsTimestamp() {
+    return getPrefs().getLong(SyncConfiguration.CLIENTS_COLLECTION_TIMESTAMP, 0);
+  }
+
+  public void purgeCryptoKeys() {
+    if (collectionKeys != null) {
+      collectionKeys.clear();
+    }
+    persistedCryptoKeys().purge();
+  }
+
+  public PersistedCrypto5Keys persistedCryptoKeys() {
+    return new PersistedCrypto5Keys(getPrefs(), syncKeyBundle);
+  }
+
+  public PersistedMetaGlobal persistedMetaGlobal() {
+    return new PersistedMetaGlobal(getPrefs());
   }
 }

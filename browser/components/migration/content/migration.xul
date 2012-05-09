@@ -51,7 +51,6 @@
 
   <script type="application/javascript" src="chrome://browser/content/migration/migration.js"/>
 
-  <stringbundle id="bundle" src="chrome://browser/locale/migration/migration.properties"/>
   <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
 
   <wizardpage id="importSource" pageid="importSource" next="selectProfile"
@@ -68,16 +67,10 @@
       <!-- If you are adding a migrator, please add the appropriate
            hooks to GetDefaultBrowserMigratorKey in
            browser/components/migration/src/nsProfileMigrator.cpp -->
-#ifdef XP_MACOSX
       <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
-#elifdef XP_WIN
-#ifndef NO_IE_MIGRATOR
       <radio id="ie"        label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
-#endif
-#endif
       <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
       <radio id="firefox"   label="&importFromFirefox.label;"   accesskey="&importFromFirefox.accesskey;"/>
-      <radio id="fromfile"  label="&importFromHTMLFile.label;"  accesskey="&importFromHTMLFile.accesskey;" hidden="true"/>
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>
     </radiogroup>
     <label id="noSources" hidden="true">&noMigrationSources.label;</label>

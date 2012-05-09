@@ -43,15 +43,22 @@
 
 #define NS_LINEBREAKER_NEED_MORE_TEXT -1
 
-// {5ae68851-d9a3-49fd-9388-58586dad8044}
+// 	{0x4b0b9e04-6ffb-4647-aa5f-2fa2ebd883e8}
 #define NS_ILINEBREAKER_IID \
-{ 0x5ae68851, 0xd9a3, 0x49fd, \
-    { 0x93, 0x88, 0x58, 0x58, 0x6d, 0xad, 0x80, 0x44 } }
+{0x4b0b9e04, 0x6ffb, 0x4647, \
+    {0xaa, 0x5f, 0x2f, 0xa2, 0xeb, 0xd8, 0x83, 0xe8}}
 
 class nsILineBreaker : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINEBREAKER_IID)
+
+  enum {
+    kWordBreak_Normal   = 0, // default
+    kWordBreak_BreakAll = 1, // break all
+    kWordBreak_KeepAll  = 2  // always keep 
+  };
+
   virtual PRInt32 Next( const PRUnichar* aText, PRUint32 aLen, 
                         PRUint32 aPos) = 0;
 
@@ -65,8 +72,10 @@ public:
   // aLength is the length of the aText array and also the length of the aBreakBefore
   // output array.
   virtual void GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLength,
+                                 PRUint8 aWordBreak,
                                  PRUint8* aBreakBefore) = 0;
   virtual void GetJISx4051Breaks(const PRUint8* aText, PRUint32 aLength,
+                                 PRUint8 aWordBreak,
                                  PRUint8* aBreakBefore) = 0;
 };
 

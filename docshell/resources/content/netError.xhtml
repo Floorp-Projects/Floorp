@@ -394,7 +394,22 @@
       </div>
 
       <!-- Retry Button -->
-      <button id="errorTryAgain" autocomplete="off" onclick="retryThis(this);" autofocus="true">&retry.label;</button>
+      <button id="errorTryAgain" autocomplete="off" onclick="retryThis(this);">&retry.label;</button>
+      <script>
+        // Only do autofocus if we're the toplevel frame; otherwise we
+        // don't want to call attention to ourselves!  The key part is
+        // that autofocus happens on insertion into the tree, so we
+        // can remove the button, add @autofocus, and reinsert the
+        // button.
+        if (window.top == window) {
+            var button = document.getElementById("errorTryAgain");
+            var nextSibling = button.nextSibling;
+            var parent = button.parentNode;
+            parent.removeChild(button);
+            button.setAttribute("autofocus", "true");
+            parent.insertBefore(button, nextSibling);
+        }
+      </script>
 
     </div>
 

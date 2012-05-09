@@ -48,7 +48,7 @@
 #include "ScaledFontFreetype.h"
 #endif
 
-#ifdef WIN32
+#if defined(WIN32) && defined(USE_SKIA)
 #include "ScaledFontWin.h"
 #endif
 
@@ -99,19 +99,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
       }
       break;
     }
-#elif defined XP_MACOSX || defined ANDROID || defined LINUX
-#ifdef USE_SKIA
-  case BACKEND_SKIA:
-    {
-      RefPtr<DrawTargetSkia> newTarget;
-      newTarget = new DrawTargetSkia();
-      if (newTarget->Init(aSize, aFormat)) {
-        return newTarget;
-      }
-      break;
-    }
-#endif
-#ifdef XP_MACOSX
+#elif defined XP_MACOSX
   case BACKEND_COREGRAPHICS:
     {
       RefPtr<DrawTargetCG> newTarget;
@@ -122,6 +110,16 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
       break;
     }
 #endif
+#ifdef USE_SKIA
+  case BACKEND_SKIA:
+    {
+      RefPtr<DrawTargetSkia> newTarget;
+      newTarget = new DrawTargetSkia();
+      if (newTarget->Init(aSize, aFormat)) {
+        return newTarget;
+      }
+      break;
+    }
 #endif
   default:
     gfxDebug() << "Invalid draw target type specified.";
@@ -282,18 +280,18 @@ Factory::CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams)
 
 #endif // XP_WIN
 
-#ifdef USE_CAIRO
 TemporaryRef<DrawTarget>
 Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface)
 {
+#ifdef USE_CAIRO
   RefPtr<DrawTargetCairo> newTarget = new DrawTargetCairo();
   if (newTarget->Init(aSurface)) {
     return newTarget;
   }
 
+#endif
   return NULL;
 }
-#endif
 
 }
 }

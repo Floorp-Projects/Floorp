@@ -47,22 +47,6 @@
 #include "jsfriendapi.h"
 
 /***************************************************************************/
-bool
-xpc::PtrAndPrincipalHashKey::KeyEquals(const PtrAndPrincipalHashKey* aKey) const
-{
-    if (aKey->mPtr != mPtr)
-        return false;
-    if (aKey->mPrincipal == mPrincipal)
-        return true;
-
-    bool equals;
-    if (NS_FAILED(mPrincipal->EqualsIgnoringDomain(aKey->mPrincipal, &equals))) {
-        NS_ERROR("we failed, guessing!");
-        return false;
-    }
-
-    return equals;
-}
 
 inline void
 XPCJSRuntime::AddVariantRoot(XPCTraceableVariant* variant)
@@ -584,7 +568,7 @@ inline void XPCNativeSet::ASSERT_NotMarked()
 inline
 JSObject* XPCWrappedNativeTearOff::GetJSObjectPreserveColor() const
 {
-    return mJSObject;
+    return reinterpret_cast<JSObject *>(reinterpret_cast<uintptr_t>(mJSObject) & ~1);
 }
 
 inline
@@ -598,7 +582,8 @@ JSObject* XPCWrappedNativeTearOff::GetJSObject()
 inline
 void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)
 {
-        mJSObject = JSObj;
+    MOZ_ASSERT(!IsMarked());
+    mJSObject = JSObj;
 }
 
 inline

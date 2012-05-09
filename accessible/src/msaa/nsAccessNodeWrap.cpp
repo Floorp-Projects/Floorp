@@ -39,14 +39,14 @@
 #include "nsAccessNodeWrap.h"
 
 #include "AccessibleApplication.h"
+#include "ApplicationAccessibleWrap.h"
 #include "ISimpleDOMNode_i.c"
 
 #include "Compatibility.h"
 #include "nsAccessibilityService.h"
-#include "nsApplicationAccessibleWrap.h"
 #include "nsCoreUtils.h"
-#include "nsRootAccessible.h"
 #include "nsWinUtils.h"
+#include "RootAccessible.h"
 #include "Statistics.h"
 
 #include "nsAttrName.h"
@@ -174,7 +174,7 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
 
   // Can get to IAccessibleApplication from any node via QS
   if (iid == IID_IAccessibleApplication) {
-    nsApplicationAccessible *applicationAcc = GetApplicationAccessible();
+    ApplicationAccessible* applicationAcc = GetApplicationAccessible();
     if (!applicationAcc)
       return E_NOINTERFACE;
 
@@ -397,7 +397,7 @@ __try {
     aScrollTopLeft ? nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT :
                      nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT;
 
-  ScrollTo(scrollType);
+  nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, scrollType);
   return S_OK;
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 

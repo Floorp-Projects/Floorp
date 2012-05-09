@@ -60,7 +60,7 @@ public:
 
   void SetNativeWindowDimensions(void* aWindow, const gfxRect& aDimensions);
 
-  void UpdatePosition(const gfxRect& aRect, float aZoomLevel);
+  void UpdatePosition(const gfxRect& aRect);
 
   bool Inverted() {
     return mInverted;

@@ -92,7 +92,7 @@ def build_linux_headers_aux(inst_dir):
     run_in(linux_source_dir, [old_make, "headers_check"])
     run_in(linux_source_dir, [old_make, "INSTALL_HDR_PATH=dest",
                                "headers_install"])
-    shutil.move(linux_source_dir + "/dest", inst_dir)
+    shutil.move(linux_source_dir + "/dest/include", inst_dir + '/include')
 
 def build_linux_headers(inst_dir):
     def f():
@@ -151,6 +151,10 @@ def build_one_stage_aux(stage_dir, is_stage_one):
                    "--with-mpfr=%s" % lib_inst_dir])
 
     tool_inst_dir = stage_dir + '/inst'
+    os.mkdir(tool_inst_dir)
+    os.mkdir(tool_inst_dir + '/lib64')
+    os.symlink('lib64', tool_inst_dir + '/lib')
+
     build_linux_headers(tool_inst_dir)
 
     binutils_build_dir = stage_dir + '/binutils'
@@ -250,6 +254,7 @@ if not os.path.exists(source_dir):
     extract(gmp_source_tar, source_dir)
     extract(gcc_source_tar, source_dir)
     patch('plugin_finish_decl.diff', 0, gcc_source_dir)
+    patch('libtool-74c8993c178a1386ea5e2363a01d919738402f30.patch', 1, gcc_source_dir)
     patch('pr49911.diff', 1, gcc_source_dir)
     patch('r159628-r163231-r171807.patch', 1, gcc_source_dir)
     patch('gcc-fixinc.patch', 1, gcc_source_dir)

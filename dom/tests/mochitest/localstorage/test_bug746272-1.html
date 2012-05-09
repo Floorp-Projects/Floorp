@@ -1,0 +1,32 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>incomplete UTF-16 test</title>
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
+
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function startTest()
+{
+  localStorage.clear();
+  localStorage.setItem("test1", "value1");
+  localStorage.setItem("test2", "value2");
+  localStorage.setItem("test3", "value3");
+  
+  is(localStorage.length, 3, "expected number of items");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+
+</body>
+</html>

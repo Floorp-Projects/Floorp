@@ -39,7 +39,7 @@
 
 #include "nsAccessiblePivot.h"
 
-#include "nsAccessible.h"
+#include "Accessible-inl.h"
 #include "nsAccUtils.h"
 #include "nsHyperTextAccessible.h"
 #include "States.h"

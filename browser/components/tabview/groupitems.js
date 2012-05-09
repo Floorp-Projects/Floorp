@@ -1192,7 +1192,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   addAppTab: function GroupItem_addAppTab(xulTab, options) {
     GroupItems.getAppTabFavIconUrl(xulTab, function(iconUrl) {
       // The tab might have been removed or unpinned while waiting.
-      if (xulTab.closing || !xulTab.parentNode || !xulTab.pinned)
+      if (!Utils.isValidXULTab(xulTab) || !xulTab.pinned)
         return;
 
       let self = this;
@@ -2107,8 +2107,8 @@ let GroupItems = {
   // Function: getAppTabFavIconUrl
   // Gets the fav icon url for app tab.
   getAppTabFavIconUrl: function GroupItems_getAppTabFavIconUrl(xulTab, callback) {
-    UI.getFavIconUrlForTab(xulTab, function GroupItems_getAppTabFavIconUrl_getFavIconUrlForTab(iconUrl) {
-      callback(iconUrl || gFavIconService.defaultFavicon.spec);
+    FavIcons.getFavIconUrlForTab(xulTab, function GroupItems_getAppTabFavIconUrl_getFavIconUrlForTab(iconUrl) {
+      callback(iconUrl || FavIcons.defaultFavicon);
     });
   },
 

@@ -47,7 +47,6 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =\
 		test_figure.html \
-		test_landmarks.html \
 		test_listbox.xul \
 		test_nsApplicationAcc.html \
 		test_plugin.html \

@@ -80,3 +80,5 @@ cp $1/include/theora/theoraenc.h ./include/theora/theoraenc.h
 cp $1/include/theora/codec.h ./include/theora/codec.h
 patch -p3 < ./bug625773-r17780.patch
 patch -p3 < ./bug468275-r18219.patch
+patch -p3 < ./bug752139-r18031.patch
+patch -p3 < ./bug752668-r18268.patch

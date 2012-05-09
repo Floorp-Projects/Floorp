@@ -94,6 +94,7 @@
             stores[indexName] = objectStore;
           } catch (e) {
             ok("exception" in info, "should throw" + test);
+            is(e.name, "SyntaxError", "expect a SyntaxError" + test);
             ok(e instanceof DOMException, "Got a DOM Exception" + test);
             is(e.code, DOMException.SYNTAX_ERR, "expect a syntax error" + test);
             continue;
@@ -107,8 +108,9 @@
           ok("key" in info, "successfully created request to insert value" + test);
         } catch (e) {
           ok(!("key" in info), "threw when attempted to insert" + test);
-          ok(e instanceof IDBDatabaseException, "Got a IDBDatabaseException" + test);
-          is(e.code, IDBDatabaseException.DATA_ERR, "expect a DATA_ERR error" + test);
+          ok(e instanceof DOMException, "Got a DOMException" + test);
+          is(e.name, "DataError", "expect a DataError" + test);
+          is(e.code, 0, "expect zero" + test);
           continue;
         }
 
@@ -145,6 +147,7 @@
             indexes[indexName] = index;
           } catch (e) {
             ok("exception" in info, "should throw" + test);
+            is(e.name, "SyntaxError", "expect a SyntaxError" + test);
             ok(e instanceof DOMException, "Got a DOM Exception" + test);
             is(e.code, DOMException.SYNTAX_ERR, "expect a syntax error" + test);
             continue;
@@ -205,8 +208,9 @@
           }
           catch(e) {
             ok(true, "did throw" + test);
-            ok(e instanceof IDBDatabaseException, "Got a IDBDatabaseException" + test);
-            is(e.code, IDBDatabaseException.DATA_ERR, "expect a DATA_ERR" + test);
+            ok(e instanceof DOMException, "Got a DOMException" + test);
+            is(e.name, "DataError", "expect a DataError" + test);
+            is(e.code, 0, "expect zero" + test);
   
             is(JSON.stringify(info.v), preValue, "failing put didn't modify value" + test);
   
@@ -230,8 +234,9 @@
       }
       catch(e) {
         ok(true, "Did throw when creating empty-keypath autoincrement store");
+        is(e.name, "InvalidAccessError", "expect an InvalidAccessError when creating empty-keypath autoincrement store");
         ok(e instanceof DOMException, "Got a DOMException when creating empty-keypath autoincrement store");
-        is(e.code, DOMException.INVALID_ACCESS_ERR, "expect a INVALID_ACCESS_ERR when creating empty-keypath autoincrement store");
+        is(e.code, DOMException.INVALID_ACCESS_ERR, "expect an INVALID_ACCESS_ERR when creating empty-keypath autoincrement store");
       }
 
       openRequest.onsuccess = grabEventAndContinueHandler;

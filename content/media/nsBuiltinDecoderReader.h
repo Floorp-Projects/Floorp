@@ -43,13 +43,15 @@
 #include "ImageLayers.h"
 #include "nsSize.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "MediaStreamGraph.h"
+#include "SharedBuffer.h"
 
 // Stores info relevant to presenting media frames.
 class nsVideoInfo {
 public:
   nsVideoInfo()
-    : mAudioRate(0),
-      mAudioChannels(0),
+    : mAudioRate(44100),
+      mAudioChannels(2),
       mDisplay(0,0),
       mStereoMode(mozilla::layers::STEREO_MODE_MONO),
       mHasAudio(false),
@@ -113,6 +115,8 @@ typedef float AudioDataValue;
 // Holds chunk a decoded audio frames.
 class AudioData {
 public:
+  typedef mozilla::SharedBuffer SharedBuffer;
+
   AudioData(PRInt64 aOffset,
             PRInt64 aTime,
             PRInt64 aDuration,
@@ -134,6 +138,11 @@ public:
     MOZ_COUNT_DTOR(AudioData);
   }
 
+  // If mAudioBuffer is null, creates it from mAudioData.
+  void EnsureAudioBuffer();
+
+  PRInt64 GetEnd() { return mTime + mDuration; }
+
   // Approximate byte offset of the end of the page on which this chunk
   // ends.
   const PRInt64 mOffset;
@@ -142,6 +151,10 @@ public:
   const PRInt64 mDuration; // In usecs.
   const PRUint32 mFrames;
   const PRUint32 mChannels;
+  // At least one of mAudioBuffer/mAudioData must be non-null.
+  // mChannels channels, each with mFrames frames
+  nsRefPtr<SharedBuffer> mAudioBuffer;
+  // mFrames frames, each with mChannels values
   nsAutoArrayPtr<AudioDataValue> mAudioData;
 };
 
@@ -197,6 +210,8 @@ public:
   {
     MOZ_COUNT_DTOR(VideoData);
   }
+
+  PRInt64 GetEnd() { return mEndTime; }
 
   // Dimensions at which to display the video frame. The picture region
   // will be scaled to this size. This is should be the picture region's
@@ -370,6 +385,25 @@ template <class T> class MediaQueue : private nsDeque {
     ForEach(aFunctor);
   }
 
+  // Extracts elements from the queue into aResult, in order.
+  // Elements whose start time is before aTime are ignored.
+  void GetElementsAfter(PRInt64 aTime, nsTArray<T*>* aResult) {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    if (!GetSize())
+      return;
+    PRInt32 i;
+    for (i = GetSize() - 1; i > 0; --i) {
+      T* v = static_cast<T*>(ObjectAt(i));
+      if (v->GetEnd() < aTime)
+        break;
+    }
+    // Elements less than i have a end time before aTime. It's also possible
+    // that the element at i has a end time before aTime, but that's OK.
+    for (; i < GetSize(); ++i) {
+      aResult->AppendElement(static_cast<T*>(ObjectAt(i)));
+    }
+  }
+
 private:
   mutable ReentrantMonitor mReentrantMonitor;
 
@@ -389,7 +423,7 @@ public:
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
 
   nsBuiltinDecoderReader(nsBuiltinDecoder* aDecoder);
-  ~nsBuiltinDecoderReader();
+  virtual ~nsBuiltinDecoderReader();
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
@@ -408,7 +442,7 @@ public:
   // than aTimeThreshold will be decoded (unless they're not keyframes
   // and aKeyframeSkip is true), but will not be added to the queue.
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                  PRInt64 aTimeThreshold) = 0;
+                                PRInt64 aTimeThreshold) = 0;
 
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;

@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for default bidi css  **/
+function styleOf(name, attributes) {
+    var element = document.createElement(name);
+    for (var name in attributes) {
+        var value = attributes[name];
+        element.setAttribute(name, value);
+    }
+    return getComputedStyle(element);
+}
+
+var tests = [
+    ['div', {}, 'ltr', '-moz-isolate'],
+    ['div', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],
+    ['div', {'dir': 'rtl'}, 'rtl', '-moz-isolate'],
+    ['div', {'dir': 'auto'}, 'ltr', '-moz-isolate'],
+    ['div', {'dir': ''}, 'ltr', '-moz-isolate'],
+
+    ['span', {}, 'ltr', 'normal'],
+    ['span', {'dir': 'ltr'}, 'ltr', 'embed'],
+    ['span', {'dir': 'rtl'}, 'rtl', 'embed'],
+    ['span', {'dir': 'auto'}, 'ltr', '-moz-isolate'],
+    ['span', {'dir': ''}, 'ltr', 'normal'],
+
+    ['bdi', {}, 'ltr', '-moz-isolate'],
+    ['bdi', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],
+    ['bdi', {'dir': 'rtl'}, 'rtl', '-moz-isolate'],
+    ['bdi', {'dir': 'auto'}, 'ltr', '-moz-isolate'],
+    ['bdi', {'dir': ''}, 'ltr', '-moz-isolate'],
+
+    ['output', {}, 'ltr', '-moz-isolate'],
+    ['output', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],
+    ['output', {'dir': 'rtl'}, 'rtl', '-moz-isolate'],
+    ['output', {'dir': 'auto'}, 'ltr', '-moz-isolate'],
+    ['output', {'dir': ''}, 'ltr', '-moz-isolate'],
+
+    ['bdo', {}, 'ltr', 'bidi-override'],
+    ['bdo', {'dir': 'ltr'}, 'ltr', 'bidi-override'],
+    ['bdo', {'dir': 'rtl'}, 'rtl', 'bidi-override'],
+    ['bdo', {'dir': 'auto'}, 'ltr', '-moz-isolate bidi-override'],
+    ['bdo', {'dir': ''}, 'ltr', 'bidi-override'],
+
+    ['textarea', {}, 'ltr', 'normal'],
+    ['textarea', {'dir': 'ltr'}, 'ltr', 'embed'],
+    ['textarea', {'dir': 'rtl'}, 'rtl', 'embed'],
+    ['textarea', {'dir': 'auto'}, 'ltr', '-moz-plaintext'],
+    ['textarea', {'dir': ''}, 'ltr', 'normal'],
+
+    ['pre', {}, 'ltr', '-moz-isolate'],
+    ['pre', {'dir': 'ltr'}, 'ltr', '-moz-isolate'],
+    ['pre', {'dir': 'rtl'}, 'rtl', '-moz-isolate'],
+    ['pre', {'dir': 'auto'}, 'ltr', '-moz-plaintext'],
+    ['pre', {'dir': ''}, 'ltr', '-moz-isolate'],
+].forEach(function (test) {
+    var style = styleOf(test[0], test[1]);
+    is(style.direction, test[2], "default value for direction");
+    is(style.unicodeBidi, test[3], "default value for unicode-bidi");
+});
+
+
+</script>
+</pre>
+</body>
+</html>

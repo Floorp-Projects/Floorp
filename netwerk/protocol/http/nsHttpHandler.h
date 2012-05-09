@@ -61,6 +61,7 @@
 #include "nsIIDNService.h"
 #include "nsITimer.h"
 #include "nsIStrictTransportSecurityService.h"
+#include "nsISpeculativeConnect.h"
 
 class nsHttpConnectionInfo;
 class nsHttpHeaderArray;
@@ -76,6 +77,7 @@ class nsIPrefBranch;
 class nsHttpHandler : public nsIHttpProtocolHandler
                     , public nsIObserver
                     , public nsSupportsWeakReference
+                    , public nsISpeculativeConnect
 {
 public:
     NS_DECL_ISUPPORTS
@@ -83,6 +85,7 @@ public:
     NS_DECL_NSIPROXIEDPROTOCOLHANDLER
     NS_DECL_NSIHTTPPROTOCOLHANDLER
     NS_DECL_NSIOBSERVER
+    NS_DECL_NSISPECULATIVECONNECT
 
     nsHttpHandler();
     virtual ~nsHttpHandler();
@@ -182,6 +185,13 @@ public:
         return mConnMgr->GetSocketThreadTarget(target);
     }
 
+    nsresult SpeculativeConnect(nsHttpConnectionInfo *ci,
+                                nsIInterfaceRequestor *callbacks,
+                                nsIEventTarget *target)
+    {
+        return mConnMgr->SpeculativeConnect(ci, callbacks, target);
+    }
+
     // for anything that wants to know if we're in private browsing mode.
     bool InPrivateBrowsingMode();
 
@@ -233,10 +243,26 @@ public:
                                      nsCString& hostLine);
 
     bool GetPipelineAggressive()     { return mPipelineAggressive; }
-    void GetMaxPipelineObjectSize(PRInt64 &outVal)
+    void GetMaxPipelineObjectSize(PRInt64 *outVal)
     {
-        outVal = mMaxPipelineObjectSize;
+        *outVal = mMaxPipelineObjectSize;
     }
+
+    bool GetPipelineEnabled()
+    {
+        return mCapabilities & NS_HTTP_ALLOW_PIPELINING;
+    }
+
+    bool GetPipelineRescheduleOnTimeout()
+    {
+        return mPipelineRescheduleOnTimeout;
+    }
+
+    PRIntervalTime GetPipelineRescheduleTimeout()
+    {
+        return mPipelineRescheduleTimeout;
+    }
+    
     PRIntervalTime GetPipelineTimeout()   { return mPipelineReadTimeout; }
 
 private:
@@ -299,7 +325,8 @@ private:
     PRUint16 mMaxOptimisticPipelinedRequests;
     bool     mPipelineAggressive;
     PRInt64  mMaxPipelineObjectSize;
-
+    bool     mPipelineRescheduleOnTimeout;
+    PRIntervalTime mPipelineRescheduleTimeout;
     PRIntervalTime mPipelineReadTimeout;
 
     PRUint8  mRedirectionLimit;
@@ -388,6 +415,7 @@ extern nsHttpHandler *gHttpHandler;
 
 class nsHttpsHandler : public nsIHttpProtocolHandler
                      , public nsSupportsWeakReference
+                     , public nsISpeculativeConnect
 {
 public:
     // we basically just want to override GetScheme and GetDefaultPort...
@@ -397,6 +425,7 @@ public:
     NS_DECL_NSIPROTOCOLHANDLER
     NS_FORWARD_NSIPROXIEDPROTOCOLHANDLER (gHttpHandler->)
     NS_FORWARD_NSIHTTPPROTOCOLHANDLER    (gHttpHandler->)
+    NS_FORWARD_NSISPECULATIVECONNECT     (gHttpHandler->)
 
     nsHttpsHandler() { }
     virtual ~nsHttpsHandler() { }

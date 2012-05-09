@@ -44,13 +44,34 @@
 #ifndef jsdate_h___
 #define jsdate_h___
 
-#include "jscntxt.h"
+#include "mozilla/FloatingPoint.h"
 
-#define HalfTimeDomain  8.64e15
+#include <math.h>
 
-#define TIMECLIP(d) ((JSDOUBLE_IS_FINITE(d) \
-                      && !((d < 0 ? -d : d) > HalfTimeDomain)) \
-                     ? js_DoubleToInteger(d + (+0.)) : js_NaN)
+#include "jstypes.h"
+
+#include "vm/NumericConversions.h"
+
+extern "C" {
+struct JSObject;
+struct JSContext;
+}
+
+namespace js {
+
+/* ES5 15.9.1.14. */
+inline double
+TimeClip(double time)
+{
+    /* Steps 1-2. */
+    if (!MOZ_DOUBLE_IS_FINITE(time) || fabs(time) > 8.64e15)
+        return js_NaN;
+
+    /* Step 3. */
+    return ToInteger(time + (+0.0));
+}
+
+} /* namespace js */
 
 extern JSObject *
 js_InitDateClass(JSContext *cx, JSObject *obj);

@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/
+   - https://bugzilla.mozilla.org/show_bug.cgi?id=741549
+-->
+
+<window title="Mozilla Bug 741549"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="apphelper.js"/>
+  <script type="application/javascript" src="jshelper.js"/>
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
+     target="_blank">Mozilla Bug 741549</a>
+  </body>
+
+<script> 
+
+steps = [setUp, install_super_crazy, tearDown];
+
+runAll(steps);
+
+function setUp(next) { 
+  debug("in " + arguments.callee.name);
+  uninstallAll(next);
+}
+
+
+function install_super_crazy(next)  {
+  debug("in " + arguments.callee.name);
+  var appURL = SERVERS['super_crazy'];
+  var pending = navigator.mozApps.install(appURL, {receipts: ["a",0, true,false,null,undefined,{one:1},{nest:{ed:"hi"}},NaN,Infinity]});
+  pending.onsuccess = function ()  {
+    var receipts = pending.result.receipts; 
+    ok(receipts[0] == "a", receipts[0]);
+    ok(receipts[1] == 0, receipts[1]);
+    ok(receipts[2] == true, receipts[2]); 
+    ok(receipts[3] == false, receipts[3]); 
+    ok(receipts[4] == null, receipts[4]); 
+    ok(receipts[5] == undefined, receipts[5]);
+    ok(receipts[6].one == 1, receipts[6].one); 
+    ok(receipts[7].nest.ed == "hi", receipts[7].nest.ed);
+    todo(receipts[8] == NaN, receipts[8]);
+    todo(receipts[9] == Infinity, receipts[9]);
+ 
+    next();
+  };
+}
+
+</script> 
+
+</window>
+

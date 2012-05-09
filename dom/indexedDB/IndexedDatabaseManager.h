@@ -60,6 +60,7 @@
 #define INDEXEDDB_MANAGER_CONTRACTID "@mozilla.org/dom/indexeddb/manager;1"
 
 class mozIStorageQuotaCallback;
+class nsIFile;
 class nsITimer;
 
 BEGIN_INDEXEDDB_NAMESPACE
@@ -192,6 +193,16 @@ public:
 
   nsresult AsyncDeleteFile(FileManager* aFileManager,
                            PRInt64 aFileId);
+
+  const nsString&
+  GetBaseDirectory() const
+  {
+    return mDatabaseBasePath;
+  }
+
+  nsresult
+  GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
+                        nsIFile** aDirectory) const;
 
   static mozilla::Mutex& FileMutex()
   {
@@ -388,6 +399,8 @@ private:
   // It's s also used to atomically update FileInfo.mRefCnt, FileInfo.mDBRefCnt
   // and FileInfo.mSliceRefCnt
   mozilla::Mutex mFileMutex;
+
+  nsString mDatabaseBasePath;
 };
 
 class AutoEnterWindow

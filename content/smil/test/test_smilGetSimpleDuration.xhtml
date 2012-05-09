@@ -68,6 +68,8 @@ function checkForException(anim, descr) {
   try {
     var dur = anim.getSimpleDuration();
   } catch(e) {
+    is (e.name, "NotSupportedError",
+        "Wrong exception from getSimpleDuration");
     is (e.code, DOMException.NOT_SUPPORTED_ERR,
         "Wrong exception from getSimpleDuration");
     gotException = true;

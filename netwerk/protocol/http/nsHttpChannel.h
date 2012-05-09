@@ -161,11 +161,29 @@ public: /* internal necko use only */
         return NS_OK;
     }
 
+    // This allows cache entry to be marked as foreign even after channel itself
+    // is gone.  Needed for e10s (see HttpChannelParent::RecvDocumentChannelCleanup)
+    class OfflineCacheEntryAsForeignMarker {
+        nsCOMPtr<nsIApplicationCache> mApplicationCache;
+        nsCString mCacheKey;
+    public:
+        OfflineCacheEntryAsForeignMarker(nsIApplicationCache* appCache,
+                                         const nsCSubstring& key)
+             : mApplicationCache(appCache)
+             , mCacheKey(key)
+        {}
+
+        nsresult MarkAsForeign();
+    };
+
+    OfflineCacheEntryAsForeignMarker* GetOfflineCacheEntryAsForeignMarker();
+
 private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 
     bool     RequestIsConditional();
     nsresult Connect(bool firstTime = true);
+    void     SpeculativeConnect();
     nsresult SetupTransaction();
     nsresult CallOnStartRequest();
     nsresult ProcessResponse();

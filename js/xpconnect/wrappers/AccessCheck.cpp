@@ -254,21 +254,7 @@ GetPrincipal(JSObject *obj)
 bool
 AccessCheck::documentDomainMakesSameOrigin(JSContext *cx, JSObject *obj)
 {
-    JSObject *scope = nsnull;
-    JSStackFrame *fp = nsnull;
-    JS_FrameIterator(cx, &fp);
-    if (fp) {
-        while (!JS_IsScriptFrame(cx, fp)) {
-            if (!JS_FrameIterator(cx, &fp))
-                break;
-        }
-
-        if (fp)
-            scope = JS_GetGlobalForFrame(fp);
-    }
-
-    if (!scope)
-        scope = JS_GetGlobalForScopeChain(cx);
+    JSObject *scope = JS_GetScriptedGlobal(cx);
 
     nsIPrincipal *subject;
     nsIPrincipal *object;
@@ -364,18 +350,15 @@ AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
         return false;
     }
 
+    JSScript *script = nsnull;
     if (!fp) {
-        if (!JS_FrameIterator(cx, &fp)) {
+        if (!JS_DescribeScriptedCaller(cx, &script, nsnull)) {
             // No code at all is running. So we must be arriving here as the result
             // of C++ code asking us to do something. Allow access.
             return true;
         }
-
-        // Some code is running, we can't make the assumption, as above, but we
-        // can't use a native frame, so clear fp.
-        fp = NULL;
-    } else if (!JS_IsScriptFrame(cx, fp)) {
-        fp = NULL;
+    } else if (JS_IsScriptFrame(cx, fp)) {
+        script = JS_GetFrameScript(cx, fp);
     }
 
     bool privileged;
@@ -388,8 +371,8 @@ AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
     // cloned into a less privileged context.
     static const char prefix[] = "chrome://global/";
     const char *filename;
-    if (fp &&
-        (filename = JS_GetScriptFilename(cx, JS_GetFrameScript(cx, fp))) &&
+    if (script &&
+        (filename = JS_GetScriptFilename(cx, script)) &&
         !strncmp(filename, prefix, ArrayLength(prefix) - 1)) {
         return true;
     }
@@ -622,6 +605,31 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
 
     perm = PermitPropertyAccess;
     return true; // Allow
+}
+
+bool
+ComponentsObjectPolicy::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper::Action act,
+                              Permission &perm) 
+{
+    perm = DenyAccess;
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, wrapper))
+        return false;
+
+    if (JSID_IS_STRING(id) && act == Wrapper::GET) {
+        JSFlatString *flatId = JSID_TO_FLAT_STRING(id);
+        if (JS_FlatStringEqualsAscii(flatId, "isSuccessCode") ||
+            JS_FlatStringEqualsAscii(flatId, "lookupMethod") ||
+            JS_FlatStringEqualsAscii(flatId, "interfaces") ||
+            JS_FlatStringEqualsAscii(flatId, "interfacesByID") ||
+            JS_FlatStringEqualsAscii(flatId, "results"))
+        {
+            perm = PermitPropertyAccess;
+            return true;
+        }
+    }
+
+    return PermitIfUniversalXPConnect(cx, id, act, perm);  // Deny
 }
 
 }

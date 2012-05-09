@@ -1951,7 +1951,7 @@ nsXULDocument::RemoveElementFromRefMap(Element* aElement)
 //
 
 NS_IMETHODIMP
-nsXULDocument::CloneNode(bool aDeep, nsIDOMNode** aReturn)
+nsXULDocument::CloneNode(bool aDeep, PRUint8 aOptionalArgc, nsIDOMNode** aReturn)
 {
     // We don't allow cloning of a document
     *aReturn = nsnull;
@@ -2762,6 +2762,11 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
         // Not there. Initiate a load.
         PR_LOG(gXULLog, PR_LOG_DEBUG, ("xul: overlay was not cached"));
 
+        if (mIsGoingAway) {
+            PR_LOG(gXULLog, PR_LOG_DEBUG, ("xul: ...and document already destroyed"));
+            return NS_ERROR_NOT_AVAILABLE;
+        }
+
         // We'll set the right principal on the proto doc when we get
         // OnStartRequest from the parser, so just pass in a null principal for
         // now.
@@ -3383,18 +3388,12 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, bool* aBlock)
     bool useXULCache = nsXULPrototypeCache::GetInstance()->IsEnabled();
 
     if (isChromeDoc && useXULCache) {
-        PRUint32 fetchedLang = nsIProgrammingLanguage::UNKNOWN;
         JSScript* newScriptObject =
             nsXULPrototypeCache::GetInstance()->GetScript(
-                                   aScriptProto->mSrcURI,
-                                   &fetchedLang);
+                                   aScriptProto->mSrcURI);
         if (newScriptObject) {
             // The script language for a proto must remain constant - we
             // can't just change it for this unexpected language.
-            if (aScriptProto->mScriptObject.mLangID != fetchedLang) {
-                NS_ERROR("XUL cache gave me an incorrect script language");
-                return NS_ERROR_UNEXPECTED;
-            }
             aScriptProto->Set(newScriptObject);
         }
 
@@ -3558,7 +3557,6 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             if (useXULCache && IsChromeURI(mDocumentURI)) {
                 nsXULPrototypeCache::GetInstance()->PutScript(
                                    scriptProto->mSrcURI,
-                                   scriptProto->mScriptObject.mLangID,
                                    scriptProto->mScriptObject.mObject);
             }
 

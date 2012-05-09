@@ -61,6 +61,7 @@
 #include "nsIMM32Handler.h"
 #include "nsWindow.h"
 #include "WinUtils.h"
+#include "KeyboardLayout.h"
 
 using namespace mozilla::widget;
 
@@ -764,7 +765,11 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
 
   // add hacky code here
   nsModifierKeyState modKeyState(false, false, true);
-  aWindow->DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, 192, nsnull, modKeyState);
+  mozilla::widget::NativeKey nativeKey; // Dummy is okay for this usage.
+  nsKeyEvent keyEvent(true, NS_KEY_PRESS, aWindow);
+  keyEvent.keyCode = 192;
+  aWindow->InitKeyEvent(keyEvent, nativeKey, modKeyState);
+  aWindow->DispatchKeyEvent(keyEvent, nsnull);
   sIsStatusChanged = sIsStatusChanged || (wParam == IMN_SETOPENSTATUS);
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: OnIMENotify, sIsStatusChanged=%s\n",
@@ -1741,10 +1746,7 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
 
   event.theText = mCompositionString.get();
   nsModifierKeyState modKeyState;
-  event.isShift = modKeyState.mIsShiftDown;
-  event.isControl = modKeyState.mIsControlDown;
-  event.isMeta = false;
-  event.isAlt = modKeyState.mIsAltDown;
+  modKeyState.InitInputEvent(event);
 
   aWindow->DispatchWindowEvent(&event);
 

@@ -5,14 +5,19 @@
 == capitalize-5.html capitalize-5-ref.html
 == capitalize-6.html capitalize-6-ref.html
 == lowercase-1.html lowercase-ref.html
+== lowercase-sigma-1.html lowercase-sigma-1-ref.html
 == small-caps-1.html small-caps-1-ref.html
 == uppercase-1.html uppercase-ref.html
 == uppercase-szlig-1.html uppercase-szlig-ref.html
-== all-upper.html all-upper-ref.html
-== all-lower.html all-lower-ref.html
-== all-title.html all-title-ref.html
+# these use DejaVu Sans via @font-face for consistency of results
+HTTP(..) == all-upper.html all-upper-ref.html
+HTTP(..) == all-lower.html all-lower-ref.html
+HTTP(..) == all-title.html all-title-ref.html
 == smtp-upper.html smtp-upper-ref.html
 == smtp-lower.html smtp-lower-ref.html
 == smtp-title.html smtp-title-ref.html
 == turkish-casing-1.html turkish-casing-1-ref.html
 HTTP(..) != small-caps-turkish-1.html small-caps-turkish-1-notref.html
+== greek-uppercase-1.html greek-uppercase-1-ref.html
+== greek-uppercase-2.html greek-uppercase-2-ref.html
+== greek-small-caps-1.html greek-small-caps-1-ref.html

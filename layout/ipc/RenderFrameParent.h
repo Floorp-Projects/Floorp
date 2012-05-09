@@ -111,7 +111,6 @@ protected:
 private:
   void BuildViewMap();
 
-  LayerManager* GetLayerManager() const;
   ShadowLayersParent* GetShadowLayers() const;
   ContainerLayer* GetRootLayer() const;
 
@@ -162,7 +161,8 @@ public:
 
   NS_OVERRIDE
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager)
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters)
   { return mozilla::LAYER_ACTIVE; }  
 
   NS_OVERRIDE
@@ -198,8 +198,9 @@ public:
     , mId(aId)
   {}
 
-  NS_OVERRIDE nsRect GetBounds(nsDisplayListBuilder* aBuilder)
+  NS_OVERRIDE nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   {
+    *aSnap = false;
     return mRect;
   }
 

@@ -22,7 +22,8 @@
 #include "vpx/vpx_encoder.h"
 #include "vpx_mem/vpx_mem.h"
 #include "bitstream.h"
-#include "vp8/common/defaultcoefcounts.h"
+
+#include "defaultcoefcounts.h"
 
 const int vp8cx_base_skip_false_prob[128] =
 {
@@ -108,7 +109,7 @@ static void update_mbintra_mode_probs(VP8_COMP *cpi)
 {
     VP8_COMMON *const x = & cpi->common;
 
-    vp8_writer *const w = & cpi->bc;
+    vp8_writer *const w = cpi->bc;
 
     {
         vp8_prob Pnew   [VP8_YMODES-1];
@@ -220,6 +221,11 @@ static void pack_tokens_c(vp8_writer *w, const TOKENEXTRA *p, int xcount)
                     w->buffer[x] += 1;
                 }
 
+                validate_buffer(w->buffer + w->pos,
+                                1,
+                                w->buffer_end,
+                                w->error);
+
                 w->buffer[w->pos++] = (lowvalue >> (24 - offset));
                 lowvalue <<= offset;
                 shift = count;
@@ -280,6 +286,11 @@ static void pack_tokens_c(vp8_writer *w, const TOKENEXTRA *p, int xcount)
                             w->buffer[x] += 1;
                         }
 
+                        validate_buffer(w->buffer + w->pos,
+                                        1,
+                                        w->buffer_end,
+                                        w->error);
+
                         w->buffer[w->pos++] = (lowvalue >> (24 - offset));
                         lowvalue <<= offset;
                         shift = count;
@@ -328,6 +339,12 @@ static void pack_tokens_c(vp8_writer *w, const TOKENEXTRA *p, int xcount)
                 if (!++count)
                 {
                     count = -8;
+
+                    validate_buffer(w->buffer + w->pos,
+                                    1,
+                                    w->buffer_end,
+                                    w->error);
+
                     w->buffer[w->pos++] = (lowvalue >> 24);
                     lowvalue &= 0xffffff;
                 }
@@ -357,20 +374,22 @@ static void write_partition_size(unsigned char *cx_data, int size)
 
 }
 
-static void pack_tokens_into_partitions_c(VP8_COMP *cpi, unsigned char *cx_data, int num_part, int *size)
+static void pack_tokens_into_partitions_c(VP8_COMP *cpi, unsigned char *cx_data,
+                                          unsigned char * cx_data_end,
+                                          int num_part)
 {
 
     int i;
     unsigned char *ptr = cx_data;
+    unsigned char *ptr_end = cx_data_end;
     unsigned int shift;
-    vp8_writer *w = &cpi->bc2;
-    *size = 3 * (num_part - 1);
-    cpi->partition_sz[0] += *size;
-    ptr = cx_data + (*size);
+    vp8_writer *w;
+    ptr = cx_data;
 
     for (i = 0; i < num_part; i++)
     {
-        vp8_start_encode(w, ptr);
+        w = cpi->bc + i + 1;
+        vp8_start_encode(w, ptr, ptr_end);
         {
             unsigned int split;
             int count = w->count;
@@ -436,7 +455,13 @@ static void pack_tokens_into_partitions_c(VP8_COMP *cpi, unsigned char *cx_data,
                                 w->buffer[x] += 1;
                             }
 
+                            validate_buffer(w->buffer + w->pos,
+                                            1,
+                                            cx_data_end,
+                                            &cpi->common.error);
+
                             w->buffer[w->pos++] = (lowvalue >> (24 - offset));
+
                             lowvalue <<= offset;
                             shift = count;
                             lowvalue &= 0xffffff;
@@ -496,7 +521,14 @@ static void pack_tokens_into_partitions_c(VP8_COMP *cpi, unsigned char *cx_data,
                                         w->buffer[x] += 1;
                                     }
 
-                                    w->buffer[w->pos++] = (lowvalue >> (24 - offset));
+                                    validate_buffer(w->buffer + w->pos,
+                                                    1,
+                                                    cx_data_end,
+                                                    &cpi->common.error);
+
+                                    w->buffer[w->pos++] =
+                                        (lowvalue >> (24 - offset));
+
                                     lowvalue <<= offset;
                                     shift = count;
                                     lowvalue &= 0xffffff;
@@ -542,7 +574,13 @@ static void pack_tokens_into_partitions_c(VP8_COMP *cpi, unsigned char *cx_data,
                             if (!++count)
                             {
                                 count = -8;
+                                validate_buffer(w->buffer + w->pos,
+                                                1,
+                                                cx_data_end,
+                                                &cpi->common.error);
+
                                 w->buffer[w->pos++] = (lowvalue >> 24);
+
                                 lowvalue &= 0xffffff;
                             }
                         }
@@ -560,17 +598,7 @@ static void pack_tokens_into_partitions_c(VP8_COMP *cpi, unsigned char *cx_data,
         }
 
         vp8_stop_encode(w);
-        *size +=   w->pos;
-
-        /* The first partition size is set earlier */
-        cpi->partition_sz[i + 1] = w->pos;
-
-        if (i < (num_part - 1))
-        {
-            write_partition_size(cx_data, w->pos);
-            cx_data += 3;
-            ptr += w->pos;
-        }
+        ptr += w->pos;
     }
 }
 
@@ -643,6 +671,11 @@ static void pack_mb_row_tokens_c(VP8_COMP *cpi, vp8_writer *w)
                         w->buffer[x] += 1;
                     }
 
+                    validate_buffer(w->buffer + w->pos,
+                                    1,
+                                    w->buffer_end,
+                                    w->error);
+
                     w->buffer[w->pos++] = (lowvalue >> (24 - offset));
                     lowvalue <<= offset;
                     shift = count;
@@ -703,6 +736,11 @@ static void pack_mb_row_tokens_c(VP8_COMP *cpi, vp8_writer *w)
                                 w->buffer[x] += 1;
                             }
 
+                            validate_buffer(w->buffer + w->pos,
+                                            1,
+                                            w->buffer_end,
+                                            w->error);
+
                             w->buffer[w->pos++] = (lowvalue >> (24 - offset));
                             lowvalue <<= offset;
                             shift = count;
@@ -749,6 +787,12 @@ static void pack_mb_row_tokens_c(VP8_COMP *cpi, vp8_writer *w)
                     if (!++count)
                     {
                         count = -8;
+
+                        validate_buffer(w->buffer + w->pos,
+                                        1,
+                                        w->buffer_end,
+                                        w->error);
+
                         w->buffer[w->pos++] = (lowvalue >> 24);
                         lowvalue &= 0xffffff;
                     }
@@ -834,44 +878,46 @@ static void write_mb_features(vp8_writer *w, const MB_MODE_INFO *mi, const MACRO
         }
     }
 }
+void vp8_convert_rfct_to_prob(VP8_COMP *const cpi)
+{
+    const int *const rfct = cpi->count_mb_ref_frame_usage;
+    const int rf_intra = rfct[INTRA_FRAME];
+    const int rf_inter = rfct[LAST_FRAME] + rfct[GOLDEN_FRAME] + rfct[ALTREF_FRAME];
 
+    // Calculate the probabilities used to code the ref frame based on useage
+    if (!(cpi->prob_intra_coded = rf_intra * 255 / (rf_intra + rf_inter)))
+        cpi->prob_intra_coded = 1;
+
+    cpi->prob_last_coded = rf_inter ? (rfct[LAST_FRAME] * 255) / rf_inter : 128;
+
+    if (!cpi->prob_last_coded)
+        cpi->prob_last_coded = 1;
+
+    cpi->prob_gf_coded = (rfct[GOLDEN_FRAME] + rfct[ALTREF_FRAME])
+                  ? (rfct[GOLDEN_FRAME] * 255) / (rfct[GOLDEN_FRAME] + rfct[ALTREF_FRAME]) : 128;
+
+    if (!cpi->prob_gf_coded)
+        cpi->prob_gf_coded = 1;
+
+}
 
 static void pack_inter_mode_mvs(VP8_COMP *const cpi)
 {
     VP8_COMMON *const pc = & cpi->common;
-    vp8_writer *const w = & cpi->bc;
+    vp8_writer *const w = cpi->bc;
     const MV_CONTEXT *mvc = pc->fc.mvc;
 
-    const int *const rfct = cpi->count_mb_ref_frame_usage;
-    const int rf_intra = rfct[INTRA_FRAME];
-    const int rf_inter = rfct[LAST_FRAME] + rfct[GOLDEN_FRAME] + rfct[ALTREF_FRAME];
 
     MODE_INFO *m = pc->mi, *ms;
     const int mis = pc->mode_info_stride;
     int mb_row = -1;
 
-    int prob_last_coded;
-    int prob_gf_coded;
     int prob_skip_false = 0;
     ms = pc->mi - 1;
 
     cpi->mb.partition_info = cpi->mb.pi;
 
-    // Calculate the probabilities to be used to code the reference frame based on actual useage this frame
-    if (!(cpi->prob_intra_coded = rf_intra * 255 / (rf_intra + rf_inter)))
-        cpi->prob_intra_coded = 1;
-
-    prob_last_coded = rf_inter ? (rfct[LAST_FRAME] * 255) / rf_inter : 128;
-
-    if (!prob_last_coded)
-        prob_last_coded = 1;
-
-    prob_gf_coded = (rfct[GOLDEN_FRAME] + rfct[ALTREF_FRAME])
-                    ? (rfct[GOLDEN_FRAME] * 255) / (rfct[GOLDEN_FRAME] + rfct[ALTREF_FRAME]) : 128;
-
-    if (!prob_gf_coded)
-        prob_gf_coded = 1;
-
+    vp8_convert_rfct_to_prob(cpi);
 
 #ifdef ENTROPY_STATS
     active_section = 1;
@@ -892,8 +938,8 @@ static void pack_inter_mode_mvs(VP8_COMP *const cpi)
     }
 
     vp8_write_literal(w, cpi->prob_intra_coded, 8);
-    vp8_write_literal(w, prob_last_coded, 8);
-    vp8_write_literal(w, prob_gf_coded, 8);
+    vp8_write_literal(w, cpi->prob_last_coded, 8);
+    vp8_write_literal(w, cpi->prob_gf_coded, 8);
 
     update_mbintra_mode_probs(cpi);
 
@@ -955,11 +1001,11 @@ static void pack_inter_mode_mvs(VP8_COMP *const cpi)
                 vp8_write(w, 1, cpi->prob_intra_coded);
 
                 if (rf == LAST_FRAME)
-                    vp8_write(w, 0, prob_last_coded);
+                    vp8_write(w, 0, cpi->prob_last_coded);
                 else
                 {
-                    vp8_write(w, 1, prob_last_coded);
-                    vp8_write(w, (rf == GOLDEN_FRAME) ? 0 : 1, prob_gf_coded);
+                    vp8_write(w, 1, cpi->prob_last_coded);
+                    vp8_write(w, (rf == GOLDEN_FRAME) ? 0 : 1, cpi->prob_gf_coded);
                 }
 
                 {
@@ -967,6 +1013,8 @@ static void pack_inter_mode_mvs(VP8_COMP *const cpi)
                     int ct[4];
 
                     vp8_find_near_mvs(xd, m, &n1, &n2, &best_mv, ct, rf, cpi->common.ref_frame_sign_bias);
+                    vp8_clamp_mv2(&best_mv, xd);
+
                     vp8_mv_ref_probs(mv_ref_p, ct);
 
 #ifdef ENTROPY_STATS
@@ -1054,7 +1102,7 @@ static void pack_inter_mode_mvs(VP8_COMP *const cpi)
 
 static void write_kfmodes(VP8_COMP *cpi)
 {
-    vp8_writer *const bc = & cpi->bc;
+    vp8_writer *const bc = cpi->bc;
     const VP8_COMMON *const c = & cpi->common;
     /* const */
     MODE_INFO *m = c->mi;
@@ -1160,7 +1208,7 @@ static void sum_probs_over_prev_coef_context(
     {
         for (j=0; j < PREV_COEF_CONTEXTS; ++j)
         {
-            const int tmp = out[i];
+            const unsigned int tmp = out[i];
             out[i] += probs[j][i];
             /* check for wrap */
             if (out[i] < tmp)
@@ -1193,20 +1241,20 @@ static int independent_coef_context_savings(VP8_COMP *cpi)
             int k = 0;
             unsigned int prev_coef_count_sum[MAX_ENTROPY_TOKENS] = {0};
             int prev_coef_savings[MAX_ENTROPY_TOKENS] = {0};
+            const unsigned int (*probs)[MAX_ENTROPY_TOKENS];
             /* Calculate new probabilities given the constraint that
              * they must be equal over the prev coef contexts
              */
+
+            probs = (const unsigned int (*)[MAX_ENTROPY_TOKENS])
+                                                    cpi->coef_counts[i][j];
+
+            /* Reset to default probabilities at key frames */
             if (cpi->common.frame_type == KEY_FRAME)
-            {
-                /* Reset to default probabilities at key frames */
-                sum_probs_over_prev_coef_context(vp8_default_coef_counts[i][j],
-                                                 prev_coef_count_sum);
-            }
-            else
-            {
-                sum_probs_over_prev_coef_context(cpi->coef_counts[i][j],
-                                                 prev_coef_count_sum);
-            }
+                probs = default_coef_counts[i][j];
+
+            sum_probs_over_prev_coef_context(probs, prev_coef_count_sum);
+
             do
             {
                 /* at every context */
@@ -1311,6 +1359,24 @@ static int default_coef_context_savings(VP8_COMP *cpi)
     return savings;
 }
 
+void vp8_calc_ref_frame_costs(int *ref_frame_cost,
+                              int prob_intra,
+                              int prob_last,
+                              int prob_garf
+                             )
+{
+    ref_frame_cost[INTRA_FRAME]   = vp8_cost_zero(prob_intra);
+    ref_frame_cost[LAST_FRAME]    = vp8_cost_one(prob_intra)
+                                    + vp8_cost_zero(prob_last);
+    ref_frame_cost[GOLDEN_FRAME]  = vp8_cost_one(prob_intra)
+                                    + vp8_cost_one(prob_last)
+                                    + vp8_cost_zero(prob_garf);
+    ref_frame_cost[ALTREF_FRAME]  = vp8_cost_one(prob_intra)
+                                    + vp8_cost_one(prob_last)
+                                    + vp8_cost_one(prob_garf);
+
+}
+
 int vp8_estimate_entropy_savings(VP8_COMP *cpi)
 {
     int savings = 0;
@@ -1318,7 +1384,7 @@ int vp8_estimate_entropy_savings(VP8_COMP *cpi)
     const int *const rfct = cpi->count_mb_ref_frame_usage;
     const int rf_intra = rfct[INTRA_FRAME];
     const int rf_inter = rfct[LAST_FRAME] + rfct[GOLDEN_FRAME] + rfct[ALTREF_FRAME];
-    int new_intra, new_last, gf_last, oldtotal, newtotal;
+    int new_intra, new_last, new_garf, oldtotal, newtotal;
     int ref_frame_cost[MAX_REF_FRAMES];
 
     vp8_clear_system_state(); //__asm emms;
@@ -1330,19 +1396,11 @@ int vp8_estimate_entropy_savings(VP8_COMP *cpi)
 
         new_last = rf_inter ? (rfct[LAST_FRAME] * 255) / rf_inter : 128;
 
-        gf_last = (rfct[GOLDEN_FRAME] + rfct[ALTREF_FRAME])
+        new_garf = (rfct[GOLDEN_FRAME] + rfct[ALTREF_FRAME])
                   ? (rfct[GOLDEN_FRAME] * 255) / (rfct[GOLDEN_FRAME] + rfct[ALTREF_FRAME]) : 128;
 
-        // new costs
-        ref_frame_cost[INTRA_FRAME]   = vp8_cost_zero(new_intra);
-        ref_frame_cost[LAST_FRAME]    = vp8_cost_one(new_intra)
-                                        + vp8_cost_zero(new_last);
-        ref_frame_cost[GOLDEN_FRAME]  = vp8_cost_one(new_intra)
-                                        + vp8_cost_one(new_last)
-                                        + vp8_cost_zero(gf_last);
-        ref_frame_cost[ALTREF_FRAME]  = vp8_cost_one(new_intra)
-                                        + vp8_cost_one(new_last)
-                                        + vp8_cost_one(gf_last);
+
+        vp8_calc_ref_frame_costs(ref_frame_cost,new_intra,new_last,new_garf);
 
         newtotal =
             rfct[INTRA_FRAME] * ref_frame_cost[INTRA_FRAME] +
@@ -1352,15 +1410,8 @@ int vp8_estimate_entropy_savings(VP8_COMP *cpi)
 
 
         // old costs
-        ref_frame_cost[INTRA_FRAME]   = vp8_cost_zero(cpi->prob_intra_coded);
-        ref_frame_cost[LAST_FRAME]    = vp8_cost_one(cpi->prob_intra_coded)
-                                        + vp8_cost_zero(cpi->prob_last_coded);
-        ref_frame_cost[GOLDEN_FRAME]  = vp8_cost_one(cpi->prob_intra_coded)
-                                        + vp8_cost_one(cpi->prob_last_coded)
-                                        + vp8_cost_zero(cpi->prob_gf_coded);
-        ref_frame_cost[ALTREF_FRAME]  = vp8_cost_one(cpi->prob_intra_coded)
-                                        + vp8_cost_one(cpi->prob_last_coded)
-                                        + vp8_cost_one(cpi->prob_gf_coded);
+        vp8_calc_ref_frame_costs(ref_frame_cost,cpi->prob_intra_coded,
+                                 cpi->prob_last_coded,cpi->prob_gf_coded);
 
         oldtotal =
             rfct[INTRA_FRAME] * ref_frame_cost[INTRA_FRAME] +
@@ -1384,7 +1435,7 @@ int vp8_estimate_entropy_savings(VP8_COMP *cpi)
 static void update_coef_probs(VP8_COMP *cpi)
 {
     int i = 0;
-    vp8_writer *const w = & cpi->bc;
+    vp8_writer *const w = cpi->bc;
     int savings = 0;
 
     vp8_clear_system_state(); //__asm emms;
@@ -1525,16 +1576,17 @@ static void put_delta_q(vp8_writer *bc, int delta_q)
         vp8_write_bit(bc, 0);
 }
 
-void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned long *size)
+void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned char * dest_end, unsigned long *size)
 {
     int i, j;
     VP8_HEADER oh;
     VP8_COMMON *const pc = & cpi->common;
-    vp8_writer *const bc = & cpi->bc;
+    vp8_writer *const bc = cpi->bc;
     MACROBLOCKD *const xd = & cpi->mb.e_mbd;
     int extra_bytes_packed = 0;
 
     unsigned char *cx_data = dest;
+    unsigned char *cx_data_end = dest_end;
     const int *mb_feature_data_bits;
 
     oh.show_frame = (int) pc->show_frame;
@@ -1543,6 +1595,10 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned long *size)
     oh.first_partition_length_in_bytes = 0;
 
     mb_feature_data_bits = vp8_mb_feature_data_bits;
+
+    bc[0].error = &pc->error;
+
+    validate_buffer(cx_data, 3, cx_data_end, &cpi->common.error);
     cx_data += 3;
 
 #if defined(SECTIONBITS_OUTPUT)
@@ -1559,6 +1615,8 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned long *size)
     {
         int v;
 
+        validate_buffer(cx_data, 7, cx_data_end, &cpi->common.error);
+
         // Start / synch code
         cx_data[0] = 0x9D;
         cx_data[1] = 0x01;
@@ -1572,10 +1630,11 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned long *size)
         cx_data[5] = v;
         cx_data[6] = v >> 8;
 
+
         extra_bytes_packed = 7;
         cx_data += extra_bytes_packed ;
 
-        vp8_start_encode(bc, cx_data);
+        vp8_start_encode(bc, cx_data, cx_data_end);
 
         // signal clr type
         vp8_write_bit(bc, pc->clr_type);
@@ -1583,24 +1642,24 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned long *size)
 
     }
     else
-        vp8_start_encode(bc, cx_data);
+        vp8_start_encode(bc, cx_data, cx_data_end);
 
 
     // Signal whether or not Segmentation is enabled
-    vp8_write_bit(bc, (xd->segmentation_enabled) ? 1 : 0);
+    vp8_write_bit(bc, xd->segmentation_enabled);
 
     // Indicate which features are enabled
     if (xd->segmentation_enabled)
     {
         // Signal whether or not the segmentation map is being updated.
-        vp8_write_bit(bc, (xd->update_mb_segmentation_map) ? 1 : 0);
-        vp8_write_bit(bc, (xd->update_mb_segmentation_data) ? 1 : 0);
+        vp8_write_bit(bc, xd->update_mb_segmentation_map);
+        vp8_write_bit(bc, xd->update_mb_segmentation_data);
 
         if (xd->update_mb_segmentation_data)
         {
             signed char Data;
 
-            vp8_write_bit(bc, (xd->mb_segement_abs_delta) ? 1 : 0);
+            vp8_write_bit(bc, xd->mb_segement_abs_delta);
 
             // For each segmentation feature (Quant and loop filter level)
             for (i = 0; i < MB_LVL_MAX; i++)
@@ -1657,7 +1716,7 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned long *size)
     vp8_write_literal(bc, pc->sharpness_level, 3);
 
     // Write out loop filter deltas applied at the MB level based on mode or ref frame (if they are enabled).
-    vp8_write_bit(bc, (xd->mode_ref_lf_delta_enabled) ? 1 : 0);
+    vp8_write_bit(bc, xd->mode_ref_lf_delta_enabled);
 
     if (xd->mode_ref_lf_delta_enabled)
     {
@@ -1783,9 +1842,9 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned long *size)
 
     vp8_clear_system_state();  //__asm emms;
 
-    //************************************************
-    // save a copy for later refresh
+    if (pc->refresh_entropy_probs == 0)
     {
+        // save a copy for later refresh
         vpx_memcpy(&cpi->common.lfc, &cpi->common.fc, sizeof(cpi->common.fc));
     }
 
@@ -1817,7 +1876,9 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned long *size)
 
     vp8_stop_encode(bc);
 
-    oh.first_partition_length_in_bytes = cpi->bc.pos;
+    cx_data += bc->pos;
+
+    oh.first_partition_length_in_bytes = cpi->bc->pos;
 
     /* update frame tag */
     {
@@ -1831,34 +1892,58 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned long *size)
         dest[2] = v >> 16;
     }
 
-    *size = VP8_HEADER_SIZE + extra_bytes_packed + cpi->bc.pos;
+    *size = VP8_HEADER_SIZE + extra_bytes_packed + cpi->bc->pos;
+
     cpi->partition_sz[0] = *size;
 
     if (pc->multi_token_partition != ONE_PARTITION)
     {
-        int num_part;
-        int asize;
-        num_part = 1 << pc->multi_token_partition;
+        int num_part = 1 << pc->multi_token_partition;
 
-        pack_tokens_into_partitions(cpi, cx_data + bc->pos, num_part, &asize);
+        /* partition size table at the end of first partition */
+        cpi->partition_sz[0] += 3 * (num_part - 1);
+        *size += 3 * (num_part - 1);
 
-        *size += asize;
+        validate_buffer(cx_data, 3 * (num_part - 1), cx_data_end,
+                        &pc->error);
+
+        for(i = 1; i < num_part + 1; i++)
+        {
+            cpi->bc[i].error = &pc->error;
+        }
+
+        pack_tokens_into_partitions(cpi, cx_data + 3 * (num_part - 1),
+                                    cx_data_end, num_part);
+
+        for(i = 1; i < num_part; i++)
+        {
+            cpi->partition_sz[i] = cpi->bc[i].pos;
+            write_partition_size(cx_data, cpi->partition_sz[i]);
+            cx_data += 3;
+            *size += cpi->partition_sz[i]; /* add to total */
+        }
+
+        /* add last partition to total size */
+        cpi->partition_sz[i] = cpi->bc[i].pos;
+        *size += cpi->partition_sz[i];
     }
     else
     {
-        vp8_start_encode(&cpi->bc2, cx_data + bc->pos);
+        bc[1].error = &pc->error;
+
+        vp8_start_encode(&cpi->bc[1], cx_data, cx_data_end);
 
 #if CONFIG_MULTITHREAD
         if (cpi->b_multi_threaded)
-            pack_mb_row_tokens(cpi, &cpi->bc2);
+            pack_mb_row_tokens(cpi, &cpi->bc[1]);
         else
 #endif
-            pack_tokens(&cpi->bc2, cpi->tok, cpi->tok_count);
+            pack_tokens(&cpi->bc[1], cpi->tok, cpi->tok_count);
 
-        vp8_stop_encode(&cpi->bc2);
+        vp8_stop_encode(&cpi->bc[1]);
 
-        *size += cpi->bc2.pos;
-        cpi->partition_sz[1] = cpi->bc2.pos;
+        *size += cpi->bc[1].pos;
+        cpi->partition_sz[1] = cpi->bc[1].pos;
     }
 }
 

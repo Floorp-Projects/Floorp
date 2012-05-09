@@ -13,18 +13,7 @@ let stylePanel;
 
 function waitForRuleView(aCallback)
 {
-  if (InspectorUI.ruleView) {
-    aCallback();
-    return;
-  }
-
-  let ruleViewFrame = InspectorUI.getToolIframe(InspectorUI.ruleViewObject);
-  ruleViewFrame.addEventListener("load", function(evt) {
-    ruleViewFrame.removeEventListener(evt.type, arguments.callee, true);
-    executeSoon(function() {
-      aCallback();
-    });
-  }, true);
+  InspectorUI.currentInspector.once("sidebaractivated-ruleview", aCallback);
 }
 
 function waitForEditorFocus(aParent, aCallback)
@@ -54,8 +43,8 @@ function openRuleView()
     // Open the rule view sidebar.
     waitForRuleView(testFocus);
 
-    InspectorUI.showSidebar();
-    InspectorUI.ruleButton.click();
+    InspectorUI.sidebar.show();
+    InspectorUI.sidebar.activatePanel("ruleview");
 
     testFocus();
   }, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
@@ -64,7 +53,7 @@ function openRuleView()
 
 function testFocus()
 {
-  let ruleViewFrame = InspectorUI.getToolIframe(InspectorUI.ruleViewObject);
+  let ruleViewFrame = InspectorUI.sidebar._tools["ruleview"].frame;
   let brace = ruleViewFrame.contentDocument.querySelectorAll(".ruleview-ruleclose")[0];
   waitForEditorFocus(brace.parentNode, function onNewElement(aEditor) {
     aEditor.input.value = "color";
@@ -89,7 +78,7 @@ function testFocus()
 
 function finishUp()
 {
-  InspectorUI.hideSidebar();
+  InspectorUI.sidebar.hide();
   InspectorUI.closeInspectorUI();
   doc = stylePanel = null;
   gBrowser.removeCurrentTab();

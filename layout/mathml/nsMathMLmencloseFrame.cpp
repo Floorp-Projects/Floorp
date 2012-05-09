@@ -236,7 +236,7 @@ nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   mencloseRect.x = mencloseRect.y = 0;
 
   if (IsToDraw(NOTATION_RADICAL)) {
-    rv = mMathMLChar[mRadicalCharIndex].Display(aBuilder, this, aLists);
+    rv = mMathMLChar[mRadicalCharIndex].Display(aBuilder, this, aLists, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRect rect;
@@ -249,7 +249,7 @@ nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   if (IsToDraw(NOTATION_LONGDIV)) {
-    rv = mMathMLChar[mLongDivCharIndex].Display(aBuilder, this, aLists);
+    rv = mMathMLChar[mLongDivCharIndex].Display(aBuilder, this, aLists, 1);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRect rect;

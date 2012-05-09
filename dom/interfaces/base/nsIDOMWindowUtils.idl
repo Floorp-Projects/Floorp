@@ -70,7 +70,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 
-[scriptable, uuid(c7f303a1-4f7b-4d38-a192-c3f0e25dadb1)]
+[scriptable, uuid(f75d0a14-e278-4716-a151-637862451a2f)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -198,6 +198,24 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   attribute boolean isFirstPaint;
 
+  /**
+   * Following modifiers are for sent*Event() except sendNative*Event().
+   * NOTE: MODIFIER_ALT, MODIFIER_CONTROL, MODIFIER_SHIFT and MODIFIER_META
+   *       are must be same values as nsIDOMNSEvent::*_MASK for backward
+   *       compatibility.
+   */
+  const long MODIFIER_ALT        = 0x0001;
+  const long MODIFIER_CONTROL    = 0x0002;
+  const long MODIFIER_SHIFT      = 0x0004;
+  const long MODIFIER_META       = 0x0008;
+  const long MODIFIER_ALTGRAPH   = 0x0010;
+  const long MODIFIER_CAPSLOCK   = 0x0020;
+  const long MODIFIER_FN         = 0x0040;
+  const long MODIFIER_NUMLOCK    = 0x0080;
+  const long MODIFIER_SCROLL     = 0x0100;
+  const long MODIFIER_SYMBOLLOCK = 0x0200;
+  const long MODIFIER_WIN        = 0x0400;
+
   /** Synthesize a mouse event. The event types supported are:
    *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu
    *
@@ -225,7 +243,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aY y offset in CSS pixels
    * @param aButton button to synthesize
    * @param aClickCount number of clicks that have been performed
-   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
    * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
    *                           during dispatch
    */
@@ -258,7 +276,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param rotationAngles array of angles in degrees for each touch to be sent
    * @param forces array of forces (floats from 0 to 1) for each touch to be sent
    * @param count number of touches in this set
-   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
    * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
    *                           during dispatch
    *
@@ -305,7 +323,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aScrollFlags flag bits --- see nsMouseScrollFlags in nsGUIEvent.h
    * @param aDelta the direction and amount to scroll (in lines or pixels,
    * depending on the event type)
-   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
    */
   void sendMouseScrollEvent(in AString aType,
                             in float aX,
@@ -328,18 +346,31 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aType event type
    * @param aKeyCode key code
    * @param aCharCode character code
-   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
-   * @param aPreventDefault if true, preventDefault() the event before dispatch
+   * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
+   * @param aAdditionalFlags special flags for the key event, see KEY_FLAG_*.
    *
    * @return false if the event had preventDefault() called on it,
    *               true otherwise.  In other words, true if and only if the
    *               default action was taken.
    */
+
+  // If this is set, preventDefault() the event before dispatch.
+  const unsigned long KEY_FLAG_PREVENT_DEFAULT   = 0x0001;
+
+  // if one of these flags is set, the KeyboardEvent.location will be the value.
+  // Otherwise, it will be computed from aKeyCode.
+  const unsigned long KEY_FLAG_LOCATION_STANDARD = 0x0010;
+  const unsigned long KEY_FLAG_LOCATION_LEFT     = 0x0020;
+  const unsigned long KEY_FLAG_LOCATION_RIGHT    = 0x0040;
+  const unsigned long KEY_FLAG_LOCATION_NUMPAD   = 0x0080;
+  const unsigned long KEY_FLAG_LOCATION_MOBILE   = 0x0100;
+  const unsigned long KEY_FLAG_LOCATION_JOYSTICK = 0x0200;
+
   boolean sendKeyEvent(in AString aType,
                        in long aKeyCode,
                        in long aCharCode,
                        in long aModifiers,
-                       [optional] in boolean aPreventDefault);
+                       [optional] in unsigned long aAdditionalFlags);
 
   /**
    * See nsIWidget::SynthesizeNativeKeyEvent
@@ -1110,4 +1141,12 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   [implicit_jscontext]
   readonly attribute jsval plugins;
+
+  /**
+   * Set the scrollport size for the purposes of clamping scroll positions for
+   * the root scroll frame of this document to be (aWidth,aHeight) in CSS pixels.
+   *
+   * The caller of this method must have UniversalXPConnect privileges.
+   */
+  void setScrollPositionClampingScrollPortSize(in float aWidth, in float aHeight);
 };

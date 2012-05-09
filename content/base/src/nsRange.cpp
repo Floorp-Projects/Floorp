@@ -62,6 +62,9 @@
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
 #include "nsFontFaceList.h"
+#include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
@@ -79,9 +82,6 @@ nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
     }                                                                              \
     if (!nsContentUtils::CanCallerAccess(node_)) {                                 \
       return NS_ERROR_DOM_SECURITY_ERR;                                            \
-    }                                                                              \
-    if (mIsDetached) {                                                             \
-      return NS_ERROR_DOM_INVALID_STATE_ERR;                                       \
     }                                                                              \
   PR_END_MACRO
 
@@ -242,6 +242,9 @@ nsRange::IsNodeSelected(nsINode* aNode, PRUint32 aStartOffset,
 nsRange::~nsRange() 
 {
   NS_ASSERTION(!IsInSelection(), "deleting nsRange that is in use");
+
+  // Maybe we can remove Detach() -- bug 702948.
+  Telemetry::Accumulate(Telemetry::DOM_RANGE_DETACHED, mIsDetached);
 
   // we want the side effects (releases and list removals)
   DoSetRange(nsnull, 0, nsnull, 0, nsnull);
@@ -647,9 +650,6 @@ nsRange::IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, bool* aResult)
 NS_IMETHODIMP
 nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
 {
-  if (mIsDetached)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-
   // our range is in a good state?
   if (!mIsPositioned) 
     return NS_ERROR_NOT_INITIALIZED;
@@ -665,7 +665,7 @@ nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
-  if (aOffset < 0 || aOffset > parent->Length()) {
+  if (aOffset < 0 || PRUint32(aOffset) > parent->Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
   
@@ -749,8 +749,7 @@ nsRange::DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
       if (newCommonAncestor) {
         RegisterCommonAncestor(newCommonAncestor);
       } else {
-        NS_ASSERTION(mIsDetached || !mIsPositioned,
-                     "unexpected disconnected nodes");
+        NS_ASSERTION(!mIsPositioned, "unexpected disconnected nodes");
         mInSelection = false;
       }
     }
@@ -838,8 +837,6 @@ nsRange::GetEndOffset(PRInt32* aEndOffset)
 NS_IMETHODIMP
 nsRange::GetCollapsed(bool* aIsCollapsed)
 {
-  if(mIsDetached)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -852,8 +849,6 @@ NS_IMETHODIMP
 nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
 {
   *aCommonParent = nsnull;
-  if(mIsDetached)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -929,7 +924,7 @@ nsRange::SetStart(nsINode* aParent, PRInt32 aOffset)
   nsINode* newRoot = IsValidBoundary(aParent);
   NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
-  if (aOffset < 0 || aOffset > aParent->Length()) {
+  if (aOffset < 0 || PRUint32(aOffset) > aParent->Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -993,7 +988,7 @@ nsRange::SetEnd(nsINode* aParent, PRInt32 aOffset)
   nsINode* newRoot = IsValidBoundary(aParent);
   NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
-  if (aOffset < 0 || aOffset > aParent->Length()) {
+  if (aOffset < 0 || PRUint32(aOffset) > aParent->Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -1043,8 +1038,6 @@ nsRange::SetEndAfter(nsIDOMNode* aSibling)
 NS_IMETHODIMP
 nsRange::Collapse(bool aToStart)
 {
-  if(mIsDetached)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -1496,9 +1489,6 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
     *aFragment = nsnull;
   }
 
-  if (IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-
   nsresult rv;
 
   nsCOMPtr<nsIDocument> doc = mStartParent->OwnerDoc();
@@ -1776,8 +1766,6 @@ nsRange::CompareBoundaryPoints(PRUint16 aHow, nsIDOMRange* aOtherRange,
   nsRange* otherRange = static_cast<nsRange*>(aOtherRange);
   NS_ENSURE_TRUE(otherRange, NS_ERROR_NULL_POINTER);
 
-  if(mIsDetached || otherRange->IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
   if (!mIsPositioned || !otherRange->IsPositioned())
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -1877,9 +1865,6 @@ nsRange::CloneParentsBetween(nsIDOMNode *aAncestor,
 NS_IMETHODIMP
 nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 {
-  if (IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-
   nsresult res;
   nsCOMPtr<nsIDOMNode> commonAncestor;
   res = GetCommonAncestorContainer(getter_AddRefs(commonAncestor));
@@ -2072,9 +2057,6 @@ nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 nsresult
 nsRange::CloneRange(nsRange** aReturn) const
 {
-  if(mIsDetached)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-
   if (aReturn == 0)
     return NS_ERROR_NULL_POINTER;
 
@@ -2099,9 +2081,9 @@ nsRange::CloneRange(nsIDOMRange** aReturn)
 }
 
 NS_IMETHODIMP
-nsRange::InsertNode(nsIDOMNode* aN)
+nsRange::InsertNode(nsIDOMNode* aNode)
 {
-  VALIDATE_ACCESS(aN);
+  VALIDATE_ACCESS(aNode);
   
   nsresult res;
   PRInt32 tStartOffset;
@@ -2109,51 +2091,63 @@ nsRange::InsertNode(nsIDOMNode* aN)
 
   nsCOMPtr<nsIDOMNode> tStartContainer;
   res = this->GetStartContainer(getter_AddRefs(tStartContainer));
-  if(NS_FAILED(res)) return res;
+  NS_ENSURE_SUCCESS(res, res);
+
+  // This is the node we'll be inserting before, and its parent
+  nsCOMPtr<nsIDOMNode> referenceNode;
+  nsCOMPtr<nsIDOMNode> referenceParentNode = tStartContainer;
 
   nsCOMPtr<nsIDOMText> startTextNode(do_QueryInterface(tStartContainer));
-  if (startTextNode)
-  {
-    nsCOMPtr<nsIDOMNode> tSCParentNode;
-    res = tStartContainer->GetParentNode(getter_AddRefs(tSCParentNode));
-    if(NS_FAILED(res)) return res;
-    NS_ENSURE_TRUE(tSCParentNode, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
-
-    PRInt32 tEndOffset;
-    GetEndOffset(&tEndOffset);
-
-    nsCOMPtr<nsIDOMNode> tEndContainer;
-    res = this->GetEndContainer(getter_AddRefs(tEndContainer));
-    if(NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNodeList> tChildList;
+  if (startTextNode) {
+    res = tStartContainer->GetParentNode(getter_AddRefs(referenceParentNode));
+    NS_ENSURE_SUCCESS(res, res);
+    NS_ENSURE_TRUE(referenceParentNode, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
 
     nsCOMPtr<nsIDOMText> secondPart;
     res = startTextNode->SplitText(tStartOffset, getter_AddRefs(secondPart));
-    if (NS_FAILED(res)) return res;
+    NS_ENSURE_SUCCESS(res, res);
 
-    nsCOMPtr<nsIDOMNode> tResultNode;
-    res = tSCParentNode->InsertBefore(aN, secondPart, getter_AddRefs(tResultNode));
-    if (NS_FAILED(res)) return res;
+    referenceNode = secondPart;
+  } else {
+    res = tStartContainer->GetChildNodes(getter_AddRefs(tChildList));
+    NS_ENSURE_SUCCESS(res, res);
 
-    if (tEndContainer == tStartContainer && tEndOffset != tStartOffset)
-      res = SetEnd(secondPart, tEndOffset - tStartOffset);
+    // find the insertion point in the DOM and insert the Node
+    res = tChildList->Item(tStartOffset, getter_AddRefs(referenceNode));
+    NS_ENSURE_SUCCESS(res, res);
+  }
 
-    return res;
-  }  
+  // We might need to update the end to include the new node (bug 433662)
+  PRInt32 newOffset;
 
-  nsCOMPtr<nsIDOMNodeList>tChildList;
-  res = tStartContainer->GetChildNodes(getter_AddRefs(tChildList));
-  if(NS_FAILED(res)) return res;
-  PRUint32 tChildListLength;
-  res = tChildList->GetLength(&tChildListLength);
-  if(NS_FAILED(res)) return res;
+  if (Collapsed()) {
+    if (referenceNode) {
+      newOffset = IndexOf(referenceNode);
+    } else {
+      PRUint32 length;
+      res = tChildList->GetLength(&length);
+      NS_ENSURE_SUCCESS(res, res);
+      newOffset = length;
+    }
 
-  // find the insertion point in the DOM and insert the Node
-  nsCOMPtr<nsIDOMNode>tChildNode;
-  res = tChildList->Item(tStartOffset, getter_AddRefs(tChildNode));
-  if(NS_FAILED(res)) return res;
-  
+    nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+    NS_ENSURE_STATE(node);
+    if (node->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+      newOffset += node->GetChildCount();
+    } else {
+      newOffset++;
+    }
+  }
+
   nsCOMPtr<nsIDOMNode> tResultNode;
-  return tStartContainer->InsertBefore(aN, tChildNode, getter_AddRefs(tResultNode));
+  res = referenceParentNode->InsertBefore(aNode, referenceNode, getter_AddRefs(tResultNode));
+  NS_ENSURE_SUCCESS(res, res);
+
+  if (Collapsed()) {
+    return SetEnd(referenceParentNode, newOffset);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2246,9 +2240,6 @@ nsRange::SurroundContents(nsIDOMNode* aNewParent)
 NS_IMETHODIMP
 nsRange::ToString(nsAString& aReturn)
 { 
-  if(mIsDetached)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-
   // clear the string
   aReturn.Truncate();
   
@@ -2340,17 +2331,8 @@ nsRange::ToString(nsAString& aReturn)
 NS_IMETHODIMP
 nsRange::Detach()
 {
-  if(mIsDetached)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-
-  if (IsInSelection()) {
-    ::InvalidateAllFrames(GetRegisteredCommonAncestor());
-  }
-
+  // No-op, but still set mIsDetached for telemetry (bug 702948)
   mIsDetached = true;
-
-  DoSetRange(nsnull, 0, nsnull, 0, nsnull);
-  
   return NS_OK;
 }
 

@@ -37,6 +37,7 @@
 INTL_UNICHARUTIL_UTIL_LCPPSRCS = \
 	nsUnicharUtils.cpp \
 	nsBidiUtils.cpp \
+	nsSpecialCasingData.cpp \
 	nsUnicodeProperties.cpp \
 	$(NULL)
 

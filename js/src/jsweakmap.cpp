@@ -45,9 +45,9 @@
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
-#include "jsgcmark.h"
 #include "jsweakmap.h"
 
+#include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 
 #include "jsgcinlines.h"
@@ -392,14 +392,15 @@ js_InitWeakMapClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = &obj->asGlobal();
+    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
 
-    JSObject *weakMapProto = global->createBlankPrototype(cx, &WeakMapClass);
+    RootedVarObject weakMapProto(cx, global->createBlankPrototype(cx, &WeakMapClass));
     if (!weakMapProto)
         return NULL;
 
-    JSFunction *ctor = global->createConstructor(cx, WeakMap_construct,
-                                                 CLASS_ATOM(cx, WeakMap), 0);
+    RootedVarFunction ctor(cx);
+    ctor = global->createConstructor(cx, WeakMap_construct,
+                                     CLASS_NAME(cx, WeakMap), 0);
     if (!ctor)
         return NULL;
 

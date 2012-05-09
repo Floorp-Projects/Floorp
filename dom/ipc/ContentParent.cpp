@@ -69,6 +69,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "IDBFactory.h"
+#include "IndexedDatabaseManager.h"
 #if defined(MOZ_SYDNEYAUDIO)
 #include "AudioParent.h"
 #endif
@@ -111,6 +112,7 @@
 #include "nsWidgetsCID.h"
 #include "nsISupportsPrimitives.h"
 #include "mozilla/dom/sms/SmsParent.h"
+#include "nsDebugImpl.h"
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
@@ -162,6 +164,7 @@ MemoryReportRequestParent::~MemoryReportRequestParent()
 }
 
 nsTArray<ContentParent*>* ContentParent::gContentParents;
+nsTArray<ContentParent*>* ContentParent::gPrivateContent;
 
 // The first content child has ID 1, so the chrome process can have ID 0.
 static PRUint64 gContentChildID = 1;
@@ -210,6 +213,7 @@ ContentParent::Init()
         obs->AddObserver(this, "memory-pressure", false);
         obs->AddObserver(this, "child-gc-request", false);
         obs->AddObserver(this, "child-cc-request", false);
+        obs->AddObserver(this, "last-pb-context-exited", false);
 #ifdef ACCESSIBILITY
         obs->AddObserver(this, "a11y-init-or-shutdown", false);
 #endif
@@ -307,6 +311,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         obs->RemoveObserver(static_cast<nsIObserver*>(this), NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-gc-request");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-cc-request");
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), "last-pb-context-exited");
 #ifdef ACCESSIBILITY
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "a11y-init-or-shutdown");
 #endif
@@ -335,6 +340,14 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         if (!gContentParents->Length()) {
             delete gContentParents;
             gContentParents = NULL;
+        }
+    }
+
+    if (gPrivateContent) {
+        gPrivateContent->RemoveElement(this);
+        if (!gPrivateContent->Length()) {
+            delete gPrivateContent;
+            gPrivateContent = NULL;
         }
     }
 
@@ -410,6 +423,10 @@ ContentParent::ContentParent()
     , mIsAlive(true)
     , mSendPermissionUpdates(false)
 {
+    // From this point on, NS_WARNING, NS_ASSERTION, etc. should print out the
+    // PID along with the warning.
+    nsDebugImpl::SetMultiprocessMode("Parent");
+
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content);
     mSubprocess->AsyncLaunch();
@@ -512,18 +529,18 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
 bool
 ContentParent::RecvGetIndexedDBDirectory(nsString* aDirectory)
 {
-    indexedDB::IDBFactory::NoteUsedByProcessType(GeckoProcessType_Content);
+    using namespace indexedDB;
 
-    nsCOMPtr<nsIFile> dbDirectory;
-    nsresult rv = indexedDB::IDBFactory::GetDirectory(getter_AddRefs(dbDirectory));
+    IDBFactory::NoteUsedByProcessType(GeckoProcessType_Content);
 
-    if (NS_FAILED(rv)) {
-        NS_ERROR("Failed to get IndexedDB directory");
+    nsRefPtr<IndexedDatabaseManager> mgr =
+        IndexedDatabaseManager::GetOrCreate();
+    if (!mgr) {
+        NS_ERROR("This should not fail!");
         return true;
     }
 
-    dbDirectory->GetPath(*aDirectory);
-
+    *aDirectory = mgr->GetBaseDirectory();
     return true;
 }
 
@@ -717,6 +734,9 @@ ContentParent::Observe(nsISupports* aSubject,
     }
     else if (!strcmp(aTopic, "child-cc-request")){
         SendCycleCollect();
+    }
+    else if (!strcmp(aTopic, "last-pb-context-exited")) {
+        unused << SendLastPrivateDocShellDestroyed();
     }
 #ifdef ACCESSIBILITY
     // Make sure accessibility is running in content process when accessibility
@@ -1167,7 +1187,8 @@ ContentParent::RecvAddGeolocationListener()
     if (!geo) {
       return true;
     }
-    geo->WatchPosition(this, nsnull, nsnull, &mGeolocationWatchID);
+    jsval dummy = JSVAL_VOID;
+    geo->WatchPosition(this, nsnull, dummy, nsnull, &mGeolocationWatchID);
   }
   return true;
 }
@@ -1225,6 +1246,25 @@ ContentParent::RecvScriptError(const nsString& aMessage,
     return true;
 
   svc->LogMessage(msg);
+  return true;
+}
+
+bool
+ContentParent::RecvPrivateDocShellsExist(const bool& aExist)
+{
+  if (!gPrivateContent)
+    gPrivateContent = new nsTArray<ContentParent*>;
+  if (aExist) {
+    gPrivateContent->AppendElement(this);
+  } else {
+    gPrivateContent->RemoveElement(this);
+    if (!gPrivateContent->Length()) {
+      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+      obs->NotifyObservers(nsnull, "last-pb-context-exited", nsnull);
+      delete gPrivateContent;
+      gPrivateContent = NULL;
+    }
+  }
   return true;
 }
 

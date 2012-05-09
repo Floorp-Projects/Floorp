@@ -55,8 +55,8 @@ extern "C" {
 #define VPX_CODEC_CAP_POSTPROC   0x40000 /**< Can postprocess decoded frame */
 #define VPX_CODEC_CAP_ERROR_CONCEALMENT   0x80000 /**< Can conceal errors due to
                                                        packet loss */
-#define VPX_CODEC_CAP_INPUT_PARTITION   0x100000 /**< Can receive encoded frames
-                                                    one partition at a time */
+#define VPX_CODEC_CAP_INPUT_FRAGMENTS   0x100000 /**< Can receive encoded frames
+                                                    one fragment at a time */
 
     /*! \brief Initialization-time Feature Enabling
      *
@@ -68,9 +68,9 @@ extern "C" {
 #define VPX_CODEC_USE_POSTPROC   0x10000 /**< Postprocess decoded frame */
 #define VPX_CODEC_USE_ERROR_CONCEALMENT 0x20000 /**< Conceal errors in decoded
                                                      frames */
-#define VPX_CODEC_USE_INPUT_PARTITION   0x40000 /**< The input frame should be
+#define VPX_CODEC_USE_INPUT_FRAGMENTS   0x40000 /**< The input frame should be
                                                     passed to the decoder one
-                                                    partition at a time */
+                                                    fragment at a time */
 
     /*!\brief Stream properties
      *
@@ -189,11 +189,13 @@ extern "C" {
      * generated, as appropriate. Encoded data \ref MUST be passed in DTS (decode
      * time stamp) order. Frames produced will always be in PTS (presentation
      * time stamp) order.
-     * If the decoder is configured with VPX_CODEC_USE_INPUT_PARTITION enabled,
-     * data and data_sz must contain at most one encoded partition. When no more
-     * data is available, this function should be called with NULL as data and 0
-     * as data_sz. The memory passed to this function must be available until
-     * the frame has been decoded.
+     * If the decoder is configured with VPX_CODEC_USE_INPUT_FRAGMENTS enabled,
+     * data and data_sz can contain a fragment of the encoded frame. Fragment #n
+     * must contain at least partition #n, but can also contain subsequent
+     * partitions (#n+1 - #n+i), and if so, fragments #n+1, .., #n+i must be
+     * empty. When no more data is available, this function should be called
+     * with NULL as data and 0 as data_sz. The memory passed to this function
+     * must be available until the frame has been decoded.
      *
      * \param[in] ctx          Pointer to this instance's context
      * \param[in] data         Pointer to this block of new coded data. If

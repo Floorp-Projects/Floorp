@@ -289,32 +289,3 @@ BEGIN_TEST(testDebugger_singleStepThrow)
         return JSTRAP_CONTINUE;
     }
 END_TEST(testDebugger_singleStepThrow)
-
-BEGIN_TEST(testDebugger_emptyObjectPropertyIterator)
-{
-    JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
-    JSScopeProperty *prop = NULL;
-    CHECK(!JS_PropertyIterator(obj, &prop));
-    CHECK(!prop);
-
-    return true;
-}
-END_TEST(testDebugger_emptyObjectPropertyIterator)
-
-BEGIN_TEST(testDebugger_nonEmptyObjectPropertyIterator)
-{
-    jsval v;
-    EVAL("({a: 15})", &v);
-    JSObject *obj = JSVAL_TO_OBJECT(v);
-    JSScopeProperty *prop = NULL;
-    CHECK(JS_PropertyIterator(obj, &prop));
-    JSPropertyDesc desc;
-    CHECK(JS_GetPropertyDesc(cx, obj, prop, &desc));
-    CHECK_EQUAL(JSVAL_IS_INT(desc.value), true);
-    CHECK_EQUAL(JSVAL_TO_INT(desc.value), 15);
-    CHECK(!JS_PropertyIterator(obj, &prop));
-    CHECK(!prop);
-
-    return true;
-}
-END_TEST(testDebugger_nonEmptyObjectPropertyIterator)

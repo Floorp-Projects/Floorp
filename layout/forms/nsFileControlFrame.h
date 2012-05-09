@@ -113,8 +113,8 @@ protected:
   public:
     NS_DECL_ISUPPORTS
     
-    MouseListener(nsFileControlFrame* aFrame) :
-      mFrame(aFrame)
+    MouseListener(nsFileControlFrame* aFrame)
+     : mFrame(aFrame) 
     {}
 
     void ForgetFrame() {
@@ -148,15 +148,21 @@ protected:
 
   class CaptureMouseListener: public MouseListener {
   public:
-    CaptureMouseListener(nsFileControlFrame* aFrame) : MouseListener(aFrame),
-                                                       mMode(0) {};
+    CaptureMouseListener(nsFileControlFrame* aFrame) 
+      : MouseListener(aFrame)
+      , mMode(0) 
+    {}
+
     NS_DECL_NSIDOMEVENTLISTENER
     PRUint32 mMode;
   };
   
   class BrowseMouseListener: public MouseListener {
   public:
-    BrowseMouseListener(nsFileControlFrame* aFrame) : MouseListener(aFrame) {};
+    BrowseMouseListener(nsFileControlFrame* aFrame) 
+      : MouseListener(aFrame) 
+    {}
+
     NS_DECL_NSIDOMEVENTLISTENER
 
     static bool IsValidDropData(nsIDOMDragEvent* aEvent);

@@ -160,7 +160,8 @@ extern "C" {
      * \param[in]    fmt       Format for the image
      * \param[in]    d_w       Width of the image
      * \param[in]    d_h       Height of the image
-     * \param[in]    align     Alignment, in bytes, of each row in the image.
+     * \param[in]    align     Alignment, in bytes, of the image buffer and
+     *                         each row in the image(stride).
      *
      * \return Returns a pointer to the initialized image descriptor. If the img
      *         parameter is non-null, the value of the img parameter will be

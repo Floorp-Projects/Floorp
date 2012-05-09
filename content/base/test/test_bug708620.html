@@ -26,8 +26,14 @@ var tests = [
   "file_bug708620.html"
 ];
 
+function resolveURL(relative) {
+  var a = document.createElement('a');
+  a.href = relative;
+  return a.href;
+}
+
 var expectedErrors = [
-  '[JavaScript Warning: "A form was submitted in the windows-1252 encoding which cannot encode all Unicode characters, so user input may get corrupted. To avoid this problem, the page should be changed so that the form is submitted in the UTF-8 encoding either by changing the encoding of the page itself to UTF-8 or by specifying accept-charset=utf-8 on the form element."]'
+  '[JavaScript Warning: "A form was submitted in the windows-1252 encoding which cannot encode all Unicode characters, so user input may get corrupted. To avoid this problem, the page should be changed so that the form is submitted in the UTF-8 encoding either by changing the encoding of the page itself to UTF-8 or by specifying accept-charset=utf-8 on the form element." {file: "' + resolveURL(tests[0]) + '" line: 1}]'
 ];
 
 function consoleError(msg) {

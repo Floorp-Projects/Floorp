@@ -37,14 +37,13 @@
 #ifndef nsScreen_h___
 #define nsScreen_h___
 
+#include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/Hal.h"
 #include "nsIDOMScreen.h"
 #include "nsISupports.h"
 #include "nsIScriptContext.h"
 #include "nsCOMPtr.h"
-#include "mozilla/dom/ScreenOrientation.h"
 #include "nsDOMEventTargetHelper.h"
-#include "mozilla/Observer.h"
 
 class nsIDocShell;
 class nsDeviceContext;
@@ -53,7 +52,7 @@ struct nsRect;
 // Script "screen" object
 class nsScreen : public nsDOMEventTargetHelper
                , public nsIDOMScreen
-               , public mozilla::hal::ScreenOrientationObserver
+               , public mozilla::hal::ScreenConfigurationObserver
 {
 public:
   static already_AddRefed<nsScreen> Create(nsPIDOMWindow* aWindow);
@@ -67,7 +66,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsScreen,
                                            nsDOMEventTargetHelper)
 
-  void Notify(const mozilla::dom::ScreenOrientationWrapper& aOrientation);
+  void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration);
 
 protected:
   nsDeviceContext* GetDeviceContext();

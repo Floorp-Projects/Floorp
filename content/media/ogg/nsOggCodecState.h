@@ -46,6 +46,9 @@
 #else
 #include <vorbis/codec.h>
 #endif
+#ifdef MOZ_OPUS
+#include <opus/opus.h>
+#endif
 #include <nsDeque.h>
 #include <nsTArray.h>
 #include <nsClassHashtable.h>
@@ -101,8 +104,9 @@ public:
   enum CodecType {
     TYPE_VORBIS=0,
     TYPE_THEORA=1,
-    TYPE_SKELETON=2,
-    TYPE_UNKNOWN=3
+    TYPE_OPUS=2,
+    TYPE_SKELETON=3,
+    TYPE_UNKNOWN=4
   };
 
   virtual ~nsOggCodecState();
@@ -317,6 +321,42 @@ private:
   // of all frames in the array. This enables us to determine their timestamps.
   void ReconstructTheoraGranulepos();
 
+};
+
+class nsOpusState : public nsOggCodecState {
+#ifdef MOZ_OPUS
+public:
+  nsOpusState(ogg_page* aBosPage);
+  virtual ~nsOpusState();
+
+  CodecType GetType() { return TYPE_OPUS; }
+  bool DecodeHeader(ogg_packet* aPacket);
+  PRInt64 Time(PRInt64 granulepos);
+  bool Init();
+  nsresult Reset();
+  bool IsHeader(ogg_packet* aPacket);
+  nsresult PageIn(ogg_page* aPage);
+
+  // Various fields from the Ogg Opus header.
+  int mRate;        // Sample rate the decoder uses (always 48 kHz).
+  int mNominalRate; // Original sample rate of the data (informational).
+  int mChannels;    // Number of channels the stream encodes.
+  int mPreSkip;     // Number of samples to strip after decoder reset.
+  float mGain;      // Gain (dB) to apply to decoder output.
+  int mChannelMapping; // Channel mapping family.
+  int mStreams;     // Number of packed streams in each packet.
+
+  OpusDecoder *mDecoder;
+
+private:
+
+  // Reconstructs the granulepos of Opus packets stored in the
+  // mUnstamped array. mUnstamped must be filled with consecutive packets from
+  // the stream, with the last packet having a known granulepos. Using this
+  // known granulepos, and the known frame numbers, we recover the granulepos
+  // of all frames in the array. This enables us to determine their timestamps.
+  void ReconstructGranulepos();
+#endif /* MOZ_OPUS */
 };
 
 // Constructs a 32bit version number out of two 16 bit major,minor

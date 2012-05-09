@@ -11,10 +11,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
-XPCOMUtils.defineLazyGetter(Services, "rs", function() {
-  return Cc["@mozilla.org/dom/dom-request-service;1"].getService(Ci.nsIDOMRequestService);
-});
-
 XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
   return Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
 });
@@ -44,12 +40,9 @@ WebappsRegistry.prototype = {
       return false;
 
     if (aManifest.installs_allowed_from) {
-      ok = false;
-      aManifest.installs_allowed_from.forEach(function(aOrigin) {
-        if (aOrigin == "*" || aOrigin == aInstallOrigin)
-          ok = true;
+      return aManifest.installs_allowed_from.some(function(aOrigin) {
+        return aOrigin == "*" || aOrigin == aInstallOrigin;
       });
-      return ok;
     }
     return true;
   },
@@ -64,27 +57,27 @@ WebappsRegistry.prototype = {
     let app = msg.app;
     switch (aMessage.name) {
       case "Webapps:Install:Return:OK":
-        Services.rs.fireSuccess(req, new WebappsApplication(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
+        Services.DOMRequest.fireSuccess(req, new WebappsApplication(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
                                                 app.installOrigin, app.installTime));
         break;
       case "Webapps:Install:Return:KO":
-        Services.rs.fireError(req, "DENIED");
+        Services.DOMRequest.fireError(req, "DENIED");
         break;
       case "Webapps:GetSelf:Return:OK":
         if (msg.apps.length) {
           app = msg.apps[0];
-          Services.rs.fireSuccess(req, new WebappsApplication(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
+          Services.DOMRequest.fireSuccess(req, new WebappsApplication(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
                                                   app.installOrigin, app.installTime));
         } else {
-          Services.rs.fireSuccess(req, null);
+          Services.DOMRequest.fireSuccess(req, null);
         }
         break;
       case "Webapps:GetInstalled:Return:OK":
-        Services.rs.fireSuccess(req, convertAppsArray(msg.apps, this._window));
+        Services.DOMRequest.fireSuccess(req, convertAppsArray(msg.apps, this._window));
         break;
       case "Webapps:GetSelf:Return:KO":
       case "Webapps:GetInstalled:Return:KO":
-        Services.rs.fireError(req, "ERROR");
+        Services.DOMRequest.fireError(req, "ERROR");
         break;
     }
     this.removeRequest(msg.requestID);
@@ -109,7 +102,7 @@ WebappsRegistry.prototype = {
           let installOrigin = this._getOrigin(this._window.location.href);
           let manifest = JSON.parse(xhr.responseText, installOrigin);
           if (!this.checkManifest(manifest, installOrigin)) {
-            Services.rs.fireError(request, "INVALID_MANIFEST");
+            Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
           } else {
             let receipts = (aParams && aParams.receipts && Array.isArray(aParams.receipts)) ? aParams.receipts : [];
             cpmm.sendAsyncMessage("Webapps:Install", { app: { installOrigin: installOrigin,
@@ -122,16 +115,16 @@ WebappsRegistry.prototype = {
                                                               requestID: requestID });
           }
         } catch(e) {
-          Services.rs.fireError(request, "MANIFEST_PARSE_ERROR");
+          Services.DOMRequest.fireError(request, "MANIFEST_PARSE_ERROR");
         }
       }
       else {
-        Services.rs.fireError(request, "MANIFEST_URL_ERROR");
+        Services.DOMRequest.fireError(request, "MANIFEST_URL_ERROR");
       }      
     }).bind(this), false);
 
     xhr.addEventListener("error", (function() {
-      Services.rs.fireError(request, "NETWORK_ERROR");
+      Services.DOMRequest.fireError(request, "NETWORK_ERROR");
     }).bind(this), false);
 
     xhr.send(null);
@@ -236,7 +229,7 @@ WebappsApplication.prototype = {
   launch: function(aStartPoint) {
     let request = this.createRequest();
     cpmm.sendAsyncMessage("Webapps:Launch", { origin: this._origin,
-                                              startPoint: aStartPoint,
+                                              startPoint: aStartPoint || "",
                                               oid: this._id,
                                               requestID: this.getRequestId(request) });
     return request;
@@ -257,10 +250,10 @@ WebappsApplication.prototype = {
       return;
     switch (aMessage.name) {
       case "Webapps:Uninstall:Return:OK":
-        Services.rs.fireSuccess(req, msg.origin);
+        Services.DOMRequest.fireSuccess(req, msg.origin);
         break;
       case "Webapps:Uninstall:Return:KO":
-        Services.rs.fireError(req, msg.origin);
+        Services.DOMRequest.fireError(req, msg.origin);
         break;
     }
     this.removeRequest(msg.requestID);
@@ -346,10 +339,10 @@ WebappsApplicationMgmt.prototype = {
       return;
     switch (aMessage.name) {
       case "Webapps:GetAll:Return:OK":
-        Services.rs.fireSuccess(req, convertAppsArray(msg.apps, this._window));
+        Services.DOMRequest.fireSuccess(req, convertAppsArray(msg.apps, this._window));
         break;
       case "Webapps:GetAll:Return:KO":
-        Services.rs.fireError(req, "DENIED");
+        Services.DOMRequest.fireError(req, "DENIED");
         break;
       case "Webapps:Install:Return:OK":
         if (this._oninstall) {

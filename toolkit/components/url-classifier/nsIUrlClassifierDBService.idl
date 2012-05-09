@@ -40,12 +40,10 @@
 
 %{C++
 #include "nsTArray.h"
-#include "Entries.h"
-#include "LookupCache.h"
+class nsUrlClassifierLookupResult;
 %}
-[ptr] native ResultArray(nsTArray<mozilla::safebrowsing::LookupResult>);
-[ptr] native CacheCompletionArray(nsTArray<mozilla::safebrowsing::CacheResult>);
-[ptr] native PrefixArray(mozilla::safebrowsing::PrefixArray);
+[ptr] native ResultArray(nsTArray<nsUrlClassifierLookupResult>);
+
 interface nsIUrlClassifierHashCompleter;
 
 // Interface for JS function callbacks
@@ -233,14 +231,14 @@ interface nsIUrlClassifierDBService : nsISupports
  * Interface for the actual worker thread.  Implementations of this need not
  * be thread aware and just work on the database.
  */
-[scriptable, uuid(0445be75-b114-43ea-89dc-aa16af26e77e)]
+[scriptable, uuid(2af84c09-269e-4fc2-b28f-af56717db118)]
 interface nsIUrlClassifierDBServiceWorker : nsIUrlClassifierDBService
 {
   // Provide a way to forcibly close the db connection.
   void closeDb();
 
-  [noscript]void cacheCompletions(in CacheCompletionArray completions);
-  [noscript]void cacheMisses(in PrefixArray misses);
+  // Cache the results of a hash completion.
+  [noscript]void cacheCompletions(in ResultArray entries);
 };
 
 /**
@@ -249,7 +247,7 @@ interface nsIUrlClassifierDBServiceWorker : nsIUrlClassifierDBService
  * lookup to provide a set of possible results, which the main thread
  * may need to expand using an nsIUrlClassifierCompleter.
  */
-[uuid(b903dc8f-dff1-42fe-894b-36e7a59bb801)]
+[uuid(f1dc83c6-ad43-4f0f-a809-fd43de7de8a4)]
 interface nsIUrlClassifierLookupCallback : nsISupports
 {
   /**

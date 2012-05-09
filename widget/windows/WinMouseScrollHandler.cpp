@@ -795,10 +795,10 @@ MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(nsWindow* aWindow,
      aWindow, (aMessage == MOZ_WM_VSCROLL) ? "V" : "H",
      aWParam, aLParam, scrollEvent.refPoint.x, scrollEvent.refPoint.y,
      scrollEvent.delta, scrollEvent.scrollFlags,
-     GetBoolName(scrollEvent.isShift),
-     GetBoolName(scrollEvent.isControl),
-     GetBoolName(scrollEvent.isAlt),
-     GetBoolName(scrollEvent.isMeta)));
+     GetBoolName(scrollEvent.IsShift()),
+     GetBoolName(scrollEvent.IsControl()),
+     GetBoolName(scrollEvent.IsAlt()),
+     GetBoolName(scrollEvent.IsMeta())));
 
   DispatchEvent(aWindow, scrollEvent);
 }
@@ -966,10 +966,10 @@ MouseScrollHandler::LastEventInfo::InitMouseScrollEvent(
      "isMeta: %s }, mRemainingDeltaForScroll: %d",
      aWindow, aMouseScrollEvent.refPoint.x, aMouseScrollEvent.refPoint.y,
      aMouseScrollEvent.delta, aMouseScrollEvent.scrollFlags,
-     GetBoolName(aMouseScrollEvent.isShift),
-     GetBoolName(aMouseScrollEvent.isControl),
-     GetBoolName(aMouseScrollEvent.isAlt),
-     GetBoolName(aMouseScrollEvent.isMeta), mRemainingDeltaForScroll));
+     GetBoolName(aMouseScrollEvent.IsShift()),
+     GetBoolName(aMouseScrollEvent.IsControl()),
+     GetBoolName(aMouseScrollEvent.IsAlt()),
+     GetBoolName(aMouseScrollEvent.IsMeta()), mRemainingDeltaForScroll));
 
   return (aMouseScrollEvent.delta != 0);
 }
@@ -1036,10 +1036,10 @@ MouseScrollHandler::LastEventInfo::InitMousePixelScrollEvent(
      "isMeta: %s }, mRemainingDeltaForScroll: %d",
      aWindow, aPixelScrollEvent.refPoint.x, aPixelScrollEvent.refPoint.y,
      aPixelScrollEvent.delta, aPixelScrollEvent.scrollFlags,
-     GetBoolName(aPixelScrollEvent.isShift),
-     GetBoolName(aPixelScrollEvent.isControl),
-     GetBoolName(aPixelScrollEvent.isAlt),
-     GetBoolName(aPixelScrollEvent.isMeta), mRemainingDeltaForPixel));
+     GetBoolName(aPixelScrollEvent.IsShift()),
+     GetBoolName(aPixelScrollEvent.IsControl()),
+     GetBoolName(aPixelScrollEvent.IsAlt()),
+     GetBoolName(aPixelScrollEvent.IsMeta()), mRemainingDeltaForPixel));
 
   return (aPixelScrollEvent.delta != 0);
 }

@@ -60,6 +60,8 @@
 #include "nsTWeakRef.h"
 #include "nsCrashOnException.h"
 
+using namespace mozilla;
+
 #define NP_POPUP_API_VERSION 16
 
 #define nsMajorVersion(v)       (((PRInt32)(v) >> 16) & 0xffff)

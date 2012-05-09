@@ -5,7 +5,9 @@
 package org.mozilla.gecko.sync.repositories.android;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.json.simple.JSONArray;
 import org.mozilla.gecko.db.BrowserContract;
@@ -14,6 +16,7 @@ import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -79,10 +82,13 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     context.getContentResolver().delete(uri, EXCLUDE_SPECIAL_GUIDS_WHERE_CLAUSE, null);
   }
 
+  private String[] GUID_AND_ID = new String[] { BrowserContract.Bookmarks.GUID,
+                                                BrowserContract.Bookmarks._ID };
+
   protected Cursor getGuidsIDsForFolders() throws NullCursorException {
     // Exclude "places" and "tags", in case they've ended up in the DB.
     String where = BOOKMARK_IS_FOLDER + " AND " + GUID_NOT_TAGS_OR_PLACES;
-    return queryHelper.safeQuery(".getGuidsIDsForFolders", null, where, null, null);
+    return queryHelper.safeQuery(".getGuidsIDsForFolders", GUID_AND_ID, where, null, null);
   }
 
   /**
@@ -94,9 +100,29 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
    *        A sequence of GUID strings.
    */
   public int updatePositions(ArrayList<String> childArray) {
-    Logger.debug(LOG_TAG, "Updating positions for " + childArray.size() + " items.");
-    String[] args = childArray.toArray(new String[childArray.size()]);
+    final int size = childArray.size();
+    if (size == 0) {
+      return 0;
+    }
+
+    Logger.debug(LOG_TAG, "Updating positions for " + size + " items.");
+    String[] args = childArray.toArray(new String[size]);
     return context.getContentResolver().update(getPositionsUri(), new ContentValues(), null, args);
+  }
+
+  public int bumpModifiedByGUID(Collection<String> ids, long modified) {
+    final int size = ids.size();
+    if (size == 0) {
+      return 0;
+    }
+
+    Logger.debug(LOG_TAG, "Bumping modified for " + size + " items to " + modified);
+    String where = RepoUtils.computeSQLInClause(size, BrowserContract.Bookmarks.GUID);
+    String[] selectionArgs = ids.toArray(new String[size]);
+    ContentValues values = new ContentValues();
+    values.put(BrowserContract.Bookmarks.DATE_MODIFIED, modified);
+
+    return context.getContentResolver().update(getUri(), values, where, selectionArgs);
   }
 
   /**
@@ -119,7 +145,49 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
       cv.put(BrowserContract.Bookmarks.POSITION, position);
     }
     updateByGuid(guid, cv);
-  } 
+  }
+
+  protected Map<String, Long> idsForGUIDs(String[] guids) throws NullCursorException {
+    final String where = RepoUtils.computeSQLInClause(guids.length, BrowserContract.Bookmarks.GUID);
+    Cursor c = queryHelper.safeQuery(".idsForGUIDs", GUID_AND_ID, where, guids, null);
+    try {
+      HashMap<String, Long> out = new HashMap<String, Long>();
+      if (!c.moveToFirst()) {
+        return out;
+      }
+      final int guidIndex = c.getColumnIndexOrThrow(BrowserContract.Bookmarks.GUID);
+      final int idIndex = c.getColumnIndexOrThrow(BrowserContract.Bookmarks._ID);
+      while (!c.isAfterLast()) {
+        out.put(c.getString(guidIndex), c.getLong(idIndex));
+        c.moveToNext();
+      }
+      return out;
+    } finally {
+      c.close();
+    }
+  }
+
+  /**
+   * Move the children of each source folder to the destination folder.
+   * Bump the modified time of each child.
+   * The caller should bump the modified time of the destination if desired.
+   *
+   * @param from the source folders.
+   * @param to the destination folder.
+   * @return the number of updated rows.
+   */
+  protected int moveChildren(String[] fromIDs, long to) {
+    long now = System.currentTimeMillis();
+    long pos = -1;
+
+    ContentValues cv = new ContentValues();
+    cv.put(BrowserContract.Bookmarks.PARENT, to);
+    cv.put(BrowserContract.Bookmarks.DATE_MODIFIED, now);
+    cv.put(BrowserContract.Bookmarks.POSITION, pos);
+
+    final String where = RepoUtils.computeSQLInClause(fromIDs.length, BrowserContract.Bookmarks.PARENT);
+    return context.getContentResolver().update(getUri(), cv, where, fromIDs);
+  }
   
   /*
    * Verify that all special GUIDs are present and that they aren't marked as deleted.
@@ -182,7 +250,7 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     record.title = AndroidBrowserBookmarksRepositorySession.SPECIAL_GUIDS_MAP.get(guid);
     record.type = "folder";
     record.androidParentID = parentId;
-    return(RepoUtils.getAndroidIdFromUri(insert(record)));
+    return ContentUris.parseId(insert(record));
   }
 
   @Override

@@ -39,7 +39,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, uuid(def974c3-b491-481b-bc67-29174af4b26a)]
+[scriptable, uuid(229244a6-0515-43bc-8218-9a1b1774959f)]
 interface nsIDOMKeyEvent : nsIDOMUIEvent
 {
   const unsigned long DOM_VK_CANCEL         = 0x03;
@@ -200,4 +200,15 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
                                          in boolean metaKeyArg,
                                          in unsigned long keyCodeArg,
                                          in unsigned long charCodeArg);
+
+  bool getModifierState(in DOMString keyArg);
+
+  const unsigned long DOM_KEY_LOCATION_STANDARD = 0x00;
+  const unsigned long DOM_KEY_LOCATION_LEFT     = 0x01;
+  const unsigned long DOM_KEY_LOCATION_RIGHT    = 0x02;
+  const unsigned long DOM_KEY_LOCATION_NUMPAD   = 0x03;
+  const unsigned long DOM_KEY_LOCATION_MOBILE   = 0x04;
+  const unsigned long DOM_KEY_LOCATION_JOYSTICK = 0x05;
+
+  readonly attribute unsigned long location;
 };

@@ -56,6 +56,7 @@ DIRS	= \
   name \
   pivot \
   relations \
+  role \
   selectable \
   states \
   table \
@@ -92,17 +93,12 @@ _TEST_FILES =\
 		states.js \
 		table.js \
 		value.js \
-		test_aria_role_article.html \
-		test_aria_role_equation.html \
-		test_aria_roles.html \
-		test_aria_roles.xul \
 		test_aria_token_attrs.html \
 		test_bug420863.html \
 		test_descr.html \
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleImage.html \
 		test_OuterDocAccessible.html \
-		test_role_nsHyperTextAcc.html \
 		test_textboxes.html \
 		test_textboxes.xul \
 		testTextboxes.js \

@@ -119,7 +119,7 @@ Recompiler::patchNative(JSCompartment *compartment, JITChunk *chunk, StackFrame 
     fp->setRejoin(StubRejoin(rejoin));
 
     /* :XXX: We might crash later if this fails. */
-    compartment->jaegerCompartment()->orphanedNativeFrames.append(fp);
+    compartment->rt->jaegerRuntime().orphanedNativeFrames.append(fp);
 
     DebugOnly<bool> found = false;
 
@@ -156,7 +156,7 @@ Recompiler::patchNative(JSCompartment *compartment, JITChunk *chunk, StackFrame 
         }
 
         /* :XXX: We leak the pool if this fails. Oh well. */
-        compartment->jaegerCompartment()->orphanedNativePools.append(stub.pool);
+        compartment->rt->jaegerRuntime().orphanedNativePools.append(stub.pool);
 
         /* Mark as stolen in case there are multiple calls on the stack. */
         stub.pool = NULL;
@@ -321,12 +321,15 @@ Recompiler::expandInlineFrames(JSCompartment *compartment,
 void
 ExpandInlineFrames(JSCompartment *compartment)
 {
-    if (!compartment || !compartment->hasJaegerCompartment())
+    if (!compartment || !compartment->rt->hasJaegerRuntime())
         return;
 
-    for (VMFrame *f = compartment->jaegerCompartment()->activeFrame();
+    for (VMFrame *f = compartment->rt->jaegerRuntime().activeFrame();
          f != NULL;
          f = f->previous) {
+
+        if (f->entryfp->compartment() != compartment)
+            continue;
 
         if (f->regs.inlined())
             mjit::Recompiler::expandInlineFrames(compartment, f->fp(), f->regs.inlined(), NULL, f);
@@ -357,14 +360,19 @@ ExpandInlineFrames(JSCompartment *compartment)
 void
 ClearAllFrames(JSCompartment *compartment)
 {
-    if (!compartment || !compartment->hasJaegerCompartment())
+    if (!compartment || !compartment->rt->hasJaegerRuntime())
         return;
 
     ExpandInlineFrames(compartment);
 
-    for (VMFrame *f = compartment->jaegerCompartment()->activeFrame();
+    compartment->types.recompilations++;
+
+    for (VMFrame *f = compartment->rt->jaegerRuntime().activeFrame();
          f != NULL;
-         f = f->previous) {
+         f = f->previous)
+    {
+        if (f->entryfp->compartment() != compartment)
+            continue;
 
         Recompiler::patchFrame(compartment, f, f->fp()->script());
 
@@ -423,10 +431,10 @@ Recompiler::clearStackReferences(FreeOp *fop, JSScript *script)
 
     // Find all JIT'd stack frames to account for return addresses that will
     // need to be patched after recompilation.
-    for (VMFrame *f = comp->jaegerCompartment()->activeFrame();
+    for (VMFrame *f = fop->runtime()->jaegerRuntime().activeFrame();
          f != NULL;
-         f = f->previous) {
-
+         f = f->previous)
+    {
         // Scan all frames owned by this VMFrame.
         StackFrame *end = f->entryfp->prev();
         StackFrame *next = NULL;
@@ -470,9 +478,10 @@ Recompiler::clearStackReferencesAndChunk(FreeOp *fop, JSScript *script,
         // we need to make sure all JIT code for the script is purged, as
         // otherwise we will have orphaned the native stub but pointers to it
         // still exist in the containing chunk.
-        for (VMFrame *f = script->compartment()->jaegerCompartment()->activeFrame();
+        for (VMFrame *f = fop->runtime()->jaegerRuntime().activeFrame();
              f != NULL;
-             f = f->previous) {
+             f = f->previous)
+        {
             if (f->fp()->script() == script) {
                 JS_ASSERT(f->stubRejoin != REJOIN_NATIVE &&
                           f->stubRejoin != REJOIN_NATIVE_LOWERED &&

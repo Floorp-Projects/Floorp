@@ -236,7 +236,7 @@ class nsLineLink {
  * enough state to support incremental reflow of the frames, event handling
  * for the frames, and rendering of the frames.
  */
-class nsLineBox : public nsLineLink {
+class nsLineBox MOZ_FINAL : public nsLineLink {
 private:
   nsLineBox(nsIFrame* aFrame, PRInt32 aCount, bool aIsBlock);
   ~nsLineBox();

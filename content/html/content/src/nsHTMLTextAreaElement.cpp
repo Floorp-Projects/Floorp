@@ -229,6 +229,8 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 
+  virtual nsIDOMNode* AsDOMNode() { return this; }
+
   // nsIConstraintValidation
   bool     IsTooLong();
   bool     IsValueMissing() const;
@@ -257,9 +259,13 @@ protected:
   bool                     mCanShowInvalidUI;
   /** Whether we should make :-moz-ui-valid apply on the element. **/
   bool                     mCanShowValidUI;
+  
+  void FireChangeEventIfNeeded();
+  
+  nsString mFocusedValue;
 
   /** The state of the text editor (selection controller and the editor) **/
-  nsRefPtr<nsTextEditorState> mState;
+  nsTextEditorState mState;
 
   NS_IMETHOD SelectAll(nsPresContext* aPresContext);
   /**
@@ -333,7 +339,7 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNode
     mDisabledChanged(false),
     mCanShowInvalidUI(true),
     mCanShowValidUI(true),
-    mState(new nsTextEditorState(this))
+    mState(this)
 {
   AddMutationObserver(this);
 
@@ -352,11 +358,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLTextAreaElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLTextAreaElement,
                                                 nsGenericHTMLFormElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mControllers)
+  tmp->mState.Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLTextAreaElement,
                                                   nsGenericHTMLFormElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mControllers)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mState, nsTextEditorState)
+  tmp->mState.Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLTextAreaElement, nsGenericElement) 
@@ -498,76 +505,76 @@ nsHTMLTextAreaElement::GetValue(nsAString& aValue)
 void
 nsHTMLTextAreaElement::GetValueInternal(nsAString& aValue, bool aIgnoreWrap) const
 {
-  mState->GetValue(aValue, aIgnoreWrap);
+  mState.GetValue(aValue, aIgnoreWrap);
 }
 
 NS_IMETHODIMP_(nsIEditor*)
 nsHTMLTextAreaElement::GetTextEditor()
 {
-  return mState->GetEditor();
+  return mState.GetEditor();
 }
 
 NS_IMETHODIMP_(nsISelectionController*)
 nsHTMLTextAreaElement::GetSelectionController()
 {
-  return mState->GetSelectionController();
+  return mState.GetSelectionController();
 }
 
 NS_IMETHODIMP_(nsFrameSelection*)
 nsHTMLTextAreaElement::GetConstFrameSelection()
 {
-  return mState->GetConstFrameSelection();
+  return mState.GetConstFrameSelection();
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::BindToFrame(nsTextControlFrame* aFrame)
 {
-  return mState->BindToFrame(aFrame);
+  return mState.BindToFrame(aFrame);
 }
 
 NS_IMETHODIMP_(void)
 nsHTMLTextAreaElement::UnbindFromFrame(nsTextControlFrame* aFrame)
 {
   if (aFrame) {
-    mState->UnbindFromFrame(aFrame);
+    mState.UnbindFromFrame(aFrame);
   }
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::CreateEditor()
 {
-  return mState->PrepareEditor();
+  return mState.PrepareEditor();
 }
 
 NS_IMETHODIMP_(nsIContent*)
 nsHTMLTextAreaElement::GetRootEditorNode()
 {
-  return mState->GetRootNode();
+  return mState.GetRootNode();
 }
 
 NS_IMETHODIMP_(nsIContent*)
 nsHTMLTextAreaElement::CreatePlaceholderNode()
 {
-  NS_ENSURE_SUCCESS(mState->CreatePlaceholderNode(), nsnull);
-  return mState->GetPlaceholderNode();
+  NS_ENSURE_SUCCESS(mState.CreatePlaceholderNode(), nsnull);
+  return mState.GetPlaceholderNode();
 }
 
 NS_IMETHODIMP_(nsIContent*)
 nsHTMLTextAreaElement::GetPlaceholderNode()
 {
-  return mState->GetPlaceholderNode();
+  return mState.GetPlaceholderNode();
 }
 
 NS_IMETHODIMP_(void)
 nsHTMLTextAreaElement::UpdatePlaceholderText(bool aNotify)
 {
-  mState->UpdatePlaceholderText(aNotify);
+  mState.UpdatePlaceholderText(aNotify);
 }
 
 NS_IMETHODIMP_(void)
 nsHTMLTextAreaElement::SetPlaceholderClass(bool aVisible, bool aNotify)
 {
-  mState->SetPlaceholderClass(aVisible, aNotify);
+  mState.SetPlaceholderClass(aVisible, aNotify);
 }
 
 nsresult
@@ -578,7 +585,7 @@ nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
   // nsTextControlFrame::UpdateValueDisplay retrieves the correct value
   // if needed.
   SetValueChanged(true);
-  mState->SetValue(aValue, aUserInput);
+  mState.SetValue(aValue, aUserInput);
 
   return NS_OK;
 }
@@ -586,7 +593,9 @@ nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::SetValue(const nsAString& aValue)
 {
-  return SetValueInternal(aValue, false);
+  SetValueInternal(aValue, false);
+  GetValueInternal(mFocusedValue, true);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -605,8 +614,8 @@ nsHTMLTextAreaElement::SetValueChanged(bool aValueChanged)
   bool previousValue = mValueChanged;
 
   mValueChanged = aValueChanged;
-  if (!aValueChanged && !mState->IsEmpty()) {
-    mState->EmptyValue();
+  if (!aValueChanged && !mState.IsEmpty()) {
+    mState.EmptyValue();
   }
 
   if (mValueChanged != previousValue) {
@@ -730,16 +739,28 @@ nsHTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // Fire onchange (if necessary), before we do the blur, bug 370521.
   if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
-    nsIFrame* primaryFrame = GetPrimaryFrame();
-    if (primaryFrame) {
-      nsITextControlFrame* textFrame = do_QueryFrame(primaryFrame);
-      if (textFrame) {
-        textFrame->CheckFireOnChange();
-      }
-    }
+    FireChangeEventIfNeeded();
   }
 
   return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
+}
+
+void
+nsHTMLTextAreaElement::FireChangeEventIfNeeded()
+{
+  nsString value;
+  GetValueInternal(value, true);
+
+  if (mFocusedValue.Equals(value)) {
+    return;
+  }
+
+  // Dispatch the change event.
+  mFocusedValue = value;
+  nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
+                                       static_cast<nsIContent*>(this),
+                                       NS_LITERAL_STRING("change"), true, 
+                                       false);
 }
 
 nsresult
@@ -754,6 +775,7 @@ nsHTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
       // If the invalid UI is shown, we should show it while focusing (and
       // update). Otherwise, we should not.
+      GetValueInternal(mFocusedValue, true);
       mCanShowInvalidUI = !IsValid() && ShouldShowValidityUI();
 
       // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
@@ -848,8 +870,8 @@ nsHTMLTextAreaElement::GetSelectionStart(PRInt32 *aSelectionStart)
   PRInt32 selEnd;
   nsresult rv = GetSelectionRange(aSelectionStart, &selEnd);
 
-  if (NS_FAILED(rv) && mState->IsSelectionCached()) {
-    *aSelectionStart = mState->GetSelectionProperties().mStart;
+  if (NS_FAILED(rv) && mState.IsSelectionCached()) {
+    *aSelectionStart = mState.GetSelectionProperties().mStart;
     return NS_OK;
   }
   return rv;
@@ -858,8 +880,8 @@ nsHTMLTextAreaElement::GetSelectionStart(PRInt32 *aSelectionStart)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetSelectionStart(PRInt32 aSelectionStart)
 {
-  if (mState->IsSelectionCached()) {
-    mState->GetSelectionProperties().mStart = aSelectionStart;
+  if (mState.IsSelectionCached()) {
+    mState.GetSelectionProperties().mStart = aSelectionStart;
     return NS_OK;
   }
 
@@ -884,8 +906,8 @@ nsHTMLTextAreaElement::GetSelectionEnd(PRInt32 *aSelectionEnd)
   PRInt32 selStart;
   nsresult rv = GetSelectionRange(&selStart, aSelectionEnd);
 
-  if (NS_FAILED(rv) && mState->IsSelectionCached()) {
-    *aSelectionEnd = mState->GetSelectionProperties().mEnd;
+  if (NS_FAILED(rv) && mState.IsSelectionCached()) {
+    *aSelectionEnd = mState.GetSelectionProperties().mEnd;
     return NS_OK;
   }
   return rv;
@@ -894,8 +916,8 @@ nsHTMLTextAreaElement::GetSelectionEnd(PRInt32 *aSelectionEnd)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
-  if (mState->IsSelectionCached()) {
-    mState->GetSelectionProperties().mEnd = aSelectionEnd;
+  if (mState.IsSelectionCached()) {
+    mState.GetSelectionProperties().mEnd = aSelectionEnd;
     return NS_OK;
   }
 
@@ -960,8 +982,8 @@ nsHTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection)
   }
 
   if (NS_FAILED(rv)) {
-    if (mState->IsSelectionCached()) {
-      DirectionToName(mState->GetSelectionProperties().mDirection, aDirection);
+    if (mState.IsSelectionCached()) {
+      DirectionToName(mState.GetSelectionProperties().mDirection, aDirection);
       return NS_OK;
     }
   }
@@ -971,14 +993,14 @@ nsHTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection)
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection) {
-  if (mState->IsSelectionCached()) {
+  if (mState.IsSelectionCached()) {
     nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eNone;
     if (aDirection.EqualsLiteral("forward")) {
       dir = nsITextControlFrame::eForward;
     } else if (aDirection.EqualsLiteral("backward")) {
       dir = nsITextControlFrame::eBackward;
     }
-    mState->GetSelectionProperties().mDirection = dir;
+    mState.GetSelectionProperties().mDirection = dir;
     return NS_OK;
   }
 
@@ -1293,7 +1315,7 @@ nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     if (aName == nsGkAtoms::readonly) {
       UpdateEditableState(aNotify);
-      mState->UpdateEditableState(aNotify);
+      mState.UpdateEditableState(aNotify);
     }
     UpdateState(aNotify);
   }
@@ -1525,20 +1547,20 @@ NS_IMETHODIMP_(void)
 nsHTMLTextAreaElement::GetTextEditorValue(nsAString& aValue,
                                           bool aIgnoreWrap) const
 {
-  mState->GetValue(aValue, aIgnoreWrap);
+  mState.GetValue(aValue, aIgnoreWrap);
 }
 
 NS_IMETHODIMP_(void)
 nsHTMLTextAreaElement::SetTextEditorValue(const nsAString& aValue,
                                           bool aUserInput)
 {
-  mState->SetValue(aValue, aUserInput);
+  mState.SetValue(aValue, aUserInput);
 }
 
 NS_IMETHODIMP_(void)
 nsHTMLTextAreaElement::InitializeKeyboardEventListeners()
 {
-  mState->InitializeKeyboardEventListeners();
+  mState.InitializeKeyboardEventListeners();
 }
 
 NS_IMETHODIMP_(void)
@@ -1559,7 +1581,7 @@ nsHTMLTextAreaElement::OnValueChanged(bool aNotify)
 NS_IMETHODIMP_(bool)
 nsHTMLTextAreaElement::HasCachedSelection()
 {
-  return mState->IsSelectionCached();
+  return mState.IsSelectionCached();
 }
 
 void

@@ -7,7 +7,7 @@
  *   Mihai Sucan <mihai.sucan@gmail.com>
  */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-bug-621644-jsterm-dollar.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-621644-jsterm-dollar.html";
 
 function tabLoad(aEvent) {
   browser.removeEventListener(aEvent.type, arguments.callee, true);

@@ -41,7 +41,7 @@
 
         request = objectStore.put({ id: 5, index: 6 });
         request.onsuccess = unexpectedSuccessHandler;
-        request.onerror = new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
+        request.onerror = new ExpectError("ConstraintError");
         event = yield;
 
         event.preventDefault();
@@ -58,8 +58,7 @@
 
           request = cursor.update(cursor.value);
           request.onsuccess = unexpectedSuccessHandler;
-          request.onerror =
-            new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
+          request.onerror = new ExpectError("ConstraintError");
         };
 
         yield;

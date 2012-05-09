@@ -158,7 +158,9 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
   NS_ASSERTION(svgElement, "Content is not an SVG 'svg' element!");
 #endif
 
-  AddStateBits(NS_STATE_IS_OUTER_SVG);
+  AddStateBits(NS_STATE_IS_OUTER_SVG |
+               NS_FRAME_FONT_INFLATION_CONTAINER |
+               NS_FRAME_FONT_INFLATION_FLOW_ROOT);
 
   // Check for conditional processing attributes here rather than in
   // nsCSSFrameConstructor::FindSVGData because we want to avoid
@@ -287,7 +289,7 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
     return ratio;
   }
 
-  if (content->mViewBox.IsValid()) {
+  if (content->HasViewBox()) {
     const nsSVGViewBoxRect viewbox = content->mViewBox.GetAnimValue();
     float viewBoxWidth = viewbox.width;
     float viewBoxHeight = viewbox.height;
@@ -311,54 +313,68 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
                                 PRUint32 aFlags)
 {
-  nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
+  if (IsRootOfImage() || IsRootOfReplacedElementSubDoc()) {
+    // The embedding element has sized itself using the CSS replaced element
+    // sizing rules, using our intrinsic dimensions as necessary. The SVG spec
+    // says that the width and height of embedded SVG is overridden by the
+    // width and height of the embedding element, so we just need to size to
+    // the viewport that the embedding element has established for us.
+    return aCBSize;
+  }
 
+  nsSize cbSize = aCBSize;
   IntrinsicSize intrinsicSize = GetIntrinsicSize();
 
   if (!mContent->GetParent()) {
-    if (IsRootOfImage() || IsRootOfReplacedElementSubDoc()) {
-      // The embedding element has done the replaced element sizing,
-      // using our intrinsic dimensions as necessary. We just need to
-      // fill the viewport.
-      return aCBSize;
-    } else {
-      // We're the root of a browsing context, so we need to honor
-      // widths and heights in percentages.  (GetIntrinsicSize() doesn't
-      // report these since there's no such thing as a percentage
-      // intrinsic size.)
-      nsSVGLength2 &width =
-        content->mLengthAttributes[nsSVGSVGElement::WIDTH];
-      if (width.IsPercentage()) {
-        NS_ABORT_IF_FALSE(intrinsicSize.width.GetUnit() == eStyleUnit_None,
-                          "GetIntrinsicSize should have reported no "
-                          "intrinsic width");
-        float val = width.GetAnimValInSpecifiedUnits() / 100.0f;
-        if (val < 0.0f) val = 0.0f;
-        intrinsicSize.width.SetCoordValue(val * aCBSize.width);
-      }
+    // We're the root of the outermost browsing context, so we need to scale
+    // cbSize by the full-zoom so that SVGs with percentage width/height zoom:
 
-      nsSVGLength2 &height =
-        content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
-      NS_ASSERTION(aCBSize.height != NS_AUTOHEIGHT,
-                   "root should not have auto-height containing block");
-      if (height.IsPercentage()) {
-        NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_None,
-                          "GetIntrinsicSize should have reported no "
-                          "intrinsic height");
-        float val = height.GetAnimValInSpecifiedUnits() / 100.0f;
-        if (val < 0.0f) val = 0.0f;
-        intrinsicSize.height.SetCoordValue(val * aCBSize.height);
-      }
-      NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
-                        intrinsicSize.width.GetUnit() == eStyleUnit_Coord,
-                        "We should have just handled the only situation where"
-                        "we lack an intrinsic height or width.");
+    NS_ASSERTION(aCBSize.width  != NS_AUTOHEIGHT &&
+                 aCBSize.height != NS_AUTOHEIGHT,
+                 "root should not have auto-width/height containing block");
+    cbSize.width  *= PresContext()->GetFullZoom();
+    cbSize.height *= PresContext()->GetFullZoom();
+
+    // We also need to honour the width and height attributes' default values
+    // of 100% when we're the root of a browsing context.  (GetIntrinsicSize()
+    // doesn't report these since there's no such thing as a percentage
+    // intrinsic size.  Also note that explicit percentage values are mapped
+    // into style, so the following isn't for them.)
+
+    nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
+
+    nsSVGLength2 &width =
+      content->mLengthAttributes[nsSVGSVGElement::WIDTH];
+    if (width.IsPercentage()) {
+      NS_ABORT_IF_FALSE(intrinsicSize.width.GetUnit() == eStyleUnit_None,
+                        "GetIntrinsicSize should have reported no "
+                        "intrinsic width");
+      float val = width.GetAnimValInSpecifiedUnits() / 100.0f;
+      if (val < 0.0f) val = 0.0f;
+      intrinsicSize.width.SetCoordValue(val * cbSize.width);
     }
+
+    nsSVGLength2 &height =
+      content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
+    NS_ASSERTION(aCBSize.height != NS_AUTOHEIGHT,
+                 "root should not have auto-height containing block");
+    if (height.IsPercentage()) {
+      NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_None,
+                        "GetIntrinsicSize should have reported no "
+                        "intrinsic height");
+      float val = height.GetAnimValInSpecifiedUnits() / 100.0f;
+      if (val < 0.0f) val = 0.0f;
+      intrinsicSize.height.SetCoordValue(val * cbSize.height);
+    }
+    NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
+                      intrinsicSize.width.GetUnit() == eStyleUnit_Coord,
+                      "We should have just handled the only situation where"
+                      "we lack an intrinsic height or width.");
   }
 
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this,
-                            intrinsicSize, GetIntrinsicRatio(), aCBSize,
+                            intrinsicSize, GetIntrinsicRatio(), cbSize,
                             aMargin, aBorder, aPadding);
 }
 
@@ -399,12 +415,18 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
 
   nsSVGSVGElement *svgElem = static_cast<nsSVGSVGElement*>(mContent);
 
-  if (newViewportSize != svgElem->GetViewportSize() ||
-      mFullZoom != PresContext()->GetFullZoom()) {
+  PRUint32 changeBits = 0;
+  if (newViewportSize != svgElem->GetViewportSize()) {
+    changeBits |= COORD_CONTEXT_CHANGED;
     svgElem->SetViewportSize(newViewportSize);
-    mViewportInitialized = true;
+  }
+  if (mFullZoom != PresContext()->GetFullZoom()) {
+    changeBits |= TRANSFORM_CHANGED;
     mFullZoom = PresContext()->GetFullZoom();
-    NotifyViewportChange();
+  }
+  mViewportInitialized = true;
+  if (changeBits) {
+    NotifyViewportOrTransformChanged(changeBits);
   }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
@@ -689,30 +711,41 @@ nsSVGOuterSVGFrame::GetType() const
 // nsISVGSVGFrame methods:
 
 void
-nsSVGOuterSVGFrame::NotifyViewportChange()
+nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(PRUint32 aFlags)
 {
-  // no point in doing anything when were not init'ed yet:
+  NS_ABORT_IF_FALSE(aFlags &&
+                    !(aFlags & ~(COORD_CONTEXT_CHANGED | TRANSFORM_CHANGED)),
+                    "Unexpected aFlags value");
+
+  // No point in doing anything when were not init'ed yet:
   if (!mViewportInitialized) {
     return;
   }
 
-  PRUint32 flags = COORD_CONTEXT_CHANGED;
+  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
 
-  // viewport changes only affect our transform if we have a viewBox attribute
-#if 1
-  {
-#else
-  // XXX this caused reftest failures (bug 413960)
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
-#endif
-    // make sure canvas transform matrix gets (lazily) recalculated:
-    mCanvasTM = nsnull;
-
-    flags |= TRANSFORM_CHANGED;
+  if (aFlags & COORD_CONTEXT_CHANGED) {
+    if (content->HasViewBox() || content->ShouldSynthesizeViewBox()) {
+      // Percentage lengths on children resolve against the viewBox rect so we
+      // don't need to notify them of the viewport change, but the viewBox
+      // transform will have changed, so we need to notify them of that instead.
+      aFlags = TRANSFORM_CHANGED;
+    }
+    else if (mCanvasTM && mCanvasTM->IsSingular()) {
+      // A width/height of zero will result in us having a singular mCanvasTM
+      // even when we don't have a viewBox. So we also want to recompute our
+      // mCanvasTM for this width/height change even though we don't have a
+      // viewBox.
+      aFlags |= TRANSFORM_CHANGED;
+    }
   }
 
-  // inform children
-  nsSVGUtils::NotifyChildrenOfSVGChange(this, flags);
+  if (aFlags & TRANSFORM_CHANGED) {
+    // Make sure our canvas transform matrix gets (lazily) recalculated:
+    mCanvasTM = nsnull;
+  }
+
+  nsSVGUtils::NotifyChildrenOfSVGChange(this, aFlags);
 }
 
 //----------------------------------------------------------------------

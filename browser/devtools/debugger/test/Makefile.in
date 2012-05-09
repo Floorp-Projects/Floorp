@@ -46,6 +46,8 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
+	browser_dbg_createRemote.js \
+	browser_dbg_createChrome.js \
 	browser_dbg_debuggerstatement.js \
 	browser_dbg_listtabs.js \
 	browser_dbg_tabactor-01.js \
@@ -70,6 +72,9 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_stack-05.js \
 	browser_dbg_location-changes.js \
 	browser_dbg_script-switching.js \
+	browser_dbg_scripts-sorting.js \
+	browser_dbg_scripts-searching-01.js \
+	browser_dbg_scripts-searching-02.js \
 	browser_dbg_pause-resume.js \
 	browser_dbg_update-editor-mode.js \
 	$(warning browser_dbg_select-line.js temporarily disabled due to oranges, see bug 726609) \

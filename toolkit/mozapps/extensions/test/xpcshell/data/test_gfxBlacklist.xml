@@ -114,5 +114,41 @@
       <driverVersion> 7 </driverVersion>
       <driverVersionComparator> GREATER_THAN_OR_EQUAL </driverVersionComparator>
     </gfxBlacklistEntry>
+    <gfxBlacklistEntry>
+      <os>WINNT 6.1</os>
+      <vendor>0xabcd</vendor>
+      <devices>
+        <device>0x6666</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DEVICE </featureStatus>
+    </gfxBlacklistEntry>
+    <gfxBlacklistEntry>
+      <os>Darwin 9</os>
+      <vendor>0xabcd</vendor>
+      <devices>
+        <device>0x6666</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DEVICE </featureStatus>
+    </gfxBlacklistEntry>
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <devices>
+        <device>0x6666</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DEVICE </featureStatus>
+    </gfxBlacklistEntry>
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <devices>
+        <device>0x6666</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DEVICE </featureStatus>
+    </gfxBlacklistEntry>
   </gfxItems>
 </blocklist>

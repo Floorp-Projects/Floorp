@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE window [
+]>
+
+  <iframe id="iframe" name="iframename" src="test2.xul"/>
+</dialog>

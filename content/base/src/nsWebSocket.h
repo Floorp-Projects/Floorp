@@ -136,7 +136,8 @@ protected:
   // Get msg info out of JS variable being sent (string, arraybuffer, blob)
   nsresult GetSendParams(nsIVariant *aData, nsCString &aStringOut,
                          nsCOMPtr<nsIInputStream> &aStreamOut,
-                         bool &aIsBinary, PRUint32 &aOutgoingLength);
+                         bool &aIsBinary, PRUint32 &aOutgoingLength,
+                         JSContext *aCx);
 
   nsresult DoOnMessageAvailable(const nsACString & aMsg, bool isBinary);
   nsresult CreateAndDispatchSimpleEvent(const nsString& aName);

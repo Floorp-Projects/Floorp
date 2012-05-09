@@ -55,10 +55,8 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIAccessible
-  NS_IMETHOD GetName(nsAString& aName);
-
   // nsAccessible
+  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
@@ -120,81 +118,5 @@ public:
   virtual nsresult GetAttributesInternal(nsIPersistentProperties* aAttributes);
   virtual Relation RelationByType(PRUint32 aType);
 };
-
-/**
- * Used for bullet of HTML list item element (for example, HTML li).
- */
-class nsHTMLListBulletAccessible : public nsLeafAccessible
-{
-public:
-  nsHTMLListBulletAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
-
-  // nsIAccessible
-  NS_IMETHOD GetName(nsAString& aName);
-
-  // nsAccessNode
-  virtual bool IsPrimaryForNode() const;
-
-  // nsAccessible
-  virtual mozilla::a11y::role NativeRole();
-  virtual PRUint64 NativeState();
-  virtual void AppendTextTo(nsAString& aText, PRUint32 aStartOffset = 0,
-                            PRUint32 aLength = PR_UINT32_MAX);
-};
-
-/**
- * Used for HTML list (like HTML ul).
- */
-class nsHTMLListAccessible : public nsHyperTextAccessibleWrap
-{
-public:
-  nsHTMLListAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsAccessible
-  virtual mozilla::a11y::role NativeRole();
-  virtual PRUint64 NativeState();
-};
-
-/**
- * Used for HTML list item (e.g. HTML li).
- */
-class nsHTMLLIAccessible : public nsHyperTextAccessibleWrap
-{
-public:
-  nsHTMLLIAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsAccessNode
-  virtual void Shutdown();
-
-  // nsIAccessible
-  NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
-
-  // nsAccessible
-  virtual mozilla::a11y::role NativeRole();
-  virtual PRUint64 NativeState();
-
-  // nsHTMLLIAccessible
-  void UpdateBullet(bool aHasBullet);
-
-protected:
-  // nsAccessible
-  virtual void CacheChildren();
-
-private:
-  nsRefPtr<nsHTMLListBulletAccessible> mBullet;
-};
-
-inline nsHTMLLIAccessible*
-nsAccessible::AsHTMLListItem()
-{
-  return mFlags & eHTMLListItemAccessible ?
-    static_cast<nsHTMLLIAccessible*>(this) : nsnull;
-}
 
 #endif

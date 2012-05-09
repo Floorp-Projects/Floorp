@@ -141,4 +141,13 @@
 #define inflateReset2 MOZ_Z_inflateReset2
 #define inflateUndermine MOZ_Z_inflateUndermine
 
+/* New as of zlib-1.2.6 */
+#define deflatePending MOZ_Z_deflatePending
+#define deflateResetKeep MOZ_Z_deflateResetKeep
+#define inflateResetKeep MOZ_Z_inflateResetKeep
+#define gzgetc_ MOZ_Z_gzgetc_
+
+/* New as of zlib-1.2.7 */
+#define gzopen_w MOZ_Z_gzopen_w
+
 #endif

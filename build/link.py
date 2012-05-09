@@ -50,7 +50,7 @@ def measure_vsize_threadfunc(proc, output_file):
     while proc.returncode is None:
         maxvsize, vsize = procmem.get_vmsize(proc._handle)
         time.sleep(0.5)
-    print "linker max virtual size: %d" % maxvsize
+    print "TinderboxPrint: linker max vsize: %d" % maxvsize
     with open(output_file, "w") as f:
         f.write("%d\n" % maxvsize)
 

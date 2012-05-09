@@ -110,11 +110,13 @@ FENNEC_JAVA_FILES = \
   sqlite/SQLiteBridgeException.java \
   RemoteTabs.java \
   SetupScreen.java \
-  SurfaceLockInfo.java \
+  SiteIdentityPopup.java \
+  SurfaceBits.java \
   Tab.java \
   Tabs.java \
   TabsTray.java \
   TabsAccessor.java \
+  Telemetry.java \
   gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoGLInfo.java \
@@ -123,6 +125,7 @@ FENNEC_JAVA_FILES = \
   gfx/CheckerboardImage.java \
   gfx/DisplayPortCalculator.java \
   gfx/DisplayPortMetrics.java \
+  gfx/DrawTimingQueue.java \
   gfx/FloatSize.java \
   gfx/GeckoLayerClient.java \
   gfx/GLController.java \
@@ -133,10 +136,12 @@ FENNEC_JAVA_FILES = \
   gfx/LayerController.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
+  gfx/PluginLayer.java \
   gfx/NinePatchTileLayer.java \
   gfx/PanningPerfAPI.java \
   gfx/PointUtils.java \
   gfx/RectUtils.java \
+  gfx/ScreenshotLayer.java \
   gfx/ScrollbarLayer.java \
   gfx/SingleTileLayer.java \
   gfx/SurfaceTextureLayer.java \
@@ -193,7 +198,9 @@ endif
 
 UA_BUILDID=$(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-8)
 
+# Mangle our package name to avoid Bug 750548.
 DEFINES += \
+  -DMANGLED_ANDROID_PACKAGE_NAME=$(subst fennec,f3nn3c,$(ANDROID_PACKAGE_NAME)) \
   -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
   -DMOZ_APP_DISPLAYNAME="$(MOZ_APP_DISPLAYNAME)" \
   -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
@@ -205,6 +212,10 @@ DEFINES += \
   -DMOZILLA_OFFICIAL=$(MOZILLA_OFFICIAL) \
   -DUA_BUILDID=$(UA_BUILDID) \
   $(NULL)
+
+ifdef MOZ_LINKER_EXTRACT
+DEFINES += -DMOZ_LINKER_EXTRACT=1
+endif
 
 GARBAGE += \
   AndroidManifest.xml  \
@@ -268,6 +279,7 @@ RES_LAYOUT = \
   res/layout/notification_progress_text.xml \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
+  res/layout/site_identity_popup.xml \
   res/layout/remote_tabs.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
@@ -338,6 +350,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_addons_empty.png \
   res/drawable/ic_awesomebar_go.png \
   res/drawable/ic_awesomebar_search.png \
+  res/drawable/ic_awesomebar_star.png \
   res/drawable/ic_menu_bookmark_add.png \
   res/drawable/ic_menu_bookmark_remove.png \
   res/drawable/ic_menu_find_in_page.png \
@@ -361,10 +374,13 @@ RES_DRAWABLE_BASE = \
   res/drawable/doorhanger_bg.9.png \
   res/drawable/doorhanger_shadow_bg.9.png \
   res/drawable/doorhanger_popup_bg.9.png \
+  res/drawable/larry_blue.png \
+  res/drawable/larry_green.png \
   res/drawable/site_security_identified.png \
   res/drawable/site_security_verified.png \
   res/drawable/urlbar_stop.png \
   res/drawable/validation_arrow.png \
+  res/drawable/validation_arrow_inverted.png \
   res/drawable/validation_bg.9.png \
   res/drawable/bookmarkdefaults_favicon_support.png \
   res/drawable/bookmarkdefaults_favicon_addons.png \
@@ -387,11 +403,13 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/abouthome_sync_bg.9.png \
   res/drawable-hdpi/abouthome_sync_pressed_bg.9.png \
   res/drawable-hdpi/abouthome_thumbnail.png \
+  res/drawable-hdpi/address_bar_bg_shadow.png \
   res/drawable-hdpi/awesomebar_tab.9.png \
   res/drawable-hdpi/awesomebar_tab_pressed.9.png \
   res/drawable-hdpi/ic_addons_empty.png \
   res/drawable-hdpi/ic_awesomebar_go.png \
   res/drawable-hdpi/ic_awesomebar_search.png \
+  res/drawable-hdpi/ic_awesomebar_star.png \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
   res/drawable-hdpi/ic_menu_bookmark_remove.png \
   res/drawable-hdpi/ic_menu_find_in_page.png \
@@ -415,9 +433,14 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/doorhanger_bg.9.png \
   res/drawable-hdpi/doorhanger_shadow_bg.9.png \
   res/drawable-hdpi/doorhanger_popup_bg.9.png \
+  res/drawable-hdpi/larry_blue.png \
+  res/drawable-hdpi/larry_green.png \
   res/drawable-hdpi/site_security_identified.png \
   res/drawable-hdpi/site_security_verified.png \
   res/drawable-hdpi/urlbar_stop.png \
+  res/drawable-hdpi/validation_arrow.png \
+  res/drawable-hdpi/validation_arrow_inverted.png \
+  res/drawable-hdpi/validation_bg.9.png \
   $(addprefix res/drawable-hdpi/,$(notdir $(SYNC_RES_DRAWABLE_HDPI))) \
   $(NULL)
 
@@ -451,11 +474,13 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/abouthome_sync_bg.9.png \
   res/drawable-xhdpi-v11/abouthome_sync_pressed_bg.9.png \
   res/drawable-xhdpi-v11/abouthome_thumbnail.png \
+  res/drawable-xhdpi-v11/address_bar_bg_shadow.png \
   res/drawable-xhdpi-v11/awesomebar_tab.9.png \
   res/drawable-xhdpi-v11/awesomebar_tab_pressed.9.png \
   res/drawable-xhdpi-v11/ic_addons_empty.png \
   res/drawable-xhdpi-v11/ic_awesomebar_go.png \
   res/drawable-xhdpi-v11/ic_awesomebar_search.png \
+  res/drawable-xhdpi-v11/ic_awesomebar_star.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-xhdpi-v11/ic_menu_find_in_page.png \
@@ -474,10 +499,19 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/address_bar_texture_port.png \
   res/drawable-xhdpi-v11/address_bar_url_bg.9.png \
   res/drawable-xhdpi-v11/address_bar_url_outline.9.png \
+  res/drawable-xhdpi-v11/doorhanger_arrow.png \
+  res/drawable-xhdpi-v11/doorhanger_bg.9.png \
+  res/drawable-xhdpi-v11/doorhanger_shadow_bg.9.png \
+  res/drawable-xhdpi-v11/doorhanger_popup_bg.9.png \
   res/drawable-xhdpi-v11/urlbar_stop.png \
+  res/drawable-xhdpi-v11/larry_blue.png \
+  res/drawable-xhdpi-v11/larry_green.png \
   res/drawable-xhdpi-v11/site_security_identified.png \
   res/drawable-xhdpi-v11/site_security_verified.png \
   res/drawable-xhdpi-v11/tabs_button_tail.9.png \
+  res/drawable-xhdpi-v11/validation_arrow.png \
+  res/drawable-xhdpi-v11/validation_arrow_inverted.png \
+  res/drawable-xhdpi-v11/validation_bg.9.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_V14 = \
@@ -551,7 +585,8 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/abouthome_sync_box.xml                 \
   mobile/android/base/resources/drawable/abouthome_topsites_bg_repeat.xml       \
   mobile/android/base/resources/drawable/address_bar_bg.xml                     \
-  mobile/android/base/resources/drawable/address_bar_bg_shadow.xml              \
+  mobile/android/base/resources/drawable/address_bar_bg_shadow.png              \
+  mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
   mobile/android/base/resources/drawable/address_bar_url_default.xml            \
   mobile/android/base/resources/drawable/address_bar_url_pressed.xml            \
   mobile/android/base/resources/drawable/autocomplete_list_bg.9.png             \
@@ -656,8 +691,20 @@ $(PP_RES_XML): $(patsubst res/%,$(srcdir)/resources/%.in,$(PP_RES_XML))
 # AndroidManifest.xml includes these files, so they need to be marked as dependencies.
 SYNC_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/sync/manifests/*.in)
 
-AndroidManifest.xml $(FENNEC_PP_JAVA_FILES) $(SYNC_PP_JAVA_FILES) package-name.txt: % : %.in Makefile.in $(SYNC_MANIFEST_FRAGMENTS)
-	mkdir -p db sync/repositories/android
+android-tgts = \
+  AndroidManifest.xml \
+  $(FENNEC_PP_JAVA_FILES) \
+  $(SYNC_PP_JAVA_FILES) \
+  package-name.txt \
+  $(NULL)
+
+android-preqs = \
+  Makefile.in \
+  $(call mkdir_deps,db,sync/repositories/android) \
+  $(SYNC_MANIFEST_FRAGMENTS) \
+  $(NULL)
+
+$(android-tgts): % : %.in $(android-preqs)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
@@ -679,7 +726,7 @@ res/values/defaults.xml: $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/res/values/defau
 	$(NSINSTALL) $^  res/values
 
 $(RES_DIRS):
-	rm -rf $@
+	$(RM) -r $@
 	$(NSINSTALL) -D $@
 
 $(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))

@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+[scriptable, uuid(4bb21c9b-381f-4c73-9000-5eb838f58738)]
+interface nsIDOMDeviceProximityEvent : nsIDOMEvent
+{
+  [noscript] void initDeviceProximityEvent(in DOMString eventTypeArg,
+                                           in boolean canBubbleArg,
+                                           in boolean cancelableArg,
+                                           in double value,
+                                           in double min,
+                                           in double max);
+  readonly attribute double value;
+  readonly attribute double min;
+  readonly attribute double max;
+};
+
+
+dictionary DeviceProximityEventInit : EventInit
+{
+   double value;
+   double min;
+   double max;
+};

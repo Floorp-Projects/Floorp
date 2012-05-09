@@ -1817,6 +1817,14 @@ int NS_main(int argc, NS_tchar **argv)
         return 1;
       }
 
+      // Make sure the path to the updater to use for the update is on local.
+      // We do this check to make sure that file locking is available for
+      // race condition security checks.
+      if (useService) {
+        BOOL isLocal = FALSE;
+        useService = IsLocalFile(argv[0], isLocal) && isLocal;
+      }
+      
       // Make sure the service registry entries for the instsallation path
       // are available.  If not don't use the service.
       if (useService) {
