@@ -53,7 +53,10 @@ class TestExecuteContent(MarionetteTestCase):
     def test_execute_permission(self):
         self.assertRaises(JavascriptException,
                           self.marionette.execute_script,
-                          "return Components.classes;")
+                          """
+let prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+""")
 
     def test_complex_return_values(self):
         self.assertEqual(self.marionette.execute_script("return [1, 2];"), [1, 2])
