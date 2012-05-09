@@ -920,8 +920,7 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
         // Create the image container with the right size.
         BeginGIF();
         if (HasError()) {
-          // Setting the size lead to an error; this can happen when for example
-          // a multipart channel sends an image of a different size.
+          // Setting the size led to an error.
           mGIFStruct.state = gif_error;
           return;
         }
