@@ -98,7 +98,8 @@ class TestExecuteAsyncContent(MarionetteTestCase):
 
     def test_execute_permission(self):
         self.assertRaises(JavascriptException, self.marionette.execute_async_script, """
-var c = Components.classes;
+let prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
 marionetteScriptFinished(1);
 """)
 
