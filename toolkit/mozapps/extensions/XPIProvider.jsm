@@ -3597,6 +3597,16 @@ var XPIProvider = {
                  createInstance(Ci.mozIJSSubScriptLoader);
 
     try {
+      // Copy the reason values from the global object into the bootstrap scope.
+      for (let name in BOOTSTRAP_REASONS)
+        this.bootstrapScopes[aId][name] = BOOTSTRAP_REASONS[name];
+
+      // Add other stuff that extensions want.
+      const features = [ "Worker", "ChromeWorker" ];
+
+      for (let feature of features)
+        this.bootstrapScopes[aId][feature] = gGlobalScope[feature];
+
       // As we don't want our caller to control the JS version used for the
       // bootstrap file, we run loadSubScript within the context of the
       // sandbox with the latest JS version set explicitly.
@@ -3614,17 +3624,6 @@ var XPIProvider = {
     catch (e) {
       WARN("Error loading bootstrap.js for " + aId, e);
     }
-
-    // Copy the reason values from the global object into the bootstrap scope.
-    for (let name in BOOTSTRAP_REASONS)
-      this.bootstrapScopes[aId][name] = BOOTSTRAP_REASONS[name];
-
-
-    // Add other stuff that extensions want.
-    const features = [ "Worker", "ChromeWorker" ];
-
-    for each (let feature in features)
-      this.bootstrapScopes[aId][feature] = gGlobalScope[feature];
   },
 
   /**
