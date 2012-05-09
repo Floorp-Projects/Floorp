@@ -135,6 +135,9 @@ class IonCompartment
         }
         return argumentsRectifier_;
     }
+    IonCode **getArgumentsRectifierAddr() {
+        return argumentsRectifier_.unsafeGetAddress();
+    }
 
     IonCode *getOrCreateInvalidationThunk(JSContext *cx) {
         if (!invalidator_) {

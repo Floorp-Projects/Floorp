@@ -139,6 +139,13 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     static inline size_t Size() {
         return sizeof(IonExitFrameLayout);
     }
+    static inline size_t SizeWithFooter() {
+        return Size() + sizeof(IonCode *);
+    }
+    inline IonCode ** ionCodePointer() {
+        return ((IonCode**)this)-1;
+    }
+
 };
 
 // An invalidation bailout stack is at the stack pointer for the callee frame.
