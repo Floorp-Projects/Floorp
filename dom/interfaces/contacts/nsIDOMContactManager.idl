@@ -4,6 +4,7 @@
 
 #include "domstubs.idl"
 #include "nsIDOMContactProperties.idl"
+#include "nsIDOMEvent.idl"
 
 interface nsIArray;
 interface nsIDOMContactFindOptions;
@@ -20,7 +21,14 @@ interface nsIDOMContact : nsIDOMContactProperties
   void init(in nsIDOMContactProperties properties);  // Workaround BUG 723206
 };
 
-[scriptable, uuid(50a820b0-ced0-11e0-9572-0800200c9a66)]
+[scriptable, uuid(a8cd4ba0-93d1-11e1-b0c4-0800200c9a66)]
+interface mozIDOMContactEvent : nsIDOMEvent
+{
+  readonly attribute DOMString contactID;
+  readonly attribute DOMString reason;
+};
+
+[scriptable, uuid(d9ca0950-93d1-11e1-b0c4-0800200c9a66)]
 interface nsIDOMContactManager : nsISupports
 {
   nsIDOMDOMRequest find(in nsIDOMContactFindOptions options);
@@ -30,4 +38,6 @@ interface nsIDOMContactManager : nsISupports
   nsIDOMDOMRequest save(in nsIDOMContact contact);
   
   nsIDOMDOMRequest remove(in nsIDOMContact contact);
+
+  attribute nsIDOMEventListener oncontactchange;
 };

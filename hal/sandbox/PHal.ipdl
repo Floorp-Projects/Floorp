@@ -43,60 +43,67 @@ include "prtime.h";
 include "mozilla/HalSensor.h";
 include "mozilla/HalTypes.h";
 include "mozilla/dom/ScreenOrientation.h";
+include "nsRect.h";
 
-using PRTime;
+using mozilla::dom::ScreenOrientation;
 using mozilla::hal::FlashMode;
 using mozilla::hal::LightType;
 using mozilla::hal::LightMode;
 using mozilla::hal::SensorType;
 using mozilla::hal::SensorAccuracyType;
 using mozilla::hal::WakeLockControl;
-using mozilla::dom::ScreenOrientation;
 using mozilla::hal::SwitchState;
 using mozilla::hal::SwitchDevice;
+using nsIntRect;
+using PRTime;
 
 namespace mozilla {
 
 namespace hal {
-  struct BatteryInformation {
-    double level;
-    bool   charging;
-    double remainingTime;
-  };
+struct BatteryInformation {
+  double level;
+  bool   charging;
+  double remainingTime;
+};
 
-  struct LightConfiguration {
-    LightType light;
-    LightMode mode;
-    FlashMode flash;
-    uint32_t flashOnMS;
-    uint32_t flashOffMS;
-    uint32_t color;
-  };
+struct LightConfiguration {
+  LightType light;
+  LightMode mode;
+  FlashMode flash;
+  uint32_t flashOnMS;
+  uint32_t flashOffMS;
+  uint32_t color;
+};
 
-  struct SensorData {
-    SensorType sensor;
-    PRTime timestamp;
-    float[] values;
-    SensorAccuracyType accuracy;
-  };
+struct SensorData {
+  SensorType sensor;
+  PRTime timestamp;
+  float[] values;
+  SensorAccuracyType accuracy;
+};
 
-  struct NetworkInformation {
-    double bandwidth;
-    bool   canBeMetered;
-  };
+struct NetworkInformation {
+  double bandwidth;
+  bool   canBeMetered;
+};
 
-  struct SwitchEvent {
-    SwitchDevice device;
-    SwitchState status;
-  };
-}
+struct SwitchEvent {
+  SwitchDevice device;
+  SwitchState status;
+};
 
-namespace hal {
-  struct WakeLockInformation {
-    uint32_t numLocks;
-    uint32_t numHidden;
-    nsString topic;
-  };
+struct WakeLockInformation {
+  uint32_t numLocks;
+  uint32_t numHidden;
+  nsString topic;
+};
+
+struct ScreenConfiguration {
+  nsIntRect rect;
+  ScreenOrientation orientation;
+  uint32_t colorDepth;
+  uint32_t pixelDepth;
+};
 }
 
 namespace hal_sandbox {
@@ -108,7 +115,7 @@ child:
     NotifyBatteryChange(BatteryInformation aBatteryInfo);
     NotifyNetworkChange(NetworkInformation aNetworkInfo);
     NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
-    NotifyScreenOrientationChange(ScreenOrientation aScreenOrientation);
+    NotifyScreenConfigurationChange(ScreenConfiguration aScreenOrientation);
     NotifySwitchChange(SwitchEvent aEvent);
 
 parent:
@@ -151,10 +158,10 @@ parent:
     sync GetWakeLockInfo(nsString aTopic)
       returns (WakeLockInformation aWakeLockInfo);
 
-    EnableScreenOrientationNotifications();
-    DisableScreenOrientationNotifications();
-    sync GetCurrentScreenOrientation()
-      returns (ScreenOrientation aScreenOrientation);
+    EnableScreenConfigurationNotifications();
+    DisableScreenConfigurationNotifications();
+    sync GetCurrentScreenConfiguration()
+      returns (ScreenConfiguration aScreenConfiguration);
     sync LockScreenOrientation(ScreenOrientation aOrientation)
       returns (bool allowed);
     UnlockScreenOrientation();

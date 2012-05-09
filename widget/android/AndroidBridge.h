@@ -85,7 +85,6 @@ class NetworkInformation;
 } // namespace hal
 
 namespace dom {
-class ScreenOrientationWrapper;
 namespace sms {
 struct SmsFilterData;
 } // namespace sms
@@ -379,14 +378,14 @@ public:
     void AddPluginView(jobject view, const gfxRect& rect);
     void RemovePluginView(jobject view);
 
-    // This method doesn't take a ScreenOrientation because it's an enum and
-    // that would require including the header which requires include IPC
-    // headers which requires including basictypes.h which requires a lot of
-    // changes...
-    void GetScreenOrientation(dom::ScreenOrientationWrapper& aOrientation);
+    // These methods don't use a ScreenOrientation because it's an
+    // enum and that would require including the header which requires
+    // include IPC headers which requires including basictypes.h which
+    // requires a lot of changes...
+    uint32_t GetScreenOrientation();
     void EnableScreenOrientationNotifications();
     void DisableScreenOrientationNotifications();
-    void LockScreenOrientation(const dom::ScreenOrientationWrapper& aOrientation);
+    void LockScreenOrientation(uint32_t aOrientation);
     void UnlockScreenOrientation();
 
     void PumpMessageLoop();

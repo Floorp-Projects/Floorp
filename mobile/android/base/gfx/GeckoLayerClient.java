@@ -336,10 +336,19 @@ public class GeckoLayerClient implements GeckoEventResponder,
       */
     public void setFirstPaintViewport(float offsetX, float offsetY, float zoom, float pageWidth, float pageHeight, float cssPageWidth, float cssPageHeight) {
         synchronized (mLayerController) {
-            ViewportMetrics currentMetrics = new ViewportMetrics(mLayerController.getViewportMetrics());
+            final ViewportMetrics currentMetrics = new ViewportMetrics(mLayerController.getViewportMetrics());
             currentMetrics.setOrigin(new PointF(offsetX, offsetY));
             currentMetrics.setZoomFactor(zoom);
             currentMetrics.setPageSize(new FloatSize(pageWidth, pageHeight), new FloatSize(cssPageWidth, cssPageHeight));
+            // Since we have switched to displaying a different document, we need to update any
+            // viewport-related state we have lying around. This includes mGeckoViewport and the
+            // viewport in mLayerController. Usually this information is updated via handleViewportMessage
+            // while we remain on the same document.
+            mLayerController.post(new Runnable() {
+                public void run() {
+                    mGeckoViewport = currentMetrics;
+                }
+            });
             mLayerController.setViewportMetrics(currentMetrics);
             mLayerController.setCheckerboardColor(Tabs.getInstance().getSelectedTab().getCheckerboardColor());
             // At this point, we have just switched to displaying a different document than we

@@ -64,9 +64,8 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace gl {
 
-#ifdef DEBUG
-PRUintn GLContext::sCurrentGLContextTLS = -1;
-#endif
+tls::key GLContextTLSStorage::sTLSKey;
+bool GLContextTLSStorage::sTLSKeyAlreadyCreated = false;
 
 PRUint32 GLContext::sDebugMode = 0;
 
@@ -101,6 +100,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_unpack_subimage",
     "GL_OES_standard_derivatives",
     "GL_EXT_texture_filter_anisotropic",
+    "GL_EXT_texture_compression_s3tc",
     "GL_EXT_framebuffer_blit",
     "GL_ANGLE_framebuffer_blit",
     "GL_EXT_framebuffer_multisample",
@@ -146,6 +146,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &mSymbols.fClearColor, { "ClearColor", NULL } },
         { (PRFuncPtr*) &mSymbols.fClearStencil, { "ClearStencil", NULL } },
         { (PRFuncPtr*) &mSymbols.fColorMask, { "ColorMask", NULL } },
+        { (PRFuncPtr*) &mSymbols.fCompressedTexImage2D, {"CompressedTexImage2D", NULL} },
+        { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage2D, {"CompressedTexSubImage2D", NULL} },
         { (PRFuncPtr*) &mSymbols.fCullFace, { "CullFace", NULL } },
         { (PRFuncPtr*) &mSymbols.fDetachShader, { "DetachShader", "DetachShaderARB", NULL } },
         { (PRFuncPtr*) &mSymbols.fDepthFunc, { "DepthFunc", NULL } },

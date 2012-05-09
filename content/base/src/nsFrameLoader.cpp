@@ -933,6 +933,12 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
     mRemoteBrowserShown = true;
 
     EnsureMessageManager();
+
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    if (OwnerIsBrowserFrame() && os) {
+      os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
+                          "remote-browser-frame-shown", NULL);
+    }
   } else {
     nsRect dimensions;
     NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), false);
@@ -1512,11 +1518,11 @@ nsFrameLoader::MaybeCreateDocShell()
     mDocShell->SetChromeEventHandler(chromeEventHandler);
   }
 
-  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
-  if (browserFrame) {
-    bool isBrowserFrame = false;
-    browserFrame->GetReallyIsBrowser(&isBrowserFrame);
-    mDocShell->SetIsBrowserFrame(isBrowserFrame);
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (OwnerIsBrowserFrame() && os) {
+    mDocShell->SetIsBrowserFrame(true);
+    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
+                        "in-process-browser-frame-shown", NULL);
   }
 
   // This is nasty, this code (the do_GetInterface(mDocShell) below)
@@ -2182,7 +2188,7 @@ nsFrameLoader::EnsureMessageManager()
     return rv;
   }
 
-  if (!mIsTopLevelContent && !mRemoteFrame) {
+  if (!mIsTopLevelContent && !OwnerIsBrowserFrame() && !mRemoteFrame) {
     return NS_OK;
   }
 
@@ -2217,10 +2223,7 @@ nsFrameLoader::EnsureMessageManager()
                                                 mRemoteBrowserShown ? this : nsnull,
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
                                                 cx);
-    NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
-  } else
-  {
-
+  } else {
     mMessageManager = new nsFrameMessageManager(true,
                                                 nsnull,
                                                 SendAsyncMessageToChild,
@@ -2228,7 +2231,6 @@ nsFrameLoader::EnsureMessageManager()
                                                 nsnull,
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
                                                 cx);
-    NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
     mChildMessageManager =
       new nsInProcessTabChildGlobal(mDocShell, mOwnerContent, mMessageManager);
     mMessageManager->SetCallbackData(this);
@@ -2240,4 +2242,12 @@ nsIDOMEventTarget*
 nsFrameLoader::GetTabChildGlobalAsEventTarget()
 {
   return static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get());
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetOwnerElement(nsIDOMElement **aElement)
+{
+  nsCOMPtr<nsIDOMElement> ownerElement = do_QueryInterface(mOwnerContent);
+  ownerElement.forget(aElement);
+  return NS_OK;
 }
