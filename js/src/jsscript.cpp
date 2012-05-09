@@ -2268,19 +2268,19 @@ JSScript::varIsAliased(unsigned varSlot)
 }
 
 bool
-JSScript::argIsAliased(unsigned argSlot)
+JSScript::formalIsAliased(unsigned argSlot)
 {
-    return argLivesInCallObject(argSlot) || needsArgsObj();
+    return formalLivesInCallObject(argSlot) || argsObjAliasesFormals();
 }
 
 bool
-JSScript::argLivesInArgumentsObject(unsigned argSlot)
+JSScript::formalLivesInArgumentsObject(unsigned argSlot)
 {
-    return needsArgsObj() && !argLivesInCallObject(argSlot);
+    return argsObjAliasesFormals() && !formalLivesInCallObject(argSlot);
 }
 
 bool
-JSScript::argLivesInCallObject(unsigned argSlot)
+JSScript::formalLivesInCallObject(unsigned argSlot)
 {
     if (bindingsAccessedDynamically)
         return true;

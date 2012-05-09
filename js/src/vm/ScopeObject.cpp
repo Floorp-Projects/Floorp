@@ -268,7 +268,7 @@ CallObject::getArgOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     unsigned i = (uint16_t) JSID_TO_INT(id);
 
     DebugOnly<JSScript *> script = callobj.getCalleeFunction()->script();
-    JS_ASSERT_IF(!callobj.compartment()->debugMode(), script->argLivesInCallObject(i));
+    JS_ASSERT_IF(!callobj.compartment()->debugMode(), script->formalLivesInCallObject(i));
 
     if (StackFrame *fp = callobj.maybeStackFrame())
         *vp = fp->formalArg(i);
@@ -286,7 +286,7 @@ CallObject::setArgOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value
     unsigned i = (uint16_t) JSID_TO_INT(id);
 
     JSScript *script = callobj.getCalleeFunction()->script();
-    JS_ASSERT_IF(!callobj.compartment()->debugMode(), script->argLivesInCallObject(i));
+    JS_ASSERT_IF(!callobj.compartment()->debugMode(), script->formalLivesInCallObject(i));
 
     if (StackFrame *fp = callobj.maybeStackFrame())
         fp->formalArg(i) = *vp;
