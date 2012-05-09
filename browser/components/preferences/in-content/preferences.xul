@@ -95,6 +95,7 @@
 #include privacy.xul
 #include advanced.xul
 #include applications.xul
+#include content.xul
     </prefpane>
   </hbox>
   

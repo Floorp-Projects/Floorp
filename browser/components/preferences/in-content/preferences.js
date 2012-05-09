@@ -24,6 +24,7 @@ function init_all() {
   gPrivacyPane.init();
   gAdvancedPane.init();
   gApplicationsPane.init();
+  gContentPane.init();
   var initFinished = document.createEvent("Event");
   initFinished.initEvent("Initialized", true, true);
   document.dispatchEvent(initFinished);
