@@ -4744,7 +4744,7 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
             const char *code = codeChunks.front();
             jsval rval;
             if (!JS_EvaluateScript(cx, obj, code, strlen(code), "-e", 1, &rval))
-                return EXIT_FAILURE;
+                return gExitCode ? gExitCode : EXITCODE_RUNTIME_ERROR;
             codeChunks.popFront();
         }
     }
