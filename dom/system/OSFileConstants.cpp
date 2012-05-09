@@ -9,10 +9,6 @@
 #include "unistd.h"
 #endif // defined(XP_UNIX)
 
-#if defined(XP_WIN)
-#include <windows.h>
-#endif // defined(XP_WIN)
-
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "BindingUtils.h"
@@ -175,71 +171,6 @@ static dom::ConstantSpec gLibcProperties[] =
   PROP_END
 };
 
-
-#if defined(XP_WIN)
-/**
- * The properties defined in windows.h.
- *
- * If you extend this list of properties, please
- * separate categories ("errors", "open", etc.),
- * keep properties organized by alphabetical order
- * and #ifdef-away properties that are not portable.
- */
-static dom::ConstantSpec gWinProperties[] =
-{
-  // FormatMessage flags
-  INT_CONSTANT(FORMAT_MESSAGE_FROM_SYSTEM),
-  INT_CONSTANT(FORMAT_MESSAGE_IGNORE_INSERTS),
-
-  // CreateFile desired access
-  INT_CONSTANT(GENERIC_ALL),
-  INT_CONSTANT(GENERIC_EXECUTE),
-  INT_CONSTANT(GENERIC_READ),
-  INT_CONSTANT(GENERIC_WRITE),
-
-  // CreateFile share mode
-  INT_CONSTANT(FILE_SHARE_DELETE),
-  INT_CONSTANT(FILE_SHARE_READ),
-  INT_CONSTANT(FILE_SHARE_WRITE),
-
-  // CreateFile creation disposition
-  INT_CONSTANT(CREATE_ALWAYS),
-  INT_CONSTANT(CREATE_NEW),
-  INT_CONSTANT(OPEN_ALWAYS),
-  INT_CONSTANT(OPEN_EXISTING),
-  INT_CONSTANT(TRUNCATE_EXISTING),
-
-  // CreateFile attributes
-  INT_CONSTANT(FILE_ATTRIBUTE_ARCHIVE),
-  INT_CONSTANT(FILE_ATTRIBUTE_DIRECTORY),
-  INT_CONSTANT(FILE_ATTRIBUTE_NORMAL),
-  INT_CONSTANT(FILE_ATTRIBUTE_READONLY),
-  INT_CONSTANT(FILE_ATTRIBUTE_TEMPORARY),
-
-  // SetFilePointer error constant
-  { "INVALID_FILE_HANDLE", INT_TO_JSVAL((int)INVALID_FILE_HANDLE) },
-
-
-  // CreateFile flags
-  INT_CONSTANT(FILE_FLAG_DELETE_ON_CLOSE),
-
-  // SetFilePointer methods
-  INT_CONSTANT(FILE_BEGIN),
-  INT_CONSTANT(FILE_CURRENT),
-  INT_CONSTANT(FILE_END),
-
-  // SetFilePointer error constant
-  INT_CONSTANT(INVALID_SET_FILE_POINTER),
-
-  // Errors
-  INT_CONSTANT(ERROR_FILE_NOT_FOUND),
-  INT_CONSTANT(ERROR_ACCESS_DENIED),
-
-  PROP_END
-};
-#endif // defined(XP_WIN)
-
-
 /**
  * Get a field of an object as an object.
  *
@@ -284,19 +215,7 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
   if (!(objLibc = GetOrCreateObjectProperty(cx, objConstants, "libc"))) {
     return false;
   }
-  if (!dom::DefineConstants(cx, objLibc, gLibcProperties)) {
-    return false;
-  }
-#if defined(XP_WIN)
-  JSObject *objWin;
-  if (!(objWin = GetOrCreateObjectProperty(cx, objConstants, "Win"))) {
-    return false;
-  }
-  if (!dom::DefineConstants(cx, objWin, gWinProperties)) {
-    return false;
-  }
-#endif // defined(XP_WIN)
-  return true;
+  return dom::DefineConstants(cx, objLibc, gLibcProperties);
 }
 
 } // namespace mozilla
