@@ -120,19 +120,17 @@ function testFrameParameters()
 }
 
 function resumeAndFinish() {
-  let thread = gDebugger.DebuggerController.activeThread;
-  thread.addOneTimeListener("framescleared", function() {
-    Services.tm.currentThread.dispatch({ run: function() {
-      var frames = gDebugger.DebuggerView.StackFrames._frames;
+  gDebugger.addEventListener("Debugger:AfterFramesCleared", function listener() {
+    gDebugger.removeEventListener("Debugger:AfterFramesCleared", listener, true);
 
-      is(frames.querySelectorAll(".dbg-stackframe").length, 0,
-        "Should have no frames.");
+    var frames = gDebugger.DebuggerView.StackFrames._frames;
+    is(frames.querySelectorAll(".dbg-stackframe").length, 0,
+      "Should have no frames.");
 
-      closeDebuggerAndFinish(gTab);
-    }}, 0);
-  });
+    closeDebuggerAndFinish(gTab);
+  }, true);
 
-  thread.resume();
+  gDebugger.DebuggerController.activeThread.resume();
 }
 
 registerCleanupFunction(function() {
