@@ -278,7 +278,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         // Post our size to the superclass
         PostSize(mBIH.width, real_height);
         if (HasError()) {
-          // Setting the size led to an error.
+          // Setting the size lead to an error; this can happen when for example
+          // a multipart channel sends an image of a different size.
           return;
         }
 

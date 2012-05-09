@@ -131,8 +131,6 @@ public:
   // wins.
   static void SetCacheValidation(imgCacheEntry* aEntry, nsIRequest* aRequest);
 
-  bool GetMultipart() const { return mIsMultiPartChannel; }
-
   // The CORS mode for which we loaded this image.
   PRInt32 GetCORSMode() const { return mCORSMode; }
 
