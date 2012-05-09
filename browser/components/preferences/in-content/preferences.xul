@@ -92,6 +92,7 @@
 #include landing.xul
 #include main.xul
 #include tabs.xul
+#include privacy.xul
     </prefpane>
   </hbox>
   
