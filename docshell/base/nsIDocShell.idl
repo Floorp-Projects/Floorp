@@ -71,8 +71,9 @@ interface nsIDOMStorage;
 interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
+interface nsIPrivacyTransitionObserver;
 
-[scriptable, uuid(c7325422-817e-4321-957a-c0bdd764941d)]
+[scriptable, uuid(6f60ac96-fa2c-41a5-92b4-29aaadbd7a7b)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -602,6 +603,12 @@ interface nsIDocShell : nsISupports
    * @see nsIParser
    */
   attribute PRInt32 parentCharsetSource;
+
+  /**
+   * Add an observer to the list of parties to be notified when this docshell's
+   * private browsing status is changed. |obs| must support weak references.
+   */
+  void addWeakPrivacyTransitionObserver(in nsIPrivacyTransitionObserver obs);
 
   /*
    * Is this docshell a browser frame (i.e., does it correspond to an <iframe

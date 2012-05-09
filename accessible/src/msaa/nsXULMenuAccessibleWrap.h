@@ -47,7 +47,7 @@ public:
   virtual ~nsXULMenuitemAccessibleWrap() {}
 
   // nsIAccessible
-  NS_IMETHOD GetName(nsAString& aName);
+  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
 };
 
 #endif

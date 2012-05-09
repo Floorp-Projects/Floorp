@@ -114,14 +114,15 @@ typedef struct {
 typedef enum {
   CUBEB_STATE_STARTED, /**< Stream started. */
   CUBEB_STATE_STOPPED, /**< Stream stopped. */
-  CUBEB_STATE_DRAINED /**< Stream drained. */
+  CUBEB_STATE_DRAINED, /**< Stream drained. */
+  CUBEB_STATE_ERROR    /**< Stream disabled due to error. */
 } cubeb_state;
 
 /** Result code enumeration. */
 enum {
-  CUBEB_OK = 0,              /**< Success. */
-  CUBEB_ERROR = -1,          /**< Unclassified error. */
-  CUBEB_ERROR_INVALID_FORMAT /**< Unsupported #cubeb_stream_params requested. */
+  CUBEB_OK = 0,                   /**< Success. */
+  CUBEB_ERROR = -1,               /**< Unclassified error. */
+  CUBEB_ERROR_INVALID_FORMAT = -2 /**< Unsupported #cubeb_stream_params requested. */
 };
 
 /** User supplied data callback.

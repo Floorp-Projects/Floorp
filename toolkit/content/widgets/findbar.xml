@@ -284,12 +284,21 @@
       <field name="_tmpOutline">null</field>
       <field name="_tmpOutlineOffset">"0"</field>
       <field name="_drawOutline">false</field>
-      <field name="_foundLink">null</field>
       <field name="_editors">null</field>
       <field name="_stateListeners">null</field>
 
       <field name="_flashFindBar">0</field>
       <field name="_initialFlashFindBarCount">6</field>
+
+      <property name="_foundLink"
+                onget="return this._foundLinkRef.get();"
+                onset="this._foundLinkRef = Components.utils.getWeakReference(val); return val;"/>
+      <property name="_foundEditable"
+                onget="return this._foundEditableRef.get();"
+                onset="this._foundEditableRef = Components.utils.getWeakReference(val); return val;"/>
+      <property name="_currentWindow"
+                onget="return this._currentWindowRef.get();"
+                onset="this._currentWindowRef = Components.utils.getWeakReference(val); return val;"/>
 
       <property name="prefillWithSelection"
                 onget="return this.getAttribute('prefillwithselection') != 'false'"
@@ -380,6 +389,10 @@
         this._findField = this.getElement("findbar-textbox");
         this._findStatusIcon = this.getElement("find-status-icon");
         this._findStatusDesc = this.getElement("find-status");
+
+        this._foundLink = null;
+        this._foundEditable = null;
+        this._currentWindow = null;
 
         var prefsvc =
           Components.classes["@mozilla.org/preferences-service;1"]

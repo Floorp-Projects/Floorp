@@ -75,6 +75,8 @@ public:
   nsresult AppendTextForNormalize(const PRUnichar* aBuffer, PRUint32 aLength,
                                   bool aNotify, nsIContent* aNextSibling);
 
+  virtual nsIDOMNode* AsDOMNode() { return this; }
+
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent, bool aDumpAll) const;

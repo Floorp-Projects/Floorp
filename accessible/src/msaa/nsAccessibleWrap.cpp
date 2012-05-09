@@ -52,7 +52,9 @@
 #include "nsIAccessibleRelation.h"
 
 #include "Accessible2_i.c"
+#include "AccessibleRole.h"
 #include "AccessibleStates.h"
+#include "RootAccessible.h"
 
 #include "nsIMutableArray.h"
 #include "nsIDOMDocument.h"
@@ -60,16 +62,19 @@
 #include "nsIScrollableFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
-#include "nsRootAccessible.h"
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsRoleMap.h"
 #include "nsEventMap.h"
 #include "nsArrayUtils.h"
 
+#include "OLEACC.H"
+
+using namespace mozilla;
 using namespace mozilla::a11y;
+
+const PRUint32 USE_ROLE_STRING = 0;
 
 /* For documentation of the accessibility architecture,
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -133,7 +138,7 @@ __try {
     *ppv = static_cast<IAccessible2*>(this);
 
   if (NULL == *ppv) {
-    HRESULT hr = CAccessibleComponent::QueryInterface(iid, ppv);
+    HRESULT hr = ia2AccessibleComponent::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr))
       return hr;
   }
@@ -168,9 +173,9 @@ __try {
   *ppdispParent = NULL;
 
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
-  nsRefPtr<nsDocAccessible> doc(do_QueryObject(this));
+  nsDocAccessible* doc = AsDoc();
   if (doc) {
     // Return window system accessible object for root document and tab document
     // accessibles.
@@ -210,7 +215,7 @@ __try {
   *pcountChildren = 0;
 
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   if (nsAccUtils::MustPrune(this))
     return S_OK;
@@ -228,7 +233,7 @@ STDMETHODIMP nsAccessibleWrap::get_accChild(
 __try {
   *ppdispChild = NULL;
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   // IAccessible::accChild is used to return this accessible or child accessible
   // at the given index or to get an accessible by child ID in the case of
@@ -236,12 +241,17 @@ __try {
   // on the document accessible). The getting an accessible by child ID is used
   // by AccessibleObjectFromEvent() called by AT when AT handles our MSAA event.
   nsAccessible* child = GetXPAccessibleFor(varChild);
-  if (child)
-    *ppdispChild = NativeAccessible(child);
+  if (!child)
+    return E_INVALIDARG;
+
+  if (child->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  *ppdispChild = NativeAccessible(child);
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
-  return (*ppdispChild)? S_OK: E_INVALIDARG;
+  return S_OK;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accName(
@@ -250,13 +260,19 @@ STDMETHODIMP nsAccessibleWrap::get_accName(
 {
 __try {
   *pszName = NULL;
-  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
+
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
-    return E_FAIL;
+    return E_INVALIDARG;
+
+  if (xpAccessible->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
   nsAutoString name;
-  nsresult rv = xpAccessible->GetName(name);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  xpAccessible->Name(name);
 
   // The name was not provided, e.g. no alt attribute for an image. A screen
   // reader may choose to invent its own accessible name, e.g. from an image src
@@ -281,13 +297,21 @@ STDMETHODIMP nsAccessibleWrap::get_accValue(
 __try {
   *pszValue = NULL;
 
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
   nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible || xpAccessible->IsDefunct())
-    return E_FAIL;
+  if (!xpAccessible)
+    return E_INVALIDARG;
+
+  if (xpAccessible->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  if (xpAccessible->NativeRole() == roles::PASSWORD_TEXT)
+    return E_ACCESSDENIED;
 
   nsAutoString value;
-  if (NS_FAILED(xpAccessible->GetValue(value)))
-    return E_FAIL;
+  xpAccessible->Value(value);
 
   // See bug 438784: need to expose URL on doc's value attribute. For this,
   // reverting part of fix for bug 425693 to make this MSAA method behave
@@ -310,9 +334,15 @@ nsAccessibleWrap::get_accDescription(VARIANT varChild,
 __try {
   *pszDescription = NULL;
 
-  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible || xpAccessible->IsDefunct())
-    return E_FAIL;
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  if (!xpAccessible)
+    return E_INVALIDARG;
+
+  if (xpAccessible->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   nsAutoString description;
   xpAccessible->Description(description);
@@ -333,26 +363,40 @@ __try {
   VariantInit(pvarRole);
 
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
+  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
-    return E_FAIL;
+    return E_INVALIDARG;
 
-#ifdef DEBUG_A11Y
+  if (xpAccessible->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+#ifdef DEBUG
   NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(xpAccessible),
                "Does not support nsIAccessibleText when it should");
 #endif
 
-  roles::Role role = xpAccessible->Role();
-  PRUint32 msaaRole = gWindowsRoleMap[role].msaaRole;
-  NS_ASSERTION(gWindowsRoleMap[roles::LAST_ENTRY].msaaRole == ROLE_WINDOWS_LAST_ENTRY,
-               "MSAA role map skewed");
+  a11y::role geckoRole = xpAccessible->Role();
+  PRUint32 msaaRole = 0;
+
+#define ROLE(_geckoRole, stringRole, atkRole, macRole, _msaaRole, ia2Role) \
+  case roles::_geckoRole: \
+    msaaRole = _msaaRole; \
+    break;
+
+  switch (geckoRole) {
+#include "RoleMap.h"
+    default:
+      MOZ_NOT_REACHED("Unknown role.");
+  };
+
+#undef ROLE
 
   // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call the MSAA role
   // a ROLE_OUTLINEITEM for consistency and compatibility.
   // We need this because ARIA has a role of "row" for both grid and treegrid
-  if (role == roles::ROW) {
+  if (geckoRole == roles::ROW) {
     nsAccessible* xpParent = Parent();
     if (xpParent && xpParent->Role() == roles::TREE_TABLE)
       msaaRole = ROLE_SYSTEM_OUTLINEITEM;
@@ -410,9 +454,15 @@ __try {
   pvarState->vt = VT_I4;
   pvarState->lVal = 0;
 
-  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
-    return E_FAIL;
+    return E_INVALIDARG;
+
+  if (xpAccessible->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   // MSAA only has 31 states and the lowest 31 bits of our state bit mask
   // are the same states as MSAA.
@@ -467,9 +517,15 @@ __try {
     return E_INVALIDARG;
   *pszKeyboardShortcut = NULL;
 
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
   nsAccessible* acc = GetXPAccessibleFor(varChild);
-  if (!acc || acc->IsDefunct())
-    return E_FAIL;
+  if (!acc)
+    return E_INVALIDARG;
+
+  if (acc->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   KeyBinding keyBinding = acc->AccessKey();
   if (keyBinding.IsEmpty())
@@ -496,7 +552,7 @@ STDMETHODIMP nsAccessibleWrap::get_accFocus(
   //              for the child object with the keyboard focus.
 __try {
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   VariantInit(pvarChild);
 
@@ -670,6 +726,9 @@ __try {
   VariantInit(pvarChildren);
   pvarChildren->vt = VT_EMPTY;
 
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
   if (IsSelect()) {
     nsCOMPtr<nsIArray> selectedItems = SelectedItems();
     if (selectedItems) {
@@ -694,16 +753,24 @@ STDMETHODIMP nsAccessibleWrap::get_accDefaultAction(
 {
 __try {
   *pszDefaultAction = NULL;
-  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
-  if (xpAccessible) {
-    nsAutoString defaultAction;
-    if (NS_FAILED(xpAccessible->GetActionName(0, defaultAction)))
-      return E_FAIL;
 
-    *pszDefaultAction = ::SysAllocStringLen(defaultAction.get(),
-                                            defaultAction.Length());
-    return *pszDefaultAction ? S_OK : E_OUTOFMEMORY;
-  }
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  if (!xpAccessible)
+    return E_INVALIDARG;
+
+  if (xpAccessible->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  nsAutoString defaultAction;
+  if (NS_FAILED(xpAccessible->GetActionName(0, defaultAction)))
+    return E_FAIL;
+
+  *pszDefaultAction = ::SysAllocStringLen(defaultAction.get(),
+                                          defaultAction.Length());
+  return *pszDefaultAction ? S_OK : E_OUTOFMEMORY;
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
@@ -714,9 +781,16 @@ STDMETHODIMP nsAccessibleWrap::accSelect(
       /* [optional][in] */ VARIANT varChild)
 {
 __try {
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
   // currently only handle focus and selection
-  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
-  NS_ENSURE_TRUE(xpAccessible, E_FAIL);
+  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  if (!xpAccessible)
+    return E_INVALIDARG;
+
+  if (xpAccessible->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   if (flagsSelect & (SELFLAG_TAKEFOCUS|SELFLAG_TAKESELECTION|SELFLAG_REMOVESELECTION))
   {
@@ -750,19 +824,26 @@ STDMETHODIMP nsAccessibleWrap::accLocation(
       /* [optional][in] */ VARIANT varChild)
 {
 __try {
-  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
-  if (xpAccessible) {
-    PRInt32 x, y, width, height;
-    if (NS_FAILED(xpAccessible->GetBounds(&x, &y, &width, &height)))
-      return E_FAIL;
+  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  if (!xpAccessible)
+    return E_INVALIDARG;
 
-    *pxLeft = x;
-    *pyTop = y;
-    *pcxWidth = width;
-    *pcyHeight = height;
-    return S_OK;
-  }
+  if (xpAccessible->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  PRInt32 x, y, width, height;
+  if (NS_FAILED(xpAccessible->GetBounds(&x, &y, &width, &height)))
+    return E_FAIL;
+
+  *pxLeft = x;
+  *pyTop = y;
+  *pcxWidth = width;
+  *pcyHeight = height;
+  return S_OK;
+
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return E_FAIL;
@@ -777,9 +858,15 @@ __try {
   if (!pvarEndUpAt)
     return E_INVALIDARG;
 
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
   nsAccessible* accessible = GetXPAccessibleFor(varStart);
-  if (!accessible || accessible->IsDefunct())
-    return E_FAIL;
+  if (!accessible)
+    return E_INVALIDARG;
+
+  if (accessible->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   VariantInit(pvarEndUpAt);
 
@@ -884,8 +971,9 @@ STDMETHODIMP nsAccessibleWrap::accHitTest(
 {
 __try {
   VariantInit(pvarChild);
+
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   nsAccessible* accessible = ChildAtPoint(xLeft, yTop, eDirectChild);
 
@@ -913,12 +1001,20 @@ STDMETHODIMP nsAccessibleWrap::accDoDefaultAction(
       /* [optional][in] */ VARIANT varChild)
 {
 __try {
-  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
-  if (!xpAccessible || FAILED(xpAccessible->DoAction(0))) {
-    return E_FAIL;
-  }
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  if (!xpAccessible)
+    return E_INVALIDARG;
+
+  if (xpAccessible->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  return GetHRESULT(xpAccessible->DoAction(0));
+
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return S_OK;
+  return E_FAIL;
 }
 
 STDMETHODIMP nsAccessibleWrap::put_accName(
@@ -1033,7 +1129,7 @@ __try {
   *aNRelations = 0;
 
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   for (PRUint32 relType = nsIAccessibleRelation::RELATION_FIRST;
        relType <= nsIAccessibleRelation::RELATION_LAST; relType++) {
@@ -1057,7 +1153,7 @@ __try {
   *aRelation = NULL;
 
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   PRUint32 relIdx = 0;
   for (PRUint32 relType = nsIAccessibleRelation::RELATION_FIRST;
@@ -1092,7 +1188,7 @@ __try {
   *aNRelations = 0;
 
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   for (PRUint32 relType = nsIAccessibleRelation::RELATION_FIRST;
        relType <= nsIAccessibleRelation::RELATION_LAST &&
@@ -1118,17 +1214,25 @@ __try {
   *aRole = 0;
 
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
-  NS_ASSERTION(gWindowsRoleMap[roles::LAST_ENTRY].ia2Role == ROLE_WINDOWS_LAST_ENTRY,
-               "MSAA role map skewed");
+#define ROLE(_geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role) \
+  case roles::_geckoRole: \
+    *aRole = ia2Role; \
+    break;
 
-  roles::Role role = Role();
-  *aRole = gWindowsRoleMap[role].ia2Role;
+  a11y::role geckoRole = Role();
+  switch (geckoRole) {
+#include "RoleMap.h"
+    default:
+      MOZ_NOT_REACHED("Unknown role.");
+  };
+
+#undef ROLE
 
   // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call
   // the IA2 role a ROLE_OUTLINEITEM.
-  if (role == roles::ROW) {
+  if (geckoRole == roles::ROW) {
     nsAccessible* xpParent = Parent();
     if (xpParent && xpParent->Role() == roles::TREE_TABLE)
       *aRole = ROLE_SYSTEM_OUTLINEITEM;
@@ -1144,7 +1248,10 @@ STDMETHODIMP
 nsAccessibleWrap::scrollTo(enum IA2ScrollType aScrollType)
 {
 __try {
-  nsAccessNode::ScrollTo(aScrollType);
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, aScrollType);
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -1156,6 +1263,9 @@ nsAccessibleWrap::scrollToPoint(enum IA2CoordinateType aCoordType,
                                 long aX, long aY)
 {
 __try {
+  if (IsDefunct())
+      return CO_E_OBJNOTCONNECTED;
+
   PRUint32 geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
     nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
     nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
@@ -1173,6 +1283,9 @@ nsAccessibleWrap::get_groupPosition(long *aGroupLevel,
                                     long *aPositionInGroup)
 {
 __try {
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
   PRInt32 groupLevel = 0;
   PRInt32 similarItemsInGroup = 0;
   PRInt32 positionInGroup = 0;
@@ -1203,6 +1316,9 @@ nsAccessibleWrap::get_states(AccessibleStates *aStates)
 {
 __try {
   *aStates = 0;
+
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   // XXX: bug 344674 should come with better approach that we have here.
 
@@ -1326,7 +1442,7 @@ __try {
   *aWindowHandle = 0;
 
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   *aWindowHandle = GetHWNDFor(this);
   return S_OK;
@@ -1344,7 +1460,7 @@ __try {
 
   *aIndexInParent = -1;
   if (IsDefunct())
-    return E_FAIL;
+    return CO_E_OBJNOTCONNECTED;
 
   *aIndexInParent = IndexInParent();
   if (*aIndexInParent == -1)
@@ -1363,6 +1479,9 @@ __try {
   // subcodes: language-code = primary-code ( "-" subcode )*
   // Two-letter primary codes are reserved for [ISO639] language abbreviations.
   // Any two-letter subcode is understood to be a [ISO3166] country code.
+
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   nsAutoString lang;
   Language(lang);
@@ -1406,6 +1525,9 @@ nsAccessibleWrap::get_attributes(BSTR *aAttributes)
   // characters ":;=,\".
 __try {
   *aAttributes = NULL;
+
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   nsCOMPtr<nsIPersistentProperties> attributes;
   nsresult rv = GetAttributes(getter_AddRefs(attributes));
@@ -1548,7 +1670,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
       aid->ToUTF8String(id);
   }
 
-#ifdef DEBUG_A11Y
+#ifdef DEBUG
   printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %d\n\n",
          eventType, NS_ConvertUTF16toUTF8(tag).get(), id.get(),
          childID, hWnd);
@@ -1758,7 +1880,7 @@ void nsAccessibleWrap::UpdateSystemCaret()
   // off-screen model can follow the caret
   ::DestroyCaret();
 
-  nsRootAccessible* rootAccessible = RootAccessible();
+  a11y::RootAccessible* rootAccessible = RootAccessible();
   if (!rootAccessible) {
     return;
   }

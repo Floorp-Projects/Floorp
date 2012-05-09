@@ -24,14 +24,6 @@ static const unsigned int bmode_cts[VP8_BINTRAMODES] =
     43891, 17694, 10036, 3920, 3363, 2546, 5119, 3221, 2471, 1723
 };
 
-typedef enum
-{
-    SUBMVREF_NORMAL,
-    SUBMVREF_LEFT_ZED,
-    SUBMVREF_ABOVE_ZED,
-    SUBMVREF_LEFT_ABOVE_SAME,
-    SUBMVREF_LEFT_ABOVE_ZED
-} sumvfref_t;
 
 int vp8_mv_cont(const int_mv *l, const int_mv *a)
 {

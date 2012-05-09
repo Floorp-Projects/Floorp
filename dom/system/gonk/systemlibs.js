@@ -5,6 +5,11 @@
 const SYSTEM_PROPERTY_KEY_MAX = 32;
 const SYSTEM_PROPERTY_VALUE_MAX = 92;
 
+// We leave this as 'undefined' instead of setting it to 'false'. That
+// way a file that includes us can have it defined already without us
+// overriding the value here.
+let DEBUG;
+
 /**
  * Expose some system-level functions.
  */
@@ -15,7 +20,9 @@ let libcutils = (function() {
   } catch(ex) {
     // Return a fallback option in case libcutils.so isn't present (e.g.
     // when building Firefox with MOZ_B2G_RIL.
-    dump("Could not load libcutils.so. Using fake propdb.\n");
+    if (DEBUG) {
+      dump("Could not load libcutils.so. Using fake propdb.\n");
+    }
     let fake_propdb = Object.create(null);
     return {
       property_get: function fake_property_get(key, defaultValue) {
@@ -86,7 +93,9 @@ let libnetutils = (function () {
   try {
     library = ctypes.open("libnetutils.so");
   } catch(ex) {
-    dump("Could not load libnetutils.so!\n");
+    if (DEBUG) {
+      dump("Could not load libnetutils.so!\n");
+    }
     // For now we just fake the ctypes library interfacer to return
     // no-op functions when library.declare() is called.
     library = {

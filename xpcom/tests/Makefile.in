@@ -103,6 +103,7 @@ CPP_UNIT_TESTS = \
                  TestObserverService.cpp \
                  TestPipe.cpp \
                  TestRefPtr.cpp \
+                 TestSettingsAPI.cpp \
                  TestTextFormatter.cpp \
                  TestCheckedInt.cpp \
                  TestTArray.cpp \
@@ -193,7 +194,7 @@ else
 getnativepath = $(1)
 endif
 
-abs_srcdir = $(shell cd $(srcdir) && pwd)
+abs_srcdir = $(call core_abspath,$(srcdir))
 
 DIST_PATH = $(DIST)/bin/
 RM_DIST = rm -f
@@ -205,8 +206,3 @@ check::
 	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) $(regOrderDir)
 
 GARBAGE += TestScriptable.h
-
-ifdef STDCXX_COMPAT
-TestCheckedInt: $(STDCXX_COMPAT:.cpp=.$(OBJ_SUFFIX))
-TestCheckedInt: LIBS += $(STDCXX_COMPAT:.cpp=.$(OBJ_SUFFIX))
-endif

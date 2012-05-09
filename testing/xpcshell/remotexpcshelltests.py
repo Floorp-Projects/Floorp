@@ -58,6 +58,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         # of characters used in a shell command, and the xpcshell command
         # line can be quite complex.
         self.remoteBinDir = self.remoteJoin(self.remoteTestRoot, "b")
+        self.remoteTmpDir = self.remoteJoin(self.remoteTestRoot, "tmp")
         self.remoteScriptsDir = self.remoteTestRoot
         self.remoteComponentsDir = self.remoteJoin(self.remoteTestRoot, "c")
         self.profileDir = self.remoteJoin(self.remoteTestRoot, "p")
@@ -97,6 +98,9 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
     def setupUtilities(self):
         remotePrefDir = self.remoteJoin(self.remoteBinDir, "defaults/pref")
+        if (self.device.dirExists(self.remoteTmpDir)):
+          self.device.removeDir(self.remoteTmpDir)
+        self.device.mkDir(self.remoteTmpDir)
         if (not self.device.dirExists(remotePrefDir)):
           self.device.mkDirs(self.remoteJoin(remotePrefDir, "extra"))
         if (not self.device.dirExists(self.remoteScriptsDir)):
@@ -223,6 +227,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         if (self.appRoot):
           env["GRE_HOME"]=self.appRoot
         env["XPCSHELL_TEST_PROFILE_DIR"]=self.profileDir
+        env["TMPDIR"]=self.remoteTmpDir
+        env["HOME"]=self.profileDir
         outputFile = "xpcshelloutput"
         f = open(outputFile, "w+")
         self.shellReturnCode = self.device.shell(cmd, f, cwd=self.remoteHere, env=env)

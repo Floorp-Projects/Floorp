@@ -77,6 +77,7 @@ using mozilla::unused;
 #include "nsTArray.h"
 
 #include "AndroidBridge.h"
+#include "android_npapi.h"
 
 #include "imgIEncoder.h"
 
@@ -90,10 +91,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 // The dimensions of the current android view
 static gfxIntSize gAndroidBounds = gfxIntSize(0, 0);
 static gfxIntSize gAndroidScreenBounds;
-
-#ifdef ACCESSIBILITY
-bool nsWindow::sAccessibilityEnabled = false;
-#endif
 
 #ifdef MOZ_JAVA_COMPOSITOR
 #include "mozilla/layers/CompositorChild.h"
@@ -156,8 +153,8 @@ static void *sNativeWindow = nsnull;
 static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
 static const double SWIPE_MIN_DISTANCE_INCHES = 0.6;
 
-static nsWindow*
-TopWindow()
+nsWindow*
+nsWindow::TopWindow()
 {
     if (!gTopLevelWindows.IsEmpty())
         return gTopLevelWindows[0];
@@ -196,9 +193,6 @@ nsWindow::nsWindow() :
     mIsVisible(false),
     mParent(nsnull),
     mFocus(nsnull),
-#ifdef ACCESSIBILITY
-    mRootAccessible(nsnull),
-#endif
     mIMEComposing(false)
 {
 }
@@ -209,10 +203,6 @@ nsWindow::~nsWindow()
     nsWindow *top = FindTopLevel();
     if (top->mFocus == this)
         top->mFocus = nsnull;
-#ifdef ACCESSIBILITY
-    if (mRootAccessible)
-        mRootAccessible = nsnull;
-#endif
     ALOG("nsWindow %p destructor", (void*)this);
 #ifdef MOZ_JAVA_COMPOSITOR
     SetCompositor(NULL, NULL, NULL);
@@ -344,7 +334,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
         mParent->mChildren.AppendElement(this);
 
     // if we are now in the toplevel window's hierarchy, schedule a redraw
-    if (FindTopLevel() == TopWindow())
+    if (FindTopLevel() == nsWindow::TopWindow())
         RedrawAll();
 
     return NS_OK;
@@ -400,7 +390,7 @@ nsWindow::Show(bool aState)
             // and bring it to the front.
             Resize(0, 0, gAndroidBounds.width, gAndroidBounds.height, false);
             BringToFront();
-        } else if (TopWindow() == this) {
+        } else if (nsWindow::TopWindow() == this) {
             // find the next visible window to show
             unsigned int i;
             for (i = 1; i < gTopLevelWindows.Length(); i++) {
@@ -412,20 +402,9 @@ nsWindow::Show(bool aState)
                 break;
             }
         }
-    } else if (FindTopLevel() == TopWindow()) {
+    } else if (FindTopLevel() == nsWindow::TopWindow()) {
         RedrawAll();
     }
-
-#ifdef ACCESSIBILITY
-    static bool sAccessibilityChecked = false;
-    if (!sAccessibilityChecked) {
-        sAccessibilityChecked = true;
-        sAccessibilityEnabled =
-            AndroidBridge::Bridge()->GetAccessibilityEnabled();
-     } 
-    if (aState && sAccessibilityEnabled)
-        CreateRootAccessible();
-#endif
 
 #ifdef DEBUG_ANDROID_WIDGET
     DumpWindows();
@@ -433,32 +412,6 @@ nsWindow::Show(bool aState)
 
     return NS_OK;
 }
-
-#ifdef ACCESSIBILITY
-void
-nsWindow::CreateRootAccessible()
-{
-    if (IsTopLevel() && !mRootAccessible) {
-        ALOG(("nsWindow:: Create Toplevel Accessibility\n"));
-        nsAccessible *acc = DispatchAccessibleEvent();
-
-        if (acc) {
-            mRootAccessible = acc;
-        }
-    }
-}
-
-nsAccessible*
-nsWindow::DispatchAccessibleEvent()
-{
-    nsAccessibleEvent event(true, NS_GETACCESSIBLE, this);
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-
-    return event.mAccessible;
-}
-#endif
 
 NS_IMETHODIMP
 nsWindow::SetModal(bool aState)
@@ -537,7 +490,7 @@ nsWindow::Resize(PRInt32 aX,
         OnSizeChanged(gfxIntSize(aWidth, aHeight));
 
     // Should we skip honoring aRepaint here?
-    if (aRepaint && FindTopLevel() == TopWindow())
+    if (aRepaint && FindTopLevel() == nsWindow::TopWindow())
         RedrawAll();
 
     return NS_OK;
@@ -636,7 +589,7 @@ nsWindow::BringToFront()
     nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
     nsCOMPtr<nsIDOMWindow> existingTopWindow;
     fm->GetActiveWindow(getter_AddRefs(existingTopWindow));
-    if (existingTopWindow && FindTopLevel() == TopWindow())
+    if (existingTopWindow && FindTopLevel() == nsWindow::TopWindow())
         return;
 
     if (!IsTopLevel()) {
@@ -961,11 +914,15 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
             if (AndroidBridge::Bridge()->HasNativeWindowAccess()) {
                 AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
-                jobject surface = sview.GetSurface();
-                if (surface) {
-                    sNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(surface);
-                    if (sNativeWindow) {
-                        AndroidBridge::Bridge()->SetNativeWindowFormat(sNativeWindow, 0, 0, AndroidBridge::WINDOW_FORMAT_RGB_565);
+                JNIEnv *env = AndroidBridge::GetJNIEnv();
+                if (env) {
+                    AutoLocalJNIFrame jniFrame(env);
+                    jobject surface = sview.GetSurface(&jniFrame);
+                    if (surface) {
+                        sNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(env, surface);
+                        if (sNativeWindow) {
+                            AndroidBridge::Bridge()->SetNativeWindowFormat(sNativeWindow, 0, 0, AndroidBridge::WINDOW_FORMAT_RGB_565);
+                        }
                     }
                 }
             }
@@ -1066,9 +1023,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
     // If we have no covering child, then we need to render this.
     if (coveringChildIndex == -1) {
         nsPaintEvent event(true, NS_PAINT, this);
-
-        nsIntRect tileRect(0, 0, gAndroidBounds.width, gAndroidBounds.height);
-        event.region = boundsRect.Intersect(invalidRect).Intersect(tileRect);
+        event.region = invalidRect;
 
         switch (GetLayerManager(nsnull)->GetBackendType()) {
             case LayerManager::LAYERS_BASIC: {
@@ -1158,30 +1113,16 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
-    AndroidBridge::AutoLocalJNIFrame jniFrame;
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return;
+    AutoLocalJNIFrame jniFrame;
+
 #ifdef MOZ_JAVA_COMPOSITOR
     // We're paused, or we haven't been given a window-size yet, so do nothing
     if (sCompositorPaused || gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0) {
         return;
     }
-
-    /*
-     * Check to see whether the presentation shell corresponding to the document on the screen
-     * is suppressing painting. If it is, we bail out, as continuing would result in a mismatch
-     * between the content on the screen and the current viewport metrics.
-     */
-    nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
-        AndroidBridge::Bridge()->GetDrawMetadataProvider();
-
-    layers::renderTraceEventStart("Check supress", "424242");
-    bool paintingSuppressed = false;
-    if (metadataProvider) {
-        metadataProvider->PaintingSuppressed(&paintingSuppressed);
-    }
-    if (paintingSuppressed) {
-        return;
-    }
-    layers::renderTraceEventEnd("Check supress", "424242");
 
     layers::renderTraceEventStart("Get surface", "424545");
     static unsigned char bits2[32 * 32 * 2];
@@ -1191,11 +1132,10 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     layers::renderTraceEventEnd("Get surface", "424545");
 
     layers::renderTraceEventStart("Widget draw to", "434646");
-    nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
     if (targetSurface->CairoStatus()) {
         ALOG("### Failed to create a valid surface from the bitmap");
     } else {
-        DrawTo(targetSurface, dirtyRect);
+        DrawTo(targetSurface, ae->Rect());
     }
     layers::renderTraceEventEnd("Widget draw to", "434646");
     return;
@@ -1241,7 +1181,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
             AndroidBridge::Bridge()->UnlockWindow(sNativeWindow);
         } else if (AndroidBridge::Bridge()->HasNativeBitmapAccess()) {
-            jobject bitmap = sview.GetSoftwareDrawBitmap();
+            jobject bitmap = sview.GetSoftwareDrawBitmap(&jniFrame);
             if (!bitmap) {
                 ALOG("no bitmap to draw into - skipping draw");
                 return;
@@ -1270,15 +1210,11 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
             AndroidBridge::Bridge()->UnlockBitmap(bitmap);
             sview.Draw2D(bitmap, mBounds.width, mBounds.height);
         } else {
-            jobject bytebuf = sview.GetSoftwareDrawBuffer();
+            jobject bytebuf = sview.GetSoftwareDrawBuffer(&jniFrame);
             if (!bytebuf) {
                 ALOG("no buffer to draw into - skipping draw");
                 return;
             }
-
-            JNIEnv *env = AndroidBridge::GetJNIEnv();
-            if (!env)
-                return;
 
             void *buf = env->GetDirectBufferAddress(bytebuf);
             int cap = env->GetDirectBufferCapacity(bytebuf);
@@ -1509,10 +1445,7 @@ nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
 {
     nsIntPoint offset = WidgetToScreenOffset();
 
-    event.isShift = false;
-    event.isControl = false;
-    event.isMeta = false;
-    event.isAlt = false;
+    event.modifiers = 0;
     event.time = ae->Time();
 
     int action = ae->Action() & AndroidMotionEvent::ACTION_MASK;
@@ -1627,10 +1560,7 @@ nsWindow::DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
 {
     nsSimpleGestureEvent event(true, msg, this, direction, delta);
 
-    event.isShift = false;
-    event.isControl = false;
-    event.isMeta = false;
-    event.isAlt = false;
+    event.modifiers = 0;
     event.time = time;
     event.refPoint = refPoint;
 
@@ -1644,10 +1574,7 @@ nsWindow::DispatchMotionEvent(nsInputEvent &event, AndroidGeckoEvent *ae,
 {
     nsIntPoint offset = WidgetToScreenOffset();
 
-    event.isShift = false;
-    event.isControl = false;
-    event.isMeta = false;
-    event.isAlt = false;
+    event.modifiers = 0;
     event.time = ae->Time();
 
     // XXX possibly bound the range of event.refPoint here.
@@ -1657,175 +1584,165 @@ nsWindow::DispatchMotionEvent(nsInputEvent &event, AndroidGeckoEvent *ae,
     DispatchEvent(&event);
 }
 
-void
-nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key)
+static unsigned int ConvertAndroidKeyCodeToDOMKeyCode(int androidKeyCode)
 {
-    switch (key.KeyCode()) {
-    case AndroidKeyEvent::KEYCODE_UNKNOWN:
-    case AndroidKeyEvent::KEYCODE_HOME:
-        break;
-    case AndroidKeyEvent::KEYCODE_BACK:
-        event.keyCode = NS_VK_ESCAPE;
-        break;
-    case AndroidKeyEvent::KEYCODE_CALL:
-    case AndroidKeyEvent::KEYCODE_ENDCALL:
-        break;
-    case AndroidKeyEvent::KEYCODE_0:
-    case AndroidKeyEvent::KEYCODE_1:
-    case AndroidKeyEvent::KEYCODE_2:
-    case AndroidKeyEvent::KEYCODE_3:
-    case AndroidKeyEvent::KEYCODE_4:
-    case AndroidKeyEvent::KEYCODE_5:
-    case AndroidKeyEvent::KEYCODE_6:
-    case AndroidKeyEvent::KEYCODE_7:
-    case AndroidKeyEvent::KEYCODE_8:
-    case AndroidKeyEvent::KEYCODE_9:
-        event.keyCode = key.KeyCode() - AndroidKeyEvent::KEYCODE_0 + NS_VK_0;
-        break;
-    case AndroidKeyEvent::KEYCODE_STAR:
-        event.keyCode = NS_VK_MULTIPLY;
-        break;
-    case AndroidKeyEvent::KEYCODE_POUND:
-        break;
-    case AndroidKeyEvent::KEYCODE_DPAD_UP:
-        event.keyCode = NS_VK_UP;
-        break;
-    case AndroidKeyEvent::KEYCODE_DPAD_DOWN:
-        event.keyCode = NS_VK_DOWN;
-        break;
-    case AndroidKeyEvent::KEYCODE_SOFT_LEFT:
-    case AndroidKeyEvent::KEYCODE_DPAD_LEFT:
-        event.keyCode = NS_VK_LEFT;
-        break;
-    case AndroidKeyEvent::KEYCODE_SOFT_RIGHT:
-    case AndroidKeyEvent::KEYCODE_DPAD_RIGHT:
-        event.keyCode = NS_VK_RIGHT;
-        break;
-    case AndroidKeyEvent::KEYCODE_VOLUME_UP:
-    case AndroidKeyEvent::KEYCODE_VOLUME_DOWN:
-    case AndroidKeyEvent::KEYCODE_POWER:
-    case AndroidKeyEvent::KEYCODE_CAMERA:
-    case AndroidKeyEvent::KEYCODE_CLEAR:
-        break;
-    case AndroidKeyEvent::KEYCODE_A:
-    case AndroidKeyEvent::KEYCODE_B:
-    case AndroidKeyEvent::KEYCODE_C:
-    case AndroidKeyEvent::KEYCODE_D:
-    case AndroidKeyEvent::KEYCODE_E:
-    case AndroidKeyEvent::KEYCODE_F:
-    case AndroidKeyEvent::KEYCODE_G:
-    case AndroidKeyEvent::KEYCODE_H:
-    case AndroidKeyEvent::KEYCODE_I:
-    case AndroidKeyEvent::KEYCODE_J:
-    case AndroidKeyEvent::KEYCODE_K:
-    case AndroidKeyEvent::KEYCODE_L:
-    case AndroidKeyEvent::KEYCODE_M:
-    case AndroidKeyEvent::KEYCODE_N:
-    case AndroidKeyEvent::KEYCODE_O:
-    case AndroidKeyEvent::KEYCODE_P:
-    case AndroidKeyEvent::KEYCODE_Q:
-    case AndroidKeyEvent::KEYCODE_R:
-    case AndroidKeyEvent::KEYCODE_S:
-    case AndroidKeyEvent::KEYCODE_T:
-    case AndroidKeyEvent::KEYCODE_U:
-    case AndroidKeyEvent::KEYCODE_V:
-    case AndroidKeyEvent::KEYCODE_W:
-    case AndroidKeyEvent::KEYCODE_X:
-    case AndroidKeyEvent::KEYCODE_Y:
-    case AndroidKeyEvent::KEYCODE_Z:
-        event.keyCode = key.KeyCode() - AndroidKeyEvent::KEYCODE_A + NS_VK_A;
-        break;
-    case AndroidKeyEvent::KEYCODE_COMMA:
-        event.keyCode = NS_VK_COMMA;
-        break;
-    case AndroidKeyEvent::KEYCODE_PERIOD:
-        event.keyCode = NS_VK_PERIOD;
-        break;
-    case AndroidKeyEvent::KEYCODE_ALT_LEFT:
-    case AndroidKeyEvent::KEYCODE_ALT_RIGHT:
-    case AndroidKeyEvent::KEYCODE_SHIFT_LEFT:
-    case AndroidKeyEvent::KEYCODE_SHIFT_RIGHT:
-        break;
-    case AndroidKeyEvent::KEYCODE_TAB:
-        event.keyCode = NS_VK_TAB;
-        break;
-    case AndroidKeyEvent::KEYCODE_SPACE:
-        event.keyCode = NS_VK_SPACE;
-        break;
-    case AndroidKeyEvent::KEYCODE_SYM:
-    case AndroidKeyEvent::KEYCODE_EXPLORER:
-    case AndroidKeyEvent::KEYCODE_ENVELOPE:
-        break;
-    case AndroidKeyEvent::KEYCODE_DPAD_CENTER:
-        event.keyCode = NS_VK_ENTER;
-        break;
-    case AndroidKeyEvent::KEYCODE_ENTER:
-        event.keyCode = NS_VK_RETURN;
-        break;
-    case AndroidKeyEvent::KEYCODE_DEL:
-        event.keyCode = NS_VK_BACK;
-        break;
-    case AndroidKeyEvent::KEYCODE_GRAVE:
-        break;
-    case AndroidKeyEvent::KEYCODE_MINUS:
-        event.keyCode = NS_VK_SUBTRACT;
-        break;
-    case AndroidKeyEvent::KEYCODE_EQUALS:
-        event.keyCode = NS_VK_EQUALS;
-        break;
-    case AndroidKeyEvent::KEYCODE_LEFT_BRACKET:
-        event.keyCode = NS_VK_OPEN_BRACKET;
-        break;
-    case AndroidKeyEvent::KEYCODE_RIGHT_BRACKET:
-        event.keyCode = NS_VK_CLOSE_BRACKET;
-        break;
-    case AndroidKeyEvent::KEYCODE_BACKSLASH:
-        event.keyCode = NS_VK_BACK_SLASH;
-        break;
-    case AndroidKeyEvent::KEYCODE_SEMICOLON:
-        event.keyCode = NS_VK_SEMICOLON;
-        break;
-    case AndroidKeyEvent::KEYCODE_APOSTROPHE:
-        event.keyCode = NS_VK_QUOTE;
-        break;
-    case AndroidKeyEvent::KEYCODE_SLASH:
-        event.keyCode = NS_VK_SLASH;
-        break;
-    case AndroidKeyEvent::KEYCODE_AT:
-    case AndroidKeyEvent::KEYCODE_NUM:
-    case AndroidKeyEvent::KEYCODE_HEADSETHOOK:
-    case AndroidKeyEvent::KEYCODE_FOCUS:
-        break;
-    case AndroidKeyEvent::KEYCODE_PLUS:
-        event.keyCode = NS_VK_ADD;
-        break;
-    case AndroidKeyEvent::KEYCODE_MENU:
-    case AndroidKeyEvent::KEYCODE_NOTIFICATION:
-    case AndroidKeyEvent::KEYCODE_SEARCH:
-    case AndroidKeyEvent::KEYCODE_MEDIA_PLAY_PAUSE:
-    case AndroidKeyEvent::KEYCODE_MEDIA_STOP:
-    case AndroidKeyEvent::KEYCODE_MEDIA_NEXT:
-    case AndroidKeyEvent::KEYCODE_MEDIA_PREVIOUS:
-    case AndroidKeyEvent::KEYCODE_MEDIA_REWIND:
-    case AndroidKeyEvent::KEYCODE_MEDIA_FAST_FORWARD:
-    case AndroidKeyEvent::KEYCODE_MUTE:
-        break;
-    default:
-        ALOG("Unknown key code!");
-        break;
+    // Special-case alphanumeric keycodes because they are most common.
+    if (androidKeyCode >= AndroidKeyEvent::KEYCODE_A &&
+        androidKeyCode <= AndroidKeyEvent::KEYCODE_Z) {
+        return androidKeyCode - AndroidKeyEvent::KEYCODE_A + NS_VK_A;
     }
 
-    // Android gives us \n, so filter out some control characters.
-    if (event.message == NS_KEY_PRESS &&
-        key.UnicodeChar() >= ' ') {
-        event.charCode = key.UnicodeChar();
-        if (key.UnicodeChar())
-            event.keyCode = 0;
+    if (androidKeyCode >= AndroidKeyEvent::KEYCODE_0 &&
+        androidKeyCode <= AndroidKeyEvent::KEYCODE_9) {
+        return androidKeyCode - AndroidKeyEvent::KEYCODE_0 + NS_VK_0;
     }
-    event.isShift = !!(key.MetaState() & AndroidKeyEvent::META_SHIFT_ON);
-    event.isControl = gMenu;
-    event.isAlt = !!(key.MetaState() & AndroidKeyEvent::META_ALT_ON);
-    event.isMeta = false;
+
+    switch (androidKeyCode) {
+        // KEYCODE_UNKNOWN (0) ... KEYCODE_HOME (3)
+        case AndroidKeyEvent::KEYCODE_BACK:               return NS_VK_ESCAPE;
+        // KEYCODE_CALL (5) ... KEYCODE_POUND (18)
+        case AndroidKeyEvent::KEYCODE_DPAD_UP:            return NS_VK_UP;
+        case AndroidKeyEvent::KEYCODE_DPAD_DOWN:          return NS_VK_DOWN;
+        case AndroidKeyEvent::KEYCODE_DPAD_LEFT:          return NS_VK_LEFT;
+        case AndroidKeyEvent::KEYCODE_DPAD_RIGHT:         return NS_VK_RIGHT;
+        case AndroidKeyEvent::KEYCODE_DPAD_CENTER:        return NS_VK_ENTER;
+        // KEYCODE_VOLUME_UP (24) ... KEYCODE_Z (54)
+        case AndroidKeyEvent::KEYCODE_COMMA:              return NS_VK_COMMA;
+        case AndroidKeyEvent::KEYCODE_PERIOD:             return NS_VK_PERIOD;
+        case AndroidKeyEvent::KEYCODE_ALT_LEFT:           return NS_VK_ALT;
+        case AndroidKeyEvent::KEYCODE_ALT_RIGHT:          return NS_VK_ALT;
+        case AndroidKeyEvent::KEYCODE_SHIFT_LEFT:         return NS_VK_SHIFT;
+        case AndroidKeyEvent::KEYCODE_SHIFT_RIGHT:        return NS_VK_SHIFT;
+        case AndroidKeyEvent::KEYCODE_TAB:                return NS_VK_TAB;
+        case AndroidKeyEvent::KEYCODE_SPACE:              return NS_VK_SPACE;
+        // KEYCODE_SYM (63) ... KEYCODE_ENVELOPE (65)
+        case AndroidKeyEvent::KEYCODE_ENTER:              return NS_VK_RETURN;
+        case AndroidKeyEvent::KEYCODE_DEL:                return NS_VK_BACK; // Backspace
+        case AndroidKeyEvent::KEYCODE_GRAVE:              return NS_VK_BACK_QUOTE;
+        // KEYCODE_MINUS (69)
+        case AndroidKeyEvent::KEYCODE_EQUALS:             return NS_VK_EQUALS;
+        case AndroidKeyEvent::KEYCODE_LEFT_BRACKET:       return NS_VK_OPEN_BRACKET;
+        case AndroidKeyEvent::KEYCODE_RIGHT_BRACKET:      return NS_VK_CLOSE_BRACKET;
+        case AndroidKeyEvent::KEYCODE_BACKSLASH:          return NS_VK_BACK_SLASH;
+        case AndroidKeyEvent::KEYCODE_SEMICOLON:          return NS_VK_SEMICOLON;
+        // KEYCODE_APOSTROPHE (75)
+        case AndroidKeyEvent::KEYCODE_SLASH:              return NS_VK_SLASH;
+        // KEYCODE_AT (77) ... KEYCODE_MUTE (91)
+        case AndroidKeyEvent::KEYCODE_PAGE_UP:            return NS_VK_PAGE_UP;
+        case AndroidKeyEvent::KEYCODE_PAGE_DOWN:          return NS_VK_PAGE_DOWN;
+        // KEYCODE_PICTSYMBOLS (94) ... KEYCODE_BUTTON_MODE (110)
+        case AndroidKeyEvent::KEYCODE_ESCAPE:             return NS_VK_ESCAPE;
+        case AndroidKeyEvent::KEYCODE_FORWARD_DEL:        return NS_VK_DELETE;
+        case AndroidKeyEvent::KEYCODE_CTRL_LEFT:          return NS_VK_CONTROL;
+        case AndroidKeyEvent::KEYCODE_CTRL_RIGHT:         return NS_VK_CONTROL;
+        case AndroidKeyEvent::KEYCODE_CAPS_LOCK:          return NS_VK_CAPS_LOCK;
+        case AndroidKeyEvent::KEYCODE_SCROLL_LOCK:        return NS_VK_SCROLL_LOCK;
+        // KEYCODE_META_LEFT (117) ... KEYCODE_FUNCTION (119)
+        case AndroidKeyEvent::KEYCODE_SYSRQ:              return NS_VK_PRINTSCREEN;
+        case AndroidKeyEvent::KEYCODE_BREAK:              return NS_VK_PAUSE;
+        case AndroidKeyEvent::KEYCODE_MOVE_HOME:          return NS_VK_HOME;
+        case AndroidKeyEvent::KEYCODE_MOVE_END:           return NS_VK_END;
+        case AndroidKeyEvent::KEYCODE_INSERT:             return NS_VK_INSERT;
+        // KEYCODE_FORWARD (125) ... KEYCODE_MEDIA_RECORD (130)
+        case AndroidKeyEvent::KEYCODE_F1:                 return NS_VK_F1;
+        case AndroidKeyEvent::KEYCODE_F2:                 return NS_VK_F2;
+        case AndroidKeyEvent::KEYCODE_F3:                 return NS_VK_F3;
+        case AndroidKeyEvent::KEYCODE_F4:                 return NS_VK_F4;
+        case AndroidKeyEvent::KEYCODE_F5:                 return NS_VK_F5;
+        case AndroidKeyEvent::KEYCODE_F6:                 return NS_VK_F6;
+        case AndroidKeyEvent::KEYCODE_F7:                 return NS_VK_F7;
+        case AndroidKeyEvent::KEYCODE_F8:                 return NS_VK_F8;
+        case AndroidKeyEvent::KEYCODE_F9:                 return NS_VK_F9;
+        case AndroidKeyEvent::KEYCODE_F10:                return NS_VK_F10;
+        case AndroidKeyEvent::KEYCODE_F11:                return NS_VK_F11;
+        case AndroidKeyEvent::KEYCODE_F12:                return NS_VK_F12;
+        case AndroidKeyEvent::KEYCODE_NUM_LOCK:           return NS_VK_NUM_LOCK;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_0:           return NS_VK_NUMPAD0;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_1:           return NS_VK_NUMPAD1;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_2:           return NS_VK_NUMPAD2;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_3:           return NS_VK_NUMPAD3;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_4:           return NS_VK_NUMPAD4;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_5:           return NS_VK_NUMPAD5;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_6:           return NS_VK_NUMPAD6;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_7:           return NS_VK_NUMPAD7;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_8:           return NS_VK_NUMPAD8;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_9:           return NS_VK_NUMPAD9;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_DIVIDE:      return NS_VK_DIVIDE;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_MULTIPLY:    return NS_VK_MULTIPLY;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_SUBTRACT:    return NS_VK_SUBTRACT;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_ADD:         return NS_VK_ADD;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_DOT:         return NS_VK_DECIMAL;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_COMMA:       return NS_VK_SEPARATOR;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_ENTER:       return NS_VK_RETURN;
+        case AndroidKeyEvent::KEYCODE_NUMPAD_EQUALS:      return NS_VK_EQUALS;
+        // KEYCODE_NUMPAD_LEFT_PAREN (162) ... KEYCODE_CALCULATOR (210)
+
+        default:
+            ALOG("ConvertAndroidKeyCodeToDOMKeyCode: "
+                 "No DOM keycode for Android keycode %d", androidKeyCode);
+        return 0;
+    }
+}
+
+static void InitPluginEvent(ANPEvent* pluginEvent, ANPKeyActions keyAction,
+                            AndroidGeckoEvent& key)
+{
+    int androidKeyCode = key.KeyCode();
+    PRUint32 domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(androidKeyCode);
+
+    int modifiers = 0;
+    if (key.IsAltPressed())
+      modifiers |= kAlt_ANPKeyModifier;
+    if (key.IsShiftPressed())
+      modifiers |= kShift_ANPKeyModifier;
+
+    pluginEvent->inSize = sizeof(ANPEvent);
+    pluginEvent->eventType = kKey_ANPEventType;
+    pluginEvent->data.key.action = keyAction;
+    pluginEvent->data.key.nativeCode = androidKeyCode;
+    pluginEvent->data.key.virtualCode = domKeyCode;
+    pluginEvent->data.key.unichar = key.UnicodeChar();
+    pluginEvent->data.key.modifiers = modifiers;
+    pluginEvent->data.key.repeatCount = key.RepeatCount();
+}
+
+void
+nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key,
+                       ANPEvent* pluginEvent)
+{
+    int androidKeyCode = key.KeyCode();
+    PRUint32 domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(androidKeyCode);
+
+    if (event.message == NS_KEY_PRESS) {
+        // Android gives us \n, so filter out some control characters.
+        event.isChar = (key.UnicodeChar() >= ' ');
+        event.charCode = event.isChar ? key.UnicodeChar() : 0;
+        event.keyCode = (event.charCode > 0) ? 0 : domKeyCode;
+        event.pluginEvent = NULL;
+    } else {
+#ifdef DEBUG
+        if (event.message != NS_KEY_DOWN && event.message != NS_KEY_UP) {
+            ALOG("InitKeyEvent: unexpected event.message %d", event.message);
+        }
+#endif // DEBUG
+
+        // Flash will want a pluginEvent for keydown and keyup events.
+        ANPKeyActions action = event.message == NS_KEY_DOWN
+                             ? kDown_ANPKeyAction
+                             : kUp_ANPKeyAction;
+        InitPluginEvent(pluginEvent, action, key);
+
+        event.isChar = false;
+        event.charCode = 0;
+        event.keyCode = domKeyCode;
+        event.pluginEvent = pluginEvent;
+    }
+
+    event.InitBasicModifiers(gMenu,
+                             key.IsAltPressed(),
+                             key.IsShiftPressed(),
+                             false);
+    event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
     event.time = key.Time();
 
     if (gMenu)
@@ -1867,7 +1784,8 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
         switch (keyCode) {
             case AndroidKeyEvent::KEYCODE_BACK: {
                 nsKeyEvent pressEvent(true, NS_KEY_PRESS, this);
-                InitKeyEvent(pressEvent, *ae);
+                ANPEvent pluginEvent;
+                InitKeyEvent(pressEvent, *ae, &pluginEvent);
                 DispatchEvent(&pressEvent);
                 return;
             }
@@ -1937,7 +1855,8 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
 
     nsEventStatus status;
     nsKeyEvent event(true, msg, this);
-    InitKeyEvent(event, *ae);
+    ANPEvent pluginEvent;
+    InitKeyEvent(event, *ae, &pluginEvent);
     DispatchEvent(&event, status);
 
     if (Destroyed())
@@ -1946,12 +1865,12 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         return;
 
     nsKeyEvent pressEvent(true, NS_KEY_PRESS, this);
-    InitKeyEvent(pressEvent, *ae);
+    InitKeyEvent(pressEvent, *ae, &pluginEvent);
     if (status == nsEventStatus_eConsumeNoDefault) {
         pressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     }
 #ifdef DEBUG_ANDROID_WIDGET
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "Dispatching key pressEvent with keyCode %d charCode %d shift %d alt %d sym/ctrl %d metamask %d", pressEvent.keyCode, pressEvent.charCode, pressEvent.isShift, pressEvent.isAlt, pressEvent.isControl, ae->MetaState());
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "Dispatching key pressEvent with keyCode %d charCode %d shift %d alt %d sym/ctrl %d metamask %d", pressEvent.keyCode, pressEvent.charCode, pressEvent.IsShift(), pressEvent.IsAlt(), pressEvent.IsControl(), ae->MetaState());
 #endif
     DispatchEvent(&pressEvent);
 }
@@ -2071,10 +1990,11 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
         }
         return;
     case AndroidGeckoEvent::IME_DELETE_TEXT:
-        {   
+        {
             ALOGIME("IME: IME_DELETE_TEXT");
             nsKeyEvent event(true, NS_KEY_PRESS, this);
-            InitEvent(event, nsnull);
+            ANPEvent pluginEvent;
+            InitKeyEvent(event, *ae, &pluginEvent);
             event.keyCode = NS_VK_BACK;
             DispatchEvent(&event);
         }
@@ -2303,32 +2223,43 @@ nsWindow::GetIMEUpdatePreference()
 
 #ifdef MOZ_JAVA_COMPOSITOR
 void
-nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {
-    AndroidBridge::AutoLocalJNIFrame jniFrame(GetJNIForThread());
+nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
+{
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowUnderlay()!");
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame jniFrame(env);
 
     AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
-    client.CreateFrame(mLayerRendererFrame);
-
-    client.ActivateProgram();
-    mLayerRendererFrame.BeginDrawing();
-    mLayerRendererFrame.DrawBackground();
-    client.DeactivateProgram();
+    if (!client.CreateFrame(&jniFrame, mLayerRendererFrame)) return;
+    if (!client.ActivateProgram(&jniFrame)) return;
+    if (!mLayerRendererFrame.BeginDrawing(&jniFrame)) return;
+    if (!mLayerRendererFrame.DrawBackground(&jniFrame)) return;
+    if (!client.DeactivateProgram(&jniFrame)) return; // redundant, but in case somebody adds code after this...
 }
 
 void
-nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {
-    AndroidBridge::AutoLocalJNIFrame jniFrame(GetJNIForThread());
+nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
+{
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowOverlay()!");
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame jniFrame(env);
+
     NS_ABORT_IF_FALSE(!mLayerRendererFrame.isNull(),
                       "Frame should have been created in DrawWindowUnderlay()!");
 
     AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
 
-    client.ActivateProgram();
-    mLayerRendererFrame.DrawForeground();
-    mLayerRendererFrame.EndDrawing();
-    client.DeactivateProgram();
-
-    mLayerRendererFrame.Dispose();
+    if (!client.ActivateProgram(&jniFrame)) return;
+    if (!mLayerRendererFrame.DrawForeground(&jniFrame)) return;
+    if (!mLayerRendererFrame.EndDrawing(&jniFrame)) return;
+    if (!client.DeactivateProgram(&jniFrame)) return;
+    mLayerRendererFrame.Dispose(env);
 }
 
 // off-main-thread compositor fields and functions
@@ -2365,10 +2296,10 @@ nsWindow::SchedulePauseComposition()
 }
 
 void
-nsWindow::ScheduleResumeComposition()
+nsWindow::ScheduleResumeComposition(int width, int height)
 {
     if (sCompositorParent) {
-        sCompositorParent->ScheduleResumeOnCompositorThread();
+        sCompositorParent->ScheduleResumeOnCompositorThread(width, height);
     }
 }
 

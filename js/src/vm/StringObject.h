@@ -41,8 +41,6 @@
 #ifndef StringObject_h___
 #define StringObject_h___
 
-#include "mozilla/Attributes.h"
-
 #include "jsobj.h"
 #include "jsstr.h"
 
@@ -60,13 +58,13 @@ class StringObject : public JSObject
      * Creates a new String object boxing the given string.  The object's
      * [[Prototype]] is determined from context.
      */
-    static inline StringObject *create(JSContext *cx, JSString *str);
+    static inline StringObject *create(JSContext *cx, HandleString str);
 
     /*
      * Identical to create(), but uses |proto| as [[Prototype]].  This method
      * must not be used to create |String.prototype|.
      */
-    static inline StringObject *createWithProto(JSContext *cx, JSString *str, JSObject &proto);
+    static inline StringObject *createWithProto(JSContext *cx, HandleString str, JSObject &proto);
 
     JSString *unbox() const {
         return getFixedSlot(PRIMITIVE_VALUE_SLOT).toString();
@@ -81,7 +79,7 @@ class StringObject : public JSObject
     }
 
   private:
-    inline bool init(JSContext *cx, JSString *str);
+    inline bool init(JSContext *cx, HandleString str);
 
     void setStringThis(JSString *str) {
         JS_ASSERT(getReservedSlot(PRIMITIVE_VALUE_SLOT).isUndefined());
@@ -99,10 +97,6 @@ class StringObject : public JSObject
      * this String object's last property to it.
      */
     Shape *assignInitialShape(JSContext *cx);
-
-  private:
-    StringObject() MOZ_DELETE;
-    StringObject &operator=(const StringObject &so) MOZ_DELETE;
 };
 
 } // namespace js

@@ -29,3 +29,31 @@ assertEq(q[4294967295], 2);
 try {
   [1,2,3,{a:0,b:1}].foo.bar;
 } catch (e) { assertEq(e.message, "[1, 2, 3, {a:0, b:1}].foo is undefined"); }
+
+var a = [1 + 1, 3 * 2, 6 - 5, 14 % 6, 15 / 5, 1 << 3, 
+         8 >> 2, 5 | 2, 5 ^ 3, ~3, -3,"a" + "b",  !true, !false];
+assertEq(String(a), "2,6,1,2,3,8,2,7,6,-4,-3,ab,false,true");
+assertEq(a.length, 14);
+
+var b = {
+    a: 1 + 1,
+    b: 3 * 2,
+    c: 6 - 5,
+    d: 14 % 6,
+    e: 15 / 5,
+    f: 1 << 3,
+    g: 8 >> 2,
+    h: 5 | 2,
+    i: 5 ^ 3,
+    j: ~3,
+    k: -3,
+    l: "a" + "b",
+    m: !true,
+    n: !false,
+}
+
+var char = "a".charCodeAt(0);
+for (var i = 0; i < a.length; i++) {
+    assertEq(b[String.fromCharCode(char)], a[i]);
+    char++;
+}

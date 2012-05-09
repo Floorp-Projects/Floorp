@@ -41,7 +41,7 @@
 #include "nsEventStateManager.h"
 
 
-class nsHTMLProgressElement : public nsGenericHTMLFormElement,
+class nsHTMLProgressElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLProgressElement
 {
 public:
@@ -52,21 +52,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLProgressElement
   NS_DECL_NSIDOMHTMLPROGRESSELEMENT
-
-  // nsIFormControl
-  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_PROGRESS; }
-  NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
 
   nsEventStates IntrinsicState() const;
 
@@ -76,6 +71,8 @@ public:
                         const nsAString& aValue, nsAttrValue& aResult);
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 
 protected:
   /**
@@ -100,7 +97,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Progress)
 
 
 nsHTMLProgressElement::nsHTMLProgressElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLFormElement(aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
   // We start out indeterminate
   AddStatesSilently(NS_EVENT_STATE_INDETERMINATE);
@@ -119,30 +116,16 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLProgressElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLProgressElement,
                                    nsIDOMHTMLProgressElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLProgressElement,
-                                               nsGenericHTMLFormElement)
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLProgressElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLProgressElement)
 
 
-NS_IMETHODIMP
-nsHTMLProgressElement::Reset()
-{
-  // The progress element is not resettable.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLProgressElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
-{
-  // The progress element is not submittable.
-  return NS_OK;
-}
-
 nsEventStates
 nsHTMLProgressElement::IntrinsicState() const
 {
-  nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
+  nsEventStates state = nsGenericHTMLElement::IntrinsicState();
 
   if (IsIndeterminate()) {
     state |= NS_EVENT_STATE_INDETERMINATE;
@@ -161,14 +144,8 @@ nsHTMLProgressElement::ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLFormElement::ParseAttribute(aNamespaceID, aAttribute,
-                                                  aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLProgressElement::GetForm(nsIDOMHTMLFormElement** aForm)
-{
-  return nsGenericHTMLFormElement::GetForm(aForm);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute,
+                                              aValue, aResult);
 }
 
 NS_IMETHODIMP

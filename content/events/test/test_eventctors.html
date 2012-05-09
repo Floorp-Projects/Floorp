@@ -64,7 +64,9 @@ ok(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event shouldn't be trusted!");
 ok(!e.bubbles, "Event shouldn't bubble!");
 ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
 document.dispatchEvent(e);
+is(e.eventPhase, Event.NONE, "Wrong event phase");
 is(receivedEvent, e, "Wrong event!");
 
 e = new Event("hello", { bubbles: true, cancelable: true });
@@ -367,6 +369,25 @@ is(e.storageArea, localStorage, "Wrong value");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
 
+// DeviceProximityEvent
+e = new DeviceProximityEvent("hello", {min: 0, value: 1, max: 2});
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event should not be trusted");
+is(e.value, 1, "value should be 1");
+is(e.min, 0, "min should be 0");
+is(e.max, 2, "max should be 2");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+// DeviceLightEvent
+e = new DeviceLightEvent("hello", {value: 1} );
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event should not be trusted");
+is(e.value, 1, "value should be 1");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+
 // MouseEvent
 
 try {
@@ -395,6 +416,7 @@ var mouseEventProps =
   { altKey: false },
   { metaKey: false },
   { button: 0 },
+  { buttons: 0 },
   { relatedTarget: null }
 ];
 
@@ -409,6 +431,7 @@ var testProps =
   { altKey: true },
   { metaKey: true },
   { button: 5 },
+  { buttons: 6 },
   { relatedTarget: window }
 ];
 

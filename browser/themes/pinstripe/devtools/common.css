@@ -58,6 +58,11 @@
   box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
 }
 
+.devtools-toolbarbutton:-moz-focusring {
+  outline: 1px dotted hsla(210,30%,85%,0.4);
+  outline-offset: -4px;
+}
+
 .devtools-toolbarbutton > .toolbarbutton-text {
   margin: 1px 6px;
 }

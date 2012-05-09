@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=588683
+-->
+<head>
+  <title>Test for form attributes 2</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=588683">Mozilla Bug 588683</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <form id='a'>
+    <form id='b'>
+      <input id='i' form='b'>
+      <script>
+        is(document.getElementById('i').form, document.getElementById('b'),
+           "While parsing, the form property should work.");
+      </script>
+    </form>
+  </form>
+  <form id='c'>
+    <form id='d'>
+      <input id='i2' form='c'>
+      <script>
+        is(document.getElementById('i2').form, document.getElementById('c'),
+           "While parsing, the form property should work.");
+      </script>
+    </form>
+  </form>
+  <!-- Let's tests without @form -->
+  <form id='e'>
+    <form id='f'>
+      <input id='i3'>
+      <script>
+        // bug 589073
+        todo_is(document.getElementById('i3').form, document.getElementById('f'),
+                "While parsing, the form property should work.");
+      </script>
+    </form>
+  </form>
+  <form id='g'>
+    <input id='i4'>
+    <script>
+      is(document.getElementById('i4').form, document.getElementById('g'),
+         "While parsing, the form property should work.");
+    </script>
+  </form>
+</div>
+</body>
+</html>

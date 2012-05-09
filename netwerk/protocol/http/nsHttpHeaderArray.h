@@ -113,8 +113,6 @@ private:
 
     // Header cannot be merged: only one value possible
     bool    IsSingletonHeader(nsHttpAtom header);
-    // For some headers, we treat no value as possible CRLF attack
-    bool    HeaderMustHaveValue(nsHttpAtom header);
     // For some headers we want to track empty values to prevent them being
     // combined with non-empty ones as a CRLF attack vector
     bool    TrackEmptyHeader(nsHttpAtom header);
@@ -162,15 +160,10 @@ nsHttpHeaderArray::IsSingletonHeader(nsHttpAtom header)
 }
 
 inline bool
-nsHttpHeaderArray::HeaderMustHaveValue(nsHttpAtom header)
-{
-    return header == nsHttp::Location;
-}
-
-inline bool
 nsHttpHeaderArray::TrackEmptyHeader(nsHttpAtom header)
 {
-    return header == nsHttp::Content_Length;
+    return header == nsHttp::Content_Length ||
+           header == nsHttp::Location;
 }
 
 inline void

@@ -119,10 +119,13 @@ Site.prototype = {
    * Renders the site's data (fills the HTML fragment).
    */
   _render: function Site_render() {
-    let title = this.title || this.url;
+    let url = this.url;
+    let title = this.title || url;
+    let tooltip = (title == url ? title : title + "\n" + url);
+
     let link = this._querySelector(".newtab-link");
-    link.setAttribute("title", title);
-    link.setAttribute("href", this.url);
+    link.setAttribute("title", tooltip);
+    link.setAttribute("href", url);
     this._querySelector(".newtab-title").textContent = title;
 
     if (this.isPinned())

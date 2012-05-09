@@ -116,6 +116,12 @@ struct Statistics {
     FILE *fp;
     bool fullFormat;
 
+    /*
+     * GCs can't really nest, but a second GC can be triggered from within the
+     * JSGC_END callback.
+     */
+    int gcDepth;
+
     int collectedCount;
     int compartmentCount;
     const char *nonincrementalReason;
@@ -125,12 +131,14 @@ struct Statistics {
           : reason(reason), resetReason(NULL), start(start)
         {
             PodArrayZero(phaseTimes);
+            PodArrayZero(phaseFaults);
         }
 
         gcreason::Reason reason;
         const char *resetReason;
         int64_t start, end;
         int64_t phaseTimes[PHASE_LIMIT];
+        size_t phaseFaults[PHASE_LIMIT];
 
         int64_t duration() const { return end - start; }
     };
@@ -138,10 +146,12 @@ struct Statistics {
     Vector<SliceData, 8, SystemAllocPolicy> slices;
 
     /* Most recent time when the given phase started. */
-    int64_t phaseStarts[PHASE_LIMIT];
+    int64_t phaseStartTimes[PHASE_LIMIT];
+    size_t phaseStartFaults[PHASE_LIMIT];
 
     /* Total time in a given phase for this GC. */
     int64_t phaseTimes[PHASE_LIMIT];
+    size_t phaseFaults[PHASE_LIMIT];
 
     /* Total time in a given phase over all GCs. */
     int64_t phaseTotals[PHASE_LIMIT];

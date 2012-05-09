@@ -585,6 +585,36 @@ nsDOMMutationObserver::Disconnect()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMMutationObserver::TakeRecords(nsIVariant** aRetVal)
+{
+  *aRetVal = TakeRecords().get();
+  return NS_OK;
+}
+
+already_AddRefed<nsIVariant>
+nsDOMMutationObserver::TakeRecords()
+{
+  nsCOMPtr<nsIWritableVariant> mutations =
+    do_CreateInstance("@mozilla.org/variant;1");
+  PRInt32 len = mPendingMutations.Count();
+  if (len == 0) {
+    mutations->SetAsEmptyArray();
+  } else {
+    nsTArray<nsIDOMMutationRecord*> mods(len);
+    for (PRInt32 i = 0; i < len; ++i) {
+      mods.AppendElement(mPendingMutations[i]);
+    }
+
+    mutations->SetAsArray(nsIDataType::VTYPE_INTERFACE,
+                          &NS_GET_IID(nsIDOMMutationRecord),
+                          mods.Length(),
+                          const_cast<void*>(
+                            static_cast<const void*>(mods.Elements())));
+    mPendingMutations.Clear();
+  }
+  return mutations.forget();
+}
 
 NS_IMETHODIMP
 nsDOMMutationObserver::Initialize(nsISupports* aOwner, JSContext* cx,
@@ -639,21 +669,8 @@ nsDOMMutationObserver::HandleMutation()
     mPendingMutations.Clear();
     return;
   }
-  
-  PRInt32 len = mPendingMutations.Count();
-  nsTArray<nsIDOMMutationRecord*> mods(len);
-  for (PRInt32 i = 0; i < len; ++i) {
-    mods.AppendElement(mPendingMutations[i]);
-  }
-  
-  nsCOMPtr<nsIWritableVariant> mutations =
-    do_CreateInstance("@mozilla.org/variant;1");
-  mutations->SetAsArray(nsIDataType::VTYPE_INTERFACE,
-                        &NS_GET_IID(nsIDOMMutationRecord),
-                        mods.Length(),
-                        const_cast<void*>(
-                          static_cast<const void*>(mods.Elements())));
-  mPendingMutations.Clear();
+
+  nsCOMPtr<nsIVariant> mutations = TakeRecords();
   nsAutoMicroTask mt;
   sCurrentObserver = this; // For 'this' handling.
   mCallback->HandleMutations(mutations, this);

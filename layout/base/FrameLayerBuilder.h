@@ -163,6 +163,17 @@ public:
     bool mInTransformedSubtree;
     bool mInActiveTransformedSubtree;
     bool mDisableSubpixelAntialiasingInDescendants;
+    /**
+     * When this is false, ThebesLayer coordinates are drawn to with an integer
+     * translation and the scale in mXScale/mYScale.
+     */
+    bool AllowResidualTranslation()
+    {
+      // If we're in a transformed subtree, but no ancestor transform is actively
+      // changing, we'll use the residual translation when drawing into the
+      // ThebesLayer to ensure that snapping exactly matches the ideal transform.
+      return mInTransformedSubtree && !mInActiveTransformedSubtree;
+    }
   };
   /**
    * Build a container layer for a display item that contains a child
@@ -372,7 +383,16 @@ public:
 
     // Apply this |Clip| to the given gfxContext.  Any saving of state
     // or clearing of other clips must be done by the caller.
-    void ApplyTo(gfxContext* aContext, nsPresContext* aPresContext);
+    // See aBegin/aEnd note on ApplyRoundedRectsTo.
+    void ApplyTo(gfxContext* aContext, nsPresContext* aPresContext,
+                 PRUint32 aBegin = 0, PRUint32 aEnd = PR_UINT32_MAX);
+
+    void ApplyRectTo(gfxContext* aContext, PRInt32 A2D) const;
+    // Applies the rounded rects in this Clip to aContext
+    // Will only apply rounded rects from aBegin (inclusive) to aEnd
+    // (exclusive) or the number of rounded rects, whichever is smaller.
+    void ApplyRoundedRectsTo(gfxContext* aContext, PRInt32 A2DPRInt32,
+                             PRUint32 aBegin, PRUint32 aEnd) const;
 
     // Return a rectangle contained in the intersection of aRect with this
     // clip region. Tries to return the largest possible rectangle, but may
@@ -414,7 +434,7 @@ protected:
 
     nsRefPtr<Layer> mLayer;
     PRUint32        mDisplayItemKey;
-    LayerState    mLayerState;
+    LayerState      mLayerState;
   };
 
   static void RemoveFrameFromLayerManager(nsIFrame* aFrame, void* aPropertyValue);
@@ -429,9 +449,9 @@ protected:
    */
   class DisplayItemDataEntry : public nsPtrHashKey<nsIFrame> {
   public:
-    DisplayItemDataEntry(const nsIFrame *key) : nsPtrHashKey<nsIFrame>(key) {}
+    DisplayItemDataEntry(const nsIFrame *key) : nsPtrHashKey<nsIFrame>(key), mIsSharingContainerLayer(false) {}
     DisplayItemDataEntry(DisplayItemDataEntry &toCopy) :
-      nsPtrHashKey<nsIFrame>(toCopy.mKey)
+      nsPtrHashKey<nsIFrame>(toCopy.mKey), mIsSharingContainerLayer(toCopy.mIsSharingContainerLayer)
     {
       // This isn't actually a copy-constructor; notice that it steals toCopy's
       // array.  Be careful.
@@ -441,6 +461,7 @@ protected:
     bool HasNonEmptyContainerLayer();
 
     nsAutoTArray<DisplayItemData, 1> mData;
+    bool mIsSharingContainerLayer;
 
     enum { ALLOW_MEMMOVE = false };
   };
@@ -497,11 +518,12 @@ protected:
    * We accumulate ClippedDisplayItem elements in a hashtable during
    * the paint process. This is the hashentry for that hashtable.
    */
+public:
   class ThebesLayerItemsEntry : public nsPtrHashKey<ThebesLayer> {
   public:
     ThebesLayerItemsEntry(const ThebesLayer *key) :
         nsPtrHashKey<ThebesLayer>(key), mContainerLayerFrame(nsnull),
-        mHasExplicitLastPaintOffset(false) {}
+        mHasExplicitLastPaintOffset(false), mCommonClipCount(-1) {}
     ThebesLayerItemsEntry(const ThebesLayerItemsEntry &toCopy) :
       nsPtrHashKey<ThebesLayer>(toCopy.mKey), mItems(toCopy.mItems)
     {
@@ -514,10 +536,25 @@ protected:
     // layer tree.
     nsIntPoint mLastPaintOffset;
     bool mHasExplicitLastPaintOffset;
+    /**
+      * The first mCommonClipCount rounded rectangle clips are identical for
+      * all items in the layer. Computed in ThebesLayerData.
+      */
+    PRUint32 mCommonClipCount;
 
     enum { ALLOW_MEMMOVE = true };
   };
 
+  /**
+   * Get the ThebesLayerItemsEntry object associated with aLayer in this
+   * FrameLayerBuilder
+   */
+  ThebesLayerItemsEntry* GetThebesLayerItemsEntry(ThebesLayer* aLayer)
+  {
+    return mThebesLayerItems.GetEntry(aLayer);
+  }
+
+protected:
   void RemoveThebesItemsForLayerSubtree(Layer* aLayer);
 
   static PLDHashOperator UpdateDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,

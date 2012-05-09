@@ -101,11 +101,18 @@ public class GeckoThread extends Thread {
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
+        // find the right intent type
+        final String action = mIntent.getAction();
+        String type = GeckoApp.ACTION_WEBAPP.equals(action) ? "-webapp" :
+                      GeckoApp.ACTION_BOOKMARK.equals(action) ? "-bookmark" :
+                      null;
+
         // and then fire us up
-        Log.w(LOGTAG, "RunGecko - URI = " + mUri);
+        Log.i(LOGTAG, "RunGecko - URI = " + mUri);
         GeckoAppShell.runGecko(app.getApplication().getPackageResourcePath(),
                                mIntent.getStringExtra("args"),
                                mUri,
+                               type,
                                mRestoreSession);
     }
 }

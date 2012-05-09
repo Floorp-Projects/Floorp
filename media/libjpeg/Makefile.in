@@ -48,10 +48,8 @@ MODULE		= jpeg
 LIBRARY_NAME	= mozjpeg
 
 ifeq ($(OS_ARCH),WINNT)
-LIBRARY_NAME	= jpeg32$(VERSION_NUMBER)
+VISIBILITY_FLAGS	=
 endif
-
-GRE_MODULE	= 1
 
 CSRCS		= \
 		jcomapi.c \

@@ -76,6 +76,7 @@ const MATCH_ANYWHERE = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
 const MATCH_BOUNDARY_ANYWHERE = Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY_ANYWHERE;
 const MATCH_BOUNDARY = Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY;
 const MATCH_BEGINNING = Ci.mozIPlacesAutoComplete.MATCH_BEGINNING;
+const MATCH_BEGINNING_CASE_SENSITIVE = Ci.mozIPlacesAutoComplete.MATCH_BEGINNING_CASE_SENSITIVE;
 
 // AutoComplete index constants.  All AutoComplete queries will provide these
 // columns in this order.
@@ -102,7 +103,8 @@ const kQueryTypeFiltered = 1;
 const kTitleTagsSeparator = " \u2013 ";
 
 const kBrowserUrlbarBranch = "browser.urlbar.";
-
+// Toggle autocomplete.
+const kBrowserUrlbarAutocompleteEnabledPref = "autocomplete.enabled";
 // Toggle autoFill.
 const kBrowserUrlbarAutofillPref = "autoFill";
 // Whether to search only typed entries.
@@ -844,7 +846,9 @@ nsPlacesAutoComplete.prototype = {
    */
   _loadPrefs: function PAC_loadPrefs(aRegisterObserver)
   {
-    this._enabled = safePrefGetter(this._prefs, "autocomplete.enabled", true);
+    this._enabled = safePrefGetter(this._prefs,
+                                   kBrowserUrlbarAutocompleteEnabledPref,
+                                   true);
     this._matchBehavior = safePrefGetter(this._prefs,
                                          "matchBehavior",
                                          MATCH_BOUNDARY_ANYWHERE);
@@ -1300,7 +1304,7 @@ urlInlineComplete.prototype = {
 
   get _db()
   {
-    if (!this.__db && this._autofill) {
+    if (!this.__db && this._autofillEnabled) {
       this.__db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase).
                   DBConnection.clone(true);
     }
@@ -1439,11 +1443,20 @@ urlInlineComplete.prototype = {
       return;
     }
 
+    // The URIs in the database are fixed up, so we can match on a lowercased
+    // host, but the path must be matched in a case sensitive way.
+    let pathIndex =
+      this._originalSearchString.indexOf("/", this._strippedPrefix.length);
+    this._currentSearchString = fixupSearchText(
+      this._originalSearchString.slice(0, pathIndex).toLowerCase() +
+      this._originalSearchString.slice(pathIndex)
+    );
+
     // Within the standard autocomplete query, we only search the beginning
     // of URLs for 1 result.
     let query = this._asyncQuery;
     let (params = query.params) {
-      params.matchBehavior = MATCH_BEGINNING;
+      params.matchBehavior = MATCH_BEGINNING_CASE_SENSITIVE;
       params.searchBehavior = Ci.mozIPlacesAutoComplete["BEHAVIOR_URL"];
       params.searchString = this._currentSearchString;
     }
@@ -1476,9 +1489,13 @@ urlInlineComplete.prototype = {
   _loadPrefs: function UIC_loadPrefs(aRegisterObserver)
   {
     let prefBranch = Services.prefs.getBranch(kBrowserUrlbarBranch);
-    this._autofill = safePrefGetter(prefBranch,
-                                    kBrowserUrlbarAutofillPref,
-                                    true);
+    let autocomplete = safePrefGetter(prefBranch,
+                                      kBrowserUrlbarAutocompleteEnabledPref,
+                                      true);
+    let autofill = safePrefGetter(prefBranch,
+                                  kBrowserUrlbarAutofillPref,
+                                  true);
+    this._autofillEnabled = autocomplete && autofill;
     this._autofillTyped = safePrefGetter(prefBranch,
                                          kBrowserUrlbarAutofillTypedPref,
                                          true);
@@ -1538,10 +1555,11 @@ urlInlineComplete.prototype = {
     }
     else if (aTopic == kPrefChanged &&
              (aData.substr(kBrowserUrlbarBranch.length) == kBrowserUrlbarAutofillPref ||
+              aData.substr(kBrowserUrlbarBranch.length) == kBrowserUrlbarAutocompleteEnabledPref ||
               aData.substr(kBrowserUrlbarBranch.length) == kBrowserUrlbarAutofillTypedPref)) {
       let previousAutofillTyped = this._autofillTyped;
       this._loadPrefs();
-      if (!this._autofill) {
+      if (!this._autofillEnabled) {
         this.stopSearch();
         this._closeDatabase();
       }

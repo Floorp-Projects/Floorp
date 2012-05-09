@@ -118,7 +118,6 @@ CPPSRCS		= \
 		jsfriendapi.cpp \
 		jsfun.cpp \
 		jsgc.cpp \
-		jsgcmark.cpp \
 		jscrashreport.cpp \
 		jshash.cpp \
 		jsinfer.cpp \
@@ -172,6 +171,7 @@ CPPSRCS		= \
 		RegExpObject.cpp \
 		RegExpStatics.cpp \
 		RegExp.cpp \
+		Marking.cpp \
 		Memory.cpp \
 		Statistics.cpp \
 		StringBuffer.cpp \
@@ -196,7 +196,6 @@ INSTALLED_HEADERS = \
 		jsdhash.h \
 		jsfriendapi.h \
 		jsgc.h \
-		jscell.h \
 		jshash.h \
 		jslock.h \
 		json.h \
@@ -205,7 +204,6 @@ INSTALLED_HEADERS = \
 		jsproto.tbl \
 		jsprvtd.h \
 		jspubtd.h \
-		jstypedarray.h \
 		jstypes.h \
 		jsutil.h \
 		jsversion.h \
@@ -224,8 +222,10 @@ EXPORTS_ds = \
 		$(NULL)
 
 EXPORTS_gc = \
-		Statistics.h \
 		Barrier.h \
+		Heap.h \
+		Root.h \
+		Statistics.h \
 		$(NULL)
 
 ######################################################
@@ -256,8 +256,9 @@ EXPORTS_js = \
 ###############################################
 # BEGIN include sources for low-level code shared with mfbt
 #
-VPATH += $(srcdir)/../../mfbt
-include $(srcdir)/../../mfbt/exported_headers.mk
+MFBT_ROOT = $(srcdir)/../../mfbt
+VPATH += $(MFBT_ROOT)
+include $(MFBT_ROOT)/exported_headers.mk
 
 ifdef ENABLE_METHODJIT
 
@@ -319,39 +320,23 @@ endif
 
 endif
 
-###############################################
-# BEGIN include sources for V8 dtoa
-#
-VPATH += 	$(srcdir)/v8-dtoa \
-		$(NONE)
-
-CPPSRCS += 	checks.cc \
-		conversions.cc \
-		diy-fp.cc \
-		v8-dtoa.cc \
-		fast-dtoa.cc \
-		platform.cc \
-		utils.cc \
-		$(NONE)
-
-#
-# END enclude sources for V8 dtoa
-#############################################
-
-# For architectures without YARR JIT, PCRE is faster than the YARR
-# interpreter (bug 684559).
-
 ifeq (,$(filter arm% sparc %86 x86_64 mips%,$(TARGET_CPU)))
 
-VPATH +=        $(srcdir)/yarr/pcre \
+VPATH +=	$(srcdir)/assembler \
+		$(srcdir)/assembler/wtf \
+		$(srcdir)/assembler/jit \
+		$(srcdir)/yarr \
 		$(NULL)
 
-CPPSRCS += \
-                pcre_compile.cpp \
-                pcre_exec.cpp \
-                pcre_tables.cpp \
-                pcre_xclass.cpp \
-                pcre_ucp_searchfuncs.cpp \
+CPPSRCS +=	ExecutableAllocator.cpp \
+		ExecutableAllocatorPosix.cpp \
+		OSAllocatorOS2.cpp \
+		OSAllocatorPosix.cpp \
+		OSAllocatorWin.cpp \
+		PageBlock.cpp \
+		YarrInterpreter.cpp \
+		YarrPattern.cpp \
+		YarrSyntaxChecker.cpp \
 		$(NULL)
 else
 
@@ -451,6 +436,8 @@ endif
 
 endif # JS_HAS_CTYPES
 
+LOCAL_INCLUDES += -I$(MFBT_ROOT)/double-conversion
+
 ifdef HAVE_DTRACE
 INSTALLED_HEADERS += \
 		$(CURDIR)/javascript-trace.h \
@@ -494,7 +481,7 @@ include $(topsrcdir)/config/config.mk
 ifeq (,$(MOZ_GLUE_PROGRAM_LDFLAGS))
 # When building standalone, we need to include mfbt sources, and to declare
 # "exported" mfbt symbols on its behalf when we use its headers.
-include $(srcdir)/../../mfbt/sources.mk
+include $(MFBT_ROOT)/sources.mk
 DEFINES += -DIMPL_MFBT
 endif
 
@@ -622,10 +609,17 @@ ifneq ($(OS_ARCH),WINNT) # FIXME: this should be made work on Windows too.
 #check:: check-malloc-function-usage FIXME: disable on JM until closer to merge time.
 endif
 
+ifdef MOZ_VALGRIND
+ifndef MOZ_ASAN
+JITTEST_VALGRIND_FLAG = --valgrind
+endif
+endif
+
 JITFLAGS = ,m,am,amd,n,mn,amn,amdn,mdn
 check-jit-test::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
-	        --valgrind --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
+	        --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(JITTEST_VALGRIND_FLAG) \
+	        $(DIST)/bin/js$(BIN_SUFFIX)
 
 check:: check-jit-test
 
@@ -832,6 +826,7 @@ endif
 ifneq (,$(IMPORT_LIBRARY))
 	$(SYSINSTALL) $(IMPORT_LIBRARY) $(DESTDIR)$(libdir)
 endif
+	$(MAKE) -C shell install
 
 # Extra dependancies and rules for auto-generated headers
 host_jskwgen.$(OBJ_SUFFIX): jsversion.h jskeyword.tbl

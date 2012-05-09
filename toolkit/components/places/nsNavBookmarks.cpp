@@ -50,7 +50,6 @@
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
-#include "nsIUUIDGenerator.h"
 #include "prprf.h"
 #include "mozilla/storage.h"
 #include "mozilla/FunctionTimer.h"
@@ -99,7 +98,6 @@ PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavBookmarks, gBookmarksService)
 
 #define BOOKMARKS_ANNO_PREFIX "bookmarks/"
 #define BOOKMARKS_TOOLBAR_FOLDER_ANNO NS_LITERAL_CSTRING(BOOKMARKS_ANNO_PREFIX "toolbarFolder")
-#define GUID_ANNO NS_LITERAL_CSTRING("placesInternal/GUID")
 #define READ_ONLY_ANNO NS_LITERAL_CSTRING("placesInternal/READ_ONLY")
 
 
@@ -1597,7 +1595,7 @@ nsNavBookmarks::SetItemDateAdded(PRInt64 aItemId, PRTime aDateAdded)
                    OnItemChanged(bookmark.id,
                                  NS_LITERAL_CSTRING("dateAdded"),
                                  false,
-                                 nsPrintfCString(16, "%lld", bookmark.dateAdded),
+                                 nsPrintfCString("%lld", bookmark.dateAdded),
                                  bookmark.dateAdded,
                                  bookmark.type,
                                  bookmark.parentId,
@@ -1641,7 +1639,7 @@ nsNavBookmarks::SetItemLastModified(PRInt64 aItemId, PRTime aLastModified)
                    OnItemChanged(bookmark.id,
                                  NS_LITERAL_CSTRING("lastModified"),
                                  false,
-                                 nsPrintfCString(16, "%lld", bookmark.lastModified),
+                                 nsPrintfCString("%lld", bookmark.lastModified),
                                  bookmark.lastModified,
                                  bookmark.type,
                                  bookmark.parentId,
@@ -1662,104 +1660,6 @@ nsNavBookmarks::GetItemLastModified(PRInt64 aItemId, PRTime* _lastModified)
   NS_ENSURE_SUCCESS(rv, rv);
 
   *_lastModified = bookmark.lastModified;
-  return NS_OK;
-}
-
-
-nsresult
-nsNavBookmarks::GetGUIDBase(nsAString &aGUIDBase)
-{
-  if (!mGUIDBase.IsEmpty()) {
-    aGUIDBase = mGUIDBase;
-    return NS_OK;
-  }
-
-  // generate a new GUID base for this session
-  nsCOMPtr<nsIUUIDGenerator> uuidgen =
-    do_GetService("@mozilla.org/uuid-generator;1");
-  NS_ENSURE_TRUE(uuidgen, NS_ERROR_OUT_OF_MEMORY);
-  nsID GUID;
-  nsresult rv = uuidgen->GenerateUUIDInPlace(&GUID);
-  NS_ENSURE_SUCCESS(rv, rv);
-  char GUIDChars[NSID_LENGTH];
-  GUID.ToProvidedString(GUIDChars);
-  CopyASCIItoUTF16(GUIDChars, mGUIDBase);
-  aGUIDBase = mGUIDBase;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavBookmarks::GetItemGUID(PRInt64 aItemId, nsAString& aGUID)
-{
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-
-  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
-  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
-  nsresult rv = annosvc->GetItemAnnotationString(aItemId, GUID_ANNO, aGUID);
-  if (NS_SUCCEEDED(rv) || rv != NS_ERROR_NOT_AVAILABLE)
-    return rv;
-
-  nsAutoString tmp;
-  tmp.AppendInt(mItemCount++);
-  aGUID.SetCapacity(NSID_LENGTH - 1 + tmp.Length());
-  nsString GUIDBase;
-  rv = GetGUIDBase(GUIDBase);
-  NS_ENSURE_SUCCESS(rv, rv);
-  aGUID.Assign(GUIDBase);
-  aGUID.Append(tmp);
-
-  rv = SetItemGUID(aItemId, aGUID);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavBookmarks::SetItemGUID(PRInt64 aItemId, const nsAString& aGUID)
-{
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-
-  PRInt64 checkId;
-  GetItemIdForGUID(aGUID, &checkId);
-  if (checkId != -1)
-    return NS_ERROR_INVALID_ARG; // invalid GUID, already exists
-
-  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
-  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
-  nsresult rv = annosvc->SetItemAnnotationString(aItemId, GUID_ANNO, aGUID, 0,
-                                                 nsIAnnotationService::EXPIRE_NEVER);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavBookmarks::GetItemIdForGUID(const nsAString& aGUID, PRInt64* aItemId)
-{
-  NS_ENSURE_ARG_POINTER(aItemId);
-
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "SELECT item_id FROM moz_items_annos "
-    "WHERE content = :guid "
-    "LIMIT 1"
-  );
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  nsresult rv = stmt->BindStringByName(NS_LITERAL_CSTRING("guid"), aGUID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasMore = false;
-  rv = stmt->ExecuteStep(&hasMore);
-  if (NS_FAILED(rv) || ! hasMore) {
-    *aItemId = -1;
-    return NS_OK; // not found: return -1
-  }
-
-  // found, get the itemId
-  rv = stmt->GetInt64(0, aItemId);
-  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -2195,7 +2095,7 @@ nsNavBookmarks::GetBookmarkedURIFor(nsIURI* aURI, nsIURI** _retval)
   // As a bonus the query also checks first if place_id is already a bookmark,
   // so you don't have to check that apart.
 
-  nsCString query = nsPrintfCString(512,
+  nsCString query = nsPrintfCString(
     "SELECT url FROM moz_places WHERE id = ( "
       "SELECT :page_id FROM moz_bookmarks WHERE fk = :page_id "
       "UNION ALL "

@@ -53,9 +53,11 @@ using namespace js;
 using namespace js::frontend;
 
 bool
-DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
+DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript* script)
 {
-    JSObject *globalObj = globalScope.globalObj;
+    Root<JSScript*> root(cx, &script);
+
+    HandleObject globalObj = globalScope.globalObj;
 
     /* Define and update global properties. */
     for (size_t i = 0; i < globalScope.defs.length(); i++) {
@@ -65,7 +67,7 @@ DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
         if (!def.atom)
             continue;
 
-        jsid id = ATOM_TO_JSID(def.atom);
+        jsid id = AtomToId(def.atom);
         Value rval;
 
         if (def.funbox) {
@@ -110,8 +112,8 @@ DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
         JSScript *outer = worklist.back();
         worklist.popBack();
 
-        if (JSScript::isValidOffset(outer->objectsOffset)) {
-            JSObjectArray *arr = outer->objects();
+        if (outer->hasObjects()) {
+            ObjectArray *arr = outer->objects();
 
             /*
              * If this is an eval script, don't treat the saved caller function
@@ -130,16 +132,14 @@ DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
                     outer->isOuterFunction = true;
                     inner->isInnerFunction = true;
                 }
-                if (!JSScript::isValidOffset(inner->globalsOffset) &&
-                    !JSScript::isValidOffset(inner->objectsOffset)) {
+                if (!inner->hasGlobals() && !inner->hasObjects())
                     continue;
-                }
                 if (!worklist.append(inner))
                     return false;
             }
         }
 
-        if (!JSScript::isValidOffset(outer->globalsOffset))
+        if (!outer->hasGlobals())
             continue;
 
         GlobalSlotArray *globalUses = outer->globals();
@@ -165,7 +165,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 {
     TokenKind tt;
     ParseNode *pn;
-    JSScript *script;
     bool inDirectivePrologue;
 
     JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL | TCF_COMPILE_FOR_EVAL
@@ -199,8 +198,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT_IF(globalObj, globalObj->isNative());
     JS_ASSERT_IF(globalObj, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalObj->getClass()));
 
-    /* Null script early in case of error, to reduce our code footprint. */
-    script = NULL;
+    RootedVar<JSScript*> script(cx);
 
     GlobalScope globalScope(cx, globalObj, &bce);
     bce.flags |= tcflags;
@@ -361,7 +359,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     funbce.flags |= TCF_IN_FUNCTION;
     funbce.setFunction(fun);
     funbce.bindings.transfer(cx, bindings);
-    fun->setArgCount(funbce.bindings.countArgs());
+    fun->setArgCount(funbce.bindings.numArgs());
     if (!GenerateBlockId(&funbce, funbce.bodyid))
         return false;
 
@@ -377,12 +375,12 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
              * NB: do not use AutoLocalNameArray because it will release space
              * allocated from cx->tempLifoAlloc by DefineArg.
              */
-            Vector<JSAtom *> names(cx);
+            BindingNames names(cx);
             if (!funbce.bindings.getLocalNameArray(cx, &names)) {
                 fn = NULL;
             } else {
                 for (unsigned i = 0; i < nargs; i++) {
-                    if (!DefineArg(fn, names[i], i, &funbce)) {
+                    if (!DefineArg(fn, names[i].maybeAtom, i, &funbce)) {
                         fn = NULL;
                         break;
                     }
@@ -398,9 +396,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
      */
     ParseNode *pn = fn ? parser.functionBody(Parser::StatementListBody) : NULL;
     if (pn) {
-        if (!CheckStrictParameters(cx, &funbce)) {
-            pn = NULL;
-        } else if (!tokenStream.matchToken(TOK_EOF)) {
+        if (!tokenStream.matchToken(TOK_EOF)) {
             parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else if (!FoldConstants(cx, pn, &funbce)) {

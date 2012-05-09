@@ -479,13 +479,6 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
     widget, dbgBounds.x, dbgBounds.y, dbgBounds.width, dbgBounds.height);
 #endif
 
-  // If the bounds don't overlap at all, there's nothing to do
-  nsRegion intersection;
-  intersection.And(aWidgetView->GetInvalidationDimensions(), aDamagedRegion);
-  if (intersection.IsEmpty()) {
-    return;
-  }
-
   // If the widget is hidden, it don't cover nothing
   if (widget) {
     bool visible;
@@ -542,7 +535,7 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
   }
 
   nsRegion leftOver;
-  leftOver.Sub(intersection, children);
+  leftOver.Sub(aDamagedRegion, children);
 
   if (!leftOver.IsEmpty()) {
     const nsRect* r;
@@ -1320,13 +1313,8 @@ nsIntRect nsViewManager::ViewToWidget(nsView *aView, const nsRect &aRect) const
 {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
-  // intersect aRect with bounds of aView, to prevent generating any illegal rectangles.
-  nsRect bounds = aView->GetInvalidationDimensions();
-  nsRect rect;
-  rect.IntersectRect(aRect, bounds);
-
   // account for the view's origin not lining up with the widget's
-  rect += aView->ViewToWidgetOffset();
+  nsRect rect = aRect + aView->ViewToWidgetOffset();
 
   // finally, convert to device coordinates.
   return rect.ToOutsidePixels(AppUnitsPerDevPixel());

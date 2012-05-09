@@ -7,9 +7,6 @@ var testGenerator = testSteps();
 
 function testSteps()
 {
-  const CONSTRAINT_ERR =
-    Components.interfaces.nsIIDBDatabaseException.CONSTRAINT_ERR;
-
   const name = this.window ? this.window ? window.location.pathname : "Splendid Test" : "Splendid Test";
   const description = "My Test Database";
 
@@ -192,7 +189,7 @@ function testSteps()
                   .objectStore(objectStoreName);
   request = objectStore.add({ name: "Bob", height: 62, weight: 170 },
                             "237-23-7738");
-  request.onerror = new ExpectError(CONSTRAINT_ERR);
+  request.onerror = new ExpectError("ConstraintError");
   request.onsuccess = unexpectedSuccessHandler;
   event = yield;
 

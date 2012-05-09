@@ -40,7 +40,7 @@ sym(vp8_loop_filter_horizontal_edge_mmx):
         movsxd      rax, dword ptr arg(1) ;src_pixel_step     ; destination pitch?
 
         movsxd      rcx, dword ptr arg(5) ;count
-next8_h:
+.next8_h:
         mov         rdx, arg(3) ;limit
         movq        mm7, [rdx]
         mov         rdi, rsi              ; rdi points to row +1 for indirect addressing
@@ -211,7 +211,7 @@ next8_h:
         add         rsi,8
         neg         rax
         dec         rcx
-        jnz         next8_h
+        jnz         .next8_h
 
     add rsp, 32
     pop rsp
@@ -255,7 +255,7 @@ sym(vp8_loop_filter_vertical_edge_mmx):
         lea         rsi,        [rsi + rax*4 - 4]
 
         movsxd      rcx,        dword ptr arg(5) ;count
-next8_v:
+.next8_v:
         mov         rdi,        rsi           ; rdi points to row +1 for indirect addressing
         add         rdi,        rax
 
@@ -581,7 +581,7 @@ next8_v:
 
         lea         rsi,        [rsi+rax*8]
         dec         rcx
-        jnz         next8_v
+        jnz         .next8_v
 
     add rsp, 64
     pop rsp
@@ -622,7 +622,7 @@ sym(vp8_mbloop_filter_horizontal_edge_mmx):
         movsxd      rax, dword ptr arg(1) ;src_pixel_step     ; destination pitch?
 
         movsxd      rcx, dword ptr arg(5) ;count
-next8_mbh:
+.next8_mbh:
         mov         rdx, arg(3) ;limit
         movq        mm7, [rdx]
         mov         rdi, rsi              ; rdi points to row +1 for indirect addressing
@@ -898,7 +898,7 @@ next8_mbh:
         neg         rax
         add         rsi,8
         dec         rcx
-        jnz         next8_mbh
+        jnz         .next8_mbh
 
     add rsp, 32
     pop rsp
@@ -942,7 +942,7 @@ sym(vp8_mbloop_filter_vertical_edge_mmx):
         lea         rsi,        [rsi + rax*4 - 4]
 
         movsxd      rcx,        dword ptr arg(5) ;count
-next8_mbv:
+.next8_mbv:
         lea         rdi,        [rsi + rax]  ; rdi points to row +1 for indirect addressing
 
         ;transpose
@@ -1365,7 +1365,7 @@ next8_mbv:
         lea         rsi,        [rsi+rax*8]
         dec         rcx
 
-        jnz         next8_mbv
+        jnz         .next8_mbv
 
     add rsp, 96
     pop rsp
@@ -1398,7 +1398,7 @@ sym(vp8_loop_filter_simple_horizontal_edge_mmx):
         movsxd      rax, dword ptr arg(1) ;src_pixel_step     ; destination pitch?
 
         mov         rcx, 2                ; count
-nexts8_h:
+.nexts8_h:
         mov         rdx, arg(2) ;blimit           ; get blimit
         movq        mm3, [rdx]            ;
 
@@ -1483,7 +1483,7 @@ nexts8_h:
         add         rsi,8
         neg         rax
         dec         rcx
-        jnz         nexts8_h
+        jnz         .nexts8_h
 
     ; begin epilog
     pop rdi
@@ -1520,7 +1520,7 @@ sym(vp8_loop_filter_simple_vertical_edge_mmx):
 
         lea         rsi, [rsi + rax*4- 2];  ;
         mov         rcx, 2                                      ; count
-nexts8_v:
+.nexts8_v:
 
         lea         rdi,        [rsi + rax];
         movd        mm0,        [rdi + rax * 2]                 ; xx xx xx xx 73 72 71 70
@@ -1695,7 +1695,7 @@ nexts8_v:
         lea         rsi,        [rsi+rax*8]                 ; next 8
 
         dec         rcx
-        jnz         nexts8_v
+        jnz         .nexts8_v
 
     add rsp, 32
     pop rsp

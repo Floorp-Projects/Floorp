@@ -1,6 +1,0 @@
-url-prefix ../../jsreftest.html?test=ecma_3/Operators/
-script 11.13.1-001.js
-script 11.13.1-002.js
-script 11.4.1-001.js
-script 11.4.1-002.js
-script order-01.js

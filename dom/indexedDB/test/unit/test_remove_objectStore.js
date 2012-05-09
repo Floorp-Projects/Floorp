@@ -8,8 +8,6 @@ var testGenerator = testSteps();
 function testSteps()
 {
   const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
-  const UNKNOWN_ERR =
-    Components.interfaces.nsIIDBDatabaseException.UNKNOWN_ERR;
 
   const name = this.window ? window.location.pathname : "Splendid Test";
   const description = "My Test Database";
@@ -61,8 +59,9 @@ function testSteps()
     ok(false, "should have thrown");
   }
   catch(ex) {
-    ok(ex instanceof IDBDatabaseException, "Got a IDBDatabaseException");
-    is(ex.code, IDBDatabaseException.NOT_FOUND_ERR, "expect a NOT_FOUND_ERR");
+    ok(ex instanceof DOMException, "Got a DOMException");
+    is(ex.name, "NotFoundError", "expect a NotFoundError");
+    is(ex.code, DOMException.NOT_FOUND_ERR, "expect a NOT_FOUND_ERR");
   }
 
   objectStore = db.createObjectStore(objectStoreName, { keyPath: "foo" });

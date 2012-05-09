@@ -64,8 +64,7 @@
       this.preinvoke = function rootContentRemoved_preinvoke()
       {
         // Set up target for hide event before we invoke.
-        var text =
-          getAccessible(getAccessible(getDocNode(aID)).firstChild).DOMNode;
+        var text = getAccessible(getAccessible(getDocNode(aID)).firstChild);
         this.eventSeq[0].target = text;
       }
 
@@ -304,16 +303,21 @@
 
     function insertElmUnderDocElmWhileBodyMissed(aID)
     {
-      this.docNode = getDocNode(aID);
-      this.inputNode = getDocNode(aID).createElement("input");
+      this.docNode = null;
+      this.inputNode = null;
+
+      function getInputNode()
+        { return this.inputNode; }
 
       this.eventSeq = [
-        new invokerChecker(EVENT_SHOW, this.inputNode),
-        new invokerChecker(EVENT_REORDER, this.docNode)
+        new invokerChecker(EVENT_SHOW, getInputNode.bind(this)),
+        new invokerChecker(EVENT_REORDER, getDocNode, aID)
       ];
 
       this.invoke = function invoke()
       {
+        this.docNode = getDocNode(aID);
+        this.inputNode = this.docNode.createElement("input");
         this.docNode.documentElement.appendChild(this.inputNode);
       }
 
@@ -389,6 +393,7 @@
     // Test
 
     //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
 
     var gQueue = null;
 

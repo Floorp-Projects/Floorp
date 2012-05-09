@@ -42,6 +42,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <algorithm>
 
 #include "prlink.h"
 #include "prenv.h"
@@ -63,9 +64,8 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace gl {
 
-#ifdef DEBUG
-PRUintn GLContext::sCurrentGLContextTLS = -1;
-#endif
+tls::key GLContextTLSStorage::sTLSKey;
+bool GLContextTLSStorage::sTLSKeyAlreadyCreated = false;
 
 PRUint32 GLContext::sDebugMode = 0;
 
@@ -100,6 +100,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_unpack_subimage",
     "GL_OES_standard_derivatives",
     "GL_EXT_texture_filter_anisotropic",
+    "GL_EXT_texture_compression_s3tc",
     "GL_EXT_framebuffer_blit",
     "GL_ANGLE_framebuffer_blit",
     "GL_EXT_framebuffer_multisample",
@@ -126,6 +127,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         return true;
     }
 
+    mWorkAroundDriverBugs = gfxPlatform::GetPlatform()->WorkAroundDriverBugs();
+
     SymLoadStruct symbols[] = {
         { (PRFuncPtr*) &mSymbols.fActiveTexture, { "ActiveTexture", "ActiveTextureARB", NULL } },
         { (PRFuncPtr*) &mSymbols.fAttachShader, { "AttachShader", "AttachShaderARB", NULL } },
@@ -143,6 +146,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &mSymbols.fClearColor, { "ClearColor", NULL } },
         { (PRFuncPtr*) &mSymbols.fClearStencil, { "ClearStencil", NULL } },
         { (PRFuncPtr*) &mSymbols.fColorMask, { "ColorMask", NULL } },
+        { (PRFuncPtr*) &mSymbols.fCompressedTexImage2D, {"CompressedTexImage2D", NULL} },
+        { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage2D, {"CompressedTexSubImage2D", NULL} },
         { (PRFuncPtr*) &mSymbols.fCullFace, { "CullFace", NULL } },
         { (PRFuncPtr*) &mSymbols.fDetachShader, { "DetachShader", "DetachShaderARB", NULL } },
         { (PRFuncPtr*) &mSymbols.fDepthFunc, { "DepthFunc", NULL } },
@@ -501,7 +506,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
 
 #ifdef XP_MACOSX
-        if (mVendor == VendorIntel) {
+        if (mWorkAroundDriverBugs &&
+            mVendor == VendorIntel) {
             // see bug 737182 for 2D textures, bug 684822 for cube map textures.
             mMaxTextureSize        = NS_MIN(mMaxTextureSize,        4096);
             mMaxCubeMapTextureSize = NS_MIN(mMaxCubeMapTextureSize, 512);
@@ -634,6 +640,14 @@ CopyAndPadTextureData(const GLvoid* srcBuffer,
 bool
 GLContext::CanUploadSubTextures()
 {
+    if (!mWorkAroundDriverBugs)
+        return true;
+
+    // Lock surface feature allows to mmap texture memory and modify it directly
+    // this feature allow us modify texture partially without full upload
+    if (HasLockSurface())
+        return true;
+
     // There are certain GPUs that we don't want to use glTexSubImage2D on
     // because that function can be very slow and/or buggy
     if (Renderer() == RendererAdreno200 || Renderer() == RendererAdreno205)
@@ -650,6 +664,9 @@ GLContext::CanUploadSubTextures()
 bool
 GLContext::CanUploadNonPowerOfTwo()
 {
+    if (!mWorkAroundDriverBugs)
+        return true;
+
     static bool sPowerOfTwoForced;
     static bool sPowerOfTwoPrefCached = false;
 
@@ -673,7 +690,8 @@ GLContext::WantsSmallTiles()
         return true;
 
     // We can't use small tiles on the SGX 540, because of races in texture upload.
-    if (Renderer() == RendererSGX540)
+    if (mWorkAroundDriverBugs &&
+        Renderer() == RendererSGX540)
         return false;
 
     // Don't use small tiles otherwise. (If we implement incremental texture upload,
@@ -756,7 +774,7 @@ void GLContext::ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter)
 BasicTextureImage::~BasicTextureImage()
 {
     GLContext *ctx = mGLContext;
-    if (ctx->IsDestroyed() || !NS_IsMainThread()) {
+    if (ctx->IsDestroyed() || !ctx->IsOwningThreadCurrent()) {
         ctx = ctx->GetSharedContext();
     }
 
@@ -1285,361 +1303,334 @@ PRUint32 TiledTextureImage::GetTileCount()
     return mImages.Length();
 }
 
-bool
-GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, const bool aDisableAA)
+GLContext::GLFormats
+GLContext::ChooseGLFormats(ContextFormat& aCF)
 {
-    if (!IsOffscreenSizeAllowed(aSize))
-        return false;
+    GLFormats formats;
 
-    MakeCurrent();
+    if (aCF.alpha) {
+        formats.texColor = LOCAL_GL_RGBA;
+        if (mIsGLES2 && !IsExtensionSupported(OES_rgb8_rgba8)) {
+            formats.rbColor = LOCAL_GL_RGBA4;
+            aCF.red = aCF.green = aCF.blue = aCF.alpha = 4;
+        } else {
+            formats.rbColor = LOCAL_GL_RGBA8;
+            aCF.red = aCF.green = aCF.blue = aCF.alpha = 8;
+        }
+    } else {
+        formats.texColor = LOCAL_GL_RGB;
+        if (mIsGLES2 && !IsExtensionSupported(OES_rgb8_rgba8)) {
+            formats.rbColor = LOCAL_GL_RGB565;
+            aCF.red = 5;
+            aCF.green = 6;
+            aCF.blue = 5;
+        } else {
+            formats.rbColor = LOCAL_GL_RGB8;
+            aCF.red = aCF.green = aCF.blue = 8;
+        }
+        aCF.alpha = 0;
+    }
+    formats.texColorType = LOCAL_GL_UNSIGNED_BYTE;
 
-    const bool alpha = mCreationFormat.alpha > 0;
-    const int depth = mCreationFormat.depth;
-    const int stencil = mCreationFormat.stencil;
-    int samples = mCreationFormat.samples;
 
-    GLint maxSamples = 0;
-    if (SupportsFramebufferMultisample() && !aDisableAA)
-        fGetIntegerv(LOCAL_GL_MAX_SAMPLES, &maxSamples);
+    GLsizei samples = aCF.samples;
 
+    GLsizei maxSamples = 0;
+    if (SupportsFramebufferMultisample())
+        fGetIntegerv(LOCAL_GL_MAX_SAMPLES, (GLint*)&maxSamples);
     samples = NS_MIN(samples, maxSamples);
 
-    const bool useDrawMSFBO = (samples > 0);
+    formats.samples = samples;
+    aCF.samples = samples;
 
-    if (!useDrawMSFBO && !aUseReadFBO) {
-        // Early out, as no FBO resize work is necessary.
+
+    const int depth = aCF.depth;
+    const int stencil = aCF.stencil;
+    const bool useDepthStencil =
+        !mIsGLES2 || IsExtensionSupported(OES_packed_depth_stencil);
+
+    formats.depthStencil = 0;
+    formats.depth = 0;
+    formats.stencil = 0;
+    if (depth && stencil && useDepthStencil) {
+        formats.depthStencil = LOCAL_GL_DEPTH24_STENCIL8;
+        aCF.depth = 24;
+        aCF.stencil = 8;
+    } else {
+        if (depth) {
+            if (mIsGLES2) {
+                if (IsExtensionSupported(OES_depth24)) {
+                    formats.depth = LOCAL_GL_DEPTH_COMPONENT24;
+                    aCF.depth = 24;
+                } else {
+                    formats.depth = LOCAL_GL_DEPTH_COMPONENT16;
+                    aCF.depth = 16;
+                }
+            } else {
+                formats.depth = LOCAL_GL_DEPTH_COMPONENT24;
+                aCF.depth = 24;
+            }
+        }
+
+        if (stencil) {
+            formats.stencil = LOCAL_GL_STENCIL_INDEX8;
+            aCF.stencil = 8;
+        }
+    }
+
+    return formats;
+}
+
+void
+GLContext::CreateTextureForOffscreen(const GLFormats& aFormats, const gfxIntSize& aSize, GLuint& texture)
+{
+    GLuint boundTexture = 0;
+    fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, (GLint*)&boundTexture);
+
+    texture = 0;
+    fGenTextures(1, &texture);
+    fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+
+    fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                0,
+                aFormats.texColor,
+                aSize.width, aSize.height,
+                0,
+                aFormats.texColor,
+                aFormats.texColorType,
+                nsnull);
+
+    fBindTexture(LOCAL_GL_TEXTURE_2D, boundTexture);
+}
+
+static inline void
+RenderbufferStorageBySamples(GLContext* gl, GLsizei samples, GLenum internalFormat, const gfxIntSize& size)
+{
+    if (samples) {
+        gl->fRenderbufferStorageMultisample(LOCAL_GL_RENDERBUFFER,
+                                            samples,
+                                            internalFormat,
+                                            size.width, size.height);
+    } else {
+        gl->fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
+                                 internalFormat,
+                                 size.width, size.height);
+    }
+}
+
+void
+GLContext::CreateRenderbuffersForOffscreen(const GLContext::GLFormats& aFormats, const gfxIntSize& aSize,
+                                           GLuint& colorMSRB, GLuint& depthRB, GLuint& stencilRB)
+{
+    GLuint boundRB = 0;
+    fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, (GLint*)&boundRB);
+
+
+    colorMSRB = 0;
+    depthRB = 0;
+    stencilRB = 0;
+
+    if (aFormats.samples > 0) {
+        fGenRenderbuffers(1, &colorMSRB);
+        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, colorMSRB);
+        RenderbufferStorageBySamples(this, aFormats.samples, aFormats.rbColor, aSize);
+    }
+
+    // If depthStencil, disallow depth, stencil
+    MOZ_ASSERT(!aFormats.depthStencil || (!aFormats.depth && !aFormats.stencil));
+
+    if (aFormats.depthStencil) {
+        fGenRenderbuffers(1, &depthRB);
+        stencilRB = depthRB;
+        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, depthRB);
+        RenderbufferStorageBySamples(this, aFormats.samples, aFormats.depthStencil, aSize);
+    }
+
+    if (aFormats.depth) {
+        fGenRenderbuffers(1, &depthRB);
+        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, depthRB);
+        RenderbufferStorageBySamples(this, aFormats.samples, aFormats.depth, aSize);
+    }
+
+    if (aFormats.stencil) {
+        fGenRenderbuffers(1, &stencilRB);
+        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, stencilRB);
+        RenderbufferStorageBySamples(this, aFormats.samples, aFormats.stencil, aSize);
+    }
+
+
+    fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, boundRB);
+}
+
+bool
+GLContext::AssembleOffscreenFBOs(const GLuint colorMSRB,
+                                 const GLuint depthRB,
+                                 const GLuint stencilRB,
+                                 const GLuint texture,
+                                 GLuint& drawFBO,
+                                 GLuint& readFBO)
+{
+    drawFBO = 0;
+    readFBO = 0;
+
+    if (!colorMSRB && !texture) {
+        MOZ_ASSERT(!depthRB && !stencilRB);
         return true;
     }
 
-    GLuint curBoundFramebufferDraw = 0;
-    GLuint curBoundFramebufferRead = 0;
-    GLuint curBoundRenderbuffer = 0;
-    GLuint curBoundTexture = 0;
+    GLuint boundDrawFBO = GetUserBoundDrawFBO();
+    GLuint boundReadFBO = GetUserBoundReadFBO();
 
-    GLint viewport[4];
-
-    const bool useDepthStencil =
-            !mIsGLES2 || IsExtensionSupported(OES_packed_depth_stencil);
-
-    // save a few things for later restoring
-    curBoundFramebufferDraw = GetUserBoundDrawFBO();
-    curBoundFramebufferRead = GetUserBoundReadFBO();
-    fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, (GLint*) &curBoundRenderbuffer);
-    fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, (GLint*) &curBoundTexture);
-    fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
-
-    // the context format of what we're defining
-    // This becomes mActualFormat on success
-    ContextFormat cf(mCreationFormat);
-
-    // Create everything we need for the resize, so if it fails, we haven't broken anything
-    // If successful, these new resized objects will replace their associated member vars in GLContext
-    GLuint newOffscreenDrawFBO = 0;
-    GLuint newOffscreenReadFBO = 0;
-    GLuint newOffscreenTexture = 0;
-    GLuint newOffscreenColorRB = 0;
-    GLuint newOffscreenDepthRB = 0;
-    GLuint newOffscreenStencilRB = 0;
-
-    // Create the buffers and texture
-    if (aUseReadFBO) {
-        fGenFramebuffers(1, &newOffscreenReadFBO);
-        fGenTextures(1, &newOffscreenTexture);
-    }
-
-    if (useDrawMSFBO) {
-        fGenFramebuffers(1, &newOffscreenDrawFBO);
-        fGenRenderbuffers(1, &newOffscreenColorRB);
-    } else {
-        newOffscreenDrawFBO = newOffscreenReadFBO;
-    }
-
-    if (depth && stencil && useDepthStencil) {
-        fGenRenderbuffers(1, &newOffscreenDepthRB);
-    } else {
-        if (depth) {
-            fGenRenderbuffers(1, &newOffscreenDepthRB);
-        }
-
-        if (stencil) {
-            fGenRenderbuffers(1, &newOffscreenStencilRB);
-        }
-    }
-
-   // Allocate texture
-    if (aUseReadFBO) {
-        fBindTexture(LOCAL_GL_TEXTURE_2D, newOffscreenTexture);
-        fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-        fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-        fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-        fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-
-        if (alpha) {
-            fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                        0,
-                        LOCAL_GL_RGBA,
-                        aSize.width, aSize.height,
-                        0,
-                        LOCAL_GL_RGBA,
-                        LOCAL_GL_UNSIGNED_BYTE,
-                        NULL);
-
-            cf.red = cf.green = cf.blue = cf.alpha = 8;
-        } else {
-            fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                        0,
-                        LOCAL_GL_RGB,
-                        aSize.width, aSize.height,
-                        0,
-                        LOCAL_GL_RGB,
-#ifdef XP_WIN
-                        LOCAL_GL_UNSIGNED_BYTE,
-#else
-                        mIsGLES2 ? LOCAL_GL_UNSIGNED_SHORT_5_6_5
-                                 : LOCAL_GL_UNSIGNED_BYTE,
-#endif
-                        NULL);
-
-#ifdef XP_WIN
-            cf.red = cf.green = cf.blue = 8;
-#else
-            cf.red = 5;
-            cf.green = 6;
-            cf.blue = 5;
-#endif
-            cf.alpha = 0;
-        }
-    }
-    cf.samples = samples;
-
-    // Allocate color buffer
-    if (useDrawMSFBO) {
-        GLenum colorFormat;
-        if (!mIsGLES2 || IsExtensionSupported(OES_rgb8_rgba8))
-            colorFormat = alpha ? LOCAL_GL_RGBA8 : LOCAL_GL_RGB8;
-        else
-            colorFormat = alpha ? LOCAL_GL_RGBA4 : LOCAL_GL_RGB565;
-
-        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, newOffscreenColorRB);
-        fRenderbufferStorageMultisample(LOCAL_GL_RENDERBUFFER,
-                                        samples,
-                                        colorFormat,
-                                        aSize.width, aSize.height);
-    }
-
-    // Allocate depth and stencil buffers
-    if (depth && stencil && useDepthStencil) {
-        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, newOffscreenDepthRB);
-        if (useDrawMSFBO) {
-            fRenderbufferStorageMultisample(LOCAL_GL_RENDERBUFFER,
-                                            samples,
-                                            LOCAL_GL_DEPTH24_STENCIL8,
-                                            aSize.width, aSize.height);
-        } else {
-            fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
-                                 LOCAL_GL_DEPTH24_STENCIL8,
-                                 aSize.width, aSize.height);
-        }
-        cf.depth = 24;
-        cf.stencil = 8;
-    } else {
-        if (depth) {
-            GLenum depthType;
-            if (mIsGLES2) {
-                if (IsExtensionSupported(OES_depth32)) {
-                    depthType = LOCAL_GL_DEPTH_COMPONENT32;
-                    cf.depth = 32;
-                } else if (IsExtensionSupported(OES_depth24)) {
-                    depthType = LOCAL_GL_DEPTH_COMPONENT24;
-                    cf.depth = 24;
-                } else {
-                    depthType = LOCAL_GL_DEPTH_COMPONENT16;
-                   cf.depth = 16;
-                }
-            } else {
-                depthType = LOCAL_GL_DEPTH_COMPONENT24;
-                cf.depth = 24;
-            }
-
-            fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, newOffscreenDepthRB);
-            if (useDrawMSFBO) {
-                fRenderbufferStorageMultisample(LOCAL_GL_RENDERBUFFER,
-                                                samples,
-                                                depthType,
-                                                aSize.width, aSize.height);
-            } else {
-                fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
-                                     depthType,
-                                     aSize.width, aSize.height);
-            }
-        }
-
-        if (stencil) {
-            fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, newOffscreenStencilRB);
-            if (useDrawMSFBO) {
-                fRenderbufferStorageMultisample(LOCAL_GL_RENDERBUFFER,
-                                                samples,
-                                                LOCAL_GL_STENCIL_INDEX8,
-                                                aSize.width, aSize.height);
-            } else {
-                fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
-                                     LOCAL_GL_STENCIL_INDEX8,
-                                     aSize.width, aSize.height);
-            }
-            cf.stencil = 8;
-        }
-    }
-
-    // Now assemble the FBO
-    BindInternalFBO(newOffscreenDrawFBO);    // If we're not using a separate draw FBO, this will be the read FBO
-    if (useDrawMSFBO) {
-        fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
-                                 LOCAL_GL_COLOR_ATTACHMENT0,
-                                 LOCAL_GL_RENDERBUFFER,
-                                 newOffscreenColorRB);
-    }
-
-    if (depth && stencil && useDepthStencil) {
-        fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
-                                 LOCAL_GL_DEPTH_ATTACHMENT,
-                                 LOCAL_GL_RENDERBUFFER,
-                                 newOffscreenDepthRB);
-        fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
-                                 LOCAL_GL_STENCIL_ATTACHMENT,
-                                 LOCAL_GL_RENDERBUFFER,
-                                 newOffscreenDepthRB);
-    } else {
-        if (depth) {
-            fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
-                                     LOCAL_GL_DEPTH_ATTACHMENT,
-                                     LOCAL_GL_RENDERBUFFER,
-                                     newOffscreenDepthRB);
-        }
-
-        if (stencil) {
-            fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
-                                     LOCAL_GL_STENCIL_ATTACHMENT,
-                                     LOCAL_GL_RENDERBUFFER,
-                                     newOffscreenStencilRB);
-        }
-    }
-
-    if (aUseReadFBO) {
-        BindInternalFBO(newOffscreenReadFBO);
+    if (texture) {
+        fGenFramebuffers(1, &readFBO);
+        BindInternalFBO(readFBO);
         fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
                               LOCAL_GL_COLOR_ATTACHMENT0,
                               LOCAL_GL_TEXTURE_2D,
-                              newOffscreenTexture,
+                              texture,
                               0);
+    }
+
+    if (colorMSRB) {
+        fGenFramebuffers(1, &drawFBO);
+        BindInternalFBO(drawFBO);
+        fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                 LOCAL_GL_COLOR_ATTACHMENT0,
+                                 LOCAL_GL_RENDERBUFFER,
+                                 colorMSRB);
+    } else {
+        drawFBO = readFBO;
+        // drawFBO==readFBO is already bound from the 'if (texture)' block.
+    }
+
+    if (depthRB) {
+        fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                 LOCAL_GL_DEPTH_ATTACHMENT,
+                                 LOCAL_GL_RENDERBUFFER,
+                                 depthRB);
+    }
+
+    if (stencilRB) {
+        fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                 LOCAL_GL_STENCIL_ATTACHMENT,
+                                 LOCAL_GL_RENDERBUFFER,
+                                 stencilRB);
     }
 
     // We should be all resized.  Check for framebuffer completeness.
     GLenum status;
-    bool framebuffersComplete = true;
+    bool isComplete = true;
 
-    BindInternalFBO(newOffscreenDrawFBO);
+    BindInternalFBO(drawFBO);
     status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         NS_WARNING("DrawFBO: Incomplete");
-#ifdef DEBUG
+  #ifdef DEBUG
         printf_stderr("Framebuffer status: %X\n", status);
-#endif
-        framebuffersComplete = false;
+  #endif
+        isComplete = false;
     }
 
-    BindInternalFBO(newOffscreenReadFBO);
+    BindInternalFBO(readFBO);
     status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         NS_WARNING("ReadFBO: Incomplete");
-#ifdef DEBUG
+  #ifdef DEBUG
         printf_stderr("Framebuffer status: %X\n", status);
-#endif
-        framebuffersComplete = false;
+  #endif
+        isComplete = false;
     }
 
-    if (!framebuffersComplete) {
-        NS_WARNING("Error resizing offscreen framebuffer -- framebuffer(s) not complete");
+    BindUserDrawFBO(boundDrawFBO);
+    BindUserReadFBO(boundReadFBO);
 
-        // Clean up the mess
-        fDeleteFramebuffers(1, &newOffscreenDrawFBO);
-        fDeleteFramebuffers(1, &newOffscreenReadFBO);
-        fDeleteTextures(1, &newOffscreenTexture);
-        fDeleteRenderbuffers(1, &newOffscreenColorRB);
-        fDeleteRenderbuffers(1, &newOffscreenDepthRB);
-        fDeleteRenderbuffers(1, &newOffscreenStencilRB);
+    return isComplete;
+}
 
-        BindUserDrawFBO(curBoundFramebufferDraw);
-        BindUserReadFBO(curBoundFramebufferRead);
-        fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
-        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, curBoundRenderbuffer);
-        fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+bool
+GLContext::ResizeOffscreenFBOs(const ContextFormat& aCF, const gfxIntSize& aSize, const bool aNeedsReadBuffer)
+{
+    // Early out for when we're rendering directly to the context's 'screen'.
+    if (!aNeedsReadBuffer && !aCF.samples)
+        return true;
+
+    MakeCurrent();
+    ContextFormat cf(aCF);
+    GLFormats formats = ChooseGLFormats(cf);
+
+    GLuint texture = 0;
+    if (aNeedsReadBuffer)
+        CreateTextureForOffscreen(formats, aSize, texture);
+
+    GLuint colorMSRB = 0;
+    GLuint depthRB = 0;
+    GLuint stencilRB = 0;
+    CreateRenderbuffersForOffscreen(formats, aSize, colorMSRB, depthRB, stencilRB);
+
+    GLuint drawFBO = 0;
+    GLuint readFBO = 0;
+    if (!AssembleOffscreenFBOs(colorMSRB, depthRB, stencilRB, texture,
+                               drawFBO, readFBO))
+    {
+        fDeleteFramebuffers(1, &drawFBO);
+        fDeleteFramebuffers(1, &readFBO);
+        fDeleteRenderbuffers(1, &colorMSRB);
+        fDeleteRenderbuffers(1, &depthRB);
+        fDeleteRenderbuffers(1, &stencilRB);
+        fDeleteTextures(1, &texture);
 
         return false;
     }
 
-    // Success, so delete the old and busted
-    fDeleteFramebuffers(1, &mOffscreenDrawFBO);
-    fDeleteFramebuffers(1, &mOffscreenReadFBO);
-    fDeleteTextures(1, &mOffscreenTexture);
-    fDeleteRenderbuffers(1, &mOffscreenColorRB);
-    fDeleteRenderbuffers(1, &mOffscreenDepthRB);
-    fDeleteRenderbuffers(1, &mOffscreenStencilRB);
-
-    // Update currently bound references if we're changing what they were point to
-    // This way we don't rebind to old buffers when we're done here
-    if (curBoundFramebufferDraw == mOffscreenDrawFBO)
-        curBoundFramebufferDraw = newOffscreenDrawFBO;
-    if (curBoundFramebufferRead == mOffscreenReadFBO)
-        curBoundFramebufferRead = newOffscreenReadFBO;
-    if (curBoundTexture == mOffscreenTexture)
-        curBoundTexture = newOffscreenTexture;
-    if (curBoundRenderbuffer == mOffscreenColorRB)
-        curBoundRenderbuffer = newOffscreenColorRB;
-    else if (curBoundRenderbuffer == mOffscreenDepthRB)
-        curBoundRenderbuffer = newOffscreenDepthRB;
-    else if (curBoundRenderbuffer == mOffscreenStencilRB)
-        curBoundRenderbuffer = newOffscreenStencilRB;
+    // Success, so switch everything out.
+    // Store current user FBO bindings.
+    GLuint boundDrawFBO = GetUserBoundDrawFBO();
+    GLuint boundReadFBO = GetUserBoundReadFBO();
 
     // Replace with the new hotness
-    mOffscreenDrawFBO = newOffscreenDrawFBO;
-    mOffscreenReadFBO = newOffscreenReadFBO;
-    mOffscreenTexture = newOffscreenTexture;
-    mOffscreenColorRB = newOffscreenColorRB;
-    mOffscreenDepthRB = newOffscreenDepthRB;
-    mOffscreenStencilRB = newOffscreenStencilRB;
+    std::swap(mOffscreenDrawFBO, drawFBO);
+    std::swap(mOffscreenReadFBO, readFBO);
+    std::swap(mOffscreenColorRB, colorMSRB);
+    std::swap(mOffscreenDepthRB, depthRB);
+    std::swap(mOffscreenStencilRB, stencilRB);
+    std::swap(mOffscreenTexture, texture);
 
+    // Delete the old and busted
+    fDeleteFramebuffers(1, &drawFBO);
+    fDeleteFramebuffers(1, &readFBO);
+    fDeleteRenderbuffers(1, &colorMSRB);
+    fDeleteRenderbuffers(1, &depthRB);
+    fDeleteRenderbuffers(1, &stencilRB);
+    fDeleteTextures(1, &texture);
+
+    // Rebind user FBOs, in case anything changed internally.
+    BindUserDrawFBO(boundDrawFBO);
+    BindUserReadFBO(boundReadFBO);
+
+    // Newly-created buffers are...unlikely to match.
+    ForceDirtyFBOs();
+
+    // Finish up.
     mOffscreenSize = aSize;
     mOffscreenActualSize = aSize;
-
     mActualFormat = cf;
 
-#ifdef DEBUG
     if (DebugMode()) {
         printf_stderr("Resized %dx%d offscreen FBO: r: %d g: %d b: %d a: %d depth: %d stencil: %d samples: %d\n",
                       mOffscreenActualSize.width, mOffscreenActualSize.height,
                       mActualFormat.red, mActualFormat.green, mActualFormat.blue, mActualFormat.alpha,
                       mActualFormat.depth, mActualFormat.stencil, mActualFormat.samples);
     }
-#endif
-
-    // We're good, and the framebuffer is already attached.
-    // Now restore the GL state back to what it was before the resize took place.
-    // If the user was using fb 0, this will bind the offscreen framebuffer we
-    // just created.
-    BindUserDrawFBO(curBoundFramebufferDraw);
-    BindUserReadFBO(curBoundFramebufferRead);
-    fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
-    fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, curBoundRenderbuffer);
-    fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-    // Make sure we know that the buffers are new and thus dirty:
-    ForceDirtyFBOs();
 
     return true;
 }
 
 void
-GLContext::DeleteOffscreenFBO()
+GLContext::DeleteOffscreenFBOs()
 {
     fDeleteFramebuffers(1, &mOffscreenDrawFBO);
     fDeleteFramebuffers(1, &mOffscreenReadFBO);
@@ -1759,13 +1750,16 @@ GLContext::MarkDestroyed()
     if (IsDestroyed())
         return;
 
-    MakeCurrent();
-    DeleteOffscreenFBO();
+    if (MakeCurrent()) {
+        DeleteOffscreenFBOs();
 
-    fDeleteProgram(mBlitProgram);
-    mBlitProgram = 0;
-    fDeleteFramebuffers(1, &mBlitFramebuffer);
-    mBlitFramebuffer = 0;
+        fDeleteProgram(mBlitProgram);
+        mBlitProgram = 0;
+        fDeleteFramebuffers(1, &mBlitFramebuffer);
+        mBlitFramebuffer = 0;
+    } else {
+        NS_WARNING("MakeCurrent() failed during MarkDestroyed! Skipping GL object teardown.");
+    }
 
     mSymbols.Zero();
 }
@@ -2065,7 +2059,9 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     // only save/restore this stuff on Qualcomm Adreno, to work
     // around an apparent bug
     int savedFb = 0;
-    if (mVendor == VendorQualcomm) {
+    if (mWorkAroundDriverBugs &&
+        mVendor == VendorQualcomm)
+    {
         fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &savedFb);
     }
 
@@ -2200,7 +2196,8 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     // we enable scissor test while the current FBO is invalid
     // (which it will be, once we assign texture 0 to the color
     // attachment)
-    if (mVendor == VendorQualcomm) {
+    if (mWorkAroundDriverBugs &&
+        mVendor == VendorQualcomm) {
         fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
     }
 
@@ -2222,11 +2219,12 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
                                   GLuint& aTexture,
                                   bool aOverwrite,
                                   const nsIntPoint& aSrcPoint,
-                                  bool aPixelBuffer)
+                                  bool aPixelBuffer,
+                                  GLenum aTextureUnit)
 {
     bool textureInited = aOverwrite ? false : true;
     MakeCurrent();
-    fActiveTexture(LOCAL_GL_TEXTURE0);
+    fActiveTexture(aTextureUnit);
   
     if (!aTexture) {
         fGenTextures(1, &aTexture);
@@ -2325,11 +2323,7 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
 
     PRInt32 stride = imageSurface->Stride();
 
-#ifndef USE_GLES2
-    internalformat = LOCAL_GL_RGBA;
-#else
-    internalformat = format;
-#endif
+    internalformat = mIsGLES2 ? format : LOCAL_GL_RGBA;
 
     nsIntRegionRectIterator iter(paintRegion);
     const nsIntRect *iterRect;
@@ -2397,52 +2391,94 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
                       GLint pixelsize, GLint border, GLenum format,
                       GLenum type, const GLvoid *pixels)
 {
-#ifdef USE_GLES2
+    if (mIsGLES2) {
 
-    NS_ASSERTION(format == internalformat,
-                 "format and internalformat not the same for glTexImage2D on GLES2");
+        NS_ASSERTION(format == internalformat,
+                    "format and internalformat not the same for glTexImage2D on GLES2");
 
-    if (!CanUploadNonPowerOfTwo()
-        && (stride != width * pixelsize
-        || !IsPowerOfTwo(width)
-        || !IsPowerOfTwo(height))) {
+        if (!CanUploadNonPowerOfTwo()
+            && (stride != width * pixelsize
+            || !IsPowerOfTwo(width)
+            || !IsPowerOfTwo(height))) {
 
-        // Pad out texture width and height to the next power of two
-        // as we don't support/want non power of two texture uploads
-        GLsizei paddedWidth = NextPowerOfTwo(width);
-        GLsizei paddedHeight = NextPowerOfTwo(height);
+            // Pad out texture width and height to the next power of two
+            // as we don't support/want non power of two texture uploads
+            GLsizei paddedWidth = NextPowerOfTwo(width);
+            GLsizei paddedHeight = NextPowerOfTwo(height);
 
-        GLvoid* paddedPixels = new unsigned char[paddedWidth * paddedHeight * pixelsize];
+            GLvoid* paddedPixels = new unsigned char[paddedWidth * paddedHeight * pixelsize];
 
-        // Pad out texture data to be in a POT sized buffer for uploading to
-        // a POT sized texture
-        CopyAndPadTextureData(pixels, paddedPixels, width, height,
-                              paddedWidth, paddedHeight, stride, pixelsize);
+            // Pad out texture data to be in a POT sized buffer for uploading to
+            // a POT sized texture
+            CopyAndPadTextureData(pixels, paddedPixels, width, height,
+                                  paddedWidth, paddedHeight, stride, pixelsize);
+
+            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                    NS_MIN(GetAddressAlignment((ptrdiff_t)paddedPixels),
+                            GetAddressAlignment((ptrdiff_t)paddedWidth * pixelsize)));
+            fTexImage2D(target,
+                        border,
+                        internalformat,
+                        paddedWidth,
+                        paddedHeight,
+                        border,
+                        format,
+                        type,
+                        paddedPixels);
+            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+
+            delete[] static_cast<unsigned char*>(paddedPixels);
+            return;
+        }
+
+        if (stride == width * pixelsize) {
+            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                    NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
+                            GetAddressAlignment((ptrdiff_t)stride)));
+            fTexImage2D(target,
+                        border,
+                        internalformat,
+                        width,
+                        height,
+                        border,
+                        format,
+                        type,
+                        pixels);
+            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+        } else {
+            // Use GLES-specific workarounds for GL_UNPACK_ROW_LENGTH; these are
+            // implemented in TexSubImage2D.
+            fTexImage2D(target,
+                        border,
+                        internalformat,
+                        width,
+                        height,
+                        border,
+                        format,
+                        type,
+                        NULL);
+            TexSubImage2D(target,
+                          level,
+                          0,
+                          0,
+                          width,
+                          height,
+                          stride,
+                          pixelsize,
+                          format,
+                          type,
+                          pixels);
+        }
+    } else {
+        // desktop GL (non-ES) path
 
         fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                 NS_MIN(GetAddressAlignment((ptrdiff_t)paddedPixels),
-                        GetAddressAlignment((ptrdiff_t)paddedWidth * pixelsize)));
+                    NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
+                            GetAddressAlignment((ptrdiff_t)stride)));
+        int rowLength = stride/pixelsize;
+        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
         fTexImage2D(target,
-                    border,
-                    internalformat,
-                    paddedWidth,
-                    paddedHeight,
-                    border,
-                    format,
-                    type,
-                    paddedPixels);
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-
-        delete[] static_cast<unsigned char*>(paddedPixels);
-        return;
-    }
-
-    if (stride == width * pixelsize) {
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                 NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
-                        GetAddressAlignment((ptrdiff_t)stride)));
-        fTexImage2D(target,
-                    border,
+                    level,
                     internalformat,
                     width,
                     height,
@@ -2450,49 +2486,9 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
                     format,
                     type,
                     pixels);
+        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
         fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-    } else {
-        // Use GLES-specific workarounds for GL_UNPACK_ROW_LENGTH; these are
-        // implemented in TexSubImage2D.
-        fTexImage2D(target,
-                    border,
-                    internalformat,
-                    width,
-                    height,
-                    border,
-                    format,
-                    type,
-                    NULL);
-        TexSubImage2D(target,
-                      level,
-                      0,
-                      0,
-                      width,
-                      height,
-                      stride,
-                      pixelsize,
-                      format,
-                      type,
-                      pixels);
     }
-#else
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                 NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
-                        GetAddressAlignment((ptrdiff_t)stride)));
-    int rowLength = stride/pixelsize;
-    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
-    fTexImage2D(target,
-                level,
-                internalformat,
-                width,
-                height,
-                border,
-                format,
-                type,
-                pixels);
-    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-#endif
 }
 
 void
@@ -2502,49 +2498,50 @@ GLContext::TexSubImage2D(GLenum target, GLint level,
                          GLint pixelsize, GLenum format,
                          GLenum type, const GLvoid* pixels)
 {
-#ifdef USE_GLES2
-    if (stride == width * pixelsize) {
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                 NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
-                        GetAddressAlignment((ptrdiff_t)stride)));
-        fTexSubImage2D(target,
-                       level,
-                       xoffset,
-                       yoffset,
-                       width,
-                       height,
-                       format,
-                       type,
-                       pixels);
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-    } else if (IsExtensionSupported(EXT_unpack_subimage)) {
-        TexSubImage2DWithUnpackSubimageGLES(target, level, xoffset, yoffset,
-                                            width, height, stride,
-                                            pixelsize, format, type, pixels);
+    if (mIsGLES2) {
+        if (stride == width * pixelsize) {
+            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                    NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
+                            GetAddressAlignment((ptrdiff_t)stride)));
+            fTexSubImage2D(target,
+                          level,
+                          xoffset,
+                          yoffset,
+                          width,
+                          height,
+                          format,
+                          type,
+                          pixels);
+            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+        } else if (IsExtensionSupported(EXT_unpack_subimage)) {
+            TexSubImage2DWithUnpackSubimageGLES(target, level, xoffset, yoffset,
+                                                width, height, stride,
+                                                pixelsize, format, type, pixels);
 
+        } else {
+            TexSubImage2DWithoutUnpackSubimage(target, level, xoffset, yoffset,
+                                              width, height, stride,
+                                              pixelsize, format, type, pixels);
+        }
     } else {
-        TexSubImage2DWithoutUnpackSubimage(target, level, xoffset, yoffset,
-                                           width, height, stride,
-                                           pixelsize, format, type, pixels);
+        // desktop GL (non-ES) path
+        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                    NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
+                            GetAddressAlignment((ptrdiff_t)stride)));
+        int rowLength = stride/pixelsize;
+        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
+        fTexSubImage2D(target,
+                      level,
+                      xoffset,
+                      yoffset,
+                      width,
+                      height,
+                      format,
+                      type,
+                      pixels);
+        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
     }
-#else
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                 NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
-                        GetAddressAlignment((ptrdiff_t)stride)));
-    int rowLength = stride/pixelsize;
-    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
-    fTexSubImage2D(target,
-                   level,
-                   xoffset,
-                   yoffset,
-                   width,
-                   height,
-                   format,
-                   type,
-                   pixels);
-    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-#endif
 }
 
 void

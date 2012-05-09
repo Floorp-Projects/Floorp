@@ -142,6 +142,7 @@
 @BINPATH@/components/content_canvas.xpt
 @BINPATH@/components/content_htmldoc.xpt
 @BINPATH@/components/content_html.xpt
+@BINPATH@/components/content_media.xpt
 @BINPATH@/components/content_xslt.xpt
 @BINPATH@/components/content_xtf.xpt
 @BINPATH@/components/cookie.xpt
@@ -232,7 +233,9 @@
 @BINPATH@/components/necko_socket.xpt
 @BINPATH@/components/necko_strconv.xpt
 @BINPATH@/components/necko_viewsource.xpt
+#ifdef NECKO_WIFI
 @BINPATH@/components/necko_wifi.xpt
+#endif
 @BINPATH@/components/necko_wyciwyg.xpt
 @BINPATH@/components/necko.xpt
 @BINPATH@/components/loginmgr.xpt
@@ -242,7 +245,9 @@
 @BINPATH@/components/pref.xpt
 @BINPATH@/components/prefetch.xpt
 @BINPATH@/components/profile.xpt
+#ifdef MOZ_ENABLE_PROFILER_SPS
 @BINPATH@/components/profiler.xpt
+#endif
 @BINPATH@/components/rdf.xpt
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
@@ -289,8 +294,8 @@
 ; JavaScript components
 @BINPATH@/components/ConsoleAPI.manifest
 @BINPATH@/components/ConsoleAPI.js
-@BINPATH@/components/BrowserElementAPI.manifest
-@BINPATH@/components/BrowserElementAPI.js
+@BINPATH@/components/BrowserElementParent.manifest
+@BINPATH@/components/BrowserElementParent.js
 @BINPATH@/components/FeedProcessor.manifest
 @BINPATH@/components/FeedProcessor.js
 @BINPATH@/components/BrowserFeeds.manifest
@@ -304,6 +309,9 @@
 @BINPATH@/components/nsBrowserGlue.js
 @BINPATH@/components/nsSetDefaultBrowser.manifest
 @BINPATH@/components/nsSetDefaultBrowser.js
+@BINPATH@/components/BrowserDownloads.manifest
+@BINPATH@/components/DownloadsStartup.js
+@BINPATH@/components/DownloadsUI.js
 @BINPATH@/components/BrowserPlaces.manifest
 @BINPATH@/components/BrowserPageThumbs.manifest
 @BINPATH@/components/nsPrivateBrowsingService.manifest
@@ -393,6 +401,7 @@
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/RadioInterfaceLayer.manifest
 @BINPATH@/components/RadioInterfaceLayer.js
+@BINPATH@/components/RILContentHelper.js
 @BINPATH@/components/SmsDatabaseService.manifest
 @BINPATH@/components/SmsDatabaseService.js
 @BINPATH@/components/WifiWorker.js
@@ -404,7 +413,12 @@
 @BINPATH@/components/ProfileMigrator.js
 @BINPATH@/components/ChromeProfileMigrator.js
 @BINPATH@/components/FirefoxProfileMigrator.js
+#ifdef XP_WIN
+@BINPATH@/components/IEProfileMigrator.js
+@BINPATH@/components/SafariProfileMigrator.js
+#endif
 #ifdef XP_MACOSX
+@BINPATH@/components/SafariProfileMigrator.js
 @BINPATH@/components/libalerts.dylib
 #endif
 #ifdef MOZ_ENABLE_DBUS
@@ -611,4 +625,22 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/MozSounds.cmd
 @BINPATH@/*.xqs
 @BINPATH@/components/*.xqs
+#endif
+
+#ifdef MOZ_WEBAPP_RUNTIME
+[WebappRuntime]
+#ifdef XP_WIN
+@BINPATH@/webapp-uninstaller@BIN_SUFFIX@
+#endif
+@BINPATH@/webapprt-stub@BIN_SUFFIX@
+@BINPATH@/webapprt/webapprt.ini
+@BINPATH@/webapprt/chrome.manifest
+@BINPATH@/webapprt/chrome/webapprt@JAREXT@
+@BINPATH@/webapprt/chrome/webapprt.manifest
+@BINPATH@/webapprt/components/CommandLineHandler.js
+@BINPATH@/webapprt/components/ContentPolicy.js
+@BINPATH@/webapprt/components/DirectoryProvider.js
+@BINPATH@/webapprt/components/components.manifest
+@BINPATH@/webapprt/defaults/preferences/prefs.js
+@BINPATH@/webapprt/modules/WebappRT.jsm
 #endif

@@ -133,7 +133,6 @@ THEORA_ASFILES  = \
   armfrag.s \
   armidct.s \
   armloop.s \
-  armopts.s \
   $(NULL)
 
 ASFILES = $(patsubst %.s,%-gnu.$(ASM_SUFFIX),$(THEORA_ASFILES))

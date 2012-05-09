@@ -6,47 +6,19 @@
 
 #include "Preprocessor.h"
 
-#include <algorithm>
-
-#include "compiler/debug.h"
-#include "Context.h"
-#include "stl_utils.h"
-
 namespace pp
 {
 
-Preprocessor::Preprocessor() : mContext(NULL)
+bool Preprocessor::init(int count,
+                        const char* const string[],
+                        const int length[])
 {
+    return mLexer.init(count, string, length);
 }
 
-Preprocessor::~Preprocessor()
+int Preprocessor::lex(Token* token)
 {
-    delete mContext;
-}
-
-bool Preprocessor::init()
-{
-    mContext = new Context;
-    return mContext->init();
-}
-
-bool Preprocessor::process(int count,
-                           const char* const string[],
-                           const int length[])
-{
-    ASSERT((count >=0) && (string != NULL));
-    if ((count < 0) || (string == NULL))
-        return false;
-
-    reset();
-
-    return mContext->process(count, string, length, &mTokens);
-}
-
-void Preprocessor::reset()
-{
-    std::for_each(mTokens.begin(), mTokens.end(), Delete());
-    mTokens.clear();
+    return mLexer.lex(token);
 }
 
 }  // namespace pp

@@ -48,11 +48,14 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[scriptable, uuid(7f57aa45-6792-4d8b-ba5b-201533cf0b2f)]
+[scriptable, uuid(22f9f2ef-18f0-4f8f-a459-6ec8cfaa4f59)]
 interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
   readonly attribute long               screenX;
   readonly attribute long               screenY;
+
+  readonly attribute long               mozMovementX;
+  readonly attribute long               mozMovementY;
 
   readonly attribute long               clientX;
   readonly attribute long               clientY;
@@ -63,6 +66,7 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
   readonly attribute boolean            metaKey;
 
   readonly attribute unsigned short     button;
+  readonly attribute unsigned short     buttons;
   readonly attribute nsIDOMEventTarget  relatedTarget;
 
   void                      initMouseEvent(in DOMString typeArg,
@@ -112,6 +116,8 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
                                        in nsIDOMEventTarget relatedTargetArg,
                                        in float pressure,
                                        in unsigned short inputSourceArg);
+
+  bool getModifierState(in DOMString keyArg);
 };
 
 dictionary MouseEventInit : UIEventInit
@@ -125,6 +131,6 @@ dictionary MouseEventInit : UIEventInit
   boolean altKey;
   boolean metaKey;
   unsigned short button;
-  // unsigned short buttons; is not supported yet.
+  unsigned short buttons;
   nsIDOMEventTarget relatedTarget;
 };

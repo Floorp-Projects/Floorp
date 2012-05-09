@@ -38,91 +38,132 @@
 
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h"
+#include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsDOMError.h"
 #include "nsDOMException.h"
 #include "nsIDOMDOMException.h"
-#include "nsIDOMFileException.h"
 #include "nsIDOMSVGException.h"
 #include "nsIDOMXPathException.h"
-#include "nsIIDBDatabaseException.h"
+#include "nsIDocument.h"
 #include "nsString.h"
 #include "prprf.h"
 
-#define DOM_MSG_DEF(val, message) {(val), #val, message},
-#define DOM_MSG_DEF_(val, name, message) {(NS_ERROR_DOM_##val), name, message},
-
-#define IMPL_INTERNAL_DOM_EXCEPTION_HEAD(classname, ifname)                  \
-class classname : public nsBaseDOMException,                                 \
-                  public ifname                                              \
+#define IMPL_INTERNAL_DOM_EXCEPTION_HEAD(domname)                            \
+class ns##domname : public nsBaseDOMException,                               \
+                    public nsIDOM##domname                                   \
 {                                                                            \
 public:                                                                      \
-  classname();                                                               \
-  virtual ~classname();                                                      \
+  ns##domname();                                                             \
+  virtual ~ns##domname();                                                    \
                                                                              \
   NS_DECL_ISUPPORTS_INHERITED
 
-#define IMPL_INTERNAL_DOM_EXCEPTION_TAIL(classname, ifname, domname, module, \
-                                         mapping_function)                   \
+#define IMPL_INTERNAL_DOM_EXCEPTION_TAIL(domname)                            \
 };                                                                           \
                                                                              \
-classname::classname() {}                                                    \
-classname::~classname() {}                                                   \
+ns##domname::ns##domname() {}                                                \
+ns##domname::~ns##domname() {}                                               \
                                                                              \
-DOMCI_DATA(domname, classname)                                               \
+DOMCI_DATA(domname, ns##domname)                                             \
                                                                              \
-NS_IMPL_ADDREF_INHERITED(classname, nsBaseDOMException)                      \
-NS_IMPL_RELEASE_INHERITED(classname, nsBaseDOMException)                     \
-NS_INTERFACE_MAP_BEGIN(classname)                                            \
-  NS_INTERFACE_MAP_ENTRY(ifname)                                             \
+NS_IMPL_ADDREF_INHERITED(ns##domname, nsBaseDOMException)                    \
+NS_IMPL_RELEASE_INHERITED(ns##domname, nsBaseDOMException)                   \
+NS_INTERFACE_MAP_BEGIN(ns##domname)                                          \
+  NS_INTERFACE_MAP_ENTRY(nsIDOM##domname)                                    \
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(domname)                              \
 NS_INTERFACE_MAP_END_INHERITING(nsBaseDOMException)                          \
                                                                              \
 nsresult                                                                     \
 NS_New##domname(nsresult aNSResult, nsIException* aDefaultException,         \
-                nsIException** aException)                                   \
+                  nsIException** aException)                                 \
 {                                                                            \
-  if (!(NS_ERROR_GET_MODULE(aNSResult) == module)) {                         \
-    NS_WARNING("Trying to create an exception for the wrong error module."); \
-    return NS_ERROR_FAILURE;                                                 \
-  }                                                                          \
   const char* name;                                                          \
   const char* message;                                                       \
-  mapping_function(aNSResult, &name, &message);                              \
-  classname* inst = new classname();                                         \
+  PRUint16 code;                                                             \
+  NSResultToNameAndMessage(aNSResult, &name, &message, &code);               \
+  ns##domname* inst = new ns##domname();                                     \
   NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);                              \
-  inst->Init(aNSResult, name, message, aDefaultException);                   \
+  inst->Init(aNSResult, name, message, code, aDefaultException);             \
   *aException = inst;                                                        \
   NS_ADDREF(*aException);                                                    \
   return NS_OK;                                                              \
 }
 
+enum DOM4ErrorTypeCodeMap {
+  /* DOM4 errors from http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#domexception */
+  IndexSizeError             = nsIDOMDOMException::INDEX_SIZE_ERR,
+  HierarchyRequestError      = nsIDOMDOMException::HIERARCHY_REQUEST_ERR,
+  WrongDocumentError         = nsIDOMDOMException::WRONG_DOCUMENT_ERR,
+  InvalidCharacterError      = nsIDOMDOMException::INVALID_CHARACTER_ERR,
+  NoModificationAllowedError = nsIDOMDOMException::NO_MODIFICATION_ALLOWED_ERR,
+  NotFoundError              = nsIDOMDOMException::NOT_FOUND_ERR,
+  NotSupportedError          = nsIDOMDOMException::NOT_SUPPORTED_ERR,
+  // Can't remove until setNamedItem is removed
+  InUseAttributeError        = nsIDOMDOMException::INUSE_ATTRIBUTE_ERR,
+  InvalidStateError          = nsIDOMDOMException::INVALID_STATE_ERR,
+  SyntaxError                = nsIDOMDOMException::SYNTAX_ERR,
+  InvalidModificationError   = nsIDOMDOMException::INVALID_MODIFICATION_ERR,
+  NamespaceError             = nsIDOMDOMException::NAMESPACE_ERR,
+  InvalidAccessError         = nsIDOMDOMException::INVALID_ACCESS_ERR,
+  TypeMismatchError          = nsIDOMDOMException::TYPE_MISMATCH_ERR,
+  SecurityError              = nsIDOMDOMException::SECURITY_ERR,
+  NetworkError               = nsIDOMDOMException::NETWORK_ERR,
+  AbortError                 = nsIDOMDOMException::ABORT_ERR,
+  URLMismatchError           = nsIDOMDOMException::URL_MISMATCH_ERR,
+  QuotaExceededError         = nsIDOMDOMException::QUOTA_EXCEEDED_ERR,
+  TimeoutError               = nsIDOMDOMException::TIMEOUT_ERR,
+  InvalidNodeTypeError       = nsIDOMDOMException::INVALID_NODE_TYPE_ERR,
+  DataCloneError             = nsIDOMDOMException::DATA_CLONE_ERR,
+
+  /* XXX Should be JavaScript native TypeError */
+  TypeError                  = 0,
+
+  /* IndexedDB errors http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#exceptions */
+  UnknownError             = 0,
+  ConstraintError          = 0,
+  DataError                = 0,
+  TransactionInactiveError = 0,
+  ReadOnlyError            = 0,
+  VersionError             = 0,
+
+  /* File API errors http://dev.w3.org/2006/webapi/FileAPI/#ErrorAndException */
+  NotReadableError         = 0,
+};
+
+#define DOM4_MSG_DEF(name, message, nsresult) {(nsresult), name, #name, message},
+#define DOM_MSG_DEF(val, message) {(val), NS_ERROR_GET_CODE(val), #val, message},
+
 static struct ResultStruct
 {
   nsresult mNSResult;
+  PRUint16 mCode;
   const char* mName;
   const char* mMessage;
 } gDOMErrorMsgMap[] = {
 #include "domerr.msg"
-  {0, nsnull, nsnull}   // sentinel to mark end of array
+  {0, 0, nsnull, nsnull}   // sentinel to mark end of array
 };
 
+#undef DOM4_MSG_DEF
 #undef DOM_MSG_DEF
-#undef DOM_MSG_DEF_
 
 static void
 NSResultToNameAndMessage(nsresult aNSResult,
                          const char** aName,
-                         const char** aMessage)
+                         const char** aMessage,
+                         PRUint16* aCode)
 {
   *aName = nsnull;
   *aMessage = nsnull;
+  *aCode = 0;
   ResultStruct* result_struct = gDOMErrorMsgMap;
 
   while (result_struct->mName) {
     if (aNSResult == result_struct->mNSResult) {
       *aName = result_struct->mName;
       *aMessage = result_struct->mMessage;
+      *aCode = result_struct->mCode;
       return;
     }
 
@@ -136,105 +177,73 @@ NSResultToNameAndMessage(nsresult aNSResult,
 
 nsresult
 NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
-                                   const char** aMessage)
+                                   const char** aMessage, PRUint16* aCode)
 {
   const char* name = nsnull;
   const char* message = nsnull;
-  NSResultToNameAndMessage(aNSResult, &name, &message);
+  PRUint16 code = 0;
+  NSResultToNameAndMessage(aNSResult, &name, &message, &code);
 
   if (name && message) {
     *aName = name;
     *aMessage = message;
+    if (aCode) {
+      *aCode = code;
+    }
     return NS_OK;
   }
 
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsDOMException, nsIDOMDOMException)
+IMPL_INTERNAL_DOM_EXCEPTION_HEAD(DOMException)
   NS_DECL_NSIDOMDOMEXCEPTION
-IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsDOMException, nsIDOMDOMException,
-                                 DOMException, NS_ERROR_MODULE_DOM,
-                                 NSResultToNameAndMessage)
+IMPL_INTERNAL_DOM_EXCEPTION_TAIL(DOMException)
 
 NS_IMETHODIMP
 nsDOMException::GetCode(PRUint16* aCode)
 {
   NS_ENSURE_ARG_POINTER(aCode);
-  nsresult result;
-  GetResult(&result);
-  *aCode = NS_ERROR_GET_CODE(result);
+  *aCode = mCode;
+
+  // Warn only when the code was changed (IndexedDB or File API)
+  // or the code is useless (zero)
+  if (NS_ERROR_GET_MODULE(mResult) == NS_ERROR_MODULE_DOM_INDEXEDDB ||
+      NS_ERROR_GET_MODULE(mResult) == NS_ERROR_MODULE_DOM_FILE ||
+      !mCode) {
+    nsCOMPtr<nsIDocument> doc =
+      do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
+    if (doc) {
+      doc->WarnOnceAbout(nsIDocument::eDOMExceptionCode);
+    }
+  }
 
   return NS_OK;
 }
 
-IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsSVGException, nsIDOMSVGException)
+IMPL_INTERNAL_DOM_EXCEPTION_HEAD(SVGException)
   NS_DECL_NSIDOMSVGEXCEPTION
-IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsSVGException, nsIDOMSVGException,
-                                 SVGException, NS_ERROR_MODULE_SVG,
-                                 NSResultToNameAndMessage)
+IMPL_INTERNAL_DOM_EXCEPTION_TAIL(SVGException)
 
 NS_IMETHODIMP
 nsSVGException::GetCode(PRUint16* aCode)
 {
   NS_ENSURE_ARG_POINTER(aCode);
-  nsresult result;
-  GetResult(&result);
-  *aCode = NS_ERROR_GET_CODE(result);
+  *aCode = mCode;
 
   return NS_OK;
 }
 
-IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsXPathException, nsIDOMXPathException)
+IMPL_INTERNAL_DOM_EXCEPTION_HEAD(XPathException)
   NS_DECL_NSIDOMXPATHEXCEPTION
-IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsXPathException, nsIDOMXPathException,
-                                 XPathException, NS_ERROR_MODULE_DOM_XPATH,
-                                 NSResultToNameAndMessage)
+IMPL_INTERNAL_DOM_EXCEPTION_TAIL(XPathException)
 
 NS_IMETHODIMP
 nsXPathException::GetCode(PRUint16* aCode)
 {
   NS_ENSURE_ARG_POINTER(aCode);
-  nsresult result;
-  GetResult(&result);
-  *aCode = NS_ERROR_GET_CODE(result);
+  *aCode = mCode;
 
-  return NS_OK;
-}
-
-IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsDOMFileException, nsIDOMFileException)
-  NS_DECL_NSIDOMFILEEXCEPTION
-IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsDOMFileException, nsIDOMFileException,
-                                 FileException, NS_ERROR_MODULE_DOM_FILE,
-                                 NSResultToNameAndMessage)
-
-NS_IMETHODIMP
-nsDOMFileException::GetCode(PRUint16* aCode)
-{
-  NS_ENSURE_ARG_POINTER(aCode);
-  nsresult result;
-  GetResult(&result);
-  *aCode = NS_ERROR_GET_CODE(result);
-
-  return NS_OK;
-}
-
-IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsIDBDatabaseException,
-                                 nsIIDBDatabaseException)
-  NS_DECL_NSIIDBDATABASEEXCEPTION
-IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsIDBDatabaseException,
-                                 nsIIDBDatabaseException,
-                                 IDBDatabaseException,
-                                 NS_ERROR_MODULE_DOM_INDEXEDDB,
-                                 NSResultToNameAndMessage)
-
-NS_IMETHODIMP
-nsIDBDatabaseException::GetCode(PRUint16* aCode)
-{
-  NS_ASSERTION(aCode, "Null pointer!");
-  nsresult result;
-  GetResult(&result);
-  *aCode = NS_ERROR_GET_CODE(result);
   return NS_OK;
 }
 
@@ -401,9 +410,8 @@ nsBaseDOMException::ToString(char **aReturn)
 
   const char* msg = mMessage ? mMessage : defaultMsg;
   const char* resultName = mName ? mName : defaultName;
-  PRUint32 code = NS_ERROR_GET_CODE(mResult);
 
-  *aReturn = PR_smprintf(format, msg, code, mResult, resultName,
+  *aReturn = PR_smprintf(format, msg, mCode, mResult, resultName,
                          location.get());
 
   return *aReturn ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -411,12 +419,13 @@ nsBaseDOMException::ToString(char **aReturn)
 
 NS_IMETHODIMP
 nsBaseDOMException::Init(nsresult aNSResult, const char* aName,
-                         const char* aMessage,
+                         const char* aMessage, PRUint16 aCode,
                          nsIException* aDefaultException)
 {
   mResult = aNSResult;
   mName = aName;
   mMessage = aMessage;
+  mCode = aCode;
   mInner = aDefaultException;
   return NS_OK;
 }

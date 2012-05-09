@@ -49,15 +49,15 @@
 
 // {731d9701-39f8-11d6-a7f2-b39073384c9c}
 #define NS_IBASEDOMEXCEPTION_IID  \
-{ 0x731d9701, 0x39f8, 0x11d6, \
-{ 0xa7, 0xf2, 0xb3, 0x90, 0x73, 0x38, 0x4c, 0x9c } }
+{ 0xb33afd76, 0x5531, 0x423b, \
+{ 0x99, 0x42, 0x90, 0x69, 0xf0, 0x9a, 0x3f, 0x5c } }
 
 class nsIBaseDOMException : public nsISupports {
 public:  
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBASEDOMEXCEPTION_IID)
 
   NS_IMETHOD Init(nsresult aNSResult, const char* aName,
-                  const char* aMessage,
+                  const char* aMessage, PRUint16 aCode,
                   nsIException* aDefaultException) = 0;
 };
 

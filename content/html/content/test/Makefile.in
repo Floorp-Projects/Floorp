@@ -137,7 +137,6 @@ _TEST_FILES = \
 		test_bug401160.xhtml \
 		test_bug405242.html \
 		test_bug406596.html \
-		test_bug408231.html \
 		test_bug417760.html \
 		file_bug417760.png \
 		test_formSubmission.html \
@@ -202,10 +201,6 @@ _TEST_FILES = \
 		test_bug558788-1.html \
 		test_bug558788-2.html \
 		test_bug561634.html \
-		test_bug588683-1.html \
-		test_bug588683-2.html \
-		test_bug588683-3.html \
-		test_bug588683-4.html \
 		test_bug590353-1.html \
 		test_bug590353-2.html \
 		test_bug593689.html \
@@ -256,7 +251,6 @@ _TEST_FILES = \
 		test_bug641219.html \
 		test_bug643051.html \
 		test_bug583514.html \
-		test_bug514437.html \
 		test_bug560112.html \
 		test_bug586786.html \
 		test_bug646157.html \
@@ -301,6 +295,7 @@ _TEST_FILES = \
 		test_object_plugin_nav.html \
 		test_bug742030.html \
 		test_bug742549.html \
+		test_bug745685.html \
 		$(NULL)
 
 _BROWSER_TEST_FILES = \

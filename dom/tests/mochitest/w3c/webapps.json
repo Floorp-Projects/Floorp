@@ -1,9 +1,0 @@
-{
-  "webapps/DOMCore/tests/submissions/Opera/test_getElementsByClassName-10.xml": {
-    "document.getElementsByClassName(): compound": true
-  },
-
-  "webapps/DOMCore/tests/submissions/Opera/test_getElementsByClassName-11.xml": {
-    "document.getElementsByClassName(): \"tricky\" compound": true
-  }
-}

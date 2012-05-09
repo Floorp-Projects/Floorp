@@ -41,18 +41,11 @@
 
 #include "nsDocAccessible.h"
 #include "nsAccUtils.h"
+#include "nsIAccessibleRelation.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"
-
-#include "nsIAccessibleRelation.h"
-#include "nsIFrame.h"
-#include "nsPresContext.h"
-#include "nsBlockFrame.h"
-#include "nsISelection.h"
-#include "nsISelectionController.h"
-#include "nsComponentManagerUtils.h"
 
 using namespace mozilla::a11y;
 
@@ -68,12 +61,12 @@ nsHTMLTextAccessible::
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTextAccessible, nsTextAccessible)
 
-NS_IMETHODIMP
-nsHTMLTextAccessible::GetName(nsAString& aName)
+ENameValueFlag
+nsHTMLTextAccessible::Name(nsString& aName)
 {
   // Text node, ARIA can't be used.
   aName = mText;
-  return NS_OK;
+  return eNameOK;
 }
 
 role
@@ -225,197 +218,5 @@ nsHTMLOutputAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
                          NS_LITERAL_STRING("polite"));
   
   return NS_OK;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLLIAccessible
-////////////////////////////////////////////////////////////////////////////////
-
-nsHTMLLIAccessible::
-  nsHTMLLIAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc), mBullet(nsnull)
-{
-  mFlags |= eHTMLListItemAccessible;
-
-  nsBlockFrame* blockFrame = do_QueryFrame(GetFrame());
-  if (blockFrame && blockFrame->HasBullet()) {
-    mBullet = new nsHTMLListBulletAccessible(mContent, mDoc);
-    if (!Document()->BindToDocument(mBullet, nsnull))
-      mBullet = nsnull;
-  }
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLLIAccessible, nsHyperTextAccessible)
-
-void
-nsHTMLLIAccessible::Shutdown()
-{
-  mBullet = nsnull;
-
-  nsHyperTextAccessibleWrap::Shutdown();
-}
-
-role
-nsHTMLLIAccessible::NativeRole()
-{
-  return roles::LISTITEM;
-}
-
-PRUint64
-nsHTMLLIAccessible::NativeState()
-{
-  return nsHyperTextAccessibleWrap::NativeState() | states::READONLY;
-}
-
-NS_IMETHODIMP nsHTMLLIAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
-{
-  nsresult rv = nsAccessibleWrap::GetBounds(x, y, width, height);
-  if (NS_FAILED(rv) || !mBullet)
-    return rv;
-
-  PRInt32 bulletX, bulletY, bulletWidth, bulletHeight;
-  rv = mBullet->GetBounds(&bulletX, &bulletY, &bulletWidth, &bulletHeight);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *x = bulletX; // Move x coordinate of list item over to cover bullet as well
-  *width += bulletWidth;
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLLIAccessible: public
-
-void
-nsHTMLLIAccessible::UpdateBullet(bool aHasBullet)
-{
-  if (aHasBullet == !!mBullet) {
-    NS_NOTREACHED("Bullet and accessible are in sync already!");
-    return;
-  }
-
-  nsDocAccessible* document = Document();
-  if (aHasBullet) {
-    mBullet = new nsHTMLListBulletAccessible(mContent, mDoc);
-    if (document->BindToDocument(mBullet, nsnull)) {
-      InsertChildAt(0, mBullet);
-    }
-  } else {
-    RemoveChild(mBullet);
-    document->UnbindFromDocument(mBullet);
-    mBullet = nsnull;
-  }
-
-  // XXXtodo: fire show/hide and reorder events. That's hard to make it
-  // right now because coalescence happens by DOM node.
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLLIAccessible: nsAccessible protected
-
-void
-nsHTMLLIAccessible::CacheChildren()
-{
-  if (mBullet)
-    AppendChild(mBullet);
-
-  // Cache children from subtree.
-  nsAccessibleWrap::CacheChildren();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLListBulletAccessible
-////////////////////////////////////////////////////////////////////////////////
-
-nsHTMLListBulletAccessible::
-  nsHTMLListBulletAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-    nsLeafAccessible(aContent, aDoc)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLListBulletAccessible: nsAccessNode
-
-bool
-nsHTMLListBulletAccessible::IsPrimaryForNode() const
-{
-  return false;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLListBulletAccessible: nsAccessible
-
-NS_IMETHODIMP
-nsHTMLListBulletAccessible::GetName(nsAString &aName)
-{
-  aName.Truncate();
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  // Native anonymous content, ARIA can't be used. Get list bullet text.
-  nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  NS_ASSERTION(blockFrame, "No frame for list item!");
-  if (blockFrame) {
-    blockFrame->GetBulletText(aName);
-
-    // Append space otherwise bullets are jammed up against list text.
-    aName.Append(' ');
-  }
-
-  return NS_OK;
-}
-
-role
-nsHTMLListBulletAccessible::NativeRole()
-{
-  return roles::STATICTEXT;
-}
-
-PRUint64
-nsHTMLListBulletAccessible::NativeState()
-{
-  PRUint64 state = nsLeafAccessible::NativeState();
-
-  state &= ~states::FOCUSABLE;
-  state |= states::READONLY;
-  return state;
-}
-
-void
-nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
-                                         PRUint32 aLength)
-{
-  nsAutoString bulletText;
-  nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  NS_ASSERTION(blockFrame, "No frame for list item!");
-  if (blockFrame)
-    blockFrame->GetBulletText(bulletText);
-
-  aText.Append(Substring(bulletText, aStartOffset, aLength));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLListAccessible
-////////////////////////////////////////////////////////////////////////////////
-
-nsHTMLListAccessible::
-  nsHTMLListAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
-{
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLListAccessible, nsHyperTextAccessible)
-
-role
-nsHTMLListAccessible::NativeRole()
-{
-  return roles::LIST;
-}
-
-PRUint64
-nsHTMLListAccessible::NativeState()
-{
-  return nsHyperTextAccessibleWrap::NativeState() | states::READONLY;
 }
 

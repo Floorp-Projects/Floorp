@@ -5,6 +5,8 @@
 #ifndef mozilla_dom_ScreenOrientation_h
 #define mozilla_dom_ScreenOrientation_h
 
+#include "IPC/IPCMessageUtils.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -20,24 +22,6 @@ enum ScreenOrientation {
   eScreenOrientation_LandscapeSecondary = 8,  // 00001000
   eScreenOrientation_Landscape          = 12, // 00001100
   eScreenOrientation_EndGuard
-};
-
-/**
- * ScreenOrientationWrapper is a class wrapping ScreenOrientation so it can be
- * used with Observer<T> which is taking a class, not an enum.
- * C++11 should make this useless.
- */
-class ScreenOrientationWrapper {
-public:
-  ScreenOrientationWrapper()
-    : orientation(eScreenOrientation_None)
-  {}
-
-  ScreenOrientationWrapper(ScreenOrientation aOrientation)
-    : orientation(aOrientation)
-  {}
-
-  ScreenOrientation orientation;
 };
 
 } // namespace dom

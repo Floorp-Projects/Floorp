@@ -72,7 +72,13 @@ function startTest()
     ruleView = new CssRuleView(doc);
     doc.documentElement.appendChild(ruleView.element);
     ruleView.element.addEventListener("CssRuleViewChanged", ruleViewChanged, false);
+    is(ruleView.element.querySelectorAll("#noResults").length, 1, "Has a no-results element.");
     ruleView.highlight(testElement);
+    is(ruleView.element.querySelectorAll("#noResults").length, 0, "After a highlight, no longer has a no-results element.");
+    ruleView.highlight(null);
+    is(ruleView.element.querySelectorAll("#noResults").length, 1, "After highlighting null, has a no-results element again.");
+    ruleView.highlight(testElement);
+
     waitForFocus(testCancelNew, ruleDialog);
   }, true);
 }

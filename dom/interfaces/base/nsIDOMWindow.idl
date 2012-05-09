@@ -69,7 +69,7 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(f6e3b10d-d5f4-4fcd-aa4c-5f98626d428a)]
+[scriptable, uuid(e6198a86-1a46-46ec-9501-dfcd84a5f630)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -464,6 +464,8 @@ interface nsIDOMWindow : nsISupports
    */
   [implicit_jscontext] attribute jsval ondevicemotion;
   [implicit_jscontext] attribute jsval ondeviceorientation;
+  [implicit_jscontext] attribute jsval ondeviceproximity;
+  [implicit_jscontext] attribute jsval ondevicelight;
 
   [implicit_jscontext] attribute jsval onmouseenter;
   [implicit_jscontext] attribute jsval onmouseleave;

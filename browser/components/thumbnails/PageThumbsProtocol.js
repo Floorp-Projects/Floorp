@@ -72,6 +72,14 @@ Protocol.prototype = {
    * @return The newly created channel.
    */
   newChannel: function Proto_newChannel(aURI) {
+    let {url} = parseURI(aURI);
+    let file = PageThumbsStorage.getFileForURL(url);
+
+    if (file.exists()) {
+      let fileuri = Services.io.newFileURI(file);
+      return Services.io.newChannelFromURI(fileuri);
+    }
+
     return new Channel(aURI);
   },
 

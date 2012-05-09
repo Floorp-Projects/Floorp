@@ -26,6 +26,7 @@
 
 #ifndef HB_H
 #define HB_H
+#define HB_H_IN
 
 #include "hb-blob.h"
 #include "hb-buffer.h"
@@ -38,4 +39,5 @@
 HB_BEGIN_DECLS
 HB_END_DECLS
 
+#undef HB_H_IN
 #endif /* HB_H */

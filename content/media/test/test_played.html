@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test played member for media elements</title>
+<script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id='test'>
+<script class="testbody" type='application/javascript;version=1.8'>
+
+let manager = new MediaTestManager;
+
+function finish_test(element) {
+  if (element.parentNode)
+    element.parentNode.removeChild(element);
+  element.src="";
+  manager.finished(element.token);
+}
+
+// Check that a file has been played in its entirety.
+function check_full_file_played(element) {
+  element.addEventListener('ended', (function(e) {
+    let interval_count = e.target.played.length;
+    is(interval_count, 1, "normal play : a.played.length must be 1");
+    is(element.played.start(0), 0, "start time shall be 0");
+    is(element.played.end(0), e.target.duration, "end time shall be duration");
+    finish_test(e.target);
+  }), false);
+}
+
+var tests = [
+// Without playing, check that player.played.length == 0.
+{
+  setup : function(element) {
+    element.addEventListener("loadedmetadata", function() {
+      is(element.played.length, 0, "audio : initial played.length equals zero");
+      finish_test(element);
+    });
+  }
+},
+// Play the file, test the range we have.
+{
+  setup : function(element) {
+    check_full_file_played(element);
+    element.play();
+  }
+},
+
+// Play the second half of the file, pause, play
+// an check we have only one range.
+{
+  setup : function (element) {
+    element.addEventListener("ended", function (e) {
+      var t = e.target;
+      check_full_file_played(t);
+      t.pause();
+      t.currentTime = 0;
+      t.play();
+    }, false);
+    element.addEventListener("loadedmetadata", function() {
+      element.currentTime = element.duration / 2;
+      element.play();
+    }, false);
+  }
+},
+
+// Play the first half of the file, seek back, while
+// continuing to play. We shall have only one range.
+{
+  setup : function (element) {
+    let onTimeUpdate = function() {
+      if (element.currentTime > element.duration/2) {
+        element.removeEventListener("timeupdate", onTimeUpdate, false);
+        element.currentTime = element.duration / 4;
+      }
+    }
+    element.addEventListener("timeupdate", onTimeUpdate, false);
+    check_full_file_played(element);
+    element.play();
+  }
+},
+
+// Play and seek to have two ranges, and check that, as well a
+// boundaries.
+{
+  setup : function (element) {
+    let onTimeUpdate = function() {
+      if (element.currentTime > element.duration / 2) {
+        element.removeEventListener("timeupdate", onTimeUpdate, false);
+        element.pause();
+        element.currentTime += element.duration/10;
+        element.play();
+      }
+    }
+
+    element.addEventListener("loadedmetadata", function() {
+      element.addEventListener("timeupdate", onTimeUpdate, false);
+    }, false);
+
+
+    element.addEventListener("ended", (function() {
+      if(element.played.length > 1) {
+        is(element.played.length, 2, "element.played.length == 2");
+        var guess = element.played.end(0) + element.duration/10.0;
+        ok(rangeCheck(element.played.start(1), guess), "we should have seeked forward by one tenth of the duration");
+        is(element.played.end(1), element.duration, "end of second range shall be the total duration");
+      }
+      is(element.played.start(0), 0, "start of first range shall be 0");
+      finish_test(element);
+    }), false);
+
+    element.play();
+  }
+},
+
+// Play to create two ranges, in the reverse order. check that they are sorted.
+{
+  setup : function (element) {
+    function end() {
+      element.pause();
+      let p = element.played;
+      ok(p.length >= 1, "There should be at least one range");
+      is(p.start(0), element.duration/6, "Start of first range should be the sixth of the duration");
+      ok(p.end(p.length - 1) > 5*element.duration/6, "End of last range should be greater that five times the sixth of the duration");
+      finish_test(element);
+    }
+
+    function pauseseekrestart() {
+      element.pause();
+      element.currentTime = element.duration/6;
+      element.play();
+    }
+
+    function onTimeUpdate_pauseseekrestart() {
+      if (element.currentTime > 5*element.duration/6) {
+        element.removeEventListener("timeupdate", onTimeUpdate_pauseseekrestart, false);
+        pauseseekrestart();
+        element.addEventListener("timeupdate", onTimeUpdate_end, false);
+      }
+    }
+
+    function onTimeUpdate_end() {
+      if (element.currentTime > 3 * element.duration/6) {
+        element.removeEventListener("timeupdate", onTimeUpdate_end, false);
+        end();
+      }
+    }
+
+    element.addEventListener("timeupdate", onTimeUpdate_pauseseekrestart, false);
+
+    element.addEventListener('loadedmetadata', function() {
+      element.currentTime = 4 * element.duration/6;
+      element.play();
+    }, false);
+  }
+},
+// Seek repeatedly without playing. No range should appear.
+{
+  setup : function(element) {
+    let index = 1;
+
+    element.addEventListener('seeked', function() {
+      index++;
+      element.currentTime = index * element.duration / 5;
+      is(element.played.length, 0, "element.played.length should be 0");
+      if (index == 5) {
+        finish_test(element);
+      }
+    }, false);
+
+    element.addEventListener('loadedmetadata', function() {
+      element.currentTime = element.duration / 5;
+    }, false);
+  }
+}
+];
+
+function rangeCheck(n1, n2) {
+  var THRESHOLD = 0.35;
+  var diff = Math.abs(n1 - n2);
+  if (diff < THRESHOLD) {
+    return true;
+  }
+  return false;
+}
+
+function createTestArray() {
+  var A = [];
+  for (var i=0; i<tests.length; i++) {
+    for (var k=0; k<gPlayedTests.length; k++) {
+      var t = new Object();
+      t.setup = tests[i].setup;
+      t.name = gPlayedTests[k].name;
+      t.type = gPlayedTests[k].type;
+      A.push(t);
+    }
+  }
+  return A;
+}
+
+function startTest(test, token) {
+  var elemType = /^audio/.test(test.type) ? "audio" : "video";
+  var element = document.createElement(elemType);
+  element.src = test.name;
+  element.token = token;
+  element.volume = 0;
+  test.setup(element);
+  manager.started(token);
+}
+
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

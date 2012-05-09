@@ -379,11 +379,6 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
   return NS_OK;
 }
 
-/* Called by NewEmbeddedPluginStream() - if this is called, we weren't
- * able to load the plugin, so we need to load it later once we figure
- * out the mimetype.  In order to load it later, we need the plugin
- * instance owner.
- */
 nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
                                                         nsNPAPIPluginInstance* aInstance,
                                                         nsObjectLoadingContent *aContent)
@@ -397,7 +392,12 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
   
   PR_LogFlush();
 #endif
-  
+
+  // We have to have one or the other.
+  if (!aInstance && !aContent) {
+    return NS_ERROR_FAILURE;
+  }
+
   mURL = aURL;
   
   if (aInstance) {
@@ -1175,7 +1175,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
       }
 
       // Assemble everything and pass to listener.
-      nsPrintfCString status(100, "HTTP%s %lu %s", ver.get(), statusNum,
+      nsPrintfCString status("HTTP%s %lu %s", ver.get(), statusNum,
                              statusText.get());
       static_cast<nsIHTTPHeaderListener*>(mPStreamListener)->StatusLine(status.get());
     }

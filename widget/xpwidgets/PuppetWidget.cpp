@@ -45,11 +45,13 @@
 #endif
 
 #include "gfxPlatform.h"
+#include "mozilla/Hal.h"
 #include "PuppetWidget.h"
 
+using namespace mozilla::dom;
+using namespace mozilla::hal;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
-using namespace mozilla::dom;
 
 static void
 InvalidateRegion(nsIWidget* aWidget, const nsIntRegion& aRegion)
@@ -593,26 +595,132 @@ PuppetWidget::GetDPI()
 void*
 PuppetWidget::GetNativeData(PRUint32 aDataType)
 {
-    switch (aDataType) {
-    case NS_NATIVE_SHAREABLE_WINDOW: {
-        NS_ABORT_IF_FALSE(mTabChild, "Need TabChild to get the nativeWindow from!");
-        mozilla::WindowsHandle nativeData = nsnull;
-        mTabChild->SendGetWidgetNativeData(&nativeData);
-        return (void*)nativeData;
-    }
-    case NS_NATIVE_WINDOW:
-    case NS_NATIVE_DISPLAY:
-    case NS_NATIVE_PLUGIN_PORT:
-    case NS_NATIVE_GRAPHIC:
-    case NS_NATIVE_SHELLWIDGET:
-    case NS_NATIVE_WIDGET:
-        NS_WARNING("nsWindow::GetNativeData not implemented for this type");
-        break;
-    default:
-        NS_WARNING("nsWindow::GetNativeData called with bad value");
-        break;
-    }
-    return nsnull;
+  switch (aDataType) {
+  case NS_NATIVE_SHAREABLE_WINDOW: {
+    NS_ABORT_IF_FALSE(mTabChild, "Need TabChild to get the nativeWindow from!");
+    mozilla::WindowsHandle nativeData = nsnull;
+    mTabChild->SendGetWidgetNativeData(&nativeData);
+    return (void*)nativeData;
+  }
+  case NS_NATIVE_WINDOW:
+  case NS_NATIVE_DISPLAY:
+  case NS_NATIVE_PLUGIN_PORT:
+  case NS_NATIVE_GRAPHIC:
+  case NS_NATIVE_SHELLWIDGET:
+  case NS_NATIVE_WIDGET:
+    NS_WARNING("nsWindow::GetNativeData not implemented for this type");
+    break;
+  default:
+    NS_WARNING("nsWindow::GetNativeData called with bad value");
+    break;
+  }
+  return nsnull;
+}
+
+PuppetScreen::PuppetScreen(void *nativeScreen)
+{
+}
+
+PuppetScreen::~PuppetScreen()
+{
+}
+
+static ScreenConfiguration
+ScreenConfig()
+{
+  ScreenConfiguration config;
+  hal::GetCurrentScreenConfiguration(&config);
+  return config;
+}
+
+NS_IMETHODIMP
+PuppetScreen::GetRect(PRInt32 *outLeft,  PRInt32 *outTop,
+                      PRInt32 *outWidth, PRInt32 *outHeight)
+{
+  nsIntRect r = ScreenConfig().rect();
+  *outLeft = r.x;
+  *outTop = r.y;
+  *outWidth = r.width;
+  *outHeight = r.height;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PuppetScreen::GetAvailRect(PRInt32 *outLeft,  PRInt32 *outTop,
+                           PRInt32 *outWidth, PRInt32 *outHeight)
+{
+  return GetRect(outLeft, outTop, outWidth, outHeight);
+}
+
+
+NS_IMETHODIMP
+PuppetScreen::GetPixelDepth(PRInt32 *aPixelDepth)
+{
+  *aPixelDepth = ScreenConfig().pixelDepth();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PuppetScreen::GetColorDepth(PRInt32 *aColorDepth)
+{
+  *aColorDepth = ScreenConfig().colorDepth();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PuppetScreen::GetRotation(PRUint32* aRotation)
+{
+  NS_WARNING("Attempt to get screen rotation through nsIScreen::GetRotation().  Nothing should know or care this in sandboxed contexts.  If you want *orientation*, use hal.");
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+PuppetScreen::SetRotation(PRUint32 aRotation)
+{
+  NS_WARNING("Attempt to set screen rotation through nsIScreen::GetRotation().  Nothing should know or care this in sandboxed contexts.  If you want *orientation*, use hal.");
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMPL_ISUPPORTS1(PuppetScreenManager, nsIScreenManager)
+
+PuppetScreenManager::PuppetScreenManager()
+{
+    mOneScreen = new PuppetScreen(nsnull);
+}
+
+PuppetScreenManager::~PuppetScreenManager()
+{
+}
+
+NS_IMETHODIMP
+PuppetScreenManager::GetPrimaryScreen(nsIScreen** outScreen)
+{
+  NS_IF_ADDREF(*outScreen = mOneScreen.get());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PuppetScreenManager::ScreenForRect(PRInt32 inLeft,
+                                   PRInt32 inTop,
+                                   PRInt32 inWidth,
+                                   PRInt32 inHeight,
+                                   nsIScreen** outScreen)
+{
+  return GetPrimaryScreen(outScreen);
+}
+
+NS_IMETHODIMP
+PuppetScreenManager::ScreenForNativeWidget(void* aWidget,
+                                           nsIScreen** outScreen)
+{
+  return GetPrimaryScreen(outScreen);
+}
+
+NS_IMETHODIMP
+PuppetScreenManager::GetNumberOfScreens(PRUint32* aNumberOfScreens)
+{
+  *aNumberOfScreens = 1;
+  return NS_OK;
 }
 
 }  // namespace widget

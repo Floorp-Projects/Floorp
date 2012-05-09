@@ -80,8 +80,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x9aef58e9, 0x5225, 0x4e58, \
-  { 0x9a, 0xfb, 0xe6, 0x63, 0x97, 0x1d, 0x86, 0x88 } }
+{ 0x7a6238d4, 0x7cbc, 0x43b2, \
+  { 0x86, 0x68, 0x92, 0xeb, 0x9e, 0xb0, 0x49, 0xaf } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -486,12 +486,7 @@ public:
   void SetHasMouseEnterLeaveEventListeners()
   {
     mMayHaveMouseEnterLeaveEventListener = true;
-  }  
-
-  /**
-   * Initialize window.java and window.Packages.
-   */
-  virtual void InitJavaProperties() = 0;
+  }
 
   virtual JSObject* GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) = 0;
   virtual void CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,

@@ -19,7 +19,11 @@
       var list = getAccessible("list");
       var listitem = getAccessible("listitem");
       var image = getAccessible("image");
+if (!MAC) {
       testChildAtPoint(list, 1, 1, listitem, image.firstChild);
+} else {
+      todo(false, "Bug 746974 - children must match on all platforms, disable failing test on Mac");
+}
 
       // ::MustPrune case (in this case childAtPoint doesn't look inside a
       // textbox), point is inside of textbox.

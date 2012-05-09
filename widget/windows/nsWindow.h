@@ -90,6 +90,12 @@ class nsIRollupListener;
 class nsIFile;
 class imgIContainer;
 
+namespace mozilla {
+namespace widget {
+class NativeKey;
+} // namespace widget
+} // namespacw mozilla;
+
 /**
  * Native WIN32 window wrapper.
  */
@@ -100,6 +106,7 @@ class nsWindow : public nsBaseWidget
   typedef mozilla::TimeDuration TimeDuration;
   typedef mozilla::widget::WindowHook WindowHook;
   typedef mozilla::widget::TaskbarWindowPreview TaskbarWindowPreview;
+  typedef mozilla::widget::NativeKey NativeKey;
 public:
   nsWindow();
   virtual ~nsWindow();
@@ -177,6 +184,10 @@ public:
   virtual nsresult        SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                                      PRUint32 aNativeMessage,
                                                      PRUint32 aModifierFlags);
+
+  virtual nsresult        SynthesizeNativeMouseMove(nsIntPoint aPoint)
+                          { return SynthesizeNativeMouseEvent(aPoint, MOUSEEVENTF_MOVE, 0); }
+
   virtual nsresult        SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
                                                            PRUint32 aNativeMessage,
                                                            double aDeltaX,
@@ -217,11 +228,11 @@ public:
                                              PRUint16 aInputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE);
   virtual bool            DispatchWindowEvent(nsGUIEvent* event);
   virtual bool            DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
-  virtual bool            DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
-                                           const nsTArray<nsAlternativeCharCode>* aAlternativeChars,
-                                           UINT aVirtualCharCode, const MSG *aMsg,
-                                           const nsModifierKeyState &aModKeyState,
-                                           PRUint32 aFlags = 0);
+  void                    InitKeyEvent(nsKeyEvent& aKeyEvent,
+                                       const NativeKey& aNativeKey,
+                                       const nsModifierKeyState &aModKeyState);
+  virtual bool            DispatchKeyEvent(nsKeyEvent& aKeyEvent,
+                                           const MSG *aMsgSentToPlugin);
   void                    DispatchPendingEvents();
   bool                    DispatchPluginEvent(UINT aMessage,
                                               WPARAM aWParam,
@@ -389,7 +400,14 @@ protected:
   virtual void            OnDestroy();
   virtual bool            OnMove(PRInt32 aX, PRInt32 aY);
   virtual bool            OnResize(nsIntRect &aWindowRect);
+  /**
+   * @param aVirtualKeyCode     If caller knows which key exactly caused the
+   *                            aMsg, set the virtual key code.
+   *                            Otherwise, 0.
+   * @param aScanCode           If aVirutalKeyCode isn't 0, set the scan code.
+   */
   LRESULT                 OnChar(const MSG &aMsg,
+                                 const NativeKey& aNativeKey,
                                  nsModifierKeyState &aModKeyState,
                                  bool *aEventDispatched,
                                  PRUint32 aFlags = 0);
@@ -400,11 +418,6 @@ protected:
   LRESULT                 OnKeyUp(const MSG &aMsg,
                                   nsModifierKeyState &aModKeyState,
                                   bool *aEventDispatched);
-  LRESULT                 OnCharRaw(UINT charCode, UINT aScanCode,
-                                    nsModifierKeyState &aModKeyState,
-                                    PRUint32 aFlags = 0,
-                                    const MSG *aMsg = nsnull,
-                                    bool *aEventDispatched = nsnull);
   bool                    OnGesture(WPARAM wParam, LPARAM lParam);
   bool                    OnTouch(WPARAM wParam, LPARAM lParam);
   bool                    OnHotKey(WPARAM wParam, LPARAM lParam);
@@ -464,7 +477,6 @@ protected:
   /**
    * Misc.
    */
-  UINT                    MapFromNativeToDOM(UINT aNativeKeyCode);
   void                    StopFlashing();
   static bool             IsTopLevelMouseExit(HWND aWnd);
   nsresult                SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
@@ -503,6 +515,7 @@ protected:
   HKL                   mLastKeyboardLayout;
   nsPopupType           mPopupType;
   nsSizeMode            mOldSizeMode;
+  nsSizeMode            mLastSizeMode;
   WindowHook            mWindowHook;
   DWORD                 mAssumeWheelIsZoomUntil;
   PRUint32              mPickerDisplayCount;

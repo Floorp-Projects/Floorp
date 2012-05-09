@@ -63,8 +63,8 @@ public:
    * Constructor. Used to expose default text attributes.
    */
   TextAttrsMgr(nsHyperTextAccessible* aHyperTextAcc) :
-    mHyperTextAcc(aHyperTextAcc), mIncludeDefAttrs(true),
-    mOffsetAcc(nsnull), mOffsetAccIdx(-1) { }
+    mOffsetAcc(nsnull),  mHyperTextAcc(aHyperTextAcc),
+    mOffsetAccIdx(-1), mIncludeDefAttrs(true) { }
 
   /**
    * Constructor. Used to expose text attributes at the given offset.
@@ -82,8 +82,8 @@ public:
                bool aIncludeDefAttrs,
                nsAccessible* aOffsetAcc,
                PRInt32 aOffsetAccIdx) :
-    mHyperTextAcc(aHyperTextAcc), mIncludeDefAttrs(aIncludeDefAttrs),
-    mOffsetAcc(aOffsetAcc), mOffsetAccIdx(aOffsetAccIdx) { }
+    mOffsetAcc(aOffsetAcc), mHyperTextAcc(aHyperTextAcc),
+    mOffsetAccIdx(aOffsetAccIdx), mIncludeDefAttrs(aIncludeDefAttrs) { }
 
   /*
    * Return text attributes and hyper text offsets where these attributes are

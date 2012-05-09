@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
+		file_MozEnteredDomFullscreen.html \
 		test_outerHTML.html \
 		test_outerHTML.xhtml \
 		497633.html \
@@ -76,6 +77,7 @@ _TEST_FILES = \
 		test_focus_legend_noparent.html \
 		file_clonewrapper.html \
 		file_moving_nodeList.html \
+		test_performance_now.html \
 		$(NULL)
 
 _CHROME_FILES = \

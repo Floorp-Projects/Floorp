@@ -79,6 +79,8 @@ DOMCI_CLASS(DragEvent)
 DOMCI_CLASS(KeyboardEvent)
 DOMCI_CLASS(CompositionEvent)
 DOMCI_CLASS(PopupBlockedEvent)
+DOMCI_CLASS(DeviceLightEvent)
+DOMCI_CLASS(DeviceProximityEvent)
 DOMCI_CLASS(DeviceOrientationEvent)
 DOMCI_CLASS(DeviceMotionEvent)
 DOMCI_CLASS(DeviceAcceleration)
@@ -376,7 +378,6 @@ DOMCI_CLASS(StorageObsolete)
 DOMCI_CLASS(Storage)
 DOMCI_CLASS(StorageItem)
 DOMCI_CLASS(StorageEvent)
-DOMCI_CLASS(StorageEventObsolete)
 
 // DOMParser, XMLSerializer
 DOMCI_CLASS(DOMParser)
@@ -401,7 +402,6 @@ DOMCI_CLASS(OfflineResourceList)
 DOMCI_CLASS(FileList)
 DOMCI_CLASS(Blob)
 DOMCI_CLASS(File)
-DOMCI_CLASS(FileException)
 DOMCI_CLASS(FileReader)
 DOMCI_CLASS(MozURLProperty)
 DOMCI_CLASS(MozBlobBuilder)
@@ -437,6 +437,7 @@ DOMCI_CLASS(MozSmsFilter)
 DOMCI_CLASS(MozSmsCursor)
 
 DOMCI_CLASS(MozConnection)
+DOMCI_CLASS(MozMobileConnection)
 
 // @font-face in CSS
 DOMCI_CLASS(CSSFontFaceRule)
@@ -449,6 +450,9 @@ DOMCI_CLASS(HTMLSourceElement)
 DOMCI_CLASS(MediaError)
 DOMCI_CLASS(HTMLAudioElement)
 DOMCI_CLASS(TimeRanges)
+
+// Media streams
+DOMCI_CLASS(MediaStream)
 #endif
 
 DOMCI_CLASS(ProgressEvent)
@@ -485,6 +489,7 @@ DOMCI_CLASS(WebGLExtension)
 DOMCI_CLASS(WebGLExtensionStandardDerivatives)
 DOMCI_CLASS(WebGLExtensionTextureFilterAnisotropic)
 DOMCI_CLASS(WebGLExtensionLoseContext)
+DOMCI_CLASS(WebGLExtensionCompressedTextureS3TC)
 
 DOMCI_CLASS(PaintRequest)
 DOMCI_CLASS(PaintRequestList)
@@ -520,7 +525,6 @@ DOMCI_CLASS(IDBKeyRange)
 DOMCI_CLASS(IDBIndex)
 DOMCI_CLASS(IDBVersionChangeEvent)
 DOMCI_CLASS(IDBOpenDBRequest)
-DOMCI_CLASS(IDBDatabaseException)
 
 DOMCI_CLASS(Touch)
 DOMCI_CLASS(TouchList)
@@ -545,7 +549,6 @@ DOMCI_CLASS(CallEvent)
 
 #ifdef MOZ_B2G_BT
 DOMCI_CLASS(BluetoothAdapter)
-DOMCI_CLASS(BluetoothDevice)
 #endif
 
 DOMCI_CLASS(DOMError)

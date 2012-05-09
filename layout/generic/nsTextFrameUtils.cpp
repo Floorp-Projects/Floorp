@@ -43,6 +43,8 @@
 #include "gfxFont.h"
 #include "nsUnicharUtils.h"
 #include "nsBidiUtils.h"
+#include "nsIContent.h"
+#include "nsStyleStruct.h"
 
 // XXX TODO implement transform of backslash to yen that nsTextTransform does
 // when requested by PresContext->LanguageSpecificTransformType(). Do it with
@@ -246,6 +248,47 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
   }
   *aAnalysisFlags = flags;
   return aOutput;
+}
+
+PRUint32
+nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
+                    nsIContent *aContent, const nsStyleText *aStyleText)
+{
+  const nsTextFragment *frag = aContent->GetText();
+  // This is an approximation so we don't really need anything
+  // too fancy here.
+  PRUint32 len;
+  if (aStyleText->WhiteSpaceIsSignificant()) {
+    len = frag->GetLength();
+  } else {
+    bool is2b = frag->Is2b();
+    union {
+      const char *s1b;
+      const PRUnichar *s2b;
+    } u;
+    if (is2b) {
+      u.s2b = frag->Get2b();
+    } else {
+      u.s1b = frag->Get1b();
+    }
+    bool prevWS = true; // more important to ignore blocks with
+                        // only whitespace than get inline boundaries
+                        // exactly right
+    len = 0;
+    for (PRUint32 i = 0, i_end = frag->GetLength(); i < i_end; ++i) {
+      PRUnichar c = is2b ? u.s2b[i] : u.s1b[i];
+      if (c == ' ' || c == '\n' || c == '\t' || c == '\r') {
+        if (!prevWS) {
+          ++len;
+        }
+        prevWS = true;
+      } else {
+        ++len;
+        prevWS = false;
+      }
+    }
+  }
+  return len;
 }
 
 bool nsSkipCharsRunIterator::NextRun() {

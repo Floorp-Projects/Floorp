@@ -171,7 +171,7 @@ CONFIGURES := $(TOPSRCDIR)/configure
 CONFIGURES += $(TOPSRCDIR)/js/src/configure
 
 # Make targets that are going to be passed to the real build system
-OBJDIR_TARGETS = install export libs clean realclean distclean alldep maybe_clobber_profiledbuild upload sdk installer package package-compare stage-package source-package l10n-check
+OBJDIR_TARGETS = install export libs clean realclean distclean alldep maybe_clobber_profiledbuild upload sdk installer package fast-package package-compare stage-package source-package l10n-check
 
 #######################################################################
 # Rules
@@ -197,6 +197,9 @@ build_all: build
 build_all_dep: alldep
 build_all_depend: alldep
 clobber clobber_all: clean
+
+# helper target for mobile
+build_and_deploy: build fast-package install
 
 # Do everything from scratch
 everything: clean build
@@ -324,7 +327,11 @@ configure-preqs = \
   configure-files \
   $(call mkdir_deps,$(OBJDIR)) \
   $(if $(MOZ_BUILD_PROJECTS),$(call mkdir_deps,$(MOZ_OBJDIR))) \
+  save-mozconfig \
   $(NULL)
+
+save-mozconfig:
+	-cp $(FOUND_MOZCONFIG) $(OBJDIR)/.mozconfig
 
 configure:: $(configure-preqs)
 	@echo cd $(OBJDIR);

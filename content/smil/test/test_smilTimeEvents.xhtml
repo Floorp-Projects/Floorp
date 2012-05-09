@@ -157,7 +157,7 @@ function testCreateEvent()
   is(evt.detail, 3, "Unexpected detail for user-generated event");
   is(evt.target, null, "Unexpected event target");
   is(evt.currentTarget, null, "Unexpected event current target");
-  is(evt.eventPhase, evt.AT_TARGET);
+  is(evt.eventPhase, evt.NONE);
   is(evt.bubbles, false, "Event should not bubble");
   is(evt.cancelable, false, "Event should not be cancelable");
   is(evt.view, null, "Event view should be null");

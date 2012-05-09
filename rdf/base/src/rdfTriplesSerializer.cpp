@@ -119,8 +119,7 @@ TriplesVisitor::Visit(nsIRDFNode *aSubject, nsIRDFResource *aPredicate,
         PRInt32 value;
         intLit->GetValue(&value);
         nsPrintfCString
-            object(128,
-                   "\"%i\"^^<http://www.w3.org/2001/XMLSchema#integer> ",
+            object("\"%i\"^^<http://www.w3.org/2001/XMLSchema#integer> ",
                    value);
         PRUint32 writeCount = object.Length();
         rv = mOut->Write(object.get(), writeCount, &wroteCount);

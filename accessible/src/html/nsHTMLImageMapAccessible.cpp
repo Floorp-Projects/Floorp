@@ -40,6 +40,7 @@
 #include "nsHTMLImageMapAccessible.h"
 
 #include "nsAccUtils.h"
+#include "nsARIAMap.h"
 #include "nsDocAccessible.h"
 #include "Role.h"
 
@@ -142,7 +143,7 @@ nsHTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
     nsAccessible* area = mChildren.SafeElementAt(idx);
     if (!area || area->GetContent() != areaContent) {
       nsRefPtr<nsAccessible> area = new nsHTMLAreaAccessible(areaContent, mDoc);
-      if (!mDoc->BindToDocument(area, nsAccUtils::GetRoleMapEntry(areaContent)))
+      if (!mDoc->BindToDocument(area, aria::GetRoleMap(areaContent)))
         break;
 
       if (!InsertChildAt(idx, area)) {

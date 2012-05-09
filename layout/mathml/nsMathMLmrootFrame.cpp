@@ -134,7 +134,7 @@ nsMathMLmrootFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   /////////////
   // paint the sqrt symbol
   if (!NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-    rv = mSqrChar.Display(aBuilder, this, aLists);
+    rv = mSqrChar.Display(aBuilder, this, aLists, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = DisplayBar(aBuilder, this, mBarRect, aLists);

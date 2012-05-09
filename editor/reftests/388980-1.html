@@ -1,0 +1,43 @@
+<html>
+<head>
+<title>Reftest for bug 388980</title></html>
+<script type="text/javascript">
+
+var text = '<html><head></head><body style="font-size:16px;">'
+	+ '<p id="redpar">This paragraph should be red</p>'
+	+ '<p id="bluepar">This paragraph should be blue</p>'
+	+ '<p>This paragraph should not be colored</p>'
+	+'</body></html>';
+
+
+function colorPar(par, color) {
+	var doc = document.getElementById('theIFrame').contentDocument;
+	var win = document.getElementById('theIFrame').contentWindow;
+	win.getSelection().selectAllChildren(doc.getElementById(par));
+	doc.execCommand("hilitecolor", false, color);
+	win.getSelection().removeAllRanges();
+}	
+	
+function initIFrame() {
+	var doc = document.getElementById('theIFrame').contentDocument;
+	doc.designMode = 'on';
+	doc.open('text/html');
+	doc.write(text);
+	doc.close();
+	
+	// Test hilighting with styleWithCSS, should hilight the text...
+	doc.execCommand("styleWithCSS", false, true);
+	colorPar("redpar", "red");
+
+	// Test highlighting without styleWithCSS, should also work.
+	doc.execCommand("styleWithCSS", false, false);
+	colorPar("bluepar", "blue");
+
+}
+</script>
+</head>
+<body>
+<iframe id="theIFrame" onload="initIFrame()">
+</iframe>
+</body>
+</html>

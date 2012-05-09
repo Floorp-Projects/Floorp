@@ -55,10 +55,10 @@ namespace mozilla {
 namespace dom {
 
 Link::Link(Element *aElement)
-  : mLinkState(defaultState)
-  , mRegistered(false)
-  , mElement(aElement)
+  : mElement(aElement)
   , mHistory(services::GetHistoryService())
+  , mLinkState(defaultState)
+  , mRegistered(false)
 {
   NS_ABORT_IF_FALSE(mElement, "Must have an element");
 }
@@ -75,7 +75,7 @@ Link::GetLinkState() const
                "Getting the link state of an unregistered Link!");
   NS_ASSERTION(mLinkState != eLinkState_Unknown,
                "Getting the link state with an unknown value!");
-  return mLinkState;
+  return nsLinkState(mLinkState);
 }
 
 void

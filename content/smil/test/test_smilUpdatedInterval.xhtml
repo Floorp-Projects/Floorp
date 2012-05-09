@@ -46,7 +46,8 @@ function main() {
     is(anim.getSimpleDuration(), 4, "Simple duration shouldn't have changed");
     is(anim.getStartTime(), 2, "Start time shouldn't have changed after seek");
   } catch (e) {
-    if (e.code != DOMException.INVALID_STATE_ERR)
+    if (e.name != "InvalidStateError" ||
+        e.code != DOMException.INVALID_STATE_ERR)
       throw e;
     ok(false, "Animation ended too early, even though begin time and " +
       "simple duration didn't change");

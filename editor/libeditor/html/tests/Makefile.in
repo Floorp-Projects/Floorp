@@ -52,6 +52,7 @@ _TEST_FILES = \
 		test_bug332636.html \
 		test_bug332636.html^headers^ \
 		test_bug372345.html \
+		test_bug404320.html \
 		test_bug410986.html \
 		test_bug414526.html \
 		test_bug417418.html \
@@ -62,7 +63,9 @@ _TEST_FILES = \
 		test_bug455992.html \
 		test_bug456244.html \
 		test_bug460740.html \
+		test_bug468353.html \
 		test_bug478725.html \
+		test_bug480647.html \
 		test_bug480972.html \
 		test_bug484181.html \
 		test_bug487524.html \
@@ -75,6 +78,7 @@ _TEST_FILES = \
 		test_bug551704.html \
 		test_bug552782.html \
 		test_bug570144.html \
+		test_bug578771.html \
 		test_bug592592.html \
 		test_bug597784.html \
 		test_bug599322.html \
@@ -92,6 +96,7 @@ _TEST_FILES = \
 		test_bug674861.html \
 		test_bug676401.html \
 		test_bug677752.html \
+		test_bug686203.html \
 		test_bug697842.html \
 		test_bug725069.html \
 		test_bug735059.html \

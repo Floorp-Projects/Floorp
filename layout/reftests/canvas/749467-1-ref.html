@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</head>
+<body>
+<p><canvas width="500" height="200" id="c"></canvas></p>
+<script type="text/javascript">
+
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+  ctx.beginPath();
+
+  ctx.lineWidth = 20;
+  ctx.strokeStyle = 'rgb(0,0,0)';
+
+  ctx.moveTo(10, 30);
+  ctx.lineTo(50, 50);
+
+  ctx.stroke();
+
+  ctx.lineTo(80, 80);
+  ctx.stroke();
+
+</script>
+</body>
+</html>

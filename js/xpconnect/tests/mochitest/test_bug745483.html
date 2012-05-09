@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=745483
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 745483</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=745483">Mozilla Bug 745483</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 745483 **/
+SimpleTest.waitForExplicitFinish();
+
+// Make sure we can make iframes with TI disabled.
+SpecialPowers.pushPrefEnv({ set: [['javascript.options.typeinference', false]] }, doTest);
+
+function doTest() {
+    var ifr = document.createElement('iframe');
+    document.body.appendChild(ifr);
+    ok(true, "didn't assert");
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

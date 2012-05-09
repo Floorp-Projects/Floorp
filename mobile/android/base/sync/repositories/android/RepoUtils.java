@@ -12,7 +12,6 @@ import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
-import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 
 import android.content.ContentProviderClient;
 import android.content.Context;
@@ -120,28 +119,81 @@ public class RepoUtils {
     }
   }
 
-  // Returns android id from the URI that we get after inserting a
-  // bookmark into the local Android store.
-  public static long getAndroidIdFromUri(Uri uri) {
-    String path = uri.getPath();
-    int lastSlash = path.lastIndexOf('/');
-    return Long.parseLong(path.substring(lastSlash + 1));
+  /**
+   * Return true if the provided URI is non-empty and acceptable to Fennec
+   * (i.e., not an undesirable scheme).
+   *
+   * This code is pilfered from Fennec, which pilfered from Places.
+   */
+  public static boolean isValidHistoryURI(String uri) {
+    if (uri == null || uri.length() == 0) {
+      return false;
+    }
+
+    // First, check the most common cases (HTTP, HTTPS) to avoid most of the work.
+    if (uri.startsWith("http:") || uri.startsWith("https:")) {
+      return true;
+    }
+
+    String scheme = Uri.parse(uri).getScheme();
+    if (scheme == null) {
+      return false;
+    }
+
+    // Now check for all bad things.
+    if (scheme.equals("about") ||
+        scheme.equals("imap") ||
+        scheme.equals("news") ||
+        scheme.equals("mailbox") ||
+        scheme.equals("moz-anno") ||
+        scheme.equals("view-source") ||
+        scheme.equals("chrome") ||
+        scheme.equals("resource") ||
+        scheme.equals("data") ||
+        scheme.equals("wyciwyg") ||
+        scheme.equals("javascript")) {
+      return false;
+    }
+
+    return true;
   }
 
-  //Create a HistoryRecord object from a cursor on a row with a Moz History record in it
+  /**
+   * Create a HistoryRecord object from a cursor row.
+   *
+   * @return a HistoryRecord, or null if this row would produce
+   *         an invalid record (e.g., with a null URI or no visits).
+   */
   public static HistoryRecord historyFromMirrorCursor(Cursor cur) {
+    final String guid = getStringFromCursor(cur, BrowserContract.SyncColumns.GUID);
+    if (guid == null) {
+      Logger.debug(LOG_TAG, "Skipping history record with null GUID.");
+      return null;
+    }
 
-    String guid = getStringFromCursor(cur, BrowserContract.SyncColumns.GUID);
-    String collection = "history";
-    long lastModified = getLongFromCursor(cur, BrowserContract.SyncColumns.DATE_MODIFIED);
-    boolean deleted = getLongFromCursor(cur, BrowserContract.SyncColumns.IS_DELETED) == 1 ? true : false;
-    HistoryRecord rec = new HistoryRecord(guid, collection, lastModified, deleted);
+    final String historyURI = getStringFromCursor(cur, BrowserContract.History.URL);
+    if (!isValidHistoryURI(historyURI)) {
+      Logger.debug(LOG_TAG, "Skipping history record " + guid + " with unwanted/invalid URI " + historyURI);
+      return null;
+    }
 
-    rec.title = getStringFromCursor(cur, BrowserContract.History.TITLE);
-    rec.histURI = getStringFromCursor(cur, BrowserContract.History.URL);
-    rec.androidID = getLongFromCursor(cur, BrowserContract.History._ID);
+    final long visitCount = getLongFromCursor(cur, BrowserContract.History.VISITS);
+    if (visitCount <= 0) {
+      Logger.debug(LOG_TAG, "Skipping history record " + guid + " with <= 0 visit count.");
+      return null;
+    }
+
+    final String collection = "history";
+    final long lastModified = getLongFromCursor(cur, BrowserContract.SyncColumns.DATE_MODIFIED);
+    final boolean deleted = getLongFromCursor(cur, BrowserContract.SyncColumns.IS_DELETED) == 1 ? true : false;
+
+    final HistoryRecord rec = new HistoryRecord(guid, collection, lastModified, deleted);
+
+    rec.androidID         = getLongFromCursor(cur, BrowserContract.History._ID);
     rec.fennecDateVisited = getLongFromCursor(cur, BrowserContract.History.DATE_LAST_VISITED);
-    rec.fennecVisitCount = getLongFromCursor(cur, BrowserContract.History.VISITS);
+    rec.fennecVisitCount  = visitCount;
+    rec.histURI           = historyURI;
+    rec.title             = getStringFromCursor(cur, BrowserContract.History.TITLE);
 
     return logHistory(rec);
   }
@@ -171,30 +223,6 @@ public class RepoUtils {
     }
   }
 
-  public static PasswordRecord passwordFromMirrorCursor(Cursor cur) {
-    
-    String guid = getStringFromCursor(cur, BrowserContract.SyncColumns.GUID);
-    String collection = "passwords";
-    long lastModified = getLongFromCursor(cur, BrowserContract.SyncColumns.DATE_MODIFIED);
-    boolean deleted = getLongFromCursor(cur, BrowserContract.SyncColumns.IS_DELETED) == 1 ? true : false;
-    PasswordRecord rec = new PasswordRecord(guid, collection, lastModified, deleted);
-    rec.hostname = getStringFromCursor(cur, BrowserContract.Passwords.HOSTNAME);
-    rec.httpRealm = getStringFromCursor(cur, BrowserContract.Passwords.HTTP_REALM);
-    rec.formSubmitURL = getStringFromCursor(cur, BrowserContract.Passwords.FORM_SUBMIT_URL);
-    rec.usernameField = getStringFromCursor(cur, BrowserContract.Passwords.USERNAME_FIELD);
-    rec.passwordField = getStringFromCursor(cur, BrowserContract.Passwords.PASSWORD_FIELD);
-    rec.encType = getStringFromCursor(cur, BrowserContract.Passwords.ENC_TYPE);
-    
-    // TODO decryption of username/password here (Bug 711636)
-    rec.username = getStringFromCursor(cur, BrowserContract.Passwords.ENCRYPTED_USERNAME);
-    rec.password = getStringFromCursor(cur, BrowserContract.Passwords.ENCRYPTED_PASSWORD);
-    
-    rec.timeLastUsed = getLongFromCursor(cur, BrowserContract.Passwords.TIME_LAST_USED);
-    rec.timesUsed = getLongFromCursor(cur, BrowserContract.Passwords.TIMES_USED);
-    
-    return rec;
-  }
-  
   public static void queryTimeLogger(String methodCallingQuery, long queryStart, long queryEnd) {
     long elapsedTime = queryEnd - queryStart;
     Logger.debug(LOG_TAG, "Query timer: " + methodCallingQuery + " took " + elapsedTime + "ms.");

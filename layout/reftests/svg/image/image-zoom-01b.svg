@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink"
-     viewBox="0 0 20 20"
-     reftest-zoom="0.5">
-  <title>Testcase to ensure that full-page-zoom doesn't actually zoom raster
-         images, when we have a viewBox applied.</title>
-  <image width="10" height="10" xlink:href="blueRect10x10.png"/>
-</svg>

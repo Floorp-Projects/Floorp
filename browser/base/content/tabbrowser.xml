@@ -92,13 +92,17 @@
       <field name="tabs" readonly="true">
         this.tabContainer.childNodes;
       </field>
+
       <property name="visibleTabs" readonly="true">
         <getter><![CDATA[
-          return Array.filter(this.tabs, function(tab) {
-            return !tab.hidden && !tab.closing;
-          });
+          if (!this._visibleTabs)
+            this._visibleTabs = Array.filter(this.tabs,
+                                             function (tab) !tab.hidden && !tab.closing);
+          return this._visibleTabs;
         ]]></getter>
       </property>
+      <field name="_visibleTabs">null</field>
+
       <field name="mURIFixup" readonly="true">
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
@@ -150,9 +154,6 @@
 #else
         false
 #endif
-      </field>
-      <field name="_browsers">
-        null
       </field>
 
       <field name="_autoScrollPopup">
@@ -924,6 +925,7 @@
 
             if (!this._previewMode) {
               this.mCurrentTab.removeAttribute("unread");
+              this.selectedTab.lastAccessed = Date.now();
 
 #ifdef MOZ_E10S_COMPAT
               // Bug 666816 - TypeAheadFind support for e10s
@@ -1239,8 +1241,6 @@
               aIsUTF8               = params.isUTF8;
             }
 
-            this._browsers = null; // invalidate cache
-
             // if we're adding tabs, we're past interrupt mode, ditch the owner
             if (this.mCurrentTab.owner)
               this.mCurrentTab.owner = null;
@@ -1290,10 +1290,11 @@
               }, 0, this.tabContainer);
             }
 
-            this.tabContainer.appendChild(t);
-
-            // invalidate cache, because tabContainer is about to change
+            // invalidate caches
             this._browsers = null;
+            this._visibleTabs = null;
+
+            this.tabContainer.appendChild(t);
 
             // If this new tab is owned by another, assert that relationship
             if (aOwner)
@@ -1624,6 +1625,7 @@
 
             aTab.closing = true;
             this._removingTabs.push(aTab);
+            this._visibleTabs = null; // invalidate cache
             if (newTab)
               this.addTab(BROWSER_NEW_TAB_URL, {skipAnimation: true});
             else
@@ -2008,7 +2010,10 @@
         <![CDATA[
           if (aTab.hidden) {
             aTab.removeAttribute("hidden");
+            this._visibleTabs = null; // invalidate cache
+
             this.tabContainer.adjustTabstrip();
+
             let event = document.createEvent("Events");
             event.initEvent("TabShow", true, false);
             aTab.dispatchEvent(event);
@@ -2024,7 +2029,10 @@
           if (!aTab.hidden && !aTab.pinned && !aTab.selected &&
               !aTab.closing) {
             aTab.setAttribute("hidden", "true");
+            this._visibleTabs = null; // invalidate cache
+
             this.tabContainer.adjustTabstrip();
+
             let event = document.createEvent("Events");
             event.initEvent("TabHide", true, false);
             aTab.dispatchEvent(event);
@@ -2080,6 +2088,7 @@
           ]]>
         </getter>
       </property>
+      <field name="_browsers">null</field>
 
       <!-- Moves a tab to a new browser window, unless it's already the only tab
            in the current window, in which case this will do nothing. -->
@@ -2125,11 +2134,14 @@
 
           aIndex = aIndex < aTab._tPos ? aIndex: aIndex+1;
           this.mCurrentTab._selected = false;
+
+          // invalidate caches
+          this._browsers = null;
+          this._visibleTabs = null;
+
           // use .item() instead of [] because dragging to the end of the strip goes out of
           // bounds: .item() returns null (so it acts like appendChild), but [] throws
           this.tabContainer.insertBefore(aTab, this.tabs.item(aIndex));
-          // invalidate cache, because tabContainer is about to change
-          this._browsers = null;
 
           for (let i = 0; i < this.tabs.length; i++) {
             this.tabs[i]._tPos = i;
@@ -3816,6 +3828,7 @@
       <field name="mCorrespondingMenuitem">null</field>
       <field name="_fullyOpen">false</field>
       <field name="closing">false</field>
+      <field name="lastAccessed">0</field>
     </implementation>
 
     <handlers>
@@ -4036,8 +4049,10 @@
 
       <property name="label">
         <setter><![CDATA[
-          if (!this.label)
+          if (!this.label) {
             this.removeAttribute("mirror");
+            this.removeAttribute("sizelimit");
+          }
 
           this.style.minWidth = this.getAttribute("type") == "status" &&
                                 this.getAttribute("previoustype") == "status"
@@ -4115,6 +4130,11 @@
             this.removeAttribute("mirror");
           else
             this.setAttribute("mirror", "true");
+
+          if (!this.hasAttribute("sizelimit")) {
+            this.setAttribute("sizelimit", "true");
+            this._calcMouseTargetRect();
+          }
         </body>
       </method>
     </implementation>

@@ -33,7 +33,7 @@ window.onerror = function(message, uri, line) {
 </script>
 <script type="application/javascript">
 window.onerror = function(message, uri, line) {
-  is(message, "c is not defined", "Should have correct error message");
+  is(message, "ReferenceError: c is not defined", "Should have correct error message");
   is(uri,
      "http://mochi.test:8888/tests/content/base/test/bug461735-redirect2.sjs",
      "Unexpected error location URI");

@@ -73,6 +73,7 @@
 #include "sampler.h"
 #include "nsIConsoleService.h"
 #include "base/compiler_specific.h"
+#include "NullHttpTransaction.h"
 
 using namespace mozilla;
 
@@ -231,6 +232,10 @@ nsHttpChannel::Connect(bool firstTime)
 
     // true when called from AsyncOpen
     if (firstTime) {
+
+        // Consider opening a TCP connection right away
+        SpeculativeConnect();
+
         // are we offline?
         bool offline = gIOService->IsOffline();
         if (offline)
@@ -355,6 +360,35 @@ nsHttpChannel::Connect(bool firstTime)
         mTransactionPump->Suspend();
 
     return NS_OK;
+}
+
+void
+nsHttpChannel::SpeculativeConnect()
+{
+    // Before we take the latency hit of dealing with the cache, try and
+    // get the TCP (and SSL) handshakes going so they can overlap.
+
+    // don't speculate on uses of the offline application cache or if
+    // we are actually offline
+    if (mApplicationCache || gIOService->IsOffline())
+        return;
+
+    // LOAD_ONLY_FROM_CACHE and LOAD_NO_NETWORK_IO must not hit network.
+    // LOAD_FROM_CACHE and LOAD_CHECK_OFFLINE_CACHE are unlikely to hit network,
+    // so skip preconnects for them.
+    if (mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_FROM_CACHE |
+                      LOAD_NO_NETWORK_IO | LOAD_CHECK_OFFLINE_CACHE))
+        return;
+    
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
+                                           getter_AddRefs(callbacks));
+    if (!callbacks)
+        return;
+
+    mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
+    gHttpHandler->SpeculativeConnect(mConnectionInfo,
+                                     callbacks, NS_GetCurrentThread());
 }
 
 void
@@ -1149,6 +1183,11 @@ nsHttpChannel::ProcessResponse()
 nsresult
 nsHttpChannel::ContinueProcessResponse(nsresult rv)
 {
+    if (rv == NS_ERROR_CORRUPTED_CONTENT) {
+        // don't ever render responses we've flagged as suspect content
+        return NS_ERROR_CORRUPTED_CONTENT;
+    }
+
     if (rv == NS_ERROR_DOM_BAD_URI && mRedirectURI) {
 
         bool isHTTP = false;
@@ -1986,17 +2025,20 @@ nsHttpChannel::ProcessNotModified()
     // that cache entry so there is a fighting chance of getting things on the
     // right track as well as disabling pipelining for that host.
 
-    nsCAutoString lastModified;
+    nsCAutoString lastModifiedCached;
     nsCAutoString lastModified304;
 
     rv = mCachedResponseHead->GetHeader(nsHttp::Last_Modified,
-                                        lastModified);
-    if (NS_SUCCEEDED(rv))
+                                        lastModifiedCached);
+    if (NS_SUCCEEDED(rv)) {
         rv = mResponseHead->GetHeader(nsHttp::Last_Modified, 
                                       lastModified304);
-    if (NS_SUCCEEDED(rv) && !lastModified304.Equals(lastModified)) {
+    }
+
+    if (NS_SUCCEEDED(rv) && !lastModified304.Equals(lastModifiedCached)) {
         LOG(("Cache Entry and 304 Last-Modified Headers Do Not Match "
-             "%s and %s\n", lastModified.get(), lastModified304.get()));
+             "[%s] and [%s]\n",
+             lastModifiedCached.get(), lastModified304.get()));
 
         mCacheEntry->Doom();
         if (mConnectionInfo)
@@ -2004,6 +2046,7 @@ nsHttpChannel::ProcessNotModified()
                 PipelineFeedbackInfo(mConnectionInfo,
                                      nsHttpConnectionMgr::RedCorruptedContent,
                                      nsnull, 0);
+        Telemetry::Accumulate(Telemetry::CACHE_LM_INCONSISTENT, true);
     }
 
     // merge any new headers with the cached response headers
@@ -2370,11 +2413,13 @@ nsHttpChannel::OpenNormalCacheEntry()
     nsCOMPtr<nsICacheSession> session;
     rv = gHttpHandler->GetCacheSession(storagePolicy,
                                        getter_AddRefs(session));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
-    nsCacheAccessMode accessRequested;
+    nsCacheAccessMode accessRequested = 0;
     rv = DetermineCacheAccess(&accessRequested);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     mOnCacheEntryAvailableCallback =
         &nsHttpChannel::OnNormalCacheEntryAvailable;
@@ -3152,7 +3197,7 @@ nsHttpChannel::InitOfflineCacheEntry()
         return NS_OK;
     }
 
-    if (mResponseHead && mResponseHead->NoStore()) {
+    if (!mResponseHead || mResponseHead->NoStore()) {
         CloseOfflineCacheEntry();
 
         return NS_OK;
@@ -3522,7 +3567,11 @@ nsHttpChannel::AsyncProcessRedirection(PRUint32 redirectType)
 
     nsresult rv = CreateNewURI(location, getter_AddRefs(mRedirectURI));
 
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        LOG(("Invalid URI for redirect: Location: %s\n", location));
+        Cancel(NS_ERROR_CORRUPTED_CONTENT);
+        return NS_ERROR_CORRUPTED_CONTENT;
+    }
 
     if (mApplicationCache) {
         // if we are redirected to a different origin check if there is a fallback
@@ -4451,18 +4500,8 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         
         if (mUpgradeProtocolCallback && stickyConn &&
             mResponseHead && mResponseHead->Status() == 101) {
-            nsCOMPtr<nsISocketTransport>    socketTransport;
-            nsCOMPtr<nsIAsyncInputStream>   socketIn;
-            nsCOMPtr<nsIAsyncOutputStream>  socketOut;
-
-            nsresult rv;
-            rv = stickyConn->TakeTransport(getter_AddRefs(socketTransport),
-                                           getter_AddRefs(socketIn),
-                                           getter_AddRefs(socketOut));
-            if (NS_SUCCEEDED(rv))
-                mUpgradeProtocolCallback->OnTransportAvailable(socketTransport,
-                                                               socketIn,
-                                                               socketOut);
+            gHttpHandler->ConnMgr()->CompleteUpgrade(stickyConn,
+                                                     mUpgradeProtocolCallback);
         }
     }
 
@@ -5139,20 +5178,40 @@ nsHttpChannel::SetChooseApplicationCache(bool aChoose)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHttpChannel::MarkOfflineCacheEntryAsForeign()
+nsHttpChannel::OfflineCacheEntryAsForeignMarker*
+nsHttpChannel::GetOfflineCacheEntryAsForeignMarker()
 {
     if (!mApplicationCache)
-        return NS_ERROR_NOT_AVAILABLE;
+        return nsnull;
 
     nsresult rv;
 
     nsCAutoString cacheKey;
     rv = GenerateCacheKey(mPostID, cacheKey);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, nsnull);
 
-    rv = mApplicationCache->MarkEntry(cacheKey,
-                                      nsIApplicationCache::ITEM_FOREIGN);
+    return new OfflineCacheEntryAsForeignMarker(mApplicationCache, cacheKey);
+}
+
+nsresult
+nsHttpChannel::OfflineCacheEntryAsForeignMarker::MarkAsForeign()
+{
+    return mApplicationCache->MarkEntry(mCacheKey,
+                                        nsIApplicationCache::ITEM_FOREIGN);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::MarkOfflineCacheEntryAsForeign()
+{
+    nsresult rv;
+
+    nsAutoPtr<OfflineCacheEntryAsForeignMarker> marker(
+        GetOfflineCacheEntryAsForeignMarker());
+
+    if (!marker)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    rv = marker->MarkAsForeign();
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

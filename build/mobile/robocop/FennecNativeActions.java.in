@@ -63,6 +63,8 @@ import org.json.*;
 
 import com.jayway.android.robotium.solo.Solo;
 
+import static @ANDROID_PACKAGE_NAME@.FennecNativeDriver.LogLevel;
+
 public class FennecNativeActions implements Actions {
     private Solo mSolo;
     private Instrumentation mInstr;
@@ -104,15 +106,15 @@ public class FennecNativeActions implements Actions {
             Class gslc = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoLayerClient");
             mDrawListener = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoLayerClient$DrawListener");
             mSetDrawListener = gslc.getDeclaredMethod("setDrawListener", mDrawListener);
-         } catch (ClassNotFoundException e) {
-             e.printStackTrace();
-         } catch (SecurityException e) {
-             e.printStackTrace();
-         } catch (NoSuchMethodException e) {
-             e.printStackTrace();
-         } catch (IllegalArgumentException e) {
-             e.printStackTrace();
-         }
+        } catch (ClassNotFoundException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } catch (SecurityException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } catch (NoSuchMethodException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } catch (IllegalArgumentException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        }
     }
 
     class wakeInvocationHandler implements InvocationHandler {
@@ -137,7 +139,7 @@ public class FennecNativeActions implements Actions {
             if(methodName.equals("hashCode")) {
                 return 314;
             }
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG, 
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, 
                 "Waking up on "+methodName);
             mEventExpecter.notifyOfEvent();
             return null;
@@ -159,11 +161,11 @@ public class FennecNativeActions implements Actions {
                 try {
                     this.wait();
                 } catch (InterruptedException ie) {
-                    ie.printStackTrace();
+                    FennecNativeDriver.log(LogLevel.ERROR, ie);
                     break;
                 }
             }
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                 "unblocked on expecter for " + mGeckoEvent);
         }
 
@@ -175,11 +177,11 @@ public class FennecNativeActions implements Actions {
             try {
                 mUnregisterGEL.invoke(null, mRegistrationParams);
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                FennecNativeDriver.log(LogLevel.ERROR, e);
             } catch (InvocationTargetException e) {
-                e.printStackTrace();
+                FennecNativeDriver.log(LogLevel.ERROR, e);
             }
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                 "received event " + mGeckoEvent);
             synchronized (this) {
                 mEventReceived = true;
@@ -189,7 +191,7 @@ public class FennecNativeActions implements Actions {
     }
     
     public EventExpecter expectGeckoEvent(String geckoEvent) {
-        FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
             "waiting for "+geckoEvent);
         try {
             Class [] interfaces = new Class[1];
@@ -205,9 +207,9 @@ public class FennecNativeActions implements Actions {
             
             return expecter;
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            FennecNativeDriver.log(LogLevel.ERROR, e);
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            FennecNativeDriver.log(LogLevel.ERROR, e);
         }
         return null;
     }
@@ -222,7 +224,7 @@ public class FennecNativeActions implements Actions {
         public Object invoke(Object proxy, Method method, Object[] args) {
             String methodName = method.getName();
             if ("drawFinished".equals(methodName)) {
-                FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+                FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                     "Received drawFinished notification");
                 mPaintExpecter.notifyOfEvent();
             } else if ("toString".equals(methodName)) {
@@ -257,14 +259,14 @@ public class FennecNativeActions implements Actions {
                 try {
                     this.wait();
                 } catch (InterruptedException ie) {
-                    ie.printStackTrace();
+                    FennecNativeDriver.log(LogLevel.ERROR, ie);
                     break;
                 }
             }
             try {
                 mSetDrawListener.invoke(mLayerClient, (Object)null);
             } catch (Exception e) {
-                e.printStackTrace();
+                FennecNativeDriver.log(LogLevel.ERROR, e);
             }
         }
 
@@ -281,7 +283,7 @@ public class FennecNativeActions implements Actions {
                 try {
                     this.wait();
                 } catch (InterruptedException ie) {
-                    ie.printStackTrace();
+                    FennecNativeDriver.log(LogLevel.ERROR, ie);
                     break;
                 }
             }
@@ -291,7 +293,7 @@ public class FennecNativeActions implements Actions {
                 try {
                     this.wait(millis);
                 } catch (InterruptedException ie) {
-                    ie.printStackTrace();
+                    FennecNativeDriver.log(LogLevel.ERROR, ie);
                     break;
                 }
                 long endTime = SystemClock.uptimeMillis();
@@ -305,7 +307,7 @@ public class FennecNativeActions implements Actions {
             try {
                 mSetDrawListener.invoke(mLayerClient, (Object)null);
             } catch (Exception e) {
-                e.printStackTrace();
+                FennecNativeDriver.log(LogLevel.ERROR, e);
             }
         }
     }
@@ -314,7 +316,7 @@ public class FennecNativeActions implements Actions {
         try {
             return new PaintExpecter();
         } catch (Exception e) {
-            e.printStackTrace();
+            FennecNativeDriver.log(LogLevel.ERROR, e);
             return null;
         }
     }

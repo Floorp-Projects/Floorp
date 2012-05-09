@@ -45,14 +45,119 @@
      (((s) >> 6) & 0x03e0) |                                            \
      (((s) >> 9) & 0x7c00))
 
-#define RGB15_TO_ENTRY(mif,rgb15)					\
-    ((mif)->ent[rgb15])
+/* Fetch macros */
 
-#define RGB24_TO_ENTRY(mif,rgb24)					\
-    RGB15_TO_ENTRY (mif,CONVERT_RGB24_TO_RGB15 (rgb24))
+#ifdef WORDS_BIGENDIAN
+#define FETCH_1(img,l,o)						\
+    (((READ ((img), ((uint32_t *)(l)) + ((o) >> 5))) >> (0x1f - ((o) & 0x1f))) & 0x1)
+#else
+#define FETCH_1(img,l,o)						\
+    ((((READ ((img), ((uint32_t *)(l)) + ((o) >> 5))) >> ((o) & 0x1f))) & 0x1)
+#endif
 
-#define RGB24_TO_ENTRY_Y(mif,rgb24)					\
-    ((mif)->ent[CONVERT_RGB24_TO_Y15 (rgb24)])
+#define FETCH_8(img,l,o)    (READ (img, (((uint8_t *)(l)) + ((o) >> 3))))
+
+#ifdef WORDS_BIGENDIAN
+#define FETCH_4(img,l,o)						\
+    (((4 * (o)) & 4) ? (FETCH_8 (img,l, 4 * (o)) & 0xf) : (FETCH_8 (img,l,(4 * (o))) >> 4))
+#else
+#define FETCH_4(img,l,o)						\
+    (((4 * (o)) & 4) ? (FETCH_8 (img, l, 4 * (o)) >> 4) : (FETCH_8 (img, l, (4 * (o))) & 0xf))
+#endif
+
+#ifdef WORDS_BIGENDIAN
+#define FETCH_24(img,l,o)                                              \
+    ((READ (img, (((uint8_t *)(l)) + ((o) * 3) + 0)) << 16)    |       \
+     (READ (img, (((uint8_t *)(l)) + ((o) * 3) + 1)) << 8)     |       \
+     (READ (img, (((uint8_t *)(l)) + ((o) * 3) + 2)) << 0))
+#else
+#define FETCH_24(img,l,o)						\
+    ((READ (img, (((uint8_t *)(l)) + ((o) * 3) + 0)) << 0)	|	\
+     (READ (img, (((uint8_t *)(l)) + ((o) * 3) + 1)) << 8)	|	\
+     (READ (img, (((uint8_t *)(l)) + ((o) * 3) + 2)) << 16))
+#endif
+
+/* Store macros */
+
+#ifdef WORDS_BIGENDIAN
+#define STORE_1(img,l,o,v)						\
+    do									\
+    {									\
+	uint32_t  *__d = ((uint32_t *)(l)) + ((o) >> 5);		\
+	uint32_t __m, __v;						\
+									\
+	__m = 1 << (0x1f - ((o) & 0x1f));				\
+	__v = (v)? __m : 0;						\
+									\
+	WRITE((img), __d, (READ((img), __d) & ~__m) | __v);		\
+    }									\
+    while (0)
+#else
+#define STORE_1(img,l,o,v)						\
+    do									\
+    {									\
+	uint32_t  *__d = ((uint32_t *)(l)) + ((o) >> 5);		\
+	uint32_t __m, __v;						\
+									\
+	__m = 1 << ((o) & 0x1f);					\
+	__v = (v)? __m : 0;						\
+									\
+	WRITE((img), __d, (READ((img), __d) & ~__m) | __v);		\
+    }									\
+    while (0)
+#endif
+
+#define STORE_8(img,l,o,v)  (WRITE (img, (uint8_t *)(l) + ((o) >> 3), (v)))
+
+#ifdef WORDS_BIGENDIAN
+#define STORE_4(img,l,o,v)						\
+    do									\
+    {									\
+	int bo = 4 * (o);						\
+	int v4 = (v) & 0x0f;						\
+									\
+	STORE_8 (img, l, bo, (						\
+		     bo & 4 ?						\
+		     (FETCH_8 (img, l, bo) & 0xf0) | (v4) :		\
+		     (FETCH_8 (img, l, bo) & 0x0f) | (v4 << 4)));	\
+    } while (0)
+#else
+#define STORE_4(img,l,o,v)						\
+    do									\
+    {									\
+	int bo = 4 * (o);						\
+	int v4 = (v) & 0x0f;						\
+									\
+	STORE_8 (img, l, bo, (						\
+		     bo & 4 ?						\
+		     (FETCH_8 (img, l, bo) & 0x0f) | (v4 << 4) :	\
+		     (FETCH_8 (img, l, bo) & 0xf0) | (v4)));		\
+    } while (0)
+#endif
+
+#ifdef WORDS_BIGENDIAN
+#define STORE_24(img,l,o,v)                                            \
+    do                                                                 \
+    {                                                                  \
+	uint8_t *__tmp = (l) + 3 * (o);				       \
+        							       \
+	WRITE ((img), __tmp++, ((v) & 0x00ff0000) >> 16);	       \
+	WRITE ((img), __tmp++, ((v) & 0x0000ff00) >>  8);	       \
+	WRITE ((img), __tmp++, ((v) & 0x000000ff) >>  0);	       \
+    }                                                                  \
+    while (0)
+#else
+#define STORE_24(img,l,o,v)                                            \
+    do                                                                 \
+    {                                                                  \
+	uint8_t *__tmp = (l) + 3 * (o);				       \
+        							       \
+	WRITE ((img), __tmp++, ((v) & 0x000000ff) >>  0);	       \
+	WRITE ((img), __tmp++, ((v) & 0x0000ff00) >>  8);	       \
+	WRITE ((img), __tmp++, ((v) & 0x00ff0000) >> 16);	       \
+    }								       \
+    while (0)
+#endif
 
 /*
  * YV12 setup and access macros
@@ -86,194 +191,320 @@
     ((uint8_t *) ((bits) + offset0 +                                    \
                   ((stride) >> 1) * ((line) >> 1)))
 
+/* Misc. helpers */
+
+static force_inline void
+get_shifts (pixman_format_code_t  format,
+	    int			 *a,
+	    int			 *r,
+	    int                  *g,
+	    int                  *b)
+{
+    switch (PIXMAN_FORMAT_TYPE (format))
+    {
+    case PIXMAN_TYPE_A:
+	*b = 0;
+	*g = 0;
+	*r = 0;
+	*a = 0;
+	break;
+
+    case PIXMAN_TYPE_ARGB:
+	*b = 0;
+	*g = *b + PIXMAN_FORMAT_B (format);
+	*r = *g + PIXMAN_FORMAT_G (format);
+	*a = *r + PIXMAN_FORMAT_R (format);
+	break;
+
+    case PIXMAN_TYPE_ABGR:
+	*r = 0;
+	*g = *r + PIXMAN_FORMAT_R (format);
+	*b = *g + PIXMAN_FORMAT_G (format);
+	*a = *b + PIXMAN_FORMAT_B (format);
+	break;
+
+    case PIXMAN_TYPE_BGRA:
+	/* With BGRA formats we start counting at the high end of the pixel */
+	*b = PIXMAN_FORMAT_BPP (format) - PIXMAN_FORMAT_B (format);
+	*g = *b - PIXMAN_FORMAT_B (format);
+	*r = *g - PIXMAN_FORMAT_G (format);
+	*a = *r - PIXMAN_FORMAT_R (format);
+	break;
+
+    case PIXMAN_TYPE_RGBA:
+	/* With BGRA formats we start counting at the high end of the pixel */
+	*r = PIXMAN_FORMAT_BPP (format) - PIXMAN_FORMAT_R (format);
+	*g = *r - PIXMAN_FORMAT_R (format);
+	*b = *g - PIXMAN_FORMAT_G (format);
+	*a = *b - PIXMAN_FORMAT_B (format);
+	break;
+
+    default:
+	assert (0);
+	break;
+    }
+}
+
+static force_inline uint32_t
+convert_channel (uint32_t pixel, uint32_t def_value,
+		 int n_from_bits, int from_shift,
+		 int n_to_bits, int to_shift)
+{
+    uint32_t v;
+
+    if (n_from_bits && n_to_bits)
+	v  = unorm_to_unorm (pixel >> from_shift, n_from_bits, n_to_bits);
+    else if (n_to_bits)
+	v = def_value;
+    else
+	v = 0;
+
+    return (v & ((1 << n_to_bits) - 1)) << to_shift;
+}
+
+static force_inline uint32_t
+convert_pixel (pixman_format_code_t from, pixman_format_code_t to, uint32_t pixel)
+{
+    int a_from_shift, r_from_shift, g_from_shift, b_from_shift;
+    int a_to_shift, r_to_shift, g_to_shift, b_to_shift;
+    uint32_t a, r, g, b;
+
+    get_shifts (from, &a_from_shift, &r_from_shift, &g_from_shift, &b_from_shift);
+    get_shifts (to, &a_to_shift, &r_to_shift, &g_to_shift, &b_to_shift);
+
+    a = convert_channel (pixel, ~0,
+			 PIXMAN_FORMAT_A (from), a_from_shift,
+			 PIXMAN_FORMAT_A (to), a_to_shift);
+
+    r = convert_channel (pixel, 0,
+			 PIXMAN_FORMAT_R (from), r_from_shift,
+			 PIXMAN_FORMAT_R (to), r_to_shift);
+
+    g = convert_channel (pixel, 0,
+			 PIXMAN_FORMAT_G (from), g_from_shift,
+			 PIXMAN_FORMAT_G (to), g_to_shift);
+
+    b = convert_channel (pixel, 0,
+			 PIXMAN_FORMAT_B (from), b_from_shift,
+			 PIXMAN_FORMAT_B (to), b_to_shift);
+
+    return a | r | g | b;
+}
+
+static force_inline uint32_t
+convert_pixel_to_a8r8g8b8 (pixman_image_t *image,
+			   pixman_format_code_t format,
+			   uint32_t pixel)
+{
+    if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_GRAY		||
+	PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_COLOR)
+    {
+	return image->bits.indexed->rgba[pixel];
+    }
+    else
+    {
+	return convert_pixel (format, PIXMAN_a8r8g8b8, pixel);
+    }
+}
+
+static force_inline uint32_t
+convert_pixel_from_a8r8g8b8 (pixman_image_t *image,
+			     pixman_format_code_t format, uint32_t pixel)
+{
+    if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_GRAY)
+    {
+	pixel = CONVERT_RGB24_TO_Y15 (pixel);
+
+	return image->bits.indexed->ent[pixel & 0x7fff];
+    }
+    else if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_COLOR)
+    {
+	pixel = convert_pixel (PIXMAN_a8r8g8b8, PIXMAN_x1r5g5b5, pixel);
+
+	return image->bits.indexed->ent[pixel & 0x7fff];
+    }
+    else
+    {
+	return convert_pixel (PIXMAN_a8r8g8b8, format, pixel);
+    }
+}
+
+static force_inline uint32_t
+fetch_and_convert_pixel (pixman_image_t	*	image,
+			 const uint8_t *	bits,
+			 int			offset,
+			 pixman_format_code_t	format)
+{
+    uint32_t pixel;
+
+    switch (PIXMAN_FORMAT_BPP (format))
+    {
+    case 1:
+	pixel = FETCH_1 (image, bits, offset);
+	break;
+
+    case 4:
+	pixel = FETCH_4 (image, bits, offset);
+	break;
+
+    case 8:
+	pixel = READ (image, bits + offset);
+	break;
+
+    case 16:
+	pixel = READ (image, ((uint16_t *)bits + offset));
+	break;
+
+    case 24:
+	pixel = FETCH_24 (image, bits, offset);
+	break;
+
+    case 32:
+	pixel = READ (image, ((uint32_t *)bits + offset));
+	break;
+
+    default:
+	pixel = 0xffff00ff; /* As ugly as possible to detect the bug */
+	break;
+    }
+
+    return convert_pixel_to_a8r8g8b8 (image, format, pixel);
+}
+
+static force_inline void
+convert_and_store_pixel (bits_image_t *		image,
+			 uint8_t *		dest,
+			 int                    offset,
+			 pixman_format_code_t	format,
+			 uint32_t		pixel)
+{
+    uint32_t converted = convert_pixel_from_a8r8g8b8 (
+	(pixman_image_t *)image, format, pixel);
+
+    switch (PIXMAN_FORMAT_BPP (format))
+    {
+    case 1:
+	STORE_1 (image, dest, offset, converted & 0x01);
+	break;
+
+    case 4:
+	STORE_4 (image, dest, offset, converted & 0xf);
+	break;
+
+    case 8:
+	WRITE (image, (dest + offset), converted & 0xff);
+	break;
+
+    case 16:
+	WRITE (image, ((uint16_t *)dest + offset), converted & 0xffff);
+	break;
+
+    case 24:
+	STORE_24 (image, dest, offset, converted);
+	break;
+
+    case 32:
+	WRITE (image, ((uint32_t *)dest + offset), converted);
+	break;
+
+    default:
+	*dest = 0x0;
+	break;
+    }
+}
+
+#define MAKE_ACCESSORS(format)						\
+    static void								\
+    fetch_scanline_ ## format (pixman_image_t *image,			\
+			       int	       x,			\
+			       int             y,			\
+			       int             width,			\
+			       uint32_t *      buffer,			\
+			       const uint32_t *mask)			\
+    {									\
+	uint8_t *bits =							\
+	    (uint8_t *)(image->bits.bits + y * image->bits.rowstride);	\
+	int i;								\
+									\
+	for (i = 0; i < width; ++i)					\
+	{								\
+	    *buffer++ =							\
+		fetch_and_convert_pixel (image, bits, x + i, PIXMAN_ ## format); \
+	}								\
+    }									\
+									\
+    static void								\
+    store_scanline_ ## format (bits_image_t *  image,			\
+			       int             x,			\
+			       int             y,			\
+			       int             width,			\
+			       const uint32_t *values)			\
+    {									\
+	uint8_t *dest =							\
+	    (uint8_t *)(image->bits + y * image->rowstride);		\
+	int i;								\
+									\
+	for (i = 0; i < width; ++i)					\
+	{								\
+	    convert_and_store_pixel (					\
+		image, dest, i + x, PIXMAN_ ## format, values[i]);	\
+	}								\
+    }									\
+									\
+    static uint32_t							\
+    fetch_pixel_ ## format (bits_image_t *image,			\
+			    int		offset,				\
+			    int		line)				\
+    {									\
+	uint8_t *bits =							\
+	    (uint8_t *)(image->bits + line * image->rowstride);		\
+									\
+	return fetch_and_convert_pixel ((pixman_image_t *)image,	\
+					bits, offset, PIXMAN_ ## format); \
+    }									\
+									\
+    static const void *const __dummy__ ## format
+
+MAKE_ACCESSORS(a8r8g8b8);
+MAKE_ACCESSORS(x8r8g8b8);
+MAKE_ACCESSORS(a8b8g8r8);
+MAKE_ACCESSORS(x8b8g8r8);
+MAKE_ACCESSORS(x14r6g6b6);
+MAKE_ACCESSORS(b8g8r8a8);
+MAKE_ACCESSORS(b8g8r8x8);
+MAKE_ACCESSORS(r8g8b8x8);
+MAKE_ACCESSORS(r8g8b8a8);
+MAKE_ACCESSORS(r8g8b8);
+MAKE_ACCESSORS(b8g8r8);
+MAKE_ACCESSORS(r5g6b5);
+MAKE_ACCESSORS(b5g6r5);
+MAKE_ACCESSORS(a1r5g5b5);
+MAKE_ACCESSORS(x1r5g5b5);
+MAKE_ACCESSORS(a1b5g5r5);
+MAKE_ACCESSORS(x1b5g5r5);
+MAKE_ACCESSORS(a4r4g4b4);
+MAKE_ACCESSORS(x4r4g4b4);
+MAKE_ACCESSORS(a4b4g4r4);
+MAKE_ACCESSORS(x4b4g4r4);
+MAKE_ACCESSORS(a8);
+MAKE_ACCESSORS(c8);
+MAKE_ACCESSORS(g8);
+MAKE_ACCESSORS(r3g3b2);
+MAKE_ACCESSORS(b2g3r3);
+MAKE_ACCESSORS(a2r2g2b2);
+MAKE_ACCESSORS(a2b2g2r2);
+MAKE_ACCESSORS(x4a4);
+MAKE_ACCESSORS(a4);
+MAKE_ACCESSORS(g4);
+MAKE_ACCESSORS(c4);
+MAKE_ACCESSORS(r1g2b1);
+MAKE_ACCESSORS(b1g2r1);
+MAKE_ACCESSORS(a1r1g1b1);
+MAKE_ACCESSORS(a1b1g1r1);
+MAKE_ACCESSORS(a1);
+MAKE_ACCESSORS(g1);
+
 /********************************** Fetch ************************************/
-
-static void
-fetch_scanline_a8r8g8b8 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    
-    MEMCPY_WRAPPED (image,
-                    buffer, (const uint32_t *)bits + x,
-                    width * sizeof(uint32_t));
-}
-
-static void
-fetch_scanline_x8r8g8b8 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = (const uint32_t *)bits + x;
-    const uint32_t *end = pixel + width;
-    
-    while (pixel < end)
-	*buffer++ = READ (image, pixel++) | 0xff000000;
-}
-
-static void
-fetch_scanline_a8b8g8r8 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = (uint32_t *)bits + x;
-    const uint32_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	
-	*buffer++ = (p & 0xff00ff00)	|
-	    ((p >> 16) & 0xff)		|
-	    ((p & 0xff) << 16);
-    }
-}
-
-static void
-fetch_scanline_x8b8g8r8 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = (uint32_t *)bits + x;
-    const uint32_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	
-	*buffer++ = 0xff000000		|
-	    (p & 0x0000ff00)		|
-	    ((p >> 16) & 0xff)		|
-	    ((p & 0xff) << 16);
-    }
-}
-
-static void
-fetch_scanline_b8g8r8a8 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = (uint32_t *)bits + x;
-    const uint32_t *end = pixel + width;
-
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-
-	*buffer++ = (((p & 0xff000000) >> 24)	|
-	             ((p & 0x00ff0000) >> 8)	|
-	             ((p & 0x0000ff00) << 8)	|
-	             ((p & 0x000000ff) << 24));
-    }
-}
-
-static void
-fetch_scanline_b8g8r8x8 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = (uint32_t *)bits + x;
-    const uint32_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	
-	*buffer++ = (0xff000000 |
-	             ((p & 0xff000000) >> 24)	|
-	             ((p & 0x00ff0000) >> 8)	|
-	             ((p & 0x0000ff00) << 8));
-    }
-}
-
-static void
-fetch_scanline_r8g8b8a8 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = (uint32_t *)bits + x;
-    const uint32_t *end = pixel + width;
-
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-
-	*buffer++ = (((p & 0x000000ff) << 24) | (p >> 8));
-    }
-}
-
-static void
-fetch_scanline_r8g8b8x8 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = (uint32_t *)bits + x;
-    const uint32_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	
-	*buffer++ = (0xff000000 | (p >> 8));
-    }
-}
-
-static void
-fetch_scanline_x14r6g6b6 (pixman_image_t *image,
-                          int             x,
-                          int             y,
-                          int             width,
-                          uint32_t *      buffer,
-                          const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = (const uint32_t *)bits + x;
-    const uint32_t *end = pixel + width;
-
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r, g, b;
-
-	r = ((p & 0x3f000) << 6) | ((p & 0x30000));
-	g = ((p & 0x00fc0) << 4) | ((p & 0x00c00) >> 2);
-	b = ((p & 0x0003f) << 2) | ((p & 0x00030) >> 4);
-
-	*buffer++ = 0xff000000 | r | g | b;
-    }
-}
 
 /* Expects a uint64_t buffer */
 static void
@@ -400,698 +631,6 @@ fetch_scanline_x2b10g10r10 (pixman_image_t *image,
 	b = b << 6 | b >> 4;
 	
 	*buffer++ = 0xffffULL << 48 | r << 32 | g << 16 | b;
-    }
-}
-
-static void
-fetch_scanline_r8g8b8 (pixman_image_t *image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       uint32_t *      buffer,
-                       const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint8_t *pixel = (const uint8_t *)bits + 3 * x;
-    const uint8_t *end = pixel + 3 * width;
-    
-    while (pixel < end)
-    {
-	uint32_t b = 0xff000000;
-	
-#ifdef WORDS_BIGENDIAN
-	b |= (READ (image, pixel++) << 16);
-	b |= (READ (image, pixel++) << 8);
-	b |= (READ (image, pixel++));
-#else
-	b |= (READ (image, pixel++));
-	b |= (READ (image, pixel++) << 8);
-	b |= (READ (image, pixel++) << 16);
-#endif
-	
-	*buffer++ = b;
-    }
-}
-
-static void
-fetch_scanline_b8g8r8 (pixman_image_t *image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       uint32_t *      buffer,
-                       const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint8_t *pixel = (const uint8_t *)bits + 3 * x;
-    const uint8_t *end = pixel + 3 * width;
-    
-    while (pixel < end)
-    {
-	uint32_t b = 0xff000000;
-#ifdef WORDS_BIGENDIAN
-	b |= (READ (image, pixel++));
-	b |= (READ (image, pixel++) << 8);
-	b |= (READ (image, pixel++) << 16);
-#else
-	b |= (READ (image, pixel++) << 16);
-	b |= (READ (image, pixel++) << 8);
-	b |= (READ (image, pixel++));
-#endif
-	*buffer++ = b;
-    }
-}
-
-static void
-fetch_scanline_r5g6b5 (pixman_image_t *image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       uint32_t *      buffer,
-                       const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint16_t *pixel = (const uint16_t *)bits + x;
-    const uint16_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r = (((p) << 3) & 0xf8) |
-	    (((p) << 5) & 0xfc00) |
-	    (((p) << 8) & 0xf80000);
-	
-	r |= (r >> 5) & 0x70007;
-	r |= (r >> 6) & 0x300;
-	
-	*buffer++ = 0xff000000 | r;
-    }
-}
-
-static void
-fetch_scanline_b5g6r5 (pixman_image_t *image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       uint32_t *      buffer,
-                       const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint16_t *pixel = (const uint16_t *)bits + x;
-    const uint16_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r, g, b;
-	
-	b = ((p & 0xf800) | ((p & 0xe000) >> 5)) >> 8;
-	g = ((p & 0x07e0) | ((p & 0x0600) >> 6)) << 5;
-	r = ((p & 0x001c) | ((p & 0x001f) << 5)) << 14;
-	
-	*buffer++ = 0xff000000 | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_a1r5g5b5 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint16_t *pixel = (const uint16_t *)bits + x;
-    const uint16_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r, g, b, a;
-	
-	a = (uint32_t) ((uint8_t) (0 - ((p & 0x8000) >> 15))) << 24;
-	r = ((p & 0x7c00) | ((p & 0x7000) >> 5)) << 9;
-	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
-	b = ((p & 0x001c) | ((p & 0x001f) << 5)) >> 2;
-	
-	*buffer++ = a | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_x1r5g5b5 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint16_t *pixel = (const uint16_t *)bits + x;
-    const uint16_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r, g, b;
-	
-	r = ((p & 0x7c00) | ((p & 0x7000) >> 5)) << 9;
-	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
-	b = ((p & 0x001c) | ((p & 0x001f) << 5)) >> 2;
-	
-	*buffer++ = 0xff000000 | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_a1b5g5r5 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint16_t *pixel = (const uint16_t *)bits + x;
-    const uint16_t *end = pixel + width;
-    uint32_t r, g, b, a;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	
-	a = (uint32_t) ((uint8_t) (0 - ((p & 0x8000) >> 15))) << 24;
-	b = ((p & 0x7c00) | ((p & 0x7000) >> 5)) >> 7;
-	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
-	r = ((p & 0x001c) | ((p & 0x001f) << 5)) << 14;
-	
-	*buffer++ = a | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_x1b5g5r5 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint16_t *pixel = (const uint16_t *)bits + x;
-    const uint16_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r, g, b;
-	
-	b = ((p & 0x7c00) | ((p & 0x7000) >> 5)) >> 7;
-	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
-	r = ((p & 0x001c) | ((p & 0x001f) << 5)) << 14;
-	
-	*buffer++ = 0xff000000 | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_a4r4g4b4 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint16_t *pixel = (const uint16_t *)bits + x;
-    const uint16_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r, g, b, a;
-	
-	a = ((p & 0xf000) | ((p & 0xf000) >> 4)) << 16;
-	r = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) << 12;
-	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
-	b = ((p & 0x000f) | ((p & 0x000f) << 4));
-	
-	*buffer++ = a | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_x4r4g4b4 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint16_t *pixel = (const uint16_t *)bits + x;
-    const uint16_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r, g, b;
-	
-	r = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) << 12;
-	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
-	b = ((p & 0x000f) | ((p & 0x000f) << 4));
-	
-	*buffer++ = 0xff000000 | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_a4b4g4r4 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint16_t *pixel = (const uint16_t *)bits + x;
-    const uint16_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r, g, b, a;
-	
-	a = ((p & 0xf000) | ((p & 0xf000) >> 4)) << 16;
-	b = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) >> 4;
-	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
-	r = ((p & 0x000f) | ((p & 0x000f) << 4)) << 16;
-	
-	*buffer++ = a | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_x4b4g4r4 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint16_t *pixel = (const uint16_t *)bits + x;
-    const uint16_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r, g, b;
-	
-	b = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) >> 4;
-	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
-	r = ((p & 0x000f) | ((p & 0x000f) << 4)) << 16;
-	
-	*buffer++ = 0xff000000 | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_a8 (pixman_image_t *image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   uint32_t *      buffer,
-                   const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint8_t *pixel = (const uint8_t *)bits + x;
-    const uint8_t *end = pixel + width;
-    
-    while (pixel < end)
-	*buffer++ = READ (image, pixel++) << 24;
-}
-
-static void
-fetch_scanline_r3g3b2 (pixman_image_t *image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       uint32_t *      buffer,
-                       const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint8_t *pixel = (const uint8_t *)bits + x;
-    const uint8_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r, g, b;
-	
-	r = ((p & 0xe0) | ((p & 0xe0) >> 3) | ((p & 0xc0) >> 6)) << 16;
-	g = ((p & 0x1c) | ((p & 0x18) >> 3) | ((p & 0x1c) << 3)) << 8;
-	b = (((p & 0x03)     ) |
-	     ((p & 0x03) << 2) |
-	     ((p & 0x03) << 4) |
-	     ((p & 0x03) << 6));
-	
-	*buffer++ = 0xff000000 | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_b2g3r3 (pixman_image_t *image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       uint32_t *      buffer,
-                       const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint8_t *pixel = (const uint8_t *)bits + x;
-    const uint8_t *end = pixel + width;
-
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t r, g, b;
-
-	b  = p & 0xc0;
-	b |= b >> 2;
-	b |= b >> 4;
-	b &= 0xff;
-
-	g  = (p & 0x38) << 10;
-	g |= g >> 3;
-	g |= g >> 6;
-	g &= 0xff00;
-
-	r  = (p & 0x7) << 21;
-	r |= r >> 3;
-	r |= r >> 6;
-	r &= 0xff0000;
-
-	*buffer++ = 0xff000000 | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_a2r2g2b2 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint8_t *pixel = (const uint8_t *)bits + x;
-    const uint8_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t a, r, g, b;
-	
-	a = ((p & 0xc0) * 0x55) << 18;
-	r = ((p & 0x30) * 0x55) << 12;
-	g = ((p & 0x0c) * 0x55) << 6;
-	b = ((p & 0x03) * 0x55);
-	
-	*buffer++ = a | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_a2b2g2r2 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint8_t *pixel = (const uint8_t *)bits + x;
-    const uint8_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint32_t a, r, g, b;
-	
-	a = ((p & 0xc0) * 0x55) << 18;
-	b = ((p & 0x30) * 0x55) >> 4;
-	g = ((p & 0x0c) * 0x55) << 6;
-	r = ((p & 0x03) * 0x55) << 16;
-	
-	*buffer++ = a | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_c8 (pixman_image_t *image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   uint32_t *      buffer,
-                   const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const pixman_indexed_t * indexed = image->bits.indexed;
-    const uint8_t *pixel = (const uint8_t *)bits + x;
-    const uint8_t *end = pixel + width;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	
-	*buffer++ = indexed->rgba[p];
-    }
-}
-
-static void
-fetch_scanline_x4a4 (pixman_image_t *image,
-                     int             x,
-                     int             y,
-                     int             width,
-                     uint32_t *      buffer,
-                     const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint8_t *pixel = (const uint8_t *)bits + x;
-    const uint8_t *end = pixel + width;
-   
-    while (pixel < end)
-    {
-	uint8_t p = READ (image, pixel++) & 0xf;
-
-	*buffer++ = (p | (p << 4)) << 24;
-    }
-}
-
-#define FETCH_8(img,l,o)    (READ (img, (((uint8_t *)(l)) + ((o) >> 3))))
-#ifdef WORDS_BIGENDIAN
-#define FETCH_4(img,l,o)						\
-    (((4 * (o)) & 4) ? (FETCH_8 (img,l, 4 * (o)) & 0xf) : (FETCH_8 (img,l,(4 * (o))) >> 4))
-#else
-#define FETCH_4(img,l,o)						\
-    (((4 * (o)) & 4) ? (FETCH_8 (img, l, 4 * (o)) >> 4) : (FETCH_8 (img, l, (4 * (o))) & 0xf))
-#endif
-
-static void
-fetch_scanline_a4 (pixman_image_t *image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   uint32_t *      buffer,
-                   const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    int i;
-
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t p = FETCH_4 (image, bits, i + x);
-
-	p |= p << 4;
-
-	*buffer++ = p << 24;
-    }
-}
-
-static void
-fetch_scanline_r1g2b1 (pixman_image_t *image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       uint32_t *      buffer,
-                       const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t p = FETCH_4 (image, bits, i + x);
-	uint32_t r, g, b;
-	
-	r = ((p & 0x8) * 0xff) << 13;
-	g = ((p & 0x6) * 0x55) << 7;
-	b = ((p & 0x1) * 0xff);
-	
-	*buffer++ = 0xff000000 | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_b1g2r1 (pixman_image_t *image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       uint32_t *      buffer,
-                       const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t p = FETCH_4 (image, bits, i + x);
-	uint32_t r, g, b;
-	
-	b = ((p & 0x8) * 0xff) >> 3;
-	g = ((p & 0x6) * 0x55) << 7;
-	r = ((p & 0x1) * 0xff) << 16;
-
-	*buffer++ = 0xff000000 | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_a1r1g1b1 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    uint32_t a, r, g, b;
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    int i;
-
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t p = FETCH_4 (image, bits, i + x);
-
-	a = ((p & 0x8) * 0xff) << 21;
-	r = ((p & 0x4) * 0xff) << 14;
-	g = ((p & 0x2) * 0xff) << 7;
-	b = ((p & 0x1) * 0xff);
-
-	*buffer++ = a | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_a1b1g1r1 (pixman_image_t *image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         uint32_t *      buffer,
-                         const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    int i;
-
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t p = FETCH_4 (image, bits, i + x);
-	uint32_t a, r, g, b;
-
-	a = ((p & 0x8) * 0xff) << 21;
-	b = ((p & 0x4) * 0xff) >> 2;
-	g = ((p & 0x2) * 0xff) << 7;
-	r = ((p & 0x1) * 0xff) << 16;
-
-	*buffer++ = a | r | g | b;
-    }
-}
-
-static void
-fetch_scanline_c4 (pixman_image_t *image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   uint32_t *      buffer,
-                   const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const pixman_indexed_t * indexed = image->bits.indexed;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t p = FETCH_4 (image, bits, i + x);
-	
-	*buffer++ = indexed->rgba[p];
-    }
-}
-
-static void
-fetch_scanline_a1 (pixman_image_t *image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   uint32_t *      buffer,
-                   const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t p = READ (image, bits + ((i + x) >> 5));
-	uint32_t a;
-	
-#ifdef WORDS_BIGENDIAN
-	a = p >> (0x1f - ((i + x) & 0x1f));
-#else
-	a = p >> ((i + x) & 0x1f);
-#endif
-	a = a & 1;
-	a |= a << 1;
-	a |= a << 2;
-	a |= a << 4;
-	
-	*buffer++ = a << 24;
-    }
-}
-
-static void
-fetch_scanline_g1 (pixman_image_t *image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   uint32_t *      buffer,
-                   const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const pixman_indexed_t * indexed = image->bits.indexed;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t p = READ (image, bits + ((i + x) >> 5));
-	uint32_t a;
-	
-#ifdef WORDS_BIGENDIAN
-	a = p >> (0x1f - ((i + x) & 0x1f));
-#else
-	a = p >> ((i + x) & 0x1f);
-#endif
-	a = a & 1;
-	
-	*buffer++ = indexed->rgba[a];
     }
 }
 
@@ -1257,576 +796,6 @@ fetch_pixel_x2b10g10r10 (bits_image_t *image,
 }
 
 static uint32_t
-fetch_pixel_a8r8g8b8 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    return READ (image, (uint32_t *)bits + offset);
-}
-
-static uint32_t
-fetch_pixel_x8r8g8b8 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-
-    return READ (image, (uint32_t *)bits + offset) | 0xff000000;
-}
-
-static uint32_t
-fetch_pixel_a8b8g8r8 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint32_t *)bits + offset);
-    
-    return ((pixel & 0xff000000) |
-	    ((pixel >> 16) & 0xff) |
-	    (pixel & 0x0000ff00) |
-	    ((pixel & 0xff) << 16));
-}
-
-static uint32_t
-fetch_pixel_x8b8g8r8 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint32_t *)bits + offset);
-    
-    return ((0xff000000) |
-	    ((pixel >> 16) & 0xff) |
-	    (pixel & 0x0000ff00) |
-	    ((pixel & 0xff) << 16));
-}
-
-static uint32_t
-fetch_pixel_b8g8r8a8 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint32_t *)bits + offset);
-    
-    return ((pixel & 0xff000000) >> 24 |
-	    (pixel & 0x00ff0000) >> 8 |
-	    (pixel & 0x0000ff00) << 8 |
-	    (pixel & 0x000000ff) << 24);
-}
-
-static uint32_t
-fetch_pixel_b8g8r8x8 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint32_t *)bits + offset);
-    
-    return ((0xff000000) |
-	    (pixel & 0xff000000) >> 24 |
-	    (pixel & 0x00ff0000) >> 8 |
-	    (pixel & 0x0000ff00) << 8);
-}
-
-static uint32_t
-fetch_pixel_r8g8b8a8 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint32_t *)bits + offset);
-    
-    return (((pixel & 0x000000ff) << 24) | (pixel >> 8));
-}
-
-static uint32_t
-fetch_pixel_r8g8b8x8 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint32_t *)bits + offset);
-    
-    return (0xff000000 | (pixel >> 8));
-}
-
-static uint32_t
-fetch_pixel_x14r6g6b6 (bits_image_t *image,
-                       int           offset,
-                       int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint32_t *) bits + offset);
-    uint32_t r, g, b;
-
-    r = ((pixel & 0x3f000) << 6) | ((pixel & 0x30000));
-    g = ((pixel & 0x00fc0) << 4) | ((pixel & 0x00c00) >> 2);
-    b = ((pixel & 0x0003f) << 2) | ((pixel & 0x00030) >> 4);
-
-    return 0xff000000 | r | g | b;
-}
-
-static uint32_t
-fetch_pixel_r8g8b8 (bits_image_t *image,
-		    int           offset,
-		    int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint8_t   *pixel = ((uint8_t *) bits) + (offset * 3);
-    
-#ifdef WORDS_BIGENDIAN
-    return (0xff000000 |
-	    (READ (image, pixel + 0) << 16) |
-	    (READ (image, pixel + 1) << 8) |
-	    (READ (image, pixel + 2)));
-#else
-    return (0xff000000 |
-	    (READ (image, pixel + 2) << 16) |
-	    (READ (image, pixel + 1) << 8) |
-	    (READ (image, pixel + 0)));
-#endif
-}
-
-static uint32_t
-fetch_pixel_b8g8r8 (bits_image_t *image,
-		    int           offset,
-		    int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint8_t   *pixel = ((uint8_t *) bits) + (offset * 3);
-#ifdef WORDS_BIGENDIAN
-    return (0xff000000 |
-	    (READ (image, pixel + 2) << 16) |
-	    (READ (image, pixel + 1) << 8) |
-	    (READ (image, pixel + 0)));
-#else
-    return (0xff000000 |
-	    (READ (image, pixel + 0) << 16) |
-	    (READ (image, pixel + 1) << 8) |
-	    (READ (image, pixel + 2)));
-#endif
-}
-
-static uint32_t
-fetch_pixel_r5g6b5 (bits_image_t *image,
-		    int           offset,
-		    int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint16_t *) bits + offset);
-    uint32_t r, g, b;
-    
-    r = ((pixel & 0xf800) | ((pixel & 0xe000) >> 5)) << 8;
-    g = ((pixel & 0x07e0) | ((pixel & 0x0600) >> 6)) << 5;
-    b = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) >> 2;
-    
-    return (0xff000000 | r | g | b);
-}
-
-static uint32_t
-fetch_pixel_b5g6r5 (bits_image_t *image,
-		    int           offset,
-		    int           line)
-{
-    uint32_t r, g, b;
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint16_t *) bits + offset);
-    
-    b = ((pixel & 0xf800) | ((pixel & 0xe000) >> 5)) >> 8;
-    g = ((pixel & 0x07e0) | ((pixel & 0x0600) >> 6)) << 5;
-    r = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) << 14;
-    
-    return (0xff000000 | r | g | b);
-}
-
-static uint32_t
-fetch_pixel_a1r5g5b5 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint16_t *) bits + offset);
-    uint32_t a, r, g, b;
-    
-    a = (uint32_t) ((uint8_t) (0 - ((pixel & 0x8000) >> 15))) << 24;
-    r = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) << 9;
-    g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
-    b = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) >> 2;
-    
-    return (a | r | g | b);
-}
-
-static uint32_t
-fetch_pixel_x1r5g5b5 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint16_t *) bits + offset);
-    uint32_t r, g, b;
-    
-    r = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) << 9;
-    g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
-    b = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) >> 2;
-    
-    return (0xff000000 | r | g | b);
-}
-
-static uint32_t
-fetch_pixel_a1b5g5r5 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint16_t *) bits + offset);
-    uint32_t a, r, g, b;
-    
-    a = (uint32_t) ((uint8_t) (0 - ((pixel & 0x8000) >> 15))) << 24;
-    b = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) >> 7;
-    g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
-    r = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) << 14;
-    
-    return (a | r | g | b);
-}
-
-static uint32_t
-fetch_pixel_x1b5g5r5 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint16_t *) bits + offset);
-    uint32_t r, g, b;
-    
-    b = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) >> 7;
-    g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
-    r = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) << 14;
-    
-    return (0xff000000 | r | g | b);
-}
-
-static uint32_t
-fetch_pixel_a4r4g4b4 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint16_t *) bits + offset);
-    uint32_t a, r, g, b;
-    
-    a = ((pixel & 0xf000) | ((pixel & 0xf000) >> 4)) << 16;
-    r = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) << 12;
-    g = ((pixel & 0x00f0) | ((pixel & 0x00f0) >> 4)) << 8;
-    b = ((pixel & 0x000f) | ((pixel & 0x000f) << 4));
-    
-    return (a | r | g | b);
-}
-
-static uint32_t
-fetch_pixel_x4r4g4b4 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint16_t *) bits + offset);
-    uint32_t r, g, b;
-    
-    r = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) << 12;
-    g = ((pixel & 0x00f0) | ((pixel & 0x00f0) >> 4)) << 8;
-    b = ((pixel & 0x000f) | ((pixel & 0x000f) << 4));
-    
-    return (0xff000000 | r | g | b);
-}
-
-static uint32_t
-fetch_pixel_a4b4g4r4 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint16_t *) bits + offset);
-    uint32_t a, r, g, b;
-    
-    a = ((pixel & 0xf000) | ((pixel & 0xf000) >> 4)) << 16;
-    b = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) >> 4;
-    g = ((pixel & 0x00f0) | ((pixel & 0x00f0) >> 4)) << 8;
-    r = ((pixel & 0x000f) | ((pixel & 0x000f) << 4)) << 16;
-    
-    return (a | r | g | b);
-}
-
-static uint32_t
-fetch_pixel_x4b4g4r4 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint16_t *) bits + offset);
-    uint32_t r, g, b;
-    
-    b = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) >> 4;
-    g = ((pixel & 0x00f0) | ((pixel & 0x00f0) >> 4)) << 8;
-    r = ((pixel & 0x000f) | ((pixel & 0x000f) << 4)) << 16;
-    
-    return (0xff000000 | r | g | b);
-}
-
-static uint32_t
-fetch_pixel_a8 (bits_image_t *image,
-		int           offset,
-		int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint8_t *) bits + offset);
-    
-    return pixel << 24;
-}
-
-static uint32_t
-fetch_pixel_r3g3b2 (bits_image_t *image,
-		    int           offset,
-		    int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint8_t *) bits + offset);
-    uint32_t r, g, b;
-    
-    r = ((pixel & 0xe0) |
-	 ((pixel & 0xe0) >> 3) |
-	 ((pixel & 0xc0) >> 6)) << 16;
-    
-    g = ((pixel & 0x1c) |
-	 ((pixel & 0x18) >> 3) |
-	 ((pixel & 0x1c) << 3)) << 8;
-    
-    b = (((pixel & 0x03)     ) |
-	 ((pixel & 0x03) << 2) |
-	 ((pixel & 0x03) << 4) |
-	 ((pixel & 0x03) << 6));
-    
-    return (0xff000000 | r | g | b);
-}
-
-static uint32_t
-fetch_pixel_b2g3r3 (bits_image_t *image,
-		    int           offset,
-		    int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t p = READ (image, (uint8_t *) bits + offset);
-    uint32_t r, g, b;
-
-    b  = p & 0xc0;
-    b |= b >> 2;
-    b |= b >> 4;
-    b &= 0xff;
-
-    g  = (p & 0x38) << 10;
-    g |= g >> 3;
-    g |= g >> 6;
-    g &= 0xff00;
-
-    r  = (p & 0x7) << 21;
-    r |= r >> 3;
-    r |= r >> 6;
-    r &= 0xff0000;
-
-    return 0xff000000 | r | g | b;
-}
-
-static uint32_t
-fetch_pixel_a2r2g2b2 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint8_t *) bits + offset);
-    uint32_t a, r, g, b;
-    
-    a = ((pixel & 0xc0) * 0x55) << 18;
-    r = ((pixel & 0x30) * 0x55) << 12;
-    g = ((pixel & 0x0c) * 0x55) << 6;
-    b = ((pixel & 0x03) * 0x55);
-    
-    return a | r | g | b;
-}
-
-static uint32_t
-fetch_pixel_a2b2g2r2 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint8_t *) bits + offset);
-    uint32_t a, r, g, b;
-    
-    a = ((pixel & 0xc0) * 0x55) << 18;
-    b = ((pixel & 0x30) * 0x55) >> 4;
-    g = ((pixel & 0x0c) * 0x55) << 6;
-    r = ((pixel & 0x03) * 0x55) << 16;
-    
-    return a | r | g | b;
-}
-
-static uint32_t
-fetch_pixel_c8 (bits_image_t *image,
-		int           offset,
-		int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint8_t *) bits + offset);
-    const pixman_indexed_t * indexed = image->indexed;
-    
-    return indexed->rgba[pixel];
-}
-
-static uint32_t
-fetch_pixel_x4a4 (bits_image_t *image,
-		  int           offset,
-		  int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint8_t *) bits + offset);
-    
-    return ((pixel & 0xf) | ((pixel & 0xf) << 4)) << 24;
-}
-
-static uint32_t
-fetch_pixel_a4 (bits_image_t *image,
-		int           offset,
-		int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = FETCH_4 (image, bits, offset);
-    
-    pixel |= pixel << 4;
-    return pixel << 24;
-}
-
-static uint32_t
-fetch_pixel_r1g2b1 (bits_image_t *image,
-		    int           offset,
-		    int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = FETCH_4 (image, bits, offset);
-    uint32_t r, g, b;
-    
-    r = ((pixel & 0x8) * 0xff) << 13;
-    g = ((pixel & 0x6) * 0x55) << 7;
-    b = ((pixel & 0x1) * 0xff);
-    
-    return 0xff000000 | r | g | b;
-}
-
-static uint32_t
-fetch_pixel_b1g2r1 (bits_image_t *image,
-		    int           offset,
-		    int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = FETCH_4 (image, bits, offset);
-    uint32_t r, g, b;
-    
-    b = ((pixel & 0x8) * 0xff) >> 3;
-    g = ((pixel & 0x6) * 0x55) << 7;
-    r = ((pixel & 0x1) * 0xff) << 16;
-    
-    return 0xff000000 | r | g | b;
-}
-
-static uint32_t
-fetch_pixel_a1r1g1b1 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = FETCH_4 (image, bits, offset);
-    uint32_t a, r, g, b;
-
-    a = ((pixel & 0x8) * 0xff) << 21;
-    r = ((pixel & 0x4) * 0xff) << 14;
-    g = ((pixel & 0x2) * 0xff) << 7;
-    b = ((pixel & 0x1) * 0xff);
-
-    return a | r | g | b;
-}
-
-static uint32_t
-fetch_pixel_a1b1g1r1 (bits_image_t *image,
-		      int           offset,
-		      int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = FETCH_4 (image, bits, offset);
-    uint32_t a, r, g, b;
-
-    a = ((pixel & 0x8) * 0xff) << 21;
-    b = ((pixel & 0x4) * 0xff) >> 2;
-    g = ((pixel & 0x2) * 0xff) << 7;
-    r = ((pixel & 0x1) * 0xff) << 16;
-
-    return a | r | g | b;
-}
-
-static uint32_t
-fetch_pixel_c4 (bits_image_t *image,
-		int           offset,
-		int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = FETCH_4 (image, bits, offset);
-    const pixman_indexed_t * indexed = image->indexed;
-
-    return indexed->rgba[pixel];
-}
-
-static uint32_t
-fetch_pixel_a1 (bits_image_t *image,
-		int           offset,
-		int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, bits + (offset >> 5));
-    uint32_t a;
-    
-#ifdef WORDS_BIGENDIAN
-    a = pixel >> (0x1f - (offset & 0x1f));
-#else
-    a = pixel >> (offset & 0x1f);
-#endif
-    a = a & 1;
-    a |= a << 1;
-    a |= a << 2;
-    a |= a << 4;
-    
-    return a << 24;
-}
-
-static uint32_t
-fetch_pixel_g1 (bits_image_t *image,
-		int           offset,
-		int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, bits + (offset >> 5));
-    const pixman_indexed_t * indexed = image->indexed;
-    uint32_t a;
-    
-#ifdef WORDS_BIGENDIAN
-    a = pixel >> (0x1f - (offset & 0x1f));
-#else
-    a = pixel >> (offset & 0x1f);
-#endif
-    a = a & 1;
-    
-    return indexed->rgba[a];
-}
-
-static uint32_t
 fetch_pixel_yuy2 (bits_image_t *image,
 		  int           offset,
 		  int           line)
@@ -1882,17 +851,6 @@ fetch_pixel_yv12 (bits_image_t *image,
 }
 
 /*********************************** Store ************************************/
-
-#define SPLIT_A(v)              \
-    uint32_t a = ((v) >> 24),   \
-	r = ((v) >> 16) & 0xff, \
-	g = ((v) >> 8) & 0xff,  \
-	b = (v) & 0xff
-
-#define SPLIT(v)                     \
-    uint32_t r = ((v) >> 16) & 0xff, \
-	g = ((v) >> 8) & 0xff,       \
-	b = (v) & 0xff
 
 static void
 store_scanline_a2r10g10b10 (bits_image_t *  image,
@@ -1980,829 +938,6 @@ store_scanline_x2b10g10r10 (bits_image_t *  image,
     }
 }
 
-static void
-store_scanline_a8r8g8b8 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    
-    MEMCPY_WRAPPED (image, ((uint32_t *)bits) + x, values,
-                    width * sizeof(uint32_t));
-}
-
-static void
-store_scanline_x8r8g8b8 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint32_t *pixel = (uint32_t *)bits + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-	WRITE (image, pixel++, values[i] & 0xffffff);
-}
-
-static void
-store_scanline_a8b8g8r8 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint32_t *pixel = (uint32_t *)bits + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	WRITE (image, pixel++,
-	       (values[i] & 0xff00ff00)         |
-	       ((values[i] >> 16) & 0xff)       |
-	       ((values[i] & 0xff) << 16));
-    }
-}
-
-static void
-store_scanline_x8b8g8r8 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint32_t *pixel = (uint32_t *)bits + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	WRITE (image, pixel++,
-	       (values[i] & 0x0000ff00)         |
-	       ((values[i] >> 16) & 0xff)       |
-	       ((values[i] & 0xff) << 16));
-    }
-}
-
-static void
-store_scanline_b8g8r8a8 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint32_t *pixel = (uint32_t *)bits + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	WRITE (image, pixel++,
-	       ((values[i] >> 24) & 0x000000ff) |
-	       ((values[i] >>  8) & 0x0000ff00) |
-	       ((values[i] <<  8) & 0x00ff0000) |
-	       ((values[i] << 24) & 0xff000000));
-    }
-}
-
-static void
-store_scanline_b8g8r8x8 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint32_t *pixel = (uint32_t *)bits + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	WRITE (image, pixel++,
-	       ((values[i] >>  8) & 0x0000ff00) |
-	       ((values[i] <<  8) & 0x00ff0000) |
-	       ((values[i] << 24) & 0xff000000));
-    }
-}
-
-static void
-store_scanline_r8g8b8a8 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint32_t *pixel = (uint32_t *)bits + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	WRITE (image, pixel++,
-	       ((values[i] >> 24) & 0x000000ff) | (values[i] << 8));
-    }
-}
-
-static void
-store_scanline_r8g8b8x8 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint32_t *pixel = (uint32_t *)bits + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-	WRITE (image, pixel++, (values[i] << 8));
-}
-
-static void
-store_scanline_x14r6g6b6 (bits_image_t *  image,
-                          int             x,
-                          int             y,
-                          int             width,
-                          const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint32_t *pixel = ((uint32_t *) bits) + x;
-    int i;
-
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t s = values[i];
-	uint32_t r, g, b;
-
-	r = (s & 0xfc0000) >> 6;
-	g = (s & 0x00fc00) >> 4;
-	b = (s & 0x0000fc) >> 2;
-
-	WRITE (image, pixel++, r | g | b);
-    }
-}
-
-static void
-store_scanline_r8g8b8 (bits_image_t *  image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint8_t *pixel = ((uint8_t *) bits) + 3 * x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t val = values[i];
-	
-#ifdef WORDS_BIGENDIAN
-	WRITE (image, pixel++, (val & 0x00ff0000) >> 16);
-	WRITE (image, pixel++, (val & 0x0000ff00) >>  8);
-	WRITE (image, pixel++, (val & 0x000000ff) >>  0);
-#else
-	WRITE (image, pixel++, (val & 0x000000ff) >>  0);
-	WRITE (image, pixel++, (val & 0x0000ff00) >>  8);
-	WRITE (image, pixel++, (val & 0x00ff0000) >> 16);
-#endif
-    }
-}
-
-static void
-store_scanline_b8g8r8 (bits_image_t *  image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint8_t *pixel = ((uint8_t *) bits) + 3 * x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t val = values[i];
-	
-#ifdef WORDS_BIGENDIAN
-	WRITE (image, pixel++, (val & 0x000000ff) >>  0);
-	WRITE (image, pixel++, (val & 0x0000ff00) >>  8);
-	WRITE (image, pixel++, (val & 0x00ff0000) >> 16);
-#else
-	WRITE (image, pixel++, (val & 0x00ff0000) >> 16);
-	WRITE (image, pixel++, (val & 0x0000ff00) >>  8);
-	WRITE (image, pixel++, (val & 0x000000ff) >>  0);
-#endif
-    }
-}
-
-static void
-store_scanline_r5g6b5 (bits_image_t *  image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint16_t *pixel = ((uint16_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t s = values[i];
-	
-	WRITE (image, pixel++,
-	       ((s >> 3) & 0x001f) |
-	       ((s >> 5) & 0x07e0) |
-	       ((s >> 8) & 0xf800));
-    }
-}
-
-static void
-store_scanline_b5g6r5 (bits_image_t *  image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint16_t  *pixel = ((uint16_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT (values[i]);
-	
-	WRITE (image, pixel++,
-	       ((b << 8) & 0xf800) |
-	       ((g << 3) & 0x07e0) |
-	       ((r >> 3)         ));
-    }
-}
-
-static void
-store_scanline_a1r5g5b5 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint16_t  *pixel = ((uint16_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT_A (values[i]);
-	
-	WRITE (image, pixel++,
-	       ((a << 8) & 0x8000) |
-	       ((r << 7) & 0x7c00) |
-	       ((g << 2) & 0x03e0) |
-	       ((b >> 3)         ));
-    }
-}
-
-static void
-store_scanline_x1r5g5b5 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint16_t  *pixel = ((uint16_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT (values[i]);
-	
-	WRITE (image, pixel++,
-	       ((r << 7) & 0x7c00) |
-	       ((g << 2) & 0x03e0) |
-	       ((b >> 3)         ));
-    }
-}
-
-static void
-store_scanline_a1b5g5r5 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint16_t  *pixel = ((uint16_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT_A (values[i]);
-	
-	WRITE (image, pixel++,
-	       ((a << 8) & 0x8000) |
-	       ((b << 7) & 0x7c00) |
-	       ((g << 2) & 0x03e0) |
-	       ((r >> 3)         ));
-    }
-}
-
-static void
-store_scanline_x1b5g5r5 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint16_t  *pixel = ((uint16_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT (values[i]);
-	
-	WRITE (image, pixel++, ((b << 7) & 0x7c00) |
-	       ((g << 2) & 0x03e0) |
-	       ((r >> 3)         ));
-    }
-}
-
-static void
-store_scanline_a4r4g4b4 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint16_t  *pixel = ((uint16_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT_A (values[i]);
-	
-	WRITE (image, pixel++,
-	       ((a << 8) & 0xf000) |
-	       ((r << 4) & 0x0f00) |
-	       ((g     ) & 0x00f0) |
-	       ((b >> 4)         ));
-    }
-}
-
-static void
-store_scanline_x4r4g4b4 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint16_t  *pixel = ((uint16_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT (values[i]);
-	
-	WRITE (image, pixel++,
-	       ((r << 4) & 0x0f00) |
-	       ((g     ) & 0x00f0) |
-	       ((b >> 4)         ));
-    }
-}
-
-static void
-store_scanline_a4b4g4r4 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint16_t  *pixel = ((uint16_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT_A (values[i]);
-	WRITE (image, pixel++, ((a << 8) & 0xf000) |
-	       ((b << 4) & 0x0f00) |
-	       ((g     ) & 0x00f0) |
-	       ((r >> 4)         ));
-    }
-}
-
-static void
-store_scanline_x4b4g4r4 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint16_t  *pixel = ((uint16_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT (values[i]);
-	
-	WRITE (image, pixel++,
-	       ((b << 4) & 0x0f00) |
-	       ((g     ) & 0x00f0) |
-	       ((r >> 4)         ));
-    }
-}
-
-static void
-store_scanline_a8 (bits_image_t *  image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint8_t   *pixel = ((uint8_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	WRITE (image, pixel++, values[i] >> 24);
-    }
-}
-
-static void
-store_scanline_r3g3b2 (bits_image_t *  image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint8_t   *pixel = ((uint8_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT (values[i]);
-	
-	WRITE (image, pixel++,
-	       ((r     ) & 0xe0) |
-	       ((g >> 3) & 0x1c) |
-	       ((b >> 6)       ));
-    }
-}
-
-static void
-store_scanline_b2g3r3 (bits_image_t *  image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint8_t   *pixel = ((uint8_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT (values[i]);
-	
-	WRITE (image, pixel++,
-	       ((b     ) & 0xc0) |
-	       ((g >> 2) & 0x38) |
-	       ((r >> 5)       ));
-    }
-}
-
-static void
-store_scanline_a2r2g2b2 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint8_t   *pixel = ((uint8_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT_A (values[i]);
-	
-	WRITE (image, pixel++,
-	       ((a     ) & 0xc0) |
-	       ((r >> 2) & 0x30) |
-	       ((g >> 4) & 0x0c) |
-	       ((b >> 6)       ));
-    }
-}
-
-static void
-store_scanline_a2b2g2r2 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint8_t   *pixel = ((uint8_t *) bits) + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	SPLIT_A (values[i]);
-	
-	WRITE (image, pixel++,
-	       ((a     ) & 0xc0) |
-	       ((b >> 2) & 0x30) |
-	       ((g >> 4) & 0x0c) |
-	       ((r >> 6)       ));
-    }
-}
-
-static void
-store_scanline_c8 (bits_image_t *  image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint8_t *pixel = ((uint8_t *) bits) + x;
-    const pixman_indexed_t *indexed = image->indexed;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-	WRITE (image, pixel++, RGB24_TO_ENTRY (indexed,values[i]));
-}
-
-static void
-store_scanline_g8 (bits_image_t *  image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint8_t *pixel = ((uint8_t *) bits) + x;
-    const pixman_indexed_t *indexed = image->indexed;
-    int i;
-
-    for (i = 0; i < width; ++i)
-	WRITE (image, pixel++, RGB24_TO_ENTRY_Y (indexed,values[i]));
-}
-
-static void
-store_scanline_x4a4 (bits_image_t *  image,
-                     int             x,
-                     int             y,
-                     int             width,
-                     const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint8_t   *pixel = ((uint8_t *) bits) + x;
-    int i;
-
-    for (i = 0; i < width; ++i)
-	WRITE (image, pixel++, values[i] >> 28);
-}
-
-#define STORE_8(img,l,o,v)  (WRITE (img, (uint8_t *)(l) + ((o) >> 3), (v)))
-#ifdef WORDS_BIGENDIAN
-
-#define STORE_4(img,l,o,v)						\
-    do									\
-    {									\
-	int bo = 4 * (o);						\
-	int v4 = (v) & 0x0f;						\
-									\
-	STORE_8 (img, l, bo, (						\
-		     bo & 4 ?						\
-		     (FETCH_8 (img, l, bo) & 0xf0) | (v4) :		\
-		     (FETCH_8 (img, l, bo) & 0x0f) | (v4 << 4)));	\
-    } while (0)
-#else
-
-#define STORE_4(img,l,o,v)						\
-    do									\
-    {									\
-	int bo = 4 * (o);						\
-	int v4 = (v) & 0x0f;						\
-									\
-	STORE_8 (img, l, bo, (						\
-		     bo & 4 ?						\
-		     (FETCH_8 (img, l, bo) & 0x0f) | (v4 << 4) :	\
-		     (FETCH_8 (img, l, bo) & 0xf0) | (v4)));		\
-    } while (0)
-#endif
-
-static void
-store_scanline_a4 (bits_image_t *  image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    int i;
-
-    for (i = 0; i < width; ++i)
-	STORE_4 (image, bits, i + x, values[i] >> 28);
-}
-
-static void
-store_scanline_r1g2b1 (bits_image_t *  image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    int i;
-
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t pixel;
-
-	SPLIT (values[i]);
-	pixel = (((r >> 4) & 0x8) |
-	         ((g >> 5) & 0x6) |
-	         ((b >> 7)      ));
-	STORE_4 (image, bits, i + x, pixel);
-    }
-}
-
-static void
-store_scanline_b1g2r1 (bits_image_t *  image,
-                       int             x,
-                       int             y,
-                       int             width,
-                       const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    int i;
-
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t pixel;
-
-	SPLIT (values[i]);
-	pixel = (((b >> 4) & 0x8) |
-	         ((g >> 5) & 0x6) |
-	         ((r >> 7)      ));
-	STORE_4 (image, bits, i + x, pixel);
-    }
-}
-
-static void
-store_scanline_a1r1g1b1 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    int i;
-
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t pixel;
-
-	SPLIT_A (values[i]);
-	pixel = (((a >> 4) & 0x8) |
-	         ((r >> 5) & 0x4) |
-	         ((g >> 6) & 0x2) |
-	         ((b >> 7)      ));
-
-	STORE_4 (image, bits, i + x, pixel);
-    }
-}
-
-static void
-store_scanline_a1b1g1r1 (bits_image_t *  image,
-                         int             x,
-                         int             y,
-                         int             width,
-                         const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    int i;
-
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t pixel;
-
-	SPLIT_A (values[i]);
-	pixel = (((a >> 4) & 0x8) |
-	         ((b >> 5) & 0x4) |
-	         ((g >> 6) & 0x2) |
-	         ((r >> 7)      ));
-
-	STORE_4 (image, bits, i + x, pixel);
-    }
-}
-
-static void
-store_scanline_c4 (bits_image_t *  image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    const pixman_indexed_t *indexed = image->indexed;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t pixel;
-	
-	pixel = RGB24_TO_ENTRY (indexed, values[i]);
-	STORE_4 (image, bits, i + x, pixel);
-    }
-}
-
-static void
-store_scanline_g4 (bits_image_t *  image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    const pixman_indexed_t *indexed = image->indexed;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t pixel;
-	
-	pixel = RGB24_TO_ENTRY_Y (indexed, values[i]);
-	STORE_4 (image, bits, i + x, pixel);
-    }
-}
-
-static void
-store_scanline_a1 (bits_image_t *  image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t  *pixel = ((uint32_t *) bits) + ((i + x) >> 5);
-	uint32_t mask, v;
-	
-#ifdef WORDS_BIGENDIAN
-	mask = 1 << (0x1f - ((i + x) & 0x1f));
-#else
-	mask = 1 << ((i + x) & 0x1f);
-#endif
-	v = values[i] & 0x80000000 ? mask : 0;
-	
-	WRITE (image, pixel, (READ (image, pixel) & ~mask) | v);
-    }
-}
-
-static void
-store_scanline_g1 (bits_image_t *  image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    const pixman_indexed_t *indexed = image->indexed;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t  *pixel = ((uint32_t *) bits) + ((i + x) >> 5);
-	uint32_t mask, v;
-	
-#ifdef WORDS_BIGENDIAN
-	mask = 1 << (0x1f - ((i + x) & 0x1f));
-#else
-	mask = 1 << ((i + x) & 0x1f);
-#endif
-	v = RGB24_TO_ENTRY_Y (indexed, values[i]) & 0x1 ? mask : 0;
-	
-	WRITE (image, pixel, (READ (image, pixel) & ~mask) | v);
-    }
-}
-
 /*
  * Contracts a 64bpp image to 32bpp and then stores it using a regular 32-bit
  * store proc. Despite the type, this function expects a uint64_t buffer.
@@ -2844,7 +979,7 @@ fetch_scanline_generic_64 (pixman_image_t *image,
                            const uint32_t *mask)
 {
     pixman_format_code_t format;
-    
+
     /* Fetch the pixels into the first half of buffer and then expand them in
      * place.
      */
@@ -2858,10 +993,10 @@ fetch_scanline_generic_64 (pixman_image_t *image,
 	 * precision, so when expanding we shouldn't correct
 	 * for the width of the channels
 	 */
-	
+
 	format = PIXMAN_a8r8g8b8;
     }
-    
+
     pixman_expand ((uint64_t *)buffer, buffer, format, width);
 }
 
@@ -2883,10 +1018,10 @@ fetch_pixel_generic_64 (bits_image_t *image,
 	 * precision, so when expanding we shouldn't correct
 	 * for the width of the channels
 	 */
-	
+
 	format = PIXMAN_a8r8g8b8;
     }
-    
+
     pixman_expand ((uint64_t *)&result, &pixel32, format, 1);
 
     return result;
@@ -2905,7 +1040,7 @@ fetch_pixel_generic_lossy_32 (bits_image_t *image,
 {
     uint64_t pixel64 = image->fetch_pixel_64 (image, offset, line);
     uint32_t result;
-    
+
     pixman_contract (&result, &pixel64, 1);
 
     return result;
@@ -2970,8 +1105,6 @@ static const format_info_t accessors[] =
     
     FORMAT_INFO (c8),
     
-#define fetch_scanline_g8 fetch_scanline_c8
-#define fetch_pixel_g8 fetch_pixel_c8
     FORMAT_INFO (g8),
     
 #define fetch_scanline_x4c4 fetch_scanline_c8
@@ -2979,8 +1112,8 @@ static const format_info_t accessors[] =
 #define store_scanline_x4c4 store_scanline_c8
     FORMAT_INFO (x4c4),
     
-#define fetch_scanline_x4g4 fetch_scanline_c8
-#define fetch_pixel_x4g4 fetch_pixel_c8
+#define fetch_scanline_x4g4 fetch_scanline_g8
+#define fetch_pixel_x4g4 fetch_pixel_g8
 #define store_scanline_x4g4 store_scanline_g8
     FORMAT_INFO (x4g4),
     
@@ -2995,8 +1128,6 @@ static const format_info_t accessors[] =
     
     FORMAT_INFO (c4),
     
-#define fetch_scanline_g4 fetch_scanline_c4
-#define fetch_pixel_g4 fetch_pixel_c4
     FORMAT_INFO (g4),
     
 /* 1bpp formats */

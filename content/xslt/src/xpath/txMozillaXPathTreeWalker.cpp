@@ -55,6 +55,7 @@
 #include "nsAttrName.h"
 #include "nsTArray.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/StandardInteger.h"
 
 const PRUint32 kUnknownIndex = PRUint32(-1);
 
@@ -570,13 +571,9 @@ txXPathNodeUtils::getOwnerDocument(const txXPathNode& aNode)
 }
 
 #ifndef HAVE_64BIT_OS
-#define kFmtSize 13
-#define kFmtSizeAttr 24
 const char gPrintfFmt[] = "id0x%08p";
 const char gPrintfFmtAttr[] = "id0x%08p-%010i";
 #else
-#define kFmtSize 21
-#define kFmtSizeAttr 32
 const char gPrintfFmt[] = "id0x%016p";
 const char gPrintfFmtAttr[] = "id0x%016p-%010i";
 #endif
@@ -587,13 +584,13 @@ txXPathNodeUtils::getXSLTId(const txXPathNode& aNode,
                             const txXPathNode& aBase,
                             nsAString& aResult)
 {
-    PRUword nodeid = ((PRUword)aNode.mNode) - ((PRUword)aBase.mNode);
+    uintptr_t nodeid = ((uintptr_t)aNode.mNode) - ((uintptr_t)aBase.mNode);
     if (!aNode.isAttribute()) {
-        CopyASCIItoUTF16(nsPrintfCString(kFmtSize, gPrintfFmt, nodeid),
+        CopyASCIItoUTF16(nsPrintfCString(gPrintfFmt, nodeid),
                          aResult);
     }
     else {
-        CopyASCIItoUTF16(nsPrintfCString(kFmtSizeAttr, gPrintfFmtAttr,
+        CopyASCIItoUTF16(nsPrintfCString(gPrintfFmtAttr,
                                          nodeid, aNode.mIndex), aResult);
     }
 

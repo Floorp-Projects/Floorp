@@ -39,7 +39,7 @@
 
 interface nsIDOMSVGSVGElement;
 
-[scriptable, uuid(b3c5a715-ccee-48e4-8d2b-dcf7fa6ccb7c)]
+[scriptable, uuid(4AEBF9E7-F275-4147-AA90-601626476132)]
 interface nsIDOMSVGDocument : nsIDOMDocument
 {
   readonly attribute DOMString domain;

@@ -143,6 +143,44 @@ IsSVGWhitespace(PRUnichar aChar)
  */
 bool NS_SMILEnabled();
 
+/**
+ * Sometimes we need to distinguish between an empty box and a box
+ * that contains an element that has no size e.g. a point at the origin.
+ */
+class SVGBBox {
+public:
+  SVGBBox() 
+    : mIsEmpty(true) {}
+
+  SVGBBox(const gfxRect& aRect) 
+    : mBBox(aRect), mIsEmpty(false) {}
+
+  SVGBBox& operator=(const gfxRect& aRect) {
+    mBBox = aRect;
+    mIsEmpty = false;
+    return *this;
+  }
+
+  operator const gfxRect& () const {
+    return mBBox;
+  }
+
+  bool IsEmpty() const {
+    return mIsEmpty;
+  }
+
+  void UnionEdges(const SVGBBox& aSVGBBox) {
+    if (aSVGBBox.mIsEmpty) {
+      return;
+    }
+    mBBox = mIsEmpty ? aSVGBBox.mBBox : mBBox.UnionEdges(aSVGBBox.mBBox);
+    mIsEmpty = false;
+  }
+
+private:
+  gfxRect mBBox;
+  bool    mIsEmpty;
+};
 
 // GRRR WINDOWS HATE HATE HATE
 #undef CLIP_MASK
@@ -542,7 +580,9 @@ public:
   static gfxRect GetBBox(nsIFrame *aFrame, PRUint32 aFlags = eBBoxIncludeFill);
 
   /**
-   * Compute a rectangle in userSpaceOnUse or objectBoundingBoxUnits.
+   * Convert a userSpaceOnUse/objectBoundingBoxUnits rectangle that's specified
+   * using four nsSVGLength2 values into a user unit rectangle in user space.
+   *
    * @param aXYWH pointer to 4 consecutive nsSVGLength2 objects containing
    * the x, y, width and height values in that order
    * @param aBBox the bounding box of the object the rect is relative to;
@@ -596,16 +636,6 @@ public:
     return NS_lround(NS_MAX(double(PR_INT32_MIN),
                             NS_MIN(double(PR_INT32_MAX), aVal)));
   }
-
-  /**
-   * Given a nsIContent* that is actually an nsSVGSVGElement*, this method
-   * checks whether it currently has a valid viewBox, and returns true if so.
-   *
-   * No other type of element should be passed to this method.
-   * (In debug builds, anything non-<svg> will trigger an abort; in non-debug
-   * builds, it will trigger a false return-value as a safe fallback.)
-   */
-  static bool RootSVGElementHasViewbox(const nsIContent *aRootSVGElem);
 
   static void GetFallbackOrPaintColor(gfxContext *aContext,
                                       nsStyleContext *aStyleContext,

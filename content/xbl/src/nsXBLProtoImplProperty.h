@@ -67,8 +67,8 @@ public:
 
   virtual nsresult InstallMember(nsIScriptContext* aContext,
                                  nsIContent* aBoundElement, 
-                                 void* aScriptObject,
-                                 void* aTargetClassObject,
+                                 JSObject* aScriptObject,
+                                 JSObject* aTargetClassObject,
                                  const nsCString& aClassStr);
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,

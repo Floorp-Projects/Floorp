@@ -10,7 +10,6 @@
 #include "compiler/BaseTypes.h"
 #include "compiler/Common.h"
 #include "compiler/compilerdebug.h"
-#include <cstdlib>
 
 //
 // Need to have association of line numbers to types in a list for building structs.
@@ -209,7 +208,7 @@ public:
 
     const TString& getTypeName() const
     {
-        if(!typeName) abort();
+        assert(typeName);
         return *typeName;
     }
     void setTypeName(const TString& n)

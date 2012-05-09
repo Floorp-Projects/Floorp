@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531176
 
 var errorCount = 0;
 function errorHandler(msg, filename, linenr) {
-  is(msg, "syntax error", "Wrong error!");
+  is(msg, "SyntaxError: syntax error", "Wrong error!");
   is(filename, window.location, "Wrong filename!");
   is(linenr, 1, "Wrong linenr!");
   ++errorCount;
@@ -34,7 +34,7 @@ document.body.onclick;
 is(errorCount, 1, "Error handler should have been called! (1)");
 
 function recursiveHandler(msg, filename, linenr) {
-  is(msg, "syntax error", "Wrong error!");
+  is(msg, "SyntaxError: syntax error", "Wrong error!");
   is(filename, window.location, "Wrong filename!");
   is(linenr, 1, "Wrong linenr!");
   ++errorCount;

@@ -24,12 +24,14 @@
  * Red Hat Author(s): Behdad Esfahbod
  */
 
+#ifndef HB_OT_H_IN
+#error "Include <hb-ot.h> instead."
+#endif
+
 #ifndef HB_OT_LAYOUT_H
 #define HB_OT_LAYOUT_H
 
-#include "hb-common.h"
-#include "hb-buffer.h"
-#include "hb-font.h"
+#include "hb.h"
 
 #include "hb-ot-tag.h"
 
@@ -199,7 +201,7 @@ hb_ot_layout_position_lookup (hb_font_t    *font,
 
 /* Should be called after all the position_lookup's are done */
 void
-hb_ot_layout_position_finish (hb_face_t *face, hb_buffer_t *buffer);
+hb_ot_layout_position_finish (hb_face_t *face, hb_buffer_t  *buffer);
 
 
 HB_END_DECLS

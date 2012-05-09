@@ -43,13 +43,15 @@
 
 #include "CheckedInt.h"
 
-#include "jstypedarray.h"
+#include "jsfriendapi.h"
 
 #if defined(USE_ANGLE)
 #include "angle/ShaderLang.h"
 #endif
 
 #include <algorithm>
+
+#include "nsIObserverService.h"
 
 using namespace mozilla;
 
@@ -61,6 +63,7 @@ WebGLProgram::UpdateInfo()
 {
     mIdentifierMap = nsnull;
     mIdentifierReverseMap = nsnull;
+    mUniformInfoMap = nsnull;
 
     mAttribMaxNameLength = 0;
 
@@ -368,10 +371,118 @@ bool WebGLContext::ValidateGLSLString(const nsAString& string, const char *info)
     return true;
 }
 
-PRUint32 WebGLContext::GetTexelSize(WebGLenum format, WebGLenum type)
+bool WebGLContext::ValidateTexImage2DTarget(WebGLenum target, WebGLsizei width, WebGLsizei height,
+                                            const char* info)
+{
+    switch (target) {
+        case LOCAL_GL_TEXTURE_2D:
+            break;
+        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+            if (width != height) {
+                ErrorInvalidValue("%s: with cube map targets, width and height must be equal", info);
+                return false;
+            }
+            break;
+        default:
+            ErrorInvalidEnum("%s: invalid target enum 0x%x", info, target);
+            return false;
+    }
+
+    return true;
+}
+
+bool WebGLContext::ValidateCompressedTextureSize(WebGLint level, WebGLenum format, WebGLsizei width,
+                                                 WebGLsizei height, uint32_t byteLength, const char* info)
+{
+    CheckedUint32 calculated_byteLength = 0;
+    CheckedUint32 checked_byteLength = byteLength;
+    if (!checked_byteLength.valid()) {
+        ErrorInvalidValue("%s: data length out of bounds", info);
+        return false;
+    }
+
+    switch (format) {
+        case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+        {
+            calculated_byteLength = ((CheckedUint32(width) + 3) / 4) * ((CheckedUint32(height) + 3) / 4) * 8;
+            if (!calculated_byteLength.valid() || !(checked_byteLength == calculated_byteLength)) {
+                ErrorInvalidValue("%s: data size does not match dimensions", info);
+                return false;
+            }
+            break;
+        }
+        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+        {
+            calculated_byteLength = ((CheckedUint32(width) + 3) / 4) * ((CheckedUint32(height) + 3) / 4) * 16;
+            if (!calculated_byteLength.valid() || !(checked_byteLength == calculated_byteLength)) {
+                ErrorInvalidValue("%s: data size does not match dimensions", info);
+                return false;
+            }
+            break;
+        }
+    }
+
+    switch (format) {
+        case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+        {
+            if (level == 0 && width % 4 == 0 && height % 4 == 0) {
+                return true;
+            }
+            if (level > 0
+                && (width == 0 || width == 1 || width == 2 || width % 4 == 0)
+                && (height == 0 || height == 1 || height == 2 || height % 4 == 0))
+            {
+                return true;
+            }
+        }
+    }
+
+    ErrorInvalidOperation("%s: level parameter does not match width and height", info);
+    return false;
+}
+
+bool WebGLContext::ValidateLevelWidthHeightForTarget(WebGLenum target, WebGLint level, WebGLsizei width,
+                                                     WebGLsizei height, const char* info)
+{
+    WebGLsizei maxTextureSize = MaxTextureSizeForTarget(target);
+
+    if (level < 0) {
+        ErrorInvalidValue("%s: level must be >= 0", info);
+        return false;
+    }
+
+    if (!(maxTextureSize >> level)) {
+        ErrorInvalidValue("%s: 2^level exceeds maximum texture size");
+        return false;
+    }
+
+    if (width < 0 || height < 0) {
+        ErrorInvalidValue("%s: width and height must be >= 0");
+        return false;
+    }
+
+    if (width > maxTextureSize || height > maxTextureSize) {
+        ErrorInvalidValue("%s: width or height exceeds maximum texture size");
+        return false;
+    }
+
+    return true;
+}
+
+PRUint32 WebGLContext::GetBitsPerTexel(WebGLenum format, WebGLenum type)
 {
     if (type == LOCAL_GL_UNSIGNED_BYTE || type == LOCAL_GL_FLOAT) {
-        int multiplier = type == LOCAL_GL_FLOAT ? 4 : 1;
+        int multiplier = type == LOCAL_GL_FLOAT ? 32 : 8;
         switch (format) {
             case LOCAL_GL_ALPHA:
             case LOCAL_GL_LUMINANCE:
@@ -382,6 +493,12 @@ PRUint32 WebGLContext::GetTexelSize(WebGLenum format, WebGLenum type)
                 return 3 * multiplier;
             case LOCAL_GL_RGBA:
                 return 4 * multiplier;
+            case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+            case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+                return 4;
+            case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+            case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+                return 8;
             default:
                 break;
         }
@@ -389,7 +506,7 @@ PRUint32 WebGLContext::GetTexelSize(WebGLenum format, WebGLenum type)
                type == LOCAL_GL_UNSIGNED_SHORT_5_5_5_1 ||
                type == LOCAL_GL_UNSIGNED_SHORT_5_6_5)
     {
-        return 2;
+        return 16;
     }
 
     NS_ABORT();
@@ -403,10 +520,10 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
         (IsExtensionEnabled(WebGL_OES_texture_float) && type == LOCAL_GL_FLOAT))
     {
         if (jsArrayType != -1) {
-            if ((type == LOCAL_GL_UNSIGNED_BYTE && jsArrayType != js::TypedArray::TYPE_UINT8) ||
-                (type == LOCAL_GL_FLOAT && jsArrayType != js::TypedArray::TYPE_FLOAT32))
+            if ((type == LOCAL_GL_UNSIGNED_BYTE && jsArrayType != js::ArrayBufferView::TYPE_UINT8) ||
+                (type == LOCAL_GL_FLOAT && jsArrayType != js::ArrayBufferView::TYPE_FLOAT32))
             {
-                ErrorInvalidOperation("%s: invalid typed array type for given format", info);
+                ErrorInvalidOperation("%s: invalid typed array type for given texture data type", info);
                 return false;
             }
         }
@@ -437,8 +554,8 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
     switch (type) {
         case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
         case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
-            if (jsArrayType != -1 && jsArrayType != js::TypedArray::TYPE_UINT16) {
-                ErrorInvalidOperation("%s: invalid typed array type for given format", info);
+            if (jsArrayType != -1 && jsArrayType != js::ArrayBufferView::TYPE_UINT16) {
+                ErrorInvalidOperation("%s: invalid typed array type for given texture data type", info);
                 return false;
             }
 
@@ -450,8 +567,8 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
             return false;
 
         case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-            if (jsArrayType != -1 && jsArrayType != js::TypedArray::TYPE_UINT16) {
-                ErrorInvalidOperation("%s: invalid typed array type for given format", info);
+            if (jsArrayType != -1 && jsArrayType != js::ArrayBufferView::TYPE_UINT16) {
+                ErrorInvalidOperation("%s: invalid typed array type for given texture data type", info);
                 return false;
             }
 
@@ -641,7 +758,8 @@ WebGLContext::InitAndValidateGL()
         //    http://www.gamedev.net/community/forums/topic.asp?topic_id=525643
         // Also, if the ATI/Windows driver implements a recent GL spec version, this shouldn't be needed anyway.
 #ifdef XP_WIN
-        if (gl->Vendor() != gl::GLContext::VendorATI)
+        if (!(gl->WorkAroundDriverBugs() &&
+              gl->Vendor() == gl::GLContext::VendorATI))
 #else
         if (true)
 #endif
@@ -675,6 +793,16 @@ WebGLContext::InitAndValidateGL()
     if (error != LOCAL_GL_NO_ERROR) {
         LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
         return false;
+    }
+
+    mMemoryPressureObserver
+        = new WebGLMemoryPressureObserver(this);
+    nsCOMPtr<nsIObserverService> observerService
+        = mozilla::services::GetObserverService();
+    if (observerService) {
+        observerService->AddObserver(mMemoryPressureObserver,
+                                     "memory-pressure",
+                                     false);
     }
 
     return true;

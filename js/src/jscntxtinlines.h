@@ -45,13 +45,125 @@
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jsinterp.h"
+#include "jsprobes.h"
 #include "jsxml.h"
 #include "jsgc.h"
 
 #include "frontend/ParseMaps.h"
 #include "vm/RegExpObject.h"
 
+#include "jsgcinlines.h"
+
 namespace js {
+
+inline void
+NewObjectCache::staticAsserts()
+{
+    JS_STATIC_ASSERT(NewObjectCache::MAX_OBJ_SIZE == sizeof(JSObject_Slots16));
+    JS_STATIC_ASSERT(gc::FINALIZE_OBJECT_LAST == gc::FINALIZE_OBJECT16_BACKGROUND);
+}
+
+inline bool
+NewObjectCache::lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry)
+{
+    uintptr_t hash = (uintptr_t(clasp) ^ uintptr_t(key)) + kind;
+    *pentry = hash % js::ArrayLength(entries);
+
+    Entry *entry = &entries[*pentry];
+
+    /* N.B. Lookups with the same clasp/key but different kinds map to different entries. */
+    return (entry->clasp == clasp && entry->key == key);
+}
+
+inline bool
+NewObjectCache::lookupProto(Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry)
+{
+    JS_ASSERT(!proto->isGlobal());
+    return lookup(clasp, proto, kind, pentry);
+}
+
+inline bool
+NewObjectCache::lookupGlobal(Class *clasp, js::GlobalObject *global, gc::AllocKind kind, EntryIndex *pentry)
+{
+    return lookup(clasp, global, kind, pentry);
+}
+
+inline bool
+NewObjectCache::lookupType(Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, EntryIndex *pentry)
+{
+    return lookup(clasp, type, kind, pentry);
+}
+
+inline void
+NewObjectCache::fill(EntryIndex entry_, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj)
+{
+    JS_ASSERT(unsigned(entry_) < ArrayLength(entries));
+    Entry *entry = &entries[entry_];
+
+    JS_ASSERT(!obj->hasDynamicSlots() && !obj->hasDynamicElements());
+
+    entry->clasp = clasp;
+    entry->key = key;
+    entry->kind = kind;
+
+    entry->nbytes = obj->sizeOfThis();
+    js_memcpy(&entry->templateObject, obj, entry->nbytes);
+}
+
+inline void
+NewObjectCache::fillProto(EntryIndex entry, Class *clasp, JSObject *proto, gc::AllocKind kind, JSObject *obj)
+{
+    JS_ASSERT(!proto->isGlobal());
+    JS_ASSERT(obj->getProto() == proto);
+    return fill(entry, clasp, proto, kind, obj);
+}
+
+inline void
+NewObjectCache::fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj)
+{
+    //JS_ASSERT(global == obj->getGlobal());
+    return fill(entry, clasp, global, kind, obj);
+}
+
+inline void
+NewObjectCache::fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind, JSObject *obj)
+{
+    JS_ASSERT(obj->type() == type);
+    return fill(entry, clasp, type, kind, obj);
+}
+
+inline JSObject *
+NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
+{
+    JS_ASSERT(unsigned(entry_) < ArrayLength(entries));
+    Entry *entry = &entries[entry_];
+
+    JSObject *obj = js_TryNewGCObject(cx, entry->kind);
+    if (obj) {
+        copyCachedToObject(obj, reinterpret_cast<JSObject *>(&entry->templateObject));
+        Probes::createObject(cx, obj);
+        return obj;
+    }
+
+    /* Copy the entry to the stack first in case it is purged by a GC. */
+    size_t nbytes = entry->nbytes;
+    char stackObject[sizeof(JSObject_Slots16)];
+    JS_ASSERT(nbytes <= sizeof(stackObject));
+    js_memcpy(&stackObject, &entry->templateObject, nbytes);
+
+    JSObject *baseobj = (JSObject *) stackObject;
+    RootShape shapeRoot(cx, (Shape **) baseobj->addressOfShape());
+    RootTypeObject typeRoot(cx, (types::TypeObject **) baseobj->addressOfType());
+
+    obj = js_NewGCObject(cx, entry->kind);
+    if (obj) {
+        copyCachedToObject(obj, baseobj);
+        Probes::createObject(cx, obj);
+        return obj;
+    }
+
+    return NULL;
+}
 
 struct PreserveRegsGuard
 {
@@ -76,7 +188,7 @@ static inline GlobalObject *
 GetGlobalForScopeChain(JSContext *cx)
 {
     if (cx->hasfp())
-        return &cx->fp()->scopeChain().global();
+        return &cx->fp()->global();
 
     JSObject *scope = JS_ObjectToInnerObject(cx, cx->globalObject);
     if (!scope)
@@ -231,7 +343,7 @@ class CompartmentChecker
 
     void check(StackFrame *fp) {
         if (fp)
-            check(&fp->scopeChain());
+            check(fp->scopeChain());
     }
 };
 
@@ -326,7 +438,7 @@ JS_ALWAYS_INLINE bool
 CallJSNativeConstructor(JSContext *cx, Native native, const CallArgs &args)
 {
 #ifdef DEBUG
-    JSObject &callee = args.callee();
+    RootedVarObject callee(cx, &args.callee());
 #endif
 
     JS_ASSERT(args.thisv().isMagic());
@@ -349,10 +461,9 @@ CallJSNativeConstructor(JSContext *cx, Native native, const CallArgs &args)
      * (new Object(Object)) returns the callee.
      */
     JS_ASSERT_IF(native != FunctionProxyClass.construct &&
-                 native != CallableObjectClass.construct &&
                  native != js::CallOrConstructBoundFunction &&
-                 (!callee.isFunction() || callee.toFunction()->native() != js_Object),
-                 !args.rval().isPrimitive() && callee != args.rval().toObject());
+                 (!callee->isFunction() || callee->toFunction()->native() != js_Object),
+                 !args.rval().isPrimitive() && callee != &args.rval().toObject());
 
     return true;
 }
@@ -363,7 +474,7 @@ CallJSPropertyOp(JSContext *cx, PropertyOp op, JSObject *receiver, jsid id, Valu
     assertSameCompartment(cx, receiver, id, *vp);
     JSBool ok = op(cx, receiver, id, vp);
     if (ok)
-        assertSameCompartment(cx, receiver, *vp);
+        assertSameCompartment(cx, *vp);
     return ok;
 }
 
@@ -467,13 +578,6 @@ JSContext::assertValidStackDepth(unsigned depth)
 #endif
 }
 
-#ifdef JS_METHODJIT
-inline js::mjit::JaegerCompartment *JSContext::jaegerCompartment()
-{
-    return compartment->jaegerCompartment();
-}
-#endif
-
 inline js::LifoAlloc &
 JSContext::typeLifoAlloc()
 {
@@ -491,6 +595,7 @@ JSContext::ensureGeneratorStackSpace()
 
 inline void
 JSContext::setPendingException(js::Value v) {
+    JS_ASSERT(!IsPoisonedValue(v));
     this->throwing = true;
     this->exception = v;
     js::assertSameCompartment(this, v);

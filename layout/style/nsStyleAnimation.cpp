@@ -2622,7 +2622,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
-        case eCSSProperty__moz_transform_origin: {
+        case eCSSProperty_transform_origin: {
           const nsStyleDisplay *styleDisplay =
             static_cast<const nsStyleDisplay*>(styleStruct);
           nsAutoPtr<nsCSSValueTriplet> triplet(new nsCSSValueTriplet);
@@ -2905,7 +2905,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
-        case eCSSProperty__moz_transform: {
+        case eCSSProperty_transform: {
           const nsStyleDisplay *display =
             static_cast<const nsStyleDisplay*>(styleStruct);
           nsAutoPtr<nsCSSValueList> result;

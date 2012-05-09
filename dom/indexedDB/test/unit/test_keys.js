@@ -51,10 +51,10 @@ function testSteps()
     new Date(2),
     new Date(1000),
     new Date("1971-01-01"),
-    new Date("1971-01-01T01:01:01"),
-    new Date("1971-01-01T01:01:01.001"),
-    new Date("1971-01-01T01:01:01.01"),
-    new Date("1971-01-01T01:01:01.1"),
+    new Date("1971-01-01T01:01:01Z"),
+    new Date("1971-01-01T01:01:01.001Z"),
+    new Date("1971-01-01T01:01:01.01Z"),
+    new Date("1971-01-01T01:01:01.1Z"),
     new Date("1980-02-02"),
     new Date("3333-03-19T03:33:33.333"),
     "",
@@ -176,14 +176,14 @@ function testSteps()
     if (keyI === 0) {
       doCompare(-0);
       let req = store.add(i, -0);
-      req.onerror = new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
+      req.onerror = new ExpectError("ConstraintError");
       req.onsuccess = unexpectedSuccessHandler;
       yield;
     }
     else if (Array.isArray(keyI) && keyI.length === 1 && keyI[0] === 0) {
       doCompare([-0]);
       let req = store.add(i, [-0]);
-      req.onerror = new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
+      req.onerror = new ExpectError("ConstraintError");
       req.onsuccess = unexpectedSuccessHandler;
       yield;
     }
@@ -234,24 +234,27 @@ function testSteps()
       ok(false, "didn't throw");
     }
     catch(ex) {
-      ok(ex instanceof IDBDatabaseException, "Threw IDBDatabaseException");
-      is(ex.code, IDBDatabaseException.DATA_ERR, "Threw right IDBDatabaseException");
+      ok(ex instanceof DOMException, "Threw DOMException");
+      is(ex.name, "DataError", "Threw right DOMException");
+      is(ex.code, 0, "Threw with right code");
     }
     try {
       mozIndexedDB.cmp(1, invalidKeys[i]);
       ok(false, "didn't throw2");
     }
     catch(ex) {
-      ok(ex instanceof IDBDatabaseException, "Threw IDBDatabaseException2");
-      is(ex.code, IDBDatabaseException.DATA_ERR, "Threw right IDBDatabaseException2");
+      ok(ex instanceof DOMException, "Threw DOMException2");
+      is(ex.name, "DataError", "Threw right DOMException2");
+      is(ex.code, 0, "Threw with right code2");
     }
     try {
       store.put(1, invalidKeys[i]);
       ok(false, "didn't throw3");
     }
     catch(ex) {
-      ok(ex instanceof IDBDatabaseException, "Threw IDBDatabaseException3");
-      is(ex.code, IDBDatabaseException.DATA_ERR, "Threw right IDBDatabaseException3");
+      ok(ex instanceof DOMException, "Threw DOMException3");
+      is(ex.name, "DataError", "Threw right DOMException3");
+      is(ex.code, 0, "Threw with right code3");
     }
   }
 

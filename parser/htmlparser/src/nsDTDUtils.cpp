@@ -794,7 +794,7 @@ void nsDTDContext::ReleaseGlobalObjects(void){
 
 static const size_t  kTokenBuckets[]       ={sizeof(CStartToken),sizeof(CAttributeToken),sizeof(CCommentToken),sizeof(CEndToken)};
 static const PRInt32 kNumTokenBuckets      = sizeof(kTokenBuckets) / sizeof(size_t);
-static const PRInt32 kInitialTokenPoolSize = NS_SIZE_IN_HEAP(sizeof(CToken)) * 200;
+static const PRInt32 kInitialTokenPoolSize = sizeof(CToken) * 200;
 
 /**
  * 
@@ -955,7 +955,7 @@ nsNodeAllocator::nsNodeAllocator():mSharedNodes(0){
 #else 
   static const size_t  kNodeBuckets[]       = { sizeof(nsCParserNode), sizeof(nsCParserStartNode) };
   static const PRInt32 kNumNodeBuckets      = sizeof(kNodeBuckets) / sizeof(size_t);
-  static const PRInt32 kInitialNodePoolSize = NS_SIZE_IN_HEAP(sizeof(nsCParserNode)) * 35; // optimal size based on space-trace data
+  static const PRInt32 kInitialNodePoolSize = sizeof(nsCParserNode) * 35; // optimal size based on space-trace data
 nsNodeAllocator::nsNodeAllocator() {
   mNodePool.Init("NodePool", kNodeBuckets, kNumNodeBuckets, kInitialNodePoolSize);
 #endif

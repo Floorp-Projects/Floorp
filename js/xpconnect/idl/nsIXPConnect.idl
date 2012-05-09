@@ -409,7 +409,7 @@ enum nsGCType {
 };
 %}
 
-[uuid(08ad2253-3ed6-40ed-beec-6472f2d8dc7f)]
+[uuid(1239b432-b835-4d28-9dc0-53063cb7f60f)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -744,30 +744,6 @@ interface nsIXPConnect : nsISupports
      * browser is drawing a frame.
      */
     void NotifyDidPaint();
-
-    /**
-     * Define quick stubs on the given object, @a proto.
-     *
-     * @param cx
-     *     A context.  Requires request.
-     * @param proto
-     *     The (newly created) prototype object for a DOM class.  The JS half
-     *     of an XPCWrappedNativeProto.
-     * @param flags
-     *     Property flags for the quick stub properties--should be either
-     *     JSPROP_ENUMERATE or 0.
-     * @param interfaceCount
-     *     The number of interfaces the class implements.
-     * @param interfaceArray
-     *     The interfaces the class implements; interfaceArray and
-     *     interfaceCount are like what nsIClassInfo.getInterfaces returns.
-     */
-    [noscript,notxpcom] boolean defineDOMQuickStubs(
-        in JSContextPtr cx,
-        in JSObjectPtr proto,
-        in PRUint32 flags,
-        in PRUint32 interfaceCount,
-        [array, size_is(interfaceCount)] in nsIIDPtr interfaceArray);
 
 %{C++
     /**

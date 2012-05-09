@@ -20,7 +20,7 @@ registerCleanupFunction(function() {
 
 function test() {
   Services.prefs.setBoolPref("devtools.gcli.enable", true);
-  addTab("http://example.com/browser/browser/devtools/webconsole/test//test-console.html");
+  addTab("http://example.com/browser/browser/devtools/webconsole/test/test-console.html");
   browser.addEventListener("DOMContentLoaded", onLoad, false);
 }
 

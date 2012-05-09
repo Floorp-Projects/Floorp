@@ -13,12 +13,24 @@
                android:minHeight="32dip"
                android:scaleType="fitCenter"/>
 
+    <ImageView android:id="@+id/bookmark_star"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_marginLeft="10dip"
+               android:layout_centerVertical="true"
+               android:layout_alignParentRight="true"
+               android:visibility="gone"
+               android:minHeight="32dip"
+               android:src="@drawable/ic_awesomebar_star"
+               android:scaleType="fitStart"/>
+
     <TextView android:id="@+id/title"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:textAppearance="?android:attr/textAppearanceMedium"
               android:textColor="?android:attr/textColorPrimary"
               android:layout_toRightOf="@id/favicon"
+              android:layout_toLeftOf="@id/bookmark_star"
               android:singleLine="true"
               android:ellipsize="middle"/>
 
@@ -30,6 +42,7 @@
               android:layout_marginTop="2dip"
               android:layout_below="@id/title"
               android:layout_alignLeft="@id/title"
+              android:layout_toLeftOf="@id/bookmark_star"
               android:includeFontPadding="false"
               android:singleLine="true"
               android:ellipsize="middle"/>

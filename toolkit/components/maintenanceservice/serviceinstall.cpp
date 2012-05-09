@@ -404,6 +404,8 @@ SvcInstall(SvcInstallAction action)
     return TRUE;
   }
 
+  // Quote the path only if it contains spaces.
+  PathQuoteSpaces(newServiceBinaryPath);
   // The service does not already exist so create the service as on demand
   schService.own(CreateServiceW(schSCManager, SVC_NAME, SVC_DISPLAY_NAME,
                                 SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,

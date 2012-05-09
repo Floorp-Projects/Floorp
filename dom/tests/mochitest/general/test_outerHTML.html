@@ -49,6 +49,7 @@ function runTest() {
     document.documentElement.outerHTML = "<html></html>";
     ok(false, "Should have thrown an exception");
   } catch(e) {
+    is(e.name, "NoModificationAllowedError", "outerHTML should throw NoModificationAllowedError");
     is(e.code, 7, "outerHTML should throw NO_MODIFICATION_ALLOWED_ERR");
   }
 

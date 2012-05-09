@@ -170,9 +170,14 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         for (int i = 0; i < columns.length; i++) {
             String column = columns[i];
             if (cv.containsKey(column)) {
-                mAsserter.info("Comparing", "Column value " + c.getString(i) + " ?= " + cv.get(column).toString());
-                if (!cv.get(column).toString().equals(c.getString(i))) {
-                    return false;
+                mAsserter.info("Comparing", "Column values for: " + column);
+                Object value = cv.get(column);
+                if (value == null) {
+                    if (!c.isNull(i))
+                        return false;
+                } else {
+                    if (c.isNull(i) || !value.toString().equals(c.getString(i)))
+                        return false;
                 }
             }
         }
@@ -199,9 +204,14 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         for (int i = 0; i < c.getColumnCount(); i++) {
             String column = c.getColumnName(i);
              if (cv.containsKey(column)) {
-                mAsserter.info("Pass","Column value " + c.getString(i) + " ?= " + cv.get(column).toString());
-                if (!cv.get(column).toString().equals(c.getString(i))) {
-                    return false;
+                mAsserter.info("Comparing", "Column values for: " + column);
+                Object value = cv.get(column);
+                if (value == null) {
+                    if (!c.isNull(i))
+                        return false;
+                } else {
+                    if (c.isNull(i) || !value.toString().equals(c.getString(i)))
+                        return false;
                 }
             }
         }

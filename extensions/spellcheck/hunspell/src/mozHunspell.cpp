@@ -112,12 +112,12 @@ static PRInt64 HunspellGetCurrentAllocatedSize() {
 }
 
 NS_MEMORY_REPORTER_IMPLEMENT(Hunspell,
-    "explicit/spell-check",
-    KIND_HEAP,
-    UNITS_BYTES,
-    HunspellGetCurrentAllocatedSize,
-    "Memory used by the Hunspell spell checking engine.  This number accounts "
-    "for the memory in use by Hunspell's internal data structures."
+  "explicit/spell-check",
+  KIND_HEAP,
+  UNITS_BYTES,
+  HunspellGetCurrentAllocatedSize,
+  "Memory used by the Hunspell spell checking engine.  This number accounts "
+  "for the memory in use by Hunspell's internal data structures."
 )
 
 nsresult
@@ -557,7 +557,7 @@ NS_IMETHODIMP mozHunspell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggest
       PRUint32 index = 0;
       for (index = 0; index < *aSuggestionCount && NS_SUCCEEDED(rv); ++index) {
         // Convert the suggestion to utf16
-        PRInt32 inLength = nsCRT::strlen(wlst[index]);
+        PRInt32 inLength = strlen(wlst[index]);
         PRInt32 outLength;
         rv = mDecoder->GetMaxLength(wlst[index], inLength, &outLength);
         if (NS_SUCCEEDED(rv))

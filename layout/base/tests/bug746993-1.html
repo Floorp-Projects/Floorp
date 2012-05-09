@@ -1,0 +1,33 @@
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="start()">
+    <iframe src="data:text/html,<body contenteditable><br /><div></div></body>"></iframe>
+    <script>
+      function start() {
+        var iframe = document.querySelector("iframe");
+        var win = iframe.contentWindow;
+        var doc = iframe.contentDocument;
+        iframe.focus();
+        doc.body.focus();
+        win.getSelection().collapse(doc.body, 0);
+        synthesizeText(
+          { "composition":
+            {
+              "string": "Here's some text.",
+              "clauses":
+              [
+                { "length": 17, "attr": COMPOSITION_ATTR_RAWINPUT }
+              ]
+            },
+            "caret": { "start": 2, "length": 0 }
+          }
+         )
+        synthesizeKey("VK_RETURN", {});
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </body>
+</html>

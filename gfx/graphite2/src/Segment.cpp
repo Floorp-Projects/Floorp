@@ -204,86 +204,57 @@ void Segment::freeSlot(Slot *aSlot)
 }
 
 #ifndef GRAPHITE2_NSEGCACHE
-void Segment::splice(size_t offset, size_t length, Slot * startSlot,
-                       Slot * endSlot, const Slot * firstSpliceSlot,
-                       size_t numGlyphs)
+void Segment::splice(size_t offset, size_t length, Slot * const startSlot,
+                       Slot * endSlot, const Slot * srcSlot,
+                       const size_t numGlyphs)
 {
-    const Slot * replacement = firstSpliceSlot;
-    Slot * slot = startSlot;
     extendLength(numGlyphs - length);
-    // insert extra slots if needed
-    while (numGlyphs > length)
-    {
-        Slot * extra = newSlot();
-        extra->prev(endSlot);
-        extra->next(endSlot->next());
-        endSlot->next(extra);
-        if (extra->next())
-            extra->next()->prev(extra);
-        if (m_last == endSlot)
-            m_last = extra;
-        endSlot = extra;
-        ++length;
-    }
     // remove any extra
     if (numGlyphs < length)
     {
-        Slot * afterSplice = endSlot->next();
+        Slot * end = endSlot->next();
         do
         {
             endSlot = endSlot->prev();
             freeSlot(endSlot->next());
-            --length;
-        } while (numGlyphs < length);
-        endSlot->next(afterSplice);
-        if (afterSplice)
-            afterSplice->prev(endSlot);
+        } while (numGlyphs < --length);
+        endSlot->next(end);
+        if (end)
+            end->prev(endSlot);
     }
-    assert(numGlyphs == length);
-    // keep a record of consecutive slots wrt start of splice to minimize
-    // iterative next/prev calls
-    Slot * slotArray[eMaxSpliceSize];
-    uint16 slotPosition = 0;
-    for (uint16 i = 0; i < numGlyphs; i++)
+    else
     {
-        if (slotPosition <= i)
+        // insert extra slots if needed
+        while (numGlyphs > length)
         {
-            slotArray[i] = slot;
-            slotPosition = i;
+            Slot * extra = newSlot();
+            extra->prev(endSlot);
+            extra->next(endSlot->next());
+            endSlot->next(extra);
+            if (extra->next())
+                extra->next()->prev(extra);
+            if (m_last == endSlot)
+                m_last = extra;
+            endSlot = extra;
+            ++length;
         }
-        slot->set(*replacement, offset, m_silf->numUser());
-        if (replacement->attachedTo())
-        {
-            uint16 parentPos = replacement->attachedTo() - firstSpliceSlot;
-            while (slotPosition < parentPos)
-            {
-                slotArray[slotPosition+1] = slotArray[slotPosition]->next();
-                ++slotPosition;
-            }
-            slot->attachTo(slotArray[parentPos]);
-        }
-        if (replacement->nextSibling())
-        {
-            uint16 pos = replacement->nextSibling() - firstSpliceSlot;
-            while (slotPosition < pos)
-            {
-                slotArray[slotPosition+1] = slotArray[slotPosition]->next();
-                ++slotPosition;
-            }
-            slot->sibling(slotArray[pos]);
-        }
-        if (replacement->firstChild())
-        {
-            uint16 pos = replacement->firstChild() - firstSpliceSlot;
-            while (slotPosition < pos)
-            {
-                slotArray[slotPosition+1] = slotArray[slotPosition]->next();
-                ++slotPosition;
-            }
-            slot->child(slotArray[pos]);
-        }
-        slot = slot->next();
-        replacement = replacement->next();
+    }
+
+    endSlot = endSlot->next();
+    assert(numGlyphs == length);
+    Slot * indexmap[eMaxSpliceSize*3];
+    assert(numGlyphs < sizeof indexmap/sizeof *indexmap);
+    Slot * slot = startSlot;
+    for (uint16 i=0; i < numGlyphs; slot = slot->next(), ++i)
+    	indexmap[i] = slot;
+
+    slot = startSlot;
+    for (slot=startSlot; slot != endSlot; slot = slot->next(), srcSlot = srcSlot->next())
+    {
+        slot->set(*srcSlot, offset, m_silf->numUser());
+        if (srcSlot->attachedTo())	slot->attachTo(indexmap[srcSlot->attachedTo()->index()]);
+        if (srcSlot->nextSibling())	slot->m_sibling = indexmap[srcSlot->nextSibling()->index()];
+        if (srcSlot->firstChild())	slot->m_child = indexmap[srcSlot->firstChild()->index()];
     }
 }
 #endif // GRAPHITE2_NSEGCACHE
@@ -347,6 +318,24 @@ Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd)
 }
 
 
+void Segment::associateChars()
+{
+    int i = 0;
+    for (Slot * s = m_first; s; s->index(i++), s = s->next())
+    {
+        int j = s->before();
+        if (j < 0)	continue;
+
+        for (const int after = s->after(); j <= after; ++j)
+		{
+			CharInfo & c = *charinfo(j);
+			if (c.before() == -1 || i < c.before()) 	c.before(i);
+			if (c.after() < i) 							c.after(i);
+		}
+    }
+}
+
+
 template <typename utf_iter>
 inline void process_utf_data(Segment & seg, const Face & face, const int fid, utf_iter c, size_t n_chars)
 {
@@ -382,38 +371,16 @@ void Segment::prepare_pos(const Font * /*font*/)
     // copy key changeable metrics into slot (if any);
 }
 
-void Segment::finalise(const Font *font)
-{
-	if (!m_first) return;
-
-    m_advance = positionSlots(font);
-    int i = 0;
-    for (Slot * s = m_first; s; s->index(i++), s = s->next())
-    {
-        int j = s->before();
-        if (j < 0)	continue;
-
-        for (const int after = s->after(); j <= after; ++j)
-		{
-			CharInfo & c = *charinfo(j);
-			if (c.before() == -1 || i < c.before()) 	c.before(i);
-			if (c.after() < i) 							c.after(i);
-		}
-    }
-    linkClusters(m_first, m_last);
-}
-
 void Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUSED justFlags flags, Slot *pFirst, Slot *pLast)
 {
     Slot *pEnd = pSlot;
     Slot *s, *end;
     int numBase = 0;
-    float currWidth = 0.;
-    float scale = font ? font->scale() : 1.0;
-    float base;
+    float currWidth = 0.0;
+    const float scale = font ? font->scale() : 1.0f;
 
     if (!pFirst) pFirst = pSlot;
-    base = pFirst->origin().x / scale;
+    const float base = pFirst->origin().x / scale;
     width = width / scale;
     end = pLast ? pLast->next() : NULL;
 
@@ -471,7 +438,7 @@ void Segment::bidiPass(uint8 aBidi, int paradir, uint8 aMirror)
     unsigned int bmask = 0;
     for (s = first(); s; s = s->next())
     {
-        unsigned int bAttr = glyphAttr(s->gid(), aBidi);
+    	unsigned int bAttr = glyphAttr(s->gid(), aBidi);
         s->setBidiClass((bAttr <= 16) * bAttr);
         bmask |= (1 << s->getBidiClass());
         s->setBidiLevel(baseLevel);
@@ -486,7 +453,7 @@ void Segment::bidiPass(uint8 aBidi, int paradir, uint8 aMirror)
             resolveNeutrals(baseLevel, first());
         resolveImplicit(first(), this, aMirror);
         resolveWhitespace(baseLevel, this, aBidi, last());
-        s = resolveOrder(s = first(), baseLevel);
+        s = resolveOrder(s = first(), baseLevel != 0);
         first(s); last(s->prev());
         s->prev()->next(0); s->prev(0);
     }

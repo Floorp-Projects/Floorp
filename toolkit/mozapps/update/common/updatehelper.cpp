@@ -652,3 +652,23 @@ DoesFallbackKeyExist()
   RegCloseKey(testOnlyFallbackKey);
   return TRUE;
 }
+
+/**
+ * Determines if the file system for the specified file handle is local
+ * @param file path to check the filesystem type for, must be at most MAX_PATH
+ * @param isLocal out parameter which will hold TRUE if the drive is local
+ * @return TRUE if the call succeeded
+*/
+BOOL
+IsLocalFile(LPCWSTR file, BOOL &isLocal)
+{
+  WCHAR rootPath[MAX_PATH + 1];
+  if (wcslen(file) > MAX_PATH) {
+    return FALSE;
+  }
+
+  wcscpy(rootPath, file);
+  PathStripToRootW(rootPath);
+  isLocal = GetDriveTypeW(rootPath) == DRIVE_FIXED;
+  return TRUE;
+}

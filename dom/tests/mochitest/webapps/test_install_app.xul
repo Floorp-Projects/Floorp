@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/
+   - https://bugzilla.mozilla.org/show_bug.cgi?id=741549
+-->
+
+<window title="Mozilla Bug 741549"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="apphelper.js"/>
+  <script type="application/javascript" src="jshelper.js"/>
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
+     target="_blank">Mozilla Bug 741549</a>
+  </body>
+
+<script> 
+
+steps = [setUp, verify_no_apps, get_installed_returns_nothing, install_super_crazy, get_self_returns_nothing, 
+         install_wild_crazy, uninstall_wild_crazy, tearDown];
+
+runAll(steps);
+
+function setUp(next) { 
+  debug("in " + arguments.callee.name);
+  uninstallAll(next);
+}
+
+function verify_no_apps(next)  {
+  debug("in " + arguments.callee.name);
+  mozAppscb(navigator.mozApps.mgmt.getAll(), 
+            [{ status: "== \"success\""}], 
+            ok,
+            next);
+}
+
+function get_installed_returns_nothing(next) {
+  debug("in " + arguments.callee.name);
+  mozAppscb(navigator.mozApps.getInstalled(), 
+            [{ status: "== \"success\""}], 
+            ok,
+            next);
+}
+
+function install_super_crazy(next)  {
+  debug("in " + arguments.callee.name);
+  var appURL = SERVERS['super_crazy'];
+  install(appURL, ok, function() { 
+    getInstalled([appURL], ok, next);
+  });
+}
+
+function get_self_returns_nothing(next) {
+  mozAppscb(navigator.mozApps.getSelf(), 
+            [{ status: "== \"success\""}], 
+            ok, 
+            next);
+}
+
+function install_wild_crazy(next) {
+  var appURL = SERVERS['wild_crazy'];
+  install(appURL, ok, function() { 
+     getInstalled([appURL], ok, next);
+     }
+  );
+}
+
+function uninstall_wild_crazy(next)  {
+  var appURL = SERVERS['wild_crazy'];
+  uninstall(appURL, function() { 
+    mozAppscb(navigator.mozApps.getInstalled(),
+           [{ status: "== \"success\""}],
+           ok, 
+           next);
+  });
+}
+
+</script> 
+
+</window>
+

@@ -21,6 +21,8 @@ try {
   document.createElement("<div>");
   ok(false, "Should throw.")
 } catch (e) {
+  is(e.name, "InvalidCharacterError",
+     "Expected InvalidCharacterError.");
   ok(e instanceof DOMException, "Expected DOMException.");
   is(e.code, DOMException.INVALID_CHARACTER_ERR,
      "Expected INVALID_CHARACTER_ERR.");

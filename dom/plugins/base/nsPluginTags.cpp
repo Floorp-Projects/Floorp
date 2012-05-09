@@ -81,7 +81,6 @@ mMimeDescriptions(aPluginTag->mMimeDescriptions),
 mExtensions(aPluginTag->mExtensions),
 mLibrary(nsnull),
 mIsJavaPlugin(aPluginTag->mIsJavaPlugin),
-mIsNPRuntimeEnabledJavaPlugin(aPluginTag->mIsNPRuntimeEnabledJavaPlugin),
 mIsFlashPlugin(aPluginTag->mIsFlashPlugin),
 mFileName(aPluginTag->mFileName),
 mFullPath(aPluginTag->mFullPath),
@@ -97,7 +96,6 @@ mName(aPluginInfo->fName),
 mDescription(aPluginInfo->fDescription),
 mLibrary(nsnull),
 mIsJavaPlugin(false),
-mIsNPRuntimeEnabledJavaPlugin(false),
 mIsFlashPlugin(false),
 mFileName(aPluginInfo->fFileName),
 mFullPath(aPluginInfo->fFullPath),
@@ -128,7 +126,6 @@ mName(aName),
 mDescription(aDescription),
 mLibrary(nsnull),
 mIsJavaPlugin(false),
-mIsNPRuntimeEnabledJavaPlugin(false),
 mIsFlashPlugin(false),
 mFileName(aFileName),
 mFullPath(aFullPath),
@@ -160,18 +157,6 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
   for (PRUint32 i = 0; i < aVariantCount; i++) {
     if (!aMimeTypes[i]) {
       continue;
-    }
-
-    // If we already marked this as a Java plugin, a later MIME type will tell
-    // us if it is npruntime-enabled.
-    if (mIsJavaPlugin) {
-      if (strcmp(aMimeTypes[i], "application/x-java-vm-npruntime") == 0) {
-        // This "magic MIME type" should not be exposed, but is just a signal
-        // to the browser that this is new-style java.
-        // Don't add it or its associated information to our arrays.
-        mIsNPRuntimeEnabledJavaPlugin = true;
-        continue;
-      }
     }
 
     // Look for certain special plugins.

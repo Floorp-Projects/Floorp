@@ -1,0 +1,34 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH	 = ../../../../..
+topsrcdir	 = @top_srcdir@
+srcdir	= @srcdir@
+VPATH	 = @srcdir@
+relativesrcdir	= dom/tests/mochitest/webapps/apps
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES	= \
+    include.html \
+    wild_crazy.webapp \
+    wild_crazy.webapp^headers^ \
+    super_crazy.webapp \
+    super_crazy.webapp^headers^ \
+    missing_required_field.webapp \
+    missing_required_field.webapp^headers^ \
+    json_syntax_error.webapp \
+    json_syntax_error.webapp^headers^ \
+    no_delegated_install.webapp \
+    no_delegated_install.webapp^headers^ \
+    bad_content_type.webapp \
+    manifest_with_bom.webapp \
+    manifest_with_bom.webapp^headers^ \
+    $(NULL)
+
+libs:: 	$(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+

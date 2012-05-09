@@ -10,6 +10,7 @@
 
 
 %include "vpx_ports/x86_abi_support.asm"
+extern sym(vp8_bilinear_filters_x86_8)
 
 %define BLOCK_HEIGHT_WIDTH 4
 %define VP8_FILTER_WEIGHT 128
@@ -55,7 +56,7 @@ sym(vp8_filter_block1d8_h6_sse2):
 %endif
         pxor        xmm0,       xmm0                        ; clear xmm0 for unpack
 
-filter_block1d8_h6_rowloop:
+.filter_block1d8_h6_rowloop:
         movq        xmm3,       MMWORD PTR [rsi - 2]
         movq        xmm1,       MMWORD PTR [rsi + 6]
 
@@ -124,7 +125,7 @@ filter_block1d8_h6_rowloop:
 %endif
         dec         rcx
 
-        jnz         filter_block1d8_h6_rowloop                ; next row
+        jnz         .filter_block1d8_h6_rowloop                ; next row
 
     ; begin epilog
     pop rdi
@@ -176,7 +177,7 @@ sym(vp8_filter_block1d16_h6_sse2):
 
         pxor        xmm0,       xmm0                        ; clear xmm0 for unpack
 
-filter_block1d16_h6_sse2_rowloop:
+.filter_block1d16_h6_sse2_rowloop:
         movq        xmm3,       MMWORD PTR [rsi - 2]
         movq        xmm1,       MMWORD PTR [rsi + 6]
 
@@ -301,7 +302,7 @@ filter_block1d16_h6_sse2_rowloop:
 %endif
 
         dec         rcx
-        jnz         filter_block1d16_h6_sse2_rowloop                ; next row
+        jnz         .filter_block1d16_h6_sse2_rowloop                ; next row
 
     ; begin epilog
     pop rdi
@@ -356,7 +357,7 @@ sym(vp8_filter_block1d8_v6_sse2):
         movsxd      r8,         dword ptr arg(2) ; dst_ptich
 %endif
 
-vp8_filter_block1d8_v6_sse2_loop:
+.vp8_filter_block1d8_v6_sse2_loop:
         movdqa      xmm1,       XMMWORD PTR [rsi]
         pmullw      xmm1,       [rax]
 
@@ -396,7 +397,7 @@ vp8_filter_block1d8_v6_sse2_loop:
         add         rdi,        r8
 %endif
         dec         rcx         ; decrement count
-        jnz         vp8_filter_block1d8_v6_sse2_loop               ; next row
+        jnz         .vp8_filter_block1d8_v6_sse2_loop               ; next row
 
     ; begin epilog
     pop rdi
@@ -448,7 +449,7 @@ sym(vp8_filter_block1d16_v6_sse2):
         movsxd      r8,         dword ptr arg(2) ; dst_ptich
 %endif
 
-vp8_filter_block1d16_v6_sse2_loop:
+.vp8_filter_block1d16_v6_sse2_loop:
 ; The order for adding 6-tap is 2 5 3 1 4 6. Read in data in that order.
         movdqa      xmm1,       XMMWORD PTR [rsi + rdx]       ; line 2
         movdqa      xmm2,       XMMWORD PTR [rsi + rdx + 16]
@@ -511,7 +512,7 @@ vp8_filter_block1d16_v6_sse2_loop:
         add         rdi,        r8
 %endif
         dec         rcx         ; decrement count
-        jnz         vp8_filter_block1d16_v6_sse2_loop               ; next row
+        jnz         .vp8_filter_block1d16_v6_sse2_loop              ; next row
 
     ; begin epilog
     pop rdi
@@ -556,7 +557,7 @@ sym(vp8_filter_block1d8_h6_only_sse2):
 %endif
         pxor        xmm0,       xmm0                        ; clear xmm0 for unpack
 
-filter_block1d8_h6_only_rowloop:
+.filter_block1d8_h6_only_rowloop:
         movq        xmm3,       MMWORD PTR [rsi - 2]
         movq        xmm1,       MMWORD PTR [rsi + 6]
 
@@ -624,7 +625,7 @@ filter_block1d8_h6_only_rowloop:
 %endif
         dec         rcx
 
-        jnz         filter_block1d8_h6_only_rowloop                ; next row
+        jnz         .filter_block1d8_h6_only_rowloop               ; next row
 
     ; begin epilog
     pop rdi
@@ -670,7 +671,7 @@ sym(vp8_filter_block1d16_h6_only_sse2):
 
         pxor        xmm0,       xmm0                        ; clear xmm0 for unpack
 
-filter_block1d16_h6_only_sse2_rowloop:
+.filter_block1d16_h6_only_sse2_rowloop:
         movq        xmm3,       MMWORD PTR [rsi - 2]
         movq        xmm1,       MMWORD PTR [rsi + 6]
 
@@ -789,7 +790,7 @@ filter_block1d16_h6_only_sse2_rowloop:
 %endif
 
         dec         rcx
-        jnz         filter_block1d16_h6_only_sse2_rowloop                ; next row
+        jnz         .filter_block1d16_h6_only_sse2_rowloop               ; next row
 
     ; begin epilog
     pop rdi
@@ -837,7 +838,7 @@ sym(vp8_filter_block1d8_v6_only_sse2):
         movsxd      r8,         dword ptr arg(3) ; dst_ptich
 %endif
 
-vp8_filter_block1d8_v6_only_sse2_loop:
+.vp8_filter_block1d8_v6_only_sse2_loop:
         movq        xmm1,       MMWORD PTR [rsi]
         movq        xmm2,       MMWORD PTR [rsi + rdx]
         movq        xmm3,       MMWORD PTR [rsi + rdx * 2]
@@ -883,7 +884,7 @@ vp8_filter_block1d8_v6_only_sse2_loop:
         add         rdi,        r8
 %endif
         dec         rcx         ; decrement count
-        jnz         vp8_filter_block1d8_v6_only_sse2_loop               ; next row
+        jnz         .vp8_filter_block1d8_v6_only_sse2_loop              ; next row
 
     ; begin epilog
     pop rdi
@@ -924,7 +925,7 @@ sym(vp8_unpack_block1d16_h6_sse2):
         movsxd      r8,         dword ptr arg(4) ;output_width            ; Pitch for Source
 %endif
 
-unpack_block1d16_h6_sse2_rowloop:
+.unpack_block1d16_h6_sse2_rowloop:
         movq        xmm1,       MMWORD PTR [rsi]            ; 0d 0c 0b 0a 09 08 07 06 05 04 03 02 01 00 -1 -2
         movq        xmm3,       MMWORD PTR [rsi+8]          ; make copy of xmm1
 
@@ -941,7 +942,7 @@ unpack_block1d16_h6_sse2_rowloop:
         add         rdi,        r8
 %endif
         dec         rcx
-        jnz         unpack_block1d16_h6_sse2_rowloop                ; next row
+        jnz         .unpack_block1d16_h6_sse2_rowloop               ; next row
 
     ; begin epilog
     pop rdi
@@ -961,7 +962,7 @@ unpack_block1d16_h6_sse2_rowloop:
 ;    unsigned char *dst_ptr,
 ;    int dst_pitch
 ;)
-extern sym(vp8_bilinear_filters_mmx)
+extern sym(vp8_bilinear_filters_x86_8)
 global sym(vp8_bilinear_predict16x16_sse2)
 sym(vp8_bilinear_predict16x16_sse2):
     push        rbp
@@ -973,14 +974,14 @@ sym(vp8_bilinear_predict16x16_sse2):
     push        rdi
     ; end prolog
 
-    ;const short *HFilter = bilinear_filters_mmx[xoffset]
-    ;const short *VFilter = bilinear_filters_mmx[yoffset]
+    ;const short *HFilter = vp8_bilinear_filters_x86_8[xoffset]
+    ;const short *VFilter = vp8_bilinear_filters_x86_8[yoffset]
 
-        lea         rcx,        [GLOBAL(sym(vp8_bilinear_filters_mmx))]
+        lea         rcx,        [GLOBAL(sym(vp8_bilinear_filters_x86_8))]
         movsxd      rax,        dword ptr arg(2) ;xoffset
 
         cmp         rax,        0      ;skip first_pass filter if xoffset=0
-        je          b16x16_sp_only
+        je          .b16x16_sp_only
 
         shl         rax,        5
         add         rax,        rcx    ;HFilter
@@ -995,7 +996,7 @@ sym(vp8_bilinear_predict16x16_sse2):
         movsxd      rax,        dword ptr arg(3) ;yoffset
 
         cmp         rax,        0      ;skip second_pass filter if yoffset=0
-        je          b16x16_fp_only
+        je          .b16x16_fp_only
 
         shl         rax,        5
         add         rax,        rcx    ;VFilter
@@ -1041,7 +1042,7 @@ sym(vp8_bilinear_predict16x16_sse2):
         packuswb    xmm7,       xmm4
 
         add         rsi,        rdx                 ; next line
-next_row:
+.next_row:
         movdqu      xmm3,       [rsi]               ; xx 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14
         movdqa      xmm4,       xmm3                 ; make a copy of current line
 
@@ -1104,11 +1105,11 @@ next_row:
 %endif
 
         cmp         rdi,        rcx
-        jne         next_row
+        jne         .next_row
 
-        jmp         done
+        jmp         .done
 
-b16x16_sp_only:
+.b16x16_sp_only:
         movsxd      rax,        dword ptr arg(3) ;yoffset
         shl         rax,        5
         add         rax,        rcx    ;VFilter
@@ -1130,7 +1131,7 @@ b16x16_sp_only:
         movdqu      xmm7,       [rsi]               ; xx 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14
 
         add         rsi,        rax                 ; next line
-next_row_spo:
+.next_row_spo:
         movdqu      xmm3,       [rsi]               ; xx 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14
 
         movdqa      xmm5,       xmm7
@@ -1164,17 +1165,17 @@ next_row_spo:
         add         rsi,        rax                 ; next line
         add         rdi,        rdx                 ;dst_pitch
         cmp         rdi,        rcx
-        jne         next_row_spo
+        jne         .next_row_spo
 
-        jmp         done
+        jmp         .done
 
-b16x16_fp_only:
+.b16x16_fp_only:
         lea         rcx,        [rdi+rdx*8]
         lea         rcx,        [rcx+rdx*8]
         movsxd      rax,        dword ptr arg(1) ;src_pixels_per_line
         pxor        xmm0,       xmm0
 
-next_row_fpo:
+.next_row_fpo:
         movdqu      xmm3,       [rsi]               ; xx 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14
         movdqa      xmm4,       xmm3                 ; make a copy of current line
 
@@ -1208,9 +1209,9 @@ next_row_fpo:
         add         rsi,        rax                 ; next line
         add         rdi,        rdx                 ; dst_pitch
         cmp         rdi,        rcx
-        jne         next_row_fpo
+        jne         .next_row_fpo
 
-done:
+.done:
     ; begin epilog
     pop rdi
     pop rsi
@@ -1230,7 +1231,6 @@ done:
 ;    unsigned char *dst_ptr,
 ;    int dst_pitch
 ;)
-extern sym(vp8_bilinear_filters_mmx)
 global sym(vp8_bilinear_predict8x8_sse2)
 sym(vp8_bilinear_predict8x8_sse2):
     push        rbp
@@ -1245,9 +1245,9 @@ sym(vp8_bilinear_predict8x8_sse2):
     ALIGN_STACK 16, rax
     sub         rsp, 144                         ; reserve 144 bytes
 
-    ;const short *HFilter = bilinear_filters_mmx[xoffset]
-    ;const short *VFilter = bilinear_filters_mmx[yoffset]
-        lea         rcx,        [GLOBAL(sym(vp8_bilinear_filters_mmx))]
+    ;const short *HFilter = vp8_bilinear_filters_x86_8[xoffset]
+    ;const short *VFilter = vp8_bilinear_filters_x86_8[yoffset]
+        lea         rcx,        [GLOBAL(sym(vp8_bilinear_filters_x86_8))]
 
         mov         rsi,        arg(0) ;src_ptr
         movsxd      rdx,        dword ptr arg(1) ;src_pixels_per_line
@@ -1318,7 +1318,7 @@ sym(vp8_bilinear_predict8x8_sse2):
 
         movdqa      xmm7,       xmm3
         add         rsp,        16                 ; next line
-next_row8x8:
+.next_row8x8:
         movdqa      xmm3,       XMMWORD PTR [rsp]               ; 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15
         movdqa      xmm4,       xmm3                 ; make a copy of current line
         psrldq      xmm4,       1
@@ -1352,7 +1352,7 @@ next_row8x8:
         add         rdi,        rdx
 
         cmp         rdi,        rcx
-        jne         next_row8x8
+        jne         .next_row8x8
 
     ;add rsp, 144
     pop rsp

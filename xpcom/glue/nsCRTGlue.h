@@ -133,6 +133,10 @@ NS_COM_GLUE bool NS_IsAsciiWhitespace(PRUnichar aChar);
 NS_COM_GLUE bool NS_IsAscii(const char* aString);
 NS_COM_GLUE bool NS_IsAscii(const char* aString, PRUint32 aLength);
 
+#ifndef XPCOM_GLUE_AVOID_NSPR
+NS_COM_GLUE void NS_MakeRandomString(char *buf, PRInt32 bufLen);
+#endif
+
 #define FF '\f'
 #define TAB '\t'
 

@@ -54,10 +54,10 @@ class nsRulesInfo
 {
   public:
   
-  nsRulesInfo(int aAction) : action(aAction) {}
+  nsRulesInfo(nsEditor::OperationID aAction) : action(aAction) {}
   virtual ~nsRulesInfo() {}
   
-  int action;
+  nsEditor::OperationID action;
 };
 
 /***************************************************************************
@@ -74,8 +74,10 @@ public:
 
   NS_IMETHOD Init(nsPlaintextEditor *aEditor)=0;
   NS_IMETHOD DetachEditor()=0;
-  NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
-  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
+  NS_IMETHOD BeforeEdit(nsEditor::OperationID action,
+                        nsIEditor::EDirection aDirection) = 0;
+  NS_IMETHOD AfterEdit(nsEditor::OperationID action,
+                       nsIEditor::EDirection aDirection) = 0;
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, bool *aCancel, bool *aHandled)=0;
   NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult)=0;
   NS_IMETHOD DocumentIsEmpty(bool *aDocumentIsEmpty)=0;

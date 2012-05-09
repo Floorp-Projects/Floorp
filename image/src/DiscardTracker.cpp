@@ -18,10 +18,11 @@ static const char* sDiscardTimeoutPref = "image.mem.min_discard_timeout_ms";
 /* static */ nsCOMPtr<nsITimer> DiscardTracker::sTimer;
 /* static */ bool DiscardTracker::sInitialized = false;
 /* static */ bool DiscardTracker::sTimerOn = false;
-/* static */ bool DiscardTracker::sDiscardRunnablePending = false;
+/* static */ PRInt32 DiscardTracker::sDiscardRunnablePending = 0;
 /* static */ PRInt64 DiscardTracker::sCurrentDecodedImageBytes = 0;
 /* static */ PRUint32 DiscardTracker::sMinDiscardTimeoutMs = 10000;
 /* static */ PRUint32 DiscardTracker::sMaxDecodedImageKB = 42 * 1024;
+/* static */ PRLock * DiscardTracker::sAllocationLock = NULL;
 
 /*
  * When we notice we're using too much memory for decoded images, we enqueue a
@@ -30,7 +31,8 @@ static const char* sDiscardTimeoutPref = "image.mem.min_discard_timeout_ms";
 NS_IMETHODIMP
 DiscardTracker::DiscardRunnable::Run()
 {
-  sDiscardRunnablePending = false;
+  PR_ATOMIC_SET(&sDiscardRunnablePending, 0);
+
   DiscardTracker::DiscardNow();
   return NS_OK;
 }
@@ -48,16 +50,11 @@ DiscardTracker::Reset(Node *node)
   // We shouldn't call Reset() with a null |img| pointer, on images which can't
   // be discarded, or on animated images (which should be marked as
   // non-discardable, anyway).
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(sInitialized);
   MOZ_ASSERT(node->img);
   MOZ_ASSERT(node->img->CanDiscard());
   MOZ_ASSERT(!node->img->mAnim);
-
-  // Initialize the first time through.
-  nsresult rv;
-  if (NS_UNLIKELY(!sInitialized)) {
-    rv = Initialize();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   // Insert the node at the front of the list and note when it was inserted.
   bool wasInList = node->isInList();
@@ -75,7 +72,7 @@ DiscardTracker::Reset(Node *node)
   }
 
   // Make sure the timer is running.
-  rv = EnableTimer();
+  nsresult rv = EnableTimer();
   NS_ENSURE_SUCCESS(rv,rv);
 
   return NS_OK;
@@ -84,6 +81,8 @@ DiscardTracker::Reset(Node *node)
 void
 DiscardTracker::Remove(Node *node)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (node->isInList())
     node->remove();
 
@@ -97,6 +96,8 @@ DiscardTracker::Remove(Node *node)
 void
 DiscardTracker::Shutdown()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (sTimer) {
     sTimer->Cancel();
     sTimer = NULL;
@@ -109,6 +110,8 @@ DiscardTracker::Shutdown()
 void
 DiscardTracker::DiscardAll()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!sInitialized)
     return;
 
@@ -128,8 +131,12 @@ DiscardTracker::InformAllocation(PRInt64 bytes)
 {
   // This function is called back e.g. from RasterImage::Discard(); be careful!
 
+  MOZ_ASSERT(sInitialized);
+
+  PR_Lock(sAllocationLock);
   sCurrentDecodedImageBytes += bytes;
   MOZ_ASSERT(sCurrentDecodedImageBytes >= 0);
+  PR_Unlock(sAllocationLock);
 
   // If we're using too much memory for decoded images, MaybeDiscardSoon will
   // enqueue a callback to discard some images.
@@ -142,6 +149,8 @@ DiscardTracker::InformAllocation(PRInt64 bytes)
 nsresult
 DiscardTracker::Initialize()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // Watch the timeout pref for changes.
   Preferences::RegisterCallback(DiscardTimeoutChangedCallback,
                                 sDiscardTimeoutPref);
@@ -152,6 +161,9 @@ DiscardTracker::Initialize()
 
   // Create the timer.
   sTimer = do_CreateInstance("@mozilla.org/timer;1");
+
+  // Create a lock for safegarding the 64-bit sCurrentDecodedImageBytes
+  sAllocationLock = PR_NewLock();
 
   // Mark us as initialized
   sInitialized = true;
@@ -275,10 +287,12 @@ DiscardTracker::MaybeDiscardSoon()
   // Are we carrying around too much decoded image data?  If so, enqueue an
   // event to try to get us down under our limit.
   if (sCurrentDecodedImageBytes > sMaxDecodedImageKB * 1024 &&
-      !sDiscardableImages.isEmpty() && !sDiscardRunnablePending) {
-    sDiscardRunnablePending = true;
-    nsRefPtr<DiscardRunnable> runnable = new DiscardRunnable();
-    NS_DispatchToCurrentThread(runnable);
+      !sDiscardableImages.isEmpty()) {
+    // Check if the value of sDiscardRunnablePending used to be false
+    if (!PR_ATOMIC_SET(&sDiscardRunnablePending, 1)) {
+      nsRefPtr<DiscardRunnable> runnable = new DiscardRunnable();
+      NS_DispatchToMainThread(runnable);
+    }
   }
 }
 

@@ -44,6 +44,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -132,6 +133,30 @@ public class ExtendedJSONObject {
   }
 
   /**
+   * Return an Integer if the value for this key is an Integer, Long, or String
+   * that can be parsed as a base 10 Integer.
+   * Passes through null.
+   *
+   * @throws NumberFormatException
+   */
+  public Integer getIntegerSafely(String key) throws NumberFormatException {
+    Object val = this.object.get(key);
+    if (val == null) {
+      return null;
+    }
+    if (val instanceof Integer) {
+      return (Integer) val;
+    }
+    if (val instanceof Long) {
+      return new Integer(((Long) val).intValue());
+    }
+    if (val instanceof String) {
+      return Integer.parseInt((String) val, 10);
+    }
+    throw new NumberFormatException("Expecting Integer, got " + val.getClass());
+  }
+
+  /**
    * Return a server timestamp value as milliseconds since epoch.
    * @param key
    * @return A Long, or null if the value is non-numeric or doesn't exist.
@@ -215,6 +240,11 @@ public class ExtendedJSONObject {
     return this.object.entrySet();
   }
 
+  @SuppressWarnings("unchecked")
+  public Set<String> keySet() {
+    return this.object.keySet();
+  }
+
   public org.json.simple.JSONArray getArray(String key) throws NonArrayJSONException {
     Object o = this.object.get(key);
     if (o == null) {
@@ -224,5 +254,9 @@ public class ExtendedJSONObject {
       return (JSONArray) o;
     }
     throw new NonArrayJSONException(o);
+  }
+
+  public int size() {
+    return this.object.size();
   }
 }

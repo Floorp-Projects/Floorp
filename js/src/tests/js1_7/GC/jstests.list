@@ -1,3 +1,0 @@
-url-prefix ../../jsreftest.html?test=js1_7/GC/
-script regress-341675.js
-skip-if(Android) script regress-381374.js

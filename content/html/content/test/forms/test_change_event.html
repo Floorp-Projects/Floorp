@@ -1,0 +1,148 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=722599
+-->
+<head>
+<title>Test for Bug 722599</title>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=722599">Mozilla Bug 722599</a>
+<p id="display"></p>
+<div id="content">
+<input type="file" id="fileInput"></input>
+<textarea id="textarea" onchange="++textareaChange;"></textarea>
+<input type="text" id="input_text" onchange="++textInputChange[0];"></input>
+<input type="email" id="input_email" onchange="++textInputChange[1];"></input>
+<input type="search" id="input_search" onchange="++textInputChange[2];"></input>
+<input type="tel" id="input_telephone" onchange="++textInputChange[3];"></input>
+<input type="url" id="input_url" onchange="++textInputChange[4];"></input>
+<input type="password" id="input_password" onchange="++textInputChange[5];"></input>
+ 
+<!-- "Non-text" inputs-->
+<input type="button" id="input_button" onchange="++NonTextInputChange[0];"></input>
+<input type="submit" id="input_submit" onchange="++NonTextInputChange[1];"></input>
+<input type="image" id="input_image" onchange="++NonTextInputChange[2];"></input>
+<input type="reset" id="input_reset" onchange="++NonTextInputChange[3];"></input>
+<input type="radio" id="input_radio" onchange="++NonTextInputChange[4];"></input>
+<input type="checkbox" id="input_checkbox" onchange="++NonTextInputChange[5];"></input>
+ 
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  /** Test for Bug 722599 **/
+  var textareaChange = 0;
+  var fileInputChange = 0;
+
+  var textInputTypes = ["text", "email", "search", "telephone", "url", "password"];
+  var textInputChange = [0, 0, 0, 0, 0, 0];
+
+  var NonTextInputTypes = ["button", "submit", "image", "reset", "radio", "checkbox"];
+  var NonTextInputChange = [0, 0, 0, 0, 0, 0];
+
+  var blurTestCalled = false; //Sentinel to prevent infinite loop.
+
+  SimpleTest.waitForExplicitFinish();
+  var MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init();
+
+  function fileInputBlurTest() {
+    var btn = document.getElementById('fileInput');
+    btn.focus()
+    btn.blur();
+    is(fileInputChange, 1, "change event shouldn't be dispatched on blur for file input element(1)");
+  }
+
+  function testUserInput() {
+    //Simulating an OK click and with a file name return.
+    MockFilePicker.useAnyFile();
+    MockFilePicker.returnValue = MockFilePicker.returnOK;
+    var input = document.getElementById('fileInput');
+    input.focus();
+
+    input.addEventListener("change", function (aEvent) {
+      ++fileInputChange;
+      if (!blurTestCalled) {
+        is(fileInputChange, 1, "change event should have been dispatched on file input.");
+        blurTestCalled = true;
+        fileInputBlurTest();
+      }
+      else {
+        is(fileInputChange, 1, "change event shouldn't be dispatched on blur for file input element (2)");
+      }
+    }, false);
+
+    input.click();
+
+    //text, email, search, telephone, url & password input tests
+    for (var i = 0; i < textInputTypes.length; ++i) {
+      input = document.getElementById("input_" + textInputTypes[i]);
+      input.focus();
+      synthesizeKey("VK_ENTER", {});
+      is(textInputChange[i], 0, "Change event shouldn't be dispatched on " + textInputTypes[i] + " input element");
+
+      synthesizeKey("m", {});
+      synthesizeKey("VK_RETURN", {});
+      is(textInputChange[i], 1, textInputTypes[i] + " input element should have dispatched change event.");
+    }
+
+    //focus and blur text input
+    input = document.getElementById("input_text");
+    input.focus();
+    synthesizeKey("f", {});
+    input.blur();
+    is(textInputChange[0], 2, "text input element should have dispatched change event (2).");
+
+    //focus and blur textarea
+    var textarea = document.getElementById("textarea");
+    textarea.focus();
+    synthesizeKey("f", {});
+    textarea.blur();
+    is(textareaChange, 1, "Textarea element should have dispatched change event.");
+
+    //Non-text input tests:
+    for (var i = 0; i < NonTextInputTypes.length; ++i) {
+      //button, submit, image and reset input type tests.
+      if (i < 4) {
+        input = document.getElementById("input_" + NonTextInputTypes[i]);
+        input.focus();
+        input.click();
+        is(NonTextInputChange[i], 0, "Change event shouldn't be dispatched on " + NonTextInputTypes[i] + " input element");
+        input.blur();
+        is(NonTextInputChange[i], 0, "Change event shouldn't be dispatched on " + NonTextInputTypes[i] + " input element(2)");
+      }
+      //for radio and and checkboxes, we require that change event should ONLY be dispatched on setting the value.
+      else {
+        input = document.getElementById("input_" + NonTextInputTypes[i]);
+        input.focus();
+        input.click();
+        is(NonTextInputChange[i], 1, NonTextInputTypes[i] + " input element should have dispatched change event.");
+        input.blur();
+        is(NonTextInputChange[i], 1, "Change event shouldn't be dispatched on " + NonTextInputTypes[i] + " input element");
+      }
+    }
+
+    //Input type change test.
+    input = document.getElementById("input_checkbox");
+    input.type = "text";
+    input.focus();
+    input.click();
+    input.blur();
+    is(NonTextInputChange[5], 1, "Change event shouldn't be dispatched for checkbox ---> text input type change");
+
+    MockFilePicker.cleanup;
+    SimpleTest.finish();
+
+  }
+
+  addLoadEvent(testUserInput);
+ 
+</script>
+</pre>
+</body>
+</html>
+ 

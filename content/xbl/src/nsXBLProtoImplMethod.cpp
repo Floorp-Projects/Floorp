@@ -122,31 +122,28 @@ nsXBLProtoImplMethod::SetLineNumber(PRUint32 aLineNumber)
 nsresult
 nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
                                     nsIContent* aBoundElement, 
-                                    void* aScriptObject,
-                                    void* aTargetClassObject,
+                                    JSObject* aScriptObject,
+                                    JSObject* aTargetClassObject,
                                     const nsCString& aClassStr)
 {
   NS_PRECONDITION(IsCompiled(),
                   "Should not be installing an uncompiled method");
   JSContext* cx = aContext->GetNativeContext();
 
-  nsIDocument *ownerDoc = aBoundElement->OwnerDoc();
-  nsIScriptGlobalObject *sgo;
+  nsIScriptGlobalObject* sgo = aBoundElement->OwnerDoc()->GetScopeObject();
 
-  if (!(sgo = ownerDoc->GetScopeObject())) {
+  if (!sgo) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  JSObject * scriptObject = (JSObject *) aScriptObject;
-  NS_ASSERTION(scriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
-  if (!scriptObject)
+  NS_ASSERTION(aScriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
+  if (!aScriptObject)
     return NS_ERROR_FAILURE;
 
-  JSObject * targetClassObject = (JSObject *) aTargetClassObject;
-  JSObject * globalObject = sgo->GetGlobalJSObject();
+  JSObject* globalObject = sgo->GetGlobalJSObject();
 
   // now we want to reevaluate our property using aContext and the script object for this window...
-  if (mJSMethodObject && targetClassObject) {
+  if (mJSMethodObject && aTargetClassObject) {
     nsDependentString name(mName);
     JSAutoRequest ar(cx);
     JSAutoEnterCompartment ac;
@@ -160,8 +157,8 @@ nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    if (!::JS_DefineUCProperty(cx, targetClassObject,
-                               reinterpret_cast<const jschar*>(mName), 
+    if (!::JS_DefineUCProperty(cx, aTargetClassObject,
+                               static_cast<const jschar*>(mName),
                                name.Length(), OBJECT_TO_JSVAL(method),
                                NULL, NULL, JSPROP_ENUMERATE)) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -263,7 +260,7 @@ void
 nsXBLProtoImplMethod::Trace(TraceCallback aCallback, void *aClosure) const
 {
   if (IsCompiled() && mJSMethodObject) {
-    aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSMethodObject, "mJSMethodObject", aClosure);
+    aCallback(mJSMethodObject, "mJSMethodObject", aClosure);
   }
 }
 

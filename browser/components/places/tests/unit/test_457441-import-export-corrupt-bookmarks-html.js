@@ -62,7 +62,7 @@ const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const POST_DATA_ANNO = "bookmarkProperties/POSTData";
 
 const TEST_FAVICON_PAGE_URL = "http://en-US.www.mozilla.com/en-US/firefox/central/";
-const TEST_FAVICON_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg==";
+const TEST_FAVICON_DATA_SIZE = 580;
 
 function run_test() {
   do_test_pending();
@@ -84,8 +84,7 @@ function after_import(success) {
 
   // Check that every bookmark is correct
   // Corrupt bookmarks should not have been imported
-  database_check();
-  waitForAsyncUpdates(function() {
+  database_check(function () {
     // Create corruption in database
     var corruptItemId = bs.insertBookmark(bs.toolbarFolder,
                                           uri("http://test.mozilla.org"),
@@ -112,22 +111,23 @@ function after_import(success) {
 
     // Import bookmarks
     try {
-      BookmarkHTMLUtils.importFromFile(bookmarksFile, true, before_database_check);
+    BookmarkHTMLUtils.importFromFile(bookmarksFile, true, before_database_check);
     } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
   });
 }
 
 function before_database_check(success) {
-    // Check that every bookmark is correct
-    database_check();
-
-    waitForAsyncUpdates(do_test_finished);
+  // Check that every bookmark is correct
+  database_check(do_test_finished);
 }
 
 /*
  * Check for imported bookmarks correctness
+ *
+ * @param aCallback
+ *        Called when the checks are finished.
  */
-function database_check() {
+function database_check(aCallback) {
   // BOOKMARKS MENU
   var query = hs.getNewQuery();
   query.setFolders([bs.bookmarksMenuFolder], 1);
@@ -226,7 +226,14 @@ function database_check() {
   unfiledBookmarks.containerOpen = false;
 
   // favicons
-  var faviconURI = icos.getFaviconForPage(uri(TEST_FAVICON_PAGE_URL));
-  var dataURL = icos.getFaviconDataAsDataURL(faviconURI);
-  do_check_eq(TEST_FAVICON_DATA_URL, dataURL);
+  icos.getFaviconDataForPage(uri(TEST_FAVICON_PAGE_URL),
+    function DC_onComplete(aURI, aDataLen, aData, aMimeType) {
+      // aURI should never be null when aDataLen > 0.
+      do_check_neq(aURI, null);
+      // Favicon data is stored in the bookmarks file as a "data:" URI.  For
+      // simplicity, instead of converting the data we receive to a "data:" URI
+      // and comparing it, we just check the data size.
+      do_check_eq(TEST_FAVICON_DATA_SIZE, aDataLen);
+      aCallback();
+    });
 }

@@ -52,7 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=390488
   function checkForStacks() {
     matches(getStack1(), /checkForStacks .* onclick .* simulateClick/,
             "Stack from walking caller chain should be correct");
-    isnot(getStack2().indexOf("simulateClick()@"),  -1,
+    isnot(getStack2().indexOf("simulateClick@"),  -1,
           "Stack from |new Error().stack| should include simulateClick");
   }
 

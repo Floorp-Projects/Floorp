@@ -60,56 +60,10 @@ txList::~txList() {
     clear();
 } //-- ~txList
 
-nsresult txList::insert(int index, void* objPtr)
-{
-    if (index >= itemCount) {
-        return insertBefore(objPtr, 0);
-    }
-    // add inside the list
-    ListItem* nextItem = firstItem;
-    for (int i = 0; i < index; i++)
-        nextItem = nextItem->nextItem;
-    return insertBefore(objPtr, nextItem);
-} //-- insert
-
 nsresult txList::add(void* objPtr)
 {
     return insertBefore(objPtr, 0);
 } //-- add
-
-/**
- * Returns the object located at the given index. This may
- * be slow or fast depending on the implementation.
- * Note:
- * Currently this list is implemented via a linked list, so
- * this method will be slow (unless the list only has a couple
- * members) as it will need traverse the links each time
- * @return the object located at the given index
-**/
-void* txList::get(int index) {
-
-    if (index < 0 || index >= itemCount)
-        return 0;
-
-    int c = 0;
-    ListItem* item = firstItem;
-    while ((c != index) && item) {
-        item = item->nextItem;
-        ++c;
-    }
-
-    if (item)
-        return item->objPtr;
-    return 0;
-} //-- get(int)
-
-txList::ListItem* txList::getFirstItem() {
-    return firstItem;
-} //-- getFirstItem
-
-txList::ListItem* txList::getLastItem() {
-    return lastItem;
-} //-- getLastItem
 
 /**
  * Returns the number of items in this txList
@@ -178,20 +132,6 @@ nsresult txList::insertBefore(void* objPtr, ListItem* refItem)
     
     return NS_OK;
 } //-- insertBefore
-
-void* txList::remove(void* objPtr) {
-   ListItem* item = firstItem;
-   while (item) {
-      if (item->objPtr == objPtr) {
-         remove(item);
-         delete item;
-         return objPtr;
-      }
-      item = item->nextItem;
-   }
-   // not in list
-   return 0;
-} //-- remove
 
 txList::ListItem* txList::remove(ListItem* item) {
 
@@ -290,21 +230,6 @@ bool txListIterator::hasNext() {
 } //-- hasNext
 
 /**
- * Returns true if a successful call to the previous() method can be made
- * @return true if a successful call to the previous() method can be made,
- * otherwise false
-**/
-bool txListIterator::hasPrevious() {
-    bool hasPrevious = false;
-    if (currentItem)
-        hasPrevious = (currentItem->prevItem != 0);
-    else if (atEndOfList)
-        hasPrevious = (list->lastItem != 0);
-
-    return hasPrevious;
-} //-- hasPrevious
-
-/**
  * Returns the next Object pointer in the list
 **/
 void* txListIterator::next() {
@@ -353,40 +278,6 @@ void* txListIterator::current() {
 
     return 0;
 } //-- current
-
-/**
- * Moves the specified number of steps
-**/
-void* txListIterator::advance(int i) {
-
-    void* obj = 0;
-
-    if (i > 0) {
-        if (!currentItem && !atEndOfList) {
-            currentItem = list->firstItem;
-            --i;
-        }
-        for (; currentItem && i > 0; i--)
-            currentItem = currentItem->nextItem;
-        
-        atEndOfList = currentItem == 0;
-    }
-    else if (i < 0) {
-        if (!currentItem && atEndOfList) {
-            currentItem = list->lastItem;
-            ++i;
-        }
-        for (; currentItem && i < 0; i++)
-            currentItem = currentItem->prevItem;
-
-        atEndOfList = false;
-    }
-
-    if (currentItem)
-        obj = currentItem->objPtr;
-
-    return obj;
-} //-- advance
 
 /**
  * Removes the Object last returned by the next() or previous() methods;

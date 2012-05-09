@@ -1,3 +1,0 @@
-include extensions/jstests.list
-include Object/jstests.list
-include RegExp/jstests.list

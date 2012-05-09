@@ -64,7 +64,6 @@ class JS_FRIEND_API(ProxyHandler) {
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props) = 0;
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) = 0;
     virtual bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props) = 0;
-    virtual bool fix(JSContext *cx, JSObject *proxy, Value *vp) = 0;
 
     /* ES5 Harmony derived proxy traps. */
     virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
@@ -117,7 +116,6 @@ class Proxy {
     static bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props);
     static bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     static bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props);
-    static bool fix(JSContext *cx, JSObject *proxy, Value *vp);
 
     /* ES5 Harmony derived proxy traps. */
     static bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
@@ -197,6 +195,20 @@ GetProxyExtra(const JSObject *obj, size_t n)
 {
     JS_ASSERT(IsProxy(obj));
     return GetReservedSlot(obj, JSSLOT_PROXY_EXTRA + n);
+}
+
+inline void
+SetProxyHandler(JSObject *obj, ProxyHandler *handler)
+{
+    JS_ASSERT(IsProxy(obj));
+    SetReservedSlot(obj, JSSLOT_PROXY_HANDLER, PrivateValue(handler));
+}
+
+inline void
+SetProxyPrivate(JSObject *obj, const Value &value)
+{
+    JS_ASSERT(IsProxy(obj));
+    SetReservedSlot(obj, JSSLOT_PROXY_PRIVATE, value);
 }
 
 inline void

@@ -42,6 +42,13 @@ var Cc = Components.classes, Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+const NOTIFICATION_EVENT_DISMISSED = "dismissed";
+const NOTIFICATION_EVENT_REMOVED = "removed";
+const NOTIFICATION_EVENT_SHOWN = "shown";
+
+const ICON_SELECTOR = ".notification-anchor-icon";
+const ICON_ATTRIBUTE_SHOWING = "showing";
+
 /**
  * Notification object describes a single popup notification.
  *
@@ -60,6 +67,16 @@ function Notification(id, message, anchorID, mainAction, secondaryActions,
 }
 
 Notification.prototype = {
+
+  id: null,
+  message: null,
+  anchorID: null,
+  mainAction: null,
+  secondaryActions: null,
+  browser: null,
+  owner: null,
+  options: null,
+
   /**
    * Removes the notification and updates the popup accordingly if needed.
    */
@@ -68,15 +85,18 @@ Notification.prototype = {
   },
 
   get anchorElement() {
-    if (!this.owner.iconBox)
+    let iconBox = this.owner.iconBox;
+    if (!iconBox)
       return null;
 
     let anchorElement = null;
     if (this.anchorID)
-      anchorElement = this.owner.iconBox.querySelector("#"+this.anchorID);
+      anchorElement = iconBox.querySelector("#"+this.anchorID);
 
+    // Use a default anchor icon if it's available
     if (!anchorElement)
-      anchorElement = this.owner.iconBox;
+      anchorElement = iconBox.querySelector("#default-notification-icon") ||
+                      iconBox;
 
     return anchorElement;
   }
@@ -110,35 +130,31 @@ function PopupNotifications(tabbrowser, panel, iconBox) {
   this.window = tabbrowser.ownerDocument.defaultView;
   this.panel = panel;
   this.tabbrowser = tabbrowser;
-
-  this._onIconBoxCommand = this._onIconBoxCommand.bind(this);
   this.iconBox = iconBox;
 
-  this.panel.addEventListener("popuphidden", this._onPopupHidden.bind(this), true);
+  this.panel.addEventListener("popuphidden", this, true);
 
-  let self = this;
-  function updateFromListeners() {
-    // setTimeout(..., 0) needed, otherwise openPopup from "activate" event
-    // handler results in the popup being hidden again for some reason...
-    self.window.setTimeout(function () {
-      self._update();
-    }, 0);
-  }
-  this.window.addEventListener("activate", updateFromListeners, true);
-  this.tabbrowser.tabContainer.addEventListener("TabSelect", updateFromListeners, true);
+  this.window.addEventListener("activate", this, true);
+  this.tabbrowser.tabContainer.addEventListener("TabSelect", this, true);
 }
 
 PopupNotifications.prototype = {
+
+  window: null,
+  panel: null,
+  tabbrowser: null,
+
+  _iconBox: null,
   set iconBox(iconBox) {
     // Remove the listeners on the old iconBox, if needed
     if (this._iconBox) {
-      this._iconBox.removeEventListener("click", this._onIconBoxCommand, false);
-      this._iconBox.removeEventListener("keypress", this._onIconBoxCommand, false);
+      this._iconBox.removeEventListener("click", this, false);
+      this._iconBox.removeEventListener("keypress", this, false);
     }
     this._iconBox = iconBox;
     if (iconBox) {
-      iconBox.addEventListener("click", this._onIconBoxCommand, false);
-      iconBox.addEventListener("keypress", this._onIconBoxCommand, false);
+      iconBox.addEventListener("click", this, false);
+      iconBox.addEventListener("keypress", this, false);
     }
   },
   get iconBox() {
@@ -159,7 +175,7 @@ PopupNotifications.prototype = {
   getNotification: function PopupNotifications_getNotification(id, browser) {
     let n = null;
     let notifications = this._getNotificationsForBrowser(browser || this.tabbrowser.selectedBrowser);
-    notifications.some(function(x) x.id == id && (n = x))
+    notifications.some(function(x) x.id == id && (n = x));
     return n;
   },
 
@@ -298,7 +314,7 @@ PopupNotifications.prototype = {
           notification.options.persistence--;
         return true;
       }
-      
+
       // The persistence option allows a notification to persist across multiple
       // page loads
       if ("persistence" in notification.options &&
@@ -313,7 +329,7 @@ PopupNotifications.prototype = {
         return true;
       }
 
-      this._fireCallback(notification, "removed");
+      this._fireCallback(notification, NOTIFICATION_EVENT_REMOVED);
       return false;
     }, this);
 
@@ -334,9 +350,33 @@ PopupNotifications.prototype = {
       this._update();
   },
 
+  handleEvent: function (aEvent) {
+    switch (aEvent.type) {
+      case "popuphidden":
+        this._onPopupHidden(aEvent);
+        break;
+      case "activate":
+      case "TabSelect":
+        let self = this;
+        // setTimeout(..., 0) needed, otherwise openPopup from "activate" event
+        // handler results in the popup being hidden again for some reason...
+        this.window.setTimeout(function () {
+          self._update();
+        }, 0);
+        break;
+      case "click":
+      case "keypress":
+        this._onIconBoxCommand(aEvent);
+        break;
+    }
+  },
+
 ////////////////////////////////////////////////////////////////////////////////
 // Utility methods
 ////////////////////////////////////////////////////////////////////////////////
+
+  _ignoreDismissal: null,
+  _currentAnchorElement: null,
 
   /**
    * Gets and sets notifications for the currently selected browser.
@@ -359,11 +399,13 @@ PopupNotifications.prototype = {
     if (index == -1)
       return;
 
+    notification.anchorElement.removeAttribute(ICON_ATTRIBUTE_SHOWING);
+
     // remove the notification
     notifications.splice(index, 1);
-    this._fireCallback(notification, "removed");
+    this._fireCallback(notification, NOTIFICATION_EVENT_REMOVED);
   },
-  
+
   /**
    * Dismisses the notification without removing it.
    */
@@ -459,7 +501,7 @@ PopupNotifications.prototype = {
 
     this.panel.openPopup(anchorElement, "bottomcenter topleft");
     notificationsToShow.forEach(function (n) {
-      this._fireCallback(n, "shown");
+      this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
     }, this);
   },
 
@@ -468,21 +510,27 @@ PopupNotifications.prototype = {
    * selection changes.
    */
   _update: function PopupNotifications_update(anchor) {
+    if (this.iconBox) {
+      // hide icons of the previous tab.
+      this._hideIcons();
+    }
+
     let anchorElement, notificationsToShow = [];
-    let haveNotifications = this._currentNotifications.length > 0;
+    let currentNotifications = this._currentNotifications;
+    let haveNotifications = currentNotifications.length > 0;
     if (haveNotifications) {
       // Only show the notifications that have the passed-in anchor (or the
       // first notification's anchor, if none was passed in). Other
       // notifications will be shown once these are dismissed.
-      anchorElement = anchor || this._currentNotifications[0].anchorElement;
+      anchorElement = anchor || currentNotifications[0].anchorElement;
 
       if (this.iconBox) {
+        this._showIcons(currentNotifications);
         this.iconBox.hidden = false;
-        this.iconBox.setAttribute("anchorid", anchorElement.id);
       }
 
       // Also filter out notifications that have been dismissed.
-      notificationsToShow = this._currentNotifications.filter(function (n) {
+      notificationsToShow = currentNotifications.filter(function (n) {
         return !n.dismissed && n.anchorElement == anchorElement &&
                !n.options.neverShow;
       });
@@ -502,6 +550,22 @@ PopupNotifications.prototype = {
       // to not having any showable notifications)
       if (this.iconBox && !haveNotifications)
         this.iconBox.hidden = true;
+    }
+  },
+
+  _showIcons: function PopupNotifications_showIcons(aCurrentNotifications) {
+    for (let notification of aCurrentNotifications) {
+      let anchorElm = notification.anchorElement;
+      if (anchorElm) {
+        anchorElm.setAttribute(ICON_ATTRIBUTE_SHOWING, "true");
+      }
+    }
+  },
+
+  _hideIcons: function PopupNotifications_hideIcons() {
+    let icons = this.iconBox.querySelectorAll(ICON_SELECTOR);
+    for (let icon of icons) {
+      icon.removeAttribute(ICON_ATTRIBUTE_SHOWING);
     }
   },
 
@@ -563,15 +627,18 @@ PopupNotifications.prototype = {
       if (notifications.indexOf(notificationObj) == -1)
         return;
 
-      // Do not mark the notification as dismissed or fire "dismissed" if the
-      // notification is removed. 
+      // Do not mark the notification as dismissed or fire NOTIFICATION_EVENT_DISMISSED
+      // if the notification is removed.
       if (notificationObj.options.removeOnDismissal)
         this._remove(notificationObj);
       else {
         notificationObj.dismissed = true;
-        this._fireCallback(notificationObj, "dismissed");
+        this._fireCallback(notificationObj, NOTIFICATION_EVENT_DISMISSED);
       }
     }, this);
+
+    while (this.panel.lastChild)
+      this.panel.removeChild(this.panel.lastChild);
 
     this._update();
   },
@@ -614,5 +681,5 @@ PopupNotifications.prototype = {
 
   _notify: function PopupNotifications_notify(topic) {
     Services.obs.notifyObservers(null, "PopupNotifications-" + topic, "");
-  }
-}
+  },
+};

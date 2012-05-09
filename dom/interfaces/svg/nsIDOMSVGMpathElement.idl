@@ -43,7 +43,7 @@
  * http://www.w3.org/TR/SVG/animate.html#mpathElement
  */
 
-[scriptable, uuid(f1fb5fb2-efa7-455c-b307-8d2203badadd)]
+[scriptable, uuid(67DB3F0C-2A3F-4D56-984F-3D30752FAF37)]
 interface nsIDOMSVGMpathElement
   : nsIDOMSVGElement
 /*

@@ -183,6 +183,8 @@ public:
     eDOMEvents_beforeresize,
     eDOMEvents_mozfullscreenchange,
     eDOMEvents_mozfullscreenerror,
+    eDOMEvents_mozpointerlockchange,
+    eDOMEvents_mozpointerlockerror,
     eDOMEvents_MozSwipeGesture,
     eDOMEvents_MozMagnifyGestureStart,
     eDOMEvents_MozMagnifyGestureUpdate,
@@ -207,7 +209,9 @@ public:
     eDOMEvents_animationend,
     eDOMEvents_animationiteration,
     eDOMEvents_devicemotion,
-    eDOMEvents_deviceorientation
+    eDOMEvents_deviceorientation,
+    eDOMEvents_deviceproximity,
+    eDOMEvents_devicelight
   };
 
   nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent);

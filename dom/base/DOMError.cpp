@@ -8,6 +8,7 @@
 
 #include "mozilla/Util.h"
 #include "nsDOMClassInfo.h"
+#include "nsDOMException.h"
 
 using mozilla::ArrayLength;
 using mozilla::dom::DOMError;
@@ -21,6 +22,19 @@ struct NameMap
 };
 
 } // anonymous namespace
+
+// static
+already_AddRefed<nsIDOMDOMError>
+DOMError::CreateForNSResult(nsresult aRv)
+{
+  const char* name;
+  const char* message;
+  aRv = NS_GetNameAndMessageForDOMNSResult(aRv, &name, &message);
+  if (NS_FAILED(aRv) || !name) {
+    return nsnull;
+  }
+  return CreateWithName(NS_ConvertASCIItoUTF16(name));
+}
 
 // static
 already_AddRefed<nsIDOMDOMError>

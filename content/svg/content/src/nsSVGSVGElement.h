@@ -196,8 +196,31 @@ public:
   void SyncWidthOrHeight(nsIAtom* aName, nsSVGElement *aTarget) const;
 
   // public helpers:
+
+  /**
+   * Returns true if this element has a base/anim value for its "viewBox"
+   * attribute that defines a viewBox rectangle with finite values.
+   *
+   * Note that this does not check whether we need to synthesize a viewBox,
+   * so you must call ShouldSynthesizeViewBox() if you need to check that too.
+   *
+   * Note also that this method does not pay attention to whether the width or
+   * height values of the viewBox rect are positive!
+   */
+  bool HasViewBox() const {
+    return mViewBox.IsExplicitlySet();
+  }
+
+  /**
+   * Returns true if we should synthesize a viewBox for ourselves (that is, if
+   * we're the root element in an image document, and we're not currently being
+   * painted for an <svg:image> element).
+   *
+   * Only call this method if HasViewBox() returns false.
+   */
+  bool ShouldSynthesizeViewBox() const;
+
   gfxMatrix GetViewBoxTransform() const;
-  bool      HasValidViewbox() const { return mViewBox.IsValid(); }
 
   // This services any pending notifications for the transform on on this root
   // <svg> node needing to be recalculated.  (Only applicable in
@@ -217,6 +240,8 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 
+  virtual nsIDOMNode* AsDOMNode() { return this; }
+
 private:
   // Methods for <image> elements to override my "PreserveAspectRatio" value.
   // These are private so that only our friends (nsSVGImageFrame in
@@ -224,12 +249,6 @@ private:
   void SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR);
   void ClearImageOverridePreserveAspectRatio();
   const SVGPreserveAspectRatio* GetImageOverridePreserveAspectRatio() const;
-
-  // Returns true if we should synthesize a viewBox for ourselves (that is,
-  // if we're the outermost <svg> in an image document, and we're not currently
-  // being painted by an <svg:image> element). This method also assumes that we
-  // lack a valid viewBox attribute.
-  bool ShouldSynthesizeViewBox() const;
 
 protected:
   // nsSVGElement overrides

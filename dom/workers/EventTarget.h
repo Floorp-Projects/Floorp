@@ -11,9 +11,10 @@
 // I hate having to export this...
 #include "mozilla/dom/workers/bindings/EventListenerManager.h"
 
-#include "mozilla/dom/bindings/Nullable.h"
+#include "mozilla/dom/Nullable.h"
+#include "mozilla/ErrorResult.h"
 
-using namespace mozilla::dom::bindings;
+using namespace mozilla::dom;
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -38,24 +39,25 @@ public:
 
   void
   AddEventListener(const nsAString& aType, JSObject* aListener,
-                   bool aCapture, Nullable<bool> aWantsUntrusted, nsresult& aRv);
+                   bool aCapture, Nullable<bool> aWantsUntrusted,
+                   ErrorResult& aRv);
 
   void
   RemoveEventListener(const nsAString& aType, JSObject* aListener,
-                      bool aCapture, nsresult& aRv);
+                      bool aCapture, ErrorResult& aRv);
 
   bool
-  DispatchEvent(JSObject* aEvent, nsresult& aRv) const
+  DispatchEvent(JSObject* aEvent, ErrorResult& aRv) const
   {
     return mListenerManager.DispatchEvent(GetJSContext(), *this, aEvent, aRv);
   }
 
   JSObject*
-  GetEventListener(const nsAString& aType, nsresult& aRv) const;
+  GetEventListener(const nsAString& aType, ErrorResult& aRv) const;
 
   void
   SetEventListener(const nsAString& aType, JSObject* aListener,
-                   nsresult& aRv);
+                   ErrorResult& aRv);
 
   bool
   HasListeners() const

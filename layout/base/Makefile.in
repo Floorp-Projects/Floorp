@@ -80,11 +80,13 @@ EXPORTS		= \
 		nsIReflowCallback.h \
 		nsLayoutErrors.h \
 		nsLayoutUtils.h \
+		nsPresArena.h \
 		nsPresContext.h \
 		nsPresState.h \
 		nsRefreshDriver.h \
 		nsStyleChangeList.h \
 		nsStyleConsts.h \
+		StackArena.h \
 		$(NULL)
 
 EXPORTS_mozilla = \
@@ -119,6 +121,7 @@ CPPSRCS		= \
 		nsStyleChangeList.cpp \
 		nsStyleSheetService.cpp \
 		PaintTracker.cpp \
+		StackArena.cpp \
 		$(NULL)
 
 ifndef MOZ_XUL

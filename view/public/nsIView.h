@@ -63,8 +63,8 @@ enum nsViewVisibility {
 };
 
 #define NS_IVIEW_IID    \
-  { 0xda62efbf, 0x0711, 0x4b79, \
-    { 0x87, 0x85, 0x9e, 0xec, 0xed, 0xf5, 0xb0, 0x32 } }
+  { 0x697948d2, 0x3f10, 0x407d, \
+    { 0xb8, 0x94, 0x9f, 0x36, 0xd2, 0x11, 0xdb, 0xf1 } }
 
 // Public view flags
 
@@ -166,17 +166,6 @@ public:
   nsRect GetDimensions() const {
     nsRect r = mDimBounds; r.MoveBy(-mPosX, -mPosY); return r;
   }
-
-  /**
-   * Set the dimensions at which invalidations are clipped, which can
-   * be different than |GetDimensions()|.  |aRect| is relative to
-   * |this|.  It can be null, in which case invalidations return to
-   * being clipped to the view dimensions.
-   *
-   * The caller is responsible for invalidating the area that may lie
-   * outside the view dimensions but inside |aRect| after this call.
-   */
-  void SetInvalidationDimensions(const nsRect* aRect);
 
   /**
    * Get the offset between the coordinate systems of |this| and aOther.

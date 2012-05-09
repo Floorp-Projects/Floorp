@@ -1,15 +1,9 @@
 #include "nsISupports.idl"
 #include "nsIDOMWindow.idl"
 
-[scriptable, uuid(38b5c83a-3e8d-45c2-8311-6e36bd5116c0)]
+[scriptable, uuid(56fd8e18-a5cf-4e7a-92ba-4f68b4ad50ac)]
 interface nsIAndroidDrawMetadataProvider : nsISupports {
   AString getDrawMetadata();
-
-  /*
-   * Returns true if the presentation shell corresponding to the currently-viewed document is
-   * suppressing painting (which occurs during page transitions) and false otherwise.
-   */
-  boolean paintingSuppressed();
 };
 
 [scriptable, uuid(0843f3c1-043e-4c64-9d8c-091370548c05)]

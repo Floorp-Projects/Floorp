@@ -411,10 +411,12 @@ protected:
   bool     HandleListSelection(nsIDOMEvent * aDOMEvent, PRInt32 selectedIndex);
   void     InitSelectionRange(PRInt32 aClickedIndex);
 
+public:
   nsSelectsAreaFrame* GetOptionsContainer() const {
     return static_cast<nsSelectsAreaFrame*>(GetScrolledFrame());
   }
 
+protected:
   nscoord HeightOfARow() {
     return GetOptionsContainer()->HeightOfARow();
   }

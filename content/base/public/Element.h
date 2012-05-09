@@ -88,9 +88,9 @@ namespace dom {
 class Link;
 
 // IID for the dom::Element interface
-#define NS_ELEMENT_IID      \
-{ 0xa1588efb, 0x5a84, 0x49cd, \
-  { 0x99, 0x1a, 0xac, 0x84, 0x9d, 0x92, 0x05, 0x0f } }
+#define NS_ELEMENT_IID \
+{ 0xab6554b0, 0xb675, 0x45a7, \
+  { 0xac, 0x23, 0x44, 0x1c, 0x94, 0x5f, 0x3b, 0xee } }
 
 class Element : public nsIContent
 {
@@ -170,6 +170,53 @@ public:
    * Clear all style state locks on this element.
    */
   void ClearStyleStateLocks();
+
+  /**
+   * Get the inline style rule, if any, for this element.
+   */
+  virtual css::StyleRule* GetInlineStyleRule() = 0;
+
+  /**
+   * Set the inline style rule for this element. This will send an appropriate
+   * AttributeChanged notification if aNotify is true.
+   */
+  virtual nsresult SetInlineStyleRule(css::StyleRule* aStyleRule,
+                                      const nsAString* aSerialized,
+                                      bool aNotify) = 0;
+
+  /**
+   * Get the SMIL override style rule for this element. If the rule hasn't been
+   * created, this method simply returns null.
+   */
+  virtual css::StyleRule* GetSMILOverrideStyleRule() = 0;
+
+  /**
+   * Set the SMIL override style rule for this element. If aNotify is true, this
+   * method will notify the document's pres context, so that the style changes
+   * will be noticed.
+   */
+  virtual nsresult SetSMILOverrideStyleRule(css::StyleRule* aStyleRule,
+                                            bool aNotify) = 0;
+
+  /**
+   * Returns a new nsISMILAttr that allows the caller to animate the given
+   * attribute on this element.
+   *
+   * The CALLER OWNS the result and is responsible for deleting it.
+   */
+  virtual nsISMILAttr* GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName) = 0;
+
+  /**
+   * Get the SMIL override style for this element. This is a style declaration
+   * that is applied *after* the inline style, and it can be used e.g. to store
+   * animated style values.
+   *
+   * Note: This method is analogous to the 'GetStyle' method in
+   * nsGenericHTMLElement and nsStyledElement.
+   *
+   * TODO: Bug 744157 - All callers QI to nsICSSDeclaration.
+   */
+  virtual nsIDOMCSSStyleDeclaration* GetSMILOverrideStyle() = 0;
 
 protected:
   /**

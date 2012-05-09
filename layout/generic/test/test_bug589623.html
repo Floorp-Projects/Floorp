@@ -23,6 +23,7 @@ function t(m) {
     sel[m]();
     ok(false, "Should not be here");
   } catch(e) {
+    is(e.name, "InvalidStateError", "Should be an InvalidStateError");
     ok(e instanceof DOMException, "Should be a DOMException");
     is(e.code, DOMException.INVALID_STATE_ERR, "Should be an INVALID_STATE_ERR");
   }

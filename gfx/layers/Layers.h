@@ -85,6 +85,7 @@ class CanvasLayer;
 class ReadbackLayer;
 class ReadbackProcessor;
 class ShadowLayer;
+class ShadowableLayer;
 class ShadowLayerForwarder;
 class ShadowLayerManager;
 class SpecificLayerAttributes;
@@ -109,6 +110,8 @@ public:
     , mContentSize(0, 0)
     , mViewportScrollOffset(0, 0)
     , mScrollId(NULL_SCROLL_ID)
+    , mCSSContentSize(0, 0)
+    , mResolution(1, 1)
   {}
 
   // Default copy ctor and operator= are fine
@@ -146,6 +149,14 @@ public:
   nsIntPoint mViewportScrollOffset;
   nsIntRect mDisplayPort;
   ViewID mScrollId;
+
+  // Consumers often want to know the size before scaling to pixels
+  // so we record this size as well.
+  gfx::Size mCSSContentSize;
+
+  // This represents the resolution at which the associated layer
+  // will been rendered.
+  gfxSize mResolution;
 };
 
 #define MOZ_LAYER_DECL_NAME(n, e)                           \
@@ -449,6 +460,12 @@ public:
                          gfxASurface::gfxImageFormat imageFormat);
 
   /**
+   * Which image format to use as an alpha mask with this layer manager.
+   */
+  virtual gfxASurface::gfxImageFormat MaskImageFormat() 
+  { return gfxASurface::ImageFormatA8; }
+
+  /**
    * Creates a DrawTarget which is optimized for inter-operating with this
    * layermanager.
    */
@@ -687,6 +704,36 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
+   * Set a layer to mask this layer.
+   *
+   * The mask layer should be applied using its effective transform (after it
+   * is calculated by ComputeEffectiveTransformForMaskLayer), this should use
+   * this layer's parent's transform and the mask layer's transform, but not
+   * this layer's. That is, the mask layer is specified relative to this layer's
+   * position in it's parent layer's coord space.
+   * Currently, only 2D translations are supported for the mask layer transform.
+   *
+   * Ownership of aMaskLayer passes to this.
+   * Typical use would be an ImageLayer with an alpha image used for masking.
+   * See also ContainerState::BuildMaskLayer in FrameLayerBuilder.cpp.
+   */
+  void SetMaskLayer(Layer* aMaskLayer)
+  {
+#ifdef DEBUG
+    if (aMaskLayer) {
+      gfxMatrix maskTransform;
+      bool maskIs2D = aMaskLayer->GetTransform().CanDraw2D(&maskTransform);
+      NS_ASSERTION(maskIs2D && maskTransform.HasOnlyIntegerTranslation(),
+                   "Mask layer has invalid transform.");
+    }
+#endif
+
+    mMaskLayer = aMaskLayer;
+    Mutated();
+  }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
    * Tell this layer what its transform should be. The transformation
    * is applied when compositing the layer into its parent container.
    * XXX Currently only transformations corresponding to 2D affine transforms
@@ -712,6 +759,7 @@ public:
   virtual Layer* GetLastChild() { return nsnull; }
   const gfx3DMatrix& GetTransform() { return mTransform; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
+  Layer* GetMaskLayer() { return mMaskLayer; }
 
   /**
    * DRAWING PHASE ONLY
@@ -794,6 +842,12 @@ public:
    */
   virtual ShadowLayer* AsShadowLayer() { return nsnull; }
 
+  /**
+   * Dynamic cast to a ShadowableLayer.  Return null if this is not a
+   * ShadowableLayer.  Can be used anytime.
+   */
+  virtual ShadowableLayer* AsShadowableLayer() { return nsnull; }
+
   // These getters can be used anytime.  They return the effective
   // values that should be used when drawing this layer to screen,
   // accounting for this layer possibly being a shadow.
@@ -826,7 +880,12 @@ public:
    * have already had ComputeEffectiveTransforms called.
    */
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) = 0;
-  
+    
+  /**
+   * computes the effective transform for a mask layer, if this layer has one
+   */
+  void ComputeEffectiveTransformForMaskLayer(const gfx3DMatrix& aTransformToSurface);
+
   /**
    * Calculate the scissor rect required when rendering this layer.
    * Returns a rectangle relative to the intermediate surface belonging to the
@@ -881,6 +940,11 @@ public:
 
   static bool IsLogEnabled() { return LayerManager::IsLogEnabled(); }
 
+#ifdef DEBUG
+  void SetDebugColorIndex(PRUint32 aIndex) { mDebugColorIndex = aIndex; }
+  PRUint32 GetDebugColorIndex() { return mDebugColorIndex; }
+#endif
+
 protected:
   Layer(LayerManager* aManager, void* aImplData) :
     mManager(aManager),
@@ -888,11 +952,13 @@ protected:
     mNextSibling(nsnull),
     mPrevSibling(nsnull),
     mImplData(aImplData),
+    mMaskLayer(nsnull),
     mOpacity(1.0),
     mContentFlags(0),
     mUseClipRect(false),
     mUseTileSourceRect(false),
-    mIsFixedPosition(false)
+    mIsFixedPosition(false),
+    mDebugColorIndex(0)
     {}
 
   void Mutated() { mManager->Mutated(this); }
@@ -930,6 +996,7 @@ protected:
   Layer* mNextSibling;
   Layer* mPrevSibling;
   void* mImplData;
+  nsRefPtr<Layer> mMaskLayer;
   LayerUserDataSet mUserData;
   nsIntRegion mVisibleRegion;
   gfx3DMatrix mTransform;
@@ -941,6 +1008,7 @@ protected:
   bool mUseClipRect;
   bool mUseTileSourceRect;
   bool mIsFixedPosition;
+  DebugOnly<PRUint32> mDebugColorIndex;
 };
 
 /**
@@ -1005,6 +1073,7 @@ public:
                    "Residual translation out of range");
       mValidRegion.SetEmpty();
     }
+    ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
   bool UsedForReadback() { return mUsedForReadback; }
@@ -1196,6 +1265,7 @@ public:
     // Snap 0,0 to pixel boundaries, no extra internal transform.
     gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
     mEffectiveTransform = SnapTransform(idealTransform, gfxRect(0, 0, 0, 0), nsnull);
+    ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
 protected:
@@ -1286,6 +1356,7 @@ public:
         SnapTransform(GetLocalTransform(), gfxRect(0, 0, mBounds.width, mBounds.height),
                       nsnull)*
         SnapTransform(aTransformToSurface, gfxRect(0, 0, 0, 0), nsnull);
+    ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
 protected:

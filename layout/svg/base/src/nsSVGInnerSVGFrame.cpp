@@ -134,7 +134,7 @@ nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
     if (!(aFlags & TRANSFORM_CHANGED) &&
         (svg->mLengthAttributes[nsSVGSVGElement::X].IsPercentage() ||
          svg->mLengthAttributes[nsSVGSVGElement::Y].IsPercentage() ||
-         (svg->mViewBox.IsValid() &&
+         (svg->HasViewBox() &&
           (svg->mLengthAttributes[nsSVGSVGElement::WIDTH].IsPercentage() ||
            svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].IsPercentage())))) {
     
@@ -175,7 +175,7 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
         aAttribute == nsGkAtoms::height) {
 
       nsSVGSVGElement* svg = static_cast<nsSVGSVGElement*>(mContent);
-      if (svg->mViewBox.IsValid()) {
+      if (svg->HasViewBox()) {
 
         // make sure our cached transform matrix gets (lazily) updated
         mCanvasTM = nsnull;
@@ -236,9 +236,14 @@ nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
 // nsISVGSVGFrame methods:
 
 void
-nsSVGInnerSVGFrame::NotifyViewportChange()
+nsSVGInnerSVGFrame::NotifyViewportOrTransformChanged(PRUint32 aFlags)
 {
-  NS_ERROR("Inner SVG frames should not get Viewport changes.");
+  // The dimensions of inner-<svg> frames are purely defined by their "width"
+  // and "height" attributes, and transform changes can only occur as a result
+  // of changes to their "width", "height", "viewBox" or "preserveAspectRatio"
+  // attributes. Changes to all of these attributes are handled in
+  // AttributeChanged(), so we should never be called.
+  NS_ERROR("Not called for nsSVGInnerSVGFrame");
 }
 
 //----------------------------------------------------------------------

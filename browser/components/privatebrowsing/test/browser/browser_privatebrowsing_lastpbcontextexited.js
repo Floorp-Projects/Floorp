@@ -37,7 +37,7 @@
 function test() {
   // We need to open a new window for this so that its docshell would get destroyed
   // when clearing the PB mode flag.
-  let newWin = window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no");
+  let newWin = window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no");
   waitForExplicitFinish();
   SimpleTest.waitForFocus(function() {
     let notificationCount = 0;

@@ -80,6 +80,13 @@ const IS_ANDROID = true;
 const IS_ANDROID = false;
 #endif
 
+
+#ifdef MOZ_VERIFY_MAR_SIGNATURE
+const IS_MAR_CHECKS_ENABLED = true;
+#else
+const IS_MAR_CHECKS_ENABLED = false;
+#endif
+
 const URL_HOST = "http://localhost:4444/";
 const URL_PATH = "data";
 
@@ -87,11 +94,14 @@ const APPLY_TO_DIR_SUFFIX = "_applyToDir/";
 const HELPER_BIN_FILE = "TestAUSHelper" + BIN_SUFFIX;
 const MAR_COMPLETE_FILE = "data/complete.mar";
 const MAR_PARTIAL_FILE = "data/partial.mar";
+const MAR_OLD_VERSION_FILE = "data/old_version_mar.mar";
+const MAR_WRONG_CHANNEL_FILE = "data/wrong_product_channel_mar.mar";
 const UPDATER_BIN_FILE = "updater" + BIN_SUFFIX;
 const MAINTENANCE_SERVICE_BIN_FILE = "maintenanceservice.exe";
 const MAINTENANCE_SERVICE_INSTALLER_BIN_FILE = "maintenanceservice_installer.exe";
 const UPDATE_SETTINGS_INI_FILE = "update-settings.ini";
-const UPDATE_SETTINGS_CONTENTS = "[Settings]\nMAR_CHANNEL_ID=xpcshell-test\n"
+const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
+                                 "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n"
 const UPDATES_DIR_SUFFIX = "_mar";
 
 const LOG_COMPLETE_SUCCESS = "data/complete_log_success";

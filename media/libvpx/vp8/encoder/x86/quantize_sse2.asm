@@ -137,17 +137,17 @@ sym(vp8_regular_quantize_b_sse2):
     ; if (x >= zbin)
     sub         cx, WORD PTR[rdx]           ; x - zbin
     lea         rdx, [rdx + 2]              ; zbin_boost_ptr++
-    jl          rq_zigzag_loop_%1           ; x < zbin
+    jl          .rq_zigzag_loop_%1           ; x < zbin
 
     movsx       edi, WORD PTR[rsp + temp_qcoeff + %1 * 2]
 
     ; downshift by quant_shift[rc]
     movsx       cx, BYTE PTR[rax + %1]      ; quant_shift_ptr[rc]
     sar         edi, cl                     ; also sets Z bit
-    je          rq_zigzag_loop_%1           ; !y
+    je          .rq_zigzag_loop_%1           ; !y
     mov         WORD PTR[rsp + qcoeff + %1 * 2], di ;qcoeff_ptr[rc] = temp_qcoeff[rc]
     mov         rdx, [rsp + zrun_zbin_boost] ; reset to b->zrun_zbin_boost
-rq_zigzag_loop_%1:
+.rq_zigzag_loop_%1:
 %endmacro
 ; in vp8_default_zig_zag1d order: see vp8/common/entropy.c
 ZIGZAG_LOOP  0
@@ -194,6 +194,8 @@ ZIGZAG_LOOP 15
     movdqa      [rdi], xmm0        ; store dqcoeff
     movdqa      [rdi + 16], xmm1
 
+    mov         rcx, [rsi + vp8_blockd_eob]
+
     ; select the last value (in zig_zag order) for EOB
     pcmpeqw     xmm2, xmm6
     pcmpeqw     xmm3, xmm6
@@ -214,7 +216,8 @@ ZIGZAG_LOOP 15
     pmaxsw      xmm2, xmm3
     movd        eax, xmm2
     and         eax, 0xff
-    mov         [rsi + vp8_blockd_eob], eax
+
+    mov         BYTE PTR [rcx], al          ; store eob
 
     ; begin epilog
     add         rsp, stack_size
@@ -337,6 +340,8 @@ sym(vp8_fast_quantize_b_sse2):
 
     pmaxsw      xmm1, xmm5
 
+    mov         rcx, [rsi + vp8_blockd_eob]
+
     ; now down to 8
     pshufd      xmm5, xmm1, 00001110b
 
@@ -354,7 +359,8 @@ sym(vp8_fast_quantize_b_sse2):
 
     movd        eax, xmm1
     and         eax, 0xff
-    mov         [rsi + vp8_blockd_eob], eax
+
+    mov         BYTE PTR [rcx], al          ; store eob
 
     ; begin epilog
 %if ABI_IS_32BIT

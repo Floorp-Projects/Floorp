@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test playback of media files that should play OK</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function onloadedmetadata(e) {
+  var t = e.target;
+  is(t.mozHasAudio, t.hasAudio, "The element reports the wrong audio property." + t.token);
+  manager.finished(t.token);
+}
+
+function startTest(test, token) {
+  var elemType = /^audio/.test(test.type) ? "audio" : "video";
+  var element = document.createElement(elemType);
+
+  element.token = token;
+  manager.started(token);
+
+  element.src = test.name;
+  element.name = test.name;
+  element.hasAudio = test.hasAudio;
+  element.addEventListener("loadedmetadata", onloadedmetadata, false);
+
+  element.load();
+}
+
+manager.runTests(gMozHasAudioTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

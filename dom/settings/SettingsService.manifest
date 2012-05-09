@@ -1,0 +1,5 @@
+component {3ab3cbc0-8513-11e1-b0c4-0800200c9a66} SettingsService.js
+contract @mozilla.org/settingsServiceLock;1 {3ab3cbc0-8513-11e1-b0c4-0800200c9a66}
+
+component {3458e760-8513-11e1-b0c4-0800200c9a66} SettingsService.js
+contract @mozilla.org/settingsService;1 {3458e760-8513-11e1-b0c4-0800200c9a66}

@@ -23,31 +23,30 @@ IF YOU MODIFY THIS FILE YOU ALSO NEED TO RUN generate_parser.sh.
 }
 
 %{
-#include "compiler/debug.h"
-#include "Context.h"
-#include "pp_tab.h"
+#include "Input.h"
+#include "Lexer.h"
+#include "Token.h"
 
-#define YY_USER_ACTION                        \
-    do {                                      \
-        yylloc->first_line = yylineno;        \
-        yylloc->first_column = yycolumn + 1;  \
-        yycolumn += yyleng;                   \
+typedef std::string YYSTYPE;
+typedef pp::Token::Location YYLTYPE;
+
+#define YY_USER_ACTION           \
+    do {                         \
+        yylloc->line = yylineno; \
+        yylloc->string = 0;      \
     } while(0);
 
 #define YY_INPUT(buf, result, maxSize) \
-    result = yyextra->readInput(buf, maxSize);
-    
-static std::string* extractMacroName(const char* str, int len);
+    result = readInput(buf, maxSize, yyscanner);
+
+static int readInput(char* buf, int maxSize, yyscan_t scanner);
 %}
 
 %option noyywrap nounput never-interactive
 %option yylineno reentrant bison-bridge bison-locations
-%option stack
 %option prefix="pp"
-%option extra-type="pp::Context*"
+%option extra-type="pp::Input*"
 
-HSPACE      [ \t]
-HASH        ^{HSPACE}*#{HSPACE}*
 IDENTIFIER  [_a-zA-Z][_a-zA-Z0-9]*
 PUNCTUATOR  [][<>(){}.+-/*%^|&~=!:;,?]
 
@@ -61,120 +60,98 @@ FRACTIONAL_CONSTANT  ({DIGIT}*"."{DIGIT}+)|({DIGIT}+".")
 
 %%
 
-{HASH} { return HASH; }
-
-{HASH}define{HSPACE}+{IDENTIFIER}/[ \t\n] {
-    yylval->sval = extractMacroName(yytext, yyleng);
-    return HASH_DEFINE_OBJ;
-}
-{HASH}define{HSPACE}+{IDENTIFIER}/"(" {
-    yylval->sval = extractMacroName(yytext, yyleng);
-    return HASH_DEFINE_FUNC;
-}
-{HASH}undef{HSPACE}+ { return HASH_UNDEF; }
-
-{HASH}if { return HASH_IF; }
-{HASH}ifdef { return HASH_IFDEF; }
-{HASH}ifndef { return HASH_IFNDEF; }
-{HASH}else { return HASH_ELSE; }
-{HASH}elif { return HASH_ELIF; }
-{HASH}endif { return HASH_ENDIF; }
-"defined" { return DEFINED; }
-
-{HASH}error { return HASH_ERROR; }
-{HASH}pragma { return HASH_PRAGMA; }
-{HASH}extension { return HASH_EXTENSION; }
-{HASH}version { return HASH_VERSION; }
-{HASH}line { return HASH_LINE; }
+# { return yytext[0]; }
 
 {IDENTIFIER} {
-    yylval->sval = new std::string(yytext, yyleng);
-    return IDENTIFIER;
+    yylval->assign(yytext, yyleng);
+    return pp::Token::IDENTIFIER;
 }
 
 {DECIMAL_CONSTANT}|{OCTAL_CONSTANT}|{HEXADECIMAL_CONSTANT} {
-    yylval->sval = new std::string(yytext, yyleng);
-    return INT_CONSTANT;
+    yylval->assign(yytext, yyleng);
+    return pp::Token::CONST_INT;
 }
 
 ({DIGIT}+{EXPONENT_PART})|({FRACTIONAL_CONSTANT}{EXPONENT_PART}?) {
-    yylval->sval = new std::string(yytext, yyleng);
-    return FLOAT_CONSTANT;
+    yylval->assign(yytext, yyleng);
+    return pp::Token::CONST_FLOAT;
 }
+
+"++"  { return pp::Token::OP_INC; }
+"--"  { return pp::Token::OP_DEC; }
+"<<"  { return pp::Token::OP_LEFT; }
+">>"  { return pp::Token::OP_RIGHT; }
+"<="  { return pp::Token::OP_LE; }
+">="  { return pp::Token::OP_GE; }
+"=="  { return pp::Token::OP_EQ; }
+"!="  { return pp::Token::OP_NE; }
+"&&"  { return pp::Token::OP_AND; }
+"^^"  { return pp::Token::OP_XOR; }
+"||"  { return pp::Token::OP_OR; }
+"+="  {  return pp::Token::OP_ADD_ASSIGN; }
+"-="  {  return pp::Token::OP_SUB_ASSIGN; }
+"*="  {  return pp::Token::OP_MUL_ASSIGN; }
+"/="  {  return pp::Token::OP_DIV_ASSIGN; }
+"%="  {  return pp::Token::OP_MOD_ASSIGN; }
+"<<=" {  return pp::Token::OP_LEFT_ASSIGN; }
+">>=" {  return pp::Token::OP_RIGHT_ASSIGN; }
+"&="  {  return pp::Token::OP_AND_ASSIGN; }
+"^="  {  return pp::Token::OP_XOR_ASSIGN; }
+"|="  {  return pp::Token::OP_OR_ASSIGN; }
 
 {PUNCTUATOR} { return yytext[0]; }
+[ \t\v\f]+   { return ' '; }
+\n           { return yytext[0]; }
 
-[ \t\v\f]+ { /* Ignore whitespace */ }
-
-\n {
-    ++yylineno; yycolumn = 0;
-    return yytext[0];
-}
-
-<*><<EOF>>     { yyterminate(); }
+<*><<EOF>>   { yyterminate(); }
 
 %%
 
-std::string* extractMacroName(const char* str, int len)
-{
-    // The input string is of the form {HASH}define{HSPACE}+{IDENTIFIER}
-    // We just need to find the last HSPACE.
-    ASSERT(str && (len > 8));  // strlen("#define ") == 8;
-
-    std::string* name = NULL;
-    for (int i = len - 1; i >= 0; --i)
-    {
-        if ((str[i] == ' ') || (str[i] == '\t'))
-        {
-            name = new std::string(str + i + 1, len - i - 1);
-            break;
-        }
-    }
-    ASSERT(name);
-    return name;
-}
-
-namespace pp {
-
-int Context::readInput(char* buf, int maxSize)
+int readInput(char* buf, int maxSize, yyscan_t scanner)
 {
     int nread = YY_NULL;
-    while (!mInput->eof() &&
-           (mInput->error() == pp::Input::kErrorNone) &&
+    pp::Input* input = yyget_extra(scanner);
+    while (!input->eof() &&
+           (input->error() == pp::Input::kErrorNone) &&
            (nread == YY_NULL))
     {
-        int line = 0, file = 0;
-        pp::Token::decodeLocation(yyget_lineno(mLexer), &line, &file);
-        file = mInput->stringIndex();
-        yyset_lineno(pp::Token::encodeLocation(line, file), mLexer);
-
-        nread = mInput->read(buf, maxSize);
-
-        if (mInput->error() == pp::Input::kErrorUnexpectedEOF)
-        {
-            // TODO(alokp): Report error.
-        }
+        nread = input->read(buf, maxSize);
     }
     return nread;
 }
 
-bool Context::initLexer()
-{
-    ASSERT(mLexer == NULL);
+namespace pp {
 
-    if (yylex_init_extra(this, &mLexer))
+int Lexer::lex(Token* token)
+{
+    token->type = yylex(&token->value, &token->location, mHandle);
+    while (token->type == ' ')
+    {
+        mLeadingSpace = true;
+        token->type = yylex(&token->value, &token->location, mHandle);
+    }
+    token->setHasLeadingSpace(mLeadingSpace);
+    mLeadingSpace = false;
+
+    return token->type;
+}
+
+bool Lexer::initLexer()
+{
+    if ((mHandle == NULL) && yylex_init_extra(mInput.get(), &mHandle))
         return false;
 
-    yyrestart(0, mLexer);
+    yyrestart(0, mHandle);
     return true;
 }
 
-void Context::destroyLexer()
+void Lexer::destroyLexer()
 {
-    ASSERT(mLexer);
+    if (mHandle == NULL)
+        return;
 
-    yylex_destroy(mLexer);
-    mLexer = NULL;
+    yylex_destroy(mHandle);
+    mHandle = NULL;
 }
 
 }  // namespace pp

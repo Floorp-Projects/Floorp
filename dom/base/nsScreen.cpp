@@ -82,8 +82,10 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
   nsRefPtr<nsScreen> screen = new nsScreen();
   screen->BindToOwner(aWindow);
 
-  hal::RegisterScreenOrientationObserver(screen);
-  hal::GetCurrentScreenOrientation(&(screen->mOrientation));
+  hal::RegisterScreenConfigurationObserver(screen);
+  hal::ScreenConfiguration config;
+  hal::GetCurrentScreenConfiguration(&config);
+  screen->mOrientation = config.orientation();
 
   return screen.forget();
 }
@@ -95,7 +97,7 @@ nsScreen::nsScreen()
 
 nsScreen::~nsScreen()
 {
-  hal::UnregisterScreenOrientationObserver(this);
+  hal::UnregisterScreenConfigurationObserver(this);
 }
 
 
@@ -285,10 +287,10 @@ nsScreen::GetAvailRect(nsRect& aRect)
 }
 
 void
-nsScreen::Notify(const ScreenOrientationWrapper& aOrientation)
+nsScreen::Notify(const hal::ScreenConfiguration& aConfiguration)
 {
   ScreenOrientation previousOrientation = mOrientation;
-  mOrientation = aOrientation.orientation;
+  mOrientation = aConfiguration.orientation();
 
   NS_ASSERTION(mOrientation != eScreenOrientation_None &&
                mOrientation != eScreenOrientation_EndGuard &&
@@ -372,8 +374,15 @@ nsScreen::MozLockOrientation(const nsAString& aOrientation, bool* aReturn)
   }
 
   if (!IsChromeType(GetOwner()->GetDocShell())) {
+    nsCOMPtr<nsIDOMDocument> doc;
+    GetOwner()->GetDocument(getter_AddRefs(doc));
+    if (!doc) {
+      *aReturn = false;
+      return NS_OK;
+    }
+
     bool fullscreen;
-    GetOwner()->GetFullScreen(&fullscreen);
+    doc->GetMozFullScreen(&fullscreen);
     if (!fullscreen) {
       *aReturn = false;
       return NS_OK;
@@ -418,6 +427,24 @@ nsScreen::FullScreenEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMEventTarget> target;
   aEvent->GetCurrentTarget(getter_AddRefs(target));
+
+  // We have to make sure that the event we got is the event sent when
+  // fullscreen is disabled because we could get one when fullscreen
+  // got enabled if the lock call is done at the same moment.
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(target);
+  MOZ_ASSERT(window);
+
+  nsCOMPtr<nsIDOMDocument> doc;
+  window->GetDocument(getter_AddRefs(doc));
+  // If we have no doc, we will just continue, remove the event and unlock.
+  // This is an edge case were orientation lock and fullscreen is meaningless.
+  if (doc) {
+    bool fullscreen;
+    doc->GetMozFullScreen(&fullscreen);
+    if (fullscreen) {
+      return NS_OK;
+    }
+  }
 
   target->RemoveSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
                                     this, true);

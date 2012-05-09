@@ -96,7 +96,7 @@ CERT_VerifySignedDataWithPublicKey(CERTSignedData *sd,
 	rv = NSS_GetAlgorithmPolicy(hashAlg, &policyFlags);
 	if (rv == SECSuccess && 
 	    !(policyFlags & NSS_USE_ALG_IN_CERT_SIGNATURE)) {
-	    PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+	    PORT_SetError(SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
 	    rv = SECFailure;
 	}
     }
@@ -496,7 +496,10 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
 		    PORT_SetError(SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE);
 		    LOG_ERROR_OR_EXIT(log,issuerCert,count+1,0);
 		} else {
-		    PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+		    if (PORT_GetError() !=
+			SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED) {
+			PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+		    }
 		    LOG_ERROR_OR_EXIT(log,subjectCert,count,0);
 		}
 	    }

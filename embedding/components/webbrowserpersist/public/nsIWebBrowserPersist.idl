@@ -54,7 +54,7 @@ interface nsIWebBrowserPersist : nsICancelable
 {
   /** No special persistence behaviour. */
   const unsigned long PERSIST_FLAGS_NONE = 0;
-  /** Only use cached data (could result in failure if data is not cached). */
+  /** Use cached data if present (skipping validation), else load from network */
   const unsigned long PERSIST_FLAGS_FROM_CACHE = 1;
   /** Bypass the cached data. */
   const unsigned long PERSIST_FLAGS_BYPASS_CACHE = 2;

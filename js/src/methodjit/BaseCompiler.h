@@ -138,9 +138,7 @@ class LinkerHelper : public JSC::LinkBuffer
     }
 
     bool verifyRange(const JSC::JITCode &other) {
-#ifdef DEBUG
-        verifiedRange = true;
-#endif
+        markVerified();
 #ifdef JS_CPU_X64
         return VerifyRange(m_code, m_size, other.start(), other.size());
 #else
@@ -156,12 +154,12 @@ class LinkerHelper : public JSC::LinkBuffer
     JSC::ExecutablePool *init(JSContext *cx) {
         // The pool is incref'd after this call, so it's necessary to release()
         // on any failure.
-        JSScript *script = cx->fp()->script();
-        JSC::ExecutableAllocator *allocator = script->compartment()->jaegerCompartment()->execAlloc();
+        JSC::ExecutableAllocator *allocator = &cx->runtime->execAlloc();
         allocator->setDestroyCallback(Probes::discardExecutableRegion);
         JSC::ExecutablePool *pool;
         m_code = executableAllocAndCopy(masm, allocator, &pool);
         if (!m_code) {
+            markVerified();
             js_ReportOutOfMemory(cx);
             return NULL;
         }
@@ -172,7 +170,7 @@ class LinkerHelper : public JSC::LinkBuffer
     JSC::CodeLocationLabel finalize(VMFrame &f) {
         masm.finalize(*this);
         JSC::CodeLocationLabel label = finalizeCodeAddendum();
-        Probes::registerICCode(f.cx, f.jit(), f.script(), f.pc(),
+        Probes::registerICCode(f.cx, f.chunk(), f.script(), f.pc(),
                                label.executableAddress(), masm.size());
         return label;
     }
@@ -185,6 +183,13 @@ class LinkerHelper : public JSC::LinkBuffer
 
     size_t size() const {
         return m_size;
+    }
+
+  protected:
+    void markVerified() {
+#ifdef DEBUG
+        verifiedRange = true;
+#endif
     }
 };
 

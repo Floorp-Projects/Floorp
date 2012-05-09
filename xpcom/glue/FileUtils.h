@@ -40,6 +40,8 @@
 #ifndef mozilla_FileUtils_h
 #define mozilla_FileUtils_h
 
+#include "nscore.h" // nsnull
+
 #if defined(XP_UNIX) || defined(XP_OS2)
 # include <unistd.h>
 #elif defined(XP_WIN)
@@ -47,43 +49,43 @@
 #endif
 #include "prio.h"
 
+#include "mozilla/Scoped.h"
+
 namespace mozilla {
 
 /**
  * AutoFDClose is a RAII wrapper for PRFileDesc.
+ *
+ * Instances |PR_Close| their fds when they go out of scope.
  **/
-class AutoFDClose
+struct ScopedClosePRFDTraits
 {
-public:
-  AutoFDClose(PRFileDesc* fd = nsnull) : mFD(fd) { }
-  ~AutoFDClose() { if (mFD) PR_Close(mFD); }
-
-  PRFileDesc* operator= (PRFileDesc *fd) {
-    if (mFD) PR_Close(mFD);
-    mFD = fd;
-    return fd;
-  }
-
-  operator PRFileDesc* () { return mFD; }
-  PRFileDesc** operator &() { *this = nsnull; return &mFD; }
-
-private:
-  PRFileDesc *mFD;
-};
-
-/**
- * Instances close() their fds when they go out of scope.
- */
-struct ScopedClose
-{
-  ScopedClose(int aFd=-1) : mFd(aFd) {}
-  ~ScopedClose() {
-    if (0 <= mFd) {
-      close(mFd);
+  typedef PRFileDesc* type;
+  static type empty() { return NULL; }
+  static void release(type fd) {
+    if (fd != NULL) {
+      PR_Close(fd);
     }
   }
-  int mFd;
 };
+typedef Scoped<ScopedClosePRFDTraits> AutoFDClose;
+
+/**
+ * ScopedCloseFD is a RAII wrapper for POSIX file descriptors
+ *
+ * Instances |close()| their fds when they go out of scope.
+ */
+struct ScopedCloseFDTraits
+{
+  typedef int type;
+  static type empty() { return -1; }
+  static void release(type fd) {
+    if (fd != -1) {
+      close(fd);
+    }
+  }
+};
+typedef Scoped<ScopedCloseFDTraits> ScopedClose;
 
 /**
  * Fallocate efficiently and continuously allocates files via fallocate-type APIs.

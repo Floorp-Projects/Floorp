@@ -743,7 +743,7 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, bool co
   if ( !aInString || !tagTXT || !imageName )
       return false;
 
-  PRInt32  tagLen = nsCRT::strlen(tagTXT);
+  PRInt32 tagLen = strlen(tagTXT);
  
   PRUint32 delim = (col0 ? 0 : 1) + tagLen;
 
@@ -804,7 +804,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, bool 
   // temporary variable used to store the glyph html text
   nsAutoString outputHTML;
   bool bTestSmilie;
-  bool bArg;
+  bool bArg = false;
   int i;
 
   // refactor some of this mess to avoid code duplication and speed execution a bit

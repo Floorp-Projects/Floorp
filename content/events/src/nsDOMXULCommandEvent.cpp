@@ -79,7 +79,7 @@ NS_IMETHODIMP
 nsDOMXULCommandEvent::GetAltKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = Event()->isAlt;
+  *aIsDown = Event()->IsAlt();
   return NS_OK;
 }
 
@@ -87,7 +87,7 @@ NS_IMETHODIMP
 nsDOMXULCommandEvent::GetCtrlKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = Event()->isControl;
+  *aIsDown = Event()->IsControl();
   return NS_OK;
 }
 
@@ -95,7 +95,7 @@ NS_IMETHODIMP
 nsDOMXULCommandEvent::GetShiftKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = Event()->isShift;
+  *aIsDown = Event()->IsShift();
   return NS_OK;
 }
 
@@ -103,7 +103,7 @@ NS_IMETHODIMP
 nsDOMXULCommandEvent::GetMetaKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = Event()->isMeta;
+  *aIsDown = Event()->IsMeta();
   return NS_OK;
 }
 
@@ -128,11 +128,7 @@ nsDOMXULCommandEvent::InitCommandEvent(const nsAString& aType,
                                           aView, aDetail);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsInputEvent *event = Event();
-  event->isControl = aCtrlKey;
-  event->isAlt = aAltKey;
-  event->isShift = aShiftKey;
-  event->isMeta = aMetaKey;
+  Event()->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
   mSourceEvent = aSourceEvent;
 
   return NS_OK;

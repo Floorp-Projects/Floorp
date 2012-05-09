@@ -90,8 +90,10 @@ public:
   // nsIEditRules methods
   NS_IMETHOD Init(nsPlaintextEditor *aEditor);
   NS_IMETHOD DetachEditor();
-  NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
-  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
+  NS_IMETHOD BeforeEdit(nsEditor::OperationID action,
+                        nsIEditor::EDirection aDirection);
+  NS_IMETHOD AfterEdit(nsEditor::OperationID action,
+                       nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, bool *aCancel, bool *aHandled);
   NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD DocumentModified();
@@ -141,7 +143,7 @@ protected:
 #ifdef XXX_DEAD_CODE
   nsresult DidInsert(nsISelection *aSelection, nsresult aResult);
 #endif
-  nsresult WillInsertText(  PRInt32          aAction,
+  nsresult WillInsertText(  nsEditor::OperationID aAction,
                             nsISelection *aSelection, 
                             bool            *aCancel,
                             bool            *aHandled,
@@ -196,7 +198,8 @@ protected:
                           nsCOMPtr<nsIDOMNode> *aSelNode, 
                           PRInt32 *aOffset);
   nsresult ReturnInListItem(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
-  nsresult AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection);
+  nsresult AfterEditInner(nsEditor::OperationID action,
+                          nsIEditor::EDirection aDirection);
   nsresult RemovePartOfBlock(nsIDOMNode *aBlock, 
                              nsIDOMNode *aStartChild, 
                              nsIDOMNode *aEndChild,
@@ -234,24 +237,26 @@ protected:
   bool AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
 #endif
   nsresult NormalizeSelection(nsISelection *inSelection);
-  nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
-                            PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
+  nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode,
+                            PRInt32 aOffset, nsEditor::OperationID actionID,
+                            nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
   nsresult GetPromotedRanges(nsISelection *inSelection, 
                              nsCOMArray<nsIDOMRange> &outArrayOfRanges, 
-                             PRInt32 inOperationType);
-  nsresult PromoteRange(nsIDOMRange *inRange, PRInt32 inOperationType);
+                             nsEditor::OperationID inOperationType);
+  nsresult PromoteRange(nsIDOMRange *inRange,
+                        nsEditor::OperationID inOperationType);
   nsresult GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges, 
                                 nsCOMArray<nsIDOMNode>& outArrayOfNodes, 
-                                PRInt32 inOperationType,
+                                nsEditor::OperationID inOperationType,
                                 bool aDontTouchContent=false);
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
                                      nsCOMArray<nsIDOMNode>& outArrayOfNodes);
   nsresult GetNodesFromPoint(DOMPoint point,
-                             PRInt32 operation,
+                             nsEditor::OperationID operation,
                              nsCOMArray<nsIDOMNode>& arrayOfNodes,
                              bool dontTouchContent);
   nsresult GetNodesFromSelection(nsISelection *selection,
-                                 PRInt32 operation,
+                                 nsEditor::OperationID operation,
                                  nsCOMArray<nsIDOMNode>& arrayOfNodes,
                                  bool aDontTouchContent=false);
   nsresult GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes, bool aEntireList, bool aDontTouchContent=false);
@@ -290,7 +295,7 @@ protected:
                                   nsCOMPtr<nsIDOMNode> *outSelectableNode);
   nsresult InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2, bool *aResult);
   nsresult RemoveEmptyNodes();
-  nsresult SelectionEndpointInNode(nsIDOMNode *aNode, bool *aResult);
+  nsresult SelectionEndpointInNode(nsINode *aNode, bool *aResult);
   nsresult UpdateDocChangeRange(nsIDOMRange *aRange);
   nsresult ConfirmSelectionInBody();
   nsresult InsertMozBRIfNeeded(nsIDOMNode *aNode);

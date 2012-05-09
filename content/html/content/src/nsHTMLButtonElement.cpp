@@ -161,7 +161,7 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual void DoneCreatingElement();
   virtual nsXPCClassInfo* GetClassInfo();
-
+  virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
   PRUint8 mType;
   bool mDisabledChanged;

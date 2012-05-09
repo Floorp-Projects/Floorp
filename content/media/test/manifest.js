@@ -9,6 +9,7 @@ var gSmallTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
+  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -21,6 +22,14 @@ var gProgressTests = [
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233, size:28942 },
   { name:"seek.webm", type:"video/webm", duration:3.966, size:215529 },
   { name:"bogus.duh", type:"bogus/duh" }
+];
+
+// Used by test_played.html
+var gPlayedTests = [
+  { name:"big.wav", type:"audio/x-wav", duration:9.0 },
+  { name:"sound.ogg", type:"audio/ogg", duration:4.0 },
+  { name:"seek.ogv", type:"video/ogg", duration:3.966 },
+  { name:"seek.webm", type:"video/webm", duration:3.966 },
 ];
 
 // Used by test_mozLoadFrom.  Need one test file per decoder backend, plus
@@ -46,6 +55,15 @@ var gPausedAfterEndedTests = gSmallTests.concat([
   { name:"r11025_u8_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"small-shot.ogg", type:"video/ogg", duration:0.276 }
 ]);
+
+// Test the mozHasAudio property
+var gMozHasAudioTests = [
+  { name:"big.wav", type:"audio/x-wav", duration:9.278981, size:102444, hasAudio:undefined },
+  { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233, size:28942, hasAudio:false },
+  { name:"short-video.ogv", type:"video/ogg", duration:1.081, hasAudio:true },
+  { name:"seek.webm", type:"video/webm", duration:3.966, size:215529, hasAudio:false },
+  { name:"bogus.duh", type:"bogus/duh" }
+];
 
 // These are files that we want to make sure we can play through.  We can
 // also check metadata.  Put files of the same type together in this list so if
@@ -126,6 +144,10 @@ var gPlayTests = [
   // hardware.
   { name:"spacestorm-1000Hz-100ms.ogg", type:"audio/ogg", duration:0.099 },
 
+  // Opus data in an ogg container
+  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
+
+  // Invalid file
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN }
 ];
 
@@ -236,6 +258,7 @@ var gSeekTests = [
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"bug516323.indexed.ogv", type:"video/ogg", duration:4.208 },
   { name:"split.webm", type:"video/webm", duration:1.967 },
+  { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
 
@@ -451,16 +474,23 @@ function mediaTestCleanup() {
   var branch = prefService.getBranch("media.");
   var oldDefault = 2;
   var oldAuto = 3;
+  var oldOpus = undefined;
   try {
     oldDefault = branch.getIntPref("preload.default");
     oldAuto    = branch.getIntPref("preload.auto");
+    oldOpus    = branch.getBoolPref("opus.enabled");
   } catch(ex) { }
   branch.setIntPref("preload.default", 2); // preload_metadata
   branch.setIntPref("preload.auto", 3); // preload_enough
+  // test opus playback iff the pref exists
+  if (oldOpus !== undefined)
+    branch.setBoolPref("opus.enabled", true);
 
   window.addEventListener("unload", function() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     branch.setIntPref("preload.default", oldDefault);
     branch.setIntPref("preload.auto", oldAuto);
+    if (oldOpus !== undefined)
+      branch.setBoolPref("opus.enabled", oldOpus);
   }, false);
  })();

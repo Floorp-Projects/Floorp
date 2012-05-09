@@ -82,8 +82,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
         // nsXPCWrappedJS roots its mJSObj when its refcount is > 1, see
         // the comment above nsXPCWrappedJS::AddRef.
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mJSObj");
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                           tmp->GetJSObjectPreserveColor());
+        cb.NoteJSChild(tmp->GetJSObjectPreserveColor());
     }
 
     nsXPCWrappedJS* root = tmp->GetRootWrapper();

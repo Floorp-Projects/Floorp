@@ -225,26 +225,26 @@
       trans.objectStore("store2").add({ unique: 1, id: "unique" });
 
       trans.objectStore("store1").add({ error: 1, unique: 1 }).onerror =
-        new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
+        new ExpectError("ConstraintError");
       trans.objectStore("store1").add({ error: 2 }).onsuccess =
         genCheck(c1++, { error: 2 }, "first" + test);
       yield; yield;
 
       trans.objectStore("store2").add({ error: 3, unique: 1 }).onerror =
-        new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
+        new ExpectError("ConstraintError");
       trans.objectStore("store2").add({ error: 4 }).onsuccess =
         genCheck(c2, { error: 4, id: c2 }, "second" + test);
       c2++;
       yield; yield;
 
       trans.objectStore("store1").add({ error: 5, unique: 1 }, 100000).onerror =
-        new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
+        new ExpectError("ConstraintError");
       trans.objectStore("store1").add({ error: 6 }).onsuccess =
         genCheck(c1++, { error: 6 }, "third" + test);
       yield; yield;
 
       trans.objectStore("store2").add({ error: 7, unique: 1, id: 100000 }).onerror =
-        new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
+        new ExpectError("ConstraintError");
       trans.objectStore("store2").add({ error: 8 }).onsuccess =
         genCheck(c2, { error: 8, id: c2 }, "fourth" + test);
       c2++;

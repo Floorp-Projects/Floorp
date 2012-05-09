@@ -75,8 +75,6 @@ public class BrowserDB {
 
         public Cursor getRecentHistory(ContentResolver cr, int limit);
 
-        public int getMaxHistoryCount();
-
         public void clearHistory(ContentResolver cr);
 
         public Cursor getBookmarksInFolder(ContentResolver cr, long folderId);
@@ -91,7 +89,7 @@ public class BrowserDB {
 
         public void removeBookmarksWithURL(ContentResolver cr, String uri);
 
-        public void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword);
+        public void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword);
 
         public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri);
 
@@ -142,10 +140,6 @@ public class BrowserDB {
         return sDb.getRecentHistory(cr, limit);
     }
 
-    public static int getMaxHistoryCount() {
-        return sDb.getMaxHistoryCount();
-    }
-
     public static void clearHistory(ContentResolver cr) {
         sDb.clearHistory(cr);
     }
@@ -174,8 +168,8 @@ public class BrowserDB {
         sDb.removeBookmarksWithURL(cr, uri);
     }
 
-    public static void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword) {
-        sDb.updateBookmark(cr, oldUri, uri, title, keyword);
+    public static void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword) {
+        sDb.updateBookmark(cr, id, uri, title, keyword);
     }
 
     public static BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {

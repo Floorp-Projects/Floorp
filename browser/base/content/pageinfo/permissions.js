@@ -33,9 +33,11 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-const ALLOW = nsIPermissionManager.ALLOW_ACTION;   // 1
-const BLOCK = nsIPermissionManager.DENY_ACTION;    // 2
-const SESSION = nsICookiePermission.ACCESS_SESSION;// 8
+
+const UNKNOWN = nsIPermissionManager.UNKNOWN_ACTION;   // 0
+const ALLOW = nsIPermissionManager.ALLOW_ACTION;       // 1
+const BLOCK = nsIPermissionManager.DENY_ACTION;        // 2
+const SESSION = nsICookiePermission.ACCESS_SESSION;    // 8
 
 const nsIIndexedDatabaseManager =
   Components.interfaces.nsIIndexedDatabaseManager;
@@ -82,6 +84,16 @@ var gPermObj = {
   indexedDB: function getIndexedDBDefaultPermissions()
   {
     return BLOCK;
+  },
+  plugins: function getPluginsDefaultPermissions()
+  {
+    if (gPrefs.getBoolPref("plugins.click_to_play"))
+      return BLOCK;
+    return ALLOW;
+  },
+  fullscreen: function getFullscreenDefaultPermissions()
+  {
+    return UNKNOWN;  
   }
 };
 
@@ -133,6 +145,9 @@ function onUnloadPermission()
 
 function initRow(aPartId)
 {
+  if (aPartId == "plugins" && !gPrefs.getBoolPref("plugins.click_to_play"))
+    document.getElementById("permPluginsRow").hidden = true;
+
   var permissionManager = Components.classes[PERMISSION_CONTRACTID]
                                     .getService(nsIPermissionManager);
 
@@ -191,6 +206,9 @@ function onRadioClick(aPartId)
   if (aPartId == "indexedDB" && permission == BLOCK) {
     permissionManager.remove(gPermURI.host, "indexedDB-unlimited");
   }
+  if (aPartId == "fullscreen" && permission == UNKNOWN) {
+    permissionManager.remove(gPermURI.host, "fullscreen");
+  }  
 }
 
 function setRadioState(aPartId, aValue)

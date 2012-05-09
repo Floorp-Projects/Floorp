@@ -217,8 +217,11 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
                                                    PRInt32* aWidth, PRInt32* aHeight) 
 {
   *aX = *aY = *aWidth = *aHeight = 0;
-  nsPresContext *presContext = GetPresContext();
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
+  if (IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  nsPresContext* presContext = mDoc->PresContext();
 
   nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);

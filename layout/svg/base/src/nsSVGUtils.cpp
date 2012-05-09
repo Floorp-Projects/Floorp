@@ -1538,12 +1538,9 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, PRUint32 aFlags)
       matrix = element->PrependLocalTransformsTo(matrix,
                           nsSVGElement::eChildToUserSpace);
     }
-    bbox = svg->GetBBoxContribution(matrix, aFlags);
-  } else {
-    bbox = nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
+    return svg->GetBBoxContribution(matrix, aFlags);
   }
-  NS_ASSERTION(bbox.Width() >= 0.0 && bbox.Height() >= 0.0, "Invalid bbox!");
-  return bbox;
+  return nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
 }
 
 gfxRect
@@ -1713,20 +1710,6 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 }
 
 // ----------------------------------------------------------------------
-
-/* static */ bool
-nsSVGUtils::RootSVGElementHasViewbox(const nsIContent *aRootSVGElem)
-{
-  if (!aRootSVGElem->IsSVG(nsGkAtoms::svg)) {
-    NS_ABORT_IF_FALSE(false, "Expecting an SVG <svg> node");
-    return false;
-  }
-
-  const nsSVGSVGElement *svgSvgElem =
-    static_cast<const nsSVGSVGElement*>(aRootSVGElem);
-
-  return svgSvgElem->HasValidViewbox();
-}
 
 /* static */ void
 nsSVGUtils::GetFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,

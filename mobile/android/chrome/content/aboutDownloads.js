@@ -81,6 +81,7 @@ let Downloads = {
     switch (aTopic) {
       case "dl-failed":
       case "dl-cancel":
+        break;
       case "dl-done":
         if (!this._getElementForDownload(download.id)) {
           let item = this._createItem(downloadTemplate, {
@@ -89,7 +90,7 @@ let Downloads = {
             icon: "moz-icon://" + download.displayName + "?size=64",
             date: DownloadUtils.getReadableDates(new Date())[0],
             domain: DownloadUtils.getURIHost(download.source.spec)[0],
-            size: DownloadUtils.convertByteUnits(download.size).join(""),
+            size: DownloadUtils.convertByteUnits(download.size).join("")
           });
           this._list.insertAdjacentHTML("afterbegin", item);
           break;
@@ -102,18 +103,30 @@ let Downloads = {
       this._stmt.finalize();
 
     this._stmt = this._dlmgr.DBConnection.createStatement(
-      "SELECT id, name, source, state, startTime, endTime, referrer, " +
-             "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive " +
+      "SELECT id, name, source, startTime, endTime, referrer, " +
+             "currBytes, maxBytes " +
       "FROM moz_downloads " +
-      "WHERE NOT isActive " +
+      "WHERE state = :download_state " +
       "ORDER BY endTime DESC");
   },
 
-  _createItem: function (aTemplate, aValues) {
+  _createItem: function _createItem(aTemplate, aValues) {
+    function htmlEscape(s) {
+      s = s.replace(/&/g, "&amp;");
+      s = s.replace(/>/g, "&gt;");
+      s = s.replace(/</g, "&lt;");
+      s = s.replace(/"/g, "&quot;");
+      s = s.replace(/'/g, "&apos;");
+      return s;
+    }
+
     let t = aTemplate;
-    for (let i in aValues) {
-      let regEx = new RegExp("{" + i + "}", "g");
-      t = t.replace(regEx, aValues[i]);
+    for (let key in aValues) {
+      if (aValues.hasOwnProperty(key)) {
+        let regEx = new RegExp("{" + key + "}", "g");
+        let value = htmlEscape(aValues[key].toString());
+        t = t.replace(regEx, value);
+      }
     }
     return t;
   },
@@ -131,9 +144,9 @@ let Downloads = {
         id: this._stmt.row.id,
         target: this._stmt.row.name,
         icon: "moz-icon://" + this._stmt.row.name + "?size=64",
-        date: DownloadUtils.getReadableDates(new Date(this._stmt.row.endTime/1000))[0],
+        date: DownloadUtils.getReadableDates(new Date(this._stmt.row.endTime / 1000))[0],
         domain: DownloadUtils.getURIHost(this._stmt.row.source)[0],
-        size: DownloadUtils.convertByteUnits(this._stmt.row.maxBytes).join(""),
+        size: DownloadUtils.convertByteUnits(this._stmt.row.maxBytes).join("")
       };
 
       let item = this._createItem(downloadTemplate, attrs);
@@ -165,11 +178,7 @@ let Downloads = {
     clearTimeout(this._timeoutID);
 
     this._stmt.reset();
-    this._stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED);
-    this._stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-    this._stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
-    this._stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
-    this._stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_SCANNING);
+    this._stmt.params.download_state = Ci.nsIDownloadManager.DOWNLOAD_FINISHED;
 
     // Take a quick break before we actually start building the list
     let self = this;

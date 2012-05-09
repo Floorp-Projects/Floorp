@@ -238,6 +238,10 @@ class ExceptionHandler {
   void RegisterAppMemory(void *ptr, size_t length);
   void UnregisterAppMemory(void *ptr);
 
+  // Called on the exception thread when an unhandled exception occurs.
+  // Signals the exception handler thread to handle the exception.
+  static LONG WINAPI HandleException(EXCEPTION_POINTERS* exinfo);
+
  private:
   friend class AutoExceptionHandler;
 
@@ -267,10 +271,6 @@ class ExceptionHandler {
 
   // Runs the main loop for the exception handler thread.
   static DWORD WINAPI ExceptionHandlerThreadMain(void* lpParameter);
-
-  // Called on the exception thread when an unhandled exception occurs.
-  // Signals the exception handler thread to handle the exception.
-  static LONG WINAPI HandleException(EXCEPTION_POINTERS* exinfo);
 
 #if _MSC_VER >= 1400  // MSVC 2005/8
   // This function will be called by some CRT functions when they detect

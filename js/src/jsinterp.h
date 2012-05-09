@@ -260,9 +260,6 @@ TypeOfValue(JSContext *cx, const Value &v);
 extern JSBool
 HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
 
-extern bool
-ValueToId(JSContext *cx, const Value &v, jsid *idp);
-
 /*
  * A linked list of the |FrameRegs regs;| variables belonging to all
  * js::Interpret C++ frames on this thread's stack.
@@ -322,7 +319,7 @@ extern void
 UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs);
 
 extern bool
-OnUnknownMethod(JSContext *cx, JSObject *obj, Value idval, Value *vp);
+OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp);
 
 extern bool
 IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth);

@@ -1552,7 +1552,7 @@ nsIContent::HasIndependentSelection()
   return (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION);
 }
 
-nsIContent*
+dom::Element*
 nsIContent::GetEditingHost()
 {
   // If this isn't editable, return NULL.
@@ -1566,12 +1566,12 @@ nsIContent::GetEditingHost()
   }
 
   nsIContent* content = this;
-  for (nsIContent* parent = GetParent();
+  for (dom::Element* parent = GetElementParent();
        parent && parent->HasFlag(NODE_IS_EDITABLE);
-       parent = content->GetParent()) {
+       parent = content->GetElementParent()) {
     content = parent;
   }
-  return content;
+  return content->AsElement();
 }
 
 nsresult
@@ -3280,6 +3280,9 @@ nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
       // Fully exit full-screen.
       nsIDocument::ExitFullScreen(false);
     }
+    if (HasPointerLock()) {
+      nsIDocument::UnlockPointer();
+    }
     if (GetParent()) {
       NS_RELEASE(mParent);
     } else {
@@ -3607,7 +3610,7 @@ nsGenericElement::GetInlineStyleRule()
   return nsnull;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericElement::SetInlineStyleRule(css::StyleRule* aStyleRule,
                                      const nsAString* aSerialized,
                                      bool aNotify)
@@ -3941,10 +3944,7 @@ nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
   event.pressure = pressure;
   event.clickCount = clickCount;
   event.inputSource = inputSource;
-  event.isShift = aSourceEvent->isShift;
-  event.isControl = aSourceEvent->isControl;
-  event.isAlt = aSourceEvent->isAlt;
-  event.isMeta = aSourceEvent->isMeta;
+  event.modifiers = aSourceEvent->modifiers;
   event.flags |= aFlags; // Be careful not to overwrite existing flags!
 
   return DispatchEvent(aPresContext, &event, aTarget, aFullDispatch, aStatus);
@@ -5985,8 +5985,8 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
   case NS_MOUSE_CLICK:
     if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
       nsInputEvent* inputEvent = static_cast<nsInputEvent*>(aVisitor.mEvent);
-      if (inputEvent->isControl || inputEvent->isMeta ||
-          inputEvent->isAlt ||inputEvent->isShift) {
+      if (inputEvent->IsControl() || inputEvent->IsMeta() ||
+          inputEvent->IsAlt() ||inputEvent->IsShift()) {
         break;
       }
 
@@ -6456,6 +6456,13 @@ nsINode::Contains(nsIDOMNode* aOther, bool* aReturn)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGenericElement::MozRequestPointerLock()
+{
+  OwnerDoc()->RequestPointerLock(this);
+  return NS_OK;
+}
+
 PRUint32
 nsINode::Length() const
 {
@@ -6475,6 +6482,20 @@ nsINode::Length() const
   }
 }
 
+static const char*
+GetFullScreenError(nsIDocument* aDoc)
+{
+  if (!nsContentUtils::IsRequestFullScreenAllowed()) {
+    return "FullScreenDeniedNotInputDriven";
+  }
+  
+  if (nsContentUtils::IsSitePermDeny(aDoc->NodePrincipal(), "fullscreen")) {
+    return "FullScreenDeniedBlocked";
+  }
+
+  return nsnull;
+}
+
 nsresult nsGenericElement::MozRequestFullScreen()
 {
   // Only grant full-screen requests if this is called from inside a trusted
@@ -6482,11 +6503,12 @@ nsresult nsGenericElement::MozRequestFullScreen()
   // This stops the full-screen from being abused similar to the popups of old,
   // and it also makes it harder for bad guys' script to go full-screen and
   // spoof the browser chrome/window and phish logins etc.
-  if (!nsContentUtils::IsRequestFullScreenAllowed()) {
+  const char* error = GetFullScreenError(OwnerDoc());
+  if (error) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     "DOM", OwnerDoc(),
                                     nsContentUtils::eDOM_PROPERTIES,
-                                    "FullScreenDeniedNotInputDriven");
+                                    error);
     nsRefPtr<nsAsyncDOMEvent> e =
       new nsAsyncDOMEvent(OwnerDoc(),
                           NS_LITERAL_STRING("mozfullscreenerror"),

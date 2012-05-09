@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync.stage;
 import java.net.URISyntaxException;
 
 import org.mozilla.gecko.sync.CryptoRecord;
+import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.repositories.ConstrainedServer11Repository;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
@@ -21,9 +22,13 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
   private static final String FORM_HISTORY_SORT          = "index";
   private static final long   FORM_HISTORY_REQUEST_LIMIT = 5000;         // Sanity limit.
 
+  public FormHistoryServerSyncStage(GlobalSession session) {
+    super(session);
+  }
+
   @Override
-  public void execute(org.mozilla.gecko.sync.GlobalSession session) throws NoSuchStageException {
-    super.execute(session);
+  public void execute() throws NoSuchStageException {
+    super.execute();
   }
 
   @Override
@@ -63,10 +68,5 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
   @Override
   protected RecordFactory getRecordFactory() {
     return new FormHistoryRecordFactory();
-  }
-
-  @Override
-  public boolean isEnabled() {
-    return false;
   }
 }

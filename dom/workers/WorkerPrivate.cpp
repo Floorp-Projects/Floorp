@@ -55,6 +55,7 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIXPConnect.h"
+#include "nsIXPCScriptNotify.h"
 
 #include "jsfriendapi.h"
 #include "jsdbgapi.h"
@@ -79,6 +80,7 @@
 #include "Events.h"
 #include "Exceptions.h"
 #include "File.h"
+#include "ImageData.h"
 #include "Principal.h"
 #include "RuntimeService.h"
 #include "ScriptLoader.h"
@@ -99,11 +101,11 @@
 using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
-using mozilla::dom::workers::exceptions::ThrowDOMExceptionForCode;
-using mozilla::xpconnect::memory::ReportJSRuntimeExplicitTreeStats;
+using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
 
 USING_WORKERS_NAMESPACE
 using namespace mozilla::dom::workers::events;
+using namespace mozilla::dom;
 
 namespace {
 
@@ -263,12 +265,8 @@ public:
 
     // Always report, even if we're disabled, so that we at least get an entry
     // in about::memory.
-    rv = ReportJSRuntimeExplicitTreeStats(rtStats, mPathPrefix, aCallback, aClosure);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    return NS_OK;
+    return xpc::ReportJSRuntimeExplicitTreeStats(rtStats, mPathPrefix,
+                                                 aCallback, aClosure);
   }
 
   NS_IMETHOD
@@ -338,6 +336,25 @@ struct WorkerStructuredCloneCallbacks
         return jsBlob;
       }
     }
+    // See if the object is an ImageData.
+    else if (aTag == SCTAG_DOM_IMAGEDATA) {
+      JS_ASSERT(!aData);
+
+      // Read the information out of the stream.
+      uint32_t width, height;
+      jsval dataArray;
+      if (!JS_ReadUint32Pair(aReader, &width, &height) ||
+          !JS_ReadTypedArray(aReader, &dataArray))
+      {
+        return nsnull;
+      }
+      MOZ_ASSERT(dataArray.isObject());
+
+      // Construct the ImageData.
+      JSObject* obj = imagedata::Create(aCx, width, height,
+                                        JSVAL_TO_OBJECT(dataArray));
+      return obj;
+    }
 
     Error(aCx, 0);
     return nsnull;
@@ -379,6 +396,19 @@ struct WorkerStructuredCloneCallbacks
       }
     }
 
+    // See if this is an ImageData object.
+    if (imagedata::IsImageData(aObj)) {
+      // Pull the properties off the object.
+      uint32_t width = imagedata::GetWidth(aObj);
+      uint32_t height = imagedata::GetHeight(aObj);
+      JSObject* data = imagedata::GetData(aObj);
+
+      // Write the structured clone.
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEDATA, 0) &&
+             JS_WriteUint32Pair(aWriter, width, height) &&
+             JS_WriteTypedArray(aWriter, OBJECT_TO_JSVAL(data));
+    }
+
     Error(aCx, 0);
     return false;
   }
@@ -386,7 +416,7 @@ struct WorkerStructuredCloneCallbacks
   static void
   Error(JSContext* aCx, uint32_t /* aErrorId */)
   {
-    ThrowDOMExceptionForCode(aCx, DATA_CLONE_ERR);
+    ThrowDOMExceptionForNSResult(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
   }
 };
 
@@ -471,12 +501,6 @@ struct MainThreadWorkerStructuredCloneCallbacks
       }
     }
 
-    JSObject* clone =
-      WorkerStructuredCloneCallbacks::Read(aCx, aReader, aTag, aData, aClosure);
-    if (clone) {
-      return clone;
-    }
-
     JS_ClearPendingException(aCx);
     return NS_DOMReadStructuredClone(aCx, aReader, aTag, aData, nsnull);
   }
@@ -530,12 +554,6 @@ struct MainThreadWorkerStructuredCloneCallbacks
           }
         }
       }
-    }
-
-    JSBool ok =
-      WorkerStructuredCloneCallbacks::Write(aCx, aWriter, aObj, aClosure);
-    if (ok) {
-      return ok;
     }
 
     JS_ClearPendingException(aCx);
@@ -949,6 +967,13 @@ public:
     bool dummy;
     return DispatchEventToTarget(aCx, target, event, &dummy);
   }
+
+  void PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult)
+  {
+    // Notify before WorkerRunnable::PostRun, since that can kill aWorkerPrivate
+    NotifyScriptExecutedIfNeeded();
+    WorkerRunnable::PostRun(aCx, aWorkerPrivate, aRunResult);
+  }
 };
 
 class NotifyRunnable : public WorkerControlRunnable
@@ -1092,6 +1117,13 @@ public:
                                             mFilename, mLine, mLineNumber,
                                             mColumnNumber, mFlags,
                                             mErrorNumber, innerWindowId);
+  }
+
+  void PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult)
+  {
+    // Notify before WorkerRunnable::PostRun, since that can kill aWorkerPrivate
+    NotifyScriptExecutedIfNeeded();
+    WorkerRunnable::PostRun(aCx, aWorkerPrivate, aRunResult);
   }
 
   static bool
@@ -1799,6 +1831,18 @@ WorkerRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
   }
 }
 
+void
+WorkerRunnable::NotifyScriptExecutedIfNeeded() const
+{
+  // if we're on the main thread notify about the end of our script execution.
+  if (mTarget == ParentThread && !mWorkerPrivate->GetParent()) {
+    AssertIsOnMainThread();
+    if (mWorkerPrivate->GetScriptNotify()) {
+      mWorkerPrivate->GetScriptNotify()->ScriptExecuted();
+    }
+  }
+}
+
 struct WorkerPrivate::TimeoutInfo
 {
   TimeoutInfo()
@@ -1864,6 +1908,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
 
   mWindow.swap(aWindow);
   mScriptContext.swap(aScriptContext);
+  mScriptNotify = do_QueryInterface(mScriptContext);
   mBaseURI.swap(aBaseURI);
   mPrincipal.swap(aPrincipal);
   mDocument.swap(aDocument);
@@ -2164,10 +2209,11 @@ WorkerPrivateParent<Derived>::ForgetMainThreadObjects(
   AssertIsOnParentThread();
   MOZ_ASSERT(!mMainThreadObjectsForgotten);
 
-  aDoomed.SetCapacity(6);
+  aDoomed.SetCapacity(7);
 
   SwapToISupportsArray(mWindow, aDoomed);
   SwapToISupportsArray(mScriptContext, aDoomed);
+  SwapToISupportsArray(mScriptNotify, aDoomed);
   SwapToISupportsArray(mBaseURI, aDoomed);
   SwapToISupportsArray(mScriptURI, aDoomed);
   SwapToISupportsArray(mPrincipal, aDoomed);

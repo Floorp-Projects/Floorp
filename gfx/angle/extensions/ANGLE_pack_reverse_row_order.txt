@@ -18,16 +18,16 @@ Contributors
 
 Status
 
-    XXX - Not complete yet!!!
+    Implemented in ANGLE ES2
 
 Version
 
-    Last Modified Date: November 22, 2011
-    Author Revision: 1
+    Last Modified Date: February 22, 2011
+    Author Revision: 22
 
 Number
 
-    XXX not yet
+    TBD
 
 Dependencies
 
@@ -58,9 +58,6 @@ Overview
 IP Status
 
     No known IP claims.
-
-Issues
-
 
 New Procedures and Functions
 
@@ -108,6 +105,8 @@ Additions to Chapter 3 of the OpenGL 3.2 Specification (Rasterization)
         is packed in the same manner as when PACK_REVERSE_ROW_ORDER_ANGLE is
         FALSE.
 
+Additions to Chapter 6 of the OpenGL 3.2 Specification (State and State Requests)
+
     In Section 6.1.4 add the following sentence to the fifth paragraph
     (beginning with "For three-dimensional and two-dimensional array
     textures..."):
@@ -142,23 +141,29 @@ New Implementation Dependent State
 
     None
 
+Issues
+
+    None
+
 Sample Code
 
     /* Allocate space to hold the pixel data */
     const GLvoid* pixels = malloc(width * height * 4);
 
     /* Bind the framebuffer object to be read */
-    glBindFramebuffer(READ_FRAMEBUFFER, framebuffer);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
 
     /* Enable row order reversal */
-    glPixelStore(PACK_REVERSE_ROW_ORDER_ANGLE, TRUE);
+    glPixelStore(GL_PACK_REVERSE_ROW_ORDER_ANGLE, TRUE);
 
     /* The pixel data stored in pixels will be in top-down order, ready for
      * use with a windowing system API that expects this order.
      */
-    glReadPixels(x, y, width, height, RGBA, UNSIGNED_BYTE, pixels);
+    glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
 Revision History
 
     Revision 1, 2011/11/22 (Brian Salomon)
       - First version
+    Revision 2, 2012/02/22 (dgkoch)
+      - prepare for publishing

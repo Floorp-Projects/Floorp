@@ -8,7 +8,6 @@
 ;  be found in the AUTHORS file in the root of the source tree.
 ;
     EXPORT  |vp8_short_inv_walsh4x4_neon|
-    EXPORT  |vp8_short_inv_walsh4x4_1_neon|
 
     ARM
     REQUIRE8
@@ -16,7 +15,7 @@
 
     AREA    |.text|, CODE, READONLY  ; name this block of code
 
-;short vp8_short_inv_walsh4x4_neon(short *input, short *output)
+;short vp8_short_inv_walsh4x4_neon(short *input, short *mb_dqcoeff)
 |vp8_short_inv_walsh4x4_neon| PROC
 
     ; read in all four lines of values: d0->d3
@@ -59,22 +58,30 @@
     vshr.s16 q0, q0, #3 ;e/f >> 3
     vshr.s16 q1, q1, #3 ;g/h >> 3
 
-    vst4.i16 {d0,d1,d2,d3}, [r1@128]
+    mov      r2, #64
+    add      r3, r1, #32
+
+    vst1.i16 d0[0], [r1],r2
+    vst1.i16 d1[0], [r3],r2
+    vst1.i16 d2[0], [r1],r2
+    vst1.i16 d3[0], [r3],r2
+
+    vst1.i16 d0[1], [r1],r2
+    vst1.i16 d1[1], [r3],r2
+    vst1.i16 d2[1], [r1],r2
+    vst1.i16 d3[1], [r3],r2
+
+    vst1.i16 d0[2], [r1],r2
+    vst1.i16 d1[2], [r3],r2
+    vst1.i16 d2[2], [r1],r2
+    vst1.i16 d3[2], [r3],r2
+
+    vst1.i16 d0[3], [r1],r2
+    vst1.i16 d1[3], [r3],r2
+    vst1.i16 d2[3], [r1]
+    vst1.i16 d3[3], [r3]
 
     bx lr
     ENDP    ; |vp8_short_inv_walsh4x4_neon|
-
-
-;short vp8_short_inv_walsh4x4_1_neon(short *input, short *output)
-|vp8_short_inv_walsh4x4_1_neon| PROC
-    ldrsh r2, [r0]          ; load input[0]
-    add r3, r2, #3          ; add 3
-    add r2, r1, #16         ; base for last 8 output
-    asr r0, r3, #3          ; right shift 3
-    vdup.16 q0, r0          ; load and duplicate
-    vst1.16 {q0}, [r1@128]  ; write back 8
-    vst1.16 {q0}, [r2@128]  ; write back last 8
-    bx lr
-    ENDP    ; |vp8_short_inv_walsh4x4_1_neon|
 
     END

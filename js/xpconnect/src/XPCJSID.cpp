@@ -42,8 +42,8 @@
 /* An xpcom implementation of the JavaScript nsIID and nsCID objects. */
 
 #include "xpcprivate.h"
-#include "mozilla/dom/bindings/DOMJSClass.h"
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/DOMJSClass.h"
+#include "mozilla/dom/BindingUtils.h"
 
 /***************************************************************************/
 // nsJSID
@@ -519,13 +519,13 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         if (mozilla::dom::binding::instanceIsProxy(obj)) {
             identity =
                 static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
-        } else if (mozilla::dom::bindings::IsDOMClass(js::GetObjectJSClass(obj))) {
-            NS_ASSERTION(mozilla::dom::bindings::DOMJSClass::FromJSClass(
+        } else if (mozilla::dom::IsDOMClass(js::GetObjectJSClass(obj))) {
+            NS_ASSERTION(mozilla::dom::DOMJSClass::FromJSClass(
                               js::GetObjectJSClass(obj))->mDOMObjectIsISupports,
                          "This only works on nsISupports classes!");
             identity =
-                mozilla::dom::bindings::UnwrapDOMObject<nsISupports>(obj,
-                                                                     js::GetObjectJSClass(obj));
+                mozilla::dom::UnwrapDOMObject<nsISupports>(obj,
+                                                           js::GetObjectJSClass(obj));
         } else {
             identity = nsnull;
         }

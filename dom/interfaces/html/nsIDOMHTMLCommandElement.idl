@@ -46,7 +46,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(2ee6f391-342a-42b9-a9f6-f0f7e6d1701b)]
+[scriptable, uuid(A6963C8F-6475-4631-B7E0-41DD7DC8F388)]
 interface nsIDOMHTMLCommandElement : nsIDOMHTMLElement
 {
            attribute DOMString        type;

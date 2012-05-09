@@ -1055,3 +1055,7 @@ ogg/os_types.h
 nestegg/nestegg.h
 cubeb/cubeb.h
 #endif
+gst/gst.h
+gst/app/gstappsink.h
+gst/app/gstappsrc.h
+gst/video/video.h

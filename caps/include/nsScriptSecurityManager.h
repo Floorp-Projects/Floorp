@@ -57,6 +57,8 @@
 #include "plstr.h"
 #include "nsIScriptExternalNameSet.h"
 
+#include "mozilla/StandardInteger.h"
+
 class nsIDocShell;
 class nsString;
 class nsIClassInfo;
@@ -147,8 +149,8 @@ private:
 // Property Policy
 union SecurityLevel
 {
-    PRWord   level;
-    char*    capability;
+    intptr_t   level;
+    char*      capability;
 };
 
 // Security levels
@@ -521,15 +523,8 @@ private:
                          JSStackFrame** frameResult,
                          nsresult* rv);
 
-    static bool
-    CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal,
-                       const char* aCapability, bool *checkValue);
-
     static void
     FormatCapabilityString(nsAString& aCapability);
-
-    nsresult
-    SavePrincipal(nsIPrincipal* aToSave);
 
     /**
      * Check capability levels for an |aObj| that implements

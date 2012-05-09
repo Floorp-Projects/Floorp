@@ -36,18 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCoreUtils.h"
 #include "nsAccUtils.h"
 
-#include "nsIAccessibleTypes.h"
-#include "Role.h"
-#include "States.h"
-
+#include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsARIAMap.h"
+#include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
 #include "nsHyperTextAccessible.h"
+#include "nsIAccessibleTypes.h"
 #include "nsTextAccessible.h"
+#include "Role.h"
+#include "States.h"
 
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
@@ -174,7 +174,7 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
 
     // container-live, and container-live-role attributes
     if (live.IsEmpty()) {
-      nsRoleMapEntry *role = GetRoleMapEntry(ancestor);
+      nsRoleMapEntry* role = aria::GetRoleMap(ancestor);
       if (nsAccUtils::HasDefinedARIAToken(ancestor,
                                           nsGkAtoms::aria_live)) {
         ancestor->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_live,
@@ -418,45 +418,6 @@ nsAccUtils::GetScreenCoordsForParent(nsAccessNode *aAccessNode)
   return nsIntPoint(parentRect.x, parentRect.y);
 }
 
-nsRoleMapEntry*
-nsAccUtils::GetRoleMapEntry(nsINode *aNode)
-{
-  nsIContent *content = nsCoreUtils::GetRoleContent(aNode);
-  nsAutoString roleString;
-  if (!content ||
-      !content->GetAttr(kNameSpaceID_None, nsGkAtoms::role, roleString) ||
-      roleString.IsEmpty()) {
-    // We treat role="" as if the role attribute is absent (per aria spec:8.1.1)
-    return nsnull;
-  }
-
-  nsWhitespaceTokenizer tokenizer(roleString);
-  while (tokenizer.hasMoreTokens()) {
-    // Do a binary search through table for the next role in role list
-    NS_LossyConvertUTF16toASCII role(tokenizer.nextToken());
-    PRUint32 low = 0;
-    PRUint32 high = nsARIAMap::gWAIRoleMapLength;
-    while (low < high) {
-      PRUint32 index = (low + high) / 2;
-      PRInt32 compare = PL_strcmp(role.get(), nsARIAMap::gWAIRoleMap[index].roleString);
-      if (compare == 0) {
-        // The  role attribute maps to an entry in the role table
-        return &nsARIAMap::gWAIRoleMap[index];
-      }
-      if (compare < 0) {
-        high = index;
-      }
-      else {
-        low = index + 1;
-      }
-    }
-  }
-
-  // Always use some entry if there is a non-empty role string
-  // To ensure an accessible object is created
-  return &nsARIAMap::gLandmarkRoleMap;
-}
-
 PRUint8
 nsAccUtils::GetAttributeCharacteristics(nsIAtom* aAtom)
 {
@@ -482,10 +443,10 @@ nsAccUtils::GetLiveAttrValue(PRUint32 aRule, nsAString& aValue)
   return false;
 }
 
-#ifdef DEBUG_A11Y
+#ifdef DEBUG
 
 bool
-nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible *aAccessible)
+nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible* aAccessible)
 {
   // Don't test for accessible docs, it makes us create accessibles too
   // early and fire mutation events before we need to
@@ -494,8 +455,8 @@ nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible *aAccessible)
 
   bool foundText = false;
   PRInt32 childCount = aAccessible->GetChildCount();
-  for (PRint32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible *child = GetChildAt(childIdx);
+  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible* child = aAccessible->GetChildAt(childIdx);
     if (IsText(child)) {
       foundText = true;
       break;
@@ -509,7 +470,7 @@ nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible *aAccessible)
       return false;
   }
 
-  return true; 
+  return true;
 }
 #endif
 

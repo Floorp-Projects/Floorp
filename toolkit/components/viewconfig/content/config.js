@@ -442,6 +442,10 @@ function onConfigUnload()
 
 function FilterPrefs()
 {
+  if (document.getElementById("configDeck").getAttribute("selectedIndex") != 1) {
+    return false;
+  }
+
   var substring = document.getElementById("textbox").value;
   // Check for "/regex/[i]"
   if (substring.charAt(0) == '/') {

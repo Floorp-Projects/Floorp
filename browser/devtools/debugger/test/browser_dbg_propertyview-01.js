@@ -13,14 +13,14 @@ function test() {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
-    gDebugger = gPane.debuggerWindow;
+    gDebugger = gPane.contentWindow;
 
     testSimpleCall();
   });
 }
 
 function testSimpleCall() {
-  gPane.activeThread.addOneTimeListener("framesadded", function() {
+  gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
       let globalScope = gDebugger.DebuggerView.Properties._globalScope;
@@ -82,10 +82,11 @@ function testSimpleCall() {
 }
 
 function resumeAndFinish() {
-  gDebugger.StackFrames.activeThread.resume(function() {
+  gDebugger.DebuggerController.activeThread.resume(function() {
     let vs = gDebugger.DebuggerView.Scripts;
-    let ss = gDebugger.SourceScripts;
-    ss.onScriptsCleared();
+    let ss = gDebugger.DebuggerController.SourceScripts;
+    vs.empty();
+    vs._scripts.removeEventListener("select", vs._onScriptsChange, false);
 
     is(ss._trimUrlQuery("a/b/c.d?test=1&random=4"), "a/b/c.d",
       "Trimming the url query isn't done properly.");
@@ -101,12 +102,11 @@ function resumeAndFinish() {
       { href: "si://interesting.address.moc/random/x/y/", leaf: "script.js?a=1&b=2&c=3" }
     ];
 
-    vs._scripts.removeEventListener("select", vs._onScriptsChange, false);
-
     urls.forEach(function(url) {
       executeSoon(function() {
         let loc = url.href + url.leaf;
         vs.addScript(ss._getScriptLabel(loc, url.href), { url: loc });
+        vs.commitScripts();
       });
     });
 

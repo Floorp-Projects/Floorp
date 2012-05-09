@@ -41,7 +41,7 @@ bool graphite_start_logging(FILE * logFile, GrLogMask mask)
 
 #if !defined GRAPHITE2_NTRACING
 	dbgout = new json(logFile);
-	return dbgout;
+	return dbgout != 0;
 #else
 	return false;
 #endif
@@ -68,6 +68,7 @@ json & graphite2::operator << (json & j, const CharInfo & ci) throw()
 				<< "offset"			<< ci.base()
 				<< "unicode"		<< ci.unicodeChar()
 				<< "break"			<< ci.breakWeight()
+				<< "flags"          << ci.flags()
 				<< "slot" << json::flat << json::object
 					<< "before"	<< ci.before()
 					<< "after"	<< ci.after()
@@ -92,7 +93,8 @@ json & graphite2::operator << (json & j, const dslot & ds) throw()
 			<< "after" 			<< s.after()
 			<< json::close
 		<< "origin"			<< s.origin()
-		<< "shift"			<< Position(s.getAttr(0, gr_slatShiftX, 0), s.getAttr(0, gr_slatShiftY, 0))
+		<< "shift"			<< Position(float(s.getAttr(0, gr_slatShiftX, 0)),
+										float(s.getAttr(0, gr_slatShiftY, 0)))
 		<< "advance"		<< s.advancePos()
 		<< "insert"			<< s.isInsertBefore()
 		<< "break"			<< s.getAttr(&seg, gr_slatBreak, 0);

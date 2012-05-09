@@ -51,12 +51,19 @@
 #include "nsAudioStream.h"
 #include "VideoFrameContainer.h"
 #include "mozilla/CORSMode.h"
+#include "nsDOMMediaStream.h"
+#include "mozilla/Mutex.h"
+#include "nsTimeRanges.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
 
 typedef PRUint16 nsMediaNetworkState;
 typedef PRUint16 nsMediaReadyState;
+
+namespace mozilla {
+class MediaResource;
+}
 
 class nsHTMLMediaElement : public nsGenericHTMLElement,
                            public nsIObserver
@@ -65,6 +72,8 @@ public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
+  typedef mozilla::MediaStream MediaStream;
+  typedef mozilla::MediaResource MediaResource;
 
   enum CanPlayStatus {
     CANPLAY_NO,
@@ -132,7 +141,7 @@ public:
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
   // etc.
-  void MetadataLoaded(PRUint32 aChannels, PRUint32 aRate);
+  void MetadataLoaded(PRUint32 aChannels, PRUint32 aRate, bool aHasAudio);
 
   // Called by the video decoder object, on the main thread,
   // when it has read the first frame of the video
@@ -252,8 +261,13 @@ public:
   // http://www.whatwg.org/specs/web-apps/current-work/#ended
   bool IsPlaybackEnded() const;
 
-  // principal of the currently playing stream
+  // principal of the currently playing resource. Anything accessing the contents
+  // of this element must have a principal that subsumes this principal.
+  // Returns null if nothing is playing.
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
+
+  // called to notify that the principal of the decoder's media resource has changed.
+  void NotifyDecoderPrincipalChanged();
 
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
@@ -286,6 +300,8 @@ public:
   static bool IsOggType(const nsACString& aType);
   static const char gOggTypes[3][16];
   static char const *const gOggCodecs[3];
+  static bool IsOpusEnabled();
+  static char const *const gOggCodecsWithOpus[4];
 #endif
 
 #ifdef MOZ_WAVE
@@ -300,6 +316,13 @@ public:
   static bool IsWebMType(const nsACString& aType);
   static const char gWebMTypes[2][17];
   static char const *const gWebMCodecs[4];
+#endif
+
+#ifdef MOZ_GSTREAMER
+  static bool IsH264Enabled();
+  static bool IsH264Type(const nsACString& aType);
+  static const char gH264Types[3][17];
+  static char const *const gH264Codecs[6];
 #endif
 
   /**
@@ -363,8 +386,15 @@ public:
    */
   void FireTimeUpdate(bool aPeriodic);
 
+  MediaStream* GetMediaStream()
+  {
+    NS_ASSERTION(mStream, "Don't call this when not playing a stream");
+    return mStream->GetStream();
+  }
+
 protected:
   class MediaLoadListener;
+  class StreamListener;
 
   /**
    * Logs a warning message to the web console to report various failures.
@@ -382,6 +412,24 @@ protected:
    * the poster hiding or showing immediately.
    */
   void SetPlayedOrSeeked(bool aValue);
+
+  /**
+   * Initialize the media element for playback of mSrcAttrStream
+   */
+  void SetupMediaStreamPlayback();
+  /**
+   * Stop playback on mStream.
+   */
+  void EndMediaStreamPlayback();
+
+  /**
+   * Returns an nsDOMMediaStream containing the played contents of this
+   * element. When aFinishWhenEnded is true, when this element ends playback
+   * we will finish the stream and not play any more into it.
+   * When aFinishWhenEnded is false, ending playback does not finish the stream.
+   * The stream will never finish.
+   */
+  already_AddRefed<nsDOMMediaStream> CaptureStreamInternal(bool aFinishWhenEnded);
 
   /**
    * Create a decoder for the given aMIMEType. Returns null if we
@@ -408,7 +456,10 @@ protected:
    * Finish setting up the decoder after Load() has been called on it.
    * Called by InitializeDecoderForChannel/InitializeDecoderAsClone.
    */
-  nsresult FinishDecoderSetup(nsMediaDecoder* aDecoder);
+  nsresult FinishDecoderSetup(nsMediaDecoder* aDecoder,
+                              MediaResource* aStream,
+                              nsIStreamListener **aListener,
+                              nsMediaDecoder* aCloneDonor);
 
   /**
    * Call this after setting up mLoadingSrc and mDecoder.
@@ -424,6 +475,10 @@ protected:
    */
   nsHTMLMediaElement* LookupMediaElementURITable(nsIURI* aURI);
 
+  /**
+   * Shutdown and clear mDecoder and maintain associated invariants.
+   */
+  void ShutdownDecoder();
   /**
    * Execute the initial steps of the load algorithm that ensure existing
    * loads are aborted, the element is emptied, and a new load ID is
@@ -581,11 +636,32 @@ protected:
   void ProcessMediaFragmentURI();
 
   // The current decoder. Load() has been called on this decoder.
+  // At most one of mDecoder and mStream can be non-null.
   nsRefPtr<nsMediaDecoder> mDecoder;
 
   // A reference to the VideoFrameContainer which contains the current frame
   // of video to display.
   nsRefPtr<VideoFrameContainer> mVideoFrameContainer;
+
+  // Holds a reference to the DOM wrapper for the MediaStream that has been
+  // set in the src attribute.
+  nsRefPtr<nsDOMMediaStream> mSrcAttrStream;
+
+  // Holds a reference to the DOM wrapper for the MediaStream that we're
+  // actually playing.
+  // At most one of mDecoder and mStream can be non-null.
+  nsRefPtr<nsDOMMediaStream> mStream;
+
+  // Holds references to the DOM wrappers for the MediaStreams that we're
+  // writing to.
+  struct OutputMediaStream {
+    nsRefPtr<nsDOMMediaStream> mStream;
+    bool mFinishWhenEnded;
+  };
+  nsTArray<OutputMediaStream> mOutputStreams;
+
+  // Holds a reference to the MediaStreamListener attached to mStream. STRONG!
+  StreamListener* mStreamListener;
 
   // Holds a reference to the first channel we open to the media resource.
   // Once the decoder is created, control over the channel passes to the
@@ -689,6 +765,12 @@ protected:
   // An audio stream for writing audio directly from JS.
   nsRefPtr<nsAudioStream> mAudioStream;
 
+  // Range of time played.
+  nsTimeRanges mPlayed;
+
+  // Stores the time at the start of the current 'played' range.
+  double mCurrentPlayRangeStart;
+
   // True if MozAudioAvailable events can be safely dispatched, based on
   // a media and element same-origin check.
   bool mAllowAudioData;
@@ -720,8 +802,11 @@ protected:
   // 'Pause' method, or playback not yet having started.
   bool mPaused;
 
-  // True if the sound is muted
+  // True if the sound is muted.
   bool mMuted;
+
+  // True if the sound is being captured.
+  bool mAudioCaptured;
 
   // If TRUE then the media element was actively playing before the currently
   // in progress seeking. If FALSE then the media element is either not seeking
@@ -787,6 +872,9 @@ protected:
 
   // The CORS mode when loading the media element
   mozilla::CORSMode mCORSMode;
+
+  // True if the media has an audio track
+  bool mHasAudio;
 };
 
 #endif

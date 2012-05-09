@@ -72,39 +72,45 @@ let gCurrentTest, gCurrentTestIndex = -1, gTestDesc;
 // Go through the tests in both directions, to add additional coverage for
 // transitions between different states.
 let gForward = true;
+let gCheckETLD = false;
 function nextTest() {
-  if (gForward)
-    gCurrentTestIndex++;
-  else
-    gCurrentTestIndex--;
+  if (!gCheckETLD) {
+    if (gForward)
+      gCurrentTestIndex++;
+    else
+      gCurrentTestIndex--;
 
-  if (gCurrentTestIndex == tests.length) {
-    // Went too far, reverse
-    gCurrentTestIndex--;
-    gForward = false;
+    if (gCurrentTestIndex == tests.length) {
+      // Went too far, reverse
+      gCurrentTestIndex--;
+      gForward = false;
+    }
+
+    if (gCurrentTestIndex == -1) {
+      gBrowser.selectedBrowser.removeEventListener("load", checkResult, true);
+      gBrowser.removeCurrentTab();
+      finish();
+      return;
+    }
+
+    gCurrentTest = tests[gCurrentTestIndex];
+    gTestDesc = "#" + gCurrentTestIndex + " (" + gCurrentTest.name + ")";
+    if (!gForward)
+      gTestDesc += " (second time)";
+    if (gCurrentTest.isHTTPS) {
+      gCheckETLD = true;
+    }
+    content.location = gCurrentTest.location;
+  } else {
+    gCheckETLD = false;
+    gTestDesc = "#" + gCurrentTestIndex + " (" + gCurrentTest.name + " without eTLD in identity icon label)";
+    if (!gForward)
+      gTestDesc += " (second time)";
+    content.location.reload(true);
   }
-
-  if (gCurrentTestIndex == -1) {
-    gBrowser.selectedBrowser.removeEventListener("load", checkResult, true);
-    gBrowser.removeCurrentTab();
-    finish();
-    return;
-  }
-
-  gCurrentTest = tests[gCurrentTestIndex];
-  gTestDesc = "#" + gCurrentTestIndex + " (" + gCurrentTest.name + ")";
-  if (!gForward)
-    gTestDesc += " (second time)";
-  content.location = gCurrentTest.location;
 }
 
 function checkResult() {
-  if (gCurrentTest.isHTTPS) {
-    // Check that the effective host is displayed in the UI
-    let label = document.getElementById("identity-icon-label");
-    is(label.value, gCurrentTest.effectiveHost, "effective host is displayed in identity icon label for test " + gTestDesc);
-  }
-
   // Sanity check other values, and the value of gIdentityHandler.getEffectiveHost()
   is(gIdentityHandler._lastLocation.host, gCurrentTest.host, "host matches for test " + gTestDesc);
   is(gIdentityHandler.getEffectiveHost(), gCurrentTest.effectiveHost, "effectiveHost matches for test " + gTestDesc);

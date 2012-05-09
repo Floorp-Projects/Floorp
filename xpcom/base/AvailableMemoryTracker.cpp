@@ -152,8 +152,11 @@ PRUint32 sNumLowPhysicalMemEvents = 0;
 WindowsDllInterceptor sKernel32Intercept;
 WindowsDllInterceptor sGdi32Intercept;
 
-// Have we installed the kernel intercepts above?
-bool sHooksInstalled = false;
+// Has Init() been called?
+bool sInitialized = false;
+
+// Has Activate() been called?  The hooks don't do anything until this happens.
+bool sHooksActive = false;
 
 // Alas, we'd like to use mozilla::TimeStamp, but we can't, because it acquires
 // a lock!
@@ -208,6 +211,10 @@ bool MaybeScheduleMemoryPressureEvent()
 
 void CheckMemAvailable()
 {
+  if (!sHooksActive) {
+    return;
+  }
+
   MEMORYSTATUSEX stat;
   stat.dwLength = sizeof(stat);
   bool success = GlobalMemoryStatusEx(&stat);
@@ -263,7 +270,7 @@ VirtualAllocHook(LPVOID aAddress, SIZE_T aSize,
   // virtual memory.  Similarly, don't call CheckMemAvailable for MEM_COMMIT if
   // we're not tracking low physical memory.
   if ((sLowVirtualMemoryThreshold != 0 && aAllocationType & MEM_RESERVE) ||
-      (sLowPhysicalMemoryThreshold != 0 &&  aAllocationType & MEM_COMMIT)) {
+      (sLowPhysicalMemoryThreshold != 0 && aAllocationType & MEM_COMMIT)) {
     LOG3("VirtualAllocHook(size=", aSize, ")");
     CheckMemAvailable();
   }
@@ -300,7 +307,7 @@ CreateDIBSectionHook(HDC aDC,
 
   // If aSection is non-null, CreateDIBSection won't allocate any new memory.
   bool doCheck = false;
-  if (!aSection && aBitmapInfo) {
+  if (sHooksActive && !aSection && aBitmapInfo) {
     PRUint16 bitCount = aBitmapInfo->bmiHeader.biBitCount;
     if (bitCount == 0) {
       // MSDN says bitCount == 0 means that it figures out how many bits each
@@ -382,15 +389,14 @@ public:
     aDescription.AssignLiteral(
       "Number of low-virtual-memory events fired since startup. ");
 
-    if (sLowVirtualMemoryThreshold == 0 || !sHooksInstalled) {
-      aDescription.Append(nsPrintfCString(1024,
+    if (sLowVirtualMemoryThreshold == 0) {
+      aDescription.AppendLiteral(
         "Tracking low-virtual-memory events is disabled, but you can enable it "
         "by giving the memory.low_virtual_mem_threshold_mb pref a non-zero "
-        "value%s.",
-        sHooksInstalled ? "" : " and restarting"));
+        "value.");
     }
     else {
-      aDescription.Append(nsPrintfCString(1024,
+      aDescription.Append(nsPrintfCString(
         "We fire such an event if we notice there is less than %d MB of virtual "
         "address space available (controlled by the "
         "'memory.low_virtual_mem_threshold_mb' pref).  We'll likely crash if "
@@ -425,15 +431,14 @@ public:
     aDescription.AssignLiteral(
       "Number of low-commit-space events fired since startup. ");
 
-    if (sLowCommitSpaceThreshold == 0 || !sHooksInstalled) {
-      aDescription.Append(nsPrintfCString(1024,
+    if (sLowCommitSpaceThreshold == 0) {
+      aDescription.Append(
         "Tracking low-commit-space events is disabled, but you can enable it "
         "by giving the memory.low_commit_space_threshold_mb pref a non-zero "
-        "value%s.",
-        sHooksInstalled ? "" : " and restarting"));
+        "value.");
     }
     else {
-      aDescription.Append(nsPrintfCString(1024,
+      aDescription.Append(nsPrintfCString(
         "We fire such an event if we notice there is less than %d MB of "
         "available commit space (controlled by the "
         "'memory.low_commit_space_threshold_mb' pref).  Windows will likely "
@@ -468,15 +473,14 @@ public:
     aDescription.AssignLiteral(
       "Number of low-physical-memory events fired since startup. ");
 
-    if (sLowPhysicalMemoryThreshold == 0 || !sHooksInstalled) {
-      aDescription.Append(nsPrintfCString(1024,
+    if (sLowPhysicalMemoryThreshold == 0) {
+      aDescription.Append(
         "Tracking low-physical-memory events is disabled, but you can enable it "
         "by giving the memory.low_physical_memory_threshold_mb pref a non-zero "
-        "value%s.",
-        sHooksInstalled ? "" : " and restarting"));
+        "value.");
     }
     else {
-      aDescription.Append(nsPrintfCString(1024,
+      aDescription.Append(nsPrintfCString(
         "We fire such an event if we notice there is less than %d MB of "
         "available physical memory (controlled by the "
         "'memory.low_physical_memory_threshold_mb' pref).  The machine will start "
@@ -495,8 +499,12 @@ NS_IMPL_ISUPPORTS1(NumLowPhysicalMemoryEventsMemoryReporter, nsIMemoryReporter)
 namespace mozilla {
 namespace AvailableMemoryTracker {
 
-void Init()
+void Activate()
 {
+#if defined(_M_IX86)
+  MOZ_ASSERT(sInitialized);
+  MOZ_ASSERT(!sHooksActive);
+
   // On 64-bit systems, hardcode sLowVirtualMemoryThreshold to 0 -- we assume
   // we're not going to run out of virtual memory!
   if (sizeof(void*) > 4) {
@@ -514,14 +522,32 @@ void Init()
   Preferences::AddUintVarCache(&sLowMemoryNotificationIntervalMS,
       "memory.low_memory_notification_interval_ms", 10000);
 
-  // Don't register the hooks if we're a build instrumented for PGO or if both
-  // thresholds are 0.  (If we're an instrumented build, the compiler adds
-  // function calls all over the place which may call VirtualAlloc; this makes
-  // it hard to prevent VirtualAllocHook from reentering itself.)
+  NS_RegisterMemoryReporter(new NumLowCommitSpaceEventsMemoryReporter());
+  NS_RegisterMemoryReporter(new NumLowPhysicalMemoryEventsMemoryReporter());
+  if (sizeof(void*) == 4) {
+    NS_RegisterMemoryReporter(new NumLowVirtualMemoryEventsMemoryReporter());
+  }
+  sHooksActive = true;
+#endif
+}
 
-  if (!PR_GetEnv("MOZ_PGO_INSTRUMENTED") &&
-      (sLowVirtualMemoryThreshold != 0 || sLowPhysicalMemoryThreshold != 0)) {
-    sHooksInstalled = true;
+void Init()
+{
+  // Do nothing on x86-64, because nsWindowsDllInterceptor is not thread-safe
+  // on 64-bit.  (On 32-bit, it's probably thread-safe.)  Even if we run Init()
+  // before any other of our threads are running, another process may have
+  // started a remote thread which could call VirtualAlloc!
+  //
+  // Moreover, the benefit of this code is less clear when we're a 64-bit
+  // process, because we aren't going to run out of virtual memory, and the
+  // system is likely to have a fair bit of physical memory.
+
+#if defined(_M_IX86)
+  // Don't register the hooks if we're a build instrumented for PGO: If we're
+  // an instrumented build, the compiler adds function calls all over the place
+  // which may call VirtualAlloc; this makes it hard to prevent
+  // VirtualAllocHook from reentering itself.
+  if (!PR_GetEnv("MOZ_PGO_INSTRUMENTED")) {
     sKernel32Intercept.Init("Kernel32.dll");
     sKernel32Intercept.AddHook("VirtualAlloc",
       reinterpret_cast<intptr_t>(VirtualAllocHook),
@@ -535,15 +561,9 @@ void Init()
       reinterpret_cast<intptr_t>(CreateDIBSectionHook),
       (void**) &sCreateDIBSectionOrig);
   }
-  else {
-    sHooksInstalled = false;
-  }
 
-  NS_RegisterMemoryReporter(new NumLowCommitSpaceEventsMemoryReporter());
-  NS_RegisterMemoryReporter(new NumLowPhysicalMemoryEventsMemoryReporter());
-  if (sizeof(void*) == 4) {
-    NS_RegisterMemoryReporter(new NumLowVirtualMemoryEventsMemoryReporter());
-  }
+  sInitialized = true;
+#endif
 }
 
 } // namespace AvailableMemoryTracker

@@ -169,7 +169,6 @@ nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aCo
   : nsStackFrame(aShell, aContext)
   , mUseEditor(false)
   , mIsProcessing(false)
-  , mFireChangeEventState(false)
 #ifdef DEBUG
   , mInEditorInitialization(false)
 #endif
@@ -698,8 +697,6 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
       return;
     }
   }
-
-  InitFocusedValue();
 
   nsCOMPtr<nsISelection> ourSel;
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, 
@@ -1379,28 +1376,6 @@ nsTextControlFrame::GetMaxLength(PRInt32* aSize)
     }
   }
   return false;
-}
-
-nsresult
-nsTextControlFrame::InitFocusedValue()
-{
-  return GetText(mFocusedValue);
-}
-
-NS_IMETHODIMP
-nsTextControlFrame::CheckFireOnChange()
-{
-  nsString value;
-  GetText(value);
-  if (!mFocusedValue.Equals(value))
-  {
-    mFocusedValue = value;
-    // Dispatch the change event.
-    nsContentUtils::DispatchTrustedEvent(mContent->OwnerDoc(), mContent,
-                                         NS_LITERAL_STRING("change"), true,
-                                         false);
-  }
-  return NS_OK;
 }
 
 // END IMPLEMENTING NS_IFORMCONTROLFRAME

@@ -95,6 +95,7 @@ AddSharedLibraryInfoToStream(std::ostream& aStream, SharedLibrary& aLib)
   aStream << "{";
   aStream << "\"start\":" << aLib.GetStart();
   aStream << ",\"end\":" << aLib.GetEnd();
+  aStream << ",\"offset\":" << aLib.GetOffset();
   aStream << ",\"name\":\"" << aLib.GetName() << "\"";
 #ifdef XP_WIN
   aStream << ",\"pdbSignature\":\"" << aLib.GetPdbSignature().ToString() << "\"";
@@ -104,7 +105,7 @@ AddSharedLibraryInfoToStream(std::ostream& aStream, SharedLibrary& aLib)
   aStream << "}";
 }
 
-static std::string
+std::string
 GetSharedLibraryInfoString()
 {
   SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();

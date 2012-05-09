@@ -291,6 +291,8 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
       return FunctionPtr(__wrap_dlsym);
     if (strcmp(symbol + 2, "addr") == 0)
       return FunctionPtr(__wrap_dladdr);
+    if (strcmp(symbol + 2, "_iterate_phdr") == 0)
+      return FunctionPtr(__wrap_dl_iterate_phdr);
   } else if (symbol[0] == '_' && symbol[1] == '_') {
   /* Resolve a few C++ ABI specific functions to point to ours */
 #ifdef __ARM_EABI__

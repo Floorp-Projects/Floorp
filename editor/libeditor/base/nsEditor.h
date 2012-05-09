@@ -129,12 +129,34 @@ public:
     kOpDeleteNode,
     kOpSplitNode,
     kOpJoinNode,
-    kOpDeleteSelection,
+    kOpDeleteText = 1003,
+
     // text commands
-    kOpInsertBreak    = 1000,
-    kOpInsertText     = 1001,
-    kOpInsertIMEText  = 1002,
-    kOpDeleteText     = 1003
+    kOpInsertText         = 2000,
+    kOpInsertIMEText      = 2001,
+    kOpDeleteSelection    = 2002,
+    kOpSetTextProperty    = 2003,
+    kOpRemoveTextProperty = 2004,
+    kOpOutputText         = 2005,
+
+    // html only action
+    kOpInsertBreak         = 3000,
+    kOpMakeList            = 3001,
+    kOpIndent              = 3002,
+    kOpOutdent             = 3003,
+    kOpAlign               = 3004,
+    kOpMakeBasicBlock      = 3005,
+    kOpRemoveList          = 3006,
+    kOpMakeDefListItem     = 3007,
+    kOpInsertElement       = 3008,
+    kOpInsertQuotation     = 3009,
+    kOpHTMLPaste           = 3012,
+    kOpLoadHTML            = 3013,
+    kOpResetTextProperties = 3014,
+    kOpSetAbsolutePosition = 3015,
+    kOpRemoveAbsolutePosition = 3016,
+    kOpDecreaseZIndex      = 3017,
+    kOpIncreaseZIndex      = 3018
   };
 
   /** The default constructor. This should suffice. the setting of the interfaces is done
@@ -218,8 +240,6 @@ public:
   void SwitchTextDirectionTo(PRUint32 aDirection);
 
 protected:
-  nsCString mContentMIMEType;       // MIME type of the doc we are editing.
-
   nsresult DetermineCurrentDirection();
 
   /** create a transaction for setting aAttribute to aValue on aElement
@@ -353,8 +373,7 @@ protected:
   // helper for GetPriorNode and GetNextNode
   nsIContent* FindNextLeafNode(nsINode  *aCurrentNode,
                                bool      aGoForward,
-                               bool      bNoBlockCrossing,
-                               nsIContent *aActiveEditorRoot);
+                               bool      bNoBlockCrossing);
 
   // Get nsIWidget interface
   nsresult GetWidget(nsIWidget **aWidget);
@@ -386,7 +405,8 @@ public:
 
   /** All editor operations which alter the doc should be prefaced
    *  with a call to StartOperation, naming the action and direction */
-  NS_IMETHOD StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
+  NS_IMETHOD StartOperation(OperationID opID,
+                            nsIEditor::EDirection aDirection);
 
   /** All editor operations which alter the doc should be followed
    *  with a call to EndOperation */
@@ -456,22 +476,26 @@ public:
     *                       skipping non-editable nodes if aEditableNode is true.
     *                       If there is no prior node, aResultNode will be nsnull.
     * @param bNoBlockCrossing If true, don't move across "block" nodes, whatever that means.
-    * @param aActiveEditorRoot If non-null, only return descendants of aActiveEditorRoot.
     */
   nsresult GetPriorNode(nsIDOMNode  *aCurrentNode, 
                         bool         aEditableNode,
                         nsCOMPtr<nsIDOMNode> *aResultNode,
-                        bool         bNoBlockCrossing = false,
-                        nsIContent  *aActiveEditorRoot = nsnull);
+                        bool         bNoBlockCrossing = false);
+  nsIContent* GetPriorNode(nsINode* aCurrentNode, bool aEditableNode,
+                           bool aNoBlockCrossing = false);
 
   // and another version that takes a {parent,offset} pair rather than a node
   nsresult GetPriorNode(nsIDOMNode  *aParentNode, 
                         PRInt32      aOffset, 
                         bool         aEditableNode, 
                         nsCOMPtr<nsIDOMNode> *aResultNode,
-                        bool         bNoBlockCrossing = false,
-                        nsIContent  *aActiveEditorRoot = nsnull);
-                       
+                        bool         bNoBlockCrossing = false);
+  nsIContent* GetPriorNode(nsINode* aParentNode,
+                           PRInt32 aOffset,
+                           bool aEditableNode,
+                           bool aNoBlockCrossing = false);
+
+
   /** get the node immediately after to aCurrentNode
     * @param aCurrentNode   the node from which we start the search
     * @param aEditableNode  if true, only return an editable node
@@ -482,27 +506,27 @@ public:
   nsresult GetNextNode(nsIDOMNode  *aCurrentNode, 
                        bool         aEditableNode,
                        nsCOMPtr<nsIDOMNode> *aResultNode,
-                       bool         bNoBlockCrossing = false,
-                       nsIContent  *aActiveEditorRoot = nsnull);
+                       bool         bNoBlockCrossing = false);
   nsIContent* GetNextNode(nsINode* aCurrentNode,
                           bool aEditableNode,
-                          bool bNoBlockCrossing = false,
-                          nsIContent* aActiveEditorRoot = nsnull);
+                          bool bNoBlockCrossing = false);
 
   // and another version that takes a {parent,offset} pair rather than a node
   nsresult GetNextNode(nsIDOMNode  *aParentNode, 
                        PRInt32      aOffset, 
                        bool         aEditableNode, 
                        nsCOMPtr<nsIDOMNode> *aResultNode,
-                       bool         bNoBlockCrossing = false,
-                       nsIContent  *aActiveEditorRoot = nsnull);
+                       bool         bNoBlockCrossing = false);
+  nsIContent* GetNextNode(nsINode* aParentNode,
+                          PRInt32 aOffset,
+                          bool aEditableNode,
+                          bool aNoBlockCrossing = false);
 
   // Helper for GetNextNode and GetPriorNode
   nsIContent* FindNode(nsINode *aCurrentNode,
                        bool     aGoForward,
                        bool     aEditableNode,
-                       bool     bNoBlockCrossing,
-                       nsIContent *aActiveEditorRoot);
+                       bool     bNoBlockCrossing);
   /**
    * Get the rightmost child of aCurrentNode;
    * return nsnull if aCurrentNode has no children.
@@ -536,17 +560,21 @@ public:
 
 
   /** returns true if aParent can contain a child of type aTag */
-  bool CanContainTag(nsIDOMNode* aParent, const nsAString &aTag);
-  bool TagCanContain(const nsAString &aParentTag, nsIDOMNode* aChild);
-  virtual bool TagCanContainTag(const nsAString &aParentTag, const nsAString &aChildTag);
+  bool CanContain(nsIDOMNode* aParent, nsIDOMNode* aChild);
+  bool CanContainTag(nsIDOMNode* aParent, nsIAtom* aTag);
+  bool TagCanContain(nsIAtom* aParentTag, nsIDOMNode* aChild);
+  virtual bool TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag);
 
   /** returns true if aNode is our root node */
-  bool IsRootNode(nsIDOMNode *inNode);
-  bool IsRootNode(nsINode *inNode);
+  bool IsRoot(nsIDOMNode* inNode);
+  bool IsRoot(nsINode* inNode);
+  bool IsEditorRoot(nsINode* aNode);
 
   /** returns true if aNode is a descendant of our root node */
-  bool IsDescendantOfBody(nsIDOMNode *inNode);
-  bool IsDescendantOfBody(nsINode *inNode);
+  bool IsDescendantOfRoot(nsIDOMNode* inNode);
+  bool IsDescendantOfRoot(nsINode* inNode);
+  bool IsDescendantOfEditorRoot(nsIDOMNode* aNode);
+  bool IsDescendantOfEditorRoot(nsINode* aNode);
 
   /** returns true if aNode is a container */
   virtual bool IsContainer(nsIDOMNode *aNode);
@@ -555,6 +583,9 @@ public:
   bool IsEditable(nsIDOMNode *aNode);
   bool IsEditable(nsIContent *aNode);
 
+  /**
+   * aNode must be a non-null text node.
+   */
   virtual bool IsTextInDirtyFrameVisible(nsIContent *aNode);
 
   /** returns true if aNode is a MozEditorBogus node */
@@ -619,7 +650,7 @@ public:
 
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
 
-  nsresult HandleInlineSpellCheck(PRInt32 action,
+  nsresult HandleInlineSpellCheck(OperationID action,
                                     nsISelection *aSelection,
                                     nsIDOMNode *previousSelectedNode,
                                     PRInt32 previousSelectedOffset,
@@ -632,6 +663,10 @@ public:
 
   // Fast non-refcounting editor root element accessor
   mozilla::dom::Element *GetRoot();
+
+  // Likewise, but gets the editor's root instead, which is different for HTML
+  // editors
+  virtual mozilla::dom::Element* GetEditorRoot();
 
   // Accessor methods to flags
   bool IsPlaintextEditor() const
@@ -793,59 +828,60 @@ public:
   };
 
 protected:
-
-  PRUint32        mModCount;     // number of modifications (for undo/redo stack)
-  PRUint32        mFlags;        // behavior flags. See nsIPlaintextEditor.idl for the flags we use.
-
-  nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
-  PRInt32         mUpdateCount;
-
-  // Spellchecking
   enum Tristate {
     eTriUnset,
     eTriFalse,
     eTriTrue
-  }                 mSpellcheckCheckboxState;
+  };
+  // Spellchecking
+  nsCString mContentMIMEType;       // MIME type of the doc we are editing.
+
   nsCOMPtr<nsIInlineSpellChecker> mInlineSpellChecker;
 
   nsCOMPtr<nsITransactionManager> mTxnMgr;
-  nsWeakPtr         mPlaceHolderTxn;     // weak reference to placeholder for begin/end batch purposes
-  nsIAtom          *mPlaceHolderName;    // name of placeholder transaction
-  PRInt32           mPlaceHolderBatch;   // nesting count for batching
-  nsSelectionState *mSelState;           // saved selection state for placeholder txn batching
-  nsSelectionState  mSavedSel;           // cached selection for nsAutoSelectionReset
-  nsRangeUpdater    mRangeUpdater;       // utility class object for maintaining preserved ranges
-  nsCOMPtr<mozilla::dom::Element> mRootElement;   // cached root node
-  PRInt32           mAction;             // the current editor action
-  EDirection        mDirection;          // the current direction of editor action
-  
-  // data necessary to build IME transactions
+  nsCOMPtr<mozilla::dom::Element> mRootElement; // cached root node
   nsCOMPtr<nsIPrivateTextRangeList> mIMETextRangeList; // IME special selection ranges
   nsCOMPtr<nsIDOMCharacterData>     mIMETextNode;      // current IME text node
-  PRUint32                          mIMETextOffset;    // offset in text node where IME comp string begins
-  PRUint32                          mIMEBufferLength;  // current length of IME comp string
-  bool                              mInIMEMode;        // are we inside an IME composition?
-  bool                              mIsIMEComposing;   // is IME in composition state?
-                                                       // This is different from mInIMEMode. see Bug 98434.
+  nsCOMPtr<nsIDOMEventTarget> mEventTarget; // The form field as an event receiver
+  nsCOMPtr<nsIDOMEventListener> mEventListener;
+  nsWeakPtr        mSelConWeak;          // weak reference to the nsISelectionController
+  nsWeakPtr        mPlaceHolderTxn;      // weak reference to placeholder for begin/end batch purposes
+  nsWeakPtr        mDocWeak;             // weak reference to the nsIDOMDocument
+  nsIAtom          *mPlaceHolderName;    // name of placeholder transaction
+  nsSelectionState *mSelState;           // saved selection state for placeholder txn batching
+  nsString         *mPhonetic;
 
-  bool                          mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
-  bool                          mDidPreDestroy;    // whether PreDestroy has been called
-  bool                          mDidPostCreate;    // whether PostCreate has been called
-   // various listeners
+  // various listeners
   nsCOMArray<nsIEditActionListener> mActionListeners;  // listens to all low level actions on the doc
   nsCOMArray<nsIEditorObserver> mEditorObservers;  // just notify once per high level change
   nsCOMArray<nsIDocumentStateListener> mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
 
-  PRInt8                        mDocDirtyState;		// -1 = not initialized
-  nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument
-  // The form field as an event receiver
-  nsCOMPtr<nsIDOMEventTarget> mEventTarget;
+  nsSelectionState  mSavedSel;           // cached selection for nsAutoSelectionReset
+  nsRangeUpdater    mRangeUpdater;       // utility class object for maintaining preserved ranges
 
-  nsString* mPhonetic;
+  PRUint32          mModCount;     // number of modifications (for undo/redo stack)
+  PRUint32          mFlags;        // behavior flags. See nsIPlaintextEditor.idl for the flags we use.
 
- nsCOMPtr<nsIDOMEventListener> mEventListener;
+  PRInt32           mUpdateCount;
 
-  PRUint32 mHandlingActionCount;
+  PRInt32           mPlaceHolderBatch;   // nesting count for batching
+  OperationID       mAction;             // the current editor action
+  PRUint32          mHandlingActionCount;
+
+  PRUint32          mIMETextOffset;    // offset in text node where IME comp string begins
+  PRUint32          mIMEBufferLength;  // current length of IME comp string
+
+  EDirection        mDirection;          // the current direction of editor action
+  PRInt8            mDocDirtyState;      // -1 = not initialized
+  PRUint8           mSpellcheckCheckboxState; // a Tristate value
+
+  bool mInIMEMode;        // are we inside an IME composition?
+  bool mIsIMEComposing;   // is IME in composition state?
+                                                       // This is different from mInIMEMode. see Bug 98434.
+
+  bool mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
+  bool mDidPreDestroy;    // whether PreDestroy has been called
+  bool mDidPostCreate;    // whether PostCreate has been called
   bool mHandlingTrustedAction;
   bool mDispatchInputEvent;
 

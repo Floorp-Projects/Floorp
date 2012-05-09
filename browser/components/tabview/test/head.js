@@ -78,13 +78,23 @@ function closeGroupItem(groupItem, callback) {
 function afterAllTabItemsUpdated(callback, win) {
   win = win || window;
   let tabItems = win.document.getElementById("tab-view").contentWindow.TabItems;
+  let counter = 0;
 
   for (let a = 0; a < win.gBrowser.tabs.length; a++) {
     let tabItem = win.gBrowser.tabs[a]._tabViewTabItem;
-    if (tabItem)
-      tabItems._update(win.gBrowser.tabs[a]);
+    if (tabItem) {
+      let tab = win.gBrowser.tabs[a];
+      counter++;
+      tabItem.addSubscriber("updated", function onUpdated() {
+        tabItem.removeSubscriber("updated", onUpdated);
+        if (--counter == 0)
+          callback();
+      });
+      tabItems.update(tab);
+    }
   }
-  callback();
+  if (counter == 0)
+    callback();
 }
 
 // ---------
@@ -401,15 +411,9 @@ function goToNextGroup(win) {
 }
 
 // ----------
-function whenAppTabIconAdded(callback, win) {
-  win = win || window;
-
-  let contentWindow = win.TabView.getContentWindow();
-  let groupItems = contentWindow.GroupItems.groupItems;
-  let groupItem = groupItems[(groupItems.length - 1)];
-
+function whenAppTabIconAdded(groupItem, callback) {
   groupItem.addSubscriber("appTabIconAdded", function onAppTabIconAdded() {
     groupItem.removeSubscriber("appTabIconAdded", onAppTabIconAdded);
-    callback();
+    executeSoon(callback);
   });
 }

@@ -41,6 +41,7 @@
 #define mozilla_ClearOnShutdown_h
 
 #include "mozilla/LinkedList.h"
+#include "nsThreadUtils.h"
 
 /*
  * This header exports one public method in the mozilla namespace:
@@ -56,6 +57,10 @@
  *
  * There is no way to undo a call to ClearOnShutdown, so you can call it only
  * on smart pointers which you know will live until the program shuts down.
+ *
+ * ClearOnShutdown is currently main-thread only because we don't want to
+ * accidentally free an object from a different thread than the one it was
+ * created on.
  */
 
 namespace mozilla {
@@ -96,6 +101,8 @@ inline void ClearOnShutdown(SmartPtr *aPtr)
 {
   using namespace ClearOnShutdown_Internal;
 
+  MOZ_ASSERT(NS_IsMainThread());
+
   MOZ_ASSERT(!sHasShutDown);
   ShutdownObserver *observer = new PointerClearer<SmartPtr>(aPtr);
   sShutdownObservers.insertBack(observer);
@@ -106,6 +113,8 @@ inline void ClearOnShutdown(SmartPtr *aPtr)
 inline void KillClearOnShutdown()
 {
   using namespace ClearOnShutdown_Internal;
+
+  MOZ_ASSERT(NS_IsMainThread());
 
   ShutdownObserver *observer;
   while ((observer = sShutdownObservers.popFirst())) {

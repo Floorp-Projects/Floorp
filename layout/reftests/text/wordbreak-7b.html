@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <style type="text/css">
+    @font-face {
+      font-family: test;
+      src: url(../fonts/dejavu-sans/DejaVuSans.ttf);
+    }
+    body {
+      font-family: test;
+      line-height: 1.5em;
+    }
+    div.breakall { width: 0px; word-break: break-all; }
+    div.keepall { width: 0px; word-break: keep-all; }
+  </style>
+  <title>Test - word-break: break-all with rtl and diacritics, including ligatures</title>
+  </head>
+  <body>
+    <div class="breakall">
+    &#x0648;&#x064E;&#x0644;&#x064E;&#x0627;
+    &#x0627;&#x0644;&#x0633;&#x0651;&#x064E;&#x0644;&#x064E;&#x0627;&#x0645;&#x064F;
+    &#x0639;&#x064E;&#x0644;&#x064E;&#x064A;&#x0652;&#x0643;&#x064F;&#x0645;&#x0652;
+    </div>
+    <br>
+    <div class="keepall">
+    &#x0648;&#x064E;&#x0644;&#x064E;&#x0627;
+    &#x0627;&#x0644;&#x0633;&#x0651;&#x064E;&#x0644;&#x064E;&#x0627;&#x0645;&#x064F;
+    &#x0639;&#x064E;&#x0644;&#x064E;&#x064A;&#x0652;&#x0643;&#x064F;&#x0645;&#x0652;
+    </div>
+  </body>
+</html>

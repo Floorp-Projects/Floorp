@@ -1,0 +1,348 @@
+# HG changeset patch
+# Parent d02aa133060bcdfd44634038c8c28654c718c2ff
+# User Timothy B. Terriberry <tterribe@vt.edu>
+remove __inline for compiler compatibility
+
+Upstream Change-Id: I6f2b218dfc808b73212bbb90c69e2b6cc1fa90ce
+
+diff --git a/media/libvpx/vp8/common/loopfilter_filters.c b/media/libvpx/vp8/common/loopfilter_filters.c
+--- a/media/libvpx/vp8/common/loopfilter_filters.c
++++ b/media/libvpx/vp8/common/loopfilter_filters.c
+@@ -10,50 +10,50 @@
+ 
+ 
+ #include <stdlib.h>
+ #include "loopfilter.h"
+ #include "onyxc_int.h"
+ 
+ typedef unsigned char uc;
+ 
+-static __inline signed char vp8_signed_char_clamp(int t)
++static signed char vp8_signed_char_clamp(int t)
+ {
+     t = (t < -128 ? -128 : t);
+     t = (t > 127 ? 127 : t);
+     return (signed char) t;
+ }
+ 
+ 
+ /* should we apply any filter at all ( 11111111 yes, 00000000 no) */
+-static __inline signed char vp8_filter_mask(uc limit, uc blimit,
+-                                     uc p3, uc p2, uc p1, uc p0,
+-                                     uc q0, uc q1, uc q2, uc q3)
++static signed char vp8_filter_mask(uc limit, uc blimit,
++                            uc p3, uc p2, uc p1, uc p0,
++                            uc q0, uc q1, uc q2, uc q3)
+ {
+     signed char mask = 0;
+     mask |= (abs(p3 - p2) > limit);
+     mask |= (abs(p2 - p1) > limit);
+     mask |= (abs(p1 - p0) > limit);
+     mask |= (abs(q1 - q0) > limit);
+     mask |= (abs(q2 - q1) > limit);
+     mask |= (abs(q3 - q2) > limit);
+     mask |= (abs(p0 - q0) * 2 + abs(p1 - q1) / 2  > blimit);
+     return mask - 1;
+ }
+ 
+ /* is there high variance internal edge ( 11111111 yes, 00000000 no) */
+-static __inline signed char vp8_hevmask(uc thresh, uc p1, uc p0, uc q0, uc q1)
++static signed char vp8_hevmask(uc thresh, uc p1, uc p0, uc q0, uc q1)
+ {
+     signed char hev = 0;
+     hev  |= (abs(p1 - p0) > thresh) * -1;
+     hev  |= (abs(q1 - q0) > thresh) * -1;
+     return hev;
+ }
+ 
+-static __inline void vp8_filter(signed char mask, uc hev, uc *op1,
++static void vp8_filter(signed char mask, uc hev, uc *op1,
+         uc *op0, uc *oq0, uc *oq1)
+ 
+ {
+     signed char ps0, qs0;
+     signed char ps1, qs1;
+     signed char vp8_filter, Filter1, Filter2;
+     signed char u;
+ 
+@@ -153,17 +153,17 @@ void vp8_loop_filter_vertical_edge_c
+ 
+         vp8_filter(mask, hev, s - 2, s - 1, s, s + 1);
+ 
+         s += p;
+     }
+     while (++i < count * 8);
+ }
+ 
+-static __inline void vp8_mbfilter(signed char mask, uc hev,
++static void vp8_mbfilter(signed char mask, uc hev,
+                            uc *op2, uc *op1, uc *op0, uc *oq0, uc *oq1, uc *oq2)
+ {
+     signed char s, u;
+     signed char vp8_filter, Filter1, Filter2;
+     signed char ps2 = (signed char) * op2 ^ 0x80;
+     signed char ps1 = (signed char) * op1 ^ 0x80;
+     signed char ps0 = (signed char) * op0 ^ 0x80;
+     signed char qs0 = (signed char) * oq0 ^ 0x80;
+@@ -274,27 +274,27 @@ void vp8_mbloop_filter_vertical_edge_c
+ 
+         s += p;
+     }
+     while (++i < count * 8);
+ 
+ }
+ 
+ /* should we apply any filter at all ( 11111111 yes, 00000000 no) */
+-static __inline signed char vp8_simple_filter_mask(uc blimit, uc p1, uc p0, uc q0, uc q1)
++static signed char vp8_simple_filter_mask(uc blimit, uc p1, uc p0, uc q0, uc q1)
+ {
+ /* Why does this cause problems for win32?
+  * error C2143: syntax error : missing ';' before 'type'
+  *  (void) limit;
+  */
+     signed char mask = (abs(p0 - q0) * 2 + abs(p1 - q1) / 2  <= blimit) * -1;
+     return mask;
+ }
+ 
+-static __inline void vp8_simple_filter(signed char mask, uc *op1, uc *op0, uc *oq0, uc *oq1)
++static void vp8_simple_filter(signed char mask, uc *op1, uc *op0, uc *oq0, uc *oq1)
+ {
+     signed char vp8_filter, Filter1, Filter2;
+     signed char p1 = (signed char) * op1 ^ 0x80;
+     signed char p0 = (signed char) * op0 ^ 0x80;
+     signed char q0 = (signed char) * oq0 ^ 0x80;
+     signed char q1 = (signed char) * oq1 ^ 0x80;
+     signed char u;
+ 
+diff --git a/media/libvpx/vp8/common/onyx.h b/media/libvpx/vp8/common/onyx.h
+--- a/media/libvpx/vp8/common/onyx.h
++++ b/media/libvpx/vp8/common/onyx.h
+@@ -67,17 +67,17 @@ extern "C"
+     {
+         FRAMEFLAGS_KEY    = 1,
+         FRAMEFLAGS_GOLDEN = 2,
+         FRAMEFLAGS_ALTREF = 4,
+     } FRAMETYPE_FLAGS;
+ 
+ 
+ #include <assert.h>
+-    static __inline void Scale2Ratio(int mode, int *hr, int *hs)
++    static void Scale2Ratio(int mode, int *hr, int *hs)
+     {
+         switch (mode)
+         {
+         case    NORMAL:
+             *hr = 1;
+             *hs = 1;
+             break;
+         case    FOURFIVE:
+diff --git a/media/libvpx/vp8/encoder/encodemv.c b/media/libvpx/vp8/encoder/encodemv.c
+--- a/media/libvpx/vp8/encoder/encodemv.c
++++ b/media/libvpx/vp8/encoder/encodemv.c
+@@ -181,17 +181,17 @@ void vp8_build_component_cost_table(int 
+ 
+ // Motion vector probability table update depends on benefit.
+ // Small correction allows for the fact that an update to an MV probability
+ // may have benefit in subsequent frames as well as the current one.
+ 
+ #define MV_PROB_UPDATE_CORRECTION   -1
+ 
+ 
+-__inline static void calc_prob(vp8_prob *p, const unsigned int ct[2])
++static void calc_prob(vp8_prob *p, const unsigned int ct[2])
+ {
+     const unsigned int tot = ct[0] + ct[1];
+ 
+     if (tot)
+     {
+         const vp8_prob x = ((ct[0] * 255) / tot) & -2;
+         *p = x ? x : 1;
+     }
+diff --git a/media/libvpx/vp8/encoder/rdopt.c b/media/libvpx/vp8/encoder/rdopt.c
+--- a/media/libvpx/vp8/encoder/rdopt.c
++++ b/media/libvpx/vp8/encoder/rdopt.c
+@@ -1326,17 +1326,17 @@ static void rd_check_segment(VP8_COMP *c
+         {
+             bsi->mvs[i].as_mv = x->partition_info->bmi[i].mv.as_mv;
+             bsi->modes[i] = x->partition_info->bmi[i].mode;
+             bsi->eobs[i] = x->e_mbd.eobs[i];
+         }
+     }
+ }
+ 
+-static __inline
++static
+ void vp8_cal_step_param(int sr, int *sp)
+ {
+     int step = 0;
+ 
+     if (sr > MAX_FIRST_STEP) sr = MAX_FIRST_STEP;
+     else if (sr < 1) sr = 1;
+ 
+     while (sr>>=1)
+diff --git a/media/libvpx/vp8/encoder/sad_c.c b/media/libvpx/vp8/encoder/sad_c.c
+--- a/media/libvpx/vp8/encoder/sad_c.c
++++ b/media/libvpx/vp8/encoder/sad_c.c
+@@ -34,17 +34,17 @@ unsigned int vp8_sad16x16_c(
+         src_ptr += src_stride;
+         ref_ptr += ref_stride;
+     }
+ 
+     return sad;
+ }
+ 
+ 
+-static __inline
++static
+ unsigned int sad_mx_n_c(
+     const unsigned char *src_ptr,
+     int  src_stride,
+     const unsigned char *ref_ptr,
+     int  ref_stride,
+     int m,
+     int n)
+ {
+diff --git a/media/libvpx/vp8/encoder/tokenize.c b/media/libvpx/vp8/encoder/tokenize.c
+--- a/media/libvpx/vp8/encoder/tokenize.c
++++ b/media/libvpx/vp8/encoder/tokenize.c
+@@ -480,17 +480,17 @@ void print_context_counters()
+ 
+ 
+ void vp8_tokenize_initialize()
+ {
+     fill_value_tokens();
+ }
+ 
+ 
+-static __inline void stuff2nd_order_b
++static void stuff2nd_order_b
+ (
+     TOKENEXTRA **tp,
+     ENTROPY_CONTEXT *a,
+     ENTROPY_CONTEXT *l,
+     VP8_COMP *cpi
+ )
+ {
+     int pt; /* near block/prev token context index */
+@@ -504,17 +504,17 @@ static __inline void stuff2nd_order_b
+     ++t;
+ 
+     *tp = t;
+     pt = 0;
+     *a = *l = pt;
+ 
+ }
+ 
+-static __inline void stuff1st_order_b
++static void stuff1st_order_b
+ (
+     TOKENEXTRA **tp,
+     ENTROPY_CONTEXT *a,
+     ENTROPY_CONTEXT *l,
+     int type,
+     VP8_COMP *cpi
+ )
+ {
+@@ -528,17 +528,17 @@ static __inline void stuff1st_order_b
+     t->skip_eob_node = 0;
+     ++cpi->coef_counts       [type] [band] [pt] [DCT_EOB_TOKEN];
+     ++t;
+     *tp = t;
+     pt = 0; /* 0 <-> all coeff data is zero */
+     *a = *l = pt;
+ 
+ }
+-static __inline
++static
+ void stuff1st_order_buv
+ (
+     TOKENEXTRA **tp,
+     ENTROPY_CONTEXT *a,
+     ENTROPY_CONTEXT *l,
+     VP8_COMP *cpi
+ )
+ {
+diff --git a/media/libvpx/vp8/encoder/treewriter.h b/media/libvpx/vp8/encoder/treewriter.h
+--- a/media/libvpx/vp8/encoder/treewriter.h
++++ b/media/libvpx/vp8/encoder/treewriter.h
+@@ -37,28 +37,28 @@ typedef BOOL_CODER vp8_writer;
+ 
+ #define vp8_cost_bit( x, b) vp8_cost_zero( (b)?  vp8_complement(x) : (x) )
+ 
+ /* VP8BC version is scaled by 2^20 rather than 2^8; see bool_coder.h */
+ 
+ 
+ /* Both of these return bits, not scaled bits. */
+ 
+-static __inline unsigned int vp8_cost_branch(const unsigned int ct[2], vp8_prob p)
++static unsigned int vp8_cost_branch(const unsigned int ct[2], vp8_prob p)
+ {
+     /* Imitate existing calculation */
+ 
+     return ((ct[0] * vp8_cost_zero(p))
+             + (ct[1] * vp8_cost_one(p))) >> 8;
+ }
+ 
+ /* Small functions to write explicit values and tokens, as well as
+    estimate their lengths. */
+ 
+-static __inline void vp8_treed_write
++static void vp8_treed_write
+ (
+     vp8_writer *const w,
+     vp8_tree t,
+     const vp8_prob *const p,
+     int v,
+     int n               /* number of bits in v, assumed nonzero */
+ )
+ {
+@@ -67,28 +67,28 @@ static __inline void vp8_treed_write
+     do
+     {
+         const int b = (v >> --n) & 1;
+         vp8_write(w, b, p[i>>1]);
+         i = t[i+b];
+     }
+     while (n);
+ }
+-static __inline void vp8_write_token
++static void vp8_write_token
+ (
+     vp8_writer *const w,
+     vp8_tree t,
+     const vp8_prob *const p,
+     vp8_token *const x
+ )
+ {
+     vp8_treed_write(w, t, p, x->value, x->Len);
+ }
+ 
+-static __inline int vp8_treed_cost(
++static int vp8_treed_cost(
+     vp8_tree t,
+     const vp8_prob *const p,
+     int v,
+     int n               /* number of bits in v, assumed nonzero */
+ )
+ {
+     int c = 0;
+     vp8_tree_index i = 0;
+@@ -98,17 +98,17 @@ static __inline int vp8_treed_cost(
+         const int b = (v >> --n) & 1;
+         c += vp8_cost_bit(p[i>>1], b);
+         i = t[i+b];
+     }
+     while (n);
+ 
+     return c;
+ }
+-static __inline int vp8_cost_token
++static int vp8_cost_token
+ (
+     vp8_tree t,
+     const vp8_prob *const p,
+     vp8_token *const x
+ )
+ {
+     return vp8_treed_cost(t, p, x->value, x->Len);
+ }

@@ -71,8 +71,17 @@ public:
 
   void Init();
 
-  // Used by element to tell if viewBox is defined
-  bool IsValid() const
+  /**
+   * Returns true if the corresponding "viewBox" attribute defined a rectangle
+   * with finite values. Returns false if the viewBox was set to an invalid
+   * string, or if any of the four rect values were too big to store in a
+   * float.
+   *
+   * This method does not check whether the width or height values are
+   * positive, so callers must check whether the viewBox rect is valid where
+   * necessary!
+   */
+  bool IsExplicitlySet() const
     { return (mHasBaseVal || mAnimVal); }
 
   const nsSVGViewBoxRect& GetBaseValue() const

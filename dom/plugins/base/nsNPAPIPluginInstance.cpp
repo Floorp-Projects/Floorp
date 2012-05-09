@@ -48,7 +48,6 @@
 #include "nsPluginHost.h"
 #include "nsPluginSafety.h"
 #include "nsPluginLogging.h"
-#include "nsIPrivateBrowsingService.h"
 #include "nsContentUtils.h"
 
 #include "nsIDocument.h"
@@ -70,6 +69,29 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
 #include "AndroidBridge.h"
+
+class PluginEventRunnable : public nsRunnable
+{
+public:
+  PluginEventRunnable(nsNPAPIPluginInstance* instance, ANPEvent* event)
+    : mInstance(instance), mEvent(*event), mCanceled(false) {}
+
+  virtual nsresult Run() {
+    if (mCanceled)
+      return NS_OK;
+
+    mInstance->HandleEvent(&mEvent, nsnull);
+    mInstance->PopPostedEvent(this);
+    return NS_OK;
+  }
+
+  void Cancel() { mCanceled = true; }
+private:
+  nsNPAPIPluginInstance* mInstance;
+  ANPEvent mEvent;
+  bool mCanceled;
+};
+
 #endif
 
 using namespace mozilla;
@@ -152,7 +174,7 @@ nsresult nsNPAPIPluginInstance::Initialize(nsNPAPIPlugin *aPlugin, nsIPluginInst
       PL_strcpy(mMIMEType, aMIMEType);
     }
   }
-
+  
   return Start();
 }
 
@@ -215,6 +237,14 @@ nsresult nsNPAPIPluginInstance::Stop()
                    ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, &mNPP, error));
   }
   mRunning = DESTROYED;
+
+#if MOZ_WIDGET_ANDROID
+  for (PRUint32 i = 0; i < mPostedEvents.Length(); i++) {
+    mPostedEvents[i]->Cancel();
+  }
+
+  mPostedEvents.Clear();
+#endif
 
   nsJSNPRuntime::OnPluginDestroy(&mNPP);
 
@@ -793,6 +823,19 @@ void nsNPAPIPluginInstance::RequestJavaSurface()
   ((SurfaceGetter*)mSurfaceGetter.get())->RequestSurface();
 }
 
+void nsNPAPIPluginInstance::PostEvent(void* event)
+{
+  PluginEventRunnable *r = new PluginEventRunnable(this, (ANPEvent*)event);
+  mPostedEvents.AppendElement(nsRefPtr<PluginEventRunnable>(r));
+
+  NS_DispatchToMainThread(r);
+}
+
+void nsNPAPIPluginInstance::PopPostedEvent(PluginEventRunnable* r)
+{
+  mPostedEvents.RemoveElement(r);
+}
+
 #endif
 
 nsresult nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
@@ -832,63 +875,6 @@ nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
   *outObject = nsNPObjWrapper::GetNewOrUsed(&mNPP, cx, npobj);
 
   _releaseobject(npobj);
-
-  return NS_OK;
-}
-
-nsresult
-nsNPAPIPluginInstance::DefineJavaProperties()
-{
-  NPObject *plugin_obj = nsnull;
-
-  // The dummy Java plugin's scriptable object is what we want to
-  // expose as window.Packages. And Window.Packages.java will be
-  // exposed as window.java.
-
-  // Get the scriptable plugin object.
-  nsresult rv = GetValueFromPlugin(NPPVpluginScriptableNPObject, &plugin_obj);
-
-  if (NS_FAILED(rv) || !plugin_obj) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Get the NPObject wrapper for window.
-  NPObject *window_obj = _getwindowobject(&mNPP);
-
-  if (!window_obj) {
-    _releaseobject(plugin_obj);
-
-    return NS_ERROR_FAILURE;
-  }
-
-  NPIdentifier java_id = _getstringidentifier("java");
-  NPIdentifier packages_id = _getstringidentifier("Packages");
-
-  NPObject *java_obj = nsnull;
-  NPVariant v;
-  OBJECT_TO_NPVARIANT(plugin_obj, v);
-
-  // Define the properties.
-
-  bool ok = _setproperty(&mNPP, window_obj, packages_id, &v);
-  if (ok) {
-    ok = _getproperty(&mNPP, plugin_obj, java_id, &v);
-
-    if (ok && NPVARIANT_IS_OBJECT(v)) {
-      // Set java_obj so that we properly release it at the end of
-      // this function.
-      java_obj = NPVARIANT_TO_OBJECT(v);
-
-      ok = _setproperty(&mNPP, window_obj, java_id, &v);
-    }
-  }
-
-  _releaseobject(window_obj);
-  _releaseobject(plugin_obj);
-  _releaseobject(java_obj);
-
-  if (!ok)
-    return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
@@ -1143,7 +1129,7 @@ nsNPAPIPluginInstance::GetPluginAPIVersion(PRUint16* version)
 }
 
 nsresult
-nsNPAPIPluginInstance::PrivateModeStateChanged()
+nsNPAPIPluginInstance::PrivateModeStateChanged(bool enabled)
 {
   if (RUNNING != mRunning)
     return NS_OK;
@@ -1155,23 +1141,15 @@ nsNPAPIPluginInstance::PrivateModeStateChanged()
 
   NPPluginFuncs* pluginFunctions = mPlugin->PluginFuncs();
 
-  if (pluginFunctions->setvalue) {
-    PluginDestructionGuard guard(this);
-    
-    nsCOMPtr<nsIPrivateBrowsingService> pbs = do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-    if (pbs) {
-      bool pme = false;
-      nsresult rv = pbs->GetPrivateBrowsingEnabled(&pme);
-      if (NS_FAILED(rv))
-        return rv;
+  if (!pluginFunctions->setvalue)
+    return NS_ERROR_FAILURE;
 
-      NPError error;
-      NPBool value = static_cast<NPBool>(pme);
-      NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->setvalue)(&mNPP, NPNVprivateModeBool, &value), this);
-      return (error == NPERR_NO_ERROR) ? NS_OK : NS_ERROR_FAILURE;
-    }
-  }
-  return NS_ERROR_FAILURE;
+  PluginDestructionGuard guard(this);
+    
+  NPError error;
+  NPBool value = static_cast<NPBool>(enabled);
+  NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->setvalue)(&mNPP, NPNVprivateModeBool, &value), this);
+  return (error == NPERR_NO_ERROR) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 class DelayUnscheduleEvent : public nsRunnable {

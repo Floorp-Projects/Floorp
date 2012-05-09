@@ -170,6 +170,13 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 - (long long)_scrollPhase;
 @end
 
+#if !defined(MAC_OS_X_VERSION_10_6) || \
+MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_6
+@interface NSEvent (SnowLeopardEventFeatures)
++ (NSUInteger)pressedMouseButtons;
+@end
+#endif
+
 // The following section, required to support fluid swipe tracking on OS X 10.7
 // and up, contains defines/declarations that are only available on 10.7 and up.
 // [NSEvent trackSwipeEventWithOptions:...] also requires that the compiler
@@ -488,7 +495,10 @@ public:
   virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                               PRUint32 aNativeMessage,
                                               PRUint32 aModifierFlags);
-  
+
+  virtual nsresult SynthesizeNativeMouseMove(nsIntPoint aPoint)
+  { return SynthesizeNativeMouseEvent(aPoint, NSMouseMoved, 0); }
+
   // Mac specific methods
   
   virtual bool      DispatchWindowEvent(nsGUIEvent& event);

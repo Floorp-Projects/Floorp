@@ -7,7 +7,7 @@ do_load_httpd_js();
 var httpserver = new nsHttpServer();
 var testpath = "/simple";
 
-var testfile = getFile("XpcomLib");
+var testfile = do_get_file("../unit/data/test_readline6.txt");
 
 const BOUNDARY = "AaB03x";
 var teststring1 = "--" + BOUNDARY + "\r\n"
@@ -88,10 +88,4 @@ function serverHandler(metadata, response) {
 
 function checkRequest(request, data, context) {
   httpserver.stop(do_test_finished);
-}
-
-function getFile(key) {
-  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
-                         .getService(Components.interfaces.nsIProperties);
-  return dirSvc.get(key, Components.interfaces.nsILocalFile);
 }

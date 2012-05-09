@@ -40,7 +40,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/MigrationUtils.jsm");
+Components.utils.import("resource:///modules/MigrationUtils.jsm");
 
 var PlacesOrganizer = {
   _places: null,
@@ -241,16 +241,13 @@ var PlacesOrganizer = {
     }
 
     // Update the selected folder title where it appears in the UI: the folder
-    // scope button, "Find in <current collection>" command, and the search box
-    // emptytext.  They must be updated even if the selection hasn't changed --
+    // scope button, and the search box emptytext.
+    // They must be updated even if the selection hasn't changed --
     // specifically when node's title changes.  In that case a selection event
     // is generated, this method is called, but the selection does not change.
     var folderButton = document.getElementById("scopeBarFolder");
     var folderTitle = node.title || folderButton.getAttribute("emptytitle");
     folderButton.setAttribute("label", folderTitle);
-    var cmd = document.getElementById("OrganizerCommand_find:current");
-    var label = PlacesUIUtils.getFormattedString("findInPrefix", [folderTitle]);
-    cmd.setAttribute("label", label);
     if (PlacesSearchBox.filterCollection == "collection")
       PlacesSearchBox.updateCollectionTitle(folderTitle);
 
@@ -925,18 +922,20 @@ var PlacesSearchBox = {
   },
 
   /**
-   * Finds across all bookmarks
+   * Finds across all history, downloads or all bookmarks.
    */
   findAll: function PSB_findAll() {
-    PlacesQueryBuilder.setScope("bookmarks");
-    this.focus();
-  },
-
-  /**
-   * Finds in the currently selected Place.
-   */
-  findCurrent: function PSB_findCurrent() {
-    PlacesQueryBuilder.setScope("collection");
+    switch (this.filterCollection) {
+      case "history":
+        PlacesQueryBuilder.setScope("history");
+        break;
+      case "downloads":
+        PlacesQueryBuilder.setScope("downloads");
+        break;
+      default:
+        PlacesQueryBuilder.setScope("bookmarks");
+        break;
+    }
     this.focus();
   },
 
@@ -947,12 +946,15 @@ var PlacesSearchBox = {
    */
   updateCollectionTitle: function PSB_updateCollectionTitle(aTitle) {
     let title = "";
+    // This is needed when a user performs a folder-specific search
+    // using the scope bar, removes the search-string, and unfocuses
+    // the search box, at least until the removal of the scope bar.
     if (aTitle) {
       title = PlacesUIUtils.getFormattedString("searchCurrentDefault",
                                                [aTitle]);
     }
     else {
-      switch(this.filterCollection) {
+      switch (this.filterCollection) {
         case "history":
           title = PlacesUIUtils.getString("searchHistory");
           break;

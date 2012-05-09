@@ -71,6 +71,7 @@ GK_ATOM(mozeditorbogusnode, "_moz_editor_bogus_node")
 GK_ATOM(mozgeneratedcontentbefore, "_moz_generated_content_before")
 GK_ATOM(mozgeneratedcontentafter, "_moz_generated_content_after")
 GK_ATOM(mozgeneratedcontentimage, "_moz_generated_content_image")
+GK_ATOM(mozquote, "_moz_quote")
 GK_ATOM(_moz_original_size, "_moz_original_size")
 GK_ATOM(_moz_target, "_moz_target")
 GK_ATOM(_moz_type, "_moz-type")
@@ -593,6 +594,8 @@ GK_ATOM(mousethrough, "mousethrough")
 GK_ATOM(mouseup, "mouseup")
 GK_ATOM(mozfullscreenchange, "mozfullscreenchange")
 GK_ATOM(mozfullscreenerror, "mozfullscreenerror")
+GK_ATOM(mozpointerlockchange, "mozpointerlockchange")
+GK_ATOM(mozpointerlockerror, "mozpointerlockerror")
 GK_ATOM(moz_opaque, "moz-opaque")
 GK_ATOM(moz_action_hint, "mozactionhint")
 GK_ATOM(x_moz_errormessage, "x-moz-errormessage")
@@ -714,6 +717,8 @@ GK_ATOM(onmouseup, "onmouseup")
 GK_ATOM(onMozAfterPaint, "onMozAfterPaint")
 GK_ATOM(onmozfullscreenchange, "onmozfullscreenchange")
 GK_ATOM(onmozfullscreenerror, "onmozfullscreenerror")
+GK_ATOM(onmozpointerlockchange, "onmozpointerlockchange")
+GK_ATOM(onmozpointerlockerror, "onmozpointerlockerror")
 GK_ATOM(onMozMousePixelScroll, "onMozMousePixelScroll")
 GK_ATOM(onMozScrolledAreaChanged, "onMozScrolledAreaChanged")
 GK_ATOM(ononline, "ononline")
@@ -1707,8 +1712,12 @@ GK_ATOM(onMozTouchMove, "onMozTouchMove")
 GK_ATOM(onMozTouchUp, "onMozTouchUp")
 
 // orientation support
-GK_ATOM(ondeviceorientation, "ondeviceorientation")
 GK_ATOM(ondevicemotion, "ondevicemotion")
+GK_ATOM(ondeviceorientation, "ondeviceorientation")
+GK_ATOM(ondeviceproximity, "ondeviceproximity")
+
+// light sensor support
+GK_ATOM(ondevicelight, "ondevicelight")
 
 //---------------------------------------------------------------------------
 // Special atoms
@@ -1907,6 +1916,7 @@ GK_ATOM(az, "az")
 GK_ATOM(ba, "ba")
 GK_ATOM(crh, "crh")
 GK_ATOM(nl, "nl")
+GK_ATOM(el, "el")
 
 // Names for editor transactions
 GK_ATOM(TypingTxnName, "Typing")

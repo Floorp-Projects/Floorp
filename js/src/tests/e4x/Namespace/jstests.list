@@ -1,9 +1,0 @@
-url-prefix ../../jsreftest.html?test=e4x/Namespace/
-script 13.2.1.js
-script 13.2.2.js
-script 13.2.5.js
-script regress-283972.js
-fails script regress-292863.js
-script regress-350442.js
-script regress-444608-02.js
-script regress-444608.js

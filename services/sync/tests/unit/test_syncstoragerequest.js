@@ -5,7 +5,7 @@ Cu.import("resource://services-sync/rest.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-common/log4moz.js");
 
 const STORAGE_REQUEST_RESOURCE_URL = TEST_SERVER_URL + "resource";
 

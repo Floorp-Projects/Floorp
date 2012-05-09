@@ -44,7 +44,7 @@
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
 #include "nsWrapperCacheInlines.h"
-#include "mozilla/dom/bindings/Utils.h"
+#include "mozilla/dom/BindingUtils.h"
 
 /***************************************************************************/
 
@@ -620,7 +620,7 @@ XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
 {
     js::Class* clazz = js::GetObjectClass(obj);
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::bindings::DestroyProtoOrIfaceCache(obj);
+        mozilla::dom::DestroyProtoOrIfaceCache(obj);
     }
     nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
     if (!p)
@@ -648,19 +648,7 @@ XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
 static void
 TraceScopeJSObjects(JSTracer *trc, XPCWrappedNativeScope* scope)
 {
-    NS_ASSERTION(scope, "bad scope");
-
-    JSObject* obj;
-
-    obj = scope->GetGlobalJSObject();
-    NS_ASSERTION(obj, "bad scope JSObject");
-    JS_CALL_OBJECT_TRACER(trc, obj, "XPCWrappedNativeScope::mGlobalJSObject");
-
-    obj = scope->GetPrototypeJSObject();
-    if (obj) {
-        JS_CALL_OBJECT_TRACER(trc, obj,
-                              "XPCWrappedNativeScope::mPrototypeJSObject");
-    }
+    scope->TraceSelf(trc);
 }
 
 static void
@@ -695,6 +683,11 @@ TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper)
 static void
 MarkWrappedNative(JSTracer *trc, JSObject *obj)
 {
+    js::Class* clazz = js::GetObjectClass(obj);
+    if (clazz->flags & JSCLASS_DOM_GLOBAL) {
+        mozilla::dom::TraceProtoOrIfaceCache(trc, obj);
+    }
+
     JSObject *obj2;
 
     // Pass null for the first JSContext* parameter  to skip any security
@@ -885,7 +878,6 @@ XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
         nsnull, // deleteSpecial
         XPC_WN_JSOp_Enumerate,
         XPC_WN_JSOp_TypeOf_Object,
-        nsnull, // fix
         XPC_WN_JSOp_ThisObject,
         XPC_WN_JSOp_Clear
     }
@@ -961,7 +953,7 @@ XPC_WN_Helper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     POST_HELPER_STUB
 }
 
-static JSBool
+JSBool
 XPC_WN_Helper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     PRE_HELPER_STUB
@@ -969,7 +961,7 @@ XPC_WN_Helper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     POST_HELPER_STUB
 }
 
-static JSBool
+JSBool
 XPC_WN_Helper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
     PRE_HELPER_STUB
@@ -1050,7 +1042,7 @@ XPC_WN_Helper_Finalize(js::FreeOp *fop, JSObject *obj)
 {
     js::Class* clazz = js::GetObjectClass(obj);
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::bindings::DestroyProtoOrIfaceCache(obj);
+        mozilla::dom::DestroyProtoOrIfaceCache(obj);
     }
     nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
     if (IS_SLIM_WRAPPER(obj)) {

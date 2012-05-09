@@ -1366,7 +1366,7 @@ FeedWriter.prototype = {
     }
     var faviconURI = makeURI(readerURI.prePath + "/favicon.ico");
     var self = this;
-    this._faviconService.setAndLoadFaviconForPage(readerURI, faviconURI, false,
+    this._faviconService.setAndFetchFaviconForPage(readerURI, faviconURI, false,
       function (aURI, aDataLen, aData, aMimeType) {
         if (aDataLen > 0) {
           var dataURL = "data:" + aMimeType + ";base64," +

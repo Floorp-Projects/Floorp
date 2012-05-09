@@ -8,7 +8,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TESTS_PATH = "http://example.com/browser/browser/devtools/webconsole/test//";
+const TESTS_PATH = "http://example.com/browser/browser/devtools/webconsole/test/";
 const TESTS = [
   { // #0
     file: "test-bug-595934-css-loader.html",

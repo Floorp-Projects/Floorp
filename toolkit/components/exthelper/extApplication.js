@@ -590,9 +590,10 @@ extApplication.prototype = {
       this.events.dispatch("unload", "application");
 
       // call the cleanup functions and empty the array
-      while (gShutdown.length) {
-        gShutdown.shift()();
+      for (let i = 0; i < gShutdown.length; i++) {
+        gShutdown[i]();
       }
+      gShutdown.splice(0, gShutdown.length);
 
       // release our observers
       this._obs.removeObserver(this, "app-startup");

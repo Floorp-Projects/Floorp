@@ -63,13 +63,6 @@ public:
     ~txList();
 
     /**
-     * Returns the object located at the given index. This may
-     * be slow or fast depending on the implementation.
-     * @return the object located at the given index
-    **/
-    void* get(int index);
-
-    /**
      * Returns the number of items in this txList
     **/
     PRInt32 getLength();
@@ -83,20 +76,10 @@ public:
     }
 
     /**
-     * Adds the given Object to the specified position in the list
-    **/
-    nsresult insert(int index, void* objPtr);
-
-    /**
      * Adds the given Object to the list
     **/
     nsresult add(void* objPtr);
 
-    /**
-     * Removes the given Object pointer from the list
-    **/
-    void* remove(void* objPtr);
-    
     /*
      * Removes all the objects from the list
      */
@@ -109,9 +92,6 @@ protected:
         ListItem* prevItem;
         void* objPtr;
     };
-
-    ListItem* getFirstItem();
-    ListItem* getLastItem();
 
     /**
      * Removes the given ListItem pointer from the list
@@ -167,13 +147,6 @@ public:
     bool  hasNext();
 
     /**
-     * Returns true if a successful call to the previous() method can be made
-     * @return true if a successful call to the previous() method can be made,
-     * otherwise false
-    **/
-    bool  hasPrevious();
-
-    /**
      * Returns the next Object pointer from the list
     **/
     void* next();
@@ -188,11 +161,6 @@ public:
     **/
     void* current();
     
-    /**
-     * Moves the specified number of steps
-    **/
-    void* advance(int i);
-
     /**
      * Removes the Object last returned by the next() or previous() methods;
      * @return the removed Object pointer

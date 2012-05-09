@@ -175,4 +175,10 @@ struct ExposedPropertiesOnly : public Policy {
                       Permission &perm);
 };
 
+// Components specific policy
+struct ComponentsObjectPolicy : public Policy {
+    static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act,
+                      Permission &perm);
+};
+
 }

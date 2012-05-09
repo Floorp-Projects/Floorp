@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import subprocess
 from devicemanager import DeviceManager, DMError, _pop_last_line
 import re
@@ -20,6 +24,7 @@ class DeviceManagerADB(DeviceManager):
     self.useZip = False
     self.packageName = None
     self.tempDir = None
+    self.deviceRoot = None
 
     # the path to adb, or 'adb' to assume that it's on the PATH
     self.adbPath = adbPath
@@ -46,6 +51,9 @@ class DeviceManagerADB(DeviceManager):
     # verify that we can connect to the device. can't continue
     self.verifyDevice()
 
+    # set up device root
+    self.setupDeviceRoot()
+
     # Can we use run-as? (currently not required)
     try:
       self.verifyRunAs()
@@ -53,6 +61,8 @@ class DeviceManagerADB(DeviceManager):
       pass
 
     # Can we run things as root? (currently not required)
+    useRunAsTmp = self.useRunAs
+    self.useRunAs = False
     try:
       self.verifyRoot()
     except DMError, e:
@@ -63,10 +73,11 @@ class DeviceManagerADB(DeviceManager):
         # to check again ourselves that we have root now.
         self.verifyRoot()
       except DMError:
-        if self.useRunAs:
+        if useRunAsTmp:
           print "restarting as root failed, but run-as available"
         else:
           print "restarting as root failed"
+    self.useRunAs = useRunAsTmp
 
     # can we use zip to speed up some file operations? (currently not
     # required)
@@ -84,9 +95,16 @@ class DeviceManagerADB(DeviceManager):
   # success: <return code>
   # failure: None
   def shell(self, cmd, outputfile, env=None, cwd=None):
-    # need to quote special characters here
+    # need to quote and escape special characters here
     for (index, arg) in enumerate(cmd):
-      if arg.find(" ") or arg.find("(") or arg.find(")") or arg.find("\""):
+      arg.replace('&', '\&')
+
+      needsQuoting = False
+      for char in [ ' ', '(', ')', '"', '&' ]:
+        if arg.find(char):
+          needsQuoting = True
+          break
+      if needsQuoting:
         cmd[index] = '\'%s\'' % arg
 
     # This is more complex than you'd think because adb doesn't actually
@@ -164,6 +182,9 @@ class DeviceManagerADB(DeviceManager):
       result = self.runCmdAs(["shell", "mkdir", name]).stdout.read()
       if 'read-only file system' in result.lower():
         return None
+      if 'file exists' in result.lower():
+        return name
+
       self.chmodDir(name)
       return name
     except:
@@ -216,7 +237,7 @@ class DeviceManagerADB(DeviceManager):
           self.useZip = False
           self.pushDir(localDir, remoteDir)
       else:
-        for root, dirs, files in os.walk(localDir, followlinks='true'):
+        for root, dirs, files in os.walk(localDir, followlinks=True):
           relRoot = os.path.relpath(root, localDir)
           for file in files:
             localFile = os.path.join(root, file)
@@ -313,6 +334,10 @@ class DeviceManagerADB(DeviceManager):
           if (data[0].find("No such file or directory") != -1):
               return []
           if (data[0].find("Not a directory") != -1):
+              return []
+          if (data[0].find("Permission denied") != -1):
+              return []
+          if (data[0].find("opendir failed") != -1):
               return []
       return data
 
@@ -514,6 +539,26 @@ class DeviceManagerADB(DeviceManager):
     data = p = subprocess.Popen(["ls", "-l", filename], stdout=subprocess.PIPE).stdout.read()
     return data.split()[4]
 
+  # Internal method to setup the device root and cache its value
+  def setupDeviceRoot(self):
+    # /mnt/sdcard/tests is preferred to /data/local/tests, but this can be
+    # over-ridden by creating /data/local/tests
+    testRoot = "/data/local/tests"
+    if (self.dirExists(testRoot)):
+      self.deviceRoot = testRoot
+      return
+
+    for (basePath, subPath) in [('/mnt/sdcard', 'tests'),
+                                ('/data/local', 'tests')]:
+      if self.dirExists(basePath):
+        testRoot = os.path.join(basePath, subPath)
+        if self.mkDir(testRoot):
+          self.deviceRoot = testRoot
+          return
+
+    raise DMError("Unable to set up device root as /mnt/sdcard/tests "
+                  "or /data/local/tests")
+
   # Gets the device root for the testing area on the device
   # For all devices we will use / type slashes and depend on the device-agent
   # to sort those out.  The agent will return us the device location where we
@@ -532,22 +577,7 @@ class DeviceManagerADB(DeviceManager):
   #  success: path for device root
   #  failure: None
   def getDeviceRoot(self):
-    # /mnt/sdcard/tests is preferred to /data/local/tests, but this can be
-    # over-ridden by creating /data/local/tests
-    testRoot = "/data/local/tests"
-    if (self.dirExists(testRoot)):
-      return testRoot
-
-    root = "/mnt/sdcard"
-    if self.dirExists(root):
-      testRoot = root + "/tests"
-      if self.mkDir(testRoot):
-        return testRoot
-
-    testRoot = "/data/local/tests"
-    if (not self.dirExists(testRoot)):
-      self.mkDir(testRoot)
-    return testRoot
+    return self.deviceRoot
 
   # Gets the temporary directory we are using on this device
   # base on our device root, ensuring also that it exists.
@@ -777,10 +807,9 @@ class DeviceManagerADB(DeviceManager):
   def verifyRoot(self):
     # a test to see if we have root privs
     files = self.listFiles("/data/data")
-    if (len(files) == 1):
-      if (files[0].find("Permission denied") != -1):
-        print "NOT running as root"
-        raise DMError("not running as root")
+    if (len(files) == 0):
+      print "NOT running as root"
+      raise DMError("not running as root")
 
     self.haveRoot = True
 

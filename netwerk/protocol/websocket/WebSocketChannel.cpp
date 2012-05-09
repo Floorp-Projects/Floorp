@@ -234,6 +234,40 @@ private:
 NS_IMPL_THREADSAFE_ISUPPORTS1(CallAcknowledge, nsIRunnable)
 
 //-----------------------------------------------------------------------------
+// CallOnTransportAvailable
+//-----------------------------------------------------------------------------
+
+class CallOnTransportAvailable : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  CallOnTransportAvailable(WebSocketChannel *aChannel,
+                           nsISocketTransport *aTransport,
+                           nsIAsyncInputStream *aSocketIn,
+                           nsIAsyncOutputStream *aSocketOut)
+    : mChannel(aChannel),
+      mTransport(aTransport),
+      mSocketIn(aSocketIn),
+      mSocketOut(aSocketOut) {}
+
+  NS_IMETHOD Run()
+  {
+    LOG(("WebSocketChannel::CallOnTransportAvailable %p\n", this));
+    return mChannel->OnTransportAvailable(mTransport, mSocketIn, mSocketOut);
+  }
+
+private:
+  ~CallOnTransportAvailable() {}
+
+  nsRefPtr<WebSocketChannel>     mChannel;
+  nsCOMPtr<nsISocketTransport>   mTransport;
+  nsCOMPtr<nsIAsyncInputStream>  mSocketIn;
+  nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
+};
+NS_IMPL_THREADSAFE_ISUPPORTS1(CallOnTransportAvailable, nsIRunnable)
+
+//-----------------------------------------------------------------------------
 // OutboundMessage
 //-----------------------------------------------------------------------------
 
@@ -693,6 +727,7 @@ WebSocketChannel::WebSocketChannel() :
   mOpenBlocked(0),
   mOpenRunning(0),
   mChannelWasOpened(0),
+  mDataStarted(0),
   mMaxMessageSize(PR_INT32_MAX),
   mStopOnClose(NS_OK),
   mServerCloseCode(CLOSE_ABNORMAL),
@@ -728,7 +763,6 @@ WebSocketChannel::~WebSocketChannel()
     sWebSocketAdmissions->DecrementSessionCount();
 
   // this stop is a nop if the normal connect/close is followed
-  mStopped = 1;
   StopSession(NS_ERROR_UNEXPECTED);
   NS_ABORT_IF_FALSE(!mOpenRunning && !mOpenBlocked, "op");
 
@@ -802,7 +836,7 @@ WebSocketChannel::BeginOpen()
   nsCOMPtr<nsIChannel> localChannel = do_QueryInterface(mChannel, &rv);
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel::BeginOpen: cannot async open\n"));
-    AbortSession(NS_ERROR_CONNECTION_REFUSED);
+    AbortSession(NS_ERROR_UNEXPECTED);
     return rv;
   }
 
@@ -906,7 +940,6 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
     avail = count;
   } else {
     if (!UpdateReadBuffer(buffer, count, mFragmentAccumulator, &avail)) {
-      AbortSession(NS_ERROR_FILE_TOO_BIG);
       return NS_ERROR_FILE_TOO_BIG;
     }
   }
@@ -945,7 +978,6 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
         // Section 4.2 says that the most significant bit MUST be
         // 0. (i.e. this is really a 63 bit value)
         LOG(("WebSocketChannel:: high bit of 64 bit length set"));
-        AbortSession(NS_ERROR_ILLEGAL_VALUE);
         return NS_ERROR_ILLEGAL_VALUE;
       }
 
@@ -962,7 +994,6 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
          payloadLength, avail));
 
     if (payloadLength + mFragmentAccumulator > mMaxMessageSize) {
-      AbortSession(NS_ERROR_FILE_TOO_BIG);
       return NS_ERROR_FILE_TOO_BIG;
     }
 
@@ -986,13 +1017,11 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
     // Control codes are required to have the fin bit set
     if (!finBit && (opcode & kControlFrameMask)) {
       LOG(("WebSocketChannel:: fragmented control frame code %d\n", opcode));
-      AbortSession(NS_ERROR_ILLEGAL_VALUE);
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
     if (rsvBits) {
       LOG(("WebSocketChannel:: unexpected reserved bits %x\n", rsvBits));
-      AbortSession(NS_ERROR_ILLEGAL_VALUE);
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -1003,7 +1032,6 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
       // first frame while some old fragments are open
       if ((mFragmentAccumulator != 0) && (opcode != kContinuation)) {
         LOG(("WebSocketChannel:: nested fragments\n"));
-        AbortSession(NS_ERROR_ILLEGAL_VALUE);
         return NS_ERROR_ILLEGAL_VALUE;
       }
 
@@ -1014,7 +1042,6 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
         // Make sure this continuation fragment isn't the first fragment
         if (mFragmentOpcode == kContinuation) {
           LOG(("WebSocketHeandler:: continuation code in first fragment\n"));
-          AbortSession(NS_ERROR_ILLEGAL_VALUE);
           return NS_ERROR_ILLEGAL_VALUE;
         }
 
@@ -1048,7 +1075,6 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
       // have an open fragment.. it must be a control code or else
       // we have a problem
       LOG(("WebSocketChannel:: illegal fragment sequence\n"));
-      AbortSession(NS_ERROR_ILLEGAL_VALUE);
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -1067,8 +1093,7 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
         // Section 8.1 says to fail connection if invalid utf-8 in text message
         if (!IsUTF8(utf8Data, false)) {
           LOG(("WebSocketChannel:: text frame invalid utf-8\n"));
-          AbortSession(NS_ERROR_CANNOT_CONVERT_DATA);
-          return NS_ERROR_ILLEGAL_VALUE;
+          return NS_ERROR_CANNOT_CONVERT_DATA;
         }
 
         NS_DispatchToMainThread(new CallOnMessageAvailable(this, utf8Data, -1));
@@ -1078,7 +1103,6 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
       if (payloadLength > 125) {
         LOG(("WebSocketChannel:: bad control frame code %d length %d\n",
              opcode, payloadLength));
-        AbortSession(NS_ERROR_ILLEGAL_VALUE);
         return NS_ERROR_ILLEGAL_VALUE;
       }
 
@@ -1103,8 +1127,7 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
             // inappropriate - so we will fail the connection instead.
             if (!IsUTF8(mServerCloseReason, false)) {
               LOG(("WebSocketChannel:: close frame invalid utf-8\n"));
-              AbortSession(NS_ERROR_ILLEGAL_VALUE);
-              return NS_ERROR_ILLEGAL_VALUE;
+              return NS_ERROR_CANNOT_CONVERT_DATA;
             }
 
             LOG(("WebSocketChannel:: close msg %s\n",
@@ -1133,7 +1156,6 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
       } else {
         /* unknown control frame opcode */
         LOG(("WebSocketChannel:: unknown control op code %d\n", opcode));
-        AbortSession(NS_ERROR_ILLEGAL_VALUE);
         return NS_ERROR_ILLEGAL_VALUE;
       }
 
@@ -1160,7 +1182,6 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
     } else if (opcode != kContinuation) {
       /* unknown opcode */
       LOG(("WebSocketChannel:: unknown op code %d\n", opcode));
-      AbortSession(NS_ERROR_ILLEGAL_VALUE);
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -1181,8 +1202,7 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
 
       if (!UpdateReadBuffer(mFramePtr - mFragmentAccumulator,
                             totalAvail + mFragmentAccumulator, 0, nsnull)) {
-        AbortSession(NS_ERROR_ILLEGAL_VALUE);
-        return NS_ERROR_ILLEGAL_VALUE;
+        return NS_ERROR_FILE_TOO_BIG;
       }
 
       // UpdateReadBuffer will reset the frameptr to the beginning
@@ -1191,8 +1211,7 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
     } else if (totalAvail) {
       LOG(("WebSocketChannel:: Setup Buffer due to partial frame"));
       if (!UpdateReadBuffer(mFramePtr, totalAvail, 0, nsnull)) {
-        AbortSession(NS_ERROR_ILLEGAL_VALUE);
-        return NS_ERROR_ILLEGAL_VALUE;
+        return NS_ERROR_FILE_TOO_BIG;
       }
     }
   } else if (!mFragmentAccumulator && !totalAvail) {
@@ -1295,17 +1314,18 @@ WebSocketChannel::ResultToCloseCode(nsresult resultCode)
 {
   if (NS_SUCCEEDED(resultCode))
     return CLOSE_NORMAL;
-  if (resultCode == NS_ERROR_FILE_TOO_BIG)
-    return CLOSE_TOO_LARGE;
-  if (resultCode == NS_BASE_STREAM_CLOSED ||
-      resultCode == NS_ERROR_NET_TIMEOUT ||
-      resultCode == NS_ERROR_CONNECTION_REFUSED) {
-    return CLOSE_ABNORMAL;
-  }
-  if (resultCode == NS_ERROR_CANNOT_CONVERT_DATA)
-    return CLOSE_INVALID_PAYLOAD;
 
-  return CLOSE_PROTOCOL_ERROR;
+  switch (resultCode) {
+    case NS_ERROR_FILE_TOO_BIG:
+    case NS_ERROR_OUT_OF_MEMORY:
+      return CLOSE_TOO_LARGE;
+    case NS_ERROR_CANNOT_CONVERT_DATA:
+      return CLOSE_INVALID_PAYLOAD;
+    case NS_ERROR_UNEXPECTED:
+      return CLOSE_INTERNAL_ERROR;
+    default:
+      return CLOSE_PROTOCOL_ERROR;
+  }
 }
 
 void
@@ -1414,7 +1434,7 @@ WebSocketChannel::PrimeNewOutgoingMessage()
       // TODO: bug 704447:  don't block socket thread!
       rv = mCurrentOut->ConvertStreamToString();
       if (NS_FAILED(rv)) {
-        AbortSession(rv);
+        AbortSession(NS_ERROR_FILE_TOO_BIG);
         return;
       }
       // Now we're a binary string
@@ -1574,8 +1594,7 @@ WebSocketChannel::StopSession(nsresult reason)
   // normally this should be called on socket thread, but it is ok to call it
   // from OnStartRequest before the socket thread machine has gotten underway
 
-  NS_ABORT_IF_FALSE(mStopped,
-                    "stopsession() has not transitioned through abort or close");
+  mStopped = 1;
 
   if (!mChannelWasOpened) {
     // The HTTP channel information will never be used in this case
@@ -1717,7 +1736,6 @@ WebSocketChannel::ReleaseSession()
 
   if (mStopped)
     return;
-  mStopped = 1;
   StopSession(NS_OK);
 }
 
@@ -1897,6 +1915,14 @@ nsresult
 WebSocketChannel::StartWebsocketData()
 {
   LOG(("WebSocketChannel::StartWebsocketData() %p", this));
+  NS_ABORT_IF_FALSE(!mDataStarted, "StartWebsocketData twice");
+  mDataStarted = 1;
+  
+  LOG(("WebSocketChannel::StartWebsocketData Notifying Listener %p\n",
+       mListener.get()));
+
+  if (mListener)
+    mListener->OnStart(mContext);
 
   return mSocketIn->AsyncWait(this, 0, 0, mSocketThread);
 }
@@ -2401,6 +2427,13 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport *aTransport,
                                        nsIAsyncInputStream *aSocketIn,
                                        nsIAsyncOutputStream *aSocketOut)
 {
+  if (!NS_IsMainThread()) {
+    return NS_DispatchToMainThread(new CallOnTransportAvailable(this,
+                                                                aTransport,
+                                                                aSocketIn,
+                                                                aSocketOut));
+  }
+
   LOG(("WebSocketChannel::OnTransportAvailable %p [%p %p %p] rcvdonstart=%d\n",
        this, aTransport, aSocketIn, aSocketOut, mRecvdHttpOnStartRequest));
 
@@ -2493,7 +2526,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel::OnStartRequest: "
          "HTTP response header Upgrade: websocket not found\n"));
-    AbortSession(rv);
+    AbortSession(NS_ERROR_ILLEGAL_VALUE);
     return rv;
   }
 
@@ -2517,7 +2550,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel::OnStartRequest: "
          "HTTP response header 'Connection: Upgrade' not found\n"));
-    AbortSession(rv);
+    AbortSession(NS_ERROR_ILLEGAL_VALUE);
     return rv;
   }
 
@@ -2530,7 +2563,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
     respAccept.IsEmpty() || !respAccept.Equals(mHashedSecret)) {
     LOG(("WebSocketChannel::OnStartRequest: "
          "HTTP response header Sec-WebSocket-Accept check failed\n"));
-    LOG(("WebSocketChannel::OnStartRequest: Expected %s recevied %s\n",
+    LOG(("WebSocketChannel::OnStartRequest: Expected %s received %s\n",
          mHashedSecret.get(), respAccept.get()));
     AbortSession(NS_ERROR_ILLEGAL_VALUE);
     return NS_ERROR_ILLEGAL_VALUE;
@@ -2575,12 +2608,6 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
   rv = HandleExtensions();
   if (NS_FAILED(rv))
     return rv;
-
-  LOG(("WebSocketChannel::OnStartRequest: Notifying Listener %p\n",
-       mListener.get()));
-
-  if (mListener)
-    mListener->OnStart(mContext);
 
   mRecvdHttpOnStartRequest = 1;
   if (mRecvdHttpUpgradeTransport)
@@ -2770,7 +2797,7 @@ WebSocketChannel::OnDataAvailable(nsIRequest *aRequest,
     PRUint8  buffer[2048];
     PRUint32 maxRead;
     PRUint32 count;
-    nsresult rv;
+    nsresult rv = NS_OK;  // aCount always > 0, so this just avoids warning
 
     while (aCount > 0) {
       if (mStopped)
@@ -2781,14 +2808,18 @@ WebSocketChannel::OnDataAvailable(nsIRequest *aRequest,
       LOG(("WebSocketChannel::OnDataAvailable: InflateRead read %u rv %x\n",
            count, rv));
       if (NS_FAILED(rv) || count == 0) {
-        AbortSession(rv);
+        AbortSession(NS_ERROR_UNEXPECTED);
         break;
       }
 
       aCount -= count;
       rv = ProcessInput(buffer, count);
+      if (NS_FAILED(rv)) {
+        AbortSession(rv);
+        break;
+      }
     }
-    return NS_OK;
+    return rv;
   }
 
   if (aContext == mSocketOut) {

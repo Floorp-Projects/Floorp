@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=633602
+  -->
+  <head>
+    <title>Bug 633602 - file_targetOutOfFocus.html</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js">
+    </script>
+    <script type="application/javascript" src="pointerlock_utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+      Mozilla Bug 633602
+    </a>
+    <p id="display"></p>
+    <div id="content">
+    </div>
+    <div id="div"></div>
+    <input id="input" type="text" />
+    <pre id="test">
+      <script type="application/javascript">
+        /*
+         * Test for Bug 633602
+         * Element doesn't need to have focus to request
+         * pointer lock
+        */
+
+        SimpleTest.waitForExplicitFinish();
+
+        var div = document.getElementById("div")
+          , input = document.getElementById("input")
+          , divPointerLock = false;
+
+        function runTests () {
+          ok(divPointerLock, "Pointer should be locked even if " +
+            "the element being locked is not focused");
+        }
+
+        input.addEventListener("focus", function() {
+          div.mozRequestPointerLock();
+        }, false);
+
+        document.addEventListener("mozpointerlockchange", function (e) {
+          if (document.mozPointerLockElement === div) {
+            divPointerLock = true;
+            document.mozCancelFullScreen();
+          }
+        }, false);
+
+        document.addEventListener("mozfullscreenchange", function() {
+          if (document.mozFullScreenElement === div) {
+            input.focus();
+          } else {
+            runTests();
+            SimpleTest.finish();
+          }
+        }, false);
+
+        function start() {
+          div.mozRequestFullScreen();
+        }
+      </script>
+    </pre>
+  </body>
+</html>

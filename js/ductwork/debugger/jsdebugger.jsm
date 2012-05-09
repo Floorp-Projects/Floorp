@@ -36,11 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let EXPORTED_SYMBOLS = [ "Debugger" ];
+let EXPORTED_SYMBOLS = [ "addDebuggerToGlobal" ];
 
 /*
  * This is the js module for Debugger. Import it like so:
  *   Components.utils.import("resource://gre/modules/jsdebugger.jsm");
+ *   addDebuggerToGlobal(this);
  *
  * This will create a 'Debugger' object, which provides an interface to debug
  * JavaScript code running in other compartments in the same process, on the
@@ -50,6 +51,7 @@ let EXPORTED_SYMBOLS = [ "Debugger" ];
  *   https://wiki.mozilla.org/Debugger
  */
 
-// Initialize the Debugger object. You do not need to do this yourself.
 const init = Components.classes["@mozilla.org/jsdebugger;1"].createInstance(Components.interfaces.IJSDebugger);
-init.addClass();
+function addDebuggerToGlobal(global) {
+  init.addClass(global);
+};

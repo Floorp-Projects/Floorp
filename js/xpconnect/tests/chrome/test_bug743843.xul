@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=743843
+-->
+<window title="Mozilla Bug 743843"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=743843"
+     target="_blank">Mozilla Bug 743843</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Components.Exception options objects. **/
+
+  // Note: We pass |window| as the 'data' field here because Components.Exception
+  // doesn't handle JS Objects here all that nicely. See bug 743121.
+
+  // Test the old interface.
+  var e1 = Components.Exception('foo', Components.results.NS_BINDING_ABORTED, null, window);
+  is(e1.result, Components.results.NS_BINDING_ABORTED, "Result should get set properly");
+  is(e1.data, window, "User data should get set properly");
+
+  // Test the options object.
+  var e2 = Components.Exception('foo', { result: Components.results.NS_BINDING_ABORTED,
+                                         data: window,
+                                         foobar: 2 });
+  is(e2.result, Components.results.NS_BINDING_ABORTED, "Result should get set properly");
+  is(e2.data.window, window, "User data should get set properly");
+
+  ]]>
+  </script>
+</window>

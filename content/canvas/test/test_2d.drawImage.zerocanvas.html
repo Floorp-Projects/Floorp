@@ -33,19 +33,19 @@ canvas2.width = 0;
 canvas2.height = 10;
 var _thrown = undefined; try {
   ctx.drawImage(canvas2, 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INVALID_STATE_ERR, "should throw INVALID_STATE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "InvalidStateError" && _thrown.code == DOMException.INVALID_STATE_ERR, "should throw InvalidStateError");
 
 canvas2.width = 10;
 canvas2.height = 0;
 var _thrown = undefined; try {
   ctx.drawImage(canvas2, 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INVALID_STATE_ERR, "should throw INVALID_STATE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "InvalidStateError" && _thrown.code == DOMException.INVALID_STATE_ERR, "should throw InvalidStateError");
 
 canvas2.width = 0;
 canvas2.height = 0;
 var _thrown = undefined; try {
   ctx.drawImage(canvas2, 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INVALID_STATE_ERR, "should throw INVALID_STATE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "InvalidStateError" && _thrown.code == DOMException.INVALID_STATE_ERR, "should throw InvalidStateError");
 
 isPixel(ctx, 50,25, 0,255,0,255, "50,25", "0,255,0,255", 2);
 

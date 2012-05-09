@@ -9,7 +9,7 @@
  */
 
 
-#include "vpx_ports/config.h"
+#include "vpx_config.h"
 #include "encodemb.h"
 #include "vp8/common/reconinter.h"
 #include "quantize.h"
@@ -48,12 +48,12 @@ void vp8_subtract_b_c(BLOCK *be, BLOCKD *bd, int pitch)
     }
 }
 
-void vp8_subtract_mbuv_c(short *diff, unsigned char *usrc, unsigned char *vsrc, unsigned char *pred, int stride)
+void vp8_subtract_mbuv_c(short *diff, unsigned char *usrc, unsigned char *vsrc,
+                         int src_stride, unsigned char *upred,
+                         unsigned char *vpred, int pred_stride)
 {
     short *udiff = diff + 256;
     short *vdiff = diff + 320;
-    unsigned char *upred = pred + 256;
-    unsigned char *vpred = pred + 320;
 
     int r, c;
 
@@ -65,8 +65,8 @@ void vp8_subtract_mbuv_c(short *diff, unsigned char *usrc, unsigned char *vsrc, 
         }
 
         udiff += 8;
-        upred += 8;
-        usrc  += stride;
+        upred += pred_stride;
+        usrc  += src_stride;
     }
 
     for (r = 0; r < 8; r++)
@@ -77,12 +77,13 @@ void vp8_subtract_mbuv_c(short *diff, unsigned char *usrc, unsigned char *vsrc, 
         }
 
         vdiff += 8;
-        vpred += 8;
-        vsrc  += stride;
+        vpred += pred_stride;
+        vsrc  += src_stride;
     }
 }
 
-void vp8_subtract_mby_c(short *diff, unsigned char *src, unsigned char *pred, int stride)
+void vp8_subtract_mby_c(short *diff, unsigned char *src, int src_stride,
+                        unsigned char *pred, int pred_stride)
 {
     int r, c;
 
@@ -94,8 +95,8 @@ void vp8_subtract_mby_c(short *diff, unsigned char *src, unsigned char *pred, in
         }
 
         diff += 16;
-        pred += 16;
-        src  += stride;
+        pred += pred_stride;
+        src  += src_stride;
     }
 }
 
@@ -103,8 +104,11 @@ static void vp8_subtract_mb(const VP8_ENCODER_RTCD *rtcd, MACROBLOCK *x)
 {
     BLOCK *b = &x->block[0];
 
-    ENCODEMB_INVOKE(&rtcd->encodemb, submby)(x->src_diff, *(b->base_src), x->e_mbd.predictor, b->src_stride);
-    ENCODEMB_INVOKE(&rtcd->encodemb, submbuv)(x->src_diff, x->src.u_buffer, x->src.v_buffer, x->e_mbd.predictor, x->src.uv_stride);
+    ENCODEMB_INVOKE(&rtcd->encodemb, submby)(x->src_diff, *(b->base_src),
+        b->src_stride, x->e_mbd.dst.y_buffer, x->e_mbd.dst.y_stride);
+    ENCODEMB_INVOKE(&rtcd->encodemb, submbuv)(x->src_diff, x->src.u_buffer,
+        x->src.v_buffer, x->src.uv_stride, x->e_mbd.dst.u_buffer,
+        x->e_mbd.dst.v_buffer, x->e_mbd.dst.uv_stride);
 }
 
 static void build_dcblock(MACROBLOCK *x)
@@ -274,7 +278,7 @@ static void optimize_b(MACROBLOCK *mb, int ib, int type,
     qcoeff_ptr = d->qcoeff;
     dqcoeff_ptr = d->dqcoeff;
     i0 = !type;
-    eob = d->eob;
+    eob = *d->eob;
 
     /* Now set up a Viterbi trellis to evaluate alternative roundings. */
     rdmult = mb->rdmult * err_mult;
@@ -466,8 +470,45 @@ static void optimize_b(MACROBLOCK *mb, int ib, int type,
     }
     final_eob++;
 
-    d->eob = final_eob;
-    *a = *l = (d->eob != !type);
+    *a = *l = (final_eob != !type);
+    *d->eob = (char)final_eob;
+}
+static void check_reset_2nd_coeffs(MACROBLOCKD *x, int type,
+                                   ENTROPY_CONTEXT *a, ENTROPY_CONTEXT *l)
+{
+    int sum=0;
+    int i;
+    BLOCKD *bd = &x->block[24];
+
+    if(bd->dequant[0]>=35 && bd->dequant[1]>=35)
+        return;
+
+    for(i=0;i<(*bd->eob);i++)
+    {
+        int coef = bd->dqcoeff[vp8_default_zig_zag1d[i]];
+        sum+= (coef>=0)?coef:-coef;
+        if(sum>=35)
+            return;
+    }
+    /**************************************************************************
+    our inverse hadamard transform effectively is weighted sum of all 16 inputs
+    with weight either 1 or -1. It has a last stage scaling of (sum+3)>>3. And
+    dc only idct is (dc+4)>>3. So if all the sums are between -35 and 29, the
+    output after inverse wht and idct will be all zero. A sum of absolute value
+    smaller than 35 guarantees all 16 different (+1/-1) weighted sums in wht
+    fall between -35 and +35.
+    **************************************************************************/
+    if(sum < 35)
+    {
+        for(i=0;i<(*bd->eob);i++)
+        {
+            int rc = vp8_default_zig_zag1d[i];
+            bd->qcoeff[rc]=0;
+            bd->dqcoeff[rc]=0;
+        }
+        *bd->eob = 0;
+        *a = *l = (*bd->eob != !type);
+    }
 }
 
 static void optimize_mb(MACROBLOCK *x, const VP8_ENCODER_RTCD *rtcd)
@@ -475,6 +516,7 @@ static void optimize_mb(MACROBLOCK *x, const VP8_ENCODER_RTCD *rtcd)
     int b;
     int type;
     int has_2nd_order;
+
     ENTROPY_CONTEXT_PLANES t_above, t_left;
     ENTROPY_CONTEXT *ta;
     ENTROPY_CONTEXT *tl;
@@ -506,6 +548,8 @@ static void optimize_mb(MACROBLOCK *x, const VP8_ENCODER_RTCD *rtcd)
         b=24;
         optimize_b(x, b, PLANE_TYPE_Y2,
             ta + vp8_block2above[b], tl + vp8_block2left[b], rtcd);
+        check_reset_2nd_coeffs(&x->e_mbd, PLANE_TYPE_Y2,
+            ta + vp8_block2above[b], tl + vp8_block2left[b]);
     }
 }
 
@@ -539,7 +583,7 @@ void vp8_optimize_mby(MACROBLOCK *x, const VP8_ENCODER_RTCD *rtcd)
     for (b = 0; b < 16; b++)
     {
         optimize_b(x, b, type,
-        ta + vp8_block2above[b], tl + vp8_block2left[b], rtcd);
+            ta + vp8_block2above[b], tl + vp8_block2left[b], rtcd);
     }
 
 
@@ -548,6 +592,8 @@ void vp8_optimize_mby(MACROBLOCK *x, const VP8_ENCODER_RTCD *rtcd)
         b=24;
         optimize_b(x, b, PLANE_TYPE_Y2,
             ta + vp8_block2above[b], tl + vp8_block2left[b], rtcd);
+        check_reset_2nd_coeffs(&x->e_mbd, PLANE_TYPE_Y2,
+            ta + vp8_block2above[b], tl + vp8_block2left[b]);
     }
 }
 
@@ -589,41 +635,22 @@ void vp8_encode_inter16x16(const VP8_ENCODER_RTCD *rtcd, MACROBLOCK *x)
 
     if (x->optimize)
         optimize_mb(x, rtcd);
-
-    vp8_inverse_transform_mb(IF_RTCD(&rtcd->common->idct), &x->e_mbd);
-
-    RECON_INVOKE(&rtcd->common->recon, recon_mb)
-        (IF_RTCD(&rtcd->common->recon), &x->e_mbd);
 }
-
 
 /* this funciton is used by first pass only */
 void vp8_encode_inter16x16y(const VP8_ENCODER_RTCD *rtcd, MACROBLOCK *x)
 {
     BLOCK *b = &x->block[0];
 
-    vp8_build_inter16x16_predictors_mby(&x->e_mbd);
+    vp8_build_inter16x16_predictors_mby(&x->e_mbd, x->e_mbd.dst.y_buffer,
+                                        x->e_mbd.dst.y_stride);
 
-    ENCODEMB_INVOKE(&rtcd->encodemb, submby)(x->src_diff, *(b->base_src), x->e_mbd.predictor, b->src_stride);
+    ENCODEMB_INVOKE(&rtcd->encodemb, submby)(x->src_diff, *(b->base_src),
+        b->src_stride, x->e_mbd.dst.y_buffer, x->e_mbd.dst.y_stride);
 
     transform_mby(x);
 
     vp8_quantize_mby(x);
 
-    vp8_inverse_transform_mby(IF_RTCD(&rtcd->common->idct), &x->e_mbd);
-
-    RECON_INVOKE(&rtcd->common->recon, recon_mby)
-        (IF_RTCD(&rtcd->common->recon), &x->e_mbd);
-}
-
-
-void vp8_encode_inter16x16uvrd(const VP8_ENCODER_RTCD *rtcd, MACROBLOCK *x)
-{
-    vp8_build_inter_predictors_mbuv(&x->e_mbd);
-    ENCODEMB_INVOKE(&rtcd->encodemb, submbuv)(x->src_diff, x->src.u_buffer, x->src.v_buffer, x->e_mbd.predictor, x->src.uv_stride);
-
-    vp8_transform_mbuv(x);
-
-    vp8_quantize_mbuv(x);
-
+    vp8_inverse_transform_mby(&x->e_mbd, IF_RTCD(rtcd->common));
 }

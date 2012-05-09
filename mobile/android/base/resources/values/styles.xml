@@ -69,6 +69,7 @@
         <item name="android:layout_weight">1</item>
         <item name="android:divider">#E5E5E5</item>
         <item name="android:dividerHeight">1dp</item>
+        <item name="android:cacheColorHint">#FFFFFF</item>
     </style>
 
     <!-- Lists in TabsTray -->

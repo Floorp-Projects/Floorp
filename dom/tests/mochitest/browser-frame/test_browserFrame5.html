@@ -27,8 +27,9 @@ function runTest() {
   var iframe1 = document.createElement('iframe');
   iframe1.mozbrowser = true;
   iframe1.id = 'iframe1';
-  iframe1.addEventListener('load', function() {
-    iframe1.removeEventListener('load', arguments.callee);
+  iframe1.addEventListener('mozbrowserloadend', function() {
+    iframe1.removeEventListener('mozbrowserloadend', arguments.callee);
+    ok(true, 'Got first loadend event.');
     SimpleTest.executeSoon(runTest2);
   });
   iframe1.src = browserFrameHelpers.emptyPage1;
@@ -39,25 +40,25 @@ function runTest2() {
   var iframe1 = document.getElementById('iframe1');
   var iframe2 = document.getElementById('iframe2');
 
-  var sawLoad = false;
+  var sawLoadEnd = false;
   var sawLocationChange = false;
 
   iframe1.addEventListener('mozbrowserlocationchange', function(e) {
     ok(e.isTrusted, 'Event should be trusted.');
     ok(!sawLocationChange, 'Just one locationchange event.');
-    ok(!sawLoad, 'locationchange before load.');
+    ok(!sawLoadEnd, 'locationchange before load.');
     is(e.detail, 'data:text/html,1', "event's reported location");
     sawLocationChange = true;
   });
 
-  iframe1.addEventListener('load', function() {
-    ok(sawLocationChange, 'Load after locationchange.');
-    ok(!sawLoad, 'Just one load event.');
-    sawLoad = true;
+  iframe1.addEventListener('mozbrowserloadend', function() {
+    ok(sawLocationChange, 'Loadend after locationchange.');
+    ok(!sawLoadEnd, 'Just one loadend event.');
+    sawLoadEnd = true;
   });
 
   function iframe2Load() {
-    if (!sawLoad || !sawLocationChange) {
+    if (!sawLoadEnd || !sawLocationChange) {
       // Spin if iframe1 hasn't loaded yet.
       SimpleTest.executeSoon(iframe2Load);
       return;

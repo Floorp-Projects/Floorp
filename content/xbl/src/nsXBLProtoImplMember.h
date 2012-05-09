@@ -110,8 +110,8 @@ public:
 
   virtual nsresult InstallMember(nsIScriptContext* aContext,
                                  nsIContent* aBoundElement, 
-                                 void* aScriptObject,
-                                 void* aTargetClassObject,
+                                 JSObject* aScriptObject, // Unused
+                                 JSObject* aTargetClassObject,
                                  const nsCString& aClassStr) = 0;
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,

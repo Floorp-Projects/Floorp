@@ -61,8 +61,8 @@ SDK_HEADERS = \
 	$(NULL)
 
 EXPORTS = \
-	nsCompressedCharMap.h \
 	nsBidiUtils.h \
+	nsSpecialCasingData.h \
 	nsUnicodeProperties.h \
 	nsUnicodeScriptCodes.h \
 	$(NULL)
@@ -70,6 +70,7 @@ EXPORTS = \
 CPPSRCS	= \
 	nsUnicharUtils.cpp \
 	nsBidiUtils.cpp \
+	nsSpecialCasingData.cpp \
 	nsUnicodeProperties.cpp \
 	$(NULL)
 

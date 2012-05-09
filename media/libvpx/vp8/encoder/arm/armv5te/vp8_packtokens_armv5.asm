@@ -10,6 +10,7 @@
 
 
     EXPORT |vp8cx_pack_tokens_armv5|
+    IMPORT |vp8_validate_buffer_arm|
 
     INCLUDE asm_enc_offsets.asm
 
@@ -19,6 +20,22 @@
 
     AREA    |.text|, CODE, READONLY
 
+
+    ; macro for validating write buffer position
+    ; needs vp8_writer in r0
+    ; start shall not be in r1
+    MACRO
+    VALIDATE_POS $start, $pos
+    push {r0-r3, r12, lr}        ; rest of regs are preserved by subroutine call
+    ldr  r2, [r0, #vp8_writer_buffer_end]
+    ldr  r3, [r0, #vp8_writer_error]
+    mov  r1, $pos
+    mov  r0, $start
+    bl   vp8_validate_buffer_arm
+    pop  {r0-r3, r12, lr}
+    MEND
+
+
 ; r0 vp8_writer *w
 ; r1 const TOKENEXTRA *p
 ; r2 int xcount
@@ -26,11 +43,11 @@
 ; s0 vp8_extra_bits
 ; s1 vp8_coef_tree
 |vp8cx_pack_tokens_armv5| PROC
-    push    {r4-r11, lr}
+    push    {r4-r12, lr}
+    sub     sp, sp, #16
 
     ; Add size of xcount * sizeof (TOKENEXTRA) to get stop
     ;  sizeof (TOKENEXTRA) is 8
-    sub     sp, sp, #12
     add     r2, r1, r2, lsl #3          ; stop = p + xcount*sizeof(TOKENEXTRA)
     str     r2, [sp, #0]
     str     r3, [sp, #8]                ; save vp8_coef_encodings
@@ -57,7 +74,7 @@ while_p_lt_stop
     subne   r8, r8, #1                  ; --n
 
     rsb     r4, r8, #32                 ; 32-n
-    ldr     r10, [sp, #52]              ; vp8_coef_tree
+    ldr     r10, [sp, #60]              ; vp8_coef_tree
 
     ; v is kept in r12 during the token pack loop
     lsl     r12, r6, r4                ; r12 = v << 32 - n
@@ -71,7 +88,7 @@ token_loop
     ; off of v, so set a flag here based on this.
     ; This value is refered to as "bb"
     lsls    r12, r12, #1                ; bb = v >> n
-    mul     r4, r4, r7                  ; ((range-1) * pp[i>>1]))
+    mul     r6, r4, r7                  ; ((range-1) * pp[i>>1]))
 
     ; bb can only be 0 or 1.  So only execute this statement
     ; if bb == 1, otherwise it will act like i + 0
@@ -79,7 +96,7 @@ token_loop
 
     mov     r7, #1
     ldrsb   lr, [r10, lr]               ; i = vp8_coef_tree[i+bb]
-    add     r4, r7, r4, lsr #8          ; 1 + (((range-1) * pp[i>>1]) >> 8)
+    add     r4, r7, r6, lsr #8          ; 1 + (((range-1) * pp[i>>1]) >> 8)
 
     addcs   r2, r2, r4                  ; if  (bb) lowvalue += split
     subcs   r4, r5, r4                  ; if  (bb) range = range-split
@@ -128,12 +145,15 @@ token_high_bit_not_set
     bic     r2, r2, #0xff000000         ; lowvalue &= 0xffffff
     str     r11, [r0, #vp8_writer_pos]
     sub     r3, r3, #8                  ; count -= 8
+
+    VALIDATE_POS r10, r11               ; validate_buffer at pos
+
     strb    r7, [r10, r4]               ; w->buffer[w->pos++]
 
     ; r10 is used earlier in the loop, but r10 is used as
     ; temp variable here.  So after r10 is used, reload
     ; vp8_coef_tree_dcd into r10
-    ldr     r10, [sp, #52]              ; vp8_coef_tree
+    ldr     r10, [sp, #60]              ; vp8_coef_tree
 
 token_count_lt_zero
     lsl     r2, r2, r6                  ; lowvalue <<= shift
@@ -142,7 +162,7 @@ token_count_lt_zero
     bne     token_loop
 
     ldrb    r6, [r1, #tokenextra_token] ; t
-    ldr     r7, [sp, #48]               ; vp8_extra_bits
+    ldr     r7, [sp, #56]               ; vp8_extra_bits
     ; Add t * sizeof (vp8_extra_bit_struct) to get the desired
     ;  element.  Here vp8_extra_bit_struct == 16
     add     r12, r7, r6, lsl #4         ; b = vp8_extra_bits + t
@@ -172,12 +192,12 @@ extra_bits_loop
     ldrb    r4, [r9, lr, asr #1]            ; pp[i>>1]
     sub     r7, r5, #1                  ; range-1
     lsls    r12, r12, #1                ; v >> n
-    mul     r4, r4, r7                  ; (range-1) * pp[i>>1]
+    mul     r6, r4, r7                  ; (range-1) * pp[i>>1]
     addcs   lr, lr, #1                  ; i + bb
 
     mov     r7, #1
     ldrsb   lr, [r10, lr]               ; i = b->tree[i+bb]
-    add     r4, r7, r4, lsr #8          ; split = 1 +  (((range-1) * pp[i>>1]) >> 8)
+    add     r4, r7, r6, lsr #8          ; split = 1 +  (((range-1) * pp[i>>1]) >> 8)
 
     addcs   r2, r2, r4                  ; if  (bb) lowvalue += split
     subcs   r4, r5, r4                  ; if  (bb) range = range-split
@@ -223,6 +243,9 @@ extra_high_bit_not_set
     bic     r2, r2, #0xff000000         ; lowvalue &= 0xffffff
     str     r11, [r0, #vp8_writer_pos]
     sub     r3, r3, #8                  ; count -= 8
+
+    VALIDATE_POS r10, r11               ; validate_buffer at pos
+
     strb    r7, [r10, r4]               ; w->buffer[w->pos++]=(lowvalue >> (24-offset))
     ldr     r10, [sp, #4]               ; b->tree
 extra_count_lt_zero
@@ -271,7 +294,10 @@ end_high_bit_not_set
     lsr     r6, r2, #24                 ; lowvalue >> 24
     add     r12, r4, #1                 ; w->pos++
     bic     r2, r2, #0xff000000         ; lowvalue &= 0xffffff
-    str     r12, [r0, #0x10]
+    str     r12, [r0, #vp8_writer_pos]
+
+    VALIDATE_POS r7, r12               ; validate_buffer at pos
+
     strb    r6, [r7, r4]
 end_count_zero
 skip_extra_bits
@@ -284,8 +310,8 @@ check_p_lt_stop
     str     r2, [r0, #vp8_writer_lowvalue]
     str     r5, [r0, #vp8_writer_range]
     str     r3, [r0, #vp8_writer_count]
-    add     sp, sp, #12
-    pop     {r4-r11, pc}
+    add     sp, sp, #16
+    pop     {r4-r12, pc}
     ENDP
 
     END

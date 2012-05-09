@@ -39,6 +39,7 @@
 
 #include "nsBaseWidgetAccessible.h"
 
+#include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
@@ -124,16 +125,17 @@ nsLinkableAccessible::NativeState()
   return states;
 }
 
-NS_IMETHODIMP
-nsLinkableAccessible::GetValue(nsAString& aValue)
+void
+nsLinkableAccessible::Value(nsString& aValue)
 {
   aValue.Truncate();
 
-  nsAccessible::GetValue(aValue);
+  nsAccessible::Value(aValue);
   if (!aValue.IsEmpty())
-    return NS_OK;
+    return;
 
-  return mIsLink ? mActionAcc->GetValue(aValue) : NS_ERROR_NOT_IMPLEMENTED;
+  if (aValue.IsEmpty() && mIsLink)
+    mActionAcc->Value(aValue);
 }
 
 

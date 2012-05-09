@@ -524,6 +524,25 @@
                phase="capturing"
                modifiers="accel"
                action="this.selectEngine(event, (event.detail > 0));"/>
+
+      <handler event="focus">
+      <![CDATA[
+        // Speculatively connect to the current engine's search URI (and
+        // suggest URI, if different) to reduce request latency
+
+        const SUGGEST_TYPE = "application/x-suggestions+json";
+        var engine = this.currentEngine;
+	var connector =
+            Services.io.QueryInterface(Components.interfaces.nsISpeculativeConnect);
+        var searchURI = engine.getSubmission("dummy").uri;
+        connector.speculativeConnect(searchURI, null, null);
+
+        if (engine.supportsResponseType(SUGGEST_TYPE)) {
+	  var suggestURI = engine.getSubmission("dummy", SUGGEST_TYPE).uri;
+          if (suggestURI.prePath != searchURI.prePath)
+            connector.speculativeConnect(suggestURI, null, null);
+        }
+      ]]></handler>
     </handlers>
   </binding>
 

@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--https://bugzilla.mozilla.org/show_bug.cgi?id=633602-->
+<head>
+  <title>Bug 633602</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js">
+  </script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript" src="pointerlock_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+    Mozilla Bug 633602
+  </a>
+  <div id="div"></div>
+  <pre id="test">
+    <script type="text/javascript">
+      /*
+       * Test for Bug 633602
+       * Escape key should unlock the pointer
+       */
+
+      SimpleTest.waitForExplicitFinish();
+
+      var div = document.getElementById("div")
+        , pointerUnLocked = false;
+
+      function runTests () {
+        ok(pointerUnLocked, "Pressing Escape key should unlock the pointer");
+      }
+
+      document.addEventListener("mozpointerlockchange", function (e) {
+        if (document.mozPointerLockElement === div) {
+          synthesizeKey("VK_ESCAPE", {});
+        }
+        else {
+          pointerUnLocked = true;
+          document.mozCancelFullScreen();
+        }
+      }, false);
+
+      document.addEventListener("mozfullscreenchange", function(e) {
+        if (document.mozFullScreenElement === div) {
+          div.mozRequestPointerLock();
+        }
+        else {
+          runTests();
+          SimpleTest.finish();
+        }
+      }, false);
+
+      function start() {
+        div.mozRequestFullScreen();
+      }
+    </script>
+  </pre>
+</body>
+</html>
