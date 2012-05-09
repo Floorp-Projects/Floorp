@@ -18,6 +18,9 @@ function init_all() {
   window.addEventListener("popstate", onStatePopped, true);
   updateCommands();
   gMainPane.init();
+#ifdef XP_WIN
+  gTabsPane.init();
+#endif
   var initFinished = document.createEvent("Event");
   initFinished.initEvent("Initialized", true, true);
   document.dispatchEvent(initFinished);

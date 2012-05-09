@@ -91,6 +91,7 @@
     <prefpane flex="1" id="mainPrefPane">
 #include landing.xul
 #include main.xul
+#include tabs.xul
     </prefpane>
   </hbox>
   
