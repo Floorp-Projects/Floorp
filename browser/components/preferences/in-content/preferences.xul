@@ -90,6 +90,7 @@
   <hbox class="main-content" flex="1">
     <prefpane flex="1" id="mainPrefPane">
 #include landing.xul
+#include main.xul
     </prefpane>
   </hbox>
   
