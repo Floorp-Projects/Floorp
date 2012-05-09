@@ -4,3 +4,5 @@ browser.jar:
 *  content/browser/preferences/in-content/preferences.xul
 *  content/browser/preferences/in-content/main.xul
    content/browser/preferences/in-content/main.js
+*  content/browser/preferences/in-content/tabs.xul
+*  content/browser/preferences/in-content/tabs.js
