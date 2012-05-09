@@ -343,7 +343,7 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
   // If we don't have a decoder, we know we've got everything we're going to
   // get. If we do, we only display fully-downloaded frames; everything else
   // gets delayed.
-  bool haveFullNextFrame = (mMultipart && mBytesDecoded == 0) || !mDecoder ||
+  bool haveFullNextFrame = !mDecoder ||
                            nextFrameIndex < mDecoder->GetCompleteFrameCount();
 
   // If we're done decoding the next frame, go ahead and display it now and
@@ -1135,9 +1135,14 @@ RasterImage::SetSize(PRInt32 aWidth, PRInt32 aHeight)
     return NS_ERROR_INVALID_ARG;
 
   // if we already have a size, check the new size against the old one
-  if (!mMultipart && mHasSize &&
+  if (mHasSize &&
       ((aWidth != mSize.width) || (aHeight != mSize.height))) {
-    NS_WARNING("Image changed size on redecode! This should not happen!");
+
+    // Alter the warning depending on whether the channel is multipart
+    if (!mMultipart)
+      NS_WARNING("Image changed size on redecode! This should not happen!");
+    else
+      NS_WARNING("Multipart channel sent an image of a different size");
 
     // Make the decoder aware of the error so that it doesn't try to call
     // FinishInternal during ShutdownDecoder.
@@ -1209,14 +1214,10 @@ RasterImage::EnsureFrame(PRUint32 aFrameNum, PRInt32 aX, PRInt32 aY,
     }
   }
 
-  // Not reusable, so replace the frame directly.
   DeleteImgFrame(aFrameNum);
-  mFrames.RemoveElementAt(aFrameNum);
-  nsAutoPtr<imgFrame> newFrame(new imgFrame());
-  nsresult rv = newFrame->Init(aX, aY, aWidth, aHeight, aFormat, aPaletteDepth);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return InternalAddFrameHelper(aFrameNum, newFrame.forget(), imageData,
-                                imageLength, paletteData, paletteLength);
+  return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat,
+                          aPaletteDepth, imageData, imageLength,
+                          paletteData, paletteLength);
 }
 
 nsresult
@@ -1489,31 +1490,6 @@ RasterImage::AddSourceData(const char *aBuffer, PRUint32 aCount)
   // This call should come straight from necko - no reentrancy allowed
   NS_ABORT_IF_FALSE(!mInDecoder, "Re-entrant call to AddSourceData!");
 
-  // Starting a new part's frames, let's clean up before we add any
-  // This needs to happen just before we start getting EnsureFrame() call(s),
-  // so that there's no gap for anything to miss us.
-  if (mBytesDecoded == 0) {
-    // Our previous state may have been animated, so let's clean up
-    bool wasAnimating = mAnimating;
-    if (mAnimating) {
-      StopAnimation();
-      mAnimating = false;
-    }
-    mAnimationFinished = false;
-    if (mAnim) {
-      delete mAnim;
-      mAnim = nsnull;
-    }
-    // If there's only one frame, this could cause flickering
-    int old_frame_count = mFrames.Length();
-    if (old_frame_count > 1) {
-      for (int i = 0; i < old_frame_count; ++i) {
-        DeleteImgFrame(i);
-      }
-      mFrames.Clear();
-    }
-  }
-
   // If we're not storing source data, write it directly to the decoder
   if (!StoringSourceData()) {
     rv = WriteToDecoder(aBuffer, aCount);
@@ -1643,7 +1619,7 @@ RasterImage::SourceDataComplete()
 }
 
 nsresult
-RasterImage::NewSourceData(const char* aMimeType)
+RasterImage::NewSourceData()
 {
   nsresult rv;
 
@@ -1677,8 +1653,6 @@ RasterImage::NewSourceData(const char* aMimeType)
   // Reset some flags
   mDecoded = false;
   mHasSourceData = false;
-
-  mSourceDataMimeType.Assign(aMimeType);
 
   // We're decode-on-load here. Open up a new decoder just like what happens when
   // we call Init() for decode-on-load images.
