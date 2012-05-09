@@ -332,8 +332,6 @@ static const uint32_t TCF_FUN_FLAGS = TCF_FUN_HEAVYWEIGHT |
                                       TCF_ARGUMENTS_HAS_LOCAL_BINDING |
                                       TCF_DEFINITELY_NEEDS_ARGS_OBJ;
 
-struct BytecodeEmitter;
-
 struct TreeContext {                /* tree context for semantic checks */
     uint32_t        flags;          /* statement state flags, see above */
     uint32_t        bodyid;         /* block number of program/function body */
@@ -552,42 +550,11 @@ class GCConstList {
 };
 
 struct GlobalScope {
-    GlobalScope(JSContext *cx, JSObject *globalObj, BytecodeEmitter *bce)
-      : globalObj(cx, globalObj), bce(bce), defs(cx), names(cx),
-        defsRoot(cx, &defs), namesRoot(cx, &names)
+    GlobalScope(JSContext *cx, JSObject *globalObj)
+      : globalObj(cx, globalObj)
     { }
 
-    struct GlobalDef {
-        JSAtom        *atom;        // If non-NULL, specifies the property name to add.
-        FunctionBox   *funbox;      // If non-NULL, function value for the property.
-                                    // This value is only set/used if atom is non-NULL.
-        uint32_t      knownSlot;    // If atom is NULL, this is the known shape slot.
-
-        GlobalDef() { }
-        GlobalDef(uint32_t knownSlot) : atom(NULL), knownSlot(knownSlot) { }
-        GlobalDef(JSAtom *atom, FunctionBox *box) : atom(atom), funbox(box) { }
-    };
-
     RootedVarObject globalObj;
-    BytecodeEmitter *bce;
-
-    /*
-     * This is the table of global names encountered during parsing. Each
-     * global name appears in the list only once, and the |names| table
-     * maps back into |defs| for fast lookup.
-     *
-     * A definition may either specify an existing global property, or a new
-     * one that must be added after compilation succeeds.
-     */
-    Vector<GlobalDef, 16> defs;
-    AtomIndexMap      names;
-
-    /*
-     * Protect the inline elements within defs/names from being clobbered by
-     * root analysis. The atoms in this structure must be separately rooted.
-     */
-    JS::SkipRoot      defsRoot;
-    JS::SkipRoot      namesRoot;
 };
 
 struct BytecodeEmitter : public TreeContext
@@ -628,11 +595,6 @@ struct BytecodeEmitter : public TreeContext
 
     GlobalScope     *globalScope;   /* frontend::CompileScript global scope, or null */
 
-    typedef Vector<GlobalSlotArray::Entry, 16> GlobalUseVector;
-
-    GlobalUseVector globalUses;     /* per-script global uses */
-    OwnedAtomIndexMapPtr globalMap; /* per-script map of global name to globalUses vector */
-
     /* Vectors of pn_cookie slot values. */
     typedef Vector<uint32_t, 8> SlotVector;
     SlotVector      closedArgs;
@@ -654,22 +616,6 @@ struct BytecodeEmitter : public TreeContext
      * destructor call.
      */
     ~BytecodeEmitter();
-
-    /*
-     * Adds a use of a variable that is statically known to exist on the
-     * global object.
-     *
-     * The actual slot of the variable on the global object is not known
-     * until after compilation. Properties must be resolved before being
-     * added, to avoid aliasing properties that should be resolved. This makes
-     * slot prediction based on the global object's free slot impossible. So,
-     * we use the slot to index into bce->globalScope->defs, and perform a
-     * fixup of the script at the very end of compilation.
-     *
-     * If the global use can be cached, |cookie| will be set to |slot|.
-     * Otherwise, |cookie| is set to the free cookie value.
-     */
-    bool addGlobalUse(JSAtom *atom, uint32_t slot, UpvarCookie *cookie);
 
     bool compilingForEval() const { return !!(flags & TCF_COMPILE_FOR_EVAL); }
     JSVersion version() const { return parser->versionWithFlags(); }
