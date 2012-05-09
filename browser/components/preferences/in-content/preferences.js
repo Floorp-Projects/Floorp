@@ -17,6 +17,7 @@ function init_all() {
   window.history.replaceState("landing", document.title);
   window.addEventListener("popstate", onStatePopped, true);
   updateCommands();
+  gMainPane.init();
   var initFinished = document.createEvent("Event");
   initFinished.initEvent("Initialized", true, true);
   document.dispatchEvent(initFinished);
