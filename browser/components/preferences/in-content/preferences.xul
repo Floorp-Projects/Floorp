@@ -96,7 +96,7 @@
 #include advanced.xul
 #include applications.xul
 #include content.xul
-
+#include security.xul
 #ifdef MOZ_SERVICES_SYNC
 #include sync.xul
 #endif
