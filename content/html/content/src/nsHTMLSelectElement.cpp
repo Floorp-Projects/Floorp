@@ -1815,13 +1815,6 @@ nsHTMLSelectElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLSelectElement::GetHasOptGroups(bool* aHasGroups)
-{
-  *aHasGroups = (mOptGroupCount > 0);
-  return NS_OK;
-}
-
 void
 nsHTMLSelectElement::DispatchContentReset()
 {

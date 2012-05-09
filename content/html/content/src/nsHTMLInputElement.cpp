@@ -1239,15 +1239,6 @@ nsHTMLInputElement::GetPlaceholderNode()
 }
 
 NS_IMETHODIMP_(void)
-nsHTMLInputElement::UpdatePlaceholderText(bool aNotify)
-{
-  nsTextEditorState *state = GetEditorState();
-  if (state) {
-    state->UpdatePlaceholderText(aNotify);
-  }
-}
-
-NS_IMETHODIMP_(void)
 nsHTMLInputElement::SetPlaceholderClass(bool aVisible, bool aNotify)
 {
   nsTextEditorState *state = GetEditorState();
@@ -4096,16 +4087,6 @@ nsHTMLInputElement::GetTextEditorValue(nsAString& aValue,
   nsTextEditorState *state = GetEditorState();
   if (state) {
     state->GetValue(aValue, aIgnoreWrap);
-  }
-}
-
-NS_IMETHODIMP_(void)
-nsHTMLInputElement::SetTextEditorValue(const nsAString& aValue,
-                                       bool aUserInput)
-{
-  nsTextEditorState *state = GetEditorState();
-  if (state) {
-    state->SetValue(aValue, aUserInput);
   }
 }
 
