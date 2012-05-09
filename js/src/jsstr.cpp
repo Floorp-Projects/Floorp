@@ -372,16 +372,6 @@ str_uneval(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-const char js_escape_str[] = "escape";
-const char js_unescape_str[] = "unescape";
-#if JS_HAS_UNEVAL
-const char js_uneval_str[] = "uneval";
-#endif
-const char js_decodeURI_str[] = "decodeURI";
-const char js_encodeURI_str[] = "encodeURI";
-const char js_decodeURIComponent_str[] = "decodeURIComponent";
-const char js_encodeURIComponent_str[] = "encodeURIComponent";
-
 static JSFunctionSpec string_functions[] = {
     JS_FN(js_escape_str,             str_escape,                1,0),
     JS_FN(js_unescape_str,           str_unescape,              1,0),
@@ -477,7 +467,7 @@ ThisToStringForStringProto(JSContext *cx, CallReceiver call)
         if (obj->isString() &&
             ClassMethodIsNative(cx, obj,
                                 &StringClass,
-                                RootedVarId(cx, ATOM_TO_JSID(cx->runtime->atomState.toStringAtom)),
+                                RootedVarId(cx, NameToId(cx->runtime->atomState.toStringAtom)),
                                 js_str_toString))
         {
             JSString *str = obj->asString().unbox();
@@ -1834,7 +1824,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         }
 
         Value v;
-        if (HasDataProperty(cx, base, atom, &v) && v.isString()) {
+        if (HasDataProperty(cx, base, AtomToId(atom), &v) && v.isString()) {
             rdata.repstr = v.toString()->ensureLinear(cx);
             if (!rdata.repstr)
                 return false;
@@ -3104,7 +3094,7 @@ StringObject::assignInitialShape(JSContext *cx)
 {
     JS_ASSERT(nativeEmpty());
 
-    return addDataProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+    return addDataProperty(cx, NameToId(cx->runtime->atomState.lengthAtom),
                            LENGTH_SLOT, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
@@ -3121,7 +3111,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 
     /* Now create the String function. */
     RootedVarFunction ctor(cx);
-    ctor = global->createConstructor(cx, js_String, CLASS_ATOM(cx, String), 1);
+    ctor = global->createConstructor(cx, js_String, CLASS_NAME(cx, String), 1);
     if (!ctor)
         return NULL;
 
@@ -3335,7 +3325,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
 
     Value rval = NullValue();
     Value fval;
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.toSourceAtom);
+    jsid id = NameToId(cx->runtime->atomState.toSourceAtom);
     if (!js_GetMethod(cx, RootedVarObject(cx, &v.toObject()), id, 0, &fval))
         return NULL;
     if (js_IsCallable(fval)) {

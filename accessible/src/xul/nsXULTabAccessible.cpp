@@ -160,7 +160,7 @@ nsXULTabAccessible::RelationByType(PRUint32 aType)
     return rel;
 
   nsCOMPtr<nsIContent> tabpanelContent(do_QueryInterface(tabpanelNode));
-  rel.AppendTarget(tabpanelContent);
+  rel.AppendTarget(mDoc, tabpanelContent);
   return rel;
 }
 
@@ -254,6 +254,6 @@ nsXULTabpanelAccessible::RelationByType(PRUint32 aType)
     return rel;
 
   nsCOMPtr<nsIContent> tabContent(do_QueryInterface(tabNode));
-  rel.AppendTarget(tabContent);
+  rel.AppendTarget(mDoc, tabContent);
   return rel;
 }

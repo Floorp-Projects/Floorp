@@ -616,22 +616,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage)
 NS_INTERFACE_MAP_END
 
 nsresult
-NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  nsDOMStorage* storage = new nsDOMStorage();
-  if (!storage)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return storage->QueryInterface(aIID, aResult);
-}
-
-nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsDOMStorage2* storage = new nsDOMStorage2();
-  if (!storage)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   return storage->QueryInterface(aIID, aResult);
 }
 
@@ -1821,16 +1808,8 @@ already_AddRefed<nsIDOMStorage>
 nsDOMStorage2::Fork(const nsSubstring &aDocumentURI)
 {
   nsRefPtr<nsDOMStorage2> storage = new nsDOMStorage2();
-  if (!storage)
-    return nsnull;
-
-  nsresult rv = storage->InitAsSessionStorageFork(mPrincipal, aDocumentURI, mStorage);
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  nsIDOMStorage* result = static_cast<nsIDOMStorage*>(storage.get());
-  storage.forget();
-  return result;
+  storage->InitAsSessionStorageFork(mPrincipal, aDocumentURI, mStorage);
+  return storage.forget();
 }
 
 bool nsDOMStorage2::IsForkOf(nsIDOMStorage* aThat)
@@ -1842,14 +1821,12 @@ bool nsDOMStorage2::IsForkOf(nsIDOMStorage* aThat)
   return mStorage == storage->mStorage;
 }
 
-nsresult
-nsDOMStorage2::InitAsSessionStorageFork(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI, nsIDOMStorageObsolete* aStorage)
+void
+nsDOMStorage2::InitAsSessionStorageFork(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI, nsDOMStorage* aStorage)
 {
   mPrincipal = aPrincipal;
   mDocumentURI = aDocumentURI;
-  mStorage = static_cast<nsDOMStorage*>(aStorage);
-
-  return NS_OK;
+  mStorage = aStorage;
 }
 
 nsTArray<nsString> *
@@ -2192,42 +2169,4 @@ nsDOMStorageEvent::InitFromCtor(const nsAString& aType,
   NS_ENSURE_SUCCESS(rv, rv);
   return InitStorageEvent(aType, d.bubbles, d.cancelable, d.key, d.oldValue,
                           d.newValue, d.url, d.storageArea);
-}
-
-// Obsolete globalStorage event
-
-DOMCI_DATA(StorageEventObsolete, nsDOMStorageEventObsolete)
-
-// QueryInterface implementation for nsDOMStorageEventObsolete
-NS_INTERFACE_MAP_BEGIN(nsDOMStorageEventObsolete)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageEventObsolete)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StorageEventObsolete)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
-
-NS_IMPL_ADDREF_INHERITED(nsDOMStorageEventObsolete, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMStorageEventObsolete, nsDOMEvent)
-
-
-NS_IMETHODIMP
-nsDOMStorageEventObsolete::GetDomain(nsAString& aDomain)
-{
-  // mDomain will be #session for session storage for events that fire
-  // due to a change in a session storage object.
-  aDomain = mDomain;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMStorageEventObsolete::InitStorageEvent(const nsAString& aTypeArg,
-                                    bool aCanBubbleArg,
-                                    bool aCancelableArg,
-                                    const nsAString& aDomainArg)
-{
-  nsresult rv = InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mDomain = aDomainArg;
-
-  return NS_OK;
 }

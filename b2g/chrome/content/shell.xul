@@ -16,9 +16,6 @@
         onunload="shell.stop();">
 
   <script type="application/javascript" src="chrome://browser/content/shell.js"/>
-#ifndef MOZ_TOUCH
-  <script type="application/javascript" src="chrome://browser/content/touch.js"/>
-#endif
 
   <browser id="homescreen"
            type="content-primary"

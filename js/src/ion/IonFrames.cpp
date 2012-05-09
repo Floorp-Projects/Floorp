@@ -306,7 +306,7 @@ CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
     JSScript *script = frame.script();
     jsbytecode *pc = frame.pc();
 
-    if (!JSScript::isValidOffset(script->trynotesOffset))
+    if (!script->hasTrynotes())
         return;
 
     JSTryNote *tn = script->trynotes()->vector;

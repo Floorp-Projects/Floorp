@@ -20,6 +20,10 @@ import android.widget.TextView;
 import org.json.JSONObject;
 import org.json.JSONException;
 
+/**
+ * SiteIdentityPopup is a singleton class that displays site identity data in
+ * an arrow panel popup hanging from the lock icon in the browser toolbar.
+ */
 public class SiteIdentityPopup extends PopupWindow {
     private static final String LOGTAG = "GeckoSiteIdentityPopup";
 
@@ -27,7 +31,6 @@ public class SiteIdentityPopup extends PopupWindow {
     public static final String VERIFIED = "verified";
     public static final String IDENTIFIED = "identified";
 
-    private Context mContext;
     private Resources mResources;
     private boolean mInflated;
 
@@ -40,19 +43,27 @@ public class SiteIdentityPopup extends PopupWindow {
     private ImageView mLarry;
     private ImageView mArrow;
 
-    public SiteIdentityPopup(Context aContext) {
-        super(aContext);
-        mContext = aContext;
-        mResources = aContext.getResources();
+    private SiteIdentityPopup() {
+        super(GeckoApp.mAppContext);
+
+        mResources = GeckoApp.mAppContext.getResources();
         mInflated = false;
-   }
+    }
+
+    private static class InstanceHolder {
+        private static final SiteIdentityPopup INSTANCE = new SiteIdentityPopup();
+    }
+
+    public static SiteIdentityPopup getInstance() {
+       return SiteIdentityPopup.InstanceHolder.INSTANCE;
+    }
 
     private void init() {
         setBackgroundDrawable(new BitmapDrawable());
         setOutsideTouchable(true);
         setWindowLayoutMode(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
 
-        LayoutInflater inflater = LayoutInflater.from(mContext);
+        LayoutInflater inflater = LayoutInflater.from(GeckoApp.mAppContext);
         RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.site_identity_popup, null);
         setContentView(layout);
 

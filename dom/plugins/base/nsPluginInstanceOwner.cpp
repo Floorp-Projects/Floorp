@@ -2866,6 +2866,47 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HPS aHPS)
 
 #ifdef MOZ_WIDGET_ANDROID
 
+// Modified version of nsFrame::GetOffsetToCrossDoc that stops when it
+// hits an element with a displayport (or runs out of frames). This is
+// not really the right thing to do, but it's better than what was here before.
+static nsPoint
+GetOffsetRootContent(nsIFrame* aFrame)
+{
+  // offset will hold the final offset
+  // docOffset holds the currently accumulated offset at the current APD, it
+  // will be converted and added to offset when the current APD changes.
+  nsPoint offset(0, 0), docOffset(0, 0);
+  const nsIFrame* f = aFrame;
+  PRInt32 currAPD = aFrame->PresContext()->AppUnitsPerDevPixel();
+  PRInt32 apd = currAPD;
+  nsRect displayPort;
+  while (f) {
+    if (f->GetContent() && nsLayoutUtils::GetDisplayPort(f->GetContent(), &displayPort))
+      break;
+
+    docOffset += f->GetPosition();
+    nsIFrame* parent = f->GetParent();
+    if (parent) {
+      f = parent;
+    } else {
+      nsPoint newOffset(0, 0);
+      f = nsLayoutUtils::GetCrossDocParentFrame(f, &newOffset);
+      PRInt32 newAPD = f ? f->PresContext()->AppUnitsPerDevPixel() : 0;
+      if (!f || newAPD != currAPD) {
+        // Convert docOffset to the right APD and add it to offset.
+        offset += docOffset.ConvertAppUnits(currAPD, apd);
+        docOffset.x = docOffset.y = 0;
+      }
+      currAPD = newAPD;
+      docOffset += newOffset;
+    }
+  }
+
+  offset += docOffset.ConvertAppUnits(currAPD, apd);
+
+  return offset;
+}
+
 void nsPluginInstanceOwner::Paint(gfxContext* aContext,
                                   const gfxRect& aFrameRect,
                                   const gfxRect& aDirtyRect)
@@ -2876,15 +2917,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   PRInt32 model = mInstance->GetANPDrawingModel();
 
   // Get the offset of the content relative to the page
-
-  nsPoint offset = nsPoint(0, 0);
-  nsIFrame* current = (nsIFrame*)mObjectFrame;
-  while (current && current->GetContent() && current->GetContent()->Tag() != nsGkAtoms::html) {    
-    offset += current->GetPosition();
-    current = current->GetParent();
-  }
-
-  nsRect bounds = nsRect(offset, mObjectFrame->GetSize());
+  nsRect bounds = mObjectFrame->GetContentRectRelativeToSelf() + GetOffsetRootContent(mObjectFrame);
   nsIntRect intBounds = bounds.ToNearestPixels(mObjectFrame->PresContext()->AppUnitsPerDevPixel());
   gfxRect pluginRect(intBounds);
 

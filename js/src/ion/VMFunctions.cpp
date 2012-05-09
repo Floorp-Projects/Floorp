@@ -109,7 +109,7 @@ InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &
 {
     // Copy the incoming value. This may be overwritten; the return value is discarded.
     Value rval = value;
-    jsid id = ATOM_TO_JSID(name);
+    jsid id = AtomToId(name);
 
     if (name == cx->runtime->atomState.protoAtom)
         return js_SetPropertyHelper(cx, obj, id, 0, &rval, false);
@@ -301,7 +301,7 @@ SetProperty(JSContext *cx, HandleObject obj, JSAtom *atom, HandleValue value,
             bool strict, bool isSetName)
 {
     Value v = value;
-    jsid id = ATOM_TO_JSID(atom);
+    jsid id = AtomToId(atom);
 
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
         unsigned defineHow = isSetName ? DNP_UNQUALIFIED : 0;

@@ -209,7 +209,8 @@ destroy_loads(nsIFrame* aKey, nsRefPtr<nsImageLoader>& aData, void* closure)
 
 nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   : mType(aType), mDocument(aDocument), mMinFontSize(0),
-    mTextZoom(1.0), mFullZoom(1.0), mPageSize(-1, -1), mPPScale(1.0f),
+    mTextZoom(1.0), mFullZoom(1.0), mLastFontInflationScreenWidth(-1.0),
+    mPageSize(-1, -1), mPPScale(1.0f),
     mViewportStyleOverflow(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
     mImageAnimationModePref(imgIContainer::kNormalAnimMode)
 {
@@ -1410,6 +1411,34 @@ nsPresContext::SetFullZoom(float aZoom)
   mSupressResizeReflow = false;
 
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
+}
+
+float
+nsPresContext::ScreenWidthInchesForFontInflation(bool* aChanged)
+{
+  if (aChanged) {
+    *aChanged = false;
+  }
+
+  nsDeviceContext *dx = DeviceContext();
+  nsRect clientRect;
+  dx->GetClientRect(clientRect); // FIXME: GetClientRect looks expensive
+  float deviceWidthInches =
+    float(clientRect.width) / float(dx->AppUnitsPerPhysicalInch());
+
+  if (deviceWidthInches != mLastFontInflationScreenWidth) {
+    if (mLastFontInflationScreenWidth != -1.0) {
+      if (aChanged) {
+        *aChanged = true;
+      } else {
+        NS_NOTREACHED("somebody should have checked for screen width change "
+                      "and triggered a reflow");
+      }
+    }
+    mLastFontInflationScreenWidth = deviceWidthInches;
+  }
+
+  return deviceWidthInches;
 }
 
 void

@@ -2798,7 +2798,7 @@ IonBuilder::getSingletonPrototype(JSFunction *target)
     if (target->getType(cx)->unknownProperties())
         return NULL;
 
-    jsid protoid = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
+    jsid protoid = AtomToId(cx->runtime->atomState.classPrototypeAtom);
     types::TypeSet *protoTypes = target->getType(cx)->getProperty(cx, protoid, false);
     if (!protoTypes)
         return NULL;
@@ -3167,7 +3167,7 @@ IonBuilder::jsop_initprop(JSAtom *atom)
 
     JSObject *holder;
     JSProperty *prop = NULL;
-    DebugOnly<bool> res = LookupPropertyWithFlags(cx, baseObj, ATOM_TO_JSID(atom),
+    DebugOnly<bool> res = LookupPropertyWithFlags(cx, baseObj, AtomToId(atom),
                                                   JSRESOLVE_QUALIFIED, &holder, &prop);
     JS_ASSERT(res && prop && holder == baseObj);
 
@@ -3646,7 +3646,7 @@ IonBuilder::jsop_getgname(JSAtom *atom)
     if (atom == cx->runtime->atomState.InfinityAtom)
         return pushConstant(cx->runtime->positiveInfinityValue);
 
-    jsid id = ATOM_TO_JSID(atom);
+    jsid id = AtomToId(atom);
     JSObject *globalObj = script->global();
     JS_ASSERT(globalObj->isNative());
 
@@ -3716,7 +3716,7 @@ IonBuilder::jsop_getgname(JSAtom *atom)
 bool
 IonBuilder::jsop_setgname(JSAtom *atom)
 {
-    jsid id = ATOM_TO_JSID(atom);
+    jsid id = AtomToId(atom);
 
     bool canSpecialize;
     types::TypeSet *propertyTypes = oracle->globalPropertyWrite(script, pc, id, &canSpecialize);
@@ -4227,7 +4227,7 @@ GetDefiniteSlot(JSContext *cx, types::TypeSet *types, JSAtom *atom)
     if (!type || type->unknownProperties())
         return NULL;
 
-    jsid id = ATOM_TO_JSID(atom);
+    jsid id = AtomToId(atom);
     if (id != types::MakeTypeId(cx, id))
         return NULL;
 
@@ -4270,7 +4270,7 @@ IonBuilder::jsop_getprop(JSAtom *atom)
     if (singleton && !barrier) {
         bool isKnownConstant, testObject;
         if (!TestSingletonPropertyTypes(cx, unaryTypes.inTypes,
-                                        script->global(), ATOM_TO_JSID(atom),
+                                        script->global(), AtomToId(atom),
                                         &isKnownConstant, &testObject))
         {
             return false;
@@ -4349,7 +4349,7 @@ IonBuilder::jsop_setprop(JSAtom *atom)
     } else {
         ins = MSetPropertyCache::New(obj, value, atom, script->strictModeCode);
 
-        jsid id = ATOM_TO_JSID(atom);
+        jsid id = AtomToId(atom);
         if (cx->compartment->needsBarrier() &&
             (!binaryTypes.lhsTypes || binaryTypes.lhsTypes->propertyNeedsBarrier(cx, id))) {
             ins->setNeedsBarrier();

@@ -114,6 +114,10 @@ ifdef MOZ_JSDEBUGGER
 DEFINES += -DMOZ_JSDEBUGGER
 endif
 
+ifdef NECKO_WIFI
+DEFINES += -DNECKO_WIFI
+endif
+
 ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = package-manifest
 

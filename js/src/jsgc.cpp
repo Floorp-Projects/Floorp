@@ -1096,9 +1096,7 @@ MarkWordConservatively(JSTracer *trc, uintptr_t w)
     MarkIfGCThingWord(trc, w);
 }
 
-#ifdef MOZ_ASAN
-JS_NEVER_INLINE
-#endif
+MOZ_ASAN_BLACKLIST
 static void
 MarkRangeConservatively(JSTracer *trc, const uintptr_t *begin, const uintptr_t *end)
 {
@@ -3753,16 +3751,18 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
                 callback(rt, JSGC_BEGIN);
         }
 
-        {
-            rt->gcPoke = false;
-            GCCycle(rt, incremental, budget, gckind);
-        }
+        rt->gcPoke = false;
+        GCCycle(rt, incremental, budget, gckind);
 
         if (rt->gcIncrementalState == NO_INCREMENTAL) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_GC_END);
             if (JSGCCallback callback = rt->gcCallback)
                 callback(rt, JSGC_END);
         }
+
+        /* Need to re-schedule all compartments for GC. */
+        if (!rt->hasContexts() && rt->gcPoke)
+            PrepareForFullGC(rt);
 
         /*
          * On shutdown, iterate until finalizers or the JSGC_END callback
@@ -4352,12 +4352,6 @@ oom:
     js_free(trc);
 }
 
-static void
-MarkFromAutorooter(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
-{
-    static_cast<Cell *>(*thingp)->markIfUnmarked();
-}
-
 static bool
 IsMarkedOrAllocated(Cell *cell)
 {
@@ -4390,21 +4384,6 @@ CheckEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
             return;
         }
     }
-
-    /*
-     * Anything that is reachable now should have been reachable before, or else
-     * it should be marked.
-     */
-    NodeMap::Ptr p = trc->nodemap.lookup(*thingp);
-    JS_ASSERT_IF(!p, IsMarkedOrAllocated(static_cast<Cell *>(*thingp)));
-}
-
-static void
-CheckReachable(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
-{
-    VerifyTracer *trc = (VerifyTracer *)jstrc;
-    NodeMap::Ptr p = trc->nodemap.lookup(*thingp);
-    JS_ASSERT_IF(!p, IsMarkedOrAllocated(static_cast<Cell *>(*thingp)));
 }
 
 static void
@@ -4450,18 +4429,7 @@ EndVerifyBarriers(JSRuntime *rt)
     rt->gcVerifyData = NULL;
     rt->gcIncrementalState = NO_INCREMENTAL;
 
-    JS_TracerInit(trc, rt, MarkFromAutorooter);
-
-    AutoGCRooter::traceAll(trc);
-
     if (!compartmentCreated && IsIncrementalGCSafe(rt)) {
-        /*
-         * Verify that all the current roots were reachable previously, or else
-         * are marked.
-         */
-        JS_TracerInit(trc, rt, CheckReachable);
-        MarkRuntime(trc, true);
-
         JS_TracerInit(trc, rt, CheckEdge);
 
         /* Start after the roots. */

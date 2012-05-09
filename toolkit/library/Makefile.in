@@ -113,6 +113,10 @@ ifdef MOZ_B2G_RIL #{
 STATIC_LIBS += mozril_s
 endif #}
 
+ifdef MOZ_B2G_BT #{
+STATIC_LIBS += mozdbus_s
+endif #}
+
 ifdef MOZ_IPDL_TESTS
 STATIC_LIBS += ipdlunittest_s
 endif
@@ -335,7 +339,6 @@ EXTRA_DSO_LDOPTS += \
   $(MOZ_JS_LIBS) \
   $(NSS_LIBS) \
   $(MOZ_CAIRO_OSLIBS) \
-  $(MOZ_HARFBUZZ_LIBS) \
   $(MOZ_APP_EXTRA_LIBS) \
   $(SQLITE_LIBS) \
   $(NULL)
@@ -398,6 +401,7 @@ OS_LIBS += \
   -lcamera_client \
   -lbinder \
   -lsensorservice \
+  -ldbus \
   $(NULL)
 endif
 

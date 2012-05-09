@@ -648,19 +648,7 @@ XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
 static void
 TraceScopeJSObjects(JSTracer *trc, XPCWrappedNativeScope* scope)
 {
-    NS_ASSERTION(scope, "bad scope");
-
-    JSObject* obj;
-
-    obj = scope->GetGlobalJSObjectPreserveColor();
-    NS_ASSERTION(obj, "bad scope JSObject");
-    JS_CALL_OBJECT_TRACER(trc, obj, "XPCWrappedNativeScope::mGlobalJSObject");
-
-    obj = scope->GetPrototypeJSObjectPreserveColor();
-    if (obj) {
-        JS_CALL_OBJECT_TRACER(trc, obj,
-                              "XPCWrappedNativeScope::mPrototypeJSObject");
-    }
+    scope->TraceSelf(trc);
 }
 
 static void
@@ -965,7 +953,7 @@ XPC_WN_Helper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     POST_HELPER_STUB
 }
 
-static JSBool
+JSBool
 XPC_WN_Helper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     PRE_HELPER_STUB
@@ -973,7 +961,7 @@ XPC_WN_Helper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     POST_HELPER_STUB
 }
 
-static JSBool
+JSBool
 XPC_WN_Helper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
     PRE_HELPER_STUB

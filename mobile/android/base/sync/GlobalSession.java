@@ -393,13 +393,39 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
       callback.requestBackoff(responseBackoff);
     }
 
-    if (response.getStatusLine() != null && response.getStatusLine().getStatusCode() == 401) {
-      /*
-       * Alert our callback we have a 401 on a cluster URL. This GlobalSession
-       * will fail, but the next one will fetch a new cluster URL and will
-       * distinguish between "node reassignment" and "user password changed".
-       */
-      callback.informUnauthorizedResponse(this, config.getClusterURL());
+    if (response.getStatusLine() != null) {
+      final int statusCode = response.getStatusLine().getStatusCode();
+      switch(statusCode) {
+
+      case 400:
+        SyncStorageResponse storageResponse = new SyncStorageResponse(response);
+        this.interpretHTTPBadRequestBody(storageResponse);
+        break;
+
+      case 401:
+        /*
+         * Alert our callback we have a 401 on a cluster URL. This GlobalSession
+         * will fail, but the next one will fetch a new cluster URL and will
+         * distinguish between "node reassignment" and "user password changed".
+         */
+        callback.informUnauthorizedResponse(this, config.getClusterURL());
+        break;
+      }
+    }
+  }
+
+  protected void interpretHTTPBadRequestBody(final SyncStorageResponse storageResponse) {
+    try {
+      final String body = storageResponse.body();
+      if (body == null) {
+        return;
+      }
+      if (SyncStorageResponse.RESPONSE_CLIENT_UPGRADE_REQUIRED.equals(body)) {
+        callback.informUpgradeRequiredResponse(this);
+        return;
+      }
+    } catch (Exception e) {
+      Logger.warn(LOG_TAG, "Exception parsing HTTP 400 body.", e);
     }
   }
 
@@ -410,7 +436,15 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     this.config.infoCollections.fetch(callback);
   }
 
-  public void uploadKeys(CryptoRecord keysRecord,
+  /**
+   * Upload new crypto/keys.
+   *
+   * @param keys
+   *          new keys.
+   * @param keyUploadDelegate
+   *          a delegate.
+   */
+  public void uploadKeys(final CollectionKeys keys,
                          final KeyUploadDelegate keyUploadDelegate) {
     SyncStorageRecordRequest request;
     final GlobalSession self = this;
@@ -452,8 +486,10 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
       }
     };
 
-    keysRecord.setKeyBundle(config.syncKeyBundle);
+    CryptoRecord keysRecord;
     try {
+      keysRecord = keys.asCryptoRecord();
+      keysRecord.setKeyBundle(config.syncKeyBundle);
       keysRecord.encrypt();
     } catch (UnsupportedEncodingException e) {
       keyUploadDelegate.onKeyUploadFailed(e);
@@ -461,10 +497,14 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     } catch (CryptoException e) {
       keyUploadDelegate.onKeyUploadFailed(e);
       return;
+    } catch (NoCollectionKeysSetException e) {
+      // Should not occur.
+      keyUploadDelegate.onKeyUploadFailed(e);
+      return;
     }
+
     request.put(keysRecord);
   }
-
 
   /*
    * meta/global callbacks.
@@ -496,6 +536,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
       config.purgeCryptoKeys();
       config.syncID = remoteSyncID;
     }
+    config.enabledEngineNames = global.getEnabledEngineNames();
     config.persistToPrefs();
     advance();
   }
@@ -563,7 +604,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
 
             // Generate and upload new keys.
             try {
-              session.uploadKeys(CollectionKeys.generateCollectionKeys().asCryptoRecord(), new KeyUploadDelegate() {
+              session.uploadKeys(CollectionKeys.generateCollectionKeys(), new KeyUploadDelegate() {
                 @Override
                 public void onKeysUploaded() {
                   // Now we can download them.
@@ -576,9 +617,6 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
                   freshStartDelegate.onFreshStartFailed(e);
                 }
               });
-            } catch (NoCollectionKeysSetException e) {
-              Log.e(LOG_TAG, "Got exception generating new keys.", e);
-              freshStartDelegate.onFreshStartFailed(e);
             } catch (CryptoException e) {
               Log.e(LOG_TAG, "Got exception generating new keys.", e);
               freshStartDelegate.onFreshStartFailed(e);
@@ -729,15 +767,16 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
   }
 
   public void resetStagesByName(Collection<String> names) {
+    Collection<GlobalSyncStage> stages = new ArrayList<GlobalSyncStage>();
     for (String name : names) {
       try {
         GlobalSyncStage stage = this.getSyncStageByName(name);
-        Logger.info(LOG_TAG, "Resetting " + name + "(" + stage + ")");
-        stage.resetLocal();
+        stages.add(stage);
       } catch (NoSuchStageException e) {
         Logger.warn(LOG_TAG, "Cannot reset stage " + name + ": no such stage.");
       }
     }
+    GlobalSession.resetStages(stages);
   }
 
   /**
@@ -765,28 +804,32 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
    * @throws MetaGlobalException
    */
   public boolean engineIsEnabled(String engineName, EngineSettings engineSettings) throws MetaGlobalException {
-    if (this.config.metaGlobal == null) {
-      throw new MetaGlobalNotSetException();
-    }
-    if (this.config.metaGlobal.engines == null) {
-      throw new MetaGlobalMissingEnginesException();
-    }
-    ExtendedJSONObject engineEntry;
-    try {
-      engineEntry = this.config.metaGlobal.engines.getObject(engineName);
-    } catch (NonObjectJSONException e) {
-      Logger.error(LOG_TAG, "Engine field for " + engineName + " in meta/global is not an object.");
+    // This should not occur.
+    if (this.config.enabledEngineNames == null) {
+      Logger.error(LOG_TAG, "No enabled engines in config. Giving up.");
+      if (this.config.metaGlobal == null) {
+        throw new MetaGlobalNotSetException();
+      }
       throw new MetaGlobalMissingEnginesException();
     }
 
-    if (engineEntry == null) {
+    if (!(this.config.enabledEngineNames.contains(engineName))) {
       Logger.debug(LOG_TAG, "Engine " + engineName + " not enabled: no meta/global entry.");
       return false;
     }
 
-    if (engineSettings != null) {
-      MetaGlobal.verifyEngineSettings(engineEntry, engineSettings);
+    if (this.config.metaGlobal == null) {
+      Logger.warn(LOG_TAG, "No meta/global; using historical enabled engine names.");
+      return true;
     }
+
+    // If we have a meta/global, check that it's safe for us to sync.
+    // (If we don't, we'll create one later, which is why we return `true` above.)
+    if (engineSettings != null) {
+      // Throws if there's a problem.
+      this.config.metaGlobal.verifyEngineSettings(engineName, engineSettings);
+    }
+
     return true;
   }
 

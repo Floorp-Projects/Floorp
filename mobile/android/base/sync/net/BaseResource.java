@@ -12,7 +12,6 @@ import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
@@ -60,8 +59,6 @@ public class BaseResource implements Resource {
 
   private static final int MAX_TOTAL_CONNECTIONS     = 20;
   private static final int MAX_CONNECTIONS_PER_ROUTE = 10;
-
-  private static final long MAX_IDLE_TIME_SECONDS = 30;
 
   public static boolean rewriteLocalhost = true;
 
@@ -224,9 +221,6 @@ public class BaseResource implements Resource {
     }
     Logger.trace(LOG_TAG, "Closing expired connections.");
     connectionManager.closeExpiredConnections();
-
-    Logger.trace(LOG_TAG, "Closing idle connections.");
-    connectionManager.closeIdleConnections(MAX_IDLE_TIME_SECONDS, TimeUnit.SECONDS);
   }
 
   public static void shutdownConnectionManager() {

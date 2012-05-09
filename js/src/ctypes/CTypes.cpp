@@ -4180,7 +4180,8 @@ ArrayType::Getter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
   size_t index;
   size_t length = GetLength(typeObj);
   bool ok = jsidToSize(cx, idval, true, &index);
-  if (!ok && JSID_IS_STRING(idval)) {
+  int32_t dummy;
+  if (!ok && JSID_IS_STRING(idval) && !StringToInteger(cx, JSID_TO_STRING(idval), &dummy)) {
     // String either isn't a number, or doesn't fit in size_t.
     // Chances are it's a regular property lookup, so return.
     return JS_TRUE;
@@ -4215,7 +4216,8 @@ ArrayType::Setter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict, jsval
   size_t index;
   size_t length = GetLength(typeObj);
   bool ok = jsidToSize(cx, idval, true, &index);
-  if (!ok && JSID_IS_STRING(idval)) {
+  int32_t dummy;
+  if (!ok && JSID_IS_STRING(idval) && !StringToInteger(cx, JSID_TO_STRING(idval), &dummy)) {
     // String either isn't a number, or doesn't fit in size_t.
     // Chances are it's a regular property lookup, so return.
     return JS_TRUE;

@@ -1193,7 +1193,6 @@ nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent)
     
     bool doRestrict = ent->mConnInfo->UsingSSL() &&
         gHttpHandler->IsSpdyEnabled() &&
-        !ent->mConnInfo->UsingHttpProxy() &&
         (!ent->mTestedSpdy || ent->mUsingSpdy) &&
         (ent->mHalfOpens.Length() || ent->mActiveConns.Length());
 
@@ -2273,6 +2272,13 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(PRInt32, void *param)
     nsConnectionEntry *ent =
         GetOrCreateConnectionEntry(trans->ConnectionInfo());
 
+    // If spdy has previously made a preferred entry for this host via
+    // the ip pooling rules. If so, connect to the preferred host instead of
+    // the one directly passed in here.
+    nsConnectionEntry *preferredEntry = GetSpdyPreferredEnt(ent);
+    if (preferredEntry)
+        ent = preferredEntry;
+
     if (!ent->mIdleConns.Length() && !RestrictConnections(ent) &&
         !AtActiveConnectionLimit(ent, trans->Caps())) {
         CreateTransport(ent, trans, trans->Caps(), true);
@@ -2694,7 +2700,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
 
     // if we are doing spdy coalescing and haven't recorded the ip address
     // for this entry before then make the hash key if our dns lookup
-    // just completed
+    // just completed. We can't do coalescing if using a proxy because the
+    // ip addresses are not available to the client.
 
     if (status == nsISocketTransport::STATUS_CONNECTED_TO &&
         gHttpHandler->IsSpdyEnabled() &&

@@ -599,21 +599,21 @@ static JSBool
 ParallelArray_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toString,
-                                        ATOM_TO_JSID(cx->runtime->atomState.toStringAtom));
+                                        AtomToId(cx->runtime->atomState.toStringAtom));
 }
 
 static JSBool
 ParallelArray_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 {
     return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toLocaleString,
-                                        ATOM_TO_JSID(cx->runtime->atomState.toStringAtom));
+                                        AtomToId(cx->runtime->atomState.toStringAtom));
 }
 
 static JSBool
 ParallelArray_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toSource,
-                                        ATOM_TO_JSID(cx->runtime->atomState.toStringAtom));
+                                        AtomToId(cx->runtime->atomState.toStringAtom));
 }
 
 static JSBool
@@ -673,7 +673,7 @@ static JSBool
 ParallelArray_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name, JSObject **objp,
                              JSProperty **propp)
 {
-    return ParallelArray_lookupGeneric(cx, obj, ATOM_TO_JSID(name), objp, propp);
+    return ParallelArray_lookupGeneric(cx, obj, AtomToId(name), objp, propp);
 }
 
 static JSBool
@@ -726,7 +726,7 @@ ParallelArray_getGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid 
 static JSBool
 ParallelArray_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp)
 {
-    return ParallelArray_getGeneric(cx, obj, receiver, ATOM_TO_JSID(name), vp);
+    return ParallelArray_getGeneric(cx, obj, receiver, AtomToId(name), vp);
 }
 
 static JSBool
@@ -765,7 +765,7 @@ static JSBool
 ParallelArray_defineProperty(JSContext *cx, JSObject *obj, PropertyName *name, const Value *value,
                              JSPropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    return ParallelArray_defineGeneric(cx, obj, ATOM_TO_JSID(name), value, getter, setter, attrs);
+    return ParallelArray_defineGeneric(cx, obj, AtomToId(name), value, getter, setter, attrs);
 }
 
 static JSBool
@@ -795,7 +795,7 @@ ParallelArray_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBoo
 static JSBool
 ParallelArray_setProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict)
 {
-    return ParallelArray_setGeneric(cx, obj, ATOM_TO_JSID(name), vp, strict);
+    return ParallelArray_setGeneric(cx, obj, AtomToId(name), vp, strict);
 }
 
 static JSBool
@@ -828,7 +828,7 @@ ParallelArray_getGenericAttributes(JSContext *cx, JSObject *obj, jsid id, unsign
 static JSBool
 ParallelArray_getPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp)
 {
-    return ParallelArray_getGenericAttributes(cx, obj, ATOM_TO_JSID(name), attrsp);
+    return ParallelArray_getGenericAttributes(cx, obj, AtomToId(name), attrsp);
 }
 
 static JSBool
@@ -855,7 +855,7 @@ ParallelArray_setGenericAttributes(JSContext *cx, JSObject *obj, jsid id, unsign
 static JSBool
 ParallelArray_setPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp)
 {
-    return ParallelArray_setGenericAttributes(cx, obj, ATOM_TO_JSID(name), attrsp);
+    return ParallelArray_setGenericAttributes(cx, obj, AtomToId(name), attrsp);
 }
 
 static JSBool
@@ -883,7 +883,7 @@ ParallelArray_deleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, 
 static JSBool
 ParallelArray_deleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
 {
-    return ParallelArray_deleteGeneric(cx, obj, ATOM_TO_JSID(name), rval, strict);
+    return ParallelArray_deleteGeneric(cx, obj, AtomToId(name), rval, strict);
 }
 
 static JSBool
@@ -923,7 +923,7 @@ ParallelArray_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, Value
 
       case JSENUMERATE_NEXT:
         if (statep->isTrue()) {
-            *idp = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
+            *idp = AtomToId(cx->runtime->atomState.lengthAtom);
             statep->setInt32(0);
         } else {
             uint32_t index = statep->toInt32();
@@ -1035,12 +1035,12 @@ js_InitParallelArrayClass(JSContext *cx, JSObject *obj)
     if (!parallelArrayProto)
         return NULL;
     /* define the length property */
-    const jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
+    const jsid lengthId = AtomToId(cx->runtime->atomState.lengthAtom);
 
     parallelArrayProto->addProperty(cx, lengthId, ParallelArray_length_getter, NULL,
                                     SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_READONLY, 0, 0);
 
-    JSFunction *ctor = global->createConstructor(cx, ParallelArray_construct, CLASS_ATOM(cx, ParallelArray), 0);
+    JSFunction *ctor = global->createConstructor(cx, ParallelArray_construct, CLASS_NAME(cx, ParallelArray), 0);
     if (!ctor)
         return NULL;
 
