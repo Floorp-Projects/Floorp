@@ -8,16 +8,29 @@
 </head>
 <body>
   <script>
-    ok(window.performance);
-    ok(typeof window.performance.now == 'function');
-    var n = window.performance.now();
-    ok(n >= 0);
-    ok(window.performance.now() >= n);
+    ok(window.performance, "Performance object should exist.");
+    ok(typeof window.performance.now == 'function', "Performance object should have a 'now' method.");
+    var n = window.performance.now(), d = Date.now();
+    ok(n >= 0, "The value of now() should be equal to or greater than 0.");
+    ok(window.performance.now() >= n, "The value of now() should monotonically increase.");
     SimpleTest.waitForExplicitFinish();
-    setTimeout(function() {
-      ok(window.performance.now() > n);
+
+    var checks = 0;
+    function checkAfterTimeout() {
+      checks++;
+      var d2 = Date.now();
+      // Timeouts aren't extremely reliable and especially on Windows we are prone to fallback to
+      // millisecond timers, in which case this test might occasionally fail. This is a workaround:
+      if (navigator.platform.indexOf("Win") == 0 &&
+          window.performance.now() == n && d == d2 &&
+          checks < 5) {
+        setTimeout(checkAfterTimeout, 20);
+        return;
+      }
+      ok(window.performance.now() > n, "After a timeout, the value of now() should be strictly greater than before.");
       SimpleTest.finish();
-    }, 20);
+    };
+    setTimeout(checkAfterTimeout, 20);
   </script>
 </body>
 </html>

@@ -42,7 +42,7 @@
 #include "nsISupports.idl"
 #include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(d092f5a5-33a8-456c-ac89-6ae6f880bd04)]
+[scriptable, uuid(e0c3f659-8bc7-4a37-b39f-35903021e6a6)]
 interface nsIBrowserHistory : nsIGlobalHistory2
 {
     /**
@@ -59,14 +59,6 @@ interface nsIBrowserHistory : nsIGlobalHistory2
     void addPageWithDetails(in nsIURI aURI,
                             in wstring aTitle,
                             in long long aLastVisited);
-
-    /**
-     * Indicates if there are entries in global history.
-     *
-     * @note For performance reasons this is not the real number of entries.
-     *       It will instead evaluate to 0 for no entries, 1 otherwise.
-     */
-    readonly attribute PRUint32 count;
 
     /**
      * Removes a page from global history.
@@ -148,18 +140,6 @@ interface nsIBrowserHistory : nsIGlobalHistory2
      *       nsINavHistoryObserver implementers.
      */
     void removeAllPages();
-
-    /**
-     * Hides the specified URL from being enumerated (and thus displayed in
-     * the UI).
-     *
-     * @param aURI
-     *        URI of the page to be marked.
-     *
-     * @note If the page hasn't been visited yet, then it will be added
-     *       as if it was visited, and then marked as hidden
-     */
-    void hidePage(in nsIURI aURI);
 
     /**
      * Designates the url as having been explicitly typed in by the user.

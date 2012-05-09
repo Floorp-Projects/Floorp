@@ -873,12 +873,6 @@ pref("places.frecency.unvisitedTypedBonus", 200);
 // 2 - pre-populate site URL and pre-fetch certificate
 pref("browser.ssl_override_behavior", 2);
 
-// Controls the display of domain in the identity box for SSL connections.
-// 0 - do not show domain
-// 1 - show effectiveTLD + 1 (e.g. mozilla.org)
-// 2 - show full domain (e.g. bugzilla.mozilla.org)
-pref("browser.identity.ssl_domain_display", 0);
-
 // True if the user should be prompted when a web application supports
 // offline apps.
 pref("browser.offline-apps.notify", true);
@@ -1061,6 +1055,9 @@ pref("devtools.debugger.enabled", false);
 pref("devtools.debugger.remote-enabled", false);
 pref("devtools.debugger.remote-host", "localhost");
 pref("devtools.debugger.remote-port", 6000);
+pref("devtools.debugger.remote-autoconnect", false);
+pref("devtools.debugger.remote-connection-retries", 3);
+pref("devtools.debugger.remote-timeout", 3000);
 
 // The default Debugger UI height
 pref("devtools.debugger.ui.height", 250);

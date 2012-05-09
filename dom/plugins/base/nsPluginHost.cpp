@@ -3281,6 +3281,15 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
     UnloadPlugins();
     sInst->Release();
   }
+  if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
+    mPluginsDisabled = Preferences::GetBool("plugin.disable", false);
+    // Unload or load plugins as needed
+    if (mPluginsDisabled) {
+      UnloadPlugins();
+    } else {
+      LoadPlugins();
+    }
+  }
 #ifdef MOZ_WIDGET_ANDROID
   if (!nsCRT::strcmp("application-background", aTopic)) {
     for(PRUint32 i = 0; i < mInstances.Length(); i++) {

@@ -3097,6 +3097,11 @@ bool BindPropertyOp(JSContext *cx, JSObject *targetObj, Op& op,
     return true;
 }
 
+extern JSBool
+XPC_WN_Helper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+extern JSBool
+XPC_WN_Helper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
+
 bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
                                                 jsid id, bool set,
@@ -3120,10 +3125,16 @@ xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
     // ops can in theory rely on, but our property op forwarder doesn't know how
     // to make that happen.  Since we really only need to rebind the DOM methods
     // here, not rebindings holder_get and holder_set is OK.
+    //
+    // Similarly, don't mess with XPC_WN_Helper_GetProperty and
+    // XPC_WN_Helper_SetProperty, for the same reasons: that could confuse our
+    // access to expandos when we're not doing Xrays.
     if (desc->getter != xpc::holder_get &&
+        desc->getter != XPC_WN_Helper_GetProperty &&
         !BindPropertyOp(cx, obj, desc->getter, desc, id, JSPROP_GETTER))
         return false;
     if (desc->setter != xpc::holder_set &&
+        desc->setter != XPC_WN_Helper_SetProperty &&
         !BindPropertyOp(cx, obj, desc->setter, desc, id, JSPROP_SETTER))
         return false;
     if (desc->value.isObject()) {
@@ -4092,6 +4103,7 @@ GENERATE_JSOPTION_GETTER_SETTER(Xml, JSOPTION_XML)
 GENERATE_JSOPTION_GETTER_SETTER(Relimit, JSOPTION_RELIMIT)
 GENERATE_JSOPTION_GETTER_SETTER(Methodjit, JSOPTION_METHODJIT)
 GENERATE_JSOPTION_GETTER_SETTER(Methodjit_always, JSOPTION_METHODJIT_ALWAYS)
+GENERATE_JSOPTION_GETTER_SETTER(Strict_mode, JSOPTION_STRICT_MODE)
 GENERATE_JSOPTION_GETTER_SETTER(Ion, JSOPTION_ION);
 
 #undef GENERATE_JSOPTION_GETTER_SETTER

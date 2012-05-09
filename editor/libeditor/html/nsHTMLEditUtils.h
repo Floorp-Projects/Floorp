@@ -56,7 +56,9 @@ public:
   static bool IsSmall(nsIDOMNode *aNode);
 
   // from nsHTMLEditRules:
+  static bool IsInlineStyle(mozilla::dom::Element* aNode);
   static bool IsInlineStyle(nsIDOMNode *aNode);
+  static bool IsFormatNode(mozilla::dom::Element* aNode);
   static bool IsFormatNode(nsIDOMNode *aNode);
   static bool IsNodeThatCanOutdent(nsIDOMNode *aNode);
   static bool IsHeader(nsIDOMNode *aNode);
@@ -85,6 +87,7 @@ public:
   static bool IsNamedAnchor(nsIDOMNode *aNode);
   static bool IsDiv(nsIDOMNode *aNode);
   static bool IsMozDiv(nsIDOMNode *aNode);
+  static bool IsMailCite(mozilla::dom::Element* aNode);
   static bool IsMailCite(nsIDOMNode *aNode);
   static bool IsFormWidget(mozilla::dom::Element* aNode);
   static bool IsFormWidget(nsIDOMNode *aNode);

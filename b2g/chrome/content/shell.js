@@ -14,36 +14,31 @@ Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/ContactService.jsm');
 Cu.import('resource://gre/modules/Webapps.jsm');
 
-XPCOMUtils.defineLazyGetter(Services, 'env', function() {
-  return Cc['@mozilla.org/process/environment;1']
-           .getService(Ci.nsIEnvironment);
-});
+XPCOMUtils.defineLazyServiceGetter(Services, 'env',
+                                   '@mozilla.org/process/environment;1',
+                                   'nsIEnvironment');
 
-XPCOMUtils.defineLazyGetter(Services, 'ss', function() {
-  return Cc['@mozilla.org/content/style-sheet-service;1']
-           .getService(Ci.nsIStyleSheetService);
-});
+XPCOMUtils.defineLazyServiceGetter(Services, 'ss',
+                                   '@mozilla.org/content/style-sheet-service;1',
+                                   'nsIStyleSheetService');
 
-XPCOMUtils.defineLazyGetter(Services, 'idle', function() {
-  return Cc['@mozilla.org/widget/idleservice;1']
-           .getService(Ci.nsIIdleService);
-});
+XPCOMUtils.defineLazyServiceGetter(Services, 'idle',
+                                   '@mozilla.org/widget/idleservice;1',
+                                   'nsIIdleService');
 
-XPCOMUtils.defineLazyGetter(Services, 'audioManager', function() {
 #ifdef MOZ_WIDGET_GONK
-  return Cc['@mozilla.org/telephony/audiomanager;1']
-           .getService(Ci.nsIAudioManager);
+XPCOMUtils.defineLazyServiceGetter(Services, 'audioManager',
+                                   '@mozilla.org/telephony/audiomanager;1',
+                                   'nsIAudioManager');
 #else
-  return {
-    "masterVolume": 0
-  };
+Services.audioManager = {
+  'masterVolume': 0
+};
 #endif
-});
 
-XPCOMUtils.defineLazyServiceGetter(Services, 'fm', function() {
-  return Cc['@mozilla.org/focus-manager;1']
-           .getService(Ci.nsFocusManager);
-});
+XPCOMUtils.defineLazyServiceGetter(Services, 'fm',
+                                   '@mozilla.org/focus-manager;1',
+                                   'nsIFocusManager');
 
 XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
   Cu.import('resource://gre/modules/devtools/dbg-server.jsm');
@@ -144,9 +139,20 @@ var shell = {
   },
 
   stop: function shell_stop() {
+    ['keydown', 'keypress', 'keyup'].forEach((function unlistenKey(type) {
+      window.removeEventListener(type, this, false, true);
+      window.removeEventListener(type, this, true, true);
+    }).bind(this));
+
+    window.addEventListener('MozApplicationManifest', this);
     window.removeEventListener('MozApplicationManifest', this);
     window.removeEventListener('mozfullscreenchange', this);
     window.removeEventListener('sizemodechange', this);
+    this.contentBrowser.removeEventListener('load', this, true);
+
+#ifndef MOZ_WIDGET_GONK
+    delete Services.audioManager;
+#endif
   },
 
   toggleDebug: function shell_toggleDebug() {
@@ -300,118 +306,6 @@ var shell = {
     content.dispatchEvent(event);
   }
 };
-
-(function PowerManager() {
-  // This will eventually be moved to content, so use content API as
-  // much as possible here. TODO: Bug 738530
-  let power = navigator.mozPower;
-  let idleHandler = function idleHandler(subject, topic, time) {
-    if (topic === "idle") {
-      if (power.getWakeLockState("screen") != "locked-foreground") {
-        navigator.mozPower.screenEnabled = false;
-      }
-    }
-  }
-
-  let wakeLockHandler = function wakeLockHandler(topic, state) {
-    // Turn off the screen when no one needs the it or all of them are
-    // invisible, otherwise turn the screen on. Note that the CPU
-    // might go to sleep as soon as the screen is turned off and
-    // acquiring wake lock will not bring it back (actually the code
-    // is not executed at all).
-    if (topic == "screen") {
-      if (state != "locked-foreground") {
-        if (Services.idle.idleTime > idleTimeout*1000) {
-          navigator.mozPower.screenEnabled = false;
-        }
-      } else {
-        navigator.mozPower.screenEnabled = true;
-      }
-    }
-    if (topic == "cpu") {
-      navigator.mozPower.cpuSleepAllowed = (state != "locked-foreground" &&
-                                            state != "locked-background");
-    }
-  }
-
-  let idleTimeout = Services.prefs.getIntPref("power.screen.timeout");
-  if (!('mozSettings' in navigator))
-    return;
-
-  let request = navigator.mozSettings.getLock().get("power.screen.timeout");
-  request.onsuccess = function onSuccess() {
-    idleTimeout = request.result["power.screen.timeout"] || idleTimeout;
-    if (idleTimeout) {
-      Services.idle.addIdleObserver(idleHandler, idleTimeout);
-      power.addWakeLockListener(wakeLockHandler);
-    }
-  };
-
-  request.onerror = function onError() {
-    if (idleTimeout) {
-      Services.idle.addIdleObserver(idleHandler, idleTimeout);
-      power.addWakeLockListener(wakeLockHandler);
-    }
-  };
-
-  // XXX We may override other's callback here, but this is the only
-  // user of mozSettings in shell.js at this moment.
-  navigator.mozSettings.onsettingchange = function onSettingChange(e) {
-    if (e.settingName == "power.screen.timeout" && e.settingValue) {
-      Services.idle.removeIdleObserver(idleHandler, idleTimeout);
-      idleTimeout = e.settingValue;
-      Services.idle.addIdleObserver(idleHandler, idleTimeout);
-    }
-  };
-})();
-
-const DATA_CALL_SETTING_BOLKEYS  = ["ril.data.enabled",
-                                    "ril.data.roaming.enabled"];
-const DATA_CALL_SETTING_CHARKEYS = ["ril.data.apn",
-                                    "ril.data.user",
-                                    "ril.data.passwd"];
-(function DataCallSettings() {
-  let sm = navigator.mozSettings;
-  let lock = sm.getLock();
-  DATA_CALL_SETTING_BOLKEYS.forEach(function(key) {
-    let request = lock.get(key);
-    request.onsuccess = function onSuccess() {
-      let value = request.result[key] || false;
-      Services.prefs.setBoolPref(key, value);
-      dump("DataCallSettings - " + key + ":" + value);
-    };
-    request.onerror = function onError() {
-      Services.prefs.setBoolPref(key, false);
-    };
-  });
-
-  DATA_CALL_SETTING_CHARKEYS.forEach(function(key) {
-    let request = lock.get(key);
-    request.onsuccess = function onSuccess() {
-      let value = request.result[key] || "";
-      Services.prefs.setCharPref(key, value);
-      dump("DataCallSettings - " + key + ":" + value);
-    };
-    request.onerror = function onError() {
-      Services.prefs.setCharPref(key, "");
-    };
-  });
-
-  navigator.mozSettings.onsettingchange = function onSettingChange(e) {
-    dump("DataCallSettings - onsettingchange: " + e.settingName +
-         ": " + e.settingValue);
-    if (e.settingValue) {
-      if (DATA_CALL_SETTING_BOLKEYS.indexOf(e.settingName) > -1 ) {
-        Services.prefs.setBoolPref(e.settingName, e.settingValue);
-        return;
-      }
-      if (DATA_CALL_SETTING_CHARKEYS.indexOf(e.settingName) > -1) {
-        Services.prefs.setCharPref(e.settingName, e.settingValue);
-      }
-    }
-  };
-
-})();
 
 function nsBrowserAccess() {
 }
@@ -593,7 +487,11 @@ var WebappsHelper = {
             return;
 
           let manifest = new DOMApplicationManifest(aManifest, json.origin);
-          shell.sendEvent(content, "mozChromeEvent", { type: "webapps-launch", url: manifest.fullLaunchPath(), origin: json.origin });
+          shell.sendEvent(content, "mozChromeEvent", {
+            "type": "webapps-launch",
+            "url": manifest.fullLaunchPath(json.startPoint),
+            "origin": json.origin
+          });
         });
         break;
       case "webapps-ask-install":
@@ -623,4 +521,136 @@ window.addEventListener('ContentStart', function(evt) {
   if (Services.prefs.getBoolPref('devtools.debugger.enabled')) {
     startDebugger();
   }
-}, false);
+});
+
+
+// Once Bug 731746 - Allow chrome JS object to implement nsIDOMEventTarget
+// is resolved this helper could be removed.
+var SettingsListener = {
+  _callbacks: {},
+
+  init: function sl_init() {
+    if ('mozSettings' in navigator && navigator.mozSettings)
+      navigator.mozSettings.onsettingchange = this.onchange.bind(this);
+  },
+
+  onchange: function sl_onchange(evt) {
+    var callback = this._callbacks[evt.settingName];
+    if (callback) {
+      callback(evt.settingValue);
+    }
+  },
+
+  observe: function sl_observe(name, defaultValue, callback) {
+    var settings = window.navigator.mozSettings;
+    if (!settings) {
+      window.setTimeout(function() { callback(defaultValue); });
+      return;
+    }
+
+    if (!callback || typeof callback !== 'function') {
+      throw new Error('Callback is not a function');
+    }
+
+    var req = settings.getLock().get(name);
+    req.addEventListener('success', (function onsuccess() {
+      callback(typeof(req.result[name]) != 'undefined' ?
+        req.result[name] : defaultValue);
+    }));
+
+    this._callbacks[name] = callback;
+  }
+};
+
+SettingsListener.init();
+
+SettingsListener.observe('language.current', 'en-US', function(value) {
+  Services.prefs.setCharPref('intl.accept_languages', value);
+});
+
+
+(function PowerManager() {
+  // This will eventually be moved to content, so use content API as
+  // much as possible here. TODO: Bug 738530
+  let power = navigator.mozPower;
+  let idleHandler = function idleHandler(subject, topic, time) {
+    if (topic !== 'idle')
+      return;
+
+    if (power.getWakeLockState("screen") != "locked-foreground") {
+      navigator.mozPower.screenEnabled = false;
+    }
+  }
+
+  let wakeLockHandler = function(topic, state) {
+    // Turn off the screen when no one needs the it or all of them are
+    // invisible, otherwise turn the screen on. Note that the CPU
+    // might go to sleep as soon as the screen is turned off and
+    // acquiring wake lock will not bring it back (actually the code
+    // is not executed at all).
+    if (topic === 'screen') {
+      if (state != "locked-foreground") {
+        if (Services.idle.idleTime > idleTimeout*1000) {
+          navigator.mozPower.screenEnabled = false;
+        }
+      } else {
+        navigator.mozPower.screenEnabled = true;
+      }
+    } else if (topic == 'cpu') {
+      navigator.mozPower.cpuSleepAllowed = (state != 'locked-foreground' &&
+                                            state != 'locked-background');
+    }
+  }
+
+  let idleTimeout = Services.prefs.getIntPref('power.screen.timeout');
+  if (!('mozSettings' in navigator))
+    return;
+
+  let request = navigator.mozSettings.getLock().get('power.screen.timeout');
+  request.onsuccess = function onSuccess() {
+    idleTimeout = request.result['power.screen.timeout'] || idleTimeout;
+    if (!idleTimeout)
+      return;
+
+    Services.idle.addIdleObserver(idleHandler, idleTimeout);
+    power.addWakeLockListener(wakeLockHandler);
+  };
+
+  request.onerror = function onError() {
+    if (!idleTimeout)
+      return;
+
+    Services.idle.addIdleObserver(idleHandler, idleTimeout);
+    power.addWakeLockListener(wakeLockHandler);
+  };
+
+  SettingsListener.observe('power.screen.timeout', 30, function(value) {
+    if (!value)
+      return;
+
+    Services.idle.removeIdleObserver(idleHandler, idleTimeout);
+    idleTimeout = value;
+    Services.idle.addIdleObserver(idleHandler, idleTimeout);
+  });
+
+  window.addEventListener('unload', function removeIdleObjects() {
+    Services.idle.removeIdleObserver(idleHandler, idleTimeout);
+    power.removeWakeLockListener(wakeLockHandler);
+  });
+})();
+
+
+(function RILSettingsToPrefs() {
+  ['ril.data.enabled', 'ril.data.roaming.enabled'].forEach(function(key) {
+    SettingsListener.observe(key, false, function(value) {
+      Services.prefs.setBoolPref(key, value);
+    });
+  });
+
+  ['ril.data.apn', 'ril.data.user', 'ril.data.passwd'].forEach(function(key) {
+    SettingsListener.observe(key, false, function(value) {
+      Services.prefs.setBoolPref(key, value);
+    });
+  });
+})();
+

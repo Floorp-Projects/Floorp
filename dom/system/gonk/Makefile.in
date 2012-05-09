@@ -35,6 +35,7 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/src/geolocation \
   -I$(topsrcdir)/dom/telephony \
   -I$(topsrcdir)/dom/wifi \
+  -I$(topsrcdir)/dom/bluetooth \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
 

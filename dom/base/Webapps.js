@@ -40,12 +40,9 @@ WebappsRegistry.prototype = {
       return false;
 
     if (aManifest.installs_allowed_from) {
-      ok = false;
-      aManifest.installs_allowed_from.forEach(function(aOrigin) {
-        if (aOrigin == "*" || aOrigin == aInstallOrigin)
-          ok = true;
+      return aManifest.installs_allowed_from.some(function(aOrigin) {
+        return aOrigin == "*" || aOrigin == aInstallOrigin;
       });
-      return ok;
     }
     return true;
   },
@@ -232,7 +229,7 @@ WebappsApplication.prototype = {
   launch: function(aStartPoint) {
     let request = this.createRequest();
     cpmm.sendAsyncMessage("Webapps:Launch", { origin: this._origin,
-                                              startPoint: aStartPoint,
+                                              startPoint: aStartPoint || "",
                                               oid: this._id,
                                               requestID: this.getRequestId(request) });
     return request;

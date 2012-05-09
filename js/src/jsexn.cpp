@@ -301,7 +301,7 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
              */
             if (checkAccess && i.isNonEvalFunctionFrame()) {
                 Value v = NullValue();
-                jsid callerid = ATOM_TO_JSID(cx->runtime->atomState.callerAtom);
+                jsid callerid = NameToId(cx->runtime->atomState.callerAtom);
                 if (!checkAccess(cx, i.callee(), callerid, JSACC_READ, &v))
                     break;
             }
@@ -715,7 +715,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
     /* Step 4. */
     RootedVarString name(cx);
     if (nameVal.isUndefined()) {
-        name = CLASS_ATOM(cx, Error);
+        name = CLASS_NAME(cx, Error);
     } else {
         name = ToString(cx, nameVal);
         if (!name)
@@ -739,7 +739,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 7. */
     if (name->empty() && message->empty()) {
-        args.rval().setString(CLASS_ATOM(cx, Error));
+        args.rval().setString(CLASS_NAME(cx, Error));
         return true;
     }
 
@@ -875,10 +875,10 @@ InitErrorClass(JSContext *cx, Handle<GlobalObject*> global, int type, HandleObje
         return NULL;
 
     RootedVarValue empty(cx, StringValue(cx->runtime->emptyString));
-    RootedVarId nameId(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom));
-    RootedVarId messageId(cx, ATOM_TO_JSID(cx->runtime->atomState.messageAtom));
-    RootedVarId fileNameId(cx, ATOM_TO_JSID(cx->runtime->atomState.fileNameAtom));
-    RootedVarId lineNumberId(cx, ATOM_TO_JSID(cx->runtime->atomState.lineNumberAtom));
+    RootedVarId nameId(cx, NameToId(cx->runtime->atomState.nameAtom));
+    RootedVarId messageId(cx, NameToId(cx->runtime->atomState.messageAtom));
+    RootedVarId fileNameId(cx, NameToId(cx->runtime->atomState.fileNameAtom));
+    RootedVarId lineNumberId(cx, NameToId(cx->runtime->atomState.lineNumberAtom));
     if (!DefineNativeProperty(cx, errorProto, nameId, StringValue(name),
                               JS_PropertyStub, JS_StrictPropertyStub, 0, 0, 0) ||
         !DefineNativeProperty(cx, errorProto, messageId, empty,

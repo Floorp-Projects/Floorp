@@ -152,13 +152,7 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
 
   // Bug 742100, this gfxContext really should live on the stack.
   nsRefPtr<gfxContext> ctxt = new gfxContext(writableSurface);
- if (!mThebesLayer->CanUseOpaqueSurface()) {
-    ctxt->NewPath();
-    ctxt->SetOperator(gfxContext::OPERATOR_CLEAR);
-    ctxt->Rectangle(drawRect, true);
-    ctxt->Fill();
-    ctxt->SetOperator(gfxContext::OPERATOR_OVER);
-  }
+  ctxt->SetOperator(gfxContext::OPERATOR_SOURCE);
   if (mSinglePaintBuffer) {
     ctxt->NewPath();
     ctxt->SetSource(mSinglePaintBuffer.get(),
@@ -242,7 +236,13 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       ->Paint(aContext, nsnull);
   }
 
-  BasicManager()->PaintedTiledLayerBuffer(BasicManager()->Hold(this), &mTiledBuffer);
+  // Create a heap copy owned and released by the compositor. This is needed
+  // since we're sending this over an async message and content needs to be
+  // be able to modify the tiled buffer in the next transaction.
+  // TODO: Remove me once Bug 747811 lands.
+  BasicTiledLayerBuffer *heapCopy = new BasicTiledLayerBuffer(mTiledBuffer);
+
+  BasicManager()->PaintedTiledLayerBuffer(BasicManager()->Hold(this), heapCopy);
 }
 
 } // mozilla

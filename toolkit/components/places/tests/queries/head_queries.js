@@ -139,10 +139,6 @@ function populateDB(aArray) {
             PlacesUtils.bhistory.markPageAsTyped(uri(qdata.uri));
           }
 
-          if (qdata.hidePage){
-            PlacesUtils.bhistory.hidePage(uri(qdata.uri));
-          }
-
           if (qdata.isPageAnnotation) {
             if (qdata.removeAnnotation) 
               PlacesUtils.annotations.removePageAnnotation(uri(qdata.uri),
@@ -276,7 +272,6 @@ function queryData(obj) {
   this.isDetails = obj.isDetails ? obj.isDetails : false;
   this.title = obj.title ? obj.title : "";
   this.markPageAsTyped = obj.markPageAsTyped ? obj.markPageAsTyped : false;
-  this.hidePage = obj.hidePage ? obj.hidePage : false;
   this.isPageAnnotation = obj.isPageAnnotation ? obj.isPageAnnotation : false;
   this.removeAnnotation= obj.removeAnnotation ? true : false;
   this.annoName = obj.annoName ? obj.annoName : "";

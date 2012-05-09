@@ -42,6 +42,7 @@ EXPORTS
     MOZ_Z_gzputs
     MOZ_Z_gzgets
     MOZ_Z_gzputc
+    MOZ_Z_gzgetc
     MOZ_Z_gzungetc
     MOZ_Z_gzflush
     MOZ_Z_gzseek
@@ -80,4 +81,4 @@ EXPORTS
     MOZ_Z_inflateResetKeep
     MOZ_Z_deflateResetKeep
     MOZ_Z_gzgetc_
-    MOZ_Z_gzflags
+    MOZ_Z_gzopen_w

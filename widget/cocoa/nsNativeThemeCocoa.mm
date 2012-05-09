@@ -2387,6 +2387,7 @@ bool
 nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                       PRUint8 aWidgetType, nsRect* aOverflowRect)
 {
+  PRInt32 p2a = aContext->AppUnitsPerDevPixel();
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     case NS_THEME_TOOLBAR_BUTTON:
@@ -2404,11 +2405,17 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFram
       // We assume that the above widgets can draw a focus ring that will be less than
       // or equal to 4 pixels thick.
       nsIntMargin extraSize = nsIntMargin(MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH);
-      PRInt32 p2a = aContext->AppUnitsPerDevPixel();
       nsMargin m(NSIntPixelsToAppUnits(extraSize.left, p2a),
                  NSIntPixelsToAppUnits(extraSize.top, p2a),
                  NSIntPixelsToAppUnits(extraSize.right, p2a),
                  NSIntPixelsToAppUnits(extraSize.bottom, p2a));
+      aOverflowRect->Inflate(m);
+      return true;
+    }
+    case NS_THEME_PROGRESSBAR:
+    {
+      // Progress bars draw a 2 pixel white shadow under their progress indicators
+      nsMargin m(0, 0, 0, NSIntPixelsToAppUnits(2, p2a));
       aOverflowRect->Inflate(m);
       return true;
     }

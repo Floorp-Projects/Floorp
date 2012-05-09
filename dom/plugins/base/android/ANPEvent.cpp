@@ -47,31 +47,14 @@
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #define ASSIGN(obj, name)   (obj)->name = anp_event_##name
 
-class PluginEventRunnable : public nsRunnable
-{
-public:
-  PluginEventRunnable(NPP inst, ANPEvent* event, NPPluginFuncs* aFuncs)
-    : mInstance(inst), mEvent(*event), mFuncs(aFuncs) {}
-  virtual nsresult Run() {
-    (*mFuncs->event)(mInstance, &mEvent);
-    return NS_OK;
-  }
-private:
-  NPP mInstance;
-  ANPEvent mEvent;
-  NPPluginFuncs* mFuncs;
-};
-
 void
-anp_event_postEvent(NPP inst, const ANPEvent* event)
+anp_event_postEvent(NPP instance, const ANPEvent* event)
 {
   LOG("%s", __PRETTY_FUNCTION__);
 
-  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(inst->ndata);
-  NPPluginFuncs* pluginFunctions = pinst->GetPlugin()->PluginFuncs();
-  PluginEventRunnable* e = new PluginEventRunnable(inst, const_cast<ANPEvent*>(event), pluginFunctions);
+  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+  pinst->PostEvent((void*) event);
   
-  NS_DispatchToMainThread(e);
   LOG("returning from %s", __PRETTY_FUNCTION__);
 }
 

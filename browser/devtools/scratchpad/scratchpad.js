@@ -61,6 +61,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource:///modules/PropertyPanel.jsm");
 Cu.import("resource:///modules/source-editor.jsm");
 Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
+Cu.import("resource://gre/modules/jsdebugger.jsm");
 
 
 const SCRATCHPAD_CONTEXT_CONTENT = 1;
@@ -295,6 +296,7 @@ var Scratchpad = {
       this._chromeSandbox = new Cu.Sandbox(this.browserWindow,
         { sandboxPrototype: this.browserWindow, wantXrays: false, 
           sandboxName: 'scratchpad-chrome'});
+      addDebuggerToGlobal(this._chromeSandbox);
 
       this._previousBrowserWindow = this.browserWindow;
     }
