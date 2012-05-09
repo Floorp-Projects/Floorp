@@ -163,7 +163,6 @@ public:
   NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue);
   NS_IMETHOD_(bool) ValueChanged() const;
   NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const;
-  NS_IMETHOD_(void) SetTextEditorValue(const nsAString& aValue, bool aUserInput);
   NS_IMETHOD_(nsIEditor*) GetTextEditor();
   NS_IMETHOD_(nsISelectionController*) GetSelectionController();
   NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection();
@@ -173,7 +172,6 @@ public:
   NS_IMETHOD_(nsIContent*) GetRootEditorNode();
   NS_IMETHOD_(nsIContent*) CreatePlaceholderNode();
   NS_IMETHOD_(nsIContent*) GetPlaceholderNode();
-  NS_IMETHOD_(void) UpdatePlaceholderText(bool aNotify);
   NS_IMETHOD_(void) SetPlaceholderClass(bool aVisible, bool aNotify);
   NS_IMETHOD_(void) InitializeKeyboardEventListeners();
   NS_IMETHOD_(void) OnValueChanged(bool aNotify);
@@ -558,12 +556,6 @@ NS_IMETHODIMP_(nsIContent*)
 nsHTMLTextAreaElement::GetPlaceholderNode()
 {
   return mState.GetPlaceholderNode();
-}
-
-NS_IMETHODIMP_(void)
-nsHTMLTextAreaElement::UpdatePlaceholderText(bool aNotify)
-{
-  mState.UpdatePlaceholderText(aNotify);
 }
 
 NS_IMETHODIMP_(void)
@@ -1539,13 +1531,6 @@ nsHTMLTextAreaElement::GetTextEditorValue(nsAString& aValue,
                                           bool aIgnoreWrap) const
 {
   mState.GetValue(aValue, aIgnoreWrap);
-}
-
-NS_IMETHODIMP_(void)
-nsHTMLTextAreaElement::SetTextEditorValue(const nsAString& aValue,
-                                          bool aUserInput)
-{
-  mState.SetValue(aValue, aUserInput);
 }
 
 NS_IMETHODIMP_(void)
