@@ -465,18 +465,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       }
     }
 
-    if (isJavaScript)
-      typeID = nsIProgrammingLanguage::JAVASCRIPT;
-    else {
-      // Use the object factory to locate a matching language.
-      nsCOMPtr<nsIScriptRuntime> runtime;
-      rv = NS_GetJSRuntime(getter_AddRefs(runtime));
-      if (NS_FAILED(rv) || runtime == nsnull) {
-        // Failed to get the explicitly specified language
-        NS_WARNING("Failed to find a scripting language");
-        typeID = nsIProgrammingLanguage::UNKNOWN;
-      } else
-        typeID = nsIProgrammingLanguage::JAVASCRIPT;
+    if (!isJavaScript) {
+      typeID = nsIProgrammingLanguage::UNKNOWN;
     }
 
     if (typeID != nsIProgrammingLanguage::UNKNOWN) {
