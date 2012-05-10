@@ -49,7 +49,8 @@ struct CGObjectList {
 
     CGObjectList() : length(0), lastbox(NULL) {}
 
-    unsigned index(ObjectBox *objbox);
+    unsigned add(ObjectBox *objbox);
+    unsigned indexOf(JSObject *obj);
     void finish(ObjectArray *array);
 };
 
