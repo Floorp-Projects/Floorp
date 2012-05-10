@@ -48,15 +48,9 @@ DIRS = locales
 
 DIST_FILES = package-name.txt
 
-SYNC_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-sources.mn | tr '\n' ' ';)
-SYNC_PP_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/preprocess-sources.mn | tr '\n' ' ';)
-SYNC_THIRDPARTY_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-third-party-sources.mn | tr '\n' ' ';)
-SYNC_RES_DRAWABLE=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-resources.mn | tr '\n' ' ';)
-SYNC_RES_DRAWABLE_LDPI=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-ldpi-resources.mn | tr '\n' ' ';)
-SYNC_RES_DRAWABLE_MDPI=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-mdpi-resources.mn | tr '\n' ' ';)
-SYNC_RES_DRAWABLE_HDPI=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-hdpi-resources.mn | tr '\n' ' ';)
-SYNC_RES_LAYOUT=$(shell cat $(topsrcdir)/mobile/android/sync/android-layout-resources.mn | tr '\n' ' ';)
-SYNC_RES_VALUES=$(shell cat $(topsrcdir)/mobile/android/sync/android-values-resources.mn | tr '\n' ' ';)
+include $(topsrcdir)/mobile/android/base/android-sync-files.mk
+
+#These SYNC_ variables could be moved to android-sync/fennec-copy-code.sh
 SYNC_RES_XML=res/xml/sync_authenticator.xml
 SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml res/xml/sync_options.xml
 
