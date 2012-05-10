@@ -1863,7 +1863,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
         plaintextEditor->SetMaxTextLength(-1);
 
         if (insertValue.IsEmpty()) {
-          mEditor->DeleteSelection(nsIEditor::eNone);
+          mEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
         } else {
           plaintextEditor->InsertText(insertValue);
         }

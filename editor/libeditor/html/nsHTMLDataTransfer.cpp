@@ -206,7 +206,7 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
     // Delete Selection, but only if it isn't collapsed, see bug #106269
     if (!isCollapsed) 
     {
-      rv = DeleteSelection(eNone);
+      rv = DeleteSelection(eNone, eStrip);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -351,7 +351,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       // Use an auto tracker so that our drop point is correctly
       // positioned after the delete.
       nsAutoTrackDOMPoint tracker(mRangeUpdater, &targetNode, &targetOffset);
-      rv = DeleteSelection(eNone);
+      rv = DeleteSelection(eNone, eStrip);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 

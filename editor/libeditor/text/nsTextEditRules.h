@@ -275,6 +275,7 @@ class nsTextRulesInfo : public nsRulesInfo
     outputFormat(0),
     maxLength(-1),
     collapsedAction(nsIEditor::eNext),
+    stripWrappers(nsIEditor::eStrip),
     bOrdered(false),
     entireList(false),
     bulletType(0),
@@ -293,6 +294,7 @@ class nsTextRulesInfo : public nsRulesInfo
   
   // kDeleteSelection
   nsIEditor::EDirection collapsedAction;
+  nsIEditor::EStripWrappers stripWrappers;
   
   // kMakeList
   bool bOrdered;

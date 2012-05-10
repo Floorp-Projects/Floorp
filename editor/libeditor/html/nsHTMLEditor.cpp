@@ -1757,6 +1757,15 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
   {
     if (aDeleteSelection)
     {
+      if (!IsBlockNode(aElement)) {
+        // E.g., inserting an image.  In this case we don't need to delete any
+        // inline wrappers before we do the insertion.  Otherwise we let
+        // DeleteSelectionAndPrepareToCreateNode do the deletion for us, which
+        // calls DeleteSelection with aStripWrappers = eStrip.
+        res = DeleteSelection(nsIEditor::eNone, nsIEditor::eNoStrip);
+        NS_ENSURE_SUCCESS(res, res);
+      }
+
       nsCOMPtr<nsIDOMNode> tempNode;
       PRInt32 tempOffset;
       nsresult result = DeleteSelectionAndPrepareToCreateNode(tempNode,tempOffset);
@@ -3452,6 +3461,66 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
   return rv;
 }
 
+
+NS_IMETHODIMP
+nsHTMLEditor::DeleteSelectionImpl(EDirection aAction,
+                                  EStripWrappers aStripWrappers)
+{
+  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
+
+  nsresult res = nsEditor::DeleteSelectionImpl(aAction, aStripWrappers);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // If we weren't asked to strip any wrappers, we're done.
+  if (aStripWrappers == eNoStrip) {
+    return NS_OK;
+  }
+
+  nsRefPtr<nsTypedSelection> typedSel = GetTypedSelection();
+  // Just checking that the selection itself is collapsed doesn't seem to work
+  // right in the multi-range case
+  NS_ENSURE_STATE(typedSel);
+  NS_ENSURE_STATE(typedSel->GetAnchorFocusRange());
+  NS_ENSURE_STATE(typedSel->GetAnchorFocusRange()->Collapsed());
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(typedSel->GetAnchorNode());
+  NS_ENSURE_STATE(content);
+
+  // Don't strip wrappers if this is the only wrapper in the block.  Then we'll
+  // add a <br> later, so it won't be an empty wrapper in the end.
+  nsCOMPtr<nsIContent> blockParent = content;
+  while (!IsBlockNode(blockParent)) {
+    blockParent = blockParent->GetParent();
+  }
+  bool emptyBlockParent;
+  res = IsEmptyNode(blockParent, &emptyBlockParent);
+  NS_ENSURE_SUCCESS(res, res);
+  if (emptyBlockParent) {
+    return NS_OK;
+  }
+
+  if (content && !IsBlockNode(content) && !content->Length() &&
+      content->IsEditable() && content != content->GetEditingHost()) {
+    while (content->GetParent() && !IsBlockNode(content->GetParent()) &&
+           content->GetParent()->Length() == 1 &&
+           content->GetParent()->IsEditable() &&
+           content->GetParent() != content->GetEditingHost()) {
+      content = content->GetParent();
+    }
+    res = DeleteNode(content);
+    NS_ENSURE_SUCCESS(res, res);
+  }
+
+  return NS_OK;
+}
+
+
+nsresult
+nsHTMLEditor::DeleteNode(nsINode* aNode)
+{
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
+  return DeleteNode(node);
+}
 
 NS_IMETHODIMP
 nsHTMLEditor::DeleteNode(nsIDOMNode* aNode)
