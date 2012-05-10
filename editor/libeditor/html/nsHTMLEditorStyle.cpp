@@ -457,7 +457,7 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
     nsIContent* nextNode = GetNextHTMLSibling(aNode);
     if (nextNode && nextNode->Tag() == aProperty &&
         HasAttrVal(nextNode, aAttribute, *aValue) &&
-        IsOnlyAttribute(priorNode, *aAttribute)) {
+        IsOnlyAttribute(nextNode, *aAttribute)) {
       // following sib is already right kind of inline node; slide this over into it
       return MoveNode(aNode->AsDOMNode(), nextNode->AsDOMNode(), 0);
     }

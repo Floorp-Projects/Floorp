@@ -104,29 +104,33 @@ class Marionette(object):
 
     def __init__(self, host='localhost', port=2828, b2gbin=False,
                  emulator=False, connectToRunningEmulator=False,
-                 homedir=None, baseurl=None, noWindow=False):
+                 homedir=None, baseurl=None, noWindow=False, logcat_dir=None):
         self.host = host
         self.port = self.local_port = port
         self.b2gbin = b2gbin
         self.session = None
         self.window = None
         self.emulator = None
+        self.extra_emulators = []
         self.homedir = homedir
         self.baseurl = baseurl
         self.noWindow = noWindow
+        self.logcat_dir = logcat_dir
 
         if b2gbin:
             self.b2ginstance = B2GInstance(host=self.host, port=self.port, b2gbin=self.b2gbin)
             self.b2ginstance.start()
             assert(self.b2ginstance.wait_for_port())
         if emulator:
-            self.emulator = Emulator(homedir=homedir, noWindow=self.noWindow)
+            self.emulator = Emulator(homedir=homedir,
+                                     noWindow=self.noWindow,
+                                     logcat_dir=self.logcat_dir)
             self.emulator.start()
             self.port = self.emulator.setup_port_forwarding(self.port)
             assert(self.emulator.wait_for_port())
 
         if connectToRunningEmulator:
-            self.emulator = Emulator(homedir=homedir)
+            self.emulator = Emulator(homedir=homedir, logcat_dir=self.logcat_dir)
             self.emulator.connect()
             self.port = self.emulator.setup_port_forwarding(self.port)
             assert(self.emulator.wait_for_port())
@@ -138,6 +142,8 @@ class Marionette(object):
             self.emulator.close()
         if self.b2gbin:
             self.b2ginstance.close()
+        for qemu in self.extra_emulators:
+            qemu.emulator.close()
 
     def _send_message(self, command, response_key, **kwargs):
         if not self.session and command not in ('newSession', 'getStatus'):
@@ -310,7 +316,7 @@ class Marionette(object):
 
         return unwrapped
 
-    def execute_js_script(self, script, script_args=None, timeout=True):
+    def execute_js_script(self, script, script_args=None, timeout=True, new_sandbox=True):
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
@@ -318,21 +324,30 @@ class Marionette(object):
                                       'value',
                                       value=script,
                                       args=args,
-                                      timeout=timeout)
+                                      timeout=timeout,
+                                      newSandbox=new_sandbox)
         return self.unwrapValue(response)
 
-    def execute_script(self, script, script_args=None):
+    def execute_script(self, script, script_args=None, new_sandbox=True):
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
-        response = self._send_message('executeScript', 'value', value=script, args=args)
+        response = self._send_message('executeScript',
+                                     'value',
+                                      value=script,
+                                      args=args,
+                                      newSandbox=new_sandbox)
         return self.unwrapValue(response)
 
-    def execute_async_script(self, script, script_args=None):
+    def execute_async_script(self, script, script_args=None, new_sandbox=True):
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
-        response = self._send_message('executeAsyncScript', 'value', value=script, args=args)
+        response = self._send_message('executeAsyncScript',
+                                      'value',
+                                      value=script,
+                                      args=args,
+                                      newSandbox=new_sandbox)
         return self.unwrapValue(response)
 
     def find_element(self, method, target, id=None):

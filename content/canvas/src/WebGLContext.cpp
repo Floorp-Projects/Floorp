@@ -501,6 +501,41 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     }
 #endif
 
+
+#ifdef ANDROID
+    // bug 736123, blacklist WebGL on Adreno
+    //
+    // The Adreno driver in WebGL context creation, specifically in the first MakeCurrent
+    // call on the newly created OpenGL context.
+    //
+    // Notice that we can't rely on GfxInfo for this blacklisting,
+    // as GfxInfo on Android currently doesn't know the GL strings, which are,
+    // AFAIK, the only way to identify Adreno GPUs.
+    //
+    // Somehow, the Layers' OpenGL context creation doesn't crash, and neither does
+    // the global GL context creation. So we currently use the Renderer() id from the
+    // global context. This is not future-proof, as the plan is to get rid of the global
+    // context soon with OMTC. We need to replace this by getting the renderer id from
+    // the Layers' GL context, but as with OMTC the LayerManager lives on a different
+    // thread, this will have to involve some message-passing.
+    if (!forceEnabled) {
+        GLContext *globalContext = GLContextProvider::GetGlobalContext();
+        if (!globalContext) {
+            // make sure that we don't forget to update this code once the globalContext
+            // is removed
+            NS_RUNTIMEABORT("No global context anymore? Then you need to update "
+                            "this code, or force-enable WebGL.");
+        }
+        int renderer = globalContext->Renderer();
+        if (renderer == gl::GLContext::RendererAdreno200 ||
+            renderer == gl::GLContext::RendererAdreno205)
+        {
+            LogMessage("WebGL blocked on this Adreno driver!");
+            return NS_ERROR_FAILURE;
+        }
+    }
+#endif
+
     // if we're forcing osmesa, do it first
     if (forceOSMesa) {
         gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
@@ -883,9 +918,12 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ei)
         case WebGL_EXT_texture_filter_anisotropic:
             isSupported = gl->IsExtensionSupported(GLContext::EXT_texture_filter_anisotropic);
             break;
-        case WebGL_MOZ_WEBGL_lose_context:
+        case WebGL_WEBGL_lose_context:
             // We always support this extension.
             isSupported = true;
+            break;
+        case WebGL_WEBGL_compressed_texture_s3tc:
+            isSupported = gl->IsExtensionSupported(GLContext::EXT_texture_compression_s3tc);
             break;
         default:
             isSupported = false;
@@ -927,8 +965,12 @@ WebGLContext::GetExtension(const nsAString& aName)
             ei = WebGL_EXT_texture_filter_anisotropic;
     }
     else if (aName.EqualsLiteral("MOZ_WEBGL_lose_context")) {
-        if (IsExtensionSupported(WebGL_MOZ_WEBGL_lose_context))
-            ei = WebGL_MOZ_WEBGL_lose_context;
+        if (IsExtensionSupported(WebGL_WEBGL_lose_context))
+            ei = WebGL_WEBGL_lose_context;
+    }
+    else if (aName.EqualsLiteral("MOZ_WEBGL_compressed_texture_s3tc")) {
+        if (IsExtensionSupported(WebGL_WEBGL_compressed_texture_s3tc))
+            ei = WebGL_WEBGL_compressed_texture_s3tc;
     }
 
     if (ei != WebGLExtensionID_Max) {
@@ -940,8 +982,11 @@ WebGLContext::GetExtension(const nsAString& aName)
                 case WebGL_EXT_texture_filter_anisotropic:
                     mEnabledExtensions[ei] = new WebGLExtensionTextureFilterAnisotropic(this);
                     break;
-                case WebGL_MOZ_WEBGL_lose_context:
+                case WebGL_WEBGL_lose_context:
                     mEnabledExtensions[ei] = new WebGLExtensionLoseContext(this);
+                    break;
+                case WebGL_WEBGL_compressed_texture_s3tc:
+                    mEnabledExtensions[ei] = new WebGLExtensionCompressedTextureS3TC(this);
                     break;
                 // create an extension for any types that don't
                 // have any additional tokens or methods
@@ -1518,8 +1563,10 @@ WebGLContext::GetSupportedExtensions(Nullable< nsTArray<nsString> > &retval)
         arr.AppendElement(NS_LITERAL_STRING("OES_standard_derivatives"));
     if (IsExtensionSupported(WebGL_EXT_texture_filter_anisotropic))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_EXT_texture_filter_anisotropic"));
-    if (IsExtensionSupported(WebGL_MOZ_WEBGL_lose_context))
+    if (IsExtensionSupported(WebGL_WEBGL_lose_context))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_lose_context"));
+    if (IsExtensionSupported(WebGL_WEBGL_compressed_texture_s3tc))
+        arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_s3tc"));
 }
 
 NS_IMETHODIMP

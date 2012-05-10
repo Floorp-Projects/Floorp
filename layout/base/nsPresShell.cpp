@@ -1071,73 +1071,6 @@ PresShell::Destroy()
 }
 
 void
-PresShell::FreeFrame(nsQueryFrame::FrameIID aID, void* aPtr)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount--;
-#endif
-  if (PRESARENA_MUST_FREE_DURING_DESTROY || !mIsDestroying)
-    mFrameArena.FreeByFrameID(aID, aPtr);
-}
-
-void*
-PresShell::AllocateFrame(nsQueryFrame::FrameIID aID, size_t aSize)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount++;
-#endif
-  void* result = mFrameArena.AllocateByFrameID(aID, aSize);
-
-  if (result) {
-    memset(result, 0, aSize);
-  }
-  return result;
-}
-
-void*
-PresShell::AllocateByObjectID(nsPresArena::ObjectID aID, size_t aSize)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount++;
-#endif
-  void* result = mFrameArena.AllocateByObjectID(aID, aSize);
-
-  if (result) {
-    memset(result, 0, aSize);
-  }
-  return result;
-}
-
-void
-PresShell::FreeByObjectID(nsPresArena::ObjectID aID, void* aPtr)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount--;
-#endif
-  if (PRESARENA_MUST_FREE_DURING_DESTROY || !mIsDestroying)
-    mFrameArena.FreeByObjectID(aID, aPtr);
-}
-
-void
-PresShell::FreeMisc(size_t aSize, void* aPtr)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount--;
-#endif
-  if (PRESARENA_MUST_FREE_DURING_DESTROY || !mIsDestroying)
-    mFrameArena.FreeBySize(aSize, aPtr);
-}
-
-void*
-PresShell::AllocateMisc(size_t aSize)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount++;
-#endif
-  return mFrameArena.AllocateBySize(aSize);
-}
-
-void
 nsIPresShell::SetAuthorStyleDisabled(bool aStyleDisabled)
 {
   if (aStyleDisabled != mStyleSet->GetAuthorStyleDisabled()) {
@@ -3118,8 +3051,12 @@ ComputeWhereToScroll(PRInt16 aWhereToScroll,
                      nscoord aRectMin,
                      nscoord aRectMax,
                      nscoord aViewMin,
-                     nscoord aViewMax) {
+                     nscoord aViewMax,
+                     nscoord* aRangeMin,
+                     nscoord* aRangeMax) {
   nscoord resultCoord = aOriginalCoord;
+  // Allow the scroll operation to land anywhere that
+  // makes the whole rectangle visible.
   if (nsIPresShell::SCROLL_MINIMUM == aWhereToScroll) {
     if (aRectMin < aViewMin) {
       // Scroll up so the frame's top edge is visible
@@ -3138,6 +3075,10 @@ ComputeWhereToScroll(PRInt16 aWhereToScroll,
     resultCoord =  NSToCoordRound(frameAlignCoord - (aViewMax - aViewMin) * (
                                   aWhereToScroll / 100.0f));
   }
+  nscoord scrollPortLength = aViewMax - aViewMin;
+  // Force the scroll range to extend to include resultCoord.
+  *aRangeMin = NS_MIN(resultCoord, aRectMax - scrollPortLength);
+  *aRangeMax = NS_MAX(resultCoord, aRectMin);
   return resultCoord;
 }
 
@@ -3157,8 +3098,18 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
 {
   nsPoint scrollPt = aScrollFrame->GetScrollPosition();
   nsRect visibleRect(scrollPt, aScrollFrame->GetScrollPortRect().Size());
-  nsSize lineSize = aScrollFrame->GetLineScrollAmount();
+  nsSize lineSize;
+  // Don't call GetLineScrollAmount unless we actually need it. Not only
+  // does this save time, but it's not safe to call GetLineScrollAmount
+  // during reflow (because it depends on font size inflation and doesn't
+  // use the in-reflow-safe font-size inflation path). If we did call it,
+  // it would assert and possible give the wrong result.
+  if (aVertical.mWhenToScroll == nsIPresShell::SCROLL_IF_NOT_VISIBLE ||
+      aHorizontal.mWhenToScroll == nsIPresShell::SCROLL_IF_NOT_VISIBLE) {
+    lineSize = aScrollFrame->GetLineScrollAmount();
+  }
   nsPresContext::ScrollbarStyles ss = aScrollFrame->GetScrollbarStyles();
+  nsRect allowedRange(scrollPt, nsSize(0, 0));
 
   if ((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
       ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
@@ -3169,12 +3120,15 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
                             aRect.YMost(),
                             visibleRect.y,
                             visibleRect.YMost())) {
+      nscoord maxHeight;
       scrollPt.y = ComputeWhereToScroll(aVertical.mWhereToScroll,
                                         scrollPt.y,
                                         aRect.y,
                                         aRect.YMost(),
                                         visibleRect.y,
-                                        visibleRect.YMost());
+                                        visibleRect.YMost(),
+                                        &allowedRange.y, &maxHeight);
+      allowedRange.height = maxHeight - allowedRange.y;
     }
   }
 
@@ -3187,16 +3141,19 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
                             aRect.XMost(),
                             visibleRect.x,
                             visibleRect.XMost())) {
+      nscoord maxWidth;
       scrollPt.x = ComputeWhereToScroll(aHorizontal.mWhereToScroll,
                                         scrollPt.x,
                                         aRect.x,
                                         aRect.XMost(),
                                         visibleRect.x,
-                                        visibleRect.XMost());
+                                        visibleRect.XMost(),
+                                        &allowedRange.x, &maxWidth);
+      allowedRange.width = maxWidth - allowedRange.x;
     }
   }
 
-  aScrollFrame->ScrollTo(scrollPt, nsIScrollableFrame::INSTANT);
+  aScrollFrame->ScrollTo(scrollPt, nsIScrollableFrame::INSTANT, &allowedRange);
 }
 
 nsresult
@@ -6227,57 +6184,6 @@ static bool CanHandleContextMenuEvent(nsMouseEvent* aMouseEvent,
   return true;
 }
 
-static bool
-IsFullScreenAndRestrictedKeyEvent(nsIContent* aTarget, const nsEvent* aEvent)
-{
-  NS_ABORT_IF_FALSE(aEvent, "Must have an event to check.");
-
-  // Bail out if the event is not a key event, or the target's document is
-  // not in DOM full screen mode, or full-screen key input is not restricted.
-  nsIDocument *root = nsnull;
-  if (!aTarget ||
-      (aEvent->message != NS_KEY_DOWN &&
-      aEvent->message != NS_KEY_UP &&
-      aEvent->message != NS_KEY_PRESS) ||
-      !(root = nsContentUtils::GetRootDocument(aTarget->OwnerDoc())) ||
-      !root->IsFullScreenDoc() ||
-      !nsContentUtils::IsFullScreenKeyInputRestricted()) {
-    return false;
-  }
-
-  // We're in full-screen mode. We whitelist key codes, and we will
-  // show a warning when keys not in this list are pressed.
-  const nsKeyEvent* keyEvent = static_cast<const nsKeyEvent*>(aEvent);
-  int key = keyEvent->keyCode ? keyEvent->keyCode : keyEvent->charCode;
-  switch (key) {
-    case NS_VK_TAB:
-    case NS_VK_SPACE:
-    case NS_VK_PAGE_UP:
-    case NS_VK_PAGE_DOWN:
-    case NS_VK_END:
-    case NS_VK_HOME:
-    case NS_VK_LEFT:
-    case NS_VK_UP:
-    case NS_VK_RIGHT:
-    case NS_VK_DOWN:
-    case NS_VK_SHIFT:
-    case NS_VK_CONTROL:
-    case NS_VK_ALT:
-    case NS_VK_META:
-#ifdef XP_WIN
-    case VK_VOLUME_MUTE:
-    case VK_VOLUME_DOWN:
-    case VK_VOLUME_UP:
-#endif
-      // Unrestricted key code.
-      return false;
-    default:
-      // Otherwise, fullscreen is enabled, key input is restricted, and the key
-      // code is not an allowed key code.
-      return true;
-  }
-}
-
 nsresult
 PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
 {
@@ -6336,18 +6242,10 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
                             NS_EVENT_FLAG_ONLY_CHROME_DISPATCH);
 
           if (aEvent->message == NS_KEY_UP) {
-           // ESC key released while in DOM full-screen mode.
-           // Exit full-screen mode.
+             // ESC key released while in DOM full-screen mode.
+             // Exit full-screen mode.
             nsIDocument::ExitFullScreen(true);
           }
-        } else if (IsFullScreenAndRestrictedKeyEvent(mCurrentEventContent, aEvent)) {
-          // Restricted key press while in DOM full-screen mode. Dispatch
-          // an event to chrome so it knows to show a warning message
-          // informing the user how to exit full-screen.
-          nsRefPtr<nsAsyncDOMEvent> e =
-            new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozShowFullScreenWarning"),
-                                true, true);
-          e->PostDOMEvent();
         }
         // Else not full-screen mode or key code is unrestricted, fall
         // through to normal handling.
@@ -9035,7 +8933,8 @@ void
 PresShell::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                size_t *aArenasSize,
                                size_t *aStyleSetsSize,
-                               size_t *aTextRunsSize) const
+                               size_t *aTextRunsSize,
+                               size_t *aPresContextSize) const
 {
   *aArenasSize = aMallocSizeOf(this);
   *aArenasSize += mFrameArena.SizeOfExcludingThis(aMallocSizeOf);
@@ -9043,6 +8942,8 @@ PresShell::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
   *aStyleSetsSize = StyleSet()->SizeOfIncludingThis(aMallocSizeOf);
 
   *aTextRunsSize = SizeOfTextRuns(aMallocSizeOf);
+
+  *aPresContextSize = mPresContext->SizeOfIncludingThis(aMallocSizeOf);
 }
 
 size_t

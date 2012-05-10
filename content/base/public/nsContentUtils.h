@@ -614,10 +614,17 @@ public:
   static void SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
                              nsIAtom **aTagName, PRInt32 *aNameSpaceID);
 
-  // Get a permission-manager setting for the given uri and type.
+  // Get a permission-manager setting for the given principal and type.
   // If the pref doesn't exist or if it isn't ALLOW_ACTION, false is
-  // returned, otherwise true is returned.
-  static bool IsSitePermAllow(nsIURI* aURI, const char* aType);
+  // returned, otherwise true is returned. Always returns true for the
+  // system principal, and false for a null principal.
+  static bool IsSitePermAllow(nsIPrincipal* aPrincipal, const char* aType);
+
+  // Get a permission-manager setting for the given principal and type.
+  // If the pref doesn't exist or if it isn't DENY_ACTION, false is
+  // returned, otherwise true is returned. Always returns false for the
+  // system principal, and true for a null principal.
+  static bool IsSitePermDeny(nsIPrincipal* aPrincipal, const char* aType);
 
   static nsILineBreaker* LineBreaker()
   {
@@ -1843,13 +1850,6 @@ public:
   static bool IsRequestFullScreenAllowed();
 
   /**
-   * Returns true if key input is restricted in DOM full-screen mode
-   * to non-alpha-numeric key codes only. This mirrors the
-   * "full-screen-api.key-input-restricted" pref.
-   */
-  static bool IsFullScreenKeyInputRestricted();
-
-  /**
    * Returns true if the doc tree branch which contains aDoc contains any
    * plugins which we don't control event dispatch for, i.e. do any plugins
    * in the same tab as this document receive key events outside of our
@@ -2121,7 +2121,6 @@ private:
   static bool sAllowXULXBL_for_file;
   static bool sIsFullScreenApiEnabled;
   static bool sTrustedFullScreenOnly;
-  static bool sFullScreenKeyInputRestricted;
   static PRUint32 sHandlingInputTimeout;
 
   static nsHtml5StringParser* sHTMLFragmentParser;

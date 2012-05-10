@@ -10,8 +10,6 @@
 package org.mozilla.gecko;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -59,6 +57,19 @@ public final class GeckoProfile {
         }
     }
 
+    public static File ensureMozillaDirectory(Context context) throws IOException {
+        synchronized (context) {
+            File filesDir = context.getFilesDir();
+            File mozDir = new File(filesDir, "mozilla");
+            if (! mozDir.exists()) {
+                if (! mozDir.mkdirs()) {
+                    throw new IOException("Unable to create mozilla directory at " + mozDir.getAbsolutePath());
+                }
+            }
+            return mozDir;
+        }
+    }
+
     private GeckoProfile(Context context, String profileName) {
         mContext = context;
         mName = profileName;
@@ -70,7 +81,14 @@ public final class GeckoProfile {
         }
 
         try {
-            File mozillaDir = ensureMozillaDirectory();
+            // Check for old profiles that may need migration.
+            ProfileMigrator profileMigrator = new ProfileMigrator(mContext);
+            if (!profileMigrator.isProfileMoved()) {
+                Log.i(LOGTAG, "New installation or update, checking for old profiles.");
+                profileMigrator.launchMoveProfile();
+            }
+
+            File mozillaDir = ensureMozillaDirectory(mContext);
             mDir = findProfileDir(mozillaDir);
             if (mDir == null) {
                 mDir = createProfileDir(mozillaDir);
@@ -81,6 +99,10 @@ public final class GeckoProfile {
             Log.e(LOGTAG, "Error getting profile dir", ioe);
         }
         return mDir;
+    }
+
+    public File getFilesDir() {
+        return mContext.getFilesDir();
     }
 
     public boolean shouldRestoreSession() {
@@ -152,147 +174,6 @@ public final class GeckoProfile {
         } finally {
             fr.close();
         }
-    }
-
-    public File getFilesDir() {
-        return mContext.getFilesDir();
-    }
-
-    private boolean isOnInternalStorage() {
-        // prior to version 8, apps were always on internal storage
-        if (Build.VERSION.SDK_INT < 8) {
-            return true;
-        }
-        // if there is no external storage dir, then we're definitely on internal storage
-        File externalDir = mContext.getExternalFilesDir(null);
-        if (externalDir == null) {
-            return true;
-        }
-        // otherwise, check app install location to see if it is on internal storage
-        String resourcePath = mContext.getPackageResourcePath();
-        if (resourcePath.startsWith("/data") || resourcePath.startsWith("/system")) {
-            return true;
-        }
-
-        // otherwise we're most likely on external storage
-        return false;
-    }
-
-    public void moveProfilesToAppInstallLocation() {
-        // check normal install directory
-        moveProfilesFrom(new File("/data/data/" + mContext.getPackageName()));
-
-        if (Build.VERSION.SDK_INT >= 8) {
-            // if we're on API >= 8, it's possible that
-            // we were previously on external storage, check there for profiles to pull in
-            moveProfilesFrom(mContext.getExternalFilesDir(null));
-        }
-    }
-
-    private void moveProfilesFrom(File oldFilesDir) {
-        if (oldFilesDir == null) {
-            return;
-        }
-        File oldMozDir = new File(oldFilesDir, "mozilla");
-        if (! (oldMozDir.exists() && oldMozDir.isDirectory())) {
-            return;
-        }
-
-        // if we get here, we know that oldMozDir exists
-        File currentMozDir;
-        try {
-            currentMozDir = ensureMozillaDirectory();
-            if (currentMozDir.equals(oldMozDir)) {
-                return;
-            }
-        } catch (IOException ioe) {
-            Log.e(LOGTAG, "Unable to create a profile directory!", ioe);
-            return;
-        }
-
-        Log.d(LOGTAG, "Moving old profile directories from " + oldMozDir.getAbsolutePath());
-
-        // if we get here, we know that oldMozDir != currentMozDir, so we have some stuff to move
-        moveDirContents(oldMozDir, currentMozDir);
-    }
-
-    private void moveDirContents(File src, File dst) {
-        File[] files = src.listFiles();
-        if (files == null) {
-            src.delete();
-            return;
-        }
-        for (File f : files) {
-            File target = new File(dst, f.getName());
-            try {
-                if (f.renameTo(target)) {
-                    continue;
-                }
-            } catch (SecurityException se) {
-                Log.e(LOGTAG, "Unable to rename file to " + target.getAbsolutePath() + " while moving profiles", se);
-            }
-            // rename failed, try moving manually
-            if (f.isDirectory()) {
-                if (target.mkdirs()) {
-                    moveDirContents(f, target);
-                } else {
-                    Log.e(LOGTAG, "Unable to create folder " + target.getAbsolutePath() + " while moving profiles");
-                }
-            } else {
-                if (! moveFile(f, target)) {
-                    Log.e(LOGTAG, "Unable to move file " + target.getAbsolutePath() + " while moving profiles");
-                }
-            }
-        }
-        src.delete();
-    }
-
-    private boolean moveFile(File src, File dst) {
-        boolean success = false;
-        long lastModified = src.lastModified();
-        try {
-            FileInputStream fis = new FileInputStream(src);
-            try {
-                FileOutputStream fos = new FileOutputStream(dst);
-                try {
-                    FileChannel inChannel = fis.getChannel();
-                    long size = inChannel.size();
-                    if (size == inChannel.transferTo(0, size, fos.getChannel())) {
-                        success = true;
-                    }
-                } finally {
-                    fos.close();
-                }
-            } finally {
-                fis.close();
-            }
-        } catch (IOException ioe) {
-            Log.e(LOGTAG, "Exception while attempting to move file to " + dst.getAbsolutePath(), ioe);
-        }
-
-        if (success) {
-            dst.setLastModified(lastModified);
-            src.delete();
-        } else {
-            dst.delete();
-        }
-        return success;
-    }
-
-    private synchronized File ensureMozillaDirectory() throws IOException {
-        if (mMozDir != null) {
-            return mMozDir;
-        }
-
-        File filesDir = getFilesDir();
-        File mozDir = new File(filesDir, "mozilla");
-        if (! mozDir.exists()) {
-            if (! mozDir.mkdirs()) {
-                throw new IOException("Unable to create mozilla directory at " + mozDir.getAbsolutePath());
-            }
-        }
-        mMozDir = mozDir;
-        return mMozDir;
     }
 
     private File findProfileDir(File mozillaDir) {

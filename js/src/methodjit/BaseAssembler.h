@@ -567,6 +567,17 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
         }
     }
 
+    void storeArg(uint32_t i, Imm32 imm) {
+        JS_ASSERT(callIsAligned);
+        RegisterID to;
+        if (Registers::regForArg(callConvention, i, &to)) {
+            move(imm, to);
+            availInCall.takeRegUnchecked(to);
+        } else {
+            store32(imm, addressOfArg(i));
+        }
+    }
+
     // High-level call helper, given an optional function pointer and a
     // calling convention. setupABICall() must have been called beforehand,
     // as well as each numbered argument stored with storeArg().
@@ -1276,7 +1287,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
     /*
      * Get a free object for the specified GC kind in compartment, writing it
      * to result and filling it in according to templateObject. Returns a jump
-     * taken if a free thing was not retrieved.
+     * taken if a free thing was not retrieved. Note: don't call this directly,
+     * use Compiler::getNewObject instead.
      */
     Jump getNewObject(JSContext *cx, RegisterID result, JSObject *templateObject)
     {

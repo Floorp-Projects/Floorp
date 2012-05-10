@@ -1,5 +1,5 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: c++; c-basic-offset: 2; tab-width: 20; indent-tabs-mode: nil; -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -62,6 +62,8 @@ struct AudioTrack {
   jmethodID stop;
   jmethodID write;
   jmethodID getpos;
+  jmethodID getstate;
+  jmethodID release;
 };
 
 enum AudioTrackMode {
@@ -91,11 +93,18 @@ enum AudioFormatEncoding {
   ENCODING_PCM_8BIT = 3
 };
 
+enum AudioFormatState {
+  STATE_UNINITIALIZED = 0,
+  STATE_INITIALIZED = 1,
+  STATE_NO_STATIC_DATA = 2
+};
+
 static struct AudioTrack at;
 
 static jclass
 init_jni_bindings(JNIEnv *jenv) {
-  jclass jc = jenv->FindClass("android/media/AudioTrack");
+  jclass jc =
+    (jclass)jenv->NewGlobalRef(jenv->FindClass("android/media/AudioTrack"));
 
   at.constructor = jenv->GetMethodID(jc, "<init>", "(IIIIII)V");
   at.flush       = jenv->GetMethodID(jc, "flush", "()V");
@@ -105,6 +114,8 @@ init_jni_bindings(JNIEnv *jenv) {
   at.stop        = jenv->GetMethodID(jc, "stop",  "()V");
   at.write       = jenv->GetMethodID(jc, "write", "([BII)I");
   at.getpos      = jenv->GetMethodID(jc, "getPlaybackHeadPosition", "()I");
+  at.getstate    = jenv->GetMethodID(jc, "getState", "()I");
+  at.release     = jenv->GetMethodID(jc, "release", "()V");
 
   return jc;
 }
@@ -143,7 +154,7 @@ AudioRunnable::Run()
   if (!jenv)
     return NS_ERROR_FAILURE;
 
-  mozilla::AutoLocalJNIFrame autoFrame(jenv);
+  mozilla::AutoLocalJNIFrame autoFrame(jenv, 2);
 
   jbyteArray bytearray = jenv->NewByteArray(mTrack->bufferSize);
   if (!bytearray) {
@@ -192,6 +203,8 @@ AudioRunnable::Run()
 
     } while(wroteSoFar < buffer.size);
   }
+
+  jenv->CallVoidMethod(mTrack->output_unit, at.release);
 
   jenv->DeleteGlobalRef(mTrack->output_unit);
   jenv->DeleteGlobalRef(mTrack->at_class);
@@ -257,6 +270,8 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
     break;
   }
 
+  mozilla::AutoLocalJNIFrame autoFrame(jenv);
+
   jobject obj = jenv->NewObject(s->at_class,
                                 at.constructor,
                                 STREAM_MUSIC,
@@ -266,11 +281,15 @@ anp_audio_newTrack(uint32_t sampleRate,    // sampling rate in Hz
                                 s->bufferSize,
                                 MODE_STREAM);
 
-  jthrowable exception = jenv->ExceptionOccurred();
-  if (exception) {
-    LOG("%s fAILED  ", __PRETTY_FUNCTION__);
-    jenv->ExceptionDescribe();
-    jenv->ExceptionClear();
+  if (autoFrame.CheckForException() || obj == NULL) {
+    jenv->DeleteGlobalRef(s->at_class);
+    free(s);
+    return NULL;
+  }
+
+  jint state = jenv->CallIntMethod(obj, at.getstate);
+
+  if (autoFrame.CheckForException() || state == STATE_UNINITIALIZED) {
     jenv->DeleteGlobalRef(s->at_class);
     free(s);
     return NULL;
@@ -300,7 +319,7 @@ anp_audio_start(ANPAudioTrack* s)
   if (s == NULL || s->output_unit == NULL) {
     return;
   }
-  
+
   if (s->keepGoing) {
     // we are already playing.  Ignore.
     return;
@@ -310,7 +329,14 @@ anp_audio_start(ANPAudioTrack* s)
   if (!jenv)
     return;
 
+  mozilla::AutoLocalJNIFrame autoFrame(jenv, 0);
   jenv->CallVoidMethod(s->output_unit, at.play);
+
+  if (autoFrame.CheckForException()) {
+    jenv->DeleteGlobalRef(s->at_class);
+    free(s);
+    return;
+  }
 
   s->isStopped = false;
   s->keepGoing = true;
@@ -332,6 +358,8 @@ anp_audio_pause(ANPAudioTrack* s)
   JNIEnv *jenv = GetJNIForThread();
   if (!jenv)
     return;
+
+  mozilla::AutoLocalJNIFrame autoFrame(jenv, 0);
   jenv->CallVoidMethod(s->output_unit, at.pause);
 }
 
@@ -346,6 +374,8 @@ anp_audio_stop(ANPAudioTrack* s)
   JNIEnv *jenv = GetJNIForThread();
   if (!jenv)
     return;
+
+  mozilla::AutoLocalJNIFrame autoFrame(jenv, 0);
   jenv->CallVoidMethod(s->output_unit, at.stop);
 }
 

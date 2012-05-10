@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      span {
+        color: transparent; /* workaround for bug 617524 */
+        outline: 1px solid green;
+      }
+    </style>
+  </head>
+  <body>
+    <input>
+    <input readonly><span>hide me</span>
+    <input type=password>
+    <input type=password readonly><span>hide me</span>
+    <input type=email>
+    <input type=email readonly><span>hide me</span>
+    <textarea></textarea>
+    <textarea readonly></textarea><span>hide me</span>
+  </body>
+</html>

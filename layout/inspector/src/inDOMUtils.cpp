@@ -138,11 +138,11 @@ inDOMUtils::GetParentForNode(nsIDOMNode* aNode,
       if (bindingManager) {
         bparent = bindingManager->GetInsertionParent(content);
       }
-    
+
       parent = do_QueryInterface(bparent);
     }
   }
-  
+
   if (!parent) {
     // Ok, just get the normal DOM parent node
     aNode->GetParentNode(getter_AddRefs(parent));
@@ -262,7 +262,7 @@ inDOMUtils::IsInheritedProperty(const nsAString &aPropertyName, bool *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
 {
   NS_ENSURE_ARG_POINTER(aElement);
@@ -292,15 +292,15 @@ NS_IMETHODIMP
 inDOMUtils::SetContentState(nsIDOMElement *aElement, nsEventStates::InternalType aState)
 {
   NS_ENSURE_ARG_POINTER(aElement);
-  
+
   nsRefPtr<nsEventStateManager> esm = inLayoutUtils::GetEventStateManagerFor(aElement);
   if (esm) {
     nsCOMPtr<nsIContent> content;
     content = do_QueryInterface(aElement);
-  
+
     return esm->SetContentState(content, nsEventStates(aState));
   }
-  
+
   return NS_ERROR_FAILURE;
 }
 
@@ -398,14 +398,14 @@ NS_IMETHODIMP
 inDOMUtils::AddPseudoClassLock(nsIDOMElement *aElement,
                                const nsAString &aPseudoClass)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
-
   nsEventStates state = GetStatesForPseudoClass(aPseudoClass);
   if (state.IsEmpty()) {
     return NS_OK;
   }
 
   nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_ARG_POINTER(element);
+
   element->LockStyleStates(state);
 
   return NS_OK;
@@ -415,14 +415,14 @@ NS_IMETHODIMP
 inDOMUtils::RemovePseudoClassLock(nsIDOMElement *aElement,
                                   const nsAString &aPseudoClass)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
-
   nsEventStates state = GetStatesForPseudoClass(aPseudoClass);
   if (state.IsEmpty()) {
     return NS_OK;
   }
 
   nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_ARG_POINTER(element);
+
   element->UnlockStyleStates(state);
 
   return NS_OK;
@@ -433,8 +433,6 @@ inDOMUtils::HasPseudoClassLock(nsIDOMElement *aElement,
                                const nsAString &aPseudoClass,
                                bool *_retval)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
-
   nsEventStates state = GetStatesForPseudoClass(aPseudoClass);
   if (state.IsEmpty()) {
     *_retval = false;
@@ -442,6 +440,8 @@ inDOMUtils::HasPseudoClassLock(nsIDOMElement *aElement,
   }
 
   nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_ARG_POINTER(element);
+
   nsEventStates locks = element->LockedStyleStates();
 
   *_retval = locks.HasAllStates(state);
@@ -451,9 +451,9 @@ inDOMUtils::HasPseudoClassLock(nsIDOMElement *aElement,
 NS_IMETHODIMP
 inDOMUtils::ClearPseudoClassLocks(nsIDOMElement *aElement)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
-
   nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_ARG_POINTER(element);
+
   element->ClearStyleStateLocks();
 
   return NS_OK;

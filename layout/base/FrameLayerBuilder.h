@@ -347,6 +347,17 @@ public:
   nsIntPoint GetLastPaintOffset(ThebesLayer* aLayer);
 
   /**
+   * Return resolution and scroll offset of ThebesLayer content associated
+   * with aFrame's subtree.
+   * Returns true if some ThebesLayer was found.
+   * This just looks for the first ThebesLayer and returns its data. There
+   * could be other ThebesLayers with different resolution and offsets.
+   */
+  static bool GetThebesLayerResolutionForFrame(nsIFrame* aFrame,
+                                               double* aXRes, double* aYRes,
+                                               gfxPoint* aPoint);
+
+  /**
    * Clip represents the intersection of an optional rectangle with a
    * list of rounded rectangles.
    */

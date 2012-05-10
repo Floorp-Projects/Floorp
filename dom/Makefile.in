@@ -47,10 +47,10 @@ MODULE		= dom
 DIRS = \
   interfaces/base \
   interfaces/canvas \
-  interfaces/contacts \
   interfaces/core \
   interfaces/html \
   interfaces/events \
+  interfaces/contacts \
   interfaces/settings \
   interfaces/stylesheets \
   interfaces/sidebar \
