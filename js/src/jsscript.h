@@ -861,12 +861,11 @@ struct JSScript : public js::gc::Cell
     }
 
 
-#ifdef DEBUG
     bool varIsAliased(unsigned varSlot);
     bool formalIsAliased(unsigned argSlot);
     bool formalLivesInArgumentsObject(unsigned argSlot);
     bool formalLivesInCallObject(unsigned argSlot);
-#endif
+
   private:
     /*
      * Recompile with or without single-stepping support, as directed

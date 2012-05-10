@@ -882,6 +882,11 @@ struct Shape : public js::gc::Cell
 
     inline void markChildren(JSTracer *trc);
 
+    inline Shape *search(JSContext *cx, jsid id) {
+        Shape **_;
+        return search(cx, this, id, &_);
+    }
+
     /* For JIT usage */
     static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
 
