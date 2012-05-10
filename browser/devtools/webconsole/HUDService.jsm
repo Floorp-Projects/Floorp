@@ -1503,8 +1503,9 @@ HUD_SERVICE.prototype =
     let nBox = chromeDocument.defaultView.getNotificationBox(window);
     let hudId = "hud_" + nBox.id;
     let displayNode = chromeDocument.getElementById(hudId);
+    let hudFound = (hudId in this.hudReferences) && displayNode;
 
-    if (hudId in this.hudReferences && displayNode) {
+    if (hudFound) {
       if (!aAnimated) {
         this.storeHeight(hudId);
       }
@@ -1533,8 +1534,10 @@ HUD_SERVICE.prototype =
       }
     }
 
-    let id = WebConsoleUtils.supportsString(hudId);
-    Services.obs.notifyObservers(id, "web-console-destroyed", null);
+    if (hudFound) {
+      let id = WebConsoleUtils.supportsString(hudId);
+      Services.obs.notifyObservers(id, "web-console-destroyed", null);
+    }
   },
 
   /**
@@ -1854,8 +1857,6 @@ HUD_SERVICE.prototype =
     this.startHTTPObservation();
 
     HUDWindowObserver.init();
-    HUDConsoleObserver.init();
-    ConsoleAPIObserver.init();
   },
 
   /**
@@ -1880,8 +1881,6 @@ HUD_SERVICE.prototype =
     delete this.lastFinishedRequestCallback;
 
     HUDWindowObserver.uninit();
-    HUDConsoleObserver.uninit();
-    ConsoleAPIObserver.shutdown();
   },
 
   /**
@@ -1985,73 +1984,6 @@ HUD_SERVICE.prototype =
                                               SEVERITY_WARNING, message,
                                               aHUDId);
     ConsoleUtils.outputMessageNode(node, aHUDId);
-  },
-
-  /**
-   * Reports an error in the page source, either JavaScript or CSS.
-   *
-   * @param nsIScriptError aScriptError
-   *        The error message to report.
-   * @return void
-   */
-  reportPageError: function HS_reportPageError(aScriptError)
-  {
-    if (!aScriptError.outerWindowID) {
-      return;
-    }
-
-    let category;
-
-    switch (aScriptError.category) {
-      // We ignore chrome-originating errors as we only care about content.
-      case "XPConnect JavaScript":
-      case "component javascript":
-      case "chrome javascript":
-      case "chrome registration":
-      case "XBL":
-      case "XBL Prototype Handler":
-      case "XBL Content Sink":
-      case "xbl javascript":
-        return;
-
-      case "CSS Parser":
-      case "CSS Loader":
-        category = CATEGORY_CSS;
-        break;
-
-      default:
-        category = CATEGORY_JS;
-        break;
-    }
-
-    // Warnings and legacy strict errors become warnings; other types become
-    // errors.
-    let severity = SEVERITY_ERROR;
-    if ((aScriptError.flags & aScriptError.warningFlag) ||
-        (aScriptError.flags & aScriptError.strictFlag)) {
-      severity = SEVERITY_WARNING;
-    }
-
-    let window = WebConsoleUtils.getWindowByOuterId(aScriptError.outerWindowID);
-    if (window) {
-      let hudId = HUDService.getHudIdByWindow(window.top);
-      if (hudId) {
-        let outputNode = this.hudReferences[hudId].outputNode;
-        let chromeDocument = outputNode.ownerDocument;
-
-        let node = ConsoleUtils.createMessageNode(chromeDocument,
-                                                  category,
-                                                  severity,
-                                                  aScriptError.errorMessage,
-                                                  hudId,
-                                                  aScriptError.sourceName,
-                                                  aScriptError.lineNumber,
-                                                  null, null,
-                                                  aScriptError.timeStamp);
-
-        ConsoleUtils.outputMessageNode(node, hudId);
-      }
-    }
   },
 
   /**
@@ -3030,7 +2962,7 @@ HeadsUpDisplay.prototype = {
    * @type array
    */
   _messageListeners: ["JSTerm:EvalObject", "WebConsole:ConsoleAPI",
-                      "WebConsole:CachedMessages"],
+                      "WebConsole:CachedMessages", "WebConsole:PageError"],
 
   consolePanel: null,
 
@@ -3374,42 +3306,30 @@ HeadsUpDisplay.prototype = {
    * Display cached messages that may have been collected before the UI is
    * displayed.
    *
+   * @private
    * @param array aRemoteMessages
    *        Array of cached messages coming from the remote Web Console
    *        content instance.
    */
-  displayCachedConsoleMessages:
-  function HUD_displayCachedConsoleMessages(aRemoteMessages)
+  _displayCachedConsoleMessages:
+  function HUD__displayCachedConsoleMessages(aRemoteMessages)
   {
-    let innerWindowId = WebConsoleUtils.getInnerWindowId(this.contentWindow);
-
-    let messages = aRemoteMessages;
-
-    let errors = {};
-    Services.console.getMessageArray(errors, {});
-
-    // Filter the errors to find only those we should display.
-    let filteredErrors = (errors.value || []).filter(function(aError) {
-      return aError instanceof Ci.nsIScriptError &&
-             aError.innerWindowID == innerWindowId;
-    }, this);
-
-    messages.push.apply(messages, filteredErrors);
-    messages.sort(function(a, b) { return a.timeStamp - b.timeStamp; });
+    if (!aRemoteMessages.length) {
+      return;
+    }
 
     // Turn off scrolling for the moment.
     ConsoleUtils.scroll = false;
     this.outputNode.hidden = true;
 
-    // Display all messages.
-    messages.forEach(function(aMessage) {
-      if (aMessage instanceof Ci.nsIScriptError) {
-        HUDService.reportPageError(aMessage);
-      }
-      else {
-        // In this case the cached message is a console message generated
-        // by the ConsoleAPI, not an nsIScriptError
-        this.logConsoleAPIMessage(aMessage);
+    aRemoteMessages.forEach(function(aMessage) {
+      switch (aMessage._type) {
+        case "PageError":
+          this.reportPageError(aMessage);
+          break;
+        case "ConsoleAPI":
+          this.logConsoleAPIMessage(aMessage);
+          break;
       }
     }, this);
 
@@ -4073,6 +3993,64 @@ HeadsUpDisplay.prototype = {
     }
   },
 
+  /**
+   * Reports an error in the page source, either JavaScript or CSS.
+   *
+   * @param nsIScriptError aScriptError
+   *        The error message to report.
+   */
+  reportPageError: function HUD_reportPageError(aScriptError)
+  {
+    if (!aScriptError.outerWindowID) {
+      return;
+    }
+
+    let category;
+
+    switch (aScriptError.category) {
+      // We ignore chrome-originating errors as we only care about content.
+      case "XPConnect JavaScript":
+      case "component javascript":
+      case "chrome javascript":
+      case "chrome registration":
+      case "XBL":
+      case "XBL Prototype Handler":
+      case "XBL Content Sink":
+      case "xbl javascript":
+        return;
+
+      case "CSS Parser":
+      case "CSS Loader":
+        category = CATEGORY_CSS;
+        break;
+
+      default:
+        category = CATEGORY_JS;
+        break;
+    }
+
+    // Warnings and legacy strict errors become warnings; other types become
+    // errors.
+    let severity = SEVERITY_ERROR;
+    if ((aScriptError.flags & aScriptError.warningFlag) ||
+        (aScriptError.flags & aScriptError.strictFlag)) {
+      severity = SEVERITY_WARNING;
+    }
+
+    let node = ConsoleUtils.createMessageNode(this.chromeDocument,
+                                              category,
+                                              severity,
+                                              aScriptError.errorMessage,
+                                              this.hudId,
+                                              aScriptError.sourceName,
+                                              aScriptError.lineNumber,
+                                              null,
+                                              null,
+                                              aScriptError.timeStamp);
+
+    ConsoleUtils.outputMessageNode(node, this.hudId);
+  },
+
   ERRORS: {
     HUD_BOX_DOES_NOT_EXIST: "Heads Up Display does not exist",
     TAB_ID_REQUIRED: "Tab DOM ID is required",
@@ -4096,8 +4074,8 @@ HeadsUpDisplay.prototype = {
 
     let message = {
       hudId: this.hudId,
-      features: ["ConsoleAPI", "JSTerm"],
-      cachedMessages: ["ConsoleAPI"],
+      features: ["ConsoleAPI", "JSTerm", "PageError"],
+      cachedMessages: ["ConsoleAPI", "PageError"],
     };
     this.sendMessageToContent("WebConsole:Init", message);
   },
@@ -4124,8 +4102,11 @@ HeadsUpDisplay.prototype = {
       case "WebConsole:ConsoleAPI":
         this.logConsoleAPIMessage(aMessage.json);
         break;
+      case "WebConsole:PageError":
+        this.reportPageError(aMessage.json.pageError);
+        break;
       case "WebConsole:CachedMessages":
-        this.displayCachedConsoleMessages(aMessage.json.messages);
+        this._displayCachedConsoleMessages(aMessage.json.messages);
         this._onInitComplete();
         break;
     }
@@ -4275,33 +4256,6 @@ HeadsUpDisplay.prototype = {
     this.closeButton.removeEventListener("command",
       this.closeButtonOnCommand, false);
   },
-};
-
-
-//////////////////////////////////////////////////////////////////////////////
-// ConsoleAPIObserver
-//////////////////////////////////////////////////////////////////////////////
-
-let ConsoleAPIObserver = {
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-
-  init: function CAO_init()
-  {
-    Services.obs.addObserver(this, "quit-application-granted", false);
-  },
-
-  observe: function CAO_observe(aMessage, aTopic, aData)
-  {
-    if (aTopic == "quit-application-granted") {
-      HUDService.shutdown();
-    }
-  },
-
-  shutdown: function CAO_shutdown()
-  {
-    Services.obs.removeObserver(this, "quit-application-granted");
-  }
 };
 
 /**
@@ -4853,6 +4807,7 @@ function JSTerm(aContext, aParentNode, aMixin, aConsole)
   }
   this.hudId = node.getAttribute("id");
 
+  this.history = [];
   this.historyIndex = 0;
   this.historyPlaceHolder = 0;  // this.history.length;
   this.log = LogFactory("*** JSTerm:");
@@ -5474,7 +5429,7 @@ JSTerm.prototype = {
            node.selectionStart == 0 && !multiline;
   },
 
-  history: [],
+  history: null,
 
   // Stores the data for the last completion.
   lastCompletion: null,
@@ -6485,14 +6440,12 @@ ConsoleEntry.prototype = {
 //////////////////////////////////////////////////////////////////////////
 
 HUDWindowObserver = {
-  QueryInterface: XPCOMUtils.generateQI(
-    [Ci.nsIObserver,]
-  ),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   init: function HWO_init()
   {
-    Services.obs.addObserver(this, "xpcom-shutdown", false);
     Services.obs.addObserver(this, "content-document-global-created", false);
+    Services.obs.addObserver(this, "quit-application-granted", false);
   },
 
   observe: function HWO_observe(aSubject, aTopic, aData)
@@ -6500,16 +6453,15 @@ HUDWindowObserver = {
     if (aTopic == "content-document-global-created") {
       HUDService.windowInitializer(aSubject);
     }
-    else if (aTopic == "xpcom-shutdown") {
-      this.uninit();
+    else if (aTopic == "quit-application-granted") {
+      HUDService.shutdown();
     }
   },
 
   uninit: function HWO_uninit()
   {
     Services.obs.removeObserver(this, "content-document-global-created");
-    Services.obs.removeObserver(this, "xpcom-shutdown");
-    this.initialConsoleCreated = false;
+    Services.obs.removeObserver(this, "quit-application-granted");
   },
 
 };
@@ -6600,44 +6552,6 @@ CommandController.prototype = {
       case "cmd_selectAll":
         this.selectAll(outputNode);
         break;
-    }
-  }
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// HUDConsoleObserver
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * HUDConsoleObserver: Observes nsIConsoleService for global consoleMessages,
- * if a message originates inside a contentWindow we are tracking,
- * then route that message to the HUDService for logging.
- */
-
-HUDConsoleObserver = {
-  QueryInterface: XPCOMUtils.generateQI(
-    [Ci.nsIObserver]
-  ),
-
-  init: function HCO_init()
-  {
-    Services.console.registerListener(this);
-    Services.obs.addObserver(this, "quit-application-granted", false);
-  },
-
-  uninit: function HCO_uninit()
-  {
-    Services.console.unregisterListener(this);
-    Services.obs.removeObserver(this, "quit-application-granted");
-  },
-
-  observe: function HCO_observe(aSubject, aTopic, aData)
-  {
-    if (aTopic == "quit-application-granted") {
-      this.uninit();
-    }
-    else if (aSubject instanceof Ci.nsIScriptError) {
-      HUDService.reportPageError(aSubject);
     }
   }
 };

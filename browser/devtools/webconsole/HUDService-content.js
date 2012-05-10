@@ -7,31 +7,25 @@
 "use strict";
 
 // This code is appended to the browser content script.
-(function(_global) {
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+(function _HUDServiceContent() {
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+let Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+let tempScope = {};
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", tempScope);
+Cu.import("resource://gre/modules/Services.jsm", tempScope);
+Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm", tempScope);
+Cu.import("resource:///modules/WebConsoleUtils.jsm", tempScope);
 
-XPCOMUtils.defineLazyGetter(_global, "gConsoleStorage", function () {
-  let obj = {};
-  Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm", obj);
-  return obj.ConsoleAPIStorage;
-});
+let XPCOMUtils = tempScope.XPCOMUtils;
+let Services = tempScope.Services;
+let gConsoleStorage = tempScope.ConsoleAPIStorage;
+let WebConsoleUtils = tempScope.WebConsoleUtils;
+let l10n = WebConsoleUtils.l10n;
+tempScope = null;
 
-XPCOMUtils.defineLazyGetter(_global, "WebConsoleUtils", function () {
-  let obj = {};
-  Cu.import("resource:///modules/WebConsoleUtils.jsm", obj);
-  return obj.WebConsoleUtils;
-});
-
-XPCOMUtils.defineLazyGetter(_global, "l10n", function () {
-  return WebConsoleUtils.l10n;
-});
-
-_global = null;
+let _alive = true; // Track if this content script should still be alive.
 
 /**
  * The Web Console content instance manager.
@@ -63,6 +57,26 @@ let Manager = {
     this._messageListeners.forEach(function(aName) {
       addMessageListener(aName, this);
     }, this);
+
+    // Need to track the owner XUL window to listen to the unload and TabClose
+    // events, to avoid memory leaks.
+    let xulWindow = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShell)
+                    .chromeEventHandler.ownerDocument.defaultView;
+
+    xulWindow.addEventListener("unload", this._onXULWindowClose, false);
+
+    let tabContainer = xulWindow.gBrowser.tabContainer;
+    tabContainer.addEventListener("TabClose", this._onTabClose, false);
+
+    // Need to track private browsing change and quit application notifications,
+    // again to avoid memory leaks. The Web Console main process cannot notify
+    // this content script when the XUL window close, tab close, private
+    // browsing change and quit application events happen, so we must call
+    // Manager.destroy() on our own.
+    Services.obs.addObserver(this, "private-browsing-change-granted", false);
+    Services.obs.addObserver(this, "quit-application-granted", false);
   },
 
   /**
@@ -71,6 +85,10 @@ let Manager = {
    */
   receiveMessage: function Manager_receiveMessage(aMessage)
   {
+    if (!_alive) {
+      return;
+    }
+
     if (!aMessage.json || (aMessage.name != "WebConsole:Init" &&
                            aMessage.json.hudId != this.hudId)) {
       Cu.reportError("Web Console content script: received message " +
@@ -100,6 +118,22 @@ let Manager = {
   },
 
   /**
+   * Observe notifications from the nsIObserverService.
+   *
+   * @param mixed aSubject
+   * @param string aTopic
+   * @param mixed aData
+   */
+  observe: function Manager_observe(aSubject, aTopic, aData)
+  {
+    if (_alive && (aTopic == "quit-application-granted" ||
+        (aTopic == "private-browsing-change-granted" &&
+         (aData == "enter" || aData == "exit")))) {
+      this.destroy();
+    }
+  },
+
+  /**
    * The manager initialization code. This method is called when the Web Console
    * remote process initializes the content process (this code!).
    *
@@ -110,9 +144,11 @@ let Manager = {
    *        - features - (optional) array of features you want to enable from
    *        the start. For each feature you enable you can pass feature-specific
    *        options in a property on the JSON object you send with the same name
-   *        as the feature.
+   *        as the feature. See this.enableFeature() for the list of available
+   *        features.
    *        - cachedMessages - (optional) an array of cached messages you want
-   *        to receive: only "ConsoleAPI" is available for now.
+   *        to receive. See this._sendCachedMessages() for the list of available
+   *        message types.
    *
    *        Example message:
    *        {
@@ -203,6 +239,8 @@ let Manager = {
    *    - JSTerm - a JavaScript "terminal" which allows code execution.
    *    - ConsoleAPI - support for routing the window.console API to the remote
    *    process.
+   *    - PageError - route all the nsIScriptErrors from the nsIConsoleService
+   *    to the remote process.
    *
    * @param string aFeature
    *        One of the supported features: JSTerm, ConsoleAPI.
@@ -223,6 +261,9 @@ let Manager = {
       case "ConsoleAPI":
         ConsoleAPIObserver.init(aMessage);
         break;
+      case "PageError":
+        ConsoleListener.init(aMessage);
+        break;
       default:
         Cu.reportError("Web Console content: unknown feature " + aFeature);
         break;
@@ -236,7 +277,8 @@ let Manager = {
    *
    * @see this.enableFeature
    * @param string aFeature
-   *        One of the supported features: JSTerm, ConsoleAPI.
+   *        One of the supported features - see this.enableFeature() for the
+   *        list of supported features.
    */
   disableFeature: function Manager_disableFeature(aFeature)
   {
@@ -253,6 +295,9 @@ let Manager = {
       case "ConsoleAPI":
         ConsoleAPIObserver.destroy();
         break;
+      case "PageError":
+        ConsoleListener.destroy();
+        break;
       default:
         Cu.reportError("Web Console content: unknown feature " + aFeature);
         break;
@@ -264,17 +309,22 @@ let Manager = {
    *
    * @private
    * @param array aMessageTypes
-   *        An array that lists which kinds of messages you want. Currently only
-   *        "ConsoleAPI" messages are supported.
+   *        An array that lists which kinds of messages you want. Supported
+   *        message types: "ConsoleAPI" and "PageError".
    */
   _sendCachedMessages: function Manager__sendCachedMessages(aMessageTypes)
   {
     let messages = [];
 
-    switch (aMessageTypes.shift()) {
-      case "ConsoleAPI":
-        messages.push.apply(messages, ConsoleAPIObserver.getCachedMessages());
-        break;
+    while (aMessageTypes.length > 0) {
+      switch (aMessageTypes.shift()) {
+        case "ConsoleAPI":
+          messages.push.apply(messages, ConsoleAPIObserver.getCachedMessages());
+          break;
+        case "PageError":
+          messages.push.apply(messages, ConsoleListener.getCachedMessages());
+          break;
+      }
     }
 
     messages.sort(function(a, b) { return a.timeStamp - b.timeStamp; });
@@ -283,10 +333,48 @@ let Manager = {
   },
 
   /**
+   * The XUL window "unload" event handler which destroys this content script
+   * instance.
+   * @private
+   */
+  _onXULWindowClose: function Manager__onXULWindowClose()
+  {
+    if (_alive) {
+      Manager.destroy();
+    }
+  },
+
+  /**
+   * The "TabClose" event handler which destroys this content script
+   * instance, if needed.
+   * @private
+   */
+  _onTabClose: function Manager__onTabClose(aEvent)
+  {
+    let tab = aEvent.target;
+    if (_alive && tab.linkedBrowser.contentWindow === Manager.window) {
+      Manager.destroy();
+    }
+  },
+
+  /**
    * Destroy the Web Console content script instance.
    */
   destroy: function Manager_destroy()
   {
+    Services.obs.removeObserver(this, "private-browsing-change-granted");
+    Services.obs.removeObserver(this, "quit-application-granted");
+
+    _alive = false;
+    let xulWindow = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShell)
+                    .chromeEventHandler.ownerDocument.defaultView;
+
+    xulWindow.removeEventListener("unload", this._onXULWindowClose, false);
+    let tabContainer = xulWindow.gBrowser.tabContainer;
+    tabContainer.removeEventListener("TabClose", this._onTabClose, false);
+
     this._messageListeners.forEach(function(aName) {
       removeMessageListener(aName, this);
     }, this);
@@ -295,7 +383,9 @@ let Manager = {
 
     this.hudId = null;
     this._messageHandlers = null;
-    Manager = ConsoleAPIObserver = JSTerm = null;
+    Manager = ConsoleAPIObserver = JSTerm = ConsoleListener = null;
+    Cc = Ci = Cu = XPCOMUtils = Services = gConsoleStorage =
+      WebConsoleUtils = l10n = null;
   },
 };
 
@@ -447,7 +537,7 @@ let ConsoleAPIObserver = {
    */
   observe: function CAO_observe(aMessage, aTopic)
   {
-    if (!aMessage || aTopic != "console-api-log-event") {
+    if (!_alive || !aMessage || aTopic != "console-api-log-event") {
       return;
     }
 
@@ -578,11 +668,7 @@ let ConsoleAPIObserver = {
     let messages = gConsoleStorage.getEvents(innerWindowId);
 
     let result = messages.map(function(aMessage) {
-      let remoteMessage = {
-        hudId: Manager.hudId,
-        id: Manager.sequenceId,
-        type: "ConsoleAPI",
-      };
+      let remoteMessage = { _type: "ConsoleAPI" };
       this._prepareApiMessageForRemote(aMessage.wrappedJSObject, remoteMessage);
       return remoteMessage;
     }, this);
@@ -609,5 +695,96 @@ let ConsoleAPIObserver = {
   },
 };
 
+/**
+ * The nsIConsoleService listener. This is used to send all the page errors
+ * (JavaScript, CSS and more) to the remote Web Console instance.
+ */
+let ConsoleListener = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener]),
+
+  /**
+   * Initialize the nsIConsoleService listener.
+   */
+  init: function CL_init()
+  {
+    Services.console.registerListener(this);
+  },
+
+  /**
+   * The nsIConsoleService observer. This method takes all the script error
+   * messages belonging to the current window and sends them to the remote Web
+   * Console instance.
+   *
+   * @param nsIScriptError aScriptError
+   *        The script error object coming from the nsIConsoleService.
+   */
+  observe: function CL_observe(aScriptError)
+  {
+    if (!_alive || !(aScriptError instanceof Ci.nsIScriptError) ||
+        !aScriptError.outerWindowID) {
+      return;
+    }
+
+    switch (aScriptError.category) {
+      // We ignore chrome-originating errors as we only care about content.
+      case "XPConnect JavaScript":
+      case "component javascript":
+      case "chrome javascript":
+      case "chrome registration":
+      case "XBL":
+      case "XBL Prototype Handler":
+      case "XBL Content Sink":
+      case "xbl javascript":
+        return;
+    }
+
+    let errorWindow =
+      WebConsoleUtils.getWindowByOuterId(aScriptError.outerWindowID,
+                                         Manager.window);
+    if (!errorWindow || errorWindow.top != Manager.window) {
+      return;
+    }
+
+    Manager.sendMessage("WebConsole:PageError", { pageError: aScriptError });
+  },
+
+  /**
+   * Get the cached page errors for the current inner window.
+   *
+   * @return array
+   *         The array of cached messages. Each element is an nsIScriptError
+   *         with an added _type property so the remote Web Console instance can
+   *         tell the difference between various types of cached messages.
+   */
+  getCachedMessages: function CL_getCachedMessages()
+  {
+    let innerWindowId = WebConsoleUtils.getInnerWindowId(Manager.window);
+    let result = [];
+    let errors = {};
+    Services.console.getMessageArray(errors, {});
+
+    (errors.value || []).forEach(function(aError) {
+      if (!(aError instanceof Ci.nsIScriptError) ||
+          aError.innerWindowID != innerWindowId) {
+        return;
+      }
+
+      let remoteMessage = WebConsoleUtils.cloneObject(aError);
+      remoteMessage._type = "PageError";
+      result.push(remoteMessage);
+    });
+
+    return result;
+  },
+
+  /**
+   * Remove the nsIConsoleService listener.
+   */
+  destroy: function CL_destroy()
+  {
+    Services.console.unregisterListener(this);
+  },
+};
+
 Manager.init();
-})(this);
+})();

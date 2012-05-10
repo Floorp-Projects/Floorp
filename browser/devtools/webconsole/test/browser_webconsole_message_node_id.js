@@ -44,7 +44,7 @@ function test() {
 
 function onLoad() {
   browser.removeEventListener("DOMContentLoaded", onLoad, false);
-  openConsole(function(hud) {
+  openConsole(null, function(hud) {
     content.console.log("a log message");
 
     waitForSuccess({

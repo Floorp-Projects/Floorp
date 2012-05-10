@@ -46,7 +46,7 @@ function test() {
 function tabLoaded() {
   browser.removeEventListener("load", tabLoaded, true);
 
-  openConsole(function() {
+  openConsole(null, function() {
     browser.addEventListener("load", tabReloaded, true);
     content.location.reload();
   });
