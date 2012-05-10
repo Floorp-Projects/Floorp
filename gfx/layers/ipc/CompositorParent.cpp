@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* vim: set sw=2 ts=2 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -71,7 +71,6 @@ CompositorParent::CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop,
   , mThreadID(aThreadID)
   , mRenderToEGLSurface(aRenderToEGLSurface)
   , mEGLSurfaceSize(aSurfaceWidth, aSurfaceHeight)
-  , mPauseCompositionMonitor("PauseCompositionMonitor")
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -147,9 +146,6 @@ CompositorParent::PauseComposition()
 {
   NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "PauseComposition() can only be called on the compositor thread");
-
-  mozilla::MonitorAutoLock lock(mPauseCompositionMonitor);
-
   if (!mPaused) {
     mPaused = true;
 
@@ -157,9 +153,6 @@ CompositorParent::PauseComposition()
     static_cast<LayerManagerOGL*>(mLayerManager.get())->gl()->ReleaseSurface();
 #endif
   }
-
-  // if anyone's waiting to make sure that composition really got paused, tell them
-  lock.NotifyAll();
 }
 
 void
@@ -191,21 +184,12 @@ CompositorParent::ResumeCompositionAndResize(int width, int height)
   ResumeComposition();
 }
 
-/*
- * This will execute a pause synchronously, waiting to make sure that the compositor
- * really is paused.
- */
 void
 CompositorParent::SchedulePauseOnCompositorThread()
 {
-  mozilla::MonitorAutoLock lock(mPauseCompositionMonitor);
-
   CancelableTask *pauseTask = NewRunnableMethod(this,
                                                 &CompositorParent::PauseComposition);
   CompositorLoop()->PostTask(FROM_HERE, pauseTask);
-
-  // Wait until the pause has actually been processed by the compositor thread
-  lock.Wait();
 }
 
 void
