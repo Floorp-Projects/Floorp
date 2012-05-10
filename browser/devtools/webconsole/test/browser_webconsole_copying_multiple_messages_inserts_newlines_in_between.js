@@ -20,7 +20,7 @@ function test()
 
 function onLoad() {
   browser.removeEventListener("DOMContentLoaded", onLoad, false);
-  openConsole(testNewlines);
+  openConsole(null, testNewlines);
 }
 
 function testNewlines(aHud) {

@@ -14,7 +14,7 @@ function test() {
          "object with group methods");
   browser.addEventListener("load", function onLoad(aEvent) {
     browser.removeEventListener(aEvent.type, onLoad, true);
-    openConsole(function(aHud) {
+    openConsole(null, function(aHud) {
       hud = aHud;
       testDriver = testGen();
       testNext();

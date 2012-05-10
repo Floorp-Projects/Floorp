@@ -13,17 +13,17 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 let newTabIsOpen = false;
 
 function tabLoaded(aEvent) {
-  gBrowser.selectedBrowser.removeEventListener(aEvent.type, arguments.callee, true);
+  gBrowser.selectedBrowser.removeEventListener(aEvent.type, tabLoaded, true);
 
-  HUDService.activateHUDForContext(gBrowser.selectedTab);
-
-  gBrowser.selectedBrowser.addEventListener("load", tabReloaded, true);
-  expectUncaughtException();
-  content.location.reload();
+  openConsole(gBrowser.selectedTab, function() {
+    gBrowser.selectedBrowser.addEventListener("load", tabReloaded, true);
+    expectUncaughtException();
+    content.location.reload();
+  });
 }
 
 function tabReloaded(aEvent) {
-  gBrowser.selectedBrowser.removeEventListener(aEvent.type, arguments.callee, true);
+  gBrowser.selectedBrowser.removeEventListener(aEvent.type, tabReloaded, true);
 
   let hudId = HUDService.getHudIdByWindow(content);
   let HUD = HUDService.hudReferences[hudId];
@@ -34,24 +34,22 @@ function tabReloaded(aEvent) {
 
   executeSoon(function() {
     if (newTabIsOpen) {
-      testEnd();
+      executeSoon(finishTest);
       return;
     }
 
-    let newTab = gBrowser.addTab();
-    gBrowser.removeCurrentTab();
-    gBrowser.selectedTab = newTab;
+    closeConsole(gBrowser.selectedTab, function() {
+      gBrowser.removeCurrentTab();
 
-    newTabIsOpen = true;
-    gBrowser.selectedBrowser.addEventListener("load", tabLoaded, true);
-    expectUncaughtException();
-    content.location = TEST_URI;
+      let newTab = gBrowser.addTab();
+      gBrowser.selectedTab = newTab;
+
+      newTabIsOpen = true;
+      gBrowser.selectedBrowser.addEventListener("load", tabLoaded, true);
+      expectUncaughtException();
+      content.location = TEST_URI;
+    });
   });
-}
-
-function testEnd() {
-  gBrowser.removeCurrentTab();
-  executeSoon(finishTest);
 }
 
 function test() {

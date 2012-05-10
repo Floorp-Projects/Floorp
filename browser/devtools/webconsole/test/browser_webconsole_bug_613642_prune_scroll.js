@@ -92,7 +92,7 @@ function test() {
   browser.addEventListener("load", function tabLoad(aEvent) {
     browser.removeEventListener(aEvent.type, tabLoad, true);
 
-    openConsole(function(aHud) {
+    openConsole(null, function(aHud) {
       hud = aHud;
       testDriver = testGen();
       testDriver.next();

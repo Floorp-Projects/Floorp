@@ -48,7 +48,7 @@ function test() {
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
-    openConsole(consoleOpened);
+    openConsole(null, consoleOpened);
   }, true);
 }
 

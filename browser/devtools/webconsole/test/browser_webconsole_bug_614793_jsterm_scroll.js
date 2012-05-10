@@ -47,7 +47,7 @@ function test() {
   addTab("data:text/html;charset=utf-8,Web Console test for bug 614793: jsterm result scroll");
   browser.addEventListener("load", function onLoad(aEvent) {
     browser.removeEventListener(aEvent.type, onLoad, true);
-    openConsole(consoleOpened);
+    openConsole(null, consoleOpened);
   }, true);
 }
 
