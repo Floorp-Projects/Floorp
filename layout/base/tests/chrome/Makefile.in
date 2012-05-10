@@ -75,6 +75,7 @@ _CHROME_FILES = \
 	test_printpreview_bug482976.xul \
 	     printpreview_bug482976_helper.xul \
 	test_transformed_scrolling_repaints.html \
+	test_transformed_scrolling_repaints_2.html \
     $(NULL)
 
 libs:: $(_CHROME_FILES)
