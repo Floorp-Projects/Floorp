@@ -11,13 +11,8 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-own-console.html";
 
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
-});
-
 function test()
 {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
   browser.addEventListener("load", function() {
     browser.removeEventListener("load", arguments.callee, true);
