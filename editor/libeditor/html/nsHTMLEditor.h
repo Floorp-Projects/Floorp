@@ -765,6 +765,9 @@ protected:
                                    bool aDeleteSelection,
                                    bool aTrustedInput);
 
+  nsresult ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, PRInt32* aOffset,
+                      nsIAtom* aProperty, const nsAString* aAttribute);
+
 // Data members
 protected:
 
