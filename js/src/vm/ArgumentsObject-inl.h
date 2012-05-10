@@ -74,7 +74,7 @@ ArgumentsObject::markElementDeleted(uint32_t i)
     SetBitArrayElement(data()->deletedBits, initialLength(), i);
 }
 
-inline const js::Value &
+inline const Value &
 ArgumentsObject::element(uint32_t i) const
 {
     JS_ASSERT(!isElementDeleted(i));
