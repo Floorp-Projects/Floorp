@@ -160,6 +160,9 @@ class CallObject : public ScopeObject
 
     /* Return whether this environment contains 'name' and, if so, its value. */
     bool containsVarOrArg(PropertyName *name, Value *vp, JSContext *cx);
+
+    /* Copy in all the unaliased formals and locals. */
+    void copyUnaliasedValues(StackFrame *fp);
 };
 
 class DeclEnvObject : public ScopeObject
@@ -218,7 +221,8 @@ class BlockObject : public NestedScopeObject
 
   protected:
     /* Blocks contain an object slot for each slot i: 0 <= i < slotCount. */
-    inline HeapSlot &slotValue(unsigned i);
+    inline const Value &slotValue(unsigned i);
+    inline void setSlotValue(unsigned i, const Value &v);
 };
 
 class StaticBlockObject : public BlockObject
@@ -275,10 +279,14 @@ class ClonedBlockObject : public BlockObject
     void put(StackFrame *fp);
 
     /* Assuming 'put' has been called, return the value of the ith let var. */
-    const Value &closedSlot(unsigned i);
+    const Value &var(unsigned i);
+    void setVar(unsigned i, const Value &v);
 
     /* Return whether this environment contains 'name' and, if so, its value. */
     bool containsVar(PropertyName *name, Value *vp, JSContext *cx);
+
+    /* Copy in all the unaliased formals and locals. */
+    void copyUnaliasedValues(StackFrame *fp);
 };
 
 template<XDRMode mode>

@@ -1321,12 +1321,6 @@ struct JSContext : js::ContextFriendFields
      * stack iteration; defaults to true.
      */
     bool stackIterAssertionEnabled;
-
-    /*
-     * When greather than zero, it is ok to accessed non-aliased fields of
-     * ScopeObjects because the accesses are coming from the DebugScopeProxy.
-     */
-    unsigned okToAccessUnaliasedBindings;
 #endif
 
     /*
@@ -1362,23 +1356,6 @@ struct JSContext : js::ContextFriendFields
 }; /* struct JSContext */
 
 namespace js {
-
-class AutoAllowUnaliasedVarAccess
-{
-    JSContext *cx;
-  public:
-    AutoAllowUnaliasedVarAccess(JSContext *cx) : cx(cx) {
-#ifdef DEBUG
-        cx->okToAccessUnaliasedBindings++;
-#endif
-    }
-    ~AutoAllowUnaliasedVarAccess() {
-#ifdef DEBUG
-        JS_ASSERT(cx->okToAccessUnaliasedBindings);
-        cx->okToAccessUnaliasedBindings--;
-#endif
-    }
-};
 
 struct AutoResolving {
   public:
