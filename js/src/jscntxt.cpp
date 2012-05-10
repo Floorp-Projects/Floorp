@@ -996,7 +996,6 @@ JSContext::JSContext(JSRuntime *rt)
     enumerators(NULL),
 #ifdef DEBUG
     stackIterAssertionEnabled(true),
-    okToAccessUnaliasedBindings(0),
 #endif
     activeCompilations(0)
 {
