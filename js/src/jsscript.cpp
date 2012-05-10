@@ -1374,8 +1374,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         bool singleton =
             cx->typeInferenceEnabled() &&
             bce->parent &&
-            bce->parent->compiling() &&
-            bce->parent->asBytecodeEmitter()->checkSingletonContext();
+            bce->parentBCE()->checkSingletonContext();
 
         if (!script->typeSetFunction(cx, fun, singleton))
             return NULL;
