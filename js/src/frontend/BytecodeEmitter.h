@@ -167,44 +167,35 @@ struct StmtInfo {
 
 JS_ENUM_HEADER(TreeContextFlags, uint32_t)
 {
-    /*
-     * There are two parsing modes.
-     * - If we are parsing only to get the parse tree, all TreeContexts used
-     *   are truly TreeContexts, and this flag is clear for each of them.
-     * - If we are parsing to do bytecode compilation, all TreeContexts are
-     *   actually BytecodeEmitters and this flag is set for each of them.
-     */
-    TCF_COMPILING =                            0x1,
-
     /* parsing inside function body */
-    TCF_IN_FUNCTION =                          0x2,
+    TCF_IN_FUNCTION =                          0x1,
 
     /* function has 'return expr;' */
-    TCF_RETURN_EXPR =                          0x4,
+    TCF_RETURN_EXPR =                          0x2,
 
     /* function has 'return;' */
-    TCF_RETURN_VOID =                          0x8,
+    TCF_RETURN_VOID =                          0x4,
 
     /* parsing init expr of for; exclude 'in' */
-    TCF_IN_FOR_INIT =                         0x10,
+    TCF_IN_FOR_INIT =                          0x8,
 
     /* function needs Call object per call */
-    TCF_FUN_HEAVYWEIGHT =                     0x20,
+    TCF_FUN_HEAVYWEIGHT =                     0x10,
 
     /* parsed yield statement in function */
-    TCF_FUN_IS_GENERATOR =                    0x40,
+    TCF_FUN_IS_GENERATOR =                    0x20,
 
     /* block contains a function statement */
-    TCF_HAS_FUNCTION_STMT =                   0x80,
+    TCF_HAS_FUNCTION_STMT =                   0x40,
 
     /* flag lambda from generator expression */
-    TCF_GENEXP_LAMBDA =                      0x100,
+    TCF_GENEXP_LAMBDA =                       0x80,
 
     /* script can optimize name references based on scope chain */
-    TCF_COMPILE_N_GO =                       0x200,
+    TCF_COMPILE_N_GO =                       0x100,
 
     /* API caller does not want result value from global script */
-    TCF_NO_SCRIPT_RVAL =                     0x400,
+    TCF_NO_SCRIPT_RVAL =                     0x200,
 
     /*
      * Set when parsing a declaration-like destructuring pattern.  This flag
@@ -217,7 +208,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
      * assignment-like and declaration-like destructuring patterns, and why
      * they need to be treated differently.
      */
-    TCF_DECL_DESTRUCTURING =                 0x800,
+    TCF_DECL_DESTRUCTURING =                 0x400,
 
     /*
      * This function/global/eval code body contained a Use Strict Directive.
@@ -225,7 +216,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
      * See also TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and
      * JSREPORT_STRICT_ERROR.
      */
-    TCF_STRICT_MODE_CODE =                  0x1000,
+    TCF_STRICT_MODE_CODE =                   0x800,
 
     /*
      * The (static) bindings of this script need to support dynamic name
@@ -249,22 +240,22 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
      * more general "is this argument aliased" question, script->needsArgsObj
      * should be tested (see JSScript::argIsAlised).
      */
-    TCF_BINDINGS_ACCESSED_DYNAMICALLY =     0x2000,
+    TCF_BINDINGS_ACCESSED_DYNAMICALLY =     0x1000,
 
     /* Compiling an eval() script. */
-    TCF_COMPILE_FOR_EVAL =                  0x4000,
+    TCF_COMPILE_FOR_EVAL =                  0x2000,
 
     /*
      * The function or a function that encloses it may define new local names
      * at runtime through means other than calling eval.
      */
-    TCF_FUN_MIGHT_ALIAS_LOCALS =            0x8000,
+    TCF_FUN_MIGHT_ALIAS_LOCALS =            0x4000,
 
     /* The script contains singleton initialiser JSOP_OBJECT. */
-    TCF_HAS_SINGLETONS =                   0x10000,
+    TCF_HAS_SINGLETONS =                    0x8000,
 
     /* Some enclosing scope is a with-statement or E4X filter-expression. */
-    TCF_IN_WITH =                          0x20000,
+    TCF_IN_WITH =                          0x10000,
 
     /*
      * This function does something that can extend the set of bindings in its
@@ -274,10 +265,10 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
      * This flag is *not* inherited by enclosed or enclosing functions; it
      * applies only to the function in whose flags it appears.
      */
-    TCF_FUN_EXTENSIBLE_SCOPE =             0x40000,
+    TCF_FUN_EXTENSIBLE_SCOPE =             0x20000,
 
     /* The caller is JS_Compile*Script*. */
-    TCF_NEED_SCRIPT_GLOBAL =               0x80000,
+    TCF_NEED_SCRIPT_GLOBAL =               0x40000,
 
     /*
      * Technically, every function has a binding named 'arguments'. Internally,
@@ -301,7 +292,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
      * have no special semantics: the initial value is unconditionally the
      * actual argument (or undefined if nactual < nformal).
      */
-    TCF_ARGUMENTS_HAS_LOCAL_BINDING =     0x100000,
+    TCF_ARGUMENTS_HAS_LOCAL_BINDING =      0x80000,
 
     /*
      * In many cases where 'arguments' has a local binding (as described above)
@@ -313,7 +304,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
      * be unsound in several cases. The frontend filters out such cases by
      * setting this flag which eagerly sets script->needsArgsObj to true.
      */
-    TCF_DEFINITELY_NEEDS_ARGS_OBJ =       0x200000
+    TCF_DEFINITELY_NEEDS_ARGS_OBJ =       0x100000
 
 } JS_ENUM_FOOTER(TreeContextFlags);
 
@@ -382,13 +373,7 @@ struct TreeContext {                /* tree context for semantic checks */
 
     OwnedAtomDefnMapPtr lexdeps;    /* unresolved lexical name dependencies */
 
-    /*
-     * Enclosing function or global context.  If |this| is truly a TreeContext,
-     * then |parent| will also be a TreeContext.  If |this| is a
-     * BytecodeEmitter, then |parent| will also be a BytecodeEmitter.  See the
-     * comment on TCF_COMPILING.
-     */
-    TreeContext     *parent;
+    TreeContext     *parent;        /* Enclosing function or global context.  */
 
     unsigned        staticLevel;    /* static compilation unit nesting level */
 
@@ -451,9 +436,6 @@ struct TreeContext {                /* tree context for semantic checks */
 
     bool compileAndGo() const { return flags & TCF_COMPILE_N_GO; }
     bool inFunction() const { return flags & TCF_IN_FUNCTION; }
-
-    bool compiling() const { return flags & TCF_COMPILING; }
-    inline BytecodeEmitter *asBytecodeEmitter();
 
     void noteBindingsAccessedDynamically() {
         flags |= TCF_BINDINGS_ACCESSED_DYNAMICALLY;
@@ -609,6 +591,13 @@ struct BytecodeEmitter : public TreeContext
         return parser->context;
     }
 
+    // This is a down-cast.  It's necessary and safe -- although
+    // TreeContext::parent is a |TreeContext *|, a BytecodeEmitter's parent is
+    // always itself a BytecodeEmitter.
+    BytecodeEmitter *parentBCE() {
+        return static_cast<BytecodeEmitter *>(parent);
+    }
+
     /*
      * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
      * space above their tempMark points. This means that you cannot alloc from
@@ -674,13 +663,6 @@ struct BytecodeEmitter : public TreeContext
 
     inline ptrdiff_t countFinalSourceNotes();
 };
-
-inline BytecodeEmitter *
-TreeContext::asBytecodeEmitter()
-{
-    JS_ASSERT(compiling());
-    return static_cast<BytecodeEmitter *>(this);
-}
 
 namespace frontend {
 
