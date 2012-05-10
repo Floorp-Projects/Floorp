@@ -850,8 +850,7 @@ PropertiesView.prototype = {
       let value = document.createElement("span");
       let title = element.getElementsByClassName("title")[0];
 
-      // Separator shouldn't be selectable.
-      separator.className = "unselectable";
+      // Separator between the variable name and its value.
       separator.textContent = ": ";
 
       // The variable information (type, class and/or value).
@@ -1075,8 +1074,7 @@ PropertiesView.prototype = {
       value.textContent = propertyString;
       value.classList.add(propertyColor);
 
-      // Separator shouldn't be selected.
-      separator.className = "unselectable";
+      // Separator between the variable name and its value.
       separator.textContent = ": ";
 
       if ("undefined" !== typeof pKey) {
@@ -1332,7 +1330,7 @@ PropertiesView.prototype = {
     arrow.style.visibility = "hidden";
 
     // The name element.
-    name.className = "name unselectable";
+    name.className = "name";
     name.textContent = aName || "";
 
     // The title element, containing the arrow and the name.
