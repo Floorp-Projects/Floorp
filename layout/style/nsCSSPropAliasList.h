@@ -61,5 +61,9 @@
   nsCSSPropList.h, prefixes should just be included in this file (rather
   than needing the CSS_PROP_DOMPROP_PREFIXED(prop) macro).
 
+  -. 'pref' is the name of a pref that controls whether the property
+  is enabled.  The property is enabled if 'pref' is an empty string,
+  or if the boolean property whose name is 'pref' is set to true.
+
  ******/
 
