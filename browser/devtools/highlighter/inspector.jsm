@@ -403,7 +403,7 @@ InspectorUI.prototype = {
    */
   get isInspectorOpen()
   {
-    return this.toolbar && !this.toolbar.hidden && this.highlighter;
+    return !!(this.toolbar && !this.toolbar.hidden && this.highlighter);
   },
 
   /**
@@ -652,7 +652,7 @@ InspectorUI.prototype = {
     if (!aKeepInspector)
       this.store.deleteInspector(this.winID);
 
-    this.inspectMenuitem.setAttribute("checked", false);
+    this.inspectMenuitem.removeAttribute("checked");
     this.browser = this.win = null; // null out references to browser and window
     this.winID = null;
     this.selection = null;

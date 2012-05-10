@@ -35,106 +35,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#gclichrome-body {
-  margin: 0;
-  padding: 0;
-  font: message-box;
+.gclichrome-output {
+  max-width: 350px;
 }
 
-.gcli-row-out {
-  padding: 0 5px;
-  line-height: 1.2em;
-  border-top: none;
-  border-bottom: none;
+.gclichrome-tooltip {
+  max-width: 350px;
 }
 
-.gcli-row-out p,
-.gcli-row-out h1,
-.gcli-row-out h2,
-.gcli-row-out h3 {
-  margin: 5px 0;
-}
-
-.gcli-out-shortcut {
-  border: 1px solid #999;
-  border-radius: 3px;
-  padding: 1px 4px 0;
-  margin: 0 4px;
-  font-size: 80%;
-  font-family: Consolas, Inconsolata, "Courier New", monospace;
-  cursor: pointer;
-  vertical-align: bottom;
-  white-space: pre;
-  background-color: #fff;
-}
-
-.gcli-out-shortcut:before {
-  color: #66F;
-  content: '\bb';
-}
-
-
-/* From: $GCLI/lib/gcli/commands/help.css */
-
-.gcli-help-arrow {
-  font-size: 70%;
-  color: #AAA;
+.gcli-help-name {
+  text-align: end;
 }
 
 .gcli-help-synopsis {
-  font-family: Consolas, Inconsolata, "Courier New", monospace;
-  font-weight: normal;
-  padding: 0 3px;
-  margin: 0 10px;
-  border: 1px solid #999;
-  border-radius: 3px;
+  cursor: pointer;
+  display: inline-block;
 }
 
 .gcli-help-synopsis:before {
-  color: #66F;
+  content: '\bb';
 }
 
-.gcli-help-description {
-  margin: 0 20px;
-  padding: 0;
+.gcli-menu-option {
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
-.gcli-help-parameter {
-  margin: 0 30px;
-  padding: 0;
-}
-
-.gcli-help-header {
-  margin: 10px 0 6px;
-}
-
-
-/* From: $GCLI/lib/gcli/ui/fields/menu.css */
-
-.gcli-menu-name {
-  -moz-padding-start: 8px;
-}
-
-.gcli-menu-desc {
-  -moz-padding-end: 8px;
-  color: #999;
-}
-
-.gcli-menu-option:hover {
-  background-color: #EEE;
-}
-
-.gcli-menu-highlight,
-.gcli-menu-highlight.gcli-menu-option:hover {
-  background-color: #DDD;
+.gcli-menu-template {
+  border-collapse: collapse;
+  width: 100%;
 }
 
 .gcli-menu-error {
-  padding: 8px 10px 2px;
-  font-size: 80%;
-  color: red;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
-.gcli-menu-typed {
-  color: hsl(25,78%,50%);
-}
