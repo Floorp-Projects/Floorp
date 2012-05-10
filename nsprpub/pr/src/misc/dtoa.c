@@ -79,7 +79,7 @@
  *	standard (and are specified to be consistent, with fesetround()
  *	affecting the value of FLT_ROUNDS), but that some (Linux) systems
  *	do not work correctly in this regard, so using fegetround() is more
- *	portable than using FLT_FOUNDS directly.
+ *	portable than using FLT_ROUNDS directly.
  * #define Check_FLT_ROUNDS if FLT_ROUNDS can assume the values 2 or 3
  *	and Honor_FLT_ROUNDS is not #defined.
  * #define RND_PRODQUOT to use rnd_prod and rnd_quot (assembly routines
@@ -669,7 +669,7 @@ s2b
 #ifdef KR_headers
 	(s, nd0, nd, y9, dplen) CONST char *s; int nd0, nd, dplen; ULong y9;
 #else
-	(CONST char *s, int nd0, int nd, ULong y9, int dplen)
+	(const char *s, int nd0, int nd, ULong y9, int dplen)
 #endif
 {
 	Bigint *b;
@@ -1538,7 +1538,7 @@ match
 #ifdef KR_headers
 	(sp, t) char **sp, *t;
 #else
-	(CONST char **sp, char *t)
+	(const char **sp, const char *t)
 #endif
 {
 	int c, d;
@@ -1560,7 +1560,7 @@ hexnan
 #ifdef KR_headers
 	(rvp, sp) U *rvp; CONST char **sp;
 #else
-	(U *rvp, CONST char **sp)
+	(U *rvp, const char **sp)
 #endif
 {
 	ULong c, x[2];
@@ -1633,6 +1633,41 @@ hexnan
 #define kshift 4
 #define kmask 15
 #endif
+
+#if !defined(NO_HEX_FP) || defined(Honor_FLT_ROUNDS) /*{*/
+ static Bigint *
+#ifdef KR_headers
+increment(b) Bigint *b;
+#else
+increment(Bigint *b)
+#endif
+{
+	ULong *x, *xe;
+	Bigint *b1;
+
+	x = b->x;
+	xe = x + b->wds;
+	do {
+		if (*x < (ULong)0xffffffffL) {
+			++*x;
+			return b;
+			}
+		*x++ = 0;
+		} while(x < xe);
+	{
+		if (b->wds >= b->maxwds) {
+			b1 = Balloc(b->k+1);
+			Bcopy(b1,b);
+			Bfree(b);
+			b = b1;
+			}
+		b->x[b->wds++] = 1;
+		}
+	return b;
+	}
+
+#endif /*}*/
+
 #ifndef NO_HEX_FP /*{*/
 
  static void
@@ -1704,37 +1739,6 @@ enum {	/* rounding values: same as FLT_ROUNDS */
 	Round_up = 2,
 	Round_down = 3
 	};
-
- static Bigint *
-#ifdef KR_headers
-increment(b) Bigint *b;
-#else
-increment(Bigint *b)
-#endif
-{
-	ULong *x, *xe;
-	Bigint *b1;
-
-	x = b->x;
-	xe = x + b->wds;
-	do {
-		if (*x < (ULong)0xffffffffL) {
-			++*x;
-			return b;
-			}
-		*x++ = 0;
-		} while(x < xe);
-	{
-		if (b->wds >= b->maxwds) {
-			b1 = Balloc(b->k+1);
-			Bcopy(b1,b);
-			Bfree(b);
-			b = b1;
-			}
-		b->x[b->wds++] = 1;
-		}
-	return b;
-	}
 
  void
 #ifdef KR_headers
@@ -2263,7 +2267,7 @@ bigcomp
 	(rv, s0, bc)
 	U *rv; CONST char *s0; BCinfo *bc;
 #else
-	(U *rv, CONST char *s0, BCinfo *bc)
+	(U *rv, const char *s0, BCinfo *bc)
 #endif
 {
 	Bigint *b, *d;
@@ -2392,7 +2396,7 @@ bigcomp
 		b = multadd(b, 10, 0);
 		dig = quorem(b,d);
 		}
-	if (b->x[0] || b->wds > 1)
+	if (b->x[0] || b->wds > 1 || dig > 0)
 		dd = -1;
  ret:
 	Bfree(b);
@@ -2471,7 +2475,7 @@ strtod
 #ifdef KR_headers
 	(s00, se) CONST char *s00; char **se;
 #else
-	(CONST char *s00, char **se)
+	(const char *s00, char **se)
 #endif
 {
 	int bb2, bb5, bbe, bd2, bd5, bbbits, bs2, c, e, e1;
@@ -3570,7 +3574,7 @@ rv_alloc(int i)
 #ifdef KR_headers
 nrv_alloc(s, rve, n) char *s, **rve; int n;
 #else
-nrv_alloc(char *s, char **rve, int n)
+nrv_alloc(const char *s, char **rve, int n)
 #endif
 {
 	char *rv, *t;
@@ -3693,8 +3697,10 @@ dtoa
 	U d2, eps, u;
 	double ds;
 	char *s, *s0;
+#ifndef No_leftright
 #ifdef IEEE_Arith
 	U eps1;
+#endif
 #endif
 #ifdef SET_INEXACT
 	int inexact, oldinexact;
