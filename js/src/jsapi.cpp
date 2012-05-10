@@ -90,7 +90,7 @@
 #include "builtin/ParallelArray.h"
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/BytecodeEmitter.h"
+#include "frontend/TreeContext.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "js/MemoryMetrics.h"
@@ -774,6 +774,7 @@ JSRuntime::JSRuntime()
     emptyString(NULL),
     debugMode(false),
     profilingScripts(false),
+    alwaysPreserveCode(false),
     hadOutOfMemory(false),
     data(NULL),
 #ifdef JS_THREADSAFE

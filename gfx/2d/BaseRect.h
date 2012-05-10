@@ -415,6 +415,16 @@ struct BaseRect {
     height = bottom - y;
   }
 
+  /**
+   * Clamp aPoint to this rectangle. It is allowed to end up on any
+   * edge of the rectangle.
+   */
+  Point ClampPoint(const Point& aPoint) const
+  {
+    return Point(NS_MAX(x, NS_MIN(XMost(), aPoint.x)),
+                 NS_MAX(y, NS_MIN(YMost(), aPoint.y)));
+  }
+
 private:
   // Do not use the default operator== or operator!= !
   // Use IsEqualEdges or IsEqualInterior explicitly.

@@ -265,10 +265,7 @@ class MarionetteTestRunner(object):
         if not self.marionette:
             self.start_marionette()
 
-        if not os.path.isabs(test):
-            filepath = os.path.join(os.path.dirname(__file__), test)
-        else:
-            filepath = test
+        filepath = os.path.abspath(test)
 
         if os.path.isdir(filepath):
             for root, dirs, files in os.walk(filepath):

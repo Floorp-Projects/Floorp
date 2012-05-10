@@ -1155,7 +1155,7 @@ static inline JSCompartment *
 GetObjectCompartment(JSObject *obj) { return reinterpret_cast<js::gc::Cell *>(obj)->compartment(); }
 
 void
-ReleaseAllJITCode(FreeOp *fop, JSCompartment *c, bool resetUseCounts);
+ReleaseAllJITCode(FreeOp *fop, JSCompartment *c, bool resetUseCounts, bool onlyIon = false);
 
 void
 ReleaseAllJITCode(FreeOp *fop, bool resetUseCounts);

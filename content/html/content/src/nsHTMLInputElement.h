@@ -182,7 +182,6 @@ public:
   NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue);
   NS_IMETHOD_(bool) ValueChanged() const;
   NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const;
-  NS_IMETHOD_(void) SetTextEditorValue(const nsAString& aValue, bool aUserInput);
   NS_IMETHOD_(nsIEditor*) GetTextEditor();
   NS_IMETHOD_(nsISelectionController*) GetSelectionController();
   NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection();
@@ -192,7 +191,6 @@ public:
   NS_IMETHOD_(nsIContent*) GetRootEditorNode();
   NS_IMETHOD_(nsIContent*) CreatePlaceholderNode();
   NS_IMETHOD_(nsIContent*) GetPlaceholderNode();
-  NS_IMETHOD_(void) UpdatePlaceholderText(bool aNotify);
   NS_IMETHOD_(void) SetPlaceholderClass(bool aVisible, bool aNotify);
   NS_IMETHOD_(void) InitializeKeyboardEventListeners();
   NS_IMETHOD_(void) OnValueChanged(bool aNotify);
@@ -222,11 +220,6 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   NS_IMETHOD FireAsyncClickHandler();
-
-  virtual void UpdateEditableState(bool aNotify)
-  {
-    return UpdateEditableFormControlState(aNotify);
-  }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLInputElement,
                                            nsGenericHTMLFormElement)

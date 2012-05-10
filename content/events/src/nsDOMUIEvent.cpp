@@ -60,7 +60,7 @@ nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   : nsDOMEvent(aPresContext, aEvent ?
                static_cast<nsEvent *>(aEvent) :
                static_cast<nsEvent *>(new nsUIEvent(false, 0, 0)))
-  , mClientPoint(0, 0), mLayerPoint(0, 0), mPagePoint(0, 0)
+  , mClientPoint(0, 0), mLayerPoint(0, 0), mPagePoint(0, 0), mMovementPoint(0, 0)
   , mIsPointerLocked(nsEventStateManager::sIsPointerLocked)
   , mLastScreenPoint(nsEventStateManager::sLastScreenPoint)
   , mLastClientPoint(nsEventStateManager::sLastClientPoint)
@@ -132,6 +132,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 nsIntPoint
 nsDOMUIEvent::GetMovementPoint()
 {
+  if (mPrivateDataDuplicated) {
+    return mMovementPoint;
+  }
+
   if (!mEvent ||
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
@@ -413,6 +417,7 @@ nsDOMUIEvent::DuplicatePrivateData()
                                              mEvent,
                                              mEvent->refPoint,
                                              mClientPoint);
+  mMovementPoint = GetMovementPoint();
   mLayerPoint = GetLayerPoint();
   mPagePoint = nsDOMEvent::GetPageCoords(mPresContext,
                                          mEvent,

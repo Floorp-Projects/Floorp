@@ -73,7 +73,6 @@
 #include "jslibmath.h"
 
 #include "gc/Marking.h"
-#include "frontend/BytecodeEmitter.h"
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Logging.h"

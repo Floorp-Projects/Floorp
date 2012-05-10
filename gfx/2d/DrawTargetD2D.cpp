@@ -42,6 +42,7 @@
 #include "PathD2D.h"
 #include "GradientStopsD2D.h"
 #include "ScaledFontDWrite.h"
+#include "ImageScaling.h"
 #include "Logging.h"
 #include "Tools.h"
 #include <algorithm>
@@ -289,7 +290,7 @@ DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
 
         int stride = srcSurf->GetSize().width * BytesPerPixel(srcSurf->GetFormat());
 
-        unsigned char *data = &srcSurf->mRawData.front() +
+        unsigned char *data = srcSurf->mRawData +
                               (uint32_t)aSource.y * stride +
                               (uint32_t)aSource.x * BytesPerPixel(srcSurf->GetFormat());
 
@@ -1982,8 +1983,8 @@ DrawTargetD2D::CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix 
   // or downsample in software.
 
   Matrix transform = mTransform;
-  transform = aMatrix * transform;
-  if (!transform.Invert()) {
+  Matrix invTransform = transform = aMatrix * transform;
+  if (!invTransform.Invert()) {
     // Singular transform, nothing to be drawn.
     return NULL;
   }
@@ -1991,7 +1992,7 @@ DrawTargetD2D::CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix 
   Rect rect(0, 0, mSize.width, mSize.height);
 
   // Calculate the rectangle of the source mapped to our surface.
-  rect = transform.TransformBounds(rect);
+  rect = invTransform.TransformBounds(rect);
   rect.RoundOut();
 
   Rect uploadRect(0, 0, aSurface->mSize.width, aSurface->mSize.height);
@@ -2014,19 +2015,59 @@ DrawTargetD2D::CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix 
 
     // A partial upload will suffice.
     mRT->CreateBitmap(D2D1::SizeU(uint32_t(uploadRect.width), uint32_t(uploadRect.height)),
-                      &aSurface->mRawData.front() + int(uploadRect.x) + int(uploadRect.y) * stride,
+                      aSurface->mRawData + int(uploadRect.x) * 4 + int(uploadRect.y) * stride,
                       stride,
                       D2D1::BitmapProperties(D2DPixelFormat(aSurface->mFormat)),
                       byRef(bitmap));
 
-    aMatrix.Translate(-uploadRect.x, -uploadRect.y);
+    aMatrix.Translate(uploadRect.x, uploadRect.y);
 
     return bitmap;
   } else {
-    // XXX - FIX ME!!
-    MOZ_ASSERT(false);
-    gfxDebug() << "Source surface used for pattern too large!";
-    return NULL;
+    int Bpp = BytesPerPixel(aSurface->mFormat);
+
+    if (Bpp != 4) {
+      // This shouldn't actually happen in practice!
+      MOZ_ASSERT(false);
+      return NULL;
+    }
+
+    int stride = Bpp * aSurface->mSize.width;
+
+    ImageHalfScaler scaler(aSurface->mRawData, stride, IntSize(aSurface->mSize));
+
+    // Calculate the maximum width/height of the image post transform.
+    Point topRight = transform * Point(aSurface->mSize.width, 0);
+    Point topLeft = transform * Point(0, 0);
+    Point bottomRight = transform * Point(aSurface->mSize.width, aSurface->mSize.height);
+    Point bottomLeft = transform * Point(0, aSurface->mSize.height);
+    
+    IntSize scaleSize;
+
+    scaleSize.width = max(Distance(topRight, topLeft), Distance(bottomRight, bottomLeft));
+    scaleSize.height = max(Distance(topRight, bottomRight), Distance(topLeft, bottomLeft));
+
+    if (scaleSize.width > mRT->GetMaximumBitmapSize()) {
+      // Ok, in this case we'd really want a downscale of a part of the bitmap,
+      // perhaps we can do this later but for simplicity let's do something
+      // different here and assume it's good enough, this should be rare!
+      scaleSize.width = 4095;
+    }
+    if (scaleSize.height > mRT->GetMaximumBitmapSize()) {
+      scaleSize.height = 4095;
+    }
+
+    scaler.ScaleForSize(scaleSize);
+
+    IntSize newSize = scaler.GetSize();
+    
+    mRT->CreateBitmap(D2D1::SizeU(newSize.width, newSize.height),
+                      scaler.GetScaledData(), scaler.GetStride(),
+                      D2D1::BitmapProperties(D2DPixelFormat(aSurface->mFormat)),
+                      byRef(bitmap));
+
+    aMatrix.Scale(aSurface->mSize.width / newSize.width, aSurface->mSize.height / newSize.height);
+    return bitmap;
   }
 }
 

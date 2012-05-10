@@ -302,6 +302,7 @@ static PhaseInfo phases[] = {
     { PHASE_PURGE, "Purge" },
     { PHASE_MARK, "Mark" },
     { PHASE_MARK_ROOTS, "Mark Roots" },
+    { PHASE_MARK_TYPES, "Mark Types" },
     { PHASE_MARK_DELAYED, "Mark Delayed" },
     { PHASE_MARK_OTHER, "Mark Other" },
     { PHASE_FINALIZE_START, "Finalize Start Callback" },
