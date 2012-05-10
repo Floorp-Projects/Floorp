@@ -22,6 +22,9 @@ namespace js {
  * given lexically-enclosing variable. A scope coordinate has two dimensions:
  *  - hops: the number of scope objects on the scope chain to skip
  *  - binding: which binding on the scope object
+ * Additionally (as described in jsopcode.tbl) there is a 'block' index, but
+ * this is only needed for decompilation/inference so it is not included in the
+ * main ScopeCoordinate struct: use ScopeCoordinate{BlockChain,Atom} instead.
  */
 struct ScopeCoordinate
 {
@@ -35,8 +38,13 @@ struct ScopeCoordinate
     inline ScopeCoordinate() {}
 };
 
-inline JSAtom *
-ScopeCoordinateAtom(JSScript *script, jsbytecode *pc);
+/* Return the static block chain (or null) accessed by *pc. */
+extern StaticBlockObject *
+ScopeCoordinateBlockChain(JSScript *script, jsbytecode *pc);
+
+/* Return the name being accessed by the given ALIASEDVAR op. */
+extern PropertyName *
+ScopeCoordinateName(JSScript *script, jsbytecode *pc);
 
 /*****************************************************************************/
 
