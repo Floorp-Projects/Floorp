@@ -1264,12 +1264,19 @@ nsHTMLEditRules::WillInsert(nsISelection *aSelection, bool *aCancel)
     }
   }
 
-  // we need to get the doc
-  nsCOMPtr<nsIDOMDocument> doc = mHTMLEditor->GetDOMDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
-    
-  // for every property that is set, insert a new inline style node
-  return CreateStyleForInsertText(aSelection, doc);
+  if (mDidDeleteSelection &&
+      (mTheAction == nsEditor::kOpInsertText ||
+       mTheAction == nsEditor::kOpInsertIMEText ||
+       mTheAction == nsEditor::kOpInsertBreak ||
+       mTheAction == nsEditor::kOpDeleteSelection)) {
+    res = ReapplyCachedStyles();
+    NS_ENSURE_SUCCESS(res, res);
+  }
+  // either way we clear the cached styles array
+  res = ClearCachedStyles();
+  NS_ENSURE_SUCCESS(res, res);
+
+  return NS_OK;
 }    
 
 nsresult
@@ -1316,6 +1323,14 @@ nsHTMLEditRules::WillInsertText(nsEditor::OperationID aAction,
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = false;
+
+  // we need to get the doc
+  nsCOMPtr<nsIDOMDocument> doc = mHTMLEditor->GetDOMDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
+
+  // for every property that is set, insert a new inline style node
+  res = CreateStyleForInsertText(aSelection, doc);
+  NS_ENSURE_SUCCESS(res, res);
   
   // get the (collapsed) selection location
   res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
@@ -1326,10 +1341,6 @@ nsHTMLEditRules::WillInsertText(nsEditor::OperationID aAction,
       !mHTMLEditor->CanContainTag(selNode, nsGkAtoms::textTagName)) {
     return NS_ERROR_FAILURE;
   }
-
-  // we need to get the doc
-  nsCOMPtr<nsIDOMDocument> doc = mHTMLEditor->GetDOMDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
     
   if (aAction == nsEditor::kOpInsertIMEText) {
     // Right now the nsWSRunObject code bails on empty strings, but IME needs 
@@ -4354,19 +4365,6 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection,
                                                     &offset);
   NS_ENSURE_SUCCESS(res, res);
 
-  // if we deleted selection then also for cached styles
-  if (mDidDeleteSelection &&
-      (mTheAction == nsEditor::kOpInsertText ||
-       mTheAction == nsEditor::kOpInsertIMEText ||
-       mTheAction == nsEditor::kOpInsertBreak ||
-       mTheAction == nsEditor::kOpDeleteSelection)) {
-    res = ReapplyCachedStyles();
-    NS_ENSURE_SUCCESS(res, res);
-  }
-  // either way we clear the cached styles array
-  res = ClearCachedStyles();
-  NS_ENSURE_SUCCESS(res, res);
-
   // next examine our present style and make sure default styles are either
   // present or explicitly overridden.  If neither, add the default style to
   // the TypeInState
@@ -4404,82 +4402,9 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection,
   // process clearing any styles first
   nsAutoPtr<PropItem> item(mHTMLEditor->mTypeInState->TakeClearProperty());
   while (item && node != rootElement) {
-    nsCOMPtr<nsIDOMNode> leftNode, rightNode;
-    res = mHTMLEditor->SplitStyleAbovePoint(address_of(node), &offset,
-                                            item->tag, &item->attr,
-                                            address_of(leftNode),
-                                            address_of(rightNode));
+    res = mHTMLEditor->ClearStyle(address_of(node), &offset,
+                                  item->tag, &item->attr);
     NS_ENSURE_SUCCESS(res, res);
-    bool bIsEmptyNode;
-    if (leftNode) {
-      mHTMLEditor->IsEmptyNode(leftNode, &bIsEmptyNode, false, true);
-      if (bIsEmptyNode) {
-        // delete leftNode if it became empty
-        res = mEditor->DeleteNode(leftNode);
-        NS_ENSURE_SUCCESS(res, res);
-      }
-    }
-    if (rightNode) {
-      nsCOMPtr<nsIDOMNode> secondSplitParent =
-        mHTMLEditor->GetLeftmostChild(rightNode);
-      // don't try to split non-containers (br's, images, hr's, etc)
-      if (!secondSplitParent) {
-        secondSplitParent = rightNode;
-      }
-      nsCOMPtr<nsIDOMNode> savedBR;
-      if (!mHTMLEditor->IsContainer(secondSplitParent)) {
-        if (nsTextEditUtils::IsBreak(secondSplitParent)) {
-          savedBR = secondSplitParent;
-        }
-
-        secondSplitParent->GetParentNode(getter_AddRefs(tmp));
-        secondSplitParent = tmp;
-      }
-      offset = 0;
-      res = mHTMLEditor->SplitStyleAbovePoint(address_of(secondSplitParent),
-                                              &offset, item->tag,
-                                              &item->attr,
-                                              address_of(leftNode),
-                                              address_of(rightNode));
-      NS_ENSURE_SUCCESS(res, res);
-      // should be impossible to not get a new leftnode here
-      NS_ENSURE_TRUE(leftNode, NS_ERROR_FAILURE);
-      nsCOMPtr<nsIDOMNode> newSelParent =
-        mHTMLEditor->GetLeftmostChild(leftNode);
-      if (!newSelParent) {
-        newSelParent = leftNode;
-      }
-      // If rightNode starts with a br, suck it out of right node and into
-      // leftNode.  This is so we you don't revert back to the previous style
-      // if you happen to click at the end of a line.
-      if (savedBR) {
-        res = mEditor->MoveNode(savedBR, newSelParent, 0);
-        NS_ENSURE_SUCCESS(res, res);
-      }
-      mHTMLEditor->IsEmptyNode(rightNode, &bIsEmptyNode, false, true);
-      if (bIsEmptyNode) {
-        // delete rightNode if it became empty
-        res = mEditor->DeleteNode(rightNode);
-        NS_ENSURE_SUCCESS(res, res);
-      }
-      // remove the style on this new hierarchy
-      PRInt32 newSelOffset = 0;
-      {
-        // Track the point at the new hierarchy.  This is so we can know where
-        // to put the selection after we call RemoveStyleInside().
-        // RemoveStyleInside() could remove any and all of those nodes, so I
-        // have to use the range tracking system to find the right spot to put
-        // selection.
-        nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
-                                    address_of(newSelParent), &newSelOffset);
-        res = mHTMLEditor->RemoveStyleInside(leftNode, item->tag,
-                                             &(item->attr));
-        NS_ENSURE_SUCCESS(res, res);
-      }
-      // reset our node offset values to the resulting new sel point
-      node = newSelParent;
-      offset = newSelOffset;
-    }
     item = mHTMLEditor->mTypeInState->TakeClearProperty();
     weDidSomething = true;
   }
