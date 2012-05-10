@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=733553
+-->
+<head>
+  <title>Test for Bug 733553</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=733553">Mozilla Bug 733553</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var testIndex = 0;
+var testParts = [
+  [1, "red.png"],
+  [40, "animated-gif2.gif"],
+  [1, "red.png"],
+  [100, "lime100x100.svg"],
+  [3000, "big.png"],
+  [40, "animated-gif2.gif"],
+  [1, "red.png"]
+];
+
+function initializeOnload() {
+  var iframeelem = document.getElementById('test-iframe');
+  var firstimg = iframeelem.contentDocument.getElementById('image1');
+  firstimg.addEventListener("load", imageLoad, false);
+}
+
+function imageLoad(aEvent) {
+  if (testParts.length > testIndex) {
+    var [width, fileName] = testParts[testIndex++];
+    is(aEvent.target.width, width,
+       "Test " + (testIndex - 1) + " " + fileName + " width not correct");
+  }
+  else {
+    aEvent.target.removeEventListener("load", arguments.callee, false);
+    SimpleTest.finish();
+  }
+}
+
+</script>
+</pre>
+<div id="content"> <!-- style="display: none" -->
+<iframe id="test-iframe" src="http://mochi.test:8888/tests/image/test/mochitest/bug733553-iframe.html" onload="initializeOnload()"></iframe>
+</div>
+</body>
+</html>
