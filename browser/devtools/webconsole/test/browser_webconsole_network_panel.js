@@ -100,6 +100,12 @@ function checkNodeKeyValue(aPanel, aId, aKey, aValue) {
 function testGen() {
   let filterBox = HUDService.getHudByWindow(content).filterBox;
 
+  XPCOMUtils.defineLazyGetter(this, "l10n", function () {
+    let obj = {};
+    Cu.import("resource:///modules/WebConsoleUtils.jsm", obj);
+    return obj.WebConsoleUtils.l10n;
+  });
+
   var httpActivity = {
     url: "http://www.testpage.com",
     method: "GET",
@@ -438,7 +444,9 @@ function testGen() {
     responseImageCached: false
   });
 
-  let responseString = HUDService.getFormatStr("NetworkPanel.responseBodyUnableToDisplay.content", ["application/x-shockwave-flash"]);
+  let responseString =
+    l10n.getFormatStr("NetworkPanel.responseBodyUnableToDisplay.content",
+                      ["application/x-shockwave-flash"]);
   checkNodeContent(networkPanel, "responseBodyUnknownTypeContent", responseString);
   networkPanel.panel.hidePopup();
 

@@ -67,6 +67,6 @@ function testChrome() {
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
   is(jsterm.completeNode.value, "    ment", "'docu' completion");
 
-  finishTest();
+  finish();
 }
 
