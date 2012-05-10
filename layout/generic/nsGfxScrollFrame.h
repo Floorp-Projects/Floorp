@@ -819,12 +819,9 @@ protected:
     /* 
      * For RTL frames, restore the original scrolled position of the right
      * edge, then subtract the current width to find the physical position.
-     * This can break the invariant that the scroll position is a multiple of
-     * device pixels, so round off the result to the nearest device pixel.
      */
     if (!mInner.IsLTR()) {
-      aRect.x = PresContext()->RoundAppUnitsToNearestDevPixels(
-         mInner.mScrollPort.XMost() - aScrollPosition.x - aRect.width);
+      aRect.x = mInner.mScrollPort.XMost() - aScrollPosition.x - aRect.width;
     }
     mInner.mScrolledFrame->SetBounds(aState, aRect, aRemoveOverflowAreas);
   }

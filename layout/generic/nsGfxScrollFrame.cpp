@@ -2386,12 +2386,6 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
   return result;
 }
 
-static nscoord
-AlignToDevPixelRoundingToZero(nscoord aVal, PRInt32 aAppUnitsPerDevPixel)
-{
-  return (aVal/aAppUnitsPerDevPixel)*aAppUnitsPerDevPixel;
-}
-
 nsRect
 nsGfxScrollFrameInner::GetScrollRange() const
 {
@@ -2927,11 +2921,14 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
                              &allowedRange.x, &allowedRange.width);
   dest.y = GetCoordAttribute(mVScrollbarBox, nsGkAtoms::curpos, current.y,
                              &allowedRange.y, &allowedRange.height);
+  current += scrolledRect.TopLeft();
   dest += scrolledRect.TopLeft();
   allowedRange += scrolledRect.TopLeft();
 
-  // If we have an async scroll pending don't stomp on that by calling ScrollTo.
-  if (mAsyncScroll && allowedRange.Contains(GetScrollPosition())) {
+  // Don't try to scroll if we're already at an acceptable place.
+  // Don't call Contains here since Contains returns false when the point is
+  // on the bottom or right edge of the rectangle.
+  if (allowedRange.ClampPoint(current) == current) {
     return;
   }
 
@@ -3494,6 +3491,12 @@ nsGfxScrollFrameInner::ReflowFinished()
   // do anything.
   nsPoint currentScrollPos = GetScrollPosition();
   ScrollToImpl(currentScrollPos, nsRect(currentScrollPos, nsSize(0, 0)));
+  if (!mAsyncScroll) {
+    // We need to have mDestination track the current scroll position,
+    // in case it falls outside the new reflow area. mDestination is used
+    // by ScrollBy as its starting position.
+    mDestination = GetScrollPosition();
+  }
 
   if (NS_SUBTREE_DIRTY(mOuter) || !mUpdateScrollbarAttributes)
     return false;
