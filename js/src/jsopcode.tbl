@@ -334,6 +334,14 @@ OPDEF(JSOP_FINALLY,     135,"finally",    NULL,       1,  0,  2,  0,  JOF_BYTE)
  * 'with', 'arguments' and E4X filters. All of these cases require creating a
  * CallObject to own the aliased variable.
  *
+ * An ALIASEDVAR opcode contains the following immediates:
+ *  uint16 hops:  the number of scope objects to skip to find the ScopeObject
+ *                containing the variable being accessed
+ *  uint16 slot:  the slot containing the variable in the ScopeObject (this
+ *                'slot' does not include RESERVED_SLOTS).
+ *  uint32 block: the index (into the script object table) of the block chain
+ *                at the point of the variable access.
+ *
  * XXX: there is also a temporary 2-byte index (indicating the frame slot
  * aliased by the scope chain) which will be removed with the last patch of bug
  * 659577.

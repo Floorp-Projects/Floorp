@@ -20,13 +20,6 @@ ScopeCoordinate::ScopeCoordinate(jsbytecode *pc)
     JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
 }
 
-inline JSAtom *
-ScopeCoordinateAtom(JSScript *script, jsbytecode *pc)
-{
-    JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
-    return script->getAtom(GET_UINT32_INDEX(pc + 2 * sizeof(uint16_t)));
-}
-
 inline JSObject &
 ScopeObject::enclosingScope() const
 {

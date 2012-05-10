@@ -23,6 +23,51 @@ using namespace js::types;
 
 /*****************************************************************************/
 
+StaticBlockObject *
+js::ScopeCoordinateBlockChain(JSScript *script, jsbytecode *pc)
+{
+    ScopeCoordinate sc(pc);
+
+    uint32_t blockIndex = GET_UINT32_INDEX(pc + 2 * sizeof(uint16_t));
+    if (blockIndex == UINT32_MAX)
+        return NULL;
+
+    StaticBlockObject *block = &script->getObject(blockIndex)->asStaticBlock();
+    unsigned i = 0;
+    while (true) {
+        while (block && !block->needsClone())
+            block = block->enclosingBlock();
+        if (i++ == sc.hops)
+            break;
+        block = block->enclosingBlock();
+    }
+    return block;
+}
+
+PropertyName *
+js::ScopeCoordinateName(JSScript *script, jsbytecode *pc)
+{
+    StaticBlockObject *maybeBlock = ScopeCoordinateBlockChain(script, pc);
+    ScopeCoordinate sc(pc);
+
+    uint32_t targetSlot;
+    Shape *shape;
+    if (maybeBlock) {
+        targetSlot = BlockObject::RESERVED_SLOTS + sc.binding;
+        shape = maybeBlock->lastProperty();
+    } else {
+        targetSlot = CallObject::RESERVED_SLOTS + sc.binding;
+        shape = script->bindings.lastShape();
+    }
+
+    Shape::Range r = shape->all();
+    while (r.front().slot() != targetSlot)
+        r.popFront();
+    return JSID_TO_ATOM(r.front().propid())->asPropertyName();
+}
+
+/*****************************************************************************/
+
 void
 js_PutCallObject(StackFrame *fp, CallObject &callobj)
 {
