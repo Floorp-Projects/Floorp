@@ -2931,13 +2931,16 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
 
   nsPoint current = GetScrollPosition() - scrolledRect.TopLeft();
   nsPoint dest;
-  dest.x = GetCoordAttribute(mHScrollbarBox, nsGkAtoms::curpos, current.x) +
-           scrolledRect.x;
-  dest.y = GetCoordAttribute(mVScrollbarBox, nsGkAtoms::curpos, current.y) +
-           scrolledRect.y;
+  nsRect allowedRange;
+  dest.x = GetCoordAttribute(mHScrollbarBox, nsGkAtoms::curpos, current.x,
+                             &allowedRange.x, &allowedRange.width);
+  dest.y = GetCoordAttribute(mVScrollbarBox, nsGkAtoms::curpos, current.y,
+                             &allowedRange.y, &allowedRange.height);
+  dest += scrolledRect.TopLeft();
+  allowedRange += scrolledRect.TopLeft();
 
   // If we have an async scroll pending don't stomp on that by calling ScrollTo.
-  if (mAsyncScroll && dest == GetScrollPosition()) {
+  if (mAsyncScroll && allowedRange.Contains(GetScrollPosition())) {
     return;
   }
 
@@ -2951,7 +2954,7 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
   }
   ScrollToWithOrigin(dest,
                      isSmooth ? nsIScrollableFrame::SMOOTH : nsIScrollableFrame::INSTANT,
-                     nsGkAtoms::scrollbars, nsnull);
+                     nsGkAtoms::scrollbars, &allowedRange);
 }
 
 /* ============= Scroll events ========== */
@@ -3952,24 +3955,35 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, bool aVisible)
   }
 }
 
-PRInt32
-nsGfxScrollFrameInner::GetCoordAttribute(nsIBox* aBox, nsIAtom* atom, PRInt32 defaultValue)
+nscoord
+nsGfxScrollFrameInner::GetCoordAttribute(nsIBox* aBox, nsIAtom* aAtom,
+                                         nscoord aDefaultValue,
+                                         nscoord* aRangeStart,
+                                         nscoord* aRangeLength)
 {
   if (aBox) {
     nsIContent* content = aBox->GetContent();
 
     nsAutoString value;
-    content->GetAttr(kNameSpaceID_None, atom, value);
+    content->GetAttr(kNameSpaceID_None, aAtom, value);
     if (!value.IsEmpty())
     {
       PRInt32 error;
-
-      // convert it to an integer
-      defaultValue = nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
+      // convert it to appunits
+      nscoord result = nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
+      nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
+      // Any nscoord value that would round to the attribute value when converted
+      // to CSS pixels is allowed.
+      *aRangeStart = result - halfPixel;
+      *aRangeLength = halfPixel*2 - 1;
+      return result;
     }
   }
 
-  return defaultValue;
+  // Only this exact default value is allowed.
+  *aRangeStart = aDefaultValue;
+  *aRangeLength = 0;
+  return aDefaultValue;
 }
 
 nsPresState*
