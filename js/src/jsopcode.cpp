@@ -514,14 +514,15 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       }
 
       case JOF_SCOPECOORD: {
-        unsigned i = GET_UINT16(pc);
-        Sprint(sp, " %u", i);
-        pc += sizeof(uint16_t);
-        i = GET_UINT16(pc);
-        Sprint(sp, " %u", i);
-        pc += sizeof(uint16_t);
-        /* FALL THROUGH */
+        Value v = StringValue(ScopeCoordinateName(script, pc));
+        JSAutoByteString bytes;
+        if (!ToDisassemblySource(cx, v, &bytes))
+            return 0;
+        ScopeCoordinate sc(pc);
+        Sprint(sp, " %s (hops = %u, slot = %u)", bytes.ptr(), sc.hops, sc.binding);
+        break;
       }
+
       case JOF_ATOM: {
         Value v = StringValue(script->getAtom(GET_UINT32_INDEX(pc)));
         JSAutoByteString bytes;
@@ -1843,7 +1844,7 @@ static bool
 IsVarSlot(JSPrinter *jp, jsbytecode *pc, JSAtom **varAtom, int *localSlot)
 {
     if (JOF_OPTYPE(*pc) == JOF_SCOPECOORD) {
-        *varAtom = ScopeCoordinateAtom(jp->script, pc);
+        *varAtom = ScopeCoordinateName(jp->script, pc);
         LOCAL_ASSERT_RV(*varAtom, NULL);
         return true;
     }
