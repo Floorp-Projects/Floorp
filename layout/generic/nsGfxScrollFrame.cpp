@@ -2404,15 +2404,6 @@ nsGfxScrollFrameInner::GetScrollRange(nscoord aWidth, nscoord aHeight) const
   nsRect range = GetScrolledRect();
   range.width -= aWidth;
   range.height -= aHeight;
-
-  nsPresContext* presContext = mOuter->PresContext();
-  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-  range.width =
-    AlignToDevPixelRoundingToZero(range.XMost(), appUnitsPerDevPixel) - range.x;
-  range.height =
-    AlignToDevPixelRoundingToZero(range.YMost(), appUnitsPerDevPixel) - range.y;
-  range.x = AlignToDevPixelRoundingToZero(range.x, appUnitsPerDevPixel);
-  range.y = AlignToDevPixelRoundingToZero(range.y, appUnitsPerDevPixel);
   return range;
 }
 
