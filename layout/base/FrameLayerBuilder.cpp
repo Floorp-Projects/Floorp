@@ -2266,6 +2266,46 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
   return nsnull;
 }
 
+bool
+FrameLayerBuilder::GetThebesLayerResolutionForFrame(nsIFrame* aFrame,
+                                                    double* aXres, double* aYres,
+                                                    gfxPoint* aPoint)
+{
+  nsTArray<DisplayItemData> *array = GetDisplayItemDataArrayForFrame(aFrame);
+  if (array) {
+    for (PRUint32 i = 0; i < array->Length(); ++i) {
+      Layer* layer = array->ElementAt(i).mLayer;
+      if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
+        ThebesDisplayItemLayerUserData* data =
+          static_cast<ThebesDisplayItemLayerUserData*>
+            (layer->GetUserData(&gThebesDisplayItemLayerUserData));
+        *aXres = data->mXScale;
+        *aYres = data->mYScale;
+        *aPoint = data->mActiveScrolledRootPosition;
+        return true;
+      }
+    }
+  }
+
+  nsIFrame::ChildListIterator lists(aFrame);
+  for (; !lists.IsDone(); lists.Next()) {
+    if (lists.CurrentID() == nsIFrame::kPopupList ||
+        lists.CurrentID() == nsIFrame::kSelectPopupList) {
+      continue;
+    }
+
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      if (GetThebesLayerResolutionForFrame(childFrames.get(),
+                                           aXres, aYres, aPoint)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 #ifdef MOZ_DUMP_PAINTING
 static void DebugPaintItem(nsRenderingContext* aDest, nsDisplayItem *aItem, nsDisplayListBuilder* aBuilder)
 {
