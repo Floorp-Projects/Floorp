@@ -1,5 +1,6 @@
 import re
 from subprocess import list2cmdline
+from progressbar import ProgressBar
 
 class TestOutput:
     """Output from a test run."""
@@ -77,16 +78,17 @@ class TestResult:
         return cls(test, result, results)
 
 class ResultsSink:
-    def __init__(self, output_file, options):
-        self.output_file = output_file
+    def __init__(self, options, testcount):
         self.options = options
+        self.fp = options.output_fp
 
         self.groups = {}
         self.counts = [ 0, 0, 0 ]
         self.n = 0
 
-        self.finished = False
         self.pb = None
+        if not options.hide_progress:
+            self.pb = ProgressBar('', testcount, 16)
 
     def push(self, output):
         if isinstance(output, NullTestOutput):
@@ -96,12 +98,12 @@ class ResultsSink:
             self.n += 1
         else:
             if self.options.show_cmd:
-                print >> self.output_file, list2cmdline(output.cmd)
+                print >> self.fp, list2cmdline(output.cmd)
 
             if self.options.show_output:
-                print >> self.output_file, '    rc = %d, run time = %f' % (output.rc, output.dt)
-                self.output_file.write(output.out)
-                self.output_file.write(output.err)
+                print >> self.fp, '    rc = %d, run time = %f' % (output.rc, output.dt)
+                self.fp.write(output.out)
+                self.fp.write(output.err)
 
             result = TestResult.from_output(output)
             tup = (result.result, result.test.expect, result.test.random)
@@ -134,6 +136,12 @@ class ResultsSink:
             self.pb.label = '[%4d|%4d|%4d]'%tuple(self.counts)
             self.pb.update(self.n)
 
+    def finish(self, completed):
+        if self.pb:
+            self.pb.finish(completed)
+        if not self.options.tinderbox:
+            self.list(completed)
+
     # Conceptually, this maps (test result x test expection) to text labels.
     #      key   is (result, expect, random)
     #      value is (tinderbox label, dev test category)
@@ -154,7 +162,7 @@ class ResultsSink:
         (TestResult.PASS,  True,  True):  ('TEST-PASS (EXPECTED RANDOM)',        ''),
         }
 
-    def list(self):
+    def list(self, completed):
         for label, paths in sorted(self.groups.items()):
             if label == '': continue
 
@@ -173,7 +181,7 @@ class ResultsSink:
                           print >> failure_file, path
               failure_file.close()
 
-        suffix = '' if self.finished else ' (partial run -- interrupted by user)'
+        suffix = '' if completed else ' (partial run -- interrupted by user)'
         if self.all_passed():
             print 'PASS' + suffix
         else:
