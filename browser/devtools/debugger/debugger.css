@@ -134,12 +134,3 @@
   display: inline-block;
   vertical-align: middle;
 }
-
-/**
- * Display helpers
- */
-
-.unselectable {
-  -moz-user-select: -moz-none;
-  cursor: default;
-}
