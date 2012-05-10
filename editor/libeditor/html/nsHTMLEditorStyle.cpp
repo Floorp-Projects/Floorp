@@ -626,6 +626,85 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
   return NS_OK;
 }
 
+nsresult
+nsHTMLEditor::ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, PRInt32* aOffset,
+                         nsIAtom* aProperty, const nsAString* aAttribute)
+{
+  nsCOMPtr<nsIDOMNode> leftNode, rightNode, tmp;
+  nsresult res = SplitStyleAbovePoint(aNode, aOffset, aProperty, aAttribute,
+                                      address_of(leftNode),
+                                      address_of(rightNode));
+  NS_ENSURE_SUCCESS(res, res);
+  if (leftNode) {
+    bool bIsEmptyNode;
+    IsEmptyNode(leftNode, &bIsEmptyNode, false, true);
+    if (bIsEmptyNode) {
+      // delete leftNode if it became empty
+      res = DeleteNode(leftNode);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+  }
+  if (rightNode) {
+    nsCOMPtr<nsIDOMNode> secondSplitParent = GetLeftmostChild(rightNode);
+    // don't try to split non-containers (br's, images, hr's, etc)
+    if (!secondSplitParent) {
+      secondSplitParent = rightNode;
+    }
+    nsCOMPtr<nsIDOMNode> savedBR;
+    if (!IsContainer(secondSplitParent)) {
+      if (nsTextEditUtils::IsBreak(secondSplitParent)) {
+        savedBR = secondSplitParent;
+      }
+
+      secondSplitParent->GetParentNode(getter_AddRefs(tmp));
+      secondSplitParent = tmp;
+    }
+    *aOffset = 0;
+    res = SplitStyleAbovePoint(address_of(secondSplitParent),
+                               aOffset, aProperty, aAttribute,
+                               address_of(leftNode), address_of(rightNode));
+    NS_ENSURE_SUCCESS(res, res);
+    // should be impossible to not get a new leftnode here
+    NS_ENSURE_TRUE(leftNode, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDOMNode> newSelParent = GetLeftmostChild(leftNode);
+    if (!newSelParent) {
+      newSelParent = leftNode;
+    }
+    // If rightNode starts with a br, suck it out of right node and into
+    // leftNode.  This is so we you don't revert back to the previous style
+    // if you happen to click at the end of a line.
+    if (savedBR) {
+      res = MoveNode(savedBR, newSelParent, 0);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    bool bIsEmptyNode;
+    IsEmptyNode(rightNode, &bIsEmptyNode, false, true);
+    if (bIsEmptyNode) {
+      // delete rightNode if it became empty
+      res = DeleteNode(rightNode);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    // remove the style on this new hierarchy
+    PRInt32 newSelOffset = 0;
+    {
+      // Track the point at the new hierarchy.  This is so we can know where
+      // to put the selection after we call RemoveStyleInside().
+      // RemoveStyleInside() could remove any and all of those nodes, so I
+      // have to use the range tracking system to find the right spot to put
+      // selection.
+      nsAutoTrackDOMPoint tracker(mRangeUpdater,
+                                  address_of(newSelParent), &newSelOffset);
+      res = RemoveStyleInside(leftNode, aProperty, aAttribute);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    // reset our node offset values to the resulting new sel point
+    *aNode = newSelParent;
+    *aOffset = newSelOffset;
+  }
+
+  return NS_OK;
+}
+
 bool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
 {
   NS_ENSURE_TRUE(aNode, false);
