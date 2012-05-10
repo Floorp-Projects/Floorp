@@ -37,6 +37,7 @@
 
 #include "SanityChecks.h"
 #include "TestPoint.h"
+#include "TestScaling.h"
 #ifdef WIN32
 #include "TestDrawTargetD2D.h"
 #endif
@@ -61,7 +62,8 @@ main()
   #ifdef WIN32
     { new TestDrawTargetD2D(), "DrawTarget (D2D)" },
   #endif
-    { new TestPoint(), "Point Tests" }
+    { new TestPoint(), "Point Tests" },
+    { new TestScaling(), "Scaling Tests" }
   };
 
   int totalFailures = 0;
