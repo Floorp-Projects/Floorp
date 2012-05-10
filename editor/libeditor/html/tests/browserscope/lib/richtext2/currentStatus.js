@@ -968,8 +968,6 @@ const knownFailures = {
     "D-Proposed-CHAR-7_SC-dM": true,
     "D-Proposed-CHAR-7_SC-body": true,
     "D-Proposed-CHAR-7_SC-div": true,
-    "D-Proposed-B-1_SW-dM": true,
-    "D-Proposed-B-1_SW-body": true,
     "D-Proposed-B-1_SW-div": true,
     "D-Proposed-B-1_SL-dM": true,
     "D-Proposed-B-1_SL-body": true,

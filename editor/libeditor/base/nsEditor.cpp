@@ -616,9 +616,10 @@ nsEditor::GetSelectionController(nsISelectionController **aSel)
 
 
 NS_IMETHODIMP
-nsEditor::DeleteSelection(EDirection aAction)
+nsEditor::DeleteSelection(EDirection aAction, EStripWrappers aStripWrappers)
 {
-  return DeleteSelectionImpl(aAction);
+  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
+  return DeleteSelectionImpl(aAction, aStripWrappers);
 }
 
 
@@ -632,6 +633,23 @@ nsEditor::GetSelection(nsISelection **aSelection)
   GetSelectionController(getter_AddRefs(selcon));
   NS_ENSURE_TRUE(selcon, NS_ERROR_NOT_INITIALIZED);
   return selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);  // does an addref
+}
+
+nsTypedSelection*
+nsEditor::GetTypedSelection()
+{
+  nsCOMPtr<nsISelection> sel;
+  nsresult res = GetSelection(getter_AddRefs(sel));
+  NS_ENSURE_SUCCESS(res, nsnull);
+
+  nsCOMPtr<nsISelectionPrivate> selPrivate = do_QueryInterface(sel);
+  NS_ENSURE_TRUE(selPrivate, nsnull);
+
+  nsRefPtr<nsFrameSelection> frameSel;
+  res = selPrivate->GetFrameSelection(getter_AddRefs(frameSel));
+  NS_ENSURE_SUCCESS(res, nsnull);
+
+  return frameSel->GetSelection(nsISelectionController::SELECTION_NORMAL);
 }
 
 NS_IMETHODIMP 
@@ -4301,8 +4319,11 @@ nsEditor::GetShouldTxnSetSelection()
 
 
 NS_IMETHODIMP 
-nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
+nsEditor::DeleteSelectionImpl(EDirection aAction,
+                              EStripWrappers aStripWrappers)
 {
+  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
+
   nsCOMPtr<nsISelection>selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
@@ -4431,7 +4452,7 @@ nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSele
   result = selection->GetIsCollapsed(&collapsed);
   if (NS_SUCCEEDED(result) && !collapsed) 
   {
-    result = DeleteSelection(nsIEditor::eNone);
+    result = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
     if (NS_FAILED(result)) {
       return result;
     }
@@ -5105,7 +5126,7 @@ nsEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
           nativeKeyEvent->IsMeta()) {
         return NS_OK;
       }
-      DeleteSelection(nsIEditor::ePrevious);
+      DeleteSelection(nsIEditor::ePrevious, nsIEditor::eStrip);
       aKeyEvent->PreventDefault(); // consumed
       return NS_OK;
     case nsIDOMKeyEvent::DOM_VK_DELETE:
@@ -5116,7 +5137,7 @@ nsEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
           nativeKeyEvent->IsAlt() || nativeKeyEvent->IsMeta()) {
         return NS_OK;
       }
-      DeleteSelection(nsIEditor::eNext);
+      DeleteSelection(nsIEditor::eNext, nsIEditor::eStrip);
       aKeyEvent->PreventDefault(); // consumed
       return NS_OK; 
   }

@@ -616,7 +616,8 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
     case nsEditor::kOpInsertBreak:
       return WillInsertBreak(aSelection, aCancel, aHandled);
     case nsEditor::kOpDeleteSelection:
-      return WillDeleteSelection(aSelection, info->collapsedAction, aCancel, aHandled);
+      return WillDeleteSelection(aSelection, info->collapsedAction,
+                                 info->stripWrappers, aCancel, aHandled);
     case nsEditor::kOpMakeList:
       return WillMakeList(aSelection, info->blockType, info->entireList, info->bulletType, aCancel, aHandled);
     case nsEditor::kOpIndent:
@@ -1306,7 +1307,7 @@ nsHTMLEditRules::WillInsertText(nsEditor::OperationID aAction,
   NS_ENSURE_SUCCESS(res, res);
   if (!bCollapsed)
   {
-    res = mHTMLEditor->DeleteSelection(nsIEditor::eNone);
+    res = mHTMLEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
     NS_ENSURE_SUCCESS(res, res);
   }
 
@@ -1514,7 +1515,7 @@ nsHTMLEditRules::WillInsertBreak(nsISelection* aSelection,
   nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
   NS_ENSURE_SUCCESS(res, res);
   if (!bCollapsed) {
-    res = mHTMLEditor->DeleteSelection(nsIEditor::eNone);
+    res = mHTMLEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
     NS_ENSURE_SUCCESS(res, res);
   }
 
@@ -1819,11 +1820,14 @@ nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, bool aPlaintext, bool 
 
 
 nsresult
-nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection, 
-                                     nsIEditor::EDirection aAction, 
-                                     bool *aCancel,
-                                     bool *aHandled)
+nsHTMLEditRules::WillDeleteSelection(nsISelection* aSelection,
+                                     nsIEditor::EDirection aAction,
+                                     nsIEditor::EStripWrappers aStripWrappers,
+                                     bool* aCancel,
+                                     bool* aHandled)
 {
+  MOZ_ASSERT(aStripWrappers == nsIEditor::eStrip ||
+             aStripWrappers == nsIEditor::eNoStrip);
 
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
@@ -1988,7 +1992,8 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       {
         res = mHTMLEditor->DeleteNode(visNode);
         NS_ENSURE_SUCCESS(res, res);
-        return WillDeleteSelection(aSelection, aAction, aCancel, aHandled);
+        return WillDeleteSelection(aSelection, aAction, aStripWrappers,
+                                   aCancel, aHandled);
       }
       
       // special handling for backspace when positioned after <hr>
@@ -2292,14 +2297,17 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   }
   
   {
-    // track end location of where we are deleting
-    nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, address_of(endNode), &endOffset);
+    // track location of where we are deleting
+    nsAutoTrackDOMPoint startTracker(mHTMLEditor->mRangeUpdater,
+                                     address_of(startNode), &startOffset);
+    nsAutoTrackDOMPoint endTracker(mHTMLEditor->mRangeUpdater,
+                                   address_of(endNode), &endOffset);
     // we are handling all ranged deletions directly now.
     *aHandled = true;
     
     if (endNode == startNode)
     {
-      res = mHTMLEditor->DeleteSelectionImpl(aAction);
+      res = mHTMLEditor->DeleteSelectionImpl(aAction, aStripWrappers);
       NS_ENSURE_SUCCESS(res, res); 
     }
     else
@@ -2339,7 +2347,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       // are endpoint block parents the same?  use default deletion
       if (leftParent == rightParent) 
       {
-        res = mHTMLEditor->DeleteSelectionImpl(aAction);
+        res = mHTMLEditor->DeleteSelectionImpl(aAction, aStripWrappers);
       }
       else
       {
@@ -2360,7 +2368,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
           if (nsHTMLEditUtils::IsParagraph(leftParent))
           {
             // first delete the selection
-            res = mHTMLEditor->DeleteSelectionImpl(aAction);
+            res = mHTMLEditor->DeleteSelectionImpl(aAction, aStripWrappers);
             NS_ENSURE_SUCCESS(res, res);
             // then join para's, insert break
             res = mHTMLEditor->JoinNodeDeep(leftParent,rightParent,address_of(selNode),&selOffset);
@@ -2373,7 +2381,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
               || nsHTMLEditUtils::IsHeader(leftParent))
           {
             // first delete the selection
-            res = mHTMLEditor->DeleteSelectionImpl(aAction);
+            res = mHTMLEditor->DeleteSelectionImpl(aAction, aStripWrappers);
             NS_ENSURE_SUCCESS(res, res);
             // join blocks
             res = mHTMLEditor->JoinNodeDeep(leftParent,rightParent,address_of(selNode),&selOffset);

@@ -60,7 +60,7 @@ function runTests() {
   select(document.querySelector("#test2 span"));
   document.querySelector("#test2 [contenteditable]").focus();
   synthesizeKey("VK_DELETE", {});
-  todo_is(document.querySelector("#test2 span"), null,
+  is(document.querySelector("#test2 span"), null,
     "The <span> element should have been deleted.");
 
   // done

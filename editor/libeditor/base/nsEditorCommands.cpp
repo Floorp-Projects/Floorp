@@ -286,7 +286,7 @@ nsCutOrDeleteCommand::DoCommand(const char *aCommandName,
       bool isCollapsed;
       rv = selection->GetIsCollapsed(&isCollapsed);
       if (NS_SUCCEEDED(rv) && isCollapsed)
-        return editor->DeleteSelection(nsIEditor::eNext);
+        return editor->DeleteSelection(nsIEditor::eNext, nsIEditor::eStrip);
     }
     return editor->Cut();
   }
@@ -384,7 +384,8 @@ nsCopyOrDeleteCommand::DoCommand(const char *aCommandName,
       bool isCollapsed;
       rv = selection->GetIsCollapsed(&isCollapsed);
       if (NS_SUCCEEDED(rv) && isCollapsed)
-        return editor->DeleteSelection(nsIEditor::eNextWord);
+        return editor->DeleteSelection(nsIEditor::eNextWord,
+                                       nsIEditor::eStrip);
     }
     return editor->Copy();
   }
@@ -627,7 +628,7 @@ nsDeleteCommand::DoCommand(const char *aCommandName, nsISupports *aCommandRefCon
   else if (!nsCRT::strcmp("cmd_deleteToEndOfLine",aCommandName))
     deleteDir = nsIEditor::eToEndOfLine;
 
-  return editor->DeleteSelection(deleteDir);
+  return editor->DeleteSelection(deleteDir, nsIEditor::eStrip);
 }
 
 NS_IMETHODIMP 
