@@ -6621,10 +6621,28 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
     return JS_FALSE;
   }
 
+  // If our argument is a CData, it holds a type.
+  // This is the type that we should capture, not that
+  // of the function, which may be less precise.
+  JSObject *objBestArgType = objArgType;
+  if (!JSVAL_IS_PRIMITIVE(valData)) {
+    JSObject *objData = JSVAL_TO_OBJECT(valData);
+    if (CData::IsCData(objData)) {
+      objBestArgType = CData::GetCType(objData);
+      size_t sizeBestArg;
+      if (!CType::GetSafeSize(objBestArgType, &sizeBestArg)) {
+        JS_NOT_REACHED("object with unknown size");
+      }
+      if (sizeBestArg != sizeArg) {
+        return TypeError(cx, "(an object with the same size as that expected by the C finalization function)", valData);
+      }
+    }
+  }
+
   // Used by GetCType
   JS_SetReservedSlot(objResult,
                      SLOT_DATAFINALIZER_VALTYPE,
-                     OBJECT_TO_JSVAL(objArgType));
+                     OBJECT_TO_JSVAL(objBestArgType));
 
   // Used by ToSource
   JS_SetReservedSlot(objResult,

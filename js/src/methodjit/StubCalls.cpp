@@ -827,8 +827,8 @@ void JS_FASTCALL
 stubs::RecompileForInline(VMFrame &f)
 {
     ExpandInlineFrames(f.cx->compartment);
-    Recompiler::clearStackReferencesAndChunk(f.cx->runtime->defaultFreeOp(), f.script(), f.jit(),
-                                             f.chunkIndex(), /* resetUses = */ false);
+    Recompiler::clearStackReferences(f.cx->runtime->defaultFreeOp(), f.script());
+    f.jit()->destroyChunk(f.cx->runtime->defaultFreeOp(), f.chunkIndex(), /* resetUses = */ false);
 }
 
 void JS_FASTCALL

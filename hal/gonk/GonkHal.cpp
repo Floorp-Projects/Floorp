@@ -17,6 +17,7 @@
 #include "hardware/lights.h"
 #include "hardware_legacy/uevent.h"
 #include "hardware_legacy/vibrator.h"
+#include "hardware_legacy/power.h"
 
 #include "base/message_loop.h"
 
@@ -331,7 +332,6 @@ namespace {
 /**
  * RAII class to help us remember to close file descriptors.
  */
-const char *screenEnabledFilename = "/sys/power/state";
 const char *wakeLockFilename = "/sys/power/wake_lock";
 const char *wakeUnlockFilename = "/sys/power/wake_unlock";
 
@@ -392,7 +392,7 @@ GetScreenEnabled()
 void
 SetScreenEnabled(bool enabled)
 {
-  WriteToFile(screenEnabledFilename, enabled ? "on" : "mem");
+  set_screen_state(enabled);
   sScreenEnabled = enabled;
 }
 

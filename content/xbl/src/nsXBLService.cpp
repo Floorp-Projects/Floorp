@@ -836,9 +836,20 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 
   nsXBLPrototypeBinding* protoBinding = docInfo->GetPrototypeBinding(ref);
 
-  NS_WARN_IF_FALSE(protoBinding, "Unable to locate an XBL binding");
-  if (!protoBinding)
+  if (!protoBinding) {
+#ifdef DEBUG
+    nsCAutoString uriSpec;
+    aURI->GetSpec(uriSpec);
+    nsCAutoString doc;
+    boundDocument->GetDocumentURI()->GetSpec(doc);
+    nsCAutoString message("Unable to locate an XBL binding for URI ");
+    message += uriSpec;
+    message += " in document ";
+    message += doc;
+    NS_WARNING(message.get());
+#endif
     return NS_ERROR_FAILURE;
+  }
 
   NS_ENSURE_TRUE(aDontExtendURIs.AppendElement(protoBinding->BindingURI()),
                  NS_ERROR_OUT_OF_MEMORY);

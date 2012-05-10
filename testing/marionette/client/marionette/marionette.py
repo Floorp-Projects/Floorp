@@ -111,6 +111,7 @@ class Marionette(object):
         self.session = None
         self.window = None
         self.emulator = None
+        self.extra_emulators = []
         self.homedir = homedir
         self.baseurl = baseurl
         self.noWindow = noWindow
@@ -141,6 +142,8 @@ class Marionette(object):
             self.emulator.close()
         if self.b2gbin:
             self.b2ginstance.close()
+        for qemu in self.extra_emulators:
+            qemu.emulator.close()
 
     def _send_message(self, command, response_key, **kwargs):
         if not self.session and command not in ('newSession', 'getStatus'):
@@ -313,7 +316,7 @@ class Marionette(object):
 
         return unwrapped
 
-    def execute_js_script(self, script, script_args=None, timeout=True):
+    def execute_js_script(self, script, script_args=None, timeout=True, new_sandbox=True):
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
@@ -321,21 +324,30 @@ class Marionette(object):
                                       'value',
                                       value=script,
                                       args=args,
-                                      timeout=timeout)
+                                      timeout=timeout,
+                                      newSandbox=new_sandbox)
         return self.unwrapValue(response)
 
-    def execute_script(self, script, script_args=None):
+    def execute_script(self, script, script_args=None, new_sandbox=True):
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
-        response = self._send_message('executeScript', 'value', value=script, args=args)
+        response = self._send_message('executeScript',
+                                     'value',
+                                      value=script,
+                                      args=args,
+                                      newSandbox=new_sandbox)
         return self.unwrapValue(response)
 
-    def execute_async_script(self, script, script_args=None):
+    def execute_async_script(self, script, script_args=None, new_sandbox=True):
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
-        response = self._send_message('executeAsyncScript', 'value', value=script, args=args)
+        response = self._send_message('executeAsyncScript',
+                                      'value',
+                                      value=script,
+                                      args=args,
+                                      newSandbox=new_sandbox)
         return self.unwrapValue(response)
 
     def find_element(self, method, target, id=None):
