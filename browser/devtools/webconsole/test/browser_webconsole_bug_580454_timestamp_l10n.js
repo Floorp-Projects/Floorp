@@ -21,7 +21,7 @@ function test() {
     browser.removeEventListener("DOMContentLoaded", testTimestamp, false);
     const TEST_TIMESTAMP = 12345678;
     let date = new Date(TEST_TIMESTAMP);
-    let localizedString = ConsoleUtils.timestampString(TEST_TIMESTAMP);
+    let localizedString = WebConsoleUtils.l10n.timestampString(TEST_TIMESTAMP);
     isnot(localizedString.indexOf(date.getHours()), -1, "the localized " +
           "timestamp contains the hours");
     isnot(localizedString.indexOf(date.getMinutes()), -1, "the localized " +

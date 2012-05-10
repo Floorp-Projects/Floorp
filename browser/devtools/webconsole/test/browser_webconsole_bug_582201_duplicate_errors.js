@@ -52,14 +52,14 @@ function test() {
 function testDuplicateErrors() {
   browser.removeEventListener("DOMContentLoaded", testDuplicateErrors,
                               false);
-  openConsole();
+  openConsole(function(hud) {
+    hud.jsterm.clearOutput();
 
-  HUDService.getHudByWindow(content).jsterm.clearOutput();
+    Services.console.registerListener(consoleObserver);
 
-  Services.console.registerListener(consoleObserver);
-
-  expectUncaughtException();
-  content.location.reload();
+    expectUncaughtException();
+    content.location.reload();
+  });
 }
 
 var consoleObserver = {
