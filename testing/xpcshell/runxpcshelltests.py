@@ -235,7 +235,7 @@ class XPCShellTests(object):
         '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath
     ]
 
-    if self.testingModulesDir is not None:
+    if self.testingModulesDir:
         self.xpcsCmd.extend([
             '-e',
             'const _TESTING_MODULES_DIR = "%s";' % self.testingModulesDir
@@ -621,7 +621,7 @@ class XPCShellTests(object):
             raise Exception("testsRootDir path does not exists: %s" %
                     testsRootDir)
 
-    if testingModulesDir is not None:
+    if testingModulesDir:
         if not os.path.isabs(testingModulesDir):
             testingModulesDir = os.path.abspath(testingModulesDir)
 
@@ -900,7 +900,7 @@ class XPCShellOptions(OptionParser):
     self.add_option("--tests-root-dir",
                     type="string", dest="testsRootDir", default=None,
                     help="absolute path to directory where all tests are located. this is typically $(objdir)/_tests")
-    self.add_option("--tests-modules-dir",
+    self.add_option("--testing-modules-dir",
                     dest="testingModulesDir", default=None,
                     help="Directory where testing modules are located.")
     self.add_option("--total-chunks",

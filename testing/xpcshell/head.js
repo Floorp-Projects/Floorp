@@ -303,7 +303,7 @@ function do_get_idle() {
 
 function _execute_test() {
   // Map resource://test/ to current working directory and
-  // resource://testing/ to the shared test modules directory.
+  // resource://testing-common/ to the shared test modules directory.
   let (ios = Components.classes["@mozilla.org/network/io-service;1"]
              .getService(Components.interfaces.nsIIOService)) {
     let protocolHandler =
@@ -318,7 +318,7 @@ function _execute_test() {
       modulesFile.initWithPath(_TESTING_MODULES_DIR);
 
       let modulesURI = ios.newFileURI(modulesFile);
-      protocolHandler.setSubstitution("testing", modulesURI);
+      protocolHandler.setSubstitution("testing-common", modulesURI);
     }
   }
 
