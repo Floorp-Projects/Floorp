@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test text selection functions</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+
+  <script type="application/javascript">
+    
+    function doTest()
+    {
+      // Test selection count: clean selection / check count.
+      testTextAddSelection("div0", 0, 2, 1); // |Test selection...
+      cleanTextSelections("div0");
+      testTextSelectionCount("div0", 0);
+
+      // Test addition: adding two equal selections, the second one should
+      // not be added.
+      testTextAddSelection("div1", 7, 9, 1); // Test ad|di|ng two...
+      testTextAddSelection("div1", 7, 9, 1); // Test ad|di|ng two...
+      testTextGetSelection("div1", 7, 9, 0);
+
+      // Test overlapping selections: adding three selections, one adjacent.
+      testTextAddSelection("div2", 0, 3, 1); // |Tes|t adding 3...
+      testTextAddSelection("div2", 7, 9, 2); // |Tes|t ad|di|ng 3...
+      testTextAddSelection("div2", 3, 4, 3); // |Tes||t| ad|di|ng 3...
+      testTextGetSelection("div2", 0, 3, 0);
+      testTextGetSelection("div2", 3, 4, 1);
+      testTextGetSelection("div2", 7, 9, 2);
+
+      // Test selection re-ordering: adding two selections.
+      // NOTE: removeSelections aSelectionIndex is from start of document.
+      testTextAddSelection("div3", 0, 3, 1); // |Tes|t adding 2...
+      testTextAddSelection("div3", 7, 9, 2); // |Tes|t ad|di|ng 2...
+      testTextRemoveSelection("div3", 4, 1); // Test ad|di|ng 2...
+
+      // Test extending existing selection.
+      // NOTE: setSelectionBounds aSelectionIndex is from start of document.
+      testTextAddSelection("div4", 4, 5, 1); // Test| |extending...
+      testTextSetSelection("div4", 4, 9, 6, 1); // Test| exte|nding...
+
+      // Test moving an existing selection.
+      // NOTE: setSelectionBounds aSelectionIndex is from start of document.
+      testTextAddSelection("div5", 1, 3, 1); // T|es|t moving...
+      testTextSetSelection("div5", 5, 9, 6, 1); // Test |movi|ng...
+
+      // Test adding selections to multiple inner elements.
+      testTextAddSelection("div71", 0, 3, 1); // |Tes|t adding...
+      testTextAddSelection("div71", 7, 8, 2); // |Tes|t ad|d|ing...
+      testTextAddSelection("div72", 4, 6, 1); // Test| a|dding...
+      testTextAddSelection("div72", 7, 8, 2); // Test| a|d|d|ing...
+
+      // Test adding selection to parent element.
+      // NOTE: If inner elements are represented as embedded chars
+      //       we count their internal selections.
+      testTextAddSelection("div7", 7, 8, 5); // Test ad|d|ing...
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+
+</script>
+</head>
+
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="div0">Test selection count</div>
+  </br>
+  <div id="div1">Test adding two equal selections </div>
+  <div id="div2">Test adding 3 selections one adjacent </div>
+  <div id="div3">Test adding 2 selections, remove first one </div>
+  <div id="div4">Test extending a selection </div>
+  <div id="div5">Test moving a selection </div>
+  </br>
+  <div id="div7">Test adding selections to parent element
+    <div id="div71">Test adding selections to inner element1 </div>
+    <div id="div72">Test adding selections to inner element2 </div>
+  </div>
+
+</body>
+
+</html>
