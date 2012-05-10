@@ -16,9 +16,9 @@ function test() {
         {selector: "#element-size",              value: "160x160"},
         {selector: ".size > span",               value: "100x100"},
         {selector: ".margin.top > span",         value: 30},
-        {selector: ".margin.left > span",        value: 30},
+        {selector: ".margin.left > span",        value: "auto"},
         {selector: ".margin.bottom > span",      value: 30},
-        {selector: ".margin.right > span",       value: 30},
+        {selector: ".margin.right > span",       value: "auto"},
         {selector: ".padding.top > span",        value: 20},
         {selector: ".padding.left > span",       value: 20},
         {selector: ".padding.bottom > span",     value: 20},
@@ -30,16 +30,16 @@ function test() {
   ];
 
   let res2 = [
-        {selector: "#element-size",              value: "160x210"},
+        {selector: "#element-size",              value: "190x210"},
         {selector: ".size > span",               value: "100x150"},
         {selector: ".margin.top > span",         value: 30},
-        {selector: ".margin.left > span",        value: 30},
+        {selector: ".margin.left > span",        value: "auto"},
         {selector: ".margin.bottom > span",      value: 30},
-        {selector: ".margin.right > span",       value: 50},
+        {selector: ".margin.right > span",       value: "auto"},
         {selector: ".padding.top > span",        value: 20},
         {selector: ".padding.left > span",       value: 20},
         {selector: ".padding.bottom > span",     value: 20},
-        {selector: ".padding.right > span",      value: 20},
+        {selector: ".padding.right > span",      value: 50},
         {selector: ".border.top > span",         value: 10},
         {selector: ".border.left > span",        value: 10},
         {selector: ".border.bottom > span",      value: 10},
@@ -53,7 +53,7 @@ function test() {
     waitForFocus(setupTest, content);
   }, true);
 
-  let style = "div { position: absolute; top: 42px; left: 42px; height: 100px; width: 100px; border: 10px solid black; padding: 20px; margin: 30px; }";
+  let style = "div { position: absolute; top: 42px; left: 42px; height: 100px; width: 100px; border: 10px solid black; padding: 20px; margin: 30px auto;}";
   let html = "<style>" + style + "</style><div></div>"
   content.location = "data:text/html," + encodeURIComponent(html);
 
@@ -106,7 +106,7 @@ function test() {
     }
 
     InspectorUI.selection.style.height = "150px";
-    InspectorUI.selection.style.marginRight = "50px";
+    InspectorUI.selection.style.paddingRight = "50px";
 
     setTimeout(test2, 200); // Should be enough to get a MozAfterPaint event
   }
