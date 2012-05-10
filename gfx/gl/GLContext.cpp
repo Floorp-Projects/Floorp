@@ -64,9 +64,8 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace gl {
 
-#ifdef DEBUG
-PRUintn GLContext::sCurrentGLContextTLS = -1;
-#endif
+tls::key GLContextTLSStorage::sTLSKey;
+bool GLContextTLSStorage::sTLSKeyAlreadyCreated = false;
 
 PRUint32 GLContext::sDebugMode = 0;
 
@@ -101,6 +100,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_unpack_subimage",
     "GL_OES_standard_derivatives",
     "GL_EXT_texture_filter_anisotropic",
+    "GL_EXT_texture_compression_s3tc",
     "GL_EXT_framebuffer_blit",
     "GL_ANGLE_framebuffer_blit",
     "GL_EXT_framebuffer_multisample",
@@ -146,6 +146,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &mSymbols.fClearColor, { "ClearColor", NULL } },
         { (PRFuncPtr*) &mSymbols.fClearStencil, { "ClearStencil", NULL } },
         { (PRFuncPtr*) &mSymbols.fColorMask, { "ColorMask", NULL } },
+        { (PRFuncPtr*) &mSymbols.fCompressedTexImage2D, {"CompressedTexImage2D", NULL} },
+        { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage2D, {"CompressedTexSubImage2D", NULL} },
         { (PRFuncPtr*) &mSymbols.fCullFace, { "CullFace", NULL } },
         { (PRFuncPtr*) &mSymbols.fDetachShader, { "DetachShader", "DetachShaderARB", NULL } },
         { (PRFuncPtr*) &mSymbols.fDepthFunc, { "DepthFunc", NULL } },
@@ -739,8 +741,9 @@ already_AddRefed<TextureImage>
 GLContext::CreateTextureImage(const nsIntSize& aSize,
                               TextureImage::ContentType aContentType,
                               GLenum aWrapMode,
-                              bool aUseNearestFilter)
+                              TextureImage::Flags aFlags)
 {
+    bool useNearestFilter = aFlags & TextureImage::UseNearestFilter;
     MakeCurrent();
 
     GLuint texture;
@@ -749,13 +752,13 @@ GLContext::CreateTextureImage(const nsIntSize& aSize,
     fActiveTexture(LOCAL_GL_TEXTURE0);
     fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
 
-    GLint texfilter = aUseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
+    GLint texfilter = useNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
     fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
 
-    return CreateBasicTextureImage(texture, aSize, aWrapMode, aContentType, this);
+    return CreateBasicTextureImage(texture, aSize, aWrapMode, aContentType, this, aFlags);
 }
 
 void GLContext::ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter)
@@ -938,14 +941,13 @@ BasicTextureImage::Resize(const nsIntSize& aSize)
 TiledTextureImage::TiledTextureImage(GLContext* aGL,
                                      nsIntSize aSize,
                                      TextureImage::ContentType aContentType,
-                                     bool aUseNearestFilter)
-    : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aUseNearestFilter)
+                                     TextureImage::Flags aFlags)
+    : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aFlags)
     , mCurrentImage(0)
     , mInUpdate(false)
     , mRows(0)
     , mColumns(0)
     , mGL(aGL)
-    , mUseNearestFilter(aUseNearestFilter)
     , mTextureState(Created)
     , mIterationCallback(nsnull)
 {
@@ -975,7 +977,7 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
     int oldCurrentImage = mCurrentImage;
     BeginTileIteration();
     do {
-        nsIntRect tileRect = GetTileRect();
+        nsIntRect tileRect = GetSrcTileRect();
         int xPos = tileRect.x;
         int yPos = tileRect.y;
 
@@ -1187,6 +1189,15 @@ nsIntRect TiledTextureImage::GetTileRect()
     return rect;
 }
 
+nsIntRect TiledTextureImage::GetSrcTileRect()
+{
+    nsIntRect rect = GetTileRect();
+    unsigned int srcY = mFlags & NeedsYFlip
+                        ? mSize.height - rect.height - rect.y
+                        : rect.y;
+    return nsIntRect(rect.x, srcY, rect.width, rect.height);
+}
+
 void
 TiledTextureImage::BindTexture(GLenum aTextureUnit)
 {
@@ -1267,7 +1278,7 @@ void TiledTextureImage::Resize(const nsIntSize& aSize)
 
             // Create a new tile.
             nsRefPtr<TextureImage> teximg =
-                    mGL->TileGenFunc(size, mContentType, mUseNearestFilter);
+                    mGL->TileGenFunc(size, mContentType, mFlags);
             if (replace)
                 mImages.ReplaceElementAt(i, teximg.forget());
             else

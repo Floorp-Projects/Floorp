@@ -164,14 +164,25 @@ struct BidiParagraphData {
     mPrevFrame = aBpd->mPrevFrame;
     mParagraphDepth = aBpd->mParagraphDepth + 1;
 
+    const nsStyleTextReset* text = aBDIFrame->GetStyleTextReset();
     bool isRTL = (NS_STYLE_DIRECTION_RTL ==
                   aBDIFrame->GetStyleVisibility()->mDirection);
-    mParaLevel = mParagraphDepth * 2;
-    if (isRTL) ++mParaLevel;
 
-    if (aBDIFrame->GetStyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_OVERRIDE) {
+    if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
+      mParaLevel = NSBIDI_DEFAULT_LTR;
+    } else {
+      mParaLevel = mParagraphDepth * 2;
+      if (isRTL) ++mParaLevel;
+    }
+
+    if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_OVERRIDE) {
       PushBidiControl(isRTL ? kRLO : kLRO);
     }
+  }
+
+  void EmptyBuffer()
+  {
+    mBuffer.SetLength(0);
   }
 
   nsresult SetPara()
@@ -631,6 +642,10 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
     bpd.PopBidiControl();
   }
 
+  BidiParagraphData* subParagraph = bpd.GetSubParagraph();
+  if (subParagraph->BufferLength()) {
+    ResolveParagraph(aBlockFrame, subParagraph);
+  }
   return ResolveParagraph(aBlockFrame, &bpd);
 }
 
@@ -1122,7 +1137,8 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
       nsIFrame* kid = frame->GetFirstPrincipalChild();
       if (kid) {
         const nsStyleTextReset* text = frame->GetStyleTextReset();
-        if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_ISOLATE) {
+        if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_ISOLATE ||
+            text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
           // css "unicode-bidi: isolate" and html5 bdi: 
           //  resolve the element as a separate paragraph
           BidiParagraphData* subParagraph = aBpd->GetSubParagraph();
@@ -1137,11 +1153,15 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
            */
           bool isLastContinuation = !frame->GetNextContinuation();
           if (!frame->GetPrevContinuation() || !subParagraph->mReset) {
+            if (subParagraph->BufferLength()) {
+              ResolveParagraph(aBlockFrame, subParagraph);
+            }
             subParagraph->Reset(frame, aBpd);
           }
           TraverseFrames(aBlockFrame, aLineIter, kid, subParagraph);
           if (isLastContinuation) {
             ResolveParagraph(aBlockFrame, subParagraph);
+            subParagraph->EmptyBuffer();
           }
 
           // Treat the element as a neutral character within its containing

@@ -210,6 +210,11 @@ CollectWindowReports(nsGlobalWindow *aWindow,
          "tree, within a window.");
   aWindowTotalSizes->mLayoutTextRuns += windowSizes.mLayoutTextRuns;
 
+  REPORT("/layout/pres-contexts", windowSizes.mLayoutPresContext,
+         "Memory used for the PresContext in the PresShell's frame "
+         "within a window.");
+  aWindowTotalSizes->mLayoutPresContext += windowSizes.mLayoutPresContext;
+
 #undef REPORT
 
   return NS_OK;

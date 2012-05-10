@@ -1,0 +1,98 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html>
+  <body>
+    This page contains javascript that can be included in an iframe and
+    upon recieving commands over postMessage will attempt to invoke privileged
+    repository management APIs.
+  </body>
+  <script src="../jshelper.js"></script>
+  <script>
+
+   window.addEventListener('message', doSomething);
+   var installed = false;
+
+   function doSomething(event) {
+     if(event.data == "getSelf") {
+       var origin = getOrigin(appURL);
+       mozAppscb(navigator.mozApps.getSelf(),
+                 [{ status: '== "success"',
+                    installOrigin: '== "chrome://mochitests"',
+                    origin: "== " + origin.quote(),
+                    manifestURL: "== " +  appURL.quote()
+                 }], check, next);
+      }
+      else if(event.data == "uninstall") {
+        var pending = navigator.mozApps.getSelf();
+        pending.onsuccess = function ()  {
+          var result = pending.result.uninstall();
+          result.onsuccess = function()  {
+            check(true, "app has been uninstalled by the domain");
+            next();
+          };
+          result.onerror = function() {
+            check(false, "app uninstall failed");
+            next();
+          };
+        };
+        pending.onerror = function() {
+          check(false, "app uninstall failed through getSelf");
+          next();
+        };
+      }
+      else if(event.data == "install") {
+        debug('type of check = ' + typeof check);
+        install(appURL, check, next);
+        installed = true;
+      }
+      else if(event.data == "getInstalled") {
+        if(installed == true) {
+          getInstalled([appURL], check, next);
+        }
+        mozAppscb(navigator.mozApps.getInstalled(),
+                  [{ status: '== "success"'}],
+                  check, next);
+      } 
+      else if(event.data == "mgmt.getAll") {
+        var hostname = window.location.hostname;
+        debug(hostname);
+        if (hostname != "http://example.com") {
+          mozAppscb(navigator.mozApps.mgmt.getAll(),
+                    [{ status: '== "error"',
+                       name: '== "DENIED"'
+                    }], check, next);
+        } else {
+          mozAppscb(navigator.mozApps.mgmt.getAll(),
+                    [{ status: '== "success"'}],
+                    check, next);
+        }
+      }
+      else if(event.data == "mgmt.event_error") {
+        var hostname = window.location.hostname;
+        debug(hostname);
+        if (hostname != "http://example.com") {
+          try {
+            navigator.mozApps.mgmt.addEventListener("install", function (ev) {check(ev.application.origin);});
+          } catch (e) {
+            check(!e.message, e.message);
+          }
+
+          try {
+            navigator.mozApps.mgmt.removeEventListener("install", function (ev) {check(!ev.application.origin);});
+          } catch (e) {
+            check(!e.message, e.message);
+          }
+          finally {
+            next();
+          }
+
+        } else {
+          mozAppscb(navigator.mozApps.mgmt.getAll(),
+                    [{ status: '== "success"'}], 
+                    check, next);
+        }
+      }
+   }
+  </script>
+</html>

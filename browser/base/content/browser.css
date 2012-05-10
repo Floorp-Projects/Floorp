@@ -372,6 +372,16 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 
 #full-screen-warning-message {
   pointer-events: auto;
+  /* We must specify a max-width, otherwise word-wrap:break-word doesn't
+     work in descendant <description> and <label> elements. Bug 630864. */
+  max-width: 800px;  
+}
+
+#full-screen-domain-text,
+#full-screen-remember-decision > .checkbox-label-box > .checkbox-label {
+  word-wrap: break-word;
+  /* We must specify a min-width, otherwise word-wrap:break-word doesn't work. Bug 630864. */
+  min-width: 1px;
 }
 
 #nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-icon {

@@ -126,7 +126,7 @@ $(NIB_DEST)/%: $(srcdir)/resources/MainMenu.nib/% $(NIB_DEST)
 	$(INSTALL) $< $(NIB_DEST)
 
 # for objdir builds, symlink the cursors dir
-ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
+ABS_topsrcdir   := $(call core_abspath,$(topsrcdir))
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 export::
 	ln -fs $(srcdir)/cursors

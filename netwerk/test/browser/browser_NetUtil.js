@@ -61,6 +61,7 @@ function test_asyncFetchBadCert() {
 
       // Now try a valid request
       NetUtil.asyncFetch("https://example.com", function (aInputStream, aStatusCode, aRequest) {
+        info("aStatusCode for valid request: " + aStatusCode);
         ok(Components.isSuccessCode(aStatusCode), "request succeeded");
         ok(aRequest instanceof Ci.nsIHttpChannel, "request is an nsIHttpChannel");
         ok(aRequest.requestSucceeded, "HTTP request succeeded");

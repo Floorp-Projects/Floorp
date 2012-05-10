@@ -164,6 +164,7 @@ CPPSRCS		= \
 		Parser.cpp \
 		SemanticAnalysis.cpp \
 		TokenStream.cpp \
+		TreeContext.cpp \
 		TestingFunctions.cpp \
 		LifoAlloc.cpp \
 		MapObject.cpp \

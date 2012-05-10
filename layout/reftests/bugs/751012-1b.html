@@ -1,0 +1,41 @@
+<!doctype html>
+<body style="position: relative;">
+  <div style="-moz-column-count: 2; height: 300px">
+    <div id="container" style="height: 600px">
+      <!-- Make sure the abs-pos div's placeholder is not in the first continuation -->
+      <div style="height: 400px"></div>
+      <div style="position:absolute; top: 0; left: 0">
+        <textarea rows="6">
+        You should be seeing the "Should see me" text.
+        a
+        b
+        c
+        d
+        e
+        f
+        g
+        h
+        i
+        j
+        k
+        l
+        m
+        n
+        o
+        p
+        q
+        r
+        s
+        t
+        u
+        Should see me.
+        </textarea>
+      </div>
+    </div>
+  </div>
+  <script>
+    var textarea = document.querySelector("textarea");
+    textarea.scrollTop = textarea.scrollHeight
+    document.getElementById("container").style.overflow = "hidden";
+  </script>
+</body>

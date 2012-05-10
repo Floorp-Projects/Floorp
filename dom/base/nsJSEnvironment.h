@@ -184,7 +184,9 @@ public:
   static void LoadStart();
   static void LoadEnd();
 
-  static void GarbageCollectNow(js::gcreason::Reason reason, PRUint32 gckind = nsGCNormal);
+  static void GarbageCollectNow(js::gcreason::Reason reason,
+                                PRUint32 aGckind,
+                                bool aGlobal);
   static void ShrinkGCBuffersNow();
   // If aExtraForgetSkippableCalls is -1, forgetSkippable won't be
   // called even if the previous collection was GC.
@@ -199,6 +201,7 @@ public:
 
   static void MaybePokeCC();
   static void KillCCTimer();
+  static void KillFullGCTimer();
 
   virtual void GC(js::gcreason::Reason aReason);
 
@@ -238,7 +241,7 @@ private:
   nsrefcnt GetCCRefcnt();
 
   JSContext *mContext;
-  PRUint32 mNumEvaluations;
+  bool mActive;
 
 protected:
   struct TerminationFuncHolder;
@@ -306,6 +309,9 @@ private:
 
   PRTime mModalStateTime;
   PRUint32 mModalStateDepth;
+
+  nsJSContext *mNext;
+  nsJSContext **mPrev;
 
   // mGlobalObjectRef ensures that the outer window stays alive as long as the
   // context does. It is eventually collected by the cycle collector.

@@ -308,10 +308,12 @@ MaybeReflowForInflationScreenWidthChange(nsPresContext *aPresContext)
             nsCOMPtr<nsIPresShell> shell;
             nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(array[i]);
             cv->GetPresShell(getter_AddRefs(shell));
-            nsIFrame *rootFrame = shell->GetRootFrame();
-            if (rootFrame) {
-              shell->FrameNeedsReflow(rootFrame, nsIPresShell::eResize,
-                                      NS_FRAME_IS_DIRTY);
+            if (shell) {
+              nsIFrame *rootFrame = shell->GetRootFrame();
+              if (rootFrame) {
+                shell->FrameNeedsReflow(rootFrame, nsIPresShell::eResize,
+                                        NS_FRAME_IS_DIRTY);
+              }
             }
           }
         }
@@ -521,6 +523,16 @@ nsDOMWindowUtils::SendMouseEventToWindow(const nsAString& aType,
                               aIgnoreRootScrollFrame, true);
 }
 
+static nsIntPoint
+ToWidgetPoint(float aX, float aY, const nsPoint& aOffset,
+              nsPresContext* aPresContext)
+{
+  double appPerDev = aPresContext->AppUnitsPerDevPixel();
+  nscoord appPerCSS = nsPresContext::AppUnitsPerCSSPixel();
+  return nsIntPoint(NSToIntRound((aX*appPerCSS + aOffset.x)/appPerDev),
+                    NSToIntRound((aY*appPerCSS + aOffset.y)/appPerDev));
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
                                        float aX,
@@ -574,13 +586,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
   if (!presContext)
     return NS_ERROR_FAILURE;
 
-  PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
-  event.refPoint.x =
-    NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aX) + offset.x,
-                          appPerDev);
-  event.refPoint.y =
-    NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aY) + offset.y,
-                          appPerDev);
+  event.refPoint = ToWidgetPoint(aX, aY, offset, presContext);
   event.ignoreRootScrollFrame = aIgnoreRootScrollFrame;
 
   nsEventStatus status;
@@ -641,13 +647,7 @@ nsDOMWindowUtils::SendMouseScrollEvent(const nsAString& aType,
   if (!presContext)
     return NS_ERROR_FAILURE;
 
-  PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
-  event.refPoint.x =
-    NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aX) + offset.x,
-                          appPerDev);
-  event.refPoint.y =
-    NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aY) + offset.y,
-                          appPerDev);
+  event.refPoint = ToWidgetPoint(aX, aY, offset, presContext);
 
   nsEventStatus status;
   return widget->DispatchEvent(&event, status);
@@ -700,15 +700,8 @@ nsDOMWindowUtils::SendTouchEvent(const nsAString& aType,
     return NS_ERROR_FAILURE;
   }
   event.touches.SetCapacity(aCount);
-  PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
   for (PRUint32 i = 0; i < aCount; ++i) {
-    nsIntPoint pt(0, 0);
-    pt.x =
-      NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aXs[i]) + offset.x,
-                            appPerDev);
-    pt.y =
-      NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aYs[i]) + offset.y,
-                            appPerDev);
+    nsIntPoint pt = ToWidgetPoint(aXs[i], aYs[i], offset, presContext);
     nsCOMPtr<nsIDOMTouch> t(new nsDOMTouch(aIdentifiers[i],
                                            pt,
                                            nsIntPoint(aRxs[i], aRys[i]),
@@ -1009,7 +1002,7 @@ nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener,
   }
 #endif
 
-  nsJSContext::GarbageCollectNow(js::gcreason::DOM_UTILS);
+  nsJSContext::GarbageCollectNow(js::gcreason::DOM_UTILS, nsGCNormal, true);
   nsJSContext::CycleCollectNow(aListener, aExtraForgetSkippableCalls);
 
   return NS_OK;
@@ -1078,13 +1071,7 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
   if (!presContext)
     return NS_ERROR_FAILURE;
 
-  PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
-  event.refPoint.x =
-    NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aX) + offset.x,
-                          appPerDev);
-  event.refPoint.y =
-    NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aY) + offset.y,
-                          appPerDev);
+  event.refPoint = ToWidgetPoint(aX, aY, offset, presContext);
 
   nsEventStatus status;
   return widget->DispatchEvent(&event, status);

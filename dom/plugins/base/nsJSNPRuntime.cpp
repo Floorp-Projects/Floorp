@@ -182,11 +182,17 @@ static JSClass sNPObjectJSWrapperClass =
   {
     NPRUNTIME_JSCLASS_NAME,
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE,
-    NPObjWrapper_AddProperty, NPObjWrapper_DelProperty,
-    NPObjWrapper_GetProperty, NPObjWrapper_SetProperty,
+    NPObjWrapper_AddProperty,
+    NPObjWrapper_DelProperty,
+    NPObjWrapper_GetProperty,
+    NPObjWrapper_SetProperty,
     (JSEnumerateOp)NPObjWrapper_newEnumerate,
-    (JSResolveOp)NPObjWrapper_NewResolve, NPObjWrapper_Convert,
-    NPObjWrapper_Finalize, nsnull, NPObjWrapper_Call,
+    (JSResolveOp)NPObjWrapper_NewResolve,
+    NPObjWrapper_Convert,
+    NPObjWrapper_Finalize,
+    nsnull,                                                /* checkAccess */
+    NPObjWrapper_Call,
+    nsnull,                                                /* hasInstance */
     NPObjWrapper_Construct
   };
 

@@ -1,0 +1,4 @@
+{
+  "name": "App with a Syntax Error (extra comma)",
+  "installs_allowed_from": [ "*" ], << FIREFOX 3.6, THAT *WAS* A SYNTAX ERROR
+}

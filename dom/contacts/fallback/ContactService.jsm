@@ -95,21 +95,28 @@ let DOMContactManager = {
             debug("result:" + JSON.stringify(result));
             ppmm.sendAsyncMessage("Contacts:Find:Return:OK", {requestID: msg.requestID, contacts: result});
           }.bind(this),
-          function(aErrorMsg) { ppmm.sendAsyncMessage("Contacts:Find:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }) }.bind(this), 
+          function(aErrorMsg) { ppmm.sendAsyncMessage("Contacts:Find:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }) }.bind(this),
           msg.findOptions);
         break;
       case "Contact:Save":
-        this._db.saveContact(msg.contact, function() { ppmm.sendAsyncMessage("Contact:Save:Return:OK", { requestID: msg.requestID }); }.bind(this), 
-                             function(aErrorMsg) { ppmm.sendAsyncMessage("Contact:Save:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this));
+        this._db.saveContact(
+          msg.contact, 
+          function() { ppmm.sendAsyncMessage("Contact:Save:Return:OK", { requestID: msg.requestID, contactID: msg.contact.id }); }.bind(this),
+          function(aErrorMsg) { ppmm.sendAsyncMessage("Contact:Save:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
+        );
         break;
       case "Contact:Remove":
-        this._db.removeContact(msg.id, 
-                               function() { ppmm.sendAsyncMessage("Contact:Remove:Return:OK", { requestID: msg.requestID }); }.bind(this), 
-                               function(aErrorMsg) { ppmm.sendAsyncMessage("Contact:Remove:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this));
+        this._db.removeContact(
+          msg.id, 
+          function() { ppmm.sendAsyncMessage("Contact:Remove:Return:OK", { requestID: msg.requestID, contactID: msg.id }); }.bind(this),
+          function(aErrorMsg) { ppmm.sendAsyncMessage("Contact:Remove:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
+        );
         break;
       case "Contacts:Clear":
-        this._db.clear(function() { ppmm.sendAsyncMessage("Contacts:Clear:Return:OK", { requestID: msg.requestID }); }.bind(this),
-                       function(aErrorMsg) { ppmm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this));
+        this._db.clear(
+          function() { ppmm.sendAsyncMessage("Contacts:Clear:Return:OK", { requestID: msg.requestID }); }.bind(this),
+          function(aErrorMsg) { ppmm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
+        );
     }
   }
 }

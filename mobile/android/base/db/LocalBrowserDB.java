@@ -501,7 +501,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         cr.registerContentObserver(uri, false, observer);
     }
 
-    public void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword) {
+    public void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword) {
         ContentValues values = new ContentValues();
         values.put(Browser.BookmarkColumns.TITLE, title);
         values.put(Bookmarks.URL, uri);
@@ -509,8 +509,8 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
         cr.update(mBookmarksUriWithProfile,
                   values,
-                  Bookmarks.URL + " = ?",
-                  new String[] { oldUri });
+                  Bookmarks._ID + " = ?",
+                  new String[] { String.valueOf(id) });
     }
 
     public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {

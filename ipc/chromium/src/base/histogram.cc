@@ -149,6 +149,12 @@ void Histogram::AddSampleSet(const SampleSet& sample) {
   sample_.Add(sample);
 }
 
+void Histogram::Clear() {
+  SampleSet ss;
+  ss.Resize(*this);
+  sample_ = ss;
+}
+
 void Histogram::SetRangeDescriptions(const DescriptionPair descriptions[]) {
   DCHECK(false);
 }

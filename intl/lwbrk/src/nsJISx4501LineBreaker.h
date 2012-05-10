@@ -53,8 +53,10 @@ public:
   PRInt32 Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
 
   virtual void GetJISx4051Breaks(const PRUnichar* aText, PRUint32 aLength,
+                                 PRUint8 aBreakMode,
                                  PRUint8* aBreakBefore);
   virtual void GetJISx4051Breaks(const PRUint8* aText, PRUint32 aLength,
+                                 PRUint8 aBreakMode,
                                  PRUint8* aBreakBefore);
 
 private:

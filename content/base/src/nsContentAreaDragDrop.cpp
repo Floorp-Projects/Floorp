@@ -85,6 +85,7 @@
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "nsDOMDataTransfer.h"
+#include "mozilla/dom/Element.h"
 
 class NS_STACK_CLASS DragDataProducer
 {
@@ -403,7 +404,8 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
   nsCOMPtr<nsISelection> selection;
   nsIContent* editingElement = mSelectionTargetNode->IsEditable() ?
                                mSelectionTargetNode->GetEditingHost() : nsnull;
-  nsCOMPtr<nsITextControlElement> textControl(do_QueryInterface(editingElement));
+  nsCOMPtr<nsITextControlElement> textControl =
+    nsITextControlElement::GetTextControlElementFromEditingHost(editingElement);
   if (textControl) {
     nsISelectionController* selcon = textControl->GetSelectionController();
     if (selcon) {

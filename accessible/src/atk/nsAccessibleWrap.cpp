@@ -721,7 +721,7 @@ getRoleCB(AtkObject *aAtkObj)
   if (!accWrap)
     return ATK_ROLE_INVALID;
 
-#ifdef DEBUG_A11Y
+#ifdef DEBUG
   NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
       "Does not support nsIAccessibleText when it should");
 #endif
@@ -1382,10 +1382,11 @@ nsresult
 nsAccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
                                        AtkObject *aObject, bool aIsAdded)
 {
-    if (aIsAdded)
+    if (aIsAdded) {
         MAI_LOG_DEBUG(("\n\nReceived: Show event\n"));
-    else
+    } else {
         MAI_LOG_DEBUG(("\n\nReceived: Hide event\n"));
+    }
 
     PRInt32 indexInParent = getIndexInParentCB(aObject);
     AtkObject *parentObject = getParentCB(aObject);
