@@ -48,10 +48,6 @@ SIMPLECSRCS	+= \
 		tmstats.c \
 		$(NULL)
 
-# Set CPP_PROG_LINK manually since we're using SIMPLECPPSRCS rather than
-# CPPSRCS.
-CPP_PROG_LINK	= 1
-
 SIMPLECPPSRCS	= \
 		leaksoup.cpp \
 		bloatblame.cpp \

@@ -314,7 +314,9 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
     // fetch the paste insertion point from our selection
     rv = GetStartNodeAndOffset(selection, getter_AddRefs(targetNode), &targetOffset);
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(targetNode, NS_ERROR_FAILURE);
+    if (!targetNode || !IsEditable(targetNode)) {
+      return NS_ERROR_FAILURE;
+    }
   }
   else
   {

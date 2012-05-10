@@ -1,2 +1,0 @@
-#filter substitution
-@MOZ_APP_NAME@_@DEB_PKG_VERSION@_armel.deb user/network extra

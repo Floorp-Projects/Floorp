@@ -309,8 +309,13 @@ nsHttpConnection::EnsureNPNComplete()
         PRUint32 count = 0;
         rv = mSocketOut->Write("", 0, &count);
 
-        if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK)
+        if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
+            LOG(("nsHttpConnection::EnsureNPNComplete %p socket write failed "
+                 "with result %X\n", this, rv));
+            mSocketOutCondition = rv;
             goto npnComplete;
+        }
+        
         return false;
     }
 
@@ -1247,7 +1252,14 @@ nsHttpConnection::OnSocketWritable()
 
             LOG(("  writing transaction request stream\n"));
             mProxyConnectInProgress = false;
-            rv = mTransaction->ReadSegments(this, nsIOService::gDefaultSegmentSize, &n);
+
+            if (NS_SUCCEEDED(mSocketOutCondition) ||
+                mSocketOutCondition == NS_BASE_STREAM_WOULD_BLOCK) {
+                rv = mTransaction->ReadSegments(this, nsIOService::gDefaultSegmentSize, &n);
+            }
+            else {
+                rv = mSocketOutCondition;
+            }
         }
 
         LOG(("  ReadSegments returned [rv=%x read=%u sock-cond=%x]\n",

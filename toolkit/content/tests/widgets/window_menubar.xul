@@ -294,6 +294,40 @@ var popupTests = [
   result: function(testname) { checkClosed("viewmenu", testname); },
 },
 {
+  // on Windows, pressing Alt should highlight the first menu but not open it,
+  // but it should be ignored if the alt keydown event is consumed.
+  testname: "alt shouldn't activate menubar if keydown event is consumed",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  test: function() {
+    document.addEventListener("keydown", function (aEvent) {
+      document.removeEventListener("keydown", arguments.callee, true);
+      aEvent.preventDefault();
+    }, true);
+    synthesizeKey("VK_ALT", { });
+  },
+  result: function(testname) {
+    ok(!document.getElementById("filemenu").openedWithKey, testname);
+    checkClosed("filemenu", testname);
+  },
+},
+{
+  // on Windows, pressing Alt should highlight the first menu but not open it,
+  // but it should be ignored if the alt keyup event is consumed.
+  testname: "alt shouldn't activate menubar if keyup event is consumed",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  test: function() {
+    document.addEventListener("keyup", function (aEvent) {
+      document.removeEventListener("keyup", arguments.callee, true);
+      aEvent.preventDefault();
+    }, true);
+    synthesizeKey("VK_ALT", { });
+  },
+  result: function(testname) {
+    ok(!document.getElementById("filemenu").openedWithKey, testname);
+    checkClosed("filemenu", testname);
+  },
+},
+{
   // on Windows, pressing Alt should highlight the first menu but not open it
   testname: "alt to activate menubar",
   condition: function() { return (navigator.platform.indexOf("Win") == 0) },
