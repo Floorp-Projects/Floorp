@@ -40,6 +40,8 @@ let tempScope = {};
 Cu.import("resource:///modules/HUDService.jsm", tempScope);
 let HUDService = tempScope.HUDService;
 let ConsoleUtils = tempScope.ConsoleUtils;
+Cu.import("resource:///modules/WebConsoleUtils.jsm", tempScope);
+let WebConsoleUtils = tempScope.WebConsoleUtils;
 
 function log(aMsg)
 {
@@ -153,8 +155,29 @@ function findLogEntry(aString)
   testLogEntry(outputNode, aString, "found " + aString);
 }
 
-function openConsole()
+/**
+ * Open the Web Console for the current tab.
+ *
+ * @param function [aCallback]
+ *        Optional function to invoke after the Web Console completes
+ *        initialization.
+ */
+function openConsole(aCallback)
 {
+  function onWebConsoleOpen(aSubject, aTopic)
+  {
+    if (aTopic == "web-console-created") {
+      Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
+      aSubject.QueryInterface(Ci.nsISupportsString);
+      let hud = HUDService.getHudReferenceById(aSubject.data);
+      executeSoon(aCallback.bind(null, hud));
+    }
+  }
+
+  if (aCallback) {
+    Services.obs.addObserver(onWebConsoleOpen, "web-console-created", false);
+  }
+
   HUDService.activateHUDForContext(tab);
 }
 
@@ -165,17 +188,31 @@ function closeConsole()
 
 function finishTest()
 {
-  finish();
+  browser = hudId = hud = filterBox = outputNode = cs = null;
+
+  function onWebConsoleClose(aSubject, aTopic)
+  {
+    if (aTopic == "web-console-destroyed") {
+      Services.obs.removeObserver(onWebConsoleClose, "web-console-destroyed");
+      executeSoon(finish);
+    }
+  }
+
+  Services.obs.addObserver(onWebConsoleClose, "web-console-destroyed", false);
+
+  let hud = HUDService.getHudByWindow(content);
+  if (!hud) {
+    finish();
+    return;
+  }
+  hud.jsterm.clearOutput(true);
+  HUDService.deactivateHUDForContext(hud.tab);
+  hud = null;
 }
 
 function tearDown()
 {
-  try {
-    HUDService.deactivateHUDForContext(gBrowser.selectedTab);
-  }
-  catch (ex) {
-    log(ex);
-  }
+  HUDService.deactivateHUDForContext(gBrowser.selectedTab);
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
@@ -186,3 +223,49 @@ registerCleanupFunction(tearDown);
 
 waitForExplicitFinish();
 
+/**
+ * Polls a given function waiting for it to become true.
+ *
+ * @param object aOptions
+ *        Options object with the following properties:
+ *        - validatorFn
+ *        A validator function that returns a boolean. This is called every few
+ *        milliseconds to check if the result is true. When it is true, succesFn
+ *        is called and polling stops. If validatorFn never returns true, then
+ *        polling timeouts after several tries and a failure is recorded.
+ *        - successFn
+ *        A function called when the validator function returns true.
+ *        - failureFn
+ *        A function called if the validator function timeouts - fails to return
+ *        true in the given time.
+ *        - name
+ *        Name of test. This is used to generate the success and failure
+ *        messages.
+ *        - timeout
+ *        Timeout for validator function, in milliseconds. Default is 5000.
+ */
+function waitForSuccess(aOptions)
+{
+  let start = Date.now();
+  let timeout = aOptions.timeout || 5000;
+
+  function wait(validatorFn, successFn, failureFn)
+  {
+    if ((Date.now() - start) > timeout) {
+      // Log the failure.
+      ok(false, "Timed out while waiting for: " + aOptions.name);
+      failureFn(aOptions);
+      return;
+    }
+
+    if (validatorFn(aOptions)) {
+      ok(true, aOptions.name);
+      successFn();
+    }
+    else {
+      setTimeout(function() wait(validatorFn, successFn, failureFn), 100);
+    }
+  }
+
+  wait(aOptions.validatorFn, aOptions.successFn, aOptions.failureFn);
+}

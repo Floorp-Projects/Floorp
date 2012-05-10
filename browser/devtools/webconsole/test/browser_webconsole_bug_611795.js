@@ -24,12 +24,16 @@ function onContentLoaded()
   jsterm.setInputValue("for (let i = 0; i < 10; ++i) console.log('this is a line of reasonably long text that I will use to verify that the repeated text node is of an appropriate size.');");
   jsterm.execute();
 
-  let msg = "The console output is repeated 10 times";
-  let node = outputNode.querySelector(".webconsole-msg-console");
-  is(node.childNodes[3].firstChild.getAttribute("value"), 10, msg);
-
-  jsterm.clearOutput();
-  finishTest();
+  waitForSuccess({
+    name: "10 repeated console.log messages",
+    validatorFn: function()
+    {
+      let node = outputNode.querySelector(".webconsole-msg-console");
+      return node && node.childNodes[3].firstChild.getAttribute("value") == 10;
+    },
+    successFn: finishTest,
+    failureFn: finishTest,
+  });
 }
 
 /**
@@ -39,14 +43,13 @@ function onContentLoaded()
 function test()
 {
   addTab(TEST_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee, true);
-
-    openConsole();
-    // Clear cached messages that are shown once the Web Console opens.
-    HUDService.getHudByWindow(content).jsterm.clearOutput(true);
-
-    browser.addEventListener("load", onContentLoaded, true);
-    content.location.reload();
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(function(aHud) {
+      // Clear cached messages that are shown once the Web Console opens.
+      aHud.jsterm.clearOutput(true);
+      browser.addEventListener("load", onContentLoaded, true);
+      content.location.reload();
+    });
   }, true);
 }
