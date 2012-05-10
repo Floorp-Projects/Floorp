@@ -99,14 +99,18 @@ public class ScreenshotLayer extends SingleTileLayer {
 
         /** Creates a buffered Cairo image from a byte buffer. */
         public ScreenshotImage(ByteBuffer inBuffer, int inWidth, int inHeight, int inFormat) {
-            mBuffer = inBuffer; mSize = new IntSize(inWidth, inHeight); mFormat = inFormat;
+            mBuffer = inBuffer;
+            mSize = new IntSize(inWidth, inHeight);
+            mFormat = inFormat;
         }
 
         @Override
         protected void finalize() throws Throwable {
             try {
-                if (mBuffer != null)
+                if (mBuffer != null) {
                     GeckoAppShell.freeDirectBuffer(mBuffer);
+                    mBuffer = null;
+                }
             } finally {
                 super.finalize();
             }
