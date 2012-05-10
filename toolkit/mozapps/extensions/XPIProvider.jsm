@@ -3592,7 +3592,7 @@ var XPIProvider = {
     if (!aFile.exists()) {
       this.bootstrapScopes[aId] = new Components.utils.Sandbox(principal,
                                                                {sandboxName: aFile.path});
-      ERROR("Attempted to load bootstrap scope from missing directory " + bootstrap.path);
+      ERROR("Attempted to load bootstrap scope from missing directory " + aFile.path);
       return;
     }
 
