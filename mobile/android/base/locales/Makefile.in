@@ -41,7 +41,7 @@ srcdir    = @srcdir@
 VPATH     = @srcdir@
 relativesrcdir = mobile/android/base/locales
 
-include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
 
 # special case some locale codes, he and id
 # http://code.google.com/p/android/issues/detail?id=3639

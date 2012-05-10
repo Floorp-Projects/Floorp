@@ -39,6 +39,20 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
   var s = h.snapshot().counts;
   do_check_eq(s[0], 2)
   do_check_eq(s[1], 2)
+
+  // Check that clearing works.
+  h.clear();
+  var s = h.snapshot();
+  for each(var i in s.counts) {
+    do_check_eq(i, 0);
+  }
+  do_check_eq(s.sum, 0);
+
+  h.add(0);
+  h.add(1);
+  var c = h.snapshot().counts;
+  do_check_eq(c[0], 1);
+  do_check_eq(c[1], 1);
 }
 
 function expect_fail(f) {
@@ -181,6 +195,9 @@ function test_addons() {
 
   // Check for reflection capabilities.
   var h1 = Telemetry.getAddonHistogram(addon_id, name1);
+  // Verify that although we've created storage for it, we don't reflect it into JS.
+  var snapshots = Telemetry.addonHistogramSnapshots;
+  do_check_false(name1 in snapshots[addon_id]);
   h1.add(1);
   h1.add(3);
   var s1 = h1.snapshot();
@@ -313,6 +330,11 @@ function run_test()
     expect_fail(function () nh("test::min", 0, max, bucket_count, histogram_type));
     expect_fail(function () nh("test::bucket_count", min, max, 1, histogram_type));
   }
+
+  // Instantiate the storage for this histogram and make sure it doesn't
+  // get reflected into JS, as it has no interesting data in it.
+  let h = Telemetry.getHistogramById("NEWTAB_PAGE_PINNED_SITES_COUNT");
+  do_check_false("NEWTAB_PAGE_PINNED_SITES_COUNT" in Telemetry.histogramSnapshots);
 
   test_boolean_histogram();
   test_getHistogramById();

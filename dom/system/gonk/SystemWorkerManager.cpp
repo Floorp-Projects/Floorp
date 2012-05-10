@@ -49,16 +49,32 @@
 #include "jsfriendapi.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ipc/Ril.h"
+#ifdef MOZ_B2G_BT
+#include "mozilla/ipc/DBusThread.h"
+#include "BluetoothFirmware.h"
+#endif
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsRadioInterfaceLayer.h"
 #include "WifiWorker.h"
 
+#undef LOG
+#if defined(MOZ_WIDGET_GONK)
+#include <android/log.h>
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GonkBluetooth", args);
+#else
+#define BTDEBUG true
+#define LOG(args...) if(BTDEBUG) printf(args);
+#endif
+
 
 USING_WORKERS_NAMESPACE
 using namespace mozilla::dom::gonk;
 using namespace mozilla::ipc;
+#ifdef MOZ_B2G_BT
+using namespace mozilla::dom::bluetooth;
+#endif
 
 namespace {
 
@@ -212,6 +228,10 @@ SystemWorkerManager::~SystemWorkerManager()
 nsresult
 SystemWorkerManager::Init()
 {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   NS_ASSERTION(NS_IsMainThread(), "We can only initialize on the main thread");
   NS_ASSERTION(!mShutdown, "Already shutdown!");
 
@@ -228,6 +248,11 @@ SystemWorkerManager::Init()
 
   rv = InitWifi(cx);
   NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef MOZ_B2G_BT
+  rv = InitBluetooth(cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
   nsCOMPtr<nsIObserverService> obs =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
@@ -250,7 +275,9 @@ SystemWorkerManager::Shutdown()
   mShutdown = true;
 
   StopRil();
-
+#ifdef MOZ_B2G_BT
+  StopDBus();
+#endif
   mRILWorker = nsnull;
   nsCOMPtr<nsIWifi> wifi(do_QueryInterface(mWifiWorker));
   if (wifi) {
@@ -360,6 +387,28 @@ SystemWorkerManager::InitWifi(JSContext *cx)
   NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
 
   mWifiWorker = worker;
+  return NS_OK;
+}
+
+nsresult
+SystemWorkerManager::InitBluetooth(JSContext *cx)
+{
+#ifdef MOZ_B2G_BT
+#ifdef MOZ_WIDGET_GONK
+  // We need a platform specific check here to make sure of when we're
+  // running on an emulator. Therefore, if we're compiled with gonk,
+  // see if we can load functions out of bluedroid. If not, assume
+  // it's an emulator and don't start the bluetooth thread.
+  if(EnsureBluetoothInit()) {
+#endif
+    StartDBus();
+#ifdef MOZ_WIDGET_GONK
+  }
+  else {
+    LOG("Bluedroid functions not available, assuming running on simulator. Not starting DBus thread.");
+  }
+#endif
+#endif
   return NS_OK;
 }
 

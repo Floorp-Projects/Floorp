@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  Test that "MozEnteredFullscreen" is dispatched to chrome on documents that enter fullscreen.
+
+  Test Description:
+  
+  This chrome window has a browser. The browser's contentDocument (the "outer document")
+  in turn has an iframe (the "inner document").
+  
+  We request fullscreen in the outer document, and check that MozEnteredDomFullscreen is
+  dispatched to chrome, targeted at the outer document.
+  
+  Then we request fullscreen in the inner document, and check that MozEnteredDomFullscreen
+  is dispatched to chrome, targeted at the inner document.
+  
+  Then we cancel fullscreen in the inner document, and check that MozEnteredDomFullscreen is
+  dispatched again to chrome, targeted at the outer document. This still happens, since the
+  outer document's domain was never approved for fullscreen.
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="start();">
+
+<script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+<script type="application/javascript"><![CDATA[
+
+function ok(condition, msg) {
+  window.opener.wrappedJSObject.ok(condition, msg);
+}
+
+function is(a, b, msg) {
+  window.opener.wrappedJSObject.is(a, b, msg);
+}
+
+var gBrowser = null;
+var gOuterDoc = null;
+var gInnerDoc = null;
+
+function firstEntry(event) {
+  is(event.target, gOuterDoc, "First MozEnteredDomFullscreen should be targeted at outer doc");
+  window.removeEventListener("MozEnteredDomFullscreen", firstEntry, false);
+  ok(gOuterDoc.mozFullScreenElement != null, "Outer doc should be in fullscreen");
+  gInnerDoc = gOuterDoc.getElementById("innerFrame").contentDocument;
+  window.addEventListener("MozEnteredDomFullscreen", secondEntry, false);
+  gInnerDoc.defaultView.focus();
+  gInnerDoc.body.mozRequestFullScreen();
+}
+
+function secondEntry(event) {
+  is(event.target, gInnerDoc, "Second MozEnteredDomFullscreen should be targeted at inner doc");
+  ok(gInnerDoc.mozFullScreenElement != null, "Inner doc should be in fullscreen");
+  window.removeEventListener("MozEnteredDomFullscreen", secondEntry, false);
+  window.addEventListener("MozEnteredDomFullscreen", thirdEntry, false);
+  gInnerDoc.mozCancelFullScreen();
+}
+
+function thirdEntry(event) {
+  is(event.target, gOuterDoc, "Third MozEnteredDomFullscreen should be targeted at outer doc");
+  ok(gOuterDoc.mozFullScreenElement != null, "Outer doc return to fullscreen after cancel fullscreen in inner doc");
+  window.removeEventListener("MozEnteredDomFullscreen", thirdEntry, false);
+  gOuterDoc.mozCancelFullScreen();
+  window.opener.wrappedJSObject.done();
+}
+
+function start() {
+  SimpleTest.waitForFocus(
+    function() {
+      gBrowser = document.getElementById("browser");
+      gOuterDoc = gBrowser.contentDocument;
+      gBrowser.contentWindow.focus();
+      window.addEventListener("MozEnteredDomFullscreen", firstEntry, false);
+      gOuterDoc.body.mozRequestFullScreen();
+    });
+}
+
+]]>
+</script>
+<!-- chrome://mochitests/content/chrome/dom/tests/mochitest/chrome/test_MozEnteredDomFullscreen_event.xul -->
+<browser type="content" id="browser" width="400" height="400" src="http://mochi.test:8888/tests/dom/tests/mochitest/general/file_MozEnteredDomFullscreen.html"/>
+
+</window>

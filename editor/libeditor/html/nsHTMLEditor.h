@@ -136,9 +136,12 @@ public:
   virtual already_AddRefed<nsIContent> GetFocusedContent();
   virtual bool IsActiveInDOMWindow();
   virtual already_AddRefed<nsIDOMEventTarget> GetDOMEventTarget();
+  virtual mozilla::dom::Element* GetEditorRoot() MOZ_OVERRIDE;
   virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
   virtual bool IsAcceptableInputEvent(nsIDOMEvent* aEvent);
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent();
+  virtual bool IsEditable(nsIContent *aNode);
+  using nsEditor::IsEditable;
 
   /* ------------ nsStubMutationObserver overrides --------- */
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
@@ -441,8 +444,6 @@ protected:
 
   // Return TRUE if aElement is a table-related elemet and caret was set
   bool SetCaretInTableCell(nsIDOMElement* aElement);
-  bool IsNodeInActiveEditor(nsIDOMNode* aNode);
-  bool IsNodeInActiveEditor(nsINode* aNode);
 
   // key event helpers
   NS_IMETHOD TabInTable(bool inIsShift, bool *outHandled);

@@ -35,3 +35,5 @@
 <!ENTITY indexedDB.label                 "Maintain Offline Storage">
 
 <!ENTITY popup.label                     "Open Pop-up Windows">
+
+<!ENTITY fullscreen.label                "Fullscreen">

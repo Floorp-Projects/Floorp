@@ -55,7 +55,7 @@ CPPSRCS = \
   MozillaRuntimeMain.cpp \
   $(NULL)
 
-ifeq (Android,$(OS_TARGET))
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 WRAP_LDFLAGS =
 CPPSRCS = MozillaRuntimeMainAndroid.cpp
 else
@@ -83,7 +83,7 @@ NSDISTMODE = copy
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
-ifeq ($(OS_TARGET),Android)
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 FINAL_TARGET = $(DIST)/bin/lib
 endif
 

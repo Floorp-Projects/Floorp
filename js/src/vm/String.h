@@ -422,6 +422,11 @@ class JSString : public js::gc::Cell
     void dump();
     bool equals(const char *s);
 #endif
+
+  private:
+    JSString() MOZ_DELETE;
+    JSString(const JSString &other) MOZ_DELETE;
+    void operator=(const JSString &other) MOZ_DELETE;
 };
 
 class JSRope : public JSString

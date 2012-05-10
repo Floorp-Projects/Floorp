@@ -558,8 +558,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
             for (Layer layer : mExtraLayers)
                 mUpdated &= layer.update(mPageContext); // called on compositor thread
-
-            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
         }
 
         /** Retrieves the bounds for the layer, rounded in such a way that it
@@ -603,6 +601,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         /** This function is invoked via JNI; be careful when modifying signature. */
         public void drawBackground() {
+            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
+
             /* Update background color. */
             mBackgroundColor = mView.getController().getCheckerboardColor();
 
@@ -637,9 +637,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
                 /* Scissor around the page-rect, in case the page has shrunk
                  * since the screenshot layer was last updated.
                  */
-                setScissorRect();
+                setScissorRect(); // Calls glEnable(GL_SCISSOR_TEST))
                 mCheckerboardLayer.draw(mPageContext);
-                GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
             }
         }
 
