@@ -98,6 +98,7 @@ BrowserElementParent.prototype = {
     addMessageListener("loadstart", this._fireEventFromMsg);
     addMessageListener("loadend", this._fireEventFromMsg);
     addMessageListener("titlechange", this._fireEventFromMsg);
+    addMessageListener("iconchange", this._fireEventFromMsg);
 
     mm.loadFrameScript("chrome://global/content/BrowserElementChild.js",
                        /* allowDelayedLoad = */ true);

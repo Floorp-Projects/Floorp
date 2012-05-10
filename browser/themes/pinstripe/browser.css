@@ -1108,6 +1108,10 @@ toolbar[mode="icons"] #zoom-in-button {
   list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
 }
 
+.mixedContent > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed.png);
+}
+
 #identity-box:hover:active > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon,
 #identity-box[open=true] > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
   -moz-image-region: rect(0, 32px, 16px, 16px);

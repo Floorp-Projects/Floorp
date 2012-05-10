@@ -1894,9 +1894,15 @@ static const PRUint32 kThreadLimit = 4;
 static const PRUint32 kIdleThreadLimit = 4;
 static const PRUint32 kIdleThreadTimeoutMs = 2000;
 
+/**
+ * We make the initial mCurrentTime nonzero so that zero times can have
+ * special meaning if necessary.
+ */
+static const PRInt32 INITIAL_CURRENT_TIME = 1;
+
 MediaStreamGraphImpl::MediaStreamGraphImpl()
-  : mLastActionTime(1)
-  , mCurrentTime(1)
+  : mLastActionTime(INITIAL_CURRENT_TIME)
+  , mCurrentTime(INITIAL_CURRENT_TIME)
   , mBlockingDecisionsMadeUntilTime(1)
   , mProcessingGraphUpdateIndex(0)
   , mMonitor("MediaStreamGraphImpl")
