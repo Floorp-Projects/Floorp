@@ -56,7 +56,7 @@ function testOpenUI(aTestReopen)
   // test to see if the messages are
   // displayed when the console UI is opened
 
-  openConsole(function(hud) {
+  openConsole(null, function(hud) {
     testLogEntry(hud.outputNode, "log Bazzle",
                  "Find a console log entry from before console UI is opened",
                  false, null);

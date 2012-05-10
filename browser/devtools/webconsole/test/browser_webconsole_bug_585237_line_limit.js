@@ -19,7 +19,7 @@ function test() {
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
-    openConsole(function(aHud) {
+    openConsole(null, function(aHud) {
       hud = aHud;
       testDriver = testGen();
       testNext();

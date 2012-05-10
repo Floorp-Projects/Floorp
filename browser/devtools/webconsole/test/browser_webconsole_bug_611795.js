@@ -7,17 +7,39 @@ const TEST_URI = 'data:text/html;charset=utf-8,<div style="-moz-opacity:0;">test
 
 function onContentLoaded()
 {
-  browser.removeEventListener("load", arguments.callee, true);
+  browser.removeEventListener("load", onContentLoaded, true);
 
   let HUD = HUDService.getHudByWindow(content);
   let jsterm = HUD.jsterm;
   let outputNode = HUD.outputNode;
 
-  let msg = "The unknown CSS property warning is displayed only once";
-  let node = outputNode.firstChild;
+  let cssWarning = "Unknown property '-moz-opacity'.  Declaration dropped.";
 
-  is(node.childNodes[2].textContent, "Unknown property '-moz-opacity'.  Declaration dropped.", "correct node")
-  is(node.childNodes[3].firstChild.getAttribute("value"), 2, msg);
+  waitForSuccess({
+    name: "2 repeated CSS warnings",
+    validatorFn: function()
+    {
+      return outputNode.textContent.indexOf(cssWarning) > -1;
+    },
+    successFn: function()
+    {
+      let msg = "The unknown CSS property warning is displayed only once";
+      let node = outputNode.firstChild;
+
+      is(node.childNodes[2].textContent, cssWarning, "correct node");
+      is(node.childNodes[3].firstChild.getAttribute("value"), 2, msg);
+
+      testConsoleLogRepeats();
+    },
+    failureFn: finishTest,
+  });
+}
+
+function testConsoleLogRepeats()
+{
+  let HUD = HUDService.getHudByWindow(content);
+  let jsterm = HUD.jsterm;
+  let outputNode = HUD.outputNode;
 
   jsterm.clearOutput();
 
@@ -45,7 +67,7 @@ function test()
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
-    openConsole(function(aHud) {
+    openConsole(null, function(aHud) {
       // Clear cached messages that are shown once the Web Console opens.
       aHud.jsterm.clearOutput(true);
       browser.addEventListener("load", onContentLoaded, true);

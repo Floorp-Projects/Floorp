@@ -95,7 +95,7 @@ function test() {
   addTab("data:text/html;charset=utf-8,Web Console test for bug 613642: remember scroll location");
   browser.addEventListener("load", function tabLoad(aEvent) {
     browser.removeEventListener(aEvent.type, tabLoad, true);
-    openConsole(function(aHud) {
+    openConsole(null, function(aHud) {
       hud = aHud;
       testDriver = testGen();
       testDriver.next();

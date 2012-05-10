@@ -98,7 +98,7 @@ function tabLoad(aEvent) {
   browser.removeEventListener(aEvent.type, tabLoad, true);
 
   waitForFocus(function () {
-    openConsole(function(aHud) {
+    openConsole(null, function(aHud) {
       HUD = aHud;
       testNext();
     });

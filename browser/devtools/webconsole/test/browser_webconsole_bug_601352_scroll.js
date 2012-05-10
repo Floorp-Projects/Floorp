@@ -66,7 +66,7 @@ function test() {
   addTab("data:text/html;charset=utf-8,Web Console test for bug 601352");
   browser.addEventListener("load", function tabLoad(aEvent) {
     browser.removeEventListener(aEvent.type, tabLoad, true);
-    openConsole(consoleOpened);
+    openConsole(null, consoleOpened);
   }, true);
 }
 

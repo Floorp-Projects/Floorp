@@ -54,7 +54,7 @@ function test() {
 function onLoad() {
   browser.removeEventListener("DOMContentLoaded", onLoad, false);
 
-  openConsole(function(aHud) {
+  openConsole(null, function(aHud) {
     hud = aHud;
     hudId = hud.hudId;
     outputNode = hud.outputNode;

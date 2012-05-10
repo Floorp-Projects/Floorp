@@ -11,7 +11,7 @@ function test() {
          "object with a dir method");
   browser.addEventListener("load", function onLoad(aEvent) {
     browser.removeEventListener(aEvent.type, onLoad, true);
-    openConsole(consoleOpened);
+    openConsole(null, consoleOpened);
   }, true);
 }
 
