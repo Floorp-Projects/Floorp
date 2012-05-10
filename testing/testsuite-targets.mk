@@ -245,7 +245,7 @@ xpcshell-tests:
 	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --no-logfiles \
 	  --tests-root-dir=$(call core_abspath,_tests/xpcshell) \
-	  --tests-modules-dir=$(call core_abspath,_tests/modules) \
+	  --testing-modules-dir=$(call core_abspath,_tests/modules) \
 	  --xunit-file=$(call core_abspath,_tests/xpcshell/results.xml) \
 	  --xunit-suite-name=xpcshell \
           $(SYMBOLS_PATH) \
