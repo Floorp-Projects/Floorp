@@ -40,7 +40,7 @@
 #ifndef MOZSTORAGESTATEMENTROW_H
 #define MOZSTORAGESTATEMENTROW_H
 
-#include "mozIStorageStatementWrapper.h"
+#include "mozIStorageStatementRow.h"
 #include "nsIXPCScriptable.h"
 
 namespace mozilla {

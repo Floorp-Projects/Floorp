@@ -378,6 +378,9 @@ GetObjectParentMaybeScope(JSObject *obj);
 JS_FRIEND_API(JSObject *)
 GetGlobalForObjectCrossCompartment(JSObject *obj);
 
+JS_FRIEND_API(void)
+NotifyAnimationActivity(JSObject *obj);
+
 JS_FRIEND_API(bool)
 IsOriginalScriptFunction(JSFunction *fun);
 

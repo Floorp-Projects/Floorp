@@ -40,6 +40,7 @@
 #define nsITextControlElement_h___
 
 #include "nsISupports.h"
+#include "nsCOMPtr.h"
 class nsIContent;
 class nsAString;
 class nsIEditor;
@@ -49,8 +50,8 @@ class nsTextControlFrame;
 
 // IID for the nsITextControl interface
 #define NS_ITEXTCONTROLELEMENT_IID    \
-{ 0x2e758eee, 0xd023, 0x4fd1,    \
-  { 0x97, 0x93, 0xae, 0xeb, 0xbb, 0xf3, 0xa8, 0x3f } }
+{ 0xe0a05008, 0xef02, 0x4fa2,    \
+  { 0x93, 0xf2, 0x78, 0xe1, 0xec, 0xf7, 0x5b, 0x79 } }
 
 /**
  * This interface is used for the text control frame to get the editor and
@@ -127,14 +128,6 @@ public:
   NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const = 0;
 
   /**
-   * Set the current value of the text editor.
-   *
-   * @param aValue the new value for the text control.
-   * @param aUserInput whether this value is coming from user input.
-   */
-  NS_IMETHOD_(void) SetTextEditorValue(const nsAString& aValue, bool aUserInput) = 0;
-
-  /**
    * Get the editor object associated with the text editor.
    * The return value is null if the control does not support an editor
    * (for example, if it is a checkbox.)
@@ -190,11 +183,6 @@ public:
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() = 0;
 
   /**
-   * Notify the text control that the placeholder text needs to be updated.
-   */
-  NS_IMETHOD_(void) UpdatePlaceholderText(bool aNotify) = 0;
-
-  /**
    * Show/hide the placeholder for the control.
    */
   NS_IMETHOD_(void) SetPlaceholderClass(bool aVisible, bool aNotify) = 0;
@@ -226,6 +214,9 @@ public:
    * elements be initialized eagerly.
    */
   NS_IMETHOD_(bool) HasCachedSelection() = 0;
+
+  static already_AddRefed<nsITextControlElement>
+  GetTextControlElementFromEditingHost(nsIContent* aHost);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITextControlElement,

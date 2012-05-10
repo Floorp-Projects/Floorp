@@ -72,6 +72,7 @@ fails-if(Android) != spellcheck-hyphen-invalid.html spellcheck-hyphen-invalid-re
 == spellcheck-hyphen-multiple-valid.html spellcheck-hyphen-multiple-valid-ref.html
 fails-if(Android) != spellcheck-hyphen-multiple-invalid.html spellcheck-hyphen-multiple-invalid-ref.html
 == spellcheck-dotafterquote-valid.html spellcheck-dotafterquote-valid-ref.html
+== spellcheck-url-valid.html spellcheck-url-valid-ref.html
 == unneeded_scroll.html unneeded_scroll-ref.html
 == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html
 == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html
@@ -85,6 +86,10 @@ skip-if(Android) == 674212-spellcheck.html 674212-spellcheck-ref.html
 skip-if(Android) == 338427-2.html 338427-2-ref.html
 skip-if(Android) needs-focus == 338427-3.html 338427-3-ref.html
 skip-if(Android) == 462758-grabbers-resizers.html 462758-grabbers-resizers-ref.html
+== readwrite-non-editable.html readwrite-non-editable-ref.html
+== readwrite-editable.html readwrite-editable-ref.html
+== readonly-non-editable.html readonly-non-editable-ref.html
+== readonly-editable.html readonly-editable-ref.html
 == dynamic-overflow-change.html dynamic-overflow-change-ref.html
 == 694880-1.html 694880-ref.html
 == 694880-2.html 694880-ref.html

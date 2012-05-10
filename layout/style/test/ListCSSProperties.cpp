@@ -49,8 +49,8 @@ struct PropertyInfo {
 const PropertyInfo gLonghandProperties[] = {
 
 #define CSS_PROP_DOMPROP_PREFIXED(prop_) Moz ## prop_
-#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,       \
-                 stylestruct_, stylestructoffset_, animtype_)                \
+#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
+                 stylestruct_, stylestructoffset_, animtype_)                 \
     { #name_, #method_ },
 
 #include "nsCSSPropList.h"
@@ -68,8 +68,8 @@ const PropertyInfo gLonghandProperties[] = {
 const char* gLonghandPropertiesWithDOMProp[] = {
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
-#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,       \
-                 stylestruct_, stylestructoffset_, animtype_)                \
+#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
+                 stylestruct_, stylestructoffset_, animtype_)                 \
     #name_,
 
 #include "nsCSSPropList.h"
@@ -85,7 +85,7 @@ const PropertyInfo gShorthandProperties[] = {
 // Need an extra level of macro nesting to force expansion of method_
 // params before they get pasted.
 #define LISTCSSPROPERTIES_INNER_MACRO(method_) #method_,
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) \
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_)	\
     { #name_, LISTCSSPROPERTIES_INNER_MACRO(method_) },
 
 #include "nsCSSPropList.h"
@@ -100,7 +100,7 @@ const PropertyInfo gShorthandProperties[] = {
 const char* gShorthandPropertiesWithDOMProp[] = {
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) \
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_)	\
     #name_,
 
 #include "nsCSSPropList.h"

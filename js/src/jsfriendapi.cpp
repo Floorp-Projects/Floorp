@@ -301,6 +301,12 @@ js::GetGlobalForObjectCrossCompartment(JSObject *obj)
     return &obj->global();
 }
 
+JS_FRIEND_API(void)
+js::NotifyAnimationActivity(JSObject *obj)
+{
+    obj->compartment()->lastAnimationTime = PRMJ_Now();
+}
+
 JS_FRIEND_API(uint32_t)
 js::GetObjectSlotSpan(JSObject *obj)
 {
@@ -747,7 +753,7 @@ NotifyDidPaint(JSRuntime *rt)
 extern JS_FRIEND_API(bool)
 IsIncrementalGCEnabled(JSRuntime *rt)
 {
-    return rt->gcIncrementalEnabled;
+    return rt->gcIncrementalEnabled && rt->gcMode == JSGC_MODE_INCREMENTAL;
 }
 
 extern JS_FRIEND_API(void)
