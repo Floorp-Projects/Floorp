@@ -68,7 +68,14 @@ function submitForm(idNum) {
 
 function submitFormMouse(idNum) {
   $("test"+idNum).setAttribute("onload", "frameLoaded(this)");
-  synthesizeMouse($("test" + idNum + "image"), 5, 5, {});
+  // Use 4.999 instead of 5 to guard against the possibility that the
+  // image's 'top' is exactly N + 0.5 pixels from the root. In that case
+  // we'd round up the widget mouse coordinate to N + 6, which relative
+  // to the image would be 5.5, which would get rounded up to 6 when
+  // submitting the form. Instead we round the widget mouse coordinate to
+  // N + 5, which relative to the image would be 4.5 which gets rounded up
+  // to 5.
+  synthesizeMouse($("test" + idNum + "image"), 4.999, 4.999, {});
 }
 
 addLoadEvent(function() {

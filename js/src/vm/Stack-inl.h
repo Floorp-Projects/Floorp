@@ -102,6 +102,15 @@ StackFrame::compartment() const
     return scopeChain()->compartment();
 }
 
+#ifdef JS_METHODJIT
+inline mjit::JITScript *
+StackFrame::jit()
+{
+    JSScript *script_ = script();
+    return script_->getJIT(isConstructing(), script_->compartment()->needsBarrier());
+}
+#endif
+
 inline void
 StackFrame::initPrev(JSContext *cx)
 {

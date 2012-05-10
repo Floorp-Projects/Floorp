@@ -6531,31 +6531,6 @@ nsDocument::GetCurrentRadioButton(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-nsDocument::GetPositionInGroup(nsIDOMHTMLInputElement *aRadio,
-                               PRInt32 *aPositionIndex,
-                               PRInt32 *aItemsInGroup)
-{
-  *aPositionIndex = 0;
-  *aItemsInGroup = 1;
-  nsAutoString name;
-  aRadio->GetName(name);
-  if (name.IsEmpty()) {
-    return NS_OK;
-  }
-
-  nsRadioGroupStruct* radioGroup = GetRadioGroup(name);
-  NS_ENSURE_TRUE(radioGroup, NS_ERROR_OUT_OF_MEMORY);
-
-  nsCOMPtr<nsIFormControl> radioControl(do_QueryInterface(aRadio));
-  NS_ASSERTION(radioControl, "Radio button should implement nsIFormControl");
-  *aPositionIndex = radioGroup->mRadioButtons.IndexOf(radioControl);
-  NS_ASSERTION(*aPositionIndex >= 0, "Radio button not found in its own group");
-  *aItemsInGroup = radioGroup->mRadioButtons.Count();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocument::GetNextRadioButton(const nsAString& aName,
                                const bool aPrevious,
                                nsIDOMHTMLInputElement*  aFocusedRadio,
@@ -9698,7 +9673,8 @@ nsIDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
     mPresShell->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf,
                                     &aWindowSizes->mLayoutArenas,
                                     &aWindowSizes->mLayoutStyleSets,
-                                    &aWindowSizes->mLayoutTextRuns);
+                                    &aWindowSizes->mLayoutTextRuns,
+                                    &aWindowSizes->mLayoutPresContext);
   }
 
   // Measurement of the following members may be added later if DMD finds it

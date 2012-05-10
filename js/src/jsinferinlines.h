@@ -264,6 +264,7 @@ struct AutoEnterCompilation
         JS_ASSERT(!info.script);
         info.script = script;
         info.constructing = constructing;
+        info.barriers = cx->compartment->needsBarrier();
         info.chunkIndex = chunkIndex;
     }
 
@@ -272,6 +273,7 @@ struct AutoEnterCompilation
         JS_ASSERT(info.script);
         info.script = NULL;
         info.constructing = false;
+        info.barriers = false;
         info.chunkIndex = 0;
     }
 };

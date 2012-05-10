@@ -2238,6 +2238,9 @@ nsAccessible::DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex)
 NS_IMETHODIMP
 nsAccessible::ScrollTo(PRUint32 aHow)
 {
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, aHow);
   return NS_OK;
 }

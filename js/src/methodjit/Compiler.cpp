@@ -59,7 +59,6 @@
 #include "jsopcodeinlines.h"
 
 #include "builtin/RegExp.h"
-#include "frontend/BytecodeEmitter.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpObject.h"
 
@@ -114,6 +113,8 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
     callPatches(CompilerAllocPolicy(cx, *thisFromCtor())),
     callSites(CompilerAllocPolicy(cx, *thisFromCtor())),
     doubleList(CompilerAllocPolicy(cx, *thisFromCtor())),
+    rootedTemplates(CompilerAllocPolicy(cx, *thisFromCtor())),
+    rootedRegExps(CompilerAllocPolicy(cx, *thisFromCtor())),
     fixedIntToDoubleEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
     fixedDoubleToAnyEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTables(CompilerAllocPolicy(cx, *thisFromCtor())),
@@ -144,7 +145,7 @@ mjit::Compiler::compile()
 
     CompileStatus status = performCompilation();
     if (status != Compile_Okay && status != Compile_Retry) {
-        JSScript::JITScriptHandle *jith = outerScript->jitHandle(isConstructing);
+        JSScript::JITScriptHandle *jith = outerScript->jitHandle(isConstructing, cx->compartment->needsBarrier());
         JSScript::ReleaseCode(cx->runtime->defaultFreeOp(), jith);
         jith->setUnjittable();
 
@@ -942,7 +943,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (!cx->methodJitEnabled)
         return Compile_Abort;
 
-    JSScript::JITScriptHandle *jith = script->jitHandle(construct);
+    JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->needsBarrier());
     if (jith->isUnjittable())
         return Compile_Abort;
 
@@ -962,6 +963,8 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (construct && !script->nslots)
         script->nslots++;
 
+    uint64_t gcNumber = cx->runtime->gcNumber;
+
     JITScript *jit;
     if (jith->isEmpty()) {
         jit = MakeJITScript(cx, script);
@@ -971,6 +974,11 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     } else {
         jit = jith->getValid();
     }
+
+    // Script analysis can trigger GC, watch in case needsBarrier() changed.
+    if (gcNumber != cx->runtime->gcNumber)
+        goto restart;
+
     unsigned chunkIndex = jit->chunkIndex(pc);
     ChunkDescriptor &desc = jit->chunkDescriptor(chunkIndex);
 
@@ -1340,6 +1348,8 @@ mjit::Compiler::finishThisUp()
                       sizeof(NativeMapEntry) * nNmapLive +
                       sizeof(InlineFrame) * inlineFrames.length() +
                       sizeof(CallSite) * callSites.length() +
+                      sizeof(JSObject*) * rootedTemplates.length() +
+                      sizeof(RegExpShared*) * rootedRegExps.length() +
 #if defined JS_MONOIC
                       sizeof(ic::GetGlobalNameIC) * getGlobalNames.length() +
                       sizeof(ic::SetGlobalNameIC) * setGlobalNames.length() +
@@ -1469,6 +1479,20 @@ mjit::Compiler::finishThisUp()
             stubCode.patch(from.loopPatch.codePatch, result + codeOffset);
     }
 
+    JSObject **jitRootedTemplates = (JSObject **)cursor;
+    chunk->nRootedTemplates = rootedTemplates.length();
+    cursor += sizeof(JSObject*) * chunk->nRootedTemplates;
+    for (size_t i = 0; i < chunk->nRootedTemplates; i++)
+        jitRootedTemplates[i] = rootedTemplates[i];
+
+    RegExpShared **jitRootedRegExps = (RegExpShared **)cursor;
+    chunk->nRootedRegExps = rootedRegExps.length();
+    cursor += sizeof(RegExpShared*) * chunk->nRootedRegExps;
+    for (size_t i = 0; i < chunk->nRootedRegExps; i++) {
+        jitRootedRegExps[i] = rootedRegExps[i];
+        jitRootedRegExps[i]->incRef();
+    }
+
 #if defined JS_MONOIC
     if (chunkIndex == 0 && script->function()) {
         JS_ASSERT(jit->argsCheckPool == NULL);
@@ -1508,7 +1532,6 @@ mjit::Compiler::finishThisUp()
         to.loadStoreOffset = offset;
         JS_ASSERT(to.loadStoreOffset == offset);
 
-        to.hasExtraStub = 0;
         to.objConst = from.objConst;
         to.shapeReg = from.shapeReg;
         to.objReg = from.objReg;
@@ -1531,7 +1554,6 @@ mjit::Compiler::finishThisUp()
     chunk->nCallICs = callICs.length();
     cursor += sizeof(ic::CallICInfo) * chunk->nCallICs;
     for (size_t i = 0; i < chunk->nCallICs; i++) {
-        jitCallICs[i].reset();
         jitCallICs[i].funGuard = fullCode.locationOf(callICs[i].funGuard);
         jitCallICs[i].funJump = fullCode.locationOf(callICs[i].funJump);
         jitCallICs[i].slowPathStart = stubCode.locationOf(callICs[i].slowPathStart);
@@ -5007,10 +5029,11 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
 
     RESERVE_OOL_SPACE(stubcc.masm);
     pic.slowPathStart = stubcc.linkExit(j, Uses(1));
+    pic.cached = !forPrototype;
 
     stubcc.leave();
     passICAddress(&pic);
-    pic.slowPathCall = OOL_STUBCALL(forPrototype ? ic::GetPropNoCache : ic::GetProp, rejoin);
+    pic.slowPathCall = OOL_STUBCALL(ic::GetProp, rejoin);
     CHECK_OOL_SPACE();
     if (rejoin == REJOIN_GETTER)
         testPushedType(rejoin, -1);
@@ -6552,6 +6575,13 @@ mjit::Compiler::emitEval(uint32_t argc)
     pushSyncedEntry(0);
 }
 
+Compiler::Jump
+Compiler::getNewObject(JSContext *cx, RegisterID result, JSObject *templateObject)
+{
+    rootedTemplates.append(templateObject);
+    return masm.getNewObject(cx, result, templateObject);
+}
+
 bool
 mjit::Compiler::jsop_newinit()
 {
@@ -6631,7 +6661,7 @@ mjit::Compiler::jsop_newinit()
     templateObject->setType(type);
 
     RegisterID result = frame.allocReg();
-    Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
+    Jump emptyFreeList = getNewObject(cx, result, templateObject);
 
     stubcc.linkExit(emptyFreeList, Uses(0));
     stubcc.leave();
@@ -6661,8 +6691,7 @@ mjit::Compiler::jsop_regexp()
         !cx->typeInferenceEnabled() ||
         analysis->localsAliasStack() ||
         types::TypeSet::HasObjectFlags(cx, globalObj->getType(cx),
-                                       types::OBJECT_FLAG_REGEXP_FLAGS_SET) ||
-        cx->runtime->gcIncrementalState == gc::MARK)
+                                       types::OBJECT_FLAG_REGEXP_FLAGS_SET))
     {
         prepareStubCall(Uses(0));
         masm.move(ImmPtr(obj), Registers::ArgReg1);
@@ -6718,17 +6747,19 @@ mjit::Compiler::jsop_regexp()
 
     /*
      * Force creation of the RegExpShared in the script's RegExpObject so that
-     * we grab it in the getNewObject template copy. Note that JIT code is
-     * discarded on every GC, which permits us to burn in the pointer to the
-     * RegExpShared. We don't do this during an incremental
-     * GC, since we don't discard JIT code after every marking slice.
+     * we grab it in the getNewObject template copy. A strong reference to the
+     * RegExpShared will be added when the jitcode is created. Any GC activity
+     * between now and construction of that jitcode could purge the shared
+     * info, but such activity will also abort compilation.
      */
     RegExpGuard g;
     if (!reobj->getShared(cx, &g))
         return false;
 
+    rootedRegExps.append(g.re());
+
     RegisterID result = frame.allocReg();
-    Jump emptyFreeList = masm.getNewObject(cx, result, obj);
+    Jump emptyFreeList = getNewObject(cx, result, obj);
 
     stubcc.linkExit(emptyFreeList, Uses(0));
     stubcc.leave();
@@ -7071,7 +7102,7 @@ mjit::Compiler::constructThis()
             types::TypeSet::WatchObjectStateChange(cx, templateObject->type());
 
         RegisterID result = frame.allocReg();
-        Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
+        Jump emptyFreeList = getNewObject(cx, result, templateObject);
 
         stubcc.linkExit(emptyFreeList, Uses(0));
         stubcc.leave();

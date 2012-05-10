@@ -64,9 +64,9 @@
 #include "jsopcode.h"
 #include "jsscript.h"
 
-#include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
+#include "frontend/TreeContext.h"
 #include "vm/RegExpObject.h"
 
 #include "jsscriptinlines.h"
