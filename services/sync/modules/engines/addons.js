@@ -75,8 +75,11 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/preferences.js");
 
-Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource://gre/modules/AddonRepository.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
+                                  "resource://gre/modules/AddonRepository.jsm");
 
 const EXPORTED_SYMBOLS = ["AddonsEngine"];
 
