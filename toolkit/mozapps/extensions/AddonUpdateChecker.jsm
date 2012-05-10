@@ -64,9 +64,18 @@ const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/AddonRepository.jsm");
-// shared code for suppressing bad cert dialogs
-Components.utils.import("resource://gre/modules/CertUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
+                                  "resource://gre/modules/AddonRepository.jsm");
+
+// Shared code for suppressing bad cert dialogs.
+XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
+  let certUtils = {};
+  Components.utils.import("resource://gre/modules/CertUtils.jsm", certUtils);
+  return certUtils;
+});
 
 var gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
            getService(Ci.nsIRDFService);
@@ -79,11 +88,6 @@ var gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
     return this[aName];
   });
 }, this);
-
-XPCOMUtils.defineLazyGetter(this, "AddonManager", function() {
-  Cu.import("resource://gre/modules/AddonManager.jsm");
-  return AddonManager;
-});
 
 
 /**
@@ -450,7 +454,7 @@ function UpdateParser(aId, aType, aUpdateKey, aUrl, aObserver) {
     this.request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                    createInstance(Ci.nsIXMLHttpRequest);
     this.request.open("GET", aUrl, true);
-    this.request.channel.notificationCallbacks = new BadCertHandler(!requireBuiltIn);
+    this.request.channel.notificationCallbacks = new CertUtils.BadCertHandler(!requireBuiltIn);
     this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     this.request.overrideMimeType("text/xml");
     var self = this;
@@ -488,7 +492,7 @@ UpdateParser.prototype = {
     }
 
     try {
-      checkCert(request.channel, !requireBuiltIn);
+      CertUtils.checkCert(request.channel, !requireBuiltIn);
     }
     catch (e) {
       this.notifyError(AddonUpdateChecker.ERROR_DOWNLOAD_ERROR);
