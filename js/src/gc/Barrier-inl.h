@@ -166,23 +166,29 @@ HeapValue::set(JSCompartment *comp, const Value &v)
 }
 
 inline void
-HeapValue::writeBarrierPost(const Value &value, void *addr)
+HeapValue::writeBarrierPost(const Value &value, Value *addr)
 {
+#ifdef JSGC_GENERATIONAL
+#endif
 }
 
 inline void
-HeapValue::writeBarrierPost(JSCompartment *comp, const Value &value, void *addr)
+HeapValue::writeBarrierPost(JSCompartment *comp, const Value &value, Value *addr)
 {
+#ifdef JSGC_GENERATIONAL
+#endif
 }
 
 inline void
 HeapValue::post()
 {
+    writeBarrierPost(value, &value);
 }
 
 inline void
 HeapValue::post(JSCompartment *comp)
 {
+    writeBarrierPost(comp, value, &value);
 }
 
 inline
@@ -196,6 +202,7 @@ RelocatableValue::RelocatableValue(const Value &v)
     : EncapsulatedValue(v)
 {
     JS_ASSERT(!IsPoisonedValue(v));
+    post();
 }
 
 inline
@@ -203,12 +210,14 @@ RelocatableValue::RelocatableValue(const RelocatableValue &v)
     : EncapsulatedValue(v.value)
 {
     JS_ASSERT(!IsPoisonedValue(v.value));
+    post();
 }
 
 inline
 RelocatableValue::~RelocatableValue()
 {
     pre();
+    relocate();
 }
 
 inline RelocatableValue &
@@ -217,6 +226,7 @@ RelocatableValue::operator=(const Value &v)
     pre();
     JS_ASSERT(!IsPoisonedValue(v));
     value = v;
+    post();
     return *this;
 }
 
@@ -226,7 +236,29 @@ RelocatableValue::operator=(const RelocatableValue &v)
     pre();
     JS_ASSERT(!IsPoisonedValue(v.value));
     value = v.value;
+    post();
     return *this;
+}
+
+inline void
+RelocatableValue::post()
+{
+#ifdef JSGC_GENERATIONAL
+#endif
+}
+
+inline void
+RelocatableValue::post(JSCompartment *comp)
+{
+#ifdef JSGC_GENERATIONAL
+#endif
+}
+
+inline void
+RelocatableValue::relocate()
+{
+#ifdef JSGC_GENERATIONAL
+#endif
 }
 
 inline
