@@ -3449,7 +3449,6 @@ IncrementalMarkSlice(JSRuntime *rt, int64_t budget, JSGCInvocationKind gckind, b
 
     *shouldSweep = false;
     if (rt->gcIncrementalState == MARK) {
-        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK);
         SliceBudget sliceBudget(budget);
 
         /* If we needed delayed marking for gray roots, then collect until done. */
@@ -3466,7 +3465,11 @@ IncrementalMarkSlice(JSRuntime *rt, int64_t budget, JSGCInvocationKind gckind, b
         }
 #endif
 
-        bool finished = rt->gcMarker.drainMarkStack(sliceBudget);
+        bool finished;
+        {
+            gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK);
+            finished = rt->gcMarker.drainMarkStack(sliceBudget);
+        }
         if (finished) {
             JS_ASSERT(rt->gcMarker.isDrained());
             if (initialState == MARK && !rt->gcLastMarkSlice && budget != SliceBudget::Unlimited) {
