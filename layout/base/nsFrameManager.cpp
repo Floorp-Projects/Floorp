@@ -1786,7 +1786,15 @@ nsFrameManager::CaptureFrameState(nsIFrame* aFrame,
   for (; !lists.IsDone(); lists.Next()) {
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
-      CaptureFrameState(childFrames.get(), aState);
+      nsIFrame* child = childFrames.get();
+      if (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+        // We'll pick it up when we get to its placeholder
+        continue;
+      }
+      // Make sure to walk through placeholders as needed, so that we
+      // save state for out-of-flows which may not be our descendants
+      // themselves but whose placeholders are our descendants.
+      CaptureFrameState(nsPlaceholderFrame::GetRealFrameFor(child), aState);
     }
   }
 }
