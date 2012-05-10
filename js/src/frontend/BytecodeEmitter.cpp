@@ -118,7 +118,6 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, unsigned lineno)
     closedVars(parser->context),
     typesetCount(0)
 {
-    flags = TCF_COMPILING;
     memset(&prolog, 0, sizeof prolog);
     memset(&main, 0, sizeof main);
     current = &main;
@@ -839,7 +838,9 @@ LookupCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, Val
                     break;
             }
         }
-    } while (bce->parent && (bce = bce->parent->asBytecodeEmitter()));
+        bce = bce->parentBCE();
+    } while (bce);
+
     return JS_TRUE;
 }
 
@@ -4934,7 +4935,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!bce2.init(cx))
             return false;
 
-        bce2.flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION |
+        bce2.flags = pn->pn_funbox->tcflags | TCF_IN_FUNCTION |
                      (bce->flags & TCF_FUN_MIGHT_ALIAS_LOCALS);
         bce2.bindings.transfer(cx, &pn->pn_funbox->bindings);
         bce2.setFunction(fun);

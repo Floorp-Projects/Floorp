@@ -46,8 +46,7 @@
  * feedback to disambiguate non-LL(1) structures.  It generates trees of nodes
  * induced by the recursive parsing (not precise syntax trees, see Parser.h).
  * After tree construction, it rewrites trees to fold constants and evaluate
- * compile-time expressions.  Finally, it calls js::frontend::EmitTree (see
- * BytecodeEmitter.h) to generate bytecode.
+ * compile-time expressions.
  *
  * This parser attempts no error recovery.
  */
