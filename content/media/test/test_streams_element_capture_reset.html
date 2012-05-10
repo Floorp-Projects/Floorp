@@ -19,13 +19,9 @@ var stream = v.mozCaptureStream();
 vout.src = stream;
 
 function dumpEvent(event) {
-  var detail;
-  if (event.type == "timeupdate") {
-    detail = " currentTime=" + event.target.currentTime;
-  } else {
-    detail = "";
-  }
-  dump("GOT EVENT " + event.type + detail + "\n");
+  dump("GOT EVENT " + event.type + " currentTime=" + event.target.currentTime +
+       " paused=" + event.target.paused + " ended=" + event.target.ended +
+       " readyState=" + event.target.readyState + "\n");
 }
 var events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];
 for (var i = 0; i < events.length; ++i) {
