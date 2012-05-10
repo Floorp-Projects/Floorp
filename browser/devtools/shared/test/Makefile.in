@@ -49,11 +49,21 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_TEST_FILES = \
   browser_promise_basic.js \
   browser_templater_basic.js \
+  browser_toolbar_basic.js \
+  browser_gcli_commands.js \
+  browser_gcli_inspect.js \
+  browser_gcli_integrate.js \
+  browser_gcli_require.js \
+  browser_gcli_web.js \
+  browser_gcli_break.js \
   head.js \
   $(NULL)
 
 _BROWSER_TEST_PAGES = \
   browser_templater_basic.html \
+  browser_toolbar_basic.html \
+  browser_gcli_inspect.html \
+  browser_gcli_break.html \
   $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
