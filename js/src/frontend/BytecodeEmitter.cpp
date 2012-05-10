@@ -805,7 +805,7 @@ static bool
 EmitObjectOp(JSContext *cx, ObjectBox *objbox, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
-    return EmitIndex32(cx, op, bce->objectList.index(objbox), bce);
+    return EmitIndex32(cx, op, bce->objectList.add(objbox), bce);
 }
 
 static bool
@@ -833,13 +833,13 @@ EmitUnaliasedVarOp(JSContext *cx, JSOp op, uint16_t slot, BytecodeEmitter *bce)
 }
 
 static bool
-EmitAliasedVarOp(JSContext *cx, JSOp op, ScopeCoordinate sc, JSAtom *atom, BytecodeEmitter *bce)
+EmitAliasedVarOp(JSContext *cx, JSOp op, ScopeCoordinate sc, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_SCOPECOORD);
 
-    jsatomid atomIndex;
-    if (!bce->makeAtomIndex(atom, &atomIndex))
-        return false;
+    uint32_t maybeBlockIndex = UINT32_MAX;
+    if (bce->sc->blockChain)
+        maybeBlockIndex = bce->objectList.indexOf(bce->sc->blockChain);
 
     bool decomposed = js_CodeSpec[op].format & JOF_DECOMPOSE;
     unsigned n = 2 * sizeof(uint16_t) + sizeof(uint32_t) + sizeof(uint16_t) + (decomposed ? 1 : 0);
@@ -854,7 +854,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ScopeCoordinate sc, JSAtom *atom, Bytec
     pc += sizeof(uint16_t);
     SET_UINT16(pc, sc.binding);
     pc += sizeof(uint16_t);
-    SET_UINT32_INDEX(pc, atomIndex);
+    SET_UINT32_INDEX(pc, maybeBlockIndex);
     pc += sizeof(uint32_t);
     SET_UINT16(pc, sc.frameBinding);
     return true;
@@ -911,7 +911,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
         }
     }
 
-    return EmitAliasedVarOp(cx, op, sc, pn->atom(), bce);
+    return EmitAliasedVarOp(cx, op, sc, bce);
 }
 
 static bool
@@ -2635,8 +2635,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
             sc.hops = 0;
             sc.binding = bce->sc->bindings.localToBinding(bce->sc->argumentsLocalSlot());
             sc.frameBinding = sc.binding;
-            JSAtom *atom = cx->runtime->atomState.argumentsAtom;
-            if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, atom, bce))
+            if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, bce))
                 return false;
         } else {
             if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, bce->sc->argumentsLocalSlot(), bce))
@@ -4875,7 +4874,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     /* Make the function object a literal in the outer script's pool. */
-    unsigned index = bce->objectList.index(pn->pn_funbox);
+    unsigned index = bce->objectList.add(pn->pn_funbox);
 
     /* Emit a bytecode pointing to the closure object in its immediate. */
     if (pn->getOp() != JSOP_NOP) {
@@ -5808,7 +5807,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ObjectBox *objbox = bce->parser->newObjectBox(obj);
         if (!objbox)
             return false;
-        unsigned index = bce->objectList.index(objbox);
+        unsigned index = bce->objectList.add(objbox);
         MOZ_STATIC_ASSERT(JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
                           "newinit and newobject must have equal length to edit in-place");
         EMIT_UINT32_IN_PLACE(offset, JSOP_NEWOBJECT, uint32_t(index));
@@ -6440,7 +6439,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_REGEXP:
         JS_ASSERT(pn->isOp(JSOP_REGEXP));
-        ok = EmitRegExp(cx, bce->regexpList.index(pn->pn_objbox), bce);
+        ok = EmitRegExp(cx, bce->regexpList.add(pn->pn_objbox), bce);
         break;
 
 #if JS_HAS_XML_SUPPORT
@@ -6940,12 +6939,22 @@ frontend::FinishTakingTryNotes(BytecodeEmitter *bce, TryNoteArray *array)
  * the pre-compilation prototype, a pigeon-hole problem for instanceof tests.
  */
 unsigned
-CGObjectList::index(ObjectBox *objbox)
+CGObjectList::add(ObjectBox *objbox)
 {
     JS_ASSERT(!objbox->emitLink);
     objbox->emitLink = lastbox;
     lastbox = objbox;
     return length++;
+}
+
+unsigned
+CGObjectList::indexOf(JSObject *obj)
+{
+    JS_ASSERT(length > 0);
+    unsigned index = length - 1;
+    for (ObjectBox *box = lastbox; box->object != obj; box = box->emitLink)
+        index--;
+    return index;
 }
 
 void
