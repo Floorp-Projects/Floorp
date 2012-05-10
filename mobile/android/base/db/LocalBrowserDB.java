@@ -75,7 +75,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     }
 
     private final String mProfile;
-    private long mMobileFolderId;
 
     // Map of folder GUIDs to IDs. Used for caching.
     private HashMap<String, Long> mFolderIdMap;
@@ -103,7 +102,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     public LocalBrowserDB(String profile) {
         mProfile = profile;
-        mMobileFolderId = -1;
         mFolderIdMap = new HashMap<String, Long>();
         mDesktopBookmarksExist = null;
 
@@ -302,7 +300,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
         // We always want to show mobile bookmarks in the root view.
         if (folderId == Bookmarks.FIXED_ROOT_ID) {
-            folderId = getMobileBookmarksFolderId(cr);
+            folderId = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
 
             // We'll add a fake "Desktop Bookmarks" folder to the root view if desktop 
             // bookmarks exist, so that the user can still access non-mobile bookmarks.
@@ -403,14 +401,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return url;
     }
 
-    private long getMobileBookmarksFolderId(ContentResolver cr) {
-        if (mMobileFolderId >= 0)
-            return mMobileFolderId;
-
-        mMobileFolderId = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
-        return mMobileFolderId;
-    }
-
     private synchronized long getFolderIdFromGuid(ContentResolver cr, String guid) {
         if (mFolderIdMap.containsKey(guid))
           return mFolderIdMap.get(guid);
@@ -451,7 +441,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     }
 
     public void addBookmark(ContentResolver cr, String title, String uri) {
-        long folderId = getMobileBookmarksFolderId(cr);
+        long folderId = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
         if (folderId < 0)
             return;
 
