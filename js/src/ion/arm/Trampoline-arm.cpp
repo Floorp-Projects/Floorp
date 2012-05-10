@@ -574,7 +574,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     if (f.explicitArgs) {
         argsBase = r5;
         regs.take(argsBase);
-        masm.ma_add(sp, Imm32(sizeof(IonExitFrameLayout) + argumentPadding), argsBase);
+        masm.ma_add(sp, Imm32(IonExitFrameLayout::SizeWithFooter()), argsBase);
     }
 
     // Reserve space for the outparameter.
