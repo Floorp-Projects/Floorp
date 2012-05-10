@@ -153,7 +153,8 @@ public:
   static void SetScrollbarEnabled(nsIContent* aContent, nscoord aMaxPos);
   static void SetCoordAttribute(nsIContent* aContent, nsIAtom* aAtom,
                                 nscoord aSize);
-  nscoord GetCoordAttribute(nsIBox* aFrame, nsIAtom* atom, nscoord defaultValue);
+  nscoord GetCoordAttribute(nsIBox* aFrame, nsIAtom* aAtom, nscoord aDefaultValue,
+                            nscoord* aRangeStart, nscoord* aRangeLength);
 
   // Update scrollbar curpos attributes to reflect current scroll position
   void UpdateScrollbarPosition();
