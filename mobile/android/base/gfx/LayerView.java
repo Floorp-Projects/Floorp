@@ -81,8 +81,6 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
     private GLController mGLController;
     private InputConnectionHandler mInputConnectionHandler;
     private LayerRenderer mRenderer;
-    private long mRenderTime;
-    private boolean mRenderTimeReset;
     /* Must be a PAINT_xxx constant */
     private int mPaintState = PAINT_NONE;
 
@@ -178,7 +176,7 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
         return false;
     }
 
-    public synchronized void requestRender() {
+    public void requestRender() {
         if (mListener != null) {
             mListener.renderRequested();
         }
@@ -190,17 +188,6 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
 
     public void removeLayer(Layer layer) {
         mRenderer.removeLayer(layer);
-    }
-
-    /**
-     * Returns the time elapsed between the first call of requestRender() after
-     * the last call of getRenderTime(), in nanoseconds.
-     */
-    public long getRenderTime() {
-        synchronized(this) {
-            mRenderTimeReset = false;
-            return System.nanoTime() - mRenderTime;
-        }
     }
 
     public int getMaxTextureSize() {
@@ -242,7 +229,7 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
         mListener = listener;
     }
 
-    public synchronized GLController getGLController() {
+    public GLController getGLController() {
         return mGLController;
     }
 
