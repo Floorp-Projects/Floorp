@@ -2220,7 +2220,6 @@ JSScript::applySpeculationFailed(JSContext *cx, JSScript *script_)
     return true;
 }
 
-#ifdef DEBUG
 bool
 JSScript::varIsAliased(unsigned varSlot)
 {
@@ -2264,4 +2263,3 @@ JSScript::formalLivesInCallObject(unsigned argSlot)
 
     return false;
 }
-#endif

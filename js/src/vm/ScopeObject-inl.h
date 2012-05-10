@@ -186,11 +186,18 @@ BlockObject::slotCount() const
     return propertyCount();
 }
 
-inline HeapSlot &
+inline const Value &
 BlockObject::slotValue(unsigned i)
 {
     JS_ASSERT(i < slotCount());
     return getSlotRef(RESERVED_SLOTS + i);
+}
+
+inline void
+BlockObject::setSlotValue(unsigned i, const Value &v)
+{
+    JS_ASSERT(i < slotCount());
+    setSlot(RESERVED_SLOTS + i, v);
 }
 
 inline StaticBlockObject *
@@ -217,7 +224,7 @@ inline void
 StaticBlockObject::setDefinitionParseNode(unsigned i, Definition *def)
 {
     JS_ASSERT(slotValue(i).isUndefined());
-    slotValue(i).init(this, i, PrivateValue(def));
+    setSlotValue(i, PrivateValue(def));
 }
 
 inline Definition *
@@ -230,7 +237,7 @@ StaticBlockObject::maybeDefinitionParseNode(unsigned i)
 inline void
 StaticBlockObject::setAliased(unsigned i, bool aliased)
 {
-    slotValue(i).init(this, i, BooleanValue(aliased));
+    setSlotValue(i, BooleanValue(aliased));
     if (aliased)
         JSObject::setPrivate(reinterpret_cast<void *>(1));
 }
@@ -260,10 +267,16 @@ ClonedBlockObject::staticBlock() const
 }
 
 inline const Value &
-ClonedBlockObject::closedSlot(unsigned i)
+ClonedBlockObject::var(unsigned i)
 {
     JS_ASSERT(!maybeStackFrame());
     return slotValue(i);
+}
+
+inline void
+ClonedBlockObject::setVar(unsigned i, const Value &v)
+{
+    setSlotValue(i, v);
 }
 
 }  /* namespace js */
