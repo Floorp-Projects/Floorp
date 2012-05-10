@@ -2914,8 +2914,17 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
 
     // Attempt to inline native and scripted functions.
     if (inliningEnabled() && target) {
-        if (target->isNative() && inlineNativeCall(target, argc, constructing))
-            return true;
+        if (target->isNative()) {
+            switch (inlineNativeCall(target, argc, constructing)) {
+              case InliningStatus_Inlined:
+                return true;
+              case InliningStatus_Error:
+                return false;
+              case InliningStatus_NotInlined:
+                break;
+            }
+        }
+
         if (!constructing && makeInliningDecision(target))
             return inlineScriptedCall(target, argc);
     }

@@ -80,14 +80,14 @@ IonBuilder::discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb)
     return true;
 }
 
-bool
+IonBuilder::InliningStatus
 IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
 {
     JSNative native = target->native();
 
     // Currently constructing is only possible with Array()
     if (constructing && native != js_Array)
-        return false;
+        return InliningStatus_NotInlined;
 
     /* Check if there is a match for the current native function */
 
@@ -102,14 +102,14 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
     if (argc == 0) {
         if (native == js_Array) {
             if (!discardCall(argc, argv, current))
-                return false;
+                return InliningStatus_Error;
             types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
             MNewArray *ins = new MNewArray(0, type, MNewArray::NewArray_Unallocating);
             current->add(ins);
             current->push(ins);
             if (!resumeAfter(ins))
-                return false;
-            return true;
+                return InliningStatus_Error;
+            return InliningStatus_Inlined;
         }
 
         if ((native == js::array_pop || native == js::array_shift) && thisType == MIRType_Object) {
@@ -129,19 +129,21 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
                 MArrayPopShift::Mode mode = (native == js::array_pop) ? MArrayPopShift::Pop : MArrayPopShift::Shift;
                 JSValueType knownType = returnTypes->getKnownTypeTag(cx);
                 if (knownType == JSVAL_TYPE_UNDEFINED || knownType == JSVAL_TYPE_NULL)
-                    return false;
+                    return InliningStatus_NotInlined;
                 MIRType resultType = MIRTypeFromValueType(knownType);
                 if (!discardCall(argc, argv, current))
-                    return false;
+                    return InliningStatus_Error;
                 MArrayPopShift *ins = MArrayPopShift::New(argv[0], mode, needsHoleCheck, maybeUndefined);
                 current->add(ins);
                 current->push(ins);
                 ins->setResultType(resultType);
-                return resumeAfter(ins);
+                if (!resumeAfter(ins))
+                    return InliningStatus_Error;
+                return InliningStatus_Inlined;
             }
         }
 
-        return false;
+        return InliningStatus_NotInlined;
     }
 
     types::TypeSet *arg1Types = oracle->getCallArg(script, argc, 1, pc);
@@ -153,11 +155,11 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
             if ((arg1Type == MIRType_Double || arg1Type == MIRType_Int32) &&
                 arg1Type == returnType) {
                 if (!discardCall(argc, argv, current))
-                    return false;
+                    return InliningStatus_Error;
                 MAbs *ins = MAbs::New(argv[1], returnType);
                 current->add(ins);
                 current->push(ins);
-                return true;
+                return InliningStatus_Inlined;
             }
         }
         if (native == js_math_sqrt) {
@@ -165,47 +167,47 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
             if ((arg1Type == MIRType_Double || arg1Type == MIRType_Int32) &&
                 returnType == MIRType_Double) {
                 if (!discardCall(argc, argv, current))
-                    return false;
+                    return InliningStatus_Error;
                 MSqrt *ins = MSqrt::New(argv[1]);
                 current->add(ins);
                 current->push(ins);
-                return true;
+                return InliningStatus_Inlined;
             }
         }
         if (native == js_math_floor) {
             // argThis == MPassArg(MConstant(Math))
             if (arg1Type == MIRType_Double && returnType == MIRType_Int32) {
                 if (!discardCall(argc, argv, current))
-                    return false;
+                    return InliningStatus_Error;
                 MFloor *ins = new MFloor(argv[1]);
                 current->add(ins);
                 current->push(ins);
-                return true;
+                return InliningStatus_Inlined;
             }
             if (arg1Type == MIRType_Int32 && returnType == MIRType_Int32) {
                 // i == Math.floor(i)
                 if (!discardCall(argc, argv, current))
-                    return false;
+                    return InliningStatus_Error;
                 current->push(argv[1]);
-                return true;
+                return InliningStatus_Inlined;
             }
         }
         if (native == js_math_round) {
             // argThis == MPassArg(MConstant(Math))
             if (arg1Type == MIRType_Double && returnType == MIRType_Int32) {
                 if (!discardCall(argc, argv, current))
-                    return false;
+                    return InliningStatus_Error;
                 MRound *ins = new MRound(argv[1]);
                 current->add(ins);
                 current->push(ins);
-                return true;
+                return InliningStatus_Inlined;
             }
             if (arg1Type == MIRType_Int32 && returnType == MIRType_Int32) {
                 // i == Math.round(i)
                 if (!discardCall(argc, argv, current))
-                    return false;
+                    return InliningStatus_Error;
                 current->push(argv[1]);
-                return true;
+                return InliningStatus_Inlined;
             }
         }
         // TODO: js_math_ceil
@@ -217,25 +219,25 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
             if (native == js_str_charCodeAt) {
                 if (returnType != MIRType_Int32 || thisType != MIRType_String ||
                     arg1Type != MIRType_Int32) {
-                    return false;
+                    return InliningStatus_NotInlined;
                 }
             }
 
             if (native == js_str_charAt) {
                 if (returnType != MIRType_String || thisType != MIRType_String ||
                     arg1Type != MIRType_Int32) {
-                    return false;
+                    return InliningStatus_NotInlined;
                 }
             }
 
             if (native == js::str_fromCharCode) {
                 // argThis == MPassArg(MConstant(String))
                 if (returnType != MIRType_String || arg1Type != MIRType_Int32)
-                    return false;
+                    return InliningStatus_NotInlined;
             }
 
             if (!discardCall(argc, argv, current))
-                return false;
+                return InliningStatus_Error;
             MDefinition *str = argv[0];
             MDefinition *indexOrCode = argv[1];
             MInstruction *ins = MToInt32::New(indexOrCode);
@@ -256,7 +258,7 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
                 current->add(ins);
             }
             current->push(ins);
-            return true;
+            return InliningStatus_Inlined;
         }
         if (native == js_Array) {
             if (arg1Type == MIRType_Int32) {
@@ -264,14 +266,14 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
                 if (argv1->isConstant()) {
                     int32 arg = argv1->toConstant()->value().toInt32();
                     if (!discardCall(argc, argv, current))
-                        return false;
+                        return InliningStatus_Error;
                     types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
                     MNewArray *ins = new MNewArray(arg, type, MNewArray::NewArray_Unallocating);
                     current->add(ins);
                     current->push(ins);
                     if (!resumeAfter(ins))
-                        return false;
-                    return true;
+                        return InliningStatus_Error;
+                    return InliningStatus_Inlined;
                 }
             }
         }
@@ -283,18 +285,20 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
                 !types::ArrayPrototypeHasIndexedProperty(cx, script))
             {
                 if (!discardCall(argc, argv, current))
-                    return false;
+                    return InliningStatus_Error;
                 MArrayPush *ins = MArrayPush::New(argv[0], argv[1]);
                 current->add(ins);
                 current->push(ins);
-                return resumeAfter(ins);
+                if (!resumeAfter(ins))
+                    return InliningStatus_Error;
+                return InliningStatus_Inlined;
             }
         }
 
-        return false;
+        return InliningStatus_NotInlined;
     }
 
-    return false;
+    return InliningStatus_NotInlined;
 }
 
 } // namespace ion

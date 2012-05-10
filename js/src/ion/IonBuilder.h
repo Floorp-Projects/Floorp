@@ -353,12 +353,6 @@ class IonBuilder : public MIRGenerator
     bool jsop_itermore();
     bool jsop_iterend();
 
-    // Replace generic calls to native function by instructions which can be
-    // specialized and which can enable GVN & LICM on these native calls.
-    bool discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
-    bool discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
-    bool inlineNativeCall(JSFunction *target, uint32 argc, bool constructing);
-
     /* Inlining. */
 
     enum InliningStatus
@@ -367,6 +361,10 @@ class IonBuilder : public MIRGenerator
         InliningStatus_NotInlined,
         InliningStatus_Inlined
     };
+
+    bool discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
+    bool discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
+    InliningStatus inlineNativeCall(JSFunction *target, uint32 argc, bool constructing);
 
     bool jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inlineBuilder);
     bool inlineScriptedCall(JSFunction *target, uint32 argc);
