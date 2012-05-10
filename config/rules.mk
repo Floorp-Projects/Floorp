@@ -117,7 +117,7 @@ xpcshell-tests:
 	  --symbols-path=$(DIST)/crashreporter-symbols \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --tests-root-dir=$(testxpcobjdir) \
-	  --tests-modules-dir=$(DEPTH)/_tests/modules \
+	  --testing-modules-dir=$(DEPTH)/_tests/modules \
 	  --xunit-file=$(testxpcobjdir)/$(relativesrcdir)/results.xml \
 	  --xunit-suite-name=xpcshell \
 	  $(EXTRA_TEST_ARGS) \
@@ -148,7 +148,7 @@ check-interactive:
 	  --symbols-path=$(DIST)/crashreporter-symbols \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --test-path=$(SOLO_FILE) \
-	  --tests-modules-dir=$(DEPTH)/_tests/modules \
+	  --testing-modules-dir=$(DEPTH)/_tests/modules \
 	  --profile-name=$(MOZ_APP_NAME) \
 	  --interactive \
 	  $(LIBXUL_DIST)/bin/xpcshell \
@@ -162,7 +162,7 @@ check-one:
 	  --symbols-path=$(DIST)/crashreporter-symbols \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --test-path=$(SOLO_FILE) \
-	  --tests-modules-dir=$(DEPTH)/_tests/modules \
+	  --testing-modules-dir=$(DEPTH)/_tests/modules \
 	  --profile-name=$(MOZ_APP_NAME) \
 	  --verbose \
 	  $(EXTRA_TEST_ARGS) \
