@@ -261,7 +261,6 @@ var tests = [
 
       // switch back to the old browser
       gBrowser.selectedTab = this.oldSelectedTab;
-
     },
     onHidden: function (popup) {
       // actually remove the notification to prevent it from reappearing
@@ -601,14 +600,10 @@ var tests = [
   // Test notification when chrome is hidden
   { // Test #19
     run: function () {
-      this.oldSelectedTab = gBrowser.selectedTab;
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
-
-      let self = this;
-      loadURI("about:addons", function() {
-        self.notifyObj = new basicNotification();
-        self.notification = showNotification(self.notifyObj);
-      });
+      window.locationbar.visible = false;
+      this.notifyObj = new basicNotification();
+      this.notification = showNotification(this.notifyObj);
+      window.locationbar.visible = true;
     },
     onShown: function (popup) {
       checkPopup(popup, this.notifyObj);
@@ -619,9 +614,6 @@ var tests = [
       ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback triggered");
       this.notification.remove();
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
-
-      gBrowser.removeTab(gBrowser.selectedTab);
-      gBrowser.selectedTab = this.oldSelectedTab;
     }
   },
   // Test notification is removed when dismissed if removeOnDismissal is true
