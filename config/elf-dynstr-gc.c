@@ -1234,10 +1234,10 @@ main(int argc, char *argv[])
   
   munmap(mapping, size);
 
-  int result = ftruncate(fd, size - hole_len);
+  ftruncate(fd, size - hole_len);
   close(fd);
 
-  return result == -1 ? 1 : 0;
+  return 0;
 }
 
 
