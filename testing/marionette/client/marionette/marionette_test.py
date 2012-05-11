@@ -67,7 +67,7 @@ class MarionetteTestCase(CommonTestCase):
     def get_new_emulator(self):
         self.extra_emulator_index += 1
         if len(self.marionette.extra_emulators) == self.extra_emulator_index:
-            qemu  = Marionette(emulator=True,
+            qemu  = Marionette(emulator=self.marionette.emulator.arch,
                                homedir=self.marionette.homedir,
                                baseurl=self.marionette.baseurl,
                                noWindow=self.marionette.noWindow)
