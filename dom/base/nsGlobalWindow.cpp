@@ -692,6 +692,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mShowFocusRingForContent(false),
     mFocusByKeyOccurred(false),
     mNotifiedIDDestroyed(false),
+    mIsApp(TriState_Unknown),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
@@ -10013,6 +10014,33 @@ nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
   aWindowSizes->mDOM +=
     mNavigator ?
       mNavigator->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf) : 0;
+}
+
+void
+nsGlobalWindow::SetIsApp(bool aValue)
+{
+  FORWARD_TO_OUTER_VOID(SetIsApp, (aValue));
+
+  mIsApp = aValue ? TriState_True : TriState_False;
+}
+
+bool
+nsGlobalWindow::IsPartOfApp()
+{
+  FORWARD_TO_OUTER(IsPartOfApp, (), TriState_False);
+
+  // We go trough all window parents until we find one with |mIsApp| set to
+  // something. If none is found, we are not part of an application.
+  for (nsGlobalWindow* w = this; w;
+       w = static_cast<nsGlobalWindow*>(w->GetParentInternal())) {
+    if (w->mIsApp == TriState_True) {
+      return true;
+    } else if (w->mIsApp == TriState_False) {
+      return false;
+    }
+  }
+
+  return false;
 }
 
 // nsGlobalChromeWindow implementation
