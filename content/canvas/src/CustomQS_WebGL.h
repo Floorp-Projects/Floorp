@@ -193,14 +193,14 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, unsigned argc, jsval *vp)
     if (argc < 6 || argc == 7 || argc == 8)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
-    jsval *argv = JS_ARGV(cx, vp);
+    JS::Value* argv = JS_ARGV(cx, vp);
 
     // arguments common to all cases
     GET_UINT32_ARG(argv0, 0);
     GET_INT32_ARG(argv1, 1);
     GET_UINT32_ARG(argv2, 2);
 
-    if (argc > 5 && !JSVAL_IS_PRIMITIVE(argv[5])) {
+    if (argc > 5 && argv[5].isObject()) {
         // implement the variants taking a DOMElement as argv[5]
         GET_UINT32_ARG(argv3, 3);
         GET_UINT32_ARG(argv4, 4);
@@ -210,7 +210,7 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         }
         rv = NS_OK;
-    } else if (argc > 8 && JSVAL_IS_OBJECT(argv[8])) {
+    } else if (argc > 8 && argv[8].isObjectOrNull()) {
         // here, we allow null !
         // implement the variants taking a buffer/array as argv[8]
         GET_INT32_ARG(argv3, 3);
@@ -219,7 +219,7 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, unsigned argc, jsval *vp)
         GET_UINT32_ARG(argv6, 6);
         GET_UINT32_ARG(argv7, 7);
 
-        JSObject *argv8 = JSVAL_TO_OBJECT(argv[8]);
+        JSObject* argv8 = argv[8].toObjectOrNull();
 
         // then try to grab either a js::TypedArray, or null
         if (argv8 == nsnull) {

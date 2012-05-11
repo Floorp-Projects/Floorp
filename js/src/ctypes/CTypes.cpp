@@ -3633,8 +3633,8 @@ PointerType::ConstructData(JSContext* cx,
   jsval* argv = JS_ARGV(cx, vp);
   JSObject* baseObj = PointerType::GetBaseType(obj);
   bool looksLikeClosure = CType::GetTypeCode(baseObj) == TYPE_function &&
-                          JSVAL_IS_OBJECT(argv[0]) &&
-                          JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(argv[0]));
+                          argv[0].isObject() &&
+                          JS_ObjectIsCallable(cx, &argv[0].toObject());
 
   //
   // Case 2 - Initialized pointer
@@ -3656,7 +3656,9 @@ PointerType::ConstructData(JSContext* cx,
   // wish to pass the third argument.
   JSObject* thisObj = NULL;
   if (argc >= 2) {
-    if (JSVAL_IS_OBJECT(argv[1])) {
+    if (JSVAL_IS_NULL(argv[1])) {
+      thisObj = NULL;
+    } else if (!JSVAL_IS_PRIMITIVE(argv[1])) {
       thisObj = JSVAL_TO_OBJECT(argv[1]);
     } else if (!JS_ValueToObject(cx, argv[1], &thisObj)) {
       return JS_FALSE;
@@ -3696,7 +3698,7 @@ PointerType::TargetTypeGetter(JSContext* cx,
   }
 
   *vp = JS_GetReservedSlot(obj, SLOT_TARGET_T);
-  JS_ASSERT(JSVAL_IS_OBJECT(*vp));
+  JS_ASSERT(vp->isObject());
   return JS_TRUE;
 }
 
@@ -6530,12 +6532,12 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
   }
 
   jsval* argv = JS_ARGV(cx, vp);
-  jsval valCodePtr = argv[1];
-  if (!JSVAL_IS_OBJECT(valCodePtr) || JSVAL_IS_NULL(valCodePtr)) {
+  JS::Value valCodePtr = argv[1];
+  if (!valCodePtr.isObject()) {
     return TypeError(cx, "_a CData object_ of a function pointer type",
                      valCodePtr);
   }
-  JSObject *objCodePtr = JSVAL_TO_OBJECT(valCodePtr);
+  JSObject *objCodePtr = &valCodePtr.toObject();
 
   //Note: Using a custom argument formatter here would be awkward (requires
   //a destructor just to uninstall the formatter).

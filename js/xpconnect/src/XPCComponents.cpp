@@ -3315,7 +3315,7 @@ nsXPCComponents_utils_Sandbox::Construct(nsIXPConnectWrappedNative *wrapper,
 nsresult
 nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
                                                JSContext * cx, JSObject * obj,
-                                               PRUint32 argc, jsval * argv,
+                                               PRUint32 argc, JS::Value * argv,
                                                jsval * vp, bool *_retval)
 {
     if (argc < 1)
@@ -3327,8 +3327,8 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     nsCOMPtr<nsIScriptObjectPrincipal> sop;
     nsCOMPtr<nsIPrincipal> principal;
     nsISupports *prinOrSop = nsnull;
-    if (JSVAL_IS_STRING(argv[0])) {
-        JSString *codebaseStr = JSVAL_TO_STRING(argv[0]);
+    if (argv[0].isString()) {
+        JSString *codebaseStr = argv[0].toString();
         size_t codebaseLength;
         const jschar *codebaseChars = JS_GetStringCharsAndLength(cx, codebaseStr,
                                                                  &codebaseLength);
@@ -3356,12 +3356,12 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
         prinOrSop = principal;
     } else {
-        if (!JSVAL_IS_PRIMITIVE(argv[0])) {
+        if (argv[0].isObject()) {
             nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
             if (!xpc)
                 return NS_ERROR_XPC_UNEXPECTED;
             nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-            xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(argv[0]),
+            xpc->GetWrappedNativeOfJSObject(cx, &argv[0].toObject(),
                                             getter_AddRefs(wrapper));
 
             if (wrapper) {
@@ -3384,10 +3384,10 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     nsCString sandboxName;
 
     if (argc > 1) {
-        if (!JSVAL_IS_OBJECT(argv[1]))
+        if (!argv[1].isObject())
             return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
 
-        JSObject *optionsObject = JSVAL_TO_OBJECT(argv[1]);
+        JSObject *optionsObject = &argv[1].toObject();
         jsval option;
 
         JSBool found;
@@ -3396,11 +3396,11 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
         if (found) {
             if (!JS_GetProperty(cx, optionsObject, "sandboxPrototype", &option) ||
-                !JSVAL_IS_OBJECT(option)) {
+                !option.isObject()) {
                 return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
             }
 
-            proto = JSVAL_TO_OBJECT(option);
+            proto = &option.toObject();
         }
 
         if (!JS_HasProperty(cx, optionsObject, "wantXrays", &found))
@@ -3408,11 +3408,11 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
         if (found) {
             if (!JS_GetProperty(cx, optionsObject, "wantXrays", &option) ||
-                !JSVAL_IS_BOOLEAN(option)) {
+                !option.isBoolean()) {
                 return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
             }
 
-            wantXrays = JSVAL_TO_BOOLEAN(option);
+            wantXrays = option.toBoolean();
         }
 
         if (!JS_HasProperty(cx, optionsObject, "sandboxName", &found))
@@ -3420,11 +3420,11 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
         if (found) {
             if (!JS_GetProperty(cx, optionsObject, "sandboxName", &option) ||
-                !JSVAL_IS_STRING(option)) {
+                !option.isString()) {
                 return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
             }
 
-            char *tmp = JS_EncodeString(cx, JSVAL_TO_STRING(option));
+            char *tmp = JS_EncodeString(cx, option.toString());
             if (!tmp) {
                 return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
             }
@@ -3869,18 +3869,18 @@ nsXPCComponents_Utils::SchedulePreciseShrinkingGC(ScheduledGCCallback* aCallback
 
 /* [implicit_jscontext] jsval nondeterministicGetWeakMapKeys(in jsval aMap); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(const jsval &aMap,
+nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(const JS::Value &aMap,
                                                       JSContext *aCx,
-                                                      jsval *aKeys)
+                                                      JS::Value *aKeys)
 {
-    if (!JSVAL_IS_OBJECT(aMap)) {
-        *aKeys = JSVAL_VOID;
+    if (!aMap.isObject()) {
+        aKeys->setUndefined();
         return NS_OK; 
     }
     JSObject *objRet;
-    if (!JS_NondeterministicGetWeakMapKeys(aCx, JSVAL_TO_OBJECT(aMap), &objRet))
+    if (!JS_NondeterministicGetWeakMapKeys(aCx, &aMap.toObject(), &objRet))
         return NS_ERROR_OUT_OF_MEMORY;
-    *aKeys = objRet ? OBJECT_TO_JSVAL(objRet) : JSVAL_VOID;
+    *aKeys = objRet ? ObjectValue(*objRet) : UndefinedValue();
     return NS_OK;
 }
 
@@ -3961,8 +3961,9 @@ nsXPCComponents_Utils::CreateObjectIn(const jsval &vobj, JSContext *cx, jsval *r
 JSBool
 FunctionWrapper(JSContext *cx, unsigned argc, jsval *vp)
 {
-    jsval v = js::GetFunctionNativeReserved(JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0);
-    NS_ASSERTION(JSVAL_IS_OBJECT(v), "weird function");
+    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
+    JS::Value v = js::GetFunctionNativeReserved(callee, 0);
+    NS_ASSERTION(v.isObject(), "weird function");
 
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj) {
