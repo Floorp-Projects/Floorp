@@ -282,8 +282,13 @@ generateBailoutTail(MacroAssembler &masm)
     // Test for an exception
     masm.as_cmp(r0, Imm8(0));
     masm.ma_b(&exception, Assembler::Zero);
+    masm.freeStack(sizeof(IonCode*));
     masm.ma_pop(pc);
+
     masm.bind(&exception);
+#ifdef DEBUG
+    masm.ma_add(Imm32(sizeof(IonCode*)), sp);
+#endif
     masm.handleException();
 }
 
@@ -574,7 +579,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     if (f.explicitArgs) {
         argsBase = r5;
         regs.take(argsBase);
-        masm.ma_add(sp, Imm32(IonExitFrameLayout::SizeWithFooter()), argsBase);
+        masm.ma_add(sp, Imm32(IonExitFrameLayout::SizeWithFooter() + argumentPadding), argsBase);
     }
 
     // Reserve space for the outparameter.
