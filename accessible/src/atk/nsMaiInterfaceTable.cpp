@@ -75,22 +75,16 @@ refAtCB(AtkTable *aTable, gint aRow, gint aColumn)
 }
 
 static gint
-getIndexAtCB(AtkTable *aTable, gint aRow, gint aColumn)
+getIndexAtCB(AtkTable* aTable, gint aRow, gint aColumn)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-    if (!accWrap)
-        return -1;
+  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
+  if (!accWrap)
+    return -1;
 
-    nsCOMPtr<nsIAccessibleTable> accTable;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
-                            getter_AddRefs(accTable));
-    NS_ENSURE_TRUE(accTable, -1);
+  TableAccessible* table = accWrap->AsTable();
+  NS_ENSURE_TRUE(table, -1);
 
-    PRInt32 index;
-    nsresult rv = accTable->GetCellIndexAt(aRow, aColumn, &index);
-    NS_ENSURE_SUCCESS(rv, -1);
-
-    return static_cast<gint>(index);
+  return static_cast<gint>(table->CellIndexAt(aRow, aColumn));
 }
 
 static gint
