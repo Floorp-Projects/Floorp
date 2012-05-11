@@ -81,9 +81,11 @@ public class WatcherService extends Service
     String sErrorPrefix = "##Installer Error## ";
     String currentDir = "/";
     String sPingTarget = "";
-    long    lDelay = 60000;
-    long    lPeriod = 300000;
-    int        nMaxStrikes = 3;
+    long lDelay = 60000;
+    long lPeriod = 300000;
+    int nMaxStrikes = 3; // maximum number of tries before we consider network unreachable
+    boolean bStartSUTAgent = true;
+
     Process    pProc;
     Context myContext = null;
     Timer myTimer = null;
@@ -143,6 +145,8 @@ public class WatcherService extends Service
         this.lPeriod = Long.parseLong(sHold.trim());
         sHold = GetIniData("watcher", "strikes", sIniFile,"3");
         this.nMaxStrikes = Integer.parseInt(sHold.trim());
+        sHold = GetIniData("watcher", "StartSUTAgent", sIniFile, "true");
+        this.bStartSUTAgent = Boolean.parseBoolean(sHold.trim());
 
         sHold = GetIniData("watcher", "stayon", sIniFile,"0");
         int nStayOn = Integer.parseInt(sHold.trim());
@@ -923,34 +927,33 @@ public class WatcherService extends Service
             if (bInstalling)
                 return;
 
-            // See if the network is up, if not after three failures reboot
-            String sRet = SendPing(sPingTarget);
-            if (!sRet.contains("3 received"))
+            // See if the network is up, if not reboot after a configurable
+            // number of tries
+            if (nMaxStrikes > 0)
                 {
-                if (nMaxStrikes > 0)
-                    {
-                    if (++nStrikes >= nMaxStrikes)
-                        RunReboot(null);
-                    }
+                    String sRet = SendPing(sPingTarget);
+                    if (!sRet.contains("3 received") && ++nStrikes >= nMaxStrikes)
+                        {
+                            RunReboot(null);
+                        }
+                    else
+                        {
+                            nStrikes = 0;
+                        }
                 }
-            else
-                {
-                nStrikes = 0;
-                }
-            sRet = null;
 
             String sProgramName = "com.mozilla.SUTAgentAndroid";
-            PackageManager pm = myContext.getPackageManager();
 
 //            Debug.waitForDebugger();
 
-            if (!GetProcessInfo(sProgramName))
+            if (bStartSUTAgent && !GetProcessInfo(sProgramName))
                 {
                 Intent agentIntent = new Intent();
                 agentIntent.setPackage(sProgramName);
                 agentIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 agentIntent.setAction(Intent.ACTION_MAIN);
                 try {
+                    PackageManager pm = myContext.getPackageManager();
                     PackageInfo pi = pm.getPackageInfo(sProgramName, PackageManager.GET_ACTIVITIES | PackageManager.GET_INTENT_FILTERS);
                     ActivityInfo [] ai = pi.activities;
                     for (int i = 0; i < ai.length; i++)

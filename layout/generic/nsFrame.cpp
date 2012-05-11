@@ -1772,23 +1772,40 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   bool inTransform = aBuilder->IsInTransform();
   if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
       disp->HasTransform()) {
-    if (nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, this) ||
-        Preserves3DChildren()) {
+    if (aBuilder->IsForPainting() &&
+        nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, this)) {
       dirtyRect = GetVisualOverflowRectRelativeToSelf();
     } else {
-      // Transform dirtyRect into our frame's local coordinate space. Note that
-      // the new value is the bounds of the old value's transformed vertices, so
-      // the area covered by dirtyRect may increase here.
-      //
-      // Although we don't bother to check for and maintain the 1x1 size of the
-      // magic rect indicating a hit test point, in reality this is extremely
-      // unlikely to matter. The rect starts off with dimensions of 1x1 *app*
-      // units, and it would require a very large number of elements with
-      // transforms along a parent chain to noticably expand this by an entire
-      // device pixel.
-      if (!nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0), &dirtyRect)) {
-        // we have a singular transform - just grab the entire overflow rect
-        dirtyRect = GetVisualOverflowRectRelativeToSelf();
+      if (Preserves3D()) {
+        // Preserve3D frames are difficult. Trying to  back-transform arbitrary rects
+        // gives us really weird results. I believe this is from points that lie beyond the
+        // vanishing point. As a workaround we transform the overflow rect into screen space
+        // and compare in that coordinate system.
+        
+        // Transform the overflow rect into screen space
+        nsRect overflow = GetVisualOverflowRectRelativeToSelf();
+        nsPoint offset = aBuilder->ToReferenceFrame(this);
+        overflow += offset;
+        overflow = nsDisplayTransform::TransformRect(overflow, this, offset);
+
+        dirtyRect += offset;
+
+        if (dirtyRect.Intersects(overflow)) {
+          dirtyRect = GetVisualOverflowRectRelativeToSelf();
+        } else {
+          dirtyRect.SetEmpty();
+        }
+      } else {
+        // Transform dirtyRect into our frame's local coordinate space. Note that
+        // the new value is the bounds of the old value's transformed vertices, so
+        // the area covered by dirtyRect may increase here.
+        if (!nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0), &dirtyRect)) {
+          // we have a singular transform - surely we must be drawing nothing.
+          dirtyRect.SetEmpty();
+        }
+      }
+      if (!Preserves3DChildren() && !dirtyRect.Intersects(GetVisualOverflowRectRelativeToSelf())) {
+        return NS_OK;
       }
     }
     inTransform = true;
@@ -1807,6 +1824,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   // Mark the display list items for absolutely positioned children
   MarkAbsoluteFramesForDisplayList(aBuilder, dirtyRect);
+  // Preserve3DChildren() also guarantees that applyAbsPosClipping and usingSVGEffects are false
+  // We only modify the preserve-3d rect if we are the top of a preserve-3d heirarchy
+  if (Preserves3DChildren()) {
+    aBuilder->MarkPreserve3DFramesForDisplayList(this, aDirtyRect);
+  }
 
   nsDisplayListCollection set;
   nsresult rv;
@@ -2006,6 +2028,15 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       dirty.SetEmpty();
     }
     pseudoStackingContext = true;
+  }
+  if (child->Preserves3D()) {
+    nsRect* savedDirty = static_cast<nsRect*>
+      (child->Properties().Get(nsDisplayListBuilder::Preserve3DDirtyRectProperty()));
+    if (savedDirty) {
+      dirty = *savedDirty;
+    } else {
+      dirty.SetEmpty();
+    }
   }
 
   // Mark the display list items for absolutely positioned children

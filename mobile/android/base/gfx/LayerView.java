@@ -115,6 +115,10 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        /** We need to manually hide FormAssistPopup because it is not a regular PopupWindow. */
+        if (GeckoApp.mFormAssistPopup != null)
+            GeckoApp.mFormAssistPopup.hide();
+
         return mTouchEventHandler.handleEvent(event);
     }
 

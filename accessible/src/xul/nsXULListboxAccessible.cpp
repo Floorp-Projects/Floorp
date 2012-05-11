@@ -308,27 +308,6 @@ nsXULListboxAccessible::GetCellAt(PRInt32 aRow, PRInt32 aColumn,
 }
 
 NS_IMETHODIMP
-nsXULListboxAccessible::GetCellIndexAt(PRInt32 aRow, PRInt32 aColumn,
-                                       PRInt32 *aIndex)
-{
-  NS_ENSURE_ARG_POINTER(aIndex);
-  *aIndex = -1;
-
-  PRInt32 rowCount = 0;
-  nsresult rv = GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(0 <= aRow && aRow <= rowCount, NS_ERROR_INVALID_ARG);
-
-  PRInt32 columnCount = 0;
-  rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(0 <= aColumn && aColumn <= columnCount, NS_ERROR_INVALID_ARG);
-
-  *aIndex = aRow * columnCount + aColumn;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULListboxAccessible::GetColumnIndexAt(PRInt32 aIndex, PRInt32 *aColumn)
 {
   NS_ENSURE_ARG_POINTER(aColumn);
