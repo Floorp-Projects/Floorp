@@ -163,6 +163,7 @@ class IonFrameIterator
     // overhead.
     const OsiIndex *osiIndex() const;
 
+    uintptr_t *spillBase() const;
     MachineState machineState() const;
 };
 

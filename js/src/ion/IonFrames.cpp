@@ -254,27 +254,29 @@ IonFrameIterator::operator++()
     return *this;
 }
 
-MachineState
-IonFrameIterator::machineState() const
+uintptr_t *
+IonFrameIterator::spillBase() const
 {
-    SafepointReader reader(ionScript(), safepoint());
-
-    GeneralRegisterSet gcRegs = reader.gcSpills();
-    GeneralRegisterSet allRegs = reader.allSpills();
-
     // Get the base address to where safepoint registers are spilled.
     // Out-of-line calls do not unwind the extra padding space used to
     // aggregate bailout tables, so we use frameSize instead of frameLocals,
     // which would only account for local stack slots.
-    uintptr_t *spillBase = reinterpret_cast<uintptr_t *>(fp()) + ionScript()->frameSize();
+    return reinterpret_cast<uintptr_t *>(fp() - ionScript()->frameSize());
+}
 
+MachineState
+IonFrameIterator::machineState() const
+{
+    SafepointReader reader(ionScript(), safepoint());
+    uintptr_t *spill = spillBase();
+
+    // see CodeGeneratorShared::saveLive, we are only copying GPRs for now, FPUs
+    // are stored after but are not saved in the safepoint.  This means that we
+    // are unable to restore any FPUs registers from an OOL VM call.  This can
+    // cause some trouble for f.arguments.
     MachineState machine;
-    for (GeneralRegisterIterator iter(allRegs); iter.more(); iter++, spillBase++) {
-        Register reg = *iter;
-        if (!gcRegs.has(reg))
-            continue;
-        machine.setRegisterLocation(reg, spillBase);
-    }
+    for (GeneralRegisterIterator iter(reader.allSpills()); iter.more(); iter++)
+        machine.setRegisterLocation(*iter, --spill);
 
     return machine;
 }
@@ -447,10 +449,6 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     SafepointReader safepoint(ionScript, si);
 
-    // Not yet implemented.
-    JS_ASSERT(safepoint.gcSpills().empty());
-    JS_ASSERT(safepoint.allSpills().empty());
-
     // Scan through slots which contain pointers (or on punboxing systems,
     // actual values).
     uint32 slot;
@@ -462,6 +460,13 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
     while (safepoint.getValueSlot(&slot)) {
         Value *v = (Value *)layout->slotRef(slot);
         gc::MarkValueRoot(trc, v, "ion-gc-slot");
+    }
+
+    uintptr_t *spill = frame.spillBase();
+    GeneralRegisterSet gcRegs = safepoint.gcSpills();
+    for (GeneralRegisterIterator iter(safepoint.allSpills()); iter.more(); iter++) {
+        if (gcRegs.has(*iter))
+            gc::MarkThingOrValueRoot(trc, --spill, "ion-gc-spill");
     }
 }
 

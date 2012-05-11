@@ -78,16 +78,21 @@ WriteRegisterMask(CompactBufferWriter &stream, uint32 bits)
 }
 
 void
-SafepointWriter::writeGcRegs(GeneralRegisterSet actual, GeneralRegisterSet spilled)
+SafepointWriter::writeGcRegs(GeneralRegisterSet gc, GeneralRegisterSet spilled)
 {
-    WriteRegisterMask(stream_, actual.bits());
-    if (!actual.empty())
-        WriteRegisterMask(stream_, spilled.bits());
+    WriteRegisterMask(stream_, spilled.bits());
+    if (!spilled.empty())
+        WriteRegisterMask(stream_, gc.bits());
 
-#ifdef DEBUG
-    for (AnyRegisterIterator iter(actual, FloatRegisterSet()); iter.more(); iter++)
-        IonSpew(IonSpew_Safepoints, "    gc reg: %s", (*iter).name());
-#endif
+    // gc is a subset of spilled.
+    JS_ASSERT((gc.bits() & ~spilled.bits()) == 0);
+
+    if (IonSpewEnabled(IonSpew_Safepoints)) {
+        for (GeneralRegisterIterator iter(spilled); iter.more(); iter++) {
+            const char *type = gc.has(*iter) ? "gc" : "any";
+            IonSpew(IonSpew_Safepoints, "    %s reg: %s", type, (*iter).name());
+        }
+    }
 }
 
 static void
@@ -179,11 +184,12 @@ SafepointReader::SafepointReader(IonScript *script, const SafepointIndex *si)
 {
     osiCallPointOffset_ = stream_.readUnsigned();
 
-    gcSpills_ = GeneralRegisterSet(stream_.readUnsigned());
-    if (gcSpills_.empty())
-        allSpills_ = gcSpills_;
+    // gcSpills is a subset of allSpills.
+    allSpills_ = GeneralRegisterSet(stream_.readUnsigned());
+    if (allSpills_.empty())
+        gcSpills_ = allSpills_;
     else
-        allSpills_ = GeneralRegisterSet(stream_.readUnsigned());
+        gcSpills_ = GeneralRegisterSet(stream_.readUnsigned());
 
     advanceFromGcRegs();
 }
