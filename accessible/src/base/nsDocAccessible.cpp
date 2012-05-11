@@ -1083,6 +1083,9 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   if ((aContent->IsXUL() && aAttribute == nsGkAtoms::selected) ||
       aAttribute == nsGkAtoms::aria_selected) {
     nsAccessible* item = GetAccessible(aContent);
+    if (!item)
+      return;
+
     nsAccessible* widget =
       nsAccUtils::GetSelectableContainer(item, item->State());
     if (widget) {
