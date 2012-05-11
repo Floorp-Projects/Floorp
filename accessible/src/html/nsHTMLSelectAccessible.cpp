@@ -265,12 +265,9 @@ nsHTMLSelectOptionAccessible::NativeState()
   // because we don't want EDITABLE or SELECTABLE_TEXT
   PRUint64 state = nsAccessible::NativeState();
 
-  nsAccessible* select = GetSelect();
-  if (!select)
-    return state;
-
-  PRUint64 selectState = select->State();
-  if (selectState & states::INVISIBLE)
+  PRUint64 selectState = 0;
+  nsIContent* selectContent = GetSelectState(&selectState);
+  if (!selectContent || selectState & states::INVISIBLE)
     return state;
 
   // Focusable and selectable
@@ -393,6 +390,30 @@ nsHTMLSelectOptionAccessible::ContainerWidget() const
 {
   return mParent && mParent->IsListControl() ? mParent : nsnull;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLSelectOptionAccessible: private methods
+
+nsIContent*
+nsHTMLSelectOptionAccessible::GetSelectState(PRUint64* aState)
+{
+  *aState = 0;
+
+  nsIContent* selectNode = mContent;
+  while (selectNode && selectNode->Tag() != nsGkAtoms::select) {
+    selectNode = selectNode->GetParent();
+  }
+
+  if (selectNode) {
+    nsAccessible* select = mDoc->GetAccessible(selectNode);
+    if (select) {
+      *aState = select->State();
+      return selectNode;
+    }
+  }
+  return nsnull; 
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLSelectOptGroupAccessible
