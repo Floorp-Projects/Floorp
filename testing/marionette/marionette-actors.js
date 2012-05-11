@@ -3,31 +3,27 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+
 /**
  * Gecko-specific actors.
  */
 
-let Ci = Components.interfaces;
-let Cc = Components.classes;
-let Cu = Components.utils;
+let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-             .getService(Ci.mozIJSSubScriptLoader);
+               .getService(Ci.mozIJSSubScriptLoader);
 loader.loadSubScript("chrome://marionette/content/marionette-simpletest.js");
 loader.loadSubScript("chrome://marionette/content/marionette-log-obj.js");
 Cu.import("chrome://marionette/content/marionette-elements.js");
 let utils = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
-
-let prefs = Cc["@mozilla.org/preferences-service;1"]
-            .getService(Ci.nsIPrefBranch);
-prefs.setBoolPref("marionette.contentListener", false);
-
-let xulAppInfo = Cc["@mozilla.org/xre/app-info;1"]
-                 .getService(Ci.nsIXULAppInfo);
-let appName = xulAppInfo.name;
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
+
+Cu.import("resource://gre/modules/Services.jsm");
+
+Services.prefs.setBoolPref("marionette.contentListener", false);
+let appName = Services.appinfo.name;
 
 // import logger
 Cu.import("resource://gre/modules/services-common/log4moz.js");
@@ -106,12 +102,11 @@ MarionetteRootActor.prototype.requestTypes = {
 function MarionetteDriverActor(aConnection)
 {
   this.uuidGen = Cc["@mozilla.org/uuid-generator;1"]
-                 .getService(Ci.nsIUUIDGenerator);
+                   .getService(Ci.nsIUUIDGenerator);
 
   this.conn = aConnection;
-  this.messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-                             getService(Ci.nsIChromeFrameMessageManager);
-  this.windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
+  this.messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
+                          .getService(Ci.nsIChromeFrameMessageManager);
   this.browsers = {}; //holds list of BrowserObjs
   this.curBrowser = null; // points to current browser
   this.context = "content";
@@ -225,7 +220,7 @@ MarionetteDriverActor.prototype = {
       if (appName != "B2G" && this.context == "content") {
         type = 'navigator:browser';
       }
-      return this.windowMediator.getMostRecentWindow(type);
+      return Services.wm.getMostRecentWindow(type);
     }
     else {
       return this.curFrame;
@@ -242,7 +237,7 @@ MarionetteDriverActor.prototype = {
     if (appName != "B2G" && this.context == "content") {
       type = 'navigator:browser';
     }
-    return this.windowMediator.getEnumerator(type);
+    return Services.wm.getEnumerator(type);
   },
 
   /**
@@ -338,8 +333,7 @@ MarionetteDriverActor.prototype = {
   newSession: function MDA_newSession() {
 
     function waitForWindow() {
-      let checkTimer = Cc["@mozilla.org/timer;1"].
-                       createInstance(Ci.nsITimer);
+      let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       let win = this.getCurrentWindow();
       if (!win || (appName != "B2G" && !win.gBrowser)) { 
         checkTimer.initWithCallback(waitForWindow.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
@@ -349,7 +343,7 @@ MarionetteDriverActor.prototype = {
       }
     }
 
-    if (!prefs.getBoolPref("marionette.contentListener")) {
+    if (!Services.prefs.getBoolPref("marionette.contentListener")) {
       waitForWindow.call(this);
     }
     else if ((appName == "B2G") && (this.curBrowser == null)) {
@@ -1152,7 +1146,7 @@ MarionetteDriverActor.prototype = {
       }
       else {
         //don't set this pref for B2G since the framescript can be safely reused
-        prefs.setBoolPref("marionette.contentListener", false);
+        Services.prefs.setBoolPref("marionette.contentListener", false);
       }
       this.curBrowser.closeTab();
       //delete session in each frame in each browser
@@ -1361,9 +1355,9 @@ BrowserObj.prototype = {
    *        frame to load the script in
    */
   loadFrameScript: function BO_loadFrameScript(script, frame) {
-    if (!prefs.getBoolPref("marionette.contentListener")) {
+    if (!Services.prefs.getBoolPref("marionette.contentListener")) {
       frame.window.messageManager.loadFrameScript(script, true);
-      prefs.setBoolPref("marionette.contentListener", true);
+      Services.prefs.setBoolPref("marionette.contentListener", true);
     }
   },
 
