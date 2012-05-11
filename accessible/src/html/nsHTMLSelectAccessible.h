@@ -133,17 +133,11 @@ public:
 private:
   
   /**
-   * Return a select accessible the option belongs to if any.
+   * Get Select element's accessible state
+   * @param aState, Select element state
+   * @return Select element content, returns null if not avaliable
    */ 
-  nsAccessible* GetSelect() const
-  {
-    if (mParent && mParent->IsListControl()) {
-      nsAccessible* combobox = mParent->Parent();
-      return combobox && combobox->IsCombobox() ? combobox : mParent;
-    }
-
-    return nsnull;
-  }
+  nsIContent* GetSelectState(PRUint64* aState);
 
   /**
    * Return a combobox accessible the option belongs to if any.
@@ -152,7 +146,7 @@ private:
   {
     if (mParent && mParent->IsListControl()) {
       nsAccessible* combobox = mParent->Parent();
-      return combobox && combobox->IsCombobox() ? combobox : nsnull;
+      return combobox->IsCombobox() ? combobox : nsnull;
     }
 
     return nsnull;
