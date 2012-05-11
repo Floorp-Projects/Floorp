@@ -649,7 +649,7 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
 
   ['ril.data.apn', 'ril.data.user', 'ril.data.passwd'].forEach(function(key) {
     SettingsListener.observe(key, false, function(value) {
-      Services.prefs.setBoolPref(key, value);
+      Services.prefs.setCharPref(key, value);
     });
   });
 })();
