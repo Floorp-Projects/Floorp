@@ -575,7 +575,6 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Save the base of the argument set stored on the stack.
     Register argsBase = InvalidReg;
-    uint32 argumentPadding = (f.explicitStackSlots() * sizeof(void *)) % StackAlignment;
     if (f.explicitArgs) {
         argsBase = r5;
         regs.take(argsBase);
@@ -586,13 +585,15 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     Register outReg = InvalidReg;
     switch (f.outParam) {
       case Type_Value:
-        outReg = regs.takeAny();
+        outReg = r4;
+        regs.take(outReg);
         masm.reserveStack(sizeof(Value));
         masm.ma_mov(sp, outReg);
         break;
 
       case Type_Int32:
-        outReg = regs.takeAny();
+        outReg = r4;
+        regs.take(outReg);
         masm.reserveStack(sizeof(int32));
         masm.ma_mov(sp, outReg);
         break;
@@ -602,8 +603,8 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
         break;
     }
 
-    // ARM stack is made to be constantly aligned by 8.
-    masm.setupAlignedABICall(f.argc());
+    Register temp = regs.getAny();
+    masm.setupUnalignedABICall(f.argc(), temp);
 
     // Initialize and set the context parameter.
     // r0 is the first argument register.
@@ -670,8 +671,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
         break;
     }
     masm.freeStack(sizeof(IonCode *));
-    masm.retn(Imm32(sizeof(IonExitFrameLayout) + argumentPadding +
-                    f.explicitStackSlots() * sizeof(void *)));
+    masm.retn(Imm32(sizeof(IonExitFrameLayout) + f.explicitStackSlots() * sizeof(void *)));
 
     masm.bind(&exception);
     masm.handleException();

@@ -480,7 +480,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     Register argsBase = InvalidReg;
     if (f.explicitArgs) {
         argsBase = r10;
-        regs.take(r10);
+        regs.take(argsBase);
         masm.lea(Operand(rsp,IonExitFrameLayout::SizeWithFooter()), argsBase);
     }
 
@@ -510,7 +510,6 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // Initialize the context parameter.
     Register cxreg = IntArgReg0;
     masm.loadJSContext(cxreg);
-
     masm.passABIArg(cxreg);
 
     size_t argDisp = 0;

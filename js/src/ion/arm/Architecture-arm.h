@@ -143,7 +143,7 @@ class Registers
 
     static const uint32 WrapperMask =
         VolatileMask |         // = arguments
-        (1 << Registers::r4) | // = Invalidation saved PC
+        (1 << Registers::r4) | // = outReg
         (1 << Registers::r5);  // = argBase
 
     static const uint32 SingleByteRegs =

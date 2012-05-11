@@ -114,19 +114,16 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
     }
     // It has been decreed that the stack shall always be 8 byte aligned on ARM.
     // maintain this invariant.  It can't hurt other platforms.
-    size_t new_diff = (diff + 7) & ~7;
-    reserveStack(new_diff);
+    reserveStack(diff);
 
-    diff = new_diff - diff;
-    for (AnyRegisterIterator iter(set); iter.more(); iter++) {
-        AnyRegister reg = *iter;
-        if (reg.isFloat()) {
-            storeDouble(reg.fpu(), Address(StackPointer, diff));
-            diff += sizeof(double);
-        } else {
-            storePtr(reg.gpr(), Address(StackPointer, diff));
-            diff += STACK_SLOT_SIZE;
-        }
+    diff = 0;
+    for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+        storePtr(*iter, Address(StackPointer, diff));
+        diff += STACK_SLOT_SIZE;
+    }
+    for (FloatRegisterIterator iter(set.fpus()); iter.more(); iter++) {
+        storeDouble(*iter, Address(StackPointer, diff));
+        diff += sizeof(double);
     }
 }
 
@@ -134,28 +131,16 @@ void
 MacroAssembler::PopRegsInMask(RegisterSet set)
 {
     size_t diff = 0;
-    // Undo the alignment that was done in PushRegsInMask.
-    for (AnyRegisterIterator iter(set); iter.more(); iter++) {
-        AnyRegister reg = *iter;
-        if (reg.isFloat())
-            diff += sizeof(double);
-        else
-            diff += STACK_SLOT_SIZE;
+    for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+        loadPtr(Address(StackPointer, diff), *iter);
+        diff += STACK_SLOT_SIZE;
     }
-    size_t new_diff = (diff + 7) & ~7;
+    for (FloatRegisterIterator iter(set.fpus()); iter.more(); iter++) {
+        loadDouble(Address(StackPointer, diff), *iter);
+        diff += sizeof(double);
+    }
 
-    diff = new_diff - diff;
-    for (AnyRegisterIterator iter(set); iter.more(); iter++) {
-        AnyRegister reg = *iter;
-        if (reg.isFloat()) {
-            loadDouble(Address(StackPointer, diff), reg.fpu());
-            diff += sizeof(double);
-        } else {
-            loadPtr(Address(StackPointer, diff), reg.gpr());
-            diff += STACK_SLOT_SIZE;
-        }
-    }
-    freeStack(new_diff);
+    freeStack(diff);
 }
 
 void

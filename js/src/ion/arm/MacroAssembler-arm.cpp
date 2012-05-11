@@ -1325,7 +1325,8 @@ MacroAssemblerARMCompat::callWithExitFrame(IonCode *target)
 
     addPendingJump(m_buffer.nextOffset(), target->raw(), Relocation::IONCODE);
     ma_mov(Imm32((int) target->raw()), ScratchRegister);
-    callIon(ScratchRegister);
+    adjustFrame(sizeof(void*));
+    ma_callIon(ScratchRegister);
 }
 
 void
@@ -2648,7 +2649,7 @@ MacroAssemblerARMCompat::handleException()
     ma_mov(sp, r0);
 
     // Ask for an exception handler.
-    setupAlignedABICall(1);
+    setupUnalignedABICall(1, r1);
     passABIArg(r0);
     callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::HandleException));
     // Load the error value, load the new stack pointer, and return.
