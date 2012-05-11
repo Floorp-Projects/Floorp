@@ -48,7 +48,7 @@ public class BufferedCairoImage extends CairoImage {
     private ByteBuffer mBuffer;
     private IntSize mSize;
     private int mFormat;
-    private boolean mNeedToFreeBuffer = false;
+    private boolean mNeedToFreeBuffer;
 
     /** Creates a buffered Cairo image from a byte buffer. */
     public BufferedCairoImage(ByteBuffer inBuffer, int inWidth, int inHeight, int inFormat) {
@@ -60,18 +60,22 @@ public class BufferedCairoImage extends CairoImage {
         setBitmap(bitmap);
     }
 
-     protected void finalize() throws Throwable {
+    private void freeBuffer() {
+        if (mNeedToFreeBuffer && mBuffer != null)
+            GeckoAppShell.freeDirectBuffer(mBuffer);
+        mNeedToFreeBuffer = false;
+        mBuffer = null;
+    }
+
+    protected void finalize() throws Throwable {
         try {
-            if (mNeedToFreeBuffer && mBuffer != null)
-                GeckoAppShell.freeDirectBuffer(mBuffer);
-            mNeedToFreeBuffer = false;
-            mBuffer = null;
+            freeBuffer();
         } finally {
             super.finalize();
         }
     }
 
-   @Override
+    @Override
     public ByteBuffer getBuffer() { return mBuffer; }
     @Override
     public IntSize getSize() { return mSize; }
@@ -80,6 +84,7 @@ public class BufferedCairoImage extends CairoImage {
 
 
     public void setBuffer(ByteBuffer buffer, int width, int height, int format) {
+        freeBuffer();
         mBuffer = buffer;
         mSize = new IntSize(width, height);
         mFormat = format;
