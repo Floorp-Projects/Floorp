@@ -394,6 +394,29 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
   }
 }
 
+void
+nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame, const nsRect& aDirtyRect) 
+{
+  nsAutoTArray<nsIFrame::ChildList,4> childListArray;
+  aDirtyFrame->GetChildLists(&childListArray);
+  nsIFrame::ChildListArrayIterator lists(childListArray);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame *child = childFrames.get();
+      if (child->Preserves3D()) {
+        mFramesMarkedForDisplay.AppendElement(child);
+        nsRect dirty = aDirtyRect - child->GetOffsetTo(aDirtyFrame);
+
+        child->Properties().Set(nsDisplayListBuilder::Preserve3DDirtyRectProperty(),
+                           new nsRect(dirty));
+
+        MarkFrameForDisplay(child, aDirtyFrame);
+      }
+    }
+  }
+}
+
 void*
 nsDisplayListBuilder::Allocate(size_t aSize) {
   void *tmp;
