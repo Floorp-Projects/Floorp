@@ -1,4 +1,8 @@
 #!/bin/sh
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #
 # Stupid wrapper to avoid win32 dospath/cygdrive issues
 # Try not to spawn programs from within this file. If the stuff in here looks royally 

@@ -662,7 +662,7 @@ public:
   /**
    * Return the localized string for the given key.
    */
-  static void TranslateString(const nsAString& aKey, nsAString& aStringOut);
+  static void TranslateString(const nsString& aKey, nsAString& aStringOut);
 
   /**
    * Return true if the accessible is defunct.
