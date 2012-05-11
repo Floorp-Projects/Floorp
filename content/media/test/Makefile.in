@@ -283,6 +283,7 @@ _TEST_FILES += \
 		test_audio_event_adopt.html \
 		test_framebuffer.html \
 		test_referer.html \
+		test_bug726904.html \
 		test_bug686137.html \
 		$(NULL)
 else

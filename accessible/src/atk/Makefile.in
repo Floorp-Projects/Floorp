@@ -69,18 +69,7 @@ CPPSRCS = \
   $(NULL)
 
 EXPORTS = \
-  ARIAGridAccessibleWrap.h \
-  AtkSocketAccessible.h \
   nsAccessNodeWrap.h \
-  nsAccessibleWrap.h \
-  nsDocAccessibleWrap.h \
-  nsTextAccessibleWrap.h \
-  nsXULMenuAccessibleWrap.h \
-  nsXULListboxAccessibleWrap.h \
-  nsXULTreeGridAccessibleWrap.h \
-  nsHyperTextAccessibleWrap.h \
-  nsHTMLImageAccessibleWrap.h \
-  nsHTMLTableAccessibleWrap.h \
   $(NULL)
 
 # we want to force the creation of a static lib.

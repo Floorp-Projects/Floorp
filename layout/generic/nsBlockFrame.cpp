@@ -439,6 +439,18 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " pst=%s",
             NS_LossyConvertUTF16toASCII(atomString).get());
   }
+  if (IsTransformed()) {
+    fprintf(out, " transformed");
+  }
+  if (ChildrenHavePerspective()) {
+    fprintf(out, " perspective");
+  }
+  if (Preserves3DChildren()) {
+    fprintf(out, " preserves-3d-children");
+  }
+  if (Preserves3D()) {
+    fprintf(out, " preserves-3d");
+  }
   fputs("<\n", out);
 
   aIndent++;

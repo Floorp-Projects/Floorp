@@ -23,8 +23,9 @@ class ProgressBar:
         sys.stdout.write(self.fmt % (self.label[:self.label_width], pct, bar, dt))
         sys.stdout.flush()
 
-    def finish(self):
-        self.update(self.limit)
+    def finish(self, complete=True):
+        final_count = self.limit if complete else self.cur
+        self.update(final_count)
         sys.stdout.write('\n')
 
 if __name__ == '__main__':
