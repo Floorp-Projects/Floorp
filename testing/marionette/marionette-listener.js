@@ -3,19 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let Cu = Components.utils;
-let uuidGen = Components.classes["@mozilla.org/uuid-generator;1"]
-             .getService(Components.interfaces.nsIUUIDGenerator);
+let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-             .getService(Components.interfaces.mozIJSSubScriptLoader);
+let uuidGen = Cc["@mozilla.org/uuid-generator;1"]
+                .getService(Ci.nsIUUIDGenerator);
+
+let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+               .getService(Ci.mozIJSSubScriptLoader);
+
 loader.loadSubScript("chrome://marionette/content/marionette-simpletest.js");
 loader.loadSubScript("chrome://marionette/content/marionette-log-obj.js");
-Components.utils.import("chrome://marionette/content/marionette-elements.js");
+Cu.import("chrome://marionette/content/marionette-elements.js");
 let utils = {};
 utils.window = content;
-//load Event/ChromeUtils for use with JS scripts:
-loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils)
+// Load Event/ChromeUtils for use with JS scripts:
+loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
 let marionetteLogObj = new MarionetteLogObj();
@@ -23,7 +25,8 @@ let marionetteLogObj = new MarionetteLogObj();
 let isB2G = false;
 
 let marionetteTimeout = null;
-let winUtil = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
+let winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindowUtils);
 let listenerId = null; //unique ID of this listener
 let activeFrame = null;
 let curWindow = content;
@@ -53,33 +56,47 @@ function registerSelf() {
 }
 
 /**
+ * Add a message listener that's tied to our listenerId.
+ */
+function addMessageListenerId(messageName, handler) {
+  addMessageListener(messageName + listenerId, handler);
+}
+
+/**
+ * Remove a message listener that's tied to our listenerId.
+ */
+function removeMessageListenerId(messageName, handler) {
+  removeMessageListener(messageName + listenerId, handler);
+}
+
+/**
  * Start all message listeners
  */
 function startListeners() {
-  addMessageListener("Marionette:newSession" + listenerId, newSession);
-  addMessageListener("Marionette:executeScript" + listenerId, executeScript);
-  addMessageListener("Marionette:setScriptTimeout" + listenerId, setScriptTimeout);
-  addMessageListener("Marionette:executeAsyncScript" + listenerId, executeAsyncScript);
-  addMessageListener("Marionette:executeJSScript" + listenerId, executeJSScript);
-  addMessageListener("Marionette:setSearchTimeout" + listenerId, setSearchTimeout);
-  addMessageListener("Marionette:goUrl" + listenerId, goUrl);
-  addMessageListener("Marionette:getUrl" + listenerId, getUrl);
-  addMessageListener("Marionette:goBack" + listenerId, goBack);
-  addMessageListener("Marionette:goForward" + listenerId, goForward);
-  addMessageListener("Marionette:refresh" + listenerId, refresh);
-  addMessageListener("Marionette:findElementContent" + listenerId, findElementContent);
-  addMessageListener("Marionette:findElementsContent" + listenerId, findElementsContent);
-  addMessageListener("Marionette:clickElement" + listenerId, clickElement);
-  addMessageListener("Marionette:getElementAttribute" + listenerId, getElementAttribute);
-  addMessageListener("Marionette:getElementText" + listenerId, getElementText);
-  addMessageListener("Marionette:isElementDisplayed" + listenerId, isElementDisplayed);
-  addMessageListener("Marionette:isElementEnabled" + listenerId, isElementEnabled);
-  addMessageListener("Marionette:isElementSelected" + listenerId, isElementSelected);
-  addMessageListener("Marionette:sendKeysToElement" + listenerId, sendKeysToElement);
-  addMessageListener("Marionette:clearElement" + listenerId, clearElement);
-  addMessageListener("Marionette:switchToFrame" + listenerId, switchToFrame);
-  addMessageListener("Marionette:deleteSession" + listenerId, deleteSession);
-  addMessageListener("Marionette:sleepSession" + listenerId, sleepSession);
+  addMessageListenerId("Marionette:newSession", newSession);
+  addMessageListenerId("Marionette:executeScript", executeScript);
+  addMessageListenerId("Marionette:setScriptTimeout", setScriptTimeout);
+  addMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
+  addMessageListenerId("Marionette:executeJSScript", executeJSScript);
+  addMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
+  addMessageListenerId("Marionette:goUrl", goUrl);
+  addMessageListenerId("Marionette:getUrl", getUrl);
+  addMessageListenerId("Marionette:goBack", goBack);
+  addMessageListenerId("Marionette:goForward", goForward);
+  addMessageListenerId("Marionette:refresh", refresh);
+  addMessageListenerId("Marionette:findElementContent", findElementContent);
+  addMessageListenerId("Marionette:findElementsContent", findElementsContent);
+  addMessageListenerId("Marionette:clickElement", clickElement);
+  addMessageListenerId("Marionette:getElementAttribute", getElementAttribute);
+  addMessageListenerId("Marionette:getElementText", getElementText);
+  addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
+  addMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
+  addMessageListenerId("Marionette:isElementSelected", isElementSelected);
+  addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
+  addMessageListenerId("Marionette:clearElement", clearElement);
+  addMessageListenerId("Marionette:switchToFrame", switchToFrame);
+  addMessageListenerId("Marionette:deleteSession", deleteSession);
+  addMessageListenerId("Marionette:sleepSession", sleepSession);
 }
 
 /**
@@ -113,30 +130,30 @@ function restart() {
  * Removes all listeners
  */
 function deleteSession(msg) {
-  removeMessageListener("Marionette:newSession" + listenerId, newSession);
-  removeMessageListener("Marionette:executeScript" + listenerId, executeScript);
-  removeMessageListener("Marionette:setScriptTimeout" + listenerId, setScriptTimeout);
-  removeMessageListener("Marionette:executeAsyncScript" + listenerId, executeAsyncScript);
-  removeMessageListener("Marionette:executeJSScript" + listenerId, executeJSScript);
-  removeMessageListener("Marionette:setSearchTimeout" + listenerId, setSearchTimeout);
-  removeMessageListener("Marionette:goUrl" + listenerId, goUrl);
-  removeMessageListener("Marionette:getUrl" + listenerId, getUrl);
-  removeMessageListener("Marionette:goBack" + listenerId, goBack);
-  removeMessageListener("Marionette:goForward" + listenerId, goForward);
-  removeMessageListener("Marionette:refresh" + listenerId, refresh);
-  removeMessageListener("Marionette:findElementContent" + listenerId, findElementContent);
-  removeMessageListener("Marionette:findElementsContent" + listenerId, findElementsContent);
-  removeMessageListener("Marionette:clickElement" + listenerId, clickElement);
-  removeMessageListener("Marionette:getElementAttribute" + listenerId, getElementAttribute);
-  removeMessageListener("Marionette:getElementText" + listenerId, getElementText);
-  removeMessageListener("Marionette:isElementDisplayed" + listenerId, isElementDisplayed);
-  removeMessageListener("Marionette:isElementEnabled" + listenerId, isElementEnabled);
-  removeMessageListener("Marionette:isElementSelected" + listenerId, isElementSelected);
-  removeMessageListener("Marionette:sendKeysToElement" + listenerId, sendKeysToElement);
-  removeMessageListener("Marionette:clearElement" + listenerId, clearElement);
-  removeMessageListener("Marionette:switchToFrame" + listenerId, switchToFrame);
-  removeMessageListener("Marionette:deleteSession" + listenerId, deleteSession);
-  removeMessageListener("Marionette:sleepSession" + listenerId, sleepSession);
+  removeMessageListenerId("Marionette:newSession", newSession);
+  removeMessageListenerId("Marionette:executeScript", executeScript);
+  removeMessageListenerId("Marionette:setScriptTimeout", setScriptTimeout);
+  removeMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
+  removeMessageListenerId("Marionette:executeJSScript", executeJSScript);
+  removeMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
+  removeMessageListenerId("Marionette:goUrl", goUrl);
+  removeMessageListenerId("Marionette:getUrl", getUrl);
+  removeMessageListenerId("Marionette:goBack", goBack);
+  removeMessageListenerId("Marionette:goForward", goForward);
+  removeMessageListenerId("Marionette:refresh", refresh);
+  removeMessageListenerId("Marionette:findElementContent", findElementContent);
+  removeMessageListenerId("Marionette:findElementsContent", findElementsContent);
+  removeMessageListenerId("Marionette:clickElement", clickElement);
+  removeMessageListenerId("Marionette:getElementAttribute", getElementAttribute);
+  removeMessageListenerId("Marionette:getElementText", getElementText);
+  removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
+  removeMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
+  removeMessageListenerId("Marionette:isElementSelected", isElementSelected);
+  removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
+  removeMessageListenerId("Marionette:clearElement", clearElement);
+  removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
+  removeMessageListenerId("Marionette:deleteSession", deleteSession);
+  removeMessageListenerId("Marionette:sleepSession", sleepSession);
   this.elementManager.reset();
 }
 
@@ -424,15 +441,15 @@ function setSearchTimeout(msg) {
 function goUrl(msg) {
   curWindow.location = msg.json.value;
   //TODO: replace this with DOMContentLoaded event listening when Bug 720714 is resolved
-  let checkTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
+  let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   function checkLoad() { 
     if (curWindow.document.readyState == "complete") { 
       sendOk();
       return;
     } 
-    checkTimer.initWithCallback(checkLoad, 100, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+    checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   }
-  checkTimer.initWithCallback(checkLoad, 100, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+  checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
 }
 
 /**
