@@ -4,19 +4,19 @@ BEGIN_TEST(test_BindCallable)
 {
   jsval v;
   EVAL("({ somename : 1717 })", &v);
-  CHECK(JSVAL_IS_OBJECT(v));
+  CHECK(v.isObject());
 
   jsval func;
   EVAL("(function() { return this.somename; })", &func);
-  CHECK(JSVAL_IS_OBJECT(func));
+  CHECK(func.isObject());
 
   JSObject* newCallable = JS_BindCallable(cx, JSVAL_TO_OBJECT(func),
-					  JSVAL_TO_OBJECT(v));
+                                          JSVAL_TO_OBJECT(v));
   CHECK(newCallable);
 
   jsval retval;
   bool called = JS_CallFunctionValue(cx, NULL, OBJECT_TO_JSVAL(newCallable),
-				     0, NULL, &retval);
+                                     0, NULL, &retval);
   CHECK(called);
 
   CHECK(JSVAL_IS_INT(retval));
