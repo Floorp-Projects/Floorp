@@ -71,7 +71,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The layer renderer implements the rendering logic for a layer view.
@@ -103,7 +103,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private int mMaxTextureSize;
     private int mBackgroundColor;
 
-    private ArrayList<Layer> mExtraLayers = new ArrayList<Layer>();
+    private CopyOnWriteArrayList<Layer> mExtraLayers = new CopyOnWriteArrayList<Layer>();
 
     // Dropped frames display
     private int[] mFrameTimings;
@@ -292,7 +292,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     public void addLayer(Layer layer) {
         LayerController controller = mView.getController();
 
-        synchronized (controller) {
+        synchronized (mExtraLayers) {
             if (mExtraLayers.contains(layer)) {
                 mExtraLayers.remove(layer);
             }
@@ -304,7 +304,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     public void removeLayer(Layer layer) {
         LayerController controller = mView.getController();
 
-        synchronized (controller) {
+        synchronized (mExtraLayers) {
             mExtraLayers.remove(layer);
         }
     }
