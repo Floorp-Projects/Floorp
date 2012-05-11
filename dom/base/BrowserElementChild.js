@@ -7,6 +7,7 @@
 let Cu = Components.utils;
 let Ci = Components.interfaces;
 let Cc = Components.classes;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function debug(msg) {
   //dump("BrowserElementChild - " + msg + "\n");
