@@ -608,6 +608,43 @@ public class AwesomeBarTabs extends TabHost {
         }
     }
 
+    private interface AwesomeBarItem {
+        public void onClick();
+    }
+
+    private class AwesomeBarCursorItem implements AwesomeBarItem {
+        private Cursor mCursor;
+
+        public AwesomeBarCursorItem(Cursor cursor) {
+            mCursor = cursor;
+        }
+
+        public void onClick() {
+            String url = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.URL));
+            if (mUrlOpenListener != null) {
+                int display = mCursor.getInt(cursor.getColumnIndexOrThrow(Combined.DISPLAY));
+                if (display == Combined.DISPLAY_READER) {
+                    url = getReaderForUrl(url);
+                }
+
+                mUrlOpenListener.onUrlOpen(url);
+            }
+        }
+    }
+
+    private class AwesomeBarSearchEngineItem implements AwesomeBarItem {
+        private String mSearchEngine;
+
+        public AwesomeBarSearchEngineItem(String searchEngine) {
+            mSearchEngine = searchEngine;
+        }
+
+        public void onClick() {
+            if (mUrlOpenListener != null)
+                mUrlOpenListener.onSearch(mSearchEngine);
+        }
+    }
+
     private class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
         private String mSearchTerm;
 
@@ -639,7 +676,7 @@ public class AwesomeBarTabs extends TabHost {
         public Object getItem(int position) {
             final int resultCount = super.getCount();
             if (position < resultCount)
-                return super.getItem(position);
+                return new AwesomeBarCursorItem((Cursor) super.getItem(position));
 
             JSONObject engine;
             String engineName = null;
@@ -647,10 +684,10 @@ public class AwesomeBarTabs extends TabHost {
                 engine = mSearchEngines.getJSONObject(position - resultCount);
                 engineName = engine.getString("name");
             } catch (JSONException e) {
-                Log.e(LOGTAG, "error getting json arguments");
+                Log.e(LOGTAG, "Error getting search engine JSON", e);
             }
 
-            return engineName;
+            return new AwesomeBarSearchEngineItem(engineName);
         }
 
         @Override
@@ -711,7 +748,7 @@ public class AwesomeBarTabs extends TabHost {
                 name = searchEngine.getString("name");
                 iconURI = searchEngine.getString("iconURI");
             } catch (JSONException e) {
-                Log.e(LOGTAG, "error getting json arguments");
+                Log.e(LOGTAG, "Error getting search engine JSON", e);
                 return;
             }
 
@@ -837,7 +874,7 @@ public class AwesomeBarTabs extends TabHost {
 
         allPagesList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                handleItemClick(allPagesList, position);
+                ((AwesomeBarItem) allPagesList.getItemAtPosition(position)).onClick();
             }
         });
 
@@ -926,28 +963,6 @@ public class AwesomeBarTabs extends TabHost {
 
         if (mUrlOpenListener != null)
             mUrlOpenListener.onUrlOpen(url);
-    }
-
-    private void handleItemClick(ListView list, int position) {
-        Object item = list.getItemAtPosition(position);
-        // If an AwesomeBar entry is clicked, item will be a Cursor containing
-        // the entry's data.  Otherwise, a search engine entry was clicked, and
-        // item will be a String containing the name of the search engine.
-        if (item instanceof Cursor) {
-            Cursor cursor = (Cursor) item;
-            String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-            if (mUrlOpenListener != null) {
-                int display = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.DISPLAY));
-                if (display == Combined.DISPLAY_READER) {
-                    url = getReaderForUrl(url);
-                }
-
-                mUrlOpenListener.onUrlOpen(url);
-            }
-        } else {
-            if (mUrlOpenListener != null)
-                mUrlOpenListener.onSearch((String)item);
-        }
     }
 
     private void updateFavicon(ImageView faviconView, Cursor cursor) {
