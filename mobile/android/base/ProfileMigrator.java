@@ -151,14 +151,17 @@ public class ProfileMigrator {
         "       bookmark.parent        AS b_parent,"      +
         "       bookmark.dateAdded     AS b_added,"       +
         "       bookmark.lastModified  AS b_modified,"    +
-        "       bookmark.position      AS b_position,";
+        "       bookmark.position      AS b_position,"    +
+        "       keyword.keyword        AS k_keyword,";
 
     private static final String BOOKMARK_QUERY_TRAILER =
-        "FROM ((moz_bookmarks AS bookmark "               +
+        "FROM (((moz_bookmarks AS bookmark "              +
+        "        LEFT OUTER JOIN moz_keywords AS keyword "+
+        "        ON keyword.id = bookmark.keyword_id) "   +
         "       LEFT OUTER JOIN moz_places AS places "    +
         "       ON places.id = bookmark.fk) "             +
-        "       LEFT OUTER JOIN moz_favicons AS favicon " +
-        "       ON places.favicon_id = favicon.id) "      +
+        "      LEFT OUTER JOIN moz_favicons AS favicon "  +
+        "      ON places.favicon_id = favicon.id) "       +
         // Bookmark folders don't have a places entry.
         "WHERE (places.hidden IS NULL "                   +
         "       OR places.hidden <> 1) "                  +
@@ -167,7 +170,7 @@ public class ProfileMigrator {
         "ORDER BY bookmark.id";
 
     private static final String BOOKMARK_QUERY_GUID =
-        BOOKMARK_QUERY_SELECT                              +
+        BOOKMARK_QUERY_SELECT                             +
         "       favicon.data           AS f_data,"        +
         "       favicon.mime_type      AS f_mime_type,"   +
         "       favicon.url            AS f_url,"         +
@@ -175,7 +178,7 @@ public class ProfileMigrator {
         BOOKMARK_QUERY_TRAILER;
 
     private static final String BOOKMARK_QUERY_NO_GUID =
-        BOOKMARK_QUERY_SELECT                              +
+        BOOKMARK_QUERY_SELECT                             +
         "       favicon.data           AS f_data,"        +
         "       favicon.mime_type      AS f_mime_type,"   +
         "       favicon.url            AS f_url "         +
@@ -191,6 +194,7 @@ public class ProfileMigrator {
     private static final String BOOKMARK_ADDED    = "b_added";
     private static final String BOOKMARK_MODIFIED = "b_modified";
     private static final String BOOKMARK_POSITION = "b_position";
+    private static final String KEYWORD_KEYWORD   = "k_keyword";
     private static final String FAVICON_DATA      = "f_data";
     private static final String FAVICON_MIME      = "f_mime_type";
     private static final String FAVICON_URL       = "f_url";
@@ -1099,7 +1103,7 @@ public class ProfileMigrator {
         protected void addBookmark(String url, String title, String guid,
                                    long parent, long added,
                                    long modified, long position,
-                                   int type) {
+                                   String keyword, int type) {
             ContentValues values = new ContentValues();
             if (title == null && url != null) {
                 title = url;
@@ -1112,6 +1116,9 @@ public class ProfileMigrator {
             }
             if (guid != null) {
                 values.put(SyncColumns.GUID, guid);
+            }
+            if (keyword != null) {
+                values.put(Bookmarks.KEYWORD, keyword);
             }
             values.put(SyncColumns.DATE_CREATED, added);
             values.put(SyncColumns.DATE_MODIFIED, modified);
@@ -1195,6 +1202,7 @@ public class ProfileMigrator {
                 final int addedCol = cursor.getColumnIndex(BOOKMARK_ADDED);
                 final int modifiedCol = cursor.getColumnIndex(BOOKMARK_MODIFIED);
                 final int positionCol = cursor.getColumnIndex(BOOKMARK_POSITION);
+                final int keywordCol = cursor.getColumnIndex(KEYWORD_KEYWORD);
                 final int faviconMimeCol = cursor.getColumnIndex(FAVICON_MIME);
                 final int faviconDataCol = cursor.getColumnIndex(FAVICON_DATA);
                 final int faviconUrlCol = cursor.getColumnIndex(FAVICON_URL);
@@ -1264,6 +1272,7 @@ public class ProfileMigrator {
                         long datemodified =
                             cursor.getLong(modifiedCol) / (long)1000;
                         long position = cursor.getLong(positionCol);
+                        String keyword = cursor.getString(keywordCol);
                         byte[] faviconDataBuff = cursor.getBlob(faviconDataCol);
                         String faviconMime = cursor.getString(faviconMimeCol);
                         String faviconUrl = cursor.getString(faviconUrlCol);
@@ -1278,7 +1287,7 @@ public class ProfileMigrator {
                             try {
                                 addBookmark(url, title, guid, parent,
                                             dateadded, datemodified,
-                                            position, type);
+                                            position, keyword, type);
                                 addFavicon(url, faviconUrl, faviconGuid,
                                            faviconMime, faviconDataBuff);
                                 if (type == PLACES_TYPE_FOLDER) {
