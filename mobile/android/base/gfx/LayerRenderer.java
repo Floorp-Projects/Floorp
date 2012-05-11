@@ -290,8 +290,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     }
 
     public void addLayer(Layer layer) {
-        LayerController controller = mView.getController();
-
         synchronized (mExtraLayers) {
             if (mExtraLayers.contains(layer)) {
                 mExtraLayers.remove(layer);
@@ -302,8 +300,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     }
 
     public void removeLayer(Layer layer) {
-        LayerController controller = mView.getController();
-
         synchronized (mExtraLayers) {
             mExtraLayers.remove(layer);
         }
