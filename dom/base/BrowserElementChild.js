@@ -41,6 +41,17 @@ BrowserElementChild.prototype = {
                                  Ci.nsIWebProgress.NOTIFY_LOCATION |
                                  Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
 
+    // A mozbrowser iframe contained inside a mozapp iframe should return false
+    // for nsWindowUtils::IsPartOfApp (unless the mozbrowser iframe is itself
+    // also mozapp).  That is, mozapp is transitive down to its children, but
+    // mozbrowser serves as a barrier.
+    //
+    // This is because mozapp iframes have some privileges which we don't want
+    // to extend to untrusted mozbrowser content.
+    content.QueryInterface(Ci.nsIInterfaceRequestor)
+           .getInterface(Components.interfaces.nsIDOMWindowUtils)
+           .setIsApp(false);
+
     addEventListener('DOMTitleChanged',
                      this._titleChangedHandler.bind(this),
                      /* useCapture = */ true,

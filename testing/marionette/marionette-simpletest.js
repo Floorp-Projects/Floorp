@@ -11,6 +11,7 @@ function Marionette(is_async, window, context, logObj) {
   this.tests = [];
   this.logObj = logObj;
   this.context = context;
+  this.timeout = 0;
 }
 
 Marionette.prototype = {
@@ -119,15 +120,17 @@ Marionette.prototype = {
       return ostring;
   },
 
-  defaultWaitForTimeout: 10000,
   waitFor: function test_waitFor(callback, test, timeout) {
       if (test()) {
           callback();
           return;
       }
       timeout = timeout || Date.now();
-      if (Date.now() - timeout > this.defaultWaitForTimeout) {
-          throw 'waitFor timeout';
+      if (Date.now() - timeout > this.timeout) {
+        dump("waitFor timeout: " + test.toString() + "\n");
+        // the script will timeout here, so no need to raise a separate
+        // timeout exception
+        return;
       }
       this.window.setTimeout(this.waitFor.bind(this), 100, callback, test, timeout);
   },

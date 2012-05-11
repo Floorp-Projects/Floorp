@@ -511,27 +511,22 @@ StackFramesView.prototype = {
    * @param string aState
    *        Either "paused" or "attached".
    */
-  updateState: function DVF_updateState(aState) {
-    let resume = document.getElementById("resume");
-    let status = document.getElementById("status");
+   updateState: function DVF_updateState(aState) {
+     let resume = document.getElementById("resume");
 
-    // If we're paused, show a pause label and a resume label on the button.
-    if (aState == "paused") {
-      status.textContent = L10N.getStr("pausedState");
-      resume.label = L10N.getStr("resumeLabel");
-    }
-    // If we're attached, do the opposite.
-    else if (aState == "attached") {
-      status.textContent = L10N.getStr("runningState");
-      resume.label = L10N.getStr("pauseLabel");
-    }
-    // No valid state parameter.
-    else {
-      status.textContent = "";
-    }
+     // If we're paused, show a pause label and a resume label on the button.
+     if (aState == "paused") {
+       resume.label = L10N.getStr("resumeLabel");
+       resume.setAttribute("checked", true);
+     }
+     // If we're attached, do the opposite.
+     else if (aState == "attached") {
+       resume.label = L10N.getStr("pauseLabel");
+       resume.removeAttribute("checked");
+     }
 
-    DebuggerView.Scripts.clearSearch();
-  },
+     DebuggerView.Scripts.clearSearch();
+   },
 
   /**
    * Removes all elements from the stackframes container, leaving it empty.
