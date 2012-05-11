@@ -297,18 +297,19 @@ private:
   static JSBool
   UnwrapErrorEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
+    JS_ASSERT(JSVAL_IS_OBJECT(JS_CALLEE(aCx, aVp)));
     JS_ASSERT(aArgc == 1);
-    JS_ASSERT((JS_ARGV(aCx, aVp)[0]).isObject());
+    JS_ASSERT(JSVAL_IS_OBJECT(JS_ARGV(aCx, aVp)[0]));
 
-    JSObject* wrapper = &JS_CALLEE(aCx, aVp).toObject();
+    JSObject* wrapper = JSVAL_TO_OBJECT(JS_CALLEE(aCx, aVp));
     JS_ASSERT(JS_ObjectIsFunction(aCx, wrapper));
 
     jsval scope = js::GetFunctionNativeReserved(wrapper, SLOT_wrappedScope);
     jsval listener = js::GetFunctionNativeReserved(wrapper, SLOT_wrappedFunction);
 
-    JS_ASSERT(scope.isObject());
+    JS_ASSERT(JSVAL_IS_OBJECT(scope));
 
-    JSObject* event = &JS_ARGV(aCx, aVp)[0].toObject();
+    JSObject* event = JSVAL_TO_OBJECT(JS_ARGV(aCx, aVp)[0]);
 
     jsval argv[3] = { JSVAL_VOID, JSVAL_VOID, JSVAL_VOID };
     if (!JS_GetProperty(aCx, event, "message", &argv[0]) ||

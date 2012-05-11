@@ -821,24 +821,24 @@ xpc_qsUnwrapThisFromCcxImpl(XPCCallContext &ccx,
 }
 
 JSObject*
-xpc_qsUnwrapObj(JS::Value v, nsISupports **ppArgRef, nsresult *rv)
+xpc_qsUnwrapObj(jsval v, nsISupports **ppArgRef, nsresult *rv)
 {
-    if (v.isNullOrUndefined()) {
+    if (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v)) {
         *ppArgRef = nsnull;
         *rv = NS_OK;
         return nsnull;
     }
 
-    if (!v.isObject()) {
+    if (!JSVAL_IS_OBJECT(v)) {
         *ppArgRef = nsnull;
-        *rv = ((v.isInt32() && v.toInt32() == 0)
+        *rv = ((JSVAL_IS_INT(v) && JSVAL_TO_INT(v) == 0)
                ? NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL
                : NS_ERROR_XPC_BAD_CONVERT_JS);
         return nsnull;
     }
 
     *rv = NS_OK;
-    return &v.toObject();
+    return JSVAL_TO_OBJECT(v);
 }
 
 nsresult

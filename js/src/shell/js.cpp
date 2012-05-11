@@ -2696,14 +2696,18 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
+ShapeOf(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JS::Value v;
-    if (argc < 1 || !((v = JS_ARGV(cx, vp)[0]).isObject())) {
+    jsval v;
+    if (argc < 1 || !JSVAL_IS_OBJECT(v = JS_ARGV(cx, vp)[0])) {
         JS_ReportError(cx, "shapeOf: object expected");
         return JS_FALSE;
     }
-    JSObject *obj = &v.toObject();
+    JSObject *obj = JSVAL_TO_OBJECT(v);
+    if (!obj) {
+        *vp = JSVAL_ZERO;
+        return JS_TRUE;
+    }
     return JS_NewNumberValue(cx, (double) ((uintptr_t)obj->lastProperty() >> 3), vp);
 }
 
@@ -3852,13 +3856,13 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
             jsval v;
             if (!JS_LookupPropertyById(cx, global, ida[i], &v))
                 return false;
-            if (!JSVAL_IS_PRIMITIVE(v) && !PrintHelp(cx, JSVAL_TO_OBJECT(v)))
+            if (JSVAL_IS_OBJECT(v) && !PrintHelp(cx, JSVAL_TO_OBJECT(v)))
                 return false;
         }
     } else {
         jsval *argv = JS_ARGV(cx, vp);
         for (unsigned i = 0; i < argc; i++) {
-            if (!JSVAL_IS_PRIMITIVE(argv[i]) && !PrintHelp(cx, JSVAL_TO_OBJECT(argv[i])))
+            if (JSVAL_IS_OBJECT(argv[i]) && !PrintHelp(cx, JSVAL_TO_OBJECT(argv[i])))
                 return false;
         }
     }

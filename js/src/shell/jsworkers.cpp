@@ -971,7 +971,7 @@ class ErrorEvent : public Event
   public:
     static ErrorEvent *create(JSContext *cx, Worker *child) {
         JSString *data = NULL;
-        JS::Value exc;
+        jsval exc;
         if (JS_GetPendingException(cx, &exc)) {
             AutoValueRooter tvr(cx, exc);
             JS_ClearPendingException(cx);
@@ -979,12 +979,12 @@ class ErrorEvent : public Event
             // Determine what error message to put in the error event.
             // If exc.message is a string, use that; otherwise use String(exc).
             // (This is a little different from what web workers do.)
-            if (exc.isObject()) {
-                JS::Value msg;
-                if (!JS_GetProperty(cx, &exc.toObject(), "message", &msg))
+            if (JSVAL_IS_OBJECT(exc)) {
+                jsval msg;
+                if (!JS_GetProperty(cx, JSVAL_TO_OBJECT(exc), "message", &msg))
                     JS_ClearPendingException(cx);
-                else if (msg.isString())
-                    data = msg.toString();
+                else if (JSVAL_IS_STRING(msg))
+                    data = JSVAL_TO_STRING(msg);
             }
             if (!data) {
                 data = JS_ValueToString(cx, exc);
