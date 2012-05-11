@@ -2741,6 +2741,18 @@ panel[dimmed="true"] {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
+#inspector-option-toolbarbutton {
+  -moz-appearance: none;
+  -moz-margin-end: 6px;
+  list-style-image: url("chrome://browser/skin/devtools/inspector-option-icon.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+  border: none;
+}
+
+#inspector-option-toolbarbutton[open] {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
 #inspector-toolbar {
   border-top: 1px solid hsla(210, 8%, 5%, .65);
   padding-top: 4px;
@@ -3213,4 +3225,11 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 
 .gcli-in-closebrace {
   color: hsl(0,0%,80%);
+}
+
+/* Highlight toolbar - Option menu */
+
+#inspector-option-toolbarbutton:-moz-focusring {
+  outline: 1px dotted hsla(210,30%,85%,0.4);
+  outline-offset: -2px;
 }
