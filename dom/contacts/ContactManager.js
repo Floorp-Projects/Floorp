@@ -28,10 +28,12 @@ XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
 });
 
 const nsIClassInfo            = Ci.nsIClassInfo;
-const CONTACTPROPERTIES_CID   = Components.ID("{53ed7c20-ceda-11e0-9572-0800200c9a66}");
+const CONTACTPROPERTIES_CID   = Components.ID("{f5181640-89e8-11e1-b0c4-0800200c9a66}");
 const nsIDOMContactProperties = Ci.nsIDOMContactProperties;
 
 // ContactProperties is not directly instantiated. It is used as interface.
+
+function ContactProperties(aProp) { debug("ContactProperties Constructor"); }
 
 ContactProperties.prototype = {
 
@@ -48,18 +50,17 @@ ContactProperties.prototype = {
 //ContactAddress
 
 const CONTACTADDRESS_CONTRACTID = "@mozilla.org/contactAddress;1";
-const CONTACTADDRESS_CID        = Components.ID("{27a568b0-cee1-11e0-9572-0800200c9a66}");
+const CONTACTADDRESS_CID        = Components.ID("{eba48030-89e8-11e1-b0c4-0800200c9a66}");
 const nsIDOMContactAddress      = Components.interfaces.nsIDOMContactAddress;
 
-function ContactAddress(aStreetAddress, aLocality, aRegion, aPostalCode, aCountryName) {
+function ContactAddress(aType, aStreetAddress, aLocality, aRegion, aPostalCode, aCountryName) {
+  this.type = aType || null;
   this.streetAddress = aStreetAddress || null;
   this.locality = aLocality || null;
   this.region = aRegion || null;
   this.postalCode = aPostalCode || null;
   this.countryName = aCountryName || null;
 };
-
-function ContactProperties(aProp) { debug("ContactProperties Constructor"); }
 
 ContactAddress.prototype = {
 
@@ -71,6 +72,29 @@ ContactAddress.prototype = {
                                      flags: nsIClassInfo.DOM_OBJECT}),
 
   QueryInterface : XPCOMUtils.generateQI([nsIDOMContactAddress])
+}
+
+//ContactTelephone
+
+const CONTACTTELEPHONE_CONTRACTID = "@mozilla.org/contactTelephone;1";
+const CONTACTTELEPHONE_CID        = Components.ID("{82601b20-89e8-11e1-b0c4-0800200c9a66}");
+const nsIDOMContactTelephone      = Components.interfaces.nsIDOMContactTelephone;
+
+function ContactTelephone(aType, aNumber) {
+  this.type = aType || null;
+  this.number = aNumber || null;
+};
+
+ContactTelephone.prototype = {
+
+  classID : CONTACTTELEPHONE_CID,
+  classInfo : XPCOMUtils.generateCI({classID: CONTACTTELEPHONE_CID,
+                                     contractID: CONTACTTELEPHONE_CONTRACTID,
+                                     classDescription: "ContactTelephone",
+                                     interfaces: [nsIDOMContactTelephone],
+                                     flags: nsIClassInfo.DOM_OBJECT}),
+
+  QueryInterface : XPCOMUtils.generateQI([nsIDOMContactTelephone])
 }
 
 //ContactFindOptions
@@ -125,19 +149,27 @@ Contact.prototype = {
 
     if (aProp.adr) {
       // Make sure adr argument is an array. Instanceof doesn't work.
-      aProp.adr = aProp.adr.length == undefined ? [aProp.adr] : aProp.adr;
+      aProp.adr = Array.isArray(aProp.adr) ? aProp.adr : [aProp.adr];
 
       this.adr = new Array();
       for (let i = 0; i < aProp.adr.length; i++)
-        this.adr.push(new ContactAddress(aProp.adr[i].streetAddress, aProp.adr[i].locality,
-                                         aProp.adr[i].region, aProp.adr[i].postalCode,
-                                         aProp.adr[i].countryName));
+        this.adr.push(new ContactAddress(aProp.adr[i].type, aProp.adr[i].streetAddress, aProp.adr[i].locality,
+                                         aProp.adr[i].region, aProp.adr[i].postalCode, aProp.adr[i].countryName));
     } else {
       this.adr = null;
     }
 
-    this.tel =             _create(aProp.tel) || null;
+    if (aProp.tel) {
+      aProp.tel = Array.isArray(aProp.tel) ? aProp.tel : [aProp.tel];
+      this.tel = new Array();
+      for (let i = 0; i < aProp.tel.length; i++)
+        this.tel.push(new ContactTelephone(aProp.tel[i].type, aProp.tel[i].number));
+    } else {
+      this.tel = null;
+    }
+
     this.org =             _create(aProp.org) || null;
+    this.jobTitle =        _create(aProp.jobTitle) || null;
     this.bday =            (aProp.bday == "undefined" || aProp.bday == null) ? null : new Date(aProp.bday);
     this.note =            _create(aProp.note) || null;
     this.impp =            _create(aProp.impp) || null;
@@ -157,7 +189,7 @@ Contact.prototype = {
   get updated () {
     return this._updated;
   },
- 
+
   set updated(aUpdated) {
     this._updated = aUpdated;
   },
@@ -218,6 +250,7 @@ ContactManager.prototype = {
         adr:             [],
         tel:             [],
         org:             [],
+        jobTitle:        [],
         bday:            null,
         note:            [],
         impp:            [],
@@ -352,9 +385,9 @@ ContactManager.prototype = {
       return null;
 
     this.initHelper(aWindow, ["Contacts:Find:Return:OK", "Contacts:Find:Return:KO",
-                     "Contacts:Clear:Return:OK", "Contacts:Clear:Return:KO",
-                     "Contact:Save:Return:OK", "Contact:Save:Return:KO",
-                     "Contact:Remove:Return:OK", "Contact:Remove:Return:KO"]);
+                              "Contacts:Clear:Return:OK", "Contacts:Clear:Return:KO",
+                              "Contact:Save:Return:OK", "Contact:Save:Return:KO",
+                              "Contact:Remove:Return:OK", "Contact:Remove:Return:KO"]);
 
     let principal = aWindow.document.nodePrincipal;
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
@@ -412,4 +445,5 @@ MozContactEvent.prototype = {
                                     classDescription: "Contact Change Event"})
 }
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([Contact, ContactManager, ContactProperties, ContactAddress, ContactFindOptions])
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(
+                       [Contact, ContactManager, ContactProperties, ContactAddress, ContactTelephone, ContactFindOptions])

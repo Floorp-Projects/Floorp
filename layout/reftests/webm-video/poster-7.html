@@ -3,9 +3,9 @@
 <body style="background:white;">
 <!-- Test that poster frame changes when you change the poster attribute. -->
 <video src="black140x100.webm"
-       preload="auto"
+       preload="none"
        id="v"
-       onload="document.getElementById('v').poster = 'red160x120.png'; setTimeout(function(){document.documentElement.className = '';}, 0);"
+       onload="document.getElementById('v').poster = 'red140x100.png'; setTimeout(function(){document.documentElement.className = '';}, 0);"
        poster="blue250x200.png"></video>
 </body>
 </html>

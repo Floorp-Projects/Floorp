@@ -81,6 +81,21 @@ repeat (pixman_repeat_t repeat, int *c, int size)
     return TRUE;
 }
 
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+#define LOW_QUALITY_INTERPOLATION
+#endif
+
+static force_inline int32_t
+interpolation_coord(pixman_fixed_t t)
+{
+#ifdef LOW_QUALITY_INTERPOLATION
+    return (t >> 12) & 0xf;
+#else
+    return (t >> 8) & 0xff;
+#endif
+}
+
+
 #if SIZEOF_LONG > 4
 
 static force_inline uint32_t
@@ -127,6 +142,34 @@ bilinear_interpolation (uint32_t tl, uint32_t tr,
 
 #else
 
+#ifdef LOW_QUALITY_INTERPOLATION
+/* Based on Filter_32_opaque_portable from Skia */
+static force_inline uint32_t
+bilinear_interpolation(uint32_t a00, uint32_t a01,
+		       uint32_t a10, uint32_t a11,
+		       int x, int y)
+{
+    int xy = x * y;
+    static const uint32_t mask = 0xff00ff;
+
+    int scale = 256 - 16*y - 16*x + xy;
+    uint32_t lo = (a00 & mask) * scale;
+    uint32_t hi = ((a00 >> 8) & mask) * scale;
+
+    scale = 16*x - xy;
+    lo += (a01 & mask) * scale;
+    hi += ((a01 >> 8) & mask) * scale;
+
+    scale = 16*y - xy;
+    lo += (a10 & mask) * scale;
+    hi += ((a10 >> 8) & mask) * scale;
+
+    lo += (a11 & mask) * xy;
+    hi += ((a11 >> 8) & mask) * xy;
+
+    return ((lo >> 8) & mask) | (hi & ~mask);
+}
+#else
 static force_inline uint32_t
 bilinear_interpolation (uint32_t tl, uint32_t tr,
 			uint32_t bl, uint32_t br,
@@ -169,7 +212,7 @@ bilinear_interpolation (uint32_t tl, uint32_t tr,
 
     return r;
 }
-
+#endif
 #endif
 
 /*

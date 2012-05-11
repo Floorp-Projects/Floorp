@@ -192,6 +192,8 @@ pixman-export.patch: use cairo_public for PIXMAN_EXPORT to make sure pixman symb
 
 pixman-limits.patch: include limits.h for SIZE_MAX
 
+pixman-lowres-interp.patch: Use lower quality interpolation for more speed.
+
 ==== disable printing patch ====
 
 disable-printing.patch:  allows us to use NS_PRINTING to disable printing.
