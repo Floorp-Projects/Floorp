@@ -533,20 +533,20 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
         return true;
     }
 
-    JS::Value exposedProps;
+    jsval exposedProps;
     if (!JS_LookupPropertyById(cx, wrappedObject, exposedPropsId, &exposedProps))
         return false;
 
-    if (exposedProps.isNullOrUndefined()) {
+    if (JSVAL_IS_VOID(exposedProps) || JSVAL_IS_NULL(exposedProps)) {
         return PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
     }
 
-    if (!exposedProps.isObject()) {
+    if (!JSVAL_IS_OBJECT(exposedProps)) {
         JS_ReportError(cx, "__exposedProps__ must be undefined, null, or an Object");
         return false;
     }
 
-    JSObject *hallpass = &exposedProps.toObject();
+    JSObject *hallpass = JSVAL_TO_OBJECT(exposedProps);
 
     Access access = NO_ACCESS;
 

@@ -2087,19 +2087,19 @@ CreateExceptionFromResult(JSContext *cx, nsresult aResult)
     return NS_ERROR_FAILURE;
   }
 
-  JS::Value jv;
+  jsval jv;
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
   rv = WrapNative(cx, ::JS_GetGlobalObject(cx), exception,
                   &NS_GET_IID(nsIException), false, &jv,
                   getter_AddRefs(holder));
-  if (NS_FAILED(rv) || jv.isNull()) {
+  if (NS_FAILED(rv) || JSVAL_IS_NULL(jv)) {
     return NS_ERROR_FAILURE;
   }
 
   JSAutoEnterCompartment ac;
 
-  if (jv.isObject()) {
-    if (!ac.enter(cx, &jv.toObject())) {
+  if (JSVAL_IS_OBJECT(jv)) {
+    if (!ac.enter(cx, JSVAL_TO_OBJECT(jv))) {
       return NS_ERROR_UNEXPECTED;
     }
   }
@@ -6492,23 +6492,26 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
     JSObject *proto = nsnull;
 
     if (class_parent_name) {
+      jsval val;
+
       JSAutoEnterCompartment ac;
       if (!ac.enter(cx, winobj)) {
         return NS_ERROR_UNEXPECTED;
       }
 
-      JS::Value val;
-      if (!JS_LookupProperty(cx, winobj, CutPrefix(class_parent_name), &val)) {
+      if (!::JS_LookupProperty(cx, winobj, CutPrefix(class_parent_name), &val)) {
         return NS_ERROR_UNEXPECTED;
       }
 
-      if (val.isObject()) {
-        if (!JS_LookupProperty(cx, &val.toObject(), "prototype", &val)) {
+      JSObject *tmp = JSVAL_IS_OBJECT(val) ? JSVAL_TO_OBJECT(val) : nsnull;
+
+      if (tmp) {
+        if (!::JS_LookupProperty(cx, tmp, "prototype", &val)) {
           return NS_ERROR_UNEXPECTED;
         }
 
-        if (val.isObject()) {
-          proto = &val.toObject();
+        if (JSVAL_IS_OBJECT(val)) {
+          proto = JSVAL_TO_OBJECT(val);
         }
       }
     }
@@ -8953,9 +8956,8 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
   // If we are called via document.all(id) instead of document.all.item(i) or
   // another method, use the document.all callee object as self.
   JSObject *self;
-  JS::Value callee = JS_CALLEE(cx, vp);
-  if (callee.isObject() &&
-  	  JS_GetClass(&callee.toObject()) == &sHTMLDocumentAllClass) {
+  if (JSVAL_IS_OBJECT(JS_CALLEE(cx, vp)) &&
+      ::JS_GetClass(JSVAL_TO_OBJECT(JS_CALLEE(cx, vp))) == &sHTMLDocumentAllClass) {
     self = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
   } else {
     self = JS_THIS_OBJECT(cx, vp);
@@ -8999,7 +9001,7 @@ PrivateToFlags(void *priv)
 
 JSBool
 nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
-                                               jsid id, JS::Value *vp)
+                                               jsid id, jsval *vp)
 {
   if (id != nsDOMClassInfo::sAll_id) {
     return JS_TRUE;
@@ -9022,12 +9024,12 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
     // or it was not being resolved with a qualified name. Claim that
     // document.all is undefined.
 
-    vp->setUndefined();
+    *vp = JSVAL_VOID;
   } else {
     // document.all is not being detected, and it resolved with a
     // qualified name. Expose the document.all collection.
 
-    if (!vp->isObjectOrNull()) { 
+    if (!JSVAL_IS_OBJECT(*vp)) {
       // First time through, create the collection, and set the
       // document as its private nsISupports data.
       nsresult rv;
@@ -9049,7 +9051,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
 
       doc.forget();
 
-      vp->setObject(*all);
+      *vp = OBJECT_TO_JSVAL(all);
     }
   }
 
@@ -9493,20 +9495,25 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
 // static
 nsresult
-nsHTMLSelectElementSH::SetOption(JSContext *cx, JS::Value *vp, PRUint32 aIndex,
+nsHTMLSelectElementSH::SetOption(JSContext *cx, jsval *vp, PRUint32 aIndex,
                                  nsIDOMHTMLOptionsCollection *aOptCollection)
 {
   JSAutoRequest ar(cx);
 
   // vp must refer to an object
-  if (!vp->isObject()) {
+  if (!JSVAL_IS_OBJECT(*vp) && !::JS_ConvertValue(cx, *vp, JSTYPE_OBJECT, vp)) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIDOMHTMLOptionElement> new_option = do_QueryWrapper(cx, &vp->toObject());
-  if (!new_option) {
-    // Someone is trying to set an option to a non-option object.
-    return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIDOMHTMLOptionElement> new_option;
+
+  if (!JSVAL_IS_NULL(*vp)) {
+    new_option = do_QueryWrapper(cx, JSVAL_TO_OBJECT(*vp));
+    if (!new_option) {
+      // Someone is trying to set an option to a non-option object.
+
+      return NS_ERROR_UNEXPECTED;
+    }
   }
 
   return aOptCollection->SetOption(aIndex, new_option);

@@ -308,14 +308,14 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
 
             if (JS_GetPendingException(cx, &jsexception)) {
                 nsresult rv;
-                if (jsexception.isObject()) {
+                if (JSVAL_IS_OBJECT(jsexception)) {
                     // XPConnect may have constructed an object to represent a
                     // C++ QI failure. See if that is the case.
                     nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
 
                     nsXPConnect::GetXPConnect()->
                         GetWrappedNativeOfJSObject(ccx,
-                                                   &jsexception.toObject(),
+                                                   JSVAL_TO_OBJECT(jsexception),
                                                    getter_AddRefs(wrapper));
 
                     if (wrapper) {

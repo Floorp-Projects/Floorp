@@ -1013,12 +1013,11 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
 
     if (optionalArgc) {
         // The caller passed in the optional second argument. Get it.
-        if (targetObj.isObjectOrNull()) {
-            targetObject = targetObj.toObjectOrNull();
-        } else {
+        if (!JSVAL_IS_OBJECT(targetObj)) {
             return ReportOnCaller(cx, ERROR_SCOPE_OBJ,
-                                  PromiseFlatCString(registryLocation).get());            
+                                  PromiseFlatCString(registryLocation).get());
         }
+        targetObject = JSVAL_TO_OBJECT(targetObj);
     } else {
         // Our targetObject is the caller's global object. Find it by
         // walking the calling object's parent chain.
@@ -1172,6 +1171,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
     NS_ASSERTION(mod->global, "Import table contains entry with no global");
     *_retval = mod->global;
 
+    jsval symbols;
     if (targetObj) {
         JSCLContextHelper cxhelper(this);
 
@@ -1179,20 +1179,19 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
         if (!ac.enter(mContext, mod->global))
             return NS_ERROR_FAILURE;
 
-        JS::Value symbols;
         if (!JS_GetProperty(mContext, mod->global,
                             "EXPORTED_SYMBOLS", &symbols)) {
             return ReportOnCaller(cxhelper, ERROR_NOT_PRESENT,
                                   PromiseFlatCString(aLocation).get());
         }
 
-        if (!symbols.isObject() ||
-            !JS_IsArrayObject(mContext, &symbols.toObject())) {
+        JSObject *symbolsObj = nsnull;
+        if (!JSVAL_IS_OBJECT(symbols) ||
+            !(symbolsObj = JSVAL_TO_OBJECT(symbols)) ||
+            !JS_IsArrayObject(mContext, symbolsObj)) {
             return ReportOnCaller(cxhelper, ERROR_NOT_AN_ARRAY,
                                   PromiseFlatCString(aLocation).get());
         }
-
-        JSObject *symbolsObj = &symbols.toObject();
 
         // Iterate over symbols array, installing symbols on targetObj:
 

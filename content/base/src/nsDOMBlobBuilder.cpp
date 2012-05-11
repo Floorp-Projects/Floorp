@@ -404,18 +404,18 @@ nsDOMBlobBuilder::GetFile(const nsAString& aName,
 /* [implicit_jscontext] void append (in jsval data,
                                      [optional] in DOMString endings); */
 NS_IMETHODIMP
-nsDOMBlobBuilder::Append(const JS::Value& aData,
+nsDOMBlobBuilder::Append(const jsval& aData,
                          const nsAString& aEndings, JSContext* aCx)
 {
   // We need to figure out what our jsval is
 
-  // Just return for null
-  if (aData.isNull())
-    return NS_OK;
-
   // Is it an object?
-  if (aData.isObject()) {
-    JSObject* obj = &aData.toObject();
+  if (JSVAL_IS_OBJECT(aData)) {
+    JSObject* obj = JSVAL_TO_OBJECT(aData);
+    if (!obj) {
+      // We got passed null.  Just do nothing.
+      return NS_OK;
+    }
 
     // Is it a Blob?
     nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(

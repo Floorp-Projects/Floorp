@@ -529,17 +529,19 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return false;
         case nsXPTType::T_IID:
         {
-            const nsID* pid = nsnull;
+            JSObject* obj;
+            const nsID* pid=nsnull;
 
             // There's no good reason to pass a null IID.
-            if (s.isNullOrUndefined()) {
+            if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
                 if (pErr)
-                    *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
+                  *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
                 return false;
             }
 
-            if (!s.isObject() ||
-                (!(pid = xpc_JSObjectToID(cx, &s.toObject()))) ||
+            if (!JSVAL_IS_OBJECT(s) ||
+                (!(obj = JSVAL_TO_OBJECT(s))) ||
+                (!(pid = xpc_JSObjectToID(cx, obj))) ||
                 (!(pid = (const nsID*) nsMemory::Clone(pid, sizeof(nsID))))) {
                 return false;
             }
@@ -794,6 +796,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         case nsXPTType::T_INTERFACE:
         case nsXPTType::T_INTERFACE_IS:
         {
+            JSObject* obj;
             NS_ASSERTION(iid,"can't do interface conversions without iid");
 
             if (iid->Equals(NS_GET_IID(nsIVariant))) {
@@ -822,19 +825,19 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             }
             //else ...
 
-            if (s.isNullOrUndefined()) {
+            if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
                 *((nsISupports**)d) = nsnull;
                 return true;
             }
 
             // only wrap JSObjects
-            if (!s.isObject()) {
-                if (pErr && s.isInt32() && 0 == s.toInt32())
+            if (!JSVAL_IS_OBJECT(s) || !(obj = JSVAL_TO_OBJECT(s))) {
+                if (pErr && JSVAL_IS_INT(s) && 0 == JSVAL_TO_INT(s))
                     *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL;
                 return false;
             }
 
-            return JSObject2NativeInterface(ccx, (void**)d, &s.toObject(), iid,
+            return JSObject2NativeInterface(ccx, (void**)d, obj, iid,
                                             nsnull, pErr);
         }
         default:
@@ -1740,7 +1743,7 @@ XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
 
 // static
 JSBool
-XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, JS::Value s,
+XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
                            uint32_t count, const nsXPTType& type,
                            const nsID* iid, nsresult* pErr)
 {
@@ -1748,11 +1751,21 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, JS::Value s,
 
     JSContext* cx = ccx.GetJSContext();
 
+    // No Action, FRee memory, RElease object
+    enum CleanupMode {na, fr, re};
+
+    CleanupMode cleanupMode;
+
+    JSObject* jsarray = nsnull;
+    void* array = nsnull;
+    uint32_t initedCount;
+    jsval current;
+
     // XXX add support for getting chars from strings
 
     // XXX add support to indicate *which* array element was not convertable
 
-    if (s.isNullOrUndefined()) {
+    if (JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s)) {
         if (0 != count) {
             if (pErr)
                 *pErr = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
@@ -1763,13 +1776,13 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, JS::Value s,
         return true;
     }
 
-    if (!s.isObject()) {
+    if (!JSVAL_IS_OBJECT(s)) {
         if (pErr)
             *pErr = NS_ERROR_XPC_CANT_CONVERT_PRIMITIVE_TO_ARRAY;
         return false;
     }
 
-    JSObject* jsarray = &s.toObject();
+    jsarray = JSVAL_TO_OBJECT(s);
 
     // If this is a typed array, then try a fast conversion with memcpy.
     if (JS_IsTypedArrayObject(jsarray, cx)) {
@@ -1810,16 +1823,9 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, JS::Value s,
         }                                                                     \
     PR_END_MACRO
 
-    // No Action, FRee memory, RElease object
-    enum CleanupMode {na, fr, re};
-
-    CleanupMode cleanupMode;
-
-    void *array = nsnull;
-    uint32_t initedCount;
-    jsval current;
 
     // XXX check IsPtr - esp. to handle array of nsID (as opposed to nsID*)
+
     // XXX make extra space at end of char* and wchar* and null termintate
 
     switch (type.TagPart()) {

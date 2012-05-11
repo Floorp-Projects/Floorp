@@ -204,7 +204,7 @@ WriteCallback(const jschar *buf, uint32_t len, void *data)
 }
 
 NS_IMETHODIMP
-nsJSON::EncodeFromJSVal(JS::Value *value, JSContext *cx, nsAString &result)
+nsJSON::EncodeFromJSVal(jsval *value, JSContext *cx, nsAString &result)
 {
   result.Truncate();
 
@@ -212,9 +212,9 @@ nsJSON::EncodeFromJSVal(JS::Value *value, JSContext *cx, nsAString &result)
   JSAutoRequest ar(cx);
 
   JSAutoEnterCompartment ac;
+  JSObject *obj;
   nsIScriptSecurityManager *ssm = nsnull;
-  if (value->isObject()) {
-    JSObject *obj = &value->toObject();
+  if (JSVAL_IS_OBJECT(*value) && (obj = JSVAL_TO_OBJECT(*value))) {
     if (!ac.enter(cx, obj)) {
       return NS_ERROR_FAILURE;
     }
@@ -254,11 +254,14 @@ nsJSON::EncodeInternal(JSContext* cx, const JS::Value& aValue, nsJSONWriter* wri
 
   // Backward compatibility:
   // nsIJSON does not allow to serialize anything other than objects
-  if (!aValue.isObject()) {
+  if (!JSVAL_IS_OBJECT(aValue)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  JSObject* obj = &aValue.toObject();
+  JSObject* obj = JSVAL_TO_OBJECT(aValue);
+  if (!obj) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   JS::Value val = aValue;
 
