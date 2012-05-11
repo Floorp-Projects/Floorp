@@ -176,8 +176,14 @@
       <menuseparator class="appmenu-menuseparator"/>
       <menu id="appmenu_webDeveloper"
             label="&appMenuWebDeveloper.label;">
-        <menupopup id="appmenu_webDeveloper_popup"
-                   onpopupshowing="onWebDeveloperMenuShowing();">
+        <menupopup id="appmenu_webDeveloper_popup">
+          <menuitem id="appmenu_devToolbar"
+                    type="checkbox"
+                    autocheck="false"
+                    hidden="true"
+                    label="&devToolbarMenu.label;"
+                    command="Tools:DevToolbar"
+                    key="key_devToolbar"/>
           <menuitem id="appmenu_webConsole"
                     label="&webConsoleCmd.label;"
                     type="checkbox"
@@ -191,6 +197,7 @@
                     key="key_inspect"/>
           <menuitem id="appmenu_debugger"
                     hidden="true"
+                    type="checkbox"
                     label="&debuggerMenu.label;"
                     key="key_debugger"
                     command="Tools:Debugger"/>

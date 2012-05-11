@@ -131,13 +131,8 @@ function finishUp() {
   finish();
 }
 
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
-});
-
 function test()
 {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function() {

@@ -67,6 +67,20 @@ function DebuggerUI(aWindow) {
 }
 
 DebuggerUI.prototype = {
+  /**
+   * Called by the DebuggerPane to update the Debugger toggle switches with the
+   * debugger state.
+   */
+  refreshCommand: function DUI_refreshCommand() {
+    let selectedTab = this.chromeWindow.getBrowser().selectedTab;
+    let command = this.chromeWindow.document.getElementById("Tools:Debugger");
+
+    if (this.getDebugger(selectedTab) != null) {
+      command.setAttribute("checked", "true");
+    } else {
+      command.removeAttribute("checked");
+    }
+  },
 
   /**
    * Starts a debugger for the current tab, or stops it if already started.
@@ -79,7 +93,7 @@ DebuggerUI.prototype = {
       tab._scriptDebugger.close();
       return null;
     }
-    return new DebuggerPane(tab);
+    return new DebuggerPane(this, tab);
   },
 
   /**
@@ -115,7 +129,7 @@ DebuggerUI.prototype = {
    * @return DebuggerPane if a debugger exists for the tab, null otherwise.
    */
   getDebugger: function DUI_getDebugger(aTab) {
-    return aTab._scriptDebugger;
+    return '_scriptDebugger' in aTab ? aTab._scriptDebugger : null;
   },
 
   /**
@@ -153,7 +167,8 @@ DebuggerUI.prototype = {
  * @param XULElement aTab
  *        The tab in which to create the debugger.
  */
-function DebuggerPane(aTab) {
+function DebuggerPane(aDebuggerUI, aTab) {
+  this._globalUI = aDebuggerUI;
   this._tab = aTab;
 
   this._initServer();
@@ -182,7 +197,7 @@ DebuggerPane.prototype = {
     let ownerDocument = gBrowser.parentNode.ownerDocument;
 
     this._splitter = ownerDocument.createElement("splitter");
-    this._splitter.setAttribute("class", "hud-splitter");
+    this._splitter.setAttribute("class", "devtools-horizontal-splitter");
 
     this._frame = ownerDocument.createElement("iframe");
     this._frame.height = DebuggerPreferences.height;
@@ -207,6 +222,7 @@ DebuggerPane.prototype = {
     }, true);
 
     this._frame.setAttribute("src", DBG_XUL);
+    this._globalUI.refreshCommand();
   },
 
   /**
@@ -229,6 +245,8 @@ DebuggerPane.prototype = {
     this._splitter = null;
     this._frame = null;
     this._nbox = null;
+
+    this._globalUI.refreshCommand();
   },
 
   /**

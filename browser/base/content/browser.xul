@@ -1015,9 +1015,28 @@
              hidden="true">
 #ifdef XP_MACOSX
       <toolbarbutton id="highlighter-closebutton"
+                     class="devtools-closebutton"
                      oncommand="InspectorUI.closeInspectorUI(false);"
                      tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
+      <toolbarbutton id="inspector-option-toolbarbutton"
+                     type="menu"
+                     tabindex="0"
+                     tooltiptext="&inspectOptionButton.tooltiptext;">
+        <menupopup id="inspector-option-popup"
+                   position="before_start">
+          <menuitem id="inspectorToggleVeil"
+                    type="checkbox"
+                    label="&inspectorToggleVeil.label;"
+                    accesskey="&inspectorToggleVeil.accesskey;"
+                    command="Inspector:ToggleVeil"/>
+          <menuitem id="inspectorToggleInfobar"
+                    type="checkbox"
+                    label="&inspectorToggleInfobar.label;"
+                    accesskey="&inspectorToggleInfobar.accesskey;"
+                    command="Inspector:ToggleInfobar"/>
+        </menupopup>
+      </toolbarbutton>
       <toolbarbutton id="inspector-inspect-toolbutton"
                      class="devtools-toolbarbutton"
                      command="Inspector:Inspect"/>
@@ -1048,10 +1067,46 @@
       </hbox>
 #ifndef XP_MACOSX
       <toolbarbutton id="highlighter-closebutton"
+                     class="devtools-closebutton"
                      oncommand="InspectorUI.closeInspectorUI(false);"
                      tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
     </toolbar>
+
+    <toolbar id="developer-toolbar"
+             class="devtools-toolbar"
+             hidden="true">
+#ifdef XP_MACOSX
+          <toolbarbutton id="developer-toolbar-closebutton"
+                         oncommand="DeveloperToolbar.hide();"
+                         tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
+#endif
+          <stack class="gclitoolbar-stack-node" flex="1">
+            <description class="gclitoolbar-prompt">&#187;</description>
+            <description class="gclitoolbar-complete-node"/>
+            <textbox class="gclitoolbar-input-node" rows="1"/>
+          </stack>
+          <toolbarbutton id="developer-toolbar-webconsole"
+                         label="&webConsoleButton.label;"
+                         class="devtools-toolbarbutton"
+                         command="Tools:WebConsole"/>
+          <toolbarbutton id="developer-toolbar-inspector"
+                         label="&inspectorButton.label;"
+                         class="devtools-toolbarbutton"
+                         hidden="true"
+                         command="Tools:Inspect"/>
+          <toolbarbutton id="developer-toolbar-debugger"
+                         label="&scriptsButton.label;"
+                         class="devtools-toolbarbutton"
+                         hidden="true"
+                         command="Tools:Debugger"/>
+#ifndef XP_MACOSX
+          <toolbarbutton id="developer-toolbar-closebutton"
+                         oncommand="DeveloperToolbar.hide();"
+                         tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
+#endif
+   </toolbar>
+
     <toolbar id="addon-bar"
              toolbarname="&addonBarCmd.label;" accesskey="&addonBarCmd.accesskey;"
              collapsed="true"
