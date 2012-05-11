@@ -184,10 +184,10 @@
     MODULE(nsRDFModule)                      \
     MODULE(nsWindowDataSourceModule)         \
     MODULE(nsParserModule)                   \
+    MODULE(nsImageLib2Module)                \
     MODULE(nsGfxModule)                      \
     PROFILER_MODULE                          \
     WIDGET_MODULES                           \
-    MODULE(nsImageLib2Module)                \
     ICON_MODULE                              \
     MODULE(nsPluginModule)                   \
     MODULE(nsLayoutModule)                   \

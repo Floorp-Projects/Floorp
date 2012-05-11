@@ -365,6 +365,8 @@ gfxPlatform::Shutdown()
 
 gfxPlatform::~gfxPlatform()
 {
+    mScreenReferenceSurface = nsnull;
+
     // The cairo folks think we should only clean up in debug builds,
     // but we're generally in the habit of trying to shut down as
     // cleanly as possible even in production code, so call this
