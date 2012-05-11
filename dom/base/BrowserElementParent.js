@@ -67,17 +67,17 @@ BrowserElementParent.prototype = {
     }
   },
 
-  _observeInProcessBrowserFrameShown: function(frameLoader) {
+  _observeInProcessBrowserFrameShown: function(frameLoader, isMozApp) {
     debug("In-process browser frame shown " + frameLoader);
-    this._setUpMessageManagerListeners(frameLoader);
+    this._setUpMessageManagerListeners(frameLoader, isMozApp);
   },
 
-  _observeRemoteBrowserFrameShown: function(frameLoader) {
+  _observeRemoteBrowserFrameShown: function(frameLoader, isMozApp) {
     debug("Remote browser frame shown " + frameLoader);
-    this._setUpMessageManagerListeners(frameLoader);
+    this._setUpMessageManagerListeners(frameLoader, isMozApp);
   },
 
-  _setUpMessageManagerListeners: function(frameLoader) {
+  _setUpMessageManagerListeners: function(frameLoader, isMozApp) {
     let frameElement = frameLoader.QueryInterface(Ci.nsIFrameLoader).ownerElement;
     if (!frameElement) {
       debug("No frame element?");
@@ -102,6 +102,12 @@ BrowserElementParent.prototype = {
 
     mm.loadFrameScript("chrome://global/content/BrowserElementChild.js",
                        /* allowDelayedLoad = */ true);
+    if (isMozApp) {
+      mm.loadFrameScript("data:,content.QueryInterface(Ci.nsIInterfaceRequestor)" +
+                         "             .getInterface(Components.interfaces.nsIDOMWindowUtils)" +
+                         "             .setIsApp(true);",
+                         /* allowDelayedLoad = */ true);
+    }
   },
 
   _recvHello: function(frameElement, data) {
@@ -144,10 +150,10 @@ BrowserElementParent.prototype = {
       }
       break;
     case 'remote-browser-frame-shown':
-      this._observeRemoteBrowserFrameShown(subject);
+      this._observeRemoteBrowserFrameShown(subject, data == "is-moz-app:true");
       break;
     case 'in-process-browser-frame-shown':
-      this._observeInProcessBrowserFrameShown(subject);
+      this._observeInProcessBrowserFrameShown(subject, data == "is-moz-app:true");
       break;
     case 'content-document-global-created':
       this._observeContentGlobalCreated(subject);
