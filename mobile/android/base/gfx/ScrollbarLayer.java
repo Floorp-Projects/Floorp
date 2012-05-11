@@ -65,11 +65,9 @@ public class ScrollbarLayer extends TileLayer {
     private static final int CAP_RADIUS = (BAR_SIZE / 2);
 
     private final boolean mVertical;
-    private final ByteBuffer mBuffer;
     private final Bitmap mBitmap;
     private final Canvas mCanvas;
     private float mOpacity;
-    private boolean mFinalized = false;
 
     private LayerRenderer mRenderer;
     private int mProgram;
@@ -143,7 +141,6 @@ public class ScrollbarLayer extends TileLayer {
     private ScrollbarLayer(LayerRenderer renderer, CairoImage image, boolean vertical, ByteBuffer buffer) {
         super(image, TileLayer.PaintMode.NORMAL);
         mVertical = vertical;
-        mBuffer = buffer;
         mRenderer = renderer;
 
         IntSize size = image.getSize();
@@ -159,17 +156,7 @@ public class ScrollbarLayer extends TileLayer {
         mCanvas.drawColor(Color.argb(0, 0, 0, 0), PorterDuff.Mode.CLEAR);
         mCanvas.drawCircle(CAP_RADIUS, CAP_RADIUS, CAP_RADIUS, foregroundPaint);
 
-        mBitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
-    }
-
-    protected void finalize() throws Throwable {
-        try {
-            if (!mFinalized && mBuffer != null)
-                GeckoAppShell.freeDirectBuffer(mBuffer);
-            mFinalized = true;
-        } finally {
-            super.finalize();
-        }
+        mBitmap.copyPixelsToBuffer(buffer.asIntBuffer());
     }
 
     public static ScrollbarLayer create(LayerRenderer renderer, boolean vertical) {

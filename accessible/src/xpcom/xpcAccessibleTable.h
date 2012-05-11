@@ -26,6 +26,8 @@ public:
   nsresult GetSummary(nsAString& aSummary);
   nsresult GetColumnCount(PRInt32* aColumnCount);
   nsresult GetRowCount(PRInt32* aRowCount);
+  nsresult GetCellIndexAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
+                          PRInt32* aCellIndex);
   nsresult UnselectColumn(PRInt32 aColIdx);
   nsresult UnselectRow(PRInt32 aRowIdx);
   nsresult IsProbablyForLayout(bool* aIsForLayout);
@@ -44,7 +46,8 @@ protected:
   NS_SCRIPTABLE NS_IMETHOD GetRowCount(PRInt32* aRowCount) \
     { return xpcAccessibleTable::GetRowCount(aRowCount); } \
   NS_SCRIPTABLE NS_IMETHOD GetCellAt(PRInt32 rowIndex, PRInt32 columnIndex, nsIAccessible * *_retval NS_OUTPARAM); \
-  NS_SCRIPTABLE NS_IMETHOD GetCellIndexAt(PRInt32 rowIndex, PRInt32 columnIndex, PRInt32 *_retval NS_OUTPARAM); \
+  NS_SCRIPTABLE NS_IMETHOD GetCellIndexAt(PRInt32 rowIndex, PRInt32 columnIndex, PRInt32 *_retval NS_OUTPARAM) \
+    { return xpcAccessibleTable::GetCellIndexAt(rowIndex, columnIndex, _retval); } \
   NS_SCRIPTABLE NS_IMETHOD GetColumnIndexAt(PRInt32 cellIndex, PRInt32 *_retval NS_OUTPARAM); \
   NS_SCRIPTABLE NS_IMETHOD GetRowIndexAt(PRInt32 cellIndex, PRInt32 *_retval NS_OUTPARAM); \
   NS_SCRIPTABLE NS_IMETHOD GetRowAndColumnIndicesAt(PRInt32 cellIndex, PRInt32 *rowIndex NS_OUTPARAM, PRInt32 *columnIndex NS_OUTPARAM); \
