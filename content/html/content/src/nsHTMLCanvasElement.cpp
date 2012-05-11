@@ -498,7 +498,7 @@ nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
 
 NS_IMETHODIMP
 nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
-                                const jsval& aContextOptions,
+                                const JS::Value& aContextOptions,
                                 nsISupports **aContext)
 {
   nsresult rv;
@@ -521,52 +521,51 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
       return NS_ERROR_FAILURE;
     }
 
+    // note: if any contexts end up supporting something other
+    // than objects, e.g. plain strings, then we'll need to expand
+    // this to know how to create nsISupportsStrings etc.
+
     nsCOMPtr<nsIWritablePropertyBag2> contextProps;
-    if (!JSVAL_IS_NULL(aContextOptions) &&
-        !JSVAL_IS_VOID(aContextOptions))
+    if (aContextOptions.isObject())
     {
       JSContext *cx = nsContentUtils::GetCurrentJSContext();
 
-      // note: if any contexts end up supporting something other
-      // than objects, e.g. plain strings, then we'll need to expand
-      // this to know how to create nsISupportsStrings etc.
-      if (JSVAL_IS_OBJECT(aContextOptions)) {
-        contextProps = do_CreateInstance("@mozilla.org/hash-property-bag;1");
+      contextProps = do_CreateInstance("@mozilla.org/hash-property-bag;1");
 
-        JSObject *opts = JSVAL_TO_OBJECT(aContextOptions);
-        JS::AutoIdArray props(cx, JS_Enumerate(cx, opts));
-        for (size_t i = 0; !!props && i < props.length(); ++i) {
-          jsid propid = props[i];
-          jsval propname, propval;
-          if (!JS_IdToValue(cx, propid, &propname) ||
-              !JS_GetPropertyById(cx, opts, propid, &propval)) {
-            continue;
-          }
+      JSObject *opts = &aContextOptions.toObject();
+      JS::AutoIdArray props(cx, JS_Enumerate(cx, opts));
+      for (size_t i = 0; !!props && i < props.length(); ++i) {
+        jsid propid = props[i];
+        jsval propname, propval;
+        if (!JS_IdToValue(cx, propid, &propname) ||
+            !JS_GetPropertyById(cx, opts, propid, &propval)) {
+          continue;
+        }
 
-          JSString *propnameString = JS_ValueToString(cx, propname);
-          nsDependentJSString pstr;
-          if (!propnameString || !pstr.init(cx, propnameString)) {
+        JSString *propnameString = JS_ValueToString(cx, propname);
+        nsDependentJSString pstr;
+        if (!propnameString || !pstr.init(cx, propnameString)) {
+          mCurrentContext = nsnull;
+          return NS_ERROR_FAILURE;
+        }
+
+        if (JSVAL_IS_BOOLEAN(propval)) {
+          contextProps->SetPropertyAsBool(pstr, JSVAL_TO_BOOLEAN(propval));
+        } else if (JSVAL_IS_INT(propval)) {
+          contextProps->SetPropertyAsInt32(pstr, JSVAL_TO_INT(propval));
+        } else if (JSVAL_IS_DOUBLE(propval)) {
+          contextProps->SetPropertyAsDouble(pstr, JSVAL_TO_DOUBLE(propval));
+        } else if (JSVAL_IS_STRING(propval)) {
+          JSString *propvalString = JS_ValueToString(cx, propval);
+          nsDependentJSString vstr;
+          if (!propvalString || !vstr.init(cx, propvalString)) {
             mCurrentContext = nsnull;
             return NS_ERROR_FAILURE;
           }
 
-          if (JSVAL_IS_BOOLEAN(propval)) {
-            contextProps->SetPropertyAsBool(pstr, JSVAL_TO_BOOLEAN(propval));
-          } else if (JSVAL_IS_INT(propval)) {
-            contextProps->SetPropertyAsInt32(pstr, JSVAL_TO_INT(propval));
-          } else if (JSVAL_IS_DOUBLE(propval)) {
-            contextProps->SetPropertyAsDouble(pstr, JSVAL_TO_DOUBLE(propval));
-          } else if (JSVAL_IS_STRING(propval)) {
-            JSString *propvalString = JS_ValueToString(cx, propval);
-            nsDependentJSString vstr;
-            if (!propvalString || !vstr.init(cx, propvalString)) {
-              mCurrentContext = nsnull;
-              return NS_ERROR_FAILURE;
-            }
-
-            contextProps->SetPropertyAsAString(pstr, vstr);
-          }
+          contextProps->SetPropertyAsAString(pstr, vstr);
         }
+
       }
     }
 

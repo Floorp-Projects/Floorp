@@ -453,10 +453,10 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
         jsval thisValue = JSVAL_VOID;
 
-        jsval funval = JSVAL_VOID;
+        JS::Value funval;
         if (JS_ObjectIsCallable(ctx, object)) {
           // If the listener is a JS function:
-          funval = OBJECT_TO_JSVAL(object);
+          funval.setObject(*object);
 
           // A small hack to get 'this' value right on content side where
           // messageManager is wrapped in TabChildGlobal.
@@ -471,13 +471,13 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                      defaultThisValue, &thisValue, nsnull, true);
         } else {
           // If the listener is a JS object which has receiveMessage function:
-          NS_ENSURE_STATE(JS_GetProperty(ctx, object, "receiveMessage",
-                                         &funval) &&
-                          JSVAL_IS_OBJECT(funval) &&
-                          !JSVAL_IS_NULL(funval));
-          JSObject* funobject = JSVAL_TO_OBJECT(funval);
-          NS_ENSURE_STATE(JS_ObjectIsCallable(ctx, funobject));
-          thisValue = OBJECT_TO_JSVAL(object);
+          if (!JS_GetProperty(ctx, object, "receiveMessage", &funval) ||
+              !funval.isObject())
+            return NS_ERROR_UNEXPECTED;
+
+          // Check if the object is even callable.
+          NS_ENSURE_STATE(JS_ObjectIsCallable(ctx, &funval.toObject()));
+          thisValue.setObject(*object);
         }
 
         jsval rval = JSVAL_VOID;
