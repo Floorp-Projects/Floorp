@@ -1459,6 +1459,9 @@ IonBuilder::processNextLookupSwitchCase(CFGState &state)
         successor->addPredecessor(current);
     }
 
+    // Move next body block to end to maintain RPO.
+    graph_.moveBlockToEnd(successor);
+
     // If this is the last successor the block should stop at the end of the lookupswitch
     // Else it should stop at the start of the next successor
     if (curBlock + 1 < state.lookupswitch.bodies->length())
@@ -2209,9 +2212,9 @@ IonBuilder::lookupSwitch(JSOp op, jssrcnote *sn)
     // Fill bodies in CFGState using bodies in bodyBlocks, move them to
     // end in order in order to maintain RPO
     for (size_t i = 0; i < bodyBlocks.length(); i++) {
-        graph_.moveBlockToEnd(bodyBlocks[i]);
         (*state.lookupswitch.bodies)[i] = bodyBlocks[i];
     }
+    graph_.moveBlockToEnd(bodyBlocks[0]);
 
     // Create control flow info
     ControlFlowInfo switchinfo(cfgStack_.length(), exitpc);
