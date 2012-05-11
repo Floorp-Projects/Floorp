@@ -66,7 +66,7 @@ class SafepointWriter
     // A safepoint entry is written in the order these functions appear.
     uint32 startEntry();
     void writeOsiCallPointOffset(uint32 osiPointOffset);
-    void writeGcRegs(GeneralRegisterSet actual, GeneralRegisterSet spilled);
+    void writeGcRegs(GeneralRegisterSet gc, GeneralRegisterSet spilled);
     void writeGcSlots(uint32 nslots, uint32 *slots);
     void writeValueSlots(uint32 nslots, uint32 *slots);
     void writeNunboxParts(uint32 nentries, SafepointNunboxEntry *entries);
