@@ -78,28 +78,7 @@ CPPSRCS = \
   $(NULL)
 
 EXPORTS = \
-  ARIAGridAccessibleWrap.h \
   nsAccessNodeWrap.h \
-  nsAccessibleWrap.h \
-  nsTextAccessibleWrap.h \
-  nsDocAccessibleWrap.h \
-  nsHTMLWin32ObjectAccessible.h \
-  nsXULMenuAccessibleWrap.h \
-  nsXULListboxAccessibleWrap.h \
-  nsXULTreeGridAccessibleWrap.h \
-  nsHyperTextAccessibleWrap.h \
-  nsHTMLImageAccessibleWrap.h \
-  nsHTMLTableAccessibleWrap.h \
-  ia2AccessibleAction.h \
-  ia2AccessibleComponent.h \
-  CAccessibleImage.h \
-  CAccessibleText.h \
-  CAccessibleEditableText.h \
-  CAccessibleHyperlink.h \
-  ia2AccessibleHypertext.h \
-  CAccessibleTable.h \
-  CAccessibleTableCell.h \
-  CAccessibleValue.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
