@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=753758
+-->
+<head>
+  <title>Test for Bug 753758</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=753758">Mozilla Bug 753758</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 753758 **/
+
+var c = document.createElement("canvas");
+
+var ctx = c.getContext("2d");
+ctx.mozFillRule = 'evenodd';
+is(ctx.mozFillRule, 'evenodd', 'Initial value must be set to evenodd');
+ctx.save();
+is(ctx.mozFillRule, 'evenodd', 'fillRule value must be stay evenodd');
+ctx.restore();
+is(ctx.mozFillRule, 'evenodd', 'fillRule value must be restored to evenodd');
+
+</script>
+</pre>
+</body>
+</html>
