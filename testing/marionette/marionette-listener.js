@@ -425,14 +425,13 @@ function goUrl(msg) {
   curWindow.location = msg.json.value;
   //TODO: replace this with DOMContentLoaded event listening when Bug 720714 is resolved
   let checkTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
-  let checkLoad = function () { 
-                    if (curWindow.document.readyState == "complete") { 
-                      sendOk();
-                    } 
-                    else { 
-                      checkTimer.initWithCallback(checkLoad, 100, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
-                    }
-                  };
+  function checkLoad() { 
+    if (curWindow.document.readyState == "complete") { 
+      sendOk();
+      return;
+    } 
+    checkTimer.initWithCallback(checkLoad, 100, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+  }
   checkTimer.initWithCallback(checkLoad, 100, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
 }
 
