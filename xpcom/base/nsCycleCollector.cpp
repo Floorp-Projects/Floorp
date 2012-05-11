@@ -1366,7 +1366,9 @@ public:
         // Therefore we need to call the APIs directly.
         GetTempPathA(mozilla::ArrayLength(basename), basename);
 #else
-        tmpnam(basename);
+        char *tmp = tmpnam(basename);
+        if (!tmp)
+            return NS_ERROR_FAILURE;
         char *lastSlash = strrchr(basename, XPCOM_FILE_PATH_SEPARATOR[0]);
         if (lastSlash) {
             *lastSlash = '\0';

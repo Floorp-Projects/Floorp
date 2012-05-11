@@ -65,6 +65,10 @@
 #include <stdio.h>
 #endif
 
+#include "mozilla/unused.h"
+
+using mozilla::unused;
+
 namespace mozilla {
 namespace widget {
 // the read end of the pipe, which will be used by GfxInfo
@@ -90,8 +94,8 @@ static func_ptr_type cast(void *ptr)
 
 static void fatal_error(const char *str)
 {
-  write(write_end_of_the_pipe, str, strlen(str));
-  write(write_end_of_the_pipe, "\n", 1);
+  unused << write(write_end_of_the_pipe, str, strlen(str));
+  unused << write(write_end_of_the_pipe, "\n", 1);
   exit(EXIT_FAILURE);
 }
 
@@ -105,7 +109,7 @@ x_error_handler(Display *, XErrorEvent *ev)
                         ev->error_code,
                         ev->request_code,
                         ev->minor_code);
-  write(write_end_of_the_pipe, buf, length);
+  unused << write(write_end_of_the_pipe, buf, length);
   exit(EXIT_FAILURE);
   return 0;
 }
@@ -253,7 +257,7 @@ static void glxtest()
   dlclose(libgl);
 
   ///// Finally write data to the pipe
-  write(write_end_of_the_pipe, buf, length);
+  unused << write(write_end_of_the_pipe, buf, length);
 }
 
 /** \returns true in the child glxtest process, false in the parent process */

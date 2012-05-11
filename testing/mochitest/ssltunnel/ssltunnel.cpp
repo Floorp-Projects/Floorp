@@ -66,9 +66,11 @@
 #include "keyt.h"
 #include "ssl.h"
 #include "plhash.h"
+#include "mozilla/unused.h"
 
 using std::string;
 using std::vector;
+using mozilla::unused;
 
 #define IS_DELIM(m, c)          ((m)[(c) >> 3] & (1 << ((c) & 7)))
 #define SET_DELIM(m, c)         ((m)[(c) >> 3] |= (1 << ((c) & 7)))
@@ -1264,7 +1266,7 @@ int parseConfigFile(const char* filePath)
   while (!feof(f))
   {
     char c;
-    fscanf(f, "%c", &c);
+    unused << fscanf(f, "%c", &c);
     switch (c)
     {
     case '\n':
