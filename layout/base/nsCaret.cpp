@@ -451,6 +451,22 @@ void nsCaret::SetVisibilityDuringSelection(bool aVisibility)
   mShowDuringSelection = aVisibility;
 }
 
+static
+nsFrameSelection::HINT GetHintForPosition(nsIDOMNode* aNode, PRInt32 aOffset)
+{
+  nsFrameSelection::HINT hint = nsFrameSelection::HINTLEFT;
+  nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
+  if (!node || aOffset < 1) {
+    return hint;
+  }
+  const nsTextFragment* text = node->GetText();
+  if (text && text->CharAt(aOffset - 1) == '\n') {
+    // Attach the caret to the next line if needed
+    hint = nsFrameSelection::HINTRIGHT;
+  }
+  return hint;
+}
+
 nsresult nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
 {
   NS_ENSURE_ARG(aNode);
@@ -466,9 +482,8 @@ nsresult nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   // ourselves, our consumer will take care of that.
   mBlinkRate = 0;
 
-  // XXX we need to do more work here to get the correct hint.
   nsresult rv = DrawAtPositionWithHint(aNode, aOffset,
-                                       nsFrameSelection::HINTLEFT,
+                                       GetHintForPosition(aNode, aOffset),
                                        bidiLevel, true)
     ?  NS_OK : NS_ERROR_FAILURE;
   ToggleDrawnStatus();
