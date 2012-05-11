@@ -188,18 +188,14 @@ void
 CodeGeneratorShared::saveLive(LInstruction *ins)
 {
     LSafepoint *safepoint = ins->safepoint();
-
-    masm.PushRegsInMask(safepoint->gcRegs());
-    masm.PushRegsInMask(safepoint->restRegs());
+    masm.PushRegsInMask(safepoint->spillRegs());
 }
 
 void
 CodeGeneratorShared::restoreLive(LInstruction *ins)
 {
     LSafepoint *safepoint = ins->safepoint();
-
-    masm.PopRegsInMask(safepoint->restRegs());
-    masm.PopRegsInMask(safepoint->gcRegs());
+    masm.PopRegsInMask(safepoint->spillRegs());
 }
 
 } // ion

@@ -330,6 +330,10 @@ class TypedRegisterSet
                                              const TypedRegisterSet &rhs) {
         return TypedRegisterSet(lhs.bits_ & rhs.bits_);
     }
+    static inline TypedRegisterSet Union(const TypedRegisterSet &lhs,
+                                         const TypedRegisterSet &rhs) {
+        return TypedRegisterSet(lhs.bits_ | rhs.bits_);
+    }
     static inline TypedRegisterSet Not(const TypedRegisterSet &in) {
         return TypedRegisterSet(~in.bits_ & T::Codes::AllocatableMask);
     }
@@ -385,6 +389,13 @@ class TypedRegisterSet
     uint32 bits() const {
         return bits_;
     }
+    uint32 size() const {
+        uint32 sum2  = (bits_ & 0x55555555) + ((bits_ & 0xaaaaaaaa) >> 1);
+        uint32 sum4  = (sum2  & 0x33333333) + ((sum2  & 0xcccccccc) >> 2);
+        uint32 sum8  = (sum4  & 0x0f0f0f0f) + ((sum4  & 0xf0f0f0f0) >> 4);
+        uint32 sum16 = (sum8  & 0x00ff00ff) + ((sum8  & 0xff00ff00) >> 8);
+        return sum16;
+    }
     bool operator ==(const TypedRegisterSet<T> &other) const {
         return other.bits_ == bits_;
     }
@@ -414,6 +425,10 @@ class RegisterSet {
     static inline RegisterSet Intersect(const RegisterSet &lhs, const RegisterSet &rhs) {
         return RegisterSet(GeneralRegisterSet::Intersect(lhs.gpr_, rhs.gpr_),
                            FloatRegisterSet::Intersect(lhs.fpu_, rhs.fpu_));
+    }
+    static inline RegisterSet Union(const RegisterSet &lhs, const RegisterSet &rhs) {
+        return RegisterSet(GeneralRegisterSet::Union(lhs.gpr_, rhs.gpr_),
+                           FloatRegisterSet::Union(lhs.fpu_, rhs.fpu_));
     }
     static inline RegisterSet Not(const RegisterSet &in) {
         return RegisterSet(GeneralRegisterSet::Not(in.gpr_),
@@ -593,4 +608,3 @@ class AnyRegisterIterator
 } // namespace js
 
 #endif // jsion_cpu_registersets_h__
-
