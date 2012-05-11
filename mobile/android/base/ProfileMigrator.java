@@ -134,6 +134,14 @@ public class ProfileMigrator {
     // We use this to ignore the tags folder during migration.
     private static final String ROOT_TAGS_FOLDER_NAME = "tags";
 
+    // Find the Mobile bookmarks root in places (bug 746860).
+    // We cannot rely on the name as that is locale-dependent.
+    // If it exists, it will have Id=6, fk=null, type=folder.
+    private static final String MOBILE_ROOT_QUERY =
+        "SELECT id FROM moz_bookmarks " +
+        "WHERE id=6 AND type=2 AND fk IS NULL AND parent=1";
+    private static final String MOBILE_ROOT_ID = "id";
+
     private static final String BOOKMARK_QUERY_SELECT =
         "SELECT places.url             AS p_url,"         +
         "       bookmark.guid          AS b_guid,"        +
@@ -806,6 +814,22 @@ public class ProfileMigrator {
                     cursor.moveToNext();
                 }
                 cursor.close();
+
+                // XUL Fennec doesn't mark the Mobile folder as a root,
+                // so fix that up here.
+                cursor = db.rawQuery(MOBILE_ROOT_QUERY, null);
+                if (cursor.moveToFirst()) {
+                    Log.v(LOGTAG, "Mobile root found, adding to known roots.");
+                    final int idCol = cursor.getColumnIndex(MOBILE_ROOT_ID);
+                    final long mobileRootId = cursor.getLong(idCol);
+                    mRerootMap.put(mobileRootId, getFolderId(Bookmarks.MOBILE_FOLDER_GUID));
+                    Log.v(LOGTAG, "Name: mobile, pid=" + mobileRootId
+                          + ", nid=" + mRerootMap.get(mobileRootId));
+                } else {
+                    Log.v(LOGTAG, "Mobile root not found, is this a desktop profile?");
+                }
+                cursor.close();
+
             } catch (SQLiteBridgeException e) {
                 Log.e(LOGTAG, "Failed to get bookmark roots: ", e);
                 // Do not try again.

@@ -71,6 +71,7 @@ CPPSRCS = \
   nsCaretAccessible.cpp \
   nsTextAccessible.cpp \
   nsTextEquivUtils.cpp \
+  RoleAsserts.cpp \
   StyleInfo.cpp \
   TextAttrs.cpp \
   TextUpdater.cpp \

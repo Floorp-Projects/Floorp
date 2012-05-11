@@ -35,3 +35,25 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../../../layout/generic \
   -I$(srcdir)/../../../layout/xul/base/src \
   $(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+LOCAL_INCLUDES += \
+  -I$(srcdir)/../atk \
+  $(NULL)
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+LOCAL_INCLUDES += \
+  -I$(srcdir)/../msaa \
+  $(NULL)
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+LOCAL_INCLUDES += \
+  -I$(srcdir)/../mac \
+  $(NULL)
+else
+LOCAL_INCLUDES += \
+  -I$(srcdir)/../other \
+  $(NULL)
+endif
+endif
+endif

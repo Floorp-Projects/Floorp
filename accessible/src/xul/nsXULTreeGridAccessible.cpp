@@ -357,24 +357,6 @@ nsXULTreeGridAccessible::GetCellAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
 }
 
 NS_IMETHODIMP
-nsXULTreeGridAccessible::GetCellIndexAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
-                                        PRInt32 *aCellIndex)
-{
-  NS_ENSURE_ARG_POINTER(aCellIndex);
-  *aCellIndex = -1;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  PRInt32 columnCount = 0;
-  nsresult rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aCellIndex = aRowIndex * columnCount + aColumnIndex;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULTreeGridAccessible::GetColumnIndexAt(PRInt32 aCellIndex,
                                           PRInt32 *aColumnIndex)
 {

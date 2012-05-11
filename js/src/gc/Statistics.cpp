@@ -599,6 +599,9 @@ Statistics::endSlice()
 void
 Statistics::beginPhase(Phase phase)
 {
+    /* Guard against re-entry */
+    JS_ASSERT(!phaseStartTimes[phase]);
+
     phaseStartTimes[phase] = PRMJ_Now();
     phaseStartFaults[phase] = gc::GetPageFaultCount();
 
@@ -614,6 +617,7 @@ Statistics::endPhase(Phase phase)
     int64_t t = PRMJ_Now() - phaseStartTimes[phase];
     slices.back().phaseTimes[phase] += t;
     phaseTimes[phase] += t;
+    phaseStartTimes[phase] = 0;
 
     size_t faults = gc::GetPageFaultCount() - phaseStartFaults[phase];
     slices.back().phaseFaults[phase] += faults;
