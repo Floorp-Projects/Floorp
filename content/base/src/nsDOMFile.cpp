@@ -517,7 +517,7 @@ nsDOMFileFile::Initialize(nsISupports* aOwner,
                           JSContext* aCx,
                           JSObject* aObj,
                           PRUint32 aArgc,
-                          JS::Value* aArgv)
+                          jsval* aArgv)
 {
   nsresult rv;
 
@@ -533,13 +533,14 @@ nsDOMFileFile::Initialize(nsISupports* aOwner,
   // We expect to get a path to represent as a File object,
   // or an nsIFile
   nsCOMPtr<nsIFile> file;
-  if (!aArgv[0].isString()) {
+  if (!JSVAL_IS_STRING(aArgv[0])) {
     // Lets see if it's an nsIFile
-    if (!aArgv[0].isObject()) {
+    if (!JSVAL_IS_OBJECT(aArgv[0])) {
       return NS_ERROR_UNEXPECTED; // We're not interested
     }
 
-    JSObject* obj = &aArgv[0].toObject();
+    JSObject* obj = JSVAL_TO_OBJECT(aArgv[0]);
+    NS_ASSERTION(obj, "This is a bit odd");
 
     // Is it an nsIFile
     file = do_QueryInterface(

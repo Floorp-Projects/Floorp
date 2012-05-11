@@ -147,29 +147,30 @@ checkAndLogStatementPerformance(sqlite3_stmt *aStatement)
 nsIVariant *
 convertJSValToVariant(
   JSContext *aCtx,
-  JS::Value aValue)
+  jsval aValue)
 {
-  if (aValue.isInt32())
-    return new IntegerVariant(aValue.toInt32());
+  if (JSVAL_IS_INT(aValue))
+    return new IntegerVariant(JSVAL_TO_INT(aValue));
 
-  if (aValue.isDouble())
-    return new FloatVariant(aValue.toDouble());
+  if (JSVAL_IS_DOUBLE(aValue))
+    return new FloatVariant(JSVAL_TO_DOUBLE(aValue));
 
-  if (aValue.isString()) {
+  if (JSVAL_IS_STRING(aValue)) {
+    JSString *str = JSVAL_TO_STRING(aValue);
     nsDependentJSString value;
-    if (!value.init(aCtx, aValue))
+    if (!value.init(aCtx, str))
         return nsnull;
     return new TextVariant(value);
   }
 
-  if (aValue.isBoolean())
-    return new IntegerVariant(aValue.isTrue() ? 1 : 0);
+  if (JSVAL_IS_BOOLEAN(aValue))
+    return new IntegerVariant((aValue == JSVAL_TRUE) ? 1 : 0);
 
-  if (aValue.isNull())
+  if (JSVAL_IS_NULL(aValue))
     return new NullVariant();
 
-  if (aValue.isObject()) {
-    JSObject* obj = &aValue.toObject();
+  if (JSVAL_IS_OBJECT(aValue)) {
+    JSObject *obj = JSVAL_TO_OBJECT(aValue);
     // We only support Date instances, all others fail.
     if (!::js_DateIsValid(aCtx, obj))
       return nsnull;

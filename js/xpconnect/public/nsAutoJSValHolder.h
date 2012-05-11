@@ -135,8 +135,8 @@ public:
    * Explicit JSObject* conversion.
    */
   JSObject* ToJSObject() const {
-    return mVal.isObject()
-         ? &mVal.toObject()
+    return JSVAL_IS_OBJECT(mVal)
+         ? JSVAL_TO_OBJECT(mVal)
          : nsnull;
   }
 

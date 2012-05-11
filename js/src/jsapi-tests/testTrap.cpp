@@ -36,7 +36,7 @@ BEGIN_TEST(testTrap_gc)
     // execute
     jsvalRoot v2(cx);
     CHECK(JS_ExecuteScript(cx, global, script, v2.addr()));
-    CHECK(v2.value().isObject());
+    CHECK(JSVAL_IS_OBJECT(v2));
     CHECK_EQUAL(emptyTrapCallCount, 0);
 
     // Enable debug mode

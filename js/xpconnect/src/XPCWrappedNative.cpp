@@ -2644,9 +2644,9 @@ CallMethodHelper::GatherAndConvertResults()
             mCallContext.SetRetVal(v);
         } else if (i < mArgc) {
             // we actually assured this before doing the invoke
-            NS_ASSERTION(mArgv[i].isObject(), "out var is not object");
+            NS_ASSERTION(JSVAL_IS_OBJECT(mArgv[i]), "out var is not object");
             if (!JS_SetPropertyById(mCallContext,
-                                    &mArgv[i].toObject(),
+                                    JSVAL_TO_OBJECT(mArgv[i]),
                                     mIdxValueId, &v)) {
                 ThrowBadParam(NS_ERROR_XPC_CANT_SET_OUT_VAL, i, mCallContext);
                 return false;
@@ -2670,14 +2670,11 @@ CallMethodHelper::QueryInterfaceFastPath() const
         Throw(NS_ERROR_XPC_NOT_ENOUGH_ARGS, mCallContext);
         return false;
     }
-    
-    if (!mArgv[0].isObject()) {
-        ThrowBadParam(NS_ERROR_XPC_BAD_CONVERT_JS, 0, mCallContext);
-        return false;
-    }
-
-    const nsID* iid = xpc_JSObjectToID(mCallContext, &mArgv[0].toObject());
-    if (!iid) {
+    const nsID* iid;
+    JSObject* obj;
+    if (!JSVAL_IS_OBJECT(mArgv[0]) ||
+        (!(obj = JSVAL_TO_OBJECT(mArgv[0]))) ||
+        (!(iid = xpc_JSObjectToID(mCallContext, obj)))) {
         ThrowBadParam(NS_ERROR_XPC_BAD_CONVERT_JS, 0, mCallContext);
         return false;
     }

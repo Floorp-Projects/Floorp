@@ -326,16 +326,16 @@ nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
 }
   
 static nsQueryInterface
-JSvalToInterface(JSContext* cx, JS::Value val, nsIXPConnect* xpc, bool* wasNull)
+JSvalToInterface(JSContext* cx, jsval val, nsIXPConnect* xpc, bool* wasNull)
 {
-  if (val.isNull()) {
+  if (val == JSVAL_NULL) {
     *wasNull = true;
     return nsQueryInterface(nsnull);
   }
   
   *wasNull = false;
-  if (val.isObject()) {
-    JSObject* arg = &val.toObject();
+  if (JSVAL_IS_OBJECT(val)) {
+    JSObject* arg = JSVAL_TO_OBJECT(val);
 
     nsCOMPtr<nsIXPConnectWrappedNative> native;
     xpc->GetWrappedNativeOfJSObject(cx, arg, getter_AddRefs(native));
