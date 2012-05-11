@@ -337,6 +337,118 @@ function testWords(aElement, aWords, aToDoFlag)
   }
 }
 
+/**
+ * Remove all selections.
+ *
+ * @param aID  [in] Id, DOM node, or acc obj
+ */
+function cleanTextSelections(aID)
+{
+  var acc = getAccessible(aID, [nsIAccessibleText]);
+
+  while (acc.selectionCount > 0)
+    acc.removeSelection(0);
+}
+
+/**
+ * Test addSelection method.
+ *
+ * @param aID               [in] Id, DOM node, or acc obj
+ * @param aStartOffset      [in] start offset for the new selection
+ * @param aEndOffset        [in] end offset for the new selection
+ * @param aSelectionsCount  [in] expected number of selections after addSelection
+ */
+function testTextAddSelection(aID, aStartOffset, aEndOffset, aSelectionsCount)
+{
+  var acc = getAccessible(aID, [nsIAccessibleText]);
+  var text = acc.getText(0, -1);
+
+  acc.addSelection(aStartOffset, aEndOffset);
+
+  ok(acc.selectionCount, aSelectionsCount,
+     text + ": failed to add selection from offset '" + aStartOffset +
+     "' to offset '" + aEndOffset + "': selectionCount after");
+}
+
+/**
+ * Test removeSelection method.
+ *
+ * @param aID               [in] Id, DOM node, or acc obj
+ * @param aSelectionIndex   [in] index of the selection to be removed
+ * @param aSelectionsCount  [in] expected number of selections after
+ *                               removeSelection
+ */
+function testTextRemoveSelection(aID, aSelectionIndex, aSelectionsCount)
+{
+  var acc = getAccessible(aID, [nsIAccessibleText]);
+  var text = acc.getText(0, -1);
+
+  acc.removeSelection(aSelectionIndex);
+
+  ok(acc.selectionCount, aSelectionsCount, 
+     text + ": failed to remove selection at index '" + 
+     aSelectionIndex + "': selectionCount after");
+}
+
+/**
+ * Test setSelectionBounds method.
+ *
+ * @param aID               [in] Id, DOM node, or acc obj
+ * @param aStartOffset      [in] new start offset for the selection
+ * @param aEndOffset        [in] new end offset for the selection
+ * @param aSelectionIndex   [in] index of the selection to set
+ * @param aSelectionsCount  [in] expected number of selections after
+ *                               setSelectionBounds
+ */
+function testTextSetSelection(aID, aStartOffset, aEndOffset,
+                              aSelectionIndex, aSelectionsCount)
+{
+  var acc = getAccessible(aID, [nsIAccessibleText]);
+  var text = acc.getText(0, -1);
+
+  acc.setSelectionBounds(aSelectionIndex, aStartOffset, aEndOffset);
+ 
+  is(acc.selectionCount, aSelectionsCount, 
+     text + ": failed to set selection at index '" + 
+     aSelectionIndex + "': selectionCount after");
+}
+
+/**
+ * Test selectionCount method.
+ *
+ * @param aID        [in] Id, DOM node, or acc obj
+ * @param aCount     [in] expected selection count
+ */
+function testTextSelectionCount(aID, aCount)
+{
+  var acc = getAccessible(aID, [nsIAccessibleText]);
+  var text = acc.getText(0, -1);
+
+  is(acc.selectionCount, aCount, text + ": wrong selectionCount: ");
+}
+
+/**
+ * Test getSelectionBounds method.
+ *
+ * @param aID              [in] Id, DOM node, or acc obj
+ * @param aStartOffset     [in] expected start offset for the selection
+ * @param aEndOffset       [in] expected end offset for the selection
+ * @param aSelectionIndex  [in] index of the selection to get
+ */
+function testTextGetSelection(aID, aStartOffset, aEndOffset, aSelectionIndex)
+{
+  var acc = getAccessible(aID, [nsIAccessibleText]);
+  var text = acc.getText(0, -1);
+
+  var startObj = {}, endObj = {};
+  acc.getSelectionBounds(aSelectionIndex, startObj, endObj);
+
+  is(startObj.value, aStartOffset, text + ": wrong start offset for index '" +
+     aSelectionIndex + "'");
+  is(endObj.value, aEndOffset, text + ": wrong end offset for index '" +
+     aSelectionIndex + "'");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Private
 
