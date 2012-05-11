@@ -1,25 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// For more information on GCLI see:
-// - https://github.com/mozilla/gcli/blob/master/docs/index.md
-// - https://wiki.mozilla.org/DevTools/Features/GCLI
-
 // Tests that source URLs in the Web Console can be clicked to display the
 // standard View Source window.
 
-var modules = { gcli: null };
-
-Components.utils.import("resource:///modules/gcli.jsm", modules);
-
-var define, require, console;
-
 function test() {
-
-  define = modules.gcli._internal.define;
-  require = modules.gcli._internal.require;
-  console = modules.gcli._internal.console;
-
   define('gclitest/requirable', [], function(require, exports, module) {
     exports.thing1 = 'thing1';
     exports.thing2 = 2;
@@ -43,8 +28,6 @@ function test() {
   testRecursive();
   testUncompilable();
 
-  finishTest();
-
   delete define.modules['gclitest/requirable'];
   delete define.globalDomain.modules['gclitest/requirable'];
   delete define.modules['gclitest/unrequirable'];
@@ -52,11 +35,7 @@ function test() {
   delete define.modules['gclitest/recurse'];
   delete define.globalDomain.modules['gclitest/recurse'];
 
-  define = null;
-  require = null;
-  console = null;
-
-  modules = null;
+  finish();
 }
 
 function testWorking() {
