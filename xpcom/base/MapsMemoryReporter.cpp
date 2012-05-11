@@ -46,6 +46,9 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include <stdio.h>
+#include "mozilla/unused.h"
+
+using mozilla::unused;
 
 namespace mozilla {
 namespace MapsMemoryReporter {
@@ -339,7 +342,7 @@ MapsReporter::ParseMapping(
                        devMinor, &inode, path);
 
   // Eat up any whitespace at the end of this line, including the newline.
-  fscanf(aFile, " ");
+  unused << fscanf(aFile, " ");
 
   // We might or might not have a path, but the rest of the arguments should be
   // there.

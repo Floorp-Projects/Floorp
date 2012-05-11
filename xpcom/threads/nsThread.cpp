@@ -47,6 +47,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/HangMonitor.h"
 #include "mozilla/Services.h"
+#include "mozilla/unused.h"
 
 #define HAVE_UALARM _BSD_SOURCE || (_XOPEN_SOURCE >= 500 ||                 \
                       _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) &&           \
@@ -72,6 +73,7 @@
 #endif
 
 using namespace mozilla;
+using mozilla::unused;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *sLog = PR_NewLogModule("nsThread");
@@ -568,7 +570,7 @@ void canary_alarm_handler (int signum)
   void *array[30];
   const char msg[29] = "event took too long to run:\n";
   // use write to be safe in the signal handler
-  write(Canary::sOutputFD, msg, sizeof(msg)); 
+  unused << write(Canary::sOutputFD, msg, sizeof(msg)); 
   backtrace_symbols_fd(array, backtrace(array, 30), Canary::sOutputFD);
 }
 

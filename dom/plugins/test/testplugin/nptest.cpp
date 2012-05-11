@@ -1354,12 +1354,12 @@ NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
 
   FILE *file = fopen(fname, "rb");
   if (file) {
-    fseek(file, 0, SEEK_END);
+    ssize_t unused = fseek(file, 0, SEEK_END);
     size = ftell(file);
     instanceData->fileBuf = malloc((int32_t)size + 1);
     char* buf = reinterpret_cast<char *>(instanceData->fileBuf);
-    fseek(file, 0, SEEK_SET);
-    fread(instanceData->fileBuf, 1, size, file);
+    unused = fseek(file, 0, SEEK_SET);
+    unused = fread(instanceData->fileBuf, 1, size, file);
     fclose(file);
     buf[size] = '\0';
     instanceData->fileBufSize = (int32_t)size;
