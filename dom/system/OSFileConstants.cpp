@@ -154,22 +154,31 @@ static dom::ConstantSpec gLibcProperties[] =
   INT_CONSTANT(EINVAL),
   INT_CONSTANT(EIO),
   INT_CONSTANT(EISDIR),
+#if defined(ELOOP) // not defined with VC9
   INT_CONSTANT(ELOOP),
+#endif // defined(ELOOP)
   INT_CONSTANT(EMFILE),
   INT_CONSTANT(ENAMETOOLONG),
   INT_CONSTANT(ENFILE),
-  INT_CONSTANT(ELOOP),
   INT_CONSTANT(ENOENT),
   INT_CONSTANT(ENOMEM),
   INT_CONSTANT(ENOSPC),
   INT_CONSTANT(ENOTDIR),
   INT_CONSTANT(ENXIO),
+#if defined(EOPNOTSUPP) // not defined with VC 9
   INT_CONSTANT(EOPNOTSUPP),
+#endif // defined(EOPNOTSUPP)
+#if defined(EOVERFLOW) // not defined with VC 9
   INT_CONSTANT(EOVERFLOW),
+#endif // defined(EOVERFLOW)
   INT_CONSTANT(EPERM),
   INT_CONSTANT(ERANGE),
+#if defined(ETIMEDOUT) // not defined with VC 9
   INT_CONSTANT(ETIMEDOUT),
+#endif // defined(ETIMEDOUT)
+#if defined(EWOULDBLOCK) // not defined with VC 9
   INT_CONSTANT(EWOULDBLOCK),
+#endif // defined(EWOULDBLOCK)
   INT_CONSTANT(EXDEV),
 
   PROP_END
