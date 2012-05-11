@@ -16,6 +16,10 @@ function sendAsyncMsg(msg, data) {
   sendAsyncMessage('browser-element-api:' + msg, data);
 }
 
+function sendSyncMsg(msg, data) {
+  return sendSyncMessage('browser-element-api:' + msg, data);
+}
+
 /**
  * The BrowserElementChild implements one half of <iframe mozbrowser>.
  * (The other half is, unsurprisingly, BrowserElementParent.)
@@ -48,9 +52,12 @@ BrowserElementChild.prototype = {
     //
     // This is because mozapp iframes have some privileges which we don't want
     // to extend to untrusted mozbrowser content.
+    //
+    // Set the window's isApp state by asking our parent if our iframe has the
+    // 'mozapp' attribute.
     content.QueryInterface(Ci.nsIInterfaceRequestor)
            .getInterface(Components.interfaces.nsIDOMWindowUtils)
-           .setIsApp(false);
+           .setIsApp(sendSyncMsg('get-mozapp')[0]);
 
     addEventListener('DOMTitleChanged',
                      this._titleChangedHandler.bind(this),
