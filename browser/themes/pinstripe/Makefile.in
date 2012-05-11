@@ -48,7 +48,6 @@ include $(topsrcdir)/config/rules.mk
 
 FILES := \
 	icon.png \
-	preview.png \
 	$(NULL)
 
 libs:: $(FILES)
