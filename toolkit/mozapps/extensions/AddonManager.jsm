@@ -78,8 +78,14 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
-var CertUtils = {};
-Components.utils.import("resource://gre/modules/CertUtils.jsm", CertUtils);
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
+  let certUtils = {};
+  Components.utils.import("resource://gre/modules/CertUtils.jsm", certUtils);
+  return certUtils;
+});
+
 
 var EXPORTED_SYMBOLS = [ "AddonManager", "AddonManagerPrivate" ];
 
