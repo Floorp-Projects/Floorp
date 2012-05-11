@@ -145,6 +145,15 @@ HashableValue::equals(const HashableValue &other) const
     return b;
 }
 
+HashableValue
+HashableValue::mark(JSTracer *trc) const
+{
+    HashableValue hv(*this);
+    JS_SET_TRACING_LOCATION(trc, (void *)this);
+    gc::MarkValue(trc, &hv.value, "key");
+    return hv;
+}
+
 
 /*** Map *****************************************************************************************/
 
@@ -188,12 +197,9 @@ MapObject::mark(JSTracer *trc, JSObject *obj)
 {
     MapObject *mapobj = static_cast<MapObject *>(obj);
     if (ValueMap *map = mapobj->getData()) {
-        for (ValueMap::Range r = map->all(); !r.empty(); r.popFront()) {
-            const HeapValue &key = r.front().key;
-            HeapValue tmp(key);
-            gc::MarkValue(trc, &tmp, "key");
-            JS_ASSERT(tmp.get() == key.get());
-            gc::MarkValue(trc, &r.front().value, "value");
+        for (ValueMap::Enum iter(*map); !iter.empty(); iter.popFront()) {
+            gc::MarkValue(trc, &iter.front().value, "value");
+            iter.rekeyFront(iter.front().key.mark(trc));
         }
     }
 }
@@ -393,12 +399,8 @@ SetObject::mark(JSTracer *trc, JSObject *obj)
 {
     SetObject *setobj = static_cast<SetObject *>(obj);
     if (ValueSet *set = setobj->getData()) {
-        for (ValueSet::Range r = set->all(); !r.empty(); r.popFront()) {
-            const HeapValue &key = r.front();
-            HeapValue tmp(key);
-            gc::MarkValue(trc, &tmp, "key");
-            JS_ASSERT(tmp.get() == key.get());
-        }
+        for (ValueSet::Enum iter(*set); !iter.empty(); iter.popFront())
+            iter.rekeyFront(iter.front().mark(trc));
     }
 }
 
@@ -506,4 +508,4 @@ JSObject *
 js_InitSetClass(JSContext *cx, JSObject *obj)
 {
     return SetObject::initClass(cx, obj);
-} 
+}
