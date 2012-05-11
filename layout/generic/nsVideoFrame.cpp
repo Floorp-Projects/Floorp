@@ -190,9 +190,10 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 {
   nsRect area = GetContentRect() - GetPosition() + aItem->ToReferenceFrame();
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
-  nsIntSize videoSize = element->GetVideoSize(nsIntSize(0, 0));
-  if (videoSize.width <= 0 || videoSize.height <= 0 || area.IsEmpty())
+  nsIntSize videoSize;
+  if (NS_FAILED(element->GetVideoSize(&videoSize)) || area.IsEmpty()) {
     return nsnull;
+  }
 
   nsRefPtr<ImageContainer> container = element->GetImageContainer();
   if (!container)
@@ -525,19 +526,7 @@ nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
 {
   // Defaulting size to 300x150 if no size given.
   nsIntSize size(300, 150);
-
-  if (ShouldDisplayPoster()) {
-    // Use the poster image frame's size.
-    nsIFrame *child = mFrames.FirstChild();
-    if (child && child->GetType() == nsGkAtoms::imageFrame) {
-      nsImageFrame* imageFrame = static_cast<nsImageFrame*>(child);
-      nsSize imgsize;
-      if (NS_SUCCEEDED(imageFrame->GetIntrinsicImageSize(imgsize))) {
-        return imgsize;
-      }
-    }
-  }
-
+  
   if (!HasVideoElement()) {
     if (!aRenderingContext || !mFrames.FirstChild()) {
       // We just want our intrinsic ratio, but audio elements need no
@@ -553,7 +542,15 @@ nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
   }
 
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
-  size = element->GetVideoSize(size);
+  if (NS_FAILED(element->GetVideoSize(&size)) && ShouldDisplayPoster()) {
+    // Use the poster image frame's size.
+    nsIFrame *child = mPosterImage->GetPrimaryFrame();
+    nsImageFrame* imageFrame = do_QueryFrame(child);
+    nsSize imgsize;
+    if (NS_SUCCEEDED(imageFrame->GetIntrinsicImageSize(imgsize))) {
+      return imgsize;
+    }
+  }
 
   return nsSize(nsPresContext::CSSPixelsToAppUnits(size.width),
                 nsPresContext::CSSPixelsToAppUnits(size.height));
@@ -599,6 +596,7 @@ bool nsVideoFrame::HasVideoData()
   if (!HasVideoElement())
     return false;
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
-  nsIntSize size = element->GetVideoSize(nsIntSize(0,0));
+  nsIntSize size(0, 0);
+  element->GetVideoSize(&size);
   return size != nsIntSize(0,0);
 }
