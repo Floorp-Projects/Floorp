@@ -627,8 +627,8 @@ public class ProfileMigrator {
 
         protected void configureSync() {
             final String userName = mSyncSettingsMap.get("services.sync.account");
-            final String syncKey = mSyncSettingsMap.get("Mozilla Services Password");
-            final String syncPass = mSyncSettingsMap.get("Mozilla Services Encryption Passphrase");
+            final String syncKey = mSyncSettingsMap.get("Mozilla Services Encryption Passphrase");
+            final String syncPass = mSyncSettingsMap.get("Mozilla Services Password");
             final String serverURL = mSyncSettingsMap.get("services.sync.serverURL");
             final String clusterURL = mSyncSettingsMap.get("services.sync.clusterURL");
             final String clientName = mSyncSettingsMap.get("services.sync.client.name");
