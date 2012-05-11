@@ -155,7 +155,7 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/qsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser/cache \
 	  --header-output dom_quickstubs.h \
 	  --stub-output dom_quickstubs.cpp \
 	  --makedepend-output $(MDDEPDIR)/dom_qsgen.pp \
@@ -176,7 +176,7 @@ dombindings_gen.h: $(srcdir)/dombindings.conf \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dombindingsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser/cache \
 	  --header-output dombindings_gen.h \
 	  $(srcdir)/dombindings.conf
 
@@ -193,7 +193,7 @@ dombindings_gen.cpp: $(srcdir)/dombindings.conf \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dombindingsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser/cache \
 	  --stub-output dombindings_gen.cpp \
 	  --makedepend-output $(MDDEPDIR)/dombindingsgen.pp \
 	  $(srcdir)/dombindings.conf
@@ -212,7 +212,7 @@ DictionaryHelpers.h: $(srcdir)/dictionary_helper_gen.conf \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dictionary_helper_gen.py \
 	  -I $(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser/cache \
 	  --header-output DictionaryHelpers.h \
 	  $(srcdir)/dictionary_helper_gen.conf
 
@@ -227,7 +227,7 @@ DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/dictionary_helper_gen.py \
 	  -I $(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser/cache \
 	  --header-output DictionaryHelpers.h \
 	  --stub-output DictionaryHelpers.cpp \
 	  --makedepend-output $(MDDEPDIR)/dictionary_helper_gen.pp \

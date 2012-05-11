@@ -61,7 +61,7 @@ export:: $(PARSER_SRCS) $(PLY_PROGS)
 	$(PYTHON_PATH) \
 	  $(PLY_INCLUDE) \
 	  -I$(topsrcdir)/xpcom/idl-parser \
-	  $(topsrcdir)/xpcom/idl-parser/header.py --cachedir=. --regen
+	  $(topsrcdir)/xpcom/idl-parser/header.py --cachedir=$(DEPTH)/xpcom/idl-parser/cache --regen
 
 check::
 	$(PYTHON_PATH) \
