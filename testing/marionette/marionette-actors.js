@@ -681,11 +681,21 @@ MarionetteDriverActor.prototype = {
    *        'value' member holds the url to navigate to
    */
   goUrl: function MDA_goUrl(aRequest) {
-    if (this.context == "chrome") {
-      this.getCurrentWindow().location.href = aRequest.value;
-      this.sendOk();
+    if (this.context != "chrome") {
+      this.sendAsync("goUrl", aRequest);
+      return;
     }
-    this.sendAsync("goUrl", aRequest);
+
+    this.getCurrentWindow().location.href = aRequest.value;
+    let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    function checkLoad() { 
+      if (curWindow.document.readyState == "complete") { 
+        sendOk();
+        return;
+      } 
+      checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+    checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   /**
