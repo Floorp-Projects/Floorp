@@ -197,8 +197,9 @@ public class ProfileMigrator {
     private static final String FAVICON_GUID      = "f_guid";
 
     // Helper constants
-    private static final int PLACES_TYPE_BOOKMARK = 1;
-    private static final int PLACES_TYPE_FOLDER   = 2;
+    private static final int PLACES_TYPE_BOOKMARK  = 1;
+    private static final int PLACES_TYPE_FOLDER    = 2;
+    private static final int PLACES_TYPE_SEPARATOR = 3;
 
     /*
       For statistics keeping.
@@ -1098,7 +1099,7 @@ public class ProfileMigrator {
         protected void addBookmark(String url, String title, String guid,
                                    long parent, long added,
                                    long modified, long position,
-                                   boolean folder) {
+                                   int type) {
             ContentValues values = new ContentValues();
             if (title == null && url != null) {
                 title = url;
@@ -1121,7 +1122,11 @@ public class ProfileMigrator {
                 parent = mRerootMap.get(parent);
             }
             values.put(Bookmarks.PARENT, parent);
-            values.put(Bookmarks.TYPE, (folder ? Bookmarks.TYPE_FOLDER : Bookmarks.TYPE_BOOKMARK));
+
+            // The bookmark can only be one of three valid types
+            values.put(Bookmarks.TYPE, type == PLACES_TYPE_BOOKMARK ? Bookmarks.TYPE_BOOKMARK :
+                                       type == PLACES_TYPE_FOLDER ? Bookmarks.TYPE_FOLDER :
+                                       Bookmarks.TYPE_SEPARATOR);
 
             Cursor cursor = null;
             ContentProviderOperation.Builder builder = null;
@@ -1232,6 +1237,15 @@ public class ProfileMigrator {
                         }
 
                         int type = cursor.getInt(typeCol);
+
+                        // Only add bookmarks with a known type
+                        if (!(type == PLACES_TYPE_BOOKMARK ||
+                              type == PLACES_TYPE_FOLDER ||
+                              type == PLACES_TYPE_SEPARATOR)) {
+                            cursor.moveToNext();
+                            continue;
+                        }
+
                         long parent = cursor.getLong(parentCol);
 
                         // Places has an explicit root folder, id=1 parent=0. Skip that.
@@ -1262,13 +1276,12 @@ public class ProfileMigrator {
                         // If so, we can add the bookmark itself.
                         if (knownFolders.contains(parent)) {
                             try {
-                                boolean isFolder = (type == PLACES_TYPE_FOLDER);
                                 addBookmark(url, title, guid, parent,
                                             dateadded, datemodified,
-                                            position, isFolder);
+                                            position, type);
                                 addFavicon(url, faviconUrl, faviconGuid,
                                            faviconMime, faviconDataBuff);
-                                if (isFolder) {
+                                if (type == PLACES_TYPE_FOLDER) {
                                     // We need to know the ID of the folder
                                     // we just inserted. It's possible to
                                     // make future database ops refer to the
