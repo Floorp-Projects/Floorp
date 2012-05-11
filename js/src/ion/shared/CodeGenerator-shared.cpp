@@ -379,14 +379,6 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
     if (!wrapper)
         return false;
 
-    uint32 argumentPadding = 0;
-    if (StackKeptAligned) {
-        // We add an extra padding after the pushed arguments if we pushed an
-        // odd number of arguments. This padding is removed by the wrapper when
-        // it returns.
-        argumentPadding = (fun.explicitStackSlots() * sizeof(void *)) % StackAlignment;
-        masm.reserveStack(argumentPadding);
-    }
     // Call the wrapper function.  The wrapper is in charge to unwind the stack
     // when returning from the call.  Failures are handled with exceptions based
     // on the return value of the C functions.  To guard the outcome of the
@@ -400,7 +392,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
     int framePop = sizeof(IonExitFrameLayout) - sizeof(void*);
 
     // Pop arguments from framePushed.
-    masm.implicitPop(fun.explicitStackSlots() * sizeof(void *) + argumentPadding + framePop);
+    masm.implicitPop(fun.explicitStackSlots() * sizeof(void *) + framePop);
 
     // Stack is:
     //    ... frame ...
