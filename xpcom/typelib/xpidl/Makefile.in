@@ -48,8 +48,8 @@ SDK_BINARY = \
   $(topsrcdir)/xpcom/idl-parser/xpidl.py \
   $(topsrcdir)/xpcom/idl-parser/header.py \
   $(topsrcdir)/xpcom/idl-parser/typelib.py \
-  $(DEPTH)/xpcom/idl-parser/xpidllex.py \
-  $(DEPTH)/xpcom/idl-parser/xpidlyacc.py \
+  $(DEPTH)/xpcom/idl-parser/cache/xpidllex.py \
+  $(DEPTH)/xpcom/idl-parser/cache/xpidlyacc.py \
   $(NULL)
 
 ifndef MOZ_SYSTEM_PLY
