@@ -1846,7 +1846,7 @@ WorkerRunnable::NotifyScriptExecutedIfNeeded() const
 struct WorkerPrivate::TimeoutInfo
 {
   TimeoutInfo()
-  : mTimeoutVal(JSVAL_VOID), mLineNumber(0), mId(0), mIsInterval(false),
+  : mTimeoutVal(JS::UndefinedValue()), mLineNumber(0), mId(0), mIsInterval(false),
     mCanceled(false)
   {
     MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerPrivate::TimeoutInfo);
@@ -1867,7 +1867,7 @@ struct WorkerPrivate::TimeoutInfo
     return mTargetTime < aOther.mTargetTime;
   }
 
-  jsval mTimeoutVal;
+  JS::Value mTimeoutVal;
   nsTArray<jsval> mExtraArgVals;
   mozilla::TimeStamp mTargetTime;
   mozilla::TimeDuration mInterval;
@@ -3619,11 +3619,11 @@ WorkerPrivate::SetTimeout(JSContext* aCx, unsigned aArgc, jsval* aVp,
     mNextTimeoutId = 1;
   }
 
-  jsval* argv = JS_ARGV(aCx, aVp);
+  JS::Value* argv = JS_ARGV(aCx, aVp);
 
   // Take care of the main argument.
-  if (JSVAL_IS_OBJECT(argv[0])) {
-    if (JS_ObjectIsCallable(aCx, JSVAL_TO_OBJECT(argv[0]))) {
+  if (argv[0].isObject()) {
+    if (JS_ObjectIsCallable(aCx, &argv[0].toObject())) {
       newInfo->mTimeoutVal = argv[0];
     }
     else {
@@ -3631,10 +3631,10 @@ WorkerPrivate::SetTimeout(JSContext* aCx, unsigned aArgc, jsval* aVp,
       if (!timeoutStr) {
         return false;
       }
-      newInfo->mTimeoutVal = STRING_TO_JSVAL(timeoutStr);
+      newInfo->mTimeoutVal.setString(timeoutStr);
     }
   }
-  else if (JSVAL_IS_STRING(argv[0])) {
+  else if (argv[0].isString()) {
     newInfo->mTimeoutVal = argv[0];
   }
   else {
@@ -3651,7 +3651,7 @@ WorkerPrivate::SetTimeout(JSContext* aCx, unsigned aArgc, jsval* aVp,
     }
     newInfo->mInterval = TimeDuration::FromMilliseconds(intervalMS);
 
-    if (aArgc > 2 && JSVAL_IS_OBJECT(newInfo->mTimeoutVal)) {
+    if (aArgc > 2 && newInfo->mTimeoutVal.isObject()) {
       nsTArray<jsval> extraArgVals(aArgc - 2);
       for (unsigned index = 2; index < aArgc; index++) {
         extraArgVals.AppendElement(argv[index]);
@@ -3662,7 +3662,7 @@ WorkerPrivate::SetTimeout(JSContext* aCx, unsigned aArgc, jsval* aVp,
 
   newInfo->mTargetTime = TimeStamp::Now() + newInfo->mInterval;
 
-  if (JSVAL_IS_STRING(newInfo->mTimeoutVal)) {
+  if (newInfo->mTimeoutVal.isString()) {
     const char* filenameChars;
     PRUint32 lineNumber;
     if (nsJSUtils::GetCallingLocation(aCx, &filenameChars, &lineNumber)) {
@@ -3786,8 +3786,8 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
     // JS_ReportPendingException returns false (i.e. uncatchable exception) then
     // break out of the loop.
 
-    if (JSVAL_IS_STRING(info->mTimeoutVal)) {
-      JSString* expression = JSVAL_TO_STRING(info->mTimeoutVal);
+    if (info->mTimeoutVal.isString()) {
+      JSString* expression = info->mTimeoutVal.toString();
 
       size_t stringLength;
       const jschar* string = JS_GetStringCharsAndLength(aCx, expression,

@@ -51,7 +51,7 @@ void JSD_ASSERT_VALID_VALUE(JSDValue* jsdval)
     if(!JS_CLIST_IS_EMPTY(&jsdval->props))
     {
         JS_ASSERT(CHECK_BIT_FLAG(jsdval->flags, GOT_PROPS));
-        JS_ASSERT(JSVAL_IS_OBJECT(jsdval->val));
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(jsdval->val));
     }
 
     if(jsdval->proto)
@@ -87,7 +87,7 @@ void JSD_ASSERT_VALID_PROPERTY(JSDProperty* jsdprop)
 JSBool
 jsd_IsValueObject(JSDContext* jsdc, JSDValue* jsdval)
 {
-    return JSVAL_IS_OBJECT(jsdval->val);
+    return !JSVAL_IS_PRIMITIVE(jsdval->val) || JSVAL_IS_NULL(jsdval->val);
 }
 
 JSBool
@@ -449,7 +449,7 @@ static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
 
     JS_ASSERT(JS_CLIST_IS_EMPTY(&jsdval->props));
     JS_ASSERT(!(CHECK_BIT_FLAG(jsdval->flags, GOT_PROPS)));
-    JS_ASSERT(JSVAL_IS_OBJECT(jsdval->val));
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(jsdval->val));
 
     if(JSVAL_IS_PRIMITIVE(jsdval->val))
         return JS_FALSE;
@@ -675,16 +675,16 @@ jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 {
     JSObject *obj;
     JSFunction *fun;
-    JSCrossCompartmentCall *call = NULL;
-    if (!JSVAL_IS_OBJECT(jsdval->val))
-        return NULL;
-    if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
-        return NULL;
-    obj = JS_UnwrapObject(obj);
 
+    JSCrossCompartmentCall *call = NULL;
+    if (JSVAL_IS_PRIMITIVE(jsdval->val))
+        return NULL;
+
+    obj = JS_UnwrapObject(JSVAL_TO_OBJECT(jsdval->val));
     call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, obj);
     if (!call)
         return NULL;
+
     fun = JS_ValueToFunction(jsdc->dumbContext, OBJECT_TO_JSVAL(obj));
     JS_LeaveCrossCompartmentCall(call);
 
@@ -702,10 +702,9 @@ jsd_GetValuePrototype(JSDContext* jsdc, JSDValue* jsdval)
         JSObject* proto;
         JS_ASSERT(!jsdval->proto);
         SET_BIT_FLAG(jsdval->flags, GOT_PROTO);
-        if(!JSVAL_IS_OBJECT(jsdval->val))
+        if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return NULL;
-        if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
-            return NULL;
+        obj = JSVAL_TO_OBJECT(jsdval->val);
         proto = JS_GetPrototype(obj);
         if(!proto)
             return NULL;
@@ -727,10 +726,9 @@ jsd_GetValueParent(JSDContext* jsdc, JSDValue* jsdval)
         JSObject* parent;
         JS_ASSERT(!jsdval->parent);
         SET_BIT_FLAG(jsdval->flags, GOT_PARENT);
-        if(!JSVAL_IS_OBJECT(jsdval->val))
+        if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return NULL;
-        if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
-            return NULL;
+        obj = JSVAL_TO_OBJECT(jsdval->val);
         JS_BeginRequest(jsdc->dumbContext);
         call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, obj);
         if(!call) {
@@ -762,10 +760,9 @@ jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval)
         JSObject* ctor;
         JS_ASSERT(!jsdval->ctor);
         SET_BIT_FLAG(jsdval->flags, GOT_CTOR);
-        if(!JSVAL_IS_OBJECT(jsdval->val))
+        if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return NULL;
-        if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
-            return NULL;
+        obj = JSVAL_TO_OBJECT(jsdval->val);
         proto = JS_GetPrototype(obj);
         if(!proto)
             return NULL;
@@ -794,11 +791,9 @@ jsd_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval)
     jsval val = jsdval->val;
     JSCrossCompartmentCall *call = NULL;
 
-    if(!jsdval->className && JSVAL_IS_OBJECT(val))
+    if(!jsdval->className && !JSVAL_IS_PRIMITIVE(val))
     {
-        JSObject* obj;
-        if(!(obj = JSVAL_TO_OBJECT(val)))
-            return NULL;
+        JSObject* obj = JSVAL_TO_OBJECT(val);
         JS_BeginRequest(jsdc->dumbContext);
         call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, obj);
         if(!call) {

@@ -2890,30 +2890,29 @@ JS_EXPORT_API(void) DumpJSObject(JSObject* obj)
     xpc_DumpJSObject(obj);
 }
 
-JS_EXPORT_API(void) DumpJSValue(jsval val)
+JS_EXPORT_API(void) DumpJSValue(JS::Value val)
 {
-    printf("Dumping 0x%llu.\n", (long long) JSVAL_TO_IMPL(val).asBits);
-    if (JSVAL_IS_NULL(val)) {
+    printf("Dumping 0x%llu.\n", (long long) val.asRawBits());
+    if (val.isNull()) {
         printf("Value is null\n");
-    } else if (JSVAL_IS_OBJECT(val) || JSVAL_IS_NULL(val)) {
+    } else if (val.isObject()) {
         printf("Value is an object\n");
-        JSObject* obj = JSVAL_TO_OBJECT(val);
-        DumpJSObject(obj);
-    } else if (JSVAL_IS_NUMBER(val)) {
+        DumpJSObject(&val.toObject());
+    } else if (val.isNumber()) {
         printf("Value is a number: ");
-        if (JSVAL_IS_INT(val))
-          printf("Integer %i\n", JSVAL_TO_INT(val));
-        else if (JSVAL_IS_DOUBLE(val))
-          printf("Floating-point value %f\n", JSVAL_TO_DOUBLE(val));
-    } else if (JSVAL_IS_STRING(val)) {
+        if (val.isInt32())
+          printf("Integer %i\n", val.toInt32());
+        else if (val.isDouble())
+          printf("Floating-point value %f\n", val.toDouble());
+    } else if (val.isString()) {
         printf("Value is a string: ");
         putc('<', stdout);
-        JS_FileEscapedString(stdout, JSVAL_TO_STRING(val), 0);
+        JS_FileEscapedString(stdout, val.toString(), 0);
         fputs(">\n", stdout);
-    } else if (JSVAL_IS_BOOLEAN(val)) {
+    } else if (val.isBoolean()) {
         printf("Value is boolean: ");
-        printf(JSVAL_TO_BOOLEAN(val) ? "true" : "false");
-    } else if (JSVAL_IS_VOID(val)) {
+        printf(val.isTrue() ? "true" : "false");
+    } else if (val.isUndefined()) {
         printf("Value is undefined\n");
     } else {
         printf("No idea what this value is.\n");
