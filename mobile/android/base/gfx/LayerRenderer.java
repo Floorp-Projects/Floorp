@@ -97,7 +97,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private final ScrollbarLayer mHorizScrollLayer;
     private final ScrollbarLayer mVertScrollLayer;
     private final FadeRunnable mFadeRunnable;
-    private final FloatBuffer mCoordBuffer;
+    private ByteBuffer mCoordByteBuffer;
+    private FloatBuffer mCoordBuffer;
     private RenderContext mLastPageContext;
     private int mMaxTextureSize;
     private int mBackgroundColor;
@@ -214,9 +215,22 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         // Initialize the FloatBuffer that will be used to store all vertices and texture
         // coordinates in draw() commands.
-        ByteBuffer byteBuffer = GeckoAppShell.allocateDirectBuffer(COORD_BUFFER_SIZE * 4);
-        byteBuffer.order(ByteOrder.nativeOrder());
-        mCoordBuffer = byteBuffer.asFloatBuffer();
+        mCoordByteBuffer = GeckoAppShell.allocateDirectBuffer(COORD_BUFFER_SIZE * 4);
+        mCoordByteBuffer.order(ByteOrder.nativeOrder());
+        mCoordBuffer = mCoordByteBuffer.asFloatBuffer();
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            if (mCoordByteBuffer != null) {
+                GeckoAppShell.freeDirectBuffer(mCoordByteBuffer);
+                mCoordByteBuffer = null;
+                mCoordBuffer = null;
+            }
+        } finally {
+            super.finalize();
+        }
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {

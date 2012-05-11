@@ -48,8 +48,7 @@ var AccessFu = {
     } catch (x) {
     }
 
-    if (this.amINeeded(accessPref))
-      this.enable();
+    this.processPreferences(accessPref);
   },
 
   /**
@@ -57,6 +56,10 @@ var AccessFu = {
    * with arrow keys.
    */
   enable: function enable() {
+    if (this._enabled)
+      return;
+    this._enabled = true;
+
     dump('AccessFu enable');
     this.addPresenter(new VisualPresenter());
 
@@ -77,6 +80,10 @@ var AccessFu = {
    * Disable AccessFu and return to default interaction mode.
    */
   disable: function disable() {
+    if (!this._enabled)
+      return;
+    this._enabled = false;
+
     dump('AccessFu disable');
 
     this.presenters.forEach(function(p) { p.detach(); });
@@ -91,26 +98,29 @@ var AccessFu = {
     this.chromeWin.removeEventListener('TabOpen', this, true);
   },
 
-  amINeeded: function(aPref) {
-    switch (aPref) {
-      case ACCESSFU_ENABLE:
-        return true;
-      case ACCESSFU_AUTO:
-        if (Services.appinfo.OS == 'Android') {
-          let msg = Cc['@mozilla.org/android/bridge;1'].
-            getService(Ci.nsIAndroidBridge).handleGeckoMessage(
-              JSON.stringify(
-                { gecko: {
-                    type: 'Accessibility:IsEnabled',
-                    eventType: 1,
-                    text: []
-                  }
-                }));
-          return JSON.parse(msg).enabled;
+  processPreferences: function processPreferences(aPref) {
+    if (Services.appinfo.OS == 'Android') {
+      if (aPref == ACCESSFU_AUTO) {
+        if (!this._observingSystemSettings) {
+          Services.obs.addObserver(this, 'Accessibility:Settings', false);
+          this._observingSystemSettings = true;
         }
-      default:
-        return false;
+        Cc['@mozilla.org/android/bridge;1'].
+          getService(Ci.nsIAndroidBridge).handleGeckoMessage(
+            JSON.stringify({ gecko: { type: 'Accessibility:Ready' } }));
+        return;
+      }
+
+      if (this._observingSystemSettings) {
+        Services.obs.removeObserver(this, 'Accessibility:Settings');
+        this._observingSystemSettings = false;
+      }
     }
+
+    if (aPref == ACCESSFU_ENABLE)
+      this.enable();
+    else
+      this.disable();
   },
 
   addPresenter: function addPresenter(presenter) {
@@ -159,13 +169,15 @@ var AccessFu = {
 
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case 'Accessibility:Settings':
+        if (JSON.parse(aData).enabled)
+          this.enable();
+        else
+          this.disable();
+        break;
       case 'nsPref:changed':
-        if (aData == 'accessfu') {
-          if (this.amINeeded(this.prefsBranch.getIntPref('accessfu')))
-            this.enable();
-          else
-            this.disable();
-        }
+        if (aData == 'accessfu')
+          this.processPreferences(this.prefsBranch.getIntPref('accessfu'));
         break;
       case 'accessible-event':
         let event;
@@ -392,7 +404,13 @@ var AccessFu = {
   },
 
   // A hash of documents that don't yet have an accessible tree.
-  _pendingDocuments: {}
+  _pendingDocuments: {},
+
+  // So we don't enable/disable twice
+  _enabled: false,
+
+  // Observing accessibility settings
+  _observingSystemSettings: false
 };
 
 function getAccessible(aNode) {

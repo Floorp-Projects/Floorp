@@ -212,7 +212,6 @@ struct nsCycleCollectorParams
     bool mLogGraphs;
 #ifdef DEBUG_CC
     bool mReportStats;
-    bool mHookMalloc;
     bool mLogPointers;
     PRUint32 mShutdownCollections;
 #endif
@@ -223,7 +222,6 @@ struct nsCycleCollectorParams
         mLogGraphs     (gAlwaysLogCCGraphs ||
                         PR_GetEnv("XPCOM_CC_DRAW_GRAPHS") != NULL),
         mReportStats   (PR_GetEnv("XPCOM_CC_REPORT_STATS") != NULL),
-        mHookMalloc    (PR_GetEnv("XPCOM_CC_HOOK_MALLOC") != NULL),
         mLogPointers   (PR_GetEnv("XPCOM_CC_LOG_POINTERS") != NULL),
 
         mShutdownCollections(DEFAULT_SHUTDOWN_COLLECTIONS)
@@ -251,11 +249,8 @@ struct nsCycleCollectorStats
 
     PRUint32 mVisitedNode;
     PRUint32 mWalkedGraph;
-    PRUint32 mCollectedBytes;
-    PRUint32 mFreeCalls;
     PRUint32 mFreedBytes;
 
-    PRUint32 mSetColorGrey;
     PRUint32 mSetColorBlack;
     PRUint32 mSetColorWhite;
 
@@ -264,7 +259,6 @@ struct nsCycleCollectorStats
 
     PRUint32 mSuspectNode;
     PRUint32 mForgetNode;
-    PRUint32 mFreedWhilePurple;
   
     PRUint32 mCollection;
 
@@ -282,11 +276,8 @@ struct nsCycleCollectorStats
     
         DUMP(mVisitedNode);
         DUMP(mWalkedGraph);
-        DUMP(mCollectedBytes);
-        DUMP(mFreeCalls);
         DUMP(mFreedBytes);
     
-        DUMP(mSetColorGrey);
         DUMP(mSetColorBlack);
         DUMP(mSetColorWhite);
     
@@ -295,7 +286,6 @@ struct nsCycleCollectorStats
     
         DUMP(mSuspectNode);
         DUMP(mForgetNode);
-        DUMP(mFreedWhilePurple);
     
         DUMP(mCollection);
 #undef DUMP
@@ -305,7 +295,6 @@ struct nsCycleCollectorStats
 
 #ifdef DEBUG_CC
 static bool nsCycleCollector_shouldSuppress(nsISupports *s);
-static void InitMemHook(void);
 #endif
 
 #ifdef COLLECT_TIME_DEBUG
@@ -1112,9 +1101,6 @@ struct nsCycleCollector
     nsCycleCollectorStats mStats;
     FILE *mPtrLog;
     PointerSet mExpectedGarbage;
-
-    void Allocated(void *n, size_t sz);
-    void Freed(void *n);
 
     void LogPurpleRemoval(void* aObject);
 
@@ -2336,204 +2322,6 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
 }
 
 
-#ifdef DEBUG_CC
-////////////////////////////////////////////////////////////////////////
-// Memory-hooking stuff
-// When debugging wild pointers, it sometimes helps to hook malloc and
-// free. This stuff is disabled unless you set an environment variable.
-////////////////////////////////////////////////////////////////////////
-
-#if defined(__GLIBC__) && !defined(__UCLIBC__)
-#include <malloc.h>
-
-static bool hookedMalloc = false;
-
-static void* (*old_memalign_hook)(size_t, size_t, const void *);
-static void* (*old_realloc_hook)(void *, size_t, const void *);
-static void* (*old_malloc_hook)(size_t, const void *);
-static void (*old_free_hook)(void *, const void *);
-
-static void* my_memalign_hook(size_t, size_t, const void *);
-static void* my_realloc_hook(void *, size_t, const void *);
-static void* my_malloc_hook(size_t, const void *);
-static void my_free_hook(void *, const void *);
-
-static inline void 
-install_old_hooks()
-{
-    __memalign_hook = old_memalign_hook;
-    __realloc_hook = old_realloc_hook;
-    __malloc_hook = old_malloc_hook;
-    __free_hook = old_free_hook;
-}
-
-static inline void 
-save_old_hooks()
-{
-    // Glibc docs recommend re-saving old hooks on
-    // return from recursive calls. Strangely when 
-    // we do this, we find ourselves in infinite
-    // recursion.
-
-    //     old_memalign_hook = __memalign_hook;
-    //     old_realloc_hook = __realloc_hook;
-    //     old_malloc_hook = __malloc_hook;
-    //     old_free_hook = __free_hook;
-}
-
-static inline void 
-install_new_hooks()
-{
-    __memalign_hook = my_memalign_hook;
-    __realloc_hook = my_realloc_hook;
-    __malloc_hook = my_malloc_hook;
-    __free_hook = my_free_hook;
-}
-
-static void*
-my_realloc_hook(void *ptr, size_t size, const void *caller)
-{
-    void *result;    
-
-    install_old_hooks();
-    result = realloc(ptr, size);
-    save_old_hooks();
-
-    if (sCollector) {
-        sCollector->Freed(ptr);
-        sCollector->Allocated(result, size);
-    }
-
-    install_new_hooks();
-
-    return result;
-}
-
-
-static void* 
-my_memalign_hook(size_t size, size_t alignment, const void *caller)
-{
-    void *result;    
-
-    install_old_hooks();
-    result = memalign(size, alignment);
-    save_old_hooks();
-
-    if (sCollector)
-        sCollector->Allocated(result, size);
-
-    install_new_hooks();
-
-    return result;
-}
-
-
-static void 
-my_free_hook (void *ptr, const void *caller)
-{
-    install_old_hooks();
-    free(ptr);
-    save_old_hooks();
-
-    if (sCollector)
-        sCollector->Freed(ptr);
-
-    install_new_hooks();
-}      
-
-
-static void*
-my_malloc_hook (size_t size, const void *caller)
-{
-    void *result;
-
-    install_old_hooks();
-    result = malloc (size);
-    save_old_hooks();
-
-    if (sCollector)
-        sCollector->Allocated(result, size);
-
-    install_new_hooks();
-
-    return result;
-}
-
-
-static void 
-InitMemHook(void)
-{
-    if (!hookedMalloc) {
-        save_old_hooks();
-        install_new_hooks();
-        hookedMalloc = true;        
-    }
-}
-
-#elif defined(WIN32)
-#ifndef __MINGW32__
-
-static bool hookedMalloc = false;
-
-static int 
-AllocHook(int allocType, void *userData, size_t size, int 
-          blockType, long requestNumber, const unsigned char *filename, int 
-          lineNumber)
-{
-    if (allocType == _HOOK_FREE)
-        sCollector->Freed(userData);
-    return 1;
-}
-
-
-static void InitMemHook(void)
-{
-    if (!hookedMalloc) {
-        _CrtSetAllocHook (AllocHook);
-        hookedMalloc = true;        
-    }
-}
-#endif // __MINGW32__
-
-#elif 0 // defined(XP_MACOSX)
-
-#include <malloc/malloc.h>
-
-static bool hookedMalloc = false;
-
-static void (*old_free)(struct _malloc_zone_t *zone, void *ptr);
-
-static void
-freehook(struct _malloc_zone_t *zone, void *ptr)
-{
-    if (sCollector)
-        sCollector->Freed(ptr);
-    old_free(zone, ptr);
-}
-
-
-static void
-InitMemHook(void)
-{
-    if (!hookedMalloc) {
-        malloc_zone_t *default_zone = malloc_default_zone();
-        old_free = default_zone->free;
-        default_zone->free = freehook;
-        hookedMalloc = true;
-    }
-}
-
-
-#else
-
-static void
-InitMemHook(void)
-{
-}
-
-#endif // GLIBC / WIN32 / OSX
-#endif // DEBUG_CC
-
 ////////////////////////////////////////////////////////////////////////
 // Collector implementation
 ////////////////////////////////////////////////////////////////////////
@@ -2699,11 +2487,6 @@ nsCycleCollector::Suspect(nsISupports *n)
     if (nsCycleCollector_shouldSuppress(n))
         return false;
 
-#ifndef __MINGW32__
-    if (mParams.mHookMalloc)
-        InitMemHook();
-#endif
-
     if (mParams.mLogPointers) {
         if (!mPtrLog)
             mPtrLog = fopen("pointer_log", "w");
@@ -2732,11 +2515,6 @@ nsCycleCollector::Forget(nsISupports *n)
 
 #ifdef DEBUG_CC
     mStats.mForgetNode++;
-
-#ifndef __MINGW32__
-    if (mParams.mHookMalloc)
-        InitMemHook();
-#endif
 
     if (mParams.mLogPointers) {
         if (!mPtrLog)
@@ -2772,11 +2550,6 @@ nsCycleCollector::Suspect2(nsISupports *n)
 
     if (nsCycleCollector_shouldSuppress(n))
         return nsnull;
-
-#ifndef __MINGW32__
-    if (mParams.mHookMalloc)
-        InitMemHook();
-#endif
 
     if (mParams.mLogPointers) {
         if (!mPtrLog)
@@ -2826,45 +2599,12 @@ nsCycleCollector::LogPurpleRemoval(void* aObject)
 
     mStats.mForgetNode++;
 
-#ifndef __MINGW32__
-    if (mParams.mHookMalloc)
-        InitMemHook();
-#endif
-
     if (mParams.mLogPointers) {
         if (!mPtrLog)
             mPtrLog = fopen("pointer_log", "w");
         fprintf(mPtrLog, "F %p\n", aObject);
     }
     mPurpleBuf.mNormalObjects.RemoveEntry(aObject);
-}
-
-void 
-nsCycleCollector::Allocated(void *n, size_t sz)
-{
-}
-
-void 
-nsCycleCollector::Freed(void *n)
-{
-    mStats.mFreeCalls++;
-
-    if (!n) {
-        // Ignore null pointers coming through
-        return;
-    }
-
-    if (mPurpleBuf.Exists(n)) {
-        mStats.mForgetNode++;
-        mStats.mFreedWhilePurple++;
-        Fault("freed while purple", n);
-        
-        if (mParams.mLogPointers) {
-            if (!mPtrLog)
-                mPtrLog = fopen("pointer_log", "w");
-            fprintf(mPtrLog, "R %p\n", n);
-        }
-    }
 }
 #endif
 
@@ -2909,11 +2649,6 @@ bool
 nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
                                        nsTArray<PtrInfo*> *aWhiteNodes)
 {
-#if defined(DEBUG_CC) && !defined(__MINGW32__)
-    if (!mParams.mDoNothing && mParams.mHookMalloc)
-        InitMemHook();
-#endif
-
     // This can legitimately happen in a few cases. See bug 383651.
     if (mCollectionInProgress)
         return false;
@@ -3031,10 +2766,6 @@ nsCycleCollector::BeginCollection(nsICycleCollectorListener *aListener)
     PRUint32 purpleEnd = builder.Count();
 
     if (purpleStart != purpleEnd) {
-#ifndef __MINGW32__
-        if (mParams.mHookMalloc)
-            InitMemHook();
-#endif
         if (mParams.mLogPointers && !mPtrLog)
             mPtrLog = fopen("pointer_log", "w");
 

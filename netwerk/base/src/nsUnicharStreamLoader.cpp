@@ -43,6 +43,8 @@
 
 #define SNIFFING_BUFFER_SIZE 512 // specified in draft-abarth-mime-sniff-06
 
+using mozilla::fallible_t;
+
 NS_IMETHODIMP
 nsUnicharStreamLoader::Init(nsIUnicharStreamLoaderObserver *aObserver)
 {
@@ -50,7 +52,7 @@ nsUnicharStreamLoader::Init(nsIUnicharStreamLoaderObserver *aObserver)
 
   mObserver = aObserver;
 
-  if (!mRawData.SetCapacity(SNIFFING_BUFFER_SIZE))
+  if (!mRawData.SetCapacity(SNIFFING_BUFFER_SIZE, fallible_t()))
     return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
@@ -237,7 +239,7 @@ nsUnicharStreamLoader::WriteSegmentFun(nsIInputStream *,
     self->mDecoder->GetMaxLength(aSegment + consumed, srcLen, &dstLen);
 
     PRUint32 capacity = haveRead + dstLen;
-    if (!self->mBuffer.SetCapacity(capacity)) {
+    if (!self->mBuffer.SetCapacity(capacity, fallible_t())) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
