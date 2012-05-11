@@ -165,6 +165,10 @@
              oncommand="InspectorUI.copyOuterHTML();"/>
     <command id="Inspector:DeleteNode"
              oncommand="InspectorUI.deleteNode();"/>
+    <command id="Inspector:ToggleVeil"
+             oncommand="InspectorUI.toggleVeil();"/>
+    <command id="Inspector:ToggleInfobar"
+             oncommand="InspectorUI.toggleInfobar();"/>
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
