@@ -2453,3 +2453,14 @@ nsDOMWindowUtils::SetScrollPositionClampingScrollPortSize(float aWidth, float aH
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetIsApp(bool aValue)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+  static_cast<nsGlobalWindow*>(window.get())->SetIsApp(aValue);
+
+  return NS_OK;
+}

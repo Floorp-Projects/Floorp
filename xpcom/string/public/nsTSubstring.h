@@ -83,6 +83,8 @@ class nsTDefaultStringComparator_CharT
 class nsTSubstring_CharT
   {
     public:
+      typedef mozilla::fallible_t                 fallible_t;
+
       typedef CharT                               char_type;
 
       typedef nsCharTraits<char_type>             char_traits;
@@ -156,14 +158,49 @@ class nsTSubstring_CharT
       
       char_iterator BeginWriting()
         {
+          if (!EnsureMutable())
+            NS_RUNTIMEABORT("OOM");
+
+          return mData;
+        }
+
+      char_iterator BeginWriting( const fallible_t& )
+        {
           return EnsureMutable() ? mData : char_iterator(0);
         }
 
       char_iterator EndWriting()
         {
+          if (!EnsureMutable())
+            NS_RUNTIMEABORT("OOM");
+
+          return mData + mLength;
+        }
+
+      char_iterator EndWriting( const fallible_t& )
+        {
           return EnsureMutable() ? (mData + mLength) : char_iterator(0);
         }
 
+      char_iterator& BeginWriting( char_iterator& iter )
+        {
+          return iter = BeginWriting();
+        }
+
+      char_iterator& BeginWriting( char_iterator& iter, const fallible_t& )
+        {
+          return iter = BeginWriting(fallible_t());
+        }
+
+      char_iterator& EndWriting( char_iterator& iter )
+        {
+          return iter = EndWriting();
+        }
+
+      char_iterator& EndWriting( char_iterator& iter, const fallible_t& )
+        {
+          return iter = EndWriting(fallible_t());
+        }
 
         /**
          * deprecated writing iterators
@@ -171,7 +208,7 @@ class nsTSubstring_CharT
       
       iterator& BeginWriting( iterator& iter )
         {
-          char_type *data = EnsureMutable() ? mData : nsnull;
+          char_type *data = BeginWriting();
           iter.mStart = data;
           iter.mEnd = data + mLength;
           iter.mPosition = iter.mStart;
@@ -180,23 +217,12 @@ class nsTSubstring_CharT
 
       iterator& EndWriting( iterator& iter )
         {
-          char_type *data = EnsureMutable() ? mData : nsnull;
+          char_type *data = BeginWriting();
           iter.mStart = data;
           iter.mEnd = data + mLength;
           iter.mPosition = iter.mEnd;
           return iter;
         }
-
-      char_iterator& BeginWriting( char_iterator& iter )
-        {
-          return iter = EnsureMutable() ? mData : char_iterator(0);
-        }
-
-      char_iterator& EndWriting( char_iterator& iter )
-        {
-          return iter = EnsureMutable() ? (mData + mLength) : char_iterator(0);
-        }
-
 
         /**
          * accessors
@@ -339,16 +365,35 @@ class nsTSubstring_CharT
          */
 
       void NS_FASTCALL Assign( char_type c );
-      void NS_FASTCALL Assign( const char_type* data, size_type length = size_type(-1) );
+      bool NS_FASTCALL Assign( char_type c, const fallible_t& ) NS_WARN_UNUSED_RESULT;
+
+      void NS_FASTCALL
+        Assign( const char_type* data, size_type length = size_type(-1) );
+      bool NS_FASTCALL Assign( const char_type* data, size_type length, const fallible_t& ) NS_WARN_UNUSED_RESULT;
+
       void NS_FASTCALL Assign( const self_type& );
+      bool NS_FASTCALL Assign( const self_type&, const fallible_t& ) NS_WARN_UNUSED_RESULT;
+
       void NS_FASTCALL Assign( const substring_tuple_type& );
+      bool NS_FASTCALL Assign( const substring_tuple_type&, const fallible_t& ) NS_WARN_UNUSED_RESULT;
 
       void NS_FASTCALL AssignASCII( const char* data, size_type length );
-      void NS_FASTCALL AssignASCII( const char* data );
+      bool NS_FASTCALL AssignASCII( const char* data, size_type length, const fallible_t& ) NS_WARN_UNUSED_RESULT;
+
+      void NS_FASTCALL AssignASCII( const char* data )
+        {
+          AssignASCII(data, strlen(data));
+        }
+      bool NS_FASTCALL AssignASCII( const char* data, const fallible_t& ) NS_WARN_UNUSED_RESULT
+        {
+          return AssignASCII(data, strlen(data), fallible_t());
+        }
 
     // AssignLiteral must ONLY be applied to an actual literal string.
     // Do not attempt to use it with a regular char* pointer, or with a char
     // array variable. Use AssignASCII for those.
+    // There are not fallible version of these methods because they only really
+    // apply to small allocations that we wouldn't want to check anyway.
 #ifdef NS_DISABLE_LITERAL_TEMPLATE
       void AssignLiteral( const char* str )
                   { AssignASCII(str); }
@@ -375,7 +420,7 @@ class nsTSubstring_CharT
 
       void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, char_type c );
       void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) );
-             void Replace( index_type cutStart, size_type cutLength, const self_type& str )      { Replace(cutStart, cutLength, str.Data(), str.Length()); }
+      void Replace( index_type cutStart, size_type cutLength, const self_type& str )      { Replace(cutStart, cutLength, str.Data(), str.Length()); }
       void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& tuple );
 
       void NS_FASTCALL ReplaceASCII( index_type cutStart, size_type cutLength, const char* data, size_type length = size_type(-1) );
@@ -467,14 +512,12 @@ class nsTSubstring_CharT
         /**
          * Attempts to set the capacity to the given size, without affecting
          * the length of the string. Also ensures that the buffer is mutable.
-         *
-         * @returns true on success
-         *          false on out-of-memory, or if requesting a size bigger
-         *                   than a string can hold (2^31 chars).
          */
-      bool NS_FASTCALL SetCapacity( size_type newCapacity );
+      void NS_FASTCALL SetCapacity( size_type newCapacity );
+      bool NS_FASTCALL SetCapacity( size_type newCapacity, const fallible_t& ) NS_WARN_UNUSED_RESULT;
 
-      bool NS_FASTCALL SetLength( size_type newLength );
+      void NS_FASTCALL SetLength( size_type newLength );
+      bool NS_FASTCALL SetLength( size_type newLength, const fallible_t& ) NS_WARN_UNUSED_RESULT;
 
       void Truncate( size_type newLength = 0 )
         {
@@ -510,7 +553,16 @@ class nsTSubstring_CharT
          * @returns The length of the buffer in characters or 0 if unable to
          * satisfy the request due to low-memory conditions.
          */
-      inline size_type GetMutableData( char_type** data, size_type newLen = size_type(-1) )
+      size_type GetMutableData( char_type** data, size_type newLen = size_type(-1) )
+        {
+          if (!EnsureMutable(newLen))
+            NS_RUNTIMEABORT("OOM");
+
+          *data = mData;
+          return mLength;
+        }
+
+      size_type GetMutableData( char_type** data, size_type newLen, const fallible_t& )
         {
           if (!EnsureMutable(newLen))
             {
@@ -684,7 +736,7 @@ class nsTSubstring_CharT
          * memory.
          */
       bool ReplacePrep(index_type cutStart, size_type cutLength,
-                         size_type newLength)
+                       size_type newLength) NS_WARN_UNUSED_RESULT
       {
         cutLength = NS_MIN(cutLength, mLength - cutStart);
         PRUint32 newTotalLen = mLength - cutLength + newLength;
@@ -698,10 +750,11 @@ class nsTSubstring_CharT
       }
 
       bool NS_FASTCALL ReplacePrepInternal(index_type cutStart,
-                                             size_type cutLength,
-                                             size_type newFragLength,
-                                             size_type newTotalLength);
-      
+                                           size_type cutLength,
+                                           size_type newFragLength,
+                                           size_type newTotalLength)
+        NS_WARN_UNUSED_RESULT;
+
         /**
          * returns the number of writable storage units starting at mData.
          * the value does not include space for the null-terminator character.
@@ -715,7 +768,7 @@ class nsTSubstring_CharT
          * this helper function can be called prior to directly manipulating
          * the contents of mData.  see, for example, BeginWriting.
          */
-      bool NS_FASTCALL EnsureMutable( size_type newLen = size_type(-1) );
+      bool NS_FASTCALL EnsureMutable( size_type newLen = size_type(-1) ) NS_WARN_UNUSED_RESULT;
 
         /**
          * returns true if this string overlaps with the given string fragment.

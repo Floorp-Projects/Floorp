@@ -90,11 +90,11 @@ public:
                 NSOpenGLPFAAccelerated,
                 NSOpenGLPFAAllowOfflineRenderers,
                 NSOpenGLPFADoubleBuffer,
-                (NSOpenGLPixelFormatAttribute)nil 
+                0
             };
 
             if (!gUseDoubleBufferedWindows) {
-              attribs[2] = (NSOpenGLPixelFormatAttribute)nil;
+              attribs[2] = 0;
             }
 
             mPixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
