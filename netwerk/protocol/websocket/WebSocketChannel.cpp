@@ -1050,7 +1050,10 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
     } else if (opcode == kText) {
       LOG(("WebSocketChannel:: text frame received\n"));
       if (mListener) {
-        nsCString utf8Data((const char *)payload, payloadLength);
+        nsCString utf8Data;
+        if (!utf8Data.Assign((const char *)payload, payloadLength,
+                             mozilla::fallible_t()))
+          return NS_ERROR_OUT_OF_MEMORY;
 
         // Section 8.1 says to fail connection if invalid utf-8 in text message
         if (!IsUTF8(utf8Data, false)) {
