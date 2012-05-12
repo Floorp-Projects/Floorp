@@ -145,6 +145,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     dvobj.setFixedSlot(BYTELENGTH_SLOT, Int32Value(byteLength));
     dvobj.setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
     dvobj.setPrivate(arrayBuffer->dataPointer() + byteOffset);
+    JS_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
 
     JS_ASSERT(dvobj.numFixedSlots() == RESERVED_SLOTS);
 

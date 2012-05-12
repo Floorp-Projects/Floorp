@@ -1278,6 +1278,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 {
     JS_ASSERT(parent);
     JS_ASSERT(proto);
+    JS_ASSERT(!fun->isBoundFunction());
 
     JSObject *cloneobj = NewObjectWithClassProto(cx, &FunctionClass, NULL, SkipScopeParent(parent), kind);
     if (!cloneobj)

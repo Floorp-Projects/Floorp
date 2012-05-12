@@ -3,9 +3,6 @@
 #include "nscore.h"
 #include "nsXULAppAPI.h"
 #include "nsExceptionHandler.h"
-#include "mozilla/unused.h"
-
-using mozilla::unused;
 
 /*
  * This pure virtual call example is from MSDN
@@ -66,9 +63,9 @@ void Crash(PRInt16 how)
     break;
   }
   case CRASH_OOM: {
-    unused << moz_xmalloc((size_t) -1);
-    unused << moz_xmalloc((size_t) -1);
-    unused << moz_xmalloc((size_t) -1);
+    (void) moz_xmalloc((size_t) -1);
+    (void) moz_xmalloc((size_t) -1);
+    (void) moz_xmalloc((size_t) -1);
     break;
   }
   default:

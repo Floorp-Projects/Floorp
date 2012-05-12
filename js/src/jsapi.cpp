@@ -4573,6 +4573,11 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent_)
         return NULL;
     }
 
+    if (fun->isBoundFunction()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_CANT_CLONE_OBJECT);
+        return NULL;
+    }
 
     return CloneFunctionObject(cx, fun, parent, fun->getAllocKind());
 }
