@@ -502,8 +502,18 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
     // wrapper or the invalidation code may be GC if no IonCode keep reference
     // on them.
     JS_ASSERT(uintptr_t(footer->ionCode()) != uintptr_t(-1));
-    if (footer->ionCode() != NULL)
-        MarkIonCodeRoot(trc, footer->addressOfIonCode(), "ion-exit-code");
+
+    // This correspond to the case where we have build a fake exit frame in
+    // CodeGenerator.cpp which handle the case of a native function call. We
+    // need to mark the argument vector of the function call.
+    if (footer->ionCode() == NULL) {
+        size_t len = frame.numActualArgs();
+        Value *vp = frame.exitFrame()->nativeVp();
+        gc::MarkValueRootRange(trc, len, vp, "ion-native-args");
+        return;
+    }
+
+    MarkIonCodeRoot(trc, footer->addressOfIonCode(), "ion-exit-code");
 
     const VMFunction *f = footer->function();
     if (f == NULL || f->explicitArgs == 0)
@@ -516,17 +526,17 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
           case VMFunction::RootNone:
             break;
           case VMFunction::RootObject:
-            gc::MarkObjectRoot(trc, reinterpret_cast<JSObject**>(argBase), "ion-exit-frame");
+            gc::MarkObjectRoot(trc, reinterpret_cast<JSObject**>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootString:
           case VMFunction::RootPropertyName:
-            gc::MarkStringRoot(trc, reinterpret_cast<JSString**>(argBase), "ion-exit-frame");
+            gc::MarkStringRoot(trc, reinterpret_cast<JSString**>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootFunction:
-            gc::MarkObjectRoot(trc, reinterpret_cast<JSFunction**>(argBase), "ion-exit-frame");
+            gc::MarkObjectRoot(trc, reinterpret_cast<JSFunction**>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootValue:
-            gc::MarkValueRoot(trc, reinterpret_cast<Value*>(argBase), "ion-exit-frame");
+            gc::MarkValueRoot(trc, reinterpret_cast<Value*>(argBase), "ion-vm-args");
             break;
         }
 
