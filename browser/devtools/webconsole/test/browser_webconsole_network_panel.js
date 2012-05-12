@@ -49,14 +49,13 @@ let testDriver;
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testNetworkPanel, false);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, testNetworkPanel);
+  }, true);
 }
 
 function testNetworkPanel() {
-  browser.removeEventListener("DOMContentLoaded", testNetworkPanel,
-                              false);
-  openConsole();
-
   testDriver = testGen();
   testDriver.next();
 }
@@ -99,6 +98,11 @@ function checkNodeKeyValue(aPanel, aId, aKey, aValue) {
 
 function testGen() {
   let filterBox = HUDService.getHudByWindow(content).filterBox;
+
+  let tempScope  = {};
+  Cu.import("resource:///modules/WebConsoleUtils.jsm", tempScope);
+  let l10n = tempScope.WebConsoleUtils.l10n;
+  tempScope = null;
 
   var httpActivity = {
     url: "http://www.testpage.com",
@@ -438,7 +442,9 @@ function testGen() {
     responseImageCached: false
   });
 
-  let responseString = HUDService.getFormatStr("NetworkPanel.responseBodyUnableToDisplay.content", ["application/x-shockwave-flash"]);
+  let responseString =
+    l10n.getFormatStr("NetworkPanel.responseBodyUnableToDisplay.content",
+                      ["application/x-shockwave-flash"]);
   checkNodeContent(networkPanel, "responseBodyUnknownTypeContent", responseString);
   networkPanel.panel.hidePopup();
 
@@ -481,5 +487,6 @@ function testGen() {
   networkPanel.panel.hidePopup(); */
 
   // All done!
-  finish();
+  testDriver = null;
+  executeSoon(finishTest);
 }

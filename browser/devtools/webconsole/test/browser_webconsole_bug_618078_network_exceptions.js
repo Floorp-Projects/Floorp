@@ -53,57 +53,50 @@ let TestObserver = {
 
     is(aSubject.category, "content javascript", "error category");
 
+    testEnded = true;
     if (aSubject.category == "content javascript") {
       executeSoon(checkOutput);
     }
     else {
-      testEnd();
+      executeSoon(finishTest);
     }
   }
 };
 
 function checkOutput()
 {
-  if (testEnded) {
-    return;
-  }
-
-  let textContent = hud.outputNode.textContent;
-  isnot(textContent.indexOf("bug618078exception"), -1,
-        "exception message");
-
-  testEnd();
+  waitForSuccess({
+    name: "exception message",
+    validatorFn: function()
+    {
+      return hud.outputNode.textContent.indexOf("bug618078exception") > -1;
+    },
+    successFn: finishTest,
+    failureFn: finishTest,
+  });
 }
 
 function testEnd()
 {
-  if (testEnded) {
-    return;
-  }
-
-  testEnded = true;
   Services.console.unregisterListener(TestObserver);
-  finishTest();
 }
 
 function test()
 {
   addTab("data:text/html;charset=utf-8,Web Console test for bug 618078");
 
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
 
-    openConsole();
+    openConsole(null, function(aHud) {
+      hud = aHud;
+      Services.console.registerListener(TestObserver);
+      registerCleanupFunction(testEnd);
 
-    let hudId = HUDService.getHudIdByWindow(content);
-    hud = HUDService.hudReferences[hudId];
-
-    Services.console.registerListener(TestObserver);
-    registerCleanupFunction(testEnd);
-
-    executeSoon(function() {
-      expectUncaughtException();
-      content.location = TEST_URI;
+      executeSoon(function() {
+        expectUncaughtException();
+        content.location = TEST_URI;
+      });
     });
   }, true);
 }

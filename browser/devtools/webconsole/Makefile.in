@@ -46,8 +46,10 @@ include $(DEPTH)/config/autoconf.mk
 
 EXTRA_JS_MODULES = \
 		PropertyPanel.jsm \
+		PropertyPanelAsync.jsm \
 		NetworkHelper.jsm \
 		AutocompletePopup.jsm \
+		WebConsoleUtils.jsm \
 		gcli.jsm \
 		GcliCommands.jsm \
 		GcliTiltCommands.jsm \
