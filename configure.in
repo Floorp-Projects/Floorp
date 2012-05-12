@@ -1757,15 +1757,11 @@ if test "$GNU_CC"; then
     # -Werror=return-type - catches missing returns, zero false positives
     # -Wtype-limits - catches overflow bugs, few false positives
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
-    # -Werror=unused-result - enforces __attribute__((warn_unused_result));
-    #     Seldom used in system headers, but frequently in Mozilla code to
-    #     enforce checking of fallible methods.
-
+    #
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -Wpointer-arith -Wdeclaration-after-statement"
     MOZ_C_SUPPORTS_WARNING(-W, error=return-type, ac_c_has_werror_return_type)
     MOZ_C_SUPPORTS_WARNING(-W, type-limits, ac_c_has_wtype_limits)
     MOZ_C_SUPPORTS_WARNING(-W, empty-body, ac_c_has_wempty_body)
-    MOZ_C_SUPPORTS_WARNING(-W, error=unused-result, ac_c_has_werror_unused_result)
     
     # Turn off the following warnings that -Wall/-pedantic turn on:
     # -Wno-unused - lots of violations in third-party code
@@ -1828,13 +1824,11 @@ if test "$GNU_CXX"; then
     # -Werror=return-type - catches missing returns, zero false positives
     # -Wtype-limits - catches overflow bugs, few false positives
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
-    # -Werror=unused-result - see above
-
+    #
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual"
     MOZ_CXX_SUPPORTS_WARNING(-W, error=return-type, ac_cxx_has_werror_return_type)
     MOZ_CXX_SUPPORTS_WARNING(-W, type-limits, ac_cxx_has_wtype_limits)
     MOZ_CXX_SUPPORTS_WARNING(-W, empty-body, ac_cxx_has_wempty_body)
-    MOZ_CXX_SUPPORTS_WARNING(-W, error=unused-result, ac_cxx_has_werror_unused_result)
 
     # Turn off the following warnings that -Wall/-pedantic turn on:
     # -Wno-ctor-dtor-privacy - ???

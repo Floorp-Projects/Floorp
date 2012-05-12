@@ -3541,24 +3541,24 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
         return;
     }
 
+    bool reset = false;
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         if (c->gcBytes > c->gcTriggerBytes) {
             *budget = SliceBudget::Unlimited;
             rt->gcStats.nonincremental("allocation trigger");
-            return;
         }
 
         if (c->isTooMuchMalloc()) {
             *budget = SliceBudget::Unlimited;
             rt->gcStats.nonincremental("malloc bytes trigger");
-            return;
         }
 
-        if (c->isCollecting() != c->needsBarrier()) {
-            ResetIncrementalGC(rt, "compartment change");
-            return;
-        }
+        if (c->isCollecting() != c->needsBarrier())
+            reset = true;
     }
+
+    if (reset)
+        ResetIncrementalGC(rt, "compartment change");
 }
 
 /*

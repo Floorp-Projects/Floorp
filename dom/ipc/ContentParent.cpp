@@ -444,7 +444,7 @@ ContentParent::ContentParent()
         nsCString buildID(gAppData->buildID);
 
         //Sending all information to content process
-        unused << SendAppInfo(version, buildID);
+        SendAppInfo(version, buildID);
     }
 }
 
@@ -730,10 +730,10 @@ ContentParent::Observe(nsISupports* aSubject,
         unused << SendPMemoryReportRequestConstructor();
     }
     else if (!strcmp(aTopic, "child-gc-request")){
-        unused << SendGarbageCollect();
+        SendGarbageCollect();
     }
     else if (!strcmp(aTopic, "child-cc-request")){
-        unused << SendCycleCollect();
+        SendCycleCollect();
     }
     else if (!strcmp(aTopic, "last-pb-context-exited")) {
         unused << SendLastPrivateDocShellDestroyed();
