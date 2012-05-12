@@ -7293,10 +7293,13 @@ var gPluginHandler = {
     }
 
     let overlay = doc.getAnonymousElementByAttribute(aPlugin, "class", "mainBox");
-    overlay.addEventListener("click", function(aEvent) {
-      if (aEvent.button == 0 && aEvent.isTrusted)
-        gPluginHandler.activatePlugins(aEvent.target.ownerDocument.defaultView.top);
-    }, true);
+    // The overlay is null if the XBL binding is not attached (element is display:none).
+    if (overlay) {
+      overlay.addEventListener("click", function(aEvent) {
+        if (aEvent.button == 0 && aEvent.isTrusted)
+          gPluginHandler.activatePlugins(aEvent.target.ownerDocument.defaultView.top);
+      }, true);
+    }
 
     if (!browser._clickToPlayDoorhangerShown)
       gPluginHandler._showClickToPlayNotification(browser);
