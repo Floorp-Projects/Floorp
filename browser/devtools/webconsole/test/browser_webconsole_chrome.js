@@ -42,15 +42,14 @@
 
 function test() {
   addTab(getBrowserURL());
-  browser.addEventListener("DOMContentLoaded", testChrome, false);
+  browser.addEventListener("DOMContentLoaded", function onLoad() {
+    browser.removeEventListener("DOMContentLoaded", onLoad, true);
+    openConsole();
+    testChrome(HUDService.getHudByWindow(content));
+  }, true);
 }
 
-function testChrome() {
-  browser.removeEventListener("DOMContentLoaded", testChrome, false);
-
-  openConsole();
-
-  let hud = HUDService.getHudByWindow(content);
+function testChrome(hud) {
   ok(hud, "we have a console");
   
   ok(hud.HUDBox, "we have the console display");
@@ -67,6 +66,7 @@ function testChrome() {
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
   is(jsterm.completeNode.value, "    ment", "'docu' completion");
 
-  finishTest();
+  gBrowser.removeCurrentTab();
+  executeSoon(finishTest);
 }
 
