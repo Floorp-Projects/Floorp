@@ -187,16 +187,29 @@ IonFrameIterator::calleeToken() const
 JSFunction *
 IonFrameIterator::callee() const
 {
-    JS_ASSERT(isFunctionFrame());
-    return CalleeTokenToFunction(calleeToken());
+    if (isScripted()) {
+        JS_ASSERT(isFunctionFrame());
+        return CalleeTokenToFunction(calleeToken());
+    }
+
+    JS_ASSERT(isNative());
+    return exitFrame()->nativeVp()[0].toObject().toFunction();
 }
 
 JSFunction *
 IonFrameIterator::maybeCallee() const
 {
-    if (isFunctionFrame())
+    if ((isScripted() && isFunctionFrame()) || isNative())
         return callee();
     return NULL;
+}
+
+bool
+IonFrameIterator::isNative() const
+{
+    if (type_ != IonFrame_Exit)
+        return false;
+    return exitFrame()->footer()->ionCode() == NULL;
 }
 
 bool
@@ -212,6 +225,13 @@ IonFrameIterator::script() const
     JSScript *script = MaybeScriptFromCalleeToken(calleeToken());
     JS_ASSERT(script);
     return script;
+}
+
+Value *
+IonFrameIterator::nativeVp() const
+{
+    JS_ASSERT(isNative());
+    return exitFrame()->nativeVp();
 }
 
 uint8 *

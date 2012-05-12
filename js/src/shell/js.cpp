@@ -2129,9 +2129,8 @@ DumpStack(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     StackIter iter(cx);
-	
-	// This assert does not work with IonMonkey.
-    // JS_ASSERT(iter.isNativeCall() && iter.callee()->native() == DumpStack);
+
+    JS_ASSERT(iter.isNativeCall() && iter.callee()->native() == DumpStack);
 
     ++iter;
 

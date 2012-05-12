@@ -154,3 +154,21 @@ for (var i = 0; i < 10; ++i) {
         }
     }).bind().call(null);
 }
+
+/***********/
+
+function f() {
+    assertStackIs([f, g, Array.prototype.map, h, 'global-code']);
+}
+
+function g() {
+  f();
+}
+
+function h() {
+    var x = [1];
+    for (var i = 0; i < 100; i++)
+        x.map(g);
+}
+
+h();
