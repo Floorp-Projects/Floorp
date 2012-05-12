@@ -731,8 +731,6 @@ class StackFrame
     inline bool forEachCanonicalActualArg(Op op, unsigned start = 0, unsigned count = unsigned(-1));
     template <class Op> inline bool forEachFormalArg(Op op);
 
-    /* XXX: all these argsObj functions will be removed with bug 659577. */
-
     bool hasArgsObj() const {
         /*
          * HAS_ARGS_OBJ is still technically not equivalent to
@@ -1887,15 +1885,23 @@ class StackIter
     bool operator==(const StackIter &rhs) const;
     bool operator!=(const StackIter &rhs) const { return !(*this == rhs); }
 
-    bool isScript() const { JS_ASSERT(!done()); return state_ == SCRIPTED || state_ == ION; }
-    bool isIon() const { JS_ASSERT(!done()); return state_ == ION; }
+    bool isScript() const {
+        JS_ASSERT(!done());
+        return state_ == SCRIPTED ||
+               (state_ == ION && ionFrames_.isScripted());
+    }
+    bool isIon() const {
+        JS_ASSERT(!done());
+        return state_ == ION;
+    }
     bool isImplicitNativeCall() const {
         JS_ASSERT(!done());
         return state_ == IMPLICIT_NATIVE;
     }
     bool isNativeCall() const {
         JS_ASSERT(!done());
-        return state_ == NATIVE || state_ == IMPLICIT_NATIVE;
+        return state_ == NATIVE || state_ == IMPLICIT_NATIVE ||
+               (state_ == ION && ionFrames_.isNative());
     }
 
     bool isFunctionFrame() const;
