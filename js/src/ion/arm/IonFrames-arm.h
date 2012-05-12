@@ -167,6 +167,11 @@ class IonExitFrameLayout : public IonCommonFrameLayout
 {
     void *padding2;
 
+    inline uint8 *top() {
+        uint8 *sp = reinterpret_cast<uint8 *>(this);
+        return sp + IonExitFrameLayout::Size();
+    }
+
   public:
     static inline size_t Size() {
         return sizeof(IonExitFrameLayout);
@@ -184,8 +189,13 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     // each wrapper are pushed before the exit frame.  This correspond exactly
     // to the value of the argBase register of the generateVMWrapper function.
     inline uint8 *argBase() {
-        uint8 *sp = reinterpret_cast<uint8 *>(this);
-        return sp + IonExitFrameLayout::Size();
+        JS_ASSERT(footer()->ionCode() != NULL);
+        return top();
+    }
+    inline Value *nativeVp() {
+        // see CodeGenerator::visitCallNative
+        JS_ASSERT(footer()->ionCode() == NULL);
+        return reinterpret_cast<Value *>(top());
     }
 };
 

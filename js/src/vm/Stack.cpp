@@ -1181,6 +1181,11 @@ StackIter::settleOnNewState()
             if (fp_->runningInIon()) {
                 ionFrames_ = ion::IonFrameIterator(ionActivations_);
 
+                if (ionFrames_.isNative()) {
+                    state_ = ION;
+                    return;
+                }
+
                 while (!ionFrames_.done() && !ionFrames_.isScripted())
                     ++ionFrames_;
 
@@ -1305,7 +1310,7 @@ StackIter::popIonFrame()
 {
     // Keep fp which describes all ion frames.
     poisonRegs();
-    if (ionInlineFrames_.more()) {
+    if (ionFrames_.isScripted() && ionInlineFrames_.more()) {
         ++ionInlineFrames_;
         pc_ = ionInlineFrames_.pc();
         script_ = ionInlineFrames_.script();
@@ -1443,7 +1448,10 @@ StackIter::callee() const
         JS_ASSERT(isFunctionFrame());
         return fp()->callee().toFunction();
       case ION:
-        return ionInlineFrames_.callee();
+        if (ionFrames_.isScripted())
+            return ionInlineFrames_.callee();
+        JS_ASSERT(ionFrames_.isNative());
+        return ionFrames_.callee();
       case NATIVE:
       case IMPLICIT_NATIVE:
         return nativeArgs().callee().toFunction();
@@ -1462,7 +1470,7 @@ StackIter::calleev() const
         JS_ASSERT(isFunctionFrame());
         return fp()->calleev();
       case ION:
-        return ObjectValue(*ionInlineFrames_.callee());
+        return ObjectValue(*callee());
       case NATIVE:
       case IMPLICIT_NATIVE:
         return nativeArgs().calleev();
