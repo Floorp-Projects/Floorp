@@ -171,8 +171,12 @@ public:
         }
     }
 
-    bool MakeCurrentImpl()
+    bool MakeCurrentImpl(bool aForce = false)
     {
+        if (!aForce && [NSOpenGLContext currentContext] == mContext) {
+            return true;
+        }
+
         if (mContext) {
             [mContext makeCurrentContext];
         }
