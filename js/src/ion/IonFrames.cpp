@@ -52,6 +52,7 @@
 #include "gc/Marking.h"
 #include "SnapshotReader.h"
 #include "Safepoints.h"
+#include "VMFunctions.h"
 
 using namespace js;
 using namespace js::ion;
@@ -471,16 +472,64 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 }
 
 static void
+MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
+{
+    IonExitFooterFrame *footer = frame.exitFrame()->footer();
+
+    // Mark the code of the code handling the exit path.  This is needed because
+    // invalidated script are no longer marked because data are erased by the
+    // invalidation and relocation data are no longer reliable.  So the VM
+    // wrapper or the invalidation code may be GC if no IonCode keep reference
+    // on them.
+    JS_ASSERT(uintptr_t(footer->ionCode()) != uintptr_t(-1));
+    if (footer->ionCode() != NULL)
+        MarkIonCodeRoot(trc, footer->addressOfIonCode(), "ion-exit-code");
+
+    const VMFunction *f = footer->function();
+    if (f == NULL || f->explicitArgs == 0)
+        return;
+
+    // Mark arguments of the VM wrapper.
+    uint8 *argBase = frame.exitFrame()->argBase();
+    for (uint32 explicitArg = 0; explicitArg < f->explicitArgs; explicitArg++) {
+        switch (f->argRootType(explicitArg)) {
+          case VMFunction::RootNone:
+            break;
+          case VMFunction::RootObject:
+            gc::MarkObjectRoot(trc, reinterpret_cast<JSObject**>(argBase), "ion-exit-frame");
+            break;
+          case VMFunction::RootString:
+          case VMFunction::RootPropertyName:
+            gc::MarkStringRoot(trc, reinterpret_cast<JSString**>(argBase), "ion-exit-frame");
+            break;
+          case VMFunction::RootFunction:
+            gc::MarkObjectRoot(trc, reinterpret_cast<JSFunction**>(argBase), "ion-exit-frame");
+            break;
+          case VMFunction::RootValue:
+            gc::MarkValueRoot(trc, reinterpret_cast<Value*>(argBase), "ion-exit-frame");
+            break;
+        }
+
+        switch (f->argProperties(explicitArg)) {
+          case VMFunction::WordByValue:
+          case VMFunction::WordByRef:
+            argBase += sizeof(void *);
+            break;
+          case VMFunction::DoubleByValue:
+          case VMFunction::DoubleByRef:
+            argBase += 2 * sizeof(void *);
+            break;
+        }
+    }
+}
+
+static void
 MarkIonActivation(JSTracer *trc, uint8 *top, IonActivation *activation)
 {
-    IonCode **tmp;
     for (IonFrameIterator frames(top); !frames.done(); ++frames) {
         switch (frames.type()) {
           case IonFrame_Exit:
-            // The exit frame will not be ignored.
-            tmp = frames.exitFrame()->ionCodePointer();
-            if (*tmp != NULL)
-                MarkIonCodeRoot(trc, tmp, "Exit Code");
+            MarkIonExitFrame(trc, frames);
             break;
           case IonFrame_JS:
             MarkIonJSFrame(trc, frames);

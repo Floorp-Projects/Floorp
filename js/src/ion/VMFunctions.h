@@ -102,6 +102,19 @@ struct VMFunction
     // NULL before discarding its value.
     DataType returnType;
 
+    enum RootType {
+        RootNone = 0,
+        RootObject,
+        RootString,
+        RootPropertyName,
+        RootFunction,
+        RootValue
+    };
+
+    // Contains an combination of enumerated types used by the gc for marking
+    // arguments of the VM wrapper.
+    uint64 argumentRootTypes;
+
     uint32 argc() const {
         // JSContext * + args + (OutParam? *)
         return 1 + explicitArgc() + ((outParam == Type_Void) ? 0 : 1);
@@ -113,6 +126,10 @@ struct VMFunction
 
     ArgProperties argProperties(uint32 explicitArg) const {
         return ArgProperties((argumentProperties >> (2 * explicitArg)) & 3);
+    }
+
+    RootType argRootType(uint32 explicitArg) const {
+        return RootType((argumentRootTypes >> (4 * explicitArg)) & 15);
     }
 
     // Return the stack size consumed by explicit arguments.
@@ -169,12 +186,14 @@ struct VMFunction
     {
     }
 
-    VMFunction(void *wrapped, uint32 explicitArgs, uint32 argumentProperties, DataType outParam, DataType returnType)
+    VMFunction(void *wrapped, uint32 explicitArgs, uint32 argumentProperties, uint64 argRootTypes,
+               DataType outParam, DataType returnType)
       : wrapped(wrapped),
         explicitArgs(explicitArgs),
         argumentProperties(argumentProperties),
         outParam(outParam),
-        returnType(returnType)
+        returnType(returnType),
+        argumentRootTypes(argRootTypes)
     {
         // Check for valid failure/return type.
         JS_ASSERT_IF(outParam != Type_Void, returnType == Type_Bool);
@@ -217,6 +236,26 @@ template <> struct TypeToArgProperties<HandleValue> {
     static const uint32 result = TypeToArgProperties<Value>::result | VMFunction::ByRef;
 };
 
+// Convert argument types to root types used by the gc, see MarkIonExitFrame.
+template <class T> struct TypeToRootType {
+    static const uint32 result = VMFunction::RootNone;
+};
+template <> struct TypeToRootType<HandleObject> {
+    static const uint32 result = VMFunction::RootObject;
+};
+template <> struct TypeToRootType<HandleString> {
+    static const uint32 result = VMFunction::RootString;
+};
+template <> struct TypeToRootType<HandlePropertyName> {
+    static const uint32 result = VMFunction::RootPropertyName;
+};
+template <> struct TypeToRootType<HandleFunction> {
+    static const uint32 result = VMFunction::RootFunction;
+};
+template <> struct TypeToRootType<HandleValue> {
+    static const uint32 result = VMFunction::RootValue;
+};
+
 template <class> struct OutParamToDataType { static const DataType result = Type_Void; };
 template <> struct OutParamToDataType<Value *> { static const DataType result = Type_Value; };
 template <> struct OutParamToDataType<int *> { static const DataType result = Type_Int32; };
@@ -231,6 +270,7 @@ template <> struct OutParamToDataType<uint32_t *> { static const DataType result
 #define COMPUTE_INDEX(NbArg) NbArg
 #define COMPUTE_OUTPARAM_RESULT(NbArg) OutParamToDataType<A ## NbArg>::result
 #define COMPUTE_ARG_PROP(NbArg) (TypeToArgProperties<A ## NbArg>::result << (2 * (NbArg - 1)))
+#define COMPUTE_ARG_ROOT(NbArg) (uint64(TypeToArgProperties<A ## NbArg>::result) << (4 * (NbArg - 1)))
 #define SEP_OR(_) |
 #define NOTHING(_)
 
@@ -250,9 +290,13 @@ template <> struct OutParamToDataType<uint32_t *> { static const DataType result
     static inline uint32 argumentProperties() {                                         \
         return ForEachNb(COMPUTE_ARG_PROP, SEP_OR, NOTHING);                            \
     }                                                                                   \
+    static inline uint64 argumentRootTypes() {                                          \
+        return ForEachNb(COMPUTE_ARG_ROOT, SEP_OR, NOTHING);                            \
+    }                                                                                   \
     FunctionInfo(pf fun)                                                                \
         : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),                  \
-                     argumentProperties(), outParam(), returnType())                    \
+                     argumentProperties(),argumentRootTypes(),                          \
+                     outParam(), returnType())                                          \
     { }
 
 template <typename Fun>
@@ -276,9 +320,13 @@ struct FunctionInfo<R (*)(JSContext *)> : public VMFunction {
     static inline uint32 argumentProperties() {
         return 0;
     }
+    static inline uint64 argumentRootTypes() {
+        return 0;
+    }
     FunctionInfo(pf fun)
       : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),
-                   argumentProperties(), outParam(), returnType())
+                   argumentProperties(), argumentRootTypes(),
+                   outParam(), returnType())
     { }
 };
 
