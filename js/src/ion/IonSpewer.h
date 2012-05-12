@@ -131,6 +131,7 @@ void IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap);
 
 void EnableChannel(IonSpewChannel channel);
 void DisableChannel(IonSpewChannel channel);
+void EnableIonDebugLogging();
 
 #else
 
@@ -158,6 +159,8 @@ static inline void IonSpewVA(IonSpewChannel, const char *fmt, va_list ap)
 static inline void EnableChannel(IonSpewChannel)
 { }
 static inline void DisableChannel(IonSpewChannel)
+{ }
+static inline void EnableIonDebugLogging()
 { }
 
 #endif /* DEBUG */
