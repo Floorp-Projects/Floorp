@@ -67,12 +67,15 @@ static const char *ChannelNames[] =
 #undef IONSPEW_CHANNEL
 };
 
+void
+ion::EnableIonDebugLogging()
+{
+    ionspewer.init();
+}
 
 void
 ion::IonSpewNewFunction(MIRGraph *graph, JSScript *function)
 {
-    if (!ionspewer.init())
-        return;
     ionspewer.beginFunction(graph, function);
 }
 
@@ -214,6 +217,7 @@ ion::CheckLogging()
             "  caches     Inline caches\n"
             "  osi        Invalidation\n"
             "  safepoints Safepoints\n"
+            "  logs       C1 and JSON visualization logging\n"
             "  all        Everything\n"
             "\n"
         );
@@ -246,8 +250,13 @@ ion::CheckLogging()
         EnableChannel(IonSpew_InlineCaches);
     if (ContainsFlag(env, "safepoints"))
         EnableChannel(IonSpew_Safepoints);
+    if (ContainsFlag(env, "logs"))
+        EnableIonDebugLogging();
     if (ContainsFlag(env, "all"))
         LoggingBits = uint32(-1);
+
+    if (LoggingBits != 0)
+        EnableIonDebugLogging();
 
     IonSpewFile = stderr;
 }
