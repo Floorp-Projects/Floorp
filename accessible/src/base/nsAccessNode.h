@@ -53,13 +53,13 @@
 #include "nsIStringBundle.h"
 #include "nsWeakReference.h"
 
-class ApplicationAccessible;
 class nsAccessNode;
 class nsDocAccessible;
 class nsIAccessibleDocument;
 
 namespace mozilla {
 namespace a11y {
+class ApplicationAccessible;
 class RootAccessible;
 }
 }
@@ -84,7 +84,7 @@ public:
   /**
    * Return an application accessible.
    */
-  static ApplicationAccessible* GetApplicationAccessible();
+  static mozilla::a11y::ApplicationAccessible* GetApplicationAccessible();
 
   /**
    * Return the document accessible for this access node.
@@ -165,7 +165,7 @@ private:
   nsAccessNode(const nsAccessNode&) MOZ_DELETE;
   nsAccessNode& operator =(const nsAccessNode&) MOZ_DELETE;
   
-  static ApplicationAccessible* gApplicationAccessible;
+  static mozilla::a11y::ApplicationAccessible* gApplicationAccessible;
 };
 
 #endif
