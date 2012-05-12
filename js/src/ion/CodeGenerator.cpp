@@ -463,8 +463,8 @@ CodeGenerator::visitCallNative(LCallNative *call)
 
     // Construct exit frame.
     uint32 safepointOffset = masm.buildFakeExitFrame(tempReg);
-    masm.linkExitFrame();
-    masm.Push(ImmWord(uintptr_t(NULL)));
+    masm.enterFakeExitFrame();
+
     if (!markSafepointAt(safepointOffset, call))
         return false;
 
@@ -489,6 +489,9 @@ CodeGenerator::visitCallNative(LCallNative *call)
         masm.handleException();
     }
     masm.bind(&success);
+
+    // The next instruction is removing the footer of the exit frame, so there
+    // is no need for leaveFakeExitFrame.
 
     // Move the StackPointer back to its original location, unwinding the exit frame.
     masm.adjustStack(IonExitFrameLayout::SizeWithFooter() - unusedStack + sizeof(Value));

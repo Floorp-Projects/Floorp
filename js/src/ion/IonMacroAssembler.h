@@ -403,12 +403,25 @@ class MacroAssembler : public MacroAssemblerSpecific
     // This is a reference to a patch location where the IonCode* will be written.
   private:
     CodeOffsetLabel exitCodePatch_;
+
   public:
-    void linkExitFrameAndCode() {
+    void enterExitFrame(const VMFunction *f = NULL) {
         linkExitFrame();
-        // Push the ioncode for this bailout onto the stack
+        // Push the ioncode. (Bailout or VM wrapper)
         exitCodePatch_ = PushWithPatch(ImmWord(-1));
+        // Push VMFunction pointer, to mark arguments.
+        Push(ImmWord(f));
     }
+    void enterFakeExitFrame() {
+        linkExitFrame();
+        Push(ImmWord(uintptr_t(NULL)));
+        Push(ImmWord(uintptr_t(NULL)));
+    }
+
+    void leaveExitFrame() {
+        freeStack(IonExitFooterFrame::Size());
+    }
+
     void link(IonCode *code) {
 
         // If this code can transition to C++ code and witness a GC, then we need to store
