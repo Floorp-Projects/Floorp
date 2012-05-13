@@ -899,8 +899,11 @@ nsFrameScriptExecutor::Traverse(nsFrameScriptExecutor *tmp,
                                 nsCycleCollectionTraversalCallback &cb)
 {
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobal)
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCx");
-  nsContentUtils::XPConnect()->NoteJSContext(tmp->mCx, cb);
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  if (xpc) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCx");
+    xpc->NoteJSContext(tmp->mCx, cb);
+  }
 }
 
 NS_IMPL_ISUPPORTS1(nsScriptCacheCleaner, nsIObserver)
