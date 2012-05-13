@@ -401,11 +401,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
 
   NS_ASSERTION(!GetPrevInFlow(), "SVG can't currently be broken across pages.");
 
-  // Make sure we scroll if we're too big:
-  // XXX Use the bounding box of our descendants? (See bug 353460 comment 14.)
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
-  FinishAndStoreOverflow(&aDesiredSize);
-
   // If our SVG viewport has changed, update our content and notify.
   // http://www.w3.org/TR/SVG11/coords.html#ViewportSpace
 
@@ -429,28 +424,8 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
     NotifyViewportOrTransformChanged(changeBits);
   }
 
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                  ("exit nsSVGOuterSVGFrame::Reflow: size=%d,%d",
-                  aDesiredSize.width, aDesiredSize.height));
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
-                              const nsHTMLReflowState*  aReflowState,
-                              nsDidReflowStatus aStatus)
-{
-  bool firstReflow = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
-
-  nsresult rv = nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
-
-  if (firstReflow) {
-    // Temporarily add back the NS_FRAME_FIRST_REFLOW bit to indicate
-    // to the children that we are still to receive the invalidation
-    // for our first reflow:
-    AddStateBits(NS_FRAME_FIRST_REFLOW);
-  }
+  // Now that we've marked the necessary children as dirty, call
+  // UpdateBounds() on them:
 
 #ifdef DEBUG
   mCallingUpdateBounds = true;
@@ -471,10 +446,24 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
   mCallingUpdateBounds = false;
 #endif
 
-  if (firstReflow) {
-    // And now remove it again:
-    RemoveStateBits(NS_FRAME_FIRST_REFLOW);
-  }
+  // Make sure we scroll if we're too big:
+  // XXX Use the bounding box of our descendants? (See bug 353460 comment 14.)
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
+  FinishAndStoreOverflow(&aDesiredSize);
+
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                  ("exit nsSVGOuterSVGFrame::Reflow: size=%d,%d",
+                  aDesiredSize.width, aDesiredSize.height));
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
+                              const nsHTMLReflowState*  aReflowState,
+                              nsDidReflowStatus aStatus)
+{
+  nsresult rv = nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
 
   // Make sure elements styled by :hover get updated if script/animation moves
   // them under or out from under the pointer:
