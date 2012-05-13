@@ -7,13 +7,15 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  */
 
-function tabLoad(aEvent) {
-  browser.removeEventListener(aEvent.type, arguments.callee, true);
+let hud, testDriver;
 
-  openConsole();
+function testNext() {
+  testDriver.next();
+}
 
-  let hudId = HUDService.getHudIdByWindow(content);
-  let hud = HUDService.hudReferences[hudId];
+function testGen() {
+  hud.jsterm.clearOutput();
+
   let outputNode = hud.outputNode;
   let oldPref = Services.prefs.getIntPref("devtools.hud.loglimit.console");
 
@@ -24,6 +26,18 @@ function tabLoad(aEvent) {
   for (let i = 0; i < 150; i++) {
     hud.console.log("test message " + i);
   }
+
+  waitForSuccess({
+    name: "150 console.log messages displayed",
+    validatorFn: function()
+    {
+      return outputNode.querySelectorAll(".hud-log").length == 140;
+    },
+    successFn: testNext,
+    failureFn: finishTest,
+  });
+
+  yield;
 
   let oldScrollTop = scrollBoxElement.scrollTop;
   ok(oldScrollTop > 0, "scroll location is not at the top");
@@ -45,6 +59,18 @@ function tabLoad(aEvent) {
   // add a message
   hud.console.log("hello world");
 
+  waitForSuccess({
+    name: "console.log message #151 displayed",
+    validatorFn: function()
+    {
+      return outputNode.textContent.indexOf("hello world") > -1;
+    },
+    successFn: testNext,
+    failureFn: finishTest,
+  });
+
+  yield;
+
   // Scroll location needs to change, because one message is also removed, and
   // we need to scroll a bit towards the top, to keep the current view in sync.
   isnot(scrollBoxElement.scrollTop, oldScrollTop,
@@ -54,10 +80,22 @@ function tabLoad(aEvent) {
         "first message removed");
 
   Services.prefs.setIntPref("devtools.hud.loglimit.console", oldPref);
+
+  hud = testDriver = null;
   finishTest();
+
+  yield;
 }
 
 function test() {
   addTab("data:text/html;charset=utf-8,Web Console test for bug 613642: maintain scroll with pruning of old messages");
-  browser.addEventListener("load", tabLoad, true);
+  browser.addEventListener("load", function tabLoad(aEvent) {
+    browser.removeEventListener(aEvent.type, tabLoad, true);
+
+    openConsole(null, function(aHud) {
+      hud = aHud;
+      testDriver = testGen();
+      testDriver.next();
+    });
+  }, true);
 }

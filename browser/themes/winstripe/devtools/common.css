@@ -42,21 +42,25 @@
   padding: 4px 3px;
   box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
   background-image: -moz-linear-gradient(top, hsl(209,18%,34%), hsl(210,24%,16%));
+  color: hsl(210,30%,85%);
 }
 
+.devtools-menulist,
 .devtools-toolbarbutton {
   -moz-appearance: none;
   min-width: 78px;
   min-height: 22px;
-  color: hsl(210,30%,85%);
   text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
   border: 1px solid hsla(211,68%,6%,.5);
   border-radius: 3px;
   background: -moz-linear-gradient(hsla(209,13%,54%,.35), hsla(209,13%,54%,.1) 85%, hsla(209,13%,54%,.2)) padding-box;
   box-shadow: 0 1px 0 hsla(209,29%,72%,.15) inset, 0 0 0 1px hsla(209,29%,72%,.1) inset, 0 0 0 1px hsla(209,29%,72%,.1), 0 1px 0 hsla(210,16%,76%,.1);
+  margin: 0;
   -moz-margin-end: 3px;
+  color: inherit;
 }
 
+.devtools-menulist:-moz-focusring,
 .devtools-toolbarbutton:-moz-focusring {
   outline: 1px dotted hsla(210,30%,85%,0.4);
   outline-offset: -4px;
@@ -76,6 +80,7 @@
   box-shadow: 0 1px 3px hsla(211,68%,6%,.5) inset, 0 0 0 1px hsla(209,29%,72%,.1), 0 1px 0 hsla(210,16%,76%,.1);
 }
 
+.devtools-menulist[open=true],
 .devtools-toolbarbutton[checked] {
   border-color: hsla(211,68%,6%,.6);
   background: -moz-linear-gradient(hsla(211,68%,6%,.1), hsla(211,68%,6%,.2));
@@ -85,6 +90,22 @@
 
 .devtools-toolbarbutton[checked]:hover:active {
   background-color: hsla(211,68%,6%,.2);
+}
+
+.devtools-menulist > .menulist-label-box {
+  text-align: center;
+}
+
+.devtools-menulist > .menulist-dropmarker {
+  -moz-appearance: none;
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
+  border-width: 0;
+  background-color: transparent;
+}
+
+.devtools-menulist:focus:not([open="true"]):not(.menulist-compact) > .menulist-label-box {
+  color: hsl(210,30%,85%) !important;
+  background-color: transparent;
 }
 
 /* Search input */
@@ -98,15 +119,15 @@
   background-color: transparent;
   background-image: url(magnifying-glass.png), -moz-linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
   background-repeat: no-repeat;
-  background-position: 4px 3px, top left, top left;
+  background-position: 4px center, top left, top left;
   padding-top: 0;
   padding-bottom: 0;
   -moz-padding-start: 18px;
   -moz-padding-end: 12px;
-  color: hsl(210,30%,85%);
   -moz-transition-property: background-color, border-color, box-shadow;
   -moz-transition-duration: 150ms;
   -moz-transition-timing-function: ease;
+  color: inherit;
 }
 
 .devtools-searchinput[focused] {
@@ -126,4 +147,40 @@
 
 .devtools-searchinput > .textbox-input-box > .textbox-input:-moz-placeholder {
   color: hsl(208,10%,66%);
+}
+
+/* Close button */
+
+.devtools-closebutton {
+  list-style-image: url("chrome://browser/skin/devtools/toolbarbutton-close.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+  min-width: 16px;
+  width: 16px;
+  -moz-appearance: none;
+  border-style: none;
+}
+
+.devtools-closebutton > .toolbarbutton-text {
+  display: none;
+}
+
+.devtools-closebutton:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.devtools-closebutton:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+
+/* Splitter */
+
+.devtools-horizontal-splitter {
+  -moz-appearance: none;
+  border-width: 1px 0 0 0;
+  -moz-border-top-colors: black;
+  background-color: transparent;
+  min-height: 3px;
+  height: 3px;
+  margin-bottom: -3px;
+  position: relative;
 }

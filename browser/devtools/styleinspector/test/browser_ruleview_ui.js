@@ -155,6 +155,12 @@ function testEditProperty()
         expectChange();
         is(idRuleEditor.rule.style.getPropertyValue("border-color"), "red",
            "border-color should have been set.");
+
+        let props = ruleView.element.querySelectorAll(".ruleview-property");
+        for (let i = 0; i < props.length; i++) {
+          is(props[i].hasAttribute("dirty"), i <= 1,
+            "props[" + i + "] marked dirty as appropriate");
+        }
         testDisableProperty();
       });
 

@@ -8,12 +8,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 613280";
 
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
-});
-
 function test() {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
   browser.addEventListener("load", tabLoaded, true);
 }
@@ -74,6 +69,6 @@ function tabLoaded() {
 }
 
 function getExpectedClipboardText(aItem) {
-  return "[" + ConsoleUtils.timestampString(aItem.timestamp) + "] " +
+  return "[" + WebConsoleUtils.l10n.timestampString(aItem.timestamp) + "] " +
          aItem.clipboardText;
 }
