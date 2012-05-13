@@ -46,10 +46,10 @@ function test() {
 function tabLoaded() {
   browser.removeEventListener("load", tabLoaded, true);
 
-  openConsole();
-
-  browser.addEventListener("load", tabReloaded, true);
-  content.location.reload();
+  openConsole(null, function() {
+    browser.addEventListener("load", tabReloaded, true);
+    content.location.reload();
+  });
 }
 
 function tabReloaded() {

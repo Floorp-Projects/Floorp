@@ -42,32 +42,52 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
-});
+let testDriver = null;
+let subtestDriver = null;
 
 function test() {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
+
   browser.addEventListener("DOMContentLoaded", onLoad, false);
 }
 
 function onLoad() {
   browser.removeEventListener("DOMContentLoaded", onLoad, false);
 
-  openConsole();
+  openConsole(null, function(aHud) {
+    hud = aHud;
+    hudId = hud.hudId;
+    outputNode = hud.outputNode;
+    testDriver = testGen();
+    testDriver.next();
+  });
+}
 
-  hud = HUDService.getHudByWindow(content);
-  hudId = hud.hudId;
-  outputNode = hud.outputNode;
+function testGen() {
+  subtestGen("log");
+  yield;
 
-  testConsoleLoggingAPI("log");
-  testConsoleLoggingAPI("info");
-  testConsoleLoggingAPI("warn");
-  testConsoleLoggingAPI("error");
-  testConsoleLoggingAPI("debug"); // bug 616742
+  subtestGen("info");
+  yield;
 
+  subtestGen("warn");
+  yield;
+
+  subtestGen("error");
+  yield;
+
+  subtestGen("debug"); // bug 616742
+  yield;
+
+  testDriver = subtestDriver = null;
   finishTest();
+
+  yield;
+}
+
+function subtestGen(aMethod) {
+  subtestDriver = testConsoleLoggingAPI(aMethod);
+  subtestDriver.next();
 }
 
 function testConsoleLoggingAPI(aMethod) {
@@ -79,9 +99,21 @@ function testConsoleLoggingAPI(aMethod) {
   console[aMethod]("foo-bar-baz");
   console[aMethod]("bar-baz");
 
-  var nodes = outputNode.querySelectorAll(".hud-filtered-by-string");
+  function nextTest() {
+    subtestDriver.next();
+  }
 
-  is(nodes.length, 1, "1 hidden " + aMethod  + " node found (via classList)");
+  waitForSuccess({
+    name: "1 hidden " + aMethod + " node via string filtering",
+    validatorFn: function()
+    {
+      return outputNode.querySelectorAll(".hud-filtered-by-string").length == 1;
+    },
+    successFn: nextTest,
+    failureFn: nextTest,
+  });
+
+  yield;
 
   hud.jsterm.clearOutput();
 
@@ -91,16 +123,34 @@ function testConsoleLoggingAPI(aMethod) {
   setStringFilter(hudId, "");
   HUDService.setFilterState(hudId, aMethod, false);
   console[aMethod]("foo-bar-baz");
-  nodes = outputNode.querySelectorAll("description");
 
-  is(nodes.length, 1,  aMethod + " logging turned off, 1 message hidden");
+  waitForSuccess({
+    name: "1 message hidden for " + aMethod + " (logging turned off)",
+    validatorFn: function()
+    {
+      return outputNode.querySelectorAll("description").length == 1;
+    },
+    successFn: nextTest,
+    failureFn: nextTest,
+  });
+
+  yield;
 
   hud.jsterm.clearOutput();
   HUDService.setFilterState(hudId, aMethod, true);
   console[aMethod]("foo-bar-baz");
-  nodes = outputNode.querySelectorAll("description");
 
-  is(nodes.length, 1, aMethod + " logging turned on, 1 message shown");
+  waitForSuccess({
+    name: "1 message shown for " + aMethod + " (logging turned on)",
+    validatorFn: function()
+    {
+      return outputNode.querySelectorAll("description").length == 1;
+    },
+    successFn: nextTest,
+    failureFn: nextTest,
+  });
+
+  yield;
 
   hud.jsterm.clearOutput();
   setStringFilter(hudId, "");
@@ -108,9 +158,20 @@ function testConsoleLoggingAPI(aMethod) {
   // test for multiple arguments.
   console[aMethod]("foo", "bar");
 
-  let node = outputNode.querySelector(".hud-msg-node");
-  ok(/foo bar/.test(node.textContent),
-    "Emitted both console arguments");
+  waitForSuccess({
+    name: "show both console arguments for " + aMethod,
+    validatorFn: function()
+    {
+      let node = outputNode.querySelector(".hud-msg-node");
+      return node && /foo bar/.test(node.textContent);
+    },
+    successFn: nextTest,
+    failureFn: nextTest,
+  });
+
+  yield;
+  testDriver.next();
+  yield;
 }
 
 function setStringFilter(aId, aValue) {

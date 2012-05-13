@@ -10,14 +10,9 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-621644-jsterm-dollar.html";
 
 function tabLoad(aEvent) {
-  browser.removeEventListener(aEvent.type, arguments.callee, true);
+  browser.removeEventListener(aEvent.type, tabLoad, true);
 
-  waitForFocus(function () {
-    openConsole();
-
-    let hudId = HUDService.getHudIdByWindow(content);
-    let HUD = HUDService.hudReferences[hudId];
-
+  openConsole(null, function(HUD) {
     HUD.jsterm.clearOutput();
 
     HUD.jsterm.setInputValue("$(document.body)");
@@ -39,15 +34,10 @@ function tabLoad(aEvent) {
        "jsterm output is correct for $$()");
 
     executeSoon(finishTest);
-  }, content);
+  });
 }
 
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
-});
-
 function test() {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
   browser.addEventListener("load", tabLoad, true);
 }

@@ -44,16 +44,18 @@ function test() {
 
 function onLoad() {
   browser.removeEventListener("DOMContentLoaded", onLoad, false);
-  openConsole();
+  openConsole(null, function(hud) {
+    content.console.log("a log message");
 
-  let console = content.wrappedJSObject.console;
-  let outputNode = HUDService.getHudByWindow(content).outputNode;
-
-  console.log("a log message");
-
-  let node = outputNode.querySelectorAll(".hud-msg-node");
-
-  ok(node[0].getAttribute("id") && node[0].getAttribute != "", "we have a node id");
-  closeConsole();
-  finishTest();
+    waitForSuccess({
+      name: "console.log message shown with an ID attribute",
+      validatorFn: function()
+      {
+        let node = hud.outputNode.querySelector(".hud-msg-node");
+        return node && node.getAttribute("id");
+      },
+      successFn: finishTest,
+      failureFn: finishTest,
+    });
+  });
 }

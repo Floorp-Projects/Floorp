@@ -45,6 +45,7 @@
 #include "nsIXTFElement.h"
 
 typedef nsXMLElement nsXTFElementWrapperBase;
+class nsXTFClassInfo;
 
 // Pseudo IID for nsXTFElementWrapper
 // {599EB85F-ABC0-4B52-A1B0-EA103D48E3AE}
@@ -53,8 +54,7 @@ typedef nsXMLElement nsXTFElementWrapperBase;
 
 
 class nsXTFElementWrapper : public nsXTFElementWrapperBase,
-                            public nsIXTFElementWrapper,
-                            public nsXPCClassInfo
+                            public nsIXTFElementWrapper
 {
 public:
   nsXTFElementWrapper(already_AddRefed<nsINodeInfo> aNodeInfo, nsIXTFElement* aXTFElement);
@@ -153,7 +153,7 @@ public:
   }
   nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo() { return this; }
+  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual void NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
   {
@@ -193,9 +193,39 @@ protected:
   nsAttrName mTmpAttrName;
 
   nsCOMPtr<nsIAtom> mClassAttributeName;
+
+  nsRefPtr<nsXTFClassInfo> mClassInfo;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXTFElementWrapper, NS_XTFELEMENTWRAPPER_IID)
+
+class nsXTFClassInfo : public nsXPCClassInfo
+{
+public:
+  nsXTFClassInfo(nsXTFElementWrapper* aWrapper) : mWrapper(aWrapper) {}
+
+  void Disconnect() { mWrapper = nsnull; }
+
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_SAFE_NSICLASSINFO(mWrapper);
+  NS_FORWARD_SAFE_NSIXPCSCRIPTABLE(mWrapper);
+
+  // nsXPCClassInfo
+  virtual void PreserveWrapper(nsISupports* aNative)
+  {
+    if (mWrapper) {
+      mWrapper->PreserveWrapper(aNative);
+    }
+  }
+
+  virtual PRUint32 GetInterfacesBitmap()
+  {
+    return mWrapper ? mWrapper->GetInterfacesBitmap() : 0;
+  }
+
+private:
+  nsXTFElementWrapper* mWrapper;  
+};
 
 nsresult
 NS_NewXTFElementWrapper(nsIXTFElement* aXTFElement, already_AddRefed<nsINodeInfo> aNodeInfo,
