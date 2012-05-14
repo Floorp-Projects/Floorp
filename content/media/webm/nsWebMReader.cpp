@@ -448,12 +448,12 @@ bool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
   // from after the gap.
   CheckedInt64 tstamp_frames = UsecsToFrames(tstamp_usecs, rate);
   CheckedInt64 decoded_frames = UsecsToFrames(mAudioStartUsec, rate);
-  if (!tstamp_frames.valid() || !decoded_frames.valid()) {
+  if (!tstamp_frames.isValid() || !decoded_frames.isValid()) {
     NS_WARNING("Int overflow converting WebM times to frames");
     return false;
   }
   decoded_frames += mAudioFrames;
-  if (!decoded_frames.valid()) {
+  if (!decoded_frames.isValid()) {
     NS_WARNING("Int overflow adding decoded_frames");
     return false;
   }
@@ -461,7 +461,7 @@ bool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
 #ifdef DEBUG
     CheckedInt64 usecs = FramesToUsecs(tstamp_frames.value() - decoded_frames.value(), rate);
     LOG(PR_LOG_DEBUG, ("WebMReader detected gap of %lld, %lld frames, in audio stream\n",
-      usecs.valid() ? usecs.value(): -1,
+      usecs.isValid() ? usecs.value() : -1,
       tstamp_frames.value() - decoded_frames.value()));
 #endif
     mPacketCount++;
@@ -501,18 +501,18 @@ bool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
       }
 
       CheckedInt64 duration = FramesToUsecs(frames, rate);
-      if (!duration.valid()) {
+      if (!duration.isValid()) {
         NS_WARNING("Int overflow converting WebM audio duration");
         return false;
       }
       CheckedInt64 total_duration = FramesToUsecs(total_frames, rate);
-      if (!total_duration.valid()) {
+      if (!total_duration.isValid()) {
         NS_WARNING("Int overflow converting WebM audio total_duration");
         return false;
       }
       
       CheckedInt64 time = total_duration + tstamp_usecs;
-      if (!time.valid()) {
+      if (!time.isValid()) {
         NS_WARNING("Int overflow adding total_duration and tstamp_usecs");
         nestegg_free_packet(aPacket);
         return false;

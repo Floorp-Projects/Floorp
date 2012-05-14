@@ -40,12 +40,11 @@
 #define VideoUtils_h
 
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/CheckedInt.h"
 
 #include "nsRect.h"
 #include "nsIThreadManager.h"
 #include "nsThreadUtils.h"
-
-#include "CheckedInt.h"
 
 using mozilla::CheckedInt64;
 using mozilla::CheckedUint64;

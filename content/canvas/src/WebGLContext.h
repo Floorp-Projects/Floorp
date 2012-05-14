@@ -64,9 +64,9 @@
 #include "GLContextProvider.h"
 #include "Layers.h"
 
-#include "CheckedInt.h"
 #include "nsDataHashtable.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/dom/ImageData.h"
 
 #ifdef XP_MACOSX
@@ -481,7 +481,7 @@ public:
 private:
     WebGLMonotonicHandle NextMonotonicHandle() {
         ++mCurrentMonotonicHandle;
-        if (!mCurrentMonotonicHandle.valid())
+        if (!mCurrentMonotonicHandle.isValid())
             NS_RUNTIMEABORT("ran out of monotonic ids!");
         return mCurrentMonotonicHandle.value();
     }
@@ -1748,7 +1748,7 @@ public:
 
     bool HasImageInfoAt(size_t level, size_t face) const {
         CheckedUint32 checked_index = CheckedUint32(level) * mFacesCount + face;
-        return checked_index.valid() &&
+        return checked_index.isValid() &&
                checked_index.value() < mImageInfos.Length() &&
                ImageInfoAt(level, face).mIsDefined;
     }
@@ -2328,7 +2328,7 @@ public:
 
     bool NextGeneration()
     {
-        if (!(mGeneration+1).valid())
+        if (!(mGeneration + 1).isValid())
             return false; // must exit without changing mGeneration
         ++mGeneration;
         return true;

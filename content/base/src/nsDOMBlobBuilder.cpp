@@ -70,7 +70,7 @@ nsDOMMultipartFile::GetSize(PRUint64* aLength)
       length += l;
     }
   
-    NS_ENSURE_TRUE(length.valid(), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(length.isValid(), NS_ERROR_FAILURE);
 
     mLength = length.value();
   }
