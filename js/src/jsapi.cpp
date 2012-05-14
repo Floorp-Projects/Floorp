@@ -1544,7 +1544,7 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
     JSCompartment *destination = target->compartment();
     WrapperMap &map = destination->crossCompartmentWrappers;
     Value origv = ObjectValue(*origobj);
-    JSObject *obj;
+    JSObject *newIdentity;
 
     if (origobj->compartment() == destination) {
         // If the original object is in the same compartment as the
@@ -1553,40 +1553,40 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
         // object will continue to work.
         if (!origobj->swap(cx, target))
             return NULL;
-        obj = origobj;
+        newIdentity = origobj;
     } else if (WrapperMap::Ptr p = map.lookup(origv)) {
         // There might already be a wrapper for the original object in
         // the new compartment. If there is, we use its identity and swap
         // in the contents of |target|.
-        obj = &p->value.toObject();
+        newIdentity = &p->value.toObject();
         map.remove(p);
-        if (!obj->swap(cx, target))
+        if (!newIdentity->swap(cx, target))
             return NULL;
     } else {
         // Otherwise, we use |target| for the new identity object.
-        obj = target;
+        newIdentity = target;
     }
-    Value targetv = ObjectValue(*obj);
 
     // Now, iterate through other scopes looking for references to the
     // old object, and update the relevant cross-compartment wrappers.
-    if (!RemapWrappers(cx, origobj, obj))
+    if (!RemapWrappers(cx, origobj, newIdentity))
         return NULL;
 
     // Lastly, update the original object to point to the new one.
     if (origobj->compartment() != destination) {
         AutoCompartment ac(cx, origobj);
-        JSObject *tobj = obj;
-        if (!ac.enter() || !JS_WrapObject(cx, &tobj))
+        JSObject *newIdentityWrapper = newIdentity;
+        if (!ac.enter() || !JS_WrapObject(cx, &newIdentityWrapper))
             return NULL;
-        if (!origobj->swap(cx, tobj))
+        if (!origobj->swap(cx, newIdentityWrapper))
             return NULL;
-        origobj->compartment()->crossCompartmentWrappers.put(targetv, origv);
+        origobj->compartment()->crossCompartmentWrappers.put(ObjectValue(*newIdentity),
+                                                             origv);
     }
 
     // The new identity object might be one of several things. Return it to avoid
     // ambiguity.
-    return obj;
+    return newIdentity;
 }
 
 /*
