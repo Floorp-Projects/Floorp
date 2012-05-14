@@ -8,6 +8,9 @@
 // PRELUDE                             //
 /////////////////////////////////////////
 
+// Avoid eager compilation of the global-scope.
+try{} catch (x) {};
+
 function ASSERT(cond, msg) {
     assertEq(cond, true, msg);
 }
