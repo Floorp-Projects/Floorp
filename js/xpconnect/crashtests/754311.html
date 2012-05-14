@@ -1,0 +1,16 @@
+<html class="reftest-wait">
+<head>
+<script type="application/javascript">
+
+// The actual crashing code does document.write, which doesn't play
+// well with |reftest-wait|. So we load it in an iframe.
+
+function allDone() {
+  window.document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body>
+    <iframe src="754311-iframe.html"></iframe>
+</body>
+</html>
