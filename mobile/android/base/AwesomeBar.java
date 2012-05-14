@@ -79,6 +79,7 @@ import java.net.URLEncoder;
 import java.util.Map;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.BrowserDB;
 
@@ -484,8 +485,11 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             // The history list is backed by a SimpleExpandableListAdapter
             @SuppressWarnings("rawtypes")
             Map map = (Map) exList.getExpandableListAdapter().getChild(groupPosition, childPosition);
-            mContextMenuSubject = new ContextMenuSubject(-1, (String)map.get(URLColumns.URL),
-                    (byte[]) map.get(URLColumns.FAVICON), (String)map.get(URLColumns.TITLE), null);
+            mContextMenuSubject = new ContextMenuSubject((Integer) map.get(Combined.HISTORY_ID),
+                                                         (String) map.get(URLColumns.URL),
+                                                         (byte[]) map.get(URLColumns.FAVICON),
+                                                         (String) map.get(URLColumns.TITLE),
+                                                         null);
         } else {
             if (!(menuInfo instanceof AdapterView.AdapterContextMenuInfo)) {
                 Log.e(LOGTAG, "menuInfo is not AdapterContextMenuInfo");
@@ -510,12 +514,15 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                 if (keywordCol != -1)
                     keyword = cursor.getString(keywordCol);
 
-                mContextMenuSubject = new ContextMenuSubject(cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID)),
+                // Use the bookmark id for the Bookmarks tab and the history id for the Top Sites tab 
+                int id = (list == findViewById(R.id.bookmarks_list)) ? cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID)) :
+                                                                       cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
+
+                mContextMenuSubject = new ContextMenuSubject(id,
                                                              cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL)),
                                                              cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON)),
                                                              cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE)),
-                                                             keyword
-                );
+                                                             keyword);
             }
         }
 
@@ -528,6 +535,12 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         if (list != findViewById(R.id.bookmarks_list)) {
             menu.findItem(R.id.remove_bookmark).setVisible(false);
             menu.findItem(R.id.edit_bookmark).setVisible(false);
+
+            // Hide "Remove" item if there isn't a valid history ID
+            if (mContextMenuSubject.id < 0)
+                menu.findItem(R.id.remove_history).setVisible(false);
+        } else {
+            menu.findItem(R.id.remove_history).setVisible(false);
         }
 
         menu.setHeaderTitle(mContextMenuSubject.title);
@@ -621,6 +634,21 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                     @Override
                     public void onPostExecute(Void result) {
                         Toast.makeText(AwesomeBar.this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+                    }
+                }).execute();
+                break;
+            }
+            case R.id.remove_history: {
+                (new GeckoAsyncTask<Void, Void, Void>() {
+                    @Override
+                    public Void doInBackground(Void... params) {
+                        BrowserDB.removeHistoryEntry(mResolver, id);
+                        return null;
+                    }
+
+                    @Override
+                    public void onPostExecute(Void result) {
+                        Toast.makeText(AwesomeBar.this, R.string.history_removed, Toast.LENGTH_SHORT).show();
                     }
                 }).execute();
                 break;

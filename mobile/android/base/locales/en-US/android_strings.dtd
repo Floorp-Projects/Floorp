@@ -89,10 +89,15 @@
 <!ENTITY save_as_pdf "Save as PDF">
 
 <!ENTITY contextmenu_open_new_tab "Open in New Tab">
+<!ENTITY contextmenu_remove_history "Remove">
 <!ENTITY contextmenu_remove_bookmark "Remove">
 <!ENTITY contextmenu_add_to_launcher "Add to Home Screen">
 <!ENTITY contextmenu_share "Share">
 <!ENTITY contextmenu_edit_bookmark "Edit">
+
+<!-- Localization note (history_removed) : Shown in a toast notificaion
+	 after a page is removed from browser history. -->
+<!ENTITY history_removed "Page removed">
 
 <!ENTITY bookmark_edit_title "Edit Bookmark">
 <!ENTITY bookmark_edit_name "Name">
