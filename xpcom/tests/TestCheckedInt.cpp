@@ -45,12 +45,13 @@ namespace CheckedInt_test {
 using namespace mozilla::CheckedInt_internal;
 using mozilla::CheckedInt;
 
+int g_integer_types_tested = 0;
 int g_tests_passed = 0;
 int g_tests_failed = 0;
 
 void verify_impl_function(bool x, bool expected,
                           const char* file, int line,
-                          int T_size, bool T_is_signed)
+                          int T_size, bool T_is_T_signed)
 {
     if (x == expected) {
         g_tests_passed++;
@@ -58,7 +59,7 @@ void verify_impl_function(bool x, bool expected,
         g_tests_failed++;
         std::cerr << "Test failed at " << file << ":" << line;
         std::cerr << " with T a ";
-        if(T_is_signed)
+        if(T_is_T_signed)
             std::cerr << "signed";
         else
             std::cerr << "unsigned";
@@ -67,7 +68,7 @@ void verify_impl_function(bool x, bool expected,
 }
 
 #define VERIFY_IMPL(x, expected) \
-    verify_impl_function((x), (expected), __FILE__, __LINE__, sizeof(T), integer_traits<T>::is_signed)
+    verify_impl_function((x), (expected), __FILE__, __LINE__, sizeof(T), is_signed<T>::value)
 
 #define VERIFY(x)            VERIFY_IMPL(x, true)
 #define VERIFY_IS_FALSE(x)   VERIFY_IMPL(x, false)
@@ -80,12 +81,11 @@ struct test_twice_bigger_type
 {
     static void run()
     {
-        VERIFY(integer_traits<T>::twice_bigger_type_is_supported);
-        VERIFY(sizeof(typename integer_traits<T>::twice_bigger_type)
-                    == 2 * sizeof(T));
-        VERIFY(bool(integer_traits<
-                    typename integer_traits<T>::twice_bigger_type
-                >::is_signed) == bool(integer_traits<T>::is_signed));
+        VERIFY(is_supported<typename twice_bigger_type<T>::type>::value);
+        VERIFY(sizeof(typename twice_bigger_type<T>::type)
+                   == 2 * sizeof(T));
+        VERIFY(bool(is_signed<typename twice_bigger_type<T>::type>::value)
+                   == bool(is_signed<T>::value));
     }
 };
 
@@ -94,7 +94,7 @@ struct test_twice_bigger_type<T, 8>
 {
     static void run()
     {
-        VERIFY_IS_FALSE(integer_traits<T>::twice_bigger_type_is_supported);
+        VERIFY_IS_FALSE(is_supported<typename twice_bigger_type<T>::type>::value);
     }
 };
 
@@ -103,45 +103,44 @@ template<typename T>
 void test()
 {
     static bool already_run = false;
-    if (already_run) {
-        g_tests_failed++;
-        std::cerr << "You already tested this type. Copy/paste typo??" << std::endl;
+    // integer types from different families may just be typedefs for types from other families.
+    // e.g. int32_t might be just a typedef for int. No point re-running the same tests then.
+    if (already_run)
         return;
-    }
     already_run = true;
+    g_integer_types_tested++;
 
-    VERIFY(integer_traits<T>::is_supported);
-    VERIFY(integer_traits<T>::size == sizeof(T));
-    enum{ is_signed = integer_traits<T>::is_signed };
-    VERIFY(bool(is_signed) == !bool(T(-1) > T(0)));
+    VERIFY(is_supported<T>::value);
+    enum{ is_T_signed = is_signed<T>::value };
+    VERIFY(bool(is_T_signed) == !bool(T(-1) > T(0)));
 
     test_twice_bigger_type<T>::run();
 
-    typedef typename integer_traits<T>::unsigned_type unsigned_T;
+    typedef typename unsigned_type<T>::type unsigned_T;
 
     VERIFY(sizeof(unsigned_T) == sizeof(T));
-    VERIFY(integer_traits<unsigned_T>::is_signed == false);
+    VERIFY(is_signed<unsigned_T>::value == false);
 
-    CheckedInt<T> max_value(integer_traits<T>::max_value());
-    CheckedInt<T> min_value(integer_traits<T>::min_value());
+    const CheckedInt<T> max(max_value<T>::value());
+    const CheckedInt<T> min(min_value<T>::value());
 
-    // check min_value() and max_value(), since they are custom implementations and a mistake there
+    // check min() and max(), since they are custom implementations and a mistake there
     // could potentially NOT be caught by any other tests... while making everything wrong!
 
     T bit = 1;
     for(unsigned int i = 0; i < sizeof(T) * CHAR_BIT - 1; i++)
     {
-        VERIFY((min_value.value() & bit) == 0);
+        VERIFY((min.value() & bit) == 0);
         bit <<= 1;
     }
-    VERIFY((min_value.value() & bit) == (is_signed ? bit : T(0)));
-    VERIFY(max_value.value() == T(~(min_value.value())));
+    VERIFY((min.value() & bit) == (is_T_signed ? bit : T(0)));
+    VERIFY(max.value() == T(~(min.value())));
 
-    CheckedInt<T> zero(0);
-    CheckedInt<T> one(1);
-    CheckedInt<T> two(2);
-    CheckedInt<T> three(3);
-    CheckedInt<T> four(4);
+    const CheckedInt<T> zero(0);
+    const CheckedInt<T> one(1);
+    const CheckedInt<T> two(2);
+    const CheckedInt<T> three(3);
+    const CheckedInt<T> four(4);
 
     /* addition / substraction checks */
 
@@ -153,77 +152,77 @@ void test()
     VERIFY_IS_VALID(one+one);
     VERIFY(one+one == two);
 
-    CheckedInt<T> max_value_minus_one = max_value - one;
-    CheckedInt<T> max_value_minus_two = max_value - two;
-    VERIFY_IS_VALID(max_value_minus_one);
-    VERIFY_IS_VALID(max_value_minus_two);
-    VERIFY_IS_VALID(max_value_minus_one + one);
-    VERIFY_IS_VALID(max_value_minus_two + one);
-    VERIFY_IS_VALID(max_value_minus_two + two);
-    VERIFY(max_value_minus_one + one == max_value);
-    VERIFY(max_value_minus_two + one == max_value_minus_one);
-    VERIFY(max_value_minus_two + two == max_value);
+    const CheckedInt<T> max_minus_one = max - one;
+    const CheckedInt<T> max_minus_two = max - two;
+    VERIFY_IS_VALID(max_minus_one);
+    VERIFY_IS_VALID(max_minus_two);
+    VERIFY_IS_VALID(max_minus_one + one);
+    VERIFY_IS_VALID(max_minus_two + one);
+    VERIFY_IS_VALID(max_minus_two + two);
+    VERIFY(max_minus_one + one == max);
+    VERIFY(max_minus_two + one == max_minus_one);
+    VERIFY(max_minus_two + two == max);
 
-    VERIFY_IS_VALID(max_value + zero);
-    VERIFY_IS_VALID(max_value - zero);
-    VERIFY_IS_INVALID(max_value + one);
-    VERIFY_IS_INVALID(max_value + two);
-    VERIFY_IS_INVALID(max_value + max_value_minus_one);
-    VERIFY_IS_INVALID(max_value + max_value);
+    VERIFY_IS_VALID(max + zero);
+    VERIFY_IS_VALID(max - zero);
+    VERIFY_IS_INVALID(max + one);
+    VERIFY_IS_INVALID(max + two);
+    VERIFY_IS_INVALID(max + max_minus_one);
+    VERIFY_IS_INVALID(max + max);
 
-    CheckedInt<T> min_value_plus_one = min_value + one;
-    CheckedInt<T> min_value_plus_two = min_value + two;
-    VERIFY_IS_VALID(min_value_plus_one);
-    VERIFY_IS_VALID(min_value_plus_two);
-    VERIFY_IS_VALID(min_value_plus_one - one);
-    VERIFY_IS_VALID(min_value_plus_two - one);
-    VERIFY_IS_VALID(min_value_plus_two - two);
-    VERIFY(min_value_plus_one - one == min_value);
-    VERIFY(min_value_plus_two - one == min_value_plus_one);
-    VERIFY(min_value_plus_two - two == min_value);
+    const CheckedInt<T> min_plus_one = min + one;
+    const CheckedInt<T> min_plus_two = min + two;
+    VERIFY_IS_VALID(min_plus_one);
+    VERIFY_IS_VALID(min_plus_two);
+    VERIFY_IS_VALID(min_plus_one - one);
+    VERIFY_IS_VALID(min_plus_two - one);
+    VERIFY_IS_VALID(min_plus_two - two);
+    VERIFY(min_plus_one - one == min);
+    VERIFY(min_plus_two - one == min_plus_one);
+    VERIFY(min_plus_two - two == min);
 
-    CheckedInt<T> min_value_minus_one = min_value - one;
-    VERIFY_IS_VALID(min_value + zero);
-    VERIFY_IS_VALID(min_value - zero);
-    VERIFY_IS_INVALID(min_value - one);
-    VERIFY_IS_INVALID(min_value - two);
-    VERIFY_IS_INVALID(min_value - min_value_minus_one);
-    VERIFY_IS_VALID(min_value - min_value);
+    const CheckedInt<T> min_minus_one = min - one;
+    VERIFY_IS_VALID(min + zero);
+    VERIFY_IS_VALID(min - zero);
+    VERIFY_IS_INVALID(min - one);
+    VERIFY_IS_INVALID(min - two);
+    VERIFY_IS_INVALID(min - min_minus_one);
+    VERIFY_IS_VALID(min - min);
 
-    CheckedInt<T> max_value_over_two = max_value / two;
-    VERIFY_IS_VALID(max_value_over_two + max_value_over_two);
-    VERIFY_IS_VALID(max_value_over_two + one);
-    VERIFY((max_value_over_two + one) - one == max_value_over_two);
-    VERIFY_IS_VALID(max_value_over_two - max_value_over_two);
-    VERIFY(max_value_over_two - max_value_over_two == zero);
+    const CheckedInt<T> max_over_two = max / two;
+    VERIFY_IS_VALID(max_over_two + max_over_two);
+    VERIFY_IS_VALID(max_over_two + one);
+    VERIFY((max_over_two + one) - one == max_over_two);
+    VERIFY_IS_VALID(max_over_two - max_over_two);
+    VERIFY(max_over_two - max_over_two == zero);
 
-    CheckedInt<T> min_value_over_two = min_value / two;
-    VERIFY_IS_VALID(min_value_over_two + min_value_over_two);
-    VERIFY_IS_VALID(min_value_over_two + one);
-    VERIFY((min_value_over_two + one) - one == min_value_over_two);
-    VERIFY_IS_VALID(min_value_over_two - min_value_over_two);
-    VERIFY(min_value_over_two - min_value_over_two == zero);
+    const CheckedInt<T> min_over_two = min / two;
+    VERIFY_IS_VALID(min_over_two + min_over_two);
+    VERIFY_IS_VALID(min_over_two + one);
+    VERIFY((min_over_two + one) - one == min_over_two);
+    VERIFY_IS_VALID(min_over_two - min_over_two);
+    VERIFY(min_over_two - min_over_two == zero);
 
-    VERIFY_IS_INVALID(min_value - one);
-    VERIFY_IS_INVALID(min_value - two);
+    VERIFY_IS_INVALID(min - one);
+    VERIFY_IS_INVALID(min - two);
 
-    if (is_signed) {
-        VERIFY_IS_INVALID(min_value + min_value);
-        VERIFY_IS_INVALID(min_value_over_two + min_value_over_two + min_value_over_two);
-        VERIFY_IS_INVALID(zero - min_value + min_value);
-        VERIFY_IS_INVALID(one - min_value + min_value);
+    if (is_T_signed) {
+        VERIFY_IS_INVALID(min + min);
+        VERIFY_IS_INVALID(min_over_two + min_over_two + min_over_two);
+        VERIFY_IS_INVALID(zero - min + min);
+        VERIFY_IS_INVALID(one - min + min);
     }
 
     /* unary operator- checks */
 
-    CheckedInt<T> neg_one = -one;
-    CheckedInt<T> neg_two = -two;
+    const CheckedInt<T> neg_one = -one;
+    const CheckedInt<T> neg_two = -two;
 
-    if (is_signed) {
-        VERIFY_IS_VALID(-max_value);
-        VERIFY_IS_VALID(-max_value - one);
+    if (is_T_signed) {
+        VERIFY_IS_VALID(-max);
+        VERIFY_IS_VALID(-max - one);
         VERIFY_IS_VALID(neg_one);
-        VERIFY_IS_VALID(-max_value + neg_one);
+        VERIFY_IS_VALID(-max + neg_one);
         VERIFY_IS_VALID(neg_one + one);
         VERIFY(neg_one + one == zero);
         VERIFY_IS_VALID(neg_two);
@@ -248,77 +247,77 @@ void test()
     VERIFY_IS_VALID(two*two);
     VERIFY(two*two == four);
 
-    VERIFY_IS_INVALID(max_value * max_value);
-    VERIFY_IS_INVALID(max_value_over_two * max_value);
-    VERIFY_IS_INVALID(max_value_over_two * max_value_over_two);
+    VERIFY_IS_INVALID(max * max);
+    VERIFY_IS_INVALID(max_over_two * max);
+    VERIFY_IS_INVALID(max_over_two * max_over_two);
 
-    CheckedInt<T> max_value_approx_sqrt(T(T(1) << (CHAR_BIT*sizeof(T)/2)));
+    const CheckedInt<T> max_approx_sqrt(T(T(1) << (CHAR_BIT*sizeof(T)/2)));
 
-    VERIFY_IS_VALID(max_value_approx_sqrt);
-    VERIFY_IS_VALID(max_value_approx_sqrt * two);
-    VERIFY_IS_INVALID(max_value_approx_sqrt * max_value_approx_sqrt);
-    VERIFY_IS_INVALID(max_value_approx_sqrt * max_value_approx_sqrt * max_value_approx_sqrt);
+    VERIFY_IS_VALID(max_approx_sqrt);
+    VERIFY_IS_VALID(max_approx_sqrt * two);
+    VERIFY_IS_INVALID(max_approx_sqrt * max_approx_sqrt);
+    VERIFY_IS_INVALID(max_approx_sqrt * max_approx_sqrt * max_approx_sqrt);
 
-    if (is_signed) {
-        VERIFY_IS_INVALID(min_value * min_value);
-        VERIFY_IS_INVALID(min_value_over_two * min_value);
-        VERIFY_IS_INVALID(min_value_over_two * min_value_over_two);
+    if (is_T_signed) {
+        VERIFY_IS_INVALID(min * min);
+        VERIFY_IS_INVALID(min_over_two * min);
+        VERIFY_IS_INVALID(min_over_two * min_over_two);
 
-        CheckedInt<T> min_value_approx_sqrt = -max_value_approx_sqrt;
+        const CheckedInt<T> min_approx_sqrt = -max_approx_sqrt;
 
-        VERIFY_IS_VALID(min_value_approx_sqrt);
-        VERIFY_IS_VALID(min_value_approx_sqrt * two);
-        VERIFY_IS_INVALID(min_value_approx_sqrt * max_value_approx_sqrt);
-        VERIFY_IS_INVALID(min_value_approx_sqrt * min_value_approx_sqrt);
+        VERIFY_IS_VALID(min_approx_sqrt);
+        VERIFY_IS_VALID(min_approx_sqrt * two);
+        VERIFY_IS_INVALID(min_approx_sqrt * max_approx_sqrt);
+        VERIFY_IS_INVALID(min_approx_sqrt * min_approx_sqrt);
     }
 
     // make sure to check all 4 paths in signed multiplication validity check.
     // test positive * positive
-    VERIFY_IS_VALID(max_value * one);
-    VERIFY(max_value * one == max_value);
-    VERIFY_IS_INVALID(max_value * two);
-    VERIFY_IS_VALID(max_value_over_two * two);
-    VERIFY((max_value_over_two + max_value_over_two) == (max_value_over_two * two));
+    VERIFY_IS_VALID(max * one);
+    VERIFY(max * one == max);
+    VERIFY_IS_INVALID(max * two);
+    VERIFY_IS_VALID(max_over_two * two);
+    VERIFY((max_over_two + max_over_two) == (max_over_two * two));
 
-    if (is_signed) {
+    if (is_T_signed) {
         // test positive * negative
-        VERIFY_IS_VALID(max_value * neg_one);
-        VERIFY_IS_VALID(-max_value);
-        VERIFY(max_value * neg_one == -max_value);
-        VERIFY_IS_VALID(one * min_value);
-        VERIFY_IS_INVALID(max_value * neg_two);
-        VERIFY_IS_VALID(max_value_over_two * neg_two);
-        VERIFY_IS_VALID(two * min_value_over_two);
-        VERIFY_IS_VALID((max_value_over_two + one) * neg_two);
-        VERIFY_IS_INVALID((max_value_over_two + two) * neg_two);
-        VERIFY_IS_INVALID(two * (min_value_over_two - one));
+        VERIFY_IS_VALID(max * neg_one);
+        VERIFY_IS_VALID(-max);
+        VERIFY(max * neg_one == -max);
+        VERIFY_IS_VALID(one * min);
+        VERIFY_IS_INVALID(max * neg_two);
+        VERIFY_IS_VALID(max_over_two * neg_two);
+        VERIFY_IS_VALID(two * min_over_two);
+        VERIFY_IS_VALID((max_over_two + one) * neg_two);
+        VERIFY_IS_INVALID((max_over_two + two) * neg_two);
+        VERIFY_IS_INVALID(two * (min_over_two - one));
 
         // test negative * positive
-        VERIFY_IS_VALID(min_value * one);
-        VERIFY_IS_VALID(min_value_plus_one * one);
-        VERIFY_IS_INVALID(min_value * two);
-        VERIFY_IS_VALID(min_value_over_two * two);
-        VERIFY(min_value_over_two * two == min_value);
-        VERIFY_IS_INVALID((min_value_over_two - one) * neg_two);
-        VERIFY_IS_INVALID(neg_two * max_value);
-        VERIFY_IS_VALID(min_value_over_two * two);
-        VERIFY(min_value_over_two * two == min_value);
-        VERIFY_IS_VALID(neg_two * max_value_over_two);
-        VERIFY_IS_INVALID((min_value_over_two - one) * two);
-        VERIFY_IS_VALID(neg_two * (max_value_over_two + one));
-        VERIFY_IS_INVALID(neg_two * (max_value_over_two + two));
+        VERIFY_IS_VALID(min * one);
+        VERIFY_IS_VALID(min_plus_one * one);
+        VERIFY_IS_INVALID(min * two);
+        VERIFY_IS_VALID(min_over_two * two);
+        VERIFY(min_over_two * two == min);
+        VERIFY_IS_INVALID((min_over_two - one) * neg_two);
+        VERIFY_IS_INVALID(neg_two * max);
+        VERIFY_IS_VALID(min_over_two * two);
+        VERIFY(min_over_two * two == min);
+        VERIFY_IS_VALID(neg_two * max_over_two);
+        VERIFY_IS_INVALID((min_over_two - one) * two);
+        VERIFY_IS_VALID(neg_two * (max_over_two + one));
+        VERIFY_IS_INVALID(neg_two * (max_over_two + two));
 
         // test negative * negative
-        VERIFY_IS_INVALID(min_value * neg_one);
-        VERIFY_IS_VALID(min_value_plus_one * neg_one);
-        VERIFY(min_value_plus_one * neg_one == max_value);
-        VERIFY_IS_INVALID(min_value * neg_two);
-        VERIFY_IS_INVALID(min_value_over_two * neg_two);
-        VERIFY_IS_INVALID(neg_one * min_value);
-        VERIFY_IS_VALID(neg_one * min_value_plus_one);
-        VERIFY(neg_one * min_value_plus_one == max_value);
-        VERIFY_IS_INVALID(neg_two * min_value);
-        VERIFY_IS_INVALID(neg_two * min_value_over_two);
+        VERIFY_IS_INVALID(min * neg_one);
+        VERIFY_IS_VALID(min_plus_one * neg_one);
+        VERIFY(min_plus_one * neg_one == max);
+        VERIFY_IS_INVALID(min * neg_two);
+        VERIFY_IS_INVALID(min_over_two * neg_two);
+        VERIFY_IS_INVALID(neg_one * min);
+        VERIFY_IS_VALID(neg_one * min_plus_one);
+        VERIFY(neg_one * min_plus_one == max);
+        VERIFY_IS_INVALID(neg_two * min);
+        VERIFY_IS_INVALID(neg_two * min_over_two);
     }
 
     /* division checks */
@@ -336,23 +335,23 @@ void test()
     VERIFY_IS_INVALID(one / zero);
     VERIFY_IS_INVALID(two / zero);
     VERIFY_IS_INVALID(neg_one / zero);
-    VERIFY_IS_INVALID(max_value / zero);
-    VERIFY_IS_INVALID(min_value / zero);
+    VERIFY_IS_INVALID(max / zero);
+    VERIFY_IS_INVALID(min / zero);
 
-    if (is_signed) {
-        // check that min_value / -1 is invalid
-        VERIFY_IS_INVALID(min_value / neg_one);
+    if (is_T_signed) {
+        // check that min / -1 is invalid
+        VERIFY_IS_INVALID(min / neg_one);
 
-        // check that the test for div by -1 isn't banning other numerators than min_value
+        // check that the test for div by -1 isn't banning other numerators than min
         VERIFY_IS_VALID(one / neg_one);
         VERIFY_IS_VALID(zero / neg_one);
         VERIFY_IS_VALID(neg_one / neg_one);
-        VERIFY_IS_VALID(max_value / neg_one);
+        VERIFY_IS_VALID(max / neg_one);
     }
 
     /* check that invalidity is correctly preserved by arithmetic ops */
 
-    CheckedInt<T> some_invalid = max_value + max_value;
+    const CheckedInt<T> some_invalid = max + max;
     VERIFY_IS_INVALID(some_invalid + zero);
     VERIFY_IS_INVALID(some_invalid - zero);
     VERIFY_IS_INVALID(zero + some_invalid);
@@ -413,19 +412,19 @@ void test()
 
     #define VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(U) \
     { \
-        bool is_U_signed = integer_traits<U>::is_signed; \
+        bool is_U_signed = is_signed<U>::value; \
         VERIFY_IS_VALID(CheckedInt<T>(U(0))); \
         VERIFY_IS_VALID(CheckedInt<T>(U(1))); \
         VERIFY_IS_VALID(CheckedInt<T>(U(100))); \
         if (is_U_signed) \
-            VERIFY_IS_VALID_IF(CheckedInt<T>(U(-1)), is_signed); \
+            VERIFY_IS_VALID_IF(CheckedInt<T>(U(-1)), is_T_signed); \
         if (sizeof(U) > sizeof(T)) \
-            VERIFY_IS_INVALID(CheckedInt<T>(U(integer_traits<T>::max_value())+1)); \
-        VERIFY_IS_VALID_IF(CheckedInt<T>(integer_traits<U>::max_value()), \
-            (sizeof(T) > sizeof(U) || ((sizeof(T) == sizeof(U)) && (is_U_signed || !is_signed)))); \
-        VERIFY_IS_VALID_IF(CheckedInt<T>(integer_traits<U>::min_value()), \
+            VERIFY_IS_INVALID(CheckedInt<T>(U(max_value<T>::value())+1)); \
+        VERIFY_IS_VALID_IF(CheckedInt<T>(max_value<U>::value()), \
+            (sizeof(T) > sizeof(U) || ((sizeof(T) == sizeof(U)) && (is_U_signed || !is_T_signed)))); \
+        VERIFY_IS_VALID_IF(CheckedInt<T>(min_value<U>::value()), \
             is_U_signed == false ? 1 : \
-            bool(is_signed) == false ? 0 : \
+            bool(is_T_signed) == false ? 0 : \
             sizeof(T) >= sizeof(U)); \
     }
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int8_t)
@@ -436,6 +435,33 @@ void test()
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(uint32_t)
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int64_t)
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(uint64_t)
+
+    typedef unsigned char unsigned_char;
+    typedef unsigned short unsigned_short;
+    typedef unsigned int  unsigned_int;
+    typedef unsigned long unsigned_long;
+    typedef long long long_long;
+    typedef unsigned long long unsigned_long_long;
+    
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(char)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(unsigned_char)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(short)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(unsigned_short)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(unsigned_int)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(long)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(unsigned_long)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(long_long)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(unsigned_long_long)
+
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt8)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint8)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt16)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint16)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt32)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint32)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt64)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint64)
 
     /* Test increment/decrement operators */
 
@@ -456,13 +482,13 @@ void test()
     y = --x;
     VERIFY(x == zero);
     VERIFY(y == zero);
-    x = max_value;
+    x = max;
     VERIFY_IS_VALID(x++);
-    x = max_value;
+    x = max;
     VERIFY_IS_INVALID(++x);
-    x = min_value;
+    x = min;
     VERIFY_IS_VALID(x--);
-    x = min_value;
+    x = min;
     VERIFY_IS_INVALID(--x);
 }
 
@@ -479,10 +505,31 @@ int main()
     CheckedInt_test::test<int64_t>();
     CheckedInt_test::test<uint64_t>();
 
+    CheckedInt_test::test<char>();
+    CheckedInt_test::test<unsigned char>();
+    CheckedInt_test::test<short>();
+    CheckedInt_test::test<unsigned short>();
+    CheckedInt_test::test<int>();
+    CheckedInt_test::test<unsigned int>();
+    CheckedInt_test::test<long>();
+    CheckedInt_test::test<unsigned long>();
+    CheckedInt_test::test<long long>();
+    CheckedInt_test::test<unsigned long long>();
+
+    CheckedInt_test::test<PRInt8>();
+    CheckedInt_test::test<PRUint8>();
+    CheckedInt_test::test<PRInt16>();
+    CheckedInt_test::test<PRUint16>();
+    CheckedInt_test::test<PRInt32>();
+    CheckedInt_test::test<PRUint32>();
+    CheckedInt_test::test<PRInt64>();
+
     std::cerr << CheckedInt_test::g_tests_failed << " tests failed, "
               << CheckedInt_test::g_tests_passed << " tests passed out of "
               << CheckedInt_test::g_tests_failed + CheckedInt_test::g_tests_passed
-              << " tests." << std::endl;
+              << " tests, covering " << CheckedInt_test::g_integer_types_tested
+              << " distinct integer types." << std::endl;
 
-    return CheckedInt_test::g_tests_failed > 0;
+    return CheckedInt_test::g_tests_failed > 0
+        || CheckedInt_test::g_integer_types_tested < 8;
 }

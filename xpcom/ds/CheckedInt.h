@@ -42,6 +42,8 @@
 
 #include "prtypes.h"
 
+#include <mozilla/Assertions.h>
+
 #include <climits>
 
 namespace mozilla {
@@ -55,80 +57,121 @@ namespace CheckedInt_internal {
  * helps much with twice_bigger_type.
  */
 
-/*** Step 1: manually record information for all the types that we want to support
+/*** Step 1: manually record supported types
+ ***
+ *** What's nontrivial here is that there are different families of integer types: plain integer types, stdint types,
+ *** and PR types. It is merrily undefined which types from one family may be just typedefs for a type from another family.
+ ***
+ *** For example, on GCC 4.6, aside from the 10 'standard types' (including long long types), the only other type
+ *** that isn't just a typedef for some of them, is int8_t.
  ***/
 
 struct unsupported_type {};
 
-template<typename T> struct integer_type_manually_recorded_info
-{
-    enum { is_supported = 0 };
-    typedef unsupported_type twice_bigger_type;
-    typedef unsupported_type unsigned_type;
+template<typename integer_type> struct is_supported_pass_3 {
+    enum { value = 0 };
+};
+template<typename integer_type> struct is_supported_pass_2 {
+    enum { value = is_supported_pass_3<integer_type>::value };
+};
+template<typename integer_type> struct is_supported {
+    enum { value = is_supported_pass_2<integer_type>::value };
 };
 
+template<> struct is_supported<int8_t>   { enum { value = 1 }; };
+template<> struct is_supported<uint8_t>  { enum { value = 1 }; };
+template<> struct is_supported<int16_t>  { enum { value = 1 }; };
+template<> struct is_supported<uint16_t> { enum { value = 1 }; };
+template<> struct is_supported<int32_t>  { enum { value = 1 }; };
+template<> struct is_supported<uint32_t> { enum { value = 1 }; };
+template<> struct is_supported<int64_t>  { enum { value = 1 }; };
+template<> struct is_supported<uint64_t> { enum { value = 1 }; };
 
-#define CHECKEDINT_REGISTER_SUPPORTED_TYPE(T,_twice_bigger_type,_unsigned_type)  \
-template<> struct integer_type_manually_recorded_info<T>       \
-{                                                              \
-    enum { is_supported = 1 };                                 \
-    typedef _twice_bigger_type twice_bigger_type;              \
-    typedef _unsigned_type unsigned_type;                      \
-    static void TYPE_NOT_SUPPORTED_BY_CheckedInt() {}          \
-};
+template<> struct is_supported_pass_2<char>   { enum { value = 1 }; };
+template<> struct is_supported_pass_2<unsigned char>  { enum { value = 1 }; };
+template<> struct is_supported_pass_2<short>  { enum { value = 1 }; };
+template<> struct is_supported_pass_2<unsigned short> { enum { value = 1 }; };
+template<> struct is_supported_pass_2<int>  { enum { value = 1 }; };
+template<> struct is_supported_pass_2<unsigned int> { enum { value = 1 }; };
+template<> struct is_supported_pass_2<long>  { enum { value = 1 }; };
+template<> struct is_supported_pass_2<unsigned long> { enum { value = 1 }; };
+template<> struct is_supported_pass_2<long long>  { enum { value = 1 }; };
+template<> struct is_supported_pass_2<unsigned long long> { enum { value = 1 }; };
 
-//                                 Type      Twice Bigger Type     Unsigned Type
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(int8_t,   int16_t,              uint8_t)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(uint8_t,  uint16_t,             uint8_t)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(int16_t,  int32_t,              uint16_t)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(uint16_t, uint32_t,             uint16_t)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(int32_t,  int64_t,              uint32_t)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(uint32_t, uint64_t,             uint32_t)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(int64_t,  unsupported_type,     uint64_t)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(uint64_t, unsupported_type,     uint64_t)
+template<> struct is_supported_pass_3<PRInt8>   { enum { value = 1 }; };
+template<> struct is_supported_pass_3<PRUint8>  { enum { value = 1 }; };
+template<> struct is_supported_pass_3<PRInt16>  { enum { value = 1 }; };
+template<> struct is_supported_pass_3<PRUint16> { enum { value = 1 }; };
+template<> struct is_supported_pass_3<PRInt32>  { enum { value = 1 }; };
+template<> struct is_supported_pass_3<PRUint32> { enum { value = 1 }; };
+template<> struct is_supported_pass_3<PRInt64>  { enum { value = 1 }; };
+template<> struct is_supported_pass_3<PRUint64> { enum { value = 1 }; };
 
 
-/*** Step 2: record some info about a given integer type,
- ***         including whether it is supported, whether a twice bigger integer type
- ***         is supported, what that twice bigger type is, and some stuff as found
- ***         in std::numeric_limits (which we don't use because PRInt.. types may
- ***         not support it, if they are defined directly from compiler built-in types).
- ***         We use function names min_value() and max_value() instead of min() and max()
- ***         because of stupid min/max macros in Windows headers.
+/*** Step 2: some integer-traits kind of stuff. We're doing our own thing here rather than
+ ***         relying on std::numeric_limits mostly for historical reasons (we still support PR integer types
+ ***         which might still be different types e.g. typedefs for some built-in types). Eventually, a patch
+ ***         replacing some of that by std::numeric_limits should be welcome.
  ***/
 
-template<typename T> struct is_unsupported_type { enum { answer = 0 }; };
-template<> struct is_unsupported_type<unsupported_type> { enum { answer = 1 }; };
+template<int size, bool signedness> struct stdint_type_for_size_and_signedness {};
+template<> struct stdint_type_for_size_and_signedness<1, true>   { typedef int8_t   type; };
+template<> struct stdint_type_for_size_and_signedness<1, false>  { typedef uint8_t  type; };
+template<> struct stdint_type_for_size_and_signedness<2, true>   { typedef int16_t  type; };
+template<> struct stdint_type_for_size_and_signedness<2, false>  { typedef uint16_t type; };
+template<> struct stdint_type_for_size_and_signedness<4, true>   { typedef int32_t  type; };
+template<> struct stdint_type_for_size_and_signedness<4, false>  { typedef uint32_t type; };
+template<> struct stdint_type_for_size_and_signedness<8, true>   { typedef int64_t  type; };
+template<> struct stdint_type_for_size_and_signedness<8, false>  { typedef uint64_t type; };
 
-template<typename T> struct integer_traits
+template<typename integer_type> struct unsigned_type {
+    typedef typename stdint_type_for_size_and_signedness<sizeof(integer_type), false>::type type;
+};
+
+template<typename integer_type> struct is_signed {
+    enum { value = integer_type(-1) <= integer_type(0) };
+};
+
+template<typename integer_type, int size=sizeof(integer_type)>
+struct twice_bigger_type {
+    typedef typename stdint_type_for_size_and_signedness<
+                       sizeof(integer_type) * 2,
+                       is_signed<integer_type>::value
+                     >::type type;
+};
+
+template<typename integer_type>
+struct twice_bigger_type<integer_type, 8> {
+    typedef unsupported_type type;
+};
+
+template<typename integer_type> struct position_of_sign_bit
 {
-    typedef typename integer_type_manually_recorded_info<T>::twice_bigger_type twice_bigger_type;
-    typedef typename integer_type_manually_recorded_info<T>::unsigned_type unsigned_type;
-
     enum {
-        is_supported = integer_type_manually_recorded_info<T>::is_supported,
-        twice_bigger_type_is_supported
-            = is_unsupported_type<
-                  typename integer_type_manually_recorded_info<T>::twice_bigger_type
-              >::answer ? 0 : 1,
-        size = sizeof(T),
-        position_of_sign_bit = CHAR_BIT * size - 1,
-        is_signed = (T(-1) > T(0)) ? 0 : 1
+        value = CHAR_BIT * sizeof(integer_type) - 1
     };
+};
 
-    static T min_value()
+template<typename integer_type> struct min_value
+{
+    static integer_type value()
     {
         // bitwise ops may return a larger type, that's why we cast explicitly to T
         // in C++, left bit shifts on signed values is undefined by the standard unless the shifted value is representable.
         // notice that signed-to-unsigned conversions are always well-defined in the standard,
         // as the value congruent to 2^n as expected. By contrast, unsigned-to-signed is only well-defined if the value is
         // representable.
-        return is_signed ? T(unsigned_type(1) << position_of_sign_bit) : T(0);
+        return is_signed<integer_type>::value
+                 ? integer_type(typename unsigned_type<integer_type>::type(1) << position_of_sign_bit<integer_type>::value)
+                 : integer_type(0);
     }
+};
 
-    static T max_value()
+template<typename integer_type> struct max_value
+{
+    static integer_type value()
     {
-        return ~min_value();
+        return ~min_value<integer_type>::value();
     }
 };
 
@@ -144,8 +187,7 @@ template<typename T> inline T has_sign_bit(T x)
     // notice that signed-to-unsigned conversions are always well-defined in the standard,
     // as the value congruent modulo 2^n as expected. By contrast, unsigned-to-signed is only well-defined if the value is
     // representable. Here the unsigned-to-signed conversion is OK because the value (the result of the shift) is 0 or 1.
-    typedef typename integer_traits<T>::unsigned_type unsigned_T;
-    return T(unsigned_T(x) >> integer_traits<T>::position_of_sign_bit);
+    return T(typename unsigned_type<T>::type(x) >> position_of_sign_bit<T>::value);
 }
 
 template<typename T> inline T binary_complement(T x)
@@ -154,8 +196,8 @@ template<typename T> inline T binary_complement(T x)
 }
 
 template<typename T, typename U,
-         bool is_T_signed = integer_traits<T>::is_signed,
-         bool is_U_signed = integer_traits<U>::is_signed>
+         bool is_T_signed = is_signed<T>::value,
+         bool is_U_signed = is_signed<U>::value>
 struct is_in_range_impl {};
 
 template<typename T, typename U>
@@ -163,8 +205,8 @@ struct is_in_range_impl<T, U, true, true>
 {
     static T run(U x)
     {
-        return (x <= integer_traits<T>::max_value()) &&
-               (x >= integer_traits<T>::min_value());
+        return (x <= max_value<T>::value()) &&
+               (x >= min_value<T>::value());
     }
 };
 
@@ -173,7 +215,7 @@ struct is_in_range_impl<T, U, false, false>
 {
     static T run(U x)
     {
-        return x <= integer_traits<T>::max_value();
+        return x <= max_value<T>::value();
     }
 };
 
@@ -185,7 +227,7 @@ struct is_in_range_impl<T, U, true, false>
         if (sizeof(T) > sizeof(U))
             return 1;
         else
-            return x <= U(integer_traits<T>::max_value());
+            return x <= U(max_value<T>::value());
     }
 };
 
@@ -197,7 +239,7 @@ struct is_in_range_impl<T, U, false, true>
         if (sizeof(T) >= sizeof(U))
             return x >= 0;
         else
-            return (x >= 0) && (x <= U(integer_traits<T>::max_value()));
+            return (x >= 0) && (x <= U(max_value<T>::value()));
     }
 };
 
@@ -208,27 +250,27 @@ template<typename T, typename U> inline T is_in_range(U x)
 
 template<typename T> inline T is_add_valid(T x, T y, T result)
 {
-    return integer_traits<T>::is_signed ?
-                        // addition is valid if the sign of x+y is equal to either that of x or that of y.
-                        // Beware! These bitwise operations can return a larger integer type, if T was a
-                        // small type like int8, so we explicitly cast to T.
-                        has_sign_bit(binary_complement(T((result^x) & (result^y))))
-                    :
-                        binary_complement(x) >= y;
+    return is_signed<T>::value ?
+                 // addition is valid if the sign of x+y is equal to either that of x or that of y.
+                 // Beware! These bitwise operations can return a larger integer type, if T was a
+                 // small type like int8, so we explicitly cast to T.
+                 has_sign_bit(binary_complement(T((result^x) & (result^y))))
+             :
+                 binary_complement(x) >= y;
 }
 
 template<typename T> inline T is_sub_valid(T x, T y, T result)
 {
-    return integer_traits<T>::is_signed ?
-                        // substraction is valid if either x and y have same sign, or x-y and x have same sign
-                        has_sign_bit(binary_complement(T((result^x) & (x^y))))
-                    :
-                        x >= y;
+    return is_signed<T>::value ?
+                 // substraction is valid if either x and y have same sign, or x-y and x have same sign
+                 has_sign_bit(binary_complement(T((result^x) & (x^y))))
+             :
+                 x >= y;
 }
 
 template<typename T,
-         bool is_signed =  integer_traits<T>::is_signed,
-         bool twice_bigger_type_is_supported = integer_traits<T>::twice_bigger_type_is_supported>
+         bool is_signed =  is_signed<T>::value,
+         bool twice_bigger_type_is_supported = is_supported<typename twice_bigger_type<T>::type>::value>
 struct is_mul_valid_impl {};
 
 template<typename T, bool is_signed>
@@ -236,7 +278,7 @@ struct is_mul_valid_impl<T, is_signed, true>
 {
     static T run(T x, T y)
     {
-        typedef typename integer_traits<T>::twice_bigger_type twice_bigger_type;
+        typedef typename twice_bigger_type<T>::type twice_bigger_type;
         twice_bigger_type product = twice_bigger_type(x) * twice_bigger_type(y);
         return is_in_range<T>(product);
     }
@@ -247,21 +289,21 @@ struct is_mul_valid_impl<T, true, false>
 {
     static T run(T x, T y)
     {
-        const T max_value = integer_traits<T>::max_value();
-        const T min_value = integer_traits<T>::min_value();
+        const T max = max_value<T>::value();
+        const T min = min_value<T>::value();
 
         if (x == 0 || y == 0) return true;
 
         if (x > 0) {
             if (y > 0)
-                return x <= max_value / y;
+                return x <= max / y;
             else
-                return y >= min_value / x;
+                return y >= min / x;
         } else {
             if (y > 0)
-                return x >= min_value / y;
+                return x >= min / y;
             else
-                return y >= max_value / x;
+                return y >= max / x;
         }
     }
 };
@@ -271,9 +313,9 @@ struct is_mul_valid_impl<T, false, false>
 {
     static T run(T x, T y)
     {
-        const T max_value = integer_traits<T>::max_value();
+        const T max = max_value<T>::value();
         if (x == 0 || y == 0) return true;
-        return x <= max_value / y;
+        return x <= max / y;
     }
 };
 
@@ -284,15 +326,15 @@ template<typename T> inline T is_mul_valid(T x, T y, T /*result not used*/)
 
 template<typename T> inline T is_div_valid(T x, T y)
 {
-    return integer_traits<T>::is_signed ?
-                        // keep in mind that min/-1 is invalid because abs(min)>max
-                        (y != 0) && (x != integer_traits<T>::min_value() || y != T(-1))
-                    :
-                        y != 0;
+    return is_signed<T>::value ?
+                 // keep in mind that min/-1 is invalid because abs(min)>max
+                 (y != 0) && (x != min_value<T>::value() || y != T(-1))
+             :
+                 y != 0;
 }
 
 // this is just to shut up msvc warnings about negating unsigned ints.
-template<typename T, bool is_signed = integer_traits<T>::is_signed>
+template<typename T, bool is_signed = is_signed<T>::value>
 struct opposite_if_signed_impl
 {
     static T run(T x) { return -x; }
@@ -374,8 +416,7 @@ protected:
     template<typename U>
     CheckedInt(U value, T isValid) : mValue(value), mIsValid(isValid)
     {
-        CheckedInt_internal::integer_type_manually_recorded_info<T>
-            ::TYPE_NOT_SUPPORTED_BY_CheckedInt();
+        MOZ_STATIC_ASSERT(CheckedInt_internal::is_supported<T>::value, "This type is not supported by CheckedInt");
     }
 
 public:
@@ -392,15 +433,13 @@ public:
         : mValue(T(value)),
           mIsValid(CheckedInt_internal::is_in_range<T>(value))
     {
-        CheckedInt_internal::integer_type_manually_recorded_info<T>
-            ::TYPE_NOT_SUPPORTED_BY_CheckedInt();
+        MOZ_STATIC_ASSERT(CheckedInt_internal::is_supported<T>::value, "This type is not supported by CheckedInt");
     }
 
     /** Constructs a valid checked integer with initial value 0 */
     CheckedInt() : mValue(0), mIsValid(1)
     {
-        CheckedInt_internal::integer_type_manually_recorded_info<T>
-            ::TYPE_NOT_SUPPORTED_BY_CheckedInt();
+        MOZ_STATIC_ASSERT(CheckedInt_internal::is_supported<T>::value, "This type is not supported by CheckedInt");
     }
 
     /** \returns the actual value */
