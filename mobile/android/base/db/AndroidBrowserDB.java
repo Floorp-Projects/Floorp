@@ -313,6 +313,10 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
             registerBookmarkObserverPre11(cr, observer);
     }
 
+    public void registerHistoryObserver(ContentResolver cr, ContentObserver observer) {
+        // Not implemented
+    }
+
     public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {
         Cursor c = cr.query(Browser.BOOKMARKS_URI,
                             new String[] { Browser.BookmarkColumns.FAVICON },
