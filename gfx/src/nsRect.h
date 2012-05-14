@@ -90,32 +90,46 @@ struct NS_GFX nsRect :
     Inflate(aMargin);
 #else
     PRInt64 nx = PRInt64(x) - aMargin.left;
-    if (nx < nscoord_MIN) {
+    PRInt64 w = PRInt64(width) + PRInt64(aMargin.left) + aMargin.right;
+    if (NS_UNLIKELY(w > nscoord_MAX)) {
+      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
+      PRInt64 xdiff = nx - nscoord_MIN / 2;
+      if (xdiff < 0) {
+        // Clamp huge negative x to nscoord_MIN / 2 and try again.
+        nx = nscoord_MIN / 2;
+        w += xdiff;
+      }
+      if (NS_UNLIKELY(w > nscoord_MAX)) {
+        w = nscoord_MAX;
+      }
+    }
+    width = nscoord(w);
+    if (NS_UNLIKELY(nx < nscoord_MIN)) {
       NS_WARNING("Underflowed nscoord_MIN in conversion to nscoord x");
       nx = nscoord_MIN;
     }
     x = nscoord(nx);
 
     PRInt64 ny = PRInt64(y) - aMargin.top;
-    if (ny < nscoord_MIN) {
+    PRInt64 h = PRInt64(height) + PRInt64(aMargin.top) + aMargin.bottom;
+    if (NS_UNLIKELY(h > nscoord_MAX)) {
+      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
+      PRInt64 ydiff = ny - nscoord_MIN / 2;
+      if (ydiff < 0) {
+        // Clamp huge negative y to nscoord_MIN / 2 and try again.
+        ny = nscoord_MIN / 2;
+        h += ydiff;
+      }
+      if (NS_UNLIKELY(h > nscoord_MAX)) {
+        h = nscoord_MAX;
+      }
+    }
+    height = nscoord(h);
+    if (NS_UNLIKELY(ny < nscoord_MIN)) {
       NS_WARNING("Underflowed nscoord_MIN in conversion to nscoord y");
       ny = nscoord_MIN;
     }
     y = nscoord(ny);
-
-    PRInt64 w = PRInt64(width) + PRInt64(aMargin.left) + aMargin.right;
-    if (w > nscoord_MAX) {
-      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
-      w = nscoord_MAX;
-    }
-    width = nscoord(w);
-
-    PRInt64 h = PRInt64(height) + PRInt64(aMargin.top) + aMargin.bottom;
-    if (h > nscoord_MAX) {
-      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
-      h = nscoord_MAX;
-    }
-    height = nscoord(h);
 #endif
   }
 
@@ -141,22 +155,53 @@ struct NS_GFX nsRect :
 #else
     nsRect result;
     result.x = NS_MIN(aRect.x, x);
-    result.y = NS_MIN(aRect.y, y);
     PRInt64 w = NS_MAX(PRInt64(aRect.x) + aRect.width, PRInt64(x) + width) - result.x;
-    PRInt64 h = NS_MAX(PRInt64(aRect.y) + aRect.height, PRInt64(y) + height) - result.y;
-    if (w > nscoord_MAX) {
+    if (NS_UNLIKELY(w > nscoord_MAX)) {
       NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
-      w = nscoord_MAX;
-    }
-    if (h > nscoord_MAX) {
-      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
-      h = nscoord_MAX;
+      // Clamp huge negative x to nscoord_MIN / 2 and try again.
+      result.x = NS_MAX(result.x, nscoord_MIN / 2);
+      w = NS_MAX(PRInt64(aRect.x) + aRect.width, PRInt64(x) + width) - result.x;
+      if (NS_UNLIKELY(w > nscoord_MAX)) {
+        w = nscoord_MAX;
+      }
     }
     result.width = nscoord(w);
+
+    result.y = NS_MIN(aRect.y, y);
+    PRInt64 h = NS_MAX(PRInt64(aRect.y) + aRect.height, PRInt64(y) + height) - result.y;
+    if (NS_UNLIKELY(h > nscoord_MAX)) {
+      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
+      // Clamp huge negative y to nscoord_MIN / 2 and try again.
+      result.y = NS_MAX(result.y, nscoord_MIN / 2);
+      h = NS_MAX(PRInt64(aRect.y) + aRect.height, PRInt64(y) + height) - result.y;
+      if (NS_UNLIKELY(h > nscoord_MAX)) {
+        h = nscoord_MAX;
+      }
+    }
     result.height = nscoord(h);
     return result;
 #endif
   }
+
+#ifndef NS_COORD_IS_FLOAT
+  // Make all nsRect Union methods be saturating.
+  nsRect UnionEdges(const nsRect& aRect) const
+  {
+    return SaturatingUnionEdges(aRect);
+  }
+  void UnionRectEdges(const nsRect& aRect1, const nsRect& aRect2)
+  {
+    *this = aRect1.UnionEdges(aRect2);
+  }
+  nsRect Union(const nsRect& aRect) const
+  {
+    return SaturatingUnion(aRect);
+  }
+  void UnionRect(const nsRect& aRect1, const nsRect& aRect2)
+  {
+    *this = aRect1.Union(aRect2);
+  }
+#endif
 
   void SaturatingUnionRect(const nsRect& aRect1, const nsRect& aRect2)
   {
