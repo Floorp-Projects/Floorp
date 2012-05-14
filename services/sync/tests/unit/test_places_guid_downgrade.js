@@ -35,7 +35,9 @@ Svc.Obs.add("places-shutdown", function () {
 
 
 // Verify initial database state. Function borrowed from places tests.
-function test_initial_state() {
+add_test(function test_initial_state() {
+  _("Verify initial setup: v11 database is available");
+
   // Mostly sanity checks our starting DB to make sure it's setup as we expect
   // it to be.
   let dbFile = gSyncProfile.clone();
@@ -76,61 +78,80 @@ function test_initial_state() {
   do_check_eq(db.schemaVersion, 10);
 
   db.close();
-}
 
-function test_history_guids() {
+  run_next_test();
+});
+
+add_test(function test_history_guids() {
   let engine = new HistoryEngine();
   let store = engine._store;
 
-  PlacesUtils.history.addPageWithDetails(fxuri, "Get Firefox!",
-                                         Date.now() * 1000);
-  PlacesUtils.history.addPageWithDetails(tburi, "Get Thunderbird!",
-                                         Date.now() * 1000);
+  let places = [
+    {
+      uri: fxuri,
+      title: "Get Firefox!",
+      visits: [{
+        visitDate: Date.now() * 1000,
+        transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+      }]
+    },
+    {
+      uri: tburi,
+      title: "Get Thunderbird!",
+      visits: [{
+        visitDate: Date.now() * 1000,
+        transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+      }]
+    }
+  ];
+  PlacesUtils.asyncHistory.updatePlaces(places, {
+    handleError: function handleError() {
+      do_throw("Unexpected error in adding visit.");
+    },
+    handleResult: function handleResult() {},
+    handleCompletion: onVisitAdded
+  });
 
-  // Hack: flush the places db by adding a random bookmark.
-  let uri = Utils.makeURI("http://mozilla.com/");
-  let fxid = PlacesUtils.bookmarks.insertBookmark(
-    PlacesUtils.bookmarks.toolbarFolder,
-    uri,
-    PlacesUtils.bookmarks.DEFAULT_INDEX,
-    "Mozilla");
+  function onVisitAdded() {
+    let fxguid = store.GUIDForUri(fxuri, true);
+    let tbguid = store.GUIDForUri(tburi, true);
+    dump("fxguid: " + fxguid + "\n");
+    dump("tbguid: " + tbguid + "\n");
 
-  let fxguid = store.GUIDForUri(fxuri, true);
-  let tbguid = store.GUIDForUri(tburi, true);
-  dump("fxguid: " + fxguid + "\n");
-  dump("tbguid: " + tbguid + "\n");
+    _("History: Verify GUIDs are added to the guid column.");
+    let connection = PlacesUtils.history
+                                .QueryInterface(Ci.nsPIPlacesDatabase)
+                                .DBConnection;
+    let stmt = connection.createAsyncStatement(
+      "SELECT id FROM moz_places WHERE guid = :guid");
 
-  _("History: Verify GUIDs are added to the guid column.");
-  let connection = PlacesUtils.history
-                              .QueryInterface(Ci.nsPIPlacesDatabase)
-                              .DBConnection;
-  let stmt = connection.createAsyncStatement(
-    "SELECT id FROM moz_places WHERE guid = :guid");
+    stmt.params.guid = fxguid;
+    let result = Async.querySpinningly(stmt, ["id"]);
+    do_check_eq(result.length, 1);
 
-  stmt.params.guid = fxguid;
-  let result = Async.querySpinningly(stmt, ["id"]);
-  do_check_eq(result.length, 1);
+    stmt.params.guid = tbguid;
+    result = Async.querySpinningly(stmt, ["id"]);
+    do_check_eq(result.length, 1);
+    stmt.finalize();
 
-  stmt.params.guid = tbguid;
-  result = Async.querySpinningly(stmt, ["id"]);
-  do_check_eq(result.length, 1);
-  stmt.finalize();
+    _("History: Verify GUIDs weren't added to annotations.");
+    stmt = connection.createAsyncStatement(
+      "SELECT a.content AS guid FROM moz_annos a WHERE guid = :guid");
 
-  _("History: Verify GUIDs weren't added to annotations.");
-  stmt = connection.createAsyncStatement(
-    "SELECT a.content AS guid FROM moz_annos a WHERE guid = :guid");
+    stmt.params.guid = fxguid;
+    result = Async.querySpinningly(stmt, ["guid"]);
+    do_check_eq(result.length, 0);
 
-  stmt.params.guid = fxguid;
-  result = Async.querySpinningly(stmt, ["guid"]);
-  do_check_eq(result.length, 0);
+    stmt.params.guid = tbguid;
+    result = Async.querySpinningly(stmt, ["guid"]);
+    do_check_eq(result.length, 0);
+    stmt.finalize();
 
-  stmt.params.guid = tbguid;
-  result = Async.querySpinningly(stmt, ["guid"]);
-  do_check_eq(result.length, 0);
-  stmt.finalize();
-}
+    run_next_test();
+  }
+});
 
-function test_bookmark_guids() {
+add_test(function test_bookmark_guids() {
   let engine = new BookmarksEngine();
   let store = engine._store;
 
@@ -178,13 +199,12 @@ function test_bookmark_guids() {
   result = Async.querySpinningly(stmt, ["guid"]);
   do_check_eq(result.length, 0);
   stmt.finalize();
-}
+
+  run_next_test();
+});
 
 function run_test() {
   setPlacesDatabase("places_v10_from_v11.sqlite");
 
-  _("Verify initial setup: v11 database is available");
-  test_initial_state();
-  test_history_guids();
-  test_bookmark_guids();
+  run_next_test();
 }
