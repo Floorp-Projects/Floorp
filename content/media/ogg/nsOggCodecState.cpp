@@ -353,10 +353,10 @@ PRInt64 nsTheoraState::Time(th_info* aInfo, PRInt64 aGranulepos)
   ogg_int64_t pframe = aGranulepos - (iframe << shift);
   PRInt64 frameno = iframe + pframe - TH_VERSION_CHECK(aInfo, 3, 2, 1);
   CheckedInt64 t = ((CheckedInt64(frameno) + 1) * USECS_PER_S) * aInfo->fps_denominator;
-  if (!t.valid())
+  if (!t.isValid())
     return -1;
   t /= aInfo->fps_numerator;
-  return t.valid() ? t.value() : -1;
+  return t.isValid() ? t.value() : -1;
 }
 
 PRInt64 nsTheoraState::StartTime(PRInt64 granulepos) {
@@ -364,7 +364,7 @@ PRInt64 nsTheoraState::StartTime(PRInt64 granulepos) {
     return -1;
   }
   CheckedInt64 t = (CheckedInt64(th_granule_frame(mCtx, granulepos)) * USECS_PER_S) * mInfo.fps_denominator;
-  if (!t.valid())
+  if (!t.isValid())
     return -1;
   return t.value() / mInfo.fps_numerator;
 }
@@ -622,7 +622,7 @@ PRInt64 nsVorbisState::Time(vorbis_info* aInfo, PRInt64 aGranulepos)
     return -1;
   }
   CheckedInt64 t = CheckedInt64(aGranulepos) * USECS_PER_S;
-  if (!t.valid())
+  if (!t.isValid())
     t = 0;
   return t.value() / aInfo->rate;
 }
@@ -884,7 +884,7 @@ PRInt64 nsOpusState::Time(PRInt64 granulepos)
 
   // Ogg Opus always runs at a granule rate of 48 kHz.
   CheckedInt64 t = CheckedInt64(granulepos - mPreSkip) * USECS_PER_S;
-  return t.valid() ? t.value() / mRate : -1;
+  return t.isValid() ? t.value() / mRate : -1;
 }
 
 bool nsOpusState::IsHeader(ogg_packet* aPacket)
@@ -1048,7 +1048,7 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
 
   // Extract the start time.
   CheckedInt64 t = CheckedInt64(LEInt64(p + INDEX_FIRST_NUMER_OFFSET)) * USECS_PER_S;
-  if (!t.valid()) {
+  if (!t.isValid()) {
     return (mActive = false);
   } else {
     startTime = t.value() / timeDenom;
@@ -1056,7 +1056,7 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
 
   // Extract the end time.
   t = LEInt64(p + INDEX_LAST_NUMER_OFFSET) * USECS_PER_S;
-  if (!t.valid()) {
+  if (!t.isValid()) {
     return (mActive = false);
   } else {
     endTime = t.value() / timeDenom;
@@ -1065,7 +1065,7 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
   // Check the numKeyPoints value read, ensure we're not going to run out of
   // memory while trying to decode the index packet.
   CheckedInt64 minPacketSize = (CheckedInt64(numKeyPoints) * MIN_KEY_POINT_SIZE) + INDEX_KEYPOINT_OFFSET;
-  if (!minPacketSize.valid())
+  if (!minPacketSize.isValid())
   {
     return (mActive = false);
   }
@@ -1103,7 +1103,7 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
     p = ReadVariableLengthInt(p, limit, delta);
     offset += delta;
     if (p == limit ||
-        !offset.valid() ||
+        !offset.isValid() ||
         offset.value() > mLength ||
         offset.value() < 0)
     {
@@ -1111,14 +1111,14 @@ bool nsSkeletonState::DecodeIndex(ogg_packet* aPacket)
     }
     p = ReadVariableLengthInt(p, limit, delta);
     time += delta;
-    if (!time.valid() ||
+    if (!time.isValid() ||
         time.value() > endTime ||
         time.value() < startTime)
     {
       return (mActive = false);
     }
     CheckedInt64 timeUsecs = time * USECS_PER_S;
-    if (!timeUsecs.valid())
+    if (!timeUsecs.isValid())
       return mActive = false;
     timeUsecs /= timeDenom;
     keyPoints->Add(offset.value(), timeUsecs.value());
@@ -1228,8 +1228,8 @@ nsresult nsSkeletonState::GetDuration(const nsTArray<PRUint32>& aTracks,
   }
   NS_ASSERTION(endTime > startTime, "Duration must be positive");
   CheckedInt64 duration = CheckedInt64(endTime) - startTime;
-  aDuration = duration.valid() ? duration.value() : 0;
-  return duration.valid() ? NS_OK : NS_ERROR_FAILURE;
+  aDuration = duration.isValid() ? duration.value() : 0;
+  return duration.isValid() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 bool nsSkeletonState::DecodeHeader(ogg_packet* aPacket)
