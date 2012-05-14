@@ -232,7 +232,7 @@ struct is_in_range_impl {};
 template<typename T, typename U>
 struct is_in_range_impl<T, U, true, true>
 {
-    static T run(U x)
+    static bool run(U x)
     {
         return (x <= max_value<T>::value()) &&
                (x >= min_value<T>::value());
@@ -242,7 +242,7 @@ struct is_in_range_impl<T, U, true, true>
 template<typename T, typename U>
 struct is_in_range_impl<T, U, false, false>
 {
-    static T run(U x)
+    static bool run(U x)
     {
         return x <= max_value<T>::value();
     }
@@ -251,7 +251,7 @@ struct is_in_range_impl<T, U, false, false>
 template<typename T, typename U>
 struct is_in_range_impl<T, U, true, false>
 {
-    static T run(U x)
+    static bool run(U x)
     {
         if (sizeof(T) > sizeof(U))
             return 1;
@@ -263,7 +263,7 @@ struct is_in_range_impl<T, U, true, false>
 template<typename T, typename U>
 struct is_in_range_impl<T, U, false, true>
 {
-    static T run(U x)
+    static bool run(U x)
     {
         if (sizeof(T) >= sizeof(U))
             return x >= 0;
@@ -272,12 +272,12 @@ struct is_in_range_impl<T, U, false, true>
     }
 };
 
-template<typename T, typename U> inline T is_in_range(U x)
+template<typename T, typename U> inline bool is_in_range(U x)
 {
     return is_in_range_impl<T, U>::run(x);
 }
 
-template<typename T> inline T is_add_valid(T x, T y, T result)
+template<typename T> inline bool is_add_valid(T x, T y, T result)
 {
     return is_signed<T>::value ?
                  // addition is valid if the sign of x+y is equal to either that of x or that of y.
@@ -288,7 +288,7 @@ template<typename T> inline T is_add_valid(T x, T y, T result)
                  binary_complement(x) >= y;
 }
 
-template<typename T> inline T is_sub_valid(T x, T y, T result)
+template<typename T> inline bool is_sub_valid(T x, T y, T result)
 {
     return is_signed<T>::value ?
                  // substraction is valid if either x and y have same sign, or x-y and x have same sign
@@ -305,7 +305,7 @@ struct is_mul_valid_impl {};
 template<typename T, bool is_signed>
 struct is_mul_valid_impl<T, is_signed, true>
 {
-    static T run(T x, T y)
+    static bool run(T x, T y)
     {
         typedef typename twice_bigger_type<T>::type twice_bigger_type;
         twice_bigger_type product = twice_bigger_type(x) * twice_bigger_type(y);
@@ -316,7 +316,7 @@ struct is_mul_valid_impl<T, is_signed, true>
 template<typename T>
 struct is_mul_valid_impl<T, true, false>
 {
-    static T run(T x, T y)
+    static bool run(T x, T y)
     {
         const T max = max_value<T>::value();
         const T min = min_value<T>::value();
@@ -340,7 +340,7 @@ struct is_mul_valid_impl<T, true, false>
 template<typename T>
 struct is_mul_valid_impl<T, false, false>
 {
-    static T run(T x, T y)
+    static bool run(T x, T y)
     {
         const T max = max_value<T>::value();
         if (x == 0 || y == 0) return true;
@@ -348,12 +348,12 @@ struct is_mul_valid_impl<T, false, false>
     }
 };
 
-template<typename T> inline T is_mul_valid(T x, T y, T /*result not used*/)
+template<typename T> inline bool is_mul_valid(T x, T y, T /*result not used*/)
 {
     return is_mul_valid_impl<T>::run(x, y);
 }
 
-template<typename T> inline T is_div_valid(T x, T y)
+template<typename T> inline bool is_div_valid(T x, T y)
 {
     return is_signed<T>::value ?
                  // keep in mind that min/-1 is invalid because abs(min)>max
@@ -441,11 +441,10 @@ class CheckedInt
 {
 protected:
     T mValue;
-    T mIsValid; // stored as a T to limit the number of integer conversions when
-                // evaluating nested arithmetic expressions.
+    bool mIsValid;
 
     template<typename U>
-    CheckedInt(U value, T isValid) : mValue(value), mIsValid(isValid)
+    CheckedInt(U value, bool isValid) : mValue(value), mIsValid(isValid)
     {
         MOZ_STATIC_ASSERT(CheckedInt_internal::is_supported<T>::value, "This type is not supported by CheckedInt");
     }
@@ -468,7 +467,7 @@ public:
     }
 
     /** Constructs a valid checked integer with initial value 0 */
-    CheckedInt() : mValue(0), mIsValid(1)
+    CheckedInt() : mValue(0), mIsValid(true)
     {
         MOZ_STATIC_ASSERT(CheckedInt_internal::is_supported<T>::value, "This type is not supported by CheckedInt");
     }
@@ -481,7 +480,7 @@ public:
       */
     bool valid() const
     {
-        return bool(mIsValid);
+        return mIsValid;
     }
 
     /** \returns the sum. Checks for overflow. */
@@ -509,7 +508,7 @@ public:
         T result = CheckedInt_internal::opposite_if_signed(value());
         /* give the compiler a good chance to perform RVO */
         return CheckedInt(result,
-                          mIsValid & CheckedInt_internal::is_sub_valid(T(0), value(), result));
+                          valid() && CheckedInt_internal::is_sub_valid(T(0), value(), result));
     }
 
     /** \returns true if the left and right hand sides are valid and have the same value.
@@ -523,7 +522,7 @@ public:
       */
     bool operator ==(const CheckedInt& other) const
     {
-        return bool(mIsValid & other.mIsValid & (value() == other.mValue));
+        return valid() && other.valid() && value() == other.value();
     }
 
     /** prefix ++ */
@@ -589,7 +588,7 @@ inline CheckedInt<T> operator /(const CheckedInt<T> &lhs, const CheckedInt<T> &r
 {
     T x = lhs.mValue;
     T y = rhs.mValue;
-    T is_op_valid = CheckedInt_internal::is_div_valid(x, y);
+    bool is_op_valid = CheckedInt_internal::is_div_valid(x, y);
     T result = is_op_valid ? (x / y) : 0;
     /* give the compiler a good chance to perform RVO */
     return CheckedInt<T>(result,
