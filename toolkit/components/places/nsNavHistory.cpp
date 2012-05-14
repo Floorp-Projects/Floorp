@@ -2687,33 +2687,6 @@ nsNavHistory::GetHistoryDisabled(bool *_retval)
 // Browser history *************************************************************
 
 
-// nsNavHistory::AddPageWithDetails
-//
-//    This function is used by the migration components to import history.
-//
-//    Note that this always adds the page with one visit and no parent, which
-//    is appropriate for imported URIs.
-
-NS_IMETHODIMP
-nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
-                                 PRInt64 aLastVisited)
-{
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-  NS_ENSURE_ARG(aURI);
-
-  // Don't update the page title inside the private browsing mode.
-  if (InPrivateBrowsingMode())
-    return NS_OK;
-
-  PRInt64 visitID;
-  nsresult rv = AddVisit(aURI, aLastVisited, 0, TRANSITION_LINK, false,
-                         0, &visitID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return SetPageTitleInternal(aURI, nsString(aTitle));
-}
-
-
 // nsNavHistory::RemovePagesInternal
 //
 //    Deletes a list of placeIds from history.

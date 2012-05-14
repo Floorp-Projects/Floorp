@@ -60,6 +60,8 @@ const dm = Cc["@mozilla.org/download-manager;1"].
 const formhist = Cc["@mozilla.org/satchel/form-history;1"].
                  getService(Ci.nsIFormHistory2);
 
+const kUsecPerMin = 60 * 1000000;
+
 // Add tests here.  Each is a function that's called by doNextTest().
 var gAllTests = [
 
@@ -831,8 +833,8 @@ function addDownloadWithMinutesAgo(aMinutesAgo) {
     name:      name,
     source:   "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target:    name,
-    startTime: now_uSec - (aMinutesAgo * 60 * 1000000),
-    endTime:   now_uSec - ((aMinutesAgo + 1) *60 * 1000000),
+    startTime: now_uSec - (aMinutesAgo * kUsecPerMin),
+    endTime:   now_uSec - ((aMinutesAgo + 1) * kUsecPerMin),
     state:     Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
   };
@@ -872,7 +874,7 @@ function addFormEntryWithMinutesAgo(aMinutesAgo) {
 
   // Artifically age the entry to the proper vintage.
   let db = formhist.DBConnection;
-  let timestamp = now_uSec - (aMinutesAgo * 60 * 1000000);
+  let timestamp = now_uSec - (aMinutesAgo * kUsecPerMin);
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = '" + name + "'");
 
@@ -889,10 +891,12 @@ function addFormEntryWithMinutesAgo(aMinutesAgo) {
  */
 function addHistoryWithMinutesAgo(aMinutesAgo) {
   let pURI = makeURI("http://" + aMinutesAgo + "-minutes-ago.com/");
-  PlacesUtils.bhistory
-             .addPageWithDetails(pURI,
-                                 aMinutesAgo + " minutes ago",
-                                 now_uSec - (aMinutesAgo * 60 * 1000 * 1000));
+  PlacesUtils.history.addVisit(pURI,
+                               now_uSec - aMinutesAgo * kUsecPerMin,
+                               null,
+                               Ci.nsINavHistoryService.TRANSITION_LINK,
+                               false,
+                               0);
   is(PlacesUtils.bhistory.isVisited(pURI), true,
      "Sanity check: history visit " + pURI.spec +
      " should exist after creating it");
