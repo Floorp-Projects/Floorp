@@ -1,45 +1,21 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is McCoy.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation <http://www.mozilla.org/>.
- * Portions created by the Initial Developer are Copyright (C) 2008
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dave Townsend <dtownsend@oxymoronical.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 
-#include <windows.h>
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// System headers (alphabetical)
+#include <fcntl.h>
+#include <io.h>
+#include <share.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <io.h>
-#include <fcntl.h>
+#include <sys/stat.h>
+#include <windows.h>
+
+// Mozilla headers (alphabetical)
+#include "mozilla/FileUtils.h"  // ScopedClose
+#include "nsAutoPtr.h"          // nsAutoArrayPtr
 
 /*
 Icon files are made up of:
@@ -98,80 +74,108 @@ typedef struct
 } IconResEntry;
 #pragma pack(pop)
 
+namespace {
+  /**
+   * ScopedResourceUpdate is a RAII wrapper for Windows resource updating
+   *
+   * Instances |EndUpdateResourceW()| their handles when they go out of scope.
+   * They pass |TRUE| as the second argument to |EndUpdateResourceW()|, which
+   * causes the resource update to be aborted (changes are discarded).
+   */
+  struct ScopedResourceUpdateTraits
+  {
+    typedef HANDLE type;
+    static type empty() { return NULL; }
+    static void release(type handle) {
+      if(NULL != handle) {
+        EndUpdateResourceW(handle, TRUE); // Discard changes
+      }
+    }
+  };
+
+  typedef Scoped<ScopedResourceUpdateTraits> ScopedResourceUpdate;
+};
+
 int
-main(int argc, char **argv)
+wmain(int argc, wchar_t** argv)
 {
   if (argc != 3) {
     printf("Usage: redit <exe file> <icon file>\n");
     return 1;
   }
 
-  int file = _open(argv[2], _O_BINARY | _O_RDONLY);
-  if (file == -1) {
+  mozilla::ScopedClose file;
+  if (0 != _wsopen_s(&file.rwget(),
+                     argv[2],
+                     _O_BINARY | _O_RDONLY,
+                     _SH_DENYWR,
+                     _S_IREAD)
+  || (-1 == file)) {
     fprintf(stderr, "Unable to open icon file.\n");
     return 1;
   }
 
   // Load all the data from the icon file
   long filesize = _filelength(file);
-  char* data = (char*)malloc(filesize);
+  nsAutoArrayPtr<BYTE> data(new BYTE[filesize]);
+  if(!data) {
+    fprintf(stderr, "Failed to allocate memory for icon file.\n");
+    return 1;
+  }
   _read(file, data, filesize);
-  _close(file);
-  IconHeader* header = (IconHeader*)data;
+
+  IconHeader* header = reinterpret_cast<IconHeader*>(data.get());
 
   // Open the target library for updating
-  HANDLE updateRes = BeginUpdateResource(argv[1], FALSE);
-  if (updateRes == NULL) {
+  ScopedResourceUpdate updateRes(BeginUpdateResourceW(argv[1], FALSE));
+  if (NULL == updateRes) {
     fprintf(stderr, "Unable to open library for modification.\n");
-    free(data);
     return 1;
   }
 
   // Allocate the group resource entry
-  long groupsize = sizeof(IconHeader) + header->ImageCount * sizeof(IconResEntry);
-  char* group = (char*)malloc(groupsize);
-  if (!group) {
+  long groupSize = sizeof(IconHeader)
+                 + header->ImageCount * sizeof(IconResEntry);
+  nsAutoArrayPtr<BYTE> group(new BYTE[groupSize]);
+  if(!group) {
     fprintf(stderr, "Failed to allocate memory for new images.\n");
-    free(data);
     return 1;
   }
   memcpy(group, data, sizeof(IconHeader));
 
-  IconDirEntry* sourceIcon = (IconDirEntry*)(data + sizeof(IconHeader));
-  IconResEntry* targetIcon = (IconResEntry*)(group + sizeof(IconHeader));
+  IconDirEntry* sourceIcon =
+                    reinterpret_cast<IconDirEntry*>(data
+                                                  + sizeof(IconHeader));
+  IconResEntry* targetIcon =
+                    reinterpret_cast<IconResEntry*>(group
+                                                  + sizeof(IconHeader));
 
   for (int id = 1; id <= header->ImageCount; id++) {
     // Add the individual icon
-    if (!UpdateResource(updateRes, RT_ICON, MAKEINTRESOURCE(id),
-                        MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-                        data + sourceIcon->ImageOffset, sourceIcon->ImageSize)) {
-      fprintf(stderr, "Unable to update resource.\n");
-      EndUpdateResource(updateRes, TRUE);  // Discard changes, ignore errors
-      free(data);
-      free(group);
+    if (!UpdateResourceW(updateRes, RT_ICON, MAKEINTRESOURCE(id),
+                         MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
+                         data + sourceIcon->ImageOffset,
+                         sourceIcon->ImageSize)) {
+      fprintf(stderr, "Unable to update resource (RT_ICON).\n");
       return 1;
     }
-    // Copy the data for this icon (note that the structs have different sizes)
+    // Copy the data for this icon
+    // (note that the structs have different sizes)
     memcpy(targetIcon, sourceIcon, sizeof(IconResEntry));
     targetIcon->ResourceID = id;
     sourceIcon++;
     targetIcon++;
   }
-  free(data);
 
-  if (!UpdateResource(updateRes, RT_GROUP_ICON, "MAINICON",
-                      MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-                      group, groupsize)) {
-    fprintf(stderr, "Unable to update resource.\n");
-    EndUpdateResource(updateRes, TRUE);  // Discard changes
-    free(group);
+  if (!UpdateResourceW(updateRes, RT_GROUP_ICON, L"MAINICON",
+                       MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
+                       group, groupSize)) {
+    fprintf(stderr, "Unable to update resource (RT_GROUP_ICON).\n");
     return 1;
   }
 
-  free(group);
-
   // Save the modifications
-  if (!EndUpdateResource(updateRes, FALSE)) {
+  if(!EndUpdateResourceW(updateRes.forget(), FALSE)) {
     fprintf(stderr, "Unable to write changes to library.\n");
     return 1;
   }
