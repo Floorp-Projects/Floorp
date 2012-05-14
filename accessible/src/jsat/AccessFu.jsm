@@ -48,14 +48,14 @@ var AccessFu = {
     } catch (x) {
     }
 
-    this.processPreferences(accessPref);
+    this._processPreferences(accessPref);
   },
 
   /**
    * Start AccessFu mode, this primarily means controlling the virtual cursor
    * with arrow keys.
    */
-  enable: function enable() {
+  _enable: function _enable() {
     if (this._enabled)
       return;
     this._enabled = true;
@@ -79,7 +79,7 @@ var AccessFu = {
   /**
    * Disable AccessFu and return to default interaction mode.
    */
-  disable: function disable() {
+  _disable: function _disable() {
     if (!this._enabled)
       return;
     this._enabled = false;
@@ -98,7 +98,7 @@ var AccessFu = {
     this.chromeWin.removeEventListener('TabOpen', this, true);
   },
 
-  processPreferences: function processPreferences(aPref) {
+  _processPreferences: function _processPreferences(aPref) {
     if (Services.appinfo.OS == 'Android') {
       if (aPref == ACCESSFU_AUTO) {
         if (!this._observingSystemSettings) {
@@ -118,9 +118,9 @@ var AccessFu = {
     }
 
     if (aPref == ACCESSFU_ENABLE)
-      this.enable();
+      this._enable();
     else
-      this.disable();
+      this._disable();
   },
 
   addPresenter: function addPresenter(presenter) {
@@ -171,19 +171,19 @@ var AccessFu = {
     switch (aTopic) {
       case 'Accessibility:Settings':
         if (JSON.parse(aData).enabled)
-          this.enable();
+          this._enable();
         else
-          this.disable();
+          this._disable();
         break;
       case 'nsPref:changed':
         if (aData == 'accessfu')
-          this.processPreferences(this.prefsBranch.getIntPref('accessfu'));
+          this._processPreferences(this.prefsBranch.getIntPref('accessfu'));
         break;
       case 'accessible-event':
         let event;
         try {
           event = aSubject.QueryInterface(Ci.nsIAccessibleEvent);
-          this.handleAccEvent(event);
+          this._handleAccEvent(event);
         } catch (ex) {
           dump(ex);
           return;
@@ -191,7 +191,7 @@ var AccessFu = {
     }
   },
 
-  handleAccEvent: function handleAccEvent(aEvent) {
+  _handleAccEvent: function _handleAccEvent(aEvent) {
     switch (aEvent.eventType) {
       case Ci.nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED:
         {
@@ -251,13 +251,13 @@ var AccessFu = {
               let state = {};
               docAcc.getState(state, {});
               if (state.value & Ci.nsIAccessibleStates.STATE_BUSY &&
-                  this.isNotChromeDoc(docAcc))
+                  this._isNotChromeDoc(docAcc))
                 this.presenters.forEach(
                   function(p) { p.tabStateChanged(docAcc, 'loading'); }
                 );
               delete this._pendingDocuments[aEvent.DOMNode];
             }
-            if (this.isBrowserDoc(docAcc))
+            if (this._isBrowserDoc(docAcc))
               // A new top-level content document has been attached
               this.presenters.forEach(
                 function(p) { p.tabStateChanged(docAcc, 'newdoc'); }
@@ -267,7 +267,7 @@ var AccessFu = {
         }
       case Ci.nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_COMPLETE:
         {
-          if (this.isNotChromeDoc(aEvent.accessible)) {
+          if (this._isNotChromeDoc(aEvent.accessible)) {
             this.presenters.forEach(
               function(p) {
                 p.tabStateChanged(aEvent.accessible, 'loaded');
@@ -296,7 +296,7 @@ var AccessFu = {
         }
       case Ci.nsIAccessibleEvent.EVENT_FOCUS:
         {
-          if (this.isBrowserDoc(aEvent.accessible)) {
+          if (this._isBrowserDoc(aEvent.accessible)) {
             // The document recieved focus, call tabSelected to present current tab.
             this.presenters.forEach(
               function(p) { p.tabSelected(aEvent.accessible); });
@@ -342,7 +342,7 @@ var AccessFu = {
    * @param {nsIAccessible} aDocAcc the accessible to check.
    * @return {boolean} true if this is a top-level content document.
    */
-  isBrowserDoc: function isBrowserDoc(aDocAcc) {
+  _isBrowserDoc: function _isBrowserDoc(aDocAcc) {
     let parent = aDocAcc.parent;
     if (!parent)
       return false;
@@ -360,7 +360,7 @@ var AccessFu = {
    * @param {nsIDOMDocument} aDocument the document to check.
    * @return {boolean} true if this is not a chrome document.
    */
-  isNotChromeDoc: function isNotChromeDoc(aDocument) {
+  _isNotChromeDoc: function _isNotChromeDoc(aDocument) {
     let location = aDocument.DOMNode.location;
     if (!location)
       return false;
