@@ -170,6 +170,8 @@ void
 C1Spewer::spewIntervals(FILE *fp, MBasicBlock *block, LinearScanAllocator *regalloc, size_t &nextId)
 {
     LBlock *lir = block->lir();
+    if (!lir)
+        return;
 
     for (size_t i = 0; i < lir->numPhis(); i++)
         spewIntervals(fp, regalloc, lir->getPhi(i), nextId);
@@ -177,6 +179,7 @@ C1Spewer::spewIntervals(FILE *fp, MBasicBlock *block, LinearScanAllocator *regal
     for (LInstructionIterator ins = lir->begin(); ins != lir->end(); ins++)
         spewIntervals(fp, regalloc, *ins, nextId);
 }
+
 void
 C1Spewer::spewPass(FILE *fp, MBasicBlock *block)
 {
