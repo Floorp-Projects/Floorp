@@ -47,9 +47,7 @@ LIBRARY_NAME = mfbt
 FORCE_STATIC_LIB = 1
 STL_FLAGS =
 
-TEST_DIRS = \
-  tests \
-  $(NULL)
+DIRS =
 
 # exported_headers.mk defines the headers exported by mfbt.  It is included by
 # mfbt itself and by the JS engine, which, when built standalone, must do the

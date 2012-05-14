@@ -108,6 +108,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsStyleUtil.h"
 #include "CanvasImageCache.h"
+#include "CheckedInt.h"
 
 #include <algorithm>
 
@@ -115,7 +116,6 @@
 #include "jsfriendapi.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/PBrowserParent.h"
@@ -3926,14 +3926,14 @@ nsCanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     MOZ_ASSERT(aWidth && aHeight);
 
     CheckedInt<uint32_t> len = CheckedInt<uint32_t>(aWidth) * aHeight * 4;
-    if (!len.isValid()) {
+    if (!len.valid()) {
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
 
     CheckedInt<int32_t> rightMost = CheckedInt<int32_t>(aX) + aWidth;
     CheckedInt<int32_t> bottomMost = CheckedInt<int32_t>(aY) + aHeight;
 
-    if (!rightMost.isValid() || !bottomMost.isValid()) {
+    if (!rightMost.valid() || !bottomMost.valid()) {
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
@@ -4066,7 +4066,7 @@ nsCanvasRenderingContext2D::PutImageData_explicit(PRInt32 x, PRInt32 y, PRUint32
 
             CheckedInt32 checkedDirtyX = CheckedInt32(dirtyX) + dirtyWidth;
 
-            if (!checkedDirtyX.isValid())
+            if (!checkedDirtyX.valid())
                 return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
             dirtyX = checkedDirtyX.value();
@@ -4078,7 +4078,7 @@ nsCanvasRenderingContext2D::PutImageData_explicit(PRInt32 x, PRInt32 y, PRUint32
 
             CheckedInt32 checkedDirtyY = CheckedInt32(dirtyY) + dirtyHeight;
 
-            if (!checkedDirtyY.isValid())
+            if (!checkedDirtyY.valid())
                 return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
             dirtyY = checkedDirtyY.value();

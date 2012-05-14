@@ -547,7 +547,7 @@ void nsBuiltinDecoderStateMachine::SendOutputStreamAudio(AudioData* aAudio,
   CheckedInt64 audioWrittenOffset = UsecsToFrames(mInfo.mAudioRate,
       aStream->mAudioFramesWrittenBaseTime + mStartTime) + aStream->mAudioFramesWritten;
   CheckedInt64 frameOffset = UsecsToFrames(mInfo.mAudioRate, aAudio->mTime);
-  if (!audioWrittenOffset.isValid() || !frameOffset.isValid())
+  if (!audioWrittenOffset.valid() || !frameOffset.valid())
     return;
   if (audioWrittenOffset.value() < frameOffset.value()) {
     // Write silence to catch up
@@ -1115,7 +1115,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     // samples.
     CheckedInt64 sampleTime = UsecsToFrames(s->mTime, rate);
     CheckedInt64 missingFrames = sampleTime - playedFrames;
-    if (!missingFrames.isValid() || !sampleTime.isValid()) {
+    if (!missingFrames.valid() || !sampleTime.valid()) {
       NS_WARNING("Int overflow adding in AudioLoop()");
       break;
     }
@@ -1139,7 +1139,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     {
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
       CheckedInt64 playedUsecs = FramesToUsecs(audioDuration, rate) + audioStartTime;
-      if (!playedUsecs.isValid()) {
+      if (!playedUsecs.valid()) {
         NS_WARNING("Int overflow calculating audio end time");
         break;
       }

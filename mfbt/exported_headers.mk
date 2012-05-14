@@ -45,7 +45,6 @@ EXPORTS_mozilla += \
   Assertions.h \
   Attributes.h \
   BloomFilter.h \
-  CheckedInt.h \
   FloatingPoint.h \
   GuardObjects.h \
   HashFunctions.h \
