@@ -508,8 +508,11 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     }
 
     public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer) {
-        Uri uri = mBookmarksUriWithProfile;
-        cr.registerContentObserver(uri, false, observer);
+        cr.registerContentObserver(mBookmarksUriWithProfile, false, observer);
+    }
+
+    public void registerHistoryObserver(ContentResolver cr, ContentObserver observer) {
+        cr.registerContentObserver(mHistoryUriWithProfile, false, observer);
     }
 
     public void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword) {

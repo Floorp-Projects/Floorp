@@ -102,6 +102,8 @@ public class BrowserDB {
         public byte[] getThumbnailForUrl(ContentResolver cr, String uri);
 
         public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer);
+
+        public void registerHistoryObserver(ContentResolver cr, ContentObserver observer);
     }
 
     static {
@@ -198,7 +200,11 @@ public class BrowserDB {
         sDb.registerBookmarkObserver(cr, observer);
     }
 
-    public static void unregisterBookmarkObserver(ContentResolver cr, ContentObserver observer) {
+    public static void registerHistoryObserver(ContentResolver cr, ContentObserver observer) {
+        sDb.registerHistoryObserver(cr, observer);
+    }
+
+    public static void unregisterContentObserver(ContentResolver cr, ContentObserver observer) {
         cr.unregisterContentObserver(observer);
     }
 }
