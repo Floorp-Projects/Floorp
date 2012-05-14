@@ -443,17 +443,17 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond)
     switch (pn->getArity()) {
       case PN_FUNC:
       {
-        TreeContext *tc = parser->tc;
-        uint32_t oldflags = tc->flags;
-        FunctionBox *oldlist = tc->functionList;
+        SharedContext *sc = parser->tc->sc;
+        uint32_t oldflags = sc->flags;
+        FunctionBox *oldlist = sc->functionList;
 
-        tc->flags = pn->pn_funbox->tcflags;
-        tc->functionList = pn->pn_funbox->kids;
+        sc->flags = pn->pn_funbox->tcflags;
+        sc->functionList = pn->pn_funbox->kids;
         if (!FoldConstants(cx, pn->pn_body, parser))
             return false;
-        pn->pn_funbox->kids = tc->functionList;
-        tc->flags = oldflags;
-        tc->functionList = oldlist;
+        pn->pn_funbox->kids = sc->functionList;
+        sc->flags = oldflags;
+        sc->functionList = oldlist;
         break;
       }
 
@@ -589,7 +589,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond)
 
 #if JS_HAS_GENERATOR_EXPRS
         /* Don't fold a trailing |if (0)| in a generator expression. */
-        if (!pn2 && (parser->tc->flags & TCF_GENEXP_LAMBDA))
+        if (!pn2 && (parser->tc->sc->flags & TCF_GENEXP_LAMBDA))
             break;
 #endif
 

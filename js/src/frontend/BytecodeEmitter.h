@@ -103,8 +103,12 @@ struct GlobalScope {
     RootedVarObject globalObj;
 };
 
-struct BytecodeEmitter : public TreeContext
+struct BytecodeEmitter
 {
+    SharedContext   *sc;            /* context shared between parsing and bytecode generation */
+
+    BytecodeEmitter *parent;        /* enclosing function or global context */
+
     struct {
         jsbytecode  *base;          /* base of JS bytecode vector */
         jsbytecode  *limit;         /* one byte beyond end of bytecode */
@@ -150,15 +154,8 @@ struct BytecodeEmitter : public TreeContext
 
     uint16_t        typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
-    BytecodeEmitter(Parser *parser, unsigned lineno);
-    bool init(JSContext *cx, TreeContext::InitBehavior ib = USED_AS_CODE_GENERATOR);
-
-    // This is a down-cast.  It's necessary and safe -- although
-    // TreeContext::parent is a |TreeContext *|, a BytecodeEmitter's parent is
-    // always itself a BytecodeEmitter.
-    BytecodeEmitter *parentBCE() {
-        return static_cast<BytecodeEmitter *>(parent);
-    }
+    BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lineno);
+    bool init();
 
     /*
      * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
@@ -168,7 +165,6 @@ struct BytecodeEmitter : public TreeContext
      */
     ~BytecodeEmitter();
 
-    bool compilingForEval() const { return !!(flags & TCF_COMPILE_FOR_EVAL); }
     JSVersion version() const { return parser->versionWithFlags(); }
 
     bool isAliasedName(ParseNode *pn);
@@ -193,13 +189,13 @@ struct BytecodeEmitter : public TreeContext
     }
 
     bool checkSingletonContext() {
-        if (!compileAndGo() || inFunction())
+        if (!sc->compileAndGo() || sc->inFunction())
             return false;
-        for (StmtInfo *stmt = topStmt; stmt; stmt = stmt->down) {
+        for (StmtInfo *stmt = sc->topStmt; stmt; stmt = stmt->down) {
             if (STMT_IS_LOOP(stmt))
                 return false;
         }
-        flags |= TCF_HAS_SINGLETONS;
+        sc->flags |= TCF_HAS_SINGLETONS;
         return true;
     }
 

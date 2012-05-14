@@ -191,12 +191,12 @@ MarkExtensibleScopeDescendants(JSContext *context, FunctionBox *funbox, bool has
 bool
 frontend::AnalyzeFunctions(Parser *parser)
 {
-    TreeContext *tc = parser->tc;
-    if (!tc->functionList)
+    SharedContext *sc = parser->tc->sc;
+    if (!sc->functionList)
         return true;
-    if (!MarkExtensibleScopeDescendants(tc->context, tc->functionList, false))
+    if (!MarkExtensibleScopeDescendants(sc->context, sc->functionList, false))
         return false;
     bool isDirectEval = !!parser->callerFrame;
-    SetFunctionKinds(tc->functionList, &tc->flags, isDirectEval);
+    SetFunctionKinds(sc->functionList, &sc->flags, isDirectEval);
     return true;
 }
