@@ -8,7 +8,7 @@ var gSmallTests = [
   { name:"small-shot.ogg", type:"audio/ogg", duration:0.276 },
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233 },
-  { name:"seek.webm", type:"video/webm", duration:3.966 },
+  { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];

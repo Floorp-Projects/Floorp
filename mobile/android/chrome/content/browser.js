@@ -2680,8 +2680,7 @@ var BrowserEventHandler = {
       return;
     }
 
-    win = element.ownerDocument.defaultView;
-    while (element && win.getComputedStyle(element,null).display == "inline")
+    while (element && !this._shouldZoomToElement(element))
       element = element.parentNode;
 
     if (!element) {
@@ -2723,6 +2722,17 @@ var BrowserEventHandler = {
       rect.w = bRect.width; rect.h = availHeight;
       sendMessageToJava({ gecko: rect });
     }
+  },
+
+  _shouldZoomToElement: function(aElement) {
+    let win = aElement.ownerDocument.defaultView;
+    if (win.getComputedStyle(aElement, null).display == "inline")
+      return false;
+    if (aElement instanceof Ci.nsIDOMHTMLLIElement)
+      return false;
+    if (aElement instanceof Ci.nsIDOMHTMLQuoteElement)
+      return false;
+    return true;
   },
 
   _firstScrollEvent: false,

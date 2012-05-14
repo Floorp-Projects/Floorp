@@ -236,7 +236,8 @@ pixman_scaled_nearest_scanline_##name##_##op##_asm_##cputype (                \
                                                    dst_type *       dst,      \
                                                    const src_type * src,      \
                                                    pixman_fixed_t   vx,       \
-                                                   pixman_fixed_t   unit_x);  \
+                                                   pixman_fixed_t   unit_x,   \
+                                                   pixman_fixed_t   max_vx);  \
                                                                               \
 static force_inline void                                                      \
 scaled_nearest_scanline_##cputype##_##name##_##op (dst_type *       pd,       \
@@ -248,7 +249,8 @@ scaled_nearest_scanline_##cputype##_##name##_##op (dst_type *       pd,       \
                                                    pixman_bool_t    zero_src) \
 {                                                                             \
     pixman_scaled_nearest_scanline_##name##_##op##_asm_##cputype (w, pd, ps,  \
-                                                                  vx, unit_x);\
+                                                                  vx, unit_x, \
+                                                                  max_vx);    \
 }                                                                             \
                                                                               \
 FAST_NEAREST_MAINLOOP (cputype##_##name##_cover_##op,                         \
@@ -259,13 +261,17 @@ FAST_NEAREST_MAINLOOP (cputype##_##name##_none_##op,                          \
                        src_type, dst_type, NONE)                              \
 FAST_NEAREST_MAINLOOP (cputype##_##name##_pad_##op,                           \
                        scaled_nearest_scanline_##cputype##_##name##_##op,     \
-                       src_type, dst_type, PAD)
+                       src_type, dst_type, PAD)                               \
+FAST_NEAREST_MAINLOOP (cputype##_##name##_normal_##op,                        \
+                       scaled_nearest_scanline_##cputype##_##name##_##op,     \
+                       src_type, dst_type, NORMAL)
 
 /* Provide entries for the fast path table */
 #define PIXMAN_ARM_SIMPLE_NEAREST_FAST_PATH(op,s,d,func)                      \
     SIMPLE_NEAREST_FAST_PATH_COVER (op,s,d,func),                             \
     SIMPLE_NEAREST_FAST_PATH_NONE (op,s,d,func),                              \
-    SIMPLE_NEAREST_FAST_PATH_PAD (op,s,d,func)
+    SIMPLE_NEAREST_FAST_PATH_PAD (op,s,d,func),                               \
+    SIMPLE_NEAREST_FAST_PATH_NORMAL (op,s,d,func)
 
 #define PIXMAN_ARM_BIND_SCALED_NEAREST_SRC_A8_DST(flags, cputype, name, op,   \
                                                   src_type, dst_type)         \
@@ -276,6 +282,7 @@ pixman_scaled_nearest_scanline_##name##_##op##_asm_##cputype (                \
                                                    const src_type * src,      \
                                                    pixman_fixed_t   vx,       \
                                                    pixman_fixed_t   unit_x,   \
+                                                   pixman_fixed_t   max_vx,   \
                                                    const uint8_t *  mask);    \
                                                                               \
 static force_inline void                                                      \
@@ -292,6 +299,7 @@ scaled_nearest_scanline_##cputype##_##name##_##op (const uint8_t *  mask,     \
 	return;                                                               \
     pixman_scaled_nearest_scanline_##name##_##op##_asm_##cputype (w, pd, ps,  \
                                                                   vx, unit_x, \
+                                                                  max_vx,     \
                                                                   mask);      \
 }                                                                             \
                                                                               \
@@ -303,13 +311,17 @@ FAST_NEAREST_MAINLOOP_COMMON (cputype##_##name##_none_##op,                   \
                               src_type, uint8_t, dst_type, NONE, TRUE, FALSE) \
 FAST_NEAREST_MAINLOOP_COMMON (cputype##_##name##_pad_##op,                    \
                               scaled_nearest_scanline_##cputype##_##name##_##op,\
-                              src_type, uint8_t, dst_type, PAD, TRUE, FALSE)
+                              src_type, uint8_t, dst_type, PAD, TRUE, FALSE)  \
+FAST_NEAREST_MAINLOOP_COMMON (cputype##_##name##_normal_##op,                 \
+                              scaled_nearest_scanline_##cputype##_##name##_##op,\
+                              src_type, uint8_t, dst_type, NORMAL, TRUE, FALSE)
 
 /* Provide entries for the fast path table */
 #define PIXMAN_ARM_SIMPLE_NEAREST_A8_MASK_FAST_PATH(op,s,d,func)              \
     SIMPLE_NEAREST_A8_MASK_FAST_PATH_COVER (op,s,d,func),                     \
     SIMPLE_NEAREST_A8_MASK_FAST_PATH_NONE (op,s,d,func),                      \
-    SIMPLE_NEAREST_A8_MASK_FAST_PATH_PAD (op,s,d,func)
+    SIMPLE_NEAREST_A8_MASK_FAST_PATH_PAD (op,s,d,func),                       \
+    SIMPLE_NEAREST_A8_MASK_FAST_PATH_NORMAL (op,s,d,func)
 
 /*****************************************************************************/
 

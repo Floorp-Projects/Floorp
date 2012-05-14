@@ -247,15 +247,19 @@ class HashTable : private AllocPolicy
          * a new key at the new Lookup position.  |front()| is invalid after
          * this operation until the next call to |popFront()|.
          */
-        void rekeyFront(const Key &k) {
+        void rekeyFront(const Lookup &l, const Key &k) {
             JS_ASSERT(&k != &HashPolicy::getKey(this->cur->t));
-            if (table.match(*this->cur, k))
+            if (match(*this->cur, l))
                 return;
             Entry e = *this->cur;
             HashPolicy::setKey(e.t, const_cast<Key &>(k));
             table.remove(*this->cur);
-            table.add(k, e);
+            table.add(l, e);
             added = true;
+        }
+
+        void rekeyFront(const Key &k) {
+            rekeyFront(k, k);
         }
 
         /* Potentially rehashes the table. */

@@ -13,43 +13,41 @@ class MultiEmulatorDialTest(MarionetteTestCase):
         sender = self.get_new_emulator()
         receiver = self.marionette
 
+        self.set_up_test_page(sender, "test.html", ["dom.telephony.app.phone.url"])
+        self.set_up_test_page(receiver, "test.html", ["dom.telephony.app.phone.url"])
+
         # Setup the event listsener on the receiver, which should store
         # a global variable when an incoming call is received.
-        receiver.set_context("chrome")
         self.assertTrue(receiver.execute_script("""
 return window.navigator.mozTelephony != undefined && window.navigator.mozTelephony != null;
-"""))
+""", new_sandbox=False))
         receiver.execute_script("""
-window.wrappedJSObject.incoming = "none";
+global.incoming = null;
 window.navigator.mozTelephony.addEventListener("incoming", function(e) {
-    window.wrappedJSObject.incoming = e.call.number;
+    global.incoming = e.call.number;
 });
-""")
+""", new_sandbox=False)
 
         # Dial the receiver from the sender.
         toPhoneNumber = "1555521%d" % receiver.emulator.port
         fromPhoneNumber = "1555521%d" % sender.emulator.port
-        sender.set_context("chrome")
         sender.execute_script("""
 window.navigator.mozTelephony.dial("%s");
-""" % toPhoneNumber)
+""" % toPhoneNumber, new_sandbox=False)
 
-        # On the receiver, wait up to 30s for an incoming call to be 
+        # On the receiver, wait up to 10s for an incoming call to be 
         # detected, by checking the value of the global var that the 
         # listener will change.
-        receiver.set_script_timeout(30000)
+        receiver.set_script_timeout(10000)
         received = receiver.execute_async_script("""
-        function check_incoming() {
-            if (window.wrappedJSObject.incoming != "none") {
-                marionetteScriptFinished(window.wrappedJSObject.incoming);
-            }
-            else {
-                setTimeout(check_incoming, 500);
-            }
-        }
-        setTimeout(check_incoming, 0);
-    """)
+        waitFor(function () {
+            marionetteScriptFinished(global.incoming);
+        }, function () {
+            return global.incoming;
+        });
+        """, new_sandbox=False)
         # Verify the phone number of the incoming call.
         self.assertEqual(received, fromPhoneNumber)
 
-
+        sender.execute_script("window.navigator.mozTelephony.calls[0].hangUp();", new_sandbox=False)
+        receiver.execute_script("window.navigator.mozTelephony.calls[0].hangUp();", new_sandbox=False)

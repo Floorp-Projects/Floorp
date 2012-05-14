@@ -40,8 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MOZILLA_A11Y_APPLICATION_ACCESSIBLE_H__
-#define MOZILLA_A11Y_APPLICATION_ACCESSIBLE_H__
+#ifndef mozilla_a11y_ApplicationAccessible_h__
+#define mozilla_a11y_ApplicationAccessible_h__
 
 #include "nsAccessibleWrap.h"
 #include "nsIAccessibleApplication.h"
@@ -49,6 +49,9 @@
 #include "nsIMutableArray.h"
 #include "nsIXULAppInfo.h"
 
+namespace mozilla {
+namespace a11y {
+ 
 /**
  * ApplicationAccessible is for the whole application of Mozilla.
  * Only one instance of ApplicationAccessible exists for one Mozilla instance.
@@ -129,6 +132,9 @@ protected:
 private:
   nsCOMPtr<nsIXULAppInfo> mAppInfo;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif
 

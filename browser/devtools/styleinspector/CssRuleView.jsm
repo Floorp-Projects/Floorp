@@ -438,8 +438,13 @@ Rule.prototype = {
    * Reapply all the properties in this rule, and update their
    * computed styles.  Store disabled properties in the element
    * style's store.  Will re-mark overridden properties.
+   *
+   * @param {string} [aName]
+   *        A text property name (such as "background" or "border-top") used
+   *        when calling from setPropertyValue & setPropertyName to signify that
+   *        the property should be saved in store.userProperties.
    */
-  applyProperties: function Rule_applyProperties()
+  applyProperties: function Rule_applyProperties(aName)
   {
     let disabledProps = [];
     let store = this.elementStyle.store;
@@ -454,7 +459,9 @@ Rule.prototype = {
         continue;
       }
 
-      store.userProperties.setProperty(this.style, prop.name, prop.value);
+      if (aName && prop.name == aName) {
+        store.userProperties.setProperty(this.style, prop.name, prop.value);
+      }
 
       this.style.setProperty(prop.name, prop.value, prop.priority);
       // Refresh the property's priority from the style, to reflect
@@ -486,7 +493,7 @@ Rule.prototype = {
     }
     this.style.removeProperty(aProperty.name);
     aProperty.name = aName;
-    this.applyProperties();
+    this.applyProperties(aName);
   },
 
   /**
@@ -506,7 +513,7 @@ Rule.prototype = {
     }
     aProperty.value = aValue;
     aProperty.priority = aPriority;
-    this.applyProperties();
+    this.applyProperties(aProperty.name);
   },
 
   /**
@@ -1422,7 +1429,8 @@ TextPropertyEditor.prototype = {
       this.element.classList.remove("ruleview-overridden");
     }
 
-    this.nameSpan.textContent = this.prop.name;
+    let name = this.prop.name;
+    this.nameSpan.textContent = name;
 
     // Combine the property's value and priority into one string for
     // the value.
@@ -1432,6 +1440,14 @@ TextPropertyEditor.prototype = {
     }
     this.valueSpan.textContent = val;
     this.warning.hidden = this._validate();
+
+    let store = this.prop.rule.elementStyle.store;
+    let propDirty = store.userProperties.contains(this.prop.rule.style, name);
+    if (propDirty) {
+      this.element.setAttribute("dirty", "");
+    } else {
+      this.element.removeAttribute("dirty");
+    }
 
     // Populate the computed styles.
     this._updateComputed();
@@ -1878,6 +1894,19 @@ UserProperties.prototype = {
       props[aName] = aValue;
       this.weakMap.set(aStyle, props);
     }
+  },
+
+  /**
+   * Check whether a named property for a given CSSStyleDeclaration is stored.
+   *
+   * @param {CSSStyleDeclaration} aStyle
+   *        The CSSStyleDeclaration against which the property would be mapped.
+   * @param {String} aName
+   *        The name of the property to check.
+   */
+  contains: function UP_contains(aStyle, aName) {
+    let entry = this.weakMap.get(aStyle, null);
+    return !!entry && aName in entry;
   },
 };
 

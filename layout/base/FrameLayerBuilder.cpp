@@ -934,6 +934,41 @@ GetTranslationForThebesLayer(ThebesLayer* aLayer)
   return nsIntPoint(PRInt32(transform.x0), PRInt32(transform.y0));
 }
 
+static const double SUBPIXEL_OFFSET_EPSILON = 0.02;
+
+static PRBool
+SubpixelOffsetFuzzyEqual(gfxPoint aV1, gfxPoint aV2)
+{
+  return fabs(aV2.x - aV1.x) < SUBPIXEL_OFFSET_EPSILON &&
+         fabs(aV2.y - aV1.y) < SUBPIXEL_OFFSET_EPSILON;
+}
+
+/**
+ * This normally computes NSToIntRoundUp(aValue). However, if that would
+ * give a residual near 0.5 while aOldResidual is near -0.5, or
+ * it would give a residual near -0.5 while aOldResidual is near 0.5, then
+ * instead we return the integer in the other direction so that the residual
+ * is close to aOldResidual.
+ */
+static PRInt32
+RoundToMatchResidual(double aValue, double aOldResidual)
+{
+  PRInt32 v = NSToIntRoundUp(aValue);
+  double residual = aValue - v;
+  if (aOldResidual < 0) {
+    if (residual > 0 && fabs(residual - 1.0 - aOldResidual) < SUBPIXEL_OFFSET_EPSILON) {
+      // Round up instead
+      return PRInt32(ceil(aValue));
+    }
+  } else if (aOldResidual > 0) {
+    if (residual < 0 && fabs(residual + 1.0 - aOldResidual) < SUBPIXEL_OFFSET_EPSILON) {
+      // Round down instead
+      return PRInt32(floor(aValue));
+    }
+  }
+  return v;
+}
+
 already_AddRefed<ThebesLayer>
 ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
 {
@@ -995,7 +1030,10 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
   gfxPoint scaledOffset(
       NSAppUnitsToDoublePixels(offset.x, appUnitsPerDevPixel)*mParameters.mXScale,
       NSAppUnitsToDoublePixels(offset.y, appUnitsPerDevPixel)*mParameters.mYScale);
-  nsIntPoint pixOffset(NSToIntRoundUp(scaledOffset.x), NSToIntRoundUp(scaledOffset.y));
+  // We call RoundToMatchResidual here so that the residual after rounding
+  // is close to data->mActiveScrolledRootPosition if possible.
+  nsIntPoint pixOffset(RoundToMatchResidual(scaledOffset.x, data->mActiveScrolledRootPosition.x),
+                       RoundToMatchResidual(scaledOffset.y, data->mActiveScrolledRootPosition.y));
   gfxMatrix matrix;
   matrix.Translate(gfxPoint(pixOffset.x, pixOffset.y));
   layer->SetTransform(gfx3DMatrix::From2D(matrix));
@@ -1008,7 +1046,7 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
   // If it has changed, then we need to invalidate the entire layer since the
   // pixels in the layer buffer have the content at a (subpixel) offset
   // from what we need.
-  if (activeScrolledRootTopLeft != data->mActiveScrolledRootPosition) {
+  if (!SubpixelOffsetFuzzyEqual(activeScrolledRootTopLeft, data->mActiveScrolledRootPosition)) {
     data->mActiveScrolledRootPosition = activeScrolledRootTopLeft;
     nsIntRect invalidate = layer->GetValidRegion().GetBounds();
     layer->InvalidateRegion(invalidate);
@@ -2260,6 +2298,46 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
     }
   }
   return nsnull;
+}
+
+bool
+FrameLayerBuilder::GetThebesLayerResolutionForFrame(nsIFrame* aFrame,
+                                                    double* aXres, double* aYres,
+                                                    gfxPoint* aPoint)
+{
+  nsTArray<DisplayItemData> *array = GetDisplayItemDataArrayForFrame(aFrame);
+  if (array) {
+    for (PRUint32 i = 0; i < array->Length(); ++i) {
+      Layer* layer = array->ElementAt(i).mLayer;
+      if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
+        ThebesDisplayItemLayerUserData* data =
+          static_cast<ThebesDisplayItemLayerUserData*>
+            (layer->GetUserData(&gThebesDisplayItemLayerUserData));
+        *aXres = data->mXScale;
+        *aYres = data->mYScale;
+        *aPoint = data->mActiveScrolledRootPosition;
+        return true;
+      }
+    }
+  }
+
+  nsIFrame::ChildListIterator lists(aFrame);
+  for (; !lists.IsDone(); lists.Next()) {
+    if (lists.CurrentID() == nsIFrame::kPopupList ||
+        lists.CurrentID() == nsIFrame::kSelectPopupList) {
+      continue;
+    }
+
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      if (GetThebesLayerResolutionForFrame(childFrames.get(),
+                                           aXres, aYres, aPoint)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 #ifdef MOZ_DUMP_PAINTING

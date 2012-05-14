@@ -11,6 +11,7 @@ import android.app.Application;
 
 public class GeckoApplication extends Application {
 
+    private boolean mInBackground = false;
     private ArrayList<ApplicationLifecycleCallbacks> mListeners;
 
     public interface ApplicationLifecycleCallbacks {
@@ -33,19 +34,21 @@ public class GeckoApplication extends Application {
     }
 
     public void onActivityPause(GeckoActivity activity) {
-        if (!activity.isApplicationInBackground())
+        if (activity.isGeckoActivityOpened())
             return;
 
         if (mListeners == null)
             return;
+
+        mInBackground = true;
 
         for (ApplicationLifecycleCallbacks listener: mListeners)
             listener.onApplicationPause();
     }
 
     public void onActivityResume(GeckoActivity activity) {
-        // This is a misnomer. Should have been "wasApplicationInBackground".
-        if (!activity.isApplicationInBackground())
+        // This is a misnomer. Should have been "wasGeckoActivityOpened".
+        if (activity.isGeckoActivityOpened())
             return;
 
         if (mListeners == null)
@@ -53,5 +56,11 @@ public class GeckoApplication extends Application {
 
         for (ApplicationLifecycleCallbacks listener: mListeners)
             listener.onApplicationResume();
+
+        mInBackground = false;
+    }
+
+    public boolean isApplicationInBackground() {
+        return mInBackground;
     }
 }

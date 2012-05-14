@@ -1063,6 +1063,23 @@ abstract public class GeckoApp
                         accessibilityManager.sendAccessibilityEvent(accEvent);
                     }
                 });
+            } else if (event.equals("Accessibility:Ready")) {
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        JSONObject ret = new JSONObject();
+                        AccessibilityManager accessibilityManager =
+                            (AccessibilityManager) mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
+                        try {
+                            ret.put("enabled", accessibilityManager.isEnabled());
+                            // XXX: A placeholder for future explore by touch support.
+                            ret.put("exploreByTouch", false);
+                        } catch (Exception ex) {
+                            Log.e(LOGTAG, "Error building JSON arguments for Accessibility:Ready:", ex);
+                        }
+                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:Settings",
+                                                                                       ret.toString()));
+                    }
+                });
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1337,11 +1354,12 @@ abstract public class GeckoApp
                 if (layer == null) {
                     layer = new PluginLayer(view, rect, mLayerController.getView().getRenderer().getMaxTextureSize());
                     tab.addPluginLayer(view, layer);
-                    mLayerController.getView().addLayer(layer);
                 } else {
                     layer.reset(rect);
                     layer.setVisible(true);
                 }
+
+                mLayerController.getView().addLayer(layer);
             }
         });
     }
@@ -1695,6 +1713,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Session:StatePurged", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Accessibility:Ready", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2039,6 +2058,8 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Tab:HasTouchListener", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Session:StatePurged", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Accessibility:Ready", GeckoApp.mAppContext);
 
         if (mFavicons != null)
             mFavicons.close();

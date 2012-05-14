@@ -108,19 +108,6 @@ public:
                                    nsCompatibility aCompatMode);
   virtual NS_HIDDEN_(void) Destroy();
 
-  virtual NS_HIDDEN_(void*) AllocateFrame(nsQueryFrame::FrameIID aID,
-                                          size_t aSize);
-  virtual NS_HIDDEN_(void)  FreeFrame(nsQueryFrame::FrameIID aID,
-                                      void* aChunk);
-
-  virtual NS_HIDDEN_(void*) AllocateByObjectID(nsPresArena::ObjectID aID,
-                                               size_t aSize);
-  virtual NS_HIDDEN_(void)  FreeByObjectID(nsPresArena::ObjectID aID,
-                                           void* aPtr);
-
-  virtual NS_HIDDEN_(void*) AllocateMisc(size_t aSize);
-  virtual NS_HIDDEN_(void)  FreeMisc(size_t aSize, void* aChunk);
-
   virtual NS_HIDDEN_(nsresult) SetPreferenceStyleRules(bool aForceReflow);
 
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
@@ -570,7 +557,6 @@ protected:
   nscoord                       mLastAnchorScrollPositionY;
   nsRefPtr<nsCaret>             mCaret;
   nsRefPtr<nsCaret>             mOriginalCaret;
-  nsPresArena                   mFrameArena;
   nsCOMPtr<nsIDragService>      mDragService;
   
 #ifdef DEBUG
@@ -811,18 +797,13 @@ private:
 
   PresShell* GetRootPresShell();
 
-private:
-#ifdef DEBUG
-  // Ensure that every allocation from the PresArena is eventually freed.
-  PRUint32 mPresArenaAllocCount;
-#endif
-
 public:
 
   void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                            size_t *aArenasSize,
                            size_t *aStyleSetsSize,
-                           size_t *aTextRunsSize) const;
+                           size_t *aTextRunsSize,
+                           size_t *aPresContextSize) const;
   size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const;
 
 protected:

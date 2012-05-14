@@ -383,6 +383,8 @@ function test13b() {
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 13b, Plugin should not be activated");
+  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+  ok(overlay.style.visibility == "hidden", "Test 13b, Plugin should not have visible overlay");
 
   gNextTest = test13c;
   gTestBrowser.reload();
@@ -395,6 +397,8 @@ function test13c() {
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 13c, Plugin should not be activated");
+  var overlay = gTestBrowser.contentDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+  ok(overlay.style.visibility == "hidden", "Test 13c, Plugin should not have visible overlay");
 
   Services.perms.removeAll();
   Services.prefs.setBoolPref("plugins.click_to_play", false);

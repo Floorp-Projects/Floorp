@@ -70,13 +70,6 @@ public:
     static void
     clearStackReferences(FreeOp *fop, JSScript *script);
 
-    // Clear all uses of compiled code for script on the stack, along with
-    // the specified compiled chunk.
-    static void
-    clearStackReferencesAndChunk(FreeOp *fop, JSScript *script,
-                                 JITScript *jit, size_t chunkIndex,
-                                 bool resetUses = true);
-
     static void
     expandInlineFrames(JSCompartment *compartment, StackFrame *fp, mjit::CallSite *inlined,
                        StackFrame *next, VMFrame *f);

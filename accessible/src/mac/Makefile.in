@@ -60,24 +60,9 @@ CMMSRCS = nsAccessNodeWrap.mm \
           RootAccessibleWrap.mm \
           $(NULL)
 
-
 EXPORTS = \
-  ARIAGridAccessibleWrap.h \
   nsAccessNodeWrap.h \
-  nsTextAccessibleWrap.h \
-  nsAccessibleWrap.h \
-  nsDocAccessibleWrap.h \
-  nsXULMenuAccessibleWrap.h \
-  nsXULListboxAccessibleWrap.h \
-  nsXULTreeGridAccessibleWrap.h \
-  nsHyperTextAccessibleWrap.h \
-  nsHTMLImageAccessibleWrap.h \
-  nsHTMLTableAccessibleWrap.h \
-  mozDocAccessible.h \
-  mozAccessible.h \
   mozAccessibleProtocol.h \
-  mozActionElements.h \
-  mozTextAccessible.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

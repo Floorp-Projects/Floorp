@@ -130,7 +130,7 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
 
 class MarionetteTestRunner(object):
 
-    def __init__(self, address=None, emulator=False, homedir=None,
+    def __init__(self, address=None, emulator=None, homedir=None,
                  b2gbin=None, autolog=False, revision=None, es_server=None,
                  rest_server=None, logger=None, testgroup="marionette",
                  noWindow=False, logcat_dir=None):
@@ -200,7 +200,7 @@ class MarionetteTestRunner(object):
                                              port=int(port),
                                              baseurl=self.baseurl)
         elif self.emulator:
-            self.marionette = Marionette(emulator=True,
+            self.marionette = Marionette(emulator=self.emulator,
                                          homedir=self.homedir,
                                          baseurl=self.baseurl,
                                          noWindow=self.noWindow,
@@ -265,10 +265,7 @@ class MarionetteTestRunner(object):
         if not self.marionette:
             self.start_marionette()
 
-        if not os.path.isabs(test):
-            filepath = os.path.join(os.path.dirname(__file__), test)
-        else:
-            filepath = test
+        filepath = os.path.abspath(test)
 
         if os.path.isdir(filepath):
             for root, dirs, files in os.walk(filepath):
@@ -357,9 +354,10 @@ if __name__ == "__main__":
                       action = "store", dest = "testgroup",
                       help = "testgroup names for autolog submissions")
     parser.add_option("--emulator",
-                      action = "store_true", dest = "emulator",
-                      default = False,
-                      help = "launch a B2G emulator on which to run tests")
+                      action = "store", dest = "emulator",
+                      default = None, choices = ["x86", "arm"],
+                      help = "Launch a B2G emulator on which to run tests. "
+                      "You need to specify which architecture to emulate.")
     parser.add_option("--no-window",
                       action = "store_true", dest = "noWindow",
                       default = False,

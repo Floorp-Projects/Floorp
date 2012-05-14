@@ -1,43 +1,8 @@
 dnl -*- Mode: Autoconf; tab-width: 4; indent-tabs-mode: nil; -*-
 dnl 
-dnl ***** BEGIN LICENSE BLOCK *****
-dnl Version: MPL 1.1/GPL 2.0/LGPL 2.1
-dnl
-dnl The contents of this file are subject to the Mozilla Public License Version
-dnl 1.1 (the "License"); you may not use this file except in compliance with
-dnl the License. You may obtain a copy of the License at
-dnl http://www.mozilla.org/MPL/
-dnl
-dnl Software distributed under the License is distributed on an "AS IS" basis,
-dnl WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-dnl for the specific language governing rights and limitations under the
-dnl License.
-dnl
-dnl The Original Code is the Netscape Portable Runtime (NSPR).
-dnl
-dnl The Initial Developer of the Original Code is
-dnl Netscape Communications Corporation.
-dnl Portions created by the Initial Developer are Copyright (C) 1998
-dnl the Initial Developer. All Rights Reserved.
-dnl
-dnl Contributor(s):
-dnl   Christopher Seawood <cls@seawood.org>
-dnl   Howard Chu <hyc@symas.com>
-dnl   Mark Mentovai <mark@moxienet.com>
-dnl
-dnl Alternatively, the contents of this file may be used under the terms of
-dnl either the GNU General Public License Version 2 or later (the "GPL"), or
-dnl the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-dnl in which case the provisions of the GPL or the LGPL are applicable instead
-dnl of those above. If you wish to allow use of your version of this file only
-dnl under the terms of either the GPL or the LGPL, and not to allow others to
-dnl use your version of this file under the terms of the MPL, indicate your
-dnl decision by deleting the provisions above and replace them with the notice
-dnl and other provisions required by the GPL or the LGPL. If you do not delete
-dnl the provisions above, a recipient may use your version of this file under
-dnl the terms of any one of the MPL, the GPL or the LGPL.
-dnl
-dnl ***** END LICENSE BLOCK *****
+dnl This Source Code Form is subject to the terms of the Mozilla Public
+dnl License, v. 2.0. If a copy of the MPL was not distributed with this
+dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 AC_PREREQ(2.12)
 AC_INIT(config/libc_r.h)
@@ -50,7 +15,7 @@ dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=9
-MOD_PATCH_VERSION=0
+MOD_PATCH_VERSION=1
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -254,8 +219,8 @@ case "$target" in
     STRIP="$android_toolchain"/bin/"$android_tool_prefix"-strip
 
     CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
-    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CFLAGS"
-    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fpic -fno-short-enums -fno-exceptions $CXXFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -I$android_platform/usr/include -fpic -fno-short-enums -fno-exceptions $CXXFLAGS"
     LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
 
     dnl prevent cross compile section from using these flags as host flags
@@ -1009,14 +974,15 @@ dnl = ARM toolchain tweaks
 dnl ========================================================
 
 dnl Defaults
-case "${CPU_ARCH}-${OS_TARGET}" in
-arm-Android)
+case "$target" in
+arm*-android*|arm*-linuxandroid*)
     MOZ_THUMB=yes
     MOZ_ARCH=armv7-a
     MOZ_FPU=vfp
     MOZ_FLOAT_ABI=softfp
+    MOZ_SOFT_FLOAT=yes
     ;;
-arm-*)
+arm*-*)
     if test -n "$MOZ_PLATFORM_MAEMO"; then
         MOZ_THUMB=no
         MOZ_ARCH=armv7-a
@@ -1256,33 +1222,6 @@ case "$target" in
     RESOLVE_LINK_SYMBOLS=1
     ;;
         
-*-android*|*-linuxandroid*)
-    if test -z "$USE_NSPR_THREADS"; then
-        USE_PTHREADS=1
-        IMPL_STRATEGY=_PTH
-    fi
-    AC_DEFINE(XP_UNIX)
-    AC_DEFINE(_GNU_SOURCE)
-    AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-    AC_DEFINE(LINUX)
-    CFLAGS="$CFLAGS -Wall"
-    CXXFLAGS="$CXXFLAGS -Wall"
-    MDCPUCFG_H=_linux.cfg
-    PR_MD_CSRCS=linux.c
-    MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
-    DSO_CFLAGS=-fPIC
-    DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
-    _OPTIMIZE_FLAGS=-O2
-    _DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb, and that
-                                   # combo is not yet good at debugging inlined
-                                   # functions (even when using DWARF2 as the
-                                   # debugging format)
-    COMPILER_TAG=_glibc
-    CPU_ARCH=arm
-    CPU_ARCH_TAG=_arm
-    OS_TARGET=Android
-    ;;
-
 *-beos*)
     AC_DEFINE(XP_BEOS)
     AC_DEFINE(BeOS)
@@ -1817,7 +1756,7 @@ tools are selected during the Xcode/Developer Tools installation.])
 	esac
     ;;
 
-*-linux*|*-gnu*|*-k*bsd*-gnu)
+*-linux*|*-gnu*|*-k*bsd*-gnu|*-android*|*-linuxandroid*)
     if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
         IMPL_STRATEGY=_PTH
@@ -1825,8 +1764,12 @@ tools are selected during the Xcode/Developer Tools installation.])
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(_GNU_SOURCE)
     AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-    case "${target_os}" in
-    linux*)
+    case "${target}" in
+    *-android*|*-linuxandroid*)
+        OS_TARGET=Android
+        AC_DEFINE(LINUX)
+        ;;
+    *-linux*)
         AC_DEFINE(LINUX)
         ;;
     esac
@@ -3225,7 +3168,6 @@ if test -n "$_WRAP_MALLOC"; then
     if test -n "$GNU_CC"; then
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=malloc,--wrap=calloc,--wrap=valloc,--wrap=free,--wrap=realloc,--wrap=memalign"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=__builtin_new,--wrap=__builtin_vec_new,--wrap=__builtin_delete,--wrap=__builtin_vec_delete"
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=PR_Free,--wrap=PR_Malloc,--wrap=PR_Calloc,--wrap=PR_Realloc"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=strdup,--wrap=strndup"
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=posix_memalign,--wrap=malloc_usable_size"
     else

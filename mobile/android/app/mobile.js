@@ -761,3 +761,6 @@ pref("ui.zooming.animation_frames", "");
 
 // Enable accessibility mode if platform accessibility is enabled.
 pref("accessibility.accessfu", 2);
+
+// Mobile manages state by autodetection
+pref("network.manage-offline-status", true);

@@ -63,12 +63,12 @@ extern const char* const kCSSRawProperties[];
 
 // define an array of all CSS properties
 const char* const kCSSRawProperties[] = {
-#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,       \
-                 stylestruct_, stylestructoffset_, animtype_)                \
+#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
+                 stylestruct_, stylestructoffset_, animtype_)                 \
   #name_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) #name_,
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) #name_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SHORTHAND
 };
@@ -319,7 +319,7 @@ nsCSSProps::ReleaseTable(void)
 // We need eCSSAliasCount so we can make gAliases nonzero size when there
 // are no aliases.
 enum {
-#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_)                     \
+#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)              \
   eCSSAliasCountBefore_##aliasmethod_,
 #include "nsCSSPropAliasList.h"
 #undef CSS_PROP_ALIAS
@@ -337,7 +337,7 @@ enum {
   //     conveniently zero.
   //   eMaxCSSAliasNameSizeWith_##aliasmethod_ is **one less than** the
   //     largest sizeof(#aliasname_) before or including that alias.
-#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_)                     \
+#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)              \
   eMaxCSSAliasNameSizeBefore_##aliasmethod_,                                  \
   eMaxCSSAliasNameSizeWith_##aliasmethod_ =                                   \
     PR_MAX(sizeof(#aliasname_), eMaxCSSAliasNameSizeBefore_##aliasmethod_) - 1,
@@ -353,7 +353,7 @@ struct CSSPropertyAlias {
 };
 
 static const CSSPropertyAlias gAliases[PR_MAX(eCSSAliasCount, 1)] = {
-#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_) \
+#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)  \
   { #aliasname_, eCSSProperty_##propid_ },
 #include "nsCSSPropAliasList.h"
 #undef CSS_PROP_ALIAS
@@ -1572,8 +1572,8 @@ nsCSSProps::ValueToKeyword(PRInt32 aValue, const PRInt32 aTable[])
 
 /* static */ const PRInt32* const
 nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
-  #define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,     \
-                   stylestruct_, stylestructoffset_, animtype_)              \
+  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
+                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
     kwtable_,
   #include "nsCSSPropList.h"
   #undef CSS_PROP
@@ -1617,8 +1617,8 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
     // Note that this uses the special BackendOnly style struct ID
     // (which does need to be valid for storing in the
     // nsCSSCompressedDataBlock::mStyleBits bitfield).
-    #define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,   \
-                     stylestruct_, stylestructoffset_, animtype_)            \
+    #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
+                     kwtable_, stylestruct_, stylestructoffset_, animtype_) \
         eStyleStruct_##stylestruct_,
 
     #include "nsCSSPropList.h"
@@ -1628,8 +1628,8 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
 
 const nsStyleAnimType
 nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,       \
-                 stylestruct_, stylestructoffset_, animtype_)                \
+#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
+                 stylestruct_, stylestructoffset_, animtype_)                 \
   animtype_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
@@ -1637,20 +1637,20 @@ nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
 
 const ptrdiff_t
 nsCSSProps::kStyleStructOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,       \
-                 stylestruct_, stylestructoffset_, animtype_)                \
+#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
+                 stylestruct_, stylestructoffset_, animtype_)                 \
   stylestructoffset_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
 };
 
 const PRUint32 nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
-#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,       \
-                 stylestruct_, stylestructoffset_, animtype_)                \
+#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
+                 stylestruct_, stylestructoffset_, animtype_)                 \
   flags_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) flags_,
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) flags_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SHORTHAND
 };
@@ -2145,7 +2145,8 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
 // Need an extra level of macro nesting to force expansion of method_
 // params before they get pasted.
 #define NSCSSPROPS_INNER_MACRO(method_) g##method_##SubpropTable,
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) NSCSSPROPS_INNER_MACRO(method_)
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
+  NSCSSPROPS_INNER_MACRO(method_)
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SHORTHAND
 #undef NSCSSPROPS_INNER_MACRO
@@ -2153,8 +2154,9 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
 };
 
 
-#define ENUM_DATA_FOR_PROPERTY(name_, id_, method_, flags_, parsevariant_,   \
-                               kwtable_, stylestructoffset_, animtype_)      \
+#define ENUM_DATA_FOR_PROPERTY(name_, id_, method_, flags_, pref_,          \
+                               parsevariant_, kwtable_, stylestructoffset_, \
+                               animtype_)                                   \
   ePropertyIndex_for_##id_,
 
 // The order of these enums must match the g*Flags arrays in nsRuleNode.cpp.
@@ -2333,11 +2335,11 @@ nsCSSProps::gPropertyCountInStruct[nsStyleStructID_Length] = {
 /* static */ const size_t
 nsCSSProps::gPropertyIndexInStruct[eCSSProperty_COUNT_no_shorthands] = {
 
-  #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, parsevariant_,    \
-                               kwtable_)                                      \
+  #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, pref_, \
+                               parsevariant_, kwtable_)            \
       size_t(-1),
-  #define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,      \
-                   stylestruct_, stylestructoffset_, animtype_)               \
+  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
+                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
     ePropertyIndex_for_##id_,
   #include "nsCSSPropList.h"
   #undef CSS_PROP

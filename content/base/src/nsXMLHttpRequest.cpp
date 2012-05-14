@@ -881,7 +881,7 @@ nsXMLHttpRequest::AppendToResponseText(const char * aSrcBuffer,
                                        &destBufferLen);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mResponseText.SetCapacity(mResponseText.Length() + destBufferLen)) {
+  if (!mResponseText.SetCapacity(mResponseText.Length() + destBufferLen, fallible_t())) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

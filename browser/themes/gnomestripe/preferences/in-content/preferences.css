@@ -1,0 +1,160 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/inContentUI.css");
+
+@namespace html "http://www.w3.org/1999/xhtml";
+
+#preferences-home {
+  display: block;
+}
+
+#header {
+  margin-bottom: 18px;
+}
+
+.landingButton {
+  -moz-box-align: center;
+  -moz-box-orient: vertical;
+}
+
+.landingButton:hover {
+  cursor: pointer;
+}
+
+.landingButton-label {
+  margin-top: 4px;
+}
+
+.landingButton-icon {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background-image: url("chrome://browser/skin/preferences/Options.png");
+  background-repeat: no-repeat;
+}
+
+.preference-icon {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background-image: url("chrome://browser/skin/preferences/Options.png");
+  background-repeat: no-repeat;
+  margin: 0 20px;
+}
+
+.preference-icon[type="general"],
+.landingButton-icon[type="general"] {
+  background-position: 0 0;
+}
+
+.preference-icon[type="tabs"],
+.landingButton-icon[type="tabs"] {
+  background-position: -32px 0;
+}
+
+.preference-icon[type="content"],
+.landingButton-icon[type="content"] {
+  background-position: -64px 0;
+}
+
+.preference-icon[type="applications"],
+.landingButton-icon[type="applications"] {
+  background-position: -96px 0;
+}
+
+.preference-icon[type="privacy"],
+.landingButton-icon[type="privacy"] {
+  background-position: -128px 0;
+}
+
+.preference-icon[type="security"],
+.landingButton-icon[type="security"] {
+  background-position: -160px 0;
+}
+
+.preference-icon[type="advanced"],
+.landingButton-icon[type="advanced"] {
+  background-position: -192px 0;
+}
+
+.preference-icon[type="sync"],
+.landingButton-icon[type="sync"] {
+  background-image: url("chrome://browser/skin/preferences/Options-sync.png");
+}
+
+caption {
+  font-size: 20px;
+}
+
+.heading {
+  height: 50px;
+  background-color: rgba(192,199,210,0.7);
+  border-radius: 5px 5px 0 0;
+  margin-bottom: 15px;
+  -moz-box-align: center;
+}
+
+prefpane > .content-box {
+  overflow: auto;
+}
+
+/* Applications Pane Styles */
+
+#applications-content {
+  padding: 15px;
+}
+
+#handlersView {
+  -moz-appearance: none;
+  border: 1px solid ThreeDShadow;
+  overflow-y: auto;
+}
+
+/* XXX This style is for bug 740213 and should be removed once that
+   bug has a solution. */
+description > html|a {
+  cursor: pointer;
+}
+
+/* XXX Styles Below can be removed once bug 660726 lands */
+.nav-button {
+  min-width: 0;
+}
+
+#back-btn:-moz-locale-dir(ltr) {
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
+}
+
+#forward-btn:-moz-locale-dir(ltr) {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
+}
+
+#back-btn:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar");
+}
+
+#forward-btn:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
+}
+
+#back-btn[disabled="true"]:-moz-locale-dir(ltr) {
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar&state=disabled");
+}
+
+#forward-btn[disabled="true"]:-moz-locale-dir(ltr) {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
+}
+
+#back-btn[disabled="true"]:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
+}
+
+#forward-btn[disabled="true"]:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
+}
+
+.header-button .toolbarbutton-text {
+  display: none;
+}

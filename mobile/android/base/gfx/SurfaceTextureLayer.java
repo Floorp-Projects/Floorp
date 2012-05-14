@@ -165,19 +165,23 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
 
     @Override
     protected void finalize() throws Throwable {
-        if (mSurfaceTexture != null) {
-            try {
-                SurfaceTexture.class.getDeclaredMethod("release").invoke(mSurfaceTexture);
-            } catch (NoSuchMethodException nsme) {
-                Log.e(LOGTAG, "error finding release method on mSurfaceTexture", nsme);
-            } catch (IllegalAccessException iae) {
-                Log.e(LOGTAG, "error invoking release method on mSurfaceTexture", iae);
-            } catch (Exception e) {
-                Log.e(LOGTAG, "some other exception while invoking release method on mSurfaceTexture", e);
+        try {
+            if (mSurfaceTexture != null) {
+                try {
+                    SurfaceTexture.class.getDeclaredMethod("release").invoke(mSurfaceTexture);
+                } catch (NoSuchMethodException nsme) {
+                    Log.e(LOGTAG, "error finding release method on mSurfaceTexture", nsme);
+                } catch (IllegalAccessException iae) {
+                    Log.e(LOGTAG, "error invoking release method on mSurfaceTexture", iae);
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "some other exception while invoking release method on mSurfaceTexture", e);
+                }
             }
+            if (mTextureId > 0)
+                TextureReaper.get().add(mTextureId);
+        } finally {
+            super.finalize();
         }
-        if (mTextureId > 0)
-            TextureReaper.get().add(mTextureId);
     }
 
     @Override

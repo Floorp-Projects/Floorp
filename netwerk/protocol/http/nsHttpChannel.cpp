@@ -1024,8 +1024,6 @@ nsHttpChannel::ProcessResponse()
     LOG(("nsHttpChannel::ProcessResponse [this=%p httpStatus=%u]\n",
         this, httpStatus));
 
-    UpdateInhibitPersistentCachingFlag();
-
     if (mTransaction->SSLConnectFailed()) {
         if (!ShouldSSLProxyResponseContinue(httpStatus))
             return ProcessFailedSSLConnect(httpStatus);
@@ -1272,6 +1270,8 @@ nsHttpChannel::ContinueProcessNormal(nsresult rv)
     mCachedContentIsPartial = false;
 
     ClearBogusContentEncodingIfNeeded();
+
+    UpdateInhibitPersistentCachingFlag();
 
     // this must be called before firing OnStartRequest, since http clients,
     // such as imagelib, expect our cache entry to already have the correct

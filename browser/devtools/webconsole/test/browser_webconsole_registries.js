@@ -57,7 +57,7 @@ function testRegistries() {
   ok(hud, "we have a HUD");
   ok(HUDService.hudReferences[hud.hudId], "we have a HUD in hudReferences");
 
-  let windowID = HUDService.getWindowId(content);
+  let windowID = WebConsoleUtils.getOuterWindowId(content);
   is(HUDService.windowIds[windowID], hud.hudId, "windowIds are working");
 
   finishTest();

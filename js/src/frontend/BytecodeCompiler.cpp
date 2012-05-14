@@ -49,65 +49,20 @@
 
 #include "jsinferinlines.h"
 
+#include "frontend/TreeContext-inl.h"
+
 using namespace js;
 using namespace js::frontend;
 
 bool
-DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript* script)
+MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script)
 {
     Root<JSScript*> root(cx, &script);
-
-    HandleObject globalObj = globalScope.globalObj;
-
-    /* Define and update global properties. */
-    for (size_t i = 0; i < globalScope.defs.length(); i++) {
-        GlobalScope::GlobalDef &def = globalScope.defs[i];
-
-        /* Names that could be resolved ahead of time can be skipped. */
-        if (!def.atom)
-            continue;
-
-        jsid id = AtomToId(def.atom);
-        Value rval;
-
-        if (def.funbox) {
-            JSFunction *fun = def.funbox->function();
-
-            /*
-             * No need to check for redeclarations or anything, global
-             * optimizations only take place if the property is not defined.
-             */
-            rval.setObject(*fun);
-            types::AddTypePropertyId(cx, globalObj, id, rval);
-        } else {
-            rval.setUndefined();
-        }
-
-        /*
-         * Don't update the type information when defining the property for the
-         * global object, per the consistency rules for type properties. If the
-         * property is only undefined before it is ever written, we can check
-         * the global directly during compilation and avoid having to emit type
-         * checks every time it is accessed in the script.
-         */
-        const Shape *shape =
-            DefineNativeProperty(cx, globalObj, id, rval, JS_PropertyStub, JS_StrictPropertyStub,
-                                 JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, DNP_SKIP_TYPE);
-        if (!shape)
-            return false;
-        def.knownSlot = shape->slot();
-    }
 
     Vector<JSScript *, 16> worklist(cx);
     if (!worklist.append(script))
         return false;
 
-    /*
-     * Recursively walk through all scripts we just compiled. For each script,
-     * go through all global uses. Each global use indexes into globalScope->defs.
-     * Use this information to repoint each use to the correct slot in the global
-     * object.
-     */
     while (worklist.length()) {
         JSScript *outer = worklist.back();
         worklist.popBack();
@@ -132,22 +87,11 @@ DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript* script)
                     outer->isOuterFunction = true;
                     inner->isInnerFunction = true;
                 }
-                if (!inner->hasGlobals() && !inner->hasObjects())
+                if (!inner->hasObjects())
                     continue;
                 if (!worklist.append(inner))
                     return false;
             }
-        }
-
-        if (!outer->hasGlobals())
-            continue;
-
-        GlobalSlotArray *globalUses = outer->globals();
-        uint32_t nGlobalUses = globalUses->length;
-        for (uint32_t i = 0; i < nGlobalUses; i++) {
-            uint32_t index = globalUses->vector[i].slot;
-            JS_ASSERT(index < globalScope.defs.length());
-            globalUses->vector[i].slot = globalScope.defs[index].knownSlot;
         }
     }
 
@@ -200,7 +144,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     RootedVar<JSScript*> script(cx);
 
-    GlobalScope globalScope(cx, globalObj, &bce);
+    GlobalScope globalScope(cx, globalObj);
     bce.flags |= tcflags;
     bce.setScopeChain(scopeChain);
     bce.globalScope = &globalScope;
@@ -283,10 +227,10 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         if (inDirectivePrologue && !parser.recognizeDirectivePrologue(pn, &inDirectivePrologue))
             goto out;
 
-        if (!FoldConstants(cx, pn, &bce))
+        if (!FoldConstants(cx, pn, bce.parser))
             goto out;
 
-        if (!AnalyzeFunctions(&bce))
+        if (!AnalyzeFunctions(bce.parser))
             goto out;
         bce.functionList = NULL;
 
@@ -297,7 +241,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         if (!pn->isKind(PNK_SEMI) || !pn->pn_kid || !pn->pn_kid->isXMLItem())
             onlyXML = false;
 #endif
-        bce.freeTree(pn);
+        bce.parser->freeTree(pn);
     }
 
 #if JS_HAS_XML_SUPPORT
@@ -328,7 +272,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     JS_ASSERT(script->savedCallerFun == savedCallerFun);
 
-    if (!DefineGlobals(cx, globalScope, script))
+    if (!MarkInnerAndOuterFunctions(cx, script))
         script = NULL;
 
   out:
@@ -364,7 +308,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
         return false;
 
     /* FIXME: make Function format the source for a function definition. */
-    ParseNode *fn = FunctionNode::create(PNK_NAME, &funbce);
+    ParseNode *fn = FunctionNode::create(PNK_NAME, funbce.parser);
     if (fn) {
         fn->pn_body = NULL;
         fn->pn_cookie.makeFree();
@@ -380,7 +324,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
                 fn = NULL;
             } else {
                 for (unsigned i = 0; i < nargs; i++) {
-                    if (!DefineArg(fn, names[i].maybeAtom, i, &funbce)) {
+                    if (!DefineArg(fn, names[i].maybeAtom, i, funbce.parser)) {
                         fn = NULL;
                         break;
                     }
@@ -399,10 +343,10 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
         if (!tokenStream.matchToken(TOK_EOF)) {
             parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
-        } else if (!FoldConstants(cx, pn, &funbce)) {
+        } else if (!FoldConstants(cx, pn, funbce.parser)) {
             /* FoldConstants reported the error already. */
             pn = NULL;
-        } else if (!AnalyzeFunctions(&funbce)) {
+        } else if (!AnalyzeFunctions(funbce.parser)) {
             pn = NULL;
         } else {
             if (fn->pn_body) {

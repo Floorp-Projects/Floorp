@@ -417,6 +417,12 @@ nsHTMLEditor::FindSelectionRoot(nsINode *aNode)
   }
 
   if (!content->HasFlag(NODE_IS_EDITABLE)) {
+    // If the content is in read-write state but is not editable itself,
+    // return it as the selection root.
+    if (content->IsElement() &&
+        content->AsElement()->State().HasState(NS_EVENT_STATE_MOZ_READWRITE)) {
+      return content.forget();
+    }
     return nsnull;
   }
 
@@ -5699,6 +5705,20 @@ nsHTMLEditor::GetInputEventTargetContent()
 {
   nsCOMPtr<nsIContent> target = GetActiveEditingHost();
   return target.forget();
+}
+
+bool
+nsHTMLEditor::IsEditable(nsIContent* aNode) {
+  if (!nsPlaintextEditor::IsEditable(aNode)) {
+    return false;
+  }
+  if (aNode->IsElement()) {
+    // If we're dealing with an element, then ask it whether it's editable.
+    return aNode->IsEditable();
+  }
+  // We might be dealing with a text node for example, which we always consider
+  // to be editable.
+  return true;
 }
 
 // virtual MOZ_OVERRIDE

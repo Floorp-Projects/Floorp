@@ -46,6 +46,9 @@
 #include "nsIPersistentProperties2.h"
 #include "nsServiceManagerUtils.h"
 
+using namespace mozilla;
+using namespace mozilla::a11y;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessibleWrap,

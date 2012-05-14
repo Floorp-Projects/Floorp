@@ -302,7 +302,8 @@ function do_get_idle() {
 }
 
 function _execute_test() {
-  // Map resource://test/ to the current working directory.
+  // Map resource://test/ to current working directory and
+  // resource://testing-common/ to the shared test modules directory.
   let (ios = Components.classes["@mozilla.org/network/io-service;1"]
              .getService(Components.interfaces.nsIIOService)) {
     let protocolHandler =
@@ -310,6 +311,15 @@ function _execute_test() {
          .QueryInterface(Components.interfaces.nsIResProtocolHandler);
     let curDirURI = ios.newFileURI(do_get_cwd());
     protocolHandler.setSubstitution("test", curDirURI);
+
+    if (this._TESTING_MODULES_DIR) {
+      let modulesFile = Components.classes["@mozilla.org/file/local;1"].
+                        createInstance(Components.interfaces.nsILocalFile);
+      modulesFile.initWithPath(_TESTING_MODULES_DIR);
+
+      let modulesURI = ios.newFileURI(modulesFile);
+      protocolHandler.setSubstitution("testing-common", modulesURI);
+    }
   }
 
   // Override idle service by default.
@@ -819,14 +829,21 @@ function do_load_child_test_harness()
   var quoted_tail_files = _TAIL_FILES.map(addQuotes);
 
   _XPCSHELL_PROCESS = "parent";
- 
-  sendCommand(
+
+  let command =
         "const _HEAD_JS_PATH='" + _HEAD_JS_PATH + "'; "
       + "const _HTTPD_JS_PATH='" + _HTTPD_JS_PATH + "'; "
       + "const _HEAD_FILES=[" + quoted_head_files.join() + "];"
       + "const _TAIL_FILES=[" + quoted_tail_files.join() + "];"
-      + "const _XPCSHELL_PROCESS='child';"
-      + "load(_HEAD_JS_PATH);");
+      + "const _XPCSHELL_PROCESS='child';";
+
+  if (this._TESTING_MODULES_DIR) {
+    command += "const _TESTING_MODULES_DIR='" + _TESTING_MODULES_DIR + "'; ";
+  }
+
+  command += "load(_HEAD_JS_PATH);";
+
+  sendCommand(command);
 }
 
 /**

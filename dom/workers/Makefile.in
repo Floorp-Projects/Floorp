@@ -61,6 +61,7 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/base/src \
   -I$(topsrcdir)/content/events/src \
   -I$(topsrcdir)/dom/base \
+  -I$(topsrcdir)/dom/system \
   -I$(topsrcdir)/xpcom/build \
   -I$(topsrcdir)/js/xpconnect/src \
   $(NULL)

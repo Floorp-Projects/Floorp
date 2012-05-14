@@ -28,6 +28,7 @@ function RunTests() {
   testVisited();
   testMultiple();
   testInvalid();
+  testNotElement();
 }
 
 function testLockEnabled() {
@@ -118,7 +119,7 @@ function testLockDisabled() {
 
   /* change state to enabled */
   button.removeAttribute("disabled");
-  
+
   is(window.getComputedStyle(button).color, disabledColor,
      ":disabled style applied after enabling");
 
@@ -256,7 +257,19 @@ function testInvalid() {
   }
 }
 
-
+function testNotElement() {
+  var values = [null, undefined, {}];
+  try {
+    for each (value in values); {
+      DOMUtils.hasPseudoClassLock(value, ":hover");
+      DOMUtils.addPseudoClassLock(value, ":hover");
+      DOMUtils.removePseudoClassLock(value, ":hover");
+      DOMUtils.clearPseudoClassLocks(value);
+    }
+  } catch(e) {
+    // just make sure we don't crash on non-elements
+  }
+}
   ]]>
   </script>
 

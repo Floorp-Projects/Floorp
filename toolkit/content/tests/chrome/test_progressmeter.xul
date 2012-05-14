@@ -17,36 +17,33 @@
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-// ise - is exact - compares using ===
-function ise(left, right, name) { SimpleTest.ok(left === right, name); }
-
 SimpleTest.waitForExplicitFinish();
 
 function doTests() {
   var n1 = document.getElementById("n1");
   var n2 = document.getElementById("n2");
 
-  ise(n1.mode, "", "mode determined");
-  ise(n2.mode, "undetermined", "mode undetermined");
+  SimpleTest.ise(n1.mode, "", "mode determined");
+  SimpleTest.ise(n2.mode, "undetermined", "mode undetermined");
 
-  ise(n1.value, "0", "determined value");
-  ise(n2.value, "0", "undetermined value");
+  SimpleTest.ise(n1.value, "0", "determined value");
+  SimpleTest.ise(n2.value, "0", "undetermined value");
 
   // values can only be incremented in multiples of 4
   n1.value = 2;
-  ise(n1.value, "0", "determined value set 2");
+  SimpleTest.ise(n1.value, "0", "determined value set 2");
   n1.value = -1;
-  ise(n1.value, "0", "determined value set -1");
+  SimpleTest.ise(n1.value, "0", "determined value set -1");
   n1.value = 125;
-  ise(n1.value, "100", "determined value set 125");
+  SimpleTest.ise(n1.value, "100", "determined value set 125");
   n1.value = 7;
-  ise(n1.value, "7", "determined value set 7");
+  SimpleTest.ise(n1.value, "7", "determined value set 7");
   n1.value = "17";
-  ise(n1.value, "17", "determined value set 17 string");
+  SimpleTest.ise(n1.value, "17", "determined value set 17 string");
   n1.value = 18;
-  ise(n1.value, "17", "determined value set 18");
+  SimpleTest.ise(n1.value, "17", "determined value set 18");
   n1.value = "Cat";
-  ise(n1.value, "17", "determined value set invalid");
+  SimpleTest.ise(n1.value, "17", "determined value set invalid");
 
   n1.max = 200;
   is(n1.max, 200, "max changed");
@@ -55,19 +52,19 @@ function doTests() {
   is(n1.value, 120, "max lowered below value");
 
   n2.value = 2;
-  ise(n2.value, "0", "undetermined value set 2");
+  SimpleTest.ise(n2.value, "0", "undetermined value set 2");
   n2.value = -1;
-  ise(n2.value, "0", "undetermined value set -1");
+  SimpleTest.ise(n2.value, "0", "undetermined value set -1");
   n2.value = 125;
-  ise(n2.value, "100", "undetermined value set 125");
+  SimpleTest.ise(n2.value, "100", "undetermined value set 125");
   n2.value = 7;
-  ise(n2.value, "7", "undetermined value set 7");
+  SimpleTest.ise(n2.value, "7", "undetermined value set 7");
   n2.value = "17";
-  ise(n2.value, "17", "undetermined value set 17 string");
+  SimpleTest.ise(n2.value, "17", "undetermined value set 17 string");
   n2.value = 18;
-  ise(n2.value, "17", "undetermined value set 18");
+  SimpleTest.ise(n2.value, "17", "undetermined value set 18");
   n2.value = "Cat";
-  ise(n2.value, "17", "determined value set invalid");
+  SimpleTest.ise(n2.value, "17", "determined value set invalid");
 
   SimpleTest.finish();
 }

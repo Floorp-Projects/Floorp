@@ -562,7 +562,7 @@ nsWebSocket::Initialize(nsISupports* aOwner,
                         JSContext* aContext,
                         JSObject* aObject,
                         PRUint32 aArgc,
-                        jsval* aArgv)
+                        JS::Value* aArgv)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
   nsAutoString urlParam;
@@ -608,11 +608,10 @@ nsWebSocket::Initialize(nsISupports* aOwner,
   nsTArray<nsString> protocolArray;
 
   if (aArgc == 2) {
-    JSObject *jsobj;
+    if (aArgv[1].isObject() &&
+        JS_IsArrayObject(aContext, &aArgv[1].toObject())) {
+      JSObject* jsobj = &aArgv[1].toObject();
 
-    if (JSVAL_IS_OBJECT(aArgv[1]) &&
-        (jsobj = JSVAL_TO_OBJECT(aArgv[1])) &&
-        JS_IsArrayObject(aContext, jsobj)) {
       uint32_t len;
       JS_GetArrayLength(aContext, jsobj, &len);
       

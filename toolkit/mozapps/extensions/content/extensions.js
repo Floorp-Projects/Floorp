@@ -640,6 +640,7 @@ var gViewController = {
 
     this.viewPort.selectedPanel = this.currentViewObj.node;
     this.viewPort.selectedPanel.setAttribute("loading", "true");
+    this.currentViewObj.node.focus();
 
     if (aViewId == aPreviousView)
       this.currentViewObj.refresh(view.param, ++this.currentViewRequest, aState);

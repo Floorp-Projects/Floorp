@@ -357,8 +357,8 @@ class HeapValue : public EncapsulatedValue
      */
     inline void set(JSCompartment *comp, const Value &v);
 
-    static inline void writeBarrierPost(const Value &v, void *addr);
-    static inline void writeBarrierPost(JSCompartment *comp, const Value &v, void *addr);
+    static inline void writeBarrierPost(const Value &v, Value *addr);
+    static inline void writeBarrierPost(JSCompartment *comp, const Value &v, Value *addr);
 
   private:
     inline void post();
@@ -375,6 +375,14 @@ class RelocatableValue : public EncapsulatedValue
 
     inline RelocatableValue &operator=(const Value &v);
     inline RelocatableValue &operator=(const RelocatableValue &v);
+
+    static inline void writeBarrierPost(const Value &v, Value *addr);
+    static inline void writeBarrierPost(JSCompartment *comp, const Value &v, Value *addr);
+
+  private:
+    inline void post();
+    inline void post(JSCompartment *comp);
+    inline void relocate();
 };
 
 class HeapSlot : public EncapsulatedValue

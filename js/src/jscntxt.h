@@ -685,6 +685,9 @@ struct JSRuntime : js::RuntimeFriendFields
     /* If true, new scripts must be created with PC counter information. */
     bool                profilingScripts;
 
+    /* Always preserve JIT code during GCs, for testing. */
+    bool                alwaysPreserveCode;
+
     /* Had an out-of-memory error which did not populate an exception. */
     JSBool              hadOutOfMemory;
 

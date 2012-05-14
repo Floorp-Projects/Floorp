@@ -816,10 +816,8 @@ Connection::setClosedState()
 bool
 Connection::isAsyncClosing() {
   MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
-  bool isReady;
-  (void)GetConnectionReady(&isReady);
   return mAsyncExecutionThreadShuttingDown && !!mAsyncExecutionThread &&
-    isReady;
+    ConnectionReady();
 }
 
 nsresult
@@ -1135,7 +1133,7 @@ Connection::Clone(bool aReadOnly,
 NS_IMETHODIMP
 Connection::GetConnectionReady(bool *_ready)
 {
-  *_ready = (mDBConn != nsnull);
+  *_ready = ConnectionReady();
   return NS_OK;
 }
 

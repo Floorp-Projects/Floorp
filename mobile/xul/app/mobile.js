@@ -691,3 +691,6 @@ pref("browser.dom.window.dump.enabled", false);
 // controls if we want camera support
 pref("device.camera.enabled", true);
 pref("media.realtime_decoder.enabled", true);
+
+// Mobile manages state by autodetection
+pref("network.manage-offline-status", true);

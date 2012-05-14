@@ -64,6 +64,7 @@ public:
   size_t mLayoutArenas;
   size_t mLayoutStyleSets;
   size_t mLayoutTextRuns;
+  size_t mLayoutPresContext;
 };
 
 /**

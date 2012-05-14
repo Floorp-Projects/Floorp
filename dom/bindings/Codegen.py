@@ -1414,132 +1414,173 @@ class CGArgumentConverter(CGThing):
                                                  self.descriptor))
             ).substitute(self.replacementVariables)
 
-def getWrapTemplateForTypeImpl(type, result, descriptorProvider,
-                               resultAlreadyAddRefed):
+def getWrapTemplateForType(type, descriptorProvider, result, successCode):
+    """
+    Reflect a C++ value stored in "result", of IDL type "type" into JS.  The
+    "successCode" is the code to run once we have successfully done the
+    conversion.  The resulting string should be used with string.Template, it
+    needs the following keys when substituting: jsvalPtr/jsvalRef/obj.
+    """
+    haveSuccessCode = successCode is not None
+    if not haveSuccessCode:
+        successCode = "return true;"
+
+    def setValue(value, callWrapValue=False):
+        """
+        Returns the code to set the jsval to value. If "callWrapValue" is true
+        JS_WrapValue will be called on the jsval.
+        """
+        if not callWrapValue:
+            tail = successCode
+        elif haveSuccessCode:
+            tail = ("if (!JS_WrapValue(cx, ${jsvalPtr})) {\n" +
+                    "  return false;\n" +
+                    "}\n" +
+                    successCode)
+        else:
+            tail = "return JS_WrapValue(cx, ${jsvalPtr});"
+        return ("${jsvalRef} = %s;\n" +
+                tail) % (value)
+
+    def wrapAndSetPtr(wrapCall, failureCode=None):
+        """
+        Returns the code to set the jsval by calling "wrapCall". "failureCode"
+        is the code to run if calling "wrapCall" fails 
+        """
+        if failureCode is None:
+            if not haveSuccessCode:
+                return "return " + wrapCall + ";"
+            failureCode = "return false;"
+        str = ("if (!%s) {\n" +
+               CGIndenter(CGGeneric(failureCode)).define() + "\n" +
+               "}\n" +
+               successCode) % (wrapCall)
+        return str
+    
     if type is None or type.isVoid():
-        return """
-  ${jsvalRef} = JSVAL_VOID;
-  return true;"""
+        return setValue("JSVAL_VOID")
 
     if type.isSequence() or type.isArray():
         raise TypeError("Can't handle sequence or array return values yet")
 
     if type.isInterface() and not type.isArrayBuffer():
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
-        wrappingCode = ("""
-  if (!%s) {
-    ${jsvalRef} = JSVAL_NULL;
-    return true;
-  }""" % result) if type.nullable() else ""
+        if type.nullable():
+            wrappingCode = ("if (!%s) {\n" % (result) +
+                            CGIndenter(CGGeneric(setValue("JSVAL_NULL"))).define() + "\n" +
+                            "}\n")
+        else:
+            wrappingCode = ""
         if descriptor.castable and not type.unroll().inner.isExternal():
-            wrappingCode += """
-  if (WrapNewBindingObject(cx, obj, %s, ${jsvalPtr})) {
-    return true;
-  }""" % result
+            wrap = "WrapNewBindingObject(cx, ${obj}, %s, ${jsvalPtr})" % result
             # We don't support prefable stuff in workers.
             assert(not descriptor.prefable or not descriptor.workers)
             if not descriptor.prefable:
                 # Non-prefable bindings can only fail to wrap as a new-binding object
                 # if they already threw an exception.  Same thing for
                 # non-prefable bindings.
-                wrappingCode += """
-  MOZ_ASSERT(JS_IsExceptionPending(cx));
-  return false;"""
+                failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
+                          "return false;")
             else:
                 # Try old-style wrapping for bindings which might be preffed off.
-                wrappingCode += """
-  return HandleNewBindingWrappingFailure(cx, obj, %s, ${jsvalPtr});""" % result
+                failed = wrapAndSetPtr("HandleNewBindingWrappingFailure(cx, ${obj}, %s, ${jsvalPtr})" % result)
+            wrappingCode += wrapAndSetPtr(wrap, failed)
         else:
             if descriptor.notflattened:
                 getIID = "&NS_GET_IID(%s), " % descriptor.nativeType
             else:
                 getIID = ""
-            wrappingCode += """
-  return WrapObject(cx, obj, %s, %s${jsvalPtr});""" % (result, getIID)
+            wrap = "WrapObject(cx, ${obj}, %s, %s${jsvalPtr})" % (result, getIID)
+            wrappingCode += wrapAndSetPtr(wrap)
         return wrappingCode
 
     if type.isString():
         if type.nullable():
-            return """
-  return xpc::StringToJsval(cx, %s, ${jsvalPtr});""" % result
+            return wrapAndSetPtr("xpc::StringToJsval(cx, %s, ${jsvalPtr})" % result)
         else:
-            return """
-  return xpc::NonVoidStringToJsval(cx, %s, ${jsvalPtr});""" % result
+            return wrapAndSetPtr("xpc::NonVoidStringToJsval(cx, %s, ${jsvalPtr})" % result)
 
     if type.isEnum():
         if type.nullable():
             raise TypeError("We don't support nullable enumerated return types "
                             "yet")
-        return """
-  MOZ_ASSERT(uint32_t(%(result)s) < ArrayLength(%(strings)s));
-  JSString* result_str = JS_NewStringCopyN(cx, %(strings)s[uint32_t(%(result)s)].value, %(strings)s[uint32_t(%(result)s)].length);
-  if (!result_str) {
-    return false;
-  }
-  ${jsvalRef} = JS::StringValue(result_str);
-  return true;""" % { "result" : result,
-                      "strings" : type.inner.identifier.name + "Values::strings" }
+        return """MOZ_ASSERT(uint32_t(%(result)s) < ArrayLength(%(strings)s));
+JSString* %(resultStr)s = JS_NewStringCopyN(cx, %(strings)s[uint32_t(%(result)s)].value, %(strings)s[uint32_t(%(result)s)].length);
+if (!%(resultStr)s) {
+  return false;
+}
+""" % { "result" : result,
+        "resultStr" : result + "_str",
+        "strings" : type.inner.identifier.name + "Values::strings" } + setValue("JS::StringValue(%s_str)" % result)
 
     if type.isCallback() and not type.isInterface():
         # XXXbz we're going to assume that callback types are always
         # nullable and always have [TreatNonCallableAsNull] for now.
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
-        return """
-  ${jsvalRef} = JS::ObjectOrNullValue(%s);
-  return JS_WrapValue(cx, ${jsvalPtr});""" % result
+        return setValue("JS::ObjectOrNullValue(%s)" % result, True)
 
     if type.tag() == IDLType.Tags.any:
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
-        return """
-  ${jsvalRef} = %s;\n
-  return JS_WrapValue(cx, ${jsvalPtr});""" % result
+        return setValue(result, True)
 
     if not type.isPrimitive():
         raise TypeError("Need to learn to wrap %s" % type)
 
     if type.nullable():
-        return """
-  if (%s.IsNull()) {
-    ${jsvalRef} = JSVAL_NULL;
-    return true;
-  }
-%s""" % (result, getWrapTemplateForTypeImpl(type.inner, "%s.Value()" % result,
-                                            descriptorProvider,
-                                            resultAlreadyAddRefed))
+        return ("if (%s.IsNull()) {\n" % result +
+                CGIndenter(CGGeneric(setValue("JSVAL_NULL"))).define() + "\n" +
+                "}\n" +
+                getWrapTemplateForType(type.inner, descriptorProvider,
+                                       "%s.Value()" % result, successCode))
     
     tag = type.tag()
     
     if tag in [IDLType.Tags.int8, IDLType.Tags.uint8, IDLType.Tags.int16,
                IDLType.Tags.uint16, IDLType.Tags.int32]:
-        return """
-  ${jsvalRef} = INT_TO_JSVAL(int32_t(%s));
-  return true;""" % result
+        return setValue("INT_TO_JSVAL(int32_t(%s))" % result)
 
     elif tag in [IDLType.Tags.int64, IDLType.Tags.uint64, IDLType.Tags.float,
                  IDLType.Tags.double]:
         # XXXbz will cast to double do the "even significand" thing that webidl
         # calls for for 64-bit ints?  Do we care?
-        return """
-  return JS_NewNumberValue(cx, double(%s), ${jsvalPtr});""" % result
+        return wrapAndSetPtr("JS_NewNumberValue(cx, double(%s), ${jsvalPtr})" % result)
 
     elif tag == IDLType.Tags.uint32:
-        return """
-  ${jsvalRef} = UINT_TO_JSVAL(%s);
-  return true;""" % result
+        return setValue("UINT_TO_JSVAL(%s)" % result)
 
     elif tag == IDLType.Tags.bool:
-        return """
-  ${jsvalRef} = BOOLEAN_TO_JSVAL(%s);
-  return true;""" % result
+        return setValue("BOOLEAN_TO_JSVAL(%s)" % result)
 
     else:
         raise TypeError("Need to learn to wrap primitive: %s" % type)
 
-def getWrapTemplateForType(type, descriptorProvider, resultAlreadyAddRefed):
-    return getWrapTemplateForTypeImpl(type, "result", descriptorProvider,
-                                      resultAlreadyAddRefed)
+def wrapForType(type, descriptorProvider, templateValues):
+    """
+    Reflect a C++ value of IDL type "type" into JS.  TemplateValues is a dict
+    that should contain:
+
+      * 'jsvalRef': a C++ reference to the jsval in which to store the result of
+                    the conversion
+      * 'jsvalPtr': a C++ pointer to the jsval in which to store the result of
+                    the conversion
+      * 'obj' (optional): the name of the variable that contains the JSObject to
+                          use as a scope when wrapping, if not supplied 'obj'
+                          will be used as the name
+      * 'result' (optional): the name of the variable in which the C++ value is
+                             stored, if not supplied 'result' will be used as
+                             the name
+      * 'successCode' (optional): the code to run once we have successfully done
+                                  the conversion, if not supplied 'return true;'
+                                  will be used as the code
+    """
+    wrap = getWrapTemplateForType(type, descriptorProvider,
+                                  templateValues.get('result', 'result'),
+                                  templateValues.get('successCode', None))
+
+    defaultValues = {'obj': 'obj'}
+    return string.Template(wrap).substitute(defaultValues, **templateValues)
 
 class CGCallGenerator(CGThing):
     """
@@ -1681,12 +1722,8 @@ class CGPerSignatureCall(CGThing):
 
     def wrap_return_value(self):
         resultTemplateValues = {'jsvalRef': '*vp', 'jsvalPtr': 'vp'}
-        return string.Template(
-            re.sub(unindenter,
-                   "",
-                   getWrapTemplateForType(self.returnType, self.descriptor,
-                                          self.resultAlreadyAddRefed))
-            ).substitute(resultTemplateValues)
+        return wrapForType(self.returnType, self.descriptor,
+                           resultTemplateValues)
 
     def getErrorReport(self):
         return 'return ThrowMethodFailedWithDetails<%s>(cx, rv, "%s", "%s");'\
@@ -1695,7 +1732,7 @@ class CGPerSignatureCall(CGThing):
                   self.idlNode.identifier.name)
 
     def define(self):
-        return (self.cgRoot.define() + self.wrap_return_value())
+        return (self.cgRoot.define() + "\n" + self.wrap_return_value())
 
 class CGSwitch(CGList):
     """
