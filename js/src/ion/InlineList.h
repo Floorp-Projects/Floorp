@@ -42,6 +42,8 @@
 #ifndef js_inline_list_h__
 #define js_inline_list_h__
 
+#include "mozilla/Util.h"
+
 #include "jsutil.h"
 
 namespace js {
@@ -73,9 +75,7 @@ class InlineForwardList : protected InlineForwardListNode<T>
     typedef InlineForwardListNode<T> Node;
 
     Node *tail_;
-#ifdef DEBUG
-    uintptr_t modifyCount_;
-#endif
+    DebugOnly<int> modifyCount_;
 
     InlineForwardList<T> *thisFromConstructor() {
         return this;
@@ -84,10 +84,9 @@ class InlineForwardList : protected InlineForwardListNode<T>
   public:
     InlineForwardList()
       : tail_(thisFromConstructor())
-#ifdef DEBUG
-      ,  modifyCount_(0)
-#endif
-    { }
+    {
+        modifyCount_ = 0;
+    }
 
   public:
     typedef InlineForwardListIterator<T> iterator;
@@ -103,9 +102,7 @@ class InlineForwardList : protected InlineForwardListNode<T>
         iterator iter(where);
         iter++;
         iter.prev = where.prev;
-#ifdef DEBUG
-        iter.modifyCount++;
-#endif
+        iter.modifyCount_++;
 
         // Once the element 'where' points at has been removed, it is no longer
         // safe to do any operations that would touch 'iter', as the element
@@ -120,9 +117,7 @@ class InlineForwardList : protected InlineForwardListNode<T>
         insertAfter(this, t);
     }
     void pushBack(Node *t) {
-#ifdef DEBUG
         modifyCount_++;
-#endif
         tail_->next = t;
         t->next = NULL;
         tail_ = t;
@@ -134,18 +129,14 @@ class InlineForwardList : protected InlineForwardListNode<T>
         return result;
     }
     void insertAfter(Node *at, Node *item) {
-#ifdef DEBUG
         modifyCount_++;
-#endif
         if (at == tail_)
             tail_ = item;
         item->next = at->next;
         at->next = item;
     }
     void removeAfter(Node *at, Node *item) {
-#ifdef DEBUG
         modifyCount_++;
-#endif
         if (item == tail_)
             tail_ = at;
         JS_ASSERT(at->next == item);
@@ -157,9 +148,7 @@ class InlineForwardList : protected InlineForwardListNode<T>
             at = this;
         if (at == tail_)
             return;
-#ifdef DEBUG
         modifyCount_++;
-#endif
         to->next = at->next;
         to->tail_ = tail_;
         tail_ = at;
@@ -167,6 +156,11 @@ class InlineForwardList : protected InlineForwardListNode<T>
     }
     bool empty() const {
         return tail_ == this;
+    }
+    void clear() {
+        this->next = NULL;
+        tail_ = this;
+        modifyCount_ = 0;
     }
 };
 
@@ -182,31 +176,31 @@ private:
       : prev(const_cast<Node *>(static_cast<const Node *>(owner))),
         iter(owner ? owner->next : NULL)
 #ifdef DEBUG
-      , owner(owner),
-        modifyCount(owner ? owner->modifyCount_ : 0)
+      , owner_(owner),
+        modifyCount_(owner ? owner->modifyCount_.value : 0)
 #endif
     { }
 
 public:
     InlineForwardListIterator<T> & operator ++() {
-        JS_ASSERT(modifyCount == owner->modifyCount_);
+        JS_ASSERT(modifyCount_ == owner_->modifyCount_);
         prev = iter;
         iter = iter->next;
         return *this;
     }
     InlineForwardListIterator<T> operator ++(int) {
-        JS_ASSERT(modifyCount == owner->modifyCount_);
+        JS_ASSERT(modifyCount_ == owner_->modifyCount_);
         InlineForwardListIterator<T> old(*this);
         prev = iter;
         iter = iter->next;
         return old;
     }
     T * operator *() const {
-        JS_ASSERT(modifyCount == owner->modifyCount_);
+        JS_ASSERT(modifyCount_ == owner_->modifyCount_);
         return static_cast<T *>(iter);
     }
     T * operator ->() const {
-        JS_ASSERT(modifyCount == owner->modifyCount_);
+        JS_ASSERT(modifyCount_ == owner_->modifyCount_);
         return static_cast<T *>(iter);
     }
     bool operator !=(const InlineForwardListIterator<T> &where) const {
@@ -219,10 +213,11 @@ public:
 private:
     Node *prev;
     Node *iter;
+
 #ifdef DEBUG
-    const InlineForwardList<T> *owner;
-    uintptr_t modifyCount;
+    const InlineForwardList<T> *owner_;
 #endif
+    DebugOnly<int> modifyCount_;
 };
 
 template <typename T> class InlineList;

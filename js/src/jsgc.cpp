@@ -2376,6 +2376,7 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
     rt->stackSpace.mark(trc);
 #ifdef JS_ION
     ion::MarkIonActivations(rt, trc);
+    ion::MarkIonCompilerRoots(trc);
 #endif
 
     for (CompartmentsIter c(rt); !c.done(); c.next())

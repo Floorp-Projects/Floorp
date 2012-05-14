@@ -582,6 +582,14 @@ ion::MarkIonActivations(JSRuntime *rt, JSTracer *trc)
 }
 
 void
+ion::MarkIonCompilerRoots(JSTracer *trc)
+{
+    JSRuntime *rt = trc->runtime;
+    for (CompilerRootNode *root = rt->ionCompilerRootList; root != NULL; root = root->next)
+        gc::MarkGCThingRoot(trc, root->address(), "ion-compiler-root");
+}
+
+void
 ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
 #ifdef DEBUG
