@@ -428,14 +428,14 @@ void test()
             bool(is_signed) == false ? 0 : \
             sizeof(T) >= sizeof(U)); \
     }
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt8)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint8)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt16)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint16)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt32)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint32)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt64)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint64)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int8_t)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(uint8_t)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int16_t)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(uint16_t)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int32_t)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(uint32_t)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int64_t)
+    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(uint64_t)
 
     /* Test increment/decrement operators */
 
@@ -470,14 +470,14 @@ void test()
 
 int main()
 {
-    CheckedInt_test::test<PRInt8>();
-    CheckedInt_test::test<PRUint8>();
-    CheckedInt_test::test<PRInt16>();
-    CheckedInt_test::test<PRUint16>();
-    CheckedInt_test::test<PRInt32>();
-    CheckedInt_test::test<PRUint32>();
-    CheckedInt_test::test<PRInt64>();
-    CheckedInt_test::test<PRUint64>();
+    CheckedInt_test::test<int8_t>();
+    CheckedInt_test::test<uint8_t>();
+    CheckedInt_test::test<int16_t>();
+    CheckedInt_test::test<uint16_t>();
+    CheckedInt_test::test<int32_t>();
+    CheckedInt_test::test<uint32_t>();
+    CheckedInt_test::test<int64_t>();
+    CheckedInt_test::test<uint64_t>();
 
     std::cerr << CheckedInt_test::g_tests_failed << " tests failed, "
               << CheckedInt_test::g_tests_passed << " tests passed out of "
