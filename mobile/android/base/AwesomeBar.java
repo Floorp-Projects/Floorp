@@ -559,6 +559,11 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
 
         switch (item.getItemId()) {
             case R.id.open_new_tab: {
+                if (url == null) {
+                    Log.e(LOGTAG, "Can't open in new tab because URL is null");
+                    break;
+                }
+
                 GeckoApp.mAppContext.loadUrl(url, AwesomeBar.Type.ADD);
                 Toast.makeText(this, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
                 break;
@@ -654,6 +659,11 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                 break;
             }
             case R.id.add_to_launcher: {
+                if (url == null) {
+                    Log.e(LOGTAG, "Can't add to home screen because URL is null");
+                    break;
+                }
+
                 Bitmap bitmap = null;
                 if (b != null)
                     bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
@@ -663,6 +673,11 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                 break;
             }
             case R.id.share: {
+                if (url == null) {
+                    Log.e(LOGTAG, "Can't share because URL is null");
+                    break;
+                }
+
                 GeckoAppShell.openUriExternal(url, "text/plain", "", "",
                                               Intent.ACTION_SEND, title);
                 break;
