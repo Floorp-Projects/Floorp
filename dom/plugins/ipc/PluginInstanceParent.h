@@ -47,7 +47,6 @@
 #include "nsCoreAnimationSupport.h"
 #endif
 
-#include "mozilla/unused.h"
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
 #include "nsDataHashtable.h"
@@ -306,7 +305,7 @@ public:
     nsresult HandleGUIEvent(const nsGUIEvent& anEvent, bool* handled);
 #endif
 
-    void DidComposite() { unused << SendNPP_DidComposite(); }
+    void DidComposite() { SendNPP_DidComposite(); }
 
 private:
     // Create an appropriate platform surface for a background of size

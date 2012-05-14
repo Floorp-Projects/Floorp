@@ -41,21 +41,22 @@ fails-if(Android) != spellcheck-input-property-dynamic-override.html spellcheck-
 == spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-nofocus-ref.html
 fails-if(Android) != spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-ref.html
 == spellcheck-textarea-attr.html spellcheck-textarea-nofocus-ref.html
-fails-if(Android) != spellcheck-textarea-attr.html spellcheck-textarea-ref.html
+#the random-if(Android) tests pass on android native, but fail on android-xul, see bug 728942
+random-if(Android) != spellcheck-textarea-attr.html spellcheck-textarea-ref.html
 needs-focus == spellcheck-textarea-focused.html spellcheck-textarea-ref.html
 needs-focus == spellcheck-textarea-focused-reframe.html spellcheck-textarea-ref.html
 needs-focus == spellcheck-textarea-focused-notreadonly.html spellcheck-textarea-ref.html
-fails-if(Android) != spellcheck-textarea-nofocus.html spellcheck-textarea-ref.html
-fails-if(Android) != spellcheck-textarea-disabled.html spellcheck-textarea-ref.html
-fails-if(Android) != spellcheck-textarea-attr-inherit.html spellcheck-textarea-ref.html
-fails-if(Android) != spellcheck-textarea-attr-dynamic.html spellcheck-textarea-ref.html
-fails-if(Android) != spellcheck-textarea-attr-dynamic-inherit.html spellcheck-textarea-ref.html
-fails-if(Android) != spellcheck-textarea-property-dynamic.html spellcheck-textarea-ref.html
-fails-if(Android) != spellcheck-textarea-property-dynamic-inherit.html spellcheck-textarea-ref.html
-fails-if(Android) != spellcheck-textarea-attr-dynamic-override.html spellcheck-textarea-ref.html
-fails-if(Android) != spellcheck-textarea-attr-dynamic-override-inherit.html spellcheck-textarea-ref.html
-fails-if(Android) != spellcheck-textarea-property-dynamic-override.html spellcheck-textarea-ref.html
-fails-if(Android) != spellcheck-textarea-property-dynamic-override-inherit.html spellcheck-textarea-ref.html
+random-if(Android) != spellcheck-textarea-nofocus.html spellcheck-textarea-ref.html
+random-if(Android) != spellcheck-textarea-disabled.html spellcheck-textarea-ref.html
+random-if(Android) != spellcheck-textarea-attr-inherit.html spellcheck-textarea-ref.html
+random-if(Android) != spellcheck-textarea-attr-dynamic.html spellcheck-textarea-ref.html
+random-if(Android) != spellcheck-textarea-attr-dynamic-inherit.html spellcheck-textarea-ref.html
+random-if(Android) != spellcheck-textarea-property-dynamic.html spellcheck-textarea-ref.html
+random-if(Android) != spellcheck-textarea-property-dynamic-inherit.html spellcheck-textarea-ref.html
+random-if(Android) != spellcheck-textarea-attr-dynamic-override.html spellcheck-textarea-ref.html
+random-if(Android) != spellcheck-textarea-attr-dynamic-override-inherit.html spellcheck-textarea-ref.html
+random-if(Android) != spellcheck-textarea-property-dynamic-override.html spellcheck-textarea-ref.html
+random-if(Android) != spellcheck-textarea-property-dynamic-override-inherit.html spellcheck-textarea-ref.html
 needs-focus == caret_on_focus.html caret_on_focus-ref.html
 needs-focus != caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html
 needs-focus == input-text-onfocus-reframe.html input-text-onfocus-reframe-ref.html

@@ -301,7 +301,7 @@ scanline_func_name (dst_type_t       *dst,							\
 		    int32_t           w,							\
 		    pixman_fixed_t    vx,							\
 		    pixman_fixed_t    unit_x,							\
-		    pixman_fixed_t    max_vx,							\
+		    pixman_fixed_t    src_width_fixed,						\
 		    pixman_bool_t     fully_transparent_src)					\
 {												\
 	uint32_t   d;										\
@@ -317,25 +317,25 @@ scanline_func_name (dst_type_t       *dst,							\
 												\
 	while ((w -= 2) >= 0)									\
 	{											\
-	    x1 = vx >> 16;									\
+	    x1 = pixman_fixed_to_int (vx);							\
 	    vx += unit_x;									\
 	    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
 	    {											\
 		/* This works because we know that unit_x is positive */			\
-		while (vx >= max_vx)								\
-		    vx -= max_vx;								\
+		while (vx >= 0)									\
+		    vx -= src_width_fixed;							\
 	    }											\
-	    s1 = src[x1];									\
+	    s1 = *(src + x1);									\
 												\
-	    x2 = vx >> 16;									\
+	    x2 = pixman_fixed_to_int (vx);							\
 	    vx += unit_x;									\
 	    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
 	    {											\
 		/* This works because we know that unit_x is positive */			\
-		while (vx >= max_vx)								\
-		    vx -= max_vx;								\
+		while (vx >= 0)									\
+		    vx -= src_width_fixed;							\
 	    }											\
-	    s2 = src[x2];									\
+	    s2 = *(src + x2);									\
 												\
 	    if (PIXMAN_OP_ ## OP == PIXMAN_OP_OVER)						\
 	    {											\
@@ -379,8 +379,8 @@ scanline_func_name (dst_type_t       *dst,							\
 												\
 	if (w & 1)										\
 	{											\
-	    x1 = vx >> 16;									\
-	    s1 = src[x1];									\
+	    x1 = pixman_fixed_to_int (vx);							\
+	    s1 = *(src + x1);									\
 												\
 	    if (PIXMAN_OP_ ## OP == PIXMAN_OP_OVER)						\
 	    {											\
@@ -418,7 +418,7 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
     mask_type_t *mask_line;									\
     src_type_t *src_first_line;									\
     int       y;										\
-    pixman_fixed_t max_vx = INT32_MAX; /* suppress uninitialized variable warning */		\
+    pixman_fixed_t src_width_fixed = pixman_int_to_fixed (src_image->bits.width);		\
     pixman_fixed_t max_vy;									\
     pixman_vector_t v;										\
     pixman_fixed_t vx, vy;									\
@@ -464,11 +464,10 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 												\
     if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)					\
     {												\
-	/* Clamp repeating positions inside the actual samples */				\
-	max_vx = src_image->bits.width << 16;							\
-	max_vy = src_image->bits.height << 16;							\
+	max_vy = pixman_int_to_fixed (src_image->bits.height);					\
 												\
-	repeat (PIXMAN_REPEAT_NORMAL, &vx, max_vx);						\
+	/* Clamp repeating positions inside the actual samples */				\
+	repeat (PIXMAN_REPEAT_NORMAL, &vx, src_width_fixed);					\
 	repeat (PIXMAN_REPEAT_NORMAL, &vy, max_vy);						\
     }												\
 												\
@@ -490,7 +489,7 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 	    mask_line += mask_stride;								\
 	}											\
 												\
-	y = vy >> 16;										\
+	y = pixman_fixed_to_int (vy);								\
 	vy += unit_y;										\
 	if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
 	    repeat (PIXMAN_REPEAT_NORMAL, &vy, max_vy);						\
@@ -500,18 +499,21 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 	    src = src_first_line + src_stride * y;						\
 	    if (left_pad > 0)									\
 	    {											\
-		scanline_func (mask, dst, src, left_pad, 0, 0, 0, FALSE);			\
+		scanline_func (mask, dst,							\
+			       src + src_image->bits.width - src_image->bits.width + 1,		\
+			       left_pad, -pixman_fixed_e, 0, src_width_fixed, FALSE);		\
 	    }											\
 	    if (width > 0)									\
 	    {											\
 		scanline_func (mask + (mask_is_solid ? 0 : left_pad),				\
-			       dst + left_pad, src, width, vx, unit_x, 0, FALSE);		\
+			       dst + left_pad, src + src_image->bits.width, width,		\
+			       vx - src_width_fixed, unit_x, src_width_fixed, FALSE);		\
 	    }											\
 	    if (right_pad > 0)									\
 	    {											\
 		scanline_func (mask + (mask_is_solid ? 0 : left_pad + width),			\
-			       dst + left_pad + width, src + src_image->bits.width - 1,		\
-			       right_pad, 0, 0, 0, FALSE);					\
+			       dst + left_pad + width, src + src_image->bits.width,		\
+			       right_pad, -pixman_fixed_e, 0, src_width_fixed, FALSE);		\
 	    }											\
 	}											\
 	else if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NONE)				\
@@ -519,29 +521,34 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 	    static const src_type_t zero[1] = { 0 };						\
 	    if (y < 0 || y >= src_image->bits.height)						\
 	    {											\
-		scanline_func (mask, dst, zero, left_pad + width + right_pad, 0, 0, 0, TRUE);	\
+		scanline_func (mask, dst, zero + 1, left_pad + width + right_pad,		\
+			       -pixman_fixed_e, 0, src_width_fixed, TRUE);			\
 		continue;									\
 	    }											\
 	    src = src_first_line + src_stride * y;						\
 	    if (left_pad > 0)									\
 	    {											\
-		scanline_func (mask, dst, zero, left_pad, 0, 0, 0, TRUE);			\
+		scanline_func (mask, dst, zero + 1, left_pad,					\
+			       -pixman_fixed_e, 0, src_width_fixed, TRUE);			\
 	    }											\
 	    if (width > 0)									\
 	    {											\
 		scanline_func (mask + (mask_is_solid ? 0 : left_pad),				\
-			       dst + left_pad, src, width, vx, unit_x, 0, FALSE);		\
+			       dst + left_pad, src + src_image->bits.width, width,		\
+			       vx - src_width_fixed, unit_x, src_width_fixed, FALSE);		\
 	    }											\
 	    if (right_pad > 0)									\
 	    {											\
 		scanline_func (mask + (mask_is_solid ? 0 : left_pad + width),			\
-			       dst + left_pad + width, zero, right_pad, 0, 0, 0, TRUE);		\
+			       dst + left_pad + width, zero + 1, right_pad,			\
+			       -pixman_fixed_e, 0, src_width_fixed, TRUE);			\
 	    }											\
 	}											\
 	else											\
 	{											\
 	    src = src_first_line + src_stride * y;						\
-	    scanline_func (mask, dst, src, width, vx, unit_x, max_vx, FALSE);			\
+	    scanline_func (mask, dst, src + src_image->bits.width, width, vx - src_width_fixed,	\
+			   unit_x, src_width_fixed, FALSE);					\
 	}											\
     }												\
 }

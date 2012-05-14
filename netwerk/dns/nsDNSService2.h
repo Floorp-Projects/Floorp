@@ -40,6 +40,8 @@
 #include "nsHostResolver.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 #include "mozilla/Mutex.h"
 
 class nsDNSService : public nsPIDNSService
@@ -70,4 +72,5 @@ private:
     bool                      mDisableIPv6;
     bool                      mDisablePrefetch;
     bool                      mFirstTime;
+    nsTHashtable<nsCStringHashKey> mLocalDomains;
 };

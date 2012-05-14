@@ -7,27 +7,37 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-error.html";
 
 function test() {
-  expectUncaughtException();
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testViewSource, false);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, testViewSource);
+  }, true);
 }
 
-function testViewSource() {
-  browser.removeEventListener("DOMContentLoaded", testViewSource, false);
-
-  openConsole();
-
+function testViewSource(hud) {
   let button = content.document.querySelector("button");
   button = XPCNativeWrapper.unwrap(button);
   ok(button, "we have the button on the page");
 
-  button.addEventListener("click", buttonClicked, false);
+  expectUncaughtException();
   EventUtils.sendMouseEvent({ type: "click" }, button, content);
-}
 
-function buttonClicked(aEvent) {
-  aEvent.target.removeEventListener("click", buttonClicked, false);
-  executeSoon(findLocationNode);
+  waitForSuccess({
+    name: "find the location node",
+    validatorFn: function()
+    {
+      return hud.outputNode.querySelector(".webconsole-location");
+    },
+    successFn: function()
+    {
+      let locationNode = hud.outputNode.querySelector(".webconsole-location");
+
+      Services.ww.registerNotification(observer);
+
+      EventUtils.sendMouseEvent({ type: "click" }, locationNode);
+    },
+    failureFn: finishTest,
+  });
 }
 
 let observer = {
@@ -39,8 +49,6 @@ let observer = {
     ok(true, "the view source window was opened in response to clicking " +
        "the location node");
 
-    Services.ww.unregisterNotification(this);
-
     // executeSoon() is necessary to avoid crashing Firefox. See bug 611543.
     executeSoon(function() {
       aSubject.close();
@@ -49,14 +57,6 @@ let observer = {
   }
 };
 
-function findLocationNode() {
-  outputNode = HUDService.getHudByWindow(content).outputNode;
-
-  let locationNode = outputNode.querySelector(".webconsole-location");
-  ok(locationNode, "we have the location node");
-
-  Services.ww.registerNotification(observer);
-
-  EventUtils.sendMouseEvent({ type: "click" }, locationNode);
-}
-
+registerCleanupFunction(function() {
+  Services.ww.unregisterNotification(observer);
+});

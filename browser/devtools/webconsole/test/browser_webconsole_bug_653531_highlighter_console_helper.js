@@ -97,7 +97,7 @@ function runSelectionTests()
   });
 }
 
-function performTestComparisons(evt)
+function performTestComparisons()
 {
   InspectorUI.highlighter.removeListener("nodeselected", performTestComparisons);
 
@@ -105,9 +105,11 @@ function performTestComparisons(evt)
   is(InspectorUI.highlighter.node, h1, "node selected");
   is(InspectorUI.selection, h1, "selection matches node");
 
-  HUDService.activateHUDForContext(gBrowser.selectedTab);
-  let hudId = HUDService.getHudIdByWindow(content);
-  let hud = HUDService.hudReferences[hudId];
+  openConsole(gBrowser.selectedTab, performWebConsoleTests);
+}
+
+function performWebConsoleTests(hud)
+{
   let jsterm = hud.jsterm;
   outputNode = hud.outputNode;
 
@@ -127,8 +129,7 @@ function performTestComparisons(evt)
 
 function finishUp() {
   InspectorUI.closeInspectorUI();
-  gBrowser.removeCurrentTab();
-  finish();
+  finishTest();
 }
 
 function test()

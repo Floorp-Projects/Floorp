@@ -92,28 +92,36 @@ let inputValues = [
 let eventHandlers = [];
 let popupShown = [];
 let HUD;
+let testDriver;
 
 function tabLoad(aEvent) {
-  browser.removeEventListener(aEvent.type, arguments.callee, true);
+  browser.removeEventListener(aEvent.type, tabLoad, true);
 
   waitForFocus(function () {
-    openConsole();
-
-    let hudId = HUDService.getHudIdByWindow(content);
-    HUD = HUDService.hudReferences[hudId];
-
-    executeSoon(testNext);
+    openConsole(null, function(aHud) {
+      HUD = aHud;
+      testNext();
+    });
   }, content);
 }
 
+function subtestNext() {
+  testDriver.next();
+}
+
 function testNext() {
-  let cpos = ++pos;
-  if (cpos == inputValues.length) {
-    if (popupShown.length == inputValues.length) {
-      executeSoon(testEnd);
-    }
+  pos++;
+  if (pos == inputValues.length) {
+    testEnd();
     return;
   }
+
+  testDriver = testGen();
+  testDriver.next();
+}
+
+function testGen() {
+  let cpos = pos;
 
   let showsPropertyPanel = inputValues[cpos][0];
   let inputValue = inputValues[cpos][1];
@@ -129,19 +137,34 @@ function testNext() {
 
   HUD.jsterm.clearOutput();
 
+  // Test the console.log() output.
+
   // Ugly but it does the job.
   with (content) {
     eval("HUD.console.log(" + consoleTest + ")");
   }
 
-  let outputItem = HUD.outputNode.
-    querySelector(".hud-log:last-child");
+  waitForSuccess({
+    name: "console.log message for test #" + cpos,
+    validatorFn: function()
+    {
+      return HUD.outputNode.querySelector(".hud-log");
+    },
+    successFn: subtestNext,
+    failureFn: testNext,
+  });
+
+  yield;
+
+  let outputItem = HUD.outputNode.querySelector(".hud-log:last-child");
   ok(outputItem,
     "found the window.console output line for inputValues[" + cpos + "]");
   ok(outputItem.textContent.indexOf(consoleOutput) > -1,
     "console API output is correct for inputValues[" + cpos + "]");
 
   HUD.jsterm.clearOutput();
+
+  // Test jsterm print() output.
 
   HUD.jsterm.setInputValue("print(" + inputValue + ")");
   HUD.jsterm.execute();
@@ -153,6 +176,8 @@ function testNext() {
   ok(outputItem.textContent.indexOf(printOutput) > -1,
     "jsterm print() output is correct for inputValues[" + cpos + "]");
 
+  // Test jsterm execution output.
+
   let eventHandlerID = eventHandlers.length + 1;
 
   let propertyPanelShown = function(aEvent) {
@@ -161,7 +186,7 @@ function testNext() {
       return;
     }
 
-    document.removeEventListener(aEvent.type, arguments.callee, false);
+    document.removeEventListener(aEvent.type, propertyPanelShown, false);
     eventHandlers[eventHandlerID] = null;
 
     ok(showsPropertyPanel,
@@ -170,8 +195,9 @@ function testNext() {
     aEvent.target.hidePopup();
 
     popupShown[cpos] = true;
-    if (popupShown.length == inputValues.length) {
-      executeSoon(testEnd);
+
+    if (showsPropertyPanel) {
+      subtestNext();
     }
   };
 
@@ -192,15 +218,18 @@ function testNext() {
   let messageBody = outputItem.querySelector(".webconsole-msg-body");
   ok(messageBody, "we have the message body for inputValues[" + cpos + "]");
 
-  messageBody.addEventListener("click", function(aEvent) {
-    this.removeEventListener(aEvent.type, arguments.callee, false);
-    executeSoon(testNext);
-  }, false);
-
   // Send the mousedown, mouseup and click events to check if the property
   // panel opens.
   EventUtils.sendMouseEvent({ type: "mousedown" }, messageBody, window);
   EventUtils.sendMouseEvent({ type: "click" }, messageBody, window);
+
+  if (showsPropertyPanel) {
+    yield; // wait for the panel to open if we need to.
+  }
+
+  testNext();
+
+  yield;
 }
 
 function testEnd() {
@@ -222,6 +251,7 @@ function testEnd() {
     }
   }
 
+  testDriver = null;
   executeSoon(finishTest);
 }
 
