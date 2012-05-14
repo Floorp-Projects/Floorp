@@ -3310,16 +3310,14 @@ nsHTMLInputElement::AllowDrop()
 void
 nsHTMLInputElement::AddedToRadioGroup()
 {
-  // Make sure not to notify if we're still being created by the parser
-  bool notify = !mParserCreating;
-
-  //
-  //  If the input element is not in a form and
-  //  not in a document, we just need to return.
-  //
-  if (!mForm && !(IsInDoc() && GetParent())) {
+  // If the element is neither in a form nor a document, there is no group so we
+  // should just stop here.
+  if (!mForm && !IsInDoc()) {
     return;
   }
+
+  // Make sure not to notify if we're still being created by the parser
+  bool notify = !mParserCreating;
 
   //
   // If the input element is checked, and we add it to the group, it will
