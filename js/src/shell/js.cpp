@@ -2140,6 +2140,8 @@ DumpStack(JSContext *cx, unsigned argc, Value *vp)
         } else {
             v = StringValue(globalStr);
         }
+        if (!JS_WrapValue(cx, &v))
+            return false;
         if (!JS_SetElement(cx, arr, index, &v))
             return false;
     }
