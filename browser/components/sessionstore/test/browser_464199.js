@@ -60,7 +60,7 @@ function test() {
                              { url: "http://www.example.net/frame" }
                            ] }] }, title: FORGET },
     { state: { entries: [{ url: "http://www.example.org/form",
-                           formdata: { "#url": "http://www.example.net/" }
+                           formdata: { id: { "url": "http://www.example.net/" } }
                          }] }, title: REMEMBER },
     { state: { entries: [{ url: "http://www.example.org/form" }],
                extData: { "setTabValue": "http://example.net:80" } }, title: REMEMBER }
