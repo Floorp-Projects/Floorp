@@ -40,9 +40,35 @@
 #ifndef mozilla_CheckedInt_h
 #define mozilla_CheckedInt_h
 
-#include "prtypes.h"
+/*** Build options. Comment out these #defines to disable the corresponding optional feature.
+ *** Disabling features may be useful for code using CheckedInt outside of Mozilla (e.g. WebKit)
+ ***/
 
-#include <mozilla/Assertions.h>
+// enable support for NSPR types like PRInt64
+#define CHECKEDINT_ENABLE_PR_INTEGER_TYPES
+
+// enable support for long long and unsigned long long
+#define CHECKEDINT_ENABLE_LONG_LONG
+
+// enable usage of MOZ_STATIC_ASSERT to check for unsupported types.
+// If disabled, static asserts are just removed. You'll still get compile errors, just less helpful ones.
+#define CHECKEDINT_ENABLE_MOZ_ASSERTS
+
+/*** End of build options
+ ***/
+
+
+#ifdef CHECKEDINT_ENABLE_MOZ_ASSERTS
+    #include <mozilla/Assertions.h>
+#else
+    #ifndef MOZ_STATIC_ASSERT
+        #define MOZ_STATIC_ASSERT(x)
+    #endif
+#endif
+
+#ifdef CHECKEDINT_ENABLE_PR_INTEGER_TYPES
+    #include "prtypes.h"
+#endif
 
 #include <climits>
 
@@ -95,18 +121,21 @@ template<> struct is_supported_pass_2<int>  { enum { value = 1 }; };
 template<> struct is_supported_pass_2<unsigned int> { enum { value = 1 }; };
 template<> struct is_supported_pass_2<long>  { enum { value = 1 }; };
 template<> struct is_supported_pass_2<unsigned long> { enum { value = 1 }; };
-template<> struct is_supported_pass_2<long long>  { enum { value = 1 }; };
-template<> struct is_supported_pass_2<unsigned long long> { enum { value = 1 }; };
+#ifdef CHECKEDINT_ENABLE_LONG_LONG
+    template<> struct is_supported_pass_2<long long>  { enum { value = 1 }; };
+    template<> struct is_supported_pass_2<unsigned long long> { enum { value = 1 }; };
+#endif
 
-template<> struct is_supported_pass_3<PRInt8>   { enum { value = 1 }; };
-template<> struct is_supported_pass_3<PRUint8>  { enum { value = 1 }; };
-template<> struct is_supported_pass_3<PRInt16>  { enum { value = 1 }; };
-template<> struct is_supported_pass_3<PRUint16> { enum { value = 1 }; };
-template<> struct is_supported_pass_3<PRInt32>  { enum { value = 1 }; };
-template<> struct is_supported_pass_3<PRUint32> { enum { value = 1 }; };
-template<> struct is_supported_pass_3<PRInt64>  { enum { value = 1 }; };
-template<> struct is_supported_pass_3<PRUint64> { enum { value = 1 }; };
-
+#ifdef CHECKEDINT_ENABLE_PR_INTEGER_TYPES
+    template<> struct is_supported_pass_3<PRInt8>   { enum { value = 1 }; };
+    template<> struct is_supported_pass_3<PRUint8>  { enum { value = 1 }; };
+    template<> struct is_supported_pass_3<PRInt16>  { enum { value = 1 }; };
+    template<> struct is_supported_pass_3<PRUint16> { enum { value = 1 }; };
+    template<> struct is_supported_pass_3<PRInt32>  { enum { value = 1 }; };
+    template<> struct is_supported_pass_3<PRUint32> { enum { value = 1 }; };
+    template<> struct is_supported_pass_3<PRInt64>  { enum { value = 1 }; };
+    template<> struct is_supported_pass_3<PRUint64> { enum { value = 1 }; };
+#endif
 
 /*** Step 2: some integer-traits kind of stuff. We're doing our own thing here rather than
  ***         relying on std::numeric_limits mostly for historical reasons (we still support PR integer types
