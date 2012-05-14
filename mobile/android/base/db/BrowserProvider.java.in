@@ -2156,6 +2156,13 @@ public class BrowserProvider extends ContentProvider {
                 db.setTransactionSuccessful();
                 db.endTransaction();
                 db.beginTransaction();
+            } catch (OperationApplicationException e) {
+                // Repeat of above.
+                results[i] = new ContentProviderResult(0);
+                failures = true;
+                db.setTransactionSuccessful();
+                db.endTransaction();
+                db.beginTransaction();
             }
         }
 
