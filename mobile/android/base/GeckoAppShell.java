@@ -161,6 +161,8 @@ public class GeckoAppShell
 
     private static Handler sGeckoHandler;
 
+    private static boolean sDisableScreenshot = false;
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -2234,7 +2236,15 @@ public class GeckoAppShell
         return Math.max(Math.min(max, val), min);
     }
 
+    // Invoked via reflection from robocop test
+    public static void disableScreenshot() {
+        sDisableScreenshot = true;
+    }
+
     public static void screenshotWholePage(Tab tab) {
+        if (sDisableScreenshot) {
+            return;
+        }
         if (GeckoApp.mAppContext.isApplicationInBackground())
             return;
 
