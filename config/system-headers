@@ -1047,6 +1047,7 @@ vpx/vpx_codec.h
 vpx/vpx_decoder.h
 vpx/vp8dx.h
 sydneyaudio/sydney_audio.h
+speex/speex_resampler.h
 vorbis/codec.h
 theora/theoradec.h
 tremor/ivorbiscodec.h

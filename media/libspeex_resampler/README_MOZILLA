@@ -1,0 +1,6 @@
+This source is from the Speex library (http://git.xiph.org/speex.git/), from
+commit a6d05eb5.
+
+It consists in the audio resampling code (resampler.c) and its header files
+dependancies. No changes have been made to those files, imported in the tree
+using the update.sh script.
