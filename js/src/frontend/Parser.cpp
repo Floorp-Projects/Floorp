@@ -605,7 +605,7 @@ Parser::functionBody(FunctionBodyType type)
     stmtInfo.flags = SIF_BODY_BLOCK;
 
     unsigned oldflags = tc->sc->flags;
-    tc->sc->flags &= ~(TCF_RETURN_EXPR | TCF_RETURN_VOID);
+    JS_ASSERT(!tc->hasReturnExpr && !tc->hasReturnVoid);
 
     ParseNode *pn;
     if (type == StatementListBody) {
@@ -637,8 +637,9 @@ Parser::functionBody(FunctionBodyType type)
         PopStatementSC(tc->sc);
 
         /* Check for falling off the end of a function that returns a value. */
-        if (context->hasStrictOption() && (tc->sc->flags & TCF_RETURN_EXPR) &&
-            !CheckFinalReturn(context, this, pn)) {
+        if (context->hasStrictOption() && tc->hasReturnExpr &&
+            !CheckFinalReturn(context, this, pn))
+        {
             pn = NULL;
         }
     }
@@ -1138,7 +1139,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
     tc->sc->blockidGen = funtc->sc->blockidGen;
 
     FunctionBox *funbox = fn->pn_funbox;
-    funbox->tcflags |= funtc->sc->flags & (TCF_FUN_FLAGS | TCF_COMPILE_N_GO | TCF_RETURN_EXPR);
+    funbox->tcflags |= funtc->sc->flags & (TCF_FUN_FLAGS | TCF_COMPILE_N_GO);
 
     fn->pn_dflags |= PND_INITIALIZED;
     if (!tc->sc->topStmt || tc->sc->topStmt->type == STMT_BLOCK)
@@ -2682,17 +2683,17 @@ Parser::returnOrYield(bool useAssignExpr)
 #if JS_HAS_GENERATORS
         if (tt == TOK_RETURN)
 #endif
-            tc->sc->flags |= TCF_RETURN_EXPR;
+            tc->hasReturnExpr = true;
         pn->pn_pos.end = pn2->pn_pos.end;
         pn->pn_kid = pn2;
     } else {
 #if JS_HAS_GENERATORS
         if (tt == TOK_RETURN)
 #endif
-            tc->sc->flags |= TCF_RETURN_VOID;
+            tc->hasReturnVoid = true;
     }
 
-    if ((~tc->sc->flags & (TCF_RETURN_EXPR | TCF_FUN_IS_GENERATOR)) == 0) {
+    if (tc->hasReturnExpr && (tc->sc->flags & TCF_FUN_IS_GENERATOR)) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
         ReportBadReturn(context, this, pn, JSREPORT_ERROR,
                         JSMSG_BAD_GENERATOR_RETURN,
@@ -2700,8 +2701,7 @@ Parser::returnOrYield(bool useAssignExpr)
         return NULL;
     }
 
-    if (context->hasStrictOption() &&
-        (~tc->sc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) == 0 &&
+    if (context->hasStrictOption() && tc->hasReturnExpr && tc->hasReturnVoid &&
         !ReportBadReturn(context, this, pn, JSREPORT_WARNING | JSREPORT_STRICT,
                          JSMSG_NO_RETURN_VALUE,
                          JSMSG_ANON_NO_RETURN_VALUE)) {
@@ -4108,7 +4108,7 @@ Parser::statement()
             (!tc->sc->topStmt || tc->sc->topStmt->type == STMT_BLOCK)) {
             pn->pn_xflags |= PNX_NEEDBRACES;
         }
-        tc->sc->flags = oldflags | (tc->sc->flags & (TCF_FUN_FLAGS | TCF_RETURN_FLAGS));
+        tc->sc->flags = oldflags | (tc->sc->flags & TCF_FUN_FLAGS);
         return pn;
       }
 
@@ -4967,7 +4967,7 @@ GenexpGuard::maybeNoteGenerator(ParseNode *pn)
                                       js_yield_str);
             return false;
         }
-        if (tc->sc->flags & TCF_RETURN_EXPR) {
+        if (tc->hasReturnExpr) {
             /* At the time we saw the yield, we might not have set TCF_FUN_IS_GENERATOR yet. */
             ReportBadReturn(tc->sc->context, parser, pn, JSREPORT_ERROR,
                             JSMSG_BAD_GENERATOR_RETURN,

@@ -61,32 +61,26 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // parsing inside function body
     TCF_IN_FUNCTION =                          0x1,
 
-    // function has 'return expr;'
-    TCF_RETURN_EXPR =                          0x2,
-
-    // function has 'return;'
-    TCF_RETURN_VOID =                          0x4,
-
     // parsing init expr of for; exclude 'in'
-    TCF_IN_FOR_INIT =                          0x8,
+    TCF_IN_FOR_INIT =                          0x2,
 
     // function needs Call object per call
-    TCF_FUN_HEAVYWEIGHT =                     0x10,
+    TCF_FUN_HEAVYWEIGHT =                      0x4,
 
     // parsed yield statement in function
-    TCF_FUN_IS_GENERATOR =                    0x20,
+    TCF_FUN_IS_GENERATOR =                     0x8,
 
     // block contains a function statement
-    TCF_HAS_FUNCTION_STMT =                   0x40,
+    TCF_HAS_FUNCTION_STMT =                   0x10,
 
     // flag lambda from generator expression
-    TCF_GENEXP_LAMBDA =                       0x80,
+    TCF_GENEXP_LAMBDA =                       0x20,
 
     // script can optimize name references based on scope chain
-    TCF_COMPILE_N_GO =                       0x100,
+    TCF_COMPILE_N_GO =                        0x40,
 
     // API caller does not want result value from global script
-    TCF_NO_SCRIPT_RVAL =                     0x200,
+    TCF_NO_SCRIPT_RVAL =                      0x80,
 
     // Set when parsing a declaration-like destructuring pattern.  This flag
     // causes PrimaryExpr to create PN_NAME parse nodes for variable references
@@ -98,14 +92,14 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // assignment-like and declaration-like destructuring patterns, and why
     // they need to be treated differently.
     //
-    TCF_DECL_DESTRUCTURING =                 0x400,
+    TCF_DECL_DESTRUCTURING =                 0x100,
 
     // This function/global/eval code body contained a Use Strict Directive.
     // Treat certain strict warnings as errors, and forbid the use of 'with'.
     // See also TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and
     // JSREPORT_STRICT_ERROR.
     //
-    TCF_STRICT_MODE_CODE =                   0x800,
+    TCF_STRICT_MODE_CODE =                   0x200,
 
     // The (static) bindings of this script need to support dynamic name
     // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
@@ -127,20 +121,20 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // taken not to turn off the whole 'arguments' optimization). To answer the
     // more general "is this argument aliased" question, script->needsArgsObj
     // should be tested (see JSScript::argIsAlised).
-    TCF_BINDINGS_ACCESSED_DYNAMICALLY =     0x1000,
+    TCF_BINDINGS_ACCESSED_DYNAMICALLY =      0x400,
 
     // Compiling an eval() script.
-    TCF_COMPILE_FOR_EVAL =                  0x2000,
+    TCF_COMPILE_FOR_EVAL =                   0x800,
 
     // The function or a function that encloses it may define new local names
     // at runtime through means other than calling eval.
-    TCF_FUN_MIGHT_ALIAS_LOCALS =            0x4000,
+    TCF_FUN_MIGHT_ALIAS_LOCALS =            0x1000,
 
     // The script contains singleton initialiser JSOP_OBJECT.
-    TCF_HAS_SINGLETONS =                    0x8000,
+    TCF_HAS_SINGLETONS =                    0x2000,
 
     // Some enclosing scope is a with-statement or E4X filter-expression.
-    TCF_IN_WITH =                          0x10000,
+    TCF_IN_WITH =                           0x4000,
 
     // This function does something that can extend the set of bindings in its
     // call objects --- it does a direct eval in non-strict code, or includes a
@@ -149,10 +143,10 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // This flag is *not* inherited by enclosed or enclosing functions; it
     // applies only to the function in whose flags it appears.
     //
-    TCF_FUN_EXTENSIBLE_SCOPE =             0x20000,
+    TCF_FUN_EXTENSIBLE_SCOPE =              0x8000,
 
     // The caller is JS_Compile*Script*.
-    TCF_NEED_SCRIPT_GLOBAL =               0x40000,
+    TCF_NEED_SCRIPT_GLOBAL =               0x10000,
 
     // Technically, every function has a binding named 'arguments'. Internally,
     // this binding is only added when 'arguments' is mentioned by the function
@@ -175,7 +169,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // have no special semantics: the initial value is unconditionally the
     // actual argument (or undefined if nactual < nformal).
     //
-    TCF_ARGUMENTS_HAS_LOCAL_BINDING =      0x80000,
+    TCF_ARGUMENTS_HAS_LOCAL_BINDING =      0x20000,
 
     // In many cases where 'arguments' has a local binding (as described above)
     // we do not need to actually create an arguments object in the function
@@ -186,12 +180,9 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // be unsound in several cases. The frontend filters out such cases by
     // setting this flag which eagerly sets script->needsArgsObj to true.
     //
-    TCF_DEFINITELY_NEEDS_ARGS_OBJ =       0x100000
+    TCF_DEFINITELY_NEEDS_ARGS_OBJ =        0x40000
 
 } JS_ENUM_FOOTER(TreeContextFlags);
-
-// Flags to check for return; vs. return expr; in a function.
-static const uint32_t TCF_RETURN_FLAGS = TCF_RETURN_EXPR | TCF_RETURN_VOID;
 
 // Sticky deoptimization flags to propagate from FunctionBody.
 static const uint32_t TCF_FUN_FLAGS = TCF_FUN_HEAVYWEIGHT |
@@ -322,9 +313,16 @@ struct TreeContext {                /* tree context for semantic checks */
 
     ParseNode       *innermostWith; /* innermost WITH parse node */
 
-    FuncStmtSet *funcStmts;         /* Set of (non-top-level) function statements
+    FuncStmtSet     *funcStmts;     /* Set of (non-top-level) function statements
                                        that will alias any top-level bindings with
                                        the same name. */
+
+    /*
+     * Flags that are set for a short time during parsing to indicate context
+     * or the presence of a code feature.
+     */
+    bool            hasReturnExpr:1; /* function has 'return <expr>;' */
+    bool            hasReturnVoid:1; /* function has 'return;' */
 
     void trace(JSTracer *trc);
 
