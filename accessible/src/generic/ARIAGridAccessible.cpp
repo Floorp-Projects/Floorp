@@ -134,30 +134,6 @@ ARIAGridAccessible::GetCellAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
 }
 
 NS_IMETHODIMP
-ARIAGridAccessible::GetCellIndexAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
-                                   PRInt32* aCellIndex)
-{
-  NS_ENSURE_ARG_POINTER(aCellIndex);
-  *aCellIndex = -1;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG(aRowIndex >= 0 && aColumnIndex >= 0);
-
-  PRInt32 rowCount = 0;
-  GetRowCount(&rowCount);
-  NS_ENSURE_ARG(aRowIndex < rowCount);
-
-  PRInt32 colsCount = 0;
-  GetColumnCount(&colsCount);
-  NS_ENSURE_ARG(aColumnIndex < colsCount);
-
-  *aCellIndex = colsCount * aRowIndex + aColumnIndex;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 ARIAGridAccessible::GetColumnIndexAt(PRInt32 aCellIndex,
                                      PRInt32* aColumnIndex)
 {

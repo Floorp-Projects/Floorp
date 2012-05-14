@@ -147,7 +147,7 @@ protected:
   // Screenpoint is mEvent->refPoint.
   nsIntPoint mLayerPoint;
   nsIntPoint mPagePoint;
-  nsIntPoint mMovement;
+  nsIntPoint mMovementPoint;
   bool mIsPointerLocked;
   nsIntPoint mLastScreenPoint;
   nsIntPoint mLastClientPoint;

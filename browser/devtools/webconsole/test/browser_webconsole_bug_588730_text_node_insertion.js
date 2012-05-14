@@ -44,18 +44,16 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testTextNodeInsertion,
-                           false);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, testTextNodeInsertion);
+  }, true);
 }
 
 // Test for bug 588730: Adding a text node to an existing label element causes
 // warnings
-function testTextNodeInsertion() {
-  browser.removeEventListener("DOMContentLoaded", testTextNodeInsertion,
-                              false);
-  openConsole();
-
-  let outputNode = HUDService.getHudByWindow(content).outputNode;
+function testTextNodeInsertion(hud) {
+  let outputNode = hud.outputNode;
 
   let label = document.createElementNS(
     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "label");
@@ -71,16 +69,13 @@ function testTextNodeInsertion() {
     }
   };
 
-  let nsIConsoleServiceClass = Cc["@mozilla.org/consoleservice;1"];
-  let nsIConsoleService =
-    nsIConsoleServiceClass.getService(Ci.nsIConsoleService);
-  nsIConsoleService.registerListener(listener);
+  Services.console.registerListener(listener);
 
   // This shouldn't fail.
   label.appendChild(document.createTextNode("foo"));
 
   executeSoon(function() {
-    nsIConsoleService.unregisterListener(listener);
+    Services.console.unregisterListener(listener);
     ok(!error, "no error when adding text nodes as children of labels");
 
     finishTest();

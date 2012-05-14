@@ -118,10 +118,10 @@ MarkIdRootRange(JSTracer *trc, size_t len, jsid *vec, const char *name);
 /*** Value Marking ***/
 
 void
-MarkValue(JSTracer *trc, HeapValue *v, const char *name);
+MarkValue(JSTracer *trc, EncapsulatedValue *v, const char *name);
 
 void
-MarkValueRange(JSTracer *trc, size_t len, HeapValue *vec, const char *name);
+MarkValueRange(JSTracer *trc, size_t len, EncapsulatedValue *vec, const char *name);
 
 void
 MarkValueRoot(JSTracer *trc, Value *v, const char *name);

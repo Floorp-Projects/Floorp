@@ -43,14 +43,12 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 
 let jsterm;
 
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
-});
-
 function test() {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testJSTerm, false);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, testJSTerm);
+  }, true);
 }
 
 function checkResult(msg, desc, lines) {
@@ -60,13 +58,9 @@ function checkResult(msg, desc, lines) {
     desc);
 }
 
-function testJSTerm()
+function testJSTerm(hud)
 {
-  browser.removeEventListener("DOMContentLoaded", testJSTerm, false);
-
-  openConsole();
-
-  jsterm = HUDService.getHudByWindow(content).jsterm;
+  jsterm = hud.jsterm;
 
   jsterm.clearOutput();
   jsterm.execute("'id=' + $('header').getAttribute('id')");
@@ -160,5 +154,5 @@ function testJSTerm()
   checkResult("null", "null is null", 1);
 
   jsterm = null;
-  finishTest();
+  executeSoon(finishTest);
 }

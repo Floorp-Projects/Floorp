@@ -1,0 +1,76 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public License,
+   - v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<script type="application/javascript"
+        src="chrome://browser/content/preferences/in-content/tabs.js"/>
+
+<preferences id="tabsPreferences">
+  <preference id="browser.link.open_newwindow"
+              name="browser.link.open_newwindow"
+              type="int"/>
+  <preference id="browser.tabs.autoHide"
+              name="browser.tabs.autoHide"
+              type="bool"
+              inverted="true"/>
+  <preference id="browser.tabs.loadInBackground"
+              name="browser.tabs.loadInBackground"
+              type="bool"
+              inverted="true"/>
+  <preference id="browser.tabs.warnOnClose"
+              name="browser.tabs.warnOnClose"
+              type="bool"/>
+  <preference id="browser.tabs.warnOnOpen"
+              name="browser.tabs.warnOnOpen"
+              type="bool"/>
+#ifdef XP_WIN
+  <preference id="browser.taskbar.previews.enable"
+              name="browser.taskbar.previews.enable"
+              type="bool"/>
+#endif
+</preferences>
+
+<hbox class="heading" data-category="paneTabs" hidden="true">
+  <image class="preference-icon" type="tabs"/>
+  <html:h1>&paneTabs.title;</html:h1>
+</hbox>
+
+<checkbox id="linkTargeting" label="&newWindowsAsTabs.label;"
+          data-category="paneTabs" hidden="true"
+          accesskey="&newWindowsAsTabs.accesskey;"
+          preference="browser.link.open_newwindow"
+          onsyncfrompreference="return gTabsPane.readLinkTarget();"
+          onsynctopreference="return gTabsPane.writeLinkTarget();"
+          class="indent"/>
+
+<checkbox id="warnCloseMultiple" label="&warnCloseMultipleTabs.label;"
+          data-category="paneTabs" hidden="true"
+          accesskey="&warnCloseMultipleTabs.accesskey;"
+          preference="browser.tabs.warnOnClose"
+          class="indent"/>
+
+<checkbox id="warnOpenMany" label="&warnOpenManyTabs.label;"
+          data-category="paneTabs" hidden="true"
+          accesskey="&warnOpenManyTabs.accesskey;"
+          preference="browser.tabs.warnOnOpen"
+          class="indent"/>
+
+<checkbox id="showTabBar" label="&showTabBar.label;"
+          data-category="paneTabs" hidden="true"
+          accesskey="&showTabBar.accesskey;"
+          preference="browser.tabs.autoHide"
+          class="indent"/>
+
+<checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
+          data-category="paneTabs" hidden="true"
+          accesskey="&switchToNewTabs.accesskey;"
+          preference="browser.tabs.loadInBackground"
+          class="indent"/>
+
+#ifdef XP_WIN
+<checkbox id="showTabsInTaskbar" label="&showTabsInTaskbar.label;"
+          data-category="paneTabs" hidden="true"
+          accesskey="&showTabsInTaskbar.accesskey;"
+          preference="browser.taskbar.previews.enable"
+          class="indent"/>
+#endif

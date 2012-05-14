@@ -7,34 +7,56 @@ const TEST_URI = 'data:text/html;charset=utf-8,<div style="-moz-opacity:0;">test
 
 function onContentLoaded()
 {
-  browser.removeEventListener("load", arguments.callee, true);
+  browser.removeEventListener("load", onContentLoaded, true);
 
   let HUD = HUDService.getHudByWindow(content);
   let jsterm = HUD.jsterm;
   let outputNode = HUD.outputNode;
 
-  let msg = "The unknown CSS property warning is displayed only once";
-  let node = outputNode.firstChild;
+  let cssWarning = "Unknown property '-moz-opacity'.  Declaration dropped.";
 
-  is(node.childNodes[2].textContent, "Unknown property '-moz-opacity'.  Declaration dropped.", "correct node")
-  is(node.childNodes[3].firstChild.getAttribute("value"), 2, msg);
+  waitForSuccess({
+    name: "2 repeated CSS warnings",
+    validatorFn: function()
+    {
+      return outputNode.textContent.indexOf(cssWarning) > -1;
+    },
+    successFn: function()
+    {
+      let msg = "The unknown CSS property warning is displayed only once";
+      let node = outputNode.firstChild;
+
+      is(node.childNodes[2].textContent, cssWarning, "correct node");
+      is(node.childNodes[3].firstChild.getAttribute("value"), 2, msg);
+
+      testConsoleLogRepeats();
+    },
+    failureFn: finishTest,
+  });
+}
+
+function testConsoleLogRepeats()
+{
+  let HUD = HUDService.getHudByWindow(content);
+  let jsterm = HUD.jsterm;
+  let outputNode = HUD.outputNode;
 
   jsterm.clearOutput();
 
   jsterm.setInputValue("for (let i = 0; i < 10; ++i) console.log('this is a line of reasonably long text that I will use to verify that the repeated text node is of an appropriate size.');");
   jsterm.execute();
 
-  let msg = "The console output is repeated 10 times";
-  let node = outputNode.querySelector(".webconsole-msg-console");
-  is(node.childNodes[3].firstChild.getAttribute("value"), 10, msg);
-
-  jsterm.clearOutput();
-  finishTest();
+  waitForSuccess({
+    name: "10 repeated console.log messages",
+    validatorFn: function()
+    {
+      let node = outputNode.querySelector(".webconsole-msg-console");
+      return node && node.childNodes[3].firstChild.getAttribute("value") == 10;
+    },
+    successFn: finishTest,
+    failureFn: finishTest,
+  });
 }
-
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
-});
 
 /**
  * Unit test for bug 611795:
@@ -42,16 +64,14 @@ registerCleanupFunction(function() {
  */
 function test()
 {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee, true);
-
-    openConsole();
-    // Clear cached messages that are shown once the Web Console opens.
-    HUDService.getHudByWindow(content).jsterm.clearOutput(true);
-
-    browser.addEventListener("load", onContentLoaded, true);
-    content.location.reload();
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, function(aHud) {
+      // Clear cached messages that are shown once the Web Console opens.
+      aHud.jsterm.clearOutput(true);
+      browser.addEventListener("load", onContentLoaded, true);
+      content.location.reload();
+    });
   }, true);
 }

@@ -240,7 +240,7 @@
       <deck id="view-port" flex="1" selectedIndex="0">
 
         <!-- discover view -->
-        <deck id="discover-view" flex="1" class="view-pane" selectedIndex="0">
+        <deck id="discover-view" flex="1" class="view-pane" selectedIndex="0" tabindex="0">
           <vbox id="discover-loading" align="center" pack="stretch" flex="1" class="alert-container">
             <spacer class="alert-spacer-before"/>
             <hbox class="alert loading" align="center">
@@ -270,7 +270,7 @@
         </deck>
 
         <!-- search view -->
-        <vbox id="search-view" flex="1" class="view-pane">
+        <vbox id="search-view" flex="1" class="view-pane" tabindex="0">
           <hbox class="view-header global-warning-container" align="center">
             <!-- global warnings -->
             <hbox class="global-warning" flex="1">
@@ -345,7 +345,7 @@
         </vbox>
 
         <!-- list view -->
-        <vbox id="list-view" flex="1" class="view-pane" align="stretch">
+        <vbox id="list-view" flex="1" class="view-pane" align="stretch" tabindex="0">
           <hbox class="view-header global-warning-container">
             <!-- global warnings -->
             <hbox class="global-warning" flex="1">
@@ -401,7 +401,7 @@
         </vbox>
 
         <!-- updates view -->
-        <vbox id="updates-view" flex="1" class="view-pane">
+        <vbox id="updates-view" flex="1" class="view-pane" tabindex="0">
           <hbox class="view-header global-warning-container" align="center">
             <!-- global warnings -->
             <hbox class="global-warning" flex="1">
@@ -457,7 +457,7 @@
         </vbox>
 
         <!-- detail view -->
-        <scrollbox id="detail-view" flex="1" class="view-pane addon-view" orient="vertical">
+        <scrollbox id="detail-view" flex="1" class="view-pane addon-view" orient="vertical" tabindex="0">
           <!-- global warnings -->
           <hbox class="global-warning-container global-warning">
             <hbox class="global-warning-safemode" flex="1" align="center"

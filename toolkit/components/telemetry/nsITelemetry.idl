@@ -158,6 +158,7 @@ interface nsITelemetry : nsISupports
    * The returned object has the following functions:
    *   add(int) - Adds an int value to the appropriate bucket
    *   snapshot() - Returns a snapshot of the histogram with the same data fields as in histogramSnapshots()
+   *   clear() - Zeros out the histogram's buckets and sum
    */
   [implicit_jscontext]
   jsval newHistogram(in ACString name, in PRUint32 min, in PRUint32 max, in PRUint32 bucket_count, in unsigned long histogram_type);

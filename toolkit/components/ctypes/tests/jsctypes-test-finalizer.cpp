@@ -171,6 +171,32 @@ test_finalizer_cmp_ptr_t(void *a, void *b)
   return a==b;
 }
 
+// Resource type: int32_t*
+
+// Acquire resource i
+int32_t*
+test_finalizer_acq_int32_ptr_t(size_t i)
+{
+  gFinalizerTestResources[i] = 1;
+  return (int32_t*)&gFinalizerTestResources[i];
+}
+
+// Release resource i
+void
+test_finalizer_rel_int32_ptr_t(int32_t *i)
+{
+  -- (*i);
+  if (*i < 0) {
+    MOZ_NOT_REACHED("Assertion failed");
+  }
+}
+
+bool
+test_finalizer_cmp_int32_ptr_t(int32_t *a, int32_t *b)
+{
+  return a==b;
+}
+
 // Resource type: NULL
 
 // Acquire resource i

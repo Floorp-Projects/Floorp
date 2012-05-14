@@ -252,6 +252,16 @@ SimpleTest.isnot = function (a, b, name) {
     SimpleTest.ok(pass, name, diag);
 };
 
+/**
+ * Roughly equivalent to ok(a===b, name)
+**/
+SimpleTest.ise = function (a, b, name) {
+    var pass = (a === b);
+    var diag = pass ? repr(a) + " should strictly equal " + repr(b)
+                    : "got " + repr(a) + ", strictly expected " + repr(b)
+    SimpleTest.ok(pass, name, diag);
+};
+
 //  --------------- Test.Builder/Test.More todo() -----------------
 
 SimpleTest.todo = function(condition, name, diag) {
@@ -961,6 +971,7 @@ SimpleTest.isa = function (object, clas) {
 var ok = SimpleTest.ok;
 var is = SimpleTest.is;
 var isnot = SimpleTest.isnot;
+var ise = SimpleTest.ise;
 var todo = SimpleTest.todo;
 var todo_is = SimpleTest.todo_is;
 var todo_isnot = SimpleTest.todo_isnot;

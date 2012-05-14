@@ -42,21 +42,24 @@
   padding: 4px 3px;
   box-shadow: 0 1px 0 0 hsla(210, 16%, 76%, .2) inset;
   background: -moz-linear-gradient(top, hsl(210,11%,36%), hsl(210,11%,18%));
+  color: hsl(210,30%,85%);
 }
 
+.devtools-menulist,
 .devtools-toolbarbutton {
   -moz-appearance: none;
   min-width: 78px;
   min-height: 22px;
-  color: hsl(210,30%,85%);
   text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
   border: 1px solid hsla(210,8%,5%,.45);
   border-radius: 3px;
   background: -moz-linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
   box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
   margin: 0 3px;
+  color: inherit;
 }
 
+.devtools-menulist:-moz-focusring,
 .devtools-toolbarbutton:-moz-focusring {
   outline: 1px dotted hsla(210,30%,85%,0.4);
   outline-offset: -4px;
@@ -72,6 +75,7 @@
   box-shadow: 0 0 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
 }
 
+.devtools-menulist[open=true],
 .devtools-toolbarbutton[checked] {
   color: hsl(208,100%,60%) !important;
   border-color: hsla(210,8%,5%,.6) !important;
@@ -87,6 +91,18 @@
   background-color: hsla(210,8%,5%,.2) !important;
 }
 
+.devtools-menulist > .menulist-label-box {
+  text-align: center;
+}
+
+.devtools-menulist > .menulist-dropmarker {
+  -moz-appearance: none;
+  display: -moz-box;
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
+  -moz-box-align: center;
+  min-width: 16px;
+}
+
 /* Search input */
 
 .devtools-searchinput {
@@ -97,7 +113,7 @@
   background-color: transparent;
   background-image: url(magnifying-glass.png), -moz-linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
   background-repeat: no-repeat;
-  background-position: 4px 3px, top left, top left;
+  background-position: 4px center, top left, top left;
   padding-top: 0;
   padding-bottom: 0;
   -moz-padding-start: 18px;
@@ -105,7 +121,7 @@
   box-shadow: 0 1px 1px hsla(210,8%,5%,.3) inset,
               0 0 0 1px hsla(210,16%,76%,.1) inset,
               0 1px 0 hsla(210,16%,76%,.15);
-  color: hsl(210,30%,85%);
+  color: inherit;
 }
 
 .devtools-searchinput:-moz-locale-dir(rtl) {
@@ -118,4 +134,30 @@
 
 .devtools-searchinput > .textbox-input-box > .textbox-input:-moz-placeholder {
   color: hsl(208,10%,66%);
+}
+
+/* Close button */
+
+.devtools-closebutton {
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.devtools-closebutton > .toolbarbutton-icon {
+  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
+     use evil CSS to give the impression of smaller content */
+  margin: -4px;
+}
+
+/* Splitter */
+
+.devtools-horizontal-splitter {
+  -moz-appearance: none;
+  border-top: 1px solid black;
+  border-bottom-width: 0;
+  min-height: 3px;
+  height: 3px;
+  margin-bottom: -3px;
+  position: relative;
 }

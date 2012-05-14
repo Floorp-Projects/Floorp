@@ -24,10 +24,11 @@
 == extend-3i.html extend-3-ref.html
 == extend-4a.html extend-4-ref.html
 == extend-4b.html extend-4-ref.html
-fails-if(Android) != pseudo-element-of-native-anonymous.html pseudo-element-of-native-anonymous-ref.html # bug 676641
+# these 3 random-if(Android) are a difference of Native & Xul, see bug 739714
+random-if(Android) != pseudo-element-of-native-anonymous.html pseudo-element-of-native-anonymous-ref.html # bug 676641
 # These tests uses Highlight and HighlightText color keywords, they are not same as text selection color on Mac.
-fails-if(cocoaWidget) == non-themed-widget.html non-themed-widget-ref.html
-fails-if(cocoaWidget) == themed-widget.html themed-widget-ref.html
+random-if(Android) fails-if(cocoaWidget) == non-themed-widget.html non-themed-widget-ref.html
+random-if(Android) fails-if(cocoaWidget) == themed-widget.html themed-widget-ref.html
 == addrange-1.html addrange-ref.html
 == addrange-2.html addrange-ref.html
 == splitText-normalize.html splitText-normalize-ref.html

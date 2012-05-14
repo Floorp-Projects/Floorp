@@ -1,0 +1,223 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<script type="application/javascript"
+        src="chrome://browser/content/preferences/in-content/privacy.js"/>
+
+<preferences id="privacyPreferences">
+
+  <!-- Tracking -->
+  <preference id="privacy.donottrackheader.enabled"
+              name="privacy.donottrackheader.enabled"
+              type="bool"/>
+
+  <!-- XXX button prefs -->
+  <preference id="pref.privacy.disable_button.cookie_exceptions"
+              name="pref.privacy.disable_button.cookie_exceptions"
+              type="bool"/>
+  <preference id="pref.privacy.disable_button.view_cookies"
+              name="pref.privacy.disable_button.view_cookies"
+              type="bool"/>
+
+  <!-- Location Bar -->
+  <preference id="browser.urlbar.autocomplete.enabled"
+              name="browser.urlbar.autocomplete.enabled"
+              type="bool"/>
+  <preference id="browser.urlbar.default.behavior"
+              name="browser.urlbar.default.behavior"
+              type="int"
+              onchange="document.getElementById('browser.urlbar.autocomplete.enabled').updateElements();"/>
+
+  <!-- History -->
+  <preference id="places.history.enabled"
+              name="places.history.enabled"
+              type="bool"/>
+  <preference id="browser.formfill.enable"
+              name="browser.formfill.enable"
+              type="bool"/>
+  <!-- Cookies -->
+  <preference id="network.cookie.cookieBehavior"
+              name="network.cookie.cookieBehavior"
+              type="int"/>
+  <preference id="network.cookie.lifetimePolicy"
+              name="network.cookie.lifetimePolicy"
+              type="int"/>
+  <preference id="network.cookie.blockFutureCookies"
+              name="network.cookie.blockFutureCookies"
+              type="bool"/>
+  <!-- Clear Private Data -->
+  <preference id="privacy.sanitize.sanitizeOnShutdown"
+              name="privacy.sanitize.sanitizeOnShutdown"
+              onchange="gPrivacyPane._updateSanitizeSettingsButton();"
+              type="bool"/>
+  <preference id="privacy.sanitize.timeSpan"
+              name="privacy.sanitize.timeSpan"
+              type="int"/>
+  <!-- Private Browsing -->
+  <preference id="browser.privatebrowsing.autostart"
+              name="browser.privatebrowsing.autostart"
+              onchange="gPrivacyPane.updatePrivacyMicroControls();"
+              type="bool"/>
+  <preference id="browser.privatebrowsing.keep_current_session"
+              name="browser.privatebrowsing.keep_current_session"
+              instantApply="true"
+              type="bool"/>
+
+</preferences>
+
+<hbox class="heading" data-category="panePrivacy" hidden="true">
+  <image class="preference-icon" type="privacy"/>
+  <html:h1>&panePrivacy.title;</html:h1>
+</hbox>
+
+<!-- Tracking -->
+<groupbox id="trackingGroup" data-category="panePrivacy" hidden="true">
+  <caption label="&tracking.label;"/>
+
+  <checkbox id="privacyDoNotTrackPrefs"
+            label="&doNotTrack.label;"
+            accesskey="&doNotTrack.accesskey;"
+            preference="privacy.donottrackheader.enabled"/>
+</groupbox>
+
+<!-- History -->
+<groupbox id="historyGroup" data-category="panePrivacy" hidden="true">
+  <caption label="&history.label;"/>
+  <hbox align="center">
+    <label id="historyModeLabel"
+           control="historyMode"
+           accesskey="&historyHeader.pre.accesskey;">&historyHeader.pre.label;
+    </label>
+    <menulist id="historyMode"
+              oncommand="gPrivacyPane.updateHistoryModePane();
+                        gPrivacyPane.updateHistoryModePrefs();
+                        gPrivacyPane.updatePrivacyMicroControls();">
+      <menupopup>
+        <menuitem label="&historyHeader.remember.label;" value="remember"/>
+        <menuitem label="&historyHeader.dontremember.label;" value="dontremember"/>
+        <menuitem label="&historyHeader.custom.label;" value="custom"/>
+      </menupopup>
+    </menulist>
+    <label>&historyHeader.post.label;</label>
+  </hbox>
+  <deck id="historyPane">
+    <vbox align="center" id="historyRememberPane">
+      <hbox align="center" flex="1">
+        <spacer flex="1" class="indent"/>
+        <vbox flex="2">
+          <description>&rememberDescription.label;</description>
+          <separator/>
+          <description>&rememberActions.pre.label;<html:a
+          class="inline-link" href="#"
+          onclick="gPrivacyPane.clearPrivateDataNow(false); return false;"
+          >&rememberActions.clearHistory.label;</html:a>&rememberActions.middle.label;<html:a
+          class="inline-link" href="#"
+          onclick="gPrivacyPane.showCookies(); return false;"
+          >&rememberActions.removeCookies.label;</html:a>&rememberActions.post.label;</description>
+        </vbox>
+        <spacer flex="1" class="indent"/>
+      </hbox>
+    </vbox>
+    <vbox align="center" id="historyDontRememberPane">
+      <hbox align="center" flex="1">
+        <spacer flex="1" class="indent"/>
+        <vbox flex="2">
+          <description>&dontrememberDescription.label;</description>
+          <separator/>
+          <description>&dontrememberActions.pre.label;<html:a
+          class="inline-link" href="#"
+          onclick="gPrivacyPane.clearPrivateDataNow(true); return false;"
+          >&dontrememberActions.clearHistory.label;</html:a>&dontrememberActions.post.label;</description>
+        </vbox>
+        <spacer flex="1" class="indent"/>
+      </hbox>
+    </vbox>
+    <vbox id="historyCustomPane">
+      <separator class="thin"/>
+      <vbox class="indent">
+        <checkbox id="privateBrowsingAutoStart"
+                  label="&privateBrowsingPermanent2.label;"
+                  accesskey="&privateBrowsingPermanent2.accesskey;"
+                  preference="browser.privatebrowsing.autostart"/>
+
+        <vbox class="indent">
+          <checkbox id="rememberHistory"
+                    label="&rememberHistory2.label;"
+                    accesskey="&rememberHistory2.accesskey;"
+                    preference="places.history.enabled"/>
+          <checkbox id="rememberForms"
+                    label="&rememberSearchForm.label;"
+                    accesskey="&rememberSearchForm.accesskey;"
+                    preference="browser.formfill.enable"/>
+
+          <hbox id="cookiesBox">
+            <checkbox id="acceptCookies" label="&acceptCookies.label;" flex="1"
+                      preference="network.cookie.cookieBehavior"
+                      accesskey="&acceptCookies.accesskey;"
+                      onsyncfrompreference="return gPrivacyPane.readAcceptCookies();"
+                      onsynctopreference="return gPrivacyPane.writeAcceptCookies();"/>
+            <button id="cookieExceptions" oncommand="gPrivacyPane.showCookieExceptions();"
+                    label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
+                    preference="pref.privacy.disable_button.cookie_exceptions"/>
+          </hbox>
+          <checkbox id="acceptThirdParty" label="&acceptThirdParty.label;" class="indent"
+                    preference="network.cookie.cookieBehavior"
+                    accesskey="&acceptThirdParty.accesskey;"
+                    onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
+                    onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();"/>
+          <hbox id="keepRow" class="indent">
+            <label id="keepUntil"
+                   control="keepCookiesUntil"
+                   accesskey="&keepUntil.accesskey;">&keepUntil.label;</label>
+            <menulist id="keepCookiesUntil"
+                      preference="network.cookie.lifetimePolicy">
+              <menupopup>
+                <menuitem label="&expire.label;" value="0"/>
+                <menuitem label="&close.label;" value="2"/>
+                <menuitem label="&askEachTime.label;" value="1"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+          <hbox flex="1">
+            <button id="showCookiesButton"
+                    label="&showCookies.label;" accesskey="&showCookies.accesskey;"
+                    oncommand="gPrivacyPane.showCookies();"
+                    preference="pref.privacy.disable_button.view_cookies"/>
+          </hbox>
+          <hbox id="clearDataBox" align="center">
+            <checkbox id="alwaysClear" flex="1"
+                      preference="privacy.sanitize.sanitizeOnShutdown"
+                      label="&clearOnClose.label;"
+                      accesskey="&clearOnClose.accesskey;"/>
+            <button id="clearDataSettings" label="&clearOnCloseSettings.label;"
+                    accesskey="&clearOnCloseSettings.accesskey;"
+                    oncommand="gPrivacyPane.showClearPrivateDataSettings();"/>
+          </hbox>
+        </vbox>
+      </vbox>
+    </vbox>
+  </deck>
+</groupbox>
+
+<!-- Location Bar -->
+<groupbox id="locationBarGroup" data-category="panePrivacy" hidden="true">
+  <caption label="&locationBar.label;"/>
+  <hbox align="center">
+    <label id="locationBarSuggestionLabel"
+           control="locationBarSuggestion"
+           accesskey="&locbar.pre.accessKey;">&locbar.pre.label;</label>
+    <menulist id="locationBarSuggestion"
+              preference="browser.urlbar.autocomplete.enabled"
+              onsyncfrompreference="return gPrivacyPane.readSuggestionPref();"
+              onsynctopreference="return gPrivacyPane.writeSuggestionPref();">
+      <menupopup>
+        <menuitem label="&locbar.both.label;" value="0"/>
+        <menuitem label="&locbar.history.label;" value="1"/>
+        <menuitem label="&locbar.bookmarks.label;" value="2"/>
+        <menuitem label="&locbar.nothing.label;" value="-1"/>
+      </menupopup>
+    </menulist>
+    <label>&locbar.post.label;</label>
+  </hbox>
+</groupbox>

@@ -21,25 +21,19 @@ function tabLoaded(aEvent) {
   browser.removeEventListener("load", tabLoaded, true);
   openConsole();
 
-  browser.addEventListener("load", contentLoaded, true);
-  content.location.reload();
-}
-
-function contentLoaded(aEvent) {
-  browser.removeEventListener("load", contentLoaded, true);
-
   let button = content.document.querySelector("button");
-  expectUncaughtException();
-  EventUtils.sendMouseEvent({ type: "click" }, button, content);
-  executeSoon(buttonClicked);
-}
-
-function buttonClicked() {
   let outputNode = HUDService.getHudByWindow(content).outputNode;
 
-  let msg = "the error from the external script was logged";
-  testLogEntry(outputNode, "bogus", msg);
+  expectUncaughtException();
+  EventUtils.sendMouseEvent({ type: "click" }, button, content);
 
-  finishTest();
+  waitForSuccess({
+    name: "external script error message",
+    validatorFn: function()
+    {
+      return outputNode.textContent.indexOf("bogus is not defined") > -1;
+    },
+    successFn: finishTest,
+    failureFn: finishTest,
+  });
 }
-

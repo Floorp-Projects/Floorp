@@ -284,6 +284,7 @@ nsGenericHTMLFrameElement::GetReallyIsBrowser(bool *aOut)
   }
 
   // Fail if the node principal isn't trusted.
+  // TODO: check properly for mozApps rights when mozApps will be less hacky.
   nsIPrincipal *principal = NodePrincipal();
   nsCOMPtr<nsIURI> principalURI;
   principal->GetURI(getter_AddRefs(principalURI));

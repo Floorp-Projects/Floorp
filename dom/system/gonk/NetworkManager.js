@@ -70,7 +70,7 @@ NetworkManager.prototype = {
     debug("Network '" + network.name + "' changed state to " + network.state);
     switch (network.state) {
       case Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED:
-      case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTING:
+      case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
         this.setAndConfigureActive();
         break;
     }
@@ -142,6 +142,7 @@ NetworkManager.prototype = {
    */
   setAndConfigureActive: function setAndConfigureActive() {
     debug("Evaluating whether active network needs to be changed.");
+    let oldActive = this.active;
 
     if (this._overriddenActive) {
       debug("We have an override for the active network: " +
@@ -149,19 +150,20 @@ NetworkManager.prototype = {
       // The override was just set, so reconfigure the network.
       if (this.active != this._overriddenActive) {
         this.active = this._overriddenActive;
-        this.setDefaultRouteAndDNS();
+        this.setDefaultRouteAndDNS(oldActive);
       }
       return;
     }
 
     // If the active network is already of the preferred type, nothing to do.
-    if (this.active && this.active.type == this._preferredNetworkType) {
+    if (this.active &&
+        this.active.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED &&
+        this.active.type == this._preferredNetworkType) {
       debug("Active network is already our preferred type. Not doing anything.");
       return;
     }
 
     // Find a suitable network interface to activate.
-    let oldActive = this.active;
     this.active = null;
     for each (let network in this.networkInterfaces) {
       if (network.state != Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED) {
@@ -174,19 +176,18 @@ NetworkManager.prototype = {
       }
     }
     if (this.active && (oldActive != this.active)) {
-      this.setDefaultRouteAndDNS();
+      this.setDefaultRouteAndDNS(oldActive);
     }
   },
 
-  setDefaultRouteAndDNS: function setDefaultRouteAndDNS() {
+  setDefaultRouteAndDNS: function setDefaultRouteAndDNS(oldInterface) {
     debug("Going to change route and DNS to " + this.active.name);
-    if (this.active.dhcp) {
-      this.worker.postMessage({cmd: "runDHCPAndSetDefaultRouteAndDNS",
-                               ifname: this.active.name});
-    } else {
-      this.worker.postMessage({cmd: "setDefaultRouteAndDNS",
-                               ifname: this.active.name});
-    }
+    let options = {
+      cmd: this.active.dhcp ? "runDHCPAndSetDefaultRouteAndDNS" : "setDefaultRouteAndDNS",
+      ifname: this.active.name,
+      oldIfname: oldInterface ? oldInterface.name : null
+    };
+    this.worker.postMessage(options);
   },
 
 };

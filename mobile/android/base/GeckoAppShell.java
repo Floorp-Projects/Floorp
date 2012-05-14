@@ -73,7 +73,6 @@ import android.webkit.MimeTypeMap;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.provider.Settings;
-import android.view.accessibility.AccessibilityManager;
 import android.opengl.GLES20;
 
 import android.util.*;
@@ -232,8 +231,6 @@ public class GeckoAppShell
     public static native void scheduleComposite();
     public static native void schedulePauseComposition();
     public static native void scheduleResumeComposition(int width, int height);
-
-    public static native void unlockDatabaseFile(String databasePath);
 
     public static native SurfaceBits getSurfaceBits(Surface surface);
 
@@ -1842,16 +1839,6 @@ public class GeckoAppShell
                     Log.i(LOGTAG, "showing prompt ",  e);
                 }
                 return promptServiceResult;
-            }
-
-            if (type.equals("Accessibility:IsEnabled")) {
-                JSONObject ret = new JSONObject();
-                AccessibilityManager accessibilityManager =
-                    (AccessibilityManager) GeckoApp.mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
-                try {
-                    ret.put("enabled", accessibilityManager.isEnabled());
-                } catch (Exception ex) { }
-                return ret.toString();
             }
 
             CopyOnWriteArrayList<GeckoEventListener> listeners;

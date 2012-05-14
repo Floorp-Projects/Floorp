@@ -131,15 +131,20 @@ USING_INDEXEDDB_NAMESPACE
 
 const int MaxArrayCollapse = 3;
 
+const int MaxRecursionDepth = 256;
+
 nsresult
-Key::EncodeJSVal(JSContext* aCx, const jsval aVal, PRUint8 aTypeOffset)
+Key::EncodeJSValInternal(JSContext* aCx, const jsval aVal,
+                         PRUint8 aTypeOffset, PRUint16 aRecursionDepth)
 {
+  NS_ENSURE_TRUE(aRecursionDepth < MaxRecursionDepth, NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+
   PR_STATIC_ASSERT(eMaxType * MaxArrayCollapse < 256);
 
   if (JSVAL_IS_STRING(aVal)) {
     nsDependentJSString str;
     if (!str.init(aCx, aVal)) {
-      return NS_ERROR_OUT_OF_MEMORY;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
     EncodeString(str, aTypeOffset);
     return NS_OK;
@@ -183,7 +188,8 @@ Key::EncodeJSVal(JSContext* aCx, const jsval aVal, PRUint8 aTypeOffset)
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
 
-        nsresult rv = EncodeJSVal(aCx, val, aTypeOffset);
+        nsresult rv = EncodeJSValInternal(aCx, val, aTypeOffset,
+                                          aRecursionDepth + 1);
         NS_ENSURE_SUCCESS(rv, rv);
 
         aTypeOffset = 0;
@@ -205,9 +211,12 @@ Key::EncodeJSVal(JSContext* aCx, const jsval aVal, PRUint8 aTypeOffset)
 
 // static
 nsresult
-Key::DecodeJSVal(const unsigned char*& aPos, const unsigned char* aEnd,
-                 JSContext* aCx, PRUint8 aTypeOffset, jsval* aVal)
+Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
+                         JSContext* aCx, PRUint8 aTypeOffset, jsval* aVal,
+                         PRUint16 aRecursionDepth)
 {
+  NS_ENSURE_TRUE(aRecursionDepth < MaxRecursionDepth, NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+
   if (*aPos - aTypeOffset >= eArray) {
     JSObject* array = JS_NewArrayObject(aCx, 0, nsnull);
     if (!array) {
@@ -225,7 +234,8 @@ Key::DecodeJSVal(const unsigned char*& aPos, const unsigned char* aEnd,
     uint32_t index = 0;
     while (aPos < aEnd && *aPos - aTypeOffset != eTerminator) {
       jsval val;
-      nsresult rv = DecodeJSVal(aPos, aEnd, aCx, aTypeOffset, &val);
+      nsresult rv = DecodeJSValInternal(aPos, aEnd, aCx, aTypeOffset,
+                                        &val, aRecursionDepth + 1);
       NS_ENSURE_SUCCESS(rv, rv);
 
       aTypeOffset = 0;
@@ -268,7 +278,6 @@ Key::DecodeJSVal(const unsigned char*& aPos, const unsigned char* aEnd,
 
   return NS_OK;
 }
-
 
 #define ONE_BYTE_LIMIT 0x7E
 #define TWO_BYTE_LIMIT (0x3FFF+0x7F)

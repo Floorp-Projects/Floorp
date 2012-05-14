@@ -58,6 +58,7 @@ var c5 = {
 };
 
 var adr1 = {
+  type: "work",
   streetAddress: "street 1",
   locality: "locality 1",
   region: "region 1",
@@ -66,6 +67,7 @@ var adr1 = {
 };
 
 var adr2 = {
+  type: "home, fax",
   streetAddress: "street2",
   locality: "locality2",
   region: "region2",
@@ -78,7 +80,7 @@ var properties1 = {
   familyName: ["TestFamilyName","Wagner"],
   givenName: ["Test1","Test2"],
   nickname: "nicktest",
-  tel: ["123456", "+9-876-5432"],
+  tel: [{type: "work", number: "123456"} , {type: "home", number: "+9-876-5432"}],
   adr: adr1
 };
 
@@ -90,11 +92,12 @@ var properties2 = {
   honorificSuffix: "dummyHonorificSuffix",
   additionalName: "dummyadditionalName",
   nickname: "dummyNickname",
-  tel: ["123456789", "234567890"],
+  tel: [{type: "test", number: "123456789"},{type: "home", number: "234567890"}],
   email: ["a@b.c", "b@c.d"],
   adr: [adr1, adr2],
   impp: ["im1", "im2"],
   org: ["org1", "org2"],
+  jobTitle: ["boss", "superboss"],
   bday: new Date("1980, 12, 01"),
   note: "test note",
   photo: ["pic1", "pic2"],
@@ -137,11 +140,17 @@ function checkStr(str1, str2, msg) {
 }
 
 function checkAddress(adr1, adr2) {
+  checkStr(adr1.type, adr2.type, "Same type");
   checkStr(adr1.streetAddress, adr2.streetAddress, "Same streetAddress");
   checkStr(adr1.locality, adr2.locality, "Same locality");
   checkStr(adr1.region, adr2.region, "Same region");
   checkStr(adr1.postalCode, adr2.postalCode, "Same postalCode");
   checkStr(adr1.countryName, adr2.countryName, "Same countryName");
+}
+
+function checkTel(tel1, tel2) {
+  checkStr(tel1.type, tel2.type, "Same type");
+  checkStr(tel1.number, tel2.number, "Same number");
 }
 
 function checkContacts(contact1, contact2) {
@@ -156,6 +165,8 @@ function checkContacts(contact1, contact2) {
   checkStr(contact1.photo, contact2.photo, "Same photo");
   checkStr(contact1.url, contact2.url, "Same url");
   checkStr(contact1.category, contact2.category, "Same category");
+  checkStr(contact1.org, contact2.org, "Same org");
+  checkStr(contact1.jobTitle, contact2.jobTitle, "Same jobTitle");
   is(contact1.bday ? contact1.bday.valueOf() : null, contact2.bday ? contact2.bday.valueOf() : null, "Same birthday");
   checkStr(contact1.note, contact2.note, "Same note");
   checkStr(contact1.impp, contact2.impp, "Same impp");
@@ -165,6 +176,8 @@ function checkContacts(contact1, contact2) {
 
   for (var i in contact1.adr)
     checkAddress(contact1.adr[i], contact2.adr[i]);
+  for (var i in contact1.tel)
+    checkTel(contact1.tel[i], contact2.tel[i]);
 }
 
 var req;
@@ -388,7 +401,7 @@ var steps = [
     ok(true, "Retrieving by substring tel1");
     var options = {filterBy: ["tel"],
                    filterOp: "contains",
-                   filterValue: properties1.tel[1].substring(1,5)};
+                   filterValue: properties1.tel[1].number.substring(1,5)};
     mozContacts.oncontactchange = null;
     req = mozContacts.find(options);
     req.onsuccess = function () {
@@ -724,7 +737,7 @@ var steps = [
     ok(true, "Searching contacts by tel");
     var options = {filterBy: ["tel"],
                    filterOp: "contains",
-                   filterValue: properties2.tel[0].substring(0, 7)};
+                   filterValue: properties2.tel[0].number.substring(0, 7)};
     req = mozContacts.find(options);
     req.onsuccess = function () {
       ok(req.result.length == 1, "Found exactly 1 contact.");
@@ -890,7 +903,7 @@ var steps = [
   function () {
     ok(true, "Search with redundant fields should only return 1 contact");
     createResult1 = new mozContact();
-    createResult1.init({name: "XXX", nickname: "XXX", email: "XXX", tel: "XXX"});
+    createResult1.init({name: "XXX", nickname: "XXX", email: "XXX", tel: {number: "XXX"}});
     req = mozContacts.save(createResult1);
     req.onsuccess = function() {
       var options = {filterBy: [],
@@ -1018,6 +1031,73 @@ var steps = [
       checkContacts(req.result[4], c4);
       next();
     };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Don't allow to add custom fields");
+    createResult1 = new mozContact();
+    createResult1.init({name: "customTest", yyy: "XXX"});
+    req = mozContacts.save(createResult1);
+    req.onsuccess = function() {
+      var options = {filterBy: [],
+                     filterOp: "equals",
+                     filterValue: "customTest"};
+      var req2 = mozContacts.find(options);
+      req2.onsuccess = function() {
+        ok(req2.result.length == 1, "1 Entry");
+        checkStr(req2.result.name, "customTest", "same name");
+        ok(req2.result.yyy === undefined, "custom property undefined");
+        next();
+      }
+      req2.onerror = onFailure;
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding a new contact with properties2");
+    createResult2 = new mozContact();
+    createResult2.init(properties2);
+    req = mozContacts.save(createResult2);
+    req.onsuccess = function () {
+      ok(createResult2.id, "The contact now has an ID.");
+      sample_id2 = createResult2.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test category search with contains");
+    var options = {filterBy: ["category"],
+                   filterOp: "contains",
+                   filterValue: properties2.category[0]};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "1 Entry.");
+      checkContacts(req.result[0], createResult2);
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test category search with equals");
+    var options = {filterBy: ["category"],
+                   filterOp: "equals",
+                   filterValue: properties2.category[0]};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "1 Entry.");
+      checkContacts(req.result[0], createResult2);
+      next();
+    }
     req.onerror = onFailure;
   },
   function () {

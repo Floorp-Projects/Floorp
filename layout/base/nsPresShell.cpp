@@ -1071,73 +1071,6 @@ PresShell::Destroy()
 }
 
 void
-PresShell::FreeFrame(nsQueryFrame::FrameIID aID, void* aPtr)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount--;
-#endif
-  if (PRESARENA_MUST_FREE_DURING_DESTROY || !mIsDestroying)
-    mFrameArena.FreeByFrameID(aID, aPtr);
-}
-
-void*
-PresShell::AllocateFrame(nsQueryFrame::FrameIID aID, size_t aSize)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount++;
-#endif
-  void* result = mFrameArena.AllocateByFrameID(aID, aSize);
-
-  if (result) {
-    memset(result, 0, aSize);
-  }
-  return result;
-}
-
-void*
-PresShell::AllocateByObjectID(nsPresArena::ObjectID aID, size_t aSize)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount++;
-#endif
-  void* result = mFrameArena.AllocateByObjectID(aID, aSize);
-
-  if (result) {
-    memset(result, 0, aSize);
-  }
-  return result;
-}
-
-void
-PresShell::FreeByObjectID(nsPresArena::ObjectID aID, void* aPtr)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount--;
-#endif
-  if (PRESARENA_MUST_FREE_DURING_DESTROY || !mIsDestroying)
-    mFrameArena.FreeByObjectID(aID, aPtr);
-}
-
-void
-PresShell::FreeMisc(size_t aSize, void* aPtr)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount--;
-#endif
-  if (PRESARENA_MUST_FREE_DURING_DESTROY || !mIsDestroying)
-    mFrameArena.FreeBySize(aSize, aPtr);
-}
-
-void*
-PresShell::AllocateMisc(size_t aSize)
-{
-#ifdef DEBUG
-  mPresArenaAllocCount++;
-#endif
-  return mFrameArena.AllocateBySize(aSize);
-}
-
-void
 nsIPresShell::SetAuthorStyleDisabled(bool aStyleDisabled)
 {
   if (aStyleDisabled != mStyleSet->GetAuthorStyleDisabled()) {
@@ -3118,8 +3051,12 @@ ComputeWhereToScroll(PRInt16 aWhereToScroll,
                      nscoord aRectMin,
                      nscoord aRectMax,
                      nscoord aViewMin,
-                     nscoord aViewMax) {
+                     nscoord aViewMax,
+                     nscoord* aRangeMin,
+                     nscoord* aRangeMax) {
   nscoord resultCoord = aOriginalCoord;
+  // Allow the scroll operation to land anywhere that
+  // makes the whole rectangle visible.
   if (nsIPresShell::SCROLL_MINIMUM == aWhereToScroll) {
     if (aRectMin < aViewMin) {
       // Scroll up so the frame's top edge is visible
@@ -3138,6 +3075,10 @@ ComputeWhereToScroll(PRInt16 aWhereToScroll,
     resultCoord =  NSToCoordRound(frameAlignCoord - (aViewMax - aViewMin) * (
                                   aWhereToScroll / 100.0f));
   }
+  nscoord scrollPortLength = aViewMax - aViewMin;
+  // Force the scroll range to extend to include resultCoord.
+  *aRangeMin = NS_MIN(resultCoord, aRectMax - scrollPortLength);
+  *aRangeMax = NS_MAX(resultCoord, aRectMin);
   return resultCoord;
 }
 
@@ -3157,8 +3098,18 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
 {
   nsPoint scrollPt = aScrollFrame->GetScrollPosition();
   nsRect visibleRect(scrollPt, aScrollFrame->GetScrollPortRect().Size());
-  nsSize lineSize = aScrollFrame->GetLineScrollAmount();
+  nsSize lineSize;
+  // Don't call GetLineScrollAmount unless we actually need it. Not only
+  // does this save time, but it's not safe to call GetLineScrollAmount
+  // during reflow (because it depends on font size inflation and doesn't
+  // use the in-reflow-safe font-size inflation path). If we did call it,
+  // it would assert and possible give the wrong result.
+  if (aVertical.mWhenToScroll == nsIPresShell::SCROLL_IF_NOT_VISIBLE ||
+      aHorizontal.mWhenToScroll == nsIPresShell::SCROLL_IF_NOT_VISIBLE) {
+    lineSize = aScrollFrame->GetLineScrollAmount();
+  }
   nsPresContext::ScrollbarStyles ss = aScrollFrame->GetScrollbarStyles();
+  nsRect allowedRange(scrollPt, nsSize(0, 0));
 
   if ((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
       ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
@@ -3169,12 +3120,15 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
                             aRect.YMost(),
                             visibleRect.y,
                             visibleRect.YMost())) {
+      nscoord maxHeight;
       scrollPt.y = ComputeWhereToScroll(aVertical.mWhereToScroll,
                                         scrollPt.y,
                                         aRect.y,
                                         aRect.YMost(),
                                         visibleRect.y,
-                                        visibleRect.YMost());
+                                        visibleRect.YMost(),
+                                        &allowedRange.y, &maxHeight);
+      allowedRange.height = maxHeight - allowedRange.y;
     }
   }
 
@@ -3187,16 +3141,19 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
                             aRect.XMost(),
                             visibleRect.x,
                             visibleRect.XMost())) {
+      nscoord maxWidth;
       scrollPt.x = ComputeWhereToScroll(aHorizontal.mWhereToScroll,
                                         scrollPt.x,
                                         aRect.x,
                                         aRect.XMost(),
                                         visibleRect.x,
-                                        visibleRect.XMost());
+                                        visibleRect.XMost(),
+                                        &allowedRange.x, &maxWidth);
+      allowedRange.width = maxWidth - allowedRange.x;
     }
   }
 
-  aScrollFrame->ScrollTo(scrollPt, nsIScrollableFrame::INSTANT);
+  aScrollFrame->ScrollTo(scrollPt, nsIScrollableFrame::INSTANT, &allowedRange);
 }
 
 nsresult
@@ -8976,7 +8933,8 @@ void
 PresShell::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                size_t *aArenasSize,
                                size_t *aStyleSetsSize,
-                               size_t *aTextRunsSize) const
+                               size_t *aTextRunsSize,
+                               size_t *aPresContextSize) const
 {
   *aArenasSize = aMallocSizeOf(this);
   *aArenasSize += mFrameArena.SizeOfExcludingThis(aMallocSizeOf);
@@ -8984,6 +8942,8 @@ PresShell::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
   *aStyleSetsSize = StyleSet()->SizeOfIncludingThis(aMallocSizeOf);
 
   *aTextRunsSize = SizeOfTextRuns(aMallocSizeOf);
+
+  *aPresContextSize = mPresContext->SizeOfIncludingThis(aMallocSizeOf);
 }
 
 size_t

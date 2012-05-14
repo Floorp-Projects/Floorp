@@ -43,16 +43,8 @@
  * Debugger content
  */
 
-#dbg-content > * > .vbox {
+.dbg-default {
   cursor: default;
-}
-
-/**
- * Debugger statusbar
- */
-
-#dbg-statusbar {
-  -moz-appearance: statusbar;
 }
 
 /**
@@ -172,20 +164,6 @@
 /**
  * Display helpers
  */
-
-.hbox {
-  display: -moz-box;
-  -moz-box-orient: horizontal;
-}
-
-.vbox {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-}
-
-.flex {
-  -moz-box-flex: 1;
-}
 
 .unselectable {
   -moz-user-select: -moz-none;

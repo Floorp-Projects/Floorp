@@ -48,6 +48,24 @@ xpcAccessibleTable::GetRowCount(PRInt32* aRowCount)
 }
 
 nsresult
+xpcAccessibleTable::GetCellIndexAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
+                                   PRInt32* aCellIndex)
+{
+  NS_ENSURE_ARG_POINTER(aCellIndex);
+  *aCellIndex = -1;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aRowIndex < 0 || aRowIndex >= mTable->RowCount() ||
+      aColumnIndex < 0 || aColumnIndex >= mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  *aCellIndex = mTable->CellIndexAt(aRowIndex, aColumnIndex);
+  return NS_OK;
+}
+
+nsresult
 xpcAccessibleTable::GetSummary(nsAString& aSummary)
 {
   if (!mTable)

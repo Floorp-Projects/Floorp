@@ -1,0 +1,165 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<preferences id="contentPreferences">
+
+  <!-- Popups, images, and JavaScript -->
+  <preference id="dom.disable_open_during_load"
+              name="dom.disable_open_during_load"
+              type="bool"/>
+  <preference id="permissions.default.image"
+              name="permissions.default.image"
+              type="int"/>
+  <preference id="javascript.enabled"
+              name="javascript.enabled"
+              type="bool"/>
+  <preference id="pref.advanced.images.disable_button.view_image"
+              name="pref.advanced.images.disable_button.view_image"
+              type="bool"/>
+  <preference id="pref.advanced.javascript.disable_button.advanced"
+              name="pref.advanced.javascript.disable_button.advanced"
+              type="bool"/>
+
+  <!-- Fonts -->
+  <preference id="font.language.group"
+              name="font.language.group"
+              type="wstring"
+              onchange="gContentPane._rebuildFonts();"/>
+</preferences>
+
+<script type="application/javascript" 
+        src="chrome://mozapps/content/preferences/fontbuilder.js"/>
+<script type="application/javascript" 
+        src="chrome://browser/content/preferences/in-content/content.js"/>
+
+<hbox class="heading" data-category="paneContent" hidden="true">
+  <image class="preference-icon" type="content"/>
+  <html:h1>&paneContent.title;</html:h1>
+</hbox>
+
+<groupbox id="miscGroup" data-category="paneContent" hidden="true">
+  <grid id="contentGrid">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows id="contentRows-1">
+      <row id="popupPolicyRow">
+        <vbox align="start">
+          <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
+                    label="&blockPopups.label;" accesskey="&blockPopups.accesskey;"
+                    onsyncfrompreference="return gContentPane.updateButtons('popupPolicyButton',
+                                                                        'dom.disable_open_during_load');"/>
+        </vbox>
+        <button id="popupPolicyButton" label="&popupExceptions.label;"
+                oncommand="gContentPane.showPopupExceptions();"
+                accesskey="&popupExceptions.accesskey;"/>
+      </row>
+      <row id="enableImagesRow">
+        <vbox align="start">
+          <checkbox id="loadImages"
+                    label="&loadImages.label;"
+                    accesskey="&loadImages.accesskey;"
+                    preference="permissions.default.image"
+                    onsyncfrompreference="return gContentPane.readLoadImages();"
+                    onsynctopreference="return gContentPane.writeLoadImages();"/>
+        </vbox>
+        <vbox>
+          <button label="&exceptions.label;"
+                  accesskey="&exceptions.accesskey;"
+                  oncommand="gContentPane.showImageExceptions();"
+                  preference="pref.advanced.images.disable_button.view_image"/>
+        </vbox>
+      </row>
+      <row id="enableJavaScriptRow">
+        <vbox align="start">
+          <checkbox id="enableJavaScript" preference="javascript.enabled"
+                    label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
+                    onsyncfrompreference="return gContentPane.updateButtons('advancedJSButton',
+                                                                        'javascript.enabled');"/>
+        </vbox>
+        <vbox>
+          <button id="advancedJSButton" label="&advancedJS.label;"
+                  accesskey="&advancedJS.accesskey;"
+                  oncommand="gContentPane.showAdvancedJS();"
+                  preference="pref.advanced.javascript.disable_button.advanced"/>
+        </vbox>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
+<!-- Fonts and Colors -->
+<groupbox id="fontsGroup" data-category="paneContent" hidden="true">
+  <caption label="&fontsAndColors.label;"/>
+
+  <grid id="fontsGrid">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows id="fontsRows">
+      <row id="fontRow">
+        <hbox align="center">
+          <label control="defaultFont" accesskey="&defaultFont.accesskey;">&defaultFont.label;</label>
+          <menulist id="defaultFont" />
+          <label control="defaultFontSize" accesskey="&defaultSize.accesskey;">&defaultSize.label;</label>
+          <menulist id="defaultFontSize">
+            <menupopup>
+              <menuitem value="9" label="9"/>
+              <menuitem value="10" label="10"/>
+              <menuitem value="11" label="11"/>
+              <menuitem value="12" label="12"/>
+              <menuitem value="13" label="13"/>
+              <menuitem value="14" label="14"/>
+              <menuitem value="15" label="15"/>
+              <menuitem value="16" label="16"/>
+              <menuitem value="17" label="17"/>
+              <menuitem value="18" label="18"/>
+              <menuitem value="20" label="20"/>
+              <menuitem value="22" label="22"/>
+              <menuitem value="24" label="24"/>
+              <menuitem value="26" label="26"/>
+              <menuitem value="28" label="28"/>
+              <menuitem value="30" label="30"/>
+              <menuitem value="32" label="32"/>
+              <menuitem value="34" label="34"/>
+              <menuitem value="36" label="36"/>
+              <menuitem value="40" label="40"/>
+              <menuitem value="44" label="44"/>
+              <menuitem value="48" label="48"/>
+              <menuitem value="56" label="56"/>
+              <menuitem value="64" label="64"/>
+              <menuitem value="72" label="72"/>
+            </menupopup>
+          </menulist>
+        </hbox>
+        <button id="advancedFonts" icon="select-font"
+                label="&advancedFonts.label;"
+                accesskey="&advancedFonts.accesskey;"
+                oncommand="gContentPane.configureFonts();"/>
+      </row>
+      <row id="colorsRow">
+        <hbox/>
+        <button id="colors" icon="select-color"
+                label="&colors.label;"
+                accesskey="&colors.accesskey;"
+                oncommand="gContentPane.configureColors();"/>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
+<!-- Languages -->
+<groupbox id="languagesGroup" data-category="paneContent" hidden="true">
+  <caption label="&languages.label;"/>
+
+  <hbox id="languagesBox" align="center">
+    <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
+    <button id="chooseLanguage"
+            label="&chooseButton.label;"
+            accesskey="&chooseButton.accesskey;"
+            oncommand="gContentPane.showLanguages();"/>
+  </hbox>
+</groupbox>

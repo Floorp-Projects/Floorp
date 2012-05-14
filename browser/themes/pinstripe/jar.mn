@@ -28,6 +28,7 @@ browser.jar:
   skin/classic/browser/identity-icons-generic.png
   skin/classic/browser/identity-icons-https.png
   skin/classic/browser/identity-icons-https-ev.png
+  skin/classic/browser/identity-icons-https-mixed.png
   skin/classic/browser/Info.png
   skin/classic/browser/KUI-background.png
   skin/classic/browser/KUI-close.png
@@ -103,6 +104,7 @@ browser.jar:
 #endif
   skin/classic/browser/preferences/saveFile.png             (preferences/saveFile.png)
 * skin/classic/browser/preferences/preferences.css          (preferences/preferences.css)
+* skin/classic/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/preferences/aboutPermissions.css     (preferences/aboutPermissions.css)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
@@ -185,6 +187,7 @@ browser.jar:
   skin/classic/browser/devtools/layout-background.png       (devtools/layout-background.png)
   skin/classic/browser/devtools/layoutview.css              (devtools/layoutview.css)
   skin/classic/browser/devtools/layout-buttons.png          (devtools/layout-buttons.png)
+  skin/classic/browser/devtools/inspector-option-icon.png     (devtools/inspector-option-icon.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-throbber.png
   skin/classic/browser/sync-16.png

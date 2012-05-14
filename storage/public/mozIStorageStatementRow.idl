@@ -1,0 +1,12 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(02eeaf95-c3db-4182-9340-222c29f68f02)]
+interface mozIStorageStatementRow : nsISupports {
+  // Magic interface we return that implements nsIXPCScriptable, to allow
+  // for by-name access to rows.
+};

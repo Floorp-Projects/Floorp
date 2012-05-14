@@ -302,6 +302,7 @@ static PhaseInfo phases[] = {
     { PHASE_PURGE, "Purge" },
     { PHASE_MARK, "Mark" },
     { PHASE_MARK_ROOTS, "Mark Roots" },
+    { PHASE_MARK_TYPES, "Mark Types" },
     { PHASE_MARK_DELAYED, "Mark Delayed" },
     { PHASE_MARK_OTHER, "Mark Other" },
     { PHASE_FINALIZE_START, "Finalize Start Callback" },
@@ -598,6 +599,9 @@ Statistics::endSlice()
 void
 Statistics::beginPhase(Phase phase)
 {
+    /* Guard against re-entry */
+    JS_ASSERT(!phaseStartTimes[phase]);
+
     phaseStartTimes[phase] = PRMJ_Now();
     phaseStartFaults[phase] = gc::GetPageFaultCount();
 
@@ -613,6 +617,7 @@ Statistics::endPhase(Phase phase)
     int64_t t = PRMJ_Now() - phaseStartTimes[phase];
     slices.back().phaseTimes[phase] += t;
     phaseTimes[phase] += t;
+    phaseStartTimes[phase] = 0;
 
     size_t faults = gc::GetPageFaultCount() - phaseStartFaults[phase];
     slices.back().phaseFaults[phase] += faults;

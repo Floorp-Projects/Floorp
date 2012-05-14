@@ -476,10 +476,10 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 {
   switch (mRole) {
     case roles::LIST:
-      return NSAccessibilityContentListSubrole;
+      return @"AXContentList"; // 10.6+ NSAccessibilityContentListSubrole;
 
     case roles::DEFINITION_LIST:
-      return NSAccessibilityDefinitionListSubrole;
+      return @"AXDefinitionList"; // 10.6+ NSAccessibilityDefinitionListSubrole;
 
     case roles::TERM:
       return @"AXTerm";

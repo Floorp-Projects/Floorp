@@ -2210,25 +2210,12 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
   // otherwise we find the content's frame and scroll to it
   nsIFrame *childFrame = aOptElement->GetPrimaryFrame();
   if (childFrame) {
-    nsPoint pt = GetScrollPosition();
-    // get the scroll port rect relative to the scrolled frame
-    nsRect rect = GetScrollPortRect() + pt;
-    // get the option's rect relative to the scrolled frame
-    nsRect fRect(childFrame->GetOffsetTo(GetScrolledFrame()),
-                 childFrame->GetSize());
-
-    // See if the selected frame (fRect) is inside the scrollport
-    // area (rect). Check only the vertical dimension. Don't
-    // scroll just because there's horizontal overflow.
-    if (!(rect.y <= fRect.y && fRect.YMost() <= rect.YMost())) {
-      // figure out which direction we are going
-      if (fRect.YMost() > rect.YMost()) {
-        pt.y = fRect.y - (rect.height - fRect.height);
-      } else {
-        pt.y = fRect.y;
-      }
-      ScrollTo(nsPoint(fRect.x, pt.y), nsIScrollableFrame::INSTANT);
-    }
+    PresContext()->PresShell()->
+      ScrollFrameRectIntoView(childFrame,
+                              nsRect(nsPoint(0, 0), childFrame->GetSize()),
+                              nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(),
+                              nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
+                              nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY);
   }
   return NS_OK;
 }

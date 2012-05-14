@@ -290,14 +290,33 @@ function openWindow(parent, url, target, features, args, noExternalArgs) {
 }
 
 function openPreferences() {
-  var features = "chrome,titlebar,toolbar,centerscreen,dialog=no";
-  var url = "chrome://browser/content/preferences/preferences.xul";
+  if (Services.prefs.getBoolPref("browser.preferences.inContent")) { 
+    var sa = Components.classes["@mozilla.org/supports-array;1"]
+                       .createInstance(Components.interfaces.nsISupportsArray);
 
-  var win = getMostRecentWindow("Browser:Preferences");
-  if (win) {
-    win.focus();
+    var wuri = Components.classes["@mozilla.org/supports-string;1"]
+                         .createInstance(Components.interfaces.nsISupportsString);
+    wuri.data = "about:preferences";
+
+    sa.AppendElement(wuri);
+
+    var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                           .getService(nsIWindowWatcher);
+
+    wwatch.openWindow(null, gBrowserContentHandler.chromeURL,
+                      "_blank",
+                      "chrome,dialog=no,all",
+                      sa);
   } else {
-    openWindow(null, url, "_blank", features);
+    var features = "chrome,titlebar,toolbar,centerscreen,dialog=no";
+    var url = "chrome://browser/content/preferences/preferences.xul";
+    
+    var win = getMostRecentWindow("Browser:Preferences");
+    if (win) {
+      win.focus();
+    } else {
+      openWindow(null, url, "_blank", features);
+    }
   }
 }
 

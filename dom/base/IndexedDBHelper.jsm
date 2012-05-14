@@ -36,7 +36,7 @@ IndexedDBHelper.prototype = {
 
   /**
    * Open a new database.
-   * User has to provide createSchema and upgradeSchema.
+   * User has to provide upgradeSchema.
    * 
    * @param successCb
    *        Success callback to call once database is open.
@@ -45,7 +45,7 @@ IndexedDBHelper.prototype = {
    */
   open: function open(aSuccessCb, aFailureCb) {
     let self = this;
-    debug("Try to open database:" + this.dbName + " " + this.dbVersion);
+    debug("Try to open database:" + self.dbName + " " + self.dbVersion);
     let req = this.dbGlobal.mozIndexedDB.open(this.dbName, this.dbVersion);
     req.onsuccess = function (event) {
       debug("Opened database:" + self.dbName + " " + self.dbName);
@@ -57,22 +57,14 @@ IndexedDBHelper.prototype = {
     };
 
     req.onupgradeneeded = function (aEvent) {
-      debug("Database needs upgrade:" + this.dbName + aEvent.oldVersion + aEvent.newVersion);
+      debug("Database needs upgrade:" + self.dbName + aEvent.oldVersion + aEvent.newVersion);
       debug("Correct new database version:" + aEvent.newVersion == this.dbVersion);
 
       let _db = aEvent.target.result;
-      switch (aEvent.oldVersion) {
-        case 0:
-          debug("New database");
-          self.createSchema(_db);
-          break;
-        default:
-          self.upgradeSchema(_db, aEvent.oldVersion, aEvent.newVersion);
-          break;
-      }
+      self.upgradeSchema(req.transaction, _db, aEvent.oldVersion, aEvent.newVersion);
     };
     req.onerror = function (aEvent) {
-      debug("Failed to open database:" + this.dbName);
+      debug("Failed to open database:" + self.dbName);
       aFailureCb(aEvent.target.errorMessage);
     };
     req.onblocked = function (aEvent) {
@@ -139,7 +131,7 @@ IndexedDBHelper.prototype = {
    * @param aDBName
    *        DB name for the open call.
    * @param aDBVersion
-   *        Current DB version. User has to implement createSchema and upgradeSchema.
+   *        Current DB version. User has to implement upgradeSchema.
    * @param aDBStoreName
    *        ObjectStore that is used.
    * @param aGlobal

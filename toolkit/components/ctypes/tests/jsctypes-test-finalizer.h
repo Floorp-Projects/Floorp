@@ -30,6 +30,10 @@ NS_EXTERN_C
   EXPORT_CDECL(void) test_finalizer_rel_ptr_t(void *i);
   EXPORT_CDECL(bool) test_finalizer_cmp_ptr_t(void *a, void *b);
 
+  EXPORT_CDECL(int32_t*) test_finalizer_acq_int32_ptr_t(size_t i);
+  EXPORT_CDECL(void) test_finalizer_rel_int32_ptr_t(int32_t *i);
+  EXPORT_CDECL(bool) test_finalizer_cmp_int32_ptr_t(int32_t *a, int32_t *b);
+
   EXPORT_CDECL(char*) test_finalizer_acq_string_t(int i);
   EXPORT_CDECL(void) test_finalizer_rel_string_t(char *i);
   EXPORT_CDECL(bool) test_finalizer_cmp_string_t(char *a, char *b);

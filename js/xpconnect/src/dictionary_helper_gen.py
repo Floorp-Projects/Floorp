@@ -460,7 +460,7 @@ if __name__ == '__main__':
                  help="Quick stub header output file", metavar="FILE")
     o.add_option('--makedepend-output', type='string', default=None,
                  help="gnumake dependencies output file", metavar="FILE")
-    o.add_option('--cachedir', dest='cachedir', default='',
+    o.add_option('--cachedir', dest='cachedir', default=None,
                  help="Directory in which to cache lex/parse tables.")
     (options, filenames) = o.parse_args()
     if len(filenames) != 1:

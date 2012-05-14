@@ -77,6 +77,7 @@
     <ClCompile Include="TestDrawTargetBase.cpp" />
     <ClCompile Include="TestDrawTargetD2D.cpp" />
     <ClCompile Include="TestPoint.cpp" />
+    <ClCompile Include="TestScaling.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestDrawTargetBase.h" />
@@ -84,6 +85,7 @@
     <ClInclude Include="TestBase.h" />
     <ClInclude Include="TestDrawTargetD2D.h" />
     <ClInclude Include="TestPoint.h" />
+    <ClInclude Include="TestScaling.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

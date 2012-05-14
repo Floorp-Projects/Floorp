@@ -57,9 +57,6 @@ HOST_LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)host_breakpad_common_s.$(LIB_SUFFIX) \
   $(NULL)
 
-# force C++ linking
-CPP_PROG_LINK = 1
-
 #XXX: bug 554854 causes us to be unable to run binaries on the build slaves
 # due to them having an older libstdc++
 HOST_LDFLAGS += -static

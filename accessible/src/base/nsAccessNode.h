@@ -53,13 +53,13 @@
 #include "nsIStringBundle.h"
 #include "nsWeakReference.h"
 
-class ApplicationAccessible;
 class nsAccessNode;
 class nsDocAccessible;
 class nsIAccessibleDocument;
 
 namespace mozilla {
 namespace a11y {
+class ApplicationAccessible;
 class RootAccessible;
 }
 }
@@ -69,9 +69,6 @@ class nsPresContext;
 class nsIFrame;
 class nsIDocShellTreeItem;
 
-#define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
-#define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
-
 class nsAccessNode: public nsISupports
 {
 public:
@@ -79,16 +76,15 @@ public:
   nsAccessNode(nsIContent* aContent, nsDocAccessible* aDoc);
   virtual ~nsAccessNode();
 
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(nsAccessNode)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsAccessNode)
 
-    static void InitXPAccessibility();
-    static void ShutdownXPAccessibility();
+  static void ShutdownXPAccessibility();
 
   /**
    * Return an application accessible.
    */
-  static ApplicationAccessible* GetApplicationAccessible();
+  static mozilla::a11y::ApplicationAccessible* GetApplicationAccessible();
 
   /**
    * Return the document accessible for this access node.
@@ -164,15 +160,12 @@ protected:
   nsCOMPtr<nsIContent> mContent;
   nsDocAccessible* mDoc;
 
-  // Static data, we do our own refcounting for our static data.
-  static nsIStringBundle* gStringBundle;
-
 private:
   nsAccessNode() MOZ_DELETE;
   nsAccessNode(const nsAccessNode&) MOZ_DELETE;
   nsAccessNode& operator =(const nsAccessNode&) MOZ_DELETE;
   
-  static ApplicationAccessible* gApplicationAccessible;
+  static mozilla::a11y::ApplicationAccessible* gApplicationAccessible;
 };
 
 #endif
