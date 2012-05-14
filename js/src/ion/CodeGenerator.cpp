@@ -899,7 +899,7 @@ CodeGenerator::visitNewArray(LNewArray *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    JSObject *templateObject = NewDenseUnallocatedArray(gen->cx, count);
+    RootedVarObject templateObject(gen->cx, NewDenseUnallocatedArray(gen->cx, count));
     if (!templateObject)
         return false;
     templateObject->setType(typeObj);
@@ -1072,7 +1072,9 @@ CodeGenerator::visitCreateThis(LCreateThis *lir)
         if (!addOutOfLineCode(ool))
             return false;
 
-        masm.getNewObject(gen->cx, objReg, lir->mir()->getTemplateObject(), ool->entry());
+        RootedVarObject templateObject(gen->cx, lir->mir()->getTemplateObject());
+
+        masm.getNewObject(gen->cx, objReg, templateObject, ool->entry());
         masm.bind(ool->rejoin());
         return true;
     }

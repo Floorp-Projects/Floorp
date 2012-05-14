@@ -327,6 +327,7 @@ struct ResumeFromException
 void HandleException(ResumeFromException *rfe);
 
 void MarkIonActivations(JSRuntime *rt, JSTracer *trc);
+void MarkIonCompilerRoots(JSTracer *trc);
 
 static inline uint32
 MakeFrameDescriptor(uint32 frameSize, FrameType type)

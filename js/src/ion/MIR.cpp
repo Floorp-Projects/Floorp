@@ -384,9 +384,9 @@ MParameter::congruentTo(MDefinition * const &ins) const
 }
 
 MCall *
-MCall::New(size_t argc, size_t bytecodeArgc, bool construct)
+MCall::New(JSFunction *target, size_t argc, size_t bytecodeArgc, bool construct)
 {
-    MCall *ins = new MCall(construct, bytecodeArgc);
+    MCall *ins = new MCall(target, bytecodeArgc, construct);
     if (!ins->init(argc + NumNonArgumentOperands))
         return NULL;
     return ins;

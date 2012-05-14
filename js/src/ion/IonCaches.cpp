@@ -293,8 +293,6 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
     if (cache.stubCount() < MAX_STUBS && obj->isNative()) {
         cache.incrementStubCount();
 
-        jsid id = AtomToId(atom);
-
         JSObject *holder;
         JSProperty *prop;
         if (!obj->lookupProperty(cx, atom->asPropertyName(), &holder, &prop))

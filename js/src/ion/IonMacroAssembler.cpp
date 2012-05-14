@@ -42,6 +42,7 @@
 #include "jsinfer.h"
 #include "jsinferinlines.h"
 #include "IonMacroAssembler.h"
+#include "gc/Root.h"
 
 using namespace js;
 using namespace js::ion;
@@ -373,7 +374,7 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 
 void
 MacroAssembler::getNewObject(JSContext *cx, const Register &result,
-                             JSObject *templateObject, Label *fail)
+                             HandleObject templateObject, Label *fail)
 {
     gc::AllocKind allocKind = templateObject->getAllocKind();
 

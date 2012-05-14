@@ -812,6 +812,9 @@ struct JSRuntime : js::RuntimeFriendFields
     // This points to the most recent Ion activation running on the thread.
     js::ion::IonActivation  *ionActivation;
 
+    // Linked list of GCThings rooted for the current compilation.
+    JS::CompilerRootNode *ionCompilerRootList;
+
   private:
     // In certain cases, we want to optimize certain opcodes to typed instructions,
     // to avoid carrying an extra register to feed into an unbox. Unfortunately,

@@ -59,6 +59,7 @@
 #include "IonMacroAssembler.h"
 #include "Bailouts.h"
 #include "FixedList.h"
+#include "CompilerRoot.h"
 
 namespace js {
 namespace ion {
@@ -1125,13 +1126,13 @@ class MCall
     // True if the call is for JSOP_NEW.
     bool construct_;
     // Monomorphic cache of single target from TI, or NULL.
-    JSFunction *target_;
+    CompilerRootFunction target_;
     // Original value of argc from the bytecode.
     uint32 bytecodeArgc_;
 
-    MCall(bool construct, uint32 bytecodeArgc)
+    MCall(JSFunction *target, uint32 bytecodeArgc, bool construct)
       : construct_(construct),
-        target_(NULL),
+        target_(target),
         bytecodeArgc_(bytecodeArgc)
     {
         setResultType(MIRType_Value);
@@ -1139,7 +1140,7 @@ class MCall
 
   public:
     INSTRUCTION_HEADER(Call);
-    static MCall *New(size_t argc, size_t bytecodeArgc, bool construct);
+    static MCall *New(JSFunction *target, size_t argc, size_t bytecodeArgc, bool construct);
 
     void initPrepareCall(MDefinition *start) {
         JS_ASSERT(start->isPrepareCall());
@@ -1164,9 +1165,6 @@ class MCall
     }
 
     // For TI-informed monomorphic callsites.
-    void setSingleTarget(JSFunction *target) {
-        target_ = target;
-    }
     JSFunction *getSingleTarget() const {
         return target_;
     }
@@ -1481,7 +1479,7 @@ class MCreateThis
     public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >
 {
     // Template for |this|, provided by TI, or NULL.
-    JSObject *templateObject_;
+    CompilerRootObject templateObject_;
 
     MCreateThis(MDefinition *callee, MDefinition *prototype, JSObject *templateObject)
       : templateObject_(templateObject)
@@ -1493,8 +1491,7 @@ class MCreateThis
 
   public:
     INSTRUCTION_HEADER(CreateThis);
-    static MCreateThis *New(MDefinition *callee, MDefinition *prototype,
-                            JSObject *templateObject)
+    static MCreateThis *New(MDefinition *callee, MDefinition *prototype, JSObject *templateObject)
     {
         return new MCreateThis(callee, prototype, templateObject);
     }
@@ -1509,6 +1506,7 @@ class MCreateThis
         return !!templateObject_;
     }
     JSObject *getTemplateObject() const {
+        JS_ASSERT(hasTemplateObject());
         return templateObject_;
     }
 

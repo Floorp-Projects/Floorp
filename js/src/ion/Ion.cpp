@@ -67,10 +67,12 @@
 #include "jsobjinlines.h"
 #include "vm/Stack-inl.h"
 #include "ion/IonFrames-inl.h"
+#include "ion/CompilerRoot.h"
 
 using namespace js;
 using namespace js::ion;
 
+// Global variables.
 IonOptions ion::js_IonOptions;
 
 // Assert that IonCode is gc::Cell aligned.
@@ -768,6 +770,7 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *osrPc)
         return false;
 
     types::AutoEnterCompilation enterCompiler(cx, script, false, 0);
+    AutoCompilerRoots roots(script->compartment()->rt);
 
     IonBuilder builder(cx, fp->scopeChain(), temp, graph, &oracle, *info);
     if (!TestCompiler(builder, graph)) {

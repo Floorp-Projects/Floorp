@@ -396,7 +396,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // This function clobbers the input register.
     void clampDoubleToUint8(FloatRegister input, Register output);
 
-    void getNewObject(JSContext *cx, const Register &result, JSObject *templateObject, Label *fail);
+    void getNewObject(JSContext *cx, const Register &result, HandleObject templateObject, Label *fail);
 
     // If the IonCode that created this assembler needs to transition into the VM,
     // we want to store the IonCode on the stack in order to mark it during a GC.
