@@ -53,6 +53,7 @@
 
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
+#include "frontend/TreeContext.h"
 
 #define NUM_TEMP_FREELISTS      6U      /* 32 to 2048 byte size classes (32 bit) */
 

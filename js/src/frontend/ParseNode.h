@@ -1065,9 +1065,9 @@ struct FunctionNode : public ParseNode {
 };
 
 struct NameNode : public ParseNode {
-    static NameNode *create(ParseNodeKind kind, JSAtom *atom, Parser *parser, TreeContext *tc);
+    static NameNode *create(ParseNodeKind kind, JSAtom *atom, Parser *parser, SharedContext *sc);
 
-    inline void initCommon(TreeContext *tc);
+    inline void initCommon(SharedContext *sc);
 
 #ifdef DEBUG
     inline void dump(int indent);

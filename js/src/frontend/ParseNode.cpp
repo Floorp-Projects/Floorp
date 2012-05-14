@@ -440,15 +440,15 @@ ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, Parse
 }
 
 // Nb: unlike most functions that are passed a Parser, this one gets a
-// TreeContext passed in separately, because in this case |tc| may not equal
-// |parser->tc|.
+// SharedContext passed in separately, because in this case |sc| may not equal
+// |parser->tc->sc|.
 NameNode *
-NameNode::create(ParseNodeKind kind, JSAtom *atom, Parser *parser, TreeContext *tc)
+NameNode::create(ParseNodeKind kind, JSAtom *atom, Parser *parser, SharedContext *sc)
 {
     ParseNode *pn = ParseNode::create(kind, PN_NAME, parser);
     if (pn) {
         pn->pn_atom = atom;
-        ((NameNode *)pn)->initCommon(tc);
+        ((NameNode *)pn)->initCommon(sc);
     }
     return (NameNode *)pn;
 }
@@ -480,7 +480,7 @@ CloneParseTree(ParseNode *opn, Parser *parser)
 {
     TreeContext *tc = parser->tc;
 
-    JS_CHECK_RECURSION(tc->context, return NULL);
+    JS_CHECK_RECURSION(tc->sc->context, return NULL);
 
     ParseNode *pn = parser->new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
                                             opn->pn_pos);

@@ -555,15 +555,15 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned 
 }
 
 bool
-js::ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn,
+js::ReportStrictModeError(JSContext *cx, TokenStream *ts, SharedContext *sc, ParseNode *pn,
                           unsigned errorNumber, ...)
 {
-    JS_ASSERT(ts || tc);
+    JS_ASSERT(ts || sc);
     JS_ASSERT(cx == ts->getContext());
 
     /* In strict mode code, this is an error, not merely a warning. */
     unsigned flags;
-    if ((ts && ts->isStrictMode()) || (tc && (tc->flags & TCF_STRICT_MODE_CODE))) {
+    if ((ts && ts->isStrictMode()) || (sc && (sc->flags & TCF_STRICT_MODE_CODE))) {
         flags = JSREPORT_ERROR;
     } else {
         if (!cx->hasStrictOption())
