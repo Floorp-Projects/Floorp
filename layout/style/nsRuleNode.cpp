@@ -1468,8 +1468,9 @@ CheckTextCallback(const nsRuleData* aRuleData,
   return aResult;
 }
 
-#define FLAG_DATA_FOR_PROPERTY(name_, id_, method_, flags_, parsevariant_,   \
-                               kwtable_, stylestructoffset_, animtype_)      \
+#define FLAG_DATA_FOR_PROPERTY(name_, id_, method_, flags_, pref_,          \
+                               parsevariant_, kwtable_, stylestructoffset_, \
+                               animtype_)                                   \
   flags_,
 
 // The order here must match the enums in *CheckCounter in nsCSSProps.cpp.

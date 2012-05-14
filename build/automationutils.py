@@ -459,7 +459,7 @@ class ShutdownLeakLogger(object):
   DOM windows (that are still around after test suite shutdown, despite running
   the GC) to the tests that created them and prints leak statistics.
   """
-  MAX_LEAK_COUNT = 21
+  MAX_LEAK_COUNT = 10
 
   def __init__(self, logger):
     self.logger = logger

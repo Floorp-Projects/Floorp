@@ -290,7 +290,8 @@ nsTString_CharT::SetCharAt( PRUnichar aChar, PRUint32 aIndex )
     if (aIndex >= mLength)
       return false;
 
-    EnsureMutable();
+    if (!EnsureMutable())
+      NS_RUNTIMEABORT("OOM");
 
     mData[aIndex] = CharT(aChar);
     return true;
@@ -304,7 +305,9 @@ nsTString_CharT::SetCharAt( PRUnichar aChar, PRUint32 aIndex )
 void
 nsTString_CharT::StripChars( const char* aSet )
   {
-    EnsureMutable();
+    if (!EnsureMutable())
+      NS_RUNTIMEABORT("OOM");
+
     mLength = nsBufferRoutines<CharT>::strip_chars(mData, mLength, aSet);
   }
 
@@ -322,7 +325,8 @@ nsTString_CharT::StripWhitespace()
 void
 nsTString_CharT::ReplaceChar( char_type aOldChar, char_type aNewChar )
   {
-    EnsureMutable(); // XXX do this lazily?
+    if (!EnsureMutable()) // XXX do this lazily?
+      NS_RUNTIMEABORT("OOM");
 
     for (PRUint32 i=0; i<mLength; ++i)
       {
@@ -334,7 +338,8 @@ nsTString_CharT::ReplaceChar( char_type aOldChar, char_type aNewChar )
 void
 nsTString_CharT::ReplaceChar( const char* aSet, char_type aNewChar )
   {
-    EnsureMutable(); // XXX do this lazily?
+    if (!EnsureMutable()) // XXX do this lazily?
+      NS_RUNTIMEABORT("OOM");
 
     char_type* data = mData;
     PRUint32 lenRemaining = mLength;

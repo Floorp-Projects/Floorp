@@ -359,13 +359,18 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        nsCAutoString path;
-        rv = aURL->GetPath(path);
+        nsCAutoString spec;
+        rv = aURL->GetSpec(spec);
         if (NS_FAILED(rv)) {
             return rv;
         }
+        gchar *path = g_filename_from_uri(spec.get(), NULL, NULL);
+        if (!path) {
+            return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+        }
 
-        ca_context_play(ctx, 0, "media.filename", path.get(), NULL);
+        ca_context_play(ctx, 0, "media.filename", path, NULL);
+        g_free(path);
     } else {
         nsCOMPtr<nsIStreamLoader> loader;
         rv = NS_NewStreamLoader(getter_AddRefs(loader), aURL, this);

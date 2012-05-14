@@ -1,0 +1,198 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<script type="application/javascript" 
+        src="chrome://browser/content/preferences/in-content/main.js"/>
+
+<preferences id="mainPreferences">
+
+    <!-- Startup -->
+    <preference id="browser.startup.page"
+                name="browser.startup.page"
+                type="int"
+                onchange="gMainPane.startupPagePrefChanged();"/>
+    <preference id="browser.sessionstore.restore_on_demand"
+                name="browser.sessionstore.restore_on_demand"
+                type="bool"/>
+    <preference id="browser.startup.homepage"
+                name="browser.startup.homepage"
+                type="wstring"/>
+
+    <preference id="pref.browser.homepage.disable_button.current_page"
+                name="pref.browser.homepage.disable_button.current_page"
+                type="bool"/>
+    <preference id="pref.browser.homepage.disable_button.bookmark_page"
+                name="pref.browser.homepage.disable_button.bookmark_page"
+                type="bool"/>
+    <preference id="pref.browser.homepage.disable_button.restore_default"
+                name="pref.browser.homepage.disable_button.restore_default"
+                type="bool"/>
+
+    <preference id="browser.privatebrowsing.autostart"
+                name="browser.privatebrowsing.autostart"
+                type="bool"
+                onchange="gMainPane.updateBrowserStartupLastSession();"/>
+
+    <!-- Downloads -->
+    <preference id="browser.download.manager.showWhenStarting"
+                name="browser.download.manager.showWhenStarting"
+                type="bool"
+                onchange="gMainPane.showDownloadsWhenStartingPrefChanged();"/>
+    <preference id="browser.download.manager.closeWhenDone"
+                name="browser.download.manager.closeWhenDone"
+                type="bool"/>
+    <preference id="browser.download.useDownloadDir"
+                name="browser.download.useDownloadDir"
+                type="bool"/>
+    <preference id="browser.download.dir"
+                name="browser.download.dir"
+                type="file"
+                onchange="gMainPane.displayDownloadDirPref();"/>
+    <preference id="browser.download.folderList"
+                name="browser.download.folderList"
+                type="int"/>
+
+</preferences>
+
+<hbox class="heading" data-category="paneGeneral" hidden="true">
+  <image class="preference-icon" type="general"/>
+  <html:h1>&paneGeneral.title;</html:h1>
+</hbox>
+
+<!-- Startup -->
+<groupbox id="startupGroup" data-category="paneGeneral" hidden="true">
+  <caption label="&startup.label;"/>
+
+  <hbox align="center">
+    <label value="&startupPage.label;"
+           accesskey="&startupPage.accesskey;"
+           control="browserStartupPage"/>
+    <menulist id="browserStartupPage"
+              preference="browser.startup.page">
+      <menupopup>
+      <menuitem label="&startupHomePage.label;"
+                value="1"
+                id="browserStartupHomePage"/>
+      <menuitem label="&startupBlankPage.label;"
+                value="0"
+                id="browserStartupBlank"/>
+      <menuitem label="&startupLastSession.label;"
+                value="3"
+                id="browserStartupLastSession"/>
+      </menupopup>
+    </menulist>
+  </hbox>
+  <hbox align="center">
+    <checkbox id="restoreOnDemand"
+              label="&restoreOnDemand.label;"
+              accesskey="&restoreOnDemand.accesskey;"
+              class="indent"
+              preference="browser.sessionstore.restore_on_demand"/>
+  </hbox>
+  <separator class="thin"/>
+  <hbox align="center">
+    <label value="&homepage.label;"
+           accesskey="&homepage.accesskey;"
+           control="browserHomePage"/>
+    <textbox id="browserHomePage"
+             class="padded uri-element"
+             flex="1"
+             type="autocomplete"
+             autocompletesearch="history"
+             onsyncfrompreference="return gMainPane.syncFromHomePref();"
+             onsynctopreference="return gMainPane.syncToHomePref(this.value);"
+             placeholder="&abouthome.pageTitle;"
+             preference="browser.startup.homepage"/>
+  </hbox>
+  <hbox align="center" pack="end">
+    <button label=""
+            accesskey="&useCurrentPage.accesskey;"
+            label1="&useCurrentPage.label;"
+            label2="&useMultiple.label;"
+            oncommand="gMainPane.setHomePageToCurrent();"
+            id="useCurrent"
+            preference="pref.browser.homepage.disable_button.current_page"/>
+    <button label="&chooseBookmark.label;"
+            accesskey="&chooseBookmark.accesskey;"
+            oncommand="gMainPane.setHomePageToBookmark();"
+            id="useBookmark"
+            preference="pref.browser.homepage.disable_button.bookmark_page"/>
+    <button label="&restoreDefault.label;"
+            accesskey="&restoreDefault.accesskey;"
+            oncommand="gMainPane.restoreDefaultHomePage();"
+            id="restoreDefaultHomePage"
+            preference="pref.browser.homepage.disable_button.restore_default"/>
+  </hbox>
+</groupbox>
+
+<!-- Downloads -->
+<groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
+  <caption label="&downloads.label;"/>
+
+  <checkbox id="showWhenDownloading"
+            label="&showWhenDownloading.label;"
+            accesskey="&showWhenDownloading.accesskey;"
+            preference="browser.download.manager.showWhenStarting"
+            onsyncfrompreference="return gMainPane.readShowDownloadsWhenStarting();"/>
+  <checkbox id="closeWhenDone"
+            label="&closeWhenDone.label;"
+            accesskey="&closeWhenDone.accesskey;"
+            class="indent"
+            preference="browser.download.manager.closeWhenDone"/>
+
+  <separator class="thin"/>
+
+  <radiogroup id="saveWhere"
+              preference="browser.download.useDownloadDir"
+              onsyncfrompreference="return gMainPane.readUseDownloadDir();">
+    <hbox id="saveToRow">
+      <radio id="saveTo"
+             value="true"
+             label="&saveTo.label;"
+             accesskey="&saveTo.accesskey;"
+             aria-labelledby="saveTo downloadFolder"/>
+      <filefield id="downloadFolder"
+                 flex="1"
+                 preference="browser.download.folderList"
+                 preference-editable="true"
+                 aria-labelledby="saveTo"
+                 onsyncfrompreference="return gMainPane.displayDownloadDirPref();"
+                 onsynctopreference="return gMainPane.getFolderListPref()"/>
+      <button id="chooseFolder"
+              oncommand="gMainPane.chooseFolder();"
+#ifdef XP_MACOSX
+              accesskey="&chooseFolderMac.accesskey;"
+              label="&chooseFolderMac.label;"
+#else
+              accesskey="&chooseFolderWin.accesskey;"
+              label="&chooseFolderWin.label;"
+#endif
+              preference="browser.download.folderList"
+              onsynctopreference="return gMainPane.getFolderListPref();"/>
+    </hbox>
+    <radio id="alwaysAsk"
+           value="false"
+           label="&alwaysAsk.label;"
+           accesskey="&alwaysAsk.accesskey;"/>
+  </radiogroup>
+</groupbox>
+
+<hbox class="bottomBox" data-category="paneGeneral" hidden="true">
+  <groupbox id="addonsMgrGroup"
+            orient="horizontal"
+            flex="1">
+    <caption label="&addonsMgr.label;"/>
+
+    <description control="manageAddons"
+#ifdef XP_WIN
+                 flex="1">&manageAddonsDescWin.label;</description>
+#else
+                 flex="1">&manageAddonsDescUnix2.label;</description>
+#endif
+    <button id="manageAddons"
+            label="&manageAddons.label;"
+            accesskey="&manageAddons.accesskey;"
+            oncommand="gMainPane.showAddonsMgr();"/>
+  </groupbox>
+</hbox>

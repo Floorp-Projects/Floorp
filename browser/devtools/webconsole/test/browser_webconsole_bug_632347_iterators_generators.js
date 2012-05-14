@@ -38,18 +38,18 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-632347-iterators-generators.html";
 
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.gcli.enable");
-});
-
 function test() {
-  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
   browser.addEventListener("load", tabLoaded, true);
 }
 
 function tabLoaded() {
   browser.removeEventListener("load", tabLoaded, true);
+
+  let tmp = {};
+  Cu.import("resource:///modules/WebConsoleUtils.jsm", tmp);
+  let WCU = tmp.WebConsoleUtils;
+
   openConsole();
 
   let hudId = HUDService.getHudIdByWindow(content);
@@ -62,7 +62,7 @@ function tabLoaded() {
   let result = win.gen1.next();
   let completion = jsterm.propertyProvider(win, "gen1.");
   is(completion, null, "no matchees for gen1");
-  ok(!jsterm.isResultInspectable(win.gen1),
+  ok(!WCU.isObjectInspectable(win.gen1),
      "gen1 is not inspectable");
 
   is(result+1, win.gen1.next(), "gen1.next() did not execute");
@@ -71,7 +71,7 @@ function tabLoaded() {
 
   completion = jsterm.propertyProvider(win, "gen2.");
   is(completion, null, "no matchees for gen2");
-  ok(!jsterm.isResultInspectable(win.gen2),
+  ok(!WCU.isObjectInspectable(win.gen2),
      "gen2 is not inspectable");
 
   is((result/2+1)*2, win.gen2.next(),
@@ -83,7 +83,7 @@ function tabLoaded() {
 
   completion = jsterm.propertyProvider(win, "iter1.");
   is(completion, null, "no matchees for iter1");
-  ok(!jsterm.isResultInspectable(win.iter1),
+  ok(!WCU.isObjectInspectable(win.iter1),
      "iter1 is not inspectable");
 
   result = win.iter1.next();
@@ -92,13 +92,13 @@ function tabLoaded() {
 
   completion = jsterm.propertyProvider(content, "iter2.");
   is(completion, null, "no matchees for iter2");
-  ok(!jsterm.isResultInspectable(win.iter2),
+  ok(!WCU.isObjectInspectable(win.iter2),
      "iter2 is not inspectable");
 
   completion = jsterm.propertyProvider(win, "window.");
   ok(completion, "matches available for window");
   ok(completion.matches.length, "matches available for window (length)");
-  ok(jsterm.isResultInspectable(win),
+  ok(WCU.isObjectInspectable(win),
      "window is inspectable");
 
   let panel = jsterm.openPropertyPanel("Test", win);

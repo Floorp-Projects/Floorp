@@ -117,8 +117,8 @@ XPCTraceableVariant::PrintTraceName(JSTracer* trc, char *buf, size_t bufsize)
 #endif
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
-    jsval val = tmp->GetJSValPreserveColor();
-    if (JSVAL_IS_OBJECT(val)) {
+    JS::Value val = tmp->GetJSValPreserveColor();
+    if (val.isObjectOrNull()) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mJSVal");
         cb.NoteJSChild(JSVAL_TO_OBJECT(val));
     }
@@ -127,19 +127,19 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
-    jsval val = tmp->GetJSValPreserveColor();
+    JS::Value val = tmp->GetJSValPreserveColor();
 
     // We're sharing val's buffer, clear the pointer to it so Cleanup() won't
     // try to delete it
-    if (JSVAL_IS_STRING(val))
+    if (val.isString())
         tmp->mData.u.wstr.mWStringValue = nsnull;
     nsVariant::Cleanup(&tmp->mData);
 
-    if (JSVAL_IS_TRACEABLE(val)) {
+    if (val.isMarkable()) {
         XPCTraceableVariant *v = static_cast<XPCTraceableVariant*>(tmp);
         v->RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetMapLock());
     }
-    tmp->mJSVal = JSVAL_NULL;
+    tmp->mJSVal = JS::NullValue();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 // static
@@ -221,26 +221,26 @@ XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
     Type type;
 
     for (uint32_t i = 0; i < length; i++) {
-        jsval val;
+        JS::Value val;
         if (!JS_GetElement(ccx, array, i, &val))
             return false;
 
-        if (JSVAL_IS_INT(val))
+        if (val.isInt32()) {
             type = tInt;
-        else if (JSVAL_IS_DOUBLE(val))
+        } else if (val.isDouble()) {
             type = tDbl;
-        else if (JSVAL_IS_BOOLEAN(val))
+        } else if (val.isBoolean()) {
             type = tBool;
-        else if (JSVAL_IS_VOID(val)) {
+        } else if (val.isUndefined()) { 
             state = tVar;
             break;
-        } else if (JSVAL_IS_NULL(val))
+        } else if (val.isNull()) {
             type = tNull;
-        else if (JSVAL_IS_STRING(val))
+        } else if (val.isString()) {
             type = tStr;
-        else {
-            NS_ASSERTION(JSVAL_IS_OBJECT(val), "invalid type of jsval!");
-            JSObject* jsobj = JSVAL_TO_OBJECT(val);
+        } else {
+            NS_ASSERTION(val.isObject(), "invalid type of jsval!");
+            JSObject* jsobj = &val.toObject();
             if (JS_IsArrayObject(ccx, jsobj))
                 type = tArr;
             else if (xpc_JSObjectIsID(ccx, jsobj))
@@ -306,24 +306,22 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 {
     JS_CHECK_RECURSION(ccx.GetJSContext(), return false);
 
-    jsval val = GetJSVal();
+    JS::Value val = GetJSVal();
 
-    if (JSVAL_IS_INT(val))
-        return NS_SUCCEEDED(nsVariant::SetFromInt32(&mData, JSVAL_TO_INT(val)));
-    if (JSVAL_IS_DOUBLE(val))
-        return NS_SUCCEEDED(nsVariant::SetFromDouble(&mData,
-                                                     JSVAL_TO_DOUBLE(val)));
-    if (JSVAL_IS_BOOLEAN(val))
-        return NS_SUCCEEDED(nsVariant::SetFromBool(&mData,
-                                                   JSVAL_TO_BOOLEAN(val)));
-    if (JSVAL_IS_VOID(val))
+    if (val.isInt32())
+        return NS_SUCCEEDED(nsVariant::SetFromInt32(&mData, val.toInt32()));
+    if (val.isDouble())
+        return NS_SUCCEEDED(nsVariant::SetFromDouble(&mData, val.toDouble()));
+    if (val.isBoolean())
+        return NS_SUCCEEDED(nsVariant::SetFromBool(&mData, val.toBoolean()));
+    if (val.isUndefined())
         return NS_SUCCEEDED(nsVariant::SetToVoid(&mData));
-    if (JSVAL_IS_NULL(val))
+    if (val.isNull())
         return NS_SUCCEEDED(nsVariant::SetToEmpty(&mData));
-    if (JSVAL_IS_STRING(val)) {
+    if (val.isString()) {
         // Make our string immutable.  This will also ensure null-termination,
         // which nsVariant assumes for its PRUnichar* stuff.
-        JSString* str = JSVAL_TO_STRING(val);
+        JSString* str = val.toString();
         if (!JS_MakeStringImmutable(ccx, str))
             return false;
 
@@ -350,9 +348,9 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
     }
 
     // leaving only JSObject...
-    NS_ASSERTION(JSVAL_IS_OBJECT(val), "invalid type of jsval!");
+    NS_ASSERTION(val.isObject(), "invalid type of jsval!");
 
-    JSObject* jsobj = JSVAL_TO_OBJECT(val);
+    JSObject* jsobj = &val.toObject();
 
     // Let's see if it is a xpcJSID.
 

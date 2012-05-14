@@ -631,21 +631,21 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
     } else if (aAttribute == nsGkAtoms::width ||
                aAttribute == nsGkAtoms::height) {
 
-        nsIFrame* embeddingFrame;
-        if (IsRootOfReplacedElementSubDoc(&embeddingFrame) && embeddingFrame) {
-          if (DependsOnIntrinsicSize(embeddingFrame)) {
-            // Tell embeddingFrame's presShell it needs to be reflowed (which takes
-            // care of reflowing us too).
-            embeddingFrame->PresContext()->PresShell()->
-              FrameNeedsReflow(embeddingFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
-          }
-          // else our width and height is overridden - don't reflow anything
-        } else {
-          // We are not embedded by reference, so our 'width' and 'height'
-          // attributes are not overridden - we need to reflow.
-          PresContext()->PresShell()->
-            FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+      nsIFrame* embeddingFrame;
+      if (IsRootOfReplacedElementSubDoc(&embeddingFrame) && embeddingFrame) {
+        if (DependsOnIntrinsicSize(embeddingFrame)) {
+          // Tell embeddingFrame's presShell it needs to be reflowed (which takes
+          // care of reflowing us too).
+          embeddingFrame->PresContext()->PresShell()->
+            FrameNeedsReflow(embeddingFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
         }
+        // else our width and height is overridden - don't reflow anything
+      } else {
+        // We are not embedded by reference, so our 'width' and 'height'
+        // attributes are not overridden - we need to reflow.
+        PresContext()->PresShell()->
+          FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+      }
     }
   }
 

@@ -129,8 +129,8 @@ bits_image_fetch_pixel_bilinear (bits_image_t   *image,
     x1 = x - pixman_fixed_1 / 2;
     y1 = y - pixman_fixed_1 / 2;
 
-    distx = (x1 >> 8) & 0xff;
-    disty = (y1 >> 8) & 0xff;
+    distx = interpolation_coord(x1);
+    disty = interpolation_coord(y1);
 
     x1 = pixman_fixed_to_int (x1);
     y1 = pixman_fixed_to_int (y1);
@@ -195,7 +195,7 @@ bits_image_fetch_bilinear_no_repeat_8888 (pixman_image_t * ima,
     x = x_top = x_bottom = v.vector[0] - pixman_fixed_1/2;
 
     y = v.vector[1] - pixman_fixed_1/2;
-    disty = (y >> 8) & 0xff;
+    disty = interpolation_coord(y);
 
     /* Load the pointers to the first and second lines from the source
      * image that bilinear code must read.
@@ -304,7 +304,7 @@ bits_image_fetch_bilinear_no_repeat_8888 (pixman_image_t * ima,
 	tr = top_row[pixman_fixed_to_int (x_top) + 1] | top_mask;
 	br = bottom_row[pixman_fixed_to_int (x_bottom) + 1] | bottom_mask;
 
-	distx = (x >> 8) & 0xff;
+	distx = interpolation_coord(x);
 
 	*buffer++ = bilinear_interpolation (0, tr, 0, br, distx, disty);
 
@@ -329,7 +329,7 @@ bits_image_fetch_bilinear_no_repeat_8888 (pixman_image_t * ima,
 	    bl = bottom_row [pixman_fixed_to_int (x_bottom)] | bottom_mask;
 	    br = bottom_row [pixman_fixed_to_int (x_bottom) + 1] | bottom_mask;
 
-	    distx = (x >> 8) & 0xff;
+	    distx = interpolation_coord(x);
 
 	    *buffer = bilinear_interpolation (tl, tr, bl, br, distx, disty);
 	}
@@ -353,7 +353,7 @@ bits_image_fetch_bilinear_no_repeat_8888 (pixman_image_t * ima,
 	    tl = top_row [pixman_fixed_to_int (x_top)] | top_mask;
 	    bl = bottom_row [pixman_fixed_to_int (x_bottom)] | bottom_mask;
 
-	    distx = (x >> 8) & 0xff;
+	    distx = interpolation_coord(x);
 
 	    *buffer = bilinear_interpolation (tl, 0, bl, 0, distx, disty);
 	}
@@ -680,8 +680,8 @@ bits_image_fetch_bilinear_affine (pixman_image_t * image,
 	x1 = x - pixman_fixed_1 / 2;
 	y1 = y - pixman_fixed_1 / 2;
 
-	distx = (x1 >> 8) & 0xff;
-	disty = (y1 >> 8) & 0xff;
+	distx = interpolation_coord(x1);
+	disty = interpolation_coord(y1);
 
 	y1 = pixman_fixed_to_int (y1);
 	y2 = y1 + 1;

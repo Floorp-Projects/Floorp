@@ -671,10 +671,12 @@ struct JITChunk
      * Therefore, do not change the section ordering in finishThisUp() without
      * changing nMICs() et al as well.
      */
-    uint32_t        nNmapPairs;         /* The NativeMapEntrys are sorted by .bcOff.
+    uint32_t        nNmapPairs : 31;    /* The NativeMapEntrys are sorted by .bcOff.
                                            .ncode values may not be NULL. */
     uint32_t        nInlineFrames;
     uint32_t        nCallSites;
+    uint32_t        nRootedTemplates;
+    uint32_t        nRootedRegExps;
 #ifdef JS_MONOIC
     uint32_t        nGetGlobalNames;
     uint32_t        nSetGlobalNames;
@@ -699,6 +701,8 @@ struct JITChunk
     NativeMapEntry *nmap() const;
     js::mjit::InlineFrame *inlineFrames() const;
     js::mjit::CallSite *callSites() const;
+    JSObject **rootedTemplates() const;
+    RegExpShared **rootedRegExps() const;
 #ifdef JS_MONOIC
     ic::GetGlobalNameIC *getGlobalNames() const;
     ic::SetGlobalNameIC *setGlobalNames() const;
@@ -717,12 +721,13 @@ struct JITChunk
         return jcheck >= jitcode && jcheck < jitcode + code.m_size;
     }
 
-    void nukeScriptDependentICs();
-
     size_t computedSizeOfIncludingThis();
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
 
     ~JITChunk();
+
+    void trace(JSTracer *trc);
+    void purgeCaches();
 
   private:
     /* Helpers used to navigate the variable-length sections. */
@@ -854,6 +859,9 @@ struct JITScript
 
     void destroy(FreeOp *fop);
     void destroyChunk(FreeOp *fop, unsigned chunkIndex, bool resetUses = true);
+
+    void trace(JSTracer *trc);
+    void purgeCaches();
 };
 
 /*
@@ -895,10 +903,13 @@ CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
 inline void
 ReleaseScriptCode(FreeOp *fop, JSScript *script)
 {
-    if (script->jitHandleCtor.isValid())
-        JSScript::ReleaseCode(fop, &script->jitHandleCtor);
-    if (script->jitHandleNormal.isValid())
-        JSScript::ReleaseCode(fop, &script->jitHandleNormal);
+    for (int constructing = 0; constructing <= 1; constructing++) {
+        for (int barriers = 0; barriers <= 1; barriers++) {
+            JSScript::JITScriptHandle *jith = script->jitHandle((bool) constructing, (bool) barriers);
+            if (jith && jith->isValid())
+                JSScript::ReleaseCode(fop, jith);
+        }
+    }
 }
 
 // Expand all stack frames inlined by the JIT within a compartment.
@@ -1012,7 +1023,7 @@ VMFrame::pc()
 inline void *
 JSScript::nativeCodeForPC(bool constructing, jsbytecode *pc)
 {
-    js::mjit::JITScript *jit = getJIT(constructing);
+    js::mjit::JITScript *jit = getJIT(constructing, compartment()->needsBarrier());
     if (!jit)
         return NULL;
     js::mjit::JITChunk *chunk = jit->chunk(pc);

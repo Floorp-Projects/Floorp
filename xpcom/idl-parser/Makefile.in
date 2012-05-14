@@ -60,14 +60,13 @@ include $(topsrcdir)/config/rules.mk
 export:: $(PARSER_SRCS) $(PLY_PROGS)
 	$(PYTHON_PATH) \
 	  $(PLY_INCLUDE) \
-	  -I$(topsrcdir)/xpcom/idl-parser \
-	  $(topsrcdir)/xpcom/idl-parser/header.py --cachedir=. --regen
+	  $(srcdir)/header.py --cachedir=. --regen
 
 check::
 	$(PYTHON_PATH) \
 	  $(PLY_INCLUDE) \
-	  -I$(topsrcdir)/xpcom/idl-parser \
-	  $(topsrcdir)/xpcom/idl-parser/runtests.py
+	  -I. \
+	  $(srcdir)/runtests.py
 
 GARBAGE += \
   xpidllex.py \

@@ -210,6 +210,11 @@ CollectWindowReports(nsGlobalWindow *aWindow,
          "tree, within a window.");
   aWindowTotalSizes->mLayoutTextRuns += windowSizes.mLayoutTextRuns;
 
+  REPORT("/layout/pres-contexts", windowSizes.mLayoutPresContext,
+         "Memory used for the PresContext in the PresShell's frame "
+         "within a window.");
+  aWindowTotalSizes->mLayoutPresContext += windowSizes.mLayoutPresContext;
+
 #undef REPORT
 
   return NS_OK;
@@ -282,7 +287,7 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
          "This is the sum of all windows' 'style-sheets' numbers.");
     
   REPORT("window-objects-layout-arenas", windowTotalSizes.mLayoutArenas, 
-         "Memory used by layout PresShell, PresContext, and other related "
+         "Memory used by layout PresShell and other related "
          "areas within windows. This is the sum of all windows' "
          "'layout/arenas' numbers.");
     
@@ -293,6 +298,10 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   REPORT("window-objects-layout-text-runs", windowTotalSizes.mLayoutTextRuns, 
          "Memory used for text runs within windows. "
          "This is the sum of all windows' 'layout/text-runs' numbers.");
+
+  REPORT("window-objects-layout-pres-contexts", windowTotalSizes.mLayoutPresContext,
+         "Memory used for layout PresContexts within windows. "
+         "This is the sum of all windows' 'layout/pres-contexts' numbers.");
 
 #undef REPORT
     

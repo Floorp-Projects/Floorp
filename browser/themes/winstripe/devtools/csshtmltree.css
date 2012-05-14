@@ -277,3 +277,11 @@
   padding: 0;
   box-shadow: 2px 2px 2px #CCC;
 }
+
+.ruleview-property {
+  border-left: 2px solid transparent;
+}
+
+.ruleview-property[dirty] {
+  border-left-color: #68E268;
+}

@@ -41,7 +41,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions);GFX_LOG_DEBUG;GFX_LOG_WARNING;MFBT_STAND_ALONE;XP_WIN</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_SSE2;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions);GFX_LOG_DEBUG;GFX_LOG_WARNING;MFBT_STAND_ALONE;XP_WIN</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -80,6 +80,7 @@
     <ClInclude Include="DrawTargetDual.h" />
     <ClInclude Include="GradientStopsD2D.h" />
     <ClInclude Include="HelpersD2D.h" />
+    <ClInclude Include="ImageScaling.h" />
     <ClInclude Include="Logging.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="PathD2D.h" />
@@ -96,6 +97,8 @@
     <ClCompile Include="DrawTargetD2D.cpp" />
     <ClCompile Include="DrawTargetDual.cpp" />
     <ClCompile Include="Factory.cpp" />
+    <ClCompile Include="ImageScaling.cpp" />
+    <ClCompile Include="ImageScalingSSE2.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="PathD2D.cpp" />
     <ClCompile Include="ScaledFontDWrite.cpp" />

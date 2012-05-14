@@ -15,6 +15,8 @@
 
 #include "methodjit/MethodJIT.h"
 
+#include "vm/Stack-inl.h"
+
 using namespace js;
 using namespace JS;
 
@@ -258,6 +260,20 @@ GCSlice(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     GCDebugSlice(cx->runtime, limit, budget);
+    *vp = JSVAL_VOID;
+    return JS_TRUE;
+}
+
+static JSBool
+GCPreserveCode(JSContext *cx, unsigned argc, jsval *vp)
+{
+    if (argc != 0) {
+        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
+        return JS_FALSE;
+    }
+
+    cx->runtime->alwaysPreserveCode = true;
+
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -552,6 +568,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gcslice", GCSlice, 1, 0,
 "gcslice(n)",
 "  Run an incremental GC slice that marks about n objects."),
+
+    JS_FN_HELP("gcPreserveCode", GCPreserveCode, 0, 0,
+"gcPreserveCode()",
+"  Preserve JIT code during garbage collections."),
 
     JS_FN_HELP("deterministicgc", DeterministicGC, 1, 0,
 "deterministicgc(true|false)",

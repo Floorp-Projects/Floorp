@@ -82,6 +82,10 @@ nsXTFElementWrapper::~nsXTFElementWrapper()
 {
   mXTFElement->OnDestroyed();
   mXTFElement = nsnull;
+  if (mClassInfo) {
+    mClassInfo->Disconnect();
+    mClassInfo = nsnull;
+  }
 }
 
 nsresult
@@ -126,13 +130,19 @@ nsXTFElementWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_IMPL_QUERY_CYCLE_COLLECTION(nsXTFElementWrapper)
   if (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||
       aIID.Equals(NS_GET_IID(nsXPCClassInfo))) {
-    *aInstancePtr = static_cast<nsIClassInfo*>(this);
-    NS_ADDREF_THIS();
+    if (!mClassInfo) {
+      mClassInfo = new nsXTFClassInfo(this);
+    }
+    NS_ADDREF(mClassInfo);
+    *aInstancePtr = static_cast<nsIClassInfo*>(mClassInfo);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIXPCScriptable))) {
-    *aInstancePtr = static_cast<nsIXPCScriptable*>(this);
-    NS_ADDREF_THIS();
+    if (!mClassInfo) {
+      mClassInfo = new nsXTFClassInfo(this);
+    }
+    NS_ADDREF(mClassInfo);
+    *aInstancePtr = static_cast<nsIXPCScriptable*>(mClassInfo);
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIXTFElementWrapper))) {
@@ -159,6 +169,15 @@ nsXTFElementWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
 
   return NS_ERROR_NO_INTERFACE;
+}
+
+nsXPCClassInfo*
+nsXTFElementWrapper::GetClassInfo()
+{
+  if (!mClassInfo) {
+    mClassInfo = new nsXTFClassInfo(this);
+  }
+  return mClassInfo;
 }
 
 //----------------------------------------------------------------------
@@ -1013,3 +1032,8 @@ NS_NewXTFElementWrapper(nsIXTFElement* aXTFElement,
   *aResult = result;
   return NS_OK;
 }
+
+NS_IMPL_ISUPPORTS3(nsXTFClassInfo,
+                   nsIClassInfo,
+                   nsXPCClassInfo,
+                   nsIXPCScriptable)

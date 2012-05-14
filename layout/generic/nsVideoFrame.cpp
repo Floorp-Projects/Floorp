@@ -46,6 +46,7 @@
 #include "nsVideoFrame.h"
 #include "nsHTMLVideoElement.h"
 #include "nsIDOMHTMLVideoElement.h"
+#include "nsIDOMHTMLImageElement.h"
 #include "nsDisplayList.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
@@ -190,9 +191,10 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 {
   nsRect area = GetContentRect() - GetPosition() + aItem->ToReferenceFrame();
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
-  nsIntSize videoSize = element->GetVideoSize(nsIntSize(0, 0));
-  if (videoSize.width <= 0 || videoSize.height <= 0 || area.IsEmpty())
+  nsIntSize videoSize;
+  if (NS_FAILED(element->GetVideoSize(&videoSize)) || area.IsEmpty()) {
     return nsnull;
+  }
 
   nsRefPtr<ImageContainer> container = element->GetImageContainer();
   if (!container)
@@ -283,18 +285,34 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
                                        availableSize,
                                        aMetrics.width,
                                        aMetrics.height);
-      if (ShouldDisplayPoster()) {
-        kidReflowState.SetComputedWidth(aReflowState.ComputedWidth());
-        kidReflowState.SetComputedHeight(aReflowState.ComputedHeight());
-      } else {
-        kidReflowState.SetComputedWidth(0);
-        kidReflowState.SetComputedHeight(0);
+
+      PRUint32 posterHeight, posterWidth;
+      nsSize scaledPosterSize(0, 0);
+      nsSize computedArea(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
+      nsPoint posterTopLeft(0, 0);
+
+      nsCOMPtr<nsIDOMHTMLImageElement> posterImage = do_QueryInterface(mPosterImage);
+      NS_ENSURE_TRUE(posterImage, NS_ERROR_FAILURE);
+      posterImage->GetNaturalHeight(&posterHeight);
+      posterImage->GetNaturalWidth(&posterWidth);
+
+      if (ShouldDisplayPoster() && posterHeight && posterWidth) {
+        gfxFloat scale =
+          NS_MIN(static_cast<float>(computedArea.width)/nsPresContext::CSSPixelsToAppUnits(static_cast<float>(posterWidth)),
+                 static_cast<float>(computedArea.height)/nsPresContext::CSSPixelsToAppUnits(static_cast<float>(posterHeight)));
+        gfxSize scaledRatio = gfxSize(scale*posterWidth, scale*posterHeight);
+        scaledPosterSize.width = nsPresContext::CSSPixelsToAppUnits(static_cast<float>(scaledRatio.width));
+        scaledPosterSize.height = nsPresContext::CSSPixelsToAppUnits(static_cast<PRInt32>(scaledRatio.height));
       }
+      kidReflowState.SetComputedWidth(scaledPosterSize.width);
+      kidReflowState.SetComputedHeight(scaledPosterSize.height);
+      posterTopLeft.x = ((computedArea.width - scaledPosterSize.width) / 2) + mBorderPadding.left;
+      posterTopLeft.y = ((computedArea.height - scaledPosterSize.height) / 2) + mBorderPadding.top;
+
       ReflowChild(imageFrame, aPresContext, kidDesiredSize, kidReflowState,
-                  mBorderPadding.left, mBorderPadding.top, 0, aStatus);
-      FinishReflowChild(imageFrame, aPresContext,
-                        &kidReflowState, kidDesiredSize,
-                        mBorderPadding.left, mBorderPadding.top, 0);
+                        posterTopLeft.x, posterTopLeft.y, 0, aStatus);
+      FinishReflowChild(imageFrame, aPresContext, &kidReflowState, kidDesiredSize,
+                        posterTopLeft.x, posterTopLeft.y, 0);
     } else if (child->GetType() == nsGkAtoms::boxFrame) {
       // Reflow the video controls frame.
       nsBoxLayoutState boxState(PresContext(), aReflowState.rendContext);
@@ -525,19 +543,7 @@ nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
 {
   // Defaulting size to 300x150 if no size given.
   nsIntSize size(300, 150);
-
-  if (ShouldDisplayPoster()) {
-    // Use the poster image frame's size.
-    nsIFrame *child = mFrames.FirstChild();
-    if (child && child->GetType() == nsGkAtoms::imageFrame) {
-      nsImageFrame* imageFrame = static_cast<nsImageFrame*>(child);
-      nsSize imgsize;
-      if (NS_SUCCEEDED(imageFrame->GetIntrinsicImageSize(imgsize))) {
-        return imgsize;
-      }
-    }
-  }
-
+  
   if (!HasVideoElement()) {
     if (!aRenderingContext || !mFrames.FirstChild()) {
       // We just want our intrinsic ratio, but audio elements need no
@@ -553,7 +559,15 @@ nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
   }
 
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
-  size = element->GetVideoSize(size);
+  if (NS_FAILED(element->GetVideoSize(&size)) && ShouldDisplayPoster()) {
+    // Use the poster image frame's size.
+    nsIFrame *child = mPosterImage->GetPrimaryFrame();
+    nsImageFrame* imageFrame = do_QueryFrame(child);
+    nsSize imgsize;
+    if (NS_SUCCEEDED(imageFrame->GetIntrinsicImageSize(imgsize))) {
+      return imgsize;
+    }
+  }
 
   return nsSize(nsPresContext::CSSPixelsToAppUnits(size.width),
                 nsPresContext::CSSPixelsToAppUnits(size.height));
@@ -599,6 +613,7 @@ bool nsVideoFrame::HasVideoData()
   if (!HasVideoElement())
     return false;
   nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
-  nsIntSize size = element->GetVideoSize(nsIntSize(0,0));
+  nsIntSize size(0, 0);
+  element->GetVideoSize(&size);
   return size != nsIntSize(0,0);
 }

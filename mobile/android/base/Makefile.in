@@ -44,19 +44,34 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/ipc/app/defs.mk
 
+USE_AUTOTARGETS_MK = 1 # mkdir_deps
+include $(topsrcdir)/config/makefiles/makeutils.mk
+
+# Enhanced error checking
+javac-xlint = -Xlint:all,-deprecation,-fallthrough
+
 DIRS = locales
 
-DIST_FILES = package-name.txt
+# Directory deps
+dir-classes           = $(call mkdir_deps,classes)
+dir-res-drawable      = $(call mkdir_deps,res/drawable)
+dir-res-drawable-hdpi = $(call mkdir_deps,res/drawable-hdpi)
+dir-res-values        = $(call mkdir_deps,res/values)
 
-SYNC_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-sources.mn | tr '\n' ' ';)
-SYNC_PP_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/preprocess-sources.mn | tr '\n' ' ';)
-SYNC_THIRDPARTY_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-third-party-sources.mn | tr '\n' ' ';)
-SYNC_RES_DRAWABLE=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-resources.mn | tr '\n' ' ';)
-SYNC_RES_DRAWABLE_LDPI=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-ldpi-resources.mn | tr '\n' ' ';)
-SYNC_RES_DRAWABLE_MDPI=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-mdpi-resources.mn | tr '\n' ' ';)
-SYNC_RES_DRAWABLE_HDPI=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-hdpi-resources.mn | tr '\n' ' ';)
-SYNC_RES_LAYOUT=$(shell cat $(topsrcdir)/mobile/android/sync/android-layout-resources.mn | tr '\n' ' ';)
-SYNC_RES_VALUES=$(shell cat $(topsrcdir)/mobile/android/sync/android-values-resources.mn | tr '\n' ' ';)
+# Local vars to avoid typos
+dir-ts       = .deps/ts
+gecko-ap     = gecko.ap_
+manifest-xml = AndroidManifest.xml
+pkg-name     = package-name.txt
+R-java       = R.java
+strings-xml  = res/values/strings.xml
+
+GENERATED_DIRS += $(dir-ts)
+DIST_FILES      = $(pkg-name)
+
+include $(topsrcdir)/mobile/android/base/android-sync-files.mk
+
+#These SYNC_ variables could be moved to android-sync/fennec-copy-code.sh
 SYNC_RES_XML=res/xml/sync_authenticator.xml
 SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml res/xml/sync_options.xml
 
@@ -162,7 +177,7 @@ FENNEC_JAVA_FILES = \
   $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND
-FENNEC_JAVA_FILES += GeckoSmsManager.java
+  FENNEC_JAVA_FILES += GeckoSmsManager.java
 endif
 
 FENNEC_PP_JAVA_FILES = \
@@ -218,16 +233,16 @@ DEFINES += -DMOZ_LINKER_EXTRACT=1
 endif
 
 GARBAGE += \
-  AndroidManifest.xml  \
+  $(manifest-xml)  \
   classes.dex  \
   $(FENNEC_PP_JAVA_FILES) \
   $(SYNC_PP_JAVA_FILES) \
-  gecko.ap_  \
-  res/values/strings.xml \
-  R.java \
+  $(gecko-ap)  \
+  $(strings-xml) \
+  $(R-java) \
   $(FENNEC_PP_XML_FILES) \
   $(SYNC_PP_RES_XML) \
-  package-name.txt \
+  $(pkg-name) \
   Manifest.java \
   $(NULL)
 
@@ -298,7 +313,7 @@ RES_LAYOUT = \
 RES_LAYOUT_V11 = \
   res/layout-v11/gecko_app.xml \
   $(NULL)
- 
+
 RES_LAYOUT_LAND_V14 = \
   res/layout-land-v14/browser_toolbar.xml \
   $(NULL)
@@ -661,6 +676,7 @@ RES_DIRS= \
   res/menu-v11                \
   $(NULL)
 
+GENERATED_DIRS += $(RES_DIRS)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -672,12 +688,88 @@ include $(topsrcdir)/config/android-common.mk
 # Sync dependencies are provided in a single jar. Sync classes themselves are delivered as source,
 # because Android resource classes must be compiled together in order to avoid overlapping resource
 # indices.
-classes.dex: $(FENNEC_JAVA_FILES) $(FENNEC_PP_JAVA_FILES) $(SYNC_JAVA_FILES) $(SYNC_PP_JAVA_FILES) $(SYNC_THIRDPARTY_JAVA_FILES) R.java
-	$(NSINSTALL) -D classes
-	$(JAVAC) $(JAVAC_FLAGS) -d classes $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES))
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes -classpath classes $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
+
+###########################################################################
+# Problems to contend with:
+# -------------------------------------------------------------------------
+#   o Third party sources will not compile cleanly with -Werror -Xlint:all
+#     For now maintain separate -dep and -excl{usion} lists so dependencies
+#     and command lines can be handled separately.  This layer can be used
+#     to transition files over to using stricter compiler flags by moving
+#     files between lists.  The layer should be removed after all files
+#     have been transitioned.
+#   o A 1-to-1 dep mapping (%.class: %.java) would be beneficial.
+#     This would allow updating individual classes within a jarfile.
+#     $(wildcard) can be used to gather anonymous classes.
+###########################################################################
+
+###########################################################################
+third-party-classes = $(dir-ts)/third-party-classes.ts
+# -----------------------------------------------------------------------
+# -classes: block classes.dex compile until 3rd party has finished
+###########################################################################
+
+third-party-src=\
+  $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES)) \
+  $(NULL)
+
+third-party-preqs=\
+  $(dir-classes) \
+  $(third-party-src) \
+  $(NULL)
+
+third-party-excl=\
+  $(dir-classes) \
+  $(srcdir)/Makefile.in \
+  $(NULL)
+
+# todo: review deps, target should use $? rather than $^.
+third-party-classes: $(third-party-classes)
+$(third-party-classes): $(third-party-preqs)
+	$(if $(filter-out $(third-party-excl),$^),(\
+      $(JAVAC) $(JAVAC_FLAGS) -d classes $(filter-out $(third-party-excl),$^)\
+    ))
+	@$(TOUCH) $@
+
+$(third-party-preqs): $(srcdir)/Makefile.in
+
+
+###########################################################################
+classes-dex-src=\
+  $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) \
+  $(FENNEC_PP_JAVA_FILES) \
+  $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) \
+  $(SYNC_PP_JAVA_FILES) \
+  $(R-java) \
+  $(NULL)
+
+classes-dex-preqs=\
+  $(dir-classes) \
+  $(third-party-classes) \
+  $(classes-dex-src) \
+  $(third-party-src) \
+  $(NULL)
+
+classes-dex-preqs-excl=\
+  $(dir-classes) \
+  $(third-party-classes) \
+  $(third-party-src) \
+  $(srcdir)/Makefile.in \
+  $(NULL)
+
+classes.dex: $(classes-dex-preqs)
+	$(if $(filter-out $(classes-dex-preqs-excl),$?),(\
+      $(JAVAC) $(JAVAC_FLAGS) $(javac-xlint) \
+        -d classes -classpath classes \
+        $(filter-out $(classes-dex-preqs-excl),$?)\
+    ))
 	$(DX) --dex --output=$@ classes
 
+# todo: replace $(srcdir)/Makefile.in with $(GLOBAL_DEPS)
+$(classes-dex-preqs) : $(srcdir)/Makefile.in
+
+
+###########################################################################
 PP_RES_XML= \
   $(SYNC_PP_RES_XML) \
   $(FENNEC_PP_XML_FILES) \
@@ -691,55 +783,103 @@ $(PP_RES_XML): $(patsubst res/%,$(srcdir)/resources/%.in,$(PP_RES_XML))
 # AndroidManifest.xml includes these files, so they need to be marked as dependencies.
 SYNC_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/sync/manifests/*.in)
 
-android-tgts = \
-  AndroidManifest.xml \
-  $(FENNEC_PP_JAVA_FILES) \
-  $(SYNC_PP_JAVA_FILES) \
-  package-name.txt \
-  $(NULL)
-
-android-preqs = \
-  Makefile.in \
-  $(call mkdir_deps,db,sync/repositories/android) \
+gen-preqs =\
+  $(call mkdir_deps,db sync/repositories/android) \
   $(SYNC_MANIFEST_FRAGMENTS) \
   $(NULL)
 
-$(android-tgts): % : %.in $(android-preqs)
+gen-tgts =\
+  $(manifest-xml) \
+  $(FENNEC_PP_JAVA_FILES) \
+  $(SYNC_PP_JAVA_FILES) \
+  $(pkg-name) \
+  $(NULL)
+
+$(gen-tgts): % : %.in $(gen-preqs)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
-res/drawable/icon.png: $(MOZ_APP_ICON)
-	$(NSINSTALL) -D res/drawable
+$(gen-preqs): $(srcdir)/Makefile.in
+
+
+#####################
+res/drawable/icon.png: $(dir-res-drawable) $(MOZ_APP_ICON)
 	cp $(ICON_PATH) $@
 
-res/drawable-hdpi/icon.png: $(MOZ_APP_ICON)
-	$(NSINSTALL) -D res/drawable-hdpi
+res/drawable-hdpi/icon.png: $(dir-res-drawable-hdpi) $(MOZ_APP_ICON)
 	cp $(ICON_PATH_HDPI) $@
 
+
+#####################
+res-drawable-preqs =\
+  $(dir-res-drawable) \
+  $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES)) \
+  $(NULL)
+
 RES_DRAWABLE = $(addprefix res/drawable/,$(notdir $(MOZ_ANDROID_DRAWABLES)))
-$(RES_DRAWABLE): $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES))
-	$(NSINSTALL) -D res/drawable
+$(RES_DRAWABLE): $(res-drawable-preqs)
 	$(NSINSTALL) $^ res/drawable/
 
-res/values/defaults.xml: $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/res/values/defaults.xml
-	$(NSINSTALL) -D res/values
+
+#####################
+res-defaults-preqs =\
+  $(dir-res-values) \
+  $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/res/values/defaults.xml \
+  $(NULL)
+
+res/values/defaults.xml: $(res-defaults-preqs)
 	$(NSINSTALL) $^  res/values
 
-$(RES_DIRS):
-	$(RM) -r $@
-	$(NSINSTALL) -D $@
-
-$(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
+# note: deps += $(RES_DIRS) moved to GENERATED_DIRS
+$(RESOURCES): $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	@echo "creating $@"
 	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
 
-R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_HDPI) $(PP_RES_XML) res/values/defaults.xml res/drawable/sync_ic_launcher.png res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml FORCE
-	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
+## Common preqs for R.java and gecko.ap_
+##########################################
+rg-common-preqs =\
+  $(RESOURCES) \
+  $(RES_DRAWABLE) \
+  $(RES_DRAWABLE_LDPI) \
+  $(RES_DRAWABLE_MDPI) \
+  $(RES_DRAWABLE_HDPI) \
+  $(PP_RES_XML) \
+  res/values/defaults.xml \
+  res/drawable/sync_ic_launcher.png \
+  res/drawable/icon.png \
+  res/drawable-hdpi/icon.png \
+  $(strings-xml) \
+  $(if $(IS_LANGUAGE_REPACK),FORCE) \
+  $(NULL)
 
-gecko.ap_: AndroidManifest.xml res/drawable/sync_ic_launcher.png res/drawable/icon.png res/drawable-hdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_HDPI) $(PP_RES_XML) res/values/defaults.xml res/values/strings.xml FORCE
-	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
-libs:: classes.dex package-name.txt
-	$(INSTALL) classes.dex $(FINAL_TARGET)
-	$(INSTALL) package-name.txt $(FINAL_TARGET)
+## R.java
+###########
+R-java-preqs =\
+  $(MOZ_APP_ICON) \
+  $(rg-common-preqs) \
+  $(manifest-xml) \
+  $(NULL)
+
+$(R-java): $(R-java-preqs)
+	$(AAPT) package -f -M $(manifest-xml) -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
+
+
+## gecko.ap_
+##############
+gecko-ap-preqs =\
+  $(manifest-xml) \
+  $(rg-common-preqs) \
+  $(NULL)
+
+$(gecko-ap): $(gecko-ap-preqs)
+	$(AAPT) package -f -M $(manifest-xml) -I $(ANDROID_SDK)/android.jar  -S res -F $@
+
+
+#################
+libs-install = $(dir-ts)/libs-install.ts
+libs:: $(R-java) $(gecko-ap) third-party-classes $(libs-install)
+$(libs-install): classes.dex $(pkg-name)
+	$(INSTALL) $^ $(FINAL_TARGET)
+	$(TOUCH) $@

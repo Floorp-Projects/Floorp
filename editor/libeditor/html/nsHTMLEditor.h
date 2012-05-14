@@ -140,6 +140,8 @@ public:
   virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
   virtual bool IsAcceptableInputEvent(nsIDOMEvent* aEvent);
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent();
+  virtual bool IsEditable(nsIContent *aNode);
+  using nsEditor::IsEditable;
 
   /* ------------ nsStubMutationObserver overrides --------- */
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED

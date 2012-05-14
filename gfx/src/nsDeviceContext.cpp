@@ -41,7 +41,6 @@
 #include "nsCRT.h"
 #include "nsFontMetrics.h"
 #include "nsRenderingContext.h"
-#include "nsIView.h"
 #include "nsIWidget.h"
 
 #include "mozilla/Attributes.h"

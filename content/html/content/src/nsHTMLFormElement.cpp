@@ -1910,41 +1910,6 @@ nsHTMLFormElement::GetCurrentRadioButton(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-nsHTMLFormElement::GetPositionInGroup(nsIDOMHTMLInputElement *aRadio,
-                                      PRInt32 *aPositionIndex,
-                                      PRInt32 *aItemsInGroup)
-{
-  *aPositionIndex = 0;
-  *aItemsInGroup = 1;
-
-  nsAutoString name;
-  aRadio->GetName(name);
-  if (name.IsEmpty()) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsISupports> itemWithName;
-  itemWithName = ResolveName(name);
-  NS_ENSURE_TRUE(itemWithName, NS_ERROR_FAILURE);
-  nsCOMPtr<nsINodeList> radioGroup(do_QueryInterface(itemWithName));
-
-  NS_ASSERTION(radioGroup, "No such radio group in this container");
-  if (!radioGroup) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContent> currentRadioNode(do_QueryInterface(aRadio));
-  NS_ASSERTION(currentRadioNode, "No nsIContent for current radio button");
-  *aPositionIndex = radioGroup->IndexOf(currentRadioNode);
-  NS_ASSERTION(*aPositionIndex >= 0, "Radio button not found in its own group");
-  PRUint32 itemsInGroup;
-  radioGroup->GetLength(&itemsInGroup);
-  *aItemsInGroup = itemsInGroup;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
                                       const bool aPrevious,
                                       nsIDOMHTMLInputElement*  aFocusedRadio,

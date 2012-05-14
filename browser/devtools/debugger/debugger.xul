@@ -23,6 +23,7 @@
    -   Dave Camp <dcamp@mozilla.com>
    -   Panos Astithas <past@mozilla.com>
    -   Victor Porof <vporof@mozilla.com>
+   -   Rob Campbell <rcampbell@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,6 +41,7 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/orion.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/debugger.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/debugger.css" type="text/css"?>
 <!DOCTYPE window [
 <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/debugger.dtd" >
@@ -48,59 +50,73 @@
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/source-editor-overlay.xul"?>
 
-<xul:window xmlns="http://www.w3.org/1999/xhtml"
-            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <xul:script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <xul:script type="text/javascript" src="debugger-controller.js"/>
-  <xul:script type="text/javascript" src="debugger-view.js"/>
+  <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="text/javascript" src="debugger-controller.js"/>
+  <script type="text/javascript" src="debugger-view.js"/>
 
-  <xul:popupset id="debugger-popups">
-    <xul:menupopup id="sourceEditorContextMenu"
-                   onpopupshowing="goUpdateSourceEditorMenuItems()">
-      <xul:menuitem id="se-cMenu-copy"/>
-      <xul:menuseparator/>
-      <xul:menuitem id="se-cMenu-selectAll"/>
-      <xul:menuseparator/>
-      <xul:menuitem id="se-cMenu-find"/>
-      <xul:menuitem id="se-cMenu-findAgain"/>
-      <xul:menuseparator/>
-      <xul:menuitem id="se-cMenu-gotoLine"/>
-    </xul:menupopup>
-  </xul:popupset>
+  <popupset id="debugger-popups">
+    <menupopup id="sourceEditorContextMenu"
+               onpopupshowing="goUpdateSourceEditorMenuItems()">
+      <menuitem id="se-cMenu-copy"/>
+      <menuseparator/>
+      <menuitem id="se-cMenu-selectAll"/>
+      <menuseparator/>
+      <menuitem id="se-cMenu-find"/>
+      <menuitem id="se-cMenu-findAgain"/>
+      <menuseparator/>
+      <menuitem id="se-cMenu-gotoLine"/>
+    </menupopup>
+  </popupset>
 
-  <xul:commandset id="editMenuCommands"/>
-  <xul:commandset id="sourceEditorCommands"/>
-  <xul:keyset id="sourceEditorKeys"/>
+  <commandset id="editMenuCommands"/>
+  <commandset id="sourceEditorCommands"/>
+  <keyset id="sourceEditorKeys"/>
 
-  <div id="body" class="vbox flex">
-    <xul:toolbar id="dbg-toolbar">
-      <xul:button id="close" hidden="false">&debuggerUI.closeButton;</xul:button>
-      <xul:button id="resume"/>
-      <xul:button id="step-over">&debuggerUI.stepOverButton;</xul:button>
-      <xul:button id="step-in">&debuggerUI.stepInButton;</xul:button>
-      <xul:button id="step-out">&debuggerUI.stepOutButton;</xul:button>
-      <xul:menulist id="scripts"/>
-      <xul:textbox id="scripts-search" type="search"
-                   emptytext="&debuggerUI.emptyFilterText;"/>
-    </xul:toolbar>
-    <div id="dbg-content" class="hbox flex">
-      <div id="stack" class="vbox">
-        <div class="title unselectable">&debuggerUI.stackTitle;</div>
-        <div id="stackframes" class="vbox flex"></div>
-      </div>
-      <div id="script" class="vbox flex">
-        <div class="title unselectable">&debuggerUI.scriptTitle;</div>
-        <div id="editor" class="vbox flex"></div>
-      </div>
-      <div id="properties" class="vbox">
-        <div class="title unselectable">&debuggerUI.propertiesTitle;</div>
-        <div id="variables" class="vbox flex"></div>
-      </div>
-    </div>
-    <div id="dbg-statusbar">
-      <span id="status"></span>
-    </div>
-  </div>
-
-</xul:window>
+  <vbox id="body" flex="1">
+    <toolbar id="dbg-toolbar" class="devtools-toolbar">
+#ifdef XP_MACOSX
+      <toolbarbutton id="close" class="devtools-closebutton"/>
+#endif
+      <toolbarbutton id="resume"
+              class="devtools-toolbarbutton"
+              type="checkbox"
+              tabindex="0"/>
+      <toolbarbutton id="step-over"
+              class="devtools-toolbarbutton"
+              label="&debuggerUI.stepOverButton;"
+              tabindex="0"/>
+      <toolbarbutton id="step-in"
+              class="devtools-toolbarbutton"
+              label="&debuggerUI.stepInButton;"
+              tabindex="0"/>
+      <toolbarbutton id="step-out"
+              class="devtools-toolbarbutton"
+              label="&debuggerUI.stepOutButton;"
+              tabindex="0"/>
+      <menulist id="scripts" class="devtools-menulist"
+                label="&debuggerUI.emptyScriptText;"/>
+      <textbox id="scripts-search" type="search"
+               class="devtools-searchinput"
+               emptytext="&debuggerUI.emptyFilterText;"/>
+      <spacer flex="1"/>
+#ifndef XP_MACOSX
+      <toolbarbutton id="close" class="devtools-closebutton"/>
+#endif
+    </toolbar>
+    <hbox id="dbg-content" flex="1">
+      <vbox id="stack" flex="1">
+        <vbox id="stackframes" class="dbg-default" flex="1"/>
+      </vbox>
+      <splitter id="stack-script-splitter"
+                class="devtools-side-splitter"/>
+      <vbox id="editor" class="dbg-default" flex="1"/>
+      <splitter id="script-properties-splitter"
+                class="devtools-side-splitter"/>
+      <vbox id="properties" flex="1">
+        <vbox id="variables" class="dbg-default" flex="1"/>
+      </vbox>
+    </hbox>
+  </vbox>
+</window>

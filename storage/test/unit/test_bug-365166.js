@@ -21,12 +21,6 @@ function run_test() {
     try {
       // This shouldn't crash:
       do_check_eq(statement.getColumnName(0), colName);
-
-      // OK, if the above statement didn't crash, check that initializing a
-      // wrapper doesn't crash either:
-      var wrapper = Components.classes["@mozilla.org/storage/statement-wrapper;1"]
-                              .createInstance(Components.interfaces.mozIStorageStatementWrapper);
-      wrapper.initialize(statement);
     } finally {
       statement.reset();
       statement.finalize();

@@ -70,7 +70,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 
-[scriptable, uuid(f75d0a14-e278-4716-a151-637862451a2f)]
+[scriptable, uuid(2e5a1f37-786b-4a52-b0e3-f711ee2268a8)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1149,4 +1149,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * The caller of this method must have UniversalXPConnect privileges.
    */
   void setScrollPositionClampingScrollPortSize(in float aWidth, in float aHeight);
+
+  /**
+   * Mark if the window is an application window or not.
+   * This should only be set for top-level mozApp or mozBrowser frames.
+   * It should not be set for other frames unless you want a frame (and its
+   * children) to have a different value for IsPartOfApp than the frame's
+   * parent.
+   */
+  void setIsApp(in boolean value);
 };

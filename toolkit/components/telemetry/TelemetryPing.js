@@ -282,7 +282,8 @@ TelemetryPing.prototype = {
       for (let name in addonHistograms) {
         packedHistograms[name] = this.packHistogram(addonHistograms[name]);
       }
-      ret[addonName] = packedHistograms;
+      if (Object.keys(packedHistograms).length != 0)
+        ret[addonName] = packedHistograms;
     }
 
     return ret;

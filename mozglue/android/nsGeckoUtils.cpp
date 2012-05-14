@@ -66,7 +66,14 @@ __attribute__ ((visibility("default")))
 jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *jenv, jclass, jlong size)
 {
-    return jenv->NewDirectByteBuffer(malloc(size), size);
+    jobject buffer = NULL;
+    void* mem = malloc(size);
+    if (mem) {
+        buffer = jenv->NewDirectByteBuffer(mem, size);
+        if (!buffer)
+            free(mem);
+    }
+    return buffer;
 }
 
 extern "C"
@@ -75,36 +82,4 @@ void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_freeDirectBuffer(JNIEnv *jenv, jclass, jobject buf)
 {
     free(jenv->GetDirectBufferAddress(buf));
-}
-
-extern "C"
-__attribute__ ((visibility("default")))
-void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_unlockDatabaseFile(JNIEnv *jenv, jclass, jstring jDatabasePath)
-{
-    const char *databasePath = jenv->GetStringUTFChars(jDatabasePath, NULL);
-    int fd = open(databasePath, O_RDWR);
-    jenv->ReleaseStringUTFChars(jDatabasePath, databasePath);
-
-    // File could not be open, do nothing
-    if (fd < 0) {
-        return;
-    }
-
-    struct flock lock;
-
-    lock.l_type = F_WRLCK;
-    lock.l_whence = SEEK_SET;
-    lock.l_start = 0;
-    lock.l_len = 0;
-
-    int result = fcntl(fd, F_GETLK, &lock);
-
-    // Release any existing lock in the file
-    if (result != -1 && lock.l_type == F_WRLCK) {
-        lock.l_type = F_UNLCK;
-        fcntl(fd, F_SETLK, &lock);
-    }
-
-    close(fd);
 }

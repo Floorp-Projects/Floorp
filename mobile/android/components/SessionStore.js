@@ -744,7 +744,7 @@ SessionStore.prototype = {
         matchingEntry = {shEntry: shEntry, childDocIdents: childDocIdents};
         aDocIdentMap[aEntry.docIdentifier] = matchingEntry;
       } else {
-        shEntry.adoptBFCacheEntry(matchingEntry);
+        shEntry.adoptBFCacheEntry(matchingEntry.shEntry);
         childDocIdents = matchingEntry.childDocIdents;
       }
     }

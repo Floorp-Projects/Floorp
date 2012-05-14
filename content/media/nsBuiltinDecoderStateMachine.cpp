@@ -772,7 +772,7 @@ bool nsBuiltinDecoderStateMachine::HaveEnoughDecodedAudio(PRInt64 aAmpleAudioUSe
   nsTArray<OutputMediaStream>& streams = mDecoder->OutputStreams();
   for (PRUint32 i = 0; i < streams.Length(); ++i) {
     OutputMediaStream* stream = &streams[i];
-    if (!stream->mHaveSentFinishAudio &&
+    if (stream->mStreamInitialized && !stream->mHaveSentFinishAudio &&
         !stream->mStream->HaveEnoughBuffered(TRACK_AUDIO)) {
       return false;
     }
@@ -783,7 +783,7 @@ bool nsBuiltinDecoderStateMachine::HaveEnoughDecodedAudio(PRInt64 aAmpleAudioUSe
       &nsBuiltinDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder);
   for (PRUint32 i = 0; i < streams.Length(); ++i) {
     OutputMediaStream* stream = &streams[i];
-    if (!stream->mHaveSentFinishAudio) {
+    if (stream->mStreamInitialized && !stream->mHaveSentFinishAudio) {
       stream->mStream->DispatchWhenNotEnoughBuffered(TRACK_AUDIO, thread, callback);
     }
   }
@@ -805,7 +805,7 @@ bool nsBuiltinDecoderStateMachine::HaveEnoughDecodedVideo()
 
   for (PRUint32 i = 0; i < streams.Length(); ++i) {
     OutputMediaStream* stream = &streams[i];
-    if (!stream->mHaveSentFinishVideo &&
+    if (stream->mStreamInitialized && !stream->mHaveSentFinishVideo &&
         !stream->mStream->HaveEnoughBuffered(TRACK_VIDEO)) {
       return false;
     }
@@ -816,7 +816,7 @@ bool nsBuiltinDecoderStateMachine::HaveEnoughDecodedVideo()
       &nsBuiltinDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder);
   for (PRUint32 i = 0; i < streams.Length(); ++i) {
     OutputMediaStream* stream = &streams[i];
-    if (!stream->mHaveSentFinishVideo) {
+    if (stream->mStreamInitialized && !stream->mHaveSentFinishVideo) {
       stream->mStream->DispatchWhenNotEnoughBuffered(TRACK_VIDEO, thread, callback);
     }
   }

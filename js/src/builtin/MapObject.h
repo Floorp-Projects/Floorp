@@ -58,7 +58,7 @@ namespace js {
  * All values except ropes are hashable as-is.
  */
 class HashableValue {
-    HeapValue value;
+    RelocatableValue value;
 
   public:
     struct Hasher {
@@ -69,10 +69,10 @@ class HashableValue {
 
     HashableValue() : value(UndefinedValue()) {}
 
-    operator const HeapValue &() const { return value; }
     bool setValue(JSContext *cx, const Value &v);
     HashNumber hash() const;
     bool equals(const HashableValue &other) const;
+    HashableValue mark(JSTracer *trc) const;
 
     struct StackRoot {
         StackRoot(JSContext *cx, HashableValue *pv) : valueRoot(cx, (Value*) &pv->value) {}
@@ -80,8 +80,13 @@ class HashableValue {
     };
 };
 
-typedef HashMap<HashableValue, HeapValue, HashableValue::Hasher, RuntimeAllocPolicy> ValueMap;
-typedef HashSet<HashableValue, HashableValue::Hasher, RuntimeAllocPolicy> ValueSet;
+typedef HashMap<HashableValue,
+                RelocatableValue,
+                HashableValue::Hasher,
+                RuntimeAllocPolicy> ValueMap;
+typedef HashSet<HashableValue,
+                HashableValue::Hasher,
+                RuntimeAllocPolicy> ValueSet;
 
 class MapObject : public JSObject {
   public:

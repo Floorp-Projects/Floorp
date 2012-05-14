@@ -66,6 +66,21 @@ struct ClassStorage
   T *addr() { return (T *)(void *)bytes; }
 };
 
+static inline bool
+FuzzyEqual(Float aA, Float aB, Float aErr)
+{
+  if ((aA + aErr > aB) && (aA - aErr < aB)) {
+    return true;
+  }
+  return false;
+}
+
+static inline Float
+Distance(Point aA, Point aB)
+{
+  return hypotf(aB.x - aA.x, aB.y - aA.y);
+}
+
 }
 }
 

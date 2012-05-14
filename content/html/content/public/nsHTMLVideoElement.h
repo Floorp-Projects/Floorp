@@ -83,9 +83,9 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  // Returns the current video frame width and height.
-  // If there is no video frame, returns the given default size.
-  nsIntSize GetVideoSize(nsIntSize defaultSize);
+  // Set size with the current video frame's height and width.
+  // If there is no video frame, returns NS_ERROR_FAILURE.
+  nsresult GetVideoSize(nsIntSize* size);
 
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel);
 

@@ -43,7 +43,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
-CPP_PROG_LINK	= 1
 
 SIMPLE_PROGRAMS	= PrimitiveTest$(BIN_SUFFIX) SimpleTypeLib$(BIN_SUFFIX)
 

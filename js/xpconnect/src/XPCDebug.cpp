@@ -79,7 +79,6 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     PRInt32 lineno = 0;
     JSFunction* fun = nsnull;
     uint32_t namedArgCount = 0;
-    jsval val;
     JSBool isString;
 
     // get the info for this stack frame
@@ -152,11 +151,11 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
         }
 
         // print any unnamed trailing args (found in 'arguments' object)
-
+        JS::Value val;
         if (JS_GetProperty(cx, callObj, "arguments", &val) &&
-            JSVAL_IS_OBJECT(val)) {
+            val.isObject()) {
             uint32_t argCount;
-            JSObject* argsObj = JSVAL_TO_OBJECT(val);
+            JSObject* argsObj = &val.toObject();
             if (JS_GetProperty(cx, argsObj, "length", &val) &&
                 JS_ValueToECMAUint32(cx, val, &argCount) &&
                 argCount > namedArgCount) {

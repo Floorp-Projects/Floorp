@@ -72,9 +72,8 @@ let DOMContactManager = {
         x = a.properties[msg.findOptions.sortBy][0].toLowerCase();
       if (b.properties[msg.findOptions.sortBy])
         y = b.properties[msg.findOptions.sortBy][0].toLowerCase();
-      if (msg.findOptions == 'ascending')
-        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-      return ((x < y) ? 1 : ((x > y) ? -1 : 0));
+      let result = x.localeCompare(y);
+      return msg.findOptions.sortOrder == 'ascending' ? result : -result;
     }
     debug("Fallback DOMContactManager::receiveMessage " + aMessage.name);
     let msg = aMessage.json;

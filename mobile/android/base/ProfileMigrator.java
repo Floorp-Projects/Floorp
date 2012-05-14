@@ -134,6 +134,14 @@ public class ProfileMigrator {
     // We use this to ignore the tags folder during migration.
     private static final String ROOT_TAGS_FOLDER_NAME = "tags";
 
+    // Find the Mobile bookmarks root in places (bug 746860).
+    // We cannot rely on the name as that is locale-dependent.
+    // If it exists, it will have Id=6, fk=null, type=folder.
+    private static final String MOBILE_ROOT_QUERY =
+        "SELECT id FROM moz_bookmarks " +
+        "WHERE id=6 AND type=2 AND fk IS NULL AND parent=1";
+    private static final String MOBILE_ROOT_ID = "id";
+
     private static final String BOOKMARK_QUERY_SELECT =
         "SELECT places.url             AS p_url,"         +
         "       bookmark.guid          AS b_guid,"        +
@@ -143,14 +151,17 @@ public class ProfileMigrator {
         "       bookmark.parent        AS b_parent,"      +
         "       bookmark.dateAdded     AS b_added,"       +
         "       bookmark.lastModified  AS b_modified,"    +
-        "       bookmark.position      AS b_position,";
+        "       bookmark.position      AS b_position,"    +
+        "       keyword.keyword        AS k_keyword,";
 
     private static final String BOOKMARK_QUERY_TRAILER =
-        "FROM ((moz_bookmarks AS bookmark "               +
+        "FROM (((moz_bookmarks AS bookmark "              +
+        "        LEFT OUTER JOIN moz_keywords AS keyword "+
+        "        ON keyword.id = bookmark.keyword_id) "   +
         "       LEFT OUTER JOIN moz_places AS places "    +
         "       ON places.id = bookmark.fk) "             +
-        "       LEFT OUTER JOIN moz_favicons AS favicon " +
-        "       ON places.favicon_id = favicon.id) "      +
+        "      LEFT OUTER JOIN moz_favicons AS favicon "  +
+        "      ON places.favicon_id = favicon.id) "       +
         // Bookmark folders don't have a places entry.
         "WHERE (places.hidden IS NULL "                   +
         "       OR places.hidden <> 1) "                  +
@@ -159,7 +170,7 @@ public class ProfileMigrator {
         "ORDER BY bookmark.id";
 
     private static final String BOOKMARK_QUERY_GUID =
-        BOOKMARK_QUERY_SELECT                              +
+        BOOKMARK_QUERY_SELECT                             +
         "       favicon.data           AS f_data,"        +
         "       favicon.mime_type      AS f_mime_type,"   +
         "       favicon.url            AS f_url,"         +
@@ -167,7 +178,7 @@ public class ProfileMigrator {
         BOOKMARK_QUERY_TRAILER;
 
     private static final String BOOKMARK_QUERY_NO_GUID =
-        BOOKMARK_QUERY_SELECT                              +
+        BOOKMARK_QUERY_SELECT                             +
         "       favicon.data           AS f_data,"        +
         "       favicon.mime_type      AS f_mime_type,"   +
         "       favicon.url            AS f_url "         +
@@ -183,14 +194,16 @@ public class ProfileMigrator {
     private static final String BOOKMARK_ADDED    = "b_added";
     private static final String BOOKMARK_MODIFIED = "b_modified";
     private static final String BOOKMARK_POSITION = "b_position";
+    private static final String KEYWORD_KEYWORD   = "k_keyword";
     private static final String FAVICON_DATA      = "f_data";
     private static final String FAVICON_MIME      = "f_mime_type";
     private static final String FAVICON_URL       = "f_url";
     private static final String FAVICON_GUID      = "f_guid";
 
     // Helper constants
-    private static final int PLACES_TYPE_BOOKMARK = 1;
-    private static final int PLACES_TYPE_FOLDER   = 2;
+    private static final int PLACES_TYPE_BOOKMARK  = 1;
+    private static final int PLACES_TYPE_FOLDER    = 2;
+    private static final int PLACES_TYPE_SEPARATOR = 3;
 
     /*
       For statistics keeping.
@@ -518,7 +531,12 @@ public class ProfileMigrator {
                     // This includes personal info, so don't log.
                     // Log.d(LOGTAG, "Message: " + message.toString());
                     JSONArray jsonPrefs = message.getJSONArray("preferences");
-                    parsePrefs(jsonPrefs);
+
+                    // Check that the batch of preferences we got notified of are in
+                    // the ones we requested and not those requested by other java code.
+                    if (!parsePrefs(jsonPrefs))
+                        return;
+
                     GeckoAppShell.unregisterGeckoEventListener("Preferences:Data",
                                                                (GeckoEventListener)this);
 
@@ -576,12 +594,18 @@ public class ProfileMigrator {
             return result;
         }
 
-        protected void parsePrefs(JSONArray jsonPrefs) {
+        // Returns true if we sucessfully got the preferences we requested.
+        protected boolean parsePrefs(JSONArray jsonPrefs) {
             try {
                 final int length = jsonPrefs.length();
                 for (int i = 0; i < length; i++) {
                     JSONObject jPref = jsonPrefs.getJSONObject(i);
                     final String prefName = jPref.getString("name");
+
+                    // Check to make sure we're working with preferences we requested.
+                    if (!mSyncSettingsList.contains(prefName))
+                        return false;
+
                     final String prefType = jPref.getString("type");
                     if ("bool".equals(prefType)) {
                         final boolean value = jPref.getBoolean("value");
@@ -599,13 +623,16 @@ public class ProfileMigrator {
             } catch (JSONException e) {
                 Log.e(LOGTAG, "Exception handling preferences answer: "
                       + e.getMessage());
+                return false;
             }
+
+            return true;
         }
 
         protected void configureSync() {
             final String userName = mSyncSettingsMap.get("services.sync.account");
-            final String syncKey = mSyncSettingsMap.get("Mozilla Services Password");
-            final String syncPass = mSyncSettingsMap.get("Mozilla Services Encryption Passphrase");
+            final String syncKey = mSyncSettingsMap.get("Mozilla Services Encryption Passphrase");
+            final String syncPass = mSyncSettingsMap.get("Mozilla Services Password");
             final String serverURL = mSyncSettingsMap.get("services.sync.serverURL");
             final String clusterURL = mSyncSettingsMap.get("services.sync.clusterURL");
             final String clientName = mSyncSettingsMap.get("services.sync.client.name");
@@ -792,6 +819,22 @@ public class ProfileMigrator {
                     cursor.moveToNext();
                 }
                 cursor.close();
+
+                // XUL Fennec doesn't mark the Mobile folder as a root,
+                // so fix that up here.
+                cursor = db.rawQuery(MOBILE_ROOT_QUERY, null);
+                if (cursor.moveToFirst()) {
+                    Log.v(LOGTAG, "Mobile root found, adding to known roots.");
+                    final int idCol = cursor.getColumnIndex(MOBILE_ROOT_ID);
+                    final long mobileRootId = cursor.getLong(idCol);
+                    mRerootMap.put(mobileRootId, getFolderId(Bookmarks.MOBILE_FOLDER_GUID));
+                    Log.v(LOGTAG, "Name: mobile, pid=" + mobileRootId
+                          + ", nid=" + mRerootMap.get(mobileRootId));
+                } else {
+                    Log.v(LOGTAG, "Mobile root not found, is this a desktop profile?");
+                }
+                cursor.close();
+
             } catch (SQLiteBridgeException e) {
                 Log.e(LOGTAG, "Failed to get bookmark roots: ", e);
                 // Do not try again.
@@ -1060,7 +1103,7 @@ public class ProfileMigrator {
         protected void addBookmark(String url, String title, String guid,
                                    long parent, long added,
                                    long modified, long position,
-                                   boolean folder) {
+                                   String keyword, int type) {
             ContentValues values = new ContentValues();
             if (title == null && url != null) {
                 title = url;
@@ -1074,6 +1117,9 @@ public class ProfileMigrator {
             if (guid != null) {
                 values.put(SyncColumns.GUID, guid);
             }
+            if (keyword != null) {
+                values.put(Bookmarks.KEYWORD, keyword);
+            }
             values.put(SyncColumns.DATE_CREATED, added);
             values.put(SyncColumns.DATE_MODIFIED, modified);
             values.put(Bookmarks.POSITION, position);
@@ -1083,7 +1129,11 @@ public class ProfileMigrator {
                 parent = mRerootMap.get(parent);
             }
             values.put(Bookmarks.PARENT, parent);
-            values.put(Bookmarks.TYPE, (folder ? Bookmarks.TYPE_FOLDER : Bookmarks.TYPE_BOOKMARK));
+
+            // The bookmark can only be one of three valid types
+            values.put(Bookmarks.TYPE, type == PLACES_TYPE_BOOKMARK ? Bookmarks.TYPE_BOOKMARK :
+                                       type == PLACES_TYPE_FOLDER ? Bookmarks.TYPE_FOLDER :
+                                       Bookmarks.TYPE_SEPARATOR);
 
             Cursor cursor = null;
             ContentProviderOperation.Builder builder = null;
@@ -1152,6 +1202,7 @@ public class ProfileMigrator {
                 final int addedCol = cursor.getColumnIndex(BOOKMARK_ADDED);
                 final int modifiedCol = cursor.getColumnIndex(BOOKMARK_MODIFIED);
                 final int positionCol = cursor.getColumnIndex(BOOKMARK_POSITION);
+                final int keywordCol = cursor.getColumnIndex(KEYWORD_KEYWORD);
                 final int faviconMimeCol = cursor.getColumnIndex(FAVICON_MIME);
                 final int faviconDataCol = cursor.getColumnIndex(FAVICON_DATA);
                 final int faviconUrlCol = cursor.getColumnIndex(FAVICON_URL);
@@ -1194,6 +1245,15 @@ public class ProfileMigrator {
                         }
 
                         int type = cursor.getInt(typeCol);
+
+                        // Only add bookmarks with a known type
+                        if (!(type == PLACES_TYPE_BOOKMARK ||
+                              type == PLACES_TYPE_FOLDER ||
+                              type == PLACES_TYPE_SEPARATOR)) {
+                            cursor.moveToNext();
+                            continue;
+                        }
+
                         long parent = cursor.getLong(parentCol);
 
                         // Places has an explicit root folder, id=1 parent=0. Skip that.
@@ -1212,6 +1272,7 @@ public class ProfileMigrator {
                         long datemodified =
                             cursor.getLong(modifiedCol) / (long)1000;
                         long position = cursor.getLong(positionCol);
+                        String keyword = cursor.getString(keywordCol);
                         byte[] faviconDataBuff = cursor.getBlob(faviconDataCol);
                         String faviconMime = cursor.getString(faviconMimeCol);
                         String faviconUrl = cursor.getString(faviconUrlCol);
@@ -1224,13 +1285,12 @@ public class ProfileMigrator {
                         // If so, we can add the bookmark itself.
                         if (knownFolders.contains(parent)) {
                             try {
-                                boolean isFolder = (type == PLACES_TYPE_FOLDER);
                                 addBookmark(url, title, guid, parent,
                                             dateadded, datemodified,
-                                            position, isFolder);
+                                            position, keyword, type);
                                 addFavicon(url, faviconUrl, faviconGuid,
                                            faviconMime, faviconDataBuff);
-                                if (isFolder) {
+                                if (type == PLACES_TYPE_FOLDER) {
                                     // We need to know the ID of the folder
                                     // we just inserted. It's possible to
                                     // make future database ops refer to the

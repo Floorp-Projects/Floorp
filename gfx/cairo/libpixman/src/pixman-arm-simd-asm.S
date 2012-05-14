@@ -355,49 +355,57 @@ pixman_asm_function pixman_composite_over_n_8_8888_asm_armv6
                                       prefetch_braking_distance
 
 pixman_asm_function fname
-	W	.req	r0
-	DST	.req	r1
-	SRC	.req	r2
-	VX	.req	r3
-	UNIT_X	.req	ip
-	TMP1	.req	r4
-	TMP2	.req	r5
-	VXMASK	.req	r6
-	PF_OFFS	.req	r7
+	W		.req	r0
+	DST		.req	r1
+	SRC		.req	r2
+	VX		.req	r3
+	UNIT_X		.req	ip
+	TMP1		.req	r4
+	TMP2		.req	r5
+	VXMASK		.req	r6
+	PF_OFFS		.req	r7
+	SRC_WIDTH_FIXED	.req	r8
 
 	ldr	UNIT_X, [sp]
-	push	{r4, r5, r6, r7}
+	push	{r4, r5, r6, r7, r8, r10}
 	mvn	VXMASK, #((1 << bpp_shift) - 1)
+	ldr	SRC_WIDTH_FIXED, [sp, #28]
 
 	/* define helper macro */
 	.macro	scale_2_pixels
 		ldr&t	TMP1, [SRC, TMP1]
-		and	TMP2, VXMASK, VX, lsr #(16 - bpp_shift)
-		add	VX, VX, UNIT_X
+		and	TMP2, VXMASK, VX, asr #(16 - bpp_shift)
+		adds	VX, VX, UNIT_X
 		str&t	TMP1, [DST], #(1 << bpp_shift)
+9:		subpls	VX, VX, SRC_WIDTH_FIXED
+		bpl	9b
 
 		ldr&t	TMP2, [SRC, TMP2]
-		and	TMP1, VXMASK, VX, lsr #(16 - bpp_shift)
-		add	VX, VX, UNIT_X
+		and	TMP1, VXMASK, VX, asr #(16 - bpp_shift)
+		adds	VX, VX, UNIT_X
 		str&t	TMP2, [DST], #(1 << bpp_shift)
+9:		subpls	VX, VX, SRC_WIDTH_FIXED
+		bpl	9b
 	.endm
 
 	/* now do the scaling */
-	and	TMP1, VXMASK, VX, lsr #(16 - bpp_shift)
-	add	VX, VX, UNIT_X
+	and	TMP1, VXMASK, VX, asr #(16 - bpp_shift)
+	adds	VX, VX, UNIT_X
+9:	subpls	VX, VX, SRC_WIDTH_FIXED
+	bpl	9b
 	subs	W, W, #(8 + prefetch_braking_distance)
 	blt	2f
 	/* calculate prefetch offset */
 	mov	PF_OFFS, #prefetch_distance
 	mla	PF_OFFS, UNIT_X, PF_OFFS, VX
 1:	/* main loop, process 8 pixels per iteration with prefetch */
-	subs	W, W, #8
+	pld	[SRC, PF_OFFS, asr #(16 - bpp_shift)]
 	add	PF_OFFS, UNIT_X, lsl #3
 	scale_2_pixels
 	scale_2_pixels
 	scale_2_pixels
 	scale_2_pixels
-	pld	[SRC, PF_OFFS, lsr #(16 - bpp_shift)]
+	subs	W, W, #8
 	bge	1b
 2:
 	subs	W, W, #(4 - 8 - prefetch_braking_distance)
@@ -426,8 +434,9 @@ pixman_asm_function fname
 	.unreq	TMP2
 	.unreq	VXMASK
 	.unreq	PF_OFFS
+	.unreq  SRC_WIDTH_FIXED
 	/* return */
-	pop	{r4, r5, r6, r7}
+	pop	{r4, r5, r6, r7, r8, r10}
 	bx	lr
 .endfunc
 .endm

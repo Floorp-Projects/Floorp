@@ -43,6 +43,10 @@ self.onmessage = function onmessage(event) {
  * Set default route and DNS servers for given network interface.
  */
 function setDefaultRouteAndDNS(options) {
+  if (options.oldIfname) {
+    libnetutils.ifc_remove_default_route(options.oldIfname);
+  }
+
   if (!options.gateway || !options.dns1_str) {
     options = getIFProperties(options.ifname);
   }
@@ -63,6 +67,7 @@ function setDefaultRouteAndDNS(options) {
 function runDHCPAndSetDefaultRouteAndDNS(options) {
   let dhcp = libnetutils.dhcp_do_request(options.ifname);
   dhcp.ifname = options.ifname;
+  dhcp.oldIfname = options.oldIfname;
 
   //TODO this could be race-y... by the time we've finished the DHCP request
   // and are now fudging with the routes, another network interface may have

@@ -18,10 +18,12 @@ MARIONETTE_HOME=`dirname $PWD`
 echo "Detected Marionette home in $MARIONETTE_HOME"
 
 # If a GECKO_OBJDIR environemnt variable exists, we will create the Python
-# virtual envirnoment there. Otherwise we createit in the PWD.
+# virtual envirnoment there. Otherwise we create it in the PWD.
 VENV_DIR="marionette_venv"
-if [ -d $GECKO_OBJDIR ]
+if [ -z $GECKO_OBJDIR ]
 then
+    VENV_DIR="$MARIONETTE_HOME/$VENV_DIR"
+else
     VENV_DIR="$GECKO_OBJDIR/$VENV_DIR"
 fi
 

@@ -147,15 +147,14 @@ dom_quickstubs.h: dom_quickstubs.cpp
 
 dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
                     $(srcdir)/qsgen.py \
-                    $(topsrcdir)/xpcom/idl-parser/header.py \
-                    $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+                    $(LIBXUL_DIST)/sdk/bin/header.py \
+                    $(LIBXUL_DIST)/sdk/bin/xpidl.py \
                     $(DEPTH)/js/src/js-confdefs.h
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
-	  -I$(topsrcdir)/xpcom/idl-parser \
+	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/qsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser \
 	  --header-output dom_quickstubs.h \
 	  --stub-output dom_quickstubs.cpp \
 	  --makedepend-output $(MDDEPDIR)/dom_qsgen.pp \
@@ -168,15 +167,14 @@ dombindings.$(OBJ_SUFFIX): dombindings_gen.h \
 dombindings_gen.h: $(srcdir)/dombindings.conf \
                    $(srcdir)/dombindingsgen.py \
                    $(srcdir)/codegen.py \
-                   $(topsrcdir)/xpcom/idl-parser/header.py \
-                   $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+                   $(LIBXUL_DIST)/sdk/bin/header.py \
+                   $(LIBXUL_DIST)/sdk/bin/xpidl.py \
                    $(DEPTH)/js/src/js-confdefs.h
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
-	  -I$(topsrcdir)/xpcom/idl-parser \
+	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/dombindingsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser \
 	  --header-output dombindings_gen.h \
 	  $(srcdir)/dombindings.conf
 
@@ -185,15 +183,14 @@ exports:: dombindings_gen.h
 dombindings_gen.cpp: $(srcdir)/dombindings.conf \
                      $(srcdir)/dombindingsgen.py \
                      $(srcdir)/codegen.py \
-                     $(topsrcdir)/xpcom/idl-parser/header.py \
-                     $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+                     $(LIBXUL_DIST)/sdk/bin/header.py \
+                     $(LIBXUL_DIST)/sdk/bin/xpidl.py \
                      $(DEPTH)/js/src/js-confdefs.h
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
-	  -I$(topsrcdir)/xpcom/idl-parser \
+	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/dombindingsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser \
 	  --stub-output dombindings_gen.cpp \
 	  --makedepend-output $(MDDEPDIR)/dombindingsgen.pp \
 	  $(srcdir)/dombindings.conf
@@ -204,30 +201,28 @@ DictionaryHelpers.$(OBJ_SUFFIX): DictionaryHelpers.h \
 DictionaryHelpers.h: $(srcdir)/dictionary_helper_gen.conf \
                      $(srcdir)/dictionary_helper_gen.py \
                      $(srcdir)/codegen.py \
-                     $(topsrcdir)/xpcom/idl-parser/header.py \
-                     $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+                     $(LIBXUL_DIST)/sdk/bin/header.py \
+                     $(LIBXUL_DIST)/sdk/bin/xpidl.py \
                      $(DEPTH)/js/src/js-confdefs.h
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
-	  -I$(topsrcdir)/xpcom/idl-parser \
+	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/dictionary_helper_gen.py \
 	  -I $(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser \
 	  --header-output DictionaryHelpers.h \
 	  $(srcdir)/dictionary_helper_gen.conf
 
 DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
                        $(srcdir)/dictionary_helper_gen.py \
                        $(srcdir)/codegen.py \
-                       $(topsrcdir)/xpcom/idl-parser/header.py \
-                       $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+                       $(LIBXUL_DIST)/sdk/bin/header.py \
+                       $(LIBXUL_DIST)/sdk/bin/xpidl.py \
                        $(DEPTH)/js/src/js-confdefs.h
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
-	  -I$(topsrcdir)/xpcom/idl-parser \
+	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/dictionary_helper_gen.py \
 	  -I $(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser \
 	  --header-output DictionaryHelpers.h \
 	  --stub-output DictionaryHelpers.cpp \
 	  --makedepend-output $(MDDEPDIR)/dictionary_helper_gen.pp \

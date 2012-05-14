@@ -1,0 +1,171 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/inContentUI.css");
+
+@namespace html "http://www.w3.org/1999/xhtml";
+
+#preferences-home {
+  display: block;
+}
+
+#header {
+  margin-bottom: 18px;
+}
+
+.landingButton {
+  -moz-box-align: center;
+  -moz-box-orient: vertical;
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
+.landingButton:hover {
+  cursor: pointer;
+}
+
+.landingButton-label {
+  margin-top: 4px;
+}
+
+.landingButton-icon {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background-image: url("chrome://browser/skin/preferences/Options.png");
+  background-repeat: no-repeat;
+}
+
+.preference-icon {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background-image: url("chrome://browser/skin/preferences/Options.png");
+  background-repeat: no-repeat;
+  margin: 0 20px;
+}
+
+.preference-icon[type="general"],
+.landingButton-icon[type="general"] {
+  background-position: 0 0;
+}
+
+.preference-icon[type="tabs"],
+.landingButton-icon[type="tabs"] {
+  background-position: -32px 0;
+}
+
+.preference-icon[type="content"],
+.landingButton-icon[type="content"] {
+  background-position: -64px 0;
+}
+
+.preference-icon[type="applications"],
+.landingButton-icon[type="applications"] {
+  background-position: -96px 0;
+}
+
+.preference-icon[type="privacy"],
+.landingButton-icon[type="privacy"] {
+  background-position: -128px 0;
+}
+
+.preference-icon[type="security"],
+.landingButton-icon[type="security"] {
+  background-position: -160px 0;
+}
+
+.preference-icon[type="advanced"],
+.landingButton-icon[type="advanced"] {
+  background-position: -192px 0;
+}
+
+.preference-icon[type="sync"],
+.landingButton-icon[type="sync"] {
+  background-image: url("chrome://browser/skin/preferences/Options-sync.png");
+}
+
+caption {
+  font-size: 20px;
+}
+
+.heading {
+  height: 50px;
+  background-color: rgba(192,199,210,0.7);
+  border-radius: 5px 5px 0 0;
+  margin-bottom: 15px;
+  -moz-box-align: center;
+}
+
+prefpane > .content-box {
+  overflow: auto;
+}
+
+/* Applications Pane Styles */
+
+#applications-content {
+  padding: 15px;
+}
+
+#handlersView {
+  -moz-appearance: none;
+  border: 1px solid rgba(60,73,97,0.5);
+  overflow-y: auto;
+}
+
+/* XXX This style is for bug 740213 and should be removed once that
+   bug has a solution. */
+description > html|a {
+  cursor: pointer;
+}
+
+/* XXX Styles Below can be removed once bug 660726 lands */
+.nav-button {
+  list-style-image: url(chrome://mozapps/skin/extensions/navigation.png);
+}
+
+#back-btn:-moz-locale-dir(ltr),
+#forward-btn:-moz-locale-dir(rtl) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+  -moz-image-region: rect(0, 20px, 20px, 0);
+  padding-right: 3px;
+}
+
+#back-btn:-moz-locale-dir(rtl),
+#forward-btn:-moz-locale-dir(ltr) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  -moz-image-region: rect(0, 40px, 20px, 20px);
+  padding-left: 3px;
+}
+
+.header-button {
+  -moz-appearance: none;
+  padding: 0 4px;
+  margin: 0;
+  height: 22px;
+  border: 1px solid rgba(60,73,97,0.5);
+  border-radius: @toolbarbuttonCornerRadius@;
+  box-shadow: inset 0 1px rgba(255,255,255,0.25), 0 1px rgba(255,255,255,0.25);
+  background: -moz-linear-gradient(rgba(255,255,255,0.45), rgba(255,255,255,0));
+  background-clip: padding-box;
+}
+
+.header-button .toolbarbutton-text {
+  display: none;
+}
+
+.header-button[disabled="true"] .toolbarbutton-icon {
+  opacity: 0.4;
+}
+
+.header-button:not([disabled="true"]):active:hover,
+.header-button[open="true"] {
+  border-color: rgba(45,54,71,0.7);
+  box-shadow: inset 0 0 4px rgb(45,54,71), 0 1px rgba(255,255,255,0.25);
+  background-image: -moz-linear-gradient(rgba(45,54,71,0.6), rgba(45,54,71,0));
+}

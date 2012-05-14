@@ -730,6 +730,7 @@ var WifiManager = (function() {
       if (eventData.indexOf("recv error") !== -1 && ++recvErrors < 10)
         return true;
 
+      notifyStateChange({ state: "DISCONNECTED", BSSID: null, id: -1 });
       notify("supplicantlost");
       return false;
     }
@@ -841,6 +842,7 @@ var WifiManager = (function() {
   manager.setWifiEnabled = function(enable, callback) {
     if ((enable && manager.state !== "UNINITIALIZED") ||
         (!enable && manager.state === "UNINITIALIZED")) {
+      callback(0);
       return;
     }
 

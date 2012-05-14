@@ -1051,6 +1051,10 @@ toolbar[iconsize="small"] #feed-button {
   list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
 }
 
+.mixedContent > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed.png);
+}
+
 #identity-box:hover > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
@@ -1986,18 +1990,6 @@ panel[dimmed="true"] {
   background-color: rgba(25, 25, 25, 0.5);
 }
 
-#highlighter-closebutton {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-#highlighter-closebutton > .toolbarbutton-icon {
-  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
-     use evil CSS to give the impression of smaller content */
-  margin: -4px;
-}
-
 #highlighter-veil-transparentbox {
   box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
   outline: 1px dashed rgba(255,255,255,0.5);
@@ -2017,6 +2009,18 @@ panel[dimmed="true"] {
 }
 
 #inspector-inspect-toolbutton[checked] {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+#inspector-option-toolbarbutton {
+  -moz-appearance: none;
+  -moz-margin-end: 6px;
+  list-style-image: url("chrome://browser/skin/devtools/inspector-option-icon.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+  border: none;
+}
+
+#inspector-option-toolbarbutton[open] {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
@@ -2421,12 +2425,76 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   border-radius: 0 3px 3px 0;
 }
 
-#inspector-tree-splitter {
+.gcli-panel-inner-arrowcontent {
+  padding: 0;
+}
+
+.gclitoolbar-input-node,
+.gclitoolbar-complete-node,
+.gclitoolbar-prompt {
+  font-family: monospace;
+}
+
+.gclitoolbar-input-node {
+  background-color: transparent;
   -moz-appearance: none;
-  border-top: 1px solid black;
-  border-bottom-width: 0;
-  min-height: 3px;
-  height: 3px;
-  margin-bottom: -3px;
-  position: relative;
+  border: none;
+  padding: 0 0 0 22px;
+}
+
+.gclitoolbar-complete-node {
+  background-color: transparent;
+  color: transparent;
+  height: 100%;
+  line-height: 100%;
+  padding: 10px 0 0 27px;
+  margin: 0;
+}
+
+.gclitoolbar-prompt {
+  color: hsl(25,78%,50%);
+  -moz-appearance: textfield;
+  font-size: 150%;
+  font-weight: bold;
+  line-height: 100%;
+  padding-top: 1px;
+  padding-left: 3px;
+}
+
+.gcli-in-incomplete,
+.gcli-in-error,
+.gcli-in-ontab,
+.gcli-in-todo,
+.gcli-in-closebrace,
+.gcli-in-param,
+.gcli-in-valid {
+  margin: 0;
+  padding: 0;
+}
+
+.gcli-in-incomplete {
+  border-bottom: 2px dotted #999;
+}
+
+.gcli-in-error {
+  border-bottom: 2px dotted #F00;
+}
+
+.gcli-in-ontab {
+  color: hsl(200,40%,70%);
+}
+
+.gcli-in-todo {
+  color: hsl(48,28%,76%);
+}
+
+.gcli-in-closebrace {
+  color: hsl(0,0%,80%);
+}
+
+/* Highlight toolbar - Option menu */
+
+#inspector-option-toolbarbutton:-moz-focusring {
+  outline: 1px dotted hsla(210,30%,85%,0.4);
+  outline-offset: -2px;
 }

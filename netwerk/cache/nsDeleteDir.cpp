@@ -47,6 +47,7 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsISupportsPriority.h"
+#include <time.h>
 
 using namespace mozilla;
 
@@ -252,6 +253,7 @@ nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash, PRUint32 delay)
     // NTFS we'll wait (with cache lock) while nsIFile's ACL reset walks file
     // tree: was hanging GUI for *minutes* on large cache dirs.
     // Append random number to the trash directory and check if it exists.
+    srand(PR_Now());
     nsCAutoString leaf;
     for (PRInt32 i = 0; i < 10; i++) {
       leaf = origLeaf;

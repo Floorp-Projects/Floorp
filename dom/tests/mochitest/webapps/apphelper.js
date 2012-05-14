@@ -10,8 +10,6 @@ var event_listener_loaded = {};
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 Components.classes["@mozilla.org/permissionmanager;1"]
           .getService(Components.interfaces.nsIPermissionManager)
           .add(SpecialPowers.getDocumentURIObject(window.document),

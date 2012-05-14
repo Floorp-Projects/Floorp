@@ -71,6 +71,7 @@ endif
 
 EXPORTS_NAMESPACES 	= mozilla
 EXPORTS_mozilla 	=			\
+	fallible.h				\
 	mozalloc.h		 		\
 	mozalloc_abort.h			\
 	mozalloc_macro_wrappers.h 		\

@@ -44,22 +44,35 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded",
-                              testLiveFilteringOfMessageTypes, false);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, consoleOpened);
+  }, true);
+}
+
+function consoleOpened(aHud) {
+  hud = aHud;
+  hud.jsterm.clearOutput();
+
+  let console = content.console;
+
+  for (let i = 0; i < 50; i++) {
+    console.log("http://www.example.com/" + i);
+  }
+
+  waitForSuccess({
+    name: "50 console.log messages displayed",
+    validatorFn: function()
+    {
+      return hud.outputNode.itemCount == 50;
+    },
+    successFn: testLiveFilteringOfMessageTypes,
+    failureFn: finishTest,
+  });
 }
 
 function testLiveFilteringOfMessageTypes() {
-  browser.removeEventListener("DOMContentLoaded",
-                              testLiveFilteringOfMessageTypes, false);
-
-  openConsole();
-
-  hud = HUDService.getHudByWindow(content);
-  let console = browser.contentWindow.wrappedJSObject.console;
-
-  for (let i = 0; i < 50; i++) {
-    console.log("http://www.example.com/");
-  }
+  // TODO: bug 744732 - broken live filtering tests.
 
   HUDService.setFilterState(hud.hudId, "log", false);
   is(countMessageNodes(), 0, "the log nodes are hidden when the " +

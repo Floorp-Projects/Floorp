@@ -4676,7 +4676,7 @@ nsTypedSelection::DoAutoScroll(nsIFrame *aFrame, nsPoint& aPoint)
 
   bool didScroll = presContext->PresShell()->ScrollFrameRectIntoView(
     aFrame, 
-    nsRect(aPoint, nsSize(1,1)),
+    nsRect(aPoint, nsSize(0, 0)),
     nsIPresShell::ScrollAxis(),
     nsIPresShell::ScrollAxis(),
     0);
