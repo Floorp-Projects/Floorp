@@ -38,60 +38,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Get history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
-} catch(ex) {
-  do_throw("Could not get history services\n");
-}
-
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-}
-catch(ex) {
-  do_throw("Could not get the nav-bookmarks-service\n");
-}
-
-// Get tagging service
-try {
-  var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
-                getService(Ci.nsITaggingService);
-} catch(ex) {
-  do_throw("Could not get tagging service\n");
-}
-
-// main
 function run_test() {
-  var uri1 = uri("http://foo.tld/");
-  var uri2 = uri("https://bar.tld/");
-
-  bhist.addPageWithDetails(uri1, "foo title", Date.now() * 1000);
-  bhist.addPageWithDetails(uri2, "bar title", Date.now() * 1000);
-
-  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri1, bmsvc.DEFAULT_INDEX, null);
-  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri2, bmsvc.DEFAULT_INDEX, null);
-  
-  tagssvc.tagURI(uri1, ["tag 1"]);
-  tagssvc.tagURI(uri2, ["tag 2"]);
-
-  var options = histsvc.getNewQueryOptions();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  options.resultType = options.RESULTS_AS_TAG_CONTENTS;
-
-  var query = histsvc.getNewQuery();
-  // if we don't set a tag folder, RESULTS_AS_TAG_CONTENTS will return all
-  // tagged URIs
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
-  root.containerOpen = true;
-  do_check_eq(root.childCount, 2);
-  // actually RESULTS_AS_TAG_CONTENTS return results ordered by place_id DESC
-  // so they are reversed
-  do_check_eq(root.getChild(0).title, "bar title");
-  do_check_eq(root.getChild(1).title, "foo title");
-  root.containerOpen = false;
+  run_next_test();
 }
+
+add_test(function test_resolveNullBookmarkTitles() {
+  let uri1 = uri("http://foo.tld/");
+  let uri2 = uri("https://bar.tld/");
+
+  addVisits([
+    { uri: uri1, title: "foo title" },
+    { uri: uri2, title: "bar title" }
+  ], function () {
+    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarksMenuFolderId,
+                                         uri1,
+                                         PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                         null);
+    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarksMenuFolderId,
+                                         uri2,
+                                         PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                         null);
+
+    PlacesUtils.tagging.tagURI(uri1, ["tag 1"]);
+    PlacesUtils.tagging.tagURI(uri2, ["tag 2"]);
+
+    let options = PlacesUtils.history.getNewQueryOptions();
+    options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
+    options.resultType = options.RESULTS_AS_TAG_CONTENTS;
+
+    let query = PlacesUtils.history.getNewQuery();
+    // if we don't set a tag folder, RESULTS_AS_TAG_CONTENTS will return all
+    // tagged URIs
+    let root = PlacesUtils.history.executeQuery(query, options).root;
+    root.containerOpen = true;
+    do_check_eq(root.childCount, 2);
+    // actually RESULTS_AS_TAG_CONTENTS return results ordered by place_id DESC
+    // so they are reversed
+    do_check_eq(root.getChild(0).title, "bar title");
+    do_check_eq(root.getChild(1).title, "foo title");
+    root.containerOpen = false;
+
+    run_next_test();
+  });
+});

@@ -5,20 +5,25 @@ const dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManage
 const bhist = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIBrowserHistory);
 const formhist = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
+const kUsecPerMin = 60 * 1000000;
+
 let tempScope = {};
 Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
                                            .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
 let Sanitizer = tempScope.Sanitizer;
 
 function test() {
-  
+  waitForExplicitFinish();
+
+  setupDownloads();
+  setupFormHistory();
+  setupHistory(onHistoryReady);
+}
+
+function onHistoryReady() {
   var hoursSinceMidnight = new Date().getHours();
   var minutesSinceMidnight = hoursSinceMidnight * 60 + new Date().getMinutes();
 
-  setupHistory();
-  setupFormHistory();
-  setupDownloads();
-  
   // Should test cookies here, but nsICookieManager/nsICookieService
   // doesn't let us fake creation times.  bug 463127
   
@@ -271,37 +276,46 @@ function test() {
 
   ok(!downloadExists(5555550), "Year old download should now be deleted");
 
+  finish();
 }
 
-function setupHistory() {
-  bhist.addPageWithDetails(makeURI("http://10minutes.com/"), "10 minutes ago", now_uSec - 10*60*1000000);
-  bhist.addPageWithDetails(makeURI("http://1hour.com/"), "Less than 1 hour ago", now_uSec - 45*60*1000000);
-  bhist.addPageWithDetails(makeURI("http://1hour10minutes.com/"), "1 hour 10 minutes ago", now_uSec - 70*60*1000000);
-  bhist.addPageWithDetails(makeURI("http://2hour.com/"), "Less than 2 hours ago", now_uSec - 90*60*1000000);
-  bhist.addPageWithDetails(makeURI("http://2hour10minutes.com/"), "2 hours 10 minutes ago", now_uSec - 130*60*1000000);
-  bhist.addPageWithDetails(makeURI("http://4hour.com/"), "Less than 4 hours ago", now_uSec - 180*60*1000000);
-  bhist.addPageWithDetails(makeURI("http://4hour10minutes.com/"), "4 hours 10 minutesago", now_uSec - 250*60*1000000);
-  
+function setupHistory(aCallback) {
+  let places = [];
+
+  function addPlace(aURI, aTitle, aVisitDate) {
+    places.push({
+      uri: aURI,
+      title: aTitle,
+      visits: [{
+        visitDate: aVisitDate,
+        transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+      }]
+    });
+  }
+
+  addPlace(makeURI("http://10minutes.com/"), "10 minutes ago", now_uSec - 10 * kUsecPerMin);
+  addPlace(makeURI("http://1hour.com/"), "Less than 1 hour ago", now_uSec - 45 * kUsecPerMin);
+  addPlace(makeURI("http://1hour10minutes.com/"), "1 hour 10 minutes ago", now_uSec - 70 * kUsecPerMin);
+  addPlace(makeURI("http://2hour.com/"), "Less than 2 hours ago", now_uSec - 90 * kUsecPerMin);
+  addPlace(makeURI("http://2hour10minutes.com/"), "2 hours 10 minutes ago", now_uSec - 130 * kUsecPerMin);
+  addPlace(makeURI("http://4hour.com/"), "Less than 4 hours ago", now_uSec - 180 * kUsecPerMin);
+  addPlace(makeURI("http://4hour10minutes.com/"), "4 hours 10 minutesago", now_uSec - 250 * kUsecPerMin);
+
   let today = new Date();
   today.setHours(0);
   today.setMinutes(0);
   today.setSeconds(1);
-  bhist.addPageWithDetails(makeURI("http://today.com/"), "Today", today.valueOf() * 1000);
-  
+  addPlace(makeURI("http://today.com/"), "Today", today.getTime() * 1000);
+
   let lastYear = new Date();
   lastYear.setFullYear(lastYear.getFullYear() - 1);
-  bhist.addPageWithDetails(makeURI("http://before-today.com/"), "Before Today", lastYear.valueOf() * 1000);
-  
-  // Confirm everything worked
-  ok(bhist.isVisited(makeURI("http://10minutes.com/")), "Pretend visit to 10minutes.com should exist");
-  ok(bhist.isVisited(makeURI("http://1hour.com")), "Pretend visit to 1hour.com should exist");
-  ok(bhist.isVisited(makeURI("http://1hour10minutes.com/")), "Pretend visit to 1hour10minutes.com should exist");
-  ok(bhist.isVisited(makeURI("http://2hour.com")), "Pretend visit to 2hour.com should exist");
-  ok(bhist.isVisited(makeURI("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should exist");
-  ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should exist");
-  ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should exist");
-  ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should exist");
-  ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should exist");
+  addPlace(makeURI("http://before-today.com/"), "Before Today", lastYear.getTime() * 1000);
+
+  PlacesUtils.asyncHistory.updatePlaces(places, {
+    handleError: function () ok(false, "Unexpected error in adding visit."),
+    handleResult: function () { },
+    handleCompletion: function () aCallback()
+  });
 }
 
 function setupFormHistory() {
@@ -321,25 +335,25 @@ function setupFormHistory() {
 
   // Artifically age the entries to the proper vintage.
   let db = formhist.DBConnection;
-  let timestamp = now_uSec - 10*60*1000000;
+  let timestamp = now_uSec - 10 * kUsecPerMin;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = '10minutes'");
-  timestamp = now_uSec - 45*60*1000000;
+  timestamp = now_uSec - 45 * kUsecPerMin;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = '1hour'");
-  timestamp = now_uSec - 70*60*1000000;
+  timestamp = now_uSec - 70 * kUsecPerMin;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = '1hour10minutes'");
-  timestamp = now_uSec - 90*60*1000000;
+  timestamp = now_uSec - 90 * kUsecPerMin;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = '2hour'");
-  timestamp = now_uSec - 130*60*1000000;
+  timestamp = now_uSec - 130 * kUsecPerMin;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = '2hour10minutes'");
-  timestamp = now_uSec - 180*60*1000000;
+  timestamp = now_uSec - 180 * kUsecPerMin;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = '4hour'");
-  timestamp = now_uSec - 250*60*1000000;
+  timestamp = now_uSec - 250 * kUsecPerMin;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = '4hour10minutes'");
 
@@ -347,13 +361,13 @@ function setupFormHistory() {
   today.setHours(0);
   today.setMinutes(0);
   today.setSeconds(1);
-  timestamp = today.valueOf() * 1000;
+  timestamp = today.getTime() * 1000;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = 'today'");
 
   let lastYear = new Date();
   lastYear.setFullYear(lastYear.getFullYear() - 1);
-  timestamp = lastYear.valueOf() * 1000;
+  timestamp = lastYear.getTime() * 1000;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = 'b4today'");
 
@@ -377,8 +391,8 @@ function setupDownloads() {
     name: "fakefile-10-minutes",
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-10-minutes",
-    startTime: now_uSec - 10*60*1000000,  // 10 minutes ago, in uSec
-    endTime: now_uSec - 11*60*1000000, // 1 minute later
+    startTime: now_uSec - 10 * kUsecPerMin, // 10 minutes ago, in uSec
+    endTime: now_uSec - 11 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
   };
@@ -404,8 +418,8 @@ function setupDownloads() {
     name: "fakefile-1-hour",
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-1-hour",
-    startTime: now_uSec - 45*60*1000000,  // 45 minutes ago, in uSec
-    endTime: now_uSec - 44*60*1000000, // 1 minute later
+    startTime: now_uSec - 45 * kUsecPerMin, // 45 minutes ago, in uSec
+    endTime: now_uSec - 44 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
   };
@@ -425,8 +439,8 @@ function setupDownloads() {
     name: "fakefile-1-hour-10-minutes",
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-1-hour-10-minutes",
-    startTime: now_uSec - 70*60*1000000,  // 70 minutes ago, in uSec
-    endTime: now_uSec - 71*60*1000000, // 1 minute later
+    startTime: now_uSec - 70 * kUsecPerMin, // 70 minutes ago, in uSec
+    endTime: now_uSec - 71 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
   };
@@ -446,8 +460,8 @@ function setupDownloads() {
     name: "fakefile-2-hour",
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-2-hour",
-    startTime: now_uSec - 90*60*1000000,  // 90 minutes ago, in uSec
-    endTime: now_uSec - 89*60*1000000, // 1 minute later
+    startTime: now_uSec - 90 * kUsecPerMin, // 90 minutes ago, in uSec
+    endTime: now_uSec - 89 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
   };
@@ -467,8 +481,8 @@ function setupDownloads() {
     name: "fakefile-2-hour-10-minutes",
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-2-hour-10-minutes",
-    startTime: now_uSec - 130*60*1000000,  // 130 minutes ago, in uSec
-    endTime: now_uSec - 131*60*1000000, // 1 minute later
+    startTime: now_uSec - 130 * kUsecPerMin, // 130 minutes ago, in uSec
+    endTime: now_uSec - 131 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
   };
@@ -488,8 +502,8 @@ function setupDownloads() {
     name: "fakefile-4-hour",
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-4-hour",
-    startTime: now_uSec - 180*60*1000000,  // 180 minutes ago, in uSec
-    endTime: now_uSec - 179*60*1000000, // 1 minute later
+    startTime: now_uSec - 180 * kUsecPerMin, // 180 minutes ago, in uSec
+    endTime: now_uSec - 179 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
   };
@@ -509,8 +523,8 @@ function setupDownloads() {
     name: "fakefile-4-hour-10-minutes",
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
     target: "fakefile-4-hour-10-minutes",
-    startTime: now_uSec - 250*60*1000000,  // 250 minutes ago, in uSec
-    endTime: now_uSec - 251*60*1000000, // 1 minute later
+    startTime: now_uSec - 250 * kUsecPerMin, // 250 minutes ago, in uSec
+    endTime: now_uSec - 251 * kUsecPerMin, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
   };
@@ -535,8 +549,8 @@ function setupDownloads() {
     name: "fakefile-today",
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-today",
-    startTime: today.valueOf() * 1000,  // 12:00:30am this morning, in uSec
-    endTime: (today.valueOf() + 1000) * 1000, // 1 second later
+    startTime: today.getTime() * 1000,  // 12:00:30am this morning, in uSec
+    endTime: (today.getTime() + 1000) * 1000, // 1 second later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
   };
@@ -558,8 +572,8 @@ function setupDownloads() {
     name: "fakefile-old",
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
     target: "fakefile-old",
-    startTime: lastYear.valueOf() * 1000,  // 1 year ago, in uSec
-    endTime: (lastYear.valueOf() + 1000) * 1000, // 1 second later
+    startTime: lastYear.getTime() * 1000, // 1 year ago, in uSec
+    endTime: (lastYear.getTime() + 1000) * 1000, // 1 second later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
   };

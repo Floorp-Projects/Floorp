@@ -101,7 +101,7 @@ function run_test() {
       histsvc.addVisit(testURI, when, null, histsvc.TRANSITION_TYPED, false, 0);
     }
   } catch(ex) {
-    do_throw("addPageWithDetails failed");
+    do_throw("addVisit failed");
   }
 
   // set a page annotation on one of the urls that will be removed
