@@ -1656,42 +1656,42 @@ js_TransplantObjectWithWrapper(JSContext *cx,
 {
     AssertNoGC(cx);
 
-    JSObject *obj;
+    JSObject *newWrapper;
     JSCompartment *destination = targetobj->compartment();
     WrapperMap &map = destination->crossCompartmentWrappers;
 
     // |origv| is the map entry we're looking up. The map entries are going to
-    // be for the location object itself.
+    // be for |origobj|, not |origwrapper|.
     Value origv = ObjectValue(*origobj);
 
     // There might already be a wrapper for the original object in the new
     // compartment.
     if (WrapperMap::Ptr p = map.lookup(origv)) {
-        // There is. Make the existing wrapper a same compartment location
-        // wrapper (swapping it with the given new wrapper).
-        obj = &p->value.toObject();
+        // There is. Make the existing cross-compartment wrapper a same-
+        // compartment wrapper.
+        newWrapper = &p->value.toObject();
         map.remove(p);
-        if (!obj->swap(cx, targetwrapper))
+        if (!newWrapper->swap(cx, targetwrapper))
             return NULL;
     } else {
-        // Otherwise, use the passed-in wrapper as the same compartment
-        // location wrapper.
-        obj = targetwrapper;
+        // Otherwise, use the passed-in wrapper as the same-compartment wrapper.
+        newWrapper = targetwrapper;
     }
 
     // Now, iterate through other scopes looking for references to the old
-    // location object. Note that the entries in the maps are for |origobj|
-    // and not |origwrapper|. They need to be updated to point at the new
-    // location object.
+    // object. Note that the entries in the maps are for |origobj| and not
+    // |origwrapper|. They need to be updated to point at the new object.
     if (!RemapWrappers(cx, origobj, targetobj))
         return NULL;
 
-    // Lastly, update the original object to point to the new one. However, as
-    // mentioned above, we do the transplant on the wrapper, not the object
-    // itself, since all of the references are to the object itself.
+    // Lastly, update things in the original compartment. Our invariants dictate
+    // that the original compartment can only have one cross-compartment wrapper
+    // to the new object. So we choose to update |origwrapper|, not |origobj|,
+    // since theoretically there should have been no direct intra-compartment
+    // references to |origobj|.
     {
         AutoCompartment ac(cx, origobj);
-        JSObject *tobj = obj;
+        JSObject *tobj = newWrapper;
         if (!ac.enter() || !JS_WrapObject(cx, &tobj))
             return NULL;
         if (!origwrapper->swap(cx, tobj))
@@ -1700,7 +1700,7 @@ js_TransplantObjectWithWrapper(JSContext *cx,
                                                                  ObjectValue(*origwrapper));
     }
 
-    return obj;
+    return newWrapper;
 }
 
 /*
