@@ -187,32 +187,22 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         if (obj->isStopIteration())
             return js_FindClassObject(cx, NULL, JSProto_StopIteration, vp);
 
-        /* Don't unwrap an outer window proxy. */
-        if (!obj->getClass()->ext.innerObject) {
-            obj = UnwrapObject(&vp->toObject(), true, &flags);
-            vp->setObject(*obj);
-            if (obj->compartment() == this)
-                return true;
+        /* Unwrap the object, but don't unwrap outer windows. */
+        obj = UnwrapObject(&vp->toObject(), /* stopAtOuter = */ true, &flags);
 
-            if (cx->runtime->preWrapObjectCallback) {
-                obj = cx->runtime->preWrapObjectCallback(cx, global, obj, flags);
-                if (!obj)
-                    return false;
-            }
+        vp->setObject(*obj);
+        if (obj->compartment() == this)
+            return true;
 
-            vp->setObject(*obj);
-            if (obj->compartment() == this)
-                return true;
-        } else {
-            if (cx->runtime->preWrapObjectCallback) {
-                obj = cx->runtime->preWrapObjectCallback(cx, global, obj, flags);
-                if (!obj)
-                    return false;
-            }
-
-            JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);
-            vp->setObject(*obj);
+        if (cx->runtime->preWrapObjectCallback) {
+            obj = cx->runtime->preWrapObjectCallback(cx, global, obj, flags);
+            if (!obj)
+                return false;
         }
+
+        vp->setObject(*obj);
+        if (obj->compartment() == this)
+            return true;
 
 #ifdef DEBUG
         {
