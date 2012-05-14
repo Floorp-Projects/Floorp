@@ -106,7 +106,9 @@ TreeContext::TreeContext(Parser *prs, SharedContext *sc)
     lexdeps(prs->context),
     parent(prs->tc),
     innermostWith(NULL),
-    funcStmts(NULL)
+    funcStmts(NULL),
+    hasReturnExpr(false),
+    hasReturnVoid(false)
 {
     prs->tc = this;
 }
