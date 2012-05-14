@@ -808,6 +808,7 @@ JSRuntime::JSRuntime()
     ionJSContext(NULL),
     ionStackLimit(0),
     ionActivation(NULL),
+    ionCompilerRootList(NULL),
     ionReturnOverride_(MagicValue(JS_ARG_POISON))
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
