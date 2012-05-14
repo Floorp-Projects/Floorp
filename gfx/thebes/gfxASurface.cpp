@@ -38,7 +38,7 @@
 
 #include "nsIMemoryReporter.h"
 #include "nsMemory.h"
-#include "CheckedInt.h"
+#include "mozilla/CheckedInt.h"
 
 #include "gfxASurface.h"
 #include "gfxContext.h"
@@ -378,7 +378,7 @@ gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
     // make sure the surface area doesn't overflow a PRInt32
     CheckedInt<PRInt32> tmp = sz.width;
     tmp *= sz.height;
-    if (!tmp.valid()) {
+    if (!tmp.isValid()) {
         NS_WARNING("Surface size too large (would overflow)!");
         return false;
     }
@@ -386,7 +386,7 @@ gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
     // assuming 4-byte stride, make sure the allocation size
     // doesn't overflow a PRInt32 either
     tmp *= 4;
-    if (!tmp.valid()) {
+    if (!tmp.isValid()) {
         NS_WARNING("Allocation too large (would overflow)!");
         return false;
     }

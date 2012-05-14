@@ -61,8 +61,8 @@
 #include "nsIUUIDGenerator.h"
 #include "nsBlobProtocolHandler.h"
 #include "nsStringStream.h"
-#include "CheckedInt.h"
 #include "nsJSUtils.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Preferences.h"
 
 #include "plbase64.h"
@@ -227,7 +227,7 @@ ParseSize(PRInt64 aSize, PRInt64& aStart, PRInt64& aEnd)
     newEndOffset = aSize;
   }
 
-  if (!newStartOffset.valid() || !newEndOffset.valid() ||
+  if (!newStartOffset.isValid() || !newEndOffset.isValid() ||
       newStartOffset.value() >= newEndOffset.value()) {
     aStart = aEnd = 0;
   }
