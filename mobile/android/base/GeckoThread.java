@@ -56,12 +56,12 @@ public class GeckoThread extends Thread {
 
     Intent mIntent;
     String mUri;
-    boolean mRestoreSession;
+    int mRestoreMode;
 
-    GeckoThread (Intent intent, String uri, boolean restoreSession) {
+    GeckoThread(Intent intent, String uri, int restoreMode) {
         mIntent = intent;
         mUri = uri;
-        mRestoreSession = restoreSession;
+        mRestoreMode = restoreMode;
     }
 
     public void run() {
@@ -113,6 +113,6 @@ public class GeckoThread extends Thread {
                                mIntent.getStringExtra("args"),
                                mUri,
                                type,
-                               mRestoreSession);
+                               mRestoreMode);
     }
 }
