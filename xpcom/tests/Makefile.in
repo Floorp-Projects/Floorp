@@ -105,7 +105,6 @@ CPP_UNIT_TESTS = \
                  TestRefPtr.cpp \
                  TestSettingsAPI.cpp \
                  TestTextFormatter.cpp \
-                 TestCheckedInt.cpp \
                  TestTArray.cpp \
                  $(NULL)
 

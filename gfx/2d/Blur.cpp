@@ -39,7 +39,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "CheckedInt.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Util.h"
 
 #ifndef M_PI
@@ -81,7 +81,7 @@ BoxBlurHorizontal(unsigned char* aInput,
         memcpy(aOutput, aInput, aWidth*aRows);
         return;
     }
-    PRUint32 reciprocal = (PRUint64(1) << 32)/boxSize;
+    uint32_t reciprocal = (uint64_t(1) << 32) / boxSize;
 
     for (int32_t y = 0; y < aRows; y++) {
         // Check whether the skip rect intersects this row. If the skip
@@ -128,7 +128,7 @@ BoxBlurHorizontal(unsigned char* aInput,
             int32_t last = max(tmp, 0);
             int32_t next = min(tmp + boxSize, aWidth - 1);
 
-            aOutput[aWidth * y + x] = (PRUint64(alphaSum)*reciprocal) >> 32;
+            aOutput[aWidth * y + x] = (uint64_t(alphaSum) * reciprocal) >> 32;
 
             alphaSum += aInput[aWidth * y + next] -
                         aInput[aWidth * y + last];
@@ -159,7 +159,7 @@ BoxBlurVertical(unsigned char* aInput,
         memcpy(aOutput, aInput, aWidth*aRows);
         return;
     }
-    PRUint32 reciprocal = (PRUint64(1) << 32)/boxSize;
+    uint32_t reciprocal = (uint64_t(1) << 32) / boxSize;
 
     for (int32_t x = 0; x < aWidth; x++) {
         bool inSkipRectX = x >= aSkipRect.x &&
@@ -199,7 +199,7 @@ BoxBlurVertical(unsigned char* aInput,
             int32_t last = max(tmp, 0);
             int32_t next = min(tmp + boxSize, aRows - 1);
 
-            aOutput[aWidth * y + x] = (PRUint64(alphaSum)*reciprocal) >> 32;
+            aOutput[aWidth * y + x] = (uint64_t(alphaSum) * reciprocal) >> 32;
 
             alphaSum += aInput[aWidth * next + x] -
                         aInput[aWidth * last + x];
@@ -409,12 +409,12 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
   mRect = IntRect(rect.x, rect.y, rect.width, rect.height);
 
   CheckedInt<int32_t> stride = RoundUpToMultipleOf4(mRect.width);
-  if (stride.valid()) {
+  if (stride.isValid()) {
     mStride = stride.value();
 
     CheckedInt<int32_t> size = CheckedInt<int32_t>(mStride) * mRect.height *
                                sizeof(unsigned char);
-    if (size.valid()) {
+    if (size.isValid()) {
       mData = static_cast<unsigned char*>(malloc(size.value()));
       memset(mData, 0, size.value());
     }

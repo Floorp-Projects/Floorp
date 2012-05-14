@@ -87,7 +87,7 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
 
   CheckedUint32 dummy = CheckedUint32(static_cast<PRUint32>(mMetadata.frameWidth)) *
                           static_cast<PRUint32>(mMetadata.frameHeight);
-  NS_ENSURE_TRUE(dummy.valid(), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(dummy.isValid(), NS_ERROR_FAILURE);
 
   if (mMetadata.aspectDenominator == 0 ||
       mMetadata.framerateDenominator == 0)
@@ -268,7 +268,7 @@ nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, 
 
   CheckedUint32 offset = CheckedUint32(mCurrentFrame) * mFrameSize;
   offset += sizeof(nsRawVideoHeader);
-  NS_ENSURE_TRUE(offset.valid(), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(offset.isValid(), NS_ERROR_FAILURE);
 
   nsresult rv = resource->Seek(nsISeekableStream::NS_SEEK_SET, offset.value());
   NS_ENSURE_SUCCESS(rv, rv);
