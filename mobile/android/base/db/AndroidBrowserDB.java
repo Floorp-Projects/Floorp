@@ -183,6 +183,10 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         return new AndroidDBCursor(c);
     }
 
+    public void removeHistoryEntry(ContentResolver cr, int id) {
+        // Not implemented
+    }
+
     public void clearHistory(ContentResolver cr) {
         Browser.clearHistory(cr);
     }
