@@ -190,7 +190,8 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                                              Combined.URL,
                                              Combined.TITLE,
                                              Combined.FAVICON,
-                                             Combined.BOOKMARK_ID },
+                                             Combined.BOOKMARK_ID,
+                                             Combined.HISTORY_ID },
                               constraint,
                               limit,
                               null);
@@ -278,6 +279,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         Cursor c = cr.query(combinedUriWithLimit(limit),
                             new String[] { Combined._ID,
                                            Combined.BOOKMARK_ID,
+                                           Combined.HISTORY_ID,
                                            Combined.URL,
                                            Combined.TITLE,
                                            Combined.FAVICON,
@@ -288,6 +290,12 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                             History.DATE_LAST_VISITED + " DESC");
 
         return new LocalDBCursor(c);
+    }
+
+    public void removeHistoryEntry(ContentResolver cr, int id) {
+        cr.delete(mHistoryUriWithProfile,
+                  History._ID + " = ?",
+                  new String[] { String.valueOf(id) });
     }
 
     public void clearHistory(ContentResolver cr) {

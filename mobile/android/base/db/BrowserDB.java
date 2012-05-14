@@ -75,6 +75,8 @@ public class BrowserDB {
 
         public Cursor getRecentHistory(ContentResolver cr, int limit);
 
+        public void removeHistoryEntry(ContentResolver cr, int id);
+
         public void clearHistory(ContentResolver cr);
 
         public Cursor getBookmarksInFolder(ContentResolver cr, long folderId);
@@ -138,6 +140,10 @@ public class BrowserDB {
 
     public static Cursor getRecentHistory(ContentResolver cr, int limit) {
         return sDb.getRecentHistory(cr, limit);
+    }
+
+    public static void removeHistoryEntry(ContentResolver cr, int id) {
+        sDb.removeHistoryEntry(cr, id);
     }
 
     public static void clearHistory(ContentResolver cr) {
