@@ -386,23 +386,25 @@ inline T opposite_if_signed(T x) { return opposite_if_signed_impl<T>::run(x); }
 
 /** \class CheckedInt
   * \brief Integer wrapper class checking for integer overflow and other errors
-  * \param T the integer type to wrap. Can be any of int8_t, uint8_t, int16_t, uint16_t,
-  *          int32_t, uint32_t, int64_t, uint64_t.
+  * \param T the integer type to wrap. Can be any type among the following:
+  *            - any standard integer type like int, char, short, long, long long, and unsigned variants
+  *            - any stdint type such as int8_t, uint64_t etc.
+  *            - (Mozilla specific) and PR integer type like PRInt32
   *
   * This class implements guarded integer arithmetic. Do a computation, check that
   * valid() returns true, you then have a guarantee that no problem, such as integer overflow,
   * happened during this computation.
   *
-  * The arithmetic operators in this class are guaranteed not to crash your app
-  * in case of a division by zero.
+  * The arithmetic operators in this class are guaranteed not to raise a signal
+  * (e.g. in case of a division by zero).
   *
   * For example, suppose that you want to implement a function that computes (x+y)/z,
   * that doesn't crash if z==0, and that reports on error (divide by zero or integer overflow).
   * You could code it as follows:
     \code
-    bool compute_x_plus_y_over_z(int32_t x, int32_t y, int32_t z, int32_t *result)
+    bool compute_x_plus_y_over_z(int x, int y, int z, int *result)
     {
-        CheckedInt<int32_t> checked_result = (CheckedInt<int32_t>(x) + y) / z;
+        CheckedInt<int> checked_result = (CheckedInt<int>(x) + y) / z;
         *result = checked_result.value();
         return checked_result.valid();
     }
@@ -428,7 +430,7 @@ inline T opposite_if_signed(T x) { return opposite_if_signed_impl<T>::run(x); }
   *
   * Checked integers of different types cannot be used in the same arithmetic expression.
   *
-  * There are convenience typedefs for all PR integer types, of the following form (these are just 2 examples):
+  * There are convenience typedefs for all stdint types, of the following form (these are just 2 examples):
     \code
     typedef CheckedInt<int32_t> CheckedInt32;
     typedef CheckedInt<uint16_t> CheckedUint16;
@@ -510,7 +512,15 @@ public:
                           mIsValid & CheckedInt_internal::is_sub_valid(T(0), value(), result));
     }
 
-    /** \returns true if the left and right hand sides are valid and have the same value. */
+    /** \returns true if the left and right hand sides are valid and have the same value.
+      *
+      * Note that these semantics are the reason why we don't offer a operator!=. Indeed, we'd want
+      * to have a!=b be equivalent to !(a==b) but that would mean that whenever a or b is invalid, a!=b
+      * is always true, which would be very confusing.
+      *
+      * For similar reasons, operators <, >, <=, >= would be very tricky to specify, so we just avoid
+      * offering them.
+      */
     bool operator ==(const CheckedInt& other) const
     {
         return bool(mIsValid & other.mIsValid & (value() == other.mValue));
