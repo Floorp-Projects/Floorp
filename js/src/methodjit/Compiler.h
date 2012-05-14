@@ -479,7 +479,7 @@ private:
     js::Vector<LoopEntry, 16> loopEntries;
     js::Vector<OutgoingChunkEdge, 16> chunkEdges;
     StubCompiler stubcc;
-    Label invokeLabel;
+    Label fastEntryLabel;
     Label arityLabel;
     Label argsCheckLabel;
 #ifdef JS_MONOIC
