@@ -41,6 +41,7 @@ package org.mozilla.gecko;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -102,6 +103,7 @@ public class AwesomeBarTabs extends TabHost {
     private View.OnTouchListener mListTouchListener;
     private JSONArray mSearchEngines;
     private ContentResolver mContentResolver;
+    private ContentObserver mContentObserver;
 
     private BookmarksQueryTask mBookmarksQueryTask;
     private HistoryQueryTask mHistoryQueryTask;
@@ -581,6 +583,17 @@ public class AwesomeBarTabs extends TabHost {
                 result.second
             );
 
+            if (mContentObserver == null) {
+                // Register an observer to update the history tab contents if they change.
+                mContentObserver = new ContentObserver(GeckoAppShell.getHandler()) {
+                    public void onChange(boolean selfChange) {
+                        mHistoryQueryTask = new HistoryQueryTask();
+                        mHistoryQueryTask.execute();
+                    }
+                };
+                BrowserDB.registerHistoryObserver(mContentResolver, mContentObserver);
+            }
+
             final ExpandableListView historyList =
                     (ExpandableListView) findViewById(R.id.history_list);
 
@@ -738,6 +751,7 @@ public class AwesomeBarTabs extends TabHost {
         mInflated = false;
         mSearchEngines = new JSONArray();
         mContentResolver = context.getContentResolver();
+        mContentObserver = null;
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
@@ -1001,6 +1015,9 @@ public class AwesomeBarTabs extends TabHost {
             if (bookmarksCursor != null)
                 bookmarksCursor.close();
         }
+
+        if (mContentObserver != null)
+            BrowserDB.unregisterContentObserver(mContentResolver, mContentObserver);
     }
 
     public void filter(String searchTerm) {
