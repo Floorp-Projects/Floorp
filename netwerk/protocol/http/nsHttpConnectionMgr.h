@@ -379,7 +379,7 @@ private:
     {
     public:
         NS_DECL_ISUPPORTS
-        NS_DECL_NSAHTTPCONNECTION
+        NS_DECL_NSAHTTPCONNECTION(mConn)
 
         nsConnectionHandle(nsHttpConnection *conn) { NS_ADDREF(mConn = conn); }
         virtual ~nsConnectionHandle();
