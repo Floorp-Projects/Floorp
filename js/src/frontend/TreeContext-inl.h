@@ -108,7 +108,8 @@ TreeContext::TreeContext(Parser *prs, SharedContext *sc)
     innermostWith(NULL),
     funcStmts(NULL),
     hasReturnExpr(false),
-    hasReturnVoid(false)
+    hasReturnVoid(false),
+    inDeclDestructuring(false)
 {
     prs->tc = this;
 }
