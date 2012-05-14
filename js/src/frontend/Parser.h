@@ -200,7 +200,7 @@ struct Parser : private AutoGCRooter
      */
     ParseNode *functionStmt();
     ParseNode *functionExpr();
-    ParseNode *statements();
+    ParseNode *statements(bool *hasFunctionStmt = NULL);
 
     ParseNode *switchStatement();
     ParseNode *forStatement();
