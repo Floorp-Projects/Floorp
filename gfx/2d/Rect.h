@@ -88,7 +88,8 @@ struct Rect :
     {
       *aOut = IntRect(int32_t(X()), int32_t(Y()),
                     int32_t(Width()), int32_t(Height()));
-      return Rect(aOut->x, aOut->y, aOut->width, aOut->height).IsEqualEdges(*this);
+      return Rect(Float(aOut->x), Float(aOut->y), 
+                  Float(aOut->width), Float(aOut->height)).IsEqualEdges(*this);
     }
 };
 
