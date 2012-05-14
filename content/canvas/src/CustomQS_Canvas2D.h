@@ -40,7 +40,7 @@
 
 #include "nsDOMError.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
-#include "CheckedInt.h"
+#include "mozilla/CheckedInt.h"
 #include "nsMathUtils.h"
 #include "CustomQS_Canvas.h"
 
@@ -169,7 +169,7 @@ CreateImageData(JSContext* cx, JSObject* obj, uint32_t w, uint32_t h, jsval* vp)
         h = 1;
 
     CheckedInt<uint32_t> len = CheckedInt<uint32_t>(w) * h * 4;
-    if (!len.valid()) {
+    if (!len.isValid()) {
         return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
     }
 

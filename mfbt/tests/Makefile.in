@@ -1,0 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH = ../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+STL_FLAGS =
+
+CPP_UNIT_TESTS = \
+  TestCheckedInt.cpp \
+  $(NULL)
+
+# in order to prevent rules.mk from trying to link to libraries that are
+# not available to MFBT, we have to reset these MOZ_GLUE*_LDFLAGS before including it
+# and LIBS_ after including it. For WRAP_LDFLAGS, it shouldn't matter.
+# See later comments in bug 732875.
+
+MOZ_GLUE_PROGRAM_LDFLAGS=
+MOZ_GLUE_LDFLAGS =
+WRAP_LDFLAGS=
+
+include $(topsrcdir)/config/rules.mk
+
+LIBS=

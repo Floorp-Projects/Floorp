@@ -40,8 +40,7 @@
 #include "WebGLContext.h"
 
 #include "mozilla/Preferences.h"
-
-#include "CheckedInt.h"
+#include "mozilla/CheckedInt.h"
 
 #include "jsfriendapi.h"
 
@@ -143,8 +142,8 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
         CheckedInt32 checked_sizeOfLastElement
           = CheckedInt32(vd.componentSize()) * vd.size;
 
-        if (!checked_byteLength.valid() ||
-            !checked_sizeOfLastElement.valid())
+        if (!checked_byteLength.isValid() ||
+            !checked_sizeOfLastElement.isValid())
         {
           ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
           return false;
@@ -156,7 +155,7 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
           CheckedInt32 checked_maxAllowedCount
             = ((checked_byteLength - checked_sizeOfLastElement) / vd.actualStride()) + 1;
 
-          if (!checked_maxAllowedCount.valid()) {
+          if (!checked_maxAllowedCount.isValid()) {
             ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
             return false;
           }
@@ -401,7 +400,7 @@ bool WebGLContext::ValidateCompressedTextureSize(WebGLint level, WebGLenum forma
 {
     CheckedUint32 calculated_byteLength = 0;
     CheckedUint32 checked_byteLength = byteLength;
-    if (!checked_byteLength.valid()) {
+    if (!checked_byteLength.isValid()) {
         ErrorInvalidValue("%s: data length out of bounds", info);
         return false;
     }
@@ -411,7 +410,7 @@ bool WebGLContext::ValidateCompressedTextureSize(WebGLint level, WebGLenum forma
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
         {
             calculated_byteLength = ((CheckedUint32(width) + 3) / 4) * ((CheckedUint32(height) + 3) / 4) * 8;
-            if (!calculated_byteLength.valid() || !(checked_byteLength == calculated_byteLength)) {
+            if (!calculated_byteLength.isValid() || !(checked_byteLength == calculated_byteLength)) {
                 ErrorInvalidValue("%s: data size does not match dimensions", info);
                 return false;
             }
@@ -421,7 +420,7 @@ bool WebGLContext::ValidateCompressedTextureSize(WebGLint level, WebGLenum forma
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
         {
             calculated_byteLength = ((CheckedUint32(width) + 3) / 4) * ((CheckedUint32(height) + 3) / 4) * 16;
-            if (!calculated_byteLength.valid() || !(checked_byteLength == calculated_byteLength)) {
+            if (!calculated_byteLength.isValid() || !(checked_byteLength == calculated_byteLength)) {
                 ErrorInvalidValue("%s: data size does not match dimensions", info);
                 return false;
             }

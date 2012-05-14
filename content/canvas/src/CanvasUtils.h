@@ -40,7 +40,7 @@
 
 #include "prtypes.h"
 
-#include "CheckedInt.h"
+#include "mozilla/CheckedInt.h"
 
 class nsHTMLCanvasElement;
 class nsIPrincipal;
@@ -63,9 +63,9 @@ inline bool CheckSaneSubrectSize(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
     CheckedInt32 checked_ymost  = CheckedInt32(y) + h;
 
     return w >= 0 && h >= 0 && x >= 0 && y >= 0 &&
-        checked_xmost.valid() &&
+        checked_xmost.isValid() &&
         checked_xmost.value() <= realWidth &&
-        checked_ymost.valid() &&
+        checked_ymost.isValid() &&
         checked_ymost.value() <= realHeight;
 }
 
