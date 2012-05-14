@@ -202,6 +202,8 @@ GetGSNCache(JSContext *cx)
     return &cx->runtime->gsnCache;
 }
 
+#if JS_HAS_XML_SUPPORT
+
 class AutoNamespaceArray : protected AutoGCRooter {
   public:
     AutoNamespaceArray(JSContext *cx)
@@ -222,6 +224,8 @@ class AutoNamespaceArray : protected AutoGCRooter {
   public:
     JSXMLArray<JSObject> array;
 };
+
+#endif /* JS_HAS_XML_SUPPORT */
 
 template <typename T>
 class AutoPtr

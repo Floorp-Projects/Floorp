@@ -37,7 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stddef.h>
 #include "jsversion.h"
+
+size_t sE4XObjectsCreated = 0;
 
 #if JS_HAS_XML_SUPPORT
 
@@ -173,8 +176,6 @@ xml_isXMLName(JSContext *cx, unsigned argc, jsval *vp)
     *vp = BOOLEAN_TO_JSVAL(js_IsXMLName(cx, argc ? vp[2] : JSVAL_VOID));
     return JS_TRUE;
 }
-
-size_t sE4XObjectsCreated = 0;
 
 /*
  * This wrapper is needed because NewBuiltinClassInstance doesn't
