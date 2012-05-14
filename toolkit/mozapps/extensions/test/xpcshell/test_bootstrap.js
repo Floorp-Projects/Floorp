@@ -81,46 +81,6 @@ function getUninstallReason() {
   return Services.prefs.getIntPref("bootstraptest.uninstall_reason");
 }
 
-function manuallyInstall(aXPIFile, aInstallLocation, aID) {
-  if (TEST_UNPACKED) {
-    let dir = aInstallLocation.clone();
-    dir.append(aID);
-    dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
-    let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
-              createInstance(AM_Ci.nsIZipReader);
-    zip.open(aXPIFile);
-    let entries = zip.findEntries(null);
-    while (entries.hasMore()) {
-      let entry = entries.getNext();
-      let target = dir.clone();
-      entry.split("/").forEach(function(aPart) {
-        target.append(aPart);
-      });
-      zip.extract(entry, target);
-    }
-    zip.close();
-
-    return dir;
-  }
-  else {
-    let target = aInstallLocation.clone();
-    target.append(aID + ".xpi");
-    aXPIFile.copyTo(target.parent, target.leafName);
-    return target;
-  }
-}
-
-function manuallyUninstall(aInstallLocation, aID) {
-  let file = getFileForAddon(aInstallLocation, aID);
-
-  // In reality because the app is restarted a flush isn't necessary for XPIs
-  // removed outside the app, but for testing we must flush manually.
-  if (file.isFile())
-    Services.obs.notifyObservers(file, "flush-cache-entry", null);
-
-  file.remove(true);
-}
-
 function run_test() {
   do_test_pending();
 
