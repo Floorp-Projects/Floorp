@@ -60,14 +60,21 @@
          'dolor', ' sit amet. Integer vitae urna leo, id ',
          'semper', ' nulla. ', 'Second Section Title',
          'Sed accumsan luctus lacus, vitae mollis arcu tristique vulputate.',
-         'An ', 'embedded', ' document.', 'Link 1', 'Link 2', 'Link 3']);
+         'An ', 'embedded', ' document.', 'Hide me', 'Link 1', 'Link 2',
+         'Link 3']);
 
       // Just a random smoke test to see if our setTextRange works.
       gQueue.push(
-        new setVirtualCursorRangeInvoker(
+        new setVCRangeInvoker(
           docAcc,
           getAccessible(doc.getElementById('paragraph-2'), nsIAccessibleText),
           [2,6]));
+
+      gQueue.push(new removeVCPositionInvoker(
+        docAcc, doc.getElementById('hide-me')));
+
+      gQueue.push(new removeVCRootInvoker(
+        doc.getElementById('links')));
 
       gQueue.invoke();
     }
