@@ -1691,10 +1691,10 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     // references to |origobj|.
     {
         AutoCompartment ac(cx, origobj);
-        JSObject *tobj = newWrapper;
-        if (!ac.enter() || !JS_WrapObject(cx, &tobj))
+        JSObject *wrapperGuts = targetobj;
+        if (!ac.enter() || !JS_WrapObject(cx, &wrapperGuts))
             return NULL;
-        if (!origwrapper->swap(cx, tobj))
+        if (!origwrapper->swap(cx, wrapperGuts))
             return NULL;
         origwrapper->compartment()->crossCompartmentWrappers.put(ObjectValue(*targetobj),
                                                                  ObjectValue(*origwrapper));
