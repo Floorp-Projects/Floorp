@@ -1636,3 +1636,10 @@ if [ "$MOZ_SYDNEYAUDIO" ]; then
     media/libsydneyaudio/src/Makefile
   "
 fi
+
+if [ "$MOZ_SPEEX_RESAMPLER" ]; then
+  add_makefiles "
+    media/libspeex_resampler/Makefile
+    media/libspeex_resampler/src/Makefile
+  "
+fi
