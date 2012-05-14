@@ -61,13 +61,19 @@ function test() {
     let savedFormData = undoItems[0].state.entries[0].formdata;
     
     let countGood = 0, countBad = 0;
-    for each (let value in savedFormData) {
+    for each (let value in savedFormData.id) {
       if (value == expectedValue)
         countGood++;
       else
         countBad++;
     }
-    
+    for each (let value in savedFormData.xpath) {
+      if (value == expectedValue)
+        countGood++;
+      else
+        countBad++;
+    }
+
     is(countGood, 4, "Saved text for non-standard input fields");
     is(countBad,  0, "Didn't save text for ignored field types");
     

@@ -5,7 +5,6 @@ function test() {
   /** Tests formdata format **/
   waitForExplicitFinish();
 
-  let testTabCount = 0;
   let formData = [
     { },
     // old format
@@ -52,6 +51,7 @@ function test() {
     [ "value29", "value30" ],
     [ "", "value33" ]
   ];
+  let testTabCount = 0;
   let callback = function() {
     testTabCount--;
     if (testTabCount == 0) {
@@ -65,32 +65,51 @@ function test() {
   }
 }
 
-function testTabRestoreData(aFormData, aExpectedValues, aCallback) {
+function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
   let testURL =
     getRootDirectory(gTestPath) + "browser_formdata_format_sample.html";
   let tab = gBrowser.addTab(testURL);
   let tabState = { entries: [{ url: testURL, formdata: aFormData}] };
 
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    ss.setTabState(tab, JSON.stringify(tabState));
-
-    tab.addEventListener("SSTabRestored", function(aEvent) {
-      tab.removeEventListener("SSTabRestored", arguments.callee);
+  let browserLoadedCallback = function(aEvent) {
+    let tabStateCallback = function(aEvent) {
       let doc = tab.linkedBrowser.contentDocument;
-      let value1 = doc.getElementById("input1").value;
-      let value2 = doc.querySelector("input[name=input2]").value;
+      let input1 = doc.getElementById("input1");
+      let input2 = doc.querySelector("input[name=input2]");
+      let saveStateCallback = function(aEvent) {
+        let restoredTabState = JSON.parse(ss.getTabState(tab));
+        let restoredFormData = restoredTabState.entries[0].formdata;
 
-      // test id
-      is(value1, aExpectedValues[0],
-        "FormData by 'id' has been restored correctly");
-      // test xpath
-      is(value2, aExpectedValues[1],
-        "FormData by 'xpath' has been restored correctly");
+        if (restoredFormData) {
+          // test format
+          ok("id" in restoredFormData && "xpath" in restoredFormData,
+            "FormData format is valid: " + restoredFormData);
+          // validate that there are no old keys
+          is(Object.keys(restoredFormData).length, 2,
+            "FormData key length is valid");
+          // test id
+          is(input1.value, aExpectedValue[0],
+            "FormData by 'id' has been restored correctly");
+          // test xpath
+          is(input2.value, aExpectedValue[1],
+            "FormData by 'xpath' has been restored correctly");
+        }
 
-      // clean up
-      gBrowser.removeTab(tab);
-      aCallback();
-    });
-  }, true);
+        // clean up
+        gBrowser.removeTab(tab);
+        aCallback();
+      };
+
+      waitForSaveState(saveStateCallback);
+
+      // force a change event to recollect the formdata
+      let changeEvent = document.createEvent("Events");
+      changeEvent.initEvent("change", true, true);
+      input.dispatchEvent(changeEvent);
+    };
+
+    waitForTabState(tab, tabState, tabStateCallback);
+  };
+
+  whenBrowserLoaded(tab.linkedBrowser, browserLoadedCallback);
 }

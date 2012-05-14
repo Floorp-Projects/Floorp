@@ -45,7 +45,7 @@ function test() {
   let oldState = { windows: [{ tabs: [{ entries: [{ url: "example.com" }] }] }]};
   let pageData = {
     url: "about:sessionrestore",
-    formdata: { "#sessionData": "(" + JSON.stringify(oldState) + ")" }
+    formdata: { id: { "sessionData": "(" + JSON.stringify(oldState) + ")" } }
   };
   let state = { windows: [{ tabs: [{ entries: [pageData] }] }] };
 

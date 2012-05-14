@@ -365,7 +365,10 @@ SessionStoreService.prototype = {
               // replace the crashed session with a restore-page-only session
               let pageData = {
                 url: "about:sessionrestore",
-                formdata: { "#sessionData": this._initialState }
+                formdata: {
+                  id: { "sessionData": this._initialState },
+                  xpath: {}
+                }
               };
               this._initialState = { windows: [{ tabs: [{ entries: [pageData] }] }] };
             }
@@ -2209,7 +2212,10 @@ SessionStoreService.prototype = {
     aBrowser.__SS_formDataSaved = true;
     if (aBrowser.currentURI.spec == "about:config")
       aTabData.entries[tabIndex].formdata = {
-        "#textbox": aBrowser.contentDocument.getElementById("textbox").value
+        id: {
+          "textbox": aBrowser.contentDocument.getElementById("textbox").value
+        },
+        xpath: {}
       };
   },
 
@@ -2252,17 +2258,9 @@ SessionStoreService.prototype = {
           formData.id["sessionData"] = JSON.parse(formData.id["sessionData"]);
         }
 
-        // For backwards compatibility in SessionStore, the structure of the
-        // stored object is modified slightly.
         if (Object.keys(formData.id).length ||
             Object.keys(formData.xpath).length) {
-          // The object returned from getFormData() is not shared, so we reuse
-          // the xpath sub-object for our storage.
-          aData.formdata = formData.xpath;
-
-          for each (let [k, v] in Iterator(formData.id)) {
-            aData.formdata["#" + k] = v;
-          }
+          aData.formdata = formData;
         } else if (aData.formdata) {
           delete aData.formdata;
         }
@@ -3419,8 +3417,9 @@ SessionStoreService.prototype = {
         let formdata = aData.formdata;
 
         // handle backwards compatibility
+        // this is a migration from pre-firefox 15. cf. bug 742051
         if (!("xpath" in formdata || "id" in formdata)) {
-          formdata = {xpath: {}, id: {}};
+          formdata = { xpath: {}, id: {} };
 
           for each (let [key, value] in Iterator(aData.formdata)) {
             if (key.charAt(0) == "#") {
@@ -3435,11 +3434,15 @@ SessionStoreService.prototype = {
         // nested instances causing humongous sessionstore.js files.
         // cf. bug 467409
         if (aData.url == "about:sessionrestore" &&
+            "sessionData" in formdata.id &&
             typeof formdata.id["sessionData"] == "object") {
           formdata.id["sessionData"] =
             JSON.stringify(formdata.id["sessionData"]);
         }
 
+        // update the formdata
+        aData.formdata = formdata;
+        // merge the formdata
         DocumentUtils.mergeFormData(aContent.document, formdata);
       }
 
