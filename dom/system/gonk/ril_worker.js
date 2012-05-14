@@ -299,15 +299,7 @@ let Buf = {
     // Strings are \0\0 delimited, but that isn't part of the length. And
     // if the string length is even, the delimiter is two characters wide.
     // It's insane, I know.
-    let delimiter = this.readUint16();
-    if (!(string_len & 1)) {
-      delimiter |= this.readUint16();
-    }
-    if (DEBUG) {
-      if (delimiter != 0) {
-        debug("Something's wrong, found string delimiter: " + delimiter);
-      }
-    }
+    this.readStringDelimiter(string_len);
     return s;
   },
 
@@ -318,6 +310,18 @@ let Buf = {
       strings.push(this.readString());
     }
     return strings;
+  },
+  
+  readStringDelimiter: function readStringDelimiter(length) {
+    let delimiter = this.readUint16();
+    if (!(length & 1)) {
+      delimiter |= this.readUint16();
+    }
+    if (DEBUG) {
+      if (delimiter != 0) {
+        debug("Something's wrong, found string delimiter: " + delimiter);
+      }
+    }
   },
 
   readParcelSize: function readParcelSize() {
@@ -363,16 +367,20 @@ let Buf = {
     // Strings are \0\0 delimited, but that isn't part of the length. And
     // if the string length is even, the delimiter is two characters wide.
     // It's insane, I know.
-    this.writeUint16(0);
-    if (!(value.length & 1)) {
-      this.writeUint16(0);
-    }
+    this.writeStringDelimiter(value.length);
   },
 
   writeStringList: function writeStringList(strings) {
     this.writeUint32(strings.length);
     for (let i = 0; i < strings.length; i++) {
       this.writeString(strings[i]);
+    }
+  },
+  
+  writeStringDelimiter: function writeStringDelimiter(length) {
+    this.writeUint16(0);
+    if (!(length & 1)) {
+      this.writeUint16(0);
     }
   },
 
@@ -904,15 +912,7 @@ let RIL = {
         return;
       }
       this.iccInfo.MSISDN = GsmPDUHelper.readAddress(len);
-      let delimiter = Buf.readUint16();
-      if (!(length & 1)) {
-        delimiter |= Buf.readUint16();
-      }
-      if (DEBUG) {
-        if (delimiter != 0) {
-          debug("Something's wrong, found string delimiter: " + delimiter);
-        }
-      }
+      Buf.readStringDelimiter(length);
 
       if (DEBUG) debug("MSISDN: " + this.iccInfo.MSISDN);
       if (this.iccInfo.MSISDN) {
@@ -943,15 +943,7 @@ let RIL = {
       // Each octet is encoded into two chars.
       let len = length / 2;
       this.iccInfo.AD = GsmPDUHelper.readHexOctetArray(len);
-      let delimiter = Buf.readUint16();
-      if (!(length & 1)) {
-        delimiter |= Buf.readUint16();
-      }
-      if (DEBUG) {
-        if (delimiter != 0) {
-          debug("Something's wrong, found string delimiter: " + delimiter);
-        }
-      }
+      Buf.readStringDelimiter(length);
 
       if (DEBUG) {
         let str = "";
@@ -1010,15 +1002,7 @@ let RIL = {
       // Each octet is encoded into two chars.
       let len = length / 2;
       this.iccInfo.UST = GsmPDUHelper.readHexOctetArray(len);
-      let delimiter = Buf.readUint16();
-      if (!(length & 1)) {
-        delimiter |= Buf.readUint16();
-      }
-      if (DEBUG) {
-        if (delimiter != 0) {
-          debug("Something's wrong, found string delimiter: " + delimiter);
-        }
-      }
+      Buf.readStringDelimiter(length);
       
       if (DEBUG) {
         let str = "";
@@ -1610,15 +1594,7 @@ let RIL = {
     // Length of a record, data[14]
     let recordSize = GsmPDUHelper.readHexOctet();
 
-    let delimiter = Buf.readUint16();
-    if (!(length & 1)) {
-      delimiter |= Buf.readUint16();
-    }
-    if (DEBUG) {
-      if (delimiter != 0) {
-        debug("Something's wrong, found string delimiter: " + delimiter);
-      }
-    }
+    Buf.readStringDelimiter(length);
 
     switch (options.type) {
       case EF_TYPE_LINEAR_FIXED:
@@ -1916,15 +1892,7 @@ let RIL = {
     if (DEBUG) debug(message);
 
     // Read string delimiters. See Buf.readString().
-    let delimiter = Buf.readUint16();
-    if (!(messageStringLength & 1)) {
-      delimiter |= Buf.readUint16();
-    }
-    if (DEBUG) {
-      if (delimiter != 0) {
-        debug("Something's wrong, found string delimiter: " + delimiter);
-      }
-    }
+    Buf.readStringDelimiter(length);
 
     return message;
   },
@@ -3059,26 +3027,6 @@ let GsmPDUHelper = {
       number += this.octetToBCD(octet);
     }
     return number;
-  },
-
-  /**
-   *  Read a string from Buf and convert it to BCD
-   * 
-   *  @return the decimal as a number.
-   */ 
-  readStringAsBCD: function readStringAsBCD() {
-    let length = Buf.readUint32();
-    let bcd = this.readSwappedNibbleBCD(length / 2);
-    let delimiter = Buf.readUint16();
-    if (!(length & 1)) {
-      delimiter |= Buf.readUint16();
-    }
-    if (DEBUG) {
-      if (delimiter != 0) {
-        debug("Something's wrong, found string delimiter: " + delimiter);
-      }
-    }
-    return bcd;
   },
 
   /**
