@@ -82,44 +82,61 @@ add_test(function test_store() {
 
   _("Let's create an entry in the database.");
   fxuri = Utils.makeURI("http://getfirefox.com/");
-   PlacesUtils.history.addPageWithDetails(fxuri, "Get Firefox!", TIMESTAMP1);
 
-  _("Verify that the entry exists.");
-  let ids = Object.keys(store.getAllIDs());
-  do_check_eq(ids.length, 1);
-  fxguid = ids[0];
-  do_check_true(store.itemExists(fxguid));
+  let place = {
+    uri: fxuri,
+    title: "Get Firefox!",
+    visits: [{
+      visitDate: TIMESTAMP1,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+    }]
+  };
+  PlacesUtils.asyncHistory.updatePlaces(place, {
+    handleError: function handleError() {
+      do_throw("Unexpected error in adding visit.");
+    },
+    handleResult: function handleResult() {},
+    handleCompletion: onVisitAdded
+  });
 
-  _("If we query a non-existent record, it's marked as deleted.");
-  let record = store.createRecord("non-existent");
-  do_check_true(record.deleted);
+  function onVisitAdded() {
+    _("Verify that the entry exists.");
+    let ids = Object.keys(store.getAllIDs());
+    do_check_eq(ids.length, 1);
+    fxguid = ids[0];
+    do_check_true(store.itemExists(fxguid));
 
-  _("Verify createRecord() returns a complete record.");
-  record = store.createRecord(fxguid);
-  do_check_eq(record.histUri, fxuri.spec);
-  do_check_eq(record.title, "Get Firefox!");
-  do_check_eq(record.visits.length, 1);
-  do_check_eq(record.visits[0].date, TIMESTAMP1);
-  do_check_eq(record.visits[0].type, Ci.nsINavHistoryService.TRANSITION_LINK);
+    _("If we query a non-existent record, it's marked as deleted.");
+    let record = store.createRecord("non-existent");
+    do_check_true(record.deleted);
 
-  _("Let's modify the record and have the store update the database.");
-  let secondvisit = {date: TIMESTAMP2,
-                     type: Ci.nsINavHistoryService.TRANSITION_TYPED};
-  onNextTitleChanged(ensureThrows(function() {
-    let queryres = queryHistoryVisits(fxuri);
-    do_check_eq(queryres.length, 2);
-    do_check_eq(queryres[0].time, TIMESTAMP1);
-    do_check_eq(queryres[0].title, "Hol Dir Firefox!");
-    do_check_eq(queryres[1].time, TIMESTAMP2);
-    do_check_eq(queryres[1].title, "Hol Dir Firefox!");
-    run_next_test();
-  }));
-  applyEnsureNoFailures([
-    {id: fxguid,
-     histUri: record.histUri,
-     title: "Hol Dir Firefox!",
-     visits: [record.visits[0], secondvisit]}
-  ]);
+    _("Verify createRecord() returns a complete record.");
+    record = store.createRecord(fxguid);
+    do_check_eq(record.histUri, fxuri.spec);
+    do_check_eq(record.title, "Get Firefox!");
+    do_check_eq(record.visits.length, 1);
+    do_check_eq(record.visits[0].date, TIMESTAMP1);
+    do_check_eq(record.visits[0].type, Ci.nsINavHistoryService.TRANSITION_LINK);
+
+    _("Let's modify the record and have the store update the database.");
+    let secondvisit = {date: TIMESTAMP2,
+                       type: Ci.nsINavHistoryService.TRANSITION_TYPED};
+    onNextTitleChanged(ensureThrows(function() {
+      let queryres = queryHistoryVisits(fxuri);
+      do_check_eq(queryres.length, 2);
+      do_check_eq(queryres[0].time, TIMESTAMP1);
+      do_check_eq(queryres[0].title, "Hol Dir Firefox!");
+      do_check_eq(queryres[1].time, TIMESTAMP2);
+      do_check_eq(queryres[1].title, "Hol Dir Firefox!");
+      run_next_test();
+    }));
+    applyEnsureNoFailures([
+      {id: fxguid,
+       histUri: record.histUri,
+       title: "Hol Dir Firefox!",
+       visits: [record.visits[0], secondvisit]}
+    ]);
+  }
 });
 
 add_test(function test_store_create() {
