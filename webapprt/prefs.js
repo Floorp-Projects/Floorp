@@ -4,3 +4,6 @@
 
 pref("browser.chromeURL", "chrome://webapprt/content/webapp.xul");
 pref("browser.download.folderList", 1);
+
+// Disable all add-on locations other than the profile
+pref("extensions.enabledScopes", 1);
