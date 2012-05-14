@@ -40,9 +40,13 @@
 #include "CheckedInt.h"
 #include <iostream>
 
+#ifndef CHECKEDINT_ENABLE_MOZ_ASSERTS
+    #error CHECKEDINT_ENABLE_MOZ_ASSERTS should be defined by CheckedInt.h
+#endif
+
 namespace CheckedInt_test {
 
-using namespace mozilla::CheckedInt_internal;
+using namespace mozilla::detail;
 using mozilla::CheckedInt;
 
 int g_integer_types_tested = 0;
@@ -440,8 +444,6 @@ void test()
     typedef unsigned short unsigned_short;
     typedef unsigned int  unsigned_int;
     typedef unsigned long unsigned_long;
-    typedef long long long_long;
-    typedef unsigned long long unsigned_long_long;
     
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(char)
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(unsigned_char)
@@ -451,17 +453,6 @@ void test()
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(unsigned_int)
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(long)
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(unsigned_long)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(long_long)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(unsigned_long_long)
-
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt8)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint8)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt16)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint16)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt32)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint32)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt64)
-    VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint64)
 
     /* Test increment/decrement operators */
 
@@ -513,16 +504,6 @@ int main()
     CheckedInt_test::test<unsigned int>();
     CheckedInt_test::test<long>();
     CheckedInt_test::test<unsigned long>();
-    CheckedInt_test::test<long long>();
-    CheckedInt_test::test<unsigned long long>();
-
-    CheckedInt_test::test<PRInt8>();
-    CheckedInt_test::test<PRUint8>();
-    CheckedInt_test::test<PRInt16>();
-    CheckedInt_test::test<PRUint16>();
-    CheckedInt_test::test<PRInt32>();
-    CheckedInt_test::test<PRUint32>();
-    CheckedInt_test::test<PRInt64>();
 
     std::cerr << CheckedInt_test::g_tests_failed << " tests failed, "
               << CheckedInt_test::g_tests_passed << " tests passed out of "

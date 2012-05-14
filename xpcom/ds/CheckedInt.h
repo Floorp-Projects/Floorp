@@ -44,12 +44,6 @@
  *** Disabling features may be useful for code using CheckedInt outside of Mozilla (e.g. WebKit)
  ***/
 
-// enable support for NSPR types like PRInt64
-#define CHECKEDINT_ENABLE_PR_INTEGER_TYPES
-
-// enable support for long long and unsigned long long
-#define CHECKEDINT_ENABLE_LONG_LONG
-
 // enable usage of MOZ_STATIC_ASSERT to check for unsupported types.
 // If disabled, static asserts are just removed. You'll still get compile errors, just less helpful ones.
 #define CHECKEDINT_ENABLE_MOZ_ASSERTS
@@ -59,46 +53,33 @@
 
 
 #ifdef CHECKEDINT_ENABLE_MOZ_ASSERTS
-    #include <mozilla/Assertions.h>
+    #include "mozilla/Assertions.h"
 #else
     #ifndef MOZ_STATIC_ASSERT
-        #define MOZ_STATIC_ASSERT(x)
+        #include <cassert>
+        #define MOZ_STATIC_ASSERT(cond, reason) assert((cond) && reason)
     #endif
 #endif
 
-#ifdef CHECKEDINT_ENABLE_PR_INTEGER_TYPES
-    #include "prtypes.h"
-#endif
-
+#include "mozilla/StandardInteger.h"
 #include <climits>
 
 namespace mozilla {
 
-namespace CheckedInt_internal {
-
-/* historically, we didn't want to use std::numeric_limits here because PRInt... types may not support it,
- * depending on the platform, e.g. on certain platforms they use nonstandard built-in types.
- * 
- * Maybe we should revisit this now that we use stdint types. But anyway, I don't think that std::numeric_limits
- * helps much with twice_bigger_type.
- */
+namespace detail {
 
 /*** Step 1: manually record supported types
  ***
- *** What's nontrivial here is that there are different families of integer types: plain integer types, stdint types,
- *** and PR types. It is merrily undefined which types from one family may be just typedefs for a type from another family.
+ *** What's nontrivial here is that there are different families of integer types: basic integer types and stdint types. It is merrily undefined which types from one family may be just typedefs for a type from another family.
  ***
- *** For example, on GCC 4.6, aside from the 10 'standard types' (including long long types), the only other type
+ *** For example, on GCC 4.6, aside from the basic integer types, the only other type
  *** that isn't just a typedef for some of them, is int8_t.
  ***/
 
 struct unsupported_type {};
 
-template<typename integer_type> struct is_supported_pass_3 {
-    enum { value = 0 };
-};
 template<typename integer_type> struct is_supported_pass_2 {
-    enum { value = is_supported_pass_3<integer_type>::value };
+    enum { value = 0 };
 };
 template<typename integer_type> struct is_supported {
     enum { value = is_supported_pass_2<integer_type>::value };
@@ -121,21 +102,6 @@ template<> struct is_supported_pass_2<int>  { enum { value = 1 }; };
 template<> struct is_supported_pass_2<unsigned int> { enum { value = 1 }; };
 template<> struct is_supported_pass_2<long>  { enum { value = 1 }; };
 template<> struct is_supported_pass_2<unsigned long> { enum { value = 1 }; };
-#ifdef CHECKEDINT_ENABLE_LONG_LONG
-    template<> struct is_supported_pass_2<long long>  { enum { value = 1 }; };
-    template<> struct is_supported_pass_2<unsigned long long> { enum { value = 1 }; };
-#endif
-
-#ifdef CHECKEDINT_ENABLE_PR_INTEGER_TYPES
-    template<> struct is_supported_pass_3<PRInt8>   { enum { value = 1 }; };
-    template<> struct is_supported_pass_3<PRUint8>  { enum { value = 1 }; };
-    template<> struct is_supported_pass_3<PRInt16>  { enum { value = 1 }; };
-    template<> struct is_supported_pass_3<PRUint16> { enum { value = 1 }; };
-    template<> struct is_supported_pass_3<PRInt32>  { enum { value = 1 }; };
-    template<> struct is_supported_pass_3<PRUint32> { enum { value = 1 }; };
-    template<> struct is_supported_pass_3<PRInt64>  { enum { value = 1 }; };
-    template<> struct is_supported_pass_3<PRUint64> { enum { value = 1 }; };
-#endif
 
 /*** Step 2: some integer-traits kind of stuff. We're doing our own thing here rather than
  ***         relying on std::numeric_limits mostly for historical reasons (we still support PR integer types
@@ -378,7 +344,7 @@ inline T opposite_if_signed(T x) { return opposite_if_signed_impl<T>::run(x); }
 
 
 
-} // end namespace CheckedInt_internal
+} // end namespace detail
 
 
 /*** Step 4: Now define the CheckedInt class.
@@ -387,9 +353,8 @@ inline T opposite_if_signed(T x) { return opposite_if_signed_impl<T>::run(x); }
 /** \class CheckedInt
   * \brief Integer wrapper class checking for integer overflow and other errors
   * \param T the integer type to wrap. Can be any type among the following:
-  *            - any standard integer type like int, char, short, long, long long, and unsigned variants
-  *            - any stdint type such as int8_t, uint64_t etc.
-  *            - (Mozilla specific) and PR integer type like PRInt32
+  *            - any basic integer type such as |int|
+  *            - any stdint type such as |int8_t|
   *
   * This class implements guarded integer arithmetic. Do a computation, check that
   * valid() returns true, you then have a guarantee that no problem, such as integer overflow,
@@ -446,7 +411,7 @@ protected:
     template<typename U>
     CheckedInt(U value, bool isValid) : mValue(value), mIsValid(isValid)
     {
-        MOZ_STATIC_ASSERT(CheckedInt_internal::is_supported<T>::value, "This type is not supported by CheckedInt");
+        MOZ_STATIC_ASSERT(detail::is_supported<T>::value, "This type is not supported by CheckedInt");
     }
 
 public:
@@ -461,15 +426,15 @@ public:
     template<typename U>
     CheckedInt(U value)
         : mValue(T(value)),
-          mIsValid(CheckedInt_internal::is_in_range<T>(value))
+          mIsValid(detail::is_in_range<T>(value))
     {
-        MOZ_STATIC_ASSERT(CheckedInt_internal::is_supported<T>::value, "This type is not supported by CheckedInt");
+        MOZ_STATIC_ASSERT(detail::is_supported<T>::value, "This type is not supported by CheckedInt");
     }
 
     /** Constructs a valid checked integer with initial value 0 */
     CheckedInt() : mValue(0), mIsValid(true)
     {
-        MOZ_STATIC_ASSERT(CheckedInt_internal::is_supported<T>::value, "This type is not supported by CheckedInt");
+        MOZ_STATIC_ASSERT(detail::is_supported<T>::value, "This type is not supported by CheckedInt");
     }
 
     /** \returns the actual value */
@@ -505,10 +470,10 @@ public:
     {
         // circumvent msvc warning about - applied to unsigned int.
         // if we're unsigned, the only valid case anyway is 0 in which case - is a no-op.
-        T result = CheckedInt_internal::opposite_if_signed(value());
+        T result = detail::opposite_if_signed(value());
         /* give the compiler a good chance to perform RVO */
         return CheckedInt(result,
-                          valid() && CheckedInt_internal::is_sub_valid(T(0), value(), result));
+                          valid() && detail::is_sub_valid(T(0), value(), result));
     }
 
     /** \returns true if the left and right hand sides are valid and have the same value.
@@ -571,7 +536,7 @@ inline CheckedInt<T> operator OP(const CheckedInt<T> &lhs, const CheckedInt<T> &
     T y = rhs.mValue;                                                \
     T result = x OP y;                                                \
     T is_op_valid                                                     \
-        = CheckedInt_internal::is_##NAME##_valid(x, y, result);       \
+        = detail::is_##NAME##_valid(x, y, result);       \
     /* give the compiler a good chance to perform RVO */              \
     return CheckedInt<T>(result,                                      \
                          lhs.mIsValid & rhs.mIsValid & is_op_valid);  \
@@ -588,7 +553,7 @@ inline CheckedInt<T> operator /(const CheckedInt<T> &lhs, const CheckedInt<T> &r
 {
     T x = lhs.mValue;
     T y = rhs.mValue;
-    bool is_op_valid = CheckedInt_internal::is_div_valid(x, y);
+    bool is_op_valid = detail::is_div_valid(x, y);
     T result = is_op_valid ? (x / y) : 0;
     /* give the compiler a good chance to perform RVO */
     return CheckedInt<T>(result,
