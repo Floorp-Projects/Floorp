@@ -132,6 +132,19 @@ JSCompartment::setNeedsBarrier(bool needs)
     needsBarrier_ = needs;
 }
 
+static bool
+WrapForSameCompartment(JSContext *cx, JSObject *obj, Value *vp)
+{
+    JS_ASSERT(cx->compartment == obj->compartment());
+    if (cx->runtime->sameCompartmentWrapObjectCallback) {
+        obj = cx->runtime->sameCompartmentWrapObjectCallback(cx, obj);
+        if (!obj)
+            return false;
+    }
+    vp->setObject(*obj);
+    return true;
+}
+
 bool
 JSCompartment::wrap(JSContext *cx, Value *vp)
 {
@@ -179,9 +192,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (vp->isObject()) {
         JSObject *obj = &vp->toObject();
 
-        /* If the object is already in this compartment, we are done. */
         if (obj->compartment() == this)
-            return true;
+            return WrapForSameCompartment(cx, obj, vp);
 
         /* Translate StopIteration singleton. */
         if (obj->isStopIteration())
@@ -190,9 +202,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         /* Unwrap the object, but don't unwrap outer windows. */
         obj = UnwrapObject(&vp->toObject(), /* stopAtOuter = */ true, &flags);
 
-        vp->setObject(*obj);
         if (obj->compartment() == this)
-            return true;
+            return WrapForSameCompartment(cx, obj, vp);
 
         if (cx->runtime->preWrapObjectCallback) {
             obj = cx->runtime->preWrapObjectCallback(cx, global, obj, flags);
@@ -200,9 +211,9 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
                 return false;
         }
 
-        vp->setObject(*obj);
         if (obj->compartment() == this)
-            return true;
+            return WrapForSameCompartment(cx, obj, vp);
+        vp->setObject(*obj);
 
 #ifdef DEBUG
         {
