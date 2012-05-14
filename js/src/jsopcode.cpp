@@ -1493,7 +1493,11 @@ PopOffPrec(SprintStack *ss, uint8_t prec, jsbytecode **ppc = NULL)
 
     ss->top = --top;
     off = GetOff(ss, top);
-    topcs = &js_CodeSpec[ss->opcodes[top]];
+
+    int op = ss->opcodes[top];
+    if (op >= JSOP_LIMIT)
+        op = JSOP_NOP;
+    topcs = &js_CodeSpec[op];
 
     jsbytecode *pc = ss->bytecodes[top];
     if (ppc)
@@ -3784,12 +3788,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * The bytecode around pc looks like this:
                      *     <<RHS>>
                      *     iter
-                     * pc: goto/gotox C         [src_for_in(B, D)]
+                     * pc: goto C               [src_for_in(B, D)]
                      *  A: <<LHS = iternext>>
                      *  B: pop                  [maybe a src_decl_var/let]
                      *     <<S>>
                      *  C: moreiter
-                     *     ifne/ifnex A
+                     *     ifne A
                      *     enditer
                      *  D: ...
                      *
