@@ -1,5 +1,5 @@
 <!doctype html>
-<html><head>
+<html class="reftest-wait"><head>
 <title>border-image, only middle part, table cell, testcase</title>
 <style>
 table {
@@ -12,6 +12,17 @@ table {
 }
 </style>
 </head><body>
+<iframe src="3x3green-1DD813.png" width="48" height="48"></iframe>
 <table>
 </table>
+<script>
+  // This is a wallpaper for bug 688897 until bug 697230 is fixed.
+  // MozReftestInvalidate is called after onload of all frames so it
+  // delays the snapshot until the used border image is loaded.
+  window.addEventListener("MozReftestInvalidate",
+    function() {
+      document.getElementsByTagName("iframe")[0].style.display = "none";
+      document.documentElement.className = "";
+    }, false);
+</script>
 </body></html>
