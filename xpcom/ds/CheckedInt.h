@@ -48,8 +48,11 @@ namespace mozilla {
 
 namespace CheckedInt_internal {
 
-/* we don't want to use std::numeric_limits here because PRInt... types may not support it,
- * depending on the platform, e.g. on certain platforms they use nonstandard built-in types
+/* historically, we didn't want to use std::numeric_limits here because PRInt... types may not support it,
+ * depending on the platform, e.g. on certain platforms they use nonstandard built-in types.
+ * 
+ * Maybe we should revisit this now that we use stdint types. But anyway, I don't think that std::numeric_limits
+ * helps much with twice_bigger_type.
  */
 
 /*** Step 1: manually record information for all the types that we want to support
@@ -75,14 +78,14 @@ template<> struct integer_type_manually_recorded_info<T>       \
 };
 
 //                                 Type      Twice Bigger Type     Unsigned Type
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt8,   PRInt16,              PRUint8)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint8,  PRUint16,             PRUint8)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt16,  PRInt32,              PRUint16)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint16, PRUint32,             PRUint16)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt32,  PRInt64,              PRUint32)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint32, PRUint64,             PRUint32)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt64,  unsupported_type,     PRUint64)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint64, unsupported_type,     PRUint64)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(int8_t,   int16_t,              uint8_t)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(uint8_t,  uint16_t,             uint8_t)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(int16_t,  int32_t,              uint16_t)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(uint16_t, uint32_t,             uint16_t)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(int32_t,  int64_t,              uint32_t)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(uint32_t, uint64_t,             uint32_t)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(int64_t,  unsupported_type,     uint64_t)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(uint64_t, unsupported_type,     uint64_t)
 
 
 /*** Step 2: record some info about a given integer type,
@@ -312,8 +315,8 @@ inline T opposite_if_signed(T x) { return opposite_if_signed_impl<T>::run(x); }
 
 /** \class CheckedInt
   * \brief Integer wrapper class checking for integer overflow and other errors
-  * \param T the integer type to wrap. Can be any of PRInt8, PRUint8, PRInt16, PRUint16,
-  *          PRInt32, PRUint32, PRInt64, PRUint64.
+  * \param T the integer type to wrap. Can be any of int8_t, uint8_t, int16_t, uint16_t,
+  *          int32_t, uint32_t, int64_t, uint64_t.
   *
   * This class implements guarded integer arithmetic. Do a computation, check that
   * valid() returns true, you then have a guarantee that no problem, such as integer overflow,
@@ -326,9 +329,9 @@ inline T opposite_if_signed(T x) { return opposite_if_signed_impl<T>::run(x); }
   * that doesn't crash if z==0, and that reports on error (divide by zero or integer overflow).
   * You could code it as follows:
     \code
-    bool compute_x_plus_y_over_z(PRInt32 x, PRInt32 y, PRInt32 z, PRInt32 *result)
+    bool compute_x_plus_y_over_z(int32_t x, int32_t y, int32_t z, int32_t *result)
     {
-        CheckedInt<PRInt32> checked_result = (CheckedInt<PRInt32>(x) + y) / z;
+        CheckedInt<int32_t> checked_result = (CheckedInt<int32_t>(x) + y) / z;
         *result = checked_result.value();
         return checked_result.valid();
     }
@@ -338,12 +341,12 @@ inline T opposite_if_signed(T x) { return opposite_if_signed_impl<T>::run(x); }
   * is checked to be in range before being casted to the destination type. This means that the following
   * lines all compile, and the resulting CheckedInts are correctly detected as valid or invalid:
   * \code
-    CheckedInt<PRUint8> x(1);   // 1 is of type int, is found to be in range for PRUint8, x is valid
-    CheckedInt<PRUint8> x(-1);  // -1 is of type int, is found not to be in range for PRUint8, x is invalid
-    CheckedInt<PRInt8> x(-1);   // -1 is of type int, is found to be in range for PRInt8, x is valid
-    CheckedInt<PRInt8> x(PRInt16(1000)); // 1000 is of type PRInt16, is found not to be in range for PRInt8, x is invalid
-    CheckedInt<PRInt32> x(PRUint32(3123456789)); // 3123456789 is of type PRUint32, is found not to be in range
-                                             // for PRInt32, x is invalid
+    CheckedInt<uint8_t> x(1);   // 1 is of type int, is found to be in range for uint8_t, x is valid
+    CheckedInt<uint8_t> x(-1);  // -1 is of type int, is found not to be in range for uint8_t, x is invalid
+    CheckedInt<int8_t> x(-1);   // -1 is of type int, is found to be in range for int8_t, x is valid
+    CheckedInt<int8_t> x(int16_t(1000)); // 1000 is of type int16_t, is found not to be in range for int8_t, x is invalid
+    CheckedInt<int32_t> x(uint32_t(3123456789)); // 3123456789 is of type uint32_t, is found not to be in range
+                                             // for int32_t, x is invalid
   * \endcode
   * Implicit conversion from
   * checked integers to plain integers is not allowed. As shown in the
@@ -356,8 +359,8 @@ inline T opposite_if_signed(T x) { return opposite_if_signed_impl<T>::run(x); }
   *
   * There are convenience typedefs for all PR integer types, of the following form (these are just 2 examples):
     \code
-    typedef CheckedInt<PRInt32> CheckedInt32;
-    typedef CheckedInt<PRUint16> CheckedUint16;
+    typedef CheckedInt<int32_t> CheckedInt32;
+    typedef CheckedInt<uint16_t> CheckedUint16;
     \endcode
   */
 template<typename T>
