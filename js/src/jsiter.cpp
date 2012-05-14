@@ -379,8 +379,13 @@ Snapshot(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector *props)
             }
         }
 
-        if ((flags & JSITER_OWNONLY) || pobj->isXML())
+        if (flags & JSITER_OWNONLY)
             break;
+
+#if JS_HAS_XML_SUPPORT
+        if (pobj->isXML())
+            break;
+#endif
     } while ((pobj = pobj->getProto()) != NULL);
 
 #ifdef JS_MORE_DETERMINISTIC

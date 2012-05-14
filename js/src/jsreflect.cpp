@@ -2496,7 +2496,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case PNK_NEW:
       case PNK_LP:
       {
-#ifdef JS_HAS_GENERATOR_EXPRS
+#if JS_HAS_GENERATOR_EXPRS
         if (pn->isGeneratorExpr())
             return generatorExpression(pn->generatorExpr(), dst);
 #endif
@@ -2611,7 +2611,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
       case PNK_LET:
         return let(pn, true, dst);
 
-#ifdef JS_HAS_XML_SUPPORT
+#if JS_HAS_XML_SUPPORT
       case PNK_XMLUNARY:
         JS_ASSERT(pn->isOp(JSOP_XMLNAME) ||
                   pn->isOp(JSOP_SETXMLNAME) ||
@@ -2685,7 +2685,7 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
 {
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
-#ifdef JS_HAS_XML_SUPPORT
+#if JS_HAS_XML_SUPPORT
       case PNK_XMLCURLYEXPR:
       {
         Value expr;
@@ -2949,14 +2949,14 @@ ASTSerializer::function(ParseNode *pn, ASTType type, Value *dst)
     JSFunction *func = (JSFunction *)pn->pn_funbox->object;
 
     bool isGenerator =
-#ifdef JS_HAS_GENERATORS
+#if JS_HAS_GENERATORS
         pn->pn_funbox->tcflags & TCF_FUN_IS_GENERATOR;
 #else
         false;
 #endif
 
     bool isExpression =
-#ifdef JS_HAS_EXPR_CLOSURES
+#if JS_HAS_EXPR_CLOSURES
         func->flags & JSFUN_EXPR_CLOSURE;
 #else
         false;

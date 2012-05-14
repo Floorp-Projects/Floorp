@@ -1376,7 +1376,7 @@ struct AutoResolving {
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-#ifdef JS_HAS_XML_SUPPORT
+#if JS_HAS_XML_SUPPORT
 class AutoXMLRooter : private AutoGCRooter {
   public:
     AutoXMLRooter(JSContext *cx, JSXML *xml
