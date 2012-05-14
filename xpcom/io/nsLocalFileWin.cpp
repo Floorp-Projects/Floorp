@@ -253,9 +253,21 @@ private:
         seinfo.lpParameters =  NULL;
         seinfo.lpDirectory  = NULL;
         seinfo.nShow  = SW_SHOWNORMAL;
+
+        // Use the directory of the file we're launching as the working
+        // directory.  That way if we have a self extracting EXE it won't
+        // suggest to extract to the install directory.
+        WCHAR workingDirectory[MAX_PATH + 1] = { L'\0' };
+        wcsncpy(workingDirectory,  mResolvedPath.get(), MAX_PATH);
+        if (PathRemoveFileSpecW(workingDirectory)) {
+            seinfo.lpDirectory = workingDirectory;
+        } else {
+            NS_WARNING("Could not set working directory for launched file.");
+        }
         
-        if (ShellExecuteExW(&seinfo))
+        if (ShellExecuteExW(&seinfo)) {
             return NS_OK;
+        }
         DWORD r = GetLastError();
         // if the file has no association, we launch windows' 
         // "what do you want to do" dialog
