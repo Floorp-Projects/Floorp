@@ -490,9 +490,9 @@ def main(argv):
     job_list = []
     if OPTIONS.tbpl:
         # Running all bits would take forever. Instead, we test a few interesting combinations.
-        ion_flags = [ 
+        flags = [
                       ['--no-jm'],
-                      ['--ion-gvn=off', '--ion-licm=off'],
+                      ['--ion-eager'],
                       # Below, equivalents the old shell flags: ,m,am,amd,n,mn,amn,amdn,mdn
                       ['--no-ion', '--no-jm', '--no-ti'],
                       ['--no-ion', '--no-ti'],
@@ -504,16 +504,17 @@ def main(argv):
                       ['--no-ion', '-d']
                     ]
         for test in test_list:
-            for variant in ion_flags:
+            for variant in flags:
                 new_test = test.copy()
                 new_test.jitflags.extend(variant)
                 job_list.append(new_test)
     elif OPTIONS.ion:
-        args = []
+        flags = [[], ['--ion-eager']]
         for test in test_list:
-            new_test = test.copy()
-            new_test.jitflags.extend(args)
-            job_list.append(new_test)
+            for variant in flags:
+                new_test = test.copy()
+                new_test.jitflags.extend(variant)
+                job_list.append(new_test)
     else:
         jitflags_list = parse_jitflags()
         for test in test_list:
