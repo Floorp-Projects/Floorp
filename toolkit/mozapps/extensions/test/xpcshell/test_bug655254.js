@@ -58,13 +58,22 @@ function run_test() {
   var dir = writeInstallRDFForExtension(addon1, userDir);
   setExtensionModifiedTime(dir, time);
 
+  manuallyInstall(do_get_addon("test_bug655254_2"), userDir, "addon2@tests.mozilla.org");
+
   startupManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org"], function([a1, a2]) {
     do_check_neq(a1, null);
     do_check_true(a1.appDisabled);
     do_check_false(a1.isActive);
     do_check_false(isExtensionInAddonsList(userDir, a1.id));
+
+    do_check_neq(a2, null);
+    do_check_false(a2.appDisabled);
+    do_check_true(a2.isActive);
+    do_check_false(isExtensionInAddonsList(userDir, a2.id));
+    do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
     a1.findUpdates({
       onUpdateFinished: function() {
@@ -78,6 +87,8 @@ function run_test() {
 
           shutdownManager();
 
+          do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
+
           userDir.parent.moveTo(gProfD, "extensions3");
           userDir = gProfD.clone();
           userDir.append("extensions3");
@@ -86,11 +97,18 @@ function run_test() {
 
           startupManager(false);
 
-          AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+          AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                                       "addon2@tests.mozilla.org"], function([a1, a2]) {
             do_check_neq(a1, null);
             do_check_false(a1.appDisabled);
             do_check_true(a1.isActive);
             do_check_true(isExtensionInAddonsList(userDir, a1.id));
+
+            do_check_neq(a2, null);
+            do_check_false(a2.appDisabled);
+            do_check_true(a2.isActive);
+            do_check_false(isExtensionInAddonsList(userDir, a2.id));
+            do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
             testserver.stop(do_test_finished);
           });
