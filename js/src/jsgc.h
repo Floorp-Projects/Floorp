@@ -64,9 +64,6 @@
 
 struct JSCompartment;
 
-extern void
-js_TraceXML(JSTracer *trc, JSXML* thing);
-
 #if JS_STACK_GROWTH_DIRECTION > 0
 # define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) < limit)
 #else
@@ -924,9 +921,11 @@ struct GCMarker : public JSTracer {
         pushTaggedPtr(TypeTag, type);
     }
 
+#if JS_HAS_XML_SUPPORT
     void pushXML(JSXML *xml) {
         pushTaggedPtr(XmlTag, xml);
     }
+#endif
 
     uint32_t getMarkColor() const {
         return color;

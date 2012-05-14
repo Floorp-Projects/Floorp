@@ -2575,8 +2575,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
     JSFunction *fun = NULL; /* init to shut GCC up */
     JSString *str;
     JSBool ok;
+    JSBool foreach;
 #if JS_HAS_XML_SUPPORT
-    JSBool foreach, inXML, quoteAttr;
+    JSBool inXML, quoteAttr;
 #else
 #define inXML JS_FALSE
 #endif
@@ -2682,8 +2683,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
     sn = NULL;
     rval = NULL;
     bool forOf = false;
+    foreach = false;
 #if JS_HAS_XML_SUPPORT
-    foreach = inXML = quoteAttr = JS_FALSE;
+    inXML = quoteAttr = false;
 #endif
 
     while (nb < 0 || pc < endpc) {
@@ -5202,17 +5204,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                     todo = ss->sprinter.put("*", 1);
                 }
                 break;
+#endif
 
               case JSOP_QNAMEPART:
                 LOAD_ATOM(0);
+#if JS_HAS_XML_SUPPORT
                 if (pc[JSOP_QNAMEPART_LENGTH] == JSOP_TOATTRNAME) {
                     saveop = JSOP_TOATTRNAME;
                     len += JSOP_TOATTRNAME_LENGTH;
                     lval = "@";
                     goto do_qname;
                 }
+#endif
                 goto do_name;
 
+#if JS_HAS_XML_SUPPORT
               case JSOP_QNAMECONST:
                 LOAD_ATOM(0);
                 rval = QuoteString(&ss->sprinter, atom, 0);

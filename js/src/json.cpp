@@ -391,7 +391,7 @@ PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, Stringi
 static inline bool
 IsFilteredValue(const Value &v)
 {
-    return v.isUndefined() || js_IsCallable(v) || (v.isObject() && v.toObject().isXML());
+    return v.isUndefined() || js_IsCallable(v) || VALUE_IS_XML(v);
 }
 
 /* ES5 15.12.3 JO. */
