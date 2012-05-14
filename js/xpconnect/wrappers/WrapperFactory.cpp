@@ -472,6 +472,25 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     return wrapperObj;
 }
 
+JSObject *
+WrapperFactory::WrapForSameCompartment(JSContext *cx, JSObject *obj)
+{
+    // Only WNs have same-compartment wrappers.
+    //
+    // NB: The contract of WrapForSameCompartment says that |obj| may or may not
+    // be a security wrapper. This check implicitly handles the security wrapper
+    // case.
+    if (!IS_WN_WRAPPER(obj))
+        return obj;
+
+    // Extract the WN. It should exist.
+    XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
+    MOZ_ASSERT(wn, "Trying to wrap a dead WN!");
+
+    // The WN knows what to do.
+    return wn->GetSameCompartmentSecurityWrapper(cx);
+}
+
 typedef FilteringWrapper<XrayWrapper<SameCompartmentSecurityWrapper>, LocationPolicy> LW;
 
 bool
