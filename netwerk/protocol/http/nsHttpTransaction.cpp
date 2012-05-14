@@ -725,7 +725,15 @@ nsHttpTransaction::Close(nsresult reason)
     // mReceivedData == FALSE.  (see bug 203057 for more info.)
     //
     if (reason == NS_ERROR_NET_RESET || reason == NS_OK) {
-        if (!mReceivedData && (!mSentData || connReused || mPipelinePosition)) {
+
+        // reallySentData is meant to separate the instances where data has
+        // been sent by this transaction but buffered at a higher level while
+        // a TLS session (perhaps via a tunnel) is setup.
+        bool reallySentData =
+            mSentData && (!mConnection || mConnection->BytesWritten());
+        
+        if (!mReceivedData &&
+            (!reallySentData || connReused || mPipelinePosition)) {
             // if restarting fails, then we must proceed to close the pipe,
             // which will notify the channel that the transaction failed.
             
