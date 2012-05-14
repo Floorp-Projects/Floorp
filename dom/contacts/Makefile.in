@@ -11,7 +11,7 @@ VPATH            = \
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq ($(MOZ_BUILD_APP),b2g)
+ifeq ($(MOZ_BUILD_APP), $(filter $(MOZ_BUILD_APP),b2g mail))
 VPATH += $(srcdir)/fallback
 endif
 
@@ -24,7 +24,7 @@ EXTRA_COMPONENTS =        \
   ContactManager.manifest \
   $(NULL)
 
-ifeq ($(MOZ_BUILD_APP),b2g)
+ifeq ($(MOZ_BUILD_APP), $(filter $(MOZ_BUILD_APP),b2g mail))
 EXTRA_JS_MODULES =   \
   ContactService.jsm \
   ContactDB.jsm      \
