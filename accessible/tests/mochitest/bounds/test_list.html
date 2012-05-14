@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Accessible boundaries when page is zoomed</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // Inside list
+      var li = getAccessible("insidelist_item");
+      testBounds(li);
+
+      var [xLI, yLI, widthLI, heightLI] = getBounds(li);
+      var bullet = li.firstChild;
+      var [x, y, width, height] = getBounds(bullet);
+      is(x, xLI,
+        "Bullet x should match to list item x");
+      ok(y >= yLI,
+         "Bullet y= " + y + " should be not less than list item y=" + yLI);
+      ok(width < widthLI,
+         "Bullet width should be lesser list item width");
+      ok(height <= heightLI,
+         "Bullet height= " + height + " should be not greater than list item height=" + heightLI);
+
+      // Outside list
+      li = getAccessible("outsidelist_item");
+      var [xLIElm, yLIElm, widthLIElm, heightLIElm] = getBoundsForDOMElm(li);
+      [xLI, yLI, widthLI, heightLI] = getBounds(li);
+
+      ok(xLI < xLIElm,
+         "Outside list item x=" + xLI + " should be lesser than list item element x=" + xLIElm);
+      is(yLI, yLIElm,
+         "Outside list item y should match to list item element y");
+      ok(widthLI > widthLIElm,
+         "Outside list item width=" + widthLI + " should be greater than list item element width=" + widthLIElm);
+      is(heightLI, heightLIElm,
+         "Outside list item height should match to list item element height");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=754627"
+     title="GetBounds on bullet return wrong values">
+    Mozilla Bug 754627
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <ul style="list-style-position: inside;">
+    <li id="insidelist_item">item</li>
+  </ul>
+
+  <ul style="list-style-position: outside;">
+    <li id="outsidelist_item">item</li>
+  </ul>
+
+</body>
+</html>
