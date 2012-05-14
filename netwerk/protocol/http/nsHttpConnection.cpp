@@ -79,6 +79,7 @@ nsHttpConnection::nsHttpConnection()
     , mCurrentBytesRead(0)
     , mMaxBytesRead(0)
     , mTotalBytesRead(0)
+    , mTotalBytesWritten(0)
     , mKeepAlive(true) // assume to keep-alive by default
     , mKeepAliveMask(true)
     , mSupportsPipelining(false) // assume low-grade server
@@ -1194,8 +1195,11 @@ nsHttpConnection::OnReadSegment(const char *buf,
         mSocketOutCondition = rv;
     else if (*countRead == 0)
         mSocketOutCondition = NS_BASE_STREAM_CLOSED;
-    else
+    else {
         mSocketOutCondition = NS_OK; // reset condition
+        if (!mProxyConnectInProgress)
+            mTotalBytesWritten += *countRead;
+    }
 
     return mSocketOutCondition;
 }
