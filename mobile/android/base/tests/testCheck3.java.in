@@ -1,0 +1,70 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import java.lang.reflect.Method;
+
+public class testCheck3 extends PixelTest {
+    public void testCheck3() {
+        setTestType("talos");
+        String url = getAbsoluteUrl("/startup_test/fennecmark/cnn/cnn.com/index.html");
+        // Disable Fennec's low-res screenshot for the duration of this test;
+        // this distinguishes this test from testCheck2, which is otherwise
+        // identical.
+        disableScreenshot();
+
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        loadAndPaint(url);
+        mDriver.setupScrollHandling();
+
+        /*
+         * for this test, we load the timecube page, and replay a recorded sequence of events
+         * that is a user panning/zooming around the page. specific things in the sequence
+         * include:
+         * - scroll on one axis followed by scroll on another axis
+         * - pinch zoom (in and out)
+         * - double-tap zoom (in and out)
+         * - multi-fling panning with different velocities on each fling
+         *
+         * this checkerboarding metric is going to be more of a "functional" style test than
+         * a "unit" style test; i.e. it covers a little bit of a lot of things to measure
+         * overall performance, but doesn't really allow identifying which part is slow.
+         */
+
+        MotionEventReplayer mer = new MotionEventReplayer(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
+
+        float completeness = 0.0f;
+        mDriver.startCheckerboardRecording();
+        // replay the events
+        try {
+            mer.replayEvents(getAsset("testcheck2-motionevents"));
+            // give it some time to draw any final frames
+            Thread.sleep(1000);
+            completeness = mDriver.stopCheckerboardRecording();
+        } catch (Exception e) {
+            mAsserter.dumpLog("Exception while replaying events", e);
+        }
+
+        mAsserter.dumpLog("__start_report" + completeness + "__end_report");
+        System.out.println("Completeness score: " + completeness);
+        long msecs = System.currentTimeMillis();
+        mAsserter.dumpLog("__startTimestamp" + msecs + "__endTimestamp");
+    }
+
+    private void disableScreenshot() {
+        try {
+            ClassLoader classLoader = getActivity().getClassLoader();
+            Class appshell = classLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
+            Method disableScreenshotMethod = appshell.getMethod("disableScreenshot");
+            disableScreenshotMethod.invoke(null);
+        } catch (ClassNotFoundException ex) {
+            mAsserter.ok(false, "Error getting class", ex.toString());
+        } catch (IllegalAccessException ex) {
+            mAsserter.ok(false, "Error using field", ex.toString());
+        } catch (java.lang.NoSuchMethodException ex) {
+            mAsserter.ok(false, "Error getting method", ex.toString());
+        } catch (java.lang.reflect.InvocationTargetException ex) {
+            mAsserter.ok(false, "Error invoking method", ex.toString());
+        }
+    }
+}
