@@ -1683,44 +1683,8 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     // location object. Note that the entries in the maps are for |origobj|
     // and not |origwrapper|. They need to be updated to point at the new
     // location object.
-    Value targetv = ObjectValue(*targetobj);
-    CompartmentVector &vector = cx->runtime->compartments;
-    AutoValueVector toTransplant(cx);
-    if (!toTransplant.reserve(vector.length()))
+    if (!RemapWrappers(cx, origobj, targetobj))
         return NULL;
-
-    for (JSCompartment **p = vector.begin(), **end = vector.end(); p != end; ++p) {
-        WrapperMap &pmap = (*p)->crossCompartmentWrappers;
-        if (WrapperMap::Ptr wp = pmap.lookup(origv)) {
-            // We found a wrapper. Remember and root it.
-            toTransplant.infallibleAppend(wp->value);
-        }
-    }
-
-    for (Value *begin = toTransplant.begin(), *end = toTransplant.end(); begin != end; ++begin) {
-        JSObject *wobj = &begin->toObject();
-        JSCompartment *wcompartment = wobj->compartment();
-        WrapperMap &pmap = wcompartment->crossCompartmentWrappers;
-        JS_ASSERT(pmap.lookup(origv));
-        pmap.remove(origv);
-
-        // First, we wrap it in the new compartment. This will return a
-        // new wrapper.
-        AutoCompartment ac(cx, wobj);
-
-        JSObject *tobj = targetobj;
-        if (!ac.enter() || !wcompartment->wrap(cx, &tobj))
-            return NULL;
-
-        // Now, because we need to maintain object identity, we do a brain
-        // transplant on the old object. At the same time, we update the
-        // entry in the compartment's wrapper map to point to the old
-        // wrapper.
-        JS_ASSERT(tobj != wobj);
-        if (!wobj->swap(cx, tobj))
-            return NULL;
-        pmap.put(targetv, ObjectValue(*wobj));
-    }
 
     // Lastly, update the original object to point to the new one. However, as
     // mentioned above, we do the transplant on the wrapper, not the object
@@ -1732,7 +1696,7 @@ js_TransplantObjectWithWrapper(JSContext *cx,
             return NULL;
         if (!origwrapper->swap(cx, tobj))
             return NULL;
-        origwrapper->compartment()->crossCompartmentWrappers.put(targetv,
+        origwrapper->compartment()->crossCompartmentWrappers.put(ObjectValue(*targetobj),
                                                                  ObjectValue(*origwrapper));
     }
 
