@@ -21,8 +21,9 @@ TOUCH ?= touch
 ###########################################################################
 # Threadsafe directory creation
 # GENERATED_DIRS - Automated creation of these directories.
+# Squeeze '//' from the path, easily created by $(dir $(path))
 ###########################################################################
-mkdir_deps =$(foreach dir,$(getargv),$(dir)/.mkdir.done)
+mkdir_deps =$(subst //,/,$(foreach dir,$(getargv),$(dir)/.mkdir.done))
 
 %/.mkdir.done: # mkdir -p -p => mkdir -p
 	$(subst $(SPACE)-p,$(null),$(MKDIR)) -p $(dir $@)
@@ -42,7 +43,7 @@ endif #}
 ifneq (,$(GENERATED_DIRS))
   tmpauto :=$(call mkdir_deps,GENERATED_DIRS)
   GENERATED_DIRS_DEPS +=$(tmpauto)
-  GARBAGE_DIRS        +=$(tmpauto)
+  GARBAGE_DIRS        +=$(GENERATED_DIRS)
 endif
 
 #################################################################

@@ -24,8 +24,8 @@ BEGIN_TEST(testLookup_bug522590)
     // This lookup must not return an internal function object.
     jsvalRoot r(cx);
     CHECK(JS_LookupProperty(cx, xobj, "f", r.addr()));
-    CHECK(JSVAL_IS_OBJECT(r));
-    JSObject *funobj = JSVAL_TO_OBJECT(r);
+    CHECK(r.value().isObject());
+    JSObject *funobj = &r.value().toObject();
     CHECK(funobj->isFunction());
     CHECK(!js::IsInternalFunctionObject(funobj));
 

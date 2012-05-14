@@ -14,129 +14,90 @@ include $(DEPTH)/config/autoconf.mk
 MAKEUTILS_UNIT_TEST = 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
 
+dir-ts = .deps/test
+check-arglist     = $(dir-ts)/arglist.ts
+check-autotargets = $(dir-ts)/autotargets_mk.ts
+check-XinY        = $(dir-ts)/check_XinY_mk.ts
+check-tests =\
+  $(check-arglist) \
+  $(check-autotargets) \
+  $(check-XinY) \
+  $(NULL)
+
+
 ##------------------_##
 ##---]  TARGETS  [---##
 ##------------------_##
 all::
 
-###########################################################################
-## This test target should really depend on a timestamp to only perform
-## work when makeutils.mk is modified.  That answer would require using a
-## 2nd makefile imposing more shell overhead.  Separate makefiles would be
-## very handy for testing when pwd==$src/ but for now avoid the overhead.
-##
-## Test logic will be interpreted at compile time, 'fast' and 'required' so
-## the test will always be run when testing is enabled.
-###########################################################################
-check::
-	@true
+clean:
+	$(RM) $(check-tests)
 
 ###########################################################################
 ## Logic processed at compile time so be selective about when to test
-## Verify istype, isval, isvar, getargv, subargv
+## $(MAKE) check VERBOSE=1
 ifneq ($(NULL),$(findstring check,$(MAKECMDGOALS))) #
 
-ifdef VERBOSE
+check-preqs =\
+  $(call mkdir_deps,$(dir-ts)) \
+  $(check-tests) \
+  $(NULL)
 
-$(info ===========================================================================)
-$(info Running test: $(MAKECMDGOALS): pwd=$(CURDIR))
-$(info ===========================================================================)
+check:: $(check-preqs)
+	@true
 
-$(info )
-$(info ===========================================================================)
-$(info Running test: istype, getargv)
-$(info ===========================================================================)
-endif
+
+ifdef VERBOSE #{ gmake check VERBOSE=1
+  $(info ===========================================================================)
+  $(info Running test: $(MAKECMDGOALS): pwd=$(CURDIR))
+  $(info ===========================================================================)
+endif #}
 
 ifndef requiredfunction
   $(error requiredfunction is not defined)
 endif
 
-include $(topsrcdir)/config/makefiles/test/check_XinY.mk
 
-$(call requiredfunc,istype isvar isval)
+##################
+check-XinY-preqs=\
+  $(call mkdir_deps,$(dir-ts)) \
+  $(topsrcdir)/config/makefiles/makeutils.mk \
+  $(srcdir)/check_XinY.mk \
+  $(eval include $(srcdir)/check_XinY.mk) \
+  $(NULL)
 
-# arg_scalar = [scalar|literal]
-arg_list = foo bar
-arg_ref  = arg_list
+$(check-XinY): $(check-XinY-preqs)
+	@$(TOUCH) $@
+# </check-XinY.mk>
 
-## Identify type of function argument(s)
-########################################
-ifneq (scalar,$(call istype,arg_scalar))
-  $(error istype(arg_scalar)=scalar, found [$(call istype,arg_scalar)])
-endif
-ifneq (list,$(call istype,arg_list))
-  $(error istype(arg_list)=list, found [$(call istype,arg_list)])
-endif
-ifneq (list,$(call istype,arg_ref))
-  $(error istype(arg_ref)=list, found [$(call istype,arg_ref)])
-endif
 
-## Type == scalar or a list of values
-#####################################
-ifneq (true,$(call isval,scalar))
-  $(error isval(scalar)=true, found [$(call isval,scalar)])
-endif
-ifneq ($(NULL),$(call isval,arg_list))
-  $(error isval(arg_list)=null, found [$(call isval,arg_list)])
-endif
+###########################################################################
+## check-arglist.mk always invoked as a compile time test
+## maintain real file dependencies for use later on.
+check-arglist-preqs=\
+  $(call mkdir_deps,$(dir-ts)) \
+  $(topsrcdir)/config/makefiles/makeutils.mk \
+  $(srcdir)/check-arglist.mk \
+  $(eval include $(srcdir)/check-arglist.mk) \
+  $(NULL)
 
-## type == reference: macro=>macro => $($(1))
-#############################################
-ifneq ($(NULL),$(call isvar,scalar))
-  $(error isvar(scalar)=$(NULL), found [$(call isvar,scalar)])
-endif
-ifneq (true,$(call isvar,arg_list))
-  $(error isvar(arg_list)=true, found [$(call isvar,arg_list)])
-endif
-ifneq (true,$(call isvar,arg_ref))
-  $(error isvar(arg_ref)=true, found [$(call isvar,arg_ref)])
-endif
+$(check-arglist): $(check-arglist-preqs)
+	@$(TOUCH) $@
+# </check-arglist.mk>
 
-# Verify getargv expansion
-##########################
-ifneq (scalar,$(call getargv,scalar))
-  $(error getargv(scalar)=scalar, found [$(call getargv,scalar)])
-endif
-ifneq ($(arg_list),$(call getargv,arg_list))
-  $(error getargv(arg_list)=list, found [$(call getargv,arg_list)])
-endif
-ifneq (arg_list,$(call getargv,arg_ref))
-  $(error getargv(arg_ref)=list, found [$(call getargv,arg_ref)])
-endif
 
-ifdef MANUAL_TEST #{
-  # For automated testing a callback is needed that can set an external status
-  # variable that can be tested.  Syntax is tricky to get correct functionality.
-  ifdef VERBOSE
-    $(info )
-    $(info ===========================================================================)
-    $(info Running test: checkIfEmpty)
-    $(info ===========================================================================)
-  endif
+###########################################################################
+# <CHECK: autotargets.mk>
+check-autotargets-preqs=\
+  $(call mkdir_deps,$(dir-ts)) \
+  $(topsrcdir)/config/makefiles/makeutils.mk \
+  $(topsrcdir)/config/makefiles/autotargets.mk \
+  $(srcdir)/check-autotargets.mk \
+  $(eval include $(srcdir)/check-autotargets.mk) \
+  $(NULL)
 
-  #status =
-  #setTRUE =status=true
-  #setFALSE =status=$(NULL)
-  #$(call checkIfEmpty,setFALSE NULL)
-  #$(if $(status),$(error checkIfEmpty(xyz) failed))
-  #$(call checkIfEmpty,setTRUE xyz)
-  #$(if $(status),$(error checkIfEmpty(xyz) failed))
-  xyz=abc
-  $(info STATUS: warnIfEmpty - two vars)
-  $(call warnIfEmpty,foo xyz bar)
-  $(info STATUS: errorIfEmpty - on first var)
-  $(call errorIfEmpty,foo xyz bar)
-  $(error TEST FAILED: processing should not reach this point)
-endif #}
+$(check-autotargets): $(check-autotargets-preqs)
+	@$(TOUCH) $@
+# </CHECK: autotargets.mk>
 
-# Verify subargv expansion
-##########################
-subargs=foo bar tans fans
-subargs_exp=tans fans
-subargs_found=$(call subargv,4,$(subargs))
-ifneq ($(subargs_exp),$(subargs_found))
-  $(error subargv(4,$(subargs)): expected [$(subargs_exp)] found [$(subargs_found)])
-endif
- 
-endif #} unit_test: istype, isvar, isval, getargv, subargv
+endif #} findstring check

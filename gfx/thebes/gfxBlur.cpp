@@ -114,6 +114,8 @@ gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx, const gfxPoint& offset)
         aDestinationCtx->Save();
         aDestinationCtx->NewPath();
         gfxRect dirty(dirtyrect->x, dirtyrect->y, dirtyrect->width, dirtyrect->height);
+        gfxRect imageRect(offset - mImageSurface->GetDeviceOffset(), mImageSurface->GetSize());
+        dirty.IntersectRect(dirty, imageRect);
         aDestinationCtx->Rectangle(dirty);
         aDestinationCtx->Clip();
         aDestinationCtx->Mask(mImageSurface, offset);

@@ -65,6 +65,11 @@
   margin: 0 40px;
 }
 
+.text-link:-moz-focusring,
+.bottom-link:-moz-focusring {
+  outline: 1px dotted;
+}
+
 #currentChannel {
   margin: 0;
   padding: 0;

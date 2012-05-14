@@ -1372,13 +1372,13 @@ scaled_nearest_scanline_565_565_SRC (uint16_t *       dst,
     uint16_t tmp1, tmp2, tmp3, tmp4;
     while ((w -= 4) >= 0)
     {
-	tmp1 = src[pixman_fixed_to_int (vx)];
+	tmp1 = *(src + pixman_fixed_to_int (vx));
 	vx += unit_x;
-	tmp2 = src[pixman_fixed_to_int (vx)];
+	tmp2 = *(src + pixman_fixed_to_int (vx));
 	vx += unit_x;
-	tmp3 = src[pixman_fixed_to_int (vx)];
+	tmp3 = *(src + pixman_fixed_to_int (vx));
 	vx += unit_x;
-	tmp4 = src[pixman_fixed_to_int (vx)];
+	tmp4 = *(src + pixman_fixed_to_int (vx));
 	vx += unit_x;
 	*dst++ = tmp1;
 	*dst++ = tmp2;
@@ -1387,15 +1387,15 @@ scaled_nearest_scanline_565_565_SRC (uint16_t *       dst,
     }
     if (w & 2)
     {
-	tmp1 = src[pixman_fixed_to_int (vx)];
+	tmp1 = *(src + pixman_fixed_to_int (vx));
 	vx += unit_x;
-	tmp2 = src[pixman_fixed_to_int (vx)];
+	tmp2 = *(src + pixman_fixed_to_int (vx));
 	vx += unit_x;
 	*dst++ = tmp1;
 	*dst++ = tmp2;
     }
     if (w & 1)
-	*dst++ = src[pixman_fixed_to_int (vx)];
+	*dst = *(src + pixman_fixed_to_int (vx));
 }
 
 FAST_NEAREST_MAINLOOP (565_565_cover_SRC,

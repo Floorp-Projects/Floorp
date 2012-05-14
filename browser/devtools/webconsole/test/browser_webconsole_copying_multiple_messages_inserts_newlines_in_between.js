@@ -19,23 +19,30 @@ function test()
 }
 
 function onLoad() {
-  browser.removeEventListener("DOMContentLoaded", onLoad,
-                                               false);
-  executeSoon(testNewlines);
+  browser.removeEventListener("DOMContentLoaded", onLoad, false);
+  openConsole(null, testNewlines);
 }
 
-function testNewlines() {
-  openConsole();
-  hud = HUDService.getHudByWindow(content);
+function testNewlines(aHud) {
+  hud = aHud;
   hud.jsterm.clearOutput();
 
-  let console = content.wrappedJSObject.console;
-  ok(console != null, "we have the console object");
-
   for (let i = 0; i < 20; i++) {
-    console.log("Hello world!");
+    content.console.log("Hello world #" + i);
   }
 
+  waitForSuccess({
+    name: "20 console.log messages displayed",
+    validatorFn: function()
+    {
+      return hud.outputNode.itemCount == 20;
+    },
+    successFn: testClipboard,
+    failureFn: finishTest,
+  });
+}
+
+function testClipboard() {
   let outputNode = hud.outputNode;
 
   outputNode.selectAll();
@@ -44,7 +51,8 @@ function testNewlines() {
   let clipboardTexts = [];
   for (let i = 0; i < outputNode.itemCount; i++) {
     let item = outputNode.getItemAtIndex(i);
-    clipboardTexts.push("[" + ConsoleUtils.timestampString(item.timestamp) +
+    clipboardTexts.push("[" +
+                        WebConsoleUtils.l10n.timestampString(item.timestamp) +
                         "] " + item.clipboardText);
   }
 
