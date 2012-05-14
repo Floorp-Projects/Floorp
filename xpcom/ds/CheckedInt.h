@@ -619,18 +619,14 @@ inline bool operator ==(U  lhs, const CheckedInt<T> &rhs)
 }
 
 // convenience typedefs.
-// the use of a macro here helps make sure that we don't let a typo slip into some of these.
-#define CHECKEDINT_MAKE_TYPEDEF(Type) \
-typedef CheckedInt<PR##Type> Checked##Type;
-
-CHECKEDINT_MAKE_TYPEDEF(Int8)
-CHECKEDINT_MAKE_TYPEDEF(Uint8)
-CHECKEDINT_MAKE_TYPEDEF(Int16)
-CHECKEDINT_MAKE_TYPEDEF(Uint16)
-CHECKEDINT_MAKE_TYPEDEF(Int32)
-CHECKEDINT_MAKE_TYPEDEF(Uint32)
-CHECKEDINT_MAKE_TYPEDEF(Int64)
-CHECKEDINT_MAKE_TYPEDEF(Uint64)
+typedef CheckedInt<int8_t>   CheckedInt8;
+typedef CheckedInt<uint8_t>  CheckedUint8;
+typedef CheckedInt<int16_t>  CheckedInt16;
+typedef CheckedInt<uint16_t> CheckedUint16;
+typedef CheckedInt<int32_t>  CheckedInt32;
+typedef CheckedInt<uint32_t> CheckedUint32;
+typedef CheckedInt<int64_t>  CheckedInt64;
+typedef CheckedInt<uint64_t> CheckedUint64;
 
 } // end namespace mozilla
 
