@@ -725,7 +725,7 @@ HistoryMenu.prototype = {
     let placesNode = aEvent.target._placesNode;
     if (placesNode) {
       PlacesUIUtils.markPageAsTyped(placesNode.uri);
-      openUILink(placesNode.uri, aEvent, false, true);
+      openUILink(placesNode.uri, aEvent, { ignoreAlt: true });
     }
   }
 };

@@ -9,15 +9,13 @@
 function test() {
   addTab("http://example.com/browser/browser/devtools/webconsole/" +
          "test/test-bug-658368-time-methods.html");
-  openConsole();
-  browser.addEventListener("load", onLoad, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, consoleOpened);
+  }, true);
 }
 
-function onLoad(aEvent) {
-  browser.removeEventListener(aEvent.type, onLoad, true);
-
-  let hudId = HUDService.getHudIdByWindow(content);
-  let hud = HUDService.hudReferences[hudId];
+function consoleOpened(hud) {
   outputNode = hud.outputNode;
 
   executeSoon(function() {
@@ -28,16 +26,14 @@ function onLoad(aEvent) {
     // tabs, do not contain the same value.
     addTab("data:text/html;charset=utf-8,<script type='text/javascript'>" +
            "console.timeEnd('bTimer');</script>");
-    openConsole();
-    browser.addEventListener("load", testTimerIndependenceInTabs, true);
+    browser.addEventListener("load", function onLoad() {
+      browser.removeEventListener("load", onLoad, true);
+      openConsole(null, testTimerIndependenceInTabs);
+    }, true);
   });
 }
 
-function testTimerIndependenceInTabs(aEvent) {
-  browser.removeEventListener(aEvent.type, testTimerIndependenceInTabs, true);
-
-  let hudId = HUDService.getHudIdByWindow(content);
-  let hud = HUDService.hudReferences[hudId];
+function testTimerIndependenceInTabs(hud) {
   outputNode = hud.outputNode;
 
   executeSoon(function() {
@@ -46,15 +42,16 @@ function testTimerIndependenceInTabs(aEvent) {
 
     // The next test makes sure that timers with the same name but in separate
     // pages, do not contain the same value.
-    browser.addEventListener("load", testTimerIndependenceInSameTab, true);
+    browser.addEventListener("load", function onLoad() {
+      browser.removeEventListener("load", onLoad, true);
+      executeSoon(testTimerIndependenceInSameTab);
+    }, true);
     content.location = "data:text/html;charset=utf-8,<script type='text/javascript'>" +
            "console.time('bTimer');</script>";
   });
 }
 
-function testTimerIndependenceInSameTab(aEvent) {
-  browser.removeEventListener(aEvent.type, testTimerIndependenceInSameTab, true);
-
+function testTimerIndependenceInSameTab() {
   let hudId = HUDService.getHudIdByWindow(content);
   let hud = HUDService.hudReferences[hudId];
   outputNode = hud.outputNode;
@@ -65,15 +62,16 @@ function testTimerIndependenceInSameTab(aEvent) {
 
     // Now the following console.timeEnd() call shouldn't display anything,
     // if the timers in different pages are not related.
-    browser.addEventListener("load", testTimerIndependenceInSameTabAgain, true);
+    browser.addEventListener("load", function onLoad() {
+      browser.removeEventListener("load", onLoad, true);
+      executeSoon(testTimerIndependenceInSameTabAgain);
+    }, true);
     content.location = "data:text/html;charset=utf-8,<script type='text/javascript'>" +
            "console.timeEnd('bTimer');</script>";
   });
 }
 
-function testTimerIndependenceInSameTabAgain(aEvent) {
-  browser.removeEventListener(aEvent.type, testTimerIndependenceInSameTabAgain, true);
-
+function testTimerIndependenceInSameTabAgain(hud) {
   let hudId = HUDService.getHudIdByWindow(content);
   let hud = HUDService.hudReferences[hudId];
   outputNode = hud.outputNode;
@@ -82,6 +80,9 @@ function testTimerIndependenceInSameTabAgain(aEvent) {
     testLogEntry(outputNode, "bTimer: timer started", "bTimer was not started",
                  false, true);
 
-    finishTest();
+    closeConsole(gBrowser.selectedTab, function() {
+      gBrowser.removeCurrentTab();
+      executeSoon(finishTest);
+    });
   });
 }
