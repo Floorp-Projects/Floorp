@@ -40,6 +40,7 @@ package com.mozilla.SUTAgentAndroid;
 import java.io.File;
 import java.io.PrintWriter;
 import java.net.InetAddress;
+import org.apache.http.conn.util.InetAddressUtils;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
@@ -665,7 +666,7 @@ public class SUTAgentAndroid extends Activity
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();)
                     {
                     InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress())
+                    if (!inetAddress.isLoopbackAddress() && InetAddressUtils.isIPv4Address(inetAddress.getHostAddress()))
                         {
                         return inetAddress.getHostAddress().toString();
                         }
