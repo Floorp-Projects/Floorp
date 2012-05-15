@@ -693,7 +693,7 @@ LookupCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, Val
      */
     constp->setMagic(JS_NO_CONSTANT);
     do {
-        if (bce->sc->inFunction() || bce->sc->compileAndGo()) {
+        if (bce->sc->inFunction() || bce->parser->compileAndGo) {
             /* XXX this will need revising if 'const' becomes block-scoped. */
             StmtInfo *stmt = LexicalLookup(bce->sc, atom, NULL);
             if (stmt)
@@ -716,7 +716,7 @@ LookupCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, Val
                 if (bce->sc->bindings.hasBinding(cx, atom))
                     break;
             } else {
-                JS_ASSERT(bce->sc->compileAndGo());
+                JS_ASSERT(bce->parser->compileAndGo);
                 JSObject *obj = bce->sc->scopeChain();
 
                 const Shape *shape = obj->nativeLookup(cx, AtomToId(atom));
@@ -1124,7 +1124,7 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
 static bool
 TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
 {
-    if (bce->sc->compileAndGo() &&
+    if (bce->parser->compileAndGo &&
         bce->globalScope->globalObj &&
         !bce->sc->mightAliasLocals() &&
         !pn->isDeoptimized() &&
@@ -1222,7 +1222,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case JSOP_DELNAME:
         if (dn_kind != Definition::UNKNOWN) {
             if (bce->parser->callerFrame && dn->isTopLevel())
-                JS_ASSERT(bce->sc->compileAndGo());
+                JS_ASSERT(bce->parser->compileAndGo);
             else
                 pn->setOp(JSOP_FALSE);
             pn->pn_dflags |= PND_BOUND;
@@ -1246,7 +1246,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (cookie.isFree()) {
         StackFrame *caller = bce->parser->callerFrame;
         if (caller) {
-            JS_ASSERT(bce->sc->compileAndGo());
+            JS_ASSERT(bce->parser->compileAndGo);
 
             /*
              * Don't generate upvars on the left side of a for loop. See
@@ -1594,7 +1594,7 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool *ans
 bool
 BytecodeEmitter::needsImplicitThis()
 {
-    if (!sc->compileAndGo())
+    if (!parser->compileAndGo)
         return true;
     if (!sc->inFunction()) {
         JSObject *scope = sc->scopeChain();
@@ -5715,7 +5715,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * JSOP_NEWOBJECT with the final shape instead.
      */
     RootedVarObject obj(cx);
-    if (bce->sc->compileAndGo()) {
+    if (bce->parser->compileAndGo) {
         gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)

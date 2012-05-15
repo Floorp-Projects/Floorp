@@ -195,7 +195,7 @@ struct BytecodeEmitter
     }
 
     bool checkSingletonContext() {
-        if (!sc->compileAndGo() || sc->inFunction())
+        if (!parser->compileAndGo || sc->inFunction())
             return false;
         for (StmtInfo *stmt = sc->topStmt; stmt; stmt = stmt->down) {
             if (STMT_IS_LOOP(stmt))
