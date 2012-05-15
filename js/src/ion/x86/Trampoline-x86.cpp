@@ -612,7 +612,12 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     Linker linker(masm);
     IonCode *wrapper = linker.newCode(cx);
-    if (!wrapper || !functionWrappers_->add(p, &f, wrapper))
+    if (!wrapper)
+        return NULL;
+
+    // linker.newCode may trigger a GC and sweep functionWrappers_ so we have to
+    // use relookupOrAdd instead of add.
+    if (!functionWrappers_->relookupOrAdd(p, &f, wrapper))
         return NULL;
 
     return wrapper;
