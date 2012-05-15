@@ -855,39 +855,44 @@ exports.testElement = function(options) {
   test.ok(assign1.arg.isBlank());
   test.is(undefined, assign1.value);
 
-  update({ typed: 'tse :root', cursor: { start: 9, end: 9 } });
-  test.is(        'VVVVVVVVV', statuses);
-  test.is(Status.VALID, status);
-  test.is('tse', requ.commandAssignment.value.name);
-  test.is(':root', assign1.arg.text);
-  if (!options.window.isFake) {
-    test.is(options.window.document.documentElement, assign1.value);
-  }
-
-  if (!options.window.isFake) {
-    var inputElement = options.window.document.getElementById('gcli-input');
-    if (inputElement) {
-      update({ typed: 'tse #gcli-input', cursor: { start: 15, end: 15 } });
-      test.is(        'VVVVVVVVVVVVVVV', statuses);
-      test.is(Status.VALID, status);
-      test.is('tse', requ.commandAssignment.value.name);
-      test.is('#gcli-input', assign1.arg.text);
-      test.is(inputElement, assign1.value);
+  if (!options.isNode) {
+    update({ typed: 'tse :root', cursor: { start: 9, end: 9 } });
+    test.is(        'VVVVVVVVV', statuses);
+    test.is(Status.VALID, status);
+    test.is('tse', requ.commandAssignment.value.name);
+    test.is(':root', assign1.arg.text);
+    if (!options.window.isFake) {
+      test.is(options.window.document.documentElement, assign1.value);
     }
-    else {
-      test.log('Skipping test that assumes gcli on the web');
-    }
-  }
 
-  update({ typed: 'tse #gcli-nomatch', cursor: { start: 17, end: 17 } });
-  // This is somewhat debatable because this input can't be corrected simply
-  // by typing so it's and error rather than incomplete, however without
-  // digging into the CSS engine we can't tell that so we default to incomplete
-  test.is(        'VVVVIIIIIIIIIIIII', statuses);
-  test.is(Status.ERROR, status);
-  test.is('tse', requ.commandAssignment.value.name);
-  test.is('#gcli-nomatch', assign1.arg.text);
-  test.is(undefined, assign1.value);
+    if (!options.window.isFake) {
+      var inputElement = options.window.document.getElementById('gcli-input');
+      if (inputElement) {
+        update({ typed: 'tse #gcli-input', cursor: { start: 15, end: 15 } });
+        test.is(        'VVVVVVVVVVVVVVV', statuses);
+        test.is(Status.VALID, status);
+        test.is('tse', requ.commandAssignment.value.name);
+        test.is('#gcli-input', assign1.arg.text);
+        test.is(inputElement, assign1.value);
+      }
+      else {
+        test.log('Skipping test that assumes gcli on the web');
+      }
+    }
+
+    update({ typed: 'tse #gcli-nomatch', cursor: { start: 17, end: 17 } });
+    // This is somewhat debatable because this input can't be corrected simply
+    // by typing so it's and error rather than incomplete, however without
+    // digging into the CSS engine we can't tell that so we default to incomplete
+    test.is(        'VVVVIIIIIIIIIIIII', statuses);
+    test.is(Status.ERROR, status);
+    test.is('tse', requ.commandAssignment.value.name);
+    test.is('#gcli-nomatch', assign1.arg.text);
+    test.is(undefined, assign1.value);
+  }
+  else {
+    test.log('Skipping :root test due to jsdom (from isNode)');
+  }
 
   update({ typed: 'tse #', cursor: { start: 5, end: 5 } });
   test.is(        'VVVVE', statuses);
@@ -2996,7 +3001,7 @@ exports.testWorking = function() {
   test.ok(requireable.thing3 === undefined);
 };
 
-exports.testDomains = function() {
+exports.testDomains = function(options) {
   var requireable = require('gclitest/requirable');
   test.ok(requireable.status === undefined);
   requireable.setStatus(null);
@@ -3005,6 +3010,11 @@ exports.testDomains = function() {
   requireable.setStatus('42');
   test.is('42', requireable.getStatus());
   test.ok(requireable.status === undefined);
+
+  if (options.isUnamdized) {
+    test.log('Running unamdized, Reduced tests');
+    return;
+  }
 
   if (define.Domain) {
     var domain = new define.Domain();
