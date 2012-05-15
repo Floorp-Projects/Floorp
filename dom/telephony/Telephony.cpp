@@ -500,6 +500,31 @@ Telephony::EnumerateCallState(PRUint32 aCallIndex, PRUint16 aCallState,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Telephony::NotifyError(PRInt32 aCallIndex,
+                        const nsAString& aError)
+{
+  PRInt32 index = -1;
+  PRInt32 length = mCalls.Length();
+
+  // The connection is not established yet, remove the latest call object
+  if (aCallIndex == -1) {
+    if (length > 0) {
+      index = length - 1;
+    }
+  } else {
+    if (aCallIndex < 0 || aCallIndex >= length) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    index = aCallIndex;
+  }
+  if (index != -1) {
+    mCalls[index]->NotifyError(aError);
+  }
+
+  return NS_OK;
+}
+
 nsresult
 NS_NewTelephony(nsPIDOMWindow* aWindow, nsIDOMTelephony** aTelephony)
 {
