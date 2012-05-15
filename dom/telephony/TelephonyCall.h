@@ -63,11 +63,13 @@ class TelephonyCall : public nsDOMEventTargetHelper,
   NS_DECL_EVENT_HANDLER(holding)
   NS_DECL_EVENT_HANDLER(held)
   NS_DECL_EVENT_HANDLER(resuming)
+  NS_DECL_EVENT_HANDLER(error)
 
   nsRefPtr<Telephony> mTelephony;
 
   nsString mNumber;
   nsString mState;
+  nsCOMPtr<nsIDOMDOMError> mError;
 
   PRUint32 mCallIndex;
   PRUint16 mCallState;
