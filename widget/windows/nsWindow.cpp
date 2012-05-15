@@ -3241,8 +3241,20 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
     }
 
     // Fall back to software if we couldn't use any hardware backends.
-    if (!mLayerManager)
-      mLayerManager = CreateBasicLayerManager();
+    if (!mLayerManager) {
+      // Try to use an async compositor first, if possible
+      bool useCompositor =
+        Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
+      if (useCompositor) {
+        // e10s uses the parameter to pass in the shadow manager from the TabChild
+        // so we don't expect to see it there since this doesn't support e10s.
+        NS_ASSERTION(aShadowManager == nsnull, "Async Compositor not supported with e10s");
+        CreateCompositor();
+      }
+
+      if (!mLayerManager)
+        mLayerManager = CreateBasicLayerManager();
+    }
   }
 
   NS_ASSERTION(mLayerManager, "Couldn't provide a valid layer manager.");
