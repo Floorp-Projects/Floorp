@@ -39,7 +39,10 @@
 #define MOZILLA_GFX_HELPERSD2D_H_
 
 #include <d2d1.h>
+#include <dwrite.h>
 #include "2D.h"
+
+#include "ScaledFontDWrite.h"
 
 namespace mozilla {
 namespace gfx {
@@ -211,6 +214,78 @@ struct ShaderConstantRectD3D10
   // For easy passing to SetVertexShaderConstantF.
   operator float* () { return &mX; }
 };
+
+static DWRITE_MATRIX
+DWriteMatrixFromMatrix(Matrix &aMatrix)
+{
+  DWRITE_MATRIX mat;
+  mat.m11 = aMatrix._11;
+  mat.m12 = aMatrix._12;
+  mat.m21 = aMatrix._21;
+  mat.m22 = aMatrix._22;
+  mat.dx = aMatrix._31;
+  mat.dy = aMatrix._32;
+  return mat;
+}
+
+class AutoDWriteGlyphRun : public DWRITE_GLYPH_RUN
+{
+    static const int kNumAutoGlyphs = 256;
+
+public:
+    AutoDWriteGlyphRun() {
+        glyphCount = 0;
+    }
+
+    ~AutoDWriteGlyphRun() {
+        if (glyphCount > kNumAutoGlyphs) {
+            delete[] glyphIndices;
+            delete[] glyphAdvances;
+            delete[] glyphOffsets;
+        }
+    }
+
+    void allocate(int aNumGlyphs) {
+        glyphCount = aNumGlyphs;
+        if (aNumGlyphs <= kNumAutoGlyphs) {
+            glyphIndices = &mAutoIndices[0];
+            glyphAdvances = &mAutoAdvances[0];
+            glyphOffsets = &mAutoOffsets[0];
+        } else {
+            glyphIndices = new UINT16[aNumGlyphs];
+            glyphAdvances = new FLOAT[aNumGlyphs];
+            glyphOffsets = new DWRITE_GLYPH_OFFSET[aNumGlyphs];
+        }
+    }
+
+private:
+    DWRITE_GLYPH_OFFSET mAutoOffsets[kNumAutoGlyphs];
+    FLOAT               mAutoAdvances[kNumAutoGlyphs];
+    UINT16              mAutoIndices[kNumAutoGlyphs];
+};
+
+static void
+DWriteGlyphRunFromGlyphs(const GlyphBuffer &aGlyphs, ScaledFontDWrite *aFont, AutoDWriteGlyphRun *run)
+{
+  run->allocate(aGlyphs.mNumGlyphs);
+
+  FLOAT *advances = const_cast<FLOAT*>(run->glyphAdvances);
+  UINT16 *indices = const_cast<UINT16*>(run->glyphIndices);
+  DWRITE_GLYPH_OFFSET *offsets = const_cast<DWRITE_GLYPH_OFFSET*>(run->glyphOffsets);
+
+  memset(advances, 0, sizeof(FLOAT) * aGlyphs.mNumGlyphs);
+  for (unsigned int i = 0; i < aGlyphs.mNumGlyphs; i++) {
+    indices[i] = aGlyphs.mGlyphs[i].mIndex;
+    offsets[i].advanceOffset = aGlyphs.mGlyphs[i].mPosition.x;
+    offsets[i].ascenderOffset = -aGlyphs.mGlyphs[i].mPosition.y;
+  }
+    
+  run->bidiLevel = 0;
+  run->fontFace = aFont->mFontFace;
+  run->fontEmSize = aFont->mSize;
+  run->glyphCount = aGlyphs.mNumGlyphs;
+  run->isSideways = FALSE;
+}
 
 }
 }
