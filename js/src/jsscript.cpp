@@ -1339,8 +1339,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     }
     if (bce->sc->bindingsAccessedDynamically())
         script->bindingsAccessedDynamically = true;
-    if (bce->sc->flags & TCF_HAS_SINGLETONS)
-        script->hasSingletons = true;
+    script->hasSingletons = bce->hasSingletons;
     if (bce->sc->flags & TCF_FUN_IS_GENERATOR)
         script->isGenerator = true;
 

@@ -159,6 +159,8 @@ struct BytecodeEmitter
     const bool      needScriptGlobal:1; /* API caller does not want result value 
                                            from global script. */
 
+    bool            hasSingletons:1;    /* script contains singleton initializer JSOP_OBJECT */
+
     BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lineno,
                     bool noScriptRval, bool needScriptGlobal);
     bool init();
@@ -201,7 +203,7 @@ struct BytecodeEmitter
             if (STMT_IS_LOOP(stmt))
                 return false;
         }
-        sc->flags |= TCF_HAS_SINGLETONS;
+        hasSingletons = true;
         return true;
     }
 
