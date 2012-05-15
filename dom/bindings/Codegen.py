@@ -1653,8 +1653,45 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode):
     if type is None or type.isVoid():
         return setValue("JSVAL_VOID")
 
-    if type.isSequence() or type.isArray():
-        raise TypeError("Can't handle sequence or array return values yet")
+    if type.isArray():
+        raise TypeError("Can't handle array return values yet")
+
+    if type.isSequence():
+        if type.nullable():
+            # Nullable sequences are Nullable< nsTArray<T> >
+            return """
+if (%s.IsNull()) {
+%s
+}
+%s""" % (result, CGIndenter(CGGeneric(setValue("JSVAL_NULL"))).define(),
+         getWrapTemplateForType(type.inner, descriptorProvider,
+                                "%s.Value()" % result, successCode))
+
+        # Now do non-nullable sequences.  We use setting the element
+        # in the array as our succcess code because when we succeed in
+        # wrapping that's what we should do.
+        innerTemplate = wrapForType(
+            type.inner, descriptorProvider,
+            {
+                'result' :  "%s[i]" % result,
+                'successCode': ("if (!JS_SetElement(cx, returnArray, i, &tmp)) {\n"
+                                "  return false;\n"
+                                "}"),
+                'jsvalRef': "tmp",
+                'jsvalPtr': "&tmp"
+                }
+            )
+        innerTemplate = CGIndenter(CGGeneric(innerTemplate)).define()
+        return ("""
+uint32_t length = %s.Length();
+JSObject *returnArray = JS_NewArrayObject(cx, length, NULL);
+if (!returnArray) {
+  return false;
+}
+jsval tmp;
+for (uint32_t i = 0; i < length; ++i) {
+%s
+}\n""" % (result, innerTemplate)) + setValue("JS::ObjectValue(*returnArray)")
 
     if type.isInterface() and not type.isArrayBuffer():
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
@@ -1775,6 +1812,51 @@ def wrapForType(type, descriptorProvider, templateValues):
     defaultValues = {'obj': 'obj'}
     return string.Template(wrap).substitute(defaultValues, **templateValues)
 
+def getRetvalDeclarationForType(returnType, descriptorProvider,
+                                resultAlreadyAddRefed):
+    if returnType is None or returnType.isVoid():
+        # Nothing to declare
+        result = None
+    elif returnType.isPrimitive() and returnType.tag() in builtinNames:
+        result = CGGeneric(builtinNames[returnType.tag()])
+        if returnType.nullable():
+            result = CGWrapper(result, pre="Nullable<", post=">")
+    elif returnType.isString():
+        result = CGGeneric("nsString")
+    elif returnType.isEnum():
+        if returnType.nullable():
+            raise TypeError("We don't support nullable enum return values")
+        result = CGGeneric(returnType.inner.identifier.name)
+    elif returnType.isInterface() and not returnType.isArrayBuffer():
+        result = CGGeneric(descriptorProvider.getDescriptor(
+            returnType.unroll().inner.identifier.name).nativeType)
+        if resultAlreadyAddRefed:
+            result = CGWrapper(result, pre="nsRefPtr<", post=">")
+        else:
+            result = CGWrapper(result, post="*")
+    elif returnType.isCallback():
+        # XXXbz we're going to assume that callback types are always
+        # nullable for now.
+        result = CGGeneric("JSObject*")
+    elif returnType.tag() is IDLType.Tags.any:
+        result = CGGeneric("JS::Value")
+    elif returnType.isSequence():
+        nullable = returnType.nullable()
+        if nullable:
+            returnType = returnType.inner
+        # Assume no need to addref for now
+        result = CGWrapper(getRetvalDeclarationForType(returnType.inner,
+                                                       descriptorProvider,
+                                                       False),
+                           pre="nsTArray< ", post=" >")
+        if nullable:
+            result = CGWrapper(result, pre="Nullable< ", post=" >")
+    else:
+        raise TypeError("Don't know how to declare return value for %s" %
+                        returnType)
+    return result
+
+
 class CGCallGenerator(CGThing):
     """
     A class to generate an actual call to a C++ object.  Assumes that the C++
@@ -1787,42 +1869,16 @@ class CGCallGenerator(CGThing):
         isFallible = errorReport is not None
 
         args = CGList([CGGeneric("arg" + str(i)) for i in range(argCount)], ", ")
-        resultOutParam = returnType is not None and returnType.isString()
+        resultOutParam = (returnType is not None and
+                          (returnType.isString() or returnType.isSequence()))
         # Return values that go in outparams go here
         if resultOutParam:
             args.append(CGGeneric("result"))
         if isFallible:
             args.append(CGGeneric("rv"))
 
-        if returnType is None or returnType.isVoid():
-            # Nothing to declare
-            result = None
-        elif returnType.isPrimitive() and returnType.tag() in builtinNames:
-            result = CGGeneric(builtinNames[returnType.tag()])
-            if returnType.nullable():
-                result = CGWrapper(result, pre="Nullable<", post=">")
-        elif returnType.isString():
-            result = CGGeneric("nsString")
-        elif returnType.isEnum():
-            if returnType.nullable():
-                raise TypeError("We don't support nullable enum return values")
-            result = CGGeneric(returnType.inner.identifier.name)
-        elif returnType.isInterface() and not returnType.isArrayBuffer():
-            result = CGGeneric(descriptorProvider.getDescriptor(
-                returnType.unroll().inner.identifier.name).nativeType)
-            if resultAlreadyAddRefed:
-                result = CGWrapper(result, pre="nsRefPtr<", post=">")
-            else:
-                result = CGWrapper(result, post="*")
-        elif returnType.isCallback():
-            # XXXbz we're going to assume that callback types are always
-            # nullable for now.
-            result = CGGeneric("JSObject*")
-        elif returnType.tag() is IDLType.Tags.any:
-            result = CGGeneric("JS::Value")
-        else:
-            raise TypeError("Don't know how to declare return value for %s" %
-                            returnType)
+        result = getRetvalDeclarationForType(returnType, descriptorProvider,
+                                             resultAlreadyAddRefed)
 
         # Build up our actual call
         self.cgRoot = CGList([], "\n")
