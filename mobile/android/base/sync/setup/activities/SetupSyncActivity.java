@@ -542,6 +542,8 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
           public void onTextChanged(CharSequence s, int start, int before, int count) {
           }
         });
+
+        row1.requestFocus();
       }
     });
   }
