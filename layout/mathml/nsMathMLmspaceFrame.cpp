@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -71,51 +72,65 @@ nsMathMLmspaceFrame::IsLeaf() const
 void
 nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
 {
-  /*
-  parse the attributes
-
-  width  = number h-unit 
-  height = number v-unit 
-  depth  = number v-unit 
-  */
-
   nsAutoString value;
-  nsCSSValue cssValue;
 
   // width 
+  //
+  // "Specifies the desired width of the space."
+  //
+  // values: length
+  // default: 0em
+  //
+  // The default value is "0em", so unitless values can be ignored.
+  // <mspace/> is listed among MathML elements allowing negative spacing and
+  // the MathML test suite contains "Presentation/TokenElements/mspace/mspace2" 
+  // as an example. Hence we allow negative values.
+  //
   mWidth = 0;
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::width,
                value);
   if (!value.IsEmpty()) {
-    if ((ParseNumericValue(value, cssValue) ||
-         ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue)) &&
-         cssValue.IsLengthUnit()) {
-      mWidth = CalcLength(aPresContext, mStyleContext, cssValue);
-    }
+    ParseNumericValue(value, &mWidth,
+                      nsMathMLElement::PARSE_ALLOW_NEGATIVE,
+                      aPresContext, mStyleContext);
   }
 
   // height
+  //
+  // "Specifies the desired height (above the baseline) of the space."
+  //
+  // values: length
+  // default: 0ex
+  //
+  // The default value is "0ex", so unitless values can be ignored.
+  // XXXfredw Should we forbid negative values? (bugs 411227, 716349)
+  //
   mHeight = 0;
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::height,
                value);
   if (!value.IsEmpty()) {
-    if ((ParseNumericValue(value, cssValue) ||
-         ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue)) &&
-         cssValue.IsLengthUnit()) {
-      mHeight = CalcLength(aPresContext, mStyleContext, cssValue);
-    }
+    ParseNumericValue(value, &mHeight,
+                      nsMathMLElement::PARSE_ALLOW_NEGATIVE,
+                      aPresContext, mStyleContext);
   }
 
   // depth
+  //
+  // "Specifies the desired depth (below the baseline) of the space."
+  //
+  // values: length
+  // default: 0ex
+  //
+  // The default value is "0ex", so unitless values can be ignored.
+  // XXXfredw Should we forbid negative values? (bugs 411227, 716349)
+  //
   mDepth = 0;
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::depth_,
                value);
   if (!value.IsEmpty()) {
-    if ((ParseNumericValue(value, cssValue) ||
-         ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue)) &&
-         cssValue.IsLengthUnit()) {
-      mDepth = CalcLength(aPresContext, mStyleContext, cssValue);
-    }
+    ParseNumericValue(value, &mDepth,
+                      nsMathMLElement::PARSE_ALLOW_NEGATIVE,
+                      aPresContext, mStyleContext);
   }
 }
 
