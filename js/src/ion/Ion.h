@@ -45,6 +45,7 @@
 #include "jscntxt.h"
 #include "IonCode.h"
 #include "jsinfer.h"
+#include "jsinterp.h"
 
 namespace js {
 namespace ion {
@@ -159,8 +160,15 @@ MethodStatus CanEnterAtBranch(JSContext *cx, JSScript *script,
                               StackFrame *fp, jsbytecode *pc);
 MethodStatus CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType);
 
-bool Cannon(JSContext *cx, StackFrame *fp);
-bool SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc);
+enum IonExecStatus
+{
+    IonExec_Error,
+    IonExec_Ok,
+    IonExec_Bailout
+};
+
+IonExecStatus Cannon(JSContext *cx, StackFrame *fp);
+IonExecStatus SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc);
 
 // Walk the stack and invalidate active Ion frames for the invalid scripts.
 void Invalidate(FreeOp *fop, const Vector<types::RecompileInfo> &invalid, bool resetUses = true);

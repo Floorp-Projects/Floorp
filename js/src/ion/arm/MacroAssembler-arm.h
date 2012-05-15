@@ -548,6 +548,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void unboxBoolean(const ValueOperand &operand, const Register &dest);
     void unboxDouble(const ValueOperand &operand, const FloatRegister &dest);
     void unboxValue(const ValueOperand &src, AnyRegister dest);
+    void unboxPrivate(const ValueOperand &src, Register dest);
 
     // boxing code
     void boxDouble(const FloatRegister &src, const ValueOperand &dest);
@@ -881,11 +882,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void reserveStack(uint32 amount);
     void freeStack(uint32 amount);
 
-    void add32(const Imm32 &imm, const Register &dest);
-    void sub32(const Imm32 &imm, const Register &dest);
+    void add32(Imm32 imm, Register dest);
+    void sub32(Imm32 imm, Register dest);
 
-    void and32(const Imm32 &imm, const Address &dest);
-    void or32(const Imm32 &imm, const Address &dest);
+    void and32(Imm32 imm, Register dest);
+    void and32(Imm32 imm, const Address &dest);
+    void or32(Imm32 imm, const Address &dest);
+    void orPtr(Imm32 imm, Register dest);
+    void addPtr(Register src, Register dest);
 
     void move32(const Imm32 &imm, const Register &dest);
 
@@ -994,10 +998,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void checkStackAlignment();
 
-    void rshiftPtr(Imm32 imm, const Register &dest) {
+    void rshiftPtr(Imm32 imm, Register dest) {
         ma_lsr(imm, dest, dest);
     }
-    void lshiftPtr(Imm32 imm, const Register &dest) {
+    void lshiftPtr(Imm32 imm, Register dest) {
         ma_lsl(imm, dest, dest);
     }
 
@@ -1050,6 +1054,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_cmn(ScratchRegister, Imm32(3));
         ma_b(handleNotAnInt, Above);
     }
+
+    void enterOsr(Register calleeToken, Register code);
 };
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;

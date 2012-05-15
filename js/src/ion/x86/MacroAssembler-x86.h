@@ -580,6 +580,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
                 movl(src.payloadReg(), dest.gpr());
         }
     }
+    void unboxPrivate(const ValueOperand &src, Register dest) {
+        if (src.payloadReg() != dest)
+            movl(src.payloadReg(), dest);
+    }
 
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
@@ -646,11 +650,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             movl(Operand(src), dest.gpr());
     }
 
-    void rshiftPtr(Imm32 imm, const Register &dest) {
+    void rshiftPtr(Imm32 imm, Register dest) {
         shrl(imm, dest);
     }
-    void lshiftPtr(Imm32 imm, const Register &dest) {
+    void lshiftPtr(Imm32 imm, Register dest) {
         shll(imm, dest);
+    }
+    void orPtr(Imm32 imm, Register dest) {
+        orl(imm, dest);
     }
 
     void loadInstructionPointerAfterCall(const Register &dest) {
@@ -710,6 +717,13 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void linkExitFrame() {
         JSContext *cx = GetIonContext()->cx;
         movl(StackPointer, Operand(&cx->runtime->ionTop));
+    }
+
+    void enterOsr(Register calleeToken, Register code) {
+        push(calleeToken);
+        push(Imm32(MakeFrameDescriptor(0, IonFrame_Osr)));
+        call(code);
+        addl(Imm32(sizeof(uintptr_t) * 2), esp);
     }
 };
 

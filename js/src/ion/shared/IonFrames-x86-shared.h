@@ -188,6 +188,14 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     }
 };
 
+class IonOsrFrameLayout : public IonJSFrameLayout
+{
+  public:
+    static inline size_t Size() {
+        return sizeof(IonOsrFrameLayout);
+    }
+ };
+
 // An invalidation bailout stack is at the stack pointer for the callee frame.
 class InvalidationBailoutStack
 {

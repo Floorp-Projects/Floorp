@@ -196,6 +196,20 @@ DeriveConstructing(StackFrame *fp, StackFrame *entryFp, IonJSFrameLayout *js)
     }
 }
 
+static inline bool
+IsInitialFrame(IonJSFrameLayout *jsFrame)
+{
+    IonFrameIterator iter(jsFrame);
+    ++iter;
+
+    for (; !iter.done(); ++iter) {
+        if (iter.isScripted())
+            return false;
+    }
+
+    return true;
+}
+
 static uint32
 ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
 {
@@ -218,17 +232,27 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
     activation->setBailout(br);
 
     StackFrame *fp;
-    if (in.callee()) {
-        // This is a normal function frame.
-        fp = cx->stack.pushBailoutFrame(cx, *in.callee(), in.script(), br->frameGuard());
+    if (IsInitialFrame(in.fp())) {
+        // Avoid creating duplicate interpreter frames. This is necessary to
+        // avoid blowing out the interpreter stack, and must be used in
+        // conjunction with inline-OSR from within bailouts (since each Ion
+        // activation must be tied to a unique JSStackFrame for StackIter to
+        // work).
+        fp = cx->fp();
+        cx->regs().sp = fp->base();
     } else {
-        // The scope chain will be updated, if necessary, in RestoreOneFrame().
-        // The |this| value for global scripts is always an object, and is
-        // precomputed in the original frame, so it's safe to re-use that
-        // value (it is not included in snapshots or resume points).
-        HandleObject prevScopeChain = cx->fp()->scopeChain();
-        Value thisv = cx->fp()->thisValue();
-        fp = cx->stack.pushBailoutFrame(cx, in.script(), *prevScopeChain, thisv, br->frameGuard());
+        if (in.callee()) {
+            // This is a normal function frame.
+            fp = cx->stack.pushBailoutFrame(cx, *in.callee(), in.script(), br->frameGuard());
+        } else {
+            // The scope chain will be updated, if necessary, in RestoreOneFrame().
+            // The |this| value for global scripts is always an object, and is
+            // precomputed in the original frame, so it's safe to re-use that
+            // value (it is not included in snapshots or resume points).
+            HandleObject prevScopeChain = cx->fp()->scopeChain();
+            Value thisv = cx->fp()->thisValue();
+            fp = cx->stack.pushBailoutFrame(cx, in.script(), *prevScopeChain, thisv, br->frameGuard());
+        }
     }
 
     if (!fp)
@@ -466,7 +490,7 @@ ion::RecompileForInlining()
     return true;
 }
 
-JSBool
+uint32
 ion::ThunkToInterpreter(Value *vp)
 {
     JSContext *cx = GetIonContext()->cx;
@@ -485,14 +509,43 @@ ion::ThunkToInterpreter(Value *vp)
     if (JSOp(*pc) == JSOP_LOOPENTRY)
         cx->regs().pc = GetNextPc(pc);
 
-    bool ok = Interpret(cx, br->entryfp(), JSINTERP_BAILOUT);
+    if (activation->entryfp() == br->entryfp()) {
+        // If the bailout entry fp is the same as the activation entryfp, then
+        // there are no scripted frames below us. In this case, just shortcut
+        // out with a special return code, and resume interpreting in the
+        // original Interpret activation.
+        vp->setMagic(JS_ION_BAILOUT);
+        return Interpret_Ok;
+    }
 
-    if (ok)
+    InterpretStatus status = Interpret(cx, br->entryfp(), JSINTERP_BAILOUT);
+
+    if (status == Interpret_OSR) {
+        IonSpew(IonSpew_Bailouts, "Performing inline OSR %s:%d",
+                cx->fp()->script()->filename,
+                PCToLineNumber(cx->fp()->script(), cx->regs().pc));
+
+        // We want to OSR again. We need to avoid the problem where frequent
+        // bailouts cause recursive nestings of Interpret and EnterIon. The
+        // interpreter therefore shortcuts out, and now we're responsible for
+        // completing the OSR inline.
+        //
+        // Note that we set runningInIon so that if we re-enter C++ from within
+        // the inlined OSR, StackIter will know to traverse these frames.
+        StackFrame *fp = cx->fp();
+
+        fp->setRunningInIon();
+        vp->setPrivate(fp);
+        return Interpret_OSR;
+    }
+
+    if (status == Interpret_Ok)
         *vp = br->entryfp()->returnValue();
 
     // The BailoutFrameGuard's destructor will ensure that the frame is
     // removed.
     cx->delete_(br);
 
-    return ok ? JS_TRUE : JS_FALSE;
+    return status;
 }
+

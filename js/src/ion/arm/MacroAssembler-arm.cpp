@@ -1358,19 +1358,31 @@ MacroAssemblerARMCompat::freeStack(uint32 amount)
 }
 
 void
-MacroAssemblerARMCompat::add32(const Imm32 &imm, const Register &dest)
+MacroAssemblerARMCompat::add32(Imm32 imm, Register dest)
 {
     ma_add(imm, dest);
 }
 
 void
-MacroAssemblerARMCompat::sub32(const Imm32 &imm, const Register &dest)
+MacroAssemblerARMCompat::sub32(Imm32 imm, Register dest)
 {
     ma_sub(imm, dest);
 }
 
 void
-MacroAssemblerARMCompat::and32(const Imm32 &imm, const Address &dest)
+MacroAssemblerARMCompat::and32(Imm32 imm, Register dest)
+{
+    ma_and(imm, dest);
+}
+
+void
+MacroAssemblerARMCompat::addPtr(Register src, Register dest)
+{
+    ma_add(src, dest);
+}
+
+void
+MacroAssemblerARMCompat::and32(Imm32 imm, const Address &dest)
 {
     load32(dest, ScratchRegister);
     ma_and(imm, ScratchRegister);
@@ -1378,11 +1390,17 @@ MacroAssemblerARMCompat::and32(const Imm32 &imm, const Address &dest)
 }
 
 void
-MacroAssemblerARMCompat::or32(const Imm32 &imm, const Address &dest)
+MacroAssemblerARMCompat::or32(Imm32 imm, const Address &dest)
 {
     load32(dest, ScratchRegister);
     ma_orr(imm, ScratchRegister);
     store32(ScratchRegister, dest);
+}
+
+void
+MacroAssemblerARMCompat::orPtr(Imm32 imm, Register dest)
+{
+    ma_orr(imm, dest);
 }
 
 void
@@ -2102,6 +2120,12 @@ MacroAssemblerARMCompat::unboxValue(const ValueOperand &src, AnyRegister dest)
 }
 
 void
+MacroAssemblerARMCompat::unboxPrivate(const ValueOperand &src, Register dest)
+{
+    ma_mov(src.payloadReg(), dest);
+}
+
+void
 MacroAssemblerARMCompat::boxDouble(const FloatRegister &src, const ValueOperand &dest)
 {
     as_vxfer(dest.payloadReg(), dest.typeReg(),
@@ -2675,6 +2699,17 @@ MacroAssemblerARMCompat::testStringTruthy(bool truthy, const ValueOperand &value
     ma_bic(Imm32(~mask), ScratchRegister, SetCond);
     return truthy ? Assembler::NonZero : Assembler::Zero;
 }
+
+void
+MacroAssemblerARMCompat::enterOsr(Register calleeToken, Register code)
+{
+    push(calleeToken);
+    push(Imm32(MakeFrameDescriptor(0, IonFrame_Osr)));
+    ma_add(sp, Imm32(sizeof(uintptr_t)), sp);   // padding
+    ma_callIonHalfPush(code);
+    ma_sub(sp, Imm32(sizeof(uintptr_t) * 3), sp);
+}
+
 
 void
 MacroAssemblerARMCompat::floor(FloatRegister input, Register output, Label *bail)

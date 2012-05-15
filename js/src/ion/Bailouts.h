@@ -195,16 +195,11 @@ uint32 InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut);
 
 // Called from a bailout thunk. Interprets the frame(s) that have been bailed
 // out.
-JSBool ThunkToInterpreter(Value *vp);
+uint32 ThunkToInterpreter(Value *vp);
 
 uint32 ReflowTypeInfo(uint32 bailoutResult);
 
 uint32 RecompileForInlining();
-
-// Called when an error occurs in Ion code. Normally, exceptions are bailouts,
-// and pop the frame. This is called to propagate an exception through multiple
-// frames. The return value is how much stack to adjust before returning.
-// uint32 HandleException(JSContext *cx);
 
 } // namespace ion
 } // namespace js

@@ -71,6 +71,8 @@ SizeOfFramePrefix(FrameType type)
         return IonBailedRectifierFrameLayout::Size();
       case IonFrame_Exit:
         return IonExitFrameLayout::Size();
+      case IonFrame_Osr:
+        return IonOsrFrameLayout::Size();
       default:
         JS_NOT_REACHED("unknown frame type");
     }

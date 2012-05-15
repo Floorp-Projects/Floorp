@@ -265,6 +265,13 @@ struct IonScript
     static void Trace(JSTracer *trc, IonScript *script);
     static void Destroy(FreeOp *fop, IonScript *script);
 
+    static inline size_t offsetOfMethod() {
+        return offsetof(IonScript, method_);
+    }
+    static inline size_t offsetOfOsrEntryOffset() {
+        return offsetof(IonScript, osrEntryOffset_);
+    }
+
   public:
     IonCode *method() const {
         return method_;
