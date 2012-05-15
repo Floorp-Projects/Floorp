@@ -185,17 +185,8 @@ CFLAGS += -Wno-missing-field-initializers
 endif # GNU_CC
 
 # special rule for pixman-mmx to get the right cflags
-pixman-mmx.$(OBJ_SUFFIX): pixman-mmx.c $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
-	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(MMX_CFLAGS) $(_VPATH_SRCS)
+pixman-mmx.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(MMX_CFLAGS)
 
-pixman-sse2.$(OBJ_SUFFIX): pixman-sse2.c $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
-	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(SSE2_CFLAGS) $(_VPATH_SRCS)
+pixman-sse2.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(SSE2_CFLAGS)
 
-pixman-arm-neon.$(OBJ_SUFFIX): pixman-arm-neon.c $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
-	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(ARM_NEON_CFLAGS) $(_VPATH_SRCS)
+pixman-arm-neon.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(ARM_NEON_CFLAGS)
