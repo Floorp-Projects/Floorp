@@ -51,7 +51,6 @@ namespace js {
 inline
 SharedContext::SharedContext(JSContext *cx, bool inFunction)
   : context(cx),
-    flags(0),
     bodyid(0),
     blockidGen(0),
     topStmt(NULL),
@@ -65,7 +64,8 @@ SharedContext::SharedContext(JSContext *cx, bool inFunction)
     bindings(cx),
     bindingsRoot(cx, &bindings),
     inFunction(inFunction),
-    inForInit(false)
+    inForInit(false),
+    cxFlags(cx)
 {
 }
 
@@ -119,8 +119,6 @@ TreeContext::TreeContext(Parser *prs, SharedContext *sc)
 inline bool
 TreeContext::init(JSContext *cx)
 {
-    if (cx->hasRunOption(JSOPTION_STRICT_MODE))
-        sc->flags |= TCF_STRICT_MODE_CODE;
     return decls.init() && lexdeps.ensureMap(sc->context);
 }
 
