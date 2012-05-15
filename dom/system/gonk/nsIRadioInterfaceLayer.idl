@@ -44,7 +44,7 @@ interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 
-[scriptable, uuid(03eafd60-d138-4f09-81b4-90cd4996b3c7)]
+[scriptable, uuid(28e80bfa-96db-4f52-8ed5-00a30758fba4)]
 interface nsIRILTelephonyCallback : nsISupports
 {
   /**
@@ -81,6 +81,17 @@ interface nsIRILTelephonyCallback : nsISupports
                              in unsigned short callState,
                              in AString number,
                              in boolean isActive);
+
+  /**
+   * Called when RIL error occurs.
+   *
+   * @param callIndex
+   *        Call identifier assigned by the RIL. -1 if no connection
+   * @param error
+   *        Error from RIL.
+   */
+  void notifyError(in long callIndex,
+                   in AString error);
 };
 
 [scriptable, uuid(66a55943-e63b-4731-aece-9c04bfc14019)]
