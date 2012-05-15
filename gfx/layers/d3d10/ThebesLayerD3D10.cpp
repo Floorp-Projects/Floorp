@@ -484,6 +484,8 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
 
   if (mD2DSurface) {
     mD2DSurface->SetSubpixelAntialiasingEnabled(!(mContentFlags & CONTENT_COMPONENT_ALPHA));
+  } else if (mDrawTarget) {
+    mDrawTarget->SetPermitSubpixelAA(!(mContentFlags & CONTENT_COMPONENT_ALPHA));
   }
 
   LayerManagerD3D10::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
