@@ -87,10 +87,13 @@ struct Parser : private AutoGCRooter
     AutoKeepAtoms       keepAtoms;
 
     /* Perform constant-folding; must be true when interfacing with the emitter. */
-    bool                foldConstants;
+    const bool          foldConstants:1;
+
+    /* Script can optimize name references based on scope chain. */
+    const bool          compileAndGo:1;
 
     Parser(JSContext *cx, JSPrincipals *prin = NULL, JSPrincipals *originPrin = NULL,
-           StackFrame *cfp = NULL, bool fold = true);
+           StackFrame *cfp = NULL, bool fold = true, bool compileAndGo = false);
     ~Parser();
 
     friend void AutoGCRooter::trace(JSTracer *trc);
