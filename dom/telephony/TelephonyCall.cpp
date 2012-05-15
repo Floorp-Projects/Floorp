@@ -150,6 +150,13 @@ TelephonyCall::ChangeStateInternal(PRUint16 aCallState, bool aFireEvents)
   }
 }
 
+void
+TelephonyCall::NotifyError(const nsAString& aError)
+{
+  // Do the state transitions
+  ChangeStateInternal(nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTED, true);
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(TelephonyCall)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TelephonyCall,

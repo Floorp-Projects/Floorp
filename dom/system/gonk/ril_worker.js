@@ -1460,8 +1460,8 @@ let RIL = {
   /**
    * Get failure casue code for the most recently failed PDP context.
    */
-  getFailCauseCode: function getFailCauseCode() {
-    Buf.simpleRequest(REQUEST_LAST_CALL_FAIL_CAUSE);
+  getFailCauseCode: function getFailCauseCode(options) {
+    Buf.simpleRequest(REQUEST_LAST_CALL_FAIL_CAUSE, options);
   },
 
   /**
@@ -2258,7 +2258,14 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, opti
   }
   this._processCalls(calls);
 };
-RIL[REQUEST_DIAL] = null;
+RIL[REQUEST_DIAL] = function REQUEST_DIAL(length, options) {
+  if (options.rilRequestError) {
+    // The connection is not established yet.
+    options.callIndex = -1;
+    this.getFailCauseCode(options);
+    return;
+  }
+};
 RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, options) {
   if (options.rilRequestError) {
     return;
@@ -2306,7 +2313,20 @@ RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_HOLDING_AND_ACT
 };
 RIL[REQUEST_CONFERENCE] = null;
 RIL[REQUEST_UDUB] = null;
-RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = null;
+RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length, options) {
+  let num = 0;
+  if (length) {
+    num = Buf.readUint32();
+  }
+  if (!num) {
+    return;
+  }
+
+  let failCause = Buf.readUint32();
+  options.type = "callError";
+  options.error = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[failCause];
+  this.sendDOMMessage(options);
+};
 RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options) {
   if (options.rilRequestError) {
     return;

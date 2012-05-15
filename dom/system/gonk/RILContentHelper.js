@@ -25,6 +25,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:DataInfoChanged",
   "RIL:EnumerateCalls",
   "RIL:CallStateChanged",
+  "RIL:CallError",
 ];
 
 const kVoiceChangedTopic     = "mobile-connection-voice-changed";
@@ -232,6 +233,12 @@ RILContentHelper.prototype = {
         this._deliverTelephonyCallback("callStateChanged",
                                        [msg.json.callIndex, msg.json.state,
                                         msg.json.number]);
+        break;
+      case "RIL:CallError":
+        this._deliverTelephonyCallback("notifyError",
+                                        [msg.json.callIndex, 
+                                         msg.json.error]);    	  
+    	break;
     }
   },
 
