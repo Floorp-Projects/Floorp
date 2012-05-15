@@ -5,7 +5,7 @@
   <!-- J-PAKE PIN Screen -->
   <string name="sync_subtitle_header">&sync.subtitle.header.label;</string>
   <string name="sync_subtitle_connect">&sync.subtitle.connectlocation.label;</string>
-  <string name="sync_subtitle_pair">&sync.subtitle.pair.label;</string>
+  <string name="sync_subtitle_pair">&sync.pair.connectlocation.label;</string>
   <string name="sync_pin_default">&sync.pin.oneline.label;</string>
   <string name="sync_link_show"><u>&sync.link.show.label;</u></string>
   <string name="sync_link_advancedsetup"><u>&sync.link.advancedsetup.label;</u></string>

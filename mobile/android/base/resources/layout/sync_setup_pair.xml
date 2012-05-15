@@ -26,7 +26,7 @@
         style="@style/SyncTextItem"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="10dp"
-        android:text="@string/sync_subtitle_connect" />
+        android:text="@string/sync_subtitle_pair" />
 
       <TextView
         style="@style/SyncLinkItem"
