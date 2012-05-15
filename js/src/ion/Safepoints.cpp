@@ -160,7 +160,7 @@ SafepointWriter::writeNunboxParts(uint32 nentries, SafepointNunboxEntry *entries
             DumpNunboxPart(entries[i].type);
             fprintf(IonSpewFile, ", payload in ");
             DumpNunboxPart(entries[i].payload);
-            fprintf(IonSpewFile, ")");
+            fprintf(IonSpewFile, ")\n");
         }
     }
 #endif
