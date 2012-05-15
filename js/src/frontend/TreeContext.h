@@ -108,18 +108,15 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // should be tested (see JSScript::argIsAlised).
     TCF_BINDINGS_ACCESSED_DYNAMICALLY =      0x100,
 
-    // Compiling an eval() script.
-    TCF_COMPILE_FOR_EVAL =                   0x200,
-
     // The function or a function that encloses it may define new local names
     // at runtime through means other than calling eval.
-    TCF_FUN_MIGHT_ALIAS_LOCALS =             0x400,
+    TCF_FUN_MIGHT_ALIAS_LOCALS =             0x200,
 
     // The script contains singleton initialiser JSOP_OBJECT.
-    TCF_HAS_SINGLETONS =                     0x800,
+    TCF_HAS_SINGLETONS =                     0x400,
 
     // Some enclosing scope is a with-statement or E4X filter-expression.
-    TCF_IN_WITH =                           0x1000,
+    TCF_IN_WITH =                            0x800,
 
     // This function does something that can extend the set of bindings in its
     // call objects --- it does a direct eval in non-strict code, or includes a
@@ -128,10 +125,10 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // This flag is *not* inherited by enclosed or enclosing functions; it
     // applies only to the function in whose flags it appears.
     //
-    TCF_FUN_EXTENSIBLE_SCOPE =              0x2000,
+    TCF_FUN_EXTENSIBLE_SCOPE =              0x1000,
 
     // The caller is JS_Compile*Script*.
-    TCF_NEED_SCRIPT_GLOBAL =                0x4000,
+    TCF_NEED_SCRIPT_GLOBAL =                0x2000,
 
     // Technically, every function has a binding named 'arguments'. Internally,
     // this binding is only added when 'arguments' is mentioned by the function
@@ -154,7 +151,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // have no special semantics: the initial value is unconditionally the
     // actual argument (or undefined if nactual < nformal).
     //
-    TCF_ARGUMENTS_HAS_LOCAL_BINDING =       0x8000,
+    TCF_ARGUMENTS_HAS_LOCAL_BINDING =       0x4000,
 
     // In many cases where 'arguments' has a local binding (as described above)
     // we do not need to actually create an arguments object in the function
@@ -165,7 +162,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // be unsound in several cases. The frontend filters out such cases by
     // setting this flag which eagerly sets script->needsArgsObj to true.
     //
-    TCF_DEFINITELY_NEEDS_ARGS_OBJ =        0x10000
+    TCF_DEFINITELY_NEEDS_ARGS_OBJ =         0x8000
 
 } JS_ENUM_FOOTER(TreeContextFlags);
 
