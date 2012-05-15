@@ -8012,8 +8012,8 @@ function Menu(options) {
  */
 Menu.prototype.destroy = function() {
   delete this.element;
-  delete this.items;
   delete this.template;
+  delete this.document;
 };
 
 /**
@@ -9835,8 +9835,6 @@ Tooltip.prototype.destroy = function() {
   delete this.descriptionEle;
   delete this.highlightEle;
 
-  delete this.field;
-  delete this.focusManager;
   delete this.document;
   delete this.element;
   delete this.panelElement;
