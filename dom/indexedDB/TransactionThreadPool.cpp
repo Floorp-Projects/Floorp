@@ -90,7 +90,7 @@ CheckOverlapAndMergeObjectStores(nsTArray<nsString>& aLockedStores,
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class FinishTransactionRunnable : public nsIRunnable
+class FinishTransactionRunnable MOZ_FINAL : public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS

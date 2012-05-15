@@ -55,9 +55,9 @@ class nsPIDOMWindow;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class CheckQuotaHelper : public nsIRunnable,
-                         public nsIInterfaceRequestor,
-                         public nsIObserver
+class CheckQuotaHelper MOZ_FINAL : public nsIRunnable,
+                                   public nsIInterfaceRequestor,
+                                   public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
