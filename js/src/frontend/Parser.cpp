@@ -605,7 +605,6 @@ Parser::functionBody(FunctionBodyType type)
     PushStatement(tc->sc, &stmtInfo, STMT_BLOCK, -1);
     stmtInfo.flags = SIF_BODY_BLOCK;
 
-    unsigned oldflags = tc->sc->flags;
     JS_ASSERT(!tc->hasReturnExpr && !tc->hasReturnVoid);
 
     ParseNode *pn;
@@ -737,7 +736,6 @@ Parser::functionBody(FunctionBodyType type)
         }
     }
 
-    tc->sc->flags = oldflags | (tc->sc->flags & TCF_FUN_FLAGS);
     return pn;
 }
 
@@ -1140,7 +1138,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
     tc->sc->blockidGen = funtc->sc->blockidGen;
 
     FunctionBox *funbox = fn->pn_funbox;
-    funbox->tcflags |= funtc->sc->flags & TCF_FUN_FLAGS;
+    funbox->tcflags |= funtc->sc->flags;
 
     fn->pn_dflags |= PND_INITIALIZED;
     if (!tc->sc->topStmt || tc->sc->topStmt->type == STMT_BLOCK)
@@ -4535,11 +4533,9 @@ Parser::condExpr1()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    uint32_t oldflags = tc->sc->flags;
     bool oldInForInit = tc->sc->inForInit;
     tc->sc->inForInit = false;
     ParseNode *thenExpr = assignExpr();
-    tc->sc->flags = oldflags | (tc->sc->flags & TCF_FUN_FLAGS);
     tc->sc->inForInit = oldInForInit;
     if (!thenExpr)
         return NULL;
@@ -5469,7 +5465,7 @@ Parser::generatorExpr(ParseNode *kid)
          * simplicity we also do not detect if the flags were only set in the
          * kid and could be removed from tc->sc->flags.
          */
-        gensc.flags |= TCF_FUN_IS_GENERATOR | (outertc->sc->flags & TCF_FUN_FLAGS);
+        gensc.flags |= TCF_FUN_IS_GENERATOR | outertc->sc->flags;
         funbox->tcflags |= gensc.flags;
         funbox->inGenexpLambda = true;
         genfn->pn_funbox = funbox;
@@ -5809,11 +5805,9 @@ Parser::bracketedExpr()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    uint32_t oldflags = tc->sc->flags;
     bool oldInForInit = tc->sc->inForInit;
     tc->sc->inForInit = false;
     ParseNode *pn = expr();
-    tc->sc->flags = oldflags | (tc->sc->flags & TCF_FUN_FLAGS);
     tc->sc->inForInit = oldInForInit;
     return pn;
 }
