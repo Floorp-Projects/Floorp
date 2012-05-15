@@ -1,0 +1,20 @@
+# We still need to build with debug symbols
+ac_add_options --disable-debug
+ac_add_options --enable-optimize="-O2 -g"
+
+# ASan specific options on Linux
+ac_add_options --enable-valgrind
+
+# Other options
+ac_add_options --enable-codesighs
+
+. $topsrcdir/build/unix/mozconfig.asan
+
+# Avoid dependency on libstdc++ 4.5
+ac_add_options --enable-stdcxx-compat
+
+# Enable parallel compiling
+mk_add_options MOZ_MAKE_FLAGS="-j4"
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
