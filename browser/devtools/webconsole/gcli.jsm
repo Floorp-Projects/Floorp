@@ -1226,9 +1226,17 @@ exports.createEvent = function(name) {
    * @param scope Optional 'this' object for the function call
    */
   event.remove = function(func, scope) {
+    var found = false;
     handlers = handlers.filter(function(test) {
-      return test.func !== func && test.scope !== scope;
+      var noMatch = (test.func !== func && test.scope !== scope);
+      if (!noMatch) {
+        found = true;
+      }
+      return noMatch;
     });
+    if (!found) {
+      console.warn('Failed to remove handler from ' + name);
+    }
   };
 
   /**
@@ -5000,7 +5008,8 @@ define('gcli/ui/intro', ['require', 'exports', 'module' , 'gcli/settings', 'gcli
   var hideIntroSettingSpec = {
     name: 'hideIntro',
     type: 'boolean',
-    description: l10n.lookup('hideIntroDesc')
+    description: l10n.lookup('hideIntroDesc'),
+    defaultValue: false
   };
   var hideIntro;
 
