@@ -1280,7 +1280,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     script->mainOffset = prologLength;
     PodCopy<jsbytecode>(script->code, bce->prologBase(), prologLength);
     PodCopy<jsbytecode>(script->main(), bce->base(), mainLength);
-    nfixed = bce->sc->inFunction() ? bce->sc->bindings.numVars() : 0;
+    nfixed = bce->sc->inFunction ? bce->sc->bindings.numVars() : 0;
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = uint16_t(nfixed);
     InitAtomMap(cx, bce->atomIndices.getMap(), script->atoms);
@@ -1358,7 +1358,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     script->bindings.transfer(cx, &bce->sc->bindings);
 
     fun = NULL;
-    if (bce->sc->inFunction()) {
+    if (bce->sc->inFunction) {
         JS_ASSERT(!bce->noScriptRval);
         JS_ASSERT(!bce->needScriptGlobal);
         /*
