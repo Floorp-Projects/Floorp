@@ -768,17 +768,6 @@ var types = require('gcli/types');
 var Status = require('gcli/types').Status;
 var BooleanType = require('gcli/types/basic').BooleanType;
 
-
-/**
- * A lookup hash of our registered commands
- */
-var commands = {};
-
-/**
- * A sorted list of command names, we regularly want them in order, so pre-sort
- */
-var commandNames = [];
-
 /**
  * Implement the localization algorithm for any documentation objects (i.e.
  * description and manual) in a command.
@@ -1031,6 +1020,21 @@ canon.Parameter = Parameter;
 
 
 /**
+ * A lookup hash of our registered commands
+ */
+var commands = {};
+
+/**
+ * A sorted list of command names, we regularly want them in order, so pre-sort
+ */
+var commandNames = [];
+
+/**
+ * A lookup of the original commandSpecs by command name
+ */
+var commandSpecs = {};
+
+/**
  * Add a command to the canon of known commands.
  * This function is exposed to the outside world (via gcli/index). It is
  * documented in docs/index.md for all the world to see.
@@ -1051,6 +1055,8 @@ canon.addCommand = function addCommand(commandSpec) {
   commandNames.push(commandSpec.name);
   commandNames.sort();
 
+  commandSpecs[commandSpec.name] = commandSpec;
+
   canon.onCanonChange();
   return command;
 };
@@ -1066,6 +1072,7 @@ canon.removeCommand = function removeCommand(commandOrName) {
 
   // See start of canon.addCommand if changing this code
   delete commands[name];
+  delete commandSpecs[name];
   commandNames = commandNames.filter(function(test) {
     return test !== name;
   });
@@ -1097,6 +1104,14 @@ canon.getCommands = function getCommands() {
  */
 canon.getCommandNames = function getCommandNames() {
   return commandNames.slice(0);
+};
+
+/**
+ * Get access to the stored commandMetaDatas (i.e. before they were made into
+ * instances of Command/Parameters) so we can remote them.
+ */
+canon.getCommandSpecs = function getCommandSpecs() {
+  return commandSpecs;
 };
 
 /**
@@ -6698,9 +6713,21 @@ Output.prototype.toDom = function(element) {
   }
   else {
     if (this.command.returnType === 'terminal') {
-      node = util.createElement(document, 'textarea');
-      node.classList.add('gcli-row-terminal');
-      node.readOnly = true;
+      if (Array.isArray(output)) {
+        node = util.createElement(document, 'div');
+        output.forEach(function() {
+          var child = util.createElement(document, 'textarea');
+          child.classList.add('gcli-row-subterminal');
+          child.readOnly = true;
+
+          node.appendChild(child);
+        });
+      }
+      else {
+        node = util.createElement(document, 'textarea');
+        node.classList.add('gcli-row-terminal');
+        node.readOnly = true;
+      }
     }
     else {
       node = util.createElement(document, 'p');
