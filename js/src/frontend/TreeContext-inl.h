@@ -64,7 +64,8 @@ SharedContext::SharedContext(JSContext *cx, bool inFunction)
     functionList(NULL),
     bindings(cx),
     bindingsRoot(cx, &bindings),
-    inFunction(inFunction)
+    inFunction(inFunction),
+    inForInit(false)
 {
 }
 

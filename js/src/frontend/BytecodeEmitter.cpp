@@ -1252,7 +1252,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              * Don't generate upvars on the left side of a for loop. See
              * bug 470758.
              */
-            if (bce->sc->flags & TCF_IN_FOR_INIT)
+            if (bce->sc->inForInit)
                 return JS_TRUE;
 
             JS_ASSERT(caller->isScriptFrame());
@@ -1682,11 +1682,11 @@ EmitXMLName(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
     JS_ASSERT(op == JSOP_XMLNAME || op == JSOP_CALLXMLNAME);
 
     ParseNode *pn2 = pn->pn_kid;
-    unsigned oldflags = bce->sc->flags;
-    bce->sc->flags &= ~TCF_IN_FOR_INIT;
+    bool oldInForInit = bce->sc->inForInit;
+    bce->sc->inForInit = false;
     if (!EmitTree(cx, bce, pn2))
         return false;
-    bce->sc->flags |= oldflags & TCF_IN_FOR_INIT;
+    bce->sc->inForInit = oldInForInit;
     if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - pn2->pn_offset) < 0)
         return false;
 
@@ -3375,11 +3375,11 @@ EmitVariables(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmitOption 
                 return JS_FALSE;
             }
 
-            unsigned oldflags = bce->sc->flags;
-            bce->sc->flags &= ~TCF_IN_FOR_INIT;
+            bool oldInForInit = bce->sc->inForInit;
+            bce->sc->inForInit = false;
             if (!EmitTree(cx, bce, pn3))
                 return JS_FALSE;
-            bce->sc->flags |= oldflags & TCF_IN_FOR_INIT;
+            bce->sc->inForInit = oldInForInit;
         } else if (letNotes) {
             /* JSOP_ENTERLETx expects at least 1 slot to have been pushed. */
             if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
@@ -4526,10 +4526,10 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (pn1) {
         ParseNode *decl = letDecl ? pn1->pn_expr : pn1;
         JS_ASSERT(decl->isKind(PNK_VAR) || decl->isKind(PNK_LET));
-        bce->sc->flags |= TCF_IN_FOR_INIT;
+        bce->sc->inForInit = true;
         if (!EmitVariables(cx, bce, decl, DefineVars))
             return false;
-        bce->sc->flags &= ~TCF_IN_FOR_INIT;
+        bce->sc->inForInit = false;
     }
 
     /* Compile the object expression to the right of 'in'. */
@@ -4669,7 +4669,7 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         /* No initializer: emit an annotated nop for the decompiler. */
         op = JSOP_NOP;
     } else {
-        bce->sc->flags |= TCF_IN_FOR_INIT;
+        bce->sc->inForInit = true;
 #if JS_HAS_DESTRUCTURING
         if (pn3->isKind(PNK_ASSIGN)) {
             JS_ASSERT(pn3->isOp(JSOP_NOP));
@@ -4692,7 +4692,7 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
                     op = JSOP_NOP;
             }
         }
-        bce->sc->flags &= ~TCF_IN_FOR_INIT;
+        bce->sc->inForInit = false;
     }
 
     /*
@@ -5394,13 +5394,13 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
      * JSOP_NEW bytecode with a two-byte immediate telling how many args
      * were pushed on the operand stack.
      */
-    unsigned oldflags = bce->sc->flags;
-    bce->sc->flags &= ~TCF_IN_FOR_INIT;
+    bool oldInForInit = bce->sc->inForInit;
+    bce->sc->inForInit = false;
     for (ParseNode *pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
         if (!EmitTree(cx, bce, pn3))
             return false;
     }
-    bce->sc->flags |= oldflags & TCF_IN_FOR_INIT;
+    bce->sc->inForInit = oldInForInit;
     if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - off) < 0)
         return false;
 
@@ -5880,12 +5880,12 @@ EmitUnary(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (op == JSOP_TYPEOF && !pn2->isKind(PNK_NAME))
         op = JSOP_TYPEOFEXPR;
 
-    unsigned oldflags = bce->sc->flags;
-    bce->sc->flags &= ~TCF_IN_FOR_INIT;
+    bool oldInForInit = bce->sc->inForInit;
+    bce->sc->inForInit = false;
     if (!EmitTree(cx, bce, pn2))
         return false;
 
-    bce->sc->flags |= oldflags & TCF_IN_FOR_INIT;
+    bce->sc->inForInit = oldInForInit;
     return Emit1(cx, bce, op) >= 0;
 }
 
@@ -6116,7 +6116,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             }
         } else {
 #if JS_HAS_XML_SUPPORT
-            unsigned oldflags;
 
       case PNK_DBLCOLON:
             JS_ASSERT(pn->getOp() != JSOP_XMLNAME);
@@ -6131,10 +6130,10 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             /*
              * Binary :: has a right operand that brackets arbitrary code,
              * possibly including a let (a = b) ... expression.  We must clear
-             * TCF_IN_FOR_INIT to avoid mis-compiling such beasts.
+             * inForInit to avoid mis-compiling such beasts.
              */
-            oldflags = bce->sc->flags;
-            bce->sc->flags &= ~TCF_IN_FOR_INIT;
+            bool oldInForInit = bce->sc->inForInit;
+            bce->sc->inForInit = false;
 #endif
 
             /* Binary operators that evaluate both operands unconditionally. */
@@ -6143,7 +6142,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!EmitTree(cx, bce, pn->pn_right))
                 return JS_FALSE;
 #if JS_HAS_XML_SUPPORT
-            bce->sc->flags |= oldflags & TCF_IN_FOR_INIT;
+            bce->sc->inForInit = oldInForInit;
 #endif
             if (Emit1(cx, bce, pn->getOp()) < 0)
                 return JS_FALSE;
@@ -6158,11 +6157,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         } else {
             JSOp op = pn->getOp();
             JS_ASSERT(op == JSOP_BINDXMLNAME || op == JSOP_SETXMLNAME);
-            unsigned oldflags = bce->sc->flags;
-            bce->sc->flags &= ~TCF_IN_FOR_INIT;
+            bool oldInForInit = bce->sc->inForInit;
+            bce->sc->inForInit = false;
             if (!EmitTree(cx, bce, pn->pn_kid))
                 return false;
-            bce->sc->flags |= oldflags & TCF_IN_FOR_INIT;
+            bce->sc->inForInit = oldInForInit;
             if (Emit1(cx, bce, op) < 0)
                 return false;
         }
