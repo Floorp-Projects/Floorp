@@ -76,15 +76,12 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // script can optimize name references based on scope chain
     TCF_COMPILE_N_GO =                        0x20,
 
-    // API caller does not want result value from global script
-    TCF_NO_SCRIPT_RVAL =                      0x40,
-
     // This function/global/eval code body contained a Use Strict Directive.
     // Treat certain strict warnings as errors, and forbid the use of 'with'.
     // See also TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and
     // JSREPORT_STRICT_ERROR.
     //
-    TCF_STRICT_MODE_CODE =                    0x80,
+    TCF_STRICT_MODE_CODE =                    0x40,
 
     // The (static) bindings of this script need to support dynamic name
     // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
@@ -106,17 +103,17 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // taken not to turn off the whole 'arguments' optimization). To answer the
     // more general "is this argument aliased" question, script->needsArgsObj
     // should be tested (see JSScript::argIsAlised).
-    TCF_BINDINGS_ACCESSED_DYNAMICALLY =      0x100,
+    TCF_BINDINGS_ACCESSED_DYNAMICALLY =       0x80,
 
     // The function or a function that encloses it may define new local names
     // at runtime through means other than calling eval.
-    TCF_FUN_MIGHT_ALIAS_LOCALS =             0x200,
+    TCF_FUN_MIGHT_ALIAS_LOCALS =             0x100,
 
     // The script contains singleton initialiser JSOP_OBJECT.
-    TCF_HAS_SINGLETONS =                     0x400,
+    TCF_HAS_SINGLETONS =                     0x200,
 
     // Some enclosing scope is a with-statement or E4X filter-expression.
-    TCF_IN_WITH =                            0x800,
+    TCF_IN_WITH =                            0x400,
 
     // This function does something that can extend the set of bindings in its
     // call objects --- it does a direct eval in non-strict code, or includes a
@@ -125,10 +122,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // This flag is *not* inherited by enclosed or enclosing functions; it
     // applies only to the function in whose flags it appears.
     //
-    TCF_FUN_EXTENSIBLE_SCOPE =              0x1000,
-
-    // The caller is JS_Compile*Script*.
-    TCF_NEED_SCRIPT_GLOBAL =                0x2000,
+    TCF_FUN_EXTENSIBLE_SCOPE =               0x800,
 
     // Technically, every function has a binding named 'arguments'. Internally,
     // this binding is only added when 'arguments' is mentioned by the function
@@ -151,7 +145,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // have no special semantics: the initial value is unconditionally the
     // actual argument (or undefined if nactual < nformal).
     //
-    TCF_ARGUMENTS_HAS_LOCAL_BINDING =       0x4000,
+    TCF_ARGUMENTS_HAS_LOCAL_BINDING =       0x1000,
 
     // In many cases where 'arguments' has a local binding (as described above)
     // we do not need to actually create an arguments object in the function
@@ -162,7 +156,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // be unsound in several cases. The frontend filters out such cases by
     // setting this flag which eagerly sets script->needsArgsObj to true.
     //
-    TCF_DEFINITELY_NEEDS_ARGS_OBJ =         0x8000
+    TCF_DEFINITELY_NEEDS_ARGS_OBJ =         0x2000
 
 } JS_ENUM_FOOTER(TreeContextFlags);
 

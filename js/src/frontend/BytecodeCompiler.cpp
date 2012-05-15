@@ -101,7 +101,7 @@ MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script)
 JSScript *
 frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
                         JSPrincipals *principals, JSPrincipals *originPrincipals,
-                        uint32_t tcflags,
+                        bool compileAndGo, bool noScriptRval, bool needScriptGlobal,
                         const jschar *chars, size_t length,
                         const char *filename, unsigned lineno, JSVersion version,
                         JSString *source /* = NULL */,
@@ -111,13 +111,11 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     ParseNode *pn;
     bool inDirectivePrologue;
 
-    JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL | TCF_NEED_SCRIPT_GLOBAL)));
-
     /*
      * The scripted callerFrame can only be given for compile-and-go scripts
      * and non-zero static level requires callerFrame.
      */
-    JS_ASSERT_IF(callerFrame, tcflags & TCF_COMPILE_N_GO);
+    JS_ASSERT_IF(callerFrame, compileAndGo);
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
     Parser parser(cx, principals, originPrincipals, callerFrame);
@@ -132,7 +130,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!tc.init(cx))
         return NULL;
 
-    BytecodeEmitter bce(&parser, &sc, tokenStream.getLineno());
+    BytecodeEmitter bce(&parser, &sc, tokenStream.getLineno(), noScriptRval, needScriptGlobal);
     if (!bce.init())
         return NULL;
 
@@ -149,8 +147,9 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     RootedVar<JSScript*> script(cx);
 
+    sc.flags |= compileAndGo ? TCF_COMPILE_N_GO : 0;
+
     GlobalScope globalScope(cx, globalObj);
-    bce.sc->flags |= tcflags;
     bce.sc->setScopeChain(scopeChain);
     bce.globalScope = &globalScope;
     if (!SetStaticLevel(bce.sc, staticLevel))
@@ -168,7 +167,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     bool savedCallerFun;
     savedCallerFun = false;
 #endif
-    if (tcflags & TCF_COMPILE_N_GO) {
+    if (compileAndGo) {
         if (source) {
             /*
              * Save eval program source in script->atoms[0] for the
@@ -306,7 +305,8 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!funtc.init(cx))
         return NULL;
 
-    BytecodeEmitter funbce(&parser, &funsc, tokenStream.getLineno());
+    BytecodeEmitter funbce(&parser, &funsc, tokenStream.getLineno(),
+                           /* noScriptRval = */ false, /* needsScriptGlobal = */ false);
     if (!funbce.init())
         return false;
 
