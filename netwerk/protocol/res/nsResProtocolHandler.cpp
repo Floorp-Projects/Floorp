@@ -331,6 +331,9 @@ nsResProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     rv = mIOService->NewChannel(spec, nsnull, nsnull, result);
     if (NS_FAILED(rv)) return rv;
 
+    nsLoadFlags loadFlags = 0;
+    (*result)->GetLoadFlags(&loadFlags);
+    (*result)->SetLoadFlags(loadFlags & ~nsIChannel::LOAD_REPLACE);
     return (*result)->SetOriginalURI(uri);
 }
 
