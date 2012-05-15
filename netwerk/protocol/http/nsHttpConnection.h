@@ -165,6 +165,7 @@ public:
     void EndIdleMonitoring();
 
     bool UsingSpdy() { return mUsingSpdy; }
+    bool EverUsedSpdy() { return mEverUsedSpdy; }
 
     // true when connection SSL NPN phase is complete and we know
     // authoritatively whether UsingSpdy() or not.
