@@ -8417,7 +8417,7 @@ var helpCommandSpec = {
       name: 'search',
       type: 'string',
       description: l10n.lookup('helpSearchDesc'),
-      manual: l10n.lookup('helpSearchManual'),
+      manual: l10n.lookup('helpSearchManual2'),
       defaultValue: null
     }
   ],
