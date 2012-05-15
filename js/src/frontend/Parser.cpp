@@ -236,10 +236,10 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
         }
     }
     funbox->level = tc->sc->staticLevel;
-    funbox->tcflags = TCF_IN_FUNCTION | (tc->sc->flags & TCF_STRICT_MODE_CODE);
+    funbox->tcflags = tc->sc->flags & TCF_STRICT_MODE_CODE;
     if (tc->innermostWith)
         funbox->tcflags |= TCF_IN_WITH;
-    if (!tc->sc->inFunction()) {
+    if (!tc->sc->inFunction) {
         JSObject *scope = tc->sc->scopeChain();
         while (scope) {
             if (scope->isWith())
@@ -291,7 +291,7 @@ Parser::parse(JSObject *chain)
      *   an object lock before it finishes generating bytecode into a script
      *   protected from the GC by a root or a stack frame reference.
      */
-    SharedContext globalsc(context);
+    SharedContext globalsc(context, /* inFunction = */ false);
     TreeContext globaltc(this, &globalsc);
     if (!globaltc.init(context))
         return NULL;
@@ -456,7 +456,7 @@ ReportBadReturn(JSContext *cx, Parser *parser, ParseNode *pn, unsigned flags, un
 static JSBool
 CheckFinalReturn(JSContext *cx, Parser *parser, ParseNode *pn)
 {
-    JS_ASSERT(parser->tc->sc->inFunction());
+    JS_ASSERT(parser->tc->sc->inFunction);
     return HasFinalReturn(pn) == ENDS_IN_RETURN ||
            ReportBadReturn(cx, parser, pn, JSREPORT_WARNING | JSREPORT_STRICT,
                            JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
@@ -530,7 +530,7 @@ static bool
 CheckStrictParameters(JSContext *cx, Parser *parser)
 {
     SharedContext *sc = parser->tc->sc;
-    JS_ASSERT(sc->inFunction());
+    JS_ASSERT(sc->inFunction);
 
     if (!sc->needStrictChecks() || sc->bindings.numArgs() == 0)
         return true;
@@ -599,7 +599,7 @@ BindLocalVariable(JSContext *cx, SharedContext *sc, ParseNode *pn, BindingKind k
 ParseNode *
 Parser::functionBody(FunctionBodyType type)
 {
-    JS_ASSERT(tc->sc->inFunction());
+    JS_ASSERT(tc->sc->inFunction);
 
     StmtInfo stmtInfo(context);
     PushStatement(tc->sc, &stmtInfo, STMT_BLOCK, -1);
@@ -992,7 +992,7 @@ static JSBool
 BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
 {
     TreeContext *tc = parser->tc;
-    JS_ASSERT(tc->sc->inFunction());
+    JS_ASSERT(tc->sc->inFunction);
 
     /*
      * NB: Check tc->decls rather than tc->sc->bindings, because destructuring
@@ -1048,7 +1048,7 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
         tc = tc->parent;
 
     RootedVarObject parent(context);
-    parent = tc->sc->inFunction() ? NULL : tc->sc->scopeChain();
+    parent = tc->sc->inFunction ? NULL : tc->sc->scopeChain();
 
     RootedVarFunction fun(context);
     fun = js_NewFunction(context, NULL, NULL, 0,
@@ -1503,7 +1503,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
          * when BytecodeEmitter.cpp's BindNameToSlot can optimize a JSOP_NAME
          * into a JSOP_GETLOCAL bytecode).
          */
-        if (bodyLevel && tc->sc->inFunction()) {
+        if (bodyLevel && tc->sc->inFunction) {
             /*
              * Define a local in the outer function so that BindNameToSlot
              * can properly optimize accesses. Note that we need a local
@@ -1533,7 +1533,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
     TreeContext *outertc = tc;
 
     /* Initialize early for possible flags mutation via destructuringExpr. */
-    SharedContext funsc(context);
+    SharedContext funsc(context, /* inFunction = */ true);
     TreeContext funtc(this, &funsc);
     if (!funtc.init(context))
         return NULL;
@@ -1711,7 +1711,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         pn->pn_body = body;
     }
 
-    JS_ASSERT_IF(!outertc->sc->inFunction() && bodyLevel && kind == Statement,
+    JS_ASSERT_IF(!outertc->sc->inFunction && bodyLevel && kind == Statement,
                  pn->pn_cookie.isFree());
 
     pn->pn_blockid = outertc->sc->blockid();
@@ -2075,7 +2075,7 @@ OuterLet(SharedContext *sc, StmtInfo *stmt, JSAtom *atom)
 static bool
 BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, SharedContext *sc)
 {
-    JS_ASSERT(sc->inFunction());
+    JS_ASSERT(sc->inFunction);
 
     ParseNode *pn = data->pn;
     JSAtom *name = pn->pn_atom;
@@ -2098,7 +2098,7 @@ BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, SharedCont
     }
 
     if (kind == ARGUMENT) {
-        JS_ASSERT(sc->inFunction());
+        JS_ASSERT(sc->inFunction);
         JS_ASSERT(!mdl.empty() && mdl.front()->kind() == Definition::ARG);
     } else {
         JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
@@ -2251,7 +2251,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
     if (data->op == JSOP_DEFCONST)
         pn->pn_dflags |= PND_CONST;
 
-    if (tc->sc->inFunction())
+    if (tc->sc->inFunction)
         return BindFunctionLocal(cx, data, mdl, tc->sc);
 
     return true;
@@ -2307,7 +2307,7 @@ NoteLValue(JSContext *cx, ParseNode *pn, SharedContext *sc, unsigned dflag = PND
      * mode, we must have a binding for it in the scope chain; we ensure this
      * happens by making such functions heavyweight.
      */
-    if (sc->inFunction() && pn->pn_atom == sc->fun()->atom)
+    if (sc->inFunction && pn->pn_atom == sc->fun()->atom)
         sc->flags |= TCF_FUN_HEAVYWEIGHT;
 }
 
@@ -2643,7 +2643,7 @@ ParseNode *
 Parser::returnOrYield(bool useAssignExpr)
 {
     TokenKind tt = tokenStream.currentToken().type;
-    if (!tc->sc->inFunction()) {
+    if (!tc->sc->inFunction) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD,
                           (tt == TOK_RETURN) ? js_return_str : js_yield_str);
         return NULL;
@@ -4961,7 +4961,7 @@ GenexpGuard::maybeNoteGenerator(ParseNode *pn)
     TreeContext *tc = parser->tc;
     if (tc->yieldCount > 0) {
         tc->sc->flags |= TCF_FUN_IS_GENERATOR;
-        if (!tc->sc->inFunction()) {
+        if (!tc->sc->inFunction) {
             parser->reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD,
                                       js_yield_str);
             return false;
@@ -5453,7 +5453,7 @@ Parser::generatorExpr(ParseNode *kid)
 
     {
         TreeContext *outertc = tc;
-        SharedContext gensc(context);
+        SharedContext gensc(context, /* inFunction = */ true);
         TreeContext gentc(this, &gensc);
         if (!gentc.init(context))
             return NULL;
@@ -6426,7 +6426,7 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
      * lightweight function activation, or if its scope chain doesn't match
      * the one passed to us.
      */
-    SharedContext xmlsc(context);
+    SharedContext xmlsc(context, /* inFunction = */ false);
     TreeContext xmltc(this, &xmlsc);
     if (!xmltc.init(context))
         return NULL;

@@ -125,7 +125,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     TokenStream &tokenStream = parser.tokenStream;
 
-    SharedContext sc(cx);
+    SharedContext sc(cx, /* inFunction = */ false);
 
     TreeContext tc(&parser, &sc);
     if (!tc.init(cx))
@@ -298,7 +298,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
 
     TokenStream &tokenStream = parser.tokenStream;
 
-    SharedContext funsc(cx);
+    SharedContext funsc(cx, /* inFunction = */ true);
 
     TreeContext funtc(&parser, &funsc);
     if (!funtc.init(cx))
@@ -309,7 +309,6 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!funbce.init())
         return false;
 
-    funsc.flags |= TCF_IN_FUNCTION;
     funsc.setFunction(fun);
     funsc.bindings.transfer(cx, bindings);
     fun->setArgCount(funsc.bindings.numArgs());
