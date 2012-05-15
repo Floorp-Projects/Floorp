@@ -115,7 +115,8 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lin
     closedVars(sc->context),
     typesetCount(0),
     noScriptRval(noScriptRval),
-    needScriptGlobal(needScriptGlobal)
+    needScriptGlobal(needScriptGlobal),
+    hasSingletons(false)
 {
     memset(&prolog, 0, sizeof prolog);
     memset(&main, 0, sizeof main);

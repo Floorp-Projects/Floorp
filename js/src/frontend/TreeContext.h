@@ -100,9 +100,6 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // at runtime through means other than calling eval.
     TCF_FUN_MIGHT_ALIAS_LOCALS =              0x20,
 
-    // The script contains singleton initialiser JSOP_OBJECT.
-    TCF_HAS_SINGLETONS =                      0x40,
-
     // This function does something that can extend the set of bindings in its
     // call objects --- it does a direct eval in non-strict code, or includes a
     // function statement (as opposed to a function definition).
@@ -110,7 +107,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // This flag is *not* inherited by enclosed or enclosing functions; it
     // applies only to the function in whose flags it appears.
     //
-    TCF_FUN_EXTENSIBLE_SCOPE =                0x80,
+    TCF_FUN_EXTENSIBLE_SCOPE =                0x40,
 
     // Technically, every function has a binding named 'arguments'. Internally,
     // this binding is only added when 'arguments' is mentioned by the function
@@ -133,7 +130,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // have no special semantics: the initial value is unconditionally the
     // actual argument (or undefined if nactual < nformal).
     //
-    TCF_ARGUMENTS_HAS_LOCAL_BINDING =        0x100,
+    TCF_ARGUMENTS_HAS_LOCAL_BINDING =         0x80,
 
     // In many cases where 'arguments' has a local binding (as described above)
     // we do not need to actually create an arguments object in the function
@@ -144,7 +141,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // be unsound in several cases. The frontend filters out such cases by
     // setting this flag which eagerly sets script->needsArgsObj to true.
     //
-    TCF_DEFINITELY_NEEDS_ARGS_OBJ =          0x200
+    TCF_DEFINITELY_NEEDS_ARGS_OBJ =          0x100
 
 } JS_ENUM_FOOTER(TreeContextFlags);
 
