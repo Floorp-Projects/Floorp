@@ -58,24 +58,21 @@ namespace js {
 
 JS_ENUM_HEADER(TreeContextFlags, uint32_t)
 {
-    // parsing init expr of for; exclude 'in'
-    TCF_IN_FOR_INIT =                          0x1,
-
     // function needs Call object per call
-    TCF_FUN_HEAVYWEIGHT =                      0x2,
+    TCF_FUN_HEAVYWEIGHT =                      0x1,
 
     // parsed yield statement in function
-    TCF_FUN_IS_GENERATOR =                     0x4,
+    TCF_FUN_IS_GENERATOR =                     0x2,
 
     // flag lambda from generator expression
-    TCF_GENEXP_LAMBDA =                        0x8,
+    TCF_GENEXP_LAMBDA =                        0x4,
 
     // This function/global/eval code body contained a Use Strict Directive.
     // Treat certain strict warnings as errors, and forbid the use of 'with'.
     // See also TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and
     // JSREPORT_STRICT_ERROR.
     //
-    TCF_STRICT_MODE_CODE =                    0x10,
+    TCF_STRICT_MODE_CODE =                     0x8,
 
     // The (static) bindings of this script need to support dynamic name
     // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
@@ -97,17 +94,17 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // taken not to turn off the whole 'arguments' optimization). To answer the
     // more general "is this argument aliased" question, script->needsArgsObj
     // should be tested (see JSScript::argIsAlised).
-    TCF_BINDINGS_ACCESSED_DYNAMICALLY =       0x20,
+    TCF_BINDINGS_ACCESSED_DYNAMICALLY =       0x10,
 
     // The function or a function that encloses it may define new local names
     // at runtime through means other than calling eval.
-    TCF_FUN_MIGHT_ALIAS_LOCALS =              0x40,
+    TCF_FUN_MIGHT_ALIAS_LOCALS =              0x20,
 
     // The script contains singleton initialiser JSOP_OBJECT.
-    TCF_HAS_SINGLETONS =                      0x80,
+    TCF_HAS_SINGLETONS =                      0x40,
 
     // Some enclosing scope is a with-statement or E4X filter-expression.
-    TCF_IN_WITH =                            0x100,
+    TCF_IN_WITH =                             0x80,
 
     // This function does something that can extend the set of bindings in its
     // call objects --- it does a direct eval in non-strict code, or includes a
@@ -116,7 +113,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // This flag is *not* inherited by enclosed or enclosing functions; it
     // applies only to the function in whose flags it appears.
     //
-    TCF_FUN_EXTENSIBLE_SCOPE =               0x200,
+    TCF_FUN_EXTENSIBLE_SCOPE =               0x100,
 
     // Technically, every function has a binding named 'arguments'. Internally,
     // this binding is only added when 'arguments' is mentioned by the function
@@ -139,7 +136,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // have no special semantics: the initial value is unconditionally the
     // actual argument (or undefined if nactual < nformal).
     //
-    TCF_ARGUMENTS_HAS_LOCAL_BINDING =        0x400,
+    TCF_ARGUMENTS_HAS_LOCAL_BINDING =        0x200,
 
     // In many cases where 'arguments' has a local binding (as described above)
     // we do not need to actually create an arguments object in the function
@@ -150,7 +147,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // be unsound in several cases. The frontend filters out such cases by
     // setting this flag which eagerly sets script->needsArgsObj to true.
     //
-    TCF_DEFINITELY_NEEDS_ARGS_OBJ =          0x800
+    TCF_DEFINITELY_NEEDS_ARGS_OBJ =          0x400
 
 } JS_ENUM_FOOTER(TreeContextFlags);
 
@@ -198,7 +195,9 @@ struct SharedContext {
                                        arguments if we're compiling a function */
     Bindings::StackRoot bindingsRoot; /* root for stack allocated bindings. */
 
-    const bool      inFunction;     /* parsing/emitting inside function body */
+    const bool      inFunction:1;   /* parsing/emitting inside function body */
+
+    bool            inForInit:1;    /* parsing/emitting init expr of for; exclude 'in' */
 
     inline SharedContext(JSContext *cx, bool inFunction);
 
