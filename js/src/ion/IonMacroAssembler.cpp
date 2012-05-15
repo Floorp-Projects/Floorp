@@ -105,39 +105,38 @@ template void MacroAssembler::guardTypeSet(const ValueOperand &value, types::Typ
 void
 MacroAssembler::PushRegsInMask(RegisterSet set)
 {
-    size_t diff = 0;
-    diff += set.gprs().size() * STACK_SLOT_SIZE;
-    diff += set.fpus().size() * sizeof(double);
+    size_t diff = set.gprs().size() * STACK_SLOT_SIZE +
+                  set.fpus().size() * sizeof(double);
 
-    // It has been decreed that the stack shall always be 8 byte aligned on ARM.
-    // maintain this invariant.  It can't hurt other platforms.
     reserveStack(diff);
 
-    diff = 0;
     for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+        diff -= STACK_SLOT_SIZE;
         storePtr(*iter, Address(StackPointer, diff));
-        diff += STACK_SLOT_SIZE;
     }
     for (FloatRegisterIterator iter(set.fpus()); iter.more(); iter++) {
+        diff -= sizeof(double);
         storeDouble(*iter, Address(StackPointer, diff));
-        diff += sizeof(double);
     }
 }
 
 void
 MacroAssembler::PopRegsInMask(RegisterSet set)
 {
-    size_t diff = 0;
+    size_t diff = set.gprs().size() * STACK_SLOT_SIZE +
+                  set.fpus().size() * sizeof(double);
+    size_t reserved = diff;
+
     for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
+        diff -= STACK_SLOT_SIZE;
         loadPtr(Address(StackPointer, diff), *iter);
-        diff += STACK_SLOT_SIZE;
     }
     for (FloatRegisterIterator iter(set.fpus()); iter.more(); iter++) {
+        diff -= sizeof(double);
         loadDouble(Address(StackPointer, diff), *iter);
-        diff += sizeof(double);
     }
 
-    freeStack(diff);
+    freeStack(reserved);
 }
 
 void

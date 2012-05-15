@@ -486,8 +486,9 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
     uintptr_t *spill = frame.spillBase();
     GeneralRegisterSet gcRegs = safepoint.gcSpills();
     for (GeneralRegisterIterator iter(safepoint.allSpills()); iter.more(); iter++) {
+        --spill;
         if (gcRegs.has(*iter))
-            gc::MarkThingOrValueRoot(trc, --spill, "ion-gc-spill");
+            gc::MarkThingOrValueRoot(trc, spill, "ion-gc-spill");
     }
 }
 
