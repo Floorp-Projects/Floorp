@@ -5729,6 +5729,9 @@ Requisition.prototype.cloneAssignments = function() {
  */
 Requisition.prototype.getStatus = function() {
   var status = Status.VALID;
+  if (!this._unassigned.arg.isBlank()) {
+    return Status.ERROR;
+  }
   this.getAssignments(true).forEach(function(assignment) {
     var assignStatus = assignment.getStatus();
     if (assignStatus > status) {

@@ -98,7 +98,7 @@ define('gclitest/index', ['require', 'exports', 'module' , 'gclitest/suite'], fu
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testCli', 'gclitest/testCompletion', 'gclitest/testExec', 'gclitest/testHelp', 'gclitest/testHistory', 'gclitest/testInputter', 'gclitest/testJs', 'gclitest/testKeyboard', 'gclitest/testPref', 'gclitest/testRequire', 'gclitest/testResource', 'gclitest/testScratchpad', 'gclitest/testSettings', 'gclitest/testSpell', 'gclitest/testSplit', 'gclitest/testTokenize', 'gclitest/testTooltip', 'gclitest/testTypes', 'gclitest/testUtil'], function(require, exports, module) {
+define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testCli', 'gclitest/testCompletion', 'gclitest/testExec', 'gclitest/testHelp', 'gclitest/testHistory', 'gclitest/testInputter', 'gclitest/testIntro', 'gclitest/testJs', 'gclitest/testKeyboard', 'gclitest/testPref', 'gclitest/testRequire', 'gclitest/testResource', 'gclitest/testScratchpad', 'gclitest/testSettings', 'gclitest/testSpell', 'gclitest/testSplit', 'gclitest/testTokenize', 'gclitest/testTooltip', 'gclitest/testTypes', 'gclitest/testUtil'], function(require, exports, module) {
 
   // We need to make sure GCLI is initialized before we begin testing it
   require('gcli/index');
@@ -114,6 +114,7 @@ define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/e
   examiner.addSuite('gclitest/testHelp', require('gclitest/testHelp'));
   examiner.addSuite('gclitest/testHistory', require('gclitest/testHistory'));
   examiner.addSuite('gclitest/testInputter', require('gclitest/testInputter'));
+  examiner.addSuite('gclitest/testIntro', require('gclitest/testIntro'));
   examiner.addSuite('gclitest/testJs', require('gclitest/testJs'));
   examiner.addSuite('gclitest/testKeyboard', require('gclitest/testKeyboard'));
   examiner.addSuite('gclitest/testPref', require('gclitest/testPref'));
@@ -2072,6 +2073,58 @@ exports.testOutput = function(options) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
+define('gclitest/testIntro', ['require', 'exports', 'module' , 'gclitest/helpers', 'test/assert'], function(require, exports, module) {
+
+  var helpers = require('gclitest/helpers');
+  var test = require('test/assert');
+
+  exports.testIntroStatus = function(options) {
+    if (options.isFirefox) {
+      test.log('Skipping testIntroStatus in Firefox.');
+      return;
+    }
+
+    helpers.status(options, {
+      typed:  'intro',
+      markup: 'VVVVV',
+      status: 'VALID',
+      emptyParameters: [ ]
+    });
+
+    helpers.status(options, {
+      typed:  'intro foo',
+      markup: 'VVVVVVEEE',
+      status: 'ERROR',
+      emptyParameters: [ ]
+    });
+  };
+
+  exports.testIntroExec = function(options) {
+    if (options.isFirefox) {
+      test.log('Skipping testIntroExec in Firefox.');
+      return;
+    }
+
+    helpers.exec(options, {
+      typed: 'intro',
+      args: { },
+      outputMatch: [
+        /graphical\s*command\s*line/,
+        /GCLI/,
+        /help/,
+        /F1/,
+        /Escape/
+      ]
+    });
+  };
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
 define('gclitest/testJs', ['require', 'exports', 'module' , 'gcli/cli', 'gcli/types', 'gcli/types/javascript', 'gcli/canon', 'test/assert'], function(require, exports, module) {
 
 
@@ -3958,6 +4011,7 @@ let testModuleNames = [
   'gclitest/helpers',
   'gclitest/testHistory',
   'gclitest/testInputter',
+  'gclitest/testIntro',
   'gclitest/testJs',
   'gclitest/testKeyboard',
   'gclitest/testPref',
