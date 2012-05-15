@@ -19,9 +19,10 @@ let worker;
 function test() {
   ok(true, "test_osfile.xul: Starting test");
   if (navigator.platform.indexOf("Win") != -1) {
-    ok(true, "test_osfile.xul: This is a Windows platform, bailing out");
-    return;
+    ok(true, "test_osfile.xul: Using Windows test suite");
+    worker = new ChromeWorker("worker_test_osfile_win.js");
   } else {
+    ok(true, "test_osfile.xul: Using Unix test suite");
     worker = new ChromeWorker("worker_test_osfile_unix.js");
   }
   SimpleTest.waitForExplicitFinish();
