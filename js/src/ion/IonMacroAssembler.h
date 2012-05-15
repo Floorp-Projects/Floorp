@@ -434,6 +434,13 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
 
     }
+
+    // Given a js::StackFrame in OsrFrameReg, performs inline on-stack
+    // replacement. The stack frame must be at a valid OSR entry-point.
+    void performOsr();
+
+    // Checks if an OSR frame is the previous frame, and if so, removes it.
+    void maybeRemoveOsrFrame(Register scratch);
 };
 
 } // namespace ion

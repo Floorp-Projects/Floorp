@@ -203,6 +203,7 @@ GenerateBailoutTail(MacroAssembler &masm)
     Label reflow;
     Label interpret;
     Label exception;
+    Label osr;
 
     // The return value from Bailout is tagged as:
     // - 0x0: done (thunk to interpreter)
@@ -220,48 +221,68 @@ GenerateBailoutTail(MacroAssembler &masm)
     masm.j(Assembler::LessThan, &reflow);
 
     // Recompile to inline calls.
-    masm.setupUnalignedABICall(0, rdx);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, RecompileForInlining));
+    {
+        masm.setupUnalignedABICall(0, rdx);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, RecompileForInlining));
 
-    masm.testl(rax, rax);
-    masm.j(Assembler::Zero, &exception);
+        masm.testl(rax, rax);
+        masm.j(Assembler::Zero, &exception);
+    }
 
     masm.jmp(&interpret);
 
     // Otherwise, we're in the "reflow" case.
     masm.bind(&reflow);
-    masm.setupUnalignedABICall(1, rdx);
-    masm.passABIArg(rax);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
+    {
+        masm.setupUnalignedABICall(1, rdx);
+        masm.passABIArg(rax);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
 
-    masm.testl(rax, rax);
-    masm.j(Assembler::Zero, &exception);
+        masm.testl(rax, rax);
+        masm.j(Assembler::Zero, &exception);
+    }
 
     masm.bind(&interpret);
-    // Reserve space for Interpret() to store a Value.
-    masm.subq(Imm32(sizeof(Value)), rsp);
-    masm.movq(rsp, rcx);
+    {
+        // Reserve space for Interpret() to store a Value.
+        masm.subq(Imm32(sizeof(Value)), rsp);
+        masm.movq(rsp, rcx);
 
-    // Call out to the interpreter.
-    masm.setupUnalignedABICall(1, rdx);
-    masm.passABIArg(rcx);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
+        // Call out to the interpreter.
+        masm.setupUnalignedABICall(1, rdx);
+        masm.passABIArg(rcx);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
 
-    // Load the value the interpreter returned.
-    masm.popValue(JSReturnOperand);
+        // Load the value the interpreter returned.
+        masm.popValue(JSReturnOperand);
 
-    // Check for an exception.
-    masm.testl(rax, rax);
-    masm.j(Assembler::Zero, &exception);
+        // Check for an exception.
+        masm.testl(rax, rax);
+        masm.j(Assembler::Zero, &exception);
 
-    // Remove the exitCode pointer from the stack.
-    masm.leaveExitFrame();
+        // Remove the exitCode pointer from the stack.
+        masm.leaveExitFrame();
 
-    // Return to the caller.
-    masm.ret();
+        // Check for OSR.
+        masm.cmpl(rax, Imm32(Interpret_OSR));
+        masm.j(Assembler::Equal, &osr);
 
+        // Return to the caller.
+        masm.ret();
+    }
+
+    // OSR handling
+    masm.bind(&osr);
+    {
+        masm.unboxPrivate(JSReturnOperand, OsrFrameReg);
+        masm.performOsr();
+    }
+
+    // Exception handling
     masm.bind(&exception);
-    masm.handleException();
+    {
+        masm.handleException();
+    }
 }
 
 IonCode *

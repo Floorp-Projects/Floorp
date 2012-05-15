@@ -471,8 +471,16 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
         ion::MethodStatus status = ion::CanEnter(cx, script, fp, false);
         if (status == ion::Method_Error)
             return false;
-        if (status == ion::Method_Compiled)
-            return ion::Cannon(cx, fp);
+        if (status == ion::Method_Compiled) {
+            ion::IonExecStatus status = ion::Cannon(cx, fp);
+            
+            // Note that if we bailed out, new inline frames may have been
+            // pushed, so we interpret with the current fp.
+            if (status == ion::IonExec_Bailout)
+                return Interpret(cx, fp, JSINTERP_REJOIN);
+
+            return status != ion::IonExec_Error;
+        }
     }
 #endif
 
@@ -487,7 +495,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
         return mjit::JaegerStatusToSuccess(mjit::JaegerShot(cx, false));
 #endif
 
-    return Interpret(cx, fp);
+    return Interpret(cx, fp) != Interpret_Error;
 }
 
 /*
@@ -1327,7 +1335,7 @@ TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const FrameRe
 #endif
 }
 
-JS_NEVER_INLINE bool
+JS_NEVER_INLINE InterpretStatus
 js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 {
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
@@ -1834,10 +1842,28 @@ BEGIN_CASE(JSOP_LOOPENTRY)
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
+            // Return back to Ion to perform inline OSR, but only if this frame
+            // is the entry fp to EnterIon.
+            if (interpMode == JSINTERP_BAILOUT && regs.fp()->runningInIon()) {
+                JS_ASSERT(entryFrame == regs.fp());
+                return Interpret_OSR;
+            }
+
             JS_ASSERT(regs.fp()->isScriptFrame());
-            interpReturnOK = ion::SideCannon(cx, regs.fp(), regs.pc);
+            ion::IonExecStatus maybeOsr = ion::SideCannon(cx, regs.fp(), regs.pc);
+            if (maybeOsr == ion::IonExec_Bailout) {
+                // We hit a deoptimization path in the first Ion frame, so now
+                // we've just replaced the entire Ion activation.
+                RESTORE_INTERP_VARS();
+                op = JSOp(*regs.pc);
+                DO_OP();
+            }
+
+            interpReturnOK = (maybeOsr == ion::IonExec_Ok);
+
             if (entryFrame != regs.fp())
                 goto jit_return;
+
             regs.fp()->setFinishedInInterpreter();
             goto leave_on_safe_point;
         }
@@ -2834,8 +2860,14 @@ BEGIN_CASE(JSOP_FUNCALL)
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
-            interpReturnOK = ion::Cannon(cx, regs.fp());
+            ion::IonExecStatus exec = ion::Cannon(cx, regs.fp());
             CHECK_INTERRUPT_HANDLER();
+            if (exec == ion::IonExec_Bailout) {
+                RESTORE_INTERP_VARS();
+                op = JSOp(*regs.pc);
+                DO_OP();
+            }
+            interpReturnOK = (exec == ion::IonExec_Error) ? false : true;
             goto jit_return;
         }
     }
@@ -4329,7 +4361,7 @@ END_CASE(JSOP_ARRAYPUSH)
 #endif
 
     gc::MaybeVerifyBarriers(cx, true);
-    return interpReturnOK;
+    return interpReturnOK ? Interpret_Ok : Interpret_Error;
 }
 
 bool

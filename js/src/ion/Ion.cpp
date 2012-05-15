@@ -943,7 +943,7 @@ ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType)
     return Method_Compiled;
 }
 
-static bool
+static IonExecStatus
 EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 {
     JS_ASSERT(ion::IsEnabled(cx));
@@ -975,9 +975,10 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 
         // Single transition point from Interpreter to Ion.
         enter(jitcode, argc, argv, fp, calleeToken, &result);
-
-        JS_ASSERT_IF(result.isMagic(), result.isMagic(JS_ION_ERROR));
     }
+
+    if (result.isMagic() && result.whyMagic() == JS_ION_BAILOUT)
+        return IonExec_Bailout;
 
     JS_ASSERT(fp == cx->fp());
     JS_ASSERT(!cx->runtime->hasIonReturnOverride());
@@ -991,10 +992,11 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     if (!result.isMagic() && fp->isConstructing() && fp->returnValue().isPrimitive())
         fp->setReturnValue(ObjectValue(fp->constructorThis()));
 
-    return !result.isMagic();
+    JS_ASSERT_IF(result.isMagic(), result.isMagic(JS_ION_ERROR));
+    return result.isMagic() ? IonExec_Error : IonExec_Ok;
 }
 
-bool
+IonExecStatus
 ion::Cannon(JSContext *cx, StackFrame *fp)
 {
     JSScript *script = fp->script();
@@ -1005,7 +1007,7 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
     return EnterIon(cx, fp, jitcode);
 }
 
-bool
+IonExecStatus
 ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 {
     JSScript *script = fp->script();
@@ -1047,6 +1049,9 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
             break;
           case IonFrame_Bailed_Rectifier:
             IonSpew(IonSpew_Invalidate, "#%d bailed rectifier frame @ %p", frameno, it.fp());
+            break;
+          case IonFrame_Osr:
+            IonSpew(IonSpew_Invalidate, "#%d osr frame @ %p", frameno, it.fp());
             break;
           case IonFrame_Entry:
             IonSpew(IonSpew_Invalidate, "#%d entry frame @ %p", frameno, it.fp());

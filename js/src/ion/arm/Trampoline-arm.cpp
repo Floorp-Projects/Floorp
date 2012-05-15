@@ -224,13 +224,14 @@ IonCompartment::generateReturnError(JSContext *cx)
     return linker.newCode(cx);
 }
 static void
-generateBailoutTail(MacroAssembler &masm)
+GenerateBailoutTail(MacroAssembler &masm)
 {
     masm.enterExitFrame();
 
     Label reflow;
     Label interpret;
     Label exception;
+    Label osr;
 
     // The return value from Bailout is tagged as:
     // - 0x0: done (thunk to interpreter)
@@ -245,52 +246,68 @@ generateBailoutTail(MacroAssembler &masm)
     masm.ma_b(&exception, Assembler::Equal);
 
     masm.ma_cmp(r0, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK));
+
+    // Recompile for inline calls.
     masm.ma_b(&reflow, Assembler::LessThan);
+    {
+        masm.setupAlignedABICall(0);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, RecompileForInlining));
 
-    masm.setupAlignedABICall(0);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, RecompileForInlining));
+        masm.ma_cmp(r0, Imm32(0));
+        masm.ma_b(&exception, Assembler::Equal);
 
-    masm.ma_cmp(r0, Imm32(0));
-    masm.ma_b(&exception, Assembler::Equal);
-
-    masm.ma_b(&interpret);
+        masm.ma_b(&interpret);
+    }
 
     // Otherwise, we're in the "reflow" case.
     masm.bind(&reflow);
-    masm.setupAlignedABICall(1);
-    masm.passABIArg(r0);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
+    {
+        masm.setupAlignedABICall(1);
+        masm.passABIArg(r0);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
 
-    masm.ma_cmp(r0, Imm32(0));
-    masm.ma_b(&exception, Assembler::Equal);
+        masm.ma_cmp(r0, Imm32(0));
+        masm.ma_b(&exception, Assembler::Equal);
+    }
 
     masm.bind(&interpret);
-    // Reserve space for Interpret() to store a Value.
-    masm.as_sub(sp, sp, Imm8(sizeof(Value)));
+    {
+        // Reserve space for Interpret() to store a Value.
+        masm.as_sub(sp, sp, Imm8(sizeof(Value)));
 
-    // Call out to the interpreter.
-    masm.ma_mov(sp, r0);
-    masm.setupAlignedABICall(1);
-    masm.passABIArg(r0);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
+        // Call out to the interpreter.
+        masm.ma_mov(sp, r0);
+        masm.setupAlignedABICall(1);
+        masm.passABIArg(r0);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
 
-    // Load the value that the interpreter returned *and* return the stack
-    // to its previous location
-    masm.as_extdtr(IsLoad, 64, true, PostIndex,
-                   JSReturnReg_Data, EDtrAddr(sp, EDtrOffImm(8)));
+        // Load the value that the interpreter returned *and* return the stack
+        // to its previous location
+        masm.as_extdtr(IsLoad, 64, true, PostIndex,
+                       JSReturnReg_Data, EDtrAddr(sp, EDtrOffImm(8)));
 
-    // Test for an exception
-    masm.as_cmp(r0, Imm8(0));
-    masm.ma_b(&exception, Assembler::Zero);
+        // Test for an exception
+        masm.as_cmp(r0, Imm8(Interpret_Ok));
+        masm.ma_b(&exception, Assembler::Zero);
 
-    // Remove the exitCode pointer from the stack.
-    masm.leaveExitFrame();
+        masm.leaveExitFrame();
 
-    // Return to the caller.
-    masm.ret();
+        masm.as_cmp(r0, Imm8(Interpret_OSR));
+        masm.ma_b(&osr, Assembler::Equal);
+
+        masm.ma_pop(pc);
+    }
+
+    masm.bind(&osr);
+    {
+        masm.unboxPrivate(JSReturnOperand, OsrFrameReg);
+        masm.performOsr();
+    }
 
     masm.bind(&exception);
-    masm.handleException();
+    {
+        masm.handleException();
+    }
 }
 
 IonCode *
@@ -335,7 +352,7 @@ IonCompartment::generateInvalidator(JSContext *cx)
     // remove the space that this frame was using before the bailout
     // (computed by InvalidationBailout)
     masm.ma_add(sp, r1, sp);
-    generateBailoutTail(masm);
+    GenerateBailoutTail(masm);
     Linker linker(masm);
     IonCode *code = linker.newCode(cx);
     IonSpew(IonSpew_Invalidate, "   invalidation thunk created at %p", (void *) code->raw());
@@ -519,7 +536,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
                           + bailoutFrameSize) // everything else that was pushed on the stack
                     , sp);
     }
-    generateBailoutTail(masm);
+    GenerateBailoutTail(masm);
 }
 
 IonCode *

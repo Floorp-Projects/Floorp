@@ -257,6 +257,7 @@ typedef enum JSWhyMagic
     JS_IS_CONSTRUCTING,          /* magic value passed to natives to indicate construction */
     JS_OVERWRITTEN_CALLEE,       /* arguments.callee has been overwritten */
     JS_ION_ERROR,                /* error while running Ion code */
+    JS_ION_BAILOUT,              /* status code to signal EnterIon will OSR into Interpret */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 
