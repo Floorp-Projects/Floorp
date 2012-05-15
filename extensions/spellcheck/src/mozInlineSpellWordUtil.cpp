@@ -943,14 +943,14 @@ WordSplitState::FindSpecialWord()
       return mDOMWordText.Length() - mDOMWordOffset;
     } else if (mDOMWordText[i] == ':' && firstColon < 0) {
       firstColon = i;
-    }
-  }
 
-  // If the first colon is followed by a slash, consider it a URL
-  // This will catch things like asdf://foo.com
-  if (firstColon >= 0 && firstColon < (PRInt32)mDOMWordText.Length() - 1 &&
-      mDOMWordText[firstColon + 1] == '/') {
-    return mDOMWordText.Length() - mDOMWordOffset;
+      // If the first colon is followed by a slash, consider it a URL
+      // This will catch things like asdf://foo.com
+      if (firstColon < (PRInt32)mDOMWordText.Length() - 1 &&
+          mDOMWordText[firstColon + 1] == '/') {
+        return mDOMWordText.Length() - mDOMWordOffset;
+      }
+    }
   }
 
   // Check the text before the first colon against some known protocols. It
