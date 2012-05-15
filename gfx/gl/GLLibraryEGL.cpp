@@ -6,18 +6,12 @@
 
 #include "gfxCrashReporterUtils.h"
 #include "mozilla/Preferences.h"
-
-#define EGL_LIB "libEGL.so"
-#define EGL_LIB1 "libEGL.so.1"
-
-#if defined(XP_WIN)
-
-#define EGL_LIB "libEGL.dll"
-
-#endif
+#include "nsDirectoryServiceDefs.h"
 
 namespace mozilla {
 namespace gl {
+
+#if defined(ANDROID)
 
 static PRLibrary* LoadApitraceLibrary()
 {
@@ -26,7 +20,6 @@ static PRLibrary* LoadApitraceLibrary()
     if (sApitraceLibrary)
         return sApitraceLibrary;
 
-#if defined(ANDROID)
     nsCString logFile = Preferences::GetCString("gfx.apitrace.logfile");
 
     if (logFile.IsEmpty()) {
@@ -46,14 +39,17 @@ static PRLibrary* LoadApitraceLibrary()
     printf_stderr("Attempting load of %s\n", APITRACE_LIB);
 
     sApitraceLibrary = PR_LoadLibrary(APITRACE_LIB);
-#endif
 
     return sApitraceLibrary;
 }
 
+#endif // ANDROID
+
 bool
 GLLibraryEGL::EnsureInitialized()
 {
+    nsresult rv;
+
     if (mInitialized) {
         return true;
     }
@@ -61,56 +57,63 @@ GLLibraryEGL::EnsureInitialized()
     mozilla::ScopedGfxFeatureReporter reporter("EGL");
 
 #ifdef XP_WIN
-    // Allow for explicitly specifying the location of libEGL.dll and
-    // libGLESv2.dll.
-    do {
-        nsCOMPtr<nsILocalFile> eglFile, glesv2File;
-        nsresult rv = Preferences::GetComplex("gfx.angle.egl.path",
-                                              NS_GET_IID(nsILocalFile),
-                                              getter_AddRefs(eglFile));
-        if (NS_FAILED(rv) || !eglFile)
-            break;
+    if (!mEGLLibrary) {
+        // On Windows, the GLESv2 and EGL libraries are shipped with libxul and
+        // we should look for them there. We have to load the libs in this
+        // order, because libEGL.dll depends on libGLESv2.dll.
 
-        nsCAutoString s;
+        nsCOMPtr<nsIFile> libraryFile;
 
-        // note that we have to load the libs in this order, because libEGL.dll
-        // depends on libGLESv2.dll, but is not/may not be in our search path.
-        nsCOMPtr<nsIFile> f;
-        eglFile->Clone(getter_AddRefs(f));
-        glesv2File = do_QueryInterface(f);
-        if (!glesv2File)
-            break;
+        nsCOMPtr<nsIProperties> dirService =
+            do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+        if (!dirService)
+            return false;
 
-        glesv2File->Append(NS_LITERAL_STRING("libGLESv2.dll"));
+        rv = dirService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile),
+                             getter_AddRefs(libraryFile));
+        if (NS_FAILED(rv))
+            return false;
 
-        PRLibrary *glesv2lib = nsnull; // this will be leaked on purpose
-        glesv2File->Load(&glesv2lib);
-        if (!glesv2lib)
-            break;
+        libraryFile->Append(NS_LITERAL_STRING("libGLESv2.dll"));
+        PRLibrary* glesv2lib = nsnull;
 
-        eglFile->Append(NS_LITERAL_STRING("libEGL.dll"));
-        eglFile->Load(&mEGLLibrary);
-    } while (false);
+        libraryFile->Load(&glesv2lib);
+
+        // Intentionally leak glesv2lib
+    
+        libraryFile->SetLeafName(NS_LITERAL_STRING("libEGL.dll"));
+        rv = libraryFile->Load(&mEGLLibrary);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Couldn't load libEGL.dll, canvas3d will be disabled.");
+            return false;
+        }
+    }
+#else // !Windows
+
+    // On non-Windows (Android) we use system copies of libEGL. We look for
+    // the APITrace lib, libEGL.so, and libEGL.so.1 in that order.
+
+#if defined(ANDROID)
+    if (!mEGLLibrary)
+        mEGLLibrary = LoadApitraceLibrary();
 #endif
 
     if (!mEGLLibrary) {
-        mEGLLibrary = LoadApitraceLibrary();
-
-        if (!mEGLLibrary) {
-            printf_stderr("Attempting load of %s\n", EGL_LIB);
-            mEGLLibrary = PR_LoadLibrary(EGL_LIB);
-#if defined(XP_UNIX)
-            if (!mEGLLibrary) {
-                mEGLLibrary = PR_LoadLibrary(EGL_LIB1);
-            }
-#endif
-        }
+        printf_stderr("Attempting load of libEGL.so\n");
+        mEGLLibrary = PR_LoadLibrary("libEGL.so");
     }
+#if defined(XP_UNIX)
+    if (!mEGLLibrary) {
+        mEGLLibrary = PR_LoadLibrary("libEGL.so.1");
+    }
+#endif
 
     if (!mEGLLibrary) {
         NS_WARNING("Couldn't load EGL LIB.");
         return false;
     }
+
+#endif // !Windows
 
 #define SYMBOL(name) \
 { (PRFuncPtr*) &mSymbols.f##name, { "egl" #name, NULL } }
