@@ -3476,7 +3476,7 @@ let GsmPDUHelper = {
             encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
             break;
           case 0x30:
-            if (!dcs & 0x04) {
+            if (dcs & 0x04) {
               encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
             }
             break;
