@@ -1545,6 +1545,7 @@ struct FunctionBox : public ObjectBox
     uint32_t            tcflags;
     bool                inWith:1;               /* some enclosing scope is a with-statement
                                                    or E4X filter-expression */
+    bool                inGenexpLambda:1;       /* lambda from generator expression */
 
     JSFunction *function() const { return (JSFunction *) object; }
 
