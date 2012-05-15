@@ -3958,6 +3958,12 @@ var FullScreen = {
     // fullscreen menuitem, menubars, and the appmenu.
     document.getElementById("View:FullScreen").setAttribute("checked", enterFS);
 
+#ifdef XP_MACOSX
+    // Make sure the menu items are adjusted.
+    document.getElementById("enterFullScreenItem").hidden = enterFS;
+    document.getElementById("exitFullScreenItem").hidden = !enterFS;
+#endif
+
     // On OS X Lion we don't want to hide toolbars when entering fullscreen, unless
     // we're entering DOM fullscreen, in which case we should hide the toolbars.
     // If we're leaving fullscreen, then we'll go through the exit code below to
