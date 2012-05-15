@@ -1409,9 +1409,9 @@ endif
 # warn against overriding existing .h file.
 
 XPIDL_DEPS = \
-  $(topsrcdir)/xpcom/idl-parser/header.py \
-  $(topsrcdir)/xpcom/idl-parser/typelib.py \
-  $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+  $(LIBXUL_DIST)/sdk/bin/header.py \
+  $(LIBXUL_DIST)/sdk/bin/typelib.py \
+  $(LIBXUL_DIST)/sdk/bin/xpidl.py \
   $(NULL)
 
 xpidl-preqs = \
@@ -1423,8 +1423,7 @@ $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_DEPS) $(xpidl-preqs)
 	$(REPORT_BUILD)
 	$(PYTHON_PATH) \
 	  $(PLY_INCLUDE) \
-	  -I$(topsrcdir)/xpcom/idl-parser \
-	  $(topsrcdir)/xpcom/idl-parser/header.py --cachedir=$(DEPTH)/xpcom/idl-parser/cache $(XPIDL_FLAGS) $(_VPATH_SRCS) -d $(MDDEPDIR)/$(@F).pp -o $@
+	  $(LIBXUL_DIST)/sdk/bin/header.py $(XPIDL_FLAGS) $(_VPATH_SRCS) -d $(MDDEPDIR)/$(@F).pp -o $@
 	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
 
@@ -1435,9 +1434,8 @@ $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_DEPS) $(xpidl-preqs)
 	$(REPORT_BUILD)
 	$(PYTHON_PATH) \
 	  $(PLY_INCLUDE) \
-	  -I$(topsrcdir)/xpcom/idl-parser \
 	  -I$(topsrcdir)/xpcom/typelib/xpt/tools \
-	  $(topsrcdir)/xpcom/idl-parser/typelib.py --cachedir=$(DEPTH)/xpcom/idl-parser/cache $(XPIDL_FLAGS) $(_VPATH_SRCS) -d $(MDDEPDIR)/$(@F).pp -o $@
+	  $(LIBXUL_DIST)/sdk/bin/typelib.py $(XPIDL_FLAGS) $(_VPATH_SRCS) -d $(MDDEPDIR)/$(@F).pp -o $@
 
 # no need to link together if XPIDLSRCS contains only XPIDL_MODULE
 ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
