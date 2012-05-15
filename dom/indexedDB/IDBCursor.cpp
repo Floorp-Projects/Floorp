@@ -456,22 +456,10 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBCursor)
                "Should have a cached primary key");
   NS_ASSERTION(tmp->mHaveCachedValue || JSVAL_IS_VOID(tmp->mCachedValue),
                "Should have a cached value");
-  if (tmp->mScriptOwner) {
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mScriptOwner,
-                                               "mScriptOwner")
-  }
-  if (JSVAL_IS_GCTHING(tmp->mCachedKey)) {
-    void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedKey);
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mCachedKey")
-  }
-  if (JSVAL_IS_GCTHING(tmp->mCachedPrimaryKey)) {
-    void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedPrimaryKey);
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mCachedPrimaryKey")
-  }
-  if (JSVAL_IS_GCTHING(tmp->mCachedValue)) {
-    void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedValue);
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mCachedValue")
-  }
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScriptOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mCachedKey)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mCachedPrimaryKey)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mCachedValue)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBCursor)
