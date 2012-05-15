@@ -101,7 +101,7 @@ MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script)
 JSScript *
 frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
                         JSPrincipals *principals, JSPrincipals *originPrincipals,
-                        uint32_t tcflags,
+                        bool compileAndGo, bool noScriptRval, bool needScriptGlobal,
                         const jschar *chars, size_t length,
                         const char *filename, unsigned lineno, JSVersion version,
                         JSString *source /* = NULL */,
@@ -111,24 +111,28 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     ParseNode *pn;
     bool inDirectivePrologue;
 
-    JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL | TCF_COMPILE_FOR_EVAL
-                            | TCF_NEED_SCRIPT_GLOBAL)));
-
     /*
      * The scripted callerFrame can only be given for compile-and-go scripts
      * and non-zero static level requires callerFrame.
      */
-    JS_ASSERT_IF(callerFrame, tcflags & TCF_COMPILE_N_GO);
+    JS_ASSERT_IF(callerFrame, compileAndGo);
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
-    Parser parser(cx, principals, originPrincipals, callerFrame);
+    bool foldConstants = true;
+    Parser parser(cx, principals, originPrincipals, callerFrame, foldConstants, compileAndGo);
     if (!parser.init(chars, length, filename, lineno, version))
         return NULL;
 
     TokenStream &tokenStream = parser.tokenStream;
 
-    BytecodeEmitter bce(&parser, tokenStream.getLineno());
-    if (!bce.init(cx, TreeContext::USED_AS_TREE_CONTEXT))
+    SharedContext sc(cx, /* inFunction = */ false);
+
+    TreeContext tc(&parser, &sc);
+    if (!tc.init(cx))
+        return NULL;
+
+    BytecodeEmitter bce(&parser, &sc, tokenStream.getLineno(), noScriptRval, needScriptGlobal);
+    if (!bce.init())
         return NULL;
 
     Probes::compileScriptBegin(cx, filename, lineno);
@@ -145,17 +149,16 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     RootedVar<JSScript*> script(cx);
 
     GlobalScope globalScope(cx, globalObj);
-    bce.flags |= tcflags;
-    bce.setScopeChain(scopeChain);
+    bce.sc->setScopeChain(scopeChain);
     bce.globalScope = &globalScope;
-    if (!SetStaticLevel(&bce, staticLevel))
+    if (!SetStaticLevel(bce.sc, staticLevel))
         goto out;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
     if (callerFrame &&
         callerFrame->isScriptFrame() &&
         callerFrame->script()->strictModeCode) {
-        bce.flags |= TCF_STRICT_MODE_CODE;
+        bce.sc->flags |= TCF_STRICT_MODE_CODE;
         tokenStream.setStrictMode();
     }
 
@@ -163,7 +166,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     bool savedCallerFun;
     savedCallerFun = false;
 #endif
-    if (tcflags & TCF_COMPILE_N_GO) {
+    if (compileAndGo) {
         if (source) {
             /*
              * Save eval program source in script->atoms[0] for the
@@ -198,9 +201,9 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
      * generate our script-body blockid since we aren't calling Statements.
      */
     uint32_t bodyid;
-    if (!GenerateBlockId(&bce, bodyid))
+    if (!GenerateBlockId(bce.sc, bodyid))
         goto out;
-    bce.bodyid = bodyid;
+    bce.sc->bodyid = bodyid;
 
 #if JS_HAS_XML_SUPPORT
     pn = NULL;
@@ -222,7 +225,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         pn = parser.statement();
         if (!pn)
             goto out;
-        JS_ASSERT(!bce.blockNode);
 
         if (inDirectivePrologue && !parser.recognizeDirectivePrologue(pn, &inDirectivePrologue))
             goto out;
@@ -232,7 +234,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
         if (!AnalyzeFunctions(bce.parser))
             goto out;
-        bce.functionList = NULL;
+        bce.sc->functionList = NULL;
 
         if (!EmitTree(cx, &bce, pn))
             goto out;
@@ -296,19 +298,25 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
 
     TokenStream &tokenStream = parser.tokenStream;
 
-    BytecodeEmitter funbce(&parser, tokenStream.getLineno());
-    if (!funbce.init(cx, TreeContext::USED_AS_TREE_CONTEXT))
+    SharedContext funsc(cx, /* inFunction = */ true);
+
+    TreeContext funtc(&parser, &funsc);
+    if (!funtc.init(cx))
+        return NULL;
+
+    BytecodeEmitter funbce(&parser, &funsc, tokenStream.getLineno(),
+                           /* noScriptRval = */ false, /* needsScriptGlobal = */ false);
+    if (!funbce.init())
         return false;
 
-    funbce.flags |= TCF_IN_FUNCTION;
-    funbce.setFunction(fun);
-    funbce.bindings.transfer(cx, bindings);
-    fun->setArgCount(funbce.bindings.numArgs());
-    if (!GenerateBlockId(&funbce, funbce.bodyid))
+    funsc.setFunction(fun);
+    funsc.bindings.transfer(cx, bindings);
+    fun->setArgCount(funsc.bindings.numArgs());
+    if (!GenerateBlockId(&funsc, funsc.bodyid))
         return false;
 
     /* FIXME: make Function format the source for a function definition. */
-    ParseNode *fn = FunctionNode::create(PNK_NAME, funbce.parser);
+    ParseNode *fn = FunctionNode::create(PNK_NAME, &parser);
     if (fn) {
         fn->pn_body = NULL;
         fn->pn_cookie.makeFree();
@@ -320,11 +328,11 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
              * allocated from cx->tempLifoAlloc by DefineArg.
              */
             BindingNames names(cx);
-            if (!funbce.bindings.getLocalNameArray(cx, &names)) {
+            if (!funsc.bindings.getLocalNameArray(cx, &names)) {
                 fn = NULL;
             } else {
                 for (unsigned i = 0; i < nargs; i++) {
-                    if (!DefineArg(fn, names[i].maybeAtom, i, funbce.parser)) {
+                    if (!DefineArg(fn, names[i].maybeAtom, i, &parser)) {
                         fn = NULL;
                         break;
                     }
@@ -343,10 +351,10 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
         if (!tokenStream.matchToken(TOK_EOF)) {
             parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
-        } else if (!FoldConstants(cx, pn, funbce.parser)) {
+        } else if (!FoldConstants(cx, pn, &parser)) {
             /* FoldConstants reported the error already. */
             pn = NULL;
-        } else if (!AnalyzeFunctions(funbce.parser)) {
+        } else if (!AnalyzeFunctions(&parser)) {
             pn = NULL;
         } else {
             if (fn->pn_body) {

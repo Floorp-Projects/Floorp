@@ -1058,27 +1058,15 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
         return true;
     }
 
+    // The call to wrap here handles both cross-compartment and same-compartment
+    // security wrappers.
     JSObject *original = flat;
     if (!JS_WrapObject(ccx, &flat))
         return false;
 
-    // If the object was not wrapped, we are same compartment and don't need
-    // to do any cross-compartment wrapping. However, there are still a few
-    // special cases we need to take care of.
-    if (original == flat) {
-
-        // Everything here should be same-compartment.
-        MOZ_ASSERT(js::IsObjectInContextCompartment(flat, cx));
-
-        // Apply any same-compartment security wrappers.
-        flat = wrapper->GetSameCompartmentSecurityWrapper(cx);
-        if (!flat)
-            return false;
-
-        // Outerize any inner windows.
-        flat = JS_ObjectToOuterObject(cx, flat);
-        MOZ_ASSERT(flat, "bad outer object hook!");
-    }
+    // Outerize if necessary.
+    flat = JS_ObjectToOuterObject(cx, flat);
+    MOZ_ASSERT(flat, "bad outer object hook!");
 
     *d = OBJECT_TO_JSVAL(flat);
 

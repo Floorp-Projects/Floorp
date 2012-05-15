@@ -2671,17 +2671,13 @@ MOZ_ARG_ENABLE_BOOL(methodjit-spew,
   ENABLE_METHODJIT_SPEW=1,
   ENABLE_METHODJIT_SPEW= )
 
-MOZ_ARG_DISABLE_BOOL(polyic-typed-array,
-[  --disable-polyic-typed-array      Disable use of Typed Array PICs by JIT compiler],
-  ENABLE_POLYIC_TYPED_ARRAY=,
-  ENABLE_POLYIC_TYPED_ARRAY=1 )
-
 MOZ_ARG_DISABLE_BOOL(ion,
 [  --disable-ion      Disable use of IONMonkey compiler],
   ENABLE_ION=,
   ENABLE_ION=1 )
 
 AC_SUBST(ENABLE_METHODJIT)
+AC_SUBST(ENABLE_METHODJIT_SPEW)
 
 if test "$ENABLE_METHODJIT"; then
     AC_DEFINE(JS_METHODJIT)
@@ -2699,10 +2695,6 @@ fi
 
 if test "$ENABLE_METHODJIT_TYPED_ARRAY"; then
     AC_DEFINE(JS_METHODJIT_TYPED_ARRAY)
-fi
-
-if test "$ENABLE_METHODJIT_SPEW"; then
-    AC_DEFINE(JS_METHODJIT_SPEW)
 fi
 
 AC_SUBST(ENABLE_ION)
@@ -3904,6 +3896,7 @@ MOZ_ARG_ENABLE_STRING(debug,
                            (using compiler flags DBG)],
 [ if test "$enableval" != "no"; then
     MOZ_DEBUG=1
+    ENABLE_METHODJIT_SPEW=1
     if test -n "$enableval" -a "$enableval" != "yes"; then
         MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
         _MOZ_DEBUG_FLAGS_SET=1
@@ -3937,6 +3930,10 @@ if test -n "$MOZ_DEBUG"; then
         AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
     fi
     CFLAGS=$_SAVE_CFLAGS
+fi
+
+if test "$ENABLE_METHODJIT_SPEW"; then
+    AC_DEFINE(JS_METHODJIT_SPEW)
 fi
 
 dnl ========================================================

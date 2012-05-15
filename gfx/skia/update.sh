@@ -114,3 +114,5 @@ patch -p3 < fix-comma-end-enum-list.patch
 patch -p3 < old-android-fonthost.patch
 # Bug 731384 - Fix compile errors on older versions of clang
 patch -p3 < SkPostConfig.patch
+# Bug 751814 - Various Skia fixes for ARM without EDSP and ARMv6+
+patch -p3 < arm-fixes.patch

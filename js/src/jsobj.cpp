@@ -1055,10 +1055,14 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
         CurrentScriptFileLineOrigin(cx, &filename, &lineno, &originPrincipals,
                                     evalType == DIRECT_EVAL ? CALLED_FROM_JSOP_EVAL
                                                             : NOT_CALLED_FROM_JSOP_EVAL);
-        uint32_t tcflags = TCF_COMPILE_N_GO | TCF_COMPILE_FOR_EVAL;
+
+        bool compileAndGo = true;
+        bool noScriptRval = false;
+        bool needScriptGlobal = false;
         JSScript *compiled = frontend::CompileScript(cx, scopeobj, caller,
                                                      principals, originPrincipals,
-                                                     tcflags, chars, length, filename,
+                                                     compileAndGo, noScriptRval, needScriptGlobal,
+                                                     chars, length, filename,
                                                      lineno, cx->findVersion(), linearStr,
                                                      staticLevel);
         if (!compiled)

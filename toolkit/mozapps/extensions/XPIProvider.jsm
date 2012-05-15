@@ -2396,6 +2396,12 @@ var XPIProvider = {
       if (aOldAddon.visible) {
         visibleAddons[aOldAddon.id] = aOldAddon;
 
+        if (aOldAddon.bootstrap) {
+          let bootstrap = oldBootstrappedAddons[aOldAddon.id];
+          bootstrap.descriptor = aAddonState.descriptor;
+          XPIProvider.bootstrappedAddons[aOldAddon.id] = bootstrap;
+        }
+
         return true;
       }
 

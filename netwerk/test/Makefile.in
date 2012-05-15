@@ -52,24 +52,26 @@ DIRS            = \
                   $(NULL)
 
 
-SIMPLE_PROGRAMS	= \
-		TestIncrementalDownload$(BIN_SUFFIX) \
-		TestStreamLoader$(BIN_SUFFIX) \
-		PropertiesTest$(BIN_SUFFIX) \
-		urltest$(BIN_SUFFIX) \
-		TestCallbacks$(BIN_SUFFIX) \
-		TestPageLoad$(BIN_SUFFIX) \
-		TestURLParser$(BIN_SUFFIX) \
-		TestStandardURL$(BIN_SUFFIX) \
-		TestUpload$(BIN_SUFFIX) \
-		TestBlockingSocket$(BIN_SUFFIX) \
-		TestDNS$(BIN_SUFFIX) \
-		TestOpen$(BIN_SUFFIX) \
-		TestCookie$(BIN_SUFFIX) \
-		TestServ$(BIN_SUFFIX) \
-		ReadNTLM$(BIN_SUFFIX) \
-		TestProtocols$(BIN_SUFFIX) \
-		$(NULL)
+CPPSRCS = \
+  TestIncrementalDownload.cpp \
+  TestStreamLoader.cpp \
+  PropertiesTest.cpp \
+  urltest.cpp \
+  TestCallbacks.cpp \
+  TestPageLoad.cpp \
+  TestURLParser.cpp \
+  TestStandardURL.cpp \
+  TestUpload.cpp \
+  TestBlockingSocket.cpp \
+  TestDNS.cpp \
+  TestOpen.cpp \
+  TestCookie.cpp \
+  TestServ.cpp \
+  ReadNTLM.cpp \
+  TestProtocols.cpp \
+  $(NULL)
+
+SIMPLE_PROGRAMS := $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 # XXX Make this work in libxul builds.
 #SIMPLE_PROGRAMS += \

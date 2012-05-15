@@ -245,14 +245,16 @@ let PageThumbs = {
 };
 
 let PageThumbsStorage = {
-  getFileForURL: function Storage_getFileForURL(aURL) {
+  getFileForURL: function Storage_getFileForURL(aURL, aOptions) {
     let hash = this._calculateMD5Hash(aURL);
-    let parts = [THUMBNAIL_DIRECTORY, hash[0], hash[1], hash.slice(2) + ".png"];
-    return FileUtils.getFile("ProfD", parts);
+    let parts = [THUMBNAIL_DIRECTORY, hash[0], hash[1]];
+    let file = FileUtils.getDir("ProfD", parts, aOptions && aOptions.createPath);
+    file.append(hash.slice(2) + ".png");
+    return file;
   },
 
   write: function Storage_write(aURL, aDataStream, aCallback) {
-    let file = this.getFileForURL(aURL);
+    let file = this.getFileForURL(aURL, {createPath: true});
     let fos = FileUtils.openSafeFileOutputStream(file);
 
     NetUtil.asyncCopy(aDataStream, fos, function (aResult) {

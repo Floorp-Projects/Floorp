@@ -159,6 +159,12 @@ tier_platform_dirs += \
 		$(NULL)
 endif
 
+ifdef MOZ_SPEEX_RESAMPLER
+tier_platform_dirs += \
+		media/libspeex_resampler \
+		$(NULL)
+endif
+
 ifdef MOZ_CUBEB
 tier_platform_dirs += \
 		media/libcubeb \

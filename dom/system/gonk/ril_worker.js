@@ -299,15 +299,7 @@ let Buf = {
     // Strings are \0\0 delimited, but that isn't part of the length. And
     // if the string length is even, the delimiter is two characters wide.
     // It's insane, I know.
-    let delimiter = this.readUint16();
-    if (!(string_len & 1)) {
-      delimiter |= this.readUint16();
-    }
-    if (DEBUG) {
-      if (delimiter != 0) {
-        debug("Something's wrong, found string delimiter: " + delimiter);
-      }
-    }
+    this.readStringDelimiter(string_len);
     return s;
   },
 
@@ -318,6 +310,18 @@ let Buf = {
       strings.push(this.readString());
     }
     return strings;
+  },
+  
+  readStringDelimiter: function readStringDelimiter(length) {
+    let delimiter = this.readUint16();
+    if (!(length & 1)) {
+      delimiter |= this.readUint16();
+    }
+    if (DEBUG) {
+      if (delimiter != 0) {
+        debug("Something's wrong, found string delimiter: " + delimiter);
+      }
+    }
   },
 
   readParcelSize: function readParcelSize() {
@@ -363,16 +367,20 @@ let Buf = {
     // Strings are \0\0 delimited, but that isn't part of the length. And
     // if the string length is even, the delimiter is two characters wide.
     // It's insane, I know.
-    this.writeUint16(0);
-    if (!(value.length & 1)) {
-      this.writeUint16(0);
-    }
+    this.writeStringDelimiter(value.length);
   },
 
   writeStringList: function writeStringList(strings) {
     this.writeUint32(strings.length);
     for (let i = 0; i < strings.length; i++) {
       this.writeString(strings[i]);
+    }
+  },
+  
+  writeStringDelimiter: function writeStringDelimiter(length) {
+    this.writeUint16(0);
+    if (!(length & 1)) {
+      this.writeUint16(0);
     }
   },
 
@@ -644,9 +652,14 @@ let RIL = {
   networkSelectionMode: null,
 
   /**
-   * Active calls
+   * Valid calls.
    */
   currentCalls: {},
+
+  /**
+   * Current calls length.
+   */
+  currentCallsLength: null,
 
   /**
    * Existing data calls.
@@ -899,15 +912,7 @@ let RIL = {
         return;
       }
       this.iccInfo.MSISDN = GsmPDUHelper.readAddress(len);
-      let delimiter = Buf.readUint16();
-      if (!(length & 1)) {
-        delimiter |= Buf.readUint16();
-      }
-      if (DEBUG) {
-        if (delimiter != 0) {
-          debug("Something's wrong, found string delimiter: " + delimiter);
-        }
-      }
+      Buf.readStringDelimiter(length);
 
       if (DEBUG) debug("MSISDN: " + this.iccInfo.MSISDN);
       if (this.iccInfo.MSISDN) {
@@ -938,15 +943,7 @@ let RIL = {
       // Each octet is encoded into two chars.
       let len = length / 2;
       this.iccInfo.AD = GsmPDUHelper.readHexOctetArray(len);
-      let delimiter = Buf.readUint16();
-      if (!(length & 1)) {
-        delimiter |= Buf.readUint16();
-      }
-      if (DEBUG) {
-        if (delimiter != 0) {
-          debug("Something's wrong, found string delimiter: " + delimiter);
-        }
-      }
+      Buf.readStringDelimiter(length);
 
       if (DEBUG) {
         let str = "";
@@ -1005,15 +1002,7 @@ let RIL = {
       // Each octet is encoded into two chars.
       let len = length / 2;
       this.iccInfo.UST = GsmPDUHelper.readHexOctetArray(len);
-      let delimiter = Buf.readUint16();
-      if (!(length & 1)) {
-        delimiter |= Buf.readUint16();
-      }
-      if (DEBUG) {
-        if (delimiter != 0) {
-          debug("Something's wrong, found string delimiter: " + delimiter);
-        }
-      }
+      Buf.readStringDelimiter(length);
       
       if (DEBUG) {
         let str = "";
@@ -1460,8 +1449,8 @@ let RIL = {
   /**
    * Get failure casue code for the most recently failed PDP context.
    */
-  getFailCauseCode: function getFailCauseCode() {
-    Buf.simpleRequest(REQUEST_LAST_CALL_FAIL_CAUSE);
+  getFailCauseCode: function getFailCauseCode(options) {
+    Buf.simpleRequest(REQUEST_LAST_CALL_FAIL_CAUSE, options);
   },
 
   /**
@@ -1605,15 +1594,7 @@ let RIL = {
     // Length of a record, data[14]
     let recordSize = GsmPDUHelper.readHexOctet();
 
-    let delimiter = Buf.readUint16();
-    if (!(length & 1)) {
-      delimiter |= Buf.readUint16();
-    }
-    if (DEBUG) {
-      if (delimiter != 0) {
-        debug("Something's wrong, found string delimiter: " + delimiter);
-      }
-    }
+    Buf.readStringDelimiter(length);
 
     switch (options.type) {
       case EF_TYPE_LINEAR_FIXED:
@@ -1749,12 +1730,19 @@ let RIL = {
   },
 
   /**
-   * Helpers for processing call state.
+   * Helpers for processing call state and handle the active call.
    */
   _processCalls: function _processCalls(newCalls) {
     // Go through the calls we currently have on file and see if any of them
     // changed state. Remove them from the newCalls map as we deal with them
     // so that only new calls remain in the map after we're done.
+    let lastCallsLength = this.currentCallsLength;
+    if (newCalls) {
+      this.currentCallsLength = newCalls.length;
+    } else {
+      this.currentCallsLength = 0;
+    }
+
     for each (let currentCall in this.currentCalls) {
       let newCall;
       if (newCalls) {
@@ -1764,9 +1752,12 @@ let RIL = {
 
       if (newCall) {
         // Call is still valid.
-        if (newCall.state != currentCall.state) {
-          // State has changed.
+        if (newCall.state != currentCall.state ||
+            this.currentCallsLength != lastCallsLength) {
+          // State has changed. Active call may have changed as valid
+          // calls change.
           currentCall.state = newCall.state;
+          currentCall.isActive = this._isActiveCall(currentCall.state);
           this._handleChangedCallState(currentCall);
         }
       } else {
@@ -1788,6 +1779,7 @@ let RIL = {
         }
         // Add to our map.
         this.currentCalls[newCall.callIndex] = newCall;
+        newCall.isActive = this._isActiveCall(newCall.state);
         this._handleChangedCallState(newCall);
       }
     }
@@ -1807,6 +1799,24 @@ let RIL = {
     let message = {type: "callDisconnected",
                    call: disconnectedCall};
     this.sendDOMMessage(message);
+  },
+
+  _isActiveCall: function _isActiveCall(callState) {
+    switch (callState) {
+      case CALL_STATE_INCOMING:
+      case CALL_STATE_DIALING:
+      case CALL_STATE_ALERTING:
+      case CALL_STATE_ACTIVE:
+        return true;
+      case CALL_STATE_HOLDING:
+        return false;
+      case CALL_STATE_WAITING:
+        if (this.currentCallsLength == 1) {
+          return true;
+        } else {
+          return false;
+        }
+    }
   },
 
   _processDataCallList: function _processDataCallList(datacalls) {
@@ -1882,15 +1892,7 @@ let RIL = {
     if (DEBUG) debug(message);
 
     // Read string delimiters. See Buf.readString().
-    let delimiter = Buf.readUint16();
-    if (!(messageStringLength & 1)) {
-      delimiter |= Buf.readUint16();
-    }
-    if (DEBUG) {
-      if (delimiter != 0) {
-        debug("Something's wrong, found string delimiter: " + delimiter);
-      }
-    }
+    Buf.readStringDelimiter(length);
 
     return message;
   },
@@ -2254,11 +2256,21 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, opti
       };
     }
 
+    call.isActive = false;
+
     calls[call.callIndex] = call;
   }
+  calls.length = calls_length;
   this._processCalls(calls);
 };
-RIL[REQUEST_DIAL] = null;
+RIL[REQUEST_DIAL] = function REQUEST_DIAL(length, options) {
+  if (options.rilRequestError) {
+    // The connection is not established yet.
+    options.callIndex = -1;
+    this.getFailCauseCode(options);
+    return;
+  }
+};
 RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, options) {
   if (options.rilRequestError) {
     return;
@@ -2306,7 +2318,20 @@ RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_HOLDING_AND_ACT
 };
 RIL[REQUEST_CONFERENCE] = null;
 RIL[REQUEST_UDUB] = null;
-RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = null;
+RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length, options) {
+  let num = 0;
+  if (length) {
+    num = Buf.readUint32();
+  }
+  if (!num) {
+    return;
+  }
+
+  let failCause = Buf.readUint32();
+  options.type = "callError";
+  options.error = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[failCause];
+  this.sendDOMMessage(options);
+};
 RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options) {
   if (options.rilRequestError) {
     return;
@@ -3005,26 +3030,6 @@ let GsmPDUHelper = {
   },
 
   /**
-   *  Read a string from Buf and convert it to BCD
-   * 
-   *  @return the decimal as a number.
-   */ 
-  readStringAsBCD: function readStringAsBCD() {
-    let length = Buf.readUint32();
-    let bcd = this.readSwappedNibbleBCD(length / 2);
-    let delimiter = Buf.readUint16();
-    if (!(length & 1)) {
-      delimiter |= Buf.readUint16();
-    }
-    if (DEBUG) {
-      if (delimiter != 0) {
-        debug("Something's wrong, found string delimiter: " + delimiter);
-      }
-    }
-    return bcd;
-  },
-
-  /**
    * Write numerical data as swapped nibble BCD.
    *
    * @param data
@@ -3476,7 +3481,7 @@ let GsmPDUHelper = {
             encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
             break;
           case 0x30:
-            if (!dcs & 0x04) {
+            if (dcs & 0x04) {
               encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
             }
             break;

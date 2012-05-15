@@ -39,10 +39,10 @@ load 263359-1.html
 load 265027-1.html
 load 265736-1.html
 load 265736-2.html
-asserts(2) load 265899-1.html # bug 575011
+load 265899-1.html
 load 265973-1.html
 asserts(6-12) load 265986-1.html # Bug 512405
-asserts(2-6) load 265999-1.html # bug 575011
+load 265999-1.html
 load 266222-1.html
 asserts(3-7) load 266360-1.html # bug 575011 / bug 576358
 asserts(4) load 266445-1.html # Bug 575011

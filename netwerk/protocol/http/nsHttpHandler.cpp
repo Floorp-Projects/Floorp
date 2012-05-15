@@ -291,7 +291,11 @@ nsHttpHandler::Init()
 
     mAppName.AssignLiteral(MOZ_APP_UA_NAME);
     if (mAppName.Length() == 0 && appInfo) {
-        appInfo->GetName(mAppName);
+        // Try to get the UA name from appInfo, falling back to the name
+        appInfo->GetUAName(mAppName);
+        if (mAppName.Length() == 0) {
+          appInfo->GetName(mAppName);
+        }
         appInfo->GetVersion(mAppVersion);
         mAppName.StripChars(" ()<>@,;:\\\"/[]?={}");
     } else {
