@@ -14,6 +14,7 @@ cbuffer cb0
     float4 QuadDesc;
     float4 TexCoords;
     float4 MaskTexCoords;
+    float4 TextColor;
 }
 
 cbuffer cb1
@@ -48,6 +49,12 @@ struct VS_RADIAL_OUTPUT
     float4 Position : SV_Position;
     float2 MaskTexCoord : TEXCOORD0;
     float2 PixelCoord : TEXCOORD1;
+};
+
+struct PS_TEXT_OUTPUT
+{
+    float4 color;
+    float4 alpha;
 };
 
 Texture2D tex;
@@ -111,6 +118,19 @@ BlendState ShadowBlendV
   DestBlendAlpha = Inv_Src_Alpha;
   BlendOpAlpha = Add;
   RenderTargetWriteMask[0] = 0xF;
+};
+
+BlendState bTextBlend
+{
+  AlphaToCoverageEnable = FALSE;
+  BlendEnable[0] = TRUE;
+  SrcBlend = Src1_Color;
+  DestBlend = Inv_Src1_Color;
+  BlendOp = Add;
+  SrcBlendAlpha = Src1_Alpha;
+  DestBlendAlpha = Inv_Src1_Alpha;
+  BlendOpAlpha = Add;
+  RenderTargetWriteMask[0] = 0x0F; // All
 };
 
 VS_OUTPUT SampleTextureVS(float3 pos : POSITION)
@@ -278,6 +298,26 @@ float4 SampleMaskShadowVPS( VS_OUTPUT In) : SV_Target
     return outputColor * mask.Sample(sMaskSampler, In.MaskTexCoord).a;
 };
 
+PS_TEXT_OUTPUT SampleTextTexturePS( VS_OUTPUT In) : SV_Target
+{
+    PS_TEXT_OUTPUT output;
+    output.color = TextColor;
+    output.alpha.rgba = tex.Sample(sSampler, In.TexCoord).bgrg * TextColor.a;
+    return output;
+};
+
+PS_TEXT_OUTPUT SampleTextTexturePSMasked( VS_OUTPUT In) : SV_Target
+{
+    PS_TEXT_OUTPUT output;
+    
+    float maskValue = mask.Sample(sMaskSampler, In.MaskTexCoord).a;
+
+    output.color = TextColor * maskValue;
+    output.alpha.rgba = tex.Sample(sSampler, In.TexCoord).bgrg * TextColor.a * maskValue;
+    
+    return output;
+};
+
 technique10 SampleTexture
 {
     pass P0
@@ -375,4 +415,23 @@ technique10 SampleTextureWithShadow
         SetGeometryShader(NULL);
         SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleMaskShadowVPS()));
     }
- }
+}
+
+technique10 SampleTextTexture
+{
+    pass Unmasked
+    {
+        SetBlendState(bTextBlend, float4( 0.0f, 0.0f, 0.0f, 0.0f ), 0xFFFFFFFF );
+        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleTextureVS()));
+        SetGeometryShader(NULL);
+        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleTextTexturePS()));
+    }
+    pass Masked
+    {
+        SetBlendState(bTextBlend, float4( 0.0f, 0.0f, 0.0f, 0.0f ), 0xFFFFFFFF );
+        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleTextureVS()));
+        SetGeometryShader(NULL);
+        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleTextTexturePSMasked()));
+    }
+}
+

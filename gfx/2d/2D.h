@@ -792,11 +792,21 @@ public:
   const IntRect &GetOpaqueRect() const {
     return mOpaqueRect;
   }
+
+  void SetPermitSubpixelAA(bool aPermitSubpixelAA) {
+    mPermitSubpixelAA = aPermitSubpixelAA;
+  }
+
+  bool GetPermitSubpixelAA() {
+    return mPermitSubpixelAA;
+  }
+
 protected:
   UserData mUserData;
   Matrix mTransform;
   IntRect mOpaqueRect;
   bool mTransformDirty : 1;
+  bool mPermitSubpixelAA : 1;
 
   SurfaceFormat mFormat;
 };

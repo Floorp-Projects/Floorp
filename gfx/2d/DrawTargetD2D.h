@@ -52,12 +52,15 @@
 #include <unordered_set>
 #endif
 
+struct IDWriteFactory;
+
 namespace mozilla {
 namespace gfx {
 
 class SourceSurfaceD2DTarget;
 class SourceSurfaceD2D;
 class GradientStopsD2D;
+class ScaledFontDWrite;
 
 struct PrivateD3D10DataD2D
 {
@@ -153,6 +156,7 @@ public:
 
   static ID2D1Factory *factory();
   static TemporaryRef<ID2D1StrokeStyle> CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions);
+  static IDWriteFactory *GetDWriteFactory();
 
   operator std::string() const {
     std::stringstream stream;
@@ -194,12 +198,19 @@ private:
   // a mask corresponding with the current DrawTarget clip.
   void EnsureClipMaskTexture();
 
+  bool FillGlyphsManual(ScaledFontDWrite *aFont,
+                        const GlyphBuffer &aBuffer,
+                        const Color &aColor,
+                        IDWriteRenderingParams *aParams,
+                        const DrawOptions &aOptions = DrawOptions());
+
   TemporaryRef<ID2D1RenderTarget> CreateRTForTexture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
   TemporaryRef<ID2D1Geometry> GetClippedGeometry();
 
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
 
   TemporaryRef<ID3D10Texture1D> CreateGradientTexture(const GradientStopsD2D *aStops);
+  TemporaryRef<ID3D10Texture2D> CreateTextureForAnalysis(IDWriteGlyphRunAnalysis *aAnalysis, const IntRect &aBounds);
 
   // This creates a partially uploaded bitmap for a SourceSurfaceD2D that is
   // too big to fit in a bitmap. It adjusts the passed Matrix to accomodate the
@@ -207,6 +218,7 @@ private:
   TemporaryRef<ID2D1Bitmap> CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix &aMatrix);
 
   void SetupEffectForRadialGradient(const RadialGradientPattern *aPattern);
+  void SetupStateForRendering();
 
   static const uint32_t test = 4;
 
@@ -247,6 +259,7 @@ private:
   bool mClipsArePushed;
   PrivateD3D10DataD2D *mPrivateData;
   static ID2D1Factory *mFactory;
+  static IDWriteFactory *mDWriteFactory;
 };
 
 }
