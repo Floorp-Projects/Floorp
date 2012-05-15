@@ -111,6 +111,11 @@ namespace CType {
 
 }
 
+namespace ABI {
+  bool IsABI(JSObject* obj);
+  static JSBool ToSource(JSContext* cx, unsigned argc, jsval* vp);
+}
+
 namespace PointerType {
   static JSBool Create(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool ConstructData(JSContext* cx, JSObject* obj, unsigned argc, jsval* vp);
@@ -452,6 +457,9 @@ static JSClass sCDataFinalizerClass = {
 #define CTYPESPROP_FLAGS \
   (JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)
 
+#define CABIFN_FLAGS \
+  (JSPROP_READONLY | JSPROP_PERMANENT)
+
 #define CDATAFN_FLAGS \
   (JSPROP_READONLY | JSPROP_PERMANENT)
 
@@ -470,6 +478,12 @@ static JSFunctionSpec sCTypeFunctions[] = {
   JS_FN("array", CType::CreateArray, 0, CTYPESFN_FLAGS),
   JS_FN("toString", CType::ToString, 0, CTYPESFN_FLAGS),
   JS_FN("toSource", CType::ToSource, 0, CTYPESFN_FLAGS),
+  JS_FS_END
+};
+
+static JSFunctionSpec sCABIFunctions[] = {
+  JS_FN("toSource", ABI::ToSource, 0, CABIFN_FLAGS),
+  JS_FN("toString", ABI::ToSource, 0, CABIFN_FLAGS),
   JS_FS_END
 };
 
@@ -754,6 +768,21 @@ InitCTypeClass(JSContext* cx, JSObject* parent)
 }
 
 static JSObject*
+InitABIClass(JSContext* cx, JSObject* parent)
+{
+  JSObject* obj = JS_NewObject(cx, NULL, NULL, NULL);
+  
+  if (!obj)
+    return NULL;
+    
+  if (!JS_DefineFunctions(cx, obj, sCABIFunctions))
+    return NULL;
+  
+  return obj;
+}
+
+
+static JSObject*
 InitCDataClass(JSContext* cx, JSObject* parent, JSObject* CTypeProto)
 {
   JSFunction* fun = JS_DefineFunction(cx, parent, "CData", ConstructAbstract, 0,
@@ -799,9 +828,10 @@ static JSBool
 DefineABIConstant(JSContext* cx,
                   JSObject* parent,
                   const char* name,
-                  ABICode code)
+                  ABICode code,
+                  JSObject* prototype)
 {
-  JSObject* obj = JS_DefineObject(cx, parent, name, &sCABIClass, NULL,
+  JSObject* obj = JS_DefineObject(cx, parent, name, &sCABIClass, prototype,
                     JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
   if (!obj)
     return false;
@@ -1059,10 +1089,14 @@ InitTypeClasses(JSContext* cx, JSObject* parent)
   AttachProtos(protos[SLOT_STRUCTPROTO], protos);
   AttachProtos(protos[SLOT_FUNCTIONPROTO], protos);
 
+  JSObject* ABIProto = InitABIClass(cx, parent);
+  if (!ABIProto)
+    return false;
+
   // Attach objects representing ABI constants.
-  if (!DefineABIConstant(cx, parent, "default_abi", ABI_DEFAULT) ||
-      !DefineABIConstant(cx, parent, "stdcall_abi", ABI_STDCALL) ||
-      !DefineABIConstant(cx, parent, "winapi_abi", ABI_WINAPI))
+  if (!DefineABIConstant(cx, parent, "default_abi", ABI_DEFAULT, ABIProto) ||
+      !DefineABIConstant(cx, parent, "stdcall_abi", ABI_STDCALL, ABIProto) ||
+      !DefineABIConstant(cx, parent, "winapi_abi", ABI_WINAPI, ABIProto))
     return false;
 
   // Create objects representing the builtin types, and attach them to the
@@ -3532,6 +3566,55 @@ CType::GetGlobalCTypes(JSContext* cx, JSObject* obj)
 
   return JSVAL_TO_OBJECT(valCTypes);
 }
+
+/*******************************************************************************
+** ABI implementation
+*******************************************************************************/
+
+bool
+ABI::IsABI(JSObject* obj)
+{
+  return JS_GetClass(obj) == &sCABIClass;
+}
+
+JSBool
+ABI::ToSource(JSContext* cx, unsigned argc, jsval* vp)
+{
+  if (argc != 0) {
+    JS_ReportError(cx, "toSource takes zero arguments");
+    return JS_FALSE;
+  }
+  
+  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  if (!obj)
+    return JS_FALSE;
+  if (!ABI::IsABI(obj)) {
+    JS_ReportError(cx, "not an ABI");
+    return JS_FALSE;
+  }
+  
+  JSString* result;
+  switch (GetABICode(obj)) {
+    case ABI_DEFAULT:
+      result = JS_NewStringCopyZ(cx, "ctypes.default_abi");
+      break;
+    case ABI_STDCALL:
+      result = JS_NewStringCopyZ(cx, "ctypes.stdcall_abi");
+      break;
+    case ABI_WINAPI:
+      result = JS_NewStringCopyZ(cx, "ctypes.winapi_abi");
+      break;
+    default:
+      JS_ReportError(cx, "not a valid ABICode");
+      return JS_FALSE;
+  }
+  if (!result)
+    return JS_FALSE;
+  
+  JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(result));
+  return JS_TRUE;
+}
+
 
 /*******************************************************************************
 ** PointerType implementation
