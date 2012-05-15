@@ -1188,7 +1188,7 @@ StackIter::settleOnNewState()
                     return;
                 }
 
-                while (!ionFrames_.done() && !ionFrames_.isScripted())
+                while (!ionFrames_.isScripted())
                     ++ionFrames_;
 
                 state_ = ION;

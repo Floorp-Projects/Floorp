@@ -1842,13 +1842,6 @@ BEGIN_CASE(JSOP_LOOPENTRY)
         if (status == ion::Method_Error)
             goto error;
         if (status == ion::Method_Compiled) {
-            // Return back to Ion to perform inline OSR, but only if this frame
-            // is the entry fp to EnterIon.
-            if (interpMode == JSINTERP_BAILOUT && regs.fp()->runningInIon()) {
-                JS_ASSERT(entryFrame == regs.fp());
-                return Interpret_OSR;
-            }
-
             JS_ASSERT(regs.fp()->isScriptFrame());
             ion::IonExecStatus maybeOsr = ion::SideCannon(cx, regs.fp(), regs.pc);
             if (maybeOsr == ion::IonExec_Bailout) {
