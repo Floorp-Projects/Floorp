@@ -335,10 +335,11 @@ CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
     JSTryNote *tn = script->trynotes()->vector;
     JSTryNote *tnEnd = tn + script->trynotes()->length;
 
+    uint32 pcOffset = uint32(pc - script->main());
     for (; tn != tnEnd; ++tn) {
-        if (uint32(pc - script->code) < tn->start)
+        if (pcOffset < tn->start)
             continue;
-        if (uint32(pc - script->code) >= tn->start + tn->length)
+        if (pcOffset >= tn->start + tn->length)
             continue;
 
         if (tn->kind != JSTRY_ITER)
