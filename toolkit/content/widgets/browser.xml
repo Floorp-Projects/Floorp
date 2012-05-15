@@ -68,14 +68,14 @@
           <![CDATA[
             if (this.getAttribute("autoscroll") == "false")
               return false;
-            
+
             var enabled = true;
             try {
               enabled = this.mPrefs.getBoolPref("general.autoScroll");
             }
             catch(ex) {
             }
-            
+
             return enabled;
           ]]>
         </getter>
@@ -179,7 +179,7 @@
               aURI = "about:blank";
 
             if (aCharset) {
-              try { 
+              try {
                 this.docShell.parentCharset = this.mAtomService.getAtom(aCharset);
               }
               catch (e) {
@@ -252,7 +252,7 @@
                 readonly="true"/>
 
       <property name="preferences"
-                onget="return Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService);"
+                onget="return this.mPrefs.QueryInterface(Components.interfaces.nsIPrefService);"
                 readonly="true"/>
 
       <field name="_docShell">null</field>
@@ -404,14 +404,14 @@
               return null;
 
             this._fastFind = Components.classes["@mozilla.org/typeaheadfind;1"]
-                                       .createInstance(Components.interfaces.nsITypeAheadFind);                                
+                                       .createInstance(Components.interfaces.nsITypeAheadFind);
             this._fastFind.init(this.docShell);
           }
           return this._fastFind;
         ]]>
         </getter>
       </property>
-      
+
       <property name="webProgress"
                 readonly="true"
                 onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);"/>
@@ -458,8 +458,7 @@
 
       <field name="mPrefs" readonly="true">
         Components.classes['@mozilla.org/preferences-service;1']
-                  .getService(Components.interfaces.nsIPrefService)
-                  .getBranch(null);
+                  .getService(Components.interfaces.nsIPrefBranch);
       </field>
 
       <field name="mAtomService" readonly="true">
@@ -527,13 +526,13 @@
             var controller = Components.classes["@mozilla.org/satchel/form-fill-controller;1"].
                                getService(Components.interfaces.nsIFormFillController);
             controller.detachFromBrowser(this.docShell);
-            
+
             this.mFormFillAttached = false;
           }
           ]]>
         </body>
       </method>
-      
+
       <method name="findChildShell">
         <parameter name="aDocShell"/>
         <parameter name="aSoughtURI"/>
@@ -598,7 +597,6 @@
             if (!tabBrowser || tabBrowser.mCurrentBrowser == this)
               this.fastFind.setDocShell(this.docShell);
 
-            
             if (this._scrollable) {
               var doc =
                 this._scrollable.ownerDocument || this._scrollable.document;
@@ -639,7 +637,7 @@
             this.pageReport.push(obj);
             this.pageReport.reported = false;
             this.updatePageReport();
-          ]]> 
+          ]]>
         </body>
       </method>
 
@@ -657,7 +655,7 @@
                 securityUI.init(this.contentWindow);
               }
             }
-            
+
             return this.docShell.securityUI;
           ]]>
         </getter>
@@ -722,7 +720,7 @@
       <field name="mFormFillAttached">
         false
       </field>
-      
+
       <field name="isShowingMessage">
         false
       </field>
@@ -746,7 +744,7 @@
                                  .getService(Components.interfaces.nsIObserverService);
               os.addObserver(this, "browser:purge-session-history", false);
               // wire up session history
-              this.webNavigation.sessionHistory = 
+              this.webNavigation.sessionHistory =
                       Components.classes["@mozilla.org/browser/shistory;1"]
                                 .createInstance(Components.interfaces.nsISHistory);
               // enable global history
@@ -769,7 +767,7 @@
           this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
         ]]>
       </constructor>
-      
+
       <destructor>
         <![CDATA[
           this.destroy();
@@ -796,10 +794,10 @@
           }
 
           this.detachFormFill();
-          
+
           this._fastFind = null;
           this._webBrowserFind = null;
-          
+
           // The feeds cache can keep the document inside this browser alive.
           this.feeds = null;
 
@@ -816,7 +814,7 @@
           ]]>
         </body>
       </method>
-      
+
       <method name="observe">
         <parameter name="aSubject"/>
         <parameter name="aTopic"/>
@@ -825,7 +823,7 @@
           <![CDATA[
             if (aTopic != "browser:purge-session-history" || !this.sessionHistory)
               return;
-              
+
             // place the entry at current index at the end of the history list, so it won't get removed
             if (this.sessionHistory.index < this.sessionHistory.count - 1) {
               var indexEntry = this.sessionHistory.getEntryAtIndex(this.sessionHistory.index, false);
@@ -833,11 +831,11 @@
               indexEntry.QueryInterface(Components.interfaces.nsISHEntry);
               this.sessionHistory.addEntry(indexEntry, true);
             }
-            
+
             var purge = this.sessionHistory.count;
             if (this.currentURI != "about:blank")
               --purge; // Don't remove the page the user's staring at from shistory
-            
+
             if (purge > 0)
               this.sessionHistory.PurgeHistory(purge);
           ]]>
@@ -881,7 +879,7 @@
           ]]>
         </body>
       </method>
-     
+
       <method name="startScroll">
         <parameter name="event"/>
         <body>
@@ -1127,7 +1125,7 @@
 
                 var x = this._screenX - this._startX;
                 var y = this._screenY - this._startY;
-        
+
                 if ((x > this._AUTOSCROLL_SNAP || x < -this._AUTOSCROLL_SNAP) ||
                     (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP))
                   this._ignoreMouseEvents = false;
@@ -1232,10 +1230,11 @@
           }
           if (warn && !browseWithCaretOn) {
             var checkValue = {value:false};
-            promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+            var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                          .getService(Components.interfaces.nsIPromptService);
 
-            var buttonPressed = promptService.confirmEx(window, 
-              this.mStrBundle.GetStringFromName('browsewithcaret.checkWindowTitle'), 
+            var buttonPressed = promptService.confirmEx(window,
+              this.mStrBundle.GetStringFromName('browsewithcaret.checkWindowTitle'),
               this.mStrBundle.GetStringFromName('browsewithcaret.checkLabel'),
               promptService.STD_YES_NO_BUTTONS,
               null, null, null, this.mStrBundle.GetStringFromName('browsewithcaret.checkMsg'),
