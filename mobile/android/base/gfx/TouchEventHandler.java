@@ -13,7 +13,6 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.view.ViewConfiguration;
 import android.view.View.OnTouchListener;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 import org.mozilla.gecko.Tab;
@@ -49,7 +48,7 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
 
     // The time limit for listeners to respond with preventDefault on touchevents
     // before we begin panning the page
-    private final int EVENT_LISTENER_TIMEOUT = ViewConfiguration.getLongPressTimeout();
+    private final int EVENT_LISTENER_TIMEOUT = 200;
 
     private final LayerView mView;
     private final LayerController mController;
