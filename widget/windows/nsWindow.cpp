@@ -301,10 +301,6 @@ PRLogModuleInfo* gWindowsLog                      = nsnull;
 // Kbd layout. Used throughout character processing.
 static KeyboardLayout gKbdLayout;
 
-// Global user preference for disabling native theme. Used
-// in NativeWindowTheme.
-bool            gDisableNativeTheme               = false;
-
 // Global used in Show window enumerations.
 static bool     gWindowsVisible                   = false;
 
@@ -650,8 +646,6 @@ nsWindow::Create(nsIWidget *aParent,
         (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION)) ? 1 : 0;
     sSwitchKeyboardLayout =
       Preferences::GetBool("intl.keyboard.per_window_layout", false);
-    gDisableNativeTheme =
-      Preferences::GetBool("mozilla.widget.disable-native-theme", false);
   }
 
   return NS_OK;
