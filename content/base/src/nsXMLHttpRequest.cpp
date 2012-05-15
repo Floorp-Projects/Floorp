@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -110,7 +109,6 @@
 #include "nsIDOMFormData.h"
 
 #include "nsWrapperCacheInlines.h"
-#include "nsStreamListenerWrapper.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3048,6 +3046,9 @@ nsXMLHttpRequest::Send(JSContext *aCx, nsIVariant* aVariant, const Nullable<Requ
   if (mState & XML_HTTP_REQUEST_MULTIPART) {
     Telemetry::Accumulate(Telemetry::MULTIPART_XHR_RESPONSE, 1);
     listener = new nsMultipartProxyListener(listener);
+    if (!listener) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   } else {
     Telemetry::Accumulate(Telemetry::MULTIPART_XHR_RESPONSE, 0);
   }
@@ -3061,18 +3062,9 @@ nsXMLHttpRequest::Send(JSContext *aCx, nsIVariant* aVariant, const Nullable<Requ
     // a same-origin request right now, since it could be redirected.
     listener = new nsCORSListenerProxy(listener, mPrincipal, mChannel,
                                        withCredentials, true, &rv);
+    NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  else {
-    // Because of bug 682305, we can't let listener be the XHR object itself
-    // because JS wouldn't be able to use it. So if we haven't otherwise
-    // created a listener around 'this', do so now.
-
-    listener = new nsStreamListenerWrapper(listener);
-  }
-
-  NS_ASSERTION(listener != this,
-               "Using an object as a listener that can't be exposed to JS");
 
   // Bypass the network cache in cases where it makes no sense:
   // 1) Multipart responses are very large and would likely be doomed by the
