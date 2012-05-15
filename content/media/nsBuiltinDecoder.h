@@ -755,7 +755,8 @@ public:
   // monitor. Thus, it can be safely read while holding the decoder monitor
   // OR on the main thread.
   // Any change to the state must call NotifyAll on the monitor.
-  PlayState mNextState;	
+  // This can only be PLAY_STATE_PAUSED or PLAY_STATE_PLAYING.
+  PlayState mNextState;
 
   // True when we have fully loaded the resource and reported that
   // to the element (i.e. reached NETWORK_LOADED state).
