@@ -4863,11 +4863,8 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     /* Emit a bytecode pointing to the closure object in its immediate. */
     if (pn->getOp() != JSOP_NOP) {
-        if ((pn->pn_funbox->tcflags & TCF_GENEXP_LAMBDA) &&
-            NewSrcNote(cx, bce, SRC_GENEXP) < 0)
-        {
+        if ((pn->pn_funbox->inGenexpLambda) && NewSrcNote(cx, bce, SRC_GENEXP) < 0)
             return false;
-        }
 
         return EmitFunctionOp(cx, pn->getOp(), index, bce);
     }

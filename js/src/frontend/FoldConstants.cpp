@@ -413,7 +413,7 @@ Boolish(ParseNode *pn)
         ParseNode *pn2 = pn->pn_head;
         if (!pn2->isKind(PNK_FUNCTION))
             return Unknown;
-        if (!(pn2->pn_funbox->tcflags & TCF_GENEXP_LAMBDA))
+        if (!(pn2->pn_funbox->inGenexpLambda))
             return Unknown;
         return Truthy;
       }
@@ -442,7 +442,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGenexpLam
 
     switch (pn->getArity()) {
       case PN_FUNC:
-        if (!FoldConstants(cx, pn->pn_body, parser, pn->pn_funbox->tcflags & TCF_GENEXP_LAMBDA))
+        if (!FoldConstants(cx, pn->pn_body, parser, pn->pn_funbox->inGenexpLambda))
             return false;
         break;
 
