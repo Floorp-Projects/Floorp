@@ -1038,6 +1038,14 @@ canon.Parameter = Parameter;
  * @return The new command
  */
 canon.addCommand = function addCommand(commandSpec) {
+  if (commands[commandSpec.name] != null) {
+    // Roughly canon.removeCommand() without the event call, which we do later
+    delete commands[commandSpec.name];
+    commandNames = commandNames.filter(function(test) {
+      return test !== commandSpec.name;
+    });
+  }
+
   var command = new Command(commandSpec);
   commands[commandSpec.name] = command;
   commandNames.push(commandSpec.name);
@@ -1055,6 +1063,8 @@ canon.removeCommand = function removeCommand(commandOrName) {
   var name = typeof commandOrName === 'string' ?
           commandOrName :
           commandOrName.name;
+
+  // See start of canon.addCommand if changing this code
   delete commands[name];
   commandNames = commandNames.filter(function(test) {
     return test !== name;
