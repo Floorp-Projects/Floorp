@@ -17,5 +17,5 @@ function handleRequest(request, response)
   response.setHeader("Content-Type", "text/html");
   response.setHeader("Cache-Control", "no-cache");
   response.write("<link rel=\"stylesheet\" href=\"ImageDocument.css\">");
-  response.write("<img src=\"moz-icon:" + uri + "\">");
+  response.write("<img src=\"moz-icon:" + uri + "\" width=\"32\" height=\"32\">");
 }
