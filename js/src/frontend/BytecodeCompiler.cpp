@@ -118,7 +118,8 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT_IF(callerFrame, compileAndGo);
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
-    Parser parser(cx, principals, originPrincipals, callerFrame);
+    bool foldConstants = true;
+    Parser parser(cx, principals, originPrincipals, callerFrame, foldConstants, compileAndGo);
     if (!parser.init(chars, length, filename, lineno, version))
         return NULL;
 
@@ -146,8 +147,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT_IF(globalObj, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalObj->getClass()));
 
     RootedVar<JSScript*> script(cx);
-
-    sc.flags |= compileAndGo ? TCF_COMPILE_N_GO : 0;
 
     GlobalScope globalScope(cx, globalObj);
     bce.sc->setScopeChain(scopeChain);

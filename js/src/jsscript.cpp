@@ -1331,7 +1331,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         bce->constList.finish(script->consts());
     if (bce->sc->flags & TCF_STRICT_MODE_CODE)
         script->strictModeCode = true;
-    if (bce->sc->flags & TCF_COMPILE_N_GO) {
+    if (bce->parser->compileAndGo) {
         script->compileAndGo = true;
         const StackFrame *fp = bce->parser->callerFrame;
         if (fp && fp->isFunctionFrame())

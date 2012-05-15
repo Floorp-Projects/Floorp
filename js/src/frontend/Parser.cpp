@@ -110,7 +110,7 @@ using namespace js::frontend;
 #define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
 Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
-               StackFrame *cfp, bool foldConstants)
+               StackFrame *cfp, bool foldConstants, bool compileAndGo)
   : AutoGCRooter(cx, PARSER),
     context(cx),
     tokenStream(cx, prin, originPrin),
@@ -123,7 +123,8 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
     traceListHead(NULL),
     tc(NULL),
     keepAtoms(cx->runtime),
-    foldConstants(foldConstants)
+    foldConstants(foldConstants),
+    compileAndGo(compileAndGo)
 {
     cx->activeCompilations++;
     PodArrayZero(tempFreeList);
@@ -235,7 +236,7 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
         }
     }
     funbox->level = tc->sc->staticLevel;
-    funbox->tcflags = (TCF_IN_FUNCTION | (tc->sc->flags & (TCF_COMPILE_N_GO | TCF_STRICT_MODE_CODE)));
+    funbox->tcflags = TCF_IN_FUNCTION | (tc->sc->flags & TCF_STRICT_MODE_CODE);
     if (tc->innermostWith)
         funbox->tcflags |= TCF_IN_WITH;
     if (!tc->sc->inFunction()) {
@@ -1053,7 +1054,7 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
     fun = js_NewFunction(context, NULL, NULL, 0,
                          JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0),
                          parent, atom);
-    if (fun && !tc->sc->compileAndGo()) {
+    if (fun && !compileAndGo) {
         if (!fun->clearParent(context))
             return NULL;
         if (!fun->clearType(context))
@@ -1139,7 +1140,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
     tc->sc->blockidGen = funtc->sc->blockidGen;
 
     FunctionBox *funbox = fn->pn_funbox;
-    funbox->tcflags |= funtc->sc->flags & (TCF_FUN_FLAGS | TCF_COMPILE_N_GO);
+    funbox->tcflags |= funtc->sc->flags & TCF_FUN_FLAGS;
 
     fn->pn_dflags |= PND_INITIALIZED;
     if (!tc->sc->topStmt || tc->sc->topStmt->type == STMT_BLOCK)
@@ -7022,7 +7023,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
         if (!reobj)
             return NULL;
 
-        if (!tc->sc->compileAndGo()) {
+        if (!compileAndGo) {
             if (!reobj->clearParent(context))
                 return NULL;
             if (!reobj->clearType(context))
