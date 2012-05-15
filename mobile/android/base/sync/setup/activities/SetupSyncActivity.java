@@ -248,8 +248,13 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
           return;
         }
         view1.setText(pin1);
+        view1.setContentDescription(pin1.replaceAll("\\B", ", "));
+
         view2.setText(pin2);
+        view2.setContentDescription(pin2.replaceAll("\\B", ", "));
+
         view3.setText(pin3);
+        view3.setContentDescription(pin3.replaceAll("\\B", ", "));
       }
     });
   }
