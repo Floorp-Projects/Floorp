@@ -142,17 +142,6 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
 
 } JS_ENUM_FOOTER(TreeContextFlags);
 
-// Sticky deoptimization flags to propagate from FunctionBody.
-static const uint32_t TCF_FUN_FLAGS = TCF_FUN_HEAVYWEIGHT |
-                                      TCF_FUN_IS_GENERATOR |
-                                      TCF_BINDINGS_ACCESSED_DYNAMICALLY |
-                                      TCF_FUN_MIGHT_ALIAS_LOCALS |
-                                      TCF_STRICT_MODE_CODE |
-                                      TCF_FUN_EXTENSIBLE_SCOPE |
-                                      TCF_ARGUMENTS_HAS_LOCAL_BINDING |
-                                      TCF_DEFINITELY_NEEDS_ARGS_OBJ;
-
-
 struct StmtInfo;
 
 struct SharedContext {
