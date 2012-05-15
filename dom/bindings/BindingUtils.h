@@ -582,6 +582,84 @@ ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
 JSBool
 ThrowingConstructorWorkers(JSContext* cx, unsigned argc, JS::Value* vp);
 
+template<class T>
+class NonNull
+{
+public:
+  NonNull()
+#ifdef DEBUG
+    : inited(false)
+#endif
+  {}
+
+  operator T&() {
+    MOZ_ASSERT(inited);
+    MOZ_ASSERT(ptr, "NonNull<T> was set to null");
+    return *ptr;
+  }
+
+  void operator=(T* t) {
+    ptr = t;
+    MOZ_ASSERT(ptr);
+#ifdef DEBUG
+    inited = true;
+#endif
+  }
+
+  T** Slot() {
+#ifdef DEBUG
+    inited = true;
+#endif
+    return &ptr;
+  }
+
+protected:
+  T* ptr;
+#ifdef DEBUG
+  bool inited;
+#endif
+};
+
+template<class T>
+class OwningNonNull
+{
+public:
+  OwningNonNull()
+#ifdef DEBUG
+    : inited(false)
+#endif
+  {}
+
+  operator T&() {
+    MOZ_ASSERT(inited);
+    MOZ_ASSERT(ptr, "OwningNonNull<T> was set to null");
+    return *ptr;
+  }
+
+  void operator=(T* t) {
+    init(t);
+  }
+
+  void operator=(const already_AddRefed<T>& t) {
+    init(t);
+  }
+
+protected:
+  template<typename U>
+  void init(U t) {
+    ptr = t;
+    MOZ_ASSERT(ptr);
+#ifdef DEBUG
+    inited = true;
+#endif
+  }
+
+  nsRefPtr<T> ptr;
+#ifdef DEBUG
+  bool inited;
+#endif
+};
+
 } // namespace dom
 } // namespace mozilla
 
