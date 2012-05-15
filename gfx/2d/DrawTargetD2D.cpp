@@ -47,6 +47,8 @@
 #include "Tools.h"
 #include <algorithm>
 
+#include <dwrite.h>
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -67,6 +69,12 @@ typedef HRESULT (WINAPI*D3D10CreateEffectFromMemoryFunc)(
     ID3D10Effect **ppEffect
 );
 
+typedef HRESULT (WINAPI*DWriteCreateFactoryFunc)(
+  DWRITE_FACTORY_TYPE factoryType,
+  REFIID iid,
+  IUnknown **factory
+);
+
 using namespace std;
 
 namespace mozilla {
@@ -78,6 +86,7 @@ struct Vertex {
 };
 
 ID2D1Factory *DrawTargetD2D::mFactory;
+IDWriteFactory *DrawTargetD2D::mDWriteFactory;
 
 // Helper class to restore surface contents that was clipped out but may have
 // been altered by a drawing call.
@@ -871,10 +880,6 @@ DrawTargetD2D::FillGlyphs(ScaledFont *aFont,
 
   ScaledFontDWrite *font = static_cast<ScaledFontDWrite*>(aFont);
 
-  ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, aPattern);
-
-  PrepareForDrawing(rt);
-
   IDWriteRenderingParams *params = NULL;
   if (aRenderOptions) {
     if (aRenderOptions->GetType() != FONT_DWRITE) {
@@ -885,6 +890,19 @@ DrawTargetD2D::FillGlyphs(ScaledFont *aFont,
       params = static_cast<const GlyphRenderingOptionsDWrite*>(aRenderOptions)->mParams;
     }
   }
+
+  if (mFormat == FORMAT_B8G8R8A8 && mPermitSubpixelAA &&
+      aOptions.mCompositionOp == OP_OVER && aPattern.GetType() == PATTERN_COLOR) {
+    if (FillGlyphsManual(font, aBuffer,
+                         static_cast<const ColorPattern*>(&aPattern)->mColor,
+                         params, aOptions)) {
+      return;
+    }
+  }
+
+  ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, aPattern);
+
+  PrepareForDrawing(rt);
 
   rt->SetTextRenderingParams(params);
 
@@ -1702,7 +1720,7 @@ DrawTargetD2D::PopClipsFromRT(ID2D1RenderTarget *aRT)
 void
 DrawTargetD2D::EnsureClipMaskTexture()
 {
-  if (mCurrentClipMaskTexture) {
+  if (mCurrentClipMaskTexture || mPushedClips.empty()) {
     return;
   }
   
@@ -1737,6 +1755,172 @@ DrawTargetD2D::EnsureClipMaskTexture()
   rt->EndDraw();
 }
 
+bool
+DrawTargetD2D::FillGlyphsManual(ScaledFontDWrite *aFont,
+                                const GlyphBuffer &aBuffer,
+                                const Color &aColor,
+                                IDWriteRenderingParams *aParams,
+                                const DrawOptions &aOptions)
+{
+  HRESULT hr;
+
+  RefPtr<IDWriteRenderingParams> params;
+
+  if (aParams) {
+    params = aParams;
+  } else {
+    mRT->GetTextRenderingParams(byRef(params));
+  }
+
+  DWRITE_RENDERING_MODE renderMode = DWRITE_RENDERING_MODE_DEFAULT;
+  if (params) {
+    hr = aFont->mFontFace->GetRecommendedRenderingMode(
+      (FLOAT)aFont->mSize,
+      1.0f,
+      DWRITE_MEASURING_MODE_NATURAL,
+      params,
+      &renderMode);
+    if (FAILED(hr)) {
+      // this probably never happens, but let's play it safe
+      renderMode = DWRITE_RENDERING_MODE_DEFAULT;
+    }
+  }
+
+  // Deal with rendering modes CreateGlyphRunAnalysis doesn't accept.
+  switch (renderMode) {
+  case DWRITE_RENDERING_MODE_ALIASED:
+    // ClearType texture creation will fail in this mode, so bail out
+    return false;
+  case DWRITE_RENDERING_MODE_DEFAULT:
+    // As per DWRITE_RENDERING_MODE documentation, pick Natural for font
+    // sizes under 16 ppem
+    if (aFont->mSize < 16.0f) {
+      renderMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL;
+    } else {
+      renderMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
+    }
+    break;
+  case DWRITE_RENDERING_MODE_OUTLINE:
+    renderMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
+    break;
+  default:
+    break;
+  }
+
+  DWRITE_MEASURING_MODE measureMode =
+    renderMode <= DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC ? DWRITE_MEASURING_MODE_GDI_CLASSIC :
+    renderMode == DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL ? DWRITE_MEASURING_MODE_GDI_NATURAL :
+    DWRITE_MEASURING_MODE_NATURAL;
+
+  DWRITE_MATRIX mat = DWriteMatrixFromMatrix(mTransform);
+
+  AutoDWriteGlyphRun autoRun;
+  DWriteGlyphRunFromGlyphs(aBuffer, aFont, &autoRun);
+
+  RefPtr<IDWriteGlyphRunAnalysis> analysis;
+  hr = GetDWriteFactory()->CreateGlyphRunAnalysis(&autoRun, 1.0f, &mat,
+                                                  renderMode, measureMode, 0, 0, byRef(analysis));
+
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  RECT bounds;
+  hr = analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1, &bounds);
+  IntRect rectBounds(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
+  IntRect surfBounds(IntPoint(0, 0), mSize);
+
+  rectBounds.IntersectRect(rectBounds, surfBounds);
+
+  if (rectBounds.IsEmpty()) {
+    // Nothing to do.
+    return true;
+  }
+
+  RefPtr<ID3D10Texture2D> tex = CreateTextureForAnalysis(analysis, rectBounds);
+
+  if (!tex) {
+    return false;
+  }
+
+  RefPtr<ID3D10ShaderResourceView> srView;
+  hr = mDevice->CreateShaderResourceView(tex, NULL, byRef(srView));
+
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  MarkChanged();
+
+  // Prepare our background texture for drawing.
+  PopAllClips();
+  mRT->Flush();
+
+  SetupStateForRendering();
+
+  ID3D10EffectTechnique *technique = mPrivateData->mEffect->GetTechniqueByName("SampleTextTexture");
+
+  mPrivateData->mEffect->GetVariableByName("QuadDesc")->AsVector()->
+    SetFloatVector(ShaderConstantRectD3D10(-1.0f + ((Float(rectBounds.x) / mSize.width) * 2.0f),
+                                           1.0f - (Float(rectBounds.y) / mSize.height * 2.0f),
+                                           (Float(rectBounds.width) / mSize.width) * 2.0f,
+                                           (-Float(rectBounds.height) / mSize.height) * 2.0f));
+  mPrivateData->mEffect->GetVariableByName("TexCoords")->AsVector()->
+    SetFloatVector(ShaderConstantRectD3D10(0, 0, 1.0f, 1.0f));
+  FLOAT color[4] = { aColor.r, aColor.g, aColor.b, aColor.a };
+  mPrivateData->mEffect->GetVariableByName("TextColor")->AsVector()->
+    SetFloatVector(color);
+  
+  mPrivateData->mEffect->GetVariableByName("tex")->AsShaderResource()->SetResource(srView);
+
+  bool isMasking = false;
+
+  if (!mPushedClips.empty()) {
+    RefPtr<ID2D1Geometry> geom = GetClippedGeometry();
+
+    RefPtr<ID2D1RectangleGeometry> rectGeom;
+    factory()->CreateRectangleGeometry(D2D1::RectF(rectBounds.x, rectBounds.y,
+                                                   rectBounds.width + rectBounds.x,
+                                                   rectBounds.height + rectBounds.y),
+                                       byRef(rectGeom));
+
+    D2D1_GEOMETRY_RELATION relation;
+    if (FAILED(geom->CompareWithGeometry(rectGeom, D2D1::IdentityMatrix(), &relation)) ||
+        relation != D2D1_GEOMETRY_RELATION_CONTAINS) {
+      isMasking = true;
+    }        
+  }
+  
+  if (isMasking) {
+    EnsureClipMaskTexture();
+
+    RefPtr<ID3D10ShaderResourceView> srViewMask;
+    hr = mDevice->CreateShaderResourceView(mCurrentClipMaskTexture, NULL, byRef(srViewMask));
+
+    if (FAILED(hr)) {
+      return false;
+    }
+
+    mPrivateData->mEffect->GetVariableByName("mask")->AsShaderResource()->SetResource(srViewMask);
+
+    mPrivateData->mEffect->GetVariableByName("MaskTexCoords")->AsVector()->
+      SetFloatVector(ShaderConstantRectD3D10(Float(rectBounds.x) / mSize.width, Float(rectBounds.y) / mSize.height,
+                                             Float(rectBounds.width) / mSize.width, Float(rectBounds.height) / mSize.height));
+
+    technique->GetPassByIndex(1)->Apply(0);
+  } else {
+    technique->GetPassByIndex(0)->Apply(0);
+  }  
+
+  RefPtr<ID3D10RenderTargetView> rtView;
+  ID3D10RenderTargetView *rtViews;
+  mDevice->CreateRenderTargetView(mTexture, NULL, byRef(rtView));
+
+  rtViews = rtView;
+  mDevice->OMSetRenderTargets(1, &rtViews, NULL);
+
+  mDevice->Draw(4, 0);
+}
 
 TemporaryRef<ID2D1Brush>
 DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
@@ -1999,6 +2183,70 @@ DrawTargetD2D::CreateGradientTexture(const GradientStopsD2D *aStops)
   return tex;
 }
 
+TemporaryRef<ID3D10Texture2D>
+DrawTargetD2D::CreateTextureForAnalysis(IDWriteGlyphRunAnalysis *aAnalysis, const IntRect &aBounds)
+{
+  HRESULT hr;
+
+  uint32_t bufferSize = aBounds.width * aBounds.height * 3;
+
+  RECT bounds;
+  bounds.left = aBounds.x;
+  bounds.top = aBounds.y;
+  bounds.right = aBounds.x + aBounds.width;
+  bounds.bottom = aBounds.y + aBounds.height;
+
+  // Add one byte so we can safely read a 32-bit int when copying the last
+  // 3 bytes.
+  BYTE *texture = new BYTE[bufferSize + 1];
+  hr = aAnalysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &bounds, texture, bufferSize);
+
+  if (FAILED(hr)) {
+    delete [] texture;
+    return NULL;
+  }
+
+  int alignedBufferSize = aBounds.width * aBounds.height * 4;
+
+  // Create a one-off immutable texture from system memory.
+  BYTE *alignedTextureData = new BYTE[alignedBufferSize];
+  for (int y = 0; y < aBounds.height; y++) {
+    for (int x = 0; x < aBounds.width; x++) {
+      // Copy 3 Bpp source to 4 Bpp destination memory used for
+      // texture creation. D3D10 has no 3 Bpp texture format we can
+      // use.
+      //
+      // Since we don't care what ends up in the alpha pixel of the
+      // destination, therefor we can simply copy a normal 32 bit
+      // integer each time, filling the alpha pixel of the destination
+      // with the first subpixel of the next pixel from the source.
+      *((int*)(alignedTextureData + (y * aBounds.width + x) * 4)) =
+        *((int*)(texture + (y * aBounds.width + x) * 3));
+    }
+  }
+
+  D3D10_SUBRESOURCE_DATA data;
+  
+  CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
+                             aBounds.width, aBounds.height,
+                             1, 1);
+  desc.Usage = D3D10_USAGE_IMMUTABLE;
+
+  data.SysMemPitch = aBounds.width * 4;
+  data.pSysMem = alignedTextureData;
+
+  RefPtr<ID3D10Texture2D> tex;
+  hr = mDevice->CreateTexture2D(&desc, &data, byRef(tex));
+	
+  delete [] alignedTextureData;
+  delete [] texture;
+
+  if (FAILED(hr)) {
+    return NULL;
+  }
+
+  return tex;
+}
 TemporaryRef<ID2D1Bitmap>
 DrawTargetD2D::CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix &aMatrix)
 {
@@ -2173,6 +2421,28 @@ DrawTargetD2D::SetupEffectForRadialGradient(const RadialGradientPattern *aPatter
   }
 }
 
+void
+DrawTargetD2D::SetupStateForRendering()
+{
+  UINT stride = sizeof(Vertex);
+  UINT offset = 0;
+  ID3D10Buffer *buff = mPrivateData->mVB;
+
+  mDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+  mDevice->IASetVertexBuffers(0, 1, &buff, &stride, &offset);
+  mDevice->IASetInputLayout(mPrivateData->mInputLayout);
+
+  D3D10_VIEWPORT viewport;
+  viewport.MaxDepth = 1;
+  viewport.MinDepth = 0;
+  viewport.Height = mSize.height;
+  viewport.Width = mSize.width;
+  viewport.TopLeftX = 0;
+  viewport.TopLeftY = 0;
+
+  mDevice->RSSetViewports(1, &viewport);
+}
+
 ID2D1Factory*
 DrawTargetD2D::factory()
 {
@@ -2207,6 +2477,33 @@ DrawTargetD2D::factory()
   }
 
   return mFactory;
+}
+
+IDWriteFactory*
+DrawTargetD2D::GetDWriteFactory()
+{
+  if (mDWriteFactory) {
+    return mDWriteFactory;
+  }
+
+  DWriteCreateFactoryFunc createDWriteFactory;
+  HMODULE dwriteModule = LoadLibraryW(L"dwrite.dll");
+  createDWriteFactory = (DWriteCreateFactoryFunc)
+    GetProcAddress(dwriteModule, "DWriteCreateFactory");
+
+  if (!createDWriteFactory) {
+    gfxWarning() << "Failed to locate DWriteCreateFactory function.";
+    return NULL;
+  }
+
+  HRESULT hr = createDWriteFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
+                                   reinterpret_cast<IUnknown**>(&mDWriteFactory));
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to create DWrite Factory.";
+  }
+
+  return mDWriteFactory;
 }
 
 }
