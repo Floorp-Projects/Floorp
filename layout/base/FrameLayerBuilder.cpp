@@ -1188,12 +1188,10 @@ ContainerState::PopThebesLayerData()
       nsRefPtr<ImageLayer> imageLayer = CreateOrRecycleImageLayer();
       imageLayer->SetContainer(imageContainer);
       data->mImage->ConfigureLayer(imageLayer);
-      if (mParameters.mInActiveTransformedSubtree) {
-        // The layer's current transform is applied first, then the result is scaled.
-        gfx3DMatrix transform = imageLayer->GetTransform()*
-          gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
-        imageLayer->SetTransform(transform);
-      }
+      // The layer's current transform is applied first, then the result is scaled.
+      gfx3DMatrix transform = imageLayer->GetTransform()*
+        gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
+      imageLayer->SetTransform(transform);
       if (data->mItemClip.mHaveClipRect) {
         nsIntRect clip = ScaleToNearestPixels(data->mItemClip.mClipRect);
         imageLayer->IntersectClipRect(clip);
