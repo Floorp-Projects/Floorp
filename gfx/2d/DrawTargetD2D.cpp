@@ -1600,9 +1600,16 @@ DrawTargetD2D::GetClippedGeometry()
   clippedGeometry->Open(byRef(currentSink));
       
   std::vector<DrawTargetD2D::PushedClip>::iterator iter = mPushedClips.begin();
-  iter->mPath->GetGeometry()->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
-                                    iter->mTransform, currentSink);
 
+  if (iter->mPath) {
+    iter->mPath->GetGeometry()->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
+                                         iter->mTransform, currentSink);
+  } else {
+    RefPtr<ID2D1RectangleGeometry> rectGeom;
+    factory()->CreateRectangleGeometry(iter->mBounds, byRef(rectGeom));
+    rectGeom->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
+                       D2D1::IdentityMatrix(), currentSink);
+  }
   currentSink->Close();
 
   iter++;
@@ -1611,8 +1618,16 @@ DrawTargetD2D::GetClippedGeometry()
     factory()->CreatePathGeometry(byRef(newGeom));
 
     newGeom->Open(byRef(currentSink));
-    clippedGeometry->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
-                                      iter->mTransform, currentSink);
+
+    if (iter->mPath) {
+      clippedGeometry->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
+                                           iter->mTransform, currentSink);
+    } else {
+      RefPtr<ID2D1RectangleGeometry> rectGeom;
+      factory()->CreateRectangleGeometry(iter->mBounds, byRef(rectGeom));
+      clippedGeometry->CombineWithGeometry(rectGeom, D2D1_COMBINE_MODE_INTERSECT,
+                                           D2D1::IdentityMatrix(), currentSink);
+    }
 
     currentSink->Close();
 
