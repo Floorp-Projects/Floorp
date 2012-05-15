@@ -129,7 +129,11 @@ public class PanZoomController
         PANNING_HOLD_LOCKED, /* like PANNING_HOLD, but axis lock still in effect */
         PINCHING,       /* nth touch-start, where n > 1. this mode allows pan and zoom */
         ANIMATED_ZOOM,  /* animated zoom to a new rect */
-        BOUNCE          /* in a bounce animation */
+        BOUNCE,         /* in a bounce animation */
+
+        WAITING_LISTENERS, /* a state halfway between NOTHING and TOUCHING - the user has
+                        put a finger down, but we don't yet know if a touch listener has
+                        prevented the default actions yet. we still need to abort animations. */
     }
 
     private final LayerController mController;
@@ -298,6 +302,30 @@ public class PanZoomController
         }
     }
 
+    /** This function must be called on the UI thread. */
+    public void waitingForTouchListeners(MotionEvent event) {
+        checkMainThread();
+        if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
+            // this is the first touch point going down, so we enter the pending state
+            mSubscroller.cancel();
+            // seting the state will kill any animations in progress, possibly leaving
+            // the page in overscroll
+            mState = PanZoomState.WAITING_LISTENERS;
+        }
+    }
+
+    /** This function must be called on the UI thread. */
+    public void preventedTouchFinished() {
+        checkMainThread();
+        if (mState == PanZoomState.WAITING_LISTENERS) {
+            // if we enter here, we just finished a block of events whose default actions
+            // were prevented by touch listeners. Now there are no touch points left, so
+            // we need to reset our state and re-bounce because we might be in overscroll
+            mState = PanZoomState.NOTHING;
+            bounce();
+        }
+    }
+
     /** This must be called on the UI thread. */
     public void pageSizeUpdated() {
         if (mState == PanZoomState.NOTHING) {
@@ -334,6 +362,7 @@ public class PanZoomController
         case FLING:
         case BOUNCE:
         case NOTHING:
+        case WAITING_LISTENERS:
             startTouch(event.getX(0), event.getY(0), event.getEventTime());
             return false;
         case TOUCHING:
@@ -354,6 +383,7 @@ public class PanZoomController
         switch (mState) {
         case FLING:
         case BOUNCE:
+        case WAITING_LISTENERS:
             // should never happen
             Log.e(LOGTAG, "Received impossible touch move while in " + mState);
             // fall through
@@ -399,6 +429,7 @@ public class PanZoomController
         switch (mState) {
         case FLING:
         case BOUNCE:
+        case WAITING_LISTENERS:
             // should never happen
             Log.e(LOGTAG, "Received impossible touch end while in " + mState);
             // fall through
@@ -433,8 +464,18 @@ public class PanZoomController
     }
 
     private boolean onTouchCancel(MotionEvent event) {
-        mState = PanZoomState.NOTHING;
+        if (mState == PanZoomState.WAITING_LISTENERS) {
+            // we might get a cancel event from the TouchEventHandler while in the
+            // WAITING_LISTENERS state if the touch listeners prevent-default the
+            // block of events. at this point being in WAITING_LISTENERS is equivalent
+            // to being in NOTHING with the exception of possibly being in overscroll.
+            // so here we don't want to do anything right now; the overscroll will be
+            // corrected in preventedTouchFinished().
+            return false;
+        }
+
         cancelTouch();
+        mState = PanZoomState.NOTHING;
         // ensure we snap back if we're overscrolled
         bounce();
         return false;
