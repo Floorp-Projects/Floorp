@@ -939,6 +939,7 @@ DrawTargetD2D::PushClip(const Path *aPath)
   }
 
   mCurrentClipMaskTexture = NULL;
+  mCurrentClippedGeometry = NULL;
 
   RefPtr<PathD2D> pathD2D = static_cast<PathD2D*>(const_cast<Path*>(aPath));
 
@@ -977,6 +978,7 @@ void
 DrawTargetD2D::PushClipRect(const Rect &aRect)
 {
   mCurrentClipMaskTexture = NULL;
+  mCurrentClippedGeometry = NULL;
   if (!mTransform.IsRectilinear()) {
     // Whoops, this isn't a rectangle in device space, Direct2D will not deal
     // with this transform the way we want it to.
@@ -1009,6 +1011,7 @@ void
 DrawTargetD2D::PopClip()
 {
   mCurrentClipMaskTexture = NULL;
+  mCurrentClippedGeometry = NULL;
   if (mClipsArePushed) {
     if (mPushedClips.back().mLayer) {
       mRT->PopLayer();
@@ -1531,11 +1534,14 @@ DrawTargetD2D::FinalizeRTForOperation(CompositionOp aOperator, const Pattern &aP
 TemporaryRef<ID2D1Geometry>
 DrawTargetD2D::GetClippedGeometry()
 {
-  RefPtr<ID2D1GeometrySink> currentSink;
-  RefPtr<ID2D1PathGeometry> clippedGeometry;
+  if (mCurrentClippedGeometry) {
+    return mCurrentClippedGeometry;
+  }
 
-  factory()->CreatePathGeometry(byRef(clippedGeometry));
-  clippedGeometry->Open(byRef(currentSink));
+  RefPtr<ID2D1GeometrySink> currentSink;
+
+  factory()->CreatePathGeometry(byRef(mCurrentClippedGeometry));
+  mCurrentClippedGeometry->Open(byRef(currentSink));
       
   std::vector<DrawTargetD2D::PushedClip>::iterator iter = mPushedClips.begin();
 
@@ -1558,21 +1564,21 @@ DrawTargetD2D::GetClippedGeometry()
     newGeom->Open(byRef(currentSink));
 
     if (iter->mPath) {
-      clippedGeometry->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
+      mCurrentClippedGeometry->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
                                            iter->mTransform, currentSink);
     } else {
       RefPtr<ID2D1RectangleGeometry> rectGeom;
       factory()->CreateRectangleGeometry(iter->mBounds, byRef(rectGeom));
-      clippedGeometry->CombineWithGeometry(rectGeom, D2D1_COMBINE_MODE_INTERSECT,
-                                           D2D1::IdentityMatrix(), currentSink);
+      mCurrentClippedGeometry->CombineWithGeometry(rectGeom, D2D1_COMBINE_MODE_INTERSECT,
+                                                   D2D1::IdentityMatrix(), currentSink);
     }
 
     currentSink->Close();
 
-    clippedGeometry = newGeom;
+    mCurrentClippedGeometry = newGeom;
   }
 
-  return clippedGeometry;
+  return mCurrentClippedGeometry;
 }
 
 TemporaryRef<ID2D1RenderTarget>

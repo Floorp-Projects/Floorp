@@ -215,6 +215,7 @@ private:
   RefPtr<ID3D10Device1> mDevice;
   RefPtr<ID3D10Texture2D> mTexture;
   RefPtr<ID3D10Texture2D> mCurrentClipMaskTexture;
+  RefPtr<ID2D1PathGeometry> mCurrentClippedGeometry;
   mutable RefPtr<ID2D1RenderTarget> mRT;
 
   // Temporary texture and render target used for supporting alternative operators.
