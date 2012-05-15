@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyGetter(this, "Sanitizer", function () {
  * be removed when the user sanitizes their history.
  */
 function runTests() {
-  clearHistory();
+  yield clearHistory();
 
   // create a thumbnail
   yield addTab(URL);
@@ -72,7 +72,7 @@ function clearHistory(aUseRange) {
 
   executeSoon(function () {
     if (PageThumbsStorage.getFileForURL(URL).exists())
-      clearHistory(aFile, aUseRange);
+      clearHistory(aUseRange);
     else
       next();
   });

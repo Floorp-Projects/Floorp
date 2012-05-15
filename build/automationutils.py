@@ -479,7 +479,7 @@ class ShutdownLeakLogger(object):
       self.currentTest = {"fileName": fileName, "windows": set(), "docShells": set()}
     elif line.startswith("INFO TEST-END"):
       # don't track a test if no windows or docShells leaked
-      if self.currentTest["windows"] or self.currentTest["docShells"]:
+      if self.currentTest and (self.currentTest["windows"] or self.currentTest["docShells"]):
         self.tests.append(self.currentTest)
       self.currentTest = None
     elif line.startswith("INFO TEST-START | Shutdown"):
