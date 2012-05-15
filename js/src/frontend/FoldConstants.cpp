@@ -434,7 +434,7 @@ Boolish(ParseNode *pn)
 }
 
 bool
-js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond)
+js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGenexpLambda, bool inCond)
 {
     ParseNode *pn1 = NULL, *pn2 = NULL, *pn3 = NULL;
 
@@ -442,20 +442,9 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond)
 
     switch (pn->getArity()) {
       case PN_FUNC:
-      {
-        SharedContext *sc = parser->tc->sc;
-        uint32_t oldflags = sc->flags;
-        FunctionBox *oldlist = sc->functionList;
-
-        sc->flags = pn->pn_funbox->tcflags;
-        sc->functionList = pn->pn_funbox->kids;
-        if (!FoldConstants(cx, pn->pn_body, parser))
+        if (!FoldConstants(cx, pn->pn_body, parser, pn->pn_funbox->tcflags & TCF_GENEXP_LAMBDA))
             return false;
-        pn->pn_funbox->kids = sc->functionList;
-        sc->flags = oldflags;
-        sc->functionList = oldlist;
         break;
-      }
 
       case PN_LIST:
       {
@@ -469,7 +458,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond)
 
         /* Save the list head in pn1 for later use. */
         for (; pn2; pn2 = pn2->pn_next) {
-            if (!FoldConstants(cx, pn2, parser, cond))
+            if (!FoldConstants(cx, pn2, parser, inGenexpLambda, cond))
                 return false;
         }
         break;
@@ -480,17 +469,17 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond)
         pn1 = pn->pn_kid1;
         pn2 = pn->pn_kid2;
         pn3 = pn->pn_kid3;
-        if (pn1 && !FoldConstants(cx, pn1, parser, pn->isKind(PNK_IF)))
+        if (pn1 && !FoldConstants(cx, pn1, parser, inGenexpLambda, pn->isKind(PNK_IF)))
             return false;
         if (pn2) {
-            if (!FoldConstants(cx, pn2, parser, pn->isKind(PNK_FORHEAD)))
+            if (!FoldConstants(cx, pn2, parser, inGenexpLambda, pn->isKind(PNK_FORHEAD)))
                 return false;
             if (pn->isKind(PNK_FORHEAD) && pn2->isOp(JSOP_TRUE)) {
                 parser->freeTree(pn2);
                 pn->pn_kid2 = NULL;
             }
         }
-        if (pn3 && !FoldConstants(cx, pn3, parser))
+        if (pn3 && !FoldConstants(cx, pn3, parser, inGenexpLambda))
             return false;
         break;
 
@@ -500,17 +489,17 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond)
 
         /* Propagate inCond through logical connectives. */
         if (pn->isKind(PNK_OR) || pn->isKind(PNK_AND)) {
-            if (!FoldConstants(cx, pn1, parser, inCond))
+            if (!FoldConstants(cx, pn1, parser, inGenexpLambda, inCond))
                 return false;
-            if (!FoldConstants(cx, pn2, parser, inCond))
+            if (!FoldConstants(cx, pn2, parser, inGenexpLambda, inCond))
                 return false;
             break;
         }
 
         /* First kid may be null (for default case in switch). */
-        if (pn1 && !FoldConstants(cx, pn1, parser, pn->isKind(PNK_WHILE)))
+        if (pn1 && !FoldConstants(cx, pn1, parser, inGenexpLambda, pn->isKind(PNK_WHILE)))
             return false;
-        if (!FoldConstants(cx, pn2, parser, pn->isKind(PNK_DOWHILE)))
+        if (!FoldConstants(cx, pn2, parser, inGenexpLambda, pn->isKind(PNK_DOWHILE)))
             return false;
         break;
 
@@ -529,7 +518,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond)
         if (pn->isOp(JSOP_TYPEOF) && !pn1->isKind(PNK_NAME))
             pn->setOp(JSOP_TYPEOFEXPR);
 
-        if (pn1 && !FoldConstants(cx, pn1, parser, pn->isOp(JSOP_NOT)))
+        if (pn1 && !FoldConstants(cx, pn1, parser, inGenexpLambda, pn->isOp(JSOP_NOT)))
             return false;
         break;
 
@@ -544,14 +533,14 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond)
             pn1 = pn->pn_expr;
             while (pn1 && pn1->isArity(PN_NAME) && !pn1->isUsed())
                 pn1 = pn1->pn_expr;
-            if (pn1 && !FoldConstants(cx, pn1, parser))
+            if (pn1 && !FoldConstants(cx, pn1, parser, inGenexpLambda))
                 return false;
         }
         break;
 
       case PN_NAMESET:
         pn1 = pn->pn_tree;
-        if (!FoldConstants(cx, pn1, parser))
+        if (!FoldConstants(cx, pn1, parser, inGenexpLambda))
             return false;
         break;
 
@@ -589,7 +578,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond)
 
 #if JS_HAS_GENERATOR_EXPRS
         /* Don't fold a trailing |if (0)| in a generator expression. */
-        if (!pn2 && (parser->tc->sc->flags & TCF_GENEXP_LAMBDA))
+        if (!pn2 && inGenexpLambda)
             break;
 #endif
 
