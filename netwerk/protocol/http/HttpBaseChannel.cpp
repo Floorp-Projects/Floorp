@@ -53,7 +53,6 @@
 #include "nsIResumableChannel.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsEscape.h"
-#include "nsStreamListenerWrapper.h"
 
 #include "prnetdb.h"
 
@@ -1427,6 +1426,36 @@ HttpBaseChannel::GetEntityID(nsACString& aEntityID)
 
   return NS_OK;
 }
+
+//-----------------------------------------------------------------------------
+// nsStreamListenerWrapper <private>
+//-----------------------------------------------------------------------------
+
+// Wrapper class to make replacement of nsHttpChannel's listener
+// from JavaScript possible. It is workaround for bug 433711.
+class nsStreamListenerWrapper : public nsIStreamListener
+{
+public:
+  nsStreamListenerWrapper(nsIStreamListener *listener);
+
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_NSIREQUESTOBSERVER(mListener->)
+  NS_FORWARD_NSISTREAMLISTENER(mListener->)
+
+private:
+  ~nsStreamListenerWrapper() {}
+  nsCOMPtr<nsIStreamListener> mListener;
+};
+
+nsStreamListenerWrapper::nsStreamListenerWrapper(nsIStreamListener *listener)
+  : mListener(listener)
+{
+  NS_ASSERTION(mListener, "no stream listener specified");
+}
+
+NS_IMPL_ISUPPORTS2(nsStreamListenerWrapper,
+                   nsIStreamListener,
+                   nsIRequestObserver)
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsITraceableChannel
