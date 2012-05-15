@@ -677,9 +677,13 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars
      * To avoid pathological behavior here, make sure to mark any topmost
      * function as uninlineable, which will expand inline frames if there are
      * any and prevent the function from being inlined in the future.
+     *
+     * Note: When called from pushBailoutFrame, error = DONT_REPORT_ERROR. Use
+     * this to deny potential invalidation, which would read from
+     * runtime->ionTop.
      */
     FrameRegs *regs = cx->maybeRegs();
-    if (regs && !regs->fp()->runningInIon()) {
+    if (regs && report != DONT_REPORT_ERROR) {
         JSFunction *fun = NULL;
         if (JSInlinedSite *site = regs->inlined()) {
             mjit::JITChunk *chunk = regs->fp()->jit()->chunk(regs->pc);
@@ -1186,14 +1190,6 @@ StackIter::settleOnNewState()
 
                 while (!ionFrames_.done() && !ionFrames_.isScripted())
                     ++ionFrames_;
-
-                if (ionFrames_.done()) {
-                    // In this case, we bailed out the last frame, so we
-                    // shouldn't really transition to Ion code.
-                    ++ionActivations_;
-                    popFrame();
-                    continue;
-                }
 
                 state_ = ION;
                 ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);

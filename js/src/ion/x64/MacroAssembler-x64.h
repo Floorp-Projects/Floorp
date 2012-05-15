@@ -442,11 +442,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movq(ImmWord(address.addr), ScratchReg);
         movq(src, Operand(ScratchReg, 0x0));
     }
-    void rshiftPtr(Imm32 imm, const Register &dest) {
+    void rshiftPtr(Imm32 imm, Register dest) {
         shrq(imm, dest);
     }
-    void lshiftPtr(Imm32 imm, const Register &dest) {
+    void lshiftPtr(Imm32 imm, Register dest) {
         shlq(imm, dest);
+    }
+    void orPtr(Imm32 imm, Register dest) {
+        orq(imm, dest);
     }
 
     void splitTag(Register src, Register dest) {
@@ -595,6 +598,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void unboxDouble(const Operand &src, const FloatRegister &dest) {
         lea(src, ScratchReg);
         movqsd(ScratchReg, dest);
+    }
+    void unboxPrivate(const ValueOperand &src, const Register dest) {
+        movq(src.valueReg(), dest);
+        shlq(Imm32(1), dest);
     }
 
     // Unbox any non-double value into dest. Prefer unboxInt32 or unboxBoolean
@@ -772,6 +779,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void linkExitFrame() {
         mov(ImmWord(GetIonContext()->cx->runtime), ScratchReg);
         mov(StackPointer, Operand(ScratchReg, offsetof(JSRuntime, ionTop)));
+    }
+
+    void enterOsr(Register calleeToken, Register code) {
+        push(calleeToken);
+        push(Imm32(MakeFrameDescriptor(0, IonFrame_Osr)));
+        call(code);
+        addq(Imm32(sizeof(uintptr_t) * 2), rsp);
     }
 };
 

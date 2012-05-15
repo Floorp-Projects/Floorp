@@ -1071,9 +1071,9 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
         InterpMode mode = (status == Jaeger_UnfinishedAtTrap)
             ? JSINTERP_SKIP_TRAP
             : JSINTERP_REJOIN;
-        ok = Interpret(cx, fp, mode);
+        InterpretStatus status = Interpret(cx, fp, mode);
 
-        return ok ? Jaeger_Returned : Jaeger_Throwing;
+        return (status != Interpret_Error) ? Jaeger_Returned : Jaeger_Throwing;
     }
 
     cx->regs().refreshFramePointer(fp);

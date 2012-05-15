@@ -162,6 +162,14 @@ class IonExitFooterFrame
     }
 };
 
+class IonOsrFrameLayout : public IonJSFrameLayout
+{
+  public:
+    static inline size_t Size() {
+        return sizeof(IonOsrFrameLayout);
+    }
+};
+
 // this is the frame layout when we are exiting ion code, and about to enter EABI code
 class IonExitFrameLayout : public IonCommonFrameLayout
 {

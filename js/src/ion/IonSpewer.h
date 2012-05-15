@@ -165,6 +165,25 @@ static inline void EnableIonDebugLogging()
 
 #endif /* DEBUG */
 
+template <IonSpewChannel Channel>
+class AutoDisableSpew
+{
+    DebugOnly<bool> enabled_;
+
+  public:
+    AutoDisableSpew()
+      : enabled_(IonSpewEnabled(Channel))
+    {
+        DisableChannel(Channel);
+    }
+
+    ~AutoDisableSpew()
+    {
+        if (enabled_)
+            EnableChannel(Channel);
+    }
+};
+
 } /* ion */
 } /* js */
 

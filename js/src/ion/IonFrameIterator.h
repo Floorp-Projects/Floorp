@@ -54,11 +54,31 @@ namespace ion {
 
 enum FrameType
 {
+    // A JS frame is analagous to a js::StackFrame, representing one scripted
+    // functon activation.
     IonFrame_JS,
+
+    // The entry frame is the initial prologue block transitioning from the VM
+    // into the Ion world.
     IonFrame_Entry,
+
+    // A rectifier frame sits in between two JS frames, adapting argc != nargs
+    // mismatches in calls.
     IonFrame_Rectifier,
+
+    // A bailed rectifier frame is a rectifier frame signalling that its callee
+    // has been bailed out.
     IonFrame_Bailed_Rectifier,
-    IonFrame_Exit
+
+    // An exit frame is necessary for transitioning from a JS frame into C++.
+    // From within C++, an exit frame is always the last frame in any
+    // IonActivation.
+    IonFrame_Exit,
+
+    // An OSR frame is added when performing OSR from within a bailout. It
+    // looks like a JS frame, but does not push scripted arguments, as OSR
+    // reads arguments from a js::StackFrame.
+    IonFrame_Osr
 };
 
 class IonCommonFrameLayout;

@@ -568,6 +568,11 @@ MarkIonActivation(JSTracer *trc, uint8 *top, IonActivation *activation)
           case IonFrame_Rectifier:
             MarkIonCodeRoot(trc, activation->compartment()->ionCompartment()->getArgumentsRectifierAddr(), "Arguments Rectifier");
             break;
+          case IonFrame_Osr:
+            // The callee token will be marked by the callee JS frame;
+            // otherwise, it does not need to be marked, since the frame is
+            // dead.
+            break;
           default:
             JS_NOT_REACHED("unexpected frame type");
             break;
@@ -593,14 +598,7 @@ ion::MarkIonCompilerRoots(JSTracer *trc)
 void
 ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
-#ifdef DEBUG
-    // Suppress bailout spew from SnapshotReader::readFrameHeader().
-    bool enableBailoutSpew = false;
-    if (IonSpewEnabled(IonSpew_Bailouts)) {
-        enableBailoutSpew = true;
-        DisableChannel(IonSpew_Bailouts);
-    }
-#endif
+    AutoDisableSpew<IonSpew_Bailouts> disableSpew;
 
     JS_ASSERT(cx->fp()->runningInIon());
     IonSpew(IonSpew_Snapshots, "Recover PC & Script from the last frame.");
@@ -614,11 +612,6 @@ ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     *scriptRes = ifi.script();
     if (pcRes)
         *pcRes = ifi.pc();
-
-#ifdef DEBUG
-    if (enableBailoutSpew)
-        EnableChannel(IonSpew_Bailouts);
-#endif
 }
 
 void

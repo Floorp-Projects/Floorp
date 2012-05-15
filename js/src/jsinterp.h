@@ -235,11 +235,18 @@ enum InterpMode
     JSINTERP_BAILOUT   = 3  /* interpreter is running from an Ion bailout */
 };
 
+enum InterpretStatus
+{
+    Interpret_Error    = 0, /* interpreter had an error */
+    Interpret_Ok       = 1, /* interpreter executed successfully */
+    Interpret_OSR      = 2  /* when mode=BAILOUT and we should OSR into Ion */
+};
+
 /*
  * Execute the caller-initialized frame for a user-defined script or function
  * pointed to by cx->fp until completion or error.
  */
-extern JS_NEVER_INLINE bool
+extern JS_NEVER_INLINE InterpretStatus
 Interpret(JSContext *cx, StackFrame *stopFp, InterpMode mode = JSINTERP_NORMAL);
 
 extern bool
