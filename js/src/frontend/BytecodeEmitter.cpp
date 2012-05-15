@@ -98,7 +98,8 @@ NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned sta
 static JSBool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);
 
-BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lineno)
+BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lineno,
+                                 bool noScriptRval, bool needScriptGlobal)
   : sc(sc),
     parent(NULL),
     parser(parser),
@@ -112,7 +113,9 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lin
     globalScope(NULL),
     closedArgs(sc->context),
     closedVars(sc->context),
-    typesetCount(0)
+    typesetCount(0),
+    noScriptRval(noScriptRval),
+    needScriptGlobal(needScriptGlobal)
 {
     memset(&prolog, 0, sizeof prolog);
     memset(&main, 0, sizeof main);
@@ -4828,7 +4831,8 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     {
         SharedContext sc(cx);
-        BytecodeEmitter bce2(bce->parser, &sc, pn->pn_pos.begin.lineno);
+        BytecodeEmitter bce2(bce->parser, &sc, pn->pn_pos.begin.lineno,
+                             /* noScriptRval = */ false, /* needsScriptGlobal = */ false);
         if (!bce2.init())
             return false;
 
@@ -5200,8 +5204,13 @@ EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * API users may also set the JSOPTION_NO_SCRIPT_RVAL option when
      * calling JS_Compile* to suppress JSOP_POPV.
      */
-    bool wantval;
-    JSBool useful = wantval = !(bce->sc->flags & (TCF_IN_FUNCTION | TCF_NO_SCRIPT_RVAL));
+    bool wantval = false;
+    JSBool useful = JS_FALSE;
+    if (bce->sc->inFunction()) {
+        JS_ASSERT(!bce->noScriptRval);
+    } else {
+        useful = wantval = !bce->noScriptRval;
+    }
 
     /* Don't eliminate expressions with side effects. */
     if (!useful) {

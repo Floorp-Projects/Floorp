@@ -154,7 +154,13 @@ struct BytecodeEmitter
 
     uint16_t        typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
-    BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lineno);
+    /* These two should only be true if sc->inFunction() is false. */
+    const bool      noScriptRval:1;     /* The caller is JS_Compile*Script*. */
+    const bool      needScriptGlobal:1; /* API caller does not want result value 
+                                           from global script. */
+
+    BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lineno,
+                    bool noScriptRval, bool needScriptGlobal);
     bool init();
 
     /*
