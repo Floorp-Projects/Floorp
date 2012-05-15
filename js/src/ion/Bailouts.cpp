@@ -521,6 +521,10 @@ ion::ThunkToInterpreter(Value *vp)
     InterpretStatus status = Interpret(cx, br->entryfp(), JSINTERP_BAILOUT);
 
     if (status == Interpret_OSR) {
+        // The interpreter currently does not ask to perform inline OSR, so
+        // this path is unreachable.
+        JS_NOT_REACHED("invalid");
+
         IonSpew(IonSpew_Bailouts, "Performing inline OSR %s:%d",
                 cx->fp()->script()->filename,
                 PCToLineNumber(cx->fp()->script(), cx->regs().pc));
