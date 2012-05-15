@@ -341,7 +341,8 @@
     <key keycode="VK_F6" command="Browser:FocusNextFrame" modifiers="shift"/>
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
 #else
-    <key id="key_fullScreen" key="&fullScreenCmd.macCommandKey;" command="View:FullScreen" modifiers="accel,shift"/>
+    <key id="key_fullScreen" key="&fullScreenCmd.macCommandKey;" command="View:FullScreen" modifiers="accel,control"/>
+    <key id="key_fullScreen_old" key="&fullScreenCmd.macCommandKey;" command="View:FullScreen" modifiers="accel,shift"/>
     <key keycode="VK_F11" command="View:FullScreen"/>
 #endif
     <key key="&reloadCmd.commandkey;" command="Browser:Reload" modifiers="accel" id="key_reload"/>
