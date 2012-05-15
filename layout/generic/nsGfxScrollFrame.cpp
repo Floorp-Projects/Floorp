@@ -1724,6 +1724,31 @@ nsGfxScrollFrameInner::AsyncScrollCallback(void* anInstance, mozilla::TimeStamp 
   self->ScrollToImpl(self->mDestination, range);
 }
 
+void
+nsGfxScrollFrameInner::ScrollToCSSPixels(nsIntPoint aScrollPosition)
+{
+  nsPoint current = GetScrollPosition();
+  nsPoint pt(nsPresContext::CSSPixelsToAppUnits(aScrollPosition.x),
+             nsPresContext::CSSPixelsToAppUnits(aScrollPosition.y));
+  nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
+  nsRect range(pt.x - halfPixel, pt.y - halfPixel, 2*halfPixel - 1, 2*halfPixel - 1);
+  if (nsPresContext::AppUnitsToIntCSSPixels(current.x) == aScrollPosition.x) {
+    pt.x = current.x;
+    range.x = pt.x;
+    range.width = 0;
+  } else {
+    // current.x must be outside 'range', so we must move in the correct direction.
+  }
+  if (nsPresContext::AppUnitsToIntCSSPixels(current.y) == aScrollPosition.y) {
+    pt.y = current.y;
+    range.y = pt.y;
+    range.height = 0;
+  } else {
+    // current.y must be outside 'range', so we must move in the correct direction.
+  }
+  ScrollTo(pt, nsIScrollableFrame::INSTANT, &range);
+}
+
 /*
  * this method wraps calls to ScrollToImpl(), either in one shot or incrementally,
  *  based on the setting of the smoothness scroll pref
