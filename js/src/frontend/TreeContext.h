@@ -58,27 +58,24 @@ namespace js {
 
 JS_ENUM_HEADER(TreeContextFlags, uint32_t)
 {
-    // parsing inside function body
-    TCF_IN_FUNCTION =                          0x1,
-
     // parsing init expr of for; exclude 'in'
-    TCF_IN_FOR_INIT =                          0x2,
+    TCF_IN_FOR_INIT =                          0x1,
 
     // function needs Call object per call
-    TCF_FUN_HEAVYWEIGHT =                      0x4,
+    TCF_FUN_HEAVYWEIGHT =                      0x2,
 
     // parsed yield statement in function
-    TCF_FUN_IS_GENERATOR =                     0x8,
+    TCF_FUN_IS_GENERATOR =                     0x4,
 
     // flag lambda from generator expression
-    TCF_GENEXP_LAMBDA =                       0x10,
+    TCF_GENEXP_LAMBDA =                        0x8,
 
     // This function/global/eval code body contained a Use Strict Directive.
     // Treat certain strict warnings as errors, and forbid the use of 'with'.
     // See also TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and
     // JSREPORT_STRICT_ERROR.
     //
-    TCF_STRICT_MODE_CODE =                    0x20,
+    TCF_STRICT_MODE_CODE =                    0x10,
 
     // The (static) bindings of this script need to support dynamic name
     // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
@@ -100,17 +97,17 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // taken not to turn off the whole 'arguments' optimization). To answer the
     // more general "is this argument aliased" question, script->needsArgsObj
     // should be tested (see JSScript::argIsAlised).
-    TCF_BINDINGS_ACCESSED_DYNAMICALLY =       0x40,
+    TCF_BINDINGS_ACCESSED_DYNAMICALLY =       0x20,
 
     // The function or a function that encloses it may define new local names
     // at runtime through means other than calling eval.
-    TCF_FUN_MIGHT_ALIAS_LOCALS =              0x80,
+    TCF_FUN_MIGHT_ALIAS_LOCALS =              0x40,
 
     // The script contains singleton initialiser JSOP_OBJECT.
-    TCF_HAS_SINGLETONS =                     0x100,
+    TCF_HAS_SINGLETONS =                      0x80,
 
     // Some enclosing scope is a with-statement or E4X filter-expression.
-    TCF_IN_WITH =                            0x200,
+    TCF_IN_WITH =                            0x100,
 
     // This function does something that can extend the set of bindings in its
     // call objects --- it does a direct eval in non-strict code, or includes a
@@ -119,7 +116,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // This flag is *not* inherited by enclosed or enclosing functions; it
     // applies only to the function in whose flags it appears.
     //
-    TCF_FUN_EXTENSIBLE_SCOPE =               0x400,
+    TCF_FUN_EXTENSIBLE_SCOPE =               0x200,
 
     // Technically, every function has a binding named 'arguments'. Internally,
     // this binding is only added when 'arguments' is mentioned by the function
@@ -142,7 +139,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // have no special semantics: the initial value is unconditionally the
     // actual argument (or undefined if nactual < nformal).
     //
-    TCF_ARGUMENTS_HAS_LOCAL_BINDING =        0x800,
+    TCF_ARGUMENTS_HAS_LOCAL_BINDING =        0x400,
 
     // In many cases where 'arguments' has a local binding (as described above)
     // we do not need to actually create an arguments object in the function
@@ -153,7 +150,7 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
     // be unsound in several cases. The frontend filters out such cases by
     // setting this flag which eagerly sets script->needsArgsObj to true.
     //
-    TCF_DEFINITELY_NEEDS_ARGS_OBJ =         0x1000
+    TCF_DEFINITELY_NEEDS_ARGS_OBJ =          0x800
 
 } JS_ENUM_FOOTER(TreeContextFlags);
 
@@ -186,14 +183,14 @@ struct SharedContext {
 
   private:
     RootedVarFunction fun_;         /* function to store argument and variable
-                                       names when flags & TCF_IN_FUNCTION */
+                                       names when inFunction is set */
     RootedVarObject   scopeChain_;  /* scope chain object for the script */
 
   public:
     unsigned        staticLevel;    /* static compilation unit nesting level */
 
     FunctionBox     *funbox;        /* null or box for function we're compiling
-                                       if (flags & TCF_IN_FUNCTION) and not in
+                                       if inFunction is set and not in
                                        js::frontend::CompileFunctionBody */
     FunctionBox     *functionList;
 
@@ -201,9 +198,10 @@ struct SharedContext {
                                        arguments if we're compiling a function */
     Bindings::StackRoot bindingsRoot; /* root for stack allocated bindings. */
 
-    inline SharedContext(JSContext *cx);
+    const bool      inFunction;     /* parsing/emitting inside function body */
 
-    bool inFunction()                  const { return flags & TCF_IN_FUNCTION; }
+    inline SharedContext(JSContext *cx, bool inFunction);
+
     bool inStrictMode()                const { return flags & TCF_STRICT_MODE_CODE; }
     bool bindingsAccessedDynamically() const { return flags & TCF_BINDINGS_ACCESSED_DYNAMICALLY; }
     bool mightAliasLocals()            const { return flags & TCF_FUN_MIGHT_ALIAS_LOCALS; }
@@ -221,19 +219,19 @@ struct SharedContext {
     unsigned argumentsLocalSlot() const;
 
     JSFunction *fun() const {
-        JS_ASSERT(inFunction());
+        JS_ASSERT(inFunction);
         return fun_;
     }
     void setFunction(JSFunction *fun) {
-        JS_ASSERT(inFunction());
+        JS_ASSERT(inFunction);
         fun_ = fun;
     }
     JSObject *scopeChain() const {
-        JS_ASSERT(!inFunction());
+        JS_ASSERT(!inFunction);
         return scopeChain_;
     }
     void setScopeChain(JSObject *scopeChain) {
-        JS_ASSERT(!inFunction());
+        JS_ASSERT(!inFunction);
         scopeChain_ = scopeChain;
     }
 

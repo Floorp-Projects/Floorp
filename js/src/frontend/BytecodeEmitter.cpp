@@ -693,7 +693,7 @@ LookupCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, Val
      */
     constp->setMagic(JS_NO_CONSTANT);
     do {
-        if (bce->sc->inFunction() || bce->parser->compileAndGo) {
+        if (bce->sc->inFunction || bce->parser->compileAndGo) {
             /* XXX this will need revising if 'const' becomes block-scoped. */
             StmtInfo *stmt = LexicalLookup(bce->sc, atom, NULL);
             if (stmt)
@@ -712,7 +712,7 @@ LookupCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, Val
              * with object or catch variable; nor can prop's value be changed,
              * nor can prop be deleted.
              */
-            if (bce->sc->inFunction()) {
+            if (bce->sc->inFunction) {
                 if (bce->sc->bindings.hasBinding(cx, atom))
                     break;
             } else {
@@ -1030,7 +1030,7 @@ static int
 AdjustBlockSlot(JSContext *cx, BytecodeEmitter *bce, int slot)
 {
     JS_ASSERT((unsigned) slot < bce->maxStackDepth);
-    if (bce->sc->inFunction()) {
+    if (bce->sc->inFunction) {
         slot += bce->sc->bindings.numVars();
         if ((unsigned) slot >= SLOTNO_LIMIT) {
             ReportCompileErrorNumber(cx, bce->tokenStream(), NULL, JSREPORT_ERROR,
@@ -1596,7 +1596,7 @@ BytecodeEmitter::needsImplicitThis()
 {
     if (!parser->compileAndGo)
         return true;
-    if (!sc->inFunction()) {
+    if (!sc->inFunction) {
         JSObject *scope = sc->scopeChain();
         while (scope) {
             if (scope->isWith())
@@ -2662,7 +2662,7 @@ MaybeEmitVarDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *
     }
 
     if (JOF_OPTYPE(pn->getOp()) == JOF_ATOM &&
-        (!bce->sc->inFunction() || (bce->sc->flags & TCF_FUN_HEAVYWEIGHT)))
+        (!bce->sc->inFunction || (bce->sc->flags & TCF_FUN_HEAVYWEIGHT)))
     {
         bce->switchToProlog();
         if (!UpdateLineNumberNotes(cx, bce, pn->pn_pos.begin.lineno))
@@ -2672,7 +2672,7 @@ MaybeEmitVarDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *
         bce->switchToMain();
     }
 
-    if (bce->sc->inFunction() &&
+    if (bce->sc->inFunction &&
         JOF_OPTYPE(pn->getOp()) == JOF_LOCAL &&
         !pn->isLet() &&
         bce->shouldNoteClosedName(pn))
@@ -4432,7 +4432,7 @@ EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         (stmtInfo.down
          ? stmtInfo.down->type == STMT_BLOCK &&
            (!stmtInfo.down->down || stmtInfo.down->down->type != STMT_FOR_IN_LOOP)
-         : !bce->sc->inFunction()))
+         : !bce->sc->inFunction))
     {
         /* There must be no source note already output for the next op. */
         JS_ASSERT(bce->noteCount() == 0 ||
@@ -4822,7 +4822,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * comments in EmitStatementList.
          */
         JS_ASSERT(pn->isOp(JSOP_NOP));
-        JS_ASSERT(bce->sc->inFunction());
+        JS_ASSERT(bce->sc->inFunction);
         return EmitFunctionDefNop(cx, bce, pn->pn_index);
     }
 
@@ -4830,14 +4830,13 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                  fun->kind() == JSFUN_INTERPRETED);
 
     {
-        SharedContext sc(cx);
+        SharedContext sc(cx, /* inFunction = */ true);
         BytecodeEmitter bce2(bce->parser, &sc, pn->pn_pos.begin.lineno,
                              /* noScriptRval = */ false, /* needsScriptGlobal = */ false);
         if (!bce2.init())
             return false;
 
-        bce2.sc->flags = pn->pn_funbox->tcflags | TCF_IN_FUNCTION |
-                         (bce->sc->flags & TCF_FUN_MIGHT_ALIAS_LOCALS);
+        bce2.sc->flags = pn->pn_funbox->tcflags | (bce->sc->flags & TCF_FUN_MIGHT_ALIAS_LOCALS);
         bce2.sc->bindings.transfer(cx, &pn->pn_funbox->bindings);
         bce2.sc->setFunction(fun);
         bce2.sc->funbox = pn->pn_funbox;
@@ -4881,7 +4880,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * invocation of the emitter and calls to EmitTree for function
      * definitions can be scheduled before generating the rest of code.
      */
-    if (!bce->sc->inFunction()) {
+    if (!bce->sc->inFunction) {
         JS_ASSERT(!bce->sc->topStmt);
         JS_ASSERT(pn->pn_cookie.isFree());
         if (pn->pn_cookie.isFree()) {
@@ -5144,7 +5143,7 @@ EmitStatementList(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t 
          * Currently this is used only for functions, as compile-as-we go
          * mode for scripts does not allow separate emitter passes.
          */
-        JS_ASSERT(bce->sc->inFunction());
+        JS_ASSERT(bce->sc->inFunction);
         if (pn->pn_xflags & PNX_DESTRUCT) {
             /*
              * Assign the destructuring arguments before defining any
@@ -5206,7 +5205,7 @@ EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      */
     bool wantval = false;
     JSBool useful = JS_FALSE;
-    if (bce->sc->inFunction()) {
+    if (bce->sc->inFunction) {
         JS_ASSERT(!bce->noScriptRval);
     } else {
         useful = wantval = !bce->noScriptRval;
@@ -5988,7 +5987,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
 #if JS_HAS_GENERATORS
       case PNK_YIELD:
-        JS_ASSERT(bce->sc->inFunction());
+        JS_ASSERT(bce->sc->inFunction);
         if (pn->pn_kid) {
             if (!EmitTree(cx, bce, pn->pn_kid))
                 return JS_FALSE;

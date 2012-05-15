@@ -49,7 +49,7 @@
 namespace js {
 
 inline
-SharedContext::SharedContext(JSContext *cx)
+SharedContext::SharedContext(JSContext *cx, bool inFunction)
   : context(cx),
     flags(0),
     bodyid(0),
@@ -63,7 +63,8 @@ SharedContext::SharedContext(JSContext *cx)
     funbox(NULL),
     functionList(NULL),
     bindings(cx),
-    bindingsRoot(cx, &bindings)
+    bindingsRoot(cx, &bindings),
+    inFunction(inFunction)
 {
 }
 
