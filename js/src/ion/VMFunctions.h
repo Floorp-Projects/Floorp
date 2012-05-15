@@ -270,7 +270,7 @@ template <> struct OutParamToDataType<uint32_t *> { static const DataType result
 #define COMPUTE_INDEX(NbArg) NbArg
 #define COMPUTE_OUTPARAM_RESULT(NbArg) OutParamToDataType<A ## NbArg>::result
 #define COMPUTE_ARG_PROP(NbArg) (TypeToArgProperties<A ## NbArg>::result << (2 * (NbArg - 1)))
-#define COMPUTE_ARG_ROOT(NbArg) (uint64(TypeToArgProperties<A ## NbArg>::result) << (4 * (NbArg - 1)))
+#define COMPUTE_ARG_ROOT(NbArg) (uint64(TypeToRootType<A ## NbArg>::result) << (4 * (NbArg - 1)))
 #define SEP_OR(_) |
 #define NOTHING(_)
 
