@@ -64,10 +64,10 @@ public class SyncAccounts {
     public final AccountManager accountManager;
 
 
-    public final String username; // services.sync.account
-    public final String syncKey; // in password manager: "chrome://weave (Mozilla Services Password)"
-    public final String password; // in password manager: "chrome://weave (Mozilla Services Encryption Passphrase)"
-    public final String serverURL; // services.sync.serverURL
+    public final String username;   // services.sync.account
+    public final String syncKey;    // in password manager: "chrome://weave (Mozilla Services Encryption Passphrase)"
+    public final String password;   // in password manager: "chrome://weave (Mozilla Services Password)"
+    public final String serverURL;  // services.sync.serverURL
     public final String clusterURL; // services.sync.clusterURL
     public final String clientName; // services.sync.client.name
     public final String clientGuid; // services.sync.client.GUID
