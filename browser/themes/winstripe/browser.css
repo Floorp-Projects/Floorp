@@ -817,7 +817,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
   box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
               0 0 1px hsla(210,54%,20%,.2) inset,
-              /* allows winstripe-keyhole-forward-mask to be used for non-hover as well as hover: */
+              /* allows winstripe-keyhole-forward-clip-path to be used for non-hover as well as hover: */
               0 1px 0 hsla(210,54%,20%,0),
               0 0 2px hsla(210,54%,20%,0);
   text-shadow: none;
@@ -896,7 +896,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 @conditionalForwardWithUrlbar@ > #forward-button > .toolbarbutton-icon {
   /*mask: url(keyhole-forward-mask.svg#mask); XXX: this regresses twinopen */
-  mask: url(chrome://browser/content/browser.xul#winstripe-keyhole-forward-mask);
+  clip-path: url(chrome://browser/content/browser.xul#winstripe-keyhole-forward-clip-path);
   -moz-margin-start: -6px !important;
   border-left-style: none;
   border-radius: 0;
@@ -1258,7 +1258,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container {
-  mask: url("chrome://browser/content/browser.xul#winstripe-urlbar-back-button-mask");
+  clip-path: url("chrome://browser/content/browser.xul#winstripe-urlbar-back-button-clip-path");
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar {

@@ -182,6 +182,8 @@ public:
     // When the connection is active this is called every second
     void  ReadTimeoutTick();
 
+    PRInt64 BytesWritten() { return mTotalBytesWritten; }
+
 private:
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStartSSL();
@@ -239,6 +241,7 @@ private:
     PRInt64                         mCurrentBytesRead;   // data read per activation
     PRInt64                         mMaxBytesRead;       // max read in 1 activation
     PRInt64                         mTotalBytesRead;     // total data read
+    PRInt64                         mTotalBytesWritten;  // does not include CONNECT tunnel
 
     nsRefPtr<nsIAsyncInputStream>   mInputOverflow;
 

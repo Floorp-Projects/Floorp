@@ -80,6 +80,7 @@ public:
   virtual ~HTMLListBulletAccessible() { }
 
   // nsAccessNode
+  virtual nsIFrame* GetFrame() const;
   virtual bool IsPrimaryForNode() const;
 
   // nsAccessible
@@ -88,6 +89,13 @@ public:
   virtual PRUint64 NativeState();
   virtual void AppendTextTo(nsAString& aText, PRUint32 aStartOffset = 0,
                             PRUint32 aLength = PR_UINT32_MAX);
+
+  // HTMLListBulletAccessible
+
+  /**
+   * Return true if the bullet is inside of list item element boundaries.
+   */
+  bool IsInside() const;
 };
 
 } // namespace a11y

@@ -1694,6 +1694,19 @@ typedef JSObject *
 typedef JSObject *
 (* JSPreWrapCallback)(JSContext *cx, JSObject *scope, JSObject *obj, unsigned flags);
 
+/*
+ * Callback used when wrapping determines that the underlying object is already
+ * in the compartment for which it is being wrapped. This allows consumers to
+ * maintain same-compartment wrapping invariants.
+ *
+ * |obj| is guaranteed to be same-compartment as |cx|, but it may (or may not)
+ * be a security or cross-compartment wrapper. This is an unfortunate contract,
+ * but is important for to avoid unnecessarily recomputing every cross-
+ * compartment wrapper that gets passed to wrap.
+ */
+typedef JSObject *
+(* JSSameCompartmentWrapObjectCallback)(JSContext *cx, JSObject *obj);
+
 typedef void
 (* JSDestroyCompartmentCallback)(JSFreeOp *fop, JSCompartment *compartment);
 
@@ -2786,6 +2799,7 @@ JS_SetDestroyCompartmentCallback(JSRuntime *rt, JSDestroyCompartmentCallback cal
 extern JS_PUBLIC_API(JSWrapObjectCallback)
 JS_SetWrapObjectCallbacks(JSRuntime *rt,
                           JSWrapObjectCallback callback,
+                          JSSameCompartmentWrapObjectCallback sccallback,
                           JSPreWrapCallback precallback);
 
 extern JS_PUBLIC_API(JSCrossCompartmentCall *)
@@ -2816,12 +2830,8 @@ js_TransplantObjectWithWrapper(JSContext *cx,
                                JSObject *targetobj,
                                JSObject *targetwrapper);
 
-extern JS_FRIEND_API(JSObject *)
-js_TransplantObjectWithWrapper(JSContext *cx,
-                               JSObject *origobj,
-                               JSObject *origwrapper,
-                               JSObject *targetobj,
-                               JSObject *targetwrapper);
+extern JS_PUBLIC_API(JSBool)
+JS_RefreshCrossCompartmentWrappers(JSContext *cx, JSObject *ob);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C

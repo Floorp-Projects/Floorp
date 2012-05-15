@@ -44,7 +44,7 @@ interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 
-[scriptable, uuid(03eafd60-d138-4f09-81b4-90cd4996b3c7)]
+[scriptable, uuid(c14c71b8-afba-403b-8320-94593de9380f)]
 interface nsIRILTelephonyCallback : nsISupports
 {
   /**
@@ -56,10 +56,13 @@ interface nsIRILTelephonyCallback : nsISupports
    *        One of the nsIRadioInterfaceLayer::CALL_STATE_* values.
    * @param number
    *        Number of the other party.
+   * @param isActive
+   *        Indicates whether this call is the currently active one.
    */
   void callStateChanged(in unsigned long callIndex,
                         in unsigned short callState,
-                        in AString number);
+                        in AString number,
+                        in boolean isActive);
 
   /**
    * Called when nsIRILContentHelper is asked to enumerate the current
@@ -81,6 +84,17 @@ interface nsIRILTelephonyCallback : nsISupports
                              in unsigned short callState,
                              in AString number,
                              in boolean isActive);
+
+  /**
+   * Called when RIL error occurs.
+   *
+   * @param callIndex
+   *        Call identifier assigned by the RIL. -1 if no connection
+   * @param error
+   *        Error from RIL.
+   */
+  void notifyError(in long callIndex,
+                   in AString error);
 };
 
 [scriptable, uuid(66a55943-e63b-4731-aece-9c04bfc14019)]

@@ -1669,11 +1669,4 @@ extern const nsIID kThisPtrOffsetsSID;
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINode, NS_INODE_IID)
 
 
-#define NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER \
-  nsContentUtils::TraceWrapper(tmp, aCallback, aClosure);
-
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
-  nsContentUtils::ReleaseWrapper(s, tmp);
-
-
 #endif /* nsINode_h___ */

@@ -29,9 +29,12 @@ let TestRunner = {
    */
   run: function () {
     waitForExplicitFinish();
-
     this._iter = runTests();
-    this.next();
+
+    if (this._iter)
+      this.next();
+    else
+      finish();
   },
 
   /**

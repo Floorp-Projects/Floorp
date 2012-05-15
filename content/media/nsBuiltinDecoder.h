@@ -470,8 +470,8 @@ public:
   // Call on the main thread only.
   virtual void NetworkError();
 
-  // Call from any thread safely. Return true if we are currently
-  // seeking in the media resource.
+  // Return true if we are currently seeking in the media resource.
+  // Call on the main thread only.
   virtual bool IsSeeking() const;
 
   // Return true if the decoder has reached the end of playback.
@@ -742,17 +742,21 @@ public:
   // Data about MediaStreams that are being fed by this decoder.
   nsTArray<OutputMediaStream> mOutputStreams;
 
-  // Set to one of the valid play states. It is protected by the
-  // monitor mReentrantMonitor. This monitor must be acquired when reading or
-  // writing the state. Any change to the state on the main thread
-  // must call NotifyAll on the monitor so the decode thread can wake up.
+  // Set to one of the valid play states.
+  // This can only be changed on the main thread while holding the decoder
+  // monitor. Thus, it can be safely read while holding the decoder monitor
+  // OR on the main thread.
+  // Any change to the state on the main thread must call NotifyAll on the
+  // monitor so the decode thread can wake up.
   PlayState mPlayState;
 
-  // The state to change to after a seek or load operation. It must only
-  // be changed from the main thread. The decoder monitor must be acquired
-  // when writing to the state, or when reading from a non-main thread.
+  // The state to change to after a seek or load operation.
+  // This can only be changed on the main thread while holding the decoder
+  // monitor. Thus, it can be safely read while holding the decoder monitor
+  // OR on the main thread.
   // Any change to the state must call NotifyAll on the monitor.
-  PlayState mNextState;	
+  // This can only be PLAY_STATE_PAUSED or PLAY_STATE_PLAYING.
+  PlayState mNextState;
 
   // True when we have fully loaded the resource and reported that
   // to the element (i.e. reached NETWORK_LOADED state).

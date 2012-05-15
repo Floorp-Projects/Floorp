@@ -1557,15 +1557,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
         return NS_OK;
     }
 
-    bool crosscompartment = js::GetObjectCompartment(aOldScope->GetGlobalJSObject()) !=
-                            js::GetObjectCompartment(aNewScope->GetGlobalJSObject());
-#ifdef DEBUG
-    if (crosscompartment) {
-        NS_ASSERTION(aNewParent, "won't be able to find the new parent");
-        NS_ASSERTION(wrapper, "can't transplant slim wrappers");
-    }
-#endif
-
     // ReparentWrapperIfFound is really only meant to be called from DOM code
     // which must happen only on the main thread. Bail if we're on some other
     // thread or have a non-main-thread-only wrapper.
@@ -1584,6 +1575,12 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
         // Oh, so now we need to move the wrapper to a different scope.
         AutoMarkingWrappedNativeProtoPtr oldProto(ccx);
         AutoMarkingWrappedNativeProtoPtr newProto(ccx);
+
+        // Cross-scope means cross-compartment.
+        MOZ_ASSERT(js::GetObjectCompartment(aOldScope->GetGlobalJSObject()) !=
+                   js::GetObjectCompartment(aNewScope->GetGlobalJSObject()));
+        NS_ASSERTION(aNewParent, "won't be able to find the new parent");
+        NS_ASSERTION(wrapper, "can't transplant slim wrappers");
 
         if (!wrapper)
             oldProto = GetSlimWrapperProto(flat);
@@ -1639,108 +1636,100 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                 (void) newMap->Add(wrapper);
             }
 
-            // We only try to fixup the __proto__ JSObject if the wrapper
-            // is directly using that of its XPCWrappedNativeProto.
+            JSObject *newobj = JS_CloneObject(ccx, flat,
+                                              newProto->GetJSProtoObject(),
+                                              aNewParent);
+            if (!newobj)
+                return NS_ERROR_FAILURE;
 
-            if (crosscompartment) {
-                JSObject *newobj = JS_CloneObject(ccx, flat,
-                                                  newProto->GetJSProtoObject(),
-                                                  aNewParent);
-                if (!newobj)
+            JSObject *propertyHolder =
+                JS_NewObjectWithGivenProto(ccx, NULL, NULL, aNewParent);
+            if (!propertyHolder || !JS_CopyPropertiesFrom(ccx, propertyHolder, flat))
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            // Before proceeding, eagerly create any same-compartment security wrappers
+            // that the object might have. This forces us to take the 'WithWrapper' path
+            // while transplanting that handles this stuff correctly.
+            {
+                JSAutoEnterCompartment innerAC;
+                if (!innerAC.enter(ccx, aOldScope->GetGlobalJSObject()) ||
+                    !wrapper->GetSameCompartmentSecurityWrapper(ccx))
                     return NS_ERROR_FAILURE;
-
-                JS_SetPrivate(flat, nsnull);
-
-                JSObject *propertyHolder =
-                    JS_NewObjectWithGivenProto(ccx, NULL, NULL, aNewParent);
-                if (!propertyHolder || !JS_CopyPropertiesFrom(ccx, propertyHolder, flat))
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                // Before proceeding, eagerly create any same-compartment security wrappers
-                // that the object might have. This forces us to take the 'WithWrapper' path
-                // while transplanting that handles this stuff correctly.
-                {
-                    JSAutoEnterCompartment innerAC;
-                    if (!innerAC.enter(ccx, aOldScope->GetGlobalJSObject()) ||
-                        !wrapper->GetSameCompartmentSecurityWrapper(ccx))
-                        return NS_ERROR_FAILURE;
-                }
-
-                JSObject *ww = wrapper->GetWrapper();
-                if (ww) {
-                    JSObject *newwrapper;
-                    MOZ_ASSERT(!xpc::WrapperFactory::IsComponentsObject(flat), 
-                               "Components object should never get here");
-                    if (xpc::WrapperFactory::IsLocationObject(flat)) {
-                        newwrapper = xpc::WrapperFactory::WrapLocationObject(ccx, newobj);
-                        if (!newwrapper)
-                            return NS_ERROR_FAILURE;
-                    } else {
-                        NS_ASSERTION(wrapper->NeedsSOW(), "weird wrapper wrapper");
-                        newwrapper = xpc::WrapperFactory::WrapSOWObject(ccx, newobj);
-                        if (!newwrapper)
-                            return NS_ERROR_FAILURE;
-                    }
-
-                    // Ok, now we do the special object-plus-wrapper transplant.
-                    //
-                    // This is some pretty serious brain surgery.
-                    //
-                    // In the case where we wrap a Location object from a same-
-                    // origin compartment, we actually want our cross-compartment
-                    // wrapper to point to the same-compartment wrapper in the
-                    // other compartment. This double-wrapping allows expandos to
-                    // be shared. So our wrapping callback (in WrapperFactory.cpp)
-                    // calls XPCWrappedNative::GetSameCompartmentSecurityWrapper
-                    // before wrapping same-origin Location objects.
-                    //
-                    // This normally works fine, but gets tricky here.
-                    // js_TransplantObjectWithWrapper needs to update the old
-                    // same-compartment security wrapper to be a cross-compartment
-                    // wrapper to the newly transplanted object. So it needs to go
-                    // through the aforementioned double-wrapping mechanism.
-                    // But during the call, things aren't really in a consistent
-                    // state, because mFlatJSObject hasn't yet been updated to
-                    // point to the object in the new compartment.
-                    //
-                    // So we need to cache the new same-compartment security
-                    // wrapper on the XPCWN before the call, so that
-                    // GetSameCompartmentSecurityWrapper can return early before
-                    // getting confused. Hold your breath.
-                    JSObject *wwsaved = ww;
-                    wrapper->SetWrapper(newwrapper);
-                    ww = js_TransplantObjectWithWrapper(ccx, flat, ww, newobj,
-                                                        newwrapper);
-                    if (!ww) {
-                        wrapper->SetWrapper(wwsaved);
-                        return NS_ERROR_FAILURE;
-                    }
-
-                    flat = newobj;
-                } else {
-                    flat = JS_TransplantObject(ccx, flat, newobj);
-                    if (!flat)
-                        return NS_ERROR_FAILURE;
-                }
-
-                wrapper->mFlatJSObject = flat;
-                if (cache)
-                    cache->SetWrapper(flat);
-                if (!JS_CopyPropertiesFrom(ccx, flat, propertyHolder))
-                    return NS_ERROR_FAILURE;
-            } else {
-                if (wrapper->HasProto() &&
-                    js::GetObjectProto(flat) == oldProto->GetJSProtoObject()) {
-                    if (!JS_SetPrototype(ccx, flat, newProto->GetJSProtoObject())) {
-                        // this is bad, very bad
-                        NS_ERROR("JS_SetPrototype failed");
-                        return NS_ERROR_FAILURE;
-                    }
-                } else {
-                    NS_WARNING("Moving XPConnect wrappedNative to new scope, "
-                               "but can't fixup __proto__");
-                }
             }
+
+            // Null out the private of the JS reflector. If we don't, we'll end up
+            // with two JS objects with the same WN in their private slot, and both
+            // will try to delete it during finalization. The one in this
+            // compartment will actually go away quite soon, because we swap() it
+            // with another object during the transplant and let that object die.
+            //
+            // NB: It's important to do this _after_ copying the properties to
+            // propertyHolder. Otherwise, an object with |foo.x === foo| will
+            // crash when JS_CopyPropertiesFrom tries to call wrap() on foo.x.
+            JS_SetPrivate(flat, nsnull);
+
+            JSObject *ww = wrapper->GetWrapper();
+            if (ww) {
+                JSObject *newwrapper;
+                MOZ_ASSERT(!xpc::WrapperFactory::IsComponentsObject(flat), 
+                           "Components object should never get here");
+                if (xpc::WrapperFactory::IsLocationObject(flat)) {
+                    newwrapper = xpc::WrapperFactory::WrapLocationObject(ccx, newobj);
+                    if (!newwrapper)
+                        return NS_ERROR_FAILURE;
+                } else {
+                    NS_ASSERTION(wrapper->NeedsSOW(), "weird wrapper wrapper");
+                    newwrapper = xpc::WrapperFactory::WrapSOWObject(ccx, newobj);
+                    if (!newwrapper)
+                        return NS_ERROR_FAILURE;
+                }
+
+                // Ok, now we do the special object-plus-wrapper transplant.
+                //
+                // This is some pretty serious brain surgery.
+                //
+                // In the case where we wrap a Location object from a same-
+                // origin compartment, we actually want our cross-compartment
+                // wrapper to point to the same-compartment wrapper in the
+                // other compartment. This double-wrapping allows expandos to
+                // be shared. So our wrapping callback (in WrapperFactory.cpp)
+                // calls XPCWrappedNative::GetSameCompartmentSecurityWrapper
+                // before wrapping same-origin Location objects.
+                //
+                // This normally works fine, but gets tricky here.
+                // js_TransplantObjectWithWrapper needs to update the old
+                // same-compartment security wrapper to be a cross-compartment
+                // wrapper to the newly transplanted object. So it needs to go
+                // through the aforementioned double-wrapping mechanism.
+                // But during the call, things aren't really in a consistent
+                // state, because mFlatJSObject hasn't yet been updated to
+                // point to the object in the new compartment.
+                //
+                // So we need to cache the new same-compartment security
+                // wrapper on the XPCWN before the call, so that
+                // GetSameCompartmentSecurityWrapper can return early before
+                // getting confused. Hold your breath.
+                JSObject *wwsaved = ww;
+                wrapper->SetWrapper(newwrapper);
+                ww = js_TransplantObjectWithWrapper(ccx, flat, ww, newobj,
+                                                    newwrapper);
+                if (!ww) {
+                    wrapper->SetWrapper(wwsaved);
+                    return NS_ERROR_FAILURE;
+                }
+
+                flat = newobj;
+            } else {
+                flat = JS_TransplantObject(ccx, flat, newobj);
+                if (!flat)
+                    return NS_ERROR_FAILURE;
+            }
+
+            wrapper->mFlatJSObject = flat;
+            if (cache)
+                cache->SetWrapper(flat);
+            if (!JS_CopyPropertiesFrom(ccx, flat, propertyHolder))
+                return NS_ERROR_FAILURE;
         } else {
             JS_SetReservedSlot(flat, 0,
                                PRIVATE_TO_JSVAL(newProto.get()));
@@ -1870,8 +1859,8 @@ return_tearoff:
 
         // Unwrap any wrapper wrappers.
         JSObject *unsafeObj = cx
-                              ? XPCWrapper::Unwrap(cx, cur)
-                              : XPCWrapper::UnsafeUnwrapSecurityWrapper(cur);
+                              ? XPCWrapper::Unwrap(cx, cur, /* stopAtOuter = */ false)
+                              : js::UnwrapObject(cur, /* stopAtOuter = */ false);
         if (unsafeObj) {
             obj = unsafeObj;
             goto restart;
