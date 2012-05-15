@@ -161,6 +161,7 @@ _TEST_FILES = \
 		use_large_cache.js \
 		test_audiowrite.html \
 		test_mozHasAudio.html \
+		test_source_media.html \
 		$(NULL)
 
 # Don't run in suite
