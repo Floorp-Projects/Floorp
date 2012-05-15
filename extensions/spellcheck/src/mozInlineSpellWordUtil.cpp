@@ -922,9 +922,6 @@ WordSplitState::FindSpecialWord()
   // Search for email addresses. We simply define these as any sequence of
   // characters with an '@' character in the middle. The DOM word is already
   // split on whitepace, so we know that everything to the end is the address
-  //
-  // Also look for periods, this tells us if we want to run the URL finder.
-  bool foundDot = false;
   PRInt32 firstColon = -1;
   for (i = mDOMWordOffset;
        i < PRInt32(mDOMWordText.Length()); i ++) {
@@ -944,10 +941,6 @@ WordSplitState::FindSpecialWord()
           ClassifyCharacter(i + 1, false) == CHAR_CLASS_WORD)
 
       return mDOMWordText.Length() - mDOMWordOffset;
-    } else if (mDOMWordText[i] == '.' && ! foundDot &&
-        i > 0 && i < (PRInt32)mDOMWordText.Length() - 1) {
-      // we found a period not at the end, we should check harder for URLs
-      foundDot = true;
     } else if (mDOMWordText[i] == ':' && firstColon < 0) {
       firstColon = i;
     }
