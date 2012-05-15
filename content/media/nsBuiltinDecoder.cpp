@@ -577,6 +577,7 @@ void nsBuiltinDecoder::PlaybackEnded()
   if (mShuttingDown || mPlayState == nsBuiltinDecoder::PLAY_STATE_SEEKING)
     return;
 
+  printf("nsBuiltinDecoder::PlaybackEnded mPlayState=%d\n", mPlayState);
   PlaybackPositionChanged();
   ChangeState(PLAY_STATE_ENDED);
 
@@ -791,6 +792,7 @@ void nsBuiltinDecoder::SeekingStopped()
       seekWasAborted = true;
     } else {
       UnpinForSeek();
+      printf("nsBuiltinDecoder::SeekingStopped, next state=%d\n", mNextState);
       ChangeState(mNextState);
     }
   }
@@ -824,6 +826,7 @@ void nsBuiltinDecoder::SeekingStoppedAtEnd()
       seekWasAborted = true;
     } else {
       UnpinForSeek();
+      printf("nsBuiltinDecoder::SeekingStoppedAtEnd, next state=PLAY_STATE_ENDED\n");
       fireEnded = true;
       ChangeState(PLAY_STATE_ENDED);
     }
@@ -906,6 +909,9 @@ void nsBuiltinDecoder::PlaybackPositionChanged()
         // current time after the seek has started but before it has
         // completed.
         mCurrentTime = mDecoderStateMachine->GetCurrentTime();
+      } else {
+        printf("Suppressed timeupdate during seeking: currentTime=%f, new time=%f\n",
+               mCurrentTime, mDecoderStateMachine->GetCurrentTime());
       }
       mDecoderStateMachine->ClearPositionChangeFlag();
     }
