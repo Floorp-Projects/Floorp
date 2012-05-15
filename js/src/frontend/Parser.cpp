@@ -3104,7 +3104,7 @@ Parser::forStatement()
             /*
              * Set pn1 to a var list or an initializing expression.
              *
-             * Set the TCF_IN_FOR_INIT flag during parsing of the first clause
+             * Set the inForInit flag during parsing of the first clause
              * of the for statement.  This flag will be used by the RelExpr
              * production; if it is set, then the 'in' keyword will not be
              * recognized as an operator, leaving it available to be parsed as
@@ -3114,7 +3114,7 @@ Parser::forStatement()
              * expressions involving an 'in' operator are illegal in the init
              * clause of an ordinary for loop.
              */
-            tc->sc->flags |= TCF_IN_FOR_INIT;
+            tc->sc->inForInit = true;
             if (tt == TOK_VAR || tt == TOK_CONST) {
                 forDecl = true;
                 tokenStream.consumeKnownToken(tt);
@@ -3137,7 +3137,7 @@ Parser::forStatement()
             else {
                 pn1 = expr();
             }
-            tc->sc->flags &= ~TCF_IN_FOR_INIT;
+            tc->sc->inForInit = false;
             if (!pn1)
                 return NULL;
         }
@@ -3155,7 +3155,7 @@ Parser::forStatement()
      * We can be sure that it's a for/in loop if there's still an 'in'
      * keyword here, even if JavaScript recognizes 'in' as an operator,
      * as we've excluded 'in' from being parsed in RelExpr by setting
-     * the TCF_IN_FOR_INIT flag in our TreeContext.
+     * tc->sc->inForInit.
      */
     ParseNode *forHead;        /* initialized by both branches. */
     StmtInfo letStmt(context); /* used if blockObj != NULL. */
@@ -4217,7 +4217,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
             if (!CheckDestructuring(context, &data, pn2, this))
                 return NULL;
             bool ignored;
-            if ((tc->sc->flags & TCF_IN_FOR_INIT) && matchInOrOf(&ignored)) {
+            if (tc->sc->inForInit && matchInOrOf(&ignored)) {
                 tokenStream.ungetToken();
                 pn->append(pn2);
                 continue;
@@ -4420,13 +4420,12 @@ RelationalTokenToParseNodeKind(const Token &token)
 
 BEGIN_EXPR_PARSER(relExpr1)
 {
-    unsigned inForInitFlag = tc->sc->flags & TCF_IN_FOR_INIT;
-
     /*
      * Uses of the in operator in shiftExprs are always unambiguous,
      * so unset the flag that prohibits recognizing it.
      */
-    tc->sc->flags &= ~TCF_IN_FOR_INIT;
+    bool oldInForInit = tc->sc->inForInit;
+    tc->sc->inForInit = false;
 
     ParseNode *pn = shiftExpr1i();
     while (pn &&
@@ -4435,14 +4434,14 @@ BEGIN_EXPR_PARSER(relExpr1)
              * Recognize the 'in' token as an operator only if we're not
              * currently in the init expr of a for loop.
              */
-            (inForInitFlag == 0 && tokenStream.isCurrentTokenType(TOK_IN)) ||
+            (oldInForInit == 0 && tokenStream.isCurrentTokenType(TOK_IN)) ||
             tokenStream.isCurrentTokenType(TOK_INSTANCEOF))) {
         ParseNodeKind kind = RelationalTokenToParseNodeKind(tokenStream.currentToken());
         JSOp op = tokenStream.currentToken().t_op;
         pn = ParseNode::newBinaryOrAppend(kind, op, pn, shiftExpr1n(), this);
     }
     /* Restore previous state of inForInit flag. */
-    tc->sc->flags |= inForInitFlag;
+    tc->sc->inForInit |= oldInForInit;
 
     return pn;
 }
@@ -4536,10 +4535,12 @@ Parser::condExpr1()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    unsigned oldflags = tc->sc->flags;
-    tc->sc->flags &= ~TCF_IN_FOR_INIT;
+    uint32_t oldflags = tc->sc->flags;
+    bool oldInForInit = tc->sc->inForInit;
+    tc->sc->inForInit = false;
     ParseNode *thenExpr = assignExpr();
     tc->sc->flags = oldflags | (tc->sc->flags & TCF_FUN_FLAGS);
+    tc->sc->inForInit = oldInForInit;
     if (!thenExpr)
         return NULL;
 
@@ -5803,18 +5804,17 @@ Parser::memberExpr(JSBool allowCallSyntax)
 ParseNode *
 Parser::bracketedExpr()
 {
-    unsigned oldflags;
-    ParseNode *pn;
-
     /*
      * Always accept the 'in' operator in a parenthesized expression,
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    oldflags = tc->sc->flags;
-    tc->sc->flags &= ~TCF_IN_FOR_INIT;
-    pn = expr();
+    uint32_t oldflags = tc->sc->flags;
+    bool oldInForInit = tc->sc->inForInit;
+    tc->sc->inForInit = false;
+    ParseNode *pn = expr();
     tc->sc->flags = oldflags | (tc->sc->flags & TCF_FUN_FLAGS);
+    tc->sc->inForInit = oldInForInit;
     return pn;
 }
 
