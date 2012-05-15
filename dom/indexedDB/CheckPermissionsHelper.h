@@ -52,9 +52,9 @@ class nsIThread;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class CheckPermissionsHelper : public nsIRunnable,
-                               public nsIInterfaceRequestor,
-                               public nsIObserver
+class CheckPermissionsHelper MOZ_FINAL : public nsIRunnable,
+                                         public nsIInterfaceRequestor,
+                                         public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
