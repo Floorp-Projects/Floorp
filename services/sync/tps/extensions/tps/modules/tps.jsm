@@ -90,6 +90,13 @@ const SYNC_WIPE_SERVER  = "wipe-server";
 const SYNC_RESET_CLIENT = "reset-client";
 const SYNC_START_OVER   = "start-over";
 
+const OBSERVER_TOPICS = ["weave:engine:start-tracking",
+                         "weave:engine:stop-tracking",
+                         "weave:service:sync:finish",
+                         "weave:service:sync:error",
+                         "sessionstore-windows-restored",
+                         "private-browsing"];
+
 let TPS =
 {
   _waitingForSync: false,
@@ -184,6 +191,9 @@ let TPS =
   },
 
   quit: function () {
+    OBSERVER_TOPICS.forEach(function(topic) {
+      Services.obs.removeObserver(this, topic);
+    }, this);
     Logger.close();
     this.goQuitApplication();
   },
@@ -565,13 +575,9 @@ let TPS =
    */
   _executeTestPhase: function _executeTestPhase(file, phase, settings) {
     try {
-      // TODO Unregister observers on unload (bug 721283).
-      Services.obs.addObserver(this, "weave:engine:start-tracking", true);
-      Services.obs.addObserver(this, "weave:engine:stop-tracking", true);
-      Services.obs.addObserver(this, "weave:service:sync:finish", true);
-      Services.obs.addObserver(this, "weave:service:sync:error", true);
-      Services.obs.addObserver(this, "sessionstore-windows-restored", true);
-      Services.obs.addObserver(this, "private-browsing", true);
+      OBSERVER_TOPICS.forEach(function(topic) {
+        Services.obs.addObserver(this, topic, true);
+      }, this);
 
       // parse the test file
       Services.scriptloader.loadSubScript(file, this);
