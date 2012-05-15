@@ -404,7 +404,7 @@ NS_IMPL_EVENT_HANDLER(Telephony, callschanged)
 
 NS_IMETHODIMP
 Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
-                            const nsAString& aNumber)
+                            const nsAString& aNumber, bool aIsActive)
 {
   NS_ASSERTION(aCallIndex != kOutgoingPlaceholderCallIndex,
                "This should never happen!");
@@ -445,7 +445,7 @@ Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
     modifiedCall->ChangeState(aCallState);
 
     // See if this should replace our current active call.
-    if (aCallState == nsIRadioInterfaceLayer::CALL_STATE_CONNECTED) {
+    if (aIsActive) {
       mActiveCall = modifiedCall;
     }
 

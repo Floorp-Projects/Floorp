@@ -166,6 +166,8 @@ AudioManager::SetPhoneState(PRInt32 aState)
   if (AudioSystem::setPhoneState(aState)) {
     return NS_ERROR_FAILURE;
   }
+
+  mPhoneState = aState;
   return NS_OK;
 }
 

@@ -440,28 +440,29 @@ RadioInterfaceLayer.prototype = {
 
   /**
    * Track the active call and update the audio system as its state changes.
-   *
-   * XXX Needs some more work to support hold/resume.
    */
   _activeCall: null,
   updateCallAudioState: function updateCallAudioState() {
     if (!this._activeCall) {
       // Disable audio.
       gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
-      debug("No active call, put audio system into PHONE_STATE_NORMAL.");
+      debug("No active call, put audio system into PHONE_STATE_NORMAL: "
+            + gAudioManager.phoneState);
       return;
     }
     switch (this._activeCall.state) {
       case nsIRadioInterfaceLayer.CALL_STATE_INCOMING:
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_RINGTONE;
-        debug("Incoming call, put audio system into PHONE_STATE_RINGTONE.");
+        debug("Incoming call, put audio system into PHONE_STATE_RINGTONE: "
+              + gAudioManager.phoneState);
         break;
       case nsIRadioInterfaceLayer.CALL_STATE_DIALING: // Fall through...
       case nsIRadioInterfaceLayer.CALL_STATE_CONNECTED:
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
         gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
                                      nsIAudioManager.FORCE_NONE);
-        debug("Active call, put audio system into PHONE_STATE_IN_CALL.");
+        debug("Active call, put audio system into PHONE_STATE_IN_CALL: "
+              + gAudioManager.phoneState);
         break;
     }
   },
@@ -473,11 +474,12 @@ RadioInterfaceLayer.prototype = {
   handleCallStateChange: function handleCallStateChange(call) {
     debug("handleCallStateChange: " + JSON.stringify(call));
     call.state = convertRILCallState(call.state);
-    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_DIALING ||
-        call.state == nsIRadioInterfaceLayer.CALL_STATE_ALERTING ||
-        call.state == nsIRadioInterfaceLayer.CALL_STATE_CONNECTED) {
-      // This is now the active call.
+    if (call.isActive) {
       this._activeCall = call;
+    } else if (this._activeCall &&
+               this._activeCall.callIndex == call.callIndex) {
+      // Previously active call is not active now.
+      this._activeCall = null;
     }
     this.updateCallAudioState();
     ppmm.sendAsyncMessage("RIL:CallStateChanged", call);
@@ -488,7 +490,7 @@ RadioInterfaceLayer.prototype = {
    */
   handleCallDisconnected: function handleCallDisconnected(call) {
     debug("handleCallDisconnected: " + JSON.stringify(call));
-    if (this._activeCall && this._activeCall.callIndex == call.callIndex) {
+    if (call.isActive) {
       this._activeCall = null;
     }
     this.updateCallAudioState();
@@ -501,12 +503,10 @@ RadioInterfaceLayer.prototype = {
    */
   handleEnumerateCalls: function handleEnumerateCalls(calls) {
     debug("handleEnumerateCalls: " + JSON.stringify(calls));
-    let activeCallIndex = this._activeCall ? this._activeCall.callIndex : -1;
     for (let i in calls) {
       calls[i].state = convertRILCallState(calls[i].state);
     }
-    ppmm.sendAsyncMessage("RIL:EnumerateCalls",
-                          {calls: calls, activeCallIndex: activeCallIndex});
+    ppmm.sendAsyncMessage("RIL:EnumerateCalls", calls);
   },
 
   /**

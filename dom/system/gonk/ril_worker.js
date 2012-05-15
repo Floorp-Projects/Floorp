@@ -644,9 +644,14 @@ let RIL = {
   networkSelectionMode: null,
 
   /**
-   * Active calls
+   * Valid calls.
    */
   currentCalls: {},
+
+  /**
+   * Current calls length.
+   */
+  currentCallsLength: null,
 
   /**
    * Existing data calls.
@@ -1749,12 +1754,19 @@ let RIL = {
   },
 
   /**
-   * Helpers for processing call state.
+   * Helpers for processing call state and handle the active call.
    */
   _processCalls: function _processCalls(newCalls) {
     // Go through the calls we currently have on file and see if any of them
     // changed state. Remove them from the newCalls map as we deal with them
     // so that only new calls remain in the map after we're done.
+    let lastCallsLength = this.currentCallsLength;
+    if (newCalls) {
+      this.currentCallsLength = newCalls.length;
+    } else {
+      this.currentCallsLength = 0;
+    }
+
     for each (let currentCall in this.currentCalls) {
       let newCall;
       if (newCalls) {
@@ -1764,9 +1776,12 @@ let RIL = {
 
       if (newCall) {
         // Call is still valid.
-        if (newCall.state != currentCall.state) {
-          // State has changed.
+        if (newCall.state != currentCall.state ||
+            this.currentCallsLength != lastCallsLength) {
+          // State has changed. Active call may have changed as valid
+          // calls change.
           currentCall.state = newCall.state;
+          currentCall.isActive = this._isActiveCall(currentCall.state);
           this._handleChangedCallState(currentCall);
         }
       } else {
@@ -1788,6 +1803,7 @@ let RIL = {
         }
         // Add to our map.
         this.currentCalls[newCall.callIndex] = newCall;
+        newCall.isActive = this._isActiveCall(newCall.state);
         this._handleChangedCallState(newCall);
       }
     }
@@ -1807,6 +1823,24 @@ let RIL = {
     let message = {type: "callDisconnected",
                    call: disconnectedCall};
     this.sendDOMMessage(message);
+  },
+
+  _isActiveCall: function _isActiveCall(callState) {
+    switch (callState) {
+      case CALL_STATE_INCOMING:
+      case CALL_STATE_DIALING:
+      case CALL_STATE_ALERTING:
+      case CALL_STATE_ACTIVE:
+        return true;
+      case CALL_STATE_HOLDING:
+        return false;
+      case CALL_STATE_WAITING:
+        if (this.currentCallsLength == 1) {
+          return true;
+        } else {
+          return false;
+        }
+    }
   },
 
   _processDataCallList: function _processDataCallList(datacalls) {
@@ -2254,8 +2288,11 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, opti
       };
     }
 
+    call.isActive = false;
+
     calls[call.callIndex] = call;
   }
+  calls.length = calls_length;
   this._processCalls(calls);
 };
 RIL[REQUEST_DIAL] = function REQUEST_DIAL(length, options) {
