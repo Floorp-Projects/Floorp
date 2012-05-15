@@ -6841,7 +6841,6 @@ exports.shutdown = function() {
  * something else takes focus.
  * @param options Object containing user customization properties, including:
  * - blurDelay (default=150ms)
- * - slowTypingDelay (default=3000ms)
  * - debug (default=false)
  * - commandOutputManager (default=canon.commandOutputManager)
  * @param components Object that links to other UI components. GCLI provided:
@@ -6866,12 +6865,6 @@ function FocusManager(options, components) {
   this._hasFocus = false;
   this._helpRequested = false;
   this._recentOutput = false;
-
-  // Be more helpful if the user pauses
-  // this._slowTyping = false;
-  // this._keyPressTimeout = null;
-  // this._onSlowTyping = this._onSlowTyping.bind(this);
-  // this._slowTypingDelay = options.slowTypingDelay || 3000;
 
   this.onVisibilityChange = util.createEvent('FocusManager.onVisibilityChange');
 
@@ -6907,7 +6900,6 @@ FocusManager.prototype.destroy = function() {
     this._blurDelayTimeout = null;
   }
 
-  // delete this._onSlowTyping;
   delete this._focused;
   delete this._document;
   delete this._window;
@@ -6998,8 +6990,6 @@ FocusManager.prototype._reportFocus = function(where) {
     console.log('FocusManager._reportFocus(' + (where || 'unknown') + ')');
   }
 
-  // this._resetSlowTypingAlarm();
-
   if (this._blurDelayTimeout) {
     if (this._debug) {
       console.log('FocusManager.cancelBlur');
@@ -7025,8 +7015,6 @@ FocusManager.prototype._reportBlur = function(where) {
     console.log('FocusManager._reportBlur(' + where + ')');
   }
 
-  // this._cancelSlowTypingAlarm();
-
   if (this._hasFocus) {
     if (this._blurDelayTimeout) {
       if (this._debug) {
@@ -7047,35 +7035,6 @@ FocusManager.prototype._reportBlur = function(where) {
 };
 
 /**
- * Called on keypress or new focus. Sets off a timer to explode if the user
- * stops typing.
- */
-FocusManager.prototype._resetSlowTypingAlarm = function() {
-  // this._cancelSlowTypingAlarm();
-  // this._keyPressTimeout = this._window.setTimeout(this._onSlowTyping,
-  //                                                 this._slowTypingDelay);
-};
-
-/**
- * Don't kick off a slow typing alarm
- */
-FocusManager.prototype._cancelSlowTypingAlarm = function() {
-  // if (this._keyPressTimeout) {
-  //   this._window.clearTimeout(this._keyPressTimeout);
-  //   this._keyPressTimeout = null;
-  // }
-  // this._slowTyping = false;
-};
-
-/**
- * Called from the key-press timeout
- */
-FocusManager.prototype._onSlowTyping = function() {
-  // this._slowTyping = true;
-  // this._checkShow();
-};
-
-/**
  * The setting has changed
  */
 FocusManager.prototype._eagerHelperChanged = function() {
@@ -7087,8 +7046,6 @@ FocusManager.prototype._eagerHelperChanged = function() {
  * showing the tooltip element, (or if the keypress is F1, show it now)
  */
 FocusManager.prototype.onInputChange = function(ev) {
-  // this._resetSlowTypingAlarm();
-  // this._slowTyping = false;
   this._recentOutput = false;
   this._checkShow();
 };
@@ -7102,8 +7059,6 @@ FocusManager.prototype.helpRequest = function() {
     console.log('FocusManager.helpRequest');
   }
 
-  // this._cancelSlowTypingAlarm();
-  // this._slowTyping = true;
   this._helpRequested = true;
   this._recentOutput = false;
   this._checkShow();
@@ -7118,8 +7073,6 @@ FocusManager.prototype.removeHelp = function() {
     console.log('FocusManager.removeHelp');
   }
 
-  // this._cancelSlowTypingAlarm();
-  // this._slowTyping = false;
   this._importantFieldFlag = false;
   this._isError = false;
   this._helpRequested = false;
@@ -7204,10 +7157,6 @@ FocusManager.prototype._shouldShowTooltip = function() {
   if (this._importantFieldFlag) {
     return { visible: true, reason: 'importantFieldFlag' };
   }
-
-  // if (this._slowTyping) {
-  //   return { visible: true, reason: 'slowTyping' };
-  // }
 
   return { visible: false, reason: 'default' };
 };
