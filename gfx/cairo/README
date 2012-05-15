@@ -194,6 +194,8 @@ pixman-limits.patch: include limits.h for SIZE_MAX
 
 pixman-lowres-interp.patch: Use lower quality interpolation for more speed.
 
+pixman-bilinear-fastpath.patch: Bilinear fast paths for non-neon
+
 ==== disable printing patch ====
 
 disable-printing.patch:  allows us to use NS_PRINTING to disable printing.
