@@ -748,6 +748,10 @@ RadioInterfaceLayer.prototype = {
       nsIAudioManager.PHONE_STATE_IN_COMMUNICATION :
       nsIAudioManager.PHONE_STATE_IN_CALL;  //XXX why is this needed?
     gAudioManager.microphoneMuted = value;
+
+    if (!this._activeCall) {
+      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+    }
   },
 
   get speakerEnabled() {
@@ -762,6 +766,10 @@ RadioInterfaceLayer.prototype = {
     let force = value ? nsIAudioManager.FORCE_SPEAKER :
                         nsIAudioManager.FORCE_NONE;
     gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION, force);
+
+    if (!this._activeCall) {
+      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+    }
   },
 
   /**
