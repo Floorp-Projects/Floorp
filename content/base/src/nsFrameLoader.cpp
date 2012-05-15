@@ -1408,7 +1408,11 @@ nsFrameLoader::ShouldUseRemoteProcess()
     return Preferences::GetBool("dom.ipc.browser_frames.oop_by_default", false);
   }
 
-  return mOwnerContent->AttrValueIs(kNameSpaceID_None,
+  // Otherwise, we're remote if we have "remote=true" and we're either a
+  // browser frame or a XUL element.
+  return (OwnerIsBrowserFrame() ||
+          mOwnerContent->GetNameSpaceID() == kNameSpaceID_XUL) &&
+         mOwnerContent->AttrValueIs(kNameSpaceID_None,
                                     nsGkAtoms::Remote,
                                     nsGkAtoms::_true,
                                     eCaseMatters);

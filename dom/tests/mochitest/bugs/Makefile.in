@@ -161,6 +161,7 @@ _TEST_FILES	= \
 		utils_bug743615.js \
 		worker_bug743615.js \
 		test_bug750051.html \
+		test_bug755320.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)
