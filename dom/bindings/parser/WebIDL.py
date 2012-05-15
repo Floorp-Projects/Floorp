@@ -814,10 +814,10 @@ class IDLSequenceType(IDLType):
         return False
 
     def isPrimitive(self):
-        return self.inner.isPrimitive()
+        return False;
 
     def isString(self):
-        return self.inner.isString()
+        return False;
 
     def isVoid(self):
         return False
