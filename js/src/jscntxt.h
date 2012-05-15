@@ -852,9 +852,7 @@ struct JSRuntime : js::RuntimeFriendFields
     JS_DECLARE_NEW_METHODS(malloc_, JS_ALWAYS_INLINE)
     JS_DECLARE_DELETE_METHODS(free_, JS_ALWAYS_INLINE)
 
-    void setGCMaxMallocBytes(size_t value) {
-        gcMaxMallocBytes = value;
-    }
+    void setGCMaxMallocBytes(size_t value);
 
     /*
      * Call this after allocating memory held by GC things, to update memory
