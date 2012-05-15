@@ -82,8 +82,8 @@ public:
   GLuint GetTextureID() { return mTexture; }
   GLContext *GetGLContext() { return mContext; }
 
-private:
   void Release();
+private:
 
   nsRefPtr<GLContext> mContext;
   GLuint mTexture;
