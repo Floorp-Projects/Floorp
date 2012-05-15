@@ -9,10 +9,8 @@ var W3CTest = {
    * names to either the boolean |true|, or the string "debug". The former
    * means that this test is expected to fail in all builds, and the latter
    * that it is only expected to fail in debug builds.
-   *
-   * This is filled in by the writeReporter.py script.
    */
-  "expectedFailures": ${expectations},
+  "expectedFailures": {},
 
   /**
    * List of test results, needed by TestRunner to update the UI.
@@ -68,14 +66,11 @@ var W3CTest = {
   /**
    * Returns true if this test is expected to fail, and false otherwise.
    */
-  "_todo": function(url, test) {
-    if (!(url in this.expectedFailures)) {
-      return false;
-    }
-    if (this.expectedFailures[url] === "all") {
+  "_todo": function(test) {
+    if (this.expectedFailures === "all") {
       return true;
     }
-    var value = this.expectedFailures[url][test.name];
+    var value = this.expectedFailures[test.name];
     return value === true || (value === "debug" && !!SpecialPowers.isDebugBuild);
   },
 
@@ -88,7 +83,7 @@ var W3CTest = {
     this.report({
       "message": test.message || test.name,
       "result": test.status === test.PASS,
-      "todo": this._todo(url, test)
+      "todo": this._todo(test)
     });
   },
 
@@ -112,6 +107,17 @@ var W3CTest = {
   if (!W3CTest.runner) {
     return;
   }
+  // Get expected fails.  If there aren't any, there will be a 404, which is
+  // fine.  Anything else is unexpected.
+  var request = new XMLHttpRequest();
+  request.open("GET", "/tests/dom/imptests/failures/" + W3CTest.getURL() + ".json", false);
+  request.send();
+  if (request.status === 200) {
+    W3CTest.expectedFailures = JSON.parse(request.responseText);
+  } else if (request.status !== 404) {
+    is(request.status, 404, "Request status neither 200 nor 404");
+  }
+
   add_result_callback(W3CTest.result.bind(W3CTest));
   add_completion_callback(W3CTest.finish.bind(W3CTest));
   setup({

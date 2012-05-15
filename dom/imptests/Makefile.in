@@ -9,6 +9,9 @@ VPATH = @srcdir@
 relativesrcdir = dom/imported-tests
 
 DIRS = \
+  failures/webapps/WebStorage/tests/submissions/Ms2ger \
+  failures/webapps/WebStorage/tests/submissions/Infraware \
+  failures/webapps/DOMCore/tests/submissions/Opera \
   $(NULL)
 
 include $(srcdir)/html.mk
@@ -23,9 +26,6 @@ _SUPPORT_FILES = \
   idlharness.js \
   WebIDLParser.js \
   $(NULL)
-
-testharnessreport.js: testharnessreport.js.in writeReporter.py failures.txt html.json webapps.json
-	$(PYTHON_PATH) $(srcdir)/writeReporter.py $<
 
 libs:: $(_SUPPORT_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/resources
