@@ -199,6 +199,21 @@ var AccessFu = {
             QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
           let event = aEvent.
             QueryInterface(Ci.nsIAccessibleVirtualCursorChangeEvent);
+          let position = pivot.position;
+          let doc = aEvent.DOMNode;
+
+          if (doc instanceof Ci.nsIDOMDocument && position.DOMNode) {
+            // Set the caret to the start of the pivot position, and move
+            // the focus in the same manner as browse with caret mode.
+            // This blurs the focus on the previous pivot position (if it
+            // was activated), and keeps us in a predictable spot for tab
+            // focus.
+            let sel = doc.getSelection();
+            sel.collapse(position.DOMNode, 0);
+            Cc["@mozilla.org/focus-manager;1"]
+              .getService(Ci.nsIFocusManager).moveFocus(
+                doc.defaultView, null, Ci.nsIFocusManager.MOVEFOCUS_CARET, 0);
+          }
 
           let newContext = this.getNewContext(event.oldAccessible,
                                               pivot.position);
