@@ -310,12 +310,24 @@ let DeveloperToolbarTest = {
           testFunc(browser, tab);
         }
         catch (ex) {
-          ok(false, "" + ex);
+          ok(false, ex);
           console.error(ex);
           finish();
-          throw ex;
         }
       });
     });
   },
 };
+
+function catchFail(func) {
+  return function() {
+    try {
+      return func.apply(null, arguments);
+    }
+    catch (ex) {
+      ok(false, ex);
+      console.error(ex);
+      finish();
+    }
+  };
+}
