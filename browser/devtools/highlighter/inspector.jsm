@@ -1505,6 +1505,10 @@ InspectorStyleSidebar.prototype = {
     let frame = this._chromeDoc.createElement("iframe");
     frame.setAttribute("flex", "1");
     frame._toolID = aRegObj.id;
+
+    // This is needed to enable tooltips inside the iframe document.
+    frame.setAttribute("tooltip", "aHTMLTooltip");
+
     this._deck.appendChild(frame);
 
     // wire up button to show the iframe
