@@ -946,6 +946,7 @@ ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType)
 static IonExecStatus
 EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 {
+    JS_CHECK_RECURSION(cx, return false);
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT(CheckFrame(fp));
 
