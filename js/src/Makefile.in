@@ -338,7 +338,7 @@ CPPSRCS += 	ExecutableAllocator.cpp \
 		YarrSyntaxChecker.cpp \
 		$(NONE)
 
-ifdef MOZ_DEBUG
+ifdef ENABLE_METHODJIT_SPEW
 CPPSRCS += Logging.cpp
 endif
 
