@@ -363,29 +363,9 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
   RefPtr<ID3D10Texture2D> maskTexture;
   RefPtr<ID3D10ShaderResourceView> maskSRView;
   if (mPushedClips.size()) {
-    // Here we render a mask of the clipped out area for use as an input to the
-    // shadow drawing.
+    EnsureClipMaskTexture();
 
-    CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_A8_UNORM,
-                               mSize.width, mSize.height,
-                               1, 1);
-    desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
-
-    hr = mDevice->CreateTexture2D(&desc, NULL, byRef(maskTexture));
-
-    RefPtr<ID2D1RenderTarget> rt = CreateRTForTexture(maskTexture);
-
-    RefPtr<ID2D1SolidColorBrush> brush;
-    rt->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), byRef(brush));
-    
-    RefPtr<ID2D1Geometry> geometry = GetClippedGeometry();
-
-    rt->BeginDraw();
-    rt->Clear(D2D1::ColorF(0, 0));
-    rt->FillGeometry(geometry, brush);
-    rt->EndDraw();
-
-    mDevice->CreateShaderResourceView(maskTexture, NULL, byRef(maskSRView));
+    mDevice->CreateShaderResourceView(mCurrentClipMaskTexture, NULL, byRef(maskSRView));
   }
 
   IntSize srcSurfSize;
@@ -958,6 +938,8 @@ DrawTargetD2D::PushClip(const Path *aPath)
     return;
   }
 
+  mCurrentClipMaskTexture = NULL;
+
   RefPtr<PathD2D> pathD2D = static_cast<PathD2D*>(const_cast<Path*>(aPath));
 
   PushedClip clip;
@@ -994,6 +976,7 @@ DrawTargetD2D::PushClip(const Path *aPath)
 void
 DrawTargetD2D::PushClipRect(const Rect &aRect)
 {
+  mCurrentClipMaskTexture = NULL;
   if (!mTransform.IsRectilinear()) {
     // Whoops, this isn't a rectangle in device space, Direct2D will not deal
     // with this transform the way we want it to.
@@ -1025,6 +1008,7 @@ DrawTargetD2D::PushClipRect(const Rect &aRect)
 void
 DrawTargetD2D::PopClip()
 {
+  mCurrentClipMaskTexture = NULL;
   if (mClipsArePushed) {
     if (mPushedClips.back().mLayer) {
       mRT->PopLayer();
@@ -1299,7 +1283,7 @@ DrawTargetD2D::InitD2DRenderTarget()
     return false;
   }
 
-  mRT = CreateRTForTexture(mTexture);
+  mRT = CreateRTForTexture(mTexture, mFormat);
 
   if (!mRT) {
     return false;
@@ -1326,24 +1310,7 @@ DrawTargetD2D::PrepareForDrawing(ID2D1RenderTarget *aRT)
         mTransformDirty = true;
         mClipsArePushed = true;
       }
-      for (std::vector<PushedClip>::iterator iter = mPushedClips.begin();
-            iter != mPushedClips.end(); iter++) {
-        D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
-        if (iter->mLayer) {
-          D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
-
-          if (mFormat == FORMAT_B8G8R8X8) {
-            options = D2D1_LAYER_OPTIONS_INITIALIZE_FOR_CLEARTYPE;
-          }
-
-          aRT->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), iter->mPath->mGeometry,
-                                                D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
-                                                iter->mTransform, 1.0f, NULL,
-                                                options), iter->mLayer);
-        } else {
-          aRT->PushAxisAlignedClip(iter->mBounds, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-        }
-      }
+      PushClipsToRT(aRT);
     }
   }
   FlushTransformToRT();
@@ -1470,7 +1437,7 @@ DrawTargetD2D::GetRTForOperation(CompositionOp aOperator, const Pattern &aPatter
     return mRT;
   }
 
-  mTempRT = CreateRTForTexture(mTempTexture);
+  mTempRT = CreateRTForTexture(mTempTexture, FORMAT_B8G8R8A8);
 
   if (!mTempRT) {
     return mRT;
@@ -1501,13 +1468,7 @@ DrawTargetD2D::FinalizeRTForOperation(CompositionOp aOperator, const Pattern &aP
     return;
   }
 
-  for (int i = mPushedClips.size() - 1; i >= 0; i--) {
-    if (mPushedClips[i].mLayer) {
-      mTempRT->PopLayer();
-    } else {
-      mTempRT->PopAxisAlignedClip();
-    }
-  }
+  PopClipsFromRT(mTempRT);
 
   mRT->Flush();
   mTempRT->Flush();
@@ -1615,7 +1576,7 @@ DrawTargetD2D::GetClippedGeometry()
 }
 
 TemporaryRef<ID2D1RenderTarget>
-DrawTargetD2D::CreateRTForTexture(ID3D10Texture2D *aTexture)
+DrawTargetD2D::CreateRTForTexture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat)
 {
   HRESULT hr;
 
@@ -1634,7 +1595,7 @@ DrawTargetD2D::CreateRTForTexture(ID3D10Texture2D *aTexture)
 
   D2D1_ALPHA_MODE alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
 
-  if (mFormat == FORMAT_B8G8R8X8 && aTexture == mTexture) {
+  if (aFormat == FORMAT_B8G8R8X8 && aTexture == mTexture) {
     alphaMode = D2D1_ALPHA_MODE_IGNORE;
   }
 
@@ -1691,17 +1652,85 @@ void
 DrawTargetD2D::PopAllClips()
 {
   if (mClipsArePushed) {
-    for (int i = mPushedClips.size() - 1; i >= 0; i--) {
-      if (mPushedClips[i].mLayer) {
-        mRT->PopLayer();
-      } else {
-        mRT->PopAxisAlignedClip();
-      }
-    }
+    PopClipsFromRT(mRT);
   
     mClipsArePushed = false;
   }
 }
+
+void
+DrawTargetD2D::PushClipsToRT(ID2D1RenderTarget *aRT)
+{
+  for (std::vector<PushedClip>::iterator iter = mPushedClips.begin();
+        iter != mPushedClips.end(); iter++) {
+    D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
+    if (iter->mLayer) {
+      D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
+
+      if (mFormat == FORMAT_B8G8R8X8) {
+        options = D2D1_LAYER_OPTIONS_INITIALIZE_FOR_CLEARTYPE;
+      }
+
+      aRT->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), iter->mPath->mGeometry,
+                                            D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
+                                            iter->mTransform, 1.0f, NULL,
+                                            options), iter->mLayer);
+    } else {
+      aRT->PushAxisAlignedClip(iter->mBounds, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+    }
+  }
+}
+
+void
+DrawTargetD2D::PopClipsFromRT(ID2D1RenderTarget *aRT)
+{
+  for (int i = mPushedClips.size() - 1; i >= 0; i--) {
+    if (mPushedClips[i].mLayer) {
+      aRT->PopLayer();
+    } else {
+      aRT->PopAxisAlignedClip();
+    }
+  }
+}
+
+void
+DrawTargetD2D::EnsureClipMaskTexture()
+{
+  if (mCurrentClipMaskTexture) {
+    return;
+  }
+  
+  CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_A8_UNORM,
+                             mSize.width,
+                             mSize.height,
+                             1, 1);
+  desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
+
+  HRESULT hr = mDevice->CreateTexture2D(&desc, NULL, byRef(mCurrentClipMaskTexture));
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to create texture for ClipMask!";
+    return;
+  }
+
+  RefPtr<ID2D1RenderTarget> rt = CreateRTForTexture(mCurrentClipMaskTexture, FORMAT_A8);
+
+  if (!rt) {
+    gfxWarning() << "Failed to create RT for ClipMask!";
+    return;
+  }
+  
+  RefPtr<ID2D1SolidColorBrush> brush;
+  rt->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), byRef(brush));
+    
+  RefPtr<ID2D1Geometry> geometry = GetClippedGeometry();
+
+  rt->BeginDraw();
+  rt->Clear(D2D1::ColorF(0, 0));
+  rt->FillGeometry(geometry, brush);
+  rt->EndDraw();
+}
+
 
 TemporaryRef<ID2D1Brush>
 DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
