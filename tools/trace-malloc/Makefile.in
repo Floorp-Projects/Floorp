@@ -58,15 +58,23 @@ SIMPLE_PROGRAMS	= \
 		$(SIMPLECPPSRCS:.cpp=$(BIN_SUFFIX)) \
 		$(NULL)
 
-CSRCS            = \
-		spacetrace.c \
-		spacecategory.c \
-		formdata.c \
-		$(NULL)
+EXTRACSRCS = tmreader.c
+EXTRACPPSRCS = adreader.cpp
 
 ifndef MOZ_PROFILE_GENERATE
 PROGRAM		= spacetrace$(BIN_SUFFIX)
+
+PROGCSRCS = \
+  spacetrace.c \
+  spacecategory.c \
+  formdata.c \
+  $(NULL)
+
+PROGOBJS = $(PROGCSRCS:.c=.$(OBJ_SUFFIX))
 endif
+
+CSRCS = $(SIMPLECSRCS) $(EXTRACSRCS) $(PROGCSRCS)
+CPPSRCS = $(SIMPLECPPSRCS) $(EXTRACPPSRCS)
 
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES	+= -I$(topsrcdir)/config/os2
@@ -111,8 +119,7 @@ DEFINES		+= \
 		$(NULL)
 endif
 
-EXTRA_DEPS      = tmreader.$(OBJ_SUFFIX) adreader.$(OBJ_SUFFIX)
-GARBAGE		+= tmreader.$(OBJ_SUFFIX) adreader.$(OBJ_SUFFIX)
+EXTRA_DEPS = $(EXTRACSRCS:.c=.$(OBJ_SUFFIX)) $(EXTRACPPSRCS:.cpp=.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 
