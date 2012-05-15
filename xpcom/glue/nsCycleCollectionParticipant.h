@@ -535,6 +535,12 @@ public:
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(_field)              \
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->_field, #_field)
 
+#define NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(_field)           \
+  if (JSVAL_IS_TRACEABLE(tmp->_field)) {                                       \
+    void *gcThing = JSVAL_TO_TRACEABLE(tmp->_field);                           \
+    aCallback(gcThing, #_field, aClosure);                                     \
+  }
+
 // NB: The (void)tmp; hack in the TRACE_END macro exists to support
 // implementations that don't need to do anything in their Trace method.
 // Without this hack, some compilers warn about the unused tmp local.
