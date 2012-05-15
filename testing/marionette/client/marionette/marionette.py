@@ -295,7 +295,7 @@ class Marionette(object):
         elif type(args) == HTMLElement:
             wrapped = {'ELEMENT': args.id }
         elif (isinstance(args, bool) or isinstance(args, basestring) or
-              isinstance(args, int) or args is None):
+              isinstance(args, int) or isinstance(args, float) or args is None):
             wrapped = args
 
         return wrapped
