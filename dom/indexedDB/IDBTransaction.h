@@ -219,7 +219,7 @@ private:
   nsTArray<nsRefPtr<FileInfo> > mCreatedFileInfos;
 };
 
-class CommitHelper : public nsIRunnable
+class CommitHelper MOZ_FINAL : public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -263,7 +263,7 @@ private:
   bool mAborted;
 };
 
-class UpdateRefcountFunction : public mozIStorageFunction
+class UpdateRefcountFunction MOZ_FINAL : public mozIStorageFunction
 {
 public:
   NS_DECL_ISUPPORTS

@@ -63,7 +63,7 @@ class ContinueObjectStoreHelper;
 class ContinueIndexHelper;
 class ContinueIndexObjectHelper;
 
-class IDBCursor : public nsIIDBCursorWithValue
+class IDBCursor MOZ_FINAL : public nsIIDBCursorWithValue
 {
   friend class ContinueHelper;
   friend class ContinueObjectStoreHelper;
