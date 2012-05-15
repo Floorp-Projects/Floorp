@@ -246,6 +246,7 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
             scope = scope->enclosingScope();
         }
     }
+    funbox->inGenexpLambda = false;
     return funbox;
 }
 
@@ -2266,7 +2267,7 @@ MakeSetCall(JSContext *cx, ParseNode *pn, Parser *parser, unsigned msg)
         return false;
 
     ParseNode *pn2 = pn->pn_head;
-    if (pn2->isKind(PNK_FUNCTION) && (pn2->pn_funbox->tcflags & TCF_GENEXP_LAMBDA)) {
+    if (pn2->isKind(PNK_FUNCTION) && (pn2->pn_funbox->inGenexpLambda)) {
         ReportCompileErrorNumber(cx, TS(parser), pn, JSREPORT_ERROR, msg);
         return false;
     }
@@ -5468,9 +5469,9 @@ Parser::generatorExpr(ParseNode *kid)
          * simplicity we also do not detect if the flags were only set in the
          * kid and could be removed from tc->sc->flags.
          */
-        gensc.flags |= TCF_FUN_IS_GENERATOR | TCF_GENEXP_LAMBDA |
-                       (outertc->sc->flags & TCF_FUN_FLAGS);
+        gensc.flags |= TCF_FUN_IS_GENERATOR | (outertc->sc->flags & TCF_FUN_FLAGS);
         funbox->tcflags |= gensc.flags;
+        funbox->inGenexpLambda = true;
         genfn->pn_funbox = funbox;
         genfn->pn_blockid = gensc.bodyid;
 
