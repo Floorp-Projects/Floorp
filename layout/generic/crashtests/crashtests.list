@@ -3,7 +3,7 @@ load 25888-2.html
 load 37757-1.html
 load 225868-1.html
 load 264937-1.html
-asserts(11) load 265867-1.html # Bug 575011
+asserts(9) load 265867-1.html # Bug 575011
 load 265867-2.html
 load 289864-1.html
 load 295292-1.html
@@ -328,11 +328,11 @@ load 545571-1.html
 load 547338.xul
 load 547843-1.xhtml
 load 551635-1.html
-asserts(5) load 553504-1.xhtml # nscoord_MAX assertions (bug 575011)
+asserts(3) load 553504-1.xhtml # nscoord_MAX assertions (bug 575011)
 load 564368-1.xhtml
 load 564968.xhtml
 load 570160.html
-asserts(2) load 570289-1.html
+load 570289-1.html
 load 571618-1.svg
 asserts(1) load 571975-1.html # bug 574889
 load 574958.xhtml
@@ -348,7 +348,7 @@ load 590404.html
 load 591141.html
 asserts(0-1) load 592118.html
 load 594808-1.html
-asserts(4) load 595435-1.xhtml # bug 610331
+load 595435-1.xhtml
 load 595740-1.html
 load 603490-1.html
 load 603510-1.html
@@ -386,7 +386,7 @@ load text-overflow-bug713610.html
 load 700031.xhtml
 load 718516.html
 load first-letter-638937.html
-asserts(2) load first-letter-638937-2.html
+load first-letter-638937-2.html
 load 737313-1.html
 load 737313-2.html
 load 737313-3.html

@@ -1,4 +1,4 @@
-fails-if(Android) == bdi-element.html bdi-element-ref.html # sub-pixel AA
+== bdi-element.html bdi-element-ref.html
 == bidi-000.html bidi-000-ref.html
 == bidi-001.html bidi-001-ref.html
 == bidi-001-j.html bidi-001-ref.html

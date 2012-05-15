@@ -160,53 +160,54 @@ add_test(function check_history_query() {
   do_check_eq(root.uri, resultObserver.nodeChangedByHistoryDetails.uri);
 
   // nsINavHistoryResultObserver.itemTitleChanged for a leaf node
-  bhist.addPageWithDetails(testURI, "baz", Date.now() * 1000);
-  do_check_eq(resultObserver.nodeChangedByTitle.title, "baz");
+  addVisits({ uri: testURI, title: "baz" }, function () {
+    do_check_eq(resultObserver.nodeChangedByTitle.title, "baz");
 
-  // nsINavHistoryResultObserver.nodeRemoved
-  var removedURI = uri("http://google.com");
-  add_visit(removedURI);
-  bhist.removePage(removedURI);
-  do_check_eq(removedURI.spec, resultObserver.removedNode.uri);
+    // nsINavHistoryResultObserver.nodeRemoved
+    var removedURI = uri("http://google.com");
+    add_visit(removedURI);
+    bhist.removePage(removedURI);
+    do_check_eq(removedURI.spec, resultObserver.removedNode.uri);
 
-  // XXX nsINavHistoryResultObserver.nodeReplaced
-  // NHQRN.onVisit()->NHCRN.MergeResults()->NHCRN.ReplaceChildURIAt()->NHRV.NodeReplaced()
+    // XXX nsINavHistoryResultObserver.nodeReplaced
+    // NHQRN.onVisit()->NHCRN.MergeResults()->NHCRN.ReplaceChildURIAt()->NHRV.NodeReplaced()
 
-  // nsINavHistoryResultObserver.invalidateContainer
-  bhist.removePagesFromHost("mozilla.com", false);
-  do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
+    // nsINavHistoryResultObserver.invalidateContainer
+    bhist.removePagesFromHost("mozilla.com", false);
+    do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
 
-  // nsINavHistoryResultObserver.sortingChanged
-  resultObserver.invalidatedContainer = null;
-  result.sortingMode = options.SORT_BY_TITLE_ASCENDING;
-  do_check_eq(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
-  do_check_eq(resultObserver.invalidatedContainer, result.root);
+    // nsINavHistoryResultObserver.sortingChanged
+    resultObserver.invalidatedContainer = null;
+    result.sortingMode = options.SORT_BY_TITLE_ASCENDING;
+    do_check_eq(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
+    do_check_eq(resultObserver.invalidatedContainer, result.root);
 
-  // nsINavHistoryResultObserver.invalidateContainer
-  bhist.removeAllPages();
-  do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
+    // nsINavHistoryResultObserver.invalidateContainer
+    bhist.removeAllPages();
+    do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
 
-  // nsINavHistoryResultObserver.batching
-  do_check_false(resultObserver.inBatchMode);
-  histsvc.runInBatchMode({
-    runBatched: function (aUserData) {
-      do_check_true(resultObserver.inBatchMode);
-    }
-  }, null);
-  do_check_false(resultObserver.inBatchMode);
-  bmsvc.runInBatchMode({
-    runBatched: function (aUserData) {
-      do_check_true(resultObserver.inBatchMode);
-    }
-  }, null);
-  do_check_false(resultObserver.inBatchMode);
+    // nsINavHistoryResultObserver.batching
+    do_check_false(resultObserver.inBatchMode);
+    histsvc.runInBatchMode({
+      runBatched: function (aUserData) {
+        do_check_true(resultObserver.inBatchMode);
+      }
+    }, null);
+    do_check_false(resultObserver.inBatchMode);
+    bmsvc.runInBatchMode({
+      runBatched: function (aUserData) {
+        do_check_true(resultObserver.inBatchMode);
+      }
+    }, null);
+    do_check_false(resultObserver.inBatchMode);
 
-  // nsINavHistoryResultObserver.containerClosed
-  root.containerOpen = false;
-  do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
-  result.removeObserver(resultObserver);
-  resultObserver.reset();
-  waitForAsyncUpdates(run_next_test);
+    // nsINavHistoryResultObserver.containerClosed
+    root.containerOpen = false;
+    do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
+    result.removeObserver(resultObserver);
+    resultObserver.reset();
+    waitForAsyncUpdates(run_next_test);
+  });
 });
 
 add_test(function check_bookmarks_query() {

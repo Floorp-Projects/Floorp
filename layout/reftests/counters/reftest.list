@@ -60,4 +60,4 @@
 == text-boundaries-subpixel.html text-boundaries-subpixel-ref.html
 == counter-hebrew-test.html counter-hebrew-reference.html
 == counters-hebrew-test.html counters-hebrew-reference.html
-fails-if(Android) == counter-reset-integer-range.html counter-reset-integer-range-ref.html
+== counter-reset-integer-range.html counter-reset-integer-range-ref.html

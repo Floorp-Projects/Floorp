@@ -101,6 +101,12 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+ifdef MOZ_SPEEX_RESAMPLER
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libspeex_resampler/src/$(LIB_PREFIX)speex_resampler.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 ifdef MOZ_CUBEB
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/media/libcubeb/src/$(LIB_PREFIX)cubeb.$(LIB_SUFFIX) \
