@@ -138,18 +138,25 @@ inline bool
 IsArrayLike(JSContext* cx, JSObject* obj)
 {
   MOZ_ASSERT(obj);
-  // For simplicity, check for security wrappers up front
+  // For simplicity, check for security wrappers up front.  In case we
+  // have a security wrapper, don't forget to enter the compartment of
+  // the underlying object after unwrapping.
+  JSAutoEnterCompartment ac;
   if (js::IsWrapper(obj)) {
     obj = XPCWrapper::Unwrap(cx, obj, false);
     if (!obj) {
       // Let's say it's not
       return false;
     }
+
+    if (!ac.enter(cx, obj)) {
+      return false;
+    }
   }
 
   // XXXbz need to detect platform objects (including listbinding
   // ones) with indexGetters here!
-  return JS_IsArrayObject(cx, obj);
+  return JS_IsArrayObject(cx, obj) || JS_IsTypedArrayObject(obj, cx);
 }
 
 inline bool
