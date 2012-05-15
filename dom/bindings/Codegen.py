@@ -1178,8 +1178,9 @@ if (!tmp) {
 }
 ${target} = tmp.forget();""").substitute(self.substitution)
 
-def getJSToNativeConversionTemplate(type, descriptor, failureCode=None,
-                                    isDefinitelyObject=False):
+def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
+                                    isDefinitelyObject=False,
+                                    isSequenceMember=False):
     """
     Get a template for converting a JS value to a native object based on the
     given type and descriptor.  If failureCode is given, then we're actually
@@ -1215,21 +1216,114 @@ def getJSToNativeConversionTemplate(type, descriptor, failureCode=None,
     If holderType is not None then ${holderName} must be in scope
     before the generated code is entered.
     """
-    if type.isSequence() or type.isArray():
-        raise TypeError("Can't handle sequence or array arguments yet")
 
-    if descriptor is not None:
-        assert(type.isInterface())
+    # A helper function for wrapping up the template body for
+    # possibly-nullable objecty stuff
+    def wrapObjectTemplate(templateBody, isDefinitelyObject, type,
+                           codeToSetNull, isWorker):
+        if not isDefinitelyObject:
+            # Handle the non-object cases by wrapping up the whole
+            # thing in an if cascade.
+            templateBody = (
+                "if (${val}.isObject()) {\n" +
+                CGIndenter(CGGeneric(templateBody)).define() + "\n")
+            if type.nullable():
+                templateBody += (
+                    "} else if (${val}.isNullOrUndefined()) {\n"
+                    "  %s;\n" % codeToSetNull)
+            templateBody += (
+                "} else {\n"
+                "  return Throw<%s>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n"
+                "}" % toStringBool(not isWorker))
+        return templateBody
+
+    if type.isArray():
+        raise TypeError("Can't handle array arguments yet")
+
+    if type.isSequence():
+        if isSequenceMember:
+            raise TypeError("Can't handle sequences of sequences")
+        if failureCode is not None:
+            raise TypeError("Can't handle sequences when failureCode is not None")
+        nullable = type.nullable();
+        if nullable:
+            type = type.inner;
+
+        elementType = type.inner;
+        # We don't know anything about the object-ness of the things
+        # we wrap, so don't pass through isDefinitelyObject
+        (elementTemplate, elementDeclType,
+         elementHolderType) = getJSToNativeConversionTemplate(
+            elementType, descriptorProvider, isSequenceMember=True)
+        if elementHolderType is not None:
+            raise TypeError("Shouldn't need holders for sequences")
+
+        # Have to make sure to use a fallible array, because it's trivial for
+        # page JS to create things with very large lengths.
+        typeName = CGWrapper(elementDeclType, pre="nsTArray< ", post=" >")
+        if nullable:
+            typeName = CGWrapper(typeName, pre="Nullable< ", post=" >")
+        templateBody = ("""JSObject* seq = &${val}.toObject();\n
+if (!IsArrayLike(cx, seq)) {
+  return Throw<%s>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
+}
+uint32_t length;
+// JS_GetArrayLength actually works on all objects
+if (!JS_GetArrayLength(cx, seq, &length)) {
+  return false;
+}
+// Jump through a hoop to do a fallible allocation but later end up with
+// an infallible array.
+FallibleTArray< %s > arr;
+if (!arr.SetCapacity(length)) {
+  return Throw<%s>(cx, NS_ERROR_OUT_OF_MEMORY);
+}
+for (uint32_t i = 0; i < length; ++i) {
+  jsval temp;
+  if (!JS_GetElement(cx, seq, i, &temp)) {
+    return false;
+  }
+""" % (toStringBool(descriptorProvider.workers),
+       elementDeclType.define(),
+       toStringBool(descriptorProvider.workers)))
+
+        templateBody += CGIndenter(CGGeneric(
+                string.Template(elementTemplate).substitute(
+                    {
+                        "val" : "temp",
+                        "declName" : "*arr.AppendElement()"
+                        }
+                    ))).define()
+
+        templateBody += """
+}
+// And the other half of the hoop-jump"""
+        if nullable:
+            templateBody += """
+${declName}.SetValue().SwapElements(arr);
+"""
+        else:
+            templateBody += """
+${declName}.SwapElements(arr);
+"""
+        templateBody = wrapObjectTemplate(templateBody, isDefinitelyObject,
+                                          type, "${declName}.SetNull()",
+                                          descriptorProvider.workers)
+        return (templateBody, typeName, None)
+
+    if type.isInterface() and not type.isArrayBuffer():
+        descriptor = descriptorProvider.getDescriptor(
+            type.unroll().inner.identifier.name)
         # This is an interface that we implement as a concrete class
         # or an XPCOM interface.
 
         # Allow null pointers for nullable types and old-binding classes
         argIsPointer = type.nullable() or type.unroll().inner.isExternal()
 
-        # Non-worker callbacks have to hold a strong ref to the thing being
-        # passed down.
+        # Sequences and non-worker callbacks have to hold a strong ref to the
+        # thing being passed down.
         forceOwningType = (descriptor.interface.isCallback() and
-                           not descriptor.workers)
+                           not descriptor.workers) or isSequenceMember
 
         typeName = descriptor.nativeType
         typePtr = typeName + "*"
@@ -1284,7 +1378,12 @@ def getJSToNativeConversionTemplate(type, descriptor, failureCode=None,
             # to addref when unwrapping or not.  So we just pass an
             # getter_AddRefs(nsCOMPtr) to XPConnect and if we'll need a release
             # it'll put a non-null pointer in there.
-            holderType = "nsCOMPtr<" + typeName + ">"
+            if forceOwningType:
+                # Don't return a holderType in this case; our declName
+                # will just own stuff.
+                templateBody += "nsCOMPtr<" + typeName + "> ${holderName};"
+            else:
+                holderType = "nsCOMPtr<" + typeName + ">"
             templateBody += (
                 "jsval tmpVal = ${val};\n" +
                 typePtr + " tmp;\n"
@@ -1311,20 +1410,9 @@ def getJSToNativeConversionTemplate(type, descriptor, failureCode=None,
             # And store our tmp, before it goes out of scope.
             templateBody += "${declName} = tmp;"
 
-        if not isDefinitelyObject:
-            # Handle the non-object cases by wrapping up the whole
-            # thing in an if cascade.
-            templateBody = (
-                "if (${val}.isObject()) {\n" +
-                CGIndenter(CGGeneric(templateBody)).define() + "\n")
-            if type.nullable():
-                templateBody += (
-                    "} else if (${val}.isNullOrUndefined()) {\n"
-                    "  ${declName} = NULL;\n")
-            templateBody += (
-                "} else {\n"
-                "  return Throw<%s>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n"
-                "}" % toStringBool(not descriptor.workers))
+        templateBody = wrapObjectTemplate(templateBody, isDefinitelyObject,
+                                          type, "${declName} = NULL",
+                                          descriptor.workers)
 
         declType = CGGeneric(declType)
         if holderType is not None:
@@ -1332,6 +1420,8 @@ def getJSToNativeConversionTemplate(type, descriptor, failureCode=None,
         return (templateBody, declType, holderType)
 
     if type.isArrayBuffer():
+        if isSequenceMember:
+            raise TypeError("Can't handle sequences of arraybuffers")
         declType = "JSObject*"
         template = (
             "if (${val}.isObject() && JS_IsArrayBufferObject(&${val}.toObject(), cx)) {\n"
@@ -1351,10 +1441,9 @@ def getJSToNativeConversionTemplate(type, descriptor, failureCode=None,
 
         return (template, CGGeneric(declType), None)
 
-    if type.isInterface():
-        raise TypeError("Interface type with no descriptor: " + type)
-
     if type.isString():
+        if isSequenceMember:
+            raise TypeError("Can't handle sequences of strings")
         # XXXbz Need to figure out string behavior based on extended args?  Also, how to
         # detect them?
 
@@ -1392,6 +1481,8 @@ def getJSToNativeConversionTemplate(type, descriptor, failureCode=None,
             CGGeneric(enum), None)
 
     if type.isCallback():
+        if isSequenceMember:
+            raise TypeError("Can't handle sequences of callbacks")
         # XXXbz we're going to assume that callback types are always
         # nullable and always have [TreatNonCallableAsNull] for now.
         return (
@@ -1402,6 +1493,8 @@ def getJSToNativeConversionTemplate(type, descriptor, failureCode=None,
             "}", CGGeneric("JSObject*"), None)
 
     if type.isAny():
+        if isSequenceMember:
+            raise TypeError("Can't handle sequences of 'any'")
         return ("${declName} = ${val};", CGGeneric("JS::Value"), None)
 
     if not type.isPrimitive():
@@ -1506,16 +1599,12 @@ class CGArgumentConverter(CGThing):
                 ).substitute(replacer)
             self.replacementVariables["valPtr"] = (
                 "&" + self.replacementVariables["val"])
-        if argument.type.isInterface() and not argument.type.isArrayBuffer():
-            self.descriptor = descriptorProvider.getDescriptor(
-                argument.type.unroll().inner.identifier.name)
-        else:
-            self.descriptor = None
+        self.descriptorProvider = descriptorProvider
 
     def define(self):
         return instantiateJSToNativeConversionTemplate(
             getJSToNativeConversionTemplate(self.argument.type,
-                                            self.descriptor),
+                                            self.descriptorProvider),
             self.replacementVariables).define()
 
 def getWrapTemplateForType(type, descriptorProvider, result, successCode):
@@ -2062,11 +2151,8 @@ class CGMethodCall(CGThing):
                     caseBody.append(CGIndenter(CGGeneric("do {")));
                     type = sig[1][distinguishingIndex].type
                     
-                    interfaceDesc = descriptor.getDescriptor(
-                        type.unroll().inner.identifier.name)
-
                     testCode = instantiateJSToNativeConversionTemplate(
-                        getJSToNativeConversionTemplate(type, interfaceDesc,
+                        getJSToNativeConversionTemplate(type, descriptor,
                                                         failureCode="break;",
                                                         isDefinitelyObject=True),
                         {
@@ -2090,7 +2176,7 @@ class CGMethodCall(CGThing):
             # XXXbz Now we're supposed to check for distinguishingArg being
             # an array or a platform object that supports indexed
             # properties... skip that last for now.  It's a bit of a pain.
-            pickFirstSignature("%s.isObject() && IsArrayLike(cx, &%s.toObject()" %
+            pickFirstSignature("%s.isObject() && IsArrayLike(cx, &%s.toObject())" %
                                (distinguishingArg, distinguishingArg),
                                lambda s:
                                    (s[1][distinguishingIndex].type.isArray() or
