@@ -114,6 +114,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLSourceElement)
 
 NS_IMPL_URI_ATTR(nsHTMLSourceElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLSourceElement, Type, type)
+NS_IMPL_STRING_ATTR(nsHTMLSourceElement, Media, media)
 
 nsresult
 nsHTMLSourceElement::BindToTree(nsIDocument *aDocument,
