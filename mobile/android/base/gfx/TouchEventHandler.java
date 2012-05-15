@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View.OnTouchListener;
+import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -51,9 +52,9 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
     private final int EVENT_LISTENER_TIMEOUT = 200;
 
     private final LayerView mView;
-    private final LayerController mController;
     private final GestureDetector mGestureDetector;
     private final SimpleScaleGestureDetector mScaleGestureDetector;
+    private final PanZoomController mPanZoomController;
 
     // the queue of events that we are holding on to while waiting for a preventDefault
     // notification
@@ -120,11 +121,11 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
 
     TouchEventHandler(Context context, LayerView view, LayerController controller) {
         mView = view;
-        mController = controller;
 
         mEventQueue = new LinkedList<MotionEvent>();
         mGestureDetector = new GestureDetector(context, controller.getGestureListener());
         mScaleGestureDetector = new SimpleScaleGestureDetector(controller.getScaleGestureListener());
+        mPanZoomController = controller.getPanZoomController();
         mListenerTimeoutProcessor = new ListenerTimeoutProcessor();
         mDispatchEvents = true;
 
@@ -225,7 +226,7 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
         if (mScaleGestureDetector.isInProgress()) {
             return;
         }
-        mController.getPanZoomController().onTouchEvent(event);
+        mPanZoomController.onTouchEvent(event);
     }
 
     /**
