@@ -112,7 +112,7 @@ bool
 FunctionBox::inAnyDynamicScope() const
 {
     for (const FunctionBox *funbox = this; funbox; funbox = funbox->parent) {
-        if (funbox->tcflags & (TCF_IN_WITH | TCF_FUN_EXTENSIBLE_SCOPE))
+        if (funbox->inWith || (funbox->tcflags & TCF_FUN_EXTENSIBLE_SCOPE))
             return true;
     }
     return false;

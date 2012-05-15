@@ -1543,6 +1543,8 @@ struct FunctionBox : public ObjectBox
                         inLoop:1,               /* in a loop in parent function */
                         level:JSFB_LEVEL_BITS;
     uint32_t            tcflags;
+    bool                inWith:1;               /* some enclosing scope is a with-statement
+                                                   or E4X filter-expression */
 
     JSFunction *function() const { return (JSFunction *) object; }
 

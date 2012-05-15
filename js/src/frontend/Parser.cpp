@@ -237,13 +237,12 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
     }
     funbox->level = tc->sc->staticLevel;
     funbox->tcflags = tc->sc->flags & TCF_STRICT_MODE_CODE;
-    if (tc->innermostWith)
-        funbox->tcflags |= TCF_IN_WITH;
+    funbox->inWith = !!tc->innermostWith;
     if (!tc->sc->inFunction) {
         JSObject *scope = tc->sc->scopeChain();
         while (scope) {
             if (scope->isWith())
-                funbox->tcflags |= TCF_IN_WITH;
+                funbox->inWith = true;
             scope = scope->enclosingScope();
         }
     }
