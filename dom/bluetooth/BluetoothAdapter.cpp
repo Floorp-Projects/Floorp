@@ -104,16 +104,16 @@ class ToggleBtTask : public nsRunnable
       }
 
       // return 1 if it's enabled, 0 if it's disabled, and -1 on error
-      int isEnabled = sBluedroidFunctions.bt_is_enabled();
+      int isEnabled = IsBluetoothEnabled();
 
       if ((isEnabled == 1 && mEnabled) || (isEnabled == 0 && !mEnabled)) {
         result = true;
       } else if (isEnabled < 0) {
         result = false;
       } else if (mEnabled) {
-        result = (sBluedroidFunctions.bt_enable() == 0) ? true : false;
+        result = (EnableBluetooth() == 0) ? true : false;
       } else {
-        result = (sBluedroidFunctions.bt_disable() == 0) ? true : false;
+        result = (DisableBluetooth() == 0) ? true : false;
       }
 #else
       result = true;
