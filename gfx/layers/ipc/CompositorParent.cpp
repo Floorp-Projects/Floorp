@@ -465,7 +465,6 @@ CompositorParent::AllocPLayers(const LayersBackend &backendType)
     }
     return new ShadowLayersParent(slm, this);
   } else if (backendType == LayerManager::LAYERS_BASIC) {
-    // This require Cairo to be thread-safe
     nsRefPtr<LayerManager> layerManager = new BasicShadowLayerManager(mWidget);
     mWidget = NULL;
     mLayerManager = layerManager;
