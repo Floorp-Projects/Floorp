@@ -1605,7 +1605,7 @@ BytecodeEmitter::needsImplicitThis()
         }
     }
     for (const FunctionBox *funbox = this->sc->funbox; funbox; funbox = funbox->parent) {
-        if (funbox->tcflags & TCF_IN_WITH)
+        if (funbox->inWith)
             return true;
     }
     for (StmtInfo *stmt = sc->topStmt; stmt; stmt = stmt->down) {
