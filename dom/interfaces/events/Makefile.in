@@ -77,6 +77,7 @@ XPIDLSRCS =					\
 	nsIDOMMozTouchEvent.idl			\
 	nsIDOMDeviceLightEvent.idl              \
 	nsIDOMDeviceProximityEvent.idl          \
+	nsIDOMUserProximityEvent.idl            \
 	nsIDOMDeviceOrientationEvent.idl        \
 	nsIDOMDeviceMotionEvent.idl		\
 	nsIDOMScrollAreaEvent.idl		\
