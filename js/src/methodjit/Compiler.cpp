@@ -66,6 +66,8 @@
 #include "jstypedarrayinlines.h"
 #include "vm/RegExpObject-inl.h"
 
+#include "ion/Ion.h"
+
 using namespace js;
 using namespace js::mjit;
 #if defined(JS_POLYIC) || defined(JS_MONOIC)
@@ -644,7 +646,7 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
  * allow more gathering of type information and less recompilation.
  */
 static const size_t USES_BEFORE_COMPILE       = 16;
-static const size_t INFER_USES_BEFORE_COMPILE = 40;
+static const size_t INFER_USES_BEFORE_COMPILE = 43;
 
 /* Target maximum size, in bytecode length, for a compiled chunk of a script. */
 static uint32_t CHUNK_LIMIT = 1500;
@@ -935,6 +937,26 @@ MakeJITScript(JSContext *cx, JSScript *script)
     return jit;
 }
 
+static inline bool
+IonGetsFirstChance(JSContext *cx, JSScript *script, bool osr)
+{
+#ifdef JS_ION
+    if (!ion::IsEnabled(cx))
+        return false;
+
+    // If there's no way this script is going to be Ion compiled, let JM take over.
+    if (!script->canIonCompile())
+        return false;
+
+    // If we're going to OSR, but IM has forbidden OSR on this script, let JM take over.
+    if (osr && script->hasIonScript() && script->ion->isOsrForbidden())
+        return false;
+
+    return true;
+#endif
+    return false;
+}
+
 CompileStatus
 mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
                    bool construct, CompileRequest request)
@@ -946,6 +968,9 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->needsBarrier());
     if (jith->isUnjittable())
         return Compile_Abort;
+
+    if (IonGetsFirstChance(cx, script, pc > script->code))
+        return Compile_Skipped;
 
     if (request == CompileRequest_Interpreter &&
         !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
