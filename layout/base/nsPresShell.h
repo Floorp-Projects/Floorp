@@ -362,6 +362,14 @@ public:
                            size_t *aPresContextSize) const;
   size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const;
 
+  // This data is stored as a content property (nsGkAtoms::scrolling) on
+  // mContentToScrollTo when we have a pending ScrollIntoView.
+  struct ScrollIntoViewData {
+    ScrollAxis mContentScrollVAxis;
+    ScrollAxis mContentScrollHAxis;
+    PRUint32   mContentToScrollToFlags;
+  };
+
 protected:
   virtual ~PresShell();
 
@@ -408,10 +416,7 @@ protected:
 #endif
 
   // Helper for ScrollContentIntoView
-  void DoScrollContentIntoView(nsIContent* aContent,
-                               ScrollAxis  aVertical,
-                               ScrollAxis  aHorizontal,
-                               PRUint32    aFlags);
+  void DoScrollContentIntoView();
 
   friend struct AutoRenderingStateSaveRestore;
   friend struct RenderingState;
@@ -774,12 +779,9 @@ protected:
   // Information needed to properly handle scrolling content into view if the
   // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is
   // non-null between the initial scroll attempt and the first time we finish
-  // processing all our dirty roots.  mContentScrollVPosition and
-  // mContentScrollHPosition are only used when it's non-null.
+  // processing all our dirty roots.  mContentToScrollTo has a content property
+  // storing the details for the scroll operation, see ScrollIntoViewData above.
   nsCOMPtr<nsIContent>      mContentToScrollTo;
-  ScrollAxis                mContentScrollVAxis;
-  ScrollAxis                mContentScrollHAxis;
-  PRUint32                  mContentToScrollToFlags;
 
   nscoord                   mLastAnchorScrollPositionY;
 
