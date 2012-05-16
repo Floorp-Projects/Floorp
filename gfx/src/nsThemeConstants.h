@@ -103,6 +103,12 @@
 // A vertical progress chunk
 #define NS_THEME_PROGRESSBAR_CHUNK_VERTICAL                54
 
+// A horizontal meter bar.
+#define NS_THEME_METERBAR                                  55
+
+// The meter bar's meter indicator
+#define NS_THEME_METERBAR_CHUNK                            56
+
 // A single tab in a tab widget.
 #define NS_THEME_TAB                                       61
 
