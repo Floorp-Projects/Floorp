@@ -109,6 +109,7 @@ public:
   virtual JSObject* GetNativeGlobal();
   virtual nsresult CreateNativeGlobalForInner(
                                       nsIScriptGlobalObject *aGlobal,
+                                      nsIURI *aURI,
                                       bool aIsChrome,
                                       nsIPrincipal *aPrincipal,
                                       JSObject** aNativeGlobal,
