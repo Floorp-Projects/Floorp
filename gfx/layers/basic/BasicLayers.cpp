@@ -2747,7 +2747,6 @@ public:
 void
 BasicShadowableColorLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
 {
-  // TODO[nrc] move this back inside the if, and clear the context some other way
   BasicColorLayer::Paint(aContext, aMaskLayer);
 
   if (!HasShadow()) {
