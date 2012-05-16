@@ -862,10 +862,12 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
     obj->slots = slots;
     obj->elements = js::emptyObjectElements;
 
-    if (shape->getObjectClass()->hasPrivate())
+    const js::Class *clasp = shape->getObjectClass();
+    if (clasp->hasPrivate())
         obj->privateRef(shape->numFixedSlots()) = NULL;
 
-    if (size_t span = shape->slotSpan())
+    size_t span = shape->slotSpan();
+    if (span && clasp != &js::ArrayBufferClass)
         obj->initializeSlotRange(0, span);
 
     return obj;
