@@ -164,9 +164,25 @@ ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool okArg)
 } /* namespace js */
 
 JS_FRIEND_API(JSBool)
+JS_SetDebugModeForAllCompartments(JSContext *cx, JSBool debug)
+{
+    AutoDebugModeGC dmgc(cx->runtime);
+
+    for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
+        // Ignore special compartments (atoms, JSD compartments)
+        if (c->principals) {
+            if (!c->setDebugModeFromC(cx, !!debug, dmgc))
+                return false;
+        }
+    }
+    return true;
+}
+
+JS_FRIEND_API(JSBool)
 JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
 {
-    return comp->setDebugModeFromC(cx, !!debug);
+    AutoDebugModeGC dmgc(cx->runtime);
+    return comp->setDebugModeFromC(cx, !!debug, dmgc);
 }
 
 static JSBool
