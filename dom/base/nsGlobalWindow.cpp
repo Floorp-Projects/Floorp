@@ -10036,6 +10036,14 @@ nsGlobalWindow::IsPartOfApp()
   return false;
 }
 
+nsresult
+nsGlobalWindow::SetApp(const nsAString& aManifestURL)
+{
+  MOZ_ASSERT(mIsApp != TriState_True);
+
+  return NS_OK;
+}
+
 // nsGlobalChromeWindow implementation
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)

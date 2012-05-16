@@ -825,6 +825,7 @@ protected:
                              nsCOMPtr<nsIDOMStorageEvent>& aEvent);
 
   void SetIsApp(bool aValue);
+  nsresult SetApp(const nsAString& aManifestURL);
 
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
