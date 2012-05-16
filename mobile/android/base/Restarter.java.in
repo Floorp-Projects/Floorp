@@ -85,6 +85,7 @@ public class Restarter extends Activity {
             if (b != null)
                 intent.putExtras(b);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             Log.i(LOGTAG, intent.toString());
             startActivity(intent);
         } catch (Exception e) {
