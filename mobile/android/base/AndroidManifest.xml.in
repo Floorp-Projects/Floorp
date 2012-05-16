@@ -126,8 +126,7 @@
 
         <activity android:name="Restarter"
                   android:process="@ANDROID_PACKAGE_NAME@Restarter"
-                  android:theme="@style/Gecko"
-                  android:excludeFromRecents="true">
+                  android:theme="@style/Gecko">
           <intent-filter>
             <action android:name="org.mozilla.gecko.restart"/>
             <action android:name="org.mozilla.gecko.restart_update"/>
