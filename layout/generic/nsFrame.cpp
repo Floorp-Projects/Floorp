@@ -6771,26 +6771,6 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       nsRect& o = aOverflowAreas.Overflow(otype);
       o.UnionRectEdges(o, bounds);
     }
-
-    if (!nsLayoutUtils::IsPopup(this)) {
-      // Include margin in scrollable overflow.
-      // XXX In theory this should consider margin collapsing
-      nsRect marginBounds(bounds);
-      nsMargin margin = GetUsedMargin();
-
-      // Bug 724352 - vertical scrollable overflow only matters for
-      // scroll frames which are block margin roots and has already
-      // accumulated child vertical margins during reflow.  We need
-      // to revisit this when using UpdateOverflow for non-transform
-      // style changes (bug 719177).
-      margin.top = 0;
-      margin.bottom = 0;
-
-      ApplySkipSides(margin);
-      marginBounds.SaturatingInflate(margin);
-      nsRect& so = aOverflowAreas.ScrollableOverflow();
-      so.SaturatingUnionRectEdges(so, marginBounds);
-    }
   }
 
   // Note that NS_STYLE_OVERFLOW_CLIP doesn't clip the frame background,
