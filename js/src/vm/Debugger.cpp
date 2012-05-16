@@ -4259,6 +4259,8 @@ DebuggerEnv_getType(JSContext *cx, unsigned argc, Value *vp)
     const char *s;
     if (env->isCall() || env->isBlock() || env->isDeclEnv())
         s = "declarative";
+    else if (env->isWith())
+        s = "with";
     else
         s = "object";
 
