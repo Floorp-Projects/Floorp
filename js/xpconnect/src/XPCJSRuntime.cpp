@@ -1481,7 +1481,7 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   "Memory allocated for JSScript bytecode and various "
                   "variable-length tables.");
 
-    REPORT_BYTES0(MakePath(pathPrefix, cStats, "mjit/data"),
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "mjit-data"),
                   nsIMemoryReporter::KIND_HEAP, cStats.mjitData,
                   "Memory used by the method JIT for the compartment's "
                   "compilation data: JITScripts, native maps, and inline "
