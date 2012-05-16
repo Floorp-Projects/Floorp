@@ -64,6 +64,35 @@ struct TypeInferenceSizes
     size_t temporary;
 };
 
+// These measurements relate directly to the JSRuntime, and not to
+// compartments within it.
+struct RuntimeSizes
+{
+    RuntimeSizes()
+      : object(0)
+      , atomsTable(0)
+      , contexts(0)
+      , dtoa(0)
+      , temporary(0)
+      , mjitCode(0)
+      , regexpCode(0)
+      , unusedCodeMemory(0)
+      , stackCommitted(0)
+      , gcMarker(0)
+    {}
+
+    size_t object;
+    size_t atomsTable;
+    size_t contexts;
+    size_t dtoa;
+    size_t temporary;
+    size_t mjitCode;
+    size_t regexpCode;
+    size_t unusedCodeMemory;
+    size_t stackCommitted;
+    size_t gcMarker;
+};
+
 struct CompartmentStats
 {
     CompartmentStats() {
@@ -102,16 +131,7 @@ struct CompartmentStats
 struct RuntimeStats
 {
     RuntimeStats(JSMallocSizeOfFun mallocSizeOf)
-      : runtimeObject(0)
-      , runtimeAtomsTable(0)
-      , runtimeContexts(0)
-      , runtimeDtoa(0)
-      , runtimeTemporary(0)
-      , runtimeMjitCode(0)
-      , runtimeRegexpCode(0)
-      , runtimeUnusedCodeMemory(0)
-      , runtimeStackCommitted(0)
-      , runtimeGCMarker(0)
+      : runtime()
       , gcHeapChunkTotal(0)
       , gcHeapCommitted(0)
       , gcHeapUnused(0)
@@ -133,16 +153,8 @@ struct RuntimeStats
       , mallocSizeOf(mallocSizeOf)
     {}
 
-    size_t runtimeObject;
-    size_t runtimeAtomsTable;
-    size_t runtimeContexts;
-    size_t runtimeDtoa;
-    size_t runtimeTemporary;
-    size_t runtimeMjitCode;
-    size_t runtimeRegexpCode;
-    size_t runtimeUnusedCodeMemory;
-    size_t runtimeStackCommitted;
-    size_t runtimeGCMarker;
+    js::RuntimeSizes runtime;
+
     size_t gcHeapChunkTotal;
     size_t gcHeapCommitted;
     size_t gcHeapUnused;

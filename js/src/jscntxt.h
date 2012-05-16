@@ -376,6 +376,10 @@ class FreeOp : public JSFreeOp {
 
 } /* namespace js */
 
+namespace JS {
+struct RuntimeSizes;
+}
+
 struct JSRuntime : js::RuntimeFriendFields
 {
     /* Default compartment. */
@@ -880,9 +884,8 @@ struct JSRuntime : js::RuntimeFriendFields
         return jitHardening;
     }
 
-    void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *dtoa, size_t *temporary,
-                             size_t *mjitCode, size_t *regexpCode, size_t *unusedCodeMemory,
-                             size_t *stackCommitted, size_t *gcMarker);
+    void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, js::RuntimeSizes *runtime);
+    size_t sizeOfExplicitNonHeap();
 };
 
 /* Common macros to access thread-local caches in JSRuntime. */
