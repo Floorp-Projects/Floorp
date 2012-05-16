@@ -50,7 +50,6 @@ _TEST_FILES = 	\
 		$(NULL)
 
 _CHROME_FILES = \
-		test_bug330705-2.xul \
 		test_bug233643.xul \
  		test_bug398289.html \
  		398289-resource.xul \
