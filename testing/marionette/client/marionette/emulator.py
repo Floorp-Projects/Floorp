@@ -3,6 +3,7 @@ from mozprocess import ProcessHandlerMixin
 import multiprocessing
 import os
 import re
+import platform
 import shutil
 import socket
 import subprocess
@@ -32,7 +33,7 @@ class Emulator(object):
 
     deviceRe = re.compile(r"^emulator-(\d+)(\s*)(.*)$")
 
-    def __init__(self, homedir=None, noWindow=False, logcat_dir=None, arch="x86"):
+    def __init__(self, homedir=None, noWindow=False, logcat_dir=None, arch="x86", emulatorBinary=None):
         self.port = None
         self._emulator_launched = False
         self.proc = None
@@ -43,6 +44,7 @@ class Emulator(object):
         self.logcat_dir = logcat_dir
         self.logcat_proc = None
         self.arch = arch
+        self.binary = emulatorBinary
         self.battery = EmulatorBattery(self)
         self.homedir = homedir
         self.noWindow = noWindow
@@ -64,22 +66,30 @@ class Emulator(object):
             raise Exception("Emulator architecture must be one of x86, arm, got: %s" %
                             self.arch)
 
+        host_dir = "linux-x86"
+        if platform.system() == "Darwin":
+            host_dir = "darwin-x86"
+
+        host_bin_dir = os.path.join("out/host", host_dir, "bin")
+
         if self.arch == "x86":
-            binary = "out/host/linux-x86/bin/emulator-x86"
+            binary = os.path.join(host_bin_dir, "emulator-x86")
             kernel = "prebuilts/qemu-kernel/x86/kernel-qemu"
             sysdir = "out/target/product/generic_x86"
             self.tail_args = []
         else:
-            binary = "out/host/linux-x86/bin/emulator"
+            binary = os.path.join(host_bin_dir, "emulator")
             kernel = "prebuilts/qemu-kernel/arm/kernel-qemu-armv7"
             sysdir = "out/target/product/generic"
             self.tail_args = ["-cpu", "cortex-a8"]
 
-        self.adb = os.path.join(self.homedir, 'out/host/linux-x86/bin/adb')
+        self.adb = os.path.join(self.homedir, host_bin_dir, "adb")
         if not os.access(self.adb, os.F_OK):
             self.adb = os.path.join(self.homedir, 'bin/adb')
 
-        self.binary = os.path.join(self.homedir, binary)
+        if not self.binary:
+            self.binary = os.path.join(self.homedir, binary)
+
         self._check_file(self.binary)
 
         self.kernelImg = os.path.join(self.homedir, kernel)
