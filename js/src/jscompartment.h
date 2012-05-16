@@ -112,6 +112,10 @@ namespace JS {
 struct TypeInferenceSizes;
 }
 
+namespace js {
+class AutoDebugModeGC;
+}
+
 struct JSCompartment
 {
     JSRuntime                    *rt;
@@ -356,14 +360,14 @@ struct JSCompartment
 
   private:
     /* This is called only when debugMode() has just toggled. */
-    void updateForDebugMode(js::FreeOp *fop);
+    void updateForDebugMode(js::FreeOp *fop, js::AutoDebugModeGC &dmgc);
 
   public:
     js::GlobalObjectSet &getDebuggees() { return debuggees; }
     bool addDebuggee(JSContext *cx, js::GlobalObject *global);
     void removeDebuggee(js::FreeOp *fop, js::GlobalObject *global,
                         js::GlobalObjectSet::Enum *debuggeesEnum = NULL);
-    bool setDebugModeFromC(JSContext *cx, bool b);
+    bool setDebugModeFromC(JSContext *cx, bool b, js::AutoDebugModeGC &dmgc);
 
     void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, JSObject *handler);
     void clearTraps(js::FreeOp *fop);
@@ -379,6 +383,29 @@ struct JSCompartment
     js::SourceMapMap *sourceMapMap;
 
     js::DebugScriptMap *debugScriptMap;
+};
+
+// For use when changing the debug mode flag on one or more compartments.
+// Do not run scripts in any compartment that is scheduled for GC using this
+// object. See comment in updateForDebugMode.
+//
+class js::AutoDebugModeGC
+{
+    JSRuntime *rt;
+    bool needGC;
+  public:
+    explicit AutoDebugModeGC(JSRuntime *rt) : rt(rt), needGC(false) {}
+
+    ~AutoDebugModeGC() {
+        if (needGC)
+            GC(rt, GC_NORMAL, gcreason::DEBUG_MODE_GC);
+    }
+
+    void scheduleGC(JSCompartment *compartment) {
+        JS_ASSERT(!rt->gcRunning);
+        PrepareCompartmentForGC(compartment);
+        needGC = true;
+    }
 };
 
 #define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)
