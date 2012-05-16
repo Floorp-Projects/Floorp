@@ -1579,6 +1579,20 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                  nsIMemoryReporter::KIND_HEAP, rtStats.runtime.gcMarker,
                  "Memory used for the GC mark stack and gray roots.");
 
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/math-cache"),
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtime.mathCache,
+                 "Memory used for the math cache.");
+
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/script-filenames"),
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtime.scriptFilenames,
+                 "Memory used for the table holding script filenames.");
+
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/compartment-objects"),
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtime.compartmentObjects,
+                 "Memory used for JSCompartment objects.  These are fairly "
+                 "small and all the same size, so they're not worth reporting "
+                 "on a per-compartment basis.");
+
     REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-chunk-dirty-unused"),
                     rtStats.gcHeapChunkDirtyUnused,
                     "Memory on the garbage-collected JavaScript heap, within "
