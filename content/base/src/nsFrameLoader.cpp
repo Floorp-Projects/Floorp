@@ -1400,11 +1400,18 @@ nsFrameLoader::ShouldUseRemoteProcess()
     return false;
   }
 
-  return OwnerIsBrowserFrame() ||
-         (bool) mOwnerContent->AttrValueIs(kNameSpaceID_None,
-                                           nsGkAtoms::Remote,
-                                           nsGkAtoms::_true,
-                                           eCaseMatters);
+  // If we're an <iframe mozbrowser> and we don't have a "remote" attribute,
+  // fall back to the default.
+  if (OwnerIsBrowserFrame() &&
+      !mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::Remote)) {
+
+    return Preferences::GetBool("dom.ipc.browser_frames.oop_by_default", false);
+  }
+
+  return mOwnerContent->AttrValueIs(kNameSpaceID_None,
+                                    nsGkAtoms::Remote,
+                                    nsGkAtoms::_true,
+                                    eCaseMatters);
 }
 
 nsresult
