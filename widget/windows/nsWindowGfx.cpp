@@ -66,6 +66,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "nsRenderingContext.h"
 #include "prmem.h"
 #include "WinUtils.h"
+#include "mozilla/unused.h"
 
 #include "LayerManagerOGL.h"
 #include "BasicLayers.h"
@@ -84,6 +85,7 @@ extern "C" {
 #include "pixman.h"
 }
 
+using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
 
@@ -252,7 +254,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
     PluginInstanceParent* instance = reinterpret_cast<PluginInstanceParent*>(
       ::GetPropW(mWnd, L"PluginInstanceParentProperty"));
     if (instance) {
-      instance->CallUpdateWindow();
+      unused << instance->CallUpdateWindow();
     } else {
       // We should never get here since in-process plugins should have
       // subclassed our HWND and handled WM_PAINT, but in some cases that
