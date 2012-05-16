@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<!-- This test checks that access keys are rendered properly, both when set with the
+     accesskey attribute in the markup and updated via script later.
+  -->
+<window class="reftest-wait" onload="changeKeys()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script>
+<![CDATA[
+
+var keys = ['L', 'l', 'b', 'x', 'l'];
+
+function changeKeys()
+{
+  var box = document.getElementById('d');
+  for (var b = 0; b < 5; b++)
+    box.childNodes[b * 2].accessKey = keys[b];
+
+  document.documentElement.className='';
+}
+
+]]>
+</script>
+
+<hbox align="start">
+  <label control="b1">Label1</label><textbox id="b1" accesskey="L" size="2"/>
+  <label control="b2">Label2</label><textbox id="b2" accesskey="l" size="2"/>
+  <label control="b3">Label3</label><textbox id="b3" accesskey="b" size="2"/>
+  <label control="b4">Label4</label><textbox id="b4" accesskey="x" size="2"/>
+  <label control="b5" maxwidth="50">Quite a long label. Hopefully it will wrap</label><textbox id="b5" accesskey="l" size="2"/>
+</hbox>
+
+<hbox id="d" align="start">
+  <label control="d1">Label1</label><textbox id="d1" accesskey="z" size="2"/>
+  <label control="d2">Label2</label><textbox id="d2" size="2"/>
+  <label control="d3">Label3</label><textbox id="d3" accesskey="t" size="2"/>
+  <label control="d4">Label4</label><textbox id="d4" accesskey="b" size="2"/>
+  <label control="d5" maxwidth="50">Quite a long label. Hopefully it will wrap</label><textbox id="d5" accesskey="l" size="2"/>
+</hbox>
+
+</window>
