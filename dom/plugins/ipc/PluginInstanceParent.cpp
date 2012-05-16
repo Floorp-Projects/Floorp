@@ -1200,8 +1200,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
             }
         }
         if (DoublePassRenderingEvent() == npevent->event) {
-            CallPaint(npremoteevent, &handled);
-            return handled;
+            return CallPaint(npremoteevent, &handled) && handled;
         }
 
         switch (npevent->event) {
@@ -1209,7 +1208,9 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
             {
                 RECT rect;
                 SharedSurfaceBeforePaint(rect, npremoteevent);
-                CallPaint(npremoteevent, &handled);
+                if (!CallPaint(npremoteevent, &handled)) {
+                    handled = false;
+                }
                 SharedSurfaceAfterPaint(npevent);
                 return handled;
             }
@@ -1237,10 +1238,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
             case WM_WINDOWPOSCHANGED:
             {
                 // We send this in nsObjectFrame just before painting
-                SendWindowPosChanged(npremoteevent);
-                // nsObjectFrame doesn't care whether we handle this
-                // or not, just returning 1 for good hygiene
-                return 1;
+                return SendWindowPosChanged(npremoteevent);
             }
             break;
         }
@@ -1792,7 +1790,7 @@ PluginInstanceParent::PluginWindowHookProc(HWND hWnd,
     switch (message) {
         case WM_SETFOCUS:
         // Let the child plugin window know it should take focus.
-        self->CallSetPluginFocus();
+        unused << self->CallSetPluginFocus();
         break;
 
         case WM_CLOSE:
@@ -1821,7 +1819,7 @@ PluginInstanceParent::SubclassPluginWindow(HWND aWnd)
         mPluginWndProc = 
             (WNDPROC)::SetWindowLongPtrA(mPluginHWND, GWLP_WNDPROC,
                          reinterpret_cast<LONG_PTR>(PluginWindowHookProc));
-        bool bRes = ::SetPropW(mPluginHWND, kPluginInstanceParentProperty, this);
+        DebugOnly<bool> bRes = ::SetPropW(mPluginHWND, kPluginInstanceParentProperty, this);
         NS_ASSERTION(mPluginWndProc,
           "PluginInstanceParent::SubclassPluginWindow failed to set subclass!");
         NS_ASSERTION(bRes,
