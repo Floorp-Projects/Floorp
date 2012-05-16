@@ -14,6 +14,21 @@ namespace mozilla {
 namespace dom {
 namespace bluetooth {
 
+static struct BluedroidFunctions {
+  bool initialized;
+  bool tried_initialization;
+
+  BluedroidFunctions() :
+    initialized(false),
+    tried_initialization(false)
+  {
+  }
+
+  int (* bt_enable)();
+  int (* bt_disable)();
+  int (* bt_is_enabled)();
+} sBluedroidFunctions;
+
 bool EnsureBluetoothInit() {
   if (sBluedroidFunctions.tried_initialization)
   {
@@ -48,6 +63,22 @@ bool EnsureBluetoothInit() {
   sBluedroidFunctions.initialized = true;
   return true;
 }
+
+int IsBluetoothEnabled()
+{
+  return sBluedroidFunctions.bt_is_enabled();
+}
+
+int EnableBluetooth()
+{
+  return sBluedroidFunctions.bt_enable();
+}
+
+int DisableBluetooth()
+{
+  return sBluedroidFunctions.bt_disable();
+}
+
 
 }
 }

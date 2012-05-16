@@ -45,6 +45,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nspr.h"
+#include "nsCycleCollectionParticipant.h"
 
 // #if defined(DEBUG_rginda_l)
 // #   define DEBUG_verbose
@@ -274,8 +275,10 @@ class jsdValue : public jsdIValue
 class jsdService : public jsdIDebuggerService
 {
   public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_JSDIDEBUGGERSERVICE
+
+    NS_DECL_CYCLE_COLLECTION_CLASS(jsdService)
 
     jsdService() : mOn(false), mPauseLevel(0),
                    mNestedLoopLevel(0), mCx(0), mRuntime(0), mErrorHook(0),

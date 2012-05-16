@@ -50,13 +50,49 @@ function do_test()
   const TITLE_2 = "Title 2";
 
   do_test_pending();
-  waitForClearHistory(function() {
-    PlacesUtils.bhistory.addPageWithDetails(TEST_URI, TITLE_1, Date.now() * 1000);
+  waitForClearHistory(function () {
+    let place = {
+      uri: TEST_URI,
+      title: TITLE_1,
+      visits: [{
+        visitDate: Date.now() * 1000,
+        transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+      }]
+    };
+    PlacesUtils.asyncHistory.updatePlaces(place, {
+      handleError: function () do_throw("Unexpected error in adding visit."),
+      handleResult: function () { },
+      handleCompletion: function () afterAddFirstVisit()
+    });
+  });
+
+  function afterAddFirstVisit()
+  {
     do_check_eq(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1);
 
     pb.privateBrowsingEnabled = true;
 
-    PlacesUtils.bhistory.addPageWithDetails(TEST_URI, TITLE_2, Date.now() * 2000);
+    let place = {
+      uri: TEST_URI,
+      title: TITLE_2,
+      visits: [{
+        visitDate: Date.now() * 2000,
+        transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+      }]
+    };
+
+    PlacesUtils.asyncHistory.updatePlaces(place, {
+      handleError: function (aResultCode) {
+        // We expect this error in Private Browsing mode.
+        do_check_eq(aResultCode, Cr.NS_ERROR_ILLEGAL_VALUE);
+      },
+      handleResult: function () do_throw("Unexpected success adding visit."),
+      handleCompletion: function () afterAddSecondVisit()
+    });
+  }
+
+  function afterAddSecondVisit()
+  {
     do_check_eq(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1);
 
     pb.privateBrowsingEnabled = false;
@@ -73,7 +109,7 @@ function do_test()
     do_check_eq(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1);
 
     waitForClearHistory(do_test_finished);
-  });
+  }
 }
 
 // Support running tests on both the service itself and its wrapper

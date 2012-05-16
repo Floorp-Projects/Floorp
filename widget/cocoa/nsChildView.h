@@ -174,6 +174,7 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_6
 @interface NSEvent (SnowLeopardEventFeatures)
 + (NSUInteger)pressedMouseButtons;
++ (NSUInteger)modifierFlags;
 @end
 #endif
 

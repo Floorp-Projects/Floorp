@@ -978,7 +978,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
     ranLifetimes_ = true;
 }
 
-#ifdef DEBUG
+#ifdef JS_METHODJIT_SPEW
 void
 LifetimeVariable::print() const
 {

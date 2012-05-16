@@ -23,6 +23,7 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Shyjan Mahamud <mahamud@cs.cmu.edu> (added TeX rendering rules)
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -89,16 +90,25 @@ nsMathMLmsupFrame::Place(nsRenderingContext& aRenderingContext,
   // extra spacing after sup/subscript
   nscoord scriptSpace = nsPresContext::CSSPointsToAppUnits(0.5f); // 0.5pt as in plain TeX
 
-  // check if the superscriptshift attribute is there
+  // superscriptshift
+  //
+  // "Specifies the minimum amount to shift the baseline of superscript up; the
+  // default is for the rendering agent to use its own positioning rules."
+  //
+  // values: length
+  // default: automatic
+  //
+  // We use 0 as the default value so unitless values can be ignored.
+  // XXXfredw Should we forbid negative values? (bug 411227)
+  //
   nsAutoString value;
   nscoord supScriptShift = 0;
   GetAttribute(mContent, mPresentationData.mstyle,
                nsGkAtoms::superscriptshift_, value);
   if (!value.IsEmpty()) {
-    nsCSSValue cssValue;
-    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
-      supScriptShift = CalcLength(PresContext(), mStyleContext, cssValue);
-    }
+    ParseNumericValue(value, &supScriptShift,
+                      nsMathMLElement::PARSE_ALLOW_NEGATIVE,
+                      PresContext(), mStyleContext);
   }
 
   return nsMathMLmsupFrame::PlaceSuperScript(PresContext(), 

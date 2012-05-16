@@ -4442,13 +4442,14 @@ nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
     if (!wrapper)
         return false;
 
-    jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
-    JSObject* obj = wrapper->GetSameCompartmentSecurityWrapper(ccx);
-    if (!wrapper)
+    // The call to wrap() here is necessary even though the object is same-
+    // compartment, because it applies our security wrapper.
+    js::Value v = ObjectValue(*wrapper->GetFlatJSObject());
+    if (!JS_WrapValue(ccx, &v))
         return false;
-   
-    return JS_DefinePropertyById(ccx, aGlobal, id, OBJECT_TO_JSVAL(obj),
-                                 nsnull, nsnull,
+
+    jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
+    return JS_DefinePropertyById(ccx, aGlobal, id, v, nsnull, nsnull,
                                  JSPROP_PERMANENT | JSPROP_READONLY);
 }
 

@@ -46,7 +46,8 @@
 namespace js {
 
 bool
-FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inCond = false);
+FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGenexpLambda = false,
+              bool inCond = false);
 
 } /* namespace js */
 

@@ -380,95 +380,33 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
   return 0;
 }
 
-/* static */ bool
-nsMathMLFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
-                                    nsString&   aString,
-                                    nsCSSValue& aCSSValue)
+/* static */ void
+nsMathMLFrame::ParseNumericValue(const nsString&   aString,
+                                 nscoord*          aLengthValue,
+                                 PRUint32          aFlags,
+                                 nsPresContext*    aPresContext,
+                                 nsStyleContext*   aStyleContext)
 {
-  aCSSValue.Reset();
-  aString.CompressWhitespace(); //  aString is not a const in this code...
-  if (!aString.Length()) return false;
+  nsCSSValue cssValue;
 
-  // See if it is one of the 'namedspace' (ranging 1/18em...7/18em)
-  PRInt32 i = 0;
-  nsIAtom* namedspaceAtom = nsnull;
-  if (aString.EqualsLiteral("veryverythinmathspace")) {
-    i = 1;
-    namedspaceAtom = nsGkAtoms::veryverythinmathspace_;
-  }
-  else if (aString.EqualsLiteral("verythinmathspace")) {
-    i = 2;
-    namedspaceAtom = nsGkAtoms::verythinmathspace_;
-  }
-  else if (aString.EqualsLiteral("thinmathspace")) {
-    i = 3;
-    namedspaceAtom = nsGkAtoms::thinmathspace_;
-  }
-  else if (aString.EqualsLiteral("mediummathspace")) {
-    i = 4;
-    namedspaceAtom = nsGkAtoms::mediummathspace_;
-  }
-  else if (aString.EqualsLiteral("thickmathspace")) {
-    i = 5;
-    namedspaceAtom = nsGkAtoms::thickmathspace_;
-  }
-  else if (aString.EqualsLiteral("verythickmathspace")) {
-    i = 6;
-    namedspaceAtom = nsGkAtoms::verythickmathspace_;
-  }
-  else if (aString.EqualsLiteral("veryverythickmathspace")) {
-    i = 7;
-    namedspaceAtom = nsGkAtoms::veryverythickmathspace_;
-  }
-  else if (aString.EqualsLiteral("negativeveryverythinmathspace")) {
-    i = -1;
-    namedspaceAtom = nsGkAtoms::negativeveryverythinmathspace_;
-  }
-  else if (aString.EqualsLiteral("negativeverythinmathspace")) {
-    i = -2;
-    namedspaceAtom = nsGkAtoms::negativeverythinmathspace_;
-  }
-  else if (aString.EqualsLiteral("negativethinmathspace")) {
-    i = -3;
-    namedspaceAtom = nsGkAtoms::negativethinmathspace_;
-  }
-  else if (aString.EqualsLiteral("negativemediummathspace")) {
-    i = -4;
-    namedspaceAtom = nsGkAtoms::negativemediummathspace_;
-  }
-  else if (aString.EqualsLiteral("negativethickmathspace")) {
-    i = -5;
-    namedspaceAtom = nsGkAtoms::negativethickmathspace_;
-  }
-  else if (aString.EqualsLiteral("negativeverythickmathspace")) {
-    i = -6;
-    namedspaceAtom = nsGkAtoms::negativeverythickmathspace_;
-  }
-  else if (aString.EqualsLiteral("negativeveryverythickmathspace")) {
-    i = -7;
-    namedspaceAtom = nsGkAtoms::negativeveryverythickmathspace_;
+  if (!nsMathMLElement::ParseNumericValue(aString, cssValue, aFlags)) {
+    // Invalid attribute value. aLengthValue remains unchanged, so the default
+    // length value is used.
+    return;
   }
 
-  if (0 != i) {
-    if (aMathMLmstyleFrame) {
-      // see if there is a <mstyle> that has overriden the default value
-      // GetAttribute() will recurse all the way up into the <mstyle> hierarchy
-      nsAutoString value;
-      GetAttribute(nsnull, aMathMLmstyleFrame, namedspaceAtom, value);
-      if (!value.IsEmpty()) {
-        if (ParseNumericValue(value, aCSSValue) &&
-            aCSSValue.IsLengthUnit()) {
-          return true;
-        }
-      }
-    }
+  nsCSSUnit unit = cssValue.GetUnit();
 
-    // fall back to the default value
-    aCSSValue.SetFloatValue(float(i)/float(18), eCSSUnit_EM);
-    return true;
+  if (unit == eCSSUnit_Percent || unit == eCSSUnit_Number) {
+    // Relative units. A multiple of the default length value is used.
+    *aLengthValue = NSToCoordRound(*aLengthValue * (unit == eCSSUnit_Percent ?
+                                                    cssValue.GetPercentValue() :
+                                                    cssValue.GetFloatValue()));
+    return;
   }
-
-  return false;
+  
+  // Absolute units.
+  *aLengthValue = CalcLength(aPresContext, aStyleContext, cssValue);
 }
 
 // ================

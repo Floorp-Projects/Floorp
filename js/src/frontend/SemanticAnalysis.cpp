@@ -52,7 +52,7 @@ using namespace js;
 using namespace js::frontend;
 
 static void
-FlagHeavyweights(Definition *dn, FunctionBox *funbox, uint32_t *tcflags)
+FlagHeavyweights(Definition *dn, FunctionBox *funbox, uint32_t *tcflags, bool topInFunction)
 {
     unsigned dnLevel = dn->frameLevel();
 
@@ -69,12 +69,12 @@ FlagHeavyweights(Definition *dn, FunctionBox *funbox, uint32_t *tcflags)
         }
     }
 
-    if (!funbox && (*tcflags & TCF_IN_FUNCTION))
+    if (!funbox && topInFunction)
         *tcflags |= TCF_FUN_HEAVYWEIGHT;
 }
 
 static void
-SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool isDirectEval)
+SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool topInFunction, bool isDirectEval)
 {
     for (; funbox; funbox = funbox->siblings) {
         ParseNode *fn = funbox->node;
@@ -86,7 +86,7 @@ SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool isDirectEval)
             continue;
 
         if (funbox->kids)
-            SetFunctionKinds(funbox->kids, tcflags, isDirectEval);
+            SetFunctionKinds(funbox->kids, tcflags, topInFunction, isDirectEval);
 
         JSFunction *fun = funbox->function();
 
@@ -144,7 +144,7 @@ SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool isDirectEval)
                 Definition *defn = r.front().value();
                 Definition *lexdep = defn->resolve();
                 if (!lexdep->isFreeVar())
-                    FlagHeavyweights(lexdep, funbox, tcflags);
+                    FlagHeavyweights(lexdep, funbox, tcflags, topInFunction);
             }
         }
     }
@@ -191,12 +191,12 @@ MarkExtensibleScopeDescendants(JSContext *context, FunctionBox *funbox, bool has
 bool
 frontend::AnalyzeFunctions(Parser *parser)
 {
-    TreeContext *tc = parser->tc;
-    if (!tc->functionList)
+    SharedContext *sc = parser->tc->sc;
+    if (!sc->functionList)
         return true;
-    if (!MarkExtensibleScopeDescendants(tc->context, tc->functionList, false))
+    if (!MarkExtensibleScopeDescendants(sc->context, sc->functionList, false))
         return false;
     bool isDirectEval = !!parser->callerFrame;
-    SetFunctionKinds(tc->functionList, &tc->flags, isDirectEval);
+    SetFunctionKinds(sc->functionList, &sc->flags, sc->inFunction, isDirectEval);
     return true;
 }

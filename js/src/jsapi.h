@@ -1693,6 +1693,19 @@ typedef JSObject *
 typedef JSObject *
 (* JSPreWrapCallback)(JSContext *cx, JSObject *scope, JSObject *obj, unsigned flags);
 
+/*
+ * Callback used when wrapping determines that the underlying object is already
+ * in the compartment for which it is being wrapped. This allows consumers to
+ * maintain same-compartment wrapping invariants.
+ *
+ * |obj| is guaranteed to be same-compartment as |cx|, but it may (or may not)
+ * be a security or cross-compartment wrapper. This is an unfortunate contract,
+ * but is important for to avoid unnecessarily recomputing every cross-
+ * compartment wrapper that gets passed to wrap.
+ */
+typedef JSObject *
+(* JSSameCompartmentWrapObjectCallback)(JSContext *cx, JSObject *obj);
+
 typedef void
 (* JSDestroyCompartmentCallback)(JSFreeOp *fop, JSCompartment *compartment);
 
@@ -2783,6 +2796,7 @@ JS_SetDestroyCompartmentCallback(JSRuntime *rt, JSDestroyCompartmentCallback cal
 extern JS_PUBLIC_API(JSWrapObjectCallback)
 JS_SetWrapObjectCallbacks(JSRuntime *rt,
                           JSWrapObjectCallback callback,
+                          JSSameCompartmentWrapObjectCallback sccallback,
                           JSPreWrapCallback precallback);
 
 extern JS_PUBLIC_API(JSCrossCompartmentCall *)
@@ -3371,18 +3385,12 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
  * The storage for name or callback's arguments needs to live only until
  * the following call to JS_CallTracer returns.
  */
-#ifdef DEBUG
 # define JS_SET_TRACING_DETAILS(trc, printer, arg, index)                     \
     JS_BEGIN_MACRO                                                            \
         (trc)->debugPrinter = (printer);                                      \
         (trc)->debugPrintArg = (arg);                                         \
         (trc)->debugPrintIndex = (index);                                     \
     JS_END_MACRO
-#else
-# define JS_SET_TRACING_DETAILS(trc, printer, arg, index)                     \
-    JS_BEGIN_MACRO                                                            \
-    JS_END_MACRO
-#endif
 
 /*
  * Sets the real location for a marked reference, when passing the address

@@ -807,7 +807,6 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
      * below.
      */
     CallArgsList *evalInFrameCalls = NULL;  /* quell overwarning */
-    StackFrame *prev;
     MaybeExtend extend;
     if (evalInFrame) {
         /* Though the prev-frame is given, need to search for prev-call. */
@@ -815,10 +814,8 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
         while (!iter.isScript() || iter.fp() != evalInFrame)
             ++iter;
         evalInFrameCalls = iter.calls_;
-        prev = evalInFrame;
         extend = CANT_EXTEND;
     } else {
-        prev = maybefp();
         extend = CAN_EXTEND;
     }
 
@@ -827,6 +824,7 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
     if (!firstUnused)
         return NULL;
 
+    StackFrame *prev = evalInFrame ? evalInFrame : maybefp();
     StackFrame *fp = reinterpret_cast<StackFrame *>(firstUnused + 2);
     fp->initExecuteFrame(script, prev, seg_->maybeRegs(), thisv, scopeChain, type);
     SetValueRangeToUndefined(fp->slots(), script->nfixed);

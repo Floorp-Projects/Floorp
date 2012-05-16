@@ -882,6 +882,9 @@ ShadowImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
 void
 ShadowImageLayerOGL::CleanupResources()
 {
+  mYUVTexture[0].Release();
+  mYUVTexture[1].Release();
+  mYUVTexture[2].Release();
   mTexImage = nsnull;
 }
 

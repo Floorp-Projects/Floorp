@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = speex_resampler
+LIBRARY_NAME = speex_resampler
+FORCE_STATIC_LIB = 1
+
+EXPORTS_NAMESPACES = speex
+
+# We don't compile the full speex codec, only the resampler.
+DEFINES += -DOUTSIDE_SPEEX
+# Speex wants a random prefix when building in another program, to avoid name
+# clashes
+DEFINES += -DRANDOM_PREFIX=speex
+# We don't use -fvisibility=hidden
+DEFINES += -DEXPORT=
+
+ifeq ($(OS_TARGET),Android)
+DEFINES += -DFIXED_POINT
+else
+DEFINES += -DFLOATING_POINT
+endif
+
+CSRCS = \
+    resample.c \
+    $(NULL)
+
+EXPORTS_speex = \
+    speex_resampler.h \
+    $(NULL)
+
+include $(topsrcdir)/config/rules.mk

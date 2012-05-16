@@ -30,20 +30,28 @@
         android:gravity="left"
         android:layout_marginTop="15dp"
         android:text="@string/sync_subtitle_header"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:focusable="true"
+        android:nextFocusDown="@+id/setup_subtitle" />
       <TextView
-        android:id="@+id/setup_subtitle"
+        android:id="@id/setup_subtitle"
         style="@style/SyncTextItem"
         android:gravity="left"
         android:layout_marginTop="2dp"
-        android:text="@string/sync_subtitle_connect" />
+        android:text="@string/sync_subtitle_connect"
+        android:focusable="true"
+        android:nextFocusDown="@+id/setup_showme"
+        android:nextFocusUp="@id/setup_header" />
 
       <TextView
-        android:id="@+id/setup_showme"
+        android:id="@id/setup_showme"
         style="@style/SyncLinkItem"
         android:layout_marginTop="2dp"
         android:onClick="showClickHandler"
-        android:text="@string/sync_link_show" />
+        android:text="@string/sync_link_show"
+        android:focusable="true"
+        android:nextFocusDown="@+id/text_pin1"
+        android:nextFocusUp="@id/setup_subtitle" />
 
       <LinearLayout
         style="@style/SyncLayout"
@@ -53,22 +61,33 @@
         android:paddingLeft="-15dp"
         android:orientation="vertical" >
         <TextView
-          android:id="@+id/text_pin1"
-          style="@style/SyncPinText" />
+          android:id="@id/text_pin1"
+          style="@style/SyncPinText"
+          android:focusable="true"
+          android:nextFocusDown="@+id/text_pin2"
+          android:nextFocusUp="@id/setup_showme" />
         <TextView
-          android:id="@+id/text_pin2"
-          style="@style/SyncPinText" />
+          android:id="@id/text_pin2"
+          style="@style/SyncPinText"
+          android:focusable="true"
+          android:nextFocusDown="@+id/text_pin3"
+          android:nextFocusUp="@id/text_pin1" />
         <TextView
-          android:id="@+id/text_pin3"
-          style="@style/SyncPinText" />
+          android:id="@id/text_pin3"
+          style="@style/SyncPinText"
+          android:focusable="true"
+          android:nextFocusDown="@+id/link_nodevice"
+          android:nextFocusUp="@id/text_pin2" />
       </LinearLayout>
       <TextView
-        android:id="@+id/link_nodevice"
+        android:id="@id/link_nodevice"
         style="@style/SyncLinkItem"
         android:gravity="center"
         android:paddingBottom="5dp"
         android:onClick="manualClickHandler"
-        android:text="@string/sync_link_advancedsetup" />
+        android:text="@string/sync_link_advancedsetup"
+        android:focusable="true"
+        android:nextFocusUp="@id/text_pin3" />
     </LinearLayout>
   </ScrollView>
   <LinearLayout

@@ -404,7 +404,7 @@ NS_IMPL_EVENT_HANDLER(Telephony, callschanged)
 
 NS_IMETHODIMP
 Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
-                            const nsAString& aNumber)
+                            const nsAString& aNumber, bool aIsActive)
 {
   NS_ASSERTION(aCallIndex != kOutgoingPlaceholderCallIndex,
                "This should never happen!");
@@ -445,7 +445,7 @@ Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
     modifiedCall->ChangeState(aCallState);
 
     // See if this should replace our current active call.
-    if (aCallState == nsIRadioInterfaceLayer::CALL_STATE_CONNECTED) {
+    if (aIsActive) {
       mActiveCall = modifiedCall;
     }
 
@@ -497,6 +497,31 @@ Telephony::EnumerateCallState(PRUint32 aCallIndex, PRUint16 aCallState,
   }
 
   *aContinue = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Telephony::NotifyError(PRInt32 aCallIndex,
+                        const nsAString& aError)
+{
+  PRInt32 index = -1;
+  PRInt32 length = mCalls.Length();
+
+  // The connection is not established yet, remove the latest call object
+  if (aCallIndex == -1) {
+    if (length > 0) {
+      index = length - 1;
+    }
+  } else {
+    if (aCallIndex < 0 || aCallIndex >= length) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    index = aCallIndex;
+  }
+  if (index != -1) {
+    mCalls[index]->NotifyError(aError);
+  }
+
   return NS_OK;
 }
 
