@@ -484,6 +484,9 @@ nsHttpPipeline::TakeSubTransactions(
     PRInt32 i, count = mRequestQ.Length();
     for (i = 0; i < count; ++i) {
         nsAHttpTransaction *trans = Request(i);
+        // set the transaction conneciton object back to the underlying
+        // nsHttpConnectionHandle
+        trans->SetConnection(mConnection);
         outTransactions.AppendElement(trans);
         NS_RELEASE(trans);
     }
