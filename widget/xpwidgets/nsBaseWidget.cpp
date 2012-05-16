@@ -77,6 +77,9 @@ using base::Thread;
 using mozilla::ipc::AsyncChannel;
 
 nsIContent* nsBaseWidget::mLastRollup = nsnull;
+// Global user preference for disabling native theme. Used
+// in NativeWindowTheme.
+bool            gDisableNativeTheme               = false;
 
 // nsBaseWidget
 NS_IMPL_ISUPPORTS1(nsBaseWidget, nsIWidget)
@@ -204,6 +207,14 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
                               nsDeviceContext *aContext,
                               nsWidgetInitData *aInitData)
 {
+  static bool gDisableNativeThemeCached = false;
+  if (!gDisableNativeThemeCached) {
+    mozilla::Preferences::AddBoolVarCache(&gDisableNativeTheme,
+                                          "mozilla.widget.disable-native-theme",
+                                          gDisableNativeTheme);
+    gDisableNativeThemeCached = true;
+  }
+
   // save the event callback function
   mEventCallback = aHandleEventFunction;
   

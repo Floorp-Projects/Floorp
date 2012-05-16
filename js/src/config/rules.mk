@@ -22,8 +22,8 @@ ifndef INCLUDED_VERSION_MK
 include $(topsrcdir)/config/version.mk
 endif
 
+USE_AUTOTARGETS_MK = 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
-include $(topsrcdir)/config/makefiles/autotargets.mk
 
 ifdef SDK_XPIDLSRCS
 XPIDLSRCS += $(SDK_XPIDLSRCS)
@@ -1596,8 +1596,7 @@ chrome::
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
 
-$(FINAL_TARGET)/chrome:
-	$(NSINSTALL) -D $@
+$(FINAL_TARGET)/chrome: $(call mkdir_deps,$(FINAL_TARGET)/chrome)
 
 ifneq (,$(wildcard $(JAR_MANIFEST)))
 ifndef NO_DIST_INSTALL
