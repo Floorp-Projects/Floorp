@@ -81,11 +81,29 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
-protected:
+private:
 
   static const double kDefaultValue;
   static const double kDefaultMin;
   static const double kDefaultMax;
+
+  /* @return the minimum value */
+  double GetMin() const;
+
+  /* @return the maximum value */
+  double GetMax() const;
+
+  /* @return the actual value */
+  double GetValue() const;
+
+  /* @return the low value */
+  double GetLow() const;
+
+  /* @return the high value */
+  double GetHigh() const;
+
+  /* @return the optimum value */
+  double GetOptimum() const;
 };
 
 const double nsHTMLMeterElement::kDefaultValue =  0.0;
@@ -155,8 +173,13 @@ nsHTMLMeterElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
-NS_IMETHODIMP
-nsHTMLMeterElement::GetMin(double* aValue)
+/*
+ * Value getters :
+ * const getters used by XPCOM methods and by IntrinsicState
+ */
+
+double
+nsHTMLMeterElement::GetMin() const
 {
   /**
    * If the attribute min is defined, the minimum is this value.
@@ -164,22 +187,13 @@ nsHTMLMeterElement::GetMin(double* aValue)
    */
   const nsAttrValue* attrMin = mAttrsAndChildren.GetAttr(nsGkAtoms::min);
   if (attrMin && attrMin->Type() == nsAttrValue::eDoubleValue) {
-    *aValue = attrMin->GetDoubleValue();
-    return NS_OK;
+    return attrMin->GetDoubleValue();
   }
-
-  *aValue = kDefaultMin;
-  return NS_OK;
+  return kDefaultMin;
 }
 
-NS_IMETHODIMP
-nsHTMLMeterElement::SetMin(double aValue)
-{
-  return SetDoubleAttr(nsGkAtoms::min, aValue);
-}
-
-NS_IMETHODIMP
-nsHTMLMeterElement::GetMax(double* aValue)
+double
+nsHTMLMeterElement::GetMax() const
 {
   /**
    * If the attribute max is defined, the maximum is this value.
@@ -187,29 +201,20 @@ nsHTMLMeterElement::GetMax(double* aValue)
    * If the maximum value is less than the minimum value,
    * the maximum value is the same as the minimum value.
    */
+  double max;
+
   const nsAttrValue* attrMax = mAttrsAndChildren.GetAttr(nsGkAtoms::max);
   if (attrMax && attrMax->Type() == nsAttrValue::eDoubleValue) {
-    *aValue = attrMax->GetDoubleValue();
+    max = attrMax->GetDoubleValue();
   } else {
-    *aValue = kDefaultMax;
+    max = kDefaultMax;
   }
 
-  double min;
-  GetMin(&min);
-
-  *aValue = NS_MAX(*aValue, min);
-
-  return NS_OK;
+  return NS_MAX(max, GetMin());
 }
 
-NS_IMETHODIMP
-nsHTMLMeterElement::SetMax(double aValue)
-{
-  return SetDoubleAttr(nsGkAtoms::max, aValue);
-}
-
-NS_IMETHODIMP
-nsHTMLMeterElement::GetValue(double* aValue)
+double
+nsHTMLMeterElement::GetValue() const
 {
   /**
    * If the attribute value is defined, the actual value is this value.
@@ -219,37 +224,26 @@ nsHTMLMeterElement::GetValue(double* aValue)
    * If the actual value is greater than the maximum value,
    * the actual value is the same as the maximum value.
    */
+  double value;
+
   const nsAttrValue* attrValue = mAttrsAndChildren.GetAttr(nsGkAtoms::value);
   if (attrValue && attrValue->Type() == nsAttrValue::eDoubleValue) {
-    *aValue = attrValue->GetDoubleValue();
+    value = attrValue->GetDoubleValue();
   } else {
-    *aValue = kDefaultValue;
+    value = kDefaultValue;
   }
 
-  double min;
-  GetMin(&min);
+  double min = GetMin();
 
-  if (*aValue <= min) {
-    *aValue = min;
-    return NS_OK;
+  if (value <= min) {
+    return min;
   }
 
-  double max;
-  GetMax(&max);
-
-  *aValue = NS_MIN(*aValue, max);
-
-  return NS_OK;
+  return NS_MIN(value, GetMax());
 }
 
-NS_IMETHODIMP
-nsHTMLMeterElement::SetValue(double aValue)
-{
-  return SetDoubleAttr(nsGkAtoms::value, aValue);
-}
-
-NS_IMETHODIMP
-nsHTMLMeterElement::GetLow(double* aValue)
+double
+nsHTMLMeterElement::GetLow() const
 {
   /**
    * If the low value is defined, the low value is this value.
@@ -260,38 +254,24 @@ nsHTMLMeterElement::GetLow(double* aValue)
    * the low value is the same as the maximum value.
    */
 
-  double min;
-  GetMin(&min);
+  double min = GetMin();
 
   const nsAttrValue* attrLow = mAttrsAndChildren.GetAttr(nsGkAtoms::low);
   if (!attrLow || attrLow->Type() != nsAttrValue::eDoubleValue) {
-    *aValue = min;
-    return NS_OK;
+    return min;
   }
 
-  *aValue = attrLow->GetDoubleValue();
+  double low = attrLow->GetDoubleValue();
 
-  if (*aValue <= min) {
-    *aValue = min;
-    return NS_OK;
+  if (low <= min) {
+    return min;
   }
 
-  double max;
-  GetMax(&max);
-
-  *aValue = NS_MIN(*aValue, max);
-
-  return NS_OK;
+  return NS_MIN(low, GetMax());
 }
 
-NS_IMETHODIMP
-nsHTMLMeterElement::SetLow(double aValue)
-{
-  return SetDoubleAttr(nsGkAtoms::low, aValue);
-}
-
-NS_IMETHODIMP
-nsHTMLMeterElement::GetHigh(double* aValue)
+double
+nsHTMLMeterElement::GetHigh() const
 {
   /**
    * If the high value is defined, the high value is this value.
@@ -302,38 +282,24 @@ nsHTMLMeterElement::GetHigh(double* aValue)
    * the high value is the same as the maximum value.
    */
 
-  double max;
-  GetMax(&max);
+  double max = GetMax();
 
   const nsAttrValue* attrHigh = mAttrsAndChildren.GetAttr(nsGkAtoms::high);
   if (!attrHigh || attrHigh->Type() != nsAttrValue::eDoubleValue) {
-    *aValue = max;
-    return NS_OK;
+    return max;
   }
 
-  *aValue = attrHigh->GetDoubleValue();
+  double high = attrHigh->GetDoubleValue();
 
-  if (*aValue >= max) {
-    *aValue = max;
-    return NS_OK;
+  if (high >= max) {
+    return max;
   }
 
-  double low;
-  GetLow(&low);
-
-  *aValue = NS_MAX(*aValue, low);
-
-  return NS_OK;
+  return NS_MAX(high, GetLow());
 }
 
-NS_IMETHODIMP
-nsHTMLMeterElement::SetHigh(double aValue)
-{
-  return SetDoubleAttr(nsGkAtoms::high, aValue);
-}
-
-NS_IMETHODIMP
-nsHTMLMeterElement::GetOptimum(double* aValue)
+double
+nsHTMLMeterElement::GetOptimum() const
 {
   /**
    * If the optimum value is defined, the optimum value is this value.
@@ -346,28 +312,98 @@ nsHTMLMeterElement::GetOptimum(double* aValue)
    * the optimum value is the same as the maximum value.
    */
 
-  double max;
-  GetMax(&max);
+  double max = GetMax();
 
-  double min;
-  GetMin(&min);
+  double min = GetMin();
 
   const nsAttrValue* attrOptimum =
               mAttrsAndChildren.GetAttr(nsGkAtoms::optimum);
   if (!attrOptimum || attrOptimum->Type() != nsAttrValue::eDoubleValue) {
-    *aValue = (min + max) / 2.0;
-    return NS_OK;
+    return (min + max) / 2.0;
   }
 
-  *aValue = attrOptimum->GetDoubleValue();
+  double optimum = attrOptimum->GetDoubleValue();
 
-  if (*aValue <= min) {
-    *aValue = min;
-    return NS_OK;
+  if (optimum <= min) {
+    return min;
   }
 
-  *aValue = NS_MIN(*aValue, max);
+  return NS_MIN(optimum, max);
+}
 
+/*
+ * XPCOM methods
+ */
+
+NS_IMETHODIMP
+nsHTMLMeterElement::GetMin(double* aValue)
+{
+  *aValue = GetMin();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMeterElement::SetMin(double aValue)
+{
+  return SetDoubleAttr(nsGkAtoms::min, aValue);
+}
+
+NS_IMETHODIMP
+nsHTMLMeterElement::GetMax(double* aValue)
+{
+  *aValue = GetMax();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMeterElement::SetMax(double aValue)
+{
+  return SetDoubleAttr(nsGkAtoms::max, aValue);
+}
+
+NS_IMETHODIMP
+nsHTMLMeterElement::GetValue(double* aValue)
+{
+  *aValue = GetValue();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMeterElement::SetValue(double aValue)
+{
+  return SetDoubleAttr(nsGkAtoms::value, aValue);
+}
+
+NS_IMETHODIMP
+nsHTMLMeterElement::GetLow(double* aValue)
+{
+  *aValue = GetLow();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMeterElement::SetLow(double aValue)
+{
+  return SetDoubleAttr(nsGkAtoms::low, aValue);
+}
+
+NS_IMETHODIMP
+nsHTMLMeterElement::GetHigh(double* aValue)
+{
+  *aValue = GetHigh();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMeterElement::SetHigh(double aValue)
+{
+  return SetDoubleAttr(nsGkAtoms::high, aValue);
+}
+
+NS_IMETHODIMP
+nsHTMLMeterElement::GetOptimum(double* aValue)
+{
+  *aValue = GetOptimum();
   return NS_OK;
 }
 
