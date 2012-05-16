@@ -100,7 +100,7 @@ BrowserElementParent.prototype = {
     addMessageListener("loadend", this._fireEventFromMsg);
     addMessageListener("titlechange", this._fireEventFromMsg);
     addMessageListener("iconchange", this._fireEventFromMsg);
-    addMessageListener("get-mozapp", this._sendAppState);
+    addMessageListener("get-mozapp-manifest-url", this._sendMozAppManifestURL);
 
     mm.loadFrameScript("chrome://global/content/BrowserElementChild.js",
                        /* allowDelayedLoad = */ true);
@@ -135,8 +135,8 @@ BrowserElementParent.prototype = {
     frameElement.dispatchEvent(evt);
   },
 
-  _sendAppState: function(frameElement, data) {
-    return frameElement.hasAttribute('mozapp');
+  _sendMozAppManifestURL: function(frameElement, data) {
+    return frameElement.getAttribute('mozapp');
   },
 
   observe: function(subject, topic, data) {
