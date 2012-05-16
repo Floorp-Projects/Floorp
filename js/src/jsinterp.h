@@ -351,7 +351,7 @@ Debug_SetValueRangeToCrashOnTouch(Value *beg, Value *end)
 {
 #ifdef DEBUG
     for (Value *v = beg; v != end; ++v)
-        *v = ObjectValueCrashOnTouch();
+        v->setObject(*reinterpret_cast<JSObject *>(0x42));
 #endif
 }
 
