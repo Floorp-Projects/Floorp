@@ -687,7 +687,7 @@ WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
     CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data->mLength;
-    if (!checked_neededByteLength.valid())
+    if (!checked_neededByteLength.isValid())
         return ErrorInvalidOperation("bufferSubData: integer overflow computing the needed byte length");
 
     if (checked_neededByteLength.value() > boundBuffer->ByteLength())
@@ -726,7 +726,7 @@ WebGLContext::BufferSubData(WebGLenum target, WebGLsizeiptr byteOffset,
         return ErrorInvalidOperation("BufferSubData: no buffer bound!");
 
     CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data.mLength;
-    if (!checked_neededByteLength.valid())
+    if (!checked_neededByteLength.isValid())
         return ErrorInvalidOperation("bufferSubData: integer overflow computing the needed byte length");
 
     if (checked_neededByteLength.value() > boundBuffer->ByteLength())
@@ -941,7 +941,7 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
         CheckedUint32 checked_neededByteLength = 
             GetImageSize(height, width, texelSize, mPixelStoreUnpackAlignment);
 
-        if (!checked_neededByteLength.valid())
+        if (!checked_neededByteLength.isValid())
             return ErrorInvalidOperation("%s: integer overflow computing the needed buffer size", info);
 
         PRUint32 bytesNeeded = checked_neededByteLength.value();
@@ -1562,7 +1562,7 @@ WebGLContext::DoFakeVertexAttrib0(WebGLuint vertexCount)
 
     CheckedUint32 checked_dataSize = CheckedUint32(vertexCount) * 4 * sizeof(WebGLfloat);
     
-    if (!checked_dataSize.valid()) {
+    if (!checked_dataSize.isValid()) {
         ErrorOutOfMemory("Integer overflow trying to construct a fake vertex attrib 0 array for a draw-operation "
                          "with %d vertices. Try reducing the number of vertices.", vertexCount);
         return false;
@@ -1779,7 +1779,7 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
 
     CheckedInt32 checked_firstPlusCount = CheckedInt32(first) + count;
 
-    if (!checked_firstPlusCount.valid())
+    if (!checked_firstPlusCount.isValid())
         return ErrorInvalidOperation("drawArrays: overflow in first+count");
 
     if (checked_firstPlusCount.value() > maxAllowedCount)
@@ -1847,7 +1847,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
         return ErrorInvalidEnum("DrawElements: type must be UNSIGNED_SHORT or UNSIGNED_BYTE");
     }
 
-    if (!checked_byteCount.valid())
+    if (!checked_byteCount.isValid())
         return ErrorInvalidValue("DrawElements: overflow in byteCount");
 
     // If there is no current program, this is silently ignored.
@@ -1863,7 +1863,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
 
     CheckedUint32 checked_neededByteCount = checked_byteCount + byteOffset;
 
-    if (!checked_neededByteCount.valid())
+    if (!checked_neededByteCount.isValid())
         return ErrorInvalidOperation("DrawElements: overflow in byteOffset+byteCount");
 
     if (checked_neededByteCount.value() > mBoundElementArrayBuffer->ByteLength())
@@ -1880,7 +1880,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
 
     CheckedInt32 checked_maxIndexPlusOne = CheckedInt32(maxIndex) + 1;
 
-    if (!checked_maxIndexPlusOne.valid() ||
+    if (!checked_maxIndexPlusOne.isValid() ||
         checked_maxIndexPlusOne.value() > maxAllowedCount)
     {
         // the index array contains invalid indices for the current drawing state, but they
@@ -1893,7 +1893,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
 
         CheckedInt32 checked_maxIndexInSubArrayPlusOne = CheckedInt32(maxIndexInSubArray) + 1;
 
-        if (!checked_maxIndexInSubArrayPlusOne.valid() ||
+        if (!checked_maxIndexInSubArrayPlusOne.isValid() ||
             checked_maxIndexInSubArrayPlusOne.value() > maxAllowedCount)
         {
             return ErrorInvalidOperation(
@@ -3883,7 +3883,7 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
     CheckedUint32 checked_alignedRowSize =
         RoundedToNextMultipleOf(checked_plainRowSize, mPixelStorePackAlignment);
 
-    if (!checked_neededByteLength.valid())
+    if (!checked_neededByteLength.isValid())
         return ErrorInvalidOperation("ReadPixels: integer overflow computing the needed buffer size");
 
     if (checked_neededByteLength.value() > dataByteLen)
@@ -5601,7 +5601,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     CheckedUint32 checked_alignedRowSize =
         RoundedToNextMultipleOf(checked_plainRowSize.value(), mPixelStoreUnpackAlignment);
 
-    if (!checked_neededByteLength.valid())
+    if (!checked_neededByteLength.isValid())
         return ErrorInvalidOperation("texImage2D: integer overflow computing the needed buffer size");
 
     PRUint32 bytesNeeded = checked_neededByteLength.value();
@@ -5842,7 +5842,7 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     CheckedUint32 checked_alignedRowSize = 
         RoundedToNextMultipleOf(checked_plainRowSize.value(), mPixelStoreUnpackAlignment);
 
-    if (!checked_neededByteLength.valid())
+    if (!checked_neededByteLength.isValid())
         return ErrorInvalidOperation("texSubImage2D: integer overflow computing the needed buffer size");
 
     PRUint32 bytesNeeded = checked_neededByteLength.value();

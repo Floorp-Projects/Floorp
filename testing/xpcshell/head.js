@@ -301,9 +301,9 @@ function do_get_idle() {
                    .getService(Components.interfaces.nsIIdleService);
 }
 
-function _execute_test() {
-  // Map resource://test/ to current working directory and
-  // resource://testing-common/ to the shared test modules directory.
+// Map resource://test/ to current working directory and
+// resource://testing-common/ to the shared test modules directory.
+function _register_protocol_handlers() {
   let (ios = Components.classes["@mozilla.org/network/io-service;1"]
              .getService(Components.interfaces.nsIIOService)) {
     let protocolHandler =
@@ -321,6 +321,10 @@ function _execute_test() {
       protocolHandler.setSubstitution("testing-common", modulesURI);
     }
   }
+}
+
+function _execute_test() {
+  _register_protocol_handlers();
 
   // Override idle service by default.
   // Call do_get_idle() to restore the factory and get the service.

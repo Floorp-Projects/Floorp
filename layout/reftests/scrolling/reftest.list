@@ -8,6 +8,7 @@ random-if(Android) HTTP == image-1.html image-1.html?ref
 HTTP == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html?ref
 random-if(cocoaWidget) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357
 HTTP == simple-1.html simple-1.html?ref
+HTTP == subpixel-1.html#d subpixel-1-ref.html#d
 HTTP == text-1.html text-1.html?ref
 HTTP == text-2.html?up text-2.html?ref
 HTTP == transformed-1.html transformed-1.html?ref
@@ -15,3 +16,5 @@ HTTP == transformed-1.html?up transformed-1.html?ref
 == uncovering-1.html uncovering-1-ref.html
 == uncovering-2.html uncovering-2-ref.html
 == less-than-scrollbar-height.html less-than-scrollbar-height-ref.html
+== huge-horizontal-overflow.html huge-horizontal-overflow-ref.html
+== huge-vertical-overflow.html huge-vertical-overflow-ref.html

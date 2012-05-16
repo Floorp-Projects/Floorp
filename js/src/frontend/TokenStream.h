@@ -882,15 +882,15 @@ ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, unsigned
  * One could have ReportCompileErrorNumber recognize the
  * JSREPORT_STRICT_MODE_ERROR flag instead of having a separate function
  * like this one.  However, the strict mode code flag we need to test is
- * in the TreeContext structure for that code; we would have to change
+ * in the ShareContext structure for that code; we would have to change
  * the ~120 ReportCompileErrorNumber calls to pass the additional
  * argument, even though many of those sites would never use it.  Using
- * ts's TSF_STRICT_MODE_CODE flag instead of tc's would be brittle: at some
- * points ts's flags don't correspond to those of the tc relevant to the
+ * ts's TSF_STRICT_MODE_CODE flag instead of sc's would be brittle: at some
+ * points ts's flags don't correspond to those of the sc relevant to the
  * error.
  */
 bool
-ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn,
+ReportStrictModeError(JSContext *cx, TokenStream *ts, SharedContext *sc, ParseNode *pn,
                       unsigned errorNumber, ...);
 
 } /* namespace js */

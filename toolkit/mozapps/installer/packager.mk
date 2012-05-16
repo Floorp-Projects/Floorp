@@ -883,9 +883,21 @@ ifdef MOZ_PACKAGE_JSSHELL
 endif # MOZ_PACKAGE_JSSHELL
 endif # LIBXUL_SDK
 
-make-package: stage-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
+make-package-internal: stage-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
 	@echo "Compressing..."
 	cd $(DIST) && $(MAKE_PACKAGE)
+
+ifdef MOZ_FAST_PACKAGE
+MAKE_PACKAGE_DEPS = $(wildcard $(subst * , ,$(addprefix $(DIST)/bin/,$(shell $(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/packager-deps.py $(MOZ_PKG_MANIFEST)))))
+else
+MAKE_PACKAGE_DEPS = FORCE
+endif
+
+make-package: $(MAKE_PACKAGE_DEPS)
+	$(MAKE) make-package-internal
+	$(TOUCH) $@
+
+GARBAGE += make-package
 
 make-sourcestamp-file::
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)

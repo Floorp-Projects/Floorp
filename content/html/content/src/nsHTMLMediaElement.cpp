@@ -98,6 +98,9 @@
 #include "nsDOMMediaStream.h"
 #include "nsIScriptError.h"
 
+#include "nsCSSParser.h"
+#include "nsIMediaList.h"
+
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
 #endif
@@ -850,6 +853,12 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
                "Should delay load event (if in document) during load");
   NS_ASSERTION(mIsLoadingFromSourceChildren,
                "Must remember we're loading from source children");
+
+  nsIDocument* parentDoc = OwnerDoc()->GetParentDocument();
+  if (parentDoc) {
+    parentDoc->FlushPendingNotifications(Flush_Layout);
+  }
+
   while (true) {
     nsIContent* child = GetNextSource();
     if (!child) {
@@ -876,11 +885,25 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
         GetCanPlay(type) == CANPLAY_NO) {
       DispatchAsyncSourceError(child);
       const PRUnichar* params[] = { type.get(), src.get() };
-      ReportLoadError("MediaLoadUnsupportedType", params, ArrayLength(params));
+      ReportLoadError("MediaLoadUnsupportedTypeAttribute", params, ArrayLength(params));
       continue;
     }
-    LOG(PR_LOG_DEBUG, ("%p Trying load from <source>=%s type=%s", this,
-      NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get()));
+    nsAutoString media;
+    if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::media, media) && !media.IsEmpty()) {
+      nsCSSParser cssParser;
+      nsRefPtr<nsMediaList> mediaList(new nsMediaList());
+      cssParser.ParseMediaList(media, NULL, 0, mediaList, false);
+      nsIPresShell* presShell = OwnerDoc()->GetShell();
+      if (presShell && !mediaList->Matches(presShell->GetPresContext(), NULL)) {
+        DispatchAsyncSourceError(child);
+        const PRUnichar* params[] = { media.get(), src.get() };
+        ReportLoadError("MediaLoadSourceMediaNotMatched", params, ArrayLength(params));
+        continue;
+      }
+    }
+    LOG(PR_LOG_DEBUG, ("%p Trying load from <source>=%s type=%s media=%s", this,
+      NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get(),
+      NS_ConvertUTF16toUTF8(media).get()));
 
     nsCOMPtr<nsIURI> uri;
     NewURIFromString(src, getter_AddRefs(uri));

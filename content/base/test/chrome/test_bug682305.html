@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=682305
+-->
+<head>
+  <title>XMLHttpRequest send and channel implemented in JS</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"  src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript"  src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=682305">Mozilla Bug 682305</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+/*
+ * Register a custom nsIProtocolHandler service
+ * in order to be able to implement *and use* an 
+ * nsIChannel component written in Javascript.
+ */
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+var SimpleURI = Cc["@mozilla.org/network/simple-uri;1"];
+var ios = Cc["@mozilla.org/network/io-service;1"]
+            .getService(Ci.nsIIOService);
+
+var PROTOCOL_SCHEME = "jsproto";
+
+
+function CustomChannel(uri) {
+	this.URI = this.originalURI = uri;
+}
+CustomChannel.prototype = {
+  URI: null,
+  originalURI: null,
+  contentCharset: "utf-8",
+  contentLength: 0,
+  contentType: "text/plain",
+  owner: Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal),
+  securityInfo: null,
+  notificationCallbacks: null,
+  loadFlags: 0,
+  loadGroup: null,
+  name: null,
+  status: Cr.NS_OK,
+  asyncOpen: function(listener, context) {
+    let stream = this.open();
+    try {
+      listener.onStartRequest(this, context);
+    } catch(e) {}
+    try {
+      listener.onDataAvailable(this, context, stream, 0, stream.available());
+    } catch(e) {}
+    try {
+      listener.onStopRequest(this, context, Cr.NS_OK);
+    } catch(e) {}
+  },
+  open: function() {
+    let data = "bar";
+    let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
+    stream.setData(data, data.length);
+    return stream;
+  },
+  isPending: function() {
+    return false;
+  },
+  cancel: function() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  suspend: function() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  resume: function() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIChannel, Ci.nsIRequest])
+};
+
+
+function CustomProtocol() {}
+CustomProtocol.prototype = {
+  get scheme() {
+    return PROTOCOL_SCHEME;
+  },
+  get protocolFlags() {
+    return (Ci.nsIProtocolHandler.URI_NORELATIVE |
+            Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE |
+            Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD);
+  },
+  get defaultPort() {
+    return -1;
+  },
+  allowPort: function allowPort() {
+    return false;
+  },
+  newURI: function newURI(spec, charset, baseURI) {
+    var uri = SimpleURI.createInstance(Ci.nsIURI)
+    uri.spec = spec;
+    return uri.QueryInterface(Ci.nsIURI);
+  },
+  newChannel: function newChannel(URI) {    
+    return new CustomChannel(URI);
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsIProtocolHandler])
+};
+
+var gFactory = {
+  register: function() {
+    var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+
+    var classID = Components.ID("{ed064287-1e76-49ba-a28d-dc74394a8334}");
+    var description = PROTOCOL_SCHEME + ": protocol";
+    var contractID = "@mozilla.org/network/protocol;1?name=" + PROTOCOL_SCHEME;
+    var factory = XPCOMUtils._getFactory(CustomProtocol);
+
+    registrar.registerFactory(classID, description, contractID, factory);
+
+    this.unregister = function() {
+      registrar.unregisterFactory(classID, factory);
+      delete this.unregister;
+    };
+  }
+};
+
+// Register the custom procotol handler
+gFactory.register();
+
+// Then, checks if XHR works with it
+var xhr = new XMLHttpRequest();
+xhr.open("GET", PROTOCOL_SCHEME + ":foo", true);
+xhr.onload = function () {
+  is(xhr.responseText, "bar", "protocol doesn't work");
+  gFactory.unregister();
+  SimpleTest.finish();
+}
+try {
+  xhr.send(null);
+} catch(e) {
+  ok(false, e);
+}
+</script>
+</pre>
+</body>
+</html>

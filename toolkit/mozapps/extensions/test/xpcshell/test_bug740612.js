@@ -17,35 +17,6 @@ function getInstalledVersion() {
   return Services.prefs.getIntPref("bootstraptest.installed_version");
 }
 
-function manuallyInstall(aXPIFile, aInstallLocation, aID) {
-  if (TEST_UNPACKED) {
-    let dir = aInstallLocation.clone();
-    dir.append(aID);
-    dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
-    let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
-              createInstance(AM_Ci.nsIZipReader);
-    zip.open(aXPIFile);
-    let entries = zip.findEntries(null);
-    while (entries.hasMore()) {
-      let entry = entries.getNext();
-      let target = dir.clone();
-      entry.split("/").forEach(function(aPart) {
-        target.append(aPart);
-      });
-      zip.extract(entry, target);
-    }
-    zip.close();
-
-    return dir;
-  }
-  else {
-    let target = aInstallLocation.clone();
-    target.append(aID + ".xpi");
-    aXPIFile.copyTo(target.parent, target.leafName);
-    return target;
-  }
-}
-
 function run_test() {
   do_test_pending();
 

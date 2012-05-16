@@ -119,6 +119,10 @@ public class GeckoAppShell
     static public final int SCREENSHOT_WHOLE_PAGE = 1;
     static public final int SCREENSHOT_UPDATE = 2;
 
+    static public final int RESTORE_NONE = 0;
+    static public final int RESTORE_OOM = 1;
+    static public final int RESTORE_CRASH = 2;
+
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
     static File sHomeDir = null;
@@ -156,6 +160,8 @@ public class GeckoAppShell
     private static boolean mLocationHighAccuracy = false;
 
     private static Handler sGeckoHandler;
+
+    private static boolean sDisableScreenshot = false;
 
     /* The Android-side API: API methods that Android calls */
 
@@ -460,7 +466,7 @@ public class GeckoAppShell
         }
     }
 
-    public static void runGecko(String apkPath, String args, String url, String type, boolean restoreSession) {
+    public static void runGecko(String apkPath, String args, String url, String type, int restoreMode) {
         Looper.prepare();
         sGeckoHandler = new Handler();
         
@@ -482,8 +488,8 @@ public class GeckoAppShell
             combinedArgs += " -url " + url;
         if (type != null)
             combinedArgs += " " + type;
-        if (restoreSession)
-            combinedArgs += " -restoresession";
+        if (restoreMode != RESTORE_NONE)
+            combinedArgs += " -restoremode " + restoreMode;
 
         DisplayMetrics metrics = new DisplayMetrics();
         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -2230,7 +2236,15 @@ public class GeckoAppShell
         return Math.max(Math.min(max, val), min);
     }
 
+    // Invoked via reflection from robocop test
+    public static void disableScreenshot() {
+        sDisableScreenshot = true;
+    }
+
     public static void screenshotWholePage(Tab tab) {
+        if (sDisableScreenshot) {
+            return;
+        }
         if (GeckoApp.mAppContext.isApplicationInBackground())
             return;
 
