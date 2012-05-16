@@ -13,7 +13,9 @@
 #ifdef USE_SKIA
 #include "DrawTargetSkia.h"
 #include "ScaledFontBase.h"
+#ifdef MOZ_ENABLE_FREETYPE
 #include "ScaledFontFreetype.h"
+#endif
 #endif
 
 #if defined(WIN32) && defined(USE_SKIA)
@@ -251,10 +253,12 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
       return new ScaledFontWin(static_cast<LOGFONT*>(aNativeFont.mFont), aSize);
     }
 #endif
+#ifdef MOZ_ENABLE_FREETYPE
   case NATIVE_FONT_SKIA_FONT_FACE:
     {
-      return new ScaledFontFreetype(static_cast<gfxFont*>(aNativeFont.mFont), aSize);
+      return new ScaledFontFreetype(static_cast<FontOptions*>(aNativeFont.mFont), aSize);
     }
+#endif
 #endif
 #ifdef USE_CAIRO
   case NATIVE_FONT_CAIRO_FONT_FACE:
