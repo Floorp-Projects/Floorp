@@ -440,6 +440,8 @@
 @BINPATH@/components/SettingsManager.manifest
 @BINPATH@/components/Webapps.js
 @BINPATH@/components/Webapps.manifest
+@BINPATH@/components/AppsService.js
+@BINPATH@/components/AppsService.manifest
 
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
