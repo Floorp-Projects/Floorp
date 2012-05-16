@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Media test: media attribute for the source element.</title>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script type="text/javascript" src="manifest.js"></script>
+<script type="text/javascript" src="../../html/content/test/reflect.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="text/javascript">
+  var testCount = 0;
+  function notifyFinished() {
+    testCount++;
+    if (testCount == 2) {
+      SimpleTest.finish();
+    }
+  }
+  SimpleTest.waitForExplicitFinish();
+
+  reflectString({
+    element: document.createElement("source"),
+    attribute: "media",
+  });
+
+  var media = getPlayableVideo(gSmallTests);
+
+  if (media == null) {
+    todo(false, "No media supported.");
+    SimpleTest.finish();
+  } else {
+    var v = document.createElement('video');
+    v.innerHTML = "<source src=\"" + media.name + "?fail\" media=\"not all\">" +
+                  "<source src=\""+ media.name + "?pass\" media=\"all\">";
+    var v2 = document.createElement("video");
+    v2.innerHTML = "<source src=\""+ media.name +"?pass\">" +
+                   "<source src=\""+ media.name + "?fail\" media=\"all\">";
+    document.body.appendChild(v);
+    document.body.appendChild(v2);
+
+    v.addEventListener("loadedmetadata", function(e) {
+        ok(/pass/.test(e.target.currentSrc),
+          "The source has been chosen according to the media attribute.");
+        notifyFinished();
+        });
+    v2.addEventListener("loadedmetadata", function(e) {
+        ok(/pass/.test(e.target.currentSrc),
+          "If no media attribute is specified, it defaults to \'all\'.")
+        notifyFinished();
+    });
+  }
+
+</script>
+</pre>
+</body>
+</html>

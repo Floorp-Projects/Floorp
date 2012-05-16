@@ -249,21 +249,19 @@ void
 nsXPCWrappedJS::TraceJS(JSTracer* trc)
 {
     NS_ASSERTION(mRefCnt >= 2 && IsValid(), "must be strongly referenced");
-    JS_SET_TRACING_DETAILS(trc, PrintTraceName, this, 0);
+    JS_SET_TRACING_DETAILS(trc, GetTraceName, this, 0);
     JS_CallTracer(trc, GetJSObjectPreserveColor(), JSTRACE_OBJECT);
 }
 
-#ifdef DEBUG
 // static
 void
-nsXPCWrappedJS::PrintTraceName(JSTracer* trc, char *buf, size_t bufsize)
+nsXPCWrappedJS::GetTraceName(JSTracer* trc, char *buf, size_t bufsize)
 {
     const nsXPCWrappedJS* self = static_cast<const nsXPCWrappedJS*>
                                             (trc->debugPrintArg);
     JS_snprintf(buf, bufsize, "nsXPCWrappedJS[%s,0x%p:0x%p].mJSObj",
                 self->GetClass()->GetInterfaceName(), self, self->mXPTCStub);
 }
-#endif
 
 NS_IMETHODIMP
 nsXPCWrappedJS::GetWeakReference(nsIWeakReference** aInstancePtr)

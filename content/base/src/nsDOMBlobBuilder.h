@@ -39,9 +39,8 @@
 #define nsDOMBlobBuilder_h
 
 #include "nsDOMFile.h"
-#include "CheckedInt.h"
 
-#include "mozilla/StandardInteger.h"
+#include "mozilla/CheckedInt.h"
 
 using namespace mozilla;
 
@@ -128,10 +127,10 @@ protected:
 
     // Start at 1 or we'll loop forever.
     CheckedUint32 bufferLen = NS_MAX<PRUint32>(mDataBufferLen, 1);
-    while (bufferLen.valid() && bufferLen.value() < mDataLen + aSize)
+    while (bufferLen.isValid() && bufferLen.value() < mDataLen + aSize)
       bufferLen *= 2;
 
-    if (!bufferLen.valid())
+    if (!bufferLen.isValid())
       return false;
 
     // PR_ memory functions are still fallible
