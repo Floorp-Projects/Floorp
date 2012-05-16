@@ -557,7 +557,6 @@ protected:
   nscoord                       mLastAnchorScrollPositionY;
   nsRefPtr<nsCaret>             mCaret;
   nsRefPtr<nsCaret>             mOriginalCaret;
-  nsCOMPtr<nsIDragService>      mDragService;
   
 #ifdef DEBUG
   // The reflow root under which we're currently reflowing.  Null when
