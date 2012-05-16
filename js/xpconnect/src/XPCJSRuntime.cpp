@@ -1533,50 +1533,50 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     }
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/runtime-object"),
-                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeObject,
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtime.object,
                  "Memory used by the JSRuntime object.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/atoms-table"),
-                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeAtomsTable,
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtime.atomsTable,
                  "Memory used by the atoms table.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/contexts"),
-                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeContexts,
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtime.contexts,
                  "Memory used by JSContext objects and certain structures "
                  "hanging off them.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/dtoa"),
-                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeDtoa,
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtime.dtoa,
                  "Memory used by DtoaState, which is used for converting "
                  "strings to numbers and vice versa.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/temporary"),
-                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeTemporary,
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtime.temporary,
                  "Memory held transiently in JSRuntime and used during "
                  "compilation.  It mostly holds parse nodes.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/mjit-code"),
-                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeMjitCode,
+                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.mjitCode,
                  "Memory used by the method JIT to hold the runtime's "
                  "generated code.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/regexp-code"),
-                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeRegexpCode,
+                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.regexpCode,
                  "Memory used by the regexp JIT to hold generated code.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/unused-code-memory"),
-                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeUnusedCodeMemory,
+                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.unusedCodeMemory,
                  "Memory allocated by the method and/or regexp JIT to hold the "
                  "runtime's code, but which is currently unused.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/stack-committed"),
-                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeStackCommitted,
+                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.stackCommitted,
                  "Memory used for the JS call stack.  This is the committed "
                  "portion of the stack; the uncommitted portion is not "
                  "measured because it hardly costs anything.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/gc-marker"),
-                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeGCMarker,
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtime.gcMarker,
                  "Memory used for the GC mark stack and gray roots.");
 
     REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-chunk-dirty-unused"),

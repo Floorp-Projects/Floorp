@@ -81,6 +81,7 @@
 # include "methodjit/MethodJIT.h"
 #endif
 #include "gc/Marking.h"
+#include "js/MemoryMetrics.h"
 #include "frontend/TokenStream.h"
 #include "frontend/ParseMaps.h"
 #include "yarr/BumpPointerAllocator.h"
@@ -94,26 +95,40 @@ using namespace js;
 using namespace js::gc;
 
 void
-JSRuntime::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *dtoa, size_t *temporary,
-                               size_t *mjitCode, size_t *regexpCode, size_t *unusedCodeMemory,
-                               size_t *stackCommitted, size_t *gcMarkerSize)
+JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *runtime)
 {
-    if (dtoa)
-        *dtoa = mallocSizeOf(dtoaState);
+    runtime->object = mallocSizeOf(this);
+    
+    runtime->atomsTable = atomState.atoms.sizeOfExcludingThis(mallocSizeOf);
+    
+    runtime->contexts = 0;
+    for (ContextIter acx(this); !acx.done(); acx.next())
+        runtime->contexts += acx->sizeOfIncludingThis(mallocSizeOf);
 
-    if (temporary)
-        *temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
+    runtime->dtoa = mallocSizeOf(dtoaState);
+
+    runtime->temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
     if (execAlloc_)
-        execAlloc_->sizeOfCode(mjitCode, regexpCode, unusedCodeMemory);
+        execAlloc_->sizeOfCode(&runtime->mjitCode, &runtime->regexpCode,
+                               &runtime->unusedCodeMemory);
     else
-        *mjitCode = *regexpCode = *unusedCodeMemory = 0;
+        runtime->mjitCode = runtime->regexpCode = runtime->unusedCodeMemory = 0;
 
-    if (stackCommitted)
-        *stackCommitted = stackSpace.sizeOfCommitted();
+    runtime->stackCommitted = stackSpace.sizeOfCommitted();
 
-    if (gcMarkerSize)
-        *gcMarkerSize = gcMarker.sizeOfExcludingThis(mallocSizeOf);
+    runtime->gcMarker = gcMarker.sizeOfExcludingThis(mallocSizeOf);
+}
+
+size_t
+JSRuntime::sizeOfExplicitNonHeap()
+{
+    if (!execAlloc_)
+        return 0; 
+    
+    size_t mjitCode, regexpCode, unusedCodeMemory;
+    execAlloc_->sizeOfCode(&mjitCode, &regexpCode, &unusedCodeMemory);
+    return mjitCode + regexpCode + unusedCodeMemory + stackSpace.sizeOfCommitted();
 }
 
 void
