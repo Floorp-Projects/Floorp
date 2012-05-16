@@ -72,6 +72,8 @@ public:
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
 
+  virtual nsEventStates IntrinsicState() const;
+
   nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
   bool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
@@ -86,6 +88,16 @@ private:
   static const double kDefaultValue;
   static const double kDefaultMin;
   static const double kDefaultMax;
+
+  /**
+   * Returns the optimum state of the element.
+   * NS_EVENT_STATE_OPTIMUM if the actual value is in the optimum region.
+   * NS_EVENT_STATE_SUB_OPTIMUM if the actual value is in the sub-optimal region.
+   * NS_EVENT_STATE_SUB_SUB_OPTIMUM if the actual value is in the sub-sub-optimal region.
+   *
+   * @return the optimum state of the element.
+   */
+  nsEventStates GetOptimumState() const;
 
   /* @return the minimum value */
   double GetMin() const;
@@ -149,6 +161,16 @@ nsHTMLMeterElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 {
   /* The meter element is not submittable. */
   return NS_OK;
+}
+
+nsEventStates
+nsHTMLMeterElement::IntrinsicState() const
+{
+  nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
+
+  state |= GetOptimumState();
+
+  return state;
 }
 
 bool
@@ -411,5 +433,48 @@ NS_IMETHODIMP
 nsHTMLMeterElement::SetOptimum(double aValue)
 {
   return SetDoubleAttr(nsGkAtoms::optimum, aValue);
+}
+
+nsEventStates
+nsHTMLMeterElement::GetOptimumState() const
+{
+  /*
+   * If the optimum value is in [minimum, low[,
+   *     return if the value is in optimal, suboptimal or sub-suboptimal region
+   *
+   * If the optimum value is in [low, high],
+   *     return if the value is in optimal or suboptimal region
+   *
+   * If the optimum value is in ]high, maximum],
+   *     return if the value is in optimal, suboptimal or sub-suboptimal region
+   */
+  double value = GetValue();
+  double low = GetLow();
+  double high = GetHigh();
+  double optimum = GetOptimum();
+
+  if (optimum < low) {
+    if (value < low) {
+      return NS_EVENT_STATE_OPTIMUM;
+    }
+    if (value <= high) {
+      return NS_EVENT_STATE_SUB_OPTIMUM;
+    }
+    return NS_EVENT_STATE_SUB_SUB_OPTIMUM;
+  }
+  if (optimum > high) {
+    if (value > high) {
+      return NS_EVENT_STATE_OPTIMUM;
+    }
+    if (value >= low) {
+      return NS_EVENT_STATE_SUB_OPTIMUM;
+    }
+    return NS_EVENT_STATE_SUB_SUB_OPTIMUM;
+  }
+  // optimum in [low, high]
+  if (value >= low && value <= high) {
+    return NS_EVENT_STATE_OPTIMUM;
+  }
+  return NS_EVENT_STATE_SUB_OPTIMUM;
 }
 
