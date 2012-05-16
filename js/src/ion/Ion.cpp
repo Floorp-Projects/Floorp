@@ -1156,8 +1156,20 @@ ion::Invalidate(FreeOp *fop, const Vector<types::RecompileInfo> &invalid, bool r
     // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
         if (invalid[i].script->hasIonScript()) {
-            invalid[i].script->ion->decref(fop);
-            invalid[i].script->ion = NULL;
+            JSScript *script = invalid[i].script;
+            IonScript *ionScript = script->ion;
+
+            JSCompartment *compartment = script->compartment();
+            if (compartment->needsBarrier()) {
+                // We're about to remove edges from the JSScript to gcthings
+                // embedded in the IonScript. Perform one final trace of the
+                // IonScript for the incremental GC, as it must know about
+                // those edges.
+                IonScript::Trace(compartment->barrierTracer(), ionScript);
+            }
+
+            script->ion->decref(fop);
+            script->ion = NULL;
         }
     }
 
