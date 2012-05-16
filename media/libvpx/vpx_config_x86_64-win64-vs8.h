@@ -27,11 +27,15 @@
 #define HAVE_SSE4_1 1
 #define HAVE_ALTIVEC 0
 #define HAVE_VPX_PORTS 1
+#ifndef HAVE_STDINT_H
 #define HAVE_STDINT_H 0
+#endif
 #define HAVE_ALT_TREE_LAYOUT 0
 #define HAVE_PTHREAD_H 0
 #define HAVE_SYS_MMAN_H 0
+#ifndef HAVE_UNISTD_H
 #define HAVE_UNISTD_H 0
+#endif
 #define CONFIG_EXTERNAL_BUILD 1
 #define CONFIG_INSTALL_DOCS 0
 #define CONFIG_INSTALL_BINS 1
@@ -41,8 +45,13 @@
 #define CONFIG_GPROF 0
 #define CONFIG_GCOV 0
 #define CONFIG_RVCT 0
+#ifdef _MSC_VER
 #define CONFIG_GCC 0
 #define CONFIG_MSVS 1
+#else
+#define CONFIG_GCC 1
+#define CONFIG_MSVS 0
+#endif
 #define CONFIG_PIC 0
 #define CONFIG_BIG_ENDIAN 0
 #define CONFIG_CODEC_SRCS 0
