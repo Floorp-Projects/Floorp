@@ -544,6 +544,7 @@ IonBuilder::traverseBytecode()
 
         // Nothing in inspectOpcode() is allowed to advance the pc.
         JSOp op = JSOp(*pc);
+        markPhiBytecodeUses(pc);
         if (!inspectOpcode(op))
             return false;
 
@@ -617,6 +618,19 @@ IonBuilder::snoopControlFlow(JSOp op)
         break;
     }
     return ControlStatus_None;
+}
+
+void
+IonBuilder::markPhiBytecodeUses(jsbytecode *pc)
+{
+    unsigned nuses = analyze::GetUseCount(script, pc - script->code);
+    for (unsigned i = 0; i < nuses; i++) {
+        MDefinition *def = current->peek(-(i + 1));
+        if (def->isPassArg())
+            def = def->toPassArg()->getArgument();
+        if (def->isPhi())
+            def->toPhi()->setHasBytecodeUses();
+    }
 }
 
 bool

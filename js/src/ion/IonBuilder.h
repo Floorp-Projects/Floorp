@@ -203,6 +203,7 @@ class IonBuilder : public MIRGenerator
   private:
     bool traverseBytecode();
     ControlStatus snoopControlFlow(JSOp op);
+    void markPhiBytecodeUses(jsbytecode *pc);
     bool inspectOpcode(JSOp op);
     uint32 readIndex(jsbytecode *pc);
     JSAtom *readAtom(jsbytecode *pc);

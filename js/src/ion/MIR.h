@@ -2346,10 +2346,12 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     js::Vector<MDefinition *, 2, IonAllocPolicy> inputs_;
     uint32 slot_;
     bool triedToSpecialize_;
+    bool hasBytecodeUses_;
 
     MPhi(uint32 slot)
       : slot_(slot),
-        triedToSpecialize_(false)
+        triedToSpecialize_(false),
+        hasBytecodeUses_(false)
     {
         setResultType(MIRType_Value);
     }
@@ -2384,6 +2386,13 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     MDefinition *foldsTo(bool useValueNumbers);
 
     bool congruentTo(MDefinition * const &ins) const;
+
+    bool hasBytecodeUses() const {
+        return hasBytecodeUses_;
+    }
+    void setHasBytecodeUses() {
+        hasBytecodeUses_ = true;
+    }
 
     AliasSet getAliasSet() const {
         return AliasSet::None();
