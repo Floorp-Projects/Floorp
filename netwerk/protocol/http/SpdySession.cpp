@@ -407,8 +407,12 @@ SpdySession::ActivateStream(SpdyStream *stream)
   SetWriteCallbacks();
 
   // Kick off the SYN transmit without waiting for the poll loop
-  PRUint32 countRead;
-  ReadSegments(nsnull, kDefaultBufferSize, &countRead);
+  // This won't work for stream id=1 because there is no segment reader
+  // yet.
+  if (mSegmentReader) {
+    PRUint32 countRead;
+    ReadSegments(nsnull, kDefaultBufferSize, &countRead);
+  }
 }
 
 void
@@ -1450,6 +1454,8 @@ SpdySession::ReadSegments(nsAHttpSegmentReader *reader,
   if (NS_FAILED(rv)) {
     LOG3(("SpdySession::ReadSegments %p returning FAIL code %X",
           this, rv));
+    if (rv != NS_BASE_STREAM_WOULD_BLOCK)
+      CleanupStream(stream, rv, RST_CANCEL);
     return rv;
   }
   
