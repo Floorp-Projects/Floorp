@@ -18,6 +18,22 @@ class PixelTest extends BaseTest {
         return p;
     }
 
+    protected final PaintedSurface reloadAndPaint() {
+        Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
+
+        mActions.sendSpecialKey(Actions.SpecialKey.MENU);
+        mSolo.waitForText("Reload");
+        mSolo.clickOnText("Reload");
+
+        paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
+        PaintedSurface p = mDriver.getPaintedSurface();
+        if (p == null) {
+            mAsserter.ok(p != null, "checking that painted surface loaded", 
+                 "painted surface loaded");
+        }
+        return p;
+    }
+
     protected final PaintedSurface waitForPaint(Actions.RepeatedEventExpecter expecter) {
         expecter.blockUntilClear(PAINT_CLEAR_DELAY);
         PaintedSurface p = mDriver.getPaintedSurface();
