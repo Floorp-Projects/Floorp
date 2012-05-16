@@ -17,6 +17,7 @@
 #include "gfxPangoFonts.h"
 #include "gfxContext.h"
 #include "gfxUserFontSet.h"
+#include "gfxFT2FontBase.h"
 #else
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -741,19 +742,20 @@ gfxPlatformGtk::GetGdkDrawable(gfxASurface *target)
 RefPtr<ScaledFont>
 gfxPlatformGtk::GetScaledFontForFont(gfxFont *aFont)
 {
-  NativeFont nativeFont;
-  nativeFont.mType = NATIVE_FONT_SKIA_FONT_FACE;
-  nativeFont.mFont = aFont;
-  RefPtr<ScaledFont> scaledFont =
-    Factory::CreateScaledFontForNativeFont(nativeFont, aFont->GetAdjustedSize());
+    NS_ASSERTION(aFont->GetType() == gfxFont::FontType::FONT_TYPE_FT2, "Expecting Freetype font");
+    NativeFont nativeFont;
+    nativeFont.mType = NATIVE_FONT_SKIA_FONT_FACE;
+    nativeFont.mFont = static_cast<gfxFT2FontBase*>(aFont)->GetFontOptions();
+    RefPtr<ScaledFont> scaledFont =
+      Factory::CreateScaledFontForNativeFont(nativeFont, aFont->GetAdjustedSize());
 
-  return scaledFont;
+    return scaledFont;
 }
 
 bool
 gfxPlatformGtk::SupportsAzure(BackendType& aBackend)
 {
-  aBackend = BACKEND_SKIA;
-  return true;
+    aBackend = BACKEND_SKIA;
+    return true;
 }
 
