@@ -87,6 +87,10 @@ class ReflowCountMgr;
 class nsPresShellEventCB;
 class nsAutoCauseReflowNotifier;
 
+// 250ms.  This is actually pref-controlled, but we use this value if we fail
+// to get the pref for any reason.
+#define PAINTLOCK_EVENT_DELAY 250
+
 class PresShell : public nsIPresShell,
                   public nsStubDocumentObserver,
                   public nsISelectionController, public nsIObserver,
@@ -351,6 +355,13 @@ public:
       IsLayoutFlushObserver(this);
   }
 
+  void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                           size_t *aArenasSize,
+                           size_t *aStyleSetsSize,
+                           size_t *aTextRunsSize,
+                           size_t *aPresContextSize) const;
+  size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const;
+
 protected:
   virtual ~PresShell();
 
@@ -407,13 +418,13 @@ protected:
 
   struct RenderingState {
     RenderingState(PresShell* aPresShell) 
-      : mRenderFlags(aPresShell->mRenderFlags)
-      , mXResolution(aPresShell->mXResolution)
+      : mXResolution(aPresShell->mXResolution)
       , mYResolution(aPresShell->mYResolution)
+      , mRenderFlags(aPresShell->mRenderFlags)
     { }
-    PRUint32 mRenderFlags;
     float mXResolution;
     float mYResolution;
+    RenderFlags mRenderFlags;
   };
 
   struct AutoSaveRestoreRenderingState {
@@ -432,6 +443,12 @@ protected:
     PresShell* mPresShell;
     RenderingState mOldState;
   };
+  static RenderFlags ChangeFlag(RenderFlags aFlags, bool aOnOff,
+                                eRenderFlag aFlag)
+  {
+    return aOnOff ? (aFlags | aFlag) : (aFlag & ~aFlag);
+  }
+
 
   void SetRenderingState(const RenderingState& aState);
 
@@ -526,58 +543,6 @@ protected:
     return rv;
   }
 
-  nsRefPtr<nsCSSStyleSheet> mPrefStyleSheet; // mStyleSet owns it but we
-                                             // maintain a ref, may be null
-#ifdef DEBUG
-  PRUint32                  mUpdateCount;
-#endif
-  // reflow roots that need to be reflowed, as both a queue and a hashtable
-  nsTArray<nsIFrame*> mDirtyRoots;
-
-  bool mDocumentLoading;
-
-  bool mIgnoreFrameDestruction;
-  bool mHaveShutDown;
-
-  bool mViewportOverridden;
-
-  bool mLastRootReflowHadUnconstrainedHeight;
-
-  // This is used to protect ourselves from triggering reflow while in the
-  // middle of frame construction and the like... it really shouldn't be
-  // needed, one hopes, but it is for now.
-  PRUint32  mChangeNestCount;
-  
-  nsIFrame*   mCurrentEventFrame;
-  nsCOMPtr<nsIContent> mCurrentEventContent;
-  nsTArray<nsIFrame*> mCurrentEventFrameStack;
-  nsCOMArray<nsIContent> mCurrentEventContentStack;
-
-  nsCOMPtr<nsIContent>          mLastAnchorScrolledTo;
-  nscoord                       mLastAnchorScrollPositionY;
-  nsRefPtr<nsCaret>             mCaret;
-  nsRefPtr<nsCaret>             mOriginalCaret;
-  
-#ifdef DEBUG
-  // The reflow root under which we're currently reflowing.  Null when
-  // not in reflow.
-  nsIFrame* mCurrentReflowRoot;
-#endif
-
-  // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
-  // we finish reflowing mCurrentReflowRoot.
-  nsTHashtable< nsPtrHashKey<nsIFrame> > mFramesToDirty;
-
-  // Information needed to properly handle scrolling content into view if the
-  // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is
-  // non-null between the initial scroll attempt and the first time we finish
-  // processing all our dirty roots.  mContentScrollVPosition and
-  // mContentScrollHPosition are only used when it's non-null.
-  nsCOMPtr<nsIContent> mContentToScrollTo;
-  ScrollAxis mContentScrollVAxis;
-  ScrollAxis mContentScrollHAxis;
-  PRUint32 mContentToScrollToFlags;
-
   class nsDelayedEvent
   {
   public:
@@ -653,58 +618,49 @@ protected:
     }
   };
 
-  bool                                 mNoDelayedMouseEvents;
-  bool                                 mNoDelayedKeyEvents;
-  nsTArray<nsAutoPtr<nsDelayedEvent> > mDelayedEvents;
+  // Check if aEvent is a mouse event and record the mouse location for later
+  // synth mouse moves.
+  void RecordMouseLocation(nsGUIEvent* aEvent);
+  class nsSynthMouseMoveEvent : public nsARefreshObserver {
+  public:
+    nsSynthMouseMoveEvent(PresShell* aPresShell, bool aFromScroll)
+      : mPresShell(aPresShell), mFromScroll(aFromScroll) {
+      NS_ASSERTION(mPresShell, "null parameter");
+    }
+    ~nsSynthMouseMoveEvent() {
+      Revoke();
+    }
 
-  nsCallbackEventRequest* mFirstCallbackEventRequest;
-  nsCallbackEventRequest* mLastCallbackEventRequest;
+    NS_INLINE_DECL_REFCOUNTING(nsSynthMouseMoveEvent)
+    
+    void Revoke() {
+      if (mPresShell) {
+        mPresShell->GetPresContext()->RefreshDriver()->
+          RemoveRefreshObserver(this, Flush_Display);
+        mPresShell = nsnull;
+      }
+    }
+    virtual void WillRefresh(mozilla::TimeStamp aTime) {
+      if (mPresShell)
+        mPresShell->ProcessSynthMouseMoveEvent(mFromScroll);
+    }
+  private:
+    PresShell* mPresShell;
+    bool mFromScroll;
+  };
+  void ProcessSynthMouseMoveEvent(bool aFromScroll);
 
-  bool              mIsDocumentGone;      // We've been disconnected from the document.
-                                          // We will refuse to paint the document until either
-                                          // (a) our timer fires or (b) all frames are constructed.
-  bool              mShouldUnsuppressPainting;  // Indicates that it is safe to unlock painting once all pending
-                                                // reflows have been processed.
-  nsCOMPtr<nsITimer> mPaintSuppressionTimer; // This timer controls painting suppression.  Until it fires
-                                             // or all frames are constructed, we won't paint anything but
-                                             // our <body> background and scrollbars.
-#define PAINTLOCK_EVENT_DELAY 250 // 250ms.  This is actually
-                                  // pref-controlled, but we use this
-                                  // value if we fail to get the pref
-                                  // for any reason.
-
-  static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell); // A callback for the timer.
-
-  // At least on Win32 and Mac after interupting a reflow we need to post
-  // the resume reflow event off a timer to avoid event starvation because
-  // posted messages are processed before other messages when the modal
-  // moving/sizing loop is running, see bug 491700 for details.
-  nsCOMPtr<nsITimer> mReflowContinueTimer;
-  static void sReflowContinueCallback(nsITimer* aTimer, void* aPresShell);
-  bool ScheduleReflowOffTimer();
-  
-#ifdef MOZ_REFLOW_PERF
-  ReflowCountMgr * mReflowCountMgr;
-#endif
-
-  static bool sDisableNonTestMouseEvents;
-
-private:
-
+  void QueryIsActive();
+  nsresult UpdateImageLockingState();
 
 #ifdef ANDROID
   nsIDocument* GetTouchEventTargetDocument();
 #endif
   bool InZombieDocument(nsIContent *aContent);
   already_AddRefed<nsIPresShell> GetParentPresShell();
+  nsIFrame* GetCurrentEventFrame();
   nsresult RetargetEventToParent(nsGUIEvent* aEvent,
                                  nsEventStatus*  aEventStatus);
-
-  //helper funcs for event handling
-protected:
-  //protected because nsPresShellEventCB needs this.
-  nsIFrame* GetCurrentEventFrame();
-private:
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
   void PopCurrentEventInfo();
   nsresult HandleEventInternal(nsEvent* aEvent, nsEventStatus *aStatus);
@@ -745,16 +701,31 @@ private:
   void FireResizeEvent();
   void FireBeforeResizeEvent();
   static void AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell);
-  nsRevocableEventPtr<nsRunnableMethod<PresShell> > mResizeEvent;
-  nsCOMPtr<nsITimer> mAsyncResizeEventTimer;
-  bool mAsyncResizeTimerIsActive;
-  bool mInResize;
 
   virtual void SynthesizeMouseMove(bool aFromScroll);
 
-  // Check if aEvent is a mouse event and record the mouse location for later
-  // synth mouse moves.
-  void RecordMouseLocation(nsGUIEvent* aEvent);
+  PresShell* GetRootPresShell();
+
+  nscolor GetDefaultBackgroundColorToDraw();
+
+  // The callback for the mPaintSuppressionTimer timer.
+  static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell);
+
+  // The callback for the mReflowContinueTimer timer.
+  static void sReflowContinueCallback(nsITimer* aTimer, void* aPresShell);
+  bool ScheduleReflowOffTimer();
+  
+#ifdef DEBUG
+  // The reflow root under which we're currently reflowing.  Null when
+  // not in reflow.
+  nsIFrame*                 mCurrentReflowRoot;
+  PRUint32                  mUpdateCount;
+#endif
+
+#ifdef MOZ_REFLOW_PERF
+  ReflowCountMgr*           mReflowCountMgr;
+#endif
+
   // This is used for synthetic mouse events that are sent when what is under
   // the mouse pointer may have changed without the mouse moving (eg scrolling,
   // change to the document contents).
@@ -763,54 +734,80 @@ private:
   // is set to (NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) if the mouse isn't
   // over our window or there is no last observed mouse location for some
   // reason.
-  nsPoint mMouseLocation;
-  class nsSynthMouseMoveEvent : public nsARefreshObserver {
-  public:
-    nsSynthMouseMoveEvent(PresShell* aPresShell, bool aFromScroll)
-      : mPresShell(aPresShell), mFromScroll(aFromScroll) {
-      NS_ASSERTION(mPresShell, "null parameter");
-    }
-    ~nsSynthMouseMoveEvent() {
-      Revoke();
-    }
+  nsPoint                   mMouseLocation;
 
-    NS_INLINE_DECL_REFCOUNTING(nsSynthMouseMoveEvent)
-    
-    void Revoke() {
-      if (mPresShell) {
-        mPresShell->GetPresContext()->RefreshDriver()->
-          RemoveRefreshObserver(this, Flush_Display);
-        mPresShell = nsnull;
-      }
-    }
-    virtual void WillRefresh(mozilla::TimeStamp aTime) {
-      if (mPresShell)
-        mPresShell->ProcessSynthMouseMoveEvent(mFromScroll);
-    }
-  private:
-    PresShell* mPresShell;
-    bool mFromScroll;
-  };
+  // mStyleSet owns it but we maintain a ref, may be null
+  nsRefPtr<nsCSSStyleSheet> mPrefStyleSheet; 
+
+  // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
+  // we finish reflowing mCurrentReflowRoot.
+  nsTHashtable<nsPtrHashKey<nsIFrame> > mFramesToDirty;
+
+  // Reflow roots that need to be reflowed.
+  nsTArray<nsIFrame*>       mDirtyRoots;
+
+  nsTArray<nsAutoPtr<nsDelayedEvent> > mDelayedEvents;
+  nsRevocableEventPtr<nsRunnableMethod<PresShell> > mResizeEvent;
+  nsCOMPtr<nsITimer>        mAsyncResizeEventTimer;
+  nsIFrame*                 mCurrentEventFrame;
+  nsCOMPtr<nsIContent>      mCurrentEventContent;
+  nsTArray<nsIFrame*>       mCurrentEventFrameStack;
+  nsCOMArray<nsIContent>    mCurrentEventContentStack;
   nsRevocableEventPtr<nsSynthMouseMoveEvent> mSynthMouseMoveEvent;
-  void ProcessSynthMouseMoveEvent(bool aFromScroll);
+  nsCOMPtr<nsIContent>      mLastAnchorScrolledTo;
+  nsRefPtr<nsCaret>         mCaret;
+  nsRefPtr<nsCaret>         mOriginalCaret;
+  nsCallbackEventRequest*   mFirstCallbackEventRequest;
+  nsCallbackEventRequest*   mLastCallbackEventRequest;
 
-  PresShell* GetRootPresShell();
+  // This timer controls painting suppression.  Until it fires
+  // or all frames are constructed, we won't paint anything but
+  // our <body> background and scrollbars.
+  nsCOMPtr<nsITimer>        mPaintSuppressionTimer;
 
-public:
+  // At least on Win32 and Mac after interupting a reflow we need to post
+  // the resume reflow event off a timer to avoid event starvation because
+  // posted messages are processed before other messages when the modal
+  // moving/sizing loop is running, see bug 491700 for details.
+  nsCOMPtr<nsITimer>        mReflowContinueTimer;
 
-  void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                           size_t *aArenasSize,
-                           size_t *aStyleSetsSize,
-                           size_t *aTextRunsSize,
-                           size_t *aPresContextSize) const;
-  size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const;
+  // Information needed to properly handle scrolling content into view if the
+  // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is
+  // non-null between the initial scroll attempt and the first time we finish
+  // processing all our dirty roots.  mContentScrollVPosition and
+  // mContentScrollHPosition are only used when it's non-null.
+  nsCOMPtr<nsIContent>      mContentToScrollTo;
+  ScrollAxis                mContentScrollVAxis;
+  ScrollAxis                mContentScrollHAxis;
+  PRUint32                  mContentToScrollToFlags;
 
-protected:
-  void QueryIsActive();
-  nsresult UpdateImageLockingState();
+  nscoord                   mLastAnchorScrollPositionY;
 
-private:
-  nscolor GetDefaultBackgroundColorToDraw();
+  // This is used to protect ourselves from triggering reflow while in the
+  // middle of frame construction and the like... it really shouldn't be
+  // needed, one hopes, but it is for now.
+  PRUint16                  mChangeNestCount;
+  
+  bool                      mDocumentLoading : 1;
+  bool                      mIgnoreFrameDestruction : 1;
+  bool                      mHaveShutDown : 1;
+  bool                      mViewportOverridden : 1;
+  bool                      mLastRootReflowHadUnconstrainedHeight : 1;
+  bool                      mNoDelayedMouseEvents : 1;
+  bool                      mNoDelayedKeyEvents : 1;
+
+  // We've been disconnected from the document.  We will refuse to paint the
+  // document until either our timer fires or all frames are constructed.
+  bool                      mIsDocumentGone : 1;
+
+  // Indicates that it is safe to unlock painting once all pending reflows
+  // have been processed.
+  bool                      mShouldUnsuppressPainting : 1;
+
+  bool                      mAsyncResizeTimerIsActive : 1;
+  bool                      mInResize : 1;
+
+  static bool               sDisableNonTestMouseEvents;
 };
 
 #endif /* !defined(nsPresShell_h_) */
