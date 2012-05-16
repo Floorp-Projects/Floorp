@@ -94,6 +94,19 @@
 using namespace js;
 using namespace js::gc;
 
+struct CallbackData
+{
+    CallbackData(JSMallocSizeOfFun f) : mallocSizeOf(f), n(0) {}
+    JSMallocSizeOfFun mallocSizeOf;
+    size_t n;
+};
+
+void CompartmentCallback(JSRuntime *rt, void *vdata, JSCompartment *compartment)
+{
+    CallbackData *data = (CallbackData *) vdata;
+    data->n += data->mallocSizeOf(compartment);
+}
+
 void
 JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *runtime)
 {
@@ -118,6 +131,17 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *run
     runtime->stackCommitted = stackSpace.sizeOfCommitted();
 
     runtime->gcMarker = gcMarker.sizeOfExcludingThis(mallocSizeOf);
+
+    runtime->mathCache = mathCache_ ? mathCache_->sizeOfIncludingThis(mallocSizeOf) : 0;
+
+    runtime->scriptFilenames = scriptFilenameTable.sizeOfExcludingThis(mallocSizeOf);
+    for (ScriptFilenameTable::Range r = scriptFilenameTable.all(); !r.empty(); r.popFront())
+        runtime->scriptFilenames += mallocSizeOf(r.front());
+
+    runtime->compartmentObjects = 0;
+    CallbackData data(mallocSizeOf);
+    JS_IterateCompartments(this, &data, CompartmentCallback);
+    runtime->compartmentObjects = data.n;
 }
 
 size_t
