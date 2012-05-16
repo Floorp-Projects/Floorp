@@ -66,6 +66,10 @@ def build_aux_tools(base_dir):
     build_package(tar_source_dir, tar_build_dir,
                   ["--prefix=%s" % aux_inst_dir])
 
+    gawk_build_dir = base_dir + '/gawk_build'
+    build_package(gawk_source_dir, gawk_build_dir,
+                  ["--prefix=%s" % aux_inst_dir])
+
 def with_env(env, f):
     old_env = os.environ.copy()
     os.environ.update(env)
@@ -189,6 +193,7 @@ binutils_version = "2.21.1"
 glibc_version = "2.5.1"
 linux_version = "2.6.18"
 tar_version = "1.26"
+gawk_version = "3.1.5"
 make_version = "3.81"
 gcc_version = "4.5.2"
 mpfr_version = "2.4.2"
@@ -204,6 +209,8 @@ linux_source_uri = "http://www.kernel.org/pub/linux/kernel/v2.6/linux-%s.tar.bz2
     linux_version
 tar_source_uri = "http://ftp.gnu.org/gnu/tar/tar-%s.tar.bz2" % \
     tar_version
+gawk_source_uri = "http://ftp.gnu.org/gnu/gawk/gawk-%s.tar.bz2" % \
+    gawk_version
 make_source_uri = "http://ftp.gnu.org/gnu/make/make-%s.tar.bz2" % \
     make_version
 unifdef_source_uri = "http://dotat.at/prog/unifdef/unifdef-%s.tar.gz" % \
@@ -220,6 +227,7 @@ binutils_source_tar = download_uri(binutils_source_uri)
 glibc_source_tar = download_uri(glibc_source_uri)
 linux_source_tar = download_uri(linux_source_uri)
 tar_source_tar = download_uri(tar_source_uri)
+gawk_source_tar = download_uri(gawk_source_uri)
 make_source_tar = download_uri(make_source_uri)
 unifdef_source_tar = download_uri(unifdef_source_uri)
 mpc_source_tar = download_uri(mpc_source_uri)
@@ -231,6 +239,7 @@ binutils_source_dir  = build_source_dir('binutils-', binutils_version)
 glibc_source_dir  = build_source_dir('glibc-', glibc_version)
 linux_source_dir  = build_source_dir('linux-', linux_version)
 tar_source_dir  = build_source_dir('tar-', tar_version)
+gawk_source_dir  = build_source_dir('gawk-', gawk_version)
 make_source_dir  = build_source_dir('make-', make_version)
 unifdef_source_dir  = build_source_dir('unifdef-', unifdef_version)
 mpc_source_dir  = build_source_dir('mpc-', mpc_version)
@@ -247,6 +256,7 @@ if not os.path.exists(source_dir):
     patch('glibc-deterministic.patch', 1, glibc_source_dir)
     run_in(glibc_source_dir, ["autoconf"])
     extract(tar_source_tar, source_dir)
+    extract(gawk_source_tar, source_dir)
     extract(make_source_tar, source_dir)
     extract(unifdef_source_tar, source_dir)
     extract(mpc_source_tar, source_dir)
@@ -266,12 +276,17 @@ os.makedirs(build_dir)
 
 build_aux_tools(build_dir)
 
+basic_path = aux_inst_dir + "/bin:/bin:/usr/bin"
+
 stage1_dir = build_dir + '/stage1'
-build_one_stage({"CC": "gcc", "CXX" : "g++"}, stage1_dir, True)
+build_one_stage({"PATH"   : basic_path,
+                 "CC"     : "gcc",
+                 "CXX"    : "g++" },
+                stage1_dir, True)
 
 stage1_tool_inst_dir = stage1_dir + '/inst'
 stage2_dir = build_dir + '/stage2'
-build_one_stage({"PATH"   : stage1_tool_inst_dir + "/bin:/bin:/usr/bin",
+build_one_stage({"PATH"   : stage1_tool_inst_dir + "/bin:" + basic_path,
                  "CC"     : "gcc -fgnu89-inline",
                  "CXX"    : "g++",
                  "RANLIB" : "true" },
@@ -279,7 +294,7 @@ build_one_stage({"PATH"   : stage1_tool_inst_dir + "/bin:/bin:/usr/bin",
 
 stage2_tool_inst_dir = stage2_dir + '/inst'
 stage3_dir = build_dir + '/stage3'
-build_one_stage({"PATH"   : stage2_tool_inst_dir + "/bin:/bin:/usr/bin",
+build_one_stage({"PATH"   : stage2_tool_inst_dir + "/bin:" + basic_path,
                  "CC"     : "gcc -fgnu89-inline",
                  "CXX"    : "g++",
                  "RANLIB" : "true" },
