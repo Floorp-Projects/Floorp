@@ -1175,11 +1175,12 @@ GetCompartmentName(JSCompartment *c, nsCString &name)
         // (e.g. components owned by the system or null principal).
         xpc::CompartmentPrivate *compartmentPrivate =
             static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(c));
-        if (compartmentPrivate &&
-            !compartmentPrivate->location.IsEmpty() &&
-            !compartmentPrivate->location.Equals(name)) {
-            name.AppendLiteral(", ");
-            name.Append(compartmentPrivate->location);
+        if (compartmentPrivate) {
+            const nsACString& location = compartmentPrivate->GetLocation();
+            if (!location.IsEmpty() && !location.Equals(name)) {
+                name.AppendLiteral(", ");
+                name.Append(location);
+            }
         }
         
         // A hack: replace forward slashes with '\\' so they aren't
