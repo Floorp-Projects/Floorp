@@ -1623,7 +1623,6 @@ OpenDatabaseHelper::DoDatabaseWork()
   NS_ASSERTION(mgr, "This should never be null!");
 
   nsresult rv = mgr->EnsureOriginIsInitialized(mASCIIOrigin,
-                                               mPrivilege,
                                                getter_AddRefs(dbDirectory));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 

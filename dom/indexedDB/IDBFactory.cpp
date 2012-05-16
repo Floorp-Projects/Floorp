@@ -427,15 +427,12 @@ IDBFactory::OpenCommon(const nsAString& aName,
   nsCOMPtr<nsPIDOMWindow> window;
   nsCOMPtr<nsIScriptGlobalObject> sgo;
   JSObject* scriptOwner = nsnull;
-  FactoryPrivilege privilege;
 
   if (mWindow) {
     window = mWindow;
-    privilege = Content;
   }
   else {
     scriptOwner = mOwningObject;
-    privilege = Chrome;
   }
 
   nsCString origin;
@@ -448,8 +445,7 @@ IDBFactory::OpenCommon(const nsAString& aName,
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenDatabaseHelper> openHelper =
-    new OpenDatabaseHelper(request, aName, origin, aVersion, aDeleting,
-                           privilege);
+    new OpenDatabaseHelper(request, aName, origin, aVersion, aDeleting);
 
   rv = openHelper->Init();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
