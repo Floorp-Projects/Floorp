@@ -3385,18 +3385,12 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
  * The storage for name or callback's arguments needs to live only until
  * the following call to JS_CallTracer returns.
  */
-#ifdef DEBUG
 # define JS_SET_TRACING_DETAILS(trc, printer, arg, index)                     \
     JS_BEGIN_MACRO                                                            \
         (trc)->debugPrinter = (printer);                                      \
         (trc)->debugPrintArg = (arg);                                         \
         (trc)->debugPrintIndex = (index);                                     \
     JS_END_MACRO
-#else
-# define JS_SET_TRACING_DETAILS(trc, printer, arg, index)                     \
-    JS_BEGIN_MACRO                                                            \
-    JS_END_MACRO
-#endif
 
 /*
  * Sets the real location for a marked reference, when passing the address

@@ -165,6 +165,7 @@ EXPORTS		= \
 		nsReadLine.h \
 		nsASocketHandler.h \
 		nsAsyncRedirectVerifyHelper.h \
+		nsStreamListenerWrapper.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

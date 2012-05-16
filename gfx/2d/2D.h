@@ -521,7 +521,7 @@ protected:
 class DrawTarget : public RefCounted<DrawTarget>
 {
 public:
-  DrawTarget() : mTransformDirty(false) {}
+  DrawTarget() : mTransformDirty(false), mPermitSubpixelAA(false) {}
   virtual ~DrawTarget() {}
 
   virtual BackendType GetType() const = 0;
@@ -792,11 +792,21 @@ public:
   const IntRect &GetOpaqueRect() const {
     return mOpaqueRect;
   }
+
+  void SetPermitSubpixelAA(bool aPermitSubpixelAA) {
+    mPermitSubpixelAA = aPermitSubpixelAA;
+  }
+
+  bool GetPermitSubpixelAA() {
+    return mPermitSubpixelAA;
+  }
+
 protected:
   UserData mUserData;
   Matrix mTransform;
   IntRect mOpaqueRect;
   bool mTransformDirty : 1;
+  bool mPermitSubpixelAA : 1;
 
   SurfaceFormat mFormat;
 };

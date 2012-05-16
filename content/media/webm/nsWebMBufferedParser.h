@@ -225,10 +225,8 @@ public:
   }
 
   void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset);
-  void CalculateBufferedForRange(nsTimeRanges* aBuffered,
-                                 PRInt64 aStartOffset, PRInt64 aEndOffset,
-                                 PRUint64 aTimecodeScale,
-                                 PRInt64 aStartTimeOffsetNS);
+  bool CalculateBufferedForRange(PRInt64 aStartOffset, PRInt64 aEndOffset,
+                                 PRUint64* aStartTime, PRUint64* aEndTime);
 
 private:
   // Synchronizes access to the mTimeMapping array.

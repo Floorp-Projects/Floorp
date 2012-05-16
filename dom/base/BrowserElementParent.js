@@ -67,17 +67,17 @@ BrowserElementParent.prototype = {
     }
   },
 
-  _observeInProcessBrowserFrameShown: function(frameLoader, data) {
+  _observeInProcessBrowserFrameShown: function(frameLoader) {
     debug("In-process browser frame shown " + frameLoader);
-    this._setUpMessageManagerListeners(frameLoader, data);
+    this._setUpMessageManagerListeners(frameLoader);
   },
 
-  _observeRemoteBrowserFrameShown: function(frameLoader, data) {
+  _observeRemoteBrowserFrameShown: function(frameLoader) {
     debug("Remote browser frame shown " + frameLoader);
-    this._setUpMessageManagerListeners(frameLoader, data);
+    this._setUpMessageManagerListeners(frameLoader);
   },
 
-  _setUpMessageManagerListeners: function(frameLoader, data) {
+  _setUpMessageManagerListeners: function(frameLoader) {
     let frameElement = frameLoader.QueryInterface(Ci.nsIFrameLoader).ownerElement;
     if (!frameElement) {
       debug("No frame element?");
@@ -150,10 +150,10 @@ BrowserElementParent.prototype = {
       }
       break;
     case 'remote-browser-frame-shown':
-      this._observeRemoteBrowserFrameShown(subject, data);
+      this._observeRemoteBrowserFrameShown(subject);
       break;
     case 'in-process-browser-frame-shown':
-      this._observeInProcessBrowserFrameShown(subject, data);
+      this._observeInProcessBrowserFrameShown(subject);
       break;
     case 'content-document-global-created':
       this._observeContentGlobalCreated(subject);

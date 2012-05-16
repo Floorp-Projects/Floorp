@@ -186,23 +186,18 @@ public:
 
   // utilities to parse and retrieve numeric values in CSS units
   // All values are stored in twips.
-  static bool
-  ParseNumericValue(const nsString& aString,
-                    nsCSSValue&     aCSSValue) {
-    return nsMathMLElement::ParseNumericValue(aString, aCSSValue,
-            nsMathMLElement::PARSE_ALLOW_NEGATIVE |
-            nsMathMLElement::PARSE_ALLOW_UNITLESS);
-  }
+  // @pre  aLengthValue is the default length value of the attribute.
+  // @post aLengthValue is the length value computed from the attribute.
+  static void ParseNumericValue(const nsString&   aString,
+                                nscoord*          aLengthValue,
+                                PRUint32          aFlags,
+                                nsPresContext*    aPresContext,
+                                nsStyleContext*   aStyleContext);
 
   static nscoord 
   CalcLength(nsPresContext*   aPresContext,
              nsStyleContext*   aStyleContext,
              const nsCSSValue& aCSSValue);
-
-  static bool
-  ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
-                       nsString&   aString,
-                       nsCSSValue& aCSSValue);
 
   static eMathMLFrameType
   GetMathMLFrameTypeFor(nsIFrame* aFrame)

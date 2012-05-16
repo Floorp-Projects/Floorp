@@ -129,8 +129,6 @@ public:
 #endif
 
 #include "mozilla/Preferences.h"
-#include "nsIScreen.h"
-#include "nsIScreenManager.h"
 #include "gfxUtils.h"
 #include "gfxFailure.h"
 #include "gfxASurface.h"
@@ -1401,17 +1399,6 @@ CreateConfig(EGLConfig* aConfig, PRInt32 depth)
     return false;
 }
 
-static int
-GetScreenDepth()
-{
-    nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
-    nsCOMPtr<nsIScreen> screen;
-    screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
-    PRInt32 depth = 24;
-    screen->GetColorDepth(&depth);
-    return depth;
-}
-
 // Return true if a suitable EGLConfig was found and pass it out
 // through aConfig.  Return false otherwise.
 //
@@ -1420,7 +1407,7 @@ GetScreenDepth()
 static bool
 CreateConfig(EGLConfig* aConfig)
 {
-    PRInt32 depth = GetScreenDepth();
+    PRInt32 depth = gfxPlatform::GetPlatform()->GetScreenDepth();
     if (!CreateConfig(aConfig, depth)) {
 #ifdef MOZ_WIDGET_ANDROID
         // Bug 736005
@@ -1492,7 +1479,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 
     void* currentContext = sEGLLibrary.fGetCurrentContext();
     if (aWidget->HasGLContext() && currentContext) {
-        PRInt32 depth = GetScreenDepth();
+        PRInt32 depth = gfxPlatform::GetPlatform()->GetScreenDepth();
         void* platformContext = currentContext;
 #ifdef MOZ_WIDGET_QT
         QGLContext* context = const_cast<QGLContext*>(QGLContext::currentContext());
