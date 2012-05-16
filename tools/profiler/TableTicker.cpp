@@ -102,11 +102,11 @@ using namespace mozilla;
 #endif
 
 
-mozilla::ThreadLocal<ProfileStack> pkey_stack;
-mozilla::ThreadLocal<TableTicker> pkey_ticker;
+mozilla::ThreadLocal<ProfileStack> tlsStack;
+mozilla::ThreadLocal<TableTicker> tlsTicker;
 // We need to track whether we've been initialized otherwise
-// we end up using pkey_stack without initializing it.
-// Because pkey_stack is totally opaque to us we can't reuse
+// we end up using tlsStack without initializing it.
+// Because tlsStack is totally opaque to us we can't reuse
 // it as the flag itself.
 bool stack_key_initialized;
 
@@ -392,7 +392,7 @@ public:
   SaveProfileTask() {}
 
   NS_IMETHOD Run() {
-    TableTicker *t = pkey_ticker.get();
+    TableTicker *t = tlsTicker.get();
 
     char buff[MAXPATHLEN];
 #ifdef ANDROID
@@ -690,14 +690,14 @@ std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry)
 
 void mozilla_sampler_init()
 {
-  if (!pkey_stack.init() || !pkey_ticker.init()) {
+  if (!tlsStack.init() || !tlsTicker.init()) {
     LOG("Failed to init.");
     return;
   }
   stack_key_initialized = true;
 
   ProfileStack *stack = new ProfileStack();
-  pkey_stack.set(stack);
+  tlsStack.set(stack);
 
 #if defined(USE_LIBUNWIND) && defined(ANDROID)
   // Only try debug_frame and exidx unwinding
@@ -733,7 +733,7 @@ void mozilla_sampler_deinit()
 
 void mozilla_sampler_save()
 {
-  TableTicker *t = pkey_ticker.get();
+  TableTicker *t = tlsTicker.get();
   if (!t) {
     return;
   }
@@ -746,7 +746,7 @@ void mozilla_sampler_save()
 
 char* mozilla_sampler_get_profile()
 {
-  TableTicker *t = pkey_ticker.get();
+  TableTicker *t = tlsTicker.get();
   if (!t) {
     return NULL;
   }
@@ -762,7 +762,7 @@ char* mozilla_sampler_get_profile()
 
 JSObject *mozilla_sampler_get_profile_data(JSContext *aCx)
 {
-  TableTicker *t = pkey_ticker.get();
+  TableTicker *t = tlsTicker.get();
   if (!t) {
     return NULL;
   }
@@ -788,7 +788,7 @@ const char** mozilla_sampler_get_features()
 void mozilla_sampler_start(int aProfileEntries, int aInterval,
                            const char** aFeatures, uint32_t aFeatureCount)
 {
-  ProfileStack *stack = pkey_stack.get();
+  ProfileStack *stack = tlsStack.get();
   if (!stack) {
     ASSERT(false);
     return;
@@ -798,24 +798,24 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
 
   TableTicker *t = new TableTicker(aInterval, aProfileEntries, stack,
                                    aFeatures, aFeatureCount);
-  pkey_ticker.set(t);
+  tlsTicker.set(t);
   t->Start();
 }
 
 void mozilla_sampler_stop()
 {
-  TableTicker *t = pkey_ticker.get();
+  TableTicker *t = tlsTicker.get();
   if (!t) {
     return;
   }
 
   t->Stop();
-  pkey_ticker.set(NULL);
+  tlsTicker.set(NULL);
 }
 
 bool mozilla_sampler_is_active()
 {
-  TableTicker *t = pkey_ticker.get();
+  TableTicker *t = tlsTicker.get();
   if (!t) {
     return false;
   }
