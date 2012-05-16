@@ -75,6 +75,7 @@ DIRS += \
   $(NULL)
 
 DIRS += \
+  apps \
   base \
   bindings \
   battery \
