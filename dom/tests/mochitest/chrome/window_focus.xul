@@ -491,7 +491,9 @@ function startTest()
   ok(gEvents === "", "focusing element that is already focused");
 
   $("t2").blur();
+  $("t7").blur();
   ok(gEvents === "", "blurring element that is not focused");
+  is(document.activeElement, $("t1"), "old element still focused after blur() on another element");
 
   // focus() method on elements that are not tabbable 
   for (idx = 1; idx <= kFocusSteps; idx++) {
