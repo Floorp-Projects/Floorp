@@ -521,7 +521,7 @@ protected:
 class DrawTarget : public RefCounted<DrawTarget>
 {
 public:
-  DrawTarget() : mTransformDirty(false) {}
+  DrawTarget() : mTransformDirty(false), mPermitSubpixelAA(false) {}
   virtual ~DrawTarget() {}
 
   virtual BackendType GetType() const = 0;
