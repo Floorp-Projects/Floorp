@@ -19,12 +19,14 @@ dir-ts = .deps/test
 check-arglist        = $(dir-ts)/arglist.ts
 check-autotargets    = $(dir-ts)/autotargets_mk.ts
 check-export-targets = $(dir-ts)/export-targets-mk.ts
+check-rcs-mk         = $(dir-ts)/rcs-mk.ts
 check-XinY           = $(dir-ts)/check_XinY_mk.ts
 check-xpidl          = $(dir-ts)/xpidl-mk.ts
 check-tests =\
   $(check-arglist) \
   $(check-autotargets) \
   $(check-export-targets) \
+  $(check-rcs-mk) \
   $(check-XinY) \
   $(check-xpidl) \
   $(NULL)
@@ -123,6 +125,21 @@ checkup: $(eval include $(srcdir)/check-export-targets.mk)
 $(check-export-targets): $(check-export-targets-preqs)
 	@$(TOUCH) $@
 # </CHECK: export-targets.mk>
+
+
+###########################################################################
+# <CHECK: rcs.mk>
+check-rcs-preqs=\
+  $(call mkdir_deps,$(dir-ts)) \
+  $(topsrcdir)/config/makefiles/rcs.mk \
+  $(srcdir)/check-rcs.mk \
+  $(NULL)
+
+$(check-rcs-mk): $(check-rcs-preqs)
+	$(MAKE) --no-print-directory -f $(srcdir)/check-rcs.mk topsrcdir=$(topsrcdir)
+	$(TOUCH) $@
+# </CHECK: rcs.mk>
+
 
 ###########################################################################
 ##{ <CHECK: xpidl.mk>
