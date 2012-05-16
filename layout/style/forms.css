@@ -671,14 +671,7 @@ meter {
   display: inline-block;
   vertical-align: -0.2em;
 
-  /* Default style in case of there is -moz-appearance: none; */
-  border: 2px solid;
-  /* #e6e6e6 is a light gray. */
-  -moz-border-top-colors: ThreeDShadow #e6e6e6;
-  -moz-border-right-colors: ThreeDHighlight #e6e6e6;
-  -moz-border-bottom-colors: ThreeDHighlight #e6e6e6;
-  -moz-border-left-colors: ThreeDShadow #e6e6e6;
-  background-color: #e6e6e6;
+  background: -moz-linear-gradient(top, #e6e6e6, #e6e6e6, #eeeeee 20%, #cccccc 45%, #cccccc 55%);
 }
 
 ::-moz-meter-bar {
@@ -691,11 +684,19 @@ meter {
   -moz-appearance: meterchunk;
   height: 100%;
   width: 100%;
+}
 
-  /* Default style in case of there is -moz-appearance: none;
-   * #2eff46 is green
-   */
-  background-color: #2eff46;
+:-moz-meter-optimum::-moz-meter-bar {
+  /* green. */
+  background: -moz-linear-gradient(top, #ad7, #ad7, #cea 20%, #7a3 45%, #7a3 55%);
+}
+:-moz-meter-sub-optimum::-moz-meter-bar {
+  /* orange. */
+  background: -moz-linear-gradient(top, #fe7, #fe7, #ffc 20%, #db3 45%, #db3 55%);
+}
+:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+  /* red. */
+  background: -moz-linear-gradient(top, #f77, #f77, #fcc 20%, #d44 45%, #d44 55%);
 }
 
 %ifdef XP_OS2
