@@ -1389,6 +1389,12 @@ SpdySession::ReadSegments(nsAHttpSegmentReader *reader,
 {
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
   
+  NS_ABORT_IF_FALSE(!mSegmentReader || !reader || (mSegmentReader == reader),
+                    "Inconsistent Write Function Callback");
+
+  if (reader)
+    mSegmentReader = reader;
+
   nsresult rv;
   *countRead = 0;
 
@@ -1415,11 +1421,6 @@ SpdySession::ReadSegments(nsAHttpSegmentReader *reader,
   
   LOG3(("SpdySession %p will write from SpdyStream %p", this, stream));
 
-  NS_ABORT_IF_FALSE(!mSegmentReader || !reader || (mSegmentReader == reader),
-                    "Inconsistent Write Function Callback");
-
-  if (reader)
-    mSegmentReader = reader;
   rv = stream->ReadSegments(this, count, countRead);
 
   // Not every permutation of stream->ReadSegents produces data (and therefore
