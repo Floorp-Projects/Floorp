@@ -105,7 +105,7 @@ struct RuntimeStats
       : runtimeObject(0)
       , runtimeAtomsTable(0)
       , runtimeContexts(0)
-      , runtimeNormal(0)
+      , runtimeDtoa(0)
       , runtimeTemporary(0)
       , runtimeMjitCode(0)
       , runtimeRegexpCode(0)
@@ -136,7 +136,7 @@ struct RuntimeStats
     size_t runtimeObject;
     size_t runtimeAtomsTable;
     size_t runtimeContexts;
-    size_t runtimeNormal;
+    size_t runtimeDtoa;
     size_t runtimeTemporary;
     size_t runtimeMjitCode;
     size_t runtimeRegexpCode;
