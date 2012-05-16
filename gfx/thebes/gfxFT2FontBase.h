@@ -9,6 +9,7 @@
 #include "cairo.h"
 #include "gfxContext.h"
 #include "gfxFont.h"
+#include "mozilla/gfx/2D.h"
 
 class gfxFT2FontBase : public gfxFont {
 public:
@@ -32,10 +33,16 @@ public:
     virtual bool SetupCairoFont(gfxContext *aContext);
 
     virtual FontType GetType() const { return FONT_TYPE_FT2; }
+
+    mozilla::gfx::FontOptions* GetFontOptions() { return &mFontOptions; }
 protected:
     PRUint32 mSpaceGlyph;
     bool mHasMetrics;
     Metrics mMetrics;
+
+    // Azure font description
+    mozilla::gfx::FontOptions  mFontOptions;
+    void ConstructFontOptions();
 };
 
 #endif /* GFX_FT2FONTBASE_H */

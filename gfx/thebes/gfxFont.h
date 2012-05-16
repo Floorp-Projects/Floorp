@@ -26,6 +26,7 @@
 #include "mozilla/HashFunctions.h"
 #include "nsIMemoryReporter.h"
 #include "gfxFontFeatures.h"
+#include "mozilla/gfx/Types.h"
 
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 
