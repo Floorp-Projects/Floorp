@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=755320
+-->
+<head>
+  <title>Test for Bug 755320</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=755320">Mozilla Bug 755320</a>
+
+<script type="text/javascript">
+
+/** Test for Bug 755320 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function finish() {
+  ok(true, "Got onload for iframe.");
+  SimpleTest.finish();
+}
+</script>
+
+<!-- remote="true" should be ignored on vanilla iframes. -->
+<iframe remote="true" onload='finish()' src="data:text/html,It worked."></iframe>
+
+</body>
+</html>
