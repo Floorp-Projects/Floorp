@@ -48,6 +48,7 @@ GRE_MODULE     = 1
 
 XPIDLSRCS =                               \
             nsIDOMApplicationRegistry.idl \
+            nsIAppsService.idl \
             $(NULL)
 
 include $(topsrcdir)/config/rules.mk
