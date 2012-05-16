@@ -615,7 +615,11 @@ protected:
   gfxAlphaBoxBlur blur;
   nsRefPtr<gfxContext> mContext;
   gfxContext* mDestinationCtx;
-  
+
+  /* This is true if the blur already has it's content transformed
+   * by mDestinationCtx's transform */
+  bool mPreTransformed;
+
 };
 
 #endif /* nsCSSRendering_h___ */
