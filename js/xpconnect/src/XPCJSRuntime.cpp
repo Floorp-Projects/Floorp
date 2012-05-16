@@ -1545,10 +1545,10 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                  "Memory used by JSContext objects and certain structures "
                  "hanging off them.");
 
-    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/normal"),
-                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeNormal,
-                 "Memory used by a JSRuntime, excluding memory that is "
-                 "reported by other reporters under 'explicit/js/runtime/'.");
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/dtoa"),
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeDtoa,
+                 "Memory used by DtoaState, which is used for converting "
+                 "strings to numbers and vice versa.");
 
     REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/temporary"),
                  nsIMemoryReporter::KIND_HEAP, rtStats.runtimeTemporary,
