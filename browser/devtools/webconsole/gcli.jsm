@@ -768,17 +768,6 @@ var types = require('gcli/types');
 var Status = require('gcli/types').Status;
 var BooleanType = require('gcli/types/basic').BooleanType;
 
-
-/**
- * A lookup hash of our registered commands
- */
-var commands = {};
-
-/**
- * A sorted list of command names, we regularly want them in order, so pre-sort
- */
-var commandNames = [];
-
 /**
  * Implement the localization algorithm for any documentation objects (i.e.
  * description and manual) in a command.
@@ -1031,6 +1020,21 @@ canon.Parameter = Parameter;
 
 
 /**
+ * A lookup hash of our registered commands
+ */
+var commands = {};
+
+/**
+ * A sorted list of command names, we regularly want them in order, so pre-sort
+ */
+var commandNames = [];
+
+/**
+ * A lookup of the original commandSpecs by command name
+ */
+var commandSpecs = {};
+
+/**
  * Add a command to the canon of known commands.
  * This function is exposed to the outside world (via gcli/index). It is
  * documented in docs/index.md for all the world to see.
@@ -1038,10 +1042,20 @@ canon.Parameter = Parameter;
  * @return The new command
  */
 canon.addCommand = function addCommand(commandSpec) {
+  if (commands[commandSpec.name] != null) {
+    // Roughly canon.removeCommand() without the event call, which we do later
+    delete commands[commandSpec.name];
+    commandNames = commandNames.filter(function(test) {
+      return test !== commandSpec.name;
+    });
+  }
+
   var command = new Command(commandSpec);
   commands[commandSpec.name] = command;
   commandNames.push(commandSpec.name);
   commandNames.sort();
+
+  commandSpecs[commandSpec.name] = commandSpec;
 
   canon.onCanonChange();
   return command;
@@ -1055,7 +1069,10 @@ canon.removeCommand = function removeCommand(commandOrName) {
   var name = typeof commandOrName === 'string' ?
           commandOrName :
           commandOrName.name;
+
+  // See start of canon.addCommand if changing this code
   delete commands[name];
+  delete commandSpecs[name];
   commandNames = commandNames.filter(function(test) {
     return test !== name;
   });
@@ -1087,6 +1104,14 @@ canon.getCommands = function getCommands() {
  */
 canon.getCommandNames = function getCommandNames() {
   return commandNames.slice(0);
+};
+
+/**
+ * Get access to the stored commandMetaDatas (i.e. before they were made into
+ * instances of Command/Parameters) so we can remote them.
+ */
+canon.getCommandSpecs = function getCommandSpecs() {
+  return commandSpecs;
 };
 
 /**
@@ -1226,9 +1251,17 @@ exports.createEvent = function(name) {
    * @param scope Optional 'this' object for the function call
    */
   event.remove = function(func, scope) {
+    var found = false;
     handlers = handlers.filter(function(test) {
-      return test.func !== func && test.scope !== scope;
+      var noMatch = (test.func !== func && test.scope !== scope);
+      if (!noMatch) {
+        found = true;
+      }
+      return noMatch;
     });
+    if (!found) {
+      console.warn('Failed to remove handler from ' + name);
+    }
   };
 
   /**
@@ -1590,6 +1623,13 @@ exports.createUrlLookup = function(callingModule) {
       return require('text!gcli/ui/' + path);
     }
     catch (ex) {
+      // Under node/unamd callingModule is provided by node. This code isn't
+      // the right answer but it's enough to pass all the unit tests and get
+      // test coverage information, which is all we actually care about here.
+      if (callingModule.filename) {
+        return callingModule.filename + path;
+      }
+
       var filename = callingModule.id.split('/').pop() + '.js';
 
       if (callingModule.uri.substr(-filename.length) !== filename) {
@@ -5000,7 +5040,8 @@ define('gcli/ui/intro', ['require', 'exports', 'module' , 'gcli/settings', 'gcli
   var hideIntroSettingSpec = {
     name: 'hideIntro',
     type: 'boolean',
-    description: l10n.lookup('hideIntroDesc')
+    description: l10n.lookup('hideIntroDesc'),
+    defaultValue: false
   };
   var hideIntro;
 
@@ -5713,6 +5754,9 @@ Requisition.prototype.cloneAssignments = function() {
  */
 Requisition.prototype.getStatus = function() {
   var status = Status.VALID;
+  if (!this._unassigned.arg.isBlank()) {
+    return Status.ERROR;
+  }
   this.getAssignments(true).forEach(function(assignment) {
     var assignStatus = assignment.getStatus();
     if (assignStatus > status) {
@@ -6669,9 +6713,21 @@ Output.prototype.toDom = function(element) {
   }
   else {
     if (this.command.returnType === 'terminal') {
-      node = util.createElement(document, 'textarea');
-      node.classList.add('gcli-row-terminal');
-      node.readOnly = true;
+      if (Array.isArray(output)) {
+        node = util.createElement(document, 'div');
+        output.forEach(function() {
+          var child = util.createElement(document, 'textarea');
+          child.classList.add('gcli-row-subterminal');
+          child.readOnly = true;
+
+          node.appendChild(child);
+        });
+      }
+      else {
+        node = util.createElement(document, 'textarea');
+        node.classList.add('gcli-row-terminal');
+        node.readOnly = true;
+      }
     }
     else {
       node = util.createElement(document, 'p');
@@ -6812,7 +6868,6 @@ exports.shutdown = function() {
  * something else takes focus.
  * @param options Object containing user customization properties, including:
  * - blurDelay (default=150ms)
- * - slowTypingDelay (default=3000ms)
  * - debug (default=false)
  * - commandOutputManager (default=canon.commandOutputManager)
  * @param components Object that links to other UI components. GCLI provided:
@@ -6837,12 +6892,6 @@ function FocusManager(options, components) {
   this._hasFocus = false;
   this._helpRequested = false;
   this._recentOutput = false;
-
-  // Be more helpful if the user pauses
-  // this._slowTyping = false;
-  // this._keyPressTimeout = null;
-  // this._onSlowTyping = this._onSlowTyping.bind(this);
-  // this._slowTypingDelay = options.slowTypingDelay || 3000;
 
   this.onVisibilityChange = util.createEvent('FocusManager.onVisibilityChange');
 
@@ -6878,7 +6927,6 @@ FocusManager.prototype.destroy = function() {
     this._blurDelayTimeout = null;
   }
 
-  // delete this._onSlowTyping;
   delete this._focused;
   delete this._document;
   delete this._window;
@@ -6969,8 +7017,6 @@ FocusManager.prototype._reportFocus = function(where) {
     console.log('FocusManager._reportFocus(' + (where || 'unknown') + ')');
   }
 
-  // this._resetSlowTypingAlarm();
-
   if (this._blurDelayTimeout) {
     if (this._debug) {
       console.log('FocusManager.cancelBlur');
@@ -6996,8 +7042,6 @@ FocusManager.prototype._reportBlur = function(where) {
     console.log('FocusManager._reportBlur(' + where + ')');
   }
 
-  // this._cancelSlowTypingAlarm();
-
   if (this._hasFocus) {
     if (this._blurDelayTimeout) {
       if (this._debug) {
@@ -7018,35 +7062,6 @@ FocusManager.prototype._reportBlur = function(where) {
 };
 
 /**
- * Called on keypress or new focus. Sets off a timer to explode if the user
- * stops typing.
- */
-FocusManager.prototype._resetSlowTypingAlarm = function() {
-  // this._cancelSlowTypingAlarm();
-  // this._keyPressTimeout = this._window.setTimeout(this._onSlowTyping,
-  //                                                 this._slowTypingDelay);
-};
-
-/**
- * Don't kick off a slow typing alarm
- */
-FocusManager.prototype._cancelSlowTypingAlarm = function() {
-  // if (this._keyPressTimeout) {
-  //   this._window.clearTimeout(this._keyPressTimeout);
-  //   this._keyPressTimeout = null;
-  // }
-  // this._slowTyping = false;
-};
-
-/**
- * Called from the key-press timeout
- */
-FocusManager.prototype._onSlowTyping = function() {
-  // this._slowTyping = true;
-  // this._checkShow();
-};
-
-/**
  * The setting has changed
  */
 FocusManager.prototype._eagerHelperChanged = function() {
@@ -7058,8 +7073,6 @@ FocusManager.prototype._eagerHelperChanged = function() {
  * showing the tooltip element, (or if the keypress is F1, show it now)
  */
 FocusManager.prototype.onInputChange = function(ev) {
-  // this._resetSlowTypingAlarm();
-  // this._slowTyping = false;
   this._recentOutput = false;
   this._checkShow();
 };
@@ -7073,8 +7086,6 @@ FocusManager.prototype.helpRequest = function() {
     console.log('FocusManager.helpRequest');
   }
 
-  // this._cancelSlowTypingAlarm();
-  // this._slowTyping = true;
   this._helpRequested = true;
   this._recentOutput = false;
   this._checkShow();
@@ -7089,8 +7100,6 @@ FocusManager.prototype.removeHelp = function() {
     console.log('FocusManager.removeHelp');
   }
 
-  // this._cancelSlowTypingAlarm();
-  // this._slowTyping = false;
   this._importantFieldFlag = false;
   this._isError = false;
   this._helpRequested = false;
@@ -7175,10 +7184,6 @@ FocusManager.prototype._shouldShowTooltip = function() {
   if (this._importantFieldFlag) {
     return { visible: true, reason: 'importantFieldFlag' };
   }
-
-  // if (this._slowTyping) {
-  //   return { visible: true, reason: 'slowTyping' };
-  // }
 
   return { visible: false, reason: 'default' };
 };
@@ -8007,8 +8012,8 @@ function Menu(options) {
  */
 Menu.prototype.destroy = function() {
   delete this.element;
-  delete this.items;
   delete this.template;
+  delete this.document;
 };
 
 /**
@@ -8388,7 +8393,7 @@ var helpCommandSpec = {
       name: 'search',
       type: 'string',
       description: l10n.lookup('helpSearchDesc'),
-      manual: l10n.lookup('helpSearchManual'),
+      manual: l10n.lookup('helpSearchManual2'),
       defaultValue: null
     }
   ],
@@ -9463,7 +9468,8 @@ History.prototype.backward = function() {
 
 exports.History = History;
 
-});define("text!gcli/ui/inputter.css", [], "");
+});
+define("text!gcli/ui/inputter.css", [], "");
 
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
@@ -9829,8 +9835,6 @@ Tooltip.prototype.destroy = function() {
   delete this.descriptionEle;
   delete this.highlightEle;
 
-  delete this.field;
-  delete this.focusManager;
   delete this.document;
   delete this.element;
   delete this.panelElement;

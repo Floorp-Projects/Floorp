@@ -379,7 +379,7 @@ public class ProfileMigrator {
     }
 
     protected void setMigratedHistory() {
-        setBooleanPrefTrue(PREFS_MIGRATE_BOOKMARKS_DONE);
+        setBooleanPrefTrue(PREFS_MIGRATE_HISTORY_DONE);
     }
 
     protected void setMigratedBookmarks() {

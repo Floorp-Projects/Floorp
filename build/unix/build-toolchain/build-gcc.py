@@ -277,5 +277,13 @@ build_one_stage({"PATH"   : stage1_tool_inst_dir + "/bin:/bin:/usr/bin",
                  "RANLIB" : "true" },
                 stage2_dir, False)
 
+stage2_tool_inst_dir = stage2_dir + '/inst'
+stage3_dir = build_dir + '/stage3'
+build_one_stage({"PATH"   : stage2_tool_inst_dir + "/bin:/bin:/usr/bin",
+                 "CC"     : "gcc -fgnu89-inline",
+                 "CXX"    : "g++",
+                 "RANLIB" : "true" },
+                stage3_dir, False)
+
 build_tar_package(aux_inst_dir + "/bin/tar",
-                  "toolchain.tar", stage2_dir, "inst")
+                  "toolchain.tar", stage3_dir, "inst")

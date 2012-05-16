@@ -103,18 +103,16 @@ void XPCTraceableVariant::TraceJS(JSTracer* trc)
     jsval val = GetJSValPreserveColor();
 
     NS_ASSERTION(JSVAL_IS_TRACEABLE(val), "Must be traceable");
-    JS_SET_TRACING_DETAILS(trc, PrintTraceName, this, 0);
+    JS_SET_TRACING_DETAILS(trc, GetTraceName, this, 0);
     JS_CallTracer(trc, JSVAL_TO_TRACEABLE(val), JSVAL_TRACE_KIND(val));
 }
 
-#ifdef DEBUG
 // static
 void
-XPCTraceableVariant::PrintTraceName(JSTracer* trc, char *buf, size_t bufsize)
+XPCTraceableVariant::GetTraceName(JSTracer* trc, char *buf, size_t bufsize)
 {
     JS_snprintf(buf, bufsize, "XPCVariant[0x%p].mJSVal", trc->debugPrintArg);
 }
-#endif
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
     JS::Value val = tmp->GetJSValPreserveColor();

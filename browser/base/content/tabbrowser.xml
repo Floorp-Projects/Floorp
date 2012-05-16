@@ -3806,7 +3806,6 @@
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
                              xbl:inherits="fadein,pinned,selected"
-                             clickthrough="never"
                              class="tab-close-button"/>
         </xul:hbox>
       </xul:stack>

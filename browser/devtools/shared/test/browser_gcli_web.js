@@ -98,7 +98,7 @@ define('gclitest/index', ['require', 'exports', 'module' , 'gclitest/suite'], fu
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testCli', 'gclitest/testCompletion', 'gclitest/testExec', 'gclitest/testHistory', 'gclitest/testJs', 'gclitest/testKeyboard', 'gclitest/testRequire', 'gclitest/testResource', 'gclitest/testScratchpad', 'gclitest/testSpell', 'gclitest/testSplit', 'gclitest/testTokenize', 'gclitest/testTooltip', 'gclitest/testTypes', 'gclitest/testUtil'], function(require, exports, module) {
+define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testCanon', 'gclitest/testCli', 'gclitest/testCompletion', 'gclitest/testExec', 'gclitest/testHelp', 'gclitest/testHistory', 'gclitest/testInputter', 'gclitest/testIntro', 'gclitest/testJs', 'gclitest/testKeyboard', 'gclitest/testPref', 'gclitest/testRequire', 'gclitest/testResource', 'gclitest/testScratchpad', 'gclitest/testSettings', 'gclitest/testSpell', 'gclitest/testSplit', 'gclitest/testTokenize', 'gclitest/testTooltip', 'gclitest/testTypes', 'gclitest/testUtil'], function(require, exports, module) {
 
   // We need to make sure GCLI is initialized before we begin testing it
   require('gcli/index');
@@ -108,15 +108,21 @@ define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/e
   // It's tempting to want to unify these strings and make addSuite() do the
   // call to require(), however that breaks the build system which looks for
   // the strings passed to require
+  examiner.addSuite('gclitest/testCanon', require('gclitest/testCanon'));
   examiner.addSuite('gclitest/testCli', require('gclitest/testCli'));
   examiner.addSuite('gclitest/testCompletion', require('gclitest/testCompletion'));
   examiner.addSuite('gclitest/testExec', require('gclitest/testExec'));
+  examiner.addSuite('gclitest/testHelp', require('gclitest/testHelp'));
   examiner.addSuite('gclitest/testHistory', require('gclitest/testHistory'));
+  examiner.addSuite('gclitest/testInputter', require('gclitest/testInputter'));
+  examiner.addSuite('gclitest/testIntro', require('gclitest/testIntro'));
   examiner.addSuite('gclitest/testJs', require('gclitest/testJs'));
   examiner.addSuite('gclitest/testKeyboard', require('gclitest/testKeyboard'));
+  examiner.addSuite('gclitest/testPref', require('gclitest/testPref'));
   examiner.addSuite('gclitest/testRequire', require('gclitest/testRequire'));
   examiner.addSuite('gclitest/testResource', require('gclitest/testResource'));
   examiner.addSuite('gclitest/testScratchpad', require('gclitest/testScratchpad'));
+  examiner.addSuite('gclitest/testSettings', require('gclitest/testSettings'));
   examiner.addSuite('gclitest/testSpell', require('gclitest/testSpell'));
   examiner.addSuite('gclitest/testSplit', require('gclitest/testSplit'));
   examiner.addSuite('gclitest/testTokenize', require('gclitest/testTokenize'));
@@ -132,9 +138,10 @@ define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/e
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('test/examiner', ['require', 'exports', 'module' ], function(require, exports, module) {
+define('test/examiner', ['require', 'exports', 'module' , 'test/assert'], function(require, exports, module) {
 var examiner = exports;
 
+var assert = require('test/assert');
 
 /**
  * Test harness data
@@ -145,8 +152,6 @@ examiner.suites = {};
  * The gap between tests when running async
  */
 var delay = 10;
-
-var currentTest = null;
 
 var stati = {
   notrun: { index: 0, name: 'Skipped' },
@@ -290,9 +295,9 @@ examiner.detailedResultLog = function() {
         console.log('- ' + test.name + ': ' + test.status.name);
         test.failures.forEach(function(failure) {
           console.log('  - ' + failure.message);
-          if (failure.expected) {
-            console.log('    - Expected: ' + failure.expected);
-            console.log('    -   Actual: ' + failure.actual);
+          if (failure.params) {
+            console.log('    - P1: ' + failure.p1);
+            console.log('    - P2: ' + failure.p2);
           }
         }.bind(this));
       }
@@ -301,42 +306,6 @@ examiner.detailedResultLog = function() {
 
   console.log();
   console.log('Summary: ' + this.status.name + ' (' + this.checks + ' checks)');
-};
-
-/**
- * Used by assert to record a failure against the current test
- * @param failure A set of properties describing the failure. Properties include:
- * - message (string, required) A message describing the test
- * - expected (optional) The expected data
- * - actual (optional) The actual data
- */
-examiner.recordFailure = function(failure) {
-  if (!currentTest) {
-    console.error('No currentTest for ' + failure.message);
-    return;
-  }
-
-  currentTest.status = stati.fail;
-  currentTest.failures.push(failure);
-};
-
-/**
- * Used by assert to record a check pass
- */
-examiner.recordPass = function() {
-  if (!currentTest) {
-    console.error('No currentTest');
-    return;
-  }
-
-  currentTest.checks++;
-};
-
-/**
- * When we want to note something alongside a test
- */
-examiner.log = function(message) {
-  currentTest.failures.push({ message: message });
 };
 
 /**
@@ -462,7 +431,7 @@ Suite.prototype._setup = function(options) {
     return true;
   }
   catch (ex) {
-    this._logToAllTests(stati.notrun, '' + ex);
+    this._logToAllTests('' + ex);
     console.error(ex);
     if (ex.stack) {
       console.error(ex.stack);
@@ -484,7 +453,7 @@ Suite.prototype._shutdown = function(options) {
     return true;
   }
   catch (ex) {
-    this._logToAllTests(stati.fail, '' + ex);
+    this._logToAllTests('' + ex);
     console.error(ex);
     if (ex.stack) {
       console.error(ex.stack);
@@ -496,12 +465,13 @@ Suite.prototype._shutdown = function(options) {
 /**
  * Something has gone wrong that affects all tests in this Suite
  */
-Suite.prototype._logToAllTests = function(status, message) {
+Suite.prototype._logToAllTests = function(message) {
+  var priorCurrentTest = assert.currentTest;
   Object.keys(this.tests).forEach(function(testName) {
-    var test = this.tests[testName];
-    test.status = status;
-    test.failures.push({ message: message });
+    assert.currentTest = this.tests[testName];
+    assert.ok(false, message);
   }.bind(this));
+  assert.currentTest = priorCurrentTest;
 };
 
 
@@ -523,7 +493,7 @@ function Test(suite, name, func) {
  * Run just a single test
  */
 Test.prototype.run = function(options) {
-  currentTest = this;
+  assert.currentTest = this;
   this.status = stati.executing;
   this.failures = [];
   this.checks = 0;
@@ -532,10 +502,9 @@ Test.prototype.run = function(options) {
     this.func.apply(this.suite, [ options ]);
   }
   catch (ex) {
-    this.status = stati.fail;
-    this.failures.push({ message: '' + ex });
+    assert.ok(false, '' + ex);
     console.error(ex);
-    if (ex.stack) {
+    if ((options.isNode || options.isFirefox) && ex.stack) {
       console.error(ex.stack);
     }
   }
@@ -544,7 +513,7 @@ Test.prototype.run = function(options) {
     this.status = stati.pass;
   }
 
-  currentTest = null;
+  assert.currentTest = null;
 };
 
 /**
@@ -580,21 +549,306 @@ Test.prototype.toRemote = function() {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/testCli', ['require', 'exports', 'module' , 'gcli/cli', 'gcli/types', 'gclitest/commands', 'test/assert'], function(require, exports, module) {
+define('test/assert', ['require', 'exports', 'module' ], function(require, exports, module) {
+
+  exports.ok = ok;
+  exports.is = is;
+  exports.log = info;
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/testCanon', ['require', 'exports', 'module' , 'gclitest/helpers', 'gcli/canon', 'test/assert'], function(require, exports, module) {
+
+  var helpers = require('gclitest/helpers');
+  var canon = require('gcli/canon');
+  var test = require('test/assert');
+
+  exports.testAddRemove = function(options) {
+    var startCount = canon.getCommands().length;
+    var events = 0;
+
+    var canonChange = function(ev) {
+      events++;
+    };
+    canon.onCanonChange.add(canonChange);
+
+    canon.addCommand({
+      name: 'testadd',
+      exec: function() {
+        return 1;
+      }
+    });
+
+    test.is(canon.getCommands().length, startCount + 1, 'add command success');
+    test.is(events, 1, 'add event');
+    helpers.exec(options, {
+      typed: 'testadd',
+      outputMatch: /^1$/
+    });
+
+    canon.addCommand({
+      name: 'testadd',
+      exec: function() {
+        return 2;
+      }
+    });
+
+    test.is(canon.getCommands().length, startCount + 1, 'readd command success');
+    test.is(events, 2, 'readd event');
+    helpers.exec(options, {
+      typed: 'testadd',
+      outputMatch: /^2$/
+    });
+
+    canon.removeCommand('testadd');
+
+    test.is(canon.getCommands().length, startCount, 'remove command success');
+    test.is(events, 3, 'remove event');
+    helpers.status(options, {
+      typed: 'testadd',
+      status: 'ERROR'
+    });
+
+    canon.addCommand({
+      name: 'testadd',
+      exec: function() {
+        return 3;
+      }
+    });
+
+    test.is(canon.getCommands().length, startCount + 1, 'rereadd command success');
+    test.is(events, 4, 'rereadd event');
+    helpers.exec(options, {
+      typed: 'testadd',
+      outputMatch: /^3$/
+    });
+
+    canon.removeCommand({
+      name: 'testadd'
+    });
+
+    test.is(canon.getCommands().length, startCount, 'reremove command success');
+    test.is(events, 5, 'reremove event');
+    helpers.status(options, {
+      typed: 'testadd',
+      status: 'ERROR'
+    });
+
+    canon.onCanonChange.remove(canonChange);
+  };
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/helpers', ['require', 'exports', 'module' , 'test/assert'], function(require, exports, module) {
+
+
+var test = require('test/assert');
+
+/**
+ * Check that we can parse command input.
+ * Doesn't execute the command, just checks that we grok the input properly:
+ *
+ * helpers.status({
+ *   // Test inputs
+ *   typed: "ech",           // Required
+ *   cursor: 3,              // Optional cursor position
+ *
+ *   // Thing to check
+ *   status: "INCOMPLETE",   // One of "VALID", "ERROR", "INCOMPLETE"
+ *   emptyParameters: [ "<message>" ], // Still to type
+ *   directTabText: "o",     // Simple completion text
+ *   arrowTabText: "",       // When the completion is not an extension
+ *   markup: "VVVIIIEEE",    // What state should the error markup be in
+ * });
+ */
+exports.status = function(options, tests) {
+  var requisition = options.display.requisition;
+  var inputter = options.display.inputter;
+  var completer = options.display.completer;
+
+  if (tests.typed) {
+    inputter.setInput(tests.typed);
+  }
+  else {
+    test.ok(false, "Missing typed for " + JSON.stringify(tests));
+    return;
+  }
+
+  if (tests.cursor) {
+    inputter.setCursor(tests.cursor);
+  }
+
+  if (tests.status) {
+    test.is(requisition.getStatus().toString(), tests.status,
+            "status for " + tests.typed);
+  }
+
+  if (tests.emptyParameters != null) {
+    var realParams = completer.emptyParameters;
+    test.is(realParams.length, tests.emptyParameters.length,
+            'emptyParameters.length for \'' + tests.typed + '\'');
+
+    if (realParams.length === tests.emptyParameters.length) {
+      for (var i = 0; i < realParams.length; i++) {
+        test.is(realParams[i].replace(/\u00a0/g, ' '), tests.emptyParameters[i],
+                'emptyParameters[' + i + '] for \'' + tests.typed + '\'');
+      }
+    }
+  }
+
+  if (tests.markup) {
+    var cursor = tests.cursor ? tests.cursor.start : tests.typed.length;
+    var statusMarkup = requisition.getInputStatusMarkup(cursor);
+    var actualMarkup = statusMarkup.map(function(s) {
+      return Array(s.string.length + 1).join(s.status.toString()[0]);
+    }).join('');
+    test.is(tests.markup, actualMarkup, 'markup for ' + tests.typed);
+  }
+
+  if (tests.directTabText) {
+    test.is(completer.directTabText, tests.directTabText,
+            'directTabText for \'' + tests.typed + '\'');
+  }
+
+  if (tests.arrowTabText) {
+    test.is(completer.arrowTabText, ' \u00a0\u21E5 ' + tests.arrowTabText,
+            'arrowTabText for \'' + tests.typed + '\'');
+  }
+};
+
+/**
+ * Execute a command:
+ *
+ * helpers.exec({
+ *   // Test inputs
+ *   typed: "echo hi",        // Optional, uses existing if undefined
+ *
+ *   // Thing to check
+ *   args: { message: "hi" }, // Check that the args were understood properly
+ *   outputMatch: /^hi$/,     // Regex to test against textContent of output
+ *   blankOutput: true,       // Special checks when there is no output
+ * });
+ */
+exports.exec = function(options, tests) {
+  var requisition = options.display.requisition;
+  var inputter = options.display.inputter;
+
+  tests = tests || {};
+
+  if (tests.typed) {
+    inputter.setInput(tests.typed);
+  }
+
+  var typed = inputter.getInputState().typed;
+  var output = requisition.exec({ hidden: true });
+
+  test.is(typed, output.typed, 'output.command for: ' + typed);
+
+  if (tests.completed !== false) {
+    test.ok(output.completed, 'output.completed false for: ' + typed);
+  }
+  else {
+    // It is actually an error if we say something is async and it turns
+    // out not to be? For now we're saying 'no'
+    // test.ok(!output.completed, 'output.completed true for: ' + typed);
+  }
+
+  if (tests.args != null) {
+    test.is(Object.keys(tests.args).length, Object.keys(output.args).length,
+            'arg count for ' + typed);
+
+    Object.keys(output.args).forEach(function(arg) {
+      var expectedArg = tests.args[arg];
+      var actualArg = output.args[arg];
+
+      if (Array.isArray(expectedArg)) {
+        if (!Array.isArray(actualArg)) {
+          test.ok(false, 'actual is not an array. ' + typed + '/' + arg);
+          return;
+        }
+
+        test.is(expectedArg.length, actualArg.length,
+                'array length: ' + typed + '/' + arg);
+        for (var i = 0; i < expectedArg.length; i++) {
+          test.is(expectedArg[i], actualArg[i],
+                  'member: "' + typed + '/' + arg + '/' + i);
+        }
+      }
+      else {
+        test.is(expectedArg, actualArg, 'typed: "' + typed + '" arg: ' + arg);
+      }
+    });
+  }
+
+  if (!options.window.document.createElement) {
+    test.log('skipping output tests (missing doc.createElement) for ' + typed);
+    return;
+  }
+
+  var div = options.window.document.createElement('div');
+  output.toDom(div);
+  var displayed = div.textContent.trim();
+
+  if (tests.outputMatch) {
+    function doTest(match, against) {
+      if (!match.test(against)) {
+        test.ok(false, "html output for " + typed + " against " + match.source);
+        console.log("Actual textContent");
+        console.log(against);
+      }
+    }
+    if (Array.isArray(tests.outputMatch)) {
+      tests.outputMatch.forEach(function(match) {
+        doTest(match, displayed);
+      });
+    }
+    else {
+      doTest(tests.outputMatch, displayed);
+    }
+  }
+
+  if (tests.blankOutput != null) {
+    if (!/^$/.test(displayed)) {
+      test.ok(false, "html for " + typed + " (textContent sent to info)");
+      console.log("Actual textContent");
+      console.log(displayed);
+    }
+  }
+};
+
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/testCli', ['require', 'exports', 'module' , 'gcli/cli', 'gcli/types', 'gclitest/mockCommands', 'test/assert'], function(require, exports, module) {
 
 
 var Requisition = require('gcli/cli').Requisition;
 var Status = require('gcli/types').Status;
-var commands = require('gclitest/commands');
+var mockCommands = require('gclitest/mockCommands');
 
 var test = require('test/assert');
 
 exports.setup = function() {
-  commands.setup();
+  mockCommands.setup();
 };
 
 exports.shutdown = function() {
-  commands.shutdown();
+  mockCommands.shutdown();
 };
 
 
@@ -706,8 +960,8 @@ exports.testTsv = function() {
   test.is(Status.ERROR, status);
   test.is(0, assignC.paramIndex);
   test.ok(assignC.getPredictions().length >= 2);
-  test.is(commands.option1, assignC.getPredictions()[0].value);
-  test.is(commands.option2, assignC.getPredictions()[1].value);
+  test.is(mockCommands.option1, assignC.getPredictions()[0].value);
+  test.is(mockCommands.option2, assignC.getPredictions()[1].value);
   test.is('tsv', requ.commandAssignment.value.name);
   test.is('o', assign1.arg.text);
   test.is(undefined, assign1.value);
@@ -717,8 +971,8 @@ exports.testTsv = function() {
   test.is(Status.ERROR, status);
   test.is(0, assignC.paramIndex);
   test.ok(assignC.getPredictions().length >= 2);
-  test.is(commands.option1, assignC.getPredictions()[0].value);
-  test.is(commands.option2, assignC.getPredictions()[1].value);
+  test.is(mockCommands.option1, assignC.getPredictions()[0].value);
+  test.is(mockCommands.option2, assignC.getPredictions()[1].value);
   test.is('tsv', requ.commandAssignment.value.name);
   test.is('option', assign1.arg.text);
   test.is(undefined, assign1.value);
@@ -745,7 +999,7 @@ exports.testTsv = function() {
   test.is(Status.ERROR, status);
   test.is('tsv', requ.commandAssignment.value.name);
   test.is('option1', assign1.arg.text);
-  test.is(commands.option1, assign1.value);
+  test.is(mockCommands.option1, assign1.value);
   test.is(0, assignC.paramIndex);
 
   update({ typed: 'tsv option1 ', cursor: { start: 12, end: 12 } });
@@ -753,7 +1007,7 @@ exports.testTsv = function() {
   test.is(Status.ERROR, status);
   test.is('tsv', requ.commandAssignment.value.name);
   test.is('option1', assign1.arg.text);
-  test.is(commands.option1, assign1.value);
+  test.is(mockCommands.option1, assign1.value);
   test.is(1, assignC.paramIndex);
 
   update({ typed: 'tsv option1 6', cursor: { start: 13, end: 13 } });
@@ -761,7 +1015,7 @@ exports.testTsv = function() {
   test.is(Status.VALID, status);
   test.is('tsv', requ.commandAssignment.value.name);
   test.is('option1', assign1.arg.text);
-  test.is(commands.option1, assign1.value);
+  test.is(mockCommands.option1, assign1.value);
   test.is('6', assign2.arg.text);
   test.is('6', assign2.value);
   test.is('string', typeof assign2.value);
@@ -772,7 +1026,7 @@ exports.testTsv = function() {
   test.is(Status.VALID, status);
   test.is('tsv', requ.commandAssignment.value.name);
   test.is('option2', assign1.arg.text);
-  test.is(commands.option2, assign1.value);
+  test.is(mockCommands.option2, assign1.value);
   test.is('6', assign2.arg.text);
   test.is(6, assign2.value);
   test.is('number', typeof assign2.value);
@@ -875,39 +1129,44 @@ exports.testElement = function(options) {
   test.ok(assign1.arg.isBlank());
   test.is(undefined, assign1.value);
 
-  update({ typed: 'tse :root', cursor: { start: 9, end: 9 } });
-  test.is(        'VVVVVVVVV', statuses);
-  test.is(Status.VALID, status);
-  test.is('tse', requ.commandAssignment.value.name);
-  test.is(':root', assign1.arg.text);
-  if (!options.window.isFake) {
-    test.is(options.window.document.documentElement, assign1.value);
-  }
-
-  if (!options.window.isFake) {
-    var inputElement = options.window.document.getElementById('gcli-input');
-    if (inputElement) {
-      update({ typed: 'tse #gcli-input', cursor: { start: 15, end: 15 } });
-      test.is(        'VVVVVVVVVVVVVVV', statuses);
-      test.is(Status.VALID, status);
-      test.is('tse', requ.commandAssignment.value.name);
-      test.is('#gcli-input', assign1.arg.text);
-      test.is(inputElement, assign1.value);
+  if (!options.isNode) {
+    update({ typed: 'tse :root', cursor: { start: 9, end: 9 } });
+    test.is(        'VVVVVVVVV', statuses);
+    test.is(Status.VALID, status);
+    test.is('tse', requ.commandAssignment.value.name);
+    test.is(':root', assign1.arg.text);
+    if (!options.window.isFake) {
+      test.is(options.window.document.documentElement, assign1.value);
     }
-    else {
-      test.log('Skipping test that assumes gcli on the web');
-    }
-  }
 
-  update({ typed: 'tse #gcli-nomatch', cursor: { start: 17, end: 17 } });
-  // This is somewhat debatable because this input can't be corrected simply
-  // by typing so it's and error rather than incomplete, however without
-  // digging into the CSS engine we can't tell that so we default to incomplete
-  test.is(        'VVVVIIIIIIIIIIIII', statuses);
-  test.is(Status.ERROR, status);
-  test.is('tse', requ.commandAssignment.value.name);
-  test.is('#gcli-nomatch', assign1.arg.text);
-  test.is(undefined, assign1.value);
+    if (!options.window.isFake) {
+      var inputElement = options.window.document.getElementById('gcli-input');
+      if (inputElement) {
+        update({ typed: 'tse #gcli-input', cursor: { start: 15, end: 15 } });
+        test.is(        'VVVVVVVVVVVVVVV', statuses);
+        test.is(Status.VALID, status);
+        test.is('tse', requ.commandAssignment.value.name);
+        test.is('#gcli-input', assign1.arg.text);
+        test.is(inputElement, assign1.value);
+      }
+      else {
+        test.log('Skipping test that assumes gcli on the web');
+      }
+    }
+
+    update({ typed: 'tse #gcli-nomatch', cursor: { start: 17, end: 17 } });
+    // This is somewhat debatable because this input can't be corrected simply
+    // by typing so it's and error rather than incomplete, however without
+    // digging into the CSS engine we can't tell that so we default to incomplete
+    test.is(        'VVVVIIIIIIIIIIIII', statuses);
+    test.is(Status.ERROR, status);
+    test.is('tse', requ.commandAssignment.value.name);
+    test.is('#gcli-nomatch', assign1.arg.text);
+    test.is(undefined, assign1.value);
+  }
+  else {
+    test.log('Skipping :root test due to jsdom (from isNode)');
+  }
 
   update({ typed: 'tse #', cursor: { start: 5, end: 5 } });
   test.is(        'VVVVE', statuses);
@@ -1030,8 +1289,7 @@ exports.testDeeplyNested = function() {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/commands', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/util', 'gcli/types/selection', 'gcli/types/basic', 'gcli/types'], function(require, exports, module) {
-var commands = exports;
+define('gclitest/mockCommands', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/util', 'gcli/types/selection', 'gcli/types/basic', 'gcli/types'], function(require, exports, module) {
 
 
 var canon = require('gcli/canon');
@@ -1044,75 +1302,75 @@ var types = require('gcli/types');
 /**
  * Registration and de-registration.
  */
-commands.setup = function() {
+exports.setup = function() {
   // setup/shutdown need to register/unregister types, however that means we
-  // need to re-initialize commands.option1 and commands.option2 with the
+  // need to re-initialize exports.option1 and exports.option2 with the
   // actual types
-  commands.option1.type = types.getType('string');
-  commands.option2.type = types.getType('number');
+  exports.option1.type = types.getType('string');
+  exports.option2.type = types.getType('number');
 
-  types.registerType(commands.optionType);
-  types.registerType(commands.optionValue);
+  types.registerType(exports.optionType);
+  types.registerType(exports.optionValue);
 
-  canon.addCommand(commands.tsv);
-  canon.addCommand(commands.tsr);
-  canon.addCommand(commands.tse);
-  canon.addCommand(commands.tsj);
-  canon.addCommand(commands.tsb);
-  canon.addCommand(commands.tss);
-  canon.addCommand(commands.tsu);
-  canon.addCommand(commands.tsn);
-  canon.addCommand(commands.tsnDif);
-  canon.addCommand(commands.tsnExt);
-  canon.addCommand(commands.tsnExte);
-  canon.addCommand(commands.tsnExten);
-  canon.addCommand(commands.tsnExtend);
-  canon.addCommand(commands.tsnDeep);
-  canon.addCommand(commands.tsnDeepDown);
-  canon.addCommand(commands.tsnDeepDownNested);
-  canon.addCommand(commands.tsnDeepDownNestedCmd);
-  canon.addCommand(commands.tselarr);
-  canon.addCommand(commands.tsm);
-  canon.addCommand(commands.tsg);
+  canon.addCommand(exports.tsv);
+  canon.addCommand(exports.tsr);
+  canon.addCommand(exports.tse);
+  canon.addCommand(exports.tsj);
+  canon.addCommand(exports.tsb);
+  canon.addCommand(exports.tss);
+  canon.addCommand(exports.tsu);
+  canon.addCommand(exports.tsn);
+  canon.addCommand(exports.tsnDif);
+  canon.addCommand(exports.tsnExt);
+  canon.addCommand(exports.tsnExte);
+  canon.addCommand(exports.tsnExten);
+  canon.addCommand(exports.tsnExtend);
+  canon.addCommand(exports.tsnDeep);
+  canon.addCommand(exports.tsnDeepDown);
+  canon.addCommand(exports.tsnDeepDownNested);
+  canon.addCommand(exports.tsnDeepDownNestedCmd);
+  canon.addCommand(exports.tselarr);
+  canon.addCommand(exports.tsm);
+  canon.addCommand(exports.tsg);
 };
 
-commands.shutdown = function() {
-  canon.removeCommand(commands.tsv);
-  canon.removeCommand(commands.tsr);
-  canon.removeCommand(commands.tse);
-  canon.removeCommand(commands.tsj);
-  canon.removeCommand(commands.tsb);
-  canon.removeCommand(commands.tss);
-  canon.removeCommand(commands.tsu);
-  canon.removeCommand(commands.tsn);
-  canon.removeCommand(commands.tsnDif);
-  canon.removeCommand(commands.tsnExt);
-  canon.removeCommand(commands.tsnExte);
-  canon.removeCommand(commands.tsnExten);
-  canon.removeCommand(commands.tsnExtend);
-  canon.removeCommand(commands.tsnDeep);
-  canon.removeCommand(commands.tsnDeepDown);
-  canon.removeCommand(commands.tsnDeepDownNested);
-  canon.removeCommand(commands.tsnDeepDownNestedCmd);
-  canon.removeCommand(commands.tselarr);
-  canon.removeCommand(commands.tsm);
-  canon.removeCommand(commands.tsg);
+exports.shutdown = function() {
+  canon.removeCommand(exports.tsv);
+  canon.removeCommand(exports.tsr);
+  canon.removeCommand(exports.tse);
+  canon.removeCommand(exports.tsj);
+  canon.removeCommand(exports.tsb);
+  canon.removeCommand(exports.tss);
+  canon.removeCommand(exports.tsu);
+  canon.removeCommand(exports.tsn);
+  canon.removeCommand(exports.tsnDif);
+  canon.removeCommand(exports.tsnExt);
+  canon.removeCommand(exports.tsnExte);
+  canon.removeCommand(exports.tsnExten);
+  canon.removeCommand(exports.tsnExtend);
+  canon.removeCommand(exports.tsnDeep);
+  canon.removeCommand(exports.tsnDeepDown);
+  canon.removeCommand(exports.tsnDeepDownNested);
+  canon.removeCommand(exports.tsnDeepDownNestedCmd);
+  canon.removeCommand(exports.tselarr);
+  canon.removeCommand(exports.tsm);
+  canon.removeCommand(exports.tsg);
 
-  types.deregisterType(commands.optionType);
-  types.deregisterType(commands.optionValue);
+  types.deregisterType(exports.optionType);
+  types.deregisterType(exports.optionValue);
 };
 
 
-commands.option1 = { type: types.getType('string') };
-commands.option2 = { type: types.getType('number') };
+exports.option1 = { type: types.getType('string') };
+exports.option2 = { type: types.getType('number') };
 
 var lastOption = undefined;
 
-commands.optionType = new SelectionType({
+exports.optionType = new SelectionType({
   name: 'optionType',
   lookup: [
-    { name: 'option1', value: commands.option1 },
-    { name: 'option2', value: commands.option2 }
+    { name: 'option1', value: exports.option1 },
+    { name: 'option2', value: exports.option2 }
   ],
   noMatch: function() {
     lastOption = undefined;
@@ -1128,7 +1386,7 @@ commands.optionType = new SelectionType({
   }
 });
 
-commands.optionValue = new DeferredType({
+exports.optionValue = new DeferredType({
   name: 'optionValue',
   defer: function() {
     if (lastOption && lastOption.type) {
@@ -1140,21 +1398,21 @@ commands.optionValue = new DeferredType({
   }
 });
 
-commands.onCommandExec = util.createEvent('commands.onCommandExec');
+exports.onCommandExec = util.createEvent('commands.onCommandExec');
 
 function createExec(name) {
   return function(args, context) {
     var data = {
-      command: commands[name],
+      command: exports[name],
       args: args,
       context: context
     };
-    commands.onCommandExec(data);
+    exports.onCommandExec(data);
     return data;
   };
 }
 
-commands.tsv = {
+exports.tsv = {
   name: 'tsv',
   params: [
     { name: 'optionType', type: 'optionType' },
@@ -1163,93 +1421,93 @@ commands.tsv = {
   exec: createExec('tsv')
 };
 
-commands.tsr = {
+exports.tsr = {
   name: 'tsr',
   params: [ { name: 'text', type: 'string' } ],
   exec: createExec('tsr')
 };
 
-commands.tse = {
+exports.tse = {
   name: 'tse',
   params: [ { name: 'node', type: 'node' } ],
   exec: createExec('tse')
 };
 
-commands.tsj = {
+exports.tsj = {
   name: 'tsj',
   params: [ { name: 'javascript', type: 'javascript' } ],
   exec: createExec('tsj')
 };
 
-commands.tsb = {
+exports.tsb = {
   name: 'tsb',
   params: [ { name: 'toggle', type: 'boolean' } ],
   exec: createExec('tsb')
 };
 
-commands.tss = {
+exports.tss = {
   name: 'tss',
   exec: createExec('tss')
 };
 
-commands.tsu = {
+exports.tsu = {
   name: 'tsu',
   params: [ { name: 'num', type: { name: 'number', max: 10, min: -5, step: 3 } } ],
   exec: createExec('tsu')
 };
 
-commands.tsn = {
+exports.tsn = {
   name: 'tsn'
 };
 
-commands.tsnDif = {
+exports.tsnDif = {
   name: 'tsn dif',
   params: [ { name: 'text', type: 'string' } ],
   exec: createExec('tsnDif')
 };
 
-commands.tsnExt = {
+exports.tsnExt = {
   name: 'tsn ext',
   params: [ { name: 'text', type: 'string' } ],
   exec: createExec('tsnExt')
 };
 
-commands.tsnExte = {
+exports.tsnExte = {
   name: 'tsn exte',
   params: [ { name: 'text', type: 'string' } ],
   exec: createExec('')
 };
 
-commands.tsnExten = {
+exports.tsnExten = {
   name: 'tsn exten',
   params: [ { name: 'text', type: 'string' } ],
   exec: createExec('tsnExte')
 };
 
-commands.tsnExtend = {
+exports.tsnExtend = {
   name: 'tsn extend',
   params: [ { name: 'text', type: 'string' } ],
   exec: createExec('tsnExtend')
 };
 
-commands.tsnDeep = {
+exports.tsnDeep = {
   name: 'tsn deep',
 };
 
-commands.tsnDeepDown = {
+exports.tsnDeepDown = {
   name: 'tsn deep down',
 };
 
-commands.tsnDeepDownNested = {
+exports.tsnDeepDownNested = {
   name: 'tsn deep down nested',
 };
 
-commands.tsnDeepDownNestedCmd = {
+exports.tsnDeepDownNestedCmd = {
   name: 'tsn deep down nested cmd',
   exec: createExec('tsnDeepDownNestedCmd')
 };
 
-commands.tselarr = {
+exports.tselarr = {
   name: 'tselarr',
   params: [
     { name: 'num', type: { name: 'selection', data: [ '1', '2', '3' ] } },
@@ -1258,7 +1516,7 @@ commands.tselarr = {
   exec: createExec('tselarr')
 };
 
-commands.tsm = {
+exports.tsm = {
   name: 'tsm',
   description: 'a 3-param test selection|string|number',
   params: [
@@ -1269,7 +1527,7 @@ commands.tsm = {
   exec: createExec('tsm')
 };
 
-commands.tsg = {
+exports.tsg = {
   name: 'tsg',
   description: 'a param group test',
   params: [
@@ -1300,32 +1558,19 @@ commands.tsg = {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('test/assert', ['require', 'exports', 'module' ], function(require, exports, module) {
-
-  exports.ok = ok;
-  exports.is = is;
-  exports.log = info;
-
-});
-/*
- * Copyright 2009-2011 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE.txt or:
- * http://opensource.org/licenses/BSD-3-Clause
- */
-
-define('gclitest/testCompletion', ['require', 'exports', 'module' , 'test/assert', 'gclitest/commands'], function(require, exports, module) {
+define('gclitest/testCompletion', ['require', 'exports', 'module' , 'test/assert', 'gclitest/mockCommands'], function(require, exports, module) {
 
 
 var test = require('test/assert');
-var commands = require('gclitest/commands');
+var mockCommands = require('gclitest/mockCommands');
 
 
 exports.setup = function() {
-  commands.setup();
+  mockCommands.setup();
 };
 
 exports.shutdown = function() {
-  commands.shutdown();
+  mockCommands.shutdown();
 };
 
 
@@ -1518,12 +1763,12 @@ exports.testActivate = function(options) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/testExec', ['require', 'exports', 'module' , 'gcli/cli', 'gcli/canon', 'gclitest/commands', 'gcli/types/node', 'test/assert'], function(require, exports, module) {
+define('gclitest/testExec', ['require', 'exports', 'module' , 'gcli/cli', 'gcli/canon', 'gclitest/mockCommands', 'gcli/types/node', 'test/assert'], function(require, exports, module) {
 
 
 var Requisition = require('gcli/cli').Requisition;
 var canon = require('gcli/canon');
-var commands = require('gclitest/commands');
+var mockCommands = require('gclitest/mockCommands');
 var nodetype = require('gcli/types/node');
 
 var test = require('test/assert');
@@ -1533,14 +1778,14 @@ var actualOutput;
 var hideExec = false;
 
 exports.setup = function() {
-  commands.setup();
-  commands.onCommandExec.add(commandExeced);
+  mockCommands.setup();
+  mockCommands.onCommandExec.add(commandExeced);
   canon.commandOutputManager.onOutput.add(commandOutputed);
 };
 
 exports.shutdown = function() {
-  commands.shutdown();
-  commands.onCommandExec.remove(commandExeced);
+  mockCommands.shutdown();
+  mockCommands.onCommandExec.remove(commandExeced);
   canon.commandOutputManager.onOutput.remove(commandOutputed);
 };
 
@@ -1614,8 +1859,8 @@ exports.testExec = function(options) {
   exec('tss', {});
 
   // Bug 707008 - GCLI deferred types don't work properly
-  exec('tsv option1 10', { optionType: commands.option1, optionValue: '10' });
-  exec('tsv option2 10', { optionType: commands.option2, optionValue: 10 });
+  exec('tsv option1 10', { optionType: mockCommands.option1, optionValue: '10' });
+  exec('tsv option2 10', { optionType: mockCommands.option2, optionValue: 10 });
 
   exec('tsr fred', { text: 'fred' });
   exec('tsr fred bloggs', { text: 'fred bloggs' });
@@ -1668,6 +1913,95 @@ var mockDoc = {
   }
 };
 
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/testHelp', ['require', 'exports', 'module' , 'gclitest/helpers'], function(require, exports, module) {
+
+  var helpers = require('gclitest/helpers');
+
+  exports.testHelpStatus = function(options) {
+    helpers.status(options, {
+      typed:  'help',
+      markup: 'VVVV',
+      status: 'VALID',
+      emptyParameters: [ " [search]" ]
+    });
+
+    helpers.status(options, {
+      typed:  'help foo',
+      markup: 'VVVVVVVV',
+      status: 'VALID',
+      emptyParameters: [ ]
+    });
+
+    helpers.status(options, {
+      typed:  'help foo bar',
+      markup: 'VVVVVVVVVVVV',
+      status: 'VALID',
+      emptyParameters: [ ]
+    });
+  };
+
+  exports.testHelpExec = function(options) {
+    if (options.isFirefox) {
+      helpers.exec(options, {
+        typed: 'help',
+        args: { search: null },
+        outputMatch: [
+          /Available Commands/,
+          /Get help/
+        ]
+      });
+    }
+    else {
+      helpers.exec(options, {
+        typed: 'help',
+        args: { search: null },
+        outputMatch: [
+          /Welcome to GCLI/,
+          /Source \(BSD\)/,
+          /Get help/
+        ]
+      });
+    }
+
+    helpers.exec(options, {
+      typed: 'help nomatch',
+      args: { search: 'nomatch' },
+      outputMatch: /Commands starting with 'nomatch':$/
+    });
+
+    helpers.exec(options, {
+      typed: 'help help',
+      args: { search: 'help' },
+      outputMatch: [
+        /Synopsis:/,
+        /Provide help either/,
+        /\(string, optional\)/
+      ]
+    });
+
+    helpers.exec(options, {
+      typed: 'help a b',
+      args: { search: 'a b' },
+      outputMatch: /Commands starting with 'a b':$/
+    });
+
+    helpers.exec(options, {
+      typed: 'help hel',
+      args: { search: 'hel' },
+      outputMatch: [
+        /Commands starting with 'hel':/,
+        /Get help on the available commands/
+      ]
+    });
+  };
 
 });
 /*
@@ -1729,6 +2063,148 @@ exports.testForwardsPastIndex = function () {
   // Going to the 'future' just keeps giving us the empty string.
   test.is('', history.forward());
 };
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/testInputter', ['require', 'exports', 'module' , 'gclitest/mockCommands', 'gcli/util', 'test/assert'], function(require, exports, module) {
+
+
+var mockCommands = require('gclitest/mockCommands');
+var KeyEvent = require('gcli/util').KeyEvent;
+
+var test = require('test/assert');
+
+var latestEvent = undefined;
+var latestOutput = undefined;
+var latestData = undefined;
+
+var outputted = function(ev) {
+  function updateData() {
+    latestData = latestOutput.data;
+  }
+
+  if (latestOutput != null) {
+    ev.output.onChange.remove(updateData);
+  }
+
+  latestEvent = ev;
+  latestOutput = ev.output;
+
+  ev.output.onChange.add(updateData);
+};
+
+exports.setup = function(options) {
+  options.display.requisition.commandOutputManager.onOutput.add(outputted);
+  mockCommands.setup();
+};
+
+exports.shutdown = function(options) {
+  mockCommands.shutdown();
+  options.display.requisition.commandOutputManager.onOutput.remove(outputted);
+};
+
+exports.testOutput = function(options) {
+  latestEvent = undefined;
+  latestOutput = undefined;
+  latestData = undefined;
+
+  var inputter = options.display.inputter;
+  var focusManager = options.display.focusManager;
+
+  inputter.setInput('tss');
+
+  inputter.onKeyDown({
+    keyCode: KeyEvent.DOM_VK_RETURN
+  });
+
+  test.is(inputter.element.value, 'tss', 'inputter should do nothing on RETURN keyDown');
+  test.is(latestEvent, undefined, 'no events this test');
+  test.is(latestData, undefined, 'no data this test');
+
+  inputter.onKeyUp({
+    keyCode: KeyEvent.DOM_VK_RETURN
+  });
+
+  test.ok(latestEvent != null, 'events this test');
+  test.is(latestData.command.name, 'tss', 'last command is tss');
+
+  test.is(inputter.element.value, '', 'inputter should exec on RETURN keyUp');
+
+  test.ok(focusManager._recentOutput, 'recent output happened');
+
+  inputter.onKeyUp({
+    keyCode: KeyEvent.DOM_VK_F1
+  });
+
+  test.ok(!focusManager._recentOutput, 'no recent output happened post F1');
+  test.ok(focusManager._helpRequested, 'F1 = help');
+
+  inputter.onKeyUp({
+    keyCode: KeyEvent.DOM_VK_ESCAPE
+  });
+
+  test.ok(!focusManager._helpRequested, 'ESCAPE = anti help');
+
+  latestOutput.onClose();
+};
+
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/testIntro', ['require', 'exports', 'module' , 'gclitest/helpers', 'test/assert'], function(require, exports, module) {
+
+  var helpers = require('gclitest/helpers');
+  var test = require('test/assert');
+
+  exports.testIntroStatus = function(options) {
+    if (options.isFirefox) {
+      test.log('Skipping testIntroStatus in Firefox.');
+      return;
+    }
+
+    helpers.status(options, {
+      typed:  'intro',
+      markup: 'VVVVV',
+      status: 'VALID',
+      emptyParameters: [ ]
+    });
+
+    helpers.status(options, {
+      typed:  'intro foo',
+      markup: 'VVVVVVEEE',
+      status: 'ERROR',
+      emptyParameters: [ ]
+    });
+  };
+
+  exports.testIntroExec = function(options) {
+    if (options.isFirefox) {
+      test.log('Skipping testIntroExec in Firefox.');
+      return;
+    }
+
+    helpers.exec(options, {
+      typed: 'intro',
+      args: { },
+      outputMatch: [
+        /graphical\s*command\s*line/,
+        /GCLI/,
+        /help/,
+        /F1/,
+        /Escape/
+      ]
+    });
+  };
 
 });
 /*
@@ -1911,12 +2387,12 @@ exports.testBasic = function(options) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/testKeyboard', ['require', 'exports', 'module' , 'gcli/cli', 'gcli/canon', 'gclitest/commands', 'gcli/types/javascript', 'test/assert'], function(require, exports, module) {
+define('gclitest/testKeyboard', ['require', 'exports', 'module' , 'gcli/cli', 'gcli/canon', 'gclitest/mockCommands', 'gcli/types/javascript', 'test/assert'], function(require, exports, module) {
 
 
 var Requisition = require('gcli/cli').Requisition;
 var canon = require('gcli/canon');
-var commands = require('gclitest/commands');
+var mockCommands = require('gclitest/mockCommands');
 var javascript = require('gcli/types/javascript');
 
 var test = require('test/assert');
@@ -1932,11 +2408,11 @@ exports.setup = function(options) {
     inputter = options.display.inputter;
   }
 
-  commands.setup();
+  mockCommands.setup();
 };
 
 exports.shutdown = function(options) {
-  commands.shutdown();
+  mockCommands.shutdown();
 
   inputter = undefined;
   javascript.setGlobalObject(tempWindow);
@@ -2092,6 +2568,565 @@ exports.testIncrDecr = function() {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
+define('gclitest/testPref', ['require', 'exports', 'module' , 'gcli/commands/pref', 'gclitest/helpers', 'gclitest/mockSettings', 'test/assert'], function(require, exports, module) {
+
+
+var pref = require('gcli/commands/pref');
+var helpers = require('gclitest/helpers');
+var mockSettings = require('gclitest/mockSettings');
+var test = require('test/assert');
+
+
+exports.setup = function(options) {
+  if (!options.isFirefox) {
+    mockSettings.setup();
+  }
+  else {
+    test.log('Skipping testPref in Firefox.');
+  }
+};
+
+exports.shutdown = function(options) {
+  if (!options.isFirefox) {
+    mockSettings.shutdown();
+  }
+};
+
+exports.testPrefSetStatus = function(options) {
+  if (options.isFirefox) {
+    test.log('Skipping testPref in Firefox.');
+    return;
+  }
+
+  helpers.status(options, {
+    typed:  'pref s',
+    markup: 'IIIIVI',
+    status: 'ERROR',
+    directTabText: 'et'
+  });
+
+  helpers.status(options, {
+    typed:  'pref set',
+    markup: 'VVVVVVVV',
+    status: 'ERROR',
+    emptyParameters: [ ' <setting>', ' <value>' ]
+  });
+
+  helpers.status(options, {
+    typed:  'pref xxx',
+    markup: 'EEEEVEEE',
+    status: 'ERROR'
+  });
+
+  helpers.status(options, {
+    typed:  'pref set ',
+    markup: 'VVVVVVVVV',
+    status: 'ERROR',
+    emptyParameters: [ ' <value>' ]
+  });
+
+  helpers.status(options, {
+    typed:  'pref set ',
+    markup: 'VVVVVVVVV',
+    status: 'ERROR',
+    emptyParameters: [ ' <value>' ]
+  });
+
+  helpers.status(options, {
+    typed:  'pref set tempTBo',
+    markup: 'VVVVVVVVVIIIIIII',
+    directTabText: 'ol',
+    status: 'ERROR',
+    emptyParameters: [ ' <value>' ]
+  });
+
+  helpers.status(options, {
+    typed:  'pref set tempTBool 4',
+    markup: 'VVVVVVVVVVVVVVVVVVVE',
+    directTabText: '',
+    status: 'ERROR',
+    emptyParameters: [ ]
+  });
+
+  helpers.status(options, {
+    typed:  'pref set tempNumber 4',
+    markup: 'VVVVVVVVVVVVVVVVVVVVV',
+    directTabText: '',
+    status: 'VALID',
+    emptyParameters: [ ]
+  });
+};
+
+exports.testPrefExec = function(options) {
+  if (options.isFirefox) {
+    test.log('Skipping testPref in Firefox.');
+    return;
+  }
+
+  var initialAllowSet = pref.allowSet.value;
+  pref.allowSet.value = false;
+
+  test.is(mockSettings.tempNumber.value, 42, 'set to 42');
+
+  helpers.exec(options, {
+    typed: 'pref set tempNumber 4',
+    args: {
+      setting: mockSettings.tempNumber,
+      value: 4
+    },
+    outputMatch: [ /void your warranty/, /I promise/ ]
+  });
+
+  test.is(mockSettings.tempNumber.value, 42, 'still set to 42');
+  pref.allowSet.value = true;
+
+  helpers.exec(options, {
+    typed: 'pref set tempNumber 4',
+    args: {
+      setting: mockSettings.tempNumber,
+      value: 4
+    },
+    blankOutput: true
+  });
+
+  test.is(mockSettings.tempNumber.value, 4, 'set to 4');
+
+  helpers.exec(options, {
+    typed: 'pref reset tempNumber',
+    args: {
+      setting: mockSettings.tempNumber
+    },
+    blankOutput: true
+  });
+
+  test.is(mockSettings.tempNumber.value, 42, 'reset to 42');
+
+  pref.allowSet.value = initialAllowSet;
+
+  helpers.exec(options, {
+    typed: 'pref list tempNum',
+    args: {
+      search: 'tempNum'
+    },
+    outputMatch: /Filter/
+  });
+};
+
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gcli/commands/pref', ['require', 'exports', 'module' , 'gcli/index', 'gcli/l10n', 'gcli/util', 'gcli/settings', 'gcli/promise', 'text!gcli/commands/pref_list_outer.html', 'text!gcli/commands/pref_list.css', 'text!gcli/commands/pref_set_check.html', 'text!gcli/commands/pref_list_inner.html'], function(require, exports, module) {
+
+
+var gcli = require('gcli/index');
+var l10n = require('gcli/l10n');
+var util = require('gcli/util');
+var settings = require('gcli/settings');
+var Promise = require('gcli/promise').Promise;
+
+/**
+ * Record if the user has clicked on 'Got It!'
+ */
+var allowSetSettingSpec = {
+  name: 'allowSet',
+  type: 'boolean',
+  description: l10n.lookup('allowSetDesc'),
+  defaultValue: false
+};
+exports.allowSet = undefined;
+
+/**
+ * 'pref' command
+ */
+var prefCmdSpec = {
+  name: 'pref',
+  description: l10n.lookup('prefDesc'),
+  manual: l10n.lookup('prefManual')
+};
+
+/**
+ * 'pref list' command
+ */
+var prefListCmdSpec = {
+  name: 'pref list',
+  description: l10n.lookup('prefListDesc'),
+  manual: l10n.lookup('prefListManual'),
+  params: [
+    {
+      name: 'search',
+      type: 'string',
+      defaultValue: null,
+      description: l10n.lookup('prefListSearchDesc'),
+      manual: l10n.lookup('prefListSearchManual')
+    }
+  ],
+  exec: function Command_prefList(args, context) {
+    return context.createView({
+      html: require('text!gcli/commands/pref_list_outer.html'),
+      data: new PrefList(args, context),
+      options: {
+        blankNullUndefined: true,
+        allowEval: true,
+        stack: 'pref_list_outer.html'
+      },
+      css: require('text!gcli/commands/pref_list.css'),
+      cssId: 'gcli-pref-list'
+    });
+  }
+};
+
+/**
+ * 'pref set' command
+ */
+var prefSetCmdSpec = {
+  name: 'pref set',
+  description: l10n.lookup('prefSetDesc'),
+  manual: l10n.lookup('prefSetManual'),
+  params: [
+    {
+      name: 'setting',
+      type: 'setting',
+      description: l10n.lookup('prefSetSettingDesc'),
+      manual: l10n.lookup('prefSetSettingManual')
+    },
+    {
+      name: 'value',
+      type: 'settingValue',
+      description: l10n.lookup('prefSetValueDesc'),
+      manual: l10n.lookup('prefSetValueManual')
+    }
+  ],
+  exec: function Command_prefSet(args, context) {
+    if (!exports.allowSet.value &&
+            args.setting.name !== exports.allowSet.name) {
+      return context.createView({
+        html: require('text!gcli/commands/pref_set_check.html'),
+        options: { allowEval: true, stack: 'pref_set_check.html' },
+        data: {
+          l10n: l10n.propertyLookup,
+          activate: function() {
+            context.exec('pref set allowSet true');
+          }
+        },
+      });
+    }
+    args.setting.value = args.value;
+    return null;
+  }
+};
+
+/**
+ * 'pref reset' command
+ */
+var prefResetCmdSpec = {
+  name: 'pref reset',
+  description: l10n.lookup('prefResetDesc'),
+  manual: l10n.lookup('prefResetManual'),
+  params: [
+    {
+      name: 'setting',
+      type: 'setting',
+      description: l10n.lookup('prefResetSettingDesc'),
+      manual: l10n.lookup('prefResetSettingManual')
+    }
+  ],
+  exec: function Command_prefReset(args, context) {
+    args.setting.setDefault();
+    return null;
+  }
+};
+
+/**
+ * Registration and de-registration.
+ */
+exports.startup = function() {
+  exports.allowSet = settings.addSetting(allowSetSettingSpec);
+
+  gcli.addCommand(prefCmdSpec);
+  gcli.addCommand(prefListCmdSpec);
+  gcli.addCommand(prefSetCmdSpec);
+  gcli.addCommand(prefResetCmdSpec);
+};
+
+exports.shutdown = function() {
+  gcli.removeCommand(prefCmdSpec);
+  gcli.removeCommand(prefListCmdSpec);
+  gcli.removeCommand(prefSetCmdSpec);
+  gcli.removeCommand(prefResetCmdSpec);
+
+  settings.removeSetting(allowSetSettingSpec);
+  exports.allowSet = undefined;
+};
+
+
+/**
+ * A manager for our version of about:config
+ */
+function PrefList(args, context) {
+  this.search = args.search;
+  this.context = context;
+  this.url = util.createUrlLookup(module);
+  this.edit = this.url('pref_list_edit.png');
+}
+
+/**
+ *
+ */
+PrefList.prototype.onLoad = function(element) {
+  var table = element.querySelector('.gcli-pref-list-table');
+  this.updateTable(table);
+  return '';
+};
+
+/**
+ * Forward localization lookups
+ */
+PrefList.prototype.l10n = l10n.propertyLookup;
+
+/**
+ * Called from the template onkeyup for the filter element
+ */
+PrefList.prototype.updateTable = function(table) {
+  util.clearElement(table);
+  var view = this.context.createView({
+    html: require('text!gcli/commands/pref_list_inner.html'),
+    options: { blankNullUndefined: true, stack: 'pref_list_inner.html' },
+    data: this
+  });
+  var child = view.toDom(table.ownerDocument);
+  util.setContents(table, child);
+};
+
+/**
+ * Which preferences match the filter?
+ */
+Object.defineProperty(PrefList.prototype, 'preferences', {
+  get: function() {
+    return settings.getAll(this.search);
+  },
+  enumerable: true
+});
+
+/**
+ * Which preferences match the filter?
+ */
+Object.defineProperty(PrefList.prototype, 'promisePreferences', {
+  get: function() {
+    var promise = new Promise();
+    setTimeout(function() {
+      promise.resolve(settings.getAll(this.search));
+    }.bind(this), 10);
+    return promise;
+  },
+  enumerable: true
+});
+
+PrefList.prototype.onFilterChange = function(ev) {
+  if (ev.target.value !== this.search) {
+    this.search = ev.target.value;
+
+    var root = ev.target.parentNode.parentNode;
+    var table = root.querySelector('.gcli-pref-list-table');
+    this.updateTable(table);
+  }
+};
+
+PrefList.prototype.onSetClick = function(ev) {
+  var typed = ev.currentTarget.getAttribute('data-command');
+  this.context.update(typed);
+};
+
+});
+define("text!gcli/commands/pref_list_outer.html", [], "<div ignore=\"${onLoad(__element)}\">\n" +
+  "  <div class=\"gcli-pref-list-filter\">\n" +
+  "    ${l10n.prefOutputFilter}:\n" +
+  "    <input onKeyUp=\"${onFilterChange}\" value=\"${search}\"/>\n" +
+  "  </div>\n" +
+  "  <table class=\"gcli-pref-list-table\">\n" +
+  "    <colgroup>\n" +
+  "      <col class=\"gcli-pref-list-name\"/>\n" +
+  "      <col class=\"gcli-pref-list-value\"/>\n" +
+  "    </colgroup>\n" +
+  "    <tr>\n" +
+  "      <th>${l10n.prefOutputName}</th>\n" +
+  "      <th>${l10n.prefOutputValue}</th>\n" +
+  "    </tr>\n" +
+  "  </table>\n" +
+  "  <div class=\"gcli-pref-list-scroller\">\n" +
+  "    <table class=\"gcli-pref-list-table\" save=\"${table}\">\n" +
+  "    </table>\n" +
+  "  </div>\n" +
+  "</div>\n" +
+  "");
+
+define("text!gcli/commands/pref_list.css", [], "\n" +
+  ".gcli-pref-list-scroller {\n" +
+  "  max-height: 200px;\n" +
+  "  overflow-y: auto;\n" +
+  "  overflow-x: hidden;\n" +
+  "  display: inline-block;\n" +
+  "}\n" +
+  "\n" +
+  ".gcli-pref-list-table {\n" +
+  "  width: 500px;\n" +
+  "  table-layout: fixed;\n" +
+  "}\n" +
+  "\n" +
+  ".gcli-pref-list-table tr > th {\n" +
+  "  text-align: left;\n" +
+  "}\n" +
+  "\n" +
+  ".gcli-pref-list-table tr > td {\n" +
+  "  text-overflow: elipsis;\n" +
+  "  word-wrap: break-word;\n" +
+  "}\n" +
+  "\n" +
+  ".gcli-pref-list-name {\n" +
+  "  width: 70%;\n" +
+  "}\n" +
+  "\n" +
+  ".gcli-pref-list-command {\n" +
+  "  display: none;\n" +
+  "}\n" +
+  "\n" +
+  ".gcli-pref-list-row:hover .gcli-pref-list-command {\n" +
+  "  display: inline-block;\n" +
+  "}\n" +
+  "");
+
+define("text!gcli/commands/pref_set_check.html", [], "<div>\n" +
+  "  <p><strong>${l10n.prefSetCheckHeading}</strong></p>\n" +
+  "  <p>${l10n.prefSetCheckBody}</p>\n" +
+  "  <button onclick=\"${activate}\">${l10n.prefSetCheckGo}</button>\n" +
+  "</div>\n" +
+  "");
+
+define("text!gcli/commands/pref_list_inner.html", [], "<table>\n" +
+  "  <colgroup>\n" +
+  "    <col class=\"gcli-pref-list-name\"/>\n" +
+  "    <col class=\"gcli-pref-list-value\"/>\n" +
+  "  </colgroup>\n" +
+  "  <tr class=\"gcli-pref-list-row\" foreach=\"preference in ${promisePreferences}\">\n" +
+  "    <td>${preference.name}</td>\n" +
+  "    <td onclick=\"${onSetClick}\" data-command=\"pref set ${preference.name} \">\n" +
+  "      ${preference.value}\n" +
+  "      <img class=\"gcli-pref-list-command\" _src=\"${edit}\"/>\n" +
+  "    </td>\n" +
+  "  </tr>\n" +
+  "</table>\n" +
+  "");
+
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/mockSettings', ['require', 'exports', 'module' , 'gcli/settings'], function(require, exports, module) {
+
+
+var settings = require('gcli/settings');
+
+
+var tempTBoolSpec = {
+  name: 'tempTBool',
+  type: 'boolean',
+  description: 'temporary default true boolean',
+  defaultValue: true
+};
+exports.tempTBool = undefined;
+
+var tempFBoolSpec = {
+  name: 'tempFBool',
+  type: 'boolean',
+  description: 'temporary default false boolean',
+  defaultValue: false
+};
+exports.tempFBool = undefined;
+
+var tempUStringSpec = {
+  name: 'tempUString',
+  type: 'string',
+  description: 'temporary default undefined string'
+};
+exports.tempUString = undefined;
+
+var tempNStringSpec = {
+  name: 'tempNString',
+  type: 'string',
+  description: 'temporary default undefined string',
+  defaultValue: null
+};
+exports.tempNString = undefined;
+
+var tempQStringSpec = {
+  name: 'tempQString',
+  type: 'string',
+  description: 'temporary default "q" string',
+  defaultValue: 'q'
+};
+exports.tempQString = undefined;
+
+var tempNumberSpec = {
+  name: 'tempNumber',
+  type: 'number',
+  description: 'temporary number',
+  defaultValue: 42
+};
+exports.tempNumber = undefined;
+
+var tempSelectionSpec = {
+  name: 'tempSelection',
+  type: { name: 'selection', data: [ 'a', 'b', 'c' ] },
+  description: 'temporary selection',
+  defaultValue: 'a'
+};
+exports.tempSelection = undefined;
+
+/**
+ * Registration and de-registration.
+ */
+exports.setup = function() {
+  exports.tempTBool = settings.addSetting(tempTBoolSpec);
+  exports.tempFBool = settings.addSetting(tempFBoolSpec);
+  exports.tempUString = settings.addSetting(tempUStringSpec);
+  exports.tempNString = settings.addSetting(tempNStringSpec);
+  exports.tempQString = settings.addSetting(tempQStringSpec);
+  exports.tempNumber = settings.addSetting(tempNumberSpec);
+  exports.tempSelection = settings.addSetting(tempSelectionSpec);
+};
+
+exports.shutdown = function() {
+  settings.removeSetting(tempTBoolSpec);
+  settings.removeSetting(tempFBoolSpec);
+  settings.removeSetting(tempUStringSpec);
+  settings.removeSetting(tempNStringSpec);
+  settings.removeSetting(tempQStringSpec);
+  settings.removeSetting(tempNumberSpec);
+  settings.removeSetting(tempSelectionSpec);
+
+  exports.tempTBool = undefined;
+  exports.tempFBool = undefined;
+  exports.tempUString = undefined;
+  exports.tempNString = undefined;
+  exports.tempQString = undefined;
+  exports.tempNumber = undefined;
+  exports.tempSelection = undefined;
+};
+
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
 define('gclitest/testRequire', ['require', 'exports', 'module' , 'test/assert', 'gclitest/requirable'], function(require, exports, module) {
 
 var test = require('test/assert');
@@ -2107,7 +3142,7 @@ exports.testWorking = function() {
   test.ok(requireable.thing3 === undefined);
 };
 
-exports.testDomains = function() {
+exports.testDomains = function(options) {
   var requireable = require('gclitest/requirable');
   test.ok(requireable.status === undefined);
   requireable.setStatus(null);
@@ -2116,6 +3151,11 @@ exports.testDomains = function() {
   requireable.setStatus('42');
   test.is('42', requireable.getStatus());
   test.ok(requireable.status === undefined);
+
+  if (options.isUnamdized) {
+    test.log('Running unamdized, Reduced tests');
+    return;
+  }
 
   if (define.Domain) {
     var domain = new define.Domain();
@@ -2217,8 +3257,8 @@ exports.shutdown = function(options) {
 };
 
 exports.testPredictions = function(options) {
-  if (options.window.isFake) {
-    test.log('Skipping resource tests: options.window.isFake = true');
+  if (options.window.isFake || options.isFirefox) {
+    test.log('Skipping resource tests: window.isFake || isFirefox');
     return;
   }
 
@@ -2328,6 +3368,155 @@ exports.testActivate = function(options) {
 
 });
 /*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/testSettings', ['require', 'exports', 'module' , 'gclitest/mockSettings', 'test/assert'], function(require, exports, module) {
+
+
+var mockSettings = require('gclitest/mockSettings');
+var test = require('test/assert');
+
+
+exports.setup = function(options) {
+  if (!options.isFirefox) {
+    mockSettings.setup();
+  }
+  else {
+    test.log('Skipping testSettings in Firefox.');
+  }
+};
+
+exports.shutdown = function(options) {
+  if (!options.isFirefox) {
+    mockSettings.shutdown();
+  }
+};
+
+exports.testChange = function(options) {
+  if (options.isFirefox) {
+    test.log('Skipping testPref in Firefox.');
+    return;
+  }
+
+  mockSettings.tempTBool.setDefault();
+  mockSettings.tempFBool.setDefault();
+  mockSettings.tempUString.setDefault();
+  mockSettings.tempNString.setDefault();
+  mockSettings.tempQString.setDefault();
+  mockSettings.tempNumber.setDefault();
+  mockSettings.tempSelection.setDefault();
+
+  test.is(mockSettings.tempTBool.value, true, 'tempTBool default');
+  test.is(mockSettings.tempFBool.value, false, 'tempFBool default');
+  test.is(mockSettings.tempUString.value, undefined, 'tempUString default');
+  test.is(mockSettings.tempNString.value, null, 'tempNString default');
+  test.is(mockSettings.tempQString.value, 'q', 'tempQString default');
+  test.is(mockSettings.tempNumber.value, 42, 'tempNumber default');
+  test.is(mockSettings.tempSelection.value, 'a', 'tempSelection default');
+
+  function tempTBoolCheck(ev) {
+    test.is(ev.setting, mockSettings.tempTBool, 'tempTBool event setting');
+    test.is(ev.value, false, 'tempTBool event value');
+    test.is(ev.setting.value, false, 'tempTBool event setting value');
+  }
+  mockSettings.tempTBool.onChange.add(tempTBoolCheck);
+  mockSettings.tempTBool.value = false;
+  test.is(mockSettings.tempTBool.value, false, 'tempTBool change');
+
+  function tempFBoolCheck(ev) {
+    test.is(ev.setting, mockSettings.tempFBool, 'tempFBool event setting');
+    test.is(ev.value, true, 'tempFBool event value');
+    test.is(ev.setting.value, true, 'tempFBool event setting value');
+  }
+  mockSettings.tempFBool.onChange.add(tempFBoolCheck);
+  mockSettings.tempFBool.value = true;
+  test.is(mockSettings.tempFBool.value, true, 'tempFBool change');
+
+  function tempUStringCheck(ev) {
+    test.is(ev.setting, mockSettings.tempUString, 'tempUString event setting');
+    test.is(ev.value, 'x', 'tempUString event value');
+    test.is(ev.setting.value, 'x', 'tempUString event setting value');
+  }
+  mockSettings.tempUString.onChange.add(tempUStringCheck);
+  mockSettings.tempUString.value = 'x';
+  test.is(mockSettings.tempUString.value, 'x', 'tempUString change');
+
+  function tempNStringCheck(ev) {
+    test.is(ev.setting, mockSettings.tempNString, 'tempNString event setting');
+    test.is(ev.value, 'y', 'tempNString event value');
+    test.is(ev.setting.value, 'y', 'tempNString event setting value');
+  }
+  mockSettings.tempNString.onChange.add(tempNStringCheck);
+  mockSettings.tempNString.value = 'y';
+  test.is(mockSettings.tempNString.value, 'y', 'tempNString change');
+
+  function tempQStringCheck(ev) {
+    test.is(ev.setting, mockSettings.tempQString, 'tempQString event setting');
+    test.is(ev.value, 'qq', 'tempQString event value');
+    test.is(ev.setting.value, 'qq', 'tempQString event setting value');
+  }
+  mockSettings.tempQString.onChange.add(tempQStringCheck);
+  mockSettings.tempQString.value = 'qq';
+  test.is(mockSettings.tempQString.value, 'qq', 'tempQString change');
+
+  function tempNumberCheck(ev) {
+    test.is(ev.setting, mockSettings.tempNumber, 'tempNumber event setting');
+    test.is(ev.value, -1, 'tempNumber event value');
+    test.is(ev.setting.value, -1, 'tempNumber event setting value');
+  }
+  mockSettings.tempNumber.onChange.add(tempNumberCheck);
+  mockSettings.tempNumber.value = -1;
+  test.is(mockSettings.tempNumber.value, -1, 'tempNumber change');
+
+  function tempSelectionCheck(ev) {
+    test.is(ev.setting, mockSettings.tempSelection, 'tempSelection event setting');
+    test.is(ev.value, 'b', 'tempSelection event value');
+    test.is(ev.setting.value, 'b', 'tempSelection event setting value');
+  }
+  mockSettings.tempSelection.onChange.add(tempSelectionCheck);
+  mockSettings.tempSelection.value = 'b';
+  test.is(mockSettings.tempSelection.value, 'b', 'tempSelection change');
+
+  mockSettings.tempTBool.onChange.remove(tempTBoolCheck);
+  mockSettings.tempFBool.onChange.remove(tempFBoolCheck);
+  mockSettings.tempUString.onChange.remove(tempUStringCheck);
+  mockSettings.tempNString.onChange.remove(tempNStringCheck);
+  mockSettings.tempQString.onChange.remove(tempQStringCheck);
+  mockSettings.tempNumber.onChange.remove(tempNumberCheck);
+  mockSettings.tempSelection.onChange.remove(tempSelectionCheck);
+
+  function tempNStringReCheck(ev) {
+    test.is(ev.setting, mockSettings.tempNString, 'tempNString event reset');
+    test.is(ev.value, null, 'tempNString event revalue');
+    test.is(ev.setting.value, null, 'tempNString event setting revalue');
+  }
+  mockSettings.tempNString.onChange.add(tempNStringReCheck);
+
+  mockSettings.tempTBool.setDefault();
+  mockSettings.tempFBool.setDefault();
+  mockSettings.tempUString.setDefault();
+  mockSettings.tempNString.setDefault();
+  mockSettings.tempQString.setDefault();
+  mockSettings.tempNumber.setDefault();
+  mockSettings.tempSelection.setDefault();
+
+  mockSettings.tempNString.onChange.remove(tempNStringReCheck);
+
+  test.is(mockSettings.tempTBool.value, true, 'tempTBool reset');
+  test.is(mockSettings.tempFBool.value, false, 'tempFBool reset');
+  test.is(mockSettings.tempUString.value, undefined, 'tempUString reset');
+  test.is(mockSettings.tempNString.value, null, 'tempNString reset');
+  test.is(mockSettings.tempQString.value, 'q', 'tempQString reset');
+  test.is(mockSettings.tempNumber.value, 42, 'tempNumber reset');
+  test.is(mockSettings.tempSelection.value, 'a', 'tempSelection reset');
+};
+
+
+});
+/*
  * Copyright (c) 2009 Panagiotis Astithas
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -2353,7 +3542,12 @@ exports.setup = function() {
 exports.shutdown = function() {
 };
 
-exports.testSimple = function(options) {
+exports.testSpellerSimple = function(options) {
+  if (options.isFirefox) {
+    test.log('Skipping testPref in Firefox.');
+    return;
+  }
+
   var speller = new Speller();
   speller.train(Object.keys(options.window));
 
@@ -2373,22 +3567,23 @@ exports.testSimple = function(options) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/testSplit', ['require', 'exports', 'module' , 'test/assert', 'gclitest/commands', 'gcli/cli'], function(require, exports, module) {
+define('gclitest/testSplit', ['require', 'exports', 'module' , 'test/assert', 'gclitest/mockCommands', 'gcli/cli', 'gcli/canon'], function(require, exports, module) {
 
 var test = require('test/assert');
 
-var commands = require('gclitest/commands');
+var mockCommands = require('gclitest/mockCommands');
 var Requisition = require('gcli/cli').Requisition;
+var canon = require('gcli/canon');
 
 exports.setup = function() {
-  commands.setup();
+  mockCommands.setup();
 };
 
 exports.shutdown = function() {
-  commands.shutdown();
+  mockCommands.shutdown();
 };
 
-exports.testSimple = function() {
+exports.testSplitSimple = function() {
   var args;
   var requ = new Requisition();
 
@@ -2416,6 +3611,11 @@ exports.testFlatCommand = function() {
 };
 
 exports.testJavascript = function() {
+  if (!canon.getCommand('{')) {
+    test.log('Skipping testJavascript because { is not registered');
+    return;
+  }
+
   var args;
   var requ = new Requisition();
 
@@ -2461,7 +3661,7 @@ exports.testBlanks = function() {
   test.is('', args[0].suffix);
 };
 
-exports.testSimple = function() {
+exports.testTokSimple = function() {
   var args;
   var requ = new Requisition();
 
@@ -2721,19 +3921,19 @@ exports.testPathological = function() {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/testTooltip', ['require', 'exports', 'module' , 'test/assert', 'gclitest/commands'], function(require, exports, module) {
+define('gclitest/testTooltip', ['require', 'exports', 'module' , 'test/assert', 'gclitest/mockCommands'], function(require, exports, module) {
 
 
 var test = require('test/assert');
-var commands = require('gclitest/commands');
+var mockCommands = require('gclitest/mockCommands');
 
 
 exports.setup = function() {
-  commands.setup();
+  mockCommands.setup();
 };
 
 exports.shutdown = function() {
-  commands.shutdown();
+  mockCommands.shutdown();
 };
 
 
@@ -2890,18 +4090,31 @@ let testModuleNames = [
   'gclitest/index',
   'gclitest/suite',
   'test/examiner',
-  'gclitest/testCli',
-  'gclitest/commands',
   'test/assert',
+  'gclitest/testCanon',
+  'gclitest/helpers',
+  'gclitest/testCli',
+  'gclitest/mockCommands',
   'gclitest/testCompletion',
   'gclitest/testExec',
+  'gclitest/testHelp',
   'gclitest/testHistory',
+  'gclitest/testInputter',
+  'gclitest/testIntro',
   'gclitest/testJs',
   'gclitest/testKeyboard',
+  'gclitest/testPref',
+  'gcli/commands/pref',
+  'text!gcli/commands/pref_list_outer.html',
+  'text!gcli/commands/pref_list.css',
+  'text!gcli/commands/pref_set_check.html',
+  'text!gcli/commands/pref_list_inner.html',
+  'gclitest/mockSettings',
   'gclitest/testRequire',
   'gclitest/requirable',
   'gclitest/testResource',
   'gclitest/testScratchpad',
+  'gclitest/testSettings',
   'gclitest/testSpell',
   'gclitest/testSplit',
   'gclitest/testTokenize',
@@ -2922,9 +4135,9 @@ function test() {
     var gclitest = define.globalDomain.require("gclitest/index");
     gclitest.run({
       display: DeveloperToolbar.display,
-      // window: browser.getBrowser().contentWindow
+      isFirefox: true,
+      window: browser.contentDocument.defaultView
     });
-
     finish();
   });
 }

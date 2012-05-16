@@ -222,7 +222,10 @@ IDBDatabase::Invalidate()
   // When the IndexedDatabaseManager needs to invalidate databases, all it has
   // is an origin, so we call back into the manager to cancel any prompts for
   // our owner.
-  IndexedDatabaseManager::CancelPromptsForWindow(GetOwner());
+  nsPIDOMWindow* owner = GetOwner();
+  if (owner) {
+    IndexedDatabaseManager::CancelPromptsForWindow(owner);
+  }
 
   mInvalidated = true;
 }
@@ -284,8 +287,6 @@ void
 IDBDatabase::OnUnlink()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!GetOwner() && !GetScriptOwner(),
-               "Should have been cleared already!");
 
   // We've been unlinked, at the very least we should be able to prevent further
   // transactions from starting and unblock any other SetVersion callers.
@@ -680,7 +681,8 @@ IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   NS_ENSURE_TRUE(aVisitor.mDOMEvent, NS_ERROR_UNEXPECTED);
 
-  if (!GetOwner()) {
+  nsPIDOMWindow* owner = GetOwner();
+  if (!owner) {
     return NS_OK;
   }
 
@@ -694,7 +696,7 @@ IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         CreateGenericEvent(type, eDoesNotBubble, eNotCancelable);
       NS_ENSURE_STATE(duplicateEvent);
 
-      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(GetOwner()));
+      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(owner));
       NS_ASSERTION(target, "How can this happen?!");
 
       bool dummy;

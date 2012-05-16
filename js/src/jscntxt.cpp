@@ -1101,6 +1101,14 @@ JSContext::runningWithTrustedPrincipals() const
 }
 
 void
+JSRuntime::setGCMaxMallocBytes(size_t value)
+{
+   gcMaxMallocBytes = value;
+   for (CompartmentsIter c(this); !c.done(); c.next())
+       c->setGCMaxMallocBytes(value);
+}
+
+void
 JSRuntime::updateMallocCounter(JSContext *cx, size_t nbytes)
 {
     if (cx && cx->compartment)
