@@ -220,6 +220,11 @@ class nsCocoaUtils
                              NSEvent* aNativeEvent);
   static void InitInputEvent(nsInputEvent &aInputEvent,
                              NSUInteger aModifiers);
+
+  /**
+   * GetCurrentModifiers() returns Cocoa modifier flags for current state.
+   */
+  static NSUInteger GetCurrentModifiers();
 };
 
 #endif // nsCocoaUtils_h_
