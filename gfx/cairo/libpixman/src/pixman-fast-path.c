@@ -650,7 +650,7 @@ fast_composite_src_x888_8888 (pixman_implementation_t *imp,
     }
 }
 
-#if 1
+#if 0
 static void
 fast_composite_over_8888_0888 (pixman_implementation_t *imp,
 			       pixman_composite_info_t *info)
@@ -1255,7 +1255,7 @@ scaled_bilinear_scanline_8888_8888_OVER (uint32_t *       dst,
     }
 }
 
-#if 0
+#if 1
 
 static force_inline void
 scaled_bilinear_scanline_565_565_SRC (uint16_t *       dst,
