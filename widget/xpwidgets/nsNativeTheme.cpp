@@ -19,6 +19,7 @@
 #include "nsIComponentManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsProgressFrame.h"
+#include "nsMeterFrame.h"
 #include "nsMenuFrame.h"
 #include "mozilla/dom/Element.h"
 
@@ -244,6 +245,19 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                                        ? aFrame->GetParent() : aFrame);
     if (progressFrame) {
       return !progressFrame->ShouldUseNativeStyle();
+    }
+  }
+
+  /**
+   * Meter bar appearance should be the same for the bar and the container
+   * frame. nsMeterFrame owns the logic and will tell us what we should do.
+   */
+  if (aWidgetType == NS_THEME_METERBAR_CHUNK ||
+      aWidgetType == NS_THEME_METERBAR) {
+    nsMeterFrame* meterFrame = do_QueryFrame(aWidgetType == NS_THEME_METERBAR_CHUNK
+                                       ? aFrame->GetParent() : aFrame);
+    if (meterFrame) {
+      return !meterFrame->ShouldUseNativeStyle();
     }
   }
 
