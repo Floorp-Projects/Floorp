@@ -89,6 +89,10 @@ public:
     PARSE_ALLOW_UNITLESS = 0x01, // unitless 0 will be turned into 0px
     PARSE_ALLOW_NEGATIVE = 0x02
   };
+  static bool ParseNamedSpaceValue(const nsString& aString,
+                                   nsCSSValue&     aCSSValue,
+                                   PRUint32        aFlags);
+
   static bool ParseNumericValue(const nsString& aString,
                                   nsCSSValue&     aCSSValue,
                                   PRUint32        aFlags);

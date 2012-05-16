@@ -1403,8 +1403,7 @@ JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    JS_ASSERT(!target->isCachedEval);
-    GlobalObject *global = target->globalObject;
+    GlobalObject *global = target->getGlobalObjectOrNull();
     if (!global) {
         SwitchToCompartment sc(cx, target->compartment());
         global = GlobalObject::create(cx, &dummy_class);

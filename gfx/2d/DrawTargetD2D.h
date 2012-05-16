@@ -52,12 +52,15 @@
 #include <unordered_set>
 #endif
 
+struct IDWriteFactory;
+
 namespace mozilla {
 namespace gfx {
 
 class SourceSurfaceD2DTarget;
 class SourceSurfaceD2D;
 class GradientStopsD2D;
+class ScaledFontDWrite;
 
 struct PrivateD3D10DataD2D
 {
@@ -153,6 +156,7 @@ public:
 
   static ID2D1Factory *factory();
   static TemporaryRef<ID2D1StrokeStyle> CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions);
+  static IDWriteFactory *GetDWriteFactory();
 
   operator std::string() const {
     std::stringstream stream;
@@ -187,13 +191,26 @@ private:
   ID2D1RenderTarget *GetRTForOperation(CompositionOp aOperator, const Pattern &aPattern);
   void FinalizeRTForOperation(CompositionOp aOperator, const Pattern &aPattern, const Rect &aBounds);  void EnsureViews();
   void PopAllClips();
+  void PushClipsToRT(ID2D1RenderTarget *aRT);
+  void PopClipsFromRT(ID2D1RenderTarget *aRT);
 
-  TemporaryRef<ID2D1RenderTarget> CreateRTForTexture(ID3D10Texture2D *aTexture);
+  // This function ensures mCurrentClipMaskTexture contains a texture containing
+  // a mask corresponding with the current DrawTarget clip.
+  void EnsureClipMaskTexture();
+
+  bool FillGlyphsManual(ScaledFontDWrite *aFont,
+                        const GlyphBuffer &aBuffer,
+                        const Color &aColor,
+                        IDWriteRenderingParams *aParams,
+                        const DrawOptions &aOptions = DrawOptions());
+
+  TemporaryRef<ID2D1RenderTarget> CreateRTForTexture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
   TemporaryRef<ID2D1Geometry> GetClippedGeometry();
 
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
 
   TemporaryRef<ID3D10Texture1D> CreateGradientTexture(const GradientStopsD2D *aStops);
+  TemporaryRef<ID3D10Texture2D> CreateTextureForAnalysis(IDWriteGlyphRunAnalysis *aAnalysis, const IntRect &aBounds);
 
   // This creates a partially uploaded bitmap for a SourceSurfaceD2D that is
   // too big to fit in a bitmap. It adjusts the passed Matrix to accomodate the
@@ -201,6 +218,7 @@ private:
   TemporaryRef<ID2D1Bitmap> CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix &aMatrix);
 
   void SetupEffectForRadialGradient(const RadialGradientPattern *aPattern);
+  void SetupStateForRendering();
 
   static const uint32_t test = 4;
 
@@ -208,6 +226,8 @@ private:
 
   RefPtr<ID3D10Device1> mDevice;
   RefPtr<ID3D10Texture2D> mTexture;
+  RefPtr<ID3D10Texture2D> mCurrentClipMaskTexture;
+  RefPtr<ID2D1PathGeometry> mCurrentClippedGeometry;
   mutable RefPtr<ID2D1RenderTarget> mRT;
 
   // Temporary texture and render target used for supporting alternative operators.
@@ -239,6 +259,7 @@ private:
   bool mClipsArePushed;
   PrivateD3D10DataD2D *mPrivateData;
   static ID2D1Factory *mFactory;
+  static IDWriteFactory *mDWriteFactory;
 };
 
 }

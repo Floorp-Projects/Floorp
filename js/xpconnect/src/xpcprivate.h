@@ -3150,9 +3150,7 @@ public:
     bool IsMainThreadOnly() const {return mMainThreadOnly;}
 
     void TraceJS(JSTracer* trc);
-#ifdef DEBUG
-    static void PrintTraceName(JSTracer* trc, char *buf, size_t bufsize);
-#endif
+    static void GetTraceName(JSTracer* trc, char *buf, size_t bufsize);
 
     virtual ~nsXPCWrappedJS();
 protected:
@@ -3193,9 +3191,7 @@ public:
     virtual ~XPCJSObjectHolder();
 
     void TraceJS(JSTracer *trc);
-#ifdef DEBUG
-    static void PrintTraceName(JSTracer* trc, char *buf, size_t bufsize);
-#endif
+    static void GetTraceName(JSTracer* trc, char *buf, size_t bufsize);
 
 private:
     XPCJSObjectHolder(XPCCallContext& ccx, JSObject* obj);
@@ -4413,9 +4409,7 @@ public:
     virtual ~XPCTraceableVariant();
 
     void TraceJS(JSTracer* trc);
-#ifdef DEBUG
-    static void PrintTraceName(JSTracer* trc, char *buf, size_t bufsize);
-#endif
+    static void GetTraceName(JSTracer* trc, char *buf, size_t bufsize);
 };
 
 /***************************************************************************/

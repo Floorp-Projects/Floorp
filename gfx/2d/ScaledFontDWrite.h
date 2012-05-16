@@ -59,9 +59,6 @@ public:
   virtual TemporaryRef<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
   virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder);
 
-private:
-  friend class DrawTargetD2D;
-
   void CopyGlyphsToSink(const GlyphBuffer &aBuffer, ID2D1GeometrySink *aSink);
 
   RefPtr<IDWriteFontFace> mFontFace;

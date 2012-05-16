@@ -25,6 +25,9 @@ ifneq ($(filter $(OS_ARCH),Linux Darwin),)
 endif
 ifeq ($(OS_ARCH), WINNT)
   DEFINES += -Dinline=__inline
+ifdef GNU_CC
+  DEFINES += -DHAVE_LRINTF
+endif
 endif
 ifeq ($(OS_ARCH),AIX)
 DEFINES += -Dalloca=__alloca
