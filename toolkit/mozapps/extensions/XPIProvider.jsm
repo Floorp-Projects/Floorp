@@ -275,6 +275,10 @@ SafeInstallOperation.prototype = {
       entries.close();
     }
 
+    cacheEntries.sort(function(a, b) {
+      return a.path > b.path ? -1 : 1;
+    });
+
     cacheEntries.forEach(function(aEntry) {
       try {
         this._installDirEntry(aEntry, newDir, aCopy);
@@ -307,8 +311,25 @@ SafeInstallOperation.prototype = {
   },
 
   _installDirEntry: function(aDirEntry, aTargetDirectory, aCopy) {
+    let isDir = null;
+
     try {
-      if (aDirEntry.isDirectory())
+      isDir = aDirEntry.isDirectory();
+    }
+    catch (e) {
+      // If the file has already gone away then don't worry about it, this can
+      // happen on OSX where the resource fork is automatically moved with the
+      // data fork for the file. See bug 733436.
+      if (e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+        return;
+
+      ERROR("Failure " + (aCopy ? "copying" : "moving") + " " + aDirEntry.path +
+            " to " + aTargetDirectory.path);
+      throw e;
+    }
+
+    try {
+      if (isDir)
         this._installDirectory(aDirEntry, aTargetDirectory, aCopy);
       else
         this._installFile(aDirEntry, aTargetDirectory, aCopy);
@@ -1292,8 +1313,23 @@ function cleanStagingDir(aDir, aLeafNames) {
  *         The nsIFile to remove
  */
 function recursiveRemove(aFile) {
-  setFilePermissions(aFile, aFile.isDirectory() ? FileUtils.PERMS_DIRECTORY
-                                                : FileUtils.PERMS_FILE);
+  let isDir = null;
+
+  try {
+    isDir = aFile.isDirectory();
+  }
+  catch (e) {
+    // If the file has already gone away then don't worry about it, this can
+    // happen on OSX where the resource fork is automatically moved with the
+    // data fork for the file. See bug 733436.
+    if (e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+      return;
+
+    throw e;
+  }
+
+  setFilePermissions(aFile, isDir ? FileUtils.PERMS_DIRECTORY
+                                  : FileUtils.PERMS_FILE);
 
   try {
     aFile.remove(true);
@@ -1306,21 +1342,26 @@ function recursiveRemove(aFile) {
     }
   }
 
+  let entries = aFile.directoryEntries
+                     .QueryInterface(Ci.nsIDirectoryEnumerator);
+  let cacheEntries = [];
   let entry;
-  let dirEntries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
+  while (entry = entries.nextFile)
+    cacheEntries.push(entry);
+  entries.close();
+
+  cacheEntries.sort(function(a, b) {
+    return a.path > b.path ? -1 : 1;
+  });
+
+  cacheEntries.forEach(recursiveRemove);
+
   try {
-    while (entry = dirEntries.nextFile)
-      recursiveRemove(entry);
-    try {
-      aFile.remove(true);
-    }
-    catch (e) {
-      ERROR("Failed to remove empty directory " + aFile.path, e);
-      throw e;
-    }
+    aFile.remove(true);
   }
-  finally {
-    dirEntries.close();
+  catch (e) {
+    ERROR("Failed to remove empty directory " + aFile.path, e);
+    throw e;
   }
 }
 
@@ -2310,6 +2351,12 @@ var XPIProvider = {
           let file = aInstallLocation.getLocationForID(aOldAddon.id);
           newAddon = loadManifestFromFile(file);
           applyBlocklistChanges(aOldAddon, newAddon);
+
+          // Carry over any pendingUninstall state to add-ons modified directly
+          // in the profile. This is impoprtant when the attempt to remove the
+          // add-on in processPendingFileChanges failed and caused an mtime
+          // change to the add-ons files.
+          newAddon.pendingUninstall = aOldAddon.pendingUninstall;
         }
 
         // The ID in the manifest that was loaded must match the ID of the old
@@ -5423,7 +5470,7 @@ var XPIDatabase = {
       aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
       aNewAddon.foreignInstall = aOldAddon.foreignInstall;
       aNewAddon.active = (aNewAddon.visible && !aNewAddon.userDisabled &&
-                          !aNewAddon.appDisabled)
+                          !aNewAddon.appDisabled && !aNewAddon.pendingUninstall)
 
       this.addAddonMetadata(aNewAddon, aDescriptor);
       this.commitTransaction();
