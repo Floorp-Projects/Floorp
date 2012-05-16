@@ -290,7 +290,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     }
   } else if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
     EnableDevice(NS_DEVICE_ORIENTATION);
-  } else if (aTypeAtom == nsGkAtoms::ondeviceproximity) {
+  } else if (aTypeAtom == nsGkAtoms::ondeviceproximity || aTypeAtom == nsGkAtoms::onuserproximity) {
     EnableDevice(NS_DEVICE_PROXIMITY);
   } else if (aTypeAtom == nsGkAtoms::ondevicelight) {
     EnableDevice(NS_DEVICE_LIGHT);
@@ -351,6 +351,7 @@ nsEventListenerManager::EnableDevice(PRUint32 aType)
       window->EnableDeviceSensor(SENSOR_ORIENTATION);
       break;
     case NS_DEVICE_PROXIMITY:
+    case NS_USER_PROXIMITY:
       window->EnableDeviceSensor(SENSOR_PROXIMITY);
       break;
     case NS_DEVICE_LIGHT:
@@ -387,6 +388,7 @@ nsEventListenerManager::DisableDevice(PRUint32 aType)
       window->DisableDeviceSensor(SENSOR_GYROSCOPE);
       break;
     case NS_DEVICE_PROXIMITY:
+    case NS_USER_PROXIMITY:
       window->DisableDeviceSensor(SENSOR_PROXIMITY);
       break;
     case NS_DEVICE_LIGHT:
