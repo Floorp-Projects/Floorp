@@ -149,7 +149,7 @@
 	<key>CFBundleIconFile</key>
 	<string>firefox</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.mozilla.%LOWER_MAC_APP_NAME%</string>
+	<string>%MOZ_MACBUNDLE_ID%</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -200,7 +200,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>%APP_VERSION%</string>
+	<string>%MAC_BUNDLE_VERSION%</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>LSMinimumSystemVersion</key>

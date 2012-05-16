@@ -1,3 +1,4 @@
+# -*- makefile -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -36,6 +37,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
+#####################################################################################
+# Dependency build overhead: 
+#   o always create/update/hard link targets boomkarks.json & searchplugins
+#   o latest symlink will be correct for the current locale / local build.
+#   o logic is essentially FORCE for language packs w/o all the build overhead
+#   o phase 2: replace hard links with a user function able to derive path
+#     based on current locale.
+#####################################################################################
+
 DEPTH     = ../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
@@ -45,6 +55,20 @@ relativesrcdir = mobile/locales
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
+USE_AUTOTARGETS_MK=1
+include $(topsrcdir)/config/makefiles/makeutils.mk
+
+# Separate items of contention
+tgt-gendir = .deps/generated_$(AB_CD)
+
+jar-maker = \
+  $(firstword \
+    $(wildcard $(MOZILLA_DIR)/config/JarMaker.py) \
+    $(topsrcdir)/config/JarMaker.py \
+  )
+
+GENERATED_DIRS += .deps
+
 ifdef LOCALE_MERGEDIR
 vpath book%.inc $(LOCALE_MERGEDIR)/mobile/profile
 endif
@@ -53,6 +77,7 @@ ifdef LOCALE_MERGEDIR
 vpath book%.inc @srcdir@/en-US/profile
 endif
 
+$(call errorIfEmpty,MOZ_BRANDING_DIRECTORY)
 SUBMAKEFILES += \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
@@ -62,56 +87,172 @@ DEFINES += \
 	-DAB_CD=$(AB_CD) \
 	$(NULL)
 
-SEARCH_PLUGINS = $(shell cat \
-  $(firstword $(wildcard $(LOCALE_SRCDIR)/searchplugins/list.txt) \
-       @srcdir@/en-US/searchplugins/list.txt ) )
 
-tmp-search.jar.mn::
+###########################################################################
+# Default target, preserve existing functionality for:
+#    gmake -C $obj/mobile/locales
+###########################################################################
+search-jar-default: search-jar
+
+
+###########################################################################
+bookmarks     = bookmarks.json
+bookmarks-ts  = $(tgt-gendir)/$(bookmarks)
+src-bookmarks = $(srcdir)/generic/profile/$(bookmarks).in
+
+GARBAGE += $(bookmarks) $(bookmarks-ts)
+# ---------------------------------------------------------------------------
+# Note: Always symlink bookmarks.json to pickup the current build for a
+#       locale.  Phase 2 edits should remove the common/symlink file and
+#       provide a user function able to derive the path.
+###########################################################################
+
+## Searchlist plugin config
+plugin-file-array = \
+  $(wildcard $(LOCALE_SRCDIR)/searchplugins/list.txt) \
+  $(srcdir)/en-US/searchplugins/list.txt \
+  $(NULL)
+
+###########################################################################
+plugin_file    = $(firstword $(plugin-file-array))
+plugin-file-ts = $(tgt-gendir)/$(subst $(topsrcdir)/,$(NULL),$(plugin_file)).ts
+
+GARBAGE += $(plugin-file-ts)
+# ---------------------------------------------------------------------------
+# plugin-file-ts track searchlist file used ($path/list.txt)
+# and time when the file was last modified.
+###########################################################################
+plugin-file-ts-preqs =\
+  $(call mkdir_deps,$(dir $(plugin-file-ts))) \
+  $(plugin_file) \
+  $(NULL)
+
+###########################################################################
+# Detect locale changes.  Force stale deps when searchlist file
+# or content has changed.
+$(plugin-file-ts): $(plugin-file-ts-preqs)
+	@touch $@
+
+
+###########################################################################
+search-jar-common = tmp-search.jar.mn
+search-jar        = $(tgt-gendir)/$(search-jar-common)
+search-jar-ts     = $(search-jar).ts
+
+GARBAGE += $(search-jar) $(search-jar-ts) $(search-jar-common)
+# ---------------------------------------------------------------------------
+# search-jar contains a list of providers for the search plugin
+###########################################################################
+SEARCH_PLUGINS = $(shell cat $(plugin_file))
+$(call errorIfEmpty,SEARCH_PLUGINS)
+
+search-jar-preqs =\
+  $(plugin-file-ts) \
+  $(if $(IS_LANGUAGE_REPACK),FORCE) \
+  $(NULL)
+
+.PHONY: search-jar
+search-jar: $(search-jar)
+$(search-jar): $(search-jar-preqs)
+	@echo "\nGenerating: search-jar"
 	printf "$(AB_CD).jar:" > $@
+	ln -fn $@ .
 	printf "$(foreach plugin,$(SEARCH_PLUGINS),$(subst __PLUGIN_SUBST__,$(plugin), \n locale/$(AB_CD)/browser/searchplugins/__PLUGIN_SUBST__.xml (__PLUGIN_SUBST__.xml)))" >>  $@
 	@echo   >> $@
 
-searchplugins: tmp-search.jar.mn
-	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
+.PHONY: searchplugins
+searchplugins: $(search-jar-ts)
+	@echo "\nGenerating: $@"	
+
+###################
+search-dir-deps = \
+  $(plugin-file) \
+  $(dir-chrome) \
+  $(NULL)
+
+search-preqs =\
+  $(call mkdir_deps,$(dir $(search-jar-ts))) \
+  $(call mkdir_deps,$(FINAL_TARGET)/chrome) \
+  $(search-jar) \
+  $(search-dir-deps) \
+  $(jar-maker) \
+  $(if $(IS_LANGUAGE_REPACK),FORCE) \
+  $(GLOBAL_DEPS) \
+  $(NULL)
+
+$(search-jar-ts): $(search-preqs)
+	$(PYTHON) $(jar-maker) \
           $(QUIET) -j $(FINAL_TARGET)/chrome \
           -s $(topsrcdir)/$(relativesrcdir)/en-US/searchplugins \
           -s $(LOCALE_SRCDIR)/searchplugins \
-          $(MAKE_JARS_FLAGS) tmp-search.jar.mn
-
-export:: searchplugins
-
-GARBAGE += tmp-search.jar.mn
+          $(MAKE_JARS_FLAGS) $(search-jar)
+	$(TOUCH) $@
 
 include $(topsrcdir)/config/rules.mk
 
-libs-%:
-	$(NSINSTALL) -D $(DIST)/install
+
+#############
+libs-preqs =\
+  $(call mkdir-deps,$(DIST)/install) \
+  $(NULL)
+
+libs-%: $(libs-preqs)
+	$(display-deps)
 	@$(MAKE) -C $(DEPTH)/toolkit/locales libs-$* BOTH_MANIFESTS=1
 	@$(MAKE) -C $(DEPTH)/services/sync/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 	@$(MAKE) -C $(DEPTH)/intl/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
-	@$(MAKE) -B bookmarks.json AB_CD=$*
+	@$(MAKE) -B $(bookmarks) AB_CD=$*
 	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref BOTH_MANIFESTS=1
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 
 # Tailored target to just add the chrome processing for multi-locale builds
 chrome-%:
+	$(display-deps)
 	@$(MAKE) -C $(DEPTH)/toolkit/locales chrome-$*
 	@$(MAKE) -C $(DEPTH)/services/sync/locales chrome AB_CD=$*
-	@$(MAKE) -B bookmarks.json AB_CD=$*
+	@$(MAKE) -B $(bookmarks) AB_CD=$*
 	@$(MAKE) -B searchplugins AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
 
 NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
 
-bookmarks.json: bookmarks.inc generic/profile/bookmarks.json.in
+
+# emulate vpath to gather deps with a path
+has-mergedir = $(if $(strip $(LOCALE_MERGEDIR)),1)
+bookmarks-inc-array = \
+  $(wildcard \
+    $(if $(has_mergedir),$(LOCALE_MERGEDIR)/mobile/profile/bookmarks.inc) \
+    $(LOCALE_SRCDIR)/profile/bookmarks.inc \
+    $(if $(has-mergedir),$(srcdir)/en-US/profile/bookmarks.inc) \
+  )
+bookmarks-inc = $(firstword $(bookmarks-inc-array))
+
+bookmarks-preqs =\
+  $(bookmarks-inc) \
+  $(call mkdir_deps,$(dir $(bookmarks-ts))) \
+  $(src-bookmarks) \
+  generic/profile/$(bookmarks).in \
+  $(topsrcdir)/config/Preprocessor.py \
+  $(if $(IS_LANGUAGE_REPACK),FORCE) \
+  $(GLOBAL_DEPS) \
+  $(NULL)
+
+$(bookmarks-ts): $(bookmarks-preqs)
+	$(display_deps)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-	  -I $< \
-	  -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
-	  $(srcdir)/generic/profile/bookmarks.json.in \
-	  > $@
+      -I $< \
+      -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
+      $(src-bookmarks) \
+      > $@
 
-export:: bookmarks.json
+.PHONY: bookmarks $(bookmarks)
+bookmarks: $(bookmarks)
+$(bookmarks): $(bookmarks-ts)
+	@echo "\nGenerating: $@"
+	ln -fn $< .
 
-GARBAGE += bookmarks.json
+
+export:: searchplugins bookmarks
+

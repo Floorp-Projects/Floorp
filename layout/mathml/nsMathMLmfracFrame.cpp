@@ -124,6 +124,15 @@ nsMathMLmfracFrame::CalcLineThickness(nsPresContext*  aPresContext,
   nscoord lineThickness = aDefaultRuleThickness;
   nscoord minimumThickness = onePixel;
 
+  // linethickness
+  //
+  // "Specifies the thickness of the horizontal 'fraction bar', or 'rule'. The
+  // default value is 'medium', 'thin' is thinner, but visible, 'thick' is
+  // thicker; the exact thickness of these is left up to the rendering agent."
+  //
+  // values: length | "thin" | "medium" | "thick"
+  // default: medium
+  //
   if (!aThicknessAttribute.IsEmpty()) {
     if (aThicknessAttribute.EqualsLiteral("thin")) {
       lineThickness = NSToCoordFloor(defaultThickness * THIN_FRACTION_LINE);
@@ -142,17 +151,12 @@ nsMathMLmfracFrame::CalcLineThickness(nsPresContext*  aPresContext,
       if (lineThickness < defaultThickness + onePixel)
         lineThickness = defaultThickness + onePixel;
     }
-    else { // see if it is a plain number, or a percentage, or a h/v-unit like 1ex, 2px, 1em
-      nsCSSValue cssValue;
-      if (ParseNumericValue(aThicknessAttribute, cssValue)) {
-        nsCSSUnit unit = cssValue.GetUnit();
-        if (eCSSUnit_Number == unit)
-          lineThickness = nscoord(float(defaultThickness) * cssValue.GetFloatValue());
-        else if (eCSSUnit_Percent == unit)
-          lineThickness = nscoord(float(defaultThickness) * cssValue.GetPercentValue());
-        else if (eCSSUnit_Null != unit)
-          lineThickness = CalcLength(aPresContext, aStyleContext, cssValue);
-      }
+    else {
+      // length value
+      lineThickness = defaultThickness;
+      ParseNumericValue(aThicknessAttribute, &lineThickness,
+                        nsMathMLElement::PARSE_ALLOW_UNITLESS,
+                        aPresContext, aStyleContext);
     }
   }
 

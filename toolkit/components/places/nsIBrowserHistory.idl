@@ -42,24 +42,9 @@
 #include "nsISupports.idl"
 #include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(e0c3f659-8bc7-4a37-b39f-35903021e6a6)]
+[scriptable, uuid(d176f8e8-383f-4109-812d-cce015e2d804)]
 interface nsIBrowserHistory : nsIGlobalHistory2
 {
-    /**
-     * Used by the History migrator to add a page to global history, with a
-     * specific title and last visit time.
-     *
-     * @param aURI
-     *        URI of the page to be added.
-     * @param aTitle
-     *        Title of the page.
-     * @param aLastvisited
-     *        Microseconds from epoch representing the last visit time.
-     */
-    void addPageWithDetails(in nsIURI aURI,
-                            in wstring aTitle,
-                            in long long aLastVisited);
-
     /**
      * Removes a page from global history.
      *

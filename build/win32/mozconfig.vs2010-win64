@@ -1,12 +1,13 @@
 export INCLUDE=/c/tools/msvs10/vc/include:/c/tools/msvs10/vc/atlmfc/include:/c/tools/sdks/v7.0/include:/c/tools/sdks/v7.0/include/atl:/c/tools/sdks/dx10/include
 export LIBPATH=/c/tools/msvs10/vc/lib:/c/tools/msvs10/vc/atlmfc/lib
 export LIB=/c/tools/msvs10/vc/lib:/c/tools/msvs10/vc/atlmfc/lib:/c/tools/sdks/v7.0/lib:/c/tools/sdks/dx10/lib
-export PATH="/c/tools/msvs10/Common7/IDE:/c/tools/msvs10/VC/BIN:/c/tools/msvs10/Common7/Tools:/c/tools/msvs10/VC/VCPackages:${PATH}"
 export WIN32_REDIST_DIR=/c/tools/msvs10/VC/redist/x86/Microsoft.VC100.CRT
-
+export MOZ_TOOLS=C:/mozilla-build/moztools
+export PATH="/c/tools/msvs10/Common7/IDE:/c/tools/msvs10/VC/BIN:/c/tools/msvs10/Common7/Tools:/c/tools/msvs10/VC/VCPackages:/c/mozilla-build/moztools:/c/Tools/sdks/v7.0/bin:${PATH}"
 
 mk_add_options "export LIB=$LIB"
 mk_add_options "export LIBPATH=$LIBPATH"
 mk_add_options "export PATH=$PATH"
 mk_add_options "export INCLUDE=$INCLUDE"
 mk_add_options "export WIN32_REDIST_DIR=$WIN32_REDIST_DIR"
+mk_add_options "export MOZ_TOOLS=$MOZ_TOOLS"

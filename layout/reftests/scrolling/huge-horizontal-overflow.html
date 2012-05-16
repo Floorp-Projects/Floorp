@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head><title>Testcase for bug 751278</title>
+<style>
+.ui-helper-hidden { display: none; }
+.ui-helper-hidden-accessible { position: absolute; left: -99999999px; }
+.ui-helper-clearfix:after { content: "."; display: block; height: 0; clear: both; visibility: hidden; }
+
+span { display:inline-block; min-width:300px;}
+</style>
+</head>
+<body>
+	<h1>Test</h1>
+	<div>
+	<div>
+	<table cellspacing='0' cellpadding='0'>
+			<tr>
+							<th><span>Col 0</span></th>
+							<th><span>Col 1</span></th>
+							<th><span>Col 2</span></th>
+							<th><span>Col 3</span></th>
+							<th><span>Col 4</span></th>
+							<th><span>Col 5</span></th>
+							<th><span>Col 6</span></th>
+							<th><span>Col 7</span></th>
+							<th><span>Col 8</span></th>
+							
+							
+						</tr>
+					<tr>
+							<td>alskjdfas</td>
+							<td>alskjdfas</td>
+							<td>alskjdfas</td>
+							<td>alskjdfas</td>
+							<td>alskjdfas</td>
+							<td>alskjdfas</td>
+							<td>alskjdfas</td>
+							<td>alskjdfas</td>
+							<td>alskjdfas</td>
+							
+						</tr>
+					
+			</table>
+	</div>
+	</div>
+<div class="ui-helper-clearfix ui-helper-hidden-accessible"></div>
+</body>
+</html>
+

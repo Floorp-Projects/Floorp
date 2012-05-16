@@ -616,6 +616,14 @@ nsHttpServer.prototype =
   },
 
   //
+  // see nsIHttpServer.registerPrefixHandler
+  //
+  registerPrefixHandler: function(prefix, handler)
+  {
+    this._handler.registerPrefixHandler(prefix, handler);
+  },
+
+  //
   // see nsIHttpServer.registerErrorHandler
   //
   registerErrorHandler: function(code, handler)
@@ -2208,7 +2216,16 @@ function ServerHandler(server)
    * @see ServerHandler.prototype._defaultPaths
    */
   this._overridePaths = {};
-  
+
+  /**
+   * Custom request handlers for the path prefixes on the server in which this
+   * resides.  Path-handler pairs are stored as property-value pairs in this
+   * property.
+   *
+   * @see ServerHandler.prototype._defaultPaths
+   */
+  this._overridePrefixes = {};
+
   /**
    * Custom request handlers for the error handlers in the server in which this
    * resides.  Path-handler pairs are stored as property-value pairs in this
@@ -2273,7 +2290,23 @@ ServerHandler.prototype =
         }
         else
         {
-          this._handleDefault(request, response);
+          var longestPrefix = "";
+          for (let prefix in this._overridePrefixes) {
+            if (prefix.length > longestPrefix.length &&
+                path.substr(0, prefix.length) == prefix)
+            {
+              longestPrefix = prefix;
+            }
+          }
+          if (longestPrefix.length > 0)
+          {
+            dumpn("calling prefix override for " + longestPrefix);
+            this._overridePrefixes[longestPrefix](request, response);
+          }
+          else
+          {
+            this._handleDefault(request, response);
+          }
         }
       }
       catch (e)
@@ -2376,6 +2409,18 @@ ServerHandler.prototype =
       throw Cr.NS_ERROR_INVALID_ARG;
 
     this._handlerToField(handler, this._overridePaths, path);
+  },
+
+  //
+  // see nsIHttpServer.registerPrefixHandler
+  //
+  registerPrefixHandler: function(path, handler)
+  {
+    // XXX true path validation!
+    if (path.charAt(0) != "/" || path.charAt(path.length - 1) != "/")
+      throw Cr.NS_ERROR_INVALID_ARG;
+
+    this._handlerToField(handler, this._overridePrefixes, path);
   },
 
   //

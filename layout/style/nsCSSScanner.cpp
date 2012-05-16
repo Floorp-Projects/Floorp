@@ -75,13 +75,16 @@ static const PRUint8 IS_HEX_DIGIT  = 0x01;
 static const PRUint8 START_IDENT   = 0x02;
 static const PRUint8 IS_IDENT      = 0x04;
 static const PRUint8 IS_WHITESPACE = 0x08;
+static const PRUint8 IS_URL_CHAR   = 0x10;
 
-#define W   IS_WHITESPACE
-#define I   IS_IDENT
-#define S            START_IDENT
-#define SI  IS_IDENT|START_IDENT
-#define XI  IS_IDENT            |IS_HEX_DIGIT
-#define XSI IS_IDENT|START_IDENT|IS_HEX_DIGIT
+#define W    IS_WHITESPACE
+#define I    IS_IDENT
+#define U                                      IS_URL_CHAR
+#define S             START_IDENT
+#define UI   IS_IDENT                         |IS_URL_CHAR
+#define USI  IS_IDENT|START_IDENT             |IS_URL_CHAR
+#define UXI  IS_IDENT            |IS_HEX_DIGIT|IS_URL_CHAR
+#define UXSI IS_IDENT|START_IDENT|IS_HEX_DIGIT|IS_URL_CHAR
 
 static const PRUint8 gLexTable[] = {
 //                                     TAB LF      FF  CR
@@ -89,33 +92,33 @@ static const PRUint8 gLexTable[] = {
 //
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 // SPC !   "   #   $   %   &   '   (   )   *   +   ,   -   .   /
-   W,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  I,  0,  0,
+   W,  U,  0,  U,  U,  U,  U,  0,  0,  0,  U,  U,  U,  UI, U,  U,
 // 0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ?
-   XI, XI, XI, XI, XI, XI, XI, XI, XI, XI, 0,  0,  0,  0,  0,  0,
-// @   A   B   C   D   E   F   G   H   I   J   K   L   M   N   O
-   0,  XSI,XSI,XSI,XSI,XSI,XSI,SI, SI, SI, SI, SI, SI, SI, SI, SI,
+   UXI,UXI,UXI,UXI,UXI,UXI,UXI,UXI,UXI,UXI,U,  U,  U,  U,  U,  U,
+// @   A   B   C    D    E    F    G   H   I   J   K   L   M   N   O
+   U,UXSI,UXSI,UXSI,UXSI,UXSI,UXSI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
 // P   Q   R   S   T   U   V   W   X   Y   Z   [   \   ]   ^   _
-   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, 0,  S,  0,  0,  SI,
-// `   a   b   c   d   e   f   g   h   i   j   k   l   m   n   o
-   0,  XSI,XSI,XSI,XSI,XSI,XSI,SI, SI, SI, SI, SI, SI, SI, SI, SI,
+   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,U,  S,  U,  U,  USI,
+// `   a   b   c    d    e    f    g   h   i   j   k   l   m   n   o
+   U,UXSI,UXSI,UXSI,UXSI,UXSI,UXSI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
 // p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~
-   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, 0,  0,  0,  0,  0,
+   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,U,  U,  U,  U,  0,
 // U+008*
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 // U+009*
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 // U+00A*
-   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
 // U+00B*
-   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
 // U+00C*
-   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
 // U+00D*
-   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
 // U+00E*
-   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,
 // U+00F*
-   SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
+   USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI,USI
 };
 
 MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(gLexTable) == 256,
@@ -124,9 +127,11 @@ MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(gLexTable) == 256,
 #undef W
 #undef S
 #undef I
-#undef XI
-#undef SI
-#undef XSI
+#undef U
+#undef UI
+#undef USI
+#undef UXI
+#undef UXSI
 
 static inline bool
 IsIdentStart(PRInt32 aChar)
@@ -160,6 +165,11 @@ IsHexDigit(PRInt32 ch) {
 static inline bool
 IsIdent(PRInt32 ch) {
   return ch >= 0 && (ch >= 256 || (gLexTable[ch] & IS_IDENT) != 0);
+}
+
+static inline bool
+IsURLChar(PRInt32 ch) {
+  return ch >= 0 && (ch >= 256 || (gLexTable[ch] & IS_URL_CHAR) != 0);
 }
 
 static inline PRUint32
@@ -887,37 +897,38 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
   nsString& ident = aToken.mIdent;
   ident.SetLength(0);
 
-  Pushback(ch);
-
   // start of a non-quoted url (which may be empty)
   bool ok = true;
   for (;;) {
-    ch = Read();
-    if (ch < 0) break;
-    if (ch == '\\') {
-      if (!ParseAndAppendEscape(ident, false)) {
-        ok = false;
-        Pushback(ch);
-        break;
-      }
+    if (IsURLChar(ch)) {
+      // A regular url character.
+      ident.Append(PRUnichar(ch));
+    } else if (ch == ')') {
+      // All done
+      break;
     } else if (IsWhitespace(ch)) {
       // Whitespace is allowed at the end of the URL
       EatWhiteSpace();
       // Consume the close paren if we have it; if not we're an invalid URL.
       ok = LookAheadOrEOF(')');
       break;
-    } else if (ch == '"' || ch == '\'' || ch == '(' || ch < PRUnichar(' ')) {
+    } else if (ch == '\\') {
+      if (!ParseAndAppendEscape(ident, false)) {
+        ok = false;
+        Pushback(ch);
+        break;
+      }
+    } else {
       // This is an invalid URL spec
       ok = false;
       Pushback(ch); // push it back so the parser can match tokens and
                     // then closing parenthesis
       break;
-    } else if (ch == ')') {
-      // All done
+    }
+
+    ch = Read();
+    if (ch < 0) {
       break;
-    } else {
-      // A regular url character.
-      ident.Append(PRUnichar(ch));
     }
   }
 

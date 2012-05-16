@@ -76,11 +76,10 @@ JS_FRIEND_API(JSObject *)
 js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
 {
     unsigned flags = 0;
-    while (wrapped->isWrapper()) {
+    while (wrapped->isWrapper() &&
+           !JS_UNLIKELY(stopAtOuter && wrapped->getClass()->ext.innerObject)) {
         flags |= static_cast<Wrapper *>(GetProxyHandler(wrapped))->flags();
         wrapped = GetProxyPrivate(wrapped).toObjectOrNull();
-        if (stopAtOuter && wrapped->getClass()->ext.innerObject)
-            break;
     }
     if (flagsp)
         *flagsp = flags;
@@ -90,7 +89,8 @@ js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
 JS_FRIEND_API(JSObject *)
 js::UnwrapObjectChecked(JSContext *cx, JSObject *obj)
 {
-    while (obj->isWrapper()) {
+    while (obj->isWrapper() &&
+           !JS_UNLIKELY(!!obj->getClass()->ext.innerObject)) {
         JSObject *wrapper = obj;
         AbstractWrapper *handler = AbstractWrapper::wrapperHandler(obj);
         bool rvOnFailure;
@@ -100,8 +100,6 @@ js::UnwrapObjectChecked(JSContext *cx, JSObject *obj)
         obj = Wrapper::wrappedObject(obj);
         JS_ASSERT(obj);
         handler->leave(cx, wrapper);
-        if (obj->getClass()->ext.innerObject)
-            break;
     }
     return obj;
 }

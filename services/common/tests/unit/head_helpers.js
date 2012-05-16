@@ -127,6 +127,19 @@ function readBytesFromInputStream(inputStream, count) {
   return new BinaryInputStream(inputStream).readBytes(count);
 }
 
+/*
+ * Ensure exceptions from inside callbacks leads to test failures.
+ */
+function ensureThrows(func) {
+  return function() {
+    try {
+      func.apply(this, arguments);
+    } catch (ex) {
+      do_throw(ex);
+    }
+  };
+}
+
 /**
  * Proxy auth helpers.
  */

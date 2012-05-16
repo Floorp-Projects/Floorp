@@ -22,8 +22,8 @@ ifndef INCLUDED_VERSION_MK
 include $(topsrcdir)/config/version.mk
 endif
 
+USE_AUTOTARGETS_MK = 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
-include $(topsrcdir)/config/makefiles/autotargets.mk
 
 ifdef SDK_XPIDLSRCS
 XPIDLSRCS += $(SDK_XPIDLSRCS)
@@ -361,25 +361,25 @@ ifndef TARGETS
 TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(JAVA_LIBRARY)
 endif
 
+COBJS = $(CSRCS:.c=.$(OBJ_SUFFIX))
+SOBJS = $(SSRCS:.S=.$(OBJ_SUFFIX))
+CCOBJS = $(patsubst %.cc,%.$(OBJ_SUFFIX),$(filter %.cc,$(CPPSRCS)))
+CPPOBJS = $(patsubst %.cpp,%.$(OBJ_SUFFIX),$(filter %.cpp,$(CPPSRCS)))
+CMOBJS = $(CMSRCS:.m=.$(OBJ_SUFFIX))
+CMMOBJS = $(CMMSRCS:.mm=.$(OBJ_SUFFIX))
+ASOBJS = $(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX))
 ifndef OBJS
-_OBJS			= \
-	$(JRI_STUB_CFILES) \
-	$(addsuffix .$(OBJ_SUFFIX), $(JMC_GEN)) \
-	$(CSRCS:.c=.$(OBJ_SUFFIX)) \
-	$(SSRCS:.S=.$(OBJ_SUFFIX)) \
-	$(patsubst %.cc,%.$(OBJ_SUFFIX),$(CPPSRCS:.cpp=.$(OBJ_SUFFIX))) \
-	$(CMSRCS:.m=.$(OBJ_SUFFIX)) \
-	$(CMMSRCS:.mm=.$(OBJ_SUFFIX)) \
-	$(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX))
-OBJS	= $(strip $(_OBJS))
+_OBJS = $(COBJS) $(SOBJS) $(CCOBJS) $(CPPOBJS) $(CMOBJS) $(CMMOBJS) $(ASOBJS)
+OBJS = $(strip $(_OBJS))
 endif
 
+HOST_COBJS = $(addprefix host_,$(HOST_CSRCS:.c=.$(OBJ_SUFFIX)))
+HOST_CCOBJS = $(addprefix host_,$(patsubst %.cc,%.$(OBJ_SUFFIX),$(filter %.cc,$(HOST_CPPSRCS))))
+HOST_CPPOBJS = $(addprefix host_,$(patsubst %.cpp,%.$(OBJ_SUFFIX),$(filter %.cpp,$(HOST_CPPSRCS))))
+HOST_CMOBJS = $(addprefix host_,$(HOST_CMSRCS:.m=.$(OBJ_SUFFIX)))
+HOST_CMMOBJS = $(addprefix host_,$(HOST_CMMSRCS:.mm=.$(OBJ_SUFFIX)))
 ifndef HOST_OBJS
-_HOST_OBJS		= \
-        $(addprefix host_,$(HOST_CSRCS:.c=.$(OBJ_SUFFIX))) \
-	$(addprefix host_,$(patsubst %.cc,%.$(OBJ_SUFFIX),$(HOST_CPPSRCS:.cpp=.$(OBJ_SUFFIX)))) \
-	$(addprefix host_,$(HOST_CMSRCS:.m=.$(OBJ_SUFFIX))) \
-	$(addprefix host_,$(HOST_CMMSRCS:.mm=.$(OBJ_SUFFIX)))
+_HOST_OBJS = $(HOST_COBJS) $(HOST_CCOBJS) $(HOST_CPPOBJS) $(HOST_CMOBJS) $(HOST_CMMOBJS)
 HOST_OBJS = $(strip $(_HOST_OBJS))
 endif
 
@@ -1090,32 +1090,27 @@ endif # MOZ_AUTO_DEPS
 $(OBJS) $(HOST_OBJS): $(GLOBAL_DEPS)
 
 # Rules for building native targets must come first because of the host_ prefix
-host_%.$(OBJ_SUFFIX): %.c
+$(HOST_COBJS): host_%.$(OBJ_SUFFIX): %.c
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.cpp
+$(HOST_CPPOBJS): host_%.$(OBJ_SUFFIX): %.cpp
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.cc
+$(HOST_CCOBJS): host_%.$(OBJ_SUFFIX): %.cc
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.m
+$(HOST_CMOBJS): host_%.$(OBJ_SUFFIX): %.m
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(HOST_CMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.mm
+$(HOST_CMMOBJS): host_%.$(OBJ_SUFFIX): %.mm
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-%:: %.c $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
-	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $(_VPATH_SRCS)
-
-%.$(OBJ_SUFFIX): %.c
+$(COBJS): %.$(OBJ_SUFFIX): %.c
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
@@ -1135,26 +1130,22 @@ qrc_%.cpp: %.qrc
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
-%.$(OBJ_SUFFIX): %.$(ASM_SUFFIX)
+$(ASOBJS): %.$(OBJ_SUFFIX): %.$(ASM_SUFFIX)
 	$(AS) $(ASOUTOPTION)$@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
 endif
 
-%.$(OBJ_SUFFIX): %.S
+$(SOBJS): %.$(OBJ_SUFFIX): %.S
 	$(AS) -o $@ $(ASFLAGS) -c $<
-
-%:: %.cpp $(GLOBAL_DEPS)
-	@$(MAKE_DEPS_AUTO_CXX)
-	$(CCC) $(OUTOPTION)$@ $(CXXFLAGS) $(_VPATH_SRCS) $(LDFLAGS)
 
 #
 # Please keep the next two rules in sync.
 #
-%.$(OBJ_SUFFIX): %.cc
+$(CCOBJS): %.$(OBJ_SUFFIX): %.cc
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 
-%.$(OBJ_SUFFIX): %.cpp
+$(CPPOBJS): %.$(OBJ_SUFFIX): %.cpp
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 ifdef STRICT_CPLUSPLUS_SUFFIX
@@ -1165,12 +1156,12 @@ else
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 endif #STRICT_CPLUSPLUS_SUFFIX
 
-$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm
+$(CMMOBJS): $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $(_VPATH_SRCS)
 
-$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m
+$(CMOBJS): $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $(_VPATH_SRCS)
@@ -1605,8 +1596,7 @@ chrome::
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
 
-$(FINAL_TARGET)/chrome:
-	$(NSINSTALL) -D $@
+$(FINAL_TARGET)/chrome: $(call mkdir_deps,$(FINAL_TARGET)/chrome)
 
 ifneq (,$(wildcard $(JAR_MANIFEST)))
 ifndef NO_DIST_INSTALL

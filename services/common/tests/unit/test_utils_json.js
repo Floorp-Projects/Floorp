@@ -1,16 +1,18 @@
-_("Make sure json saves and loads from disk");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/constants.js");
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://services-common/utils.js");
 
 function run_test() {
+  initTestLogging();
   run_next_test();
 }
 
 add_test(function test_roundtrip() {
   _("Do a simple write of an array to json and read");
-  Utils.jsonSave("foo", {}, ["v1", "v2"], ensureThrows(function() {
-    Utils.jsonLoad("foo", {}, ensureThrows(function(val) {
+  CommonUtils.jsonSave("foo", {}, ["v1", "v2"], ensureThrows(function() {
+    CommonUtils.jsonLoad("foo", {}, ensureThrows(function(val) {
       let foo = val;
       do_check_eq(typeof foo, "object");
       do_check_eq(foo.length, 2);
@@ -23,8 +25,8 @@ add_test(function test_roundtrip() {
 
 add_test(function test_string() {
   _("Try saving simple strings");
-  Utils.jsonSave("str", {}, "hi", ensureThrows(function() {
-    Utils.jsonLoad("str", {}, ensureThrows(function(val) {
+  CommonUtils.jsonSave("str", {}, "hi", ensureThrows(function() {
+    CommonUtils.jsonLoad("str", {}, ensureThrows(function(val) {
       let str = val;
       do_check_eq(typeof str, "string");
       do_check_eq(str.length, 2);
@@ -37,8 +39,8 @@ add_test(function test_string() {
 
 add_test(function test_number() {
   _("Try saving a number");
-  Utils.jsonSave("num", {}, 42, ensureThrows(function() {
-    Utils.jsonLoad("num", {}, ensureThrows(function(val) {
+  CommonUtils.jsonSave("num", {}, 42, ensureThrows(function() {
+    CommonUtils.jsonLoad("num", {}, ensureThrows(function(val) {
       let num = val;
       do_check_eq(typeof num, "number");
       do_check_eq(num, 42);
@@ -49,17 +51,17 @@ add_test(function test_number() {
 
 add_test(function test_nonexistent_file() {
   _("Try loading a non-existent file.");
-  Utils.jsonLoad("non-existent", {}, ensureThrows(function(val) {
+  CommonUtils.jsonLoad("non-existent", {}, ensureThrows(function(val) {
     do_check_eq(val, undefined);
     run_next_test();
-  }));    
+  }));
 });
 
 add_test(function test_save_logging() {
   _("Verify that writes are logged.");
   let trace;
-  Utils.jsonSave("log", {_log: {trace: function(msg) { trace = msg; }}},
-                 "hi", ensureThrows(function () {
+  CommonUtils.jsonSave("log", {_log: {trace: function(msg) { trace = msg; }}},
+                       "hi", ensureThrows(function () {
     do_check_true(!!trace);
     run_next_test();
   }));
@@ -69,7 +71,7 @@ add_test(function test_load_logging() {
   _("Verify that reads and read errors are logged.");
 
   // Write a file with some invalid JSON
-  let filePath = "weave/log.json";
+  let filePath = "log.json";
   let file = FileUtils.getFile("ProfD", filePath.split("/"), true);
   let fos = Cc["@mozilla.org/network/file-output-stream;1"]
               .createInstance(Ci.nsIFileOutputStream);
@@ -83,10 +85,18 @@ add_test(function test_load_logging() {
   stream.close();
 
   let trace, debug;
-  Utils.jsonLoad("log",
-                 {_log: {trace: function(msg) { trace = msg; },
-                         debug: function(msg) { debug = msg; }}},
-                 ensureThrows(function(val) {
+  let obj = {
+    _log: {
+      trace: function(msg) {
+        trace = msg;
+      },
+      debug: function(msg) {
+        debug = msg;
+      }
+    }
+  };
+  CommonUtils.jsonLoad("log", obj, ensureThrows(function(val) {
+    do_check_true(!val);
     do_check_true(!!trace);
     do_check_true(!!debug);
     run_next_test();

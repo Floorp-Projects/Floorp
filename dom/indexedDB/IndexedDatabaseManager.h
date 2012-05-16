@@ -69,8 +69,8 @@ class AsyncConnectionHelper;
 
 class CheckQuotaHelper;
 
-class IndexedDatabaseManager : public nsIIndexedDatabaseManager,
-                               public nsIObserver
+class IndexedDatabaseManager MOZ_FINAL : public nsIIndexedDatabaseManager,
+                                         public nsIObserver
 {
   friend class IDBDatabase;
 
@@ -243,7 +243,7 @@ private:
   // directory that contains them before dispatching itself back to the main
   // thread. When back on the main thread the runnable will notify the
   // IndexedDatabaseManager that the job has been completed.
-  class OriginClearRunnable : public nsIRunnable
+  class OriginClearRunnable MOZ_FINAL : public nsIRunnable
   {
   public:
     NS_DECL_ISUPPORTS
@@ -272,7 +272,7 @@ private:
   // before dispatching itself back to the main thread. When on the main thread
   // the runnable will call the callback and then notify the
   // IndexedDatabaseManager that the job has been completed.
-  class AsyncUsageRunnable : public nsIRunnable
+  class AsyncUsageRunnable MOZ_FINAL : public nsIRunnable
   {
   public:
     NS_DECL_ISUPPORTS
@@ -326,7 +326,7 @@ private:
 
   // A callback runnable used by the TransactionPool when it's safe to proceed
   // with a SetVersion/DeleteDatabase/etc.
-  class WaitForTransactionsToFinishRunnable : public nsIRunnable
+  class WaitForTransactionsToFinishRunnable MOZ_FINAL : public nsIRunnable
   {
   public:
     WaitForTransactionsToFinishRunnable(SynchronizedOp* aOp)
@@ -345,7 +345,7 @@ private:
     SynchronizedOp* mOp;
   };
 
-  class AsyncDeleteFileRunnable : public nsIRunnable
+  class AsyncDeleteFileRunnable MOZ_FINAL : public nsIRunnable
   {
   public:
     NS_DECL_ISUPPORTS

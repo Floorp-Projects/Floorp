@@ -53,6 +53,7 @@
 
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
+#include "frontend/TreeContext.h"
 
 #define NUM_TEMP_FREELISTS      6U      /* 32 to 2048 byte size classes (32 bit) */
 
@@ -86,10 +87,13 @@ struct Parser : private AutoGCRooter
     AutoKeepAtoms       keepAtoms;
 
     /* Perform constant-folding; must be true when interfacing with the emitter. */
-    bool                foldConstants;
+    const bool          foldConstants:1;
+
+    /* Script can optimize name references based on scope chain. */
+    const bool          compileAndGo:1;
 
     Parser(JSContext *cx, JSPrincipals *prin = NULL, JSPrincipals *originPrin = NULL,
-           StackFrame *cfp = NULL, bool fold = true);
+           StackFrame *cfp = NULL, bool fold = true, bool compileAndGo = false);
     ~Parser();
 
     friend void AutoGCRooter::trace(JSTracer *trc);
@@ -199,7 +203,7 @@ struct Parser : private AutoGCRooter
      */
     ParseNode *functionStmt();
     ParseNode *functionExpr();
-    ParseNode *statements();
+    ParseNode *statements(bool *hasFunctionStmt = NULL);
 
     ParseNode *switchStatement();
     ParseNode *forStatement();

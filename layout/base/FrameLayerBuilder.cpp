@@ -1151,7 +1151,7 @@ ContainerState::ThebesLayerData::UpdateCommonClipCount(
       }
     }
     mCommonClipCount = clipCount;
-    NS_ASSERTION(mItemClip.mRoundedClipRects.Length() >= mCommonClipCount,
+    NS_ASSERTION(mItemClip.mRoundedClipRects.Length() >= PRUint32(mCommonClipCount),
                  "Inconsistent common clip count.");
   } else {
     // first item in the layer
@@ -1188,12 +1188,10 @@ ContainerState::PopThebesLayerData()
       nsRefPtr<ImageLayer> imageLayer = CreateOrRecycleImageLayer();
       imageLayer->SetContainer(imageContainer);
       data->mImage->ConfigureLayer(imageLayer);
-      if (mParameters.mInActiveTransformedSubtree) {
-        // The layer's current transform is applied first, then the result is scaled.
-        gfx3DMatrix transform = imageLayer->GetTransform()*
-          gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
-        imageLayer->SetTransform(transform);
-      }
+      // The layer's current transform is applied first, then the result is scaled.
+      gfx3DMatrix transform = imageLayer->GetTransform()*
+        gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
+      imageLayer->SetTransform(transform);
       if (data->mItemClip.mHaveClipRect) {
         nsIntRect clip = ScaleToNearestPixels(data->mItemClip.mClipRect);
         imageLayer->IntersectClipRect(clip);
@@ -2411,7 +2409,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     return;
 
   nsTArray<ClippedDisplayItem> items;
-  PRInt32 commonClipCount;
+  PRUint32 commonClipCount;
   nsIFrame* containerLayerFrame;
   {
     ThebesLayerItemsEntry* entry =
@@ -2648,7 +2646,6 @@ FrameLayerBuilder::Clip::ApplyRoundedRectsTo(gfxContext* aContext,
                                              PRInt32 A2D,
                                              PRUint32 aBegin, PRUint32 aEnd) const
 {
-  NS_ASSERTION(aBegin >= 0, "Start index must be positive.");
   aEnd = NS_MIN<PRUint32>(aEnd, mRoundedClipRects.Length());
 
   for (PRUint32 i = aBegin; i < aEnd; ++i) {
