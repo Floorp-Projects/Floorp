@@ -135,6 +135,7 @@ struct CompartmentStats
     size_t shapesCompartmentTables;
     size_t scriptData;
     size_t mjitData;
+    size_t crossCompartmentWrappers;
 
     TypeInferenceSizes typeInferenceSizes;
 };
