@@ -1487,6 +1487,11 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   "compilation data: JITScripts, native maps, and inline "
                   "cache structs.");
 
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "cross-compartment-wrappers"),
+                  nsIMemoryReporter::KIND_HEAP, cStats.crossCompartmentWrappers,
+                  "Memory used by the compartment's cross-compartment "
+                  "wrappers.");
+
     REPORT_BYTES0(MakePath(pathPrefix, cStats, "type-inference/script-main"),
                   nsIMemoryReporter::KIND_HEAP,
                   cStats.typeInferenceSizes.scripts,
