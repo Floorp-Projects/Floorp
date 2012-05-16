@@ -667,9 +667,7 @@ progress {
 }
 
 meter {
-  /* Add a new moz-appearance : Bug 659999
-   * -moz-appearance: meterbar;
-   */
+  -moz-appearance: meterbar;
   display: inline-block;
   vertical-align: -0.2em;
 
@@ -684,14 +682,13 @@ meter {
 }
 
 ::-moz-meter-bar {
+  /* Block styles that would change the type of frame we construct. */
   display: inline-block ! important;
   float: none ! important;
   position: static ! important;
   overflow: visible ! important;
-  /* Add a new moz-appearance : Bug 660232
-   * -moz-appearance: meterchunk;
-   */
 
+  -moz-appearance: meterchunk;
   height: 100%;
   width: 100%;
 

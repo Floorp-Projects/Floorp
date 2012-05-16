@@ -480,6 +480,8 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_button_arrow_down,      NS_THEME_BUTTON_ARROW_DOWN,
   eCSSKeyword_button_arrow_next,      NS_THEME_BUTTON_ARROW_NEXT,
   eCSSKeyword_button_arrow_previous,  NS_THEME_BUTTON_ARROW_PREVIOUS,
+  eCSSKeyword_meterbar,               NS_THEME_METERBAR,
+  eCSSKeyword_meterchunk,             NS_THEME_METERBAR_CHUNK,
   eCSSKeyword_separator,              NS_THEME_TOOLBAR_SEPARATOR,
   eCSSKeyword_splitter,               NS_THEME_SPLITTER,
   eCSSKeyword_statusbar,              NS_THEME_STATUSBAR,
