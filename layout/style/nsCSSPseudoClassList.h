@@ -161,6 +161,12 @@ CSS_STATE_PSEUDO_CLASS(mozUIInvalid, ":-moz-ui-invalid",
                        NS_EVENT_STATE_MOZ_UI_INVALID)
 CSS_STATE_PSEUDO_CLASS(mozUIValid, ":-moz-ui-valid",
                        NS_EVENT_STATE_MOZ_UI_VALID)
+CSS_STATE_PSEUDO_CLASS(mozMeterOptimum, ":-moz-meter-optimum",
+                       NS_EVENT_STATE_OPTIMUM)
+CSS_STATE_PSEUDO_CLASS(mozMeterSubOptimum, ":-moz-meter-sub-optimum",
+                       NS_EVENT_STATE_SUB_OPTIMUM)
+CSS_STATE_PSEUDO_CLASS(mozMeterSubSubOptimum, ":-moz-meter-sub-sub-optimum",
+                       NS_EVENT_STATE_SUB_SUB_OPTIMUM)
 
 #ifdef DEFINED_CSS_STATE_PSEUDO_CLASS
 #undef DEFINED_CSS_STATE_PSEUDO_CLASS
