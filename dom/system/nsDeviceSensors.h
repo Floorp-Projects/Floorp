@@ -46,6 +46,7 @@
 #include "nsIDOMDeviceLightEvent.h"
 #include "nsIDOMDeviceOrientationEvent.h"
 #include "nsIDOMDeviceProximityEvent.h"
+#include "nsIDOMUserProximityEvent.h"
 #include "nsIDOMDeviceMotionEvent.h"
 #include "nsDOMDeviceMotionEvent.h"
 #include "mozilla/TimeStamp.h"
@@ -84,6 +85,9 @@ private:
                              double aMin,
                              double aMax);
 
+  void FireDOMUserProximityEvent(nsIDOMEventTarget *aTarget,
+                                 bool aNear);
+
   void FireDOMOrientationEvent(class nsIDOMDocument *domDoc, 
                                class nsIDOMEventTarget *target,
                                double alpha,
@@ -104,6 +108,7 @@ private:
   }
 
   mozilla::TimeStamp mLastDOMMotionEventTime;
+  bool mIsUserProximityNear;
   nsRefPtr<nsDOMDeviceAcceleration> mLastAcceleration;
   nsRefPtr<nsDOMDeviceAcceleration> mLastAccelerationIncluduingGravity;
   nsRefPtr<nsDOMDeviceRotationRate> mLastRotationRate;
