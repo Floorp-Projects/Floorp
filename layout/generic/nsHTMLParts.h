@@ -187,6 +187,8 @@ nsIFrame*
 NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 nsIFrame*
 NS_NewProgressFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame*
+NS_NewMeterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 // Table frame factories
 nsIFrame*

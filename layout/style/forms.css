@@ -666,6 +666,41 @@ progress {
   background-color: #0064b4; /* blue */
 }
 
+meter {
+  /* Add a new moz-appearance : Bug 659999
+   * -moz-appearance: meterbar;
+   */
+  display: inline-block;
+  vertical-align: -0.2em;
+
+  /* Default style in case of there is -moz-appearance: none; */
+  border: 2px solid;
+  /* #e6e6e6 is a light gray. */
+  -moz-border-top-colors: ThreeDShadow #e6e6e6;
+  -moz-border-right-colors: ThreeDHighlight #e6e6e6;
+  -moz-border-bottom-colors: ThreeDHighlight #e6e6e6;
+  -moz-border-left-colors: ThreeDShadow #e6e6e6;
+  background-color: #e6e6e6;
+}
+
+::-moz-meter-bar {
+  display: inline-block ! important;
+  float: none ! important;
+  position: static ! important;
+  overflow: visible ! important;
+  /* Add a new moz-appearance : Bug 660232
+   * -moz-appearance: meterchunk;
+   */
+
+  height: 100%;
+  width: 100%;
+
+  /* Default style in case of there is -moz-appearance: none;
+   * #2eff46 is green
+   */
+  background-color: #2eff46;
+}
+
 %ifdef XP_OS2
 input {
   font: medium serif; font-family: inherit

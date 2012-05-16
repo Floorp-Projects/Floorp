@@ -39,6 +39,7 @@ CPPSRCS		= \
 		nsGfxCheckboxControlFrame.cpp \
 		nsGfxRadioControlFrame.cpp \
 		nsProgressFrame.cpp \
+		nsMeterFrame.cpp \
 		nsTextControlFrame.cpp \
 		nsHTMLButtonControlFrame.cpp \
 		nsImageControlFrame.cpp \
