@@ -728,7 +728,6 @@ NoteJSChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
      * parent pointers iteratively, rather than recursively, to avoid overflow.
      */
     if (AddToCCKind(kind)) {
-#if defined(DEBUG)
         if (NS_UNLIKELY(tracer->cb.WantDebugInfo())) {
             // based on DumpNotify in jsapi.c
             if (tracer->debugPrinter) {
@@ -745,7 +744,6 @@ NoteJSChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
                 tracer->cb.NoteNextEdgeName(static_cast<const char*>(tracer->debugPrintArg));
             }
         }
-#endif
         tracer->cb.NoteJSChild(thing);
     } else if (kind == JSTRACE_SHAPE) {
         JS_TraceShapeCycleCollectorChildren(trc, thing);
