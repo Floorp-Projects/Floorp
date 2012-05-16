@@ -54,11 +54,12 @@ BrowserElementChild.prototype = {
     // This is because mozapp iframes have some privileges which we don't want
     // to extend to untrusted mozbrowser content.
     //
-    // Set the window's isApp state by asking our parent if our iframe has the
-    // 'mozapp' attribute.
+    // Get the app manifest from the parent, if our frame has one.
+    let appManifestURL = sendSyncMsg('get-mozapp-manifest-url')[0];
+
     content.QueryInterface(Ci.nsIInterfaceRequestor)
            .getInterface(Components.interfaces.nsIDOMWindowUtils)
-           .setIsApp(sendSyncMsg('get-mozapp')[0]);
+           .setIsApp(!!appManifestURL);
 
     addEventListener('DOMTitleChanged',
                      this._titleChangedHandler.bind(this),
