@@ -203,6 +203,7 @@ nsMeterFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
     xoffset += aReflowState.ComputedWidth() - size;
   }
 
+  // The bar position is *always* constrained.
   if (vertical) {
     // We want the bar to begin at the bottom.
     yoffset += aReflowState.ComputedHeight() - size;
@@ -272,3 +273,19 @@ nsMeterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   
   return autoSize;
 }
+
+bool
+nsMeterFrame::ShouldUseNativeStyle() const
+{
+  // Use the native style if these conditions are satisfied:
+  // - both frames use the native appearance;
+  // - neither frame has author specified rules setting the border or the
+  //   background.
+  return GetStyleDisplay()->mAppearance == NS_THEME_METERBAR &&
+         mBarDiv->GetPrimaryFrame()->GetStyleDisplay()->mAppearance == NS_THEME_METERBAR_CHUNK &&
+         !PresContext()->HasAuthorSpecifiedRules(const_cast<nsMeterFrame*>(this),
+                                                 NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND) &&
+         !PresContext()->HasAuthorSpecifiedRules(mBarDiv->GetPrimaryFrame(),
+                                                 NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND);
+}
+
