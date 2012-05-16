@@ -3110,6 +3110,7 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
   }
   nsPresContext::ScrollbarStyles ss = aScrollFrame->GetScrollbarStyles();
   nsRect allowedRange(scrollPt, nsSize(0, 0));
+  bool needToScroll = false;
 
   if ((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
       ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
@@ -3129,6 +3130,7 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
                                         visibleRect.YMost(),
                                         &allowedRange.y, &maxHeight);
       allowedRange.height = maxHeight - allowedRange.y;
+      needToScroll = true;
     }
   }
 
@@ -3150,10 +3152,15 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
                                         visibleRect.XMost(),
                                         &allowedRange.x, &maxWidth);
       allowedRange.width = maxWidth - allowedRange.x;
+      needToScroll = true;
     }
   }
 
-  aScrollFrame->ScrollTo(scrollPt, nsIScrollableFrame::INSTANT, &allowedRange);
+  // If we don't need to scroll, then don't try since it might cancel
+  // a current smooth scroll operation.
+  if (needToScroll) {
+    aScrollFrame->ScrollTo(scrollPt, nsIScrollableFrame::INSTANT, &allowedRange);
+  }
 }
 
 nsresult
