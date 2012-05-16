@@ -9,6 +9,9 @@ topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 
+USE_RCS_MK=1
+include $(topsrcdir)/config/makefiles/makeutils.mk
+
 CHROME_DEPS = buildconfig.html
 
 include $(DEPTH)/config/autoconf.mk
@@ -36,15 +39,9 @@ ifeq (Android,$(OS_TARGET))
 DEFINES += -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME)
 endif
 
-# strip a trailing slash from the repo URL because it's not always present,
-# and we want to construct a working URL in buildconfig.html
-# make+shell+sed = awful
-_dollar=$$
-SOURCE_REPO := $(shell cd $(topsrcdir) && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
-# extra sanity check for old versions of hg
-# that don't support showconfig
-ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))
-DEFINES += -DSOURCE_REPO="$(SOURCE_REPO)"
+source_repo := $(call getSourceRepo)
+ifneq (,$(filter http%,$(source_repo)))
+  DEFINES += -DSOURCE_REPO="$(source_repo)"
 endif
 
 BUILD_HOSTNAME = $(shell hostname -s || hostname)

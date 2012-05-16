@@ -106,9 +106,15 @@ endif #}
 
 ###########################################################################
 ## Common makefile library loader
+##   USE_AUTOTARGETS_MK - mkdir_deps directory creation
+##   USE_RCS_MK         - revision control functions
 ###########################################################################
 topORerr =$(if $(topsrcdir),$(topsrcdir),$(error topsrcdir is not defined))
 
 ifdef USE_AUTOTARGETS_MK # mkdir_deps
   include $(topORerr)/config/makefiles/autotargets.mk
+endif
+
+ifdef USE_RCS_MK
+  include $(topORerr)/config/makefiles/rcs.mk
 endif
