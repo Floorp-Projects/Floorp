@@ -198,7 +198,7 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
     rtStats->runtimeObject = rtStats->mallocSizeOf(rt);
     
     rt->sizeOfExcludingThis(rtStats->mallocSizeOf,
-                            &rtStats->runtimeNormal,
+                            &rtStats->runtimeDtoa,
                             &rtStats->runtimeTemporary,
                             &rtStats->runtimeMjitCode,
                             &rtStats->runtimeRegexpCode,

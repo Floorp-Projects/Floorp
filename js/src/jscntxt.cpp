@@ -94,12 +94,12 @@ using namespace js;
 using namespace js::gc;
 
 void
-JSRuntime::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
+JSRuntime::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *dtoa, size_t *temporary,
                                size_t *mjitCode, size_t *regexpCode, size_t *unusedCodeMemory,
                                size_t *stackCommitted, size_t *gcMarkerSize)
 {
-    if (normal)
-        *normal = mallocSizeOf(dtoaState);
+    if (dtoa)
+        *dtoa = mallocSizeOf(dtoaState);
 
     if (temporary)
         *temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);

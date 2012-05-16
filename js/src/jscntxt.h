@@ -880,7 +880,7 @@ struct JSRuntime : js::RuntimeFriendFields
         return jitHardening;
     }
 
-    void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
+    void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *dtoa, size_t *temporary,
                              size_t *mjitCode, size_t *regexpCode, size_t *unusedCodeMemory,
                              size_t *stackCommitted, size_t *gcMarker);
 };
