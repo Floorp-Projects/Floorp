@@ -100,10 +100,14 @@ ion::EliminateDeadCode(MIRGraph &graph)
 static inline bool
 IsPhiObservable(MPhi *phi)
 {
-    // Note that this skips reading resume points, which we don't count as
-    // actual uses. This is safe as long as the SSA still mimics the actual
-    // bytecode, i.e. no elimination has occurred. If the only uses are resume
-    // points, then the SSA name is never consumed by the program.
+    // If the phi has bytecode uses, there may be no SSA uses but the value
+    // is still observable in the interpreter after a bailout.
+    if (phi->hasBytecodeUses())
+        return true;
+
+    // Check for any SSA uses. Note that this skips reading resume points,
+    // which we don't count as actual uses. If the only uses are resume points,
+    // then the SSA name is never consumed by the program.
     for (MUseDefIterator iter(phi); iter; iter++) {
         if (!iter.def()->isPhi())
             return true;
@@ -124,6 +128,11 @@ IsPhiRedundant(MPhi *phi)
         if (first != phi->getOperand(i))
             return NULL;
     }
+
+    // Propagate the HasBytecodeUses flag if |phi| is replaced with
+    // another phi.
+    if (phi->hasBytecodeUses() && first->isPhi())
+        first->toPhi()->setHasBytecodeUses();
 
     return first;
 }
