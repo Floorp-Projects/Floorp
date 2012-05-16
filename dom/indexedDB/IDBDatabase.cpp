@@ -112,7 +112,7 @@ public:
 
   void OnError()
   {
-    NS_ASSERTION(mTransaction->IsAborted(), "How elsehttps://bugzilla.mozilla.org/attachment.cgi?id=616806 can this fail?!");
+    NS_ASSERTION(mTransaction->IsAborted(), "How else can this fail?!");
   }
 
 private:
