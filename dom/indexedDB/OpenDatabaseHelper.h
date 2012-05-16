@@ -50,6 +50,11 @@ class mozIStorageConnection;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
+enum FactoryPrivilege {
+  Content,
+  Chrome
+};
+
 class OpenDatabaseHelper : public HelperBase
 {
 public:
@@ -57,10 +62,12 @@ public:
                      const nsAString& aName,
                      const nsACString& aASCIIOrigin,
                      PRUint64 aRequestedVersion,
-                     bool aForDeletion)
+                     bool aForDeletion,
+                     FactoryPrivilege aPrivilege)
     : HelperBase(aRequest), mOpenDBRequest(aRequest), mName(aName),
       mASCIIOrigin(aASCIIOrigin), mRequestedVersion(aRequestedVersion),
-      mForDeletion(aForDeletion), mDatabaseId(nsnull), mCurrentVersion(0),
+      mForDeletion(aForDeletion), mPrivilege(aPrivilege),
+      mDatabaseId(nsnull), mCurrentVersion(0),
       mLastObjectStoreId(0), mLastIndexId(0), mState(eCreated),
       mResultCode(NS_OK), mLoadDBMetadata(false)
   {
@@ -129,6 +136,7 @@ private:
   nsCString mASCIIOrigin;
   PRUint64 mRequestedVersion;
   bool mForDeletion;
+  FactoryPrivilege mPrivilege;
   nsCOMPtr<nsIAtom> mDatabaseId;
 
   // Out-params.

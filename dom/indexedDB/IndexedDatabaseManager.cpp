@@ -662,6 +662,7 @@ IndexedDatabaseManager::GetIndexedDBQuotaMB()
 
 nsresult
 IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
+                                                  FactoryPrivilege mPrivilege,
                                                   nsIFile** aDirectory)
 {
 #ifdef DEBUG
@@ -709,15 +710,17 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
   rv = patternFile->GetNativePath(pattern);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Now tell SQLite to start tracking this pattern.
+  // Now tell SQLite to start tracking this pattern for content.
   nsCOMPtr<mozIStorageServiceQuotaManagement> ss =
-    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(ss, NS_ERROR_FAILURE);
 
-  rv = ss->SetQuotaForFilenamePattern(pattern,
-                                      GetIndexedDBQuotaMB() * 1024 * 1024,
-                                      mQuotaCallbackSingleton, nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (mPrivilege != Chrome) {
+    rv = ss->SetQuotaForFilenamePattern(pattern,
+                                        GetIndexedDBQuotaMB() * 1024 * 1024,
+                                        mQuotaCallbackSingleton, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // We need to see if there are any files in the directory already. If they
   // are database files then we need to create file managers for them and also
@@ -805,8 +808,10 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
 
     fileManagers->AppendElement(fileManager);
 
-    rv = ss->UpdateQuotaInformationForFile(file);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mPrivilege != Chrome) {
+      rv = ss->UpdateQuotaInformationForFile(file);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     if (!validSubdirs.PutEntry(dbBaseFilename)) {
       NS_WARNING("Out of memory?");
