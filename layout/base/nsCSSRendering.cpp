@@ -4146,14 +4146,16 @@ nsImageRenderer::GetContainer()
 #define MAX_SPREAD_RADIUS 50
 
 static inline gfxIntSize
-ComputeBlurRadius(nscoord aBlurRadius, PRInt32 aAppUnitsPerDevPixel)
+ComputeBlurRadius(nscoord aBlurRadius, PRInt32 aAppUnitsPerDevPixel, gfxFloat scale = 1.0)
 {
   // http://dev.w3.org/csswg/css3-background/#box-shadow says that the
   // standard deviation of the blur should be half the given blur value.
-  gfxFloat blurStdDev =
-    NS_MIN(gfxFloat(aBlurRadius) / gfxFloat(aAppUnitsPerDevPixel),
-           gfxFloat(MAX_BLUR_RADIUS))
-    / 2.0;
+  gfxFloat blurStdDev = gfxFloat(aBlurRadius) / gfxFloat(aAppUnitsPerDevPixel);
+
+  blurStdDev *= scale;
+
+  blurStdDev = NS_MIN(blurStdDev,
+                      gfxFloat(MAX_BLUR_RADIUS)) / 2.0;
   return
     gfxAlphaBoxBlur::CalculateBlurRadius(gfxPoint(blurStdDev, blurStdDev));
 }
@@ -4175,7 +4177,21 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
     return nsnull;
   }
 
-  gfxIntSize blurRadius = ComputeBlurRadius(aBlurRadius, aAppUnitsPerDevPixel);
+  gfxFloat scale = 1;
+
+  // Do blurs in device space when possible
+  // If the scale is not uniform we fall back to transforming on paint.
+  // Chrome/Skia always does the blurs in device space
+  // and will sometimes get incorrect results (e.g. rotated blurs)
+  gfxMatrix transform = aDestinationCtx->CurrentMatrix();
+  if (transform.HasNonAxisAlignedTransform() || transform.xx != transform.yy) {
+    transform = gfxMatrix();
+  } else {
+    scale = transform.xx;
+  }
+
+  // compute a large or smaller blur radius
+  gfxIntSize blurRadius = ComputeBlurRadius(aBlurRadius, aAppUnitsPerDevPixel, scale);
   PRInt32 spreadRadius = NS_MIN(PRInt32(aSpreadRadius / aAppUnitsPerDevPixel),
                                 PRInt32(MAX_SPREAD_RADIUS));
   mDestinationCtx = aDestinationCtx;
@@ -4194,9 +4210,26 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
     nsLayoutUtils::RectToGfxRect(aDirtyRect, aAppUnitsPerDevPixel);
   dirtyRect.RoundOut();
 
+  rect = transform.TransformBounds(rect);
+
+  mPreTransformed = !transform.IsIdentity();
+
   // Create the temporary surface for blurring
-  mContext = blur.Init(rect, gfxIntSize(spreadRadius, spreadRadius),
-                       blurRadius, &dirtyRect, aSkipRect);
+  dirtyRect = transform.TransformBounds(dirtyRect);
+  if (aSkipRect) {
+    gfxRect skipRect = transform.TransformBounds(*aSkipRect);
+    mContext = blur.Init(rect, gfxIntSize(spreadRadius, spreadRadius),
+                         blurRadius, &dirtyRect, &skipRect);
+  } else {
+    mContext = blur.Init(rect, gfxIntSize(spreadRadius, spreadRadius),
+                         blurRadius, &dirtyRect, NULL);
+  }
+
+  if (mContext) {
+    // we don't need to blur if skipRect is equal to rect
+    // and mContext will be NULL
+    mContext->SetMatrix(transform);
+  }
   return mContext;
 }
 
@@ -4205,6 +4238,12 @@ nsContextBoxBlur::DoPaint()
 {
   if (mContext == mDestinationCtx)
     return;
+
+  gfxContextMatrixAutoSaveRestore saveMatrix(mDestinationCtx);
+
+  if (mPreTransformed) {
+    mDestinationCtx->IdentityMatrix();
+  }
 
   blur.Paint(mDestinationCtx);
 }
