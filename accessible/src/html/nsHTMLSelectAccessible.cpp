@@ -88,9 +88,6 @@ nsHTMLSelectListAccessible::NativeState()
 role
 nsHTMLSelectListAccessible::NativeRole()
 {
-  if (mParent && mParent->Role() == roles::COMBOBOX)
-    return roles::COMBOBOX_LIST;
-
   return roles::LISTBOX;
 }
 
@@ -709,6 +706,12 @@ nsHTMLComboboxListAccessible::IsPrimaryForNode() const
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLComboboxAccessible: nsAccessible
+
+role
+nsHTMLComboboxListAccessible::NativeRole()
+{
+  return roles::COMBOBOX_LIST;
+}
 
 PRUint64
 nsHTMLComboboxListAccessible::NativeState()
