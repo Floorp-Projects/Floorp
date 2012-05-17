@@ -988,7 +988,7 @@ GCMarker::restoreValueArray(JSObject *obj, void **vpp, void **endp)
 }
 
 void
-GCMarker::processMarkStackOther(SliceBudget &budget, uintptr_t tag, uintptr_t addr)
+GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
 {
     if (tag == TypeTag) {
         ScanTypeObject(this, reinterpret_cast<types::TypeObject *>(addr));
@@ -1000,37 +1000,7 @@ GCMarker::processMarkStackOther(SliceBudget &budget, uintptr_t tag, uintptr_t ad
             pushValueArray(obj, vp, end);
         else
             pushObject(obj);
-    } else if (tag == ArenaTag) {
-        ArenaHeader *aheader = reinterpret_cast<ArenaHeader *>(addr);
-        AllocKind thingKind = aheader->getAllocKind();
-        size_t thingSize = Arena::thingSize(thingKind);
-
-        for ( ; aheader; aheader = aheader->next) {
-            Arena *arena = aheader->getArena();
-            FreeSpan firstSpan(aheader->getFirstFreeSpan());
-            const FreeSpan *span = &firstSpan;
-
-            for (uintptr_t thing = arena->thingsStart(thingKind); ; thing += thingSize) {
-                JS_ASSERT(thing <= arena->thingsEnd());
-                if (thing == span->first) {
-                    if (!span->hasNext())
-                        break;
-                    thing = span->last;
-                    span = span->nextSpan();
-                } else {
-                    JSObject *object = reinterpret_cast<JSObject *>(thing);
-                    if (object->hasSingletonType())
-                        pushObject(object);
-                    budget.step();
-                }
-            }
-            if (budget.isOverBudget()) {
-                pushArenaList(aheader);
-                return;
-            }
-        }
     }
-
 #if JS_HAS_XML_SUPPORT
     else {
         JS_ASSERT(tag == XmlTag);
@@ -1073,7 +1043,7 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         goto scan_obj;
     }
 
-    processMarkStackOther(budget, tag, addr);
+    processMarkStackOther(tag, addr);
     return;
 
   scan_value_array:
