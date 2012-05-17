@@ -2572,7 +2572,7 @@ var BrowserEventHandler = {
       }
     }
 
-    if (!ElementTouchHelper.isElementClickable(closest))
+    if (!ElementTouchHelper.isElementClickable(closest, null, false))
       closest = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow,
                                                     aEvent.changedTouches[0].screenX,
                                                     aEvent.changedTouches[0].screenY);
@@ -2654,7 +2654,7 @@ var BrowserEventHandler = {
           this._sendMouseEvent("mousedown", element, data.x, data.y);
           this._sendMouseEvent("mouseup",   element, data.x, data.y);
   
-          if (ElementTouchHelper.isElementClickable(element))
+          if (ElementTouchHelper.isElementClickable(element, null, true))
             Haptic.performSimpleAction(Haptic.LongPress);
         } catch(e) {
           Cu.reportError(e);
@@ -2951,7 +2951,7 @@ const ElementTouchHelper = {
     // use a cache to speed up future calls to isElementClickable in the
     // loop below.
     let unclickableCache = new Array();
-    if (this.isElementClickable(target, unclickableCache))
+    if (this.isElementClickable(target, unclickableCache, false))
       return target;
 
     target = null;
@@ -2963,7 +2963,7 @@ const ElementTouchHelper = {
     let threshold = Number.POSITIVE_INFINITY;
     for (let i = 0; i < nodes.length; i++) {
       let current = nodes[i];
-      if (!current.mozMatchesSelector || !this.isElementClickable(current, unclickableCache))
+      if (!current.mozMatchesSelector || !this.isElementClickable(current, unclickableCache, true))
         continue;
 
       let rect = current.getBoundingClientRect();
@@ -2982,9 +2982,14 @@ const ElementTouchHelper = {
     return target;
   },
 
-  isElementClickable: function isElementClickable(aElement, aUnclickableCache) {
+  isElementClickable: function isElementClickable(aElement, aUnclickableCache, aAllowBodyListeners) {
     const selector = "a,:link,:visited,[role=button],button,input,select,textarea,label";
-    for (let elem = aElement; elem; elem = elem.parentNode) {
+
+    let stopNode = null;
+    if (!aAllowBodyListeners && aElement && aElement.ownerDocument)
+      stopNode = aElement.ownerDocument.body;
+
+    for (let elem = aElement; elem != stopNode; elem = elem.parentNode) {
       if (aUnclickableCache && aUnclickableCache.indexOf(elem) != -1)
         continue;
       if (this._hasMouseListener(elem))
