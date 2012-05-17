@@ -44,7 +44,7 @@
 #include "GfxInfo.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/FunctionTimer.h"
-#include "nsCocoaFeatures.h"
+#include "nsToolkit.h"
 #include "mozilla/Preferences.h"
 
 #import <Foundation/Foundation.h>
@@ -176,7 +176,7 @@ GfxInfo::Init()
 
   AddCrashReportAnnotations();
 
-  mOSXVersion = nsCocoaFeatures::OSXVersion();
+  mOSXVersion = nsToolkit::OSXVersion();
 
   return rv;
 }
@@ -404,7 +404,7 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
     //   * bug 631258: WebGL shader paints using textures belonging to other processes on Mac OS 10.5
     //   * bug 618848: Post process shaders and texture mapping crash OS X 10.5
     if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL &&
-        !nsCocoaFeatures::OnSnowLeopardOrLater()) {
+        !nsToolkit::OnSnowLeopardOrLater()) {
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
       return NS_OK;
     }
