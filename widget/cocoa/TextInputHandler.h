@@ -124,6 +124,7 @@ enum
   kPowerbookEnterKeyCode  = 0x34, // Enter on Powerbook's keyboard is different
 
   // IME keys
+  kJapanese_Eisu          = 0x66,
   kJapanese_Kana          = 0x68,
 
   kInsertKeyCode          = 0x72, // also help key

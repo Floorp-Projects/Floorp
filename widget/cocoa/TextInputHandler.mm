@@ -1021,6 +1021,7 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
     case kKeypadDivideKeyCode:    return NS_VK_DIVIDE;
 
     // IME keys
+    case kJapanese_Eisu:        return NS_VK_EISU;
     case kJapanese_Kana:        return NS_VK_KANA;
 
     // these may clash with forward delete and help
@@ -3860,6 +3861,7 @@ TextInputHandlerBase::IsSpecialGeckoKey(UInt32 aNativeKeyCode)
     case kTabKeyCode:
     case kBackspaceKeyCode:
 
+    case kJapanese_Eisu:
     case kJapanese_Kana:
 
     case kHomeKeyCode:
