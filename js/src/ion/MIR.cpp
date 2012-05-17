@@ -1028,7 +1028,7 @@ MBitNot::foldsTo(bool useValueNumbers)
     }
 
     if (input->isBitNot() && input->toBitNot()->specialization_ == MIRType_Int32) {
-        JS_ASSERT(input->getOperand(0).type() == MIRType_Int32);
+        JS_ASSERT(input->getOperand(0)->type() == MIRType_Int32);
         return input->getOperand(0); // ~~x => x
     }
 
