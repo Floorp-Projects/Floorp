@@ -318,7 +318,10 @@ function appendElement(aP, aTagName, aClassName)
 function appendElementWithText(aP, aTagName, aClassName, aText)
 {
   let e = appendElement(aP, aTagName, aClassName);
-  appendTextNode(e, aText);
+  // Setting textContent clobbers existing children, but there are none.  More
+  // importantly, it avoids creating a JS-land object for the node, saving
+  // memory.
+  e.textContent = aText;
   return e;
 }
 
