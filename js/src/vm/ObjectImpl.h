@@ -152,6 +152,9 @@ struct PropDesc {
         isUndefined_(false)
     {}
 
+    inline PropDesc(const Value &getter, const Value &setter,
+                    Enumerability enumerable, Configurability configurable);
+
     /*
      * 8.10.5 ToPropertyDescriptor(Obj)
      *
@@ -1136,9 +1139,13 @@ class ObjectImpl : public gc::Cell
     inline uint32_t numDynamicSlots() const;
 
     const Shape * nativeLookup(JSContext *cx, jsid id);
+    inline const Shape * nativeLookup(JSContext *cx, PropertyId pid);
+    inline const Shape * nativeLookup(JSContext *cx, PropertyName *name);
 
 #ifdef DEBUG
     const Shape * nativeLookupNoAllocation(JSContext *cx, jsid id);
+    inline const Shape * nativeLookupNoAllocation(JSContext *cx, PropertyId pid);
+    inline const Shape * nativeLookupNoAllocation(JSContext *cx, PropertyName *name);
 #endif
 
     inline Class *getClass() const;
@@ -1312,9 +1319,25 @@ Downcast(Handle<ObjectImpl*> obj)
     return Handle<JSObject*>::fromMarkedLocation(reinterpret_cast<JSObject* const*>(obj.address()));
 }
 
+/* Generic [[GetOwnProperty]] method. */
 bool
 GetOwnElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, unsigned resolveFlags,
               PropDesc *desc);
+extern bool
+GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid, unsigned resolveFlags,
+               PropDesc *desc);
+inline bool
+GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<PropertyName*> name,
+               unsigned resolveFlags, PropDesc *desc)
+{
+    return GetOwnProperty(cx, obj, PropertyId(name), resolveFlags, desc);
+}
+inline bool
+GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<SpecialId> sid, unsigned resolveFlags,
+               PropDesc *desc)
+{
+    return GetOwnProperty(cx, obj, PropertyId(sid), resolveFlags, desc);
+}
 
 /* Proposed default [[GetP]](Receiver, P) method. */
 extern bool
