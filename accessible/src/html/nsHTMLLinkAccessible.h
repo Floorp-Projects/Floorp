@@ -57,6 +57,7 @@ public:
   virtual void Value(nsString& aValue);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
+  virtual PRUint64 NativeLinkState() const;
 
   // ActionAccessible
   virtual PRUint8 ActionCount();
