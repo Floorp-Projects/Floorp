@@ -4,7 +4,7 @@ This pywebsocket code is mostly unchanged from the source at
 
 The current Mozilla code is based on
 
-  svnversion:  606  (supports RFC 6455, aka Sec-WebSocket-Version: 13)
+  svnversion:  631  (supports RFC 6455)
 
 --------------------------------------------------------------------------------
 STEPS TO UPDATE MOZILLA TO NEWER PYWEBSOCKET VERSION

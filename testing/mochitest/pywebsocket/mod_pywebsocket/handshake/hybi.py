@@ -266,6 +266,9 @@ class Handshaker(object):
 
     def _set_protocol(self):
         self._request.ws_protocol = None
+        # MOZILLA
+        self._request.sts = None
+        # /MOZILLA
 
         protocol_header = self._request.headers_in.get(
             common.SEC_WEBSOCKET_PROTOCOL_HEADER)
@@ -359,6 +362,11 @@ class Handshaker(object):
             response.append(format_header(
                 common.SEC_WEBSOCKET_EXTENSIONS_HEADER,
                 format_extensions(self._request.ws_extensions)))
+        # MOZILLA: Add HSTS header if requested to
+        if self._request.sts is not None:
+            response.append(format_header("Strict-Transport-Security",
+                                          self._request.sts))
+        # /MOZILLA
         response.append('\r\n')
 
         raw_response = ''.join(response)
