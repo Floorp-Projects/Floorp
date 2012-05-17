@@ -1235,6 +1235,22 @@ js_IsCallable(const js::Value &v)
 
 namespace js {
 
+PropDesc::PropDesc(const Value &getter, const Value &setter,
+                   Enumerability enumerable, Configurability configurable)
+  : pd_(UndefinedValue()),
+    value_(UndefinedValue()),
+    get_(getter), set_(setter),
+    attrs(JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED |
+          (enumerable ? JSPROP_ENUMERATE : 0) |
+          (configurable ? 0 : JSPROP_PERMANENT)),
+    hasGet_(true), hasSet_(true),
+    hasValue_(false), hasWritable_(false), hasEnumerable_(true), hasConfigurable_(true),
+    isUndefined_(false)
+{
+    MOZ_ASSERT(getter.isUndefined() || js_IsCallable(getter));
+    MOZ_ASSERT(setter.isUndefined() || js_IsCallable(setter));
+}
+
 inline JSObject *
 GetInnerObject(JSContext *cx, HandleObject obj)
 {
