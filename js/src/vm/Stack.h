@@ -1819,7 +1819,7 @@ class GeneratorFrameGuard : public FrameGuard
 class StackIter
 {
     friend class ContextStack;
-    JSContext    *cx_;
+    JSContext    *maybecx_;
   public:
     enum SavedOption { STOP_AT_SAVED, GO_THROUGH_SAVED };
   private:
@@ -1846,6 +1846,7 @@ class StackIter
 
   public:
     StackIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
+    StackIter(JSRuntime *rt, StackSegment &seg);
 
     bool done() const { return state_ == DONE; }
     StackIter &operator++();
