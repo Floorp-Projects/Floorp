@@ -185,7 +185,7 @@ public:
    *
    * @param  [in/out] where to fill the states into.
    */
-  virtual void ApplyARIAState(PRUint64* aState);
+  virtual void ApplyARIAState(PRUint64* aState) const;
 
   /**
    * Returns the accessible name provided by native markup. It doesn't take
@@ -228,10 +228,25 @@ public:
   virtual PRUint64 State();
 
   /**
+   * Return link states present on the accessible.
+   */
+  PRUint64 LinkState() const
+  {
+    PRUint64 state = NativeLinkState();
+    ApplyARIAState(&state);
+    return state;
+  }
+
+  /**
    * Return the states of accessible, not taking into account ARIA states.
    * Use State() to get complete set of states.
    */
   virtual PRUint64 NativeState();
+
+  /**
+   * Return native link states present on the accessible.
+   */
+  virtual PRUint64 NativeLinkState() const;
 
   /**
    * Return bit set of invisible and offscreen states.
