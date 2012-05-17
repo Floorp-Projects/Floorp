@@ -111,10 +111,13 @@ html|*#highlighter-nodeinfobar-tagname {
 }
 
 #inspector-layoutview-container > iframe {
-  -moz-transition-property: height;
-  -moz-transition-duration: 0.1s;
   /* header size */
   height: 22px;
+}
+
+#inspector-layoutview-container:not([disable-transitions]) > iframe {
+  -moz-transition-property: height;
+  -moz-transition-duration: 0.2s;
 }
 
 #inspector-layoutview-container > iframe[open] {

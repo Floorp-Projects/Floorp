@@ -1078,6 +1078,7 @@
              hidden="true">
 #ifdef XP_MACOSX
           <toolbarbutton id="developer-toolbar-closebutton"
+                         class="devtools-closebutton"
                          oncommand="DeveloperToolbar.hide();"
                          tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
 #endif
@@ -1102,6 +1103,7 @@
                          command="Tools:Debugger"/>
 #ifndef XP_MACOSX
           <toolbarbutton id="developer-toolbar-closebutton"
+                         class="devtools-closebutton"
                          oncommand="DeveloperToolbar.hide();"
                          tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
 #endif

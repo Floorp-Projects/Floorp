@@ -97,6 +97,9 @@ LayoutView.prototype = {
     // Build the layout view in the sidebar.
     this.buildView();
 
+    this.bound_handleKeypress = this.handleKeypress.bind(this);
+    this.iframe.addEventListener("keypress", this.bound_handleKeypress, true);
+
     // Get messages from the iframe.
     this.inspector.chromeWindow.addEventListener("message", this.onMessage, true);
 
@@ -151,6 +154,7 @@ LayoutView.prototype = {
     this.inspector.removeListener("locked", this.onLock);
     this.inspector.removeListener("unlocked", this.onUnlock);
     this.browser.removeEventListener("MozAfterPaint", this.update, true);
+    this.iframe.removeEventListener("keypress", this.bound_handleKeypress, true);
     this.inspector.chromeWindow.removeEventListener("message", this.onMessage, true);
     this.close();
     this.iframe = null;
@@ -216,6 +220,28 @@ LayoutView.prototype = {
   },
 
   /**
+   * Handle keypress.
+   */
+   handleKeypress: function LV_handleKeypress(event) {
+     let win = this.inspector.chromeWindow;
+
+     // avoid scroll
+     if (event.keyCode == win.KeyEvent.DOM_VK_LEFT ||
+         event.keyCode == win.KeyEvent.DOM_VK_RIGHT ||
+         event.keyCode == win.KeyEvent.DOM_VK_UP ||
+         event.keyCode == win.KeyEvent.DOM_VK_DOWN ||
+         event.keyCode == win.KeyEvent.DOM_VK_PAGE_UP ||
+         event.keyCode == win.KeyEvent.DOM_VK_PAGE_DOWN) {
+
+        event.preventDefault();
+     }
+
+     if (event.charCode == win.KeyEvent.DOM_VK_SPACE) {
+       this.toggle(true);
+     }
+   },
+
+  /**
    * Open the view container.
    *
    * @param aUserAction Is the action triggered by the user (click on the
@@ -228,6 +254,9 @@ LayoutView.prototype = {
     if (aUserAction) {
       this.inspector._layoutViewIsOpen = true;
       Services.prefs.setBoolPref("devtools.layoutview.open", true);
+      this.view.removeAttribute("disable-transitions");
+    } else {
+      this.view.setAttribute("disable-transitions", "true");
     }
     this.iframe.setAttribute("open", "true");
     this.update();
@@ -246,6 +275,9 @@ LayoutView.prototype = {
     if (aUserAction) {
       this.inspector._layoutViewIsOpen = false;
       Services.prefs.setBoolPref("devtools.layoutview.open", false);
+      this.view.removeAttribute("disable-transitions");
+    } else {
+      this.view.setAttribute("disable-transitions", "true");
     }
     this.iframe.removeAttribute("open");
   },
