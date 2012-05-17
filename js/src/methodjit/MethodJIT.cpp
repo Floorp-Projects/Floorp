@@ -1097,7 +1097,7 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
 static inline JaegerStatus
 CheckStackAndEnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, bool partial)
 {
-    JS_CHECK_RECURSION(cx, return Jaeger_Throwing);
+    JS_CHECK_RECURSION(cx, return Jaeger_ThrowBeforeEnter);
 
     JS_ASSERT(!cx->compartment->activeAnalysis);
     JS_ASSERT(code);
