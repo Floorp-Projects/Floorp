@@ -48,7 +48,8 @@ def patch(patch, plevel, srcdir):
 
 def build_package(package_source_dir, package_build_dir, configure_args,
                    make = old_make):
-    os.mkdir(package_build_dir)
+    if not os.path.exists(package_build_dir):
+        os.mkdir(package_build_dir)
     run_in(package_build_dir,
            ["%s/configure" % package_source_dir] + configure_args)
     run_in(package_build_dir, [make, "-j8"])
@@ -161,6 +162,12 @@ def build_one_stage_aux(stage_dir, is_stage_one):
 
     build_linux_headers(tool_inst_dir)
 
+    # zlib's configure only works if run from the source dir, copy the source
+    zlib_build_dir = stage_dir + '/zlib'
+    shutil.copytree(zlib_source_dir, zlib_build_dir)
+    build_package(zlib_build_dir, zlib_build_dir,
+                  ["--prefix=%s" % tool_inst_dir])
+
     binutils_build_dir = stage_dir + '/binutils'
     build_package(binutils_source_dir, binutils_build_dir,
                   ["--prefix=%s" % tool_inst_dir,
@@ -197,6 +204,7 @@ gawk_version = "3.1.5"
 make_version = "3.81"
 gcc_version = "4.5.2"
 mpfr_version = "2.4.2"
+zlib_version = "1.2.3"
 gmp_version = "5.0.1"
 mpc_version = "0.8.1"
 unifdef_version = "2.6"
@@ -219,6 +227,7 @@ gcc_source_uri = "http://ftp.gnu.org/gnu/gcc/gcc-%s/gcc-%s.tar.bz2" % \
     (gcc_version, gcc_version)
 mpfr_source_uri = "http://www.mpfr.org/mpfr-%s/mpfr-%s.tar.bz2" % \
     (mpfr_version, mpfr_version)
+zlib_source_uri = "http://iweb.dl.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.bz2" % (zlib_version, zlib_version)
 gmp_source_uri = "http://ftp.gnu.org/gnu/gmp/gmp-%s.tar.bz2" % gmp_version
 mpc_source_uri = "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % \
     mpc_version
@@ -232,6 +241,7 @@ make_source_tar = download_uri(make_source_uri)
 unifdef_source_tar = download_uri(unifdef_source_uri)
 mpc_source_tar = download_uri(mpc_source_uri)
 mpfr_source_tar = download_uri(mpfr_source_uri)
+zlib_source_tar = download_uri(zlib_source_uri)
 gmp_source_tar = download_uri(gmp_source_uri)
 gcc_source_tar = download_uri(gcc_source_uri)
 
@@ -244,6 +254,7 @@ make_source_dir  = build_source_dir('make-', make_version)
 unifdef_source_dir  = build_source_dir('unifdef-', unifdef_version)
 mpc_source_dir  = build_source_dir('mpc-', mpc_version)
 mpfr_source_dir = build_source_dir('mpfr-', mpfr_version)
+zlib_source_dir = build_source_dir('zlib-', zlib_version)
 gmp_source_dir  = build_source_dir('gmp-', gmp_version)
 gcc_source_dir  = build_source_dir('gcc-', gcc_version)
 
@@ -261,6 +272,7 @@ if not os.path.exists(source_dir):
     extract(unifdef_source_tar, source_dir)
     extract(mpc_source_tar, source_dir)
     extract(mpfr_source_tar, source_dir)
+    extract(zlib_source_tar, source_dir)
     extract(gmp_source_tar, source_dir)
     extract(gcc_source_tar, source_dir)
     patch('plugin_finish_decl.diff', 0, gcc_source_dir)
@@ -284,21 +296,16 @@ build_one_stage({"PATH"   : basic_path,
                  "CXX"    : "g++" },
                 stage1_dir, True)
 
-stage1_tool_inst_dir = stage1_dir + '/inst'
-stage2_dir = build_dir + '/stage2'
-build_one_stage({"PATH"   : stage1_tool_inst_dir + "/bin:" + basic_path,
-                 "CC"     : "gcc -fgnu89-inline",
-                 "CXX"    : "g++",
-                 "RANLIB" : "true" },
-                stage2_dir, False)
+for stage_num in range(2, 4):
+    prev_stage_dir = build_dir + '/stage' + str(stage_num - 1)
+    prev_stage_inst_dir = prev_stage_dir + '/inst'
+    cur_stage_dir = build_dir + '/stage' + str(stage_num)
+    build_one_stage({"PATH"   : prev_stage_inst_dir + "/bin:" + basic_path,
+                     "CC"     : "gcc -fgnu89-inline",
+                     "CXX"    : "g++",
+                     "RANLIB" : "true" },
+                    cur_stage_dir, False)
 
-stage2_tool_inst_dir = stage2_dir + '/inst'
 stage3_dir = build_dir + '/stage3'
-build_one_stage({"PATH"   : stage2_tool_inst_dir + "/bin:" + basic_path,
-                 "CC"     : "gcc -fgnu89-inline",
-                 "CXX"    : "g++",
-                 "RANLIB" : "true" },
-                stage3_dir, False)
-
 build_tar_package(aux_inst_dir + "/bin/tar",
                   "toolchain.tar", stage3_dir, "inst")
