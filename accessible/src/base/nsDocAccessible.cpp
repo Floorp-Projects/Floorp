@@ -341,7 +341,7 @@ nsDocAccessible::NativeState()
 
 // nsAccessible public method
 void
-nsDocAccessible::ApplyARIAState(PRUint64* aState)
+nsDocAccessible::ApplyARIAState(PRUint64* aState) const
 {
   // Combine with states from outer doc
   // 

@@ -1045,7 +1045,7 @@ ARIAGridCellAccessible::IsSelected(bool* aIsSelected)
 // nsAccessible
 
 void
-ARIAGridCellAccessible::ApplyARIAState(PRUint64* aState)
+ARIAGridCellAccessible::ApplyARIAState(PRUint64* aState) const
 {
   nsHyperTextAccessibleWrap::ApplyARIAState(aState);
 
