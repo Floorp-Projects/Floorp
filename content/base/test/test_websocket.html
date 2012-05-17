@@ -25,8 +25,8 @@
  *  5. client uses an invalid protocol value;
  *  6. counter and encoding check;
  *  7. onmessage event origin property check
- *  8. client calls close() and the server sends the close frame in
- *     acknowledgement;
+ *  8. client calls close() and the server sends the close frame (with no code
+ *     or reason) in acknowledgement;
  *  9. client closes the connection before the ws connection is established;
  * 10. client sends a message before the ws connection is established;
  * 11. a simple hello echo;
@@ -55,7 +55,7 @@
  * 31. ctor using valid 2 element sub-protocol array with 1 element server
  *     will reject and one server will accept.
  * 32. ctor using invalid sub-protocol array that contains duplicate items
- * 33. default close code test
+ * 33. test for sending/receiving custom close code (but no close reason)
  * 34. test for receiving custom close code and reason
  * 35. test for sending custom close code and reason
  * 36. negative test for sending out of range close code
@@ -387,6 +387,10 @@ function test8()
   ws.onclose = function(e)
   {
     shouldCloseCleanly(e);
+    // We called close() with no close code: so pywebsocket will also send no
+    // close code, which translates to code 1005 
+    ok(e.code == 1005, "test-8 close code has wrong value:" + e.code);
+    ok(e.reason == "", "test-8 close reason has wrong value:" + e.reason);
     doTest(9);
   };
 }
@@ -461,7 +465,7 @@ function test11()
   ws.onmessage = function(e)
   {
     ok(e.data == "server data", "bad received message in test-11!");
-    ws.close();
+    ws.close(1000, "Have a nice day");
 
 // this ok() is disabled due to a race condition - it state may have
 // advanced through 2 (closing) and into 3 (closed) before it is evald
@@ -471,6 +475,8 @@ function test11()
   {
     ok(ws.readyState == 3, "onclose bad readyState in test-11!");
     shouldCloseCleanly(e);
+    ok(e.code == 1000, "test 11 got wrong close code: " + e.code);
+    ok(e.reason == "Have a nice day", "test 11 got wrong close reason: " + e.reason);
     doTest(12);
   }
 }
@@ -942,14 +948,15 @@ function test33()
   ws.onopen = function(e)
   {
     ok(true, "test 33 open");
-    ws.close();
+    ws.close(3131);   // pass code but not reason
   };
 
   ws.onclose = function(e)
   {
     ok(true, "test 33 close");
-    ok(e.wasClean, "test 33 closed cleanly");
-    ok(e.code == 1000, "test 33 had normal 1000 error code");
+    shouldCloseCleanly(e);
+    ok(e.code == 3131, "test 33 got wrong close code: " + e.code);
+    ok(e.reason === "", "test 33 got wrong close reason: " + e.reason);
     doTest(34);
   };
 }
