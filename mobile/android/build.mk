@@ -79,7 +79,9 @@ ifeq ($(OS_TARGET),Android)
 ifneq ($(MOZ_ANDROID_INSTALL_TARGET),)
 ANDROID_SERIAL = $(MOZ_ANDROID_INSTALL_TARGET)
 endif
-ifeq ($(ANDROID_SERIAL),)
+ifneq ($(ANDROID_SERIAL),)
+export ANDROID_SERIAL
+else
 # Determine if there's more than one device connected
 android_devices=$(filter device,$(shell $(ANDROID_PLATFORM_TOOLS)/adb devices))
 ifneq ($(android_devices),device)
@@ -90,7 +92,6 @@ install::
 endif
 endif
 
-export ANDROID_SERIAL
 install::
 	$(ANDROID_PLATFORM_TOOLS)/adb install -r $(DIST)/$(PKG_PATH)$(PKG_BASENAME).apk
 else
