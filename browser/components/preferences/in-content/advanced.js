@@ -20,6 +20,9 @@ var gAdvancedPane = {
     if (preference.value !== null)
         advancedPrefs.selectedIndex = preference.value;
 
+#ifdef HAVE_SHELL_SERVICE
+    this.updateSetDefaultBrowser();
+#endif
 #ifdef MOZ_UPDATER
     this.updateReadPrefs();
 #endif
@@ -667,37 +670,26 @@ var gAdvancedPane = {
    */
 
   /**
-   * Checks whether the browser is currently registered with the operating
-   * system as the default browser.  If the browser is not currently the
-   * default browser, the user is given the option of making it the default;
-   * otherwise, the user is informed that this browser already is the browser.
+   * Show button for setting browser as default browser or information that
+   * browser is already the default browser.
    */
-  checkNow: function ()
+  updateSetDefaultBrowser: function()
   {
     var shellSvc = Components.classes["@mozilla.org/browser/shell-service;1"]
                              .getService(Components.interfaces.nsIShellService);
-    var brandBundle = document.getElementById("bundleBrand");
-    var shellBundle = document.getElementById("bundleShell");
-    var brandShortName = brandBundle.getString("brandShortName");
-    var promptTitle = shellBundle.getString("setDefaultBrowserTitle");
-    var promptMessage;
-    const IPS = Components.interfaces.nsIPromptService;
-    var psvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                         .getService(IPS);
-    if (!shellSvc.isDefaultBrowser(false)) {
-      promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage",
-                                                     [brandShortName]);
-      var rv = psvc.confirmEx(window, promptTitle, promptMessage,
-                              IPS.STD_YES_NO_BUTTONS,
-                              null, null, null, null, { });
-      if (rv == 0)
-        shellSvc.setDefaultBrowser(true, false);
-    }
-    else {
-      promptMessage = shellBundle.getFormattedString("alreadyDefaultBrowser",
-                                                     [brandShortName]);
-      psvc.alert(window, promptTitle, promptMessage);
-    }
+    let selectedIndex = shellSvc.isDefaultBrowser(false) ? 1 : 0;
+    document.getElementById("setDefaultPane").selectedIndex = selectedIndex;
+  },
+
+  /**
+   * Set browser as the operating system default browser.
+   */
+  setDefaultBrowser: function()
+  {
+    var shellSvc = Components.classes["@mozilla.org/browser/shell-service;1"]
+                             .getService(Components.interfaces.nsIShellService);
+    shellSvc.setDefaultBrowser(true, false);
+    document.getElementById("setDefaultPane").selectedIndex = 1;
   }
 #endif
 };
