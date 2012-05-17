@@ -1563,6 +1563,10 @@ class StackSpace
 
     /* We only report the committed size;  uncommitted size is uninteresting. */
     JS_FRIEND_API(size_t) sizeOfCommitted();
+
+#ifdef DEBUG
+    bool containsSlow(StackFrame *fp);
+#endif
 };
 
 /*****************************************************************************/
