@@ -136,14 +136,8 @@ static const KeyPair kKeyPairs[] = {
     { NS_VK_END,        GDK_KP_End },
     { NS_VK_INSERT,     GDK_KP_Insert },
     { NS_VK_DELETE,     GDK_KP_Delete },
-
-    { NS_VK_MULTIPLY,   GDK_KP_Multiply },
-    { NS_VK_ADD,        GDK_KP_Add },
-    { NS_VK_SEPARATOR,  GDK_KP_Separator },
-    { NS_VK_SUBTRACT,   GDK_KP_Subtract },
-    { NS_VK_DECIMAL,    GDK_KP_Decimal },
-    { NS_VK_DIVIDE,     GDK_KP_Divide },
     { NS_VK_RETURN,     GDK_KP_Enter },
+
     { NS_VK_NUM_LOCK,   GDK_Num_Lock },
     { NS_VK_SCROLL_LOCK,GDK_Scroll_Lock },
 
@@ -690,6 +684,26 @@ KeymapWrapper::ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent)
         return DOMKeyCode;
     }
 
+    // printable numpad keys should be resolved here.
+    switch (keyval) {
+        case GDK_KP_Multiply:  return NS_VK_MULTIPLY;
+        case GDK_KP_Add:       return NS_VK_ADD;
+        case GDK_KP_Separator: return NS_VK_SEPARATOR;
+        case GDK_KP_Subtract:  return NS_VK_SUBTRACT;
+        case GDK_KP_Decimal:   return NS_VK_DECIMAL;
+        case GDK_KP_Divide:    return NS_VK_DIVIDE;
+        case GDK_KP_0:         return NS_VK_NUMPAD0;
+        case GDK_KP_1:         return NS_VK_NUMPAD1;
+        case GDK_KP_2:         return NS_VK_NUMPAD2;
+        case GDK_KP_3:         return NS_VK_NUMPAD3;
+        case GDK_KP_4:         return NS_VK_NUMPAD4;
+        case GDK_KP_5:         return NS_VK_NUMPAD5;
+        case GDK_KP_6:         return NS_VK_NUMPAD6;
+        case GDK_KP_7:         return NS_VK_NUMPAD7;
+        case GDK_KP_8:         return NS_VK_NUMPAD8;
+        case GDK_KP_9:         return NS_VK_NUMPAD9;
+    }
+
     // First, try to handle alphanumeric input, not listed in nsKeycodes:
     // most likely, more letters will be getting typed in than things in
     // the key list, so we will look through these first.
@@ -706,11 +720,6 @@ KeymapWrapper::ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent)
     // numbers
     if (keyval >= GDK_0 && keyval <= GDK_9) {
         return keyval - GDK_0 + NS_VK_0;
-    }
-
-    // keypad numbers
-    if (keyval >= GDK_KP_0 && keyval <= GDK_KP_9) {
-        return keyval - GDK_KP_0 + NS_VK_NUMPAD0;
     }
 
     return GetDOMKeyCodeFromKeyPairs(keyval);
@@ -734,9 +743,24 @@ KeymapWrapper::GuessGDKKeyval(PRUint32 aDOMKeyCode)
         return aDOMKeyCode - NS_VK_0 + GDK_0;
     }
 
-    // keypad numbers
-    if (aDOMKeyCode >= NS_VK_NUMPAD0 && aDOMKeyCode <= NS_VK_NUMPAD9) {
-        return aDOMKeyCode - NS_VK_NUMPAD0 + GDK_KP_0;
+    // keys in numpad
+    switch (aDOMKeyCode) {
+        case NS_VK_MULTIPLY:  return GDK_KP_Multiply;
+        case NS_VK_ADD:       return GDK_KP_Add;
+        case NS_VK_SEPARATOR: return GDK_KP_Separator;
+        case NS_VK_SUBTRACT:  return GDK_KP_Subtract;
+        case NS_VK_DECIMAL:   return GDK_KP_Decimal;
+        case NS_VK_DIVIDE:    return GDK_KP_Divide;
+        case NS_VK_NUMPAD0:   return GDK_KP_0;
+        case NS_VK_NUMPAD1:   return GDK_KP_1;
+        case NS_VK_NUMPAD2:   return GDK_KP_2;
+        case NS_VK_NUMPAD3:   return GDK_KP_3;
+        case NS_VK_NUMPAD4:   return GDK_KP_4;
+        case NS_VK_NUMPAD5:   return GDK_KP_5;
+        case NS_VK_NUMPAD6:   return GDK_KP_6;
+        case NS_VK_NUMPAD7:   return GDK_KP_7;
+        case NS_VK_NUMPAD8:   return GDK_KP_8;
+        case NS_VK_NUMPAD9:   return GDK_KP_9;
     }
 
     // misc other things
