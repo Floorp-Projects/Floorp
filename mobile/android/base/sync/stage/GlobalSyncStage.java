@@ -78,4 +78,11 @@ public interface GlobalSyncStage {
   public void execute() throws NoSuchStageException;
   public void resetLocal();
   public void wipeLocal() throws Exception;
+  /**
+   * What storage version number this engine supports.
+   * <p>
+   * Used to generate a fresh meta/global record for upload.
+   * @return a version number or <code>null</code> to never include this engine in a fresh meta/global record.
+   */
+  public Integer getStorageVersion();
 }
