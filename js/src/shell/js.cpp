@@ -769,110 +769,174 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
-EvaluateWithLocation(JSContext *cx, unsigned argc, jsval *vp)
+class AutoNewContext
 {
-    if (argc != 3) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                             argc > 3 ? JSSMSG_TOO_MANY_ARGS : JSSMSG_NOT_ENOUGH_ARGS,
-                             "evalWithLocation");
-        return false;
+  private:
+    JSContext *oldcx;
+    JSContext *newcx;
+    Maybe<JSAutoSuspendRequest> suspension;
+    Maybe<JSAutoRequest> newRequest;
+
+    AutoNewContext(const AutoNewContext &) MOZ_DELETE;
+
+  public:
+    AutoNewContext() : oldcx(NULL), newcx(NULL) {}
+
+    bool enter(JSContext *cx) {
+        JS_ASSERT(!JS_IsExceptionPending(cx));
+        oldcx = cx;
+        newcx = NewContext(JS_GetRuntime(cx));
+        if (!newcx)
+            return false;
+        JS_SetOptions(newcx, JS_GetOptions(newcx) | JSOPTION_DONT_REPORT_UNCAUGHT);
+        JS_SetGlobalObject(newcx, JS_GetGlobalForScopeChain(cx));
+
+        suspension.construct(cx);
+        newRequest.construct(newcx);
+        return true;
     }
 
-    JSString *code = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
-    if (!code)
-        return false;
-    JS::Anchor<JSString *> a_code(code);
+    JSContext *get() { return newcx; }
 
-    size_t codeLength;
-    const jschar *codeChars = JS_GetStringCharsAndLength(cx, code, &codeLength);
-    if (!codeChars)
-        return false;
-
-    JSString *filename = JS_ValueToString(cx, JS_ARGV(cx, vp)[1]);
-    if (!filename)
-        return false;
-
-    uint32_t lineno;
-    if (!JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[2], &lineno))
-        return false;
-
-    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
-    if (!thisobj)
-        return false;
-
-    if ((JS_GetClass(thisobj)->flags & JSCLASS_IS_GLOBAL) != JSCLASS_IS_GLOBAL) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
-                             "this-value passed to evalWithLocation()", "not a global object");
-        return false;
+    ~AutoNewContext() {
+        if (newcx) {
+            RootedVarValue exc(oldcx);
+            bool throwing = JS_IsExceptionPending(newcx);
+            if (throwing)
+                JS_GetPendingException(newcx, exc.address());
+            newRequest.destroy();
+            suspension.destroy();
+            if (throwing)
+                JS_SetPendingException(oldcx, exc);
+            JS_DestroyContextNoGC(newcx);
+        }
     }
-
-    char *filenameBytes = JS_EncodeString(cx, filename);
-    if (!filenameBytes)
-        return false;
-
-    jsval rval;
-    bool ok = JS_EvaluateUCScript(cx, thisobj, codeChars, codeLength, filenameBytes, lineno, &rval);
-    JS_free(cx, filenameBytes);
-
-    if (!ok)
-        return false;
-
-    JS_SET_RVAL(cx, vp, rval);
-    return true;
-}
-
-static JSBool
-EvaluateCommon(JSContext *cx, unsigned argc, jsval *vp, bool compileAndGo)
-{
-    if (argc != 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                             (argc != 1) ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_INVALID_ARGS,
-                             "evaluate");
-        return false;
-    }
-
-    JSString *code = JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]);
-
-    size_t codeLength;
-    const jschar *codeChars = JS_GetStringCharsAndLength(cx, code, &codeLength);
-    if (!codeChars)
-        return false;
-
-    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
-    if (!thisobj)
-        return false;
-
-    if ((JS_GetClass(thisobj)->flags & JSCLASS_IS_GLOBAL) != JSCLASS_IS_GLOBAL) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
-                             "this-value passed to evaluate()", "not a global object");
-        return false;
-    }
-
-    if (compileAndGo) {
-        // JS_EvaluateUCScript always enables the compile-and-go option.
-        return JS_EvaluateUCScript(cx, thisobj, codeChars, codeLength, "@evaluate", 1, vp);
-    } else {
-        uint32_t saved = JS_GetOptions(cx);
-
-        JS_SetOptions(cx, saved & ~JSOPTION_COMPILE_N_GO);
-        JSScript *script = JS_CompileUCScript(cx, thisobj, codeChars, codeLength, "@evaluate", 1);
-        JS_SetOptions(cx, saved);
-
-        return script && JS_ExecuteScript(cx, thisobj, script, vp);
-    }
-}
+};
 
 static JSBool
 Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 {
-    return EvaluateCommon(cx, argc, vp, true);
-}
+    jsval *argv = JS_ARGV(cx, vp);
 
-static JSBool
-EvaluateNonCompileAndGo(JSContext *cx, unsigned argc, jsval *vp)
-{
-    return EvaluateCommon(cx, argc, vp, false);
+    if (argc < 1 || argc > 2) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                             argc < 1 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
+                             "evaluate");
+        return false;
+    }
+    if (!JSVAL_IS_STRING(argv[0]) || (argc == 2 && JSVAL_IS_PRIMITIVE(argv[1]))) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "evaluate");
+        return false;
+    }
+
+    bool newContext;
+    RootedVarObject global(cx, NULL);
+    bool compileAndGo = true;
+    const char *fileName = "@evaluate";
+    JSAutoByteString fileNameBytes;
+    unsigned lineNumber = 1;
+
+    global = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
+    if (!global)
+        return false;
+
+    if (argc == 2) {
+        RootedVarObject options(cx, JSVAL_TO_OBJECT(argv[1]));
+        jsval v;
+
+        if (!JS_GetProperty(cx, options, "newContext", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            JSBool b;
+            if (!JS_ValueToBoolean(cx, v, &b))
+                return false;
+            newContext = !!b;
+        }
+
+        if (!JS_GetProperty(cx, options, "compileAndGo", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            JSBool b;
+            if (!JS_ValueToBoolean(cx, v, &b))
+                return false;
+            compileAndGo = !!b;
+        }
+
+        if (!JS_GetProperty(cx, options, "fileName", &v))
+            return false;
+        if (JSVAL_IS_NULL(v)) {
+            fileName = NULL;
+        } else if (!JSVAL_IS_VOID(v)) {
+            JSString *s = JS_ValueToString(cx, v);
+            if (!s)
+                return false;
+            fileName = fileNameBytes.encode(cx, s);
+            if (!fileName)
+                return false;
+        }
+
+        if (!JS_GetProperty(cx, options, "lineNumber", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            uint32_t u;
+            if (!JS_ValueToECMAUint32(cx, v, &u))
+                return false;
+            lineNumber = u;
+        }
+
+        if (!JS_GetProperty(cx, options, "global", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            global = JSVAL_IS_PRIMITIVE(v) ? NULL : JSVAL_TO_OBJECT(v);
+            if (global) {
+                global = JS_UnwrapObject(global);
+                if (!global)
+                    return false;
+            }
+            if (!global || !(JS_GetClass(global)->flags & JSCLASS_IS_GLOBAL)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                                     "\"global\" passed to evaluate()", "not a global object");
+                return false;
+            }
+        }
+    }
+
+    RootedVarString code(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+
+    size_t codeLength;
+    const jschar *codeChars = JS_GetStringCharsAndLength(cx, code, &codeLength);
+    if (!codeChars)
+        return false;
+
+    AutoNewContext ancx;
+    if (newContext) {
+        if (!ancx.enter(cx))
+            return false;
+        cx = ancx.get();
+    }
+
+    {
+        JSAutoEnterCompartment aec;
+        if (!aec.enter(cx, global))
+            return false;
+
+        if (compileAndGo) {
+            // JS_EvaluateUCScript always enables the compile-and-go option.
+            if (!JS_EvaluateUCScript(cx, global, codeChars, codeLength, fileName, lineNumber, vp))
+                return false;
+        } else {
+            uint32_t saved = JS_GetOptions(cx);
+
+            JS_SetOptions(cx, saved & ~JSOPTION_COMPILE_N_GO);
+            JSScript *script = JS_CompileUCScript(cx, global, codeChars, codeLength, fileName, lineNumber);
+            JS_SetOptions(cx, saved);
+
+            if (!script || !JS_ExecuteScript(cx, global, script, vp))
+                return false;
+        }
+    }
+
+    return JS_WrapValue(cx, vp);
 }
 
 static JSString *
@@ -3502,17 +3566,15 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "load(['foo.js' ...])",
 "  Load files named by string arguments."),
 
-    JS_FN_HELP("evaluate", Evaluate, 1, 0,
-"evaluate(code)",
-"  Evaluate code as though it were the contents of a file."),
-
-    JS_FN_HELP("evaluateNonCompileAndGo", EvaluateNonCompileAndGo, 1, 0,
-"evaluateNonCompileAndGo(code)",
-"  Evaluate code like evaluate() but with compile-and-go turned off."),
-
-    JS_FN_HELP("evalWithLocation", EvaluateWithLocation, 3, 0,
-"evalWithLocation(code, filename, lineno)",
-"  Eval code as if loaded from the given filename and line number."),
+    JS_FN_HELP("evaluate", Evaluate, 2, 0,
+"evaluate(code[, options])",
+"  Evaluate code as though it were the contents of a file.\n"
+"  options is an optional object that may have these properties:\n"
+"      compileAndGo: use the compile-and-go compiler option (default: true)\n"
+"      fileName: filename for error messages and debug info\n"
+"      lineNumber: starting line number for error messages and debug info\n"
+"      global: global in which to execute the code\n"
+"      newContext: if true, create and use a new cx (default: false)\n"),
 
     JS_FN_HELP("run", Run, 1, 0,
 "run('foo.js')",
