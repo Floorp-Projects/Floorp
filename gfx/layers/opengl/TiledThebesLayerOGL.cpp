@@ -237,18 +237,18 @@ TiledThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer, const nsIntPoint& aOf
   const nsIntRegion& visibleRegion = GetEffectiveVisibleRegion();
   const nsIntRect visibleRect = visibleRegion.GetBounds();
 
-  unsigned int rowCount = 0;
-  int tileX = 0;
-  for (size_t x = visibleRect.x; x < visibleRect.x + visibleRect.width;) {
+  uint32_t rowCount = 0;
+  uint32_t tileX = 0;
+  for (int32_t x = visibleRect.x; x < visibleRect.x + visibleRect.width;) {
     rowCount++;
-    uint16_t tileStartX = x % mVideoMemoryTiledBuffer.GetTileLength();
-    uint16_t w = mVideoMemoryTiledBuffer.GetTileLength() - tileStartX;
+    int32_t tileStartX = mVideoMemoryTiledBuffer.GetTileStart(x);
+    int16_t w = mVideoMemoryTiledBuffer.GetTileLength() - tileStartX;
     if (x + w > visibleRect.x + visibleRect.width)
       w = visibleRect.x + visibleRect.width - x;
     int tileY = 0;
-    for (size_t y = visibleRect.y; y < visibleRect.y + visibleRect.height;) {
-      uint16_t tileStartY = y % mVideoMemoryTiledBuffer.GetTileLength();
-      uint16_t h = mVideoMemoryTiledBuffer.GetTileLength() - tileStartY;
+    for (int32_t y = visibleRect.y; y < visibleRect.y + visibleRect.height;) {
+      int32_t tileStartY = mVideoMemoryTiledBuffer.GetTileStart(y);
+      int16_t h = mVideoMemoryTiledBuffer.GetTileLength() - tileStartY;
       if (y + h > visibleRect.y + visibleRect.height)
         h = visibleRect.y + visibleRect.height - y;
 
