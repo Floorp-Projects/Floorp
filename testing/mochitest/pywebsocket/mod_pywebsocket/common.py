@@ -1,4 +1,4 @@
-# Copyright 2011, Google Inc.
+# Copyright 2012, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -93,21 +93,41 @@ SEC_WEBSOCKET_LOCATION_HEADER = 'Sec-WebSocket-Location'
 # Extensions
 DEFLATE_STREAM_EXTENSION = 'deflate-stream'
 DEFLATE_FRAME_EXTENSION = 'deflate-frame'
+X_WEBKIT_DEFLATE_FRAME_EXTENSION = 'x-webkit-deflate-frame'
 
 # Status codes
-# Code STATUS_CODE_NOT_AVAILABLE should not be used in actual frames. This code
-# is exposed to JavaScript API as pseudo status code which represent actual
-# frame does not have status code.
-STATUS_NORMAL = 1000
+# Code STATUS_NO_STATUS_RECEIVED, STATUS_ABNORMAL_CLOSURE, and
+# STATUS_TLS_HANDSHAKE are pseudo codes to indicate specific error cases.
+# Could not be used for codes in actual closing frames.
+# Application level errors must use codes in the range
+# STATUS_USER_REGISTERED_BASE to STATUS_USER_PRIVATE_MAX. The codes in the
+# range STATUS_USER_REGISTERED_BASE to STATUS_USER_REGISTERED_MAX are managed
+# by IANA. Usually application must define user protocol level errors in the
+# range STATUS_USER_PRIVATE_BASE to STATUS_USER_PRIVATE_MAX.
+STATUS_NORMAL_CLOSURE = 1000
 STATUS_GOING_AWAY = 1001
 STATUS_PROTOCOL_ERROR = 1002
-STATUS_UNSUPPORTED = 1003
-STATUS_CODE_NOT_AVAILABLE = 1005
-STATUS_ABNORMAL_CLOSE = 1006
-STATUS_INVALID_FRAME_PAYLOAD = 1007
+STATUS_UNSUPPORTED_DATA = 1003
+STATUS_NO_STATUS_RECEIVED = 1005
+STATUS_ABNORMAL_CLOSURE = 1006
+STATUS_INVALID_FRAME_PAYLOAD_DATA = 1007
 STATUS_POLICY_VIOLATION = 1008
 STATUS_MESSAGE_TOO_BIG = 1009
-STATUS_MANDATORY_EXT = 1010
+STATUS_MANDATORY_EXTENSION = 1010
+STATUS_INTERNAL_SERVER_ERROR = 1011
+STATUS_TLS_HANDSHAKE = 1015
+STATUS_USER_REGISTERED_BASE = 3000
+STATUS_USER_REGISTERED_MAX = 3999
+STATUS_USER_PRIVATE_BASE = 4000
+STATUS_USER_PRIVATE_MAX = 4999
+# Following definitions are aliases to keep compatibility. Applications must
+# not use these obsoleted definitions anymore.
+STATUS_NORMAL = STATUS_NORMAL_CLOSURE
+STATUS_UNSUPPORTED = STATUS_UNSUPPORTED_DATA
+STATUS_CODE_NOT_AVAILABLE = STATUS_NO_STATUS_RECEIVED
+STATUS_ABNORMAL_CLOSE = STATUS_ABNORMAL_CLOSURE
+STATUS_INVALID_FRAME_PAYLOAD = STATUS_INVALID_FRAME_PAYLOAD_DATA
+STATUS_MANDATORY_EXT = STATUS_MANDATORY_EXTENSION
 
 # HTTP status codes
 HTTP_STATUS_BAD_REQUEST = 400

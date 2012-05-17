@@ -1,4 +1,4 @@
-# Copyright 2011, Google Inc.
+# Copyright 2012, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ class DispatchException(Exception):
 def _default_passive_closing_handshake_handler(request):
     """Default web_socket_passive_closing_handshake handler."""
 
-    return common.STATUS_NORMAL, ''
+    return common.STATUS_NORMAL_CLOSURE, ''
 
 
 def _normalize_path(path):
@@ -292,7 +292,7 @@ class Dispatcher(object):
             raise
         except msgutil.BadOperationException, e:
             self._logger.debug('%s', e)
-            request.ws_stream.close_connection(common.STATUS_ABNORMAL_CLOSE)
+            request.ws_stream.close_connection(common.STATUS_ABNORMAL_CLOSURE)
         except msgutil.InvalidFrameException, e:
             # InvalidFrameException must be caught before
             # ConnectionTerminatedException that catches InvalidFrameException.
@@ -300,11 +300,11 @@ class Dispatcher(object):
             request.ws_stream.close_connection(common.STATUS_PROTOCOL_ERROR)
         except msgutil.UnsupportedFrameException, e:
             self._logger.debug('%s', e)
-            request.ws_stream.close_connection(common.STATUS_UNSUPPORTED)
+            request.ws_stream.close_connection(common.STATUS_UNSUPPORTED_DATA)
         except stream.InvalidUTF8Exception, e:
             self._logger.debug('%s', e)
             request.ws_stream.close_connection(
-                common.STATUS_INVALID_FRAME_PAYLOAD)
+                common.STATUS_INVALID_FRAME_PAYLOAD_DATA)
         except msgutil.ConnectionTerminatedException, e:
             self._logger.debug('%s', e)
         except Exception, e:
