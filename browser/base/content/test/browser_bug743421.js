@@ -52,7 +52,7 @@ function test1b() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 1b, Plugin should not be activated");
 
-  EventUtils.synthesizeMouse(plugin, 100, 100, { });
+  popupNotification.mainAction.callback();
   setTimeout(test1c, 500);
 }
 

@@ -7,6 +7,7 @@
 #include "jsprf.h"
 #include "jsscope.h"
 #include "jsstr.h"
+#include "jsxml.h"
 
 #include "gc/Marking.h"
 #include "methodjit/MethodJIT.h"
@@ -49,8 +50,10 @@
 namespace js {
 namespace gc {
 
+#if JS_HAS_XML_SUPPORT
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSXML *thing);
+#endif
 
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSObject *thing);
@@ -451,6 +454,7 @@ MarkValueUnbarriered(JSTracer *trc, Value *v, const char *name)
     JS_ASSERT((thing)->compartment()->isCollecting() ||                 \
               (thing)->compartment() == (rt)->atomsCompartment);
 
+#if JS_HAS_XML_SUPPORT
 static void
 PushMarkStack(GCMarker *gcmarker, JSXML *thing)
 {
@@ -459,6 +463,7 @@ PushMarkStack(GCMarker *gcmarker, JSXML *thing)
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushXML(thing);
 }
+#endif
 
 static void
 PushMarkStack(GCMarker *gcmarker, JSObject *thing)
@@ -815,7 +820,7 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
         MarkObject(trc, &type->interpretedFunction, "type_function");
 }
 
-#ifdef JS_HAS_XML_SUPPORT
+#if JS_HAS_XML_SUPPORT
 static void
 MarkChildren(JSTracer *trc, JSXML *xml)
 {
@@ -995,10 +1000,13 @@ GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
             pushValueArray(obj, vp, end);
         else
             pushObject(obj);
-    } else {
+    }
+#if JS_HAS_XML_SUPPORT
+    else {
         JS_ASSERT(tag == XmlTag);
         MarkChildren(this, reinterpret_cast<JSXML *>(addr));
     }
+#endif
 }
 
 inline void

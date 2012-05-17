@@ -91,6 +91,7 @@
 #include "nsHTMLParts.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
+#include "nsTypedSelection.h"
 #include "nsLayoutCID.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMRange.h"
@@ -233,18 +234,6 @@ CapturingContentInfo nsIPresShell::gCaptureInfo =
 nsIContent* nsIPresShell::gKeyDownTarget;
 nsInterfaceHashtable<nsUint32HashKey, nsIDOMTouch> nsIPresShell::gCaptureTouchList;
 bool nsIPresShell::gPreventMouseEvents = false;
-
-static PRUint32
-ChangeFlag(PRUint32 aFlags, bool aOnOff, PRUint32 aFlag)
-{
-  PRUint32 flags;
-  if (aOnOff) {
-    flags = (aFlags | aFlag);
-  } else {
-    flags = (aFlag & ~aFlag);
-  }
-  return flags;
-}
 
 // convert a color value to a string, in the CSS format #RRGGBB
 // *  - initially created for bugs 31816, 20760, 22963
@@ -865,9 +854,6 @@ PresShell::Init(nsIDocument* aDocument,
     }
   }
 
-  // cache the drag service so we can check it during reflows
-  mDragService = do_GetService("@mozilla.org/widget/dragservice;1");
-
 #ifdef MOZ_REFLOW_PERF
     if (mReflowCountMgr) {
       bool paintFrameCounts =
@@ -928,7 +914,10 @@ PresShell::Destroy()
     NS_RELEASE(gKeyDownTarget);
   }
 
-  mContentToScrollTo = nsnull;
+  if (mContentToScrollTo) {
+    mContentToScrollTo->DeleteProperty(nsGkAtoms::scrolling);
+    mContentToScrollTo = nsnull;
+  }
 
   if (mPresContext) {
     // We need to notify the destroying the nsPresContext to ESM for
@@ -3110,6 +3099,7 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
   }
   nsPresContext::ScrollbarStyles ss = aScrollFrame->GetScrollbarStyles();
   nsRect allowedRange(scrollPt, nsSize(0, 0));
+  bool needToScroll = false;
 
   if ((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
       ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
@@ -3129,6 +3119,7 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
                                         visibleRect.YMost(),
                                         &allowedRange.y, &maxHeight);
       allowedRange.height = maxHeight - allowedRange.y;
+      needToScroll = true;
     }
   }
 
@@ -3150,10 +3141,24 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
                                         visibleRect.XMost(),
                                         &allowedRange.x, &maxWidth);
       allowedRange.width = maxWidth - allowedRange.x;
+      needToScroll = true;
     }
   }
 
-  aScrollFrame->ScrollTo(scrollPt, nsIScrollableFrame::INSTANT, &allowedRange);
+  // If we don't need to scroll, then don't try since it might cancel
+  // a current smooth scroll operation.
+  if (needToScroll) {
+    aScrollFrame->ScrollTo(scrollPt, nsIScrollableFrame::INSTANT, &allowedRange);
+  }
+}
+
+static void
+DeleteScrollIntoViewData(void* aObject, nsIAtom* aPropertyName,
+                         void* aPropertyValue, void* aData)
+{
+  PresShell::ScrollIntoViewData* data =
+    static_cast<PresShell::ScrollIntoViewData*>(aPropertyValue);
+  delete data;
 }
 
 nsresult
@@ -3162,17 +3167,24 @@ PresShell::ScrollContentIntoView(nsIContent*              aContent,
                                  nsIPresShell::ScrollAxis aHorizontal,
                                  PRUint32                 aFlags)
 {
-  nsCOMPtr<nsIContent> content = aContent; // Keep content alive while flushing.
-  NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDocument> currentDoc = content->GetCurrentDoc();
+  NS_ENSURE_TRUE(aContent, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIDocument> currentDoc = aContent->GetCurrentDoc();
   NS_ENSURE_STATE(currentDoc);
 
   NS_ASSERTION(mDidInitialReflow, "should have done initial reflow by now");
 
+  if (mContentToScrollTo) {
+    mContentToScrollTo->DeleteProperty(nsGkAtoms::scrolling);
+  }
   mContentToScrollTo = aContent;
-  mContentScrollVAxis = aVertical;
-  mContentScrollHAxis = aHorizontal;
-  mContentToScrollToFlags = aFlags;
+  ScrollIntoViewData* data = new ScrollIntoViewData();
+  data->mContentScrollVAxis = aVertical;
+  data->mContentScrollHAxis = aHorizontal;
+  data->mContentToScrollToFlags = aFlags;
+  if (NS_FAILED(mContentToScrollTo->SetProperty(nsGkAtoms::scrolling, data,
+                                                ::DeleteScrollIntoViewData))) {
+    mContentToScrollTo = nsnull;
+  }
 
   // Flush layout and attempt to scroll in the process.
   currentDoc->SetNeedLayoutFlush();
@@ -3187,21 +3199,19 @@ PresShell::ScrollContentIntoView(nsIContent*              aContent,
   // than a single best-effort scroll followed by one final scroll on the first
   // completed reflow.
   if (mContentToScrollTo) {
-    DoScrollContentIntoView(content, aVertical, aHorizontal, aFlags);
+    DoScrollContentIntoView();
   }
   return NS_OK;
 }
 
 void
-PresShell::DoScrollContentIntoView(nsIContent*              aContent,
-                                   nsIPresShell::ScrollAxis aVertical,
-                                   nsIPresShell::ScrollAxis aHorizontal,
-                                   PRUint32                 aFlags)
+PresShell::DoScrollContentIntoView()
 {
   NS_ASSERTION(mDidInitialReflow, "should have done initial reflow by now");
 
-  nsIFrame* frame = aContent->GetPrimaryFrame();
+  nsIFrame* frame = mContentToScrollTo->GetPrimaryFrame();
   if (!frame) {
+    mContentToScrollTo->DeleteProperty(nsGkAtoms::scrolling);
     mContentToScrollTo = nsnull;
     return;
   }
@@ -3220,6 +3230,13 @@ PresShell::DoScrollContentIntoView(nsIContent*              aContent,
     return;
   }
 
+  ScrollIntoViewData* data = static_cast<ScrollIntoViewData*>(
+    mContentToScrollTo->GetProperty(nsGkAtoms::scrolling));
+  if (NS_UNLIKELY(!data)) {
+    mContentToScrollTo = nsnull;
+    return;
+  }
+
   // This is a two-step process.
   // Step 1: Find the bounds of the rect we want to scroll into view.  For
   //         example, for an inline frame we may want to scroll in the whole
@@ -3232,7 +3249,8 @@ PresShell::DoScrollContentIntoView(nsIContent*              aContent,
   // even if that assumption was false.)
   nsRect frameBounds;
   bool haveRect = false;
-  bool useWholeLineHeightForInlines = aVertical.mWhenToScroll != nsIPresShell::SCROLL_IF_NOT_FULLY_VISIBLE;
+  bool useWholeLineHeightForInlines =
+    data->mContentScrollVAxis.mWhenToScroll != nsIPresShell::SCROLL_IF_NOT_FULLY_VISIBLE;
   // Reuse the same line iterator across calls to AccumulateFrameBounds.  We set
   // it every time we detect a new block (stored in prevBlock).
   nsIFrame* prevBlock = nsnull;
@@ -3245,8 +3263,9 @@ PresShell::DoScrollContentIntoView(nsIContent*              aContent,
                           frameBounds, haveRect, prevBlock, lines, curLine);
   } while ((frame = frame->GetNextContinuation()));
 
-  ScrollFrameRectIntoView(container, frameBounds, aVertical, aHorizontal,
-                          aFlags);
+  ScrollFrameRectIntoView(container, frameBounds, data->mContentScrollVAxis,
+                          data->mContentScrollHAxis,
+                          data->mContentToScrollToFlags);
 }
 
 bool
@@ -3843,11 +3862,11 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       mViewManager->FlushDelayedResize(true);
       if (ProcessReflowCommands(aType < Flush_Layout) && mContentToScrollTo) {
         // We didn't get interrupted.  Go ahead and scroll to our content
-        DoScrollContentIntoView(mContentToScrollTo,
-                                mContentScrollVAxis,
-                                mContentScrollHAxis,
-                                mContentToScrollToFlags);
-        mContentToScrollTo = nsnull;
+        DoScrollContentIntoView();
+        if (mContentToScrollTo) {
+          mContentToScrollTo->DeleteProperty(nsGkAtoms::scrolling);
+          mContentToScrollTo = nsnull;
+        }
       }
     } else if (!mIsDestroying && mSuppressInterruptibleReflows &&
                aType == Flush_InterruptibleLayout) {

@@ -95,8 +95,9 @@ HasCPUIDBit(unsigned int level, CPUIDRegister reg, unsigned int bit)
 #define HAVE_CPU_DETECTION
 #else
 
-#if defined(_MSC_VER) && _MSC_VER >= 1400 && (defined(_M_IX86) || defined(_M_AMD64))
-// MSVC 2005 or newer on x86-32 or x86-64
+#if defined(_MSC_VER) && _MSC_VER >= 1600 && (defined(_M_IX86) || defined(_M_AMD64))
+// MSVC 2005 or later supports __cpuid by intrin.h
+// But it does't work on MSVC 2005 with SDK 7.1 (Bug 753772)
 #include <intrin.h>
 
 #define HAVE_CPU_DETECTION
@@ -172,11 +173,13 @@ ID3D10Device1 *Factory::mD3D10Device;
 bool
 Factory::HasSSE2()
 {
-#if defined(HAVE_CPU_DETECTION)
-  return HasCPUIDBit(1u, edx, (1u<<26));
-#elif defined(XP_MACOSX)
-  // Intel macs always have SSE2.
+#if defined(__SSE2__) || defined(_M_X64) || \
+    (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+  // gcc with -msse2 (default on OSX and x86-64)
+  // cl.exe with -arch:SSE2 (default on x64 compiler)
   return true;
+#elif defined(HAVE_CPU_DETECTION)
+  return HasCPUIDBit(1u, edx, (1u<<26));
 #else
   return false;
 #endif

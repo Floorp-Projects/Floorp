@@ -46,6 +46,7 @@
 
 <!-- Pair Device -->
 <!ENTITY sync.pair.tryagain.label 'Please try again.'>
+<!ENTITY sync.pair.connectlocation.label 'To activate your new device, select “Set up &syncBrand.shortName.label;” on the device, and then select “I Have an Account.”'>
 
 <!-- Firefox SyncAdapter Settings Screen -->
 <!ENTITY sync.settings.options.label 'Options'>

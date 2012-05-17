@@ -1493,7 +1493,11 @@ PopOffPrec(SprintStack *ss, uint8_t prec, jsbytecode **ppc = NULL)
 
     ss->top = --top;
     off = GetOff(ss, top);
-    topcs = &js_CodeSpec[ss->opcodes[top]];
+
+    int op = ss->opcodes[top];
+    if (op >= JSOP_LIMIT)
+        op = JSOP_NOP;
+    topcs = &js_CodeSpec[op];
 
     jsbytecode *pc = ss->bytecodes[top];
     if (ppc)
@@ -2571,8 +2575,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
     JSFunction *fun = NULL; /* init to shut GCC up */
     JSString *str;
     JSBool ok;
+    JSBool foreach;
 #if JS_HAS_XML_SUPPORT
-    JSBool foreach, inXML, quoteAttr;
+    JSBool inXML, quoteAttr;
 #else
 #define inXML JS_FALSE
 #endif
@@ -2678,8 +2683,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
     sn = NULL;
     rval = NULL;
     bool forOf = false;
+    foreach = false;
 #if JS_HAS_XML_SUPPORT
-    foreach = inXML = quoteAttr = JS_FALSE;
+    inXML = quoteAttr = false;
 #endif
 
     while (nb < 0 || pc < endpc) {
@@ -3784,12 +3790,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * The bytecode around pc looks like this:
                      *     <<RHS>>
                      *     iter
-                     * pc: goto/gotox C         [src_for_in(B, D)]
+                     * pc: goto C               [src_for_in(B, D)]
                      *  A: <<LHS = iternext>>
                      *  B: pop                  [maybe a src_decl_var/let]
                      *     <<S>>
                      *  C: moreiter
-                     *     ifne/ifnex A
+                     *     ifne A
                      *     enditer
                      *  D: ...
                      *
@@ -5198,17 +5204,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                     todo = ss->sprinter.put("*", 1);
                 }
                 break;
+#endif
 
               case JSOP_QNAMEPART:
                 LOAD_ATOM(0);
+#if JS_HAS_XML_SUPPORT
                 if (pc[JSOP_QNAMEPART_LENGTH] == JSOP_TOATTRNAME) {
                     saveop = JSOP_TOATTRNAME;
                     len += JSOP_TOATTRNAME_LENGTH;
                     lval = "@";
                     goto do_qname;
                 }
+#endif
                 goto do_name;
 
+#if JS_HAS_XML_SUPPORT
               case JSOP_QNAMECONST:
                 LOAD_ATOM(0);
                 rval = QuoteString(&ss->sprinter, atom, 0);

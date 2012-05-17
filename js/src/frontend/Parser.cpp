@@ -6032,18 +6032,6 @@ Parser::xmlExpr(JSBool inTag)
     return pn;
 }
 
-ParseNode *
-Parser::atomNode(ParseNodeKind kind, JSOp op)
-{
-    ParseNode *node = NullaryNode::create(kind, this);
-    if (!node)
-        return NULL;
-    node->setOp(op);
-    const Token &tok = tokenStream.currentToken();
-    node->pn_atom = tok.atom();
-    return node;
-}
-
 /*
  * Parse the productions:
  *
@@ -6550,6 +6538,18 @@ Parser::starOrAtPropertyIdentifier(TokenKind tt)
     return (tt == TOK_AT) ? attributeIdentifier() : qualifiedIdentifier();
 }
 #endif
+
+ParseNode *
+Parser::atomNode(ParseNodeKind kind, JSOp op)
+{
+    ParseNode *node = NullaryNode::create(kind, this);
+    if (!node)
+        return NULL;
+    node->setOp(op);
+    const Token &tok = tokenStream.currentToken();
+    node->pn_atom = tok.atom();
+    return node;
+}
 
 ParseNode *
 Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)

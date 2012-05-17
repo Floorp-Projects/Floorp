@@ -1317,9 +1317,6 @@ nsAccessibleWrap::get_states(AccessibleStates *aStates)
 __try {
   *aStates = 0;
 
-  if (IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
-
   // XXX: bug 344674 should come with better approach that we have here.
 
   PRUint64 state = State();

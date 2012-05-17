@@ -260,6 +260,7 @@
 #include "nsLocation.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMEventTargetHelper.h"
+#include "nsIAppsService.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -10014,6 +10015,9 @@ nsGlobalWindow::SetIsApp(bool aValue)
 {
   FORWARD_TO_OUTER_VOID(SetIsApp, (aValue));
 
+  // You shouldn't call SetIsApp() more than once.
+  MOZ_ASSERT(mIsApp == TriState_Unknown);
+
   mIsApp = aValue ? TriState_True : TriState_False;
 }
 
@@ -10027,6 +10031,8 @@ nsGlobalWindow::IsPartOfApp()
   for (nsGlobalWindow* w = this; w;
        w = static_cast<nsGlobalWindow*>(w->GetParentInternal())) {
     if (w->mIsApp == TriState_True) {
+      // The window should be part of an application.
+      MOZ_ASSERT(w->mApp);
       return true;
     } else if (w->mIsApp == TriState_False) {
       return false;
@@ -10034,6 +10040,33 @@ nsGlobalWindow::IsPartOfApp()
   }
 
   return false;
+}
+
+nsresult
+nsGlobalWindow::SetApp(const nsAString& aManifestURL)
+{
+  // SetIsApp(true) should be called before calling SetApp().
+  if (mIsApp != TriState_True) {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+  if (!appsService) {
+    NS_ERROR("Apps Service is not available!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<mozIDOMApplication> app;
+  appsService->GetAppByManifestURL(aManifestURL, getter_AddRefs(app));
+  if (!app) {
+    NS_WARNING("No application found with the specified manifest URL");
+    return NS_ERROR_FAILURE;
+  }
+
+  mApp = app.forget();
+
+  return NS_OK;
 }
 
 // nsGlobalChromeWindow implementation

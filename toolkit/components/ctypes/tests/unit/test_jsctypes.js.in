@@ -668,6 +668,17 @@ function run_basic_abi_tests(library, t, name, toprimitive,
   // Check the alignment of the type, and its behavior in a struct,
   // against what C says.
   check_struct_stats(library, t);
+  
+  // Check the ToSource functions defined in the namespace ABI
+  do_check_eq(ctypes.default_abi.toSource(), "ctypes.default_abi");
+
+  let exn;
+  try {
+    ctypes.default_abi.toSource.call(null);
+  } catch(x) {
+    exn = x;
+  }
+  do_check_true(!!exn); // Check that some exception was raised
 }
 
 function run_single_abi_tests(decl, abi, t, toprimitive,

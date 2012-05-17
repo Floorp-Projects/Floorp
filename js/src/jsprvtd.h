@@ -95,7 +95,10 @@ typedef struct JSPrinter            JSPrinter;
 typedef struct JSStackHeader        JSStackHeader;
 typedef struct JSSubString          JSSubString;
 typedef struct JSSpecializedNative  JSSpecializedNative;
+
+#if JS_HAS_XML_SUPPORT
 typedef struct JSXML                JSXML;
+#endif
 
 /*
  * Template declarations.
