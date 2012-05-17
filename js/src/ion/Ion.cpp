@@ -957,11 +957,12 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 
     void *calleeToken;
     if (fp->isFunctionFrame()) {
-        argc = CountArgSlots(fp->fun()) - 1;
-        argv = fp->formalArgs() - 1;
         if (fp->hasOverflowArgs()) {
             argc = fp->numActualArgs() + 1;
             argv = fp->actualArgs() - 1;
+        } else {
+            argc = CountArgSlots(fp->fun()) - 1;
+            argv = fp->formalArgs() - 1;
         }
         calleeToken = CalleeToToken(fp->callee().toFunction());
     } else {

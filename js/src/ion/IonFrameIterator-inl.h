@@ -59,14 +59,15 @@ InlineFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned c
 
     unsigned nformal = callee()->nargs;
     unsigned formalEnd = end;
-    if (!more() && end > nformal)
+    if (!more() && end > nformal) {
         formalEnd = nformal;
-    else
+    } else {
         // Currently inlining does not support overflow of arguments, we have to
         // add this feature in IonBuilder.cpp and in Bailouts.cpp before
         // continuing. We need to add it to Bailouts.cpp because we need to know
         // how to walk over the oveflow of arguments.
         JS_ASSERT(end <= nformal);
+    }
 
     SnapshotIterator s(si_);
 
