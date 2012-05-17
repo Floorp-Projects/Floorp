@@ -74,7 +74,6 @@
 #include "nsClipboard.h"
 #include "nsCursorManager.h"
 #include "nsWindowMap.h"
-#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "nsMenuUtilsX.h"
 #include "nsMenuBarX.h"
@@ -307,7 +306,7 @@ nsresult nsChildView::Create(nsIWidget *aParent,
     nsToolkit::SwizzleMethods([NSView class], @selector(mouseDownCanMoveWindow),
                               @selector(nsChildView_NSView_mouseDownCanMoveWindow));
 #ifdef __LP64__
-    if (nsCocoaFeatures::OnLionOrLater()) {
+    if (nsToolkit::OnLionOrLater()) {
       nsToolkit::SwizzleMethods([NSEvent class], @selector(addLocalMonitorForEventsMatchingMask:handler:),
                                 @selector(nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:handler:),
                                 true);
@@ -3054,7 +3053,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 - (void)maybeTrackScrollEventAsSwipe:(NSEvent *)anEvent
                       scrollOverflow:(PRInt32)overflow
 {
-  if (!nsCocoaFeatures::OnLionOrLater()) {
+  if (!nsToolkit::OnLionOrLater()) {
     return;
   }
   // This method checks whether the AppleEnableSwipeNavigateWithScrolls global
