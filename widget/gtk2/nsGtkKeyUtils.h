@@ -277,6 +277,19 @@ protected:
     static bool IsBasicLatinLetterOrNumeral(PRUint32 aCharCode);
 
     /**
+     * GetGDKKeyvalWithoutModifier() returns the keyval for aGdkKeyEvent when
+     * ignoring the modifier state except NumLock. (NumLock is a key to change
+     * some key's meaning.)
+     */
+    static guint GetGDKKeyvalWithoutModifier(const GdkEventKey *aGdkKeyEvent);
+
+    /**
+     * GetDOMKeyCodeFromKeyPairs() returns DOM keycode for aGdkKeyval if
+     * it's in KeyPair table.
+     */
+    static PRUint32 GetDOMKeyCodeFromKeyPairs(guint aGdkKeyval);
+
+    /**
      * InitKeypressEvent() intializes keyCode, charCode and
      * alternativeCharCodes of keypress event.
      *

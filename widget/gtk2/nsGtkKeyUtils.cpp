@@ -130,8 +130,7 @@ static const KeyPair kKeyPairs[] = {
     // Not sure what these are
     //{ NS_VK_,       GDK_KP_Prior },
     //{ NS_VK_,        GDK_KP_Next },
-    // GDK_KP_Begin is the 5 on the non-numlock keypad
-    //{ NS_VK_,        GDK_KP_Begin },
+    { NS_VK_CLEAR,      GDK_KP_Begin }, // Num-unlocked 5
     { NS_VK_PAGE_DOWN,  GDK_KP_Page_Down },
     { NS_VK_HOME,       GDK_KP_Home },
     { NS_VK_END,        GDK_KP_End },
@@ -147,6 +146,32 @@ static const KeyPair kKeyPairs[] = {
     { NS_VK_RETURN,     GDK_KP_Enter },
     { NS_VK_NUM_LOCK,   GDK_Num_Lock },
     { NS_VK_SCROLL_LOCK,GDK_Scroll_Lock },
+
+    // Function keys
+    { NS_VK_F1,         GDK_F1 },
+    { NS_VK_F2,         GDK_F2 },
+    { NS_VK_F3,         GDK_F3 },
+    { NS_VK_F4,         GDK_F4 },
+    { NS_VK_F5,         GDK_F5 },
+    { NS_VK_F6,         GDK_F6 },
+    { NS_VK_F7,         GDK_F7 },
+    { NS_VK_F8,         GDK_F8 },
+    { NS_VK_F9,         GDK_F9 },
+    { NS_VK_F10,        GDK_F10 },
+    { NS_VK_F11,        GDK_F11 },
+    { NS_VK_F12,        GDK_F12 },
+    { NS_VK_F13,        GDK_F13 },
+    { NS_VK_F14,        GDK_F14 },
+    { NS_VK_F15,        GDK_F15 },
+    { NS_VK_F16,        GDK_F16 },
+    { NS_VK_F17,        GDK_F17 },
+    { NS_VK_F18,        GDK_F18 },
+    { NS_VK_F19,        GDK_F19 },
+    { NS_VK_F20,        GDK_F20 },
+    { NS_VK_F21,        GDK_F21 },
+    { NS_VK_F22,        GDK_F22 },
+    { NS_VK_F23,        GDK_F23 },
+    { NS_VK_F24,        GDK_F24 },
 
     { NS_VK_COMMA,      GDK_comma },
     { NS_VK_PERIOD,     GDK_period },
@@ -632,7 +657,38 @@ KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
 /* static */ PRUint32
 KeymapWrapper::ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent)
 {
+    // If the keyval indicates it's a modifier key, we should use unshifted
+    // key's modifier keyval.
     guint keyval = aGdkKeyEvent->keyval;
+    if (GetModifierForGDKKeyval(keyval)) {
+        // But if the keyval without modifiers isn't a modifier key, we
+        // shouldn't use it.  E.g., Japanese keyboard layout's
+        // Shift + Eisu-Toggle key is CapsLock.  This is an actual rare case,
+        // Windows uses different keycode for a physical key for different
+        // shift key state.
+        guint keyvalWithoutModifier = GetGDKKeyvalWithoutModifier(aGdkKeyEvent);
+        if (GetModifierForGDKKeyval(keyvalWithoutModifier)) {
+            keyval = keyvalWithoutModifier;
+        }
+        return GetDOMKeyCodeFromKeyPairs(keyval);
+    }
+
+    // If the key isn't printable, let's look at the key pairs.
+    PRUint32 charCode = GetCharCodeFor(aGdkKeyEvent);
+    if (!charCode) {
+        // Always use unshifted keycode for the non-printable key.
+        // XXX It might be better to decide DOM keycode from all keyvals of
+        //     the hardware keycode.  However, I think that it's too excessive.
+        guint keyvalWithoutModifier = GetGDKKeyvalWithoutModifier(aGdkKeyEvent);
+        PRUint32 DOMKeyCode = GetDOMKeyCodeFromKeyPairs(keyvalWithoutModifier);
+        if (!DOMKeyCode) {
+            // If the unshifted keyval couldn't be mapped to a DOM keycode,
+            // we should fallback to legacy logic, so, we should recompute with
+            // the keyval with aGdkKeyEvent.
+            DOMKeyCode = GetDOMKeyCodeFromKeyPairs(keyval);
+        }
+        return DOMKeyCode;
+    }
 
     // First, try to handle alphanumeric input, not listed in nsKeycodes:
     // most likely, more letters will be getting typed in than things in
@@ -657,45 +713,7 @@ KeymapWrapper::ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent)
         return keyval - GDK_KP_0 + NS_VK_NUMPAD0;
     }
 
-    // If the keyval indicates it's a modifier key, we should use unshifted
-    // key's modifier keyval.
-    if (GetModifierForGDKKeyval(keyval)) {
-        KeymapWrapper* keymapWrapper = GetInstance();
-        GdkKeymapKey key;
-        key.keycode = aGdkKeyEvent->hardware_keycode;
-        key.group = aGdkKeyEvent->group;
-        key.level = 0;
-        guint unshiftedKeyval =
-            gdk_keymap_lookup_key(keymapWrapper->mGdkKeymap, &key);
-        // But if the unshifted keyval isn't a modifier key, we shouldn't use
-        // it.  E.g., Japanese keyboard layout's Shift + Eisu-Toggle key is
-        // CapsLock.  This is an actual rare case, Windows uses different
-        // keycode for a physical key for different shift key state.
-        if (GetModifierForGDKKeyval(unshiftedKeyval)) {
-            keyval = unshiftedKeyval;
-        }
-    }
-
-    // map Sun Keyboard special keysyms
-    for (PRUint32 i = 0; i < ArrayLength(kSunKeyPairs); i++) {
-        if (kSunKeyPairs[i].GDKKeyval == keyval) {
-            return kSunKeyPairs[i].DOMKeyCode;
-        }
-    }
-
-    // misc other things
-    for (PRUint32 i = 0; i < ArrayLength(kKeyPairs); i++) {
-        if (kKeyPairs[i].GDKKeyval == keyval) {
-            return kKeyPairs[i].DOMKeyCode;
-        }
-    }
-
-    // function keys
-    if (keyval >= GDK_F1 && keyval <= GDK_F24) {
-        return keyval - GDK_F1 + NS_VK_F1;
-    }
-
-    return 0;
+    return GetDOMKeyCodeFromKeyPairs(keyval);
 }
 
 /* static */ guint
@@ -726,11 +744,6 @@ KeymapWrapper::GuessGDKKeyval(PRUint32 aDOMKeyCode)
         if (kKeyPairs[i].DOMKeyCode == aDOMKeyCode) {
             return kKeyPairs[i].GDKKeyval;
         }
-    }
-
-    // function keys
-    if (aDOMKeyCode >= NS_VK_F1 && aDOMKeyCode <= NS_VK_F9) {
-        return aDOMKeyCode - NS_VK_F1 + GDK_F1;
     }
 
     return 0;
@@ -946,6 +959,41 @@ KeymapWrapper::IsBasicLatinLetterOrNumeral(PRUint32 aCharCode)
     return (aCharCode >= 'a' && aCharCode <= 'z') ||
            (aCharCode >= 'A' && aCharCode <= 'Z') ||
            (aCharCode >= '0' && aCharCode <= '9');
+}
+
+/* static */ guint
+KeymapWrapper::GetGDKKeyvalWithoutModifier(const GdkEventKey *aGdkKeyEvent)
+{
+    KeymapWrapper* keymapWrapper = GetInstance();
+    guint state =
+        (aGdkKeyEvent->state & keymapWrapper->GetModifierMask(NUM_LOCK));
+    guint keyval;
+    if (!gdk_keymap_translate_keyboard_state(keymapWrapper->mGdkKeymap,
+             aGdkKeyEvent->hardware_keycode, GdkModifierType(state),
+             aGdkKeyEvent->group, &keyval, NULL, NULL, NULL)) {
+        return 0;
+    }
+    return keyval;
+}
+
+/* static */ PRUint32
+KeymapWrapper::GetDOMKeyCodeFromKeyPairs(guint aGdkKeyval)
+{
+    // map Sun Keyboard special keysyms first.
+    for (PRUint32 i = 0; i < ArrayLength(kSunKeyPairs); i++) {
+        if (kSunKeyPairs[i].GDKKeyval == aGdkKeyval) {
+            return kSunKeyPairs[i].DOMKeyCode;
+        }
+    }
+
+    // misc other things
+    for (PRUint32 i = 0; i < ArrayLength(kKeyPairs); i++) {
+        if (kKeyPairs[i].GDKKeyval == aGdkKeyval) {
+            return kKeyPairs[i].DOMKeyCode;
+        }
+    }
+
+    return 0;
 }
 
 void
