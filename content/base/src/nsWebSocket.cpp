@@ -390,10 +390,14 @@ nsWebSocket::OnServerClose(nsISupports *aContext, PRUint16 aCode,
   CopyUTF8toUTF16(aReason, mCloseEventReason);
 
   if (mReadyState == nsIWebSocket::OPEN) {
-    // Send reciprocal Close frame.
-    // 5.5.1: "When sending a Close frame in response, the endpoint typically
-    // echos the status code it received"
-    CloseConnection(aCode, aReason);
+    // RFC 6455, 5.5.1: "When sending a Close frame in response, the endpoint
+    // typically echos the status code it received".
+    // But never send certain codes, per section 7.4.1
+    if (aCode == 1005 || aCode == 1006 || aCode == 1015) {
+      CloseConnection(0, EmptyCString());
+    } else {
+      CloseConnection(aCode, aReason);
+    }
   } else {
     // Nothing else to do: OnStop does the rest of the work.
     NS_ASSERTION (mReadyState == nsIWebSocket::CLOSING, "unknown state");
