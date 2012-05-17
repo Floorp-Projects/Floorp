@@ -1497,21 +1497,21 @@ StackIter::numActualArgs() const
     return 0;
 }
 
-JSObject *
-StackIter::thisObject() const
+Value
+StackIter::thisv() const
 {
     switch (state_) {
       case DONE:
         break;
       case ION:
-        return ionInlineFrames_.thisObject();
+        return ObjectValue(*ionInlineFrames_.thisObject());
       case SCRIPTED:
       case NATIVE:
       case IMPLICIT_NATIVE:
-        return &fp()->thisValue().toObject();
+        return fp()->thisValue();
     }
     JS_NOT_REACHED("Unexpected state");
-    return NULL;
+    return NullValue();
 }
 
 /*****************************************************************************/

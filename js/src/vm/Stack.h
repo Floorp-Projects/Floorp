@@ -1917,7 +1917,7 @@ class StackIter
     JSFunction *callee() const;
     Value       calleev() const;
     unsigned    numActualArgs() const;
-    JSObject   *thisObject() const;
+    Value       thisv() const;
 
     CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return args_; }
 
