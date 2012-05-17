@@ -4,7 +4,29 @@
 // Tests that source URLs in the Web Console can be clicked to display the
 // standard View Source window.
 
+let [ define, require ] = (function() {
+  let tempScope = {};
+  Components.utils.import("resource:///modules/devtools/Require.jsm", tempScope);
+  return [ tempScope.define, tempScope.require ];
+})();
+
 function test() {
+  addTab("about:blank", function() {
+    info("Starting Require Tests");
+    setup();
+
+    testWorking();
+    testDomains();
+    testLeakage();
+    testMultiImport();
+    testRecursive();
+    testUncompilable();
+
+    shutdown();
+  });
+}
+
+function setup() {
   define('gclitest/requirable', [], function(require, exports, module) {
     exports.thing1 = 'thing1';
     exports.thing2 = 2;
@@ -21,19 +43,18 @@ function test() {
   define('gclitest/recurse', [], function(require, exports, module) {
     require('gclitest/recurse');
   });
+}
 
-  testWorking();
-  testLeakage();
-  testMultiImport();
-  testRecursive();
-  testUncompilable();
-
+function shutdown() {
   delete define.modules['gclitest/requirable'];
   delete define.globalDomain.modules['gclitest/requirable'];
   delete define.modules['gclitest/unrequirable'];
   delete define.globalDomain.modules['gclitest/unrequirable'];
   delete define.modules['gclitest/recurse'];
   delete define.globalDomain.modules['gclitest/recurse'];
+
+  define = undefined;
+  require = undefined;
 
   finish();
 }
@@ -43,30 +64,30 @@ function testWorking() {
   // The fact that we can get anything at all working is a testament to
   // require doing what it should - we don't need to test the
   let requireable = require('gclitest/requirable');
-  ok('thing1' == requireable.thing1, 'thing1 was required');
-  ok(2 == requireable.thing2, 'thing2 was required');
-  ok(requireable.thing3 === undefined, 'thing3 was not required');
+  is('thing1', requireable.thing1, 'thing1 was required');
+  is(2, requireable.thing2, 'thing2 was required');
+  is(requireable.thing3, undefined, 'thing3 was not required');
 }
 
 function testDomains() {
   let requireable = require('gclitest/requirable');
-  ok(requireable.status === undefined, 'requirable has no status');
+  is(requireable.status, undefined, 'requirable has no status');
   requireable.setStatus(null);
-  ok(null === requireable.getStatus(), 'requirable.getStatus changed to null');
-  ok(requireable.status === undefined, 'requirable still has no status');
+  is(null, requireable.getStatus(), 'requirable.getStatus changed to null');
+  is(requireable.status, undefined, 'requirable still has no status');
   requireable.setStatus('42');
-  ok('42' == requireable.getStatus(), 'requirable.getStatus changed to 42');
-  ok(requireable.status === undefined, 'requirable *still* has no status');
+  is('42', requireable.getStatus(), 'requirable.getStatus changed to 42');
+  is(requireable.status, undefined, 'requirable *still* has no status');
 
   let domain = new define.Domain();
   let requireable2 = domain.require('gclitest/requirable');
-  ok(requireable2.status === undefined, 'requirable2 has no status');
-  ok('initial' === requireable2.getStatus(), 'requirable2.getStatus is initial');
+  is(requireable2.status, undefined, 'requirable2 has no status');
+  is('initial', requireable2.getStatus(), 'requirable2.getStatus is initial');
   requireable2.setStatus(999);
-  ok(999 === requireable2.getStatus(), 'requirable2.getStatus changed to 999');
-  ok(requireable2.status === undefined, 'requirable2 still has no status');
+  is(999, requireable2.getStatus(), 'requirable2.getStatus changed to 999');
+  is(requireable2.status, undefined, 'requirable2 still has no status');
 
-  t.verifyEqual('42', requireable.getStatus());
+  is('42', requireable.getStatus(), 'status 42');
   ok(requireable.status === undefined, 'requirable has no status (as expected)');
 
   delete domain.modules['gclitest/requirable'];
@@ -74,15 +95,15 @@ function testDomains() {
 
 function testLeakage() {
   let requireable = require('gclitest/requirable');
-  ok(requireable.setup == null, 'leakage of setup');
-  ok(requireable.shutdown == null, 'leakage of shutdown');
-  ok(requireable.testWorking == null, 'leakage of testWorking');
+  is(requireable.setup, null, 'leakage of setup');
+  is(requireable.shutdown, null, 'leakage of shutdown');
+  is(requireable.testWorking, null, 'leakage of testWorking');
 }
 
 function testMultiImport() {
   let r1 = require('gclitest/requirable');
   let r2 = require('gclitest/requirable');
-  ok(r1 === r2, 'double require was strict equal');
+  is(r1, r2, 'double require was strict equal');
 }
 
 function testUncompilable() {
