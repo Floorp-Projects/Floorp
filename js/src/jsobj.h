@@ -925,9 +925,7 @@ struct JSObject : public js::ObjectImpl
     inline bool isGenerator() const;
     inline bool isGlobal() const;
     inline bool isIterator() const;
-    inline bool isNamespace() const;
     inline bool isObject() const;
-    inline bool isQName() const;
     inline bool isPrimitive() const;
     inline bool isProxy() const;
     inline bool isRegExp() const;
@@ -937,8 +935,12 @@ struct JSObject : public js::ObjectImpl
     inline bool isStopIteration() const;
     inline bool isTypedArray() const;
     inline bool isWeakMap() const;
+#if JS_HAS_XML_SUPPORT
+    inline bool isNamespace() const;
+    inline bool isQName() const;
     inline bool isXML() const;
     inline bool isXMLId() const;
+#endif
 
     /* Subtypes of ScopeObject. */
     inline bool isBlock() const;

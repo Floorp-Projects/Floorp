@@ -130,12 +130,13 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
 
 class MarionetteTestRunner(object):
 
-    def __init__(self, address=None, emulator=None, homedir=None,
+    def __init__(self, address=None, emulator=None, emulatorBinary=None, homedir=None,
                  b2gbin=None, autolog=False, revision=None, es_server=None,
                  rest_server=None, logger=None, testgroup="marionette",
                  noWindow=False, logcat_dir=None):
         self.address = address
         self.emulator = emulator
+        self.emulatorBinary = emulatorBinary
         self.homedir = homedir
         self.b2gbin = b2gbin
         self.autolog = autolog
@@ -201,6 +202,7 @@ class MarionetteTestRunner(object):
                                              baseurl=self.baseurl)
         elif self.emulator:
             self.marionette = Marionette(emulator=self.emulator,
+                                         emulatorBinary=self.emulatorBinary,
                                          homedir=self.homedir,
                                          baseurl=self.baseurl,
                                          noWindow=self.noWindow,
@@ -358,6 +360,11 @@ if __name__ == "__main__":
                       default = None, choices = ["x86", "arm"],
                       help = "Launch a B2G emulator on which to run tests. "
                       "You need to specify which architecture to emulate.")
+    parser.add_option("--emulator-binary",
+                      action = "store", dest = "emulatorBinary",
+                      default = None,
+                      help = "Launch a specific emulator binary rather than "
+                      "launching from the B2G built emulator")
     parser.add_option("--no-window",
                       action = "store_true", dest = "noWindow",
                       default = False,
@@ -399,6 +406,7 @@ if __name__ == "__main__":
 
     runner = MarionetteTestRunner(address=options.address,
                                   emulator=options.emulator,
+                                  emulatorBinary=options.emulatorBinary,
                                   homedir=options.homedir,
                                   logcat_dir=options.logcat_dir,
                                   b2gbin=options.b2gbin,

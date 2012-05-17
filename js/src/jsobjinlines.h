@@ -580,6 +580,8 @@ JSObject::setNativeIterator(js::NativeIterator *ni)
     setPrivate(ni);
 }
 
+#if JS_HAS_XML_SUPPORT
+
 inline JSLinearString *
 JSObject::getNamePrefix() const
 {
@@ -666,6 +668,8 @@ JSObject::setQNameLocalName(JSAtom *name)
     JS_ASSERT(isQName());
     setSlot(JSSLOT_QNAME_LOCAL_NAME, name ? js::StringValue(name) : js::UndefinedValue());
 }
+
+#endif
 
 inline bool
 JSObject::setSingletonType(JSContext *cx)
@@ -799,7 +803,6 @@ inline bool JSObject::isFunction() const { return hasClass(&js::FunctionClass); 
 inline bool JSObject::isFunctionProxy() const { return hasClass(&js::FunctionProxyClass); }
 inline bool JSObject::isGenerator() const { return hasClass(&js::GeneratorClass); }
 inline bool JSObject::isIterator() const { return hasClass(&js::IteratorClass); }
-inline bool JSObject::isNamespace() const { return hasClass(&js::NamespaceClass); }
 inline bool JSObject::isNestedScope() const { return isBlock() || isWith(); }
 inline bool JSObject::isNormalArguments() const { return hasClass(&js::NormalArgumentsObjectClass); }
 inline bool JSObject::isNumber() const { return hasClass(&js::NumberClass); }
@@ -815,6 +818,9 @@ inline bool JSObject::isString() const { return hasClass(&js::StringClass); }
 inline bool JSObject::isTypedArray() const { return IsTypedArrayClass(getClass()); }
 inline bool JSObject::isWeakMap() const { return hasClass(&js::WeakMapClass); }
 inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
+
+#if JS_HAS_XML_SUPPORT
+inline bool JSObject::isNamespace() const { return hasClass(&js::NamespaceClass); }
 inline bool JSObject::isXML() const { return hasClass(&js::XMLClass); }
 
 inline bool
@@ -832,6 +838,7 @@ JSObject::isQName() const
         || hasClass(&js::AttributeNameClass)
         || hasClass(&js::AnyNameClass);
 }
+#endif /* JS_HAS_XML_SUPPORT */
 
 /* static */ inline JSObject *
 JSObject::create(JSContext *cx, js::gc::AllocKind kind,
@@ -855,10 +862,12 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
     obj->slots = slots;
     obj->elements = js::emptyObjectElements;
 
-    if (shape->getObjectClass()->hasPrivate())
+    const js::Class *clasp = shape->getObjectClass();
+    if (clasp->hasPrivate())
         obj->privateRef(shape->numFixedSlots()) = NULL;
 
-    if (size_t span = shape->slotSpan())
+    size_t span = shape->slotSpan();
+    if (span && clasp != &js::ArrayBufferClass)
         obj->initializeSlotRange(0, span);
 
     return obj;
@@ -1224,17 +1233,24 @@ OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
         obj = op(cx, obj);
 }
 
+#if JS_HAS_XML_SUPPORT
 /*
  * Methods to test whether an object or a value is of type "xml" (per typeof).
  */
 
-#define VALUE_IS_XML(v)      (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isXML())
+#define VALUE_IS_XML(v)     ((v).isObject() && (v).toObject().isXML())
 
 static inline bool
 IsXML(const js::Value &v)
 {
     return v.isObject() && v.toObject().isXML();
 }
+
+#else
+
+#define VALUE_IS_XML(v)     false
+
+#endif /* JS_HAS_XML_SUPPORT */
 
 static inline bool
 IsStopIteration(const js::Value &v)
@@ -1595,10 +1611,10 @@ IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx)
 static JS_ALWAYS_INLINE bool
 ValueIsSpecial(JSObject *obj, Value *propval, SpecialId *sidp, JSContext *cx)
 {
+#if JS_HAS_XML_SUPPORT
     if (!propval->isObject())
         return false;
 
-#if JS_HAS_XML_SUPPORT
     if (obj->isXML()) {
         *sidp = SpecialId(propval->toObject());
         return true;

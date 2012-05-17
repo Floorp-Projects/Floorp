@@ -103,6 +103,7 @@ class MarionetteTestCase(CommonTestCase):
         self.extra_emulator_index += 1
         if len(self.marionette.extra_emulators) == self.extra_emulator_index:
             qemu  = Marionette(emulator=self.marionette.emulator.arch,
+                               emulatorBinary=self.marionette.emulator.binary,
                                homedir=self.marionette.homedir,
                                baseurl=self.marionette.baseurl,
                                noWindow=self.marionette.noWindow)

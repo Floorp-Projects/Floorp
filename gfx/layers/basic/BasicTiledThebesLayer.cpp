@@ -96,7 +96,7 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
 #endif
     SAMPLE_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferDraw");
 
-    mCallback(mThebesLayer, ctxt, aPaintRegion, aPaintRegion, mCallbackData);
+    mCallback(mThebesLayer, ctxt, aPaintRegion, nsIntRegion(), mCallbackData);
   }
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS

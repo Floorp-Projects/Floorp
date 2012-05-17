@@ -7247,6 +7247,25 @@ var gPluginHandler = {
       notification.remove();
   },
 
+  activateSinglePlugin: function PH_activateSinglePlugin(aContentWindow, aPlugin) {
+    let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    if (!objLoadingContent.activated)
+      objLoadingContent.playPlugin();
+
+    let cwu = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+    let haveUnplayedPlugins = cwu.plugins.some(function(plugin) {
+      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+      return (plugin != aPlugin && !objLoadingContent.activated);
+    });
+    let browser = gBrowser.getBrowserForDocument(aContentWindow.document);
+    let notification = PopupNotifications.getNotification("click-to-play-plugins", browser);
+    if (notification && !haveUnplayedPlugins) {
+      browser._clickToPlayDoorhangerShown = false;
+      notification.remove();
+    }
+  },
+
   newPluginInstalled : function(event) {
     // browser elements are anonymous so we can't just use target.
     var browser = event.originalTarget;
@@ -7321,7 +7340,7 @@ var gPluginHandler = {
     if (overlay) {
       overlay.addEventListener("click", function(aEvent) {
         if (aEvent.button == 0 && aEvent.isTrusted)
-          gPluginHandler.activatePlugins(aEvent.target.ownerDocument.defaultView.top);
+          gPluginHandler.activateSinglePlugin(aEvent.target.ownerDocument.defaultView.top, aPlugin);
       }, true);
     }
 

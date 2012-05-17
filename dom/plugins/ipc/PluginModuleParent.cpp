@@ -792,7 +792,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 
     if (NS_SUCCEEDED(mozilla::widget::GetAudioSessionData(id, sessionName,
                                                           iconPath)))
-        SendSetAudioSessionData(id, sessionName, iconPath);
+        unused << SendSetAudioSessionData(id, sessionName, iconPath);
 #endif
 
     return NS_OK;
@@ -1043,7 +1043,7 @@ void
 PluginModuleParent::ProcessRemoteNativeEventsInRPCCall()
 {
 #if defined(OS_WIN)
-    SendProcessNativeEventsInRPCCall();
+    unused << SendProcessNativeEventsInRPCCall();
     return;
 #endif
     NS_NOTREACHED(

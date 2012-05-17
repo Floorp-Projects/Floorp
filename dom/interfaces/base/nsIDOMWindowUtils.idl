@@ -1158,4 +1158,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * parent.
    */
   void setIsApp(in boolean value);
+
+  /**
+   * Associate the window with an application by passing the URL of the
+   * application's manifest.
+   *
+   * This method will throw an exception if the manifest URL isn't a valid URL
+   * or isn't the manifest URL of an installed application.
+   */
+  void setApp(in DOMString manifestURL);
 };

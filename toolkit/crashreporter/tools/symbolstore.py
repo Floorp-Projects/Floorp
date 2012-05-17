@@ -59,6 +59,7 @@ import platform
 import os
 import re
 import shutil
+import textwrap
 from subprocess import call, Popen, PIPE, STDOUT
 from optparse import OptionParser
 
@@ -288,12 +289,18 @@ class HGFileInfo(VCSFileInfo):
                     path = hg_root
                 else:
                     print >> sys.stderr, "Failed to get HG Repo for %s" % srcdir
+            cleanroot = None
             if path != '': # not there?
                 match = rootRegex.match(path)
                 if match:
                     cleanroot = match.group(1)
                     if cleanroot.endswith('/'):
                         cleanroot = cleanroot[:-1]
+            if cleanroot is None:
+                print >> sys.stderr, textwrap.dedent("""\
+                    Could not determine repo info for %s.  This is either not a clone of the web-based
+                    repository, or you have not specified SRCSRV_ROOT, or the clone is corrupt.""") % srcdir
+                sys.exit(1)
             HGRepoInfo.repos[srcdir] = HGRepoInfo(path, rev, cleanroot)
         self.repo = HGRepoInfo.repos[srcdir]
         self.file = file

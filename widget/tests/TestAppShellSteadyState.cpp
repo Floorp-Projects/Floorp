@@ -25,7 +25,7 @@
 #include "nsThreadUtils.h"
 
 #ifdef XP_WIN
-#include "Windows.h"
+#include <windows.h>
 #endif
 
 using namespace mozilla;

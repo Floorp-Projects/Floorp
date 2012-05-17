@@ -45,6 +45,8 @@
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
 
+#if JS_HAS_XML_SUPPORT
+
 extern const char js_AnyName_str[];
 extern const char js_AttributeName_str[];
 extern const char js_isXMLName_str[];
@@ -331,5 +333,7 @@ extern bool
 GetLocalNameFromFunctionQName(JSObject *qn, JSAtom **namep, JSContext *cx);
 
 } /* namespace js */
+
+#endif /* JS_HAS_XML_SUPPORT */
 
 #endif /* jsxml_h___ */

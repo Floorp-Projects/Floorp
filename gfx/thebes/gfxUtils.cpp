@@ -510,6 +510,10 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
 
     aFilter = ReduceResamplingFilter(aFilter, aImageRect.Width(), aImageRect.Height(), aSourceRect.Width(), aSourceRect.Height());
 
+    // On Mobile, we don't ever want to do this; it has the potential for
+    // allocating very large temporary surfaces, especially since we'll
+    // do full-page snapshots often (see bug 749426).
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE
     // OK now, the hard part left is to account for the subimage sampling
     // restriction. If all the transforms involved are just integer
     // translations, then we assume no resampling will occur so there's
@@ -531,6 +535,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
         // drawn without tiling.
         doTile = false;
     }
+#endif
 
     gfxContext::GraphicsOperator op = aContext->CurrentOperator();
     if ((op == gfxContext::OPERATOR_OVER || workaround.PushedGroup()) &&
