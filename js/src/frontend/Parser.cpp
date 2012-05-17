@@ -169,6 +169,14 @@ Parser::setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin)
         JS_HoldPrincipals(originPrincipals);
 }
 
+ObjectBox::ObjectBox(ObjectBox* traceLink, JSObject *obj)
+  : traceLink(traceLink),
+    emitLink(NULL),
+    object(obj),
+    isFunctionBox(false)
+{
+}
+
 ObjectBox *
 Parser::newObjectBox(JSObject *obj)
 {
@@ -181,17 +189,47 @@ Parser::newObjectBox(JSObject *obj)
      * scanning, parsing and code generation for the whole script or top-level
      * function.
      */
-    ObjectBox *objbox = context->tempLifoAlloc().new_<ObjectBox>();
+
+    ObjectBox *objbox = context->tempLifoAlloc().new_<ObjectBox>(traceListHead, obj);
     if (!objbox) {
         js_ReportOutOfMemory(context);
         return NULL;
     }
-    objbox->traceLink = traceListHead;
+
     traceListHead = objbox;
-    objbox->emitLink = NULL;
-    objbox->object = obj;
-    objbox->isFunctionBox = false;
+
     return objbox;
+}
+
+FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, TreeContext *tc)
+  : ObjectBox(traceListHead, obj),
+    node(fn),
+    siblings(tc->sc->functionList),
+    kids(NULL),
+    parent(tc->sc->funbox),
+    bindings(tc->sc->context),
+    level(tc->sc->staticLevel),
+    queued(false),
+    inLoop(false),
+    inWith(!!tc->innermostWith),
+    inGenexpLambda(false),
+    cxFlags(tc->sc->context)     // the cxFlags are set in LeaveFunction
+{
+    isFunctionBox = true;
+    for (StmtInfo *stmt = tc->sc->topStmt; stmt; stmt = stmt->down) {
+        if (STMT_IS_LOOP(stmt)) {
+            inLoop = true;
+            break;
+        }
+    }
+    if (!tc->sc->inFunction) {
+        JSObject *scope = tc->sc->scopeChain();
+        while (scope) {
+            if (scope->isWith())
+                inWith = true;
+            scope = scope->enclosingScope();
+        }
+    }
 }
 
 FunctionBox *
@@ -207,43 +245,13 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
      * scanning, parsing and code generation for the whole script or top-level
      * function.
      */
-    FunctionBox *funbox = context->tempLifoAlloc().newPod<FunctionBox>();
+    FunctionBox *funbox = context->tempLifoAlloc().new_<FunctionBox>(traceListHead, obj, fn, tc);
     if (!funbox) {
         js_ReportOutOfMemory(context);
         return NULL;
     }
-    funbox->traceLink = traceListHead;
-    traceListHead = funbox;
-    funbox->emitLink = NULL;
-    funbox->object = obj;
-    funbox->isFunctionBox = true;
-    funbox->node = fn;
-    funbox->siblings = tc->sc->functionList;
-    tc->sc->functionList = funbox;
-    funbox->kids = NULL;
-    funbox->parent = tc->sc->funbox;
-    new (&funbox->bindings) Bindings(context);
-    funbox->queued = false;
-    funbox->inLoop = false;
-    for (StmtInfo *stmt = tc->sc->topStmt; stmt; stmt = stmt->down) {
-        if (STMT_IS_LOOP(stmt)) {
-            funbox->inLoop = true;
-            break;
-        }
-    }
-    funbox->level = tc->sc->staticLevel;
-    funbox->inWith = !!tc->innermostWith;
-    if (!tc->sc->inFunction) {
-        JSObject *scope = tc->sc->scopeChain();
-        while (scope) {
-            if (scope->isWith())
-                funbox->inWith = true;
-            scope = scope->enclosingScope();
-        }
-    }
-    funbox->inGenexpLambda = false;
-    
-    new (&funbox->cxFlags) ContextFlags(context);  // the cxFlags are set in LeaveFunction
+
+    traceListHead = tc->sc->functionList = funbox;
 
     return funbox;
 }
