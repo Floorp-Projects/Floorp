@@ -514,6 +514,17 @@ nsSVGImageFrame::UpdateBounds()
   mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
     mRect, GetCanvasTM(), PresContext());
 
+  if (mState & NS_FRAME_FIRST_REFLOW) {
+    // Make sure we have our filter property (if any) before calling
+    // FinishAndStoreOverflow (subsequent filter changes are handled off
+    // nsChangeHint_UpdateEffects):
+    nsSVGEffects::UpdateEffects(this);
+  }
+
+  nsRect overflow = nsRect(nsPoint(0,0), mRect.Size());
+  nsOverflowAreas overflowAreas(overflow, overflow);
+  FinishAndStoreOverflow(overflowAreas, mRect.Size());
+
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
 
@@ -521,6 +532,7 @@ nsSVGImageFrame::UpdateBounds()
     // We only invalidate if our outer-<svg> has already had its
     // initial reflow (since if it hasn't, its entire area will be
     // invalidated when it gets that initial reflow):
+    // XXXSDL Let FinishAndStoreOverflow do this.
     nsSVGUtils::InvalidateBounds(this, true);
   }
 }

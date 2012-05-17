@@ -49,6 +49,9 @@
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryElement.h"
 #include "nsSVGUtils.h"
+#include "SVGAnimatedTransformList.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Implementation
@@ -104,6 +107,32 @@ nsIAtom *
 nsSVGPathGeometryFrame::GetType() const
 {
   return nsGkAtoms::svgPathGeometryFrame;
+}
+
+bool
+nsSVGPathGeometryFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
+                                         gfxMatrix *aFromParentTransform) const
+{
+  bool foundTransform = false;
+
+  // Check if our parent has children-only transforms:
+  nsIFrame *parent = GetParent();
+  if (parent &&
+      parent->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
+    foundTransform = static_cast<nsSVGContainerFrame*>(parent)->
+                       HasChildrenOnlyTransform(aFromParentTransform);
+  }
+
+  nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
+  const SVGAnimatedTransformList *list = content->GetAnimatedTransformList();
+  if (list && !list->GetAnimValue().IsEmpty()) {
+    if (aOwnTransform) {
+      *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
+                                  nsSVGElement::eUserSpaceToParent);
+    }
+    foundTransform = true;
+  }
+  return foundTransform;
 }
 
 //----------------------------------------------------------------------
@@ -235,9 +264,22 @@ nsSVGPathGeometryFrame::UpdateBounds()
   mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
     mRect, GetCanvasTM(), PresContext());
 
+  if (mState & NS_FRAME_FIRST_REFLOW) {
+    // Make sure we have our filter property (if any) before calling
+    // FinishAndStoreOverflow (subsequent filter changes are handled off
+    // nsChangeHint_UpdateEffects):
+    nsSVGEffects::UpdateEffects(this);
+  }
+
+  nsRect overflow = nsRect(nsPoint(0,0), mRect.Size());
+  nsOverflowAreas overflowAreas(overflow, overflow);
+  FinishAndStoreOverflow(overflowAreas, mRect.Size());
+
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
 
+  // XXXSDL get rid of this in favor of the invalidate call in
+  // FinishAndStoreOverflow?
   if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     // We only invalidate if our outer-<svg> has already had its
     // initial reflow (since if it hasn't, its entire area will be

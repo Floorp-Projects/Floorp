@@ -314,34 +314,6 @@ nsToolkit* nsToolkit::GetToolkit()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsnull);
 }
 
-PRInt32 nsToolkit::OSXVersion()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  static PRInt32 gOSXVersion = 0x0;
-  if (gOSXVersion == 0x0) {
-    OSErr err = ::Gestalt(gestaltSystemVersion, (SInt32*)&gOSXVersion);
-    if (err != noErr) {
-      // This should probably be changed when our minimum version changes
-      NS_ERROR("Couldn't determine OS X version, assuming 10.5");
-      gOSXVersion = MAC_OS_X_VERSION_10_5_HEX;
-    }
-  }
-  return gOSXVersion;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
-}
-
-bool nsToolkit::OnSnowLeopardOrLater()
-{
-  return (OSXVersion() >= MAC_OS_X_VERSION_10_6_HEX);
-}
-
-bool nsToolkit::OnLionOrLater()
-{
-  return (OSXVersion() >= MAC_OS_X_VERSION_10_7_HEX);
-}
-
 // An alternative to [NSObject poseAsClass:] that isn't deprecated on OS X
 // Leopard and is available to 64-bit binaries on Leopard and above.  Based on
 // ideas and code from http://www.cocoadev.com/index.pl?MethodSwizzling.
@@ -516,7 +488,7 @@ OSStatus Hooked_InstallEventLoopIdleTimer(
 void HookImportedFunctions()
 {
   // We currently only need to do anything on Tiger or Leopard.
-  if (nsToolkit::OnSnowLeopardOrLater())
+  if (nsCocoaFeatures::OnSnowLeopardOrLater())
     return;
 
   // _dyld_register_func_for_add_image() makes the dynamic linker runtime call

@@ -231,19 +231,6 @@ nsHTMLAreaAccessible::IsPrimaryForNode() const
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLAreaAccessible: nsAccessible public
 
-PRUint64
-nsHTMLAreaAccessible::NativeState()
-{
-  // Bypass the link states specialization for non links.
-  if (mRoleMapEntry &&
-      mRoleMapEntry->role != roles::NOTHING &&
-      mRoleMapEntry->role != roles::LINK) {
-    return nsAccessible::NativeState();
-  }
-
-  return nsHTMLLinkAccessible::NativeState();
-}
-
 nsAccessible*
 nsHTMLAreaAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                    EWhichChildAtPoint aWhichChild)
