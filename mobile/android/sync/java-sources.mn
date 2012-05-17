@@ -185,6 +185,7 @@ sync/stage/NoSyncIDException.java
 sync/stage/PasswordsServerSyncStage.java
 sync/stage/ServerSyncStage.java
 sync/stage/SyncClientsEngineStage.java
+sync/stage/UploadMetaGlobalStage.java
 sync/StubActivity.java
 sync/syncadapter/SyncAdapter.java
 sync/syncadapter/SyncService.java
@@ -205,7 +206,6 @@ sync/synchronizer/SynchronizerSessionDelegate.java
 sync/synchronizer/UnbundleError.java
 sync/synchronizer/UnexpectedSessionException.java
 sync/SynchronizerConfiguration.java
-sync/SynchronizerConfigurations.java
 sync/ThreadPool.java
 sync/UnexpectedJSONException.java
 sync/UnknownSynchronizerConfigurationVersionException.java
