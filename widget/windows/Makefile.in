@@ -131,6 +131,7 @@ EXPORTS_mozilla/widget = AudioSession.h
 LOCAL_INCLUDES	= \
 		-I. \
 		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir)/../shared \
 		-I$(srcdir) \
 		-I$(topsrcdir)/layout/generic \
 		-I$(topsrcdir)/layout/xul/base/src \
