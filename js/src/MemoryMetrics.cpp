@@ -169,11 +169,13 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         obj->sizeOfExcludingThis(&cStats->typeInferenceSizes, rtStats->mallocSizeOf);
         break;
     }
+#if JS_HAS_XML_SUPPORT
     case JSTRACE_XML:
     {
         cStats->gcHeapXML += thingSize;
         break;
     }
+#endif
     }
     // Yes, this is a subtraction:  see StatsArenaCallback() for details.
     cStats->gcHeapArenaUnused -= thingSize;
@@ -223,8 +225,10 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
                       cStats.gcHeapShapesDict +
                       cStats.gcHeapShapesBase +
                       cStats.gcHeapScripts +
-                      cStats.gcHeapTypeObjects +
-                      cStats.gcHeapXML;
+#if JS_HAS_XML_SUPPORT
+                      cStats.gcHeapXML +
+#endif
+                      cStats.gcHeapTypeObjects;
 
         rtStats->gcHeapChunkDirtyUnused -= used;
         rtStats->gcHeapArenaUnused += cStats.gcHeapArenaUnused;
