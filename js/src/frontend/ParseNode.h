@@ -1529,6 +1529,8 @@ struct ObjectBox {
     ObjectBox           *emitLink;
     JSObject            *object;
     bool                isFunctionBox;
+
+    ObjectBox(ObjectBox *traceLink, JSObject *obj);
 };
 
 #define JSFB_LEVEL_BITS 14
@@ -1548,6 +1550,8 @@ struct FunctionBox : public ObjectBox
     bool            inGenexpLambda:1;       /* lambda from generator expression */
 
     ContextFlags    cxFlags;
+
+    FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, TreeContext *tc);
 
     bool funIsHeavyweight()      const { return cxFlags.funIsHeavyweight; }
     bool funIsGenerator()        const { return cxFlags.funIsGenerator; }
