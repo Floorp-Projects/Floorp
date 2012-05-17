@@ -60,11 +60,19 @@ class SVGPreserveAspectRatio
   friend class SVGAnimatedPreserveAspectRatio;
 
 public:
+  SVGPreserveAspectRatio(PRUint16 aAlign, PRUint16 aMeetOrSlice, bool aDefer = false)
+    : mAlign(aAlign)
+    , mMeetOrSlice(aMeetOrSlice)
+    , mDefer(aDefer)
+  {};
+
   SVGPreserveAspectRatio()
     : mAlign(0)
     , mMeetOrSlice(0)
     , mDefer(false)
   {};
+
+  bool operator==(const SVGPreserveAspectRatio& aOther) const;
 
   nsresult SetAlign(PRUint16 aAlign) {
     if (aAlign < nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE ||
@@ -120,8 +128,28 @@ public:
                               nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue) const;
 
-  nsresult SetBaseAlign(PRUint16 aAlign, nsSVGElement *aSVGElement);
-  nsresult SetBaseMeetOrSlice(PRUint16 aMeetOrSlice, nsSVGElement *aSVGElement);
+  void SetBaseValue(const SVGPreserveAspectRatio &aValue,
+                    nsSVGElement *aSVGElement);
+  nsresult SetBaseAlign(PRUint16 aAlign, nsSVGElement *aSVGElement) {
+    if (aAlign < nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE ||
+        aAlign > nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX) {
+      return NS_ERROR_FAILURE;
+    }
+    SetBaseValue(SVGPreserveAspectRatio(
+                   aAlign, mBaseVal.GetMeetOrSlice(), mBaseVal.GetDefer()),
+                 aSVGElement);
+    return NS_OK;
+  }
+  nsresult SetBaseMeetOrSlice(PRUint16 aMeetOrSlice, nsSVGElement *aSVGElement) {
+    if (aMeetOrSlice < nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET ||
+        aMeetOrSlice > nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE) {
+      return NS_ERROR_FAILURE;
+    }
+    SetBaseValue(SVGPreserveAspectRatio(
+                   mBaseVal.GetAlign(), aMeetOrSlice, mBaseVal.GetDefer()),
+                 aSVGElement);
+    return NS_OK;
+  }
   void SetAnimValue(PRUint64 aPackedValue, nsSVGElement *aSVGElement);
 
   const SVGPreserveAspectRatio &GetBaseValue() const

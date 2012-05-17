@@ -632,8 +632,8 @@ nsIAtom** const kAttributesSVG[] = {
   // vert-origin-x
   // vert-origin-y
   &nsGkAtoms::viewBox, // viewBox
+  &nsGkAtoms::viewTarget, // viewTarget
   &nsGkAtoms::visibility, // visibility
-  // viewTarget
   &nsGkAtoms::width, // width
   // widths
   &nsGkAtoms::word_spacing, // word-spacing

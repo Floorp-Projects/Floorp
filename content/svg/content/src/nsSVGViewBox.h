@@ -86,9 +86,11 @@ public:
 
   const nsSVGViewBoxRect& GetBaseValue() const
     { return mBaseVal; }
-  void SetBaseValue(float aX, float aY, float aWidth, float aHeight,
+  void SetBaseValue(const nsSVGViewBoxRect& aRect,
                     nsSVGElement *aSVGElement);
-
+  void SetBaseValue(float aX, float aY, float aWidth, float aHeight,
+                    nsSVGElement *aSVGElement)
+    { SetBaseValue(nsSVGViewBoxRect(aX, aY, aWidth, aHeight), aSVGElement); }
   const nsSVGViewBoxRect& GetAnimValue() const
     { return mAnimVal ? *mAnimVal : mBaseVal; }
   void SetAnimValue(float aX, float aY, float aWidth, float aHeight,

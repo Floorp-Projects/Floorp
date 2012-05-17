@@ -140,8 +140,27 @@ public:
   }
 
   /**
+   * Methods for supporting hyperlinking
+   */
+
+  /**
    * Internal SMIL methods
    */
+
+  /**
+   * Returns the time to seek the document to when this element is targetted by
+   * a hyperlink.
+   *
+   * The behavior is defined here:
+   *   http://www.w3.org/TR/smil-animation/#HyperlinkSemantics
+   *
+   * It is very similar to GetStartTime() with the exception that when the
+   * element is not active, the begin time of the *first* interval is returned.
+   *
+   * @return the time to seek the documen to in milliseconds or an unresolved
+   * time if there is no resolved interval.
+   */
+  nsSMILTimeValue GetHyperlinkTime() const;
 
   /**
    * Adds an instance time object this element's list of instance times.

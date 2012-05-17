@@ -110,7 +110,8 @@ public:
   enum SVGChangedFlags {
     DO_NOT_NOTIFY_RENDERING_OBSERVERS = 0x01,
     TRANSFORM_CHANGED     = 0x02,
-    COORD_CONTEXT_CHANGED = 0x04
+    COORD_CONTEXT_CHANGED = 0x04,
+    FULL_ZOOM_CHANGED     = 0x08
   };
   virtual void NotifySVGChanged(PRUint32 aFlags)=0;
 
@@ -140,9 +141,6 @@ public:
 
   // Are we a container frame?
   NS_IMETHOD_(bool) IsDisplayContainer()=0;
-
-  // Does this frame have an current covered region in mRect (aka GetRect())?
-  NS_IMETHOD_(bool) HasValidCoveredRect()=0;
 };
 
 #endif // __NS_ISVGCHILDFRAME_H__

@@ -267,6 +267,24 @@ protected:
     gint GetKeyLevel(GdkEventKey *aGdkKeyEvent);
 
     /**
+     * GetFirstLatinGroup() returns group of mGdkKeymap which can input an
+     * ASCII character by GDK_A.
+     *
+     * @return                  group value of GdkEventKey.
+     */
+    gint GetFirstLatinGroup();
+
+    /**
+     * IsLatinGroup() checkes whether the keyboard layout of aGroup is
+     * ASCII alphabet inputtable or not.
+     *
+     * @param aGroup            The group value of GdkEventKey.
+     * @return                  TRUE if the keyboard layout can input
+     *                          ASCII alphabet.  Otherwise, FALSE.
+     */
+    bool IsLatinGroup(guint8 aGroup);
+
+    /**
      * IsBasicLatinLetterOrNumeral() Checks whether the aCharCode is an
      * alphabet or a numeric character in ASCII.
      *
@@ -275,6 +293,19 @@ protected:
      *                          in ASCII range.  Otherwise, FALSE.
      */
     static bool IsBasicLatinLetterOrNumeral(PRUint32 aCharCode);
+
+    /**
+     * GetGDKKeyvalWithoutModifier() returns the keyval for aGdkKeyEvent when
+     * ignoring the modifier state except NumLock. (NumLock is a key to change
+     * some key's meaning.)
+     */
+    static guint GetGDKKeyvalWithoutModifier(const GdkEventKey *aGdkKeyEvent);
+
+    /**
+     * GetDOMKeyCodeFromKeyPairs() returns DOM keycode for aGdkKeyval if
+     * it's in KeyPair table.
+     */
+    static PRUint32 GetDOMKeyCodeFromKeyPairs(guint aGdkKeyval);
 
     /**
      * InitKeypressEvent() intializes keyCode, charCode and
