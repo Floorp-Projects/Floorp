@@ -1,0 +1,712 @@
+changeset:   96613:3e003f0b8026
+tag:         2pass
+tag:         qbase
+tag:         qtip
+tag:         tip
+user:        Jeff Muizelaar <jmuizelaar@mozilla.com>
+date:        Thu May 17 19:23:53 2012 -0400
+summary:     Bug 757878. Add a fast path for 8888_over_565 with NEON. r=bgirard,joe
+
+diff --git a/gfx/cairo/libpixman/src/pixman-arm-common.h b/gfx/cairo/libpixman/src/pixman-arm-common.h
+--- a/gfx/cairo/libpixman/src/pixman-arm-common.h
++++ b/gfx/cairo/libpixman/src/pixman-arm-common.h
+@@ -355,26 +355,26 @@ scaled_bilinear_scanline_##cputype##_##n
+     if ((flags & SKIP_ZERO_SRC) && zero_src)                                  \
+ 	return;                                                               \
+     pixman_scaled_bilinear_scanline_##name##_##op##_asm_##cputype (           \
+                             dst, src_top, src_bottom, wt, wb, vx, unit_x, w); \
+ }                                                                             \
+                                                                               \
+ FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_cover_##op,                 \
+                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+-                       src_type, uint32_t, dst_type, COVER, FLAG_NONE)        \
++                       NULL, src_type, uint32_t, dst_type, COVER, FLAG_NONE)  \
+ FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_none_##op,                  \
+                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+-                       src_type, uint32_t, dst_type, NONE, FLAG_NONE)         \
++                       NULL, src_type, uint32_t, dst_type, NONE, FLAG_NONE)   \
+ FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_pad_##op,                   \
+                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+-                       src_type, uint32_t, dst_type, PAD, FLAG_NONE)          \
++                       NULL, src_type, uint32_t, dst_type, PAD, FLAG_NONE)    \
+ FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_normal_##op,                \
+                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+-                       src_type, uint32_t, dst_type, NORMAL,                  \
++                       NULL, src_type, uint32_t, dst_type, NORMAL,            \
+                        FLAG_NONE)
+ 
+ 
+ #define PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_A8_DST(flags, cputype, name, op,  \
+                                                 src_type, dst_type)           \
+ void                                                                          \
+ pixman_scaled_bilinear_scanline_##name##_##op##_asm_##cputype (               \
+                                                 dst_type *       dst,         \
+@@ -404,25 +404,25 @@ scaled_bilinear_scanline_##cputype##_##n
+     if ((flags & SKIP_ZERO_SRC) && zero_src)                                  \
+ 	return;                                                                   \
+     pixman_scaled_bilinear_scanline_##name##_##op##_asm_##cputype (           \
+                       dst, mask, src_top, src_bottom, wt, wb, vx, unit_x, w); \
+ }                                                                             \
+                                                                               \
+ FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_cover_##op,                 \
+                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+-                       src_type, uint8_t, dst_type, COVER,                    \
++                       NULL, src_type, uint8_t, dst_type, COVER,              \
+                        FLAG_HAVE_NON_SOLID_MASK)                              \
+ FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_none_##op,                  \
+                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+-                       src_type, uint8_t, dst_type, NONE,                     \
++                       NULL, src_type, uint8_t, dst_type, NONE,               \
+                        FLAG_HAVE_NON_SOLID_MASK)                              \
+ FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_pad_##op,                   \
+                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+-                       src_type, uint8_t, dst_type, PAD,                      \
++                       NULL, src_type, uint8_t, dst_type, PAD,                \
+                        FLAG_HAVE_NON_SOLID_MASK)                              \
+ FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_normal_##op,                \
+                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+-                       src_type, uint8_t, dst_type, NORMAL,                   \
++                       NULL, src_type, uint8_t, dst_type, NORMAL,             \
+                        FLAG_HAVE_NON_SOLID_MASK)
+ 
+ 
+ #endif
+diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon.c b/gfx/cairo/libpixman/src/pixman-arm-neon.c
+--- a/gfx/cairo/libpixman/src/pixman-arm-neon.c
++++ b/gfx/cairo/libpixman/src/pixman-arm-neon.c
+@@ -140,16 +140,33 @@ PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_DST 
+ PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_DST (0, neon, 8888_0565, SRC,
+                                          uint32_t, uint16_t)
+ PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_DST (0, neon, 0565_x888, SRC,
+                                          uint16_t, uint32_t)
+ PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_DST (0, neon, 0565_0565, SRC,
+                                          uint16_t, uint16_t)
+ PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_DST (SKIP_ZERO_SRC, neon, 8888_8888, OVER,
+                                          uint32_t, uint32_t)
++static force_inline void
++pixman_scaled_bilinear_scanline_8888_8888_SRC (
++                                                uint32_t *       dst,
++                                                const uint32_t * mask,
++                                                const uint32_t * src_top,
++                                                const uint32_t * src_bottom,
++                                                int32_t          w,
++                                                int              wt,
++                                                int              wb,
++                                                pixman_fixed_t   vx,
++                                                pixman_fixed_t   unit_x,
++                                                pixman_fixed_t   max_vx,
++                                                pixman_bool_t    zero_src)
++{
++    pixman_scaled_bilinear_scanline_8888_8888_SRC_asm_neon (dst, src_top, src_bottom, wt, wb, vx, unit_x, w);
++}
++
+ PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_DST (SKIP_ZERO_SRC, neon, 8888_8888, ADD,
+                                          uint32_t, uint32_t)
+ 
+ PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_A8_DST (0, neon, 8888_8_8888, SRC,
+                                             uint32_t, uint32_t)
+ PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_A8_DST (0, neon, 8888_8_0565, SRC,
+                                             uint32_t, uint16_t)
+ PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_A8_DST (0, neon, 0565_8_x888, SRC,
+@@ -261,16 +278,38 @@ pixman_blt_neon (uint32_t *src_bits,
+ 		(uint32_t *)(((char *) src_bits) +
+ 		src_y * src_stride * 4 + src_x * 4), src_stride);
+ 	return TRUE;
+     default:
+ 	return FALSE;
+     }
+ }
+ 
++static inline void op_bilinear_over_8888_0565(uint16_t *dst, const uint32_t *mask, const uint32_t *src, int width)
++{
++    pixman_composite_over_8888_0565_asm_neon (width, 1, dst, 0, src, 0);
++}
++
++FAST_BILINEAR_MAINLOOP_COMMON (neon_8888_0565_cover_OVER,
++			       pixman_scaled_bilinear_scanline_8888_8888_SRC, op_bilinear_over_8888_0565,
++			       uint32_t, uint32_t, uint16_t,
++			       COVER, FLAG_NONE)
++FAST_BILINEAR_MAINLOOP_COMMON (neon_8888_0565_pad_OVER,
++			       pixman_scaled_bilinear_scanline_8888_8888_SRC, op_bilinear_over_8888_0565,
++			       uint32_t, uint32_t, uint16_t,
++			       PAD, FLAG_NONE)
++FAST_BILINEAR_MAINLOOP_COMMON (neon_8888_0565_none_OVER,
++			       pixman_scaled_bilinear_scanline_8888_8888_SRC, op_bilinear_over_8888_0565,
++			       uint32_t, uint32_t, uint16_t,
++			       NONE, FLAG_NONE)
++FAST_BILINEAR_MAINLOOP_COMMON (neon_8888_0565_normal_OVER,
++			       pixman_scaled_bilinear_scanline_8888_8888_SRC, op_bilinear_over_8888_0565,
++			       uint32_t, uint32_t, uint16_t,
++			       NORMAL, FLAG_NONE)
++
+ static const pixman_fast_path_t arm_neon_fast_paths[] =
+ {
+     PIXMAN_STD_FAST_PATH (SRC,  r5g6b5,   null,     r5g6b5,   neon_composite_src_0565_0565),
+     PIXMAN_STD_FAST_PATH (SRC,  b5g6r5,   null,     b5g6r5,   neon_composite_src_0565_0565),
+     PIXMAN_STD_FAST_PATH (SRC,  a8r8g8b8, null,     r5g6b5,   neon_composite_src_8888_0565),
+     PIXMAN_STD_FAST_PATH (SRC,  x8r8g8b8, null,     r5g6b5,   neon_composite_src_8888_0565),
+     PIXMAN_STD_FAST_PATH (SRC,  a8b8g8r8, null,     b5g6r5,   neon_composite_src_8888_0565),
+     PIXMAN_STD_FAST_PATH (SRC,  x8b8g8r8, null,     b5g6r5,   neon_composite_src_8888_0565),
+@@ -414,16 +453,18 @@ static const pixman_fast_path_t arm_neon
+     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (SRC, r5g6b5, r5g6b5, neon_0565_8_0565),
+ 
+     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, neon_8888_8_8888),
+     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8r8g8b8, x8r8g8b8, neon_8888_8_8888),
+ 
+     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (ADD, a8r8g8b8, a8r8g8b8, neon_8888_8_8888),
+     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (ADD, a8r8g8b8, x8r8g8b8, neon_8888_8_8888),
+ 
++    SIMPLE_BILINEAR_FAST_PATH (OVER, a8r8g8b8, r5g6b5, neon_8888_0565),
++
+     { PIXMAN_OP_NONE },
+ };
+ 
+ static pixman_bool_t
+ arm_neon_blt (pixman_implementation_t *imp,
+               uint32_t *               src_bits,
+               uint32_t *               dst_bits,
+               int                      src_stride,
+diff --git a/gfx/cairo/libpixman/src/pixman-fast-path.c b/gfx/cairo/libpixman/src/pixman-fast-path.c
+--- a/gfx/cairo/libpixman/src/pixman-fast-path.c
++++ b/gfx/cairo/libpixman/src/pixman-fast-path.c
+@@ -1356,63 +1356,63 @@ scaled_bilinear_scanline_565_565_SRC (ui
+         vx += unit_x;
+         *dst++ = d;
+     }
+ }
+ 
+ #endif
+ 
+ FAST_BILINEAR_MAINLOOP_COMMON (565_565_cover_SRC,
+-			       scaled_bilinear_scanline_565_565_SRC,
++			       scaled_bilinear_scanline_565_565_SRC, NULL,
+ 			       uint16_t, uint32_t, uint16_t,
+ 			       COVER, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (565_565_pad_SRC,
+-			       scaled_bilinear_scanline_565_565_SRC,
++			       scaled_bilinear_scanline_565_565_SRC, NULL,
+ 			       uint16_t, uint32_t, uint16_t,
+ 			       PAD, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (565_565_none_SRC,
+-			       scaled_bilinear_scanline_565_565_SRC,
++			       scaled_bilinear_scanline_565_565_SRC, NULL,
+ 			       uint16_t, uint32_t, uint16_t,
+ 			       NONE, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (565_565_normal_SRC,
+-			       scaled_bilinear_scanline_565_565_SRC,
++			       scaled_bilinear_scanline_565_565_SRC, NULL,
+ 			       uint16_t, uint32_t, uint16_t,
+ 			       NORMAL, FLAG_NONE)
+ 
+ FAST_BILINEAR_MAINLOOP_COMMON (8888_565_cover_OVER,
+-			       scaled_bilinear_scanline_8888_565_OVER,
++			       scaled_bilinear_scanline_8888_565_OVER, NULL,
+ 			       uint32_t, uint32_t, uint16_t,
+ 			       COVER, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (8888_565_pad_OVER,
+-			       scaled_bilinear_scanline_8888_565_OVER,
++			       scaled_bilinear_scanline_8888_565_OVER, NULL,
+ 			       uint32_t, uint32_t, uint16_t,
+ 			       PAD, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (8888_565_none_OVER,
+-			       scaled_bilinear_scanline_8888_565_OVER,
++			       scaled_bilinear_scanline_8888_565_OVER, NULL,
+ 			       uint32_t, uint32_t, uint16_t,
+ 			       NONE, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (8888_565_normal_OVER,
+-			       scaled_bilinear_scanline_8888_565_OVER,
++			       scaled_bilinear_scanline_8888_565_OVER, NULL,
+ 			       uint32_t, uint32_t, uint16_t,
+ 			       NORMAL, FLAG_NONE)
+ 
+ FAST_BILINEAR_MAINLOOP_COMMON (8888_8888_cover_OVER,
+-			       scaled_bilinear_scanline_8888_8888_OVER,
++			       scaled_bilinear_scanline_8888_8888_OVER, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       COVER, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (8888_8888_pad_OVER,
+-			       scaled_bilinear_scanline_8888_8888_OVER,
++			       scaled_bilinear_scanline_8888_8888_OVER, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       PAD, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (8888_8888_none_OVER,
+-			       scaled_bilinear_scanline_8888_8888_OVER,
++			       scaled_bilinear_scanline_8888_8888_OVER, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       NONE, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (8888_8888_normal_OVER,
+-			       scaled_bilinear_scanline_8888_8888_OVER,
++			       scaled_bilinear_scanline_8888_8888_OVER, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       NORMAL, FLAG_NONE)
+ 
+ #define REPEAT_MIN_WIDTH    32
+ 
+ static void
+ fast_composite_tiled_repeat (pixman_implementation_t *imp,
+ 			     pixman_composite_info_t *info)
+diff --git a/gfx/cairo/libpixman/src/pixman-inlines.h b/gfx/cairo/libpixman/src/pixman-inlines.h
+--- a/gfx/cairo/libpixman/src/pixman-inlines.h
++++ b/gfx/cairo/libpixman/src/pixman-inlines.h
+@@ -816,18 +816,48 @@ bilinear_pad_repeat_get_scanline_bounds 
+  *
+  * Note: normally the sum of 'weight_top' and 'weight_bottom' is equal to 256,
+  *       but sometimes it may be less than that for NONE repeat when handling
+  *       fuzzy antialiased top or bottom image edges. Also both top and
+  *       bottom weight variables are guaranteed to have value in 0-255
+  *       range and can fit into unsigned byte or be used with 8-bit SIMD
+  *       multiplication instructions.
+  */
+-#define FAST_BILINEAR_MAINLOOP_INT(scale_func_name, scanline_func, src_type_t, mask_type_t,	\
+-				  dst_type_t, repeat_mode, flags)				\
++
++/* Replace a single "scanline_func" with "fetch_func" & "op_func" to allow optional
++ * two stage processing (bilinear fetch to a temp buffer, followed by unscaled
++ * combine), "op_func" may be NULL, in this case we keep old behavior.
++ * This is ugly and gcc issues some warnings, but works.
++ *
++ * An advice: clang has much better error reporting than gcc for deeply nested macros.
++ */
++
++#define	scanline_func(dst_type_t, mask_type_t, src_type_t, fetch_func, op_func, dst,            \
++                      scanline_buf, mask, src_top, src_bottom, width,                           \
++                      weight_top, weight_bottom, vx, unit_x, max_vx, zero_src)                  \
++ do {                                                                                           \
++		if (op_func != NULL)								\
++		{										\
++		    fetch_func ((void *)scanline_buf, (mask), (src_top), (src_bottom), (width), \
++                        (weight_top), (weight_bottom), (vx), (unit_x), (max_vx), (zero_src));   \
++		    ((void (*)(dst_type_t *, const mask_type_t *, const src_type_t *, int)) op_func)\
++			((dst), (mask), (src_type_t *)scanline_buf, (width));			\
++		}										\
++		else										\
++		{										\
++		    fetch_func ((void*)(dst), (mask), (src_top), (src_bottom), (width), (weight_top),  \
++                                (weight_bottom), (vx), (unit_x), (max_vx), (zero_src));         \
++		}                                                                               \
++  } while (0)
++
++
++#define SCANLINE_BUFFER_LENGTH 3072
++
++#define FAST_BILINEAR_MAINLOOP_INT(scale_func_name, fetch_func, op_func, src_type_t,		\
++				  mask_type_t, dst_type_t, repeat_mode, flags)			\
+ static void											\
+ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,		\
+ 						   pixman_composite_info_t *info)		\
+ {												\
+     PIXMAN_COMPOSITE_ARGS (info);								\
+     dst_type_t *dst_line;									\
+     mask_type_t *mask_line;									\
+     src_type_t *src_first_line;									\
+@@ -842,16 +872,19 @@ fast_composite_scaled_bilinear ## scale_
+     mask_type_t solid_mask;									\
+     const mask_type_t *mask = &solid_mask;							\
+     int src_stride, mask_stride, dst_stride;							\
+ 												\
+     int src_width;										\
+     pixman_fixed_t src_width_fixed;								\
+     int max_x;											\
+     pixman_bool_t need_src_extension;								\
++                                                                                                \
++    uint64_t stack_scanline_buffer[SCANLINE_BUFFER_LENGTH];                                     \
++    uint8_t *scanline_buffer = (uint8_t *) stack_scanline_buffer;                               \
+ 												\
+     PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, dst_type_t, dst_stride, dst_line, 1);	\
+     if (flags & FLAG_HAVE_SOLID_MASK)								\
+     {												\
+ 	solid_mask = _pixman_image_get_solid (imp, mask_image, dest_image->bits.format);	\
+ 	mask_stride = 0;									\
+     }												\
+     else if (flags & FLAG_HAVE_NON_SOLID_MASK)							\
+@@ -914,16 +947,24 @@ fast_composite_scaled_bilinear ## scale_
+ 	else											\
+ 	{											\
+ 	    src_width = src_image->bits.width;							\
+ 	    need_src_extension = FALSE;								\
+ 	}											\
+ 												\
+ 	src_width_fixed = pixman_int_to_fixed (src_width);					\
+     }												\
++                                                                                                \
++    if (op_func != NULL && width * sizeof(src_type_t) > sizeof(stack_scanline_buffer))          \
++    {                                                                                           \
++	scanline_buffer = pixman_malloc_ab (width, sizeof(src_type_t));                         \
++                                                                                                \
++	if (!scanline_buffer)                                                                   \
++	    return;                                                                             \
++    }                                                                                           \
+ 												\
+     while (--height >= 0)									\
+     {												\
+ 	int weight1, weight2;									\
+ 	dst = dst_line;										\
+ 	dst_line += dst_stride;									\
+ 	vx = v.vector[0];									\
+ 	if (flags & FLAG_HAVE_NON_SOLID_MASK)							\
+@@ -956,36 +997,39 @@ fast_composite_scaled_bilinear ## scale_
+ 	    repeat (PIXMAN_REPEAT_PAD, &y2, src_image->bits.height);				\
+ 	    src1 = src_first_line + src_stride * y1;						\
+ 	    src2 = src_first_line + src_stride * y2;						\
+ 												\
+ 	    if (left_pad > 0)									\
+ 	    {											\
+ 		buf1[0] = buf1[1] = src1[0];							\
+ 		buf2[0] = buf2[1] = src2[0];							\
+-		scanline_func (dst, mask,							\
+-			       buf1, buf2, left_pad, weight1, weight2, 0, 0, 0, FALSE);		\
++		scanline_func (dst_type_t, mask_type_t, src_type_t, fetch_func, op_func, dst,	\
++			       scanline_buffer, mask, buf1, buf2, left_pad, weight1, weight2,   \
++                               0, 0, 0, FALSE);	                                                \
+ 		dst += left_pad;								\
+ 		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
+ 		    mask += left_pad;								\
+ 	    }											\
+ 	    if (width > 0)									\
+ 	    {											\
+-		scanline_func (dst, mask,							\
+-			       src1, src2, width, weight1, weight2, vx, unit_x, 0, FALSE);	\
++		scanline_func (dst_type_t, mask_type_t, src_type_t, fetch_func, op_func, dst,	\
++			       scanline_buffer, mask, src1, src2, width, weight1, weight2,      \
++                               vx, unit_x, 0, FALSE);                                           \
+ 		dst += width;									\
+ 		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
+ 		    mask += width;								\
+ 	    }											\
+ 	    if (right_pad > 0)									\
+ 	    {											\
+ 		buf1[0] = buf1[1] = src1[src_image->bits.width - 1];				\
+ 		buf2[0] = buf2[1] = src2[src_image->bits.width - 1];				\
+-		scanline_func (dst, mask,							\
+-			       buf1, buf2, right_pad, weight1, weight2, 0, 0, 0, FALSE);	\
++		scanline_func (dst_type_t, mask_type_t, src_type_t, fetch_func, op_func, dst,	\
++			       scanline_buffer, mask, buf1, buf2, right_pad, weight1, weight2,  \
++                               0, 0, 0, FALSE);                                                 \
+ 	    }											\
+ 	}											\
+ 	else if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NONE)				\
+ 	{											\
+ 	    src_type_t *src1, *src2;								\
+ 	    src_type_t buf1[2];									\
+ 	    src_type_t buf2[2];									\
+ 	    /* handle top/bottom zero padding by just setting weights to 0 if needed */		\
+@@ -1011,64 +1055,67 @@ fast_composite_scaled_bilinear ## scale_
+ 	    }											\
+ 	    src1 = src_first_line + src_stride * y1;						\
+ 	    src2 = src_first_line + src_stride * y2;						\
+ 												\
+ 	    if (left_pad > 0)									\
+ 	    {											\
+ 		buf1[0] = buf1[1] = 0;								\
+ 		buf2[0] = buf2[1] = 0;								\
+-		scanline_func (dst, mask,							\
+-			       buf1, buf2, left_pad, weight1, weight2, 0, 0, 0, TRUE);		\
++		scanline_func (dst_type_t, mask_type_t, src_type_t, fetch_func, op_func, dst,	\
++			       scanline_buffer, mask, buf1, buf2, left_pad, weight1, weight2,   \
++                               0, 0, 0, TRUE);	                                                \
+ 		dst += left_pad;								\
+ 		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
+ 		    mask += left_pad;								\
+ 	    }											\
+ 	    if (left_tz > 0)									\
+ 	    {											\
+ 		buf1[0] = 0;									\
+ 		buf1[1] = src1[0];								\
+ 		buf2[0] = 0;									\
+ 		buf2[1] = src2[0];								\
+-		scanline_func (dst, mask,							\
+-			       buf1, buf2, left_tz, weight1, weight2,				\
++		scanline_func (dst_type_t, mask_type_t, src_type_t, fetch_func, op_func, dst,	\
++			       scanline_buffer, mask, buf1, buf2, left_tz, weight1, weight2,	\
+ 			       pixman_fixed_frac (vx), unit_x, 0, FALSE);			\
+ 		dst += left_tz;									\
+ 		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
+ 		    mask += left_tz;								\
+ 		vx += left_tz * unit_x;								\
+ 	    }											\
+ 	    if (width > 0)									\
+ 	    {											\
+-		scanline_func (dst, mask,							\
+-			       src1, src2, width, weight1, weight2, vx, unit_x, 0, FALSE);	\
++		scanline_func (dst_type_t, mask_type_t, src_type_t, fetch_func, op_func, dst,	\
++			       scanline_buffer, mask, src1, src2, width, weight1, weight2,      \
++                               vx, unit_x, 0, FALSE);                                           \
+ 		dst += width;									\
+ 		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
+ 		    mask += width;								\
+ 		vx += width * unit_x;								\
+ 	    }											\
+ 	    if (right_tz > 0)									\
+ 	    {											\
+ 		buf1[0] = src1[src_image->bits.width - 1];					\
+ 		buf1[1] = 0;									\
+ 		buf2[0] = src2[src_image->bits.width - 1];					\
+ 		buf2[1] = 0;									\
+-		scanline_func (dst, mask,							\
+-			       buf1, buf2, right_tz, weight1, weight2,				\
++		scanline_func (dst_type_t, mask_type_t, src_type_t, fetch_func, op_func, dst,	\
++			       scanline_buffer, mask, buf1, buf2, right_tz, weight1, weight2,   \
+ 			       pixman_fixed_frac (vx), unit_x, 0, FALSE);			\
+ 		dst += right_tz;								\
+ 		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
+ 		    mask += right_tz;								\
+ 	    }											\
+ 	    if (right_pad > 0)									\
+ 	    {											\
+ 		buf1[0] = buf1[1] = 0;								\
+ 		buf2[0] = buf2[1] = 0;								\
+-		scanline_func (dst, mask,							\
+-			       buf1, buf2, right_pad, weight1, weight2, 0, 0, 0, TRUE);		\
++		scanline_func (dst_type_t, mask_type_t, src_type_t, fetch_func, op_func, dst,	\
++			       scanline_buffer, mask, buf1, buf2, right_pad, weight1, weight2,  \
++                               0, 0, 0, TRUE);	                                                \
+ 	    }											\
+ 	}											\
+ 	else if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
+ 	{											\
+ 	    int32_t	    num_pixels;								\
+ 	    int32_t	    width_remain;							\
+ 	    src_type_t *    src_line_top;							\
+ 	    src_type_t *    src_line_bottom;							\
+@@ -1120,17 +1167,18 @@ fast_composite_scaled_bilinear ## scale_
+ 		     * vx is in range [0, src_width_fixed - pixman_fixed_e]			\
+ 		     * So we are safe from overflow.						\
+ 		     */										\
+ 		    num_pixels = ((src_width_fixed - vx - pixman_fixed_e) / unit_x) + 1;	\
+ 												\
+ 		    if (num_pixels > width_remain)						\
+ 			num_pixels = width_remain;						\
+ 												\
+-		    scanline_func (dst, mask, buf1, buf2, num_pixels,				\
++		    scanline_func (dst_type_t, mask_type_t, src_type_t, fetch_func, op_func,    \
++                                   dst, scanline_buffer, mask, buf1, buf2, num_pixels,          \
+ 				   weight1, weight2, pixman_fixed_frac(vx),			\
+ 				   unit_x, src_width_fixed, FALSE);				\
+ 												\
+ 		    width_remain -= num_pixels;							\
+ 		    vx += num_pixels * unit_x;							\
+ 		    dst += num_pixels;								\
+ 												\
+ 		    if (flags & FLAG_HAVE_NON_SOLID_MASK)					\
+@@ -1149,41 +1197,47 @@ fast_composite_scaled_bilinear ## scale_
+ 		     * So we are safe from overflow here.					\
+ 		     */										\
+ 		    num_pixels = ((src_width_fixed - pixman_fixed_1 - vx - pixman_fixed_e)	\
+ 				  / unit_x) + 1;						\
+ 												\
+ 		    if (num_pixels > width_remain)						\
+ 			num_pixels = width_remain;						\
+ 												\
+-		    scanline_func (dst, mask, src_line_top, src_line_bottom, num_pixels,	\
+-				   weight1, weight2, vx, unit_x, src_width_fixed, FALSE);	\
++		    scanline_func (dst_type_t, mask_type_t, src_type_t, fetch_func, op_func,    \
++                                   dst, scanline_buffer, mask, src_line_top, src_line_bottom,   \
++                                   num_pixels, weight1, weight2, vx, unit_x, src_width_fixed,   \
++                                   FALSE);	                                                \
+ 												\
+ 		    width_remain -= num_pixels;							\
+ 		    vx += num_pixels * unit_x;							\
+ 		    dst += num_pixels;								\
+ 												\
+ 		    if (flags & FLAG_HAVE_NON_SOLID_MASK)					\
+ 		        mask += num_pixels;							\
+ 		}										\
+ 	    }											\
+ 	}											\
+ 	else											\
+ 	{											\
+-	    scanline_func (dst, mask, src_first_line + src_stride * y1,				\
++	    scanline_func (dst_type_t, mask_type_t, src_type_t, fetch_func, op_func, dst,       \
++                           scanline_buffer, mask,                                               \
++                           src_first_line + src_stride * y1,					\
+ 			   src_first_line + src_stride * y2, width,				\
+ 			   weight1, weight2, vx, unit_x, max_vx, FALSE);			\
+ 	}											\
+     }												\
++    if (scanline_buffer != (uint8_t *) stack_scanline_buffer)                                   \
++	free (scanline_buffer);                                                                 \
+ }
+ 
+ /* A workaround for old sun studio, see: https://bugs.freedesktop.org/show_bug.cgi?id=32764 */
+-#define FAST_BILINEAR_MAINLOOP_COMMON(scale_func_name, scanline_func, src_type_t, mask_type_t,	\
++#define FAST_BILINEAR_MAINLOOP_COMMON(scale_func_name, fetch_func, op_func, src_type_t, mask_type_t,\
+ 				  dst_type_t, repeat_mode, flags)				\
+-	FAST_BILINEAR_MAINLOOP_INT(_ ## scale_func_name, scanline_func, src_type_t, mask_type_t,\
++	FAST_BILINEAR_MAINLOOP_INT(_ ## scale_func_name, fetch_func, op_func, src_type_t, mask_type_t,\
+ 				  dst_type_t, repeat_mode, flags)
+ 
+ #define SCALED_BILINEAR_FLAGS						\
+     (FAST_PATH_SCALE_TRANSFORM	|					\
+      FAST_PATH_NO_ALPHA_MAP	|					\
+      FAST_PATH_BILINEAR_FILTER	|					\
+      FAST_PATH_NO_ACCESSORS	|					\
+      FAST_PATH_NARROW_FORMAT)
+diff --git a/gfx/cairo/libpixman/src/pixman-sse2.c b/gfx/cairo/libpixman/src/pixman-sse2.c
+--- a/gfx/cairo/libpixman/src/pixman-sse2.c
++++ b/gfx/cairo/libpixman/src/pixman-sse2.c
+@@ -5404,30 +5404,33 @@ scaled_bilinear_scanline_sse2_8888_8888_
+     if (w & 1)
+     {
+ 	BILINEAR_INTERPOLATE_ONE_PIXEL (pix1);
+ 	*dst = pix1;
+     }
+ 
+ }
+ 
++/* Add extra NULL argument to the existing bilinear fast paths to indicate
++ * that we don't need two-pass processing */
++
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_cover_SRC,
+-			       scaled_bilinear_scanline_sse2_8888_8888_SRC,
++			       scaled_bilinear_scanline_sse2_8888_8888_SRC, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       COVER, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_pad_SRC,
+-			       scaled_bilinear_scanline_sse2_8888_8888_SRC,
++			       scaled_bilinear_scanline_sse2_8888_8888_SRC, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       PAD, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_none_SRC,
+-			       scaled_bilinear_scanline_sse2_8888_8888_SRC,
++			       scaled_bilinear_scanline_sse2_8888_8888_SRC, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       NONE, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_normal_SRC,
+-			       scaled_bilinear_scanline_sse2_8888_8888_SRC,
++			       scaled_bilinear_scanline_sse2_8888_8888_SRC, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       NORMAL, FLAG_NONE)
+ 
+ static force_inline void
+ scaled_bilinear_scanline_sse2_8888_8888_OVER (uint32_t *       dst,
+ 					      const uint32_t * mask,
+ 					      const uint32_t * src_top,
+ 					      const uint32_t * src_bottom,
+@@ -5505,32 +5508,66 @@ scaled_bilinear_scanline_sse2_8888_8888_
+ 	}
+ 
+ 	w--;
+ 	dst++;
+     }
+ }
+ 
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_cover_OVER,
+-			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8888_OVER, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       COVER, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_pad_OVER,
+-			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8888_OVER, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       PAD, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_none_OVER,
+-			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8888_OVER, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       NONE, FLAG_NONE)
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_normal_OVER,
+-			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8888_OVER, NULL,
+ 			       uint32_t, uint32_t, uint32_t,
+ 			       NORMAL, FLAG_NONE)
+ 
++
++/* An example of SSE2 two-stage bilinear_over_8888_0565 fast path, which is implemented
++   as scaled_bilinear_scanline_sse2_8888_8888_SRC + op_bilinear_over_8888_0565 */
++
++void op_bilinear_over_8888_0565(uint16_t *dst, const uint32_t *mask, const uint32_t *src, int width)
++{
++    /* Note: this is not really fast and should be based on 8 pixel loop from sse2_composite_over_8888_0565 */
++    while (--width >= 0)
++    {
++	*dst = composite_over_8888_0565pixel (*src, *dst);
++	src++;
++	dst++;
++    }
++}
++
++FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_0565_cover_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8888_SRC, op_bilinear_over_8888_0565,
++			       uint32_t, uint32_t, uint16_t,
++			       COVER, FLAG_NONE)
++FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_0565_pad_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8888_SRC, op_bilinear_over_8888_0565,
++			       uint32_t, uint32_t, uint16_t,
++			       PAD, FLAG_NONE)
++FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_0565_none_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8888_SRC, op_bilinear_over_8888_0565,
++			       uint32_t, uint32_t, uint16_t,
++			       NONE, FLAG_NONE)
++FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_0565_normal_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8888_SRC, op_bilinear_over_8888_0565,
++			       uint32_t, uint32_t, uint16_t,
++			       NORMAL, FLAG_NONE)
++
++/*****************************/
++
+ static force_inline void
+ scaled_bilinear_scanline_sse2_8888_8_8888_OVER (uint32_t *       dst,
+ 						const uint8_t  * mask,
+ 						const uint32_t * src_top,
+ 						const uint32_t * src_bottom,
+ 						int32_t          w,
+ 						int              wt,
+ 						int              wb,
+@@ -5669,29 +5706,29 @@ scaled_bilinear_scanline_sse2_8888_8_888
+ 	}
+ 
+ 	w--;
+ 	dst++;
+     }
+ }
+ 
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8_8888_cover_OVER,
+-			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER, NULL,
+ 			       uint32_t, uint8_t, uint32_t,
+ 			       COVER, FLAG_HAVE_NON_SOLID_MASK)
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8_8888_pad_OVER,
+-			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER, NULL,
+ 			       uint32_t, uint8_t, uint32_t,
+ 			       PAD, FLAG_HAVE_NON_SOLID_MASK)
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8_8888_none_OVER,
+-			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER, NULL,
+ 			       uint32_t, uint8_t, uint32_t,
+ 			       NONE, FLAG_HAVE_NON_SOLID_MASK)
+ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8_8888_normal_OVER,
+-			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER,
++			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER, NULL,
+ 			       uint32_t, uint8_t, uint32_t,
+ 			       NORMAL, FLAG_HAVE_NON_SOLID_MASK)
+ 
+ static const pixman_fast_path_t sse2_fast_paths[] =
+ {
+     /* PIXMAN_OP_OVER */
+     PIXMAN_STD_FAST_PATH (OVER, solid, a8, r5g6b5, sse2_composite_over_n_8_0565),
+     PIXMAN_STD_FAST_PATH (OVER, solid, a8, b5g6r5, sse2_composite_over_n_8_0565),
+@@ -5808,16 +5845,21 @@ static const pixman_fast_path_t sse2_fas
+     SIMPLE_BILINEAR_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, sse2_8888_8888),
+     SIMPLE_BILINEAR_FAST_PATH (OVER, a8b8g8r8, a8b8g8r8, sse2_8888_8888),
+ 
+     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8r8g8b8, x8r8g8b8, sse2_8888_8_8888),
+     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8b8g8r8, x8b8g8r8, sse2_8888_8_8888),
+     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, sse2_8888_8_8888),
+     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8b8g8r8, a8b8g8r8, sse2_8888_8_8888),
+ 
++    /* and here the needed entries are added to the fast path table */
++
++    SIMPLE_BILINEAR_FAST_PATH (OVER, a8r8g8b8, r5g6b5, sse2_8888_0565),
++    SIMPLE_BILINEAR_FAST_PATH (OVER, a8b8g8r8, b5g6r5, sse2_8888_0565),
++
+     { PIXMAN_OP_NONE },
+ };
+ 
+ static pixman_bool_t
+ sse2_blt (pixman_implementation_t *imp,
+           uint32_t *               src_bits,
+           uint32_t *               dst_bits,
+           int                      src_stride,
+
