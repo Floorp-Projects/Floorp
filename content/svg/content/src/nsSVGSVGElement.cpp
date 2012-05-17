@@ -41,6 +41,7 @@
 #include "mozilla/Util.h"
 
 #include "nsGkAtoms.h"
+#include "nsLayoutUtils.h"
 #include "DOMSVGNumber.h"
 #include "DOMSVGLength.h"
 #include "nsSVGAngle.h"
@@ -204,7 +205,8 @@ nsSVGSVGElement::nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mPreviousScale(1.0f),
     mStartAnimationOnBindToTree(!aFromParser),
     mImageNeedsTransformInvalidation(false),
-    mIsPaintingSVGImageElement(false)
+    mIsPaintingSVGImageElement(false),
+    mHasChildrenOnlyTransform(false)
 {
 }
 
@@ -1019,6 +1021,33 @@ nsSVGSVGElement::GetViewBoxTransform() const
                                          viewBox.width, viewBox.height,
                                          overridePARPtr ? *overridePARPtr :
                                          mPreserveAspectRatio.GetAnimValue());
+}
+
+void
+nsSVGSVGElement::ChildrenOnlyTransformChanged()
+{
+  // Avoid wasteful calls:
+  NS_ABORT_IF_FALSE(!(GetPrimaryFrame()->GetStateBits() &
+                      NS_STATE_SVG_NONDISPLAY_CHILD),
+                    "Non-display SVG frames don't maintain overflow rects");
+
+  bool hasChildrenOnlyTransform = HasViewBoxOrSyntheticViewBox() ||
+    (IsRoot() && (mCurrentTranslate != nsSVGTranslatePoint(0.0f, 0.0f) ||
+                  mCurrentScale != 1.0f));
+
+  // XXXSDL Currently we don't destroy frames if
+  // hasChildrenOnlyTransform != mHasChildrenOnlyTransform
+  // but we should once we start using GFX layers for SVG transforms
+  // (see the comment in nsSVGGraphicElement::GetAttributeChangeHint).
+
+  nsChangeHint changeHint =
+    nsChangeHint(nsChangeHint_RepaintFrame |
+                 nsChangeHint_UpdateOverflow |
+                 nsChangeHint_ChildrenOnlyTransform);
+
+  nsLayoutUtils::PostRestyleEvent(this, nsRestyleHint(0), changeHint);
+
+  mHasChildrenOnlyTransform = hasChildrenOnlyTransform;
 }
 
 nsresult

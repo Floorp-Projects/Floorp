@@ -2340,8 +2340,8 @@ public:
   static nsRect GetFrameBoundsForTransform(const nsIFrame* aFrame);
 
   /**
-   * Given a frame with the -moz-transform property, returns the
-   * transformation matrix for that frame.
+   * Given a frame with the -moz-transform property or an SVG transform,
+   * returns the transformation matrix for that frame.
    *
    * @param aFrame The frame to get the matrix from.
    * @param aOrigin Relative to which point this transform should be applied.

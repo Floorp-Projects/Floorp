@@ -47,6 +47,7 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Preferences.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsComputedDOMStyle.h"
 #include "nsContentUtils.h"
 #include "nsFrameList.h"
@@ -588,6 +589,26 @@ nsSVGUtils::GetNearestSVGViewport(nsIFrame *aFrame)
 }
 
 nsRect
+nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
+                                            const nsRect &aUnfilteredRect)
+{
+  NS_ABORT_IF_FALSE(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT,
+                    "Called on invalid frame type");
+
+  nsSVGFilterFrame *filter = nsSVGEffects::GetFilterFrame(aFrame);
+  if (!filter) {
+    return aUnfilteredRect;
+  }
+
+  PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+  nsIntRect unfilteredRect =
+    aUnfilteredRect.ToOutsidePixels(appUnitsPerDevPixel);
+  nsIntRect rect = filter->GetFilterBBox(aFrame, nsnull, &unfilteredRect);
+  nsRect r = rect.ToAppUnits(appUnitsPerDevPixel) - aFrame->GetPosition();
+  return r;
+}
+
+nsRect
 nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
 {
   PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
@@ -696,7 +717,7 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate)
     return;
   }
 
-  // XXXsvgreflow we want to reduce the bounds when passing through inner-<svg>
+  // XXXSDL we want to reduce the bounds when passing through inner-<svg>
   // and <use>, etc.
 
   nsSVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame(aFrame);
@@ -762,7 +783,7 @@ nsSVGUtils::ScheduleBoundsUpdate(nsIFrame *aFrame)
     return;
   }
 
-  // XXXsvgreflow once we store bounds on containers, we will not need to
+  // XXXSDL once we store bounds on containers, we will not need to
   // mark our descendants dirty.
   MarkDirtyBitsOnDescendants(aFrame);
 
@@ -1144,20 +1165,33 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
   bool isOK = true;
   nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
 
-  /* Check if we need to draw anything. HasValidCoveredRect only returns
-   * true for path geometry and glyphs, so basically we're traversing
-   * all containers and we can only skip leaves here.
-   */
-  if (aDirtyRect && svgChildFrame->HasValidCoveredRect()) {
-    if (filterFrame) {
-      if (!aDirtyRect->Intersects(filterFrame->GetFilterBBox(aFrame, nsnull)))
-        return;
-    } else {
-      nsRect leafBounds = nsSVGUtils::TransformFrameRectToOuterSVG(
-        aFrame->GetRect(), GetCanvasTM(aFrame), aFrame->PresContext());
-      nsRect rect = aDirtyRect->ToAppUnits(aFrame->PresContext()->AppUnitsPerDevPixel());
-      if (!rect.Intersects(leafBounds))
-        return;
+  if (aDirtyRect &&
+      !(aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    // Here we convert aFrame's paint bounds to outer-<svg> device space,
+    // compare it to aDirtyRect, and return early if they don't intersect.
+    // We don't do this optimization for nondisplay SVG since nondisplay
+    // SVG doesn't maintain bounds/overflow rects.
+    nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
+    if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry)) {
+      // Unlike containers, leaf frames do not include GetPosition() in
+      // GetCanvasTM().
+      overflowRect = overflowRect + aFrame->GetPosition();
+    }
+    PRUint32 appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
+    gfxMatrix tm = GetCanvasTM(aFrame);
+    if (aFrame->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
+      gfxMatrix childrenOnlyTM;
+      if (static_cast<nsSVGContainerFrame*>(aFrame)->
+            HasChildrenOnlyTransform(&childrenOnlyTM)) {
+        // Undo the children-only transform:
+        tm = childrenOnlyTM.Invert() * tm;
+      }
+    }
+    nsIntRect bounds = nsSVGUtils::TransformFrameRectToOuterSVG(overflowRect,
+                         tm, aFrame->PresContext()).
+                           ToOutsidePixels(appUnitsPerDevPx);
+    if (!aDirtyRect->Intersects(bounds)) {
+      return;
     }
   }
 

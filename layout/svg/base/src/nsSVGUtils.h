@@ -45,6 +45,7 @@
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "nsAlgorithm.h"
+#include "nsChangeHint.h"
 #include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsID.h"
@@ -320,7 +321,15 @@ public:
    * returns nsnull.
    */
   static nsSVGDisplayContainerFrame* GetNearestSVGViewport(nsIFrame *aFrame);
-  
+
+  /**
+   * Returns the frame's post-filter visual overflow rect when passed the
+   * frame's pre-filter visual overflow rect. If the frame is not currently
+   * being filtered, this function simply returns aUnfilteredRect.
+   */
+  static nsRect GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
+                                                const nsRect &aUnfilteredRect);
+
   /**
    * Figures out the worst case invalidation area for a frame, taking
    * filters into account.

@@ -87,6 +87,7 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
+  virtual void UpdateBounds();
   virtual void NotifySVGChanged(PRUint32 aFlags);
 
   // nsIAnonymousContentCreator
@@ -194,6 +195,21 @@ nsSVGUseFrame::IsLeaf() const
 
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
+
+void
+nsSVGUseFrame::UpdateBounds()
+{
+  // We only handle x/y offset here, since any width/height that is in force is
+  // handled by the nsSVGOuterSVGFrame for the anonymous <svg> that will be
+  // created for that purpose.
+  float x, y;
+  static_cast<nsSVGUseElement*>(mContent)->
+    GetAnimatedLengthValues(&x, &y, nsnull);
+  mRect.MoveTo(nsLayoutUtils::RoundGfxRectToAppRect(
+                 gfxRect(x, y, 0.0, 0.0),
+                 PresContext()->AppUnitsPerCSSPixel()).TopLeft());
+  nsSVGUseFrameBase::UpdateBounds();
+}
 
 void
 nsSVGUseFrame::NotifySVGChanged(PRUint32 aFlags)

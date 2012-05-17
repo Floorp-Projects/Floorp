@@ -82,20 +82,6 @@ public:
                     nsReflowStatus&          aStatus);
 
   /**
-   * Foreign objects are always transformed.
-   */
-  virtual bool IsTransformed() const
-  {
-    return true;
-  }
-
-  /**
-   * Foreign objects can return a transform matrix.
-   */
-  virtual gfx3DMatrix GetTransformMatrix(nsIFrame* aAncestor,
-                                         nsIFrame **aOutAncestor);
-
-  /**
    * Get the "type" of the frame
    *
    * @see nsGkAtoms::svgForeignObjectFrame
@@ -129,9 +115,6 @@ public:
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                       PRUint32 aFlags);
   NS_IMETHOD_(bool) IsDisplayContainer() { return true; }
-  NS_IMETHOD_(bool) HasValidCoveredRect() {
-    return !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
-  }
 
   gfxMatrix GetCanvasTM();
 
