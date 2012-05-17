@@ -261,7 +261,6 @@ MarionetteDriverActor.prototype = {
       this.curBrowser.elementManager.seenItems[winId] = win;
     }
     this.browsers[winId] = browser;
-    return winId;
   },
 
   /**
@@ -283,7 +282,9 @@ MarionetteDriverActor.prototype = {
     this.curBrowser.newSession = newSession;
     this.curBrowser.startSession(newSession);
     try {
-      this.curBrowser.loadFrameScript("chrome://marionette/content/marionette-listener.js", win);
+      if (!Services.prefs.getBoolPref("marionette.contentListener") || !newSession) {
+        this.curBrowser.loadFrameScript("chrome://marionette/content/marionette-listener.js", win);
+      }
     }
     catch (e) {
       //there may not always be a content process
@@ -1355,10 +1356,8 @@ BrowserObj.prototype = {
    *        frame to load the script in
    */
   loadFrameScript: function BO_loadFrameScript(script, frame) {
-    if (!Services.prefs.getBoolPref("marionette.contentListener")) {
-      frame.window.messageManager.loadFrameScript(script, true);
-      Services.prefs.setBoolPref("marionette.contentListener", true);
-    }
+    frame.window.messageManager.loadFrameScript(script, true);
+    Services.prefs.setBoolPref("marionette.contentListener", true);
   },
 
   /**
