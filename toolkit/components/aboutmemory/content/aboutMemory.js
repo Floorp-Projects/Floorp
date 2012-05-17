@@ -681,27 +681,44 @@ function buildTree(aReports, aTreePrefix)
   t = t._kids[0];
 
   // Next, fill in the remaining properties bottom-up.
-  function fillInNonLeafNodes(aT)
+  function fillInNonLeafNodes(aT, aCannotMerge)
   {
     if (aT._kids.length === 0) {
       // Leaf node.  Has already been filled in.
       assert(aT._kind !== undefined, "aT._kind is undefined for leaf node");
-    } else {
-      // Non-leaf node.  Derive its _amount and _description entirely
-      // from its children.
+
+    } else if (aT._kids.length === 1 && !aCannotMerge) {
+      // Non-leaf node with one child.  Merge the child with the node to avoid
+      // redundant entries.
       assert(aT._kind === undefined, "aT._kind is defined for non-leaf node");
-      let childrenBytes = 0;
-      for (let i = 0; i < aT._kids.length; i++) {
-        childrenBytes += fillInNonLeafNodes(aT._kids[i]);
+      let kid = aT._kids[0];
+      let kidBytes = fillInNonLeafNodes(kid);
+      aT._unsafeName += '/' + kid._unsafeName;
+      aT._kids = kid._kids;
+      aT._amount = kid._amount;
+      aT._description = kid._description;
+      aT._kind = kid._kind;
+      if (kid._nMerged) {
+        aT._nMerged = kid._nMerged
       }
-      aT._amount = childrenBytes;
+
+    } else {
+      // Non-leaf node with multiple children.  Derive its _amount and
+      // _description entirely from its children.
+      assert(aT._kind === undefined, "aT._kind is defined for non-leaf node");
+      let kidsBytes = 0;
+      for (let i = 0; i < aT._kids.length; i++) {
+        kidsBytes += fillInNonLeafNodes(aT._kids[i]);
+      }
+      aT._amount = kidsBytes;
       aT._description = "The sum of all entries below '" +
                         flipBackslashes(aT._unsafeName) + "'.";
     }
     return aT._amount;
   }
 
-  fillInNonLeafNodes(t);
+  // cannotMerge is set because don't want to merge into a tree's root node.
+  fillInNonLeafNodes(t, /* cannotMerge = */true);
 
   // Set the (unsafe) description on the root node.
   t._description = kTreeDescriptions[t._unsafeName];
