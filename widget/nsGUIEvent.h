@@ -1983,8 +1983,13 @@ enum nsDragDropEventStatus {
 #define NS_VK_8              nsIDOMKeyEvent::DOM_VK_8
 #define NS_VK_9              nsIDOMKeyEvent::DOM_VK_9
 
+#define NS_VK_COLON          nsIDOMKeyEvent::DOM_VK_COLON
 #define NS_VK_SEMICOLON      nsIDOMKeyEvent::DOM_VK_SEMICOLON
+#define NS_VK_LESS_THAN      nsIDOMKeyEvent::DOM_VK_LESS_THAN
 #define NS_VK_EQUALS         nsIDOMKeyEvent::DOM_VK_EQUALS
+#define NS_VK_GREATER_THAN   nsIDOMKeyEvent::DOM_VK_GREATER_THAN
+#define NS_VK_QUESTION_MARK  nsIDOMKeyEvent::DOM_VK_QUESTION_MARK
+#define NS_VK_AT             nsIDOMKeyEvent::DOM_VK_AT
 
 // NS_VK_A - NS_VK_Z match their ascii values
 #define NS_VK_A              nsIDOMKeyEvent::DOM_VK_A
@@ -2014,6 +2019,7 @@ enum nsDragDropEventStatus {
 #define NS_VK_Y              nsIDOMKeyEvent::DOM_VK_Y
 #define NS_VK_Z              nsIDOMKeyEvent::DOM_VK_Z
 
+#define NS_VK_WIN            nsIDOMKeyEvent::DOM_VK_WIN
 #define NS_VK_CONTEXT_MENU   nsIDOMKeyEvent::DOM_VK_CONTEXT_MENU
 #define NS_VK_SLEEP          nsIDOMKeyEvent::DOM_VK_SLEEP
 
@@ -2060,6 +2066,24 @@ enum nsDragDropEventStatus {
 
 #define NS_VK_NUM_LOCK       nsIDOMKeyEvent::DOM_VK_NUM_LOCK
 #define NS_VK_SCROLL_LOCK    nsIDOMKeyEvent::DOM_VK_SCROLL_LOCK
+
+#define NS_VK_CIRCUMFLEX     nsIDOMKeyEvent::DOM_VK_CIRCUMFLEX
+#define NS_VK_EXCLAMATION    nsIDOMKeyEvent::DOM_VK_EXCLAMATION
+#define NS_VK_DOUBLE_QUOTE   nsIDOMKeyEvent::DOM_VK_DOUBLE_QUOTE
+#define NS_VK_HASH           nsIDOMKeyEvent::DOM_VK_HASH
+#define NS_VK_DOLLAR         nsIDOMKeyEvent::DOM_VK_DOLLAR
+#define NS_VK_PERCENT        nsIDOMKeyEvent::DOM_VK_PERCENT
+#define NS_VK_AMPERSAND      nsIDOMKeyEvent::DOM_VK_AMPERSAND
+#define NS_VK_UNDERSCORE     nsIDOMKeyEvent::DOM_VK_UNDERSCORE
+#define NS_VK_OPEN_PAREN     nsIDOMKeyEvent::DOM_VK_OPEN_PAREN
+#define NS_VK_CLOSE_PAREN    nsIDOMKeyEvent::DOM_VK_CLOSE_PAREN
+#define NS_VK_ASTERISK       nsIDOMKeyEvent::DOM_VK_ASTERISK
+#define NS_VK_PLUS           nsIDOMKeyEvent::DOM_VK_PLUS
+#define NS_VK_PIPE           nsIDOMKeyEvent::DOM_VK_PIPE
+#define NS_VK_HYPHEN_MINUS   nsIDOMKeyEvent::DOM_VK_HYPHEN_MINUS
+#define NS_VK_OPEN_CURLY_BRACKET  nsIDOMKeyEvent::DOM_VK_OPEN_CURLY_BRACKET
+#define NS_VK_CLOSE_CURLY_BRACKET nsIDOMKeyEvent::DOM_VK_CLOSE_CURLY_BRACKET
+#define NS_VK_TILDE          nsIDOMKeyEvent::DOM_VK_TILDE
 
 #define NS_VK_COMMA          nsIDOMKeyEvent::DOM_VK_COMMA
 #define NS_VK_PERIOD         nsIDOMKeyEvent::DOM_VK_PERIOD
