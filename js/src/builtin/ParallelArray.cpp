@@ -620,10 +620,15 @@ static JSBool
 ParallelArray_length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     /* we do not support prototype chaining for now */
-    if (obj->getClass() != &ParallelArrayClass)
-        return false;
+    if (obj->getClass() == &ParallelArrayClass) {
+        /* return the length of the ParallelArray object */
+        vp->setNumber(GetLength(obj));
+    } else {
+        /* return the length of the prototype's function object */
+        JS_ASSERT(obj->getClass() == &ParallelArrayProtoClass);
+        vp->setInt32(0);
+    }
 
-    vp->setNumber(GetLength(obj));
     return true;
 }
 
