@@ -94,8 +94,8 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
   public void setFromRecord(CryptoRecord record) throws IllegalStateException, IOException, ParseException, NonObjectJSONException {
     Logger.info(LOG_TAG, "meta/global is " + record.payload.toJSONString());
     this.storageVersion = (Long) record.payload.get("storageVersion");
-    this.engines = record.payload.getObject("engines");
     this.syncID = (String) record.payload.get("syncID");
+    setEngines(record.payload.getObject("engines"));
   }
 
   public Long getStorageVersion() {
@@ -111,6 +111,9 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
   }
 
   public void setEngines(ExtendedJSONObject engines) {
+    if (engines == null) {
+      engines = new ExtendedJSONObject();
+    }
     this.engines = engines;
     final int count = engines.size();
     versions   = new HashMap<String, Integer>(count);
@@ -122,6 +125,7 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
         recordEngineState(engineName, engineEntry);
       } catch (NonObjectJSONException e) {
         Logger.error(LOG_TAG, "Engine field for " + engineName + " in meta/global is not an object.");
+        recordEngineState(engineName, new ExtendedJSONObject()); // Doesn't have a version or syncID, for example, so will be server wiped.
       }
     }
   }
@@ -137,6 +141,22 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
     if (engineEntry == null) {
       throw new IllegalArgumentException("engineEntry cannot be null.");
     }
+
+    // Record syncID first, so that engines with bad versions are recorded.
+    try {
+      String syncID = engineEntry.getString("syncID");
+      if (syncID == null) {
+        Logger.warn(LOG_TAG, "No syncID for " + engineName + ". Recording exception.");
+        exceptions.put(engineName, new MetaGlobalMalformedSyncIDException());
+      }
+      syncIDs.put(engineName, syncID);
+    } catch (ClassCastException e) {
+      // Malformed syncID on the server. Wipe the server.
+      Logger.warn(LOG_TAG, "Malformed syncID " + engineEntry.get("syncID") +
+                           " for " + engineName + ". Recording exception.");
+      exceptions.put(engineName, new MetaGlobalMalformedSyncIDException());
+    }
+
     try {
       Integer version = engineEntry.getIntegerSafely("version");
       Logger.trace(LOG_TAG, "Engine " + engineName + " has server version " + version);
@@ -155,20 +175,6 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
                            " for " + engineName + ". Recording exception.");
       exceptions.put(engineName, new MetaGlobalMalformedVersionException());
       return;
-    }
-
-    try {
-      String syncID = engineEntry.getString("syncID");
-      if (syncID == null) {
-        Logger.warn(LOG_TAG, "No syncID for " + engineName + ". Recording exception.");
-        exceptions.put(engineName, new MetaGlobalMalformedSyncIDException());
-      }
-      syncIDs.put(engineName, syncID);
-    } catch (ClassCastException e) {
-      // Malformed syncID on the server. Wipe the server.
-      Logger.warn(LOG_TAG, "Malformed syncID " + engineEntry.get("syncID") +
-                           " for " + engineName + ". Recording exception.");
-      exceptions.put(engineName, new MetaGlobalException.MetaGlobalMalformedSyncIDException());
     }
   }
 
@@ -201,18 +207,21 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
       throw new IllegalArgumentException("engineSettings cannot be null.");
     }
 
-    final String syncID = syncIDs.get(engineName);
-    if (syncID == null) {
-      throw new IllegalArgumentException("Unknown engine " + engineName);
-    }
-
+    // First, see if we had a parsing problem.
     final MetaGlobalException exception = exceptions.get(engineName);
     if (exception != null) {
       throw exception;
     }
 
-    final Integer version = versions.get(engineName);
+    final String syncID = syncIDs.get(engineName);
+    if (syncID == null) {
+      // We have checked engineName against enabled engine names before this, so
+      // we should either have a syncID or an exception for this engine already.
+      throw new IllegalArgumentException("Unknown engine " + engineName);
+    }
 
+    // Since we don't have an exception, and we do have a syncID, we should have a version.
+    final Integer version = versions.get(engineName);
     if (version > engineSettings.version) {
       // We're out of date.
       throw new MetaGlobalException.MetaGlobalStaleClientVersionException(version);

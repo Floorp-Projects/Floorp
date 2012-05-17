@@ -34,6 +34,8 @@ public interface GlobalSyncStage {
     syncBookmarks("bookmarks"),
     syncHistory("history"),
     syncFormHistory("forms"),
+
+    uploadMetaGlobal,
     completed;
 
     // Maintain a mapping from names ("bookmarks") to Stage enumerations (syncBookmarks).

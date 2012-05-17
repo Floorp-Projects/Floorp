@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -49,6 +50,7 @@ import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 import org.mozilla.gecko.sync.stage.NoSuchStageException;
 import org.mozilla.gecko.sync.stage.PasswordsServerSyncStage;
 import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
+import org.mozilla.gecko.sync.stage.UploadMetaGlobalStage;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -69,6 +71,11 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
   public final GlobalSessionCallback callback;
   private Context context;
   private ClientsDataDelegate clientsDelegate;
+
+  /**
+   * Map from engine name to new settings for an updated meta/global record.
+   */
+  public final Map<String, EngineSettings> enginesToUpdate = new HashMap<String, EngineSettings>();
 
   /*
    * Key accessors.
@@ -218,6 +225,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     stages.put(Stage.syncHistory,             new AndroidBrowserHistoryServerSyncStage(this));
     stages.put(Stage.syncFormHistory,         new FormHistoryServerSyncStage(this));
 
+    stages.put(Stage.uploadMetaGlobal,        new UploadMetaGlobalStage(this));
     stages.put(Stage.completed,               new CompletedStage(this));
 
     this.stages = Collections.unmodifiableMap(stages);
@@ -355,12 +363,114 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     this.callback.handleSuccess(this);
   }
 
+  /**
+   * Record that an updated meta/global record should be uploaded with the given
+   * settings for the given engine.
+   *
+   * @param engineName engine to update.
+   * @param engineSettings new syncID and version.
+   */
+  public void updateMetaGlobalWith(String engineName, EngineSettings engineSettings) {
+    enginesToUpdate.put(engineName, engineSettings);
+  }
+
+  public boolean hasUpdatedMetaGlobal() {
+    if (enginesToUpdate.isEmpty()) {
+      Logger.info(LOG_TAG, "Not uploading updated meta/global record since there are no engines requesting upload.");
+      return false;
+    }
+
+    if (Logger.logVerbose(LOG_TAG)) {
+      Logger.trace(LOG_TAG, "Uploading updated meta/global record since there are engines requesting upload: " +
+          Utils.toCommaSeparatedString(enginesToUpdate.keySet()));
+    }
+
+    return true;
+  }
+
+  public void updateMetaGlobalInPlace() {
+    ExtendedJSONObject engines = config.metaGlobal.getEngines();
+    for (Entry<String, EngineSettings> pair : enginesToUpdate.entrySet()) {
+      engines.put(pair.getKey(), pair.getValue().toJSONObject());
+    }
+    enginesToUpdate.clear();
+  }
+
+  /**
+   * Synchronously upload an updated meta/global.
+   * <p>
+   * All problems are logged and ignored.
+   */
+  public void uploadUpdatedMetaGlobal() {
+    updateMetaGlobalInPlace();
+
+    Logger.debug(LOG_TAG, "Uploading updated meta/global record.");
+    final Object monitor = new Object();
+
+    Runnable doUpload = new Runnable() {
+      @Override
+      public void run() {
+        config.metaGlobal.upload(new MetaGlobalDelegate() {
+          @Override
+          public void handleSuccess(MetaGlobal global, SyncStorageResponse response) {
+            Logger.info(LOG_TAG, "Successfully uploaded updated meta/global record.");
+            synchronized (monitor) {
+              monitor.notify();
+            }
+          }
+
+          @Override
+          public void handleMissing(MetaGlobal global, SyncStorageResponse response) {
+            Logger.warn(LOG_TAG, "Got 404 missing uploading updated meta/global record; shouldn't happen.  Ignoring.");
+            synchronized (monitor) {
+              monitor.notify();
+            }
+          }
+
+          @Override
+          public void handleFailure(SyncStorageResponse response) {
+            Logger.warn(LOG_TAG, "Failed to upload updated meta/global record; ignoring.");
+            synchronized (monitor) {
+              monitor.notify();
+            }
+          }
+
+          @Override
+          public void handleError(Exception e) {
+            Logger.warn(LOG_TAG, "Got exception trying to upload updated meta/global record; ignoring.", e);
+            synchronized (monitor) {
+              monitor.notify();
+            }
+          }
+        });
+      }
+    };
+
+    final Thread upload = new Thread(doUpload);
+    synchronized (monitor) {
+      try {
+        upload.start();
+        monitor.wait();
+        Logger.debug(LOG_TAG, "Uploaded updated meta/global record.");
+      } catch (InterruptedException e) {
+        Logger.error(LOG_TAG, "Uploading updated meta/global interrupted; continuing.");
+      }
+    }
+  }
+
+
   public void abort(Exception e, String reason) {
     Logger.warn(LOG_TAG, "Aborting sync: " + reason, e);
     uninstallAsHttpResponseObserver();
     long existingBackoff = largestBackoffObserved.get();
     if (existingBackoff > 0) {
       callback.requestBackoff(existingBackoff);
+    }
+    if (!(e instanceof HTTPFailureException)) {
+      //  e is null, or we aborted for a non-HTTP reason; okay to upload new meta/global record.
+      if (this.hasUpdatedMetaGlobal()) {
+        this.uploadUpdatedMetaGlobal(); // Only logs errors; does not call abort.
+      }
     }
     this.callback.handleError(this, e);
   }
