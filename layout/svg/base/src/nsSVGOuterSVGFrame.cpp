@@ -770,17 +770,9 @@ nsSVGOuterSVGFrame::GetCanvasTM()
       1.0f / PresContext()->AppUnitsToFloatCSSPixels(
                                 PresContext()->AppUnitsPerDevPixel());
 
-    gfxMatrix viewBoxTM = content->GetViewBoxTransform();
-
-    gfxMatrix zoomPanTM;
-    if (mIsRootContent) {
-      const nsSVGTranslatePoint& translate = content->GetCurrentTranslate();
-      zoomPanTM.Translate(gfxPoint(translate.GetX(), translate.GetY()));
-      zoomPanTM.Scale(content->GetCurrentScale(), content->GetCurrentScale());
-    }
-
-    gfxMatrix TM = viewBoxTM * zoomPanTM * gfxMatrix().Scale(devPxPerCSSPx, devPxPerCSSPx);
-    mCanvasTM = new gfxMatrix(TM);
+    gfxMatrix tm = content->PrependLocalTransformsTo(
+                     gfxMatrix().Scale(devPxPerCSSPx, devPxPerCSSPx));
+    mCanvasTM = new gfxMatrix(tm);
   }
   return *mCanvasTM;
 }

@@ -55,6 +55,10 @@
 
 class nsIDOMSVGMatrix;
 class nsSMILTimeContainer;
+class nsSVGViewElement;
+namespace mozilla {
+  class SVGFragmentIdentifier;
+}
 
 typedef nsSVGStylableElement nsSVGSVGElementBase;
 
@@ -138,6 +142,7 @@ class nsSVGSVGElement : public nsSVGSVGElementBase,
   friend class nsSVGOuterSVGFrame;
   friend class nsSVGInnerSVGFrame;
   friend class nsSVGImageFrame;
+  friend class mozilla::SVGFragmentIdentifier;
 
   friend nsresult NS_NewSVGSVGElement(nsIContent **aResult,
                                       already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -273,13 +278,6 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
 private:
-  // Methods for <image> elements to override my "PreserveAspectRatio" value.
-  // These are private so that only our friends (nsSVGImageFrame in
-  // particular) have access.
-  void SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR);
-  void ClearImageOverridePreserveAspectRatio();
-  const SVGPreserveAspectRatio* GetImageOverridePreserveAspectRatio() const;
-
   // nsSVGElement overrides
   bool IsEventName(nsIAtom* aName);
 
@@ -289,6 +287,23 @@ private:
   virtual void UnbindFromTree(bool aDeep, bool aNullParent);
 
   // implementation helpers:
+
+  // Methods for <image> elements to override my "PreserveAspectRatio" value.
+  // These are private so that only our friends (nsSVGImageFrame in
+  // particular) have access.
+  void SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR);
+  void ClearImageOverridePreserveAspectRatio();
+
+  // Set/Clear properties to hold old or override versions of attributes
+  bool SetPreserveAspectRatioProperty(const SVGPreserveAspectRatio& aPAR);
+  const SVGPreserveAspectRatio* GetPreserveAspectRatioProperty() const;
+  bool ClearPreserveAspectRatioProperty();
+  bool SetViewBoxProperty(const nsSVGViewBoxRect& aViewBox);
+  const nsSVGViewBoxRect* GetViewBoxProperty() const;
+  bool ClearViewBoxProperty();
+  bool SetZoomAndPanProperty(PRUint16 aValue);
+  const PRUint16* GetZoomAndPanProperty() const;
+  bool ClearZoomAndPanProperty();
 
   bool IsRoot() const {
     NS_ASSERTION((IsInDoc() && !GetParent()) ==
@@ -317,7 +332,7 @@ private:
    * parameters passed in instead.
    */
   bool WillBeOutermostSVG(nsIContent* aParent,
-                            nsIContent* aBindingParent) const;
+                          nsIContent* aBindingParent) const;
 
   // invalidate viewbox -> viewport xform & inform frames
   void InvalidateTransformNotifyFrame();
@@ -326,6 +341,19 @@ private:
   // - a (valid or invalid) value for the preserveAspectRatio attribute
   // - a SMIL-animated value for the preserveAspectRatio attribute
   bool HasPreserveAspectRatio();
+
+ /**
+  * Returns the explicit viewBox rect, if specified, or else a synthesized
+  * viewBox, if appropriate, or else a viewBox matching the dimensions of the
+  * SVG viewport.
+  */
+  nsSVGViewBoxRect GetViewBoxWithSynthesis(
+      float aViewportWidth, float aViewportHeight) const;
+  /**
+   * Returns the explicit or default preserveAspectRatio, unless we're
+   * synthesizing a viewBox, in which case it returns the "none" value.
+   */
+  SVGPreserveAspectRatio GetPreserveAspectRatioWithOverride() const;
 
   virtual LengthAttributesInfo GetLengthInfo();
 
