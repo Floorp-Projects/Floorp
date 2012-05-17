@@ -23,6 +23,8 @@ random-if(Android) == basic-negcoord.xul basic-negcoord-ref.xul
 
 != text-shadow-selected-1.html text-shadow-selected-1-notref.html
 == text-shadow-selected-1.html text-shadow-selected-1-ref.html
+!= text-shadow-selected-2.html text-shadow-selected-2-notref.html
+== text-shadow-selected-2.html text-shadow-selected-2-ref.html
 
 # bug 692744
 == text-shadow-on-space-1.html text-shadow-on-space-1-ref.html
