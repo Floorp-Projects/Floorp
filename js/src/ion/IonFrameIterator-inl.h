@@ -57,39 +57,21 @@ InlineFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned c
     unsigned end = start + count;
     JS_ASSERT(start <= end && end <= nactual);
 
-    unsigned nformal = callee()->nargs;
-    unsigned formalEnd = end;
-    if (!more() && end > nformal)
-        formalEnd = nformal;
-    else
-        // Currently inlining does not support overflow of arguments, we have to
-        // add this feature in IonBuilder.cpp and in Bailouts.cpp before
-        // continuing. We need to add it to Bailouts.cpp because we need to know
-        // how to walk over the oveflow of arguments.
-        JS_ASSERT(end <= nformal);
-
     SnapshotIterator s(si_);
-
+    
     s.skip(); // scopeChain
     s.skip(); // this
 
     unsigned i = 0;
     for (; i < start; i++)
         s.skip();
-    for (; i < formalEnd; i++) {
+    for (; i < end; i++) {
         // We are not always able to read values from the snapshots, some values
         // such as non-gc things may still be live in registers and cause an
         // error while reading the machine state.
         Value v = s.maybeRead();
         if (!op(i, &v))
             return false;
-    }
-    if (formalEnd != end) {
-        Value *argv = frame_->argv() + 1;
-        for (; i < end; i++) {
-            if (!op(i, &argv[i]))
-                return false;
-        }
     }
     return true;
 }
