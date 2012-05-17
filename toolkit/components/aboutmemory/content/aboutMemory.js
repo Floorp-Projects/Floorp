@@ -229,11 +229,11 @@ function processMemoryReporters(aMgr, aIgnoreSingle, aIgnoreMulti,
 
   let e = aMgr.enumerateMultiReporters();
   while (e.hasMoreElements()) {
-    let mrOrig = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
-    let name = mrOrig.name;
+    let mr = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    let name = mr.name;
     try {
       if (!aIgnoreMulti(name)) {
-        mrOrig.collectReports(handleReport, null);
+        mr.collectReports(handleReport, null);
       }
     }
     catch (ex) {
@@ -269,14 +269,13 @@ function checkReport(aUnsafePath, aKind, aUnits, aAmount, aDescription)
     assert(gSentenceRegExp.test(aDescription),
            "non-sentence explicit description");
 
-  } else if (aUnsafePath.startsWith("smaps/")) {
+  } else if (isSmapsPath(aUnsafePath)) {
     assert(aKind === KIND_NONHEAP, "bad smaps kind");
     assert(aUnits === UNITS_BYTES, "bad smaps units");
     assert(aDescription !== "", "empty smaps description");
 
   } else if (aKind === KIND_SUMMARY) {
-    assert(!aUnsafePath.startsWith("explicit/") &&
-           !aUnsafePath.startsWith("smaps/"),
+    assert(!aUnsafePath.startsWith("explicit/") && !isSmapsPath(aUnsafePath),
            "bad SUMMARY path");
 
   } else {
@@ -379,7 +378,7 @@ mappings is currently using. Mappings which are not in the swap file (i.e., \
 nodes which would have a value of 0 in this tree) are omitted."
 };
 
-const kTreeNames = {
+const kSectionNames = {
   'explicit': 'Explicit Allocations',
   'resident': 'Resident Set Size (RSS) Breakdown',
   'pss':      'Proportional Set Size (PSS) Breakdown',
@@ -388,8 +387,17 @@ const kTreeNames = {
   'other':    'Other Measurements'
 };
 
-const kMapTreePaths =
-  ['smaps/resident', 'smaps/pss', 'smaps/vsize', 'smaps/swap'];
+const kSmapsTreePrefixes = ['resident/', 'pss/', 'vsize/', 'swap/'];
+
+function isSmapsPath(aUnsafePath)
+{
+  for (let i = 0; i < kSmapsTreePrefixes.length; i++) {
+    if (aUnsafePath.startsWith(kSmapsTreePrefixes[i])) {
+      return true;
+    }
+  }
+  return false;
+}
 
 //---------------------------------------------------------------------------
 
@@ -519,13 +527,6 @@ Report.prototype = {
     this._amount += r._amount;
     this._nMerged = this._nMerged ? this._nMerged + 1 : 2;
   },
-
-  treeNameMatches: function(aTreeName) {
-    // Nb: the '/' must be present, because we have a KIND_OTHER reporter
-    // called "explicit" which is not part of the "explicit" tree.
-    return this._unsafePath.startsWith(aTreeName) &&
-           this._unsafePath.charAt(aTreeName.length) === '/';
-  }
 };
 
 function getReportsByProcess(aMgr)
@@ -535,18 +536,18 @@ function getReportsByProcess(aMgr)
   // that reports from these multi-reporters can reach here as single reports
   // if they were in the child process.)
 
-  function ignoreSingle(aPath) 
+  function ignoreSingle(aUnsafePath) 
   {
-    return (aPath.startsWith("smaps/") && !gVerbose) ||
-           aPath.startsWith("compartments/") ||
-           aPath.startsWith("ghost-windows/");
+    return (isSmapsPath(aUnsafePath) && !gVerbose) ||
+           aUnsafePath.startsWith("compartments/") ||
+           aUnsafePath.startsWith("ghost-windows/");
   }
 
-  function ignoreMulti(aName)
+  function ignoreMulti(aMRName)
   {
-    return (aName === "smaps" && !gVerbose) ||
-           aName === "compartments" ||
-           aName === "ghost-windows";
+    return (aMRName === "smaps" && !gVerbose) ||
+           aMRName === "compartments" ||
+           aMRName === "ghost-windows";
   }
 
   let reportsByProcess = {};
@@ -623,36 +624,26 @@ TreeNode.compare = function(a, b) {
  *
  * @param aReports
  *        The table of Reports, indexed by _unsafePath.
- * @param aTreeName
- *        The name of the tree being built.
+ * @param aTreePrefix
+ *        The prefix (name) of the tree being built.  Must have '/' on the end.
  * @return The built tree.
  */
-function buildTree(aReports, aTreeName)
+function buildTree(aReports, aTreePrefix)
 {
-  // We want to process all reports that begin with |aTreeName|.  First we
+  assert(aTreePrefix.indexOf('/') == aTreePrefix.length - 1,
+         "aTreePrefix doesn't end in '/'");
+
+  // We want to process all reports that begin with |aTreePrefix|.  First we
   // build the tree but only fill the properties that we can with a top-down
   // traversal.
 
-  // There should always be at least one matching Report object when
-  // |aTreeName| is "explicit".  But there may be zero for "smaps" trees;  if
-  // that happens, bail.
   let foundReport = false;
-  for (let unsafePath in aReports) {
-    if (aReports[unsafePath].treeNameMatches(aTreeName)) {
-      foundReport = true;
-      break;
-    }
-  }
-  if (!foundReport) {
-    assert(aTreeName !== 'explicit', "aTreeName !== 'explicit'");
-    return null;
-  }
-
   let t = new TreeNode("falseRoot");
   for (let unsafePath in aReports) {
     // Add any missing nodes in the tree implied by the unsafePath.
-    let r = aReports[unsafePath];
-    if (r.treeNameMatches(aTreeName)) {
+    if (unsafePath.startsWith(aTreePrefix)) {
+      foundReport = true;
+      let r = aReports[unsafePath];
       let unsafeNames = r._unsafePath.split('/');
       let u = t;
       for (let i = 0; i < unsafeNames.length; i++) {
@@ -677,8 +668,16 @@ function buildTree(aReports, aTreeName)
     }
   }
 
+  // There should always be at least one matching Report object when
+  // |aTreePrefix| is "explicit/".  But there may be zero for smaps trees;  if
+  // that happens, bail.
+  if (!foundReport) {
+    assert(aTreePrefix !== 'explicit/', "aTreePrefix !== 'explicit/'");
+    return null;
+  }
+
   // Using falseRoot makes the above code simpler.  Now discard it, leaving
-  // aTreeName at the root.
+  // aTreePrefix at the root.
   t = t._kids[0];
 
   // Next, fill in the remaining properties bottom-up.
@@ -704,16 +703,6 @@ function buildTree(aReports, aTreeName)
 
   fillInNonLeafNodes(t);
 
-  // Reduce the depth of the tree by the number of occurrences of '/' in
-  // aTreeName.  (Thus the tree named 'foo/bar/baz' will be rooted at 'baz'.)
-  let slashCount = 0;
-  for (let i = 0; i < aTreeName.length; i++) {
-    if (aTreeName[i] == '/') {
-      assert(t._kids.length == 1, "Not expecting multiple kids here.");
-      t = t._kids[0];
-    }
-  }
-
   // Set the (unsafe) description on the root node.
   t._description = kTreeDescriptions[t._unsafeName];
 
@@ -721,7 +710,7 @@ function buildTree(aReports, aTreeName)
 }
 
 /**
- * Ignore all the memory reports that belong to a "smaps" tree;  this involves
+ * Ignore all the memory reports that belong to a smaps tree;  this involves
  * explicitly marking them as done.
  *
  * @param aReports
@@ -731,7 +720,7 @@ function ignoreSmapsTrees(aReports)
 {
   for (let unsafePath in aReports) {
     let r = aReports[unsafePath];
-    if (r.treeNameMatches("smaps")) {
+    if (isSmapsPath(r._unsafePath)) {
       r._done = true;
     }
   }
@@ -940,22 +929,22 @@ function appendProcessReportsElements(aP, aProcess, aReports,
   // We'll fill this in later.
   let warningsDiv = appendElement(aP, "div", "accuracyWarning");
 
-  let explicitTree = buildTree(aReports, 'explicit');
+  let explicitTree = buildTree(aReports, 'explicit/');
   let hasKnownHeapAllocated = fixUpExplicitTree(explicitTree, aReports);
   sortTreeAndInsertAggregateNodes(explicitTree._amount, explicitTree);
   appendTreeElements(aP, explicitTree, aProcess);
 
   // We only show these breakdown trees in verbose mode.
   if (gVerbose) {
-    kMapTreePaths.forEach(function(t) {
-      let tree = buildTree(aReports, t);
+    kSmapsTreePrefixes.forEach(function(aTreePrefix) {
+      let t = buildTree(aReports, aTreePrefix);
 
-      // |tree| will be null if we don't have any reports for the given
+      // |t| will be null if we don't have any reports for the given
       // unsafePath.
-      if (tree) {
-        sortTreeAndInsertAggregateNodes(tree._amount, tree);
-        tree._hideKids = true;   // smaps trees are always initially collapsed
-        appendTreeElements(aP, tree, aProcess);
+      if (t) {
+        sortTreeAndInsertAggregateNodes(t._amount, t);
+        t._hideKids = true;   // smaps trees are always initially collapsed
+        appendTreeElements(aP, t, aProcess);
       }
     });
   } else {
@@ -1339,7 +1328,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
     appendMrValueSpan(d, tString, tIsInvalid);
     appendElementWithText(d, "span", "mrPerc", percText);
 
-    // We don't want to show '(nonheap)' on a tree like 'smaps/vsize', since
+    // We don't want to show '(nonheap)' on a tree like 'vsize/', since
     // the whole tree is non-heap.
     let kind = isExplicitTree ? aT._kind : undefined;
     appendMrNameSpan(d, kind, kidsState, aT._description, aT._unsafeName,
@@ -1381,7 +1370,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
     }
   }
 
-  appendSectionHeader(aPOuter, kTreeNames[aT._unsafeName]);
+  appendSectionHeader(aPOuter, kSectionNames[aT._unsafeName]);
  
   let pre = appendElement(aPOuter, "pre", "entries");
   appendTreeElements2(pre, /* prePath = */"", aT, [], "", rootStringLength);
@@ -1444,7 +1433,7 @@ OtherReport.compare = function(a, b) {
  */
 function appendOtherElements(aP, aReportsByProcess)
 {
-  appendSectionHeader(aP, kTreeNames['other']);
+  appendSectionHeader(aP, kSectionNames['other']);
 
   let pre = appendElement(aP, "pre", "entries");
 
@@ -1573,14 +1562,14 @@ function getCompartmentsByProcess(aMgr)
   // (Note that some such reports can reach here as single reports if they were
   // in the child process.)
 
-  function ignoreSingle(aPath) 
+  function ignoreSingle(aUnsafePath) 
   {
-    return !aPath.startsWith("compartments/");
+    return !aUnsafePath.startsWith("compartments/");
   }
 
-  function ignoreMulti(aName)
+  function ignoreMulti(aMRName)
   {
-    return aName !== "compartments";
+    return aMRName !== "compartments";
   }
 
   let compartmentsByProcess = {};
@@ -1648,9 +1637,9 @@ GhostWindow.prototype = {
 
 function getGhostWindowsByProcess(aMgr)
 {
-  function ignoreSingle(aPath) 
+  function ignoreSingle(aUnsafePath) 
   {
-    return !aPath.startsWith('ghost-windows/')
+    return !aUnsafePath.startsWith('ghost-windows/')
   }
 
   function ignoreMulti(aName)
