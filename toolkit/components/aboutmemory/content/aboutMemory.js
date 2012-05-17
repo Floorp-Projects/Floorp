@@ -1108,7 +1108,10 @@ const kHorizontal       = "\u2500",
       kVertical         = "\u2502",
       kUpAndRight       = "\u2514",
       kVerticalAndRight = "\u251c",
-      kDoubleHorizontalSep = " \u2500\u2500 ";
+      kNoKidsSep        = " \u2500\u2500 ",
+      kHideKidsSep      = " ++ ",
+      kShowKidsSep      = " -- ";
+
 
 function appendMrValueSpan(aP, aValue, aIsInvalid)
 {
@@ -1127,26 +1130,10 @@ function kindToString(aKind)
   }
 }
 
-// Possible states for kids.
-const kNoKids   = 0;
-const kHideKids = 1;
-const kShowKids = 2;
-
-function appendMrNameSpan(aP, aKind, aKidsState, aDescription, aUnsafeName,
+function appendMrNameSpan(aP, aKind, aSep, aDescription, aUnsafeName,
                           aIsInvalid, aNMerged)
 {
-  let text = "";
-  if (aKidsState === kNoKids) {
-    appendElementWithText(aP, "span", "mrSep", kDoubleHorizontalSep);
-  } else if (aKidsState === kHideKids) {
-    appendElementWithText(aP, "span", "mrSep",        " ++ ");
-    appendElementWithText(aP, "span", "mrSep hidden", " -- ");
-  } else if (aKidsState === kShowKids) {
-    appendElementWithText(aP, "span", "mrSep hidden", " ++ ");
-    appendElementWithText(aP, "span", "mrSep",        " -- ");
-  } else {
-    assert(false, "bad aKidsState");
-  }
+  appendElementWithText(aP, "span", "mrSep", aSep);
 
   let nameSpan = appendElementWithText(aP, "span", "mrName",
                                        flipBackslashes(aUnsafeName));
@@ -1183,24 +1170,29 @@ function assertClassListContains(e, className) {
 
 function toggle(aEvent)
 {
-  // This relies on each line being a span that contains at least five spans:
-  // mrValue, mrPerc, mrSep ('++'), mrSep ('--'), mrName, and then zero or more
-  // mrNotes.  All whitespace must be within one of these spans for this
-  // function to find the right nodes.  And the span containing the children of
-  // this line must immediately follow.  Assertions check this.
+  // This relies on each line being a span that contains at least four spans:
+  // mrValue, mrPerc, mrSep, mrName, and then zero or more mrNotes.  All
+  // whitespace must be within one of these spans for this function to find the
+  // right nodes.  And the span containing the children of this line must
+  // immediately follow.  Assertions check this.
 
   // |aEvent.target| will be one of the five spans.  Get the outer span.
   let outerSpan = aEvent.target.parentNode;
   assertClassListContains(outerSpan, "hasKids");
 
-  // Toggle visibility of the '++' and '--' separators.
-  let plusSpan  = outerSpan.childNodes[2];
-  let minusSpan = outerSpan.childNodes[3];
-  assertClassListContains(plusSpan,  "mrSep");
-  assertClassListContains(minusSpan, "mrSep");
-  let isExpansion = !plusSpan.classList.contains("hidden");
-  plusSpan .classList.toggle("hidden");
-  minusSpan.classList.toggle("hidden");
+  // Toggle the '++'/'--' separator.
+  let isExpansion;
+  let sepSpan = outerSpan.childNodes[2];
+  assertClassListContains(sepSpan, "mrSep");
+  if (sepSpan.textContent === kHideKidsSep) {
+    isExpansion = true;
+    sepSpan.textContent = kShowKidsSep;
+  } else if (sepSpan.textContent === kShowKidsSep) {
+    isExpansion = false;
+    sepSpan.textContent = kHideKidsSep;
+  } else {
+    assert(false, "bad sepSpan textContent");
+  }
 
   // Toggle visibility of the span containing this node's children.
   let subTreeSpan = outerSpan.nextSibling;
@@ -1224,13 +1216,10 @@ function expandPathToThisElement(aElement)
     expandPathToThisElement(aElement.previousSibling);  // hasKids
 
   } else if (aElement.classList.contains("hasKids")) {
-    // Unhide the '--' separator and hide the '++' separator.
-    let  plusSpan = aElement.childNodes[2];
-    let minusSpan = aElement.childNodes[3];
-    assertClassListContains(plusSpan,  "mrSep");
-    assertClassListContains(minusSpan, "mrSep");
-    plusSpan.classList.add("hidden");
-    minusSpan.classList.remove("hidden");
+    // Change the separator to '--'.
+    let sepSpan = aElement.childNodes[2];
+    assertClassListContains(sepSpan, "mrSep");
+    sepSpan.textContent = kShowKidsSep;
     expandPathToThisElement(aElement.parentNode);       // kids or pre.entries
 
   } else {
@@ -1266,7 +1255,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
    *        The tree.
    * @param aBaseIndentText
    *        The base text of the indent, which may be augmented within the
-   *        functton.
+   *        function.
    * @param aIndentGuide
    *        Records what indentation is required for this tree.  It has one
    *        entry per level of indentation.  For each entry, ._isLastKid
@@ -1322,7 +1311,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
     // be collapsed if the node is clicked on.
     let d;
     let hasKids = aT._kids.length > 0;
-    let kidsState;
+    let sep;
     let showSubtrees;
     if (hasKids) {
       // Determine if we should show the sub-tree below this entry;  this
@@ -1335,10 +1324,10 @@ function appendTreeElements(aPOuter, aT, aProcess)
       d = appendElement(aP, "span", "hasKids");
       d.id = safeTreeId;
       d.onclick = toggle;
-      kidsState = showSubtrees ? kShowKids : kHideKids;
+      sep = showSubtrees ? kShowKidsSep : kHideKidsSep;
     } else {
       assert(!aT._hideKids, "leaf node with _hideKids set")
-      kidsState = kNoKids;
+      sep = kNoKidsSep;
       d = aP;
     }
 
@@ -1348,7 +1337,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
     // We don't want to show '(nonheap)' on a tree like 'vsize/', since
     // the whole tree is non-heap.
     let kind = isExplicitTree ? aT._kind : undefined;
-    appendMrNameSpan(d, kind, kidsState, aT._description, aT._unsafeName,
+    appendMrNameSpan(d, kind, sep, aT._description, aT._unsafeName,
                      tIsInvalid, aT._nMerged);
     appendTextNode(d, "\n");
 
@@ -1484,7 +1473,7 @@ function appendOtherElements(aP, aReportsByProcess)
                              flipBackslashes(o._unsafePath));
     }
     appendMrValueSpan(pre, pad(o._asString, maxStringLength, ' '), oIsInvalid);
-    appendMrNameSpan(pre, KIND_OTHER, kNoKids, o._description, o._unsafePath,
+    appendMrNameSpan(pre, KIND_OTHER, kNoKidsSep, o._description, o._unsafePath,
                      oIsInvalid);
     appendTextNode(pre, "\n");
   }
