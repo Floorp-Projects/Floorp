@@ -114,6 +114,20 @@ nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
 }
 
 void
+nsSVGInnerSVGFrame::UpdateBounds()
+{
+  // mRect must be set before FinishAndStoreOverflow is called in order
+  // for our overflow areas to be clipped correctly.
+  float x, y, width, height;
+  static_cast<nsSVGSVGElement*>(mContent)->
+    GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+  mRect = nsLayoutUtils::RoundGfxRectToAppRect(
+                           gfxRect(x, y, width, height),
+                           PresContext()->AppUnitsPerCSSPixel());
+  nsSVGInnerSVGFrameBase::UpdateBounds();
+}
+
+void
 nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
 {
   NS_ABORT_IF_FALSE(!(aFlags & DO_NOT_NOTIFY_RENDERING_OBSERVERS) ||
@@ -171,24 +185,21 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                      PRInt32  aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
+
+    nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
+
     if (aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height) {
 
-      nsSVGSVGElement* svg = static_cast<nsSVGSVGElement*>(mContent);
-      if (svg->HasViewBox()) {
-
+      if (content->HasViewBoxOrSyntheticViewBox()) {
         // make sure our cached transform matrix gets (lazily) updated
         mCanvasTM = nsnull;
-
+        content->ChildrenOnlyTransformChanged();
         nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
       } else {
-
         PRUint32 flags = COORD_CONTEXT_CHANGED;
-
         if (mCanvasTM && mCanvasTM->IsSingular()) {
-
           mCanvasTM = nsnull;
-
           flags |= TRANSFORM_CHANGED;
         }
         nsSVGUtils::NotifyChildrenOfSVGChange(this, flags);
@@ -205,6 +216,12 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
       nsSVGUtils::NotifyChildrenOfSVGChange(
           this, aAttribute == nsGkAtoms::viewBox ?
                   TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED : TRANSFORM_CHANGED);
+
+      if (aAttribute == nsGkAtoms::viewBox ||
+          (aAttribute == nsGkAtoms::preserveAspectRatio &&
+           content->HasViewBoxOrSyntheticViewBox())) {
+        content->ChildrenOnlyTransformChanged();
+      }
     }
   }
 
@@ -265,3 +282,17 @@ nsSVGInnerSVGFrame::GetCanvasTM()
   return *mCanvasTM;
 }
 
+bool
+nsSVGInnerSVGFrame::HasChildrenOnlyTransform(gfxMatrix *aTransform) const
+{
+  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
+
+  if (content->HasViewBoxOrSyntheticViewBox()) {
+    // XXX Maybe return false if the transform is the identity transform?
+    if (aTransform) {
+      *aTransform = content->GetViewBoxTransform();
+    }
+    return true;
+  }
+  return false;
+}

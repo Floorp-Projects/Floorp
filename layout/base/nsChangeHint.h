@@ -113,7 +113,13 @@ enum nsChangeHint {
    * either through a change in its transform or a change in its position.
    * Does not update any descendant frames.
    */
-  nsChangeHint_UpdateOverflow = 0x800
+  nsChangeHint_UpdateOverflow = 0x800,
+
+  /**
+   * The children-only transform of an SVG frame changed, requiring the
+   * overflow rects of the frame's immediate children to be updated.
+   */
+  nsChangeHint_ChildrenOnlyTransform = 0x1000
 };
 
 // Redefine these operators to return nothing. This will catch any use

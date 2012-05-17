@@ -62,8 +62,15 @@ class nsSVGSVGElement;
 
 class nsSVGTranslatePoint {
 public:
-  nsSVGTranslatePoint(float aX, float aY) :
-    mX(aX), mY(aY) {}
+  nsSVGTranslatePoint()
+    : mX(0.0f)
+    , mY(0.0f)
+  {}
+
+  nsSVGTranslatePoint(float aX, float aY)
+    : mX(aX)
+    , mY(aY)
+  {}
 
   void SetX(float aX)
     { mX = aX; }
@@ -75,6 +82,10 @@ public:
     { return mY; }
 
   nsresult ToDOMVal(nsSVGSVGElement *aElement, nsIDOMSVGPoint **aResult);
+
+  bool operator!=(const nsSVGTranslatePoint &rhs) const {
+    return mX != rhs.mX || mY != rhs.mY;
+  }
 
 private:
 
@@ -128,7 +139,6 @@ class nsSVGSVGElement : public nsSVGSVGElementBase,
   friend class nsSVGInnerSVGFrame;
   friend class nsSVGImageFrame;
 
-protected:
   friend nsresult NS_NewSVGSVGElement(nsIContent **aResult,
                                       already_AddRefed<nsINodeInfo> aNodeInfo,
                                       mozilla::dom::FromParser aFromParser);
@@ -220,7 +230,27 @@ public:
    */
   bool ShouldSynthesizeViewBox() const;
 
+  bool HasViewBoxOrSyntheticViewBox() const {
+    return HasViewBox() || ShouldSynthesizeViewBox();
+  }
+
   gfxMatrix GetViewBoxTransform() const;
+
+  bool HasChildrenOnlyTransform() const {
+    return mHasChildrenOnlyTransform;
+  }
+
+  /**
+   * This method notifies the style system that the overflow rects of our
+   * immediate childrens' frames need to be updated. It is called by our own
+   * frame when changes (e.g. to currentScale) cause our children-only
+   * transform to change.
+   *
+   * The reason we have this method instead of overriding
+   * GetAttributeChangeHint is because we need to act on non-attribute (e.g.
+   * currentScale) changes in addition to attribute (e.g. viewBox) changes.
+   */
+  void ChildrenOnlyTransformChanged();
 
   // This services any pending notifications for the transform on on this root
   // <svg> node needing to be recalculated.  (Only applicable in
@@ -250,7 +280,6 @@ private:
   void ClearImageOverridePreserveAspectRatio();
   const SVGPreserveAspectRatio* GetImageOverridePreserveAspectRatio() const;
 
-protected:
   // nsSVGElement overrides
   bool IsEventName(nsIAtom* aName);
 
@@ -349,6 +378,7 @@ protected:
   bool                              mStartAnimationOnBindToTree;
   bool                              mImageNeedsTransformInvalidation;
   bool                              mIsPaintingSVGImageElement;
+  bool                              mHasChildrenOnlyTransform;
 };
 
 #endif

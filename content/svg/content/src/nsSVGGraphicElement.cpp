@@ -45,6 +45,7 @@
 #include "DOMSVGMatrix.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMMutationEvent.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGPoint.h"
@@ -177,6 +178,43 @@ nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
   
   return FindAttributeDependence(name, map) ||
     nsSVGGraphicElementBase::IsAttributeMapped(name);
+}
+
+nsChangeHint
+nsSVGGraphicElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                            PRInt32 aModType) const
+{
+  nsChangeHint retval =
+    nsSVGGraphicElementBase::GetAttributeChangeHint(aAttribute, aModType);
+  if (aAttribute == nsGkAtoms::transform) {
+    // We add nsChangeHint_UpdateOverflow so that nsFrame::UpdateOverflow()
+    // will be called on us and our ancestors.
+    nsIFrame* frame =
+      const_cast<nsSVGGraphicElement*>(this)->GetPrimaryFrame();
+    if (frame && frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+      // No need to do anything.
+    } else if (aModType == nsIDOMMutationEvent::ADDITION ||
+               aModType == nsIDOMMutationEvent::REMOVAL) {
+      // In order to handle view creation/destruction and stacking context
+      // changes, the code in nsStyleDisplay::CalcDifference uses
+      // nsChangeHint_ReconstructFrame if the transform was added/removed.
+      // XXXSDL Currently we don't need to reconstruct SVG frames when their
+      // transform is set/unset since we don't currently create GFX layers for
+      // SVG transforms, but we will after bug 614732 is fixed. Also change the
+      // assertion in ApplyRenderingChangeToTree when we do that.
+      NS_UpdateHint(retval, nsChangeHint_UpdateOverflow);
+    } else {
+      NS_ABORT_IF_FALSE(aModType == nsIDOMMutationEvent::MODIFICATION,
+                        "Unknown modification type.");
+      // We just assume the old and new transforms are different.
+      // XXXSDL Once we use GFX layers for SVG transforms, we will need to pass
+      // the nsChangeHint_UpdateTransformLayer hint too. Note that the
+      // assertion in ApplyRenderingChangeToTree will fail if that hint is
+      // passed on nsIDOMMutationEvent::REMOVAL though.
+      NS_UpdateHint(retval, nsChangeHint_UpdateOverflow);
+    }
+  }
+  return retval;
 }
 
 //----------------------------------------------------------------------

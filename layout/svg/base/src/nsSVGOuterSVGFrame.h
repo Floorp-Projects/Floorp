@@ -113,11 +113,20 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
+  virtual bool IsSVGTransformed(gfxMatrix *aOwnTransform,
+                                gfxMatrix *aFromParentTransform) const {
+    // Outer-<svg> can transform its children with viewBox, currentScale and
+    // currentTranslate, but it itself is not transformed by SVG transforms.
+    return false;
+  }
+
   // nsISVGSVGFrame interface:
   virtual void NotifyViewportOrTransformChanged(PRUint32 aFlags);
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM();
+
+  virtual bool HasChildrenOnlyTransform(gfxMatrix *aTransform) const;
 
 #ifdef XP_MACOSX
   bool BitmapFallbackEnabled() const {

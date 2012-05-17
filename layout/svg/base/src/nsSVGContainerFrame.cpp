@@ -38,8 +38,12 @@
 #include "nsSVGContainerFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "nsSVGEffects.h"
 #include "nsSVGElement.h"
 #include "nsSVGUtils.h"
+#include "SVGAnimatedTransformList.h"
+
+using namespace mozilla;
 
 NS_QUERYFRAME_HEAD(nsSVGContainerFrame)
   NS_QUERYFRAME_ENTRY(nsSVGContainerFrame)
@@ -94,6 +98,17 @@ nsSVGContainerFrame::RemoveFrame(ChildListID aListID,
 
   mFrames.DestroyFrame(aOldFrame);
   return NS_OK;
+}
+
+bool
+nsSVGContainerFrame::UpdateOverflow()
+{
+  if (mState & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    // We don't maintain overflow rects.
+    // XXX It would have be better if the restyle request hadn't even happened.
+    return false;
+  }
+  return nsSVGContainerFrameBase::UpdateOverflow();
 }
 
 NS_IMETHODIMP
@@ -163,6 +178,32 @@ nsSVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
   return rv;
 }
 
+bool
+nsSVGDisplayContainerFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
+                                             gfxMatrix *aFromParentTransform) const
+{
+  bool foundTransform = false;
+
+  // Check if our parent has children-only transforms:
+  nsIFrame *parent = GetParent();
+  if (parent &&
+      parent->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
+    foundTransform = static_cast<nsSVGContainerFrame*>(parent)->
+                       HasChildrenOnlyTransform(aFromParentTransform);
+  }
+
+  nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
+  const SVGAnimatedTransformList *list = content->GetAnimatedTransformList();
+  if (list && !list->GetAnimValue().IsEmpty()) {
+    if (aOwnTransform) {
+      *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
+                                  nsSVGElement::eUserSpaceToParent);
+    }
+    foundTransform = true;
+  }
+  return foundTransform;
+}
+
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
@@ -203,6 +244,9 @@ nsSVGDisplayContainerFrame::UpdateBounds()
   NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
                     "UpdateBounds mechanism not designed for this");
 
+  NS_ABORT_IF_FALSE(GetType() != nsGkAtoms::svgOuterSVGFrame,
+                    "Do not call on outer-<svg>");
+
   if (!nsSVGUtils::NeedsUpdatedBounds(this)) {
     return;
   }
@@ -221,6 +265,8 @@ nsSVGDisplayContainerFrame::UpdateBounds()
     mState &= ~NS_FRAME_FIRST_REFLOW; // tell our children
   }
 
+  nsOverflowAreas overflowRects;
+
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
@@ -228,14 +274,43 @@ nsSVGDisplayContainerFrame::UpdateBounds()
       NS_ABORT_IF_FALSE(!(kid->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
                         "Check for this explicitly in the |if|, then");
       SVGFrame->UpdateBounds();
+
+      // We build up our child frame overflows here instead of using
+      // nsLayoutUtils::UnionChildOverflow since SVG frame's all use the same
+      // frame list, and we're iterating over that list now anyway.
+      ConsiderChildOverflow(overflowRects, kid);
     }
   }
 
+  // <svg> can create an SVG viewport with an offset due to its
+  // x/y/width/height attributes, and <use> can introduce an offset with an
+  // empty mRect (any width/height is copied to an anonymous <svg> child).
+  // Other than that containers should not set mRect since all other offsets
+  // come from transforms, which are accounted for by nsDisplayTransform.
+  // Note that we rely on |overflow:visible| to allow display list items to be
+  // created for our children.
+  NS_ABORT_IF_FALSE(mContent->Tag() == nsGkAtoms::svg ||
+                    (mContent->Tag() == nsGkAtoms::use &&
+                     mRect.Size() == nsSize(0,0)) ||
+                    mRect.IsEqualEdges(nsRect()),
+                    "Only inner-<svg>/<use> is expected to have mRect set");
+
+  if (mState & NS_FRAME_FIRST_REFLOW) {
+    // Make sure we have our filter property (if any) before calling
+    // FinishAndStoreOverflow (subsequent filter changes are handled off
+    // nsChangeHint_UpdateEffects):
+    nsSVGEffects::UpdateEffects(this);
+  }
+
+  FinishAndStoreOverflow(overflowRects, mRect.Size());
+
+  // Remove state bits after FinishAndStoreOverflow so that it doesn't
+  // invalidate on first reflow:
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
 
-  // XXXsvgreflow once we store bounds on containers, do...
-  // nsSVGUtils::InvalidateBounds(this);
+  // XXXSDL Make Invalidate() call nsSVGUtils::InvalidateBounds(this)
+  // so that we invalidate under FinishAndStoreOverflow().
 }  
 
 void
