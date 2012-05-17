@@ -160,31 +160,26 @@ static const PRUint8 gsRGBToLinearRGBMap[256] = {
 239, 242, 244, 246, 248, 250, 253, 255
 };
 
-static bool gSMILEnabled;
-static const char SMIL_PREF_STR[] = "svg.smil.enabled";
-
-static int
-SMILPrefChanged(const char *aPref, void *aClosure)
-{
-  bool prefVal = Preferences::GetBool(SMIL_PREF_STR);
-  gSMILEnabled = prefVal;
-  return 0;
-}
+static bool sSMILEnabled;
+static bool sSVGDisplayListHitTestingEnabled;
+static bool sSVGDisplayListPaintingEnabled;
 
 bool
 NS_SMILEnabled()
 {
-  static bool sInitialized = false;
-  
-  if (!sInitialized) {
-    /* check and register ourselves with the pref */
-    gSMILEnabled = Preferences::GetBool(SMIL_PREF_STR);
-    Preferences::RegisterCallback(SMILPrefChanged, SMIL_PREF_STR);
+  return sSMILEnabled;
+}
 
-    sInitialized = true;
-  }
+bool
+NS_SVGDisplayListHitTestingEnabled()
+{
+  return sSVGDisplayListHitTestingEnabled;
+}
 
-  return gSMILEnabled;
+bool
+NS_SVGDisplayListPaintingEnabled()
+{
+  return sSVGDisplayListPaintingEnabled;
 }
 
 // we only take the address of this:
@@ -235,6 +230,20 @@ SVGAutoRenderState::IsPaintingToWindow(nsRenderingContext *aContext)
     return static_cast<SVGAutoRenderState*>(state)->mPaintingToWindow;
   }
   return false;
+}
+
+void
+nsSVGUtils::Init()
+{
+  Preferences::AddBoolVarCache(&sSMILEnabled,
+                               "svg.smil.enabled",
+                               true);
+
+  Preferences::AddBoolVarCache(&sSVGDisplayListHitTestingEnabled,
+                               "svg.display-lists.hit-testing.enabled");
+
+  Preferences::AddBoolVarCache(&sSVGDisplayListPaintingEnabled,
+                               "svg.display-lists.painting.enabled");
 }
 
 nsSVGSVGElement*
