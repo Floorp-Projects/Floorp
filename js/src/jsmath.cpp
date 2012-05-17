@@ -107,6 +107,12 @@ MathCache::MathCache() {
     JS_ASSERT(hash(-0.0) != hash(+0.0));
 }
 
+size_t
+MathCache::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
+{
+    return mallocSizeOf(this);
+}
+
 Class js::MathClass = {
     js_Math_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Math),

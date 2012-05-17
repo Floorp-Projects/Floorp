@@ -28,7 +28,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-"""WebSocket HyBi latest opening handshake processor."""
+"""This file provides the opening handshake processor for the WebSocket
+protocol (RFC 6455).
+
+Specification:
+http://tools.ietf.org/html/rfc6455
+"""
 
 
 # Note: request.connection.write is used in this module, even though mod_python
@@ -59,7 +64,10 @@ from mod_pywebsocket.stream import StreamOptions
 from mod_pywebsocket import util
 
 
-_BASE64_REGEX = re.compile('^[+/0-9A-Za-z]*=*$')
+# Used to validate the value in the Sec-WebSocket-Key header strictly. RFC 4648
+# disallows non-zero padding, so the character right before == must be any of
+# A, Q, g and w.
+_SEC_WEBSOCKET_KEY_REGEX = re.compile('^[+/0-9A-Za-z]{21}[AQgw]==$')
 
 # Defining aliases for values used frequently.
 _VERSION_HYBI08 = common.VERSION_HYBI08
@@ -85,7 +93,7 @@ def compute_accept(key):
 
 
 class Handshaker(object):
-    """This class performs WebSocket handshake."""
+    """Opening handshake processor for the WebSocket protocol (RFC 6455)."""
 
     def __init__(self, request, dispatcher):
         """Construct an instance.
@@ -161,7 +169,7 @@ class Handshaker(object):
                 accept,
                 util.hexify(accept_binary))
 
-            self._logger.debug('IETF HyBi protocol')
+            self._logger.debug('Protocol version is RFC 6455')
 
             # Setup extension processors.
 
@@ -258,7 +266,6 @@ class Handshaker(object):
 
     def _set_protocol(self):
         self._request.ws_protocol = None
-
         # MOZILLA
         self._request.sts = None
         # /MOZILLA
@@ -307,7 +314,7 @@ class Handshaker(object):
             # module. Because base64 module skips invalid characters, we have
             # to do this in advance to make this server strictly reject illegal
             # keys.
-            if _BASE64_REGEX.match(key):
+            if _SEC_WEBSOCKET_KEY_REGEX.match(key):
                 decoded_key = base64.b64decode(key)
                 if len(decoded_key) == 16:
                     key_is_valid = True

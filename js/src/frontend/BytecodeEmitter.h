@@ -123,7 +123,6 @@ struct BytecodeEmitter
     Parser          *parser;        /* the parser */
 
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
-    AtomDefnMapPtr  roLexdeps;
     unsigned        firstLine;      /* first line, for JSScript::NewScriptFromEmitter */
 
     int             stackDepth;     /* current stack depth in script frame */

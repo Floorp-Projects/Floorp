@@ -10,6 +10,7 @@
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
+#include "jsobjinlines.h"
 #include "jsprf.h"
 #include "jswrapper.h"
 
@@ -139,6 +140,22 @@ GCParameter(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_SetGCParameter(cx->runtime, param, value);
     *vp = JSVAL_VOID;
+    return true;
+}
+
+static JSBool
+IsProxy(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (argc != 1) {
+        JS_ReportError(cx, "the function takes exactly one argument");
+        return false;
+    }
+    if (!args[0].isObject()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
+    args.rval().setBoolean(args[0].toObject().isProxy());
     return true;
 }
 
@@ -582,6 +599,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "internalConst(name)",
 "  Query an internal constant for the engine. See InternalConst source for\n"
 "  the list of constant names."),
+
+    JS_FN_HELP("isProxy", IsProxy, 1, 0,
+"isProxy(obj)",
+"  If true, obj is a proxy of some sort"),
 
     JS_FN_HELP("mjitChunkLimit", MJitChunkLimit, 1, 0,
 "mjitChunkLimit(N)",

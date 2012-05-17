@@ -2950,7 +2950,7 @@ ASTSerializer::function(ParseNode *pn, ASTType type, Value *dst)
 
     bool isGenerator =
 #if JS_HAS_GENERATORS
-        pn->pn_funbox->tcflags & TCF_FUN_IS_GENERATOR;
+        pn->pn_funbox->funIsGenerator();
 #else
         false;
 #endif
