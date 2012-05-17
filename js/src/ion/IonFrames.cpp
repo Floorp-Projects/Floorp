@@ -234,6 +234,12 @@ IonFrameIterator::nativeVp() const
     return exitFrame()->nativeVp();
 }
 
+Value *
+IonFrameIterator::argv() const
+{
+    return jsFrame()->argv();
+}
+
 uint8 *
 IonFrameIterator::prevFp() const
 {
@@ -660,7 +666,7 @@ SnapshotIterator::SnapshotIterator()
 bool
 SnapshotIterator::hasLocation(const SnapshotReader::Location &loc)
 {
-    return loc.isStackSlot() && machine_.has(loc.reg());
+    return loc.isStackSlot() || machine_.has(loc.reg());
 }
 
 uintptr_t

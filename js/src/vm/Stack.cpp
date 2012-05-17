@@ -1483,11 +1483,6 @@ StackIter::numActualArgs() const
         JS_ASSERT(isFunctionFrame());
         return fp()->numActualArgs();
       case ION:
-        // :TODO: We need to handle actual arguments in IonMonkey.  Currently we
-        // cannot easily read all arguments used for the call and we do not want
-        // to hack around it because a part of Bug 735406 is to instrucment Ion
-        // frames to provide actual arguments.
-        JS_ASSERT(ionInlineFrames_.numActualArgs() <= ionInlineFrames_.callee()->nargs);
         return ionInlineFrames_.numActualArgs();
       case NATIVE:
       case IMPLICIT_NATIVE:

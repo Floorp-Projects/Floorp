@@ -151,6 +151,7 @@ class IonFrameIterator
     unsigned numActualArgs() const;
     JSScript *script() const;
     Value *nativeVp() const;
+    Value *argv() const;
 
     // Returns the return address of the frame above this one (that is, the
     // return address that returns back to the current frame).
