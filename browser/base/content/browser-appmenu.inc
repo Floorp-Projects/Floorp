@@ -198,7 +198,7 @@
           <menuitem id="appmenu_debugger"
                     hidden="true"
                     type="checkbox"
-                    label="&debuggerMenu.label;"
+                    label="&debuggerMenu.label2;"
                     key="key_debugger"
                     command="Tools:Debugger"/>
           <menuitem id="appmenu_remoteDebugger"

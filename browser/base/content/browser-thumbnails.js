@@ -8,7 +8,17 @@
  * Keeps thumbnails of open web pages up-to-date.
  */
 let gBrowserThumbnails = {
+  /**
+   * Pref that controls whether we can store SSL content on disk
+   */
+  PREF_DISK_CACHE_SSL: "browser.cache.disk_cache_ssl",
+
   _captureDelayMS: 1000,
+
+  /**
+   * Used to keep track of disk_cache_ssl preference
+   */
+  _sslDiskCacheEnabled: null,
 
   /**
    * Map of capture() timeouts assigned to their browsers.
@@ -32,6 +42,10 @@ let gBrowserThumbnails = {
     } catch (e) {}
 
     gBrowser.addTabsProgressListener(this);
+    Services.prefs.addObserver(this.PREF_DISK_CACHE_SSL, this, false);
+
+    this._sslDiskCacheEnabled =
+      Services.prefs.getBoolPref(this.PREF_DISK_CACHE_SSL);
 
     this._tabEvents.forEach(function (aEvent) {
       gBrowser.tabContainer.addEventListener(aEvent, this, false);
@@ -45,6 +59,7 @@ let gBrowserThumbnails = {
 
   uninit: function Thumbnails_uninit() {
     gBrowser.removeTabsProgressListener(this);
+    Services.prefs.removeObserver(this.PREF_DISK_CACHE_SSL, this);
 
     this._tabEvents.forEach(function (aEvent) {
       gBrowser.tabContainer.removeEventListener(aEvent, this, false);
@@ -66,6 +81,11 @@ let gBrowserThumbnails = {
         break;
       }
     }
+  },
+
+  observe: function Thumbnails_observe() {
+    this._sslDiskCacheEnabled =
+      Services.prefs.getBoolPref(this.PREF_DISK_CACHE_SSL);
   },
 
   /**
@@ -129,19 +149,30 @@ let gBrowserThumbnails = {
 
     // Don't take screenshots of internally redirecting about: pages.
     // This includes error pages.
-    if (channel.originalURI.schemeIs("about"))
+    let uri = channel.originalURI;
+    if (uri.schemeIs("about"))
       return false;
 
+    let httpChannel;
     try {
-      // If the channel is a nsIHttpChannel get its http status code.
-      let httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
+      httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
+    } catch (e) { /* Not an HTTP channel. */ }
 
+    if (httpChannel) {
       // Continue only if we have a 2xx status code.
-      return Math.floor(httpChannel.responseStatus / 100) == 2;
-    } catch (e) {
-      // Not a http channel, we just assume a success status code.
-      return true;
+      if (Math.floor(httpChannel.responseStatus / 100) != 2)
+        return false;
+
+      // Cache-Control: no-store.
+      if (httpChannel.isNoStoreResponse())
+        return false;
+
+      // Don't capture HTTPS pages unless the user explicitly enabled it.
+      if (uri.schemeIs("https") && !this._sslDiskCacheEnabled)
+        return false;
     }
+
+    return true;
   },
 
   _clearTimeout: function Thumbnails_clearTimeout(aBrowser) {
