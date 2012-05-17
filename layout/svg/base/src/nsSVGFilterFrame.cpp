@@ -99,7 +99,8 @@ public:
                        nsSVGFilterPaintCallback *aPaint,
                        const nsIntRect *aDirtyOutputRect,
                        const nsIntRect *aDirtyInputRect,
-                       const nsIntRect *aOverrideSourceBBox);
+                       const nsIntRect *aOverrideSourceBBox,
+                       const gfxMatrix *aOverrideUserToDeviceSpace = nsnull);
   ~nsAutoFilterInstance() {}
 
   // If this returns null, then draw nothing. Either the filter draws
@@ -115,7 +116,8 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
                                            nsSVGFilterPaintCallback *aPaint,
                                            const nsIntRect *aDirtyOutputRect,
                                            const nsIntRect *aDirtyInputRect,
-                                           const nsIntRect *aOverrideSourceBBox)
+                                           const nsIntRect *aOverrideSourceBBox,
+                                           const gfxMatrix *aOverrideUserToDeviceSpace)
 {
   const nsSVGFilterElement *filter = aFilterFrame->GetFilterContent();
 
@@ -161,10 +163,11 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
     return;
   }
 
-  gfxMatrix userToDeviceSpace = nsSVGUtils::GetCanvasTM(aTarget);
-  if (userToDeviceSpace.IsSingular()) {
-    // nothing to draw
-    return;
+  gfxMatrix userToDeviceSpace;
+  if (aOverrideUserToDeviceSpace) {
+    userToDeviceSpace = *aOverrideUserToDeviceSpace;
+  } else {
+    userToDeviceSpace = nsSVGUtils::GetCanvasTM(aTarget);
   }
   
   // Calculate filterRes (the width and height of the pixel buffer of the
@@ -195,7 +198,12 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   } else {
     // Match filterRes as closely as possible to the pixel density of the nearest
     // outer 'svg' device space:
-    float scale = nsSVGUtils::MaxExpansion(userToDeviceSpace);
+    gfxMatrix canvasTM = nsSVGUtils::GetCanvasTM(aTarget);
+    if (canvasTM.IsSingular()) {
+      // nothing to draw
+      return;
+    }
+    float scale = nsSVGUtils::MaxExpansion(canvasTM);
 
     filterRegion.Scale(scale);
     filterRegion.RoundOut();
@@ -228,8 +236,20 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   nsIntRect targetBoundsDeviceSpace;
   nsISVGChildFrame* svgTarget = do_QueryFrame(aTarget);
   if (svgTarget) {
-    targetBoundsDeviceSpace.UnionRect(targetBoundsDeviceSpace,
-      svgTarget->GetCoveredRegion().ToOutsidePixels(aTarget->PresContext()->AppUnitsPerDevPixel()));
+    if (aOverrideUserToDeviceSpace) {
+      // If aOverrideUserToDeviceSpace is specified, it is a simple
+      // CSS-px-to-dev-px transform passed by nsSVGFilterFrame::GetFilterBBox()
+      // when requesting the filter expansion of the overflow rects in frame
+      // space. In this case GetCoveredRegion() is not what we want since it is
+      // in outer-<svg> space, GetFilterBBox passes in the pre-filter bounds of
+      // the frame in frame space for us to use instead.
+      NS_ASSERTION(aDirtyInputRect, "Who passed aOverrideUserToDeviceSpace?");
+      targetBoundsDeviceSpace = *aDirtyInputRect;
+    } else {
+      targetBoundsDeviceSpace =
+        svgTarget->GetCoveredRegion().ToOutsidePixels(aTarget->
+          PresContext()->AppUnitsPerDevPixel());
+    }
   }
   nsIntRect targetBoundsFilterSpace =
     MapDeviceRectToFilterSpace(deviceToFilterSpace, filterRes, &targetBoundsDeviceSpace);
@@ -471,9 +491,27 @@ nsSVGFilterFrame::GetSourceForInvalidArea(nsIFrame *aTarget, const nsIntRect& aR
 }
 
 nsIntRect
-nsSVGFilterFrame::GetFilterBBox(nsIFrame *aTarget, const nsIntRect *aSourceBBox)
+nsSVGFilterFrame::GetFilterBBox(nsIFrame *aTarget,
+                                const nsIntRect *aOverrideBBox,
+                                const nsIntRect *aPreFilterBounds)
 {
-  nsAutoFilterInstance instance(aTarget, this, nsnull, nsnull, nsnull, aSourceBBox);
+  bool overrideCTM = false;
+  gfxMatrix ctm;
+
+  if (aTarget->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+    // For most filter operations on SVG frames we want information in
+    // outer-<svg> device space, but in this case we want the visual overflow
+    // rect relative to aTarget itself. For that we need to prevent the filter
+    // code using GetCanvasTM().
+    overrideCTM = true;
+    PRInt32 appUnitsPerDevPixel = aTarget->PresContext()->AppUnitsPerDevPixel();
+    float devPxPerCSSPx =
+      1 / nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPixel);
+    ctm.Scale(devPxPerCSSPx, devPxPerCSSPx);
+  }
+
+  nsAutoFilterInstance instance(aTarget, this, nsnull, nsnull, aPreFilterBounds,
+                                aOverrideBBox, overrideCTM ? &ctm : nsnull);
   if (!instance.get())
     return nsIntRect();
 

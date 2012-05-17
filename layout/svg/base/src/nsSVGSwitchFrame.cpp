@@ -39,6 +39,7 @@
 // Keep in (case-insensitive) order:
 #include "gfxMatrix.h"
 #include "gfxRect.h"
+#include "nsSVGEffects.h"
 #include "nsSVGGFrame.h"
 #include "nsSVGSwitchElement.h"
 #include "nsSVGUtils.h"
@@ -82,6 +83,7 @@ public:
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext, const nsIntRect *aDirtyRect);
   NS_IMETHODIMP_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
   NS_IMETHODIMP_(nsRect) GetCoveredRegion();
+  virtual void UpdateBounds();
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                       PRUint32 aFlags);
 
@@ -162,6 +164,68 @@ nsSVGSwitchFrame::GetCoveredRegion()
     }
   }
   return rect;
+}
+
+void
+nsSVGSwitchFrame::UpdateBounds()
+{
+  NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingUpdateBounds(this),
+               "This call is probaby a wasteful mistake");
+
+  NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+                    "UpdateBounds mechanism not designed for this");
+
+  if (!nsSVGUtils::NeedsUpdatedBounds(this)) {
+    return;
+  }
+
+  // If the NS_FRAME_FIRST_REFLOW bit has been removed from our parent frame,
+  // then our outer-<svg> has previously had its initial reflow. In that case
+  // we need to make sure that that bit has been removed from ourself _before_
+  // recursing over our children to ensure that they know too. Otherwise, we
+  // need to remove it _after_ recursing over our children so that they know
+  // the initial reflow is currently underway.
+
+  bool outerSVGHasHadFirstReflow =
+    (GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) == 0;
+
+  if (outerSVGHasHadFirstReflow) {
+    mState &= ~NS_FRAME_FIRST_REFLOW; // tell our children
+  }
+
+  nsOverflowAreas overflowRects;
+
+  nsIFrame *child = GetActiveChildFrame();
+  if (child) {
+    nsISVGChildFrame* svgChild = do_QueryFrame(child);
+    if (svgChild) {
+      NS_ABORT_IF_FALSE(!(child->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+                        "Check for this explicitly in the |if|, then");
+      svgChild->UpdateBounds();
+
+      // We build up our child frame overflows here instead of using
+      // nsLayoutUtils::UnionChildOverflow since SVG frame's all use the same
+      // frame list, and we're iterating over that list now anyway.
+      ConsiderChildOverflow(overflowRects, child);
+    }
+  }
+
+  if (mState & NS_FRAME_FIRST_REFLOW) {
+    // Make sure we have our filter property (if any) before calling
+    // FinishAndStoreOverflow (subsequent filter changes are handled off
+    // nsChangeHint_UpdateEffects):
+    nsSVGEffects::UpdateEffects(this);
+  }
+
+  FinishAndStoreOverflow(overflowRects, mRect.Size());
+
+  // Remove state bits after FinishAndStoreOverflow so that it doesn't
+  // invalidate on first reflow:
+  mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
+              NS_FRAME_HAS_DIRTY_CHILDREN);
+
+  // XXXSDL Make Invalidate() call nsSVGUtils::InvalidateBounds(this)
+  // so that we invalidate under FinishAndStoreOverflow().
 }
 
 SVGBBox

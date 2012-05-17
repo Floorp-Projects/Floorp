@@ -242,8 +242,9 @@ typedef PRUint64 nsFrameState;
 // more details.
 #define NS_FRAME_IS_SPECIAL                         NS_FRAME_STATE_BIT(15)
 
-// If this bit is set, the frame may have a transform that it applies
-// to its coordinate system (e.g. CSS transform, SVG foreignObject).
+// If this bit is set, then transforms (e.g. CSS or SVG transforms) are allowed
+// to affect the frame, and a transform may currently be in affect. If this bit
+// is not set, then any transforms on the frame will be ignored.
 // This is used primarily in GetTransformMatrix to optimize for the
 // common case.
 #define  NS_FRAME_MAY_BE_TRANSFORMED                NS_FRAME_STATE_BIT(16)
@@ -310,6 +311,11 @@ typedef PRUint64 nsFrameState;
 // i.e., roughly, is it an element establishing a new block formatting
 // context?
 #define NS_FRAME_FONT_INFLATION_FLOW_ROOT           NS_FRAME_STATE_BIT(42)
+
+// This bit is set on SVG frames that are laid out using SVG's coordinate
+// system based layout (as opposed to any of the CSS layout models). Note that
+// this does not include nsSVGOuterSVGFrame since it takes part is CSS layout.
+#define NS_FRAME_SVG_LAYOUT                         NS_FRAME_STATE_BIT(43)
 
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
@@ -1229,10 +1235,23 @@ public:
   virtual bool NeedsView() { return false; }
 
   /**
-   * Returns whether this frame has a transform matrix applied to it.  This is true
-   * if we have the -moz-transform property or if we're an SVGForeignObjectFrame.
+   * Returns true if this frame is transformed (e.g. has CSS or SVG transforms)
+   * or if its parent is an SVG frame that has children-only transforms (e.g.
+   * an SVG viewBox attribute).
    */
-  virtual bool IsTransformed() const;
+  bool IsTransformed() const;
+
+  /**
+   * Returns true if this frame is an SVG frame that has SVG transforms applied
+   * to it, or if its parent frame is an SVG frame that has children-only
+   * transforms (e.g. an SVG viewBox attribute).
+   * If aOwnTransforms is non-null and the frame has its own SVG transforms,
+   * aOwnTransforms will be set to these transforms. If aFromParentTransforms
+   * is non-null and the frame has an SVG parent with children-only transforms,
+   * then aFromParentTransforms will be set to these transforms.
+   */
+  virtual bool IsSVGTransformed(gfxMatrix *aOwnTransforms = nsnull,
+                                gfxMatrix *aFromParentTransforms = nsnull) const;
 
   /**
    * Returns whether this frame will attempt to preserve the 3d transforms of its
@@ -1969,8 +1988,8 @@ public:
    * @return A gfxMatrix that converts points in this frame's coordinate space
    *   into points in aOutAncestor's coordinate space.
    */
-  virtual gfx3DMatrix GetTransformMatrix(nsIFrame* aStopAtAncestor,
-                                         nsIFrame **aOutAncestor);
+  gfx3DMatrix GetTransformMatrix(nsIFrame* aStopAtAncestor,
+                                 nsIFrame **aOutAncestor);
 
   /**
    * Bit-flags to pass to IsFrameOfType()

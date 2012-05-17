@@ -257,7 +257,7 @@ nsSVGTextFrame::UpdateBounds()
   // areas correctly:
   nsSVGTextFrameBase::UpdateBounds();
 
-  // XXXsvgreflow once we store bounds on containers, call
+  // XXXSDL once we store bounds on containers, call
   // nsSVGUtils::InvalidateBounds(this) if not first reflow.
 }
 
