@@ -121,13 +121,13 @@
         function f(aP, aA) {
           aCbObj.callback("", aP, NONHEAP, BYTES, aA * 4 * KB, "Desc.", aClosure);
         }
-        f("smaps/vsize/a",     24);
-        f("smaps/swap/a",       1);
-        f("smaps/swap/a",       2);
-        f("smaps/vsize/a",      19);
-        f("smaps/swap/b/c",     10);
-        f("smaps/resident/a",   42);
-        f("smaps/pss/a",        43);
+        f("vsize/a",     24);
+        f("swap/a",       1);
+        f("swap/a",       2);
+        f("vsize/a",      19);
+        f("swap/b/c",     10);
+        f("resident/a",   42);
+        f("pss/a",        43);
       },
       explicitNonHeap: 0
     },
@@ -181,8 +181,8 @@
     // The fact that we skip the "smaps" multi-reporter in the main
     // process won't cause these to be skipped;  the fall-back skipping will
     // be hit instead.
-    f("2nd", "smaps/vsize/e",   NONHEAP, 24*4*KB),
-    f("2nd", "smaps/vsize/f",   NONHEAP, 24*4*KB),
+    f("2nd", "vsize/e",         NONHEAP, 24*4*KB),
+    f("2nd", "vsize/f",         NONHEAP, 24*4*KB),
 
     // Check that we can handle "heap-allocated" not being present.
     f("3rd", "explicit/a/b",    HEAP,    333 * MB),
