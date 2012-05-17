@@ -267,6 +267,24 @@ protected:
     gint GetKeyLevel(GdkEventKey *aGdkKeyEvent);
 
     /**
+     * GetFirstLatinGroup() returns group of mGdkKeymap which can input an
+     * ASCII character by GDK_A.
+     *
+     * @return                  group value of GdkEventKey.
+     */
+    gint GetFirstLatinGroup();
+
+    /**
+     * IsLatinGroup() checkes whether the keyboard layout of aGroup is
+     * ASCII alphabet inputtable or not.
+     *
+     * @param aGroup            The group value of GdkEventKey.
+     * @return                  TRUE if the keyboard layout can input
+     *                          ASCII alphabet.  Otherwise, FALSE.
+     */
+    bool IsLatinGroup(guint8 aGroup);
+
+    /**
      * IsBasicLatinLetterOrNumeral() Checks whether the aCharCode is an
      * alphabet or a numeric character in ASCII.
      *
