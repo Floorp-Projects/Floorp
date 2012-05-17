@@ -1938,10 +1938,6 @@ LoadNativeIterator(MacroAssembler &masm, Register obj, Register dest, Label *fai
 
     // Load NativeIterator object.
     masm.loadObjPrivate(obj, JSObject::ITER_CLASS_NFIXED_SLOTS, dest);
-
-    // Test for value iterators.
-    masm.branchTest32(Assembler::NonZero, Address(dest, offsetof(NativeIterator, flags)),
-                      Imm32(JSITER_FOREACH), failures);
 }
 
 bool
@@ -1959,6 +1955,9 @@ CodeGenerator::visitIteratorNext(LIteratorNext *lir)
         return false;
 
     LoadNativeIterator(masm, obj, temp, ool->entry());
+
+    masm.branchTest32(Assembler::NonZero, Address(temp, offsetof(NativeIterator, flags)),
+                      Imm32(JSITER_FOREACH), ool->entry());
 
     // Get cursor, next string.
     masm.loadPtr(Address(temp, offsetof(NativeIterator, props_cursor)), output.scratchReg());
@@ -1987,6 +1986,9 @@ CodeGenerator::visitIteratorMore(LIteratorMore *lir)
 
     LoadNativeIterator(masm, obj, output, ool->entry());
 
+    masm.branchTest32(Assembler::NonZero, Address(output, offsetof(NativeIterator, flags)),
+                      Imm32(JSITER_FOREACH), ool->entry());
+
     // Set output to true if props_cursor < props_end.
     masm.loadPtr(Address(output, offsetof(NativeIterator, props_end)), temp);
     masm.cmpPtr(Address(output, offsetof(NativeIterator, props_cursor)), temp);
@@ -2011,6 +2013,9 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd *lir)
         return false;
 
     LoadNativeIterator(masm, obj, temp1, ool->entry());
+
+    masm.branchTest32(Assembler::Zero, Address(temp1, offsetof(NativeIterator, flags)),
+                      Imm32(JSITER_ENUMERATE), ool->entry());
 
     // Clear active bit.
     masm.and32(Imm32(~JSITER_ACTIVE), Address(temp1, offsetof(NativeIterator, flags)));
