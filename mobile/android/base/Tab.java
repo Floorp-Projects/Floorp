@@ -455,8 +455,14 @@ public final class Tab {
             }
             mHistoryIndex = index;
         } else if (event.equals("Purge")) {
-            mHistorySize = 0;
-            mHistoryIndex = -1;
+            int numEntries = message.getInt("index");
+            mHistorySize -= numEntries;
+            mHistoryIndex -= numEntries;
+            if (mHistorySize < 0 || mHistoryIndex < -1) {
+                Log.e(LOGTAG, "Unexpected history state: index = " + mHistoryIndex + ", size = " + mHistorySize);
+                mHistorySize = 0;
+                mHistoryIndex = -1;
+            }
         }
     }
 
