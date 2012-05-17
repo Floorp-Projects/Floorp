@@ -68,7 +68,7 @@
 namespace js {
 
 class AutoPropDescArrayRooter;
-class ProxyHandler;
+class BaseProxyHandler;
 class CallObject;
 struct GCMarker;
 struct NativeIterator;

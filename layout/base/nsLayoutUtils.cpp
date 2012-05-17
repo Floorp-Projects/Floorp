@@ -4606,6 +4606,22 @@ nsLayoutUtils::DeregisterImageRequest(nsPresContext* aPresContext,
   }
 }
 
+/* static */
+void
+nsLayoutUtils::PostRestyleEvent(Element* aElement,
+                                nsRestyleHint aRestyleHint,
+                                nsChangeHint aMinChangeHint)
+{
+  nsIDocument* doc = aElement->GetCurrentDoc();
+  if (doc) {
+    nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+    if (presShell) {
+      presShell->FrameConstructor()->PostRestyleEvent(
+        aElement, aRestyleHint, aMinChangeHint);
+    }
+  }
+}
+
 nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
                                      const nsAString& aValue)
   : mContent(aContent),

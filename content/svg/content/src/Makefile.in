@@ -124,12 +124,14 @@ CPPSRCS		= \
 		nsSVGUnknownElement.cpp \
 		nsSVGUseElement.cpp \
 		nsSVGViewBox.cpp \
+		nsSVGViewElement.cpp \
 		SVGAnimatedLengthList.cpp \
 		SVGAnimatedNumberList.cpp \
 		SVGAnimatedPathSegList.cpp \
 		SVGAnimatedPointList.cpp \
 		SVGAnimatedPreserveAspectRatio.cpp \
 		SVGAnimatedTransformList.cpp \
+		SVGFragmentIdentifier.cpp \
 		SVGLength.cpp \
 		SVGLengthList.cpp \
 		SVGNumberList.cpp \

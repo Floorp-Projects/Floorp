@@ -182,7 +182,7 @@ struct TreeContext;
 class UpvarCookie;
 
 class Proxy;
-class ProxyHandler;
+class BaseProxyHandler;
 class Wrapper;
 class CrossCompartmentWrapper;
 

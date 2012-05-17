@@ -45,6 +45,7 @@
 
 #include "nsCocoaFeatures.h"
 #include "nsDebug.h"
+#include "nsObjCExceptions.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -53,6 +54,8 @@ PRInt32 nsCocoaFeatures::mOSXVersion = 0;
 /* static */ PRInt32
 nsCocoaFeatures::OSXVersion()
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
     if (!mOSXVersion) {
         // minor version is not accurate, use gestaltSystemVersionMajor, 
         // gestaltSystemVersionMinor, gestaltSystemVersionBugFix for these
@@ -65,6 +68,8 @@ nsCocoaFeatures::OSXVersion()
         mOSXVersion &= MAC_OS_X_VERSION_MASK;
     }
     return mOSXVersion;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
 /* static */ bool
