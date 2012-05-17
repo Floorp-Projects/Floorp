@@ -45,19 +45,15 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
     this.credentials = credentials;
   }
 
-  public void fetch(MetaGlobalDelegate callback) {
-    this.callback = callback;
-    this.doFetch();
-  }
-
-  private void doFetch() {
+  public void fetch(MetaGlobalDelegate delegate) {
+    this.callback = delegate;
     try {
       this.isUploading = false;
       SyncStorageRecordRequest r = new SyncStorageRecordRequest(this.metaURL);
       r.delegate = this;
       r.deferGet();
     } catch (URISyntaxException e) {
-      callback.handleError(e);
+      this.callback.handleError(e);
     }
   }
 
@@ -66,10 +62,10 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
       this.isUploading = true;
       SyncStorageRecordRequest r = new SyncStorageRecordRequest(this.metaURL);
 
-      // TODO: PUT! Body!
       r.delegate = this;
-      r.deferPut(null);
-    } catch (URISyntaxException e) {
+      this.callback = callback;
+      r.put(this.asCryptoRecord());
+    } catch (Exception e) {
       callback.handleError(e);
     }
   }
@@ -82,6 +78,10 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
     return json;
   }
 
+  /**
+   * Return a copy ready for upload.
+   * @return an unencrypted <code>CryptoRecord</code>.
+   */
   public CryptoRecord asCryptoRecord() {
     ExtendedJSONObject payload = this.asRecordContents();
     CryptoRecord record = new CryptoRecord(payload);
@@ -251,7 +251,6 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
 
   private void handleUploadSuccess(SyncStorageResponse response) {
     this.callback.handleSuccess(this, response);
-    this.callback = null;
   }
 
   private void handleDownloadSuccess(SyncStorageResponse response) {
@@ -260,29 +259,23 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
         CryptoRecord record = CryptoRecord.fromJSONRecord(response.jsonObjectBody());
         this.setFromRecord(record);
         this.callback.handleSuccess(this, response);
-        this.callback = null;
       } catch (Exception e) {
         this.callback.handleError(e);
-        this.callback = null;
       }
       return;
     }
     this.callback.handleFailure(response);
-    this.callback = null;
   }
 
   public void handleRequestFailure(SyncStorageResponse response) {
     if (response.getStatusCode() == 404) {
       this.callback.handleMissing(this, response);
-      this.callback = null;
       return;
     }
     this.callback.handleFailure(response);
-    this.callback = null;
   }
 
   public void handleRequestError(Exception e) {
     this.callback.handleError(e);
-    this.callback = null;
   }
 }

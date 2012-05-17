@@ -25,4 +25,8 @@ public abstract class AbstractNonRepositorySyncStage implements GlobalSyncStage 
   public void wipeLocal() {
     // Do nothing.
   }
+
+  public Integer getStorageVersion() {
+    return null; // Never include these engines in any meta/global records.
+  }
 }
