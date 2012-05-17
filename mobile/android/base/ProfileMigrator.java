@@ -142,6 +142,14 @@ public class ProfileMigrator {
         "WHERE id=6 AND type=2 AND fk IS NULL AND parent=1";
     private static final String MOBILE_ROOT_ID = "id";
 
+    // Do not migrate about URLs that we may not support,
+    // and do not migrate links to the XUL addons page.
+    private static final String FILTER_BLACKLISTED_BOOKMARKS =
+        "AND (places.url IS NULL OR (" +
+        "(places.url NOT LIKE 'about:%') AND " +
+        "(places.url NOT LIKE 'https://addons.mozilla.org/%/mobile%')" +
+        "))";
+
     private static final String BOOKMARK_QUERY_SELECT =
         "SELECT places.url             AS p_url,"         +
         "       bookmark.guid          AS b_guid,"        +
@@ -165,6 +173,7 @@ public class ProfileMigrator {
         // Bookmark folders don't have a places entry.
         "WHERE (places.hidden IS NULL "                   +
         "       OR places.hidden <> 1) "                  +
+        FILTER_BLACKLISTED_BOOKMARKS                      +
         // This gives us a better chance of adding a folder before
         // adding its contents and hence avoiding extra iterations below.
         "ORDER BY bookmark.id";

@@ -2457,10 +2457,27 @@ nsDOMWindowUtils::SetScrollPositionClampingScrollPortSize(float aWidth, float aH
 NS_IMETHODIMP
 nsDOMWindowUtils::SetIsApp(bool aValue)
 {
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   static_cast<nsGlobalWindow*>(window.get())->SetIsApp(aValue);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetApp(const nsAString& aManifestURL)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+  return static_cast<nsGlobalWindow*>(window.get())->SetApp(aManifestURL);
 }

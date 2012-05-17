@@ -3632,28 +3632,31 @@ nsHTMLInputElement::IsTooLong()
 bool
 nsHTMLInputElement::IsValueMissing() const
 {
+  // Should use UpdateValueMissingValidityStateForRadio() for type radio.
+  MOZ_ASSERT(mType != NS_FORM_INPUT_RADIO);
+
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::required) ||
       !DoesRequiredApply()) {
     return false;
   }
 
-  if (GetValueMode() == VALUE_MODE_VALUE) {
-    if (!IsMutable()) {
-      return false;
-    }
-
-    return IsValueEmpty();
+  if (!IsMutable()) {
+    return false;
   }
 
-  switch (mType)
-  {
-    case NS_FORM_INPUT_CHECKBOX:
+  switch (GetValueMode()) {
+    case VALUE_MODE_VALUE:
+      return IsValueEmpty();
+    case VALUE_MODE_FILENAME:
+    {
+      const nsCOMArray<nsIDOMFile>& files = GetFiles();
+      return !files.Count();
+    }
+    case VALUE_MODE_DEFAULT_ON:
+      // This should not be used for type radio.
+      // See the MOZ_ASSERT at the beginning of the method.
       return !mChecked;
-    case NS_FORM_INPUT_FILE:
-      {
-        const nsCOMArray<nsIDOMFile>& files = GetFiles();
-        return !files.Count();
-      }
+    case VALUE_MODE_DEFAULT:
     default:
       return false;
   }
@@ -3743,7 +3746,8 @@ nsHTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
 
   if (!container) {
-    SetValidityState(VALIDITY_STATE_VALUE_MISSING, required && !selected);
+    SetValidityState(VALIDITY_STATE_VALUE_MISSING,
+                     IsMutable() && required && !selected);
     return;
   }
 
@@ -3758,7 +3762,7 @@ nsHTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
                  : container->GetRequiredRadioCount(name);
   }
 
-  valueMissing = required && !selected;
+  valueMissing = IsMutable() && required && !selected;
 
   if (container->GetValueMissingState(name) != valueMissing) {
     container->SetValueMissingState(name, valueMissing);

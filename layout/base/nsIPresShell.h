@@ -197,10 +197,11 @@ class nsIPresShell : public nsIPresShell_base
 protected:
   typedef mozilla::layers::LayerManager LayerManager;
 
-  enum {
+  enum eRenderFlag {
     STATE_IGNORING_VIEWPORT_SCROLLING = 0x1,
     STATE_USING_DISPLAYPORT = 0x2
   };
+  typedef PRUint8 RenderFlags; // for storing the above flags
 
 public:
   virtual NS_HIDDEN_(nsresult) Init(nsIDocument* aDocument,
@@ -594,7 +595,7 @@ public:
   };
   typedef struct ScrollAxis {
     PRInt16 mWhereToScroll;
-    WhenToScroll mWhenToScroll;
+    WhenToScroll mWhenToScroll : 16;
   /**
    * @param aWhere: Either a percentage or a special value.
    *                nsIPresShell defines:
@@ -1333,7 +1334,7 @@ protected:
   // has been explicitly checked.  If you add any members to this class,
   // please make the ownership explicit (pinkerton, scc).
 
-  // these are the same Document and PresContext owned by the DocViewer.
+  // These are the same Document and PresContext owned by the DocViewer.
   // we must share ownership.
   nsIDocument*              mDocument;      // [STRONG]
   nsPresContext*            mPresContext;   // [STRONG]
@@ -1353,33 +1354,10 @@ protected:
   PRUint32                  mPresArenaAllocCount;
 #endif
 
-  // Count of the number of times this presshell has been painted to
-  // a window
+  // Count of the number of times this presshell has been painted to a window.
   PRUint64                  mPaintCount;
 
-  PRInt16                   mSelectionFlags;
-
-  bool                      mStylesHaveChanged;
-  bool                      mDidInitialReflow;
-  bool                      mIsDestroying;
-  bool                      mIsReflowing;
-  bool                      mPaintingSuppressed;  // For all documents we initially lock down painting.
-  bool                      mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
-  bool                      mIsActive;
-  bool                      mFrozen;
-
-  bool                      mIsFirstPaint;
-
-  bool                      mObservesMutationsForPrint;
-
-  bool                      mReflowScheduled; // If true, we have a reflow
-                                              // scheduled. Guaranteed to be
-                                              // false if mReflowContinueTimer
-                                              // is non-null.
-
-  bool                      mSuppressInterruptibleReflows;
-
-  bool                      mScrollPositionClampingScrollPortSizeSet;
+  nsSize                    mScrollPositionClampingScrollPortSize;
 
   // A list of weak frames. This is a pointer to the last item in the list.
   nsWeakFrame*              mWeakFrames;
@@ -1387,21 +1365,44 @@ protected:
   // Most recent canvas background color.
   nscolor                   mCanvasBackgroundColor;
 
-  // Flags controlling how our document is rendered.  These persist
-  // between paints and so are tied with retained layer pixels.
-  // PresShell flushes retained layers when the rendering state
-  // changes in a way that prevents us from being able to (usefully)
-  // re-use old pixels.
-  PRUint32                  mRenderFlags;
-
   // Used to force allocation and rendering of proportionally more or
   // less pixels in the given dimension.
   float                     mXResolution;
   float                     mYResolution;
 
-  nsSize                    mScrollPositionClampingScrollPortSize;
+  PRInt16                   mSelectionFlags;
 
-  static nsIContent* gKeyDownTarget;
+  // Flags controlling how our document is rendered.  These persist
+  // between paints and so are tied with retained layer pixels.
+  // PresShell flushes retained layers when the rendering state
+  // changes in a way that prevents us from being able to (usefully)
+  // re-use old pixels.
+  RenderFlags               mRenderFlags;
+
+  bool                      mStylesHaveChanged : 1;
+  bool                      mDidInitialReflow : 1;
+  bool                      mIsDestroying : 1;
+  bool                      mIsReflowing : 1;
+
+  // For all documents we initially lock down painting.
+  bool                      mPaintingSuppressed : 1;
+
+  // Whether or not form controls should use nsITheme in this shell.
+  bool                      mIsThemeSupportDisabled : 1;
+
+  bool                      mIsActive : 1;
+  bool                      mFrozen : 1;
+  bool                      mIsFirstPaint : 1;
+  bool                      mObservesMutationsForPrint : 1;
+
+  // If true, we have a reflow scheduled. Guaranteed to be false if
+  // mReflowContinueTimer is non-null.
+  bool                      mReflowScheduled : 1;
+
+  bool                      mSuppressInterruptibleReflows : 1;
+  bool                      mScrollPositionClampingScrollPortSizeSet : 1;
+
+  static nsIContent*        gKeyDownTarget;
 };
 
 /**

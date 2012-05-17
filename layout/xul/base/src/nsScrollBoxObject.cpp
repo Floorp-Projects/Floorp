@@ -90,13 +90,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollTo(PRInt32 x, PRInt32 y)
   nsIScrollableFrame* sf = GetScrollFrame();
   if (!sf)
     return NS_ERROR_FAILURE;
-
-  nsPoint pt(nsPresContext::CSSPixelsToAppUnits(x),
-             nsPresContext::CSSPixelsToAppUnits(y));
-  nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
-  // Don't allow pt.x/y + halfPixel since that would round up to the next CSS pixel.
-  nsRect range(pt.x - halfPixel, pt.y - halfPixel, halfPixel*2 - 1, halfPixel*2 - 1);
-  sf->ScrollTo(pt, nsIScrollableFrame::INSTANT, &range);
+  sf->ScrollToCSSPixels(nsIntPoint(x, y));
   return NS_OK;
 }
 

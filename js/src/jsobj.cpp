@@ -2401,10 +2401,12 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
     }
 
     JSObject *proto = v.toObjectOrNull();
+#if JS_HAS_XML_SUPPORT
     if (proto && proto->isXML()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_XML_PROTO_FORBIDDEN);
         return false;
     }
+#endif
 
     /*
      * Use the callee's global as the parent of the new object to avoid dynamic
@@ -4131,10 +4133,12 @@ SetProto(JSContext *cx, HandleObject obj, HandleObject proto, bool checkForCycle
     JS_ASSERT_IF(!checkForCycles, obj != proto);
     JS_ASSERT(obj->isExtensible());
 
+#if JS_HAS_XML_SUPPORT
     if (proto && proto->isXML()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_XML_PROTO_FORBIDDEN);
         return false;
     }
+#endif
 
     /*
      * Regenerate shapes for all of the scopes along the old prototype chain,
@@ -5602,7 +5606,9 @@ JSBool
 DefaultValue(JSContext *cx, HandleObject obj, JSType hint, Value *vp)
 {
     JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
+#if JS_HAS_XML_SUPPORT
     JS_ASSERT(!obj->isXML());
+#endif
 
     Class *clasp = obj->getClass();
     if (hint == JSTYPE_STRING) {
