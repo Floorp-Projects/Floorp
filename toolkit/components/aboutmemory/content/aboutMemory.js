@@ -1273,13 +1273,17 @@ function appendTreeElements(aPOuter, aT, aProcess)
     // Indent more if this entry is narrower than its parent, and update
     // aIndentGuide accordingly.
     let tString = aT.toString();
-    let extraIndentArray = [];
     let extraIndentLength = Math.max(aParentStringLength - tString.length, 0);
+    let indentText;
     if (extraIndentLength > 0) {
+      let extraIndentArray = [];
       repeatStr(extraIndentArray, kHorizontal, extraIndentLength);
       aIndentGuide[aIndentGuide.length - 1]._depth += extraIndentLength;
+      indentText = aBaseIndentText + extraIndentArray.join("");
     }
-    let indentText = aBaseIndentText + extraIndentArray.join("");
+    else {
+      indentText = aBaseIndentText;
+    }
     appendElementWithText(aP, "span", "treeLine", indentText);
 
     // Generate the percentage;  detect and record invalid values at the same
