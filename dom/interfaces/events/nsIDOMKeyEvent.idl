@@ -210,6 +210,7 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_VK_QUOTE          = 0xDE; // Apostrophe
 
   const unsigned long DOM_VK_META           = 0xE0;
+  const unsigned long DOM_VK_ALTGR          = 0xE1;
 
   readonly attribute unsigned long    charCode;
   readonly attribute unsigned long    keyCode;
