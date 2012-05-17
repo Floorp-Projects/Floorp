@@ -241,6 +241,16 @@ public:
    */
   static nsSVGSVGElement *GetOuterSVGElement(nsSVGElement *aSVGElement);
 
+  /**
+   * Activates the animation element aContent as a result of navigation to the
+   * fragment identifier that identifies aContent. aContent must be an instance
+   * of nsSVGAnimationElement.
+   *
+   * This is just a shim to allow nsSVGAnimationElement::ActivateByHyperlink to
+   * be called from layout/base without adding to that directory's include paths.
+   */
+  static void ActivateByHyperlink(nsIContent *aContent);
+
   /*
    * Get the number of CSS px (user units) per em (i.e. the em-height in user
    * units) for an nsIContent

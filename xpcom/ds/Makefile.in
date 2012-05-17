@@ -110,6 +110,7 @@ EXPORTS		= \
 		nsHashPropertyBag.h \
 		nsWhitespaceTokenizer.h \
 		nsCharSeparatedTokenizer.h \
+		CharTokenizer.h \
 		$(NULL)			
 
 XPIDLSRCS	= \
