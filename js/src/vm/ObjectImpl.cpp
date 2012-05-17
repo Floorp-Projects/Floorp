@@ -489,6 +489,64 @@ ArrayBufferElementsHeader::defineElement(JSContext *cx, Handle<ObjectImpl*> obj,
 }
 
 bool
+js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsigned resolveFlags,
+                   PropDesc *desc)
+{
+    NEW_OBJECT_REPRESENTATION_ONLY();
+
+    JS_CHECK_RECURSION(cx, return false);
+
+    Rooted<PropertyId> pid(cx, pid_);
+
+    if (static_cast<JSObject *>(obj.value())->isProxy()) {
+        MOZ_NOT_REACHED("NYI: proxy [[GetOwnProperty]]");
+        return false;
+    }
+
+    const Shape *shape = obj->nativeLookup(cx, pid);
+    if (!shape) {
+        /* Not found: attempt to resolve it. */
+        Class *clasp = obj->getClass();
+        JSResolveOp resolve = clasp->resolve;
+        if (resolve != JS_ResolveStub) {
+            Rooted<jsid> id(cx, pid.reference().asId());
+            Rooted<JSObject*> robj(cx, static_cast<JSObject*>(obj.value()));
+            if (clasp->flags & JSCLASS_NEW_RESOLVE) {
+                Rooted<JSObject*> obj2(cx, NULL);
+                JSNewResolveOp op = reinterpret_cast<JSNewResolveOp>(resolve);
+                if (!op(cx, robj, id, resolveFlags, obj2.address()))
+                    return false;
+            } else {
+                if (!resolve(cx, robj, id))
+                    return false;
+            }
+        }
+
+        /* Now look it up again. */
+        shape = obj->nativeLookup(cx, pid);
+        if (!shape) {
+            desc->setUndefined();
+            return true;
+        }
+    }
+
+    if (shape->isDataDescriptor()) {
+        *desc = PropDesc(obj->nativeGetSlot(shape->slot()), shape->writability(),
+                         shape->enumerability(), shape->configurability());
+        return true;
+    }
+
+    if (shape->isAccessorDescriptor()) {
+        *desc = PropDesc(shape->getterValue(), shape->setterValue(),
+                         shape->enumerability(), shape->configurability());
+        return true;
+    }
+
+    MOZ_NOT_REACHED("NYI: PropertyOp-based properties");
+    return false;
+}
+
+bool
 js::GetOwnElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, unsigned resolveFlags,
                   PropDesc *desc)
 {
