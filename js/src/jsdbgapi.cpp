@@ -570,7 +570,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
-    JS_ASSERT(cx->stack.containsSlow(fp));
+    JS_ASSERT(cx->stack.space().containsSlow(fp));
 
     js::AutoCompartment ac(cx, fp->scopeChain());
     if (!ac.enter())
@@ -585,7 +585,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
-    JS_ASSERT(cx->stack.containsSlow(fp));
+    JS_ASSERT(cx->stack.space().containsSlow(fp));
 
     if (!fp->compartment()->debugMode())
         return NULL;

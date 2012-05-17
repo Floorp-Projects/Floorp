@@ -621,6 +621,18 @@ StackSpace::sizeOfCommitted()
 #endif
 }
 
+#ifdef DEBUG
+bool
+StackSpace::containsSlow(StackFrame *fp)
+{
+    for (AllFramesIter i(*this); !i.done(); ++i) {
+        if (i.fp() == fp)
+            return true;
+    }
+    return false;
+}
+#endif
+
 /*****************************************************************************/
 
 ContextStack::ContextStack(JSContext *cx)
