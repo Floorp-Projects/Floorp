@@ -65,6 +65,7 @@
 #include "nsRenderingContext.h"
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
+#include "nsSVGAnimationElement.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGEffects.h"
@@ -263,6 +264,15 @@ nsSVGUtils::GetOuterSVGElement(nsSVGElement *aSVGElement)
     return static_cast<nsSVGSVGElement*>(element);
   }
   return nsnull;
+}
+
+void
+nsSVGUtils::ActivateByHyperlink(nsIContent *aContent)
+{
+  NS_ABORT_IF_FALSE(aContent->IsNodeOfType(nsINode::eANIMATION),
+                    "Expecting an animation element");
+
+  static_cast<nsSVGAnimationElement*>(aContent)->ActivateByHyperlink();
 }
 
 float

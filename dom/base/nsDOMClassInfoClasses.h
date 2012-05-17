@@ -296,6 +296,7 @@ DOMCI_CLASS(SVGTitleElement)
 DOMCI_CLASS(SVGTSpanElement)
 DOMCI_CLASS(SVGUnknownElement)
 DOMCI_CLASS(SVGUseElement)
+DOMCI_CLASS(SVGViewElement)
 
 // other SVG classes
 DOMCI_CLASS(SVGAngle)
