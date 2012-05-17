@@ -254,8 +254,10 @@ Tester.prototype = {
         // will erroneously be blamed for leaking this new tab's DOM window and
         // docshell until shutdown. We can prevent this by removing this tab now
         // that all tests are done.
-        gBrowser.addTab();
-        gBrowser.removeCurrentTab();
+        if (window.gBrowser) {
+          gBrowser.addTab();
+          gBrowser.removeCurrentTab();
+        }
 
         // Schedule GC and CC runs before finishing in order to detect
         // DOM windows leaked by our tests or the tested code.
