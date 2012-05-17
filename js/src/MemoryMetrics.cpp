@@ -69,6 +69,8 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
     // Get the compartment-level numbers.
     compartment->sizeOfTypeInferenceData(&cStats.typeInferenceSizes, rtStats->mallocSizeOf);
     cStats.shapesCompartmentTables = compartment->sizeOfShapeTable(rtStats->mallocSizeOf);
+    cStats.crossCompartmentWrappers =
+        compartment->crossCompartmentWrappers.sizeOfExcludingThis(rtStats->mallocSizeOf);
 }
 
 static void
@@ -195,23 +197,8 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
                                    StatsArenaCallback, StatsCellCallback);
     IterateChunks(rt, rtStats, StatsChunkCallback);
     
-    rtStats->runtimeObject = rtStats->mallocSizeOf(rt);
+    rt->sizeOfIncludingThis(rtStats->mallocSizeOf, &rtStats->runtime);
     
-    rt->sizeOfExcludingThis(rtStats->mallocSizeOf,
-                            &rtStats->runtimeNormal,
-                            &rtStats->runtimeTemporary,
-                            &rtStats->runtimeMjitCode,
-                            &rtStats->runtimeRegexpCode,
-                            &rtStats->runtimeUnusedCodeMemory,
-                            &rtStats->runtimeStackCommitted,
-                            &rtStats->runtimeGCMarker);
-    
-    rtStats->runtimeAtomsTable =
-        rt->atomState.atoms.sizeOfExcludingThis(rtStats->mallocSizeOf);
-    
-    for (ContextIter acx(rt); !acx.done(); acx.next())
-        rtStats->runtimeContexts += acx->sizeOfIncludingThis(rtStats->mallocSizeOf);
-
     // This is initialized to all bytes stored in used chunks, and then we
     // subtract used space from it each time around the loop.
     rtStats->gcHeapChunkDirtyUnused = rtStats->gcHeapChunkTotal -
@@ -219,7 +206,7 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
                                       rtStats->gcHeapChunkCleanDecommitted -
                                       rtStats->gcHeapChunkDirtyDecommitted;
 
-    rtStats->totalMjit = rtStats->runtimeMjitCode;
+    rtStats->totalMjit = rtStats->runtime.mjitCode;
 
     for (size_t index = 0;
          index < rtStats->compartmentStatsVector.length();
@@ -293,19 +280,7 @@ GetExplicitNonHeapForRuntime(JSRuntime *rt, JSMallocSizeOfFun mallocSizeOf)
     // explicit/runtime/regexp-code
     // explicit/runtime/stack-committed
     // explicit/runtime/unused-code-memory
-    size_t dummy, mjitCode, regexpCode, unusedCodeMemory, stackCommitted;
-    rt->sizeOfExcludingThis(mallocSizeOf,
-                            &dummy,
-                            &dummy,
-                            &mjitCode,
-                            &regexpCode,
-                            &unusedCodeMemory,
-                            &stackCommitted,
-                            NULL);
-    n += mjitCode;
-    n += regexpCode;
-    n += unusedCodeMemory;
-    n += stackCommitted;
+    n += rt->sizeOfExplicitNonHeap();
 
     return int64_t(n);
 }

@@ -409,6 +409,7 @@ var gCheckUpdateSecurityDefault = true;
 var gCheckUpdateSecurity = gCheckUpdateSecurityDefault;
 var gUpdateEnabled = true;
 var gAutoUpdateDefault = true;
+var gHotfixID = null;
 
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
@@ -538,6 +539,11 @@ var AddonManagerInternal = {
     } catch (e) {}
     Services.prefs.addObserver(PREF_EM_AUTOUPDATE_DEFAULT, this, false);
 
+    try {
+      gHotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID);
+    } catch (e) {}
+    Services.prefs.addObserver(PREF_EM_HOTFIX_ID, this, false);
+
     // Ensure all default providers have had a chance to register themselves
     DEFAULT_PROVIDERS.forEach(function(url) {
       try {
@@ -664,6 +670,7 @@ var AddonManagerInternal = {
     Services.prefs.removeObserver(PREF_EM_CHECK_UPDATE_SECURITY, this);
     Services.prefs.removeObserver(PREF_EM_UPDATE_ENABLED, this);
     Services.prefs.removeObserver(PREF_EM_AUTOUPDATE_DEFAULT, this);
+    Services.prefs.removeObserver(PREF_EM_HOTFIX_ID, this);
 
     this.providers.forEach(function(provider) {
       callProvider(provider, "shutdown");
@@ -752,6 +759,14 @@ var AddonManagerInternal = {
         this.callManagerListeners("onUpdateModeChanged");
         break;
       }
+      case PREF_EM_HOTFIX_ID: {
+        try {
+          gHotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID);
+        } catch(e) {
+          gHotfixID = null;
+        }
+        break;
+      }
     }
   },
 
@@ -825,9 +840,7 @@ var AddonManagerInternal = {
    * that can be updated.
    */
   backgroundUpdateCheck: function AMI_backgroundUpdateCheck() {
-    let hotfixID = null;
-    if (Services.prefs.getPrefType(PREF_EM_HOTFIX_ID) == Ci.nsIPrefBranch.PREF_STRING)
-      hotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID);
+    let hotfixID = this.hotfixID;
 
     let checkHotfix = hotfixID &&
                       Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED) &&
@@ -1688,7 +1701,11 @@ var AddonManagerInternal = {
     if (aValue != gUpdateEnabled)
       Services.prefs.setBoolPref(PREF_EM_UPDATE_ENABLED, aValue);
     return aValue;
-  }
+  },
+
+  get hotfixID() {
+    return gHotfixID;
+  },
 };
 
 /**
@@ -2066,6 +2083,10 @@ var AddonManager = {
 
   set autoUpdateDefault(aValue) {
     AddonManagerInternal.autoUpdateDefault = aValue;
+  },
+
+  get hotfixID() {
+    return AddonManagerInternal.hotfixID;
   },
 
   escapeAddonURI: function AM_escapeAddonURI(aAddon, aUri, aAppVersion) {

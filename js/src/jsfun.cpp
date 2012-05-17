@@ -1201,30 +1201,6 @@ IsBuiltinFunctionConstructor(JSFunction *fun)
     return fun->maybeNative() == Function;
 }
 
-const Shape *
-LookupInterpretedFunctionPrototype(JSContext *cx, RootedVarObject funobj)
-{
-#ifdef DEBUG
-    JSFunction *fun = funobj->toFunction();
-    JS_ASSERT(fun->isInterpreted());
-    JS_ASSERT(!fun->isFunctionPrototype());
-    JS_ASSERT(!funobj->isBoundFunction());
-#endif
-
-    jsid id = NameToId(cx->runtime->atomState.classPrototypeAtom);
-    RootedVar<const Shape*> shape(cx, funobj->nativeLookup(cx, id));
-    if (!shape) {
-        if (!ResolveInterpretedFunctionPrototype(cx, funobj))
-            return NULL;
-        id = NameToId(cx->runtime->atomState.classPrototypeAtom);
-        shape = funobj->nativeLookup(cx, id);
-    }
-    JS_ASSERT(!shape->configurable());
-    JS_ASSERT(shape->isDataDescriptor());
-    JS_ASSERT(shape->hasSlot());
-    return shape;
-}
-
 } /* namespace js */
 
 JSFunction *

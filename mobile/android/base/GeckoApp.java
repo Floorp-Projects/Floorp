@@ -1525,6 +1525,14 @@ abstract public class GeckoApp
 
         mAppContext = this;
 
+        // Check to see if the activity is restarted after configuration change.
+        if (getLastNonConfigurationInstance() != null) {
+            // Restart the application as a safe way to handle the configuration change.
+            doRestart();
+            System.exit(0);
+            return;
+        }
+
         // StrictMode is set by defaults resource flag |enableStrictMode|.
         if (getResources().getBoolean(R.bool.enableStrictMode)) {
             enableStrictMode();
@@ -2136,6 +2144,13 @@ abstract public class GeckoApp
         GeckoNetworkManager.getInstance().start();
         GeckoScreenOrientationListener.getInstance().start();
     }
+
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        // Send a non-null value so that we can restart the application, 
+        // when activity restarts due to configuration change.
+        return new Boolean(true);
+    } 
 
     abstract public String getPackageName();
     abstract public String getContentProcessName();

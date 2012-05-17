@@ -1716,6 +1716,7 @@ GK_ATOM(onMozTouchUp, "onMozTouchUp")
 GK_ATOM(ondevicemotion, "ondevicemotion")
 GK_ATOM(ondeviceorientation, "ondeviceorientation")
 GK_ATOM(ondeviceproximity, "ondeviceproximity")
+GK_ATOM(onuserproximity, "onuserproximity")
 
 // light sensor support
 GK_ATOM(ondevicelight, "ondevicelight")
