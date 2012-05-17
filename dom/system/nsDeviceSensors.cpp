@@ -303,7 +303,6 @@ nsDeviceSensors::FireDOMUserProximityEvent(nsIDOMEventTarget *aTarget, bool aNea
                              aNear);
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-  privateEvent = do_QueryInterface(event);
   if (privateEvent) {
     privateEvent->SetTrusted(true);
   }
