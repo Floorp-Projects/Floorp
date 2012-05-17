@@ -4,13 +4,14 @@
 
 package org.mozilla.gecko.sync.stage;
 
-import org.mozilla.gecko.sync.repositories.domain.TabsRecord;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.sync.repositories.domain.Record;
+import org.mozilla.gecko.sync.repositories.domain.TabsRecord;
+import org.mozilla.gecko.sync.repositories.domain.VersionConstants;
 
 public class FennecTabsServerSyncStage extends ServerSyncStage {
   private static final String COLLECTION = "tabs";
@@ -36,6 +37,11 @@ public class FennecTabsServerSyncStage extends ServerSyncStage {
   @Override
   protected String getEngineName() {
     return COLLECTION;
+  }
+
+  @Override
+  public Integer getStorageVersion() {
+    return VersionConstants.TABS_ENGINE_VERSION;
   }
 
   @Override
