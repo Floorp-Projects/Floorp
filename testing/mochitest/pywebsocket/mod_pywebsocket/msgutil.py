@@ -82,7 +82,15 @@ def receive_message(request):
     Args:
         request: mod_python request.
     Raises:
-        BadOperationException: when client already terminated.
+        InvalidFrameException:     when client send invalid frame.
+        UnsupportedFrameException: when client send unsupported frame e.g. some
+                                   of reserved bit is set but no extension can
+                                   recognize it.
+        InvalidUTF8Exception:      when client send a text frame containing any
+                                   invalid UTF-8 string.
+        ConnectionTerminatedException: when the connection is closed
+                                   unexpectedly.
+        BadOperationException:     when client already terminated.
     """
     return request.ws_stream.receive_message()
 
