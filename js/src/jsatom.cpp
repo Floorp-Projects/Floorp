@@ -484,18 +484,6 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
 }
 #endif
 
-#if JS_BITS_PER_WORD == 32
-# define TEMP_SIZE_START_LOG2   5
-#else
-# define TEMP_SIZE_START_LOG2   6
-#endif
-#define TEMP_SIZE_LIMIT_LOG2    (TEMP_SIZE_START_LOG2 + NUM_TEMP_FREELISTS)
-
-#define TEMP_SIZE_START         JS_BIT(TEMP_SIZE_START_LOG2)
-#define TEMP_SIZE_LIMIT         JS_BIT(TEMP_SIZE_LIMIT_LOG2)
-
-JS_STATIC_ASSERT(TEMP_SIZE_START >= sizeof(JSHashTable));
-
 namespace js {
 
 void

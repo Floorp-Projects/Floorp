@@ -54,6 +54,8 @@
 using namespace mozilla;
 using namespace hal;
 
+#undef near
+
 // also see sDefaultSensorHint in mobile/android/base/GeckoAppShell.java
 #define DEFAULT_SENSOR_POLL 100
 
@@ -124,6 +126,7 @@ NS_IMPL_ISUPPORTS1(nsDeviceSensors, nsIDeviceSensors)
 
 nsDeviceSensors::nsDeviceSensors()
 {
+  mIsUserProximityNear = false;
   mLastDOMMotionEventTime = TimeStamp::Now();
   mEnabled = Preferences::GetBool("device.sensors.enabled", true);
 
@@ -274,14 +277,46 @@ nsDeviceSensors::FireDOMProximityEvent(nsIDOMEventTarget *aTarget,
   }
   bool defaultActionEnabled;
   aTarget->DispatchEvent(event, &defaultActionEnabled);
+
+  // Some proximity sensors only support a binary near or
+  // far measurement. In this case, the sensor should report
+  // its maximum range value in the far state and a lesser
+  // value in the near state.
+
+  bool near = (aValue < aMax);
+  if (mIsUserProximityNear != near) {
+    mIsUserProximityNear = near;
+    FireDOMUserProximityEvent(aTarget, mIsUserProximityNear);
+  }
+}
+
+void
+nsDeviceSensors::FireDOMUserProximityEvent(nsIDOMEventTarget *aTarget, bool aNear)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMUserProximityEvent(getter_AddRefs(event), nsnull, nsnull);
+  nsCOMPtr<nsIDOMUserProximityEvent> pe = do_QueryInterface(event);
+
+  pe->InitUserProximityEvent(NS_LITERAL_STRING("userproximity"),
+                             true,
+                             false,
+                             aNear);
+
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  privateEvent = do_QueryInterface(event);
+  if (privateEvent) {
+    privateEvent->SetTrusted(true);
+  }
+  bool defaultActionEnabled;
+  aTarget->DispatchEvent(event, &defaultActionEnabled);
 }
 
 void
 nsDeviceSensors::FireDOMOrientationEvent(nsIDOMDocument *domdoc,
-                                        nsIDOMEventTarget *target,
-                                        double alpha,
-                                        double beta,
-                                        double gamma)
+                                         nsIDOMEventTarget *target,
+                                         double alpha,
+                                         double beta,
+                                         double gamma)
 {
   nsCOMPtr<nsIDOMEvent> event;
   bool defaultActionEnabled = true;

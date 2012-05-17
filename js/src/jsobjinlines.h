@@ -1595,6 +1595,7 @@ ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx)
       case ESClass_String: return obj.isString();
       case ESClass_Boolean: return obj.isBoolean();
       case ESClass_RegExp: return obj.isRegExp();
+      case ESClass_ArrayBuffer: return obj.isArrayBuffer();
     }
     JS_NOT_REACHED("bad classValue");
     return false;

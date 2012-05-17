@@ -89,7 +89,7 @@ def validate_subprotocol(subprotocol, hixie):
     Sec-WebSocket-Protocol.
 
     See
-    - HyBi 10: Section 5.1. and 5.2.2.
+    - RFC 6455: Section 4.1., 4.2.2., and 4.3.
     - HyBi 00: Section 4.1. Opening handshake
     - Hixie 75: Section 4.1. Handshake
     """

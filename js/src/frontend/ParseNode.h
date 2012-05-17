@@ -47,6 +47,7 @@
 
 #include "frontend/ParseMaps.h"
 #include "frontend/TokenStream.h"
+#include "frontend/TreeContext.h"
 
 namespace js {
 
@@ -1528,24 +1529,35 @@ struct ObjectBox {
     ObjectBox           *emitLink;
     JSObject            *object;
     bool                isFunctionBox;
+
+    ObjectBox(ObjectBox *traceLink, JSObject *obj);
 };
 
 #define JSFB_LEVEL_BITS 14
 
 struct FunctionBox : public ObjectBox
 {
-    ParseNode           *node;
-    FunctionBox         *siblings;
-    FunctionBox         *kids;
-    FunctionBox         *parent;
-    Bindings            bindings;               /* bindings for this function */
-    uint32_t            queued:1,
-                        inLoop:1,               /* in a loop in parent function */
-                        level:JSFB_LEVEL_BITS;
-    uint32_t            tcflags;
-    bool                inWith:1;               /* some enclosing scope is a with-statement
-                                                   or E4X filter-expression */
-    bool                inGenexpLambda:1;       /* lambda from generator expression */
+    ParseNode       *node;
+    FunctionBox     *siblings;
+    FunctionBox     *kids;
+    FunctionBox     *parent;
+    Bindings        bindings;               /* bindings for this function */
+    uint32_t        level:JSFB_LEVEL_BITS;
+    bool            queued:1;
+    bool            inLoop:1;               /* in a loop in parent function */
+    bool            inWith:1;               /* some enclosing scope is a with-statement
+                                               or E4X filter-expression */
+    bool            inGenexpLambda:1;       /* lambda from generator expression */
+
+    ContextFlags    cxFlags;
+
+    FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, TreeContext *tc);
+
+    bool funIsHeavyweight()      const { return cxFlags.funIsHeavyweight; }
+    bool funIsGenerator()        const { return cxFlags.funIsGenerator; }
+    bool funHasExtensibleScope() const { return cxFlags.funHasExtensibleScope; }
+
+    void setFunIsHeavyweight()         { cxFlags.funIsHeavyweight = true; }
 
     JSFunction *function() const { return (JSFunction *) object; }
 
@@ -1554,12 +1566,6 @@ struct FunctionBox : public ObjectBox
      * filter-expression, or a function that uses direct eval.
      */
     bool inAnyDynamicScope() const;
-
-    /* 
-     * Must this function's descendants be marked as having an extensible
-     * ancestor?
-     */
-    bool scopeIsExtensible() const;
 };
 
 struct FunctionBoxQueue {

@@ -128,6 +128,7 @@ static const char* const sEventNames[] = {
   "devicemotion",
   "deviceorientation",
   "deviceproximity",
+  "userproximity",
   "devicelight"
 };
 
@@ -1557,6 +1558,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_deviceorientation];
   case NS_DEVICE_PROXIMITY:
     return sEventNames[eDOMEvents_deviceproximity];
+  case NS_USER_PROXIMITY:
+    return sEventNames[eDOMEvents_userproximity];
   case NS_DEVICE_LIGHT:
     return sEventNames[eDOMEvents_devicelight];
   case NS_FULLSCREENCHANGE:

@@ -379,6 +379,14 @@ is(e.max, 2, "max should be 2");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
 
+// UserProximityEvent
+e = new UserProximityEvent("hello", {near: true});
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event should not be trusted");
+is(e.near, true, "near should be true");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
 // DeviceLightEvent
 e = new DeviceLightEvent("hello", {value: 1} );
 ok(e.type, "hello", "Wrong event type!");
