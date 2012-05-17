@@ -143,6 +143,9 @@ IsSVGWhitespace(PRUnichar aChar)
  */
 bool NS_SMILEnabled();
 
+bool NS_SVGDisplayListHitTestingEnabled();
+bool NS_SVGDisplayListPaintingEnabled();
+
 /**
  * Sometimes we need to distinguish between an empty box and a box
  * that contains an element that has no size e.g. a point at the origin.
@@ -224,6 +227,8 @@ class nsSVGUtils
 public:
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
   typedef mozilla::SVGPreserveAspectRatio SVGPreserveAspectRatio;
+
+  static void Init();
 
   /*
    * Get the parent element of an nsIContent
