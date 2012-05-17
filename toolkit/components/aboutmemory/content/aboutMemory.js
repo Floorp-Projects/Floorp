@@ -266,7 +266,7 @@ function checkReport(aUnsafePath, aKind, aUnits, aAmount, aDescription)
   if (aUnsafePath.startsWith("explicit/")) {
     assert(aKind === KIND_HEAP || aKind === KIND_NONHEAP, "bad explicit kind");
     assert(aUnits === UNITS_BYTES, "bad explicit units");
-    assert(aDescription.match(gSentenceRegExp),
+    assert(gSentenceRegExp.test(aDescription),
            "non-sentence explicit description");
 
   } else if (aUnsafePath.startsWith("smaps/")) {
@@ -281,9 +281,9 @@ function checkReport(aUnsafePath, aKind, aUnits, aAmount, aDescription)
 
   } else {
     assert(aUnsafePath.indexOf("/") === -1, "'other' path contains '/'");
-    assert(aKind === KIND_OTHER, "bad other kind: " + aUnsafePath);
-    assert(aDescription.match(gSentenceRegExp),
-           "non-sentence other description " + aDescription);
+    assert(aKind === KIND_OTHER, "bad other kind");
+    assert(gSentenceRegExp.test(aDescription),
+           "non-sentence other description");
   }
 }
 
