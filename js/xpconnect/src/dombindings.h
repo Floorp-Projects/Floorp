@@ -49,9 +49,9 @@ namespace mozilla {
 namespace dom {
 namespace binding {
 
-class ProxyHandler : public js::ProxyHandler {
+class ProxyHandler : public js::BaseProxyHandler {
 protected:
-    ProxyHandler() : js::ProxyHandler(ProxyFamily())
+    ProxyHandler() : js::BaseProxyHandler(ProxyFamily())
     {
     }
 
@@ -230,7 +230,7 @@ public:
     JSString *obj_toString(JSContext *cx, JSObject *proxy);
     void finalize(JSFreeOp *fop, JSObject *proxy);
 
-    static bool proxyHandlerIsList(js::ProxyHandler *handler) {
+    static bool proxyHandlerIsList(js::BaseProxyHandler *handler) {
         return handler == &instance;
     }
     static bool objIsList(JSObject *obj) {
