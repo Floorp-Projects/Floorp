@@ -56,6 +56,7 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_VK_CAPS_LOCK      = 0x14;
   const unsigned long DOM_VK_KANA           = 0x15;
   const unsigned long DOM_VK_HANGUL         = 0x15;
+  const unsigned long DOM_VK_EISU           = 0x16; // Japanese Mac keyboard only
   const unsigned long DOM_VK_JUNJA          = 0x17;
   const unsigned long DOM_VK_FINAL          = 0x18;
   const unsigned long DOM_VK_HANJA          = 0x19;
