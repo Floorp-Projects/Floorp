@@ -15,7 +15,7 @@ interface nsIDOMMozSmsManager;
 #define SMS_REQUEST_MANAGER_CONTRACTID "@mozilla.org/sms/smsrequestmanager;1"
 %}
 
-[scriptable, uuid(1638b963-3a45-4937-b6a9-280c1bfb166c)]
+[scriptable, uuid(be747cca-ba07-410a-8b91-2754d5406d66)]
 interface nsISmsRequestManager : nsISupports
 {
 
@@ -75,4 +75,9 @@ interface nsISmsRequestManager : nsISupports
   void notifyReadMessageListFailed(in long aRequestId,
                                    in long aError);
 
+  void notifyMarkedMessageRead(in long aRequestId,
+                               in bool aRead);
+
+  void notifyMarkMessageReadFailed(in long aRequestId,
+                                   in long aError);
 };
