@@ -120,7 +120,7 @@ sub check_getTopDir
     ## as the makemakefile.pm module.
     ok($path ? 1 : 0, 1, "getTopDir failed");
     ok(-d $path ? 1 : 0, 1, "getTopDir: directory $path does not exist");
-    ok($FindBin::RealBin =~ m%$path/% ? 1 : 0, 1, 'Invalid topdir path');
+    ok($FindBin::RealBin =~ m%\Q$path/% ? 1 : 0, 1, 'Invalid topdir path');
     ok(-e "$path/client.mk" ? 1 : 0, 1, "client.mk not found in $path");
 } # check_getTopDir
 
