@@ -89,8 +89,31 @@ static const KeyPair kKeyPairs[] = {
     { NS_VK_CONTROL,    GDK_Control_R },
     { NS_VK_ALT,        GDK_Alt_L },
     { NS_VK_ALT,        GDK_Alt_R },
-    { NS_VK_META,       GDK_Meta_L },
-    { NS_VK_META,       GDK_Meta_R },
+
+    // NS_VK_META is used for Command key of Mac.  It's a modifier key for
+    // shortcut keys like Ctrl key on GTK or Windows.  So, it's really different
+    // from GTK's META key, we shouldn't use it on GTK.
+    // { NS_VK_META,       GDK_Meta_L },
+    // { NS_VK_META,       GDK_Meta_R },
+
+    // Assume that Super or Hyper is always mapped to physical Win key.
+    { NS_VK_WIN,        GDK_Super_L },
+    { NS_VK_WIN,        GDK_Super_R },
+    { NS_VK_WIN,        GDK_Hyper_L },
+    { NS_VK_WIN,        GDK_Hyper_R },
+
+    // GTK's AltGraph key is similar to Mac's Option (Alt) key.  However,
+    // unfortunately, browsers on Mac are using NS_VK_ALT for it even though
+    // it's really different from Alt key on Windows.
+    // On the other hand, GTK's AltGrapsh keys are really different from
+    // Alt key.  However, there is no AltGrapsh key on Windows.  On Windows,
+    // both Ctrl and Alt keys are pressed internally when AltGr key is pressed.
+    // For some languages' users, AltGraph key is important, so, web
+    // applications on such locale may want to know AltGraph key press.
+    // Therefore, we should map AltGr keycode for them only on GTK.
+    { NS_VK_ALTGR,      GDK_ISO_Level3_Shift },
+    { NS_VK_ALTGR,      GDK_Mode_switch },
+
     { NS_VK_PAUSE,      GDK_Pause },
     { NS_VK_CAPS_LOCK,  GDK_Caps_Lock },
     { NS_VK_KANA,       GDK_Kana_Lock },
@@ -1261,8 +1284,9 @@ KeymapWrapper::IsKeyPressEventNecessary(GdkEventKey* aGdkKeyEvent)
     switch (ComputeDOMKeyCode(aGdkKeyEvent)) {
         case NS_VK_SHIFT:
         case NS_VK_CONTROL:
-        case NS_VK_META:
         case NS_VK_ALT:
+        case NS_VK_ALTGR:
+        case NS_VK_WIN:
         case NS_VK_CAPS_LOCK:
         case NS_VK_NUM_LOCK:
         case NS_VK_SCROLL_LOCK:
