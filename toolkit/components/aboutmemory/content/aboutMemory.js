@@ -880,30 +880,26 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
       "WARNING: the 'heap-allocated' memory reporter and the " +
       "moz_malloc_usable_size() function do not work for this platform " +
       "and/or configuration.  This means that 'heap-unclassified' is not " +
-      "shown and the 'explicit' tree shows much less memory than it should.");
-    appendTextNode(aP, "\n\n");
+      "shown and the 'explicit' tree shows much less memory than it should.\n\n");
 
   } else if (!aHasKnownHeapAllocated) {
     appendElementWithText(aP, "p", "", 
       "WARNING: the 'heap-allocated' memory reporter does not work for this " +
       "platform and/or configuration. This means that 'heap-unclassified' " +
-      "is not shown and the 'explicit' tree shows less memory than it should.");
-    appendTextNode(aP, "\n\n");
+      "is not shown and the 'explicit' tree shows less memory than it should.\n\n");
 
   } else if (!aHasMozMallocUsableSize) {
     appendElementWithText(aP, "p", "", 
       "WARNING: the moz_malloc_usable_size() function does not work for " +
       "this platform and/or configuration.  This means that much of the " +
       "heap-allocated memory is not measured by individual memory reporters " +
-      "and so will fall under 'heap-unclassified'.");
-    appendTextNode(aP, "\n\n");
+      "and so will fall under 'heap-unclassified'.\n\n");
   }
 
   if (gUnsafePathsWithInvalidValuesForThisProcess.length > 0) {
     let div = appendElement(aP, "div");
     appendElementWithText(div, "p", "", 
-      "WARNING: the following values are negative or unreasonably large.");
-    appendTextNode(div, "\n");  
+      "WARNING: the following values are negative or unreasonably large.\n");
 
     let ul = appendElement(div, "ul");
     for (let i = 0;
@@ -912,14 +908,12 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
     {
       appendTextNode(ul, " ");
       appendElementWithText(ul, "li", "", 
-        flipBackslashes(gUnsafePathsWithInvalidValuesForThisProcess[i]));
-      appendTextNode(ul, "\n");
+        flipBackslashes(gUnsafePathsWithInvalidValuesForThisProcess[i]) + "\n");
     }
 
     appendElementWithText(div, "p", "",
       "This indicates a defect in one or more memory reporters.  The " +
-      "invalid values are highlighted.");
-    appendTextNode(div, "\n\n");  
+      "invalid values are highlighted.\n\n");
     gUnsafePathsWithInvalidValuesForThisProcess = [];  // reset for the next process
   }
 }
@@ -940,8 +934,7 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
 function appendProcessReportsElements(aP, aProcess, aReports,
                                       aHasMozMallocUsableSize)
 {
-  appendElementWithText(aP, "h1", "", aProcess + " Process");
-  appendTextNode(aP, "\n\n");   // gives nice spacing when we cut and paste
+  appendElementWithText(aP, "h1", "", aProcess + " Process\n\n");
 
   // We'll fill this in later.
   let warningsDiv = appendElement(aP, "div", "accuracyWarning");
@@ -1483,8 +1476,7 @@ function appendOtherElements(aP, aReportsByProcess)
 
 function appendSectionHeader(aP, aText)
 {
-  appendElementWithText(aP, "h2", "", aText);
-  appendTextNode(aP, "\n");
+  appendElementWithText(aP, "h2", "", aText + "\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -1730,8 +1722,7 @@ function appendProcessAboutCompartmentsElementsHelper(aP, aEntries, aKindString)
  */
 function appendProcessAboutCompartmentsElements(aP, aProcess, aCompartments, aGhostWindows)
 {
-  appendElementWithText(aP, "h1", "", aProcess + " Process");
-  appendTextNode(aP, "\n\n");   // gives nice spacing when we cut and paste
+  appendElementWithText(aP, "h1", "", aProcess + " Process\n\n");
 
   let userCompartments = {};
   let systemCompartments = {};
