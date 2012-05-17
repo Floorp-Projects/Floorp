@@ -38,34 +38,21 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = [ "DeveloperToolbar" ];
+
+const NS_XHTML = "http://www.w3.org/1999/xhtml";
+const URI_GCLIBLANK = "chrome://browser/content/devtools/gcliblank.xhtml";
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-let EXPORTED_SYMBOLS = [ "DeveloperToolbar", "loadCommands" ];
-
-const NS_XHTML = 'http://www.w3.org/1999/xhtml';
-
-XPCOMUtils.defineLazyGetter(this, "gcli", function () {
+XPCOMUtils.defineLazyGetter(this, "gcli", function() {
   let obj = {};
-  Components.utils.import("resource:///modules/gcli.jsm", obj);
+  Components.utils.import("resource:///modules/devtools/gcli.jsm", obj);
+  Components.utils.import("resource:///modules/devtools/GcliCommands.jsm", {});
   return obj.gcli;
 });
 
-let console = gcli._internal.console;
-
-/**
- * Load the various Command JSMs.
- * Should be called when the developer toolbar first opens.
- */
-function loadCommands()
-{
-  Components.utils.import("resource:///modules/GcliCommands.jsm", {});
-  Components.utils.import("resource:///modules/GcliTiltCommands.jsm", {});
-}
-
-
-
-let commandsLoaded = false;
 
 /**
  * A component to manage the global developer toolbar, which contains a GCLI
@@ -75,11 +62,6 @@ let commandsLoaded = false;
  */
 function DeveloperToolbar(aChromeWindow, aToolbarElement)
 {
-  if (!commandsLoaded) {
-    loadCommands();
-    commandsLoaded = true;
-  }
-
   this._chromeWindow = aChromeWindow;
 
   this._element = aToolbarElement;
@@ -180,7 +162,7 @@ DeveloperToolbar.prototype._onload = function DT_onload()
 
   let contentDocument = this._chromeWindow.getBrowser().contentDocument;
 
-  this.display = gcli._internal.createDisplay({
+  this.display = gcli.createDisplay({
     contentDocument: contentDocument,
     chromeDocument: this._doc,
     chromeWindow: this._chromeWindow,
@@ -272,9 +254,11 @@ DeveloperToolbar.prototype.destroy = function DT_destroy()
   // leaks as a belt-and-braces approach, however this prevents our DOM node
   // hunter from looking in all the nooks and crannies, so it's better if we
   // can be leak-free without
+  /*
   delete this.display;
   delete this.outputPanel;
   delete this.tooltipPanel;
+  */
 };
 
 /**
@@ -393,7 +377,7 @@ function OutputPanel(aChromeDoc, aInput, aLoadCallback)
          noautohide="true"
          class="gcli-panel">
     <iframe id="gcli-output-frame"
-            src="chrome://browser/content/devtools/gcliblank.xhtml"
+            src=URI_GCLIBLANK
             flex="1"/>
   </panel>
   */
@@ -407,7 +391,7 @@ function OutputPanel(aChromeDoc, aInput, aLoadCallback)
 
   this._frame = aChromeDoc.createElement("iframe");
   this._frame.id = "gcli-output-frame";
-  this._frame.setAttribute("src", "chrome://browser/content/devtools/gcliblank.xhtml");
+  this._frame.setAttribute("src", URI_GCLIBLANK);
   this._frame.setAttribute("flex", "1");
   this._panel.appendChild(this._frame);
 
@@ -571,7 +555,7 @@ function TooltipPanel(aChromeDoc, aInput, aLoadCallback)
          noautohide="true"
          class="gcli-panel">
     <iframe id="gcli-tooltip-frame"
-            src="chrome://browser/content/devtools/gcliblank.xhtml"
+            src=URI_GCLIBLANK
             flex="1"/>
   </panel>
   */
@@ -585,7 +569,7 @@ function TooltipPanel(aChromeDoc, aInput, aLoadCallback)
 
   this._frame = aChromeDoc.createElement("iframe");
   this._frame.id = "gcli-tooltip-frame";
-  this._frame.setAttribute("src", "chrome://browser/content/devtools/gcliblank.xhtml");
+  this._frame.setAttribute("src", URI_GCLIBLANK);
   this._frame.setAttribute("flex", "1");
   this._panel.appendChild(this._frame);
 

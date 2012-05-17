@@ -3,7 +3,7 @@
 
 // Tests that the inspect command works as it should
 
-const TEST_URI = "http://example.com/browser/browser/devtools/shared/test/browser_gcli_inspect.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/commandline/test/browser_gcli_inspect.html";
 
 function test() {
   DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {

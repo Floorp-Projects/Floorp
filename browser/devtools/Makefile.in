@@ -49,6 +49,7 @@ include $(topsrcdir)/config/config.mk
 DIRS = \
   highlighter \
   webconsole \
+  commandline \
   sourceeditor \
   styleeditor \
   styleinspector \
