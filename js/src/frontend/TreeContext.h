@@ -272,9 +272,6 @@ struct TreeContext {                /* tree context for semantic checks */
     ParseNode       *yieldNode;     /* parse node for a yield expression that might
                                        be an error if we turn out to be inside a
                                        generator expression */
-    ParseNode       *argumentsNode; /* parse node for an arguments variable that
-                                       might be an error if we turn out to be
-                                       inside a generator expression */
 
   private:
     TreeContext     **parserTC;     /* this points to the Parser's active tc

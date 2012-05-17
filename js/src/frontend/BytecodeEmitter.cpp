@@ -127,7 +127,6 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lin
 bool
 BytecodeEmitter::init()
 {
-    roLexdeps.init();
     return constMap.init() && atomIndices.ensureMap(sc->context);
 }
 
@@ -5929,9 +5928,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_UPVARS:
         JS_ASSERT(pn->pn_names->count() != 0);
-        bce->roLexdeps = pn->pn_names;
         ok = EmitTree(cx, bce, pn->pn_tree);
-        bce->roLexdeps.clearMap();
         pn->pn_names.releaseMap(cx);
         break;
 
