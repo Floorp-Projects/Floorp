@@ -110,7 +110,7 @@ public:
   // Called by GetURL and PostURL (via NewStream)
   nsresult Initialize(nsIURI *aURL,
                       nsNPAPIPluginInstance *aInstance,
-                      nsIPluginStreamListener *aListener);
+                      nsNPAPIPluginStreamListener *aListener);
   
   nsresult InitializeEmbedded(nsIURI *aURL,
                               nsNPAPIPluginInstance* aInstance,
@@ -138,7 +138,7 @@ private:
   bool                    mRequestFailed;
   
   /*
-   * Set to true after nsIPluginStreamListener::OnStartBinding() has
+   * Set to true after nsNPAPIPluginStreamListener::OnStartBinding() has
    * been called.  Checked in ::OnStopRequest so we can call the
    * plugin's OnStartBinding if, for some reason, it has not already
    * been called.

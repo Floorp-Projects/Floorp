@@ -351,7 +351,7 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
 // Called as a result of GetURL and PostURL
 nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
                                                 nsNPAPIPluginInstance *aInstance,
-                                                nsIPluginStreamListener* aListener)
+                                                nsNPAPIPluginStreamListener* aListener)
 {
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec;
@@ -367,7 +367,7 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
   
   mPluginInstance = aInstance;
 
-  mPStreamListener = static_cast<nsNPAPIPluginStreamListener*>(aListener);
+  mPStreamListener = aListener;
   mPStreamListener->SetStreamListenerPeer(this);
 
   mPendingRequests = 1;
@@ -1125,7 +1125,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIPluginStreamListener> streamListener;
+    nsRefPtr<nsNPAPIPluginStreamListener> streamListener;
     rv = mPluginInstance->NewStreamListener(nsnull, nsnull,
                                             getter_AddRefs(streamListener));
     if (NS_FAILED(rv) || !streamListener) {
