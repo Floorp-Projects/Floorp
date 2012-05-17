@@ -484,7 +484,7 @@ nsCocoaUtils::GetCurrentModifiers()
 {
   // NOTE: [[NSApp currentEvent] modifiers] isn't useful because it sometime 0
   //       and we cannot check if it's actual state.
-  if (nsToolkit::OnSnowLeopardOrLater()) {
+  if (nsCocoaFeatures::OnSnowLeopardOrLater()) {
     // XXX [NSEvent modifierFlags] returns "current" modifier state, so,
     //     it's not event-queue-synchronized.  GetCurrentEventKeyModifiers()
     //     might be better, but it's Carbon API, we shouldn't use it as far as
