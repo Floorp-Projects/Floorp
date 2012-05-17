@@ -38,7 +38,7 @@
 #ifndef nsNativeThemeColors_h_
 #define nsNativeThemeColors_h_
 
-#include "nsCocoaFeatures.h"
+#include "nsToolkit.h"
 #import <Cocoa/Cocoa.h>
 
 extern "C" {
@@ -83,10 +83,10 @@ static const int sLionThemeColors[][2] = {
 __attribute__((unused))
 static int NativeGreyColorAsInt(ColorName name, BOOL isMain)
 {
-  if (nsCocoaFeatures::OnLionOrLater())
+  if (nsToolkit::OnLionOrLater())
     return sLionThemeColors[name][isMain ? 0 : 1];
 
-  if (nsCocoaFeatures::OnSnowLeopardOrLater())
+  if (nsToolkit::OnSnowLeopardOrLater())
     return sSnowLeopardThemeColors[name][isMain ? 0 : 1];
 
   return sLeopardThemeColors[name][isMain ? 0 : 1];

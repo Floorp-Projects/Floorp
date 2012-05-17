@@ -61,7 +61,6 @@
 #include "nsStyleConsts.h"
 #include "nsNativeThemeColors.h"
 #include "nsChildView.h"
-#include "nsCocoaFeatures.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"
@@ -2385,7 +2384,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   // We work around this problem by only returning AXChildren that are
   // mozAccessible object or are one of the titlebar's buttons (which
   // instantiate subclasses of NSButtonCell).
-  if (nsCocoaFeatures::OnLionOrLater() && [retval isKindOfClass:[NSArray class]] &&
+  if (nsToolkit::OnLionOrLater() && [retval isKindOfClass:[NSArray class]] &&
       [attribute isEqualToString:@"AXChildren"]) {
     NSMutableArray *holder = [NSMutableArray arrayWithCapacity:10];
     [holder addObjectsFromArray:(NSArray *)retval];
@@ -2690,7 +2689,7 @@ DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
             nil],
           nil);
 
-  if (nsCocoaFeatures::OnLionOrLater()) {
+  if (nsToolkit::OnLionOrLater()) {
     // On Lion the call to CUIDraw doesn't draw the top pixel strip at some
     // window widths. We don't want to have a flickering transparent line, so
     // we overdraw it.

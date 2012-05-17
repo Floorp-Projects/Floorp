@@ -47,7 +47,6 @@
 #include "nsObjCExceptions.h"
 
 #include "nsToolkit.h"
-#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "nsCOMPtr.h"
 #include "prinrval.h"
@@ -140,7 +139,7 @@ nsMenuX::nsMenuX()
     // SCTGRLIndex class) is loaded on demand, whenever the user first opens
     // a menu (which normally hasn't happened yet).  So we need to load it
     // here explicitly.
-    if (nsCocoaFeatures::OnSnowLeopardOrLater())
+    if (nsToolkit::OnSnowLeopardOrLater())
       dlopen("/System/Library/PrivateFrameworks/Shortcut.framework/Shortcut", RTLD_LAZY);
     Class SCTGRLIndexClass = ::NSClassFromString(@"SCTGRLIndex");
     nsToolkit::SwizzleMethods(SCTGRLIndexClass, @selector(indexMenuBarDynamically),
