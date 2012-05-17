@@ -58,6 +58,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsObjCExceptions.h"
+#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "nsChildView.h"
 #include "nsToolkit.h"
@@ -371,7 +372,7 @@ nsAppShell::Init()
       nsToolkit::SwizzleMethods([NSApplication class], @selector(terminate:),
                                 @selector(nsAppShell_NSApplication_terminate:));
     }
-    if (!nsToolkit::OnSnowLeopardOrLater()) {
+    if (!nsCocoaFeatures::OnSnowLeopardOrLater()) {
       dlopen("/System/Library/Frameworks/Carbon.framework/Frameworks/Print.framework/Versions/Current/Plugins/PrintCocoaUI.bundle/Contents/MacOS/PrintCocoaUI",
              RTLD_LAZY);
       Class PDEPluginCallbackClass = ::NSClassFromString(@"PDEPluginCallback");

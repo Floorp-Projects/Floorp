@@ -56,7 +56,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
-#include "nsToolkit.h"
+#include "nsCocoaFeatures.h"
 #include "nsCocoaWindow.h"
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
@@ -1625,7 +1625,7 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   // creating a TrackDrawInfo to determine the size of the thumb. There's
   // also no reason to do this on Lion or later, whose scrollbars have no
   // arrow buttons.
-  if (aShouldGetButtonStates && !nsToolkit::OnLionOrLater()) {
+  if (aShouldGetButtonStates && !nsCocoaFeatures::OnLionOrLater()) {
     nsEventStates buttonStates[4];
     GetScrollbarPressStates(aFrame, buttonStates);
     NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
@@ -2325,7 +2325,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     {
       // On Lion and later, scrollbars have no arrows.
-      if (!nsToolkit::OnLionOrLater()) {
+      if (!nsCocoaFeatures::OnLionOrLater()) {
         // There's only an endcap to worry about when both arrows are on the bottom
         NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
         if (!buttonPlacement || [buttonPlacement isEqualToString:@"DoubleMax"]) {
