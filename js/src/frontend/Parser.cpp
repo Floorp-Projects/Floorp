@@ -117,9 +117,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
     principals(NULL),
     originPrincipals(NULL),
     callerFrame(cfp),
-    callerVarObj(cfp ? &cfp->varObj() : NULL),
     allocator(cx),
-    functionCount(0),
     traceListHead(NULL),
     tc(NULL),
     keepAtoms(cx->runtime),
@@ -127,7 +125,6 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
     compileAndGo(compileAndGo)
 {
     cx->activeCompilations++;
-    PodArrayZero(tempFreeList);
     setPrincipals(prin, originPrin);
     JS_ASSERT_IF(cfp, cfp->isScriptFrame());
 }
@@ -223,7 +220,6 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
     funbox->node = fn;
     funbox->siblings = tc->sc->functionList;
     tc->sc->functionList = funbox;
-    ++functionCount;
     funbox->kids = NULL;
     funbox->parent = tc->sc->funbox;
     new (&funbox->bindings) Bindings(context);
@@ -4910,7 +4906,7 @@ class GenexpGuard {
         TreeContext *tc = parser->tc;
         if (tc->parenDepth == 0) {
             tc->yieldCount = 0;
-            tc->yieldNode = tc->argumentsNode = NULL;
+            tc->yieldNode = NULL;
         }
         startYieldCount = tc->yieldCount;
         tc->parenDepth++;

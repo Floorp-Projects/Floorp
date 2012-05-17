@@ -103,7 +103,6 @@ TreeContext::TreeContext(Parser *prs, SharedContext *sc)
     blockNode(NULL),
     decls(prs->context),
     yieldNode(NULL),
-    argumentsNode(NULL),
     parserTC(&prs->tc),
     lexdeps(prs->context),
     parent(prs->tc),
