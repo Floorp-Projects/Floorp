@@ -1423,10 +1423,12 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                      "Memory on the compartment's garbage-collected JavaScript "
                      "heap that holds type inference information.");
 
+#if JS_HAS_XML_SUPPORT
     REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/xml"),
                      cStats.gcHeapXML,
                      "Memory on the compartment's garbage-collected JavaScript "
                      "heap that holds E4X XML objects.");
+#endif
 
     REPORT_BYTES0(MakePath(pathPrefix, cStats, "objects/slots"),
                   nsIMemoryReporter::KIND_HEAP, cStats.objectSlots,
