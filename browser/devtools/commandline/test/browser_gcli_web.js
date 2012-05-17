@@ -41,6 +41,24 @@
  */
 
 ///////////////////////////////////////////////////////////////////////////////
+
+let [ define, require ] = (function() {
+  let tempScope = {};
+  Components.utils.import("resource:///modules/devtools/Require.jsm", tempScope);
+  return [ tempScope.define, tempScope.require ];
+})();
+
+let console = (function() {
+  let tempScope = {};
+  Components.utils.import("resource:///modules/devtools/Console.jsm", tempScope);
+  return console;
+})();
+
+registerCleanupFunction(function tearDown() {
+  define = undefined;
+  require = undefined;
+  console = undefined;
+});
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:

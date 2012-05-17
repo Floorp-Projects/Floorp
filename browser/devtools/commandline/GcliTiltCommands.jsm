@@ -38,7 +38,7 @@
 
 let EXPORTED_SYMBOLS = [ "GcliCommands" ];
 
-Components.utils.import("resource:///modules/gcli.jsm");
+Components.utils.import("resource:///modules/devtools/gcli.jsm");
 Components.utils.import("resource:///modules/HUDService.jsm");
 
 

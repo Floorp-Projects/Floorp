@@ -37,10 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-let EXPORTED_SYMBOLS = [ "GcliCommands" ];
+let EXPORTED_SYMBOLS = [ ];
 
-Components.utils.import("resource:///modules/gcli.jsm");
+Components.utils.import("resource:///modules/devtools/gcli.jsm");
 Components.utils.import("resource:///modules/HUDService.jsm");
+
+Components.utils.import("resource:///modules/devtools/GcliTiltCommands.jsm", {});
 
 
 /**
