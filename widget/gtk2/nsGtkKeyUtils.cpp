@@ -52,6 +52,7 @@
 #include <gdk/gdkx.h>
 #endif /* MOZ_X11 */
 #include "nsGUIEvent.h"
+#include "WidgetUtils.h"
 #include "keysym2ucs.h"
 
 #ifdef PR_LOGGING
@@ -167,49 +168,10 @@ static const KeyPair kKeyPairs[] = {
     { NS_VK_F23,        GDK_F23 },
     { NS_VK_F24,        GDK_F24 },
 
-    { NS_VK_COMMA,      GDK_comma },
-    { NS_VK_PERIOD,     GDK_period },
-    { NS_VK_SLASH,      GDK_slash },
-    { NS_VK_BACK_SLASH, GDK_backslash },
-    { NS_VK_BACK_QUOTE, GDK_grave },
-    { NS_VK_OPEN_BRACKET, GDK_bracketleft },
-    { NS_VK_CLOSE_BRACKET, GDK_bracketright },
-    { NS_VK_SEMICOLON, GDK_colon },
-    { NS_VK_QUOTE, GDK_apostrophe },
-
     // context menu key, keysym 0xff67, typically keycode 117 on 105-key (Microsoft) 
     // x86 keyboards, located between right 'Windows' key and right Ctrl key
     { NS_VK_CONTEXT_MENU, GDK_Menu },
     { NS_VK_SLEEP,      GDK_Sleep },
-
-    // NS doesn't have dash or equals distinct from the numeric keypad ones,
-    // so we'll use those for now.  See bug 17008:
-    { NS_VK_SUBTRACT, GDK_minus },
-    { NS_VK_EQUALS, GDK_equal },
-
-    // Some shifted keys, see bug 15463 as well as 17008.
-    // These should be subject to different keyboard mappings.
-    { NS_VK_QUOTE, GDK_quotedbl },
-    { NS_VK_OPEN_BRACKET, GDK_braceleft },
-    { NS_VK_CLOSE_BRACKET, GDK_braceright },
-    { NS_VK_BACK_SLASH, GDK_bar },
-    { NS_VK_SEMICOLON, GDK_semicolon },
-    { NS_VK_BACK_QUOTE, GDK_asciitilde },
-    { NS_VK_COMMA, GDK_less },
-    { NS_VK_PERIOD, GDK_greater },
-    { NS_VK_SLASH,      GDK_question },
-    { NS_VK_1, GDK_exclam },
-    { NS_VK_2, GDK_at },
-    { NS_VK_3, GDK_numbersign },
-    { NS_VK_4, GDK_dollar },
-    { NS_VK_5, GDK_percent },
-    { NS_VK_6, GDK_asciicircum },
-    { NS_VK_7, GDK_ampersand },
-    { NS_VK_8, GDK_asterisk },
-    { NS_VK_9, GDK_parenleft },
-    { NS_VK_0, GDK_parenright },
-    { NS_VK_SUBTRACT, GDK_underscore },
-    { NS_VK_EQUALS, GDK_plus }
 };
 
 // map Sun Keyboard special keysyms on to NS_VK keys
@@ -704,25 +666,84 @@ KeymapWrapper::ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent)
         case GDK_KP_9:         return NS_VK_NUMPAD9;
     }
 
-    // First, try to handle alphanumeric input, not listed in nsKeycodes:
-    // most likely, more letters will be getting typed in than things in
-    // the key list, so we will look through these first.
+    KeymapWrapper* keymapWrapper = GetInstance();
 
-    // since X has different key symbols for upper and lowercase letters and
-    // mozilla does not, convert gdk's to mozilla's
-    if (keyval >= GDK_a && keyval <= GDK_z) {
-        return keyval - GDK_a + NS_VK_A;
-    }
-    if (keyval >= GDK_A && keyval <= GDK_Z) {
-        return keyval - GDK_A + NS_VK_A;
-    }
+    // Ignore all modifier state except NumLock.
+    guint baseState =
+        (aGdkKeyEvent->state & keymapWrapper->GetModifierMask(NUM_LOCK));
 
-    // numbers
-    if (keyval >= GDK_0 && keyval <= GDK_9) {
-        return keyval - GDK_0 + NS_VK_0;
+    // Basically, we should use unmodified character for deciding our keyCode.
+    PRUint32 unmodifiedChar =
+        keymapWrapper->GetCharCodeFor(aGdkKeyEvent, baseState,
+                                      aGdkKeyEvent->group);
+    if (IsBasicLatinLetterOrNumeral(unmodifiedChar)) {
+        // If the unmodified character is an ASCII alphabet or an ASCII
+        // numeric, it's the best hint for deciding our keyCode.
+        return WidgetUtils::ComputeKeyCodeFromChar(unmodifiedChar);
     }
 
-    return GetDOMKeyCodeFromKeyPairs(keyval);
+    // If the unmodified character is not an ASCII character, that means we
+    // couldn't find the hint. We should reset it.
+    if (unmodifiedChar > 0x7F) {
+        unmodifiedChar = 0;
+    }
+
+    // Retry with shifted keycode.
+    guint shiftState = (baseState | keymapWrapper->GetModifierMask(SHIFT));
+    PRUint32 shiftedChar =
+        keymapWrapper->GetCharCodeFor(aGdkKeyEvent, shiftState,
+                                      aGdkKeyEvent->group);
+    if (IsBasicLatinLetterOrNumeral(shiftedChar)) {
+        // A shifted character can be an ASCII alphabet on Hebrew keyboard
+        // layout. And also shifted character can be an ASCII numeric on
+        // AZERTY keyboad layout.  Then, it's a good hint for deciding our
+        // keyCode.
+        return WidgetUtils::ComputeKeyCodeFromChar(shiftedChar);
+    }
+
+    // If the shifted unmodified character isn't an ASCII character, we should
+    // discard it too.
+    if (shiftedChar > 0x7F) {
+        shiftedChar = 0;
+    }
+
+    // If current keyboard layout isn't ASCII alphabet inputtable layout,
+    // look for ASCII alphabet inputtable keyboard layout.  If the key
+    // inputs an ASCII alphabet or an ASCII numeric, we should use it
+    // for deciding our keyCode.
+    // Note that it's important not to use alternative keyboard layout for ASCII
+    // alphabet inputabble keyboard layout because the keycode for the key with
+    // alternative keyboard layout may conflict with another key on current
+    // keyboard layout.
+    if (!keymapWrapper->IsLatinGroup(aGdkKeyEvent->group)) {
+        gint minGroup = keymapWrapper->GetFirstLatinGroup();
+        if (minGroup >= 0) {
+            PRUint32 unmodCharLatin =
+                keymapWrapper->GetCharCodeFor(aGdkKeyEvent, baseState,
+                                              minGroup);
+            if (IsBasicLatinLetterOrNumeral(unmodCharLatin)) {
+                // If the unmodified character is an ASCII alphabet or
+                // an ASCII numeric, we should use it for the keyCode.
+                return WidgetUtils::ComputeKeyCodeFromChar(unmodCharLatin);
+            }
+            PRUint32 shiftedCharLatin =
+                keymapWrapper->GetCharCodeFor(aGdkKeyEvent, shiftState,
+                                              minGroup);
+            if (IsBasicLatinLetterOrNumeral(shiftedCharLatin)) {
+                // If the shifted character is an ASCII alphabet or an ASCII
+                // numeric, we should use it for the keyCode.
+                return WidgetUtils::ComputeKeyCodeFromChar(shiftedCharLatin);
+            }
+        }
+    }
+
+    // If unmodified character is in ASCII range, use it.  Otherwise, use
+    // shifted character.
+    if (!unmodifiedChar && !shiftedChar) {
+        return 0;
+    }
+    return WidgetUtils::ComputeKeyCodeFromChar(
+                unmodifiedChar ? unmodifiedChar : shiftedChar);
 }
 
 /* static */ guint
@@ -743,8 +764,8 @@ KeymapWrapper::GuessGDKKeyval(PRUint32 aDOMKeyCode)
         return aDOMKeyCode - NS_VK_0 + GDK_0;
     }
 
-    // keys in numpad
     switch (aDOMKeyCode) {
+        // keys in numpad
         case NS_VK_MULTIPLY:  return GDK_KP_Multiply;
         case NS_VK_ADD:       return GDK_KP_Add;
         case NS_VK_SEPARATOR: return GDK_KP_Separator;
@@ -761,6 +782,40 @@ KeymapWrapper::GuessGDKKeyval(PRUint32 aDOMKeyCode)
         case NS_VK_NUMPAD7:   return GDK_KP_7;
         case NS_VK_NUMPAD8:   return GDK_KP_8;
         case NS_VK_NUMPAD9:   return GDK_KP_9;
+        // other prinable keys
+        case NS_VK_SPACE:               return GDK_space;
+        case NS_VK_COLON:               return GDK_comma;
+        case NS_VK_SEMICOLON:           return GDK_semicolon;
+        case NS_VK_LESS_THAN:           return GDK_less;
+        case NS_VK_EQUALS:              return GDK_equal;
+        case NS_VK_GREATER_THAN:        return GDK_greater;
+        case NS_VK_QUESTION_MARK:       return GDK_question;
+        case NS_VK_AT:                  return GDK_at;
+        case NS_VK_CIRCUMFLEX:          return GDK_asciicircum;
+        case NS_VK_EXCLAMATION:         return GDK_exclam;
+        case NS_VK_DOUBLE_QUOTE:        return GDK_quotedbl;
+        case NS_VK_HASH:                return GDK_numbersign;
+        case NS_VK_DOLLAR:              return GDK_dollar;
+        case NS_VK_PERCENT:             return GDK_percent;
+        case NS_VK_AMPERSAND:           return GDK_ampersand;
+        case NS_VK_UNDERSCORE:          return GDK_underscore;
+        case NS_VK_OPEN_PAREN:          return GDK_parenleft;
+        case NS_VK_CLOSE_PAREN:         return GDK_parenright;
+        case NS_VK_ASTERISK:            return GDK_asterisk;
+        case NS_VK_PLUS:                return GDK_plus;
+        case NS_VK_PIPE:                return GDK_bar;
+        case NS_VK_HYPHEN_MINUS:        return GDK_minus;
+        case NS_VK_OPEN_CURLY_BRACKET:  return GDK_braceleft;
+        case NS_VK_CLOSE_CURLY_BRACKET: return GDK_braceright;
+        case NS_VK_TILDE:               return GDK_asciitilde;
+        case NS_VK_COMMA:               return GDK_comma;
+        case NS_VK_PERIOD:              return GDK_period;
+        case NS_VK_SLASH:               return GDK_slash;
+        case NS_VK_BACK_QUOTE:          return GDK_grave;
+        case NS_VK_OPEN_BRACKET:        return GDK_bracketleft;
+        case NS_VK_BACK_SLASH:          return GDK_backslash;
+        case NS_VK_CLOSE_BRACKET:       return GDK_bracketright;
+        case NS_VK_QUOTE:               return GDK_apostrophe;
     }
 
     // misc other things
@@ -977,6 +1032,49 @@ KeymapWrapper::GetKeyLevel(GdkEventKey *aGdkKeyEvent)
     return level;
 }
 
+gint
+KeymapWrapper::GetFirstLatinGroup()
+{
+    GdkKeymapKey *keys;
+    gint count;
+    gint minGroup = -1;
+    if (gdk_keymap_get_entries_for_keyval(mGdkKeymap, GDK_a, &keys, &count)) {
+        // find the minimum number group for latin inputtable layout
+        for (gint i = 0; i < count && minGroup != 0; ++i) {
+            if (keys[i].level != 0 && keys[i].level != 1) {
+                continue;
+            }
+            if (minGroup >= 0 && keys[i].group > minGroup) {
+                continue;
+            }
+            minGroup = keys[i].group;
+        }
+        g_free(keys);
+    }
+    return minGroup;
+}
+
+bool
+KeymapWrapper::IsLatinGroup(guint8 aGroup)
+{
+    GdkKeymapKey *keys;
+    gint count;
+    bool result = false;
+    if (gdk_keymap_get_entries_for_keyval(mGdkKeymap, GDK_a, &keys, &count)) {
+        for (gint i = 0; i < count; ++i) {
+            if (keys[i].level != 0 && keys[i].level != 1) {
+                continue;
+            }
+            if (keys[i].group == aGroup) {
+                result = true;
+                break;
+            }
+        }
+        g_free(keys);
+    }
+    return result;
+}
+
 /* static */ bool
 KeymapWrapper::IsBasicLatinLetterOrNumeral(PRUint32 aCharCode)
 {
@@ -1100,23 +1198,7 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
     }
 
     // Next, find Latin inputtable keyboard layout.
-    GdkKeymapKey *keys;
-    gint count;
-    gint minGroup = -1;
-    if (gdk_keymap_get_entries_for_keyval(mGdkKeymap, GDK_a, &keys, &count)) {
-        // find the minimum number group for latin inputtable layout
-        for (gint i = 0; i < count && minGroup != 0; ++i) {
-            if (keys[i].level != 0 && keys[i].level != 1) {
-                continue;
-            }
-            if (minGroup >= 0 && keys[i].group > minGroup) {
-                continue;
-            }
-            minGroup = keys[i].group;
-        }
-        g_free(keys);
-    }
-
+    gint minGroup = GetFirstLatinGroup();
     if (minGroup < 0) {
         PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
             ("KeymapWrapper(%p): InitKeypressEvent, "
