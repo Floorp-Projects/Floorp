@@ -884,7 +884,7 @@ struct JSRuntime : js::RuntimeFriendFields
         return jitHardening;
     }
 
-    void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, js::RuntimeSizes *runtime);
+    void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, JS::RuntimeSizes *runtime);
     size_t sizeOfExplicitNonHeap();
 };
 
