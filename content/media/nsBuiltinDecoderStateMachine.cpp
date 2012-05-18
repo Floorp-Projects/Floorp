@@ -436,9 +436,9 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   mDispatchedRunEvent(false),
   mDecodeThreadWaiting(false),
   mRealTime(aRealTime),
-  mRequestedNewDecodeThread(false),
   mDidThrottleAudioDecoding(false),
   mDidThrottleVideoDecoding(false),
+  mRequestedNewDecodeThread(false),
   mEventManager(aDecoder)
 {
   MOZ_COUNT_CTOR(nsBuiltinDecoderStateMachine);
@@ -539,7 +539,7 @@ void nsBuiltinDecoderStateMachine::SendOutputStreamAudio(AudioData* aAudio,
   aStream->mLastAudioPacketTime = aAudio->mTime;
   aStream->mLastAudioPacketEndTime = aAudio->GetEnd();
 
-  NS_ASSERTION(aOutput->GetChannels() == aAudio->mChannels,
+  NS_ASSERTION(aOutput->GetChannels() == PRInt32(aAudio->mChannels),
                "Wrong number of channels");
 
   // This logic has to mimic AudioLoop closely to make sure we write
@@ -635,7 +635,6 @@ void nsBuiltinDecoderStateMachine::SendOutputStreamData()
       AudioSegment output;
       output.Init(mInfo.mAudioChannels);
       for (PRUint32 i = 0; i < audio.Length(); ++i) {
-        AudioData* a = audio[i];
         SendOutputStreamAudio(audio[i], stream, &output);
       }
       if (output.GetDuration() > 0) {
