@@ -2448,6 +2448,8 @@ Tab.prototype = {
       type: "Tab:ViewportMetadata",
       allowZoom: this.metadata.allowZoom,
       defaultZoom: this.metadata.defaultZoom || 0,
+      minZoom: this.metadata.minZoom || 0,
+      maxZoom: this.metadata.maxZoom || 0,
       tabID: this.id
     }});
   },
@@ -3703,7 +3705,7 @@ var ViewportHandler = {
 
     scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
     minScale = this.clamp(minScale, kViewportMinScale, kViewportMaxScale);
-    maxScale = this.clamp(maxScale, kViewportMinScale, kViewportMaxScale);
+    maxScale = this.clamp(maxScale, minScale, kViewportMaxScale);
 
     // If initial scale is 1.0 and width is not set, assume width=device-width
     let autoSize = (widthStr == "device-width" ||
