@@ -43,7 +43,6 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventResponder;
-import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -60,6 +59,7 @@ import android.util.Log;
 import android.view.View;
 import java.util.Map;
 import java.util.HashMap;
+import org.mozilla.gecko.Tabs;
 
 public class GeckoLayerClient implements GeckoEventResponder,
                                          LayerView.Listener {
@@ -350,12 +350,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 }
             });
             mLayerController.setViewportMetrics(currentMetrics);
-
-            Tab tab = Tabs.getInstance().getSelectedTab();
-            mLayerController.setCheckerboardColor(tab.getCheckerboardColor());
-            mLayerController.setAllowZoom(tab.getAllowZoom());
-            mLayerController.setDefaultZoom(tab.getDefaultZoom());
-
+            mLayerController.setCheckerboardColor(Tabs.getInstance().getSelectedTab().getCheckerboardColor());
             // At this point, we have just switched to displaying a different document than we
             // we previously displaying. This means we need to abort any panning/zooming animations
             // that are in progress and send an updated display port request to browser.js as soon
