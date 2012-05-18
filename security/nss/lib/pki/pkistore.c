@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.34 $ $Date: 2010/12/17 02:34:07 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.34.2.1 $ $Date: 2012/05/17 21:40:54 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -458,6 +458,7 @@ static void match_nickname(const void *k, void *v, void *a)
     {
 	nt->subjectList = subjectList;
     }
+    nss_ZFreeIf(nickname);
 }
 
 /*

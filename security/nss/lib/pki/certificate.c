@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.68 $ $Date: 2011/07/12 21:29:17 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.68.2.1 $ $Date: 2012/05/17 21:40:54 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -230,6 +230,7 @@ nssCertificate_GetSubject (
     }
 }
 
+/* Returns a copy, Caller must free using nss_ZFreeIf */
 NSS_IMPLEMENT NSSUTF8 *
 nssCertificate_GetNickname (
   NSSCertificate *c,
