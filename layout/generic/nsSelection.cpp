@@ -4762,26 +4762,34 @@ nsTypedSelection::CollapseToEnd()
 /*
  * IsCollapsed -- is the whole selection just one point, or unset?
  */
+bool
+nsTypedSelection::IsCollapsed()
+{
+  PRUint32 cnt = mRanges.Length();
+  if (cnt == 0) {
+    return true;
+  }
+
+  if (cnt != 1) {
+    return false;
+  }
+
+  return mRanges[0].mRange->Collapsed();
+}
+
+/* virtual */
+bool
+nsTypedSelection::Collapsed()
+{
+  return IsCollapsed();
+}
+
 NS_IMETHODIMP
 nsTypedSelection::GetIsCollapsed(bool* aIsCollapsed)
 {
-  if (!aIsCollapsed)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aIsCollapsed, NS_ERROR_NULL_POINTER);
 
-  PRInt32 cnt = (PRInt32)mRanges.Length();;
-  if (cnt == 0)
-  {
-    *aIsCollapsed = true;
-    return NS_OK;
-  }
-
-  if (cnt != 1)
-  {
-    *aIsCollapsed = false;
-    return NS_OK;
-  }
-
-  *aIsCollapsed = mRanges[0].mRange->Collapsed();
+  *aIsCollapsed = IsCollapsed();
   return NS_OK;
 }
 

@@ -50,7 +50,7 @@ interface nsINode;
  * @version 1.0
  */
 
-[scriptable, uuid(5ac0cd5d-3c08-4c4c-8e70-230c433f5d5c)]
+[scriptable, uuid(7f30b791-9f43-4bba-9ca3-079dc2ea7479)]
 interface nsISelection : nsISupports
 {
     /**
@@ -77,6 +77,7 @@ interface nsISelection : nsISupports
      * Indicates if the selection is collapsed or not.
      */
     readonly attribute boolean isCollapsed;
+    [noscript,notxpcom,nostdcall] boolean collapsed();
 
     /**
      * Returns the number of ranges in the selection.

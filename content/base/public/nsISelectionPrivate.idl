@@ -66,7 +66,7 @@ struct ScrollAxis;
 native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
 
-[scriptable, uuid(0ced91b9-3e77-4191-943f-95bcde5e2d14)]
+[scriptable, uuid(0733a4dc-2801-4752-a489-b68c918a7ccb)]
 interface nsISelectionPrivate : nsISelection
  {
     const short ENDOFPRECEDINGLINE=0;
