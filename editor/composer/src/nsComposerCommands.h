@@ -45,6 +45,7 @@
 #include "nsString.h"
 
 class nsIEditor;
+class nsIAtom;
 
 // This is a virtual base class for commands registered with the composer controller.
 // Note that such commands are instantiated once per composer, so can store state.
@@ -83,9 +84,8 @@ public:                                                 \
 class nsBaseStateUpdatingCommand : public nsBaseComposerCommand
 {
 public:
-
-              nsBaseStateUpdatingCommand(const char* aTagName);
-  virtual     ~nsBaseStateUpdatingCommand();
+  nsBaseStateUpdatingCommand(nsIAtom* aTagName);
+  virtual ~nsBaseStateUpdatingCommand();
     
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -100,8 +100,7 @@ protected:
   virtual nsresult  ToggleState(nsIEditor* aEditor) = 0;
 
 protected:
-
-  const char* mTagName;
+  nsIAtom* mTagName;
 };
 
 
@@ -110,8 +109,7 @@ protected:
 class nsStyleUpdatingCommand : public nsBaseStateUpdatingCommand
 {
 public:
-
-            nsStyleUpdatingCommand(const char* aTagName);
+  nsStyleUpdatingCommand(nsIAtom* aTagName);
            
 protected:
 
@@ -143,8 +141,7 @@ protected:
 class nsListCommand : public nsBaseStateUpdatingCommand
 {
 public:
-
-            nsListCommand(const char* aTagName);
+  nsListCommand(nsIAtom* aTagName);
 
 protected:
 
@@ -158,8 +155,7 @@ protected:
 class nsListItemCommand : public nsBaseStateUpdatingCommand
 {
 public:
-
-            nsListItemCommand(const char* aTagName);
+  nsListItemCommand(nsIAtom* aTagName);
 
 protected:
 
@@ -272,7 +268,7 @@ protected:
 class nsAbsolutePositioningCommand : public nsBaseStateUpdatingCommand
 {
 public:
-                   nsAbsolutePositioningCommand();
+  nsAbsolutePositioningCommand();
 
 protected:
 
