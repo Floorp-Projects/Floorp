@@ -1148,7 +1148,7 @@ class IDLParser(object):
     t_IID.__doc__ = r'%(c)s{8}-%(c)s{4}-%(c)s{4}-%(c)s{4}-%(c)s{12}' % {'c': hexchar}
 
     def t_IDENTIFIER(self, t):
-        r'unsigned\ long\ long|unsigned\ short|unsigned\ long|long\ long|[A-Za-z][A-Za-z_0-9]*'
+        r'(unsigned\ long\ long|unsigned\ short|unsigned\ long|long\ long)(?![A-Za-z][A-Za-z_0-9])|[A-Za-z][A-Za-z_0-9]*'
         t.type = self.keywords.get(t.value, 'IDENTIFIER')
         return t
 
