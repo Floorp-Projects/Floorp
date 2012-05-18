@@ -59,6 +59,8 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCRT.h"
 
+#include "mozilla/Assertions.h"
+
 //prototype
 nsresult GetListState(nsIHTMLEditor* aEditor, bool* aMixed,
                       nsAString& aLocalName);
@@ -85,10 +87,11 @@ nsBaseComposerCommand::nsBaseComposerCommand()
 NS_IMPL_ISUPPORTS1(nsBaseComposerCommand, nsIControllerCommand)
 
 
-nsBaseStateUpdatingCommand::nsBaseStateUpdatingCommand(const char* aTagName)
+nsBaseStateUpdatingCommand::nsBaseStateUpdatingCommand(nsIAtom* aTagName)
 : nsBaseComposerCommand()
 , mTagName(aTagName)
 {
+  MOZ_ASSERT(mTagName);
 }
 
 nsBaseStateUpdatingCommand::~nsBaseStateUpdatingCommand()
@@ -194,7 +197,7 @@ nsPasteNoFormattingCommand::GetCommandStateParams(const char *aCommandName,
   return aParams->SetBooleanValue(STATE_ENABLED, enabled);
 }
 
-nsStyleUpdatingCommand::nsStyleUpdatingCommand(const char* aTagName)
+nsStyleUpdatingCommand::nsStyleUpdatingCommand(nsIAtom* aTagName)
 : nsBaseStateUpdatingCommand(aTagName)
 {
 }
@@ -207,18 +210,15 @@ nsStyleUpdatingCommand::GetCurrentState(nsIEditor *aEditor,
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   NS_ENSURE_TRUE(htmlEditor, NS_ERROR_NOT_INITIALIZED);
   
-  nsresult rv = NS_OK;
-
   bool firstOfSelectionHasProp = false;
   bool anyOfSelectionHasProp = false;
   bool allOfSelectionHasProp = false;
 
-  nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(mTagName);
-  rv = htmlEditor->GetInlineProperty(styleAtom, EmptyString(), 
-                                     EmptyString(), 
-                                     &firstOfSelectionHasProp, 
-                                     &anyOfSelectionHasProp, 
-                                     &allOfSelectionHasProp);
+  nsresult rv = htmlEditor->GetInlineProperty(mTagName, EmptyString(),
+                                              EmptyString(),
+                                              &firstOfSelectionHasProp,
+                                              &anyOfSelectionHasProp,
+                                              &allOfSelectionHasProp);
 
   aParams->SetBooleanValue(STATE_ENABLED, NS_SUCCEEDED(rv));
   aParams->SetBooleanValue(STATE_ALL, allOfSelectionHasProp);
@@ -245,13 +245,10 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor)
 
   // tags "href" and "name" are special cases in the core editor 
   // they are used to remove named anchor/link and shouldn't be used for insertion
-  nsAutoString tagName; tagName.AssignWithConversion(mTagName);
   bool doTagRemoval;
-  if (tagName.EqualsLiteral("href") ||
-      tagName.EqualsLiteral("name"))
+  if (mTagName == nsGkAtoms::href || mTagName == nsGkAtoms::name) {
     doTagRemoval = true;
-  else
-  {
+  } else {
     // check current selection; set doTagRemoval if formatting should be removed
     rv = GetCurrentState(aEditor, params);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -261,23 +258,24 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor)
 
   if (doTagRemoval) {
     // Also remove equivalent properties (bug 317093)
-    if (tagName.EqualsLiteral("b")) {
+    if (mTagName == nsGkAtoms::b) {
       rv = RemoveTextProperty(htmlEditor, NS_LITERAL_STRING("strong"));
       NS_ENSURE_SUCCESS(rv, rv);
-    } else if (tagName.EqualsLiteral("i")) {
+    } else if (mTagName == nsGkAtoms::i) {
       rv = RemoveTextProperty(htmlEditor, NS_LITERAL_STRING("em"));
       NS_ENSURE_SUCCESS(rv, rv);
-    } else if (tagName.EqualsLiteral("strike")) {
+    } else if (mTagName == nsGkAtoms::strike) {
       rv = RemoveTextProperty(htmlEditor, NS_LITERAL_STRING("s"));
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = RemoveTextProperty(htmlEditor, tagName);
+    rv = RemoveTextProperty(htmlEditor, nsDependentAtomString(mTagName));
   } else {
     // Superscript and Subscript styles are mutually exclusive
     aEditor->BeginTransaction();
 
-    if (tagName.EqualsLiteral("sub") || tagName.EqualsLiteral("sup")) {
+    nsDependentAtomString tagName(mTagName);
+    if (mTagName == nsGkAtoms::sub || mTagName == nsGkAtoms::sup) {
       rv = RemoveTextProperty(htmlEditor, tagName);
     }
     if (NS_SUCCEEDED(rv))
@@ -289,7 +287,7 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor)
   return rv;
 }
 
-nsListCommand::nsListCommand(const char* aTagName)
+nsListCommand::nsListCommand(nsIAtom* aTagName)
 : nsBaseStateUpdatingCommand(aTagName)
 {
 }
@@ -306,8 +304,7 @@ nsListCommand::GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams)
   nsresult rv = GetListState(htmlEditor, &bMixed, localName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Need to use mTagName????
-  bool inList = localName.EqualsASCII(mTagName);
+  bool inList = mTagName->Equals(localName);
   aParams->SetBooleanValue(STATE_ALL, !bMixed && inList);
   aParams->SetBooleanValue(STATE_MIXED, bMixed);
   aParams->SetBooleanValue(STATE_ENABLED, true);
@@ -319,8 +316,7 @@ nsListCommand::ToggleState(nsIEditor *aEditor)
 {
   nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(aEditor);
   NS_ENSURE_TRUE(editor, NS_NOINTERFACE);
-  bool inList;
-  // Need to use mTagName????
+
   nsresult rv;
   nsCOMPtr<nsICommandParams> params =
       do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
@@ -328,21 +324,23 @@ nsListCommand::ToggleState(nsIEditor *aEditor)
     return rv;
 
   rv = GetCurrentState(aEditor, params);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool inList;
   rv = params->GetBooleanValue(STATE_ALL,&inList);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString listType; listType.AssignWithConversion(mTagName);
-  if (inList)
+  nsDependentAtomString listType(mTagName);
+  if (inList) {
     rv = editor->RemoveList(listType);    
-  else
-  {
+  } else {
     rv = editor->MakeOrChangeList(listType, false, EmptyString());
   }
   
   return rv;
 }
 
-nsListItemCommand::nsListItemCommand(const char* aTagName)
+nsListItemCommand::nsListItemCommand(nsIAtom* aTagName)
 : nsBaseStateUpdatingCommand(aTagName)
 {
 }
@@ -363,9 +361,13 @@ nsListItemCommand::GetCurrentState(nsIEditor* aEditor,
   bool inList = false;
   if (!bMixed)
   {
-    if (bLI) inList = (0 == nsCRT::strcmp(mTagName, "li"));
-    else if (bDT) inList = (0 == nsCRT::strcmp(mTagName, "dt"));
-    else if (bDD) inList = (0 == nsCRT::strcmp(mTagName, "dd"));
+    if (bLI) {
+      inList = mTagName == nsGkAtoms::li;
+    } else if (bDT) {
+      inList = mTagName == nsGkAtoms::dt;
+    } else if (bDD) {
+      inList = mTagName == nsGkAtoms::dd;
+    }
   }
 
   aParams->SetBooleanValue(STATE_ALL, !bMixed && inList);
@@ -405,12 +407,11 @@ nsListItemCommand::ToggleState(nsIEditor *aEditor)
     return htmlEditor->RemoveList(localName);
   }
 
-  nsAutoString itemType; itemType.AssignWithConversion(mTagName);
   // Set to the requested paragraph type
   //XXX Note: This actually doesn't work for "LI",
   //    but we currently don't use this for non DL lists anyway.
   // Problem: won't this replace any current block paragraph style?
-  return htmlEditor->SetParagraphFormat(itemType);
+  return htmlEditor->SetParagraphFormat(nsDependentAtomString(mTagName));
 }
 
 NS_IMETHODIMP
@@ -1006,7 +1007,7 @@ nsAlignCommand::SetState(nsIEditor *aEditor, nsString& newState)
 }
 
 nsAbsolutePositioningCommand::nsAbsolutePositioningCommand()
-: nsBaseStateUpdatingCommand("")
+: nsBaseStateUpdatingCommand(nsGkAtoms::_empty)
 {
 }
 
