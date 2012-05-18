@@ -2,9 +2,9 @@
 <head>
 <title>localStorage different port numbers</title>
 
-<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-<script type="text/javascript" src="interOriginTest2.js"></script>
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="interOriginTest2.js"></script>
 
 <!--
   This test loads two frames from different
@@ -29,8 +29,6 @@ function startTest()
   masterFrame.location = masterFrameOrigin + framePath + "frameMasterNotEqual.html";
   slaveFrame.location = slaveFrameOrigin + framePath + "frameSlaveNotEqual.html";
 }
-
-SimpleTest.waitForExplicitFinish();
 
 </script>
 
