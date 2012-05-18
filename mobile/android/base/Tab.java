@@ -88,6 +88,8 @@ public final class Tab {
     private boolean mHasTouchListeners;
     private boolean mAllowZoom;
     private float mDefaultZoom;
+    private float mMinZoom;
+    private float mMaxZoom;
     private ArrayList<View> mPluginViews;
     private HashMap<Object, Layer> mPluginLayers;
     private ContentResolver mContentResolver;
@@ -300,6 +302,22 @@ public final class Tab {
 
     public float getDefaultZoom() {
         return mDefaultZoom;
+    }
+
+    public void setMinZoom(float aValue) {
+        mMinZoom = aValue;
+    }
+
+    public float getMinZoom() {
+        return mMinZoom;
+    }
+
+    public void setMaxZoom(float aValue) {
+        mMaxZoom = aValue;
+    }
+
+    public float getMaxZoom() {
+        return mMaxZoom;
     }
 
     public void setHasTouchListeners(boolean aValue) {
