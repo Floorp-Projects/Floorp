@@ -3525,31 +3525,44 @@ nsEditor::IsBlockNode(nsINode *aNode)
 bool
 nsEditor::CanContain(nsIDOMNode* aParent, nsIDOMNode* aChild)
 {
-  nsCOMPtr<dom::Element> parentElement = do_QueryInterface(aParent);
-  NS_ENSURE_TRUE(parentElement, false);
+  nsCOMPtr<nsIContent> parent = do_QueryInterface(aParent);
+  NS_ENSURE_TRUE(parent, false);
 
-  return TagCanContain(parentElement->Tag(), aChild);
+  switch (parent->NodeType()) {
+  case nsIDOMNode::ELEMENT_NODE:
+  case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    return TagCanContain(parent->Tag(), aChild);
+  }
+  return false;
 }
 
 bool
 nsEditor::CanContainTag(nsIDOMNode* aParent, nsIAtom* aChildTag)
 {
-  nsCOMPtr<dom::Element> parentElement = do_QueryInterface(aParent);
-  NS_ENSURE_TRUE(parentElement, false);
+  nsCOMPtr<nsIContent> parent = do_QueryInterface(aParent);
+  NS_ENSURE_TRUE(parent, false);
 
-  return TagCanContainTag(parentElement->Tag(), aChildTag);
+  switch (parent->NodeType()) {
+  case nsIDOMNode::ELEMENT_NODE:
+  case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    return TagCanContainTag(parent->Tag(), aChildTag);
+  }
+  return false;
 }
 
 bool 
 nsEditor::TagCanContain(nsIAtom* aParentTag, nsIDOMNode* aChild)
 {
-  if (IsTextNode(aChild)) {
-    return TagCanContainTag(aParentTag, nsGkAtoms::textTagName);
-  }
+  nsCOMPtr<nsIContent> child = do_QueryInterface(aChild);
+  NS_ENSURE_TRUE(child, false);
 
-  nsCOMPtr<dom::Element> element = do_QueryInterface(aChild);
-  NS_ENSURE_TRUE(element, false);
-  return TagCanContainTag(aParentTag, element->Tag());
+  switch (child->NodeType()) {
+  case nsIDOMNode::TEXT_NODE:
+  case nsIDOMNode::ELEMENT_NODE:
+  case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    return TagCanContainTag(aParentTag, child->Tag());
+  }
+  return false;
 }
 
 bool 
