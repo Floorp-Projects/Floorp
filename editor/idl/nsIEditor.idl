@@ -55,12 +55,13 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(7861fe14-9977-413f-a893-3e1000c40817)]
+[scriptable, uuid(7ad59e28-f3d5-4e14-8ea3-794ad4a86de3)]
 
 interface nsIEditor  : nsISupports
 {
 %{C++
   typedef short EDirection;
+  typedef short EStripWrappers;
 %}
   const short eNone = 0;
   const short eNext = 1;
@@ -69,6 +70,9 @@ interface nsIEditor  : nsISupports
   const short ePreviousWord = 4;
   const short eToBeginningOfLine = 5;
   const short eToEndOfLine = 6;
+
+  const short eStrip = 0;
+  const short eNoStrip = 1;
 
   readonly attribute nsISelection selection;
 
@@ -146,8 +150,12 @@ interface nsIEditor  : nsISupports
    * DeleteSelection removes all nodes in the current selection.
    * @param aDir  if eNext, delete to the right (for example, the DEL key)
    *              if ePrevious, delete to the left (for example, the BACKSPACE key)
+   * @param stripWrappers If eStrip, strip any empty inline elements left
+   *                      behind after the deletion; if eNoStrip, don't.  If in
+   *                      doubt, pass eStrip -- eNoStrip is only for if you're
+   *                      about to insert text or similar right after.
    */
-  void deleteSelection(in short action);
+  void deleteSelection(in short action, in short stripWrappers);
 
 
   /* ------------ Document info and file methods -------------- */

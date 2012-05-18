@@ -329,6 +329,9 @@ public:
   virtual bool AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2)
     MOZ_OVERRIDE;
 
+  NS_IMETHOD DeleteSelectionImpl(EDirection aAction,
+                                 EStripWrappers aStripWrappers);
+  nsresult DeleteNode(nsINode* aNode);
   NS_IMETHODIMP DeleteNode(nsIDOMNode * aNode);
   NS_IMETHODIMP DeleteText(nsIDOMCharacterData *aTextNode,
                            PRUint32             aOffset,
@@ -761,6 +764,9 @@ protected:
                                    PRInt32 aDestOffset,
                                    bool aDeleteSelection,
                                    bool aTrustedInput);
+
+  nsresult ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, PRInt32* aOffset,
+                      nsIAtom* aProperty, const nsAString* aAttribute);
 
 // Data members
 protected:

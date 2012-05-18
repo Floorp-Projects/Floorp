@@ -550,7 +550,7 @@ nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
   NS_ENSURE_SUCCESS(res, res);
 
   if (!selection->Collapsed()) {
-    res = DeleteSelection(nsIEditor::eNone);
+    res = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
     NS_ENSURE_SUCCESS(res, res);
   }
 
@@ -735,8 +735,12 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
   return result;
 }
 
-NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
+nsresult
+nsPlaintextEditor::DeleteSelection(EDirection aAction,
+                                   EStripWrappers aStripWrappers)
 {
+  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
+
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   // Protect the edit rules object from dying
@@ -778,12 +782,13 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
 
   nsTextRulesInfo ruleInfo(kOpDeleteSelection);
   ruleInfo.collapsedAction = aAction;
+  ruleInfo.stripWrappers = aStripWrappers;
   bool cancel, handled;
   result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(result, result);
   if (!cancel && !handled)
   {
-    result = DeleteSelectionImpl(aAction);
+    result = DeleteSelectionImpl(aAction, aStripWrappers);
   }
   if (!cancel)
   {
@@ -1282,7 +1287,7 @@ NS_IMETHODIMP nsPlaintextEditor::Cut()
   HandlingTrustedAction trusted(this);
 
   if (FireClipboardEvent(NS_CUT))
-    return DeleteSelection(eNone);
+    return DeleteSelection(eNone, eStrip);
   return NS_OK;
 }
 

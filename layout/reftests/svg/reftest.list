@@ -174,6 +174,9 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == mask-transformed-01.svg mask-transformed-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 == nesting-invalid-01.svg nesting-invalid-01-ref.svg
+# Bug 756405
+random-if(Android) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg 
+random-if(Android) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg 
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
 random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
