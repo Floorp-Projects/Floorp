@@ -3540,6 +3540,13 @@ void
 nsEventStateManager::NotifyDestroyPresContext(nsPresContext* aPresContext)
 {
   nsIMEStateManager::OnDestroyPresContext(aPresContext);
+  if (mHoverContent) {
+    // Bug 70855: Presentation is going away, possibly for a reframe.
+    // Reset the hover state so that if we're recreating the presentation,
+    // we won't have the old hover state still set in the new presentation,
+    // as if the new presentation is resized, a new element may be hovered. 
+    SetContentState(nsnull, NS_EVENT_STATE_HOVER);
+  }
 }
 
 void
