@@ -19,12 +19,6 @@
     "StorageEvent constructor and nulls": true
   },
 
-  "webapps/WebStorage/tests/submissions/Ms2ger/test_storage_local_getitem_js.html": {
-    "All 3 items should be added.": true,
-    "array access should be correct": true,
-    "getItem should be correct": true
-  },
-
   "webapps/WebStorage/tests/submissions/Ms2ger/test_storage_local_in_js.html": {
     "Web Storage 1": true
   },
@@ -38,12 +32,6 @@
   "webapps/WebStorage/tests/submissions/Ms2ger/test_storage_local_removeitem_js.html": {
     "Web Storage 2": true,
     "Web Storage 3": true
-  },
-
-  "webapps/WebStorage/tests/submissions/Ms2ger/test_storage_session_getitem_js.html": {
-    "All 3 items should be added.": true,
-    "array access should be correct": true,
-    "getItem should be correct": true
   },
 
   "webapps/WebStorage/tests/submissions/Ms2ger/test_storage_session_in_js.html": {
