@@ -61,8 +61,8 @@ struct StmtInfo;
 class ContextFlags {
 
     // This class's data is all private and so only visible to these friends.
-    friend class SharedContext;
-    friend class FunctionBox;
+    friend struct SharedContext;
+    friend struct FunctionBox;
 
     // This function/global/eval code body contained a Use Strict Directive.
     // Treat certain strict warnings as errors, and forbid the use of 'with'.
