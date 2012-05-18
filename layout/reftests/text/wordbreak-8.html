@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <style type="text/css">
+    .breakall { width: 0px; word-break: break-all; }
+    .keepall { width: 0px; word-break: keep-all;  }
+    .lc { text-transform: lowercase; }
+    .uc { text-transform: uppercase; }
+  </style>
+  <title>Test - word-break:break-all with text-transform and clusters</title>
+  </head>
+  <body>
+    <div class="breakall lc">fox fo&#x0325;x&#x0307;</div><br>
+    <div class="keepall lc">fox fo&#x0325;x&#x0307;</div><br>
+    <div class="breakall uc">fox fo&#x0325;x&#x0307;</div><br>
+    <div class="keepall uc">fox fo&#x0325;x&#x0307;</div><br>
+  </body>
+</html>
