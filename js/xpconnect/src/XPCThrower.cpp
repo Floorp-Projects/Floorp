@@ -41,6 +41,7 @@
 /* Code for throwing errors into JavaScript. */
 
 #include "xpcprivate.h"
+#include "xpcpublic.h"
 #include "XPCWrapper.h"
 
 JSBool XPCThrower::sVerbose = true;
@@ -56,6 +57,17 @@ XPCThrower::Throw(nsresult rv, JSContext* cx)
         format = "";
     BuildAndThrowException(cx, rv, format);
 }
+
+namespace xpc {
+
+bool
+Throw(JSContext *cx, nsresult rv)
+{
+    XPCThrower::Throw(rv, cx);
+    return false;
+}
+
+} // namespace xpc
 
 /*
  * If there has already been an exception thrown, see if we're throwing the
