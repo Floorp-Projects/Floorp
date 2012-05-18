@@ -1180,9 +1180,6 @@ nsresult
 DOMStorageImpl::SetValue(bool aIsCallerSecure, const nsAString& aKey,
                          const nsAString& aData, nsAString& aOldValue)
 {
-  if (aKey.IsEmpty())
-    return NS_OK;
-
   nsresult rv;
   nsString oldValue;
   SetDOMStringToNull(oldValue);
@@ -1519,9 +1516,6 @@ nsDOMStorage::GetNamedItem(const nsAString& aKey, nsresult* aResult)
   }
 
   *aResult = NS_OK;
-  if (aKey.IsEmpty())
-    return nsnull;
-  
   return mStorageImpl->GetValue(IsCallerSecure(), aKey, aResult);
 }
 
@@ -1616,9 +1610,6 @@ NS_IMETHODIMP nsDOMStorage::RemoveItem(const nsAString& aKey)
 {
   if (!CacheStoragePermissions())
     return NS_ERROR_DOM_SECURITY_ERR;
-
-  if (aKey.IsEmpty())
-    return NS_OK;
 
   nsString oldValue;
   nsresult rv = mStorageImpl->RemoveValue(IsCallerSecure(), aKey, oldValue);
