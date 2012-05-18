@@ -863,6 +863,25 @@ public:
   Sequence() : AutoFallibleTArray<T, 16>() {}
 };
 
+// Class for holding the type of members of a union. The union type has an enum
+// to keep track of which of its UnionMembers has been constructed.
+template<class T>
+class UnionMember {
+    AlignedStorage2<T> storage;
+
+public:
+    T& SetValue() {
+      new (storage.addr()) T();
+      return *storage.addr();
+    }
+    const T& Value() const {
+      return *storage.addr();
+    }
+    void Destroy() {
+      storage.addr()->~T();
+    }
+};
+
 } // namespace dom
 } // namespace mozilla
 
