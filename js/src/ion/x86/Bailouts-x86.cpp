@@ -100,17 +100,29 @@ class BailoutStack
 # pragma pack(pop)
 #endif
 
-FrameRecovery
-ion::FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *bailout)
+IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
+                                       BailoutStack *bailout)
+  : IonFrameIterator(activations),
+    machine_(bailout->machine())
 {
     uint8 *sp = bailout->parentStackPointer();
     uint8 *fp = sp + bailout->frameSize();
 
-    if (bailout->frameClass() == FrameSizeClass::None())
-        return FrameRecovery::FromSnapshot(fp, sp, bailout->machine(), bailout->snapshotOffset());
+    current_ = fp;
+    type_ = IonFrame_JS;
+    topFrameSize_ = current_ - sp;
+    topIonScript_ = script()->ion;
 
-    // Compute the bailout ID.
-    IonCode *code = ion->getBailoutTable(bailout->frameClass());
+    if (bailout->frameClass() == FrameSizeClass::None()) {
+        snapshotOffset_ = bailout->snapshotOffset();
+        return;
+    }
+
+    // Compute the snapshot offset from the bailout ID.
+    IonActivation *activation = activations.activation();
+    JSCompartment *jsCompartment = activation->compartment();
+    IonCompartment *ionCompartment = jsCompartment->ionCompartment();
+    IonCode *code = ionCompartment->getBailoutTable(bailout->frameClass());
     uintptr_t tableOffset = bailout->tableOffset();
     uintptr_t tableStart = reinterpret_cast<uintptr_t>(code->raw());
 
@@ -121,16 +133,20 @@ ion::FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *bailout)
     uint32 bailoutId = ((tableOffset - tableStart) / BAILOUT_TABLE_ENTRY_SIZE) - 1;
     JS_ASSERT(bailoutId < BAILOUT_TABLE_SIZE);
 
-    return FrameRecovery::FromBailoutId(fp, sp, bailout->machine(), bailoutId);
+    snapshotOffset_ = topIonScript_->bailoutToSnapshot(bailoutId);
 }
 
-FrameRecovery
-ion::FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack *bailout)
+IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
+                                       InvalidationBailoutStack *bailout)
+  : IonFrameIterator(activations),
+    machine_(bailout->machine())
 {
-    IonScript *ionScript = bailout->ionScript();
-    const OsiIndex *osiIndex = ionScript->getOsiIndex(bailout->osiPointReturnAddress());
-    FrameRecovery fr = FrameRecovery::FromSnapshot((uint8 *) bailout->fp(), bailout->sp(),
-                                                   bailout->machine(), osiIndex->snapshotOffset());
-    fr.setIonScript(ionScript);
-    return fr;
+    returnAddressToFp_ = bailout->osiPointReturnAddress();
+    topIonScript_ = bailout->ionScript();
+    const OsiIndex *osiIndex = topIonScript_->getOsiIndex(returnAddressToFp_);
+
+    current_ = (uint8*) bailout->fp();
+    type_ = IonFrame_JS;
+    topFrameSize_ = current_ - bailout->sp();
+    snapshotOffset_ = osiIndex->snapshotOffset();
 }

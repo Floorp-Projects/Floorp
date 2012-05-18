@@ -55,6 +55,43 @@
 using namespace js;
 using namespace js::ion;
 
+// These constructor are exactly the same except for the type of the iterator
+// which is given to the SnapshotIterator constructor. Doing so avoid the
+// creation of virtual functions for the IonIterator but may introduce some
+// weirdness as IonInlineIterator is using an IonFrameIterator reference.
+//
+// If a function relies on ionScript() or to use OsiIndex(), due to the
+// lack of virtual, these functions will use the IonFrameIterator reference
+// contained in the InlineFrameIterator and thus are not able to recover
+// correctly the data stored in IonBailoutIterator.
+//
+// Currently, such cases should not happen because our only use case of the
+// IonFrameIterator within InlineFrameIterator is to read the frame content, or
+// to clone it to find the parent scripted frame.  Both use cases are fine and
+// should not cause any issue since the only potential issue is to read the
+// bailed out frame.
+
+SnapshotIterator::SnapshotIterator(const IonBailoutIterator &iter)
+  : SnapshotReader(iter.ionScript()->snapshots() + iter.snapshotOffset(),
+                   iter.ionScript()->snapshots() + iter.ionScript()->snapshotsSize()),
+    fp_(iter.jsFrame()),
+    machine_(iter.machineState()),
+    ionScript_(iter.ionScript())
+{
+}
+
+InlineFrameIterator::InlineFrameIterator(const IonBailoutIterator *iter)
+  : frame_(iter),
+    framesRead_(0),
+    callee_(NULL),
+    script_(NULL)
+{
+    if (iter) {
+        start_ = SnapshotIterator(*iter);
+        findNextFrame();
+    }
+}
+
 static void
 RestoreOneFrame(JSContext *cx, StackFrame *fp, SnapshotIterator &iter)
 {
@@ -172,32 +209,8 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     return fp;
 }
 
-static void
-DeriveConstructing(StackFrame *fp, StackFrame *entryFp, IonJSFrameLayout *js)
-{
-    IonFrameIterator fiter(js);
-
-    // Skip the current frame and look at the caller's.
-    do {
-        ++fiter;
-    } while (fiter.type() != IonFrame_JS && fiter.type() != IonFrame_Entry);
-
-    if (fiter.type() == IonFrame_JS) {
-        // In the case of a JS frame, look up the pc from the snapshot.
-        InlineFrameIterator ifi(&fiter);
-        JS_ASSERT(js_CodeSpec[*ifi.pc()].format & JOF_INVOKE);
-
-        if ((JSOp)*ifi.pc() == JSOP_NEW)
-            fp->setConstructing();
-    } else {
-        JS_ASSERT(fiter.type() == IonFrame_Entry);
-        if (entryFp->isConstructing())
-            fp->setConstructing();
-    }
-}
-
 static inline bool
-IsInitialFrame(IonJSFrameLayout *jsFrame)
+IsInitialFrame(const IonBailoutIterator &jsFrame)
 {
     IonFrameIterator iter(jsFrame);
     ++iter;
@@ -211,20 +224,17 @@ IsInitialFrame(IonJSFrameLayout *jsFrame)
 }
 
 static uint32
-ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
+ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 {
     IonSpew(IonSpew_Bailouts, "Bailing out %s:%u, IonScript %p",
-            in.script()->filename, in.script()->lineno, (void *) in.ionScript());
+            it.script()->filename, it.script()->lineno, (void *) it.ionScript());
     IonSpew(IonSpew_Bailouts, " reading from snapshot offset %u size %u",
-            in.snapshotOffset(), in.ionScript()->snapshotsSize());
+            it.snapshotOffset(), it.ionScript()->snapshotsSize());
 
-    // Must be stored before the bailout frame is pushed.
-    StackFrame *entryFp = cx->fp();
-
-    SnapshotIterator iter(in.ionScript(), in.snapshotOffset(), in.fp(), in.machine());
+    SnapshotIterator iter(it);
 
     // Forbid OSR in the future: bailouts are now expected.
-    in.ionScript()->forbidOsr();
+    it.ionScript()->forbidOsr();
 
     BailoutClosure *br = cx->new_<BailoutClosure>();
     if (!br)
@@ -232,7 +242,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
     activation->setBailout(br);
 
     StackFrame *fp;
-    if (IsInitialFrame(in.fp())) {
+    if (IsInitialFrame(it)) {
         // Avoid creating duplicate interpreter frames. This is necessary to
         // avoid blowing out the interpreter stack, and must be used in
         // conjunction with inline-OSR from within bailouts (since each Ion
@@ -241,9 +251,9 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
         fp = cx->fp();
         cx->regs().sp = fp->base();
     } else {
-        if (in.callee()) {
+        if (it.maybeCallee()) {
             // This is a normal function frame.
-            fp = cx->stack.pushBailoutFrame(cx, *in.callee(), in.script(), br->frameGuard());
+            fp = cx->stack.pushBailoutFrame(cx, *it.callee(), it.script(), br->frameGuard());
         } else {
             // The scope chain will be updated, if necessary, in RestoreOneFrame().
             // The |this| value for global scripts is always an object, and is
@@ -251,7 +261,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
             // value (it is not included in snapshots or resume points).
             HandleObject prevScopeChain = cx->fp()->scopeChain();
             Value thisv = cx->fp()->thisValue();
-            fp = cx->stack.pushBailoutFrame(cx, in.script(), *prevScopeChain, thisv, br->frameGuard());
+            fp = cx->stack.pushBailoutFrame(cx, it.script(), *prevScopeChain, thisv, br->frameGuard());
         }
     }
 
@@ -260,10 +270,12 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
 
     br->setEntryFrame(fp);
 
-    if (in.callee())
-        fp->formalArgs()[-2].setObject(*in.callee());
+    JSFunction *callee = it.maybeCallee();
+    if (callee)
+        fp->formalArgs()[-2].setObject(*callee);
 
-    DeriveConstructing(fp, entryFp, in.fp());
+    if (it.isConstructing())
+        fp->setConstructing();
 
     while (true) {
         IonSpew(IonSpew_Bailouts, " restoring frame");
@@ -347,15 +359,19 @@ uint32
 ion::Bailout(BailoutStack *sp)
 {
     JSContext *cx = GetIonContext()->cx;
-    IonCompartment *ioncompartment = cx->compartment->ionCompartment();
-    IonActivation *activation = cx->runtime->ionActivation;
-    FrameRecovery in = FrameRecoveryFromBailout(ioncompartment, sp);
+    IonActivationIterator ionActivations(cx);
+    IonBailoutIterator iter(ionActivations, sp);
+    IonActivation *activation = ionActivations.activation();
 
-    IonSpew(IonSpew_Bailouts, "Took bailout! Snapshot offset: %d", in.snapshotOffset());
+    // IonCompartment *ioncompartment = cx->compartment->ionCompartment();
+    // IonActivation *activation = cx->runtime->ionActivation;
+    // FrameRecovery in = FrameRecoveryFromBailout(ioncompartment, sp);
 
-    uint32 retval = ConvertFrames(cx, activation, in);
+    IonSpew(IonSpew_Bailouts, "Took bailout! Snapshot offset: %d", iter.snapshotOffset());
 
-    EnsureExitFrame(in.fp());
+    uint32 retval = ConvertFrames(cx, activation, iter);
+
+    EnsureExitFrame(iter.jsFrame());
 
     if (retval != BAILOUT_RETURN_FATAL_ERROR)
         return retval;
@@ -370,19 +386,23 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
     sp->checkInvariants();
 
     JSContext *cx = GetIonContext()->cx;
-    IonCompartment *ioncompartment = cx->compartment->ionCompartment();
-    IonActivation *activation = cx->runtime->ionActivation;
-    FrameRecovery in = FrameRecoveryFromInvalidation(ioncompartment, sp);
+    IonActivationIterator ionActivations(cx);
+    IonBailoutIterator iter(ionActivations, sp);
+    IonActivation *activation = ionActivations.activation();
 
-    IonSpew(IonSpew_Bailouts, "Took invalidation bailout! Snapshot offset: %d", in.snapshotOffset());
+    // IonCompartment *ioncompartment = cx->compartment->ionCompartment();
+    // IonActivation *activation = cx->runtime->ionActivation;
+    // FrameRecovery in = FrameRecoveryFromInvalidation(ioncompartment, sp);
+
+    IonSpew(IonSpew_Bailouts, "Took invalidation bailout! Snapshot offset: %d", iter.snapshotOffset());
 
     // Note: the frame size must be computed before we return from this function.
-    *frameSizeOut = in.frameSize();
+    *frameSizeOut = iter.topFrameSize();
 
-    uint32 retval = ConvertFrames(cx, activation, in);
+    uint32 retval = ConvertFrames(cx, activation, iter);
 
     {
-        IonJSFrameLayout *frame = in.fp();
+        IonJSFrameLayout *frame = iter.jsFrame();
         IonSpew(IonSpew_Invalidate, "converting to exit frame");
         IonSpew(IonSpew_Invalidate, "   orig calleeToken %p", (void *) frame->calleeToken());
         IonSpew(IonSpew_Invalidate, "   orig frameSize %u", unsigned(frame->prevFrameLocalSize()));
@@ -396,7 +416,7 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
     }
 
-    in.ionScript()->decref(cx->runtime->defaultFreeOp());
+    iter.ionScript()->decref(cx->runtime->defaultFreeOp());
 
     if (cx->runtime->hasIonReturnOverride())
         cx->regs().sp[-1] = cx->runtime->takeIonReturnOverride();

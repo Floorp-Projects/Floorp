@@ -44,6 +44,7 @@
 
 #include "jstypes.h"
 #include "vm/Stack.h"
+#include "IonFrameIterator.h"
 #include "IonFrames.h"
 
 namespace js {
@@ -181,11 +182,38 @@ class BailoutStack;
 class InvalidationBailoutStack;
 
 // Must be implemented by each architecture.
-FrameRecovery
-FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *sp);
 
-FrameRecovery
-FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack *sp);
+// This iterator is constructed at a time where there is no exit frame at the
+// moment. They must be initialized to the first JS frame instead of the exit
+// frame as usually done with IonFrameIterator.
+class IonBailoutIterator : public IonFrameIterator
+{
+    MachineState machine_;
+    uint32 snapshotOffset_;
+    size_t topFrameSize_;
+    IonScript *topIonScript_;
+
+  public:
+    IonBailoutIterator(const IonActivationIterator &activations, BailoutStack *sp);
+    IonBailoutIterator(const IonActivationIterator &activations, InvalidationBailoutStack *sp);
+
+    SnapshotOffset snapshotOffset() const {
+        JS_ASSERT(topIonScript_);
+        return snapshotOffset_;
+    }
+    const MachineState &machineState() const {
+        return machine_;
+    }
+    size_t topFrameSize() const {
+        JS_ASSERT(topIonScript_);
+        return topFrameSize_;
+    }
+    IonScript *ionScript() const {
+        if (topIonScript_)
+            return topIonScript_;
+        return IonFrameIterator::ionScript();
+    }
+};
 
 // Called from a bailout thunk. Returns a BAILOUT_* error code.
 uint32 Bailout(BailoutStack *sp);

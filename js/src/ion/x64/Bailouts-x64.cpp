@@ -84,22 +84,32 @@ class BailoutStack
 # pragma pack(pop)
 #endif
 
-FrameRecovery
-ion::FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *bailout)
+IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
+                                       BailoutStack *bailout)
+  : IonFrameIterator(activations),
+    machine_(bailout->machineState())
 {
     uint8 *sp = bailout->parentStackPointer();
     uint8 *fp = sp + bailout->frameSize();
 
-    return FrameRecovery::FromSnapshot(fp, sp, bailout->machineState(), bailout->snapshotOffset());
+    current_ = fp;
+    type_ = IonFrame_JS;
+    topFrameSize_ = current_ - sp;
+    topIonScript_ = script()->ion;
+    snapshotOffset_ = bailout->snapshotOffset();
 }
 
-FrameRecovery
-ion::FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack *bailout)
+IonBailoutIterator::IonBailoutIterator(const IonActivationIterator &activations,
+                                       InvalidationBailoutStack *bailout)
+  : IonFrameIterator(activations),
+    machine_(bailout->machine())
 {
-    IonScript *ionScript = bailout->ionScript();
-    const OsiIndex *osiIndex = ionScript->getOsiIndex(bailout->osiPointReturnAddress());
-    FrameRecovery fr = FrameRecovery::FromSnapshot((uint8 *) bailout->fp(), bailout->sp(),
-                                                   bailout->machine(), osiIndex->snapshotOffset());
-    fr.setIonScript(ionScript);
-    return fr;
+    returnAddressToFp_ = bailout->osiPointReturnAddress();
+    topIonScript_ = bailout->ionScript();
+    const OsiIndex *osiIndex = topIonScript_->getOsiIndex(returnAddressToFp_);
+
+    current_ = (uint8*) bailout->fp();
+    type_ = IonFrame_JS;
+    topFrameSize_ = current_ - bailout->sp();
+    snapshotOffset_ = osiIndex->snapshotOffset();
 }

@@ -1281,7 +1281,7 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
 #ifdef JS_ION
     , ionActivations_(cx),
     ionFrames_((uint8_t *)NULL),
-    ionInlineFrames_(NULL)
+    ionInlineFrames_((js::ion::IonFrameIterator*) NULL)
 #endif
 {
 #ifdef JS_METHODJIT
