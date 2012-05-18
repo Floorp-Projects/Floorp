@@ -1667,17 +1667,6 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
 
 
 nsresult
-nsHTMLEditor::RelativeFontChangeHelper(PRInt32 aSizeChange, nsIDOMNode* aNode)
-{
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_STATE(node);
-
-  return RelativeFontChangeHelper(aSizeChange, node);
-}
-
-nsresult
 nsHTMLEditor::RelativeFontChangeHelper(PRInt32 aSizeChange, nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
@@ -1700,7 +1689,7 @@ nsHTMLEditor::RelativeFontChangeHelper(PRInt32 aSizeChange, nsINode* aNode)
     for (nsIContent* child = aNode->GetLastChild();
          child;
          child = child->GetPreviousSibling()) {
-      nsresult rv = RelativeFontChangeOnNode(aSizeChange, child->AsDOMNode());
+      nsresult rv = RelativeFontChangeOnNode(aSizeChange, child);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -1718,16 +1707,24 @@ nsHTMLEditor::RelativeFontChangeHelper(PRInt32 aSizeChange, nsINode* aNode)
 
 
 nsresult
-nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange, 
-                                        nsIDOMNode *aNode)
+nsHTMLEditor::RelativeFontChangeOnNode(PRInt32 aSizeChange,
+                                       nsIDOMNode* aNode)
 {
-  // Can only change font size by + or - 1
-  if ( !( (aSizeChange==1) || (aSizeChange==-1) ) )
-    return NS_ERROR_ILLEGAL_VALUE;
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMNode> tmp;
+  return RelativeFontChangeOnNode(aSizeChange, node);
+}
+
+nsresult
+nsHTMLEditor::RelativeFontChangeOnNode(PRInt32 aSizeChange, nsINode* aNode)
+{
+  MOZ_ASSERT(aNode);
+  // Can only change font size by + or - 1
+  if (aSizeChange != 1 && aSizeChange != -1) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   nsIAtom* atom;
   if (aSizeChange == 1) {
     atom = nsGkAtoms::big;
@@ -1735,69 +1732,56 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
     atom = nsGkAtoms::small;
   }
   
-  // is it the opposite of what we want?  
-  if ( ((aSizeChange == 1) && nsHTMLEditUtils::IsSmall(aNode)) || 
-       ((aSizeChange == -1) &&  nsHTMLEditUtils::IsBig(aNode)) )
-  {
+  // Is it the opposite of what we want?
+  if (aNode->IsElement() &&
+      ((aSizeChange == 1 && aNode->AsElement()->IsHTML(nsGkAtoms::small)) ||
+       (aSizeChange == -1 && aNode->AsElement()->IsHTML(nsGkAtoms::big)))) {
     // first populate any nested font tags that have the size attr set
-    res = RelativeFontChangeHelper(aSizeChange, aNode);
-    NS_ENSURE_SUCCESS(res, res);
+    nsresult rv = RelativeFontChangeHelper(aSizeChange, aNode);
+    NS_ENSURE_SUCCESS(rv, rv);
     // in that case, just remove this node and pull up the children
-    res = RemoveContainer(aNode);
-    return res;
+    return RemoveContainer(aNode);
   }
+
   // can it be put inside a "big" or "small"?
-  if (TagCanContain(atom, aNode)) {
+  if (TagCanContain(atom, aNode->AsDOMNode())) {
     // first populate any nested font tags that have the size attr set
-    res = RelativeFontChangeHelper(aSizeChange, aNode);
-    NS_ENSURE_SUCCESS(res, res);
+    nsresult rv = RelativeFontChangeHelper(aSizeChange, aNode);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // ok, chuck it in.
     // first look at siblings of aNode for matching bigs or smalls.
     // if we find one, move aNode into it.
-    nsCOMPtr<nsIDOMNode> sibling;
-    GetPriorHTMLSibling(aNode, address_of(sibling));
-    if (sibling && nsEditor::NodeIsType(sibling, (aSizeChange==1 ? nsEditProperty::big : nsEditProperty::small)))
-    {
+    nsIContent* sibling = GetPriorHTMLSibling(aNode);
+    if (sibling && sibling->IsHTML(atom)) {
       // previous sib is already right kind of inline node; slide this over into it
-      res = MoveNode(aNode, sibling, -1);
-      return res;
+      return MoveNode(aNode->AsDOMNode(), sibling->AsDOMNode(), -1);
     }
-    sibling = nsnull;
-    GetNextHTMLSibling(aNode, address_of(sibling));
-    if (sibling && nsEditor::NodeIsType(sibling, (aSizeChange==1 ? nsEditProperty::big : nsEditProperty::small)))
-    {
+
+    sibling = GetNextHTMLSibling(aNode);
+    if (sibling && sibling->IsHTML(atom)) {
       // following sib is already right kind of inline node; slide this over into it
-      res = MoveNode(aNode, sibling, 0);
-      return res;
+      return MoveNode(aNode->AsDOMNode(), sibling->AsDOMNode(), 0);
     }
+
     // else insert it above aNode
-    res = InsertContainerAbove(aNode, address_of(tmp), nsAtomString(atom));
-    return res;
+    nsCOMPtr<nsIDOMNode> tmp;
+    return InsertContainerAbove(aNode->AsDOMNode(), address_of(tmp),
+                                nsAtomString(atom));
   }
+
   // none of the above?  then cycle through the children.
   // MOOSE: we should group the children together if possible
   // into a single "big" or "small".  For the moment they are
   // each getting their own.  
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  res = aNode->GetChildNodes(getter_AddRefs(childNodes));
-  NS_ENSURE_SUCCESS(res, res);
-  if (childNodes)
-  {
-    PRInt32 j;
-    PRUint32 childCount;
-    childNodes->GetLength(&childCount);
-    for (j=childCount-1; j>=0; j--)
-    {
-      nsCOMPtr<nsIDOMNode> childNode;
-      res = childNodes->Item(j, getter_AddRefs(childNode));
-      if ((NS_SUCCEEDED(res)) && (childNode))
-      {
-        res = RelativeFontChangeOnNode(aSizeChange, childNode);
-        NS_ENSURE_SUCCESS(res, res);
-      }
-    }
+  for (nsIContent* child = aNode->GetLastChild();
+       child;
+       child = child->GetPreviousSibling()) {
+    nsresult rv = RelativeFontChangeOnNode(aSizeChange, child);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  return res;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 

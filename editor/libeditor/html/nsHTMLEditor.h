@@ -663,11 +663,10 @@ protected:
                                          nsIDOMCharacterData *aTextNode, 
                                          PRInt32 aStartOffset,
                                          PRInt32 aEndOffset);
+  nsresult RelativeFontChangeOnNode(PRInt32 aSizeChange, nsINode* aNode);
   nsresult RelativeFontChangeOnNode( PRInt32 aSizeChange, 
                                      nsIDOMNode *aNode);
   nsresult RelativeFontChangeHelper(PRInt32 aSizeChange, nsINode* aNode);
-  nsresult RelativeFontChangeHelper( PRInt32 aSizeChange, 
-                                     nsIDOMNode *aNode);
 
   /* helper routines for inline style */
   nsresult SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode, 
