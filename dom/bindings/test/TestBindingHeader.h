@@ -267,6 +267,13 @@ public:
   JSObject* ReceiveObject(JSContext*, ErrorResult&);
   JSObject* ReceiveNullableObject(JSContext*, ErrorResult&);
 
+  // binaryNames tests
+  void MethodRenamedTo(ErrorResult&);
+  void MethodRenamedTo(int8_t, ErrorResult&);
+  int8_t GetAttributeGetterRenamedTo(ErrorResult&);
+  int8_t GetAttributeRenamedTo(ErrorResult&);
+  void SetAttributeRenamedTo(int8_t, ErrorResult&);
+
 private:
   // We add signatures here that _could_ start matching if the codegen
   // got data types wrong.  That way if it ever does we'll have a call

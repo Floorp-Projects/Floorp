@@ -578,8 +578,8 @@ class CGClassConstructHook(CGAbstractStaticMethod):
 """
             preArgs = ["global"]
 
-        name = MakeNativeName(self._ctor.identifier.name)
-        nativeName = self.descriptor.binaryNames.get(name, name)
+        name = self._ctor.identifier.name
+        nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
         callGenerator = CGMethodCall(preArgs, nativeName, True,
                                      self.descriptor, self._ctor)
         return preamble + callGenerator.define();
@@ -2703,7 +2703,7 @@ class CGNativeMethod(CGAbstractBindingMethod):
         CGAbstractBindingMethod.__init__(self, descriptor, baseName, args)
     def generate_code(self):
         name = self.method.identifier.name
-        nativeName = self.descriptor.binaryNames.get(name, MakeNativeName(name))
+        nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
         return CGMethodCall([], nativeName, self.method.isStatic(),
                             self.descriptor, self.method)
 
@@ -2729,9 +2729,9 @@ class CGNativeGetter(CGAbstractBindingMethod):
             CGGeneric("%s* self;" % self.descriptor.nativeType))
 
     def generate_code(self):
-
-        nativeMethodName = "Get" + MakeNativeName(self.attr.identifier.name)
-        return CGIndenter(CGGetterCall(self.attr.type, nativeMethodName, self.descriptor,
+        name = self.attr.identifier.name
+        nativeName = "Get" + MakeNativeName(self.descriptor.binaryNames.get(name, name))
+        return CGIndenter(CGGetterCall(self.attr.type, nativeName, self.descriptor,
                                        self.attr))
 
 class CGNativeSetter(CGAbstractBindingMethod):
@@ -2758,8 +2758,9 @@ class CGNativeSetter(CGAbstractBindingMethod):
             CGGeneric("%s* self;" % self.descriptor.nativeType))
 
     def generate_code(self):
-        nativeMethodName = "Set" + MakeNativeName(self.attr.identifier.name)
-        return CGIndenter(CGSetterCall(self.attr.type, nativeMethodName, self.descriptor,
+        name = self.attr.identifier.name
+        nativeName = "Set" + MakeNativeName(self.descriptor.binaryNames.get(name, name))
+        return CGIndenter(CGSetterCall(self.attr.type, nativeName, self.descriptor,
                                        self.attr))
 
 def getEnumValueName(value):
