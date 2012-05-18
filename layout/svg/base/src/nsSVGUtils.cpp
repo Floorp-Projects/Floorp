@@ -1709,6 +1709,32 @@ nsSVGUtils::WritePPM(const char *fname, gfxImageSurface *aSurface)
 }
 #endif
 
+gfxMatrix
+nsSVGUtils::GetStrokeTransform(nsIFrame *aFrame)
+{
+  if (aFrame->GetStyleSVGReset()->mVectorEffect ==
+      NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE) {
+ 
+    if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
+      aFrame = aFrame->GetParent();
+    }
+
+    nsIContent *content = aFrame->GetContent();
+    NS_ABORT_IF_FALSE(content->IsSVG(), "bad cast");
+
+    // a non-scaling stroke is in the screen co-ordinate
+    // space rather so we need to invert the transform
+    // to the screen co-ordinate space to get there.
+    // See http://www.w3.org/TR/SVGTiny12/painting.html#NonScalingStroke
+    gfxMatrix transform = nsSVGUtils::GetCTM(
+                            static_cast<nsSVGElement*>(content), true);
+    if (!transform.IsSingular()) {
+      return transform.Invert();
+    }
+  }
+  return gfxMatrix();
+}
+
 // The logic here comes from _cairo_stroke_style_max_distance_from_path
 static gfxRect
 PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
@@ -1719,8 +1745,11 @@ PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
   double style_expansion =
     styleExpansionFactor * aFrame->GetStrokeWidth();
 
-  double dx = style_expansion * (fabs(aMatrix.xx) + fabs(aMatrix.xy));
-  double dy = style_expansion * (fabs(aMatrix.yy) + fabs(aMatrix.yx));
+  gfxMatrix matrix = aMatrix;
+  matrix.Multiply(nsSVGUtils::GetStrokeTransform(aFrame));
+
+  double dx = style_expansion * (fabs(matrix.xx) + fabs(matrix.xy));
+  double dy = style_expansion * (fabs(matrix.yy) + fabs(matrix.yx));
 
   gfxRect strokeExtents = aPathExtents;
   strokeExtents.Inflate(dx, dy);
