@@ -3779,9 +3779,6 @@ IonBuilder::jsop_setgname(JSAtom *atom)
     if (cx->compartment->needsBarrier() && (!propertyTypes || propertyTypes->needsBarrier(cx)))
         store->setNeedsBarrier(true);
 
-    if (!resumeAfter(store))
-        return false;
-
     // Pop the global object pushed by bindgname.
     DebugOnly<MDefinition *> pushedGlobal = current->pop();
     JS_ASSERT(&pushedGlobal->toConstant()->value().toObject() == globalObj);
@@ -3799,7 +3796,7 @@ IonBuilder::jsop_setgname(JSAtom *atom)
     JS_ASSERT_IF(store->needsBarrier(), store->slotType() != MIRType_None);
 
     current->push(value);
-    return true;
+    return resumeAfter(store);
 }
 
 bool
