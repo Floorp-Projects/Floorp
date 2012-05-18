@@ -349,8 +349,13 @@ public class LayerController {
         mView.requestRender();
     }
 
-    public void setAllowZoom(boolean aValue) {
+    public void setAllowZoom(final boolean aValue) {
         mAllowZoom = aValue;
+        mView.post(new Runnable() {
+            public void run() {
+                mView.getTouchEventHandler().setDoubleTapEnabled(aValue);
+            }
+        });
     }
 
     public boolean getAllowZoom() {
