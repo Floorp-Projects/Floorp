@@ -4889,6 +4889,12 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   return Extend(parentNode, aOffset);
 }
 
+NS_IMETHODIMP
+nsTypedSelection::ExtendNative(nsINode* aParentNode, PRInt32 aOffset)
+{
+  return Extend(aParentNode, aOffset);
+}
+
 nsresult
 nsTypedSelection::Extend(nsINode* aParentNode, PRInt32 aOffset)
 {

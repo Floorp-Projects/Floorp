@@ -50,7 +50,7 @@ interface nsINode;
  * @version 1.0
  */
 
-[scriptable, uuid(7f30b791-9f43-4bba-9ca3-079dc2ea7479)]
+[scriptable, uuid(dd40d5b8-1fe1-487f-b66e-28f4b837024f)]
 interface nsISelection : nsISupports
 {
     /**
@@ -107,6 +107,7 @@ interface nsISelection : nsISupports
      * @param offset          Where in node to place the offset in the new selection end
      */
     void extend(in nsIDOMNode parentNode, in long offset);
+    [noscript] void extendNative(in nsINode parentNode, in long offset);
 
     /**
      * Collapses the whole selection to a single point at the start
