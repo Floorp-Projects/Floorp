@@ -957,8 +957,21 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 
     void *calleeToken;
     if (fp->isFunctionFrame()) {
+        // CountArgSlot include |this| and the |scopeChain|, -1 is used to
+        // discard the |scopeChain|.
         argc = CountArgSlots(fp->fun()) - 1;
         argv = fp->formalArgs() - 1;
+
+        if (fp->hasOverflowArgs()) {
+            int formalArgc = argc;
+            Value *formalArgv = argv;
+            argc = fp->numActualArgs() + 1;
+            argv = fp->actualArgs() - 1;
+            // The beginning of the actual args is not updated, so we just copy
+            // the formal args into the actual args to get a linear vector which
+            // can be copied by generateEnterJit.
+            memcpy(argv, formalArgv, formalArgc * sizeof(Value));
+        }
         calleeToken = CalleeToToken(fp->callee().toFunction());
     } else {
         calleeToken = CalleeToToken(fp->script());
