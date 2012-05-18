@@ -526,20 +526,19 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
     // this to know how to create nsISupportsStrings etc.
 
     nsCOMPtr<nsIWritablePropertyBag2> contextProps;
-    if (aContextOptions.isObject())
-    {
-      JSContext *cx = nsContentUtils::GetCurrentJSContext();
+    if (aContextOptions.isObject()) {
+      JSContext* cx = nsContentUtils::GetCurrentJSContext();
 
       contextProps = do_CreateInstance("@mozilla.org/hash-property-bag;1");
 
-      JSObject *opts = &aContextOptions.toObject();
-      JS::AutoIdArray props(cx, JS_Enumerate(cx, opts));
+      JSObject& opts = aContextOptions.toObject();
+      JS::AutoIdArray props(cx, JS_Enumerate(cx, &opts));
       for (size_t i = 0; !!props && i < props.length(); ++i) {
         jsid propid = props[i];
         jsval propname, propval;
         if (!JS_IdToValue(cx, propid, &propname) ||
-            !JS_GetPropertyById(cx, opts, propid, &propval)) {
-          continue;
+            !JS_GetPropertyById(cx, &opts, propid, &propval)) {
+          return NS_ERROR_FAILURE;
         }
 
         JSString *propnameString = JS_ValueToString(cx, propname);
