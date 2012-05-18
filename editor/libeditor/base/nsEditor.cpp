@@ -3940,25 +3940,6 @@ nsEditor::IsTextNode(nsINode *aNode)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// GetIndexOf: returns the position index of the node in the parent
-//
-PRInt32 
-nsEditor::GetIndexOf(nsIDOMNode *parent, nsIDOMNode *child)
-{
-  nsCOMPtr<nsINode> parentNode = do_QueryInterface(parent);
-  NS_PRECONDITION(parentNode, "null parentNode in nsEditor::GetIndexOf");
-  NS_PRECONDITION(parentNode->IsNodeOfType(nsINode::eCONTENT) ||
-                    parentNode->IsNodeOfType(nsINode::eDOCUMENT),
-                  "The parent node must be an element node or a document node");
-
-  nsCOMPtr<nsIContent> cChild = do_QueryInterface(child);
-  NS_PRECONDITION(cChild, "null content in nsEditor::GetIndexOf");
-
-  return parentNode->IndexOf(cChild);
-}
-  
-
-///////////////////////////////////////////////////////////////////////////
 // GetChildAt: returns the node at this position index in the parent
 //
 nsCOMPtr<nsIDOMNode> 
@@ -4122,17 +4103,15 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
                         nsCOMPtr<nsIDOMNode> *outLeftNode,
                         nsCOMPtr<nsIDOMNode> *outRightNode)
 {
-  NS_ENSURE_TRUE(aNode && aSplitPointParent && outOffset, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode> tempNode, parentNode;  
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node && aSplitPointParent && outOffset, NS_ERROR_NULL_POINTER);
   PRInt32 offset = aSplitPointOffset;
-  nsresult res;
-  
+
   if (outLeftNode)  *outLeftNode  = nsnull;
   if (outRightNode) *outRightNode = nsnull;
-  
-  nsCOMPtr<nsIDOMNode> nodeToSplit = do_QueryInterface(aSplitPointParent);
-  while (nodeToSplit)
-  {
+
+  nsCOMPtr<nsINode> nodeToSplit = do_QueryInterface(aSplitPointParent);
+  while (nodeToSplit) {
     // need to insert rules code call here to do things like
     // not split a list if you are after the last <li> or before the first, etc.
     // for now we just have some smarts about unneccessarily splitting
@@ -4140,49 +4119,55 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
     // this nsEditor routine.
     
     nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(nodeToSplit);
-    PRUint32 len;
+    PRUint32 len = nodeToSplit->Length();
     bool bDoSplit = false;
-    res = GetLengthOfDOMNode(nodeToSplit, len);
-    NS_ENSURE_SUCCESS(res, res);
     
     if (!(aNoEmptyContainers || nodeAsText) || (offset && (offset != (PRInt32)len)))
     {
       bDoSplit = true;
-      res = SplitNode(nodeToSplit, offset, getter_AddRefs(tempNode));
-      NS_ENSURE_SUCCESS(res, res);
-      if (outRightNode) *outRightNode = nodeToSplit;
-      if (outLeftNode)  *outLeftNode  = tempNode;
+      nsCOMPtr<nsIDOMNode> tempNode;
+      nsresult rv = SplitNode(nodeToSplit->AsDOMNode(), offset,
+                              getter_AddRefs(tempNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (outRightNode) {
+        *outRightNode = nodeToSplit->AsDOMNode();
+      }
+      if (outLeftNode) {
+        *outLeftNode = tempNode;
+      }
     }
 
-    res = nodeToSplit->GetParentNode(getter_AddRefs(parentNode));
-    NS_ENSURE_SUCCESS(res, res);
+    nsINode* parentNode = nodeToSplit->GetNodeParent();
     NS_ENSURE_TRUE(parentNode, NS_ERROR_FAILURE);
 
-    if (!bDoSplit && offset)  // must be "end of text node" case, we didn't split it, just move past it
-    {
-      offset = GetIndexOf(parentNode, nodeToSplit) +1;
-      if (outLeftNode)  *outLeftNode  = nodeToSplit;
+    if (!bDoSplit && offset) {
+      // must be "end of text node" case, we didn't split it, just move past it
+      offset = parentNode->IndexOf(nodeToSplit) + 1;
+      if (outLeftNode) {
+        *outLeftNode = nodeToSplit->AsDOMNode();
+      }
+    } else {
+      offset = parentNode->IndexOf(nodeToSplit);
+      if (outRightNode) {
+        *outRightNode = nodeToSplit->AsDOMNode();
+      }
     }
-    else
-    {
-      offset = GetIndexOf(parentNode, nodeToSplit);
-      if (outRightNode) *outRightNode = nodeToSplit;
-    }
-    
-    if (nodeToSplit.get() == aNode)  // we split all the way up to (and including) aNode; we're done
+
+    if (nodeToSplit == node) {
+      // we split all the way up to (and including) aNode; we're done
       break;
-      
+    }
+
     nodeToSplit = parentNode;
   }
-  
-  if (!nodeToSplit)
-  {
+
+  if (!nodeToSplit) {
     NS_NOTREACHED("null node obtained in nsEditor::SplitNodeDeep()");
     return NS_ERROR_FAILURE;
   }
-  
+
   *outOffset = offset;
-  
   return NS_OK;
 }
 
