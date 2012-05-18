@@ -1354,7 +1354,16 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
   }
 
   // If we already have a parser we ignore the document.open call.
-  if (mParser) {
+  if (mParser || mParserAborted) {
+    // The WHATWG spec says: "If the document has an active parser that isn't
+    // a script-created parser, and the insertion point associated with that
+    // parser's input stream is not undefined (that is, it does point to
+    // somewhere in the input stream), then the method does nothing. Abort
+    // these steps and return the Document object on which the method was
+    // invoked."
+    // Note that aborting a parser leaves the parser "active" with its
+    // insertion point "not undefined". We track this using mParserAborted,
+    // because aborting a parser nulls out mParser.
     return NS_OK;
   }
 
