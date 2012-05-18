@@ -41,6 +41,7 @@
 #include "nsIControllerCommandTable.h"
 #include "nsComposerController.h"
 #include "nsComposerCommands.h"
+#include "nsGkAtoms.h"
 
 #define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                    \
   {                                                                     \
@@ -115,31 +116,31 @@ nsComposerController::RegisterHTMLEditorCommands(
   NS_REGISTER_ONE_COMMAND(nsOutdentCommand, "cmd_outdent");
 
   // Styles
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_bold", "b");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_italic", "i");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_underline", "u");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_tt", "tt");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_bold", nsGkAtoms::b);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_italic", nsGkAtoms::i);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_underline", nsGkAtoms::u);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_tt", nsGkAtoms::tt);
 
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strikethrough", "strike");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_superscript", "sup");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_subscript", "sub");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_nobreak", "nobr");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strikethrough", nsGkAtoms::strike);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_superscript", nsGkAtoms::sup);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_subscript", nsGkAtoms::sub);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_nobreak", nsGkAtoms::nobr);
 
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_em", "em");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strong", "strong");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_cite", "cite");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_abbr", "abbr");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_acronym", "acronym");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_code", "code");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_samp", "samp");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_var", "var");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_removeLinks", "href");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_em", nsGkAtoms::em);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strong", nsGkAtoms::strong);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_cite", nsGkAtoms::cite);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_abbr", nsGkAtoms::abbr);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_acronym", nsGkAtoms::acronym);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_code", nsGkAtoms::code);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_samp", nsGkAtoms::samp);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_var", nsGkAtoms::var);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_removeLinks", nsGkAtoms::href);
 
   // lists
-  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ol", "ol");
-  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ul", "ul");
-  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dt", "dt");
-  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dd", "dd");
+  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ol", nsGkAtoms::ol);
+  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ul", nsGkAtoms::ul);
+  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dt", nsGkAtoms::dt);
+  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dd", nsGkAtoms::dd);
   NS_REGISTER_ONE_COMMAND(nsRemoveListCommand, "cmd_removeList");
 
   // format stuff
