@@ -140,12 +140,8 @@ nsFaviconService::Init()
   mDB = Database::GetDatabase();
   NS_ENSURE_STATE(mDB);
 
-  // Init failed favicon cache.
-  if (!mFailedFavicons.Init(MAX_FAVICON_CACHE_SIZE))
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  if (!mUnassociatedIcons.Init(MAX_UNASSOCIATED_FAVICONS))
-    return NS_ERROR_OUT_OF_MEMORY;
+  mFailedFavicons.Init(MAX_FAVICON_CACHE_SIZE);
+  mUnassociatedIcons.Init(MAX_UNASSOCIATED_FAVICONS);
 
   mOptimizedIconDimension = Preferences::GetInt(
     "places.favicons.optimizeToDimension", OPTIMIZED_FAVICON_DIMENSION
@@ -980,8 +976,7 @@ nsFaviconService::AddFailedFavicon(nsIURI* aFaviconURI)
   nsresult rv = aFaviconURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (! mFailedFavicons.Put(spec, mFailedFaviconSerial))
-    return NS_ERROR_OUT_OF_MEMORY;
+  mFailedFavicons.Put(spec, mFailedFaviconSerial);
   mFailedFaviconSerial ++;
 
   if (mFailedFavicons.Count() > MAX_FAVICON_CACHE_SIZE) {

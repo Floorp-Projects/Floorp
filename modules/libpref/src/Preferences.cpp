@@ -1438,8 +1438,8 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
   observer->AppendClosure(aClosure);
   nsresult rv = AddStrongObserver(observer, aPref);
   NS_ENSURE_SUCCESS(rv, rv);
-  return gObserverTable->Put(observer, observer) ? NS_OK :
-                                                   NS_ERROR_OUT_OF_MEMORY;
+  gObserverTable->Put(observer, observer);
+  return NS_OK;
 }
 
 // static
