@@ -669,6 +669,58 @@ protected:
 #endif
 };
 
+enum StringificationBehavior {
+  eStringify,
+  eEmpty,
+  eNull
+};
+
+static inline bool
+ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
+                       StringificationBehavior nullBehavior,
+                       StringificationBehavior undefinedBehavior,
+                       nsDependentString& result)
+{
+  JSString *s;
+  if (v.isString()) {
+    s = v.toString();
+  } else {
+    StringificationBehavior behavior;
+    if (v.isNull()) {
+      behavior = nullBehavior;
+    } else if (v.isUndefined()) {
+      behavior = undefinedBehavior;
+    } else {
+      behavior = eStringify;
+    }
+
+    // If pval is null, that means the argument was optional and
+    // not passed; turn those into void strings if they're
+    // supposed to be stringified.
+    if (behavior != eStringify || !pval) {
+      // Here behavior == eStringify implies !pval, so both eNull and
+      // eStringify should end up with void strings.
+      result.SetIsVoid(behavior != eEmpty);
+      return true;
+    }
+
+    s = JS_ValueToString(cx, v);
+    if (!s) {
+      return false;
+    }
+    pval->setString(s);  // Root the new string.
+  }
+
+  size_t len;
+  const jschar *chars = JS_GetStringCharsZAndLength(cx, s, &len);
+  if (!chars) {
+    return false;
+  }
+
+  result.Rebind(chars, len);
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla
 

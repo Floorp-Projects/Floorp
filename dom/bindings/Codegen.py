@@ -1440,12 +1440,11 @@ ${declName}.SwapElements(arr);
             undefinedBehavior = "eStringify"
 
         return (
-            "const xpc_qsDOMString ${declName}(cx, ${val}, ${valPtr},\n"
-            "                           xpc_qsDOMString::%s,\n"
-            "                           xpc_qsDOMString::%s);\n"
-            "if (!${declName}.IsValid()) {\n"
+            "if (!ConvertJSValueToString(cx, ${val}, ${valPtr}, %s, %s, ${holderName})) {\n"
             "  return false;\n"
-            "}" % (nullBehavior, undefinedBehavior), None, None)
+            "}\n"
+            "${declName} = &${holderName};" % (nullBehavior, undefinedBehavior),
+            CGGeneric("NonNull<const nsAString>"), CGGeneric("nsDependentString"))
 
     if type.isEnum():
         if type.nullable():
