@@ -94,10 +94,10 @@ public:
 protected:
 
   // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams) = 0;
+  virtual nsresult  GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams) = 0;
   
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName) = 0;
+  virtual nsresult  ToggleState(nsIEditor* aEditor) = 0;
 
 protected:
 
@@ -116,11 +116,10 @@ public:
 protected:
 
   // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
+  virtual nsresult  GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams);
   
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
-  
+  virtual nsresult  ToggleState(nsIEditor* aEditor);
 };
 
 
@@ -150,10 +149,10 @@ public:
 protected:
 
   // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
+  virtual nsresult  GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams);
   
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
+  virtual nsresult  ToggleState(nsIEditor* aEditor);
 };
 
 class nsListItemCommand : public nsBaseStateUpdatingCommand
@@ -165,10 +164,10 @@ public:
 protected:
 
   // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
+  virtual nsresult  GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams);
   
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
+  virtual nsresult  ToggleState(nsIEditor* aEditor);
 };
 
 // Base class for commands whose state consists of a string (e.g. para format)
@@ -278,8 +277,8 @@ public:
 protected:
 
   NS_IMETHOD IsCommandEnabled(const char *aCommandName, nsISupports *aCommandRefCon, bool *_retval);
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
-  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
+  virtual nsresult  GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams);
+  virtual nsresult  ToggleState(nsIEditor* aEditor);
 };
 
 // composer commands
