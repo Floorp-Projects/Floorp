@@ -3584,40 +3584,24 @@ nsHTMLEditor::IsModifiableNode(nsINode *aNode)
   return !aNode || aNode->IsEditable();
 }
 
-static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsISelection> aSelection, nsWeakPtr aDocWeak)
+static nsresult
+SetSelectionAroundHeadChildren(nsISelection* aSelection,
+                               nsIWeakReference* aDocWeak)
 {
-  nsresult res = NS_OK;
   // Set selection around <head> node
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(aDocWeak);
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(aDocWeak);
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsIDOMNodeList>nodeList; 
-  res = doc->GetElementsByTagName(NS_LITERAL_STRING("head"), getter_AddRefs(nodeList));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(nodeList, NS_ERROR_NULL_POINTER);
-
-  PRUint32 count; 
-  nodeList->GetLength(&count);
-  if (count < 1) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMNode> headNode;
-  res = nodeList->Item(0, getter_AddRefs(headNode)); 
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(headNode, NS_ERROR_NULL_POINTER);
+  dom::Element* headNode = doc->GetHeadElement();
+  NS_ENSURE_STATE(headNode);
 
   // Collapse selection to before first child of the head,
-  res = aSelection->Collapse(headNode, 0);
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = aSelection->CollapseNative(headNode, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  //  then extend it to just after
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  res = headNode->GetChildNodes(getter_AddRefs(childNodes));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(childNodes, NS_ERROR_NULL_POINTER);
-  PRUint32 childCount;
-  childNodes->GetLength(&childCount);
-
-  return aSelection->Extend(headNode, childCount+1);
+  // Then extend it to just after.
+  PRUint32 childCount = headNode->GetChildCount();
+  return aSelection->ExtendNative(headNode, childCount + 1);
 }
 
 NS_IMETHODIMP
