@@ -6393,6 +6393,21 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
     }
   }
 #endif
+
+#ifdef MOZ_GSTREAMER
+  if (nsHTMLMediaElement::IsH264Enabled()) {
+    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gH264Types); ++i) {
+      const char* type = nsHTMLMediaElement::gH264Types[i];
+      if (!strcmp(aType, type)) {
+        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+        if (docFactory && aLoaderType) {
+          *aLoaderType = TYPE_CONTENT;
+        }
+        return docFactory.forget();
+      }
+    }
+  }
+#endif
 #endif // MOZ_MEDIA
 
   return NULL;
