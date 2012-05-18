@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Test - word-wrap: break-word should respect clusters</title>
+  </head>
+  <body>
+    <div style="width:0px; word-wrap:break-word">
+      abc
+      d&#x0325;e&#x0315;f&#x0323;
+      &#x10400;&#x10401;&#x10402;
+    </div>
+  </body>
+</html>
