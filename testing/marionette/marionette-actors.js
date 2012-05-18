@@ -20,6 +20,12 @@ loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
 
+let specialpowers = {};
+loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js",
+                     specialpowers);
+specialpowers.specialPowersObserver = new specialpowers.SpecialPowersObserver();
+specialpowers.specialPowersObserver.init();
+
 Cu.import("resource://gre/modules/Services.jsm");
 
 Services.prefs.setBoolPref("marionette.contentListener", false);

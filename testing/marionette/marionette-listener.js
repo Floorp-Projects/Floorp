@@ -20,6 +20,10 @@ utils.window = content;
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
+
+loader.loadSubScript("chrome://specialpowers/content/specialpowersAPI.js");
+loader.loadSubScript("chrome://specialpowers/content/specialpowers.js");
+
 let marionetteLogObj = new MarionetteLogObj();
 
 let isB2G = false;
@@ -238,6 +242,8 @@ function createExecuteContentSandbox(aWindow) {
   marionette.exports.forEach(function(fn) {
     sandbox[fn] = marionette[fn].bind(marionette);
   });
+
+  sandbox.SpecialPowers = new SpecialPowers(aWindow);
 
   sandbox.asyncComplete = function sandbox_asyncComplete(value, status) {
     curWindow.removeEventListener("unload", errUnload, false);
