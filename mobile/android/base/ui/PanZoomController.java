@@ -1001,7 +1001,19 @@ public class PanZoomController
     }
 
     @Override
+    public boolean onSingleTapUp(MotionEvent motionEvent) {
+        // When zooming is enabled, wait to see if there's a double-tap.
+        if (mController.getAllowZoom())
+            return false;
+        sendPointToGecko("Gesture:SingleTap", motionEvent);
+        return true;
+    }
+
+    @Override
     public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
+        // When zooming is disabled, we handle this in onSingleTapUp.
+        if (!mController.getAllowZoom())
+            return false;
         sendPointToGecko("Gesture:SingleTap", motionEvent);
         return true;
     }
