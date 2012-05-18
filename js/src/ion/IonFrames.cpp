@@ -575,6 +575,7 @@ MarkIonActivation(JSTracer *trc, uint8 *top, IonActivation *activation)
             MarkIonJSFrame(trc, frames);
             break;
           case IonFrame_Rectifier:
+          case IonFrame_Bailed_Rectifier:
             MarkIonCodeRoot(trc, activation->compartment()->ionCompartment()->getArgumentsRectifierAddr(), "Arguments Rectifier");
             break;
           case IonFrame_Osr:
