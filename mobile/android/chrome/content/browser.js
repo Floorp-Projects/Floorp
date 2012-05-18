@@ -1616,6 +1616,7 @@ Tab.prototype = {
     this.browser.addEventListener("pageshow", this, true);
 
     Services.obs.addObserver(this, "before-first-paint", false);
+    Services.prefs.addObserver("browser.ui.zoom.force-user-scalable", this, false);
 
     if (!aParams.delayLoad) {
       let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -1660,6 +1661,7 @@ Tab.prototype = {
     this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
 
     Services.obs.removeObserver(this, "before-first-paint");
+    Services.prefs.removeObserver("browser.ui.zoom.force-user-scalable", this);
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are removed.
@@ -2350,6 +2352,10 @@ Tab.prototype = {
 
   /** Update viewport when the metadata changes. */
   updateViewportMetadata: function updateViewportMetadata(aMetadata) {
+    if (Services.prefs.getBoolPref("browser.ui.zoom.force-user-scalable")) {
+      aMetadata.allowZoom = true;
+      aMetadata.minZoom = aMetadata.maxZoom = NaN;
+    }
     if (aMetadata && aMetadata.autoScale) {
       let scaleRatio = aMetadata.scaleRatio = ViewportHandler.getScaleRatio();
 
@@ -2551,6 +2557,10 @@ Tab.prototype = {
           BrowserApp.displayedDocumentChanged();
           this.contentDocumentIsDisplayed = true;
         }
+        break;
+      case "nsPref:changed":
+        if (aData == "browser.ui.zoom.force-user-scalable")
+          ViewportHandler.updateMetadata(this);
         break;
     }
   },
