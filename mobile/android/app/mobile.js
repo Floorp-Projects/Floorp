@@ -37,6 +37,21 @@
 
 #filter substitution
 
+// For browser.xml binding
+//
+// cacheRatio* is a ratio that determines the amount of pixels to cache. The
+// ratio is multiplied by the viewport width or height to get the displayport's
+// width or height, respectively.
+//
+// (divide integer value by 1000 to get the ratio)
+//
+// For instance: cachePercentageWidth is 1500
+//               viewport height is 500
+//               => display port height will be 500 * 1.5 = 750
+//
+pref("toolkit.browser.cacheRatioWidth", 2000);
+pref("toolkit.browser.cacheRatioHeight", 3000);
+
 // How long before a content view (a handle to a remote scrollable object)
 // expires.
 pref("toolkit.browser.contentViewExpire", 3000);
@@ -48,6 +63,11 @@ pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.remote", true);
 
 pref("toolkit.screen.lock", false);
+
+// From libpref/src/init/all.js, extended to allow a slightly wider zoom range.
+pref("zoom.minPercent", 20);
+pref("zoom.maxPercent", 400);
+pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3,4");
 
 // Mobile will use faster, less durable mode.
 pref("toolkit.storage.synchronous", 0);
@@ -425,10 +445,20 @@ pref("dom.max_script_run_time", 20);
 // JS error console
 pref("devtools.errorconsole.enabled", false);
 
+pref("browser.ui.layout.tablet", -1); // on: 1, off: 0, auto: -1
+
+// kinetic tweakables
+pref("browser.ui.kinetic.updateInterval", 16);
+pref("browser.ui.kinetic.exponentialC", 1400);
+pref("browser.ui.kinetic.polynomialC", 100);
+pref("browser.ui.kinetic.swipeLength", 160);
+
 pref("font.size.inflation.minTwips", 120);
 
-// When true, zooming will be enabled on all sites, even ones that declare user-scalable=no.
-pref("browser.ui.zoom.force-user-scalable", false);
+// pinch gesture
+pref("browser.ui.pinch.maxGrowth", 150);     // max pinch distance growth
+pref("browser.ui.pinch.maxShrink", 200);     // max pinch distance shrinkage
+pref("browser.ui.pinch.scalingFactor", 500); // scaling factor for above pinch limits
 
 // Touch radius (area around the touch location to look for target elements),
 // in 1/240-inch pixels:
