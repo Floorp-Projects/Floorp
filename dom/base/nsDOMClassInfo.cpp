@@ -9095,9 +9095,10 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
 void
 nsHTMLDocumentSH::ReleaseDocument(JSFreeOp *fop, JSObject *obj)
 {
-  nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(obj);
-
-  NS_IF_RELEASE(doc);
+  nsIHTMLDocument *doc = static_cast<nsIHTMLDocument *>(JS_GetPrivate(obj));
+  if (doc) {
+    xpc::DeferredRelease(doc);
+  }
 }
 
 JSBool
