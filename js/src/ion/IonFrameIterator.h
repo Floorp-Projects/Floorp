@@ -82,12 +82,15 @@ enum FrameType
 };
 
 class IonCommonFrameLayout;
-class IonActivation;
 class IonJSFrameLayout;
-class IonActivationIterator;
 class IonExitFrameLayout;
+
+class IonActivation;
+class IonActivationIterator;
+
 class IonFrameIterator
 {
+  protected:
     uint8 *current_;
     FrameType type_;
     uint8 *returnAddressToFp_;
@@ -210,8 +213,8 @@ class IonActivationIterator
     bool more() const;
 };
 
-class FrameRecovery;
 class IonJSFrameLayout;
+class IonBailoutIterator;
 
 // Reads frame information in snapshot-encoding order (that is, outermost frame
 // to innermost frame).
@@ -233,6 +236,7 @@ class SnapshotIterator : public SnapshotReader
     SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
                      IonJSFrameLayout *fp, const MachineState &machine);
     SnapshotIterator(const IonFrameIterator &iter);
+    SnapshotIterator(const IonBailoutIterator &iter);
     SnapshotIterator();
 
     Value read() {
@@ -264,6 +268,7 @@ class InlineFrameIterator
 
   public:
     InlineFrameIterator(const IonFrameIterator *iter);
+    InlineFrameIterator(const IonBailoutIterator *iter);
 
     bool more() const {
         return frame_ && framesRead_ < start_.frameCount();

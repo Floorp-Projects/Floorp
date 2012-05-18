@@ -259,65 +259,6 @@ class FrameSizeClass
     }
 };
 
-class IonJSFrameLayout;
-class IonFrameIterator;
-
-// Information needed to recover the content of the stack frame.
-class FrameRecovery
-{
-    IonJSFrameLayout *fp_;
-    uint8 *sp_;             // fp_ + frameSize
-
-    MachineState machine_;
-    uint32 snapshotOffset_;
-
-    JSFunction *callee_;
-    JSScript *script_;
-    IonScript *ionScript_;
-
-  private:
-    FrameRecovery(uint8 *fp, uint8 *sp, const MachineState &machine);
-
-    void setSnapshotOffset(uint32 snapshotOffset) {
-        snapshotOffset_ = snapshotOffset;
-    }
-    void setBailoutId(BailoutId bailoutId);
-
-    void unpackCalleeToken(CalleeToken token);
-
-  public:
-    static FrameRecovery FromBailoutId(uint8 *fp, uint8 *sp, const MachineState &machine,
-                                       BailoutId bailoutId);
-    static FrameRecovery FromSnapshot(uint8 *fp, uint8 *sp, const MachineState &machine,
-                                      SnapshotOffset offset);
-
-    // Override the ionScript gleaned from the JSScript.
-    void setIonScript(IonScript *ionScript);
-
-    MachineState &machine() {
-        return machine_;
-    }
-    const MachineState &machine() const {
-        return machine_;
-    }
-    JSFunction *callee() const {
-        return callee_;
-    }
-    JSScript *script() const {
-        return script_;
-    }
-    IonScript *ionScript() const;
-    uint32 snapshotOffset() const {
-        return snapshotOffset_;
-    }
-    uint32 frameSize() const {
-        return ((uint8 *) fp_) - sp_;
-    }
-    IonJSFrameLayout *fp() {
-        return fp_;
-    }
-};
-
 // Data needed to recover from an exception.
 struct ResumeFromException
 {
