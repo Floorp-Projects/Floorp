@@ -2654,7 +2654,7 @@ var BrowserEventHandler = {
           this._sendMouseEvent("mousedown", element, data.x, data.y);
           this._sendMouseEvent("mouseup",   element, data.x, data.y);
   
-          if (ElementTouchHelper.isElementClickable(element, null, true))
+          if (ElementTouchHelper.isElementClickable(element, null, false))
             Haptic.performSimpleAction(Haptic.LongPress);
         } catch(e) {
           Cu.reportError(e);
