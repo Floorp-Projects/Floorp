@@ -78,7 +78,7 @@ FileManager::Init(nsIFile* aDirectory,
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_TRUE(mFileInfos.Init(), NS_ERROR_OUT_OF_MEMORY);
+  mFileInfos.Init();
 
   bool exists;
   nsresult rv = aDirectory->Exists(&exists);
@@ -186,10 +186,7 @@ FileManager::Load(mozIStorageConnection* aConnection)
     nsRefPtr<FileInfo> fileInfo = FileInfo::Create(this, id);
     fileInfo->mDBRefCnt = refcount;
 
-    if (!mFileInfos.Put(id, fileInfo)) {
-      NS_WARNING("Out of memory?");
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mFileInfos.Put(id, fileInfo);
 
     mLastFileId = NS_MAX(id, mLastFileId);
   }
@@ -273,10 +270,7 @@ FileManager::GetNewFileInfo()
 
     fileInfo = FileInfo::Create(this, id);
 
-    if (!mFileInfos.Put(id, fileInfo)) {
-      NS_WARNING("Out of memory?");
-      return nsnull;
-    }
+    mFileInfos.Put(id, fileInfo);
 
     mLastFileId = id;
   }

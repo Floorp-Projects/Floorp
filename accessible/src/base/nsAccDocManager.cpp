@@ -395,8 +395,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
     new nsDocAccessibleWrap(aDocument, rootElm, presShell);
 
   // Cache the document accessible into document cache.
-  if (!docAcc || !mDocAccessibleCache.Put(aDocument, docAcc))
-    return nsnull;
+  mDocAccessibleCache.Put(aDocument, docAcc);
 
   // Initialize the document accessible.
   if (!docAcc->Init()) {

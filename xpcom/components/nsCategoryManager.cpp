@@ -242,11 +242,7 @@ CategoryNode::Create(PLArenaPool* aArena)
   if (!node)
     return nsnull;
 
-  if (!node->mTable.Init()) {
-    delete node;
-    return nsnull;
-  }
-
+  node->mTable.Init();
   return node;
 }
 

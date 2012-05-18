@@ -342,15 +342,12 @@ nsXULTemplateQueryProcessorRDF::InitializeForBuilding(nsISupports* aDatasource,
         if (NS_FAILED(rv))
             return rv;
 
-        if (!mMemoryElementToResultMap.IsInitialized() &&
-            !mMemoryElementToResultMap.Init())
-            return NS_ERROR_OUT_OF_MEMORY;
-        if (!mBindingDependencies.IsInitialized() &&
-            !mBindingDependencies.Init())
-            return NS_ERROR_OUT_OF_MEMORY;
-        if (!mRuleToBindingsMap.IsInitialized() &&
-            !mRuleToBindingsMap.Init())
-            return NS_ERROR_OUT_OF_MEMORY;
+        if (!mMemoryElementToResultMap.IsInitialized())
+            mMemoryElementToResultMap.Init();
+        if (!mBindingDependencies.IsInitialized())
+            mBindingDependencies.Init();
+        if (!mRuleToBindingsMap.IsInitialized())
+            mRuleToBindingsMap.Init();
 
         mQueryProcessorRDFInited = true;
     }
@@ -620,8 +617,7 @@ nsXULTemplateQueryProcessorRDF::AddBinding(nsIDOMNode* aRuleNode,
     nsRefPtr<RDFBindingSet> bindings = mRuleToBindingsMap.GetWeak(aRuleNode);
     if (!bindings) {
         bindings = new RDFBindingSet();
-        if (!bindings || !mRuleToBindingsMap.Put(aRuleNode, bindings))
-            return NS_ERROR_OUT_OF_MEMORY;
+        mRuleToBindingsMap.Put(aRuleNode, bindings);
     }
 
     return bindings->AddBinding(aVar, aRef, property);
@@ -1766,10 +1762,7 @@ nsXULTemplateQueryProcessorRDF::AddBindingDependency(nsXULTemplateResultRDF* aRe
         if (!arr)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        if (!mBindingDependencies.Put(aResource, arr)) {
-            delete arr;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
+        mBindingDependencies.Put(aResource, arr);
     }
 
     PRInt32 index = arr->IndexOf(aResult);
@@ -1811,10 +1804,7 @@ nsXULTemplateQueryProcessorRDF::AddMemoryElements(const Instantiation& aInst,
             if (!arr)
                 return NS_ERROR_OUT_OF_MEMORY;
 
-            if (!mMemoryElementToResultMap.Put(hash, arr)) {
-                delete arr;
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
+            mMemoryElementToResultMap.Put(hash, arr);
         }
 
         // results may be added more than once so they will all get deleted properly

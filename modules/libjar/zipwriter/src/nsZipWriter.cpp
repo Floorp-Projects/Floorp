@@ -234,8 +234,7 @@ nsresult nsZipWriter::ReadFile(nsIFile *aFile)
                         mHeaders.Clear();
                         return rv;
                     }
-                    if (!mEntryHash.Put(header->mName, mHeaders.Count()))
-                        return NS_ERROR_OUT_OF_MEMORY;
+                    mEntryHash.Put(header->mName, mHeaders.Count());
                     if (!mHeaders.AppendObject(header))
                         return NS_ERROR_OUT_OF_MEMORY;
                 }
@@ -616,10 +615,7 @@ NS_IMETHODIMP nsZipWriter::RemoveEntry(const nsACString & aZipEntry,
             mCDSOffset -= shift;
             PRInt32 pos2 = pos + 1;
             while (pos2 < mHeaders.Count()) {
-                if (!mEntryHash.Put(mHeaders[pos2]->mName, pos2-1)) {
-                    Cleanup();
-                    return NS_ERROR_OUT_OF_MEMORY;
-                }
+                mEntryHash.Put(mHeaders[pos2]->mName, pos2-1);
                 mHeaders[pos2]->mOffset -= shift;
                 pos2++;
             }
@@ -804,10 +800,8 @@ nsresult nsZipWriter::InternalAddEntryDirectory(const nsACString & aZipEntry,
 
     mCDSDirty = true;
     mCDSOffset += header->GetFileHeaderLength();
-    if (!mEntryHash.Put(header->mName, mHeaders.Count())) {
-        Cleanup();
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mEntryHash.Put(header->mName, mHeaders.Count());
+
     if (!mHeaders.AppendObject(header)) {
         Cleanup();
         return NS_ERROR_OUT_OF_MEMORY;
@@ -856,10 +850,7 @@ nsresult nsZipWriter::EntryCompleteCallback(nsZipHeader* aHeader,
                                             nsresult aStatus)
 {
     if (NS_SUCCEEDED(aStatus)) {
-        if (!mEntryHash.Put(aHeader->mName, mHeaders.Count())) {
-            SeekCDS();
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
+        mEntryHash.Put(aHeader->mName, mHeaders.Count());
         if (!mHeaders.AppendObject(aHeader)) {
             mEntryHash.Remove(aHeader->mName);
             SeekCDS();

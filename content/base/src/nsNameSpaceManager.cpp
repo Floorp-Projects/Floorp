@@ -140,9 +140,9 @@ NS_IMPL_ISUPPORTS1(NameSpaceManagerImpl, nsINameSpaceManager)
 
 nsresult NameSpaceManagerImpl::Init()
 {
-  nsresult rv = mURIToIDTable.Init(32);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mURIToIDTable.Init(32);
 
+  nsresult rv;
 #define REGISTER_NAMESPACE(uri, id) \
   rv = AddNameSpace(NS_LITERAL_STRING(uri), id); \
   NS_ENSURE_SUCCESS(rv, rv)
@@ -288,11 +288,7 @@ nsresult NameSpaceManagerImpl::AddNameSpace(const nsAString& aURI,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!mURIToIDTable.Put(uri, aNameSpaceID)) {
-    mURIArray.RemoveElementAt(aNameSpaceID - 1);
-
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  mURIToIDTable.Put(uri, aNameSpaceID);
 
   return NS_OK;
 }
