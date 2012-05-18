@@ -118,7 +118,7 @@ nsBaseStateUpdatingCommand::DoCommand(const char *aCommandName,
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
   NS_ENSURE_TRUE(editor, NS_ERROR_NOT_INITIALIZED);
 
-  return ToggleState(editor, mTagName);
+  return ToggleState(editor);
 }
 
 NS_IMETHODIMP
@@ -136,7 +136,7 @@ nsBaseStateUpdatingCommand::GetCommandStateParams(const char *aCommandName,
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
   if (editor)
-    return GetCurrentState(editor, mTagName, aParams);
+    return GetCurrentState(editor, aParams);
 
   return NS_OK;
 }
@@ -201,7 +201,6 @@ nsStyleUpdatingCommand::nsStyleUpdatingCommand(const char* aTagName)
 
 nsresult
 nsStyleUpdatingCommand::GetCurrentState(nsIEditor *aEditor, 
-                                        const char* aTagName,
                                         nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need editor here");
@@ -214,7 +213,7 @@ nsStyleUpdatingCommand::GetCurrentState(nsIEditor *aEditor,
   bool anyOfSelectionHasProp = false;
   bool allOfSelectionHasProp = false;
 
-  nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(aTagName);
+  nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(mTagName);
   rv = htmlEditor->GetInlineProperty(styleAtom, EmptyString(), 
                                      EmptyString(), 
                                      &firstOfSelectionHasProp, 
@@ -232,7 +231,7 @@ nsStyleUpdatingCommand::GetCurrentState(nsIEditor *aEditor,
 }
 
 nsresult
-nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
+nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor)
 {
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   NS_ENSURE_TRUE(htmlEditor, NS_ERROR_NO_INTERFACE);
@@ -246,7 +245,7 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
 
   // tags "href" and "name" are special cases in the core editor 
   // they are used to remove named anchor/link and shouldn't be used for insertion
-  nsAutoString tagName; tagName.AssignWithConversion(aTagName);
+  nsAutoString tagName; tagName.AssignWithConversion(mTagName);
   bool doTagRemoval;
   if (tagName.EqualsLiteral("href") ||
       tagName.EqualsLiteral("name"))
@@ -254,7 +253,7 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
   else
   {
     // check current selection; set doTagRemoval if formatting should be removed
-    rv = GetCurrentState(aEditor, aTagName, params);
+    rv = GetCurrentState(aEditor, params);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = params->GetBooleanValue(STATE_ALL, &doTagRemoval);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -296,8 +295,7 @@ nsListCommand::nsListCommand(const char* aTagName)
 }
 
 nsresult
-nsListCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
-                               nsICommandParams *aParams)
+nsListCommand::GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams)
 {
   NS_ASSERTION(aEditor, "Need editor here");
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
@@ -317,7 +315,7 @@ nsListCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
 }
 
 nsresult
-nsListCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
+nsListCommand::ToggleState(nsIEditor *aEditor)
 {
   nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(aEditor);
   NS_ENSURE_TRUE(editor, NS_NOINTERFACE);
@@ -329,7 +327,7 @@ nsListCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
   if (NS_FAILED(rv) || !params)
     return rv;
 
-  rv = GetCurrentState(aEditor, mTagName, params);
+  rv = GetCurrentState(aEditor, params);
   rv = params->GetBooleanValue(STATE_ALL,&inList);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -350,7 +348,7 @@ nsListItemCommand::nsListItemCommand(const char* aTagName)
 }
 
 nsresult
-nsListItemCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
+nsListItemCommand::GetCurrentState(nsIEditor* aEditor,
                                    nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need editor here");
@@ -377,7 +375,7 @@ nsListItemCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
 }
 
 nsresult
-nsListItemCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
+nsListItemCommand::ToggleState(nsIEditor *aEditor)
 {
   NS_ASSERTION(aEditor, "Need editor here");
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
@@ -390,7 +388,7 @@ nsListItemCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
       do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
   if (NS_FAILED(rv) || !params)
     return rv;
-  rv = GetCurrentState(aEditor, mTagName, params);
+  rv = GetCurrentState(aEditor, params);
   rv = params->GetBooleanValue(STATE_ALL,&inList);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1033,7 +1031,7 @@ nsAbsolutePositioningCommand::IsCommandEnabled(const char * aCommandName,
 }
 
 nsresult
-nsAbsolutePositioningCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams)
+nsAbsolutePositioningCommand::GetCurrentState(nsIEditor *aEditor, nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need an editor here");
   
@@ -1062,14 +1060,14 @@ nsAbsolutePositioningCommand::GetCurrentState(nsIEditor *aEditor, const char* aT
 }
 
 nsresult
-nsAbsolutePositioningCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
+nsAbsolutePositioningCommand::ToggleState(nsIEditor *aEditor)
 {
   NS_ASSERTION(aEditor, "Need an editor here");
   
   nsCOMPtr<nsIHTMLAbsPosEditor> htmlEditor = do_QueryInterface(aEditor);
   NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMElement>  elt;
+  nsCOMPtr<nsIDOMElement> elt;
   nsresult rv = htmlEditor->GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(elt));
   NS_ENSURE_SUCCESS(rv, rv);
 
