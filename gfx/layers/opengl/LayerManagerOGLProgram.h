@@ -170,8 +170,8 @@ public:
   typedef mozilla::gl::GLContext GLContext;
 
   ShaderProgramOGL(GLContext* aGL, const ProgramProfileOGL& aProfile) :
-    mGL(aGL), mProgram(0), mProgramState(STATE_NEW),
-    mIsProjectionMatrixStale(false), mProfile(aProfile) { }
+    mIsProjectionMatrixStale(false), mGL(aGL), mProgram(0),
+    mProfile(aProfile), mProgramState(STATE_NEW) { }
 
 
   ~ShaderProgramOGL() {
