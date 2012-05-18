@@ -639,11 +639,7 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
       domainInfo = new WorkerDomainInfo();
       domainInfo->mDomain = domain;
-
-      if (!mDomainMap.Put(domain, domainInfo)) {
-        delete domainInfo;
-        domainInfo = nsnull;
-      }
+      mDomainMap.Put(domain, domainInfo);
     }
 
     if (domainInfo) {
@@ -696,13 +692,7 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
       NS_ASSERTION(!parent, "Shouldn't have a parent here!");
 
       windowArray = new nsTArray<WorkerPrivate*>(1);
-
-      if (!mWindowMap.Put(window, windowArray)) {
-        delete windowArray;
-        UnregisterWorker(aCx, aWorkerPrivate);
-        JS_ReportOutOfMemory(aCx);
-        return false;
-      }
+      mWindowMap.Put(window, windowArray);
     }
 
     NS_ASSERTION(!windowArray->Contains(aWorkerPrivate),
@@ -915,11 +905,8 @@ RuntimeService::Init()
   mIdleThreadTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   NS_ENSURE_STATE(mIdleThreadTimer);
 
-  bool ok = mDomainMap.Init();
-  NS_ENSURE_STATE(ok);
-
-  ok = mWindowMap.Init();
-  NS_ENSURE_STATE(ok);
+  mDomainMap.Init();
+  mWindowMap.Init();
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);

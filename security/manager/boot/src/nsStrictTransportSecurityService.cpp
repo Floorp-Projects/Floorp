@@ -114,8 +114,8 @@ nsStrictTransportSecurityService::Init()
    if (mObserverService)
      mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, false);
 
-   if (mInPrivateMode && !mPrivateModeHostTable.Init())
-     return NS_ERROR_OUT_OF_MEMORY;
+   if (mInPrivateMode)
+     mPrivateModeHostTable.Init();
 
    return NS_OK;
 }
@@ -400,9 +400,8 @@ nsStrictTransportSecurityService::Observe(nsISupports *subject,
       // Indication to start recording stuff locally and not writing changes
       // out to the permission manager.
 
-      if (!mPrivateModeHostTable.IsInitialized()
-          && !mPrivateModeHostTable.Init()) {
-        return NS_ERROR_OUT_OF_MEMORY;
+      if (!mPrivateModeHostTable.IsInitialized()) {
+        mPrivateModeHostTable.Init();
       }
       mInPrivateMode = true;
     }

@@ -4380,6 +4380,9 @@ namespace xpc {
 
 struct CompartmentPrivate
 {
+    typedef nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *> ExpandoMap;
+    typedef nsTHashtable<nsPtrHashKey<JSObject> > DOMExpandoMap;
+
     CompartmentPrivate(bool wantXrays)
         : wantXrays(wantXrays)
     {
@@ -4391,20 +4394,17 @@ struct CompartmentPrivate
     bool wantXrays;
     nsAutoPtr<JSObject2JSObjectMap> waiverWrapperMap;
     // NB: we don't want this map to hold a strong reference to the wrapper.
-    nsAutoPtr<nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *> > expandoMap;
-    nsAutoPtr<nsTHashtable<nsPtrHashKey<JSObject> > > domExpandoMap;
+    nsAutoPtr<ExpandoMap> expandoMap;
+    nsAutoPtr<DOMExpandoMap> domExpandoMap;
     nsCString location;
 
     bool RegisterExpandoObject(XPCWrappedNative *wn, JSObject *expando) {
         if (!expandoMap) {
-            expandoMap = new nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *>();
-            if (!expandoMap->Init(8)) {
-                expandoMap = nsnull;
-                return false;
-            }
+            expandoMap = new ExpandoMap();
+            expandoMap->Init(8);
         }
         wn->SetHasExpandoObject();
-        return expandoMap->Put(wn, expando);
+        return expandoMap->Put(wn, expando, mozilla::fallible_t());
     }
 
     /**
@@ -4430,13 +4430,10 @@ struct CompartmentPrivate
 
     bool RegisterDOMExpandoObject(JSObject *expando) {
         if (!domExpandoMap) {
-            domExpandoMap = new nsTHashtable<nsPtrHashKey<JSObject> >();
-            if (!domExpandoMap->Init(8)) {
-                domExpandoMap = nsnull;
-                return false;
-            }
+            domExpandoMap = new DOMExpandoMap();
+            domExpandoMap->Init(8);
         }
-        return domExpandoMap->PutEntry(expando);
+        return domExpandoMap->PutEntry(expando, mozilla::fallible_t());
     }
     void RemoveDOMExpandoObject(JSObject *expando) {
         if (domExpandoMap)
