@@ -215,12 +215,10 @@ var AccessFu = {
                 doc.defaultView, null, Ci.nsIFocusManager.MOVEFOCUS_CARET, 0);
           }
 
-          let newContext = this.getNewContext(event.oldAccessible,
-                                              pivot.position);
+          let presenterContext = new PresenterContext(pivot.position,
+                                                      event.oldAccessible);
           this.presenters.forEach(
-            function(p) {
-              p.pivotChanged(pivot.position, newContext);
-            });
+            function(p) { p.pivotChanged(presenterContext); });
           break;
         }
       case Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE:
@@ -313,8 +311,13 @@ var AccessFu = {
         {
           if (this._isBrowserDoc(aEvent.accessible)) {
             // The document recieved focus, call tabSelected to present current tab.
+            let docContext = new PresenterContext(aEvent.accessible, null);
+            let cursorable = aEvent.accessible.
+              QueryInterface(Ci.nsIAccessibleCursorable);
+            let vcContext = new PresenterContext(
+              (cursorable) ? cursorable.virtualCursor.position : null, null);
             this.presenters.forEach(
-              function(p) { p.tabSelected(aEvent.accessible); });
+              function(p) { p.tabSelected(docContext, vcContext); });
           }
           break;
         }
@@ -381,41 +384,6 @@ var AccessFu = {
       return false;
 
     return location.protocol != "about:";
-  },
-
-  getNewContext: function getNewContext(aOldObject, aNewObject) {
-    let newLineage = [];
-    let oldLineage = [];
-
-    let parent = aNewObject;
-    while ((parent = parent.parent))
-      newLineage.push(parent);
-
-    if (aOldObject) {
-      parent = aOldObject;
-      while ((parent = parent.parent))
-        oldLineage.push(parent);
-    }
-
-//    newLineage.reverse();
-//    oldLineage.reverse();
-
-    let i = 0;
-    let newContext = [];
-
-    while (true) {
-      let newAncestor = newLineage.pop();
-      let oldAncestor = oldLineage.pop();
-
-      if (newAncestor == undefined)
-        break;
-
-      if (newAncestor != oldAncestor)
-        newContext.push(newAncestor);
-      i++;
-    }
-
-    return newContext;
   },
 
   // A hash of documents that don't yet have an accessible tree.
