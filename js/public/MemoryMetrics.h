@@ -167,7 +167,7 @@ struct RuntimeStats
       , mallocSizeOf(mallocSizeOf)
     {}
 
-    js::RuntimeSizes runtime;
+    RuntimeSizes runtime;
 
     size_t gcHeapChunkTotal;
     size_t gcHeapCommitted;
