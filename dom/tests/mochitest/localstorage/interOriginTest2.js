@@ -1,3 +1,5 @@
+var t = async_test(document.title);
+
 var frameLoadsPending = 2;
 
 var callMasterFrame = true;
@@ -7,7 +9,6 @@ var masterFrameOrigin = "";
 var slaveFrameOrigin = "";
 
 var failureRegExp = new RegExp("^FAILURE");
-var todoRegExp = new RegExp("^TODO");
 
 const framePath = "/tests/dom/tests/mochitest/localstorage/";
 
@@ -39,15 +40,14 @@ function onMessageReceived(event)
         break;
 
       testDone = true;
-      SimpleTest.finish();
+      t.done();
       break;
 
     // Any other message indicates error, succes or todo message of a test
     default:
-      if (event.data.match(todoRegExp))
-        SimpleTest.todo(false, event.data);
-      else
-        SimpleTest.ok(!event.data.match(failureRegExp), event.data);
+      t.step(function() {
+        assert_true(!event.data.match(failureRegExp), event.data);
+      });
       break;
   }
 }
