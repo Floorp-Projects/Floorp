@@ -53,6 +53,7 @@
 #include "nsGkAtoms.h"
 #include "nsDOMString.h"
 #include "nsIDOMUserDataHandler.h"
+#include "nsContentUtils.h"
 
 class nsDocumentFragment : public nsGenericElement,
                            public nsIDOMDocumentFragment
@@ -161,12 +162,25 @@ nsDocumentFragment::GetIDAttributeName() const
 DOMCI_NODE_DATA(DocumentFragment, nsDocumentFragment)
 
 // QueryInterface implementation for nsDocumentFragment
-NS_INTERFACE_TABLE_HEAD(nsDocumentFragment)
-  NS_NODE_INTERFACE_TABLE2(nsDocumentFragment, nsIDOMNode,
-                           nsIDOMDocumentFragment)
+NS_INTERFACE_MAP_BEGIN(nsDocumentFragment)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocumentFragment)
+  NS_INTERFACE_MAP_ENTRY(nsIContent)
+  NS_INTERFACE_MAP_ENTRY(nsINode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentFragment)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
+                                 new nsNodeSupportsWeakRefTearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNodeSelector,
+                                 new nsNodeSelectorTearoff(this))
+  // nsNodeSH::PreCreate() depends on the identity pointer being the
+  // same as nsINode (which nsIContent inherits), so if you change the
+  // below line, make sure nsNodeSH::PreCreate() still does the right
+  // thing!
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DocumentFragment)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
-
+NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF_INHERITED(nsDocumentFragment, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsDocumentFragment, nsGenericElement)
