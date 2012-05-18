@@ -120,8 +120,11 @@ endif
 
 # Are we targeting x86 or x64?  If so, build SSE2 files.
 ifneq (,$(INTEL_ARCHITECTURE))
+# VC2005 doesn't support _mm_castsi128_ps, so SSE2 is turned off
+ifneq (1400,$(_MSC_VER))
 CPPSRCS += ImageScalingSSE2.cpp
 DEFINES += -DUSE_SSE2
+endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
