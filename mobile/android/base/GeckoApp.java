@@ -675,6 +675,8 @@ abstract public class GeckoApp
         tab.updateFaviconURL(null);
         tab.updateIdentityData(null);
         tab.removeTransientDoorHangers();
+        tab.setAllowZoom(true);
+        tab.setDefaultZoom(0);
         tab.setHasTouchListeners(false);
         tab.setCheckerboardColor(Color.WHITE);
 
@@ -1001,6 +1003,19 @@ abstract public class GeckoApp
                 }
             } else if (event.equals("Update:Restart")) {
                 doRestart("org.mozilla.gecko.restart_update");
+            } else if (event.equals("Tab:ViewportMetadata")) {
+                int tabId = message.getInt("tabID");
+                Tab tab = Tabs.getInstance().getTab(tabId);
+                if (tab == null)
+                    return;
+                tab.setAllowZoom(message.getBoolean("allowZoom"));
+                tab.setDefaultZoom((float) message.getDouble("defaultZoom"));
+                // Sync up the LayerController and the tab if the tab's currently displayed.
+                LayerController controller = getLayerController();
+                if (controller != null && Tabs.getInstance().isSelectedTab(tab)) {
+                    controller.setAllowZoom(tab.getAllowZoom());
+                    controller.setDefaultZoom(tab.getDefaultZoom());
+                }
             } else if (event.equals("Tab:HasTouchListener")) {
                 int tabId = message.getInt("tabID");
                 Tab tab = Tabs.getInstance().getTab(tabId);
@@ -1720,6 +1735,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("CharEncoding:State", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Update:Restart", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:HasTouchListener", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Tab:ViewportMetadata", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Session:StatePurged", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
