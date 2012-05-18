@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync.setup.activities;
 import java.util.Locale;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.InvalidSyncKeyException;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
@@ -22,6 +23,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -55,6 +58,11 @@ public class AccountActivity extends AccountAuthenticatorActivity {
     mContext = getApplicationContext();
     Log.d(LOG_TAG, "AccountManager.get(" + mContext + ")");
     mAccountManager = AccountManager.get(mContext);
+
+    // Set "screen on" flag.
+    Logger.debug(LOG_TAG, "Setting screen-on flag.");
+    Window w = getWindow();
+    w.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     // Find UI elements.
     usernameInput = (EditText) findViewById(R.id.usernameInput);
