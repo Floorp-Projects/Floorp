@@ -3874,13 +3874,27 @@ nsEditor::GetTagString(nsIDOMNode *aNode, nsAString& outString)
 bool 
 nsEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
 {
-  if (!aNode1 || !aNode2) 
-  {
+  if (!aNode1 || !aNode2) {
     NS_NOTREACHED("null node passed to nsEditor::NodesSameType()");
     return false;
   }
-  
-  return GetTag(aNode1) == GetTag(aNode2);
+
+  nsCOMPtr<nsIContent> content1 = do_QueryInterface(aNode1);
+  NS_ENSURE_TRUE(content1, false);
+
+  nsCOMPtr<nsIContent> content2 = do_QueryInterface(aNode2);
+  NS_ENSURE_TRUE(content2, false);
+
+  return AreNodesSameType(content1, content2);
+}
+
+/* virtual */
+bool
+nsEditor::AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2)
+{
+  MOZ_ASSERT(aNode1);
+  MOZ_ASSERT(aNode2);
+  return aNode1->Tag() == aNode2->Tag();
 }
 
 

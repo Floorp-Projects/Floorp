@@ -5142,28 +5142,24 @@ nsHTMLEditor::SetBackgroundColor(const nsAString& aColor)
 ///////////////////////////////////////////////////////////////////////////
 // NodesSameType: do these nodes have the same tag?
 //                    
-bool 
-nsHTMLEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
+/* virtual */
+bool
+nsHTMLEditor::AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2)
 {
-  if (!aNode1 || !aNode2) 
-  {
-    NS_NOTREACHED("null node passed to nsEditor::NodesSameType()");
+  MOZ_ASSERT(aNode1);
+  MOZ_ASSERT(aNode2);
+
+  if (aNode1->Tag() != aNode2->Tag()) {
     return false;
   }
 
-  nsIAtom *tag1 = GetTag(aNode1);
-
-  if (tag1 == GetTag(aNode2)) {
-    if (IsCSSEnabled() && tag1 == nsEditProperty::span) {
-      if (mHTMLCSSUtils->ElementsSameStyle(aNode1, aNode2)) {
-        return true;
-      }
-    }
-    else {
-      return true;
-    }
+  if (!IsCSSEnabled() || !aNode1->IsHTML(nsGkAtoms::span)) {
+    return true;
   }
-  return false;
+
+  // If CSS is enabled, we are stricter about span nodes.
+  return mHTMLCSSUtils->ElementsSameStyle(aNode1->AsDOMNode(),
+                                          aNode2->AsDOMNode());
 }
 
 NS_IMETHODIMP
