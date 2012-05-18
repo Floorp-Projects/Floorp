@@ -121,6 +121,8 @@ _BROWSER_TEST_FILES = \
 	browser_644409-scratchpads.js \
 	browser_645428.js \
 	browser_659591.js \
+	browser_662743.js \
+	browser_662743_sample.html \
 	browser_662812.js \
 	browser_665702-state_session.js \
 	browser_682507.js \

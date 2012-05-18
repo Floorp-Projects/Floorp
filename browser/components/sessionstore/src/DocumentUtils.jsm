@@ -73,16 +73,16 @@ let DocumentUtils = {
         // <select>s without the multiple attribute are hard to determine the
         // default value, so assume we don't have the default.
         hasDefaultValue = false;
-        value = node.selectedIndex;
+        value = { selectedIndex: node.selectedIndex, value: node.value };
       } else {
         // <select>s with the multiple attribute are easier to determine the
         // default value since each <option> has a defaultSelected
         let options = Array.map(node.options, function(aOpt, aIx) {
           let oSelected = aOpt.selected;
           hasDefaultValue = hasDefaultValue && (oSelected == aOpt.defaultSelected);
-          return oSelected ? aIx : -1;
+          return oSelected ? aOpt.value : -1;
         });
-        value = options.filter(function(aIx) aIx >= 0);
+        value = options.filter(function(aIx) aIx !== -1);
       }
 
       // In order to reduce XPath generation (which is slow), we only save data
@@ -177,23 +177,41 @@ let DocumentUtils = {
       aNode.checked = aValue;
       eventType = "change";
     } else if (typeof aValue == "number") {
+      // handle select backwards compatibility, example { "#id" : index }
       // We saved the value blindly since selects take more work to determine
       // default values. So now we should check to avoid unnecessary events.
       if (aNode.selectedIndex == aValue) {
         return;
       }
       
-      try {
+      if (aValue < aNode.options.length) {
         aNode.selectedIndex = aValue;
         eventType = "change";
-      } catch (ex) { /* throws for invalid indices */ }
+      } 
+    } else if (aValue && aValue.selectedIndex >= 0 && aValue.value) {
+      // handle select new format
+
+      // Don't dispatch a change event for no change
+      if (aNode.options[aNode.selectedIndex].value == aValue.value) {
+        return;
+      }
+
+      // find first option with matching aValue if possible
+      for (let i = 0; i < aNode.options.length; i++) {
+        if (aNode.options[i].value == aValue.value) {
+          aNode.selectedIndex = i;
+          break;
+        }
+      }
+      eventType = "change";
     } else if (aValue && aValue.fileList && aValue.type == "file" &&
       aNode.type == "file") {
       aNode.mozSetFileNameArray(aValue.fileList, aValue.fileList.length);
       eventType = "input";
     } else if (aValue && typeof aValue.indexOf == "function" && aNode.options) {
       Array.forEach(aNode.options, function(opt, index) {
-        opt.selected = aValue.indexOf(index) > -1;
+        // don't worry about malformed options with same values
+        opt.selected = aValue.indexOf(opt.value) > -1;
         
         // Only fire the event here if this wasn't selected by default
         if (!opt.defaultSelected) {
