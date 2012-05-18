@@ -167,7 +167,7 @@ protected:
   nsresult MoveBlock(nsIDOMNode *aLeft, nsIDOMNode *aRight, PRInt32 aLeftOffset, PRInt32 aRightOffset);
   nsresult MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
   nsresult MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
-  nsresult DeleteNonTableElements(nsIDOMNode *aNode);
+  nsresult DeleteNonTableElements(nsINode* aNode);
   nsresult WillMakeList(nsISelection *aSelection, const nsAString *aListType, bool aEntireList, const nsAString *aBulletType, bool *aCancel, bool *aHandled, const nsAString *aItemType=nsnull);
   nsresult WillRemoveList(nsISelection *aSelection, bool aOrderd, bool *aCancel, bool *aHandled);
   nsresult WillIndent(nsISelection *aSelection, bool *aCancel, bool *aHandled);

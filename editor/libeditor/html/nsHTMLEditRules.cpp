@@ -2403,8 +2403,9 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
           // now that we have the list, delete non table elements
           PRInt32 listCount = arrayOfNodes.Count();
           for (PRInt32 j = 0; j < listCount; j++) {
-            nsIDOMNode* somenode = arrayOfNodes[0];
-            res = DeleteNonTableElements(somenode);
+            nsCOMPtr<nsINode> somenode = do_QueryInterface(arrayOfNodes[0]);
+            NS_ENSURE_STATE(somenode);
+            DeleteNonTableElements(somenode);
             arrayOfNodes.RemoveObjectAt(0);
             // If something visible is deleted, no need to join.
             // Visible means all nodes except non-visible textnodes and breaks.
@@ -2416,7 +2417,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
                 mHTMLEditor->IsVisTextNode(content, &join, true);
               } else {
                 join = content->IsHTML(nsGkAtoms::br) &&
-                       !mHTMLEditor->IsVisBreak(somenode);
+                       !mHTMLEditor->IsVisBreak(somenode->AsDOMNode());
               }
             }
           }
@@ -2850,36 +2851,21 @@ nsHTMLEditRules::MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *a
 
 
 nsresult
-nsHTMLEditRules::DeleteNonTableElements(nsIDOMNode *aNode)
+nsHTMLEditRules::DeleteNonTableElements(nsINode* aNode)
 {
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-  nsresult res = NS_OK;
-  if (nsHTMLEditUtils::IsTableElementButNotTable(aNode))
-  {
-    nsCOMPtr<nsIDOMNodeList> children;
-    aNode->GetChildNodes(getter_AddRefs(children));
-    if (children)
-    {
-      PRUint32 len;
-      children->GetLength(&len);
-      NS_ENSURE_TRUE(len, NS_OK);
-      PRInt32 j;
-      for (j=len-1; j>=0; j--)
-      {
-        nsCOMPtr<nsIDOMNode> node;
-        children->Item(j,getter_AddRefs(node));
-        res = DeleteNonTableElements(node);
-        NS_ENSURE_SUCCESS(res, res);
+  MOZ_ASSERT(aNode);
+  if (!aNode->IsElement() ||
+      !nsHTMLEditUtils::IsTableElementButNotTable(aNode->AsElement())) {
+    return mHTMLEditor->DeleteNode(aNode->AsDOMNode());
+  }
 
-      }
-    }
+  for (nsIContent* child = aNode->GetLastChild();
+       child;
+       child = child->GetPreviousSibling()) {
+    nsresult rv = DeleteNonTableElements(child);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  else
-  {
-    res = mHTMLEditor->DeleteNode(aNode);
-    NS_ENSURE_SUCCESS(res, res);
-  }
-  return res;
+  return NS_OK;
 }
 
 nsresult
