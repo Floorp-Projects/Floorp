@@ -2,12 +2,25 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const RELATIVE_DIR = "browser/features/pdfjs/test/";
+const RELATIVE_DIR = "browser/app/profile/extensions/uriloader@pdf.js/test/";
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 
 function test() {
   waitForExplicitFinish();
 
+  AddonManager.getAddonByID("uriloader@pdf.js", function(aAddon) {
+    is(aAddon.userDisabled, true, 'Pdf.js addon must be disabled by default');
+    aAddon.userDisabled = false;
+
+    registerCleanupFunction(function() {
+      aAddon.userDisabled = true;
+    });
+
+    continueTest();
+  });
+}
+
+function continueTest() {
   var tab = gBrowser.addTab(TESTROOT + "file_pdfjs_test.pdf");
   var newTabBrowser = gBrowser.getBrowserForTab(tab);
   newTabBrowser.addEventListener("load", function onLoad() {

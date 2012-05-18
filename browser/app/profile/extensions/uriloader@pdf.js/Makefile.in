@@ -1,0 +1,30 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH      = ../../../../..
+topsrcdir  = @top_srcdir@
+srcdir     = @srcdir@
+VPATH      = @srcdir@
+
+APPEXT = $(call core_abspath,$(DIST))/bin/extensions
+
+TEST_DIRS += test
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+# Using the extension-files as an extension files whitelist to avoid noise
+# in the xpi file such as MOZILLA.readme, install.pdf.in and this make file.
+FILES := $(shell cat $(srcdir)/extension-files)
+
+libs::
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(srcdir)/install.rdf.in > install.rdf
+	$(ZIP) -9X $(APPEXT)/uriloader@pdf.js.xpi install.rdf
+	cd $(call core_abspath,$(srcdir)) && \
+	$(ZIP) -9X $(APPEXT)/uriloader@pdf.js.xpi $(FILES)
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(APPEXT)/uriloader@pdf.js.xpi $(DESTDIR)$(mozappdir)/extensions
+
+GARBAGE += install.rdf
