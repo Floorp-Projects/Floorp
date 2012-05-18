@@ -236,7 +236,7 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
     /** Implementation of SurfaceHolder.Callback */
     public synchronized void surfaceChanged(SurfaceHolder holder, int format, int width,
                                             int height) {
-        mGLController.sizeChanged(width, height);
+        mGLController.surfaceChanged(width, height);
 
         if (mListener != null) {
             mListener.surfaceChanged(width, height);
@@ -245,7 +245,6 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
 
     /** Implementation of SurfaceHolder.Callback */
     public synchronized void surfaceCreated(SurfaceHolder holder) {
-        mGLController.surfaceCreated();
     }
 
     /** Implementation of SurfaceHolder.Callback */
