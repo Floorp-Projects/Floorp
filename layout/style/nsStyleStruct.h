@@ -2241,6 +2241,7 @@ struct nsStyleSVGReset {
   float            mFloodOpacity;     // [reset]
 
   PRUint8          mDominantBaseline; // [reset] see nsStyleConsts.h
+  PRUint8          mVectorEffect;     // [reset] see nsStyleConsts.h
 };
 
 #endif /* nsStyleStruct_h___ */

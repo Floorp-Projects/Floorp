@@ -463,6 +463,9 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.unicode_bidi, [
     new AnimTestcaseFromTo("embed", "bidi-override"),
   ]),
+  new TestcaseBundle(gPropList.vector_effect, [
+    new AnimTestcaseFromTo("none", "non-scaling-stroke"),
+  ]),
   new TestcaseBundle(gPropList.visibility, [
     new AnimTestcaseFromTo("visible", "hidden"),
     new AnimTestcaseFromTo("hidden", "collapse"),
