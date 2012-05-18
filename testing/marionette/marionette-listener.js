@@ -101,6 +101,7 @@ function startListeners() {
   addMessageListenerId("Marionette:switchToFrame", switchToFrame);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
   addMessageListenerId("Marionette:sleepSession", sleepSession);
+  addMessageListenerId("Marionette:emulatorCmdResult", emulatorCmdResult);
 }
 
 /**
@@ -158,6 +159,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
   removeMessageListenerId("Marionette:sleepSession", sleepSession);
+  removeMessageListenerId("Marionette:emulatorCmdResult", emulatorCmdResult);
   this.elementManager.reset();
 }
 
@@ -237,7 +239,7 @@ function createExecuteContentSandbox(aWindow) {
   sandbox.__proto__ = sandbox.window;
   sandbox.testUtils = utils;
 
-  let marionette = new Marionette(false, aWindow, "content", marionetteLogObj);
+  let marionette = new Marionette(this, aWindow, "content", marionetteLogObj);
   sandbox.marionette = marionette;
   marionette.exports.forEach(function(fn) {
     sandbox[fn] = marionette[fn].bind(marionette);
@@ -686,6 +688,30 @@ function switchToFrame(msg) {
   sendOk();
 
   sandbox = null;
+}
+
+let _emu_cb_id = 0;
+let _emu_cbs = {};
+function runEmulatorCmd(cmd, callback) {
+  if (typeof callback != "function") {
+    throw "Need to provide callback function!";
+  }
+  _emu_cbs[_emu_cb_id] = callback;
+  sendAsyncMessage("Marionette:runEmulatorCmd", {emulator_cmd: cmd, id: _emu_cb_id});
+  _emu_cb_id += 1;
+}
+
+function emulatorCmdResult(msg) {
+  let message = msg.json;
+  let cb = _emu_cbs[message.id];
+  delete _emu_cbs[message.id];
+  try {
+    cb(message.result);
+  }
+  catch(e) {
+    sendError(e.message, e.num, e.stack);
+    return;
+  }
 }
 
 //call register self when we get loaded
