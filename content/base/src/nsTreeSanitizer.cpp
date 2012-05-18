@@ -628,6 +628,7 @@ nsIAtom** const kAttributesSVG[] = {
   // v-ideographic
   // v-mathematical
   &nsGkAtoms::values, // values
+  &nsGkAtoms::vector_effect, // vector-effect
   // vert-adv-y
   // vert-origin-x
   // vert-origin-y

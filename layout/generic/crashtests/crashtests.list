@@ -184,7 +184,7 @@ load 413582-1.xhtml
 load 413582-2.html
 load 413712-1.xhtml
 asserts-if(Android,6) load 414061-1.html
-asserts-if(!Android,6) load 414180-1.xul # Bug 439258
+load 414180-1.xul
 load 414719-1.html
 load 415685-1.html
 load 416264-1.html

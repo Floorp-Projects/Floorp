@@ -51,7 +51,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[builtinclass, scriptable, uuid(fc30df1b-9b5a-42f6-965b-cbcc67ac3c4c)]
+[builtinclass, scriptable, uuid(81085b2d-eea9-4aca-ac93-0b1eea6587d3)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -473,6 +473,9 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        textRendering;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        vectorEffect;
                                         // raises(DOMException) on setting
 
            /* Non-DOM 2 extensions */
