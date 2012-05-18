@@ -62,6 +62,7 @@
 
 #include "mozilla/dom/BindingUtils.h"
 
+using namespace xpc;
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -432,17 +433,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return false;
         break;
     case nsXPTType::T_I64    :
-        if (JSVAL_IS_INT(s)) {
-            if (!JS_ValueToECMAInt32(cx, s, &ti))
-                return false;
-           *((int64_t*)d) = ti;
+        return ValueToInt64(cx, s, (int64_t*)d);
 
-        } else {
-            if (!JS_ValueToNumber(cx, s, &td))
-                return false;
-            *((int64_t*)d) = int64_t(td);
-        }
-        break;
     case nsXPTType::T_U8     :
         if (!JS_ValueToECMAUint32(cx, s, &tu))
             return false;
@@ -458,16 +450,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return false;
         break;
     case nsXPTType::T_U64    :
-        if (JSVAL_IS_INT(s)) {
-            if (!JS_ValueToECMAUint32(cx, s, &tu))
-                return false;
-            *((uint64_t*)d) = tu;
-        } else {
-            if (!JS_ValueToNumber(cx, s, &td))
-                return false;
-            *((uint64_t*)d) = uint64_t(td);
-        }
-        break;
+        return ValueToUint64(cx, s, (uint64_t*)d);
+
     case nsXPTType::T_FLOAT  :
         if (!JS_ValueToNumber(cx, s, &td))
             return false;
