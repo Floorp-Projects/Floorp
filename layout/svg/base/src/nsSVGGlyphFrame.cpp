@@ -909,7 +909,7 @@ nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext, gfxPattern **aStrokePatte
 
     if (ps) {
       // Gradient or Pattern: can get pattern directly from frame
-      strokePattern = ps->GetPaintServerPattern(this, opacity);
+      strokePattern = ps->GetPaintServerPattern(this, &nsStyleSVG::mStroke, opacity);
     }
 
     if (!strokePattern) {

@@ -1515,6 +1515,12 @@ const PRInt32 nsCSSProps::kTextRenderingKTable[] = {
   eCSSKeyword_UNKNOWN, -1
 };
 
+const PRInt32 nsCSSProps::kVectorEffectKTable[] = {
+  eCSSKeyword_none, NS_STYLE_VECTOR_EFFECT_NONE,
+  eCSSKeyword_non_scaling_stroke, NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE,
+  eCSSKeyword_UNKNOWN, -1
+};
+
 const PRInt32 nsCSSProps::kColorInterpolationKTable[] = {
   eCSSKeyword_auto, NS_STYLE_COLOR_INTERPOLATION_AUTO,
   eCSSKeyword_srgb, NS_STYLE_COLOR_INTERPOLATION_SRGB,

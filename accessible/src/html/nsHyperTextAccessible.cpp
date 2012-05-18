@@ -1498,7 +1498,7 @@ nsHyperTextAccessible::DeleteText(PRInt32 aStartPos, PRInt32 aEndPos)
   nsresult rv = SetSelectionRange(aStartPos, aEndPos);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return editor->DeleteSelection(nsIEditor::eNone);
+  return editor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
 }
 
 NS_IMETHODIMP

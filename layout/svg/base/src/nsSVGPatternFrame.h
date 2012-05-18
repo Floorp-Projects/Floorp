@@ -73,6 +73,7 @@ public:
   // nsSVGPaintServerFrame methods:
   virtual already_AddRefed<gfxPattern>
     GetPaintServerPattern(nsIFrame *aSource,
+                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                           float aOpacity,
                           const gfxRect *aOverrideBounds);
 
@@ -141,6 +142,7 @@ protected:
   nsresult PaintPattern(gfxASurface **surface,
                         gfxMatrix *patternMatrix,
                         nsIFrame *aSource,
+                        nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                         float aGraphicOpacity,
                         const gfxRect *aOverrideBounds);
   nsIFrame*  GetPatternFirstChild();

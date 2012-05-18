@@ -406,6 +406,7 @@ private:
 
   nsIDOMCSSValue* DoGetStrokeDashoffset();
   nsIDOMCSSValue* DoGetStrokeWidth();
+  nsIDOMCSSValue* DoGetVectorEffect();
 
   nsIDOMCSSValue* DoGetFillOpacity();
   nsIDOMCSSValue* DoGetFloodOpacity();

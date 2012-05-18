@@ -122,7 +122,7 @@ nsresult TextEditorTest::InitDoc()
 {
   nsresult result = mEditor->SelectAll();
   TEST_RESULT(result);
-  result = mEditor->DeleteSelection(nsIEditor::eNext);
+  result = mEditor->DeleteSelection(nsIEditor::eNext, nsIEditor::eStrip);
   TEST_RESULT(result);
   return result;
 }
