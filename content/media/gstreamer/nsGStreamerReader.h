@@ -34,6 +34,10 @@ public:
                         PRInt64 aCurrentTime);
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime);
 
+  virtual bool IsSeekableInBufferedRanges() {
+    return true;
+  }
+
   virtual bool HasAudio() {
     return mInfo.mHasAudio;
   }
