@@ -424,6 +424,13 @@ MarionetteDriverActor.prototype = {
       _chromeSandbox[fn] = marionette[fn].bind(marionette);
     });
 
+    loader.loadSubScript("chrome://specialpowers/content/specialpowersAPI.js",
+                         _chromeSandbox);
+    loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js",
+                         _chromeSandbox);
+    loader.loadSubScript("chrome://specialpowers/content/ChromePowers.js",
+                         _chromeSandbox);
+
     return _chromeSandbox;
   },
 
