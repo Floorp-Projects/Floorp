@@ -543,21 +543,13 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
 
     // we may need to create a br if the positioned element is alone in its
     // container
-    nsCOMPtr<nsIDOMNode> parentNode;
-    res = aElement->GetParentNode(getter_AddRefs(parentNode));
-    NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<nsINode> element = do_QueryInterface(aElement);
+    NS_ENSURE_STATE(element);
 
-    nsCOMPtr<nsIDOMNodeList> childNodes;
-    res = parentNode->GetChildNodes(getter_AddRefs(childNodes));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(childNodes, NS_ERROR_NULL_POINTER);
-    PRUint32 childCount;
-    res = childNodes->GetLength(&childCount);
-    NS_ENSURE_SUCCESS(res, res);
-
-    if (childCount == 1) {
+    nsINode* parentNode = element->GetNodeParent();
+    if (parentNode->GetChildCount() == 1) {
       nsCOMPtr<nsIDOMNode> brNode;
-      res = CreateBR(parentNode, 0, address_of(brNode));
+      res = CreateBR(parentNode->AsDOMNode(), 0, address_of(brNode));
     }
   }
   else {
