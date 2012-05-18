@@ -425,20 +425,10 @@ pref("dom.max_script_run_time", 20);
 // JS error console
 pref("devtools.errorconsole.enabled", false);
 
-pref("browser.ui.layout.tablet", -1); // on: 1, off: 0, auto: -1
-
-// kinetic tweakables
-pref("browser.ui.kinetic.updateInterval", 16);
-pref("browser.ui.kinetic.exponentialC", 1400);
-pref("browser.ui.kinetic.polynomialC", 100);
-pref("browser.ui.kinetic.swipeLength", 160);
-
 pref("font.size.inflation.minTwips", 120);
 
-// pinch gesture
-pref("browser.ui.pinch.maxGrowth", 150);     // max pinch distance growth
-pref("browser.ui.pinch.maxShrink", 200);     // max pinch distance shrinkage
-pref("browser.ui.pinch.scalingFactor", 500); // scaling factor for above pinch limits
+// When true, zooming will be enabled on all sites, even ones that declare user-scalable=no.
+pref("browser.ui.zoom.force-user-scalable", false);
 
 // Touch radius (area around the touch location to look for target elements),
 // in 1/240-inch pixels:
