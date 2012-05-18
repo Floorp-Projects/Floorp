@@ -891,6 +891,7 @@ struct GCMarker : public JSTracer {
         ObjectTag,
         TypeTag,
         XmlTag,
+        ArenaTag,
         SavedValueArrayTag,
         LastTag = SavedValueArrayTag
     };
@@ -915,6 +916,10 @@ struct GCMarker : public JSTracer {
 
     void pushObject(JSObject *obj) {
         pushTaggedPtr(ObjectTag, obj);
+    }
+
+    void pushArenaList(gc::ArenaHeader *firstArena) {
+        pushTaggedPtr(ArenaTag, firstArena);
     }
 
     void pushType(types::TypeObject *type) {
@@ -1016,7 +1021,7 @@ struct GCMarker : public JSTracer {
     bool restoreValueArray(JSObject *obj, void **vpp, void **endp);
     void saveValueRanges();
     inline void processMarkStackTop(SliceBudget &budget);
-    void processMarkStackOther(uintptr_t tag, uintptr_t addr);
+    void processMarkStackOther(SliceBudget &budget, uintptr_t tag, uintptr_t addr);
 
     void appendGrayRoot(void *thing, JSGCTraceKind kind);
 

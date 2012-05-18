@@ -409,16 +409,10 @@ JSCompartment::markTypes(JSTracer *trc)
         JS_ASSERT(script == i.get<JSScript>());
     }
 
-    for (size_t thingKind = FINALIZE_OBJECT0;
-         thingKind < FINALIZE_OBJECT_LIMIT;
-         thingKind++) {
-        for (CellIterUnderGC i(this, AllocKind(thingKind)); !i.done(); i.next()) {
-            JSObject *object = i.get<JSObject>();
-            if (object->hasSingletonType()) {
-                MarkObjectRoot(trc, &object, "mark_types_singleton");
-                JS_ASSERT(object == i.get<JSObject>());
-            }
-        }
+    for (size_t thingKind = FINALIZE_OBJECT0; thingKind < FINALIZE_OBJECT_LIMIT; thingKind++) {
+        ArenaHeader *aheader = arenas.getFirstArena(static_cast<AllocKind>(thingKind));
+        if (aheader)
+            rt->gcMarker.pushArenaList(aheader);
     }
 
     for (CellIterUnderGC i(this, FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
