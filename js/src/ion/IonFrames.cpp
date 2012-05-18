@@ -461,16 +461,18 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
         // is now NULL or recompiled). Manually trace it here.
         IonScript::Trace(trc, ionScript);
     } else if (CalleeTokenIsFunction(layout->calleeToken())) {
-        JSFunction *fun = CalleeTokenToFunction(layout->calleeToken());
-
-        // Trace function arguments.
-        Value *argv = layout->argv();
-        for (size_t i = 0; i < fun->nargs; i++)
-            gc::MarkValueRoot(trc, &argv[i], "ion-argv");
-
-        ionScript = fun->script()->ion;
+        ionScript = CalleeTokenToFunction(layout->calleeToken())->script()->ion;
     } else {
         ionScript = CalleeTokenToScript(layout->calleeToken())->ion;
+    }
+
+    if (CalleeTokenIsFunction(layout->calleeToken())) {
+        size_t nargs = CalleeTokenToFunction(layout->calleeToken())->nargs;
+
+        // Trace function arguments. Note + 1 for thisv.
+        Value *argv = layout->argv();
+        for (size_t i = 0; i < nargs + 1; i++)
+            gc::MarkValueRoot(trc, &argv[i], "ion-argv");
     }
 
     const SafepointIndex *si = ionScript->getSafepointIndex(frame.returnAddressToFp());
