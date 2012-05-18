@@ -139,28 +139,21 @@ class Sampler::PlatformData : public Malloced {
     while (sampler_->IsActive()) {
       sampler_->HandleSaveRequest();
 
+      if (!sampler_->IsPaused()) {
 #ifdef XP_MACOSX
-      pthread_kill(signal_receiver_, SIGPROF);
+        pthread_kill(signal_receiver_, SIGPROF);
 #else
-      // Glibc doesn't provide a wrapper for tgkill(2).
-      tgkill(vm_tgid_, vm_tid_, SIGPROF);
+        // Glibc doesn't provide a wrapper for tgkill(2).
+        tgkill(vm_tgid_, vm_tid_, SIGPROF);
 #endif
+      }
+
       // Convert ms to us and subtract 100 us to compensate delays
       // occuring during signal delivery.
-
       // TODO measure and confirm this.
       const useconds_t interval = sampler_->interval_ * 1000 - 100;
       //int result = usleep(interval);
       usleep(interval);
-      // sometimes usleep is defined as returning void
-      int result = 0;
-#ifdef DEBUG
-      if (result != 0 && errno != EINTR) {
-        LOG("SignalSender usleep error");
-        ASSERT(result == 0 || errno == EINTR);
-      }
-#endif
-      mozilla::unused << result;
     }
   }
 
@@ -189,7 +182,8 @@ static void* SenderEntry(void* arg) {
 Sampler::Sampler(int interval, bool profiling)
     : interval_(interval),
       profiling_(profiling),
-      active_(false) {
+      active_(false),
+      paused_(false) {
   data_ = new PlatformData(this);
 }
 
