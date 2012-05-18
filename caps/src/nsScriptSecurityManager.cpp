@@ -44,6 +44,7 @@
 #include "mozilla/Util.h"
 
 #include "xpcprivate.h"
+#include "XPCWrapper.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptObjectPrincipal.h"
