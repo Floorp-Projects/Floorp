@@ -37,21 +37,6 @@
 
 #filter substitution
 
-// For browser.xml binding
-//
-// cacheRatio* is a ratio that determines the amount of pixels to cache. The
-// ratio is multiplied by the viewport width or height to get the displayport's
-// width or height, respectively.
-//
-// (divide integer value by 1000 to get the ratio)
-//
-// For instance: cachePercentageWidth is 1500
-//               viewport height is 500
-//               => display port height will be 500 * 1.5 = 750
-//
-pref("toolkit.browser.cacheRatioWidth", 2000);
-pref("toolkit.browser.cacheRatioHeight", 3000);
-
 // How long before a content view (a handle to a remote scrollable object)
 // expires.
 pref("toolkit.browser.contentViewExpire", 3000);
@@ -63,11 +48,6 @@ pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.remote", true);
 
 pref("toolkit.screen.lock", false);
-
-// From libpref/src/init/all.js, extended to allow a slightly wider zoom range.
-pref("zoom.minPercent", 20);
-pref("zoom.maxPercent", 400);
-pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3,4");
 
 // Mobile will use faster, less durable mode.
 pref("toolkit.storage.synchronous", 0);
