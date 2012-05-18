@@ -359,9 +359,21 @@ public class Server11RepositorySession extends RepositorySession {
 
   @Override
   public void storeDone() {
+    Logger.debug(LOG_TAG, "storeDone().");
     synchronized (recordsBufferMonitor) {
       flush();
-      storeDone(uploadTimestamp.get());
+      // Do this in a Runnable so that the timestamp is grabbed after any upload.
+      final Runnable r = new Runnable() {
+        @Override
+        public void run() {
+          synchronized (recordsBufferMonitor) {
+            final long end = uploadTimestamp.get();
+            Logger.debug(LOG_TAG, "Calling storeDone with " + end);
+            storeDone(end);
+          }
+        }
+      };
+      storeWorkQueue.execute(r);
     }
   }
 
@@ -381,9 +393,9 @@ public class Server11RepositorySession extends RepositorySession {
     public RecordUploadRunnable(RepositorySessionStoreDelegate storeDelegate,
                                 ArrayList<byte[]> outgoing,
                                 long byteCount) {
-      Logger.debug(LOG_TAG, "Preparing RecordUploadRunnable for " +
-                     outgoing.size() + " records (" +
-                     byteCount + " bytes).");
+      Logger.info(LOG_TAG, "Preparing record upload for " +
+                  outgoing.size() + " records (" +
+                  byteCount + " bytes).");
       this.outgoing  = outgoing;
       this.byteCount = byteCount;
     }
@@ -400,7 +412,7 @@ public class Server11RepositorySession extends RepositorySession {
 
     @Override
     public void handleRequestSuccess(SyncStorageResponse response) {
-      Logger.debug(LOG_TAG, "POST of " + outgoing.size() + " records done.");
+      Logger.info(LOG_TAG, "POST of " + outgoing.size() + " records done.");
 
       ExtendedJSONObject body;
       try {
@@ -445,6 +457,7 @@ public class Server11RepositorySession extends RepositorySession {
         // TODO
         return;
       }
+      Logger.info(LOG_TAG, "POST of " + outgoing.size() + " records handled.");
     }
 
     @Override
