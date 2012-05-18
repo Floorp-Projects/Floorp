@@ -58,7 +58,10 @@
 
 namespace js {
 namespace ion {
-
+ 
+// The public entrypoint for emitting assembly. Note that a MacroAssembler can
+// use cx->lifoAlloc, so take care not to interleave masm use with other
+// lifoAlloc use if one will be destroyed before the other.
 class MacroAssembler : public MacroAssemblerSpecific
 {
     MacroAssembler *thisFromCtor() {
@@ -82,18 +85,28 @@ class MacroAssembler : public MacroAssemblerSpecific
     };
 
     AutoRooter autoRooter_;
+    Maybe<IonContext> ionContext_;
+    Maybe<AutoIonContextAlloc> alloc_;
     bool enoughMemory_;
 
   public:
     MacroAssembler()
       : autoRooter_(GetIonContext()->cx, thisFromCtor()),
         enoughMemory_(true)
-    { }
+    {
+        if (!GetIonContext()->temp)
+            alloc_.construct(GetIonContext()->cx);
+    }
 
+    // This constructor should only be used when there is no IonContext active
+    // (for example, Trampoline-$(ARCH).cpp).
     MacroAssembler(JSContext *cx)
       : autoRooter_(cx, thisFromCtor()),
         enoughMemory_(true)
-    { }
+    {
+        ionContext_.construct(cx, (js::ion::TempAllocator *)NULL);
+        alloc_.construct(cx);
+    }
 
     MoveResolver &moveResolver() {
         return moveResolver_;

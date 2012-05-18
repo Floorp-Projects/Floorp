@@ -346,13 +346,20 @@ IonCacheSetProperty::attachNativeExisting(JSContext *cx, JSObject *obj, const Sh
 
     if (obj->isFixedSlot(shape->slot())) {
         Address addr(object(), JSObject::getFixedSlotOffset(shape->slot()));
+
+        if (cx->compartment->needsBarrier())
+            masm.emitPreBarrier(addr, MIRType_Value);
+
         masm.storeConstantOrRegister(value(), addr);
     } else {
         Register slotsReg = object();
-
         masm.loadPtr(Address(object(), JSObject::offsetOfSlots()), slotsReg);
 
         Address addr(slotsReg, obj->dynamicSlotIndex(shape->slot()) * sizeof(Value));
+
+        if (cx->compartment->needsBarrier())
+            masm.emitPreBarrier(addr, MIRType_Value);
+
         masm.storeConstantOrRegister(value(), addr);
     }
 
