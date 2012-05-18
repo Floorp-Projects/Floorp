@@ -1319,7 +1319,7 @@ nsComputedDOMStyle::DoGetFontVariant()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetMozFontFeatureSettings()
+nsComputedDOMStyle::DoGetFontFeatureSettings()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
@@ -1336,7 +1336,7 @@ nsComputedDOMStyle::DoGetMozFontFeatureSettings()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetMozFontLanguageOverride()
+nsComputedDOMStyle::DoGetFontLanguageOverride()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
@@ -1768,7 +1768,7 @@ nsComputedDOMStyle::DoGetBackgroundRepeat()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetMozBackgroundSize()
+nsComputedDOMStyle::DoGetBackgroundSize()
 {
   const nsStyleBackground* bg = GetStyleBackground();
 
@@ -2505,7 +2505,7 @@ nsComputedDOMStyle::DoGetTextDecoration()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetMozTextDecorationColor()
+nsComputedDOMStyle::DoGetTextDecorationColor()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
@@ -2522,7 +2522,7 @@ nsComputedDOMStyle::DoGetMozTextDecorationColor()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetMozTextDecorationLine()
+nsComputedDOMStyle::DoGetTextDecorationLine()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
@@ -2546,7 +2546,7 @@ nsComputedDOMStyle::DoGetMozTextDecorationLine()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetMozTextDecorationStyle()
+nsComputedDOMStyle::DoGetTextDecorationStyle()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
@@ -2621,7 +2621,7 @@ nsComputedDOMStyle::DoGetTextTransform()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetMozTabSize()
+nsComputedDOMStyle::DoGetTabSize()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   val->SetNumber(GetStyleText()->mTabSize);
@@ -4530,7 +4530,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(background_origin,             BackgroundOrigin),
     COMPUTED_STYLE_MAP_ENTRY(background_position,           BackgroundPosition),
     COMPUTED_STYLE_MAP_ENTRY(background_repeat,             BackgroundRepeat),
-    COMPUTED_STYLE_MAP_ENTRY(background_size,               MozBackgroundSize),
+    COMPUTED_STYLE_MAP_ENTRY(background_size,               BackgroundSize),
     //// COMPUTED_STYLE_MAP_ENTRY(border,                   Border),
     //// COMPUTED_STYLE_MAP_ENTRY(border_bottom,            BorderBottom),
     COMPUTED_STYLE_MAP_ENTRY(border_bottom_color,           BorderBottomColor),
@@ -4685,8 +4685,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_width,        ColumnRuleWidth),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_width,             ColumnWidth),
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
-    COMPUTED_STYLE_MAP_ENTRY(font_feature_settings,         MozFontFeatureSettings),
-    COMPUTED_STYLE_MAP_ENTRY(font_language_override,        MozFontLanguageOverride),
+    COMPUTED_STYLE_MAP_ENTRY(font_feature_settings,         FontFeatureSettings),
+    COMPUTED_STYLE_MAP_ENTRY(font_language_override,        FontLanguageOverride),
     COMPUTED_STYLE_MAP_ENTRY(force_broken_image_icon,       ForceBrokenImageIcon),
     COMPUTED_STYLE_MAP_ENTRY(hyphens,                       Hyphens),
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
@@ -4698,12 +4698,12 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(perspective,                   Perspective),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(perspective_origin,     PerspectiveOrigin),
     COMPUTED_STYLE_MAP_ENTRY(stack_sizing,                  StackSizing),
-    COMPUTED_STYLE_MAP_ENTRY(_moz_tab_size,                 MozTabSize),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_tab_size,                 TabSize),
     COMPUTED_STYLE_MAP_ENTRY(text_align_last,               TextAlignLast),
     COMPUTED_STYLE_MAP_ENTRY(text_blink,                    MozTextBlink),
-    COMPUTED_STYLE_MAP_ENTRY(text_decoration_color,         MozTextDecorationColor),
-    COMPUTED_STYLE_MAP_ENTRY(text_decoration_line,          MozTextDecorationLine),
-    COMPUTED_STYLE_MAP_ENTRY(text_decoration_style,         MozTextDecorationStyle),
+    COMPUTED_STYLE_MAP_ENTRY(text_decoration_color,         TextDecorationColor),
+    COMPUTED_STYLE_MAP_ENTRY(text_decoration_line,          TextDecorationLine),
+    COMPUTED_STYLE_MAP_ENTRY(text_decoration_style,         TextDecorationStyle),
     COMPUTED_STYLE_MAP_ENTRY(text_size_adjust,              TextSizeAdjust),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(transform,              Transform),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(transform_origin,       TransformOrigin),
