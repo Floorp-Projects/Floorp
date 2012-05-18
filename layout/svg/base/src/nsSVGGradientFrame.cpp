@@ -272,8 +272,9 @@ nsSVGGradientFrame::GetRadialGradientWithLength(PRUint32 aIndex,
 
 already_AddRefed<gfxPattern>
 nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
-                                           float aGraphicOpacity,
-                                           const gfxRect *aOverrideBounds)
+                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                                          float aGraphicOpacity,
+                                          const gfxRect *aOverrideBounds)
 {
   // Get the transform list (if there is one)
   gfxMatrix patternMatrix = GetGradientTransform(aSource, aOverrideBounds);
@@ -288,6 +289,11 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
   if (nStops == 0) {
     nsRefPtr<gfxPattern> pattern = new gfxPattern(gfxRGBA(0, 0, 0, 0));
     return pattern.forget();
+  }
+
+  // revert the vector effect transform so that the gradient appears unchanged
+  if (aFillOrStroke == &nsStyleSVG::mStroke) {
+    patternMatrix.Multiply(nsSVGUtils::GetStrokeTransform(aSource).Invert());
   }
 
   patternMatrix.Invert();

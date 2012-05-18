@@ -1378,6 +1378,7 @@ GK_ATOM(y2, "y2")
 GK_ATOM(yChannelSelector, "yChannelSelector")
 GK_ATOM(z, "z")
 GK_ATOM(zoomAndPan, "zoomAndPan")
+GK_ATOM(vector_effect, "vector-effect")
 
 GK_ATOM(accumulate, "accumulate")
 GK_ATOM(additive, "additive")

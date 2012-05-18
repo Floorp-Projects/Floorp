@@ -281,6 +281,7 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     case eCSSProperty_text_decoration:
     case eCSSProperty_text_decoration_line:
     case eCSSProperty_text_rendering:
+    case eCSSProperty_vector_effect:
     case eCSSProperty_visibility:
     case eCSSProperty_word_spacing:
       return true;
