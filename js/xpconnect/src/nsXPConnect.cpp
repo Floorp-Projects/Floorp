@@ -2559,6 +2559,12 @@ nsXPConnect::GetCaller(JSContext **aJSContext, JSObject **aObj)
 namespace xpc {
 
 bool
+DeferredRelease(nsISupports *obj)
+{
+    return nsXPConnect::GetRuntimeInstance()->DeferredRelease(obj);
+}
+
+bool
 Base64Encode(JSContext *cx, JS::Value val, JS::Value *out)
 {
     MOZ_ASSERT(cx);
