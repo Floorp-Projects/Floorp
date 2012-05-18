@@ -2558,26 +2558,18 @@ bool
 IonBuilder::jsop_pos()
 {
     TypeOracle::Unary types = oracle->unaryOp(script, pc);
-    MDefinition *value = current->pop();
-    if (types.ival == MIRType_Int32) {
-        // Already an int32, no semantic difference!
-        current->push(value);
+    if (IsNumberType(types.ival)) {
+        // Already int32 or double.
+        JS_ASSERT(types.ival == types.rval);
         return true;
     }
 
-    MToDouble *ins = MToDouble::New(value);
-    current->add(ins);
-    current->push(ins);
+    // Compile +x as x * 1.
+    MDefinition *value = current->pop();
+    MConstant *one = MConstant::New(Int32Value(1));
+    current->add(one);
 
-    // If the expected type is >= string, we compile this as a more expensive
-    // variant and consider it effectful.
-    if (types.ival >= MIRType_String) {
-       ins->unspecialize();
-       if (!resumeAfter(ins))
-           return false;
-    }
-
-    return true;
+    return jsop_binary(JSOP_MUL, value, one);
 }
 
 bool

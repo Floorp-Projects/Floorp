@@ -1571,8 +1571,7 @@ class MPassArg
 // Converts a primitive (either typed or untyped) to a double. If the input is
 // not primitive at runtime, a bailout occurs.
 class MToDouble
-  : public MUnaryInstruction,
-    public SimplePolicy
+  : public MUnaryInstruction
 {
     MToDouble(MDefinition *def)
       : MUnaryInstruction(def)
@@ -1596,12 +1595,7 @@ class MToDouble
         return congruentIfOperandsEqual(ins);
     }
     AliasSet getAliasSet() const {
-        return specialized()
-               ? AliasSet::None()
-               : AliasSet::Store(AliasSet::Any);
-    }
-    TypePolicy *typePolicy() {
-        return this;
+        return AliasSet::None();
     }
 };
 
