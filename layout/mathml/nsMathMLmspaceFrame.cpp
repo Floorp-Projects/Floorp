@@ -103,14 +103,13 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   // default: 0ex
   //
   // The default value is "0ex", so unitless values can be ignored.
-  // XXXfredw Should we forbid negative values? (bugs 411227, 716349)
+  // We do not allow negative values. See bug 716349.
   //
   mHeight = 0;
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::height,
                value);
   if (!value.IsEmpty()) {
-    ParseNumericValue(value, &mHeight,
-                      nsMathMLElement::PARSE_ALLOW_NEGATIVE,
+    ParseNumericValue(value, &mHeight, 0,
                       aPresContext, mStyleContext);
   }
 
@@ -122,14 +121,13 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   // default: 0ex
   //
   // The default value is "0ex", so unitless values can be ignored.
-  // XXXfredw Should we forbid negative values? (bugs 411227, 716349)
+  // We do not allow negative values. See bug 716349.
   //
   mDepth = 0;
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::depth_,
                value);
   if (!value.IsEmpty()) {
-    ParseNumericValue(value, &mDepth,
-                      nsMathMLElement::PARSE_ALLOW_NEGATIVE,
+    ParseNumericValue(value, &mDepth, 0,
                       aPresContext, mStyleContext);
   }
 }
@@ -141,16 +139,18 @@ nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
                             nsReflowStatus&          aStatus)
 {
   ProcessAttributes(aPresContext);
+  // nsLineLayout doesn't expect negative widths.
+  // XXXfredw Negative spaces are not implemented. See bug 717546
 
   mBoundingMetrics = nsBoundingMetrics();
-  mBoundingMetrics.width = mWidth;
+  mBoundingMetrics.width = NS_MAX(0, mWidth);
   mBoundingMetrics.ascent = mHeight;
   mBoundingMetrics.descent = mDepth;
   mBoundingMetrics.leftBearing = 0;
-  mBoundingMetrics.rightBearing = mWidth;
+  mBoundingMetrics.rightBearing = mBoundingMetrics.width;
 
   aDesiredSize.ascent = mHeight;
-  aDesiredSize.width = mWidth;
+  aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.height = aDesiredSize.ascent + mDepth;
   // Also return our bounding metrics
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;

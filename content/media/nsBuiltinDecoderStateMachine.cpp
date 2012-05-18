@@ -1126,8 +1126,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
       // we pushed to the audio hardware. We must push silence into the audio
       // hardware so that the next audio chunk begins playback at the correct
       // time.
-      missingFrames = NS_MIN(static_cast<PRInt64>(PR_UINT32_MAX),
-                             missingFrames.value());
+      missingFrames = NS_MIN<int64_t>(UINT32_MAX, missingFrames.value());
       LOG(PR_LOG_DEBUG, ("%p Decoder playing %d frames of silence",
                          mDecoder.get(), PRInt32(missingFrames.value())));
       framesWritten = PlaySilence(static_cast<PRUint32>(missingFrames.value()),

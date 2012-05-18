@@ -1295,7 +1295,11 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
-        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
+            }
+        });
     }
 
     void handleTitleChanged(int tabId, String title) {

@@ -466,7 +466,13 @@ public class GeckoLayerClient implements GeckoEventResponder,
     public void compositionPauseRequested() {
         // We need to coordinate with Gecko when pausing composition, to ensure
         // that Gecko never executes a draw event while the compositor is paused.
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createCompositorPauseEvent());
+        // This is sent synchronously to make sure that we don't attempt to use
+        // any outstanding Surfaces after we call this (such as from a
+        // surfaceDestroyed notification), and to make sure that any in-flight
+        // Gecko draw events have been processed.  When this returns, composition is
+        // definitely paused -- it'll synchronize with the Gecko event loop, which
+        // in turn will synchronize with the compositor thread.
+        GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createCompositorPauseEvent());
     }
 
     /** Implementation of LayerView.Listener */

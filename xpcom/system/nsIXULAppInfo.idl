@@ -41,7 +41,7 @@
  * a detailed description of each attribute.
  */
 
-[scriptable, uuid(a61ede2a-ef09-11d9-a5ce-001124787b2e)]
+[scriptable, uuid(1518e7d2-022a-4dae-b02e-bbe7ffcf2145)]
 interface nsIXULAppInfo : nsISupports
 {
   /**
