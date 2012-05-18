@@ -451,7 +451,7 @@ nsresult nsOggReader::DecodeOpus(ogg_packet* aPacket) {
     PRInt32 goodFrames = frames - skip;
     NS_ASSERTION(goodFrames > 0, "endTime calculation was wrong");
     nsAutoArrayPtr<AudioDataValue> goodBuffer(new AudioDataValue[goodFrames * channels]);
-    for (int i = 0; i < goodFrames*channels; i++)
+    for (PRInt32 i = 0; i < goodFrames * PRInt32(channels); i++)
       goodBuffer[i] = buffer[skip*channels + i];
 
     startTime = mOpusState->Time(endFrame - goodFrames);
