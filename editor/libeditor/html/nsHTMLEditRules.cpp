@@ -8721,19 +8721,13 @@ nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, bool aStarts)
   }
   if (!foundCR)
   {
-    nsCOMPtr<nsIDOMNode> brNode;
     PRInt32 offset = 0;
-    if (!aStarts)
-    {
-      nsCOMPtr<nsIDOMNodeList> childNodes;
-      res = aNode->GetChildNodes(getter_AddRefs(childNodes));
-      NS_ENSURE_SUCCESS(res, res);
-      NS_ENSURE_TRUE(childNodes, NS_ERROR_NULL_POINTER);
-      PRUint32 childCount;
-      res = childNodes->GetLength(&childCount);
-      NS_ENSURE_SUCCESS(res, res);
-      offset = childCount;
+    if (!aStarts) {
+      nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+      NS_ENSURE_STATE(node);
+      offset = node->GetChildCount();
     }
+    nsCOMPtr<nsIDOMNode> brNode;
     res = mHTMLEditor->CreateBR(aNode, offset, address_of(brNode));
     NS_ENSURE_SUCCESS(res, res);
   }
