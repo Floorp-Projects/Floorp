@@ -2362,6 +2362,7 @@ Tab.prototype = {
     }
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
     this.updateViewportSize(gScreenWidth);
+    this.sendViewportMetadata();
   },
 
   /** Update viewport when the metadata or the window size changes. */
@@ -2440,6 +2441,15 @@ Tab.prototype = {
     let zoom = this.clampZoom(this._zoom * zoomScale);
     this.setResolution(zoom, false);
     this.sendViewportUpdate();
+  },
+
+  sendViewportMetadata: function sendViewportMetadata() {
+    sendMessageToJava({ gecko: {
+      type: "Tab:ViewportMetadata",
+      allowZoom: this.metadata.allowZoom,
+      defaultZoom: this.metadata.defaultZoom || 0,
+      tabID: this.id
+    }});
   },
 
   setBrowserSize: function(aWidth, aHeight) {
