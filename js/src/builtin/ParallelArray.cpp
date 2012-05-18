@@ -961,6 +961,13 @@ ParallelArray_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, Value
     return true;
 }
 
+static void
+ParallelArray_trace(JSTracer *trc, JSObject *obj)
+{
+    gc::MarkSlot(trc, &obj->getSlotRef(JSSLOT_PA_LENGTH), "parallel-array-length");
+    gc::MarkSlot(trc, &obj->getSlotRef(JSSLOT_PA_BUFFER), "parallel-array-buffer");
+}
+
 Class js::ParallelArrayProtoClass = {
     "ParallelArray",
     JSCLASS_HAS_CACHED_PROTO(JSProto_ParallelArray),
@@ -988,7 +995,7 @@ Class js::ParallelArrayClass = {
     NULL,                    /* call        */
     NULL,                    /* construct   */
     NULL,                    /* hasInstance */
-    NULL,                    /* trace */
+    ParallelArray_trace,     /* trace */
     JS_NULL_CLASS_EXT,
     {
         ParallelArray_lookupGeneric,
