@@ -591,12 +591,7 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
     return NS_OK;
   }
 
-  bool putSucceeded = mObservers.Put(pCallback, pCallback);
-
-  if (!putSucceeded) {
-    delete pCallback;
-    return NS_ERROR_FAILURE;
-  }
+  mObservers.Put(pCallback, pCallback);
 
   // We must pass a fully qualified preference name to the callback
   // aDomain == nsnull is the only possible failure, and we trapped it with

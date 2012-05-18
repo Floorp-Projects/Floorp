@@ -350,7 +350,7 @@ nsDOMFileReader::DoOnDataAvailable(nsIRequest *aRequest,
                  "unexpected mResult length");
     PRUint32 oldLen = mResult.Length();
     PRUnichar *buf = nsnull;
-    mResult.GetMutableData(&buf, oldLen + aCount);
+    mResult.GetMutableData(&buf, oldLen + aCount, fallible_t());
     NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
 
     PRUint32 bytesRead = 0;
@@ -563,8 +563,8 @@ nsDOMFileReader::ConvertStream(const char *aFileData,
   rv = unicodeDecoder->GetMaxLength(aFileData, aDataLen, &destLength);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aResult.SetLength(destLength);  //Make sure we have enough space for the conversion
-  destLength = aResult.Length();
+  if (!aResult.SetLength(destLength, fallible_t()))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   PRInt32 srcLength = aDataLen;
   rv = unicodeDecoder->Convert(aFileData, &srcLength, aResult.BeginWriting(), &destLength);

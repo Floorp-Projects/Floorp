@@ -72,8 +72,7 @@ nsEffectiveTLDService::Init()
   // use a perfect hash, but at least we'll save a few rehashes along the way.
   // Next optimization here is to precompute the hash using something like
   // gperf, but one step at a time.  :-)
-  if (!mHash.Init(ArrayLength(gEntries) - 1))
-    return NS_ERROR_OUT_OF_MEMORY;
+  mHash.Init(ArrayLength(gEntries) - 1);
 
   nsresult rv;
   mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);

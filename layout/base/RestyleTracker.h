@@ -76,8 +76,8 @@ public:
                     "Shouldn't have both root flags");
   }
 
-  bool Init() {
-    return mPendingRestyles.Init();
+  void Init() {
+    mPendingRestyles.Init();
   }
 
   PRUint32 Count() const {

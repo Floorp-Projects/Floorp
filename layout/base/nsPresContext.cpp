@@ -954,9 +954,9 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
     mDeviceContext->FlushFontCache();
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 
-  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
-    if (!mImageLoaders[i].Init())
-      return NS_ERROR_OUT_OF_MEMORY;
+  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i) {
+    mImageLoaders[i].Init();
+  }
 
   mEventManager = new nsEventStateManager();
   NS_ADDREF(mEventManager);
