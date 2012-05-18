@@ -140,7 +140,7 @@ static NS_DEFINE_CID(kSessionStoreWindowRestoredCID,
 
 using namespace mozilla;
 
-PRUint32 gRestartMode = 0;
+uint32_t gRestartMode = 0;
 
 class nsAppExitEvent : public nsRunnable {
 private:
@@ -302,9 +302,9 @@ nsAppStartup::Run(void)
 
 
 NS_IMETHODIMP
-nsAppStartup::Quit(PRUint32 aMode)
+nsAppStartup::Quit(uint32_t aMode)
 {
-  PRUint32 ferocity = (aMode & 0xF);
+  uint32_t ferocity = (aMode & 0xF);
 
   // Quit the application. We will asynchronously call the appshell's
   // Exit() method via nsAppExitEvent to allow one last pass
@@ -373,7 +373,7 @@ nsAppStartup::Quit(PRUint32 aMode)
 
     if (mRestart) {
       // Firefox-restarts reuse the process. Process start-time isn't a useful indicator of startup time
-      PR_SetEnv(PR_smprintf("MOZ_APP_RESTART=%lld", (PRInt64) PR_Now() / PR_USEC_PER_MSEC));
+      PR_SetEnv(PR_smprintf("MOZ_APP_RESTART=%lld", (int64_t) PR_Now() / PR_USEC_PER_MSEC));
     }
 
     obsService = mozilla::services::GetObserverService();
@@ -543,7 +543,7 @@ nsAppStartup::GetInterrupted(bool *aInterrupted)
 
 NS_IMETHODIMP
 nsAppStartup::CreateChromeWindow(nsIWebBrowserChrome *aParent,
-                                 PRUint32 aChromeFlags,
+                                 uint32_t aChromeFlags,
                                  nsIWebBrowserChrome **_retval)
 {
   bool cancel;
@@ -557,8 +557,8 @@ nsAppStartup::CreateChromeWindow(nsIWebBrowserChrome *aParent,
 
 NS_IMETHODIMP
 nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
-                                  PRUint32 aChromeFlags,
-                                  PRUint32 aContextFlags,
+                                  uint32_t aChromeFlags,
+                                  uint32_t aContextFlags,
                                   nsIURI *aURI,
                                   bool *aCancel,
                                   nsIWebBrowserChrome **_retval)
@@ -652,7 +652,7 @@ nsAppStartup::Observe(nsISupports *aSubject,
 }
 
 #if defined(LINUX) || defined(ANDROID)
-static PRUint64 
+static uint64_t 
 JiffiesSinceBoot(const char *file)
 {
   char stat[512];
@@ -665,7 +665,7 @@ JiffiesSinceBoot(const char *file)
     return 0;
   stat[n] = 0;
   
-  long long unsigned starttime = 0; // instead of PRUint64 to keep GCC quiet
+  long long unsigned starttime = 0; // instead of uint64_t to keep GCC quiet
   
   char *s = strrchr(stat, ')');
   if (!s)
@@ -690,8 +690,8 @@ ThreadedCalculateProcessCreationTimestamp(void *aClosure)
   char thread_stat[40];
   sprintf(thread_stat, "/proc/self/task/%d/stat", (pid_t) syscall(__NR_gettid));
   
-  PRUint64 thread_jiffies = JiffiesSinceBoot(thread_stat);
-  PRUint64 self_jiffies = JiffiesSinceBoot("/proc/self/stat");
+  uint64_t thread_jiffies = JiffiesSinceBoot(thread_stat);
+  uint64_t self_jiffies = JiffiesSinceBoot("/proc/self/stat");
   
   if (!thread_jiffies || !self_jiffies)
     return;
@@ -723,7 +723,7 @@ CalculateProcessCreationTimestamp()
   if (!success)
     return 0;
   // copied from NSPR _PR_FileTimeToPRTime
-  PRUint64 timestamp = 0;
+  uint64_t timestamp = 0;
   CopyMemory(&timestamp, &start, sizeof(PRTime));
 #ifdef __GNUC__
   timestamp = (timestamp - 116444736000000000LL) / 10LL;
@@ -831,8 +831,8 @@ nsAppStartup::GetAutomaticSafeModeNecessary(bool *_retval)
 NS_IMETHODIMP
 nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
 {
-  const PRInt32 MAX_TIME_SINCE_STARTUP = 6 * 60 * 60 * 1000;
-  const PRInt32 MAX_STARTUP_BUFFER = 10;
+  const int32_t MAX_TIME_SINCE_STARTUP = 6 * 60 * 60 * 1000;
+  const int32_t MAX_STARTUP_BUFFER = 10;
   nsresult rv;
 
   mStartupCrashTrackingEnded = false;
@@ -853,7 +853,7 @@ nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
 
   xr->GetInSafeMode(&inSafeMode);
 
-  PRInt64 replacedLockTime;
+  int64_t replacedLockTime;
   rv = xr->GetReplacedLockTime(&replacedLockTime);
 
   if (NS_FAILED(rv) || !replacedLockTime) {
@@ -864,11 +864,11 @@ nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
   }
 
   // check whether safe mode is necessary
-  PRInt32 maxResumedCrashes = -1;
+  int32_t maxResumedCrashes = -1;
   rv = Preferences::GetInt(kPrefMaxResumedCrashes, &maxResumedCrashes);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
-  PRInt32 recentCrashes = 0;
+  int32_t recentCrashes = 0;
   Preferences::GetInt(kPrefRecentCrashes, &recentCrashes);
   mIsSafeModeNecessary = (recentCrashes > maxResumedCrashes && maxResumedCrashes != -1);
 
@@ -882,11 +882,11 @@ nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
   }
 
   // time of last successful startup
-  PRInt32 lastSuccessfulStartup;
+  int32_t lastSuccessfulStartup;
   rv = Preferences::GetInt(kPrefLastSuccess, &lastSuccessfulStartup);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 lockSeconds = (PRInt32)(replacedLockTime / PR_MSEC_PER_SEC);
+  int32_t lockSeconds = (int32_t)(replacedLockTime / PR_MSEC_PER_SEC);
 
   // started close enough to good startup so call it good
   if (lockSeconds <= lastSuccessfulStartup + MAX_STARTUP_BUFFER
@@ -953,7 +953,7 @@ nsAppStartup::TrackStartupCrashEnd()
   if (mainTime <= 0) {
     NS_WARNING("Could not get StartupTimeline::MAIN time.");
   } else {
-    PRInt32 lockFileTime = (PRInt32)(mainTime / PR_USEC_PER_SEC);
+    int32_t lockFileTime = (int32_t)(mainTime / PR_USEC_PER_SEC);
     rv = Preferences::SetInt(kPrefLastSuccess, lockFileTime);
     if (NS_FAILED(rv)) NS_WARNING("Could not set startup crash detection pref.");
   }
@@ -961,8 +961,8 @@ nsAppStartup::TrackStartupCrashEnd()
   if (inSafeMode && mIsSafeModeNecessary) {
     // On a successful startup in automatic safe mode, allow the user one more crash
     // in regular mode before returning to safe mode.
-    PRInt32 maxResumedCrashes = 0;
-    PRInt32 prefType;
+    int32_t maxResumedCrashes = 0;
+    int32_t prefType;
     rv = Preferences::GetDefaultRootBranch()->GetPrefType(kPrefMaxResumedCrashes, &prefType);
     NS_ENSURE_SUCCESS(rv, rv);
     if (prefType == nsIPrefBranch::PREF_INT) {
@@ -983,7 +983,7 @@ nsAppStartup::TrackStartupCrashEnd()
 }
 
 NS_IMETHODIMP
-nsAppStartup::RestartInSafeMode(PRUint32 aQuitMode)
+nsAppStartup::RestartInSafeMode(uint32_t aQuitMode)
 {
   PR_SetEnv("MOZ_SAFE_MODE_RESTART=1");
   this->Quit(aQuitMode | nsIAppStartup::eRestart);

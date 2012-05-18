@@ -316,6 +316,8 @@ namespace CDataFinalizer {
    * Note that the jsval is actually not recorded, but converted back from C.
    */
   static bool GetValue(JSContext *cx, JSObject *obj, jsval *result);
+
+  static JSObject* GetCData(JSContext *cx, JSObject *obj);
  }
 
 
@@ -508,6 +510,7 @@ static JSPropertySpec sCDataFinalizerProps[] = {
 static JSFunctionSpec sCDataFinalizerFunctions[] = {
   JS_FN("dispose",  CDataFinalizer::Methods::Dispose,  0, CDATAFINALIZERFN_FLAGS),
   JS_FN("forget",   CDataFinalizer::Methods::Forget,   0, CDATAFINALIZERFN_FLAGS),
+  JS_FN("readString",CData::ReadString, 0, CDATAFINALIZERFN_FLAGS),
   JS_FN("toString", CDataFinalizer::Methods::ToString, 0, CDATAFINALIZERFN_FLAGS),
   JS_FN("toSource", CDataFinalizer::Methods::ToSource, 0, CDATAFINALIZERFN_FLAGS),
   JS_FS_END
@@ -6285,7 +6288,7 @@ CData::ReadString(JSContext* cx, unsigned argc, jsval* vp)
     return JS_FALSE;
   }
 
-  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  JSObject* obj = CDataFinalizer::GetCData(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
     return JS_FALSE;
   if (!IsCData(obj)) {
@@ -6560,6 +6563,28 @@ CDataFinalizer::GetCType(JSContext *cx, JSObject *obj)
   }
 
   return JSVAL_TO_OBJECT(valData);
+}
+
+JSObject*
+CDataFinalizer::GetCData(JSContext *cx, JSObject *obj)
+{
+  if (!obj) {
+    JS_ReportError(cx, "No C data");
+    return NULL;
+  }
+  if (CData::IsCData(obj)) {
+    return obj;
+  }
+  if (!CDataFinalizer::IsCDataFinalizer(obj)) {
+    JS_ReportError(cx, "Not C data");
+    return NULL;
+  }
+  jsval val;
+  if (!CDataFinalizer::GetValue(cx, obj, &val) || JSVAL_IS_PRIMITIVE(val)) {
+    JS_ReportError(cx, "Empty CDataFinalizer");
+    return NULL;
+  }
+  return JSVAL_TO_OBJECT(val);
 }
 
 bool

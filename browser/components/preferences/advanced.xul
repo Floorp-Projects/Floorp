@@ -204,14 +204,17 @@
             <caption label="&systemDefaults.label;"/>
 
 #ifdef HAVE_SHELL_SERVICE
-            <hbox id="checkDefaultBox" align="center" flex="1">      
-              <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
-                        label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
-                        flex="1"/>
-              <button id="checkDefaultButton"
-                      label="&checkNow.label;" accesskey="&checkNow.accesskey;"
-                      oncommand="gAdvancedPane.checkNow()"
-                      preference="pref.general.disable_button.default_browser"/>
+            <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
+                      label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
+                      flex="1"/>
+            <hbox class="indent">
+              <deck id="setDefaultPane">
+                <button id="setDefaultButton"
+                        label="&setDefault.label;" accesskey="&setDefault.accesskey;"
+                        oncommand="gAdvancedPane.setDefaultBrowser();"
+                        preference="pref.general.disable_button.default_browser"/>
+                <description>&isDefault.label;</description>
+              </deck>
             </hbox>
 #ifdef MOZ_CRASHREPORTER
             <checkbox id="submitCrashesBox" flex="1"

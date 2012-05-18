@@ -5,7 +5,6 @@
 package org.mozilla.gecko.sync;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -15,6 +14,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.json.simple.parser.ParseException;
@@ -49,11 +50,11 @@ import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 import org.mozilla.gecko.sync.stage.NoSuchStageException;
 import org.mozilla.gecko.sync.stage.PasswordsServerSyncStage;
 import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
+import org.mozilla.gecko.sync.stage.UploadMetaGlobalStage;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import ch.boye.httpclientandroidlib.HttpResponse;
 
 public class GlobalSession implements CredentialsSource, PrefsSource, HttpResponseObserver {
@@ -70,6 +71,11 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
   public final GlobalSessionCallback callback;
   private Context context;
   private ClientsDataDelegate clientsDelegate;
+
+  /**
+   * Map from engine name to new settings for an updated meta/global record.
+   */
+  public final Map<String, EngineSettings> enginesToUpdate = new HashMap<String, EngineSettings>();
 
   /*
    * Key accessors.
@@ -219,6 +225,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     stages.put(Stage.syncHistory,             new AndroidBrowserHistoryServerSyncStage(this));
     stages.put(Stage.syncFormHistory,         new FormHistoryServerSyncStage(this));
 
+    stages.put(Stage.uploadMetaGlobal,        new UploadMetaGlobalStage(this));
     stages.put(Stage.completed,               new CompletedStage(this));
 
     this.stages = Collections.unmodifiableMap(stages);
@@ -305,15 +312,6 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     }
   }
 
-  private String getSyncID() {
-    return config.syncID;
-  }
-
-  private String generateSyncID() {
-    config.syncID = Utils.generateGuid();
-    return config.syncID;
-  }
-
   /*
    * PrefsSource methods.
    */
@@ -365,12 +363,114 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     this.callback.handleSuccess(this);
   }
 
+  /**
+   * Record that an updated meta/global record should be uploaded with the given
+   * settings for the given engine.
+   *
+   * @param engineName engine to update.
+   * @param engineSettings new syncID and version.
+   */
+  public void updateMetaGlobalWith(String engineName, EngineSettings engineSettings) {
+    enginesToUpdate.put(engineName, engineSettings);
+  }
+
+  public boolean hasUpdatedMetaGlobal() {
+    if (enginesToUpdate.isEmpty()) {
+      Logger.info(LOG_TAG, "Not uploading updated meta/global record since there are no engines requesting upload.");
+      return false;
+    }
+
+    if (Logger.logVerbose(LOG_TAG)) {
+      Logger.trace(LOG_TAG, "Uploading updated meta/global record since there are engines requesting upload: " +
+          Utils.toCommaSeparatedString(enginesToUpdate.keySet()));
+    }
+
+    return true;
+  }
+
+  public void updateMetaGlobalInPlace() {
+    ExtendedJSONObject engines = config.metaGlobal.getEngines();
+    for (Entry<String, EngineSettings> pair : enginesToUpdate.entrySet()) {
+      engines.put(pair.getKey(), pair.getValue().toJSONObject());
+    }
+    enginesToUpdate.clear();
+  }
+
+  /**
+   * Synchronously upload an updated meta/global.
+   * <p>
+   * All problems are logged and ignored.
+   */
+  public void uploadUpdatedMetaGlobal() {
+    updateMetaGlobalInPlace();
+
+    Logger.debug(LOG_TAG, "Uploading updated meta/global record.");
+    final Object monitor = new Object();
+
+    Runnable doUpload = new Runnable() {
+      @Override
+      public void run() {
+        config.metaGlobal.upload(new MetaGlobalDelegate() {
+          @Override
+          public void handleSuccess(MetaGlobal global, SyncStorageResponse response) {
+            Logger.info(LOG_TAG, "Successfully uploaded updated meta/global record.");
+            synchronized (monitor) {
+              monitor.notify();
+            }
+          }
+
+          @Override
+          public void handleMissing(MetaGlobal global, SyncStorageResponse response) {
+            Logger.warn(LOG_TAG, "Got 404 missing uploading updated meta/global record; shouldn't happen.  Ignoring.");
+            synchronized (monitor) {
+              monitor.notify();
+            }
+          }
+
+          @Override
+          public void handleFailure(SyncStorageResponse response) {
+            Logger.warn(LOG_TAG, "Failed to upload updated meta/global record; ignoring.");
+            synchronized (monitor) {
+              monitor.notify();
+            }
+          }
+
+          @Override
+          public void handleError(Exception e) {
+            Logger.warn(LOG_TAG, "Got exception trying to upload updated meta/global record; ignoring.", e);
+            synchronized (monitor) {
+              monitor.notify();
+            }
+          }
+        });
+      }
+    };
+
+    final Thread upload = new Thread(doUpload);
+    synchronized (monitor) {
+      try {
+        upload.start();
+        monitor.wait();
+        Logger.debug(LOG_TAG, "Uploaded updated meta/global record.");
+      } catch (InterruptedException e) {
+        Logger.error(LOG_TAG, "Uploading updated meta/global interrupted; continuing.");
+      }
+    }
+  }
+
+
   public void abort(Exception e, String reason) {
     Logger.warn(LOG_TAG, "Aborting sync: " + reason, e);
     uninstallAsHttpResponseObserver();
     long existingBackoff = largestBackoffObserved.get();
     if (existingBackoff > 0) {
       callback.requestBackoff(existingBackoff);
+    }
+    if (!(e instanceof HTTPFailureException)) {
+      //  e is null, or we aborted for a non-HTTP reason; okay to upload new meta/global record.
+      if (this.hasUpdatedMetaGlobal()) {
+        this.uploadUpdatedMetaGlobal(); // Only logs errors; does not call abort.
+      }
     }
     this.callback.handleError(this, e);
   }
@@ -464,12 +564,14 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
 
       @Override
       public void handleRequestSuccess(SyncStorageResponse response) {
+        Logger.debug(LOG_TAG, "Keys uploaded.");
         BaseResource.consumeEntity(response); // We don't need the response at all.
         keyUploadDelegate.onKeysUploaded();
       }
 
       @Override
       public void handleRequestFailure(SyncStorageResponse response) {
+        Logger.debug(LOG_TAG, "Failed to upload keys.");
         self.interpretHTTPFailure(response.httpResponse());
         BaseResource.consumeEntity(response); // The exception thrown should not need the body of the response.
         keyUploadDelegate.onKeyUploadFailed(new HTTPFailureException(response));
@@ -477,6 +579,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
 
       @Override
       public void handleRequestError(Exception ex) {
+        Logger.warn(LOG_TAG, "Got exception trying to upload keys", ex);
         keyUploadDelegate.onKeyUploadFailed(ex);
       }
 
@@ -486,19 +589,14 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
       }
     };
 
+    // Convert keys to an encrypted crypto record.
     CryptoRecord keysRecord;
     try {
       keysRecord = keys.asCryptoRecord();
       keysRecord.setKeyBundle(config.syncKeyBundle);
       keysRecord.encrypt();
-    } catch (UnsupportedEncodingException e) {
-      keyUploadDelegate.onKeyUploadFailed(e);
-      return;
-    } catch (CryptoException e) {
-      keyUploadDelegate.onKeyUploadFailed(e);
-      return;
-    } catch (NoCollectionKeysSetException e) {
-      // Should not occur.
+    } catch (Exception e) {
+      Logger.warn(LOG_TAG, "Got exception trying creating crypto record from keys", e);
       keyUploadDelegate.onKeyUploadFailed(e);
       return;
     }
@@ -513,30 +611,48 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     config.metaGlobal = global;
 
     Long storageVersion = global.getStorageVersion();
+    if (storageVersion == null) {
+      Logger.warn(LOG_TAG, "Malformed remote meta/global: could not retrieve remote storage version.");
+      freshStart();
+      return;
+    }
     if (storageVersion < STORAGE_VERSION) {
-      // Outdated server.
+      Logger.warn(LOG_TAG, "Outdated server: reported " +
+          "remote storage version " + storageVersion + " < " +
+          "local storage version " + STORAGE_VERSION);
       freshStart();
       return;
     }
     if (storageVersion > STORAGE_VERSION) {
-      // Outdated client!
+      Logger.warn(LOG_TAG, "Outdated client: reported " +
+          "remote storage version " + storageVersion + " > " +
+          "local storage version " + STORAGE_VERSION);
       requiresUpgrade();
       return;
     }
     String remoteSyncID = global.getSyncID();
     if (remoteSyncID == null) {
-      // Corrupt meta/global.
+      Logger.warn(LOG_TAG, "Malformed remote meta/global: could not retrieve remote syncID.");
       freshStart();
       return;
     }
-    String localSyncID = this.getSyncID();
+    String localSyncID = config.syncID;
     if (!remoteSyncID.equals(localSyncID)) {
-      // Sync ID has changed. Reset timestamps and fetch new keys.
+      Logger.warn(LOG_TAG, "Remote syncID different from local syncID: resetting client and assuming remote syncID.");
       resetAllStages();
       config.purgeCryptoKeys();
       config.syncID = remoteSyncID;
     }
+    // Persist enabled engine names.
     config.enabledEngineNames = global.getEnabledEngineNames();
+    if (config.enabledEngineNames == null) {
+      Logger.warn(LOG_TAG, "meta/global reported no enabled engine names!");
+    } else {
+      if (Logger.logVerbose(LOG_TAG)) {
+        Logger.trace(LOG_TAG, "Persisting enabled engine names '" +
+            Utils.toCommaSeparatedString(config.enabledEngineNames) + "' from meta/global.");
+      }
+    }
     config.persistToPrefs();
     advance();
   }
@@ -548,7 +664,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
   /**
    * Do a fresh start then quietly finish the sync, starting another.
    */
-  protected void freshStart() {
+  public void freshStart() {
     final GlobalSession globalSession = this;
     freshStart(this, new FreshStartDelegate() {
 
@@ -560,6 +676,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
       @Override
       public void onFreshStart() {
         try {
+          Logger.warn(LOG_TAG, "Fresh start succeeded; restarting global session.");
           globalSession.config.persistToPrefs();
           globalSession.restart();
         } catch (Exception e) {
@@ -572,67 +689,83 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
 
   /**
    * Clean the server, aborting the current sync.
+   * <p>
+   * <ol>
+   * <li>Wipe the server storage.</li>
+   * <li>Reset all stages and purge cached state: (meta/global and crypto/keys records).</li>
+   * <li>Upload fresh meta/global record.</li>
+   * <li>Upload fresh crypto/keys record.</li>
+   * <li>Restart the sync entirely in order to re-download meta/global and crypto/keys record.</li>
+   * </ol>
+   * @param session the current session.
+   * @param freshStartDelegate delegate to notify on fresh start or failure.
    */
-  protected void freshStart(final GlobalSession session, final FreshStartDelegate freshStartDelegate) {
+  protected static void freshStart(final GlobalSession session, final FreshStartDelegate freshStartDelegate) {
+    Logger.debug(LOG_TAG, "Fresh starting.");
 
-    final String newSyncID   = session.generateSyncID();
-    final String metaURL     = session.config.metaURL();
-    final String credentials = session.credentials();
+    final MetaGlobal mg = session.generateNewMetaGlobal();
 
-    wipeServer(session, new WipeServerDelegate() {
+    session.wipeServer(session, new WipeServerDelegate() {
 
       @Override
       public void onWiped(long timestamp) {
+        Logger.debug(LOG_TAG, "Successfully wiped server.  Resetting all stages and purging cached meta/global and crypto/keys records.");
+
         session.resetAllStages();
+        session.config.purgeMetaGlobal();
         session.config.purgeCryptoKeys();
         session.config.persistToPrefs();
 
-        MetaGlobal mg = new MetaGlobal(metaURL, credentials);
-        mg.setSyncID(newSyncID);
-        mg.setStorageVersion(STORAGE_VERSION);
+        Logger.info(LOG_TAG, "Uploading new meta/global with sync ID " + mg.syncID + ".");
 
         // It would be good to set the X-If-Unmodified-Since header to `timestamp`
         // for this PUT to ensure at least some level of transactionality.
         // Unfortunately, the servers don't support it after a wipe right now
         // (bug 693893), so we're going to defer this until bug 692700.
         mg.upload(new MetaGlobalDelegate() {
-
           @Override
-          public void handleSuccess(MetaGlobal global, SyncStorageResponse response) {
-            session.config.metaGlobal = global;
-            Logger.info(LOG_TAG, "New meta/global uploaded with sync ID " + newSyncID);
+          public void handleSuccess(MetaGlobal uploadedGlobal, SyncStorageResponse uploadResponse) {
+            Logger.info(LOG_TAG, "Uploaded new meta/global with sync ID " + uploadedGlobal.syncID + ".");
 
-            // Generate and upload new keys.
+            // Generate new keys.
+            CollectionKeys keys = null;
             try {
-              session.uploadKeys(CollectionKeys.generateCollectionKeys(), new KeyUploadDelegate() {
-                @Override
-                public void onKeysUploaded() {
-                  // Now we can download them.
-                  freshStartDelegate.onFreshStart();
-                }
-
-                @Override
-                public void onKeyUploadFailed(Exception e) {
-                  Log.e(LOG_TAG, "Got exception uploading new keys.", e);
-                  freshStartDelegate.onFreshStartFailed(e);
-                }
-              });
+              keys = session.generateNewCryptoKeys();
             } catch (CryptoException e) {
-              Log.e(LOG_TAG, "Got exception generating new keys.", e);
+              Logger.warn(LOG_TAG, "Got exception generating new keys; failing fresh start.", e);
               freshStartDelegate.onFreshStartFailed(e);
             }
+            if (keys == null) {
+              Logger.warn(LOG_TAG, "Got null keys from generateNewKeys; failing fresh start.");
+              freshStartDelegate.onFreshStartFailed(null);
+            }
+
+            // Upload new keys.
+            Logger.info(LOG_TAG, "Uploading new crypto/keys.");
+            session.uploadKeys(keys, new KeyUploadDelegate() {
+              @Override
+              public void onKeysUploaded() {
+                Logger.info(LOG_TAG, "Uploaded new crypto/keys.");
+                freshStartDelegate.onFreshStart();
+              }
+
+              @Override
+              public void onKeyUploadFailed(Exception e) {
+                Logger.warn(LOG_TAG, "Got exception uploading new keys.", e);
+                freshStartDelegate.onFreshStartFailed(e);
+              }
+            });
           }
 
           @Override
           public void handleMissing(MetaGlobal global, SyncStorageResponse response) {
-            // Shouldn't happen.
+            // Shouldn't happen on upload.
             Logger.warn(LOG_TAG, "Got 'missing' response uploading new meta/global.");
-            freshStartDelegate.onFreshStartFailed(new Exception("meta/global missing"));
+            freshStartDelegate.onFreshStartFailed(new Exception("meta/global missing while uploading."));
           }
 
           @Override
           public void handleFailure(SyncStorageResponse response) {
-            // TODO: respect backoffs etc.
             Logger.warn(LOG_TAG, "Got failure " + response.getStatusCode() + " uploading new meta/global.");
             session.interpretHTTPFailure(response.httpResponse());
             freshStartDelegate.onFreshStartFailed(new HTTPFailureException(response));
@@ -672,7 +805,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
   // reset client to prompt reupload.
   // If sync ID mismatch: take that syncID and reset client.
 
-  private void wipeServer(final CredentialsSource credentials, final WipeServerDelegate wipeDelegate) {
+  protected void wipeServer(final CredentialsSource credentials, final WipeServerDelegate wipeDelegate) {
     SyncStorageRequest request;
     final GlobalSession self = this;
 
@@ -780,12 +913,79 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
   }
 
   /**
+   * Engines to include in a fresh meta/global record.
+   * <p>
+   * Returns either the persisted engine names (perhaps we have been node
+   * re-assigned and are initializing a clean server: we want to upload the
+   * persisted engine names so that we don't accidentally disable engines that
+   * Android Sync doesn't recognize), or the set of engines names that Android
+   * Sync implements.
+   *
+   * @return set of engine names.
+   */
+  protected Set<String> enabledEngineNames() {
+    if (config.enabledEngineNames != null) {
+      return config.enabledEngineNames;
+    }
+    Set<String> engineNames = new HashSet<String>();
+    for (Stage stage : Stage.getNamedStages()) {
+      engineNames.add(stage.getRepositoryName());
+    }
+    return engineNames;
+  }
+
+  /**
+   * Generate fresh crypto/keys collection.
+   * @return crypto/keys collection.
+   * @throws CryptoException
+   */
+  public CollectionKeys generateNewCryptoKeys() throws CryptoException {
+    return CollectionKeys.generateCollectionKeys();
+  }
+
+  /**
+   * Generate a fresh meta/global record.
+   * @return meta/global record.
+   */
+  public MetaGlobal generateNewMetaGlobal() {
+    final String newSyncID   = Utils.generateGuid();
+    final String metaURL     = this.config.metaURL();
+    final String credentials = this.credentials();
+
+    ExtendedJSONObject engines = new ExtendedJSONObject();
+    for (String engineName : enabledEngineNames()) {
+      EngineSettings engineSettings = null;
+      try {
+        GlobalSyncStage globalStage = this.getSyncStageByName(engineName);
+        Integer version = globalStage.getStorageVersion();
+        if (version == null) {
+          continue; // Don't want this stage to be included in meta/global.
+        }
+        engineSettings = new EngineSettings(Utils.generateGuid(), version.intValue());
+      } catch (NoSuchStageException e) {
+        // No trouble; Android Sync might not recognize this engine yet.
+        // By default, version 0.  Other clients will see the 0 version and reset/wipe accordingly.
+        engineSettings = new EngineSettings(Utils.generateGuid(), 0);
+      }
+      engines.put(engineName, engineSettings.toJSONObject());
+    }
+
+    MetaGlobal metaGlobal = new MetaGlobal(metaURL, credentials);
+    metaGlobal.setSyncID(newSyncID);
+    metaGlobal.setStorageVersion(STORAGE_VERSION);
+    metaGlobal.setEngines(engines);
+
+    return metaGlobal;
+  }
+
+  /**
    * Suggest that your Sync client needs to be upgraded to work
    * with this server.
    */
   public void requiresUpgrade() {
     Logger.info(LOG_TAG, "Client outdated storage version; requires update.");
     // TODO: notify UI.
+    this.abort(null, "Requires upgrade");
   }
 
   /**
@@ -804,23 +1004,19 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
    * @throws MetaGlobalException
    */
   public boolean engineIsEnabled(String engineName, EngineSettings engineSettings) throws MetaGlobalException {
+    if (this.config.metaGlobal == null) {
+      throw new MetaGlobalNotSetException();
+    }
+
     // This should not occur.
     if (this.config.enabledEngineNames == null) {
       Logger.error(LOG_TAG, "No enabled engines in config. Giving up.");
-      if (this.config.metaGlobal == null) {
-        throw new MetaGlobalNotSetException();
-      }
       throw new MetaGlobalMissingEnginesException();
     }
 
     if (!(this.config.enabledEngineNames.contains(engineName))) {
       Logger.debug(LOG_TAG, "Engine " + engineName + " not enabled: no meta/global entry.");
       return false;
-    }
-
-    if (this.config.metaGlobal == null) {
-      Logger.warn(LOG_TAG, "No meta/global; using historical enabled engine names.");
-      return true;
     }
 
     // If we have a meta/global, check that it's safe for us to sync.
