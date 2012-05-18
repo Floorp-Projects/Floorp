@@ -1849,13 +1849,6 @@ nsComputedDOMStyle::DoGetMozBackgroundSize()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetPadding()
-{
-  // return null per spec.
-  return nsnull;
-}
-
-nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetPaddingTop()
 {
   return GetPaddingWidthFor(NS_SIDE_TOP);
@@ -1938,13 +1931,6 @@ nsComputedDOMStyle::DoGetTableLayout()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetBorderStyle()
-{
-  // return null per spec.
-  return nsnull;
-}
-
-nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetBorderTopStyle()
 {
   return GetBorderStyleFor(NS_SIDE_TOP);
@@ -2022,13 +2008,6 @@ nsComputedDOMStyle::DoGetBorderTopRightRadius()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetBorderWidth()
-{
-  // return null per spec.
-  return nsnull;
-}
-
-nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetBorderTopWidth()
 {
   return GetBorderWidthFor(NS_SIDE_TOP);
@@ -2077,13 +2056,6 @@ nsComputedDOMStyle::DoGetBorderRightColor()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetMarginWidth()
-{
-  // return null per spec.
-  return nsnull;
-}
-
-nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetMarginTopWidth()
 {
   return GetMarginWidthFor(NS_SIDE_TOP);
@@ -2123,13 +2095,6 @@ nsComputedDOMStyle::DoGetOrient()
     nsCSSProps::ValueToKeywordEnum(GetStyleDisplay()->mOrient,
                                    nsCSSProps::kOrientKTable));
   return val;
-}
-
-nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetOutline()
-{
-  // return null per spec.
-  return nsnull;
 }
 
 nsIDOMCSSValue*
