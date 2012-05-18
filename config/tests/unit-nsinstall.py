@@ -47,11 +47,25 @@ class TestNsinstall(unittest.TestCase):
         "Test nsinstall <dir> <dest dir>"
         sourcedir = self.mkdirs("sourcedir")
         self.touch("testfile", sourcedir)
+        Xfile = self.touch("Xfile", sourcedir)
+        copieddir = self.mkdirs("sourcedir/copieddir")
+        self.touch("testfile2", copieddir)
+        Xdir = self.mkdirs("sourcedir/Xdir")
+        self.touch("testfile3", Xdir)
+
         destdir = self.mkdirs("destdir")
-        self.assertEqual(nsinstall([sourcedir, destdir]), 0)
+
+        self.assertEqual(nsinstall([sourcedir, destdir,
+                                    '-X', Xfile,
+                                    '-X', Xdir]), 0)
+
         testdir = os.path.join(destdir, "sourcedir")
         self.assert_(os.path.isdir(testdir))
         self.assert_(os.path.isfile(os.path.join(testdir, "testfile")))
+        self.assert_(not os.path.exists(os.path.join(testdir, "Xfile")))
+        self.assert_(os.path.isdir(os.path.join(testdir, "copieddir")))
+        self.assert_(os.path.isfile(os.path.join(testdir, "copieddir", "testfile2")))
+        self.assert_(not os.path.exists(os.path.join(testdir, "Xdir")))
 
     def test_nsinstall_multiple(self):
         "Test nsinstall <three files> <dest dir>"
