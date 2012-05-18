@@ -268,6 +268,10 @@ class Emulator(object):
         if self.logcat_dir:
             self.save_logcat()
 
+        # setup DNS fix for networking
+        self._run_adb(['-s', 'emulator-%d' % self.port,
+                       'shell', 'setprop', 'net.dns1', '10.0.2.3'])
+
     def _save_logcat_proc(self, filename, cmd):
         self.logcat_proc = LogcatProc(filename, cmd)
         self.logcat_proc.run()
