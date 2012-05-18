@@ -22,4 +22,10 @@ mk_add_options MOZ_MAKE_FLAGS=-j1
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
+# For known full-clobber builds on Windows (like nightlies/try), 
+# this speeds things up. IS_NIGHTLY is set by the build automation.
+if test "$IS_NIGHTLY" != ""; then 
+  ac_add_options --disable-auto-deps
+fi
+
 . $topsrcdir/build/win64/mozconfig.vs2010
