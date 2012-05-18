@@ -87,6 +87,7 @@
 
 #include "jsarrayinlines.h"
 #include "jsatominlines.h"
+#include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
@@ -2556,7 +2557,7 @@ JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
             if (!JSID_IS_EMPTY(child.propid))
                 MarkTypePropertyConfigured(cx, self, child.propid);
 
-            last = JS_PROPERTY_TREE(cx).getChild(cx, last, self->numFixedSlots(), child);
+            last = cx->propertyTree().getChild(cx, last, self->numFixedSlots(), child);
             if (!last)
                 return NULL;
         }
