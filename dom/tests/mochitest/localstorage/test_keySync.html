@@ -2,9 +2,9 @@
 <head>
 <title>localStorage equal origins</title>
 
-<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-<script type="text/javascript" src="interOriginTest2.js"></script>
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="interOriginTest2.js"></script>
 
 <!--
   This test loads two frames from the same origin, clears in one frame,
@@ -21,8 +21,6 @@ function startTest()
   masterFrame.location = masterFrameOrigin + framePath + "frameKeySync.html?1";
   slaveFrame.location = slaveFrameOrigin + framePath + "frameKeySync.html?2";
 }
-
-SimpleTest.waitForExplicitFinish();
 
 </script>
 
