@@ -99,6 +99,8 @@ public:
   nsINode*     GetFocusNode();
   PRInt32      GetFocusOffset();
 
+  bool IsCollapsed();
+
   // Get the anchor-to-focus range if we don't care which end is
   // anchor and which end is focus.
   const nsRange* GetAnchorFocusRange() const {
