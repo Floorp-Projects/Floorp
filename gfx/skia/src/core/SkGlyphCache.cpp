@@ -417,7 +417,7 @@ class SkGlyphCache_Globals {
 public:
     enum UseMutex {
         kNo_UseMutex,  // thread-local cache
-        kYes_UseMutex, // shared cache
+        kYes_UseMutex  // shared cache
     };
 
     SkGlyphCache_Globals(UseMutex um) {
