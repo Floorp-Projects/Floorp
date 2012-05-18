@@ -199,13 +199,8 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
 
   if (!handled)
   {
-    bool isCollapsed;
-    rv = selection->GetIsCollapsed(&isCollapsed);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // Delete Selection, but only if it isn't collapsed, see bug #106269
-    if (!isCollapsed) 
-    {
+    if (!selection->Collapsed()) {
       rv = DeleteSelection(eNone);
       NS_ENSURE_SUCCESS(rv, rv);
     }

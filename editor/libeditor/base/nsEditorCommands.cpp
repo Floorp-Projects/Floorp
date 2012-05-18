@@ -281,12 +281,8 @@ nsCutOrDeleteCommand::DoCommand(const char *aCommandName,
   {
     nsCOMPtr<nsISelection> selection;
     nsresult rv = editor->GetSelection(getter_AddRefs(selection));
-    if (NS_SUCCEEDED(rv) && selection)
-    {
-      bool isCollapsed;
-      rv = selection->GetIsCollapsed(&isCollapsed);
-      if (NS_SUCCEEDED(rv) && isCollapsed)
-        return editor->DeleteSelection(nsIEditor::eNext);
+    if (NS_SUCCEEDED(rv) && selection && selection->Collapsed()) {
+      return editor->DeleteSelection(nsIEditor::eNext);
     }
     return editor->Cut();
   }
@@ -379,12 +375,8 @@ nsCopyOrDeleteCommand::DoCommand(const char *aCommandName,
   {
     nsCOMPtr<nsISelection> selection;
     nsresult rv = editor->GetSelection(getter_AddRefs(selection));
-    if (NS_SUCCEEDED(rv) && selection)
-    {
-      bool isCollapsed;
-      rv = selection->GetIsCollapsed(&isCollapsed);
-      if (NS_SUCCEEDED(rv) && isCollapsed)
-        return editor->DeleteSelection(nsIEditor::eNextWord);
+    if (NS_SUCCEEDED(rv) && selection && selection->Collapsed()) {
+      return editor->DeleteSelection(nsIEditor::eNextWord);
     }
     return editor->Copy();
   }

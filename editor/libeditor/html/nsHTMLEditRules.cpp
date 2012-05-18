@@ -811,13 +811,8 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   NS_ENSURE_SUCCESS(res, res);
 
   // is the selection collapsed?
-  bool bCollapsed;
-  res = selection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
   nsCOMPtr<nsIDOMNode> nodeToExamine;
-  nsCOMPtr<nsISupports> isupports;
-  if (bCollapsed)
-  {
+  if (selection->Collapsed()) {
     // if it is, we want to look at 'parent' and its ancestors
     // for divs with alignment on them
     nodeToExamine = parent;
@@ -1226,10 +1221,7 @@ nsHTMLEditRules::WillInsert(nsISelection *aSelection, bool *aCancel)
   // because selection is a pain to work with when not collapsed.
   // (no good way to extend start or end of selection), so we ignore
   // those types of selections.
-  bool bCollapsed;
-  res = aSelection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
-  if (!bCollapsed) {
+  if (!aSelection->Collapsed()) {
     return NS_OK;
   }
 
@@ -1309,11 +1301,7 @@ nsHTMLEditRules::WillInsertText(nsEditor::OperationID aAction,
   PRInt32 selOffset;
 
   // if the selection isn't collapsed, delete it.
-  bool bCollapsed;
-  res = aSelection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
-  if (!bCollapsed)
-  {
+  if (!aSelection->Collapsed()) {
     res = mHTMLEditor->DeleteSelection(nsIEditor::eNone);
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -1518,10 +1506,8 @@ nsHTMLEditRules::WillInsertBreak(nsISelection* aSelection,
   *aHandled = false;
 
   // if the selection isn't collapsed, delete it.
-  bool bCollapsed;
-  nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
-  if (!bCollapsed) {
+  nsresult res = NS_OK;
+  if (!aSelection->Collapsed()) {
     res = mHTMLEditor->DeleteSelection(nsIEditor::eNone);
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -1848,10 +1834,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
     return NS_OK;
   }
 
-  nsresult res = NS_OK;
-  bool bCollapsed, join = false;
-  res = aSelection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
+  bool bCollapsed = aSelection->Collapsed(), join = false;
 
   // origCollapsed is used later to determine whether we should join 
   // blocks. We don't really care about bCollapsed because it will be 
@@ -1865,16 +1848,14 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   
   // first check for table selection mode.  If so,
   // hand off to table editor.
-  {
-    nsCOMPtr<nsIDOMElement> cell;
-    res = mHTMLEditor->GetFirstSelectedCell(nsnull, getter_AddRefs(cell));
-    if (NS_SUCCEEDED(res) && cell)
-    {
-      res = mHTMLEditor->DeleteTableCellContents();
-      *aHandled = true;
-      return res;
-    }
+  nsCOMPtr<nsIDOMElement> cell;
+  nsresult res = mHTMLEditor->GetFirstSelectedCell(nsnull, getter_AddRefs(cell));
+  if (NS_SUCCEEDED(res) && cell) {
+    res = mHTMLEditor->DeleteTableCellContents();
+    *aHandled = true;
+    return res;
   }
+  cell = NULL;
 
   res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode), &startOffset);
   NS_ENSURE_SUCCESS(res, res);
@@ -1907,8 +1888,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
     
-    res = aSelection->GetIsCollapsed(&bCollapsed);
-    NS_ENSURE_SUCCESS(res, res);
+    bCollapsed = aSelection->Collapsed();
   }
 
   if (bCollapsed)
@@ -3488,16 +3468,13 @@ nsHTMLEditRules::DidMakeBasicBlock(nsISelection *aSelection,
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   // check for empty block.  if so, put a moz br in it.
-  bool isCollapsed;
-  nsresult res = aSelection->GetIsCollapsed(&isCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
-  if (!isCollapsed) {
+  if (!aSelection->Collapsed()) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset;
-  res = nsEditor::GetStartNodeAndOffset(aSelection, getter_AddRefs(parent), &offset);
+  nsresult res = nsEditor::GetStartNodeAndOffset(aSelection, getter_AddRefs(parent), &offset);
   NS_ENSURE_SUCCESS(res, res);
   res = InsertMozBRIfNeeded(parent);
   return res;
@@ -3538,12 +3515,8 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, bool *aCancel, bool * a
   // short circuit: detect case of collapsed selection inside an <li>.
   // just sublist that <li>.  This prevents bug 97797.
   
-  bool bCollapsed;
   nsCOMPtr<nsIDOMNode> liNode;
-  res = aSelection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
-  if (bCollapsed) 
-  {
+  if (aSelection->Collapsed()) {
     nsCOMPtr<nsIDOMNode> node, block;
     PRInt32 offset;
     nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
@@ -4195,12 +4168,8 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, bool *aCancel, bool *aHan
   }
   // make sure selection didn't stick to last piece of content in old bq
   // (only a problem for collapsed selections)
-  if (rememberedLeftBQ || rememberedRightBQ)
-  {
-    bool bCollapsed;
-    res = aSelection->GetIsCollapsed(&bCollapsed);
-    if (bCollapsed)
-    {
+  if (rememberedLeftBQ || rememberedRightBQ) {
+    if (aSelection->Collapsed()) {
       // push selection past end of rememberedLeftBQ
       nsCOMPtr<nsIDOMNode> sNode;
       PRInt32 sOffset;
@@ -4223,6 +4192,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, bool *aCancel, bool *aHan
         aSelection->Collapse(sNode, sOffset);
       }
     }
+    return NS_OK;
   }
   return res;
 }
@@ -5083,13 +5053,12 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   
   // don't need to touch collapsed selections
-  bool bCollapsed;
-  nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
-  if (bCollapsed) return res;
+  if (aSelection->Collapsed()) {
+    return NS_OK;
+  }
 
   PRInt32 rangeCount;
-  res = aSelection->GetRangeCount(&rangeCount);
+  nsresult res = aSelection->GetRangeCount(&rangeCount);
   NS_ENSURE_SUCCESS(res, res);
   
   // we don't need to mess with cell selections, and we assume multirange selections are those.
@@ -5325,13 +5294,12 @@ nsHTMLEditRules::NormalizeSelection(nsISelection *inSelection)
   NS_ENSURE_TRUE(inSelection, NS_ERROR_NULL_POINTER);
 
   // don't need to touch collapsed selections
-  bool bCollapsed;
-  nsresult res = inSelection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
-  if (bCollapsed) return res;
+  if (inSelection->Collapsed()) {
+    return NS_OK;
+  }
 
   PRInt32 rangeCount;
-  res = inSelection->GetRangeCount(&rangeCount);
+  nsresult res = inSelection->GetRangeCount(&rangeCount);
   NS_ENSURE_SUCCESS(res, res);
   
   // we don't need to mess with cell selections, and we assume multirange selections are those.
@@ -7574,17 +7542,14 @@ nsresult
 nsHTMLEditRules::PinSelectionToNewBlock(nsISelection *aSelection)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
-  bool bCollapsed;
-  nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
-  if (!bCollapsed) {
+  if (!aSelection->Collapsed()) {
     return NS_OK;
   }
 
   // get the (collapsed) selection location
   nsCOMPtr<nsIDOMNode> selNode, temp;
   PRInt32 selOffset;
-  res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
+  nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(res, res);
   temp = selNode;
   
@@ -7648,17 +7613,14 @@ nsHTMLEditRules::CheckInterlinePosition(nsISelection *aSelection)
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
   // if the selection isn't collapsed, do nothing.
-  bool bCollapsed;
-  nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
-  if (!bCollapsed) {
+  if (!aSelection->Collapsed()) {
     return NS_OK;
   }
 
   // get the (collapsed) selection location
   nsCOMPtr<nsIDOMNode> selNode, node;
   PRInt32 selOffset;
-  res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
+  nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(res, res);
 
   // First, let's check to see if we are after a <br>.  We take care of this
@@ -7696,17 +7658,14 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
   // if the selection isn't collapsed, do nothing.
   // moose: one thing to do instead is check for the case of
   // only a single break selected, and collapse it.  Good thing?  Beats me.
-  bool bCollapsed;
-  nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
-  if (!bCollapsed) {
+  if (!aSelection->Collapsed()) {
     return NS_OK;
   }
 
   // get the (collapsed) selection location
   nsCOMPtr<nsIDOMNode> selNode, temp;
   PRInt32 selOffset;
-  res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
+  nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(res, res);
   temp = selNode;
   
