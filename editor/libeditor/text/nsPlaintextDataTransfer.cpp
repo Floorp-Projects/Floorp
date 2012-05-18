@@ -235,9 +235,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  bool isCollapsed;
-  rv = selection->GetIsCollapsed(&isCollapsed);
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool isCollapsed = selection->Collapsed();
 
   nsCOMPtr<nsIDOMNode> sourceNode;
   dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));

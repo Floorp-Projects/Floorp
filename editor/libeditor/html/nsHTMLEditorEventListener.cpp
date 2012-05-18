@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -164,30 +164,23 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
 
     // Detect if mouse point is within current selection for context click
     bool nodeIsInSelection = false;
-    if (isContextClick)
-    {
-      bool isCollapsed;
-      selection->GetIsCollapsed(&isCollapsed);
-      if (!isCollapsed)
-      {
-        PRInt32 rangeCount;
-        res = selection->GetRangeCount(&rangeCount);
-        NS_ENSURE_SUCCESS(res, res);
+    if (isContextClick && !selection->Collapsed()) {
+      PRInt32 rangeCount;
+      res = selection->GetRangeCount(&rangeCount);
+      NS_ENSURE_SUCCESS(res, res);
 
-        for (PRInt32 i = 0; i < rangeCount; i++)
-        {
-          nsCOMPtr<nsIDOMRange> range;
+      for (PRInt32 i = 0; i < rangeCount; i++) {
+        nsCOMPtr<nsIDOMRange> range;
 
-          res = selection->GetRangeAt(i, getter_AddRefs(range));
-          if (NS_FAILED(res) || !range) 
-            continue;//don't bail yet, iterate through them all
+        res = selection->GetRangeAt(i, getter_AddRefs(range));
+        if (NS_FAILED(res) || !range)
+          continue;//don't bail yet, iterate through them all
 
-          res = range->IsPointInRange(parent, offset, &nodeIsInSelection);
+        res = range->IsPointInRange(parent, offset, &nodeIsInSelection);
 
-          // Done when we find a range that we are in
-          if (nodeIsInSelection)
-            break;
-        }
+        // Done when we find a range that we are in
+        if (nodeIsInSelection)
+          break;
       }
     }
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);

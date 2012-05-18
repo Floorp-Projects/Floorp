@@ -128,9 +128,7 @@ nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
-  bool isCollapsed;
-  selection->GetIsCollapsed(&isCollapsed);
-  if (isCollapsed) {
+  if (selection->Collapsed()) {
     // manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
     mTypeInState->SetProp(aProperty, aAttribute, aValue);
@@ -1009,8 +1007,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
-  bool isCollapsed;
-  selection->GetIsCollapsed(&isCollapsed);
+  bool isCollapsed = selection->Collapsed();
   nsCOMPtr<nsIDOMNode> collapsedNode;
   nsCOMPtr<nsIEnumerator> enumerator;
   result = selPriv->GetEnumerator(getter_AddRefs(enumerator));
@@ -1259,11 +1256,8 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
-  bool isCollapsed;
-  selection->GetIsCollapsed(&isCollapsed);
-
   bool useCSS = IsCSSEnabled();
-  if (isCollapsed) {
+  if (selection->Collapsed()) {
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
 
     // For links, aProperty uses "href", use "a" instead
@@ -1456,13 +1450,8 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));  
   // Is the selection collapsed?
-  bool bCollapsed;
-  res = selection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(res, res);
-  
   // if it's collapsed set typing state
-  if (bCollapsed)
-  {
+  if (selection->Collapsed()) {
     nsCOMPtr<nsIAtom> atom;
     if (aSizeChange==1) atom = nsEditProperty::big;
     else                atom = nsEditProperty::small;

@@ -4454,10 +4454,7 @@ nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSele
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  bool collapsed;
-  result = selection->GetIsCollapsed(&collapsed);
-  if (NS_SUCCEEDED(result) && !collapsed) 
-  {
+  if (!selection->Collapsed()) {
     result = DeleteSelection(nsIEditor::eNone);
     if (NS_FAILED(result)) {
       return result;
@@ -4472,14 +4469,9 @@ nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSele
     selection->GetAnchorNode(getter_AddRefs(selectedNode));
     // no selection is ok.
     // if there is a selection, it must be collapsed
-    if (selectedNode)
-    {
-      bool testCollapsed = false;
-      selection->GetIsCollapsed(&testCollapsed);
-      if (!testCollapsed) {
-        result = selection->CollapseToEnd();
-        NS_ENSURE_SUCCESS(result, result);
-      }
+    if (selectedNode && !selection->Collapsed()) {
+      result = selection->CollapseToEnd();
+      NS_ENSURE_SUCCESS(result, result);
     }
   }
   // split the selected node
@@ -4742,9 +4734,7 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
   if ((NS_SUCCEEDED(result)) && selection)
   {
     // Check whether the selection is collapsed and we should do nothing:
-    bool isCollapsed;
-    result = (selection->GetIsCollapsed(&isCollapsed));
-    if (NS_SUCCEEDED(result) && isCollapsed && aAction == eNone)
+    if (selection->Collapsed() && aAction == eNone)
       return NS_OK;
 
     // allocate the out-param transaction
@@ -4762,6 +4752,7 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
         if ((NS_SUCCEEDED(result)) && (currentItem))
         {
           nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+          bool isCollapsed;
           range->GetCollapsed(&isCollapsed);
           if (!isCollapsed)
           {
