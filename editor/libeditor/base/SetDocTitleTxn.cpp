@@ -43,6 +43,9 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
+#include "mozilla/dom/Element.h"
+
+using namespace mozilla;
 
 // note that aEditor is not refcounted
 SetDocTitleTxn::SetDocTitleTxn()
@@ -132,14 +135,11 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
   mIsTransient = false;
 
   // Get the <HEAD> node, create a <TITLE> and insert it under the HEAD
-  nsCOMPtr<nsIDOMNodeList> headList;
-  res = domDoc->GetElementsByTagName(NS_LITERAL_STRING("head"),getter_AddRefs(headList));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(headList, NS_ERROR_FAILURE);
-  
-  nsCOMPtr<nsIDOMNode>headNode;
-  headList->Item(0, getter_AddRefs(headNode));
-  NS_ENSURE_TRUE(headNode, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
+  NS_ENSURE_STATE(document);
+
+  dom::Element* head = document->GetHeadElement();
+  NS_ENSURE_STATE(head);
 
   bool     newTitleNode = false;
   PRUint32 newTitleIndex = 0;
@@ -155,13 +155,8 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
     titleNode = do_QueryInterface(titleElement);
     newTitleNode = true;
 
-    // Get index so we append new title node 
-    // after all existing HEAD children
-    nsCOMPtr<nsIDOMNodeList> children;
-    res = headNode->GetChildNodes(getter_AddRefs(children));
-    NS_ENSURE_SUCCESS(res, res);
-    if (children)
-      children->GetLength(&newTitleIndex);
+    // Get index so we append new title node after all existing HEAD children.
+    newTitleIndex = head->GetChildCount();
   }
 
   // Append a text node under the TITLE
@@ -191,7 +186,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
   if (newTitleNode)
   {
     // Undoable transaction to insert title+text together
-    res = editor->InsertNode(titleNode, headNode, newTitleIndex);
+    res = editor->InsertNode(titleNode, head->AsDOMNode(), newTitleIndex);
   }
   return res;
 }
