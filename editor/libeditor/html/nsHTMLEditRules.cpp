@@ -5957,26 +5957,18 @@ nsresult
 nsHTMLEditRules::GetChildNodesForOperation(nsIDOMNode *inNode, 
                                            nsCOMArray<nsIDOMNode>& outArrayOfNodes)
 {
-  NS_ENSURE_TRUE(inNode, NS_ERROR_NULL_POINTER);
-  
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  nsresult res = inNode->GetChildNodes(getter_AddRefs(childNodes));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(childNodes, NS_ERROR_NULL_POINTER);
-  PRUint32 childCount;
-  res = childNodes->GetLength(&childCount);
-  NS_ENSURE_SUCCESS(res, res);
-  
-  PRUint32 i;
-  nsCOMPtr<nsIDOMNode> node;
-  for (i = 0; i < childCount; i++)
-  {
-    res = childNodes->Item( i, getter_AddRefs(node));
-    NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-    if (!outArrayOfNodes.AppendObject(node))
+  nsCOMPtr<nsINode> node = do_QueryInterface(inNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+
+  for (nsIContent* child = node->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    nsIDOMNode* childNode = child->AsDOMNode();
+    if (!outArrayOfNodes.AppendObject(childNode)) {
       return NS_ERROR_FAILURE;
+    }
   }
-  return res;
+  return NS_OK;
 }
 
 
