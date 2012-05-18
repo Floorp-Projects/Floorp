@@ -1309,26 +1309,6 @@ ToUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
 }
 
 bool
-NonstandardToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
-{
-    JS_ASSERT(!v.isInt32());
-    double d;
-    if (v.isDouble()) {
-        d = v.toDouble();
-    } else if (!ToNumberSlow(cx, v, &d)) {
-        return false;
-    }
-
-    if (MOZ_DOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
-        js_ReportValueError(cx, JSMSG_CANT_CONVERT,
-                            JSDVG_SEARCH_STACK, v, NULL);
-        return false;
-    }
-    *out = (int32_t) floor(d + 0.5);  /* Round to nearest */
-    return true;
-}
-
-bool
 ValueToUint16Slow(JSContext *cx, const Value &v, uint16_t *out)
 {
     JS_ASSERT(!v.isInt32());
