@@ -49,6 +49,7 @@ PARALLEL_DIRS = \
   locales \
   modules \
   themes \
+  extensions \
   $(NULL)
 
 DIRS = \
