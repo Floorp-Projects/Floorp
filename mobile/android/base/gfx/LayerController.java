@@ -41,6 +41,7 @@ package org.mozilla.gecko.gfx;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
+import org.mozilla.gecko.GeckoApp;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -90,11 +91,6 @@ public class LayerController {
     /* The new color for the checkerboard. */
     private int mCheckerboardColor = Color.WHITE;
     private boolean mCheckerboardShouldShowChecks;
-
-    private boolean mAllowZoom;
-    private float mDefaultZoom;
-    private float mMinZoom;
-    private float mMaxZoom;
 
     private boolean mForceRedraw;
 
@@ -349,42 +345,5 @@ public class LayerController {
     public void setCheckerboardColor(int newColor) {
         mCheckerboardColor = newColor;
         mView.requestRender();
-    }
-
-    public void setAllowZoom(final boolean aValue) {
-        mAllowZoom = aValue;
-        mView.post(new Runnable() {
-            public void run() {
-                mView.getTouchEventHandler().setDoubleTapEnabled(aValue);
-            }
-        });
-    }
-
-    public boolean getAllowZoom() {
-        return mAllowZoom;
-    }
-
-    public void setDefaultZoom(float aValue) {
-        mDefaultZoom = aValue;
-    }
-
-    public float getDefaultZoom() {
-        return mDefaultZoom;
-    }
-
-    public void setMinZoom(float aValue) {
-        mMinZoom = aValue;
-    }
-
-    public float getMinZoom() {
-        return mMinZoom;
-    }
-
-    public void setMaxZoom(float aValue) {
-        mMaxZoom = aValue;
-    }
-
-    public float getMaxZoom() {
-        return mMaxZoom;
     }
 }
