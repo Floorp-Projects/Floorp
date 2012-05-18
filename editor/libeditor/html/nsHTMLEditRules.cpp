@@ -1150,42 +1150,43 @@ nsHTMLEditRules::GetParagraphState(bool *aMixed, nsAString &outFormat)
   return res;
 }
 
-nsresult 
+nsresult
 nsHTMLEditRules::AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
                                         nsIDOMNode *aNode)
 {
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMNodeList> childList;
-  nsCOMPtr<nsIDOMNode> child;
+  return AppendInnerFormatNodes(aArray, node);
+}
 
-  aNode->GetChildNodes(getter_AddRefs(childList));
-  NS_ENSURE_TRUE(childList, NS_OK);
-  PRUint32 len, j=0;
-  childList->GetLength(&len);
+nsresult
+nsHTMLEditRules::AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
+                                        nsINode* aNode)
+{
+  MOZ_ASSERT(aNode);
 
   // we only need to place any one inline inside this node onto 
   // the list.  They are all the same for purposes of determining
   // paragraph style.  We use foundInline to track this as we are 
   // going through the children in the loop below.
   bool foundInline = false;
-  while (j < len)
-  {
-    childList->Item(j, getter_AddRefs(child));
-    bool isBlock = IsBlockNode(child);
-    bool isFormat = nsHTMLEditUtils::IsFormatNode(child);
-    if (isBlock && !isFormat)  // if it's a div, etc, recurse
+  for (nsIContent* child = aNode->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    bool isBlock = IsBlockNode(child->AsDOMNode());
+    bool isFormat = child->IsElement() &&
+                    nsHTMLEditUtils::IsFormatNode(child->AsElement());
+    if (isBlock && !isFormat) {
+      // if it's a div, etc, recurse
       AppendInnerFormatNodes(aArray, child);
-    else if (isFormat)
-    {
-      aArray.AppendObject(child);
-    }
-    else if (!foundInline)  // if this is the first inline we've found, use it
-    {
+    } else if (isFormat) {
+      aArray.AppendObject(child->AsDOMNode());
+    } else if (!foundInline) {
+      // if this is the first inline we've found, use it
       foundInline = true;      
-      aArray.AppendObject(child);
+      aArray.AppendObject(child->AsDOMNode());
     }
-    j++;
   }
   return NS_OK;
 }
