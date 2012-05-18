@@ -70,68 +70,6 @@ ion::MaybeScriptFromCalleeToken(CalleeToken token)
     return NULL;
 }
 
-FrameRecovery::FrameRecovery(uint8 *fp, uint8 *sp, const MachineState &machine)
-  : fp_((IonJSFrameLayout *)fp),
-    sp_(sp),
-    machine_(machine),
-    ionScript_(NULL)
-{
-    unpackCalleeToken(fp_->calleeToken());
-}
-
-void
-FrameRecovery::unpackCalleeToken(CalleeToken token)
-{
-    switch (GetCalleeTokenTag(token)) {
-      case CalleeToken_Function:
-        callee_ = CalleeTokenToFunction(token);
-        script_ = callee_->script();
-        break;
-      case CalleeToken_Script:
-        callee_ = NULL;
-        script_ = CalleeTokenToScript(token);
-        break;
-      default:
-        JS_NOT_REACHED("invalid callee token tag");
-    }
-}
-
-void
-FrameRecovery::setIonScript(IonScript *ionScript)
-{
-    ionScript_ = ionScript;
-}
-
-void
-FrameRecovery::setBailoutId(BailoutId bailoutId)
-{
-    snapshotOffset_ = ionScript()->bailoutToSnapshot(bailoutId);
-}
-
-FrameRecovery
-FrameRecovery::FromBailoutId(uint8 *fp, uint8 *sp, const MachineState &machine,
-                             BailoutId bailoutId)
-{
-    FrameRecovery frame(fp, sp, machine);
-    frame.setBailoutId(bailoutId);
-    return frame;
-}
-
-FrameRecovery
-FrameRecovery::FromSnapshot(uint8 *fp, uint8 *sp, const MachineState &machine,
-                            SnapshotOffset snapshotOffset)
-{
-    FrameRecovery frame(fp, sp, machine);
-    frame.setSnapshotOffset(snapshotOffset);
-    return frame;
-}
-
-IonScript *
-FrameRecovery::ionScript() const
-{
-    return ionScript_ ? ionScript_ : script_->ion;
-}
-
 IonFrameIterator::IonFrameIterator(const IonActivationIterator &activations)
     : current_(activations.top()),
       type_(IonFrame_Exit),
@@ -800,8 +738,8 @@ InlineFrameIterator::InlineFrameIterator(const IonFrameIterator *iter)
     callee_(NULL),
     script_(NULL)
 {
-    if (frame_) {
-        start_ = SnapshotIterator(*frame_);
+    if (iter) {
+        start_ = SnapshotIterator(*iter);
         findNextFrame();
     }
 }
