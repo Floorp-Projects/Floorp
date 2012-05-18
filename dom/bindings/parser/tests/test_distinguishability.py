@@ -11,6 +11,8 @@ def WebIDLTest(parser, harness):
         // Bit of a pain to get things that have dictionary types
         void passDict(Dict arg);
         void passFoo(Foo arg);
+        void passNullableUnion((object? or DOMString) arg);
+        void passNullable(Foo? arg);
       };
     """)
     results = parser.finish()
@@ -19,6 +21,8 @@ def WebIDLTest(parser, harness):
     harness.ok(iface.isInterface(), "Should have interface")
     dictMethod = iface.members[0]
     ifaceMethod = iface.members[1]
+    nullableUnionMethod = iface.members[2]
+    nullableIfaceMethod = iface.members[3]
 
     dictType = firstArgType(dictMethod)
     ifaceType = firstArgType(ifaceMethod)
@@ -31,6 +35,20 @@ def WebIDLTest(parser, harness):
                "Dictionary not distinguishable from callback interface")
     harness.ok(not ifaceType.isDistinguishableFrom(dictType),
                "Callback interface not distinguishable from dictionary")
+
+    nullableUnionType = firstArgType(nullableUnionMethod)
+    nullableIfaceType = firstArgType(nullableIfaceMethod)
+
+    harness.ok(nullableUnionType.isUnion(), "Should have union type");
+    harness.ok(nullableIfaceType.isInterface(), "Should have interface type");
+    harness.ok(nullableIfaceType.nullable(), "Should have nullable type");
+
+    harness.ok(not nullableUnionType.isDistinguishableFrom(nullableIfaceType),
+               "Nullable type not distinguishable from union with nullable "
+               "member type")
+    harness.ok(not nullableIfaceType.isDistinguishableFrom(nullableUnionType),
+               "Union with nullable member type not distinguishable from "
+               "nullable type")
 
     parser = parser.reset()
     parser.parse("""
