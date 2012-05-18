@@ -32,7 +32,7 @@ function run_test() {
  * Ensure an SmsMessage object created has sensible initial values.
  */
 add_test(function test_interface() {
-  let sms = newMessage(null, "sent", null, null, null, new Date());
+  let sms = newMessage(null, "sent", null, null, null, new Date(), true);
   do_check_true(sms instanceof Ci.nsIDOMMozSmsMessage);
   do_check_eq(sms.id, 0);
   do_check_eq(sms.delivery, "sent");
@@ -40,6 +40,7 @@ add_test(function test_interface() {
   do_check_eq(sms.sender, null);
   do_check_eq(sms.body, null);
   do_check_true(sms.timestamp instanceof Date);
+  do_check_true(sms.read);
   run_next_test();
 });
 
@@ -47,7 +48,7 @@ add_test(function test_interface() {
  * Verify that attributes are read-only.
  */
 add_test(function test_readonly_attributes() {
-  let sms = newMessage(null, "received", null, null, null, new Date());
+  let sms = newMessage(null, "received", null, null, null, new Date(), true);
 
   sms.id = 1;
   do_check_eq(sms.id, 0);
@@ -68,6 +69,9 @@ add_test(function test_readonly_attributes() {
   sms.timestamp = new Date();
   do_check_eq(sms.timestamp.getTime(), oldTimestamp);
 
+  sms.read = false;
+  do_check_true(sms.read);
+
   run_next_test();
 });
 
@@ -76,7 +80,8 @@ add_test(function test_readonly_attributes() {
  */
 add_test(function test_timestamp_number() {
   let ts = Date.now();
-  let sms = newMessage(42, "sent", "the sender", "the receiver", "the body", ts);
+  let sms = newMessage(42, "sent", "the sender", "the receiver", "the body", ts,
+                       true);
   do_check_eq(sms.id, 42);
   do_check_eq(sms.delivery, "sent");
   do_check_eq(sms.sender, "the sender");
@@ -84,6 +89,7 @@ add_test(function test_timestamp_number() {
   do_check_eq(sms.body, "the body");
   do_check_true(sms.timestamp instanceof Date);
   do_check_eq(sms.timestamp.getTime(), ts);
+  do_check_true(sms.read);
   run_next_test();
 });
 
@@ -92,7 +98,8 @@ add_test(function test_timestamp_number() {
  */
 add_test(function test_timestamp_date() {
   let date = new Date();
-  let sms = newMessage(42, "sent", "the sender", "the receiver", "the body", date);
+  let sms = newMessage(42, "sent", "the sender", "the receiver", "the body",
+                       date, true);
   do_check_eq(sms.id, 42);
   do_check_eq(sms.delivery, "sent");
   do_check_eq(sms.sender, "the sender");
@@ -100,6 +107,7 @@ add_test(function test_timestamp_date() {
   do_check_eq(sms.body, "the body");
   do_check_true(sms.timestamp instanceof Date);
   do_check_eq(sms.timestamp.getTime(), date.getTime());
+  do_check_true(sms.read);
   run_next_test();
 });
 
@@ -108,7 +116,8 @@ add_test(function test_timestamp_date() {
  */
 add_test(function test_invalid_timestamp_float() {
   do_check_throws(function() {
-    newMessage(42, "sent", "the sender", "the receiver", "the body", 3.1415);
+    newMessage(42, "sent", "the sender", "the receiver", "the body", 3.1415,
+               true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -118,7 +127,8 @@ add_test(function test_invalid_timestamp_float() {
  */
 add_test(function test_invalid_timestamp_null() {
   do_check_throws(function() {
-    newMessage(42, "sent", "the sender", "the receiver", "the body", null);
+    newMessage(42, "sent", "the sender", "the receiver", "the body", null,
+               true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -128,7 +138,8 @@ add_test(function test_invalid_timestamp_null() {
  */
 add_test(function test_invalid_timestamp_undefined() {
   do_check_throws(function() {
-    newMessage(42, "sent", "the sender", "the receiver", "the body", undefined);
+    newMessage(42, "sent", "the sender", "the receiver", "the body", undefined,
+               true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -138,7 +149,7 @@ add_test(function test_invalid_timestamp_undefined() {
  */
 add_test(function test_invalid_timestamp_object() {
   do_check_throws(function() {
-    newMessage(42, "sent", "the sender", "the receiver", "the body", {});
+    newMessage(42, "sent", "the sender", "the receiver", "the body", {}, true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -149,7 +160,7 @@ add_test(function test_invalid_timestamp_object() {
 add_test(function test_invalid_delivery_string() {
   do_check_throws(function() {
     newMessage(42, "this is invalid", "the sender", "the receiver", "the body",
-               new Date());
+               new Date(), true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -159,7 +170,7 @@ add_test(function test_invalid_delivery_string() {
  */
 add_test(function test_invalid_delivery_string() {
   do_check_throws(function() {
-    newMessage(42, 1, "the sender", "the receiver", "the body", new Date());
+    newMessage(42, 1, "the sender", "the receiver", "the body", new Date(), true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
