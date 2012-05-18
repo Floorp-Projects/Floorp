@@ -1686,10 +1686,6 @@ class ContextStack
     StackFrame *pushBailoutFrame(JSContext *cx, JSFunction &fun, JSScript *script,
                                  BailoutFrameGuard *bfg);
 
-    /* Bailout for global scripts. */
-    StackFrame *pushBailoutFrame(JSContext *cx, JSScript *script, JSObject &scopeChain,
-                                 const Value &thisv, BailoutFrameGuard *efg);
-
     /*
      * Called by SendToGenerator to resume a yielded generator. In addition to
      * pushing a frame onto the VM stack, this function copies over the

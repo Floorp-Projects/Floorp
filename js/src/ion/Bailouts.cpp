@@ -251,18 +251,9 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         fp = cx->fp();
         cx->regs().sp = fp->base();
     } else {
-        if (it.maybeCallee()) {
-            // This is a normal function frame.
-            fp = cx->stack.pushBailoutFrame(cx, *it.callee(), it.script(), br->frameGuard());
-        } else {
-            // The scope chain will be updated, if necessary, in RestoreOneFrame().
-            // The |this| value for global scripts is always an object, and is
-            // precomputed in the original frame, so it's safe to re-use that
-            // value (it is not included in snapshots or resume points).
-            HandleObject prevScopeChain = cx->fp()->scopeChain();
-            Value thisv = cx->fp()->thisValue();
-            fp = cx->stack.pushBailoutFrame(cx, it.script(), *prevScopeChain, thisv, br->frameGuard());
-        }
+        // This is necessary a function frame because only the initial frame
+        // can be a script.
+        fp = cx->stack.pushBailoutFrame(cx, *it.callee(), it.script(), br->frameGuard());
     }
 
     if (!fp)
