@@ -243,6 +243,13 @@ public:
     return mSeekable;
   }
 
+  bool IsSeekableInBufferedRanges() {
+    if (mReader) {
+      return mReader->IsSeekableInBufferedRanges();
+    }
+    return false;
+  }
+
   // Sets the current frame buffer length for the MozAudioAvailable event.
   // Accessed on the main and state machine threads.
   virtual void SetFrameBufferLength(PRUint32 aLength);
