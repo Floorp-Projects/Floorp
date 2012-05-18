@@ -4936,7 +4936,9 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
         if (!aSuppressInitialBreak || i > aStart) {
             bool lineBreakHere = mCharacterGlyphs[i].CanBreakBefore() == 1;
             bool hyphenation = haveHyphenation && hyphenBuffer[i - bufferStart];
-            bool wordWrapping = aCanWordWrap && *aBreakPriority <= eWordWrapBreak;
+            bool wordWrapping =
+                aCanWordWrap && mCharacterGlyphs[i].IsClusterStart() &&
+                *aBreakPriority <= eWordWrapBreak;
 
             if (lineBreakHere || hyphenation || wordWrapping) {
                 gfxFloat hyphenatedAdvance = advance;
