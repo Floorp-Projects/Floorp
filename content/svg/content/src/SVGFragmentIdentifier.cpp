@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "SVGFragmentIdentifier.h"
-#include "CharTokenizer.h"
+#include "mozilla/CharTokenizer.h"
 #include "nsIDOMSVGDocument.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGViewElement.h"
@@ -52,9 +52,11 @@ static nsSVGEnumMapping sZoomAndPanMap[] = {
 static bool
 IsMatchingParameter(const nsAString &aString, const nsAString &aParameterName)
 {
+  // The first two tests ensure aString.Length() > aParameterName.Length()
+  // so it's then safe to do the third test
   return StringBeginsWith(aString, aParameterName) &&
-         aString.CharAt(aParameterName.Length()) == '(' &&
-         aString.Last() == ')';
+         aString.Last() == ')' &&
+         aString.CharAt(aParameterName.Length()) == '(';
 }
 
 static nsSVGViewElement*

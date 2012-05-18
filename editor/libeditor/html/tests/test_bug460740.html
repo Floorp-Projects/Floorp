@@ -108,11 +108,11 @@ function runTests() {
   for (var i = 0; i < nodes.length; i++) {
     var node = nodes[i];
     node.focus();
-    is(checkBR(node), 0, "This node should not have any <br> element yet.");
+    is(checkBR(node), 0, node.textContent.trim() + ": This node should not have any <br> element yet.");
     for (var j = 0; j < 3; j++) { // CARET_BEGIN|MIDDLE|END
       split(node, j);
-      ok(checkBR(node) > 0, "Pressing [Return] should add (at least) one <br> element.");
-      is(getBlockCount(), count, "Pressing [Return] should not change the number of non-<br> elements.");
+      ok(checkBR(node) > 0, node.textContent.trim() + " " + j + ": Pressing [Return] should add (at least) one <br> element.");
+      is(getBlockCount(), count, node.textContent.trim() + " " + j + ": Pressing [Return] should not change the number of non-<br> elements.");
       document.execCommand("Undo", false, null);
     }
   }

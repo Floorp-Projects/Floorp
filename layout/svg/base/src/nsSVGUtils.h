@@ -631,6 +631,12 @@ public:
   static bool OuterSVGIsCallingUpdateBounds(nsIFrame *aFrame);
 #endif
 
+  /*
+   * Get any additional transforms that apply only to stroking
+   * e.g. non-scaling-stroke
+   */
+  static gfxMatrix GetStrokeTransform(nsIFrame *aFrame);
+
   /**
    * Compute the maximum possible device space stroke extents of a path given
    * the path's device space path extents, its stroke style and its ctm.

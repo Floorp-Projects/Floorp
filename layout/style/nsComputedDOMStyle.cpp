@@ -4000,6 +4000,15 @@ nsComputedDOMStyle::DoGetStrokeWidth()
 }
 
 nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetVectorEffect()
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(GetStyleSVGReset()->mVectorEffect,
+                                               nsCSSProps::kVectorEffectKTable));
+  return val;
+}
+
+nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetFillOpacity()
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
@@ -4777,7 +4786,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(stroke_opacity,                StrokeOpacity),
     COMPUTED_STYLE_MAP_ENTRY(stroke_width,                  StrokeWidth),
     COMPUTED_STYLE_MAP_ENTRY(text_anchor,                   TextAnchor),
-    COMPUTED_STYLE_MAP_ENTRY(text_rendering,                TextRendering)
+    COMPUTED_STYLE_MAP_ENTRY(text_rendering,                TextRendering),
+    COMPUTED_STYLE_MAP_ENTRY(vector_effect,                 VectorEffect)
 
   };
 
