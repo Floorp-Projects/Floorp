@@ -817,6 +817,11 @@ public class PanZoomController
         float minZoomFactor = 0.0f;
         float maxZoomFactor = MAX_ZOOM;
 
+        if (mController.getMinZoom() > 0)
+            minZoomFactor = mController.getMinZoom();
+        if (mController.getMaxZoom() > 0)
+            maxZoomFactor = mController.getMaxZoom();
+
         if (!mController.getAllowZoom()) {
             // If allowZoom is false, clamp to the default zoom level.
             maxZoomFactor = minZoomFactor = mController.getDefaultZoom();
@@ -928,13 +933,31 @@ public class PanZoomController
 
         synchronized (mController) {
             float newZoomFactor = mController.getZoomFactor() * spanRatio;
-            if (newZoomFactor >= MAX_ZOOM) {
-                // apply resistance when zooming past MAX_ZOOM,
-                // such that it asymptotically reaches MAX_ZOOM + 1.0
+            float minZoomFactor = 0.0f;
+            float maxZoomFactor = MAX_ZOOM;
+
+            if (mController.getMinZoom() > 0)
+                minZoomFactor = mController.getMinZoom();
+            if (mController.getMaxZoom() > 0)
+                maxZoomFactor = mController.getMaxZoom();
+
+            if (newZoomFactor < minZoomFactor) {
+                // apply resistance when zooming past minZoomFactor,
+                // such that it asymptotically reaches minZoomFactor / 2.0
                 // but never exceeds that
-                float excessZoom = newZoomFactor - MAX_ZOOM;
+                final float rate = 0.5f; // controls how quickly we approach the limit
+                float excessZoom = minZoomFactor - newZoomFactor;
+                excessZoom = 1.0f - (float)Math.exp(-excessZoom * rate);
+                newZoomFactor = minZoomFactor * (1.0f - excessZoom / 2.0f);
+            }
+
+            if (newZoomFactor > maxZoomFactor) {
+                // apply resistance when zooming past maxZoomFactor,
+                // such that it asymptotically reaches maxZoomFactor + 1.0
+                // but never exceeds that
+                float excessZoom = newZoomFactor - maxZoomFactor;
                 excessZoom = 1.0f - (float)Math.exp(-excessZoom);
-                newZoomFactor = MAX_ZOOM + excessZoom;
+                newZoomFactor = maxZoomFactor + excessZoom;
             }
 
             mController.scrollBy(new PointF(mLastZoomFocus.x - detector.getFocusX(),
