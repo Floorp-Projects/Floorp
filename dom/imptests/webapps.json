@@ -23,12 +23,6 @@
     "Web Storage 1": true
   },
 
-  "webapps/WebStorage/tests/submissions/Ms2ger/test_storage_local_index_js.html": {
-    "Web Storage 1": true,
-    "Web Storage 2": true,
-    "Web Storage 3": true
-  },
-
   "webapps/WebStorage/tests/submissions/Ms2ger/test_storage_local_removeitem_js.html": {
     "Web Storage 2": true,
     "Web Storage 3": true
@@ -36,12 +30,6 @@
 
   "webapps/WebStorage/tests/submissions/Ms2ger/test_storage_session_in_js.html": {
     "Web Storage 1": true
-  },
-
-  "webapps/WebStorage/tests/submissions/Ms2ger/test_storage_session_index_js.html": {
-    "Web Storage 1": true,
-    "Web Storage 2": true,
-    "Web Storage 3": true
   },
 
   "webapps/WebStorage/tests/submissions/Ms2ger/test_storage_session_removeitem_js.html": {
