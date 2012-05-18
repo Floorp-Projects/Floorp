@@ -39,12 +39,12 @@ var AccessFu = {
     this.presenters = [];
 
     this.prefsBranch = Cc['@mozilla.org/preferences-service;1']
-      .getService(Ci.nsIPrefService).getBranch('accessibility.');
-    this.prefsBranch.addObserver('accessfu', this, false);
+      .getService(Ci.nsIPrefService).getBranch('accessibility.accessfu.');
+    this.prefsBranch.addObserver('activate', this, false);
 
     let accessPref = ACCESSFU_DISABLE;
     try {
-      accessPref = this.prefsBranch.getIntPref('accessfu');
+      accessPref = this.prefsBranch.getIntPref('activate');
     } catch (x) {
     }
 
@@ -176,8 +176,8 @@ var AccessFu = {
           this._disable();
         break;
       case 'nsPref:changed':
-        if (aData == 'accessfu')
-          this._processPreferences(this.prefsBranch.getIntPref('accessfu'));
+        if (aData == 'activate')
+          this._processPreferences(this.prefsBranch.getIntPref('activate'));
         break;
       case 'accessible-event':
         let event;
