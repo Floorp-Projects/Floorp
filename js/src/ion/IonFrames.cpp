@@ -351,7 +351,7 @@ CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
         if (tn->kind != JSTRY_ITER)
             continue;
 
-        JS_ASSERT(JSOp(*(script->code + tn->start + tn->length)) == JSOP_ENDITER);
+        JS_ASSERT(JSOp(*(script->main() + tn->start + tn->length)) == JSOP_ENDITER);
         JS_ASSERT(tn->stackDepth > 0);
 
         uint32 localSlot = tn->stackDepth;
