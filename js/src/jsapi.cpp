@@ -593,7 +593,26 @@ JS_ValueToInt32(JSContext *cx, jsval v, int32_t *ip)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v);
 
-    return NonstandardToInt32(cx, v, (int32_t *)ip);
+    if (v.isInt32()) {
+        *ip = v.toInt32();
+        return true;
+    }
+
+    double d;
+    if (v.isDouble()) {
+        d = v.toDouble();
+    } else if (!ToNumberSlow(cx, v, &d)) {
+        return false;
+    }
+
+    if (MOZ_DOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
+        js_ReportValueError(cx, JSMSG_CANT_CONVERT,
+                            JSDVG_SEARCH_STACK, v, NULL);
+        return false;
+    }
+
+    *ip = (int32_t) floor(d + 0.5);  /* Round to nearest */
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
