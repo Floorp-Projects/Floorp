@@ -7,3 +7,12 @@ marionette.jar:
   content/marionette-simpletest.js  (marionette-simpletest.js)
   content/EventUtils.js  (EventUtils.js)
   content/ChromeUtils.js  (ChromeUtils.js)
+
+% content specialpowers %content/
+  content/specialpowers.js (../mochitest/specialpowers/content/specialpowers.js)
+  content/specialpowersAPI.js (../mochitest/tests/SimpleTest/specialpowersAPI.js)
+  content/SpecialPowersObserverAPI.js (../mochitest/tests/SimpleTest/SpecialPowersObserverAPI.js)
+  content/ChromePowers.js (../mochitest/tests/SimpleTest/ChromePowers.js)
+
+% resource mochikit %modules/
+  modules/MockFilePicker.jsm (../mochitest/MockFilePicker.jsm)
