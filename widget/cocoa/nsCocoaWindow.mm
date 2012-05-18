@@ -62,6 +62,7 @@
 #include "nsNativeThemeColors.h"
 #include "nsChildView.h"
 #include "nsCocoaFeatures.h"
+#include "nsIScreenManager.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"
@@ -1040,8 +1041,23 @@ NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(bool aAllowSlop,
     return NS_OK;
   }
 
-  nsIntRect screenBounds(
-    nsCocoaUtils::CocoaRectToGeckoRect([[mWindow screen] visibleFrame]));
+  nsIntRect screenBounds;
+
+  nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
+  if (screenMgr) {
+    nsCOMPtr<nsIScreen> screen;
+    PRInt32 width, height;
+
+    // zero size rects confuse the screen manager
+    width = mBounds.width > 0 ? mBounds.width : 1;
+    height = mBounds.height > 0 ? mBounds.height : 1;
+    screenMgr->ScreenForRect(*aX, *aY, width, height, getter_AddRefs(screen));
+
+    if (screen) {
+      screen->GetRect(&(screenBounds.x), &(screenBounds.y),
+                      &(screenBounds.width), &(screenBounds.height));
+    }
+  }
 
   if (aAllowSlop) {
     if (*aX < screenBounds.x - mBounds.width + kWindowPositionSlop) {
