@@ -876,6 +876,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_COLOR_INTERPOLATION_SRGB           1
 #define NS_STYLE_COLOR_INTERPOLATION_LINEARRGB      2
 
+// vector-effect
+#define NS_STYLE_VECTOR_EFFECT_NONE                 0
+#define NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE   1
+
 // 3d Transforms - Backface visibility
 #define NS_STYLE_BACKFACE_VISIBILITY_VISIBLE        1
 #define NS_STYLE_BACKFACE_VISIBILITY_HIDDEN         0

@@ -140,9 +140,6 @@ protected:
 
   // nsHTMLEditRules implementation methods
   nsresult WillInsert(nsISelection *aSelection, bool *aCancel);
-#ifdef XXX_DEAD_CODE
-  nsresult DidInsert(nsISelection *aSelection, nsresult aResult);
-#endif
   nsresult WillInsertText(  nsEditor::OperationID aAction,
                             nsISelection *aSelection, 
                             bool            *aCancel,
@@ -155,8 +152,10 @@ protected:
   nsresult StandardBreakImpl(nsIDOMNode *aNode, PRInt32 aOffset, nsISelection *aSelection);
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
   nsresult SplitMailCites(nsISelection *aSelection, bool aPlaintext, bool *aHandled);
-  nsresult WillDeleteSelection(nsISelection *aSelection, nsIEditor::EDirection aAction, 
-                               bool *aCancel, bool *aHandled);
+  nsresult WillDeleteSelection(nsISelection* aSelection,
+                               nsIEditor::EDirection aAction,
+                               nsIEditor::EStripWrappers aStripWrappers,
+                               bool* aCancel, bool* aHandled);
   nsresult DidDeleteSelection(nsISelection *aSelection, 
                               nsIEditor::EDirection aDir, 
                               nsresult aResult);
@@ -234,10 +233,6 @@ protected:
   nsresult ExpandSelectionForDeletion(nsISelection *aSelection);
   bool IsFirstNode(nsIDOMNode *aNode);
   bool IsLastNode(nsIDOMNode *aNode);
-#ifdef XXX_DEAD_CODE
-  bool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
-  bool AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
-#endif
   nsresult NormalizeSelection(nsISelection *inSelection);
   nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode,
                             PRInt32 aOffset, nsEditor::OperationID actionID,

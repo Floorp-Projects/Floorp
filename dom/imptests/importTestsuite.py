@@ -55,8 +55,13 @@ def copy(thissrcdir, dest, directories):
     dirtocreate = dest
 
     subdirs, mochitests, supportfiles = parseManifestFile(dest, d)
-    sourcedir = "hg-%s/%s" % (dest, d)
-    destdir = "%s/%s" % (dest, d)
+    if d:
+      sourcedir = "hg-%s/%s" % (dest, d)
+      destdir = "%s/%s" % (dest, d)
+    else:
+      # Empty directory, i.e., the repository root
+      sourcedir = "hg-%s" % dest
+      destdir = dest
     os.makedirs(destdir)
 
     for mochitest in mochitests:
@@ -65,7 +70,11 @@ def copy(thissrcdir, dest, directories):
       shutil.copy("%s/%s" % (sourcedir, support), "%s/%s" % (destdir, support))
 
     if len(subdirs):
-      importDirs(thissrcdir, dest, ["%s/%s" % (d, subdir) for subdir in subdirs])
+      if d:
+        importDirs(thissrcdir, dest, ["%s/%s" % (d, subdir) for subdir in subdirs])
+      else:
+        # Empty directory, i.e., the repository root
+        importDirs(thissrcdir, dest, subdirs)
 
 def printMakefile(dest, directories):
   """Create a .mk file to be included into the main Makefile.in, which lists the
@@ -116,7 +125,11 @@ def printMakefiles(thissrcdir, dest, directories):
   """
   print "Creating Makefile.ins..."
   for d in directories:
-    path = "%s/%s" % (dest, d)
+    if d:
+      path = "%s/%s" % (dest, d)
+    else:
+      # Empty directory, i.e., the repository root
+      path = dest
     abspath = "%s/%s" % (thissrcdir, path)
     print "Creating Makefile.in in %s..." % (path, )
 

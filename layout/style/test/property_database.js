@@ -3276,6 +3276,14 @@ var gCSSProperties = {
 		initial_values: [ "auto" ],
 		other_values: [ "optimizeSpeed", "optimizeLegibility", "geometricPrecision" ],
 		invalid_values: []
+	},
+	"vector-effect": {
+		domProp: "vectorEffect",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [ "non-scaling-stroke" ],
+		invalid_values: []
 	}
 }
 
