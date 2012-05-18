@@ -665,6 +665,7 @@ protected:
                                          PRInt32 aEndOffset);
   nsresult RelativeFontChangeOnNode( PRInt32 aSizeChange, 
                                      nsIDOMNode *aNode);
+  nsresult RelativeFontChangeHelper(PRInt32 aSizeChange, nsINode* aNode);
   nsresult RelativeFontChangeHelper( PRInt32 aSizeChange, 
                                      nsIDOMNode *aNode);
 
