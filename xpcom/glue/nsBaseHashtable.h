@@ -458,8 +458,8 @@ template<class KeyClass,class DataType,class UserDataType>
 void
 nsBaseHashtableMT<KeyClass,DataType,UserDataType>::Init(PRUint32 initSize)
 {
-  if (!nsTHashtable<EntryType>::IsInitialized() && !nsTHashtable<EntryType>::Init(initSize))
-    NS_RUNTIMEABORT("OOM");
+  if (!nsTHashtable<EntryType>::IsInitialized())
+    nsTHashtable<EntryType>::Init(initSize);
 
   this->mLock = PR_NewLock();
   if (!this->mLock)
@@ -496,12 +496,8 @@ nsBaseHashtableMT<KeyClass,DataType,UserDataType>::Put(KeyType      aKey,
                                                            UserDataType aData)
 {
   PR_Lock(this->mLock);
-  bool res =
-    nsBaseHashtable<KeyClass,DataType,UserDataType>::Put(aKey, aData);
+  nsBaseHashtable<KeyClass,DataType,UserDataType>::Put(aKey, aData);
   PR_Unlock(this->mLock);
-
-  if (!res)
-    NS_RUNTIMEABORT("OOM");
 }
 
 template<class KeyClass,class DataType,class UserDataType>

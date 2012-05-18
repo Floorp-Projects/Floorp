@@ -124,8 +124,7 @@ CrashReporterParent::GenerateHangCrashReport(const AnnotationTable* processNotes
     GenerateChildData(processNotes);
 
     CrashReporter::AnnotationTable notes;
-    if (!notes.Init(4))
-        return false;
+    notes.Init(4);
     notes.Put(nsDependentCString("HangID"), NS_ConvertUTF16toUTF8(mHangID));
     if (!CrashReporter::AppendExtraData(mParentDumpID, notes))
         NS_WARNING("problem appending parent data to .extra");

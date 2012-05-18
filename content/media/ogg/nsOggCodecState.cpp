@@ -1263,12 +1263,7 @@ bool nsSkeletonState::DecodeHeader(ogg_packet* aPacket)
     LOG(PR_LOG_DEBUG, ("Skeleton segment length: %lld", mLength));
 
     // Initialize the serianlno-to-index map.
-    bool init = mIndex.Init();
-    if (!init) {
-      NS_WARNING("Failed to initialize Ogg skeleton serialno-to-index map");
-      mActive = false;
-      return mDoneReadingHeaders = true;
-    }
+    mIndex.Init();
     mActive = true;
   } else if (IsSkeletonIndex(aPacket) && mVersion >= SKELETON_VERSION(4,0)) {
     if (!DecodeIndex(aPacket)) {

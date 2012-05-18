@@ -46,8 +46,7 @@
 nsresult
 nsDOMStorageMemoryDB::Init(nsDOMStoragePersistentDB* aPreloadDB)
 {
-  if (!mData.Init(20))
-    return NS_ERROR_OUT_OF_MEMORY;
+  mData.Init(20);
 
   mPreloadDB = aPreloadDB;
   return NS_OK;
@@ -86,10 +85,7 @@ nsDOMStorageMemoryDB::GetItemsTable(DOMStorageImpl* aStorage,
   if (!storageData)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (!storageData->mTable.Init()) {
-    delete storageData;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  storageData->mTable.Init();
 
   if (mPreloadDB) {
     nsresult rv;

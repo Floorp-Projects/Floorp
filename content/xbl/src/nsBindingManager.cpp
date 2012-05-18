@@ -554,8 +554,7 @@ nsresult
 nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
 {
   if (!mBindingTable.IsInitialized()) {
-    if (!mBindingTable.Init())
-      return NS_ERROR_OUT_OF_MEMORY;
+    mBindingTable.Init();
   }
 
   // After this point, aBinding will be the most-derived binding for aContent.
@@ -584,11 +583,9 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
     }
   }
   
-  bool result = true;
-
   if (aBinding) {
     aContent->SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
-    result = mBindingTable.Put(aContent, aBinding);
+    mBindingTable.Put(aContent, aBinding);
   } else {
     mBindingTable.Remove(aContent);
 
@@ -603,7 +600,7 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
     }
   }
 
-  return result ? NS_OK : NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 nsIContent*
@@ -1101,12 +1098,11 @@ nsBindingManager::PutXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo)
 {
   NS_PRECONDITION(aDocumentInfo, "Must have a non-null documentinfo!");
   
-  NS_ENSURE_TRUE(mDocumentTable.IsInitialized() || mDocumentTable.Init(16),
-                 NS_ERROR_OUT_OF_MEMORY);
+  if (!mDocumentTable.IsInitialized())
+    mDocumentTable.Init(16);
 
-  NS_ENSURE_TRUE(mDocumentTable.Put(aDocumentInfo->DocumentURI(),
-                                    aDocumentInfo),
-                 NS_ERROR_OUT_OF_MEMORY);
+  mDocumentTable.Put(aDocumentInfo->DocumentURI(),
+                     aDocumentInfo);
 
   return NS_OK;
 }
@@ -1133,11 +1129,10 @@ nsBindingManager::PutLoadingDocListener(nsIURI* aURL, nsIStreamListener* aListen
 {
   NS_PRECONDITION(aListener, "Must have a non-null listener!");
   
-  NS_ENSURE_TRUE(mLoadingDocTable.IsInitialized() || mLoadingDocTable.Init(16),
-                 NS_ERROR_OUT_OF_MEMORY);
+  if (!mLoadingDocTable.IsInitialized())
+    mLoadingDocTable.Init(16);
   
-  NS_ENSURE_TRUE(mLoadingDocTable.Put(aURL, aListener),
-                 NS_ERROR_OUT_OF_MEMORY);
+  mLoadingDocTable.Put(aURL, aListener);
 
   return NS_OK;
 }
@@ -1355,8 +1350,9 @@ EnumRuleProcessors(nsISupports *aKey, nsXBLBinding *aBinding, void* aClosure)
     nsIStyleRuleProcessor *ruleProc =
       binding->PrototypeBinding()->GetRuleProcessor();
     if (ruleProc) {
-      if (!set->IsInitialized() && !set->Init(16))
-        return PL_DHASH_STOP;
+      if (!set->IsInitialized()) {
+        set->Init(16);
+      }
       set->PutEntry(ruleProc);
     }
   }

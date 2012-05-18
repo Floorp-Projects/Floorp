@@ -1873,10 +1873,7 @@ nsXULDocument::SetTemplateBuilderFor(nsIContent* aContent,
             return NS_OK;
         }
         mTemplateBuilderTable = new BuilderTable;
-        if (! mTemplateBuilderTable || !mTemplateBuilderTable->Init()) {
-            mTemplateBuilderTable = nsnull;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
+        mTemplateBuilderTable->Init();
     }
 
     if (aBuilder) {
@@ -2649,9 +2646,9 @@ nsXULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver)
 
     if (aObserver) {
         nsIObserver* obs = nsnull;
-        NS_ENSURE_TRUE(mOverlayLoadObservers.IsInitialized() || mOverlayLoadObservers.Init(), 
-                       NS_ERROR_OUT_OF_MEMORY);
-        
+        if (!mOverlayLoadObservers.IsInitialized()) {
+            mOverlayLoadObservers.Init();
+        }
         obs = mOverlayLoadObservers.GetWeak(uri);
 
         if (obs) {
@@ -3248,8 +3245,9 @@ nsXULDocument::DoneWalking()
                 // XXXbz really, we shouldn't be firing binding constructors
                 // until after StartLayout returns!
 
-                NS_ENSURE_TRUE(mPendingOverlayLoadNotifications.IsInitialized() || mPendingOverlayLoadNotifications.Init(), 
-                               NS_ERROR_OUT_OF_MEMORY);
+                if (!mPendingOverlayLoadNotifications.IsInitialized()) {
+                    mPendingOverlayLoadNotifications.Init();
+                }
                 
                 mPendingOverlayLoadNotifications.Get(overlayURI, getter_AddRefs(obs));
                 if (!obs) {

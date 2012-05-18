@@ -137,7 +137,8 @@ PluginInstanceParent::~PluginInstanceParent()
 bool
 PluginInstanceParent::Init()
 {
-    return !!mScriptableObjects.Init();
+    mScriptableObjects.Init();
+    return true;
 }
 
 void
@@ -1542,7 +1543,8 @@ PluginInstanceParent::RegisterNPObjectForActor(
     NS_ASSERTION(aObject && aActor, "Null pointers!");
     NS_ASSERTION(mScriptableObjects.IsInitialized(), "Hash not initialized!");
     NS_ASSERTION(!mScriptableObjects.Get(aObject, nsnull), "Duplicate entry!");
-    return !!mScriptableObjects.Put(aObject, aActor);
+    mScriptableObjects.Put(aObject, aActor);
+    return true;
 }
 
 void
