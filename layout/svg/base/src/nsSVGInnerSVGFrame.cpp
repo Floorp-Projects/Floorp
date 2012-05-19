@@ -155,20 +155,18 @@ nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
       aFlags |= TRANSFORM_CHANGED;
     }
 
-    // XXX We could clear the COORD_CONTEXT_CHANGED flag in some circumstances
-    // if we have a non-percentage 'width' AND 'height, or if we have a 'viewBox'
-    // rect. This is because, when we have a viewBox rect, the viewBox rect
-    // is the coordinate context for our children, and it isn't changing.
-    // Percentage lengths on our children will continue to resolve to the
-    // same number of user units because they're relative to our viewBox rect. The
-    // same is true if we have a non-percentage width and height and don't have a
-    // viewBox. We (the <svg>) establish the coordinate context for our children. Our
-    // children don't care about changes to our parent coordinate context unless that
-    // change results in a change to the coordinate context that _we_ establish. Hence
-    // we can (should, really) stop propagating COORD_CONTEXT_CHANGED in these cases.
-    // We'd actually need to check that we have a viewBox rect and not just
-    // that viewBox is set, since it could be set to none.
-    // Take care not to break the testcase for bug 394463 when implementing this
+    if (svg->HasViewBox() ||
+        (!svg->mLengthAttributes[nsSVGSVGElement::WIDTH].IsPercentage() &&
+         !svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].IsPercentage())) {
+      // Remove COORD_CONTEXT_CHANGED, since we establish the coordinate
+      // context for our descendants and this notification won't change its
+      // dimensions:
+      aFlags &= ~COORD_CONTEXT_CHANGED;
+
+      if (!(aFlags & ~DO_NOT_NOTIFY_RENDERING_OBSERVERS)) {
+        return; // No notification flags left
+      }
+    }
   }
 
   if (aFlags & TRANSFORM_CHANGED) {

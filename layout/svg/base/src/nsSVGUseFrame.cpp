@@ -225,6 +225,10 @@ nsSVGUseFrame::NotifySVGChanged(PRUint32 aFlags)
     }
   }
 
+  // We don't remove the TRANSFORM_CHANGED flag here if we have a viewBox or
+  // non-percentage width/height, since if they're set then they are cloned to
+  // an anonymous child <svg>, and its nsSVGInnerSVGFrame will do that.
+
   nsSVGUseFrameBase::NotifySVGChanged(aFlags);
 }
 
