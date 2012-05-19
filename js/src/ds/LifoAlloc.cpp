@@ -172,3 +172,12 @@ LifoAlloc::getOrCreateChunk(size_t n)
     }
     return newChunk;
 }
+
+bool
+LifoAlloc::ensureUnusedApproximateSlow(size_t n)
+{
+    // This relies on the behavior that releasing a chunk does not immediately free it.
+    LifoAllocScope scope(this);
+    return !!getOrCreateChunk(n);
+}
+
