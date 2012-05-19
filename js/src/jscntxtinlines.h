@@ -363,7 +363,7 @@ class CompartmentChecker
     CompartmentChecker c(cx)
 
 template <class T1> inline void
-assertSameCompartment(JSContext *cx, const T1 &t1)
+assertSameCompartment(JSContext *cx, T1 t1)
 {
 #ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
@@ -372,7 +372,7 @@ assertSameCompartment(JSContext *cx, const T1 &t1)
 }
 
 template <class T1, class T2> inline void
-assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2)
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2)
 {
 #ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
@@ -382,7 +382,7 @@ assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2)
 }
 
 template <class T1, class T2, class T3> inline void
-assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2, const T3 &t3)
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3)
 {
 #ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
@@ -393,7 +393,7 @@ assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2, const T3 &t3)
 }
 
 template <class T1, class T2, class T3, class T4> inline void
-assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2, const T3 &t3, const T4 &t4)
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4)
 {
 #ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
@@ -405,7 +405,7 @@ assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2, const T3 &t3, c
 }
 
 template <class T1, class T2, class T3, class T4, class T5> inline void
-assertSameCompartment(JSContext *cx, const T1 &t1, const T2 &t2, const T3 &t3, const T4 &t4, const T5 &t5)
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 {
 #ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
@@ -473,7 +473,7 @@ CallJSNativeConstructor(JSContext *cx, Native native, const CallArgs &args)
 }
 
 JS_ALWAYS_INLINE bool
-CallJSPropertyOp(JSContext *cx, PropertyOp op, HandleObject receiver, HandleId id, Value *vp)
+CallJSPropertyOp(JSContext *cx, PropertyOp op, JSObject *receiver, jsid id, Value *vp)
 {
     assertSameCompartment(cx, receiver, id, *vp);
     JSBool ok = op(cx, receiver, id, vp);
@@ -483,7 +483,7 @@ CallJSPropertyOp(JSContext *cx, PropertyOp op, HandleObject receiver, HandleId i
 }
 
 JS_ALWAYS_INLINE bool
-CallJSPropertyOpSetter(JSContext *cx, StrictPropertyOp op, HandleObject obj, HandleId id,
+CallJSPropertyOpSetter(JSContext *cx, StrictPropertyOp op, JSObject *obj, jsid id,
                        JSBool strict, Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
@@ -491,7 +491,7 @@ CallJSPropertyOpSetter(JSContext *cx, StrictPropertyOp op, HandleObject obj, Han
 }
 
 inline bool
-CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, unsigned attrs,
+CallSetter(JSContext *cx, JSObject *obj, jsid id, StrictPropertyOp op, unsigned attrs,
            unsigned shortid, JSBool strict, Value *vp)
 {
     if (attrs & JSPROP_SETTER)
@@ -500,12 +500,9 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
     if (attrs & JSPROP_GETTER)
         return js_ReportGetterOnlyAssignment(cx);
 
-    if (!(attrs & JSPROP_SHORTID))
-        return CallJSPropertyOpSetter(cx, op, obj, id, strict, vp);
-
-    RootedVarId nid(cx, INT_TO_JSID(shortid));
-
-    return CallJSPropertyOpSetter(cx, op, obj, nid, strict, vp);
+    if (attrs & JSPROP_SHORTID)
+        id = INT_TO_JSID(shortid);
+    return CallJSPropertyOpSetter(cx, op, obj, id, strict, vp);
 }
 
 static inline HeapPtrAtom *

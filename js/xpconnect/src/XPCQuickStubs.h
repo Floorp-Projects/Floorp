@@ -148,7 +148,7 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
 
 
 JSBool
-xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
+xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
 /* Functions for converting values between COM and JS. */
 
@@ -614,19 +614,19 @@ xpc_qsSameResult(PRInt32 result1, PRInt32 result2)
 
 // Apply |op| to |obj|, |id|, and |vp|. If |op| is a setter, treat the assignment as lenient.
 template<typename Op>
-static inline JSBool ApplyPropertyOp(JSContext *cx, Op op, JSHandleObject obj, JSHandleId id, jsval *vp);
+static inline JSBool ApplyPropertyOp(JSContext *cx, Op op, JSObject *obj, jsid id, jsval *vp);
 
 template<>
 inline JSBool
-ApplyPropertyOp<JSPropertyOp>(JSContext *cx, JSPropertyOp op, JSHandleObject obj, JSHandleId id, jsval *vp)
+ApplyPropertyOp<JSPropertyOp>(JSContext *cx, JSPropertyOp op, JSObject *obj, jsid id, jsval *vp)
 {
     return op(cx, obj, id, vp);
 }
 
 template<>
 inline JSBool
-ApplyPropertyOp<JSStrictPropertyOp>(JSContext *cx, JSStrictPropertyOp op, JSHandleObject obj,
-                                    JSHandleId id, jsval *vp)
+ApplyPropertyOp<JSStrictPropertyOp>(JSContext *cx, JSStrictPropertyOp op, JSObject *obj,
+                                    jsid id, jsval *vp)
 {
     return op(cx, obj, id, true, vp);
 }
@@ -641,7 +641,7 @@ PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
     //   name of the property = callee reserved slot 1
 
     JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-    JS::RootedVarObject obj(cx, JS_THIS_OBJECT(cx, vp));
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return false;
 
@@ -653,8 +653,8 @@ PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
     v = js::GetFunctionNativeReserved(callee, 1);
 
     jsval argval = (argc > 0) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
-    JS::RootedVarId id(cx);
-    if (!JS_ValueToId(cx, v, id.address()))
+    jsid id;
+    if (!JS_ValueToId(cx, v, &id))
         return false;
     JS_SET_RVAL(cx, vp, argval);
     return ApplyPropertyOp<Op>(cx, *popp, obj, id, vp);

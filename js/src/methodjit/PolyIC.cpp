@@ -1087,32 +1087,11 @@ class GetPropCompiler : public PICStubCompiler
         masm.bumpStubCount(f.script(), f.pc(), t0);
 
         /*
-         * Use three values above sp on the stack for use by the call to store
-         * the object and id being passed into the call as handles and to store
-         * the resulting value. Temporary slots are used by GETPROP for this,
-         * plus there is extra room on the stack reserved for a callee frame.
+         * Initialize vp, which is either a slot in the object (the holder,
+         * actually, which must equal the object here) or undefined.
+         * Use vp == sp to avoid clobbering stack values.
          */
-        int32_t initialFrameDepth = f.regs.sp - f.fp()->slots() + 3;
-        int32_t objHandleOffset = (char *) f.regs.sp - (char *) f.fp();
-        int32_t idHandleOffset = (char *) (f.regs.sp + 1) - (char *) f.fp();
-        int32_t vpOffset = (char *) (f.regs.sp + 2) - (char *) f.fp();
-
-        masm.storePtr(holdObjReg, Address(JSFrameReg, objHandleOffset));
-        masm.storePtr(ImmPtr((void *) JSID_BITS(userid)), Address(JSFrameReg, idHandleOffset));
-
-        /*
-         * On 32 bit platforms zero the upper portion of the values so that
-         * the GC does not see a corrupt value in the handle slots. The two
-         * slots will look like doubles, so won't be traced, but the objects
-         * will be held live by the object value still in place on the stack.
-         * This will need to be addressed once a moving GC can relocate the
-         * objects, as the created handles will need to be properly registered.
-         */
-#if JS_BITS_PER_WORD == 32
-        masm.storePtr(ImmPtr(NULL), masm.tagOf(Address(JSFrameReg, objHandleOffset)));
-        masm.storePtr(ImmPtr(NULL), masm.tagOf(Address(JSFrameReg, idHandleOffset)));
-#endif
-
+        int32_t vpOffset = (char *) f.regs.sp - (char *) f.fp();
         if (shape->hasSlot()) {
             masm.loadObjProp(obj, holdObjReg, shape,
                              Registers::ClobberInCall, t0);
@@ -1121,6 +1100,8 @@ class GetPropCompiler : public PICStubCompiler
             masm.storeValue(UndefinedValue(), Address(JSFrameReg, vpOffset));
         }
 
+        /* sp + 1 to avoid clobbering vp if the getter calls scripted functions. */
+        int32_t initialFrameDepth = f.regs.sp + 1 - f.fp()->slots();
         masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.regs.pc, initialFrameDepth);
 
         /* Grab cx. */
@@ -1131,17 +1112,14 @@ class GetPropCompiler : public PICStubCompiler
 #endif
         masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxReg);
 
-        /* Grab registers for parameters. */
+        /* Grap vp. */
         RegisterID vpReg = t0;
-        RegisterID idReg = tempRegs.takeAnyReg().reg();
         masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
-        masm.addPtr(Imm32(idHandleOffset), JSFrameReg, idReg);
-        masm.addPtr(Imm32(objHandleOffset), JSFrameReg, holdObjReg);
 
         masm.restoreStackBase();
         masm.setupABICall(Registers::NormalCall, 4);
         masm.storeArg(3, vpReg);
-        masm.storeArg(2, idReg);
+        masm.storeArg(2, ImmPtr((void *) JSID_BITS(userid)));
         masm.storeArg(1, holdObjReg);
         masm.storeArg(0, cxReg);
 
@@ -1227,7 +1205,7 @@ class GetPropCompiler : public PICStubCompiler
 #endif
         masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxReg);
 
-        /* Grab vp. */
+        /* Grap vp. */
         RegisterID vpReg = t0;
         masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
 
@@ -2505,7 +2483,7 @@ GetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, const Value &v, jsid i
     disable(f, "generated typed array stub");
 
     // Fetch the value as expected of Lookup_Cacheable for GetElement.
-    if (!obj->getGeneric(cx, RootedVarId(cx, id), vp))
+    if (!obj->getGeneric(cx, id, vp))
         return Lookup_Error;
 
     return Lookup_Cacheable;
@@ -2595,7 +2573,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
         }
     }
 
-    if (!obj->getGeneric(cx, RootedVarId(cx, id), &f.regs.sp[-2]))
+    if (!obj->getGeneric(cx, id, &f.regs.sp[-2]))
         THROW();
 
 #if JS_HAS_NO_SUCH_METHOD

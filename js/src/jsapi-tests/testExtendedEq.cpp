@@ -9,7 +9,7 @@
 #include "jsobj.h"
 
 static JSBool
-my_Equality(JSContext *cx, JS::HandleObject obj, const jsval *, JSBool *bp)
+my_Equality(JSContext *cx, JSObject *obj, const jsval *, JSBool *bp)
 {
     *bp = JS_TRUE;
     return JS_TRUE;

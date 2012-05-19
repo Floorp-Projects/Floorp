@@ -308,7 +308,7 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret)
         *ret = NULL;
         return true;
     }
-    RootedVarObject arr(cx, NewDenseEmptyArray(cx));
+    JSObject *arr = NewDenseEmptyArray(cx);
     if (!arr)
         return false;
     ObjectValueMap *map = GetObjectMap(obj);
