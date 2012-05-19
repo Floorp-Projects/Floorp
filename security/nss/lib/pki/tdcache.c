@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.49 $ $Date: 2010/02/10 02:04:32 $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.49.6.1 $ $Date: 2012/05/17 21:40:54 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -771,6 +771,7 @@ add_cert_to_cache (
 	log_cert_ref("attempted to add cert already in cache", cert);
 #endif
 	PZ_Unlock(td->cache->lock);
+        nss_ZFreeIf(certNickname);
 	/* collision - somebody else already added the cert
 	 * to the cache before this thread got around to it.
 	 */
@@ -839,8 +840,11 @@ add_cert_to_cache (
     }
     rvCert = cert;
     PZ_Unlock(td->cache->lock);
+    nss_ZFreeIf(certNickname);
     return rvCert;
 loser:
+    nss_ZFreeIf(certNickname);
+    certNickname = NULL;
     /* Remove any handles that have been created */
     subjectList = NULL;
     if (added >= 1) {

@@ -610,6 +610,19 @@ struct JSScript : public js::gc::Cell
     void setNeedsArgsObj(bool needsArgsObj);
     static bool applySpeculationFailed(JSContext *cx, JSScript *script);
 
+    /*
+     * Arguments access (via JSOP_*ARG* opcodes) must access the canonical
+     * location for the argument. If an arguments object exists AND this is a
+     * non-strict function (where 'arguments' aliases formals), then all access
+     * must go through the arguments object. Otherwise, the local slot is the
+     * canonical location for the arguments. Note: if a formal is aliased
+     * through the scope chain, then script->argLivesInCallObject and
+     * JSOP_*ARG* opcodes won't be emitted at all.
+     */
+    bool argsObjAliasesFormals() const {
+        return needsArgsObj() && !strictModeCode;
+    }
+
     /* Hash table chaining for JSCompartment::evalCache. */
     JSScript *&evalHashLink() { return *globalObject.unsafeGetUnioned(); }
 
@@ -855,9 +868,9 @@ struct JSScript : public js::gc::Cell
 
 #ifdef DEBUG
     bool varIsAliased(unsigned varSlot);
-    bool argIsAliased(unsigned argSlot);
-    bool argLivesInArgumentsObject(unsigned argSlot);
-    bool argLivesInCallObject(unsigned argSlot);
+    bool formalIsAliased(unsigned argSlot);
+    bool formalLivesInArgumentsObject(unsigned argSlot);
+    bool formalLivesInCallObject(unsigned argSlot);
 #endif
   private:
     /*

@@ -212,7 +212,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
             if (StackFrame *fp = argsobj.maybeStackFrame()) {
-                JS_ASSERT_IF(arg < fp->numFormalArgs(), fp->script()->argIsAliased(arg));
+                JS_ASSERT_IF(arg < fp->numFormalArgs(), fp->script()->formalIsAliased(arg));
                 *vp = fp->canonicalActualArg(arg);
             } else {
                 *vp = argsobj.element(arg);
@@ -245,7 +245,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
                 JSScript *script = fp->functionScript();
                 JS_ASSERT(script->needsArgsObj());
                 if (arg < fp->numFormalArgs()) {
-                    JS_ASSERT(fp->script()->argIsAliased(arg));
+                    JS_ASSERT(fp->script()->formalIsAliased(arg));
                     types::TypeScript::SetArgument(cx, script, arg, *vp);
                 }
                 fp->canonicalActualArg(arg) = *vp;

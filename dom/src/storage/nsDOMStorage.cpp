@@ -273,12 +273,7 @@ nsDOMStorageManager::Initialize()
   if (!gStorageManager)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (!gStorageManager->mStorages.Init()) {
-    delete gStorageManager;
-    gStorageManager = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
+  gStorageManager->mStorages.Init();
   NS_ADDREF(gStorageManager);
 
   // No observers needed in non-chrome

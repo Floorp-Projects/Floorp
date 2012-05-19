@@ -343,15 +343,11 @@ nsBoxObject::SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* 
   if (!mPropertyTable) {  
     mPropertyTable = new nsInterfaceHashtable<nsStringHashKey,nsISupports>;  
     if (!mPropertyTable) return NS_ERROR_OUT_OF_MEMORY;
-    if (!mPropertyTable->Init(8)) {
-       mPropertyTable = nsnull;
-       return NS_ERROR_FAILURE;
-    }
+    mPropertyTable->Init(8);
   }
 
   nsDependentString propertyName(aPropertyName);
-  if (!mPropertyTable->Put(propertyName, aValue))
-    return NS_ERROR_OUT_OF_MEMORY;
+  mPropertyTable->Put(propertyName, aValue);
   return NS_OK;
 }
 

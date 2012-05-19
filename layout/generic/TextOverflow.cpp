@@ -587,9 +587,7 @@ TextOverflow::ProcessLine(const nsDisplayListSet& aLists,
   mRight.mActive = mRight.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP;
   
   FrameHashtable framesToHide;
-  if (!framesToHide.Init(100)) {
-    return;
-  }
+  framesToHide.Init(100);
   AlignmentEdges alignmentEdges;
   ExamineLineFrames(aLine, &framesToHide, &alignmentEdges);
   bool needLeft = mLeft.IsNeeded();

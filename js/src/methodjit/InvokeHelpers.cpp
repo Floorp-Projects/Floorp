@@ -156,8 +156,8 @@ static void
 InlineReturn(VMFrame &f)
 {
     JS_ASSERT(f.fp() != f.entryfp);
-    JS_ASSERT(!IsActiveWithOrBlock(f.cx, *f.fp()->scopeChain(), 0));
-    JS_ASSERT(!f.fp()->hasBlockChain());
+    AssertValidFunctionScopeChainAtExit(f.fp());
+
     f.cx->stack.popInlineFrame(f.regs);
 
     DebugOnly<JSOp> op = JSOp(*f.regs.pc);
@@ -620,15 +620,18 @@ js_InternalThrow(VMFrame &f)
     if (cx->isExceptionPending()) {
         JS_ASSERT(JSOp(*pc) == JSOP_ENTERBLOCK);
         StaticBlockObject &blockObj = script->getObject(GET_UINT32_INDEX(pc))->asStaticBlock();
+        if (!cx->regs().fp()->pushBlock(cx, blockObj))
+            return NULL;
         Value *vp = cx->regs().sp + blockObj.slotCount();
         SetValueRangeToUndefined(cx->regs().sp, vp);
         cx->regs().sp = vp;
+
         JS_ASSERT(JSOp(pc[JSOP_ENTERBLOCK_LENGTH]) == JSOP_EXCEPTION);
         cx->regs().sp[0] = cx->getPendingException();
         cx->clearPendingException();
         cx->regs().sp++;
+
         cx->regs().pc = pc + JSOP_ENTERBLOCK_LENGTH + JSOP_EXCEPTION_LENGTH;
-        cx->regs().fp()->setBlockChain(&blockObj);
     }
 
     *f.oldregs = f.regs;

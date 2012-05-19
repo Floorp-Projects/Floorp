@@ -801,7 +801,7 @@ jsd_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval)
 
             return NULL;
         }
-        jsdval->className = JS_GetClass(obj)->name;
+        jsdval->className = JS_GetDebugClassName(obj);
         JS_LeaveCrossCompartmentCall(call);
         JS_EndRequest(jsdc->dumbContext);
     }
