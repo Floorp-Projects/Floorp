@@ -166,6 +166,10 @@ TiledThebesLayerOGL::ProcessUploadQueue()
                                      resolution);
   }
 
+  // If we coalesce uploads while the layers' valid region is changing we will
+  // end up trying to upload area outside of the valid region. (bug 756555)
+  mRegionToUpload.And(mRegionToUpload, mMainMemoryTiledBuffer.GetValidRegion());
+
   mVideoMemoryTiledBuffer.Upload(&mMainMemoryTiledBuffer,
                                  mMainMemoryTiledBuffer.GetValidRegion(),
                                  mRegionToUpload, resolution);
