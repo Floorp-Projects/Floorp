@@ -266,7 +266,7 @@ extern void
 js_ReportIsNotFunction(JSContext *cx, const js::Value *vp, unsigned flags);
 
 extern void
-js_PutCallObject(js::StackFrame *fp);
+js_PutCallObject(js::StackFrame *fp, js::CallObject &callobj);
 
 namespace js {
 

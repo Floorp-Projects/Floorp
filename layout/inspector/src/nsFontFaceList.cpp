@@ -128,9 +128,7 @@ nsFontFaceList::AddFontsFromTextRun(gfxTextRun* aTextRun,
       }
       nsCOMPtr<nsFontFace> ff =
         new nsFontFace(fe, iter.GetGlyphRun()->mMatchType, rule);
-      if (!mFontFaces.Put(fe, ff)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      mFontFaces.Put(fe, ff);
     }
   }
 

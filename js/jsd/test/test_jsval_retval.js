@@ -36,4 +36,7 @@ function run_test() {
     };
 
     f();
+
+    jsd.breakpointHook = null;
+    jsd = null;
 }

@@ -52,20 +52,6 @@
 namespace js {
 
 /*
- * Refresh and return fp->scopeChain.  It may be stale if block scopes are
- * active but not yet reflected by objects in the scope chain.  If a block
- * scope contains a with, eval, XML filtering predicate, or similar such
- * dynamically scoped construct, then compile-time block scope at fp->blocks
- * must reflect at runtime.
- */
-
-extern JSObject *
-GetScopeChain(JSContext *cx);
-
-extern JSObject *
-GetScopeChain(JSContext *cx, StackFrame *fp);
-
-/*
  * ScriptPrologue/ScriptEpilogue must be called in pairs. ScriptPrologue
  * must be called before the script executes. ScriptEpilogue must be called
  * after the script returns or exits via exception.
@@ -321,8 +307,8 @@ UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs);
 extern bool
 OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp);
 
-extern bool
-IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth);
+inline void
+AssertValidFunctionScopeChainAtExit(StackFrame *fp);
 
 class TryNoteIter
 {

@@ -1369,17 +1369,11 @@ nsDocAccessible::BindToDocument(nsAccessible* aAccessible,
     return false;
 
   // Put into DOM node cache.
-  if (aAccessible->IsPrimaryForNode() &&
-      !mNodeToAccessibleMap.Put(aAccessible->GetNode(), aAccessible))
-    return false;
+  if (aAccessible->IsPrimaryForNode())
+    mNodeToAccessibleMap.Put(aAccessible->GetNode(), aAccessible);
 
   // Put into unique ID cache.
-  if (!mAccessibleCache.Put(aAccessible->UniqueID(), aAccessible)) {
-    if (aAccessible->IsPrimaryForNode())
-      mNodeToAccessibleMap.Remove(aAccessible->GetNode());
-
-    return false;
-  }
+  mAccessibleCache.Put(aAccessible->UniqueID(), aAccessible);
 
   // Initialize the accessible.
   if (!aAccessible->Init()) {
@@ -1621,10 +1615,7 @@ nsDocAccessible::AddDependentIDsFor(nsAccessible* aRelProvider,
       if (!providers) {
         providers = new AttrRelProviderArray();
         if (providers) {
-          if (!mDependentIDsHash.Put(id, providers)) {
-            delete providers;
-            providers = nsnull;
-          }
+          mDependentIDsHash.Put(id, providers);
         }
       }
 

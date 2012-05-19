@@ -1018,7 +1018,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
 CompileStatus
 mjit::Compiler::generatePrologue()
 {
-    invokeLabel = masm.label();
+    fastEntryLabel = masm.label();
 
     /*
      * If there is no function, then this can only be called via JaegerShot(),
@@ -1031,9 +1031,7 @@ mjit::Compiler::generatePrologue()
          * Entry point #2: The caller has partially constructed a frame, and
          * either argc >= nargs or the arity check has corrected the frame.
          */
-        invokeLabel = masm.label();
-
-        Label fastPath = masm.label();
+        fastEntryLabel = masm.label();
 
         /* Store this early on so slow paths can access it. */
         masm.storePtr(ImmPtr(script->function()),
@@ -1078,7 +1076,7 @@ mjit::Compiler::generatePrologue()
 #endif
             }
 
-            stubcc.crossJump(stubcc.masm.jump(), fastPath);
+            stubcc.crossJump(stubcc.masm.jump(), fastEntryLabel);
         }
 
         /*
@@ -1113,7 +1111,7 @@ mjit::Compiler::generatePrologue()
          * stub for heavyweight functions (including nesting outer functions).
          */
         JS_ASSERT_IF(nesting && nesting->children, script->function()->isHeavyweight());
-        if (script->function()->isHeavyweight() || script->needsArgsObj()) {
+        if (script->function()->isHeavyweight()) {
             prepareStubCall(Uses(0));
             INLINE_STUBCALL(stubs::FunctionFramePrologue, REJOIN_FUNCTION_PROLOGUE);
         } else {
@@ -1383,7 +1381,7 @@ mjit::Compiler::finishThisUp()
         if (script->function()) {
             jit->arityCheckEntry = stubCode.locationOf(arityLabel).executableAddress();
             jit->argsCheckEntry = stubCode.locationOf(argsCheckLabel).executableAddress();
-            jit->fastEntry = fullCode.locationOf(invokeLabel).executableAddress();
+            jit->fastEntry = fullCode.locationOf(fastEntryLabel).executableAddress();
         }
     }
 
@@ -3817,7 +3815,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     if (script->function()) {
         types::TypeScriptNesting *nesting = script->nesting();
         if (script->function()->isHeavyweight() || script->needsArgsObj() ||
-            (nesting && nesting->children))
+            (nesting && nesting->children) || debugMode())
         {
             prepareStubCall(Uses(fe ? 1 : 0));
             INLINE_STUBCALL(stubs::FunctionFrameEpilogue, REJOIN_NONE);
@@ -7030,7 +7028,7 @@ mjit::Compiler::enterBlock(StaticBlockObject *block)
     /* For now, don't bother doing anything for this opcode. */
     frame.syncAndForgetEverything();
     masm.move(ImmPtr(block), Registers::ArgReg1);
-    INLINE_STUBCALL(stubs::EnterBlock, REJOIN_NONE);
+    INLINE_STUBCALL(stubs::EnterBlock, REJOIN_FALLTHROUGH);
     if (*PC == JSOP_ENTERBLOCK)
         frame.enterBlock(StackDefs(script, PC));
 }

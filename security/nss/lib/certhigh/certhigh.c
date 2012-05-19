@@ -394,6 +394,8 @@ CollectNicknames( NSSCertificate *c, void *data)
     stanNickname = nssCertificate_GetNickname(c,NULL);
     
     if ( stanNickname ) {
+        nss_ZFreeIf(stanNickname);
+        stanNickname = NULL;
 	if (names->what == SEC_CERT_NICKNAMES_USER) {
 	    saveit = NSSCertificate_IsPrivateKeyAvailable(c, NULL, NULL);
 	}

@@ -480,6 +480,9 @@ public:
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered,
                                PRInt64 aStartTime) = 0;
 
+  // True if we can seek using only buffered ranges. This is backend dependant.
+  virtual bool IsSeekableInBufferedRanges() = 0;
+
   class VideoQueueMemoryFunctor : public nsDequeFunctor {
   public:
     VideoQueueMemoryFunctor() : mResult(0) {}

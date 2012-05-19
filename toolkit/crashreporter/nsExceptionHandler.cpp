@@ -697,8 +697,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
     new nsDataHashtable<nsCStringHashKey,nsCString>();
   NS_ENSURE_TRUE(crashReporterAPIData_Hash, NS_ERROR_OUT_OF_MEMORY);
 
-  rv = crashReporterAPIData_Hash->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  crashReporterAPIData_Hash->Init();
 
   notesField = new nsCString();
   NS_ENSURE_TRUE(notesField, NS_ERROR_OUT_OF_MEMORY);
@@ -1287,8 +1286,7 @@ nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
 
   MutexAutoLock lock(*crashReporterAPILock);
 
-  rv = crashReporterAPIData_Hash->Put(key, escapedData);
-  NS_ENSURE_SUCCESS(rv, rv);
+  crashReporterAPIData_Hash->Put(key, escapedData);
 
   // now rebuild the file contents
   crashReporterAPIData->Truncate(0);

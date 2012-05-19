@@ -1338,6 +1338,10 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     }
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
     script->hasSingletons = bce->hasSingletons;
+#ifdef JS_METHODJIT
+    if (cx->compartment->debugMode())
+        script->debugMode = true;
+#endif
 
     if (bce->sc->inFunction) {
         if (bce->sc->funArgumentsHasLocalBinding()) {
@@ -2268,19 +2272,19 @@ JSScript::varIsAliased(unsigned varSlot)
 }
 
 bool
-JSScript::argIsAliased(unsigned argSlot)
+JSScript::formalIsAliased(unsigned argSlot)
 {
-    return argLivesInCallObject(argSlot) || needsArgsObj();
+    return formalLivesInCallObject(argSlot) || argsObjAliasesFormals();
 }
 
 bool
-JSScript::argLivesInArgumentsObject(unsigned argSlot)
+JSScript::formalLivesInArgumentsObject(unsigned argSlot)
 {
-    return needsArgsObj() && !argLivesInCallObject(argSlot);
+    return argsObjAliasesFormals() && !formalLivesInCallObject(argSlot);
 }
 
 bool
-JSScript::argLivesInCallObject(unsigned argSlot)
+JSScript::formalLivesInCallObject(unsigned argSlot)
 {
     if (bindingsAccessedDynamically)
         return true;

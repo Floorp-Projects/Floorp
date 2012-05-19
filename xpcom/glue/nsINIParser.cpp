@@ -133,8 +133,7 @@ static const char kRBracket[] = "]";
 nsresult
 nsINIParser::InitFromFILE(FILE *fd)
 {
-    if (!mSections.Init())
-        return NS_ERROR_OUT_OF_MEMORY;
+    mSections.Init();
 
     /* get file size */
     if (fseek(fd, 0, SEEK_END) != 0)

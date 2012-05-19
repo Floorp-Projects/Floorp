@@ -209,9 +209,9 @@ nsTreeBodyFrame::Init(nsIContent*     aContent,
   mIndentation = GetIndentation();
   mRowHeight = GetRowHeight();
 
-  NS_ENSURE_TRUE(mCreatedListeners.Init(), NS_ERROR_OUT_OF_MEMORY);
+  mCreatedListeners.Init();
 
-  NS_ENSURE_TRUE(mImageCache.Init(16), NS_ERROR_OUT_OF_MEMORY);
+  mImageCache.Init(16);
   EnsureBoxObject();
 
   return rv;
