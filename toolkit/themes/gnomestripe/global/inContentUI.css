@@ -61,9 +61,7 @@ html|html {
 /* Content */
 *|*.main-content {
   /* Needed to allow the radius to clip the inner content, see bug 595656 */
-  /* Disabled because of bug 623615
   overflow: hidden;
-  */
   background-color: -moz-Field;
   color: -moz-FieldText;
   border: 1px solid ThreeDShadow;
