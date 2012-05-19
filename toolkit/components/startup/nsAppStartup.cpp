@@ -78,6 +78,7 @@
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 #include "prenv.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #if defined(XP_WIN)
 #include <windows.h>
@@ -300,6 +301,70 @@ nsAppStartup::Run(void)
   return mRestart ? NS_SUCCESS_RESTART_APP : NS_OK;
 }
 
+static TimeStamp gRecordedShutdownStartTime;
+static char *gRecordedShutdownTimeFileName = NULL;
+
+static void
+RecordShutdownStartTimeStamp() {
+  if (!Telemetry::CanRecord())
+    return;
+
+  gRecordedShutdownStartTime = TimeStamp::Now();
+
+  nsCOMPtr<nsIFile> mozFile;
+  NS_GetSpecialDirectory(NS_APP_PREFS_50_DIR, getter_AddRefs(mozFile));
+  if (!mozFile)
+    return;
+
+  mozFile->AppendNative(NS_LITERAL_CSTRING("Telemetry.ShutdownTime.txt"));
+  nsCAutoString nativePath;
+  nsresult rv = mozFile->GetNativePath(nativePath);
+  if (!NS_SUCCEEDED(rv))
+    return;
+
+  gRecordedShutdownTimeFileName = PL_strdup(nativePath.get());
+}
+
+static void
+RecordShutdownEndTimeStamp() {
+  if (!gRecordedShutdownTimeFileName)
+    return;
+
+  nsCString name(gRecordedShutdownTimeFileName);
+  PL_strfree(gRecordedShutdownTimeFileName);
+  gRecordedShutdownTimeFileName = NULL;
+
+  nsCString tmpName = name;
+  tmpName += ".tmp";
+  PRFileDesc *f = PR_Open(tmpName.get(), PR_CREATE_FILE | PR_WRONLY,
+                          PR_IRUSR | PR_IWUSR);
+  if (!f)
+    return;
+
+  TimeStamp now = TimeStamp::Now();
+  MOZ_ASSERT(now >= gRecordedShutdownStartTime);
+  TimeDuration diff = now - gRecordedShutdownStartTime;
+  uint32_t diff2 = diff.ToMilliseconds();
+  uint32_t written = PR_fprintf(f, "%d\n", diff2);
+  PRStatus rv = PR_Close(f);
+  if (written == static_cast<uint32_t>(-1) || rv != PR_SUCCESS) {
+    PR_Delete(tmpName.get());
+    return;
+  }
+  PR_Rename(tmpName.get(), name.get());
+}
+
+// For now firefox runs static destructors during shutdown on release builds
+// too, so we just use one to run RecordShutdownEndTimeStamp. Once we are
+// exiting earlier in release builds we just move the call.
+class RecordShutdownEndTimeStampHelper {
+public:
+  ~RecordShutdownEndTimeStampHelper() {
+    RecordShutdownEndTimeStamp();
+  }
+};
+
+static RecordShutdownEndTimeStampHelper gHelper;
 
 NS_IMETHODIMP
 nsAppStartup::Quit(uint32_t aMode)
@@ -314,6 +379,8 @@ nsAppStartup::Quit(uint32_t aMode)
 
   if (mShuttingDown)
     return NS_OK;
+
+  RecordShutdownStartTimeStamp();
 
   // If we're considering quitting, we will only do so if:
   if (ferocity == eConsiderQuit) {

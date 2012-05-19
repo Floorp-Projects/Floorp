@@ -1027,10 +1027,11 @@ JSContext::JSContext(JSRuntime *rt)
     functionCallback(NULL),
 #endif
     enumerators(NULL),
-    activeCompilations(0)
 #ifdef DEBUG
-    , stackIterAssertionEnabled(true)
+    stackIterAssertionEnabled(true),
+    okToAccessUnaliasedBindings(0),
 #endif
+    activeCompilations(0)
 {
     PodZero(&link);
 #ifdef JSGC_ROOT_ANALYSIS

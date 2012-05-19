@@ -193,9 +193,7 @@ nsPermissionManager::Init()
 {
   nsresult rv;
 
-  if (!mHostTable.Init()) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  mHostTable.Init();
 
   mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {

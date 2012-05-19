@@ -4128,6 +4128,7 @@ Parser::statement()
         if (!pn)
             return NULL;
         tc->sc->setFunIsHeavyweight();
+        tc->sc->setBindingsAccessedDynamically();
         break;
 
 #if JS_HAS_XML_SUPPORT

@@ -201,8 +201,8 @@ private:
   /* Font properties */
   nsIDOMCSSValue* DoGetColor();
   nsIDOMCSSValue* DoGetFontFamily();
-  nsIDOMCSSValue* DoGetMozFontFeatureSettings();
-  nsIDOMCSSValue* DoGetMozFontLanguageOverride();
+  nsIDOMCSSValue* DoGetFontFeatureSettings();
+  nsIDOMCSSValue* DoGetFontLanguageOverride();
   nsIDOMCSSValue* DoGetFontSize();
   nsIDOMCSSValue* DoGetFontSizeAdjust();
   nsIDOMCSSValue* DoGetFontStretch();
@@ -219,10 +219,9 @@ private:
   nsIDOMCSSValue* DoGetBackgroundClip();
   nsIDOMCSSValue* DoGetBackgroundInlinePolicy();
   nsIDOMCSSValue* DoGetBackgroundOrigin();
-  nsIDOMCSSValue* DoGetMozBackgroundSize();
+  nsIDOMCSSValue* DoGetBackgroundSize();
 
   /* Padding properties */
-  nsIDOMCSSValue* DoGetPadding();
   nsIDOMCSSValue* DoGetPaddingTop();
   nsIDOMCSSValue* DoGetPaddingBottom();
   nsIDOMCSSValue* DoGetPaddingLeft();
@@ -237,8 +236,6 @@ private:
   nsIDOMCSSValue* DoGetVerticalAlign();
 
   /* Border Properties */
-  nsIDOMCSSValue* DoGetBorderStyle();
-  nsIDOMCSSValue* DoGetBorderWidth();
   nsIDOMCSSValue* DoGetBorderTopStyle();
   nsIDOMCSSValue* DoGetBorderBottomStyle();
   nsIDOMCSSValue* DoGetBorderLeftStyle();
@@ -275,14 +272,12 @@ private:
   nsIDOMCSSValue* DoGetWindowShadow();
 
   /* Margin Properties */
-  nsIDOMCSSValue* DoGetMarginWidth();
   nsIDOMCSSValue* DoGetMarginTopWidth();
   nsIDOMCSSValue* DoGetMarginBottomWidth();
   nsIDOMCSSValue* DoGetMarginLeftWidth();
   nsIDOMCSSValue* DoGetMarginRightWidth();
 
   /* Outline Properties */
-  nsIDOMCSSValue* DoGetOutline();
   nsIDOMCSSValue* DoGetOutlineWidth();
   nsIDOMCSSValue* DoGetOutlineStyle();
   nsIDOMCSSValue* DoGetOutlineColor();
@@ -316,9 +311,9 @@ private:
   nsIDOMCSSValue* DoGetTextAlignLast();
   nsIDOMCSSValue* DoGetMozTextBlink();
   nsIDOMCSSValue* DoGetTextDecoration();
-  nsIDOMCSSValue* DoGetMozTextDecorationColor();
-  nsIDOMCSSValue* DoGetMozTextDecorationLine();
-  nsIDOMCSSValue* DoGetMozTextDecorationStyle();
+  nsIDOMCSSValue* DoGetTextDecorationColor();
+  nsIDOMCSSValue* DoGetTextDecorationLine();
+  nsIDOMCSSValue* DoGetTextDecorationStyle();
   nsIDOMCSSValue* DoGetTextIndent();
   nsIDOMCSSValue* DoGetTextOverflow();
   nsIDOMCSSValue* DoGetTextTransform();
@@ -329,7 +324,7 @@ private:
   nsIDOMCSSValue* DoGetWordBreak();
   nsIDOMCSSValue* DoGetWordWrap();
   nsIDOMCSSValue* DoGetHyphens();
-  nsIDOMCSSValue* DoGetMozTabSize();
+  nsIDOMCSSValue* DoGetTabSize();
   nsIDOMCSSValue* DoGetTextSizeAdjust();
 
   /* Visibility properties */

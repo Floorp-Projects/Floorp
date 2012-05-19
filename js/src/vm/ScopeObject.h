@@ -44,8 +44,11 @@
 
 #include "jscntxt.h"
 #include "jsobj.h"
+#include "jsweakmap.h"
 
 namespace js {
+
+/*****************************************************************************/
 
 /*
  * A "scope coordinate" describes how to get from head of the scope chain to a
@@ -70,6 +73,8 @@ struct ScopeCoordinate
 
 inline JSAtom *
 ScopeCoordinateAtom(JSScript *script, jsbytecode *pc);
+
+/*****************************************************************************/
 
 /*
  * Scope objects
@@ -105,6 +110,8 @@ ScopeCoordinateAtom(JSScript *script, jsbytecode *pc);
  * compile time to hold the shape/binding information from which block objects
  * are cloned at runtime. These objects should never escape into the wild and
  * support a restricted set of ScopeObject operations.
+ *
+ * See also "Debug scope objects" below.
  */
 
 class ScopeObject : public JSObject
@@ -126,7 +133,8 @@ class ScopeObject : public JSObject
 
     /*
      * The stack frame for this scope object, if the frame is still active.
-     * Note: these members may not be called for a StaticBlockObject.
+     * Note: these members may not be called for a StaticBlockObject or
+     * WithObject.
      */
     inline StackFrame *maybeStackFrame() const;
     inline void setStackFrame(StackFrame *frame);
@@ -210,6 +218,10 @@ class NestedScopeObject : public ScopeObject
 
 class WithObject : public NestedScopeObject
 {
+    /* These ScopeObject operations are not valid on a with object. */
+    js::StackFrame *maybeStackFrame() const;
+    void setStackFrame(StackFrame *frame);
+
     static const unsigned THIS_SLOT = 2;
 
     /* Use WithObject::object() instead. */
@@ -220,7 +232,7 @@ class WithObject : public NestedScopeObject
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
 
     static WithObject *
-    create(JSContext *cx, StackFrame *fp, HandleObject proto, HandleObject enclosing, uint32_t depth);
+    create(JSContext *cx, HandleObject proto, HandleObject enclosing, uint32_t depth);
 
     /* Return object for the 'this' class hook. */
     JSObject &withThis() const;
@@ -272,13 +284,20 @@ class StaticBlockObject : public BlockObject
     void setAliased(unsigned i, bool aliased);
     bool isAliased(unsigned i);
 
+    /*
+     * A static block object is cloned (when entering the block) iff some
+     * variable of the block isAliased.
+     */
+    bool needsClone() const;
+
     const Shape *addVar(JSContext *cx, jsid id, int index, bool *redeclared);
 };
 
 class ClonedBlockObject : public BlockObject
 {
   public:
-    static ClonedBlockObject *create(JSContext *cx, Handle<StaticBlockObject*> block, StackFrame *fp);
+    static ClonedBlockObject *create(JSContext *cx, Handle<StaticBlockObject *> block,
+                                     StackFrame *fp);
 
     /* The static block from which this block was cloned. */
     StaticBlockObject &staticBlock() const;
@@ -287,7 +306,7 @@ class ClonedBlockObject : public BlockObject
      * When this block's stack slots are about to be popped, 'put' must be
      * called to copy the slot values into this block's object slots.
      */
-    void put(JSContext *cx);
+    void put(StackFrame *fp);
 
     /* Assuming 'put' has been called, return the value of the ith let var. */
     const Value &closedSlot(unsigned i);
@@ -304,6 +323,165 @@ extern JSObject *
 CloneStaticBlockObject(JSContext *cx, StaticBlockObject &srcBlock,
                        const AutoObjectVector &objects, JSScript *src);
 
-}  /* namespace js */
+/*****************************************************************************/
 
+/*
+ * A scope iterator describes the active scopes enclosing the current point of
+ * execution for a single frame, proceeding from inner to outer. Here, "frame"
+ * means a single activation of: a function, eval, or global code. By design,
+ * ScopeIter exposes *all* scopes, even those that have been optimized away
+ * (i.e., no ScopeObject was created when entering the scope and thus there is
+ * no ScopeObject on fp->scopeChain representing the scope).
+ *
+ * Note: ScopeIter iterates over all scopes *within* a frame which means that
+ * all scopes are ScopeObjects. In particular, the GlobalObject enclosing
+ * global code (and any random objects passed as scopes to Execute) will not
+ * be included.
+ */
+class ScopeIter
+{
+  public:
+    enum Type { Call, Block, With, StrictEvalScope };
+
+  private:
+    StackFrame *fp_;
+    JSObject *cur_;
+    StaticBlockObject *block_;
+    Type type_;
+    bool hasScopeObject_;
+
+    void settle();
+
+  public:
+    /* The default constructor leaves ScopeIter totally invalid */
+    explicit ScopeIter();
+
+    /* Constructing from StackFrame places ScopeIter on the innermost scope. */
+    explicit ScopeIter(StackFrame *fp);
+
+    /*
+     * Without a StackFrame, the resulting ScopeIter is done() with
+     * enclosingScope() as given.
+     */
+    explicit ScopeIter(JSObject &enclosingScope);
+
+    /*
+     * For the special case of generators, copy the given ScopeIter, with 'fp'
+     * as the StackFrame instead of si.fp(). Not for general use.
+     */
+    ScopeIter(ScopeIter si, StackFrame *fp);
+
+    /* Like ScopeIter(StackFrame *) except start at 'scope'. */
+    ScopeIter(StackFrame *fp, ScopeObject &scope);
+
+    bool done() const { return !fp_; }
+
+    /* If done(): */
+
+    JSObject &enclosingScope() const { JS_ASSERT(done()); return *cur_; }
+
+    /* If !done(): */
+
+    ScopeIter enclosing() const;
+
+    StackFrame *fp() const { JS_ASSERT(!done()); return fp_; }
+    Type type() const { JS_ASSERT(!done()); return type_; }
+    bool hasScopeObject() const { JS_ASSERT(!done()); return hasScopeObject_; }
+    ScopeObject &scope() const;
+
+    StaticBlockObject &staticBlock() const { JS_ASSERT(type() == Block); return *block_; }
+
+    /* For use as hash policy */
+    typedef ScopeIter Lookup;
+    static HashNumber hash(ScopeIter si);
+    static bool match(ScopeIter si1, ScopeIter si2);
+};
+
+/*****************************************************************************/
+
+/*
+ * Debug scope objects
+ *
+ * The debugger effectively turns every opcode into a potential direct eval.
+ * Naively, this would require creating a ScopeObject for every call/block
+ * scope and using JSOP_GETALIASEDVAR for every access. To optimize this, the
+ * engine assumes there is no debugger and optimizes scope access and creation
+ * accordingly. When the debugger wants to perform an unexpected eval-in-frame
+ * (or other, similar dynamic-scope-requiring operations), fp->scopeChain is
+ * now incomplete: it may not contain all, or any, of the ScopeObjects to
+ * represent the current scope.
+ *
+ * To resolve this, the debugger first calls GetDebugScopeFor(Function|Frame)
+ * to synthesize a "debug scope chain". A debug scope chain is just a chain of
+ * objects that fill in missing scopes and protect the engine from unexpected
+ * access. (The latter means that some debugger operations, like adding a new
+ * binding to a lexical scope, can fail when a true eval would succeed.) To do
+ * both of these things, GetDebugScopeFor* creates a new proxy DebugScopeObject
+ * to sit in front of every existing ScopeObject.
+ *
+ * GetDebugScopeFor* ensures the invariant that the same DebugScopeObject is
+ * always produced for the same underlying scope (optimized or not!). This is
+ * maintained by some bookkeeping information stored in DebugScopes.
+ */
+
+extern JSObject *
+GetDebugScopeForFunction(JSContext *cx, JSFunction *fun);
+
+extern JSObject *
+GetDebugScopeForFrame(JSContext *cx, StackFrame *fp);
+
+/* Provides debugger access to a scope. */
+class DebugScopeObject : public JSObject
+{
+    static const unsigned ENCLOSING_EXTRA = 0;
+
+  public:
+    static DebugScopeObject *create(JSContext *cx, ScopeObject &scope, JSObject &enclosing);
+
+    ScopeObject &scope() const;
+    JSObject &enclosingScope() const;
+
+    /* Currently, the 'declarative' scopes are Call and Block. */
+    bool isForDeclarative() const;
+};
+
+/* Maintains runtime-wide debug scope bookkeeping information. */
+class DebugScopes
+{
+    /* The map from (non-debug) scopes to debug scopes. */
+    typedef WeakMap<HeapPtrObject, HeapPtrObject> ObjectWeakMap;
+    ObjectWeakMap proxiedScopes;
+
+    /*
+     * The map from live frames which have optimized-away scopes to the
+     * corresponding debug scopes.
+     */
+    typedef HashMap<ScopeIter, DebugScopeObject *, ScopeIter, RuntimeAllocPolicy> MissingScopeMap;
+    MissingScopeMap missingScopes;
+
+  public:
+    DebugScopes(JSRuntime *rt);
+    ~DebugScopes();
+    bool init();
+
+    void mark(JSTracer *trc);
+    void sweep();
+
+    DebugScopeObject *hasDebugScope(JSContext *cx, ScopeObject &scope) const;
+    bool addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &debugScope);
+
+    DebugScopeObject *hasDebugScope(JSContext *cx, ScopeIter si) const;
+    bool addDebugScope(JSContext *cx, ScopeIter si, DebugScopeObject &debugScope);
+
+    /*
+     * In debug-mode, these must be called whenever exiting a call/block or
+     * when activating/yielding a generator.
+     */
+    void onPopCall(StackFrame *fp);
+    void onPopBlock(JSContext *cx, StackFrame *fp);
+    void onGeneratorFrameChange(StackFrame *from, StackFrame *to);
+    void onCompartmentLeaveDebugMode(JSCompartment *c);
+};
+
+}  /* namespace js */
 #endif /* ScopeObject_h___ */

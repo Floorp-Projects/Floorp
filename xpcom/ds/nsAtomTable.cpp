@@ -560,11 +560,12 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, PRUint32 aAtomCount)
   
   if (!gStaticAtomTable && !gStaticAtomTableSealed) {
     gStaticAtomTable = new nsDataHashtable<nsStringHashKey, nsIAtom*>();
-    if (!gStaticAtomTable || !gStaticAtomTable->Init()) {
+    if (!gStaticAtomTable) {
       delete gStaticAtomTable;
       gStaticAtomTable = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    gStaticAtomTable->Init();
   }
   
   for (PRUint32 i=0; i<aAtomCount; i++) {

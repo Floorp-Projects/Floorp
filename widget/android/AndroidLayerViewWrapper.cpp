@@ -90,6 +90,9 @@ AndroidGLController::ProvideEGLSurface()
     ASSERT_THREAD();
     AutoLocalJNIFrame jniFrame(mJEnv);
     jobject jObj = mJEnv->CallObjectMethod(mJObj, jProvideEGLSurfaceMethod);
+    if (jniFrame.CheckForException())
+        return NULL;
+
     return reinterpret_cast<EGLSurface>(mJEnv->GetIntField(jObj, jEGLSurfacePointerField));
 }
 

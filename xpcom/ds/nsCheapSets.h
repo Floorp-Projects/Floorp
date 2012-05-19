@@ -124,22 +124,16 @@ nsCheapSet<EntryType>::Put(const KeyType aVal)
       if (!table) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      if (!table->Init()) {
-        return NS_ERROR_FAILURE;
-      }
+      table->Init();
       EntryType *entry = GetSingleEntry();
-      if (!table->PutEntry(entry->GetKey())) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      table->PutEntry(entry->GetKey());
       entry->~EntryType();
       mUnion.table = table;
       mState = MANY;
     }
     // Fall through.
   case MANY:
-    if (!mUnion.table->PutEntry(aVal)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mUnion.table->PutEntry(aVal);
     return NS_OK;
   default:
     NS_NOTREACHED("bogus state");

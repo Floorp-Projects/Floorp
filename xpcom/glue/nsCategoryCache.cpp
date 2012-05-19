@@ -47,11 +47,7 @@ nsCategoryObserver::nsCategoryObserver(const char* aCategory,
                                        nsCategoryListener* aListener)
   : mListener(nsnull), mCategory(aCategory), mObserversRemoved(false)
 {
-  if (!mHash.Init()) {
-    // OOM
-    return;
-  }
-
+  mHash.Init();
   mListener = aListener;
 
   // First, enumerate the currently existing entries

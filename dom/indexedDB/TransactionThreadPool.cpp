@@ -164,10 +164,7 @@ TransactionThreadPool::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransactionsInProgress.Init()) {
-    NS_WARNING("Failed to init hash!");
-    return NS_ERROR_FAILURE;
-  }
+  mTransactionsInProgress.Init();
 
   nsresult rv;
   mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID, &rv);
@@ -468,10 +465,7 @@ TransactionThreadPool::Dispatch(IDBTransaction* aTransaction,
   }
 
   if (autoDBTransactionInfo) {
-    if (!mTransactionsInProgress.Put(databaseId, autoDBTransactionInfo)) {
-      NS_WARNING("Failed to put!");
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mTransactionsInProgress.Put(databaseId, autoDBTransactionInfo);
     autoDBTransactionInfo.forget();
   }
 
