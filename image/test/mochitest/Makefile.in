@@ -86,10 +86,6 @@ _TEST_FILES =   imgutils.js \
                 bug671906-iframe.html \
                 bug671906.sjs \
                 test_bug671906.html \
-                test_bug733553.html \
-                bug733553-iframe.html \
-                bug733553.sjs \
-                animated-gif2.gif \
 		test_error_events.html \
 		error-early.png \
 		test_drawDiscardedImage.html \
