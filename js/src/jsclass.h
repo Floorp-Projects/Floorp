@@ -174,73 +174,75 @@ JSID_TO_SPECIALID(jsid id)
     return SpecialId::defaultXMLNamespace();
 }
 
+typedef JS::Handle<SpecialId> HandleSpecialId;
+
 /* js::Class operation signatures. */
 
 typedef JSBool
-(* LookupGenericOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+(* LookupGenericOp)(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp,
                     JSProperty **propp);
 typedef JSBool
-(* LookupPropOp)(JSContext *cx, JSObject *obj, PropertyName *name, JSObject **objp,
+(* LookupPropOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp,
                  JSProperty **propp);
 typedef JSBool
-(* LookupElementOp)(JSContext *cx, JSObject *obj, uint32_t index, JSObject **objp,
+(* LookupElementOp)(JSContext *cx, HandleObject obj, uint32_t index, JSObject **objp,
                     JSProperty **propp);
 typedef JSBool
-(* LookupSpecialOp)(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp,
+(* LookupSpecialOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp,
                     JSProperty **propp);
 typedef JSBool
-(* DefineGenericOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+(* DefineGenericOp)(JSContext *cx, HandleObject obj, HandleId id, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
-(* DefinePropOp)(JSContext *cx, JSObject *obj, PropertyName *name, const Value *value,
+(* DefinePropOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value *value,
                  PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
-(* DefineElementOp)(JSContext *cx, JSObject *obj, uint32_t index, const Value *value,
+(* DefineElementOp)(JSContext *cx, HandleObject obj, uint32_t index, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
-(* DefineSpecialOp)(JSContext *cx, JSObject *obj, SpecialId sid, const Value *value,
+(* DefineSpecialOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
-(* GenericIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+(* GenericIdOp)(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id, Value *vp);
 typedef JSBool
-(* PropertyIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp);
+(* PropertyIdOp)(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name, Value *vp);
 typedef JSBool
-(* ElementIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp);
+(* ElementIdOp)(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index, Value *vp);
 typedef JSBool
-(* ElementIfPresentOp)(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp, bool* present);
+(* ElementIfPresentOp)(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index, Value *vp, bool* present);
 typedef JSBool
-(* SpecialIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp);
+(* SpecialIdOp)(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSpecialId sid, Value *vp);
 typedef JSBool
-(* StrictGenericIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+(* StrictGenericIdOp)(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool strict);
 typedef JSBool
-(* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict);
+(* StrictPropertyIdOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp, JSBool strict);
 typedef JSBool
-(* StrictElementIdOp)(JSContext *cx, JSObject *obj, uint32_t index, Value *vp, JSBool strict);
+(* StrictElementIdOp)(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSBool strict);
 typedef JSBool
-(* StrictSpecialIdOp)(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict);
+(* StrictSpecialIdOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *vp, JSBool strict);
 typedef JSBool
-(* GenericAttributesOp)(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp);
+(* GenericAttributesOp)(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
 typedef JSBool
-(* PropertyAttributesOp)(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp);
+(* PropertyAttributesOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp);
 typedef JSBool
-(* ElementAttributesOp)(JSContext *cx, JSObject *obj, uint32_t index, unsigned *attrsp);
+(* ElementAttributesOp)(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
 typedef JSBool
-(* SpecialAttributesOp)(JSContext *cx, JSObject *obj, SpecialId sid, unsigned *attrsp);
+(* SpecialAttributesOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
 typedef JSBool
-(* DeletePropertyOp)(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict);
+(* DeletePropertyOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp, JSBool strict);
 typedef JSBool
-(* DeleteElementOp)(JSContext *cx, JSObject *obj, uint32_t index, Value *vp, JSBool strict);
+(* DeleteElementOp)(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSBool strict);
 typedef JSBool
-(* DeleteSpecialOp)(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict);
+(* DeleteSpecialOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *vp, JSBool strict);
 typedef JSType
-(* TypeOfOp)(JSContext *cx, JSObject *obj);
+(* TypeOfOp)(JSContext *cx, HandleObject obj);
 
 typedef JSObject *
-(* ObjectOp)(JSContext *cx, JSObject *obj);
+(* ObjectOp)(JSContext *cx, HandleObject obj);
+typedef void
+(* ClearOp)(JSContext *cx, HandleObject obj);
 typedef void
 (* FinalizeOp)(FreeOp *fop, JSObject *obj);
-typedef void
-(* ClearOp)(JSContext *cx, JSObject *obj);
 
 #define JS_CLASS_MEMBERS                                                      \
     const char          *name;                                                \
