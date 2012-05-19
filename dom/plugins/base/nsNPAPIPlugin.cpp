@@ -1095,20 +1095,31 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
     return NPERR_INVALID_PARAM;
   }
 
-  // DestroyStream can kill two kinds of streams: NPP derived and NPN derived.
-  // check to see if they're trying to kill a NPP stream
-  nsRefPtr<nsNPAPIPluginStreamListener> listener = streamWrapper->GetStreamListener();
+  nsNPAPIPluginStreamListener *listener = streamWrapper->GetStreamListener();
   if (listener) {
+    // This type of stream is going from the browser to the plugin. It's either the
+    // initial src/data stream or another stream resulting from NPN_GetURL* or
+    // NPN_PostURL*.
+    //
+    // Calling OnStopBinding on the listener may cause it to be deleted due to the
+    // releasing of its last references.
     listener->OnStopBinding(nsnull, NS_BINDING_ABORTED);
   } else {
-    // This will release the wrapped nsIOutputStream.
-    // pstream should always be a subobject of wrapper.  See bug 548441.
+    // This type of stream (NPStream) was created via NPN_NewStream. The plugin holds
+    // the reference until it is to be deleted here. Deleting the wrapper will
+    // release the wrapped nsIOutputStream.
+    // 
+    // The NPStream the plugin references should always be a sub-object of it's own
+    // 'ndata', which is our nsNPAPIStramWrapper. See bug 548441.
     NS_ASSERTION((char*)streamWrapper <= (char*)pstream && 
                  ((char*)pstream) + sizeof(*pstream)
                      <= ((char*)streamWrapper) + sizeof(*streamWrapper),
                  "pstream is not a subobject of wrapper");
     delete streamWrapper;
   }
+
+  // 'listener' and/or 'streamWrapper' may be invalid (deleted) at this point. Don't
+  // touch them again!
 
   return NPERR_NO_ERROR;
 }

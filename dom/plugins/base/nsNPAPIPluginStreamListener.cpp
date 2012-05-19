@@ -220,7 +220,12 @@ nsresult
 nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  
+
+  // Various bits of code in the rest of this method may result in the
+  // deletion of this object. Use a KungFuDeathGrip to keep ourselves
+  // alive during cleanup.
+  nsRefPtr<nsNPAPIPluginStreamListener> kungFuDeathGrip(this);
+
   if (mStreamCleanedUp)
     return NS_OK;
   
@@ -771,9 +776,7 @@ nsNPAPIPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
   if (NS_FAILED(status)) {
     // The stream was destroyed, or died for some reason. Make sure we
     // cancel the underlying request.
-    nsCOMPtr<nsINPAPIPluginStreamInfo> pluginInfoNPAPI =
-    do_QueryInterface(mStreamInfo);
-    
+    nsCOMPtr<nsINPAPIPluginStreamInfo> pluginInfoNPAPI = do_QueryInterface(mStreamInfo);
     if (pluginInfoNPAPI) {
       pluginInfoNPAPI->CancelRequests(status);
     }
@@ -782,19 +785,25 @@ nsNPAPIPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
   if (!mInst || !mInst->CanFireNotifications())
     return NS_ERROR_FAILURE;
 
-  // check if the stream is of seekable type and later its destruction
-  // see bug 91140
-  nsresult rv = NS_OK;
   NPReason reason = NS_FAILED(status) ? NPRES_NETWORK_ERR : NPRES_DONE;
   if (mRedirectDenied) {
     reason = NPRES_USER_BREAK;
   }
+
+  // The following code can result in the deletion of 'this'. Don't
+  // assume we are alive after this!
+  //
+  // Delay cleanup if the stream is of type NP_SEEK and status isn't
+  // NS_BINDING_ABORTED (meaning the plugin hasn't called NPN_DestroyStream).
+  // This is because even though we're done delivering data the plugin may
+  // want to seek. Eventually either the plugin will call NPN_DestroyStream
+  // or we'll perform cleanup when the instance goes away. See bug 91140.
   if (mStreamType != NP_SEEK ||
       (NP_SEEK == mStreamType && NS_BINDING_ABORTED == status)) {
-    rv = CleanUpStream(reason);
+    return CleanUpStream(reason);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
