@@ -1304,7 +1304,7 @@ mjit::Compiler::finishThisUp()
     /* To make inlineDoubles and oolDoubles aligned to sizeof(double) bytes,
        MIPS adds extra sizeof(double) bytes to codeSize.  */
     size_t codeSize = masm.size() +
-#if defined(JS_CPU_MIPS) 
+#if defined(JS_CPU_MIPS)
                       stubcc.size() + sizeof(double) +
 #else
                       stubcc.size() +
@@ -1751,7 +1751,7 @@ mjit::Compiler::finishThisUp()
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
 
 #if defined(JS_CPU_MIPS)
-    /* Make sure doubleOffset is aligned to sizeof(double) bytes.  */ 
+    /* Make sure doubleOffset is aligned to sizeof(double) bytes.  */
     size_t doubleOffset = (((size_t)result + masm.size() + stubcc.size() +
                             sizeof(double) - 1) & (~(sizeof(double) - 1))) -
                           (size_t)result;

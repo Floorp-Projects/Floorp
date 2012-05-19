@@ -159,7 +159,7 @@ GetNativeStackBaseImpl()
     void *stackBase = 0;
     size_t stackSize = 0;
 #  ifdef DEBUG
-    int rc = 
+    int rc =
 #  endif
 # if defined(__OpenBSD__)
         pthread_stackseg_np(pthread_self(), &ss);

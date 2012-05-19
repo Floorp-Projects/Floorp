@@ -4462,7 +4462,7 @@ JS_NewArrayObject(JSContext *cx, int length, jsval *vector)
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    
+
     assertSameCompartment(cx, JSValueArray(vector, vector ? (uint32_t)length : 0));
     return NewDenseCopiedArray(cx, (uint32_t)length, vector);
 }

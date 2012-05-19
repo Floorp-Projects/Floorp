@@ -1322,7 +1322,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 
     uint32_t jumpOffset = GET_JUMP_OFFSET(originalPC);
     jsbytecode *pc = originalPC + JUMP_OFFSET_LEN;
-    
+
     /* Note: compiler adjusts the stack beforehand. */
     Value rval = f.regs.sp[-1];
 
@@ -1693,7 +1693,7 @@ stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
 
     int32_t i32 = 0;
 #ifdef DEBUG
-    bool success = 
+    bool success =
 #endif
         StringToNumberType<int32_t>(cx, vp->toString(), &i32);
     JS_ASSERT(success);
@@ -1719,7 +1719,7 @@ stubs::ConvertToTypedFloat(JSContext *cx, Value *vp)
         JS_ASSERT(vp->isString());
         double d = 0;
 #ifdef DEBUG
-        bool success = 
+        bool success =
 #endif
             StringToNumberType<double>(cx, vp->toString(), &d);
         JS_ASSERT(success);

@@ -112,7 +112,7 @@ class Repatcher : public JSC::RepatchBuffer
 
     /* Patch the offset of a Value load emitted by loadValueWithAddressOffsetPatch. */
     void patchAddressOffsetForValueLoad(CodeLocationLabel label, uint32_t offset) {
-#if defined JS_CPU_X64 || defined JS_CPU_ARM || defined JS_CPU_SPARC || defined JS_CPU_MIPS 
+#if defined JS_CPU_X64 || defined JS_CPU_ARM || defined JS_CPU_SPARC || defined JS_CPU_MIPS
         repatch(label.dataLabel32AtOffset(0), offset);
 #elif defined JS_CPU_X86
         static const unsigned LOAD_TYPE_OFFSET = 6;

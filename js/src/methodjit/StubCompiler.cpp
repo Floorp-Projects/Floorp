@@ -84,7 +84,7 @@ StubCompiler::syncExit(Uses uses)
     lastGeneration = generation;
 
     JaegerSpew(JSpew_Insns, " ---- END SLOW MERGE CODE ---- \n");
-    
+
     return l;
 }
 
@@ -143,7 +143,7 @@ StubCompiler::leave()
     generation++;
     JaegerSpew(JSpew_Insns, " ---- END SLOW LEAVE CODE ---- \n");
 }
- 
+
 void
 StubCompiler::rejoin(Changes changes)
 {

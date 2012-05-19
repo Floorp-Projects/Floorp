@@ -3634,7 +3634,7 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
         if (shouldSweep)
             SweepPhase(rt, gckind, &startBackgroundSweep);
     }
-        
+
 #ifdef JS_THREADSAFE
     if (startBackgroundSweep)
         rt->gcHelperThread.startBackgroundSweep(gckind == GC_SHRINK);

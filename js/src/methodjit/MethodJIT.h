@@ -32,7 +32,7 @@
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL. 
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -968,7 +968,7 @@ inline void * bsearch_nmap(NativeMapEntry *nmap, size_t nPairs, size_t bcOff)
         if (bcOff < bcOff_mid) {
             hi = mid-1;
             continue;
-        } 
+        }
         if (bcOff > bcOff_mid) {
             lo = mid+1;
             continue;

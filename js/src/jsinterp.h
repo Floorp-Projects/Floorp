@@ -84,7 +84,7 @@ ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok);
  * return a JSTrapStatus code indication how execution should proceed:
  *
  * - JSTRAP_CONTINUE: Continue execution normally.
- * 
+ *
  * - JSTRAP_THROW: Throw an exception. ScriptDebugPrologue has set |cx|'s
  *   pending exception to the value to be thrown.
  *
@@ -101,7 +101,7 @@ ScriptDebugPrologue(JSContext *cx, StackFrame *fp);
 /*
  * Announce to the debugger that the thread has exited a JavaScript frame, |fp|.
  * If |ok| is true, the frame is returning normally; if |ok| is false, the frame
- * is throwing an exception or terminating. 
+ * is throwing an exception or terminating.
  *
  * Call whatever hooks have been registered to observe frame exits. Change cx's
  * current exception and |fp|'s return value to reflect the changes in behavior

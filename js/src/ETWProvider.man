@@ -24,7 +24,7 @@
                  channel="MozillaChannel" level="win:Informational"
                  template="CodeLocationTemplate" task="Execution" opcode="ExecuteStop"
                  keywords="SampleKeyword" message="$(string.MozillaSpiderMonkey.ExecuteDone.message)"/>
-          
+
           <event symbol="EvtScriptCompileBegin" value="1003" version="1"
                  channel="MozillaChannel" level="win:Informational"
                  template="CodeLocationTemplate" task="Execution" opcode="CompileBegin"
@@ -61,7 +61,7 @@
                  channel="MozillaChannel" level="win:Verbose"
                  template="ObjectFinalizeTemplate" task="Allocation" opcode="ObjectFinalize"
                  keywords="SampleKeyword" message="$(string.SampleProvider.SampleEvent.message)"/>
-          
+
           <event symbol="EvtStringCreate" value="1009" version="1"
                  channel="MozillaChannel" level="win:Verbose"
                  template="StringCreateTemplate" task="Allocation" opcode="StringCreate"
@@ -94,7 +94,7 @@
                  channel="MozillaChannel" level="win:Informational"
                  template="VoidTemplate" task="Allocation" opcode="GCMarkEnd"
                  keywords="SampleKeyword" message="$(string.SampleProvider.SampleEvent.message)"/>
-                    
+
           <event symbol="EvtGCStartSweepPhase" value="1016" version="1"
                  channel="MozillaChannel" level="win:Informational"
                  template="VoidTemplate" task="Allocation" opcode="GCSweepStart"
@@ -173,7 +173,7 @@
           <opcode name="ResizeHeap" symbol="OpResizeHeap" value="32"/>
           <opcode name="CustomMark" symbol="OpCustomMark" value="33"/>
         </opcodes>
-        
+
         <channels>
           <channel name="MozillaChannel" chid="MozillaPerformanceReportingChannel"
                    symbol="MOZILLA_PERFORMANCE_REPORTING_CHANNEL" type="Analytic"
@@ -183,13 +183,13 @@
         <keywords>
           <keyword name="SampleKeyword" symbol="KwSample" mask="0x1"/>
         </keywords>
-        
+
         <templates>
           <template tid="CodeLocationTemplate">
             <data name="FileName" inType="win:AnsiString" outType="xs:string"/>
             <data name="LineNumber" inType="win:Int32" outType="xs:int"/>
           </template>
-          
+
           <template tid="ObjectCreateTemplate">
             <data name="FileName" inType="win:AnsiString" outType="xs:string"/>
             <data name="LineNumber" inType="win:Int32" outType="xs:int"/>
