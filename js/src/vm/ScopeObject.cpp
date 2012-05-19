@@ -251,7 +251,7 @@ CallObject::createForStrictEval(JSContext *cx, StackFrame *fp)
 }
 
 JSBool
-CallObject::getArgOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+CallObject::getArgOp(JSContext *cx, HandleObject obj, HandleId id, Value *vp)
 {
     CallObject &callobj = obj->asCall();
 
@@ -269,7 +269,7 @@ CallObject::getArgOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 JSBool
-CallObject::setArgOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
+CallObject::setArgOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp)
 {
     CallObject &callobj = obj->asCall();
 
@@ -293,7 +293,7 @@ CallObject::setArgOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value
 }
 
 JSBool
-CallObject::getVarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+CallObject::getVarOp(JSContext *cx, HandleObject obj, HandleId id, Value *vp)
 {
     CallObject &callobj = obj->asCall();
 
@@ -313,7 +313,7 @@ CallObject::getVarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 JSBool
-CallObject::setVarOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
+CallObject::setVarOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp)
 {
     CallObject &callobj = obj->asCall();
 
@@ -347,7 +347,7 @@ CallObject::containsVarOrArg(PropertyName *name, Value *vp, JSContext *cx)
     if (op != getVarOp && op != getArgOp)
         return false;
 
-    JS_ALWAYS_TRUE(op(cx, this, INT_TO_JSID(shape->shortid()), vp));
+    JS_ALWAYS_TRUE(op(cx, RootedVarObject(cx, this), RootedVarId(cx, INT_TO_JSID(shape->shortid())), vp));
     return true;
 }
 
@@ -420,7 +420,7 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
         return NULL;
 
 
-    if (!DefineNativeProperty(cx, obj, AtomToId(fp->fun()->atom),
+    if (!DefineNativeProperty(cx, obj, RootedVarId(cx, AtomToId(fp->fun()->atom)),
                               ObjectValue(fp->callee()), NULL, NULL,
                               JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
                               0, 0)) {
@@ -463,7 +463,7 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
 }
 
 static JSBool
-with_LookupGeneric(JSContext *cx, JSObject *obj, jsid id, JSObject **objp, JSProperty **propp)
+with_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp, JSProperty **propp)
 {
     /* Fixes bug 463997 */
     unsigned flags = cx->resolveFlags;
@@ -475,159 +475,159 @@ with_LookupGeneric(JSContext *cx, JSObject *obj, jsid id, JSObject **objp, JSPro
 }
 
 static JSBool
-with_LookupProperty(JSContext *cx, JSObject *obj, PropertyName *name, JSObject **objp, JSProperty **propp)
+with_LookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp, JSProperty **propp)
 {
-    return with_LookupGeneric(cx, obj, NameToId(name), objp, propp);
+    return with_LookupGeneric(cx, obj, RootedVarId(cx, NameToId(name)), objp, propp);
 }
 
 static JSBool
-with_LookupElement(JSContext *cx, JSObject *obj, uint32_t index, JSObject **objp,
+with_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **objp,
                    JSProperty **propp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
+    RootedVarId id(cx);
+    if (!IndexToId(cx, index, id.address()))
         return false;
     return with_LookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
-with_LookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp, JSProperty **propp)
+with_LookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp, JSProperty **propp)
 {
-    return with_LookupGeneric(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
+    return with_LookupGeneric(cx, obj, RootedVarId(cx, SPECIALID_TO_JSID(sid)), objp, propp);
 }
 
 static JSBool
-with_GetGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+with_GetGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id, Value *vp)
 {
     return obj->asWith().object().getGeneric(cx, id, vp);
 }
 
 static JSBool
-with_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp)
+with_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name, Value *vp)
 {
-    return with_GetGeneric(cx, obj, receiver, NameToId(name), vp);
+    return with_GetGeneric(cx, obj, receiver, RootedVarId(cx, NameToId(name)), vp);
 }
 
 static JSBool
-with_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp)
+with_GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index, Value *vp)
 {
-    jsid id;
-    if (!IndexToId(cx, index, &id))
+    RootedVarId id(cx);
+    if (!IndexToId(cx, index, id.address()))
         return false;
     return with_GetGeneric(cx, obj, receiver, id, vp);
 }
 
 static JSBool
-with_GetSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
+with_GetSpecial(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSpecialId sid, Value *vp)
 {
-    return with_GetGeneric(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
+    return with_GetGeneric(cx, obj, receiver, RootedVarId(cx, SPECIALID_TO_JSID(sid)), vp);
 }
 
 static JSBool
-with_SetGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+with_SetGeneric(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool strict)
 {
     return obj->asWith().object().setGeneric(cx, id, vp, strict);
 }
 
 static JSBool
-with_SetProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict)
+with_SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp, JSBool strict)
 {
     return obj->asWith().object().setProperty(cx, name, vp, strict);
 }
 
 static JSBool
-with_SetElement(JSContext *cx, JSObject *obj, uint32_t index, Value *vp, JSBool strict)
+with_SetElement(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSBool strict)
 {
     return obj->asWith().object().setElement(cx, index, vp, strict);
 }
 
 static JSBool
-with_SetSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
+with_SetSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *vp, JSBool strict)
 {
     return obj->asWith().object().setSpecial(cx, sid, vp, strict);
 }
 
 static JSBool
-with_GetGenericAttributes(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp)
+with_GetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
     return obj->asWith().object().getGenericAttributes(cx, id, attrsp);
 }
 
 static JSBool
-with_GetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp)
+with_GetPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp)
 {
     return obj->asWith().object().getPropertyAttributes(cx, name, attrsp);
 }
 
 static JSBool
-with_GetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, unsigned *attrsp)
+with_GetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp)
 {
     return obj->asWith().object().getElementAttributes(cx, index, attrsp);
 }
 
 static JSBool
-with_GetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, unsigned *attrsp)
+with_GetSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp)
 {
     return obj->asWith().object().getSpecialAttributes(cx, sid, attrsp);
 }
 
 static JSBool
-with_SetGenericAttributes(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp)
+with_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
     return obj->asWith().object().setGenericAttributes(cx, id, attrsp);
 }
 
 static JSBool
-with_SetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp)
+with_SetPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp)
 {
     return obj->asWith().object().setPropertyAttributes(cx, name, attrsp);
 }
 
 static JSBool
-with_SetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, unsigned *attrsp)
+with_SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp)
 {
     return obj->asWith().object().setElementAttributes(cx, index, attrsp);
 }
 
 static JSBool
-with_SetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, unsigned *attrsp)
+with_SetSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp)
 {
     return obj->asWith().object().setSpecialAttributes(cx, sid, attrsp);
 }
 
 static JSBool
-with_DeleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
+with_DeleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *rval, JSBool strict)
 {
     return obj->asWith().object().deleteProperty(cx, name, rval, strict);
 }
 
 static JSBool
-with_DeleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, JSBool strict)
+with_DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, Value *rval, JSBool strict)
 {
     return obj->asWith().object().deleteElement(cx, index, rval, strict);
 }
 
 static JSBool
-with_DeleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
+with_DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *rval, JSBool strict)
 {
     return obj->asWith().object().deleteSpecial(cx, sid, rval, strict);
 }
 
 static JSBool
-with_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+with_Enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                Value *statep, jsid *idp)
 {
     return obj->asWith().object().enumerate(cx, enum_op, statep, idp);
 }
 
 static JSType
-with_TypeOf(JSContext *cx, JSObject *obj)
+with_TypeOf(JSContext *cx, HandleObject obj)
 {
     return JSTYPE_OBJECT;
 }
 
 static JSObject *
-with_ThisObject(JSContext *cx, JSObject *obj)
+with_ThisObject(JSContext *cx, HandleObject obj)
 {
     return &obj->asWith().withThis();
 }
@@ -743,7 +743,7 @@ ClonedBlockObject::put(StackFrame *fp)
 }
 
 static JSBool
-block_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+block_getProperty(JSContext *cx, HandleObject obj, HandleId id, Value *vp)
 {
     /*
      * Block objects are never exposed to script, and the engine handles them
@@ -769,7 +769,7 @@ block_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-block_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
+block_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp)
 {
     ClonedBlockObject &block = obj->asClonedBlock();
     unsigned index = (unsigned) JSID_TO_INT(id);
@@ -794,13 +794,14 @@ block_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *v
 bool
 ClonedBlockObject::containsVar(PropertyName *name, Value *vp, JSContext *cx)
 {
-    jsid id = NameToId(name);
-    const Shape *shape = nativeLookup(cx, id);
+    RootedVarObject self(cx, this);
+
+    const Shape *shape = nativeLookup(cx, NameToId(name));
     if (!shape)
         return false;
 
     JS_ASSERT(shape->getterOp() == block_getProperty);
-    JS_ALWAYS_TRUE(block_getProperty(cx, this, INT_TO_JSID(shape->shortid()), vp));
+    JS_ALWAYS_TRUE(block_getProperty(cx, self, RootedVarId(cx, INT_TO_JSID(shape->shortid())), vp));
     return true;
 }
 
@@ -1370,7 +1371,7 @@ class DebugScopeProxy : public BaseProxyHandler
         }
 
         AutoAllowUnaliasedVarAccess a(cx);
-        return scope.getGeneric(cx, &scope, id, vp);
+        return scope.getGeneric(cx, RootedVarObject(cx, &scope), RootedVarId(cx, id), vp);
     }
 
     bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
@@ -1378,7 +1379,7 @@ class DebugScopeProxy : public BaseProxyHandler
     {
         AutoAllowUnaliasedVarAccess a(cx);
         ScopeObject &scope = proxy->asDebugScope().scope();
-        return scope.setGeneric(cx, id, vp, strict);
+        return scope.setGeneric(cx, RootedVarId(cx, id), vp, strict);
     }
 
     bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc) MOZ_OVERRIDE

@@ -136,11 +136,11 @@ class Handle
     template <typename S> inline Handle(const Root<S> &root);
     template <typename S> inline Handle(const RootedVar<S> &root);
 
-    const T *address() { return ptr; }
-    T value() { return *ptr; }
+    const T *address() const { return ptr; }
+    T value() const { return *ptr; }
 
-    operator T () { return value(); }
-    T operator ->() { return value(); }
+    operator T () const { return value(); }
+    T operator ->() const { return value(); }
 
   private:
     Handle() {}

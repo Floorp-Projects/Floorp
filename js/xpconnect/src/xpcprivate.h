@@ -1375,7 +1375,7 @@ extern js::Class XPC_WN_Tearoff_JSClass;
 extern js::Class XPC_WN_NoHelper_Proto_JSClass;
 
 extern JSBool
-XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
+XPC_WN_Equality(JSContext *cx, JSHandleObject obj, const jsval *v, JSBool *bp);
 
 extern JSBool
 XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp);
@@ -1384,20 +1384,20 @@ extern JSBool
 XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp);
 
 extern JSBool
-XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
                       jsval *statep, jsid *idp);
 
 extern JSType
-XPC_WN_JSOp_TypeOf_Object(JSContext *cx, JSObject *obj);
+XPC_WN_JSOp_TypeOf_Object(JSContext *cx, JSHandleObject obj);
 
 extern JSType
-XPC_WN_JSOp_TypeOf_Function(JSContext *cx, JSObject *obj);
+XPC_WN_JSOp_TypeOf_Function(JSContext *cx, JSHandleObject obj);
 
 extern void
-XPC_WN_JSOp_Clear(JSContext *cx, JSObject *obj);
+XPC_WN_JSOp_Clear(JSContext *cx, JSHandleObject obj);
 
 extern JSObject*
-XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
+XPC_WN_JSOp_ThisObject(JSContext *cx, JSHandleObject obj);
 
 // Macros to initialize Object or Function like XPC_WN classes
 #define XPC_WN_WithCall_ObjectOps                                             \
