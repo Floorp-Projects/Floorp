@@ -123,11 +123,11 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, double length);
 namespace js {
 
 extern JSBool
-array_defineElement(JSContext *cx, HandleObject obj, uint32_t index, const Value *value,
+array_defineElement(JSContext *cx, JSObject *obj, uint32_t index, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 
 extern JSBool
-array_deleteElement(JSContext *cx, HandleObject obj, uint32_t index, Value *rval, JSBool strict);
+array_deleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, JSBool strict);
 
 /*
  * Copy 'length' elements from aobj to vp.
@@ -170,7 +170,7 @@ js_ArrayInfo(JSContext *cx, unsigned argc, jsval *vp);
  * sparse, which requires that the array be completely filled.)
  */
 extern JSBool
-js_NewbornArrayPush(JSContext *cx, js::HandleObject obj, const js::Value &v);
+js_NewbornArrayPush(JSContext *cx, JSObject *obj, const js::Value &v);
 
 JSBool
 js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj);

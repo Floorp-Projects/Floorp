@@ -143,23 +143,23 @@ nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsid id, PRUin
 }
 
 static JSBool
-nsXBLDocGlobalObject_getProperty(JSContext *cx, JSHandleObject obj,
-                                 JSHandleId id, jsval *vp)
+nsXBLDocGlobalObject_getProperty(JSContext *cx, JSObject *obj,
+                                 jsid id, jsval *vp)
 {
   return nsXBLDocGlobalObject::
     doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 }
 
 static JSBool
-nsXBLDocGlobalObject_setProperty(JSContext *cx, JSHandleObject obj,
-                                 JSHandleId id, JSBool strict, jsval *vp)
+nsXBLDocGlobalObject_setProperty(JSContext *cx, JSObject *obj,
+                                 jsid id, JSBool strict, jsval *vp)
 {
   return nsXBLDocGlobalObject::
     doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
 }
 
 static JSBool
-nsXBLDocGlobalObject_checkAccess(JSContext *cx, JSHandleObject obj, JSHandleId id,
+nsXBLDocGlobalObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
                                  JSAccessMode mode, jsval *vp)
 {
   PRUint32 translated;
@@ -190,7 +190,7 @@ nsXBLDocGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
 }
 
 static JSBool
-nsXBLDocGlobalObject_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
+nsXBLDocGlobalObject_resolve(JSContext *cx, JSObject *obj, jsid id)
 {
   JSBool did_resolve = JS_FALSE;
   return JS_ResolveStandardClass(cx, obj, id, &did_resolve);

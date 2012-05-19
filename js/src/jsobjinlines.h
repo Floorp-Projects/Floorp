@@ -87,20 +87,18 @@ inline bool
 JSObject::enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp)
 {
     JSNewEnumerateOp op = getOps()->enumerate;
-    return (op ? op : JS_EnumerateState)(cx, js::RootedVarObject(cx, this), iterop, statep, idp);
+    return (op ? op : JS_EnumerateState)(cx, this, iterop, statep, idp);
 }
 
 inline bool
 JSObject::defaultValue(JSContext *cx, JSType hint, js::Value *vp)
 {
-    js::RootedVarObject self(cx, this);
-
     JSConvertOp op = getClass()->convert;
     bool ok;
     if (op == JS_ConvertStub)
-        ok = js::DefaultValue(cx, self, hint, vp);
+        ok = js::DefaultValue(cx, js::RootedVarObject(cx, this), hint, vp);
     else
-        ok = op(cx, self, hint, vp);
+        ok = op(cx, this, hint, vp);
     JS_ASSERT_IF(ok, vp->isPrimitive());
     return ok;
 }
@@ -109,30 +107,31 @@ inline JSType
 JSObject::typeOf(JSContext *cx)
 {
     js::TypeOfOp op = getOps()->typeOf;
-    return (op ? op : js::baseops::TypeOf)(cx, js::RootedVarObject(cx, this));
+    return (op ? op : js_TypeOf)(cx, this);
 }
 
 inline JSObject *
 JSObject::thisObject(JSContext *cx)
 {
     JSObjectOp op = getOps()->thisObject;
-    return op ? op(cx, js::RootedVarObject(cx, this)) : this;
+    return op ? op(cx, this) : this;
 }
 
 inline JSBool
-JSObject::setGeneric(JSContext *cx, js::HandleId id, js::Value *vp, JSBool strict)
+JSObject::setGeneric(JSContext *cx, jsid id, js::Value *vp, JSBool strict)
 {
     if (getOps()->setGeneric)
         return nonNativeSetProperty(cx, id, vp, strict);
-    return js::baseops::SetPropertyHelper(cx,
-                                          js::RootedVarObject(cx, this),
-                                          id, 0, vp, strict);
+    return js_SetPropertyHelper(cx,
+                                js::RootedVarObject(cx, this),
+                                js::RootedVarId(cx, id),
+                                0, vp, strict);
 }
 
 inline JSBool
 JSObject::setProperty(JSContext *cx, js::PropertyName *name, js::Value *vp, JSBool strict)
 {
-    return setGeneric(cx, js::RootedVarId(cx, js::NameToId(name)), vp, strict);
+    return setGeneric(cx, js::NameToId(name), vp, strict);
 }
 
 inline JSBool
@@ -140,40 +139,40 @@ JSObject::setElement(JSContext *cx, uint32_t index, js::Value *vp, JSBool strict
 {
     if (getOps()->setElement)
         return nonNativeSetElement(cx, index, vp, strict);
-    return js::baseops::SetElementHelper(cx, js::RootedVarObject(cx, this), index, 0, vp, strict);
+    return js_SetElementHelper(cx, js::RootedVarObject(cx, this), index, 0, vp, strict);
 }
 
 inline JSBool
 JSObject::setSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp, JSBool strict)
 {
-    return setGeneric(cx, js::RootedVarId(cx, SPECIALID_TO_JSID(sid)), vp, strict);
+    return setGeneric(cx, SPECIALID_TO_JSID(sid), vp, strict);
 }
 
 inline JSBool
-JSObject::setGenericAttributes(JSContext *cx, js::HandleId id, unsigned *attrsp)
+JSObject::setGenericAttributes(JSContext *cx, jsid id, unsigned *attrsp)
 {
     js::types::MarkTypePropertyConfigured(cx, this, id);
     js::GenericAttributesOp op = getOps()->setGenericAttributes;
-    return (op ? op : js::baseops::SetAttributes)(cx, js::RootedVarObject(cx, this), id, attrsp);
+    return (op ? op : js_SetAttributes)(cx, this, id, attrsp);
 }
 
 inline JSBool
 JSObject::setPropertyAttributes(JSContext *cx, js::PropertyName *name, unsigned *attrsp)
 {
-    return setGenericAttributes(cx, js::RootedVarId(cx, js::NameToId(name)), attrsp);
+    return setGenericAttributes(cx, js::NameToId(name), attrsp);
 }
 
 inline JSBool
 JSObject::setElementAttributes(JSContext *cx, uint32_t index, unsigned *attrsp)
 {
     js::ElementAttributesOp op = getOps()->setElementAttributes;
-    return (op ? op : js::baseops::SetElementAttributes)(cx, js::RootedVarObject(cx, this), index, attrsp);
+    return (op ? op : js_SetElementAttributes)(cx, this, index, attrsp);
 }
 
 inline JSBool
 JSObject::setSpecialAttributes(JSContext *cx, js::SpecialId sid, unsigned *attrsp)
 {
-    return setGenericAttributes(cx, js::RootedVarId(cx, SPECIALID_TO_JSID(sid)), attrsp);
+    return setGenericAttributes(cx, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 inline bool
@@ -183,47 +182,45 @@ JSObject::changePropertyAttributes(JSContext *cx, js::Shape *shape, unsigned att
 }
 
 inline JSBool
-JSObject::getGeneric(JSContext *cx, js::HandleObject receiver, js::HandleId id, js::Value *vp)
+JSObject::getGeneric(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
 {
-    js::RootedVarObject self(cx, this);
-
     js::GenericIdOp op = getOps()->getGeneric;
     if (op) {
-        if (!op(cx, self, receiver, id, vp))
+        if (!op(cx, this, receiver, id, vp))
             return false;
     } else {
-        if (!js::baseops::GetProperty(cx, self, receiver, id, vp))
+        if (!js_GetProperty(cx, js::RootedVarObject(cx, this), js::RootedVarObject(cx, receiver), id, vp))
             return false;
     }
     return true;
 }
 
 inline JSBool
-JSObject::getProperty(JSContext *cx, js::HandleObject receiver, js::PropertyName *name, js::Value *vp)
+JSObject::getProperty(JSContext *cx, JSObject *receiver, js::PropertyName *name, js::Value *vp)
 {
-    return getGeneric(cx, receiver, js::RootedVarId(cx, js::NameToId(name)), vp);
+    return getGeneric(cx, receiver, js::NameToId(name), vp);
 }
 
 inline JSBool
-JSObject::getGeneric(JSContext *cx, js::HandleId id, js::Value *vp)
+JSObject::getGeneric(JSContext *cx, jsid id, js::Value *vp)
 {
-    return getGeneric(cx, js::RootedVarObject(cx, this), id, vp);
+    return getGeneric(cx, this, id, vp);
 }
 
 inline JSBool
 JSObject::getProperty(JSContext *cx, js::PropertyName *name, js::Value *vp)
 {
-    return getGeneric(cx, js::RootedVarId(cx, js::NameToId(name)), vp);
+    return getGeneric(cx, js::NameToId(name), vp);
 }
 
 inline bool
-JSObject::deleteProperty(JSContext *cx, js::HandlePropertyName name, js::Value *rval, bool strict)
+JSObject::deleteProperty(JSContext *cx, js::PropertyName *name, js::Value *rval, bool strict)
 {
     jsid id = js::NameToId(name);
     js::types::AddTypePropertyId(cx, this, id, js::types::Type::UndefinedType());
     js::types::MarkTypePropertyConfigured(cx, this, id);
     js::DeletePropertyOp op = getOps()->deleteProperty;
-    return (op ? op : js::baseops::DeleteProperty)(cx, js::RootedVarObject(cx, this), name, rval, strict);
+    return (op ? op : js_DeleteProperty)(cx, this, name, rval, strict);
 }
 
 inline bool
@@ -237,17 +234,17 @@ JSObject::deleteElement(JSContext *cx, uint32_t index, js::Value *rval, bool str
     js::types::AddTypePropertyId(cx, self, id, js::types::Type::UndefinedType());
     js::types::MarkTypePropertyConfigured(cx, self, id);
     js::DeleteElementOp op = self->getOps()->deleteElement;
-    return (op ? op : js::baseops::DeleteElement)(cx, self, index, rval, strict);
+    return (op ? op : js_DeleteElement)(cx, self, index, rval, strict);
 }
 
 inline bool
-JSObject::deleteSpecial(JSContext *cx, js::HandleSpecialId sid, js::Value *rval, bool strict)
+JSObject::deleteSpecial(JSContext *cx, js::SpecialId sid, js::Value *rval, bool strict)
 {
     jsid id = SPECIALID_TO_JSID(sid);
     js::types::AddTypePropertyId(cx, this, id, js::types::Type::UndefinedType());
     js::types::MarkTypePropertyConfigured(cx, this, id);
     js::DeleteSpecialOp op = getOps()->deleteSpecial;
-    return (op ? op : js::baseops::DeleteSpecial)(cx, js::RootedVarObject(cx, this), sid, rval, strict);
+    return (op ? op : js_DeleteSpecial)(cx, this, sid, rval, strict);
 }
 
 inline void
@@ -936,7 +933,7 @@ JSObject::finish(js::FreeOp *fop)
 }
 
 inline bool
-JSObject::hasProperty(JSContext *cx, js::HandleId id, bool *foundp, unsigned flags)
+JSObject::hasProperty(JSContext *cx, jsid id, bool *foundp, unsigned flags)
 {
     JSObject *pobj;
     JSProperty *prop;
@@ -1046,33 +1043,27 @@ JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
 }
 
 inline JSBool
-JSObject::lookupGeneric(JSContext *cx, js::HandleId id, JSObject **objp, JSProperty **propp)
+JSObject::lookupGeneric(JSContext *cx, jsid id, JSObject **objp, JSProperty **propp)
 {
-    js::RootedVarObject self(cx, this);
-
     js::LookupGenericOp op = getOps()->lookupGeneric;
-    if (op)
-        return op(cx, self, id, objp, propp);
-    return js::baseops::LookupProperty(cx, self, id, objp, propp);
+    return (op ? op : js_LookupProperty)(cx, this, id, objp, propp);
 }
 
 inline JSBool
 JSObject::lookupProperty(JSContext *cx, js::PropertyName *name, JSObject **objp, JSProperty **propp)
 {
-    return lookupGeneric(cx, js::RootedVarId(cx, js::NameToId(name)), objp, propp);
+    return lookupGeneric(cx, js::NameToId(name), objp, propp);
 }
 
 inline JSBool
-JSObject::defineGeneric(JSContext *cx, js::HandleId id, const js::Value &value,
+JSObject::defineGeneric(JSContext *cx, jsid id, const js::Value &value,
                         JSPropertyOp getter /* = JS_PropertyStub */,
                         JSStrictPropertyOp setter /* = JS_StrictPropertyStub */,
                         unsigned attrs /* = JSPROP_ENUMERATE */)
 {
-    js::RootedVarObject self(cx, this);
-
     JS_ASSERT(!(attrs & JSPROP_NATIVE_ACCESSORS));
     js::DefineGenericOp op = getOps()->defineGeneric;
-    return (op ? op : js::baseops::DefineProperty)(cx, self, id, &value, getter, setter, attrs);
+    return (op ? op : js_DefineProperty)(cx, this, id, &value, getter, setter, attrs);
 }
 
 inline JSBool
@@ -1081,7 +1072,7 @@ JSObject::defineProperty(JSContext *cx, js::PropertyName *name, const js::Value 
                         JSStrictPropertyOp setter /* = JS_StrictPropertyStub */,
                         unsigned attrs /* = JSPROP_ENUMERATE */)
 {
-    return defineGeneric(cx, js::RootedVarId(cx, js::NameToId(name)), value, getter, setter, attrs);
+    return defineGeneric(cx, js::NameToId(name), value, getter, setter, attrs);
 }
 
 inline JSBool
@@ -1090,10 +1081,8 @@ JSObject::defineElement(JSContext *cx, uint32_t index, const js::Value &value,
                         JSStrictPropertyOp setter /* = JS_StrictPropertyStub */,
                         unsigned attrs /* = JSPROP_ENUMERATE */)
 {
-    js::RootedVarObject self(cx, this);
-
     js::DefineElementOp op = getOps()->defineElement;
-    return (op ? op : js::baseops::DefineElement)(cx, self, index, &value, getter, setter, attrs);
+    return (op ? op : js_DefineElement)(cx, this, index, &value, getter, setter, attrs);
 }
 
 inline JSBool
@@ -1102,35 +1091,34 @@ JSObject::defineSpecial(JSContext *cx, js::SpecialId sid, const js::Value &value
                         JSStrictPropertyOp setter /* = JS_StrictPropertyStub */,
                         unsigned attrs /* = JSPROP_ENUMERATE */)
 {
-    return defineGeneric(cx, js::RootedVarId(cx, SPECIALID_TO_JSID(sid)), value, getter, setter, attrs);
+    return defineGeneric(cx, SPECIALID_TO_JSID(sid), value, getter, setter, attrs);
 }
 
 inline JSBool
 JSObject::lookupElement(JSContext *cx, uint32_t index, JSObject **objp, JSProperty **propp)
 {
-    js::RootedVarObject self(cx, this);
-
     js::LookupElementOp op = getOps()->lookupElement;
-    return (op ? op : js::baseops::LookupElement)(cx, self, index, objp, propp);
+    return (op ? op : js_LookupElement)(cx, this, index, objp, propp);
 }
 
 inline JSBool
 JSObject::lookupSpecial(JSContext *cx, js::SpecialId sid, JSObject **objp, JSProperty **propp)
 {
-    return lookupGeneric(cx, js::RootedVarId(cx, SPECIALID_TO_JSID(sid)), objp, propp);
+    return lookupGeneric(cx, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 inline JSBool
-JSObject::getElement(JSContext *cx, js::HandleObject receiver, uint32_t index, js::Value *vp)
+JSObject::getElement(JSContext *cx, JSObject *receiver_, uint32_t index, js::Value *vp)
 {
-    js::RootedVarObject self(cx, this);
-
     js::ElementIdOp op = getOps()->getElement;
     if (op)
-        return op(cx, self, receiver, index, vp);
+        return op(cx, this, receiver_, index, vp);
 
-    js::RootedVarId id(cx);
-    if (!js::IndexToId(cx, index, id.address()))
+    js::RootedVarObject self(cx, this);
+    js::RootedVarObject receiver(cx, receiver_);
+
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
         return false;
     return self->getGeneric(cx, receiver, id, vp);
 }
@@ -1138,26 +1126,26 @@ JSObject::getElement(JSContext *cx, js::HandleObject receiver, uint32_t index, j
 inline JSBool
 JSObject::getElement(JSContext *cx, uint32_t index, js::Value *vp)
 {
-    return getElement(cx, js::RootedVarObject(cx, this), index, vp);
+    return getElement(cx, this, index, vp);
 }
 
 inline JSBool
-JSObject::getElementIfPresent(JSContext *cx, js::HandleObject receiver, uint32_t index, js::Value *vp,
+JSObject::getElementIfPresent(JSContext *cx, JSObject *receiver_, uint32_t index, js::Value *vp,
                               bool *present)
 {
-    js::RootedVarObject self(cx, this);
+    js::RootedVarObject self(cx, this), receiver(cx, receiver_);
 
     js::ElementIfPresentOp op = getOps()->getElementIfPresent;
     if (op)
-        return op(cx, self, receiver, index, vp, present);
+        return op(cx, this, receiver, index, vp, present);
 
     /*
      * For now, do the index-to-id conversion just once, then use
      * lookupGeneric/getGeneric.  Once lookupElement and getElement stop both
      * doing index-to-id conversions, we can use those here.
      */
-    js::RootedVarId id(cx);
-    if (!js::IndexToId(cx, index, id.address()))
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
         return false;
 
     JSObject *obj2;
@@ -1176,29 +1164,29 @@ JSObject::getElementIfPresent(JSContext *cx, js::HandleObject receiver, uint32_t
 }
 
 inline JSBool
-JSObject::getSpecial(JSContext *cx, js::HandleObject receiver, js::SpecialId sid, js::Value *vp)
+JSObject::getSpecial(JSContext *cx, JSObject *receiver, js::SpecialId sid, js::Value *vp)
 {
-    return getGeneric(cx, receiver, js::RootedVarId(cx, SPECIALID_TO_JSID(sid)), vp);
+    return getGeneric(cx, receiver, SPECIALID_TO_JSID(sid), vp);
 }
 
 inline JSBool
-JSObject::getGenericAttributes(JSContext *cx, js::HandleId id, unsigned *attrsp)
+JSObject::getGenericAttributes(JSContext *cx, jsid id, unsigned *attrsp)
 {
     js::GenericAttributesOp op = getOps()->getGenericAttributes;
-    return (op ? op : js::baseops::GetAttributes)(cx, js::RootedVarObject(cx, this), id, attrsp);
+    return (op ? op : js_GetAttributes)(cx, this, id, attrsp);
 }
 
 inline JSBool
 JSObject::getPropertyAttributes(JSContext *cx, js::PropertyName *name, unsigned *attrsp)
 {
-    return getGenericAttributes(cx, js::RootedVarId(cx, js::NameToId(name)), attrsp);
+    return getGenericAttributes(cx, js::NameToId(name), attrsp);
 }
 
 inline JSBool
 JSObject::getElementAttributes(JSContext *cx, uint32_t index, unsigned *attrsp)
 {
-    js::RootedVarId id(cx);
-    if (!js::IndexToId(cx, index, id.address()))
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
         return false;
     return getGenericAttributes(cx, id, attrsp);
 }
@@ -1206,7 +1194,7 @@ JSObject::getElementAttributes(JSContext *cx, uint32_t index, unsigned *attrsp)
 inline JSBool
 JSObject::getSpecialAttributes(JSContext *cx, js::SpecialId sid, unsigned *attrsp)
 {
-    return getGenericAttributes(cx, js::RootedVarId(cx, SPECIALID_TO_JSID(sid)), attrsp);
+    return getGenericAttributes(cx, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 inline bool
@@ -1244,20 +1232,18 @@ js_IsCallable(const js::Value &v)
 
 namespace js {
 
-inline JSObject *
-GetInnerObject(JSContext *cx, HandleObject obj)
+inline void
+OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
 {
     if (JSObjectOp op = obj->getClass()->ext.innerObject)
-        return op(cx, obj);
-    return obj;
+        obj = op(cx, obj);
 }
 
-inline JSObject *
-GetOuterObject(JSContext *cx, HandleObject obj)
+inline void
+OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
 {
     if (JSObjectOp op = obj->getClass()->ext.outerObject)
-        return op(cx, obj);
-    return obj;
+        obj = op(cx, obj);
 }
 
 #if JS_HAS_XML_SUPPORT

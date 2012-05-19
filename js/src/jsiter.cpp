@@ -86,7 +86,7 @@ using namespace js::gc;
 
 static void iterator_finalize(FreeOp *fop, JSObject *obj);
 static void iterator_trace(JSTracer *trc, JSObject *obj);
-static JSObject *iterator_iterator(JSContext *cx, HandleObject obj, JSBool keysonly);
+static JSObject *iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
 
 Class js::IteratorClass = {
     "Iterator",
@@ -464,7 +464,7 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
 
     /* Check whether we have a valid __iterator__ method. */
     PropertyName *name = cx->runtime->atomState.iteratorAtom;
-    if (!GetMethod(cx, obj, name, 0, vp))
+    if (!js_GetMethod(cx, obj, NameToId(name), 0, vp))
         return false;
 
     /* If there is no custom __iterator__ method, we are done here. */
@@ -822,7 +822,7 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
 }
 
 static JSObject *
-iterator_iterator(JSContext *cx, HandleObject obj, JSBool keysonly)
+iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
 {
     return obj;
 }
@@ -1018,8 +1018,8 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                         JSObject *proto = obj->getProto();
                         JSObject *obj2;
                         JSProperty *prop;
-                        RootedVarId id(cx);
-                        if (!ValueToId(cx, StringValue(*idp), id.address()))
+                        jsid id;
+                        if (!ValueToId(cx, StringValue(*idp), &id))
                             return false;
                         if (!proto->lookupGeneric(cx, id, &obj2, &prop))
                             return false;
@@ -1218,8 +1218,8 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, Value *rval)
     /* Fetch and cache the next value from the iterator. */
     if (ni) {
         JS_ASSERT(!ni->isKeyIter());
-        RootedVarId id(cx);
-        if (!ValueToId(cx, StringValue(*ni->current()), id.address()))
+        jsid id;
+        if (!ValueToId(cx, StringValue(*ni->current()), &id))
             return false;
         ni->incCursor();
         if (!ni->obj->getGeneric(cx, id, rval))
@@ -1247,7 +1247,8 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, Value *rval)
         }
     } else {
         /* Call the iterator object's .next method. */
-        if (!GetMethod(cx, iterobj, cx->runtime->atomState.nextAtom, 0, rval))
+        jsid id = NameToId(cx->runtime->atomState.nextAtom);
+        if (!js_GetMethod(cx, iterobj, id, 0, rval))
             return false;
         if (!Invoke(cx, ObjectValue(*iterobj), *rval, 0, NULL, rval)) {
             /* Check for StopIteration. */
@@ -1309,7 +1310,7 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 }
 
 static JSBool
-stopiter_hasInstance(JSContext *cx, HandleObject obj, const Value *v, JSBool *bp)
+stopiter_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
     *bp = IsStopIteration(*v);
     return JS_TRUE;

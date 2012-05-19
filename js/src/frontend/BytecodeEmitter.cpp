@@ -3722,13 +3722,11 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             return false;
 
         unsigned idx = 0;
-        RootedVarId id(cx);
         for (ParseNode *pn = pn_head; pn; idx++, pn = pn->pn_next) {
             Value value;
             if (!pn->getConstantValue(cx, strictChecks, &value))
                 return false;
-            id = INT_TO_JSID(idx);
-            if (!obj->defineGeneric(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
+            if (!obj->defineGeneric(cx, INT_TO_JSID(idx), value, NULL, NULL, JSPROP_ENUMERATE))
                 return false;
         }
         JS_ASSERT(idx == pn_count);
@@ -3753,17 +3751,17 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             ParseNode *pnid = pn->pn_left;
             if (pnid->isKind(PNK_NUMBER)) {
                 Value idvalue = NumberValue(pnid->pn_dval);
-                RootedVarId id(cx);
+                jsid id;
                 if (idvalue.isInt32() && INT_FITS_IN_JSID(idvalue.toInt32()))
                     id = INT_TO_JSID(idvalue.toInt32());
-                else if (!InternNonIntElementId(cx, obj, idvalue, id.address()))
+                else if (!InternNonIntElementId(cx, obj, idvalue, &id))
                     return false;
                 if (!obj->defineGeneric(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
                     return false;
             } else {
                 JS_ASSERT(pnid->isKind(PNK_NAME) || pnid->isKind(PNK_STRING));
                 JS_ASSERT(pnid->pn_atom != cx->runtime->atomState.protoAtom);
-                RootedVarId id(cx, AtomToId(pnid->pn_atom));
+                jsid id = AtomToId(pnid->pn_atom);
                 if (!DefineNativeProperty(cx, obj, id, value, NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0)) {
                     return false;
@@ -5766,7 +5764,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());
-                if (!DefineNativeProperty(cx, obj, RootedVarId(cx, AtomToId(pn3->pn_atom)),
+                if (!DefineNativeProperty(cx, obj, AtomToId(pn3->pn_atom),
                                           UndefinedValue(), NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0))
                 {

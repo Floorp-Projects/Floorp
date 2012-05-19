@@ -2978,13 +2978,13 @@ SandboxImport(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-sandbox_enumerate(JSContext *cx, JSHandleObject obj)
+sandbox_enumerate(JSContext *cx, JSObject *obj)
 {
     return JS_EnumerateStandardClasses(cx, obj);
 }
 
 static JSBool
-sandbox_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
+sandbox_resolve(JSContext *cx, JSObject *obj, jsid id)
 {
     JSBool resolved;
     return JS_ResolveStandardClass(cx, obj, id, &resolved);
@@ -3000,7 +3000,7 @@ sandbox_finalize(JSFreeOp *fop, JSObject *obj)
 }
 
 static JSBool
-sandbox_convert(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp)
+sandbox_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     if (type == JSTYPE_OBJECT) {
         *vp = OBJECT_TO_JSVAL(obj);
@@ -3099,18 +3099,16 @@ bool BindPropertyOp(JSContext *cx, JSObject *targetObj, Op& op,
 }
 
 extern JSBool
-XPC_WN_Helper_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+XPC_WN_Helper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 extern JSBool
-XPC_WN_Helper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
+XPC_WN_Helper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
 bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                                jsid id_, bool set,
+                                                jsid id, bool set,
                                                 PropertyDescriptor *desc)
 {
-    JS::RootedVarObject obj(cx, wrappedObject(proxy));
-    JS::RootedVarId id(cx, id_);
-
+    JSObject *obj = wrappedObject(proxy);
     JS_ASSERT(js::GetObjectCompartment(obj) == js::GetObjectCompartment(proxy));
     // XXXbz Not sure about the JSRESOLVE_QUALIFIED here, but we have
     // no way to tell for sure whether to use it.
@@ -3927,7 +3925,7 @@ nsXPCComponents_Utils::GetGlobalForObject(const JS::Value& object,
 
   // Outerize if necessary.
   if (JSObjectOp outerize = js::GetObjectClass(obj)->ext.outerObject)
-      *retval = OBJECT_TO_JSVAL(outerize(cx, JS::RootedVarObject(cx, obj)));
+      *retval = OBJECT_TO_JSVAL(outerize(cx, obj));
 
   return NS_OK;
 }

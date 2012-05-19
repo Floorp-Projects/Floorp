@@ -143,27 +143,27 @@ NPClass nsJSObjWrapper::sJSObjWrapperNPClass =
   };
 
 static JSBool
-NPObjWrapper_AddProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-NPObjWrapper_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-NPObjWrapper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
+NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
 static JSBool
-NPObjWrapper_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-NPObjWrapper_newEnumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
+NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                           jsval *statep, jsid *idp);
 
 static JSBool
-NPObjWrapper_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
+NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
                         JSObject **objp);
 
 static JSBool
-NPObjWrapper_Convert(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp);
+NPObjWrapper_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
 static void
 NPObjWrapper_Finalize(JSFreeOp *fop, JSObject *obj);
@@ -204,7 +204,7 @@ typedef struct NPObjectMemberPrivate {
 } NPObjectMemberPrivate;
 
 static JSBool
-NPObjectMember_Convert(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp);
+NPObjectMember_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
 static void
 NPObjectMember_Finalize(JSFreeOp *fop, JSObject *obj);
@@ -1177,7 +1177,7 @@ GetNPObject(JSObject *obj)
 // Does not actually add a property because this is always followed by a
 // SetProperty call.
 static JSBool
-NPObjWrapper_AddProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
+NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   NPObject *npobj = GetNPObject(obj);
 
@@ -1218,7 +1218,7 @@ NPObjWrapper_AddProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval
 }
 
 static JSBool
-NPObjWrapper_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
+NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   NPObject *npobj = GetNPObject(obj);
 
@@ -1249,7 +1249,7 @@ NPObjWrapper_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval
 }
 
 static JSBool
-NPObjWrapper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp)
+NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
   NPObject *npobj = GetNPObject(obj);
 
@@ -1308,7 +1308,7 @@ NPObjWrapper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBoo
 }
 
 static JSBool
-NPObjWrapper_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
+NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   NPObject *npobj = GetNPObject(obj);
 
@@ -1548,7 +1548,7 @@ struct NPObjectEnumerateState {
 };
 
 static JSBool
-NPObjWrapper_newEnumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
+NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                           jsval *statep, jsid *idp)
 {
   NPObject *npobj = GetNPObject(obj);
@@ -1628,7 +1628,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op
 }
 
 static JSBool
-NPObjWrapper_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
+NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
                         JSObject **objp)
 {
   NPObject *npobj = GetNPObject(obj);
@@ -1682,7 +1682,7 @@ NPObjWrapper_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsign
 }
 
 static JSBool
-NPObjWrapper_Convert(JSContext *cx, JSHandleObject obj, JSType hint, jsval *vp)
+NPObjWrapper_Convert(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 {
   JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
 
@@ -2185,7 +2185,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
 }
 
 static JSBool
-NPObjectMember_Convert(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp)
+NPObjectMember_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
   NPObjectMemberPrivate *memberPrivate =
     (NPObjectMemberPrivate *)::JS_GetInstancePrivate(cx, obj,

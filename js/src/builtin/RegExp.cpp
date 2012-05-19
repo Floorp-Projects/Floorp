@@ -57,8 +57,8 @@ class RegExpMatchBuilder
     RootedVarObject array;
 
     bool setProperty(JSAtom *name, Value v) {
-        return !!baseops::DefineProperty(cx, array, RootedVarId(cx, AtomToId(name)), &v,
-                                         JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE);
+        return !!js_DefineProperty(cx, array, AtomToId(name), &v,
+                                   JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE);
     }
 
   public:
@@ -66,8 +66,8 @@ class RegExpMatchBuilder
 
     bool append(uint32_t index, Value v) {
         JS_ASSERT(!array->getOps()->getElement);
-        return !!baseops::DefineElement(cx, array, index, &v, JS_PropertyStub, JS_StrictPropertyStub,
-                                        JSPROP_ENUMERATE);
+        return !!js_DefineElement(cx, array, index, &v, JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_ENUMERATE);
     }
 
     bool setIndex(int index) {
@@ -405,7 +405,7 @@ static JSFunctionSpec regexp_methods[] = {
 
 #define DEFINE_STATIC_GETTER(name, code)                                        \
     static JSBool                                                               \
-    name(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)               \
+    name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                      \
     {                                                                           \
         RegExpStatics *res = cx->regExpStatics();                               \
         code;                                                                   \
@@ -431,7 +431,7 @@ DEFINE_STATIC_GETTER(static_paren9_getter,       return res->createParen(cx, 9, 
 
 #define DEFINE_STATIC_SETTER(name, code)                                        \
     static JSBool                                                               \
-    name(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp)\
+    name(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)       \
     {                                                                           \
         RegExpStatics *res = cx->regExpStatics();                               \
         code;                                                                   \

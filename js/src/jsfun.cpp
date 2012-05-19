@@ -97,9 +97,8 @@ using namespace js::gc;
 using namespace js::types;
 
 static JSBool
-fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)
+fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    JSObject *obj = obj_;
     while (!obj->isFunction()) {
         obj = obj->getProto();
         if (!obj)
@@ -209,11 +208,13 @@ static const uint16_t poisonPillProps[] = {
 };
 
 static JSBool
-fun_enumerate(JSContext *cx, HandleObject obj)
+fun_enumerate(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isFunction());
 
-    RootedVarId id(cx);
+    RootObject root(cx, &obj);
+
+    jsid id;
     bool found;
 
     if (!obj->isBoundFunction()) {
@@ -287,7 +288,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
 }
 
 static JSBool
-fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+fun_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
             JSObject **objp)
 {
     if (!JSID_IS_ATOM(id))
@@ -476,10 +477,8 @@ js::CloneInterpretedFunction(JSContext *cx, JSFunction *srcFun)
  * if v is an object) returning true if .prototype is found.
  */
 static JSBool
-fun_hasInstance(JSContext *cx, HandleObject obj_, const Value *v, JSBool *bp)
+fun_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
-    RootedVarObject obj(cx, obj_);
-
     while (obj->isFunction()) {
         if (!obj->isBoundFunction())
             break;
@@ -1316,9 +1315,11 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 }
 
 JSFunction *
-js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
+js_DefineFunction(JSContext *cx, HandleObject obj, jsid id, Native native,
                   unsigned nargs, unsigned attrs, AllocKind kind)
 {
+    RootId idRoot(cx, &id);
+
     PropertyOp gop;
     StrictPropertyOp sop;
 

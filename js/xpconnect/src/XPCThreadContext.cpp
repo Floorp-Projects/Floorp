@@ -160,7 +160,7 @@ XPCJSContextStack::DEBUG_StackHasJSContext(JSContext *cx)
 #endif
 
 static JSBool
-SafeGlobalResolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
+SafeGlobalResolve(JSContext *cx, JSObject *obj, jsid id)
 {
     JSBool resolved;
     return JS_ResolveStandardClass(cx, obj, id, &resolved);

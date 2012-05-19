@@ -534,7 +534,7 @@ JSONParser::parse(Value *vp)
         switch (state) {
           case FinishObjectMember: {
             Value v = valueStack.popCopy();
-            RootedVarId propid(cx, AtomToId(&valueStack.popCopy().toString()->asAtom()));
+            jsid propid = AtomToId(&valueStack.popCopy().toString()->asAtom());
             RootedVarObject obj(cx, &valueStack.back().toObject());
             if (!DefineNativeProperty(cx, obj, propid, v,
                                       JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE,
@@ -582,7 +582,7 @@ JSONParser::parse(Value *vp)
 
           case FinishArrayElement: {
             Value v = valueStack.popCopy();
-            if (!js_NewbornArrayPush(cx, RootedVarObject(cx, &valueStack.back().toObject()), v))
+            if (!js_NewbornArrayPush(cx, &valueStack.back().toObject(), v))
                 return false;
             token = advanceAfterArrayElement();
             if (token == Comma) {

@@ -217,7 +217,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
 #ifdef DEBUG
         {
-            JSObject *outer = GetOuterObject(cx, RootedVarObject(cx, obj));
+            JSObject *outer = obj;
+            OBJ_TO_OUTER_OBJECT(cx, outer);
             JS_ASSERT(outer && outer == obj);
         }
 #endif
