@@ -2422,6 +2422,7 @@ Tab.prototype = {
       let [pageWidth, pageHeight] = this.getPageSize(this.browser.contentDocument, viewportW, viewportH);
       minScale = gScreenWidth / pageWidth;
     }
+    minScale = this.clampZoom(minScale);
     viewportH = Math.max(viewportH, screenH / minScale);
     this.setBrowserSize(viewportW, viewportH);
 
@@ -2443,7 +2444,8 @@ Tab.prototype = {
     // within the screen width. Note that "actual content" may be different
     // with respect to CSS pixels because of the CSS viewport size changing.
     let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
-    this.setResolution(this._zoom * zoomScale, false);
+    let zoom = this.clampZoom(this._zoom * zoomScale);
+    this.setResolution(zoom, false);
     this.sendViewportUpdate();
   },
 
@@ -2454,6 +2456,21 @@ Tab.prototype = {
       return;
     let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     cwu.setCSSViewport(aWidth, aHeight);
+  },
+
+  /** Takes a scale and restricts it based on this tab's zoom limits. */
+  clampZoom: function clampZoom(aZoom) {
+    let zoom = ViewportHandler.clamp(aZoom, kViewportMinScale, kViewportMaxScale);
+
+    let md = this.metadata;
+    if (!md.allowZoom)
+      return md.defaultZoom || zoom;
+
+    if (md && md.minZoom)
+      zoom = Math.max(zoom, md.minZoom);
+    if (md && md.maxZoom)
+      zoom = Math.min(zoom, md.maxZoom);
+    return zoom;
   },
 
   getRequestLoadContext: function(aRequest) {
