@@ -70,6 +70,8 @@ bool
 CodeGeneratorShared::generateOutOfLineCode()
 {
     for (size_t i = 0; i < outOfLineCode_.length(); i++) {
+        if (!gen->temp().ensureBallast())
+            return false;
         masm.setFramePushed(outOfLineCode_[i]->framePushed());
         masm.bind(outOfLineCode_[i]->entry());
 

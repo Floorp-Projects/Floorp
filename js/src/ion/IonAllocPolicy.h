@@ -87,6 +87,13 @@ class TempAllocator
         lifoAlloc_->release(mark_);
     }
 
+    void *allocateInfallible(size_t bytes)
+    {
+        void *p = lifoAlloc_->allocInfallible(bytes);
+        JS_ASSERT(p);
+        return p;
+    }
+
     void *allocate(size_t bytes)
     {
         void *p = lifoAlloc_->alloc(bytes);
@@ -96,7 +103,9 @@ class TempAllocator
     }
 
     bool ensureBallast() {
-        return true;
+        // Most infallible Ion allocations are small, so we use a ballast of
+        // ~16K for now.
+        return lifoAlloc_->ensureUnusedApproximate(16 * 1024);
     }
 };
 
@@ -124,7 +133,7 @@ class AutoIonContextAlloc
 struct TempObject
 {
     inline void *operator new(size_t nbytes) {
-        return GetIonContext()->temp->allocate(nbytes);
+        return GetIonContext()->temp->allocateInfallible(nbytes);
     }
 
   public:
