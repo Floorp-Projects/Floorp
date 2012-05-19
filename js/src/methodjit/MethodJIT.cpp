@@ -193,7 +193,7 @@ JS_STATIC_ASSERT(offsetof(FrameRegs, sp) == 0);
  * caller's registers when control is at or after that directive. That is,
  * they describe the states that hold between one instruction and the next,
  * not the instructions themselves. Later directives override earlier
- * directives. 
+ * directives.
  *
  * In DWARF CFI, each stack frame has a Canonical Frame Address (CFA) that
  * remains constant throughout the frame's lifetime. Exactly where it is is
@@ -207,7 +207,7 @@ JS_STATIC_ASSERT(offsetof(FrameRegs, sp) == 0);
  * rule for computing the CFA, not the rule for each saved register.)
  *
  * Quick reference:
- * 
+ *
  * .cfi_startproc, .cfi_endproc
  *   Put these at the beginning and end of the block of code you're
  *   annotating.
@@ -227,7 +227,7 @@ JS_STATIC_ASSERT(offsetof(FrameRegs, sp) == 0);
  * .cfi_offset REGISTER, OFFSET
  *   The caller's value of REGISTER is saved at OFFSET from the current CFA.
  *   (This is the directive that actually says something interesting.)
- * 
+ *
  * There are other directives that compute the CFA, a saved register's address,
  * or a saved register's value, in more complex ways, but the above are the ones
  * we use here.
@@ -449,7 +449,7 @@ asm (
     CFI(".cfi_offset r13, -32"                      "\n")
     CFI(".cfi_offset r14, -40"                      "\n")
     CFI(".cfi_offset r15, -48"                      "\n")
-    CFI(".cfi_offset rbx, -56"                      "\n")   
+    CFI(".cfi_offset rbx, -56"                      "\n")
     CFI("nop"                                       "\n")
 ".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
 SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
@@ -492,7 +492,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "pushl %ebx"                         "\n"
     CFI(".cfi_offset ebx, -20"           "\n")
 
-    /* Build the JIT frame. Push fields in order, 
+    /* Build the JIT frame. Push fields in order,
      * then align the stack to form esp == VMFrame. */
     "movl  12(%ebp), %ebx"               "\n"   /* load fp */
     "pushl %ebx"                         "\n"   /* unused1 */
@@ -631,7 +631,7 @@ asm (
     CFI(".cfi_offset ebp, -8"                       "\n")
     CFI(".cfi_offset esi, -12"                      "\n")
     CFI(".cfi_offset edi, -16"                      "\n")
-    CFI(".cfi_offset ebx, -20"                      "\n")      
+    CFI(".cfi_offset ebx, -20"                      "\n")
     CFI("nop"                                       "\n")
 ".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
 SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
@@ -702,11 +702,11 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      *  [ args.ptr2    ]  [ dynamicArgc ]  (union)
      *  [ args.ptr     ]  [ lazyArgsObj ]  (union)
      */
-    
+
     /* Push callee-saved registers. */
 "   push    {r4-r11,lr}"                        "\n"
     /* Push interesting VMFrame content. */
-"   mov     ip, #0"                             "\n"    
+"   mov     ip, #0"                             "\n"
 "   push    {ip}"                               "\n"    /* stubRejoin */
 "   push    {r1}"                               "\n"    /* entryncode */
 "   push    {r1}"                               "\n"    /* entryfp */
@@ -757,7 +757,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 
     /* Call the utility function that sets up the internal throw routine. */
 "   blx  " SYMBOL_STRING_RELOC(js_InternalThrow) "\n"
-    
+
     /* If js_InternalThrow found a scripted handler, jump to it. Otherwise, tidy
      * up and return. */
 "   cmp     r0, #0"                         "\n"
@@ -852,7 +852,7 @@ extern "C" {
             push edi;
             push ebx;
 
-            /* Build the JIT frame. Push fields in order, 
+            /* Build the JIT frame. Push fields in order,
              * then align the stack to form esp == VMFrame. */
             mov  ebx, [ebp + 12];
             push ebx;

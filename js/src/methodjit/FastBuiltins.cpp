@@ -175,7 +175,7 @@ mjit::Compiler::compileMathSqrt(FrameEntry *arg)
 }
 
 CompileStatus
-mjit::Compiler::compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2, 
+mjit::Compiler::compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2,
                                         Assembler::DoubleCondition cond)
 {
     FPRegisterID fpReg1;
@@ -197,10 +197,10 @@ mjit::Compiler::compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2,
 
     /* Slow path for 0 and NaN, because they have special requriments. */
     masm.zeroDouble(Registers::FPConversionTemp);
-    Jump zeroOrNan = masm.branchDouble(Assembler::DoubleEqualOrUnordered, fpReg1, 
+    Jump zeroOrNan = masm.branchDouble(Assembler::DoubleEqualOrUnordered, fpReg1,
                                        Registers::FPConversionTemp);
     stubcc.linkExit(zeroOrNan, Uses(4));
-    Jump zeroOrNan2 = masm.branchDouble(Assembler::DoubleEqualOrUnordered, fpReg2, 
+    Jump zeroOrNan2 = masm.branchDouble(Assembler::DoubleEqualOrUnordered, fpReg2,
                                         Registers::FPConversionTemp);
     stubcc.linkExit(zeroOrNan2, Uses(4));
 
@@ -849,7 +849,7 @@ mjit::Compiler::compileParseInt(JSValueType argType, uint32_t argc)
             OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
         }
 
-        /* 
+        /*
          * Stack looks like callee, this, arg1, arg2, argN.
          * First pop all args other than arg1.
          */
@@ -859,7 +859,7 @@ mjit::Compiler::compileParseInt(JSValueType argType, uint32_t argc)
 
         if (needStubCall) {
             stubcc.rejoin(Changes(1));
-        }        
+        }
     } else {
         FrameEntry *arg = frame.peek(-(int32_t)argc);
         FPRegisterID fpScratchReg = frame.allocFPReg();
@@ -872,7 +872,7 @@ mjit::Compiler::compileParseInt(JSValueType argType, uint32_t argc)
         masm.slowLoadConstantDouble(1, fpScratchReg);
 
         /* Slow path for NaN and numbers < 1. */
-        Jump lessThanOneOrNan = masm.branchDouble(Assembler::DoubleLessThanOrUnordered, 
+        Jump lessThanOneOrNan = masm.branchDouble(Assembler::DoubleLessThanOrUnordered,
                                                   fpReg, fpScratchReg);
         stubcc.linkExit(lessThanOneOrNan, Uses(2 + argc));
 
@@ -896,7 +896,7 @@ mjit::Compiler::compileParseInt(JSValueType argType, uint32_t argc)
         stubcc.rejoin(Changes(1));
     }
 
-    return Compile_Okay;   
+    return Compile_Okay;
 }
 
 CompileStatus
@@ -1054,7 +1054,7 @@ mjit::Compiler::inlineNativeFunction(uint32_t argc, bool callingNew)
         if ((native == js_math_min || native == js_math_max)) {
             if (arg1Type == JSVAL_TYPE_INT32 && arg2Type == JSVAL_TYPE_INT32 &&
                 type == JSVAL_TYPE_INT32) {
-                return compileMathMinMaxInt(arg1, arg2, 
+                return compileMathMinMaxInt(arg1, arg2,
                         native == js_math_min ? Assembler::LessThan : Assembler::GreaterThan);
             }
             if ((arg1Type == JSVAL_TYPE_INT32 || arg1Type == JSVAL_TYPE_DOUBLE) &&

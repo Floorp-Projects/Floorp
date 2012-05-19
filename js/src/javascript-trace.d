@@ -42,7 +42,7 @@
 provider javascript {
  probe function__entry(const char *, const char *, const char *);
  probe function__return(const char *, const char *, const char *);
- /* XXX must use unsigned longs here instead of uintptr_t for OS X 
+ /* XXX must use unsigned longs here instead of uintptr_t for OS X
     (Apple radar: 5194316 & 5565198) */
  probe object__create(const char *, unsigned long);
  probe object__finalize(const char *, const char *, unsigned long);

@@ -98,7 +98,7 @@ TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where,
 
     bool ok;
     JSC::LinkBuffer buffer(&masm, execAlloc, poolp, &ok, JSC::METHOD_CODE);
-    if (!ok) 
+    if (!ok)
         return false;
     masm.finalize(buffer);
     uint8_t *result = (uint8_t*)buffer.finalizeCodeAddendum().dataLocation();

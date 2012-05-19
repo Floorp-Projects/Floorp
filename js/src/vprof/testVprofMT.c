@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mohammad R. Haghighat [mohammad.r.haghighat@intel.com] 
+ *   Mohammad R. Haghighat [mohammad.r.haghighat@intel.com]
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -99,13 +99,13 @@ HANDLE array[THREADS];
 static int run (void)
 {
     int i;
-    
+
     time_t start_time = time(0);
-    
+
     for (i = 0; i < THREADS; i++) {
         array[i] = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)sub, (LPVOID)i, 0, 0);
     }
-    
+
     for (i = 0; i < THREADS; i++) {
         WaitForSingleObject(array[i], INFINITE);
     }

@@ -173,7 +173,7 @@ BaseProxyHandler::getElementIfPresent(JSContext *cx, JSObject *proxy_, JSObject 
     }
 
     return get(cx, proxy, receiver, id, vp);
-}   
+}
 
 bool
 BaseProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
@@ -504,7 +504,7 @@ IndirectProxyHandler::hasInstance(JSContext *cx, JSObject *proxy, const Value *v
 }
 
 JSType
-IndirectProxyHandler::typeOf(JSContext *cx, JSObject *proxy) 
+IndirectProxyHandler::typeOf(JSContext *cx, JSObject *proxy)
 {
     return TypeOfValue(cx, ObjectValue(*GetProxyTargetObject(proxy)));
 }
@@ -555,7 +555,7 @@ IndirectProxyHandler::iteratorNext(JSContext *cx, JSObject *proxy, Value *vp)
     if (vp->toBoolean()) {
         *vp = cx->iterValue;
         cx->iterValue.setUndefined();
-    } else 
+    } else
         vp->setMagic(JS_NO_ITER_VALUE);
     return true;
 }
@@ -921,7 +921,7 @@ ScriptedProxyHandler::iterate(JSContext *cx, JSObject *proxy_, unsigned flags, V
 }
 
 JSType
-ScriptedProxyHandler::typeOf(JSContext *cx, JSObject *proxy) 
+ScriptedProxyHandler::typeOf(JSContext *cx, JSObject *proxy)
 {
     /*
      * This function is only here to prevent a regression in

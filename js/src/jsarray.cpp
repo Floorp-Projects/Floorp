@@ -175,7 +175,7 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, uint32_t *lengthp)
         return true;
     }
 
-    
+
     return ToUint32(cx, value, (uint32_t *)lengthp);
 }
 
@@ -243,7 +243,7 @@ static JSBool
 BigIndexToId(JSContext *cx, JSObject *obj, uint32_t index, JSBool createAtom,
              jsid *idp)
 {
-    
+
     JS_ASSERT(index > JSID_INT_MAX);
 
     jschar buf[10];

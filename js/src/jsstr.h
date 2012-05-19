@@ -242,7 +242,7 @@ DeflateString(JSContext *cx, const jschar *chars, size_t length);
 /*
  * Inflate bytes to JS chars in an existing buffer. 'chars' must be large
  * enough for 'length' jschars. The buffer is NOT null-terminated.
- * 
+ *
  * charsLength must be be initialized with the destination buffer size and, on
  * return, will contain on return the number of copied chars.
  */

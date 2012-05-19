@@ -155,7 +155,7 @@ struct BytecodeEmitter
 
     /* These two should only be true if sc->inFunction() is false. */
     const bool      noScriptRval:1;     /* The caller is JS_Compile*Script*. */
-    const bool      needScriptGlobal:1; /* API caller does not want result value 
+    const bool      needScriptGlobal:1; /* API caller does not want result value
                                            from global script. */
 
     bool            hasSingletons:1;    /* script contains singleton initializer JSOP_OBJECT */

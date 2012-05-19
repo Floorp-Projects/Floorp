@@ -18,7 +18,7 @@
  *
  * DEFINE_ATOM(id, name)
  *   Define an atom whose JavaScript string's value is |name|.
- * 
+ *
  * DEFINE_PROTOTYPE_ATOM(id)
  *   Define an atom whose name is the same as one of those defined in
  *   jsproto.tbl. The code that processes that has already declared and
@@ -30,7 +30,7 @@
  *   jskeyword.tbl. The code that processes that has already declared and
  *   defined the js_<id>_str global, so this defines only the JSAtomState
  *   member.
- */ 
+ */
 
 
 

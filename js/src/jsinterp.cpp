@@ -995,14 +995,14 @@ class GenericInterruptEnabler : public InterpreterFrames::InterruptEnablerBase {
     T value;
 };
 
-inline InterpreterFrames::InterpreterFrames(JSContext *cx, FrameRegs *regs, 
+inline InterpreterFrames::InterpreterFrames(JSContext *cx, FrameRegs *regs,
                                             const InterruptEnablerBase &enabler)
   : context(cx), regs(regs), enabler(enabler)
 {
     older = cx->runtime->interpreterFrames;
     cx->runtime->interpreterFrames = this;
 }
- 
+
 inline InterpreterFrames::~InterpreterFrames()
 {
     context->runtime->interpreterFrames = older;
@@ -1691,7 +1691,7 @@ BEGIN_CASE(JSOP_STOP)
 
         if (cx->compartment->debugMode())
             interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
- 
+
         interpReturnOK = ScriptEpilogue(cx, regs.fp(), interpReturnOK);
 
         /* The JIT inlines ScriptEpilogue. */

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mohammad R. Haghighat [mohammad.r.haghighat@intel.com] 
+ *   Mohammad R. Haghighat [mohammad.r.haghighat@intel.com]
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -78,7 +78,7 @@
 #define DO_UNLOCK(lock) }
 #endif
 
-#if THREAD_SAFE  
+#if THREAD_SAFE
 #define LOCK(lock) DO_LOCK(lock)
 #define UNLOCK(lock) DO_UNLOCK(lock)
 #else
@@ -121,7 +121,7 @@ inline static entry* reverse (entry* s)
         e->next = p;
         p = e;
     }
-    
+
     return p;
 }
 
@@ -148,11 +148,11 @@ static void dumpProfile (void)
     vprof_printf ("event avg [min : max] total count\n");
     for (e = entries; e; e = e->next) {
         if (e->count == 0) continue;  // ignore entries with zero count.
-        vprof_printf ("%s", e->file); 
+        vprof_printf ("%s", e->file);
         if (e->line >= 0) {
             vprof_printf (":%d", e->line);
-        } 
-        vprof_printf (" %s [%lld : %lld] %lld %lld ", 
+        }
+        vprof_printf (" %s [%lld : %lld] %lld %lld ",
                 f(((double)e->sum)/((double)e->count)), (long long int)e->min, (long long int)e->max, (long long int)e->sum, (long long int)e->count);
         if (e->h) {
             int j = MAXINT;
@@ -285,7 +285,7 @@ int initHistProfile(void** id, char* file, int line, int nbins, ...)
             if (e) {
                 *id = e;
             }
-        } 
+        }
 
         if (e == NULL) {
             va_list va;

@@ -228,7 +228,7 @@ class Debugger::FrameRange {
         frontDebugger()->frames.remove(entry);
     }
 
-    void popFront() { 
+    void popFront() {
         JS_ASSERT(!empty());
         nextDebugger++;
         findNext();
@@ -566,7 +566,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
                 status = JSTRAP_ERROR;
                 break;
             }
-                
+
             Value completion;
             if (!dbg->newCompletionValue(cx, status, value, &completion)) {
                 status = dbg->handleUncaughtException(ac, NULL, false);
@@ -578,7 +578,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
             bool hookOk = Invoke(cx, ObjectValue(*frameobj), handler, 1, &completion, &rval);
             Value nextValue;
             JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval, &nextValue);
-            
+
             /*
              * At this point, we are back in the debuggee compartment, and any error has
              * been wrapped up as a completion value.
@@ -636,7 +636,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
       case JSTRAP_THROW:
         cx->setPendingException(value);
         return false;
-        
+
       case JSTRAP_ERROR:
         JS_ASSERT(!cx->isExceptionPending());
         return false;
@@ -786,7 +786,7 @@ Debugger::resultToCompletion(JSContext *cx, bool ok, const Value &rv,
 bool
 Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Value *result)
 {
-    /* 
+    /*
      * We must be in the debugger's compartment, since that's where we want
      * to construct the completion value.
      */
@@ -1974,7 +1974,7 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
         debuggees.remove(global);
 }
 
-/* 
+/*
  * A class for parsing 'findScripts' query arguments and searching for
  * scripts that match the criteria they represent.
  */
@@ -1984,7 +1984,7 @@ class Debugger::ScriptQuery {
     ScriptQuery(JSContext *cx, Debugger *dbg):
         cx(cx), debugger(dbg), compartments(cx), innermostForGlobal(cx) {}
 
-    /* 
+    /*
      * Initialize this ScriptQuery. Raise an error and return false if we
      * haven't enough memory.
      */
@@ -2090,7 +2090,7 @@ class Debugger::ScriptQuery {
     }
 
     /*
-     * Search all relevant compartments and the stack for scripts matching 
+     * Search all relevant compartments and the stack for scripts matching
      * this query, and append the matching scripts to |vector|.
      */
     bool findScripts(AutoScriptVector *vector) {
@@ -2197,7 +2197,7 @@ class Debugger::ScriptQuery {
         return true;
     }
 
-    /* 
+    /*
      * Arrange for this ScriptQuery to match all scripts running in debuggee
      * globals.
      */
@@ -2209,17 +2209,17 @@ class Debugger::ScriptQuery {
                 js_ReportOutOfMemory(cx);
                 return false;
             }
-        }            
+        }
         return true;
     }
 
-    /* 
+    /*
      * Given that parseQuery or omittedQuery has been called, prepare to
      * match scripts. Set urlCString as appropriate.
      */
     bool prepareQuery() {
         /*
-         * Compute the proper value for |compartments|, given the present 
+         * Compute the proper value for |compartments|, given the present
          * value of |globals|.
          */
         for (GlobalObjectSet::Range r = globals.all(); !r.empty(); r.popFront()) {
@@ -2234,11 +2234,11 @@ class Debugger::ScriptQuery {
             if (!urlCString.encode(cx, url.toString()))
                 return false;
         }
- 
-        return true;        
+
+        return true;
     }
 
-    /* 
+    /*
      * If |script|, a script in |global|, matches this query, append it to
      * |vector| or place it in |innermostForGlobal|, as appropriate. Return true
      * if no error occurs, false if an error occurs.
@@ -2291,8 +2291,8 @@ class Debugger::ScriptQuery {
                 return false;
             }
         }
-        
-        return true;        
+
+        return true;
     }
 };
 

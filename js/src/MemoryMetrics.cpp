@@ -186,7 +186,7 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
 {
     if (!rtStats->compartmentStatsVector.reserve(rt->compartments.length()))
         return false;
-    
+
     rtStats->gcHeapChunkCleanDecommitted =
         rt->gcChunkPool.countCleanDecommittedArenas(rt) * gc::ArenaSize;
     rtStats->gcHeapChunkCleanUnused =
@@ -194,13 +194,13 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
         rtStats->gcHeapChunkCleanDecommitted;
     rtStats->gcHeapChunkTotal =
         size_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) * gc::ChunkSize;
-    
+
     IterateCompartmentsArenasCells(rt, rtStats, StatsCompartmentCallback,
                                    StatsArenaCallback, StatsCellCallback);
     IterateChunks(rt, rtStats, StatsChunkCallback);
-    
+
     rt->sizeOfIncludingThis(rtStats->mallocSizeOf, &rtStats->runtime);
-    
+
     // This is initialized to all bytes stored in used chunks, and then we
     // subtract used space from it each time around the loop.
     rtStats->gcHeapChunkDirtyUnused = rtStats->gcHeapChunkTotal -
