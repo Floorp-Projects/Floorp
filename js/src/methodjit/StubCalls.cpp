@@ -159,13 +159,13 @@ stubs::SetElem(VMFrame &f)
     Value rval    = regs.sp[-1];
 
     JSObject *obj;
-    jsid id;
+    RootedVarId id(cx);
 
     obj = ValueToObject(cx, objval);
     if (!obj)
         THROW();
 
-    if (!FetchElementId(f.cx, obj, idval, id, &regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, idval, id.address(), &regs.sp[-2]))
         THROW();
 
     TypeScript::MonitorAssign(cx, obj, id);
@@ -212,8 +212,8 @@ stubs::ToId(VMFrame &f)
     if (!obj)
         THROW();
 
-    jsid id;
-    if (!FetchElementId(f.cx, obj, idval, id, &idval))
+    RootedVarId id(f.cx);
+    if (!FetchElementId(f.cx, obj, idval, id.address(), &idval))
         THROW();
 
     if (!idval.isInt32())
@@ -538,7 +538,7 @@ StubEqualityOp(VMFrame &f)
             JSObject *l = &lval.toObject(), *r = &rval.toObject();
             if (JSEqualityOp eq = l->getClass()->ext.equality) {
                 JSBool equal;
-                if (!eq(cx, l, &rval, &equal))
+                if (!eq(cx, RootedVarObject(cx, l), &rval, &equal))
                     return false;
                 cond = !!equal == EQ;
             } else {
@@ -954,9 +954,9 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     JSObject *obj = &lref.toObject();
 
     /* Fetch id now that we have obj. */
-    jsid id;
+    RootedVarId id(cx);
     const Value &idval = regs.sp[-2];
-    if (!FetchElementId(f.cx, obj, idval, id, &regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, idval, id.address(), &regs.sp[-2]))
         THROW();
 
     /*
@@ -1062,10 +1062,10 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     JS_ASSERT(obj->isNative());
 
     /* Get the immediate property name into id. */
-    jsid id = NameToId(name);
+    RootedVarId id(cx, NameToId(name));
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
-        ? !js_SetPropertyHelper(cx, obj, id, 0, &rval, false)
+        ? !baseops::SetPropertyHelper(cx, obj, id, 0, &rval, false)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         THROW();
@@ -1176,7 +1176,7 @@ stubs::InstanceOf(VMFrame &f)
                             -1, rref, NULL);
         THROWV(JS_FALSE);
     }
-    JSObject *obj = &rref.toObject();
+    RootedVarObject obj(cx, &rref.toObject());
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
     if (!HasInstance(cx, obj, &lref, &cond))
@@ -1394,9 +1394,10 @@ stubs::DelName(VMFrame &f, PropertyName *name_)
 
 template<JSBool strict>
 void JS_FASTCALL
-stubs::DelProp(VMFrame &f, PropertyName *name)
+stubs::DelProp(VMFrame &f, PropertyName *name_)
 {
     JSContext *cx = f.cx;
+    RootedVarPropertyName name(cx, name_);
 
     JSObject *obj = ValueToObject(cx, f.regs.sp[-1]);
     if (!obj)
@@ -1471,8 +1472,8 @@ stubs::In(VMFrame &f)
     }
 
     JSObject *obj = &rref.toObject();
-    jsid id;
-    if (!FetchElementId(f.cx, obj, f.regs.sp[-2], id, &f.regs.sp[-2]))
+    RootedVarId id(cx);
+    if (!FetchElementId(f.cx, obj, f.regs.sp[-2], id.address(), &f.regs.sp[-2]))
         THROWV(JS_FALSE);
 
     JSObject *obj2;

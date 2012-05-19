@@ -214,14 +214,14 @@ bool
 Wrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp)
 {
     vp->setUndefined(); // default result if we refuse to perform this action
-    GET(wrappedObject(wrapper)->getGeneric(cx, receiver, id, vp));
+    GET(wrappedObject(wrapper)->getGeneric(cx, RootedVarObject(cx, receiver), RootedVarId(cx, id), vp));
 }
 
 bool
 Wrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
                Value *vp)
 {
-    SET(wrappedObject(wrapper)->setGeneric(cx, id, vp, strict));
+    SET(wrappedObject(wrapper)->setGeneric(cx, RootedVarId(cx, id), vp, strict));
 }
 
 bool

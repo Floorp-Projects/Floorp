@@ -93,30 +93,30 @@ private:
     mutable JSObject* mObj;
 
     static JSBool
-    CPOW_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+    CPOW_AddProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
 
     static JSBool
-    CPOW_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+    CPOW_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
 
     static JSBool
-    CPOW_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+    CPOW_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
     
     static JSBool
-    CPOW_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
+    CPOW_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
 
     JSBool NewEnumerateInit(JSContext* cx, jsval* statep, jsid* idp);
     JSBool NewEnumerateNext(JSContext* cx, jsval* statep, jsid* idp);
     JSBool NewEnumerateDestroy(JSContext* cx, jsval state);
     static JSBool
-    CPOW_NewEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+    CPOW_NewEnumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
                       jsval *statep, jsid *idp);
 
     static JSBool
-    CPOW_NewResolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+    CPOW_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
                     JSObject **objp);
 
     static JSBool
-    CPOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
+    CPOW_Convert(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp);
 
     static void
     CPOW_Finalize(js::FreeOp* fop, JSObject* obj);
@@ -128,10 +128,10 @@ private:
     CPOW_Construct(JSContext *cx, unsigned argc, jsval *vp);
     
     static JSBool
-    CPOW_HasInstance(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
+    CPOW_HasInstance(JSContext *cx, JSHandleObject obj, const jsval *v, JSBool *bp);
 
     static JSBool
-    CPOW_Equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
+    CPOW_Equality(JSContext *cx, JSHandleObject obj, const jsval *v, JSBool *bp);
 
     static bool jsval_to_JSVariant(JSContext* cx, jsval from, JSVariant* to);
     static bool jsval_from_JSVariant(JSContext* cx, const JSVariant& from,

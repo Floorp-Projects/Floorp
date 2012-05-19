@@ -113,7 +113,7 @@ XBLFinalize(JSFreeOp *fop, JSObject *obj)
 }
 
 static JSBool
-XBLResolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+XBLResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
            JSObject **objp)
 {
   // Note: if we get here, that means that the implementation for some binding
