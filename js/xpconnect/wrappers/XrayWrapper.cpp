@@ -368,9 +368,9 @@ XPCWrappedNativeXrayTraits::isResolving(JSContext *cx, JSObject *holder,
 // getter/setter and rely on the class getter/setter. We install a
 // class getter/setter on the holder object to trigger them.
 JSBool
-holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
+holder_get(JSContext *cx, JSHandleObject wrapper_, JSHandleId id, jsval *vp)
 {
-    wrapper = FindWrapper(wrapper);
+    JSObject *wrapper = FindWrapper(wrapper_);
 
     JSObject *holder = GetHolder(wrapper);
 
@@ -392,9 +392,9 @@ holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 }
 
 JSBool
-holder_set(JSContext *cx, JSObject *wrapper, jsid id, JSBool strict, jsval *vp)
+holder_set(JSContext *cx, JSHandleObject wrapper_, JSHandleId id, JSBool strict, jsval *vp)
 {
-    wrapper = FindWrapper(wrapper);
+    JSObject *wrapper = FindWrapper(wrapper_);
 
     JSObject *holder = GetHolder(wrapper);
     if (XPCWrappedNativeXrayTraits::isResolving(cx, holder, id)) {
@@ -505,7 +505,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapp
 }
 
 static JSBool
-wrappedJSObject_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
+wrappedJSObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, jsval *vp)
 {
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
         JS_ReportError(cx, "Unexpected object");
@@ -543,7 +543,7 @@ WrapURI(JSContext *cx, nsIURI *uri, jsval *vp)
 }
 
 static JSBool
-documentURIObject_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
+documentURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, jsval *vp)
 {
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
         JS_ReportError(cx, "Unexpected object");
@@ -568,7 +568,7 @@ documentURIObject_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 }
 
 static JSBool
-baseURIObject_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
+baseURIObject_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, jsval *vp)
 {
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
         JS_ReportError(cx, "Unexpected object");
@@ -592,7 +592,7 @@ baseURIObject_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 }
 
 static JSBool
-nodePrincipal_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
+nodePrincipal_getter(JSContext *cx, JSHandleObject wrapper, JSHandleId id, jsval *vp)
 {
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
         JS_ReportError(cx, "Unexpected object");

@@ -123,7 +123,7 @@ doResolve(JSObject *obj, jsid id, unsigned flags, JSObject **objp)
 }
 
 static JSBool
-my_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSObject **objp)
+my_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags, JSObject **objp)
 {
     return static_cast<cls_testResolveRecursion *>(JS_GetPrivate(obj))->
            doResolve(obj, id, flags, objp);

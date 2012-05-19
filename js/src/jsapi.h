@@ -1304,6 +1304,29 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == sizeof(jsval));
 
 /************************************************************************/
 
+#ifdef __cplusplus
+
+typedef JS::Handle<JSObject*> JSHandleObject;
+typedef JS::Handle<jsid> JSHandleId;
+
+#else
+
+/*
+ * Handle support for C API users. Handles must be destroyed in the reverse
+ * order that they were created (as in a stack).
+ */
+
+typedef struct { JSObject **_; } JSHandleObject;
+typedef struct { jsid *_; } JSHandleId;
+
+JSBool JS_CreateHandleObject(JSContext *cx, JSObject *obj, JSHandleObject *phandle);
+void JS_DestroyHandleObject(JSContext *cx, JSHandleObject handle);
+
+JSBool JS_CreateHandleId(JSContext *cx, jsid id, JSHandleId *phandle);
+void JS_DestroyHandleId(JSContext *cx, JSHandleId handle);
+
+#endif
+
 /* JSClass operation signatures. */
 
 /*
@@ -1314,7 +1337,7 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == sizeof(jsval));
  * obj[id] can't be deleted (because it's permanent).
  */
 typedef JSBool
-(* JSPropertyOp)(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+(* JSPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
 
 /*
  * Set a property named by id in obj, treating the assignment as strict
@@ -1324,7 +1347,7 @@ typedef JSBool
  * set.
  */
 typedef JSBool
-(* JSStrictPropertyOp)(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
+(* JSStrictPropertyOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
 
 /*
  * This function type is used for callbacks that enumerate the properties of
@@ -1359,7 +1382,7 @@ typedef JSBool
  * indicating failure.
  */
 typedef JSBool
-(* JSNewEnumerateOp)(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+(* JSNewEnumerateOp)(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
                      jsval *statep, jsid *idp);
 
 /*
@@ -1367,7 +1390,7 @@ typedef JSBool
  * yet reflected in obj.
  */
 typedef JSBool
-(* JSEnumerateOp)(JSContext *cx, JSObject *obj);
+(* JSEnumerateOp)(JSContext *cx, JSHandleObject obj);
 
 /*
  * Resolve a lazy property named by id in obj by defining it directly in obj.
@@ -1382,7 +1405,7 @@ typedef JSBool
  * NB: JSNewResolveOp provides a cheaper way to resolve lazy properties.
  */
 typedef JSBool
-(* JSResolveOp)(JSContext *cx, JSObject *obj, jsid id);
+(* JSResolveOp)(JSContext *cx, JSHandleObject obj, JSHandleId id);
 
 /*
  * Like JSResolveOp, but flags provide contextual information as follows:
@@ -1414,7 +1437,7 @@ typedef JSBool
  * *objp without a new JSClass flag.
  */
 typedef JSBool
-(* JSNewResolveOp)(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+(* JSNewResolveOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
                    JSObject **objp);
 
 /*
@@ -1422,7 +1445,7 @@ typedef JSBool
  * *vp on success, and returning false on error or exception.
  */
 typedef JSBool
-(* JSConvertOp)(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
+(* JSConvertOp)(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp);
 
 /*
  * Delegate typeof to an object so it can cloak a primitive or another object.
@@ -1474,7 +1497,7 @@ struct JSStringFinalizer {
  * is either a string or an int jsval.
  */
 typedef JSBool
-(* JSCheckAccessOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
+(* JSCheckAccessOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, JSAccessMode mode,
                     jsval *vp);
 
 /*
@@ -1483,7 +1506,7 @@ typedef JSBool
  * *bp otherwise.
  */
 typedef JSBool
-(* JSHasInstanceOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
+(* JSHasInstanceOp)(JSContext *cx, JSHandleObject obj, const jsval *v, JSBool *bp);
 
 /*
  * Function type for trace operation of the class called to enumerate all
@@ -1513,7 +1536,7 @@ typedef void
 (* JSTraceNamePrinter)(JSTracer *trc, char *buf, size_t bufsize);
 
 typedef JSBool
-(* JSEqualityOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
+(* JSEqualityOp)(JSContext *cx, JSHandleObject obj, const jsval *v, JSBool *bp);
 
 /*
  * Typedef for native functions called by the JS VM.
@@ -3818,19 +3841,19 @@ extern JS_PUBLIC_API(JSBool)
 JS_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+JS_PropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_StrictPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
+JS_StrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_EnumerateStub(JSContext *cx, JSObject *obj);
+JS_EnumerateStub(JSContext *cx, JSHandleObject obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ResolveStub(JSContext *cx, JSObject *obj, jsid id);
+JS_ResolveStub(JSContext *cx, JSHandleObject obj, JSHandleId id);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
+JS_ConvertStub(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp);
 
 struct JSConstDoubleSpec {
     double          dval;
@@ -4300,7 +4323,7 @@ JS_NewElementIterator(JSContext *cx, JSObject *obj);
  * .ext.iteratorObject hook to this function.
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_ElementIteratorStub(JSContext *cx, JSObject *obj, JSBool keysonly);
+JS_ElementIteratorStub(JSContext *cx, JSHandleObject obj, JSBool keysonly);
 
 extern JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,

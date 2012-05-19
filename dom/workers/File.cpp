@@ -148,7 +148,7 @@ private:
   }
 
   static JSBool
-  GetSize(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
+  GetSize(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
   {
     nsIDOMBlob* blob = GetInstancePrivate(aCx, aObj, "size");
     if (!blob) {
@@ -169,7 +169,7 @@ private:
   }
 
   static JSBool
-  GetType(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
+  GetType(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
   {
     nsIDOMBlob* blob = GetInstancePrivate(aCx, aObj, "type");
     if (!blob) {
@@ -339,7 +339,7 @@ private:
   }
 
   static JSBool
-  GetMozFullPath(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
+  GetMozFullPath(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
   {
     nsIDOMFile* file = GetInstancePrivate(aCx, aObj, "mozFullPath");
     if (!file) {
@@ -365,7 +365,7 @@ private:
   }
 
   static JSBool
-  GetName(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
+  GetName(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
   {
     nsIDOMFile* file = GetInstancePrivate(aCx, aObj, "name");
     if (!file) {
