@@ -420,7 +420,7 @@ struct JSScript : public js::gc::Cell
 
   public:
     jsbytecode      *code;      /* bytecodes and their immediate operands */
-    uint8_t         *data;      /* pointer to variable-length data array (see 
+    uint8_t         *data;      /* pointer to variable-length data array (see
                                    comment above NewScript() for details) */
 
     const char      *filename;  /* source filename or null */

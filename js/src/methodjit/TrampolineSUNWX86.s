@@ -102,7 +102,7 @@ JaegerThrowpoline:
     /* We add the stack by 16 before. */
     addl $0x10, %esp
     /* Align the stack to 16 bytes. */
-    pushl %esp 
+    pushl %esp
     pushl (%esp)
     pushl (%esp)
     pushl (%esp)

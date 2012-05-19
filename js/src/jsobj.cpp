@@ -635,7 +635,7 @@ obj_toStringHelper(JSContext *cx, JSObject *obj)
 
     StringBuffer sb(cx);
     const char *className = obj->getClass()->name;
-    if (!sb.append("[object ") || !sb.appendInflated(className, strlen(className)) || 
+    if (!sb.append("[object ") || !sb.appendInflated(className, strlen(className)) ||
         !sb.append("]"))
     {
         return NULL;

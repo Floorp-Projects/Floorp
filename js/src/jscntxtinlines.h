@@ -327,7 +327,7 @@ class CompartmentChecker
         if (JSID_IS_OBJECT(id))
             check(JSID_TO_OBJECT(id));
     }
-    
+
     void check(JSIdArray *ida) {
         if (ida) {
             for (int i = 0; i < ida->length; i++) {

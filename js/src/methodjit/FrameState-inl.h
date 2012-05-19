@@ -175,7 +175,7 @@ FrameState::convertInt32ToDouble(Assembler &masm, FrameEntry *fe, FPRegisterID f
 
     if (fe->isCopy())
         fe = fe->copyOf();
-    
+
     if (fe->data.inRegister())
         masm.convertInt32ToDouble(fe->data.reg(), fpreg);
     else
@@ -751,7 +751,7 @@ FrameState::ensureFeSynced(const FrameEntry *fe, Assembler &masm) const
     }
 #endif
 
-    /* 
+    /*
      * On x86_64, only one of the following two calls will have output,
      * and a load will only occur if necessary.
      */
@@ -791,7 +791,7 @@ FrameState::ensureTypeSynced(const FrameEntry *fe, Assembler &masm) const
     if (backing->isConstant())
         masm.storeTypeTag(ImmTag(backing->getKnownTag()), to);
     else if (backing->isTypeKnown())
-        masm.storeTypeTag(ImmType(backing->getKnownType()), to); 
+        masm.storeTypeTag(ImmType(backing->getKnownType()), to);
     else
         masm.storeTypeTag(backing->type.reg(), to);
 }
@@ -1515,7 +1515,7 @@ FrameState::loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) cons
 {
     if (fe->isCopy()) {
         FrameEntry *backing = fe->copyOf();
-        if (tryFastDoubleLoad(fe, fpReg, masm)) 
+        if (tryFastDoubleLoad(fe, fpReg, masm))
             return;
         fe = backing;
     }

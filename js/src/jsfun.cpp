@@ -226,7 +226,7 @@ fun_enumerate(JSContext *cx, JSObject *obj)
     id = NameToId(cx->runtime->atomState.lengthAtom);
     if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
         return false;
-        
+
     id = NameToId(cx->runtime->atomState.nameAtom);
     if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
         return false;
@@ -328,7 +328,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
             v.setInt32(fun->nargs);
         else
             v.setString(fun->atom ? fun->atom : cx->runtime->emptyString);
-        
+
         if (!DefineNativeProperty(cx, fun, id, v, JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0)) {
             return false;

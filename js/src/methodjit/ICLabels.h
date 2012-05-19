@@ -62,7 +62,7 @@ struct GetPropLabels : MacroAssemblerTypedefs {
         int offset = masm.differenceBetween(fastPathRejoin, fastValueLoad);
         inlineValueLoadOffset = offset;
 
-        /* 
+        /*
          * Note: the offset between the type and data loads for x86 is asserted
          * in NunboxAssembler::loadValueWithAddressOffsetPatch.
          */
@@ -130,7 +130,7 @@ struct GetPropLabels : MacroAssemblerTypedefs {
         inlineShapeOffset = offset;
         JS_ASSERT(offset == inlineShapeOffset);
     }
-    
+
     void setStubShapeJumpOffset(int offset) {
         stubShapeJumpOffset = offset;
         JS_ASSERT(offset == stubShapeJumpOffset);
@@ -174,7 +174,7 @@ struct GetPropLabels : MacroAssemblerTypedefs {
     /* Offset from storeBack to end of value load. */
     int32_t inlineValueLoadOffset : 8;
 
-    /* 
+    /*
      * Offset from lastStubStart to end of shape jump.
      * TODO: We can redefine the location of lastStubStart to be
      * after the jump -- at which point this is always 0.
@@ -292,7 +292,7 @@ struct SetPropLabels : MacroAssemblerTypedefs {
     /* Offset from shapeGuard to end of shape comparison. */
     int32_t inlineShapeDataOffset : 8;
 
-    /* 
+    /*
      * Offset from lastStubStart to end of shape jump.
      * TODO: We can redefine the location of lastStubStart to be
      * after the jump -- at which point this is always 0.
