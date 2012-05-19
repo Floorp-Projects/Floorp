@@ -187,10 +187,10 @@ class CallObject : public ScopeObject
 
     inline void copyValues(unsigned nargs, Value *argv, unsigned nvars, Value *slots);
 
-    static JSBool getArgOp(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
-    static JSBool getVarOp(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
-    static JSBool setArgOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
-    static JSBool setVarOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
+    static JSBool getArgOp(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool getVarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool setArgOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp);
+    static JSBool setVarOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp);
 
     /* Return whether this environment contains 'name' and, if so, its value. */
     bool containsVarOrArg(PropertyName *name, Value *vp, JSContext *cx);

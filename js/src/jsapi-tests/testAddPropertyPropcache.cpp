@@ -10,7 +10,7 @@ static const int expectedCount = 100;
 static int callCount = 0;
 
 static JSBool
-addProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, jsval *vp)
+addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   callCount++;
   return true;

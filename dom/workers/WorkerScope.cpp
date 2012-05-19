@@ -167,7 +167,7 @@ protected:
 
 private:
   static JSBool
-  _GetEventListener(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  _GetEventListener(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
     JS_ASSERT(JSID_TO_INT(aIdval) >= 0 && JSID_TO_INT(aIdval) < STRING_COUNT);
@@ -193,7 +193,7 @@ private:
   }
 
   static JSBool
-  _SetEventListener(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSBool aStrict,
+  _SetEventListener(JSContext* aCx, JSObject* aObj, jsid aIdval, JSBool aStrict,
                    jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
@@ -233,7 +233,7 @@ private:
   }
 
   static JSBool
-  GetSelf(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetSelf(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
     if (!GetInstancePrivate(aCx, aObj, "self")) {
       return false;
@@ -244,7 +244,7 @@ private:
   }
 
   static JSBool
-  GetLocation(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetLocation(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
     WorkerGlobalScope* scope =
       GetInstancePrivate(aCx, aObj, sProperties[SLOT_location].name);
@@ -333,7 +333,7 @@ private:
   }
 
   static JSBool
-  GetOnErrorListener(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetOnErrorListener(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
     const char* name = sEventStrings[STRING_onerror];
     WorkerGlobalScope* scope = GetInstancePrivate(aCx, aObj, name);
@@ -364,7 +364,7 @@ private:
   }
 
   static JSBool
-  SetOnErrorListener(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval,
+  SetOnErrorListener(JSContext* aCx, JSObject* aObj, jsid aIdval,
                      JSBool aStrict, jsval* aVp)
   {
     const char* name = sEventStrings[STRING_onerror];
@@ -407,7 +407,7 @@ private:
   }
 
   static JSBool
-  GetNavigator(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetNavigator(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
     WorkerGlobalScope* scope =
       GetInstancePrivate(aCx, aObj, sProperties[SLOT_navigator].name);
@@ -734,7 +734,7 @@ protected:
 
 private:
   static JSBool
-  _GetEventListener(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  _GetEventListener(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
     JS_ASSERT(JSID_TO_INT(aIdval) >= 0 && JSID_TO_INT(aIdval) < STRING_COUNT);
@@ -760,7 +760,7 @@ private:
   }
 
   static JSBool
-  _SetEventListener(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSBool aStrict,
+  _SetEventListener(JSContext* aCx, JSObject* aObj, jsid aIdval, JSBool aStrict,
                     jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
@@ -813,7 +813,7 @@ private:
   }
 
   static JSBool
-  Resolve(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, unsigned aFlags,
+  Resolve(JSContext* aCx, JSObject* aObj, jsid aId, unsigned aFlags,
           JSObject** aObjp)
   {
     JSBool resolved;
@@ -821,7 +821,7 @@ private:
       return false;
     }
 
-    *aObjp = resolved ? aObj.value() : NULL;
+    *aObjp = resolved ? aObj : NULL;
     return true;
   }
 

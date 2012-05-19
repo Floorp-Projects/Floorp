@@ -392,8 +392,9 @@ JSSubString js_EmptySubString = {0, js_empty_ucstr};
 static const unsigned STRING_ELEMENT_ATTRS = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
 
 static JSBool
-str_enumerate(JSContext *cx, HandleObject obj)
+str_enumerate(JSContext *cx, JSObject *obj_)
 {
+    RootedVarObject obj(cx, obj_);
     RootedVarString str(cx, obj->asString().unbox());
     for (size_t i = 0, length = str->length(); i < length; i++) {
         JSString *str1 = js_NewDependentString(cx, str, i, 1);
@@ -410,11 +411,13 @@ str_enumerate(JSContext *cx, HandleObject obj)
 }
 
 static JSBool
-str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+str_resolve(JSContext *cx, JSObject *obj_, jsid id, unsigned flags,
             JSObject **objp)
 {
     if (!JSID_IS_INT(id))
         return JS_TRUE;
+
+    RootedVarObject obj(cx, obj_);
 
     JSString *str = obj->asString().unbox();
 
@@ -3322,8 +3325,8 @@ js_ValueToSource(JSContext *cx, const Value &v)
 
     Value rval = NullValue();
     Value fval;
-    RootedVarId id(cx, NameToId(cx->runtime->atomState.toSourceAtom));
-    if (!GetMethod(cx, RootedVarObject(cx, &v.toObject()), id, 0, &fval))
+    jsid id = NameToId(cx->runtime->atomState.toSourceAtom);
+    if (!js_GetMethod(cx, RootedVarObject(cx, &v.toObject()), id, 0, &fval))
         return NULL;
     if (js_IsCallable(fval)) {
         if (!Invoke(cx, v, fval, 0, NULL, &rval))

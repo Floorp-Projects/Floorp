@@ -282,13 +282,14 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id,
 
     RootedVarObject obj(cx, obj_), closure(cx, closure_);
 
-    JSObject *origobj = obj;
-    obj = GetInnerObject(cx, obj);
-    if (!obj)
-        return false;
-
+    JSObject *origobj;
     Value v;
     unsigned attrs;
+
+    origobj = obj;
+    OBJ_TO_INNER_OBJECT(cx, obj.reference());
+    if (!obj)
+        return false;
 
     RootedVarId propid(cx);
 
@@ -820,7 +821,7 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, Shape *shape, JSPropertyDesc *pd)
         lastException = cx->getPendingException();
     cx->clearPendingException();
 
-    if (!baseops::GetProperty(cx, obj, RootedVarId(cx, shape->propid()), &pd->value)) {
+    if (!js_GetProperty(cx, obj, shape->propid(), &pd->value)) {
         if (!cx->isExceptionPending()) {
             pd->flags = JSPD_ERROR;
             pd->value = JSVAL_VOID;
@@ -854,10 +855,8 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, Shape *shape, JSPropertyDesc *pd)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
+JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
 {
-    RootedVarObject obj(cx, obj_);
-
     assertSameCompartment(cx, obj);
     uint32_t i = 0;
     JSPropertyDesc *pd = NULL;

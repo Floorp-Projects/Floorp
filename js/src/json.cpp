@@ -313,8 +313,8 @@ PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, Stringi
     /* Step 2. */
     if (vp->isObject()) {
         Value toJSON;
-        RootedVarId id(cx, NameToId(cx->runtime->atomState.toJSONAtom));
-        if (!GetMethod(cx, RootedVarObject(cx, &vp->toObject()), id, 0, &toJSON))
+        jsid id = NameToId(cx->runtime->atomState.toJSONAtom);
+        if (!js_GetMethod(cx, RootedVarObject(cx, &vp->toObject()), id, 0, &toJSON))
             return false;
 
         if (js_IsCallable(toJSON)) {
@@ -435,7 +435,6 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
 
     /* Steps 8-10, 13. */
     bool wroteMember = false;
-    RootedVarId id(cx);
     for (size_t i = 0, len = propertyList.length(); i < len; i++) {
         /*
          * Steps 8a-8b.  Note that the call to Str is broken up into 1) getting
@@ -444,11 +443,11 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
          * values which process to |undefined|, and 4) stringifying all values
          * which pass the filter.
          */
-        id = propertyList[i];
+        const jsid &id = propertyList[i];
         Value outputValue;
         if (!obj->getGeneric(cx, id, &outputValue))
             return false;
-        if (!PreprocessValue(cx, obj, id.reference(), &outputValue, scx))
+        if (!PreprocessValue(cx, obj, id, &outputValue, scx))
             return false;
         if (IsFilteredValue(outputValue))
             continue;
@@ -754,7 +753,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space, StringB
         return false;
 
     /* Step 10. */
-    RootedVarId emptyId(cx, NameToId(cx->runtime->atomState.emptyAtom));
+    jsid emptyId = NameToId(cx->runtime->atomState.emptyAtom);
     if (!DefineNativeProperty(cx, wrapper, emptyId, *vp, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_ENUMERATE, 0, 0))
     {
@@ -766,7 +765,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space, StringB
     if (!scx.init())
         return false;
 
-    if (!PreprocessValue(cx, wrapper, emptyId.reference(), vp, &scx))
+    if (!PreprocessValue(cx, wrapper, emptyId, vp, &scx))
         return false;
     if (IsFilteredValue(*vp))
         return true;
@@ -776,7 +775,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space, StringB
 
 /* ES5 15.12.2 Walk. */
 static bool
-Walk(JSContext *cx, HandleObject holder, HandleId name, const Value &reviver, Value *vp)
+Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -796,9 +795,9 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, const Value &reviver, Va
             uint32_t length = obj->getArrayLength();
 
             /* Step 2a(i), 2a(iii-iv). */
-            RootedVarId id(cx);
             for (uint32_t i = 0; i < length; i++) {
-                if (!IndexToId(cx, i, id.address()))
+                jsid id;
+                if (!IndexToId(cx, i, &id))
                     return false;
 
                 /* Step 2a(iii)(1). */
@@ -833,11 +832,10 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, const Value &reviver, Va
                 return false;
 
             /* Step 2b(ii). */
-            RootedVarId id(cx);
             for (size_t i = 0, len = keys.length(); i < len; i++) {
                 /* Step 2b(ii)(1). */
                 Value newElement;
-                id = keys[i];
+                jsid id = keys[i];
                 if (!Walk(cx, obj, id, reviver, &newElement))
                     return false;
 
@@ -881,14 +879,15 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, const Value &reviver, Va
 static bool
 Revive(JSContext *cx, const Value &reviver, Value *vp)
 {
-    RootedVarObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+
+    JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass);
     if (!obj)
         return false;
 
     if (!obj->defineProperty(cx, cx->runtime->atomState.emptyAtom, *vp))
         return false;
 
-    return Walk(cx, obj, RootedVarId(cx, NameToId(cx->runtime->atomState.emptyAtom)), reviver, vp);
+    return Walk(cx, obj, NameToId(cx->runtime->atomState.emptyAtom), reviver, vp);
 }
 
 namespace js {

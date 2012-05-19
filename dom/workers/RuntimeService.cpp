@@ -394,7 +394,7 @@ BEGIN_WORKERS_NAMESPACE
 
 // Entry point for the DOM.
 JSBool
-ResolveWorkerClasses(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, unsigned aFlags,
+ResolveWorkerClasses(JSContext* aCx, JSObject* aObj, jsid aId, unsigned aFlags,
                      JSObject** aObjp)
 {
   AssertIsOnMainThread();
@@ -423,7 +423,7 @@ ResolveWorkerClasses(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, unsign
   bool shouldResolve = false;
 
   for (PRUint32 i = 0; i < ID_COUNT; i++) {
-    if (gStringIDs[i] == aId) {
+    if (aId == gStringIDs[i]) {
       nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
       NS_ASSERTION(ssm, "This should never be null!");
 
@@ -437,7 +437,7 @@ ResolveWorkerClasses(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, unsign
 
       // Don't resolve if this is ChromeWorker and we're not chrome. Otherwise
       // always resolve.
-      shouldResolve = gStringIDs[ID_ChromeWorker] == aId ? isChrome : true;
+      shouldResolve = aId == gStringIDs[ID_ChromeWorker] ? isChrome : true;
       break;
     }
   }

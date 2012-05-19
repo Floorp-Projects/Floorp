@@ -162,7 +162,7 @@ JSPrincipals *gJSPrincipals = nsnull;
 nsAutoString *gWorkingDirectory = nsnull;
 
 static JSBool
-GetLocationProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
+GetLocationProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
 #if !defined(XP_WIN) && !defined(XP_UNIX)
     //XXX: your platform should really implement this
@@ -848,7 +848,7 @@ JSClass global_class = {
 };
 
 static JSBool
-env_setProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp)
+env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_OS2 && !defined SOLARIS
@@ -901,7 +901,7 @@ env_setProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
 }
 
 static JSBool
-env_enumerate(JSContext *cx, JSHandleObject obj)
+env_enumerate(JSContext *cx, JSObject *obj)
 {
     static JSBool reflected;
     char **evp, *name, *value;
@@ -933,7 +933,7 @@ env_enumerate(JSContext *cx, JSHandleObject obj)
 }
 
 static JSBool
-env_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
+env_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
             JSObject **objp)
 {
     JSString *idstr, *valstr;

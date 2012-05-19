@@ -421,14 +421,14 @@ public:
   NS_IMETHOD OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                          JSObject * obj, JSObject * *_retval);
 
-  static JSBool GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
-                                              JSHandleId id, unsigned flags,
+  static JSBool GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
+                                              jsid id, unsigned flags,
                                               JSObject **objp);
-  static JSBool GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
-                                               JSHandleId id, jsval *vp);
-  static JSBool SecurityCheckOnAddDelProp(JSContext *cx, JSHandleObject obj, JSHandleId id,
+  static JSBool GlobalScopePolluterGetProperty(JSContext *cx, JSObject *obj,
+                                               jsid id, jsval *vp);
+  static JSBool SecurityCheckOnAddDelProp(JSContext *cx, JSObject *obj, jsid id,
                                           jsval *vp);
-  static JSBool SecurityCheckOnSetProp(JSContext *cx, JSHandleObject obj, JSHandleId id,
+  static JSBool SecurityCheckOnSetProp(JSContext *cx, JSObject *obj, jsid id,
                                        JSBool strict, jsval *vp);
   static void InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
@@ -794,19 +794,19 @@ protected:
                                        nsContentList **nodeList);
 
 public:
-  static JSBool DocumentAllGetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id,
+  static JSBool DocumentAllGetProperty(JSContext *cx, JSObject *obj, jsid id,
                                        jsval *vp);
-  static JSBool DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id,
+  static JSBool DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsid id,
                                       unsigned flags, JSObject **objp);
   static void ReleaseDocument(JSFreeOp *fop, JSObject *obj);
   static JSBool CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp);
-  static JSBool DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj,
-                                             JSHandleId id, jsval *vp);
-  static JSBool DocumentAllHelperNewResolve(JSContext *cx, JSHandleObject obj,
-                                            JSHandleId id, unsigned flags,
+  static JSBool DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
+                                             jsid id, jsval *vp);
+  static JSBool DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,
+                                            jsid id, unsigned flags,
                                             JSObject **objp);
-  static JSBool DocumentAllTagsNewResolve(JSContext *cx, JSHandleObject obj,
-                                          JSHandleId id, unsigned flags,
+  static JSBool DocumentAllTagsNewResolve(JSContext *cx, JSObject *obj,
+                                          jsid id, unsigned flags,
                                           JSObject **objp);
 
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,

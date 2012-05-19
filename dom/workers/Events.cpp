@@ -253,7 +253,7 @@ private:
   }
 
   static JSBool
-  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetProperty(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
@@ -269,7 +269,7 @@ private:
   }
 
   static JSBool
-  GetConstant(JSContext* aCx, JSHandleObject aObj, JSHandleId idval, jsval* aVp)
+  GetConstant(JSContext* aCx, JSObject* aObj, jsid idval, jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(idval));
     JS_ASSERT(JSID_TO_INT(idval) >= CAPTURING_PHASE &&
@@ -543,7 +543,7 @@ private:
   }
 
   static JSBool
-  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetProperty(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
@@ -751,7 +751,7 @@ private:
   }
 
   static JSBool
-  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetProperty(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
@@ -931,7 +931,7 @@ private:
   }
 
   static JSBool
-  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetProperty(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 

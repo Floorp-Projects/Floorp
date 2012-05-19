@@ -5246,8 +5246,8 @@ static JSClass sGlobalScopePolluterClass = {
 
 // static
 JSBool
-nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
-                                           JSHandleId id, jsval *vp)
+nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSObject *obj,
+                                           jsid id, jsval *vp)
 {
   // Someone is accessing a element by referencing its name/id in the
   // global scope, do a security check to make sure that's ok.
@@ -5273,7 +5273,7 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
 
 // static
 JSBool
-nsWindowSH::SecurityCheckOnAddDelProp(JSContext *cx, JSHandleObject obj, JSHandleId id,
+nsWindowSH::SecurityCheckOnAddDelProp(JSContext *cx, JSObject *obj, jsid id,
                                       jsval *vp)
 {
   // Someone is accessing a element by referencing its name/id in the
@@ -5291,7 +5291,7 @@ nsWindowSH::SecurityCheckOnAddDelProp(JSContext *cx, JSHandleObject obj, JSHandl
 
 // static
 JSBool
-nsWindowSH::SecurityCheckOnSetProp(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
+nsWindowSH::SecurityCheckOnSetProp(JSContext *cx, JSObject *obj, jsid id, JSBool strict,
                                    jsval *vp)
 {
   return SecurityCheckOnAddDelProp(cx, obj, id, vp);
@@ -5306,8 +5306,8 @@ GetDocument(JSObject *obj)
 
 // static
 JSBool
-nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
-                                          JSHandleId id, unsigned flags,
+nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
+                                          jsid id, unsigned flags,
                                           JSObject **objp)
 {
   if (flags & (JSRESOLVE_ASSIGNING | JSRESOLVE_DECLARING |
@@ -5796,7 +5796,7 @@ static const IDBConstant sIDBConstants[] = {
 };
 
 static JSBool
-IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval* vp)
+IDBConstantGetter(JSContext *cx, JSObject *obj, jsid id, jsval* vp)
 {
   MOZ_ASSERT(JSID_IS_INT(id));
   
@@ -6931,7 +6931,7 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
 
 template<class Interface>
 static JSBool
-LocationSetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
+LocationSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict,
                jsval *vp)
 {
   nsresult rv = LocationSetterGuts<Interface>(cx, obj, vp);
@@ -6946,11 +6946,9 @@ LocationSetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
 }
 
 static JSBool
-LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBool strict,
+LocationSetterUnwrapper(JSContext *cx, JSObject *obj, jsid id, JSBool strict,
                         jsval *vp)
 {
-  JS::RootedVarObject obj(cx, obj_);
-
   JSObject *wrapped = XPCWrapper::UnsafeUnwrapSecurityWrapper(obj);
   if (wrapped) {
     obj = wrapped;
@@ -6961,12 +6959,9 @@ LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBoo
 
 NS_IMETHODIMP
 nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj_, jsid id_, PRUint32 flags,
+                       JSObject *obj, jsid id, PRUint32 flags,
                        JSObject **objp, bool *_retval)
 {
-  JS::RootedVarObject obj(cx, obj_);
-  JS::RootedVarId id(cx, id_);
-
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
 
   if (!JSID_IS_STRING(id)) {
@@ -7062,7 +7057,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // We want this code to be before the child frame lookup code
     // below so that a child frame named 'constructor' doesn't
     // shadow the window's constructor property.
-    if (sConstructor_id == id) {
+    if (id == sConstructor_id) {
       return ResolveConstructor(cx, obj, objp);
     }
   }
@@ -7074,7 +7069,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  if (sLocation_id == id) {
+  if (id == sLocation_id) {
     // This must be done even if we're just getting the value of
     // window.location (i.e. no checking flags & JSRESOLVE_ASSIGNING
     // here) since we must define window.location to prevent the
@@ -7213,7 +7208,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  if (s_content_id == id) {
+  if (id == s_content_id) {
     // Map window._content to window.content for backwards
     // compatibility, this should spit out an message on the JS
     // console.
@@ -7262,7 +7257,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return NS_OK;
     }
   } else {
-    if (sNavigator_id == id) {
+    if (id == sNavigator_id) {
       nsCOMPtr<nsIDOMNavigator> navigator;
       rv = win->GetNavigator(getter_AddRefs(navigator));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -7285,7 +7280,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return NS_OK;
     }
 
-    if (sDocument_id == id) {
+    if (id == sDocument_id) {
       nsCOMPtr<nsIDOMDocument> document;
       rv = win->GetDocument(getter_AddRefs(document));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -7319,7 +7314,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return NS_OK;
     }
 
-    if (sDialogArguments_id == id && win->IsModalContentWindow()) {
+    if (id == sDialogArguments_id && win->IsModalContentWindow()) {
       nsCOMPtr<nsIArray> args;
       ((nsGlobalModalWindow *)win)->GetDialogArguments(getter_AddRefs(args));
 
@@ -7607,7 +7602,7 @@ nsNavigatorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
 template<nsresult (*func)(JSContext *cx, JSObject *obj, jsval *vp)>
 static JSBool
-GetterShim(JSContext *cx, JSHandleObject obj, JSHandleId /* unused */, jsval *vp)
+GetterShim(JSContext *cx, JSObject *obj, jsid /* unused */, jsval *vp)
 {
   nsresult rv = (*func)(cx, obj, vp);
   if (NS_FAILED(rv)) {
@@ -8788,16 +8783,14 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
 }
 
 JSBool
-nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
-                                         JSHandleId id, jsval *vp)
+nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
+                                         jsid id, jsval *vp)
 {
-  JSObject *obj = obj_;
-
   // document.all.item and .namedItem get their value in the
   // newResolve hook, so nothing to do for those properties here. And
   // we need to return early to prevent <div id="item"> from shadowing
   // document.all.item(), etc.
-  if (sItem_id == id || sNamedItem_id == id) {
+  if (id == sItem_id || id == sNamedItem_id) {
     return JS_TRUE;
   }
 
@@ -8817,7 +8810,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
   nsresult rv = NS_OK;
 
   if (JSID_IS_STRING(id)) {
-    if (sLength_id == id) {
+    if (id == sLength_id) {
       // Map document.all.length to the length of the collection
       // document.getElementsByTagName("*"), and make sure <div
       // id="length"> doesn't shadow document.all.length.
@@ -8839,7 +8832,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
       *vp = INT_TO_JSVAL(length);
 
       return JS_TRUE;
-    } else if (sTags_id != id) {
+    } else if (id != sTags_id) {
       // For all other strings, look for an element by id or name.
 
       nsDependentJSString str(id);
@@ -8887,7 +8880,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
 }
 
 JSBool
-nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id,
+nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsid id,
                                         unsigned flags, JSObject **objp)
 {
   if (flags & JSRESOLVE_ASSIGNING) {
@@ -8898,7 +8891,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
 
   jsval v = JSVAL_VOID;
 
-  if (sItem_id == id || sNamedItem_id == id) {
+  if (id == sItem_id || id == sNamedItem_id) {
     // Define the item() or namedItem() method.
 
     JSFunction *fnc = ::JS_DefineFunctionById(cx, obj, id, CallToGetPropMapper,
@@ -8908,14 +8901,14 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
     return fnc != nsnull;
   }
 
-  if (sLength_id == id) {
+  if (id == sLength_id) {
     // document.all.length. Any jsval other than undefined would do
     // here, all we need is to get into the code below that defines
     // this propery on obj, the rest happens in
     // DocumentAllGetProperty().
 
     v = JSVAL_ONE;
-  } else if (sTags_id == id) {
+  } else if (id == sTags_id) {
     nsHTMLDocument *doc = GetDocument(obj);
 
     JSObject *tags = ::JS_NewObject(cx, &sHTMLDocumentAllTagsClass, nsnull,
@@ -9025,10 +9018,10 @@ PrivateToFlags(void *priv)
 }
 
 JSBool
-nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj,
-                                               JSHandleId id, JS::Value *vp)
+nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
+                                               jsid id, JS::Value *vp)
 {
-  if (nsDOMClassInfo::sAll_id != id) {
+  if (id != nsDOMClassInfo::sAll_id) {
     return JS_TRUE;
   }
 
@@ -9084,11 +9077,11 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj
 }
 
 JSBool
-nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSHandleObject obj,
-                                              JSHandleId id, unsigned flags,
+nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,
+                                              jsid id, unsigned flags,
                                               JSObject **objp)
 {
-  if (nsDOMClassInfo::sAll_id == id) {
+  if (id == nsDOMClassInfo::sAll_id) {
     // document.all is resolved for the first time. Define it.
     JSObject *helper = GetDocumentAllHelper(obj);
 
@@ -9107,8 +9100,8 @@ nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSHandleObject obj,
 
 
 JSBool
-nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSHandleObject obj,
-                                            JSHandleId id, unsigned flags,
+nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSObject *obj,
+                                            jsid id, unsigned flags,
                                             JSObject **objp)
 {
   if (JSID_IS_STRING(id)) {

@@ -244,7 +244,7 @@ extern JSType
 TypeOfValue(JSContext *cx, const Value &v);
 
 extern JSBool
-HasInstance(JSContext *cx, HandleObject obj, const js::Value *v, JSBool *bp);
+HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
 
 /*
  * A linked list of the |FrameRegs regs;| variables belonging to all

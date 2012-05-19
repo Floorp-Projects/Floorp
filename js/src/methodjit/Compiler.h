@@ -405,7 +405,7 @@ class Compiler : public BaseCompiler
     /* SSA information for the outer script and all frames we will be inlining. */
     analyze::CrossScriptSSA ssa;
 
-    RootedVar<GlobalObject*> globalObj;
+    GlobalObject *globalObj;
     const HeapSlot *globalSlots;  /* Original slots pointer. */
 
     Assembler masm;
@@ -589,8 +589,8 @@ private:
     types::TypeSet *pushedTypeSet(uint32_t which);
     bool monitored(jsbytecode *pc);
     bool hasTypeBarriers(jsbytecode *pc);
-    bool testSingletonProperty(HandleObject obj, HandleId id);
-    bool testSingletonPropertyTypes(FrameEntry *top, HandleId id, bool *testObject);
+    bool testSingletonProperty(JSObject *obj, jsid id);
+    bool testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testObject);
     CompileStatus addInlineFrame(JSScript *script, uint32_t depth, uint32_t parent, jsbytecode *parentpc);
     CompileStatus scanInlineCalls(uint32_t index, uint32_t depth);
     CompileStatus checkAnalysis(JSScript *script);

@@ -89,7 +89,7 @@ static void
 exn_finalize(FreeOp *fop, JSObject *obj);
 
 static JSBool
-exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+exn_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
             JSObject **objp);
 
 Class js::ErrorClass = {
@@ -301,8 +301,8 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
              */
             if (checkAccess && i.isNonEvalFunctionFrame()) {
                 Value v = NullValue();
-                RootedVarId callerid(cx, NameToId(cx->runtime->atomState.callerAtom));
-                if (!checkAccess(cx, RootedVarObject(cx, i.callee()), callerid, JSACC_READ, &v))
+                jsid callerid = NameToId(cx->runtime->atomState.callerAtom);
+                if (!checkAccess(cx, i.callee(), callerid, JSACC_READ, &v))
                     break;
             }
 
@@ -418,7 +418,7 @@ exn_finalize(FreeOp *fop, JSObject *obj)
 }
 
 static JSBool
-exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+exn_resolve(JSContext *cx, JSObject *obj_, jsid id, unsigned flags,
             JSObject **objp)
 {
     JSExnPrivate *priv;
@@ -428,6 +428,8 @@ exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     const char *prop;
     jsval v;
     unsigned attrs;
+
+    RootedVarObject obj(cx, obj_);
 
     *objp = NULL;
     priv = GetExnPrivate(obj);

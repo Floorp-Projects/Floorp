@@ -2563,8 +2563,10 @@ typedef struct ComplexObject {
 } ComplexObject;
 
 static JSBool
-sandbox_enumerate(JSContext *cx, HandleObject obj)
+sandbox_enumerate(JSContext *cx, JSObject *obj_)
 {
+    RootedVarObject obj(cx, obj_);
+
     jsval v;
     JSBool b;
 
@@ -2576,9 +2578,12 @@ sandbox_enumerate(JSContext *cx, HandleObject obj)
 }
 
 static JSBool
-sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+sandbox_resolve(JSContext *cx, JSObject *obj_, jsid id_, unsigned flags,
                 JSObject **objp)
 {
+    RootedVarObject obj(cx, obj_);
+    RootedVarId id(cx, id_);
+
     jsval v;
     JSBool b, resolved;
 
@@ -2636,8 +2641,8 @@ static JSBool
 EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSString *str;
-    RootedVarObject sobj(cx);
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S / o", &str, sobj.address()))
+    JSObject *sobj = NULL;
+    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S / o", &str, &sobj))
         return false;
 
     size_t srclen;
@@ -2681,7 +2686,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
                 return false;
         }
 
-        sobj = GetInnerObject(cx, sobj);
+        OBJ_TO_INNER_OBJECT(cx, sobj);
         if (!sobj)
             return false;
         if (!(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
@@ -2774,13 +2779,15 @@ ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
  * non-native referent may be simplified to data properties.
  */
 static JSBool
-CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id,
+CopyProperty(JSContext *cx, JSObject *obj_, JSObject *referent, jsid id,
              unsigned lookupFlags, JSObject **objp)
 {
     JSProperty *prop;
     PropertyDescriptor desc;
     unsigned propFlags = 0;
     JSObject *obj2;
+
+    RootedVarObject obj(cx, obj_);
 
     *objp = NULL;
     if (referent->isNative()) {
@@ -2832,23 +2839,23 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
 }
 
 static JSBool
-resolver_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags, JSObject **objp)
+resolver_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSObject **objp)
 {
     jsval v = JS_GetReservedSlot(obj, 0);
-    return CopyProperty(cx, obj, RootedVarObject(cx, JSVAL_TO_OBJECT(v)), id, flags, objp);
+    return CopyProperty(cx, obj, JSVAL_TO_OBJECT(v), id, flags, objp);
 }
 
 static JSBool
-resolver_enumerate(JSContext *cx, HandleObject obj)
+resolver_enumerate(JSContext *cx, JSObject *obj)
 {
     jsval v = JS_GetReservedSlot(obj, 0);
-    RootedVarObject referent(cx, JSVAL_TO_OBJECT(v));
+    JSObject *referent = JSVAL_TO_OBJECT(v);
 
     AutoIdArray ida(cx, JS_Enumerate(cx, referent));
     bool ok = !!ida;
     JSObject *ignore;
     for (size_t i = 0; ok && i < ida.length(); i++)
-        ok = CopyProperty(cx, obj, referent, RootedVarId(cx, ida[i]), JSRESOLVE_QUALIFIED, &ignore);
+        ok = CopyProperty(cx, obj, referent, ida[i], JSRESOLVE_QUALIFIED, &ignore);
     return ok;
 }
 
@@ -3204,7 +3211,7 @@ Parent(JSContext *cx, unsigned argc, jsval *vp)
     /* Outerize if necessary.  Embrace the ugliness! */
     if (parent) {
         if (JSObjectOp op = parent->getClass()->ext.outerObject)
-            *vp = OBJECT_TO_JSVAL(op(cx, RootedVarObject(cx, parent)));
+            *vp = OBJECT_TO_JSVAL(op(cx, parent));
     }
 
     return JS_TRUE;
@@ -3934,10 +3941,10 @@ enum its_tinyid {
 };
 
 static JSBool
-its_getter(JSContext *cx, HandleObject obj, HandleId id, jsval *vp);
+its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp);
+its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
 static JSBool
 its_get_customNative(JSContext *cx, unsigned argc, jsval *vp);
@@ -3967,7 +3974,7 @@ static JSBool its_noisy;    /* whether to be noisy when finalizing it */
 static JSBool its_enum_fail;/* whether to fail when enumerating it */
 
 static JSBool
-its_addProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
+its_addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     if (!its_noisy)
         return JS_TRUE;
@@ -3980,7 +3987,7 @@ its_addProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
 }
 
 static JSBool
-its_delProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
+its_delProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     if (!its_noisy)
         return JS_TRUE;
@@ -3993,7 +4000,7 @@ its_delProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
 }
 
 static JSBool
-its_getProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
+its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     if (!its_noisy)
         return JS_TRUE;
@@ -4006,7 +4013,7 @@ its_getProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
 }
 
 static JSBool
-its_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp)
+its_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
     IdStringifier idString(cx, id);
     if (its_noisy) {
@@ -4031,7 +4038,7 @@ its_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsv
  * see class flags.
  */
 static JSBool
-its_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
+its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
               jsval *statep, jsid *idp)
 {
     JSObject *iterator;
@@ -4075,7 +4082,7 @@ its_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
 }
 
 static JSBool
-its_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+its_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
             JSObject **objp)
 {
     if (its_noisy) {
@@ -4090,7 +4097,7 @@ its_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 }
 
 static JSBool
-its_convert(JSContext *cx, HandleObject obj, JSType type, jsval *vp)
+its_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     if (its_noisy)
         fprintf(gOutFile, "converting it to %s type\n", JS_GetTypeName(cx, type));
@@ -4119,7 +4126,7 @@ static JSClass its_class = {
 };
 
 static JSBool
-its_getter(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
+its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     if (JS_GetClass(obj) == &its_class) {
         jsval *val = (jsval *) JS_GetPrivate(obj);
@@ -4132,7 +4139,7 @@ its_getter(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
 }
 
 static JSBool
-its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp)
+its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
     if (JS_GetClass(obj) != &its_class)
         return JS_TRUE;
@@ -4377,7 +4384,7 @@ Exec(JSContext *cx, unsigned argc, jsval *vp)
 #endif
 
 static JSBool
-global_enumerate(JSContext *cx, HandleObject obj)
+global_enumerate(JSContext *cx, JSObject *obj)
 {
 #ifdef LAZY_STANDARD_CLASSES
     return JS_EnumerateStandardClasses(cx, obj);
@@ -4387,9 +4394,11 @@ global_enumerate(JSContext *cx, HandleObject obj)
 }
 
 static JSBool
-global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+global_resolve(JSContext *cx, JSObject *obj_, jsid id, unsigned flags,
                JSObject **objp)
 {
+    RootedVarObject obj(cx, obj_);
+
 #ifdef LAZY_STANDARD_CLASSES
     JSBool resolved;
 
@@ -4464,7 +4473,7 @@ JSClass global_class = {
 };
 
 static JSBool
-env_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp)
+env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_OS2 && !defined SOLARIS
@@ -4508,7 +4517,7 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsv
 }
 
 static JSBool
-env_enumerate(JSContext *cx, HandleObject obj)
+env_enumerate(JSContext *cx, JSObject *obj)
 {
     static JSBool reflected;
     char **evp, *name, *value;
@@ -4540,7 +4549,7 @@ env_enumerate(JSContext *cx, HandleObject obj)
 }
 
 static JSBool
-env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+env_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
             JSObject **objp)
 {
     JSString *valstr;
@@ -4903,7 +4912,7 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
 JSPrincipals shellTrustedPrincipals = { 1 };
 
 JSBool
-CheckObjectAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mode, jsval *vp)
+CheckObjectAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode, jsval *vp)
 {
     return true;
 }
