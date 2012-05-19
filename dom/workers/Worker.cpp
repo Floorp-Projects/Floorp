@@ -187,7 +187,7 @@ private:
   ~Worker();
 
   static JSBool
-  GetEventListener(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
+  GetEventListener(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
     JS_ASSERT(JSID_TO_INT(aIdval) >= 0 && JSID_TO_INT(aIdval) < STRING_COUNT);
@@ -211,7 +211,7 @@ private:
   }
 
   static JSBool
-  SetEventListener(JSContext* aCx, JSObject* aObj, jsid aIdval, JSBool aStrict,
+  SetEventListener(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSBool aStrict,
                    jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));

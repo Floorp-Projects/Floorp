@@ -5,7 +5,7 @@
 #include "tests.h"
 
 static JSBool
-nativeGet(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+nativeGet(JSContext *cx, JS::HandleObject obj, JS::HandleId id, jsval *vp)
 {
     *vp = INT_TO_JSVAL(17);
     return JS_TRUE;

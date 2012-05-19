@@ -74,7 +74,7 @@ extern "C" {
 #endif
 
 static JSBool
-global_enumerate(JSContext *cx, JSObject *obj)
+global_enumerate(JSContext *cx, JSHandleObject obj)
 {
 #ifdef LAZY_STANDARD_CLASSES
     return JS_EnumerateStandardClasses(cx, obj);
@@ -84,7 +84,7 @@ global_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-global_resolve(JSContext *cx, JSObject *obj, jsval id, unsigned flags, JSObject **objp)
+global_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags, JSObject **objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
     if ((flags & JSRESOLVE_ASSIGNING) == 0) {

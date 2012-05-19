@@ -298,51 +298,49 @@ Shape::getUserId(JSContext *cx, jsid *idp) const
 }
 
 inline bool
-Shape::get(JSContext* cx, JSObject *receiver, JSObject* obj, JSObject *pobj, js::Value* vp) const
+Shape::get(JSContext* cx, HandleObject receiver, JSObject* obj, JSObject *pobj, Value* vp) const
 {
     JS_ASSERT(!hasDefaultGetter());
 
     if (hasGetterValue()) {
-        js::Value fval = getterValue();
-        return js::InvokeGetterOrSetter(cx, receiver, fval, 0, 0, vp);
+        Value fval = getterValue();
+        return InvokeGetterOrSetter(cx, receiver, fval, 0, 0, vp);
     }
 
-    /*
-     * |with (it) color;| ends up here, as do XML filter-expressions.
-     * Avoid exposing the With object to native getters.
-     */
-    if (obj->isWith())
-        obj = &obj->asWith().object();
-
-    jsid id;
-    if (!getUserId(cx, &id))
+    RootedVarId id(cx);
+    if (!getUserId(cx, id.address()))
         return false;
 
-    return js::CallJSPropertyOp(cx, getterOp(), receiver, id, vp);
+    return CallJSPropertyOp(cx, getterOp(), receiver, id, vp);
 }
 
 inline bool
-Shape::set(JSContext* cx, JSObject* obj, bool strict, js::Value* vp) const
+Shape::set(JSContext* cx, HandleObject obj, bool strict, Value* vp) const
 {
     JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
 
     if (attrs & JSPROP_SETTER) {
-        js::Value fval = setterValue();
-        return js::InvokeGetterOrSetter(cx, obj, fval, 1, vp, vp);
+        Value fval = setterValue();
+        return InvokeGetterOrSetter(cx, obj, fval, 1, vp, vp);
     }
 
     if (attrs & JSPROP_GETTER)
         return js_ReportGetterOnlyAssignment(cx);
 
-    /* See the comment in js::Shape::get as to why we check for With. */
-    if (obj->isWith())
-        obj = &obj->asWith().object();
-
-    jsid id;
-    if (!getUserId(cx, &id))
+    RootedVarId id(cx);
+    if (!getUserId(cx, id.address()))
         return false;
 
-    return js::CallJSPropertyOpSetter(cx, setterOp(), obj, id, strict, vp);
+    /*
+     * |with (it) color;| ends up here, as do XML filter-expressions.
+     * Avoid exposing the With object to native setters.
+     */
+    if (obj->isWith()) {
+        RootedVarObject nobj(cx, &obj->asWith().object());
+        return CallJSPropertyOpSetter(cx, setterOp(), nobj, id, strict, vp);
+    }
+
+    return CallJSPropertyOpSetter(cx, setterOp(), obj, id, strict, vp);
 }
 
 inline void
