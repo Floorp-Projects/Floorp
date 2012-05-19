@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>test_db_sanity_1@tests.mozilla.org</em:id>
+    <em:version>1.0</em:version>
+    <em:bootstrap>true</em:bootstrap>
+
+    <em:name>Test 1</em:name>
+    <em:description>Test Description</em:description>
+    <em:creator>Keyboard Cat</em:creator>
+    <em:homepageURL>http://mozilla.org/</em:homepageURL>
+
+    <em:contributor>Keyboard Cat 2</em:contributor>
+    <em:translator>Keyboard Cat 3</em:translator>
+
+    <em:localized>
+      <Description>
+        <em:locale>en-1</em:locale>
+        <em:name>Test 1 (en-1)</em:name>
+        <em:description>Test Description (en-1)</em:description>
+        <em:creator>Keyboard Cat (en-1)</em:creator>
+        <em:homepageURL>http://mozilla.org/en-1/</em:homepageURL>
+      </Description>
+    </em:localized>
+
+    <em:localized>
+      <Description>
+        <em:locale>en-2</em:locale>
+        <em:name>Test 1 (en-2)</em:name>
+        <em:description>Test Description (en-2)</em:description>
+        <em:creator>Keyboard Cat (en-2)</em:creator>
+        <em:homepageURL>http://mozilla.org/en-2/</em:homepageURL>
+      </Description>
+    </em:localized>
+
+    <em:targetApplication>
+      <Description>
+        <em:id>xpcshell@tests.mozilla.org</em:id>
+        <em:minVersion>1</em:minVersion>
+        <em:maxVersion>1</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <em:targetApplication>
+      <Description>
+        <em:id>keyboard-cats-awesome-browser@keyboard.cat</em:id>
+        <em:minVersion>3.1415</em:minVersion>
+        <em:maxVersion>3.1415</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <em:targetPlatform>XPCShell_noarch-spidermonkey</em:targetPlatform>
+    <em:targetPlatform>WINNT_x86</em:targetPlatform>
+  </Description>
+</RDF>
