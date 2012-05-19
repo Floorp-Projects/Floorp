@@ -230,7 +230,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     /* Heavy lifting done, but lingering tasks remain. */
 
     /* ES5 15.1.2.1. */
-    jsid id = NameToId(cx->runtime->atomState.evalAtom);
+    RootedVarId id(cx, NameToId(cx->runtime->atomState.evalAtom));
     JSObject *evalobj = js_DefineFunction(cx, self, id, eval, 1, JSFUN_STUB_GSOPS);
     if (!evalobj)
         return NULL;

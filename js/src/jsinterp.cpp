@@ -194,9 +194,9 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, Value *vp)
 {
     RootedVarValue idval(cx, idval_);
 
-    jsid id = NameToId(cx->runtime->atomState.noSuchMethodAtom);
+    RootedVarId id(cx, NameToId(cx->runtime->atomState.noSuchMethodAtom));
     RootedVarValue value(cx);
-    if (!js_GetMethod(cx, obj, id, 0, value.address()))
+    if (!GetMethod(cx, obj, id, 0, value.address()))
         return false;
     TypeScript::MonitorUnknown(cx, cx->fp()->script(), cx->regs().pc);
 
@@ -207,7 +207,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, Value *vp)
         /* Extract the function name from function::name qname. */
         if (idval.reference().isObject()) {
             JSObject *obj = &idval.reference().toObject();
-            if (js_GetLocalNameFromFunctionQName(obj, &id, cx))
+            if (js_GetLocalNameFromFunctionQName(obj, id.address(), cx))
                 idval = IdToValue(id);
         }
 #endif
@@ -513,8 +513,8 @@ bool
 js::Execute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rval)
 {
     /* The scope chain could be anything, so innerize just in case. */
-    JSObject *scopeChain = &scopeChainArg;
-    OBJ_TO_INNER_OBJECT(cx, scopeChain);
+    RootedVarObject scopeChain(cx, &scopeChainArg);
+    scopeChain = GetInnerObject(cx, scopeChain);
     if (!scopeChain)
         return false;
 
@@ -542,7 +542,7 @@ js::Execute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rva
 }
 
 JSBool
-js::HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
+js::HasInstance(JSContext *cx, HandleObject obj, const Value *v, JSBool *bp)
 {
     Class *clasp = obj->getClass();
     if (clasp->hasInstance)
@@ -585,7 +585,7 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
 
             if (JSEqualityOp eq = l->getClass()->ext.equality) {
                 JSBool res;
-                if (!eq(cx, l, &rval, &res))
+                if (!eq(cx, RootedVarObject(cx, l), &rval, &res))
                     return false;
                 *result = !!res;
                 return true;
@@ -1030,7 +1030,7 @@ js::AssertValidPropertyCacheHit(JSContext *cx,
     if (JOF_OPMODE(*pc) == JOF_NAME)
         ok = FindProperty(cx, name, start, &obj, &pobj, &prop);
     else
-        ok = LookupProperty(cx, start, name, &pobj, &prop);
+        ok = baseops::LookupProperty(cx, start, name.reference(), &pobj, &prop);
     JS_ASSERT(ok);
 
     if (cx->runtime->gcNumber != sample)
@@ -1349,6 +1349,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     RootedVarFunction rootFunction0(cx);
     RootedVarTypeObject rootType0(cx);
     RootedVarPropertyName rootName0(cx);
+    RootedVarId rootId0(cx);
 
     if (rt->profilingScripts)
         ENABLE_INTERRUPTS();
@@ -1800,7 +1801,7 @@ END_CASE(JSOP_AND)
 #define FETCH_ELEMENT_ID(obj, n, id)                                          \
     JS_BEGIN_MACRO                                                            \
         const Value &idval_ = regs.sp[n];                                     \
-        if (!ValueToId(cx, obj, idval_, &id))                                 \
+        if (!ValueToId(cx, obj, idval_, id.address()))                        \
             goto error;                                                       \
     JS_END_MACRO
 
@@ -1829,7 +1830,7 @@ BEGIN_CASE(JSOP_IN)
     }
     RootedVarObject &obj = rootObject0;
     obj = &rref.toObject();
-    jsid id;
+    RootedVarId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
     JSObject *obj2;
     JSProperty *prop;
@@ -1944,7 +1945,7 @@ BEGIN_CASE(JSOP_ENUMCONSTELEM)
     const Value &ref = regs.sp[-3];
     JSObject *obj;
     FETCH_OBJECT(cx, -2, obj);
-    jsid id;
+    RootedVarId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -1, id);
     if (!obj->defineGeneric(cx, id, ref,
                             JS_PropertyStub, JS_StrictPropertyStub,
@@ -2329,7 +2330,8 @@ BEGIN_CASE(JSOP_DELELEM)
     JSObject *obj;
     FETCH_OBJECT(cx, -2, obj);
 
-    const Value &propval = regs.sp[-1];
+    RootedVarValue &propval = rootValue0;
+    propval = regs.sp[-1];
     Value &rval = regs.sp[-2];
 
     if (!obj->deleteByValue(cx, propval, &rval, script->strictModeCode))
@@ -2477,7 +2479,7 @@ BEGIN_CASE(JSOP_SETELEM)
 {
     RootedVarObject &obj = rootObject0;
     FETCH_OBJECT(cx, -3, obj);
-    jsid id;
+    RootedVarId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
     Value &value = regs.sp[-1];
     if (!SetObjectElementOperation(cx, obj, id, value, script->strictModeCode))
@@ -2494,7 +2496,7 @@ BEGIN_CASE(JSOP_ENUMELEM)
 
     /* Funky: the value to set is under the [obj, id] pair. */
     FETCH_OBJECT(cx, -2, obj);
-    jsid id;
+    RootedVarId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -1, id);
     rval = regs.sp[-3];
     if (!obj->setGeneric(cx, id, rval.address(), script->strictModeCode))
@@ -3065,7 +3067,7 @@ BEGIN_CASE(JSOP_GETTER)
 BEGIN_CASE(JSOP_SETTER)
 {
     JSOp op2 = JSOp(*++regs.pc);
-    jsid id;
+    RootedVarId &id = rootId0;
     Value rval;
     int i;
     JSObject *obj;
@@ -3229,12 +3231,14 @@ BEGIN_CASE(JSOP_INITPROP)
     obj = &regs.sp[-2].toObject();
     JS_ASSERT(obj->isObject());
 
+    RootedVarId &id = rootId0;
+
     PropertyName *name;
     LOAD_NAME(0, name);
-    jsid id = NameToId(name);
+    id = NameToId(name);
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
-        ? !js_SetPropertyHelper(cx, obj, id, 0, &rval, script->strictModeCode)
+        ? !baseops::SetPropertyHelper(cx, obj, id, 0, &rval, script->strictModeCode)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         goto error;
@@ -3258,7 +3262,7 @@ BEGIN_CASE(JSOP_INITELEM)
     obj = &lref.toObject();
 
     /* Fetch id now that we have obj. */
-    jsid id;
+    RootedVarId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
 
     /*
@@ -3351,7 +3355,8 @@ BEGIN_CASE(JSOP_INSTANCEOF)
         js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, NULL);
         goto error;
     }
-    JSObject *obj = &rref.toObject();
+    RootedVarObject &obj = rootObject0;
+    obj = &rref.toObject();
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
     if (!HasInstance(cx, obj, &lref, &cond))
@@ -3520,7 +3525,7 @@ BEGIN_CASE(JSOP_SETXMLNAME)
 
     JSObject *obj = &regs.sp[-3].toObject();
     Value rval = regs.sp[-1];
-    jsid id;
+    RootedVarId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
     if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
         goto error;
@@ -3537,8 +3542,8 @@ BEGIN_CASE(JSOP_XMLNAME)
 
     Value lval = regs.sp[-1];
     JSObject *obj;
-    jsid id;
-    if (!js_FindXMLProperty(cx, lval, &obj, &id))
+    RootedVarId &id = rootId0;
+    if (!js_FindXMLProperty(cx, lval, &obj, id.address()))
         goto error;
     Value rval;
     if (!obj->getGeneric(cx, id, &rval))
@@ -3814,7 +3819,8 @@ BEGIN_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(script->nfixed <= slot);
     JS_ASSERT(slot < script->nslots);
     CheckLocalAccess(regs.fp(), slot);
-    JSObject *obj = &regs.fp()->slots()[slot].toObject();
+    RootedVarObject &obj = rootObject0;
+    obj = &regs.fp()->slots()[slot].toObject();
     if (!js_NewbornArrayPush(cx, obj, regs.sp[-1]))
         goto error;
     regs.sp--;

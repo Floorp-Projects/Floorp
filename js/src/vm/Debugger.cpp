@@ -896,7 +896,7 @@ CallMethodIfPresent(JSContext *cx, HandleObject obj, const char *name, int argc,
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     Value fval;
     return atom &&
-           js_GetMethod(cx, obj, AtomToId(atom), 0, &fval) &&
+           GetMethod(cx, obj, RootedVarId(cx, AtomToId(atom)), 0, &fval) &&
            (!js_IsCallable(fval) ||
             Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
 }
@@ -2524,7 +2524,7 @@ DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getChildScripts", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
 
-    JSObject *result = NewDenseEmptyArray(cx);
+    RootedVarObject result(cx, NewDenseEmptyArray(cx));
     if (!result)
         return false;
     if (script->hasObjects()) {
@@ -2749,12 +2749,11 @@ DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
         /* Make a note, if the current instruction is an entry point for the current line. */
         if (flowData[offset] != NoEdges && flowData[offset] != lineno) {
             /* Get the offsets array for this line. */
-            JSObject *offsets;
+            RootedVarObject offsets(cx);
             Value offsetsv;
             if (!result->arrayGetOwnDataElement(cx, lineno, &offsetsv))
                 return false;
 
-            jsid id;
             if (offsetsv.isObject()) {
                 offsets = &offsetsv.toObject();
             } else {
@@ -2764,9 +2763,10 @@ DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
                  * Create an empty offsets array for this line.
                  * Store it in the result array.
                  */
+                RootedVarId id(cx);
                 offsets = NewDenseEmptyArray(cx);
                 if (!offsets ||
-                    !ValueToId(cx, NumberValue(lineno), &id) ||
+                    !ValueToId(cx, NumberValue(lineno), id.address()) ||
                     !result->defineGeneric(cx, id, ObjectValue(*offsets)))
                 {
                     return false;
@@ -2811,7 +2811,7 @@ DebuggerScript_getLineOffsets(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Second pass: build the result array. */
-    JSObject *result = NewDenseEmptyArray(cx);
+    RootedVarObject result(cx, NewDenseEmptyArray(cx));
     if (!result)
         return false;
     for (BytecodeRangeWithLineNumbers r(script); !r.empty(); r.popFront()) {
@@ -2902,7 +2902,7 @@ DebuggerScript_getBreakpoints(JSContext *cx, unsigned argc, Value *vp)
         pc = NULL;
     }
 
-    JSObject *arr = NewDenseEmptyArray(cx);
+    RootedVarObject arr(cx, NewDenseEmptyArray(cx));
     if (!arr)
         return false;
 
@@ -3200,7 +3200,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
 
         JS_ASSERT(fp->numActualArgs() <= 0x7fffffff);
         int32_t fargc = int32_t(fp->numActualArgs());
-        if (!DefineNativeProperty(cx, argsobj, NameToId(cx->runtime->atomState.lengthAtom),
+        if (!DefineNativeProperty(cx, argsobj, cx->runtime->atomState.lengthAtom,
                                   Int32Value(fargc), NULL, NULL,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))
         {
@@ -3212,7 +3212,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
             getobj = js_NewFunction(cx, NULL, DebuggerArguments_getArg, 0, 0, global, NULL,
                                     JSFunction::ExtendedFinalizeKind);
             if (!getobj ||
-                !DefineNativeProperty(cx, argsobj, INT_TO_JSID(i), UndefinedValue(),
+                !DefineNativeProperty(cx, argsobj, RootedVarId(cx, INT_TO_JSID(i)), UndefinedValue(),
                                       JS_DATA_TO_FUNC_PTR(PropertyOp, getobj.reference()), NULL,
                                       JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER, 0, 0))
             {
@@ -3430,7 +3430,7 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
     AutoIdVector keys(cx);
     AutoValueVector values(cx);
     if (mode == WithBindings) {
-        JSObject *bindingsobj = NonNullObject(cx, args[1]);
+        RootedVarObject bindingsobj(cx, NonNullObject(cx, args[1]));
         if (!bindingsobj ||
             !GetPropertyNames(cx, bindingsobj, JSITER_OWNONLY, &keys) ||
             !values.growBy(keys.length()))
@@ -3439,7 +3439,7 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
         }
         for (size_t i = 0; i < keys.length(); i++) {
             Value *valp = &values[i];
-            if (!bindingsobj->getGeneric(cx, bindingsobj, keys[i], valp) ||
+            if (!bindingsobj->getGeneric(cx, bindingsobj, RootedVarId(cx, keys[i]), valp) ||
                 !dbg->unwrapDebuggeeValue(cx, valp))
             {
                 return false;
@@ -3461,9 +3461,11 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
         env = NewObjectWithGivenProto(cx, &ObjectClass, NULL, env);
         if (!env)
             return false;
+        RootedVarId id(cx);
         for (size_t i = 0; i < keys.length(); i++) {
+            id = keys[i];
             if (!cx->compartment->wrap(cx, &values[i]) ||
-                !DefineNativeProperty(cx, env, keys[i], values[i], NULL, NULL, 0, 0, 0))
+                !DefineNativeProperty(cx, env, id, values[i], NULL, NULL, 0, 0, 0))
             {
                 return false;
             }
@@ -4329,7 +4331,7 @@ DebuggerEnv_names(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    JSObject *arr = NewDenseEmptyArray(cx);
+    RootedVarObject arr(cx, NewDenseEmptyArray(cx));
     if (!arr)
         return false;
     for (size_t i = 0, len = keys.length(); i < len; i++) {
@@ -4351,13 +4353,13 @@ DebuggerEnv_find(JSContext *cx, unsigned argc, Value *vp)
     REQUIRE_ARGC("Debugger.Environment.find", 1);
     THIS_DEBUGENV_OWNER(cx, argc, vp, "find", args, envobj, env, dbg);
 
-    jsid id;
-    if (!ValueToIdentifier(cx, args[0], &id))
+    RootedVarId id(cx);
+    if (!ValueToIdentifier(cx, args[0], id.address()))
         return false;
 
     {
         AutoCompartment ac(cx, env);
-        if (!ac.enter() || !cx->compartment->wrapId(cx, &id))
+        if (!ac.enter() || !cx->compartment->wrapId(cx, id.address()))
             return false;
 
         /* This can trigger resolve hooks. */
@@ -4381,14 +4383,14 @@ DebuggerEnv_getVariable(JSContext *cx, unsigned argc, Value *vp)
     REQUIRE_ARGC("Debugger.Environment.getVariable", 1);
     THIS_DEBUGENV_OWNER(cx, argc, vp, "getVariable", args, envobj, env, dbg);
 
-    jsid id;
-    if (!ValueToIdentifier(cx, args[0], &id))
+    RootedVarId id(cx);
+    if (!ValueToIdentifier(cx, args[0], id.address()))
         return false;
 
     Value v;
     {
         AutoCompartment ac(cx, env);
-        if (!ac.enter() || !cx->compartment->wrapId(cx, &id))
+        if (!ac.enter() || !cx->compartment->wrapId(cx, id.address()))
             return false;
 
         /* This can trigger getters. */
@@ -4409,8 +4411,8 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
     REQUIRE_ARGC("Debugger.Environment.setVariable", 2);
     THIS_DEBUGENV_OWNER(cx, argc, vp, "setVariable", args, envobj, env, dbg);
 
-    jsid id;
-    if (!ValueToIdentifier(cx, args[0], &id))
+    RootedVarId id(cx);
+    if (!ValueToIdentifier(cx, args[0], id.address()))
         return false;
 
     RootedVarValue v(cx, args[1]);
@@ -4419,8 +4421,12 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
 
     {
         AutoCompartment ac(cx, env);
-        if (!ac.enter() || !cx->compartment->wrapId(cx, &id) || !cx->compartment->wrap(cx, v.address()))
+        if (!ac.enter() ||
+            !cx->compartment->wrapId(cx, id.address()) ||
+            !cx->compartment->wrap(cx, v.address()))
+        {
             return false;
+        }
 
         /* This can trigger setters. */
         ErrorCopier ec(ac, dbg->toJSObject());
