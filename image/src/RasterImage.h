@@ -304,7 +304,7 @@ public:
   nsresult SourceDataComplete();
 
   /* Called for multipart images when there's a new source image to add. */
-  nsresult NewSourceData();
+  nsresult NewSourceData(const char *aMimeType);
 
   /**
    * A hint of the number of bytes of source data that the image contains. If
