@@ -169,10 +169,26 @@ class Marionette(object):
                     self.port = self.client.port = port
             raise TimeoutException(message='socket.timeout', status=21, stacktrace=None)
 
+        # Process any emulator commands that are sent from a script
+        # while it's executing.
+        while response.get("emulator_cmd"):
+            response = self._handle_emulator_cmd(response)
+
         if (response_key == 'ok' and response.get('ok') ==  True) or response_key in response:
             return response[response_key]
         else:
             self._handle_error(response)
+
+    def _handle_emulator_cmd(self, response):
+        cmd = response.get("emulator_cmd")
+        if not cmd or not self.emulator:
+            raise MarionetteException(message="No emulator in this test to run "
+                                      "command against.")
+        cmd = cmd.encode("ascii")
+        result = self.emulator._run_telnet(cmd)
+        return self.client.send({"type": "emulatorCmdResult",
+                                 "id": response.get("id"),
+                                 "result": result})
 
     def _handle_error(self, response):
         if 'error' in response and isinstance(response['error'], dict):
