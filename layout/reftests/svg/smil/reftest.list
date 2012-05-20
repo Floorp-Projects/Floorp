@@ -234,6 +234,7 @@ fails == anim-pattern-attr-presence-02.svg anim-pattern-attr-presence-02-ref.svg
 == freeze-applied-late-2.svg anim-standard-ref.svg
 == freeze-applied-late-3.svg anim-standard-ref.svg
 == freeze-applied-late-4.svg anim-standard-ref.svg
+== frozen-to-anim-1.svg lime.svg
 
 == inactivate-with-active-unchanged-1.svg anim-standard-ref.svg
 == inactivate-with-active-unchanged-2.svg anim-standard-ref.svg
