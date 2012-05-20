@@ -280,7 +280,7 @@ ListBase<LC>::instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *calle
 
 template<class LC>
 JSBool
-ListBase<LC>::length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+ListBase<LC>::length_getter(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
 {
     if (!instanceIsListObject(cx, obj, NULL))
         return false;
@@ -339,7 +339,7 @@ ListBase<LC>::namedItem(JSContext *cx, JSObject *obj, jsval *name, NameGetterTyp
 }
 
 JSBool
-interface_hasInstance(JSContext *cx, JSObject *obj, const JS::Value *vp, JSBool *bp)
+interface_hasInstance(JSContext *cx, JSHandleObject obj, const JS::Value *vp, JSBool *bp)
 {
     if (vp->isObject()) {
         jsval prototype;
@@ -382,9 +382,9 @@ enum {
 };
 
 static JSBool
-InvalidateProtoShape_add(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+InvalidateProtoShape_add(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
 static JSBool
-InvalidateProtoShape_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
+InvalidateProtoShape_set(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
 
 js::Class sInterfacePrototypeClass = {
     "Object",
@@ -399,7 +399,7 @@ js::Class sInterfacePrototypeClass = {
 };
 
 static JSBool
-InvalidateProtoShape_add(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+InvalidateProtoShape_add(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
 {
     if (JSID_IS_STRING(id) && JS_InstanceOf(cx, obj, Jsvalify(&sInterfacePrototypeClass), NULL))
         js::SetReservedSlot(obj, 0, PrivateUint32Value(CHECK_CACHE));
@@ -407,7 +407,7 @@ InvalidateProtoShape_add(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-InvalidateProtoShape_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
+InvalidateProtoShape_set(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp)
 {
     return InvalidateProtoShape_add(cx, obj, id, vp);
 }
@@ -953,8 +953,11 @@ ListBase<LC>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, JSPrope
 
 template<class LC>
 bool
-ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id, bool *found, Value *vp)
+ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy_, JSObject *proto, jsid id_, bool *found, Value *vp)
 {
+    JS::RootedVarObject proxy(cx, proxy_);
+    JS::RootedVarId id(cx, id_);
+
     uint32_t cache = js::GetReservedSlot(proto, 0).toPrivateUint32();
     if (cache == CHECK_CACHE) {
         bool isClean;
@@ -977,7 +980,7 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
     }
 
     for (size_t n = 0; n < sProtoPropertiesCount; ++n) {
-        if (id == sProtoProperties[n].id) {
+        if (sProtoProperties[n].id == id) {
             *found = true;
             if (!vp)
                 return true;
@@ -986,7 +989,7 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
         }
     }
     for (size_t n = 0; n < sProtoMethodsCount; ++n) {
-        if (id == sProtoMethods[n].id) {
+        if (sProtoMethods[n].id == id) {
             *found = true;
             if (!vp)
                 return true;

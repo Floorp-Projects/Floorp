@@ -253,7 +253,7 @@ private:
   bool mDeferNotifications;
 
   // We only want to send OnStartContainer once for each proxy, but we might
-  // get multiple OnStartContainer calls (e.g. from multipart/x-mixed-replace).
+  // get multiple OnStartContainer calls.
   bool mSentStartContainer;
 };
 
