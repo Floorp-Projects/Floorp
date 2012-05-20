@@ -41,7 +41,7 @@ BEGIN_TEST(testAddPropertyHook)
     obj = JS_NewArrayObject(cx, 0, NULL);
     CHECK(obj);
     arr = OBJECT_TO_JSVAL(obj);
-        
+
     CHECK(JS_DefineProperty(cx, global, "arr", arr,
                             JS_PropertyStub, JS_StrictPropertyStub,
                             JSPROP_ENUMERATE));
@@ -55,7 +55,7 @@ BEGIN_TEST(testAddPropertyHook)
                                JS_PropertyStub, JS_StrictPropertyStub,
                                JSPROP_ENUMERATE));
     }
-    
+
     // Now add a prop to each of the objects, but make sure to do
     // so at the same bytecode location so we can hit the propcache.
     EXEC("'use strict';                                     \n"

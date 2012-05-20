@@ -14,7 +14,7 @@ BEGIN_TEST(test_cloneScript)
     CHECK(A = createGlobal());
     CHECK(B = createGlobal());
 
-    const char *source = 
+    const char *source =
         "var i = 0;\n"
         "var sum = 0;\n"
         "while (i < 10) {\n"

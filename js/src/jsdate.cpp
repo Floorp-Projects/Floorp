@@ -2797,9 +2797,9 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj)
 JS_FRIEND_API(int)
 js_DateGetSeconds(JSContext *cx, JSObject* obj)
 {
-    if (!obj->isDate()) 
+    if (!obj->isDate())
         return 0;
-    
+
     double utctime = obj->getDateUTCTime().toNumber();
     if (MOZ_DOUBLE_IS_NaN(utctime))
         return 0;

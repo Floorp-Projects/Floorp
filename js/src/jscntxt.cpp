@@ -111,9 +111,9 @@ void
 JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *runtime)
 {
     runtime->object = mallocSizeOf(this);
-    
+
     runtime->atomsTable = atomState.atoms.sizeOfExcludingThis(mallocSizeOf);
-    
+
     runtime->contexts = 0;
     for (ContextIter acx(this); !acx.done(); acx.next())
         runtime->contexts += acx->sizeOfIncludingThis(mallocSizeOf);
@@ -148,8 +148,8 @@ size_t
 JSRuntime::sizeOfExplicitNonHeap()
 {
     if (!execAlloc_)
-        return 0; 
-    
+        return 0;
+
     size_t mjitCode, regexpCode, unusedCodeMemory;
     execAlloc_->sizeOfCode(&mjitCode, &regexpCode, &unusedCodeMemory);
     return mjitCode + regexpCode + unusedCodeMemory + stackSpace.sizeOfCommitted();

@@ -223,7 +223,7 @@ BEGIN_FIXTURE_TEST(VersionFixture, testEntryLosesOverride)
     EXEC("overrideVersion15(); evalScriptVersion16('checkOverride(false); captureVersion()');");
     CHECK_EQUAL(captured, JSVERSION_1_6);
 
-    /* 
+    /*
      * Override gets propagated to default version as non-override when you leave the VM's execute
      * call.
      */
@@ -233,7 +233,7 @@ BEGIN_FIXTURE_TEST(VersionFixture, testEntryLosesOverride)
 }
 END_FIXTURE_TEST(VersionFixture, testEntryLosesOverride)
 
-/* 
+/*
  * EvalScriptVersion does not propagate overrides to its caller, it
  * restores things exactly as they were before the call. This is as opposed to
  * the normal (no Version suffix) API which propagates overrides

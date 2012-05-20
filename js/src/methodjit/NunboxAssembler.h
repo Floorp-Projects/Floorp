@@ -89,7 +89,7 @@ class NunboxAssembler : public JSC::MacroAssembler
     Address payloadOf(Address address) {
         return Address(address.base, address.offset + PAYLOAD_OFFSET);
     }
-  
+
     BaseIndex payloadOf(BaseIndex address) {
         return BaseIndex(address.base, address.index, address.scale, address.offset + PAYLOAD_OFFSET);
     }
@@ -199,7 +199,7 @@ class NunboxAssembler : public JSC::MacroAssembler
         JS_ASSERT(differenceBetween(endType, endPayload) == 6);
         return start;
 #elif defined JS_CPU_ARM || defined JS_CPU_SPARC
-        /* 
+        /*
          * On ARM, the first instruction loads the offset from a literal pool, so the label
          * returned points at that instruction.
          */

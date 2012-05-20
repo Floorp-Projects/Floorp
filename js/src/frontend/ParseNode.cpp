@@ -126,7 +126,7 @@ ParseNodeAllocator::freeNode(ParseNode *pn)
     /* Catch back-to-back dup recycles. */
     JS_ASSERT(pn != freelist);
 
-    /* 
+    /*
      * It's too hard to clear these nodes from the AtomDefnMaps, etc. that
      * hold references to them, so we never free them. It's our caller's job to
      * recognize and process these, since their children do need to be dealt
@@ -251,7 +251,7 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         stack->pushUnlessNull(pn->pn_kid);
         break;
       case PN_NULLARY:
-        /* 
+        /*
          * E4X function namespace nodes are PN_NULLARY, but can appear on use
          * lists.
          */
@@ -655,7 +655,7 @@ js::CloneLeftHandSide(ParseNode *opn, Parser *parser)
 void
 js::DumpParseTree(ParseNode *pn, int indent)
 {
-    if (pn == NULL) 
+    if (pn == NULL)
         fprintf(stderr, "()");
     else
         pn->dump(indent);
