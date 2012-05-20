@@ -820,7 +820,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 NS_IMETHODIMP
 nsGenericHTMLElement::SetOuterHTML(const nsAString& aOuterHTML)
 {
-  nsINode* parent = GetNodeParent();
+  nsCOMPtr<nsINode> parent = GetNodeParent();
   if (!parent) {
     return NS_OK;
   }
@@ -833,8 +833,8 @@ nsGenericHTMLElement::SetOuterHTML(const nsAString& aOuterHTML)
     nsIAtom* localName;
     PRInt32 namespaceID;
     if (parent->IsElement()) {
-      localName = static_cast<nsIContent*>(parent)->Tag();
-      namespaceID = static_cast<nsIContent*>(parent)->GetNameSpaceID();
+      localName = static_cast<nsIContent*>(parent.get())->Tag();
+      namespaceID = static_cast<nsIContent*>(parent.get())->GetNameSpaceID();
     } else {
       NS_ASSERTION(parent->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE,
         "How come the parent isn't a document, a fragment or an element?");

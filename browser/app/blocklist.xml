@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1336406310000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1337190282000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -61,8 +61,12 @@
                         <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i42" id="{D19CA586-DD6C-4a0a-96F8-14644F340D60}">
-                        <versionRange  minVersion="0.1" maxVersion="14.4.0" severity="1">
+      <emItem  blockID="i92" id="play5@vide04flash.com">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i93" id="{68b8676b-99a5-46d1-b390-22411d8bcd61}">
+                        <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i61" id="youtube@youtube3.com">
@@ -156,8 +160,16 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i91" id="crossriderapp4926@crossrider.com">
+                        <versionRange  minVersion="0" maxVersion="0.81.43" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i84" id="pink@rosaplugin.info">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i42" id="{D19CA586-DD6C-4a0a-96F8-14644F340D60}">
+                        <versionRange  minVersion="0.1" maxVersion="14.4.0" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i67" id="youtube2@youtube2.com">
