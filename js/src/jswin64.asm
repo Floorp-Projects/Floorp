@@ -43,7 +43,7 @@ extern fmod:PROC
 js_myfmod PROC FRAME
   .ENDPROLOG
   fnclex
-  jmp  fmod 
+  jmp  fmod
 js_myfmod ENDP
 
 END

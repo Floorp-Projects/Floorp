@@ -89,7 +89,7 @@ REOP_DEF(REOP_CLASS,         "class")
 REOP_DEF(REOP_NCLASS,        "nclass")
 
 /* NCLASS is considered to be the last "simple" op-code */
-    
+
 
 /* alternative subexpressions in kid and next */
 REOP_DEF(REOP_ALT,           "alt")

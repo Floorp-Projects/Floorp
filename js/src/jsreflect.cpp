@@ -677,7 +677,7 @@ NodeBuilder::newNodeLoc(TokenPos *pos, Value *dst)
         dst->setNull();
         return true;
     }
- 
+
     JSObject *loc, *to;
     Value tv;
 

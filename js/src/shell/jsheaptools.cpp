@@ -78,7 +78,7 @@ using namespace js;
  */
 
 /*
- * A JSTracer that produces a map of the heap with edges reversed. 
+ * A JSTracer that produces a map of the heap with edges reversed.
  *
  * HeapReversers must be allocated in a stack frame. (They contain an AutoArrayRooter,
  * and those must be allocated and destroyed in a stack-like order.)
@@ -179,7 +179,7 @@ class HeapReverser : public JSTracer {
     /* Build a reversed map of the heap in |map|. */
     bool reverseHeap();
 
-  private:    
+  private:
     /*
      * Conservative scanning can, on a whim, decide that a root is no longer a
      * root, and cause bits of our graph to disappear. The 'roots' vector holds
@@ -214,7 +214,7 @@ class HeapReverser : public JSTracer {
             reverser->parent = newParent;
         }
         ~AutoParent() {
-            reverser->parent = savedParent; 
+            reverser->parent = savedParent;
         }
       private:
         HeapReverser *reverser;
@@ -351,7 +351,7 @@ HeapReverser::getEdgeDescription()
 /* A class for finding an object's referrers, given a reversed heap map. */
 class ReferenceFinder {
   public:
-    ReferenceFinder(JSContext *cx, const HeapReverser &reverser) 
+    ReferenceFinder(JSContext *cx, const HeapReverser &reverser)
       : context(cx), reverser(reverser), result(cx) { }
 
     /* Produce an object describing all references to |target|. */
@@ -371,7 +371,7 @@ class ReferenceFinder {
     class Path {
       public:
         Path(const HeapReverser::Edge &edge, Path *next) : edge(edge), next(next) { }
-        
+
         /*
          * Compute the full path represented by this Path. The result is
          * owned by the caller.
@@ -390,7 +390,7 @@ class ReferenceFinder {
         HeapReverser::Node *node;
     };
 
-    /* 
+    /*
      * Given that we've reached |cell| via |path|, with all Nodes along that
      * path marked, add paths from all reportable objects reachable from cell
      * to |result|.
@@ -436,7 +436,7 @@ ReferenceFinder::visit(void *cell, Path *path)
     /* Have we reached a root? Always report that. */
     if (!cell)
         return addReferrer(JSVAL_NULL, path);
-        
+
     HeapReverser::Map::Ptr p = reverser.map.lookup(cell);
     JS_ASSERT(p);
     HeapReverser::Node *node = &p->value;
@@ -473,7 +473,7 @@ ReferenceFinder::Path::computeName(JSContext *cx)
 {
     /* Walk the edge list and compute the total size of the path. */
     size_t size = 6;
-    for (Path *l = this; l; l = l->next) 
+    for (Path *l = this; l; l = l->next)
         size += strlen(l->edge.name) + (l->next ? 2 : 0);
     size += 1;
 
@@ -577,7 +577,7 @@ FindReferences(JSContext *cx, unsigned argc, jsval *vp)
     JSObject *references = finder.findReferences(RootedVarObject(cx, &target.toObject()));
     if (!references)
         return false;
-    
+
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(references));
     return true;
 }

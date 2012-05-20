@@ -348,7 +348,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
     // stack space must be reserved up-front, and is aligned on an 8-byte
     // boundary.
     //
-    // Returns an offset that can be used to index into this stack 
+    // Returns an offset that can be used to index into this stack
     StackMarker allocStack(uint32_t bytes, uint32_t alignment = 4) {
         bytes += align(bytes + extraStackSpace, alignment);
         subPtr(Imm32(bytes), stackPointerRegister);

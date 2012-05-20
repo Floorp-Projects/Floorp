@@ -210,7 +210,7 @@ struct JSFunction : public JSObject
     inline const js::Value &getExtendedSlot(size_t which) const;
 
   private:
-    /* 
+    /*
      * These member functions are inherited from JSObject, but should never be applied to
      * a value statically known to be a JSFunction.
      */

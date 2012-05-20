@@ -68,47 +68,47 @@
  * objects; it has an id, flags, etc. (But it doesn't represent the property's
  * value.)  However, Shapes are always stored in linked linear sequence of
  * Shapes, called "shape lineages". Each shape lineage represents the layout of
- * an entire object. 
- *   
+ * an entire object.
+ *
  * Every JSObject has a pointer, |shape_|, accessible via lastProperty(), to
  * the last Shape in a shape lineage, which identifies the property most
  * recently added to the object.  This pointer permits fast object layout
  * tests. The shape lineage order also dictates the enumeration order for the
  * object; ECMA requires no particular order but this implementation has
  * promised and delivered property definition order.
- *   
+ *
  * Shape lineages occur in two kinds of data structure.
- * 
+ *
  * 1. N-ary property trees. Each path from a non-root node to the root node in
  *    a property tree is a shape lineage. Property trees permit full (or
  *    partial) sharing of Shapes between objects that have fully (or partly)
  *    identical layouts. The root is an EmptyShape whose identity is determined
  *    by the object's class, compartment and prototype. These Shapes are shared
  *    and immutable.
- * 
+ *
  * 2. Dictionary mode lists. Shapes in such lists are said to be "in
  *    dictionary mode", as are objects that point to such Shapes. These Shapes
  *    are unshared, private to a single object, and immutable except for their
  *    links in the dictionary list.
- * 
+ *
  * All shape lineages are bi-directionally linked, via the |parent| and
  * |kids|/|listp| members.
- * 
+ *
  * Shape lineages start out life in the property tree. They can be converted
  * (by copying) to dictionary mode lists in the following circumstances.
- * 
+ *
  * 1. The shape lineage's size reaches MAX_HEIGHT. This reasonable limit avoids
  *    potential worst cases involving shape lineage mutations.
- * 
+ *
  * 2. A property represented by a non-last Shape in a shape lineage is removed
  *    from an object. (In the last Shape case, obj->shape_ can be easily
  *    adjusted to point to obj->shape_->parent.)  We originally tried lazy
  *    forking of the property tree, but this blows up for delete/add
  *    repetitions.
- * 
+ *
  * 3. A property represented by a non-last Shape in a shape lineage has its
  *    attributes modified.
- * 
+ *
  * To find the Shape for a particular property of an object initially requires
  * a linear search. But if the number of searches starting at any particular
  * Shape in the property tree exceeds MAX_LINEAR_SEARCHES and the Shape's
@@ -483,7 +483,7 @@ struct Shape : public js::gc::Cell
         FIXED_SLOTS_SHIFT      = 27,
         FIXED_SLOTS_MASK       = uint32_t(FIXED_SLOTS_MAX << FIXED_SLOTS_SHIFT),
 
-        /* 
+        /*
          * numLinearSearches starts at zero and is incremented initially on
          * search() calls. Once numLinearSearches reaches LINEAR_SEARCHES_MAX,
          * the table is created on the next search() call. The table can also

@@ -574,7 +574,7 @@ js_InternalThrow(VMFrame &f)
             if (js::ScriptDebugEpilogue(cx, f.fp(), false))
                 return cx->jaegerRuntime().forceReturnFromExternC();
         }
-                
+
 
         ScriptEpilogue(f.cx, f.fp(), false);
 
@@ -957,7 +957,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         if (!ScriptPrologueOrGeneratorResume(cx, fp, types::UseNewTypeAtEntry(cx, fp)))
             return js_InternalThrow(f);
 
-        /* 
+        /*
          * Having called ScriptPrologueOrGeneratorResume, we would normally call
          * ScriptDebugPrologue here. But in debug mode, we only use JITted
          * functions' invokeEntry entry point, whereas CheckArgumentTypes

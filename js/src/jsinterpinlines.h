@@ -131,7 +131,7 @@ ComputeThis(JSContext *cx, StackFrame *fp)
  * This helps us implement the custom [[Get]] method that ES5's GetValue
  * algorithm uses for primitive values, without actually constructing the
  * temporary object that the specification does.
- * 
+ *
  * For objects, return the object itself. For string, boolean, and number
  * primitive values, return the appropriate constructor's prototype. For
  * undefined and null, throw an error and return NULL, attributing the

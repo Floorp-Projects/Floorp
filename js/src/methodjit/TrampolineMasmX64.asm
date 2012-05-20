@@ -77,8 +77,8 @@ JaegerTrampoline PROC FRAME
     ; fp must go into rbx
     push    0       ; stubRejoin
     push    rdx     ; entryncode
-    push    rdx     ; entryFp 
-    push    r9      ; inlineCallCount 
+    push    rdx     ; entryFp
+    push    r9      ; inlineCallCount
     push    rcx     ; cx
     push    rdx     ; fp
     mov     rbx, rdx

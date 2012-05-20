@@ -596,7 +596,7 @@ js::XDRAtom(XDRState<mode> *xdr, JSAtom **atomp)
     /*
      * We must copy chars to a temporary buffer to convert between little and
      * big endian data.
-     */ 
+     */
     jschar *chars;
     jschar stackChars[256];
     if (nchars <= ArrayLength(stackChars)) {
