@@ -453,31 +453,6 @@ protected:
   // associated with them.
   PRUint16                      mErrorFlags;
 
-  // This is for the very specific case where we have a 'to' animation that is
-  // frozen part way through the simple duration and there are other active
-  // lower-priority animations targetting the same attribute. In this case
-  // SMILANIM 3.3.6 says:
-  //
-  //   The value for F(t) when a to-animation is frozen (at the end of the
-  //   simple duration) is just the to value. If a to-animation is frozen
-  //   anywhere within the simple duration (e.g., using a repeatCount of "2.5"),
-  //   the value for F(t) when the animation is frozen is the value computed for
-  //   the end of the active duration. Even if other, lower priority animations
-  //   are active while a to-animation is frozen, the value for F(t) does not
-  //   change.
-  //
-  // To implement this properly we'd need to force a resample of all the lower
-  // priority animations at the active end of this animation--something which
-  // would introduce unwanted coupling between the timing and animation model.
-  // Instead we just save the value calculated when this animation is frozen (in
-  // which case this animation will be sampled at the active end and the lower
-  // priority animations should be sampled at a time pretty close to this,
-  // provided we have a reasonable frame rate and we aren't seeking).
-  //
-  // @see
-  // http://www.w3.org/TR/2001/REC-smil-animation-20010904/#FromToByAndAdditive
-  nsSMILValue                   mFrozenValue;
-
   // Allows us to check whether an animation function has changed target from
   // sample to sample (because if neither target nor animated value have
   // changed, we don't have to do anything).
