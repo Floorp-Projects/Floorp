@@ -1710,6 +1710,8 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 				    const cairo_pattern_t *pattern,
 				    bool unique = false)
 {
+    HRESULT hr;
+
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
 	cairo_solid_pattern_t *sourcePattern =
 	    (cairo_solid_pattern_t*)pattern;
@@ -1969,12 +1971,16 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 		}
 	    } else {
 		if (pattern->extend != CAIRO_EXTEND_NONE) {
-		    d2dsurf->rt->CreateBitmap(D2D1::SizeU(width, height),
-							  data + yoffset * stride + xoffset * Bpp,
-							  stride,
-							  D2D1::BitmapProperties(D2D1::PixelFormat(format,
-												   alpha)),
-					      &sourceBitmap);
+		    hr = d2dsurf->rt->CreateBitmap(D2D1::SizeU(width, height),
+						   data + yoffset * stride + xoffset * Bpp,
+						   stride,
+						   D2D1::BitmapProperties(D2D1::PixelFormat(format,
+											    alpha)),
+						   &sourceBitmap);
+
+		    if (FAILED(hr)) {
+			return NULL;
+		    }
 		} else {
 		    /**
 		     * Trick here, we create a temporary rectangular
@@ -1995,13 +2001,17 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 			    width * Bpp);
 		    }
 
-		    d2dsurf->rt->CreateBitmap(D2D1::SizeU(tmpWidth, tmpHeight),
-					      tmp,
-					      tmpWidth * Bpp,
-					      D2D1::BitmapProperties(D2D1::PixelFormat(format,
-										       D2D1_ALPHA_MODE_PREMULTIPLIED)),
-					      &sourceBitmap);
+		    hr = d2dsurf->rt->CreateBitmap(D2D1::SizeU(tmpWidth, tmpHeight),
+						   tmp,
+						   tmpWidth * Bpp,
+						   D2D1::BitmapProperties(D2D1::PixelFormat(format,
+					 						    D2D1_ALPHA_MODE_PREMULTIPLIED)),
+						   &sourceBitmap);
+
 		    delete [] tmp;
+		    if (FAILED(hr)) {
+			return NULL;
+		    }
 		}
 
 		if (!partial) {
