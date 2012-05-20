@@ -36,7 +36,7 @@ function testSimpleCall() {
       is(testVar.id, "test-scope->something-variable",
         "The newly created scope should have the default id set.");
 
-      is(testVar.querySelector(".name").textContent, "something",
+      is(testVar.querySelector(".name").getAttribute("value"), "something",
         "Any new variable should have the designated title.");
 
       is(testVar.querySelector(".details").childNodes.length, 0,
