@@ -14,7 +14,7 @@ IterNext(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSObject *
-IterHook(JSContext *cx, JSObject *obj, JSBool keysonly)
+IterHook(JSContext *cx, JS::HandleObject obj, JSBool keysonly)
 {
     JSObject *iterObj = JS_NewObject(cx, NULL, NULL, NULL);
     if (!iterObj)

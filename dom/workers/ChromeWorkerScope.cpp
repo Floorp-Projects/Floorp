@@ -46,7 +46,7 @@ JSCTypesCallbacks gCTypesCallbacks = {
 };
 
 JSBool
-CTypesLazyGetter(JSContext* aCx, JSObject* aObj, jsid aId, jsval* aVp)
+CTypesLazyGetter(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, jsval* aVp)
 {
   NS_ASSERTION(JS_GetGlobalObject(aCx) == aObj, "Not a global object!");
   NS_ASSERTION(JSID_IS_STRING(aId), "Bad id!");
