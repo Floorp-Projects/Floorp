@@ -17,7 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366936
   <script class="testbody" type="application/javascript;version=1.7">
    var parserDatFiles = ["tests17.dat",
                          "tests18.dat",
-                         "tests19.dat",
                          "tests1.dat",
                          "tests20.dat",
                          "tests21.dat",
@@ -31,13 +30,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366936
                          "tests4.dat",
                          "tests5.dat",
                          "tests6.dat",
-                         "tests7.dat",
                          "tests8.dat",
                          "tests9.dat",
                          "tests_innerHTML_1.dat",
                          "tricky01.dat",
                          "webkit01.dat",
                          "webkit02.dat"];
+    const isOSXLion = navigator.userAgent.indexOf("Mac OS X 10.7") != -1;
+    if (!isOSXLion) {
+      parserDatFiles.push("tests19.dat");
+      parserDatFiles.push("tests7.dat");
+    }
 
   </script>
   <script type="application/javascript;version=1.7"
