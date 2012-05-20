@@ -57,7 +57,7 @@ test(const char *bytes)
 {
     jsval v;
 
-    JS_SetOptions(cx, JS_GetOptions(cx) & ~(JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS)); 
+    JS_SetOptions(cx, JS_GetOptions(cx) & ~(JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS));
     sRemain = 0;
     CHECK(!evaluate(bytes, __FILE__, __LINE__, &v));
     CHECK(!JS_IsExceptionPending(cx));

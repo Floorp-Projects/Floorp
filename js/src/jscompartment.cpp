@@ -631,7 +631,7 @@ void
 JSCompartment::updateForDebugMode(FreeOp *fop, AutoDebugModeGC &dmgc)
 {
     for (ContextIter acx(rt); !acx.done(); acx.next()) {
-        if (acx->compartment == this) 
+        if (acx->compartment == this)
             acx->updateJITEnabled();
     }
 

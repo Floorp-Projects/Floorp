@@ -125,7 +125,7 @@ class ExpandArgsMore(ExpandArgs):
         if not len(objs): return
         fd, tmp = tempfile.mkstemp(suffix=".list",dir=os.curdir)
         if conf.EXPAND_LIBS_LIST_STYLE == "linkerscript":
-            content = ["INPUT(%s)\n" % obj for obj in objs]
+            content = ['INPUT("%s")\n' % obj for obj in objs]
             ref = tmp
         elif conf.EXPAND_LIBS_LIST_STYLE == "list":
             content = ["%s\n" % obj for obj in objs]

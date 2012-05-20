@@ -384,7 +384,7 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    if (args.length() == 1 || 
+    if (args.length() == 1 ||
         (args[1].isInt32() && (args[1].toInt32() == 0 || args[1].toInt32() == 10))) {
         if (args[0].isInt32()) {
             args.rval() = args[0];
@@ -397,7 +397,7 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
          *
          * To preserve this behaviour, we can't use the fast-path when string >
          * 1e21, or else the result would be |NeM|.
-         * 
+         *
          * The same goes for values smaller than 1.0e-6, because the string would be in
          * the form of "Ne-M".
          */

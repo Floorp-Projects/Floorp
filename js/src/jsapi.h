@@ -3108,7 +3108,7 @@ extern JS_PUBLIC_API(void)
 JS_freeop(JSFreeOp *fop, void *p);
 
 extern JS_PUBLIC_API(JSFreeOp *)
-JS_GetDefaultFreeOp(JSRuntime *rt);    
+JS_GetDefaultFreeOp(JSRuntime *rt);
 
 extern JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes);

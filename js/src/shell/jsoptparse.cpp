@@ -120,7 +120,7 @@ PrintParagraph(const char *text, unsigned startColno, const unsigned limitColno,
         while (!isspace(*limit) && *limit != '\0')
             ++limit;
 
-        /* 
+        /*
          * If the current token is longer than the available number of columns,
          * then make a line break before printing the token.
          */
@@ -226,7 +226,7 @@ OptionParser::printHelp(const char *progname)
 
     if (!options.empty()) {
         printf("Options:\n");
-                                
+
         /* Calculate sizes for column alignment. */
         size_t lhsLen = 0;
         for (Option **it = options.begin(), **end = options.end(); it != end; ++it) {
@@ -303,7 +303,7 @@ OptionParser::handleOption(Option *opt, size_t argc, char **argv, size_t *i, boo
         opt->asBoolOption()->value = true;
         return Okay;
       }
-      /* 
+      /*
        * Valued options are allowed to specify their values either via
        * successive arguments or a single --longflag=value argument.
        */

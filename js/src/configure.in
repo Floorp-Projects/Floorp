@@ -1648,7 +1648,7 @@ if test "$GNU_CC"; then
     MOZ_C_SUPPORTS_WARNING(-W, error=return-type, ac_c_has_werror_return_type)
     MOZ_C_SUPPORTS_WARNING(-W, type-limits, ac_c_has_wtype_limits)
     MOZ_C_SUPPORTS_WARNING(-W, empty-body, ac_c_has_wempty_body)
-    
+
     # Turn off the following warnings that -Wall/-pedantic turn on:
     # -Wno-unused - lots of violations in third-party code
     # -Wno-overlength-strings - we exceed the minimum maximum length frequently

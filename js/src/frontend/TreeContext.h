@@ -99,7 +99,7 @@ class ContextFlags {
     // false.
 
     // The function needs Call object per call.
-    bool            funIsHeavyweight:1; 
+    bool            funIsHeavyweight:1;
 
     // We parsed a yield statement in the function.
     bool            funIsGenerator:1;
@@ -258,10 +258,10 @@ struct SharedContext {
 
 typedef HashSet<JSAtom *> FuncStmtSet;
 struct Parser;
- 
+
 struct TreeContext {                /* tree context for semantic checks */
     SharedContext   *sc;            /* context shared between parsing and bytecode generation */
- 
+
     uint32_t        parenDepth;     /* nesting depth of parens that might turn out
                                        to be generator expressions */
     uint32_t        yieldCount;     /* number of |yield| tokens encountered at

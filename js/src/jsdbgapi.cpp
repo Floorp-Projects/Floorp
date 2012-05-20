@@ -1404,7 +1404,7 @@ DumpCallgrind(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_DumpCallgrind(outFile.mBytes)));
     return JS_TRUE;
-}    
+}
 #endif
 
 #ifdef MOZ_VTUNE

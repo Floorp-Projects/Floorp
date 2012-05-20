@@ -652,7 +652,7 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
 
     if (isKeyIter)
         return VectorToKeyIterator(cx, obj, ni->flags, keys, vp);
-    return VectorToValueIterator(cx, obj, ni->flags, keys, vp); 
+    return VectorToValueIterator(cx, obj, ni->flags, keys, vp);
 }
 
 bool
@@ -730,7 +730,7 @@ CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *cla
     if (!cx->stack.pushInvokeArgs(cx, srcArgs.length(), &dstArgs))
         return false;
 
-    Value *src = srcArgs.base(); 
+    Value *src = srcArgs.base();
     Value *srcend = srcArgs.array() + srcArgs.length();
     Value *dst = dstArgs.base();
     for (; src != srcend; ++src, ++dst) {

@@ -144,4 +144,4 @@ fi
 
 if test "$echo_libs" = "yes"; then
     echo "$MOZ_JS_LIBS $JS_CONFIG_LIBS"
-fi      
+fi

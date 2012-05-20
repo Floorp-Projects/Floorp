@@ -436,7 +436,7 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
     if (mode == XDR_ENCODE) {
         script = *scriptp;
         JS_ASSERT_IF(parentScript, parentScript->compartment() == script->compartment());
-    
+
         nargs = script->bindings.numArgs();
         nvars = script->bindings.numVars();
         argsVars = (nargs << 16) | nvars;
@@ -1032,9 +1032,9 @@ js::FreeScriptFilenames(JSRuntime *rt)
  * ClosedSlotArray  ClosedArgs      closedArgs()
  * ClosedSlotArray  ClosedVars      closedVars()
  *
- * Then are the elements of several arrays.  
+ * Then are the elements of several arrays.
  * - Most of these arrays have headers listed above (if present).  For each of
- *   these, the array pointer and the array length is stored in the header.  
+ *   these, the array pointer and the array length is stored in the header.
  * - The remaining arrays have pointers and lengths that are stored directly in
  *   JSScript.  This is because, unlike the others, they are nearly always
  *   non-zero length and so the optional-header space optimization isn't
@@ -1050,7 +1050,7 @@ js::FreeScriptFilenames(JSRuntime *rt)
  * Closed args      closedArgs()->vector  closedArgs()->length
  * Closed vars      closedVars()->vector  closedVars()->length
  * Bytecodes        code                  length
- * Source notes     notes()               numNotes() * sizeof(jssrcnote)  
+ * Source notes     notes()               numNotes() * sizeof(jssrcnote)
  *
  * IMPORTANT: This layout has two key properties.
  * - It ensures that everything has sufficient alignment;  in particular, the

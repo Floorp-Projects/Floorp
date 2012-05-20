@@ -14,7 +14,7 @@
 !
 ! The Original Code is Mozilla SpiderMonkey JavaScript 1.9 code, released
 ! May 28, 2008.
-! 
+!
 ! The Initial Developer of the Original Code is
 !    Leon Sha <leon.sha@oracle.com>
 !

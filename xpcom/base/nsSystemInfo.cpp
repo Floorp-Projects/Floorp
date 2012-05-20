@@ -162,6 +162,7 @@ nsSystemInfo::Init()
             SetPropertyAsACString(NS_LITERAL_STRING("device"), NS_LITERAL_CSTRING("Nokia N900"));
             SetPropertyAsACString(NS_LITERAL_STRING("manufacturer"), NS_LITERAL_CSTRING("Nokia"));
             SetPropertyAsACString(NS_LITERAL_STRING("hardware"), NS_LITERAL_CSTRING("RX-51"));
+            SetPropertyAsBool(NS_LITERAL_STRING("tablet"), false);
             break;
           } else if (strstr(line, "RX-44") ||
                      strstr(line, "RX-48") ||
@@ -170,6 +171,19 @@ nsSystemInfo::Init()
             SetPropertyAsACString(NS_LITERAL_STRING("device"), NS_LITERAL_CSTRING("Nokia N8xx"));
             SetPropertyAsACString(NS_LITERAL_STRING("manufacturer"), NS_LITERAL_CSTRING("Nokia"));
             SetPropertyAsACString(NS_LITERAL_STRING("hardware"), NS_LITERAL_CSTRING("N8xx"));
+            SetPropertyAsBool(NS_LITERAL_STRING("tablet"), false);
+            break;
+          } else if (strstr(line, "RM-680")) {
+            SetPropertyAsACString(NS_LITERAL_STRING("device"), NS_LITERAL_CSTRING("Nokia N950"));
+            SetPropertyAsACString(NS_LITERAL_STRING("manufacturer"), NS_LITERAL_CSTRING("Nokia"));
+            SetPropertyAsACString(NS_LITERAL_STRING("hardware"), NS_LITERAL_CSTRING("N9xx"));
+            SetPropertyAsBool(NS_LITERAL_STRING("tablet"), false);
+            break;
+          } else if (strstr(line, "RM-696")) {
+            SetPropertyAsACString(NS_LITERAL_STRING("device"), NS_LITERAL_CSTRING("Nokia N9"));
+            SetPropertyAsACString(NS_LITERAL_STRING("manufacturer"), NS_LITERAL_CSTRING("Nokia"));
+            SetPropertyAsACString(NS_LITERAL_STRING("hardware"), NS_LITERAL_CSTRING("N9xx"));
+            SetPropertyAsBool(NS_LITERAL_STRING("tablet"), false);
             break;
           }
         }

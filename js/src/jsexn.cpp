@@ -510,103 +510,36 @@ js_ErrorFromException(JSContext *cx, jsval exn)
 static JSString *
 StackTraceToString(JSContext *cx, JSExnPrivate *priv)
 {
-    jschar *stackbuf;
-    size_t stacklen, stackmax;
-    JSStackTraceElem *elem, *endElem;
-    JSString *str;
-    const char *cp;
-    char ulnbuf[11];
+    StringBuffer sb(cx);
 
-    /* After this point, failing control flow must goto bad. */
-    stackbuf = NULL;
-    stacklen = stackmax = 0;
+    JSStackTraceElem *element = priv->stackElems, *end = element + priv->stackDepth;
+    for (; element < end; element++) {
+        /* Try to reserve required space upfront, so we don't fail inbetween. */
+        size_t length = ((element->funName ? element->funName->length() : 0) +
+                         (element->filename ? strlen(element->filename) * 2 : 0) +
+                         13); /* "@" + ":" + "4294967295" + "\n" */
 
-/* Limit the stackbuf length to a reasonable value to avoid overflow checks. */
-#define STACK_LENGTH_LIMIT JS_BIT(20)
+        if (!sb.reserve(length) || sb.length() > JS_BIT(20))
+            break; /* Return as much as we got. */
 
-#define APPEND_CHAR_TO_STACK(c)                                               \
-    JS_BEGIN_MACRO                                                            \
-        if (stacklen == stackmax) {                                           \
-            void *ptr_;                                                       \
-            if (stackmax >= STACK_LENGTH_LIMIT)                               \
-                goto done;                                                    \
-            stackmax = stackmax ? 2 * stackmax : 64;                          \
-            ptr_ = cx->realloc_(stackbuf, (stackmax+1) * sizeof(jschar));      \
-            if (!ptr_)                                                        \
-                goto bad;                                                     \
-            stackbuf = (jschar *) ptr_;                                       \
-        }                                                                     \
-        stackbuf[stacklen++] = (c);                                           \
-    JS_END_MACRO
-
-#define APPEND_STRING_TO_STACK(str)                                           \
-    JS_BEGIN_MACRO                                                            \
-        JSString *str_ = str;                                                 \
-        size_t length_ = str_->length();                                      \
-        const jschar *chars_ = str_->getChars(cx);                            \
-        if (!chars_)                                                          \
-            goto bad;                                                         \
-                                                                              \
-        if (length_ > stackmax - stacklen) {                                  \
-            void *ptr_;                                                       \
-            if (stackmax >= STACK_LENGTH_LIMIT ||                             \
-                length_ >= STACK_LENGTH_LIMIT - stacklen) {                   \
-                goto done;                                                    \
-            }                                                                 \
-            stackmax = RoundUpPow2(stacklen + length_);                       \
-            ptr_ = cx->realloc_(stackbuf, (stackmax+1) * sizeof(jschar));     \
-            if (!ptr_)                                                        \
-                goto bad;                                                     \
-            stackbuf = (jschar *) ptr_;                                       \
-        }                                                                     \
-        js_strncpy(stackbuf + stacklen, chars_, length_);                     \
-        stacklen += length_;                                                  \
-    JS_END_MACRO
-
-    elem = priv->stackElems;
-    for (endElem = elem + priv->stackDepth; elem != endElem; elem++) {
-        if (elem->funName)
-            APPEND_STRING_TO_STACK(elem->funName);
-        APPEND_CHAR_TO_STACK('@');
-        if (elem->filename) {
-            for (cp = elem->filename; *cp; cp++)
-                APPEND_CHAR_TO_STACK(*cp);
+        if (element->funName) {
+            if (!sb.append(element->funName))
+                return NULL;
         }
-        APPEND_CHAR_TO_STACK(':');
-        JS_snprintf(ulnbuf, sizeof ulnbuf, "%u", elem->ulineno);
-        for (cp = ulnbuf; *cp; cp++)
-            APPEND_CHAR_TO_STACK(*cp);
-        APPEND_CHAR_TO_STACK('\n');
-    }
-#undef APPEND_CHAR_TO_STACK
-#undef APPEND_STRING_TO_STACK
-#undef STACK_LENGTH_LIMIT
-
-  done:
-    if (stacklen == 0) {
-        JS_ASSERT(!stackbuf);
-        return cx->runtime->emptyString;
-    }
-    if (stacklen < stackmax) {
-        /*
-         * Realloc can fail when shrinking on some FreeBSD versions, so
-         * don't use JS_realloc here; simply let the oversized allocation
-         * be owned by the string in that rare case.
-         */
-        void *shrunk = cx->realloc_(stackbuf, (stacklen+1) * sizeof(jschar));
-        if (shrunk)
-            stackbuf = (jschar *) shrunk;
+        if (!sb.append('@'))
+            return NULL;
+        if (element->filename) {
+            if (!sb.appendInflated(element->filename, strlen(element->filename)))
+                return NULL;
+        }
+        if (!sb.append(':') || !NumberValueToStringBuffer(cx, NumberValue(element->ulineno), sb) || 
+            !sb.append('\n'))
+        {
+            return NULL;
+        }
     }
 
-    stackbuf[stacklen] = 0;
-    str = js_NewString(cx, stackbuf, stacklen);
-    if (str)
-        return str;
-
-  bad:
-    if (stackbuf)
-        cx->free_(stackbuf);
-    return NULL;
+    return sb.finishString();
 }
 
 /* XXXbe Consolidate the ugly truth that we don't treat filename as UTF-8

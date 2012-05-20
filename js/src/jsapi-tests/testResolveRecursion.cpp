@@ -14,7 +14,7 @@ BEGIN_TEST(testResolveRecursion)
     static JSClass my_resolve_class = {
         "MyResolve",
         JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
-        
+
         JS_PropertyStub,       // add
         JS_PropertyStub,       // delete
         JS_PropertyStub,         // get
@@ -23,7 +23,7 @@ BEGIN_TEST(testResolveRecursion)
         (JSResolveOp) my_resolve,
         JS_ConvertStub
     };
-    
+
     obj1 = JS_NewObject(cx, &my_resolve_class, NULL, NULL);
     CHECK(obj1);
     obj2 = JS_NewObject(cx, &my_resolve_class, NULL, NULL);
@@ -52,7 +52,7 @@ unsigned resolveEntryCount;
 unsigned resolveExitCount;
 
 struct AutoIncrCounters {
-    
+
     AutoIncrCounters(cls_testResolveRecursion *t) : t(t) {
         t->resolveEntryCount++;
     }
@@ -70,9 +70,9 @@ doResolve(JSObject *obj, jsid id, unsigned flags, JSObject **objp)
     CHECK_EQUAL(resolveExitCount, 0);
     AutoIncrCounters incr(this);
     CHECK_EQUAL(obj, obj1 || obj == obj2);
-    
+
     CHECK(JSID_IS_STRING(id));
-    
+
     JSFlatString *str = JS_FlattenString(cx, JSID_TO_STRING(id));
     CHECK(str);
     jsval v;

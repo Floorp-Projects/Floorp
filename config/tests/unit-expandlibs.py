@@ -237,7 +237,7 @@ class TestExpandArgsMore(TestExpandInit):
             if config.EXPAND_LIBS_LIST_STYLE == "linkerscript":
                 self.assertNotEqual(args[3][0], '@')
                 filename = args[3]
-                content = ["INPUT(%s)" % relativize(f) for f in objs]
+                content = ['INPUT("%s")' % relativize(f) for f in objs]
                 with open(filename, 'r') as f:
                     self.assertEqual([l.strip() for l in f.readlines() if len(l.strip())], content)
             elif config.EXPAND_LIBS_LIST_STYLE == "list":

@@ -615,8 +615,13 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
 static PRUint32 sFinalizedSlimWrappers;
 #endif
 
+enum WNHelperType {
+    WN_NOHELPER,
+    WN_HELPER
+};
+
 static void
-XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
+WrappedNativeFinalize(js::FreeOp *fop, JSObject *obj, WNHelperType helperType)
 {
     js::Class* clazz = js::GetObjectClass(obj);
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
@@ -635,14 +640,21 @@ XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
         cache->ClearWrapper();
 
         XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
-        if(rt)
-            rt->DeferredRelease(p);
-        else
-            NS_RELEASE(p);
+        MOZ_ASSERT(rt, "XPCJSRuntime should exist during a GC.");
+        rt->DeferredRelease(p);
         return;
     }
 
-    static_cast<XPCWrappedNative*>(p)->FlatJSObjectFinalized();
+    XPCWrappedNative* wrapper = static_cast<XPCWrappedNative*>(p);
+    if (helperType == WN_HELPER)
+        wrapper->GetScriptableCallback()->Finalize(wrapper, js::CastToJSFreeOp(fop), obj);
+    wrapper->FlatJSObjectFinalized();
+}
+
+static void
+XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
+{
+    WrappedNativeFinalize(fop, obj, WN_NOHELPER);
 }
 
 static void
@@ -1040,28 +1052,7 @@ XPC_WN_Helper_HasInstance(JSContext *cx, JSObject *obj, const jsval *valp, JSBoo
 static void
 XPC_WN_Helper_Finalize(js::FreeOp *fop, JSObject *obj)
 {
-    js::Class* clazz = js::GetObjectClass(obj);
-    if (clazz->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::DestroyProtoOrIfaceCache(obj);
-    }
-    nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
-    if (IS_SLIM_WRAPPER(obj)) {
-        SLIM_LOG(("----- %i finalized slim wrapper (%p, %p)\n",
-                  ++sFinalizedSlimWrappers, obj, p));
-
-        nsWrapperCache* cache;
-        CallQueryInterface(p, &cache);
-        cache->ClearWrapper();
-        NS_RELEASE(p);
-        return;
-    }
-
-    XPCWrappedNative* wrapper = (XPCWrappedNative*)p;
-    if (!wrapper)
-        return;
-
-    wrapper->GetScriptableCallback()->Finalize(wrapper, js::CastToJSFreeOp(fop), obj);
-    wrapper->FlatJSObjectFinalized();
+    WrappedNativeFinalize(fop, obj, WN_HELPER);
 }
 
 static JSBool

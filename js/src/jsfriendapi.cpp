@@ -77,7 +77,7 @@ JS_FindCompilationScope(JSContext *cx, JSObject *obj)
      */
     if (obj->isWrapper())
         obj = UnwrapObject(obj);
-    
+
     /*
      * Innerize the target_obj so that we compile in the correct (inner)
      * scope.
