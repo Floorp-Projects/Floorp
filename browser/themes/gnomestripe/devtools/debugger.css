@@ -8,38 +8,12 @@
   background: -moz-dialog;
 }
 
-div,
-span {
-  font: inherit;
-}
-
 /**
  * Debugger content
  */
 
 #dbg-content {
   padding: 6px;
-}
-
-#dbg-content > * > .vbox {
-  background-color: #fff;
-  border: 1px solid #bbb;
-  box-shadow: 0 -5px 10px -3px #ccc;
-  -moz-margin-end: -1px;
-}
-
-#dbg-content > * > .title {
-  text-shadow: 0 1px #fff;
-}
-
-/**
- * Debugger statusbar
- */
-
-#dbg-statusbar {
-  font: -moz-list;
-  padding: 2px;
-  -moz-padding-start: 5px;
 }
 
 /**

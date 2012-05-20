@@ -33,10 +33,10 @@ function testFrameEval() {
           localNodes = localScope.querySelector(".details").childNodes,
           varA = localNodes[7];
 
-      is(varA.querySelector(".name").textContent, "a",
+      is(varA.querySelector(".name").getAttribute("value"), "a",
         "Should have the right name for 'a'.");
 
-      is(varA.querySelector(".value").textContent, 1,
+      is(varA.querySelector(".value").getAttribute("value"), 1,
         "Should have the right initial value for 'a'.");
 
       testModification(varA, function(aVar) {
@@ -76,7 +76,7 @@ function testModification(aVar, aCallback, aNewValue, aNewResult) {
           localNodes = localScope.querySelector(".details").childNodes,
           varA = localNodes[7];
 
-      is(varA.querySelector(".value").textContent, aNewResult,
+      is(varA.querySelector(".value").getAttribute("value"), aNewResult,
         "Should have the right value for 'a'.");
 
       executeSoon(function() {
