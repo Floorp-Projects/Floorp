@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(50, true)">
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <!-- Covered up red area, if we succeed -->
+  <rect width="100%" height="100%" fill="red"/>
+  <rect width="100%" height="100%" fill="lime">
+    <!-- At time t=50s, this will give a base value of 50% -->
+    <animate attributeName="width" from="0%" to="100%"
+      dur="100s"/>
+    <!-- From time t=1s onwards this should apply 50% of its effect to the base
+         value (since it is frozen at repeatCount=0.5).
+         So, if the base value is 50%, and the to-value is 150%, it will produce
+         100%. -->
+    <animate attributeName="width" to="150%" fill="freeze"
+      dur="2s" repeatCount="0.5"/>
+    <!-- The above will check that the resulting width is *at least* 100%. But
+         if it's, say, 120%, we won't see any failure.
+         Therefore, we perform the reverse operation on the height to ensure we
+         don't apply a value that's too large. -->
+    <!-- At time t=50s, this will give a base value of 150% -->
+    <animate attributeName="height" from="200%" to="100%"
+      dur="100s"/>
+    <!-- From time t=1s onwards this should apply 50% of its effect to the
+         value.
+         So, if the base value is 150%, and the to-value is 50%, it will produce
+         100%. -->
+    <animate attributeName="height" to="50%" fill="freeze"
+      dur="2s" repeatCount="0.5"/>
+  </rect>
+</svg>
