@@ -1039,10 +1039,10 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* ES5 15.1.1.1, 15.1.1.2 */
-    if (!DefineNativeProperty(cx, global, NameToId(cx->runtime->atomState.NaNAtom),
+    if (!DefineNativeProperty(cx, global, cx->runtime->atomState.NaNAtom,
                               cx->runtime->NaNValue, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_PERMANENT | JSPROP_READONLY, 0, 0) ||
-        !DefineNativeProperty(cx, global, NameToId(cx->runtime->atomState.InfinityAtom),
+        !DefineNativeProperty(cx, global, cx->runtime->atomState.InfinityAtom,
                               cx->runtime->positiveInfinityValue,
                               JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))

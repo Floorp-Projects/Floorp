@@ -65,7 +65,7 @@ class ArrayBufferObject : public JSObject
     static JSPropertySpec jsprops[];
     static JSFunctionSpec jsfuncs[];
 
-    static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool prop_getByteLength(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
 
     static JSBool fun_slice(JSContext *cx, unsigned argc, Value *vp);
 
@@ -80,87 +80,87 @@ class ArrayBufferObject : public JSObject
     obj_trace(JSTracer *trc, JSObject *obj);
 
     static JSBool
-    obj_lookupGeneric(JSContext *cx, JSObject *obj, jsid id,
+    obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                       JSObject **objp, JSProperty **propp);
     static JSBool
-    obj_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name,
+    obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                        JSObject **objp, JSProperty **propp);
     static JSBool
-    obj_lookupElement(JSContext *cx, JSObject *obj, uint32_t index,
+    obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                       JSObject **objp, JSProperty **propp);
     static JSBool
-    obj_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp,
+    obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp,
                       JSProperty **propp);
 
     static JSBool
-    obj_defineGeneric(JSContext *cx, JSObject *obj, jsid id, const Value *v,
+    obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, const Value *v,
                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
     static JSBool
-    obj_defineProperty(JSContext *cx, JSObject *obj, PropertyName *name, const Value *v,
+    obj_defineProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value *v,
                        PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
     static JSBool
-    obj_defineElement(JSContext *cx, JSObject *obj, uint32_t index, const Value *v,
+    obj_defineElement(JSContext *cx, HandleObject obj, uint32_t index, const Value *v,
                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
     static JSBool
-    obj_defineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *v,
+    obj_defineSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, const Value *v,
                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 
     static JSBool
-    obj_getGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+    obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id, Value *vp);
 
     static JSBool
-    obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name,
+    obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name,
                     Value *vp);
 
     static JSBool
-    obj_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp);
+    obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index, Value *vp);
     static JSBool
-    obj_getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index,
+    obj_getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
                             Value *vp, bool *present);
 
     static JSBool
-    obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp);
+    obj_getSpecial(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSpecialId sid, Value *vp);
 
     static JSBool
-    obj_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+    obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool strict);
     static JSBool
-    obj_setProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict);
+    obj_setProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp, JSBool strict);
     static JSBool
-    obj_setElement(JSContext *cx, JSObject *obj, uint32_t index, Value *vp, JSBool strict);
+    obj_setElement(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSBool strict);
     static JSBool
-    obj_setSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict);
+    obj_setSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *vp, JSBool strict);
 
     static JSBool
-    obj_getGenericAttributes(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp);
+    obj_getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
     static JSBool
-    obj_getPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp);
+    obj_getPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp);
     static JSBool
-    obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, unsigned *attrsp);
+    obj_getElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
     static JSBool
-    obj_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, unsigned *attrsp);
+    obj_getSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
 
     static JSBool
-    obj_setGenericAttributes(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp);
+    obj_setGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
     static JSBool
-    obj_setPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp);
+    obj_setPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp);
     static JSBool
-    obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, unsigned *attrsp);
+    obj_setElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
     static JSBool
-    obj_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, unsigned *attrsp);
+    obj_setSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
 
     static JSBool
-    obj_deleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict);
+    obj_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *rval, JSBool strict);
     static JSBool
-    obj_deleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, JSBool strict);
+    obj_deleteElement(JSContext *cx, HandleObject obj, uint32_t index, Value *rval, JSBool strict);
     static JSBool
-    obj_deleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict);
+    obj_deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *rval, JSBool strict);
 
     static JSBool
-    obj_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+    obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                   Value *statep, jsid *idp);
 
     static JSType
-    obj_typeOf(JSContext *cx, JSObject *obj);
+    obj_typeOf(JSContext *cx, HandleObject obj);
 
     bool
     allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
@@ -224,29 +224,29 @@ struct TypedArray {
 
     static JSPropertySpec jsprops[];
 
-    static JSBool prop_getBuffer(JSContext *cx, JSObject *obj, jsid id, Value *vp);
-    static JSBool prop_getByteOffset(JSContext *cx, JSObject *obj, jsid id, Value *vp);
-    static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
-    static JSBool prop_getLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool prop_getBuffer(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+    static JSBool prop_getByteOffset(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+    static JSBool prop_getByteLength(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+    static JSBool prop_getLength(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
 
-    static JSBool obj_lookupGeneric(JSContext *cx, JSObject *obj, jsid id,
+    static JSBool obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                     JSObject **objp, JSProperty **propp);
-    static JSBool obj_lookupProperty(JSContext *cx, JSObject *obj, PropertyName *name,
+    static JSBool obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                                      JSObject **objp, JSProperty **propp);
-    static JSBool obj_lookupElement(JSContext *cx, JSObject *obj, uint32_t index,
+    static JSBool obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                                     JSObject **objp, JSProperty **propp);
-    static JSBool obj_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid,
+    static JSBool obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
                                     JSObject **objp, JSProperty **propp);
 
-    static JSBool obj_getGenericAttributes(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp);
-    static JSBool obj_getPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp);
-    static JSBool obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, unsigned *attrsp);
-    static JSBool obj_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, unsigned *attrsp);
+    static JSBool obj_getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
+    static JSBool obj_getPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp);
+    static JSBool obj_getElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
+    static JSBool obj_getSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
 
-    static JSBool obj_setGenericAttributes(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp);
-    static JSBool obj_setPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp);
-    static JSBool obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, unsigned *attrsp);
-    static JSBool obj_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, unsigned *attrsp);
+    static JSBool obj_setGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
+    static JSBool obj_setPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp);
+    static JSBool obj_setElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
+    static JSBool obj_setSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
 
     static uint32_t getLength(JSObject *obj);
     static uint32_t getByteOffset(JSObject *obj);
@@ -325,9 +325,9 @@ class DataViewObject : public JSObject
   public:
     static const size_t RESERVED_SLOTS  = 3;
 
-    static JSBool prop_getBuffer(JSContext *cx, JSObject *obj, jsid id, Value *vp);
-    static JSBool prop_getByteOffset(JSContext *cx, JSObject *obj, jsid id, Value *vp);
-    static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool prop_getBuffer(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+    static JSBool prop_getByteOffset(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+    static JSBool prop_getByteLength(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
 
     static JSBool class_constructor(JSContext *cx, unsigned argc, Value *vp);
     static JSBool constructWithProto(JSContext *cx, unsigned argc, Value *vp);

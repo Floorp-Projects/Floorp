@@ -1065,7 +1065,7 @@ JSContext::~JSContext()
 void
 JSContext::resetCompartment()
 {
-    JSObject *scopeobj;
+    RootedVarObject scopeobj(this);
     if (stack.hasfp()) {
         scopeobj = fp()->scopeChain();
     } else {
@@ -1077,7 +1077,7 @@ JSContext::resetCompartment()
          * Innerize. Assert, but check anyway, that this succeeds. (It
          * can only fail due to bugs in the engine or embedding.)
          */
-        OBJ_TO_INNER_OBJECT(this, scopeobj);
+        scopeobj = GetInnerObject(this, scopeobj);
         if (!scopeobj)
             goto error;
     }
