@@ -1019,7 +1019,7 @@ GCMarker::processMarkStackOther(SliceBudget &budget, uintptr_t tag, uintptr_t ad
                     span = span->nextSpan();
                 } else {
                     JSObject *object = reinterpret_cast<JSObject *>(thing);
-                    if (object->hasSingletonType())
+                    if (object->hasSingletonType() && object->markIfUnmarked(getMarkColor()))
                         pushObject(object);
                     budget.step();
                 }
