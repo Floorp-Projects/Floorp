@@ -8683,9 +8683,11 @@ nsDocument::RestorePreviousFullScreenState()
       if (fullScreenDoc != doc) {
         // We've popped so enough off the stack that we've rolled back to
         // a fullscreen element in a parent document. If this document isn't
-        // authorized for fullscreen, dispatch an event to chrome so it
-        // knows to show the authorization UI.
-        if (!nsContentUtils::IsSitePermAllow(doc->NodePrincipal(), "fullscreen")) {
+        // approved for fullscreen, or if it's cross origin, dispatch an
+        // event to chrome so it knows to show the authorization/warning UI.
+        if (!nsContentUtils::HaveEqualPrincipals(fullScreenDoc, doc) ||
+            (!nsContentUtils::IsSitePermAllow(doc->NodePrincipal(), "fullscreen") &&
+             !static_cast<nsDocument*>(doc)->mIsApprovedForFullscreen)) {
           nsRefPtr<nsAsyncDOMEvent> e =
             new nsAsyncDOMEvent(doc,
                                 NS_LITERAL_STRING("MozEnteredDomFullscreen"),
@@ -9039,19 +9041,29 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
     DispatchFullScreenChange(changed[changed.Length() - i - 1]);
   }
 
-  nsRefPtr<nsAsyncDOMEvent> e =
-    new nsAsyncDOMEvent(this,
-                        NS_LITERAL_STRING("MozEnteredDomFullscreen"),
-                        true,
-                        true);
-  e->PostDOMEvent();
-
   // If this document hasn't already been approved in this session,
   // check to see if the user has granted the fullscreen access
   // to the document's principal's host, if it has one.
   if (!mIsApprovedForFullscreen) {
     mIsApprovedForFullscreen =
       nsContentUtils::IsSitePermAllow(NodePrincipal(), "fullscreen");
+  }
+
+  // If this document, or a document with the same principal has not
+  // already been approved for fullscreen this fullscreen-session, dispatch
+  // an event so that chrome knows to pop up a warning/approval UI.
+  nsCOMPtr<nsIDocument> previousFullscreenDoc(do_QueryReferent(sFullScreenDoc));
+  // Note previousFullscreenDoc=nsnull upon first entry, so we always
+  // take this path on the first time we enter fullscreen in a fullscreen
+  // session.
+  if (!mIsApprovedForFullscreen ||
+      !nsContentUtils::HaveEqualPrincipals(previousFullscreenDoc, this)) {
+    nsRefPtr<nsAsyncDOMEvent> e =
+      new nsAsyncDOMEvent(this,
+                          NS_LITERAL_STRING("MozEnteredDomFullscreen"),
+                          true,
+                          true);
+    e->PostDOMEvent();
   }
 
   // Remember this is the requesting full-screen document.
