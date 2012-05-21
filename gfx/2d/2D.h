@@ -311,7 +311,7 @@ class DataSourceSurface : public SourceSurface
 public:
   virtual SurfaceType GetType() const { return SURFACE_DATA; }
   /* Get the raw bitmap data of the surface */
-  virtual unsigned char *GetData() = 0;
+  virtual uint8_t *GetData() = 0;
   /*
    * Stride of the surface, distance in bytes between the start of the image
    * data belonging to row y and row y+1. This may be negative.
@@ -810,7 +810,7 @@ public:
    */
   static TemporaryRef<DataSourceSurface>
     CreateDataSourceSurface(const IntSize &aSize, SurfaceFormat aFormat);
-  
+
   /*
    * This creates a simple data source surface for some existing data. It will
    * wrap this data and the data for this source surface. The caller is
@@ -818,7 +818,7 @@ public:
    * surface.
    */
   static TemporaryRef<DataSourceSurface>
-    CreateDataSourceSurfaceFromData(unsigned char *aData, int32_t aStride,
+    CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
                                     const IntSize &aSize, SurfaceFormat aFormat);
 
 #ifdef WIN32
