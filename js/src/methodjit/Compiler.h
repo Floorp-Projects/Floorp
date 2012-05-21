@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla SpiderMonkey JavaScript 1.9 code, released
- * May 28, 2008.
- *
- * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org>
- *
- * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
- *   David Mandelin <dmandelin@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #if !defined jsjaeger_compiler_h__ && defined JS_METHODJIT
 #define jsjaeger_compiler_h__
 
@@ -405,7 +372,7 @@ class Compiler : public BaseCompiler
     /* SSA information for the outer script and all frames we will be inlining. */
     analyze::CrossScriptSSA ssa;
 
-    GlobalObject *globalObj;
+    RootedVar<GlobalObject*> globalObj;
     const HeapSlot *globalSlots;  /* Original slots pointer. */
 
     Assembler masm;
@@ -479,7 +446,7 @@ private:
     js::Vector<LoopEntry, 16> loopEntries;
     js::Vector<OutgoingChunkEdge, 16> chunkEdges;
     StubCompiler stubcc;
-    Label invokeLabel;
+    Label fastEntryLabel;
     Label arityLabel;
     Label argsCheckLabel;
 #ifdef JS_MONOIC
@@ -490,7 +457,7 @@ private:
     bool debugMode_;
     bool inlining_;
     bool hasGlobalReallocation;
-    bool oomInVector;       // True if we have OOM'd appending to a vector. 
+    bool oomInVector;       // True if we have OOM'd appending to a vector.
     bool overflowICSpace;   // True if we added a constant pool in a reserved space.
     uint64_t gcNumber;
     PCLengthEntry *pcLengths;
@@ -589,8 +556,8 @@ private:
     types::TypeSet *pushedTypeSet(uint32_t which);
     bool monitored(jsbytecode *pc);
     bool hasTypeBarriers(jsbytecode *pc);
-    bool testSingletonProperty(JSObject *obj, jsid id);
-    bool testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testObject);
+    bool testSingletonProperty(HandleObject obj, HandleId id);
+    bool testSingletonPropertyTypes(FrameEntry *top, HandleId id, bool *testObject);
     CompileStatus addInlineFrame(JSScript *script, uint32_t depth, uint32_t parent, jsbytecode *parentpc);
     CompileStatus scanInlineCalls(uint32_t index, uint32_t depth);
     CompileStatus checkAnalysis(JSScript *script);
@@ -802,10 +769,10 @@ private:
     CompileStatus compileMathAbsInt(FrameEntry *arg);
     CompileStatus compileMathAbsDouble(FrameEntry *arg);
     CompileStatus compileMathSqrt(FrameEntry *arg);
-    CompileStatus compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2, 
-                                          Assembler::DoubleCondition cond); 
-    CompileStatus compileMathMinMaxInt(FrameEntry *arg1, FrameEntry *arg2, 
-                                       Assembler::Condition cond);                                       
+    CompileStatus compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2,
+                                          Assembler::DoubleCondition cond);
+    CompileStatus compileMathMinMaxInt(FrameEntry *arg1, FrameEntry *arg2,
+                                       Assembler::Condition cond);
     CompileStatus compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2);
     CompileStatus compileArrayPush(FrameEntry *thisv, FrameEntry *arg);
     CompileStatus compileArrayConcat(types::TypeSet *thisTypes, types::TypeSet *argTypes,
@@ -819,7 +786,7 @@ private:
 
     enum GetCharMode { GetChar, GetCharCode };
     CompileStatus compileGetChar(FrameEntry *thisValue, FrameEntry *arg, GetCharMode mode);
-    
+
     CompileStatus compileStringFromCode(FrameEntry *arg);
     CompileStatus compileParseInt(JSValueType argType, uint32_t argc);
 

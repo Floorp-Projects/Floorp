@@ -1,3 +1,7 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
   <string name="sync_app_name">&sync.app.name.label;</string>
   <string name="sync_title_connect">&sync.title.adddevice.label;</string>
   <string name="sync_title_pair">&sync.title.pair.label;</string>
@@ -5,7 +9,7 @@
   <!-- J-PAKE PIN Screen -->
   <string name="sync_subtitle_header">&sync.subtitle.header.label;</string>
   <string name="sync_subtitle_connect">&sync.subtitle.connectlocation.label;</string>
-  <string name="sync_subtitle_pair">&sync.subtitle.pair.label;</string>
+  <string name="sync_subtitle_pair">&sync.pair.connectlocation.label;</string>
   <string name="sync_pin_default">&sync.pin.oneline.label;</string>
   <string name="sync_link_show"><u>&sync.link.show.label;</u></string>
   <string name="sync_link_advancedsetup"><u>&sync.link.advancedsetup.label;</u></string>

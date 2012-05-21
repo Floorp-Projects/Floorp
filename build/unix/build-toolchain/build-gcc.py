@@ -1,4 +1,8 @@
 #!/usr/bin/python
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 
 # The directories end up in the debug info, so the easy way of getting
 # a reproducible build is to run it in a know absolute directory.
@@ -48,7 +52,8 @@ def patch(patch, plevel, srcdir):
 
 def build_package(package_source_dir, package_build_dir, configure_args,
                    make = old_make):
-    os.mkdir(package_build_dir)
+    if not os.path.exists(package_build_dir):
+        os.mkdir(package_build_dir)
     run_in(package_build_dir,
            ["%s/configure" % package_source_dir] + configure_args)
     run_in(package_build_dir, [make, "-j8"])
@@ -64,6 +69,10 @@ def build_aux_tools(base_dir):
 
     tar_build_dir = base_dir + '/tar_build'
     build_package(tar_source_dir, tar_build_dir,
+                  ["--prefix=%s" % aux_inst_dir])
+
+    gawk_build_dir = base_dir + '/gawk_build'
+    build_package(gawk_source_dir, gawk_build_dir,
                   ["--prefix=%s" % aux_inst_dir])
 
 def with_env(env, f):
@@ -157,6 +166,12 @@ def build_one_stage_aux(stage_dir, is_stage_one):
 
     build_linux_headers(tool_inst_dir)
 
+    # zlib's configure only works if run from the source dir, copy the source
+    zlib_build_dir = stage_dir + '/zlib'
+    shutil.copytree(zlib_source_dir, zlib_build_dir)
+    build_package(zlib_build_dir, zlib_build_dir,
+                  ["--prefix=%s" % tool_inst_dir])
+
     binutils_build_dir = stage_dir + '/binutils'
     build_package(binutils_source_dir, binutils_build_dir,
                   ["--prefix=%s" % tool_inst_dir,
@@ -189,9 +204,11 @@ binutils_version = "2.21.1"
 glibc_version = "2.5.1"
 linux_version = "2.6.18"
 tar_version = "1.26"
+gawk_version = "3.1.5"
 make_version = "3.81"
 gcc_version = "4.5.2"
 mpfr_version = "2.4.2"
+zlib_version = "1.2.3"
 gmp_version = "5.0.1"
 mpc_version = "0.8.1"
 unifdef_version = "2.6"
@@ -204,6 +221,8 @@ linux_source_uri = "http://www.kernel.org/pub/linux/kernel/v2.6/linux-%s.tar.bz2
     linux_version
 tar_source_uri = "http://ftp.gnu.org/gnu/tar/tar-%s.tar.bz2" % \
     tar_version
+gawk_source_uri = "http://ftp.gnu.org/gnu/gawk/gawk-%s.tar.bz2" % \
+    gawk_version
 make_source_uri = "http://ftp.gnu.org/gnu/make/make-%s.tar.bz2" % \
     make_version
 unifdef_source_uri = "http://dotat.at/prog/unifdef/unifdef-%s.tar.gz" % \
@@ -212,6 +231,7 @@ gcc_source_uri = "http://ftp.gnu.org/gnu/gcc/gcc-%s/gcc-%s.tar.bz2" % \
     (gcc_version, gcc_version)
 mpfr_source_uri = "http://www.mpfr.org/mpfr-%s/mpfr-%s.tar.bz2" % \
     (mpfr_version, mpfr_version)
+zlib_source_uri = "http://iweb.dl.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.bz2" % (zlib_version, zlib_version)
 gmp_source_uri = "http://ftp.gnu.org/gnu/gmp/gmp-%s.tar.bz2" % gmp_version
 mpc_source_uri = "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % \
     mpc_version
@@ -220,10 +240,12 @@ binutils_source_tar = download_uri(binutils_source_uri)
 glibc_source_tar = download_uri(glibc_source_uri)
 linux_source_tar = download_uri(linux_source_uri)
 tar_source_tar = download_uri(tar_source_uri)
+gawk_source_tar = download_uri(gawk_source_uri)
 make_source_tar = download_uri(make_source_uri)
 unifdef_source_tar = download_uri(unifdef_source_uri)
 mpc_source_tar = download_uri(mpc_source_uri)
 mpfr_source_tar = download_uri(mpfr_source_uri)
+zlib_source_tar = download_uri(zlib_source_uri)
 gmp_source_tar = download_uri(gmp_source_uri)
 gcc_source_tar = download_uri(gcc_source_uri)
 
@@ -231,10 +253,12 @@ binutils_source_dir  = build_source_dir('binutils-', binutils_version)
 glibc_source_dir  = build_source_dir('glibc-', glibc_version)
 linux_source_dir  = build_source_dir('linux-', linux_version)
 tar_source_dir  = build_source_dir('tar-', tar_version)
+gawk_source_dir  = build_source_dir('gawk-', gawk_version)
 make_source_dir  = build_source_dir('make-', make_version)
 unifdef_source_dir  = build_source_dir('unifdef-', unifdef_version)
 mpc_source_dir  = build_source_dir('mpc-', mpc_version)
 mpfr_source_dir = build_source_dir('mpfr-', mpfr_version)
+zlib_source_dir = build_source_dir('zlib-', zlib_version)
 gmp_source_dir  = build_source_dir('gmp-', gmp_version)
 gcc_source_dir  = build_source_dir('gcc-', gcc_version)
 
@@ -247,10 +271,12 @@ if not os.path.exists(source_dir):
     patch('glibc-deterministic.patch', 1, glibc_source_dir)
     run_in(glibc_source_dir, ["autoconf"])
     extract(tar_source_tar, source_dir)
+    extract(gawk_source_tar, source_dir)
     extract(make_source_tar, source_dir)
     extract(unifdef_source_tar, source_dir)
     extract(mpc_source_tar, source_dir)
     extract(mpfr_source_tar, source_dir)
+    extract(zlib_source_tar, source_dir)
     extract(gmp_source_tar, source_dir)
     extract(gcc_source_tar, source_dir)
     patch('plugin_finish_decl.diff', 0, gcc_source_dir)
@@ -266,24 +292,24 @@ os.makedirs(build_dir)
 
 build_aux_tools(build_dir)
 
+basic_path = aux_inst_dir + "/bin:/bin:/usr/bin"
+
 stage1_dir = build_dir + '/stage1'
-build_one_stage({"CC": "gcc", "CXX" : "g++"}, stage1_dir, True)
+build_one_stage({"PATH"   : basic_path,
+                 "CC"     : "gcc",
+                 "CXX"    : "g++" },
+                stage1_dir, True)
 
-stage1_tool_inst_dir = stage1_dir + '/inst'
-stage2_dir = build_dir + '/stage2'
-build_one_stage({"PATH"   : stage1_tool_inst_dir + "/bin:/bin:/usr/bin",
-                 "CC"     : "gcc -fgnu89-inline",
-                 "CXX"    : "g++",
-                 "RANLIB" : "true" },
-                stage2_dir, False)
+for stage_num in range(2, 4):
+    prev_stage_dir = build_dir + '/stage' + str(stage_num - 1)
+    prev_stage_inst_dir = prev_stage_dir + '/inst'
+    cur_stage_dir = build_dir + '/stage' + str(stage_num)
+    build_one_stage({"PATH"   : prev_stage_inst_dir + "/bin:" + basic_path,
+                     "CC"     : "gcc -fgnu89-inline",
+                     "CXX"    : "g++",
+                     "RANLIB" : "true" },
+                    cur_stage_dir, False)
 
-stage2_tool_inst_dir = stage2_dir + '/inst'
 stage3_dir = build_dir + '/stage3'
-build_one_stage({"PATH"   : stage2_tool_inst_dir + "/bin:/bin:/usr/bin",
-                 "CC"     : "gcc -fgnu89-inline",
-                 "CXX"    : "g++",
-                 "RANLIB" : "true" },
-                stage3_dir, False)
-
 build_tar_package(aux_inst_dir + "/bin/tar",
                   "toolchain.tar", stage3_dir, "inst")

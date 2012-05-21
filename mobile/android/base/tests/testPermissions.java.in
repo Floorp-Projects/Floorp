@@ -1,0 +1,55 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+import android.widget.CheckBox;
+import java.util.ArrayList;
+
+public class testPermissions extends PixelTest {
+    private PaintedSurface mPaintedSurface;
+    private Actions.RepeatedEventExpecter mPaintExpecter;
+
+    public void testPermissions() {
+        setTestType("mochitest");
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
+        geolocationTest();
+    }
+
+    private void geolocationTest() {
+        // Test geolocation notification
+        mPaintedSurface = loadAndPaint(getAbsoluteUrl("/robocop/robocop_geolocation.html"));
+        mSolo.waitForText("wants your location");
+
+        // Uncheck the "Don't ask again for this site" checkbox
+        ArrayList<CheckBox> checkBoxes = mSolo.getCurrentCheckBoxes();
+        mAsserter.ok(checkBoxes.size() == 1, "checkbox count", "only one checkbox visible");
+        mAsserter.ok(mSolo.isCheckBoxChecked(0), "checkbox checked", "checkbox is checked");
+        mSolo.clickOnCheckBox(0);
+        mAsserter.ok(!mSolo.isCheckBoxChecked(0), "checkbox not checked", "checkbox is not checked");
+
+        // Test "Share" button functionality with unchecked checkbox
+        mPaintExpecter = mActions.expectPaint();
+        mSolo.clickOnText("Share");
+        mPaintedSurface = waitForPaint(mPaintExpecter);
+        mAsserter.ispixel(mPaintedSurface.getPixelAt(10, 10), 0, 0x80, 0, "checking page background is green");
+
+        // Re-trigger geolocation notification
+        reloadAndPaint();
+        mSolo.waitForText("wants your location");
+
+        // Make sure the checkbox is checked this time
+        mAsserter.ok(mSolo.isCheckBoxChecked(0), "checkbox checked", "checkbox is checked");
+
+        // Test "Share" button functionality with checked checkbox
+        mPaintExpecter = mActions.expectPaint();
+        mSolo.clickOnText("Share");
+        mPaintedSurface = waitForPaint(mPaintExpecter);
+        mAsserter.ispixel(mPaintedSurface.getPixelAt(10, 10), 0, 0x80, 0, "checking page background is green");
+
+        // When we reload the page, location should be automatically shared
+        mPaintedSurface = reloadAndPaint();
+        mAsserter.ispixel(mPaintedSurface.getPixelAt(10, 10), 0, 0x80, 0, "checking page background is green");
+    }
+}

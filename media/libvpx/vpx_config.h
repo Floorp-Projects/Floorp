@@ -1,6 +1,10 @@
 #if defined(VPX_X86_ASM)
 
-#if defined(_WIN32) && !defined(__GNUC__) && defined(_M_IX86)
+#if defined(_WIN64)
+/* 64 bit Windows */
+#include "vpx_config_x86_64-win64-vs8.h"
+
+#elif defined(_WIN32)
 /* 32 bit Windows, MSVC. */
 #include "vpx_config_x86-win32-vs8.h"
 
@@ -27,10 +31,6 @@
 #elif defined(__sun) && defined(__x86_64)
 /* 64 bit Solaris. */
 #include "vpx_config_x86_64-linux-gcc.h"
-
-#elif defined(_MSC_VER) && defined(_M_X64)
-/* 64 bit Windows */
-#include "vpx_config_x86_64-win64-vs8.h"
 
 #else
 #error VPX_X86_ASM is defined, but assembly not supported on this platform!

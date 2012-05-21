@@ -1,38 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Mozilla SVG project.
- *
- * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
 #include "nsSVGFilterFrame.h"
@@ -99,7 +68,8 @@ public:
                        nsSVGFilterPaintCallback *aPaint,
                        const nsIntRect *aDirtyOutputRect,
                        const nsIntRect *aDirtyInputRect,
-                       const nsIntRect *aOverrideSourceBBox);
+                       const nsIntRect *aOverrideSourceBBox,
+                       const gfxMatrix *aOverrideUserToDeviceSpace = nsnull);
   ~nsAutoFilterInstance() {}
 
   // If this returns null, then draw nothing. Either the filter draws
@@ -115,7 +85,8 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
                                            nsSVGFilterPaintCallback *aPaint,
                                            const nsIntRect *aDirtyOutputRect,
                                            const nsIntRect *aDirtyInputRect,
-                                           const nsIntRect *aOverrideSourceBBox)
+                                           const nsIntRect *aOverrideSourceBBox,
+                                           const gfxMatrix *aOverrideUserToDeviceSpace)
 {
   const nsSVGFilterElement *filter = aFilterFrame->GetFilterContent();
 
@@ -161,10 +132,11 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
     return;
   }
 
-  gfxMatrix userToDeviceSpace = nsSVGUtils::GetCanvasTM(aTarget);
-  if (userToDeviceSpace.IsSingular()) {
-    // nothing to draw
-    return;
+  gfxMatrix userToDeviceSpace;
+  if (aOverrideUserToDeviceSpace) {
+    userToDeviceSpace = *aOverrideUserToDeviceSpace;
+  } else {
+    userToDeviceSpace = nsSVGUtils::GetCanvasTM(aTarget);
   }
   
   // Calculate filterRes (the width and height of the pixel buffer of the
@@ -195,7 +167,12 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   } else {
     // Match filterRes as closely as possible to the pixel density of the nearest
     // outer 'svg' device space:
-    float scale = nsSVGUtils::MaxExpansion(userToDeviceSpace);
+    gfxMatrix canvasTM = nsSVGUtils::GetCanvasTM(aTarget);
+    if (canvasTM.IsSingular()) {
+      // nothing to draw
+      return;
+    }
+    float scale = nsSVGUtils::MaxExpansion(canvasTM);
 
     filterRegion.Scale(scale);
     filterRegion.RoundOut();
@@ -228,8 +205,20 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   nsIntRect targetBoundsDeviceSpace;
   nsISVGChildFrame* svgTarget = do_QueryFrame(aTarget);
   if (svgTarget) {
-    targetBoundsDeviceSpace.UnionRect(targetBoundsDeviceSpace,
-      svgTarget->GetCoveredRegion().ToOutsidePixels(aTarget->PresContext()->AppUnitsPerDevPixel()));
+    if (aOverrideUserToDeviceSpace) {
+      // If aOverrideUserToDeviceSpace is specified, it is a simple
+      // CSS-px-to-dev-px transform passed by nsSVGFilterFrame::GetFilterBBox()
+      // when requesting the filter expansion of the overflow rects in frame
+      // space. In this case GetCoveredRegion() is not what we want since it is
+      // in outer-<svg> space, GetFilterBBox passes in the pre-filter bounds of
+      // the frame in frame space for us to use instead.
+      NS_ASSERTION(aDirtyInputRect, "Who passed aOverrideUserToDeviceSpace?");
+      targetBoundsDeviceSpace = *aDirtyInputRect;
+    } else {
+      targetBoundsDeviceSpace =
+        svgTarget->GetCoveredRegion().ToOutsidePixels(aTarget->
+          PresContext()->AppUnitsPerDevPixel());
+    }
   }
   nsIntRect targetBoundsFilterSpace =
     MapDeviceRectToFilterSpace(deviceToFilterSpace, filterRes, &targetBoundsDeviceSpace);
@@ -471,9 +460,27 @@ nsSVGFilterFrame::GetSourceForInvalidArea(nsIFrame *aTarget, const nsIntRect& aR
 }
 
 nsIntRect
-nsSVGFilterFrame::GetFilterBBox(nsIFrame *aTarget, const nsIntRect *aSourceBBox)
+nsSVGFilterFrame::GetFilterBBox(nsIFrame *aTarget,
+                                const nsIntRect *aOverrideBBox,
+                                const nsIntRect *aPreFilterBounds)
 {
-  nsAutoFilterInstance instance(aTarget, this, nsnull, nsnull, nsnull, aSourceBBox);
+  bool overrideCTM = false;
+  gfxMatrix ctm;
+
+  if (aTarget->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+    // For most filter operations on SVG frames we want information in
+    // outer-<svg> device space, but in this case we want the visual overflow
+    // rect relative to aTarget itself. For that we need to prevent the filter
+    // code using GetCanvasTM().
+    overrideCTM = true;
+    PRInt32 appUnitsPerDevPixel = aTarget->PresContext()->AppUnitsPerDevPixel();
+    float devPxPerCSSPx =
+      1 / nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPixel);
+    ctm.Scale(devPxPerCSSPx, devPxPerCSSPx);
+  }
+
+  nsAutoFilterInstance instance(aTarget, this, nsnull, nsnull, aPreFilterBounds,
+                                aOverrideBBox, overrideCTM ? &ctm : nsnull);
   if (!instance.get())
     return nsIntRect();
 

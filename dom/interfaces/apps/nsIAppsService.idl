@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+interface mozIDOMApplication;
+
+%{C++
+#define APPS_SERVICE_CID { 0x05072afa, 0x92fe, 0x45bf, { 0xae, 0x22, 0x39, 0xb6, 0x9c, 0x11, 0x70, 0x58 } }
+#define APPS_SERVICE_CONTRACTID "@mozilla.org/AppsService;1"
+%}
+
+/*
+ * This service allows accessing some DOMApplicationRegistry methods from
+ * non-javascript code.
+ */
+[scriptable, uuid(8a4d9921-58ae-41da-a6f1-5f842c3a050f)]
+interface nsIAppsService : nsISupports
+{
+  mozIDOMApplication getAppByManifestURL(in DOMString manifestURL);
+};

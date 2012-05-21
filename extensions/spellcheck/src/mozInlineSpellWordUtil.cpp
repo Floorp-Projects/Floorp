@@ -1,41 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is inline spellchecker code.
- *
- * The Initial Developer of the Original Code is Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2004-2006
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Brett Wilson <brettw@gmail.com> (original author)
- *   Robert O'Callahan <rocallahan@novell.com>
- *   Ms2ger <ms2ger@gmail.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozInlineSpellWordUtil.h"
 #include "nsDebug.h"
@@ -761,7 +727,7 @@ enum CharClass {
   CHAR_CLASS_END_OF_INPUT };
 
 // Encapsulates DOM-word to real-word splitting
-struct WordSplitState
+struct NS_STACK_CLASS WordSplitState
 {
   mozInlineSpellWordUtil*    mWordUtil;
   const nsDependentSubstring mDOMWordText;
@@ -782,9 +748,9 @@ struct WordSplitState
   // current position, and returns their length, or 0 if not found. This allows
   // arbitrary word breaking rules to be used for these special entities, as
   // long as they can not contain whitespace.
-  PRInt32 FindSpecialWord();
+  bool IsSpecialWord();
 
-  // Similar to FindSpecialWord except that this takes a split word as
+  // Similar to IsSpecialWord except that this takes a split word as
   // input. This checks for things that do not require special word-breaking
   // rules.
   bool ShouldSkipWord(PRInt32 aStart, PRInt32 aLength);
@@ -912,21 +878,16 @@ WordSplitState::AdvanceThroughWord()
 }
 
 
-// WordSplitState::FindSpecialWord
+// WordSplitState::IsSpecialWord
 
-PRInt32
-WordSplitState::FindSpecialWord()
+bool
+WordSplitState::IsSpecialWord()
 {
-  PRInt32 i;
-
   // Search for email addresses. We simply define these as any sequence of
   // characters with an '@' character in the middle. The DOM word is already
   // split on whitepace, so we know that everything to the end is the address
-  //
-  // Also look for periods, this tells us if we want to run the URL finder.
-  bool foundDot = false;
   PRInt32 firstColon = -1;
-  for (i = mDOMWordOffset;
+  for (PRInt32 i = mDOMWordOffset;
        i < PRInt32(mDOMWordText.Length()); i ++) {
     if (mDOMWordText[i] == '@') {
       // only accept this if there are unambiguous word characters (don't bother
@@ -941,23 +902,19 @@ WordSplitState::FindSpecialWord()
       // current position for potentially removing a spelling range.
       if (i > 0 && ClassifyCharacter(i - 1, false) == CHAR_CLASS_WORD &&
           i < (PRInt32)mDOMWordText.Length() - 1 &&
-          ClassifyCharacter(i + 1, false) == CHAR_CLASS_WORD)
-
-      return mDOMWordText.Length() - mDOMWordOffset;
-    } else if (mDOMWordText[i] == '.' && ! foundDot &&
-        i > 0 && i < (PRInt32)mDOMWordText.Length() - 1) {
-      // we found a period not at the end, we should check harder for URLs
-      foundDot = true;
+          ClassifyCharacter(i + 1, false) == CHAR_CLASS_WORD) {
+        return true;
+      }
     } else if (mDOMWordText[i] == ':' && firstColon < 0) {
       firstColon = i;
-    }
-  }
 
-  // If the first colon is followed by a slash, consider it a URL
-  // This will catch things like asdf://foo.com
-  if (firstColon >= 0 && firstColon < (PRInt32)mDOMWordText.Length() - 1 &&
-      mDOMWordText[firstColon + 1] == '/') {
-    return mDOMWordText.Length() - mDOMWordOffset;
+      // If the first colon is followed by a slash, consider it a URL
+      // This will catch things like asdf://foo.com
+      if (firstColon < (PRInt32)mDOMWordText.Length() - 1 &&
+          mDOMWordText[firstColon + 1] == '/') {
+        return true;
+      }
+    }
   }
 
   // Check the text before the first colon against some known protocols. It
@@ -974,12 +931,12 @@ WordSplitState::FindSpecialWord()
         protocol.EqualsIgnoreCase("javascript") ||
         protocol.EqualsIgnoreCase("data") ||
         protocol.EqualsIgnoreCase("ftp")) {
-      return mDOMWordText.Length() - mDOMWordOffset;
+      return true;
     }
   }
 
   // not anything special
-  return -1;
+  return false;
 }
 
 // WordSplitState::ShouldSkipWord
@@ -1009,24 +966,20 @@ mozInlineSpellWordUtil::SplitDOMWord(PRInt32 aStart, PRInt32 aEnd)
   WordSplitState state(this, mSoftText, aStart, aEnd - aStart);
   state.mCurCharClass = state.ClassifyCharacter(0, true);
 
+  state.AdvanceThroughSeparators();
+  if (state.mCurCharClass != CHAR_CLASS_END_OF_INPUT &&
+      state.IsSpecialWord()) {
+    PRInt32 specialWordLength = state.mDOMWordText.Length() - state.mDOMWordOffset;
+    mRealWords.AppendElement(
+        RealWord(aStart + state.mDOMWordOffset, specialWordLength, false));
+
+    return;
+  }
+
   while (state.mCurCharClass != CHAR_CLASS_END_OF_INPUT) {
     state.AdvanceThroughSeparators();
     if (state.mCurCharClass == CHAR_CLASS_END_OF_INPUT)
       break;
-
-    PRInt32 specialWordLength = state.FindSpecialWord();
-    if (specialWordLength > 0) {
-      mRealWords.AppendElement(
-        RealWord(aStart + state.mDOMWordOffset, specialWordLength, false));
-
-      // skip the special word
-      state.mDOMWordOffset += specialWordLength;
-      if (state.mDOMWordOffset + aStart >= aEnd)
-        state.mCurCharClass = CHAR_CLASS_END_OF_INPUT;
-      else
-        state.mCurCharClass = state.ClassifyCharacter(state.mDOMWordOffset, true);
-      continue;
-    }
 
     // save the beginning of the word
     PRInt32 wordOffset = state.mDOMWordOffset;

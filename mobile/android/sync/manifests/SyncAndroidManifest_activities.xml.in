@@ -1,7 +1,11 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
         <activity
             android:icon="@drawable/sync_ic_launcher"
             android:label="@string/sync_app_name"
-            android:configChanges="orientation"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:taskAffinity="org.mozilla.gecko.sync.setup"
             android:name="org.mozilla.gecko.sync.setup.activities.SetupSyncActivity" >

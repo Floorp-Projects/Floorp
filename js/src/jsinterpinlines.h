@@ -1,42 +1,9 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is SpiderMonkey code.
- *
- * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2010
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Luke Wagner <lw@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef jsinterpinlines_h__
 #define jsinterpinlines_h__
@@ -131,7 +98,7 @@ ComputeThis(JSContext *cx, StackFrame *fp)
  * This helps us implement the custom [[Get]] method that ES5's GetValue
  * algorithm uses for primitive values, without actually constructing the
  * temporary object that the specification does.
- * 
+ *
  * For objects, return the object itself. For string, boolean, and number
  * primitive values, return the appropriate constructor's prototype. For
  * undefined and null, throw an error and return NULL, attributing the
@@ -183,7 +150,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSObject *start, JSObject *found,
 #endif
 
 inline bool
-GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, HandleObject obj, jsid id, Value *vp)
+GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, HandleObject obj, HandleId id, Value *vp)
 {
     /*
      * Various XML properties behave differently when accessed in a
@@ -339,12 +306,12 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
 
     RootObject objRoot(cx, &obj);
 
-    jsid id = NameToId(name);
+    RootedVarId id(cx, NameToId(name));
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
         unsigned defineHow = (op == JSOP_SETNAME)
                              ? DNP_CACHE_RESULT | DNP_UNQUALIFIED
                              : DNP_CACHE_RESULT;
-        if (!js_SetPropertyHelper(cx, objRoot, id, defineHow, rref.address(), strict))
+        if (!baseops::SetPropertyHelper(cx, objRoot, id, defineHow, rref.address(), strict))
             return false;
     } else {
         if (!obj->setGeneric(cx, id, rref.address(), strict))
@@ -405,7 +372,7 @@ NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
 
     /* Take the slow path if prop was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
-        if (!obj->getGeneric(cx, id, vp))
+        if (!obj->getGeneric(cx, RootedVarId(cx, id), vp))
             return false;
     } else {
         Shape *shape = (Shape *)prop;
@@ -423,7 +390,7 @@ inline bool
 DefVarOrConstOperation(JSContext *cx, HandleObject varobj, PropertyName *dn, unsigned attrs)
 {
     JS_ASSERT(varobj->isVarObj());
-    JS_ASSERT(!varobj->getOps()->defineProperty);
+    JS_ASSERT(!varobj->getOps()->defineProperty || varobj->isDebugScope());
 
     JSProperty *prop;
     JSObject *obj2;
@@ -432,9 +399,8 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, PropertyName *dn, uns
 
     /* Steps 8c, 8d. */
     if (!prop || (obj2 != varobj && varobj->isGlobal())) {
-        if (!DefineNativeProperty(cx, varobj, dn, UndefinedValue(),
-                                  JS_PropertyStub, JS_StrictPropertyStub, attrs, 0, 0))
-        {
+        if (!varobj->defineProperty(cx, dn, UndefinedValue(), JS_PropertyStub,
+                                    JS_StrictPropertyStub, attrs)) {
             return false;
         }
     } else {
@@ -532,6 +498,49 @@ InterpreterFrames::enableInterruptsIfRunning(JSScript *script)
 {
     if (script == regs->fp()->script())
         enabler.enableInterrupts();
+}
+
+inline void
+AssertValidEvalFrameScopeChainAtExit(StackFrame *fp)
+{
+#ifdef DEBUG
+    JS_ASSERT(fp->isEvalFrame());
+
+    JS_ASSERT(!fp->hasBlockChain());
+    JSObject &scope = *fp->scopeChain();
+
+    if (fp->isStrictEvalFrame())
+        JS_ASSERT(scope.asCall().maybeStackFrame() == fp);
+    else if (fp->isDebuggerFrame())
+        JS_ASSERT(!scope.isScope());
+    else if (fp->isDirectEvalFrame())
+        JS_ASSERT(scope == *fp->prev()->scopeChain());
+    else
+        JS_ASSERT(scope.isGlobal());
+#endif
+}
+
+inline void
+AssertValidFunctionScopeChainAtExit(StackFrame *fp)
+{
+#ifdef DEBUG
+    JS_ASSERT(fp->isFunctionFrame());
+    if (fp->isGeneratorFrame() || fp->isYielding())
+        return;
+
+    if (fp->isEvalFrame()) {
+        AssertValidEvalFrameScopeChainAtExit(fp);
+        return;
+    }
+
+    JS_ASSERT(!fp->hasBlockChain());
+    JSObject &scope = *fp->scopeChain();
+
+    if (fp->fun()->isHeavyweight())
+        JS_ASSERT(scope.asCall().maybeStackFrame() == fp);
+    else if (scope.isCall() || scope.isBlock())
+        JS_ASSERT(scope.asScope().maybeStackFrame() != fp);
+#endif
 }
 
 static JS_ALWAYS_INLINE bool
@@ -665,14 +674,14 @@ ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 }
 
 static inline bool
-FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid &id, Value *vp)
+FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid *idp, Value *vp)
 {
     int32_t i_;
     if (ValueFitsInInt32(idval, &i_) && INT_FITS_IN_JSID(i_)) {
-        id = INT_TO_JSID(i_);
+        *idp = INT_TO_JSID(i_);
         return true;
     }
-    return !!InternNonIntElementId(cx, obj, idval, &id, vp);
+    return !!InternNonIntElementId(cx, obj, idval, idp, vp);
 }
 
 static JS_ALWAYS_INLINE bool
@@ -702,7 +711,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
 #if JS_HAS_XML_SUPPORT
     if (op == JSOP_CALLELEM && JS_UNLIKELY(obj->isXML())) {
         jsid id;
-        if (!FetchElementId(cx, obj, rref, id, res))
+        if (!FetchElementId(cx, obj, rref, &id, res))
             return false;
         return js_GetXMLMethod(cx, obj, id, res);
     }
@@ -797,7 +806,7 @@ GetElementOperation(JSContext *cx, JSOp op, const Value &lref, const Value &rref
 }
 
 static JS_ALWAYS_INLINE bool
-SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &value, bool strict)
+SetObjectElementOperation(JSContext *cx, JSObject *obj, HandleId id, const Value &value, bool strict)
 {
     types::TypeScript::MonitorAssign(cx, obj, id);
 

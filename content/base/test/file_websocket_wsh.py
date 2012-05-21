@@ -31,6 +31,19 @@ def web_socket_do_extra_handshake(request):
   else:
     pass
 
+# Behave according to recommendation of RFC 6455, section # 5.5.1:
+#  "When sending a Close frame in response, the endpoint typically echos the
+#   status code it received."  
+# - Without this, pywebsocket replies with 1000 to any close code.
+#
+#  Note that this function is only called when the client initiates the close
+def web_socket_passive_closing_handshake(request):
+  if request.ws_close_code == 1005:
+    return None, None
+  else:
+    return request.ws_close_code, request.ws_close_reason
+
+
 def web_socket_transfer_data(request):
   if request.ws_protocol == "test-2.1" or request.ws_protocol == "test-2.2":
     msgutil.close_connection(request)
@@ -57,7 +70,6 @@ def web_socket_transfer_data(request):
     if msgutil.receive_message(request) == "client data":
       resp = "server data"
     msgutil.send_message(request, resp.decode('utf-8'))
-    msgutil.close_connection(request)
   elif request.ws_protocol == "test-12":
     msgutil.close_connection(request)
   elif request.ws_protocol == "test-13":

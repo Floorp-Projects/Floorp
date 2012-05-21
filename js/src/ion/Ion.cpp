@@ -972,7 +972,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
             // can be copied by generateEnterJit.
             memcpy(argv, formalArgv, formalArgc * sizeof(Value));
         }
-        calleeToken = CalleeToToken(fp->callee().toFunction());
+        calleeToken = CalleeToToken(&fp->callee());
     } else {
         calleeToken = CalleeToToken(fp->script());
     }

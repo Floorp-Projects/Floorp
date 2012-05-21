@@ -4,7 +4,7 @@ var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {
-    assertEq(frame.environment.find("x").type, "object");
+    assertEq(frame.environment.find("x").type, "with");
     hits++;
 };
 

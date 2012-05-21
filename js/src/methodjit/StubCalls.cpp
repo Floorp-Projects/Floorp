@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla SpiderMonkey JavaScript 1.9 code, released
- * May 28, 2008.
- *
- * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org>
- *
- * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
- *   David Mandelin <dmandelin@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/FloatingPoint.h"
 
@@ -159,13 +126,13 @@ stubs::SetElem(VMFrame &f)
     Value rval    = regs.sp[-1];
 
     JSObject *obj;
-    jsid id;
+    RootedVarId id(cx);
 
     obj = ValueToObject(cx, objval);
     if (!obj)
         THROW();
 
-    if (!FetchElementId(f.cx, obj, idval, id, &regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, idval, id.address(), &regs.sp[-2]))
         THROW();
 
     TypeScript::MonitorAssign(cx, obj, id);
@@ -212,8 +179,8 @@ stubs::ToId(VMFrame &f)
     if (!obj)
         THROW();
 
-    jsid id;
-    if (!FetchElementId(f.cx, obj, idval, id, &idval))
+    RootedVarId id(f.cx);
+    if (!FetchElementId(f.cx, obj, idval, id.address(), &idval))
         THROW();
 
     if (!idval.isInt32())
@@ -326,32 +293,15 @@ template<JSBool strict>
 void JS_FASTCALL
 stubs::DefFun(VMFrame &f, JSFunction *fun_)
 {
-    RootedVarFunction fun(f.cx, fun_);
-
-    JSContext *cx = f.cx;
-    StackFrame *fp = f.fp();
-
     /*
      * A top-level function defined in Global or Eval code (see ECMA-262
      * Ed. 3), or else a SpiderMonkey extension: a named function statement in
      * a compound statement (not at the top statement level of global code, or
      * at the top level of a function body).
      */
-    JSObject *obj = fun;
-
-    RootedVarObject obj2(f.cx);
-    if (fun->isNullClosure()) {
-        /*
-         * Even a null closure needs a parent for principals finding.
-         * FIXME: bug 476950, although debugger users may also demand some kind
-         * of scope link for debugger-assisted eval-in-frame.
-         */
-        obj2 = fp->scopeChain();
-    } else {
-        obj2 = GetScopeChain(cx, fp);
-        if (!obj2)
-            THROW();
-    }
+    JSContext *cx = f.cx;
+    StackFrame *fp = f.fp();
+    RootedVarFunction fun(f.cx, fun_);
 
     /*
      * If static link is not current scope, clone fun's object to link to the
@@ -362,11 +312,14 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
      * windows, and user-defined JS functions precompiled and then shared among
      * requests in server-side JS.
      */
-    if (obj->toFunction()->environment() != obj2) {
-        obj = CloneFunctionObjectIfNotSingleton(cx, fun, obj2);
-        if (!obj)
+    HandleObject scopeChain = f.fp()->scopeChain();
+    if (fun->environment() != scopeChain) {
+        fun = CloneFunctionObjectIfNotSingleton(cx, fun, scopeChain);
+        if (!fun)
             THROW();
-        JS_ASSERT_IF(f.script()->compileAndGo, obj->global() == fun->global());
+    } else {
+        JS_ASSERT(f.script()->compileAndGo);
+        JS_ASSERT(f.fp()->isGlobalFrame() || f.fp()->isEvalInFunction());
     }
 
     /*
@@ -391,7 +344,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
     if (!parent->lookupProperty(cx, name, &pobj, &prop))
         THROW();
 
-    Value rval = ObjectValue(*obj);
+    Value rval = ObjectValue(*fun);
 
     do {
         /* Steps 5d, 5f. */
@@ -552,7 +505,7 @@ StubEqualityOp(VMFrame &f)
             JSObject *l = &lval.toObject(), *r = &rval.toObject();
             if (JSEqualityOp eq = l->getClass()->ext.equality) {
                 JSBool equal;
-                if (!eq(cx, l, &rval, &equal))
+                if (!eq(cx, RootedVarObject(cx, l), &rval, &equal))
                     return false;
                 cond = !!equal == EQ;
             } else {
@@ -968,9 +921,9 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     JSObject *obj = &lref.toObject();
 
     /* Fetch id now that we have obj. */
-    jsid id;
+    RootedVarId id(cx);
     const Value &idval = regs.sp[-2];
-    if (!FetchElementId(f.cx, obj, idval, id, &regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, idval, id.address(), &regs.sp[-2]))
         THROW();
 
     /*
@@ -1011,22 +964,11 @@ JSObject * JS_FASTCALL
 stubs::Lambda(VMFrame &f, JSFunction *fun_)
 {
     RootedVarFunction fun(f.cx, fun_);
-
-    RootedVarObject parent(f.cx);
-    if (fun->isNullClosure()) {
-        parent = f.fp()->scopeChain();
-    } else {
-        parent = GetScopeChain(f.cx, f.fp());
-        if (!parent)
-            THROWV(NULL);
-    }
-
-    JSObject *obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, parent);
-    if (!obj)
+    fun = CloneFunctionObjectIfNotSingleton(f.cx, fun, f.fp()->scopeChain());
+    if (!fun)
         THROWV(NULL);
 
-    JS_ASSERT_IF(f.script()->compileAndGo, obj->global() == fun->global());
-    return obj;
+    return fun;
 }
 
 void JS_FASTCALL
@@ -1087,10 +1029,10 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     JS_ASSERT(obj->isNative());
 
     /* Get the immediate property name into id. */
-    jsid id = NameToId(name);
+    RootedVarId id(cx, NameToId(name));
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
-        ? !js_SetPropertyHelper(cx, obj, id, 0, &rval, false)
+        ? !baseops::SetPropertyHelper(cx, obj, id, 0, &rval, false)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         THROW();
@@ -1201,7 +1143,7 @@ stubs::InstanceOf(VMFrame &f)
                             -1, rref, NULL);
         THROWV(JS_FALSE);
     }
-    JSObject *obj = &rref.toObject();
+    RootedVarObject obj(cx, &rref.toObject());
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
     if (!HasInstance(cx, obj, &lref, &cond))
@@ -1232,9 +1174,11 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
 {
     FrameRegs &regs = f.regs;
     StackFrame *fp = f.fp();
-    StaticBlockObject &blockObj = obj->asStaticBlock();
-
     JS_ASSERT(!f.regs.inlined());
+
+    StaticBlockObject &blockObj = obj->asStaticBlock();
+    if (!fp->pushBlock(f.cx, blockObj))
+        THROW();
 
     if (*regs.pc == JSOP_ENTERBLOCK) {
         JS_ASSERT(fp->base() + blockObj.stackDepth() == regs.sp);
@@ -1243,53 +1187,19 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
         JS_ASSERT(vp <= fp->slots() + fp->script()->nslots);
         SetValueRangeToUndefined(regs.sp, vp);
         regs.sp = vp;
+    } else if (*regs.pc == JSOP_ENTERLET0) {
+        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() + blockObj.slotCount()
+                  == regs.sp);
+    } else if (*regs.pc == JSOP_ENTERLET1) {
+        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() + blockObj.slotCount()
+                  == regs.sp - 1);
     }
-
-#ifdef DEBUG
-    JSContext *cx = f.cx;
-    JS_ASSERT(fp->maybeBlockChain() == blockObj.enclosingBlock());
-
-    /*
-     * The young end of fp->scopeChain() may omit blocks if we haven't closed
-     * over them, but if there are any closure blocks on fp->scopeChain(), they'd
-     * better be (clones of) ancestors of the block we're entering now;
-     * anything else we should have popped off fp->scopeChain() when we left its
-     * static scope.
-     */
-    JSObject *obj2 = fp->scopeChain();
-    while (obj2->isWith())
-        obj2 = &obj2->asWith().enclosingScope();
-    if (obj2->isBlock() &&
-        obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, fp)) {
-        JSObject &youngestProto = obj2->asClonedBlock().staticBlock();
-        StaticBlockObject *parent = &blockObj;
-        while ((parent = parent->enclosingBlock()) != &youngestProto)
-            JS_ASSERT(parent);
-    }
-#endif
-
-    fp->setBlockChain(&blockObj);
 }
 
 void JS_FASTCALL
 stubs::LeaveBlock(VMFrame &f)
 {
-    JSContext *cx = f.cx;
-    StackFrame *fp = f.fp();
-
-    StaticBlockObject &blockObj = fp->blockChain();
-    JS_ASSERT(blockObj.stackDepth() <= StackDepth(fp->script()));
-
-    /*
-     * If we're about to leave the dynamic scope of a block that has been
-     * cloned onto fp->scopeChain(), clear its private data, move its locals from
-     * the stack into the clone, and pop it off the chain.
-     */
-    JSObject &obj = *fp->scopeChain();
-    if (obj.getProto() == &blockObj)
-        obj.asClonedBlock().put(cx);
-
-    fp->setBlockChain(blockObj.enclosingBlock());
+    f.fp()->popBlock(f.cx);
 }
 
 inline void *
@@ -1379,7 +1289,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 
     uint32_t jumpOffset = GET_JUMP_OFFSET(originalPC);
     jsbytecode *pc = originalPC + JUMP_OFFSET_LEN;
-    
+
     /* Note: compiler adjusts the stack beforehand. */
     Value rval = f.regs.sp[-1];
 
@@ -1451,9 +1361,10 @@ stubs::DelName(VMFrame &f, PropertyName *name_)
 
 template<JSBool strict>
 void JS_FASTCALL
-stubs::DelProp(VMFrame &f, PropertyName *name)
+stubs::DelProp(VMFrame &f, PropertyName *name_)
 {
     JSContext *cx = f.cx;
+    RootedVarPropertyName name(cx, name_);
 
     JSObject *obj = ValueToObject(cx, f.regs.sp[-1]);
     if (!obj)
@@ -1528,8 +1439,8 @@ stubs::In(VMFrame &f)
     }
 
     JSObject *obj = &rref.toObject();
-    jsid id;
-    if (!FetchElementId(f.cx, obj, f.regs.sp[-2], id, &f.regs.sp[-2]))
+    RootedVarId id(cx);
+    if (!FetchElementId(f.cx, obj, f.regs.sp[-2], id.address(), &f.regs.sp[-2]))
         THROWV(JS_FALSE);
 
     JSObject *obj2;
@@ -1707,7 +1618,7 @@ stubs::FunctionFramePrologue(VMFrame &f)
 void JS_FASTCALL
 stubs::FunctionFrameEpilogue(VMFrame &f)
 {
-    f.fp()->functionEpilogue();
+    f.fp()->functionEpilogue(f.cx);
 }
 
 void JS_FASTCALL
@@ -1725,7 +1636,7 @@ stubs::AnyFrameEpilogue(VMFrame &f)
     if (!ok)
         THROW();
     if (f.fp()->isNonEvalFunctionFrame())
-        f.fp()->functionEpilogue();
+        f.fp()->functionEpilogue(f.cx);
 }
 
 template <bool Clamped>
@@ -1750,7 +1661,7 @@ stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
 
     int32_t i32 = 0;
 #ifdef DEBUG
-    bool success = 
+    bool success =
 #endif
         StringToNumberType<int32_t>(cx, vp->toString(), &i32);
     JS_ASSERT(success);
@@ -1776,7 +1687,7 @@ stubs::ConvertToTypedFloat(JSContext *cx, Value *vp)
         JS_ASSERT(vp->isString());
         double d = 0;
 #ifdef DEBUG
-        bool success = 
+        bool success =
 #endif
             StringToNumberType<double>(cx, vp->toString(), &d);
         JS_ASSERT(success);

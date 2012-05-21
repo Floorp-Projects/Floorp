@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "tests.h"
 
 JSBool
@@ -57,7 +61,7 @@ test(const char *bytes)
 {
     jsval v;
 
-    JS_SetOptions(cx, JS_GetOptions(cx) & ~(JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS)); 
+    JS_SetOptions(cx, JS_GetOptions(cx) & ~(JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS));
     sRemain = 0;
     CHECK(!evaluate(bytes, __FILE__, __LINE__, &v));
     CHECK(!JS_IsExceptionPending(cx));

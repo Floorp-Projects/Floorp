@@ -1,44 +1,8 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // vim:cindent:ts=2:et:sw=2:
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Uri Bernstein <uriber@gmail.com>
- *   Eli Friedman <sharparrow1@yahoo.com>
- *   Mats Palmgren <matspal@gmail.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* base class of all rendering objects */
 
@@ -961,7 +925,15 @@ bool
 nsIFrame::IsTransformed() const
 {
   return (mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
-    GetStyleDisplay()->HasTransform();
+          (GetStyleDisplay()->HasTransform() ||
+           IsSVGTransformed());
+}
+
+bool
+nsIFrame::IsSVGTransformed(gfxMatrix *aOwnTransforms,
+                           gfxMatrix *aFromParentTransforms) const
+{
+  return false;
 }
 
 bool
@@ -4643,9 +4615,11 @@ nsIFrame::InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
     }
   }
   if (IsTransformed() && !rectIsTransformed) {
-    nsRect newDamageRect;
-    newDamageRect.UnionRect(nsDisplayTransform::TransformRectOut
-                            (aDamageRect, this, nsPoint(-aX, -aY)), aDamageRect);
+    nsRect newDamageRect = nsDisplayTransform::TransformRectOut
+                             (aDamageRect, this, nsPoint(-aX, -aY));
+    if (!(GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
+      newDamageRect.UnionRect(newDamageRect, aDamageRect);
+    }
 
     // If we are preserving 3d, then our computed transform includes that of any
     // ancestor frames that also preserve 3d. Mark the rectangle as already being
@@ -4703,6 +4677,7 @@ nsIFrame::GetTransformMatrix(nsIFrame* aStopAtAncestor,
     gfx3DMatrix result =
       nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0),
                                                       scaleFactor, nsnull, aOutAncestor);
+    // XXXjwatt: seems like this will double count offsets in the face of preserve-3d:
     nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     /* Combine the raw transform with a translation to our parent. */
     result *= gfx3DMatrix::Translation
@@ -4834,6 +4809,21 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, bool* aAnyOutlineOrEffects,
                              bool aStoreRectProperties) {
   nsRect r = aOverflowRect;
   *aAnyOutlineOrEffects = false;
+
+  if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+    // For SVG frames, we only need to account for filters.
+    // TODO: We could also take account of clipPath and mask to reduce the
+    // visual overflow, but that's not essential.
+    if (aFrame->GetStyleSVGReset()->mFilter) {
+      *aAnyOutlineOrEffects = true;
+      if (aStoreRectProperties) {
+        aFrame->Properties().
+          Set(nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
+      }
+      r = nsSVGUtils::GetPostFilterVisualOverflowRect(aFrame, aOverflowRect);
+    }
+    return r;
+  }
 
   // box-shadow
   nsCSSShadowArray* boxShadows = aFrame->GetStyleBorder()->mBoxShadow;
@@ -6741,10 +6731,13 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   // If the overflow area width or height is nscoord_MAX, then a
   // saturating union may have encounted an overflow, so the overflow may not
   // contain the frame border-box. Don't warn in that case.
+  // Don't warn for SVG either, since SVG doesn't need the overflow area
+  // to contain the frame bounds.
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
     DebugOnly<nsRect*> r = &aOverflowAreas.Overflow(otype);
     NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
                  r->width == nscoord_MAX || r->height == nscoord_MAX ||
+                 (mState & NS_FRAME_SVG_LAYOUT) ||
                  r->Contains(nsRect(nsPoint(0,0), aNewSize)),
                  "Computed overflow area must contain frame bounds");
   }
@@ -6763,33 +6756,16 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   }
 
   // Overflow area must always include the frame's top-left and bottom-right,
-  // even if the frame rect is empty.
+  // even if the frame rect is empty (so we can scroll to those positions).
   // Pending a real fix for bug 426879, don't do this for inline frames
   // with zero width.
-  if (aNewSize.width != 0 || !IsInlineFrame(this)) {
+  // Do not do this for SVG either, since it will usually massively increase
+  // the area unnecessarily.
+  if ((aNewSize.width != 0 || !IsInlineFrame(this)) &&
+      !(GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
     NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
       nsRect& o = aOverflowAreas.Overflow(otype);
       o.UnionRectEdges(o, bounds);
-    }
-
-    if (!nsLayoutUtils::IsPopup(this)) {
-      // Include margin in scrollable overflow.
-      // XXX In theory this should consider margin collapsing
-      nsRect marginBounds(bounds);
-      nsMargin margin = GetUsedMargin();
-
-      // Bug 724352 - vertical scrollable overflow only matters for
-      // scroll frames which are block margin roots and has already
-      // accumulated child vertical margins during reflow.  We need
-      // to revisit this when using UpdateOverflow for non-transform
-      // style changes (bug 719177).
-      margin.top = 0;
-      margin.bottom = 0;
-
-      ApplySkipSides(margin);
-      marginBounds.SaturatingInflate(margin);
-      nsRect& so = aOverflowAreas.ScrollableOverflow();
-      so.SaturatingUnionRectEdges(so, marginBounds);
     }
   }
 
@@ -6890,7 +6866,10 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       Invalidate(aOverflowAreas.VisualOverflow());
     }
   }
-  if (anyOverflowChanged && hasTransform) {
+  // XXXSDL For SVG the invalidation happens in UpdateBounds for now, so we
+  // don't currently invalidate SVG here:
+  if (anyOverflowChanged && hasTransform &&
+      !(GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
     // When there's a transform, changes to that style might require
     // repainting of the old and new overflow areas in the widget.
     // Repainting of the frame itself will not be required if there's

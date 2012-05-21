@@ -8,6 +8,7 @@
 #include "jsprf.h"
 #include "jsscope.h"
 #include "jsstr.h"
+#include "jsxml.h"
 
 #include "gc/Marking.h"
 #include "methodjit/MethodJIT.h"
@@ -51,8 +52,10 @@
 namespace js {
 namespace gc {
 
+#if JS_HAS_XML_SUPPORT
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSXML *thing);
+#endif
 
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSObject *thing);
@@ -457,6 +460,7 @@ MarkValueUnbarriered(JSTracer *trc, Value *v, const char *name)
     JS_ASSERT((thing)->compartment()->isCollecting() ||                 \
               (thing)->compartment() == (rt)->atomsCompartment);
 
+#if JS_HAS_XML_SUPPORT
 static void
 PushMarkStack(GCMarker *gcmarker, JSXML *thing)
 {
@@ -465,6 +469,7 @@ PushMarkStack(GCMarker *gcmarker, JSXML *thing)
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushXML(thing);
 }
+#endif
 
 static void
 PushMarkStack(GCMarker *gcmarker, JSObject *thing)
@@ -883,8 +888,7 @@ MarkChildren(JSTracer *trc, ion::IonCode *code)
 #endif
 }
 
-
-#ifdef JS_HAS_XML_SUPPORT
+#if JS_HAS_XML_SUPPORT
 static void
 MarkChildren(JSTracer *trc, JSXML *xml)
 {
@@ -1056,7 +1060,7 @@ GCMarker::restoreValueArray(JSObject *obj, void **vpp, void **endp)
 }
 
 void
-GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
+GCMarker::processMarkStackOther(SliceBudget &budget, uintptr_t tag, uintptr_t addr)
 {
     if (tag == TypeTag) {
         ScanTypeObject(this, reinterpret_cast<types::TypeObject *>(addr));
@@ -1070,10 +1074,43 @@ GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
             pushObject(obj);
     } else if (tag == IonCodeTag) {
         MarkChildren(this, reinterpret_cast<ion::IonCode *>(addr));
-    } else {
+    } else if (tag == ArenaTag) {
+        ArenaHeader *aheader = reinterpret_cast<ArenaHeader *>(addr);
+        AllocKind thingKind = aheader->getAllocKind();
+        size_t thingSize = Arena::thingSize(thingKind);
+
+        for ( ; aheader; aheader = aheader->next) {
+            Arena *arena = aheader->getArena();
+            FreeSpan firstSpan(aheader->getFirstFreeSpan());
+            const FreeSpan *span = &firstSpan;
+
+            for (uintptr_t thing = arena->thingsStart(thingKind); ; thing += thingSize) {
+                JS_ASSERT(thing <= arena->thingsEnd());
+                if (thing == span->first) {
+                    if (!span->hasNext())
+                        break;
+                    thing = span->last;
+                    span = span->nextSpan();
+                } else {
+                    JSObject *object = reinterpret_cast<JSObject *>(thing);
+                    if (object->hasSingletonType() && object->markIfUnmarked(getMarkColor()))
+                        pushObject(object);
+                    budget.step();
+                }
+            }
+            if (budget.isOverBudget()) {
+                pushArenaList(aheader);
+                return;
+            }
+        }
+    }
+
+#if JS_HAS_XML_SUPPORT
+    else {
         JS_ASSERT(tag == XmlTag);
         MarkChildren(this, reinterpret_cast<JSXML *>(addr));
     }
+#endif
 }
 
 inline void
@@ -1110,7 +1147,7 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         goto scan_obj;
     }
 
-    processMarkStackOther(tag, addr);
+    processMarkStackOther(budget, tag, addr);
     return;
 
   scan_value_array:

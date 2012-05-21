@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * JS symbol tables.
@@ -60,6 +27,7 @@
 #include "js/MemoryMetrics.h"
 
 #include "jsatominlines.h"
+#include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
@@ -310,7 +278,7 @@ Shape::getChildBinding(JSContext *cx, const StackShape &child)
 {
     JS_ASSERT(!inDictionary());
 
-    Shape *shape = JS_PROPERTY_TREE(cx).getChild(cx, this, numFixedSlots(), child);
+    Shape *shape = cx->propertyTree().getChild(cx, this, numFixedSlots(), child);
     if (shape) {
         //JS_ASSERT(shape->parent == this); // XXX 'this' is not rooted here
 
@@ -363,7 +331,7 @@ Shape::replaceLastProperty(JSContext *cx, const StackBaseShape &base, JSObject *
     StackShape child(shape);
     child.base = nbase;
 
-    return JS_PROPERTY_TREE(cx).getChild(cx, shape->parent, shape->numFixedSlots(), child);
+    return cx->propertyTree().getChild(cx, shape->parent, shape->numFixedSlots(), child);
 }
 
 /*
@@ -411,7 +379,7 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, StackShape &child)
         }
         shape->initDictionaryShape(child, self->numFixedSlots(), &self->shape_);
     } else {
-        shape = JS_PROPERTY_TREE(cx).getChild(cx, parent, self->numFixedSlots(), child);
+        shape = cx->propertyTree().getChild(cx, parent, self->numFixedSlots(), child);
         if (!shape)
             return NULL;
         //JS_ASSERT(shape->parent == parent);
@@ -677,7 +645,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
     if (!CheckCanChangeAttrs(cx, self, shape, &attrs))
         return NULL;
-    
+
     /*
      * If the caller wants to allocate a slot, but doesn't care which slot,
      * copy the existing shape's slot into slot so we can match shape, if all
@@ -816,7 +784,7 @@ JSObject::changeProperty(JSContext *cx, Shape *shape, unsigned attrs, unsigned m
 
     if (!CheckCanChangeAttrs(cx, this, shape, &attrs))
         return NULL;
-    
+
     if (shape->attrs == attrs && shape->getter() == getter && shape->setter() == setter)
         return shape;
 
@@ -1331,7 +1299,7 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObje
     if (!nbase)
         return NULL;
 
-    Shape *shape = JS_PROPERTY_TREE(cx).newShape(cx);
+    Shape *shape = cx->propertyTree().newShape(cx);
     if (!shape)
         return NULL;
     new (shape) EmptyShape(nbase, nfixed);

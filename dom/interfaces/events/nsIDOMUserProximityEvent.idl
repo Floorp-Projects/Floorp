@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+[scriptable, uuid(e67432b8-ead4-4247-bf6c-f2e426472478)]
+interface nsIDOMUserProximityEvent : nsIDOMEvent
+{
+  [noscript] void initUserProximityEvent(in DOMString eventTypeArg,
+                                         in boolean canBubbleArg,
+                                         in boolean cancelableArg,
+                                         in boolean near);
+
+  readonly attribute boolean near;
+};
+
+dictionary UserProximityEventInit : EventInit
+{
+   boolean near;
+};

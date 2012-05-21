@@ -1,42 +1,8 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // vim:cindent:ts=2:et:sw=2:
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dan Rosen <dr@netscape.com>
- *   Mats Palmgren <matspal@gmail.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * construction of a frame tree that is nearly isomorphic to the content
@@ -1395,9 +1361,8 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
                               ELEMENT_IS_POTENTIAL_ANIMATION_RESTYLE_ROOT, this)
 {
   // XXXbz this should be in Init() or something!
-  if (!mPendingRestyles.Init() || !mPendingAnimationRestyles.Init()) {
-    // now what?
-  }
+  mPendingRestyles.Init();
+  mPendingAnimationRestyles.Init();
 
 #ifdef DEBUG
   static bool gFirstTime = true;
@@ -7673,9 +7638,14 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
                            nsIFrame* aFrame,
                            nsChangeHint aChange)
 {
+  // We check GetStyleDisplay()->HasTransform() in addition to checking
+  // IsTransformed() since we can get here for some frames that don't have the
+  // NS_FRAME_MAY_BE_TRANSFORMED bit set (e.g. nsTableFrame; for a transformed
+  // table that bit is only set on the nsTableOuterFrame).
   NS_ASSERTION(!(aChange & nsChangeHint_UpdateTransformLayer) ||
+               aFrame->IsTransformed() ||
                aFrame->GetStyleDisplay()->HasTransform(),
-               "Only transform style should give a UpdateTransformLayer hint");
+               "Unexpected UpdateTransformLayer hint");
 
   nsIPresShell *shell = aPresContext->PresShell();
   if (shell->IsPaintingSuppressed()) {
@@ -7948,7 +7918,40 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         ApplyRenderingChangeToTree(presContext, frame, hint);
         didInvalidate = true;
       }
+      NS_ASSERTION(!(hint & nsChangeHint_ChildrenOnlyTransform) ||
+                   (hint & nsChangeHint_UpdateOverflow),
+                   "nsChangeHint_UpdateOverflow should be passed too");
       if ((hint & nsChangeHint_UpdateOverflow) && !didReflow) {
+        if (hint & nsChangeHint_ChildrenOnlyTransform) {
+          // When we process restyle events starting from the root of the frame
+          // tree, we start at a ViewportFrame and traverse down the tree from
+          // there. When we reach its nsHTMLScrollFrame child, that frame's
+          // GetContent() returns the root element of the document, even though
+          // that frame is not the root element's primary frame. The result of
+          // this quirk is that we remove any pending change hints for the
+          // root element and process them for the nsHTMLScrollFrame instead of
+          // the root element's primary frame. For most change hints this is
+          // not a problem, but for nsChangeHint_ChildrenOnlyTransform it is,
+          // since the children that we want to call UpdateOverflow on are the
+          // frames for the children of the root element, not the nsCanvasFrame
+          // child of the nsHTMLScrollFrame. As a result we need to ignore
+          // |frame| here and use frame->GetContent()->GetPrimaryFrame().
+          nsIFrame *f = frame->GetContent()->GetPrimaryFrame();
+          NS_ABORT_IF_FALSE(f->IsFrameOfType(nsIFrame::eSVG |
+                                             nsIFrame::eSVGContainer),
+                            "Children-only transforms only expected on SVG frames");
+          // Update overflow areas of children first:
+          nsIFrame* childFrame = f->GetFirstPrincipalChild();
+          for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
+            NS_ABORT_IF_FALSE(childFrame->IsFrameOfType(nsIFrame::eSVG),
+                              "Not expecting non-SVG children");
+            childFrame->UpdateOverflow();
+            NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrSpecialSibling(childFrame),
+                         "SVG frames should not have continuations or special siblings");
+            NS_ASSERTION(childFrame->GetParent() == frame,
+                         "SVG child frame not expected to have different parent");
+          }
+        }
         while (frame) {
           nsOverflowAreas* pre = static_cast<nsOverflowAreas*>
             (frame->Properties().Get(frame->PreTransformOverflowAreasProperty()));
@@ -11481,8 +11484,12 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
                                         nsIContent* aOldChild,
                                         nsIContent* aFollowingSibling)
 {
-  NS_ASSERTION(!aOldChild->IsRootOfAnonymousSubtree(),
-               "anonymous nodes should not be in child lists");
+  if (aOldChild->IsRootOfAnonymousSubtree()) {
+    // This should be an assert, but this is called incorrectly in
+    // nsHTMLEditor::DeleteRefToAnonymousNode and the assertions were clogging
+    // up the logs.  Make it an assert again when that's fixed.
+    NS_WARNING("anonymous nodes should not be in child lists (bug 439258)");
+  }
   PRUint32 selectorFlags =
     aContainer ? (aContainer->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
   if (selectorFlags == 0)

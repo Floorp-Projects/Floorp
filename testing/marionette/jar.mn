@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 marionette.jar:
 % content marionette %content/
   content/marionette-actors.js      (marionette-actors.js)
@@ -7,3 +11,14 @@ marionette.jar:
   content/marionette-simpletest.js  (marionette-simpletest.js)
   content/EventUtils.js  (EventUtils.js)
   content/ChromeUtils.js  (ChromeUtils.js)
+
+% content specialpowers %content/
+  content/specialpowers.js (../mochitest/specialpowers/content/specialpowers.js)
+  content/SpecialPowersObserver.js (../mochitest/specialpowers/components/SpecialPowersObserver.js)
+  content/specialpowersAPI.js (../mochitest/tests/SimpleTest/specialpowersAPI.js)
+  content/SpecialPowersObserverAPI.js (../mochitest/tests/SimpleTest/SpecialPowersObserverAPI.js)
+  content/ChromePowers.js (../mochitest/tests/SimpleTest/ChromePowers.js)
+  content/MozillaLogger.js (../mochitest/tests/SimpleTest/MozillaLogger.js)
+
+% resource mochikit %modules/
+  modules/MockFilePicker.jsm (../mochitest/MockFilePicker.jsm)

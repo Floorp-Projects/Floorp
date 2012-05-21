@@ -1,43 +1,9 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   John Bandhauer <jband@netscape.com> (original author)
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* JavaScript JSClasses and JSOps for our Wrapped Native JS Objects. */
 
@@ -481,7 +447,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 /***************************************************************************/
 
 static JSBool
-XPC_WN_OnlyIWrite_AddPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+XPC_WN_OnlyIWrite_AddPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
 {
     XPCCallContext ccx(JS_CALLER, cx, obj, nsnull, id);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
@@ -495,26 +461,26 @@ XPC_WN_OnlyIWrite_AddPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *
 }
 
 static JSBool
-XPC_WN_OnlyIWrite_SetPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
+XPC_WN_OnlyIWrite_SetPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp)
 {
     return XPC_WN_OnlyIWrite_AddPropertyStub(cx, obj, id, vp);
 }
 
 static JSBool
-XPC_WN_CannotModifyPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+XPC_WN_CannotModifyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
 {
     return Throw(NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN, cx);
 }
 
 static JSBool
-XPC_WN_CannotModifyStrictPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict,
+XPC_WN_CannotModifyStrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
                                       jsval *vp)
 {
     return XPC_WN_CannotModifyPropertyStub(cx, obj, id, vp);
 }
 
 static JSBool
-XPC_WN_Shared_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
+XPC_WN_Shared_Convert(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp)
 {
     if (type == JSTYPE_OBJECT) {
         *vp = OBJECT_TO_JSVAL(obj);
@@ -572,7 +538,7 @@ XPC_WN_Shared_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 }
 
 static JSBool
-XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
+XPC_WN_Shared_Enumerate(JSContext *cx, JSHandleObject obj)
 {
     MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
@@ -615,8 +581,13 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
 static PRUint32 sFinalizedSlimWrappers;
 #endif
 
+enum WNHelperType {
+    WN_NOHELPER,
+    WN_HELPER
+};
+
 static void
-XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
+WrappedNativeFinalize(js::FreeOp *fop, JSObject *obj, WNHelperType helperType)
 {
     js::Class* clazz = js::GetObjectClass(obj);
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
@@ -635,14 +606,21 @@ XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
         cache->ClearWrapper();
 
         XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
-        if(rt)
-            rt->DeferredRelease(p);
-        else
-            NS_RELEASE(p);
+        MOZ_ASSERT(rt, "XPCJSRuntime should exist during a GC.");
+        rt->DeferredRelease(p);
         return;
     }
 
-    static_cast<XPCWrappedNative*>(p)->FlatJSObjectFinalized();
+    XPCWrappedNative* wrapper = static_cast<XPCWrappedNative*>(p);
+    if (helperType == WN_HELPER)
+        wrapper->GetScriptableCallback()->Finalize(wrapper, js::CastToJSFreeOp(fop), obj);
+    wrapper->FlatJSObjectFinalized();
+}
+
+static void
+XPC_WN_NoHelper_Finalize(js::FreeOp *fop, JSObject *obj)
+{
+    WrappedNativeFinalize(fop, obj, WN_NOHELPER);
 }
 
 static void
@@ -710,7 +688,7 @@ XPC_WN_NoHelper_Trace(JSTracer *trc, JSObject *obj)
 }
 
 static JSBool
-XPC_WN_NoHelper_Resolve(JSContext *cx, JSObject *obj, jsid id)
+XPC_WN_NoHelper_Resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
 {
     MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj, nsnull, id);
@@ -743,7 +721,7 @@ XPC_GetIdentityObject(JSContext *cx, JSObject *obj)
 }
 
 JSBool
-XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
+XPC_WN_Equality(JSContext *cx, JSHandleObject obj, const jsval *valp, JSBool *bp)
 {
     jsval v = *valp;
     *bp = false;
@@ -778,8 +756,10 @@ XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
 }
 
 static JSObject *
-XPC_WN_OuterObject(JSContext *cx, JSObject *obj)
+XPC_WN_OuterObject(JSContext *cx, JSHandleObject obj_)
 {
+    JSObject *obj = obj_;
+
     XPCWrappedNative *wrapper =
         static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj));
     if (!wrapper) {
@@ -889,7 +869,7 @@ XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
 /***************************************************************************/
 
 static JSBool
-XPC_WN_MaybeResolvingPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+XPC_WN_MaybeResolvingPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
 {
     MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
@@ -902,7 +882,7 @@ XPC_WN_MaybeResolvingPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *
 }
 
 static JSBool
-XPC_WN_MaybeResolvingStrictPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict,
+XPC_WN_MaybeResolvingStrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
                                         jsval *vp)
 {
     return XPC_WN_MaybeResolvingPropertyStub(cx, obj, id, vp);
@@ -938,7 +918,7 @@ XPC_WN_MaybeResolvingStrictPropertyStub(JSContext *cx, JSObject *obj, jsid id, J
     return retval;
 
 static JSBool
-XPC_WN_Helper_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+XPC_WN_Helper_AddProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
 {
     PRE_HELPER_STUB
     AddProperty(wrapper, cx, obj, id, vp, &retval);
@@ -946,7 +926,7 @@ XPC_WN_Helper_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-XPC_WN_Helper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+XPC_WN_Helper_DelProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
 {
     PRE_HELPER_STUB
     DelProperty(wrapper, cx, obj, id, vp, &retval);
@@ -954,7 +934,7 @@ XPC_WN_Helper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 JSBool
-XPC_WN_Helper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+XPC_WN_Helper_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
 {
     PRE_HELPER_STUB
     GetProperty(wrapper, cx, obj, id, vp, &retval);
@@ -962,7 +942,7 @@ XPC_WN_Helper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 JSBool
-XPC_WN_Helper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
+XPC_WN_Helper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp)
 {
     PRE_HELPER_STUB
     SetProperty(wrapper, cx, obj, id, vp, &retval);
@@ -970,7 +950,7 @@ XPC_WN_Helper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, 
 }
 
 static JSBool
-XPC_WN_Helper_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
+XPC_WN_Helper_Convert(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp)
 {
     SLIM_LOG_WILL_MORPH(cx, obj);
     PRE_HELPER_STUB_NO_SLIM
@@ -979,7 +959,7 @@ XPC_WN_Helper_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 }
 
 static JSBool
-XPC_WN_Helper_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
+XPC_WN_Helper_CheckAccess(JSContext *cx, JSHandleObject obj, JSHandleId id,
                           JSAccessMode mode, jsval *vp)
 {
     PRE_HELPER_STUB
@@ -1027,7 +1007,7 @@ XPC_WN_Helper_Construct(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-XPC_WN_Helper_HasInstance(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
+XPC_WN_Helper_HasInstance(JSContext *cx, JSHandleObject obj, const jsval *valp, JSBool *bp)
 {
     SLIM_LOG_WILL_MORPH(cx, obj);
     bool retval2;
@@ -1040,32 +1020,11 @@ XPC_WN_Helper_HasInstance(JSContext *cx, JSObject *obj, const jsval *valp, JSBoo
 static void
 XPC_WN_Helper_Finalize(js::FreeOp *fop, JSObject *obj)
 {
-    js::Class* clazz = js::GetObjectClass(obj);
-    if (clazz->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::DestroyProtoOrIfaceCache(obj);
-    }
-    nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
-    if (IS_SLIM_WRAPPER(obj)) {
-        SLIM_LOG(("----- %i finalized slim wrapper (%p, %p)\n",
-                  ++sFinalizedSlimWrappers, obj, p));
-
-        nsWrapperCache* cache;
-        CallQueryInterface(p, &cache);
-        cache->ClearWrapper();
-        NS_RELEASE(p);
-        return;
-    }
-
-    XPCWrappedNative* wrapper = (XPCWrappedNative*)p;
-    if (!wrapper)
-        return;
-
-    wrapper->GetScriptableCallback()->Finalize(wrapper, js::CastToJSFreeOp(fop), obj);
-    wrapper->FlatJSObjectFinalized();
+    WrappedNativeFinalize(fop, obj, WN_HELPER);
 }
 
 static JSBool
-XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+XPC_WN_Helper_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
                          JSObject **objp)
 {
     nsresult rv = NS_OK;
@@ -1203,7 +1162,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
 */
 
 JSBool
-XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
                       jsval *statep, jsid *idp)
 {
     js::Class *clazz = js::GetObjectClass(obj);
@@ -1283,19 +1242,19 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 JSType
-XPC_WN_JSOp_TypeOf_Object(JSContext *cx, JSObject *obj)
+XPC_WN_JSOp_TypeOf_Object(JSContext *cx, JSHandleObject obj)
 {
     return JSTYPE_OBJECT;
 }
 
 JSType
-XPC_WN_JSOp_TypeOf_Function(JSContext *cx, JSObject *obj)
+XPC_WN_JSOp_TypeOf_Function(JSContext *cx, JSHandleObject obj)
 {
     return JSTYPE_FUNCTION;
 }
 
 void
-XPC_WN_JSOp_Clear(JSContext *cx, JSObject *obj)
+XPC_WN_JSOp_Clear(JSContext *cx, JSHandleObject obj)
 {
     // XXX Clear XrayWrappers?
 }
@@ -1336,7 +1295,7 @@ private:
 } // namespace
 
 JSObject*
-XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
+XPC_WN_JSOp_ThisObject(JSContext *cx, JSHandleObject obj)
 {
     // None of the wrappers we could potentially hand out are threadsafe so
     // just hand out the given object.
@@ -1592,7 +1551,7 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
 /***************************************************************************/
 
 static JSBool
-XPC_WN_Shared_Proto_Enumerate(JSContext *cx, JSObject *obj)
+XPC_WN_Shared_Proto_Enumerate(JSContext *cx, JSHandleObject obj)
 {
     NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
                  js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass ||
@@ -1654,7 +1613,7 @@ XPC_WN_Shared_Proto_Trace(JSTracer *trc, JSObject *obj)
 /*****************************************************/
 
 static JSBool
-XPC_WN_ModsAllowed_Proto_Resolve(JSContext *cx, JSObject *obj, jsid id)
+XPC_WN_ModsAllowed_Proto_Resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
 {
     NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
                  js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass,
@@ -1734,7 +1693,7 @@ js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass = {
 /***************************************************************************/
 
 static JSBool
-XPC_WN_OnlyIWrite_Proto_AddPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+XPC_WN_OnlyIWrite_Proto_AddPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
 {
     NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
                  js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
@@ -1758,14 +1717,14 @@ XPC_WN_OnlyIWrite_Proto_AddPropertyStub(JSContext *cx, JSObject *obj, jsid id, j
 }
 
 static JSBool
-XPC_WN_OnlyIWrite_Proto_SetPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict,
+XPC_WN_OnlyIWrite_Proto_SetPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
                                         jsval *vp)
 {
     return XPC_WN_OnlyIWrite_Proto_AddPropertyStub(cx, obj, id, vp);
 }
 
 static JSBool
-XPC_WN_NoMods_Proto_Resolve(JSContext *cx, JSObject *obj, jsid id)
+XPC_WN_NoMods_Proto_Resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
 {
     NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
                  js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
@@ -1847,7 +1806,7 @@ js::Class XPC_WN_NoMods_NoCall_Proto_JSClass = {
 /***************************************************************************/
 
 static JSBool
-XPC_WN_TearOff_Enumerate(JSContext *cx, JSObject *obj)
+XPC_WN_TearOff_Enumerate(JSContext *cx, JSHandleObject obj)
 {
     MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
@@ -1870,7 +1829,7 @@ XPC_WN_TearOff_Enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-XPC_WN_TearOff_Resolve(JSContext *cx, JSObject *obj, jsid id)
+XPC_WN_TearOff_Resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
 {
     MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);

@@ -3,13 +3,17 @@
  *
  * Tests the JSClass::getProperty hook
  */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 #include "tests.h"
 
 int called_test_fn;
 int called_test_prop_get;
 
-static JSBool test_prop_get( JSContext *cx, JSObject *obj, jsid id, jsval *vp )
+static JSBool test_prop_get( JSContext *cx, JS::HandleObject obj, JS::HandleId id, jsval *vp )
 {
     called_test_prop_get++;
     return JS_TRUE;

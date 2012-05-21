@@ -57,8 +57,10 @@
     };
   }
 
-  let hiReport = f("explicit/h/i", HEAP,  19 * MB);
-  let jkReport = f("explicit/j/k", HEAP, 0.8 * MB);
+  let hiReport  = f("explicit/h/i",  HEAP,  10 * MB);
+  let hi2Report = f("explicit/h/i2", HEAP,   9 * MB);
+  let jkReport  = f("explicit/j/k",  HEAP, 0.5 * MB);
+  let jk2Report = f("explicit/j/k2", HEAP, 0.3 * MB);
 
   let fakeReporters = [
     f("heap-allocated",     OTHER,   250 * MB),
@@ -68,8 +70,11 @@
     f("explicit/a/f",       HEAP,     30 * MB),
     f("explicit/g",         HEAP,    100 * MB),
     hiReport,
+    hi2Report,
     jkReport,
-    f("explicit/a/l/m",     HEAP,    0.2 * MB),
+    jk2Report,
+    f("explicit/a/l/m",     HEAP,    0.1 * MB),
+    f("explicit/a/l/n",     HEAP,    0.1 * MB),
   ];
 
   for (let i = 0; i < fakeReporters.length; i++) {
@@ -109,12 +114,14 @@
 
       // Yuk:  clicking a button is easy;  but for tree entries we need to
       // click on a child of the span identified via |id|.
-      // Also, we swap the paths of hiReport and jkReport just before updating,
-      // to test what happens when significant nodes become insignificant and
-      // vice versa.
+      // Also, we swap the paths of hiReport/hi2Report and
+      // jkReport/jk2Report just before updating, to test what happens when
+      // significant nodes become insignificant and vice versa.
       if (node.nodeName === "button") {
-        hiReport.path = "explicit/j/k";
-        jkReport.path = "explicit/h/i";
+        hiReport.path  = "explicit/j/k";
+        hi2Report.path = "explicit/j/k2";
+        jkReport.path  = "explicit/h/i";
+        jk2Report.path = "explicit/h/i2";
         node.click();
       } else {
         node.childNodes[0].click();
@@ -172,7 +179,8 @@ Explicit Allocations\n\
 │  └────0.20 MB (00.08%) ++ l\n\
 ├──100.00 MB (40.00%) ── g\n\
 ├───19.00 MB (07.60%) -- h\n\
-│   └──19.00 MB (07.60%) ── i\n\
+│   ├──10.00 MB (04.00%) ── i\n\
+│   └───9.00 MB (03.60%) ── i2\n\
 ├───10.00 MB (04.00%) ── heap-unclassified\n\
 └────0.80 MB (00.32%) ++ j\n\
 \n\
@@ -194,7 +202,8 @@ Explicit Allocations\n\
 │  └────0.20 MB (00.08%) ++ l\n\
 ├──100.00 MB (40.00%) ── g\n\
 ├───19.00 MB (07.60%) -- h\n\
-│   └──19.00 MB (07.60%) ── i\n\
+│   ├──10.00 MB (04.00%) ── i\n\
+│   └───9.00 MB (03.60%) ── i2\n\
 ├───10.00 MB (04.00%) ── heap-unclassified\n\
 └────0.80 MB (00.32%) ++ j\n\
 \n\
@@ -214,10 +223,12 @@ Explicit Allocations\n\
 │  ├───40.00 MB (16.00%) ++ c\n\
 │  ├───30.00 MB (12.00%) ── f\n\
 │  └────0.20 MB (00.08%) -- l\n\
-│       └──0.20 MB (00.08%) ── m\n\
+│       ├──0.10 MB (00.04%) ── m\n\
+│       └──0.10 MB (00.04%) ── n\n\
 ├──100.00 MB (40.00%) ── g\n\
 ├───19.00 MB (07.60%) -- h\n\
-│   └──19.00 MB (07.60%) ── i\n\
+│   ├──10.00 MB (04.00%) ── i\n\
+│   └───9.00 MB (03.60%) ── i2\n\
 ├───10.00 MB (04.00%) ── heap-unclassified\n\
 └────0.80 MB (00.32%) ++ j\n\
 \n\
@@ -235,7 +246,8 @@ Explicit Allocations\n\
 ├──120.20 MB (48.08%) ++ a\n\
 ├──100.00 MB (40.00%) ── g\n\
 ├───19.00 MB (07.60%) -- h\n\
-│   └──19.00 MB (07.60%) ── i\n\
+│   ├──10.00 MB (04.00%) ── i\n\
+│   └───9.00 MB (03.60%) ── i2\n\
 ├───10.00 MB (04.00%) ── heap-unclassified\n\
 └────0.80 MB (00.32%) ++ j\n\
 \n\
@@ -272,7 +284,8 @@ Explicit Allocations\n\
 ├───19.00 MB (07.60%) ++ h\n\
 ├───10.00 MB (04.00%) ── heap-unclassified\n\
 └────0.80 MB (00.32%) -- j\n\
-     └──0.80 MB (00.32%) ── k\n\
+     ├──0.50 MB (00.20%) ── k\n\
+     └──0.30 MB (00.12%) ── k2\n\
 \n\
 Other Measurements\n\
 250.00 MB ── heap-allocated\n\
@@ -291,7 +304,8 @@ Explicit Allocations\n\
 ├──120.20 MB (48.08%) ++ a\n\
 ├──100.00 MB (40.00%) ── g\n\
 ├───19.00 MB (07.60%) -- j\n\
-│   └──19.00 MB (07.60%) ── k\n\
+│   ├──10.00 MB (04.00%) ── k\n\
+│   └───9.00 MB (03.60%) ── k2\n\
 ├───10.00 MB (04.00%) ── heap-unclassified\n\
 └────0.80 MB (00.32%) ++ h\n\
 \n\
@@ -311,10 +325,12 @@ Explicit Allocations\n\
 │  ├───40.00 MB (16.00%) ++ c\n\
 │  ├───30.00 MB (12.00%) ── f\n\
 │  └────0.20 MB (00.08%) -- l\n\
-│       └──0.20 MB (00.08%) ── m\n\
+│       ├──0.10 MB (00.04%) ── m\n\
+│       └──0.10 MB (00.04%) ── n\n\
 ├──100.00 MB (40.00%) ── g\n\
 ├───19.00 MB (07.60%) -- j\n\
-│   └──19.00 MB (07.60%) ── k\n\
+│   ├──10.00 MB (04.00%) ── k\n\
+│   └───9.00 MB (03.60%) ── k2\n\
 ├───10.00 MB (04.00%) ── heap-unclassified\n\
 └────0.80 MB (00.32%) ++ h\n\
 \n\
@@ -336,10 +352,12 @@ Explicit Allocations\n\
 │  │   └──15.00 MB (06.00%) ── e\n\
 │  ├───30.00 MB (12.00%) ── f\n\
 │  └────0.20 MB (00.08%) -- l\n\
-│       └──0.20 MB (00.08%) ── m\n\
+│       ├──0.10 MB (00.04%) ── m\n\
+│       └──0.10 MB (00.04%) ── n\n\
 ├──100.00 MB (40.00%) ── g\n\
 ├───19.00 MB (07.60%) -- j\n\
-│   └──19.00 MB (07.60%) ── k\n\
+│   ├──10.00 MB (04.00%) ── k\n\
+│   └───9.00 MB (03.60%) ── k2\n\
 ├───10.00 MB (04.00%) ── heap-unclassified\n\
 └────0.80 MB (00.32%) ++ h\n\
 \n\
@@ -363,7 +381,8 @@ Explicit Allocations\n\
 │  └────0.20 MB (00.08%) ++ l\n\
 ├──100.00 MB (40.00%) ── g\n\
 ├───19.00 MB (07.60%) -- j\n\
-│   └──19.00 MB (07.60%) ── k\n\
+│   ├──10.00 MB (04.00%) ── k\n\
+│   └───9.00 MB (03.60%) ── k2\n\
 ├───10.00 MB (04.00%) ── heap-unclassified\n\
 └────0.80 MB (00.32%) ++ h\n\
 \n\

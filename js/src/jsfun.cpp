@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * JS function support.
@@ -97,8 +64,9 @@ using namespace js::gc;
 using namespace js::types;
 
 static JSBool
-fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)
 {
+    JSObject *obj = obj_;
     while (!obj->isFunction()) {
         obj = obj->getProto();
         if (!obj)
@@ -210,13 +178,11 @@ static const uint16_t poisonPillProps[] = {
 };
 
 static JSBool
-fun_enumerate(JSContext *cx, JSObject *obj)
+fun_enumerate(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->isFunction());
 
-    RootObject root(cx, &obj);
-
-    jsid id;
+    RootedVarId id(cx);
     bool found;
 
     if (!obj->isBoundFunction()) {
@@ -228,7 +194,7 @@ fun_enumerate(JSContext *cx, JSObject *obj)
     id = NameToId(cx->runtime->atomState.lengthAtom);
     if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
         return false;
-        
+
     id = NameToId(cx->runtime->atomState.nameAtom);
     if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
         return false;
@@ -290,7 +256,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
 }
 
 static JSBool
-fun_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             JSObject **objp)
 {
     if (!JSID_IS_ATOM(id))
@@ -330,7 +296,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
             v.setInt32(fun->nargs);
         else
             v.setString(fun->atom ? fun->atom : cx->runtime->emptyString);
-        
+
         if (!DefineNativeProperty(cx, fun, id, v, JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0)) {
             return false;
@@ -479,8 +445,10 @@ js::CloneInterpretedFunction(JSContext *cx, JSFunction *srcFun)
  * if v is an object) returning true if .prototype is found.
  */
 static JSBool
-fun_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
+fun_hasInstance(JSContext *cx, HandleObject obj_, const Value *v, JSBool *bp)
 {
+    RootedVarObject obj(cx, obj_);
+
     while (obj->isFunction()) {
         if (!obj->isBoundFunction())
             break;
@@ -1203,30 +1171,6 @@ IsBuiltinFunctionConstructor(JSFunction *fun)
     return fun->maybeNative() == Function;
 }
 
-const Shape *
-LookupInterpretedFunctionPrototype(JSContext *cx, RootedVarObject funobj)
-{
-#ifdef DEBUG
-    JSFunction *fun = funobj->toFunction();
-    JS_ASSERT(fun->isInterpreted());
-    JS_ASSERT(!fun->isFunctionPrototype());
-    JS_ASSERT(!funobj->isBoundFunction());
-#endif
-
-    jsid id = NameToId(cx->runtime->atomState.classPrototypeAtom);
-    RootedVar<const Shape*> shape(cx, funobj->nativeLookup(cx, id));
-    if (!shape) {
-        if (!ResolveInterpretedFunctionPrototype(cx, funobj))
-            return NULL;
-        id = NameToId(cx->runtime->atomState.classPrototypeAtom);
-        shape = funobj->nativeLookup(cx, id);
-    }
-    JS_ASSERT(!shape->configurable());
-    JS_ASSERT(shape->isDataDescriptor());
-    JS_ASSERT(shape->hasSlot());
-    return shape;
-}
-
 } /* namespace js */
 
 JSFunction *
@@ -1341,11 +1285,9 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 }
 
 JSFunction *
-js_DefineFunction(JSContext *cx, HandleObject obj, jsid id, Native native,
+js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
                   unsigned nargs, unsigned attrs, AllocKind kind)
 {
-    RootId idRoot(cx, &id);
-
     PropertyOp gop;
     StrictPropertyOp sop;
 

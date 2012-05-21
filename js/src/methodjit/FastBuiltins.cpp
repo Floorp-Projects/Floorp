@@ -1,41 +1,9 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla SpiderMonkey JavaScript 1.9 code, released
- * May 28, 2008.
- *
- * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org>
- *
- * Contributor(s):
- *   Jan de Mooij <jandemooij@gmail.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "jsbool.h"
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -175,7 +143,7 @@ mjit::Compiler::compileMathSqrt(FrameEntry *arg)
 }
 
 CompileStatus
-mjit::Compiler::compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2, 
+mjit::Compiler::compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2,
                                         Assembler::DoubleCondition cond)
 {
     FPRegisterID fpReg1;
@@ -197,10 +165,10 @@ mjit::Compiler::compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2,
 
     /* Slow path for 0 and NaN, because they have special requriments. */
     masm.zeroDouble(Registers::FPConversionTemp);
-    Jump zeroOrNan = masm.branchDouble(Assembler::DoubleEqualOrUnordered, fpReg1, 
+    Jump zeroOrNan = masm.branchDouble(Assembler::DoubleEqualOrUnordered, fpReg1,
                                        Registers::FPConversionTemp);
     stubcc.linkExit(zeroOrNan, Uses(4));
-    Jump zeroOrNan2 = masm.branchDouble(Assembler::DoubleEqualOrUnordered, fpReg2, 
+    Jump zeroOrNan2 = masm.branchDouble(Assembler::DoubleEqualOrUnordered, fpReg2,
                                         Registers::FPConversionTemp);
     stubcc.linkExit(zeroOrNan2, Uses(4));
 
@@ -849,7 +817,7 @@ mjit::Compiler::compileParseInt(JSValueType argType, uint32_t argc)
             OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
         }
 
-        /* 
+        /*
          * Stack looks like callee, this, arg1, arg2, argN.
          * First pop all args other than arg1.
          */
@@ -859,7 +827,7 @@ mjit::Compiler::compileParseInt(JSValueType argType, uint32_t argc)
 
         if (needStubCall) {
             stubcc.rejoin(Changes(1));
-        }        
+        }
     } else {
         FrameEntry *arg = frame.peek(-(int32_t)argc);
         FPRegisterID fpScratchReg = frame.allocFPReg();
@@ -872,7 +840,7 @@ mjit::Compiler::compileParseInt(JSValueType argType, uint32_t argc)
         masm.slowLoadConstantDouble(1, fpScratchReg);
 
         /* Slow path for NaN and numbers < 1. */
-        Jump lessThanOneOrNan = masm.branchDouble(Assembler::DoubleLessThanOrUnordered, 
+        Jump lessThanOneOrNan = masm.branchDouble(Assembler::DoubleLessThanOrUnordered,
                                                   fpReg, fpScratchReg);
         stubcc.linkExit(lessThanOneOrNan, Uses(2 + argc));
 
@@ -896,7 +864,7 @@ mjit::Compiler::compileParseInt(JSValueType argType, uint32_t argc)
         stubcc.rejoin(Changes(1));
     }
 
-    return Compile_Okay;   
+    return Compile_Okay;
 }
 
 CompileStatus
@@ -1054,7 +1022,7 @@ mjit::Compiler::inlineNativeFunction(uint32_t argc, bool callingNew)
         if ((native == js_math_min || native == js_math_max)) {
             if (arg1Type == JSVAL_TYPE_INT32 && arg2Type == JSVAL_TYPE_INT32 &&
                 type == JSVAL_TYPE_INT32) {
-                return compileMathMinMaxInt(arg1, arg2, 
+                return compileMathMinMaxInt(arg1, arg2,
                         native == js_math_min ? Assembler::LessThan : Assembler::GreaterThan);
             }
             if ((arg1Type == JSVAL_TYPE_INT32 || arg1Type == JSVAL_TYPE_DOUBLE) &&

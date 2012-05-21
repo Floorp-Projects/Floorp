@@ -1,41 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Daniel Glazman <glazman@netscape.com>
- *   Sebastian Kromp <46b@gulli.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef nsHTMLEditRules_h__
 #define nsHTMLEditRules_h__
@@ -140,9 +106,6 @@ protected:
 
   // nsHTMLEditRules implementation methods
   nsresult WillInsert(nsISelection *aSelection, bool *aCancel);
-#ifdef XXX_DEAD_CODE
-  nsresult DidInsert(nsISelection *aSelection, nsresult aResult);
-#endif
   nsresult WillInsertText(  nsEditor::OperationID aAction,
                             nsISelection *aSelection, 
                             bool            *aCancel,
@@ -155,8 +118,10 @@ protected:
   nsresult StandardBreakImpl(nsIDOMNode *aNode, PRInt32 aOffset, nsISelection *aSelection);
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
   nsresult SplitMailCites(nsISelection *aSelection, bool aPlaintext, bool *aHandled);
-  nsresult WillDeleteSelection(nsISelection *aSelection, nsIEditor::EDirection aAction, 
-                               bool *aCancel, bool *aHandled);
+  nsresult WillDeleteSelection(nsISelection* aSelection,
+                               nsIEditor::EDirection aAction,
+                               nsIEditor::EStripWrappers aStripWrappers,
+                               bool* aCancel, bool* aHandled);
   nsresult DidDeleteSelection(nsISelection *aSelection, 
                               nsIEditor::EDirection aDir, 
                               nsresult aResult);
@@ -167,7 +132,7 @@ protected:
   nsresult MoveBlock(nsIDOMNode *aLeft, nsIDOMNode *aRight, PRInt32 aLeftOffset, PRInt32 aRightOffset);
   nsresult MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
   nsresult MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
-  nsresult DeleteNonTableElements(nsIDOMNode *aNode);
+  nsresult DeleteNonTableElements(nsINode* aNode);
   nsresult WillMakeList(nsISelection *aSelection, const nsAString *aListType, bool aEntireList, const nsAString *aBulletType, bool *aCancel, bool *aHandled, const nsAString *aItemType=nsnull);
   nsresult WillRemoveList(nsISelection *aSelection, bool aOrderd, bool *aCancel, bool *aHandled);
   nsresult WillIndent(nsISelection *aSelection, bool *aCancel, bool *aHandled);
@@ -184,6 +149,8 @@ protected:
   nsresult DidAbsolutePosition();
   nsresult AlignInnerBlocks(nsIDOMNode *aNode, const nsAString *alignType);
   nsresult AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignType);
+  nsresult AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
+                                  nsINode* aNode);
   nsresult AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
                                   nsIDOMNode *aNode);
   nsresult GetFormatString(nsIDOMNode *aNode, nsAString &outFormat);
@@ -232,10 +199,6 @@ protected:
   nsresult ExpandSelectionForDeletion(nsISelection *aSelection);
   bool IsFirstNode(nsIDOMNode *aNode);
   bool IsLastNode(nsIDOMNode *aNode);
-#ifdef XXX_DEAD_CODE
-  bool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
-  bool AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
-#endif
   nsresult NormalizeSelection(nsISelection *inSelection);
   nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode,
                             PRInt32 aOffset, nsEditor::OperationID actionID,

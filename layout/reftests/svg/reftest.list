@@ -111,6 +111,7 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == dynamic-text-04.svg dyna
 == dynamic-use-06.svg pass.svg
 random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == dynamic-use-remove-width.svg dynamic-use-remove-width-ref.svg
+== fragmentIdentifier-01.xhtml pass.svg
 == linked-filter-01.svg pass.svg
 == linked-pattern-01.svg pass.svg
 == use-01.svg pass.svg
@@ -173,6 +174,8 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == mask-transformed-01.svg mask-transformed-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 == nesting-invalid-01.svg nesting-invalid-01-ref.svg
+== non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg 
+fuzzy-if(Android,9,38) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg 
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
 random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg

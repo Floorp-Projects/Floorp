@@ -1,41 +1,8 @@
 /* -*- Mode: c++; c-basic-offset: 4; tab-width: 40; indent-tabs-mode: nil -*- */
 /* vim: set ts=40 sw=4 et tw=99: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Mozilla SpiderMonkey bytecode type inference
- *
- * The Initial Developer of the Original Code is
- *   Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2010
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Brian Hackett <bhackett@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsapi.h"
 #include "jsautooplen.h"
@@ -351,7 +318,7 @@ types::TypeFailure(JSContext *cx, const char *fmt, ...)
 
     /* Always active, even in release builds */
     MOZ_Assert(msgbuf, __FILE__, __LINE__);
-    
+
     *((volatile int *)NULL) = 0;  /* Should never be reached */
 }
 
@@ -404,7 +371,7 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
     if (flags & TYPE_FLAG_UNKNOWN) {
         cx->compartment->types.addPending(cx, constraint, this, Type::UnknownType());
     } else {
-        /* Enqueue type set members stored as bits. */ 
+        /* Enqueue type set members stored as bits. */
         for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
             if (flags & flag) {
                 Type type = Type::PrimitiveType(TypeFlagPrimitive(flag));
@@ -2301,7 +2268,7 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
      * a generic object type. It is not sufficient to mark just the persistent
      * sets, as analysis of individual opcodes can pull type objects from
      * static information (like initializer objects at various offsets).
-     * 
+     *
      * We make a list of properties to update and fix them afterwards, as adding
      * types can't be done while iterating over cells as it can potentially make
      * new type objects as well or trigger GC.
@@ -4426,10 +4393,10 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
              * integer properties and bail out. We can't mark the aggregate
              * JSID_VOID type property as being in a definite slot.
              */
-            jsid id = NameToId(script->getName(GET_UINT32_INDEX(pc)));
+            RootedVarId id(cx, NameToId(script->getName(GET_UINT32_INDEX(pc))));
             if (MakeTypeId(cx, id) != id)
                 return false;
-            if (id == id_prototype(cx) || id == id___proto__(cx) || id == id_constructor(cx))
+            if (id_prototype(cx) == id || id___proto__(cx) == id || id_constructor(cx) == id)
                 return false;
 
             /*
@@ -5469,7 +5436,7 @@ TypeScript::CheckBytecode(JSContext *cx, JSScript *script, jsbytecode *pc, const
 
         if (!types->hasType(type)) {
             /* Display fine-grained debug information first */
-            fprintf(stderr, "Missing type at #%u:%05u pushed %u: %s\n", 
+            fprintf(stderr, "Missing type at #%u:%05u pushed %u: %s\n",
                     script->id(), unsigned(pc - script->code), i, TypeString(type));
             TypeFailure(cx, "Missing type pushed %u: %s", i, TypeString(type));
         }

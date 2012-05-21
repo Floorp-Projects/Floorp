@@ -1,43 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the nsSessionStore component.
- *
- * The Initial Developer of the Original Code is
- * Simon Bünzli <zeniko@gmail.com>
- * Portions created by the Initial Developer are Copyright (C) 2006
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dietrich Ayala <dietrich@mozilla.com>
- *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
- *   Michael Kraft <morac99-firefox2@yahoo.com>
- *   Paul O’Shannessy <paul@oshannessy.com>
- *   Nils Maier <maierman@web.de>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
  * Session Storage and Restoration
@@ -137,8 +100,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
                                   "resource:///modules/devtools/scratchpad-manager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "XPathGenerator",
-                                  "resource:///modules/sessionstore/XPathGenerator.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
+                                  "resource:///modules/sessionstore/DocumentUtils.jsm");
 
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -365,7 +328,10 @@ SessionStoreService.prototype = {
               // replace the crashed session with a restore-page-only session
               let pageData = {
                 url: "about:sessionrestore",
-                formdata: { "#sessionData": this._initialState }
+                formdata: {
+                  id: { "sessionData": this._initialState },
+                  xpath: {}
+                }
               };
               this._initialState = { windows: [{ tabs: [{ entries: [pageData] }] }] };
             }
@@ -2209,7 +2175,10 @@ SessionStoreService.prototype = {
     aBrowser.__SS_formDataSaved = true;
     if (aBrowser.currentURI.spec == "about:config")
       aTabData.entries[tabIndex].formdata = {
-        "#textbox": aBrowser.contentDocument.getElementById("textbox").value
+        id: {
+          "textbox": aBrowser.contentDocument.getElementById("textbox").value
+        },
+        xpath: {}
       };
   },
 
@@ -2243,18 +2212,21 @@ SessionStoreService.prototype = {
     let isAboutSR = aContent.top.document.location.href == "about:sessionrestore";
     if (aFullData || this._checkPrivacyLevel(isHTTPS, aIsPinned) || isAboutSR) {
       if (aFullData || aUpdateFormData) {
-        let formData = this._collectFormDataForFrame(aContent.document);
+        let formData = DocumentUtils.getFormData(aContent.document);
 
         // We want to avoid saving data for about:sessionrestore as a string.
         // Since it's stored in the form as stringified JSON, stringifying further
         // causes an explosion of escape characters. cf. bug 467409
-        if (formData && isAboutSR)
-          formData["#sessionData"] = JSON.parse(formData["#sessionData"]);
+        if (formData && isAboutSR) {
+          formData.id["sessionData"] = JSON.parse(formData.id["sessionData"]);
+        }
 
-        if (formData)
+        if (Object.keys(formData.id).length ||
+            Object.keys(formData.xpath).length) {
           aData.formdata = formData;
-        else if (aData.formdata)
+        } else if (aData.formdata) {
           delete aData.formdata;
+        }
       }
       
       // designMode is undefined e.g. for XUL documents (as about:config)
@@ -2299,83 +2271,6 @@ SessionStoreService.prototype = {
         return selectedPageStyle;
     }
     return "";
-  },
-
-  /**
-   * collect the state of all form elements
-   * @param aDocument
-   *        document reference
-   */
-  _collectFormDataForFrame: function sss_collectFormDataForFrame(aDocument) {
-    let formNodes = aDocument.evaluate(XPathGenerator.restorableFormNodes, aDocument,
-                                       XPathGenerator.resolveNS,
-                                       Ci.nsIDOMXPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-    let node = formNodes.iterateNext();
-    if (!node)
-      return null;
-
-    const MAX_GENERATED_XPATHS = 100;
-    let generatedCount = 0;
-
-    let data = {};
-    do {
-      let nId = node.id;
-      let hasDefaultValue = true;
-      let value;
-
-      // Only generate a limited number of XPath expressions for perf reasons (cf. bug 477564)
-      if (!nId && generatedCount > MAX_GENERATED_XPATHS)
-        continue;
-
-      if (node instanceof Ci.nsIDOMHTMLInputElement ||
-          node instanceof Ci.nsIDOMHTMLTextAreaElement) {
-        switch (node.type) {
-          case "checkbox":
-          case "radio":
-            value = node.checked;
-            hasDefaultValue = value == node.defaultChecked;
-            break;
-          case "file":
-            value = { type: "file", fileList: node.mozGetFileNameArray() };
-            hasDefaultValue = !value.fileList.length;
-            break;
-          default: // text, textarea
-            value = node.value;
-            hasDefaultValue = value == node.defaultValue;
-            break;
-        }
-      }
-      else if (!node.multiple) {
-        // <select>s without the multiple attribute are hard to determine the
-        // default value, so assume we don't have the default.
-        hasDefaultValue = false;
-        value = node.selectedIndex;
-      }
-      else {
-        // <select>s with the multiple attribute are easier to determine the
-        // default value since each <option> has a defaultSelected
-        let options = Array.map(node.options, function(aOpt, aIx) {
-          let oSelected = aOpt.selected;
-          hasDefaultValue = hasDefaultValue && (oSelected == aOpt.defaultSelected);
-          return oSelected ? aIx : -1;
-        });
-        value = options.filter(function(aIx) aIx >= 0);
-      }
-      // In order to reduce XPath generation (which is slow), we only save data
-      // for form fields that have been changed. (cf. bug 537289)
-      if (!hasDefaultValue) {
-        if (nId) {
-          data["#" + nId] = value;
-        }
-        else {
-          generatedCount++;
-          data[XPathGenerator.generate(node)] = value;
-        }
-      }
-
-    } while ((node = formNodes.iterateNext()));
-
-    return data;
   },
 
   /**
@@ -3479,77 +3374,41 @@ SessionStoreService.prototype = {
     function hasExpectedURL(aDocument, aURL)
       !aURL || aURL.replace(/#.*/, "") == aDocument.location.href.replace(/#.*/, "");
 
-    function restoreFormData(aDocument, aData, aURL) {
-      for (let key in aData) {
-        if (!hasExpectedURL(aDocument, aURL))
-          return;
-
-        let node = key.charAt(0) == "#" ? aDocument.getElementById(key.slice(1)) :
-                                          XPathGenerator.resolve(aDocument, key);
-        if (!node)
-          continue;
-
-        let eventType;
-        let value = aData[key];
-
-        // for about:sessionrestore we saved the field as JSON to avoid nested
-        // instances causing humongous sessionstore.js files. cf. bug 467409
-        if (aURL == "about:sessionrestore" && typeof value == "object") {
-          value = JSON.stringify(value);
-        }
-
-        if (typeof value == "string" && node.type != "file") {
-          if (node.value == value)
-            continue; // don't dispatch an input event for no change
-
-          node.value = value;
-          eventType = "input";
-        }
-        else if (typeof value == "boolean") {
-          if (node.checked == value)
-            continue; // don't dispatch a change event for no change
-
-          node.checked = value;
-          eventType = "change";
-        }
-        else if (typeof value == "number") {
-          // We saved the value blindly since selects take more work to determine
-          // default values. So now we should check to avoid unnecessary events.
-          if (node.selectedIndex == value)
-            continue;
-
-          try {
-            node.selectedIndex = value;
-            eventType = "change";
-          } catch (ex) { /* throws for invalid indices */ }
-        }
-        else if (value && value.fileList && value.type == "file" && node.type == "file") {
-          node.mozSetFileNameArray(value.fileList, value.fileList.length);
-          eventType = "input";
-        }
-        else if (value && typeof value.indexOf == "function" && node.options) {
-          Array.forEach(node.options, function(aOpt, aIx) {
-            aOpt.selected = value.indexOf(aIx) > -1;
-
-            // Only fire the event here if this wasn't selected by default
-            if (!aOpt.defaultSelected)
-              eventType = "change";
-          });
-        }
-
-        // Fire events for this node if applicable
-        if (eventType) {
-          let event = aDocument.createEvent("UIEvents");
-          event.initUIEvent(eventType, true, true, aDocument.defaultView, 0);
-          node.dispatchEvent(event);
-        }
-      }
-    }
-
     let selectedPageStyle = aBrowser.__SS_restore_pageStyle;
     function restoreTextDataAndScrolling(aContent, aData, aPrefix) {
-      if (aData.formdata)
-        restoreFormData(aContent.document, aData.formdata, aData.url);
+      if (aData.formdata && hasExpectedURL(aContent.document, aData.url)) {
+        let formdata = aData.formdata;
+
+        // handle backwards compatibility
+        // this is a migration from pre-firefox 15. cf. bug 742051
+        if (!("xpath" in formdata || "id" in formdata)) {
+          formdata = { xpath: {}, id: {} };
+
+          for each (let [key, value] in Iterator(aData.formdata)) {
+            if (key.charAt(0) == "#") {
+              formdata.id[key.slice(1)] = value;
+            } else {
+              formdata.xpath[key] = value;
+            }
+          }
+        }
+
+        // for about:sessionrestore we saved the field as JSON to avoid
+        // nested instances causing humongous sessionstore.js files.
+        // cf. bug 467409
+        if (aData.url == "about:sessionrestore" &&
+            "sessionData" in formdata.id &&
+            typeof formdata.id["sessionData"] == "object") {
+          formdata.id["sessionData"] =
+            JSON.stringify(formdata.id["sessionData"]);
+        }
+
+        // update the formdata
+        aData.formdata = formdata;
+        // merge the formdata
+        DocumentUtils.mergeFormData(aContent.document, formdata);
+      }
+
       if (aData.innerHTML) {
         aWindow.setTimeout(function() {
           if (aContent.document.designMode == "on" &&

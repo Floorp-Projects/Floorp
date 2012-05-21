@@ -1,40 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla MathML Project.
- *
- * The Initial Developer of the Original Code is
- * The University Of Queensland.
- * Portions created by the Initial Developer are Copyright (C) 1999
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Roger B. Sidje <rbs@maths.uq.edu.au>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
@@ -71,6 +38,25 @@
 #define NS_MATHML_ACTION_TYPE_TOOLTIP      3 // unsupported
 
 
+// helper function to parse actiontype attribute
+static PRInt32
+GetActionType(nsIContent* aContent)
+{
+  nsAutoString value;
+
+  if (aContent)
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::actiontype_, value);
+
+  if (value.EqualsLiteral("toggle"))
+    return NS_MATHML_ACTION_TYPE_TOGGLE;
+  if (value.EqualsLiteral("statusline"))
+    return NS_MATHML_ACTION_TYPE_STATUSLINE;
+  if (value.EqualsLiteral("tooltip"))
+    return NS_MATHML_ACTION_TYPE_TOOLTIP;
+
+  return NS_MATHML_ACTION_TYPE_NONE;
+}
+
 nsIFrame*
 NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -98,34 +84,12 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
                            nsIFrame*        aParent,
                            nsIFrame*        aPrevInFlow)
 {
-  nsAutoString value, prefix;
-
   // Init our local attributes
 
   mChildCount = -1; // these will be updated in GetSelectedFrame()
   mSelection = 0;
   mSelectedFrame = nsnull;
-  nsRefPtr<nsStyleContext> newStyleContext;
-
-  mActionType = NS_MATHML_ACTION_TYPE_NONE;
-  aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::actiontype_, value);
-  if (!value.IsEmpty()) {
-    if (value.EqualsLiteral("toggle"))
-      mActionType = NS_MATHML_ACTION_TYPE_TOGGLE;
-
-    // XXX use goto to jump out of these if?
-
-    if (NS_MATHML_ACTION_TYPE_NONE == mActionType) {
-      // expected tooltip prefix (8ch)...
-      if (8 < value.Length() && 0 == value.Find("tooltip#"))
-        mActionType = NS_MATHML_ACTION_TYPE_TOOLTIP;
-    }
-
-    if (NS_MATHML_ACTION_TYPE_NONE == mActionType) {
-      if (value.EqualsLiteral("statusline"))
-        mActionType = NS_MATHML_ACTION_TYPE_STATUSLINE;
-    }
-  }
+  mActionType = GetActionType(aContent);
 
   // Let the base class do the rest
   return nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
@@ -245,6 +209,45 @@ nsMathMLmactionFrame::SetInitialChildList(ChildListID     aListID,
                                      false, false);
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsMathMLmactionFrame::AttributeChanged(PRInt32  aNameSpaceID,
+                                       nsIAtom* aAttribute,
+                                       PRInt32  aModType)
+{
+  bool needsReflow = false;
+
+  if (aAttribute == nsGkAtoms::actiontype_) {
+    // updating mActionType ...
+    PRInt32 oldActionType = mActionType;
+    mActionType = GetActionType(mContent);
+
+    // We have to initiate a reflow only when changing actiontype
+    // from toggle or to toggle.
+    if (oldActionType == NS_MATHML_ACTION_TYPE_TOGGLE || 
+          mActionType == NS_MATHML_ACTION_TYPE_TOGGLE) {
+      needsReflow = true;
+    }
+  } else if (aAttribute == nsGkAtoms::selection_) {
+    // When the selection attribute is changed we have to initiate a reflow
+    // only when actiontype is toggle.
+    if (NS_MATHML_ACTION_TYPE_TOGGLE == mActionType) {
+      needsReflow = true;
+    }
+  } else {
+    // let the base class handle other attribute changes
+    return 
+      nsMathMLContainerFrame::AttributeChanged(aNameSpaceID, 
+                                               aAttribute, aModType);
+  }
+
+  if (needsReflow) {
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+  }
+
+  return NS_OK;
 }
 
 //  Only paint the selected child...

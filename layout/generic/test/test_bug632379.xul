@@ -180,10 +180,11 @@ function snapshot(elem)
         synthesizeKey("VK_LEFT", {});
         synthesizeKey("9", {});
     } else {
-        // Bug 668716: This test fails on Mac since it was ported to chrome
-        (navigator.platform.indexOf("Mac") == -1 ? is : todo_is)(
-            pos[1], pos[0], "Popup should open in the same place when the menu is scrolled"
-        );
+        if (navigator.platform.indexOf("Mac") == -1) {
+            is(pos[1], pos[0], "Popup should open in the same place when the menu is scrolled");
+        } else {
+            todo(false, "This test fails on Mac since it was ported to chrome: Bug 668716.");
+        }
         SimpleTest.finish();
     }
 }

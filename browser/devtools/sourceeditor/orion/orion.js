@@ -11275,7 +11275,7 @@ define("examples/textview/textStyler", ['orion/textview/annotations'], function(
 		 "target", "target-name", "target-new", "target-position", "text-align", "text-align-last", "text-decoration", "text-emphasis",
 		 "text-height", "text-indent", "text-justify", "text-outline", "text-shadow", "text-transform", "text-wrap", "top", "transform",
 		 "transform-origin", "transform-style", "transition", "transition-delay", "transition-duration", "transition-property",
-		 "transition-timing-function", "unicode-bidi", "vertical-align", "visibility", "voice-balance", "voice-duration", "voice-family",
+		 "transition-timing-function", "unicode-bidi", "vector-effect", "vertical-align", "visibility", "voice-balance", "voice-duration", "voice-family",
 		 "voice-pitch", "voice-pitch-range", "voice-rate", "voice-stress", "voice-volume", "volume", "white-space", "white-space-collapse",
 		 "widows", "width", "word-break", "word-spacing", "word-wrap", "z-index"
 		];

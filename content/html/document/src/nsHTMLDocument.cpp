@@ -1,42 +1,8 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set sw=2 ts=2 et tw=80: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Kathleen Brade <brade@netscape.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Util.h"
 
@@ -1354,7 +1320,16 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
   }
 
   // If we already have a parser we ignore the document.open call.
-  if (mParser) {
+  if (mParser || mParserAborted) {
+    // The WHATWG spec says: "If the document has an active parser that isn't
+    // a script-created parser, and the insertion point associated with that
+    // parser's input stream is not undefined (that is, it does point to
+    // somewhere in the input stream), then the method does nothing. Abort
+    // these steps and return the Document object on which the method was
+    // invoked."
+    // Note that aborting a parser leaves the parser "active" with its
+    // insertion point "not undefined". We track this using mParserAborted,
+    // because aborting a parser nulls out mParser.
     return NS_OK;
   }
 
@@ -3077,6 +3052,15 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
 
   *_retval = false;
 
+  nsCAutoString cmdToDispatch, paramStr;
+  bool isBool, boolVal;
+  if (!ConvertToMidasInternalCommand(commandID, value,
+                                     cmdToDispatch, paramStr,
+                                     isBool, boolVal)) {
+    // Return false
+    return NS_OK;
+  }
+
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
@@ -3109,12 +3093,6 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
-
-  nsCAutoString cmdToDispatch, paramStr;
-  bool isBool, boolVal;
-  if (!ConvertToMidasInternalCommand(commandID, value,
-                                     cmdToDispatch, paramStr, isBool, boolVal))
-    return NS_OK;
 
   if ((cmdToDispatch.EqualsLiteral("cmd_paragraphState") ||
        cmdToDispatch.EqualsLiteral("cmd_fontSize")) && paramStr.IsEmpty()) {
@@ -3157,6 +3135,12 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
 
+  nsCAutoString cmdToDispatch;
+  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+    // Return false
+    return NS_OK;
+  }
+
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
@@ -3170,10 +3154,6 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
   nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
-
-  nsCAutoString cmdToDispatch;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch))
-    return NS_OK; // queryCommandEnabled returns false on unsupported commands
 
   return cmdMgr->IsCommandEnabled(cmdToDispatch.get(), window, _retval);
 }
@@ -3186,6 +3166,12 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
 
+  nsCAutoString cmdToDispatch;
+  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+    // Return false
+    return NS_OK;
+  }
+
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
@@ -3199,10 +3185,6 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
-
-  nsCAutoString cmdToDispatch;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch))
-    return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv;
   nsCOMPtr<nsICommandParams> cmdParams = do_CreateInstance(
@@ -3227,6 +3209,15 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, bool *_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
 
+  nsCAutoString cmdToDispatch, paramToCheck;
+  bool dummy, dummy2;
+  if (!ConvertToMidasInternalCommand(commandID, commandID,
+                                     cmdToDispatch, paramToCheck,
+                                     dummy, dummy2)) {
+    // Return false
+    return NS_OK;
+  }
+
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
@@ -3247,12 +3238,6 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, bool *_retval)
     *_retval = false;
     return NS_OK;
   }
-
-  nsCAutoString cmdToDispatch, paramToCheck;
-  bool dummy, dummy2;
-  if (!ConvertToMidasInternalCommand(commandID, commandID,
-                                     cmdToDispatch, paramToCheck, dummy, dummy2))
-    return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv;
   nsCOMPtr<nsICommandParams> cmdParams = do_CreateInstance(
@@ -3294,22 +3279,10 @@ nsHTMLDocument::QueryCommandSupported(const nsAString & commandID,
                                       bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = false;
-
-  // if editing is not on, bail
-  if (!IsEditingOnAfterFlush())
-    return NS_ERROR_FAILURE;
-
-  // get command manager
-  nsCOMPtr<nsICommandManager> cmdMgr;
-  GetMidasCommandManager(getter_AddRefs(cmdMgr));
-  if (!cmdMgr)
-    return NS_ERROR_FAILURE;
 
   // commandID is supported if it can be converted to a Midas command
   nsCAutoString cmdToDispatch;
-  if (ConvertToMidasInternalCommand(commandID, cmdToDispatch))
-    *_retval = true;
+  *_retval = ConvertToMidasInternalCommand(commandID, cmdToDispatch);
 
   return NS_OK;
 }
@@ -3320,6 +3293,12 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
                                   nsAString &_retval)
 {
   _retval.SetLength(0);
+
+  nsCAutoString cmdToDispatch, paramStr;
+  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+    // Return empty string
+    return NS_OK;
+  }
 
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush())
@@ -3334,10 +3313,6 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
-
-  nsCAutoString cmdToDispatch, paramStr;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch))
-    return NS_ERROR_NOT_IMPLEMENTED;
 
   // create params
   nsresult rv;

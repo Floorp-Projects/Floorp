@@ -1,47 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code. This file was split
- * from xpfe/appshell/src/nsAppShellService.cpp
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Robert O'Callahan <roc+moz@cs.cmu.edu>
- *   Benjamin Smedberg <bsmedberg@covad.net>
- *   Daniel Brooks <db48x@db48x.net>
- *   Taras Glek <tglek@mozilla.com>
- *   Landry Breuil <landry@openbsd.org>
- *   David Rajchenbach-Teller <dteller@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsAppStartup.h"
 
@@ -78,6 +38,7 @@
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 #include "prenv.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #if defined(XP_WIN)
 #include <windows.h>
@@ -140,7 +101,7 @@ static NS_DEFINE_CID(kSessionStoreWindowRestoredCID,
 
 using namespace mozilla;
 
-PRUint32 gRestartMode = 0;
+uint32_t gRestartMode = 0;
 
 class nsAppExitEvent : public nsRunnable {
 private:
@@ -300,11 +261,75 @@ nsAppStartup::Run(void)
   return mRestart ? NS_SUCCESS_RESTART_APP : NS_OK;
 }
 
+static TimeStamp gRecordedShutdownStartTime;
+static char *gRecordedShutdownTimeFileName = NULL;
+
+static void
+RecordShutdownStartTimeStamp() {
+  if (!Telemetry::CanRecord())
+    return;
+
+  gRecordedShutdownStartTime = TimeStamp::Now();
+
+  nsCOMPtr<nsIFile> mozFile;
+  NS_GetSpecialDirectory(NS_APP_PREFS_50_DIR, getter_AddRefs(mozFile));
+  if (!mozFile)
+    return;
+
+  mozFile->AppendNative(NS_LITERAL_CSTRING("Telemetry.ShutdownTime.txt"));
+  nsCAutoString nativePath;
+  nsresult rv = mozFile->GetNativePath(nativePath);
+  if (!NS_SUCCEEDED(rv))
+    return;
+
+  gRecordedShutdownTimeFileName = PL_strdup(nativePath.get());
+}
+
+static void
+RecordShutdownEndTimeStamp() {
+  if (!gRecordedShutdownTimeFileName)
+    return;
+
+  nsCString name(gRecordedShutdownTimeFileName);
+  PL_strfree(gRecordedShutdownTimeFileName);
+  gRecordedShutdownTimeFileName = NULL;
+
+  nsCString tmpName = name;
+  tmpName += ".tmp";
+  PRFileDesc *f = PR_Open(tmpName.get(), PR_CREATE_FILE | PR_WRONLY,
+                          PR_IRUSR | PR_IWUSR);
+  if (!f)
+    return;
+
+  TimeStamp now = TimeStamp::Now();
+  MOZ_ASSERT(now >= gRecordedShutdownStartTime);
+  TimeDuration diff = now - gRecordedShutdownStartTime;
+  uint32_t diff2 = diff.ToMilliseconds();
+  uint32_t written = PR_fprintf(f, "%d\n", diff2);
+  PRStatus rv = PR_Close(f);
+  if (written == static_cast<uint32_t>(-1) || rv != PR_SUCCESS) {
+    PR_Delete(tmpName.get());
+    return;
+  }
+  PR_Rename(tmpName.get(), name.get());
+}
+
+// For now firefox runs static destructors during shutdown on release builds
+// too, so we just use one to run RecordShutdownEndTimeStamp. Once we are
+// exiting earlier in release builds we just move the call.
+class RecordShutdownEndTimeStampHelper {
+public:
+  ~RecordShutdownEndTimeStampHelper() {
+    RecordShutdownEndTimeStamp();
+  }
+};
+
+static RecordShutdownEndTimeStampHelper gHelper;
 
 NS_IMETHODIMP
-nsAppStartup::Quit(PRUint32 aMode)
+nsAppStartup::Quit(uint32_t aMode)
 {
-  PRUint32 ferocity = (aMode & 0xF);
+  uint32_t ferocity = (aMode & 0xF);
 
   // Quit the application. We will asynchronously call the appshell's
   // Exit() method via nsAppExitEvent to allow one last pass
@@ -314,6 +339,8 @@ nsAppStartup::Quit(PRUint32 aMode)
 
   if (mShuttingDown)
     return NS_OK;
+
+  RecordShutdownStartTimeStamp();
 
   // If we're considering quitting, we will only do so if:
   if (ferocity == eConsiderQuit) {
@@ -373,7 +400,7 @@ nsAppStartup::Quit(PRUint32 aMode)
 
     if (mRestart) {
       // Firefox-restarts reuse the process. Process start-time isn't a useful indicator of startup time
-      PR_SetEnv(PR_smprintf("MOZ_APP_RESTART=%lld", (PRInt64) PR_Now() / PR_USEC_PER_MSEC));
+      PR_SetEnv(PR_smprintf("MOZ_APP_RESTART=%lld", (int64_t) PR_Now() / PR_USEC_PER_MSEC));
     }
 
     obsService = mozilla::services::GetObserverService();
@@ -543,7 +570,7 @@ nsAppStartup::GetInterrupted(bool *aInterrupted)
 
 NS_IMETHODIMP
 nsAppStartup::CreateChromeWindow(nsIWebBrowserChrome *aParent,
-                                 PRUint32 aChromeFlags,
+                                 uint32_t aChromeFlags,
                                  nsIWebBrowserChrome **_retval)
 {
   bool cancel;
@@ -557,8 +584,8 @@ nsAppStartup::CreateChromeWindow(nsIWebBrowserChrome *aParent,
 
 NS_IMETHODIMP
 nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
-                                  PRUint32 aChromeFlags,
-                                  PRUint32 aContextFlags,
+                                  uint32_t aChromeFlags,
+                                  uint32_t aContextFlags,
                                   nsIURI *aURI,
                                   bool *aCancel,
                                   nsIWebBrowserChrome **_retval)
@@ -652,7 +679,7 @@ nsAppStartup::Observe(nsISupports *aSubject,
 }
 
 #if defined(LINUX) || defined(ANDROID)
-static PRUint64 
+static uint64_t 
 JiffiesSinceBoot(const char *file)
 {
   char stat[512];
@@ -665,7 +692,7 @@ JiffiesSinceBoot(const char *file)
     return 0;
   stat[n] = 0;
   
-  long long unsigned starttime = 0; // instead of PRUint64 to keep GCC quiet
+  long long unsigned starttime = 0; // instead of uint64_t to keep GCC quiet
   
   char *s = strrchr(stat, ')');
   if (!s)
@@ -690,8 +717,8 @@ ThreadedCalculateProcessCreationTimestamp(void *aClosure)
   char thread_stat[40];
   sprintf(thread_stat, "/proc/self/task/%d/stat", (pid_t) syscall(__NR_gettid));
   
-  PRUint64 thread_jiffies = JiffiesSinceBoot(thread_stat);
-  PRUint64 self_jiffies = JiffiesSinceBoot("/proc/self/stat");
+  uint64_t thread_jiffies = JiffiesSinceBoot(thread_stat);
+  uint64_t self_jiffies = JiffiesSinceBoot("/proc/self/stat");
   
   if (!thread_jiffies || !self_jiffies)
     return;
@@ -723,7 +750,7 @@ CalculateProcessCreationTimestamp()
   if (!success)
     return 0;
   // copied from NSPR _PR_FileTimeToPRTime
-  PRUint64 timestamp = 0;
+  uint64_t timestamp = 0;
   CopyMemory(&timestamp, &start, sizeof(PRTime));
 #ifdef __GNUC__
   timestamp = (timestamp - 116444736000000000LL) / 10LL;
@@ -831,8 +858,8 @@ nsAppStartup::GetAutomaticSafeModeNecessary(bool *_retval)
 NS_IMETHODIMP
 nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
 {
-  const PRInt32 MAX_TIME_SINCE_STARTUP = 6 * 60 * 60 * 1000;
-  const PRInt32 MAX_STARTUP_BUFFER = 10;
+  const int32_t MAX_TIME_SINCE_STARTUP = 6 * 60 * 60 * 1000;
+  const int32_t MAX_STARTUP_BUFFER = 10;
   nsresult rv;
 
   mStartupCrashTrackingEnded = false;
@@ -853,7 +880,7 @@ nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
 
   xr->GetInSafeMode(&inSafeMode);
 
-  PRInt64 replacedLockTime;
+  int64_t replacedLockTime;
   rv = xr->GetReplacedLockTime(&replacedLockTime);
 
   if (NS_FAILED(rv) || !replacedLockTime) {
@@ -864,11 +891,11 @@ nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
   }
 
   // check whether safe mode is necessary
-  PRInt32 maxResumedCrashes = -1;
+  int32_t maxResumedCrashes = -1;
   rv = Preferences::GetInt(kPrefMaxResumedCrashes, &maxResumedCrashes);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
-  PRInt32 recentCrashes = 0;
+  int32_t recentCrashes = 0;
   Preferences::GetInt(kPrefRecentCrashes, &recentCrashes);
   mIsSafeModeNecessary = (recentCrashes > maxResumedCrashes && maxResumedCrashes != -1);
 
@@ -882,11 +909,11 @@ nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
   }
 
   // time of last successful startup
-  PRInt32 lastSuccessfulStartup;
+  int32_t lastSuccessfulStartup;
   rv = Preferences::GetInt(kPrefLastSuccess, &lastSuccessfulStartup);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 lockSeconds = (PRInt32)(replacedLockTime / PR_MSEC_PER_SEC);
+  int32_t lockSeconds = (int32_t)(replacedLockTime / PR_MSEC_PER_SEC);
 
   // started close enough to good startup so call it good
   if (lockSeconds <= lastSuccessfulStartup + MAX_STARTUP_BUFFER
@@ -953,7 +980,7 @@ nsAppStartup::TrackStartupCrashEnd()
   if (mainTime <= 0) {
     NS_WARNING("Could not get StartupTimeline::MAIN time.");
   } else {
-    PRInt32 lockFileTime = (PRInt32)(mainTime / PR_USEC_PER_SEC);
+    int32_t lockFileTime = (int32_t)(mainTime / PR_USEC_PER_SEC);
     rv = Preferences::SetInt(kPrefLastSuccess, lockFileTime);
     if (NS_FAILED(rv)) NS_WARNING("Could not set startup crash detection pref.");
   }
@@ -961,8 +988,8 @@ nsAppStartup::TrackStartupCrashEnd()
   if (inSafeMode && mIsSafeModeNecessary) {
     // On a successful startup in automatic safe mode, allow the user one more crash
     // in regular mode before returning to safe mode.
-    PRInt32 maxResumedCrashes = 0;
-    PRInt32 prefType;
+    int32_t maxResumedCrashes = 0;
+    int32_t prefType;
     rv = Preferences::GetDefaultRootBranch()->GetPrefType(kPrefMaxResumedCrashes, &prefType);
     NS_ENSURE_SUCCESS(rv, rv);
     if (prefType == nsIPrefBranch::PREF_INT) {
@@ -983,7 +1010,7 @@ nsAppStartup::TrackStartupCrashEnd()
 }
 
 NS_IMETHODIMP
-nsAppStartup::RestartInSafeMode(PRUint32 aQuitMode)
+nsAppStartup::RestartInSafeMode(uint32_t aQuitMode)
 {
   PR_SetEnv("MOZ_SAFE_MODE_RESTART=1");
   this->Quit(aQuitMode | nsIAppStartup::eRestart);

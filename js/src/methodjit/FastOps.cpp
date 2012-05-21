@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla SpiderMonkey JavaScript 1.9 code, released
- * May 28, 2008.
- *
- * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org>
- *
- * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
- *   David Mandelin <dmandelin@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsbool.h"
 #include "jscntxt.h"
@@ -321,7 +288,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
                     masm.urshift32(Imm32(shift), reg);
             }
             frame.popn(2);
-            
+
             /* x >>> 0 may result in a double, handled above. */
             JS_ASSERT_IF(op == JSOP_URSH, shift >= 1);
             frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
@@ -353,14 +320,14 @@ mjit::Compiler::jsop_bitop(JSOp op)
             }
             frame.unpinReg(rr);
         }
-        
+
         if (op == JSOP_LSH) {
             masm.lshift32(rr, reg);
         } else if (op == JSOP_RSH) {
             masm.rshift32(rr, reg);
         } else {
             masm.urshift32(rr, reg);
-            
+
             Jump isNegative = masm.branch32(Assembler::LessThan, reg, Imm32(0));
             stubcc.linkExit(isNegative, Uses(2));
         }
@@ -695,7 +662,7 @@ mjit::Compiler::jsop_not()
 
     jmpNotObject.linkTo(syncTarget, &stubcc.masm);
     stubcc.crossJump(jmpObjectExit, lblRejoin);
-    
+
 
     /* Leave. */
     stubcc.leave();
@@ -755,7 +722,7 @@ mjit::Compiler::jsop_typeof()
             Assembler::Condition cond = (op == JSOP_STRICTEQ || op == JSOP_EQ)
                                         ? Assembler::Equal
                                         : Assembler::NotEqual;
-            
+
             if (atom == rt->atomState.typeAtoms[JSTYPE_VOID]) {
                 type = JSVAL_TYPE_UNDEFINED;
             } else if (atom == rt->atomState.typeAtoms[JSTYPE_STRING]) {
@@ -900,7 +867,7 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
 
     if (fe->isConstant()) {
         JSBool b = js_ValueToBoolean(fe->getValue());
-        
+
         /* Short-circuit. */
         if ((op == JSOP_OR && b == JS_TRUE) ||
             (op == JSOP_AND && b == JS_FALSE)) {
@@ -928,7 +895,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32_t slot)
     int amt = (op == JSOP_LOCALINC || op == JSOP_INCLOCAL) ? 1 : -1;
 
     if (!analysis->incrementInitialValueObserved(PC)) {
-        // Before: 
+        // Before:
         // After:  V
         frame.pushLocal(slot);
 
@@ -991,7 +958,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32_t slot)
     int amt = (op == JSOP_ARGINC || op == JSOP_INCARG) ? 1 : -1;
 
     if (!analysis->incrementInitialValueObserved(PC)) {
-        // Before: 
+        // Before:
         // After:  V
         frame.pushArg(slot);
 
@@ -1603,7 +1570,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     //  1) maybePin() never allocates a register, it only pins if a register
     //     already existed.
     //  2) tempRegForData() will work fine on a pinned register.
- 
+
     // Guard that the object is an object.
     if (!obj->isTypeKnown()) {
         Jump j = frame.testObject(Assembler::NotEqual, obj);
@@ -2433,7 +2400,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         RegisterID result = data;
         if (!(Registers::maskReg(data) & Registers::SingleByteRegs))
             result = frame.allocReg(Registers::SingleByteRegs).reg();
-        
+
         Jump notBoolean;
         if (!test->isTypeKnown())
            notBoolean = frame.testBoolean(Assembler::NotEqual, test);
@@ -2665,7 +2632,7 @@ mjit::Compiler::jsop_initprop()
     FrameEntry *fe = frame.peek(-1);
     PropertyName *name = script->getName(GET_UINT32_INDEX(PC));
 
-    JSObject *baseobj = frame.extra(obj).initObject;
+    RootedVarObject baseobj(cx, frame.extra(obj).initObject);
 
     if (!baseobj || monitored(PC)) {
         prepareStubCall(Uses(2));
@@ -2679,7 +2646,7 @@ mjit::Compiler::jsop_initprop()
 #ifdef DEBUG
     bool res =
 #endif
-    LookupPropertyWithFlags(cx, baseobj, NameToId(name),
+    LookupPropertyWithFlags(cx, baseobj, RootedVarId(cx, NameToId(name)),
                             JSRESOLVE_QUALIFIED, &holder, &prop);
     JS_ASSERT(res && prop && holder == baseobj);
 

@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * JavaScript iterators.
@@ -86,7 +53,7 @@ using namespace js::gc;
 
 static void iterator_finalize(FreeOp *fop, JSObject *obj);
 static void iterator_trace(JSTracer *trc, JSObject *obj);
-static JSObject *iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
+static JSObject *iterator_iterator(JSContext *cx, HandleObject obj, JSBool keysonly);
 
 Class js::IteratorClass = {
     "Iterator",
@@ -379,8 +346,13 @@ Snapshot(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector *props)
             }
         }
 
-        if ((flags & JSITER_OWNONLY) || pobj->isXML())
+        if (flags & JSITER_OWNONLY)
             break;
+
+#if JS_HAS_XML_SUPPORT
+        if (pobj->isXML())
+            break;
+#endif
     } while ((pobj = pobj->getProto()) != NULL);
 
 #ifdef JS_MORE_DETERMINISTIC
@@ -459,7 +431,7 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
 
     /* Check whether we have a valid __iterator__ method. */
     PropertyName *name = cx->runtime->atomState.iteratorAtom;
-    if (!js_GetMethod(cx, obj, NameToId(name), 0, vp))
+    if (!GetMethod(cx, obj, name, 0, vp))
         return false;
 
     /* If there is no custom __iterator__ method, we are done here. */
@@ -826,7 +798,7 @@ GetIteratorObject(JSContext *cx, HandleObject obj, uint32_t flags)
 } /* namespace js */
 
 static JSObject *
-iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
+iterator_iterator(JSContext *cx, HandleObject obj, JSBool keysonly)
 {
     return obj;
 }
@@ -1022,8 +994,8 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                         JSObject *proto = obj->getProto();
                         JSObject *obj2;
                         JSProperty *prop;
-                        jsid id;
-                        if (!ValueToId(cx, StringValue(*idp), &id))
+                        RootedVarId id(cx);
+                        if (!ValueToId(cx, StringValue(*idp), id.address()))
                             return false;
                         if (!proto->lookupGeneric(cx, id, &obj2, &prop))
                             return false;
@@ -1222,8 +1194,8 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, Value *rval)
     /* Fetch and cache the next value from the iterator. */
     if (ni) {
         JS_ASSERT(!ni->isKeyIter());
-        jsid id;
-        if (!ValueToId(cx, StringValue(*ni->current()), &id))
+        RootedVarId id(cx);
+        if (!ValueToId(cx, StringValue(*ni->current()), id.address()))
             return false;
         ni->incCursor();
         if (!ni->obj->getGeneric(cx, id, rval))
@@ -1251,8 +1223,7 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, Value *rval)
         }
     } else {
         /* Call the iterator object's .next method. */
-        jsid id = NameToId(cx->runtime->atomState.nextAtom);
-        if (!js_GetMethod(cx, iterobj, id, 0, rval))
+        if (!GetMethod(cx, iterobj, cx->runtime->atomState.nextAtom, 0, rval))
             return false;
         if (!Invoke(cx, ObjectValue(*iterobj), *rval, 0, NULL, rval)) {
             /* Check for StopIteration. */
@@ -1314,7 +1285,7 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 }
 
 static JSBool
-stopiter_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
+stopiter_hasInstance(JSContext *cx, HandleObject obj, const Value *v, JSBool *bp)
 {
     *bp = IsStopIteration(*v);
     return JS_TRUE;
@@ -1489,8 +1460,9 @@ js_NewGenerator(JSContext *cx)
     /* Copy from the stack to the generator's floating frame. */
     gen->regs.rebaseFromTo(stackRegs, *genfp);
     genfp->stealFrameAndSlots<HeapValue, Value, StackFrame::DoPostBarrier>(
-                              genfp, genvp, stackfp, stackvp, stackRegs.sp);
+                              cx, genfp, genvp, stackfp, stackvp, stackRegs.sp);
     genfp->initFloatingGenerator();
+    stackfp->setYielding();  /* XXX: to be removed */
 
     obj->setPrivate(gen);
     return obj;

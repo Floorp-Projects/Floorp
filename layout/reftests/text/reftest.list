@@ -109,6 +109,7 @@ HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 == wordbreak-6.html wordbreak-6-ref.html
 HTTP(..) == wordbreak-7a.html wordbreak-7a-ref.html
 fails HTTP(..) == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
+== wordbreak-8.html wordbreak-8-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
 HTTP(..) == wordwrap-02.html wordwrap-02-ref.html
 HTTP(..) == wordwrap-03.html wordwrap-03-ref.html
@@ -120,6 +121,7 @@ HTTP(..) == wordwrap-03.html wordwrap-03-ref.html
 == wordwrap-08.html wordwrap-08-ref.html
 != wordwrap-09.html wordwrap-01-ref.html
 == wordwrap-09.html wordwrap-09-ref.html
+== wordwrap-10.html wordwrap-10-ref.html # bug 752459
 == word-spacing-01.html word-spacing-01-ref.html
 # the following will fail when rendering with Core Text (see bug 389074) due to what appears to be
 # an Apple bug: the presence of ZWNJ disturbs the positioning of an adjacent glyph. rdar://6427865
