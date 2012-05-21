@@ -59,9 +59,8 @@ pref("extensions.hotfix.id", "firefox-hotfix@mozilla.org");
 pref("extensions.hotfix.cert.checkAttributes", true);
 pref("extensions.hotfix.certs.1.sha1Fingerprint", "F1:DB:F9:6A:7B:B8:04:FA:48:3C:16:95:C7:2F:17:C6:5B:C2:9F:45");
 
-// Disable add-ons installed into the shared user and shared system areas by
-// default. This does not include the application directory. See the SCOPE
-// constants in AddonManager.jsm for values to use here
+// Disable add-ons that are not installed by the user in all scopes by default.
+// See the SCOPE constants in AddonManager.jsm for values to use here.
 pref("extensions.autoDisableScopes", 15);
 
 // Dictionary download preference
