@@ -75,7 +75,7 @@ toolbarbutton[checked="true"]:not([disabled="true"]) {
   padding-bottom: 2px;
   -moz-padding-start: 4px;
   -moz-padding-end: 2px;
-  background-image: url("chrome://global/skin/toolbar/Lighten.png");
+  background-color: rgba(255,255,255,0.5);
   color: ButtonText;
 }
 
