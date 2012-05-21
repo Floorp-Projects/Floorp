@@ -1,42 +1,8 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set sw=2 ts=2 et tw=80 : */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Content App.
- *
- * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Benoit Girard <bgirard@mozilla.com>
- *   Ali Juma <ajuma@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CompositorParent.h"
 #include "RenderTrace.h"
@@ -71,6 +37,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop,
   , mThreadID(aThreadID)
   , mRenderToEGLSurface(aRenderToEGLSurface)
   , mEGLSurfaceSize(aSurfaceWidth, aSurfaceHeight)
+  , mPauseCompositionMonitor("PauseCompositionMonitor")
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -146,6 +113,9 @@ CompositorParent::PauseComposition()
 {
   NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "PauseComposition() can only be called on the compositor thread");
+
+  mozilla::MonitorAutoLock lock(mPauseCompositionMonitor);
+
   if (!mPaused) {
     mPaused = true;
 
@@ -153,6 +123,9 @@ CompositorParent::PauseComposition()
     static_cast<LayerManagerOGL*>(mLayerManager.get())->gl()->ReleaseSurface();
 #endif
   }
+
+  // if anyone's waiting to make sure that composition really got paused, tell them
+  lock.NotifyAll();
 }
 
 void
@@ -184,12 +157,21 @@ CompositorParent::ResumeCompositionAndResize(int width, int height)
   ResumeComposition();
 }
 
+/*
+ * This will execute a pause synchronously, waiting to make sure that the compositor
+ * really is paused.
+ */
 void
 CompositorParent::SchedulePauseOnCompositorThread()
 {
+  mozilla::MonitorAutoLock lock(mPauseCompositionMonitor);
+
   CancelableTask *pauseTask = NewRunnableMethod(this,
                                                 &CompositorParent::PauseComposition);
   CompositorLoop()->PostTask(FROM_HERE, pauseTask);
+
+  // Wait until the pause has actually been processed by the compositor thread
+  lock.Wait();
 }
 
 void

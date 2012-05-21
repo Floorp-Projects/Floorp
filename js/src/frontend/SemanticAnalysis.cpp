@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "frontend/SemanticAnalysis.h"
 
@@ -52,7 +19,7 @@ using namespace js;
 using namespace js::frontend;
 
 static void
-FlagHeavyweights(Definition *dn, FunctionBox *funbox, uint32_t *tcflags, bool topInFunction)
+FlagHeavyweights(Definition *dn, FunctionBox *funbox, bool *isHeavyweight, bool topInFunction)
 {
     unsigned dnLevel = dn->frameLevel();
 
@@ -64,17 +31,17 @@ FlagHeavyweights(Definition *dn, FunctionBox *funbox, uint32_t *tcflags, bool to
          * funbox whose body contains the dn definition.
          */
         if (funbox->level + 1U == dnLevel || (dnLevel == 0 && dn->isLet())) {
-            funbox->tcflags |= TCF_FUN_HEAVYWEIGHT;
+            funbox->setFunIsHeavyweight();
             break;
         }
     }
 
     if (!funbox && topInFunction)
-        *tcflags |= TCF_FUN_HEAVYWEIGHT;
+        *isHeavyweight = true;
 }
 
 static void
-SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool topInFunction, bool isDirectEval)
+SetFunctionKinds(FunctionBox *funbox, bool *isHeavyweight, bool topInFunction, bool isDirectEval)
 {
     for (; funbox; funbox = funbox->siblings) {
         ParseNode *fn = funbox->node;
@@ -86,13 +53,13 @@ SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool topInFunction, boo
             continue;
 
         if (funbox->kids)
-            SetFunctionKinds(funbox->kids, tcflags, topInFunction, isDirectEval);
+            SetFunctionKinds(funbox->kids, isHeavyweight, topInFunction, isDirectEval);
 
         JSFunction *fun = funbox->function();
 
         JS_ASSERT(fun->kind() == JSFUN_INTERPRETED);
 
-        if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
+        if (funbox->funIsHeavyweight()) {
             /* nothing to do */
         } else if (isDirectEval || funbox->inAnyDynamicScope()) {
             /*
@@ -134,7 +101,7 @@ SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool topInFunction, boo
              * ensure that its containing function has been flagged as
              * heavyweight.
              *
-             * The emitter must see TCF_FUN_HEAVYWEIGHT accurately before
+             * The emitter must see funIsHeavyweight() accurately before
              * generating any code for a tree of nested functions.
              */
             AtomDefnMapPtr upvars = pn->pn_names;
@@ -144,7 +111,7 @@ SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool topInFunction, boo
                 Definition *defn = r.front().value();
                 Definition *lexdep = defn->resolve();
                 if (!lexdep->isFreeVar())
-                    FlagHeavyweights(lexdep, funbox, tcflags, topInFunction);
+                    FlagHeavyweights(lexdep, funbox, isHeavyweight, topInFunction);
             }
         }
     }
@@ -162,7 +129,7 @@ SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool topInFunction, boo
  * js::Bindings::extensibleParents explain why.
  */
 static bool
-MarkExtensibleScopeDescendants(JSContext *context, FunctionBox *funbox, bool hasExtensibleParent) 
+MarkExtensibleScopeDescendants(JSContext *context, FunctionBox *funbox, bool hasExtensibleParent)
 {
     for (; funbox; funbox = funbox->siblings) {
         /*
@@ -179,7 +146,9 @@ MarkExtensibleScopeDescendants(JSContext *context, FunctionBox *funbox, bool has
 
         if (funbox->kids) {
             if (!MarkExtensibleScopeDescendants(context, funbox->kids,
-                                                hasExtensibleParent || funbox->scopeIsExtensible())) {
+                                                hasExtensibleParent ||
+                                                funbox->funHasExtensibleScope()))
+            {
                 return false;
             }
         }
@@ -197,6 +166,9 @@ frontend::AnalyzeFunctions(Parser *parser)
     if (!MarkExtensibleScopeDescendants(sc->context, sc->functionList, false))
         return false;
     bool isDirectEval = !!parser->callerFrame;
-    SetFunctionKinds(sc->functionList, &sc->flags, sc->inFunction, isDirectEval);
+    bool isHeavyweight = false;
+    SetFunctionKinds(sc->functionList, &isHeavyweight, sc->inFunction, isDirectEval);
+    if (isHeavyweight)
+        sc->setFunIsHeavyweight();
     return true;
 }

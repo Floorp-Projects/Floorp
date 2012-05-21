@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 browser.jar:
 *   content/browser/inspector.html                (highlighter/inspector.html)
     content/browser/NetworkPanel.xhtml            (webconsole/NetworkPanel.xhtml)
@@ -18,5 +22,5 @@ browser.jar:
     content/browser/debugger.css                  (debugger/debugger.css)
     content/browser/debugger-controller.js        (debugger/debugger-controller.js)
     content/browser/debugger-view.js              (debugger/debugger-view.js)
-    content/browser/devtools/gcli.css             (webconsole/gcli.css)
-    content/browser/devtools/gcliblank.xhtml      (webconsole/gcliblank.xhtml)
+    content/browser/devtools/gcli.css             (commandline/gcli.css)
+    content/browser/devtools/gcliblank.xhtml      (commandline/gcliblank.xhtml)

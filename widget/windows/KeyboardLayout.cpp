@@ -1,39 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Dainis Jonitis, <Dainis_Jonitis@exigengroup.lv>.
- * Portions created by the Initial Developer are Copyright (C) 2006
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Util.h"
 
@@ -45,6 +13,8 @@
 #include "nsToolkit.h"
 #include "nsQuickSort.h"
 #include "nsAlgorithm.h"
+#include "nsGUIEvent.h"
+#include "WidgetUtils.h"
 #include "WinUtils.h"
 
 #include "nsIDOMKeyEvent.h"
@@ -228,7 +198,7 @@ VirtualKey::GetNativeUniChars(PRUint8 aShiftState,
   return index;
 }
 
-NativeKey::NativeKey(HKL aKeyboardLayout,
+NativeKey::NativeKey(const KeyboardLayout& aKeyboardLayout,
                      nsWindow* aWindow,
                      const MSG& aKeyOrCharMessage) :
   mDOMKeyCode(0), mVirtualKeyCode(0), mOriginalVirtualKeyCode(0)
@@ -247,7 +217,7 @@ NativeKey::NativeKey(HKL aKeyboardLayout,
         case VK_SHIFT:
           mVirtualKeyCode = static_cast<PRUint8>(
             ::MapVirtualKeyEx(GetScanCodeWithExtendedFlag(),
-                              MAPVK_VSC_TO_VK_EX, aKeyboardLayout));
+                              MAPVK_VSC_TO_VK_EX, aKeyboardLayout.GetLayout()));
           break;
         case VK_PROCESSKEY:
           mVirtualKeyCode = mOriginalVirtualKeyCode =
@@ -270,7 +240,7 @@ NativeKey::NativeKey(HKL aKeyboardLayout,
       }
       mVirtualKeyCode = mOriginalVirtualKeyCode = static_cast<PRUint8>(
         ::MapVirtualKeyEx(GetScanCodeWithExtendedFlag(),
-                          MAPVK_VSC_TO_VK_EX, aKeyboardLayout));
+                          MAPVK_VSC_TO_VK_EX, aKeyboardLayout.GetLayout()));
       break;
     default:
       MOZ_NOT_REACHED("Unsupported message");
@@ -281,25 +251,8 @@ NativeKey::NativeKey(HKL aKeyboardLayout,
     mVirtualKeyCode = mOriginalVirtualKeyCode;
   }
 
-  mDOMKeyCode = mOriginalVirtualKeyCode;
-  if (nsIMM32Handler::IsComposingOn(aWindow)) {
-    return;
-  }
-
-  switch (mOriginalVirtualKeyCode) {
-    // 0xBA, For the US standard keyboard, the ';:' key
-    case VK_OEM_1:
-      mDOMKeyCode =  NS_VK_SEMICOLON;
-      break;
-    // 0xBB, For any country/region, the '+' key
-    case VK_OEM_PLUS:
-      mDOMKeyCode = NS_VK_ADD;
-      break;
-    // 0xBD, For any country/region, the '-' key
-    case VK_OEM_MINUS:
-      mDOMKeyCode = NS_VK_SUBTRACT;
-      break;
-  }
+  mDOMKeyCode =
+    aKeyboardLayout.ConvertNativeKeyCodeToDOMKeyCode(mOriginalVirtualKeyCode);
 }
 
 UINT
@@ -657,7 +610,7 @@ KeyboardLayout::SetShiftState(PBYTE aKbdState, PRUint8 aShiftState)
 inline PRInt32
 KeyboardLayout::GetKeyIndex(PRUint8 aVirtualKey)
 {
-// Currently these 50 (NS_NUM_OF_KEYS) virtual keys are assumed
+// Currently these 54 (NS_NUM_OF_KEYS) virtual keys are assumed
 // to produce visible representation:
 // 0x20 - VK_SPACE          ' '
 // 0x30..0x39               '0'..'9'
@@ -675,6 +628,10 @@ KeyboardLayout::GetKeyIndex(PRUint8 aVirtualKey)
 // 0xDD - VK_OEM_6          ']}' for US
 // 0xDE - VK_OEM_7          ''"' for US
 // 0xDF - VK_OEM_8
+// 0xE1 - no name
+// 0xE2 - VK_OEM_102        '\_' for JIS
+// 0xE3 - no name
+// 0xE4 - no name
 
   static const PRInt8 xlat[256] =
   {
@@ -694,7 +651,7 @@ KeyboardLayout::GetKeyIndex(PRUint8 aVirtualKey)
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 38, 39, 40, 41, 42, 43,   // B0
     44, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // C0
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 45, 46, 47, 48, 49,   // D0
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // E0
+    -1, 50, 51, 52, 53, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // E0
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1    // F0
   };
 
@@ -880,6 +837,161 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
   return entries;
 }
 
+PRUint32
+KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
+{
+  // Alphabet or Numeric or Numpad or Function keys
+  if ((aNativeKeyCode >= 0x30 && aNativeKeyCode <= 0x39) ||
+      (aNativeKeyCode >= 0x41 && aNativeKeyCode <= 0x5A) ||
+      (aNativeKeyCode >= 0x60 && aNativeKeyCode <= 0x87)) {
+    return static_cast<PRUint32>(aNativeKeyCode);
+  }
+  switch (aNativeKeyCode) {
+    // Following keycodes are same as our DOM keycodes
+    case VK_CANCEL:
+    case VK_BACK:
+    case VK_TAB:
+    case VK_CLEAR:
+    case VK_RETURN:
+    case VK_SHIFT:
+    case VK_CONTROL:
+    case VK_MENU: // Alt
+    case VK_PAUSE:
+    case VK_CAPITAL: // CAPS LOCK
+    case VK_KANA: // same as VK_HANGUL
+    case VK_JUNJA:
+    case VK_FINAL:
+    case VK_HANJA: // same as VK_KANJI
+    case VK_ESCAPE:
+    case VK_CONVERT:
+    case VK_NONCONVERT:
+    case VK_ACCEPT:
+    case VK_MODECHANGE:
+    case VK_SPACE:
+    case VK_PRIOR: // PAGE UP
+    case VK_NEXT: // PAGE DOWN
+    case VK_END:
+    case VK_HOME:
+    case VK_LEFT:
+    case VK_UP:
+    case VK_RIGHT:
+    case VK_DOWN:
+    case VK_SELECT:
+    case VK_PRINT:
+    case VK_EXECUTE:
+    case VK_SNAPSHOT:
+    case VK_INSERT:
+    case VK_DELETE:
+    case VK_APPS: // Context Menu
+    case VK_SLEEP:
+    case VK_NUMLOCK:
+    case VK_SCROLL: // SCROLL LOCK
+      return PRUint32(aNativeKeyCode);
+
+    case VK_HELP:
+      return NS_VK_HELP;
+
+    // Windows key should be mapped to a Win keycode
+    // They should be able to be distinguished by DOM3 KeyboardEvent.location
+    case VK_LWIN:
+    case VK_RWIN:
+      return NS_VK_WIN;
+
+    // Following keycodes are not defined in our DOM keycodes.
+    case VK_BROWSER_BACK:
+    case VK_BROWSER_FORWARD:
+    case VK_BROWSER_REFRESH:
+    case VK_BROWSER_STOP:
+    case VK_BROWSER_SEARCH:
+    case VK_BROWSER_FAVORITES:
+    case VK_BROWSER_HOME:
+    case VK_VOLUME_MUTE:
+    case VK_VOLUME_DOWN:
+    case VK_VOLUME_UP:
+    case VK_MEDIA_NEXT_TRACK:
+    case VK_MEDIA_STOP:
+    case VK_MEDIA_PLAY_PAUSE:
+    case VK_LAUNCH_MAIL:
+    case VK_LAUNCH_MEDIA_SELECT:
+    case VK_LAUNCH_APP1:
+    case VK_LAUNCH_APP2:
+    case VK_ATTN: // Attension key of IBM midrange computers, e.g., AS/400
+    case VK_CRSEL: // Cursor Selection
+    case VK_EXSEL: // Extend Selection
+    case VK_EREOF: // Erase EOF key of IBM 3270 keyboard layout
+    case VK_PLAY:
+    case VK_ZOOM:
+    case VK_PA1: // PA1 key of IBM 3270 keyboard layout
+    case VK_OEM_CLEAR:
+      return 0;
+
+    // Following keycodes are only used by Nokia/Ericsson, we don't define them
+    case VK_OEM_RESET:
+    case VK_OEM_JUMP:
+    case VK_OEM_PA1:
+    case VK_OEM_PA2:
+    case VK_OEM_PA3:
+    case VK_OEM_WSCTRL:
+    case VK_OEM_CUSEL:
+    case VK_OEM_ATTN:
+    case VK_OEM_FINISH:
+    case VK_OEM_COPY:
+    case VK_OEM_AUTO:
+    case VK_OEM_ENLW:
+    case VK_OEM_BACKTAB:
+      return 0;
+
+    // Following keycodes are OEM keys which are keycodes for non-alphabet and
+    // non-numeric keys, we should compute each keycode of them from unshifted
+    // character which is inputted by each key.  But if the unshifted character
+    // is not an ASCII character but shifted character is an ASCII character,
+    // we should refer it.
+    case VK_OEM_1:
+    case VK_OEM_PLUS:
+    case VK_OEM_COMMA:
+    case VK_OEM_MINUS:
+    case VK_OEM_PERIOD:
+    case VK_OEM_2:
+    case VK_OEM_3:
+    case VK_OEM_4:
+    case VK_OEM_5:
+    case VK_OEM_6:
+    case VK_OEM_7:
+    case VK_OEM_8:
+    case 0xE1: // OEM specific
+    case VK_OEM_102:
+    case 0xE3: // OEM specific
+    case 0xE4: // OEM specific
+    {
+      NS_ASSERTION(IsPrintableCharKey(aNativeKeyCode),
+                   "The key must be printable");
+      PRUnichar uniChars[5];
+      PRUint32 numOfChars =
+        GetUniCharsWithShiftState(aNativeKeyCode, 0,
+                                  uniChars, ArrayLength(uniChars));
+      if (numOfChars != 1 || uniChars[0] < ' ' || uniChars[0] > 0x7F) {
+        numOfChars =
+          GetUniCharsWithShiftState(aNativeKeyCode, eShift,
+                                    uniChars, ArrayLength(uniChars));
+        if (numOfChars != 1 || uniChars[0] < ' ' || uniChars[0] > 0x7F) {
+          return 0;
+        }
+      }
+      return WidgetUtils::ComputeKeyCodeFromChar(uniChars[0]);
+    }
+
+    // VK_PROCESSKEY means IME already consumed the key event.
+    case VK_PROCESSKEY:
+      return 0;
+    // VK_PACKET is generated by SendInput() API, we don't need to
+    // care this message as key event.
+    case VK_PACKET:
+      return 0;
+  }
+  NS_WARNING("Unknown key code comes, please check latest MSDN document,"
+             " there may be some new keycodes we have not known.");
+  return 0;
+}
 
 PRUnichar
 DeadKeyTable::GetCompositeChar(PRUnichar aBaseChar) const

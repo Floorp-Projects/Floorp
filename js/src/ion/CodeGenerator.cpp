@@ -784,7 +784,7 @@ CodeGenerator::visitDefVar(LDefVar *lir)
     typedef bool (*pf)(JSContext *, HandlePropertyName, unsigned, HandleObject);
     static const VMFunction DefVarOrConstInfo = FunctionInfo<pf>(DefVarOrConst);
 
-    masm.movePtr(ImmWord(lir->mir()->name()), nameTemp);
+    masm.movePtr(ImmGCPtr(lir->mir()->name()), nameTemp);
 
     pushArg(scopeChain); // JSObject *
     pushArg(Imm32(lir->mir()->attrs())); // unsigned
@@ -1012,7 +1012,7 @@ CodeGenerator::visitInitProp(LInitProp *lir)
     static const VMFunction InitPropInfo = FunctionInfo<pf>(InitProp);
 
     pushArg(ToValue(lir, LInitProp::ValueIndex));
-    pushArg(ImmWord(lir->mir()->propertyName()));
+    pushArg(ImmGCPtr(lir->mir()->propertyName()));
     pushArg(objReg);
 
     return callVM(InitPropInfo, lir);
@@ -1677,7 +1677,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
     masm.bind(&callStub);
     saveLive(ins);
 
-    typedef bool (*pf)(JSContext *, JSObject *, const Value &, const Value &, JSBool strict);
+    typedef bool (*pf)(JSContext *, HandleObject, const Value &, const Value &, JSBool strict);
     static const VMFunction Info = FunctionInfo<pf>(SetObjectElement);
 
     pushArg(Imm32(current->mir()->strictModeCode()));
@@ -2189,7 +2189,7 @@ CodeGenerator::visitCallGetProperty(LCallGetProperty *lir)
     typedef bool (*pf)(JSContext *, const Value &, PropertyName *, Value *);
     static const VMFunction Info = FunctionInfo<pf>(GetProperty);
 
-    pushArg(ImmGCPtr(lir->mir()->atom()));
+    pushArg(ImmGCPtr(lir->mir()->name()));
     pushArg(ToValue(lir, LCallGetProperty::Value));
     return callVM(Info, lir);
 }
@@ -2199,7 +2199,7 @@ CodeGenerator::visitCallGetName(LCallGetName *lir)
 {
     static const VMFunction Info = FunctionInfo<GetPropertyOrNameFn>(GetScopeName);
 
-    pushArg(ImmGCPtr(lir->mir()->atom()));
+    pushArg(ImmGCPtr(lir->mir()->name()));
     pushArg(ToRegister(lir->getOperand(0)));
     return callVM(Info, lir);
 }
@@ -2209,7 +2209,7 @@ CodeGenerator::visitCallGetNameTypeOf(LCallGetNameTypeOf *lir)
 {
     static const VMFunction Info = FunctionInfo<GetPropertyOrNameFn>(GetScopeNameForTypeOf);
 
-    pushArg(ImmGCPtr(lir->mir()->atom()));
+    pushArg(ImmGCPtr(lir->mir()->name()));
     pushArg(ToRegister(lir->getOperand(0)));
     return callVM(Info, lir);
 }
@@ -2237,7 +2237,7 @@ CodeGenerator::visitCallGetElement(LCallGetElement *lir)
 bool
 CodeGenerator::visitCallSetElement(LCallSetElement *lir)
 {
-    typedef bool (*pf)(JSContext *, JSObject *, const Value &, const Value &, JSBool strict);
+    typedef bool (*pf)(JSContext *, HandleObject, const Value &, const Value &, JSBool strict);
     static const VMFunction SetObjectElementInfo = FunctionInfo<pf>(js::SetObjectElement);
 
     pushArg(Imm32(current->mir()->strictModeCode()));
@@ -2395,14 +2395,14 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
 
     IonCacheGetProperty cache(ool->getInlineJump(), ool->getInlineLabel(),
                               masm.labelForPatch(), liveRegs,
-                              objReg, mir->atom(), output);
+                              objReg, mir->name(), output);
 
     cache.setScriptedLocation(mir->block()->info().script(), mir->resumePoint()->pc());
     size_t cacheIndex = allocateCache(cache);
 
     saveLive(ins_);
 
-    typedef bool (*pf)(JSContext *, size_t, JSObject *, Value *);
+    typedef bool (*pf)(JSContext *, size_t, HandleObject, Value *);
     static const VMFunction GetPropertyCacheInfo = FunctionInfo<pf>(GetPropertyCache);
 
     pushArg(objReg);
@@ -2524,10 +2524,10 @@ CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
     pushArg(Imm32(ins->mir()->strict()));
 
     pushArg(value);
-    pushArg(ImmGCPtr(ins->mir()->atom()));
+    pushArg(ImmGCPtr(ins->mir()->name()));
     pushArg(objReg);
 
-    typedef bool (*pf)(JSContext *, HandleObject, JSAtom *, const HandleValue, bool, bool);
+    typedef bool (*pf)(JSContext *, HandleObject, HandlePropertyName, const HandleValue, bool, bool);
     static const VMFunction info = FunctionInfo<pf>(SetProperty);
 
     return callVM(info, ins);
@@ -2536,7 +2536,7 @@ CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
 bool
 CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, PropertyName *, JSBool *);
+    typedef bool (*pf)(JSContext *, const Value &, HandlePropertyName, JSBool *);
 
     pushArg(ImmGCPtr(lir->mir()->atom()));
     pushArg(ToValue(lir, LCallDeleteProperty::Value));
@@ -2563,7 +2563,7 @@ CodeGenerator::visitOutOfLineSetPropertyCache(OutOfLineCache *ool)
 
     IonCacheSetProperty cache(ool->getInlineJump(), ool->getInlineLabel(),
                               masm.labelForPatch(), liveRegs,
-                              objReg, mir->atom(), value,
+                              objReg, mir->name(), value,
                               mir->strict());
 
     size_t cacheIndex = allocateCache(cache);

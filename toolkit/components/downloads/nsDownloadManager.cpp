@@ -1,46 +1,7 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Blake Ross <blaker@netscape.com> (Original Author)
- *   Ben Goodger <ben@netscape.com> (Original Author)
- *   Shawn Wilsher <me@shawnwilsher.com>
- *   Srirang G Doddihal <brahmana@doddihal.com>
- *   Edward Lee <edward.lee@engineering.uiuc.edu>
- *   Graeme McCutcheon <graememcc_firefox@graeme-online.co.uk>
- *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Util.h"
 
@@ -87,6 +48,10 @@
 #include "AndroidBridge.h"
 #endif
 
+#ifdef MOZ_WIDGET_GTK2
+#include <gtk/gtk.h>
+#endif
+
 using namespace mozilla;
 
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
@@ -131,6 +96,9 @@ nsDownloadManager::GetSingleton()
 
   gDownloadManagerService = new nsDownloadManager();
   if (gDownloadManagerService) {
+#if defined(MOZ_WIDGET_GTK2)
+    g_type_init();
+#endif
     NS_ADDREF(gDownloadManagerService);
     if (NS_FAILED(gDownloadManagerService->Init()))
       NS_RELEASE(gDownloadManagerService);
@@ -2299,7 +2267,7 @@ nsDownload::SetState(DownloadState aState)
         }
       }
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK2)
       nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
       nsCOMPtr<nsIFile> file;
       nsAutoString path;
@@ -2309,8 +2277,8 @@ nsDownload::SetState(DownloadState aState)
           file &&
           NS_SUCCEEDED(file->GetPath(path))) {
 
-#ifdef XP_WIN
-        // On windows, add the download to the system's "recent documents"
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK2)
+        // On Windows and Gtk, add the download to the system's "recent documents"
         // list, with a pref to disable.
         {
           bool addToRecentDocs = true;
@@ -2319,7 +2287,18 @@ nsDownload::SetState(DownloadState aState)
 
           if (addToRecentDocs &&
               !nsDownloadManager::gDownloadManagerService->mInPrivateBrowsing) {
+#ifdef XP_WIN
             ::SHAddToRecentDocs(SHARD_PATHW, path.get());
+#elif defined(MOZ_WIDGET_GTK2)
+            GtkRecentManager* manager = gtk_recent_manager_get_default();
+
+            gchar* uri = g_filename_to_uri(NS_ConvertUTF16toUTF8(path).get(),
+                                           NULL, NULL);
+            if (uri) {
+              gtk_recent_manager_add_item(manager, uri);
+              g_free(uri);
+            }
+#endif
           }
         }
 #endif

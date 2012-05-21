@@ -1,71 +1,24 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Firefox Developer Toolbar.
- *
- * The Initial Developer of the Original Code is
- * The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2012
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dave Camp <dcamp@mozilla.com> (Original Author)
- *   Joe Walker <jwalker@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+
+const EXPORTED_SYMBOLS = [ "DeveloperToolbar" ];
+
+const NS_XHTML = "http://www.w3.org/1999/xhtml";
+const URI_GCLIBLANK = "chrome://browser/content/devtools/gcliblank.xhtml";
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-let EXPORTED_SYMBOLS = [ "DeveloperToolbar", "loadCommands" ];
-
-const NS_XHTML = 'http://www.w3.org/1999/xhtml';
-
-XPCOMUtils.defineLazyGetter(this, "gcli", function () {
+XPCOMUtils.defineLazyGetter(this, "gcli", function() {
   let obj = {};
-  Components.utils.import("resource:///modules/gcli.jsm", obj);
+  Components.utils.import("resource:///modules/devtools/gcli.jsm", obj);
+  Components.utils.import("resource:///modules/devtools/GcliCommands.jsm", {});
   return obj.gcli;
 });
 
-let console = gcli._internal.console;
-
-/**
- * Load the various Command JSMs.
- * Should be called when the developer toolbar first opens.
- */
-function loadCommands()
-{
-  Components.utils.import("resource:///modules/GcliCommands.jsm", {});
-  Components.utils.import("resource:///modules/GcliTiltCommands.jsm", {});
-}
-
-
-
-let commandsLoaded = false;
 
 /**
  * A component to manage the global developer toolbar, which contains a GCLI
@@ -75,11 +28,6 @@ let commandsLoaded = false;
  */
 function DeveloperToolbar(aChromeWindow, aToolbarElement)
 {
-  if (!commandsLoaded) {
-    loadCommands();
-    commandsLoaded = true;
-  }
-
   this._chromeWindow = aChromeWindow;
 
   this._element = aToolbarElement;
@@ -180,7 +128,7 @@ DeveloperToolbar.prototype._onload = function DT_onload()
 
   let contentDocument = this._chromeWindow.getBrowser().contentDocument;
 
-  this.display = gcli._internal.createDisplay({
+  this.display = gcli.createDisplay({
     contentDocument: contentDocument,
     chromeDocument: this._doc,
     chromeWindow: this._chromeWindow,
@@ -272,9 +220,11 @@ DeveloperToolbar.prototype.destroy = function DT_destroy()
   // leaks as a belt-and-braces approach, however this prevents our DOM node
   // hunter from looking in all the nooks and crannies, so it's better if we
   // can be leak-free without
+  /*
   delete this.display;
   delete this.outputPanel;
   delete this.tooltipPanel;
+  */
 };
 
 /**
@@ -393,7 +343,7 @@ function OutputPanel(aChromeDoc, aInput, aLoadCallback)
          noautohide="true"
          class="gcli-panel">
     <iframe id="gcli-output-frame"
-            src="chrome://browser/content/devtools/gcliblank.xhtml"
+            src=URI_GCLIBLANK
             flex="1"/>
   </panel>
   */
@@ -407,7 +357,7 @@ function OutputPanel(aChromeDoc, aInput, aLoadCallback)
 
   this._frame = aChromeDoc.createElement("iframe");
   this._frame.id = "gcli-output-frame";
-  this._frame.setAttribute("src", "chrome://browser/content/devtools/gcliblank.xhtml");
+  this._frame.setAttribute("src", URI_GCLIBLANK);
   this._frame.setAttribute("flex", "1");
   this._panel.appendChild(this._frame);
 
@@ -571,7 +521,7 @@ function TooltipPanel(aChromeDoc, aInput, aLoadCallback)
          noautohide="true"
          class="gcli-panel">
     <iframe id="gcli-tooltip-frame"
-            src="chrome://browser/content/devtools/gcliblank.xhtml"
+            src=URI_GCLIBLANK
             flex="1"/>
   </panel>
   */
@@ -585,7 +535,7 @@ function TooltipPanel(aChromeDoc, aInput, aLoadCallback)
 
   this._frame = aChromeDoc.createElement("iframe");
   this._frame.id = "gcli-tooltip-frame";
-  this._frame.setAttribute("src", "chrome://browser/content/devtools/gcliblank.xhtml");
+  this._frame.setAttribute("src", URI_GCLIBLANK);
   this._frame.setAttribute("flex", "1");
   this._panel.appendChild(this._frame);
 

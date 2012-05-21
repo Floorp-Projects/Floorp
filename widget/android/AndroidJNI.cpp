@@ -1,39 +1,7 @@
 /* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Android code.
- *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Hal.h"
 #include "nsILocalFile.h"
@@ -252,7 +220,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass,
     };
 
     SmsMessageData message(0, eDeliveryState_Received, nsJNIString(aSender, jenv), EmptyString(),
-                           nsJNIString(aBody, jenv), aTimestamp);
+                           nsJNIString(aBody, jenv), aTimestamp, false);
 
     nsCOMPtr<nsIRunnable> runnable = new NotifySmsReceivedRunnable(message);
     NS_DispatchToMainThread(runnable);
@@ -338,7 +306,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsSent(JNIEnv* jenv, jclass,
 
     SmsMessageData message(aId, eDeliveryState_Sent, EmptyString(),
                            nsJNIString(aReceiver, jenv),
-                           nsJNIString(aBody, jenv), aTimestamp);
+                           nsJNIString(aBody, jenv), aTimestamp, true);
 
     nsCOMPtr<nsIRunnable> runnable = new NotifySmsSentRunnable(message, aRequestId, aProcessId);
     NS_DispatchToMainThread(runnable);
@@ -375,7 +343,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsDelivered(JNIEnv* jenv, jclass,
 
     SmsMessageData message(aId, eDeliveryState_Sent, EmptyString(),
                            nsJNIString(aReceiver, jenv),
-                           nsJNIString(aBody, jenv), aTimestamp);
+                           nsJNIString(aBody, jenv), aTimestamp, true);
 
     nsCOMPtr<nsIRunnable> runnable = new NotifySmsDeliveredRunnable(message);
     NS_DispatchToMainThread(runnable);
@@ -481,8 +449,9 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyGetSms(JNIEnv* jenv, jclass,
     DeliveryState state = receiver.IsEmpty() ? eDeliveryState_Received
                                              : eDeliveryState_Sent;
 
+    // TODO Need to add the message `read` parameter value. Bug 748391
     SmsMessageData message(aId, state, nsJNIString(aSender, jenv), receiver,
-                           nsJNIString(aBody, jenv), aTimestamp);
+                           nsJNIString(aBody, jenv), aTimestamp, true);
 
     nsCOMPtr<nsIRunnable> runnable = new NotifyGetSmsRunnable(message, aRequestId, aProcessId);
     NS_DispatchToMainThread(runnable);
@@ -736,8 +705,9 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyListCreated(JNIEnv* jenv, jclass,
     DeliveryState state = receiver.IsEmpty() ? eDeliveryState_Received
                                              : eDeliveryState_Sent;
 
+    // TODO Need to add the message `read` parameter value. Bug 748391
     SmsMessageData message(aMessageId, state, nsJNIString(aSender, jenv),
-                           receiver, nsJNIString(aBody, jenv), aTimestamp);
+                           receiver, nsJNIString(aBody, jenv), aTimestamp, true);
 
     nsCOMPtr<nsIRunnable> runnable =
       new NotifyCreateMessageListRunnable(aListId, message, aRequestId, aProcessId);
@@ -795,9 +765,10 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyGotNextMessage(JNIEnv* jenv, jclass,
     nsJNIString receiver = nsJNIString(aReceiver, jenv);
     DeliveryState state = receiver.IsEmpty() ? eDeliveryState_Received
                                              : eDeliveryState_Sent;
-
+ 
+    // TODO Need to add the message `read` parameter value. Bug 748391
     SmsMessageData message(aMessageId, state, nsJNIString(aSender, jenv),
-                           receiver, nsJNIString(aBody, jenv), aTimestamp);
+                           receiver, nsJNIString(aBody, jenv), aTimestamp, true);
 
     nsCOMPtr<nsIRunnable> runnable =
       new NotifyGotNextMessageRunnable(message, aRequestId, aProcessId);

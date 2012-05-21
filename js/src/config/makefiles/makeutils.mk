@@ -67,8 +67,11 @@ else
 endif
 
 # Intent: Conditionals for detecting common/tier target use
-#   Todo: are check, install, test needed ?
-isTargetStem       = $(sort $(foreach pat, $(1)% %$(1), $(call is_XinY,$(pat),${$(mcg_goals)})))
+isTargetStem       = $(sort \
+  $(foreach var,$(getargv),\
+    $(foreach pat,$(var)% %$(var),\
+      $(call is_XinY,$(pat),${$(mcg_goals)})\
+  )))
 isTargetStemClean  = $(call isTargetStem,clean)
 isTargetStemExport = $(call isTargetStem,export)
 isTargetStemLibs   = $(call isTargetStem,libs)

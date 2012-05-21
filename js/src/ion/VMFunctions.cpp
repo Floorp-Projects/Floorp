@@ -109,10 +109,10 @@ InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &
 {
     // Copy the incoming value. This may be overwritten; the return value is discarded.
     Value rval = value;
-    jsid id = AtomToId(name);
+    RootedVarId id(cx, NameToId(name));
 
     if (name == cx->runtime->atomState.protoAtom)
-        return js_SetPropertyHelper(cx, obj, id, 0, &rval, false);
+        return baseops::SetPropertyHelper(cx, obj, id, 0, &rval, false);
     return !!DefineNativeProperty(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, 0, 0, 0);
 }
 
@@ -297,15 +297,15 @@ ArrayShiftDense(JSContext *cx, JSObject *obj, Value *rval)
 }
 
 bool
-SetProperty(JSContext *cx, HandleObject obj, JSAtom *atom, HandleValue value,
+SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
             bool strict, bool isSetName)
 {
     Value v = value;
-    jsid id = AtomToId(atom);
+    RootedVarId id(cx, NameToId(name));
 
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
         unsigned defineHow = isSetName ? DNP_UNQUALIFIED : 0;
-        return js_SetPropertyHelper(cx, obj, id, defineHow, &v, strict);
+        return baseops::SetPropertyHelper(cx, obj, id, defineHow, &v, strict);
     }
 
     return obj->setGeneric(cx, id, &v, strict);

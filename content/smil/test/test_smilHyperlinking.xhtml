@@ -1,0 +1,233 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for hyperlinking</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display:none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
+     onload="this.pauseAnimations()">
+  <circle cx="-100" cy="20" r="15" fill="blue" id="circle"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for SMIL keySplines **/
+
+/* Global Variables */
+const SVGNS="http://www.w3.org/2000/svg";
+var gSvg = document.getElementById("svg");
+var gAnim;
+
+var gTestStages =
+  [ testActive,
+    testSeekToFirst,
+    testKickStart,
+    testKickStartWithUnresolved,
+    testFiltering
+  ];
+
+SimpleTest.waitForExplicitFinish();
+
+function continueTest()
+{
+  if (gTestStages.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+
+  window.location.hash = "";
+  if (gAnim) {
+    gAnim.parentNode.removeChild(gAnim);
+  }
+  gAnim = createAnim();
+  gSvg.setCurrentTime(0);
+  gTestStages.shift()();
+}
+
+function createAnim() {
+  var anim = document.createElementNS(SVGNS,'animate');
+  anim.setAttribute('attributeName','cx');
+  anim.setAttribute('from','0');
+  anim.setAttribute('to','100');
+  anim.setAttribute('dur','1s');
+  anim.setAttribute('begin','indefinite');
+  anim.setAttribute('id','anim');
+  return document.getElementById('circle').appendChild(anim);
+}
+
+// Traversing a hyperlink, condition 1:
+// 
+// "If the target element is active, seek the document time back to the
+// (current) begin time of the element. If there are multiple begin times, use
+// the begin time that corresponds to the current "begin instance"."
+//
+function testActive() {
+  gAnim.setAttribute('begin','2s; 4s');
+  gSvg.setCurrentTime(2.5);
+  fireLink(rewindActiveInterval1);
+}
+
+function rewindActiveInterval1() {
+  is(gSvg.getCurrentTime(), 2,
+     "Unexpected time after activating link to animation in the middle of " +
+     "first active interval");
+
+  // Seek to second interval
+  gSvg.setCurrentTime(4.5);
+  fireLink(rewindActiveInterval2);
+}
+
+function rewindActiveInterval2() {
+  is(gSvg.getCurrentTime(), 4,
+     "Unexpected time after activating link to animation in the middle of " +
+     "second active interval");
+
+  // Try a negative time
+  gAnim.setAttribute("begin", "-0.5");
+  gSvg.setCurrentTime(0.2);
+  fireLink(rewindActiveIntervalAtZero);
+}
+
+function rewindActiveIntervalAtZero() {
+  is(gSvg.getCurrentTime(), 0,
+     "Unexpected time after activating link to animation in the middle of " +
+     "an active interval that overlaps zero");
+
+  continueTest();
+}
+
+// Traversing a hyperlink, condition 2:
+// 
+// "Else if the target element begin time is resolved (i.e., there is any
+// resolved time in the list of begin times, or if the begin time was forced by
+// an earlier hyperlink or a beginElement() method call), seek the document time
+// (forward or back, as needed) to the earliest resolved begin time of the
+// target element. Note that the begin time may be resolved as a result of an
+// earlier hyperlink, DOM or event activation. Once the begin time is resolved,
+// hyperlink traversal always seeks."
+//
+function testSeekToFirst() {
+  // Seek forwards
+  gAnim.setAttribute('begin','2s');
+  gSvg.setCurrentTime(0);
+  fireLink(forwardToInterval1);
+}
+
+function forwardToInterval1() {
+  is(gSvg.getCurrentTime(), 2,
+     "Unexpected time after activating link to animation scheduled to start " +
+     "the future");
+
+  // Seek backwards
+  gSvg.setCurrentTime(3.5);
+  fireLink(backwardToInterval1);
+}
+
+function backwardToInterval1() {
+  is(gSvg.getCurrentTime(), 2,
+     "Unexpected time after activating link to animation that ran in the past");
+
+  // What if the first begin instance is negative?
+  gAnim.setAttribute('begin','-0.5s');
+  gSvg.setCurrentTime(1);
+  fireLink(backwardToZero);
+}
+
+function backwardToZero() {
+  is(gSvg.getCurrentTime(), 0,
+     "Unexpected time after activating link to animation that ran in the " +
+     "past with a negative time");
+
+  continueTest();
+}
+
+// Traversing a hyperlink, condition 3:
+// 
+// "Else (animation begin time is unresolved) just resolve the target animation
+// begin time at current document time. Disregard the sync-base or event base of
+// the animation, and do not "back-propagate" any timing logic to resolve the
+// child, but rather treat it as though it were defined with begin="indefinite"
+// and just resolve begin time to the current document time."
+//
+function testKickStart() {
+  gSvg.setCurrentTime(1);
+  fireLink(startedAt1s);
+}
+
+function startedAt1s() {
+  is(gSvg.getCurrentTime(), 1,
+     "Unexpected time after kick-starting animation with indefinite start " +
+     "by hyperlink");
+  is(gAnim.getStartTime(), 1,
+     "Unexpected start time for kick-started animation");
+
+  continueTest();
+}
+
+function testKickStartWithUnresolved() {
+  gAnim.setAttribute("begin", "circle.click");
+  gSvg.setCurrentTime(3);
+  fireLink(startedAt3s);
+}
+
+function startedAt3s() {
+  is(gSvg.getCurrentTime(), 3,
+     "Unexpected time after kick-starting animation with unresolved start " +
+     "by hyperlink");
+  is(gAnim.getStartTime(), 3,
+     "Unexpected start time for kick-started animation with unresolved begin " +
+     "condition");
+
+  continueTest();
+}
+
+function testFiltering() {
+  gAnim.setAttribute('begin','-3s; 1s; 2s; 3s; 4s; 5s; 6s; 7s; 8s; 9s; 10s');
+  gSvg.setCurrentTime(12);
+  fireLink(rewindToFirst);
+}
+
+function rewindToFirst() {
+  is(gSvg.getCurrentTime(), 1,
+     "Unexpected time after triggering animation with a hyperlink after " +
+     "numerous intervals have passed");
+
+  continueTest();
+}
+
+function fireLink(callback) {
+  // First we need to reset the hash because otherwise the redundant hashchange
+  // events will be suppressed
+  if (window.location.hash === '') {
+    fireLinkPart2(callback);
+  } else {
+    window.location.hash = '';
+    window.addEventListener("hashchange",
+      function clearHash() {
+        window.removeEventListener("hashchange", clearHash, false);
+        window.setTimeout(fireLinkPart2, 0, callback);
+      },
+      false);
+  }
+}
+
+function fireLinkPart2(callback) {
+  window.addEventListener("hashchange",
+    function triggerCallback() {
+      window.removeEventListener("hashchange", triggerCallback, false);
+      window.setTimeout(callback, 0);
+    },
+    false);
+  window.location.hash = '#anim';
+}
+
+window.addEventListener("load", continueTest, false);
+]]>
+</script>
+</pre>
+</body>
+</html>

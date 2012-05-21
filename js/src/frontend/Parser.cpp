@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * JS parser.
@@ -117,9 +84,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
     principals(NULL),
     originPrincipals(NULL),
     callerFrame(cfp),
-    callerVarObj(cfp ? &cfp->varObj() : NULL),
     allocator(cx),
-    functionCount(0),
     traceListHead(NULL),
     tc(NULL),
     keepAtoms(cx->runtime),
@@ -127,7 +92,6 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
     compileAndGo(compileAndGo)
 {
     cx->activeCompilations++;
-    PodArrayZero(tempFreeList);
     setPrincipals(prin, originPrin);
     JS_ASSERT_IF(cfp, cfp->isScriptFrame());
 }
@@ -172,6 +136,14 @@ Parser::setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin)
         JS_HoldPrincipals(originPrincipals);
 }
 
+ObjectBox::ObjectBox(ObjectBox* traceLink, JSObject *obj)
+  : traceLink(traceLink),
+    emitLink(NULL),
+    object(obj),
+    isFunctionBox(false)
+{
+}
+
 ObjectBox *
 Parser::newObjectBox(JSObject *obj)
 {
@@ -184,17 +156,47 @@ Parser::newObjectBox(JSObject *obj)
      * scanning, parsing and code generation for the whole script or top-level
      * function.
      */
-    ObjectBox *objbox = context->tempLifoAlloc().new_<ObjectBox>();
+
+    ObjectBox *objbox = context->tempLifoAlloc().new_<ObjectBox>(traceListHead, obj);
     if (!objbox) {
         js_ReportOutOfMemory(context);
         return NULL;
     }
-    objbox->traceLink = traceListHead;
+
     traceListHead = objbox;
-    objbox->emitLink = NULL;
-    objbox->object = obj;
-    objbox->isFunctionBox = false;
+
     return objbox;
+}
+
+FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, TreeContext *tc)
+  : ObjectBox(traceListHead, obj),
+    node(fn),
+    siblings(tc->sc->functionList),
+    kids(NULL),
+    parent(tc->sc->funbox),
+    bindings(tc->sc->context),
+    level(tc->sc->staticLevel),
+    queued(false),
+    inLoop(false),
+    inWith(!!tc->innermostWith),
+    inGenexpLambda(false),
+    cxFlags(tc->sc->context)     // the cxFlags are set in LeaveFunction
+{
+    isFunctionBox = true;
+    for (StmtInfo *stmt = tc->sc->topStmt; stmt; stmt = stmt->down) {
+        if (STMT_IS_LOOP(stmt)) {
+            inLoop = true;
+            break;
+        }
+    }
+    if (!tc->sc->inFunction) {
+        JSObject *scope = tc->sc->scopeChain();
+        while (scope) {
+            if (scope->isWith())
+                inWith = true;
+            scope = scope->enclosingScope();
+        }
+    }
 }
 
 FunctionBox *
@@ -210,43 +212,14 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
      * scanning, parsing and code generation for the whole script or top-level
      * function.
      */
-    FunctionBox *funbox = context->tempLifoAlloc().newPod<FunctionBox>();
+    FunctionBox *funbox = context->tempLifoAlloc().new_<FunctionBox>(traceListHead, obj, fn, tc);
     if (!funbox) {
         js_ReportOutOfMemory(context);
         return NULL;
     }
-    funbox->traceLink = traceListHead;
-    traceListHead = funbox;
-    funbox->emitLink = NULL;
-    funbox->object = obj;
-    funbox->isFunctionBox = true;
-    funbox->node = fn;
-    funbox->siblings = tc->sc->functionList;
-    tc->sc->functionList = funbox;
-    ++functionCount;
-    funbox->kids = NULL;
-    funbox->parent = tc->sc->funbox;
-    new (&funbox->bindings) Bindings(context);
-    funbox->queued = false;
-    funbox->inLoop = false;
-    for (StmtInfo *stmt = tc->sc->topStmt; stmt; stmt = stmt->down) {
-        if (STMT_IS_LOOP(stmt)) {
-            funbox->inLoop = true;
-            break;
-        }
-    }
-    funbox->level = tc->sc->staticLevel;
-    funbox->tcflags = tc->sc->flags & TCF_STRICT_MODE_CODE;
-    funbox->inWith = !!tc->innermostWith;
-    if (!tc->sc->inFunction) {
-        JSObject *scope = tc->sc->scopeChain();
-        while (scope) {
-            if (scope->isWith())
-                funbox->inWith = true;
-            scope = scope->enclosingScope();
-        }
-    }
-    funbox->inGenexpLambda = false;
+
+    traceListHead = tc->sc->functionList = funbox;
+
     return funbox;
 }
 
@@ -605,7 +578,6 @@ Parser::functionBody(FunctionBodyType type)
     PushStatement(tc->sc, &stmtInfo, STMT_BLOCK, -1);
     stmtInfo.flags = SIF_BODY_BLOCK;
 
-    unsigned oldflags = tc->sc->flags;
     JS_ASSERT(!tc->hasReturnExpr && !tc->hasReturnVoid);
 
     ParseNode *pn;
@@ -620,7 +592,7 @@ Parser::functionBody(FunctionBodyType type)
             if (!pn->pn_kid) {
                 pn = NULL;
             } else {
-                if (tc->sc->flags & TCF_FUN_IS_GENERATOR) {
+                if (tc->sc->funIsGenerator()) {
                     ReportBadReturn(context, this, pn, JSREPORT_ERROR,
                                     JSMSG_BAD_GENERATOR_RETURN,
                                     JSMSG_BAD_ANON_GENERATOR_RETURN);
@@ -666,16 +638,16 @@ Parser::functionBody(FunctionBodyType type)
         for (FuncStmtSet::Range r = set->all(); !r.empty(); r.popFront()) {
             PropertyName *name = r.front()->asPropertyName();
             if (name == arguments)
-                tc->sc->noteBindingsAccessedDynamically();
+                tc->sc->setBindingsAccessedDynamically();
             else if (Definition *dn = tc->decls.lookupFirst(name))
                 dn->pn_dflags |= PND_CLOSED;
         }
     }
 
     /*
-     * As explained by the TCF_ARGUMENTS_HAS_LOCAL_BINDING comment, turn uses
-     * of 'arguments' into bindings. Use of 'arguments' should never escape a
-     * nested function as an upvar.
+     * As explained by the ContextFlags::funArgumentsHasLocalBinding comment,
+     * turn uses of 'arguments' into bindings. Use of 'arguments' should never
+     * escape a nested function as an upvar.
      */
     for (AtomDefnRange r = tc->lexdeps->all(); !r.empty(); r.popFront()) {
         JSAtom *atom = r.front().key();
@@ -713,11 +685,11 @@ Parser::functionBody(FunctionBodyType type)
      */
     BindingKind bindKind = tc->sc->bindings.lookup(context, arguments, NULL);
     if (bindKind == VARIABLE || bindKind == CONSTANT) {
-        tc->sc->noteArgumentsHasLocalBinding();
+        tc->sc->setFunArgumentsHasLocalBinding();
 
         /* Dynamic scope access destroys all hope of optimization. */
         if (tc->sc->bindingsAccessedDynamically())
-            tc->sc->noteDefinitelyNeedsArgsObj();
+            tc->sc->setFunDefinitelyNeedsArgsObj();
 
         /*
          * Check whether any parameters have been assigned within this
@@ -730,14 +702,13 @@ Parser::functionBody(FunctionBodyType type)
             AtomDeclsIter iter(&tc->decls);
             while (Definition *dn = iter.next()) {
                 if (dn->kind() == Definition::ARG && dn->isAssigned()) {
-                    tc->sc->noteDefinitelyNeedsArgsObj();
+                    tc->sc->setFunDefinitelyNeedsArgsObj();
                     break;
                 }
              }
         }
     }
 
-    tc->sc->flags = oldflags | (tc->sc->flags & TCF_FUN_FLAGS);
     return pn;
 }
 
@@ -1085,24 +1056,23 @@ EnterFunction(ParseNode *fn, Parser *parser, JSAtom *funAtom = NULL,
               FunctionSyntaxKind kind = Expression)
 {
     TreeContext *funtc = parser->tc;
-    TreeContext *tc = funtc->parent;
-    JSFunction *fun = parser->newFunction(tc, funAtom, kind);
+    TreeContext *outertc = funtc->parent;
+    JSFunction *fun = parser->newFunction(outertc, funAtom, kind);
     if (!fun)
         return NULL;
 
     /* Create box for fun->object early to protect against last-ditch GC. */
-    FunctionBox *funbox = parser->newFunctionBox(fun, fn, tc);
+    FunctionBox *funbox = parser->newFunctionBox(fun, fn, outertc);
     if (!funbox)
         return NULL;
 
-    /* Initialize non-default members of funtc. */
-    funtc->sc->flags |= funbox->tcflags;
-    funtc->sc->blockidGen = tc->sc->blockidGen;
+    /* Initialize non-default members of funtc->sc. */
+    funtc->sc->blockidGen = outertc->sc->blockidGen;
     if (!GenerateBlockId(funtc->sc, funtc->sc->bodyid))
         return NULL;
     funtc->sc->setFunction(fun);
     funtc->sc->funbox = funbox;
-    if (!SetStaticLevel(funtc->sc, tc->sc->staticLevel + 1))
+    if (!SetStaticLevel(funtc->sc, outertc->sc->staticLevel + 1))
         return NULL;
 
     return funbox;
@@ -1140,7 +1110,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
     tc->sc->blockidGen = funtc->sc->blockidGen;
 
     FunctionBox *funbox = fn->pn_funbox;
-    funbox->tcflags |= funtc->sc->flags & TCF_FUN_FLAGS;
+    funbox->cxFlags = funtc->sc->cxFlags;   // copy all the flags
 
     fn->pn_dflags |= PND_INITIALIZED;
     if (!tc->sc->topStmt || tc->sc->topStmt->type == STMT_BLOCK)
@@ -1542,6 +1512,9 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
     if (!funbox)
         return NULL;
 
+    if (outertc->sc->inStrictMode())
+        funsc.setInStrictMode();    // inherit strict mode from parent
+
     RootedVarFunction fun(context, funbox->function());
 
     /* Now parse formal argument list and compute fun->nargs. */
@@ -1619,7 +1592,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
      * parents: any local can be read at runtime.
      */
     if (funsc.bindingsAccessedDynamically())
-        outertc->sc->noteBindingsAccessedDynamically();
+        outertc->sc->setBindingsAccessedDynamically();
 
 #if JS_HAS_DESTRUCTURING
     /*
@@ -1662,9 +1635,9 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
      * visible eval call, or assignment to 'arguments'), flag the function as
      * heavyweight (requiring a call object per invocation).
      */
-    if (funsc.flags & TCF_FUN_HEAVYWEIGHT) {
+    if (funsc.funIsHeavyweight()) {
         fun->flags |= JSFUN_HEAVYWEIGHT;
-        outertc->sc->flags |= TCF_FUN_HEAVYWEIGHT;
+        outertc->sc->setFunIsHeavyweight();
     }
 
     JSOp op = JSOP_NOP;
@@ -1680,12 +1653,12 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
              */
             JS_ASSERT(!outertc->sc->inStrictMode());
             op = JSOP_DEFFUN;
-            outertc->sc->noteMightAliasLocals();
-            outertc->sc->noteHasExtensibleScope();
-            outertc->sc->flags |= TCF_FUN_HEAVYWEIGHT;
+            outertc->sc->setFunMightAliasLocals();
+            outertc->sc->setFunHasExtensibleScope();
+            outertc->sc->setFunIsHeavyweight();
 
             /*
-             * Instead of noteBindingsAccessedDynamically, which would be
+             * Instead of setting bindingsAccessedDynamically, which would be
              * overly conservative, remember the names of all function
              * statements and mark any bindings with the same as aliased at the
              * end of functionBody.
@@ -1821,7 +1794,7 @@ Parser::recognizeDirectivePrologue(ParseNode *pn, bool *isDirectivePrologueMembe
                 return false;
             }
 
-            tc->sc->flags |= TCF_STRICT_MODE_CODE;
+            tc->sc->setInStrictMode();
             tokenStream.setStrictMode();
         }
     }
@@ -1887,7 +1860,7 @@ Parser::statements(bool *hasFunctionStmt)
                  * General deoptimization was done in functionDef, here we just
                  * need to tell TOK_LC in Parser::statement to add braces.
                  */
-                JS_ASSERT(tc->sc->hasExtensibleScope());
+                JS_ASSERT(tc->sc->funHasExtensibleScope());
                 if (hasFunctionStmt)
                     *hasFunctionStmt = true;
             }
@@ -2124,7 +2097,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
     if (stmt && stmt->type == STMT_WITH) {
         data->fresh = false;
         pn->pn_dflags |= PND_DEOPTIMIZED;
-        tc->sc->noteMightAliasLocals();
+        tc->sc->setFunMightAliasLocals();
         return true;
     }
 
@@ -2308,7 +2281,7 @@ NoteLValue(JSContext *cx, ParseNode *pn, SharedContext *sc, unsigned dflag = PND
      * happens by making such functions heavyweight.
      */
     if (sc->inFunction && pn->pn_atom == sc->fun()->atom)
-        sc->flags |= TCF_FUN_HEAVYWEIGHT;
+        sc->setFunIsHeavyweight();
 }
 
 static bool
@@ -2660,7 +2633,7 @@ Parser::returnOrYield(bool useAssignExpr)
          * a |for| token, so we have to delay flagging the current function.
          */
         if (tc->parenDepth == 0) {
-            tc->sc->flags |= TCF_FUN_IS_GENERATOR;
+            tc->sc->setFunIsGenerator();
         } else {
             tc->yieldCount++;
             tc->yieldNode = pn;
@@ -2697,7 +2670,7 @@ Parser::returnOrYield(bool useAssignExpr)
             tc->hasReturnVoid = true;
     }
 
-    if (tc->hasReturnExpr && (tc->sc->flags & TCF_FUN_IS_GENERATOR)) {
+    if (tc->hasReturnExpr && tc->sc->funIsGenerator()) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
         ReportBadReturn(context, this, pn, JSREPORT_ERROR,
                         JSMSG_BAD_GENERATOR_RETURN,
@@ -3607,7 +3580,7 @@ Parser::withStatement()
      * doesn't even merit a warning under JSOPTION_STRICT.  See
      * https://bugzilla.mozilla.org/show_bug.cgi?id=514576#c1.
      */
-    if (tc->sc->flags & TCF_STRICT_MODE_CODE) {
+    if (tc->sc->inStrictMode()) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_STRICT_CODE_WITH);
         return NULL;
     }
@@ -3635,8 +3608,8 @@ Parser::withStatement()
     pn->pn_pos.end = pn2->pn_pos.end;
     pn->pn_right = pn2;
 
-    tc->sc->noteBindingsAccessedDynamically();
-    tc->sc->flags |= TCF_FUN_HEAVYWEIGHT;
+    tc->sc->setBindingsAccessedDynamically();
+    tc->sc->setFunIsHeavyweight();
     tc->innermostWith = oldWith;
 
     /*
@@ -4121,7 +4094,8 @@ Parser::statement()
         pn = new_<DebuggerStatement>(tokenStream.currentToken().pos);
         if (!pn)
             return NULL;
-        tc->sc->flags |= TCF_FUN_HEAVYWEIGHT;
+        tc->sc->setFunIsHeavyweight();
+        tc->sc->setBindingsAccessedDynamically();
         break;
 
 #if JS_HAS_XML_SUPPORT
@@ -4146,7 +4120,7 @@ Parser::statement()
         JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NOP);
 
         /* Is this an E4X dagger I see before me? */
-        tc->sc->flags |= TCF_FUN_HEAVYWEIGHT;
+        tc->sc->setFunIsHeavyweight();
         ParseNode *pn2 = expr();
         if (!pn2)
             return NULL;
@@ -4535,11 +4509,9 @@ Parser::condExpr1()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    uint32_t oldflags = tc->sc->flags;
     bool oldInForInit = tc->sc->inForInit;
     tc->sc->inForInit = false;
     ParseNode *thenExpr = assignExpr();
-    tc->sc->flags = oldflags | (tc->sc->flags & TCF_FUN_FLAGS);
     tc->sc->inForInit = oldInForInit;
     if (!thenExpr)
         return NULL;
@@ -4910,7 +4882,7 @@ class GenexpGuard {
         TreeContext *tc = parser->tc;
         if (tc->parenDepth == 0) {
             tc->yieldCount = 0;
-            tc->yieldNode = tc->argumentsNode = NULL;
+            tc->yieldNode = NULL;
         }
         startYieldCount = tc->yieldCount;
         tc->parenDepth++;
@@ -4961,14 +4933,14 @@ GenexpGuard::maybeNoteGenerator(ParseNode *pn)
 {
     TreeContext *tc = parser->tc;
     if (tc->yieldCount > 0) {
-        tc->sc->flags |= TCF_FUN_IS_GENERATOR;
+        tc->sc->setFunIsGenerator();
         if (!tc->sc->inFunction) {
             parser->reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD,
                                       js_yield_str);
             return false;
         }
         if (tc->hasReturnExpr) {
-            /* At the time we saw the yield, we might not have set TCF_FUN_IS_GENERATOR yet. */
+            /* At the time we saw the yield, we might not have set funIsGenerator yet. */
             ReportBadReturn(tc->sc->context, parser, pn, JSREPORT_ERROR,
                             JSMSG_BAD_GENERATOR_RETURN,
                             JSMSG_BAD_ANON_GENERATOR_RETURN);
@@ -5464,13 +5436,14 @@ Parser::generatorExpr(ParseNode *kid)
             return NULL;
 
         /*
-         * We assume conservatively that any deoptimization flag in tc->sc->flags
+         * We assume conservatively that any deoptimization flags in tc->sc
          * come from the kid. So we propagate these flags into genfn. For code
          * simplicity we also do not detect if the flags were only set in the
-         * kid and could be removed from tc->sc->flags.
+         * kid and could be removed from tc->sc.
          */
-        gensc.flags |= TCF_FUN_IS_GENERATOR | (outertc->sc->flags & TCF_FUN_FLAGS);
-        funbox->tcflags |= gensc.flags;
+        gensc.cxFlags = outertc->sc->cxFlags;
+        gensc.setFunIsGenerator();
+
         funbox->inGenexpLambda = true;
         genfn->pn_funbox = funbox;
         genfn->pn_blockid = gensc.bodyid;
@@ -5641,8 +5614,8 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 TokenPtr begin = lhs->pn_pos.begin;
                 if (tt == TOK_LP) {
                     /* Filters are effectively 'with', so deoptimize names. */
-                    tc->sc->flags |= TCF_FUN_HEAVYWEIGHT;
-                    tc->sc->noteBindingsAccessedDynamically();
+                    tc->sc->setFunIsHeavyweight();
+                    tc->sc->setBindingsAccessedDynamically();
 
                     StmtInfo stmtInfo(context);
                     ParseNode *oldWith = tc->innermostWith;
@@ -5761,14 +5734,14 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 if (lhs->pn_atom == context->runtime->atomState.evalAtom) {
                     /* Select JSOP_EVAL and flag tc as heavyweight. */
                     nextMember->setOp(JSOP_EVAL);
-                    tc->sc->noteBindingsAccessedDynamically();
-                    tc->sc->flags |= TCF_FUN_HEAVYWEIGHT;
+                    tc->sc->setBindingsAccessedDynamically();
+                    tc->sc->setFunIsHeavyweight();
                     /*
                      * In non-strict mode code, direct calls to eval can add
                      * variables to the call object.
                      */
                     if (!tc->sc->inStrictMode())
-                        tc->sc->noteHasExtensibleScope();
+                        tc->sc->setFunHasExtensibleScope();
                 }
             } else if (lhs->isOp(JSOP_GETPROP)) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */
@@ -5809,11 +5782,9 @@ Parser::bracketedExpr()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    uint32_t oldflags = tc->sc->flags;
     bool oldInForInit = tc->sc->inForInit;
     tc->sc->inForInit = false;
     ParseNode *pn = expr();
-    tc->sc->flags = oldflags | (tc->sc->flags & TCF_FUN_FLAGS);
     tc->sc->inForInit = oldInForInit;
     return pn;
 }
@@ -5919,8 +5890,8 @@ Parser::qualifiedSuffix(ParseNode *pn)
     if (!pn2)
         return NULL;
 
-    tc->sc->flags |= TCF_FUN_HEAVYWEIGHT;
-    tc->sc->noteBindingsAccessedDynamically();
+    tc->sc->setFunIsHeavyweight();
+    tc->sc->setBindingsAccessedDynamically();
 
     /* Left operand of :: must be evaluated if it is an identifier. */
     if (pn->isOp(JSOP_QNAMEPART))
@@ -5966,8 +5937,8 @@ Parser::qualifiedIdentifier()
         return NULL;
     if (tokenStream.matchToken(TOK_DBLCOLON)) {
         /* Hack for bug 496316. Slowing down E4X won't make it go away, alas. */
-        tc->sc->flags |= TCF_FUN_HEAVYWEIGHT;
-        tc->sc->noteBindingsAccessedDynamically();
+        tc->sc->setFunIsHeavyweight();
+        tc->sc->setBindingsAccessedDynamically();
         pn = qualifiedSuffix(pn);
     }
     return pn;
@@ -6030,18 +6001,6 @@ Parser::xmlExpr(JSBool inTag)
     pn->pn_kid = pn2;
     pn->setOp(inTag ? JSOP_XMLTAGEXPR : JSOP_XMLELTEXPR);
     return pn;
-}
-
-ParseNode *
-Parser::atomNode(ParseNodeKind kind, JSOp op)
-{
-    ParseNode *node = NullaryNode::create(kind, this);
-    if (!node)
-        return NULL;
-    node->setOp(op);
-    const Token &tok = tokenStream.currentToken();
-    node->pn_atom = tok.atom();
-    return node;
 }
 
 /*
@@ -6483,8 +6442,8 @@ Parser::propertyQualifiedIdentifier()
     JS_ASSERT(tokenStream.peekToken() == TOK_DBLCOLON);
 
     /* Deoptimize QualifiedIdentifier properties to avoid tricky analysis. */
-    tc->sc->flags |= TCF_FUN_HEAVYWEIGHT;
-    tc->sc->noteBindingsAccessedDynamically();
+    tc->sc->setFunIsHeavyweight();
+    tc->sc->setBindingsAccessedDynamically();
 
     PropertyName *name = tokenStream.currentToken().name();
     ParseNode *node = NameNode::create(PNK_NAME, name, this, this->tc->sc);
@@ -6550,6 +6509,18 @@ Parser::starOrAtPropertyIdentifier(TokenKind tt)
     return (tt == TOK_AT) ? attributeIdentifier() : qualifiedIdentifier();
 }
 #endif
+
+ParseNode *
+Parser::atomNode(ParseNodeKind kind, JSOp op)
+{
+    ParseNode *node = NullaryNode::create(kind, this);
+    if (!node)
+        return NULL;
+    node->setOp(op);
+    const Token &tok = tokenStream.currentToken();
+    node->pn_atom = tok.atom();
+    return node;
+}
 
 ParseNode *
 Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)

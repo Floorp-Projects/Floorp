@@ -139,12 +139,12 @@ class IonCache
     union {
         struct {
             Register object;
-            JSAtom *atom;
+            PropertyName *name;
             TypedOrValueRegisterSpace output;
         } getprop;
         struct {
             Register object;
-            JSAtom *atom;
+            PropertyName *name;
             ConstantOrRegisterSpace value;
             bool strict;
         } setprop;
@@ -261,17 +261,17 @@ class IonCacheGetProperty : public IonCache
                         CodeOffsetLabel rejoinLabel,
                         CodeOffsetLabel cacheLabel,
                         RegisterSet liveRegs,
-                        Register object, JSAtom *atom,
+                        Register object, PropertyName *name,
                         TypedOrValueRegister output)
     {
         init(GetProperty, liveRegs, initialJump, rejoinLabel, cacheLabel);
         u.getprop.object = object;
-        u.getprop.atom = atom;
+        u.getprop.name = name;
         u.getprop.output.data() = output;
     }
 
     Register object() const { return u.getprop.object; }
-    JSAtom *atom() const { return u.getprop.atom; }
+    PropertyName *name() const { return u.getprop.name; }
     TypedOrValueRegister output() const { return u.getprop.output.data(); }
 
     bool attachNative(JSContext *cx, JSObject *obj, JSObject *holder, const Shape *shape);
@@ -284,19 +284,19 @@ class IonCacheSetProperty : public IonCache
                         CodeOffsetLabel rejoinLabel,
                         CodeOffsetLabel cacheLabel,
                         RegisterSet liveRegs,
-                        Register object, JSAtom *atom,
+                        Register object, PropertyName *name,
                         ConstantOrRegister value,
                         bool strict)
     {
         init(SetProperty, liveRegs, initialJump, rejoinLabel, cacheLabel);
         u.setprop.object = object;
-        u.setprop.atom = atom;
+        u.setprop.name = name;
         u.setprop.value.data() = value;
         u.setprop.strict = strict;
     }
 
     Register object() const { return u.setprop.object; }
-    JSAtom *atom() const { return u.setprop.atom; }
+    PropertyName *name() const { return u.setprop.name; }
     ConstantOrRegister value() const { return u.setprop.value.data(); }
     bool strict() const { return u.setprop.strict; }
 
@@ -379,7 +379,7 @@ class IonCacheBindName : public IonCache
 };
 
 bool
-GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp);
+GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Value *vp);
 
 bool
 SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue value,

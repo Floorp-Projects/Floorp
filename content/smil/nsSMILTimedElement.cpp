@@ -1,39 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Mozilla SMIL module.
- *
- * The Initial Developer of the Original Code is Brian Birtles.
- * Portions created by the Initial Developer are Copyright (C) 2006
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Brian Birtles <birtles@gmail.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSMILTimedElement.h"
 #include "nsSMILAnimationFunction.h"
@@ -352,6 +320,23 @@ nsSMILTimedElement::GetStartTime() const
   return mElementState == STATE_WAITING || mElementState == STATE_ACTIVE
          ? mCurrentInterval->Begin()->Time()
          : nsSMILTimeValue();
+}
+
+//----------------------------------------------------------------------
+// Hyperlinking support
+
+nsSMILTimeValue
+nsSMILTimedElement::GetHyperlinkTime() const
+{
+  nsSMILTimeValue hyperlinkTime; // Default ctor creates unresolved time
+
+  if (mElementState == STATE_ACTIVE) {
+    hyperlinkTime = mCurrentInterval->Begin()->Time();
+  } else if (!mBeginInstances.IsEmpty()) {
+    hyperlinkTime = mBeginInstances[0]->Time();
+  }
+
+  return hyperlinkTime;
 }
 
 //----------------------------------------------------------------------
@@ -1492,7 +1477,8 @@ nsSMILTimedElement::FilterIntervals()
   // We can filter old intervals that:
   //
   // a) are not the previous interval; AND
-  // b) are not in the middle of a dependency chain
+  // b) are not in the middle of a dependency chain; AND
+  // c) are not the first interval
   //
   // Condition (a) is necessary since the previous interval is used for applying
   // fill effects and updating the current interval.
@@ -1501,6 +1487,15 @@ nsSMILTimedElement::FilterIntervals()
   // active, it may be part of a dependency chain that includes active
   // intervals. Such chains are used to establish priorities within the
   // animation sandwich.
+  //
+  // Condition (c) is necessary to support hyperlinks that target animations
+  // since in some cases the defined behavior is to seek the document back to
+  // the first resolved begin time. Presumably the intention here is not
+  // actually to use the first resolved begin time, the
+  // _the_first_resolved_begin_time_that_produced_an_interval. That is,
+  // if we have begin="-5s; -3s; 1s; 3s" with a duration on 1s, we should seek
+  // to 1s. The spec doesn't say this but I'm pretty sure that is the intention.
+  // It seems negative times were simply not considered.
   //
   // Although the above conditions allow us to safely filter intervals for most
   // scenarios they do not cover all cases and there will still be scenarios
@@ -1514,7 +1509,8 @@ nsSMILTimedElement::FilterIntervals()
   for (PRUint32 i = 0; i < mOldIntervals.Length(); ++i)
   {
     nsSMILInterval* interval = mOldIntervals[i].get();
-    if (i + 1 < mOldIntervals.Length() /*skip previous interval*/ &&
+    if (i != 0 && /*skip first interval*/
+        i + 1 < mOldIntervals.Length() && /*skip previous interval*/
         (i < threshold || !interval->IsDependencyChainLink())) {
       interval->Unlink(true /*filtered, not deleted*/);
     } else {
@@ -1584,6 +1580,7 @@ nsSMILTimedElement::FilterInstanceTimes(InstanceTimeList& aList)
     // There are a few instance times we should keep though, notably:
     // - the current interval begin time,
     // - the previous interval end time (see note in RemoveInstanceTimes)
+    // - the first interval begin time (see note in FilterIntervals)
     nsTArray<const nsSMILInstanceTime *> timesToKeep;
     if (mCurrentInterval) {
       timesToKeep.AppendElement(mCurrentInterval->Begin());
@@ -1591,6 +1588,9 @@ nsSMILTimedElement::FilterInstanceTimes(InstanceTimeList& aList)
     const nsSMILInterval* prevInterval = GetPreviousInterval();
     if (prevInterval) {
       timesToKeep.AppendElement(prevInterval->End());
+    }
+    if (!mOldIntervals.IsEmpty()) {
+      timesToKeep.AppendElement(mOldIntervals[0]->Begin());
     }
     RemoveBelowThreshold removeBelowThreshold(threshold, timesToKeep);
     RemoveInstanceTimes(aList, removeBelowThreshold);

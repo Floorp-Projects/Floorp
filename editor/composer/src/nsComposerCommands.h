@@ -1,42 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998-2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Ryan Cassin      <rcassin@supernova.org>
- *   Daniel Glazman   <glazman@netscape.com>
- *   Charles Manske   <cmanske@netscape.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef nsComposerCommands_h_
 #define nsComposerCommands_h_
@@ -45,6 +10,7 @@
 #include "nsString.h"
 
 class nsIEditor;
+class nsIAtom;
 
 // This is a virtual base class for commands registered with the composer controller.
 // Note that such commands are instantiated once per composer, so can store state.
@@ -83,9 +49,8 @@ public:                                                 \
 class nsBaseStateUpdatingCommand : public nsBaseComposerCommand
 {
 public:
-
-              nsBaseStateUpdatingCommand(const char* aTagName);
-  virtual     ~nsBaseStateUpdatingCommand();
+  nsBaseStateUpdatingCommand(nsIAtom* aTagName);
+  virtual ~nsBaseStateUpdatingCommand();
     
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -94,14 +59,13 @@ public:
 protected:
 
   // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams) = 0;
+  virtual nsresult  GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams) = 0;
   
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName) = 0;
+  virtual nsresult  ToggleState(nsIEditor* aEditor) = 0;
 
 protected:
-
-  const char* mTagName;
+  nsIAtom* mTagName;
 };
 
 
@@ -110,17 +74,15 @@ protected:
 class nsStyleUpdatingCommand : public nsBaseStateUpdatingCommand
 {
 public:
-
-            nsStyleUpdatingCommand(const char* aTagName);
+  nsStyleUpdatingCommand(nsIAtom* aTagName);
            
 protected:
 
   // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
+  virtual nsresult  GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams);
   
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
-  
+  virtual nsresult  ToggleState(nsIEditor* aEditor);
 };
 
 
@@ -144,31 +106,29 @@ protected:
 class nsListCommand : public nsBaseStateUpdatingCommand
 {
 public:
-
-            nsListCommand(const char* aTagName);
+  nsListCommand(nsIAtom* aTagName);
 
 protected:
 
   // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
+  virtual nsresult  GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams);
   
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
+  virtual nsresult  ToggleState(nsIEditor* aEditor);
 };
 
 class nsListItemCommand : public nsBaseStateUpdatingCommand
 {
 public:
-
-            nsListItemCommand(const char* aTagName);
+  nsListItemCommand(nsIAtom* aTagName);
 
 protected:
 
   // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
+  virtual nsresult  GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams);
   
   // add/remove the style
-  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
+  virtual nsresult  ToggleState(nsIEditor* aEditor);
 };
 
 // Base class for commands whose state consists of a string (e.g. para format)
@@ -273,13 +233,13 @@ protected:
 class nsAbsolutePositioningCommand : public nsBaseStateUpdatingCommand
 {
 public:
-                   nsAbsolutePositioningCommand();
+  nsAbsolutePositioningCommand();
 
 protected:
 
   NS_IMETHOD IsCommandEnabled(const char *aCommandName, nsISupports *aCommandRefCon, bool *_retval);
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
-  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
+  virtual nsresult  GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams);
+  virtual nsresult  ToggleState(nsIEditor* aEditor);
 };
 
 // composer commands

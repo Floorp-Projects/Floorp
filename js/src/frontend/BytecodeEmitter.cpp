@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * JS bytecode generation.
@@ -127,7 +94,6 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lin
 bool
 BytecodeEmitter::init()
 {
-    roLexdeps.init();
     return constMap.init() && atomIndices.ensureMap(sc->context);
 }
 
@@ -1000,7 +966,7 @@ BytecodeEmitter::noteClosedVar(ParseNode *pn)
     for (size_t i = 0; i < closedVars.length(); ++i)
         JS_ASSERT(closedVars[i] != pn->pn_cookie.slot());
 #endif
-    sc->flags |= TCF_FUN_HEAVYWEIGHT;
+    sc->setFunIsHeavyweight();
     return closedVars.append(pn->pn_cookie.slot());
 }
 
@@ -1015,7 +981,7 @@ BytecodeEmitter::noteClosedArg(ParseNode *pn)
     for (size_t i = 0; i < closedArgs.length(); ++i)
         JS_ASSERT(closedArgs[i] != pn->pn_cookie.slot());
 #endif
-    sc->flags |= TCF_FUN_HEAVYWEIGHT;
+    sc->setFunIsHeavyweight();
     return closedArgs.append(pn->pn_cookie.slot());
 }
 
@@ -1090,7 +1056,7 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
      * clones must get unique shapes; see the comments for
      * js::Bindings::extensibleParents.
      */
-    if ((bce->sc->flags & TCF_FUN_EXTENSIBLE_SCOPE) ||
+    if (bce->sc->funHasExtensibleScope() ||
         bce->sc->bindings.extensibleParents()) {
         Shape *newShape = Shape::setExtensibleParents(cx, blockObj->lastProperty());
         if (!newShape)
@@ -1127,9 +1093,9 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
 {
     if (bce->parser->compileAndGo &&
         bce->globalScope->globalObj &&
-        !bce->sc->mightAliasLocals() &&
+        !bce->sc->funMightAliasLocals() &&
         !pn->isDeoptimized() &&
-        !(bce->sc->flags & TCF_STRICT_MODE_CODE)) {
+        !bce->sc->inStrictMode()) {
         switch (*op) {
           case JSOP_NAME:     *op = JSOP_GETGNAME; break;
           case JSOP_SETNAME:  *op = JSOP_SETGNAME; break;
@@ -1356,7 +1322,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              * the scope chain so that assignment will throw a TypeError.
              */
             JS_ASSERT(op != JSOP_DELNAME);
-            if (!(bce->sc->flags & TCF_FUN_HEAVYWEIGHT)) {
+            if (!bce->sc->funIsHeavyweight()) {
                 op = JSOP_CALLEE;
                 pn->pn_dflags |= PND_CONST;
             }
@@ -2628,7 +2594,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
      * execution starts from script->code, so this has no semantic effect.
      */
 
-    if (bce->sc->argumentsHasLocalBinding()) {
+    if (bce->sc->funArgumentsHasLocalBinding()) {
         JS_ASSERT(bce->next() == bce->base());  /* See JSScript::argumentsBytecode. */
         bce->switchToProlog();
         if (Emit1(cx, bce, JSOP_ARGUMENTS) < 0)
@@ -2647,7 +2613,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToMain();
     }
 
-    if (bce->sc->flags & TCF_FUN_IS_GENERATOR) {
+    if (bce->sc->funIsGenerator()) {
         bce->switchToProlog();
         if (Emit1(cx, bce, JSOP_GENERATOR) < 0)
             return false;
@@ -2673,7 +2639,7 @@ MaybeEmitVarDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *
     }
 
     if (JOF_OPTYPE(pn->getOp()) == JOF_ATOM &&
-        (!bce->sc->inFunction || (bce->sc->flags & TCF_FUN_HEAVYWEIGHT)))
+        (!bce->sc->inFunction || bce->sc->funIsHeavyweight()))
     {
         bce->switchToProlog();
         if (!UpdateLineNumberNotes(cx, bce, pn->pn_pos.begin.lineno))
@@ -3733,11 +3699,13 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             return false;
 
         unsigned idx = 0;
+        RootedVarId id(cx);
         for (ParseNode *pn = pn_head; pn; idx++, pn = pn->pn_next) {
             Value value;
             if (!pn->getConstantValue(cx, strictChecks, &value))
                 return false;
-            if (!obj->defineGeneric(cx, INT_TO_JSID(idx), value, NULL, NULL, JSPROP_ENUMERATE))
+            id = INT_TO_JSID(idx);
+            if (!obj->defineGeneric(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
                 return false;
         }
         JS_ASSERT(idx == pn_count);
@@ -3762,17 +3730,17 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             ParseNode *pnid = pn->pn_left;
             if (pnid->isKind(PNK_NUMBER)) {
                 Value idvalue = NumberValue(pnid->pn_dval);
-                jsid id;
+                RootedVarId id(cx);
                 if (idvalue.isInt32() && INT_FITS_IN_JSID(idvalue.toInt32()))
                     id = INT_TO_JSID(idvalue.toInt32());
-                else if (!InternNonIntElementId(cx, obj, idvalue, &id))
+                else if (!InternNonIntElementId(cx, obj, idvalue, id.address()))
                     return false;
                 if (!obj->defineGeneric(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
                     return false;
             } else {
                 JS_ASSERT(pnid->isKind(PNK_NAME) || pnid->isKind(PNK_STRING));
                 JS_ASSERT(pnid->pn_atom != cx->runtime->atomState.protoAtom);
-                jsid id = AtomToId(pnid->pn_atom);
+                RootedVarId id(cx, AtomToId(pnid->pn_atom));
                 if (!DefineNativeProperty(cx, obj, id, value, NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0)) {
                     return false;
@@ -4837,7 +4805,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return EmitFunctionDefNop(cx, bce, pn->pn_index);
     }
 
-    JS_ASSERT_IF(pn->pn_funbox->tcflags & TCF_FUN_HEAVYWEIGHT,
+    JS_ASSERT_IF(pn->pn_funbox->funIsHeavyweight(),
                  fun->kind() == JSFUN_INTERPRETED);
 
     {
@@ -4847,10 +4815,14 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!bce2.init())
             return false;
 
-        bce2.sc->flags = pn->pn_funbox->tcflags | (bce->sc->flags & TCF_FUN_MIGHT_ALIAS_LOCALS);
-        bce2.sc->bindings.transfer(cx, &pn->pn_funbox->bindings);
+        FunctionBox *funbox = pn->pn_funbox;
+        bce2.sc->cxFlags = funbox->cxFlags;
+        if (bce->sc->funMightAliasLocals())
+            bce2.sc->setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
+
+        bce2.sc->bindings.transfer(cx, &funbox->bindings);
         bce2.sc->setFunction(fun);
-        bce2.sc->funbox = pn->pn_funbox;
+        bce2.sc->funbox = funbox;
         bce2.parent = bce;
         bce2.globalScope = bce->globalScope;
 
@@ -4873,7 +4845,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     /* Emit a bytecode pointing to the closure object in its immediate. */
     if (pn->getOp() != JSOP_NOP) {
-        if ((pn->pn_funbox->inGenexpLambda) && NewSrcNote(cx, bce, SRC_GENEXP) < 0)
+        if (pn->pn_funbox->inGenexpLambda && NewSrcNote(cx, bce, SRC_GENEXP) < 0)
             return false;
 
         return EmitFunctionOp(cx, pn->getOp(), index, bce);
@@ -5777,7 +5749,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());
-                if (!DefineNativeProperty(cx, obj, AtomToId(pn3->pn_atom),
+                if (!DefineNativeProperty(cx, obj, RootedVarId(cx, AtomToId(pn3->pn_atom)),
                                           UndefinedValue(), NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0))
                 {
@@ -5941,9 +5913,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_UPVARS:
         JS_ASSERT(pn->pn_names->count() != 0);
-        bce->roLexdeps = pn->pn_names;
         ok = EmitTree(cx, bce, pn->pn_tree);
-        bce->roLexdeps.clearMap();
         pn->pn_names.releaseMap(cx);
         break;
 

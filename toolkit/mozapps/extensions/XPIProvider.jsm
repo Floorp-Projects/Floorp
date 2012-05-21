@@ -129,7 +129,7 @@ const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
-const DB_SCHEMA                       = 12;
+const DB_SCHEMA                       = 13;
 
 // Properties that exist in the install manifest
 const PROP_METADATA      = ["id", "version", "type", "internalName", "updateURL",
@@ -275,6 +275,10 @@ SafeInstallOperation.prototype = {
       entries.close();
     }
 
+    cacheEntries.sort(function(a, b) {
+      return a.path > b.path ? -1 : 1;
+    });
+
     cacheEntries.forEach(function(aEntry) {
       try {
         this._installDirEntry(aEntry, newDir, aCopy);
@@ -307,8 +311,25 @@ SafeInstallOperation.prototype = {
   },
 
   _installDirEntry: function(aDirEntry, aTargetDirectory, aCopy) {
+    let isDir = null;
+
     try {
-      if (aDirEntry.isDirectory())
+      isDir = aDirEntry.isDirectory();
+    }
+    catch (e) {
+      // If the file has already gone away then don't worry about it, this can
+      // happen on OSX where the resource fork is automatically moved with the
+      // data fork for the file. See bug 733436.
+      if (e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+        return;
+
+      ERROR("Failure " + (aCopy ? "copying" : "moving") + " " + aDirEntry.path +
+            " to " + aTargetDirectory.path);
+      throw e;
+    }
+
+    try {
+      if (isDir)
         this._installDirectory(aDirEntry, aTargetDirectory, aCopy);
       else
         this._installFile(aDirEntry, aTargetDirectory, aCopy);
@@ -1292,8 +1313,23 @@ function cleanStagingDir(aDir, aLeafNames) {
  *         The nsIFile to remove
  */
 function recursiveRemove(aFile) {
-  setFilePermissions(aFile, aFile.isDirectory() ? FileUtils.PERMS_DIRECTORY
-                                                : FileUtils.PERMS_FILE);
+  let isDir = null;
+
+  try {
+    isDir = aFile.isDirectory();
+  }
+  catch (e) {
+    // If the file has already gone away then don't worry about it, this can
+    // happen on OSX where the resource fork is automatically moved with the
+    // data fork for the file. See bug 733436.
+    if (e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+      return;
+
+    throw e;
+  }
+
+  setFilePermissions(aFile, isDir ? FileUtils.PERMS_DIRECTORY
+                                  : FileUtils.PERMS_FILE);
 
   try {
     aFile.remove(true);
@@ -1306,21 +1342,26 @@ function recursiveRemove(aFile) {
     }
   }
 
+  let entries = aFile.directoryEntries
+                     .QueryInterface(Ci.nsIDirectoryEnumerator);
+  let cacheEntries = [];
   let entry;
-  let dirEntries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
+  while (entry = entries.nextFile)
+    cacheEntries.push(entry);
+  entries.close();
+
+  cacheEntries.sort(function(a, b) {
+    return a.path > b.path ? -1 : 1;
+  });
+
+  cacheEntries.forEach(recursiveRemove);
+
   try {
-    while (entry = dirEntries.nextFile)
-      recursiveRemove(entry);
-    try {
-      aFile.remove(true);
-    }
-    catch (e) {
-      ERROR("Failed to remove empty directory " + aFile.path, e);
-      throw e;
-    }
+    aFile.remove(true);
   }
-  finally {
-    dirEntries.close();
+  catch (e) {
+    ERROR("Failed to remove empty directory " + aFile.path, e);
+    throw e;
   }
 }
 
@@ -2310,6 +2351,12 @@ var XPIProvider = {
           let file = aInstallLocation.getLocationForID(aOldAddon.id);
           newAddon = loadManifestFromFile(file);
           applyBlocklistChanges(aOldAddon, newAddon);
+
+          // Carry over any pendingUninstall state to add-ons modified directly
+          // in the profile. This is impoprtant when the attempt to remove the
+          // add-on in processPendingFileChanges failed and caused an mtime
+          // change to the add-ons files.
+          newAddon.pendingUninstall = aOldAddon.pendingUninstall;
         }
 
         // The ID in the manifest that was loaded must match the ID of the old
@@ -4703,6 +4750,8 @@ var XPIDatabase = {
                                   "homepageURL TEXT");
       this.connection.createTable("locale_strings",
                                   "locale_id INTEGER, type TEXT, value TEXT");
+      this.connection.executeSimpleSQL("CREATE INDEX locale_strings_idx ON " +
+        "locale_strings (locale_id)");
       this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon AFTER DELETE " +
         "ON addon BEGIN " +
         "DELETE FROM targetApplication WHERE addon_internal_id=old.internal_id; " +
@@ -5368,7 +5417,7 @@ var XPIDatabase = {
         aLocale.locales.forEach(function(aName) {
           stmt.params.internal_id = internal_id;
           stmt.params.name = aName;
-          stmt.params.locale = insertLocale(aLocale);
+          stmt.params.locale = id;
           executeStatement(stmt);
         });
       });
@@ -5423,7 +5472,7 @@ var XPIDatabase = {
       aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
       aNewAddon.foreignInstall = aOldAddon.foreignInstall;
       aNewAddon.active = (aNewAddon.visible && !aNewAddon.userDisabled &&
-                          !aNewAddon.appDisabled)
+                          !aNewAddon.appDisabled && !aNewAddon.pendingUninstall)
 
       this.addAddonMetadata(aNewAddon, aDescriptor);
       this.commitTransaction();

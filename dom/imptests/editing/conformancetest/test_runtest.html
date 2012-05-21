@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset=utf-8>
+<link rel=stylesheet href=../css/reset.css>
+<title>HTML editing conformance tests</title>
+<p>See the <a href=editing.html#tests>Tests</a> section of the specification
+for documentation.
+
+<p id=timing></p>
+
+<div id=log></div>
+
+<div id=test-container></div>
+
+<script src=../implementation.js></script>
+<script>var testsJsLibraryOnly = true</script>
+<script src=../tests.js></script>
+<script src=data.js></script>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+"use strict";
+
+runTests();
+
+function runTests() {
+	var startTime = Date.now();
+
+	// Make document.body.innerHTML more tidy by removing unnecessary things.
+	// We can't remove the testharness.js script, because at the time of this
+	// writing, for some reason that stops it from adding appropriate CSS.
+	[].forEach.call(document.querySelectorAll("script"), function(node) {
+		if (!/testharness\.js$/.test(node.src)) {
+			node.parentNode.removeChild(node);
+		}
+	});
+
+	browserTests.forEach(runConformanceTest);
+
+	document.getElementById("test-container").parentNode
+		.removeChild(document.getElementById("test-container"));
+
+	var elapsed = Math.round(Date.now() - startTime)/1000;
+	document.getElementById("timing").textContent =
+		"Time elapsed: " + Math.floor(elapsed/60) + ":"
+		+ ((elapsed % 60) < 10 ? "0" : "")
+		+ (elapsed % 60).toFixed(3) + " min.";
+}
+</script>

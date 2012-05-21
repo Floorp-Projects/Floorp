@@ -1,41 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
- *   Josh Aas <josh@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsToolkit.h"
 
@@ -314,34 +280,6 @@ nsToolkit* nsToolkit::GetToolkit()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsnull);
 }
 
-PRInt32 nsToolkit::OSXVersion()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  static PRInt32 gOSXVersion = 0x0;
-  if (gOSXVersion == 0x0) {
-    OSErr err = ::Gestalt(gestaltSystemVersion, (SInt32*)&gOSXVersion);
-    if (err != noErr) {
-      // This should probably be changed when our minimum version changes
-      NS_ERROR("Couldn't determine OS X version, assuming 10.5");
-      gOSXVersion = MAC_OS_X_VERSION_10_5_HEX;
-    }
-  }
-  return gOSXVersion;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
-}
-
-bool nsToolkit::OnSnowLeopardOrLater()
-{
-  return (OSXVersion() >= MAC_OS_X_VERSION_10_6_HEX);
-}
-
-bool nsToolkit::OnLionOrLater()
-{
-  return (OSXVersion() >= MAC_OS_X_VERSION_10_7_HEX);
-}
-
 // An alternative to [NSObject poseAsClass:] that isn't deprecated on OS X
 // Leopard and is available to 64-bit binaries on Leopard and above.  Based on
 // ideas and code from http://www.cocoadev.com/index.pl?MethodSwizzling.
@@ -516,7 +454,7 @@ OSStatus Hooked_InstallEventLoopIdleTimer(
 void HookImportedFunctions()
 {
   // We currently only need to do anything on Tiger or Leopard.
-  if (nsToolkit::OnSnowLeopardOrLater())
+  if (nsCocoaFeatures::OnSnowLeopardOrLater())
     return;
 
   // _dyld_register_func_for_add_image() makes the dynamic linker runtime call

@@ -624,7 +624,7 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
     power.addWakeLockListener(wakeLockHandler);
   };
 
-  SettingsListener.observe('power.screen.timeout', 30, function(value) {
+  SettingsListener.observe('power.screen.timeout', idleTimeout, function(value) {
     if (!value)
       return;
 

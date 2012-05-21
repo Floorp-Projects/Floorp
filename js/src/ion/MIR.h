@@ -1006,10 +1006,10 @@ class MNewArray : public MNullaryInstruction
 
 class MNewObject : public MNullaryInstruction
 {
-    HeapPtrObject baseObj_;
+    CompilerRootObject baseObj_;
     HeapPtr<types::TypeObject> type_;
 
-    MNewObject(JSObject *baseObj, types::TypeObject *type)
+    MNewObject(HandleObject baseObj, types::TypeObject *type)
       : baseObj_(baseObj),
         type_(type)
     {
@@ -1019,7 +1019,7 @@ class MNewObject : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(NewObject);
 
-    static MNewObject *New(JSObject *baseObj, types::TypeObject *type) {
+    static MNewObject *New(HandleObject baseObj, types::TypeObject *type) {
         return new MNewObject(baseObj, type);
     }
 
@@ -1037,10 +1037,10 @@ class MInitProp
     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >
 {
   public:
-    PropertyName *name_;
+    CompilerRootPropertyName name_;
 
   protected:
-    MInitProp(MDefinition *obj, PropertyName *name, MDefinition *value)
+    MInitProp(MDefinition *obj, HandlePropertyName name, MDefinition *value)
       : name_(name)
     {
         initOperand(0, obj);
@@ -1051,7 +1051,7 @@ class MInitProp
   public:
     INSTRUCTION_HEADER(InitProp);
 
-    static MInitProp *New(MDefinition *obj, PropertyName *name, MDefinition *value) {
+    static MInitProp *New(MDefinition *obj, HandlePropertyName name, MDefinition *value) {
         return new MInitProp(obj, name, value);
     }
 
@@ -3497,11 +3497,11 @@ class MGetPropertyCache
   : public MUnaryInstruction,
     public SingleObjectPolicy
 {
-    JSAtom *atom_;
+    CompilerRootPropertyName name_;
 
-    MGetPropertyCache(MDefinition *obj, JSAtom *atom)
+    MGetPropertyCache(MDefinition *obj, HandlePropertyName name)
       : MUnaryInstruction(obj),
-        atom_(atom)
+        name_(name)
     {
         setResultType(MIRType_Value);
     }
@@ -3509,15 +3509,15 @@ class MGetPropertyCache
   public:
     INSTRUCTION_HEADER(GetPropertyCache);
 
-    static MGetPropertyCache *New(MDefinition *obj, JSAtom *atom) {
-        return new MGetPropertyCache(obj, atom);
+    static MGetPropertyCache *New(MDefinition *obj, HandlePropertyName name) {
+        return new MGetPropertyCache(obj, name);
     }
 
     MDefinition *object() const {
         return getOperand(0);
     }
-    JSAtom *atom() const {
-        return atom_;
+    PropertyName *name() const {
+        return name_;
     }
     TypePolicy *typePolicy() { return this; }
 };
@@ -3820,13 +3820,13 @@ class MCallGetNameInstruction
     };
 
   private:
-    JSAtom *atom_;
+    CompilerRootPropertyName name_;
     AccessKind kind_;
 
   protected:
-    MCallGetNameInstruction(MDefinition *obj, JSAtom *atom, AccessKind kind)
+    MCallGetNameInstruction(MDefinition *obj, HandlePropertyName name, AccessKind kind)
       : MUnaryInstruction(obj),
-        atom_(atom),
+        name_(name),
         kind_(kind)
     {
         setResultType(MIRType_Value);
@@ -3839,8 +3839,8 @@ class MCallGetNameInstruction
     MDefinition *obj() const {
         return getOperand(0);
     }
-    JSAtom *atom() const {
-        return atom_;
+    PropertyName *name() const {
+        return name_;
     }
     AccessKind accessKind() const {
         return kind_;
@@ -3849,15 +3849,15 @@ class MCallGetNameInstruction
 
 class MSetPropertyInstruction : public MBinaryInstruction
 {
-    JSAtom *atom_;
+    CompilerRootPropertyName name_;
     bool strict_;
     bool needsBarrier_;
 
   protected:
-    MSetPropertyInstruction(MDefinition *obj, MDefinition *value, JSAtom *atom,
-                        bool strict)
+    MSetPropertyInstruction(MDefinition *obj, MDefinition *value, HandlePropertyName name,
+                            bool strict)
       : MBinaryInstruction(obj, value),
-        atom_(atom), strict_(strict), needsBarrier_(true)
+        name_(name), strict_(strict), needsBarrier_(true)
     {}
 
   public:
@@ -3867,8 +3867,8 @@ class MSetPropertyInstruction : public MBinaryInstruction
     MDefinition *value() const {
         return getOperand(1);
     }
-    JSAtom *atom() const {
-        return atom_;
+    PropertyName *name() const {
+        return name_;
     }
     bool strict() const {
         return strict_;
@@ -3919,16 +3919,16 @@ class MCallSetProperty
   : public MSetPropertyInstruction,
     public CallSetElementPolicy
 {
-    MCallSetProperty(MDefinition *obj, MDefinition *value, JSAtom *atom, bool strict)
-      : MSetPropertyInstruction(obj, value, atom, strict)
+    MCallSetProperty(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict)
+      : MSetPropertyInstruction(obj, value, name, strict)
     {
     }
 
   public:
     INSTRUCTION_HEADER(CallSetProperty);
 
-    static MCallSetProperty *New(MDefinition *obj, MDefinition *value, JSAtom *atom, bool strict) {
-        return new MCallSetProperty(obj, value, atom, strict);
+    static MCallSetProperty *New(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict) {
+        return new MCallSetProperty(obj, value, name, strict);
     }
 
     TypePolicy *typePolicy() {
@@ -3940,16 +3940,16 @@ class MSetPropertyCache
   : public MSetPropertyInstruction,
     public SingleObjectPolicy
 {
-    MSetPropertyCache(MDefinition *obj, MDefinition *value, JSAtom *atom, bool strict)
-      : MSetPropertyInstruction(obj, value, atom, strict)
+    MSetPropertyCache(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict)
+      : MSetPropertyInstruction(obj, value, name, strict)
     {
     }
 
   public:
     INSTRUCTION_HEADER(SetPropertyCache);
 
-    static MSetPropertyCache *New(MDefinition *obj, MDefinition *value, JSAtom *atom, bool strict) {
-        return new MSetPropertyCache(obj, value, atom, strict);
+    static MSetPropertyCache *New(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict) {
+        return new MSetPropertyCache(obj, value, name, strict);
     }
 
     TypePolicy *typePolicy() {
@@ -3961,11 +3961,11 @@ class MCallGetProperty
   : public MUnaryInstruction,
     public BoxInputsPolicy
 {
-    JSAtom *atom_;
+    CompilerRootPropertyName name_;
     bool markEffectful_;
 
-    MCallGetProperty(MDefinition *value, JSAtom *atom)
-      : MUnaryInstruction(value), atom_(atom),
+    MCallGetProperty(MDefinition *value, HandlePropertyName name)
+      : MUnaryInstruction(value), name_(name),
         markEffectful_(true)
     {
         setResultType(MIRType_Value);
@@ -3974,14 +3974,14 @@ class MCallGetProperty
   public:
     INSTRUCTION_HEADER(CallGetProperty);
 
-    static MCallGetProperty *New(MDefinition *value, JSAtom *atom) {
-        return new MCallGetProperty(value, atom);
+    static MCallGetProperty *New(MDefinition *value, HandlePropertyName name) {
+        return new MCallGetProperty(value, name);
     }
     MDefinition *value() const {
         return getOperand(0);
     }
-    JSAtom *atom() const {
-        return atom_;
+    PropertyName *name() const {
+        return name_;
     }
     TypePolicy *typePolicy() {
         return this;
@@ -4002,29 +4002,29 @@ class MCallGetProperty
 
 class MCallGetName : public MCallGetNameInstruction
 {
-    MCallGetName(MDefinition *obj, JSAtom *atom)
-        : MCallGetNameInstruction(obj, atom, MCallGetNameInstruction::NAME)
+    MCallGetName(MDefinition *obj, HandlePropertyName name)
+        : MCallGetNameInstruction(obj, name, MCallGetNameInstruction::NAME)
     {}
 
   public:
     INSTRUCTION_HEADER(CallGetName);
 
-    static MCallGetName *New(MDefinition *obj, JSAtom *atom) {
-        return new MCallGetName(obj, atom);
+    static MCallGetName *New(MDefinition *obj, HandlePropertyName name) {
+        return new MCallGetName(obj, name);
     }
 };
 
 class MCallGetNameTypeOf : public MCallGetNameInstruction
 {
-    MCallGetNameTypeOf(MDefinition *obj, JSAtom *atom)
-        : MCallGetNameInstruction(obj, atom, MCallGetNameInstruction::NAMETYPEOF)
+    MCallGetNameTypeOf(MDefinition *obj, HandlePropertyName name)
+        : MCallGetNameInstruction(obj, name, MCallGetNameInstruction::NAMETYPEOF)
     {}
 
   public:
     INSTRUCTION_HEADER(CallGetNameTypeOf);
 
-    static MCallGetNameTypeOf *New(MDefinition *obj, JSAtom *atom) {
-        return new MCallGetNameTypeOf(obj, atom);
+    static MCallGetNameTypeOf *New(MDefinition *obj, HandlePropertyName name) {
+        return new MCallGetNameTypeOf(obj, name);
     }
 };
 

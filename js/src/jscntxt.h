@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* JS execution context. */
 
@@ -108,6 +75,7 @@ class IonActivation;
 
 class WeakMapBase;
 class InterpreterFrames;
+class DebugScopes;
 
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
@@ -380,6 +348,10 @@ class FreeOp : public JSFreeOp {
 };
 
 } /* namespace js */
+
+namespace JS {
+struct RuntimeSizes;
+}
 
 struct JSRuntime : js::RuntimeFriendFields
 {
@@ -702,6 +674,9 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     JSCList             debuggerList;
 
+    /* Bookkeeping information for debug scope objects. */
+    js::DebugScopes     *debugScopes;
+
     /* Client opaque pointers */
     void                *data;
 
@@ -926,9 +901,8 @@ struct JSRuntime : js::RuntimeFriendFields
         return jitHardening;
     }
 
-    void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
-                             size_t *mjitCode, size_t *regexpCode, size_t *unusedCodeMemory,
-                             size_t *stackCommitted, size_t *gcMarker);
+    void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, JS::RuntimeSizes *runtime);
+    size_t sizeOfExplicitNonHeap();
 };
 
 /* Common macros to access thread-local caches in JSRuntime. */
@@ -1223,6 +1197,8 @@ struct JSContext : js::ContextFriendFields
     js::LifoAlloc &tempLifoAlloc() { return runtime->tempLifoAlloc; }
     inline js::LifoAlloc &typeLifoAlloc();
 
+    inline js::PropertyTree &propertyTree();
+
 #ifdef JS_THREADSAFE
     unsigned            outstandingRequests;/* number of JS_BeginRequest calls
                                                without the corresponding
@@ -1304,7 +1280,6 @@ struct JSContext : js::ContextFriendFields
     }
 
     inline void* calloc_(size_t bytes) {
-        JS_ASSERT(bytes != 0);
         return runtime->calloc_(bytes, this);
     }
 
@@ -1344,20 +1319,26 @@ struct JSContext : js::ContextFriendFields
         this->exception.setUndefined();
     }
 
+#ifdef DEBUG
+    /*
+     * Controls whether a quadratic-complexity assertion is performed during
+     * stack iteration; defaults to true.
+     */
+    bool stackIterAssertionEnabled;
+
+    /*
+     * When greather than zero, it is ok to accessed non-aliased fields of
+     * ScopeObjects because the accesses are coming from the DebugScopeProxy.
+     */
+    unsigned okToAccessUnaliasedBindings;
+#endif
+
     /*
      * Count of currently active compilations.
      * When there are compilations active for the context, the GC must not
      * purge the ParseMapPool.
      */
     unsigned activeCompilations;
-
-#ifdef DEBUG
-    /*
-     * Controls whether a quadratic-complexity assertion is performed during
-     * stack iteration, defaults to true.
-     */
-    bool stackIterAssertionEnabled;
-#endif
 
     /*
      * See JS_SetTrustedPrincipals in jsapi.h.
@@ -1385,6 +1366,23 @@ struct JSContext : js::ContextFriendFields
 }; /* struct JSContext */
 
 namespace js {
+
+class AutoAllowUnaliasedVarAccess
+{
+    JSContext *cx;
+  public:
+    AutoAllowUnaliasedVarAccess(JSContext *cx) : cx(cx) {
+#ifdef DEBUG
+        cx->okToAccessUnaliasedBindings++;
+#endif
+    }
+    ~AutoAllowUnaliasedVarAccess() {
+#ifdef DEBUG
+        JS_ASSERT(cx->okToAccessUnaliasedBindings);
+        cx->okToAccessUnaliasedBindings--;
+#endif
+    }
+};
 
 struct AutoResolving {
   public:
@@ -1422,7 +1420,7 @@ struct AutoResolving {
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-#ifdef JS_HAS_XML_SUPPORT
+#if JS_HAS_XML_SUPPORT
 class AutoXMLRooter : private AutoGCRooter {
   public:
     AutoXMLRooter(JSContext *cx, JSXML *xml

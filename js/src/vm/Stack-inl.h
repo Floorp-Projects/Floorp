@@ -1,42 +1,9 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79 ft=cpp:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is SpiderMonkey JavaScript engine.
- *
- * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2009
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Luke Wagner <luke@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef Stack_inl_h__
 #define Stack_inl_h__
@@ -75,7 +42,7 @@ StackFrame::scopeChain() const
 {
     JS_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
     if (!(flags_ & HAS_SCOPECHAIN)) {
-        scopeChain_ = callee().toFunction()->environment();
+        scopeChain_ = callee().environment();
         flags_ |= HAS_SCOPECHAIN;
     }
     return HandleObject::fromMarkedLocation(&scopeChain_);
@@ -312,20 +279,18 @@ StackFrame::actualArgsEnd() const
 }
 
 inline void
-StackFrame::setScopeChainNoCallObj(JSObject &obj)
+StackFrame::setScopeChain(JSObject &obj)
 {
 #ifdef DEBUG
     JS_ASSERT(&obj != NULL);
-    if (&obj != sInvalidScopeChain) {
-        if (hasCallObj()) {
-            JSObject *pobj = &obj;
-            while (pobj && pobj->getPrivate() != this)
-                pobj = pobj->enclosingScope();
-            JS_ASSERT(pobj);
-        } else {
-            for (JSObject *pobj = &obj; pobj->isScope(); pobj = pobj->enclosingScope())
-                JS_ASSERT_IF(pobj->isCall(), pobj->getPrivate() != this);
-        }
+    if (hasCallObj()) {
+        JSObject *pobj = &obj;
+        while (pobj && !pobj->isWith() && pobj->asScope().maybeStackFrame() != this)
+            pobj = pobj->enclosingScope();
+        JS_ASSERT(pobj);
+    } else {
+        for (JSObject *pobj = &obj; pobj->isScope() && !pobj->isWith(); pobj = pobj->enclosingScope())
+            JS_ASSERT_IF(pobj->isCall(), pobj->asScope().maybeStackFrame() != this);
     }
 #endif
     scopeChain_ = &obj;
@@ -333,7 +298,7 @@ StackFrame::setScopeChainNoCallObj(JSObject &obj)
 }
 
 inline void
-StackFrame::setScopeChainWithOwnCallObj(CallObject &obj)
+StackFrame::initScopeChain(CallObject &obj)
 {
     JS_ASSERT(&obj != NULL);
     JS_ASSERT(!hasCallObj() && obj.maybeStackFrame() == this);
@@ -369,8 +334,10 @@ StackFrame::functionPrologue(JSContext *cx)
     JS_ASSERT(!isGeneratorFrame());
 
     if (fun()->isHeavyweight()) {
-        if (!CallObject::createForFunction(cx, this))
+        CallObject *callobj = CallObject::createForFunction(cx, this);
+        if (!callobj)
             return false;
+        initScopeChain(*callobj);
     } else {
         /* Force instantiation of the scope chain, for JIT frames. */
         scopeChain();
@@ -385,13 +352,16 @@ StackFrame::functionPrologue(JSContext *cx)
 }
 
 inline void
-StackFrame::functionEpilogue()
+StackFrame::functionEpilogue(JSContext *cx)
 {
     JS_ASSERT(isNonEvalFunctionFrame());
 
+    if (cx->compartment->debugMode())
+        cx->runtime->debugScopes->onPopCall(this);
+
     if (flags_ & (HAS_ARGS_OBJ | HAS_CALL_OBJ)) {
         if (hasCallObj())
-            js_PutCallObject(this);
+            js_PutCallObject(this, scopeChain_->asCall());
         if (hasArgsObj())
             js_PutArgsObject(this);
     }
@@ -415,7 +385,7 @@ StackFrame::updateEpilogueFlags()
              * scope chain.
              */
             scopeChain_ = isFunctionFrame()
-                          ? callee().toFunction()->environment()
+                          ? callee().environment()
                           : &scopeChain_->asScope().enclosingScope();
             flags_ &= ~HAS_CALL_OBJ;
         }
@@ -564,7 +534,7 @@ ContextStack::popInlineFrame(FrameRegs &regs)
     JS_ASSERT(&regs == &seg_->regs());
 
     StackFrame *fp = regs.fp();
-    fp->functionEpilogue();
+    fp->functionEpilogue(cx_);
 
     Value *newsp = fp->actualArgs() - 1;
     JS_ASSERT(newsp >= fp->prev()->base());

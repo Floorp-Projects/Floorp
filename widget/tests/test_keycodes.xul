@@ -89,18 +89,23 @@ if (IS_MAC) {
   // HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Keyboard Layouts
   keyboardLayouts = {
     "US":0x409,
+    "German":0x407,
     "Greek":0x408,
+    "French":0x40c,
     "Swedish":0x41d,
     "Arabic":0x401,
     "Hebrew":0x40d,
     "Japanese":0x411,
+    "Norwegian":0x414,
     "Lithuanian":0x10427
   };
 }
 
 function eventToString(aEvent)
 {
-  var name = aEvent.layout + " '" + aEvent.chars + "'";
+  var name = aEvent.layout + " keyCode=" +
+    aEvent.keyCode + " (0x" + aEvent.keyCode.toString(16).toUpperCase() +
+      ") chars='" + aEvent.chars + "'";
   if (aEvent.shift) {
     name += " [Shift]";
   }
@@ -141,6 +146,7 @@ function synthesizeKey(aEvent, aFocusElementId)
 // also keydown/keyup events too.
 function runKeyEventTests()
 {
+  const nsIDOMKeyEvent = Components.interfaces.nsIDOMKeyEvent;
   var eventList, keyDownFlags, keyUpFlags, testingEvent;
   const kShiftFlag    = 0x1;
   const kCtrlFlag     = 0x2;
@@ -205,8 +211,10 @@ function runKeyEventTests()
   // The first parameter is the complete input event. The second parameter is
   // what to test against. The third parameter is which key events should be
   // delived for the event.
-  function testKey(aEvent, aExpectGeckoChar, aShouldDelivedEvent)
+  function testKey(aEvent, aExpectedGeckoKeyCode, aExpectGeckoChar,
+                   aShouldDelivedEvent)
   {
+    ok(aExpectedGeckoKeyCode != undefined, "keycode is undefined");
     eventList = [];
 
     // The modifier key events which are fired for state changing are har to
@@ -217,9 +225,9 @@ function runKeyEventTests()
       // state changing for synthesizeNativeKeyEvent.
       if (aEvent.shift || aEvent.shiftRight)
         keyDownFlags |= kShiftFlag;
-      if (aEvent.ctrl || aEvent.ctrlRight)
+      if (aEvent.ctrl || aEvent.ctrlRight || aEvent.altGr)
         keyDownFlags |= kCtrlFlag;
-      if (aEvent.alt || aEvent.altRight)
+      if (aEvent.alt || aEvent.altRight || aEvent.altGr)
         keyDownFlags |= kAltFlag;
       if (aEvent.command)
         keyDownFlags |= kMetaFlag;
@@ -261,10 +269,21 @@ function runKeyEventTests()
         is(e.altKey, aEvent.alt || aEvent.altRight || 0, name + ", Alt mismatch");
         is(e.shiftKey, aEvent.shift || aEvent.shiftRight || 0, name + ", Shift mismatch");
 
-        if (aExpectGeckoChar.length > 0 && e.type == "keypress")
+        if (aExpectGeckoChar.length > 0 && e.type == "keypress") {
           is(e.charCode, aExpectGeckoChar.charCodeAt(0), name + ", charcode");
-        else
+          if (aExpectedGeckoKeyCode >= 0) {
+            if (aExpectGeckoChar) {
+              is(e.keyCode, 0, name + ", wrong keycode");
+            } else {
+              is(e.keyCode, aExpectedGeckoKeyCode, name + ", wrong keycode");
+            }
+          }
+        } else {
           is(e.charCode, 0, name + ", no charcode");
+          if (aExpectedGeckoKeyCode >= 0) {
+            is(e.keyCode, aExpectedGeckoKeyCode, name + ", wrong keycode");
+          }
+        }
       }
     }
   }
@@ -287,129 +306,975 @@ function runKeyEventTests()
     // makes no attempt to verify that the keyCode matches the characters. So only
     // test key event records that you saw Cocoa send.
 
-    // Plain text input
-    testKey({layout:"US", keyCode:0, chars:"a", unmodifiedChars:"a"},
-            "a", SHOULD_DELIVER_ALL);
-    testKey({layout:"US", keyCode:11, chars:"b", unmodifiedChars:"b"},
-            "b", SHOULD_DELIVER_ALL);
-    testKey({layout:"US", keyCode:0, shift:1, chars:"A", unmodifiedChars:"A"},
-            "A", SHOULD_DELIVER_ALL);
-
     // Ctrl keys
     testKey({layout:"US", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
-            "a", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
-            "A", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL);
 
     // Alt keys
     testKey({layout:"US", keyCode:0, alt:1, chars:"\u00e5", unmodifiedChars:"a"},
-            "\u00e5", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "\u00e5", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:0, alt:1, shift:1, chars:"\u00c5", unmodifiedChars:"A"},
-            "\u00c5", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "\u00c5", SHOULD_DELIVER_ALL);
     
     // Command keys
     testKey({layout:"US", keyCode:0, command:1, chars:"a", unmodifiedChars:"a"},
-            "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Shift-cmd gives us the shifted character
     testKey({layout:"US", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"A"},
-            "A", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+            nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Ctrl-cmd gives us the unshifted character
     testKey({layout:"US", keyCode:0, command:1, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
-            "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Alt-cmd gives us the shifted character
     testKey({layout:"US", keyCode:0, command:1, alt:1, chars:"\u00e5", unmodifiedChars:"a"},
-            "\u00e5", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+            nsIDOMKeyEvent.DOM_VK_A, "\u00e5", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     testKey({layout:"US", keyCode:0, command:1, alt:1, shift:1, chars:"\u00c5", unmodifiedChars:"a"},
-            "\u00c5", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+            nsIDOMKeyEvent.DOM_VK_A, "\u00c5", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
 
     // Greek ctrl keys produce Latin charcodes
     testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
-            "a", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL);
     testKey({layout:"Greek", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"\u0391"},
-            "A", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL);
 
     // Greek command keys
     testKey({layout:"Greek", keyCode:0, command:1, chars:"a", unmodifiedChars:"\u03b1"},
-            "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Shift-cmd gives us the shifted character
     testKey({layout:"Greek", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"\u0391"},
-            "A", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+            nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Ctrl-cmd gives us the unshifted character
     testKey({layout:"Greek", keyCode:0, command:1, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
-            "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Alt-cmd gives us the shifted character
     testKey({layout:"Greek", keyCode:0, command:1, alt:1, chars:"\u00a8", unmodifiedChars:"\u03b1"},
-            "\u00a8", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+            nsIDOMKeyEvent.DOM_VK_A, "\u00a8", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     testKey({layout:"Greek", keyCode:0, command:1, alt:1, shift:1, chars:"\u00b9", unmodifiedChars:"\u0391"},
-            "\u00b9", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+            nsIDOMKeyEvent.DOM_VK_A, "\u00b9", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
 
-    // German (KCHR/KeyTranslate case)
+    // German
     testKey({layout:"German", keyCode:0, chars:"a", unmodifiedChars:"a"},
-            "a", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL);
     testKey({layout:"German", keyCode:33, chars:"\u00fc", unmodifiedChars:"\u00fc"},
-            "\u00fc", SHOULD_DELIVER_ALL);
+            0, "\u00fc", SHOULD_DELIVER_ALL);
     testKey({layout:"German", keyCode:27, chars:"\u00df", unmodifiedChars:"\u00df"},
-            "\u00df", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_QUESTION_MARK, "\u00df", SHOULD_DELIVER_ALL);
     testKey({layout:"German", keyCode:27, shift:1, chars:"?", unmodifiedChars:"?"},
-            "?", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_QUESTION_MARK, "?", SHOULD_DELIVER_ALL);
+    // Note that Shift+SS is '?' but Cmd+Shift+SS is '/' on German layout.
+    // Therefore, when Cmd key is pressed, the SS key's keycode is changed.
     testKey({layout:"German", keyCode:27, command:1, chars:"\u00df", unmodifiedChars:"\u00df"},
-            "\u00df", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
-    // Shift+SS is '?' but Cmd+Shift+SS is '/' on German layout.
+            nsIDOMKeyEvent.DOM_VK_SLASH, "\u00df", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     testKey({layout:"German", keyCode:27, command:1, shift:1, chars:"/", unmodifiedChars:"?"},
-            "?", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+            nsIDOMKeyEvent.DOM_VK_SLASH, "?", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
 
     // Caps Lock key event
     // XXX keyup event of Caps Lock key is not fired.
     testKey({layout:"US", keyCode:57, capsLock:1, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYDOWN);
+            nsIDOMKeyEvent.DOM_VK_CAPS_LOCK, "", SHOULD_DELIVER_KEYDOWN);
     testKey({layout:"US", keyCode:57, capsLock:0, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYDOWN);
+            nsIDOMKeyEvent.DOM_VK_CAPS_LOCK, "", SHOULD_DELIVER_KEYDOWN);
 
     // Shift/RightShift key event
     testKey({layout:"US", keyCode:56, shift:1, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYDOWN);
+            nsIDOMKeyEvent.DOM_VK_SHIFT, "", SHOULD_DELIVER_KEYDOWN);
     testKey({layout:"US", keyCode:56, shift:0, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYUP);
+            nsIDOMKeyEvent.DOM_VK_SHIFT, "", SHOULD_DELIVER_KEYUP);
     testKey({layout:"US", keyCode:60, shiftRight:1, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYDOWN);
+            nsIDOMKeyEvent.DOM_VK_SHIFT, "", SHOULD_DELIVER_KEYDOWN);
     testKey({layout:"US", keyCode:60, shiftRight:0, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYUP);
+            nsIDOMKeyEvent.DOM_VK_SHIFT, "", SHOULD_DELIVER_KEYUP);
 
     // Control/RightControl key event
     testKey({layout:"US", keyCode:59, ctrl:1, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYDOWN);
+            nsIDOMKeyEvent.DOM_VK_CONTROL, "", SHOULD_DELIVER_KEYDOWN);
     testKey({layout:"US", keyCode:59, ctrl:0, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYUP);
+            nsIDOMKeyEvent.DOM_VK_CONTROL, "", SHOULD_DELIVER_KEYUP);
     testKey({layout:"US", keyCode:62, ctrlRight:1, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYDOWN);
+            nsIDOMKeyEvent.DOM_VK_CONTROL, "", SHOULD_DELIVER_KEYDOWN);
     testKey({layout:"US", keyCode:62, ctrlRight:0, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYUP);
+            nsIDOMKeyEvent.DOM_VK_CONTROL, "", SHOULD_DELIVER_KEYUP);
 
     // Option/RightOption key event
     testKey({layout:"US", keyCode:58, alt:1, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYDOWN);
+            nsIDOMKeyEvent.DOM_VK_ALT, "", SHOULD_DELIVER_KEYDOWN);
     testKey({layout:"US", keyCode:58, alt:0, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYUP);
+            nsIDOMKeyEvent.DOM_VK_ALT, "", SHOULD_DELIVER_KEYUP);
     testKey({layout:"US", keyCode:61, altRight:1, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYDOWN);
+            nsIDOMKeyEvent.DOM_VK_ALT, "", SHOULD_DELIVER_KEYDOWN);
     testKey({layout:"US", keyCode:61, altRight:0, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYUP);
+            nsIDOMKeyEvent.DOM_VK_ALT, "", SHOULD_DELIVER_KEYUP);
 
     // Command/RightCommand key event
     testKey({layout:"US", keyCode:55, command:1, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYDOWN);
+            nsIDOMKeyEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYDOWN);
     testKey({layout:"US", keyCode:55, command:0, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYUP);
+            nsIDOMKeyEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYUP);
     testKey({layout:"US", keyCode:54, commandRight:1, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYDOWN);
+            nsIDOMKeyEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYDOWN);
     testKey({layout:"US", keyCode:54, commandRight:0, chars:"", unmodifiedChars:""},
-            "", SHOULD_DELIVER_KEYUP);
+            nsIDOMKeyEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYUP);
 
-   testKey({layout:"Dvorak-Qwerty", keyCode:0x22, command:1, alt:1, chars:"^", unmodifiedChars:"c"},
-           "^", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
-   testKey({layout:"Dvorak-Qwerty", keyCode:0x22, command:1, alt:1, shift:1, chars:"\u02C6", unmodifiedChars:"C"},
-           "\u02C6", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
-  }
+    // all keys on keyboard (keyCode test)
+    testKey({layout:"US", keyCode:0x30, chars:"\t", unmodifiedChars:"\t"},
+            nsIDOMKeyEvent.DOM_VK_TAB, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x47, chars:"\uF739", unmodifiedChars:"\uF739"},
+            nsIDOMKeyEvent.DOM_VK_CLEAR, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x24, chars:"\u000D", unmodifiedChars:"\u000D"},
+            nsIDOMKeyEvent.DOM_VK_RETURN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x71, chars:"\uF712", unmodifiedChars:"\uF712"},
+            nsIDOMKeyEvent.DOM_VK_PAUSE, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x35, chars:"\u001B", unmodifiedChars:"\u001B"},
+            nsIDOMKeyEvent.DOM_VK_ESCAPE, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x31, chars:" ", unmodifiedChars:" "},
+            nsIDOMKeyEvent.DOM_VK_SPACE, " ", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x74, chars:"\uF72C", unmodifiedChars:"\uF72C"},
+            nsIDOMKeyEvent.DOM_VK_PAGE_UP, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x79, chars:"\uF72D", unmodifiedChars:"\uF72D"},
+            nsIDOMKeyEvent.DOM_VK_PAGE_DOWN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x77, chars:"\uF72B", unmodifiedChars:"\uF72B"},
+            nsIDOMKeyEvent.DOM_VK_END, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x73, chars:"\uF729", unmodifiedChars:"\uF729"},
+            nsIDOMKeyEvent.DOM_VK_HOME, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x7B, chars:"\uF702", unmodifiedChars:"\uF702"},
+            nsIDOMKeyEvent.DOM_VK_LEFT, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x7E, chars:"\uF700", unmodifiedChars:"\uF700"},
+            nsIDOMKeyEvent.DOM_VK_UP, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x7C, chars:"\uF703", unmodifiedChars:"\uF703"},
+            nsIDOMKeyEvent.DOM_VK_RIGHT, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x7D, chars:"\uF701", unmodifiedChars:"\uF701"},
+            nsIDOMKeyEvent.DOM_VK_DOWN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x69, chars:"\uF710", unmodifiedChars:"\uF710"},
+            nsIDOMKeyEvent.DOM_VK_PRINTSCREEN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x75, chars:"\uF728", unmodifiedChars:"\uF728"},
+            nsIDOMKeyEvent.DOM_VK_DELETE, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x6B, chars:"\uF711", unmodifiedChars:"\uF711"},
+            nsIDOMKeyEvent.DOM_VK_SCROLL_LOCK, "", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"US", keyCode:0x7A, function:1, chars:"\uF704", unmodifiedChars:"\uF704"},
+            nsIDOMKeyEvent.DOM_VK_F1, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x78, function:1, chars:"\uF705", unmodifiedChars:"\uF705"},
+            nsIDOMKeyEvent.DOM_VK_F2, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x63, function:1, chars:"\uF706", unmodifiedChars:"\uF706"},
+            nsIDOMKeyEvent.DOM_VK_F3, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x76, function:1, chars:"\uF707", unmodifiedChars:"\uF707"},
+            nsIDOMKeyEvent.DOM_VK_F4, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x60, function:1, chars:"\uF708", unmodifiedChars:"\uF708"},
+            nsIDOMKeyEvent.DOM_VK_F5, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x61, function:1, chars:"\uF709", unmodifiedChars:"\uF709"},
+            nsIDOMKeyEvent.DOM_VK_F6, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x62, function:1, chars:"\uF70A", unmodifiedChars:"\uF70A"},
+            nsIDOMKeyEvent.DOM_VK_F7, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x64, function:1, chars:"\uF70B", unmodifiedChars:"\uF70B"},
+            nsIDOMKeyEvent.DOM_VK_F8, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x65, function:1, chars:"\uF70C", unmodifiedChars:"\uF70C"},
+            nsIDOMKeyEvent.DOM_VK_F9, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x6D, function:1, chars:"\uF70D", unmodifiedChars:"\uF70D"},
+            nsIDOMKeyEvent.DOM_VK_F10, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x67, function:1, chars:"\uF70E", unmodifiedChars:"\uF70E"},
+            nsIDOMKeyEvent.DOM_VK_F11, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x6F, function:1, chars:"\uF70F", unmodifiedChars:"\uF70F"},
+            nsIDOMKeyEvent.DOM_VK_F12, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x6A, function:1, chars:"\uF713", unmodifiedChars:"\uF713"},
+            nsIDOMKeyEvent.DOM_VK_F16, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x40, function:1, chars:"\uF714", unmodifiedChars:"\uF714"},
+            nsIDOMKeyEvent.DOM_VK_F17, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4F, function:1, chars:"\uF715", unmodifiedChars:"\uF715"},
+            nsIDOMKeyEvent.DOM_VK_F18, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x50, function:1, chars:"\uF716", unmodifiedChars:"\uF716"},
+            nsIDOMKeyEvent.DOM_VK_F19, "", SHOULD_DELIVER_ALL);
+
+    // US
+    // Alphabet
+    testKey({layout:"US", keyCode:0x00, chars:"a", unmodifiedChars:"a"},
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x00, shift:1, chars:"A", unmodifiedChars:"A"},
+            nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x00, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x00, alt:1, chars:"\u00E5", unmodifiedChars:"a"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00E5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x00, command:1, chars:"a", unmodifiedChars:"a"},
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x0B, chars:"b", unmodifiedChars:"b"},
+            nsIDOMKeyEvent.DOM_VK_B, "b", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0B, shift:1, chars:"B", unmodifiedChars:"B"},
+            nsIDOMKeyEvent.DOM_VK_B, "B", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0B, ctrl:1, chars:"\u0002", unmodifiedChars:"b"},
+            nsIDOMKeyEvent.DOM_VK_B, "b", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0B, alt:1, chars:"\u222B", unmodifiedChars:"b"},
+            nsIDOMKeyEvent.DOM_VK_B, "\u222B", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0B, command:1, chars:"b", unmodifiedChars:"b"},
+            nsIDOMKeyEvent.DOM_VK_B, "b", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x08, chars:"c", unmodifiedChars:"c"},
+            nsIDOMKeyEvent.DOM_VK_C, "c", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x08, shift:1, chars:"C", unmodifiedChars:"C"},
+            nsIDOMKeyEvent.DOM_VK_C, "C", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x08, ctrl:1, chars:"\u0003", unmodifiedChars:"c"},
+            nsIDOMKeyEvent.DOM_VK_C, "c", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x08, alt:1, chars:"\u00E7", unmodifiedChars:"c"},
+            nsIDOMKeyEvent.DOM_VK_C, "\u00E7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x08, command:1, chars:"c", unmodifiedChars:"c"},
+            nsIDOMKeyEvent.DOM_VK_C, "c", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x02, chars:"d", unmodifiedChars:"d"},
+            nsIDOMKeyEvent.DOM_VK_D, "d", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x02, shift:1, chars:"D", unmodifiedChars:"D"},
+            nsIDOMKeyEvent.DOM_VK_D, "D", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x02, ctrl:1, chars:"\u0004", unmodifiedChars:"d"},
+            nsIDOMKeyEvent.DOM_VK_D, "d", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x02, alt:1, chars:"\u2202", unmodifiedChars:"d"},
+            nsIDOMKeyEvent.DOM_VK_D, "\u2202", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x02, command:1, chars:"d", unmodifiedChars:"d"},
+            nsIDOMKeyEvent.DOM_VK_D, "d", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x0E, chars:"e", unmodifiedChars:"e"},
+            nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0E, shift:1, chars:"E", unmodifiedChars:"E"},
+            nsIDOMKeyEvent.DOM_VK_E, "E", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0E, ctrl:1, chars:"\u0005", unmodifiedChars:"e"},
+            nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0E, alt:1, chars:"", unmodifiedChars:"e"},
+            nsIDOMKeyEvent.DOM_VK_E, "", SHOULD_DELIVER_NONE); // dead key
+    testKey({layout:"US", keyCode:0x0E, command:1, chars:"e", unmodifiedChars:"e"},
+            nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x03, chars:"f", unmodifiedChars:"f"},
+            nsIDOMKeyEvent.DOM_VK_F, "f", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x03, shift:1, chars:"F", unmodifiedChars:"F"},
+            nsIDOMKeyEvent.DOM_VK_F, "F", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x03, ctrl:1, chars:"\u0006", unmodifiedChars:"f"},
+            nsIDOMKeyEvent.DOM_VK_F, "f", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x03, alt:1, chars:"\u0192", unmodifiedChars:"f"},
+            nsIDOMKeyEvent.DOM_VK_F, "\u0192", SHOULD_DELIVER_ALL);
+    // XXX This test starts fullscreen mode.
+    // testKey({layout:"US", keyCode:0x03, command:1, chars:"f", unmodifiedChars:"f"},
+    //         nsIDOMKeyEvent.DOM_VK_F, "f", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x05, chars:"g", unmodifiedChars:"g"},
+            nsIDOMKeyEvent.DOM_VK_G, "g", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x05, shift:1, chars:"G", unmodifiedChars:"G"},
+            nsIDOMKeyEvent.DOM_VK_G, "G", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x05, ctrl:1, chars:"\u0007", unmodifiedChars:"g"},
+            nsIDOMKeyEvent.DOM_VK_G, "g", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x05, alt:1, chars:"\u00A9", unmodifiedChars:"g"},
+            nsIDOMKeyEvent.DOM_VK_G, "\u00A9", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x05, command:1, chars:"g", unmodifiedChars:"g"},
+            nsIDOMKeyEvent.DOM_VK_G, "g", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x04, chars:"h", unmodifiedChars:"h"},
+            nsIDOMKeyEvent.DOM_VK_H, "h", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x04, shift:1, chars:"H", unmodifiedChars:"H"},
+            nsIDOMKeyEvent.DOM_VK_H, "H", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x04, ctrl:1, chars:"\u0008", unmodifiedChars:"h"},
+            nsIDOMKeyEvent.DOM_VK_H, "h", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x04, alt:1, chars:"\u02D9", unmodifiedChars:"h"},
+            nsIDOMKeyEvent.DOM_VK_H, "\u02D9", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x04, command:1, chars:"h", unmodifiedChars:"h"},
+            nsIDOMKeyEvent.DOM_VK_H, "h", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x22, chars:"i", unmodifiedChars:"i"},
+            nsIDOMKeyEvent.DOM_VK_I, "i", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x22, shift:1, chars:"I", unmodifiedChars:"I"},
+            nsIDOMKeyEvent.DOM_VK_I, "I", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x22, ctrl:1, chars:"\u0009", unmodifiedChars:"i"},
+            nsIDOMKeyEvent.DOM_VK_I, "i", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x22, alt:1, chars:"", unmodifiedChars:"i"},
+            nsIDOMKeyEvent.DOM_VK_I, "", SHOULD_DELIVER_NONE); // dead key
+    // XXX This test causes memory leak.
+    // testKey({layout:"US", keyCode:0x22, command:1, chars:"i", unmodifiedChars:"i"},
+    //         nsIDOMKeyEvent.DOM_VK_I, "i", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x26, chars:"j", unmodifiedChars:"j"},
+            nsIDOMKeyEvent.DOM_VK_J, "j", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x26, shift:1, chars:"J", unmodifiedChars:"J"},
+            nsIDOMKeyEvent.DOM_VK_J, "J", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x26, ctrl:1, chars:"\u000A", unmodifiedChars:"j"},
+            nsIDOMKeyEvent.DOM_VK_J, "j", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x26, alt:1, chars:"\u2206", unmodifiedChars:"j"},
+            nsIDOMKeyEvent.DOM_VK_J, "\u2206", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x26, command:1, chars:"j", unmodifiedChars:"j"},
+            nsIDOMKeyEvent.DOM_VK_J, "j", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x28, chars:"k", unmodifiedChars:"k"},
+            nsIDOMKeyEvent.DOM_VK_K, "k", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x28, shift:1, chars:"K", unmodifiedChars:"K"},
+            nsIDOMKeyEvent.DOM_VK_K, "K", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x28, ctrl:1, chars:"\u000B", unmodifiedChars:"k"},
+            nsIDOMKeyEvent.DOM_VK_K, "k", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x28, alt:1, chars:"\u02DA", unmodifiedChars:"k"},
+            nsIDOMKeyEvent.DOM_VK_K, "\u02DA", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x28, command:1, chars:"k", unmodifiedChars:"k"},
+            nsIDOMKeyEvent.DOM_VK_K, "k", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x25, chars:"l", unmodifiedChars:"l"},
+            nsIDOMKeyEvent.DOM_VK_L, "l", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x25, shift:1, chars:"L", unmodifiedChars:"L"},
+            nsIDOMKeyEvent.DOM_VK_L, "L", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x25, ctrl:1, chars:"\u000C", unmodifiedChars:"l"},
+            nsIDOMKeyEvent.DOM_VK_L, "l", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x25, alt:1, chars:"\u00AC", unmodifiedChars:"l"},
+            nsIDOMKeyEvent.DOM_VK_L, "\u00AC", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x25, command:1, chars:"l", unmodifiedChars:"l"},
+            nsIDOMKeyEvent.DOM_VK_L, "l", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x2E, chars:"m", unmodifiedChars:"m"},
+            nsIDOMKeyEvent.DOM_VK_M, "m", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2E, shift:1, chars:"M", unmodifiedChars:"M"},
+            nsIDOMKeyEvent.DOM_VK_M, "M", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2E, ctrl:1, chars:"\u000D", unmodifiedChars:"m"},
+            nsIDOMKeyEvent.DOM_VK_M, "m", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2E, alt:1, chars:"\u00B5", unmodifiedChars:"m"},
+            nsIDOMKeyEvent.DOM_VK_M, "\u00B5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2E, command:1, chars:"m", unmodifiedChars:"m"},
+            nsIDOMKeyEvent.DOM_VK_M, "m", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x2D, chars:"n", unmodifiedChars:"n"},
+            nsIDOMKeyEvent.DOM_VK_N, "n", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2D, shift:1, chars:"N", unmodifiedChars:"N"},
+            nsIDOMKeyEvent.DOM_VK_N, "N", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2D, ctrl:1, chars:"\u000E", unmodifiedChars:"n"},
+            nsIDOMKeyEvent.DOM_VK_N, "n", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2D, alt:1, chars:"", unmodifiedChars:"n"},
+            nsIDOMKeyEvent.DOM_VK_N, "", SHOULD_DELIVER_NONE); // dead key
+    testKey({layout:"US", keyCode:0x2D, command:1, chars:"n", unmodifiedChars:"n"},
+            nsIDOMKeyEvent.DOM_VK_N, "n", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x1F, chars:"o", unmodifiedChars:"o"},
+            nsIDOMKeyEvent.DOM_VK_O, "o", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1F, shift:1, chars:"O", unmodifiedChars:"O"},
+            nsIDOMKeyEvent.DOM_VK_O, "O", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1F, ctrl:1, chars:"\u000F", unmodifiedChars:"o"},
+            nsIDOMKeyEvent.DOM_VK_O, "o", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1F, alt:1, chars:"\u00F8", unmodifiedChars:"o"},
+            nsIDOMKeyEvent.DOM_VK_O, "\u00F8", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1F, command:1, chars:"o", unmodifiedChars:"o"},
+            nsIDOMKeyEvent.DOM_VK_O, "o", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x23, chars:"p", unmodifiedChars:"p"},
+            nsIDOMKeyEvent.DOM_VK_P, "p", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x23, shift:1, chars:"P", unmodifiedChars:"P"},
+            nsIDOMKeyEvent.DOM_VK_P, "P", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x23, ctrl:1, chars:"\u0010", unmodifiedChars:"p"},
+            nsIDOMKeyEvent.DOM_VK_P, "p", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x23, alt:1, chars:"\u03C0", unmodifiedChars:"p"},
+            nsIDOMKeyEvent.DOM_VK_P, "\u03C0", SHOULD_DELIVER_ALL);
+    // XXX This test starts private browsing mode (stopped at the confirmation dialog)
+    // testKey({layout:"US", keyCode:0x23, command:1, chars:"p", unmodifiedChars:"p"},
+    //         nsIDOMKeyEvent.DOM_VK_P, "p", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x0C, chars:"q", unmodifiedChars:"q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "q", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0C, shift:1, chars:"Q", unmodifiedChars:"Q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "Q", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0C, ctrl:1, chars:"\u0011", unmodifiedChars:"q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "q", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0C, alt:1, chars:"\u0153", unmodifiedChars:"q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "\u0153", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0C, command:1, chars:"q", unmodifiedChars:"q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "q", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x0F, chars:"r", unmodifiedChars:"r"},
+            nsIDOMKeyEvent.DOM_VK_R, "r", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0F, shift:1, chars:"R", unmodifiedChars:"R"},
+            nsIDOMKeyEvent.DOM_VK_R, "R", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0F, ctrl:1, chars:"\u0012", unmodifiedChars:"r"},
+            nsIDOMKeyEvent.DOM_VK_R, "r", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0F, alt:1, chars:"\u00AE", unmodifiedChars:"r"},
+            nsIDOMKeyEvent.DOM_VK_R, "\u00AE", SHOULD_DELIVER_ALL);
+    // XXX This test makes some tabs and dialogs.
+    // testKey({layout:"US", keyCode:0x0F, command:1, chars:"r", unmodifiedChars:"r"},
+    //         nsIDOMKeyEvent.DOM_VK_R, "r", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x01, chars:"s", unmodifiedChars:"s"},
+            nsIDOMKeyEvent.DOM_VK_S, "s", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x01, shift:1, chars:"S", unmodifiedChars:"S"},
+            nsIDOMKeyEvent.DOM_VK_S, "S", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x01, ctrl:1, chars:"\u0013", unmodifiedChars:"s"},
+            nsIDOMKeyEvent.DOM_VK_S, "s", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x01, alt:1, chars:"\u00DF", unmodifiedChars:"s"},
+            nsIDOMKeyEvent.DOM_VK_S, "\u00DF", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x01, command:1, chars:"s", unmodifiedChars:"s"},
+            nsIDOMKeyEvent.DOM_VK_S, "s", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x11, chars:"t", unmodifiedChars:"t"},
+            nsIDOMKeyEvent.DOM_VK_T, "t", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x11, shift:1, chars:"T", unmodifiedChars:"T"},
+            nsIDOMKeyEvent.DOM_VK_T, "T", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x11, ctrl:1, chars:"\u0014", unmodifiedChars:"t"},
+            nsIDOMKeyEvent.DOM_VK_T, "t", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x11, alt:1, chars:"\u2020", unmodifiedChars:"t"},
+            nsIDOMKeyEvent.DOM_VK_T, "\u2020", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x11, command:1, chars:"t", unmodifiedChars:"t"},
+            nsIDOMKeyEvent.DOM_VK_T, "t", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x20, chars:"u", unmodifiedChars:"u"},
+            nsIDOMKeyEvent.DOM_VK_U, "u", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x20, shift:1, chars:"U", unmodifiedChars:"U"},
+            nsIDOMKeyEvent.DOM_VK_U, "U", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x20, ctrl:1, chars:"\u0015", unmodifiedChars:"u"},
+            nsIDOMKeyEvent.DOM_VK_U, "u", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x20, alt:1, chars:"", unmodifiedChars:"u"},
+            nsIDOMKeyEvent.DOM_VK_U, "", SHOULD_DELIVER_NONE); // dead key
+    testKey({layout:"US", keyCode:0x20, command:1, chars:"u", unmodifiedChars:"u"},
+            nsIDOMKeyEvent.DOM_VK_U, "u", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x09, chars:"v", unmodifiedChars:"v"},
+            nsIDOMKeyEvent.DOM_VK_V, "v", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x09, shift:1, chars:"V", unmodifiedChars:"V"},
+            nsIDOMKeyEvent.DOM_VK_V, "V", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x09, ctrl:1, chars:"\u0016", unmodifiedChars:"v"},
+            nsIDOMKeyEvent.DOM_VK_V, "v", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x09, alt:1, chars:"\u221A", unmodifiedChars:"v"},
+            nsIDOMKeyEvent.DOM_VK_V, "\u221A", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x09, command:1, chars:"v", unmodifiedChars:"v"},
+            nsIDOMKeyEvent.DOM_VK_V, "v", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x0D, chars:"w", unmodifiedChars:"w"},
+            nsIDOMKeyEvent.DOM_VK_W, "w", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0D, shift:1, chars:"W", unmodifiedChars:"W"},
+            nsIDOMKeyEvent.DOM_VK_W, "W", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0D, ctrl:1, chars:"\u0017", unmodifiedChars:"w"},
+            nsIDOMKeyEvent.DOM_VK_W, "w", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0D, alt:1, chars:"\u2211", unmodifiedChars:"w"},
+            nsIDOMKeyEvent.DOM_VK_W, "\u2211", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x0D, command:1, chars:"w", unmodifiedChars:"w"},
+            nsIDOMKeyEvent.DOM_VK_W, "w", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x07, chars:"x", unmodifiedChars:"x"},
+            nsIDOMKeyEvent.DOM_VK_X, "x", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x07, shift:1, chars:"X", unmodifiedChars:"X"},
+            nsIDOMKeyEvent.DOM_VK_X, "X", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x07, ctrl:1, chars:"\u0018", unmodifiedChars:"x"},
+            nsIDOMKeyEvent.DOM_VK_X, "x", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x07, alt:1, chars:"\u2248", unmodifiedChars:"x"},
+            nsIDOMKeyEvent.DOM_VK_X, "\u2248", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x07, command:1, chars:"x", unmodifiedChars:"x"},
+            nsIDOMKeyEvent.DOM_VK_X, "x", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x10, chars:"y", unmodifiedChars:"y"},
+            nsIDOMKeyEvent.DOM_VK_Y, "y", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x10, shift:1, chars:"Y", unmodifiedChars:"Y"},
+            nsIDOMKeyEvent.DOM_VK_Y, "Y", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x10, ctrl:1, chars:"\u0019", unmodifiedChars:"y"},
+            nsIDOMKeyEvent.DOM_VK_Y, "y", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x10, alt:1, chars:"\u00A5", unmodifiedChars:"y"},
+            nsIDOMKeyEvent.DOM_VK_Y, "\u00A5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x10, command:1, chars:"y", unmodifiedChars:"y"},
+            nsIDOMKeyEvent.DOM_VK_Y, "y", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x06, chars:"z", unmodifiedChars:"z"},
+            nsIDOMKeyEvent.DOM_VK_Z, "z", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x06, shift:1, chars:"Z", unmodifiedChars:"Z"},
+            nsIDOMKeyEvent.DOM_VK_Z, "Z", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x06, ctrl:1, chars:"\u001A", unmodifiedChars:"z"},
+            nsIDOMKeyEvent.DOM_VK_Z, "z", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x06, alt:1, chars:"\u03A9", unmodifiedChars:"z"},
+            nsIDOMKeyEvent.DOM_VK_Z, "\u03A9", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x06, command:1, chars:"z", unmodifiedChars:"z"},
+            nsIDOMKeyEvent.DOM_VK_Z, "z", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+
+    // numeric
+    testKey({layout:"US", keyCode:0x12, chars:"1", unmodifiedChars:"1"},
+            nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x12, shift:1, chars:"!", unmodifiedChars:"!"},
+            nsIDOMKeyEvent.DOM_VK_1, "!", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x12, ctrl:1, chars:"1", unmodifiedChars:"1"},
+            nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x12, alt:1, chars:"\u00A1", unmodifiedChars:"1"},
+            nsIDOMKeyEvent.DOM_VK_1, "\u00A1", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x12, command:1, chars:"1", unmodifiedChars:"1"},
+            nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x13, chars:"2", unmodifiedChars:"2"},
+            nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x13, shift:1, chars:"@", unmodifiedChars:"@"},
+            nsIDOMKeyEvent.DOM_VK_2, "@", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x13, ctrl:1, chars:"2", unmodifiedChars:"2"},
+            nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x13, alt:1, chars:"\u00A1", unmodifiedChars:"2"},
+            nsIDOMKeyEvent.DOM_VK_2, "\u00A1", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x13, command:1, chars:"2", unmodifiedChars:"2"},
+            nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x14, chars:"3", unmodifiedChars:"3"},
+            nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x14, shift:1, chars:"#", unmodifiedChars:"#"},
+            nsIDOMKeyEvent.DOM_VK_3, "#", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x14, ctrl:1, chars:"3", unmodifiedChars:"3"},
+            nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x14, alt:1, chars:"\u00A3", unmodifiedChars:"3"},
+            nsIDOMKeyEvent.DOM_VK_3, "\u00A3", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x14, command:1, chars:"3", unmodifiedChars:"3"},
+            nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x15, chars:"4", unmodifiedChars:"4"},
+            nsIDOMKeyEvent.DOM_VK_4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x15, shift:1, chars:"$", unmodifiedChars:"$"},
+            nsIDOMKeyEvent.DOM_VK_4, "$", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x15, ctrl:1, chars:"4", unmodifiedChars:"4"},
+            nsIDOMKeyEvent.DOM_VK_4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x15, alt:1, chars:"\u00A2", unmodifiedChars:"4"},
+            nsIDOMKeyEvent.DOM_VK_4, "\u00A2", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x15, command:1, chars:"4", unmodifiedChars:"4"},
+            nsIDOMKeyEvent.DOM_VK_4, "4", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x17, chars:"5", unmodifiedChars:"5"},
+            nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x17, shift:1, chars:"%", unmodifiedChars:"%"},
+            nsIDOMKeyEvent.DOM_VK_5, "%", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x17, ctrl:1, chars:"5", unmodifiedChars:"5"},
+            nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x17, alt:1, chars:"\u221E", unmodifiedChars:"5"},
+            nsIDOMKeyEvent.DOM_VK_5, "\u221E", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x17, command:1, chars:"5", unmodifiedChars:"5"},
+            nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x16, chars:"6", unmodifiedChars:"6"},
+            nsIDOMKeyEvent.DOM_VK_6, "6", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x16, shift:1, chars:"^", unmodifiedChars:"^"},
+            nsIDOMKeyEvent.DOM_VK_6, "^", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x16, ctrl:1, chars:"6", unmodifiedChars:"6"},
+            nsIDOMKeyEvent.DOM_VK_6, "6", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x16, alt:1, chars:"\u00A7", unmodifiedChars:"6"},
+            nsIDOMKeyEvent.DOM_VK_6, "\u00A7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x16, command:1, chars:"6", unmodifiedChars:"6"},
+            nsIDOMKeyEvent.DOM_VK_6, "6", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x1A, chars:"7", unmodifiedChars:"7"},
+            nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1A, shift:1, chars:"\u0026;", unmodifiedChars:"\u0026;"},
+            nsIDOMKeyEvent.DOM_VK_7, "\u0026", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1A, ctrl:1, chars:"7", unmodifiedChars:"7"},
+            nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1A, alt:1, chars:"\u00B6", unmodifiedChars:"7"},
+            nsIDOMKeyEvent.DOM_VK_7, "\u00B6", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1A, command:1, chars:"7", unmodifiedChars:"7"},
+            nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x1C, chars:"8", unmodifiedChars:"8"},
+            nsIDOMKeyEvent.DOM_VK_8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1C, shift:1, chars:"*", unmodifiedChars:"*"},
+            nsIDOMKeyEvent.DOM_VK_8, "*", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1C, ctrl:1, chars:"8", unmodifiedChars:"8"},
+            nsIDOMKeyEvent.DOM_VK_8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1C, alt:1, chars:"\u2022", unmodifiedChars:"8"},
+            nsIDOMKeyEvent.DOM_VK_8, "\u2022", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1C, command:1, chars:"8", unmodifiedChars:"8"},
+            nsIDOMKeyEvent.DOM_VK_8, "8", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x19, chars:"9", unmodifiedChars:"9"},
+            nsIDOMKeyEvent.DOM_VK_9, "9", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x19, shift:1, chars:"(", unmodifiedChars:"("},
+            nsIDOMKeyEvent.DOM_VK_9, "(", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x19, ctrl:1, chars:"9", unmodifiedChars:"9"},
+            nsIDOMKeyEvent.DOM_VK_9, "9", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x19, alt:1, chars:"\u00AA", unmodifiedChars:"9"},
+            nsIDOMKeyEvent.DOM_VK_9, "\u00AA", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x19, command:1, chars:"9", unmodifiedChars:"9"},
+            nsIDOMKeyEvent.DOM_VK_9, "9", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x1D, chars:"0", unmodifiedChars:"0"},
+            nsIDOMKeyEvent.DOM_VK_0, "0", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1D, shift:1, chars:")", unmodifiedChars:")"},
+            nsIDOMKeyEvent.DOM_VK_0, ")", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1D, ctrl:1, chars:"0", unmodifiedChars:"0"},
+            nsIDOMKeyEvent.DOM_VK_0, "0", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1D, alt:1, chars:"\u00BA", unmodifiedChars:"0"},
+            nsIDOMKeyEvent.DOM_VK_0, "\u00BA", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1D, command:1, chars:"0", unmodifiedChars:"0"},
+            nsIDOMKeyEvent.DOM_VK_0, "0", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+
+    // other chracters
+    testKey({layout:"US", keyCode:0x32, chars:"`", unmodifiedChars:"`"},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x32, shift:1, chars:"~", unmodifiedChars:"~"},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "~", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x32, ctrl:1, chars:"`", unmodifiedChars:"`"},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x32, alt:1, chars:"", unmodifiedChars:"`"},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_NONE); // dead key
+    testKey({layout:"US", keyCode:0x32, command:1, chars:"`", unmodifiedChars:"`"},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x1B, chars:"-", unmodifiedChars:"-"},
+            nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "-", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1B, shift:1, chars:"_", unmodifiedChars:"_"},
+            nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "_", SHOULD_DELIVER_ALL);
+    // TODO:
+    // testKey({layout:"US", keyCode:0x1B, ctrl:1, chars:"\u001F", unmodifiedChars:"-"},
+    //         nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "-", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1B, alt:1, chars:"\u2013", unmodifiedChars:"-"},
+            nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "\u2013", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1B, command:1, chars:"-", unmodifiedChars:"-"},
+            nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "-", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x18, chars:"=", unmodifiedChars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x18, shift:1, chars:"+", unmodifiedChars:"+"},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "+", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x18, ctrl:1, chars:"=", unmodifiedChars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x18, alt:1, chars:"\u2260", unmodifiedChars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "\u2260", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x18, command:1, chars:"=", unmodifiedChars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x21, chars:"[", unmodifiedChars:"["},
+            nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "[", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x21, shift:1, chars:"{", unmodifiedChars:"{"},
+            nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "{", SHOULD_DELIVER_ALL);
+    // TODO:
+    // testKey({layout:"US", keyCode:0x21, ctrl:1, chars:"\u001B", unmodifiedChars:"["},
+    //         nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "[", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x21, alt:1, chars:"\u201C", unmodifiedChars:"["},
+            nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "\u201C", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x21, command:1, chars:"[", unmodifiedChars:"["},
+            nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "[", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x1E, chars:"]", unmodifiedChars:"]"},
+            nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "]", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1E, shift:1, chars:"}", unmodifiedChars:"}"},
+            nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "}", SHOULD_DELIVER_ALL);
+    // TODO:
+    // testKey({layout:"US", keyCode:0x1E, ctrl:1, chars:"\u001D", unmodifiedChars:"]"},
+    //         nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "]", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1E, alt:1, chars:"\u2018", unmodifiedChars:"]"},
+            nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "\u2018", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x1E, command:1, chars:"]", unmodifiedChars:"]"},
+            nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "]", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x2A, chars:"\\", unmodifiedChars:"\\"},
+            nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "\\", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2A, shift:1, chars:"|", unmodifiedChars:"|"},
+            nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "|", SHOULD_DELIVER_ALL);
+    // TODO:
+    // testKey({layout:"US", keyCode:0x2A, ctrl:1, chars:"\u001C", unmodifiedChars:"\\"},
+    //         nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "\\", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2A, alt:1, chars:"\u00AB", unmodifiedChars:"\\"},
+            nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "\u00AB", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2A, command:1, chars:"\\", unmodifiedChars:"\\"},
+            nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "\\", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x29, chars:";", unmodifiedChars:";"},
+            nsIDOMKeyEvent.DOM_VK_SEMICOLON, ";", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x29, shift:1, chars:":", unmodifiedChars:":"},
+            nsIDOMKeyEvent.DOM_VK_SEMICOLON, ":", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x29, ctrl:1, chars:";", unmodifiedChars:";"},
+            nsIDOMKeyEvent.DOM_VK_SEMICOLON, ";", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x29, alt:1, chars:"\u2026", unmodifiedChars:";"},
+            nsIDOMKeyEvent.DOM_VK_SEMICOLON, "\u2026", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x29, command:1, chars:";", unmodifiedChars:";"},
+            nsIDOMKeyEvent.DOM_VK_SEMICOLON, ";", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x27, chars:"'", unmodifiedChars:"'"},
+            nsIDOMKeyEvent.DOM_VK_QUOTE, "'", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x27, shift:1, chars:"\"", unmodifiedChars:"\""},
+            nsIDOMKeyEvent.DOM_VK_QUOTE, "\"", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x27, ctrl:1, chars:"'", unmodifiedChars:"'"},
+            nsIDOMKeyEvent.DOM_VK_QUOTE, "'", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x27, alt:1, chars:"\u00E6", unmodifiedChars:"'"},
+            nsIDOMKeyEvent.DOM_VK_QUOTE, "\u00E6", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x27, command:1, chars:"'", unmodifiedChars:"'"},
+            nsIDOMKeyEvent.DOM_VK_QUOTE, "'", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x2B, chars:",", unmodifiedChars:","},
+            nsIDOMKeyEvent.DOM_VK_COMMA, ",", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2B, shift:1, chars:"\u003C", unmodifiedChars:"\u003C"},
+            nsIDOMKeyEvent.DOM_VK_COMMA, "\u003C", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2B, ctrl:1, chars:",", unmodifiedChars:","},
+            nsIDOMKeyEvent.DOM_VK_COMMA, ",", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2B, alt:1, chars:"\u2264", unmodifiedChars:","},
+            nsIDOMKeyEvent.DOM_VK_COMMA, "\u2264", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2B, command:1, chars:",", unmodifiedChars:","},
+            nsIDOMKeyEvent.DOM_VK_COMMA, ",", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x2F, chars:".", unmodifiedChars:"."},
+            nsIDOMKeyEvent.DOM_VK_PERIOD, ".", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2F, shift:1, chars:"\u003E", unmodifiedChars:"\u003E"},
+            nsIDOMKeyEvent.DOM_VK_PERIOD, "\u003E", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2F, ctrl:1, chars:".", unmodifiedChars:"."},
+            nsIDOMKeyEvent.DOM_VK_PERIOD, ".", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2F, alt:1, chars:"\u2265", unmodifiedChars:"."},
+            nsIDOMKeyEvent.DOM_VK_PERIOD, "\u2265", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2F, command:1, chars:".", unmodifiedChars:"."},
+            nsIDOMKeyEvent.DOM_VK_PERIOD, ".", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x2C, chars:"/", unmodifiedChars:"/"},
+            nsIDOMKeyEvent.DOM_VK_SLASH, "/", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2C, shift:1, chars:"?", unmodifiedChars:"?"},
+            nsIDOMKeyEvent.DOM_VK_SLASH, "?", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2C, ctrl:1, chars:"/", unmodifiedChars:"/"},
+            nsIDOMKeyEvent.DOM_VK_SLASH, "/", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2C, alt:1, chars:"\u00F7", unmodifiedChars:"/"},
+            nsIDOMKeyEvent.DOM_VK_SLASH, "\u00F7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x2C, command:1, chars:"/", unmodifiedChars:"/"},
+            nsIDOMKeyEvent.DOM_VK_SLASH, "/", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+
+    // numpad
+    testKey({layout:"US", keyCode:0x53, numLock:1, chars:"1", unmodifiedChars:"1"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x53, numLock:1, shift:1, chars:"1", unmodifiedChars:"1"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x53, numLock:1, ctrl:1, chars:"1", unmodifiedChars:"1"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x53, numLock:1, alt:1, chars:"1", unmodifiedChars:"1"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x53, numLock:1, command:1, chars:"1", unmodifiedChars:"1"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD1, "1", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x54, numLock:1, chars:"2", unmodifiedChars:"2"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x54, numLock:1, shift:1, chars:"2", unmodifiedChars:"2"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x54, numLock:1, ctrl:1, chars:"2", unmodifiedChars:"2"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x54, numLock:1, alt:1, chars:"2", unmodifiedChars:"2"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x54, numLock:1, command:1, chars:"2", unmodifiedChars:"2"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD2, "2", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x55, numLock:1, chars:"3", unmodifiedChars:"3"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x55, numLock:1, shift:1, chars:"3", unmodifiedChars:"3"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x55, numLock:1, ctrl:1, chars:"3", unmodifiedChars:"3"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x55, numLock:1, alt:1, chars:"3", unmodifiedChars:"3"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x55, numLock:1, command:1, chars:"3", unmodifiedChars:"3"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD3, "3", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x56, numLock:1, chars:"4", unmodifiedChars:"4"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x56, numLock:1, shift:1, chars:"4", unmodifiedChars:"4"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x56, numLock:1, ctrl:1, chars:"4", unmodifiedChars:"4"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x56, numLock:1, alt:1, chars:"4", unmodifiedChars:"4"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x56, numLock:1, command:1, chars:"4", unmodifiedChars:"4"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD4, "4", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x57, numLock:1, chars:"5", unmodifiedChars:"5"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x57, numLock:1, shift:1, chars:"5", unmodifiedChars:"5"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x57, numLock:1, ctrl:1, chars:"5", unmodifiedChars:"5"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x57, numLock:1, alt:1, chars:"5", unmodifiedChars:"5"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x57, numLock:1, command:1, chars:"5", unmodifiedChars:"5"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD5, "5", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x58, numLock:1, chars:"6", unmodifiedChars:"6"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD6, "6", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x58, numLock:1, shift:1, chars:"6", unmodifiedChars:"6"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD6, "6", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x58, numLock:1, ctrl:1, chars:"6", unmodifiedChars:"6"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD6, "6", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x58, numLock:1, alt:1, chars:"6", unmodifiedChars:"6"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD6, "6", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x58, numLock:1, command:1, chars:"6", unmodifiedChars:"6"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD6, "6", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x59, numLock:1, chars:"7", unmodifiedChars:"7"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x59, numLock:1, shift:1, chars:"7", unmodifiedChars:"7"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x59, numLock:1, ctrl:1, chars:"7", unmodifiedChars:"7"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x59, numLock:1, alt:1, chars:"7", unmodifiedChars:"7"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x59, numLock:1, command:1, chars:"7", unmodifiedChars:"7"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD7, "7", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x5B, numLock:1, chars:"8", unmodifiedChars:"8"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x5B, numLock:1, shift:1, chars:"8", unmodifiedChars:"8"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x5B, numLock:1, ctrl:1, chars:"8", unmodifiedChars:"8"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x5B, numLock:1, alt:1, chars:"8", unmodifiedChars:"8"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x5B, numLock:1, command:1, chars:"8", unmodifiedChars:"8"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD8, "8", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x5C, numLock:1, chars:"9", unmodifiedChars:"9"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD9, "9", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x5C, numLock:1, shift:1, chars:"9", unmodifiedChars:"9"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD9, "9", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x5C, numLock:1, ctrl:1, chars:"9", unmodifiedChars:"9"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD9, "9", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x5C, numLock:1, alt:1, chars:"9", unmodifiedChars:"9"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD9, "9", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x5C, numLock:1, command:1, chars:"9", unmodifiedChars:"9"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD9, "9", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x52, numLock:1, chars:"0", unmodifiedChars:"0"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD0, "0", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x52, numLock:1, shift:1, chars:"0", unmodifiedChars:"0"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD0, "0", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x52, numLock:1, ctrl:1, chars:"0", unmodifiedChars:"0"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD0, "0", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x52, numLock:1, alt:1, chars:"0", unmodifiedChars:"0"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD0, "0", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x52, numLock:1, command:1, chars:"0", unmodifiedChars:"0"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD0, "0", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x51, numLock:1, chars:"=", unmodifiedChars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x51, numLock:1, shift:1, chars:"=", unmodifiedChars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x51, numLock:1, ctrl:1, chars:"=", unmodifiedChars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x51, numLock:1, alt:1, chars:"=", unmodifiedChars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x51, numLock:1, command:1, chars:"=", unmodifiedChars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x4B, numLock:1, chars:"/", unmodifiedChars:"/"},
+            nsIDOMKeyEvent.DOM_VK_DIVIDE, "/", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4B, numLock:1, shift:1, chars:"/", unmodifiedChars:"/"},
+            nsIDOMKeyEvent.DOM_VK_DIVIDE, "/", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4B, numLock:1, ctrl:1, chars:"/", unmodifiedChars:"/"},
+            nsIDOMKeyEvent.DOM_VK_DIVIDE, "/", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4B, numLock:1, alt:1, chars:"/", unmodifiedChars:"/"},
+            nsIDOMKeyEvent.DOM_VK_DIVIDE, "/", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4B, numLock:1, command:1, chars:"/", unmodifiedChars:"/"},
+            nsIDOMKeyEvent.DOM_VK_DIVIDE, "/", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x43, numLock:1, chars:"*", unmodifiedChars:"*"},
+            nsIDOMKeyEvent.DOM_VK_MULTIPLY, "*", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x43, numLock:1, shift:1, chars:"*", unmodifiedChars:"*"},
+            nsIDOMKeyEvent.DOM_VK_MULTIPLY, "*", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x43, numLock:1, ctrl:1, chars:"*", unmodifiedChars:"*"},
+            nsIDOMKeyEvent.DOM_VK_MULTIPLY, "*", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x43, numLock:1, alt:1, chars:"*", unmodifiedChars:"*"},
+            nsIDOMKeyEvent.DOM_VK_MULTIPLY, "*", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x43, numLock:1, command:1, chars:"*", unmodifiedChars:"*"},
+            nsIDOMKeyEvent.DOM_VK_MULTIPLY, "*", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x4E, numLock:1, chars:"-", unmodifiedChars:"-"},
+            nsIDOMKeyEvent.DOM_VK_SUBTRACT, "-", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4E, numLock:1, shift:1, chars:"-", unmodifiedChars:"-"},
+            nsIDOMKeyEvent.DOM_VK_SUBTRACT, "-", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4E, numLock:1, ctrl:1, chars:"-", unmodifiedChars:"-"},
+            nsIDOMKeyEvent.DOM_VK_SUBTRACT, "-", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4E, numLock:1, alt:1, chars:"-", unmodifiedChars:"-"},
+            nsIDOMKeyEvent.DOM_VK_SUBTRACT, "-", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4E, numLock:1, command:1, chars:"-", unmodifiedChars:"-"},
+            nsIDOMKeyEvent.DOM_VK_SUBTRACT, "-", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x45, numLock:1, chars:"+", unmodifiedChars:"+"},
+            nsIDOMKeyEvent.DOM_VK_ADD, "+", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x45, numLock:1, shift:1, chars:"+", unmodifiedChars:"+"},
+            nsIDOMKeyEvent.DOM_VK_ADD, "+", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x45, numLock:1, ctrl:1, chars:"+", unmodifiedChars:"+"},
+            nsIDOMKeyEvent.DOM_VK_ADD, "+", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x45, numLock:1, alt:1, chars:"+", unmodifiedChars:"+"},
+            nsIDOMKeyEvent.DOM_VK_ADD, "+", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x45, numLock:1, command:1, chars:"+", unmodifiedChars:"+"},
+            nsIDOMKeyEvent.DOM_VK_ADD, "+", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"US", keyCode:0x4C, numLock:1, chars:"\u0003", unmodifiedChars:"\u0003"},
+            nsIDOMKeyEvent.DOM_VK_RETURN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4C, numLock:1, shift:1, chars:"\u0003", unmodifiedChars:"\u0003"},
+            nsIDOMKeyEvent.DOM_VK_RETURN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4C, numLock:1, ctrl:1, chars:"\u0003", unmodifiedChars:"\u0003"},
+            nsIDOMKeyEvent.DOM_VK_RETURN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4C, numLock:1, alt:1, chars:"\u0003", unmodifiedChars:"\u0003"},
+            nsIDOMKeyEvent.DOM_VK_RETURN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:0x4C, numLock:1, command:1, chars:"\u0003", unmodifiedChars:"\u0003"},
+            nsIDOMKeyEvent.DOM_VK_RETURN, "", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+
+    // French, numeric
+    testKey({layout:"French", keyCode:0x12, chars:"\u0026", unmodifiedChars:"\u0026"},
+            nsIDOMKeyEvent.DOM_VK_1, "\u0026", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x12, shift:1, chars:"1", unmodifiedChars:"1"},
+            nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x12, ctrl:1, chars:"1", unmodifiedChars:"\u0026"},
+            nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x12, command:1, chars:"\u0026", unmodifiedChars:"\u0026"},
+            nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"French", keyCode:0x13, chars:"\u00E9", unmodifiedChars:"\u00E9"},
+            nsIDOMKeyEvent.DOM_VK_2, "\u00E9", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x13, shift:1, chars:"2", unmodifiedChars:"2"},
+            nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x13, ctrl:1, chars:"2", unmodifiedChars:"\u00E9"},
+            nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x13, command:1, chars:"\u00E9", unmodifiedChars:"\u00E9"},
+            nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"French", keyCode:0x14, chars:"\"", unmodifiedChars:"\""},
+            nsIDOMKeyEvent.DOM_VK_3, "\"", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x14, shift:1, chars:"3", unmodifiedChars:"3"},
+            nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x14, ctrl:1, chars:"3", unmodifiedChars:"\""},
+            nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x14, command:1, chars:"\"", unmodifiedChars:"\""},
+            nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"French", keyCode:0x15, chars:"'", unmodifiedChars:"'"},
+            nsIDOMKeyEvent.DOM_VK_4, "'", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x15, shift:1, chars:"4", unmodifiedChars:"4"},
+            nsIDOMKeyEvent.DOM_VK_4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x15, ctrl:1, chars:"4", unmodifiedChars:"'"},
+            nsIDOMKeyEvent.DOM_VK_4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x15, command:1, chars:"'", unmodifiedChars:"'"},
+            nsIDOMKeyEvent.DOM_VK_4, "4", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"French", keyCode:0x17, chars:"(", unmodifiedChars:"("},
+            nsIDOMKeyEvent.DOM_VK_5, "(", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x17, shift:1, chars:"5", unmodifiedChars:"5"},
+            nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x17, ctrl:1, chars:"5", unmodifiedChars:"("},
+            nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x17, command:1, chars:"(", unmodifiedChars:"("},
+            nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"French", keyCode:0x16, chars:"\u00A7", unmodifiedChars:"\u00A7"},
+            nsIDOMKeyEvent.DOM_VK_6, "\u00A7", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x16, shift:1, chars:"6", unmodifiedChars:"6"},
+            nsIDOMKeyEvent.DOM_VK_6, "6", SHOULD_DELIVER_ALL);
+    // TODO:
+    // testKey({layout:"French", keyCode:0x16, ctrl:1, chars:"\u001D", unmodifiedChars:"\u00A7"},
+    //         nsIDOMKeyEvent.DOM_VK_6, "", SHOULD_DELIVER_ALL); // Ctrl+6 sets strange char
+    testKey({layout:"French", keyCode:0x16, command:1, chars:"\u00A7", unmodifiedChars:"\u00A7"},
+            nsIDOMKeyEvent.DOM_VK_6, "6", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"French", keyCode:0x1A, chars:"\u00E8", unmodifiedChars:"\u00E8"},
+            nsIDOMKeyEvent.DOM_VK_7, "\u00E8", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x1A, shift:1, chars:"7", unmodifiedChars:"7"},
+            nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x1A, ctrl:1, chars:"7", unmodifiedChars:"\u00E8"},
+            nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x1A, command:1, chars:"\u00E8", unmodifiedChars:"\u00E8"},
+            nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"French", keyCode:0x1C, chars:"!", unmodifiedChars:"!"},
+            nsIDOMKeyEvent.DOM_VK_8, "!", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x1C, shift:1, chars:"8", unmodifiedChars:"8"},
+            nsIDOMKeyEvent.DOM_VK_8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x1C, ctrl:1, chars:"8", unmodifiedChars:"!"},
+            nsIDOMKeyEvent.DOM_VK_8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x1C, command:1, chars:"!", unmodifiedChars:"!"},
+            nsIDOMKeyEvent.DOM_VK_8, "8", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"French", keyCode:0x19, chars:"\u00E7", unmodifiedChars:"\u00E7"},
+            nsIDOMKeyEvent.DOM_VK_9, "\u00E7", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x19, shift:1, chars:"9", unmodifiedChars:"9"},
+            nsIDOMKeyEvent.DOM_VK_9, "9", SHOULD_DELIVER_ALL);
+    // TODO:
+    // testKey({layout:"French", keyCode:0x19, ctrl:1, chars:"\u001C", unmodifiedChars:"\u00E7"},
+    //         nsIDOMKeyEvent.DOM_VK_9, "", SHOULD_DELIVER_ALL); // Ctrl+9 sets strange char
+    testKey({layout:"French", keyCode:0x19, command:1, chars:"\u00E7", unmodifiedChars:"\u00E7"},
+            nsIDOMKeyEvent.DOM_VK_9, "9", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"French", keyCode:0x1D, chars:"\u00E0", unmodifiedChars:"\u00E0"},
+            nsIDOMKeyEvent.DOM_VK_0, "\u00E0", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x1D, shift:1, chars:"0", unmodifiedChars:"0"},
+            nsIDOMKeyEvent.DOM_VK_0, "0", SHOULD_DELIVER_ALL);
+    // XXX No events fired, not sure the reason.
+    // testKey({layout:"French", keyCode:0x1D, ctrl:1, chars:"", unmodifiedChars:"\u00E0"},
+    //         nsIDOMKeyEvent.DOM_VK_0, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:0x1D, command:1, chars:"\u00E0", unmodifiedChars:"\u00E0"},
+            nsIDOMKeyEvent.DOM_VK_0, "0", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+
+    // Thai
+    // keycode should be DOM_VK_[A-Z] of the key on the latest ASCII capable keyboard layout is for alphabet
+    testKey({layout:"Thai", keyCode:0x00, chars:"\u0E1F", unmodifiedChars:"\u0E1F"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u0E1F", SHOULD_DELIVER_ALL);
+    // keycode should be shifted character if unshifted character isn't an ASCII character
+    testKey({layout:"Thai", keyCode:0x27, chars:"\u0E07", unmodifiedChars:"\u0E07"},
+            nsIDOMKeyEvent.DOM_VK_PERIOD, "\u0E07", SHOULD_DELIVER_ALL);
+    // keycode should be zero if the character of the key on the latest ASCII capable keyboard layout isn't for alphabet
+    testKey({layout:"Thai", keyCode:0x2F, chars:"\u0E43", unmodifiedChars:"\u0E43"},
+            0, "\u0E43", SHOULD_DELIVER_ALL);
+    // keycode should be DOM_VK_[0-9] if the key on the latest ASCII capable keyboard layout is for numeric
+    testKey({layout:"Thai", keyCode:0x12, chars:"\u0E45", unmodifiedChars:"\u0E45"},
+            nsIDOMKeyEvent.DOM_VK_1, "\u0E45", SHOULD_DELIVER_ALL);
+    testKey({layout:"Thai", keyCode:0x13, chars:"/", unmodifiedChars:"/"},
+            nsIDOMKeyEvent.DOM_VK_2, "/", SHOULD_DELIVER_ALL);
+    testKey({layout:"Thai", keyCode:0x14, chars:"_", unmodifiedChars:"_"},
+            nsIDOMKeyEvent.DOM_VK_3, "_", SHOULD_DELIVER_ALL);
+    testKey({layout:"Thai", keyCode:0x15, chars:"\u0E20", unmodifiedChars:"\u0E20"},
+            nsIDOMKeyEvent.DOM_VK_4, "\u0E20", SHOULD_DELIVER_ALL);
+    testKey({layout:"Thai", keyCode:0x17, chars:"\u0E16", unmodifiedChars:"\u0E16"},
+            nsIDOMKeyEvent.DOM_VK_5, "\u0E16", SHOULD_DELIVER_ALL);
+    testKey({layout:"Thai", keyCode:0x16, chars:"\u0E38", unmodifiedChars:"\u0E38"},
+            nsIDOMKeyEvent.DOM_VK_6, "\u0E38", SHOULD_DELIVER_ALL);
+    testKey({layout:"Thai", keyCode:0x1A, chars:"\u0E36", unmodifiedChars:"\u0E36"},
+            nsIDOMKeyEvent.DOM_VK_7, "\u0E36", SHOULD_DELIVER_ALL);
+    testKey({layout:"Thai", keyCode:0x1C, chars:"\u0E04", unmodifiedChars:"\u0E04"},
+            nsIDOMKeyEvent.DOM_VK_8, "\u0E04", SHOULD_DELIVER_ALL);
+    testKey({layout:"Thai", keyCode:0x19, chars:"\u0E15", unmodifiedChars:"\u0E15"},
+            nsIDOMKeyEvent.DOM_VK_9, "\u0E15", SHOULD_DELIVER_ALL);
+    testKey({layout:"Thai", keyCode:0x1D, chars:"\u0E08", unmodifiedChars:"\u0E08"},
+            nsIDOMKeyEvent.DOM_VK_0, "\u0E08", SHOULD_DELIVER_ALL);
+
+    // Dvorak-Qwerty, layout should be changed when Command key is pressed.
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x01, chars:"o", unmodifiedChars:"o"},
+            nsIDOMKeyEvent.DOM_VK_O, "o", SHOULD_DELIVER_ALL);
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x01, shift:1, chars:"O", unmodifiedChars:"O"},
+            nsIDOMKeyEvent.DOM_VK_O, "O", SHOULD_DELIVER_ALL);
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x01, ctrl:1, chars:"\u000F", unmodifiedChars:"o"},
+            nsIDOMKeyEvent.DOM_VK_O, "o", SHOULD_DELIVER_ALL);
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x01, alt:1, chars:"\u00F8", unmodifiedChars:"o"},
+            nsIDOMKeyEvent.DOM_VK_O, "\u00F8", SHOULD_DELIVER_ALL);
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x01, command:1, chars:"s", unmodifiedChars:"o"},
+            nsIDOMKeyEvent.DOM_VK_S, "s", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x02, chars:"e", unmodifiedChars:"e"},
+            nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_ALL);
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x02, shift:1, chars:"E", unmodifiedChars:"E"},
+            nsIDOMKeyEvent.DOM_VK_E, "E", SHOULD_DELIVER_ALL);
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x02, ctrl:1, chars:"\u0005", unmodifiedChars:"e"},
+            nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_ALL);
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x02, alt:1, chars:"", unmodifiedChars:"e"},
+            nsIDOMKeyEvent.DOM_VK_E, "", SHOULD_DELIVER_NONE); // dead key
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x02, command:1, chars:"d", unmodifiedChars:"e"},
+            nsIDOMKeyEvent.DOM_VK_D, "d", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x22, command:1, alt:1, chars:"^", unmodifiedChars:"c"},
+            nsIDOMKeyEvent.DOM_VK_I, "^", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"Dvorak-Qwerty", keyCode:0x22, command:1, alt:1, shift:1, chars:"\u02C6", unmodifiedChars:"C"},
+            nsIDOMKeyEvent.DOM_VK_I, "\u02C6", SHOULD_DELIVER_KEYDOWN_KEYPRESS);  }
   else if (IS_WIN) {
     // On Windows, you can use Spy++ or Winspector (free) to watch window messages.
     // The keyCode is given by the wParam of the last WM_KEYDOWN message. The
@@ -418,45 +1283,606 @@ function runKeyEventTests()
 
     // Plain text input
     testKey({layout:"US", keyCode:65, chars:"a"},
-            "a", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:66, chars:"b"},
-            "b", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_B, "b", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:65, shift:1, chars:"A"},
-            "A", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL);
 
     // Ctrl keys
     testKey({layout:"US", keyCode:65, ctrl:1, chars:"\u0001"},
-            "a", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:65, ctrl:1, shift:1, chars:"\u0001"},
-            "A", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL);
 
     // Alt keys
     testKey({layout:"US", keyCode:65, alt:1, chars:"a"},
-            "a", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:65, alt:1, shift:1, chars:"A"},
-            "A", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL);
 
     // Shift-ctrl-alt generates no WM_CHAR, but we still get a keypress
     testKey({layout:"US", keyCode:65, alt:1, ctrl:1, shift:1, chars:""},
-            "A", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL);
 
     // Greek plain text
     testKey({layout:"Greek", keyCode:65, chars:"\u03b1"},
-            "\u03b1", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "\u03b1", SHOULD_DELIVER_ALL);
     testKey({layout:"Greek", keyCode:65, shift:1, chars:"\u0391"},
-            "\u0391", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "\u0391", SHOULD_DELIVER_ALL);
 
     // Greek ctrl keys produce Latin charcodes
     testKey({layout:"Greek", keyCode:65, ctrl:1, chars:"\u0001"},
-            "a", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL);
     testKey({layout:"Greek", keyCode:65, ctrl:1, shift:1, chars:"\u0001"},
-            "A", SHOULD_DELIVER_ALL);
+            nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL);
 
     // Caps Lock key event
     testKey({layout:"US", keyCode:20, capsLock:1, chars:""},
-             "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+            nsIDOMKeyEvent.DOM_VK_CAPS_LOCK, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
     testKey({layout:"US", keyCode:20, capsLock:0, chars:""},
-             "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+            nsIDOMKeyEvent.DOM_VK_CAPS_LOCK, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+
+    // Win keys
+    testKey({layout:"US", keyCode:8, chars:"\u0008"},
+            nsIDOMKeyEvent.DOM_VK_BACK_SPACE, "", SHOULD_DELIVER_ALL);
+
+    // all keys on keyboard (keyCode test)
+    testKey({layout:"US", keyCode:9, chars:"\t"},
+            nsIDOMKeyEvent.DOM_VK_TAB, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:12, chars:""},
+            nsIDOMKeyEvent.DOM_VK_CLEAR, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:13, chars:"\r"},
+            nsIDOMKeyEvent.DOM_VK_RETURN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:19, chars:""},
+            nsIDOMKeyEvent.DOM_VK_PAUSE, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:21, chars:""},
+            nsIDOMKeyEvent.DOM_VK_KANA, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:23, chars:""},
+            nsIDOMKeyEvent.DOM_VK_JUNJA, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:24, chars:""},
+            nsIDOMKeyEvent.DOM_VK_FINAL, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:25, chars:""},
+            nsIDOMKeyEvent.DOM_VK_KANJI, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:27, chars:""},
+            nsIDOMKeyEvent.DOM_VK_ESCAPE, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:28, chars:""},
+            nsIDOMKeyEvent.DOM_VK_CONVERT, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:29, chars:""},
+            nsIDOMKeyEvent.DOM_VK_NONCONVERT, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:30, chars:""},
+            nsIDOMKeyEvent.DOM_VK_ACCEPT, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:31, chars:""},
+            nsIDOMKeyEvent.DOM_VK_MODECHANGE, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:32, chars:" "},
+            nsIDOMKeyEvent.DOM_VK_SPACE, " ", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:33, chars:""},
+            nsIDOMKeyEvent.DOM_VK_PAGE_UP, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:34, chars:""},
+            nsIDOMKeyEvent.DOM_VK_PAGE_DOWN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:35, chars:""},
+            nsIDOMKeyEvent.DOM_VK_END, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:36, chars:""},
+            nsIDOMKeyEvent.DOM_VK_HOME, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:37, chars:""},
+            nsIDOMKeyEvent.DOM_VK_LEFT, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:38, chars:""},
+            nsIDOMKeyEvent.DOM_VK_UP, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:39, chars:""},
+            nsIDOMKeyEvent.DOM_VK_RIGHT, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:40, chars:""},
+            nsIDOMKeyEvent.DOM_VK_DOWN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:41, chars:""},
+            nsIDOMKeyEvent.DOM_VK_SELECT, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:42, chars:""},
+            nsIDOMKeyEvent.DOM_VK_PRINT, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:43, chars:""},
+            nsIDOMKeyEvent.DOM_VK_EXECUTE, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:44, chars:""},
+            nsIDOMKeyEvent.DOM_VK_PRINTSCREEN, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:45, chars:""},
+            nsIDOMKeyEvent.DOM_VK_INSERT, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:46, chars:""},
+            nsIDOMKeyEvent.DOM_VK_DELETE, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:47, chars:""},
+            nsIDOMKeyEvent.DOM_VK_HELP, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:95, chars:""},
+            nsIDOMKeyEvent.DOM_VK_SLEEP, "", SHOULD_DELIVER_ALL);
+
+    // US
+    // Alphabet
+    testKey({layout:"US", keyCode:65, chars:"a"},
+            nsIDOMKeyEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:65, shift:1, chars:"A"},
+            nsIDOMKeyEvent.DOM_VK_A, "A", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:66, chars:"b"},
+            nsIDOMKeyEvent.DOM_VK_B, "b", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:66, shift:1, chars:"B"},
+            nsIDOMKeyEvent.DOM_VK_B, "B", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:67, chars:"c"},
+            nsIDOMKeyEvent.DOM_VK_C, "c", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:67, shift:1, chars:"C"},
+            nsIDOMKeyEvent.DOM_VK_C, "C", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:68, chars:"d"},
+            nsIDOMKeyEvent.DOM_VK_D, "d", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:68, shift:1, chars:"D"},
+            nsIDOMKeyEvent.DOM_VK_D, "D", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:69, chars:"e"},
+            nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:69, shift:1, chars:"E"},
+            nsIDOMKeyEvent.DOM_VK_E, "E", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:70, chars:"f"},
+            nsIDOMKeyEvent.DOM_VK_F, "f", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:70, shift:1, chars:"F"},
+            nsIDOMKeyEvent.DOM_VK_F, "F", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:71, chars:"g"},
+            nsIDOMKeyEvent.DOM_VK_G, "g", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:71, shift:1, chars:"G"},
+            nsIDOMKeyEvent.DOM_VK_G, "G", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:72, chars:"h"},
+            nsIDOMKeyEvent.DOM_VK_H, "h", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:72, shift:1, chars:"H"},
+            nsIDOMKeyEvent.DOM_VK_H, "H", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:73, chars:"i"},
+            nsIDOMKeyEvent.DOM_VK_I, "i", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:73, shift:1, chars:"I"},
+            nsIDOMKeyEvent.DOM_VK_I, "I", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:74, chars:"j"},
+            nsIDOMKeyEvent.DOM_VK_J, "j", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:74, shift:1, chars:"J"},
+            nsIDOMKeyEvent.DOM_VK_J, "J", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:75, chars:"k"},
+            nsIDOMKeyEvent.DOM_VK_K, "k", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:75, shift:1, chars:"K"},
+            nsIDOMKeyEvent.DOM_VK_K, "K", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:76, chars:"l"},
+            nsIDOMKeyEvent.DOM_VK_L, "l", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:76, shift:1, chars:"L"},
+            nsIDOMKeyEvent.DOM_VK_L, "L", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:77, chars:"m"},
+            nsIDOMKeyEvent.DOM_VK_M, "m", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:77, shift:1, chars:"M"},
+            nsIDOMKeyEvent.DOM_VK_M, "M", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:78, chars:"n"},
+            nsIDOMKeyEvent.DOM_VK_N, "n", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:78, shift:1, chars:"N"},
+            nsIDOMKeyEvent.DOM_VK_N, "N", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:79, chars:"o"},
+            nsIDOMKeyEvent.DOM_VK_O, "o", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:79, shift:1, chars:"O"},
+            nsIDOMKeyEvent.DOM_VK_O, "O", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:80, chars:"p"},
+            nsIDOMKeyEvent.DOM_VK_P, "p", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:80, shift:1, chars:"P"},
+            nsIDOMKeyEvent.DOM_VK_P, "P", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:81, chars:"q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "q", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:81, shift:1, chars:"Q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "Q", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:82, chars:"r"},
+            nsIDOMKeyEvent.DOM_VK_R, "r", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:82, shift:1, chars:"R"},
+            nsIDOMKeyEvent.DOM_VK_R, "R", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:83, chars:"s"},
+            nsIDOMKeyEvent.DOM_VK_S, "s", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:83, shift:1, chars:"S"},
+            nsIDOMKeyEvent.DOM_VK_S, "S", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:84, chars:"t"},
+            nsIDOMKeyEvent.DOM_VK_T, "t", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:84, shift:1, chars:"T"},
+            nsIDOMKeyEvent.DOM_VK_T, "T", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:85, chars:"u"},
+            nsIDOMKeyEvent.DOM_VK_U, "u", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:85, shift:1, chars:"U"},
+            nsIDOMKeyEvent.DOM_VK_U, "U", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:86, chars:"v"},
+            nsIDOMKeyEvent.DOM_VK_V, "v", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:86, shift:1, chars:"V"},
+            nsIDOMKeyEvent.DOM_VK_V, "V", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:87, chars:"w"},
+            nsIDOMKeyEvent.DOM_VK_W, "w", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:87, shift:1, chars:"W"},
+            nsIDOMKeyEvent.DOM_VK_W, "W", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:88, chars:"x"},
+            nsIDOMKeyEvent.DOM_VK_X, "x", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:88, shift:1, chars:"X"},
+            nsIDOMKeyEvent.DOM_VK_X, "X", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:89, chars:"y"},
+            nsIDOMKeyEvent.DOM_VK_Y, "y", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:89, shift:1, chars:"Y"},
+            nsIDOMKeyEvent.DOM_VK_Y, "Y", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:90, chars:"z"},
+            nsIDOMKeyEvent.DOM_VK_Z, "z", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:90, shift:1, chars:"Z"},
+            nsIDOMKeyEvent.DOM_VK_Z, "Z", SHOULD_DELIVER_ALL);
+
+    // Numeric
+    testKey({layout:"US", keyCode:48, chars:"0"},
+            nsIDOMKeyEvent.DOM_VK_0, "0", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:48, shift:1, chars:")"},
+            nsIDOMKeyEvent.DOM_VK_0, ")", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:49, chars:"1"},
+            nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:49, shift:1, chars:"!"},
+            nsIDOMKeyEvent.DOM_VK_1, "!", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:50, chars:"2"},
+            nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:50, shift:1, chars:"@"},
+            nsIDOMKeyEvent.DOM_VK_2, "@", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:51, chars:"3"},
+            nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:51, shift:1, chars:"#"},
+            nsIDOMKeyEvent.DOM_VK_3, "#", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:52, chars:"4"},
+            nsIDOMKeyEvent.DOM_VK_4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:52, shift:1, chars:"$"},
+            nsIDOMKeyEvent.DOM_VK_4, "$", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:53, chars:"5"},
+            nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:53, shift:1, chars:"%"},
+            nsIDOMKeyEvent.DOM_VK_5, "%", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:54, chars:"6"},
+            nsIDOMKeyEvent.DOM_VK_6, "6", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:54, shift:1, chars:"^"},
+            nsIDOMKeyEvent.DOM_VK_6, "^", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:55, chars:"7"},
+            nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:55, shift:1, chars:"&"},
+            nsIDOMKeyEvent.DOM_VK_7, "&", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:56, chars:"8"},
+            nsIDOMKeyEvent.DOM_VK_8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:56, shift:1, chars:"*"},
+            nsIDOMKeyEvent.DOM_VK_8, "*", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:57, chars:"9"},
+            nsIDOMKeyEvent.DOM_VK_9, "9", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:57, shift:1, chars:"("},
+            nsIDOMKeyEvent.DOM_VK_9, "(", SHOULD_DELIVER_ALL);
+
+    // OEM keys
+    testKey({layout:"US", keyCode:189, chars:"-"},
+            nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "-", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:189, shift:1, chars:"_"},
+            nsIDOMKeyEvent.DOM_VK_HYPHEN_MINUS, "_", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:187, chars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:187, shift:1, chars:"+"},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "+", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:219, chars:"["},
+            nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "[", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:219, shift:1, chars:"{"},
+            nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET, "{", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:221, chars:"]"},
+            nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "]", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:221, shift:1, chars:"}"},
+            nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET, "}", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:186, chars:";"},
+            nsIDOMKeyEvent.DOM_VK_SEMICOLON, ";", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:186, shift:1, chars:":"},
+            nsIDOMKeyEvent.DOM_VK_SEMICOLON, ":", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:222, chars:"'"},
+            nsIDOMKeyEvent.DOM_VK_QUOTE, "'", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:222, shift:1, chars:"\""},
+            nsIDOMKeyEvent.DOM_VK_QUOTE, "\"", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:220, chars:"\\"},
+            nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "\\", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:220, shift:1, chars:"|"},
+            nsIDOMKeyEvent.DOM_VK_BACK_SLASH, "|", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:188, chars:","},
+            nsIDOMKeyEvent.DOM_VK_COMMA, ",", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:188, shift:1, chars:"<"},
+            nsIDOMKeyEvent.DOM_VK_COMMA, "<", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:190, chars:"."},
+            nsIDOMKeyEvent.DOM_VK_PERIOD, ".", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:190, shift:1, chars:">"},
+            nsIDOMKeyEvent.DOM_VK_PERIOD, ">", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:191, chars:"/"},
+            nsIDOMKeyEvent.DOM_VK_SLASH, "/", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:191, shift:1, chars:"?"},
+            nsIDOMKeyEvent.DOM_VK_SLASH, "?", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:192, chars:"`"},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:192, shift:1, chars:"~"},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "~", SHOULD_DELIVER_ALL);
+
+    // Numpad
+    testKey({layout:"US", keyCode:96, numLock:1, chars:"0"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD0, "0", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:96, numLock:1, shift:1, chars:"0"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD0, "0", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:97, numLock:1, chars:"1"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:97, numLock:1, shift:1, chars:"1"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:98, numLock:1, chars:"2"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:98, numLock:1, shift:1, chars:"2"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:99, numLock:1, chars:"3"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:99, numLock:1, shift:1, chars:"3"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:100, numLock:1, chars:"4"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:100, numLock:1, shift:1, chars:"4"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:101, numLock:1, chars:"5"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:101, numLock:1, shift:1, chars:"5"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:102, numLock:1, chars:"6"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD6, "6", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:102, numLock:1, shift:1, chars:"6"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD6, "6", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:103, numLock:1, chars:"7"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:103, numLock:1, shift:1, chars:"7"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:104, numLock:1, chars:"8"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:104, numLock:1, shift:1, chars:"8"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:105, numLock:1, chars:"9"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD9, "9", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:105, numLock:1, shift:1, chars:"9"},
+            nsIDOMKeyEvent.DOM_VK_NUMPAD9, "9", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"US", keyCode:106, numLock:1, chars:"*"},
+            nsIDOMKeyEvent.DOM_VK_MULTIPLY, "*", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:106, numLock:1, shift:1, chars:"*"},
+            nsIDOMKeyEvent.DOM_VK_MULTIPLY, "*", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:107, numLock:1, chars:"+"},
+            nsIDOMKeyEvent.DOM_VK_ADD, "+", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:107, numLock:1, shift:1, chars:"+"},
+            nsIDOMKeyEvent.DOM_VK_ADD, "+", SHOULD_DELIVER_ALL);
+    // XXX VK_SEPARATOR isn't used on Win7.  Even if we synthesize this,
+    //     keypress event isn't dispatched.
+    //testKey({layout:"US", keyCode:108, numLock:1, chars:""},
+    //        nsIDOMKeyEvent.DOM_VK_SEPARATOR, "", SHOULD_DELIVER_ALL);
+    //testKey({layout:"US", keyCode:108, numLock:1, shift:1, chars:""},
+    //        nsIDOMKeyEvent.DOM_VK_SEPARATOR, "", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:109, numLock:1, chars:"-"},
+            nsIDOMKeyEvent.DOM_VK_SUBTRACT, "-", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:109, numLock:1, shift:1, chars:"-"},
+            nsIDOMKeyEvent.DOM_VK_SUBTRACT, "-", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:110, numLock:1, chars:"."},
+            nsIDOMKeyEvent.DOM_VK_DECIMAL, ".", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:110, numLock:1, shift:1, chars:"."},
+            nsIDOMKeyEvent.DOM_VK_DECIMAL, ".", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:111, numLock:1, chars:"/"},
+            nsIDOMKeyEvent.DOM_VK_DIVIDE, "/", SHOULD_DELIVER_ALL);
+    testKey({layout:"US", keyCode:111, numLock:1, shift:1, chars:"/"},
+            nsIDOMKeyEvent.DOM_VK_DIVIDE, "/", SHOULD_DELIVER_ALL);
+    // XXX we cannot test numpad keys without NumLock becasue Windows
+    // uses same keycode for Home, Up, PageUp, Left, Clear(5), Right,
+    // End, Down, PageDown, Ins, Del of Numpad.
+
+    // Even if widget receives unknown keycode, it should dispatch key events
+    // whose keycode is 0 rather than native keycode.
+    testKey({layout:"US", keyCode:58, numLock:1, chars:""},
+            0, "", SHOULD_DELIVER_ALL);
+
+    // French
+    // Numeric
+    testKey({layout:"French", keyCode:48, chars:"\u00E0"},
+            nsIDOMKeyEvent.DOM_VK_0, "\u00E0", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:48, shift:1, chars:"0"},
+            nsIDOMKeyEvent.DOM_VK_0, "0", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:49, chars:"&"},
+            nsIDOMKeyEvent.DOM_VK_1, "&", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:49, shift:1, chars:"1"},
+            nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:50, chars:"\u00E9"},
+            nsIDOMKeyEvent.DOM_VK_2, "\u00E9", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:50, shift:1, chars:"2"},
+            nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:51, chars:"\""},
+            nsIDOMKeyEvent.DOM_VK_3, "\"", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:51, shift:1, chars:"3"},
+            nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:52, chars:"'"},
+            nsIDOMKeyEvent.DOM_VK_4, "'", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:52, shift:1, chars:"4"},
+            nsIDOMKeyEvent.DOM_VK_4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:53, chars:"("},
+            nsIDOMKeyEvent.DOM_VK_5, "(", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:53, shift:1, chars:"5"},
+            nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:54, chars:"-"},
+            nsIDOMKeyEvent.DOM_VK_6, "-", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:54, shift:1, chars:"6"},
+            nsIDOMKeyEvent.DOM_VK_6, "6", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:55, chars:"\u00E8"},
+            nsIDOMKeyEvent.DOM_VK_7, "\u00E8", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:55, shift:1, chars:"7"},
+            nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:56, chars:"_"},
+            nsIDOMKeyEvent.DOM_VK_8, "_", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:56, shift:1, chars:"8"},
+            nsIDOMKeyEvent.DOM_VK_8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:57, chars:"\u00E7"},
+            nsIDOMKeyEvent.DOM_VK_9, "\u00E7", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:57, shift:1, chars:"9"},
+            nsIDOMKeyEvent.DOM_VK_9, "9", SHOULD_DELIVER_ALL);
+
+    // Numeric with ShiftLock
+    testKey({layout:"French", keyCode:48, capsLock:1, chars:"0"},
+            nsIDOMKeyEvent.DOM_VK_0, "0", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:48, capsLock:1, shift:1, chars:"\u00E0"},
+            nsIDOMKeyEvent.DOM_VK_0, "\u00E0", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:49, capsLock:1, chars:"1"},
+            nsIDOMKeyEvent.DOM_VK_1, "1", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:49, capsLock:1, shift:1, chars:"&"},
+            nsIDOMKeyEvent.DOM_VK_1, "&", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:50, capsLock:1, chars:"2"},
+            nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:50, capsLock:1, shift:1, chars:"\u00E9"},
+            nsIDOMKeyEvent.DOM_VK_2, "\u00E9", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:51, capsLock:1, chars:"3"},
+            nsIDOMKeyEvent.DOM_VK_3, "3", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:51, capsLock:1, shift:1, chars:"\""},
+            nsIDOMKeyEvent.DOM_VK_3, "\"", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:52, capsLock:1, chars:"4"},
+            nsIDOMKeyEvent.DOM_VK_4, "4", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:52, capsLock:1, shift:1, chars:"'"},
+            nsIDOMKeyEvent.DOM_VK_4, "'", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:53, capsLock:1, chars:"5"},
+            nsIDOMKeyEvent.DOM_VK_5, "5", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:53, capsLock:1, shift:1, chars:"("},
+            nsIDOMKeyEvent.DOM_VK_5, "(", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:54, capsLock:1, chars:"6"},
+            nsIDOMKeyEvent.DOM_VK_6, "6", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:54, capsLock:1, shift:1, chars:"-"},
+            nsIDOMKeyEvent.DOM_VK_6, "-", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:55, capsLock:1, chars:"7"},
+            nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:55, capsLock:1, shift:1, chars:"\u00E8"},
+            nsIDOMKeyEvent.DOM_VK_7, "\u00E8", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:56, capsLock:1, chars:"8"},
+            nsIDOMKeyEvent.DOM_VK_8, "8", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:56, capsLock:1, shift:1, chars:"_"},
+            nsIDOMKeyEvent.DOM_VK_8, "_", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:57, capsLock:1, chars:"9"},
+            nsIDOMKeyEvent.DOM_VK_9, "9", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:57, capsLock:1, shift:1, chars:"\u00E7"},
+            nsIDOMKeyEvent.DOM_VK_9, "\u00E7", SHOULD_DELIVER_ALL);
+
+    // OEM keys
+    testKey({layout:"French", keyCode:222, chars:"\u00B2"},
+            0, "\u00B2", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:222, shift:1, chars:""},
+            0, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"French", keyCode:219, chars:")"},
+            nsIDOMKeyEvent.DOM_VK_CLOSE_PAREN, ")", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:219, shift:1, chars:"\u00B0"},
+            nsIDOMKeyEvent.DOM_VK_CLOSE_PAREN, "\u00B0", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:187, chars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:187, shift:1, chars:"+"},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "+", SHOULD_DELIVER_ALL);
+    //testKey({layout:"French", keyCode:221, chars:""},
+    //        0, "", SHOULD_DELIVER_KEYDOWN_KEYUP); // Dead-key
+    //testKey({layout:"French", keyCode:221, shift:1, chars:""},
+    //        0, "", SHOULD_DELIVER_KEYDOWN_KEYUP); // Dead-key
+    testKey({layout:"French", keyCode:186, chars:"$"},
+            nsIDOMKeyEvent.DOM_VK_DOLLAR, "$", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:186, shift:1, chars:"\u00A3"},
+            nsIDOMKeyEvent.DOM_VK_DOLLAR, "\u00A3", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:192, chars:"\u00F9"},
+            nsIDOMKeyEvent.DOM_VK_PERCENT, "\u00F9", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:192, shift:1, chars:"%"},
+            nsIDOMKeyEvent.DOM_VK_PERCENT, "%", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:220, chars:"*"},
+            nsIDOMKeyEvent.DOM_VK_ASTERISK, "*", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:220, shift:1, chars:"\u00B5"},
+            nsIDOMKeyEvent.DOM_VK_ASTERISK, "\u00B5", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:226, chars:"<"},
+            nsIDOMKeyEvent.DOM_VK_LESS_THAN, "<", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:226, shift:1, chars:">"},
+            nsIDOMKeyEvent.DOM_VK_LESS_THAN, ">", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:188, chars:","},
+            nsIDOMKeyEvent.DOM_VK_COMMA, ",", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:188, shift:1, chars:"?"},
+            nsIDOMKeyEvent.DOM_VK_COMMA, "?", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:190, chars:";"},
+            nsIDOMKeyEvent.DOM_VK_SEMICOLON, ";", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:190, shift:1, chars:"."},
+            nsIDOMKeyEvent.DOM_VK_SEMICOLON, ".", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:191, chars:":"},
+            nsIDOMKeyEvent.DOM_VK_COLON, ":", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:191, shift:1, chars:"/"},
+            nsIDOMKeyEvent.DOM_VK_COLON, "/", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:223, chars:"!"},
+            nsIDOMKeyEvent.DOM_VK_EXCLAMATION, "!", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:223, shift:1, chars:"\u00A7"},
+            nsIDOMKeyEvent.DOM_VK_EXCLAMATION, "\u00A7", SHOULD_DELIVER_ALL);
+
+    // OEM keys with ShiftLock
+    testKey({layout:"French", keyCode:222, capsLock:1, chars:"\u00B2"},
+            0, "\u00B2", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:222, capsLock:1, shift:1, chars:""},
+            0, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"French", keyCode:219, capsLock:1, chars:"\u00B0"},
+            nsIDOMKeyEvent.DOM_VK_CLOSE_PAREN, "\u00B0", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:219, capsLock:1, shift:1, chars:")"},
+            nsIDOMKeyEvent.DOM_VK_CLOSE_PAREN, ")", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:187, capsLock:1, chars:"+"},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "+", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:187, capsLock:1, shift:1, chars:"="},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL);
+    //testKey({layout:"French", keyCode:221, capsLock:1, chars:""},
+    //        0, "", SHOULD_DELIVER_KEYDOWN_KEYUP); // Dead-key
+    //testKey({layout:"French", keyCode:221, capsLock:1, shift:1, chars:""},
+    //        0, "", SHOULD_DELIVER_KEYDOWN_KEYUP); // Dead-key
+    testKey({layout:"French", keyCode:186, capsLock:1, chars:"\u00A3"},
+            nsIDOMKeyEvent.DOM_VK_DOLLAR, "\u00A3", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:186, capsLock:1, shift:1, chars:"$"},
+            nsIDOMKeyEvent.DOM_VK_DOLLAR, "$", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:192, capsLock:1, chars:"%"},
+            nsIDOMKeyEvent.DOM_VK_PERCENT, "%", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:192, capsLock:1, shift:1, chars:"\u00F9"},
+            nsIDOMKeyEvent.DOM_VK_PERCENT, "\u00F9", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:220, capsLock:1, chars:"\u00B5"},
+            nsIDOMKeyEvent.DOM_VK_ASTERISK, "\u00B5", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:220, capsLock:1, shift:1, chars:"*"},
+            nsIDOMKeyEvent.DOM_VK_ASTERISK, "*", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:226, capsLock:1, chars:">"},
+            nsIDOMKeyEvent.DOM_VK_LESS_THAN, ">", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:226, capsLock:1, shift:1, chars:"<"},
+            nsIDOMKeyEvent.DOM_VK_LESS_THAN, "<", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:188, capsLock:1, chars:"?"},
+            nsIDOMKeyEvent.DOM_VK_COMMA, "?", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:188, capsLock:1, shift:1, chars:","},
+            nsIDOMKeyEvent.DOM_VK_COMMA, ",", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:190, capsLock:1, chars:"."},
+            nsIDOMKeyEvent.DOM_VK_SEMICOLON, ".", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:190, capsLock:1, shift:1, chars:";"},
+            nsIDOMKeyEvent.DOM_VK_SEMICOLON, ";", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:191, capsLock:1, chars:"/"},
+            nsIDOMKeyEvent.DOM_VK_COLON, "/", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:191, capsLock:1, shift:1, chars:":"},
+            nsIDOMKeyEvent.DOM_VK_COLON, ":", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:223, capsLock:1, chars:"\u00A7"},
+            nsIDOMKeyEvent.DOM_VK_EXCLAMATION, "\u00A7", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:223, capsLock:1, shift:1, chars:"!"},
+            nsIDOMKeyEvent.DOM_VK_EXCLAMATION, "!", SHOULD_DELIVER_ALL);
+
+    // AltGr
+    testKey({layout:"French", keyCode:48, altGr:1, chars:"@"},
+            nsIDOMKeyEvent.DOM_VK_0, "@", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:49, altGr:1, chars:""},
+            nsIDOMKeyEvent.DOM_VK_1, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    //testKey({layout:"French", keyCode:50, altGr:1, chars:""},
+    //        nsIDOMKeyEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL); // Dead-key
+    testKey({layout:"French", keyCode:51, altGr:1, chars:"#"},
+            nsIDOMKeyEvent.DOM_VK_3, "#", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:52, altGr:1, chars:"{"},
+            nsIDOMKeyEvent.DOM_VK_4, "{", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:53, altGr:1, chars:"["},
+            nsIDOMKeyEvent.DOM_VK_5, "[", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:54, altGr:1, chars:"|"},
+            nsIDOMKeyEvent.DOM_VK_6, "|", SHOULD_DELIVER_ALL);
+    //testKey({layout:"French", keyCode:55, altGr:1, chars:""},
+    //        nsIDOMKeyEvent.DOM_VK_7, "", SHOULD_DELIVER_ALL); // Dead-key
+    testKey({layout:"French", keyCode:56, altGr:1, chars:"\\"},
+            nsIDOMKeyEvent.DOM_VK_8, "\\", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:57, altGr:1, chars:"^"},
+            nsIDOMKeyEvent.DOM_VK_9, "^", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:219, altGr:1, chars:"]"},
+            nsIDOMKeyEvent.DOM_VK_CLOSE_PAREN, "]", SHOULD_DELIVER_ALL);
+    testKey({layout:"French", keyCode:187, altGr:1, chars:"}"},
+            nsIDOMKeyEvent.DOM_VK_EQUALS, "}", SHOULD_DELIVER_ALL);
+
+    // German
+    testKey({layout:"German", keyCode:191, chars:"#"},
+            nsIDOMKeyEvent.DOM_VK_HASH, "#", SHOULD_DELIVER_ALL);
+    testKey({layout:"German", keyCode:191, shift:1, chars:"'"},
+            nsIDOMKeyEvent.DOM_VK_HASH, "'", SHOULD_DELIVER_ALL);
+
+    // Norwegian
+    testKey({layout:"Norwegian", keyCode:220, chars:"|"},
+            nsIDOMKeyEvent.DOM_VK_PIPE, "|", SHOULD_DELIVER_ALL);
+    testKey({layout:"Norwegian", keyCode:220, shift:1, chars:"\u00A7"},
+            nsIDOMKeyEvent.DOM_VK_PIPE, "\u00A7", SHOULD_DELIVER_ALL);
   }
 
   document.removeEventListener("keydown",  onKeyEvent, false);

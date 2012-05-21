@@ -117,10 +117,11 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, SnapshotIterator &iter)
         scopeChainv = iter.read();
     }
 
-    if (scopeChainv.isObject())
-        fp->setScopeChainNoCallObj(scopeChainv.toObject());
-    else
+    if (scopeChainv.isObject()) {
+        fp->setScopeChain(scopeChainv.toObject());
+    } else {
         JS_ASSERT(scopeChainv.isUndefined());
+    }
 
     if (fp->isFunctionFrame()) {
         Value thisv = iter.read();

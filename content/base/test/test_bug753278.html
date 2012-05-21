@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=753278
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 753278</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=753278">Mozilla Bug 753278</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 753278 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var f = document.getElementsByTagName("iframe")[0];
+
+function runTest() {
+  f.contentDocument.open();
+  f.contentDocument.write('<script>window.location = "data:text/html;charset=utf-8,\\u003Cscript>parent.pass();\\u003C/script>"; document.close(); document.open(); document.write("\\u003Cscript>parent.fail();\\u003C/script>"); document.close();\u003c/script>');
+  f.contentDocument.close();
+}
+
+function pass() {
+  ok(true, "window.location took precedence");
+  SimpleTest.finish();
+}
+
+function fail() {
+  ok(false, "window.location should have taken precedence");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

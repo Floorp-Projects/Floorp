@@ -1,41 +1,7 @@
 /* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Tom Pixley <joki@netscape.com> (original author)
- *   Johnny Stenback <jst@netscape.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIDOMUIEvent.idl"
 
@@ -56,6 +22,7 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_VK_CAPS_LOCK      = 0x14;
   const unsigned long DOM_VK_KANA           = 0x15;
   const unsigned long DOM_VK_HANGUL         = 0x15;
+  const unsigned long DOM_VK_EISU           = 0x16; // Japanese Mac keyboard only
   const unsigned long DOM_VK_JUNJA          = 0x17;
   const unsigned long DOM_VK_FINAL          = 0x18;
   const unsigned long DOM_VK_HANJA          = 0x19;
@@ -93,8 +60,13 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_VK_8              = 0x38;
   const unsigned long DOM_VK_9              = 0x39;
 
+  const unsigned long DOM_VK_COLON          = 0x3A;
   const unsigned long DOM_VK_SEMICOLON      = 0x3B;
+  const unsigned long DOM_VK_LESS_THAN      = 0x3C;
   const unsigned long DOM_VK_EQUALS         = 0x3D;
+  const unsigned long DOM_VK_GREATER_THAN   = 0x3E;
+  const unsigned long DOM_VK_QUESTION_MARK  = 0x3F;
+  const unsigned long DOM_VK_AT             = 0x40;
 
   // DOM_VK_A - DOM_VK_Z match their ascii values
   const unsigned long DOM_VK_A              = 0x41;
@@ -124,9 +96,11 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_VK_Y              = 0x59;
   const unsigned long DOM_VK_Z              = 0x5A;
 
+  const unsigned long DOM_VK_WIN            = 0x5B;
   const unsigned long DOM_VK_CONTEXT_MENU   = 0x5D;
   const unsigned long DOM_VK_SLEEP          = 0x5F;
 
+  // Numpad keys
   const unsigned long DOM_VK_NUMPAD0        = 0x60;
   const unsigned long DOM_VK_NUMPAD1        = 0x61;
   const unsigned long DOM_VK_NUMPAD2        = 0x62;
@@ -143,6 +117,7 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_VK_SUBTRACT       = 0x6D;
   const unsigned long DOM_VK_DECIMAL        = 0x6E;
   const unsigned long DOM_VK_DIVIDE         = 0x6F;
+
   const unsigned long DOM_VK_F1             = 0x70;
   const unsigned long DOM_VK_F2             = 0x71;
   const unsigned long DOM_VK_F3             = 0x72;
@@ -171,16 +146,37 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_VK_NUM_LOCK       = 0x90;
   const unsigned long DOM_VK_SCROLL_LOCK    = 0x91;
 
+  const unsigned long DOM_VK_CIRCUMFLEX     = 0xA0;
+  const unsigned long DOM_VK_EXCLAMATION    = 0xA1;
+  const unsigned long DOM_VK_DOUBLE_QUOTE   = 0xA2;
+  const unsigned long DOM_VK_HASH           = 0xA3;
+  const unsigned long DOM_VK_DOLLAR         = 0xA4;
+  const unsigned long DOM_VK_PERCENT        = 0xA5;
+  const unsigned long DOM_VK_AMPERSAND      = 0xA6;
+  const unsigned long DOM_VK_UNDERSCORE     = 0xA7;
+  const unsigned long DOM_VK_OPEN_PAREN     = 0xA8;
+  const unsigned long DOM_VK_CLOSE_PAREN    = 0xA9;
+  const unsigned long DOM_VK_ASTERISK       = 0xAA;
+  const unsigned long DOM_VK_PLUS           = 0xAB;
+  const unsigned long DOM_VK_PIPE           = 0xAC;
+  const unsigned long DOM_VK_HYPHEN_MINUS   = 0xAD;
+
+  const unsigned long DOM_VK_OPEN_CURLY_BRACKET  = 0xAE;
+  const unsigned long DOM_VK_CLOSE_CURLY_BRACKET = 0xAF;
+
+  const unsigned long DOM_VK_TILDE          = 0xB0;
+
   const unsigned long DOM_VK_COMMA          = 0xBC;
   const unsigned long DOM_VK_PERIOD         = 0xBE;
   const unsigned long DOM_VK_SLASH          = 0xBF;
   const unsigned long DOM_VK_BACK_QUOTE     = 0xC0;
-  const unsigned long DOM_VK_OPEN_BRACKET   = 0xDB;
+  const unsigned long DOM_VK_OPEN_BRACKET   = 0xDB; // square bracket
   const unsigned long DOM_VK_BACK_SLASH     = 0xDC;
-  const unsigned long DOM_VK_CLOSE_BRACKET  = 0xDD;
-  const unsigned long DOM_VK_QUOTE          = 0xDE;
+  const unsigned long DOM_VK_CLOSE_BRACKET  = 0xDD; // square bracket
+  const unsigned long DOM_VK_QUOTE          = 0xDE; // Apostrophe
 
   const unsigned long DOM_VK_META           = 0xE0;
+  const unsigned long DOM_VK_ALTGR          = 0xE1;
 
   readonly attribute unsigned long    charCode;
   readonly attribute unsigned long    keyCode;

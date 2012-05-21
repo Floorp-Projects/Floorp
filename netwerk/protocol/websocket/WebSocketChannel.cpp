@@ -1,42 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set sw=2 ts=8 et tw=80 : */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla.
- *
- * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Wellington Fernando de Macedo <wfernandom2004@gmail.com> (original author)
- *   Patrick McManus <mcmanus@ducksong.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebSocketLog.h"
 #include "WebSocketChannel.h"
@@ -1374,31 +1340,38 @@ WebSocketChannel::PrimeNewOutgoingMessage()
 
     mClientClosed = 1;
     mOutHeader[0] = kFinalFragBit | kClose;
-    mOutHeader[1] = 0x02; // payload len = 2, maybe more for reason
-    mOutHeader[1] |= kMaskBit;
+    mOutHeader[1] = kMaskBit;
 
     // payload is offset 6 including 4 for the mask
     payload = mOutHeader + 6;
 
-    // length is 8 plus any reason information
-    mHdrOutToSend = 8;
-
     // The close reason code sits in the first 2 bytes of payload
     // If the channel user provided a code and reason during Close()
     // and there isn't an internal error, use that.
-    if (NS_SUCCEEDED(mStopOnClose) && mScriptCloseCode) {
-      *((PRUint16 *)payload) = PR_htons(mScriptCloseCode);
-      if (!mScriptCloseReason.IsEmpty()) {
-        NS_ABORT_IF_FALSE(mScriptCloseReason.Length() <= 123,
-                          "Close Reason Too Long");
-        mOutHeader[1] += mScriptCloseReason.Length();
-        mHdrOutToSend += mScriptCloseReason.Length();
-        memcpy (payload + 2,
-                mScriptCloseReason.BeginReading(),
-                mScriptCloseReason.Length());
+    if (NS_SUCCEEDED(mStopOnClose)) {
+      if (mScriptCloseCode) {
+        *((PRUint16 *)payload) = PR_htons(mScriptCloseCode);
+        mOutHeader[1] += 2;
+        mHdrOutToSend = 8;
+        if (!mScriptCloseReason.IsEmpty()) {
+          NS_ABORT_IF_FALSE(mScriptCloseReason.Length() <= 123,
+                            "Close Reason Too Long");
+          mOutHeader[1] += mScriptCloseReason.Length();
+          mHdrOutToSend += mScriptCloseReason.Length();
+          memcpy (payload + 2,
+                  mScriptCloseReason.BeginReading(),
+                  mScriptCloseReason.Length());
+        }
+      } else {
+        // No close code/reason, so payload length = 0.  We must still send mask
+        // even though it's not used.  Keep payload offset so we write mask
+        // below.
+        mHdrOutToSend = 6;
       }
     } else {
       *((PRUint16 *)payload) = PR_htons(ResultToCloseCode(mStopOnClose));
+      mOutHeader[1] += 2;
+      mHdrOutToSend = 8;
     }
 
     if (mServerClosed) {
@@ -1504,30 +1477,29 @@ WebSocketChannel::PrimeNewOutgoingMessage()
 
   ApplyMask(mask, mCurrentOut->BeginWriting(), mCurrentOut->Length());
 
+  PRInt32 len = mCurrentOut->Length();
+
   // for small frames, copy it all together for a contiguous write
-  if (mCurrentOut->Length() <= kCopyBreak) {
-    memcpy(mOutHeader + mHdrOutToSend, mCurrentOut->BeginWriting(),
-           mCurrentOut->Length());
-    mHdrOutToSend += mCurrentOut->Length();
-    mCurrentOutSent = mCurrentOut->Length();
+  if (len && len <= kCopyBreak) {
+    memcpy(mOutHeader + mHdrOutToSend, mCurrentOut->BeginWriting(), len);
+    mHdrOutToSend += len;
+    mCurrentOutSent = len;
   }
 
-  if (mCompressor) {
+  if (len && mCompressor) {
     // assume a 1/3 reduction in size for sizing the buffer
     // the buffer is used multiple times if necessary
     PRUint32 currentHeaderSize = mHdrOutToSend;
     mHdrOutToSend = 0;
 
-    EnsureHdrOut(32 +
-                 (currentHeaderSize + mCurrentOut->Length() - mCurrentOutSent)
-                 / 2 * 3);
+    EnsureHdrOut(32 + (currentHeaderSize + len - mCurrentOutSent) / 2 * 3);
     mCompressor->Deflate(mOutHeader, currentHeaderSize,
                          mCurrentOut->BeginReading() + mCurrentOutSent,
-                         mCurrentOut->Length() - mCurrentOutSent);
+                         len - mCurrentOutSent);
 
     // All of the compressed data now resides in {mHdrOut, mHdrOutToSend}
     // so do not send the body again
-    mCurrentOutSent = mCurrentOut->Length();
+    mCurrentOutSent = len;
   }
 
   // Transmitting begins - mHdrOutToSend bytes from mOutHeader and

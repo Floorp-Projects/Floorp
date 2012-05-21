@@ -1,42 +1,8 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Mozilla browser.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications, Inc.
- * Portions created by the Initial Developer are Copyright (C) 1999
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Daniel Glazman <glazman@netscape.com>
- *   Akkana Peck <akkana@netscape.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
@@ -55,12 +21,13 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(7861fe14-9977-413f-a893-3e1000c40817)]
+[scriptable, uuid(7ad59e28-f3d5-4e14-8ea3-794ad4a86de3)]
 
 interface nsIEditor  : nsISupports
 {
 %{C++
   typedef short EDirection;
+  typedef short EStripWrappers;
 %}
   const short eNone = 0;
   const short eNext = 1;
@@ -69,6 +36,9 @@ interface nsIEditor  : nsISupports
   const short ePreviousWord = 4;
   const short eToBeginningOfLine = 5;
   const short eToEndOfLine = 6;
+
+  const short eStrip = 0;
+  const short eNoStrip = 1;
 
   readonly attribute nsISelection selection;
 
@@ -146,8 +116,12 @@ interface nsIEditor  : nsISupports
    * DeleteSelection removes all nodes in the current selection.
    * @param aDir  if eNext, delete to the right (for example, the DEL key)
    *              if ePrevious, delete to the left (for example, the BACKSPACE key)
+   * @param stripWrappers If eStrip, strip any empty inline elements left
+   *                      behind after the deletion; if eNoStrip, don't.  If in
+   *                      doubt, pass eStrip -- eNoStrip is only for if you're
+   *                      about to insert text or similar right after.
    */
-  void deleteSelection(in short action);
+  void deleteSelection(in short action, in short stripWrappers);
 
 
   /* ------------ Document info and file methods -------------- */

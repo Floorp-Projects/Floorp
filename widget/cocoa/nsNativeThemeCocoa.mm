@@ -1,44 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Mike Pinkerton (pinkerton@netscape.com).
- * Portions created by the Initial Developer are Copyright (C) 2001
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *    Vladimir Vukicevic <vladimir@pobox.com> (HITheme rewrite)
- *    Josh Aas <josh@mozilla.com>
- *    Colin Barrett <cbarrett@mozilla.com>
- *    Matthew Gregan <kinetik@flim.org>
- *    Markus Stange <mstange@themasta.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsNativeThemeCocoa.h"
 #include "nsObjCExceptions.h"
@@ -56,7 +19,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
-#include "nsToolkit.h"
+#include "nsCocoaFeatures.h"
 #include "nsCocoaWindow.h"
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
@@ -1625,7 +1588,7 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   // creating a TrackDrawInfo to determine the size of the thumb. There's
   // also no reason to do this on Lion or later, whose scrollbars have no
   // arrow buttons.
-  if (aShouldGetButtonStates && !nsToolkit::OnLionOrLater()) {
+  if (aShouldGetButtonStates && !nsCocoaFeatures::OnLionOrLater()) {
     nsEventStates buttonStates[4];
     GetScrollbarPressStates(aFrame, buttonStates);
     NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
@@ -2325,7 +2288,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     {
       // On Lion and later, scrollbars have no arrows.
-      if (!nsToolkit::OnLionOrLater()) {
+      if (!nsCocoaFeatures::OnLionOrLater()) {
         // There's only an endcap to worry about when both arrows are on the bottom
         NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
         if (!buttonPlacement || [buttonPlacement isEqualToString:@"DoubleMax"]) {

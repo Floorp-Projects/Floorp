@@ -764,21 +764,30 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       case JSOP_NEWINIT:
+      {
         if (GET_UINT8(pc) == JSProto_Array)
             return jsop_newarray(0);
-        return jsop_newobject(NULL);
+        RootedVarObject baseObj(cx, NULL);
+        return jsop_newobject(baseObj);
+      }
 
       case JSOP_NEWARRAY:
         return jsop_newarray(GET_UINT24(pc));
 
       case JSOP_NEWOBJECT:
-        return jsop_newobject(info().getObject(pc));
+      {
+        RootedVarObject baseObj(cx, info().getObject(pc));
+        return jsop_newobject(baseObj);
+      }
 
       case JSOP_INITELEM:
         return jsop_initelem();
 
       case JSOP_INITPROP:
-        return jsop_initprop(info().getAtom(pc));
+      {
+        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        return jsop_initprop(name);
+      }
 
       case JSOP_ENDINIT:
         return true;
@@ -799,17 +808,26 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_GETGNAME:
       case JSOP_CALLGNAME:
-        return jsop_getgname(info().getAtom(pc));
+      {
+        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        return jsop_getgname(name);
+      }
 
       case JSOP_BINDGNAME:
         return pushConstant(ObjectValue(*script->global()));
 
       case JSOP_SETGNAME:
-        return jsop_setgname(info().getAtom(pc));
+      {
+        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        return jsop_setgname(name);
+      }
 
       case JSOP_NAME:
       case JSOP_CALLNAME:
-        return jsop_getname(info().getAtom(pc));
+      {
+        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        return jsop_getname(name);
+      }
 
       case JSOP_BINDNAME:
         return jsop_bindname(info().getName(pc));
@@ -858,11 +876,17 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_GETPROP:
       case JSOP_CALLPROP:
-        return jsop_getprop(info().getAtom(pc));
+      {
+        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        return jsop_getprop(name);
+      }
 
       case JSOP_SETPROP:
       case JSOP_SETNAME:
-        return jsop_setprop(info().getAtom(pc));
+      {
+        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        return jsop_setprop(name);
+      }
 
       case JSOP_DELPROP:
         return jsop_delprop(info().getAtom(pc));
@@ -2786,8 +2810,8 @@ IonBuilder::createThisScripted(MDefinition *callee)
     // This instruction MUST be idempotent: since it does not correspond to an
     // explicit operation in the bytecode, we cannot use resumeAfter(). But
     // calling GetProperty can trigger a GC, and thus invalidation.
-    MCallGetProperty *getProto =
-        MCallGetProperty::New(callee, cx->runtime->atomState.classPrototypeAtom);
+    RootedVarPropertyName name(cx, cx->runtime->atomState.classPrototypeAtom);
+    MCallGetProperty *getProto = MCallGetProperty::New(callee, name);
 
     // Getters may not override |prototype| fetching, so this is repeatable.
     getProto->markUneffectful();
@@ -3104,7 +3128,7 @@ IonBuilder::jsop_newarray(uint32 count)
 }
 
 bool
-IonBuilder::jsop_newobject(JSObject *baseObj)
+IonBuilder::jsop_newobject(HandleObject baseObj)
 {
     // Don't bake in the TypeObject for non-CNG scripts.
     JS_ASSERT(script->hasGlobal());
@@ -3161,12 +3185,12 @@ IonBuilder::jsop_initelem_dense()
 }
 
 bool
-IonBuilder::jsop_initprop(JSAtom *atom)
+IonBuilder::jsop_initprop(HandlePropertyName name)
 {
     MDefinition *value = current->pop();
     MDefinition *obj = current->peek(-1);
 
-    JSObject *baseObj = obj->toNewObject()->baseObj();
+    RootedVarObject baseObj(cx, obj->toNewObject()->baseObj());
 
     if (!oracle->propertyWriteCanSpecialize(script, pc)) {
         // This should only happen for a few names like __proto__.
@@ -3175,14 +3199,15 @@ IonBuilder::jsop_initprop(JSAtom *atom)
 
     // JSOP_NEWINIT becomes an MNewObject without a known base.
     if (!baseObj) {
-        MInitProp *init = MInitProp::New(obj, (PropertyName *)atom, value);
+        MInitProp *init = MInitProp::New(obj, name, value);
         current->add(init);
         return resumeAfter(init);
     }
 
     JSObject *holder;
     JSProperty *prop = NULL;
-    DebugOnly<bool> res = LookupPropertyWithFlags(cx, baseObj, AtomToId(atom),
+    RootedVarId id(cx, NameToId(name));
+    DebugOnly<bool> res = LookupPropertyWithFlags(cx, baseObj, id,
                                                   JSRESOLVE_QUALIFIED, &holder, &prop);
     JS_ASSERT(res && prop && holder == baseObj);
 
@@ -3433,7 +3458,7 @@ IonBuilder::insertRecompileCheck()
 }
 
 static inline bool
-TestSingletonProperty(JSContext *cx, JSObject *obj, jsid id, bool *isKnownConstant)
+TestSingletonProperty(JSContext *cx, JSObject *obj, HandleId id, bool *isKnownConstant)
 {
     // We would like to completely no-op property/global accesses which can
     // produce only a particular JSObject. When indicating the access result is
@@ -3480,7 +3505,7 @@ TestSingletonProperty(JSContext *cx, JSObject *obj, jsid id, bool *isKnownConsta
 
 static inline bool
 TestSingletonPropertyTypes(JSContext *cx, types::TypeSet *types,
-                           GlobalObject *globalObj, jsid id,
+                           HandleObject globalObj, HandleId id,
                            bool *isKnownConstant, bool *testObject)
 {
     // As for TestSingletonProperty, but the input is any value in a type set
@@ -3651,31 +3676,32 @@ IonBuilder::monitorResult(MInstruction *ins, types::TypeSet *types)
 }
 
 bool
-IonBuilder::jsop_getgname(JSAtom *atom)
+IonBuilder::jsop_getgname(HandlePropertyName name)
 {
     // Optimize undefined, NaN, and Infinity.
-    if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID])
+    if (name == cx->runtime->atomState.typeAtoms[JSTYPE_VOID])
         return pushConstant(UndefinedValue());
-    if (atom == cx->runtime->atomState.NaNAtom)
+    if (name == cx->runtime->atomState.NaNAtom)
         return pushConstant(cx->runtime->NaNValue);
-    if (atom == cx->runtime->atomState.InfinityAtom)
+    if (name == cx->runtime->atomState.InfinityAtom)
         return pushConstant(cx->runtime->positiveInfinityValue);
 
-    jsid id = AtomToId(atom);
     JSObject *globalObj = script->global();
     JS_ASSERT(globalObj->isNative());
+
+    RootedVarId id(cx, NameToId(name));
 
     // For the fastest path, the property must be found, and it must be found
     // as a normal data property on exactly the global object.
     const js::Shape *shape = globalObj->nativeLookup(cx, id);
     if (!shape || !shape->hasDefaultGetter() || !shape->hasSlot())
-        return jsop_getname(atom);
+        return jsop_getname(name);
 
     types::TypeSet *propertyTypes = oracle->globalPropertyTypeSet(script, pc, id);
     if (propertyTypes && propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
         // The property has been reconfigured as non-configurable, non-enumerable
         // or non-writable.
-        return jsop_getname(atom);
+        return jsop_getname(name);
     }
 
     // If the property is permanent, a shape guard isn't necessary.
@@ -3729,16 +3755,16 @@ IonBuilder::jsop_getgname(JSAtom *atom)
 }
 
 bool
-IonBuilder::jsop_setgname(JSAtom *atom)
+IonBuilder::jsop_setgname(HandlePropertyName name)
 {
-    jsid id = AtomToId(atom);
+    RootedVarId id(cx, NameToId(name));
 
     bool canSpecialize;
     types::TypeSet *propertyTypes = oracle->globalPropertyWrite(script, pc, id, &canSpecialize);
 
     // This should only happen for a few names like __proto__.
     if (!canSpecialize)
-        return jsop_setprop(atom);
+        return jsop_setprop(name);
 
     JSObject *globalObj = script->global();
     JS_ASSERT(globalObj->isNative());
@@ -3747,12 +3773,12 @@ IonBuilder::jsop_setgname(JSAtom *atom)
     // as a normal data property on exactly the global object.
     const js::Shape *shape = globalObj->nativeLookup(cx, id);
     if (!shape || !shape->hasDefaultSetter() || !shape->writable() || !shape->hasSlot())
-        return jsop_setprop(atom);
+        return jsop_setprop(name);
 
     if (propertyTypes && propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
         // The property has been reconfigured as non-configurable, non-enumerable
         // or non-writable.
-        return jsop_setprop(atom);
+        return jsop_setprop(name);
     }
 
     MInstruction *global = MConstant::New(ObjectValue(*globalObj));
@@ -3800,7 +3826,7 @@ IonBuilder::jsop_setgname(JSAtom *atom)
 }
 
 bool
-IonBuilder::jsop_getname(JSAtom *atom)
+IonBuilder::jsop_getname(HandlePropertyName name)
 {
     MDefinition *object;
     if (js_CodeSpec[*pc].format & JOF_GNAME) {
@@ -3816,9 +3842,9 @@ IonBuilder::jsop_getname(JSAtom *atom)
 
     JSOp op2 = JSOp(*GetNextPc(pc));
     if (op2 == JSOP_TYPEOF)
-        ins = MCallGetNameTypeOf::New(object, atom);
+        ins = MCallGetNameTypeOf::New(object, name);
     else
-        ins = MCallGetName::New(object, atom);
+        ins = MCallGetName::New(object, name);
 
     current->add(ins);
     current->push(ins);
@@ -4176,7 +4202,9 @@ IonBuilder::jsop_length()
 {
     if (jsop_length_fastPath())
         return true;
-    return jsop_getprop(info().getAtom(pc));
+
+    RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+    return jsop_getprop(name);
 }
 
 bool
@@ -4267,7 +4295,7 @@ IonBuilder::jsop_not()
 }
 
 bool
-IonBuilder::jsop_getprop(JSAtom *atom)
+IonBuilder::jsop_getprop(HandlePropertyName name)
 {
     MDefinition *obj = current->pop();
     MInstruction *ins;
@@ -4281,8 +4309,10 @@ IonBuilder::jsop_getprop(JSAtom *atom)
     JSObject *singleton = types ? types->getSingleton(cx) : NULL;
     if (singleton && !barrier) {
         bool isKnownConstant, testObject;
+        RootedVarId id(cx, NameToId(name));
+        RootedVarObject global(cx, script->global());
         if (!TestSingletonPropertyTypes(cx, unaryTypes.inTypes,
-                                        script->global(), AtomToId(atom),
+                                        global, id,
                                         &isKnownConstant, &testObject))
         {
             return false;
@@ -4297,7 +4327,7 @@ IonBuilder::jsop_getprop(JSAtom *atom)
         }
     }
 
-    if (types::TypeSet *propTypes = GetDefiniteSlot(cx, unaryTypes.inTypes, atom)) {
+    if (types::TypeSet *propTypes = GetDefiniteSlot(cx, unaryTypes.inTypes, name)) {
         MLoadFixedSlot *fixed = MLoadFixedSlot::New(obj, propTypes->definiteSlot());
         if (!barrier)
             fixed->setResultType(unary.rval);
@@ -4309,7 +4339,7 @@ IonBuilder::jsop_getprop(JSAtom *atom)
     }
 
     if (unary.ival == MIRType_Object) {
-        MGetPropertyCache *load = MGetPropertyCache::New(obj, atom);
+        MGetPropertyCache *load = MGetPropertyCache::New(obj, name);
         if (!barrier) {
             // Use the default type (Value) when the output type is undefined or null.
             // Because specializing to those types isn't possible.
@@ -4318,7 +4348,7 @@ IonBuilder::jsop_getprop(JSAtom *atom)
         }
         ins = load;
     } else {
-        ins = MCallGetProperty::New(obj, atom);
+        ins = MCallGetProperty::New(obj, name);
     }
 
     current->add(ins);
@@ -4333,7 +4363,7 @@ IonBuilder::jsop_getprop(JSAtom *atom)
 }
 
 bool
-IonBuilder::jsop_setprop(JSAtom *atom)
+IonBuilder::jsop_setprop(HandlePropertyName name)
 {
     MDefinition *value = current->pop();
     MDefinition *obj = current->pop();
@@ -4343,7 +4373,7 @@ IonBuilder::jsop_setprop(JSAtom *atom)
     TypeOracle::BinaryTypes binaryTypes = oracle->binaryTypes(script, pc);
 
     if (!monitored) {
-        if (types::TypeSet *propTypes = GetDefiniteSlot(cx, binaryTypes.lhsTypes, atom)) {
+        if (types::TypeSet *propTypes = GetDefiniteSlot(cx, binaryTypes.lhsTypes, name)) {
             MStoreFixedSlot *fixed = MStoreFixedSlot::New(obj, value, propTypes->definiteSlot());
             current->add(fixed);
             current->push(value);
@@ -4357,11 +4387,11 @@ IonBuilder::jsop_setprop(JSAtom *atom)
 
     MSetPropertyInstruction *ins;
     if (monitored) {
-        ins = MCallSetProperty::New(obj, value, atom, script->strictModeCode);
+        ins = MCallSetProperty::New(obj, value, name, script->strictModeCode);
     } else {
-        ins = MSetPropertyCache::New(obj, value, atom, script->strictModeCode);
+        ins = MSetPropertyCache::New(obj, value, name, script->strictModeCode);
 
-        jsid id = AtomToId(atom);
+        RootedVarId id(cx, NameToId(name));
         if (cx->compartment->needsBarrier() &&
             (!binaryTypes.lhsTypes || binaryTypes.lhsTypes->propertyNeedsBarrier(cx, id))) {
             ins->setNeedsBarrier();

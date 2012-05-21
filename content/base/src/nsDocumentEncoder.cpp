@@ -1,41 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Mats Palmgren <matpal@gmail.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * Object that can be used to serialize selections, ranges, or nodes
@@ -130,6 +96,11 @@ protected:
                                       nsAString& aString);
   nsresult SerializeRangeContextEnd(const nsTArray<nsINode*>& aAncestorArray,
                                     nsAString& aString);
+  virtual PRInt32
+  GetImmediateContextCount(const nsTArray<nsINode*>& aAncestorArray)
+  {
+    return -1;
+  }
 
   nsresult FlushText(nsAString& aString, bool aForce);
 
@@ -185,6 +156,9 @@ protected:
   nsAutoTArray<nsIContent*, 8> mEndNodes;
   nsAutoTArray<PRInt32, 8>     mEndOffsets;
   bool              mHaltRangeHint;  
+  // Used when context has already been serialized for
+  // table cell selections (where parent is <tr>)
+  bool              mDisableContextSerialize;
   bool              mIsCopying;  // Set to true only while copying
   bool              mNodeIsContainer;
   nsStringBuffer*   mCachedBuffer;
@@ -232,6 +206,7 @@ void nsDocumentEncoder::Initialize(bool aClearCachedSerializer)
   mStartRootIndex = 0;
   mEndRootIndex = 0;
   mHaltRangeHint = false;
+  mDisableContextSerialize = false;
   mNodeIsContainer = false;
   if (aClearCachedSerializer) {
     mSerializer = nsnull;
@@ -913,8 +888,14 @@ nsresult
 nsDocumentEncoder::SerializeRangeContextStart(const nsTArray<nsINode*>& aAncestorArray,
                                               nsAString& aString)
 {
-  PRInt32 i = aAncestorArray.Length();
+  if (mDisableContextSerialize) {
+    return NS_OK;
+  }
+  PRInt32 i = aAncestorArray.Length(), j;
   nsresult rv = NS_OK;
+
+  // currently only for table-related elements; see Bug 137450
+  j = GetImmediateContextCount(aAncestorArray);
 
   while (i > 0) {
     nsINode *node = aAncestorArray.ElementAt(--i);
@@ -922,7 +903,8 @@ nsDocumentEncoder::SerializeRangeContextStart(const nsTArray<nsINode*>& aAncesto
     if (!node)
       break;
 
-    if (IncludeInContext(node)) {
+    // Either a general inclusion or as immediate context
+    if (IncludeInContext(node) || i < j) {
       rv = SerializeNodeStart(node, 0, -1, aString);
 
       if (NS_FAILED(rv))
@@ -937,9 +919,15 @@ nsresult
 nsDocumentEncoder::SerializeRangeContextEnd(const nsTArray<nsINode*>& aAncestorArray,
                                             nsAString& aString)
 {
-  PRInt32 i = 0;
+  if (mDisableContextSerialize) {
+    return NS_OK;
+  }
+  PRInt32 i = 0, j;
   PRInt32 count = aAncestorArray.Length();
   nsresult rv = NS_OK;
+
+  // currently only for table-related elements
+  j = GetImmediateContextCount(aAncestorArray);
 
   while (i < count) {
     nsINode *node = aAncestorArray.ElementAt(i++);
@@ -947,7 +935,8 @@ nsDocumentEncoder::SerializeRangeContextEnd(const nsTArray<nsINode*>& aAncestorA
     if (!node)
       break;
 
-    if (IncludeInContext(node)) {
+    // Either a general inclusion or as immediate context
+    if (IncludeInContext(node) || i - 1 < j) {
       rv = SerializeNodeEnd(node, aString);
 
       if (NS_FAILED(rv))
@@ -1083,21 +1072,43 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
       // Bug 236546: newlines not added when copying table cells into clipboard
       // Each selected cell shows up as a range containing a row with a single cell
       // get the row, compare it to previous row and emit </tr><tr> as needed
+      // Bug 137450: Problem copying/pasting a table from a web page to Excel.
+      // Each separate block of <tr></tr> produced above will be wrapped by the
+      // immediate context. This assumes that you can't select cells that are
+      // multiple selections from two tables simultaneously.
       range->GetStartContainer(getter_AddRefs(node));
       NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
       if (node != prevNode) {
+        nsCOMPtr<nsINode> p;
         if (prevNode) {
-          nsCOMPtr<nsINode> p = do_QueryInterface(prevNode);
+          p = do_QueryInterface(prevNode);
           rv = SerializeNodeEnd(p, output);
           NS_ENSURE_SUCCESS(rv, rv);
-          prevNode = nsnull;
         }
         nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-        if (content && content->Tag() == nsGkAtoms::tr) {
-          nsCOMPtr<nsINode> n = do_QueryInterface(node);
+        if (content && content->IsHTML(nsGkAtoms::tr)) {
+          nsINode* n = content;
+          if (!prevNode) {
+            // Went from a non-<tr> to a <tr>
+            mCommonAncestors.Clear();
+            nsContentUtils::GetAncestors(n->GetNodeParent(), mCommonAncestors);
+            rv = SerializeRangeContextStart(mCommonAncestors, output);
+            NS_ENSURE_SUCCESS(rv, rv);
+            // Don't let SerializeRangeToString serialize the context again
+            mDisableContextSerialize = true;
+          }
+
           rv = SerializeNodeStart(n, 0, -1, output);
           NS_ENSURE_SUCCESS(rv, rv);
           prevNode = node;
+        } else if (prevNode) {
+          // Went from a <tr> to a non-<tr>
+          mCommonAncestors.Clear();
+          nsContentUtils::GetAncestors(p->GetNodeParent(), mCommonAncestors);
+          mDisableContextSerialize = false;
+          rv = SerializeRangeContextEnd(mCommonAncestors, output);
+          NS_ENSURE_SUCCESS(rv, rv);
+          prevNode = nsnull;
         }
       }
 
@@ -1105,11 +1116,20 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
       rv = SerializeRangeToString(r, output);
       NS_ENSURE_SUCCESS(rv, rv);
     }
+
     if (prevNode) {
       nsCOMPtr<nsINode> p = do_QueryInterface(prevNode);
       rv = SerializeNodeEnd(p, output);
       NS_ENSURE_SUCCESS(rv, rv);
+      mCommonAncestors.Clear();
+      nsContentUtils::GetAncestors(p->GetNodeParent(), mCommonAncestors);
+      mDisableContextSerialize = false; 
+      rv = SerializeRangeContextEnd(mCommonAncestors, output);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
+
+    // Just to be safe
+    mDisableContextSerialize = false; 
 
     mSelection = nsnull;
   } else if (mRange) {
@@ -1262,6 +1282,8 @@ protected:
   bool IsLastNode(nsIDOMNode *aNode);
   bool IsEmptyTextContent(nsIDOMNode* aNode);
   virtual bool IncludeInContext(nsINode *aNode);
+  virtual PRInt32
+  GetImmediateContextCount(const nsTArray<nsINode*>& aAncestorArray);
 
   bool mIsTextWidget;
 };
@@ -1975,3 +1997,26 @@ NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult)
  NS_ADDREF(*aResult);
  return NS_OK;
 }
+
+PRInt32
+nsHTMLCopyEncoder::GetImmediateContextCount(const nsTArray<nsINode*>& aAncestorArray)
+{
+  PRInt32 i = aAncestorArray.Length(), j = 0;
+  while (j < i) {
+    nsINode *node = aAncestorArray.ElementAt(j);
+    if (!node) {
+      break;
+    }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+    if (!content || !content->IsHTML() || content->Tag() != nsGkAtoms::tr    &&
+                                          content->Tag() != nsGkAtoms::thead &&
+                                          content->Tag() != nsGkAtoms::tbody &&
+                                          content->Tag() != nsGkAtoms::tfoot &&
+                                          content->Tag() != nsGkAtoms::table) {
+      break;
+    }
+    ++j;
+  }
+  return j;
+}
+

@@ -1,0 +1,27 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMSVGElement.idl"
+#include "nsIDOMSVGStringList.idl"
+
+[scriptable, uuid(4b02f970-a916-4b9d-b83f-eecef658266b)]
+interface nsIDOMSVGViewElement
+  : nsIDOMSVGElement
+/*
+        The SVG DOM makes use of multiple interface inheritance.
+        Since XPCOM only supports single interface inheritance,
+        the best thing that we can do is to promise that whenever
+        an object implements _this_ interface it will also
+        implement the following interfaces. (We then have to QI to
+        hop between them.)
+
+    nsIDOMSVGExternalResourcesRequired,
+    nsIDOMSVGFitToViewBox,
+    nsIDOMSVGZoomAndPan
+*/
+{
+  readonly attribute nsIDOMSVGStringList viewTarget;
+};
+

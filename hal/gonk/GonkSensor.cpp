@@ -102,7 +102,7 @@ public:
       // Emulator is broken and gives us events without types set
       const sensor_t* sensors = NULL;
       SensorDevice& device = SensorDevice::getInstance();
-      size_t size = device.getSensorList(&sensors);
+      ssize_t size = device.getSensorList(&sensors);
       if (data.sensor < size)
         mSensorData.sensor() = HardwareSensorToHalSensor(sensors[data.sensor].type);
     }
@@ -119,8 +119,8 @@ public:
 
       // Determine the maxRange for this sensor.
       const sensor_t* sensors = NULL;
-      size_t size = SensorDevice::getInstance().getSensorList(&sensors);
-      for (size_t i = 0; i < size; i++) {
+      ssize_t size = SensorDevice::getInstance().getSensorList(&sensors);
+      for (ssize_t i = 0; i < size; i++) {
         if (sensors[i].type == SENSOR_TYPE_PROXIMITY) {
           mSensorValues.AppendElement(sensors[i].maxRange);     
         }
@@ -241,8 +241,8 @@ SetSensorState(SensorType aSensor, bool activate)
   int type = HalSensorToHardwareSensor(aSensor);
   const sensor_t* sensors = NULL;
   SensorDevice& device = SensorDevice::getInstance();
-  size_t size = device.getSensorList(&sensors);
-  for (size_t i = 0; i < size; i++) {
+  ssize_t size = device.getSensorList(&sensors);
+  for (ssize_t i = 0; i < size; i++) {
     if (sensors[i].type == type) {
       // Post an event to the sensor thread
       nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(new SwitchSensor(activate, sensors[i], pthread_self()),

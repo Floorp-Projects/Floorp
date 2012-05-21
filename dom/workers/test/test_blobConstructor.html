@@ -31,7 +31,7 @@ Tests of DOM Worker Blob constructor
       postMessage(fr.readAsText(b));
     };
   }
-  var b = new Blob([f.toString(),"f();"]);
+  var b = new Blob([f,"f();"]);
   var u = URL.createObjectURL(b);
   var w = new Worker(u);
   w.onmessage = function(e) {

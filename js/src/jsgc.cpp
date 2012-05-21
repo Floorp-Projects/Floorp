@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* JS Mark-and-Sweep Garbage Collector. */
 
@@ -2209,6 +2176,7 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
+#if JS_HAS_XML_SUPPORT
       case NAMESPACES: {
         JSXMLArray<JSObject> &array = static_cast<AutoNamespaceArray *>(this)->array;
         MarkObjectRange(trc, array.length, array.vector, "JSXMLArray.vector");
@@ -2219,6 +2187,7 @@ AutoGCRooter::trace(JSTracer *trc)
       case XML:
         js_TraceXML(trc, static_cast<AutoXMLRooter *>(this)->xml);
         return;
+#endif
 
       case OBJECT:
         if (static_cast<AutoObjectRooter *>(this)->obj)
@@ -2374,6 +2343,8 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
 #endif
 
     rt->stackSpace.mark(trc);
+    rt->debugScopes->mark(trc);
+	
 #ifdef JS_ION
     ion::MarkIonActivations(rt, trc);
     ion::MarkIonCompilerRoots(trc);
@@ -3234,6 +3205,7 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
 
     /* Finalize unreachable (key,value) pairs in all weak maps. */
     WeakMapBase::sweepAll(&rt->gcMarker);
+    rt->debugScopes->sweep();
 
     SweepAtomState(rt);
 
@@ -3694,7 +3666,7 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
         if (shouldSweep)
             SweepPhase(rt, gckind, &startBackgroundSweep);
     }
-        
+
 #ifdef JS_THREADSAFE
     if (startBackgroundSweep)
         rt->gcHelperThread.startBackgroundSweep(gckind == GC_SHRINK);

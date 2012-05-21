@@ -1,40 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Original Author: David W. Hyatt (hyatt@netscape.com)
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Util.h"
 
@@ -647,126 +614,10 @@ struct keyCodeData {
 // XXX: be sure to check this periodically for new symbol additions!
 static const keyCodeData gKeyCodes[] = {
 
-#define KEYCODE_ENTRY(str) {#str, sizeof(#str) - 1, nsIDOMKeyEvent::DOM_##str}
-#define KEYCODE_ENTRY2(str, code) {str, sizeof(str) - 1, code}
-
-  KEYCODE_ENTRY(VK_CANCEL),
-  KEYCODE_ENTRY2("VK_BACK", nsIDOMKeyEvent::DOM_VK_BACK_SPACE),
-  KEYCODE_ENTRY(VK_TAB),
-  KEYCODE_ENTRY(VK_CLEAR),
-  KEYCODE_ENTRY(VK_RETURN),
-  KEYCODE_ENTRY(VK_ENTER),
-  KEYCODE_ENTRY(VK_SHIFT),
-  KEYCODE_ENTRY(VK_CONTROL),
-  KEYCODE_ENTRY(VK_ALT),
-  KEYCODE_ENTRY(VK_PAUSE),
-  KEYCODE_ENTRY(VK_CAPS_LOCK),
-  KEYCODE_ENTRY(VK_ESCAPE),
-  KEYCODE_ENTRY(VK_SPACE),
-  KEYCODE_ENTRY(VK_PAGE_UP),
-  KEYCODE_ENTRY(VK_PAGE_DOWN),
-  KEYCODE_ENTRY(VK_END),
-  KEYCODE_ENTRY(VK_HOME),
-  KEYCODE_ENTRY(VK_LEFT),
-  KEYCODE_ENTRY(VK_UP),
-  KEYCODE_ENTRY(VK_RIGHT),
-  KEYCODE_ENTRY(VK_DOWN),
-  KEYCODE_ENTRY(VK_PRINTSCREEN),
-  KEYCODE_ENTRY(VK_INSERT),
-  KEYCODE_ENTRY(VK_HELP),
-  KEYCODE_ENTRY(VK_DELETE),
-  KEYCODE_ENTRY(VK_0),
-  KEYCODE_ENTRY(VK_1),
-  KEYCODE_ENTRY(VK_2),
-  KEYCODE_ENTRY(VK_3),
-  KEYCODE_ENTRY(VK_4),
-  KEYCODE_ENTRY(VK_5),
-  KEYCODE_ENTRY(VK_6),
-  KEYCODE_ENTRY(VK_7),
-  KEYCODE_ENTRY(VK_8),
-  KEYCODE_ENTRY(VK_9),
-  KEYCODE_ENTRY(VK_SEMICOLON),
-  KEYCODE_ENTRY(VK_EQUALS),
-  KEYCODE_ENTRY(VK_A),
-  KEYCODE_ENTRY(VK_B),
-  KEYCODE_ENTRY(VK_C),
-  KEYCODE_ENTRY(VK_D),
-  KEYCODE_ENTRY(VK_E),
-  KEYCODE_ENTRY(VK_F),
-  KEYCODE_ENTRY(VK_G),
-  KEYCODE_ENTRY(VK_H),
-  KEYCODE_ENTRY(VK_I),
-  KEYCODE_ENTRY(VK_J),
-  KEYCODE_ENTRY(VK_K),
-  KEYCODE_ENTRY(VK_L),
-  KEYCODE_ENTRY(VK_M),
-  KEYCODE_ENTRY(VK_N),
-  KEYCODE_ENTRY(VK_O),
-  KEYCODE_ENTRY(VK_P),
-  KEYCODE_ENTRY(VK_Q),
-  KEYCODE_ENTRY(VK_R),
-  KEYCODE_ENTRY(VK_S),
-  KEYCODE_ENTRY(VK_T),
-  KEYCODE_ENTRY(VK_U),
-  KEYCODE_ENTRY(VK_V),
-  KEYCODE_ENTRY(VK_W),
-  KEYCODE_ENTRY(VK_X),
-  KEYCODE_ENTRY(VK_Y),
-  KEYCODE_ENTRY(VK_Z),
-  KEYCODE_ENTRY(VK_NUMPAD0),
-  KEYCODE_ENTRY(VK_NUMPAD1),
-  KEYCODE_ENTRY(VK_NUMPAD2),
-  KEYCODE_ENTRY(VK_NUMPAD3),
-  KEYCODE_ENTRY(VK_NUMPAD4),
-  KEYCODE_ENTRY(VK_NUMPAD5),
-  KEYCODE_ENTRY(VK_NUMPAD6),
-  KEYCODE_ENTRY(VK_NUMPAD7),
-  KEYCODE_ENTRY(VK_NUMPAD8),
-  KEYCODE_ENTRY(VK_NUMPAD9),
-  KEYCODE_ENTRY(VK_MULTIPLY),
-  KEYCODE_ENTRY(VK_ADD),
-  KEYCODE_ENTRY(VK_SEPARATOR),
-  KEYCODE_ENTRY(VK_SUBTRACT),
-  KEYCODE_ENTRY(VK_DECIMAL),
-  KEYCODE_ENTRY(VK_DIVIDE),
-  KEYCODE_ENTRY(VK_F1),
-  KEYCODE_ENTRY(VK_F2),
-  KEYCODE_ENTRY(VK_F3),
-  KEYCODE_ENTRY(VK_F4),
-  KEYCODE_ENTRY(VK_F5),
-  KEYCODE_ENTRY(VK_F6),
-  KEYCODE_ENTRY(VK_F7),
-  KEYCODE_ENTRY(VK_F8),
-  KEYCODE_ENTRY(VK_F9),
-  KEYCODE_ENTRY(VK_F10),
-  KEYCODE_ENTRY(VK_F11),
-  KEYCODE_ENTRY(VK_F12),
-  KEYCODE_ENTRY(VK_F13),
-  KEYCODE_ENTRY(VK_F14),
-  KEYCODE_ENTRY(VK_F15),
-  KEYCODE_ENTRY(VK_F16),
-  KEYCODE_ENTRY(VK_F17),
-  KEYCODE_ENTRY(VK_F18),
-  KEYCODE_ENTRY(VK_F19),
-  KEYCODE_ENTRY(VK_F20),
-  KEYCODE_ENTRY(VK_F21),
-  KEYCODE_ENTRY(VK_F22),
-  KEYCODE_ENTRY(VK_F23),
-  KEYCODE_ENTRY(VK_F24),
-  KEYCODE_ENTRY(VK_NUM_LOCK),
-  KEYCODE_ENTRY(VK_SCROLL_LOCK),
-  KEYCODE_ENTRY(VK_COMMA),
-  KEYCODE_ENTRY(VK_PERIOD),
-  KEYCODE_ENTRY(VK_SLASH),
-  KEYCODE_ENTRY(VK_BACK_QUOTE),
-  KEYCODE_ENTRY(VK_OPEN_BRACKET),
-  KEYCODE_ENTRY(VK_BACK_SLASH),
-  KEYCODE_ENTRY(VK_CLOSE_BRACKET),
-  KEYCODE_ENTRY(VK_QUOTE)
-
-#undef KEYCODE_ENTRY
-#undef KEYCODE_ENTRY2
-
+#define NS_DEFINE_VK(aDOMKeyName, aDOMKeyCode) \
+  { #aDOMKeyName, sizeof(#aDOMKeyName) - 1, aDOMKeyCode }
+#include "nsVKList.h"
+#undef NS_DEFINE_VK
 };
 
 PRInt32 nsXBLPrototypeHandler::GetMatchingKeyCode(const nsAString& aKeyName)

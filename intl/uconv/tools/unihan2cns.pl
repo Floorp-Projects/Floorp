@@ -1,4 +1,8 @@
 #!/usr/local/bin/perl -w
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 use IO::File;
 my(%tagtofilemap);
 $tagtofilemap{"kCNS1986-1" } = IO::File->new("|sort> cns1986p1.txt")  

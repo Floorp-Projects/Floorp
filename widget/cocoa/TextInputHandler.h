@@ -1,41 +1,8 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=2 sw=2 et tw=80: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Mozilla Japan.
- * Portions created by the Initial Developer are Copyright (C) 2009
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Masayuki Nakano <masayuki@d-toybox.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef TextInputHandler_h_
 #define TextInputHandler_h_
@@ -61,6 +28,7 @@ namespace widget {
 // Key code constants
 enum
 {
+  kSpaceKeyCode       = 0x31,
   kEscapeKeyCode      = 0x35,
   kRCommandKeyCode    = 0x36, // right command key
   kCommandKeyCode     = 0x37,
@@ -71,6 +39,7 @@ enum
   kRShiftKeyCode      = 0x3C, // right shift key
   kROptionKeyCode     = 0x3D, // right option key
   kRControlKeyCode    = 0x3E, // right control key
+
   kClearKeyCode       = 0x47,
 
   // function keys
@@ -89,6 +58,10 @@ enum
   kF13KeyCode         = 0x69,
   kF14KeyCode         = 0x6B,
   kF15KeyCode         = 0x71,
+  kF16KeyCode         = 0x6A,
+  kF17KeyCode         = 0x40,
+  kF18KeyCode         = 0x4F,
+  kF19KeyCode         = 0x50,
 
   kPrintScreenKeyCode = kF13KeyCode,
   kScrollLockKeyCode  = kF14KeyCode,
@@ -112,9 +85,14 @@ enum
   kKeypadDecimalKeyCode   = 0x41,
   kKeypadDivideKeyCode    = 0x4B,
   kKeypadEqualsKeyCode    = 0x51, // no correpsonding gecko key code
+
   kEnterKeyCode           = 0x4C,
   kReturnKeyCode          = 0x24,
   kPowerbookEnterKeyCode  = 0x34, // Enter on Powerbook's keyboard is different
+
+  // IME keys
+  kJapanese_Eisu          = 0x66,
+  kJapanese_Kana          = 0x68,
 
   kInsertKeyCode          = 0x72, // also help key
   kDeleteKeyCode          = 0x75, // also forward delete key
@@ -287,6 +265,19 @@ public:
    */
   void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent);
 
+  /**
+   * ComputeGeckoKeyCode() returns Gecko keycode for aNativeKeyCode on current
+   * keyboard layout.
+   *
+   * @param aNativeKeyCode        A native keycode.
+   * @param aKbType               A native Keyboard Type value.  Typically,
+   *                              this is a result of ::LMGetKbdType().
+   * @param aCmdIsPressed         TRUE if Cmd key is pressed.  Otherwise, FALSE.
+   * @return                      The computed Gecko keycode.
+   */
+  PRUint32 ComputeGeckoKeyCode(UInt32 aNativeKeyCode, UInt32 aKbType,
+                               bool aCmdIsPressed);
+
 protected:
   /**
    * TranslateToString() computes the inputted text from the native keyCode,
@@ -317,7 +308,7 @@ protected:
    *                              returns the charCode of it.  Otherwise,
    *                              returns 0.
    */
-  PRUint32 TranslateToChar(UInt32 aKeyCode, UInt32 aModifiers, UInt32 aKbdType);
+  PRUint32 TranslateToChar(UInt32 aKeyCode, UInt32 aModifiers, UInt32 aKbType);
 
   /**
    * InitKeyPressEvent() initializes aKeyEvent for aNativeKeyEvent.
@@ -328,8 +319,11 @@ protected:
    * @param aKeyEvent             The result -- a Gecko key event initialized
    *                              from the native key event.  This must be
    *                              NS_KEY_PRESS event.
+   * @param aKbType               A native Keyboard Type value.  Typically,
+   *                              this is a result of ::LMGetKbdType().
    */
-  void InitKeyPressEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent);
+  void InitKeyPressEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent,
+                         UInt32 aKbType);
 
   bool GetBoolProperty(const CFStringRef aKey);
   bool GetStringProperty(const CFStringRef aKey, CFStringRef &aStr);
@@ -401,25 +395,6 @@ public:
                                     PRUint32 aModifierFlags,
                                     const nsAString& aCharacters,
                                     const nsAString& aUnmodifiedCharacters);
-
-  /**
-   * ComputeGeckoKeyCode() computes Gecko defined keyCode from the native
-   * keyCode or the characters.
-   *
-   * @param aNativeKeyCode        A native keyCode.
-   * @param aCharacters           Characters from the native key event (obtained
-   *                              using charactersIgnoringModifiers).  If the
-   *                              native event contains one or more characters,
-   *                              the result is computed from this.
-   * @return                      Gecko keyCode value for aNativeKeyCode (if
-   *                              aCharacters is empty), otherwise for
-   *                              aCharacters (if aCharacters is non-empty).
-   *                              Or zero if the aCharacters contains one or
-   *                              more Unicode characters, or if aNativeKeyCode
-   *                              cannot be mapped to a Gecko keyCode.
-   */
-  static PRUint32 ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
-                                      NSString *aCharacters);
 
   /**
    * IsSpecialGeckoKey() checks whether aNativeKeyCode is mapped to a special
@@ -627,16 +602,6 @@ protected:
    *                              FALSE.
    */
   static bool IsPrintableChar(PRUnichar aChar);
-
-  /**
-   * ComputeGeckoKeyCodeFromChar() computes Gecko defined keyCode value from
-   * aChar.  If aChar is not an ASCII character, this always returns FALSE.
-   *
-   * @param aChar                 A unicode character.
-   * @return                      A Gecko defined keyCode.  Or zero if aChar
-   *                              is a unicode character.
-   */
-  static PRUint32 ComputeGeckoKeyCodeFromChar(PRUnichar aChar);
 
   /**
    * IsNormalCharInputtingEvent() checks whether aKeyEvent causes text input.

@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import os
 import re
 import sys
@@ -103,6 +107,7 @@ class MarionetteTestCase(CommonTestCase):
         self.extra_emulator_index += 1
         if len(self.marionette.extra_emulators) == self.extra_emulator_index:
             qemu  = Marionette(emulator=self.marionette.emulator.arch,
+                               emulatorBinary=self.marionette.emulator.binary,
                                homedir=self.marionette.homedir,
                                baseurl=self.marionette.baseurl,
                                noWindow=self.marionette.noWindow)
@@ -149,6 +154,10 @@ class MarionetteJSTestCase(CommonTestCase):
         if context:
             context = context.group(3)
             self.marionette.set_context(context)
+
+        if context != "chrome":
+            page = self.marionette.absolute_url("empty.html")
+            self.marionette.navigate(page)
 
         timeout = self.timeout_re.search(js)
         if timeout:
