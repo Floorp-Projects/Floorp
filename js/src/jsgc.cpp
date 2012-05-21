@@ -1633,8 +1633,7 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
     JSRuntime *rt = comp->rt;
     JS_ASSERT(!rt->gcRunning);
 
-    bool runGC = rt->gcIncrementalState != NO_INCREMENTAL &&
-            (comp->gcBytes > comp->gcTriggerBytes || comp->isTooMuchMalloc());
+    bool runGC = rt->gcIncrementalState != NO_INCREMENTAL && comp->gcBytes > comp->gcTriggerBytes;
     for (;;) {
         if (JS_UNLIKELY(runGC)) {
             PrepareCompartmentForGC(comp);
@@ -3323,6 +3322,8 @@ AutoGCSession::~AutoGCSession()
     /* Clear gcMallocBytes for all compartments */
     for (CompartmentsIter c(runtime); !c.done(); c.next())
         c->resetGCMallocBytes();
+
+    runtime->resetGCMallocBytes();
 }
 
 static void
@@ -3510,6 +3511,11 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
         *budget = SliceBudget::Unlimited;
         rt->gcStats.nonincremental("GC mode");
         return;
+    }
+
+    if (rt->isTooMuchMalloc()) {
+        *budget = SliceBudget::Unlimited;
+        rt->gcStats.nonincremental("malloc bytes trigger");
     }
 
     bool reset = false;
