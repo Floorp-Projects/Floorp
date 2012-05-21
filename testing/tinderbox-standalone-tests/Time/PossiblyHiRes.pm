@@ -1,4 +1,8 @@
 #!/usr/bin/perl
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #
 # Use high resolution routines if installed (on win32 or linux), using
 # eval as try/catch block around import of modules. Otherwise, just use 'time()'.
