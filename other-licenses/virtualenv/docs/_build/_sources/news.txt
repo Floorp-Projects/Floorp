@@ -1,19 +1,11 @@
 Changes & News
 --------------
 
-1.4.8
------
+hg tip
+------
 
 * Fix for Mac OS X Framework builds that use
   ``--universal-archs=intel``
-
-* Fix ``activate_this.py`` on Windows.
-
-* Allow ``$PYTHONHOME`` to be set, so long as you use ``source
-  bin/activate`` it will get unset; if you leave it set and do not
-  activate the environment it will still break the environment.
-
-* Include pip 0.7.1
 
 1.4.7
 -----
