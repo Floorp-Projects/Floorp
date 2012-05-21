@@ -13,6 +13,7 @@
 #include "nsMimeTypeArray.h"
 #include "nsDesktopNotification.h"
 #include "nsGeolocation.h"
+#include "nsDeviceStorage.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsICachingChannel.h"
 #include "nsIDocShell.h"
@@ -89,6 +90,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorBattery)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
@@ -837,6 +839,26 @@ Navigator::MozIsLocallyAvailable(const nsAString &aURI,
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
   return httpChannel->GetRequestSucceeded(aIsAvailable);
+}
+
+//*****************************************************************************
+//    Navigator::nsIDOMNavigatorDeviceStorage
+//*****************************************************************************
+
+NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIVariant** _retval)
+{
+  if (!Preferences::GetBool("device.storage.enabled", false)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
+
+  if (!win || !win->GetOuterWindow() || !win->GetDocShell()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsDOMDeviceStorage::CreateDeviceStoragesFor(win, aType, _retval);
+  return NS_OK;
 }
 
 //*****************************************************************************
