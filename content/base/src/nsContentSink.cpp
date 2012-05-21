@@ -416,6 +416,48 @@ nsContentSink::LinkContextIsOurDocument(const nsSubstring& aAnchor)
   return same;
 }
 
+// Decode a parameter value using the encoding defined in RFC 5987 (in place)
+//
+//   charset  "'" [ language ] "'" value-chars
+//
+// returns true when decoding happened successfully (otherwise leaves
+// passed value alone)
+bool
+nsContentSink::Decode5987Format(nsAString& aEncoded) {
+
+  nsresult rv;
+  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar =
+  do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return false;
+
+  nsCAutoString asciiValue;
+
+  const PRUnichar* encstart = aEncoded.BeginReading();
+  const PRUnichar* encend = aEncoded.EndReading();
+
+  // create a plain ASCII string, aborting if we can't do that
+  // converted form is always shorter than input
+  while (encstart != encend) {
+    if (*encstart > 0 && *encstart < 128) {
+      asciiValue.Append((char)*encstart);
+    } else {
+      return false;
+    }
+    encstart++;
+  }
+
+  nsAutoString decoded;
+  nsCAutoString language;
+
+  rv = mimehdrpar->DecodeRFC5987Param(asciiValue, language, decoded);
+  if (NS_FAILED(rv))
+    return false;
+
+  aEncoded = decoded;
+  return true;
+}
+
 nsresult
 nsContentSink::ProcessLinkHeader(nsIContent* aElement,
                                  const nsAString& aLinkData)
@@ -429,6 +471,7 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
   nsAutoString href;
   nsAutoString rel;
   nsAutoString title;
+  nsAutoString titleStar;
   nsAutoString type;
   nsAutoString media;
   nsAutoString anchor;
@@ -453,7 +496,7 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
     end = start;
     last = end - 1;
 
-    bool needsUnescape = false;
+    bool wasQuotedString = false;
     
     // look for semicolon or comma
     while (*end != kNullCh && *end != kSemicolon && *end != kComma) {
@@ -467,14 +510,14 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
           quote = kGreaterThan;
         }
         
-        needsUnescape = (ch == kQuote);
+        wasQuotedString = (ch == kQuote);
         
         PRUnichar* closeQuote = (end + 1);
 
         // seek closing quote
         while (*closeQuote != kNullCh && quote != *closeQuote) {
           // in quoted-string, "\" is an escape character
-          if (needsUnescape && *closeQuote == kBackSlash && *(closeQuote + 1) != kNullCh) {
+          if (wasQuotedString && *closeQuote == kBackSlash && *(closeQuote + 1) != kNullCh) {
             ++closeQuote;
           }
 
@@ -549,7 +592,7 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
             value++;
           }
 
-          if (needsUnescape) {
+          if (wasQuotedString) {
             // unescape in-place
             PRUnichar* unescaped = value;
             PRUnichar *src = value;
@@ -573,6 +616,20 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
             if (title.IsEmpty()) {
               title = value;
               title.CompressWhitespace();
+            }
+          } else if (attr.LowerCaseEqualsLiteral("title*")) {
+            if (titleStar.IsEmpty() && !wasQuotedString) {
+              // RFC 5987 encoding; uses token format only, so skip if we get
+              // here with a quoted-string
+              nsAutoString tmp;
+              tmp = value;
+              if (Decode5987Format(tmp)) {
+                titleStar = tmp;
+                titleStar.CompressWhitespace();
+              } else {
+                // header value did not parse, throw it away
+                titleStar.Truncate();
+              }
             }
           } else if (attr.LowerCaseEqualsLiteral("type")) {
             if (type.IsEmpty()) {
@@ -602,7 +659,10 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
 
       href.Trim(" \t\n\r\f"); // trim HTML5 whitespace
       if (!href.IsEmpty() && !rel.IsEmpty()) {
-        rv = ProcessLink(aElement, anchor, href, rel, title, type, media);
+        rv = ProcessLink(aElement, anchor, href, rel,
+                         // prefer RFC 5987 variant over non-I18zed version
+                         titleStar.IsEmpty() ? title : titleStar,
+                         type, media);
       }
 
       href.Truncate();
@@ -620,7 +680,10 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
                 
   href.Trim(" \t\n\r\f"); // trim HTML5 whitespace
   if (!href.IsEmpty() && !rel.IsEmpty()) {
-    rv = ProcessLink(aElement, anchor, href, rel, title, type, media);
+    rv = ProcessLink(aElement, anchor, href, rel,
+                     // prefer RFC 5987 variant over non-I18zed version
+                     titleStar.IsEmpty() ? title : titleStar,
+                     type, media);
   }
 
   return rv;

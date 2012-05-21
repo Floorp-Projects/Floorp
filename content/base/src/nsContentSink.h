@@ -117,6 +117,7 @@ class nsContentSink : public nsICSSLoaderObserver,
 
   bool IsTimeToNotify();
   bool LinkContextIsOurDocument(const nsSubstring& aAnchor);
+  bool Decode5987Format(nsAString& aEncoded);
 
   static void InitializeStatics();
 
