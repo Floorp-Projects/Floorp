@@ -392,11 +392,17 @@ pref("browser.link.open_newwindow", 3);
 // 2: don't divert window.open with features
 pref("browser.link.open_newwindow.restriction", 0);
 
-// Enable browser frames (including OOP), but make in-process browser frames
-// the default.
+// Enable browser frames (including OOP, except on Windows, where it doesn't
+// work), but make in-process browser frames the default.
 pref("dom.mozBrowserFramesEnabled", true);
 pref("dom.mozBrowserFramesWhitelist", "http://homescreen.gaiamobile.org,http://browser.gaiamobile.org");
+
+#ifdef XP_WIN
+pref("dom.ipc.tabs.disabled", true);
+#else
 pref("dom.ipc.tabs.disabled", false);
+#endif
+
 pref("dom.ipc.browser_frames.oop_by_default", false);
 
 // Temporary permission hack for WebSMS
