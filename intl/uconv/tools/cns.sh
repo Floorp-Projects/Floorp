@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 # umaptable -uf < cns1992p1.txt > ../ucvtw2/cns_1.uf
 # umaptable -uf < cns1992p2.txt > ../ucvtw2/cns_2.uf
 umaptable -uf < cnsIRGTp15.txt > ../ucvtw2/cns15.uf

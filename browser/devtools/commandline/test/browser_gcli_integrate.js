@@ -9,6 +9,17 @@ function test() {
   testRemoveCommands();
 }
 
+let [ define, require ] = (function() {
+  let tempScope = {};
+  Components.utils.import("resource:///modules/devtools/Require.jsm", tempScope);
+  return [ tempScope.define, tempScope.require ];
+})();
+
+registerCleanupFunction(function tearDown() {
+  define = undefined;
+  require = undefined;
+});
+
 let tselarr = {
   name: 'tselarr',
   params: [
