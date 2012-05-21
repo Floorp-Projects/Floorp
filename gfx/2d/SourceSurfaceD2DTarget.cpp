@@ -208,7 +208,7 @@ DataSourceSurfaceD2DTarget::GetFormat() const
   return mFormat;
 }
 
-uint8_t*
+unsigned char*
 DataSourceSurfaceD2DTarget::GetData()
 {
   EnsureMapped();

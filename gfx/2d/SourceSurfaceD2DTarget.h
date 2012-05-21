@@ -63,7 +63,7 @@ public:
   virtual SurfaceType GetType() const { return SURFACE_DATA; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
-  virtual uint8_t *GetData();
+  virtual unsigned char *GetData();
   virtual int32_t Stride();
 
 private:
