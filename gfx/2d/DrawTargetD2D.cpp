@@ -2086,10 +2086,10 @@ DrawTargetD2D::CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
   return style;
 }
 
-TemporaryRef<ID3D10Texture1D>
+TemporaryRef<ID3D10Texture2D>
 DrawTargetD2D::CreateGradientTexture(const GradientStopsD2D *aStops)
 {
-  CD3D10_TEXTURE1D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 4096, 1, 1);
+  CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 4096, 1, 1, 1);
 
   std::vector<D2D1_GRADIENT_STOP> rawStops;
   rawStops.resize(aStops->mStopCollection->GetGradientStopCount());
@@ -2144,9 +2144,10 @@ DrawTargetD2D::CreateGradientTexture(const GradientStopsD2D *aStops)
 
   D3D10_SUBRESOURCE_DATA data;
   data.pSysMem = &textureData.front();
+  data.SysMemPitch = 4096 * 4;
 
-  RefPtr<ID3D10Texture1D> tex;
-  mDevice->CreateTexture1D(&desc, &data, byRef(tex));
+  RefPtr<ID3D10Texture2D> tex;
+  mDevice->CreateTexture2D(&desc, &data, byRef(tex));
 
   return tex;
 }
@@ -2328,7 +2329,7 @@ DrawTargetD2D::SetupEffectForRadialGradient(const RadialGradientPattern *aPatter
   const GradientStopsD2D *stops =
     static_cast<const GradientStopsD2D*>(aPattern->mStops.get());
 
-  RefPtr<ID3D10Texture1D> tex = CreateGradientTexture(stops);
+  RefPtr<ID3D10Texture2D> tex = CreateGradientTexture(stops);
 
   RefPtr<ID3D10ShaderResourceView> srView;
   mDevice->CreateShaderResourceView(tex, NULL, byRef(srView));
