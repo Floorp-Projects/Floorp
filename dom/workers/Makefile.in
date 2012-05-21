@@ -63,7 +63,6 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/dom/system \
   -I$(topsrcdir)/xpcom/build \
-  -I$(topsrcdir)/js/xpconnect/src \
   $(NULL)
 
 TEST_DIRS += test

@@ -43,9 +43,9 @@
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
+#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "nsCocoaWindow.h"
-#include "nsToolkit.h"
 #include "nsChildView.h"
 
 #include "nsCOMPtr.h"
@@ -365,7 +365,7 @@ nsMenuX* nsMenuBarX::GetXULHelpMenu()
 // This resolves bugs 489196 and 539317.
 void nsMenuBarX::SetSystemHelpMenu()
 {
-  if (!nsToolkit::OnSnowLeopardOrLater())
+  if (!nsCocoaFeatures::OnSnowLeopardOrLater())
     return;
   nsMenuX* xulHelpMenu = GetXULHelpMenu();
   if (xulHelpMenu) {

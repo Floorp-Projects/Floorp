@@ -37,6 +37,7 @@
 
 #include "DOMSVGTests.h"
 #include "DOMSVGStringList.h"
+#include "nsContentErrors.h" // For NS_PROPTABLE_PROP_OVERWRITTEN
 #include "nsSVGFeatures.h"
 #include "nsSVGSwitchElement.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -55,18 +56,13 @@ nsIAtom** DOMSVGTests::sStringListNames[3] =
   &nsGkAtoms::systemLanguage,
 };
 
-DOMSVGTests::DOMSVGTests()
-{
-  mStringListAttributes[LANGUAGE].SetIsCommaSeparated(true);
-}
-
 /* readonly attribute nsIDOMSVGStringList requiredFeatures; */
 NS_IMETHODIMP
 DOMSVGTests::GetRequiredFeatures(nsIDOMSVGStringList * *aRequiredFeatures)
 {
   nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
   *aRequiredFeatures = DOMSVGStringList::GetDOMWrapper(
-                         &mStringListAttributes[FEATURES], element, true, FEATURES).get();
+                         GetOrCreateStringListAttribute(FEATURES), element, true, FEATURES).get();
   return NS_OK;
 }
 
@@ -76,7 +72,7 @@ DOMSVGTests::GetRequiredExtensions(nsIDOMSVGStringList * *aRequiredExtensions)
 {
   nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
   *aRequiredExtensions = DOMSVGStringList::GetDOMWrapper(
-                           &mStringListAttributes[EXTENSIONS], element, true, EXTENSIONS).get();
+                           GetOrCreateStringListAttribute(EXTENSIONS), element, true, EXTENSIONS).get();
   return NS_OK;
 }
 
@@ -86,7 +82,7 @@ DOMSVGTests::GetSystemLanguage(nsIDOMSVGStringList * *aSystemLanguage)
 {
   nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
   *aSystemLanguage = DOMSVGStringList::GetDOMWrapper(
-                       &mStringListAttributes[LANGUAGE], element, true, LANGUAGE).get();
+                       GetOrCreateStringListAttribute(LANGUAGE), element, true, LANGUAGE).get();
   return NS_OK;
 }
 
@@ -116,15 +112,19 @@ DOMSVGTests::GetBestLanguagePreferenceRank(const nsSubstring& aAcceptLangs) cons
 
   PRInt32 lowestRank = -1;
 
-  for (PRUint32 i = 0; i < mStringListAttributes[LANGUAGE].Length(); i++) {
+  const SVGStringList *languageStringList = GetStringListAttribute(LANGUAGE);
+  if (!languageStringList) {
+    return lowestRank;
+  }
+  for (PRUint32 i = 0; i < languageStringList->Length(); i++) {
     nsCharSeparatedTokenizer languageTokenizer(aAcceptLangs, ',');
     PRInt32 index = 0;
     while (languageTokenizer.hasMoreTokens()) {
       const nsSubstring &languageToken = languageTokenizer.nextToken();
-      bool exactMatch = (languageToken == mStringListAttributes[LANGUAGE][i]);
+      bool exactMatch = (languageToken == (*languageStringList)[i]);
       bool prefixOnlyMatch =
         !exactMatch &&
-        nsStyleUtil::DashMatchCompare(mStringListAttributes[LANGUAGE][i],
+        nsStyleUtil::DashMatchCompare((*languageStringList)[i],
                                       languageTokenizer.nextToken(),
                                       defaultComparator);
       if (index == 0 && exactMatch) {
@@ -147,15 +147,16 @@ bool
 DOMSVGTests::PassesConditionalProcessingTests(const nsString *aAcceptLangs) const
 {
   // Required Features
-  if (mStringListAttributes[FEATURES].IsExplicitlySet()) {
-    if (mStringListAttributes[FEATURES].IsEmpty()) {
+  const SVGStringList *featuresStringList = GetStringListAttribute(FEATURES);
+  if (featuresStringList && featuresStringList->IsExplicitlySet()) {
+    if (featuresStringList->IsEmpty()) {
       return false;
     }
     nsCOMPtr<nsIContent> content(
       do_QueryInterface(const_cast<DOMSVGTests*>(this)));
 
-    for (PRUint32 i = 0; i < mStringListAttributes[FEATURES].Length(); i++) {
-      if (!nsSVGFeatures::HasFeature(content, mStringListAttributes[FEATURES][i])) {
+    for (PRUint32 i = 0; i < featuresStringList->Length(); i++) {
+      if (!nsSVGFeatures::HasFeature(content, (*featuresStringList)[i])) {
         return false;
       }
     }
@@ -168,12 +169,13 @@ DOMSVGTests::PassesConditionalProcessingTests(const nsString *aAcceptLangs) cons
   // go beyond the feature set defined in the SVG specification.
   // Each extension is identified by a URI reference.
   // For now, claim that mozilla's SVG implementation supports XHTML and MathML.
-  if (mStringListAttributes[EXTENSIONS].IsExplicitlySet()) {
-    if (mStringListAttributes[EXTENSIONS].IsEmpty()) {
+  const SVGStringList *extensionsStringList = GetStringListAttribute(EXTENSIONS);
+  if (extensionsStringList && extensionsStringList->IsExplicitlySet()) {
+    if (extensionsStringList->IsEmpty()) {
       return false;
     }
-    for (PRUint32 i = 0; i < mStringListAttributes[EXTENSIONS].Length(); i++) {
-      if (!nsSVGFeatures::HasExtension(mStringListAttributes[EXTENSIONS][i])) {
+    for (PRUint32 i = 0; i < extensionsStringList->Length(); i++) {
+      if (!nsSVGFeatures::HasExtension((*extensionsStringList)[i])) {
         return false;
       }
     }
@@ -190,8 +192,9 @@ DOMSVGTests::PassesConditionalProcessingTests(const nsString *aAcceptLangs) cons
   // or if one of the languages indicated by user preferences exactly equals a
   // prefix of one of the languages given in the value of this parameter such
   // that the first tag character following the prefix is "-".
-  if (mStringListAttributes[LANGUAGE].IsExplicitlySet()) {
-    if (mStringListAttributes[LANGUAGE].IsEmpty()) {
+  const SVGStringList *languageStringList = GetStringListAttribute(LANGUAGE);
+  if (languageStringList && languageStringList->IsExplicitlySet()) {
+    if (languageStringList->IsEmpty()) {
       return false;
     }
 
@@ -206,10 +209,10 @@ DOMSVGTests::PassesConditionalProcessingTests(const nsString *aAcceptLangs) cons
 
     const nsDefaultStringComparator defaultComparator;
 
-    for (PRUint32 i = 0; i < mStringListAttributes[LANGUAGE].Length(); i++) {
+    for (PRUint32 i = 0; i < languageStringList->Length(); i++) {
       nsCharSeparatedTokenizer languageTokenizer(acceptLangs, ',');
       while (languageTokenizer.hasMoreTokens()) {
-        if (nsStyleUtil::DashMatchCompare(mStringListAttributes[LANGUAGE][i],
+        if (nsStyleUtil::DashMatchCompare((*languageStringList)[i],
                                           languageTokenizer.nextToken(),
                                           defaultComparator)) {
           return true;
@@ -229,9 +232,12 @@ DOMSVGTests::ParseConditionalProcessingAttribute(nsIAtom* aAttribute,
 {
   for (PRUint32 i = 0; i < ArrayLength(sStringListNames); i++) {
     if (aAttribute == *sStringListNames[i]) {
-      nsresult rv = mStringListAttributes[i].SetValue(aValue);
-      if (NS_FAILED(rv)) {
-        mStringListAttributes[i].Clear();
+      SVGStringList *stringList = GetOrCreateStringListAttribute(i);
+      if (stringList) {
+        nsresult rv = stringList->SetValue(aValue);
+        if (NS_FAILED(rv)) {
+          stringList->Clear();
+        }
       }
       MaybeInvalidate();
       return true;
@@ -245,11 +251,66 @@ DOMSVGTests::UnsetAttr(const nsIAtom* aAttribute)
 {
   for (PRUint32 i = 0; i < ArrayLength(sStringListNames); i++) {
     if (aAttribute == *sStringListNames[i]) {
-      mStringListAttributes[i].Clear();
-      MaybeInvalidate();
+      SVGStringList *stringList = GetStringListAttribute(i);
+      if (stringList) {
+        // don't destroy the property in case there are tear-offs
+        // referring to it
+        stringList->Clear();
+        MaybeInvalidate();
+      }
       return;
     }
   }
+}
+
+// Callback function, for freeing PRUint64 values stored in property table
+// when the element goes away
+static void
+ReleaseStringListPropertyValue(void*    aObject,       /* unused */
+                               nsIAtom* aPropertyName, /* unused */
+                               void*    aPropertyValue,
+                               void*    aData          /* unused */)
+{
+  SVGStringList* valPtr =
+    static_cast<SVGStringList*>(aPropertyValue);
+  delete valPtr;
+}
+
+SVGStringList*
+DOMSVGTests::GetStringListAttribute(PRUint8 aAttrEnum) const
+{
+  nsIAtom *attrName = GetAttrName(aAttrEnum);
+  const nsCOMPtr<nsSVGElement> element =
+    do_QueryInterface(const_cast<DOMSVGTests*>(this));
+
+  return static_cast<SVGStringList*>(element->GetProperty(attrName));
+}
+
+SVGStringList*
+DOMSVGTests::GetOrCreateStringListAttribute(PRUint8 aAttrEnum) const
+{
+  SVGStringList* stringListPtr = GetStringListAttribute(aAttrEnum);
+  if (stringListPtr) {
+    return stringListPtr;
+  }
+  nsIAtom *attrName = GetAttrName(aAttrEnum);
+  const nsCOMPtr<nsSVGElement> element =
+    do_QueryInterface(const_cast<DOMSVGTests*>(this));
+
+  stringListPtr = new SVGStringList();
+  stringListPtr->SetIsCommaSeparated(aAttrEnum == LANGUAGE);
+  nsresult rv = element->SetProperty(attrName,
+                                     stringListPtr,
+                                     ReleaseStringListPropertyValue);
+  NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
+                    "Setting property value when it's already set...?"); 
+
+  if (NS_LIKELY(NS_SUCCEEDED(rv))) {
+    return stringListPtr;
+  }
+  // property-insertion failed (e.g. OOM in property-table code)
+  delete stringListPtr;
+  return nsnull;
 }
 
 nsIAtom*
@@ -263,7 +324,7 @@ DOMSVGTests::GetAttrValue(PRUint8 aAttrEnum, nsAttrValue& aValue) const
 {
   MOZ_ASSERT(aAttrEnum < ArrayLength(sStringListNames),
              "aAttrEnum out of range");
-  aValue.SetTo(mStringListAttributes[aAttrEnum], nsnull);
+  aValue.SetTo(*GetOrCreateStringListAttribute(aAttrEnum), nsnull);
 }
 
 void

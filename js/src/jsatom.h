@@ -248,7 +248,7 @@ typedef HashSet<AtomStateEntry, AtomHasher, SystemAllocPolicy> AtomSet;
  * On encodings:
  *
  * - Some string functions have an optional FlationCoding argument that allow
- *   the caller to force CESU-8 encoding handling. 
+ *   the caller to force CESU-8 encoding handling.
  * - Functions that don't take a FlationCoding base their NormalEncoding
  *   behavior on the js_CStringsAreUTF8 value. NormalEncoding is either raw
  *   (simple zero-extension) or UTF-8 depending on js_CStringsAreUTF8.

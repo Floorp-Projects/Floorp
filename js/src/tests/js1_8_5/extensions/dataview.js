@@ -1626,6 +1626,11 @@ function test() {
     buffer = Object.create(buffer1);
     checkThrow(function () new DataView(buffer), TypeError);
 
+    // view of proxy for buffer
+    av = new DataView(alien_buffer);
+    assertEq(av.getUint8(4), 100);
+    assertEq(Object.getPrototypeOf(av), DataView.prototype);
+
     reportCompare(0, 0, 'done.');
     exitFunc ('test');
 }

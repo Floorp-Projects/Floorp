@@ -1044,9 +1044,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
     if (!gCharsetMap) {
       const int NUM_CHARSETS = sizeof(charsets) / sizeof(moz2javaCharset);
       gCharsetMap = new nsDataHashtable<nsDepCharHashKey, const char*>();
-      if (!gCharsetMap || !gCharsetMap->Init(NUM_CHARSETS))
+      if (!gCharsetMap)
         return NS_ERROR_OUT_OF_MEMORY;
-
+      gCharsetMap->Init(NUM_CHARSETS);
       for (PRUint16 i = 0; i < NUM_CHARSETS; i++) {
         gCharsetMap->Put(charsets[i].mozName, charsets[i].javaName);
       }

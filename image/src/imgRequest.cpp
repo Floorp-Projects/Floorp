@@ -182,7 +182,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
 imgStatusTracker&
 imgRequest::GetStatusTracker()
 {
-  if (mImage) {
+  if (mImage && mGotData) {
     NS_ABORT_IF_FALSE(!mStatusTracker,
                       "Should have given mStatusTracker to mImage");
     return mImage->GetStatusTracker();
@@ -768,14 +768,19 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 
   // If we're multipart, and our image is initialized, fix things up for another round
   if (mIsMultiPartChannel && mImage) {
-    if (mImage->GetType() == imgIContainer::TYPE_RASTER) {
+    // Update the content type for this new part
+    nsCOMPtr<nsIChannel> partChan(do_QueryInterface(aRequest));
+    partChan->GetContentType(mContentType);
+    if (mContentType.EqualsLiteral(SVG_MIMETYPE) ||
+        mImage->GetType() == imgIContainer::TYPE_VECTOR) {
+      // mImage won't be reusable due to format change or a new SVG part
+      // Reset the tracker and forget that we have data for OnDataAvailable to
+      // treat its next call as a fresh image.
+      mStatusTracker = new imgStatusTracker(nsnull);
+      mGotData = false;
+    } else if (mImage->GetType() == imgIContainer::TYPE_RASTER) {
       // Inform the RasterImage that we have new source data
-      static_cast<RasterImage*>(mImage.get())->NewSourceData();
-    } else {  // imageType == imgIContainer::TYPE_VECTOR
-      nsCOMPtr<nsIStreamListener> imageAsStream = do_QueryInterface(mImage);
-      NS_ABORT_IF_FALSE(imageAsStream,
-                        "SVG-typed Image failed QI to nsIStreamListener");
-      imageAsStream->OnStartRequest(aRequest, ctxt);
+      static_cast<RasterImage*>(mImage.get())->NewSourceData(mContentType.get());
     }
   }
 

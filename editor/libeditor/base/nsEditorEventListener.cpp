@@ -810,13 +810,8 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
     if (NS_FAILED(rv) || !selection)
       return false;
     
-    bool isCollapsed;
-    rv = selection->GetIsCollapsed(&isCollapsed);
-    NS_ENSURE_SUCCESS(rv, false);
-  
     // Don't bother if collapsed - can always drop
-    if (!isCollapsed)
-    {
+    if (!selection->Collapsed()) {
       nsCOMPtr<nsIDOMNode> parent;
       rv = aEvent->GetRangeParent(getter_AddRefs(parent));
       if (NS_FAILED(rv) || !parent) return false;

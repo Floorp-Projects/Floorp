@@ -355,6 +355,23 @@ nsSMILTimedElement::GetStartTime() const
 }
 
 //----------------------------------------------------------------------
+// Hyperlinking support
+
+nsSMILTimeValue
+nsSMILTimedElement::GetHyperlinkTime() const
+{
+  nsSMILTimeValue hyperlinkTime; // Default ctor creates unresolved time
+
+  if (mElementState == STATE_ACTIVE) {
+    hyperlinkTime = mCurrentInterval->Begin()->Time();
+  } else if (!mBeginInstances.IsEmpty()) {
+    hyperlinkTime = mBeginInstances[0]->Time();
+  }
+
+  return hyperlinkTime;
+}
+
+//----------------------------------------------------------------------
 // nsSMILTimedElement
 
 void
@@ -1492,7 +1509,8 @@ nsSMILTimedElement::FilterIntervals()
   // We can filter old intervals that:
   //
   // a) are not the previous interval; AND
-  // b) are not in the middle of a dependency chain
+  // b) are not in the middle of a dependency chain; AND
+  // c) are not the first interval
   //
   // Condition (a) is necessary since the previous interval is used for applying
   // fill effects and updating the current interval.
@@ -1501,6 +1519,15 @@ nsSMILTimedElement::FilterIntervals()
   // active, it may be part of a dependency chain that includes active
   // intervals. Such chains are used to establish priorities within the
   // animation sandwich.
+  //
+  // Condition (c) is necessary to support hyperlinks that target animations
+  // since in some cases the defined behavior is to seek the document back to
+  // the first resolved begin time. Presumably the intention here is not
+  // actually to use the first resolved begin time, the
+  // _the_first_resolved_begin_time_that_produced_an_interval. That is,
+  // if we have begin="-5s; -3s; 1s; 3s" with a duration on 1s, we should seek
+  // to 1s. The spec doesn't say this but I'm pretty sure that is the intention.
+  // It seems negative times were simply not considered.
   //
   // Although the above conditions allow us to safely filter intervals for most
   // scenarios they do not cover all cases and there will still be scenarios
@@ -1514,7 +1541,8 @@ nsSMILTimedElement::FilterIntervals()
   for (PRUint32 i = 0; i < mOldIntervals.Length(); ++i)
   {
     nsSMILInterval* interval = mOldIntervals[i].get();
-    if (i + 1 < mOldIntervals.Length() /*skip previous interval*/ &&
+    if (i != 0 && /*skip first interval*/
+        i + 1 < mOldIntervals.Length() && /*skip previous interval*/
         (i < threshold || !interval->IsDependencyChainLink())) {
       interval->Unlink(true /*filtered, not deleted*/);
     } else {
@@ -1584,6 +1612,7 @@ nsSMILTimedElement::FilterInstanceTimes(InstanceTimeList& aList)
     // There are a few instance times we should keep though, notably:
     // - the current interval begin time,
     // - the previous interval end time (see note in RemoveInstanceTimes)
+    // - the first interval begin time (see note in FilterIntervals)
     nsTArray<const nsSMILInstanceTime *> timesToKeep;
     if (mCurrentInterval) {
       timesToKeep.AppendElement(mCurrentInterval->Begin());
@@ -1591,6 +1620,9 @@ nsSMILTimedElement::FilterInstanceTimes(InstanceTimeList& aList)
     const nsSMILInterval* prevInterval = GetPreviousInterval();
     if (prevInterval) {
       timesToKeep.AppendElement(prevInterval->End());
+    }
+    if (!mOldIntervals.IsEmpty()) {
+      timesToKeep.AppendElement(mOldIntervals[0]->Begin());
     }
     RemoveBelowThreshold removeBelowThreshold(threshold, timesToKeep);
     RemoveInstanceTimes(aList, removeBelowThreshold);

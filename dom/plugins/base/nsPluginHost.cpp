@@ -50,7 +50,6 @@
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIObserverService.h"
@@ -589,7 +588,7 @@ nsresult nsPluginHost::GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPr
 nsresult nsPluginHost::GetURL(nsISupports* pluginInst,
                               const char* url,
                               const char* target,
-                              nsIPluginStreamListener* streamListener,
+                              nsNPAPIPluginStreamListener* streamListener,
                               const char* altHost,
                               const char* referrer,
                               bool forceJSEnabled)
@@ -602,7 +601,7 @@ nsresult nsPluginHost::GetURL(nsISupports* pluginInst,
 nsresult nsPluginHost::GetURLWithHeaders(nsNPAPIPluginInstance* pluginInst,
                                          const char* url,
                                          const char* target,
-                                         nsIPluginStreamListener* streamListener,
+                                         nsNPAPIPluginStreamListener* streamListener,
                                          const char* altHost,
                                          const char* referrer,
                                          bool forceJSEnabled,
@@ -610,7 +609,7 @@ nsresult nsPluginHost::GetURLWithHeaders(nsNPAPIPluginInstance* pluginInst,
                                          const char* getHeaders)
 {
   // we can only send a stream back to the plugin (as specified by a
-  // null target) if we also have a nsIPluginStreamListener to talk to
+  // null target) if we also have a nsNPAPIPluginStreamListener to talk to
   if (!target && !streamListener)
     return NS_ERROR_ILLEGAL_VALUE;
 
@@ -646,7 +645,7 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
                                     const char* postData,
                                     bool isFile,
                                     const char* target,
-                                    nsIPluginStreamListener* streamListener,
+                                    nsNPAPIPluginStreamListener* streamListener,
                                     const char* altHost,
                                     const char* referrer,
                                     bool forceJSEnabled,
@@ -656,7 +655,7 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
   nsresult rv;
 
   // we can only send a stream back to the plugin (as specified
-  // by a null target) if we also have a nsIPluginStreamListener
+  // by a null target) if we also have a nsNPAPIPluginStreamListener
   // to talk to also
   if (!target && !streamListener)
     return NS_ERROR_ILLEGAL_VALUE;
@@ -2937,7 +2936,7 @@ nsPluginHost::EnsurePrivateDirServiceProvider()
 
 nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
                                           nsNPAPIPluginInstance *aInstance,
-                                          nsIPluginStreamListener* aListener,
+                                          nsNPAPIPluginStreamListener* aListener,
                                           nsIInputStream *aPostStream,
                                           const char *aHeadersData,
                                           PRUint32 aHeadersDataLen)

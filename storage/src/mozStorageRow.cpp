@@ -54,7 +54,7 @@ nsresult
 Row::initialize(sqlite3_stmt *aStatement)
 {
   // Initialize the hash table
-  NS_ENSURE_TRUE(mNameHashtable.Init(), NS_ERROR_OUT_OF_MEMORY);
+  mNameHashtable.Init();
 
   // Get the number of results
   mNumCols = ::sqlite3_column_count(aStatement);

@@ -138,6 +138,7 @@ export::
 LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
 	-I$(srcdir)/../xpwidgets \
+	-I$(srcdir)/../shared \
 	$(NULL)
 
 LDFLAGS	+= \

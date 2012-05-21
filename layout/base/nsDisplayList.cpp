@@ -2522,6 +2522,12 @@ nsRect
 nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "Can't get the bounds of a nonexistent frame!");
+
+  if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+    // TODO: SVG needs to define what percentage translations resolve against.
+    return nsRect();
+  }
+
   return nsRect(nsPoint(0, 0), aFrame->GetSize());
 }
 
@@ -2534,6 +2540,11 @@ nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
 
   nsRect result;
   
+  if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+    // TODO: SVG needs to define what percentage translations resolve against.
+    return result;
+  }
+
   /* Iterate through the continuation list, unioning together all the
    * bounding rects.
    */
@@ -2563,8 +2574,8 @@ gfxPoint3D GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
                                         const nsRect* aBoundsOverride)
 {
   NS_PRECONDITION(aFrame, "Can't get delta for a null frame!");
-  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
-                  "Can't get a delta for an untransformed frame!");
+  NS_PRECONDITION(aFrame->IsTransformed(),
+                  "Shouldn't get a delta for an untransformed frame!");
 
   /* For both of the coordinates, if the value of -moz-transform is a
    * percentage, it's relative to the size of the frame.  Otherwise, if it's
@@ -2600,6 +2611,14 @@ gfxPoint3D GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
       *coords[index] =
         NSAppUnitsToFloatPixels(coord.GetCoordValue(), aAppUnitsPerPixel);
     }
+    if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
+        coord.GetUnit() != eStyleUnit_Percent) {
+      // <length> values represent offsets from the origin of the SVG element's
+      // user space, not the top left of its bounds, so we must adjust for that:
+      nscoord offset =
+        (index == 0) ? aFrame->GetPosition().x : aFrame->GetPosition().y;
+      *coords[index] -= NSAppUnitsToFloatPixels(offset, aAppUnitsPerPixel);
+    }
   }
 
   *coords[2] = NSAppUnitsToFloatPixels(display->mTransformOrigin[2].GetCoordValue(),
@@ -2620,8 +2639,8 @@ gfxPoint3D GetDeltaToMozPerspectiveOrigin(const nsIFrame* aFrame,
                                           float aAppUnitsPerPixel)
 {
   NS_PRECONDITION(aFrame, "Can't get delta for a null frame!");
-  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
-                  "Can't get a delta for an untransformed frame!");
+  NS_PRECONDITION(aFrame->IsTransformed(),
+                  "Shouldn't get a delta for an untransformed frame!");
   NS_PRECONDITION(aFrame->GetParentStyleContextFrame(), 
                   "Can't get delta without a style parent!");
 
@@ -2711,16 +2730,27 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
   /* Get the matrix, then change its basis to factor in the origin. */
   bool dummy;
   gfx3DMatrix result;
+  // Call IsSVGTransformed() regardless of the value of
+  // disp->mSpecifiedTransform, since we still need any transformFromSVGParent.
+  gfxMatrix svgTransform, transformFromSVGParent;
+  bool hasSVGTransforms =
+    aFrame->IsSVGTransformed(&svgTransform, &transformFromSVGParent);
   /* Transformed frames always have a transform, or are preserving 3d (and might still have perspective!) */
   if (disp->mSpecifiedTransform) {
     result = nsStyleTransformMatrix::ReadTransforms(disp->mSpecifiedTransform,
                                                     aFrame->GetStyleContext(),
                                                     aFrame->PresContext(),
                                                     dummy, bounds, aAppUnitsPerPixel);
+  } else if (hasSVGTransforms) {
+    result = gfx3DMatrix::From2D(svgTransform);
   } else {
      NS_ASSERTION(aFrame->GetStyleDisplay()->mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
                   aFrame->GetStyleDisplay()->mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN,
                   "If we don't have a transform, then we must have another reason to have an nsDisplayTransform created");
+  }
+
+  if (hasSVGTransforms && !transformFromSVGParent.IsIdentity()) {
+    result = result * gfx3DMatrix::From2D(transformFromSVGParent);
   }
 
   const nsStyleDisplay* parentDisp = nsnull;

@@ -289,7 +289,6 @@ public:
   nsTArray<void *> mEntries;
   size_t mEntrySize;
 
-protected:
   typedef const void* KeyTypePointer;
   KeyTypePointer mKey;
 
@@ -306,7 +305,6 @@ protected:
   { return NS_PTR_TO_INT32(aKey); }
 
   enum { ALLOW_MEMMOVE = false };
-  friend class nsTHashtable<FreeList>;
 };
 
 }
@@ -337,9 +335,6 @@ struct nsPresArena::State {
     // If there is no free-list entry for this type already, we have
     // to create one now, to record its size.
     FreeList* list = mFreeLists.PutEntry(aCode);
-    if (!list) {
-      return nsnull;
-    }
 
     nsTArray<void*>::index_type len = list->mEntries.Length();
     if (list->mEntrySize == 0) {

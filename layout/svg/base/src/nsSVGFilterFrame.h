@@ -99,9 +99,11 @@ public:
    * Returns the bounding box of the post-filter area of aTarget.
    * The rectangles are relative to the origin of the outer svg, if aTarget is SVG,
    * relative to aTarget itself otherwise, in device pixels.
-   * @param aSourceBBox overrides the normal bbox for the source, if non-null
+   * @param aOverrideBBox overrides the normal bbox for the source, if non-null
    */
-  nsIntRect GetFilterBBox(nsIFrame *aTarget, const nsIntRect *aSourceBBox);
+  nsIntRect GetFilterBBox(nsIFrame *aTarget,
+                          const nsIntRect *aOverrideBBox = nsnull,
+                          const nsIntRect *aPreFilterBounds = nsnull);
 
 #ifdef DEBUG
   NS_IMETHOD Init(nsIContent*      aContent,

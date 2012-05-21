@@ -113,7 +113,7 @@ XBLFinalize(JSFreeOp *fop, JSObject *obj)
 }
 
 static JSBool
-XBLResolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+XBLResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
            JSObject **objp)
 {
   // Note: if we get here, that means that the implementation for some binding
@@ -1438,22 +1438,14 @@ nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent,
   if (!mInsertionPointTable) {
     mInsertionPointTable =
       new nsClassHashtable<nsISupportsHashKey, nsInsertionPointList>;
-    if (!mInsertionPointTable || !mInsertionPointTable->Init(4)) {
-      delete mInsertionPointTable;
-      mInsertionPointTable = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mInsertionPointTable->Init(4);
   }
 
   mInsertionPointTable->Get(aParent, aResult);
 
   if (!*aResult) {
     *aResult = new nsInsertionPointList;
-    if (!*aResult || !mInsertionPointTable->Put(aParent, *aResult)) {
-      delete *aResult;
-      *aResult = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mInsertionPointTable->Put(aParent, *aResult);
     if (aParent) {
       aParent->SetFlags(NODE_IS_INSERTION_PARENT);
     }

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="data:text/css,u { display: inline; text-decoration: underline; }" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<hbox align="start">
+  <label control="b1"><u>L</u>abel1</label><textbox id="b1" size="2"/>
+  <label control="b2">Labe<u>l</u>2</label><textbox id="b2" size="2"/>
+  <label control="b3">La<u>b</u>el3</label><textbox id="b3" size="2"/>
+  <label control="b4">Label4 (<u>X</u>)</label><textbox id="b4" size="2"/>
+  <label control="b5" maxwidth="50">Quite a <u>l</u>ong label. Hopefully it will wrap</label><textbox id="b5" label="Button5" size="2"/>
+</hbox>
+
+<hbox id="d" align="start">
+  <label control="d1"><u>L</u>abel1</label><textbox id="d1" size="2"/>
+  <label control="d2">Labe<u>l</u>2</label><textbox id="d2" size="2"/>
+  <label control="d3">La<u>b</u>el3</label><textbox id="d3" size="2"/>
+  <label control="d4">Label4 (<u>X</u>)</label><textbox id="d4" size="2"/>
+  <label control="d5" maxwidth="50">Quite a <u>l</u>ong label. Hopefully it will wrap</label><textbox id="d5" size="2"/>
+</hbox>
+
+</window>

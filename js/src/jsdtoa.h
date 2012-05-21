@@ -102,7 +102,7 @@ typedef enum JSDToStrMode {
 
 /*
  * DO NOT USE THIS FUNCTION IF YOU CAN AVOID IT.  js::NumberToCString() is a
- * better function to use.  
+ * better function to use.
  *
  * Convert dval according to the given mode and return a pointer to the
  * resulting ASCII string.  If mode == DTOSTR_STANDARD and precision == 0 it's
@@ -122,7 +122,7 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
 
 /*
  * DO NOT USE THIS FUNCTION IF YOU CAN AVOID IT.  js::NumberToCString() is a
- * better function to use.  
+ * better function to use.
  *
  * Convert d to a string in the given base.  The integral part of d will be
  * printed exactly in that base, regardless of how large it is, because there

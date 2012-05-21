@@ -43,6 +43,7 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventResponder;
+import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,7 +60,6 @@ import android.util.Log;
 import android.view.View;
 import java.util.Map;
 import java.util.HashMap;
-import org.mozilla.gecko.Tabs;
 
 public class GeckoLayerClient implements GeckoEventResponder,
                                          LayerView.Listener {
@@ -350,7 +350,12 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 }
             });
             mLayerController.setViewportMetrics(currentMetrics);
-            mLayerController.setCheckerboardColor(Tabs.getInstance().getSelectedTab().getCheckerboardColor());
+
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            mLayerController.setCheckerboardColor(tab.getCheckerboardColor());
+            mLayerController.setAllowZoom(tab.getAllowZoom());
+            mLayerController.setDefaultZoom(tab.getDefaultZoom());
+
             // At this point, we have just switched to displaying a different document than we
             // we previously displaying. This means we need to abort any panning/zooming animations
             // that are in progress and send an updated display port request to browser.js as soon
@@ -466,7 +471,13 @@ public class GeckoLayerClient implements GeckoEventResponder,
     public void compositionPauseRequested() {
         // We need to coordinate with Gecko when pausing composition, to ensure
         // that Gecko never executes a draw event while the compositor is paused.
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createCompositorPauseEvent());
+        // This is sent synchronously to make sure that we don't attempt to use
+        // any outstanding Surfaces after we call this (such as from a
+        // surfaceDestroyed notification), and to make sure that any in-flight
+        // Gecko draw events have been processed.  When this returns, composition is
+        // definitely paused -- it'll synchronize with the Gecko event loop, which
+        // in turn will synchronize with the compositor thread.
+        GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createCompositorPauseEvent());
     }
 
     /** Implementation of LayerView.Listener */

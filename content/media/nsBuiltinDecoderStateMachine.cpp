@@ -436,9 +436,9 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   mDispatchedRunEvent(false),
   mDecodeThreadWaiting(false),
   mRealTime(aRealTime),
-  mRequestedNewDecodeThread(false),
   mDidThrottleAudioDecoding(false),
   mDidThrottleVideoDecoding(false),
+  mRequestedNewDecodeThread(false),
   mEventManager(aDecoder)
 {
   MOZ_COUNT_CTOR(nsBuiltinDecoderStateMachine);
@@ -539,7 +539,7 @@ void nsBuiltinDecoderStateMachine::SendOutputStreamAudio(AudioData* aAudio,
   aStream->mLastAudioPacketTime = aAudio->mTime;
   aStream->mLastAudioPacketEndTime = aAudio->GetEnd();
 
-  NS_ASSERTION(aOutput->GetChannels() == aAudio->mChannels,
+  NS_ASSERTION(aOutput->GetChannels() == PRInt32(aAudio->mChannels),
                "Wrong number of channels");
 
   // This logic has to mimic AudioLoop closely to make sure we write
@@ -635,7 +635,6 @@ void nsBuiltinDecoderStateMachine::SendOutputStreamData()
       AudioSegment output;
       output.Init(mInfo.mAudioChannels);
       for (PRUint32 i = 0; i < audio.Length(); ++i) {
-        AudioData* a = audio[i];
         SendOutputStreamAudio(audio[i], stream, &output);
       }
       if (output.GetDuration() > 0) {
@@ -1126,8 +1125,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
       // we pushed to the audio hardware. We must push silence into the audio
       // hardware so that the next audio chunk begins playback at the correct
       // time.
-      missingFrames = NS_MIN(static_cast<PRInt64>(PR_UINT32_MAX),
-                             missingFrames.value());
+      missingFrames = NS_MIN<int64_t>(UINT32_MAX, missingFrames.value());
       LOG(PR_LOG_DEBUG, ("%p Decoder playing %d frames of silence",
                          mDecoder.get(), PRInt32(missingFrames.value())));
       framesWritten = PlaySilence(static_cast<PRUint32>(missingFrames.value()),

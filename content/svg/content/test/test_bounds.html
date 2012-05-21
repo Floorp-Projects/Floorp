@@ -93,6 +93,7 @@ function runTest()
   var rect1aBounds = doc.getElementById("rect1a").getBoundingClientRect();
   var rect2aBounds = doc.getElementById("rect2a").getBoundingClientRect();
   var rect3aBounds = doc.getElementById("rect3a").getBoundingClientRect();
+  var rect3bBounds = doc.getElementById("rect3b").getBoundingClientRect();
   var rect4aBounds = doc.getElementById("rect4a").getBoundingClientRect();
 
   is(rect1aBounds.left, 48, "rect1a.getBoundingClientRect().left");
@@ -110,6 +111,11 @@ function runTest()
   is(rect3aBounds.top, 156, "rect3a.getBoundingClientRect().top");
   is(rect3aBounds.width, 108, "rect3a.getBoundingClientRect().width");
   is(rect3aBounds.height, 108, "rect3a.getBoundingClientRect().height");
+
+  is(rect3bBounds.left, 198, "rect3b.getBoundingClientRect().left");
+  is(rect3bBounds.top, 198, "rect3b.getBoundingClientRect().top");
+  is(rect3bBounds.width, 54, "rect3b.getBoundingClientRect().width");
+  is(rect3bBounds.height, 54, "rect3b.getBoundingClientRect().height");
 
   rect = new Rect(350 - 108 * sin45, 150 - 108 * sin45, 108 * sin45 * 2, 108 * sin45 * 2);
   isWithAbsTolerance(rect4aBounds.left, rect.left, 0.1, "rect4a.getBoundingClientRect().left");

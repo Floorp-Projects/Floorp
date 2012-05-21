@@ -1847,6 +1847,12 @@ CanScrollWithBlitting(nsIFrame* aFrame)
         f->IsFrameOfType(nsIFrame::eSVG)) {
       return false;
     }
+#ifndef MOZ_ENABLE_MASK_LAYERS
+    nsIScrollableFrame* sf = do_QueryFrame(f);
+    if ((sf || f->IsFrameOfType(nsIFrame::eReplaced)) &&
+        nsLayoutUtils::HasNonZeroCorner(f->GetStyleBorder()->mBorderRadius))
+      return false;
+#endif
     if (nsLayoutUtils::IsPopup(f))
       break;
   }
@@ -2296,17 +2302,22 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Since making new layers is expensive, only use nsDisplayScrollLayer
-  // if the area is scrollable and there's a displayport (or we're the content
-  // process).
-  nsRect scrollRange = GetScrollRange();
-  ScrollbarStyles styles = GetScrollbarStylesFromFrame();
-  mShouldBuildLayer =
-     (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
-      styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
-     (usingDisplayport ||
-      (XRE_GetProcessType() == GeckoProcessType_Content &&
-       (scrollRange.width > 0 || scrollRange.height > 0) &&
-       (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument())));
+  // if the area is scrollable and we're the content process.
+  // When a displayport is being used, force building of a layer so that
+  // CompositorParent can always find the scrollable layer for the root content
+  // document.
+  if (usingDisplayport) {
+    mShouldBuildLayer = true;
+  } else {
+    nsRect scrollRange = GetScrollRange();
+    ScrollbarStyles styles = GetScrollbarStylesFromFrame();
+    mShouldBuildLayer =
+       (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
+        styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
+       (XRE_GetProcessType() == GeckoProcessType_Content &&
+        (scrollRange.width > 0 || scrollRange.height > 0) &&
+        (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument()));
+  }
 
   nsRect clip;
   nscoord radii[8];

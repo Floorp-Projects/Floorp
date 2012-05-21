@@ -78,27 +78,27 @@ BEGIN_TEST(testXDR_principals)
         CHECK(script);
         CHECK(!JS_GetScriptPrincipals(script));
         CHECK(!JS_GetScriptOriginPrincipals(script));
-    
+
         script = createScriptViaXDR(NULL, NULL, i);
         CHECK(script);
         CHECK(!JS_GetScriptPrincipals(script));
         CHECK(!JS_GetScriptOriginPrincipals(script));
-        
+
         script = createScriptViaXDR(&testPrincipals[0], NULL, i);
         CHECK(script);
         CHECK(JS_GetScriptPrincipals(script) == &testPrincipals[0]);
         CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipals[0]);
-        
+
         script = createScriptViaXDR(&testPrincipals[0], &testPrincipals[0], i);
         CHECK(script);
         CHECK(JS_GetScriptPrincipals(script) == &testPrincipals[0]);
         CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipals[0]);
-        
+
         script = createScriptViaXDR(&testPrincipals[0], &testPrincipals[1], i);
         CHECK(script);
         CHECK(JS_GetScriptPrincipals(script) == &testPrincipals[0]);
         CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipals[1]);
-        
+
         script = createScriptViaXDR(NULL, &testPrincipals[1], i);
         CHECK(script);
         CHECK(!JS_GetScriptPrincipals(script));
@@ -166,7 +166,7 @@ BEGIN_TEST(testXDR_atline)
     CHECK(script);
     CHECK(script = FreezeThaw(cx, script));
     CHECK(!strcmp("bar", JS_GetScriptFilename(cx, script)));
-    
+
     JS::Value v;
     JSBool ok = JS_ExecuteScript(cx, global, script, &v);
     CHECK(ok);

@@ -423,6 +423,34 @@ nsSVGAnimationElement::IsNodeOfType(PRUint32 aFlags) const
 }
 
 //----------------------------------------------------------------------
+// SVG utility methods
+
+void
+nsSVGAnimationElement::ActivateByHyperlink()
+{
+  FlushAnimations();
+
+  // The behavior for when the target is an animation element is defined in
+  // SMIL Animation:
+  //   http://www.w3.org/TR/smil-animation/#HyperlinkSemantics
+  nsSMILTimeValue seekTime = mTimedElement.GetHyperlinkTime();
+  if (seekTime.IsDefinite()) {
+    nsSMILTimeContainer* timeContainer = GetTimeContainer();
+    if (timeContainer) {
+      timeContainer->SetCurrentTime(seekTime.GetMillis());
+      AnimationNeedsResample();
+      // As with nsSVGSVGElement::SetCurrentTime, we need to trigger
+      // a synchronous sample now.
+      FlushAnimations();
+    }
+    // else, silently fail. We mustn't be part of an SVG document fragment that
+    // is attached to the document tree so there's nothing we can do here
+  } else {
+    BeginElement();
+  }
+}
+
+//----------------------------------------------------------------------
 // Implementation helpers
 
 nsSMILTimeContainer*

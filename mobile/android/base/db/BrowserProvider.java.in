@@ -467,7 +467,7 @@ public class BrowserProvider extends ContentProvider {
             bookmarksValues.put(Bookmarks.DATE_CREATED, now);
             bookmarksValues.put(Bookmarks.DATE_MODIFIED, now);
 
-            int pos = 1;
+            int pos = 0;
             for (int i = 0; i < fields.length; i++) {
                 String name = fields[i].getName();
                 Matcher m = p.matcher(name);

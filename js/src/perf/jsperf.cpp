@@ -53,7 +53,7 @@ static PerfMeasurement* GetPMFromThis(JSContext* cx, jsval* vp);
 
 #define GETTER(name)                                                    \
     static JSBool                                                       \
-    pm_get_##name(JSContext* cx, JSObject* obj, jsid /*unused*/, jsval* vp) \
+    pm_get_##name(JSContext* cx, JS::HandleObject obj, JS::HandleId /*unused*/, jsval* vp) \
     {                                                                   \
         PerfMeasurement* p = GetPM(cx, obj, #name);                     \
         if (!p)                                                         \

@@ -1097,6 +1097,17 @@ function openURL(aURL)
     protocolSvc.loadUrl(uri);
   }
   else {
+    var wmSvc = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                          .getService(Components.interfaces.nsIWindowMediator);
+    var recentWindow = wmSvc.getMostRecentWindow("navigator:browser");
+    if (recentWindow) {
+      var win = recentWindow.browserDOMWindow.openURI(uri, null,
+                                                      recentWindow.browserDOMWindow.OPEN_DEFAULTWINDOW,
+                                                      recentWindow.browserDOMWindow.OPEN_NEW);
+      win.focus();
+      return;
+    }
+
     var loadgroup = Components.classes["@mozilla.org/network/load-group;1"]
                               .createInstance(Components.interfaces.nsILoadGroup);
     var appstartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]

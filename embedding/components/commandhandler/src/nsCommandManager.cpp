@@ -116,7 +116,7 @@ nsCommandManager::Init(nsIDOMWindow *aWindow)
   
   NS_ASSERTION(aWindow, "Need non-null window here");
   mWindow = aWindow;      // weak ptr
-  NS_ENSURE_TRUE(mObserversTable.Init(), NS_ERROR_OUT_OF_MEMORY);
+  mObserversTable.Init();
   return NS_OK;
 }
 
@@ -163,8 +163,7 @@ nsCommandManager::AddCommandObserver(nsIObserver *aCommandObserver, const char *
   if (!mObserversTable.Get(aCommandToObserve, &commandObservers))
   {
     nsAutoPtr<nsCOMArray<nsIObserver> > array(new nsCOMArray<nsIObserver>);
-    if (!array || !mObserversTable.Put(aCommandToObserve, array))
-      return NS_ERROR_OUT_OF_MEMORY;
+    mObserversTable.Put(aCommandToObserve, array);
 
     commandObservers = array.forget();
   }

@@ -72,7 +72,7 @@ _available_processors[common.DEFLATE_STREAM_EXTENSION] = (
 class DeflateFrameExtensionProcessor(ExtensionProcessorInterface):
     """WebSocket Per-frame DEFLATE extension processor."""
 
-    _WINDOW_BITS_PARAM = 'window_bits'
+    _WINDOW_BITS_PARAM = 'max_window_bits'
     _NO_CONTEXT_TAKEOVER_PARAM = 'no_context_takeover'
 
     def __init__(self, request):
@@ -82,6 +82,18 @@ class DeflateFrameExtensionProcessor(ExtensionProcessorInterface):
 
         self._response_window_bits = None
         self._response_no_context_takeover = False
+
+        # Counters for statistics.
+
+        # Total number of outgoing bytes supplied to this filter.
+        self._total_outgoing_payload_bytes = 0
+        # Total number of bytes sent to the network after applying this filter.
+        self._total_filtered_outgoing_payload_bytes = 0
+
+        # Total number of bytes received from the network.
+        self._total_incoming_payload_bytes = 0
+        # Total number of incoming bytes obtained after applying this filter.
+        self._total_filtered_incoming_payload_bytes = 0
 
     def get_extension_response(self):
         # Any unknown parameter will be just ignored.
@@ -110,7 +122,7 @@ class DeflateFrameExtensionProcessor(ExtensionProcessorInterface):
 
         self._compress_outgoing = True
 
-        response = common.ExtensionParameter(common.DEFLATE_FRAME_EXTENSION)
+        response = common.ExtensionParameter(self._request.name())
 
         if self._response_window_bits is not None:
             response.add_parameter(
@@ -123,7 +135,7 @@ class DeflateFrameExtensionProcessor(ExtensionProcessorInterface):
             'Enable %s extension ('
             'request: window_bits=%s; no_context_takeover=%r, '
             'response: window_wbits=%s; no_context_takeover=%r)' %
-            (common.DEFLATE_STREAM_EXTENSION,
+            (self._request.name(),
              window_bits,
              no_context_takeover,
              self._response_window_bits,
@@ -171,26 +183,74 @@ class DeflateFrameExtensionProcessor(ExtensionProcessorInterface):
         an _OutgoingFilter instance.
         """
 
+        original_payload_size = len(frame.payload)
+        self._total_outgoing_payload_bytes += original_payload_size
+
         if (not self._compress_outgoing or
             common.is_control_opcode(frame.opcode)):
+            self._total_filtered_outgoing_payload_bytes += (
+                original_payload_size)
             return
 
         frame.payload = self._deflater.filter(frame.payload)
         frame.rsv1 = 1
+
+        filtered_payload_size = len(frame.payload)
+        self._total_filtered_outgoing_payload_bytes += filtered_payload_size
+
+        # Print inf when ratio is not available.
+        ratio = float('inf')
+        average_ratio = float('inf')
+        if original_payload_size != 0:
+            ratio = float(filtered_payload_size) / original_payload_size
+        if self._total_outgoing_payload_bytes != 0:
+            average_ratio = (
+                float(self._total_filtered_outgoing_payload_bytes) /
+                self._total_outgoing_payload_bytes)
+        self._logger.debug(
+            'Outgoing compress ratio: %f (average: %f)' %
+            (ratio, average_ratio))
 
     def _incoming_filter(self, frame):
         """Transform incoming frames. This method is called only by
         an _IncomingFilter instance.
         """
 
+        received_payload_size = len(frame.payload)
+        self._total_incoming_payload_bytes += received_payload_size
+
         if frame.rsv1 != 1 or common.is_control_opcode(frame.opcode):
+            self._total_filtered_incoming_payload_bytes += (
+                received_payload_size)
             return
 
         frame.payload = self._inflater.filter(frame.payload)
         frame.rsv1 = 0
 
+        filtered_payload_size = len(frame.payload)
+        self._total_filtered_incoming_payload_bytes += filtered_payload_size
+
+        # Print inf when ratio is not available.
+        ratio = float('inf')
+        average_ratio = float('inf')
+        if received_payload_size != 0:
+            ratio = float(received_payload_size) / filtered_payload_size
+        if self._total_filtered_incoming_payload_bytes != 0:
+            average_ratio = (
+                float(self._total_incoming_payload_bytes) /
+                self._total_filtered_incoming_payload_bytes)
+        self._logger.debug(
+            'Incoming compress ratio: %f (average: %f)' %
+            (ratio, average_ratio))
+
 
 _available_processors[common.DEFLATE_FRAME_EXTENSION] = (
+    DeflateFrameExtensionProcessor)
+
+
+# Adding vendor-prefixed deflate-frame extension.
+# TODO(bashi): Remove this after WebKit stops using vender prefix.
+_available_processors[common.X_WEBKIT_DEFLATE_FRAME_EXTENSION] = (
     DeflateFrameExtensionProcessor)
 
 

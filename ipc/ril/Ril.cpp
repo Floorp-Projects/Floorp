@@ -320,11 +320,19 @@ RilClient::OnFileCanWriteWithoutBlocking(int fd)
 
     MOZ_ASSERT(fd == mSocket.get());
 
-    while (!mOutgoingQ.empty() || mCurrentRilRawData != NULL) {
-        if(!mCurrentRilRawData) {
-            mCurrentRilRawData = mOutgoingQ.front();
-            mOutgoingQ.pop();
-            mCurrentWriteOffset = 0;
+    while (true) {
+        {
+            MutexAutoLock lock(mMutex);
+
+            if (mOutgoingQ.empty() && !mCurrentRilRawData) {
+                return;
+            }
+
+            if(!mCurrentRilRawData) {
+                mCurrentRilRawData = mOutgoingQ.front();
+                mOutgoingQ.pop();
+                mCurrentWriteOffset = 0;
+            }
         }
         const uint8_t *toWrite;
 

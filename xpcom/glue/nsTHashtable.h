@@ -42,6 +42,7 @@
 #include "pldhash.h"
 #include "nsDebug.h"
 #include NEW_H
+#include "mozilla/fallible.h"
 
 // helper function for nsTHashtable::Clear()
 NS_COM_GLUE PLDHashOperator
@@ -105,6 +106,8 @@ PL_DHashStubEnumRemove(PLDHashTable    *table,
 template<class EntryType>
 class nsTHashtable
 {
+  typedef mozilla::fallible_t fallible_t;
+
 public:
   /**
    * A dummy constructor; you must call Init() before using this class.
@@ -122,7 +125,14 @@ public:
    * @param initSize the initial number of buckets in the hashtable, default 16
    * @return true if the class was initialized properly.
    */
-  bool Init(PRUint32 initSize = PL_DHASH_MIN_SIZE);
+  void Init(PRUint32 initSize = PL_DHASH_MIN_SIZE)
+  {
+    if (!Init(initSize, fallible_t()))
+      NS_RUNTIMEABORT("OOM");
+  }
+  bool Init(const fallible_t&) NS_WARN_UNUSED_RESULT
+  { return Init(PL_DHASH_MIN_SIZE, fallible_t()); }
+  bool Init(PRUint32 initSize, const fallible_t&) NS_WARN_UNUSED_RESULT;
 
   /**
    * Check whether the table has been initialized. This can be useful for static hashtables.
@@ -188,6 +198,14 @@ public:
                 can't be allocated
    */
   EntryType* PutEntry(KeyType aKey)
+  {
+    EntryType* e = PutEntry(aKey, fallible_t());
+    if (!e)
+      NS_RUNTIMEABORT("OOM");
+    return e;
+  }
+
+  EntryType* PutEntry(KeyType aKey, const fallible_t&) NS_WARN_UNUSED_RESULT
   {
     NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
     
@@ -400,7 +418,7 @@ nsTHashtable<EntryType>::~nsTHashtable()
 
 template<class EntryType>
 bool
-nsTHashtable<EntryType>::Init(PRUint32 initSize)
+nsTHashtable<EntryType>::Init(PRUint32 initSize, const fallible_t&)
 {
   if (mTable.entrySize)
   {

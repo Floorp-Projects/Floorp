@@ -73,6 +73,7 @@
 #include "nsAutoPtr.h"
 #include "nsAttrName.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
 
 class nsIDOMKeyEvent;
@@ -322,11 +323,15 @@ public:
                                          const nsAString & aAttribute,
                                          bool aSuppressTransaction);
 
-  /** join together any afjacent editable text nodes in the range */
+  /** join together any adjacent editable text nodes in the range */
   NS_IMETHOD CollapseAdjacentTextNodes(nsIDOMRange *aInRange);
 
-  virtual bool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
+  virtual bool AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2)
+    MOZ_OVERRIDE;
 
+  NS_IMETHOD DeleteSelectionImpl(EDirection aAction,
+                                 EStripWrappers aStripWrappers);
+  nsresult DeleteNode(nsINode* aNode);
   NS_IMETHODIMP DeleteNode(nsIDOMNode * aNode);
   NS_IMETHODIMP DeleteText(nsIDOMCharacterData *aTextNode,
                            PRUint32             aOffset,
@@ -661,10 +666,8 @@ protected:
                                          nsIDOMCharacterData *aTextNode, 
                                          PRInt32 aStartOffset,
                                          PRInt32 aEndOffset);
-  nsresult RelativeFontChangeOnNode( PRInt32 aSizeChange, 
-                                     nsIDOMNode *aNode);
-  nsresult RelativeFontChangeHelper( PRInt32 aSizeChange, 
-                                     nsIDOMNode *aNode);
+  nsresult RelativeFontChangeOnNode(PRInt32 aSizeChange, nsINode* aNode);
+  nsresult RelativeFontChangeHelper(PRInt32 aSizeChange, nsINode* aNode);
 
   /* helper routines for inline style */
   nsresult SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode, 
@@ -761,6 +764,9 @@ protected:
                                    PRInt32 aDestOffset,
                                    bool aDeleteSelection,
                                    bool aTrustedInput);
+
+  nsresult ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, PRInt32* aOffset,
+                      nsIAtom* aProperty, const nsAString* aAttribute);
 
 // Data members
 protected:

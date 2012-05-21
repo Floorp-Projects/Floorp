@@ -7060,6 +7060,13 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
               parentSVGReset->mDominantBaseline,
               NS_STYLE_DOMINANT_BASELINE_AUTO, 0, 0, 0, 0);
 
+  // vector-effect: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForVectorEffect(),
+              svgReset->mVectorEffect,
+              canStoreInRuleTree, SETDSC_ENUMERATED,
+              parentSVGReset->mVectorEffect,
+              NS_STYLE_VECTOR_EFFECT_NONE, 0, 0, 0, 0);
+
   // filter: url, none, inherit
   const nsCSSValue* filterValue = aRuleData->ValueForFilter();
   if (eCSSUnit_URL == filterValue->GetUnit()) {

@@ -49,9 +49,9 @@ namespace mozilla {
 namespace dom {
 namespace binding {
 
-class ProxyHandler : public js::ProxyHandler {
+class ProxyHandler : public js::BaseProxyHandler {
 protected:
-    ProxyHandler() : js::ProxyHandler(ProxyFamily())
+    ProxyHandler() : js::BaseProxyHandler(ProxyFamily())
     {
     }
 
@@ -179,7 +179,7 @@ private:
     static js::Shape *getProtoShape(JSObject *obj);
     static void setProtoShape(JSObject *obj, js::Shape *shape);
 
-    static JSBool length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+    static JSBool length_getter(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
 
     static inline bool getItemAt(ListType *list, uint32_t i, IndexGetterType &item);
     static inline bool setItemAt(JSContext *cx, ListType *list, uint32_t i, IndexSetterType item);
@@ -230,7 +230,7 @@ public:
     JSString *obj_toString(JSContext *cx, JSObject *proxy);
     void finalize(JSFreeOp *fop, JSObject *proxy);
 
-    static bool proxyHandlerIsList(js::ProxyHandler *handler) {
+    static bool proxyHandlerIsList(js::BaseProxyHandler *handler) {
         return handler == &instance;
     }
     static bool objIsList(JSObject *obj) {

@@ -123,7 +123,6 @@ struct BytecodeEmitter
     Parser          *parser;        /* the parser */
 
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
-    AtomDefnMapPtr  roLexdeps;
     unsigned        firstLine;      /* first line, for JSScript::NewScriptFromEmitter */
 
     int             stackDepth;     /* current stack depth in script frame */
@@ -156,7 +155,7 @@ struct BytecodeEmitter
 
     /* These two should only be true if sc->inFunction() is false. */
     const bool      noScriptRval:1;     /* The caller is JS_Compile*Script*. */
-    const bool      needScriptGlobal:1; /* API caller does not want result value 
+    const bool      needScriptGlobal:1; /* API caller does not want result value
                                            from global script. */
 
     bool            hasSingletons:1;    /* script contains singleton initializer JSOP_OBJECT */

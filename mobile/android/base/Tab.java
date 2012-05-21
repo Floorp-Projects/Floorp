@@ -76,8 +76,8 @@ public final class Tab {
     private String mFaviconUrl;
     private JSONObject mIdentityData;
     private Drawable mThumbnail;
-    private List<HistoryEntry> mHistory;
     private int mHistoryIndex;
+    private int mHistorySize;
     private int mParentId;
     private boolean mExternal;
     private boolean mBookmark;
@@ -86,6 +86,10 @@ public final class Tab {
     private String mDocumentURI;
     private String mContentType;
     private boolean mHasTouchListeners;
+    private boolean mAllowZoom;
+    private float mDefaultZoom;
+    private float mMinZoom;
+    private float mMaxZoom;
     private ArrayList<View> mPluginViews;
     private HashMap<Object, Layer> mPluginLayers;
     private ContentResolver mContentResolver;
@@ -98,16 +102,6 @@ public final class Tab {
     public static final int STATE_SUCCESS = 2;
     public static final int STATE_ERROR = 3;
 
-    public static final class HistoryEntry {
-        public String mUri;         // must never be null
-        public String mTitle;       // must never be null
-
-        public HistoryEntry(String uri, String title) {
-            mUri = uri;
-            mTitle = title;
-        }
-    }
-
     public Tab(int id, String url, boolean external, int parentId, String title) {
         mId = id;
         mUrl = url;
@@ -118,8 +112,8 @@ public final class Tab {
         mFaviconUrl = null;
         mIdentityData = null;
         mThumbnail = null;
-        mHistory = new ArrayList<HistoryEntry>();
         mHistoryIndex = -1;
+        mHistorySize = 0;
         mBookmark = false;
         mDoorHangers = new HashMap<String, DoorHanger>();
         mFaviconLoadId = 0;
@@ -251,7 +245,7 @@ public final class Tab {
             mUrl = url;
             Log.i(LOGTAG, "Updated url: " + url + " for tab with id: " + mId);
             updateBookmark();
-            updateHistoryEntry(mUrl, mTitle);
+            updateHistory(mUrl, mTitle);
         }
     }
 
@@ -275,22 +269,15 @@ public final class Tab {
         mTitle = (title == null ? "" : title);
 
         Log.i(LOGTAG, "Updated title: " + mTitle + " for tab with id: " + mId);
-        updateHistoryEntry(mUrl, mTitle);
+        updateHistory(mUrl, mTitle);
     }
 
-    private void updateHistoryEntry(final String uri, final String title) {
-        final HistoryEntry he = getLastHistoryEntry();
-        if (he != null) {
-            he.mUri = uri;
-            he.mTitle = title;
-            GeckoAppShell.getHandler().post(new Runnable() {
-                public void run() {
-                    GlobalHistory.getInstance().update(uri, title);
-                }
-            });
-        } else {
-            Log.e(LOGTAG, "Requested title update on empty history stack");
-        }
+    private void updateHistory(final String uri, final String title) {
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                GlobalHistory.getInstance().update(uri, title);
+            }
+        });
     }
 
     public void setState(int state) {
@@ -299,6 +286,38 @@ public final class Tab {
 
     public int getState() {
         return mState;
+    }
+
+    public void setAllowZoom(boolean aValue) {
+        mAllowZoom = aValue;
+    }
+
+    public boolean getAllowZoom() {
+        return mAllowZoom;
+    }
+
+    public void setDefaultZoom(float aValue) {
+        mDefaultZoom = aValue;
+    }
+
+    public float getDefaultZoom() {
+        return mDefaultZoom;
+    }
+
+    public void setMinZoom(float aValue) {
+        mMinZoom = aValue;
+    }
+
+    public float getMinZoom() {
+        return mMinZoom;
+    }
+
+    public void setMaxZoom(float aValue) {
+        mMaxZoom = aValue;
+    }
+
+    public float getMaxZoom() {
+        return mMaxZoom;
     }
 
     public void setHasTouchListeners(boolean aValue) {
@@ -315,12 +334,6 @@ public final class Tab {
 
     public long getFaviconLoadId() {
         return mFaviconLoadId;
-    }
-
-    public HistoryEntry getLastHistoryEntry() {
-        if (mHistory.isEmpty())
-            return null;
-        return mHistory.get(mHistoryIndex);
     }
 
     public void updateFavicon(Drawable favicon) {
@@ -399,11 +412,11 @@ public final class Tab {
     }
 
     public boolean canDoForward() {
-        return (mHistoryIndex + 1 < mHistory.size());
+        return (mHistoryIndex + 1 < mHistorySize);
     }
 
     public boolean doForward() {
-        if (mHistoryIndex + 1 >= mHistory.size()) {
+        if (mHistoryIndex + 1 >= mHistorySize) {
             return false;
         }
         GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Forward", "");
@@ -452,11 +465,7 @@ public final class Tab {
         if (event.equals("New")) {
             final String uri = message.getString("uri");
             mHistoryIndex++;
-            while (mHistory.size() > mHistoryIndex) {
-                mHistory.remove(mHistoryIndex);
-            }
-            HistoryEntry he = new HistoryEntry(uri, "");
-            mHistory.add(he);
+            mHistorySize = mHistoryIndex + 1;
             GeckoAppShell.getHandler().post(new Runnable() {
                 public void run() {
                     GlobalHistory.getInstance().add(uri);
@@ -469,21 +478,27 @@ public final class Tab {
             }
             mHistoryIndex--;
         } else if (event.equals("Forward")) {
-            if (mHistoryIndex + 1 >= mHistory.size()) {
+            if (mHistoryIndex + 1 >= mHistorySize) {
                 Log.e(LOGTAG, "Received unexpected forward notification");
                 return;
             }
             mHistoryIndex++;
         } else if (event.equals("Goto")) {
             int index = message.getInt("index");
-            if (index < 0 || index >= mHistory.size()) {
+            if (index < 0 || index >= mHistorySize) {
                 Log.e(LOGTAG, "Received unexpected history-goto notification");
                 return;
             }
             mHistoryIndex = index;
         } else if (event.equals("Purge")) {
-            mHistory.clear();
-            mHistoryIndex = -1;
+            int numEntries = message.getInt("index");
+            mHistorySize -= numEntries;
+            mHistoryIndex -= numEntries;
+            if (mHistorySize < 0 || mHistoryIndex < -1) {
+                Log.e(LOGTAG, "Unexpected history state: index = " + mHistoryIndex + ", size = " + mHistorySize);
+                mHistorySize = 0;
+                mHistoryIndex = -1;
+            }
         }
     }
 

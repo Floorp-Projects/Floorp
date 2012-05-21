@@ -125,7 +125,7 @@ public:
   nsresult GetURL(nsISupports* pluginInst,
                   const char* url,
                   const char* target,
-                  nsIPluginStreamListener* streamListener,
+                  nsNPAPIPluginStreamListener* streamListener,
                   const char* altHost,
                   const char* referrer,
                   bool forceJSEnabled);
@@ -135,7 +135,7 @@ public:
                    const char* postData,
                    bool isFile,
                    const char* target,
-                   nsIPluginStreamListener* streamListener,
+                   nsNPAPIPluginStreamListener* streamListener,
                    const char* altHost,
                    const char* referrer,
                    bool forceJSEnabled,
@@ -160,7 +160,7 @@ public:
   nsresult
   NewPluginURLStream(const nsString& aURL, 
                      nsNPAPIPluginInstance *aInstance, 
-                     nsIPluginStreamListener *aListener,
+                     nsNPAPIPluginStreamListener *aListener,
                      nsIInputStream *aPostStream = nsnull,
                      const char *aHeadersData = nsnull, 
                      PRUint32 aHeadersDataLen = 0);
@@ -169,7 +169,7 @@ public:
   GetURLWithHeaders(nsNPAPIPluginInstance *pluginInst, 
                     const char* url, 
                     const char* target = NULL,
-                    nsIPluginStreamListener* streamListener = NULL,
+                    nsNPAPIPluginStreamListener* streamListener = NULL,
                     const char* altHost = NULL,
                     const char* referrer = NULL,
                     bool forceJSEnabled = false,

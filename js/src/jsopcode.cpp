@@ -714,7 +714,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
 
 const size_t Sprinter::DefaultSize = 64;
 
-bool 
+bool
 Sprinter::realloc_(size_t newSize)
 {
     JS_ASSERT(newSize > (size_t) offset);
@@ -4833,7 +4833,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      */
                     bool grouped = !(fun->flags & JSFUN_EXPR_CLOSURE);
                     bool strict = jp->script->strictModeCode;
-                    str = js_DecompileToString(cx, "lambda", fun, 0, 
+                    str = js_DecompileToString(cx, "lambda", fun, 0,
                                                false, grouped, strict,
                                                js_DecompileFunction);
                     if (!str)
@@ -5661,7 +5661,7 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
 
     if (pc < script->main())
         goto do_fallback;
-    
+
     if (spindex != JSDVG_IGNORE_STACK) {
         jsbytecode **pcstack;
 

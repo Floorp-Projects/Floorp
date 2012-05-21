@@ -1374,31 +1374,38 @@ WebSocketChannel::PrimeNewOutgoingMessage()
 
     mClientClosed = 1;
     mOutHeader[0] = kFinalFragBit | kClose;
-    mOutHeader[1] = 0x02; // payload len = 2, maybe more for reason
-    mOutHeader[1] |= kMaskBit;
+    mOutHeader[1] = kMaskBit;
 
     // payload is offset 6 including 4 for the mask
     payload = mOutHeader + 6;
 
-    // length is 8 plus any reason information
-    mHdrOutToSend = 8;
-
     // The close reason code sits in the first 2 bytes of payload
     // If the channel user provided a code and reason during Close()
     // and there isn't an internal error, use that.
-    if (NS_SUCCEEDED(mStopOnClose) && mScriptCloseCode) {
-      *((PRUint16 *)payload) = PR_htons(mScriptCloseCode);
-      if (!mScriptCloseReason.IsEmpty()) {
-        NS_ABORT_IF_FALSE(mScriptCloseReason.Length() <= 123,
-                          "Close Reason Too Long");
-        mOutHeader[1] += mScriptCloseReason.Length();
-        mHdrOutToSend += mScriptCloseReason.Length();
-        memcpy (payload + 2,
-                mScriptCloseReason.BeginReading(),
-                mScriptCloseReason.Length());
+    if (NS_SUCCEEDED(mStopOnClose)) {
+      if (mScriptCloseCode) {
+        *((PRUint16 *)payload) = PR_htons(mScriptCloseCode);
+        mOutHeader[1] += 2;
+        mHdrOutToSend = 8;
+        if (!mScriptCloseReason.IsEmpty()) {
+          NS_ABORT_IF_FALSE(mScriptCloseReason.Length() <= 123,
+                            "Close Reason Too Long");
+          mOutHeader[1] += mScriptCloseReason.Length();
+          mHdrOutToSend += mScriptCloseReason.Length();
+          memcpy (payload + 2,
+                  mScriptCloseReason.BeginReading(),
+                  mScriptCloseReason.Length());
+        }
+      } else {
+        // No close code/reason, so payload length = 0.  We must still send mask
+        // even though it's not used.  Keep payload offset so we write mask
+        // below.
+        mHdrOutToSend = 6;
       }
     } else {
       *((PRUint16 *)payload) = PR_htons(ResultToCloseCode(mStopOnClose));
+      mOutHeader[1] += 2;
+      mHdrOutToSend = 8;
     }
 
     if (mServerClosed) {
@@ -1504,30 +1511,29 @@ WebSocketChannel::PrimeNewOutgoingMessage()
 
   ApplyMask(mask, mCurrentOut->BeginWriting(), mCurrentOut->Length());
 
+  PRInt32 len = mCurrentOut->Length();
+
   // for small frames, copy it all together for a contiguous write
-  if (mCurrentOut->Length() <= kCopyBreak) {
-    memcpy(mOutHeader + mHdrOutToSend, mCurrentOut->BeginWriting(),
-           mCurrentOut->Length());
-    mHdrOutToSend += mCurrentOut->Length();
-    mCurrentOutSent = mCurrentOut->Length();
+  if (len && len <= kCopyBreak) {
+    memcpy(mOutHeader + mHdrOutToSend, mCurrentOut->BeginWriting(), len);
+    mHdrOutToSend += len;
+    mCurrentOutSent = len;
   }
 
-  if (mCompressor) {
+  if (len && mCompressor) {
     // assume a 1/3 reduction in size for sizing the buffer
     // the buffer is used multiple times if necessary
     PRUint32 currentHeaderSize = mHdrOutToSend;
     mHdrOutToSend = 0;
 
-    EnsureHdrOut(32 +
-                 (currentHeaderSize + mCurrentOut->Length() - mCurrentOutSent)
-                 / 2 * 3);
+    EnsureHdrOut(32 + (currentHeaderSize + len - mCurrentOutSent) / 2 * 3);
     mCompressor->Deflate(mOutHeader, currentHeaderSize,
                          mCurrentOut->BeginReading() + mCurrentOutSent,
-                         mCurrentOut->Length() - mCurrentOutSent);
+                         len - mCurrentOutSent);
 
     // All of the compressed data now resides in {mHdrOut, mHdrOutToSend}
     // so do not send the body again
-    mCurrentOutSent = mCurrentOut->Length();
+    mCurrentOutSent = len;
   }
 
   // Transmitting begins - mHdrOutToSend bytes from mOutHeader and

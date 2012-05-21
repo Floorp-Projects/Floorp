@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <style type="text/css">
+    .lc { text-transform: lowercase; }
+    .uc { text-transform: uppercase; }
+  </style>
+  <title>Test - word-break:break-all with text-transform and clusters</title>
+  </head>
+  <body>
+    <div class="lc">f<br>o<br>x<br>f<br>o&#x0325;<br>x&#x0307;</div><br>
+    <div class="lc">fox<br>fo&#x0325;x&#x0307;</div><br>
+    <div class="uc">f<br>o<br>x<br>f<br>o&#x0325;<br>x&#x0307;</div><br>
+    <div class="uc">fox<br>fo&#x0325;x&#x0307;</div><br>
+  </body>
+</html>

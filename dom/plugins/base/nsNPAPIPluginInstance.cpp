@@ -98,7 +98,6 @@ using namespace mozilla;
 using namespace mozilla::plugins::parent;
 
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
-static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsNPAPIPluginInstance)
 
@@ -525,14 +524,15 @@ nsNPAPIPluginInstance::NewStreamFromPlugin(const char* type, const char* target,
 
 nsresult
 nsNPAPIPluginInstance::NewStreamListener(const char* aURL, void* notifyData,
-                                         nsIPluginStreamListener** listener)
+                                         nsNPAPIPluginStreamListener** listener)
 {
-  nsNPAPIPluginStreamListener* stream = new nsNPAPIPluginStreamListener(this, notifyData, aURL);
-  NS_ENSURE_TRUE(stream, NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<nsNPAPIPluginStreamListener> sl = new nsNPAPIPluginStreamListener(this, notifyData, aURL);
 
-  mStreamListeners.AppendElement(stream);
+  mStreamListeners.AppendElement(sl);
 
-  return stream->QueryInterface(kIPluginStreamListenerIID, (void**)listener);
+  sl.forget(listener);
+
+  return NS_OK;
 }
 
 nsresult nsNPAPIPluginInstance::Print(NPPrint* platformPrint)

@@ -131,7 +131,7 @@ ComputeThis(JSContext *cx, StackFrame *fp)
  * This helps us implement the custom [[Get]] method that ES5's GetValue
  * algorithm uses for primitive values, without actually constructing the
  * temporary object that the specification does.
- * 
+ *
  * For objects, return the object itself. For string, boolean, and number
  * primitive values, return the appropriate constructor's prototype. For
  * undefined and null, throw an error and return NULL, attributing the
@@ -183,7 +183,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSObject *start, JSObject *found,
 #endif
 
 inline bool
-GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, HandleObject obj, jsid id, Value *vp)
+GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, HandleObject obj, HandleId id, Value *vp)
 {
     /*
      * Various XML properties behave differently when accessed in a
@@ -339,12 +339,12 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
 
     RootObject objRoot(cx, &obj);
 
-    jsid id = NameToId(name);
+    RootedVarId id(cx, NameToId(name));
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
         unsigned defineHow = (op == JSOP_SETNAME)
                              ? DNP_CACHE_RESULT | DNP_UNQUALIFIED
                              : DNP_CACHE_RESULT;
-        if (!js_SetPropertyHelper(cx, objRoot, id, defineHow, rref.address(), strict))
+        if (!baseops::SetPropertyHelper(cx, objRoot, id, defineHow, rref.address(), strict))
             return false;
     } else {
         if (!obj->setGeneric(cx, id, rref.address(), strict))
@@ -405,7 +405,7 @@ NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
 
     /* Take the slow path if prop was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
-        if (!obj->getGeneric(cx, id, vp))
+        if (!obj->getGeneric(cx, RootedVarId(cx, id), vp))
             return false;
     } else {
         Shape *shape = (Shape *)prop;
@@ -423,7 +423,7 @@ inline bool
 DefVarOrConstOperation(JSContext *cx, HandleObject varobj, PropertyName *dn, unsigned attrs)
 {
     JS_ASSERT(varobj->isVarObj());
-    JS_ASSERT(!varobj->getOps()->defineProperty);
+    JS_ASSERT(!varobj->getOps()->defineProperty || varobj->isDebugScope());
 
     JSProperty *prop;
     JSObject *obj2;
@@ -432,9 +432,8 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, PropertyName *dn, uns
 
     /* Steps 8c, 8d. */
     if (!prop || (obj2 != varobj && varobj->isGlobal())) {
-        if (!DefineNativeProperty(cx, varobj, dn, UndefinedValue(),
-                                  JS_PropertyStub, JS_StrictPropertyStub, attrs, 0, 0))
-        {
+        if (!varobj->defineProperty(cx, dn, UndefinedValue(), JS_PropertyStub,
+                                    JS_StrictPropertyStub, attrs)) {
             return false;
         }
     } else {
@@ -532,6 +531,49 @@ InterpreterFrames::enableInterruptsIfRunning(JSScript *script)
 {
     if (script == regs->fp()->script())
         enabler.enableInterrupts();
+}
+
+inline void
+AssertValidEvalFrameScopeChainAtExit(StackFrame *fp)
+{
+#ifdef DEBUG
+    JS_ASSERT(fp->isEvalFrame());
+
+    JS_ASSERT(!fp->hasBlockChain());
+    JSObject &scope = *fp->scopeChain();
+
+    if (fp->isStrictEvalFrame())
+        JS_ASSERT(scope.asCall().maybeStackFrame() == fp);
+    else if (fp->isDebuggerFrame())
+        JS_ASSERT(!scope.isScope());
+    else if (fp->isDirectEvalFrame())
+        JS_ASSERT(scope == *fp->prev()->scopeChain());
+    else
+        JS_ASSERT(scope.isGlobal());
+#endif
+}
+
+inline void
+AssertValidFunctionScopeChainAtExit(StackFrame *fp)
+{
+#ifdef DEBUG
+    JS_ASSERT(fp->isFunctionFrame());
+    if (fp->isGeneratorFrame() || fp->isYielding())
+        return;
+
+    if (fp->isEvalFrame()) {
+        AssertValidEvalFrameScopeChainAtExit(fp);
+        return;
+    }
+
+    JS_ASSERT(!fp->hasBlockChain());
+    JSObject &scope = *fp->scopeChain();
+
+    if (fp->fun()->isHeavyweight())
+        JS_ASSERT(scope.asCall().maybeStackFrame() == fp);
+    else if (scope.isCall() || scope.isBlock())
+        JS_ASSERT(scope.asScope().maybeStackFrame() != fp);
+#endif
 }
 
 static JS_ALWAYS_INLINE bool
@@ -668,14 +710,14 @@ ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 }
 
 static inline bool
-FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid &id, Value *vp)
+FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid *idp, Value *vp)
 {
     int32_t i_;
     if (ValueFitsInInt32(idval, &i_) && INT_FITS_IN_JSID(i_)) {
-        id = INT_TO_JSID(i_);
+        *idp = INT_TO_JSID(i_);
         return true;
     }
-    return !!InternNonIntElementId(cx, obj, idval, &id, vp);
+    return !!InternNonIntElementId(cx, obj, idval, idp, vp);
 }
 
 static JS_ALWAYS_INLINE bool
@@ -705,7 +747,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
 #if JS_HAS_XML_SUPPORT
     if (op == JSOP_CALLELEM && JS_UNLIKELY(obj->isXML())) {
         jsid id;
-        if (!FetchElementId(cx, obj, rref, id, res))
+        if (!FetchElementId(cx, obj, rref, &id, res))
             return false;
         return js_GetXMLMethod(cx, obj, id, res);
     }
@@ -796,7 +838,7 @@ GetElementOperation(JSContext *cx, JSOp op, const Value &lref, const Value &rref
 }
 
 static JS_ALWAYS_INLINE bool
-SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &value, bool strict)
+SetObjectElementOperation(JSContext *cx, JSObject *obj, HandleId id, const Value &value, bool strict)
 {
     types::TypeScript::MonitorAssign(cx, obj, id);
 

@@ -387,9 +387,13 @@ anp_audio_isStopped(ANPAudioTrack* s)
 
 uint32_t
 anp_audio_trackLatency(ANPAudioTrack* s) {
-  // Bug 721835
-  NOT_IMPLEMENTED();
-  return 1;
+  // Hardcode an estimate of the system's audio latency. Flash hardcodes
+  // similar latency estimates for pre-Honeycomb devices that do not support
+  // ANPAudioTrackInterfaceV1's trackLatency(). The Android stock browser
+  // calls android::AudioTrack::latency(), an internal Android API that is
+  // not available in the public NDK:
+  // https://github.com/android/platform_external_webkit/commit/49bf866973cb3b2a6c74c0eab864e9562e4cbab1
+  return 100; // milliseconds
 }
 
 void InitAudioTrackInterfaceV0(ANPAudioTrackInterfaceV0 *i) {

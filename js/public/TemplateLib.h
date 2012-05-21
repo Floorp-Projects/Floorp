@@ -177,7 +177,7 @@ template <typename T, T v1, T v2> struct If<false, T, v1, v2> { static const T r
 /*
  * Traits class for identifying types that are implicitly barriered.
  */
-template <class T> struct IsPostBarrieredType { static const bool result = false; };
+template <class T> struct IsRelocatableHeapType { static const bool result = true; };
 
 } /* namespace tl */
 } /* namespace js */

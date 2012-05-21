@@ -46,6 +46,12 @@ def getData(confFile):
     fp.close()
     return repo, dest, directories
 
+def makePath(a, b):
+  if not b:
+    # Empty directory, i.e., the repository root.
+    return a
+  return "%s/%s" % (a, b)
+
 def copy(thissrcdir, dest, directories):
   """Copy mochitests and support files from the external HG directory to their
   place in mozilla-central.
@@ -55,8 +61,8 @@ def copy(thissrcdir, dest, directories):
     dirtocreate = dest
 
     subdirs, mochitests, supportfiles = parseManifestFile(dest, d)
-    sourcedir = "hg-%s/%s" % (dest, d)
-    destdir = "%s/%s" % (dest, d)
+    sourcedir = makePath("hg-%s" % dest, d)
+    destdir = makePath(dest, d)
     os.makedirs(destdir)
 
     for mochitest in mochitests:
@@ -65,7 +71,16 @@ def copy(thissrcdir, dest, directories):
       shutil.copy("%s/%s" % (sourcedir, support), "%s/%s" % (destdir, support))
 
     if len(subdirs):
-      importDirs(thissrcdir, dest, ["%s/%s" % (d, subdir) for subdir in subdirs])
+      if d:
+        importDirs(thissrcdir, dest, ["%s/%s" % (d, subdir) for subdir in subdirs])
+      else:
+        # Empty directory, i.e., the repository root
+        importDirs(thissrcdir, dest, subdirs)
+
+def makefileString(entries):
+  if not len(entries):
+    return "  $(NULL)"
+  return "\n".join(["  %s \\" % (entry, ) for entry in entries]) + "\n  $(NULL)"
 
 def printMakefile(dest, directories):
   """Create a .mk file to be included into the main Makefile.in, which lists the
@@ -75,8 +90,8 @@ def printMakefile(dest, directories):
   path = dest + ".mk"
   fp = open(path, "wb")
   fp.write("DIRS += \\\n")
-  fp.writelines(["  %s/%s \\\n" % (dest, d) for d in directories])
-  fp.write("  $(NULL)\n")
+  fp.write(makefileString([makePath(dest, d) for d in directories]))
+  fp.write("\n")
   fp.close()
   subprocess.check_call(["hg", "add", path])
 
@@ -106,17 +121,16 @@ libs:: $$(_TESTS)
 \t$$(INSTALL) $$(foreach f,$$^,"$$f") $$(DEPTH)/_tests/testing/mochitest/tests/$$(relativesrcdir)
 """
 
-def makefileString(entries):
-  if not len(entries):
-    return "  $(NULL)"
-  return "\n".join(["  %s \\" % (entry, ) for entry in entries]) + "\n  $(NULL)"
-
 def printMakefiles(thissrcdir, dest, directories):
   """Create Makefile.in files for each directory that contains tests we import.
   """
   print "Creating Makefile.ins..."
   for d in directories:
-    path = "%s/%s" % (dest, d)
+    if d:
+      path = "%s/%s" % (dest, d)
+    else:
+      # Empty directory, i.e., the repository root
+      path = dest
     abspath = "%s/%s" % (thissrcdir, path)
     print "Creating Makefile.in in %s..." % (path, )
 

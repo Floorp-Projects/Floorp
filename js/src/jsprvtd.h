@@ -182,7 +182,7 @@ struct TreeContext;
 class UpvarCookie;
 
 class Proxy;
-class ProxyHandler;
+class BaseProxyHandler;
 class Wrapper;
 class CrossCompartmentWrapper;
 
@@ -409,40 +409,22 @@ typedef struct JSDebugHooks {
 /* js::ObjectOps function pointer typedefs. */
 
 /*
- * Look for id in obj and its prototype chain, returning false on error or
- * exception, true on success.  On success, return null in *propp if id was
- * not found.  If id was found, return the first object searching from obj
- * along its prototype chain in which id names a direct property in *objp, and
- * return a non-null, opaque property pointer in *propp.
- *
- * If JSLookupPropOp succeeds and returns with *propp non-null, that pointer
- * may be passed as the prop parameter to a JSAttributesOp, as a short-cut
- * that bypasses id re-lookup.
- */
-typedef JSBool
-(* JSLookupPropOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
-                   JSProperty **propp);
-
-/*
- * Get or set attributes of the property obj[id]. Return false on error or
- * exception, true with current attributes in *attrsp.
- */
-typedef JSBool
-(* JSAttributesOp)(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp);
-
-/*
  * A generic type for functions mapping an object to another object, or null
  * if an error or exception was thrown on cx.
  */
 typedef JSObject *
-(* JSObjectOp)(JSContext *cx, JSObject *obj);
+(* JSObjectOp)(JSContext *cx, JSHandleObject obj);
+
+/* Signature for class initialization ops. */
+typedef JSObject *
+(* JSClassInitializerOp)(JSContext *cx, JSObject *obj);
 
 /*
  * Hook that creates an iterator object for a given object. Returns the
  * iterator object or null if an error or exception was thrown on cx.
  */
 typedef JSObject *
-(* JSIteratorOp)(JSContext *cx, JSObject *obj, JSBool keysonly);
+(* JSIteratorOp)(JSContext *cx, JSHandleObject obj, JSBool keysonly);
 
 /*
  * The following determines whether JS_EncodeCharacters and JS_DecodeBytes

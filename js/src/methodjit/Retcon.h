@@ -40,7 +40,7 @@
 
 /*
  * Retroactive continuity ("retcon") refers to the retroactive modification
- * or reinterpretation of established facts. 
+ * or reinterpretation of established facts.
  */
 
 #if !defined jsjaeger_retcon_h__ && defined JS_METHODJIT

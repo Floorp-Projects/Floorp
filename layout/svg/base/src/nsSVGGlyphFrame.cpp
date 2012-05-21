@@ -512,6 +512,10 @@ nsSVGGlyphFrame::UpdateBounds()
   mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
     mRect, GetCanvasTM(), PresContext());
 
+  nsRect overflow = nsRect(nsPoint(0,0), mRect.Size());
+  nsOverflowAreas overflowAreas(overflow, overflow);
+  FinishAndStoreOverflow(overflowAreas, mRect.Size());
+
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
 
@@ -519,6 +523,7 @@ nsSVGGlyphFrame::UpdateBounds()
     // We only invalidate if our outer-<svg> has already had its
     // initial reflow (since if it hasn't, its entire area will be
     // invalidated when it gets that initial reflow):
+    // XXXSDL Let FinishAndStoreOverflow do this.
     nsSVGUtils::InvalidateBounds(this, true);
   }
 }  
@@ -904,7 +909,7 @@ nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext, gfxPattern **aStrokePatte
 
     if (ps) {
       // Gradient or Pattern: can get pattern directly from frame
-      strokePattern = ps->GetPaintServerPattern(this, opacity);
+      strokePattern = ps->GetPaintServerPattern(this, &nsStyleSVG::mStroke, opacity);
     }
 
     if (!strokePattern) {
