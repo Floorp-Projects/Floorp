@@ -1395,9 +1395,8 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
                               ELEMENT_IS_POTENTIAL_ANIMATION_RESTYLE_ROOT, this)
 {
   // XXXbz this should be in Init() or something!
-  if (!mPendingRestyles.Init() || !mPendingAnimationRestyles.Init()) {
-    // now what?
-  }
+  mPendingRestyles.Init();
+  mPendingAnimationRestyles.Init();
 
 #ifdef DEBUG
   static bool gFirstTime = true;
@@ -7673,9 +7672,14 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
                            nsIFrame* aFrame,
                            nsChangeHint aChange)
 {
+  // We check GetStyleDisplay()->HasTransform() in addition to checking
+  // IsTransformed() since we can get here for some frames that don't have the
+  // NS_FRAME_MAY_BE_TRANSFORMED bit set (e.g. nsTableFrame; for a transformed
+  // table that bit is only set on the nsTableOuterFrame).
   NS_ASSERTION(!(aChange & nsChangeHint_UpdateTransformLayer) ||
+               aFrame->IsTransformed() ||
                aFrame->GetStyleDisplay()->HasTransform(),
-               "Only transform style should give a UpdateTransformLayer hint");
+               "Unexpected UpdateTransformLayer hint");
 
   nsIPresShell *shell = aPresContext->PresShell();
   if (shell->IsPaintingSuppressed()) {
@@ -7948,7 +7952,40 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         ApplyRenderingChangeToTree(presContext, frame, hint);
         didInvalidate = true;
       }
+      NS_ASSERTION(!(hint & nsChangeHint_ChildrenOnlyTransform) ||
+                   (hint & nsChangeHint_UpdateOverflow),
+                   "nsChangeHint_UpdateOverflow should be passed too");
       if ((hint & nsChangeHint_UpdateOverflow) && !didReflow) {
+        if (hint & nsChangeHint_ChildrenOnlyTransform) {
+          // When we process restyle events starting from the root of the frame
+          // tree, we start at a ViewportFrame and traverse down the tree from
+          // there. When we reach its nsHTMLScrollFrame child, that frame's
+          // GetContent() returns the root element of the document, even though
+          // that frame is not the root element's primary frame. The result of
+          // this quirk is that we remove any pending change hints for the
+          // root element and process them for the nsHTMLScrollFrame instead of
+          // the root element's primary frame. For most change hints this is
+          // not a problem, but for nsChangeHint_ChildrenOnlyTransform it is,
+          // since the children that we want to call UpdateOverflow on are the
+          // frames for the children of the root element, not the nsCanvasFrame
+          // child of the nsHTMLScrollFrame. As a result we need to ignore
+          // |frame| here and use frame->GetContent()->GetPrimaryFrame().
+          nsIFrame *f = frame->GetContent()->GetPrimaryFrame();
+          NS_ABORT_IF_FALSE(f->IsFrameOfType(nsIFrame::eSVG |
+                                             nsIFrame::eSVGContainer),
+                            "Children-only transforms only expected on SVG frames");
+          // Update overflow areas of children first:
+          nsIFrame* childFrame = f->GetFirstPrincipalChild();
+          for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
+            NS_ABORT_IF_FALSE(childFrame->IsFrameOfType(nsIFrame::eSVG),
+                              "Not expecting non-SVG children");
+            childFrame->UpdateOverflow();
+            NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrSpecialSibling(childFrame),
+                         "SVG frames should not have continuations or special siblings");
+            NS_ASSERTION(childFrame->GetParent() == frame,
+                         "SVG child frame not expected to have different parent");
+          }
+        }
         while (frame) {
           nsOverflowAreas* pre = static_cast<nsOverflowAreas*>
             (frame->Properties().Get(frame->PreTransformOverflowAreasProperty()));
@@ -11481,8 +11518,12 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
                                         nsIContent* aOldChild,
                                         nsIContent* aFollowingSibling)
 {
-  NS_ASSERTION(!aOldChild->IsRootOfAnonymousSubtree(),
-               "anonymous nodes should not be in child lists");
+  if (aOldChild->IsRootOfAnonymousSubtree()) {
+    // This should be an assert, but this is called incorrectly in
+    // nsHTMLEditor::DeleteRefToAnonymousNode and the assertions were clogging
+    // up the logs.  Make it an assert again when that's fixed.
+    NS_WARNING("anonymous nodes should not be in child lists (bug 439258)");
+  }
   PRUint32 selectorFlags =
     aContainer ? (aContainer->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
   if (selectorFlags == 0)

@@ -9,17 +9,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-    src="common.js"></script>
+          src="common.js"></script>
   <script type="application/javascript"
-    src="role.js"></script>
+          src="role.js"></script>
   <script type="application/javascript"
-    src="states.js"></script>
+          src="states.js"></script>
 
-  <!-- chrome-harness.js breaks this test (bug 736886) -->
-  <!--
   <script type="application/javascript"
-          src="chrome://mochikit/content/chrome-harness.js"/>
-  -->
+          src="chrome://mochikit/content/chrome-harness.js"></script>
 
   <script type="application/javascript">
     function doTest()
@@ -43,19 +40,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
         is(attributes.getStringProperty("tag"), "body",
            "Wrong attribute on document!");
 
-        // nsIAccessibleDocument
-        // getRootDirectory() depends on broken chrome-harness.js include (bug
-        // 736886)
-        /*
+        // Document URL.
         var rootDir = getRootDirectory(window.location.href);
-        is(docAcc.URL, rootDir.path + "test_nsIAccessibleDocument.html",
+        is(docAcc.URL, rootDir + "test_nsIAccessibleDocument.html",
            "Wrong URL for document!");
-        */
-        todo(false, "chrome-harness.js include is broken (bug 736886)");
-        is(docAcc.title, "nsIAccessibleDocument chrome tests",        
+
+        // Document title and mime type.
+        is(docAcc.title, "nsIAccessibleDocument chrome tests",
            "Wrong title for document!");
         is(docAcc.mimeType, "text/html",
            "Wrong mime type for document!");
+
         // nsDocAccessible::getDocType currently returns NS_ERROR_FAILURE.
         // See bug 442005. After fixing, please remove this comment and
         // uncomment the below two lines to enable the test.

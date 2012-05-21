@@ -107,6 +107,12 @@ MathCache::MathCache() {
     JS_ASSERT(hash(-0.0) != hash(+0.0));
 }
 
+size_t
+MathCache::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
+{
+    return mallocSizeOf(this);
+}
+
 Class js::MathClass = {
     js_Math_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
@@ -450,7 +456,7 @@ powi(double x, int y)
                 // infinity in the computation, because sometimes the higher
                 // internal precision in the pow() implementation would have
                 // given us a finite p. This happens very rarely.
-                
+
                 double result = 1.0 / p;
                 return (result == 0 && MOZ_DOUBLE_IS_INFINITE(p))
                        ? pow(x, static_cast<double>(y))  // Avoid pow(double, int).

@@ -222,6 +222,9 @@ NS_NewSVGFEImageElement(nsIContent **aResult,
 nsresult
 NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
                                   already_AddRefed<nsINodeInfo> aNodeInfo);
+nsresult
+NS_NewSVGViewElement(nsIContent **aResult,
+                     already_AddRefed<nsINodeInfo> aNodeInfo);
 
 nsresult
 NS_NewSVGAnimateElement(nsIContent **aResult,
@@ -370,6 +373,8 @@ NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
     return NS_NewSVGMaskElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::svgSwitch)
     return NS_NewSVGSwitchElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::view)
+    return NS_NewSVGViewElement(aResult, aNodeInfo);
   if (NS_SMILEnabled()) {
     if (name == nsGkAtoms::animate)
       return NS_NewSVGAnimateElement(aResult, aNodeInfo);

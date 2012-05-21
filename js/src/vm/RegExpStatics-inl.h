@@ -69,7 +69,7 @@ RegExpStatics::RegExpStatics()
 }
 
 inline bool
-RegExpStatics::createDependent(JSContext *cx, size_t start, size_t end, Value *out) const 
+RegExpStatics::createDependent(JSContext *cx, size_t start, size_t end, Value *out) const
 {
     JS_ASSERT(start <= end);
     JS_ASSERT(end <= matchPairsInput->length());

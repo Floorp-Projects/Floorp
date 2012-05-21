@@ -544,7 +544,8 @@ RadioInterfaceLayer.prototype = {
                                            message.sender || null,
                                            message.receiver || null,
                                            message.fullBody || null,
-                                           message.timestamp);
+                                           message.timestamp,
+                                           false);
     Services.obs.notifyObservers(sms, kSmsReceivedObserverTopic, null);
   },
 
@@ -580,7 +581,8 @@ RadioInterfaceLayer.prototype = {
                                            null,
                                            options.number,
                                            options.fullBody,
-                                           timestamp);
+                                           timestamp,
+                                           true);
 
     if (!options.requestStatusReport) {
       // No more used if STATUS-REPORT not requested.

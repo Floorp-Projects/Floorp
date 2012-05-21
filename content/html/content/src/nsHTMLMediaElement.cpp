@@ -2194,6 +2194,10 @@ bool nsHTMLMediaElement::ShouldHandleMediaType(const char* aMIMEType)
   if (IsWebMType(nsDependentCString(aMIMEType)))
     return true;
 #endif
+#ifdef MOZ_GSTREAMER
+  if (IsH264Type(nsDependentCString(aMIMEType)))
+    return true;
+#endif
   // We should not return true for Wave types, since there are some
   // Wave codecs actually in use in the wild that we don't support, and
   // we should allow those to be handled by plugins or helper apps.

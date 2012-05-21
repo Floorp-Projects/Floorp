@@ -50,6 +50,8 @@ LIBRARY_NAME    = xpconnect_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 EXPORTS = \
+		qsObjectHelper.h \
+		xpcObjectHelper.h \
 		xpcpublic.h \
 		dombindings.h \
 		dombindings_gen.h

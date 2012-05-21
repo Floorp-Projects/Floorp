@@ -44,8 +44,7 @@ VPATH       = $(srcdir)
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS = sampler.h \
-  thread_helper.h
+EXPORTS = sampler.h
 
 ifdef MOZ_ENABLE_PROFILER_SPS
 EXPORTS += \

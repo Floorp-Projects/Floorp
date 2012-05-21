@@ -20,6 +20,7 @@ text { font: 20px monospace; }
   <g transform="scale(2)">
     <rect id="rect3" x="25" y="80" width="50" height="50" fill="green"/>
     <rect id="rect3a" x="25" y="80" width="50" height="50" fill="none" stroke-width="4" stroke="blue"/>
+    <rect id="rect3b" vector-effect="non-scaling-stroke" x="100" y="100" width="25" height="25" fill="orange" stroke-width="4" stroke="yellow"/>
   </g>
   <g transform="scale(2) rotate(45 175 75)">
     <rect id="rect4" x="150" y="50" width="50" height="50" fill="yellow"/>

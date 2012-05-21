@@ -116,6 +116,7 @@ var gPropList =
   text_decoration:   new NonAdditiveAttribute("text-decoration", "CSS", "text"),
   text_rendering:    new NonAdditiveAttribute("text-rendering", "CSS", "text"),
   unicode_bidi:      new NonAnimatableAttribute("unicode-bidi", "CSS", "text"),
+  vector_effect:     new NonAdditiveAttribute("vector-effect", "CSS", "rect"),
   visibility:        new NonAdditiveAttribute("visibility", "CSS", "rect"),
   word_spacing:      new AdditiveAttribute("word-spacing", "CSS", "text"),
   writing_mode:

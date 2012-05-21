@@ -96,7 +96,7 @@ public:
 
   // nsAccessible
   virtual void Value(nsString& aValue);
-  virtual PRUint64 NativeState();
+  virtual PRUint64 NativeLinkState() const;
 
   // ActionAccessible
   virtual PRUint8 ActionCount();

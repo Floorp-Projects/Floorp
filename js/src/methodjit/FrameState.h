@@ -90,7 +90,7 @@ class LoopState;
  * 2) Owned. The FrameState owns the register, and may spill it at any time.
  *
  * ------------------ Implementation Details ------------------
- * 
+ *
  * Observations:
  *
  * 1) Every time we need a slow call, we must sync everything.
@@ -98,7 +98,7 @@ class LoopState;
  * 3) Syncing is limited to constants and registers.
  * 4) Entries are not forgotten unless they are entirely in memory and are
  *    not constants or copies.
- * 
+ *
  * With these in mind, we want to make sure that the compiler doesn't degrade
  * badly as functions get larger.
  *
@@ -361,7 +361,7 @@ class FrameState
 
     /*
      * Pushes an int32_t onto the operation stack. This is a specialized version
-     * of pushNumber. The caller must guarantee that (a) an int32_t is to be 
+     * of pushNumber. The caller must guarantee that (a) an int32_t is to be
      * pushed on the inline path, and (b) if any slow path pushes a double,
      * the slow path also stores the double to memory.
      */

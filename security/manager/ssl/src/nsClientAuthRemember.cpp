@@ -81,8 +81,7 @@ nsClientAuthRememberService::Init()
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  if (!mSettingsTable.Init())
-    return NS_ERROR_OUT_OF_MEMORY;
+  mSettingsTable.Init();
 
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();

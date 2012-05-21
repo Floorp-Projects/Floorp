@@ -97,7 +97,7 @@ struct UncachedCallResult {
         fun = NULL;
         codeAddr = NULL;
         unjittable = false;
-    }        
+    }
 };
 
 /*
@@ -219,7 +219,7 @@ void JS_FASTCALL CrossChunkShim(VMFrame &f, void *edge);
 
 } /* namespace stubs */
 
-/* 
+/*
  * If COND is true, return A; otherwise, return B. This allows us to choose between
  * function template instantiations without running afoul of C++'s overload resolution
  * rules. (Try simplifying, and you'll either see the problem --- or have found a

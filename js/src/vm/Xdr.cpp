@@ -75,7 +75,7 @@ bool
 XDRBuffer::grow(size_t n)
 {
     JS_ASSERT(n > size_t(limit - cursor));
-    
+
     const size_t MEM_BLOCK = 8192;
     size_t offset = cursor - base;
     size_t newCapacity = JS_ROUNDUP(offset + n, MEM_BLOCK);
@@ -83,7 +83,7 @@ XDRBuffer::grow(size_t n)
         JS_ReportErrorNumber(cx(), js_GetErrorMessage, NULL, JSMSG_TOO_BIG_TO_ENCODE);
         return false;
     }
-        
+
     void *data = OffTheBooks::realloc_(base, newCapacity);
     if (!data) {
         js_ReportOutOfMemory(cx());
@@ -94,7 +94,7 @@ XDRBuffer::grow(size_t n)
     limit = base + newCapacity;
     return true;
 }
-    
+
 template<XDRMode mode>
 bool
 XDRState<mode>::codeChars(jschar *chars, size_t nchars)
@@ -155,7 +155,7 @@ XDRState<mode>::codeFunction(JSObject **objp)
 {
     if (mode == XDR_DECODE)
         *objp = NULL;
-        
+
     return VersionCheck(this) && XDRInterpretedFunction(this, objp, NULL);
 }
 

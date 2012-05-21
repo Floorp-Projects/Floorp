@@ -654,7 +654,7 @@ nsHttpHandler::BuildUserAgent()
     mUserAgent += mPlatform;
     mUserAgent.AppendLiteral("; ");
 #endif
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
     if (!mCompatDevice.IsEmpty()) {
         mUserAgent += mCompatDevice;
         mUserAgent.AppendLiteral("; ");
@@ -712,7 +712,7 @@ nsHttpHandler::InitUserAgentComponents()
 #endif
     );
 
-#if defined(ANDROID)
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
     nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
     NS_ASSERTION(infoService, "Could not find a system info service");
 

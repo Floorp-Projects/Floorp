@@ -174,7 +174,6 @@ _TEST_FILES =	\
 		test_bug667512.html \
 		test_bug677878.html \
 		test_bug696020.html \
-		test_flush_on_paint.html \
 		test_mozPaintCount.html \
 		test_scroll_selection_into_view.html \
 		test_bug583889.html \
@@ -378,6 +377,15 @@ _TEST_FILES += \
 		test_bug644768.html \
 		$(NULL)
 # THESE TESTS (ABOVE) DO NOT RUN ON WINDOWS
+endif
+
+# test_flush_on_paint.html fails frequently on Mac, bug 688128
+ifeq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
+# THESE TESTS (BELOW) DO NOT RUN ON MAC
+_TEST_FILES += \
+		test_flush_on_paint.html \
+		$(NULL)
+# THESE TESTS (ABOVE) DO NOT RUN ON MAC
 endif
 
 _BROWSER_FILES = \

@@ -109,7 +109,7 @@ nsresult nsPlaintextEditor::InsertTextAt(const nsAString &aStringToInsert,
       // Use an auto tracker so that our drop point is correctly
       // positioned after the delete.
       nsAutoTrackDOMPoint tracker(mRangeUpdater, &targetNode, &targetOffset);
-      res = DeleteSelection(eNone);
+      res = DeleteSelection(eNone, eStrip);
       NS_ENSURE_SUCCESS(res, res);
     }
 
@@ -235,9 +235,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  bool isCollapsed;
-  rv = selection->GetIsCollapsed(&isCollapsed);
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool isCollapsed = selection->Collapsed();
 
   nsCOMPtr<nsIDOMNode> sourceNode;
   dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));

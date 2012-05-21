@@ -1743,9 +1743,8 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
         if (prevmatch) {
             prevmatch->mNext = newmatch;
         }
-        else if (!mMatchMap.Put(resultid, newmatch)) {
-            nsTemplateMatch::Destroy(mPool, newmatch, true);
-            return NS_ERROR_OUT_OF_MEMORY;
+        else {
+            mMatchMap.Put(resultid, newmatch);
         }
     }
 

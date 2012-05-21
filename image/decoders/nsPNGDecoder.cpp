@@ -519,8 +519,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   // Post our size to the superclass
   decoder->PostSize(width, height);
   if (decoder->HasError()) {
-    // Setting the size lead to an error; this can happen when for example
-    // a multipart channel sends an image of a different size.
+    // Setting the size led to an error.
     longjmp(png_jmpbuf(decoder->mPNG), 1);
   }
 

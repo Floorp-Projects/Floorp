@@ -133,7 +133,7 @@ class Queue {
         T item = front->back();
         front->popBack();
         return item;
-    }        
+    }
 
     void clear() {
         v1.clear();
@@ -289,7 +289,7 @@ class Event
   public:
     enum Result { fail = JS_FALSE, ok = JS_TRUE, forwardToParent };
 
-    virtual void destroy(JSContext *cx) { 
+    virtual void destroy(JSContext *cx) {
         JS_free(cx, data);
 #ifdef DEBUG
         data = NULL;
@@ -1236,7 +1236,7 @@ Worker::jsPostMessageToChild(JSContext *cx, unsigned argc, jsval *vp)
             JS_ReportError(cx, "Worker was shut down");
         return false;
     }
-    
+
     jsval data = argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
     Event *event = DownMessageEvent::create(cx, w, data);
     if (!event)

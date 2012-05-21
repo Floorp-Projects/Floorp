@@ -9,8 +9,14 @@ VPATH = @srcdir@
 relativesrcdir = dom/imported-tests
 
 DIRS = \
+  failures/editing/conformancetest \
+  failures/editing/selecttest \
+  failures/webapps/WebStorage/tests/submissions/Ms2ger \
+  failures/webapps/WebStorage/tests/submissions/Infraware \
+  failures/webapps/DOMCore/tests/submissions/Opera \
   $(NULL)
 
+include $(srcdir)/editing.mk
 include $(srcdir)/html.mk
 include $(srcdir)/webapps.mk
 include $(DEPTH)/config/autoconf.mk
@@ -23,9 +29,6 @@ _SUPPORT_FILES = \
   idlharness.js \
   WebIDLParser.js \
   $(NULL)
-
-testharnessreport.js: testharnessreport.js.in writeReporter.py html.json webapps.json
-	$(PYTHON_PATH) $(srcdir)/writeReporter.py $<
 
 libs:: $(_SUPPORT_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/resources

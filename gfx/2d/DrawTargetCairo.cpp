@@ -627,9 +627,9 @@ DrawTargetCairo::PushClip(const Path *aPath)
   }
 
   WillChange(aPath);
-  PathCairo* path = const_cast<PathCairo*>(static_cast<const PathCairo*>(aPath));
-
   cairo_save(mContext);
+
+  PathCairo* path = const_cast<PathCairo*>(static_cast<const PathCairo*>(aPath));
   path->CopyPathTo(mContext, this);
   cairo_clip_preserve(mContext);
 }
@@ -639,6 +639,8 @@ DrawTargetCairo::PushClipRect(const Rect& aRect)
 {
   WillChange();
   cairo_save(mContext);
+
+  cairo_new_path(mContext);
   cairo_rectangle(mContext, aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
   cairo_clip_preserve(mContext);
 }
@@ -646,7 +648,7 @@ DrawTargetCairo::PushClipRect(const Rect& aRect)
 void
 DrawTargetCairo::PopClip()
 {
-  // save/restore does not affect the path, so no need to cal WillChange()
+  // save/restore does not affect the path, so no need to call WillChange()
   cairo_restore(mContext);
 }
 

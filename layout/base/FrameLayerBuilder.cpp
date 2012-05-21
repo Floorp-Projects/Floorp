@@ -1162,7 +1162,11 @@ ContainerState::ThebesLayerData::UpdateCommonClipCount(
 already_AddRefed<ImageContainer>
 ContainerState::ThebesLayerData::CanOptimizeImageLayer()
 {
+#ifdef MOZ_ENABLE_MASK_LAYERS
   if (!mImage) {
+#else
+  if (!mImage || !mItemClip.mRoundedClipRects.IsEmpty()) {
+#endif
     return nsnull;
   }
 
@@ -1192,6 +1196,10 @@ ContainerState::PopThebesLayerData()
       gfx3DMatrix transform = imageLayer->GetTransform()*
         gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
       imageLayer->SetTransform(transform);
+#ifndef MOZ_ENABLE_MASK_LAYERS
+      NS_ASSERTION(data->mItemClip.mRoundedClipRects.IsEmpty(),
+                   "How did we get rounded clip rects here?");
+#endif
       if (data->mItemClip.mHaveClipRect) {
         nsIntRect clip = ScaleToNearestPixels(data->mItemClip.mClipRect);
         imageLayer->IntersectClipRect(clip);
@@ -1273,6 +1281,7 @@ ContainerState::PopThebesLayerData()
     }
     userData->mForcedBackgroundColor = backgroundColor;
 
+#ifdef MOZ_ENABLE_MASK_LAYERS
     // use a mask layer for rounded rect clipping
     PRInt32 commonClipCount = data->mCommonClipCount;
     NS_ASSERTION(commonClipCount >= 0, "Inconsistent clip count.");
@@ -1284,6 +1293,7 @@ ContainerState::PopThebesLayerData()
   } else {
     // mask layer for image and color layers
     SetupMaskLayer(layer, data->mItemClip);
+#endif
   }
   PRUint32 flags;
   if (isOpaque && !data->mForceTransparentSurface) {
@@ -1646,7 +1656,13 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     // Assign the item to a layer
     if (layerState == LAYER_ACTIVE_FORCE ||
         layerState == LAYER_ACTIVE_EMPTY ||
+#ifdef MOZ_ENABLE_MASK_LAYERS
         layerState == LAYER_ACTIVE) {
+#else
+        (layerState == LAYER_ACTIVE &&
+         (aClip.mRoundedClipRects.IsEmpty() ||
+          !aClip.IsRectClippedByRoundedCorner(item->GetVisibleRect())))) {
+#endif
 
       // LAYER_ACTIVE_EMPTY means the layer is created just for its metadata.
       // We should never see an empty layer with any visible content!
@@ -1707,11 +1723,13 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       }
       RestrictVisibleRegionForLayer(ownLayer, itemVisibleRect);
 
+#ifdef MOZ_ENABLE_MASK_LAYERS
       // rounded rectangle clipping using mask layers
       // (must be done after visible rect is set on layer)
       if (aClip.IsRectClippedByRoundedCorner(itemContent)) {
           SetupMaskLayer(ownLayer, aClip);
       }
+#endif
 
       ContainerLayer* oldContainer = ownLayer->GetParent();
       if (oldContainer && oldContainer != mContainerLayer) {
@@ -2802,6 +2820,7 @@ void
 ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aClip,
                                PRUint32 aRoundedRectClipCount) 
 {
+#ifdef MOZ_ENABLE_MASK_LAYERS
   // don't build an unnecessary mask
   if (aClip.mRoundedClipRects.IsEmpty() ||
       aRoundedRectClipCount <= 0) {
@@ -2890,6 +2909,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   userData->mBounds = aLayer->GetEffectiveVisibleRegion().GetBounds();
 
   aLayer->SetMaskLayer(maskLayer);
+#endif
   return;
 }
 

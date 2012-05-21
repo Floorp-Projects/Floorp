@@ -39,7 +39,6 @@
 #define nsNPAPIPluginStreamListener_h_
 
 #include "nscore.h"
-#include "nsIPluginStreamListener.h"
 #include "nsIPluginStreamInfo.h"
 #include "nsIHTTPHeaderListener.h"
 #include "nsIRequest.h"
@@ -57,6 +56,23 @@
 
 class nsINPAPIPluginStreamInfo;
 class nsPluginStreamListenerPeer;
+class nsNPAPIPluginStreamListener;
+
+class nsNPAPIStreamWrapper
+{
+public:
+  nsNPAPIStreamWrapper(nsIOutputStream *outputStream,
+                       nsNPAPIPluginStreamListener *streamListener);
+  ~nsNPAPIStreamWrapper();
+
+  nsIOutputStream* GetOutputStream() { return mOutputStream.get(); }
+  nsNPAPIPluginStreamListener* GetStreamListener() { return mStreamListener; }
+
+  NPStream                              mNPStream;
+protected:
+  nsCOMPtr<nsIOutputStream>             mOutputStream; // only valid if not browser initiated
+  nsNPAPIPluginStreamListener*          mStreamListener; // only valid if browser initiated
+};
 
 // nsINPAPIPluginStreamInfo is an internal helper interface that exposes
 // the underlying necko request to consumers of nsIPluginStreamInfo's.
@@ -135,8 +151,7 @@ protected:
   nsIPluginInstanceOwner* mOwner;
 };
 
-class nsNPAPIPluginStreamListener : public nsIPluginStreamListener,
-                                    public nsITimerCallback,
+class nsNPAPIPluginStreamListener : public nsITimerCallback,
                                     public nsIHTTPHeaderListener
 {
 private:
@@ -144,13 +159,22 @@ private:
 
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPLUGINSTREAMLISTENER
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIHTTPHEADERLISTENER
 
   nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* inst, void* notifyData,
                               const char* aURL);
   virtual ~nsNPAPIPluginStreamListener();
+
+  nsresult OnStartBinding(nsIPluginStreamInfo* pluginInfo);
+  nsresult OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
+                           nsIInputStream* input,
+                           PRUint32 length);
+  nsresult OnFileAvailable(nsIPluginStreamInfo* pluginInfo, 
+                           const char* fileName);
+  nsresult OnStopBinding(nsIPluginStreamInfo* pluginInfo, 
+                         nsresult status);
+  nsresult GetStreamType(PRInt32 *result);
 
   bool IsStarted();
   nsresult CleanUpStream(NPReason reason);
@@ -162,7 +186,7 @@ public:
   void StopDataPump();
   bool PluginInitJSLoadInProgress();
 
-  void* GetNotifyData() { return mNPStream.notifyData; }
+  void* GetNotifyData();
   nsPluginStreamListenerPeer* GetStreamListenerPeer() { return mStreamListenerPeer; }
   void SetStreamListenerPeer(nsPluginStreamListenerPeer* aPeer) { mStreamListenerPeer = aPeer; }
 
@@ -176,7 +200,7 @@ protected:
   char* mNotifyURL;
   nsRefPtr<nsNPAPIPluginInstance> mInst;
   nsPluginStreamListenerPeer* mStreamListenerPeer;
-  NPStream mNPStream;
+  nsNPAPIStreamWrapper *mNPStreamWrapper;
   PRUint32 mStreamBufferSize;
   PRInt32 mStreamBufferByteCount;
   PRInt32 mStreamType;

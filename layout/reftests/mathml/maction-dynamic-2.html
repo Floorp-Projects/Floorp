@@ -1,0 +1,95 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<title>dynamic maction 2</title>
+</head>
+
+<body>
+
+<p>
+<math>
+  <maction id="m1" actiontype="statusline">
+    <mtext>__1__</mtext>
+    <mtext>__2__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m2" actiontype="statusline" selection="2">
+    <mtext>__1__</mtext>
+    <mtext>__2__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m3" actiontype="statusline" selection="2">
+    <mtext>__1__</mtext>
+    <mtext>__2__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m4" actiontype="statusline">
+    <mtext id="m41">__1__</mtext>
+    <mtext id="m42">__2__</mtext>
+    <mtext id="m43">__3__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m5" actiontype="statusline">
+    <mtext>__1__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m6" actiontype="statusline">
+    <mtext id="m61">__1__</mtext>
+    <mtext id="m62">__2__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m7" actiontype="statusline">
+    <mtext id="m71">__1__</mtext>
+    <mtext id="m72">__2__</mtext>
+  </maction>
+</math>
+</p>
+
+<script>
+function doTest() {
+  document.getElementById("m1").setAttribute("selection", "2");
+  document.getElementById("m2").removeAttribute("selection");
+  document.getElementById("m3").setAttribute("actiontype", "toggle");
+
+  var child41 = document.getElementById("m41");
+  document.getElementById("m4").removeChild(child41);
+
+  var child43 = document.getElementById("m43");
+  document.getElementById("m5").appendChild(child43.cloneNode(true));
+
+  var child61 = document.getElementById("m61");
+  document.getElementById("m6").insertBefore(child43.cloneNode(true), child61);
+
+  var child71 = document.getElementById("m71");
+  document.getElementById("m7").replaceChild(child43.cloneNode(true), child71);
+
+  document.documentElement.removeAttribute('class');
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+
+</body>
+</html>

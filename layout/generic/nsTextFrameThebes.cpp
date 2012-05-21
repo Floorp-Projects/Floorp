@@ -5087,23 +5087,16 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
                             const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
                             gfxContext* aCtx, const nscolor& aForegroundColor,
                             const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-                            nscoord aLeftSideOffset)
+                            nscoord aLeftSideOffset, gfxRect& aBoundingBox)
 {
   SAMPLE_LABEL("nsTextFrame", "PaintOneShadow");
   gfxPoint shadowOffset(aShadowDetails->mXOffset, aShadowDetails->mYOffset);
   nscoord blurRadius = NS_MAX(aShadowDetails->mRadius, 0);
 
-  gfxTextRun::Metrics shadowMetrics =
-    mTextRun->MeasureText(aOffset, aLength, gfxFont::LOOSE_INK_EXTENTS,
-                          nsnull, aProvider);
-  if (GetStateBits() & TEXT_HYPHEN_BREAK) {
-    AddHyphenToMetrics(this, mTextRun, &shadowMetrics, gfxFont::LOOSE_INK_EXTENTS, aCtx);
-  }
-
   // This rect is the box which is equivalent to where the shadow will be painted.
-  // The origin of mBoundingBox is the text baseline left, so we must translate it by
+  // The origin of aBoundingBox is the text baseline left, so we must translate it by
   // that much in order to make the origin the top-left corner of the text bounding box.
-  gfxRect shadowGfxRect = shadowMetrics.mBoundingBox +
+  gfxRect shadowGfxRect = aBoundingBox +
     gfxPoint(aFramePt.x + aLeftSideOffset, aTextBaselinePt.y) + shadowOffset;
   nsRect shadowRect(NSToCoordRound(shadowGfxRect.X()),
                     NSToCoordRound(shadowGfxRect.Y()),
@@ -5247,11 +5240,21 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
 
     // Draw shadows, if any
     if (textStyle->mTextShadow) {
+      gfxTextRun::Metrics shadowMetrics =
+        mTextRun->MeasureText(offset, length, gfxFont::LOOSE_INK_EXTENTS,
+                              nsnull, &aProvider);
+      if (GetStateBits() & TEXT_HYPHEN_BREAK) {
+        AddHyphenToMetrics(this, mTextRun, &shadowMetrics,
+                           gfxFont::LOOSE_INK_EXTENTS, aCtx);
+      }
       for (PRUint32 i = textStyle->mTextShadow->Length(); i > 0; --i) {
         PaintOneShadow(offset, length,
                        textStyle->mTextShadow->ShadowAt(i - 1), &aProvider,
                        dirtyRect, aFramePt, textBaselinePt, aCtx,
-                       foreground, aClipEdges, xOffset);
+                       foreground, aClipEdges, 
+                       xOffset - (mTextRun->IsRightToLeft() ?
+                                  shadowMetrics.mBoundingBox.width : 0),
+                       shadowMetrics.mBoundingBox);
       }
     }
 
@@ -5596,11 +5599,15 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   if (textStyle->mTextShadow) {
     // Text shadow happens with the last value being painted at the back,
     // ie. it is painted first.
+    gfxTextRun::Metrics shadowMetrics = 
+      mTextRun->MeasureText(startOffset, maxLength, gfxFont::LOOSE_INK_EXTENTS,
+                            nsnull, &provider);
     for (PRUint32 i = textStyle->mTextShadow->Length(); i > 0; --i) {
       PaintOneShadow(startOffset, maxLength,
                      textStyle->mTextShadow->ShadowAt(i - 1), &provider,
                      aDirtyRect, framePt, textBaselinePt, ctx,
-                     foregroundColor, clipEdges, snappedLeftEdge);
+                     foregroundColor, clipEdges,
+                     snappedLeftEdge, shadowMetrics.mBoundingBox);
     }
   }
 

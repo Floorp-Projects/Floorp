@@ -4,7 +4,7 @@ This pywebsocket code is mostly unchanged from the source at
 
 The current Mozilla code is based on
 
-  svnversion:  606  (supports RFC 6455, aka Sec-WebSocket-Version: 13)
+  svnversion:  631  (supports RFC 6455)
 
 --------------------------------------------------------------------------------
 STEPS TO UPDATE MOZILLA TO NEWER PYWEBSOCKET VERSION
@@ -20,7 +20,7 @@ STEPS TO UPDATE MOZILLA TO NEWER PYWEBSOCKET VERSION
 - rsync new version into our tree, deleting files that aren't needed any more
   (NOTE: this will blow away this file!  hg revert it or keep a copy.)
 
-    rsync -r --delete dist/ $MOZ_SRC/testing/mochitest/pywebsocket
+    rsync -rv --delete dist/ $MOZ_SRC/testing/mochitest/pywebsocket
 
 - Get rid of examples/test directory and some cruft:
 

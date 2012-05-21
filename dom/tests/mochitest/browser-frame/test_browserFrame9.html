@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=753595
+-->
+<head>
+  <title>Test for Bug 753595</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="browserFrameHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=753595">Mozilla Bug 753595</a>
+
+<!--
+   Test the getScreenshot property for mozbrowser
+-->
+
+<script type="application/javascript;version=1.7">
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+
+  browserFrameHelpers.setEnabledPref(true);
+  browserFrameHelpers.addToWhitelist();
+
+  var iframe1 = document.createElement('iframe');
+  iframe1.mozbrowser = true;
+  document.body.appendChild(iframe1);
+
+  var screenshots = [];
+  var numLoaded = 0;
+
+  function screenshotLoaded(e) {
+    screenshots.push(e.target.result);
+    if (screenshots.length === 1) {
+      iframe1.src = 'data:text/html,<html>' +
+        '<body style="background:blue">hello</body></html>';
+    }
+    else if (screenshots.length === 2) {
+      ok(screenshots[0] !== 'data:,', 'First Screenshot is not blank');
+      ok(screenshots[0] !== screenshots[1], 'Screenshots differ');
+      SimpleTest.finish();
+    }
+  }
+
+  function iframeLoadedHandler() {
+    numLoaded++;
+    // Ignore the first loaded event, that is fired on creation of
+    // the iframe
+    if (numLoaded === 2) {
+      iframe1.getScreenshot().onsuccess = screenshotLoaded;
+    } else if (numLoaded === 3) {
+      iframe1.getScreenshot().onsuccess = screenshotLoaded;
+    }
+  }
+
+  iframe1.addEventListener('mozbrowserloadend', iframeLoadedHandler);
+
+  iframe1.src = 'data:text/html,<html>' +
+      '<body style="background:green">hello</body></html>';
+}
+
+addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
+
+</script>
+
+</body>
+</html>

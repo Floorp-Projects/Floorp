@@ -331,6 +331,9 @@ public:
 
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered) = 0;
 
+  // Return true if the media is seekable using only buffered ranges.
+  virtual bool IsSeekableInBufferedRanges() = 0;
+
   virtual PRInt64 VideoQueueMemoryInUse() = 0;
   virtual PRInt64 AudioQueueMemoryInUse() = 0;
 

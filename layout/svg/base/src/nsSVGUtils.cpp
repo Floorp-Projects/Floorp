@@ -47,6 +47,7 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Preferences.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsComputedDOMStyle.h"
 #include "nsContentUtils.h"
 #include "nsFrameList.h"
@@ -64,6 +65,7 @@
 #include "nsRenderingContext.h"
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
+#include "nsSVGAnimationElement.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGEffects.h"
@@ -160,31 +162,26 @@ static const PRUint8 gsRGBToLinearRGBMap[256] = {
 239, 242, 244, 246, 248, 250, 253, 255
 };
 
-static bool gSMILEnabled;
-static const char SMIL_PREF_STR[] = "svg.smil.enabled";
-
-static int
-SMILPrefChanged(const char *aPref, void *aClosure)
-{
-  bool prefVal = Preferences::GetBool(SMIL_PREF_STR);
-  gSMILEnabled = prefVal;
-  return 0;
-}
+static bool sSMILEnabled;
+static bool sSVGDisplayListHitTestingEnabled;
+static bool sSVGDisplayListPaintingEnabled;
 
 bool
 NS_SMILEnabled()
 {
-  static bool sInitialized = false;
-  
-  if (!sInitialized) {
-    /* check and register ourselves with the pref */
-    gSMILEnabled = Preferences::GetBool(SMIL_PREF_STR);
-    Preferences::RegisterCallback(SMILPrefChanged, SMIL_PREF_STR);
+  return sSMILEnabled;
+}
 
-    sInitialized = true;
-  }
+bool
+NS_SVGDisplayListHitTestingEnabled()
+{
+  return sSVGDisplayListHitTestingEnabled;
+}
 
-  return gSMILEnabled;
+bool
+NS_SVGDisplayListPaintingEnabled()
+{
+  return sSVGDisplayListPaintingEnabled;
 }
 
 // we only take the address of this:
@@ -237,6 +234,20 @@ SVGAutoRenderState::IsPaintingToWindow(nsRenderingContext *aContext)
   return false;
 }
 
+void
+nsSVGUtils::Init()
+{
+  Preferences::AddBoolVarCache(&sSMILEnabled,
+                               "svg.smil.enabled",
+                               true);
+
+  Preferences::AddBoolVarCache(&sSVGDisplayListHitTestingEnabled,
+                               "svg.display-lists.hit-testing.enabled");
+
+  Preferences::AddBoolVarCache(&sSVGDisplayListPaintingEnabled,
+                               "svg.display-lists.painting.enabled");
+}
+
 nsSVGSVGElement*
 nsSVGUtils::GetOuterSVGElement(nsSVGElement *aSVGElement)
 {
@@ -253,6 +264,15 @@ nsSVGUtils::GetOuterSVGElement(nsSVGElement *aSVGElement)
     return static_cast<nsSVGSVGElement*>(element);
   }
   return nsnull;
+}
+
+void
+nsSVGUtils::ActivateByHyperlink(nsIContent *aContent)
+{
+  NS_ABORT_IF_FALSE(aContent->IsNodeOfType(nsINode::eANIMATION),
+                    "Expecting an animation element");
+
+  static_cast<nsSVGAnimationElement*>(aContent)->ActivateByHyperlink();
 }
 
 float
@@ -579,6 +599,26 @@ nsSVGUtils::GetNearestSVGViewport(nsIFrame *aFrame)
 }
 
 nsRect
+nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
+                                            const nsRect &aUnfilteredRect)
+{
+  NS_ABORT_IF_FALSE(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT,
+                    "Called on invalid frame type");
+
+  nsSVGFilterFrame *filter = nsSVGEffects::GetFilterFrame(aFrame);
+  if (!filter) {
+    return aUnfilteredRect;
+  }
+
+  PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+  nsIntRect unfilteredRect =
+    aUnfilteredRect.ToOutsidePixels(appUnitsPerDevPixel);
+  nsIntRect rect = filter->GetFilterBBox(aFrame, nsnull, &unfilteredRect);
+  nsRect r = rect.ToAppUnits(appUnitsPerDevPixel) - aFrame->GetPosition();
+  return r;
+}
+
+nsRect
 nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
 {
   PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
@@ -687,7 +727,7 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate)
     return;
   }
 
-  // XXXsvgreflow we want to reduce the bounds when passing through inner-<svg>
+  // XXXSDL we want to reduce the bounds when passing through inner-<svg>
   // and <use>, etc.
 
   nsSVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame(aFrame);
@@ -753,7 +793,7 @@ nsSVGUtils::ScheduleBoundsUpdate(nsIFrame *aFrame)
     return;
   }
 
-  // XXXsvgreflow once we store bounds on containers, we will not need to
+  // XXXSDL once we store bounds on containers, we will not need to
   // mark our descendants dirty.
   MarkDirtyBitsOnDescendants(aFrame);
 
@@ -1135,20 +1175,33 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
   bool isOK = true;
   nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
 
-  /* Check if we need to draw anything. HasValidCoveredRect only returns
-   * true for path geometry and glyphs, so basically we're traversing
-   * all containers and we can only skip leaves here.
-   */
-  if (aDirtyRect && svgChildFrame->HasValidCoveredRect()) {
-    if (filterFrame) {
-      if (!aDirtyRect->Intersects(filterFrame->GetFilterBBox(aFrame, nsnull)))
-        return;
-    } else {
-      nsRect leafBounds = nsSVGUtils::TransformFrameRectToOuterSVG(
-        aFrame->GetRect(), GetCanvasTM(aFrame), aFrame->PresContext());
-      nsRect rect = aDirtyRect->ToAppUnits(aFrame->PresContext()->AppUnitsPerDevPixel());
-      if (!rect.Intersects(leafBounds))
-        return;
+  if (aDirtyRect &&
+      !(aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    // Here we convert aFrame's paint bounds to outer-<svg> device space,
+    // compare it to aDirtyRect, and return early if they don't intersect.
+    // We don't do this optimization for nondisplay SVG since nondisplay
+    // SVG doesn't maintain bounds/overflow rects.
+    nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
+    if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry)) {
+      // Unlike containers, leaf frames do not include GetPosition() in
+      // GetCanvasTM().
+      overflowRect = overflowRect + aFrame->GetPosition();
+    }
+    PRUint32 appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
+    gfxMatrix tm = GetCanvasTM(aFrame);
+    if (aFrame->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
+      gfxMatrix childrenOnlyTM;
+      if (static_cast<nsSVGContainerFrame*>(aFrame)->
+            HasChildrenOnlyTransform(&childrenOnlyTM)) {
+        // Undo the children-only transform:
+        tm = childrenOnlyTM.Invert() * tm;
+      }
+    }
+    nsIntRect bounds = nsSVGUtils::TransformFrameRectToOuterSVG(overflowRect,
+                         tm, aFrame->PresContext()).
+                           ToOutsidePixels(appUnitsPerDevPx);
+    if (!aDirtyRect->Intersects(bounds)) {
+      return;
     }
   }
 
@@ -1656,6 +1709,32 @@ nsSVGUtils::WritePPM(const char *fname, gfxImageSurface *aSurface)
 }
 #endif
 
+gfxMatrix
+nsSVGUtils::GetStrokeTransform(nsIFrame *aFrame)
+{
+  if (aFrame->GetStyleSVGReset()->mVectorEffect ==
+      NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE) {
+ 
+    if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
+      aFrame = aFrame->GetParent();
+    }
+
+    nsIContent *content = aFrame->GetContent();
+    NS_ABORT_IF_FALSE(content->IsSVG(), "bad cast");
+
+    // a non-scaling stroke is in the screen co-ordinate
+    // space rather so we need to invert the transform
+    // to the screen co-ordinate space to get there.
+    // See http://www.w3.org/TR/SVGTiny12/painting.html#NonScalingStroke
+    gfxMatrix transform = nsSVGUtils::GetCTM(
+                            static_cast<nsSVGElement*>(content), true);
+    if (!transform.IsSingular()) {
+      return transform.Invert();
+    }
+  }
+  return gfxMatrix();
+}
+
 // The logic here comes from _cairo_stroke_style_max_distance_from_path
 static gfxRect
 PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
@@ -1666,8 +1745,11 @@ PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
   double style_expansion =
     styleExpansionFactor * aFrame->GetStrokeWidth();
 
-  double dx = style_expansion * (fabs(aMatrix.xx) + fabs(aMatrix.xy));
-  double dy = style_expansion * (fabs(aMatrix.yy) + fabs(aMatrix.yx));
+  gfxMatrix matrix = aMatrix;
+  matrix.Multiply(nsSVGUtils::GetStrokeTransform(aFrame));
+
+  double dx = style_expansion * (fabs(matrix.xx) + fabs(matrix.xy));
+  double dy = style_expansion * (fabs(matrix.yy) + fabs(matrix.yx));
 
   gfxRect strokeExtents = aPathExtents;
   strokeExtents.Inflate(dx, dy);

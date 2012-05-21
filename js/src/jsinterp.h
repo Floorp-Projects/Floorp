@@ -52,20 +52,6 @@
 namespace js {
 
 /*
- * Refresh and return fp->scopeChain.  It may be stale if block scopes are
- * active but not yet reflected by objects in the scope chain.  If a block
- * scope contains a with, eval, XML filtering predicate, or similar such
- * dynamically scoped construct, then compile-time block scope at fp->blocks
- * must reflect at runtime.
- */
-
-extern JSObject *
-GetScopeChain(JSContext *cx);
-
-extern JSObject *
-GetScopeChain(JSContext *cx, StackFrame *fp);
-
-/*
  * ScriptPrologue/ScriptEpilogue must be called in pairs. ScriptPrologue
  * must be called before the script executes. ScriptEpilogue must be called
  * after the script returns or exits via exception.
@@ -98,7 +84,7 @@ ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok);
  * return a JSTrapStatus code indication how execution should proceed:
  *
  * - JSTRAP_CONTINUE: Continue execution normally.
- * 
+ *
  * - JSTRAP_THROW: Throw an exception. ScriptDebugPrologue has set |cx|'s
  *   pending exception to the value to be thrown.
  *
@@ -115,7 +101,7 @@ ScriptDebugPrologue(JSContext *cx, StackFrame *fp);
 /*
  * Announce to the debugger that the thread has exited a JavaScript frame, |fp|.
  * If |ok| is true, the frame is returning normally; if |ok| is false, the frame
- * is throwing an exception or terminating. 
+ * is throwing an exception or terminating.
  *
  * Call whatever hooks have been registered to observe frame exits. Change cx's
  * current exception and |fp|'s return value to reflect the changes in behavior
@@ -258,7 +244,7 @@ extern JSType
 TypeOfValue(JSContext *cx, const Value &v);
 
 extern JSBool
-HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
+HasInstance(JSContext *cx, HandleObject obj, const js::Value *v, JSBool *bp);
 
 /*
  * A linked list of the |FrameRegs regs;| variables belonging to all
@@ -321,8 +307,8 @@ UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs);
 extern bool
 OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp);
 
-extern bool
-IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth);
+inline void
+AssertValidFunctionScopeChainAtExit(StackFrame *fp);
 
 class TryNoteIter
 {

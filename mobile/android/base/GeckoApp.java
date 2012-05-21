@@ -54,7 +54,6 @@ import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.SurfaceTextureLayer;
 import org.mozilla.gecko.gfx.ViewportMetrics;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
-import org.mozilla.gecko.Tab.HistoryEntry;
 
 import java.io.*;
 import java.util.*;
@@ -676,6 +675,10 @@ abstract public class GeckoApp
         tab.updateFaviconURL(null);
         tab.updateIdentityData(null);
         tab.removeTransientDoorHangers();
+        tab.setAllowZoom(true);
+        tab.setDefaultZoom(0);
+        tab.setMinZoom(0);
+        tab.setMaxZoom(0);
         tab.setHasTouchListeners(false);
         tab.setCheckerboardColor(Color.WHITE);
 
@@ -1002,6 +1005,23 @@ abstract public class GeckoApp
                 }
             } else if (event.equals("Update:Restart")) {
                 doRestart("org.mozilla.gecko.restart_update");
+            } else if (event.equals("Tab:ViewportMetadata")) {
+                int tabId = message.getInt("tabID");
+                Tab tab = Tabs.getInstance().getTab(tabId);
+                if (tab == null)
+                    return;
+                tab.setAllowZoom(message.getBoolean("allowZoom"));
+                tab.setDefaultZoom((float) message.getDouble("defaultZoom"));
+                tab.setMinZoom((float) message.getDouble("minZoom"));
+                tab.setMaxZoom((float) message.getDouble("maxZoom"));
+                // Sync up the LayerController and the tab if the tab's currently displayed.
+                LayerController controller = getLayerController();
+                if (controller != null && Tabs.getInstance().isSelectedTab(tab)) {
+                    controller.setAllowZoom(tab.getAllowZoom());
+                    controller.setDefaultZoom(tab.getDefaultZoom());
+                    controller.setMinZoom(tab.getMinZoom());
+                    controller.setMaxZoom(tab.getMaxZoom());
+                }
             } else if (event.equals("Tab:HasTouchListener")) {
                 int tabId = message.getInt("tabID");
                 Tab tab = Tabs.getInstance().getTab(tabId);
@@ -1296,7 +1316,11 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
-        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
+            }
+        });
     }
 
     void handleTitleChanged(int tabId, String title) {
@@ -1525,6 +1549,14 @@ abstract public class GeckoApp
 
         mAppContext = this;
 
+        // Check to see if the activity is restarted after configuration change.
+        if (getLastNonConfigurationInstance() != null) {
+            // Restart the application as a safe way to handle the configuration change.
+            doRestart();
+            System.exit(0);
+            return;
+        }
+
         // StrictMode is set by defaults resource flag |enableStrictMode|.
         if (getResources().getBoolean(R.bool.enableStrictMode)) {
             enableStrictMode();
@@ -1709,6 +1741,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("CharEncoding:State", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Update:Restart", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:HasTouchListener", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Tab:ViewportMetadata", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Session:StatePurged", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
@@ -2136,6 +2169,13 @@ abstract public class GeckoApp
         GeckoNetworkManager.getInstance().start();
         GeckoScreenOrientationListener.getInstance().start();
     }
+
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        // Send a non-null value so that we can restart the application, 
+        // when activity restarts due to configuration change.
+        return new Boolean(true);
+    } 
 
     abstract public String getPackageName();
     abstract public String getContentProcessName();

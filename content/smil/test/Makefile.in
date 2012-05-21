@@ -78,6 +78,7 @@ _TEST_FILES = \
 	  test_smilFillMode.xhtml \
 	  test_smilGetStartTime.xhtml \
 	  test_smilGetSimpleDuration.xhtml \
+	  test_smilHyperlinking.xhtml \
 	  test_smilKeySplines.xhtml \
 	  test_smilKeyTimes.xhtml \
 	  test_smilKeyTimesPacedMode.xhtml \

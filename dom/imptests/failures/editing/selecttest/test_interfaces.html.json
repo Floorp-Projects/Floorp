@@ -1,0 +1,11 @@
+{
+  "Selection interface: existence and properties of interface object":true,
+  "Selection interface: existence and properties of interface prototype object":true,
+  "Selection interface: existence and properties of interface prototype object's \"constructor\" property":true,
+  "Selection interface: calling collapse() on getSelection() with too few arguments must throw TypeError":true,
+  "Selection interface: calling extend() on getSelection() with too few arguments must throw TypeError":true,
+  "Selection interface: calling selectAllChildren() on getSelection() with too few arguments must throw TypeError":true,
+  "Selection interface: calling getRangeAt() on getSelection() with too few arguments must throw TypeError":true,
+  "Selection interface: calling addRange() on getSelection() with too few arguments must throw TypeError":true,
+  "Selection interface: calling removeRange() on getSelection() with too few arguments must throw TypeError":true
+}

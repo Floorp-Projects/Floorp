@@ -159,7 +159,7 @@ private:
   }
 
   static JSBool
-  GetProperty(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
+  GetProperty(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
@@ -179,7 +179,7 @@ private:
   }
 
   static JSBool
-  GetConstant(JSContext* aCx, JSObject* aObj, jsid idval, jsval* aVp)
+  GetConstant(JSContext* aCx, JSHandleObject aObj, JSHandleId idval, jsval* aVp)
   {
     JS_ASSERT(JSID_IS_INT(idval));
     *aVp = INT_TO_JSVAL(JSID_TO_INT(idval));

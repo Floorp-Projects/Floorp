@@ -99,7 +99,8 @@
         f("explicit/cc",      NONHEAP, BYTES,  10 * MB); // dup
         f("explicit/d",       NONHEAP, BYTES, 499 * KB); // omitted
         f("explicit/e",       NONHEAP, BYTES, 100 * KB); // omitted
-        f("explicit/f/g/h/i", HEAP,    BYTES,  20 * MB);
+        f("explicit/f/g/h/i", HEAP,    BYTES,  10 * MB);
+        f("explicit/f/g/h/j", HEAP,    BYTES,  10 * MB);
       },
       explicitNonHeap: (100 + 13 + 10)*MB + (499 + 100)*KB
     },
@@ -121,13 +122,13 @@
         function f(aP, aA) {
           aCbObj.callback("", aP, NONHEAP, BYTES, aA * 4 * KB, "Desc.", aClosure);
         }
-        f("smaps/vsize/a",     24);
-        f("smaps/swap/a",       1);
-        f("smaps/swap/a",       2);
-        f("smaps/vsize/a",      19);
-        f("smaps/swap/b/c",     10);
-        f("smaps/resident/a",   42);
-        f("smaps/pss/a",        43);
+        f("vsize/a",     24);
+        f("swap/a",       1);
+        f("swap/a",       2);
+        f("vsize/a",      19);
+        f("swap/b/c",     10);
+        f("resident/a",   42);
+        f("pss/a",        43);
       },
       explicitNonHeap: 0
     },
@@ -181,8 +182,8 @@
     // The fact that we skip the "smaps" multi-reporter in the main
     // process won't cause these to be skipped;  the fall-back skipping will
     // be hit instead.
-    f("2nd", "smaps/vsize/e",   NONHEAP, 24*4*KB),
-    f("2nd", "smaps/vsize/f",   NONHEAP, 24*4*KB),
+    f("2nd", "vsize/e",         NONHEAP, 24*4*KB),
+    f("2nd", "vsize/f",         NONHEAP, 24*4*KB),
 
     // Check that we can handle "heap-allocated" not being present.
     f("3rd", "explicit/a/b",    HEAP,    333 * MB),
@@ -246,10 +247,9 @@ Explicit Allocations\n\
 │  ├───77.00 MB (12.35%) ── other\n\
 │  └───23.00 MB (03.69%) ── d [2]\n\
 ├───23.00 MB (03.69%) ── cc [2]\n\
-├───20.00 MB (03.21%) -- f\n\
-│   └──20.00 MB (03.21%) -- g\n\
-│      └──20.00 MB (03.21%) -- h\n\
-│         └──20.00 MB (03.21%) ── i\n\
+├───20.00 MB (03.21%) -- f/g/h\n\
+│   ├──10.00 MB (01.60%) ── i\n\
+│   └──10.00 MB (01.60%) ── j\n\
 ├───15.00 MB (02.41%) ++ g\n\
 ├───11.00 MB (01.76%) ── heap-unclassified\n\
 └────0.58 MB (00.09%) ++ (2 tiny)\n\
@@ -268,9 +268,7 @@ Other Measurements\n\
 \n\
 Explicit Allocations\n\
 1,000.00 MB (100.0%) -- explicit\n\
-├────499.00 MB (49.90%) -- a\n\
-│    └──499.00 MB (49.90%) -- b\n\
-│       └──499.00 MB (49.90%) ── c [3]\n\
+├────499.00 MB (49.90%) ── a/b/c [3]\n\
 ├────200.00 MB (20.00%) ── flip/the/backslashes\n\
 ├────200.00 MB (20.00%) ── compartment(compartment-url)\n\
 └────101.00 MB (10.10%) ── heap-unclassified\n\
@@ -296,8 +294,6 @@ Other Measurements\n\
 4th Process\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
- explicit/js\n\
- explicit/js/compartment(http://too-big.com/)\n\
  explicit/js/compartment(http://too-big.com/)/stuff\n\
  explicit/(2 tiny)\n\
  explicit/(2 tiny)/neg1\n\
@@ -311,9 +307,7 @@ This indicates a defect in one or more memory reporters.  The invalid values are
 \n\
 Explicit Allocations\n\
 98.00 MB (100.0%) -- explicit\n\
-├──150.00 MB (153.06%) -- js [?!]\n\
-│  └──150.00 MB (153.06%) -- compartment(http://too-big.com/) [?!]\n\
-│     └──150.00 MB (153.06%) ── stuff [?!]\n\
+├──150.00 MB (153.06%) ── js/compartment(http://too-big.com/)/stuff [?!]\n\
 ├───5.00 MB (05.10%) ── ok\n\
 └──-57.00 MB (-58.16%) -- (2 tiny) [?!]\n\
    ├───-2.00 MB (-2.04%) ── neg1 [?!]\n\
@@ -333,7 +327,6 @@ Other Measurements\n\
 WARNING: the following values are negative or unreasonably large.\n\
  explicit/(3 tiny)/a/neg2\n\
  explicit/(3 tiny)/a/neg1\n\
- explicit/(3 tiny)/b\n\
  explicit/(3 tiny)/b/c\n\
  explicit/(3 tiny)/b/c/d\n\
  explicit/(3 tiny)/b/c/d/f\n\
@@ -348,13 +341,12 @@ Explicit Allocations\n\
     │  ├──0.04 MB (00.04%) ── pos\n\
     │  ├──-0.01 MB (-0.01%) ── neg2 [?!]\n\
     │  └──-0.02 MB (-0.02%) ── neg1 [?!]\n\
-    └──-0.02 MB (-0.02%) -- b [?!]\n\
-       └──-0.02 MB (-0.02%) -- c [?!]\n\
-          ├───0.01 MB (00.01%) ++ g\n\
-          ├───0.00 MB (00.00%) ++ i\n\
-          └──-0.04 MB (-0.04%) -- d [?!]\n\
-             ├───0.02 MB (00.02%) ── e\n\
-             └──-0.06 MB (-0.06%) ── f [?!]\n\
+    └──-0.02 MB (-0.02%) -- b/c [?!]\n\
+       ├───0.01 MB (00.01%) ── g/h\n\
+       ├───0.00 MB (00.00%) ── i/j\n\
+       └──-0.04 MB (-0.04%) -- d [?!]\n\
+          ├───0.02 MB (00.02%) ── e\n\
+          └──-0.06 MB (-0.06%) ── f [?!]\n\
 \n\
 Other Measurements\n\
 100.00 MB ── heap-allocated\n\
@@ -378,10 +370,9 @@ Explicit Allocations\n\
 │  ├───80,740,352 B (12.35%) ── other\n\
 │  └───24,117,248 B (03.69%) ── d [2]\n\
 ├───24,117,248 B (03.69%) ── cc [2]\n\
-├───20,971,520 B (03.21%) -- f\n\
-│   └──20,971,520 B (03.21%) -- g\n\
-│      └──20,971,520 B (03.21%) -- h\n\
-│         └──20,971,520 B (03.21%) ── i\n\
+├───20,971,520 B (03.21%) -- f/g/h\n\
+│   ├──10,485,760 B (01.60%) ── i\n\
+│   └──10,485,760 B (01.60%) ── j\n\
 ├───15,728,640 B (02.41%) -- g\n\
 │   ├───6,291,456 B (00.96%) ── a\n\
 │   ├───5,242,880 B (00.80%) ── b\n\
@@ -416,9 +407,7 @@ Other Measurements\n\
 \n\
 Explicit Allocations\n\
 1,048,576,000 B (100.0%) -- explicit\n\
-├────523,239,424 B (49.90%) -- a\n\
-│    └──523,239,424 B (49.90%) -- b\n\
-│       └──523,239,424 B (49.90%) ── c [3]\n\
+├────523,239,424 B (49.90%) ── a/b/c [3]\n\
 ├────209,715,200 B (20.00%) ── flip/the/backslashes\n\
 ├────209,715,200 B (20.00%) ── compartment(compartment-url)\n\
 └────105,906,176 B (10.10%) ── heap-unclassified\n\
@@ -447,8 +436,6 @@ Other Measurements\n\
 4th Process\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
- explicit/js\n\
- explicit/js/compartment(http://too-big.com/)\n\
  explicit/js/compartment(http://too-big.com/)/stuff\n\
  explicit/neg1\n\
  explicit/heap-unclassified\n\
@@ -461,9 +448,7 @@ This indicates a defect in one or more memory reporters.  The invalid values are
 \n\
 Explicit Allocations\n\
 102,760,448 B (100.0%) -- explicit\n\
-├──157,286,400 B (153.06%) -- js [?!]\n\
-│  └──157,286,400 B (153.06%) -- compartment(http://too-big.com/) [?!]\n\
-│     └──157,286,400 B (153.06%) ── stuff [?!]\n\
+├──157,286,400 B (153.06%) ── js/compartment(http://too-big.com/)/stuff [?!]\n\
 ├────5,242,880 B (05.10%) ── ok\n\
 ├───-2,097,152 B (-2.04%) ── neg1 [?!]\n\
 └──-57,671,680 B (-56.12%) ── heap-unclassified [?!]\n\
@@ -482,7 +467,6 @@ Other Measurements\n\
 WARNING: the following values are negative or unreasonably large.\n\
  explicit/a/neg2\n\
  explicit/a/neg1\n\
- explicit/b\n\
  explicit/b/c\n\
  explicit/b/c/d\n\
  explicit/b/c/d/f\n\
@@ -496,15 +480,12 @@ Explicit Allocations\n\
 │       ├──40,960 B (00.04%) ── pos\n\
 │       ├──-10,240 B (-0.01%) ── neg2 [?!]\n\
 │       └──-20,480 B (-0.02%) ── neg1 [?!]\n\
-└──────-25,600 B (-0.02%) -- b [?!]\n\
-       └──-25,600 B (-0.02%) -- c [?!]\n\
-          ├───10,240 B (00.01%) -- g\n\
-          │   └──10,240 B (00.01%) ── h\n\
-          ├────5,120 B (00.00%) -- i\n\
-          │    └──5,120 B (00.00%) ── j\n\
-          └──-40,960 B (-0.04%) -- d [?!]\n\
-             ├───20,480 B (00.02%) ── e\n\
-             └──-61,440 B (-0.06%) ── f [?!]\n\
+└──────-25,600 B (-0.02%) -- b/c [?!]\n\
+       ├───10,240 B (00.01%) ── g/h\n\
+       ├────5,120 B (00.00%) ── i/j\n\
+       └──-40,960 B (-0.04%) -- d [?!]\n\
+          ├───20,480 B (00.02%) ── e\n\
+          └──-61,440 B (-0.06%) ── f [?!]\n\
 \n\
 Other Measurements\n\
 104,857,600 B ── heap-allocated\n\

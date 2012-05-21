@@ -164,7 +164,7 @@ class BasePolyIC : public BaseIC {
         if (isOnePool()) {
             JSC::ExecutablePool *oldPool = u.execPool;
             JS_ASSERT(!isTagged(oldPool));
-            ExecPoolVector *execPools = OffTheBooks::new_<ExecPoolVector>(SystemAllocPolicy()); 
+            ExecPoolVector *execPools = OffTheBooks::new_<ExecPoolVector>(SystemAllocPolicy());
             if (!execPools)
                 return false;
             if (!execPools->append(oldPool) || !execPools->append(pool)) {
@@ -174,7 +174,7 @@ class BasePolyIC : public BaseIC {
             u.taggedExecPools = tag(execPools);
             return true;
         }
-        return multiplePools()->append(pool); 
+        return multiplePools()->append(pool);
     }
 
   protected:
@@ -445,7 +445,7 @@ struct PICInfo : public BasePolyIC {
 
     // Possible types of the RHS, for monitored SETPROP PICs.
     types::TypeSet *rhsTypes;
-    
+
     inline bool isSet() const {
         return kind == SET;
     }
@@ -512,7 +512,7 @@ struct PICInfo : public BasePolyIC {
 
     // Where in the script did we generate this PIC?
     jsbytecode *pc;
-    
+
     // Index into the script's atom table.
     PropertyName *name;
 

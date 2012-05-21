@@ -68,6 +68,11 @@ public:
   virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime);
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime);
 
+  // To seek in a buffered range, we just have to seek the stream.
+  virtual bool IsSeekableInBufferedRanges() {
+    return true;
+  }
+
 private:
   bool ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead = nsnull);
   bool LoadRIFFChunk();

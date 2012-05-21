@@ -437,7 +437,7 @@ Recompiler::clearStackReferences(FreeOp *fop, JSScript *script)
 
     /*
      * The strategy for this goes as follows:
-     * 
+     *
      * 1) Scan the stack, looking at all return addresses that could go into JIT
      *    code.
      * 2) If an address corresponds to a call site registered by |callSite| during

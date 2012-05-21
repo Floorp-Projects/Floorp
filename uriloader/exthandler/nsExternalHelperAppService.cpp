@@ -440,6 +440,9 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { VIDEO_WEBM, "webm" },
   { AUDIO_WEBM, "webm" },
 #endif
+#ifdef MOZ_GSTREAMER
+  { VIDEO_MP4, "mp4" },
+#endif
 #ifdef MOZ_RAW
   { VIDEO_RAW, "yuv" }
 #endif
@@ -511,6 +514,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { AUDIO_OGG, "opus", "Opus Audio" },
   { VIDEO_WEBM, "webm", "Web Media Video" },
   { AUDIO_WEBM, "webm", "Web Media Audio" },
+  { VIDEO_MP4, "mp4", "MPEG-4 Video" },
   { VIDEO_RAW, "yuv", "Raw YUV Video" },
   { AUDIO_WAV, "wav", "Waveform Audio" }
 };

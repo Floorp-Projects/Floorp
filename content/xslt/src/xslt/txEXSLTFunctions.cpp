@@ -407,9 +407,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsTHashtable<nsStringHashKey> hash;
-            if (!hash.Init()) {
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
+            hash.Init();
 
             PRInt32 i, len = nodes->size();
             for (i = 0; i < len; ++i) {
@@ -417,9 +415,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
                 const txXPathNode& node = nodes->get(i);
                 txXPathNodeUtils::appendNodeValue(node, str);
                 if (!hash.GetEntry(str)) {
-                    if (!hash.PutEntry(str)) {
-                        return NS_ERROR_OUT_OF_MEMORY;
-                    }
+                    hash.PutEntry(str);
                     rv = resultSet->append(node);
                     NS_ENSURE_SUCCESS(rv, rv);
                 }

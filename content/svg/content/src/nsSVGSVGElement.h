@@ -55,6 +55,10 @@
 
 class nsIDOMSVGMatrix;
 class nsSMILTimeContainer;
+class nsSVGViewElement;
+namespace mozilla {
+  class SVGFragmentIdentifier;
+}
 
 typedef nsSVGStylableElement nsSVGSVGElementBase;
 
@@ -62,8 +66,15 @@ class nsSVGSVGElement;
 
 class nsSVGTranslatePoint {
 public:
-  nsSVGTranslatePoint(float aX, float aY) :
-    mX(aX), mY(aY) {}
+  nsSVGTranslatePoint()
+    : mX(0.0f)
+    , mY(0.0f)
+  {}
+
+  nsSVGTranslatePoint(float aX, float aY)
+    : mX(aX)
+    , mY(aY)
+  {}
 
   void SetX(float aX)
     { mX = aX; }
@@ -75,6 +86,10 @@ public:
     { return mY; }
 
   nsresult ToDOMVal(nsSVGSVGElement *aElement, nsIDOMSVGPoint **aResult);
+
+  bool operator!=(const nsSVGTranslatePoint &rhs) const {
+    return mX != rhs.mX || mY != rhs.mY;
+  }
 
 private:
 
@@ -127,8 +142,8 @@ class nsSVGSVGElement : public nsSVGSVGElementBase,
   friend class nsSVGOuterSVGFrame;
   friend class nsSVGInnerSVGFrame;
   friend class nsSVGImageFrame;
+  friend class mozilla::SVGFragmentIdentifier;
 
-protected:
   friend nsresult NS_NewSVGSVGElement(nsIContent **aResult,
                                       already_AddRefed<nsINodeInfo> aNodeInfo,
                                       mozilla::dom::FromParser aFromParser);
@@ -220,7 +235,27 @@ public:
    */
   bool ShouldSynthesizeViewBox() const;
 
+  bool HasViewBoxOrSyntheticViewBox() const {
+    return HasViewBox() || ShouldSynthesizeViewBox();
+  }
+
   gfxMatrix GetViewBoxTransform() const;
+
+  bool HasChildrenOnlyTransform() const {
+    return mHasChildrenOnlyTransform;
+  }
+
+  /**
+   * This method notifies the style system that the overflow rects of our
+   * immediate childrens' frames need to be updated. It is called by our own
+   * frame when changes (e.g. to currentScale) cause our children-only
+   * transform to change.
+   *
+   * The reason we have this method instead of overriding
+   * GetAttributeChangeHint is because we need to act on non-attribute (e.g.
+   * currentScale) changes in addition to attribute (e.g. viewBox) changes.
+   */
+  void ChildrenOnlyTransformChanged();
 
   // This services any pending notifications for the transform on on this root
   // <svg> node needing to be recalculated.  (Only applicable in
@@ -243,14 +278,6 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
 private:
-  // Methods for <image> elements to override my "PreserveAspectRatio" value.
-  // These are private so that only our friends (nsSVGImageFrame in
-  // particular) have access.
-  void SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR);
-  void ClearImageOverridePreserveAspectRatio();
-  const SVGPreserveAspectRatio* GetImageOverridePreserveAspectRatio() const;
-
-protected:
   // nsSVGElement overrides
   bool IsEventName(nsIAtom* aName);
 
@@ -260,6 +287,23 @@ protected:
   virtual void UnbindFromTree(bool aDeep, bool aNullParent);
 
   // implementation helpers:
+
+  // Methods for <image> elements to override my "PreserveAspectRatio" value.
+  // These are private so that only our friends (nsSVGImageFrame in
+  // particular) have access.
+  void SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR);
+  void ClearImageOverridePreserveAspectRatio();
+
+  // Set/Clear properties to hold old or override versions of attributes
+  bool SetPreserveAspectRatioProperty(const SVGPreserveAspectRatio& aPAR);
+  const SVGPreserveAspectRatio* GetPreserveAspectRatioProperty() const;
+  bool ClearPreserveAspectRatioProperty();
+  bool SetViewBoxProperty(const nsSVGViewBoxRect& aViewBox);
+  const nsSVGViewBoxRect* GetViewBoxProperty() const;
+  bool ClearViewBoxProperty();
+  bool SetZoomAndPanProperty(PRUint16 aValue);
+  const PRUint16* GetZoomAndPanProperty() const;
+  bool ClearZoomAndPanProperty();
 
   bool IsRoot() const {
     NS_ASSERTION((IsInDoc() && !GetParent()) ==
@@ -288,7 +332,7 @@ protected:
    * parameters passed in instead.
    */
   bool WillBeOutermostSVG(nsIContent* aParent,
-                            nsIContent* aBindingParent) const;
+                          nsIContent* aBindingParent) const;
 
   // invalidate viewbox -> viewport xform & inform frames
   void InvalidateTransformNotifyFrame();
@@ -297,6 +341,19 @@ protected:
   // - a (valid or invalid) value for the preserveAspectRatio attribute
   // - a SMIL-animated value for the preserveAspectRatio attribute
   bool HasPreserveAspectRatio();
+
+ /**
+  * Returns the explicit viewBox rect, if specified, or else a synthesized
+  * viewBox, if appropriate, or else a viewBox matching the dimensions of the
+  * SVG viewport.
+  */
+  nsSVGViewBoxRect GetViewBoxWithSynthesis(
+      float aViewportWidth, float aViewportHeight) const;
+  /**
+   * Returns the explicit or default preserveAspectRatio, unless we're
+   * synthesizing a viewBox, in which case it returns the "none" value.
+   */
+  SVGPreserveAspectRatio GetPreserveAspectRatioWithOverride() const;
 
   virtual LengthAttributesInfo GetLengthInfo();
 
@@ -349,6 +406,7 @@ protected:
   bool                              mStartAnimationOnBindToTree;
   bool                              mImageNeedsTransformInvalidation;
   bool                              mIsPaintingSVGImageElement;
+  bool                              mHasChildrenOnlyTransform;
 };
 
 #endif

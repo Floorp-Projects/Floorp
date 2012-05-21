@@ -172,7 +172,7 @@ class PropertyCache
     PropertyCache() {
         PodZero(this);
     }
-    
+
   private:
     static inline uintptr_t
     hash(jsbytecode *pc, const Shape *kshape)

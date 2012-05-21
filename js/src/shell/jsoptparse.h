@@ -88,7 +88,7 @@ struct Option
     /* Only some valued options are variadic (like MultiStringOptions). */
     virtual bool isVariadic() const { return false; }
 
-    /* 
+    /*
      * For arguments, the shortflag field is used to indicate whether the
      * argument is optional.
      */
@@ -207,7 +207,7 @@ class MultiStringRange
     size_t argno() const { JS_ASSERT(!empty()); return cur->argno; }
 };
 
-/* 
+/*
  * Builder for describing a command line interface and parsing the resulting
  * specification.
  *
@@ -305,7 +305,7 @@ class OptionParser
     MultiStringRange getMultiStringOption(char shortflag) const;
     MultiStringRange getMultiStringOption(const char *longflag) const;
 
-    /* 
+    /*
      * Return whether the help option was present (and thus help was already
      * displayed during parse_args).
      */

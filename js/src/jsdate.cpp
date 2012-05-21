@@ -499,13 +499,12 @@ msFromTime(double t)
  */
 
 static JSBool
-date_convert(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
+date_convert(JSContext *cx, HandleObject obj, JSType hint, Value *vp)
 {
     JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
     JS_ASSERT(obj->isDate());
 
-    return DefaultValue(cx, RootedVarObject(cx, obj),
-                        (hint == JSTYPE_VOID) ? JSTYPE_STRING : hint, vp);
+    return DefaultValue(cx, obj, (hint == JSTYPE_VOID) ? JSTYPE_STRING : hint, vp);
 }
 
 /*
@@ -2693,11 +2692,11 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, dateProto, date_methods))
         return NULL;
     Value toUTCStringFun;
-    jsid toUTCStringId = NameToId(cx->runtime->atomState.toUTCStringAtom);
-    jsid toGMTStringId = NameToId(cx->runtime->atomState.toGMTStringAtom);
-    if (!js_GetProperty(cx, dateProto, toUTCStringId, &toUTCStringFun) ||
-        !js_DefineProperty(cx, dateProto, toGMTStringId, &toUTCStringFun,
-                           JS_PropertyStub, JS_StrictPropertyStub, 0))
+    RootedVarId toUTCStringId(cx, NameToId(cx->runtime->atomState.toUTCStringAtom));
+    RootedVarId toGMTStringId(cx, NameToId(cx->runtime->atomState.toGMTStringAtom));
+    if (!baseops::GetProperty(cx, dateProto, toUTCStringId, &toUTCStringFun) ||
+        !baseops::DefineProperty(cx, dateProto, toGMTStringId, &toUTCStringFun,
+                                 JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
         return NULL;
     }
@@ -2797,9 +2796,9 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj)
 JS_FRIEND_API(int)
 js_DateGetSeconds(JSContext *cx, JSObject* obj)
 {
-    if (!obj->isDate()) 
+    if (!obj->isDate())
         return 0;
-    
+
     double utctime = obj->getDateUTCTime().toNumber();
     if (MOZ_DOUBLE_IS_NaN(utctime))
         return 0;

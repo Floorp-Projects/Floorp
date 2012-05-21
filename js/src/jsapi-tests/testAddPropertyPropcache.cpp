@@ -10,7 +10,7 @@ static const int expectedCount = 100;
 static int callCount = 0;
 
 static JSBool
-addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+addProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, jsval *vp)
 {
   callCount++;
   return true;
@@ -41,7 +41,7 @@ BEGIN_TEST(testAddPropertyHook)
     obj = JS_NewArrayObject(cx, 0, NULL);
     CHECK(obj);
     arr = OBJECT_TO_JSVAL(obj);
-        
+
     CHECK(JS_DefineProperty(cx, global, "arr", arr,
                             JS_PropertyStub, JS_StrictPropertyStub,
                             JSPROP_ENUMERATE));
@@ -55,7 +55,7 @@ BEGIN_TEST(testAddPropertyHook)
                                JS_PropertyStub, JS_StrictPropertyStub,
                                JSPROP_ENUMERATE));
     }
-    
+
     // Now add a prop to each of the objects, but make sure to do
     // so at the same bytecode location so we can hit the propcache.
     EXEC("'use strict';                                     \n"

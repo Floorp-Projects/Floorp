@@ -2677,8 +2677,7 @@ nsNavBookmarks::EnsureKeywordsHash() {
     rv = stmt->GetString(1, keyword);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mBookmarkToKeywordHash.Put(itemId, keyword);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mBookmarkToKeywordHash.Put(itemId, keyword);
   }
 
   return NS_OK;
