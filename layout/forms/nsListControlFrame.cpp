@@ -363,7 +363,7 @@ nsListControlFrame::CalcHeightOfARow()
   // heightOfARow first)
   if (heightOfARow == 0 && GetNumberOfOptions() == 0) {
     float inflation =
-      nsLayoutUtils::FontSizeInflationInner(this, nsLayoutUtils::eInReflow);
+      nsLayoutUtils::FontSizeInflationFor(this, nsLayoutUtils::eInReflow);
     heightOfARow = CalcFallbackRowHeight(inflation);
   }
 
