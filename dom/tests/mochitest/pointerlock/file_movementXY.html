@@ -85,8 +85,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
         function fullscreenchange() {
           if (document.mozFullScreenElement === div) {
-            if (window.screenX != 0 || window.screenY != 0) {
-              todo(window.screenX == 0 && window.screenY == 0,
+            var screenX = window.screenX;
+            var screenY = window.screenY;
+            if (screenX != 0 || screenY != 0) {
+              todo(screenX == 0 && screenY == 0,
                 "We should only receive fullscreenchange once we've finished fullscreen transition");
               setTimeout(fullscreenchange, 250);
               return;
