@@ -187,6 +187,7 @@ JSOpToDoubleCondition(JSOp op)
 void
 CodeGeneratorShared::saveLive(LInstruction *ins)
 {
+    JS_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
     masm.PushRegsInMask(safepoint->spillRegs());
 }
@@ -194,6 +195,7 @@ CodeGeneratorShared::saveLive(LInstruction *ins)
 void
 CodeGeneratorShared::restoreLive(LInstruction *ins)
 {
+    JS_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
     masm.PopRegsInMask(safepoint->spillRegs());
 }
