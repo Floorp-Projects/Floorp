@@ -132,16 +132,6 @@ static inline D2D1_PIXEL_FORMAT D2DPixelFormat(SurfaceFormat aFormat)
   return D2D1::PixelFormat(DXGIFormat(aFormat), AlphaMode(aFormat));
 }
 
-static inline int BytesPerPixel(SurfaceFormat aFormat)
-{
-  switch (aFormat) {
-  case FORMAT_A8:
-    return 1;
-  default:
-    return 4;
-  }
-}
-
 static bool IsPatternSupportedByD2D(const Pattern &aPattern)
 {
   if (aPattern.GetType() != PATTERN_RADIAL_GRADIENT) {
