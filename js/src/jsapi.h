@@ -3976,13 +3976,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_FreezeObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *parent);
-
-extern JS_PUBLIC_API(JSObject *)
-JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *parent,
-                                unsigned argc, jsval *argv);
-
-extern JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, JSObject *ctor, unsigned argc, jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
