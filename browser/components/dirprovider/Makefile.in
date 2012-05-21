@@ -15,12 +15,7 @@ LIBRARY_NAME = browserdir_s
 TEST_DIRS += tests
 
 FORCE_STATIC_LIB = 1
-
-# Because we are an application component, link against the CRT statically
-# (on Windows, but only if we're not building our own CRT for jemalloc)
-ifndef MOZ_MEMORY
-USE_STATIC_LIBS      = 1
-endif
+USE_STATIC_LIBS = 1
 
 EXPORTS_NAMESPACES = mozilla/browser
 EXPORTS_mozilla/browser = DirectoryProvider.h
