@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 /** this should only contain XUL dialog and document window widget defaults. Defaults for widgets of
     a particular application should be in that application's style sheet.
 	For example style definitions for navigator can be found in navigator.css

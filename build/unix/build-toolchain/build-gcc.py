@@ -1,4 +1,8 @@
 #!/usr/bin/python
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 
 # The directories end up in the debug info, so the easy way of getting
 # a reproducible build is to run it in a know absolute directory.

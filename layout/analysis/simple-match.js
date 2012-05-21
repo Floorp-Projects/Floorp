@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 // This executes a very simple search for all functions that call a
 // given set of functions. It's intended to be the simplest possible
 // way of refactoring a common pattern of function calls. Of course,

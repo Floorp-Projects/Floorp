@@ -1,3 +1,7 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
 <!-- LOCALIZATION NOTE (window.width2, window.height): These values should be
 close to the golden ratio (1.618:1) while making sure it's wide enough for long
 file names and tall enough to hint that there are more downloads in the list -->
