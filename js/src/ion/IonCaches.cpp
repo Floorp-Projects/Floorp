@@ -269,13 +269,13 @@ IsCacheableGetProp(JSObject *obj, JSObject *holder, const Shape *shape)
 }
 
 bool
-js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp)
+js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Value *vp)
 {
     JSScript *topScript = GetTopIonJSScript(cx);
     IonScript *ion = topScript->ionScript();
 
     IonCacheGetProperty &cache = ion->getCache(cacheIndex).toGetProperty();
-    JSAtom *atom = cache.atom();
+    RootedVarPropertyName name(cx, cache.name());
 
     JSScript *script;
     jsbytecode *pc;
@@ -295,7 +295,7 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
 
         JSObject *holder;
         JSProperty *prop;
-        if (!obj->lookupProperty(cx, atom->asPropertyName(), &holder, &prop))
+        if (!obj->lookupProperty(cx, name, &holder, &prop))
             return false;
 
         const Shape *shape = (const Shape *)prop;
@@ -305,7 +305,7 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
         }
     }
 
-    jsid id = AtomToId(atom);
+    RootedVarId id(cx, NameToId(name));
     if (!obj->getGeneric(cx, obj, id, vp))
         return false;
 
@@ -557,12 +557,12 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
 {
     IonScript *ion = GetTopIonJSScript(cx)->ion;
     IonCacheSetProperty &cache = ion->getCache(cacheIndex).toSetProperty();
-    JSAtom *atom = cache.atom();
+    RootedVarPropertyName name(cx, cache.name());
     jsid id;
     const Shape *shape = NULL;
 
     bool inlinable = IsPropertyInlineable(obj, cache);
-    if (inlinable && IsPropertySetInlineable(cx, obj, atom, &id, &shape)) {
+    if (inlinable && IsPropertySetInlineable(cx, obj, name, &id, &shape)) {
         cache.incrementStubCount();
         if (!cache.attachNativeExisting(cx, obj, shape))
             return false;
@@ -572,7 +572,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
     const Shape *oldShape = obj->lastProperty();
 
     // Set/Add the property on the object, the inlined cache are setup for the next execution.
-    if (!SetProperty(cx, obj, atom, value, cache.strict(), isSetName))
+    if (!SetProperty(cx, obj, name, value, cache.strict(), isSetName))
         return false;
 
     // The property did not exists before, now we can try again to inline the
@@ -727,12 +727,11 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const 
     // Override the return value if we are invalidated (bug 728188).
     AutoDetectInvalidation adi(cx, res, script);
 
-    jsid id;
-    if (!FetchElementId(cx, obj, idval, id, res))
+    RootedVarId id(cx);
+    if (!FetchElementId(cx, obj, idval, id.address(), res))
         return false;
 
     if (cache.stubCount() < MAX_STUBS) {
-
         if (obj->isNative() && cache.monitoredResult()) {
             cache.incrementStubCount();
 

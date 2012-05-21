@@ -346,6 +346,20 @@ let DOMApplicationRegistry = {
     let app = this._cloneAppObject(this.webapps[aId]);
     return app;
   },
+
+  getAppByManifestURL: function(aManifestURL) {
+    // This could be O(1) if |webapps| was a dictionary indexed on manifestURL
+    // which should be the unique app identifier.
+    // It's currently O(n).
+    for (let id in this.webapps) {
+      let app = this.webapps[id];
+      if (app.manifestURL == aManifestURL) {
+        return this._cloneAppObject(app);
+      }
+    }
+
+    return null;
+  },
   
   getAllWithoutManifests: function(aCallback) {
     let result = {};

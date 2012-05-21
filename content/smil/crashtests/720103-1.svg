@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+<animate id="a" begin="-3.1s" end="a.begin+0.2s"/>
+</svg>

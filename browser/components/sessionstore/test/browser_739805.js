@@ -4,7 +4,7 @@
 const TAB_STATE_NEEDS_RESTORE = 1;
 
 let tabState = {
-  entries: [{url: "data:text/html,<input%20id='foo'>", formdata: {"#foo": "bar"}}]
+  entries: [{url: "data:text/html,<input%20id='foo'>", formdata: { id: { "foo": "bar" } } }]
 };
 
 function test() {
@@ -28,7 +28,7 @@ function test() {
 
     let state = JSON.parse(ss.getTabState(tab));
     let formdata = state.entries[0].formdata;
-    is(formdata && formdata["#foo"], "bar", "tab state's formdata is valid");
+    is(formdata && formdata.id["foo"], "bar", "tab state's formdata is valid");
 
     whenTabRestored(tab, function () {
       let input = browser.contentDocument.getElementById("foo");

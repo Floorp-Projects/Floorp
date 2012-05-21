@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * JS date methods.
@@ -499,13 +466,12 @@ msFromTime(double t)
  */
 
 static JSBool
-date_convert(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
+date_convert(JSContext *cx, HandleObject obj, JSType hint, Value *vp)
 {
     JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
     JS_ASSERT(obj->isDate());
 
-    return DefaultValue(cx, RootedVarObject(cx, obj),
-                        (hint == JSTYPE_VOID) ? JSTYPE_STRING : hint, vp);
+    return DefaultValue(cx, obj, (hint == JSTYPE_VOID) ? JSTYPE_STRING : hint, vp);
 }
 
 /*
@@ -2693,11 +2659,11 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, dateProto, date_methods))
         return NULL;
     Value toUTCStringFun;
-    jsid toUTCStringId = NameToId(cx->runtime->atomState.toUTCStringAtom);
-    jsid toGMTStringId = NameToId(cx->runtime->atomState.toGMTStringAtom);
-    if (!js_GetProperty(cx, dateProto, toUTCStringId, &toUTCStringFun) ||
-        !js_DefineProperty(cx, dateProto, toGMTStringId, &toUTCStringFun,
-                           JS_PropertyStub, JS_StrictPropertyStub, 0))
+    RootedVarId toUTCStringId(cx, NameToId(cx->runtime->atomState.toUTCStringAtom));
+    RootedVarId toGMTStringId(cx, NameToId(cx->runtime->atomState.toGMTStringAtom));
+    if (!baseops::GetProperty(cx, dateProto, toUTCStringId, &toUTCStringFun) ||
+        !baseops::DefineProperty(cx, dateProto, toGMTStringId, &toUTCStringFun,
+                                 JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
         return NULL;
     }
@@ -2797,9 +2763,9 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj)
 JS_FRIEND_API(int)
 js_DateGetSeconds(JSContext *cx, JSObject* obj)
 {
-    if (!obj->isDate()) 
+    if (!obj->isDate())
         return 0;
-    
+
     double utctime = obj->getDateUTCTime().toNumber();
     if (MOZ_DOUBLE_IS_NaN(utctime))
         return 0;

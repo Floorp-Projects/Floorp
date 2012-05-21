@@ -1,40 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Mozilla SVG project.
- *
- * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2001
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
 #include "nsSVGOuterSVGFrame.h"
@@ -146,6 +113,8 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
 #endif
     , mIsRootContent(false)
 {
+  // Outer-<svg> has CSS layout, so remove this bit:
+  RemoveStateBits(NS_FRAME_SVG_LAYOUT);
 }
 
 NS_IMETHODIMP
@@ -401,11 +370,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
 
   NS_ASSERTION(!GetPrevInFlow(), "SVG can't currently be broken across pages.");
 
-  // Make sure we scroll if we're too big:
-  // XXX Use the bounding box of our descendants? (See bug 353460 comment 14.)
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
-  FinishAndStoreOverflow(&aDesiredSize);
-
   // If our SVG viewport has changed, update our content and notify.
   // http://www.w3.org/TR/SVG11/coords.html#ViewportSpace
 
@@ -421,7 +385,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
     svgElem->SetViewportSize(newViewportSize);
   }
   if (mFullZoom != PresContext()->GetFullZoom()) {
-    changeBits |= TRANSFORM_CHANGED;
+    changeBits |= FULL_ZOOM_CHANGED;
     mFullZoom = PresContext()->GetFullZoom();
   }
   mViewportInitialized = true;
@@ -429,28 +393,8 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
     NotifyViewportOrTransformChanged(changeBits);
   }
 
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                  ("exit nsSVGOuterSVGFrame::Reflow: size=%d,%d",
-                  aDesiredSize.width, aDesiredSize.height));
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
-                              const nsHTMLReflowState*  aReflowState,
-                              nsDidReflowStatus aStatus)
-{
-  bool firstReflow = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
-
-  nsresult rv = nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
-
-  if (firstReflow) {
-    // Temporarily add back the NS_FRAME_FIRST_REFLOW bit to indicate
-    // to the children that we are still to receive the invalidation
-    // for our first reflow:
-    AddStateBits(NS_FRAME_FIRST_REFLOW);
-  }
+  // Now that we've marked the necessary children as dirty, call
+  // UpdateBounds() on them:
 
 #ifdef DEBUG
   mCallingUpdateBounds = true;
@@ -471,10 +415,24 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
   mCallingUpdateBounds = false;
 #endif
 
-  if (firstReflow) {
-    // And now remove it again:
-    RemoveStateBits(NS_FRAME_FIRST_REFLOW);
-  }
+  // Make sure we scroll if we're too big:
+  // XXX Use the bounding box of our descendants? (See bug 353460 comment 14.)
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
+  FinishAndStoreOverflow(&aDesiredSize);
+
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                  ("exit nsSVGOuterSVGFrame::Reflow: size=%d,%d",
+                  aDesiredSize.width, aDesiredSize.height));
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
+                              const nsHTMLReflowState*  aReflowState,
+                              nsDidReflowStatus aStatus)
+{
+  nsresult rv = nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
 
   // Make sure elements styled by :hover get updated if script/animation moves
   // them under or out from under the pointer:
@@ -628,8 +586,13 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
           this, aAttribute == nsGkAtoms::viewBox ?
                   TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED : TRANSFORM_CHANGED);
 
+      static_cast<nsSVGSVGElement*>(mContent)->ChildrenOnlyTransformChanged();
+
     } else if (aAttribute == nsGkAtoms::width ||
                aAttribute == nsGkAtoms::height) {
+
+      // Don't call ChildrenOnlyTransformChanged() here, since we call it
+      // under Reflow if the width/height actually changed.
 
       nsIFrame* embeddingFrame;
       if (IsRootOfReplacedElementSubDoc(&embeddingFrame) && embeddingFrame) {
@@ -714,7 +677,8 @@ void
 nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(PRUint32 aFlags)
 {
   NS_ABORT_IF_FALSE(aFlags &&
-                    !(aFlags & ~(COORD_CONTEXT_CHANGED | TRANSFORM_CHANGED)),
+                    !(aFlags & ~(COORD_CONTEXT_CHANGED | TRANSFORM_CHANGED |
+                                 FULL_ZOOM_CHANGED)),
                     "Unexpected aFlags value");
 
   // No point in doing anything when were not init'ed yet:
@@ -740,9 +704,21 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(PRUint32 aFlags)
     }
   }
 
+  bool haveNonFulLZoomTransformChange = (aFlags & TRANSFORM_CHANGED);
+
+  if (aFlags & FULL_ZOOM_CHANGED) {
+    // Convert FULL_ZOOM_CHANGED to TRANSFORM_CHANGED:
+    aFlags = (aFlags & ~FULL_ZOOM_CHANGED) | TRANSFORM_CHANGED;
+  }
+
   if (aFlags & TRANSFORM_CHANGED) {
     // Make sure our canvas transform matrix gets (lazily) recalculated:
     mCanvasTM = nsnull;
+
+    if (haveNonFulLZoomTransformChange &&
+        !(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+      content->ChildrenOnlyTransformChanged();
+    }
   }
 
   nsSVGUtils::NotifyChildrenOfSVGChange(this, aFlags);
@@ -761,19 +737,29 @@ nsSVGOuterSVGFrame::GetCanvasTM()
       1.0f / PresContext()->AppUnitsToFloatCSSPixels(
                                 PresContext()->AppUnitsPerDevPixel());
 
-    gfxMatrix viewBoxTM = content->GetViewBoxTransform();
-
-    gfxMatrix zoomPanTM;
-    if (mIsRootContent) {
-      const nsSVGTranslatePoint& translate = content->GetCurrentTranslate();
-      zoomPanTM.Translate(gfxPoint(translate.GetX(), translate.GetY()));
-      zoomPanTM.Scale(content->GetCurrentScale(), content->GetCurrentScale());
-    }
-
-    gfxMatrix TM = viewBoxTM * zoomPanTM * gfxMatrix().Scale(devPxPerCSSPx, devPxPerCSSPx);
-    mCanvasTM = new gfxMatrix(TM);
+    gfxMatrix tm = content->PrependLocalTransformsTo(
+                     gfxMatrix().Scale(devPxPerCSSPx, devPxPerCSSPx));
+    mCanvasTM = new gfxMatrix(tm);
   }
   return *mCanvasTM;
+}
+
+bool
+nsSVGOuterSVGFrame::HasChildrenOnlyTransform(gfxMatrix *aTransform) const
+{
+  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
+
+  bool hasTransform = content->HasChildrenOnlyTransform();
+
+  if (hasTransform && aTransform) {
+    // Outer-<svg> doesn't use x/y, so we can pass eChildToUserSpace here.
+    gfxMatrix identity;
+    *aTransform =
+      content->PrependLocalTransformsTo(identity,
+                                        nsSVGElement::eChildToUserSpace);
+  }
+
+  return hasTransform;
 }
 
 //----------------------------------------------------------------------

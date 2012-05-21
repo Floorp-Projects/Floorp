@@ -1,40 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla SVG Project code.
- *
- * The Initial Developer of the Original Code is
- * Jonathan Watt.
- * Portions created by the Initial Developer are Copyright (C) 2004
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Jonathan Watt <jonathan.watt@strath.ac.uk> (original author)
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef MOZILLA_SVGANIMATEDPRESERVEASPECTRATIO_H__
 #define MOZILLA_SVGANIMATEDPRESERVEASPECTRATIO_H__
@@ -60,11 +27,19 @@ class SVGPreserveAspectRatio
   friend class SVGAnimatedPreserveAspectRatio;
 
 public:
+  SVGPreserveAspectRatio(PRUint16 aAlign, PRUint16 aMeetOrSlice, bool aDefer = false)
+    : mAlign(aAlign)
+    , mMeetOrSlice(aMeetOrSlice)
+    , mDefer(aDefer)
+  {};
+
   SVGPreserveAspectRatio()
     : mAlign(0)
     , mMeetOrSlice(0)
     , mDefer(false)
   {};
+
+  bool operator==(const SVGPreserveAspectRatio& aOther) const;
 
   nsresult SetAlign(PRUint16 aAlign) {
     if (aAlign < nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE ||
@@ -120,8 +95,28 @@ public:
                               nsSVGElement *aSVGElement);
   void GetBaseValueString(nsAString& aValue) const;
 
-  nsresult SetBaseAlign(PRUint16 aAlign, nsSVGElement *aSVGElement);
-  nsresult SetBaseMeetOrSlice(PRUint16 aMeetOrSlice, nsSVGElement *aSVGElement);
+  void SetBaseValue(const SVGPreserveAspectRatio &aValue,
+                    nsSVGElement *aSVGElement);
+  nsresult SetBaseAlign(PRUint16 aAlign, nsSVGElement *aSVGElement) {
+    if (aAlign < nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE ||
+        aAlign > nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX) {
+      return NS_ERROR_FAILURE;
+    }
+    SetBaseValue(SVGPreserveAspectRatio(
+                   aAlign, mBaseVal.GetMeetOrSlice(), mBaseVal.GetDefer()),
+                 aSVGElement);
+    return NS_OK;
+  }
+  nsresult SetBaseMeetOrSlice(PRUint16 aMeetOrSlice, nsSVGElement *aSVGElement) {
+    if (aMeetOrSlice < nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET ||
+        aMeetOrSlice > nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE) {
+      return NS_ERROR_FAILURE;
+    }
+    SetBaseValue(SVGPreserveAspectRatio(
+                   mBaseVal.GetAlign(), aMeetOrSlice, mBaseVal.GetDefer()),
+                 aSVGElement);
+    return NS_OK;
+  }
   void SetAnimValue(PRUint64 aPackedValue, nsSVGElement *aSVGElement);
 
   const SVGPreserveAspectRatio &GetBaseValue() const

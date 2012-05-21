@@ -1,42 +1,9 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79 ft=cpp:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is SpiderMonkey JavaScript engine.
- *
- * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2009
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Luke Wagner <luke@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jscntxt.h"
 #include "gc/Marking.h"
@@ -126,13 +93,13 @@ StackFrame::initDummyFrame(JSContext *cx, JSObject &chain)
     flags_ = DUMMY | HAS_PREVPC | HAS_SCOPECHAIN;
     initPrev(cx);
     JS_ASSERT(chain.isGlobal());
-    setScopeChainNoCallObj(chain);
+    setScopeChain(chain);
 }
 
 template <class T, class U, StackFrame::TriggerPostBarriers doPostBarrier>
 void
-StackFrame::stealFrameAndSlots(StackFrame *fp, T *vp, StackFrame *otherfp, U *othervp,
-                               Value *othersp)
+StackFrame::stealFrameAndSlots(JSContext *cx, StackFrame *fp, T *vp,
+                               StackFrame *otherfp, U *othervp, Value *othersp)
 {
     JS_ASSERT((U *)vp == (U *)this - ((U *)otherfp - othervp));
     JS_ASSERT((Value *)othervp == otherfp->actualArgs() - 2);
@@ -178,14 +145,17 @@ StackFrame::stealFrameAndSlots(StackFrame *fp, T *vp, StackFrame *otherfp, U *ot
             JS_ASSERT(!argsobj.maybeStackFrame());
         otherfp->flags_ &= ~HAS_ARGS_OBJ;
     }
+
+    if (cx->compartment->debugMode())
+        cx->runtime->debugScopes->onGeneratorFrameChange(otherfp, this);
 }
 
 /* Note: explicit instantiation for js_NewGenerator located in jsiter.cpp. */
 template void StackFrame::stealFrameAndSlots<Value, HeapValue, StackFrame::NoPostBarrier>(
-                                             StackFrame *, Value *,
+                                             JSContext *, StackFrame *, Value *,
                                              StackFrame *, HeapValue *, Value *);
 template void StackFrame::stealFrameAndSlots<HeapValue, Value, StackFrame::DoPostBarrier>(
-                                             StackFrame *, HeapValue *,
+                                             JSContext *, StackFrame *, HeapValue *,
                                              StackFrame *, Value *, Value *);
 
 void
@@ -210,10 +180,6 @@ StackFrame::writeBarrierPost()
     if (hasReturnValue())
         HeapValue::writeBarrierPost(rval_, &rval_);
 }
-
-#ifdef DEBUG
-JSObject *const StackFrame::sInvalidScopeChain = (JSObject *)0xbeef;
-#endif
 
 jsbytecode *
 StackFrame::prevpcSlow(JSInlinedSite **pinlined)
@@ -254,6 +220,49 @@ StackFrame::pcQuadratic(const ContextStack &stack, StackFrame *next, JSInlinedSi
     if (!next)
         next = seg.computeNextFrame(this);
     return next->prevpc(pinlined);
+}
+
+bool
+StackFrame::pushBlock(JSContext *cx, StaticBlockObject &block)
+{
+    JS_ASSERT_IF(hasBlockChain(), blockChain_ == block.enclosingBlock());
+
+    if (block.needsClone()) {
+        RootedVar<StaticBlockObject *> blockHandle(cx, &block);
+        ClonedBlockObject *clone = ClonedBlockObject::create(cx, blockHandle, this);
+        if (!clone)
+            return false;
+
+        scopeChain_ = clone;
+    }
+
+    flags_ |= HAS_BLOCKCHAIN;
+    blockChain_ = &block;
+    return true;
+}
+
+void
+StackFrame::popBlock(JSContext *cx)
+{
+    JS_ASSERT(hasBlockChain());
+
+    if (cx->compartment->debugMode())
+        cx->runtime->debugScopes->onPopBlock(cx, this);
+
+    if (blockChain_->needsClone()) {
+        ClonedBlockObject &clone = scopeChain()->asClonedBlock();
+        JS_ASSERT(clone.staticBlock() == *blockChain_);
+        clone.put(cx->fp());
+        scopeChain_ = &clone.enclosingScope();
+    }
+
+    blockChain_ = blockChain_->enclosingBlock();
+}
+
+void
+StackFrame::popWith(JSContext *cx)
+{
+    setScopeChain(scopeChain()->asWith().enclosingScope());
 }
 
 void
@@ -624,6 +633,18 @@ StackSpace::sizeOfCommitted()
 #endif
 }
 
+#ifdef DEBUG
+bool
+StackSpace::containsSlow(StackFrame *fp)
+{
+    for (AllFramesIter i(*this); !i.done(); ++i) {
+        if (i.fp() == fp)
+            return true;
+    }
+    return false;
+}
+#endif
+
 /*****************************************************************************/
 
 ContextStack::ContextStack(JSContext *cx)
@@ -817,7 +838,8 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
     MaybeExtend extend;
     if (evalInFrame) {
         /* Though the prev-frame is given, need to search for prev-call. */
-        StackIter iter(cx, StackIter::GO_THROUGH_SAVED);
+        StackSegment &seg = cx->stack.space().containingSegment(evalInFrame);
+        StackIter iter(cx->runtime, seg);
         while (!iter.isScript() || iter.fp() != evalInFrame)
             ++iter;
         evalInFrameCalls = iter.calls_;
@@ -899,7 +921,7 @@ ContextStack::popFrame(const FrameGuard &fg)
     JS_ASSERT(&fg.regs_ == &seg_->regs());
 
     if (fg.regs_.fp()->isNonEvalFunctionFrame())
-        fg.regs_.fp()->functionEpilogue();
+        fg.regs_.fp()->functionEpilogue(cx_);
 
     seg_->popRegs(fg.prevRegs_);
     if (fg.pushedSeg_)
@@ -945,7 +967,7 @@ ContextStack::pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrame
 
     /* Copy from the generator's floating frame to the stack. */
     stackfp->stealFrameAndSlots<Value, HeapValue, StackFrame::NoPostBarrier>(
-                                stackfp, stackvp, genfp, genvp, gen->regs.sp);
+                                cx, stackfp, stackvp, genfp, genvp, gen->regs.sp);
     stackfp->resetGeneratorPrev(cx);
     stackfp->unsetFloatingGenerator();
     gfg->regs_.rebaseFromTo(gen->regs, *stackfp);
@@ -970,7 +992,7 @@ ContextStack::popGeneratorFrame(const GeneratorFrameGuard &gfg)
     /* Copy from the stack to the generator's floating frame. */
     gen->regs.rebaseFromTo(stackRegs, *genfp);
     genfp->stealFrameAndSlots<HeapValue, Value, StackFrame::DoPostBarrier>(
-                              genfp, genvp, stackfp, stackvp, stackRegs.sp);
+                              cx_, genfp, genvp, stackfp, stackvp, stackRegs.sp);
     genfp->setFloatingGenerator();
 
     /* ~FrameGuard/popFrame will finish the popping. */
@@ -1205,8 +1227,8 @@ StackIter::settleOnNewState()
             if (op == JSOP_CALL || op == JSOP_FUNCALL) {
                 unsigned argc = GET_ARGC(pc_);
                 DebugOnly<unsigned> spoff = sp_ - fp_->base();
-                JS_ASSERT_IF(cx_->stackIterAssertionEnabled,
-                             spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
+                JS_ASSERT_IF(maybecx_ && maybecx_->stackIterAssertionEnabled,
+                             spoff == js_ReconstructStackDepth(maybecx_, fp_->script(), pc_));
                 Value *vp = sp_ - (2 + argc);
 
                 CrashIfInvalidSlot(fp_, vp);
@@ -1255,7 +1277,7 @@ StackIter::settleOnNewState()
 }
 
 StackIter::StackIter(JSContext *cx, SavedOption savedOption)
-  : cx_(cx),
+  : maybecx_(cx),
     savedOption_(savedOption)
 #ifdef JS_ION
     , ionActivations_(cx),
@@ -1275,6 +1297,23 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
     } else {
         state_ = DONE;
     }
+}
+
+StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
+  : maybecx_(NULL), savedOption_(STOP_AT_SAVED)
+#ifdef JS_ION
+    , ionActivations_(rt),
+    ionFrames_((uint8_t *)NULL),
+    ionInlineFrames_((js::ion::IonFrameIterator*) NULL)
+#endif
+{
+#ifdef JS_METHODJIT
+    CompartmentVector &v = rt->compartments;
+    for (size_t i = 0; i < v.length(); i++)
+        mjit::ExpandInlineFrames(v[i]);
+#endif
+    startOnSegment(&seg);
+    settleOnNewState();
 }
 
 #ifdef JS_ION
@@ -1419,7 +1458,7 @@ StackIter::callee() const
         break;
       case SCRIPTED:
         JS_ASSERT(isFunctionFrame());
-        return fp()->callee().toFunction();
+        return &fp()->callee();
       case ION:
         if (ionFrames_.isScripted())
             return ionInlineFrames_.callee();

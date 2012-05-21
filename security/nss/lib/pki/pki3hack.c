@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.106 $ $Date: 2012/02/17 22:44:56 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.106.2.1 $ $Date: 2012/05/17 21:40:54 $";
 #endif /* DEBUG */
 
 /*
@@ -1168,6 +1168,8 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	                                             &c->serial,
 						     email,
 	                                             PR_TRUE);
+            nss_ZFreeIf(nickname);
+            nickname = NULL;
 	    if (!newInstance) {
 		nssrv = PR_FAILURE;
 		goto done;
@@ -1200,6 +1202,8 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	                                             &c->serial,
 						     email,
 	                                             PR_TRUE);
+            nss_ZFreeIf(nickname);
+            nickname = NULL;
 	    if (!newInstance) {
 		nssrv = PR_FAILURE;
 		goto done;

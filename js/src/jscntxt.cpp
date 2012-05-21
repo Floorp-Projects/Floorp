@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=80:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * JS execution context.
@@ -82,6 +49,7 @@
 # include "methodjit/MethodJIT.h"
 #endif
 #include "gc/Marking.h"
+#include "js/MemoryMetrics.h"
 #include "frontend/TokenStream.h"
 #include "frontend/ParseMaps.h"
 #include "yarr/BumpPointerAllocator.h"
@@ -94,27 +62,65 @@
 using namespace js;
 using namespace js::gc;
 
-void
-JSRuntime::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
-                               size_t *mjitCode, size_t *regexpCode, size_t *unusedCodeMemory,
-                               size_t *stackCommitted, size_t *gcMarkerSize)
+struct CallbackData
 {
-    if (normal)
-        *normal = mallocSizeOf(dtoaState);
+    CallbackData(JSMallocSizeOfFun f) : mallocSizeOf(f), n(0) {}
+    JSMallocSizeOfFun mallocSizeOf;
+    size_t n;
+};
 
-    if (temporary)
-        *temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
+void CompartmentCallback(JSRuntime *rt, void *vdata, JSCompartment *compartment)
+{
+    CallbackData *data = (CallbackData *) vdata;
+    data->n += data->mallocSizeOf(compartment);
+}
+
+void
+JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *runtime)
+{
+    runtime->object = mallocSizeOf(this);
+
+    runtime->atomsTable = atomState.atoms.sizeOfExcludingThis(mallocSizeOf);
+
+    runtime->contexts = 0;
+    for (ContextIter acx(this); !acx.done(); acx.next())
+        runtime->contexts += acx->sizeOfIncludingThis(mallocSizeOf);
+
+    runtime->dtoa = mallocSizeOf(dtoaState);
+
+    runtime->temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
     if (execAlloc_)
-        execAlloc_->sizeOfCode(mjitCode, regexpCode, unusedCodeMemory);
+        execAlloc_->sizeOfCode(&runtime->mjitCode, &runtime->regexpCode,
+                               &runtime->unusedCodeMemory);
     else
-        *mjitCode = *regexpCode = *unusedCodeMemory = 0;
+        runtime->mjitCode = runtime->regexpCode = runtime->unusedCodeMemory = 0;
 
-    if (stackCommitted)
-        *stackCommitted = stackSpace.sizeOfCommitted();
+    runtime->stackCommitted = stackSpace.sizeOfCommitted();
 
-    if (gcMarkerSize)
-        *gcMarkerSize = gcMarker.sizeOfExcludingThis(mallocSizeOf);
+    runtime->gcMarker = gcMarker.sizeOfExcludingThis(mallocSizeOf);
+
+    runtime->mathCache = mathCache_ ? mathCache_->sizeOfIncludingThis(mallocSizeOf) : 0;
+
+    runtime->scriptFilenames = scriptFilenameTable.sizeOfExcludingThis(mallocSizeOf);
+    for (ScriptFilenameTable::Range r = scriptFilenameTable.all(); !r.empty(); r.popFront())
+        runtime->scriptFilenames += mallocSizeOf(r.front());
+
+    runtime->compartmentObjects = 0;
+    CallbackData data(mallocSizeOf);
+    JS_IterateCompartments(this, &data, CompartmentCallback);
+    runtime->compartmentObjects = data.n;
+}
+
+size_t
+JSRuntime::sizeOfExplicitNonHeap()
+{
+    if (!execAlloc_)
+        return 0;
+
+    size_t mjitCode, regexpCode, unusedCodeMemory;
+    execAlloc_->sizeOfCode(&mjitCode, &regexpCode, &unusedCodeMemory);
+    return mjitCode + regexpCode + unusedCodeMemory + stackSpace.sizeOfCommitted();
 }
 
 void
@@ -989,10 +995,11 @@ JSContext::JSContext(JSRuntime *rt)
     functionCallback(NULL),
 #endif
     enumerators(NULL),
-    activeCompilations(0)
 #ifdef DEBUG
-    , stackIterAssertionEnabled(true)
+    stackIterAssertionEnabled(true),
+    okToAccessUnaliasedBindings(0),
 #endif
+    activeCompilations(0)
 {
     PodZero(&link);
 #ifdef JSGC_ROOT_ANALYSIS
@@ -1026,7 +1033,7 @@ JSContext::~JSContext()
 void
 JSContext::resetCompartment()
 {
-    JSObject *scopeobj;
+    RootedVarObject scopeobj(this);
     if (stack.hasfp()) {
         scopeobj = fp()->scopeChain();
     } else {
@@ -1038,7 +1045,7 @@ JSContext::resetCompartment()
          * Innerize. Assert, but check anyway, that this succeeds. (It
          * can only fail due to bugs in the engine or embedding.)
          */
-        OBJ_TO_INNER_OBJECT(this, scopeobj);
+        scopeobj = GetInnerObject(this, scopeobj);
         if (!scopeobj)
             goto error;
     }

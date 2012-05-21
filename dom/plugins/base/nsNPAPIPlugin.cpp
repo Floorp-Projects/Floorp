@@ -1,40 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Josh Aas <josh@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "base/basictypes.h"
 
@@ -56,7 +23,6 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
 
-#include "nsIPluginStreamListener.h"
 #include "nsPluginsDir.h"
 #include "nsPluginSafety.h"
 #include "nsPluginLogging.h"
@@ -561,10 +527,13 @@ nsNPAPIPlugin::RetainStream(NPStream *pstream, nsISupports **aRetainedPeer)
   if (!pstream || !pstream->ndata)
     return NPERR_INVALID_PARAM;
 
-  nsNPAPIPluginStreamListener* listener =
-    static_cast<nsNPAPIPluginStreamListener*>(pstream->ndata);
-  nsPluginStreamListenerPeer* peer = listener->GetStreamListenerPeer();
+  nsNPAPIStreamWrapper* streamWrapper = static_cast<nsNPAPIStreamWrapper*>(pstream->ndata);
+  nsNPAPIPluginStreamListener* listener = streamWrapper->GetStreamListener();
+  if (!listener) {
+    return NPERR_GENERIC_ERROR;
+  }
 
+  nsPluginStreamListenerPeer* peer = listener->GetStreamListenerPeer();
   if (!peer)
     return NPERR_GENERIC_ERROR;
 
@@ -597,7 +566,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
     return NPERR_GENERIC_ERROR;
   }
 
-  nsCOMPtr<nsIPluginStreamListener> listener;
+  nsRefPtr<nsNPAPIPluginStreamListener> listener;
   // Set aCallNotify here to false.  If pluginHost->GetURL or PostURL fail,
   // the listener's destructor will do the notification while we are about to
   // return a failure code.
@@ -607,7 +576,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
     inst->NewStreamListener(relativeURL, notifyData,
                             getter_AddRefs(listener));
     if (listener) {
-      static_cast<nsNPAPIPluginStreamListener*>(listener.get())->SetCallNotify(false);
+      listener->SetCallNotify(false);
     }
   }
 
@@ -631,7 +600,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
 
   if (listener) {
     // SetCallNotify(bDoNotify) here, see comment above.
-    static_cast<nsNPAPIPluginStreamListener*>(listener.get())->SetCallNotify(bDoNotify);
+    listener->SetCallNotify(bDoNotify);
   }
 
   return NPERR_NO_ERROR;
@@ -644,25 +613,6 @@ extern "C" size_t malloc_usable_size(const void *ptr);
 namespace {
 
 static char *gNPPException;
-
-// A little helper class used to wrap up plugin manager streams (that is,
-// streams from the plugin to the browser).
-class nsNPAPIStreamWrapper : nsISupports
-{
-public:
-  NS_DECL_ISUPPORTS
-
-protected:
-  nsIOutputStream *fStream;
-  NPStream        fNPStream;
-
-public:
-  nsNPAPIStreamWrapper(nsIOutputStream* stream);
-  virtual ~nsNPAPIStreamWrapper();
-
-  void GetStream(nsIOutputStream* &result);
-  NPStream* GetNPStream() { return &fNPStream; }
-};
 
 class nsPluginThreadRunnable : public nsRunnable,
                                public PRCList
@@ -769,33 +719,6 @@ InHeap(HANDLE hHeap, LPVOID lpMem)
 #endif
 
 } /* anonymous namespace */
-
-NS_IMPL_ISUPPORTS1(nsNPAPIStreamWrapper, nsISupports)
-
-nsNPAPIStreamWrapper::nsNPAPIStreamWrapper(nsIOutputStream* stream)
-: fStream(stream)
-{
-  NS_ASSERTION(stream, "bad stream");
-
-  fStream = stream;
-  NS_ADDREF(fStream);
-
-  memset(&fNPStream, 0, sizeof(fNPStream));
-  fNPStream.ndata = (void*) this;
-}
-
-nsNPAPIStreamWrapper::~nsNPAPIStreamWrapper()
-{
-  fStream->Close();
-  NS_IF_RELEASE(fStream);
-}
-
-void
-nsNPAPIStreamWrapper::GetStream(nsIOutputStream* &result)
-{
-  result = fStream;
-  NS_IF_ADDREF(fStream);
-}
 
 NPPExceptionAutoHolder::NPPExceptionAutoHolder()
   : mOldException(gNPPException)
@@ -1067,9 +990,9 @@ _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
     nsCOMPtr<nsIOutputStream> stream;
     if (NS_SUCCEEDED(inst->NewStreamFromPlugin((const char*) type, target,
                                                getter_AddRefs(stream)))) {
-      nsNPAPIStreamWrapper* wrapper = new nsNPAPIStreamWrapper(stream);
+      nsNPAPIStreamWrapper* wrapper = new nsNPAPIStreamWrapper(stream, nsnull);
       if (wrapper) {
-        (*result) = wrapper->GetNPStream();
+        (*result) = &wrapper->mNPStream;
         err = NPERR_NO_ERROR;
       } else {
         err = NPERR_OUT_OF_MEMORY_ERROR;
@@ -1098,20 +1021,22 @@ _write(NPP npp, NPStream *pstream, int32_t len, void *buffer)
 
   PluginDestructionGuard guard(npp);
 
-  nsNPAPIStreamWrapper* wrapper = (nsNPAPIStreamWrapper*) pstream->ndata;
-  NS_ASSERTION(wrapper, "null stream");
-  if (!wrapper)
+  nsNPAPIStreamWrapper* wrapper = static_cast<nsNPAPIStreamWrapper*>(pstream->ndata);
+  if (!wrapper) {
     return -1;
+  }
 
-  nsIOutputStream* stream;
-  wrapper->GetStream(stream);
+  nsIOutputStream* stream = wrapper->GetOutputStream();
+  if (!stream) {
+    return -1;
+  }
 
   PRUint32 count = 0;
   nsresult rv = stream->Write((char *)buffer, len, &count);
-  NS_RELEASE(stream);
 
-  if (rv != NS_OK)
+  if (NS_FAILED(rv)) {
     return -1;
+  }
 
   return (int32_t)count;
 }
@@ -1132,35 +1057,36 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
 
   PluginDestructionGuard guard(npp);
 
-  nsCOMPtr<nsIPluginStreamListener> listener =
-    do_QueryInterface((nsISupports *)pstream->ndata);
-
-  // DestroyStream can kill two kinds of streams: NPP derived and NPN derived.
-  // check to see if they're trying to kill a NPP stream
-  if (listener) {
-    // Tell the stream listner that the stream is now gone.
-    listener->OnStopBinding(nsnull, NS_BINDING_ABORTED);
-
-    // FIXME: http://bugzilla.mozilla.org/show_bug.cgi?id=240131
-    //
-    // Is it ok to leave pstream->ndata set here, and who releases it
-    // (or is it even properly ref counted)? And who closes the stream
-    // etc?
-  } else {
-    nsNPAPIStreamWrapper* wrapper = (nsNPAPIStreamWrapper *)pstream->ndata;
-    NS_ASSERTION(wrapper, "null wrapper");
-
-    if (!wrapper)
-      return NPERR_INVALID_PARAM;
-
-    // This will release the wrapped nsIOutputStream.
-    // pstream should always be a subobject of wrapper.  See bug 548441.
-    NS_ASSERTION((char*)wrapper <= (char*)pstream && 
-                 ((char*)pstream) + sizeof(*pstream)
-                     <= ((char*)wrapper) + sizeof(*wrapper),
-                 "pstream is not a subobject of wrapper");
-    delete wrapper;
+  nsNPAPIStreamWrapper *streamWrapper = static_cast<nsNPAPIStreamWrapper*>(pstream->ndata);
+  if (!streamWrapper) {
+    return NPERR_INVALID_PARAM;
   }
+
+  nsNPAPIPluginStreamListener *listener = streamWrapper->GetStreamListener();
+  if (listener) {
+    // This type of stream is going from the browser to the plugin. It's either the
+    // initial src/data stream or another stream resulting from NPN_GetURL* or
+    // NPN_PostURL*.
+    //
+    // Calling OnStopBinding on the listener may cause it to be deleted due to the
+    // releasing of its last references.
+    listener->OnStopBinding(nsnull, NS_BINDING_ABORTED);
+  } else {
+    // This type of stream (NPStream) was created via NPN_NewStream. The plugin holds
+    // the reference until it is to be deleted here. Deleting the wrapper will
+    // release the wrapped nsIOutputStream.
+    // 
+    // The NPStream the plugin references should always be a sub-object of it's own
+    // 'ndata', which is our nsNPAPIStramWrapper. See bug 548441.
+    NS_ASSERTION((char*)streamWrapper <= (char*)pstream && 
+                 ((char*)pstream) + sizeof(*pstream)
+                     <= ((char*)streamWrapper) + sizeof(*streamWrapper),
+                 "pstream is not a subobject of wrapper");
+    delete streamWrapper;
+  }
+
+  // 'listener' and/or 'streamWrapper' may be invalid (deleted) at this point. Don't
+  // touch them again!
 
   return NPERR_NO_ERROR;
 }
@@ -2571,7 +2497,11 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
   if (!pstream || !rangeList || !pstream->ndata)
     return NPERR_INVALID_PARAM;
 
-  nsNPAPIPluginStreamListener* streamlistener = (nsNPAPIPluginStreamListener*)pstream->ndata;
+  nsNPAPIStreamWrapper* streamWrapper = static_cast<nsNPAPIStreamWrapper*>(pstream->ndata);
+  nsNPAPIPluginStreamListener* streamlistener = streamWrapper->GetStreamListener();
+  if (!streamlistener) {
+    return NPERR_GENERIC_ERROR;
+  }
 
   PRInt32 streamtype = NP_NORMAL;
 
@@ -2583,8 +2513,7 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
   if (!streamlistener->mStreamInfo)
     return NPERR_GENERIC_ERROR;
 
-  nsresult rv = streamlistener->mStreamInfo
-    ->RequestRead((NPByteRange *)rangeList);
+  nsresult rv = streamlistener->mStreamInfo->RequestRead((NPByteRange *)rangeList);
   if (NS_FAILED(rv))
     return NPERR_GENERIC_ERROR;
 

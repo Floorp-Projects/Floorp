@@ -427,7 +427,7 @@ bool ArrayPopDense(JSContext *cx, JSObject *obj, Value *rval);
 bool ArrayPushDense(JSContext *cx, JSObject *obj, const Value &v, uint32_t *length);
 bool ArrayShiftDense(JSContext *cx, JSObject *obj, Value *rval);
 
-bool SetProperty(JSContext *cx, HandleObject obj, JSAtom *atom, HandleValue value,
+bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
                  bool strict, bool isSetName);
 
 } // namespace ion

@@ -1,38 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Mozilla SVG project.
- *
- * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef NS_SVGUTILS_H
 #define NS_SVGUTILS_H
@@ -45,6 +14,7 @@
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "nsAlgorithm.h"
+#include "nsChangeHint.h"
 #include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsID.h"
@@ -143,6 +113,9 @@ IsSVGWhitespace(PRUnichar aChar)
  */
 bool NS_SMILEnabled();
 
+bool NS_SVGDisplayListHitTestingEnabled();
+bool NS_SVGDisplayListPaintingEnabled();
+
 /**
  * Sometimes we need to distinguish between an empty box and a box
  * that contains an element that has no size e.g. a point at the origin.
@@ -225,6 +198,8 @@ public:
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
   typedef mozilla::SVGPreserveAspectRatio SVGPreserveAspectRatio;
 
+  static void Init();
+
   /*
    * Get the parent element of an nsIContent
    */
@@ -234,6 +209,16 @@ public:
    * Get the outer SVG element of an nsIContent
    */
   static nsSVGSVGElement *GetOuterSVGElement(nsSVGElement *aSVGElement);
+
+  /**
+   * Activates the animation element aContent as a result of navigation to the
+   * fragment identifier that identifies aContent. aContent must be an instance
+   * of nsSVGAnimationElement.
+   *
+   * This is just a shim to allow nsSVGAnimationElement::ActivateByHyperlink to
+   * be called from layout/base without adding to that directory's include paths.
+   */
+  static void ActivateByHyperlink(nsIContent *aContent);
 
   /*
    * Get the number of CSS px (user units) per em (i.e. the em-height in user
@@ -315,7 +300,15 @@ public:
    * returns nsnull.
    */
   static nsSVGDisplayContainerFrame* GetNearestSVGViewport(nsIFrame *aFrame);
-  
+
+  /**
+   * Returns the frame's post-filter visual overflow rect when passed the
+   * frame's pre-filter visual overflow rect. If the frame is not currently
+   * being filtered, this function simply returns aUnfilteredRect.
+   */
+  static nsRect GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
+                                                const nsRect &aUnfilteredRect);
+
   /**
    * Figures out the worst case invalidation area for a frame, taking
    * filters into account.
@@ -606,6 +599,12 @@ public:
 
   static bool OuterSVGIsCallingUpdateBounds(nsIFrame *aFrame);
 #endif
+
+  /*
+   * Get any additional transforms that apply only to stroking
+   * e.g. non-scaling-stroke
+   */
+  static gfxMatrix GetStrokeTransform(nsIFrame *aFrame);
 
   /**
    * Compute the maximum possible device space stroke extents of a path given

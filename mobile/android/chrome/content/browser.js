@@ -1,40 +1,7 @@
 // -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
-/*
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Mobile Browser.
- *
- * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
 let Cc = Components.classes;
@@ -1616,6 +1583,7 @@ Tab.prototype = {
     this.browser.addEventListener("pageshow", this, true);
 
     Services.obs.addObserver(this, "before-first-paint", false);
+    Services.prefs.addObserver("browser.ui.zoom.force-user-scalable", this, false);
 
     if (!aParams.delayLoad) {
       let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -1660,6 +1628,7 @@ Tab.prototype = {
     this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
 
     Services.obs.removeObserver(this, "before-first-paint");
+    Services.prefs.removeObserver("browser.ui.zoom.force-user-scalable", this);
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are removed.
@@ -2340,7 +2309,7 @@ Tab.prototype = {
   },
 
   OnHistoryPurge: function(aNumEntries) {
-    this._sendHistoryEvent("Purge", -1, null);
+    this._sendHistoryEvent("Purge", aNumEntries, null);
     return true;
   },
 
@@ -2350,6 +2319,10 @@ Tab.prototype = {
 
   /** Update viewport when the metadata changes. */
   updateViewportMetadata: function updateViewportMetadata(aMetadata) {
+    if (Services.prefs.getBoolPref("browser.ui.zoom.force-user-scalable")) {
+      aMetadata.allowZoom = true;
+      aMetadata.minZoom = aMetadata.maxZoom = NaN;
+    }
     if (aMetadata && aMetadata.autoScale) {
       let scaleRatio = aMetadata.scaleRatio = ViewportHandler.getScaleRatio();
 
@@ -2362,6 +2335,7 @@ Tab.prototype = {
     }
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
     this.updateViewportSize(gScreenWidth);
+    this.sendViewportMetadata();
   },
 
   /** Update viewport when the metadata or the window size changes. */
@@ -2422,6 +2396,7 @@ Tab.prototype = {
       let [pageWidth, pageHeight] = this.getPageSize(this.browser.contentDocument, viewportW, viewportH);
       minScale = gScreenWidth / pageWidth;
     }
+    minScale = this.clampZoom(minScale);
     viewportH = Math.max(viewportH, screenH / minScale);
     this.setBrowserSize(viewportW, viewportH);
 
@@ -2443,8 +2418,20 @@ Tab.prototype = {
     // within the screen width. Note that "actual content" may be different
     // with respect to CSS pixels because of the CSS viewport size changing.
     let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
-    this.setResolution(this._zoom * zoomScale, false);
+    let zoom = this.clampZoom(this._zoom * zoomScale);
+    this.setResolution(zoom, false);
     this.sendViewportUpdate();
+  },
+
+  sendViewportMetadata: function sendViewportMetadata() {
+    sendMessageToJava({ gecko: {
+      type: "Tab:ViewportMetadata",
+      allowZoom: this.metadata.allowZoom,
+      defaultZoom: this.metadata.defaultZoom || 0,
+      minZoom: this.metadata.minZoom || 0,
+      maxZoom: this.metadata.maxZoom || 0,
+      tabID: this.id
+    }});
   },
 
   setBrowserSize: function(aWidth, aHeight) {
@@ -2454,6 +2441,21 @@ Tab.prototype = {
       return;
     let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     cwu.setCSSViewport(aWidth, aHeight);
+  },
+
+  /** Takes a scale and restricts it based on this tab's zoom limits. */
+  clampZoom: function clampZoom(aZoom) {
+    let zoom = ViewportHandler.clamp(aZoom, kViewportMinScale, kViewportMaxScale);
+
+    let md = this.metadata;
+    if (!md.allowZoom)
+      return md.defaultZoom || zoom;
+
+    if (md && md.minZoom)
+      zoom = Math.max(zoom, md.minZoom);
+    if (md && md.maxZoom)
+      zoom = Math.min(zoom, md.maxZoom);
+    return zoom;
   },
 
   getRequestLoadContext: function(aRequest) {
@@ -2516,6 +2518,10 @@ Tab.prototype = {
           this.contentDocumentIsDisplayed = true;
         }
         break;
+      case "nsPref:changed":
+        if (aData == "browser.ui.zoom.force-user-scalable")
+          ViewportHandler.updateMetadata(this);
+        break;
     }
   },
 
@@ -2572,7 +2578,7 @@ var BrowserEventHandler = {
       }
     }
 
-    if (!ElementTouchHelper.isElementClickable(closest))
+    if (!ElementTouchHelper.isElementClickable(closest, null, false))
       closest = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow,
                                                     aEvent.changedTouches[0].screenX,
                                                     aEvent.changedTouches[0].screenY);
@@ -2654,7 +2660,7 @@ var BrowserEventHandler = {
           this._sendMouseEvent("mousedown", element, data.x, data.y);
           this._sendMouseEvent("mouseup",   element, data.x, data.y);
   
-          if (ElementTouchHelper.isElementClickable(element))
+          if (ElementTouchHelper.isElementClickable(element, null, false))
             Haptic.performSimpleAction(Haptic.LongPress);
         } catch(e) {
           Cu.reportError(e);
@@ -2915,7 +2921,7 @@ const ElementTouchHelper = {
       aX -= rect.left;
       aY -= rect.top;
       cwu = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      elem = ElementTouchHelper.getClosest(cwu, aX, aY);
+      elem = this.getClosest(cwu, aX, aY);
     }
 
     return elem;
@@ -2951,10 +2957,10 @@ const ElementTouchHelper = {
     // use a cache to speed up future calls to isElementClickable in the
     // loop below.
     let unclickableCache = new Array();
-    if (this.isElementClickable(target, unclickableCache))
+    if (this.isElementClickable(target, unclickableCache, false))
       return target;
 
-    let target = null;
+    target = null;
     let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.top * dpiRatio,
                                                    this.radius.right * dpiRatio,
                                                    this.radius.bottom * dpiRatio,
@@ -2963,7 +2969,7 @@ const ElementTouchHelper = {
     let threshold = Number.POSITIVE_INFINITY;
     for (let i = 0; i < nodes.length; i++) {
       let current = nodes[i];
-      if (!current.mozMatchesSelector || !this.isElementClickable(current, unclickableCache))
+      if (!current.mozMatchesSelector || !this.isElementClickable(current, unclickableCache, true))
         continue;
 
       let rect = current.getBoundingClientRect();
@@ -2982,9 +2988,14 @@ const ElementTouchHelper = {
     return target;
   },
 
-  isElementClickable: function isElementClickable(aElement, aUnclickableCache) {
+  isElementClickable: function isElementClickable(aElement, aUnclickableCache, aAllowBodyListeners) {
     const selector = "a,:link,:visited,[role=button],button,input,select,textarea,label";
-    for (let elem = aElement; elem; elem = elem.parentNode) {
+
+    let stopNode = null;
+    if (!aAllowBodyListeners && aElement && aElement.ownerDocument)
+      stopNode = aElement.ownerDocument.body;
+
+    for (let elem = aElement; elem != stopNode; elem = elem.parentNode) {
       if (aUnclickableCache && aUnclickableCache.indexOf(elem) != -1)
         continue;
       if (this._hasMouseListener(elem))
@@ -3664,7 +3675,7 @@ var ViewportHandler = {
 
     scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
     minScale = this.clamp(minScale, kViewportMinScale, kViewportMaxScale);
-    maxScale = this.clamp(maxScale, kViewportMinScale, kViewportMaxScale);
+    maxScale = this.clamp(maxScale, minScale, kViewportMaxScale);
 
     // If initial scale is 1.0 and width is not set, assume width=device-width
     let autoSize = (widthStr == "device-width" ||

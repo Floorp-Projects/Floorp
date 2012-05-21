@@ -1,46 +1,12 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Ryan Cassin <rcassin@supernova.org>
- *   Daniel Glazman <glazman@netscape.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIControllerCommandTable.h"
 #include "nsComposerController.h"
 #include "nsComposerCommands.h"
+#include "nsGkAtoms.h"
 
 #define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                    \
   {                                                                     \
@@ -115,31 +81,31 @@ nsComposerController::RegisterHTMLEditorCommands(
   NS_REGISTER_ONE_COMMAND(nsOutdentCommand, "cmd_outdent");
 
   // Styles
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_bold", "b");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_italic", "i");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_underline", "u");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_tt", "tt");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_bold", nsGkAtoms::b);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_italic", nsGkAtoms::i);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_underline", nsGkAtoms::u);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_tt", nsGkAtoms::tt);
 
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strikethrough", "strike");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_superscript", "sup");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_subscript", "sub");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_nobreak", "nobr");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strikethrough", nsGkAtoms::strike);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_superscript", nsGkAtoms::sup);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_subscript", nsGkAtoms::sub);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_nobreak", nsGkAtoms::nobr);
 
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_em", "em");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strong", "strong");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_cite", "cite");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_abbr", "abbr");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_acronym", "acronym");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_code", "code");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_samp", "samp");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_var", "var");
-  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_removeLinks", "href");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_em", nsGkAtoms::em);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strong", nsGkAtoms::strong);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_cite", nsGkAtoms::cite);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_abbr", nsGkAtoms::abbr);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_acronym", nsGkAtoms::acronym);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_code", nsGkAtoms::code);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_samp", nsGkAtoms::samp);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_var", nsGkAtoms::var);
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_removeLinks", nsGkAtoms::href);
 
   // lists
-  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ol", "ol");
-  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ul", "ul");
-  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dt", "dt");
-  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dd", "dd");
+  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ol", nsGkAtoms::ol);
+  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ul", nsGkAtoms::ul);
+  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dt", nsGkAtoms::dt);
+  NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dd", nsGkAtoms::dd);
   NS_REGISTER_ONE_COMMAND(nsRemoveListCommand, "cmd_removeList");
 
   // format stuff

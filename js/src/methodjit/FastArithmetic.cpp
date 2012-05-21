@@ -1,43 +1,9 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla SpiderMonkey JavaScript 1.9 code, released
- * May 28, 2008.
- *
- * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org>
- *
- * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
- *   David Mandelin <dmandelin@mozilla.com>
- *   Sean Stangl    <sstangl@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "jsbool.h"
 #include "jslibmath.h"
 #include "jsnum.h"
@@ -349,7 +315,7 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
     }
 
     EmitDoubleOp(op, fpRight, fpLeft, masm);
-    
+
     MaybeJump done;
 
     /*
@@ -365,10 +331,10 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
         FPRegisterID fpReg = frame.allocFPReg();
         JumpList isDouble;
         masm.branchConvertDoubleToInt32(fpLeft, reg, isDouble, fpReg);
-        
+
         masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), reg,
                                       frame.addressOf(lhs));
-        
+
         frame.freeReg(reg);
         frame.freeReg(fpReg);
         done.setJump(masm.jump());
@@ -480,7 +446,7 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub, 
       default:
         JS_NOT_REACHED("unrecognized op");
     }
-    
+
     JS_ASSERT(overflow.isSet());
 
     /*
@@ -585,7 +551,7 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
         /* If the LHS type was not known, link its path here. */
         if (lhsUnknownDone.isSet())
             lhsUnknownDone.get().linkTo(stubcc.masm.label(), &stubcc.masm);
-        
+
         /* Perform the double operation. */
         EmitDoubleOp(op, regs.rhsFP, regs.lhsFP, stubcc.masm);
 
@@ -721,7 +687,7 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
         JS_NOT_REACHED("unrecognized op");
     }
     op = origOp;
-    
+
     /*
      * Integer overflow path. Restore the original values and make a stub call,
      * which could trigger recompilation.
@@ -1163,7 +1129,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub,
         frame.discardFrame();
 
         bool needStub = true;
-        
+
 #ifdef JS_MONOIC
         EqualityGenInfo ic;
 
@@ -1396,7 +1362,7 @@ DoubleCondForOp(JSOp op, JSOp fused)
     bool ifeq = fused == JSOP_IFEQ;
     switch (op) {
       case JSOP_GT:
-        return ifeq 
+        return ifeq
                ? Assembler::DoubleLessThanOrEqualOrUnordered
                : Assembler::DoubleGreaterThan;
       case JSOP_GE:
@@ -1658,7 +1624,7 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
         frame.pinReg(cmpReg);
         if (reg.isSet())
             frame.pinReg(reg.reg());
-        
+
         frame.popn(2);
 
         frame.syncAndKillEverything();

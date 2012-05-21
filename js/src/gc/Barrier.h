@@ -1,41 +1,9 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is SpiderMonkey global object code.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef jsgc_barrier_h___
 #define jsgc_barrier_h___
@@ -151,31 +119,39 @@ struct JSXML;
 namespace js {
 
 template<class T, typename Unioned = uintptr_t>
-class HeapPtr
+class EncapsulatedPtr
 {
+  protected:
     union {
         T *value;
         Unioned other;
     };
 
   public:
-    HeapPtr() : value(NULL) {}
-    explicit HeapPtr(T *v) : value(v) { post(); }
-    explicit HeapPtr(const HeapPtr<T> &v) : value(v.value) { post(); }
+    EncapsulatedPtr() : value(NULL) {}
+    explicit EncapsulatedPtr(T *v) : value(v) {}
+    explicit EncapsulatedPtr(const EncapsulatedPtr<T> &v) : value(v.value) {}
 
-    ~HeapPtr() { pre(); }
-
-    /* Use this to install a ptr into a newly allocated object. */
-    void init(T *v) {
-        JS_ASSERT(!IsPoisonedPtr<T>(v));
-        value = v;
-        post();
-    }
+    ~EncapsulatedPtr() { pre(); }
 
     /* Use to set the pointer to NULL. */
     void clear() {
-	pre();
-	value = NULL;
+        pre();
+        value = NULL;
+    }
+
+    EncapsulatedPtr<T, Unioned> &operator=(T *v) {
+        pre();
+        JS_ASSERT(!IsPoisonedPtr<T>(v));
+        value = v;
+        return *this;
+    }
+
+    EncapsulatedPtr<T, Unioned> &operator=(const EncapsulatedPtr<T> &v) {
+        pre();
+        JS_ASSERT(!IsPoisonedPtr<T>(v.value));
+        value = v.value;
+        return *this;
     }
 
     /* Use this if the automatic coercion to T* isn't working. */
@@ -190,30 +166,48 @@ class HeapPtr
 
     Unioned *unsafeGetUnioned() { return &other; }
 
-    HeapPtr<T, Unioned> &operator=(T *v) {
-        pre();
-        JS_ASSERT(!IsPoisonedPtr<T>(v));
-        value = v;
-        post();
-        return *this;
-    }
-
-    HeapPtr<T, Unioned> &operator=(const HeapPtr<T> &v) {
-        pre();
-        JS_ASSERT(!IsPoisonedPtr<T>(v.value));
-        value = v.value;
-        post();
-        return *this;
-    }
-
     T &operator*() const { return *value; }
     T *operator->() const { return value; }
 
     operator T*() const { return value; }
 
-  private:
+  protected:
     void pre() { T::writeBarrierPre(value); }
-    void post() { T::writeBarrierPost(value, (void *)&value); }
+};
+
+template <class T, class Unioned = uintptr_t>
+class HeapPtr : public EncapsulatedPtr<T, Unioned>
+{
+  public:
+    HeapPtr() : EncapsulatedPtr<T>(NULL) {}
+    explicit HeapPtr(T *v) : EncapsulatedPtr<T>(v) { post(); }
+    explicit HeapPtr(const HeapPtr<T> &v)
+      : EncapsulatedPtr<T>(v) { post(); }
+
+    void init(T *v) {
+        JS_ASSERT(!IsPoisonedPtr<T>(v));
+        this->value = v;
+        post();
+    }
+
+    HeapPtr<T, Unioned> &operator=(T *v) {
+        this->pre();
+        JS_ASSERT(!IsPoisonedPtr<T>(v));
+        this->value = v;
+        post();
+        return *this;
+    }
+
+    HeapPtr<T, Unioned> &operator=(const HeapPtr<T> &v) {
+        this->pre();
+        JS_ASSERT(!IsPoisonedPtr<T>(v.value));
+        this->value = v.value;
+        post();
+        return *this;
+    }
+
+  protected:
+    void post() { T::writeBarrierPost(this->value, (void *)&this->value); }
 
     /* Make this friend so it can access pre() and post(). */
     template<class T1, class T2>
@@ -221,6 +215,41 @@ class HeapPtr
     BarrieredSetPair(JSCompartment *comp,
                      HeapPtr<T1> &v1, T1 *val1,
                      HeapPtr<T2> &v2, T2 *val2);
+};
+
+template <class T>
+class RelocatablePtr : public EncapsulatedPtr<T>
+{
+  public:
+    RelocatablePtr() : EncapsulatedPtr<T>(NULL) {}
+    explicit RelocatablePtr(T *v) : EncapsulatedPtr<T>(v) { post(); }
+    explicit RelocatablePtr(const RelocatablePtr<T> &v)
+      : EncapsulatedPtr<T>(v) { post(); }
+
+    ~RelocatablePtr() {
+        this->pre();
+        relocate();
+    }
+
+    RelocatablePtr<T> &operator=(T *v) {
+        this->pre();
+        JS_ASSERT(!IsPoisonedPtr<T>(v));
+        this->value = v;
+        post();
+        return *this;
+    }
+
+    RelocatablePtr<T> &operator=(const RelocatablePtr<T> &v) {
+        this->pre();
+        JS_ASSERT(!IsPoisonedPtr<T>(v.value));
+        this->value = v.value;
+        post();
+        return *this;
+    }
+
+  protected:
+    void post() { T::writeBarrierRelocPost(this->value, (void *)&this->value); }
+    void relocate() { T::writeBarrierRelocated(this->value, (void *)&this->value); }
 };
 
 /*
@@ -247,6 +276,9 @@ struct Shape;
 class BaseShape;
 namespace types { struct TypeObject; }
 
+typedef RelocatablePtr<JSObject> RelocatablePtrObject;
+typedef RelocatablePtr<JSScript> RelocatablePtrScript;
+
 typedef HeapPtr<JSObject> HeapPtrObject;
 typedef HeapPtr<JSFunction> HeapPtrFunction;
 typedef HeapPtr<JSString> HeapPtrString;
@@ -269,7 +301,7 @@ struct HeapPtrHasher
 
 /* Specialized hashing policy for HeapPtrs. */
 template <class T>
-struct DefaultHasher< HeapPtr<T> >: HeapPtrHasher<T> { };
+struct DefaultHasher< HeapPtr<T> > : HeapPtrHasher<T> { };
 
 class EncapsulatedValue
 {
@@ -376,9 +408,6 @@ class RelocatableValue : public EncapsulatedValue
     inline RelocatableValue &operator=(const Value &v);
     inline RelocatableValue &operator=(const RelocatableValue &v);
 
-    static inline void writeBarrierPost(const Value &v, Value *addr);
-    static inline void writeBarrierPost(JSCompartment *comp, const Value &v, Value *addr);
-
   private:
     inline void post();
     inline void post(JSCompartment *comp);
@@ -421,7 +450,7 @@ class HeapSlot : public EncapsulatedValue
  * Run a post write barrier that encompasses multiple contiguous slots in a
  * single step.
  */
-static inline void
+inline void
 SlotRangeWriteBarrierPost(JSCompartment *comp, JSObject *obj, uint32_t start, uint32_t count)
 {
 }
@@ -557,11 +586,11 @@ class ReadBarrieredValue
 
 namespace tl {
 
-template <class T> struct IsPostBarrieredType<HeapPtr<T> > {
-                                                    static const bool result = true; };
-template <> struct IsPostBarrieredType<HeapSlot>  { static const bool result = true; };
-template <> struct IsPostBarrieredType<HeapValue> { static const bool result = true; };
-template <> struct IsPostBarrieredType<HeapId>    { static const bool result = true; };
+template <class T> struct IsRelocatableHeapType<HeapPtr<T> >
+                                                    { static const bool result = false; };
+template <> struct IsRelocatableHeapType<HeapSlot>  { static const bool result = false; };
+template <> struct IsRelocatableHeapType<HeapValue> { static const bool result = false; };
+template <> struct IsRelocatableHeapType<HeapId>    { static const bool result = false; };
 
 } /* namespace tl */
 } /* namespace js */

@@ -1,47 +1,8 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // vim:cindent:ts=2:et:sw=2:
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Mats Palmgren <matspal@gmail.com>
- *   Takeshi Ichimaru <ayakawa.m@gmail.com>
- *   Masayuki Nakano <masayuki@d-toybox.com>
- *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
- *   Michael Ventnor <m.ventnor@gmail.com>
- *   Rob Arnold <robarnold@mozilla.com>
- *   Jeff Walden <jwalden+code@mit.edu>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* utility functions for drawing borders and backgrounds */
 
@@ -4146,14 +4107,16 @@ nsImageRenderer::GetContainer()
 #define MAX_SPREAD_RADIUS 50
 
 static inline gfxIntSize
-ComputeBlurRadius(nscoord aBlurRadius, PRInt32 aAppUnitsPerDevPixel)
+ComputeBlurRadius(nscoord aBlurRadius, PRInt32 aAppUnitsPerDevPixel, gfxFloat scale = 1.0)
 {
   // http://dev.w3.org/csswg/css3-background/#box-shadow says that the
   // standard deviation of the blur should be half the given blur value.
-  gfxFloat blurStdDev =
-    NS_MIN(gfxFloat(aBlurRadius) / gfxFloat(aAppUnitsPerDevPixel),
-           gfxFloat(MAX_BLUR_RADIUS))
-    / 2.0;
+  gfxFloat blurStdDev = gfxFloat(aBlurRadius) / gfxFloat(aAppUnitsPerDevPixel);
+
+  blurStdDev *= scale;
+
+  blurStdDev = NS_MIN(blurStdDev,
+                      gfxFloat(MAX_BLUR_RADIUS)) / 2.0;
   return
     gfxAlphaBoxBlur::CalculateBlurRadius(gfxPoint(blurStdDev, blurStdDev));
 }
@@ -4175,7 +4138,21 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
     return nsnull;
   }
 
-  gfxIntSize blurRadius = ComputeBlurRadius(aBlurRadius, aAppUnitsPerDevPixel);
+  gfxFloat scale = 1;
+
+  // Do blurs in device space when possible
+  // If the scale is not uniform we fall back to transforming on paint.
+  // Chrome/Skia always does the blurs in device space
+  // and will sometimes get incorrect results (e.g. rotated blurs)
+  gfxMatrix transform = aDestinationCtx->CurrentMatrix();
+  if (transform.HasNonAxisAlignedTransform() || transform.xx != transform.yy) {
+    transform = gfxMatrix();
+  } else {
+    scale = transform.xx;
+  }
+
+  // compute a large or smaller blur radius
+  gfxIntSize blurRadius = ComputeBlurRadius(aBlurRadius, aAppUnitsPerDevPixel, scale);
   PRInt32 spreadRadius = NS_MIN(PRInt32(aSpreadRadius / aAppUnitsPerDevPixel),
                                 PRInt32(MAX_SPREAD_RADIUS));
   mDestinationCtx = aDestinationCtx;
@@ -4194,9 +4171,26 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
     nsLayoutUtils::RectToGfxRect(aDirtyRect, aAppUnitsPerDevPixel);
   dirtyRect.RoundOut();
 
+  rect = transform.TransformBounds(rect);
+
+  mPreTransformed = !transform.IsIdentity();
+
   // Create the temporary surface for blurring
-  mContext = blur.Init(rect, gfxIntSize(spreadRadius, spreadRadius),
-                       blurRadius, &dirtyRect, aSkipRect);
+  dirtyRect = transform.TransformBounds(dirtyRect);
+  if (aSkipRect) {
+    gfxRect skipRect = transform.TransformBounds(*aSkipRect);
+    mContext = blur.Init(rect, gfxIntSize(spreadRadius, spreadRadius),
+                         blurRadius, &dirtyRect, &skipRect);
+  } else {
+    mContext = blur.Init(rect, gfxIntSize(spreadRadius, spreadRadius),
+                         blurRadius, &dirtyRect, NULL);
+  }
+
+  if (mContext) {
+    // we don't need to blur if skipRect is equal to rect
+    // and mContext will be NULL
+    mContext->SetMatrix(transform);
+  }
   return mContext;
 }
 
@@ -4205,6 +4199,12 @@ nsContextBoxBlur::DoPaint()
 {
   if (mContext == mDestinationCtx)
     return;
+
+  gfxContextMatrixAutoSaveRestore saveMatrix(mDestinationCtx);
+
+  if (mPreTransformed) {
+    mDestinationCtx->IdentityMatrix();
+  }
 
   blur.Paint(mDestinationCtx);
 }

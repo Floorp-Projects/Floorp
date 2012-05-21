@@ -473,8 +473,8 @@ class CGAddPropertyHook(CGAbstractClassHook):
     A hook for addProperty, used to preserve our wrapper from GC.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'obj'),
-                Argument('jsid', 'id'), Argument('jsval*', 'vp')]
+        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
+                Argument('JSHandleId', 'id'), Argument('jsval*', 'vp')]
         CGAbstractClassHook.__init__(self, descriptor, ADDPROPERTY_HOOK_NAME,
                                      'JSBool', args)
 
@@ -581,7 +581,7 @@ class CGClassConstructHook(CGAbstractStaticMethod):
 
 class CGClassHasInstanceHook(CGAbstractStaticMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'obj'),
+        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
                 Argument('const jsval*', 'v'), Argument('JSBool*', 'bp')]
         CGAbstractStaticMethod.__init__(self, descriptor, HASINSTANCE_HOOK_NAME,
                                         'JSBool', args)
@@ -608,12 +608,12 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
                          "%s");
     return false;
   }
-  obj = &protov.toObject();
+  JSObject *objProto = &protov.toObject();
 
   JSObject* instance = &v->toObject();
   JSObject* proto = JS_GetPrototype(instance);
   while (proto) {
-    if (proto == obj) {
+    if (proto == objProto) {
       *bp = true;
       return true;
     }
@@ -2428,8 +2428,8 @@ class CGNativeGetter(CGAbstractBindingMethod):
             args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                     Argument('JS::Value*', 'vp')]
         else:
-            args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'obj'),
-                    Argument('jsid', 'id'), Argument('JS::Value*', 'vp')]
+            args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
+                    Argument('JSHandleId', 'id'), Argument('JS::Value*', 'vp')]
         CGAbstractBindingMethod.__init__(self, descriptor, name, args,
                                          descriptor.getExtendedAttributes(self.attr, getter=True))
 
@@ -2457,8 +2457,8 @@ class CGNativeSetter(CGAbstractBindingMethod):
             args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                     Argument('JS::Value*', 'vp')]
         else:
-            args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'obj'),
-                    Argument('jsid', 'id'), Argument('JSBool', 'strict'),
+            args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
+                    Argument('JSHandleId', 'id'), Argument('JSBool', 'strict'),
                     Argument('JS::Value*', 'vp')]
         CGAbstractBindingMethod.__init__(self, descriptor, name, args,
                                          descriptor.getExtendedAttributes(self.attr, setter=True))

@@ -1,40 +1,9 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla SpiderMonkey JavaScript 1.9 code, released
- * May 28, 2008.
- *
- * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org>
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MethodJIT.h"
 #include "Logging.h"
@@ -193,7 +162,7 @@ JS_STATIC_ASSERT(offsetof(FrameRegs, sp) == 0);
  * caller's registers when control is at or after that directive. That is,
  * they describe the states that hold between one instruction and the next,
  * not the instructions themselves. Later directives override earlier
- * directives. 
+ * directives.
  *
  * In DWARF CFI, each stack frame has a Canonical Frame Address (CFA) that
  * remains constant throughout the frame's lifetime. Exactly where it is is
@@ -207,7 +176,7 @@ JS_STATIC_ASSERT(offsetof(FrameRegs, sp) == 0);
  * rule for computing the CFA, not the rule for each saved register.)
  *
  * Quick reference:
- * 
+ *
  * .cfi_startproc, .cfi_endproc
  *   Put these at the beginning and end of the block of code you're
  *   annotating.
@@ -227,7 +196,7 @@ JS_STATIC_ASSERT(offsetof(FrameRegs, sp) == 0);
  * .cfi_offset REGISTER, OFFSET
  *   The caller's value of REGISTER is saved at OFFSET from the current CFA.
  *   (This is the directive that actually says something interesting.)
- * 
+ *
  * There are other directives that compute the CFA, a saved register's address,
  * or a saved register's value, in more complex ways, but the above are the ones
  * we use here.
@@ -449,7 +418,7 @@ asm (
     CFI(".cfi_offset r13, -32"                      "\n")
     CFI(".cfi_offset r14, -40"                      "\n")
     CFI(".cfi_offset r15, -48"                      "\n")
-    CFI(".cfi_offset rbx, -56"                      "\n")   
+    CFI(".cfi_offset rbx, -56"                      "\n")
     CFI("nop"                                       "\n")
 ".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
 SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
@@ -492,7 +461,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "pushl %ebx"                         "\n"
     CFI(".cfi_offset ebx, -20"           "\n")
 
-    /* Build the JIT frame. Push fields in order, 
+    /* Build the JIT frame. Push fields in order,
      * then align the stack to form esp == VMFrame. */
     "movl  12(%ebp), %ebx"               "\n"   /* load fp */
     "pushl %ebx"                         "\n"   /* unused1 */
@@ -631,7 +600,7 @@ asm (
     CFI(".cfi_offset ebp, -8"                       "\n")
     CFI(".cfi_offset esi, -12"                      "\n")
     CFI(".cfi_offset edi, -16"                      "\n")
-    CFI(".cfi_offset ebx, -20"                      "\n")      
+    CFI(".cfi_offset ebx, -20"                      "\n")
     CFI("nop"                                       "\n")
 ".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
 SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
@@ -702,11 +671,11 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      *  [ args.ptr2    ]  [ dynamicArgc ]  (union)
      *  [ args.ptr     ]  [ lazyArgsObj ]  (union)
      */
-    
+
     /* Push callee-saved registers. */
 "   push    {r4-r11,lr}"                        "\n"
     /* Push interesting VMFrame content. */
-"   mov     ip, #0"                             "\n"    
+"   mov     ip, #0"                             "\n"
 "   push    {ip}"                               "\n"    /* stubRejoin */
 "   push    {r1}"                               "\n"    /* entryncode */
 "   push    {r1}"                               "\n"    /* entryfp */
@@ -757,7 +726,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 
     /* Call the utility function that sets up the internal throw routine. */
 "   blx  " SYMBOL_STRING_RELOC(js_InternalThrow) "\n"
-    
+
     /* If js_InternalThrow found a scripted handler, jump to it. Otherwise, tidy
      * up and return. */
 "   cmp     r0, #0"                         "\n"
@@ -852,7 +821,7 @@ extern "C" {
             push edi;
             push ebx;
 
-            /* Build the JIT frame. Push fields in order, 
+            /* Build the JIT frame. Push fields in order,
              * then align the stack to form esp == VMFrame. */
             mov  ebx, [ebp + 12];
             push ebx;
@@ -1097,7 +1066,7 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
 static inline JaegerStatus
 CheckStackAndEnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, bool partial)
 {
-    JS_CHECK_RECURSION(cx, return Jaeger_Throwing);
+    JS_CHECK_RECURSION(cx, return Jaeger_ThrowBeforeEnter);
 
     JS_ASSERT(!cx->compartment->activeAnalysis);
     JS_ASSERT(code);
@@ -1302,6 +1271,13 @@ JITScript::destroyChunk(FreeOp *fop, unsigned chunkIndex, bool resetUses)
     ChunkDescriptor &desc = chunkDescriptor(chunkIndex);
 
     if (desc.chunk) {
+        /*
+         * Write barrier: Before we destroy the chunk, trace through the objects
+         * it holds.
+         */
+        if (script->compartment()->needsBarrier())
+            desc.chunk->trace(script->compartment()->barrierTracer());
+
         Probes::discardMJITCode(fop, this, desc.chunk, desc.chunk->code.m_code.executableAddress());
         fop->delete_(desc.chunk);
         desc.chunk = NULL;
@@ -1532,8 +1508,10 @@ void
 JITChunk::trace(JSTracer *trc)
 {
     JSObject **rootedTemplates_ = rootedTemplates();
-    for (size_t i = 0; i < nRootedTemplates; i++)
+    for (size_t i = 0; i < nRootedTemplates; i++) {
+        /* We use a manual write barrier in destroyChunk. */
         MarkObjectUnbarriered(trc, &rootedTemplates_[i], "jitchunk_template");
+    }
 }
 
 void

@@ -1,41 +1,9 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla SpiderMonkey JavaScript 1.9 code, released
- * May 28, 2008.
- *
- * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org>
- *
- * Contributor(s):
- *   David Mandelin <dmandelin@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "PolyIC.h"
 #include "StubCalls.h"
 #include "CodeGenIncludes.h"
@@ -1087,11 +1055,32 @@ class GetPropCompiler : public PICStubCompiler
         masm.bumpStubCount(f.script(), f.pc(), t0);
 
         /*
-         * Initialize vp, which is either a slot in the object (the holder,
-         * actually, which must equal the object here) or undefined.
-         * Use vp == sp to avoid clobbering stack values.
+         * Use three values above sp on the stack for use by the call to store
+         * the object and id being passed into the call as handles and to store
+         * the resulting value. Temporary slots are used by GETPROP for this,
+         * plus there is extra room on the stack reserved for a callee frame.
          */
+        int32_t initialFrameDepth = f.regs.sp - f.fp()->slots() + 3;
         int32_t vpOffset = (char *) f.regs.sp - (char *) f.fp();
+        int32_t idHandleOffset = (char *) (f.regs.sp + 1) - (char *) f.fp();
+        int32_t objHandleOffset = (char *) (f.regs.sp + 2) - (char *) f.fp();
+
+        masm.storePtr(holdObjReg, Address(JSFrameReg, objHandleOffset));
+        masm.storePtr(ImmPtr((void *) JSID_BITS(userid)), Address(JSFrameReg, idHandleOffset));
+
+        /*
+         * On 32 bit platforms zero the upper portion of the values so that
+         * the GC does not see a corrupt value in the handle slots. The two
+         * slots will look like doubles, so won't be traced, but the objects
+         * will be held live by the object value still in place on the stack.
+         * This will need to be addressed once a moving GC can relocate the
+         * objects, as the created handles will need to be properly registered.
+         */
+#if JS_BITS_PER_WORD == 32
+        masm.storePtr(ImmPtr(NULL), masm.tagOf(Address(JSFrameReg, objHandleOffset)));
+        masm.storePtr(ImmPtr(NULL), masm.tagOf(Address(JSFrameReg, idHandleOffset)));
+#endif
+
         if (shape->hasSlot()) {
             masm.loadObjProp(obj, holdObjReg, shape,
                              Registers::ClobberInCall, t0);
@@ -1100,8 +1089,6 @@ class GetPropCompiler : public PICStubCompiler
             masm.storeValue(UndefinedValue(), Address(JSFrameReg, vpOffset));
         }
 
-        /* sp + 1 to avoid clobbering vp if the getter calls scripted functions. */
-        int32_t initialFrameDepth = f.regs.sp + 1 - f.fp()->slots();
         masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.regs.pc, initialFrameDepth);
 
         /* Grab cx. */
@@ -1112,15 +1099,16 @@ class GetPropCompiler : public PICStubCompiler
 #endif
         masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxReg);
 
-        /* Grap vp. */
-        RegisterID vpReg = t0;
-        masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
+        /* Use a temporary for parameters. */
+        masm.addPtr(Imm32(vpOffset), JSFrameReg, t0);
 
         masm.restoreStackBase();
         masm.setupABICall(Registers::NormalCall, 4);
-        masm.storeArg(3, vpReg);
-        masm.storeArg(2, ImmPtr((void *) JSID_BITS(userid)));
-        masm.storeArg(1, holdObjReg);
+        masm.storeArg(3, t0);
+        masm.addPtr(Imm32(idHandleOffset - vpOffset), t0);
+        masm.storeArg(2, t0);
+        masm.addPtr(Imm32(objHandleOffset - idHandleOffset), t0);
+        masm.storeArg(1, t0);
         masm.storeArg(0, cxReg);
 
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, getter), false);
@@ -1205,7 +1193,7 @@ class GetPropCompiler : public PICStubCompiler
 #endif
         masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxReg);
 
-        /* Grap vp. */
+        /* Grab vp. */
         RegisterID vpReg = t0;
         masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
 
@@ -2483,7 +2471,7 @@ GetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, const Value &v, jsid i
     disable(f, "generated typed array stub");
 
     // Fetch the value as expected of Lookup_Cacheable for GetElement.
-    if (!obj->getGeneric(cx, id, vp))
+    if (!obj->getGeneric(cx, RootedVarId(cx, id), vp))
         return Lookup_Error;
 
     return Lookup_Cacheable;
@@ -2573,7 +2561,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
         }
     }
 
-    if (!obj->getGeneric(cx, id, &f.regs.sp[-2]))
+    if (!obj->getGeneric(cx, RootedVarId(cx, id), &f.regs.sp[-2]))
         THROW();
 
 #if JS_HAS_NO_SUCH_METHOD

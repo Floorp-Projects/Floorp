@@ -1,0 +1,17 @@
+<html>
+<title>Geolocation Test Page</title>
+<body>
+<script>
+  function clb(position) {
+    // Show a green background if permission is granted
+    document.body.style.background = "#008000";
+  }
+  function err(error) {
+    // Show a red background if permission is denied
+    if (error.code == error.PERMISSION_DENIED)
+      document.body.style.background = "#FF0000";
+  }
+  navigator.geolocation.getCurrentPosition(clb, err, {timeout: 0});
+</script>
+</body>
+</html>

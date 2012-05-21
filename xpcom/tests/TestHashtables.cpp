@@ -1,39 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is C++ hashtable templates.
- *
- * The Initial Developer of the Original Code is
- * Benjamin Smedberg.
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsTHashtable.h"
 #include "nsBaseHashtable.h"
@@ -407,10 +375,7 @@ main(void) {
   nsTHashtable<EntityToUnicodeEntry> EntityToUnicode;
 
   printf("Initializing nsTHashtable...");
-  if (!EntityToUnicode.Init(ENTITY_COUNT)) {
-    printf("FAILED\n");
-    exit (1);
-  }
+  EntityToUnicode.Init(ENTITY_COUNT);
   printf("OK\n");
 
   printf("Partially filling nsTHashtable:\n");
@@ -454,10 +419,7 @@ main(void) {
   nsDataHashtable<nsUint32HashKey,const char*> UniToEntity;
 
   printf("Initializing nsDataHashtable...");
-  if (!UniToEntity.Init(ENTITY_COUNT)) {
-    printf("FAILED\n");
-    exit (10);
-  }
+  UniToEntity.Init(ENTITY_COUNT);
   printf("OK\n");
 
   printf("Filling hash with %u entries.\n", ENTITY_COUNT);
@@ -465,10 +427,7 @@ main(void) {
   PRUint32 i;
   for (i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
-    if (!UniToEntity.Put(gEntities[i].mUnicode, gEntities[i].mStr)) {
-      printf("FAILED\n");
-      exit (11);
-    }
+    UniToEntity.Put(gEntities[i].mUnicode, gEntities[i].mStr);
     printf("OK...\n");
   }
 
@@ -521,20 +480,14 @@ main(void) {
   nsDataHashtableMT<nsUint32HashKey,const char*> UniToEntityL;
 
   printf("Initializing nsDataHashtableMT...");
-  if (!UniToEntityL.Init(ENTITY_COUNT)) {
-    printf("FAILED\n");
-    exit (10);
-  }
+  UniToEntityL.Init(ENTITY_COUNT);
   printf("OK\n");
 
   printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
-    if (!UniToEntityL.Put(gEntities[i].mUnicode, gEntities[i].mStr)) {
-      printf("FAILED\n");
-      exit (11);
-    }
+    UniToEntityL.Put(gEntities[i].mUnicode, gEntities[i].mStr);
     printf("OK...\n");
   }
 
@@ -586,10 +539,7 @@ main(void) {
   nsClassHashtable<nsCStringHashKey,TestUniChar> EntToUniClass;
 
   printf("Initializing nsClassHashtable...");
-  if (!EntToUniClass.Init(ENTITY_COUNT)) {
-    printf("FAILED\n");
-    exit (16);
-  }
+  EntToUniClass.Init(ENTITY_COUNT);
   printf("OK\n");
 
   printf("Filling hash with %u entries.\n", ENTITY_COUNT);
@@ -598,11 +548,7 @@ main(void) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
     TestUniChar* temp = new TestUniChar(gEntities[i].mUnicode);
 
-    if (!EntToUniClass.Put(nsDependentCString(gEntities[i].mStr), temp)) {
-      printf("FAILED\n");
-      delete temp;
-      exit (17);
-    }
+    EntToUniClass.Put(nsDependentCString(gEntities[i].mStr), temp);
     printf("OK...\n");
   }
 
@@ -655,10 +601,7 @@ main(void) {
   nsClassHashtableMT<nsCStringHashKey,TestUniChar> EntToUniClassL;
 
   printf("Initializing nsClassHashtableMT...");
-  if (!EntToUniClassL.Init(ENTITY_COUNT)) {
-    printf("FAILED\n");
-    exit (16);
-  }
+  EntToUniClassL.Init(ENTITY_COUNT);
   printf("OK\n");
 
   printf("Filling hash with %u entries.\n", ENTITY_COUNT);
@@ -667,11 +610,7 @@ main(void) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
     TestUniChar* temp = new TestUniChar(gEntities[i].mUnicode);
 
-    if (!EntToUniClassL.Put(nsDependentCString(gEntities[i].mStr), temp)) {
-      printf("FAILED\n");
-      delete temp;
-      exit (17);
-    }
+    EntToUniClassL.Put(nsDependentCString(gEntities[i].mStr), temp);
     printf("OK...\n");
   }
 
@@ -723,10 +662,7 @@ main(void) {
   nsDataHashtable<nsISupportsHashKey,PRUint32> EntToUniClass2;
 
   printf("Initializing nsDataHashtable with interface key...");
-  if (!EntToUniClass2.Init(ENTITY_COUNT)) {
-    printf("FAILED\n");
-    exit (22);
-  }
+  EntToUniClass2.Init(ENTITY_COUNT);
   printf("OK\n");
 
   printf("Filling hash with %u entries.\n", ENTITY_COUNT);
@@ -742,10 +678,7 @@ main(void) {
     
     fooArray.InsertObjectAt(foo, i);
 
-    if (!EntToUniClass2.Put(foo, gEntities[i].mUnicode)) {
-      printf("FAILED\n");
-      exit (23);
-    }
+    EntToUniClass2.Put(foo, gEntities[i].mUnicode);
     printf("OK...\n");
   }
 
@@ -799,10 +732,7 @@ main(void) {
   nsInterfaceHashtable<nsUint32HashKey,IFoo> UniToEntClass2;
 
   printf("Initializing nsInterfaceHashtable...");
-  if (!UniToEntClass2.Init(ENTITY_COUNT)) {
-    printf("FAILED\n");
-    exit (28);
-  }
+  UniToEntClass2.Init(ENTITY_COUNT);
   printf("OK\n");
 
   printf("Filling hash with %u entries.\n", ENTITY_COUNT);
@@ -813,10 +743,7 @@ main(void) {
     CreateIFoo(getter_AddRefs(foo));
     foo->SetString(nsDependentCString(gEntities[i].mStr));
     
-    if (!UniToEntClass2.Put(gEntities[i].mUnicode, foo)) {
-      printf("FAILED\n");
-      exit (29);
-    }
+    UniToEntClass2.Put(gEntities[i].mUnicode, foo);
     printf("OK...\n");
   }
 
@@ -873,10 +800,7 @@ main(void) {
   nsInterfaceHashtableMT<nsUint32HashKey,IFoo> UniToEntClass2L;
 
   printf("Initializing nsInterfaceHashtableMT...");
-  if (!UniToEntClass2L.Init(ENTITY_COUNT)) {
-    printf("FAILED\n");
-    exit (28);
-  }
+  UniToEntClass2L.Init(ENTITY_COUNT);
   printf("OK\n");
 
   printf("Filling hash with %u entries.\n", ENTITY_COUNT);
@@ -887,10 +811,7 @@ main(void) {
     CreateIFoo(getter_AddRefs(foo));
     foo->SetString(nsDependentCString(gEntities[i].mStr));
     
-    if (!UniToEntClass2L.Put(gEntities[i].mUnicode, foo)) {
-      printf("FAILED\n");
-      exit (29);
-    }
+    UniToEntClass2L.Put(gEntities[i].mUnicode, foo);
     printf("OK...\n");
   }
 

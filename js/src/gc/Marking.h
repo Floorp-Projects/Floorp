@@ -224,11 +224,13 @@ Mark(JSTracer *trc, HeapPtr<JSScript> *o, const char *name)
     MarkScript(trc, o, name);
 }
 
+#if JS_HAS_XML_SUPPORT
 inline void
 Mark(JSTracer *trc, HeapPtr<JSXML> *xml, const char *name)
 {
     MarkXML(trc, xml, name);
 }
+#endif
 
 inline void
 Mark(JSTracer *trc, HeapPtr<ion::IonCode> *code, const char *name)

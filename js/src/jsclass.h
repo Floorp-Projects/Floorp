@@ -1,41 +1,9 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79 ft=cpp:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is SpiderMonkey JavaScript engine.
- *
- * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2009
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef jsclass_h__
 #define jsclass_h__
@@ -174,73 +142,75 @@ JSID_TO_SPECIALID(jsid id)
     return SpecialId::defaultXMLNamespace();
 }
 
+typedef JS::Handle<SpecialId> HandleSpecialId;
+
 /* js::Class operation signatures. */
 
 typedef JSBool
-(* LookupGenericOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+(* LookupGenericOp)(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp,
                     JSProperty **propp);
 typedef JSBool
-(* LookupPropOp)(JSContext *cx, JSObject *obj, PropertyName *name, JSObject **objp,
+(* LookupPropOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp,
                  JSProperty **propp);
 typedef JSBool
-(* LookupElementOp)(JSContext *cx, JSObject *obj, uint32_t index, JSObject **objp,
+(* LookupElementOp)(JSContext *cx, HandleObject obj, uint32_t index, JSObject **objp,
                     JSProperty **propp);
 typedef JSBool
-(* LookupSpecialOp)(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp,
+(* LookupSpecialOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp,
                     JSProperty **propp);
 typedef JSBool
-(* DefineGenericOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+(* DefineGenericOp)(JSContext *cx, HandleObject obj, HandleId id, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
-(* DefinePropOp)(JSContext *cx, JSObject *obj, PropertyName *name, const Value *value,
+(* DefinePropOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value *value,
                  PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
-(* DefineElementOp)(JSContext *cx, JSObject *obj, uint32_t index, const Value *value,
+(* DefineElementOp)(JSContext *cx, HandleObject obj, uint32_t index, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
-(* DefineSpecialOp)(JSContext *cx, JSObject *obj, SpecialId sid, const Value *value,
+(* DefineSpecialOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
-(* GenericIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+(* GenericIdOp)(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id, Value *vp);
 typedef JSBool
-(* PropertyIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp);
+(* PropertyIdOp)(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name, Value *vp);
 typedef JSBool
-(* ElementIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp);
+(* ElementIdOp)(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index, Value *vp);
 typedef JSBool
-(* ElementIfPresentOp)(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp, bool* present);
+(* ElementIfPresentOp)(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index, Value *vp, bool* present);
 typedef JSBool
-(* SpecialIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp);
+(* SpecialIdOp)(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSpecialId sid, Value *vp);
 typedef JSBool
-(* StrictGenericIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+(* StrictGenericIdOp)(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool strict);
 typedef JSBool
-(* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict);
+(* StrictPropertyIdOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp, JSBool strict);
 typedef JSBool
-(* StrictElementIdOp)(JSContext *cx, JSObject *obj, uint32_t index, Value *vp, JSBool strict);
+(* StrictElementIdOp)(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSBool strict);
 typedef JSBool
-(* StrictSpecialIdOp)(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict);
+(* StrictSpecialIdOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *vp, JSBool strict);
 typedef JSBool
-(* GenericAttributesOp)(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp);
+(* GenericAttributesOp)(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
 typedef JSBool
-(* PropertyAttributesOp)(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp);
+(* PropertyAttributesOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp);
 typedef JSBool
-(* ElementAttributesOp)(JSContext *cx, JSObject *obj, uint32_t index, unsigned *attrsp);
+(* ElementAttributesOp)(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
 typedef JSBool
-(* SpecialAttributesOp)(JSContext *cx, JSObject *obj, SpecialId sid, unsigned *attrsp);
+(* SpecialAttributesOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
 typedef JSBool
-(* DeletePropertyOp)(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict);
+(* DeletePropertyOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp, JSBool strict);
 typedef JSBool
-(* DeleteElementOp)(JSContext *cx, JSObject *obj, uint32_t index, Value *vp, JSBool strict);
+(* DeleteElementOp)(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSBool strict);
 typedef JSBool
-(* DeleteSpecialOp)(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict);
+(* DeleteSpecialOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *vp, JSBool strict);
 typedef JSType
-(* TypeOfOp)(JSContext *cx, JSObject *obj);
+(* TypeOfOp)(JSContext *cx, HandleObject obj);
 
 typedef JSObject *
-(* ObjectOp)(JSContext *cx, JSObject *obj);
+(* ObjectOp)(JSContext *cx, HandleObject obj);
+typedef void
+(* ClearOp)(JSContext *cx, HandleObject obj);
 typedef void
 (* FinalizeOp)(FreeOp *fop, JSObject *obj);
-typedef void
-(* ClearOp)(JSContext *cx, JSObject *obj);
 
 #define JS_CLASS_MEMBERS                                                      \
     const char          *name;                                                \
@@ -395,7 +365,8 @@ Valueify(const JSClass *c)
  * value of objects.
  */
 enum ESClassValue {
-    ESClass_Array, ESClass_Number, ESClass_String, ESClass_Boolean, ESClass_RegExp
+    ESClass_Array, ESClass_Number, ESClass_String, ESClass_Boolean,
+    ESClass_RegExp, ESClass_ArrayBuffer
 };
 
 /*

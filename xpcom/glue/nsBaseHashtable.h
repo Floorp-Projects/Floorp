@@ -1,39 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is C++ hashtable templates.
- *
- * The Initial Developer of the Original Code is
- * Benjamin Smedberg.
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef nsBaseHashtable_h__
 #define nsBaseHashtable_h__
@@ -82,6 +50,8 @@ template<class KeyClass,class DataType,class UserDataType>
 class nsBaseHashtable :
   protected nsTHashtable< nsBaseHashtableET<KeyClass,DataType> >
 {
+  typedef mozilla::fallible_t fallible_t;
+
 public:
   typedef typename KeyClass::KeyType KeyType;
   typedef nsBaseHashtableET<KeyClass,DataType> EntryType;
@@ -95,8 +65,16 @@ public:
    * locking on all class methods
    * @return    true if the object was initialized properly.
    */
-  bool Init(PRUint32 initSize = PL_DHASH_MIN_SIZE)
-  { return nsTHashtable<EntryType>::Init(initSize); }
+  void Init(PRUint32 initSize = PL_DHASH_MIN_SIZE)
+  { nsTHashtable<EntryType>::Init(initSize); }
+
+  bool Init(const fallible_t&) NS_WARN_UNUSED_RESULT
+  { return Init(PL_DHASH_MIN_SIZE, fallible_t()); }
+
+  bool Init(PRUint32 initSize, const fallible_t&) NS_WARN_UNUSED_RESULT
+  { return nsTHashtable<EntryType>::Init(initSize, fallible_t()); }
+
+
 
   /**
    * Check whether the table has been initialized.
@@ -158,7 +136,13 @@ public:
    * @param aData the new data
    * @return always true, unless memory allocation failed
    */
-  bool Put(KeyType aKey, UserDataType aData)
+  void Put(KeyType aKey, UserDataType aData)
+  {
+    if (!Put(aKey, aData, fallible_t()))
+      NS_RUNTIMEABORT("OOM");
+  }
+
+  bool Put(KeyType aKey, UserDataType aData, const fallible_t&) NS_WARN_UNUSED_RESULT
   {
     EntryType* ent = this->PutEntry(aKey);
 
@@ -325,7 +309,8 @@ protected:
 };
 
 /**
- * This class is a thread-safe version of nsBaseHashtable.
+ * This class is a thread-safe version of nsBaseHashtable. It only exposes
+ * an infallible API.
  */
 template<class KeyClass,class DataType,class UserDataType>
 class nsBaseHashtableMT :
@@ -344,11 +329,11 @@ public:
   nsBaseHashtableMT() : mLock(nsnull) { }
   ~nsBaseHashtableMT();
 
-  bool Init(PRUint32 initSize = PL_DHASH_MIN_SIZE);
+  void Init(PRUint32 initSize = PL_DHASH_MIN_SIZE);
   bool IsInitialized() const { return mLock != nsnull; }
   PRUint32 Count() const;
   bool Get(KeyType aKey, UserDataType* pData) const;
-  bool Put(KeyType aKey, UserDataType aData);
+  void Put(KeyType aKey, UserDataType aData);
   void Remove(KeyType aKey);
 
   PRUint32 EnumerateRead(EnumReadFunction enumFunc, void* userArg) const;
@@ -438,16 +423,15 @@ nsBaseHashtableMT<KeyClass,DataType,UserDataType>::~nsBaseHashtableMT()
 }
 
 template<class KeyClass,class DataType,class UserDataType>
-bool
+void
 nsBaseHashtableMT<KeyClass,DataType,UserDataType>::Init(PRUint32 initSize)
 {
-  if (!nsTHashtable<EntryType>::IsInitialized() && !nsTHashtable<EntryType>::Init(initSize))
-    return false;
+  if (!nsTHashtable<EntryType>::IsInitialized())
+    nsTHashtable<EntryType>::Init(initSize);
 
   this->mLock = PR_NewLock();
-  NS_ASSERTION(this->mLock, "Error creating lock during nsBaseHashtableL::Init()");
-
-  return (this->mLock != nsnull);
+  if (!this->mLock)
+    NS_RUNTIMEABORT("OOM");
 }
 
 template<class KeyClass,class DataType,class UserDataType>
@@ -475,16 +459,13 @@ nsBaseHashtableMT<KeyClass,DataType,UserDataType>::Get(KeyType       aKey,
 }
 
 template<class KeyClass,class DataType,class UserDataType>
-bool
+void
 nsBaseHashtableMT<KeyClass,DataType,UserDataType>::Put(KeyType      aKey,
                                                            UserDataType aData)
 {
   PR_Lock(this->mLock);
-  bool res =
-    nsBaseHashtable<KeyClass,DataType,UserDataType>::Put(aKey, aData);
+  nsBaseHashtable<KeyClass,DataType,UserDataType>::Put(aKey, aData);
   PR_Unlock(this->mLock);
-
-  return res;
 }
 
 template<class KeyClass,class DataType,class UserDataType>

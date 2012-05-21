@@ -1,56 +1,8 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sts=2 sw=2 et cin: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dean Tessman <dean_tessman@hotmail.com>
- *   Ere Maijala <emaijala@kolumbus.fi>
- *   Mark Hammond <markh@activestate.com>
- *   Michael Lowe <michael.lowe@bigfoot.com>
- *   Peter Bajusz <hyp-x@inf.bme.hu>
- *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Robert O'Callahan <roc+moz@cs.cmu.edu>
- *   Roy Yokoyama <yokoyama@netscape.com>
- *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
- *   Masayuki Nakano <masayuki@d-toybox.com>
- *   Dainis Jonitis <Dainis_Jonitis@swh-t.lv>
- *   Christian Biesinger <cbiesinger@web.de>
- *   Mats Palmgren <matspal@gmail.com>
- *   Ningjie Chen <chenn@email.uc.edu>
- *   Jim Mathies <jmathies@mozilla.com>
- *   Kyle Huey <me@kylehuey.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * nsWindow - Native window management and event handling.
@@ -164,6 +116,7 @@
 #include "nsISound.h"
 #include "WinTaskbar.h"
 #include "WinUtils.h"
+#include "WidgetUtils.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
@@ -5565,7 +5518,7 @@ LRESULT nsWindow::ProcessCharMessage(const MSG &aMsg, bool *aEventDispatched)
   // These must be checked here too as a lone WM_CHAR could be received
   // if a child window didn't handle it (for example Alt+Space in a content window)
   nsModifierKeyState modKeyState;
-  NativeKey nativeKey(gKbdLayout.GetLayout(), this, aMsg);
+  NativeKey nativeKey(gKbdLayout, this, aMsg);
   return OnChar(aMsg, nativeKey, modKeyState, aEventDispatched);
 }
 
@@ -6250,7 +6203,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
                             bool *aEventDispatched,
                             nsFakeCharMessage* aFakeCharMessage)
 {
-  NativeKey nativeKey(gKbdLayout.GetLayout(), this, aMsg);
+  NativeKey nativeKey(gKbdLayout, this, aMsg);
   UINT virtualKeyCode = nativeKey.GetOriginalVirtualKeyCode();
   gKbdLayout.OnKeyDown(virtualKeyCode);
 
@@ -6339,7 +6292,9 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     case NS_VK_ALT:
     case NS_VK_CAPS_LOCK:
     case NS_VK_NUM_LOCK:
-    case NS_VK_SCROLL_LOCK: return noDefault;
+    case NS_VK_SCROLL_LOCK:
+    case NS_VK_WIN:
+      return noDefault;
   }
 
   PRUint32 extraFlags = (noDefault ? NS_EVENT_FLAG_NO_DEFAULT : 0);
@@ -6432,8 +6387,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   PRUnichar uniChars[5];
   PRUnichar shiftedChars[5] = {0, 0, 0, 0, 0};
   PRUnichar unshiftedChars[5] = {0, 0, 0, 0, 0};
-  PRUnichar shiftedLatinChar = 0;
-  PRUnichar unshiftedLatinChar = 0;
+  PRUint32 shiftedLatinChar = 0;
+  PRUint32 unshiftedLatinChar = 0;
   PRUint32 numOfUniChars = 0;
   PRUint32 numOfShiftedChars = 0;
   PRUint32 numOfUnshiftedChars = 0;
@@ -6478,33 +6433,30 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
         // The current keyboard cannot input alphabets or numerics,
         // we should append them for Shortcut/Access keys.
         // E.g., for Cyrillic keyboard layout.
-        if (NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z) {
-          shiftedLatinChar = unshiftedLatinChar = DOMKeyCode;
-          if (capsLockState)
-            shiftedLatinChar += 0x20;
-          else
-            unshiftedLatinChar += 0x20;
+        WidgetUtils::GetLatinCharCodeForKeyCode(DOMKeyCode, capsLockState,
+                                                &unshiftedLatinChar,
+                                                &shiftedLatinChar);
+
+        // If the shiftedLatinChar isn't 0, the key code is NS_VK_[A-Z].
+        if (shiftedLatinChar) {
+          // If the produced characters of the key on current keyboard layout
+          // are same as computed Latin characters, we shouldn't append the
+          // Latin characters to alternativeCharCode.
           if (unshiftedLatinChar == unshiftedChars[0] &&
               shiftedLatinChar == shiftedChars[0]) {
-              shiftedLatinChar = unshiftedLatinChar = 0;
+            shiftedLatinChar = unshiftedLatinChar = 0;
           }
-        } else {
-          PRUint16 ch = 0;
-          if (NS_VK_0 <= DOMKeyCode && DOMKeyCode <= NS_VK_9) {
-            ch = DOMKeyCode;
-          } else {
-            switch (virtualKeyCode) {
-              case VK_OEM_PLUS:   ch = '+'; break;
-              case VK_OEM_MINUS:  ch = '-'; break;
-            }
-          }
-          if (ch && unshiftedChars[0] != ch && shiftedChars[0] != ch) {
-            // Windows has assigned a virtual key code to the key even though
-            // the character can't be produced with this key.  That probably
-            // means the character can't be produced with any key in the
-            // current layout and so the assignment is based on a QWERTY
-            // layout.  Append this code so that users can access the shortcut.
-            unshiftedLatinChar = ch;
+        } else if (unshiftedLatinChar) {
+          // If the shiftedLatinChar is 0, the keyCode doesn't produce
+          // alphabet character.  At that time, the character may be produced
+          // with Shift key.  E.g., on French keyboard layout, NS_VK_PERCENT
+          // key produces LATIN SMALL LETTER U WITH GRAVE (U+00F9) without
+          // Shift key but with Shift key, it produces '%'.
+          // If the unshiftedLatinChar is produced by the key on current
+          // keyboard layout, we shouldn't append it to alternativeCharCode.
+          if (unshiftedLatinChar == unshiftedChars[0] ||
+              unshiftedLatinChar == shiftedChars[0]) {
+            unshiftedLatinChar = 0;
           }
         }
 
@@ -6599,13 +6551,14 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
                           nsModifierKeyState &aModKeyState,
                           bool *aEventDispatched)
 {
+  // NOTE: VK_PROCESSKEY never comes with WM_KEYUP
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
          ("nsWindow::OnKeyUp wParam(VK)=%d\n", aMsg.wParam));
 
   if (aEventDispatched)
     *aEventDispatched = true;
   nsKeyEvent keyupEvent(true, NS_KEY_UP, this);
-  NativeKey nativeKey(gKbdLayout.GetLayout(), this, aMsg);
+  NativeKey nativeKey(gKbdLayout, this, aMsg);
   keyupEvent.keyCode = nativeKey.GetDOMKeyCode();
   InitKeyEvent(keyupEvent, nativeKey, aModKeyState);
   return DispatchKeyEvent(keyupEvent, &aMsg);

@@ -1,42 +1,9 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* vim:expandtab:shiftwidth=4:tabstop=4:
  */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is 
- * Christopher Blizzard <blizzard@mozilla.org>.  
- * Portions created by the Initial Developer are Copyright (C) 2001 
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Masayuki Nakano <masayuki@d-toybox.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "prlog.h"
 
@@ -52,6 +19,7 @@
 #include <gdk/gdkx.h>
 #endif /* MOZ_X11 */
 #include "nsGUIEvent.h"
+#include "WidgetUtils.h"
 #include "keysym2ucs.h"
 
 #ifdef PR_LOGGING
@@ -88,8 +56,31 @@ static const KeyPair kKeyPairs[] = {
     { NS_VK_CONTROL,    GDK_Control_R },
     { NS_VK_ALT,        GDK_Alt_L },
     { NS_VK_ALT,        GDK_Alt_R },
-    { NS_VK_META,       GDK_Meta_L },
-    { NS_VK_META,       GDK_Meta_R },
+
+    // NS_VK_META is used for Command key of Mac.  It's a modifier key for
+    // shortcut keys like Ctrl key on GTK or Windows.  So, it's really different
+    // from GTK's META key, we shouldn't use it on GTK.
+    // { NS_VK_META,       GDK_Meta_L },
+    // { NS_VK_META,       GDK_Meta_R },
+
+    // Assume that Super or Hyper is always mapped to physical Win key.
+    { NS_VK_WIN,        GDK_Super_L },
+    { NS_VK_WIN,        GDK_Super_R },
+    { NS_VK_WIN,        GDK_Hyper_L },
+    { NS_VK_WIN,        GDK_Hyper_R },
+
+    // GTK's AltGraph key is similar to Mac's Option (Alt) key.  However,
+    // unfortunately, browsers on Mac are using NS_VK_ALT for it even though
+    // it's really different from Alt key on Windows.
+    // On the other hand, GTK's AltGrapsh keys are really different from
+    // Alt key.  However, there is no AltGrapsh key on Windows.  On Windows,
+    // both Ctrl and Alt keys are pressed internally when AltGr key is pressed.
+    // For some languages' users, AltGraph key is important, so, web
+    // applications on such locale may want to know AltGraph key press.
+    // Therefore, we should map AltGr keycode for them only on GTK.
+    { NS_VK_ALTGR,      GDK_ISO_Level3_Shift },
+    { NS_VK_ALTGR,      GDK_Mode_switch },
+
     { NS_VK_PAUSE,      GDK_Pause },
     { NS_VK_CAPS_LOCK,  GDK_Caps_Lock },
     { NS_VK_KANA,       GDK_Kana_Lock },
@@ -130,67 +121,47 @@ static const KeyPair kKeyPairs[] = {
     // Not sure what these are
     //{ NS_VK_,       GDK_KP_Prior },
     //{ NS_VK_,        GDK_KP_Next },
-    // GDK_KP_Begin is the 5 on the non-numlock keypad
-    //{ NS_VK_,        GDK_KP_Begin },
+    { NS_VK_CLEAR,      GDK_KP_Begin }, // Num-unlocked 5
     { NS_VK_PAGE_DOWN,  GDK_KP_Page_Down },
     { NS_VK_HOME,       GDK_KP_Home },
     { NS_VK_END,        GDK_KP_End },
     { NS_VK_INSERT,     GDK_KP_Insert },
     { NS_VK_DELETE,     GDK_KP_Delete },
-
-    { NS_VK_MULTIPLY,   GDK_KP_Multiply },
-    { NS_VK_ADD,        GDK_KP_Add },
-    { NS_VK_SEPARATOR,  GDK_KP_Separator },
-    { NS_VK_SUBTRACT,   GDK_KP_Subtract },
-    { NS_VK_DECIMAL,    GDK_KP_Decimal },
-    { NS_VK_DIVIDE,     GDK_KP_Divide },
     { NS_VK_RETURN,     GDK_KP_Enter },
+
     { NS_VK_NUM_LOCK,   GDK_Num_Lock },
     { NS_VK_SCROLL_LOCK,GDK_Scroll_Lock },
 
-    { NS_VK_COMMA,      GDK_comma },
-    { NS_VK_PERIOD,     GDK_period },
-    { NS_VK_SLASH,      GDK_slash },
-    { NS_VK_BACK_SLASH, GDK_backslash },
-    { NS_VK_BACK_QUOTE, GDK_grave },
-    { NS_VK_OPEN_BRACKET, GDK_bracketleft },
-    { NS_VK_CLOSE_BRACKET, GDK_bracketright },
-    { NS_VK_SEMICOLON, GDK_colon },
-    { NS_VK_QUOTE, GDK_apostrophe },
+    // Function keys
+    { NS_VK_F1,         GDK_F1 },
+    { NS_VK_F2,         GDK_F2 },
+    { NS_VK_F3,         GDK_F3 },
+    { NS_VK_F4,         GDK_F4 },
+    { NS_VK_F5,         GDK_F5 },
+    { NS_VK_F6,         GDK_F6 },
+    { NS_VK_F7,         GDK_F7 },
+    { NS_VK_F8,         GDK_F8 },
+    { NS_VK_F9,         GDK_F9 },
+    { NS_VK_F10,        GDK_F10 },
+    { NS_VK_F11,        GDK_F11 },
+    { NS_VK_F12,        GDK_F12 },
+    { NS_VK_F13,        GDK_F13 },
+    { NS_VK_F14,        GDK_F14 },
+    { NS_VK_F15,        GDK_F15 },
+    { NS_VK_F16,        GDK_F16 },
+    { NS_VK_F17,        GDK_F17 },
+    { NS_VK_F18,        GDK_F18 },
+    { NS_VK_F19,        GDK_F19 },
+    { NS_VK_F20,        GDK_F20 },
+    { NS_VK_F21,        GDK_F21 },
+    { NS_VK_F22,        GDK_F22 },
+    { NS_VK_F23,        GDK_F23 },
+    { NS_VK_F24,        GDK_F24 },
 
     // context menu key, keysym 0xff67, typically keycode 117 on 105-key (Microsoft) 
     // x86 keyboards, located between right 'Windows' key and right Ctrl key
     { NS_VK_CONTEXT_MENU, GDK_Menu },
     { NS_VK_SLEEP,      GDK_Sleep },
-
-    // NS doesn't have dash or equals distinct from the numeric keypad ones,
-    // so we'll use those for now.  See bug 17008:
-    { NS_VK_SUBTRACT, GDK_minus },
-    { NS_VK_EQUALS, GDK_equal },
-
-    // Some shifted keys, see bug 15463 as well as 17008.
-    // These should be subject to different keyboard mappings.
-    { NS_VK_QUOTE, GDK_quotedbl },
-    { NS_VK_OPEN_BRACKET, GDK_braceleft },
-    { NS_VK_CLOSE_BRACKET, GDK_braceright },
-    { NS_VK_BACK_SLASH, GDK_bar },
-    { NS_VK_SEMICOLON, GDK_semicolon },
-    { NS_VK_BACK_QUOTE, GDK_asciitilde },
-    { NS_VK_COMMA, GDK_less },
-    { NS_VK_PERIOD, GDK_greater },
-    { NS_VK_SLASH,      GDK_question },
-    { NS_VK_1, GDK_exclam },
-    { NS_VK_2, GDK_at },
-    { NS_VK_3, GDK_numbersign },
-    { NS_VK_4, GDK_dollar },
-    { NS_VK_5, GDK_percent },
-    { NS_VK_6, GDK_asciicircum },
-    { NS_VK_7, GDK_ampersand },
-    { NS_VK_8, GDK_asterisk },
-    { NS_VK_9, GDK_parenleft },
-    { NS_VK_0, GDK_parenright },
-    { NS_VK_SUBTRACT, GDK_underscore },
-    { NS_VK_EQUALS, GDK_plus }
 };
 
 // map Sun Keyboard special keysyms on to NS_VK keys
@@ -632,70 +603,137 @@ KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
 /* static */ PRUint32
 KeymapWrapper::ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent)
 {
-    guint keyval = aGdkKeyEvent->keyval;
-
-    // First, try to handle alphanumeric input, not listed in nsKeycodes:
-    // most likely, more letters will be getting typed in than things in
-    // the key list, so we will look through these first.
-
-    // since X has different key symbols for upper and lowercase letters and
-    // mozilla does not, convert gdk's to mozilla's
-    if (keyval >= GDK_a && keyval <= GDK_z) {
-        return keyval - GDK_a + NS_VK_A;
-    }
-    if (keyval >= GDK_A && keyval <= GDK_Z) {
-        return keyval - GDK_A + NS_VK_A;
-    }
-
-    // numbers
-    if (keyval >= GDK_0 && keyval <= GDK_9) {
-        return keyval - GDK_0 + NS_VK_0;
-    }
-
-    // keypad numbers
-    if (keyval >= GDK_KP_0 && keyval <= GDK_KP_9) {
-        return keyval - GDK_KP_0 + NS_VK_NUMPAD0;
-    }
-
     // If the keyval indicates it's a modifier key, we should use unshifted
     // key's modifier keyval.
+    guint keyval = aGdkKeyEvent->keyval;
     if (GetModifierForGDKKeyval(keyval)) {
-        KeymapWrapper* keymapWrapper = GetInstance();
-        GdkKeymapKey key;
-        key.keycode = aGdkKeyEvent->hardware_keycode;
-        key.group = aGdkKeyEvent->group;
-        key.level = 0;
-        guint unshiftedKeyval =
-            gdk_keymap_lookup_key(keymapWrapper->mGdkKeymap, &key);
-        // But if the unshifted keyval isn't a modifier key, we shouldn't use
-        // it.  E.g., Japanese keyboard layout's Shift + Eisu-Toggle key is
-        // CapsLock.  This is an actual rare case, Windows uses different
-        // keycode for a physical key for different shift key state.
-        if (GetModifierForGDKKeyval(unshiftedKeyval)) {
-            keyval = unshiftedKeyval;
+        // But if the keyval without modifiers isn't a modifier key, we
+        // shouldn't use it.  E.g., Japanese keyboard layout's
+        // Shift + Eisu-Toggle key is CapsLock.  This is an actual rare case,
+        // Windows uses different keycode for a physical key for different
+        // shift key state.
+        guint keyvalWithoutModifier = GetGDKKeyvalWithoutModifier(aGdkKeyEvent);
+        if (GetModifierForGDKKeyval(keyvalWithoutModifier)) {
+            keyval = keyvalWithoutModifier;
+        }
+        return GetDOMKeyCodeFromKeyPairs(keyval);
+    }
+
+    // If the key isn't printable, let's look at the key pairs.
+    PRUint32 charCode = GetCharCodeFor(aGdkKeyEvent);
+    if (!charCode) {
+        // Always use unshifted keycode for the non-printable key.
+        // XXX It might be better to decide DOM keycode from all keyvals of
+        //     the hardware keycode.  However, I think that it's too excessive.
+        guint keyvalWithoutModifier = GetGDKKeyvalWithoutModifier(aGdkKeyEvent);
+        PRUint32 DOMKeyCode = GetDOMKeyCodeFromKeyPairs(keyvalWithoutModifier);
+        if (!DOMKeyCode) {
+            // If the unshifted keyval couldn't be mapped to a DOM keycode,
+            // we should fallback to legacy logic, so, we should recompute with
+            // the keyval with aGdkKeyEvent.
+            DOMKeyCode = GetDOMKeyCodeFromKeyPairs(keyval);
+        }
+        return DOMKeyCode;
+    }
+
+    // printable numpad keys should be resolved here.
+    switch (keyval) {
+        case GDK_KP_Multiply:  return NS_VK_MULTIPLY;
+        case GDK_KP_Add:       return NS_VK_ADD;
+        case GDK_KP_Separator: return NS_VK_SEPARATOR;
+        case GDK_KP_Subtract:  return NS_VK_SUBTRACT;
+        case GDK_KP_Decimal:   return NS_VK_DECIMAL;
+        case GDK_KP_Divide:    return NS_VK_DIVIDE;
+        case GDK_KP_0:         return NS_VK_NUMPAD0;
+        case GDK_KP_1:         return NS_VK_NUMPAD1;
+        case GDK_KP_2:         return NS_VK_NUMPAD2;
+        case GDK_KP_3:         return NS_VK_NUMPAD3;
+        case GDK_KP_4:         return NS_VK_NUMPAD4;
+        case GDK_KP_5:         return NS_VK_NUMPAD5;
+        case GDK_KP_6:         return NS_VK_NUMPAD6;
+        case GDK_KP_7:         return NS_VK_NUMPAD7;
+        case GDK_KP_8:         return NS_VK_NUMPAD8;
+        case GDK_KP_9:         return NS_VK_NUMPAD9;
+    }
+
+    KeymapWrapper* keymapWrapper = GetInstance();
+
+    // Ignore all modifier state except NumLock.
+    guint baseState =
+        (aGdkKeyEvent->state & keymapWrapper->GetModifierMask(NUM_LOCK));
+
+    // Basically, we should use unmodified character for deciding our keyCode.
+    PRUint32 unmodifiedChar =
+        keymapWrapper->GetCharCodeFor(aGdkKeyEvent, baseState,
+                                      aGdkKeyEvent->group);
+    if (IsBasicLatinLetterOrNumeral(unmodifiedChar)) {
+        // If the unmodified character is an ASCII alphabet or an ASCII
+        // numeric, it's the best hint for deciding our keyCode.
+        return WidgetUtils::ComputeKeyCodeFromChar(unmodifiedChar);
+    }
+
+    // If the unmodified character is not an ASCII character, that means we
+    // couldn't find the hint. We should reset it.
+    if (unmodifiedChar > 0x7F) {
+        unmodifiedChar = 0;
+    }
+
+    // Retry with shifted keycode.
+    guint shiftState = (baseState | keymapWrapper->GetModifierMask(SHIFT));
+    PRUint32 shiftedChar =
+        keymapWrapper->GetCharCodeFor(aGdkKeyEvent, shiftState,
+                                      aGdkKeyEvent->group);
+    if (IsBasicLatinLetterOrNumeral(shiftedChar)) {
+        // A shifted character can be an ASCII alphabet on Hebrew keyboard
+        // layout. And also shifted character can be an ASCII numeric on
+        // AZERTY keyboad layout.  Then, it's a good hint for deciding our
+        // keyCode.
+        return WidgetUtils::ComputeKeyCodeFromChar(shiftedChar);
+    }
+
+    // If the shifted unmodified character isn't an ASCII character, we should
+    // discard it too.
+    if (shiftedChar > 0x7F) {
+        shiftedChar = 0;
+    }
+
+    // If current keyboard layout isn't ASCII alphabet inputtable layout,
+    // look for ASCII alphabet inputtable keyboard layout.  If the key
+    // inputs an ASCII alphabet or an ASCII numeric, we should use it
+    // for deciding our keyCode.
+    // Note that it's important not to use alternative keyboard layout for ASCII
+    // alphabet inputabble keyboard layout because the keycode for the key with
+    // alternative keyboard layout may conflict with another key on current
+    // keyboard layout.
+    if (!keymapWrapper->IsLatinGroup(aGdkKeyEvent->group)) {
+        gint minGroup = keymapWrapper->GetFirstLatinGroup();
+        if (minGroup >= 0) {
+            PRUint32 unmodCharLatin =
+                keymapWrapper->GetCharCodeFor(aGdkKeyEvent, baseState,
+                                              minGroup);
+            if (IsBasicLatinLetterOrNumeral(unmodCharLatin)) {
+                // If the unmodified character is an ASCII alphabet or
+                // an ASCII numeric, we should use it for the keyCode.
+                return WidgetUtils::ComputeKeyCodeFromChar(unmodCharLatin);
+            }
+            PRUint32 shiftedCharLatin =
+                keymapWrapper->GetCharCodeFor(aGdkKeyEvent, shiftState,
+                                              minGroup);
+            if (IsBasicLatinLetterOrNumeral(shiftedCharLatin)) {
+                // If the shifted character is an ASCII alphabet or an ASCII
+                // numeric, we should use it for the keyCode.
+                return WidgetUtils::ComputeKeyCodeFromChar(shiftedCharLatin);
+            }
         }
     }
 
-    // map Sun Keyboard special keysyms
-    for (PRUint32 i = 0; i < ArrayLength(kSunKeyPairs); i++) {
-        if (kSunKeyPairs[i].GDKKeyval == keyval) {
-            return kSunKeyPairs[i].DOMKeyCode;
-        }
+    // If unmodified character is in ASCII range, use it.  Otherwise, use
+    // shifted character.
+    if (!unmodifiedChar && !shiftedChar) {
+        return 0;
     }
-
-    // misc other things
-    for (PRUint32 i = 0; i < ArrayLength(kKeyPairs); i++) {
-        if (kKeyPairs[i].GDKKeyval == keyval) {
-            return kKeyPairs[i].DOMKeyCode;
-        }
-    }
-
-    // function keys
-    if (keyval >= GDK_F1 && keyval <= GDK_F24) {
-        return keyval - GDK_F1 + NS_VK_F1;
-    }
-
-    return 0;
+    return WidgetUtils::ComputeKeyCodeFromChar(
+                unmodifiedChar ? unmodifiedChar : shiftedChar);
 }
 
 /* static */ guint
@@ -716,9 +754,58 @@ KeymapWrapper::GuessGDKKeyval(PRUint32 aDOMKeyCode)
         return aDOMKeyCode - NS_VK_0 + GDK_0;
     }
 
-    // keypad numbers
-    if (aDOMKeyCode >= NS_VK_NUMPAD0 && aDOMKeyCode <= NS_VK_NUMPAD9) {
-        return aDOMKeyCode - NS_VK_NUMPAD0 + GDK_KP_0;
+    switch (aDOMKeyCode) {
+        // keys in numpad
+        case NS_VK_MULTIPLY:  return GDK_KP_Multiply;
+        case NS_VK_ADD:       return GDK_KP_Add;
+        case NS_VK_SEPARATOR: return GDK_KP_Separator;
+        case NS_VK_SUBTRACT:  return GDK_KP_Subtract;
+        case NS_VK_DECIMAL:   return GDK_KP_Decimal;
+        case NS_VK_DIVIDE:    return GDK_KP_Divide;
+        case NS_VK_NUMPAD0:   return GDK_KP_0;
+        case NS_VK_NUMPAD1:   return GDK_KP_1;
+        case NS_VK_NUMPAD2:   return GDK_KP_2;
+        case NS_VK_NUMPAD3:   return GDK_KP_3;
+        case NS_VK_NUMPAD4:   return GDK_KP_4;
+        case NS_VK_NUMPAD5:   return GDK_KP_5;
+        case NS_VK_NUMPAD6:   return GDK_KP_6;
+        case NS_VK_NUMPAD7:   return GDK_KP_7;
+        case NS_VK_NUMPAD8:   return GDK_KP_8;
+        case NS_VK_NUMPAD9:   return GDK_KP_9;
+        // other prinable keys
+        case NS_VK_SPACE:               return GDK_space;
+        case NS_VK_COLON:               return GDK_comma;
+        case NS_VK_SEMICOLON:           return GDK_semicolon;
+        case NS_VK_LESS_THAN:           return GDK_less;
+        case NS_VK_EQUALS:              return GDK_equal;
+        case NS_VK_GREATER_THAN:        return GDK_greater;
+        case NS_VK_QUESTION_MARK:       return GDK_question;
+        case NS_VK_AT:                  return GDK_at;
+        case NS_VK_CIRCUMFLEX:          return GDK_asciicircum;
+        case NS_VK_EXCLAMATION:         return GDK_exclam;
+        case NS_VK_DOUBLE_QUOTE:        return GDK_quotedbl;
+        case NS_VK_HASH:                return GDK_numbersign;
+        case NS_VK_DOLLAR:              return GDK_dollar;
+        case NS_VK_PERCENT:             return GDK_percent;
+        case NS_VK_AMPERSAND:           return GDK_ampersand;
+        case NS_VK_UNDERSCORE:          return GDK_underscore;
+        case NS_VK_OPEN_PAREN:          return GDK_parenleft;
+        case NS_VK_CLOSE_PAREN:         return GDK_parenright;
+        case NS_VK_ASTERISK:            return GDK_asterisk;
+        case NS_VK_PLUS:                return GDK_plus;
+        case NS_VK_PIPE:                return GDK_bar;
+        case NS_VK_HYPHEN_MINUS:        return GDK_minus;
+        case NS_VK_OPEN_CURLY_BRACKET:  return GDK_braceleft;
+        case NS_VK_CLOSE_CURLY_BRACKET: return GDK_braceright;
+        case NS_VK_TILDE:               return GDK_asciitilde;
+        case NS_VK_COMMA:               return GDK_comma;
+        case NS_VK_PERIOD:              return GDK_period;
+        case NS_VK_SLASH:               return GDK_slash;
+        case NS_VK_BACK_QUOTE:          return GDK_grave;
+        case NS_VK_OPEN_BRACKET:        return GDK_bracketleft;
+        case NS_VK_BACK_SLASH:          return GDK_backslash;
+        case NS_VK_CLOSE_BRACKET:       return GDK_bracketright;
+        case NS_VK_QUOTE:               return GDK_apostrophe;
     }
 
     // misc other things
@@ -726,11 +813,6 @@ KeymapWrapper::GuessGDKKeyval(PRUint32 aDOMKeyCode)
         if (kKeyPairs[i].DOMKeyCode == aDOMKeyCode) {
             return kKeyPairs[i].GDKKeyval;
         }
-    }
-
-    // function keys
-    if (aDOMKeyCode >= NS_VK_F1 && aDOMKeyCode <= NS_VK_F9) {
-        return aDOMKeyCode - NS_VK_F1 + GDK_F1;
     }
 
     return 0;
@@ -940,12 +1022,90 @@ KeymapWrapper::GetKeyLevel(GdkEventKey *aGdkKeyEvent)
     return level;
 }
 
+gint
+KeymapWrapper::GetFirstLatinGroup()
+{
+    GdkKeymapKey *keys;
+    gint count;
+    gint minGroup = -1;
+    if (gdk_keymap_get_entries_for_keyval(mGdkKeymap, GDK_a, &keys, &count)) {
+        // find the minimum number group for latin inputtable layout
+        for (gint i = 0; i < count && minGroup != 0; ++i) {
+            if (keys[i].level != 0 && keys[i].level != 1) {
+                continue;
+            }
+            if (minGroup >= 0 && keys[i].group > minGroup) {
+                continue;
+            }
+            minGroup = keys[i].group;
+        }
+        g_free(keys);
+    }
+    return minGroup;
+}
+
+bool
+KeymapWrapper::IsLatinGroup(guint8 aGroup)
+{
+    GdkKeymapKey *keys;
+    gint count;
+    bool result = false;
+    if (gdk_keymap_get_entries_for_keyval(mGdkKeymap, GDK_a, &keys, &count)) {
+        for (gint i = 0; i < count; ++i) {
+            if (keys[i].level != 0 && keys[i].level != 1) {
+                continue;
+            }
+            if (keys[i].group == aGroup) {
+                result = true;
+                break;
+            }
+        }
+        g_free(keys);
+    }
+    return result;
+}
+
 /* static */ bool
 KeymapWrapper::IsBasicLatinLetterOrNumeral(PRUint32 aCharCode)
 {
     return (aCharCode >= 'a' && aCharCode <= 'z') ||
            (aCharCode >= 'A' && aCharCode <= 'Z') ||
            (aCharCode >= '0' && aCharCode <= '9');
+}
+
+/* static */ guint
+KeymapWrapper::GetGDKKeyvalWithoutModifier(const GdkEventKey *aGdkKeyEvent)
+{
+    KeymapWrapper* keymapWrapper = GetInstance();
+    guint state =
+        (aGdkKeyEvent->state & keymapWrapper->GetModifierMask(NUM_LOCK));
+    guint keyval;
+    if (!gdk_keymap_translate_keyboard_state(keymapWrapper->mGdkKeymap,
+             aGdkKeyEvent->hardware_keycode, GdkModifierType(state),
+             aGdkKeyEvent->group, &keyval, NULL, NULL, NULL)) {
+        return 0;
+    }
+    return keyval;
+}
+
+/* static */ PRUint32
+KeymapWrapper::GetDOMKeyCodeFromKeyPairs(guint aGdkKeyval)
+{
+    // map Sun Keyboard special keysyms first.
+    for (PRUint32 i = 0; i < ArrayLength(kSunKeyPairs); i++) {
+        if (kSunKeyPairs[i].GDKKeyval == aGdkKeyval) {
+            return kSunKeyPairs[i].DOMKeyCode;
+        }
+    }
+
+    // misc other things
+    for (PRUint32 i = 0; i < ArrayLength(kKeyPairs); i++) {
+        if (kKeyPairs[i].GDKKeyval == aGdkKeyval) {
+            return kKeyPairs[i].DOMKeyCode;
+        }
+    }
+
+    return 0;
 }
 
 void
@@ -1028,23 +1188,7 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
     }
 
     // Next, find Latin inputtable keyboard layout.
-    GdkKeymapKey *keys;
-    gint count;
-    gint minGroup = -1;
-    if (gdk_keymap_get_entries_for_keyval(mGdkKeymap, GDK_a, &keys, &count)) {
-        // find the minimum number group for latin inputtable layout
-        for (gint i = 0; i < count && minGroup != 0; ++i) {
-            if (keys[i].level != 0 && keys[i].level != 1) {
-                continue;
-            }
-            if (minGroup >= 0 && keys[i].group > minGroup) {
-                continue;
-            }
-            minGroup = keys[i].group;
-        }
-        g_free(keys);
-    }
-
+    gint minGroup = GetFirstLatinGroup();
     if (minGroup < 0) {
         PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
             ("KeymapWrapper(%p): InitKeypressEvent, "
@@ -1107,8 +1251,9 @@ KeymapWrapper::IsKeyPressEventNecessary(GdkEventKey* aGdkKeyEvent)
     switch (ComputeDOMKeyCode(aGdkKeyEvent)) {
         case NS_VK_SHIFT:
         case NS_VK_CONTROL:
-        case NS_VK_META:
         case NS_VK_ALT:
+        case NS_VK_ALTGR:
+        case NS_VK_WIN:
         case NS_VK_CAPS_LOCK:
         case NS_VK_NUM_LOCK:
         case NS_VK_SCROLL_LOCK:

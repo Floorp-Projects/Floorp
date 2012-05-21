@@ -1,42 +1,9 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=78:
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef jsinterp_h___
 #define jsinterp_h___
@@ -50,20 +17,6 @@
 #include "vm/Stack.h"
 
 namespace js {
-
-/*
- * Refresh and return fp->scopeChain.  It may be stale if block scopes are
- * active but not yet reflected by objects in the scope chain.  If a block
- * scope contains a with, eval, XML filtering predicate, or similar such
- * dynamically scoped construct, then compile-time block scope at fp->blocks
- * must reflect at runtime.
- */
-
-extern JSObject *
-GetScopeChain(JSContext *cx);
-
-extern JSObject *
-GetScopeChain(JSContext *cx, StackFrame *fp);
 
 /*
  * ScriptPrologue/ScriptEpilogue must be called in pairs. ScriptPrologue
@@ -98,7 +51,7 @@ ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok);
  * return a JSTrapStatus code indication how execution should proceed:
  *
  * - JSTRAP_CONTINUE: Continue execution normally.
- * 
+ *
  * - JSTRAP_THROW: Throw an exception. ScriptDebugPrologue has set |cx|'s
  *   pending exception to the value to be thrown.
  *
@@ -115,7 +68,7 @@ ScriptDebugPrologue(JSContext *cx, StackFrame *fp);
 /*
  * Announce to the debugger that the thread has exited a JavaScript frame, |fp|.
  * If |ok| is true, the frame is returning normally; if |ok| is false, the frame
- * is throwing an exception or terminating. 
+ * is throwing an exception or terminating.
  *
  * Call whatever hooks have been registered to observe frame exits. Change cx's
  * current exception and |fp|'s return value to reflect the changes in behavior
@@ -266,7 +219,7 @@ extern JSType
 TypeOfValue(JSContext *cx, const Value &v);
 
 extern JSBool
-HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
+HasInstance(JSContext *cx, HandleObject obj, const js::Value *v, JSBool *bp);
 
 /*
  * A linked list of the |FrameRegs regs;| variables belonging to all
@@ -329,8 +282,8 @@ UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs);
 extern bool
 OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp);
 
-extern bool
-IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth);
+inline void
+AssertValidFunctionScopeChainAtExit(StackFrame *fp);
 
 class TryNoteIter
 {
@@ -404,7 +357,7 @@ bool
 CallElement(JSContext *cx, const Value &lref, const Value &rref, Value *res);
 
 bool
-SetObjectElement(JSContext *cx, JSObject *obj, const Value &index, const Value &value,
+SetObjectElement(JSContext *cx, HandleObject obj, const Value &index, const Value &value,
                  JSBool strict);
 
 bool
@@ -427,11 +380,11 @@ UrshValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res);
 
 template <bool strict>
 bool
-SetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, const Value &value);
+SetProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &value);
 
 template <bool strict>
 bool
-DeleteProperty(JSContext *ctx, const Value &val, PropertyName *name, JSBool *bv);
+DeleteProperty(JSContext *ctx, const Value &val, HandlePropertyName name, JSBool *bv);
 
 }  /* namespace js */
 

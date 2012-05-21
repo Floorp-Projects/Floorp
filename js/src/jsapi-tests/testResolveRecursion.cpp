@@ -1,6 +1,10 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=99:
  */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 #include "tests.h"
 
@@ -14,7 +18,7 @@ BEGIN_TEST(testResolveRecursion)
     static JSClass my_resolve_class = {
         "MyResolve",
         JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
-        
+
         JS_PropertyStub,       // add
         JS_PropertyStub,       // delete
         JS_PropertyStub,         // get
@@ -23,7 +27,7 @@ BEGIN_TEST(testResolveRecursion)
         (JSResolveOp) my_resolve,
         JS_ConvertStub
     };
-    
+
     obj1 = JS_NewObject(cx, &my_resolve_class, NULL, NULL);
     CHECK(obj1);
     obj2 = JS_NewObject(cx, &my_resolve_class, NULL, NULL);
@@ -52,7 +56,7 @@ unsigned resolveEntryCount;
 unsigned resolveExitCount;
 
 struct AutoIncrCounters {
-    
+
     AutoIncrCounters(cls_testResolveRecursion *t) : t(t) {
         t->resolveEntryCount++;
     }
@@ -70,9 +74,9 @@ doResolve(JSObject *obj, jsid id, unsigned flags, JSObject **objp)
     CHECK_EQUAL(resolveExitCount, 0);
     AutoIncrCounters incr(this);
     CHECK_EQUAL(obj, obj1 || obj == obj2);
-    
+
     CHECK(JSID_IS_STRING(id));
-    
+
     JSFlatString *str = JS_FlattenString(cx, JSID_TO_STRING(id));
     CHECK(str);
     jsval v;
@@ -123,7 +127,7 @@ doResolve(JSObject *obj, jsid id, unsigned flags, JSObject **objp)
 }
 
 static JSBool
-my_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSObject **objp)
+my_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags, JSObject **objp)
 {
     return static_cast<cls_testResolveRecursion *>(JS_GetPrivate(obj))->
            doResolve(obj, id, flags, objp);

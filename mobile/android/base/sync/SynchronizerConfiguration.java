@@ -1,39 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync;
 
@@ -44,7 +11,6 @@ import org.mozilla.gecko.sync.SyncConfiguration.ConfigurationBranch;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 
 import android.content.SharedPreferences.Editor;
-import android.util.Log;
 
 public class SynchronizerConfiguration {
   private static final String LOG_TAG = "SynczrConfiguration";
@@ -61,14 +27,6 @@ public class SynchronizerConfiguration {
     this.syncID       = syncID;
     this.remoteBundle = remoteBundle;
     this.localBundle  = localBundle;
-  }
-
-  public String[] toStringValues() {
-    String[] out = new String[3];
-    out[0] = syncID;
-    out[1] = remoteBundle.toJSONString();
-    out[2] = localBundle.toJSONString();
-    return out;
   }
 
   // This should get partly shuffled back into SyncConfiguration, I think.
@@ -89,7 +47,7 @@ public class SynchronizerConfiguration {
     syncID = config.getString("syncID", null);
     remoteBundle = rB;
     localBundle  = lB;
-    Log.i(LOG_TAG, "Initialized SynchronizerConfiguration. syncID: " + syncID + ", remoteBundle: " + remoteBundle + ", localBundle: " + localBundle);
+    Logger.debug(LOG_TAG, "Loaded SynchronizerConfiguration. syncID: " + syncID + ", remoteBundle: " + remoteBundle + ", localBundle: " + localBundle);
   }
 
   public void persist(ConfigurationBranch config) {
@@ -105,5 +63,6 @@ public class SynchronizerConfiguration {
 
     // Synchronous.
     editor.commit();
+    Logger.debug(LOG_TAG, "Persisted SynchronizerConfiguration. syncID: " + syncID + ", remoteBundle: " + remoteBundle + ", localBundle: " + localBundle);
   }
 }

@@ -1,3 +1,7 @@
+REM This Source Code Form is subject to the terms of the Mozilla Public
+REM License, v. 2.0. If a copy of the MPL was not distributed with this
+REM file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 @rem compress binaries for optimum performance without disturbing chkdll32
 @rem yes to: abort if in use, delete debug & extra data, leave non-resident names;
 @rem align no-bounday/page-shift; no backup; use stdio; discard existing exe/dll settings;

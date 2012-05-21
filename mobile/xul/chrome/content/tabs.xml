@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
 
 <bindings
     xmlns="http://www.mozilla.org/xbl"
@@ -13,7 +17,7 @@
           <html:canvas anonid="thumbnail" class="documenttab-thumbnail" left="0" moz-opaque="true" empty="true"
             observes="bcast_urlbarState"/>
           <xul:hbox anonid="reload" class="documenttab-reload" left="0" top="0" onclick="document.getBindingParent(this)._onUndo();" observes="bcast_urlbarState"/>
-          <xul:hbox anonid="close-container" class="documenttab-close-container" top="0" align="center" onclick="document.getBindingParent(this)._onClose()" observes="bcast_urlbarState">
+          <xul:hbox anonid="close-container" class="documenttab-close-container" top="0" align="center" onclick="event.stopPropagation(); document.getBindingParent(this)._onClose()" observes="bcast_urlbarState">
             <xul:image anonid="close" class="documenttab-close" mousethrough="always" observes="bcast_urlbarState"/>
           </xul:hbox>
         </xul:stack>
