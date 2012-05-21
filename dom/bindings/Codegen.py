@@ -1512,18 +1512,18 @@ for (uint32_t i = 0; i < length; ++i) {
             # Either external, or new-binding non-castable.  We always have a
             # holder for these, because we don't actually know whether we have
             # to addref when unwrapping or not.  So we just pass an
-            # getter_AddRefs(nsCOMPtr) to XPConnect and if we'll need a release
+            # getter_AddRefs(nsRefPtr) to XPConnect and if we'll need a release
             # it'll put a non-null pointer in there.
             if forceOwningType:
                 # Don't return a holderType in this case; our declName
                 # will just own stuff.
-                templateBody += "nsCOMPtr<" + typeName + "> ${holderName};"
+                templateBody += "nsRefPtr<" + typeName + "> ${holderName};"
             else:
-                holderType = "nsCOMPtr<" + typeName + ">"
+                holderType = "nsRefPtr<" + typeName + ">"
             templateBody += (
                 "jsval tmpVal = ${val};\n" +
                 typePtr + " tmp;\n"
-                "if (NS_FAILED(xpc_qsUnwrapArg<" + typeName + ">(cx, ${val}, &tmp, getter_AddRefs(${holderName}), &tmpVal))) {\n")
+                "if (NS_FAILED(xpc_qsUnwrapArg<" + typeName + ">(cx, ${val}, &tmp, static_cast<" + typeName + "**>(getter_AddRefs(${holderName})), &tmpVal))) {\n")
             templateBody += CGIndenter(onFailure(failureCode,
                                                  descriptor.workers)).define()
             templateBody += ("}\n"
@@ -3460,6 +3460,7 @@ class CGBindingRoot(CGThing):
                          ['mozilla/dom/Nullable.h',
                           'mozilla/dom/PrimitiveConversions.h',
                           'XPCQuickStubs.h',
+                          'nsDOMQS.h',
                           'AccessCheck.h',
                           'WorkerPrivate.h',
                           'nsContentUtils.h',
