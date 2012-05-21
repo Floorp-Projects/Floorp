@@ -30,7 +30,6 @@ build/Makefile
 build/pgo/Makefile
 build/pgo/blueprint/Makefile
 build/pgo/js-input/Makefile
-build/virtualenv/Makefile
 config/Makefile
 config/autoconf.mk
 config/nspr/Makefile
