@@ -89,6 +89,7 @@
     <ClInclude Include="ScaledFontDWrite.h" />
     <ClInclude Include="SourceSurfaceD2D.h" />
     <ClInclude Include="SourceSurfaceD2DTarget.h" />
+    <ClInclude Include="SourceSurfaceRawData.h" />
     <ClInclude Include="Tools.h" />
     <ClInclude Include="Types.h" />
     <ClInclude Include="UserData.h" />
@@ -104,6 +105,7 @@
     <ClCompile Include="ScaledFontDWrite.cpp" />
     <ClCompile Include="SourceSurfaceD2D.cpp" />
     <ClCompile Include="SourceSurfaceD2DTarget.cpp" />
+    <ClCompile Include="SourceSurfaceRawData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile.in" />
