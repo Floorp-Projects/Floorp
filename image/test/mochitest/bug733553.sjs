@@ -9,7 +9,6 @@ var bodyParts = [
   ["animated-gif2.gif", "image/gif"],
   ["red.png", "image/png"],
   ["lime100x100.svg", "image/svg+xml"],
-  ["big.png", "image/png"],
   ["animated-gif2.gif", "image/gif"],
   ["red.png", "image/png"],
   ["lime100x100.svg", "image/svg+xml"]
