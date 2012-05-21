@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.gclichrome-output {
+  max-width: 350px;
+}
+
+.gclichrome-tooltip {
+  max-width: 350px;
+}
+
+.gcli-help-name {
+  text-align: end;
+}
+
+.gcli-help-synopsis {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.gcli-help-synopsis:before {
+  content: '\bb';
+}
+
+.gcli-menu-option {
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gcli-menu-template {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.gcli-menu-error {
+  overflow: hidden;
+  white-space: nowrap;
+}
+

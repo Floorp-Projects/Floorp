@@ -1,0 +1,33 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+relativesrcdir  = browser/devtools/commandline/test
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_BROWSER_TEST_FILES = \
+  browser_gcli_break.js \
+  browser_gcli_commands.js \
+  browser_gcli_inspect.js \
+  browser_gcli_integrate.js \
+  browser_gcli_web.js \
+  head.js \
+  $(NULL)
+
+_BROWSER_TEST_PAGES = \
+  browser_gcli_break.html \
+  browser_gcli_inspect.html \
+  $(NULL)
+
+libs:: $(_BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+
+libs:: $(_BROWSER_TEST_PAGES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
