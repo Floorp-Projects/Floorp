@@ -1129,8 +1129,14 @@ nsDisplayBackground::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder)
                                            *bg,
                                            layer);
 
+  nsImageRenderer* imageRenderer = &state.mImageRenderer;
   // We only care about images here, not gradients.
-  if (!state.mImageRenderer.IsRasterImage())
+  if (imageRenderer->IsRasterImage())
+    return false;
+
+  nsRefPtr<ImageContainer> imageContainer = imageRenderer->GetContainer();
+  // Image is not ready to be made into a layer yet
+  if (!imageContainer)
     return false;
 
   // We currently can't handle tiled or partial backgrounds.
@@ -1145,7 +1151,7 @@ nsDisplayBackground::TryOptimizeToImageLayer(nsDisplayListBuilder* aBuilder)
 
   PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   mDestRect = nsLayoutUtils::RectToGfxRect(state.mDestArea, appUnitsPerDevPixel);
-  mImageContainer = state.mImageRenderer.GetContainer();
+  mImageContainer = imageContainer;
 
   // Ok, we can turn this into a layer if needed.
   return true;
