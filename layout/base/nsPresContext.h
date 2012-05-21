@@ -1141,6 +1141,10 @@ public:
   // width, which is not yet set on its rect.
   nscoord               mCurrentInflationContainerWidth;
 
+  // Should we disable font size inflation because we're inside of
+  // shrink-wrapping calculations on an inflation container?
+  bool                  mInflationDisabledForShrinkWrap;
+
 protected:
 
   nsRefPtrHashtable<nsPtrHashKey<nsIFrame>, nsImageLoader>

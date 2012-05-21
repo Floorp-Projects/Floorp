@@ -1514,7 +1514,7 @@ nsTableFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
   // If we're a container for font size inflation, then shrink
   // wrapping inside of us should not apply font size inflation.
-  AutoMaybeNullInflationContainer an(this);
+  AutoMaybeDisableFontInflation an(this);
 
   // Tables never shrink below their min width.
   nscoord minWidth = GetMinWidth(aRenderingContext);
@@ -1530,7 +1530,7 @@ nsTableFrame::TableShrinkWidthToFit(nsRenderingContext *aRenderingContext,
 {
   // If we're a container for font size inflation, then shrink
   // wrapping inside of us should not apply font size inflation.
-  AutoMaybeNullInflationContainer an(this);
+  AutoMaybeDisableFontInflation an(this);
 
   nscoord result;
   nscoord minWidth = GetMinWidth(aRenderingContext);
