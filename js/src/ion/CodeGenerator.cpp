@@ -757,7 +757,6 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
 
     JSRuntime *rt = gen->cx->runtime;
 
-    // No registers are allocated yet, so it's safe to grab anything.
     const LAllocation *limit = lir->limitTemp();
     Register limitReg = ToRegister(limit);
 
@@ -807,11 +806,16 @@ CodeGenerator::visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool)
     static const VMFunction ReportOverRecursedInfo =
         FunctionInfo<pf>(ReportOverRecursed);
 
+    // LFunctionEnvironment can appear before LCheckOverRecursed, so we have
+    // to save all live registers to avoid crashes if ReportOverRecursed triggers
+    // a GC.
+    saveLive(ool->lir());
+
     if (!callVM(ReportOverRecursedInfo, ool->lir()))
         return false;
 
 #ifdef DEBUG
-    // Do not rejoin: the above call causes failure.
+    // Do not restore live registers and rejoin: the above call causes failure.
     masm.breakpoint();
 #endif
     return true;
