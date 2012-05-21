@@ -1661,7 +1661,6 @@ DrawTargetD2D::PushClipsToRT(ID2D1RenderTarget *aRT)
 {
   for (std::vector<PushedClip>::iterator iter = mPushedClips.begin();
         iter != mPushedClips.end(); iter++) {
-    D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
     if (iter->mLayer) {
       D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
 
@@ -1894,6 +1893,7 @@ DrawTargetD2D::FillGlyphsManual(ScaledFontDWrite *aFont,
   mDevice->OMSetRenderTargets(1, &rtViews, NULL);
 
   mDevice->Draw(4, 0);
+  return true;
 }
 
 TemporaryRef<ID2D1Brush>
