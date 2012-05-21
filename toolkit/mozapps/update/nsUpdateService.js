@@ -2935,9 +2935,10 @@ Downloader.prototype = {
              getService(Ci.nsIUpdateManager);
     um.saveUpdates();
 
-    var listenerCount = this._listeners.length;
+    var listeners = this._listeners.concat();
+    var listenerCount = listeners.length;
     for (var i = 0; i < listenerCount; ++i)
-      this._listeners[i].onStartRequest(request, context);
+      listeners[i].onStartRequest(request, context);
   },
 
   /**
@@ -2955,9 +2956,10 @@ Downloader.prototype = {
                                              maxProgress) {
     LOG("Downloader:onProgress - progress: " + progress + "/" + maxProgress);
 
-    var listenerCount = this._listeners.length;
+    var listeners = this._listeners.concat();
+    var listenerCount = listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
-      var listener = this._listeners[i];
+      var listener = listeners[i];
       if (listener instanceof Ci.nsIProgressEventSink)
         listener.onProgress(request, context, progress, maxProgress);
     }
@@ -2978,9 +2980,10 @@ Downloader.prototype = {
     LOG("Downloader:onStatus - status: " + status + ", statusText: " +
         statusText);
 
-    var listenerCount = this._listeners.length;
+    var listeners = this._listeners.concat();
+    var listenerCount = listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
-      var listener = this._listeners[i];
+      var listener = listeners[i];
       if (listener instanceof Ci.nsIProgressEventSink)
         listener.onStatus(request, context, status, statusText);
     }
@@ -3072,9 +3075,10 @@ Downloader.prototype = {
     }
     um.saveUpdates();
 
-    var listenerCount = this._listeners.length;
+    var listeners = this._listeners.concat();
+    var listenerCount = listeners.length;
     for (var i = 0; i < listenerCount; ++i)
-      this._listeners[i].onStopRequest(request, context, status);
+      listeners[i].onStopRequest(request, context, status);
 
     this._request = null;
 
