@@ -532,7 +532,6 @@ gfxContext::DrawSurface(gfxASurface *surface, const gfxSize& size)
     cairo_fill(mCairo);
     cairo_restore(mCairo);
   } else {
-    // Lifetime needs to be limited here since we may wrap surface's data.
     RefPtr<SourceSurface> surf =
       gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
 
@@ -1294,7 +1293,6 @@ gfxContext::SetColor(const gfxRGBA& c)
         cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
   } else {
     CurrentState().pattern = NULL;
-    CurrentState().sourceSurfCairo = NULL;
     CurrentState().sourceSurface = NULL;
 
     if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
@@ -1318,7 +1316,6 @@ gfxContext::SetDeviceColor(const gfxRGBA& c)
     cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
   } else {
     CurrentState().pattern = NULL;
-    CurrentState().sourceSurfCairo = NULL;
     CurrentState().sourceSurface = NULL;
     CurrentState().color = ToColor(c);
   }
@@ -1357,9 +1354,6 @@ gfxContext::SetSource(gfxASurface *surface, const gfxPoint& offset)
     CurrentState().surfTransform = Matrix(1.0f, 0, 0, 1.0f, Float(offset.x), Float(offset.y));
     CurrentState().pattern = NULL;
     CurrentState().patternTransformChanged = false;
-    // Keep the underlying cairo surface around while we keep the
-    // sourceSurface.
-    CurrentState().sourceSurfCairo = surface;
     CurrentState().sourceSurface =
       gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
   }
@@ -1371,7 +1365,6 @@ gfxContext::SetPattern(gfxPattern *pattern)
   if (mCairo) {
     cairo_set_source(mCairo, pattern->CairoPattern());
   } else {
-    CurrentState().sourceSurfCairo = NULL;
     CurrentState().sourceSurface = NULL;
     CurrentState().patternTransformChanged = false;
     CurrentState().pattern = pattern;
@@ -1428,7 +1421,6 @@ gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
   if (mCairo) {
     cairo_mask_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
   } else {
-    // Lifetime needs to be limited here as we may simply wrap surface's data.
     RefPtr<SourceSurface> sourceSurf =
       gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
 
@@ -1590,7 +1582,6 @@ gfxContext::PopGroupToSource()
   } else {
     RefPtr<SourceSurface> src = mDT->Snapshot();
     Restore();
-    CurrentState().sourceSurfCairo = NULL;
     CurrentState().sourceSurface = src;
     CurrentState().pattern = NULL;
     CurrentState().patternTransformChanged = false;

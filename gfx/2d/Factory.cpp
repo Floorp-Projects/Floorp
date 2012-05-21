@@ -37,8 +37,6 @@
 
 #include "DrawTargetDual.h"
 
-#include "SourceSurfaceRawData.h"
-
 #include "Logging.h"
 
 #ifdef PR_LOGGING
@@ -360,20 +358,6 @@ Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface)
   }
 
 #endif
-  return NULL;
-}
-
-TemporaryRef<DataSourceSurface>
-Factory::CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
-                                         const IntSize &aSize,
-                                         SurfaceFormat aFormat)
-{
-  RefPtr<SourceSurfaceRawData> newSurf = new SourceSurfaceRawData();
-
-  if (newSurf->InitWrappingData(aData, aSize, aStride, aFormat, false)) {
-    return newSurf;
-  }
-
   return NULL;
 }
 
