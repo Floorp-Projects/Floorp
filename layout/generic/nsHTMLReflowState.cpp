@@ -1283,7 +1283,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   }
 
   {
-    AutoMaybeNullInflationContainer an(frame);
+    AutoMaybeDisableFontInflation an(frame);
 
     nsSize size =
       frame->ComputeSize(rendContext,
@@ -1905,7 +1905,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       InitAbsoluteConstraints(aPresContext, cbrs, aContainingBlockWidth,
                               aContainingBlockHeight, aFrameType);
     } else {
-      AutoMaybeNullInflationContainer an(frame);
+      AutoMaybeDisableFontInflation an(frame);
 
       bool isBlock = NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType);
       PRUint32 computeSizeFlags = isBlock ? 0 : nsIFrame::eShrinkWrap;

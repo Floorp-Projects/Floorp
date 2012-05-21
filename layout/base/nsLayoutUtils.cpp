@@ -2349,7 +2349,7 @@ GetIntrinsicCoord(const nsStyleCoord& aStyle,
 
   // If aFrame is a container for font size inflation, then shrink
   // wrapping inside of it should not apply font size inflation.
-  AutoMaybeNullInflationContainer an(aFrame);
+  AutoMaybeDisableFontInflation an(aFrame);
 
   if (val == NS_STYLE_WIDTH_MAX_CONTENT)
     aResult = aFrame->GetPrefWidth(aRenderingContext);
@@ -2381,7 +2381,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
 
   // If aFrame is a container for font size inflation, then shrink
   // wrapping inside of it should not apply font size inflation.
-  AutoMaybeNullInflationContainer an(aFrame);
+  AutoMaybeDisableFontInflation an(aFrame);
 
   nsIFrame::IntrinsicWidthOffsetData offsets =
     aFrame->IntrinsicWidthOffsets(aRenderingContext);
@@ -2640,7 +2640,7 @@ nsLayoutUtils::ComputeWidthValue(
   } else if (eStyleUnit_Enumerated == aCoord.GetUnit()) {
     // If aFrame is a container for font size inflation, then shrink
     // wrapping inside of it should not apply font size inflation.
-    AutoMaybeNullInflationContainer an(aFrame);
+    AutoMaybeDisableFontInflation an(aFrame);
 
     PRInt32 val = aCoord.GetIntValue();
     switch (val) {
@@ -4815,12 +4815,13 @@ nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame,
   }
 #endif
 
-  if (!FontSizeInflationEnabled(aFrame->PresContext())) {
+  nsPresContext *presContext = aFrame->PresContext();
+  if (!FontSizeInflationEnabled(presContext) ||
+      presContext->mInflationDisabledForShrinkWrap) {
     return 0;
   }
 
   if (aWidthDetermination == eInReflow) {
-    nsPresContext *presContext = aFrame->PresContext();
     nsIFrame *container = presContext->mCurrentInflationContainer;
     if (!container || !ShouldInflateFontsForContainer(container)) {
       return 0;
