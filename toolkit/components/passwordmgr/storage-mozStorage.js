@@ -345,7 +345,6 @@ LoginManagerStorage_mozStorage.prototype = {
         try {
             stmt = this._dbCreateStatement(query, params);
             stmt.execute();
-            this.storeDeletedLogin(storedLogin);
             transaction.commit();
         } catch (e) {
             this.log("_removeLogin failed: " + e.name + " : " + e.message);
@@ -651,31 +650,6 @@ LoginManagerStorage_mozStorage.prototype = {
         return [logins, ids];
     },
 
-    /* storeDeletedLogin
-     *
-     * Moves a login to the deleted logins table
-     *
-     */
-     storeDeletedLogin : function(aLogin) {
-#ifdef ANDROID
-          let stmt = null; 
-          try {
-              this.log("Storing " + aLogin.guid + " in deleted passwords\n");
-              let query = "INSERT INTO moz_deleted_logins (guid, timeDeleted) VALUES (:guid, :timeDeleted)";
-              let params = { guid: aLogin.guid,
-                             timeDeleted: Date.now() };
-              let stmt = this._dbCreateStatement(query, params);
-              stmt.execute();
-          } catch(ex) {
-              throw ex;
-          } finally {
-              if (stmt)
-                  stmt.reset();
-          }		
-#endif
-     },
-
-
     /*
      * removeAllLogins
      *
@@ -693,11 +667,6 @@ LoginManagerStorage_mozStorage.prototype = {
         // Disabled hosts kept, as one presumably doesn't want to erase those.
         query = "DELETE FROM moz_logins";
         try {
-            let logins = this.getAllLogins();
-            for each (let login in logins) {
-                let [id, storedLogin] = this._getIdForLogin(login);
-                this.storeDeletedLogin(storedLogin);
-            }
             stmt = this._dbCreateStatement(query);
             stmt.execute();
             transaction.commit();
