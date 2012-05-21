@@ -151,6 +151,8 @@ gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
 
       if (!mSourceSurface) {
         nsRefPtr<gfxASurface> gfxSurf = gfxASurface::Wrap(surf);
+        // The underlying surface here will be kept around by the gfxPattern.
+        // This function is intended to be used right away.
         mSourceSurface =
           gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(aTarget, gfxSurf);
       }
