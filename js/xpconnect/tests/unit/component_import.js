@@ -28,7 +28,7 @@ FooComponent.prototype =
       thereIsNoSuchIdentifier;
       threw = false;
     } catch (ex) {
-      do_check_true(ex.lineNumber == 60);
+      do_check_true(ex.lineNumber == 28);
     }
     do_check_true(threw);
     
