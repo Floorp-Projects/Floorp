@@ -387,6 +387,9 @@ DOMCI_CLASS(DataContainerEvent)
 // HTML5
 DOMCI_CLASS(MessageEvent)
 
+DOMCI_CLASS(DeviceStorage)
+DOMCI_CLASS(DeviceStorageCursor)
+
 // Geolocation
 DOMCI_CLASS(GeoGeolocation)
 DOMCI_CLASS(GeoPosition)
