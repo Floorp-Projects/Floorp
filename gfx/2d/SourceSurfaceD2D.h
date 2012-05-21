@@ -39,6 +39,7 @@ private:
   friend class DrawTargetD2D;
 
   RefPtr<ID2D1Bitmap> mBitmap;
+  uint8_t *mRawData;
   SurfaceFormat mFormat;
   IntSize mSize;
 };

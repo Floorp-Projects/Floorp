@@ -713,7 +713,6 @@ private:
     bool opIsClear;
     Color color;
     nsRefPtr<gfxPattern> pattern;
-    nsRefPtr<gfxASurface> sourceSurfCairo;
     mozilla::RefPtr<SourceSurface> sourceSurface;
     Matrix surfTransform;
     Matrix transform;
