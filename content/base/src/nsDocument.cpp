@@ -9257,7 +9257,7 @@ nsDocument::ClearPendingPointerLockRequest(bool aDispatchErrorEvents)
     NS_WARNING("Document must implement nsIObserver");
     return;
   }
-  os->RemoveObserver(obs, "perm-changed");
+  os->RemoveObserver(obs, "fullscreen-approved");
 
   if (aDispatchErrorEvents) {
     DispatchPointerLockError(doc);
@@ -9291,7 +9291,7 @@ nsDocument::SetPendingPointerLockRequest(Element* aElement)
   nsCOMPtr<nsIObserver> obs(do_QueryInterface(aElement->OwnerDoc()));
   NS_ENSURE_TRUE(obs != nsnull, NS_ERROR_FAILURE);
 
-  nsresult res = os->AddObserver(obs, "perm-changed", true);
+  nsresult res = os->AddObserver(obs, "fullscreen-approved", true);
   NS_ENSURE_SUCCESS(res, res);
 
   sPendingPointerLockDoc = do_GetWeakReference(aElement->OwnerDoc());
@@ -9309,9 +9309,10 @@ nsDocument::Observe(nsISupports *aSubject,
                     const char *aTopic,
                     const PRUnichar *aData)
 {
-  if (strcmp("perm-changed", aTopic) == 0) {
+  if (strcmp("fullscreen-approved", aTopic) == 0) {
+    nsCOMPtr<nsIDocument> subject(do_QueryInterface(aSubject));
     nsCOMPtr<nsIDocument> doc(do_QueryReferent(sPendingPointerLockDoc));
-    if (nsContentUtils::IsSitePermAllow(doc->NodePrincipal(), "fullscreen")) {
+    if (subject == doc) {
       nsCOMPtr<Element> element(do_QueryReferent(sPendingPointerLockElement));
       nsDocument::ClearPendingPointerLockRequest(false);
       nsAsyncPointerLockRequest::Request(element, doc);
@@ -9337,7 +9338,7 @@ nsDocument::RequestPointerLock(Element* aElement)
     DispatchPointerLockError(this);
     return;
   }
-    
+
   if (!nsContentUtils::IsSitePermAllow(NodePrincipal(), "fullscreen")) {
     // Domain isn't yet approved for fullscreen, so we must wait until
     // it's been approved.
