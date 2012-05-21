@@ -12,7 +12,7 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-expect = 'TypeError:52';
+expect = 'TypeError:19';
 try
 {
   var obj = {toString: function() {return new Object();}};
