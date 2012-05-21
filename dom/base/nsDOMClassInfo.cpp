@@ -414,10 +414,6 @@
 // Storage includes
 #include "nsDOMStorage.h"
 
-// Device Storage
-#include "nsIDOMDeviceStorage.h"
-#include "nsIDOMDeviceStorageCursor.h"
-
 // Drag and drop
 #include "nsIDOMDataTransfer.h"
 
@@ -438,7 +434,6 @@
 
 #include "nsIDOMDesktopNotification.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
-#include "nsIDOMNavigatorDeviceStorage.h"
 #include "nsIDOMNavigatorGeolocation.h"
 #include "Navigator.h"
 
@@ -1397,12 +1392,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(MessageEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(DeviceStorage, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(DeviceStorageCursor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(GeoGeolocation, nsDOMGenericSH,
@@ -2442,7 +2431,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorDeviceStorage)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocation)
     DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMNavigatorDesktopNotification,
                                         Navigator::HasDesktopNotificationSupport())
@@ -4044,16 +4032,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(MessageEvent, nsIDOMMessageEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMessageEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DeviceStorage, nsIDOMDeviceStorage)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceStorage)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DeviceStorageCursor, nsIDOMDeviceStorageCursor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceStorageCursor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(GeoGeolocation, nsIDOMGeoGeolocation)
