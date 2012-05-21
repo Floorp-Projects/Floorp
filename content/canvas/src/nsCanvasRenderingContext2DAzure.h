@@ -138,6 +138,9 @@ public:
   nsCanvasRenderingContext2DAzure();
   virtual ~nsCanvasRenderingContext2DAzure();
 
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
+                               bool *triedToWrap);
+
   nsHTMLCanvasElement* GetCanvas() const
   {
     return mCanvasElement;
