@@ -95,6 +95,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "nsHTMLImageElement.h"
 #include "nsHTMLVideoElement.h"
+#include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
@@ -541,19 +542,51 @@ PRUint32 nsCanvasRenderingContext2DAzure::sNumLivingContexts = 0;
 PRUint8 (*nsCanvasRenderingContext2DAzure::sUnpremultiplyTable)[256] = nsnull;
 PRUint8 (*nsCanvasRenderingContext2DAzure::sPremultiplyTable)[256] = nsnull;
 
+namespace mozilla {
+namespace dom {
+
+static bool
+AzureCanvasEnabledOnPlatform()
+{
+#ifdef XP_WIN
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() !=
+      gfxWindowsPlatform::RENDER_DIRECT2D ||
+      !gfxWindowsPlatform::GetPlatform()->DWriteEnabled()) {
+    static bool checkedPref = false;
+    static bool preferSkia;
+    if (!checkedPref) {
+      preferSkia = Preferences::GetBool("gfx.canvas.azure.prefer-skia", false);
+      checkedPref = true;
+    }
+    return preferSkia;
+  }
+#elif !defined(XP_MACOSX) && !defined(ANDROID) && !defined(LINUX)
+  return false;
+#endif
+  return true;
+}
+
+bool
+AzureCanvasEnabled()
+{
+  static bool checkedPref = false;
+  static bool azureEnabled;
+  if (!checkedPref) {
+    azureEnabled = Preferences::GetBool("gfx.canvas.azure.enabled", false);
+    checkedPref = true;
+  }
+  return azureEnabled && AzureCanvasEnabledOnPlatform();
+}
+
+}
+}
+
 nsresult
 NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult)
 {
-#ifdef XP_WIN
-  if ((gfxWindowsPlatform::GetPlatform()->GetRenderMode() !=
-      gfxWindowsPlatform::RENDER_DIRECT2D ||
-      !gfxWindowsPlatform::GetPlatform()->DWriteEnabled()) &&
-      !Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
+  if (!AzureCanvasEnabledOnPlatform()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-#elif !defined(XP_MACOSX) && !defined(ANDROID) && !defined(LINUX)
-  return NS_ERROR_NOT_AVAILABLE;
-#endif
 
   nsRefPtr<nsIDOMCanvasRenderingContext2D> ctx = new nsCanvasRenderingContext2DAzure();
   if (!ctx)
@@ -571,6 +604,7 @@ nsCanvasRenderingContext2DAzure::nsCanvasRenderingContext2DAzure()
   , mInvalidateCount(0)
 {
   sNumLivingContexts++;
+  SetIsDOMBinding();
 }
 
 nsCanvasRenderingContext2DAzure::~nsCanvasRenderingContext2DAzure()
@@ -587,6 +621,13 @@ nsCanvasRenderingContext2DAzure::~nsCanvasRenderingContext2DAzure()
     sUnpremultiplyTable = nsnull;
     sPremultiplyTable = nsnull;
   }
+}
+
+JSObject*
+nsCanvasRenderingContext2DAzure::WrapObject(JSContext *cx, JSObject *scope,
+                                            bool *triedToWrap)
+{
+  return CanvasRenderingContext2DBinding::Wrap(cx, scope, this, triedToWrap);
 }
 
 bool
