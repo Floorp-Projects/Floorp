@@ -163,6 +163,11 @@ public:
     virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateDrawTargetForSurface(gfxASurface *aSurface);
 
+    /*
+     * Creates a SourceSurface for a gfxASurface. This surface should -not- be
+     * held around by the user after the underlying gfxASurface has been
+     * destroyed as a copy of the data is not guaranteed.
+     */
     virtual mozilla::RefPtr<mozilla::gfx::SourceSurface>
       GetSourceSurfaceForSurface(mozilla::gfx::DrawTarget *aTarget, gfxASurface *aSurface);
 
