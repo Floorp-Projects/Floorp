@@ -421,6 +421,7 @@ technique10 SampleTextTexture
 {
     pass Unmasked
     {
+        SetRasterizerState(TextureRast);
         SetBlendState(bTextBlend, float4( 0.0f, 0.0f, 0.0f, 0.0f ), 0xFFFFFFFF );
         SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleTextureVS()));
         SetGeometryShader(NULL);
@@ -428,6 +429,7 @@ technique10 SampleTextTexture
     }
     pass Masked
     {
+        SetRasterizerState(TextureRast);
         SetBlendState(bTextBlend, float4( 0.0f, 0.0f, 0.0f, 0.0f ), 0xFFFFFFFF );
         SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleTextureVS()));
         SetGeometryShader(NULL);
