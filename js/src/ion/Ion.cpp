@@ -1116,6 +1116,14 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
         const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddressToFp());
         IonCode *ionCode = ionScript->method();
 
+        JSCompartment *compartment = script->compartment();
+        if (compartment->needsBarrier()) {
+            // We're about to remove edges from the JSScript to gcthings
+            // embedded in the IonCode. Perform one final trace of the
+            // IonCode for the incremental GC, as it must know about
+            // those edges.
+            ionCode->trace(compartment->barrierTracer());
+        }
         ionCode->setInvalidated();
 
         // Write the delta (from the return address offset to the
