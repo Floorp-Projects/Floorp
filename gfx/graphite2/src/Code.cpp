@@ -307,6 +307,7 @@ opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
         case CNTXT_ITEM :
             valid_upto(_max.rule_length, _max.pre_context + int8(bc[0]));
             if (bc + 2 + bc[1] >= _max.bytecode)  failure(jump_past_end);
+            if (_pre_context != 0)                failure(nested_context_item);
             break;
         case ATTR_SET :
         case ATTR_ADD :
