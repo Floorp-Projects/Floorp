@@ -1,3 +1,7 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
 [mozrunner](https://github.com/mozilla/mozbase/tree/master/mozrunner)
 is a [python package](http://pypi.python.org/pypi/mozrunner)
 which handles running of Mozilla applications.

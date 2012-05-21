@@ -1,3 +1,7 @@
+dnl This Source Code Form is subject to the terms of the Mozilla Public
+dnl License, v. 2.0. If a copy of the MPL was not distributed with this
+dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 # PKG_CHECK_MODULES(GSTUFF, gtk+-2.0 >= 1.3 glib = 1.3.4, action-if, action-not)
 # defines GSTUFF_LIBS, GSTUFF_CFLAGS, see pkg-config man page
 # also defines GSTUFF_PKG_ERRORS on error

@@ -129,7 +129,7 @@ const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
-const DB_SCHEMA                       = 12;
+const DB_SCHEMA                       = 13;
 
 // Properties that exist in the install manifest
 const PROP_METADATA      = ["id", "version", "type", "internalName", "updateURL",
@@ -4750,6 +4750,8 @@ var XPIDatabase = {
                                   "homepageURL TEXT");
       this.connection.createTable("locale_strings",
                                   "locale_id INTEGER, type TEXT, value TEXT");
+      this.connection.executeSimpleSQL("CREATE INDEX locale_strings_idx ON " +
+        "locale_strings (locale_id)");
       this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon AFTER DELETE " +
         "ON addon BEGIN " +
         "DELETE FROM targetApplication WHERE addon_internal_id=old.internal_id; " +
@@ -5415,7 +5417,7 @@ var XPIDatabase = {
         aLocale.locales.forEach(function(aName) {
           stmt.params.internal_id = internal_id;
           stmt.params.name = aName;
-          stmt.params.locale = insertLocale(aLocale);
+          stmt.params.locale = id;
           executeStatement(stmt);
         });
       });

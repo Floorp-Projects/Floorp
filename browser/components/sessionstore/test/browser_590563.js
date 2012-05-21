@@ -12,7 +12,7 @@ function test() {
   };
   let pageData = {
     url: "about:sessionrestore",
-    formdata: { "#sessionData": oldState }
+    formdata: { id: { "sessionData": oldState } } 
   };
   let state = { windows: [{ tabs: [{ entries: [pageData] }] }] };
 

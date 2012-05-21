@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #
 # This script is run during configure, taking variables set in configure
 # and producing a JSON file that describes some portions of the build

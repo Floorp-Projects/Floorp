@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 toolkit.jar:
   content/global/devtools/dbg-transport.js        (debugger/dbg-transport.js)
   content/global/devtools/dbg-server.js        		(debugger/server/dbg-server.js)

@@ -1,3 +1,7 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
 #define GOOGLE_PARAMS <Param name="q" value="{searchTerms}"/><Param name="ie" value="utf-8"/><Param name="oe" value="utf-8"/><Param name="aq" value="t"/><Param name="rls" value="{moz:distributionID}:{moz:locale}:{moz:official}"/>
 #if MOZ_UPDATE_CHANNEL == beta
 #define GOOGLE_CLIENT_PARAM <MozParam name="client" condition="defaultEngine" trueValue="firefox-beta" falseValue="firefox"/>
