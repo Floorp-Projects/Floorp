@@ -16,6 +16,7 @@ DIRS = \
   interfaces/base \
   interfaces/canvas \
   interfaces/core \
+  interfaces/devicestorage \
   interfaces/html \
   interfaces/events \
   interfaces/contacts \
@@ -48,6 +49,7 @@ DIRS += \
   bindings \
   battery \
   contacts \
+  devicestorage \
   power \
   settings \
   sms \

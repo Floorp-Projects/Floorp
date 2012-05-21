@@ -3463,6 +3463,9 @@ pref("geo.enabled", true);
 // Enable/Disable the orientation API for content
 pref("device.motion.enabled", true);
 
+// Enable/Disable the device storage API for content
+pref("device.storage.enabled", false);
+
 // Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
 // Time in milliseconds between the time a network buffer is seen and the 

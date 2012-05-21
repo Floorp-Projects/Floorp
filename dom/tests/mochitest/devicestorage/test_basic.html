@@ -1,0 +1,102 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717103
+-->
+<head>
+  <title>Test for the device storage API </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup();
+
+var gFileName = "devicestorage/hi";
+
+function getAfterDeleteSuccess(e) {
+  ok(false, "file was deleted not successfully");
+  devicestorage_cleanup();
+}
+
+function getAfterDeleteError(e) {
+  ok(true, "file was deleted successfully");
+  devicestorage_cleanup();
+}
+
+function deleteSuccess(e) {
+
+  ok(e.target.result == gFileName, "File name should match");
+
+  var storage = navigator.getDeviceStorage("profile");
+  request = storage[0].get(e.target.result);
+  request.onsuccess = getAfterDeleteSuccess;
+  request.onerror = getAfterDeleteError;
+
+}
+
+function deleteError(e) {
+  ok(false, "deleteError was called : " + e.target.error.name);
+  devicestorage_cleanup();
+}
+
+function getSuccess(e) {
+  var storage = navigator.getDeviceStorage("profile");
+  ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+
+  ok(e.target.result.name == gFileName, "File name should match");
+
+  request = storage[0].delete(e.target.result.name)
+  request.onsuccess = deleteSuccess;
+  request.onerror = deleteError;
+}
+
+function getError(e) {
+  ok(false, "getError was called : " + e.target.error.name);
+  SpecialPowers.setBoolPref("device.storage.enabled", oldVal);
+  SimpleTest.finish();
+}
+
+function addSuccess(e) {
+
+  ok(e.target.result == gFileName, "File name should match");
+
+  var storage = navigator.getDeviceStorage("profile");
+  request = storage[0].get(gFileName);
+  request.onsuccess = getSuccess;
+  request.onerror = getError;
+
+  ok(true, "addSuccess was called");
+}
+
+function addError(e) {
+  ok(false, "addError was called : " + e.target.error.name);
+  devicestorage_cleanup();
+}
+
+var storage = navigator.getDeviceStorage("profile");
+ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+
+request = storage[0].addNamed(createRandomBlob(), "devicestorage/hi");
+ok(request, "Should have a non-null request");
+
+request.onsuccess = addSuccess;
+request.onerror = addError;
+
+</script>
+</pre>
+</body>
+</html>
+

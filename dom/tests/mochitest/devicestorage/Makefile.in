@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir	= dom/tests/mochitest/devicestorage
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES	= \
+		test_sanity.html \
+		test_basic.html \
+		test_enumerate.html \
+		test_enumerateMultipleContinue.html \
+		test_overwrite.html \
+		test_dotdot.html \
+		devicestorage_common.js \
+		$(NULL)
+
+libs:: 	$(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
