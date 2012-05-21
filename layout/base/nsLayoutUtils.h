@@ -1529,15 +1529,8 @@ public:
    * Return the font size inflation *ratio* for a given frame.  This is
    * the factor by which font sizes should be inflated; it is never
    * smaller than 1.
-   *
-   * The WidthDetermination parameter says how we determine the width of
-   * the nearest inflation container:  when not in reflow we look at the
-   * frame tree; when in reflow we look at state stored on the pres
-   * context.
    */
-  enum WidthDetermination { eNotInReflow, eInReflow };
-  static float FontSizeInflationFor(const nsIFrame *aFrame,
-                                    WidthDetermination aWidthDetermination);
+  static float FontSizeInflationFor(const nsIFrame *aFrame);
 
   /**
    * Perform the first half of the computation of FontSizeInflationFor
@@ -1552,9 +1545,7 @@ public:
    * above the minimum should always be adjusted as done by
    * FontSizeInflationInner.
    */
-  static nscoord InflationMinFontSizeFor(const nsIFrame *aFrame,
-                                         WidthDetermination
-                                           aWidthDetermination);
+  static nscoord InflationMinFontSizeFor(const nsIFrame *aFrame);
 
   /**
    * Perform the second half of the computation done by
