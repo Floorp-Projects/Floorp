@@ -172,6 +172,11 @@ FT2FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
         NS_Free((void*)aFontData);
         return nsnull;
     }
+    if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE)) {
+        FT_Done_Face(face);
+        NS_Free((void*)aFontData);
+        return nsnull;
+    }
     FT2FontEntry* fe = FT2FontEntry::CreateFontEntry(face, nsnull, 0, aFontData);
     if (fe) {
         fe->mItalic = aProxyEntry.mItalic;
@@ -291,7 +296,14 @@ FT2FontEntry::CairoFontFace()
 
     if (!mFontFace) {
         FT_Face face;
-        FT_New_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(), mFilename.get(), mFTFontIndex, &face);
+        if (FT_Err_Ok != FT_New_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(),
+                                     mFilename.get(), mFTFontIndex, &face)) {
+            NS_WARNING("failed to create freetype face");
+            return nsnull;
+        }
+        if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE)) {
+            NS_WARNING("failed to select Unicode charmap, text may be garbled");
+        }
         mFTFace = face;
         int flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
                     FT_LOAD_DEFAULT :
@@ -734,7 +746,10 @@ gfxFT2FontList::AppendFacesFromFontFile(nsCString& aFileName,
             if (FT_Err_Ok != FT_New_Face(ftLibrary, aFileName.get(), i, &face)) {
                 continue;
             }
-
+            if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE)) {
+                FT_Done_Face(face);
+                continue;
+            }
             FT2FontEntry* fe =
                 FT2FontEntry::CreateFontEntry(face, aFileName.get(), i);
             if (fe) {
