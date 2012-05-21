@@ -15,9 +15,7 @@ toolbarbutton {
   -moz-box-align: center;
   -moz-box-pack: center;
   margin: 0;
-  border: 1px solid transparent;
   padding: 3px;
-  background-color: transparent;
   color: -moz-DialogText;
 }
 
@@ -40,13 +38,11 @@ toolbarbutton.tabbable {
 }
 
 toolbarbutton:hover {
-  border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
   color: -moz-buttonhovertext;
 }
 
 toolbarbutton:hover:active,
 toolbarbutton[open="true"] {
-  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
   padding-top: 4px;
   padding-bottom: 2px;
   -moz-padding-start: 4px;
@@ -58,27 +54,12 @@ toolbarbutton[disabled="true"],
 toolbarbutton[disabled="true"]:hover,
 toolbarbutton[disabled="true"]:hover:active,
 toolbarbutton[disabled="true"][open="true"] {
-  border-color: transparent;
   padding: 3px;
   color: GrayText;
 }
 
-/* ..... checked state ..... */
-
-toolbarbutton[checked="true"] {
-  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
-  padding-top: 4px !important;
-  padding-bottom: 2px !important;
-  -moz-padding-start: 4px !important;
-  -moz-padding-end: 2px !important;
-  background-image: url("chrome://global/skin/toolbar/Lighten.png");
-  color: ButtonText !important;
-}
-
-toolbarbutton[checked="true"]:hover,
-toolbarbutton[checked="true"]:hover:active {
-  color: -moz-buttonhovertext !important;
-  background-color: -moz-buttonhoverface !important;
+toolbarbutton[checked="true"]:not(:hover) {
+  color: ButtonText;
 }
 
 toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):not([disabled="true"]) {
@@ -92,8 +73,6 @@ toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):
   -moz-appearance: toolbarbutton-dropdown !important;
   list-style-image: none;
   -moz-image-region: auto;
-  border: none !important;
-  background-color: transparent !important;
   padding: 0;
   margin: 0;
 }
@@ -117,7 +96,6 @@ toolbarbutton[type="menu-button"][open="true"],
 toolbarbutton[type="menu-button"][disabled="true"],
 toolbarbutton[type="menu-button"][disabled="true"]:hover,
 toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
-  border-style: none;
   padding: 0 !important;
 }
 
@@ -130,8 +108,6 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {
-  border: none !important;
-  background-color: transparent !important;
   padding: 3px;
   -moz-appearance: toolbarbutton-dropdown !important;
   list-style-image: none;
