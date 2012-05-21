@@ -1041,6 +1041,9 @@ SpecialPowersAPI.prototype = {
     var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
     var uri = this.getDocumentURIObject(document);
     pm.add(uri, "fullscreen", Ci.nsIPermissionManager.ALLOW_ACTION);
+    var obsvc = Cc['@mozilla.org/observer-service;1']
+                   .getService(Ci.nsIObserverService);
+    obsvc.notifyObservers(document, "fullscreen-approved", null);
   },
   
   removeFullscreenAllowed: function(document) {
