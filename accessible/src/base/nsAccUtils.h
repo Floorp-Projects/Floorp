@@ -295,7 +295,7 @@ public:
    * Return true if the given accessible can't have children. Used when exposing
    * to platform accessibility APIs, should the children be pruned off?
    */
-  static bool MustPrune(nsIAccessible *aAccessible);
+  static bool MustPrune(nsAccessible* aAccessible);
 
   /**
    * Search hint enum constants. Used by GetHeaderCellsFor() method.
