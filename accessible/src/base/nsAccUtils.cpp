@@ -461,24 +461,24 @@ nsAccUtils::TextLength(nsAccessible *aAccessible)
 }
 
 bool
-nsAccUtils::MustPrune(nsIAccessible *aAccessible)
+nsAccUtils::MustPrune(nsAccessible* aAccessible)
 { 
-  PRUint32 role = nsAccUtils::Role(aAccessible);
+  roles::Role role = aAccessible->Role();
 
   // We don't prune buttons any more however AT don't expect children inside of
   // button in general, we allow menu buttons to have children to make them
   // accessible.
-  return role == nsIAccessibleRole::ROLE_MENUITEM || 
-    role == nsIAccessibleRole::ROLE_COMBOBOX_OPTION ||
-    role == nsIAccessibleRole::ROLE_OPTION ||
-    role == nsIAccessibleRole::ROLE_ENTRY ||
-    role == nsIAccessibleRole::ROLE_FLAT_EQUATION ||
-    role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
-    role == nsIAccessibleRole::ROLE_TOGGLE_BUTTON ||
-    role == nsIAccessibleRole::ROLE_GRAPHIC ||
-    role == nsIAccessibleRole::ROLE_SLIDER ||
-    role == nsIAccessibleRole::ROLE_PROGRESSBAR ||
-    role == nsIAccessibleRole::ROLE_SEPARATOR;
+  return role == roles::MENUITEM || 
+    role == roles::COMBOBOX_OPTION ||
+    role == roles::OPTION ||
+    role == roles::ENTRY ||
+    role == roles::FLAT_EQUATION ||
+    role == roles::PASSWORD_TEXT ||
+    role == roles::TOGGLE_BUTTON ||
+    role == roles::GRAPHIC ||
+    role == roles::SLIDER ||
+    role == roles::PROGRESSBAR ||
+    role == roles::SEPARATOR;
 }
 
 nsresult
