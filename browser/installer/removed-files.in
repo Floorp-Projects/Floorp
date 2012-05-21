@@ -1179,6 +1179,7 @@ xpicleanup@BIN_SUFFIX@
   components/dom_css.xpt
   components/dom_events.xpt
   components/dom_geolocation.xpt
+  components/dom_devicestorage.xpt
   components/dom_html.xpt
   components/dom_json.xpt
   components/dom_loadsave.xpt
