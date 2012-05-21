@@ -11,10 +11,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = browser_feeds
 LIBRARY_NAME = browser_feeds_s
+
 FORCE_STATIC_LIB = 1
-ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
-endif
 
 DEFINES += \
 	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \

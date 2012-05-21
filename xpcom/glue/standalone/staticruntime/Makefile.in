@@ -1,30 +1,23 @@
-# vim:set ts=8 sw=8 sts=8 noet:
 # This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(srcdir)/../objs.mk
+include $(srcdir)/../../objs.mk
 
-EXTRA_DEPS += $(srcdir)/../objs.mk
-
-# On win we build two glue libs - glue linked to crt dlls here and in staticruntime we build
-# a statically linked glue lib.
-ifeq ($(OS_ARCH),WINNT)
-DIRS += staticruntime
-endif
+EXTRA_DEPS += $(srcdir)/../../objs.mk
 
 MODULE		= xpcom
-LIBRARY_NAME	= xpcomglue
+LIBRARY_NAME	= xpcomglue_staticruntime
 DIST_INSTALL	= 1
 
 LOCAL_INCLUDES	= \
-	-I$(srcdir)/../../build \
+	-I$(srcdir)/../../../build \
 	$(NULL)
 
 ifeq (Darwin,$(OS_ARCH))
@@ -52,20 +45,20 @@ endif
 
 CPPSRCS		= \
 	$(XPCOM_GLUE_SRC_LCPPSRCS)   \
-	nsStringAPI.cpp              \
 	nsXPCOMGlue.cpp              \
+	nsStringAPI.cpp              \
 	$(LINKSRC)                   \
 	$(NULL)
 
-SDK_HEADERS     = \
-	nsXPCOMGlue.h \
-	$(NULL)
-
 SDK_LIBRARY     	= \
-	$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
+	$(LIB_PREFIX)xpcomglue_staticruntime.$(LIB_SUFFIX) \
 	$(NULL)
 
+# create a static lib
 FORCE_STATIC_LIB = 1
+
+# Statically link to the CRT on Windows
+USE_STATIC_LIBS = 1
 
 # Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
 STL_FLAGS	=
@@ -83,10 +76,10 @@ OS_COMPILE_CFLAGS += -Zl
 DEFINES += -D_USE_ANSI_CPP
 endif
 
-export:: $(XPCOM_GLUE_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp
+export:: $(XPCOM_GLUE_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp ../nsXPCOMGlue.cpp ../nsGlueLinking.h ../$(LINKSRC)
 	$(INSTALL) $^ .
 
-GARBAGE += nsStringAPI.cpp
+GARBAGE += nsStringAPI.cpp nsXPCOMGlue.cpp nsGlueLinking.h $(LINKSRC)
 
 DEFINES		+= -DXPCOM_GLUE
 

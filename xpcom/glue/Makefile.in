@@ -15,6 +15,12 @@ EXTRA_DEPS += $(srcdir)/objs.mk
 
 DIRS            = standalone nomozalloc
 
+# On win we build two glue libs - glue linked to crt dlls here and in staticruntime we build
+# a statically linked glue lib.
+ifeq ($(OS_ARCH),WINNT)
+DIRS += staticruntime
+endif
+
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue_s
 DIST_INSTALL	= 1
@@ -109,15 +115,7 @@ SDK_LIBRARY     =                        \
 		$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(NULL)
 
-
-# we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
-
-
-# Pretend we're statically linking the CRT, even though we might not be: this
-# avoids "msvcrp" and assembly dependencies from creeping into the directives
-# for this library on Windows.
-USE_STATIC_LIBS = 1
 
 include $(topsrcdir)/config/rules.mk
 
