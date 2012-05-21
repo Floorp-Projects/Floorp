@@ -18,7 +18,6 @@ MAKEFILES_dom="
   dom/interfaces/canvas/Makefile
   dom/interfaces/core/Makefile
   dom/interfaces/css/Makefile
-  dom/interfaces/devicestorage/Makefile
   dom/interfaces/events/Makefile
   dom/interfaces/geolocation/Makefile
   dom/interfaces/html/Makefile
