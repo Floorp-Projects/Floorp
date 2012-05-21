@@ -530,13 +530,17 @@ JSCompartment::purge()
 void
 JSCompartment::resetGCMallocBytes()
 {
-    gcMallocBytes = gcMaxMallocBytes;
+    gcMallocBytes = ptrdiff_t(gcMaxMallocBytes);
 }
 
 void
 JSCompartment::setGCMaxMallocBytes(size_t value)
 {
-    gcMaxMallocBytes = value;
+    /*
+     * For compatibility treat any value that exceeds PTRDIFF_T_MAX to
+     * mean that value.
+     */
+    gcMaxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
     resetGCMallocBytes();
 }
 
