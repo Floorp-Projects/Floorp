@@ -81,9 +81,7 @@ NS_INTERFACE_MAP_END
 nsresult
 nsHashPropertyBag::Init()
 {
-    // we can only assume that Init will fail only due to OOM.
-    if (!mPropertyHash.Init())
-        return NS_ERROR_OUT_OF_MEMORY;
+    mPropertyHash.Init();
     return NS_OK;
 }
 
@@ -119,9 +117,7 @@ nsHashPropertyBag::SetProperty(const nsAString& name, nsIVariant *value)
 {
     NS_ENSURE_ARG_POINTER(value);
 
-    bool success = mPropertyHash.Put(name, value);
-    if (!success)
-        return NS_ERROR_FAILURE;
+    mPropertyHash.Put(name, value);
 
     return NS_OK;
 }

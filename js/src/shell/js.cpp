@@ -769,110 +769,174 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
-EvaluateWithLocation(JSContext *cx, unsigned argc, jsval *vp)
+class AutoNewContext
 {
-    if (argc != 3) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                             argc > 3 ? JSSMSG_TOO_MANY_ARGS : JSSMSG_NOT_ENOUGH_ARGS,
-                             "evalWithLocation");
-        return false;
+  private:
+    JSContext *oldcx;
+    JSContext *newcx;
+    Maybe<JSAutoSuspendRequest> suspension;
+    Maybe<JSAutoRequest> newRequest;
+
+    AutoNewContext(const AutoNewContext &) MOZ_DELETE;
+
+  public:
+    AutoNewContext() : oldcx(NULL), newcx(NULL) {}
+
+    bool enter(JSContext *cx) {
+        JS_ASSERT(!JS_IsExceptionPending(cx));
+        oldcx = cx;
+        newcx = NewContext(JS_GetRuntime(cx));
+        if (!newcx)
+            return false;
+        JS_SetOptions(newcx, JS_GetOptions(newcx) | JSOPTION_DONT_REPORT_UNCAUGHT);
+        JS_SetGlobalObject(newcx, JS_GetGlobalForScopeChain(cx));
+
+        suspension.construct(cx);
+        newRequest.construct(newcx);
+        return true;
     }
 
-    JSString *code = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
-    if (!code)
-        return false;
-    JS::Anchor<JSString *> a_code(code);
+    JSContext *get() { return newcx; }
 
-    size_t codeLength;
-    const jschar *codeChars = JS_GetStringCharsAndLength(cx, code, &codeLength);
-    if (!codeChars)
-        return false;
-
-    JSString *filename = JS_ValueToString(cx, JS_ARGV(cx, vp)[1]);
-    if (!filename)
-        return false;
-
-    uint32_t lineno;
-    if (!JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[2], &lineno))
-        return false;
-
-    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
-    if (!thisobj)
-        return false;
-
-    if ((JS_GetClass(thisobj)->flags & JSCLASS_IS_GLOBAL) != JSCLASS_IS_GLOBAL) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
-                             "this-value passed to evalWithLocation()", "not a global object");
-        return false;
+    ~AutoNewContext() {
+        if (newcx) {
+            RootedVarValue exc(oldcx);
+            bool throwing = JS_IsExceptionPending(newcx);
+            if (throwing)
+                JS_GetPendingException(newcx, exc.address());
+            newRequest.destroy();
+            suspension.destroy();
+            if (throwing)
+                JS_SetPendingException(oldcx, exc);
+            JS_DestroyContextNoGC(newcx);
+        }
     }
-
-    char *filenameBytes = JS_EncodeString(cx, filename);
-    if (!filenameBytes)
-        return false;
-
-    jsval rval;
-    bool ok = JS_EvaluateUCScript(cx, thisobj, codeChars, codeLength, filenameBytes, lineno, &rval);
-    JS_free(cx, filenameBytes);
-
-    if (!ok)
-        return false;
-
-    JS_SET_RVAL(cx, vp, rval);
-    return true;
-}
-
-static JSBool
-EvaluateCommon(JSContext *cx, unsigned argc, jsval *vp, bool compileAndGo)
-{
-    if (argc != 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                             (argc != 1) ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_INVALID_ARGS,
-                             "evaluate");
-        return false;
-    }
-
-    JSString *code = JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]);
-
-    size_t codeLength;
-    const jschar *codeChars = JS_GetStringCharsAndLength(cx, code, &codeLength);
-    if (!codeChars)
-        return false;
-
-    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
-    if (!thisobj)
-        return false;
-
-    if ((JS_GetClass(thisobj)->flags & JSCLASS_IS_GLOBAL) != JSCLASS_IS_GLOBAL) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
-                             "this-value passed to evaluate()", "not a global object");
-        return false;
-    }
-
-    if (compileAndGo) {
-        // JS_EvaluateUCScript always enables the compile-and-go option.
-        return JS_EvaluateUCScript(cx, thisobj, codeChars, codeLength, "@evaluate", 1, vp);
-    } else {
-        uint32_t saved = JS_GetOptions(cx);
-
-        JS_SetOptions(cx, saved & ~JSOPTION_COMPILE_N_GO);
-        JSScript *script = JS_CompileUCScript(cx, thisobj, codeChars, codeLength, "@evaluate", 1);
-        JS_SetOptions(cx, saved);
-
-        return script && JS_ExecuteScript(cx, thisobj, script, vp);
-    }
-}
+};
 
 static JSBool
 Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 {
-    return EvaluateCommon(cx, argc, vp, true);
-}
+    jsval *argv = JS_ARGV(cx, vp);
 
-static JSBool
-EvaluateNonCompileAndGo(JSContext *cx, unsigned argc, jsval *vp)
-{
-    return EvaluateCommon(cx, argc, vp, false);
+    if (argc < 1 || argc > 2) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                             argc < 1 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
+                             "evaluate");
+        return false;
+    }
+    if (!JSVAL_IS_STRING(argv[0]) || (argc == 2 && JSVAL_IS_PRIMITIVE(argv[1]))) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "evaluate");
+        return false;
+    }
+
+    bool newContext;
+    RootedVarObject global(cx, NULL);
+    bool compileAndGo = true;
+    const char *fileName = "@evaluate";
+    JSAutoByteString fileNameBytes;
+    unsigned lineNumber = 1;
+
+    global = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
+    if (!global)
+        return false;
+
+    if (argc == 2) {
+        RootedVarObject options(cx, JSVAL_TO_OBJECT(argv[1]));
+        jsval v;
+
+        if (!JS_GetProperty(cx, options, "newContext", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            JSBool b;
+            if (!JS_ValueToBoolean(cx, v, &b))
+                return false;
+            newContext = !!b;
+        }
+
+        if (!JS_GetProperty(cx, options, "compileAndGo", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            JSBool b;
+            if (!JS_ValueToBoolean(cx, v, &b))
+                return false;
+            compileAndGo = !!b;
+        }
+
+        if (!JS_GetProperty(cx, options, "fileName", &v))
+            return false;
+        if (JSVAL_IS_NULL(v)) {
+            fileName = NULL;
+        } else if (!JSVAL_IS_VOID(v)) {
+            JSString *s = JS_ValueToString(cx, v);
+            if (!s)
+                return false;
+            fileName = fileNameBytes.encode(cx, s);
+            if (!fileName)
+                return false;
+        }
+
+        if (!JS_GetProperty(cx, options, "lineNumber", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            uint32_t u;
+            if (!JS_ValueToECMAUint32(cx, v, &u))
+                return false;
+            lineNumber = u;
+        }
+
+        if (!JS_GetProperty(cx, options, "global", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            global = JSVAL_IS_PRIMITIVE(v) ? NULL : JSVAL_TO_OBJECT(v);
+            if (global) {
+                global = JS_UnwrapObject(global);
+                if (!global)
+                    return false;
+            }
+            if (!global || !(JS_GetClass(global)->flags & JSCLASS_IS_GLOBAL)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                                     "\"global\" passed to evaluate()", "not a global object");
+                return false;
+            }
+        }
+    }
+
+    RootedVarString code(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+
+    size_t codeLength;
+    const jschar *codeChars = JS_GetStringCharsAndLength(cx, code, &codeLength);
+    if (!codeChars)
+        return false;
+
+    AutoNewContext ancx;
+    if (newContext) {
+        if (!ancx.enter(cx))
+            return false;
+        cx = ancx.get();
+    }
+
+    {
+        JSAutoEnterCompartment aec;
+        if (!aec.enter(cx, global))
+            return false;
+
+        if (compileAndGo) {
+            // JS_EvaluateUCScript always enables the compile-and-go option.
+            if (!JS_EvaluateUCScript(cx, global, codeChars, codeLength, fileName, lineNumber, vp))
+                return false;
+        } else {
+            uint32_t saved = JS_GetOptions(cx);
+
+            JS_SetOptions(cx, saved & ~JSOPTION_COMPILE_N_GO);
+            JSScript *script = JS_CompileUCScript(cx, global, codeChars, codeLength, fileName, lineNumber);
+            JS_SetOptions(cx, saved);
+
+            if (!script || !JS_ExecuteScript(cx, global, script, vp))
+                return false;
+        }
+    }
+
+    return JS_WrapValue(cx, vp);
 }
 
 static JSString *
@@ -2499,10 +2563,8 @@ typedef struct ComplexObject {
 } ComplexObject;
 
 static JSBool
-sandbox_enumerate(JSContext *cx, JSObject *obj_)
+sandbox_enumerate(JSContext *cx, HandleObject obj)
 {
-    RootedVarObject obj(cx, obj_);
-
     jsval v;
     JSBool b;
 
@@ -2514,12 +2576,9 @@ sandbox_enumerate(JSContext *cx, JSObject *obj_)
 }
 
 static JSBool
-sandbox_resolve(JSContext *cx, JSObject *obj_, jsid id_, unsigned flags,
+sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                 JSObject **objp)
 {
-    RootedVarObject obj(cx, obj_);
-    RootedVarId id(cx, id_);
-
     jsval v;
     JSBool b, resolved;
 
@@ -2577,8 +2636,8 @@ static JSBool
 EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSString *str;
-    JSObject *sobj = NULL;
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S / o", &str, &sobj))
+    RootedVarObject sobj(cx);
+    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S / o", &str, sobj.address()))
         return false;
 
     size_t srclen;
@@ -2622,7 +2681,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
                 return false;
         }
 
-        OBJ_TO_INNER_OBJECT(cx, sobj);
+        sobj = GetInnerObject(cx, sobj);
         if (!sobj)
             return false;
         if (!(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
@@ -2715,15 +2774,13 @@ ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
  * non-native referent may be simplified to data properties.
  */
 static JSBool
-CopyProperty(JSContext *cx, JSObject *obj_, JSObject *referent, jsid id,
+CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id,
              unsigned lookupFlags, JSObject **objp)
 {
     JSProperty *prop;
     PropertyDescriptor desc;
     unsigned propFlags = 0;
     JSObject *obj2;
-
-    RootedVarObject obj(cx, obj_);
 
     *objp = NULL;
     if (referent->isNative()) {
@@ -2775,23 +2832,23 @@ CopyProperty(JSContext *cx, JSObject *obj_, JSObject *referent, jsid id,
 }
 
 static JSBool
-resolver_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSObject **objp)
+resolver_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags, JSObject **objp)
 {
     jsval v = JS_GetReservedSlot(obj, 0);
-    return CopyProperty(cx, obj, JSVAL_TO_OBJECT(v), id, flags, objp);
+    return CopyProperty(cx, obj, RootedVarObject(cx, JSVAL_TO_OBJECT(v)), id, flags, objp);
 }
 
 static JSBool
-resolver_enumerate(JSContext *cx, JSObject *obj)
+resolver_enumerate(JSContext *cx, HandleObject obj)
 {
     jsval v = JS_GetReservedSlot(obj, 0);
-    JSObject *referent = JSVAL_TO_OBJECT(v);
+    RootedVarObject referent(cx, JSVAL_TO_OBJECT(v));
 
     AutoIdArray ida(cx, JS_Enumerate(cx, referent));
     bool ok = !!ida;
     JSObject *ignore;
     for (size_t i = 0; ok && i < ida.length(); i++)
-        ok = CopyProperty(cx, obj, referent, ida[i], JSRESOLVE_QUALIFIED, &ignore);
+        ok = CopyProperty(cx, obj, referent, RootedVarId(cx, ida[i]), JSRESOLVE_QUALIFIED, &ignore);
     return ok;
 }
 
@@ -3147,7 +3204,7 @@ Parent(JSContext *cx, unsigned argc, jsval *vp)
     /* Outerize if necessary.  Embrace the ugliness! */
     if (parent) {
         if (JSObjectOp op = parent->getClass()->ext.outerObject)
-            *vp = OBJECT_TO_JSVAL(op(cx, parent));
+            *vp = OBJECT_TO_JSVAL(op(cx, RootedVarObject(cx, parent)));
     }
 
     return JS_TRUE;
@@ -3502,17 +3559,15 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "load(['foo.js' ...])",
 "  Load files named by string arguments."),
 
-    JS_FN_HELP("evaluate", Evaluate, 1, 0,
-"evaluate(code)",
-"  Evaluate code as though it were the contents of a file."),
-
-    JS_FN_HELP("evaluateNonCompileAndGo", EvaluateNonCompileAndGo, 1, 0,
-"evaluateNonCompileAndGo(code)",
-"  Evaluate code like evaluate() but with compile-and-go turned off."),
-
-    JS_FN_HELP("evalWithLocation", EvaluateWithLocation, 3, 0,
-"evalWithLocation(code, filename, lineno)",
-"  Eval code as if loaded from the given filename and line number."),
+    JS_FN_HELP("evaluate", Evaluate, 2, 0,
+"evaluate(code[, options])",
+"  Evaluate code as though it were the contents of a file.\n"
+"  options is an optional object that may have these properties:\n"
+"      compileAndGo: use the compile-and-go compiler option (default: true)\n"
+"      fileName: filename for error messages and debug info\n"
+"      lineNumber: starting line number for error messages and debug info\n"
+"      global: global in which to execute the code\n"
+"      newContext: if true, create and use a new cx (default: false)\n"),
 
     JS_FN_HELP("run", Run, 1, 0,
 "run('foo.js')",
@@ -3879,10 +3934,10 @@ enum its_tinyid {
 };
 
 static JSBool
-its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+its_getter(JSContext *cx, HandleObject obj, HandleId id, jsval *vp);
 
 static JSBool
-its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
+its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp);
 
 static JSBool
 its_get_customNative(JSContext *cx, unsigned argc, jsval *vp);
@@ -3912,7 +3967,7 @@ static JSBool its_noisy;    /* whether to be noisy when finalizing it */
 static JSBool its_enum_fail;/* whether to fail when enumerating it */
 
 static JSBool
-its_addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+its_addProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
 {
     if (!its_noisy)
         return JS_TRUE;
@@ -3925,7 +3980,7 @@ its_addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-its_delProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+its_delProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
 {
     if (!its_noisy)
         return JS_TRUE;
@@ -3938,7 +3993,7 @@ its_delProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+its_getProperty(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
 {
     if (!its_noisy)
         return JS_TRUE;
@@ -3951,7 +4006,7 @@ its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-its_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
+its_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp)
 {
     IdStringifier idString(cx, id);
     if (its_noisy) {
@@ -3976,7 +4031,7 @@ its_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
  * see class flags.
  */
 static JSBool
-its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+its_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
               jsval *statep, jsid *idp)
 {
     JSObject *iterator;
@@ -4020,7 +4075,7 @@ its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 static JSBool
-its_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+its_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             JSObject **objp)
 {
     if (its_noisy) {
@@ -4035,7 +4090,7 @@ its_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
 }
 
 static JSBool
-its_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
+its_convert(JSContext *cx, HandleObject obj, JSType type, jsval *vp)
 {
     if (its_noisy)
         fprintf(gOutFile, "converting it to %s type\n", JS_GetTypeName(cx, type));
@@ -4064,7 +4119,7 @@ static JSClass its_class = {
 };
 
 static JSBool
-its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+its_getter(JSContext *cx, HandleObject obj, HandleId id, jsval *vp)
 {
     if (JS_GetClass(obj) == &its_class) {
         jsval *val = (jsval *) JS_GetPrivate(obj);
@@ -4077,7 +4132,7 @@ its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
+its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp)
 {
     if (JS_GetClass(obj) != &its_class)
         return JS_TRUE;
@@ -4322,7 +4377,7 @@ Exec(JSContext *cx, unsigned argc, jsval *vp)
 #endif
 
 static JSBool
-global_enumerate(JSContext *cx, JSObject *obj)
+global_enumerate(JSContext *cx, HandleObject obj)
 {
 #ifdef LAZY_STANDARD_CLASSES
     return JS_EnumerateStandardClasses(cx, obj);
@@ -4332,11 +4387,9 @@ global_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-global_resolve(JSContext *cx, JSObject *obj_, jsid id, unsigned flags,
+global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                JSObject **objp)
 {
-    RootedVarObject obj(cx, obj_);
-
 #ifdef LAZY_STANDARD_CLASSES
     JSBool resolved;
 
@@ -4411,7 +4464,7 @@ JSClass global_class = {
 };
 
 static JSBool
-env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
+env_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, jsval *vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_OS2 && !defined SOLARIS
@@ -4455,7 +4508,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 }
 
 static JSBool
-env_enumerate(JSContext *cx, JSObject *obj)
+env_enumerate(JSContext *cx, HandleObject obj)
 {
     static JSBool reflected;
     char **evp, *name, *value;
@@ -4487,7 +4540,7 @@ env_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-env_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             JSObject **objp)
 {
     JSString *valstr;
@@ -4850,7 +4903,7 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
 JSPrincipals shellTrustedPrincipals = { 1 };
 
 JSBool
-CheckObjectAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode, jsval *vp)
+CheckObjectAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mode, jsval *vp)
 {
     return true;
 }

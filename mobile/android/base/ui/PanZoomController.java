@@ -813,19 +813,37 @@ public class PanZoomController
 
         float focusX = viewport.width() / 2.0f;
         float focusY = viewport.height() / 2.0f;
+
         float minZoomFactor = 0.0f;
-        if (viewport.width() > pageSize.width && pageSize.width > 0) {
-            float scaleFactor = viewport.width() / pageSize.width;
-            minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
-            focusX = 0.0f;
-        }
-        if (viewport.height() > pageSize.height && pageSize.height > 0) {
-            float scaleFactor = viewport.height() / pageSize.height;
-            minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
-            focusY = 0.0f;
+        float maxZoomFactor = MAX_ZOOM;
+
+        if (mController.getMinZoom() > 0)
+            minZoomFactor = mController.getMinZoom();
+        if (mController.getMaxZoom() > 0)
+            maxZoomFactor = mController.getMaxZoom();
+
+        if (!mController.getAllowZoom()) {
+            // If allowZoom is false, clamp to the default zoom level.
+            maxZoomFactor = minZoomFactor = mController.getDefaultZoom();
         }
 
-        if (!FloatUtils.fuzzyEquals(minZoomFactor, 0.0f)) {
+        // Ensure minZoomFactor keeps the page at least as big as the viewport.
+        if (pageSize.width > 0) {
+            float scaleFactor = viewport.width() / pageSize.width;
+            minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
+            if (viewport.width() > pageSize.width)
+                focusX = 0.0f;
+        }
+        if (pageSize.height > 0) {
+            float scaleFactor = viewport.height() / pageSize.height;
+            minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
+            if (viewport.height() > pageSize.height)
+                focusY = 0.0f;
+        }
+
+        maxZoomFactor = Math.max(maxZoomFactor, minZoomFactor);
+
+        if (zoomFactor < minZoomFactor) {
             // if one (or both) of the page dimensions is smaller than the viewport,
             // zoom using the top/left as the focus on that axis. this prevents the
             // scenario where, if both dimensions are smaller than the viewport, but
@@ -833,9 +851,9 @@ public class PanZoomController
             // after applying the scale
             PointF center = new PointF(focusX, focusY);
             viewportMetrics.scaleTo(minZoomFactor, center);
-        } else if (zoomFactor > MAX_ZOOM) {
+        } else if (zoomFactor > maxZoomFactor) {
             PointF center = new PointF(viewport.width() / 2.0f, viewport.height() / 2.0f);
-            viewportMetrics.scaleTo(MAX_ZOOM, center);
+            viewportMetrics.scaleTo(maxZoomFactor, center);
         }
 
         /* Now we pan to the right origin. */
@@ -875,6 +893,9 @@ public class PanZoomController
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return false;
 
+        if (!mController.getAllowZoom())
+            return false;
+
         mState = PanZoomState.PINCHING;
         mLastZoomFocus = new PointF(detector.getFocusX(), detector.getFocusY());
         cancelTouch();
@@ -912,13 +933,31 @@ public class PanZoomController
 
         synchronized (mController) {
             float newZoomFactor = mController.getZoomFactor() * spanRatio;
-            if (newZoomFactor >= MAX_ZOOM) {
-                // apply resistance when zooming past MAX_ZOOM,
-                // such that it asymptotically reaches MAX_ZOOM + 1.0
+            float minZoomFactor = 0.0f;
+            float maxZoomFactor = MAX_ZOOM;
+
+            if (mController.getMinZoom() > 0)
+                minZoomFactor = mController.getMinZoom();
+            if (mController.getMaxZoom() > 0)
+                maxZoomFactor = mController.getMaxZoom();
+
+            if (newZoomFactor < minZoomFactor) {
+                // apply resistance when zooming past minZoomFactor,
+                // such that it asymptotically reaches minZoomFactor / 2.0
                 // but never exceeds that
-                float excessZoom = newZoomFactor - MAX_ZOOM;
+                final float rate = 0.5f; // controls how quickly we approach the limit
+                float excessZoom = minZoomFactor - newZoomFactor;
+                excessZoom = 1.0f - (float)Math.exp(-excessZoom * rate);
+                newZoomFactor = minZoomFactor * (1.0f - excessZoom / 2.0f);
+            }
+
+            if (newZoomFactor > maxZoomFactor) {
+                // apply resistance when zooming past maxZoomFactor,
+                // such that it asymptotically reaches maxZoomFactor + 1.0
+                // but never exceeds that
+                float excessZoom = newZoomFactor - maxZoomFactor;
                 excessZoom = 1.0f - (float)Math.exp(-excessZoom);
-                newZoomFactor = MAX_ZOOM + excessZoom;
+                newZoomFactor = maxZoomFactor + excessZoom;
             }
 
             mController.scrollBy(new PointF(mLastZoomFocus.x - detector.getFocusX(),
@@ -985,13 +1024,27 @@ public class PanZoomController
     }
 
     @Override
+    public boolean onSingleTapUp(MotionEvent motionEvent) {
+        // When zooming is enabled, wait to see if there's a double-tap.
+        if (mController.getAllowZoom())
+            return false;
+        sendPointToGecko("Gesture:SingleTap", motionEvent);
+        return true;
+    }
+
+    @Override
     public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
+        // When zooming is disabled, we handle this in onSingleTapUp.
+        if (!mController.getAllowZoom())
+            return false;
         sendPointToGecko("Gesture:SingleTap", motionEvent);
         return true;
     }
 
     @Override
     public boolean onDoubleTap(MotionEvent motionEvent) {
+        if (!mController.getAllowZoom())
+            return false;
         sendPointToGecko("Gesture:DoubleTap", motionEvent);
         return true;
     }

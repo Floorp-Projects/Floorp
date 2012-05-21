@@ -61,6 +61,8 @@
 #include "nsStyleConsts.h"
 #include "nsNativeThemeColors.h"
 #include "nsChildView.h"
+#include "nsCocoaFeatures.h"
+#include "nsIScreenManager.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"
@@ -1039,8 +1041,23 @@ NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(bool aAllowSlop,
     return NS_OK;
   }
 
-  nsIntRect screenBounds(
-    nsCocoaUtils::CocoaRectToGeckoRect([[mWindow screen] visibleFrame]));
+  nsIntRect screenBounds;
+
+  nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
+  if (screenMgr) {
+    nsCOMPtr<nsIScreen> screen;
+    PRInt32 width, height;
+
+    // zero size rects confuse the screen manager
+    width = mBounds.width > 0 ? mBounds.width : 1;
+    height = mBounds.height > 0 ? mBounds.height : 1;
+    screenMgr->ScreenForRect(*aX, *aY, width, height, getter_AddRefs(screen));
+
+    if (screen) {
+      screen->GetRect(&(screenBounds.x), &(screenBounds.y),
+                      &(screenBounds.width), &(screenBounds.height));
+    }
+  }
 
   if (aAllowSlop) {
     if (*aX < screenBounds.x - mBounds.width + kWindowPositionSlop) {
@@ -2384,7 +2401,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   // We work around this problem by only returning AXChildren that are
   // mozAccessible object or are one of the titlebar's buttons (which
   // instantiate subclasses of NSButtonCell).
-  if (nsToolkit::OnLionOrLater() && [retval isKindOfClass:[NSArray class]] &&
+  if (nsCocoaFeatures::OnLionOrLater() && [retval isKindOfClass:[NSArray class]] &&
       [attribute isEqualToString:@"AXChildren"]) {
     NSMutableArray *holder = [NSMutableArray arrayWithCapacity:10];
     [holder addObjectsFromArray:(NSArray *)retval];
@@ -2689,7 +2706,7 @@ DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
             nil],
           nil);
 
-  if (nsToolkit::OnLionOrLater()) {
+  if (nsCocoaFeatures::OnLionOrLater()) {
     // On Lion the call to CUIDraw doesn't draw the top pixel strip at some
     // window widths. We don't want to have a flickering transparent line, so
     // we overdraw it.

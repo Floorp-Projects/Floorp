@@ -8,6 +8,8 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <script type="application/javascript"
           src="../common.js"></script>
@@ -15,18 +17,52 @@
           src="../role.js"></script>
   <script type="application/javascript"
           src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
 
   <script type="application/javascript">
     function doTest()
     {
-      testStates("link1", STATE_LINKED);
-      testStates("link2", STATE_LINKED);
-      testStates("link3", STATE_LINKED);
-      testStates("link4", STATE_LINKED);
-      testStates("link5", 0, 0, STATE_LINKED);
+      // a@href and its text node
+      testStates("link_href", STATE_LINKED);
+      testStates(getAccessible("link_href").firstChild, STATE_LINKED);
 
-      SimpleTest.finish();
+      // a@onclick
+      testStates("link_click", STATE_LINKED);
+
+      // a@onmousedown
+      testStates("link_mousedown", STATE_LINKED);
+
+      // a@onmouseup
+      testStates("link_mouseup", STATE_LINKED);
+
+      // a@role="link"
+      testStates("link_arialink", STATE_LINKED);
+
+      // a@role="button"
+      testStates("link_ariabutton", 0, 0, STATE_LINKED);
+
+      // a (no @href, no click event listener)
+      testStates("link_notlink", 0, 0, STATE_LINKED);
+
+      // a: traversal state
+      testStates("link_traversed", 0, 0, STATE_TRAVERSED);
+      registerA11yEventListener(EVENT_DOCUMENT_LOAD_COMPLETE,
+                                traversedLinkTester);
+
+      synthesizeMouse(getNode("link_traversed"), 1, 1, { shiftKey: true });
     }
+
+    var traversedLinkTester = {
+      handleEvent: function traversedLinkTester_handleEvent(aEvent) {
+        unregisterA11yEventListener(EVENT_DOCUMENT_LOAD_COMPLETE,
+                                    traversedLinkTester);
+        aEvent.accessible.rootDocument.window.close();
+
+        testStates("link_traversed", STATE_TRAVERSED);
+        SimpleTest.finish();
+      }
+    };
 
     SimpleTest.waitForExplicitFinish();
     addA11yLoadEvent(doTest);
@@ -41,16 +77,25 @@
      title="Expose click action if mouseup and mousedown are registered">
     Mozilla Bug 423409
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=754830"
+     title="Calculate link states separately">
+    Mozilla Bug 754830
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
-  <a id="link1" href="http://mozilla.org">link</a>
-  <a id="link2" onclick="">link</a>
-  <a id="link3" onmousedown="">link</a>
-  <a id="link4" onmouseup="">link</a>
-  <a id="link5">not link</a>
+  <a id="link_href" href="http://mozilla.org">link</a>
+  <a id="link_click" onclick="">link</a>
+  <a id="link_mousedown" onmousedown="">link</a>
+  <a id="link_mouseup" onmouseup="">link</a>
+  <a id="link_arialink" role="link">aria link</a>
+  <a id="link_ariabutton" role="button">aria button</a>
+  <a id="link_notlink">not link</a>
+
+  <a id="link_traversed" href="http://www.example.com" target="_top">example.com</a>
 
 </body>
 </html>

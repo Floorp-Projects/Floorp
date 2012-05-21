@@ -53,7 +53,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj);
 
 namespace js {
 
-/* 
+/*
  * |res| may be null if the |RegExpStatics| are not to be updated.
  * |input| may be null if there is no |JSString| corresponding to
  * |chars| and |length|.

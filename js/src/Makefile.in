@@ -71,7 +71,7 @@ LIBRARY_NAME	    = mozjs
 STATIC_LIBRARY_NAME = js_static
 GRE_MODULE	    = 1
 
-LIBS		= $(NSPR_LIBS) 
+LIBS		= $(NSPR_LIBS)
 
 ifeq ($(OS_ARCH),WINNT)
 NO_PROFILE_GUIDED_OPTIMIZE = 1
@@ -639,7 +639,7 @@ check-jstests:
 #   Bug 652154: On Windows, SM(!m !t) don't work because of path problems with
 #				their unusual directory layout
 #
-#   Bug 652155: On Mac, SM(d) doesn't work for unknown reasons 
+#   Bug 652155: On Mac, SM(d) doesn't work for unknown reasons
 
 ifeq ($(OS_ARCH),WINNT)
 ifdef ENABLE_METHODJIT
@@ -767,7 +767,7 @@ endif
 # - EXTRA_DSO_LDOPTS includes the NSPR -L and -l flags.
 # - OS_LIBS includes libraries selected by the configure script.
 # - EXTRA_LIBS includes libraries selected by this Makefile.
-JS_CONFIG_LIBS=$(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) 
+JS_CONFIG_LIBS=$(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS)
 
 # The configure script invokes this rule explicitly at configure time!
 # It's important that js-config be ready by the time we're done

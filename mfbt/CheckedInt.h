@@ -210,31 +210,30 @@ struct PositionOfSignBit
 template<typename IntegerType>
 struct MinValue
 {
-    static IntegerType value()
-    {
-      // Bitwise ops may return a larger type, that's why we cast explicitly.
-      // In C++, left bit shifts on signed values is undefined by the standard
-      // unless the shifted value is representable.
-      // Notice that signed-to-unsigned conversions are always well-defined in
-      // the standard as the value congruent to 2**n, as expected. By contrast,
-      // unsigned-to-signed is only well-defined if the value is representable.
-      return IsSigned<IntegerType>::value
-             ? IntegerType(typename UnsignedType<IntegerType>::Type(1)
-                             << PositionOfSignBit<IntegerType>::value)
-             : IntegerType(0);
-    }
+  private:
+    typedef typename UnsignedType<IntegerType>::Type UnsignedIntegerType;
+    static const size_t PosOfSignBit = PositionOfSignBit<IntegerType>::value;
+
+  public:
+    // Bitwise ops may return a larger type, that's why we cast explicitly.
+    // In C++, left bit shifts on signed values is undefined by the standard
+    // unless the shifted value is representable.
+    // Notice that signed-to-unsigned conversions are always well-defined in
+    // the standard as the value congruent to 2**n, as expected. By contrast,
+    // unsigned-to-signed is only well-defined if the value is representable.
+    static const IntegerType value =
+        IsSigned<IntegerType>::value
+        ? IntegerType(UnsignedIntegerType(1) << PosOfSignBit)
+        : IntegerType(0);
 };
 
 template<typename IntegerType>
 struct MaxValue
 {
-    static IntegerType value()
-    {
-      // Tricksy, but covered by the unit test.
-      // Relies heavily on the return type of MinValue<IntegerType>::value()
-      // being IntegerType.
-      return ~MinValue<IntegerType>::value();
-    }
+    // Tricksy, but covered by the unit test.
+    // Relies heavily on the type of MinValue<IntegerType>::value
+    // being IntegerType.
+    static const IntegerType value = ~MinValue<IntegerType>::value;
 };
 
 /*
@@ -278,8 +277,7 @@ struct IsInRangeImpl<T, U, true, true>
 {
     static bool run(U x)
     {
-      return x <= MaxValue<T>::value() &&
-             x >= MinValue<T>::value();
+      return x <= MaxValue<T>::value && x >= MinValue<T>::value;
     }
 };
 
@@ -288,7 +286,7 @@ struct IsInRangeImpl<T, U, false, false>
 {
     static bool run(U x)
     {
-      return x <= MaxValue<T>::value();
+      return x <= MaxValue<T>::value;
     }
 };
 
@@ -297,9 +295,7 @@ struct IsInRangeImpl<T, U, true, false>
 {
     static bool run(U x)
     {
-      return sizeof(T) > sizeof(U)
-             ? true
-             : x <= U(MaxValue<T>::value());
+      return sizeof(T) > sizeof(U) || x <= U(MaxValue<T>::value);
     }
 };
 
@@ -310,7 +306,7 @@ struct IsInRangeImpl<T, U, false, true>
     {
       return sizeof(T) >= sizeof(U)
              ? x >= 0
-             : x >= 0 && x <= U(MaxValue<T>::value());
+             : x >= 0 && x <= U(MaxValue<T>::value);
     }
 };
 
@@ -366,8 +362,8 @@ struct IsMulValidImpl<T, true, false>
 {
     static bool run(T x, T y)
     {
-      const T max = MaxValue<T>::value();
-      const T min = MinValue<T>::value();
+      const T max = MaxValue<T>::value;
+      const T min = MinValue<T>::value;
 
       if (x == 0 || y == 0)
         return true;
@@ -390,8 +386,7 @@ struct IsMulValidImpl<T, false, false>
 {
     static bool run(T x, T y)
     {
-      return y == 0 ||
-             x <= MaxValue<T>::value() / y;
+      return y == 0 ||  x <= MaxValue<T>::value / y;
     }
 };
 
@@ -407,9 +402,8 @@ inline bool
 IsDivValid(T x, T y)
 {
   // Keep in mind that in the signed case, min/-1 is invalid because abs(min)>max.
-  return IsSigned<T>::value
-         ? (y != 0) && (x != MinValue<T>::value() || y != T(-1))
-         : y != 0;
+  return y != 0 &&
+         !(IsSigned<T>::value && x == MinValue<T>::value && y == T(-1));
 }
 
 // This is just to shut up msvc warnings about negating unsigned ints.

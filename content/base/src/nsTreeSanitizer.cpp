@@ -628,12 +628,13 @@ nsIAtom** const kAttributesSVG[] = {
   // v-ideographic
   // v-mathematical
   &nsGkAtoms::values, // values
+  &nsGkAtoms::vector_effect, // vector-effect
   // vert-adv-y
   // vert-origin-x
   // vert-origin-y
   &nsGkAtoms::viewBox, // viewBox
+  &nsGkAtoms::viewTarget, // viewTarget
   &nsGkAtoms::visibility, // visibility
-  // viewTarget
   &nsGkAtoms::width, // width
   // widths
   &nsGkAtoms::word_spacing, // word-spacing

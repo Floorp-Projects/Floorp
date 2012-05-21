@@ -68,3 +68,12 @@ foreignObject {
   -moz-transform: translate(0) !important;
   text-indent: 0;
 }
+
+/* Set |transform-origin:0% 0%;| for all SVG elements except outer-<svg>,
+   noting that 'svg' as a child of 'foreignObject' counts as outer-<svg>.
+*/
+*:not(svg),
+*:not(foreignObject) > svg {
+  -moz-transform-origin:0 0;
+}
+

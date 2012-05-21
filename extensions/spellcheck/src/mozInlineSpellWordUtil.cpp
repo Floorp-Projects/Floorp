@@ -761,7 +761,7 @@ enum CharClass {
   CHAR_CLASS_END_OF_INPUT };
 
 // Encapsulates DOM-word to real-word splitting
-struct WordSplitState
+struct NS_STACK_CLASS WordSplitState
 {
   mozInlineSpellWordUtil*    mWordUtil;
   const nsDependentSubstring mDOMWordText;
@@ -782,9 +782,9 @@ struct WordSplitState
   // current position, and returns their length, or 0 if not found. This allows
   // arbitrary word breaking rules to be used for these special entities, as
   // long as they can not contain whitespace.
-  PRInt32 FindSpecialWord();
+  bool IsSpecialWord();
 
-  // Similar to FindSpecialWord except that this takes a split word as
+  // Similar to IsSpecialWord except that this takes a split word as
   // input. This checks for things that do not require special word-breaking
   // rules.
   bool ShouldSkipWord(PRInt32 aStart, PRInt32 aLength);
@@ -912,21 +912,16 @@ WordSplitState::AdvanceThroughWord()
 }
 
 
-// WordSplitState::FindSpecialWord
+// WordSplitState::IsSpecialWord
 
-PRInt32
-WordSplitState::FindSpecialWord()
+bool
+WordSplitState::IsSpecialWord()
 {
-  PRInt32 i;
-
   // Search for email addresses. We simply define these as any sequence of
   // characters with an '@' character in the middle. The DOM word is already
   // split on whitepace, so we know that everything to the end is the address
-  //
-  // Also look for periods, this tells us if we want to run the URL finder.
-  bool foundDot = false;
   PRInt32 firstColon = -1;
-  for (i = mDOMWordOffset;
+  for (PRInt32 i = mDOMWordOffset;
        i < PRInt32(mDOMWordText.Length()); i ++) {
     if (mDOMWordText[i] == '@') {
       // only accept this if there are unambiguous word characters (don't bother
@@ -941,23 +936,19 @@ WordSplitState::FindSpecialWord()
       // current position for potentially removing a spelling range.
       if (i > 0 && ClassifyCharacter(i - 1, false) == CHAR_CLASS_WORD &&
           i < (PRInt32)mDOMWordText.Length() - 1 &&
-          ClassifyCharacter(i + 1, false) == CHAR_CLASS_WORD)
-
-      return mDOMWordText.Length() - mDOMWordOffset;
-    } else if (mDOMWordText[i] == '.' && ! foundDot &&
-        i > 0 && i < (PRInt32)mDOMWordText.Length() - 1) {
-      // we found a period not at the end, we should check harder for URLs
-      foundDot = true;
+          ClassifyCharacter(i + 1, false) == CHAR_CLASS_WORD) {
+        return true;
+      }
     } else if (mDOMWordText[i] == ':' && firstColon < 0) {
       firstColon = i;
-    }
-  }
 
-  // If the first colon is followed by a slash, consider it a URL
-  // This will catch things like asdf://foo.com
-  if (firstColon >= 0 && firstColon < (PRInt32)mDOMWordText.Length() - 1 &&
-      mDOMWordText[firstColon + 1] == '/') {
-    return mDOMWordText.Length() - mDOMWordOffset;
+      // If the first colon is followed by a slash, consider it a URL
+      // This will catch things like asdf://foo.com
+      if (firstColon < (PRInt32)mDOMWordText.Length() - 1 &&
+          mDOMWordText[firstColon + 1] == '/') {
+        return true;
+      }
+    }
   }
 
   // Check the text before the first colon against some known protocols. It
@@ -974,12 +965,12 @@ WordSplitState::FindSpecialWord()
         protocol.EqualsIgnoreCase("javascript") ||
         protocol.EqualsIgnoreCase("data") ||
         protocol.EqualsIgnoreCase("ftp")) {
-      return mDOMWordText.Length() - mDOMWordOffset;
+      return true;
     }
   }
 
   // not anything special
-  return -1;
+  return false;
 }
 
 // WordSplitState::ShouldSkipWord
@@ -1009,24 +1000,20 @@ mozInlineSpellWordUtil::SplitDOMWord(PRInt32 aStart, PRInt32 aEnd)
   WordSplitState state(this, mSoftText, aStart, aEnd - aStart);
   state.mCurCharClass = state.ClassifyCharacter(0, true);
 
+  state.AdvanceThroughSeparators();
+  if (state.mCurCharClass != CHAR_CLASS_END_OF_INPUT &&
+      state.IsSpecialWord()) {
+    PRInt32 specialWordLength = state.mDOMWordText.Length() - state.mDOMWordOffset;
+    mRealWords.AppendElement(
+        RealWord(aStart + state.mDOMWordOffset, specialWordLength, false));
+
+    return;
+  }
+
   while (state.mCurCharClass != CHAR_CLASS_END_OF_INPUT) {
     state.AdvanceThroughSeparators();
     if (state.mCurCharClass == CHAR_CLASS_END_OF_INPUT)
       break;
-
-    PRInt32 specialWordLength = state.FindSpecialWord();
-    if (specialWordLength > 0) {
-      mRealWords.AppendElement(
-        RealWord(aStart + state.mDOMWordOffset, specialWordLength, false));
-
-      // skip the special word
-      state.mDOMWordOffset += specialWordLength;
-      if (state.mDOMWordOffset + aStart >= aEnd)
-        state.mCurCharClass = CHAR_CLASS_END_OF_INPUT;
-      else
-        state.mCurCharClass = state.ClassifyCharacter(state.mDOMWordOffset, true);
-      continue;
-    }
 
     // save the beginning of the word
     PRInt32 wordOffset = state.mDOMWordOffset;

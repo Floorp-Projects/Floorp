@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.33 $ $Date: 2010/04/03 18:27:32 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.33.6.1 $ $Date: 2012/05/17 21:40:54 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -364,8 +364,8 @@ nssPKIObject_GetNicknameForToken (
 	if ((!tokenOpt && object->instances[i]->label) ||
 	    (object->instances[i]->token == tokenOpt)) 
 	{
-            /* XXX should be copy? safe as long as caller has reference */
-	    nickname = object->instances[i]->label; 
+            /* Must copy, see bug 745548 */
+	    nickname = nssUTF8_Duplicate(object->instances[i]->label, NULL);
 	    break;
 	}
     }

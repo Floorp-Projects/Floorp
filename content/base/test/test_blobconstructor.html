@@ -137,6 +137,17 @@ let testData =
                              {start: 8, length:10, contents:  "IJKLMNOPsq"},
                              {start: 17, length: 3, contents: "qui"},
                              {start: 4, length: 8, contents:  "EFGHIJKL"}]],
+    // Test an ArrayBufferView
+    [[int8View, blob1, "foo"], {},
+                            [{start: 0, length: 8, contents:  "ABCDEFGH"},
+                             {start: 8, length:10, contents:  "IJKLMNOPsq"},
+                             {start: 17, length: 3, contents: "qui"},
+                             {start: 4, length: 8, contents:  "EFGHIJKL"}]],
+    // Test a partial ArrayBufferView
+    [[new Uint8Array(aB, 3, 5), blob1, "foo"], {},
+                            [{start: 0, length: 8, contents:  "DEFGHsqu"},
+                             {start: 8, length:10, contents:  "igglefoo"},
+                             {start: 4, length: 8, contents:  "Hsquiggl"}]],
     // Test transparent line endings
     [["foo\r\n", "bar\r", "baz\n"], { endings: "transparent" },
                             [{start: 0, length: 5, contents:  "foo\r\n"},
@@ -157,7 +168,11 @@ let testData =
                              {start: 4, length: 4, contents:  "bar\n"},
                              {start: 8, length: 4, contents: "baz\n"}]],
     // Test type coercion of a number
-    [[3, aB, "foo"], {},    "InvalidStateError"]
+    [[3, int8View, "foo"], {},
+                            [{start: 0, length: 8, contents:  "3ABCDEFG"},
+                             {start: 8, length:10, contents:  "HIJKLMNOPf"},
+                             {start: 17, length: 4, contents: "foo"},
+                             {start: 4, length: 8, contents:  "DEFGHIJK"}]]
  ];
 
 let testCounter = 0;

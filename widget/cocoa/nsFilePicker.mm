@@ -53,8 +53,8 @@
 #include "nsIURL.h"
 #include "nsArrayEnumerator.h"
 #include "nsIStringBundle.h"
+#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
-#include "nsToolkit.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -356,7 +356,7 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
   // are not available on 10.5 and without using them it happens to be buggy.
   int result;
   nsCocoaUtils::PrepareForNativeAppModalDialog();
-  if (mFilters.Length() > 1 && nsToolkit::OnSnowLeopardOrLater()) {
+  if (mFilters.Length() > 1 && nsCocoaFeatures::OnSnowLeopardOrLater()) {
     // [NSURL initWithString:] (below) throws an exception if URLString is nil.
     if (!theDir) {
       theDir = @"";

@@ -891,12 +891,12 @@ class ScriptAnalysis
 
   public:
 
-    ScriptAnalysis(JSScript *script) { 
+    ScriptAnalysis(JSScript *script) {
         PodZero(this);
         this->script = script;
 #ifdef DEBUG
         this->originalDebugMode_ = script->compartment()->debugMode();
-#endif        
+#endif
     }
 
     bool ranBytecode() { return ranBytecode_; }

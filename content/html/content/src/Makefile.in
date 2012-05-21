@@ -149,7 +149,6 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../../editor/libeditor/base \
 		-I$(srcdir)/../../../../editor/libeditor/text \
 		-I$(srcdir) \
-		-I$(topsrcdir)/js/xpconnect/src \
 		-I$(topsrcdir)/xpcom/ds \
 		$(NULL)
 

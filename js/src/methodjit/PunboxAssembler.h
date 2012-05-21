@@ -235,7 +235,7 @@ class PunboxAssembler : public JSC::MacroAssembler
         orPtr(reg, Registers::ValueReg);
         storePtr(Registers::ValueReg, valueOf(address));
     }
-    
+
     template <typename T>
     void storePayload(ImmPayload imm, T address) {
         /* Not for doubles. */

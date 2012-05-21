@@ -350,7 +350,7 @@ types::TypeFailure(JSContext *cx, const char *fmt, ...)
 
     /* Always active, even in release builds */
     MOZ_Assert(msgbuf, __FILE__, __LINE__);
-    
+
     *((volatile int *)NULL) = 0;  /* Should never be reached */
 }
 
@@ -403,7 +403,7 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
     if (flags & TYPE_FLAG_UNKNOWN) {
         cx->compartment->types.addPending(cx, constraint, this, Type::UnknownType());
     } else {
-        /* Enqueue type set members stored as bits. */ 
+        /* Enqueue type set members stored as bits. */
         for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
             if (flags & flag) {
                 Type type = Type::PrimitiveType(TypeFlagPrimitive(flag));
@@ -2269,7 +2269,7 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
      * a generic object type. It is not sufficient to mark just the persistent
      * sets, as analysis of individual opcodes can pull type objects from
      * static information (like initializer objects at various offsets).
-     * 
+     *
      * We make a list of properties to update and fix them afterwards, as adding
      * types can't be done while iterating over cells as it can potentially make
      * new type objects as well or trigger GC.
@@ -4393,10 +4393,10 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
              * integer properties and bail out. We can't mark the aggregate
              * JSID_VOID type property as being in a definite slot.
              */
-            jsid id = NameToId(script->getName(GET_UINT32_INDEX(pc)));
+            RootedVarId id(cx, NameToId(script->getName(GET_UINT32_INDEX(pc))));
             if (MakeTypeId(cx, id) != id)
                 return false;
-            if (id == id_prototype(cx) || id == id___proto__(cx) || id == id_constructor(cx))
+            if (id_prototype(cx) == id || id___proto__(cx) == id || id_constructor(cx) == id)
                 return false;
 
             /*
@@ -5431,7 +5431,7 @@ TypeScript::CheckBytecode(JSContext *cx, JSScript *script, jsbytecode *pc, const
 
         if (!types->hasType(type)) {
             /* Display fine-grained debug information first */
-            fprintf(stderr, "Missing type at #%u:%05u pushed %u: %s\n", 
+            fprintf(stderr, "Missing type at #%u:%05u pushed %u: %s\n",
                     script->id(), unsigned(pc - script->code), i, TypeString(type));
             TypeFailure(cx, "Missing type pushed %u: %s", i, TypeString(type));
         }

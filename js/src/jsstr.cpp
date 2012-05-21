@@ -392,9 +392,8 @@ JSSubString js_EmptySubString = {0, js_empty_ucstr};
 static const unsigned STRING_ELEMENT_ATTRS = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
 
 static JSBool
-str_enumerate(JSContext *cx, JSObject *obj_)
+str_enumerate(JSContext *cx, HandleObject obj)
 {
-    RootedVarObject obj(cx, obj_);
     RootedVarString str(cx, obj->asString().unbox());
     for (size_t i = 0, length = str->length(); i < length; i++) {
         JSString *str1 = js_NewDependentString(cx, str, i, 1);
@@ -411,13 +410,11 @@ str_enumerate(JSContext *cx, JSObject *obj_)
 }
 
 static JSBool
-str_resolve(JSContext *cx, JSObject *obj_, jsid id, unsigned flags,
+str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             JSObject **objp)
 {
     if (!JSID_IS_INT(id))
         return JS_TRUE;
-
-    RootedVarObject obj(cx, obj_);
 
     JSString *str = obj->asString().unbox();
 
@@ -3325,8 +3322,8 @@ js_ValueToSource(JSContext *cx, const Value &v)
 
     Value rval = NullValue();
     Value fval;
-    jsid id = NameToId(cx->runtime->atomState.toSourceAtom);
-    if (!js_GetMethod(cx, RootedVarObject(cx, &v.toObject()), id, 0, &fval))
+    RootedVarId id(cx, NameToId(cx->runtime->atomState.toSourceAtom));
+    if (!GetMethod(cx, RootedVarObject(cx, &v.toObject()), id, 0, &fval))
         return NULL;
     if (js_IsCallable(fval)) {
         if (!Invoke(cx, v, fval, 0, NULL, &rval))
@@ -3816,12 +3813,12 @@ const bool js_isidstart[] = {
 /*  3 */ ____, ____, ____, ____, ____, ____, true, ____, ____, ____,
 /*  4 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
 /*  5 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
-/*  6 */ ____, ____, ____, ____, ____, true, true, true, true, true, 
-/*  7 */ true, true, true, true, true, true, true, true, true, true, 
-/*  8 */ true, true, true, true, true, true, true, true, true, true, 
-/*  9 */ true, ____, ____, ____, ____, true, ____, true, true, true, 
-/* 10 */ true, true, true, true, true, true, true, true, true, true, 
-/* 11 */ true, true, true, true, true, true, true, true, true, true, 
+/*  6 */ ____, ____, ____, ____, ____, true, true, true, true, true,
+/*  7 */ true, true, true, true, true, true, true, true, true, true,
+/*  8 */ true, true, true, true, true, true, true, true, true, true,
+/*  9 */ true, ____, ____, ____, ____, true, ____, true, true, true,
+/* 10 */ true, true, true, true, true, true, true, true, true, true,
+/* 11 */ true, true, true, true, true, true, true, true, true, true,
 /* 12 */ true, true, true, ____, ____, ____, ____, ____
 };
 
@@ -3839,14 +3836,14 @@ const bool js_isident[] = {
 /*  1 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
 /*  2 */ ____, ____, ____, ____, ____, ____, ____, ____, ____, ____,
 /*  3 */ ____, ____, ____, ____, ____, ____, true, ____, ____, ____,
-/*  4 */ ____, ____, ____, ____, ____, ____, ____, ____, true, true, 
+/*  4 */ ____, ____, ____, ____, ____, ____, ____, ____, true, true,
 /*  5 */ true, true, true, true, true, true, true, true, ____, ____,
-/*  6 */ ____, ____, ____, ____, ____, true, true, true, true, true, 
-/*  7 */ true, true, true, true, true, true, true, true, true, true, 
-/*  8 */ true, true, true, true, true, true, true, true, true, true, 
-/*  9 */ true, ____, ____, ____, ____, true, ____, true, true, true, 
-/* 10 */ true, true, true, true, true, true, true, true, true, true, 
-/* 11 */ true, true, true, true, true, true, true, true, true, true, 
+/*  6 */ ____, ____, ____, ____, ____, true, true, true, true, true,
+/*  7 */ true, true, true, true, true, true, true, true, true, true,
+/*  8 */ true, true, true, true, true, true, true, true, true, true,
+/*  9 */ true, ____, ____, ____, ____, true, ____, true, true, true,
+/* 10 */ true, true, true, true, true, true, true, true, true, true,
+/* 11 */ true, true, true, true, true, true, true, true, true, true,
 /* 12 */ true, true, true, ____, ____, ____, ____, ____
 };
 

@@ -123,9 +123,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(Hunspell,
 nsresult
 mozHunspell::Init()
 {
-  if (!mDictionaries.Init())
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  mDictionaries.Init();
   LoadDictionaryList();
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();

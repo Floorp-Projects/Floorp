@@ -106,7 +106,7 @@ class PropertyTree
     bool insertChild(JSContext *cx, js::Shape *parent, js::Shape *child);
 
     PropertyTree();
-    
+
   public:
     enum { MAX_HEIGHT = 128 };
 
@@ -114,7 +114,7 @@ class PropertyTree
         : compartment(comp)
     {
     }
-    
+
     js::Shape *newShape(JSContext *cx);
     js::Shape *getChild(JSContext *cx, Shape *parent, uint32_t nfixed, const StackShape &child);
 

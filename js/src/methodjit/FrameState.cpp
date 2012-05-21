@@ -1040,7 +1040,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
             fe->data.setRegister(dreg.reg());
         }
     }
-    
+
     /* Store the Value. */
     if (fe->type.inRegister()) {
         masm.storeValueFromComponents(fe->type.reg(), dreg.reg(), address);
@@ -1360,7 +1360,7 @@ FrameState::sync(Assembler &masm, Uses uses) const
 #if defined JS_PUNBOX64
             if ((!fe->type.synced() && backing->type.inMemory()) ||
                 (!fe->data.synced() && backing->data.inMemory())) {
-    
+
                 RegisterID syncReg = Registers::ValueReg;
 
                 /* Load the entire Value into syncReg. */
@@ -2269,7 +2269,7 @@ FrameState::storeTop(FrameEntry *target)
          * The problem is slot N can't be backed by M if M could be popped
          * before N. We want a guarantee that when we pop M, even if it was
          * copied, it has no outstanding copies.
-         * 
+         *
          * Because of |let| expressions, it's kind of hard to really know
          * whether a region on the stack will be popped all at once. Bleh!
          *
@@ -2285,10 +2285,10 @@ FrameState::storeTop(FrameEntry *target)
                 fe->setCopyOf(target);
         }
     }
-    
+
     /*
      * This is valid from the top->isCopy() path because we're guaranteed a
-     * consistent ordering - all copies of |backing| are tracked after 
+     * consistent ordering - all copies of |backing| are tracked after
      * |backing|. Transitively, only one swap is needed.
      */
     if (backing->trackerIndex() < target->trackerIndex())

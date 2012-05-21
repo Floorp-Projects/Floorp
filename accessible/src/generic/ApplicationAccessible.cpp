@@ -333,7 +333,7 @@ ApplicationAccessible::IsPrimaryForNode() const
 // nsAccessible public methods
 
 void
-ApplicationAccessible::ApplyARIAState(PRUint64* aState)
+ApplicationAccessible::ApplyARIAState(PRUint64* aState) const
 {
 }
 

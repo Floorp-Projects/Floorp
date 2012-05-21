@@ -84,11 +84,14 @@ public:
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsRenderingContext *aContext, const nsIntRect *aDirtyRect);
+  virtual void UpdateBounds();
   virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM();
+
+  virtual bool HasChildrenOnlyTransform(gfxMatrix *aTransform) const;
 
   // nsISVGSVGFrame interface:
   virtual void NotifyViewportOrTransformChanged(PRUint32 aFlags);

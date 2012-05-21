@@ -1354,7 +1354,16 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
   }
 
   // If we already have a parser we ignore the document.open call.
-  if (mParser) {
+  if (mParser || mParserAborted) {
+    // The WHATWG spec says: "If the document has an active parser that isn't
+    // a script-created parser, and the insertion point associated with that
+    // parser's input stream is not undefined (that is, it does point to
+    // somewhere in the input stream), then the method does nothing. Abort
+    // these steps and return the Document object on which the method was
+    // invoked."
+    // Note that aborting a parser leaves the parser "active" with its
+    // insertion point "not undefined". We track this using mParserAborted,
+    // because aborting a parser nulls out mParser.
     return NS_OK;
   }
 
@@ -3077,6 +3086,15 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
 
   *_retval = false;
 
+  nsCAutoString cmdToDispatch, paramStr;
+  bool isBool, boolVal;
+  if (!ConvertToMidasInternalCommand(commandID, value,
+                                     cmdToDispatch, paramStr,
+                                     isBool, boolVal)) {
+    // Return false
+    return NS_OK;
+  }
+
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
@@ -3109,12 +3127,6 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
-
-  nsCAutoString cmdToDispatch, paramStr;
-  bool isBool, boolVal;
-  if (!ConvertToMidasInternalCommand(commandID, value,
-                                     cmdToDispatch, paramStr, isBool, boolVal))
-    return NS_OK;
 
   if ((cmdToDispatch.EqualsLiteral("cmd_paragraphState") ||
        cmdToDispatch.EqualsLiteral("cmd_fontSize")) && paramStr.IsEmpty()) {
@@ -3157,6 +3169,12 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
 
+  nsCAutoString cmdToDispatch;
+  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+    // Return false
+    return NS_OK;
+  }
+
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
@@ -3170,10 +3188,6 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
   nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
-
-  nsCAutoString cmdToDispatch;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch))
-    return NS_OK; // queryCommandEnabled returns false on unsupported commands
 
   return cmdMgr->IsCommandEnabled(cmdToDispatch.get(), window, _retval);
 }
@@ -3186,6 +3200,12 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
 
+  nsCAutoString cmdToDispatch;
+  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+    // Return false
+    return NS_OK;
+  }
+
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
@@ -3199,10 +3219,6 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
-
-  nsCAutoString cmdToDispatch;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch))
-    return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv;
   nsCOMPtr<nsICommandParams> cmdParams = do_CreateInstance(
@@ -3227,6 +3243,15 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, bool *_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
 
+  nsCAutoString cmdToDispatch, paramToCheck;
+  bool dummy, dummy2;
+  if (!ConvertToMidasInternalCommand(commandID, commandID,
+                                     cmdToDispatch, paramToCheck,
+                                     dummy, dummy2)) {
+    // Return false
+    return NS_OK;
+  }
+
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
@@ -3247,12 +3272,6 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, bool *_retval)
     *_retval = false;
     return NS_OK;
   }
-
-  nsCAutoString cmdToDispatch, paramToCheck;
-  bool dummy, dummy2;
-  if (!ConvertToMidasInternalCommand(commandID, commandID,
-                                     cmdToDispatch, paramToCheck, dummy, dummy2))
-    return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv;
   nsCOMPtr<nsICommandParams> cmdParams = do_CreateInstance(
@@ -3294,22 +3313,10 @@ nsHTMLDocument::QueryCommandSupported(const nsAString & commandID,
                                       bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = false;
-
-  // if editing is not on, bail
-  if (!IsEditingOnAfterFlush())
-    return NS_ERROR_FAILURE;
-
-  // get command manager
-  nsCOMPtr<nsICommandManager> cmdMgr;
-  GetMidasCommandManager(getter_AddRefs(cmdMgr));
-  if (!cmdMgr)
-    return NS_ERROR_FAILURE;
 
   // commandID is supported if it can be converted to a Midas command
   nsCAutoString cmdToDispatch;
-  if (ConvertToMidasInternalCommand(commandID, cmdToDispatch))
-    *_retval = true;
+  *_retval = ConvertToMidasInternalCommand(commandID, cmdToDispatch);
 
   return NS_OK;
 }
@@ -3320,6 +3327,12 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
                                   nsAString &_retval)
 {
   _retval.SetLength(0);
+
+  nsCAutoString cmdToDispatch, paramStr;
+  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
+    // Return empty string
+    return NS_OK;
+  }
 
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush())
@@ -3334,10 +3347,6 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
-
-  nsCAutoString cmdToDispatch, paramStr;
-  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch))
-    return NS_ERROR_NOT_IMPLEMENTED;
 
   // create params
   nsresult rv;

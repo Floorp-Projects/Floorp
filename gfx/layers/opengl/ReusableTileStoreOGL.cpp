@@ -125,12 +125,12 @@ ReusableTileStoreOGL::HarvestTiles(TiledThebesLayerOGL* aLayer,
   uint16_t tileSize = aVideoMemoryTiledBuffer->GetTileLength();
   nsIntRect validBounds = aOldValidRegion.GetBounds();
   for (int x = validBounds.x; x < validBounds.XMost();) {
-    int w = tileSize - x % tileSize;
+    int w = tileSize - aVideoMemoryTiledBuffer->GetTileStart(x);
     if (x + w > validBounds.x + validBounds.width)
       w = validBounds.x + validBounds.width - x;
 
     for (int y = validBounds.y; y < validBounds.YMost();) {
-      int h = tileSize - y % tileSize;
+      int h = tileSize - aVideoMemoryTiledBuffer->GetTileStart(y);
       if (y + h > validBounds.y + validBounds.height)
         h = validBounds.y + validBounds.height - y;
 
@@ -273,8 +273,18 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
 
     // XXX If we have multiple tiles covering the same area, we will
     //     end up with rendering artifacts if the aLayer isn't opaque.
-    uint16_t tileStartX = tile->mTileOrigin.x % tile->mTileSize;
-    uint16_t tileStartY = tile->mTileOrigin.y % tile->mTileSize;
+    int32_t tileStartX;
+    int32_t tileStartY;
+    if (tile->mTileOrigin.x >= 0) {
+      tileStartX = tile->mTileOrigin.x % tile->mTileSize;
+    } else {
+      tileStartX = (tile->mTileSize - (-tile->mTileOrigin.x % tile->mTileSize)) % tile->mTileSize;
+    }
+    if (tile->mTileOrigin.y >= 0) {
+      tileStartY = tile->mTileOrigin.y % tile->mTileSize;
+    } else {
+      tileStartY = (tile->mTileSize - (-tile->mTileOrigin.y % tile->mTileSize)) % tile->mTileSize;
+    }
     nsIntPoint tileOffset(tile->mTileOrigin.x - tileStartX, tile->mTileOrigin.y - tileStartY);
     nsIntSize textureSize(tile->mTileSize, tile->mTileSize);
     aLayer->RenderTile(tile->mTexture, transform, aRenderOffset, tileRegion, tileOffset, textureSize, aMaskLayer);

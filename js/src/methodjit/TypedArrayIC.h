@@ -183,7 +183,7 @@ GenConversionForIntArray(Assembler &masm, JSObject *tarray, const ValueRemat &vr
         Int32CxVp stub;
         if (TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
             stub = stubs::ConvertToTypedInt<true>;
-        else 
+        else
             stub = stubs::ConvertToTypedInt<false>;
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, stub), false);
         if (vr.dataReg() != Registers::ReturnReg)
@@ -301,7 +301,7 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, JSObject *tarray, T address,
         PreserveRegisters saveLHS(masm);
 
         // There are three tricky situations to handle:
-        //   (1) The RHS needs conversion. saveMask will be stomped, and 
+        //   (1) The RHS needs conversion. saveMask will be stomped, and
         //       the RHS may need to be stomped.
         //   (2) The RHS may need to be clamped, which clobbers it.
         //   (3) The RHS may need to be in a single-byte register.

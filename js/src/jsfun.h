@@ -210,7 +210,7 @@ struct JSFunction : public JSObject
     inline const js::Value &getExtendedSlot(size_t which) const;
 
   private:
-    /* 
+    /*
      * These member functions are inherited from JSObject, but should never be applied to
      * a value statically known to be a JSFunction.
      */
@@ -246,7 +246,7 @@ js_CloneFunctionObject(JSContext *cx, js::HandleFunction fun,
                        js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
 extern JSFunction *
-js_DefineFunction(JSContext *cx, js::HandleObject obj, jsid id, JSNative native,
+js_DefineFunction(JSContext *cx, js::HandleObject obj, js::HandleId id, JSNative native,
                   unsigned nargs, unsigned flags,
                   js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
@@ -266,7 +266,7 @@ extern void
 js_ReportIsNotFunction(JSContext *cx, const js::Value *vp, unsigned flags);
 
 extern void
-js_PutCallObject(js::StackFrame *fp);
+js_PutCallObject(js::StackFrame *fp, js::CallObject &callobj);
 
 namespace js {
 

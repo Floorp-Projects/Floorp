@@ -187,22 +187,6 @@ ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
 }
 
 /*
- * Convert a value to a number, then to an int32_t if it fits by rounding to
- * nearest. Return converted value in *out on success, !ok on failure. As a
- * side effect, *vp will be mutated to match *out.
- */
-JS_ALWAYS_INLINE bool
-NonstandardToInt32(JSContext *cx, const js::Value &v, int32_t *out)
-{
-    if (v.isInt32()) {
-        *out = v.toInt32();
-        return true;
-    }
-    extern bool NonstandardToInt32Slow(JSContext *cx, const js::Value &v, int32_t *ip);
-    return NonstandardToInt32Slow(cx, v, out);
-}
-
-/*
  * Convert a value to a number, then to a uint16_t according to the ECMA rules
  * for ToUint16. Return converted value on success, !ok on failure. v must be a
  * copy of a rooted value.

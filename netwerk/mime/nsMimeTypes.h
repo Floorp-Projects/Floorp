@@ -161,6 +161,7 @@
 #define TEXT_EVENT_STREAM                   "text/event-stream"
 
 #define VIDEO_MPEG                          "video/mpeg"
+#define VIDEO_MP4                           "video/mp4"
 #define VIDEO_RAW                           "video/x-raw-yuv"
 #define VIDEO_OGG                           "video/ogg"
 #define VIDEO_WEBM                          "video/webm"

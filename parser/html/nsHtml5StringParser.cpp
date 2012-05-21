@@ -53,7 +53,7 @@ nsHtml5StringParser::nsHtml5StringParser()
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, false))
 {
   MOZ_COUNT_CTOR(nsHtml5StringParser);
-  mAtomTable.Init(); // we aren't checking for OOM anyway...
+  mAtomTable.Init();
   mTokenizer->setInterner(&mAtomTable);
 }
 

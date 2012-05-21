@@ -498,7 +498,8 @@ protected:
                       gfxContext* aCtx,
                       const nscolor& aForegroundColor,
                       const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-                      nscoord aLeftSideOffset);
+                      nscoord aLeftSideOffset,
+                      gfxRect& aBoundingBox);
 
   struct LineDecoration {
     nsIFrame* mFrame;

@@ -157,8 +157,7 @@ nsResProtocolHandler::~nsResProtocolHandler()
 nsresult
 nsResProtocolHandler::Init()
 {
-    if (!mSubstitutions.Init(32))
-        return NS_ERROR_UNEXPECTED;
+    mSubstitutions.Init(32);
 
     nsresult rv;
 
@@ -362,7 +361,8 @@ nsResProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *baseURI)
     nsresult rv = baseURI->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!scheme.Equals(NS_LITERAL_CSTRING("resource"))) {
-        return mSubstitutions.Put(root, baseURI) ? NS_OK : NS_ERROR_UNEXPECTED;
+        mSubstitutions.Put(root, baseURI);
+        return NS_OK;
     }
 
     // baseURI is a resource URI, let's resolve it first.
@@ -375,7 +375,8 @@ nsResProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *baseURI)
                             getter_AddRefs(newBaseURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return mSubstitutions.Put(root, newBaseURI) ? NS_OK : NS_ERROR_UNEXPECTED;
+    mSubstitutions.Put(root, newBaseURI);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

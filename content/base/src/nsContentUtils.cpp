@@ -548,30 +548,14 @@ nsContentUtils::InitializeEventTable() {
   sAtomEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>;
   sStringEventTable = new nsDataHashtable<nsStringHashKey, EventNameMapping>;
   sUserDefinedEvents = new nsCOMArray<nsIAtom>(64);
-
-  if (!sAtomEventTable || !sStringEventTable || !sUserDefinedEvents ||
-      !sAtomEventTable->Init(int(ArrayLength(eventArray) / 0.75) + 1) ||
-      !sStringEventTable->Init(int(ArrayLength(eventArray) / 0.75) + 1)) {
-    delete sAtomEventTable;
-    sAtomEventTable = nsnull;
-    delete sStringEventTable;
-    sStringEventTable = nsnull;
-    delete sUserDefinedEvents;
-    sUserDefinedEvents = nsnull;
-    return false;
-  }
+  sAtomEventTable->Init(int(ArrayLength(eventArray) / 0.75) + 1);
+  sStringEventTable->Init(int(ArrayLength(eventArray) / 0.75) + 1);
 
   // Subtract one from the length because of the trailing null
   for (PRUint32 i = 0; i < ArrayLength(eventArray) - 1; ++i) {
-    if (!sAtomEventTable->Put(eventArray[i].mAtom, eventArray[i]) ||
-        !sStringEventTable->Put(Substring(nsDependentAtomString(eventArray[i].mAtom), 2),
-                                eventArray[i])) {
-      delete sAtomEventTable;
-      sAtomEventTable = nsnull;
-      delete sStringEventTable;
-      sStringEventTable = nsnull;
-      return false;
-    }
+    sAtomEventTable->Put(eventArray[i].mAtom, eventArray[i]);
+    sStringEventTable->Put(Substring(nsDependentAtomString(eventArray[i].mAtom), 2),
+                           eventArray[i]);
   }
 
   return true;
@@ -594,15 +578,9 @@ nsContentUtils::InitializeTouchEventTable()
     };
     // Subtract one from the length because of the trailing null
     for (PRUint32 i = 0; i < ArrayLength(touchEventArray) - 1; ++i) {
-      if (!sAtomEventTable->Put(touchEventArray[i].mAtom, touchEventArray[i]) ||
-          !sStringEventTable->Put(Substring(nsDependentAtomString(touchEventArray[i].mAtom), 2),
-                                  touchEventArray[i])) {
-        delete sAtomEventTable;
-        sAtomEventTable = nsnull;
-        delete sStringEventTable;
-        sStringEventTable = nsnull;
-        return;
-      }
+      sAtomEventTable->Put(touchEventArray[i].mAtom, touchEventArray[i]);
+      sStringEventTable->Put(Substring(nsDependentAtomString(touchEventArray[i].mAtom), 2),
+                             touchEventArray[i]);
     }
   }
 }
@@ -6405,6 +6383,21 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
   if (nsHTMLMediaElement::IsWebMEnabled()) {
     for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gWebMTypes); ++i) {
       const char* type = nsHTMLMediaElement::gWebMTypes[i];
+      if (!strcmp(aType, type)) {
+        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+        if (docFactory && aLoaderType) {
+          *aLoaderType = TYPE_CONTENT;
+        }
+        return docFactory.forget();
+      }
+    }
+  }
+#endif
+
+#ifdef MOZ_GSTREAMER
+  if (nsHTMLMediaElement::IsH264Enabled()) {
+    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gH264Types); ++i) {
+      const char* type = nsHTMLMediaElement::gH264Types[i];
       if (!strcmp(aType, type)) {
         docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
         if (docFactory && aLoaderType) {

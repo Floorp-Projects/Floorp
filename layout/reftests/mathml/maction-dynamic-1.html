@@ -1,0 +1,106 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<title>dynamic maction 1</title>
+</head>
+
+<body>
+
+<p>
+<math>
+  <maction id="m1" actiontype="toggle">
+    <mtext>__1__</mtext>
+    <mtext>__2__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m2" actiontype="toggle" selection="2">
+    <mtext>__1__</mtext>
+    <mtext>__2__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m3" actiontype="toggle" selection="2">
+    <mtext>__1__</mtext>
+    <mtext>__2__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m4" actiontype="toggle">
+    <mn>1</mn>
+    <mn>2</mn>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m5" actiontype="toggle">
+    <mtext id="m51">__1__</mtext>
+    <mtext id="m52">__2__</mtext>
+    <mtext id="m53">__3__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m6" actiontype="toggle" selection="3">
+    <mtext>__1__</mtext>
+    <mtext>__2__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m7" actiontype="toggle">
+    <mtext id="m71">__1__</mtext>
+    <mtext id="m72">__2__</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m8" actiontype="toggle">
+    <mtext id="m81">__1__</mtext>
+    <mtext id="m82">__2__</mtext>
+  </maction>
+</math>
+</p>
+
+<script>
+function doTest() {
+  document.getElementById("m1").setAttribute("selection", "2");
+  document.getElementById("m2").removeAttribute("selection");
+  document.getElementById("m3").setAttribute("actiontype", "statusline");
+  document.getElementById("m4").setAttribute("actiontype", "statusline");
+
+  var child51 = document.getElementById("m51");
+  document.getElementById("m5").removeChild(child51);
+
+  var child53 = document.getElementById("m53");
+  document.getElementById("m6").appendChild(child53.cloneNode(true));
+
+  var child71 = document.getElementById("m71");
+  document.getElementById("m7").insertBefore(child53.cloneNode(true), child71);
+
+  var child81 = document.getElementById("m81");
+  document.getElementById("m8").replaceChild(child53.cloneNode(true), child81);
+
+  document.documentElement.removeAttribute('class');
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+
+</body>
+</html>

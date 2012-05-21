@@ -69,15 +69,17 @@ JS_GetAnonymousString(JSRuntime *rt)
 }
 
 JS_FRIEND_API(JSObject *)
-JS_FindCompilationScope(JSContext *cx, JSObject *obj)
+JS_FindCompilationScope(JSContext *cx, JSObject *obj_)
 {
+    RootedVarObject obj(cx, obj_);
+
     /*
      * We unwrap wrappers here. This is a little weird, but it's what's being
      * asked of us.
      */
     if (obj->isWrapper())
         obj = UnwrapObject(obj);
-    
+
     /*
      * Innerize the target_obj so that we compile in the correct (inner)
      * scope.
@@ -230,7 +232,7 @@ JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWit
             return false;
 
         RootedVarFunction fun(cx);
-        fun = js_DefineFunction(cx, objRoot, AtomToId(atom),
+        fun = js_DefineFunction(cx, objRoot, RootedVarId(cx, AtomToId(atom)),
                                 fs->call, fs->nargs, fs->flags);
         if (!fun)
             return false;
@@ -337,7 +339,7 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, J
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, objRoot, AtomToId(atom),
+    return js_DefineFunction(cx, objRoot, RootedVarId(cx, AtomToId(atom)),
                              call, nargs, attrs,
                              JSFunction::ExtendedFinalizeKind);
 }

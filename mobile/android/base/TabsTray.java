@@ -163,8 +163,7 @@ public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListene
         if (Tabs.getInstance().getIndexOf(tab) == -1) {
             mWaitingForClose = false;
             mTabsAdapter.removeTab(tab);
-            mList.invalidateViews();
-            mListContainer.requestLayout();
+            mTabsAdapter.notifyDataSetChanged();
         } else {
             View view = mList.getChildAt(position - mList.getFirstVisiblePosition());
             if (view == null)
@@ -343,14 +342,6 @@ public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListene
             assignValues(row, tab);
 
             return convertView;
-        }
-
-        @Override
-        public void notifyDataSetChanged() {
-        }
-
-        @Override
-        public void notifyDataSetInvalidated() {
         }
     }
 }

@@ -384,7 +384,7 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    if (args.length() == 1 || 
+    if (args.length() == 1 ||
         (args[1].isInt32() && (args[1].toInt32() == 0 || args[1].toInt32() == 10))) {
         if (args[0].isInt32()) {
             args.rval() = args[0];
@@ -397,7 +397,7 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
          *
          * To preserve this behaviour, we can't use the fast-path when string >
          * 1e21, or else the result would be |NeM|.
-         * 
+         *
          * The same goes for values smaller than 1.0e-6, because the string would be in
          * the form of "Ne-M".
          */
@@ -1039,10 +1039,10 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* ES5 15.1.1.1, 15.1.1.2 */
-    if (!DefineNativeProperty(cx, global, NameToId(cx->runtime->atomState.NaNAtom),
+    if (!DefineNativeProperty(cx, global, cx->runtime->atomState.NaNAtom,
                               cx->runtime->NaNValue, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_PERMANENT | JSPROP_READONLY, 0, 0) ||
-        !DefineNativeProperty(cx, global, NameToId(cx->runtime->atomState.InfinityAtom),
+        !DefineNativeProperty(cx, global, cx->runtime->atomState.InfinityAtom,
                               cx->runtime->positiveInfinityValue,
                               JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))
@@ -1305,26 +1305,6 @@ ToUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
             return false;
     }
     *out = ToUint32(d);
-    return true;
-}
-
-bool
-NonstandardToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
-{
-    JS_ASSERT(!v.isInt32());
-    double d;
-    if (v.isDouble()) {
-        d = v.toDouble();
-    } else if (!ToNumberSlow(cx, v, &d)) {
-        return false;
-    }
-
-    if (MOZ_DOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
-        js_ReportValueError(cx, JSMSG_CANT_CONVERT,
-                            JSDVG_SEARCH_STACK, v, NULL);
-        return false;
-    }
-    *out = (int32_t) floor(d + 0.5);  /* Round to nearest */
     return true;
 }
 

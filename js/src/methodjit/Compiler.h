@@ -405,7 +405,7 @@ class Compiler : public BaseCompiler
     /* SSA information for the outer script and all frames we will be inlining. */
     analyze::CrossScriptSSA ssa;
 
-    GlobalObject *globalObj;
+    RootedVar<GlobalObject*> globalObj;
     const HeapSlot *globalSlots;  /* Original slots pointer. */
 
     Assembler masm;
@@ -479,7 +479,7 @@ private:
     js::Vector<LoopEntry, 16> loopEntries;
     js::Vector<OutgoingChunkEdge, 16> chunkEdges;
     StubCompiler stubcc;
-    Label invokeLabel;
+    Label fastEntryLabel;
     Label arityLabel;
     Label argsCheckLabel;
 #ifdef JS_MONOIC
@@ -490,7 +490,7 @@ private:
     bool debugMode_;
     bool inlining_;
     bool hasGlobalReallocation;
-    bool oomInVector;       // True if we have OOM'd appending to a vector. 
+    bool oomInVector;       // True if we have OOM'd appending to a vector.
     bool overflowICSpace;   // True if we added a constant pool in a reserved space.
     uint64_t gcNumber;
     PCLengthEntry *pcLengths;
@@ -589,8 +589,8 @@ private:
     types::TypeSet *pushedTypeSet(uint32_t which);
     bool monitored(jsbytecode *pc);
     bool hasTypeBarriers(jsbytecode *pc);
-    bool testSingletonProperty(JSObject *obj, jsid id);
-    bool testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testObject);
+    bool testSingletonProperty(HandleObject obj, HandleId id);
+    bool testSingletonPropertyTypes(FrameEntry *top, HandleId id, bool *testObject);
     CompileStatus addInlineFrame(JSScript *script, uint32_t depth, uint32_t parent, jsbytecode *parentpc);
     CompileStatus scanInlineCalls(uint32_t index, uint32_t depth);
     CompileStatus checkAnalysis(JSScript *script);
@@ -802,10 +802,10 @@ private:
     CompileStatus compileMathAbsInt(FrameEntry *arg);
     CompileStatus compileMathAbsDouble(FrameEntry *arg);
     CompileStatus compileMathSqrt(FrameEntry *arg);
-    CompileStatus compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2, 
-                                          Assembler::DoubleCondition cond); 
-    CompileStatus compileMathMinMaxInt(FrameEntry *arg1, FrameEntry *arg2, 
-                                       Assembler::Condition cond);                                       
+    CompileStatus compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2,
+                                          Assembler::DoubleCondition cond);
+    CompileStatus compileMathMinMaxInt(FrameEntry *arg1, FrameEntry *arg2,
+                                       Assembler::Condition cond);
     CompileStatus compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2);
     CompileStatus compileArrayPush(FrameEntry *thisv, FrameEntry *arg);
     CompileStatus compileArrayConcat(types::TypeSet *thisTypes, types::TypeSet *argTypes,
@@ -819,7 +819,7 @@ private:
 
     enum GetCharMode { GetChar, GetCharCode };
     CompileStatus compileGetChar(FrameEntry *thisValue, FrameEntry *arg, GetCharMode mode);
-    
+
     CompileStatus compileStringFromCode(FrameEntry *arg);
     CompileStatus compileParseInt(JSValueType argType, uint32_t argc);
 

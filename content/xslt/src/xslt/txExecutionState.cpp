@@ -51,8 +51,7 @@ const PRInt32 txExecutionState::kMaxRecursionDepth = 20000;
 
 nsresult txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
 {
-    nsresult rv = Init(8);
-    NS_ENSURE_SUCCESS(rv, rv);
+    Init(8);
 
     mSourceDocument = aSourceDocument;
     
