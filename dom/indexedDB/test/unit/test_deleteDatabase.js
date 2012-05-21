@@ -74,7 +74,7 @@ function testSteps()
   ok(onversionchangecalled, "Expected versionchange events");
   is(event.type, "success", "expect a success event");
   is(event.target, request, "event has right target");
-  is(event.target.result, null, "event should have no result");
+  ok(event.target.result === undefined, "event should have no result");
 
   let request = mozIndexedDB.open(name, 1);
   request.onerror = errorHandler;
