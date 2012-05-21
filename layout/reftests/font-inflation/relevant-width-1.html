@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<style>
+div.outer { font-size: 12px; width: 600px }
+div.middle { width: 450px; }
+div.inner { width: 300px; }
+</style>
+<!--
+In a 450px container, the minimum font size at 15em per line is 30px.
+This means we map 0px-45px into 30px-45px, so 12px gets mapped to 34px.
+-->
+<div class="outer">
+  <div class="middle">
+    Text in middle.
+    <div class="inner">Text in inner.</div>
+  </div>
+</div>
