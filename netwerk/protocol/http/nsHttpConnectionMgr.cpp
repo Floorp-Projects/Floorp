@@ -1179,7 +1179,7 @@ nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent)
         bool confirmedRestrict = false;
         for (PRUint32 index = 0; index < ent->mActiveConns.Length(); ++index) {
             nsHttpConnection *conn = ent->mActiveConns[index];
-            if (!conn->ReportedNPN() || conn->EverUsedSpdy()) {
+            if (!conn->ReportedNPN() || conn->CanDirectlyActivate()) {
                 confirmedRestrict = true;
                 break;
             }
