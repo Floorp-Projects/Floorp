@@ -765,12 +765,8 @@ nsresult
 NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 {
   Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
-  if (Preferences::GetBool("gfx.canvas.azure.enabled", false)) {
-    nsresult rv = NS_NewCanvasRenderingContext2DAzure(aResult);
-    // If Azure fails, fall back to a classic canvas.
-    if (NS_SUCCEEDED(rv)) {
-      return rv;
-    }
+  if (AzureCanvasEnabled()) {
+    return NS_NewCanvasRenderingContext2DAzure(aResult);
   }
 
   return NS_NewCanvasRenderingContext2DThebes(aResult);
