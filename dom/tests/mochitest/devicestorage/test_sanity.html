@@ -1,0 +1,72 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717103
+-->
+<head>
+  <title>Test for basic sanity of the device storage API </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup()
+
+ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+
+var storage;
+
+var throws = false;
+try {
+ storage = navigator.getDeviceStorage();
+} catch(e) {throws = true}
+ok(throws, "getDeviceStorage takes one arg");
+
+storage = navigator.getDeviceStorage("kilimanjaro");
+ok(!storage, "kilimanjaro - Should not have this type of storage");
+
+storage = navigator.getDeviceStorage("temp");
+ok(storage, "temp - Should have getDeviceStorage");
+
+storage = navigator.getDeviceStorage("profile");
+ok(storage, "profile - Should have getDeviceStorage");
+
+var cursor = storage[0].enumerate();
+ok(cursor, "Should have a non-null cursor");
+
+var i = 4;
+cursor.onsuccess = function(e) {
+  i = i - 1;
+  if (i > 0) {
+    ok(true, "onsuccess was called");
+    e.target.continue();
+  }
+  else {
+    ok(true, "onsuccess was called 4 times");
+    devicestorage_cleanup();
+  }
+}
+
+cursor.onerror = function(e) {
+  ok(false, "onerror was called : " + e.target.error.name);
+  devicestorage_cleanup();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

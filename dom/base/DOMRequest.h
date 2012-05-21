@@ -20,11 +20,6 @@ namespace dom {
 class DOMRequest : public nsDOMEventTargetHelper,
                    public nsIDOMDOMRequest
 {
-  bool mDone;
-  jsval mResult;
-  nsCOMPtr<nsIDOMDOMError> mError;
-  bool mRooted;
-
   NS_DECL_EVENT_HANDLER(success)
   NS_DECL_EVENT_HANDLER(error)
 
@@ -45,6 +40,11 @@ public:
   {
     UnrootResultVal();
   }
+
+  bool mDone;
+  jsval mResult;
+  nsCOMPtr<nsIDOMDOMError> mError;
+  bool mRooted;
 
 private:
   void FireEvent(const nsAString& aType);
