@@ -94,3 +94,4 @@ fuzzy-if(gtk2Widget,1,8) test-pref(font.size.inflation.emPerLine,15) test-pref(f
 fuzzy-if(gtk2Widget,1,8) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-combobox-contents-at-2.html threshold-select-combobox-contents-at-2-ref.html
 
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == relevant-width-1.html relevant-width-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == relevant-width-overflow-1.html relevant-width-overflow-1-ref.html
