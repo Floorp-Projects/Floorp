@@ -10,13 +10,11 @@ namespace mozilla {
 namespace gfx {
 
 SourceSurfaceD2D::SourceSurfaceD2D()
-  : mRawData(NULL)
 {
 }
 
 SourceSurfaceD2D::~SourceSurfaceD2D()
 {
-  delete [] mRawData;
 }
 
 IntSize
@@ -51,15 +49,8 @@ SourceSurfaceD2D::InitFromData(unsigned char *aData,
 
   if ((uint32_t)aSize.width > aRT->GetMaximumBitmapSize() ||
       (uint32_t)aSize.height > aRT->GetMaximumBitmapSize()) {
-    int newStride = BytesPerPixel(aFormat) * aSize.width;
-    // This should only be called once!
-    MOZ_ASSERT(!mRawData);
-    mRawData = new uint8_t[aSize.height * newStride];
-    for (int y = 0; y < aSize.height; y++) {
-      memcpy(mRawData + y * newStride, aData + y * aStride, newStride);
-    }
-    gfxDebug() << "Bitmap does not fit in texture, saving raw data.";
-    return true;
+    gfxDebug() << "Bitmap does not fit in texture.";
+    return false;
   }
 
   D2D1_BITMAP_PROPERTIES props =

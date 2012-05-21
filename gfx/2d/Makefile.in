@@ -43,6 +43,7 @@ CPPSRCS	= \
         ScaledFontBase.cpp \
         DrawTargetDual.cpp \
         ImageScaling.cpp \
+        SourceSurfaceRawData.cpp \
         $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
