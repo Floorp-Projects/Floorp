@@ -4785,8 +4785,7 @@ ShouldInflateFontsForContainer(const nsIFrame *aFrame)
 }
 
 nscoord
-nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame,
-                                       WidthDetermination aWidthDetermination)
+nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame)
 {
   nsPresContext *presContext = aFrame->PresContext();
   if (!FontSizeInflationEnabled(presContext) ||
@@ -4819,16 +4818,13 @@ nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame,
 }
 
 float
-nsLayoutUtils::FontSizeInflationFor(const nsIFrame *aFrame,
-                                    WidthDetermination aWidthDetermination)
+nsLayoutUtils::FontSizeInflationFor(const nsIFrame *aFrame)
 {
   if (!FontSizeInflationEnabled(aFrame->PresContext())) {
     return 1.0;
   }
 
-  return FontSizeInflationInner(aFrame,
-                                InflationMinFontSizeFor(aFrame,
-                                                        aWidthDetermination));
+  return FontSizeInflationInner(aFrame, InflationMinFontSizeFor(aFrame));
 }
 
 /* static */ bool
