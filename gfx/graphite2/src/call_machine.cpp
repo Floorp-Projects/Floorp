@@ -104,8 +104,6 @@ Machine::stack_t  Machine::run(const instr   * program,
 
 {
     assert(program != 0);
-//    assert(_status == finished);
-
 
     // Declare virtual machine registers
     const instr   * ip = program-1;

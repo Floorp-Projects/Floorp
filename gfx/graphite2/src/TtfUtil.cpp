@@ -807,13 +807,14 @@ bool HorMetrics(gid16 nGlyphId, const void * pHmtx, size_t lHmtxSize, const void
 		// guard against bad glyph id
 		size_t lLsbOffset = sizeof(Sfnt::HorizontalMetric) * cLongHorMetrics +
 			sizeof(int16) * (nGlyphId - cLongHorMetrics); // offset in bytes
-		if (lLsbOffset + 1 >= lHmtxSize) // + 1 because entries are two bytes wide
+		// We test like this as LsbOffset is an offset not a length.
+		if (lLsbOffset > lHmtxSize - sizeof(int16))
 		{
 			nLsb = 0;
 			return false;
 		}
         nAdvWid = be::swap(phmtx[cLongHorMetrics - 1].advance_width);
-		nLsb = be::peek<int16>(reinterpret_cast<const int16 *>(phmtx) + lLsbOffset);
+		nLsb = be::peek<int16>(reinterpret_cast<const byte *>(phmtx) + lLsbOffset);
 	}
 
 	return true;
@@ -1177,7 +1178,7 @@ size_t LocaLookup(gid16 nGlyphId,
 void * GlyfLookup(const void * pGlyf, size_t nGlyfOffset, size_t nTableLen)
 {
 	const uint8 * pByte = reinterpret_cast<const uint8 *>(pGlyf);
-        if (nGlyfOffset == size_t(-1) || nGlyfOffset > nTableLen)
+        if (nGlyfOffset == size_t(-1) || nGlyfOffset >= nTableLen)
             return NULL;
 	return const_cast<uint8 *>(pByte + nGlyfOffset);
 }
