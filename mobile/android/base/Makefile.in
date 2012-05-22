@@ -591,12 +591,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/progress_spinner_10.png                \
   mobile/android/base/resources/drawable/progress_spinner_11.png                \
   mobile/android/base/resources/drawable/progress_spinner_12.png                \
-  mobile/android/base/resources/drawable/progress_spinner_13.png                \
-  mobile/android/base/resources/drawable/progress_spinner_14.png                \
-  mobile/android/base/resources/drawable/progress_spinner_15.png                \
-  mobile/android/base/resources/drawable/progress_spinner_16.png                \
-  mobile/android/base/resources/drawable/progress_spinner_17.png                \
-  mobile/android/base/resources/drawable/progress_spinner_18.png                \
   mobile/android/base/resources/drawable/remote_tabs_group_bg_repeat.xml        \
   mobile/android/base/resources/drawable/start.png                              \
   mobile/android/base/resources/drawable/site_security_level.xml                \
