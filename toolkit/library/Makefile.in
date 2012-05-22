@@ -17,6 +17,10 @@ LIBRARY_NAME = xul
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
+ifdef MOZ_METRO
+DIRS += winvccorlib
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 # This is going to be a framework named "XUL", not an ordinary library named
 # "libxul.dylib"
@@ -544,6 +548,18 @@ EXTRA_DSO_LDOPTS += \
   -DELAYLOAD:winspool.drv \
   -DELAYLOAD:secur32.dll \
   $(NULL)
+
+# See nsDllMain for an explanation
+ifdef MOZ_METRO
+ifdef MOZ_DEBUG
+EXTRA_DSO_LDOPTS += -DELAYLOAD:VCCORLIB$(CRTDLLVERSION)D.DLL
+else
+EXTRA_DSO_LDOPTS += -DELAYLOAD:VCCORLIB$(CRTDLLVERSION).DLL
+endif
+EXTRA_DSO_LDOPTS += -DELAYLOAD:API-MS-WIN-CORE-WINRT-L$(CRTEXPDLLVERSION).DLL
+EXTRA_DSO_LDOPTS += -DELAYLOAD:API-MS-WIN-CORE-WINRT-STRING-L$(CRTEXPDLLVERSION).DLL
+endif
+
 ifdef ACCESSIBILITY
 EXTRA_DSO_LDOPTS += -DELAYLOAD:oleacc.dll
 endif

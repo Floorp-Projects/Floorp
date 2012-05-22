@@ -618,11 +618,17 @@ if test -n "$MOZ_METRO"; then
     WINSDK_TARGETVER=602
     # Allow a higher api set
     WINVER=602
+    # toolkit/library/makefile.in needs these, see nsDllMain.
+    CRTDLLVERSION=110
+    CRTEXPDLLVERSION=1-1-0
 else
     # Target the Windows 7 SDK by default
     WINSDK_TARGETVER=601
     WINVER=502
 fi
+
+AC_SUBST(CRTDLLVERSION)
+AC_SUBST(CRTEXPDLLVERSION)
 
 if test -n "$MOZ_METRO"; then
   case "$target" in
