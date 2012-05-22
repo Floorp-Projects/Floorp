@@ -87,6 +87,11 @@
 #define NS_APPSTARTUP_CONTRACTID \
   "@mozilla.org/toolkit/app-startup;1"
 
+#if defined(MOZ_UPDATER) && !defined(ANDROID)
+#define NS_UPDATEPROCESSOR_CONTRACTID \
+  "@mozilla.org/updates/update-processor;1"
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 
 // {A0CCAAF8-09DA-44D8-B250-9AC3E93C8117}
@@ -162,3 +167,8 @@
 // {6fb0c970-e1b1-11db-8314-0800200c9a66}
 #define NS_PLACESIMPORTEXPORTSERVICE_CID \
 { 0x6fb0c970, 0xe1b1, 0x11db, { 0x83, 0x14, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
+
+#if defined(MOZ_UPDATER) && !defined(ANDROID)
+#define NS_UPDATEPROCESSOR_CID \
+{ 0xf3dcf644, 0x79e8, 0x4f59, { 0xa1, 0xbb, 0x87, 0x84, 0x54, 0x48, 0x8e, 0xf9 } }
+#endif

@@ -20,6 +20,16 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS += xpcshellMacUtils.mm
 endif
 
+ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
+ifdef MOZ_APP_PROFILE
+DEFINES += -DMOZ_APP_PROFILE='"$(MOZ_APP_PROFILE)"'
+else
+DEFINES += -DMOZ_APP_VENDOR='"$(MOZ_APP_VENDOR)"'
+DEFINES += -DMOZ_APP_BASENAME='"$(MOZ_APP_BASENAME)"'
+DEFINES += -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"'
+endif
+endif
+
 LIBS		= \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(LIBXUL_LIBS) \
