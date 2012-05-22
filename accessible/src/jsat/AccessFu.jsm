@@ -202,7 +202,8 @@ var AccessFu = {
           let position = pivot.position;
           let doc = aEvent.DOMNode;
 
-          if (doc instanceof Ci.nsIDOMDocument && position.DOMNode) {
+          if (position && position.DOMNode &&
+              doc instanceof Ci.nsIDOMDocument) {
             // Set the caret to the start of the pivot position, and move
             // the focus in the same manner as browse with caret mode.
             // This blurs the focus on the previous pivot position (if it
