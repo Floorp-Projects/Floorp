@@ -222,6 +222,10 @@ FormHistory.prototype = {
             existingTransactionInProgress = this.dbConnection.transactionInProgress;
             if (!existingTransactionInProgress)
                 this.dbConnection.beginTransaction();
+            this.moveToDeletedTable("VALUES (:guid, :timeDeleted)", {
+              guid: guid,
+              timeDeleted: Date.now()
+            });
 
             // remove from the formhistory database
             stmt = this.dbCreateStatement(query, params);
@@ -257,6 +261,12 @@ FormHistory.prototype = {
             existingTransactionInProgress = this.dbConnection.transactionInProgress;
             if (!existingTransactionInProgress)
                 this.dbConnection.beginTransaction();
+            this.moveToDeletedTable(
+              "SELECT guid, :timeDeleted FROM moz_formhistory " +
+              "WHERE fieldname = :fieldname", {
+                fieldname: name,
+                timeDeleted: Date.now()
+            });
 
             stmt = this.dbCreateStatement(query, params);
             stmt.execute();
@@ -290,6 +300,11 @@ FormHistory.prototype = {
             existingTransactionInProgress = this.dbConnection.transactionInProgress;
             if (!existingTransactionInProgress)
                 this.dbConnection.beginTransaction();
+            this.moveToDeletedTable(
+              "SELECT guid, :timeDeleted FROM moz_formhistory", {
+              timeDeleted: Date.now()
+            });
+
             stmt = this.dbCreateStatement(query);
             stmt.execute();
             this.sendNotification("removeAllEntries", null);
@@ -352,6 +367,12 @@ FormHistory.prototype = {
             existingTransactionInProgress = this.dbConnection.transactionInProgress;
             if (!existingTransactionInProgress)
                 this.dbConnection.beginTransaction();
+            this.moveToDeletedTable(
+                  "SELECT guid, :timeDeleted FROM moz_formhistory " +
+                  "WHERE firstUsed >= :beginTime AND firstUsed <= :endTime", {
+              beginTime: beginTime,
+              endTime: endTime
+            });
 
             stmt = this.dbCreateStatement(query, params);
             stmt.executeStep();
@@ -368,6 +389,29 @@ FormHistory.prototype = {
         }
         if (!existingTransactionInProgress)
             this.dbConnection.commitTransaction();
+    },
+
+    moveToDeletedTable : function moveToDeletedTable(values, params) {
+#ifdef ANDROID
+        this.log("Moving entries to deleted table.");
+
+        let stmt;
+
+        try {
+            // Move the entries to the deleted items table.
+            let query = "INSERT INTO moz_deleted_formhistory (guid, timeDeleted) ";
+            if (values) query += values;
+            stmt = this.dbCreateStatement(query, params);
+            stmt.execute();
+        } catch (e) {
+            this.log("Moving deleted entries failed: " + e);
+            throw e;
+        } finally {
+            if (stmt) {
+                stmt.reset();
+            }
+        }
+#endif
     },
 
     get dbConnection() {
