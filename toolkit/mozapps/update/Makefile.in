@@ -13,10 +13,6 @@ MODULE = update
 
 XPIDLSRCS = nsIUpdateTimerManager.idl
 
-DEFINES += \
-	-DMOZ_MACBUNDLE_NAME='"$(MOZ_MACBUNDLE_NAME)"' \
-	$(NULL)
-
 EXTRA_PP_COMPONENTS = nsUpdateTimerManager.js nsUpdateTimerManager.manifest
 
 ifdef MOZ_UPDATER
