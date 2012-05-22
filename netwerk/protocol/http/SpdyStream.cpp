@@ -60,6 +60,7 @@ SpdyStream::SpdyStream(nsAHttpTransaction *httpTransaction,
 
 SpdyStream::~SpdyStream()
 {
+  mStreamID = SpdySession::kDeadStreamID;
 }
 
 // ReadSegments() is used to write data down the socket. Generally, HTTP
