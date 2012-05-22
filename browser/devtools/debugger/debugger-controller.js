@@ -533,32 +533,10 @@ StackFrames.prototype = {
         paramVar.setGrip(paramVal);
         this._addExpander(paramVar, paramVal);
       }
-
-      // If we already found 'arguments', we are done here.
-      if ("arguments" in frame.environment.bindings.variables) {
-        // Signal that variables have been fetched.
-        DebuggerController.dispatchEvent("Debugger:FetchedVariables");
-        return;
-      }
     }
 
-    // Sometimes in call frames with arguments we don't get 'arguments' in the
-    // environment (bug 746601) and we have to construct it manually. Note, that
-    // in this case arguments.callee will be absent, even in the cases where it
-    // shouldn't be.
-    if (frame.arguments && frame.arguments.length > 0) {
-      // Add "arguments".
-      let argsVar = localScope.addVar("arguments");
-      argsVar.setGrip({
-        type: "object",
-        class: "Arguments"
-      });
-      this._addExpander(argsVar, frame.arguments);
-
-      // Signal that variables have been fetched.
-      DebuggerController.dispatchEvent("Debugger:FetchedVariables");
-    }
-
+    // Signal that variables have been fetched.
+    DebuggerController.dispatchEvent("Debugger:FetchedVariables");
   },
 
   /**
@@ -566,10 +544,9 @@ StackFrames.prototype = {
    * new properties.
    */
   _addExpander: function SF__addExpander(aVar, aObject) {
-    // No need for expansion for null and undefined values, but we do need them
-    // for frame.arguments which is a regular array.
+    // No need for expansion for null and undefined values.
     if (!aVar || !aObject || typeof aObject !== "object" ||
-        (aObject.type !== "object" && !Array.isArray(aObject))) {
+        aObject.type !== "object") {
       return;
     }
 
@@ -585,23 +562,6 @@ StackFrames.prototype = {
   _addVarProperties: function SF__addVarProperties(aVar, aObject) {
     // Retrieve the properties only once.
     if (aVar.fetched) {
-      return;
-    }
-
-    // For arrays we have to construct a grip-like object.
-    if (Array.isArray(aObject)) {
-      let properties = { length: { value: aObject.length } };
-      for (let i = 0, l = aObject.length; i < l; i++) {
-        properties[i] = { value: aObject[i] };
-      }
-      aVar.addProperties(properties);
-
-      // Expansion handlers must be set after the properties are added.
-      for (let i = 0, l = aObject.length; i < l; i++) {
-        this._addExpander(aVar[i], aObject[i]);
-      }
-
-      aVar.fetched = true;
       return;
     }
 
