@@ -2270,6 +2270,9 @@ XPCRootSetElem::AddToRootSet(XPCLock *lock, XPCRootSetElem **listHead)
 void
 XPCRootSetElem::RemoveFromRootSet(XPCLock *lock)
 {
+    if (nsXPConnect *xpc = nsXPConnect::GetXPConnect())
+        js::PokeGC(xpc->GetRuntime()->GetJSRuntime());
+
     NS_ASSERTION(mSelfp, "Must be linked");
 
     XPCAutoLock autoLock(lock);
