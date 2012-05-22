@@ -515,7 +515,7 @@ nsHTMLEditRules::AfterEditInner(nsEditor::OperationID action,
 
 
 NS_IMETHODIMP 
-nsHTMLEditRules::WillDoAction(nsISelection *aSelection, 
+nsHTMLEditRules::WillDoAction(nsTypedSelection *aSelection,
                               nsRulesInfo *aInfo, 
                               bool *aCancel, 
                               bool *aHandled)

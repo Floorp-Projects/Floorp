@@ -209,7 +209,7 @@ nsTextEditRules::AfterEdit(nsEditor::OperationID action,
 
 
 NS_IMETHODIMP 
-nsTextEditRules::WillDoAction(nsISelection *aSelection, 
+nsTextEditRules::WillDoAction(nsTypedSelection* aSelection,
                               nsRulesInfo *aInfo, 
                               bool *aCancel, 
                               bool *aHandled)

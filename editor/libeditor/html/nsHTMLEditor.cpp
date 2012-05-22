@@ -1699,10 +1699,10 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpInsertElement, nsIEditor::eNext);
 
-  nsCOMPtr<nsISelection>selection;
-  res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res) || !selection)
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  if (!selection) {
     return NS_ERROR_FAILURE;
+  }
 
   // hand off to the rules system, see if it has anything to say about this
   bool cancel, handled;
@@ -2178,15 +2178,13 @@ nsHTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList, cons
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  nsCOMPtr<nsISelection> selection;
   bool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpMakeList, nsIEditor::eNext);
   
   // pre-process
-  res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsTextRulesInfo ruleInfo(kOpMakeList);
@@ -2256,15 +2254,13 @@ nsHTMLEditor::RemoveList(const nsAString& aListType)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  nsCOMPtr<nsISelection> selection;
   bool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpRemoveList, nsIEditor::eNext);
   
   // pre-process
-  res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsTextRulesInfo ruleInfo(kOpRemoveList);
@@ -2289,15 +2285,13 @@ nsHTMLEditor::MakeDefinitionItem(const nsAString& aItemType)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  nsCOMPtr<nsISelection> selection;
   bool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpMakeDefListItem, nsIEditor::eNext);
   
   // pre-process
-  res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsTextRulesInfo ruleInfo(kOpMakeDefListItem);
   ruleInfo.blockType = &aItemType;
@@ -2322,15 +2316,13 @@ nsHTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  nsCOMPtr<nsISelection> selection;
   bool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpMakeBasicBlock, nsIEditor::eNext);
   
   // pre-process
-  res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsTextRulesInfo ruleInfo(kOpMakeBasicBlock);
   ruleInfo.blockType = &aBlockType;
@@ -2404,9 +2396,7 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
   nsAutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
   
   // pre-process
-  nsCOMPtr<nsISelection> selection;
-  res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsTextRulesInfo ruleInfo(opID);
@@ -2483,13 +2473,11 @@ nsHTMLEditor::Align(const nsAString& aAlignType)
   bool cancel, handled;
   
   // Find out if the selection is collapsed:
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsTextRulesInfo ruleInfo(kOpAlign);
   ruleInfo.alignType = &aAlignType;
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(res))
     return res;
   
@@ -4896,12 +4884,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  nsresult res;
-  nsCOMPtr<nsISelection>selection;
-  res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
 
   bool isCollapsed = selection->Collapsed();
 
@@ -4912,13 +4895,13 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
   
   bool cancel, handled;
   nsTextRulesInfo ruleInfo(kOpSetTextProperty);
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(res, res);
   if (!cancel && !handled)
   {
     // get selection range enumerator
     nsCOMPtr<nsIEnumerator> enumerator;
-    res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
+    res = selection->GetEnumerator(getter_AddRefs(enumerator));
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(enumerator, NS_ERROR_FAILURE);
 
