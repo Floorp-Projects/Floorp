@@ -18,7 +18,10 @@ UpdateLog::UpdateLog() : logFP(NULL)
 {
 }
 
-void UpdateLog::Init(NS_tchar* sourcePath, const NS_tchar* fileName)
+void UpdateLog::Init(NS_tchar* sourcePath,
+                     const NS_tchar* fileName,
+                     const NS_tchar* alternateFileName,
+                     bool append)
 {
   if (logFP)
     return;
@@ -28,7 +31,12 @@ void UpdateLog::Init(NS_tchar* sourcePath, const NS_tchar* fileName)
   NS_tsnprintf(logFile, sizeof(logFile)/sizeof(logFile[0]),
     NS_T("%s/%s"), sourcePath, fileName);
 
-  logFP = NS_tfopen(logFile, NS_T("w"));
+  if (alternateFileName && NS_taccess(logFile, F_OK)) {
+    NS_tsnprintf(logFile, sizeof(logFile)/sizeof(logFile[0]),
+      NS_T("%s/%s"), sourcePath, alternateFileName);
+  }
+
+  logFP = NS_tfopen(logFile, append ? NS_T("a") : NS_T("w"));
 }
 
 void UpdateLog::Finish()

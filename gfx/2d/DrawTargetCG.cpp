@@ -692,14 +692,13 @@ DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pa
   glyphs.resize(aBuffer.mNumGlyphs);
   positions.resize(aBuffer.mNumGlyphs);
 
-  CGFloat xprev = aBuffer.mGlyphs[0].mPosition.x;
-  CGFloat yprev = aBuffer.mGlyphs[0].mPosition.y;
-  CGContextSetTextPosition(cg, xprev, yprev);
-
   // Handle the flip
-  CGAffineTransform matrix = CGAffineTransformMakeScale(1, -1);//CGAffineTransformMake(1, 0, 0, -1, 0, -mSize.height);
-  // "Note that the text matrix is not a part of the graphics state"
-  CGContextSetTextMatrix(cg, matrix);
+  CGAffineTransform matrix = CGAffineTransformMakeScale(1, -1);
+  CGContextConcatCTM(cg, matrix);
+  // CGContextSetTextMatrix works differently with kCGTextClip && kCGTextFill
+  // It seems that it transforms the positions with TextFill and not with TextClip
+  // Therefore we'll avoid it. See also:
+  // http://cgit.freedesktop.org/cairo/commit/?id=9c0d761bfcdd28d52c83d74f46dd3c709ae0fa69
 
   for (unsigned int i = 0; i < aBuffer.mNumGlyphs; i++) {
     glyphs[i] = aBuffer.mGlyphs[i].mIndex;

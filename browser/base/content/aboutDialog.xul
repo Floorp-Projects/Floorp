@@ -64,6 +64,9 @@
               <hbox id="downloading" align="center">
                 <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
               </hbox>
+              <hbox id="applying" align="center">
+                <image class="update-throbber"/><label>&update.applying;</label>
+              </hbox>
               <hbox id="downloadFailed" align="center">
                 <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
               </hbox>

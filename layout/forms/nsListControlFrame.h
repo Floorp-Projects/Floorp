@@ -206,10 +206,8 @@ public:
    * that PaintFocus will or could have painted --- basically the whole
    * GetOptionsContainer, plus some extra stuff if there are no options. This
    * must be called every time mEndSelectionIndex changes.
-   *
-   * Pass non-null aReflowState if during reflow.
    */
-  void InvalidateFocus(const nsHTMLReflowState* aReflowState = nsnull);
+  void InvalidateFocus();
 
   /**
    * Function to calculate the height a row, for use with the "size" attribute.
@@ -301,11 +299,8 @@ protected:
   /**
    * Resets the select back to it's original default values;
    * those values as determined by the original HTML
-   *
-   * Pass non-null aReflowState if during reflow.
    */
-  virtual void ResetList(bool aAllowScrolling,
-                         const nsHTMLReflowState* aReflowState = nsnull);
+  virtual void ResetList(bool aAllowScrolling);
 
   nsListControlFrame(nsIPresShell* aShell, nsIDocument* aDocument, nsStyleContext* aContext);
   virtual ~nsListControlFrame();

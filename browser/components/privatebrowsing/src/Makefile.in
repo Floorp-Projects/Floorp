@@ -11,11 +11,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = privatebrowsing
 LIBRARY_NAME = privatebrowsing_s
-FORCE_STATIC_LIB = 1
-ifndef MOZ_MEMORY
-USE_STATIC_LIBS = 1
-endif
 
+FORCE_STATIC_LIB = 1
+USE_STATIC_LIBS = 1
 
 CPPSRCS = \
 	nsPrivateBrowsingServiceWrapper.cpp \

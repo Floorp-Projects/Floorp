@@ -7293,20 +7293,6 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     return false;
   }
 
-  NS_ASSERTION(!mPresContext->mCurrentInflationContainer,
-               "current inflation container should be null");
-  AutoRestore<nsIFrame*> restoreInflationContainer(mPresContext->
-                           mCurrentInflationContainer);
-  for (nsIFrame *f = target->GetParent(); f; f = f->GetParent()) {
-    if (nsLayoutUtils::IsContainerForFontSizeInflation(f)) {
-      NS_ASSERTION(!(f->GetStateBits() & NS_FRAME_IN_REFLOW),
-                   "a frame outside should not be in reflow");
-      mPresContext->mCurrentInflationContainer = f;
-      mPresContext->mCurrentInflationContainerWidth = f->GetContentRect().width;
-      break;
-    }
-  }
-
 #ifdef DEBUG
   mCurrentReflowRoot = target;
 #endif

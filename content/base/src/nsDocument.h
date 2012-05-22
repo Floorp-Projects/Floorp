@@ -929,6 +929,8 @@ public:
   virtual void AsyncRequestFullScreen(Element* aElement);
   virtual void RestorePreviousFullScreenState();
   virtual bool IsFullScreenDoc();
+  virtual void SetApprovedForFullscreen(bool aIsApproved);
+
   static void ExitFullScreen();
 
   // This is called asynchronously by nsIDocument::AsyncRequestFullScreen()
@@ -939,7 +941,14 @@ public:
 
   // Removes all elements from the full-screen stack, removing full-scren
   // styles from the top element in the stack.
-  void ClearFullScreenStack();
+  void CleanupFullscreenState();
+
+  // Add/remove "fullscreen-approved" observer service notification listener.
+  // Chrome sends us a notification when fullscreen is approved for a
+  // document, with the notification subject as the document that was approved.
+  // We maintain this listener while in fullscreen mode.
+  nsresult AddFullscreenApprovedObserver();
+  nsresult RemoveFullscreenApprovedObserver();
 
   // Pushes aElement onto the full-screen stack, and removes full-screen styles
   // from the former full-screen stack top, and its ancestors, and applies the
@@ -1179,6 +1188,21 @@ protected:
   // Parser aborted. True if the parser of this document was forcibly
   // terminated instead of letting it finish at its own pace.
   bool mParserAborted:1;
+
+  // Whether this document has been approved for fullscreen, either by explicit
+  // approval via the fullscreen-approval UI, or because it received
+  // approval because its document's host already had the "fullscreen"
+  // permission granted when the document requested fullscreen.
+  // 
+  // Note if a document's principal doesn't have a host, the permission manager
+  // can't store permissions for it, so we can only manage approval using this
+  // flag.
+  //
+  // Note we must track this separately from the "fullscreen" permission,
+  // so that pending pointer lock requests can determine whether documents
+  // whose principal doesn't have a host (i.e. those which can't store
+  // permissions in the permission manager) have been approved for fullscreen.
+  bool mIsApprovedForFullscreen:1;
 
   PRUint8 mXMLDeclarationBits;
 

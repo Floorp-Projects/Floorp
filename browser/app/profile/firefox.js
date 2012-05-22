@@ -59,9 +59,8 @@ pref("extensions.hotfix.id", "firefox-hotfix@mozilla.org");
 pref("extensions.hotfix.cert.checkAttributes", true);
 pref("extensions.hotfix.certs.1.sha1Fingerprint", "F1:DB:F9:6A:7B:B8:04:FA:48:3C:16:95:C7:2F:17:C6:5B:C2:9F:45");
 
-// Disable add-ons installed into the shared user and shared system areas by
-// default. This does not include the application directory. See the SCOPE
-// constants in AddonManager.jsm for values to use here
+// Disable add-ons that are not installed by the user in all scopes by default.
+// See the SCOPE constants in AddonManager.jsm for values to use here.
 pref("extensions.autoDisableScopes", 15);
 
 // Dictionary download preference
@@ -145,6 +144,10 @@ pref("app.update.mode", 1);
 
 // If set to true, the Update Service will present no UI for any event.
 pref("app.update.silent", false);
+
+// If set to true, the Update Service will apply updates in the background
+// when it finishes downloading them.
+pref("app.update.stage.enabled", true);
 
 // Update service URL:
 pref("app.update.url", "https://aus3.mozilla.org/update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
@@ -1027,7 +1030,7 @@ pref("devtools.layoutview.enabled", false);
 pref("devtools.layoutview.open", false);
 
 // Enable the Debugger
-pref("devtools.debugger.enabled", false);
+pref("devtools.debugger.enabled", true);
 pref("devtools.debugger.remote-enabled", false);
 pref("devtools.debugger.remote-host", "localhost");
 pref("devtools.debugger.remote-port", 6000);

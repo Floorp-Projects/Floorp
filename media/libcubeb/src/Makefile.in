@@ -22,6 +22,14 @@ CSRCS           = \
                 $(NULL)
 endif
 
+ifeq ($(OS_TARGET),Android)
+# No Android implementation of libcubeb yet.
+else ifeq ($(OS_TARGET),Linux)
+CSRCS         = \
+              cubeb_alsa.c \
+              $(NULL)
+endif
+
 ifeq ($(OS_TARGET),Darwin)
 CSRCS           = \
                 cubeb_audiounit.c \

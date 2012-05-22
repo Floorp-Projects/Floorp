@@ -1308,6 +1308,18 @@ LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) -lxul'
 XPCOM_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) $(XPCOM_FROZEN_LDOPTS)'
 XPCOM_STANDALONE_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)'
 
+# These are specially defined on Windows only
+case "$target" in
+*-mingw*)
+  XPCOM_STATICRUNTIME_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_staticruntime_s.$(LIB_SUFFIX) $(XPCOM_FROZEN_LDOPTS)'
+  XPCOM_STANDALONE_STATICRUNTIME_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_staticruntime.$(LIB_SUFFIX)'
+  ;;
+*)
+  XPCOM_STATICRUNTIME_GLUE_LDOPTS=$XPCOM_GLUE_LDOPTS
+  XPCOM_STANDALONE_STATICRUNTIME_GLUE_LDOPTS=$XPCOM_STANDALONE_GLUE_LDOPTS
+  ;;
+esac
+
 MOZ_FS_LAYOUT=unix
 
 MOZ_COMPONENT_NSPR_LIBS='-L$(LIBXUL_DIST)/bin $(NSPR_LIBS)'
@@ -5743,6 +5755,12 @@ fi
 
 if test -n "$MOZ_CUBEB"; then
     case "$target" in
+    *-android*|*-linuxandroid*)
+        dnl No Android implementation of libcubeb yet.
+        ;;
+    *-linux*)
+        AC_DEFINE(MOZ_CUBEB)
+        ;;
     *-mingw*)
         AC_DEFINE(MOZ_CUBEB)
         ;;
@@ -8424,6 +8442,8 @@ AC_SUBST(XPCOM_LIBS)
 AC_SUBST(XPCOM_FROZEN_LDOPTS)
 AC_SUBST(XPCOM_GLUE_LDOPTS)
 AC_SUBST(XPCOM_STANDALONE_GLUE_LDOPTS)
+AC_SUBST(XPCOM_STATICRUNTIME_GLUE_LDOPTS)
+AC_SUBST(XPCOM_STANDALONE_STATICRUNTIME_GLUE_LDOPTS)
 
 AC_SUBST(USE_DEPENDENT_LIBS)
 
@@ -8840,11 +8860,11 @@ xpcom/xpcom-private.h
 
 # Hack around an Apple bug that effects the egrep that comes with OS X 10.7.
 # "arch -arch i386 egrep" always uses the 32-bit Intel part of the egrep fat
-# binary, even on 64-bit systems.  It should work on OS X 10.4.5 and up.  We
-# (apparently) only need this hack when egrep's "pattern" is particularly
-# long (as in the following code).  See bug 655339.
+# binary, even on 64-bit systems. We (apparently) only need this hack when
+# egrep's "pattern" is particularly long (as in the following code).
+# See bug 655339.
 case "$host" in
-*-apple-darwin*)
+*-apple-darwin11*)
     FIXED_EGREP="arch -arch i386 egrep"
     ;;
 *)

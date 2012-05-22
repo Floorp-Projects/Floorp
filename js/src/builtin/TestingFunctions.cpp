@@ -505,6 +505,11 @@ MJitChunkLimit(JSContext *cx, unsigned argc, jsval *vp)
         return JS_FALSE;
     }
 
+    if (cx->runtime->alwaysPreserveCode) {
+        JS_ReportError(cx, "Can't change chunk limit after gcPreserveCode()");
+        return JS_FALSE;
+    }
+
     double t;
     if (!JS_ValueToNumber(cx, JS_ARGV(cx, vp)[0], &t))
         return JS_FALSE;

@@ -169,7 +169,7 @@ HBGetGlyph(hb_font_t *font, void *font_data,
     const FontCallbackData *fcd =
         static_cast<const FontCallbackData*>(font_data);
     *glyph = fcd->mShaper->GetGlyph(unicode, variation_selector);
-    return true;
+    return *glyph != 0;
 }
 
 struct HMetricsHeader {

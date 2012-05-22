@@ -56,10 +56,14 @@ interface nsIDOMBlob : nsISupports
   [notxpcom] FileInfo getFileInfo(in FileManager aFileManager);
 };
 
-[scriptable, builtinclass, uuid(b096ef67-7b77-47f8-8e70-5d8ee36416bf)]
+[scriptable, builtinclass, uuid(eee028d1-8ce9-4c6c-b9ce-d89b656e1e17)]
 interface nsIDOMFile : nsIDOMBlob
 {
   readonly attribute DOMString name;
+
+  [implicit_jscontext]
+  readonly attribute jsval lastModifiedDate;
+
   readonly attribute DOMString mozFullPath;
 
   // This performs no security checks!

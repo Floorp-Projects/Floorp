@@ -183,6 +183,7 @@ public:
   // Overrides
   NS_IMETHOD GetSize(PRUint64* aSize);
   NS_IMETHOD GetType(nsAString& aType);
+  NS_IMETHOD GetLastModifiedDate(JSContext* cx, JS::Value *aLastModifiedDate);
   NS_IMETHOD GetMozFullPathInternal(nsAString& aFullPath);
   NS_IMETHOD GetInternalStream(nsIInputStream**);
 

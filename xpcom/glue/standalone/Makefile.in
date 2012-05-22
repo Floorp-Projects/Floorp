@@ -13,13 +13,19 @@ include $(srcdir)/../objs.mk
 
 EXTRA_DEPS += $(srcdir)/../objs.mk
 
+# On win we build two glue libs - glue linked to crt dlls here and in staticruntime we build
+# a statically linked glue lib.
+ifeq ($(OS_ARCH),WINNT)
+DIRS += staticruntime
+endif
+
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue
 DIST_INSTALL	= 1
 
 LOCAL_INCLUDES	= \
-		-I$(srcdir)/../../build \
-		$(NULL)
+	-I$(srcdir)/../../build \
+	$(NULL)
 
 ifeq (Darwin,$(OS_ARCH))
 ifeq (uikit,$(MOZ_WIDGET_TOOLKIT))
@@ -45,28 +51,21 @@ $(warning TinderboxPrint:<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=2
 endif
 
 CPPSRCS		= \
-		$(XPCOM_GLUE_SRC_LCPPSRCS)   \
-		nsStringAPI.cpp              \
-		nsXPCOMGlue.cpp              \
-		$(LINKSRC)                   \
-		$(NULL)
+	$(XPCOM_GLUE_SRC_LCPPSRCS)   \
+	nsStringAPI.cpp              \
+	nsXPCOMGlue.cpp              \
+	$(LINKSRC)                   \
+	$(NULL)
 
 SDK_HEADERS     = \
-		nsXPCOMGlue.h \
-		$(NULL)
+	nsXPCOMGlue.h \
+	$(NULL)
 
 SDK_LIBRARY     	= \
-		$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-		$(NULL)
+	$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
+	$(NULL)
 
-# we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
-
-
-# Pretend we're statically linking the CRT, even though we might not be: this
-# avoids "msvcrp" and assembly dependencies from creeping into the directives
-# for this library on Windows.
-USE_STATIC_LIBS = 1
 
 # Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
 STL_FLAGS	=
@@ -78,7 +77,7 @@ SRCS_IN_OBJDIR	= 1
 include $(topsrcdir)/config/rules.mk
 
 ifdef _MSC_VER
-# Don't include directives about which CRT to use
+# Don't include directives in obj files about which CRT to use
 OS_COMPILE_CXXFLAGS += -Zl
 OS_COMPILE_CFLAGS += -Zl
 DEFINES += -D_USE_ANSI_CPP

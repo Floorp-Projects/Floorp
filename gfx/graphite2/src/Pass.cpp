@@ -102,14 +102,14 @@ bool Pass::readPass(const byte * const pass_start, size_t pass_length, size_t su
     be::skip<uint16>(p, m_sSuccess + 1);
 
     // More sanity checks
-    if (   reinterpret_cast<const byte *>(o_rule_map) > pass_end
+    if (   reinterpret_cast<const byte *>(o_rule_map + m_sSuccess*sizeof(uint16)) > pass_end
             || p > pass_end)
         return false;
     const size_t numEntries = be::peek<uint16>(o_rule_map + m_sSuccess*sizeof(uint16));
     const byte * const   rule_map = p;
     be::skip<uint16>(p, numEntries);
 
-    if (p > pass_end) return false;
+    if (p + 2 > pass_end) return false;
     m_minPreCtxt = be::read<uint8>(p);
     m_maxPreCtxt = be::read<uint8>(p);
     const byte * const start_states = p;
@@ -120,7 +120,7 @@ bool Pass::readPass(const byte * const pass_start, size_t pass_length, size_t su
     be::skip<byte>(p, m_numRules);
     be::skip<byte>(p);     // skip reserved byte
 
-    if (p > pass_end) return false;
+    if (p + 2 > pass_end) return false;
     const size_t pass_constraint_len = be::read<uint16>(p);
     const uint16 * const o_constraint = reinterpret_cast<const uint16 *>(p);
     be::skip<uint16>(p, m_numRules + 1);
@@ -341,6 +341,26 @@ bool Pass::runFSM(FiniteStateMachine& fsm, Slot * slot) const
     return true;
 }
 
+#if !defined GRAPHITE2_NTRACING
+
+inline
+Slot * input_slot(const SlotMap &  slots, const int n)
+{
+	Slot * s = slots[slots.context() + n];
+	if (!s->isCopied()) 	return s;
+
+	return s->prev() ? s->prev()->next() : (s->next() ? s->next()->prev() : slots.segment.last());
+}
+
+inline
+Slot * output_slot(const SlotMap &  slots, const int n)
+{
+	Slot * s = slots[slots.context() + n - 1];
+	return s ? s->next() : slots.segment.first();
+}
+
+#endif //!defined GRAPHITE2_NTRACING
+
 void Pass::findNDoRule(Slot * & slot, Machine &m, FiniteStateMachine & fsm) const
 {
     assert(slot);
@@ -366,18 +386,17 @@ void Pass::findNDoRule(Slot * & slot, Machine &m, FiniteStateMachine & fsm) cons
 					if (r->rule->action->deletes()) fsm.slots.collectGarbage();
 					adjustSlot(adv, slot, fsm.slots);
 					*dbgout		<< "cursor" << slotid(slot)
-								<< json::close	// Close "output" object
 							<< json::close; // Close RuelEvent object
 
 					return;
 				}
 				else
+				{
 					*dbgout 	<< json::close	// close "considered" array
-							<< "output" << json::object
-								<< "slots" 	<< json::array << json::close
-								<< "cursor"	<< slotid(slot->next())
-								<< json::close
+							<< "output" << json::null
+							<< "cursor"	<< slotid(slot->next())
 							<< json::close;
+				}
         	}
         }
         else
@@ -397,23 +416,6 @@ void Pass::findNDoRule(Slot * & slot, Machine &m, FiniteStateMachine & fsm) cons
 }
 
 #if !defined GRAPHITE2_NTRACING
-
-inline
-Slot * input_slot(const SlotMap &  slots, const int n)
-{
-	Slot * s = slots[slots.context() + n];
-	if (!s->isCopied()) 	return s;
-
-	return s->prev() ? s->prev()->next() :  s->next()->prev();
-}
-
-inline
-Slot * output_slot(const SlotMap &  slots, const int n)
-{
-	Slot * s = slots[slots.context() + n - 1];
-	return s ? s->next() : slots.segment.first();
-}
-
 
 void Pass::dumpRuleEventConsidered(const FiniteStateMachine & fsm, const RuleEntry & re) const
 {
@@ -445,11 +447,18 @@ void Pass::dumpRuleEventOutput(const FiniteStateMachine & fsm, const Rule & r, S
 						<< json::close	// close Rule object
 				<< json::close // close considered array
 				<< "output" << json::object
+					<< "range" << json::flat << json::object
+						<< "start"	<< slotid(input_slot(fsm.slots, 0))
+						<< "end"	<< slotid(last_slot)
+					<< json::close // close "input"
 					<< "slots"	<< json::array;
 	fsm.slots.segment.positionSlots(0);
+
 	for(Slot * slot = output_slot(fsm.slots, 0); slot != last_slot; slot = slot->next())
 		*dbgout 		<< dslot(&fsm.slots.segment, slot);
-	*dbgout 			<< json::close; // close "slots";
+	*dbgout 			<< json::close 	// close "slots"
+				<< json::close;			// close "output" object
+
 }
 
 #endif

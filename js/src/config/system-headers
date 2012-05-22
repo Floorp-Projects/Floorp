@@ -21,8 +21,6 @@ all.h
 alloca.h
 alloc.h
 alsa/asoundlib.h
-alsa/pcm.h
-alsa/mixer.h
 android/log.h
 ansi_parms.h
 a.out.h

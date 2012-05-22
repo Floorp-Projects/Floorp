@@ -83,7 +83,7 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
     if (aIsCell) {
         // If aFrame is a container for font size inflation, then shrink
         // wrapping inside of it should not apply font size inflation.
-        AutoMaybeNullInflationContainer an(aFrame);
+        AutoMaybeDisableFontInflation an(aFrame);
 
         minCoord = aFrame->GetMinWidth(aRenderingContext);
         prefCoord = aFrame->GetPrefWidth(aRenderingContext);
