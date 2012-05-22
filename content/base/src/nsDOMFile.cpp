@@ -688,7 +688,7 @@ JSObject*
 nsDOMFileList::WrapObject(JSContext *cx, JSObject *scope,
                           bool *triedToWrap)
 {
-  return mozilla::dom::binding::FileList::create(cx, scope, this, triedToWrap);
+  return mozilla::dom::oldproxybindings::FileList::create(cx, scope, this, triedToWrap);
 }
 
 nsIDOMFile*

@@ -272,7 +272,7 @@ nsDOMTokenList::ToString(nsAString& aResult)
 JSObject*
 nsDOMTokenList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 {
-  return mozilla::dom::binding::DOMTokenList::create(cx, scope, this,
+  return mozilla::dom::oldproxybindings::DOMTokenList::create(cx, scope, this,
                                                      triedToWrap);
 }
 

@@ -108,7 +108,7 @@ JSObject*
 HTMLPropertiesCollection::WrapObject(JSContext* cx, JSObject* scope,
                                      bool* triedToWrap)
 {
-  return mozilla::dom::binding::HTMLPropertiesCollection::create(cx, scope, this,
+  return mozilla::dom::oldproxybindings::HTMLPropertiesCollection::create(cx, scope, this,
                                                                  triedToWrap);
 }
 
@@ -426,7 +426,7 @@ JSObject*
 PropertyNodeList::WrapObject(JSContext *cx, JSObject *scope,
                              bool *triedToWrap)
 {
-  return mozilla::dom::binding::PropertyNodeList::create(cx, scope, this,
+  return mozilla::dom::oldproxybindings::PropertyNodeList::create(cx, scope, this,
                                                          triedToWrap);
 }
 

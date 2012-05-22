@@ -293,6 +293,8 @@ def outParamForm(name, type):
         if type.specialtype == 'jsval':
             return 'vp'
         elif type.modifier == 'ref':
+            if isStringType(type):
+                return '(nsAString&)' + name
             return name
         else:
             return '&' + name

@@ -447,15 +447,14 @@ SuspectDOMExpandos(nsPtrHashKey<JSObject> *key, void *arg)
     Closure *closure = static_cast<Closure*>(arg);
     JSObject* obj = key->GetKey();
     nsISupports* native = nullptr;
-    if (js::IsProxy(obj)) {
-        NS_ASSERTION(dom::binding::instanceIsProxy(obj),
-                     "Not a DOM proxy?");
+    if (dom::oldproxybindings::instanceIsProxy(obj)) {
         native = static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
     }
     else {
-        NS_ASSERTION(dom::DOMJSClass::FromJSClass(JS_GetClass(obj))->mDOMObjectIsISupports,
-                     "Someone added a wrapper for a non-nsISupports native to DOMExpandos!");
-        native = dom::UnwrapDOMObject<nsISupports>(obj);
+        const dom::DOMClass* clasp;
+        dom::DOMObjectSlot slot = GetDOMClass(obj, clasp);
+        MOZ_ASSERT(slot != dom::eNonDOMObject && clasp->mDOMObjectIsISupports);
+        native = dom::UnwrapDOMObject<nsISupports>(obj, slot);
     }
     closure->cb->NoteXPCOMRoot(native);
     return PL_DHASH_NEXT;
@@ -2294,7 +2293,8 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
             }
         }
 
-        ok = mozilla::dom::binding::DefineStaticJSVals(cx);
+        ok = mozilla::dom::DefineStaticJSVals(cx) &&
+             mozilla::dom::oldproxybindings::DefineStaticJSVals(cx);
         if (!ok)
             return false;
 
