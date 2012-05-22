@@ -490,6 +490,9 @@ struct JSRuntime : js::RuntimeFriendFields
     int64_t             gcJitReleaseTime;
     JSGCMode            gcMode;
 
+    /* During shutdown, the GC needs to clean up every possible object. */
+    bool                gcShouldCleanUpEverything;
+
     /*
      * These flags must be kept separate so that a thread requesting a
      * compartment GC doesn't cancel another thread's concurrent request for a

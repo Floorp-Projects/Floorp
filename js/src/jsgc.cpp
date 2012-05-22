@@ -2872,7 +2872,7 @@ PurgeRuntime(JSTracer *trc)
 static bool
 ShouldPreserveJITCode(JSCompartment *c, int64_t currentTime)
 {
-    if (!c->rt->hasContexts() || !c->types.inferenceEnabled)
+    if (c->rt->gcShouldCleanUpEverything || !c->types.inferenceEnabled)
         return false;
 
     if (c->rt->alwaysPreserveCode)
@@ -3628,6 +3628,12 @@ IsDeterministicGCReason(gcreason::Reason reason)
 }
 #endif
 
+static bool
+ShouldCleanUpEverything(JSRuntime *rt, gcreason::Reason reason)
+{
+    return !rt->hasContexts() || reason == gcreason::CC_FORCED;
+}
+
 static void
 Collect(JSRuntime *rt, bool incremental, int64_t budget,
         JSGCInvocationKind gckind, gcreason::Reason reason)
@@ -3679,6 +3685,8 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
             collectedCount++;
     }
 
+    rt->gcShouldCleanUpEverything = ShouldCleanUpEverything(rt, reason);
+
     gcstats::AutoGCSlice agc(rt->gcStats, collectedCount, compartmentCount, reason);
 
     do {
@@ -3702,14 +3710,14 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
         }
 
         /* Need to re-schedule all compartments for GC. */
-        if (!rt->hasContexts() && rt->gcPoke)
+        if (rt->gcPoke && rt->gcShouldCleanUpEverything)
             PrepareForFullGC(rt);
 
         /*
          * On shutdown, iterate until finalizers or the JSGC_END callback
          * stop creating garbage.
          */
-    } while (!rt->hasContexts() && rt->gcPoke);
+    } while (rt->gcPoke && rt->gcShouldCleanUpEverything);
 }
 
 namespace js {
@@ -4578,4 +4586,3 @@ js_NewGCXML(JSContext *cx)
     return NewGCThing<JSXML>(cx, js::gc::FINALIZE_XML, sizeof(JSXML));
 }
 #endif
-

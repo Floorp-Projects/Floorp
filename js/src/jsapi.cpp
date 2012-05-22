@@ -718,6 +718,7 @@ JSRuntime::JSRuntime()
     gcNextFullGCTime(0),
     gcJitReleaseTime(0),
     gcMode(JSGC_MODE_GLOBAL),
+    gcShouldCleanUpEverything(false),
     gcIsNeeded(0),
     gcWeakMapList(NULL),
     gcStats(thisFromCtor()),
