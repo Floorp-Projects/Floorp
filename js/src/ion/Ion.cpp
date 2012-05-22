@@ -319,8 +319,15 @@ IonCode::trace(JSTracer *trc)
 {
     // Note that we cannot mark invalidated scripts, since we've basically
     // corrupted the code stream by injecting bailouts.
-    if (invalidated())
+    if (invalidated()) {
+        // Note that since we're invalidated, we won't mark the precious
+        // invalidator thunk referenced in the epilogue. We don't move
+        // executable code so the actual reference is okay, we just need to
+        // make sure it says alive before we return.
+        IonCompartment *ion = compartment()->ionCompartment();
+        MarkIonCodeRoot(trc, ion->getInvalidationThunkAddr(), "invalidator");
         return;
+    }
 
     if (jumpRelocTableBytes_) {
         uint8 *start = code_ + jumpRelocTableOffset();

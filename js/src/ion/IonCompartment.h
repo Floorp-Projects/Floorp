@@ -147,6 +147,9 @@ class IonCompartment
         }
         return invalidator_;
     }
+    IonCode **getInvalidationThunkAddr() {
+        return invalidator_.unsafeGetAddress();
+    }
 
     EnterIonCode enterJITInfallible() {
         JS_ASSERT(enterJIT_);
