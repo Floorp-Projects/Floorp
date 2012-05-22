@@ -185,8 +185,16 @@ public:
     * @param aIsSet         [OUT] a boolean being true if the css properties are set
     * @param aValueString   [IN/OUT] the attribute value (in) the list of css values (out)
     * @param aStyleType     [IN] SPECIFIED_STYLE_TYPE to query the specified style values
-                                 COMPUTED_STYLE_TYPE  to query the computed style values
+    *                            COMPUTED_STYLE_TYPE  to query the computed style values
+    *
+    * The nsIContent variant returns aIsSet instead of using an out parameter.
     */
+  bool IsCSSEquivalentToHTMLInlineStyleSet(nsIContent* aContent,
+                                           nsIAtom* aProperty,
+                                           const nsAString* aAttribute,
+                                           const nsAString& aValue,
+                                           PRUint8 aStyleType);
+
   nsresult    IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
                                                   nsIAtom * aHTMLProperty,
                                                   const nsAString * aAttribute,

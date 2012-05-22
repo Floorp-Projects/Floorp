@@ -1067,6 +1067,29 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
 // style equivalent to the HTML style aHTMLProperty/aHTMLAttribute/valueString?
 // The value of aStyleType controls the styles we retrieve: specified or
 // computed. The return value aIsSet is true if the CSS styles are set.
+//
+// The nsIContent variant returns aIsSet instead of using an out parameter, and
+// does not modify aValue.
+bool
+nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIContent* aContent,
+                                                    nsIAtom* aProperty,
+                                                    const nsAString* aAttribute,
+                                                    const nsAString& aValue,
+                                                    PRUint8 aStyleType)
+{
+  MOZ_ASSERT(aContent && aProperty);
+  MOZ_ASSERT(aStyleType == SPECIFIED_STYLE_TYPE ||
+             aStyleType == COMPUTED_STYLE_TYPE);
+  bool isSet;
+  nsAutoString value(aValue);
+  nsresult res = IsCSSEquivalentToHTMLInlineStyleSet(aContent->AsDOMNode(),
+                                                     aProperty, aAttribute,
+                                                     isSet, value, aStyleType);
+  NS_ASSERTION(NS_SUCCEEDED(res), "IsCSSEquivalentToHTMLInlineStyleSet failed");
+  NS_ENSURE_SUCCESS(res, false);
+  return isSet;
+}
+
 nsresult
 nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
                                                     nsIAtom *aHTMLProperty,
