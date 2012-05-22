@@ -1227,25 +1227,18 @@ nsHTMLEditor::UpdateBaseURL()
    to TypedText() to determine what action to take, but without passing
    an event.
    */
-NS_IMETHODIMP nsHTMLEditor::TypedText(const nsAString& aString,
-                                      PRInt32 aAction)
+NS_IMETHODIMP
+nsHTMLEditor::TypedText(const nsAString& aString, ETypingAction aAction)
 {
   nsAutoPlaceHolderBatch batch(this, nsGkAtoms::TypingTxnName);
 
-  switch (aAction)
-  {
-    case eTypedText:
-    case eTypedBreak:
-      {
-        return nsPlaintextEditor::TypedText(aString, aAction);
-      }
-    case eTypedBR:
-      {
-        nsCOMPtr<nsIDOMNode> brNode;
-        return InsertBR(address_of(brNode));  // only inserts a br node
-      }
-  } 
-  return NS_ERROR_FAILURE; 
+  if (aAction == eTypedBR) {
+    // only inserts a br node
+    nsCOMPtr<nsIDOMNode> brNode;
+    return InsertBR(address_of(brNode));
+  }
+
+  return nsPlaintextEditor::TypedText(aString, aAction);
 }
 
 NS_IMETHODIMP nsHTMLEditor::TabInTable(bool inIsShift, bool *outHandled)
