@@ -3642,6 +3642,15 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             pushed[0].addType(cx, Type::MagicArgType());
         break;
 
+      case JSOP_REST: {
+        TypeObject *rest = TypeScript::InitObject(cx, script, pc, JSProto_Array);
+        if (!rest)
+            return false;
+        pushed[0].addType(cx, Type::ObjectType(rest));
+        break;
+      }
+
+
       case JSOP_SETPROP: {
         jsid id = GetAtomId(cx, script, pc, 0);
         poppedTypes(pc, 1)->addSetProperty(cx, script, pc, poppedTypes(pc, 0), id);
