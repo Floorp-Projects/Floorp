@@ -6201,7 +6201,7 @@ var eagerHelperSettingSpec = {
       { name: 'always', value: Eagerness.ALWAYS },
     ]
   },
-  defaultValue: 1,
+  defaultValue: Eagerness.SOMETIMES,
   description: l10n.lookup('eagerHelperDesc'),
   ignoreTypeDifference: true
 };
@@ -6346,7 +6346,8 @@ FocusManager.prototype.removeMonitoredElement = function(element, where) {
 FocusManager.prototype.updatePosition = function(dimensions) {
   var ev = {
     tooltipVisible: this.isTooltipVisible,
-    outputVisible: this.isOutputVisible
+    outputVisible: this.isOutputVisible,
+    dimensions: dimensions
   };
   this.onVisibilityChange(ev);
 };
