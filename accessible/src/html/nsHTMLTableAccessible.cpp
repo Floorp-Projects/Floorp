@@ -533,6 +533,8 @@ PRUint32
 nsHTMLTableAccessible::ColCount()
 {
   nsITableLayout* tableLayout = GetTableLayout();
+  if (!tableLayout)
+    return 0;
 
   PRInt32 rowCount = 0, colCount = 0;
   tableLayout->GetTableSize(rowCount, colCount);
@@ -543,6 +545,8 @@ PRUint32
 nsHTMLTableAccessible::RowCount()
 {
   nsITableLayout* tableLayout = GetTableLayout();
+  if (!tableLayout)
+    return 0;
 
   PRInt32 rowCount = 0, colCount = 0;
   tableLayout->GetTableSize(rowCount, colCount);
