@@ -108,7 +108,7 @@ AC_ARG_WITH(android-ndk,
 
 AC_ARG_WITH(android-toolchain,
 [  --with-android-toolchain=DIR
-                          location of the Android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
+                          location of the Android toolchain],
     android_toolchain=$withval)
 
 AC_ARG_WITH(android-version,
@@ -119,18 +119,18 @@ AC_ARG_WITH(android-version,
 
 AC_ARG_WITH(android-platform,
 [  --with-android-platform=DIR
-                          location of platform dir, default NDK/build/platforms/android-5/arch-arm],
+                          location of platform dir],
     android_platform=$withval)
 
 case "$target" in
 arm-linux*-android*|*-linuxandroid*)
     android_tool_prefix="arm-linux-androideabi"
     ;;
-arm-android-eabi)
-    android_tool_prefix="arm-eabi"
-    ;;
 i?86-*android*)
     android_tool_prefix="i686-android-linux"
+    ;;
+mipsel-*android*)
+    android_tool_prefix="mipsel-linux-android"
     ;;
 *)
     android_tool_prefix="$target_os"
@@ -177,12 +177,18 @@ case "$target" in
 
         kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
 
-        android_toolchain="$android_ndk"/build/prebuilt/$kernel_name-x86/arm-eabi-4.4.0
-
-        # With newer NDK, the toolchain path has changed.
-        if ! test -d "$android_toolchain" ; then
-            android_toolchain="$android_ndk"/toolchains/arm-$kernel_name-androideabi-4.4.3/prebuilt/$kernel_name-x86
-        fi
+        case "$target_cpu" in
+        arm)
+            target_name=arm-linux-androideabi-4.4.3
+            ;;
+        i?86)
+            target_name=x86-4.4.3
+            ;;
+        mipsel)
+            target_name=mipsel-linux-android-4.4.3
+            ;;
+        esac
+        android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86
 
         if test -d "$android_toolchain" ; then
             AC_MSG_RESULT([$android_toolchain])
@@ -194,12 +200,19 @@ case "$target" in
     if test -z "$android_platform" ; then
         AC_MSG_CHECKING([for android platform directory])
 
-        android_platform="$android_ndk"/build/platforms/android-"$android_version"/arch-"$target_cpu"
+        case "$target_cpu" in
+        arm)
+            target_name=arm
+            ;;
+        i?86)
+            target_name=x86
+            ;;
+        mipsel)
+            target_name=mips
+            ;;
+        esac
 
-        # With newer NDK, the platform path has changed.
-        if ! test -d "$android_platform" ; then
-            android_platform="$android_ndk"/platforms/android-"$android_version"/arch-"$target_cpu"
-        fi
+        android_platform="$android_ndk"/platforms/android-"$android_version"/arch-"$target_name"
 
         if test -d "$android_platform" ; then
             AC_MSG_RESULT([$android_platform])
@@ -3299,6 +3312,7 @@ MAKEFILES="
     config/nsprincl.mk
     config/nsprincl.sh
     config/nspr-config
+    config/nspr.pc
     lib/Makefile
     lib/ds/Makefile
     lib/libc/Makefile
