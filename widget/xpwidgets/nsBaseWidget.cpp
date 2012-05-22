@@ -25,6 +25,7 @@
 #include "nsIGfxInfo.h"
 #include "npapi.h"
 #include "base/thread.h"
+#include "prenv.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -37,6 +38,9 @@ static bool debug_InSecureKeyboardInputMode = false;
 #ifdef NOISY_WIDGET_LEAKS
 static PRInt32 gNumWidgets;
 #endif
+
+static void InitOnlyOnce();
+static bool sUseOffMainThreadCompositing = false;
 
 using namespace mozilla::layers;
 using namespace mozilla;
@@ -100,8 +104,9 @@ nsBaseWidget::nsBaseWidget()
 #endif
 
 #ifdef DEBUG
-    debug_RegisterPrefCallbacks();
+  debug_RegisterPrefCallbacks();
 #endif
+  InitOnlyOnce();
 }
 
 
@@ -889,6 +894,11 @@ void nsBaseWidget::CreateCompositor()
   }
 }
 
+bool nsBaseWidget::UseOffMainThreadCompositing()
+{
+  return sUseOffMainThreadCompositing;
+}
+
 LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
                                             LayersBackend aBackendHint,
                                             LayerManagerPersistence aPersistence,
@@ -901,9 +911,7 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
     if (mUseAcceleratedRendering) {
 
       // Try to use an async compositor first, if possible
-      bool useCompositor =
-        Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
-      if (useCompositor) {
+      if (UseOffMainThreadCompositing()) {
         // e10s uses the parameter to pass in the shadow manager from the TabChild
         // so we don't expect to see it there since this doesn't support e10s.
         NS_ASSERTION(aShadowManager == nsnull, "Async Compositor not supported with e10s");
@@ -1301,6 +1309,25 @@ nsBaseWidget::GetGLFrameBufferFormat()
     return LOCAL_GL_RGBA;
   }
   return LOCAL_GL_NONE;
+}
+
+static void InitOnlyOnce()
+{
+  static bool once = true;
+  if (!once) {
+    return;
+  }
+  once = false;
+
+#ifdef MOZ_X11
+  // On X11 platforms only use OMTC if firefox was initalized with thread-safe 
+  // X11 (else it would crash).
+  sUseOffMainThreadCompositing = (PR_GetEnv("MOZ_USE_OMTC") != NULL);
+#else
+  sUseOffMainThreadCompositing = mozilla::Preferences::GetBool(
+        "layers.offmainthreadcomposition.enabled", 
+        false);
+#endif
 }
 
 #ifdef DEBUG
