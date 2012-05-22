@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>rules</key>
+        <dict>
+            <key>^Info.plist$</key>
+            <true/>
+            <key>^PkgInfo$</key>
+            <true/>
+            <key>^MacOS/</key>
+            <true/>
+            <key>^Resources/</key>
+            <true/>
+            <key>^MacOS/extensions/.*</key><dict>
+                <key>omit</key>
+                <true/>
+            </dict>
+            <key>^MacOS/distribution/.*</key><dict>
+                <key>omit</key>
+                <true/>
+            </dict>
+            <key>^MacOS/updates/.*</key><dict>
+                <key>omit</key>
+                <true/>
+            </dict>
+            <key>^MacOS/active-update.xml$</key><dict>
+                <key>omit</key>
+                <true/>
+            </dict>
+            <key>^MacOS/defaults/.*</key><dict>
+                <key>omit</key>
+                <true/>
+            </dict>
+            <key>^MacOS/mozilla.cfg$</key><dict>
+                <key>omit</key>
+                <true/>
+            </dict>
+            <key>^MacOS/updates.xml$</key><dict>
+                <key>omit</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
+</plist>
