@@ -669,36 +669,22 @@ Parser::functionBody(FunctionBodyType type)
         }
     }
 
-    bool hasRest = tc->sc->fun()->hasRest();
-    BindingKind bindKind = tc->sc->bindings.lookup(context, arguments, NULL);
-    switch (bindKind) {
-      case NONE:
-        /* Functions with rest parameters are free from arguments. */
-        if (hasRest)
-            break;
-
-        /*
-         * Even if 'arguments' isn't explicitly mentioned, dynamic name lookup
-         * forces an 'arguments' binding.
-         */
-        if (!tc->sc->bindingsAccessedDynamically())
-            break;
+    /*
+     * Even if 'arguments' isn't explicitly mentioned, dynamic name lookup
+     * forces an 'arguments' binding.
+     */
+    if (tc->sc->bindingsAccessedDynamically() && !tc->sc->bindings.hasBinding(context, arguments)) {
         if (!tc->sc->bindings.addVariable(context, arguments))
             return NULL;
+    }
 
-        /* 'arguments' is now bound, so fall through. */
-      case VARIABLE:
-      case CONSTANT:        
-        if (hasRest) {
-            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARGUMENTS_AND_REST);
-            return NULL;
-        }
-
-        /*
-         * Now that all possible 'arguments' bindings have been added, note whether
-         * 'arguments' has a local binding and whether it unconditionally needs an
-         * arguments object.
-         */
+    /*
+     * Now that all possible 'arguments' bindings have been added, note whether
+     * 'arguments' has a local binding and whether it unconditionally needs an
+     * arguments object.
+     */
+    BindingKind bindKind = tc->sc->bindings.lookup(context, arguments, NULL);
+    if (bindKind == VARIABLE || bindKind == CONSTANT) {
         tc->sc->setFunArgumentsHasLocalBinding();
 
         /* Dynamic scope access destroys all hope of optimization. */
@@ -719,32 +705,11 @@ Parser::functionBody(FunctionBodyType type)
                     tc->sc->setFunDefinitelyNeedsArgsObj();
                     break;
                 }
-            }
+             }
         }
-        break;
-      case ARGUMENT:
-        break;
     }
 
     return pn;
-}
-
-bool
-Parser::checkForArgumentsAndRest()
-{
-    JS_ASSERT(!tc->sc->inFunction);
-    if (callerFrame && callerFrame->isFunctionFrame() && callerFrame->fun()->hasRest()) {
-        PropertyName *arguments = context->runtime->atomState.argumentsAtom;
-        for (AtomDefnRange r = tc->lexdeps->all(); !r.empty(); r.popFront()) {
-            if (r.front().key() == arguments) {
-                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARGUMENTS_AND_REST);
-                return false;
-            }
-        }
-        /* We're not in a function context, so we don't expect any bindings. */
-        JS_ASSERT(tc->sc->bindings.lookup(context, arguments, NULL) == NONE);
-    }
-    return true;
 }
 
 // Create a placeholder Definition node for |atom|.
@@ -1285,14 +1250,12 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 }
 
 bool
-Parser::functionArguments(ParseNode **listp, bool &hasRest)
+Parser::functionArguments(ParseNode **listp)
 {
     if (tokenStream.getToken() != TOK_LP) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_BEFORE_FORMAL);
         return false;
     }
-
-    hasRest = false;
 
     if (!tokenStream.matchToken(TOK_RP)) {
 #if JS_HAS_DESTRUCTURING
@@ -1302,10 +1265,6 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
 #endif
 
         do {
-            if (hasRest) {
-                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PARAMETER_AFTER_REST);
-                return false;
-            }
             switch (TokenKind tt = tokenStream.getToken()) {
 #if JS_HAS_DESTRUCTURING
               case TOK_LB:
@@ -1366,18 +1325,6 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
                 break;
               }
 #endif /* JS_HAS_DESTRUCTURING */
-
-              case TOK_TRIPLEDOT:
-              {
-                hasRest = true;
-                tt = tokenStream.getToken();
-                if (tt != TOK_NAME) {
-                    if (tt != TOK_ERROR)
-                        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NO_REST_NAME);
-                    return false;
-                }
-                /* Fall through */
-              }
 
               case TOK_NAME:
               {
@@ -1572,13 +1519,10 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
 
     /* Now parse formal argument list and compute fun->nargs. */
     ParseNode *prelude = NULL;
-    bool hasRest;
-    if (!functionArguments(&prelude, hasRest))
+    if (!functionArguments(&prelude))
         return NULL;
 
     fun->setArgCount(funsc.bindings.numArgs());
-    if (hasRest)
-        fun->setHasRest();
 
 #if JS_HAS_DESTRUCTURING
     /*

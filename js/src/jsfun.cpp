@@ -102,10 +102,6 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)
     StackFrame *fp = iter.fp();
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
-        if (fun->hasRest()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_FUNCTION_ARGUMENTS_AND_REST);
-            return false;
-        }
         /* Warn if strict about f.arguments or equivalent unqualified uses. */
         if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING | JSREPORT_STRICT, js_GetErrorMessage,
                                           NULL, JSMSG_DEPRECATED_USAGE, js_arguments_str)) {
@@ -295,7 +291,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
         Value v;
         if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
-            v.setInt32(fun->nargs - fun->hasRest());
+            v.setInt32(fun->nargs);
         else
             v.setString(fun->atom ? fun->atom : cx->runtime->emptyString);
 
@@ -1007,8 +1003,6 @@ Function(JSContext *cx, unsigned argc, Value *vp)
     Bindings bindings(cx);
     Bindings::StackRoot bindingsRoot(cx, &bindings);
 
-    bool hasRest = false;
-
     const char *filename;
     unsigned lineno;
     JSPrincipals *originPrincipals;
@@ -1098,28 +1092,8 @@ Function(JSContext *cx, unsigned argc, Value *vp)
                  * Check that it's a name.  This also implicitly guards against
                  * TOK_ERROR, which was already reported.
                  */
-                if (hasRest) {
-                    ReportCompileErrorNumber(cx, &ts, NULL, JSREPORT_ERROR,
-                                             JSMSG_PARAMETER_AFTER_REST);
-                    return false;
-                }
-
-                if (tt != TOK_NAME) {
-                    if (tt == TOK_TRIPLEDOT) {
-                        hasRest = true;
-                        tt = ts.getToken();
-                        if (tt != TOK_NAME) {
-                            if (tt != TOK_ERROR)
-                                ReportCompileErrorNumber(cx, &ts, NULL,
-                                                         JSREPORT_ERROR,
-                                                         JSMSG_NO_REST_NAME);
-                            return false;
-                        }
-                    }
-                    else {
-                        return OnBadFormal(cx, tt);
-                    }
-                }
+                if (tt != TOK_NAME)
+                    return OnBadFormal(cx, tt);
 
                 /* Check for a duplicate parameter name. */
                 RootedVar<PropertyName*> name(cx, ts.currentToken().name());
@@ -1181,9 +1155,6 @@ Function(JSContext *cx, unsigned argc, Value *vp)
                                              global, cx->runtime->atomState.anonymousAtom));
     if (!fun)
         return false;
-
-    if (hasRest)
-        fun->setHasRest();
 
     bool ok = frontend::CompileFunctionBody(cx, fun, principals, originPrincipals,
                                             &bindings, chars, length, filename, lineno,

@@ -1520,18 +1520,12 @@ TokenStream::getTokenInternal()
             numStart = userbuf.addressOfNextRawChar() - 2;
             goto decimal_dot;
         }
-        if (c == '.') {
-            qc = getCharIgnoreEOL();
-            if (qc == '.') {
-                tt = TOK_TRIPLEDOT;
-                goto out;
-            }
-            ungetCharIgnoreEOL(qc);
 #if JS_HAS_XML_SUPPORT
+        if (c == '.') {
             tt = TOK_DBLDOT;
             goto out;
-#endif
         }
+#endif
         ungetCharIgnoreEOL(c);
         tt = TOK_DOT;
         goto out;
@@ -2164,7 +2158,6 @@ TokenKindToString(TokenKind tt)
       case TOK_INC:             return "TOK_INC";
       case TOK_DEC:             return "TOK_DEC";
       case TOK_DOT:             return "TOK_DOT";
-      case TOK_TRIPLEDOT:       return "TOK_TRIPLEDOT";
       case TOK_LB:              return "TOK_LB";
       case TOK_RB:              return "TOK_RB";
       case TOK_LC:              return "TOK_LC";
