@@ -3416,7 +3416,6 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   if (!mWidget || !mPluginWindow || !mInstance || !mObjectFrame)
     return nsnull;
 
-  NPDrawingModel drawingModel = GetDrawingModel();
   NPEventModel eventModel = GetEventModel();
 
   nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
@@ -3458,6 +3457,7 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 
 #ifndef NP_NO_QUICKDRAW
   // set the port coordinates
+  NPDrawingModel drawingModel = GetDrawingModel();
   if (drawingModel == NPDrawingModelQuickDraw) {
     mPluginWindow->x = -static_cast<NP_Port*>(pluginPort)->portx;
     mPluginWindow->y = -static_cast<NP_Port*>(pluginPort)->porty;
