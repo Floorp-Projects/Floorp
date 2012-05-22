@@ -862,7 +862,7 @@ WeaveSvc.prototype = {
 
   persistLogin: function persistLogin() {
     try {
-      this._identity.persistCredentials();
+      this._identity.persistCredentials(true);
     } catch (ex) {
       this._log.info("Unable to persist credentials: " + ex);
     }

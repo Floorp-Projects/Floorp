@@ -333,8 +333,8 @@ IdentityManager.prototype = {
    * If the password store is locked (e.g. if the master password hasn't been
    * entered), this could throw an exception.
    */
-  persistCredentials: function persistCredentials() {
-    if (this._basicPasswordUpdated) {
+  persistCredentials: function persistCredentials(force) {
+    if (this._basicPasswordUpdated || force) {
       if (this._basicPassword) {
         this._setLogin(PWDMGR_PASSWORD_REALM, this.username,
                        this._basicPassword);
@@ -347,7 +347,7 @@ IdentityManager.prototype = {
       this._basicPasswordUpdated = false;
     }
 
-    if (this._syncKeyUpdated) {
+    if (this._syncKeyUpdated || force) {
       if (this._syncKey) {
         this._setLogin(PWDMGR_PASSPHRASE_REALM, this.username, this._syncKey);
       } else {
