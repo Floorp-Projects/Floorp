@@ -44,7 +44,7 @@ function onLoad(aEvent) {
   AppsUI.shortcut = contextmenus.add(gStrings.GetStringFromName("appsContext.shortcut"), contextmenus.SelectorContext("div[mozApp]"),
     function(aTarget) {
       let manifest = aTarget.manifest;
-      createShortcut(manifest.name, manifest.fullLaunchPath(), manifest.iconURLForSize("64"), "webapp");
+      gChromeWin.WebappsUI.createShortcut(manifest.name, manifest.fullLaunchPath(), manifest.iconURLForSize("64"), "webapp");
     });
   AppsUI.uninstall = contextmenus.add(gStrings.GetStringFromName("appsContext.uninstall"), contextmenus.SelectorContext("div[mozApp]"),
     function(aTarget) {
@@ -120,38 +120,4 @@ function onUninstall(aEvent) {
     if (!parent.firstChild)
       document.getElementById("noapps").className = "";
   }
-}
-
-function createShortcut(aTitle, aURL, aIconURL, aType) {
-  // The images are 64px, but Android will resize as needed.
-  // Bigger is better than too small.
-  const kIconSize = 64;
-
-  let canvas = document.createElement("canvas");
-
-  function _createShortcut() {
-    let icon = canvas.toDataURL("image/png", "");
-    canvas = null;
-    try {
-      let shell = Cc["@mozilla.org/browser/shell-service;1"].createInstance(Ci.nsIShellService);
-      shell.createShortcut(aTitle, aURL, icon, aType);
-    } catch(e) {
-      Cu.reportError(e);
-    }
-  }
-
-  canvas.width = canvas.height = kIconSize;
-  let ctx = canvas.getContext("2d");
-
-  let favicon = new Image();
-  favicon.onload = function() {
-    ctx.drawImage(favicon, 0, 0, kIconSize, kIconSize);
-    _createShortcut();
-  }
-
-  favicon.onerror = function() {
-    Cu.reportError("CreateShortcut: favicon image load error");
-  }
-
-  favicon.src = aIconURL;
 }
