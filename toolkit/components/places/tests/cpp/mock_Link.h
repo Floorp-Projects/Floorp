@@ -71,9 +71,9 @@ namespace mozilla {
 namespace dom {
 
 Link::Link(Element* aElement)
-: mLinkState(mozilla::dom::Link::defaultState)
+: mElement(aElement)
+, mLinkState(mozilla::dom::Link::defaultState)
 , mRegistered(false)
-, mElement(aElement)
 {
 }
 
