@@ -1092,14 +1092,14 @@ Function .onInit
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Left   "0"
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Right  "-1"
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Top    "5"
-  WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Bottom "15"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Bottom "25"
 
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Type   "checkbox"
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Text   "$(MAINTENANCE_SERVICE_CHECKBOX_DESC)"
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Left   "0"
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Right  "-1"
-  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Top    "20"
-  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Bottom "30"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Top    "27"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Bottom "37"
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" State  "1"
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Flags  "GROUP"
 

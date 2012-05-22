@@ -1758,6 +1758,7 @@ HUD_SERVICE.prototype =
     // Remove the HUDBox and the consolePanel if the Web Console is inside a
     // floating panel.
     if (hud.consolePanel && hud.consolePanel.parentNode) {
+      hud.consolePanel.hidePopup();
       hud.consolePanel.parentNode.removeChild(hud.consolePanel);
       hud.consolePanel.removeAttribute("hudId");
       hud.consolePanel = null;
