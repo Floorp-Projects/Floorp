@@ -38,6 +38,7 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../statusfilter \
   -I$(srcdir)/../typeaheadfind \
   -I$(srcdir)/../url-classifier \
+  -I$(srcdir)/../../xre \
   $(NULL)
 
 ifdef ALERTS_SERVICE

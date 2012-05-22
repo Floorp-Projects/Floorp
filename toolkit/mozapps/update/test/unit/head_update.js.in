@@ -31,6 +31,11 @@ const IS_SHARK = true;
 #else
 const IS_SHARK = false;
 #endif
+#ifdef MOZ_DEBUG
+const BUNDLE_NAME = "@MOZ_APP_DISPLAYNAME@Debug.app";
+#else
+const BUNDLE_NAME = "@MOZ_APP_DISPLAYNAME@.app";
+#endif
 #else
 const IS_MACOSX = false;
 #endif
@@ -47,6 +52,7 @@ const IS_ANDROID = true;
 const IS_ANDROID = false;
 #endif
 
+const USE_EXECV = IS_UNIX && !IS_MACOSX;
 
 #ifdef MOZ_VERIFY_MAR_SIGNATURE
 const IS_MAR_CHECKS_ENABLED = true;
@@ -58,6 +64,11 @@ const URL_HOST = "http://localhost:4444/";
 const URL_PATH = "data";
 
 const APPLY_TO_DIR_SUFFIX = "_applyToDir/";
+#ifdef XP_MACOSX
+const UPDATED_DIR_SUFFIX = "Updated.app/";
+#else
+const UPDATED_DIR_SUFFIX = "updated/";
+#endif
 const HELPER_BIN_FILE = "TestAUSHelper" + BIN_SUFFIX;
 const MAR_COMPLETE_FILE = "data/complete.mar";
 const MAR_PARTIAL_FILE = "data/partial.mar";
@@ -72,9 +83,12 @@ const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
 const UPDATES_DIR_SUFFIX = "_mar";
 
 const LOG_COMPLETE_SUCCESS = "data/complete_log_success";
+const LOG_COMPLETE_SWITCH_SUCCESS = "data/complete_log_switch_success"
 const LOG_COMPLETE_CC_SUCCESS = "data/complete_cc_log_success";
+const LOG_COMPLETE_CC_SWITCH_SUCCESS = "data/complete_cc_log_switch_success";
 
 const LOG_PARTIAL_SUCCESS = "data/partial_log_success";
+const LOG_PARTIAL_SWITCH_SUCCESS = "data/partial_log_switch_success";
 const LOG_PARTIAL_FAILURE = "data/partial_log_failure";
 
 const ERR_CALLBACK_FILE_IN_USE = "NS_main: file in use - failed to " +
@@ -84,11 +98,13 @@ const ERR_RENAME_FILE = "rename_file: failed to rename file";
 const ERR_UNABLE_OPEN_DEST = "unable to open destination file";
 const ERR_BACKUP_DISCARD = "backup_discard: unable to remove";
 
-const LOG_SVC_SUCCESSFUL_LAUNCH = "updater.exe was launched and run successfully!";
+const LOG_SVC_SUCCESSFUL_LAUNCH = "Process was started... waiting on result.";
 
 // variables are used instead of contants so tests can override these values
 var gCallbackBinFile = "callback_app" + BIN_SUFFIX;
 var gCallbackArgs = ["./", "callback.log", "Test Arg 2", "Test Arg 3"];
+var gBackgroundUpdate = false;
+var gSwitchApp = false;
 
 // Time to wait for the test helper process before continuing the test
 const TEST_HELPER_TIMEOUT = 100;
@@ -276,6 +292,8 @@ var DEBUG_AUS_TEST = true;
 
 #include ../shared.js
 
+const STATE_APPLIED_PLATFORM = IS_WIN ? STATE_APPLIED_SVC : STATE_APPLIED;
+
 /**
  * Nulls out the most commonly used global vars used by tests as appropriate.
  */
@@ -292,8 +310,6 @@ function cleanUp() {
   // outside of the scope of this test don't assert and thereby cause app update
   // tests to fail.
   gAUS.observe(null, "xpcom-shutdown", "");
-
-  Services.dirsvc.unregisterProvider(gDirProvider);
 
   if (gXHR) {
     gXHRCallback     = null;
@@ -372,6 +388,63 @@ function getApplyDirFile(aRelPath, allowNonexistent) {
 }
 
 /**
+ * Helper function for getting the updated directory.
+ */
+function getUpdatedDirPath() {
+  let suffix = "";
+  if (gBackgroundUpdate) {
+    suffix = UPDATED_DIR_SUFFIX;
+  }
+  return getApplyDirPath() + suffix;
+}
+
+/**
+ * Helper function for getting the nsIFile for the directory where the update
+ * has been applied.
+ *
+ * This will be the same as getApplyDirFile for foreground updates, but will
+ * point to a different file for the case of background updates.
+ *
+ * Functions which attempt to access the files in the updated directory should
+ * be using this instead of getApplyDirFile.
+ *
+ * @return  The nsIFile for the directory where the update has been applied.
+ */
+function getTargetDirFile(aRelPath, allowNonexistent) {
+  let relpath = getUpdatedDirPath() + (aRelPath ? aRelPath : "");
+  return do_get_file(relpath, allowNonexistent);
+}
+
+if (IS_WIN) {
+  const kLockFileName = "updated.update_in_progress.lock";
+  /**
+   * Helper function for locking a directory on Windows.
+   */
+  function lockDirectory(aDir) {
+    var file = aDir.clone();
+    file.append(kLockFileName);
+    file.create(file.NORMAL_FILE_TYPE, 0444);
+    file.QueryInterface(AUS_Ci.nsILocalFileWin);
+    file.fileAttributesWin |= file.WFA_READONLY;
+    file.fileAttributesWin &= ~file.WFA_READWRITE;
+    do_check_true(file.exists());
+    do_check_false(file.isWritable());
+  }
+  /**
+   * Helper function for unlocking a directory on Windows.
+   */
+  function unlockDirectory(aDir) {
+    var file = aDir.clone();
+    file.append(kLockFileName);
+    file.QueryInterface(AUS_Ci.nsILocalFileWin);
+    file.fileAttributesWin |= file.WFA_READWRITE;
+    file.fileAttributesWin &= ~file.WFA_READONLY;
+    file.remove(false);
+    do_check_false(file.exists());
+  }
+}
+
+/**
  * Helper function for updater tests for launching the updater binary to apply
  * a mar file.
  *
@@ -408,6 +481,13 @@ function runUpdate() {
 
   let applyToDir = getApplyDirFile();
   let applyToDirPath = applyToDir.path;
+  if (gBackgroundUpdate || gSwitchApp) {
+    applyToDirPath += "/" + UPDATED_DIR_SUFFIX;
+  }
+  if (IS_WIN) {
+    // Convert to native path
+    applyToDirPath = applyToDirPath.replace(/\//g, "\\");
+  }
   if (/ /.test(applyToDirPath))
     applyToDirPath = '"' + applyToDirPath + '"';
 
@@ -426,8 +506,18 @@ function runUpdate() {
   updateSettingsIni.append(UPDATE_SETTINGS_INI_FILE);
   writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
 
-  let args = [updatesDirPath, applyToDirPath, 0, cwdPath, callbackAppPath].
-             concat(gCallbackArgs);
+  let args = [updatesDirPath, applyToDirPath, 0];
+  if (gBackgroundUpdate) {
+    args[2] = -1;
+  } else {
+    if (gSwitchApp) {
+      args[2] = "0/replace";
+    }
+    args = args.concat([cwdPath, callbackAppPath]);
+    args = args.concat(gCallbackArgs);
+  }
+  logTestInfo("Running the updater: " + updateBin.path + " " + args.join(" "));
+
   let process = AUS_Cc["@mozilla.org/process/util;1"].
                 createInstance(AUS_Ci.nsIProcess);
   process.init(updateBin);
@@ -500,6 +590,10 @@ function shouldRunServiceTest(aFirstTest) {
              process.exitValue);
   }
 
+#ifdef DISABLE_UPDATER_AUTHENTICODE_CHECK
+  // We won't be performing signature checks.
+  return true;
+#else
   // Make sure the binaries are signed
   args = ["check-signature", updaterBinPath];
   process = AUS_Cc["@mozilla.org/process/util;1"].
@@ -512,6 +606,7 @@ function shouldRunServiceTest(aFirstTest) {
   logTestInfo("this test can only run on builds with signed binaries. " +
               HELPER_BIN_FILE + " returned " + process.exitValue)
   return false;
+#endif
 }
 
 /**
@@ -717,6 +812,11 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
   // Override the update root directory
   gEnvUpdateRootOverride = updatesDir.path;
   gEnvAppDirOverride = getApplyDirFile(null).path;
+
+  if (gSwitchApp) {
+    // We want to set the env vars again
+    gShouldResetEnv = undefined;
+  }
 
   setEnvironment();
 
@@ -928,13 +1028,15 @@ function setupUpdaterTest(aMarFile) {
   let afterApplyBinDir = getApplyDirFile("a/b/", true);
   helperBin.copyTo(afterApplyBinDir, gCallbackBinFile);
 
-  let updaterIniContents = "[Strings]\n" +
-                           "Title=Update XPCShell Test\n" +
-                           "Info=Application Update Test - " + TEST_ID + "\n";
-  let updaterIni = updatesDir.clone();
-  updaterIni.append(FILE_UPDATER_INI);
-  writeFile(updaterIni, updaterIniContents);
-  updaterIni.copyTo(afterApplyBinDir, FILE_UPDATER_INI);
+  if (!gBackgroundUpdate && !gSwitchApp) {
+    let updaterIniContents = "[Strings]\n" +
+                             "Title=Update XPCShell Test\n" +
+                             "Info=Application Update Test - " + TEST_ID + "\n";
+    let updaterIni = updatesDir.clone();
+    updaterIni.append(FILE_UPDATER_INI);
+    writeFile(updaterIni, updaterIniContents);
+    updaterIni.copyTo(afterApplyBinDir, FILE_UPDATER_INI);
+  }
 
   // Copy the mar that will be applied
   let mar = do_get_file(aMarFile);
@@ -1014,8 +1116,29 @@ function cleanupUpdaterTest() {
 function checkUpdateLogContents(aCompareLogFile) {
   let updateLog = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX, true);
   updateLog.append(FILE_UPDATE_LOG);
-  // Skip the first two lines since they contain absolute paths.
-  let updateLogContents = readFileBytes(updateLog).split("\n").slice(2).join("\n");
+  let updateLogContents = readFileBytes(updateLog);
+  if (gBackgroundUpdate) {
+    // Skip the background update messages
+    updateLogContents = updateLogContents.replace(/Performing a background update/, "");
+  } else if (gSwitchApp) {
+    // Skip the switch app request messages
+    updateLogContents = updateLogContents.replace(/Performing a background update/, "");
+    updateLogContents = updateLogContents.replace(/Performing a replace request/, "");
+  }
+  // Skip the source/destination lines since they contain absolute paths.
+  updateLogContents = updateLogContents.replace(/SOURCE DIRECTORY.*/g, "");
+  updateLogContents = updateLogContents.replace(/DESTINATION DIRECTORY.*/g, "");
+  if (gSwitchApp) {
+    // Remove the lines which contain absolute paths
+    updateLogContents = updateLogContents.replace(/^Begin moving.*$/mg, "");
+#ifdef XP_MACOSX
+    // Remove the entire section about moving the precomplete file as it contains
+    // absolute paths.
+    updateLogContents = updateLogContents.replace(/\n/g, "%%%EOL%%%");
+    updateLogContents = updateLogContents.replace(/Moving the precomplete file.*Finished moving the precomplete file/, "");
+    updateLogContents = updateLogContents.replace(/%%%EOL%%%/g, "\n");
+#endif
+  }
   updateLogContents = updateLogContents.replace(/\r/g, "");
   // Replace error codes since they are different on each platform.
   updateLogContents = updateLogContents.replace(/, err:.*\n/g, "\n");
@@ -1024,9 +1147,15 @@ function checkUpdateLogContents(aCompareLogFile) {
   // The FindFile results when enumerating the filesystem on Windows is not
   // determistic so the results matching the following need to be ignored.
   updateLogContents = updateLogContents.replace(/.* a\/b\/7\/7text.*\n/g, "");
+  // Remove consecutive newlines
+  updateLogContents = updateLogContents.replace(/\n+/g, "\n");
+  // Remove leading and trailing newlines
+  updateLogContents = updateLogContents.replace(/^\n|\n$/g, "");
 
   let compareLog = do_get_file(aCompareLogFile);
   let compareLogContents = readFileBytes(compareLog);
+  // Remove leading and trailing newlines
+  compareLogContents = compareLogContents.replace(/^\n|\n$/g, "");
 
   do_check_eq(compareLogContents, updateLogContents);
 }
@@ -1046,7 +1175,7 @@ function checkUpdateLogContains(aCheckString) {
 function checkFilesAfterUpdateSuccess() {
   logTestInfo("testing contents of files after a successful update");
   TEST_FILES.forEach(function CFAUS_TF_FE(aTestFile) {
-    let testFile = getApplyDirFile(aTestFile.relPathDir + aTestFile.fileName, true);
+    let testFile = getTargetDirFile(aTestFile.relPathDir + aTestFile.fileName, true);
     logTestInfo("testing file: " + testFile.path);
     if (aTestFile.compareFile || aTestFile.compareContents) {
       do_check_true(testFile.exists());
@@ -1082,7 +1211,7 @@ function checkFilesAfterUpdateSuccess() {
               "after a successful update");
   var testDirs = TEST_DIRS.concat(ADDITIONAL_TEST_DIRS);
   testDirs.forEach(function CFAUS_TD_FE(aTestDir) {
-    let testDir = getApplyDirFile(aTestDir.relPathDir, true);
+    let testDir = getTargetDirFile(aTestDir.relPathDir, true);
     logTestInfo("testing directory: " + testDir.path);
     if (aTestDir.dirRemoved) {
       do_check_false(testDir.exists());
@@ -1092,7 +1221,7 @@ function checkFilesAfterUpdateSuccess() {
 
       if (aTestDir.files) {
         aTestDir.files.forEach(function CFAUS_TD_F_FE(aTestFile) {
-          let testFile = getApplyDirFile(aTestDir.relPathDir + aTestFile, true);
+          let testFile = getTargetDirFile(aTestDir.relPathDir + aTestFile, true);
           logTestInfo("testing directory file: " + testFile.path);
           if (aTestDir.filesRemoved) {
             do_check_false(testFile.exists());
@@ -1105,12 +1234,12 @@ function checkFilesAfterUpdateSuccess() {
 
       if (aTestDir.subDirs) {
         aTestDir.subDirs.forEach(function CFAUS_TD_SD_FE(aSubDir) {
-          let testSubDir = getApplyDirFile(aTestDir.relPathDir + aSubDir, true);
+          let testSubDir = getTargetDirFile(aTestDir.relPathDir + aSubDir, true);
           logTestInfo("testing sub-directory: " + testSubDir.path);
           do_check_true(testSubDir.exists());
           if (aTestDir.subDirFiles) {
             aTestDir.subDirFiles.forEach(function CFAUS_TD_SDF_FE(aTestFile) {
-              let testFile = getApplyDirFile(aTestDir.relPathDir + aSubDir + aTestFile, true);
+              let testFile = getTargetDirFile(aTestDir.relPathDir + aSubDir + aTestFile, true);
               logTestInfo("testing sub-directory file: " + testFile.path);
               do_check_true(testFile.exists());
             });
@@ -1126,11 +1255,15 @@ function checkFilesAfterUpdateSuccess() {
 /**
  * Helper function for updater binary tests for verifying the state of files and
  * directories after a failed update.
+ *
+ * @param aGetDirectory: the function used to get the files in the target directory.
+ * Pass getApplyDirFile if you want to test the case of a failed switch request.
  */
-function checkFilesAfterUpdateFailure() {
+function checkFilesAfterUpdateFailure(aGetDirectory) {
+  let getdir = aGetDirectory || getTargetDirFile;
   logTestInfo("testing contents of files after a failed update");
   TEST_FILES.forEach(function CFAUF_TF_FE(aTestFile) {
-    let testFile = getApplyDirFile(aTestFile.relPathDir + aTestFile.fileName, true);
+    let testFile = getdir(aTestFile.relPathDir + aTestFile.fileName, true);
     logTestInfo("testing file: " + testFile.path);
     if (aTestFile.compareFile || aTestFile.compareContents) {
       do_check_true(testFile.exists());
@@ -1165,13 +1298,13 @@ function checkFilesAfterUpdateFailure() {
   logTestInfo("testing operations specified in removed-files were not " +
               "performed after a failed update");
   TEST_DIRS.forEach(function CFAUF_TD_FE(aTestDir) {
-    let testDir = getApplyDirFile(aTestDir.relPathDir, true);
+    let testDir = getdir(aTestDir.relPathDir, true);
     logTestInfo("testing directory file: " + testDir.path);
     do_check_true(testDir.exists());
 
     if (aTestDir.files) {
       aTestDir.files.forEach(function CFAUS_TD_F_FE(aTestFile) {
-        let testFile = getApplyDirFile(aTestDir.relPathDir + aTestFile, true);
+        let testFile = getdir(aTestDir.relPathDir + aTestFile, true);
         logTestInfo("testing directory file: " + testFile.path);
         do_check_true(testFile.exists());
       });
@@ -1179,12 +1312,12 @@ function checkFilesAfterUpdateFailure() {
 
     if (aTestDir.subDirs) {
       aTestDir.subDirs.forEach(function CFAUS_TD_SD_FE(aSubDir) {
-        let testSubDir = getApplyDirFile(aTestDir.relPathDir + aSubDir, true);
+        let testSubDir = getdir(aTestDir.relPathDir + aSubDir, true);
         logTestInfo("testing sub-directory: " + testSubDir.path);
         do_check_true(testSubDir.exists());
         if (aTestDir.subDirFiles) {
           aTestDir.subDirFiles.forEach(function CFAUS_TD_SDF_FE(aTestFile) {
-            let testFile = getApplyDirFile(aTestDir.relPathDir + aSubDir + aTestFile, true);
+            let testFile = getdir(aTestDir.relPathDir + aSubDir + aTestFile, true);
             logTestInfo("testing sub-directory file: " + testFile.path);
             do_check_true(testFile.exists());
           });
@@ -1210,7 +1343,7 @@ function checkFilesAfterUpdateCommon() {
   }
 
   logTestInfo("testing backup files should not be left behind");
-  let applyToDir = getApplyDirFile(null, true);
+  let applyToDir = getTargetDirFile(null, true);
   checkFilesInDirRecursive(applyToDir, checkForBackupFiles);
 }
 
@@ -1272,30 +1405,28 @@ function checkCallbackServiceLog() {
               "and the expected command line arguments passed to it");
   do_check_eq(logContents, expectedLogContents);
 
+  do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+}
 
-  (function removeCallbackCopy() {
-    // Remove the copy of the application executable used for the test on
-    // Windows if it exists.
-    let appBinCopy = getCurrentProcessDir();
-    appBinCopy.append(TEST_ID + FILE_WIN_TEST_EXE);
-    if (appBinCopy.exists()) {
-      try {
-        appBinCopy.remove(false);
-        // Use a timeout to give any files that were in use additional 
-        // time to close.  Same as updater.exe without service tests.
-        do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
-      }
-      catch (e) {
-        logTestInfo("unable to remove file during cleanup. Exception: " + e);
-        do_timeout(TEST_HELPER_TIMEOUT, removeCallbackCopy);
-      }
-    } else {
+function removeCallbackCopy() {
+  // Remove the copy of the application executable used for the test on
+  // Windows if it exists.
+  let appBinCopy = getAppDir();
+  appBinCopy.append(TEST_ID + FILE_WIN_TEST_EXE);
+  if (appBinCopy.exists()) {
+    try {
+      appBinCopy.remove(false);
+      // Use a timeout to give any files that were in use additional 
+      // time to close.  Same as updater.exe without service tests.
       do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
     }
-  })();
-
-
-
+    catch (e) {
+      logTestInfo("unable to remove file during cleanup. Exception: " + e);
+      do_timeout(TEST_HELPER_TIMEOUT, removeCallbackCopy);
+    }
+  } else {
+    do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+  }
 }
 
 /**
@@ -1520,6 +1651,9 @@ function createAppInfo(id, name, version, platformVersion) {
     QueryInterface: function QueryInterface(iid) {
       if (iid.equals(AUS_Ci.nsIXULAppInfo) ||
           iid.equals(AUS_Ci.nsIXULRuntime) ||
+#ifdef XP_WIN
+          iid.equals(AUS_Ci.nsIWinAppHelper) ||
+#endif
           iid.equals(AUS_Ci.nsISupports))
         return this;
       throw AUS_Cr.NS_ERROR_NO_INTERFACE;
@@ -1538,25 +1672,6 @@ function createAppInfo(id, name, version, platformVersion) {
   registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
                             XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 }
-
-// On Vista XRE_UPDATE_ROOT_DIR can be a directory other than the one in the
-// application directory. This will reroute it back to the one in the
-// application directory.
-var gDirProvider = {
-  getFile: function DP_getFile(prop, persistent) {
-    persistent.value = true;
-    if (prop == XRE_UPDATE_ROOT_DIR)
-      return getCurrentProcessDir();
-    return null;
-  },
-  QueryInterface: function(iid) {
-    if (iid.equals(AUS_Ci.nsIDirectoryServiceProvider) ||
-        iid.equals(AUS_Ci.nsISupports))
-      return this;
-    throw AUS_Cr.NS_ERROR_NO_INTERFACE;
-  }
-};
-Services.dirsvc.QueryInterface(AUS_Ci.nsIDirectoryService).registerProvider(gDirProvider);
 
 /**
  * Returns the platform specific arguments used by nsIProcess when launching
@@ -1893,6 +2008,11 @@ function setEnvironment() {
     env.set("MOZ_UPDATE_APPDIR_OVERRIDE", gEnvAppDirOverride);
   }
 
+  if (gBackgroundUpdate) {
+    logTestInfo("setting the MOZ_UPDATE_BACKGROUND environment variable to 1\n");
+    env.set("MOZ_UPDATE_BACKGROUND", "1");
+  }
+
   logTestInfo("setting MOZ_NO_SERVICE_FALLBACK environment variable to 1");
   env.set("MOZ_NO_SERVICE_FALLBACK", "1");
 }
@@ -1968,6 +2088,11 @@ function resetEnvironment() {
     logTestInfo("removing the MOZ_UPDATE_APPDIR_OVERRIDE environment variable\n");
     env.set("MOZ_UPDATE_APPDIR_OVERRIDE", "");
     gEnvAppDirOverride = null;
+  }
+
+  if (gBackgroundUpdate) {
+    logTestInfo("removing the MOZ_UPDATE_BACKGROUND environment variable\n");
+    env.set("MOZ_UPDATE_BACKGROUND", "");
   }
 
   logTestInfo("removing MOZ_NO_SERVICE_FALLBACK environment variable");

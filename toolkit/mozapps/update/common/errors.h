@@ -39,7 +39,7 @@
 #define MAR_CHANNEL_MISMATCH_ERROR 22
 #define VERSION_DOWNGRADE_ERROR 23
 
-// Error codes 24-32 are related to the maintenance service
+// Error codes 24-34 are related to the maintenance service
 // and so are Windows only
 #define SERVICE_UPDATER_COULD_NOT_BE_STARTED 24
 #define SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS 25
@@ -50,6 +50,9 @@
 #define SERVICE_STILL_APPLYING_ON_FAILURE 30
 #define SERVICE_UPDATER_NOT_FIXED_DRIVE 31
 #define SERVICE_COULD_NOT_LOCK_UPDATER 32
+#define SERVICE_INSTALLDIR_ERROR 33
+
+#define NO_INSTALLDIR_ERROR 34
 
 // The following error codes are only used by updater.exe
 // when a fallback key exists and XPCShell tests are being run.

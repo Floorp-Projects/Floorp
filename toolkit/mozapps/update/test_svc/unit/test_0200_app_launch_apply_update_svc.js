@@ -85,10 +85,11 @@ function run_test() {
   file.append("removed-files");
   writeFile(file, "ToBeReplaced");
 
-  let updatesPatchDir = getUpdatesDir();
-  updatesPatchDir.append("0");
+  let updatesRootDir = processDir.clone();
+  updatesRootDir.append("updates");
+  updatesRootDir.append("0");
   let mar = do_get_file("data/simple.mar");
-  mar.copyTo(updatesPatchDir, FILE_UPDATE_ARCHIVE);
+  mar.copyTo(updatesRootDir, FILE_UPDATE_ARCHIVE);
 
   // Backup the updater.ini
   let updaterIni = processDir.clone();
@@ -104,9 +105,11 @@ function run_test() {
   updaterIni.append(FILE_UPDATER_INI);
   writeFile(updaterIni, updaterIniContents);
 
-  let updatesRootDir = processDir.clone();
-  updatesRootDir.append("updates");
-  updatesRootDir.append("0");
+  getUpdatesDir = function() {
+    var updatesDir = processDir.clone();
+    updatesDir.append("updates");
+    return updatesDir;
+  }
   getApplyDirPath = function() {
     return processDir.path;
   }
@@ -232,7 +235,7 @@ function checkUpdateFinished() {
   do_check_eq(readFileBytes(file), "update_test/UpdateTestRemoveFile\n");
 
   let updatesDir = getUpdatesDir();
-  let log = updatesDir.clone();
+  log = updatesDir.clone();
   log.append("0");
   log.append(FILE_UPDATE_LOG);
   logTestInfo("testing " + log.path + " shouldn't exist");
@@ -252,5 +255,25 @@ function checkUpdateFinished() {
   logTestInfo("testing " + updatesDir.path + " should exist");
   do_check_true(updatesDir.exists());
 
-  do_timeout(CHECK_TIMEOUT_MILLI, do_test_finished);
+  Services.dirsvc.unregisterProvider(gDirProvider);
+  removeCallbackCopy();
 }
+
+// On Vista XRE_UPDATE_ROOT_DIR can be a directory other than the one in the
+// application directory. This will reroute it back to the one in the
+// application directory.
+var gDirProvider = {
+  getFile: function DP_getFile(prop, persistent) {
+    persistent.value = true;
+    if (prop == XRE_UPDATE_ROOT_DIR)
+      return getCurrentProcessDir();
+    return null;
+  },
+  QueryInterface: function(iid) {
+    if (iid.equals(AUS_Ci.nsIDirectoryServiceProvider) ||
+        iid.equals(AUS_Ci.nsISupports))
+      return this;
+    throw AUS_Cr.NS_ERROR_NO_INTERFACE;
+  }
+};
+Services.dirsvc.QueryInterface(AUS_Ci.nsIDirectoryService).registerProvider(gDirProvider);

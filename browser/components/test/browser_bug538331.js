@@ -412,9 +412,10 @@ function writeUpdatesToXMLFile(aText)
   const MODE_CREATE   = 0x08;
   const MODE_TRUNCATE = 0x20;
 
+  const kIsWin = (navigator.platform.indexOf("Win") == 0);
   let file = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties).
-             get("XCurProcD", Ci.nsIFile);
+             get(kIsWin ? "UpdRootD" : "XCurProcD", Ci.nsIFile);
   file.append("updates.xml");
   let fos = Cc["@mozilla.org/network/file-output-stream;1"].
             createInstance(Ci.nsIFileOutputStream);

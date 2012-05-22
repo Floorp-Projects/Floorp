@@ -64,8 +64,9 @@ HAVE_PROGRESSUI = 1
 RCINCLUDE = updater.rc
 CPPSRCS += \
   progressui_win.cpp \
+  win_dirent.cpp \
   $(NULL)
-OS_LIBS += $(call EXPAND_LIBNAME,delayimp comctl32 ws2_32 shell32)
+OS_LIBS += $(call EXPAND_LIBNAME,delayimp comctl32 ws2_32 shell32 shlwapi)
 DEFINES += -DUNICODE -D_UNICODE
 ifndef GNU_CC
 RCFLAGS += -I$(srcdir)
