@@ -842,28 +842,23 @@ nsHTMLTableAccessible::GetSelectedRowIndices(PRUint32 *aNumRows,
   return rv;
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::GetCellAt(PRInt32 aRow, PRInt32 aColumn,
-                                 nsIAccessible **aTableCellAccessible)
-{
+nsAccessible*
+nsHTMLTableAccessible::CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex)
+{ 
   nsCOMPtr<nsIDOMElement> cellElement;
-  nsresult rv = GetCellAt(aRow, aColumn, *getter_AddRefs(cellElement));
-  NS_ENSURE_SUCCESS(rv, rv);
+  GetCellAt(aRowIndex, aColumnIndex, *getter_AddRefs(cellElement));
+  if (!cellElement)
+    return nsnull;
 
   nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElement));
+  if (!cellContent)
+    return nsnull;
+
   nsAccessible* cell = mDoc->GetAccessible(cellContent);
 
-  if (!cell) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (cell != this) {
-    // XXX bug 576838: crazy tables (like table6 in tables/test_table2.html) may
-    // return itself as a cell what makes Orca hang.
-    NS_ADDREF(*aTableCellAccessible = cell);
-  }
-
-  return NS_OK;
+  // XXX bug 576838: crazy tables (like table6 in tables/test_table2.html) may
+  // return itself as a cell what makes Orca hang.
+  return cell == this ? nsnull : cell;
 }
 
 PRInt32
