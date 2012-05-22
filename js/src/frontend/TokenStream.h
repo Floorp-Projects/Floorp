@@ -382,13 +382,12 @@ enum TokenStreamFlags
     TSF_OPERAND = 0x08,         /* looking for operand, not operator */
     TSF_UNEXPECTED_EOF = 0x10,  /* unexpected end of input, i.e. TOK_EOF not at top-level. */
     TSF_KEYWORD_IS_NAME = 0x20, /* Ignore keywords and return TOK_NAME instead to the parser. */
-    TSF_STRICT_MODE_CODE = 0x40,/* Tokenize as appropriate for strict mode code. */
-    TSF_DIRTYLINE = 0x80,       /* non-whitespace since start of line */
-    TSF_OWNFILENAME = 0x100,    /* ts->filename is malloc'd */
-    TSF_XMLTAGMODE = 0x200,     /* scanning within an XML tag in E4X */
-    TSF_XMLTEXTMODE = 0x400,    /* scanning XMLText terminal from E4X */
-    TSF_XMLONLYMODE = 0x800,    /* don't scan {expr} within text/tag */
-    TSF_OCTAL_CHAR = 0x1000,    /* observed a octal character escape */
+    TSF_DIRTYLINE = 0x40,       /* non-whitespace since start of line */
+    TSF_OWNFILENAME = 0x80,     /* ts->filename is malloc'd */
+    TSF_XMLTAGMODE = 0x100,     /* scanning within an XML tag in E4X */
+    TSF_XMLTEXTMODE = 0x200,    /* scanning XMLText terminal from E4X */
+    TSF_XMLONLYMODE = 0x400,    /* don't scan {expr} within text/tag */
+    TSF_OCTAL_CHAR = 0x800,     /* observed a octal character escape */
 
     /*
      * To handle the hard case of contiguous HTML comments, we want to clear the
@@ -409,7 +408,28 @@ enum TokenStreamFlags
      * It does not cope with malformed comment hiding hacks where --> is hidden
      * by C-style comments, or on a dirty line.  Such cases are already broken.
      */
-    TSF_IN_HTML_COMMENT = 0x2000
+    TSF_IN_HTML_COMMENT = 0x1000
+};
+
+struct Parser;
+
+// Ideally, tokenizing would be entirely independent of context, i.e. not
+// depend on the contents of the current TreeContext/SharedContext.  But that's
+// not quite true.  This class constitutes a tiny back-channel from TokenStream
+// to the context that avoids exposing most of TreeContext/SharedContext to
+// TokenStream.  It should be used sparingly, e.g. to avoid storing some state
+// twice (as used to be done with the strict mode flag).
+//
+class PartialTokenizingContext {
+    Parser *parser;
+  public:
+    PartialTokenizingContext(Parser *p) : parser(p) { }
+
+    // The strict mode flag for global code and each function is in the relevant
+    // SharedContext.  Because it affects both tokenizing and parsing,
+    // TokenStream needs to be able to see it.  inStrictMode() is implemented
+    // in Parser.cpp.
+    bool inStrictMode() const;
 };
 
 class TokenStream
@@ -427,9 +447,10 @@ class TokenStream
   public:
     typedef Vector<jschar, 32> CharBuffer;
 
-    TokenStream(JSContext *, JSPrincipals *principals, JSPrincipals *originPrincipals,
+    TokenStream(JSContext *cx, JSPrincipals *principals, JSPrincipals *originPrincipals,
                 const jschar *base, size_t length, const char *filename, unsigned lineno,
-                JSVersion version);
+                JSVersion version, PartialTokenizingContext *ptc);
+
     ~TokenStream();
 
     /* Accessors. */
@@ -469,13 +490,12 @@ class TokenStream
     }
 
     /* Flag methods. */
-    void setStrictMode(bool enabled = true) { setFlag(enabled, TSF_STRICT_MODE_CODE); }
     void setXMLTagMode(bool enabled = true) { setFlag(enabled, TSF_XMLTAGMODE); }
     void setXMLOnlyMode(bool enabled = true) { setFlag(enabled, TSF_XMLONLYMODE); }
     void setUnexpectedEOF(bool enabled = true) { setFlag(enabled, TSF_UNEXPECTED_EOF); }
     void setOctalCharacterEscape(bool enabled = true) { setFlag(enabled, TSF_OCTAL_CHAR); }
 
-    bool isStrictMode() { return !!(flags & TSF_STRICT_MODE_CODE); }
+    bool isStrictMode() { return partialTokenizingContext->inStrictMode(); }
     bool isXMLTagMode() { return !!(flags & TSF_XMLTAGMODE); }
     bool isXMLOnlyMode() { return !!(flags & TSF_XMLONLYMODE); }
     bool isUnexpectedEOF() { return !!(flags & TSF_UNEXPECTED_EOF); }
@@ -782,6 +802,8 @@ class TokenStream
     bool                xml;            /* see JSOPTION_XML */
     JSContext           *const cx;
     JSPrincipals        *const originPrincipals;
+    PartialTokenizingContext *partialTokenizingContext; /* used to test for
+                                                           strict mode */
 };
 
 struct KeywordInfo {
@@ -822,24 +844,10 @@ ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, unsigned
 
 /*
  * Report a condition that should elicit a warning with JSOPTION_STRICT,
- * or an error if ts or tc is handling strict mode code.  This function
- * defers to ReportCompileErrorNumber to do the real work.  Either tc
- * or ts may be NULL, if there is no tree context or token stream state
- * whose strictness should affect the report.
- *
- * One could have ReportCompileErrorNumber recognize the
- * JSREPORT_STRICT_MODE_ERROR flag instead of having a separate function
- * like this one.  However, the strict mode code flag we need to test is
- * in the ShareContext structure for that code; we would have to change
- * the ~120 ReportCompileErrorNumber calls to pass the additional
- * argument, even though many of those sites would never use it.  Using
- * ts's TSF_STRICT_MODE_CODE flag instead of sc's would be brittle: at some
- * points ts's flags don't correspond to those of the sc relevant to the
- * error.
+ * or an error if the current context is handling strict mode code.
  */
 bool
-ReportStrictModeError(JSContext *cx, TokenStream *ts, SharedContext *sc, ParseNode *pn,
-                      unsigned errorNumber, ...);
+ReportStrictModeError(JSContext *cx, TokenStream *ts, ParseNode *pn, unsigned errorNumber, ...);
 
 } /* namespace js */
 
