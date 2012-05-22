@@ -2062,7 +2062,7 @@ gfxContext::GetOp()
  * if the pattern is actually used.
  */
 void
-gfxContext::ChangeTransform(Matrix &aNewMatrix)
+gfxContext::ChangeTransform(const Matrix &aNewMatrix)
 {
   AzureState &state = CurrentState();
 
