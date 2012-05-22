@@ -11,11 +11,7 @@
 
 #include <map>
 
-#ifdef XRE_WANT_DLL_BLOCKLIST
-#define XRE_SetupDllBlocklist SetupDllBlocklist
-#else
 #include "nsXULAppAPI.h"
-#endif
 
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
