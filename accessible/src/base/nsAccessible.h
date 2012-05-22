@@ -461,7 +461,7 @@ public:
   inline bool IsHTMLListItem() const { return mFlags & eHTMLListItemAccessible; }
   mozilla::a11y::HTMLLIAccessible* AsHTMLListItem();
 
-  inline bool IsImageAccessible() const { return mFlags & eImageAccessible; }
+  inline bool IsImage() const { return mFlags & eImageAccessible; }
   nsHTMLImageAccessible* AsImage();
 
   bool IsImageMapAccessible() const { return mFlags & eImageMapAccessible; }
