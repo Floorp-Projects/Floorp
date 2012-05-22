@@ -4266,7 +4266,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
     }
 
     JS_ASSERT(obj->isNative());
-    if (!LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_CLASSNAME, &pobj, &prop))
+    if (!LookupPropertyWithFlags(cx, obj, id, 0, &pobj, &prop))
         return false;
     Value v = UndefinedValue();
     if (prop && pobj->isNative()) {
