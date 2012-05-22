@@ -1027,7 +1027,7 @@ pref("devtools.layoutview.enabled", false);
 pref("devtools.layoutview.open", false);
 
 // Enable the Debugger
-pref("devtools.debugger.enabled", false);
+pref("devtools.debugger.enabled", true);
 pref("devtools.debugger.remote-enabled", false);
 pref("devtools.debugger.remote-host", "localhost");
 pref("devtools.debugger.remote-port", 6000);
