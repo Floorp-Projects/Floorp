@@ -1,0 +1,60 @@
+# vim:set ts=8 sw=8 sts=8 noet:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(srcdir)/../objs.mk
+
+EXTRA_DEPS += $(srcdir)/../objs.mk
+
+MODULE		= xpcom
+LIBRARY_NAME	= xpcomglue_staticruntime_s
+DIST_INSTALL	= 1
+
+LOCAL_INCLUDES	= \
+	-I$(srcdir)/../../build \
+	$(NULL)
+
+CPPSRCS		= \
+	$(XPCOM_GLUE_SRC_LCPPSRCS) \
+	$(XPCOM_GLUENS_SRC_LCPPSRCS) \
+	nsStringAPI.cpp \
+	GenericModule.cpp \
+	$(NULL)
+
+SDK_LIBRARY     	= \
+	$(LIB_PREFIX)xpcomglue_staticruntime_s.$(LIB_SUFFIX) \
+	$(NULL)
+
+GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
+
+FORCE_STATIC_LIB = 1
+
+# Statically link to the CRT on Windows
+USE_STATIC_LIBS = 1
+
+# Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
+STL_FLAGS	=
+
+include $(topsrcdir)/config/rules.mk
+
+ifdef _MSC_VER
+# Don't include directives about which CRT to use
+OS_COMPILE_CXXFLAGS += -Zl
+OS_COMPILE_CFLAGS += -Zl
+DEFINES += -D_USE_ANSI_CPP
+endif
+
+export:: $(XPCOM_GLUE_SRC_CPPSRCS) $(XPCOM_GLUENS_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp $(topsrcdir)/xpcom/glue/GenericModule.cpp $(topsrcdir)/xpcom/glue/DeadlockDetector.h $(topsrcdir)/xpcom/glue/SSE.h $(topsrcdir)/xpcom/glue/arm.h
+	$(INSTALL) $^ .
+
+ifdef TARGET_XPCOM_ABI
+DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
+endif
+

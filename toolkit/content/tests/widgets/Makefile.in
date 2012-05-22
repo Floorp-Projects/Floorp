@@ -50,9 +50,14 @@ _CHROME_TEST_FILES = \
 		test_editor_currentURI.xul \
 		$(NULL)
 
+ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+_TEST_FILES += test_menubar_gtk.xul \
+               window_menubar_gtk.xul
+else
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _TEST_FILES += test_menubar.xul \
                window_menubar.xul
+endif
 endif
 
 libs:: $(_CHROME_FILES)

@@ -391,6 +391,35 @@ var tests = [
    "attachment", "foo"], 
 ];
 
+var rfc5987paramtests = [
+  [ // basic test
+    "UTF-8'language'value", "value", "language", Cr.NS_OK ],
+  [ // percent decoding
+    "UTF-8''1%202", "1 2", "", Cr.NS_OK ],
+  [ // UTF-8
+    "UTF-8''%c2%a3%20and%20%e2%82%ac%20rates", "\u00a3 and \u20ac rates", "", Cr.NS_OK ],
+  [ // missing charset
+    "''abc", "", "", Cr.NS_ERROR_INVALID_ARG ],
+  [ // ISO-8859-1: unsupported
+    "ISO-8859-1''%A3%20rates", "", "", Cr.NS_ERROR_INVALID_ARG ],
+  [ // unknown charset
+    "foo''abc", "", "", Cr.NS_ERROR_INVALID_ARG ],
+  [ // missing component
+    "abc", "", "", Cr.NS_ERROR_INVALID_ARG ],
+  [ // missing component
+    "'abc", "", "", Cr.NS_ERROR_INVALID_ARG ],
+  [ // illegal chars
+    "UTF-8''a b", "", "", Cr.NS_ERROR_INVALID_ARG ],
+  [ // broken % escapes
+    "UTF-8''a%zz", "", "", Cr.NS_ERROR_INVALID_ARG ],
+  [ // broken % escapes
+    "UTF-8''a%b", "", "", Cr.NS_ERROR_INVALID_ARG ],
+  [ // broken % escapes
+    "UTF-8''a%", "", "", Cr.NS_ERROR_INVALID_ARG ],
+  [ // broken UTF-8
+    "UTF-8''%A3%20rates", "", "", 0x8050000E /* NS_ERROR_UDEC_ILLEGALINPUT */  ],
+];
+
 function do_tests(whichRFC)
 {
   var mhp = Components.classes["@mozilla.org/network/mime-hdrparam;1"]
@@ -451,12 +480,38 @@ function do_tests(whichRFC)
   }
 }
 
-function run_test() {
+function test_decode5987Param() {
+  var mhp = Components.classes["@mozilla.org/network/mime-hdrparam;1"]
+                      .getService(Components.interfaces.nsIMIMEHeaderParam);
 
-  // Test RFC 2231
-  do_tests(0);
+  for (var i = 0; i < rfc5987paramtests.length; ++i) {
+    dump("Testing #" + i + ": " + rfc5987paramtests[i] + "\n");
 
-  // Test RFC 5987
-  do_tests(1);
+    var lang = {};
+    try {
+      var decoded = mhp.decodeRFC5987Param(rfc5987paramtests[i][0], lang);
+      if (rfc5987paramtests[i][3] == Cr.NS_OK) {
+        do_check_eq(rfc5987paramtests[i][1], decoded);
+        do_check_eq(rfc5987paramtests[i][2], lang.value);
+      }
+      else {
+        do_check_eq(rfc5987paramtests[i][3], "instead got: " + decoded);
+      }
+    }
+    catch (e) {
+      do_check_eq(rfc5987paramtests[i][3], e.result);
+    }
+  }
 }
 
+function run_test() {
+
+  // Test RFC 2231 (complete header field values)
+  do_tests(0);
+
+  // Test RFC 5987 (complete header field values)
+  do_tests(1);
+
+  // tests for RFC5987 parameter parsing
+  test_decode5987Param();
+}

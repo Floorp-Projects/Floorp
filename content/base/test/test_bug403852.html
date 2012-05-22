@@ -34,6 +34,11 @@ var domFile = fileList.files[0];
 
 is(domFile.name, "prefs.js", "fileName should be prefs.js");
 
+ok("lastModifiedDate" in domFile, "lastModifiedDate must be present");
+
+var d = new Date(testFile.lastModifiedTime);
+ok(d.getTime() == domFile.lastModifiedDate.getTime(), "lastModifiedDate should be the same.");
+
 </script>
 </pre>
 </body> </html>

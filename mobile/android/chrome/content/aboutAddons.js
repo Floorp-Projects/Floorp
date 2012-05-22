@@ -276,17 +276,15 @@ var Addons = {
             setting.setAttribute("desc", desc);
           box.appendChild(setting);
         }
-/*
         // Send an event so add-ons can prepopulate any non-preference based
         // settings
         let event = document.createEvent("Events");
         event.initEvent("AddonOptionsLoad", true, false);
-        this.dispatchEvent(event);
+        window.dispatchEvent(event);
 
         // Also send a notification to match the behavior of desktop Firefox
-        let id = this.id.substring(17); // length of |urn:mozilla:item:|
+        let id = aListItem.getAttribute("addonID");
         Services.obs.notifyObservers(document, "addon-options-displayed", id);
-*/
       }
     } catch (e) {
       Cu.reportError(e)

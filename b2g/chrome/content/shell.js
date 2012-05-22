@@ -179,7 +179,10 @@ var shell = {
     if (!audioManager)
       return;
 
-    let volume = audioManager.masterVolume + delta / steps;
+    let currentVolume = audioManager.masterVolume;
+    let newStep = Math.round(steps * Math.sqrt(currentVolume)) + delta;
+    let volume = (newStep / steps) * (newStep / steps);
+
     if (volume > 1)
       volume = 1;
     if (volume < 0)

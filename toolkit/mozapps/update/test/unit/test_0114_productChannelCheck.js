@@ -26,8 +26,11 @@ function run_test() {
   let exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for failure when " +
               "applying a wrong product and channel MAR file");
-  // Make sure the updater executed successfully
-  do_check_eq(exitValue, 0);
+  // Make sure the updater execution failed.
+  // Note that if execv is used, the updater process will turn into the
+  // callback process, so its return code will be that of the callback
+  // app.
+  do_check_eq(exitValue, USE_EXECV ? 0 : 1);
   let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
 
   //Make sure we get a version downgrade error

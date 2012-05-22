@@ -57,9 +57,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   : nsCSSOffsetState(aFrame, aRenderingContext)
   , mBlockDelta(0)
   , mReflowDepth(0)
-  , mRestoreCurrentInflationContainer(aPresContext->mCurrentInflationContainer)
-  , mRestoreCurrentInflationContainerWidth(aPresContext->
-                                             mCurrentInflationContainerWidth)
 {
   NS_PRECONDITION(aPresContext, "no pres context");
   NS_PRECONDITION(aRenderingContext, "no rendering context");
@@ -96,9 +93,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   , mBlockDelta(0)
   , mReflowDepth(aParentReflowState.mReflowDepth + 1)
   , mFlags(aParentReflowState.mFlags)
-  , mRestoreCurrentInflationContainer(aPresContext->mCurrentInflationContainer)
-  , mRestoreCurrentInflationContainerWidth(aPresContext->
-                                             mCurrentInflationContainerWidth)
 {
   NS_PRECONDITION(aPresContext, "no pres context");
   NS_PRECONDITION(aFrame, "no frame");
@@ -1250,7 +1244,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   }
 
   {
-    AutoMaybeNullInflationContainer an(frame);
+    AutoMaybeDisableFontInflation an(frame);
 
     nsSize size =
       frame->ComputeSize(rendContext,
@@ -1872,7 +1866,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       InitAbsoluteConstraints(aPresContext, cbrs, aContainingBlockWidth,
                               aContainingBlockHeight, aFrameType);
     } else {
-      AutoMaybeNullInflationContainer an(frame);
+      AutoMaybeDisableFontInflation an(frame);
 
       bool isBlock = NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType);
       PRUint32 computeSizeFlags = isBlock ? 0 : nsIFrame::eShrinkWrap;
@@ -1919,11 +1913,6 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
   if (!mFlags.mBlinks && BlinkIsAllowed()) {
     const nsStyleTextReset* st = frame->GetStyleTextReset();
     mFlags.mBlinks = (st->mTextBlink != NS_STYLE_TEXT_BLINK_NONE);
-  }
-
-  if (nsLayoutUtils::IsContainerForFontSizeInflation(frame)) {
-    aPresContext->mCurrentInflationContainer = frame;
-    aPresContext->mCurrentInflationContainerWidth = mComputedWidth;
   }
 }
 
@@ -2229,8 +2218,7 @@ nsHTMLReflowState::CalcLineHeight() const
     (mCBReflowState ? mCBReflowState->mComputedHeight : NS_AUTOHEIGHT);
 
   return CalcLineHeight(frame->GetStyleContext(), blockHeight,
-                        nsLayoutUtils::FontSizeInflationFor(frame,
-                          nsLayoutUtils::eInReflow));
+                        nsLayoutUtils::FontSizeInflationFor(frame));
 }
 
 /* static */ nscoord

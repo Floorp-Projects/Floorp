@@ -17,7 +17,8 @@
 NS_IMPL_ISUPPORTS1(nsUTF8ConverterService, nsIUTF8ConverterService)
 
 static nsresult 
-ToUTF8(const nsACString &aString, const char *aCharset, nsACString &aResult)
+ToUTF8(const nsACString &aString, const char *aCharset,
+       bool aAllowSubstitution, nsACString &aResult)
 {
   nsresult rv;
   if (!aCharset || !*aCharset)
@@ -32,6 +33,9 @@ ToUTF8(const nsACString &aString, const char *aCharset, nsACString &aResult)
   rv = ccm->GetUnicodeDecoder(aCharset,
                               getter_AddRefs(unicodeDecoder));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aAllowSubstitution)
+    unicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
 
   PRInt32 srcLen = aString.Length();
   PRInt32 dstLen;
@@ -54,6 +58,7 @@ NS_IMETHODIMP
 nsUTF8ConverterService::ConvertStringToUTF8(const nsACString &aString, 
                                             const char *aCharset, 
                                             bool aSkipCheck, 
+                                            bool aAllowSubstitution,
                                             nsACString &aUTF8String)
 {
   // return if ASCII only or valid UTF-8 providing that the ASCII/UTF-8
@@ -67,7 +72,7 @@ nsUTF8ConverterService::ConvertStringToUTF8(const nsACString &aString,
 
   aUTF8String.Truncate();
 
-  nsresult rv = ToUTF8(aString, aCharset, aUTF8String);
+  nsresult rv = ToUTF8(aString, aCharset, aAllowSubstitution, aUTF8String);
 
   // additional protection for cases where check is skipped and  the input
   // is actually in UTF-8 as opposed to aCharset. (i.e. caller's hunch
@@ -111,6 +116,6 @@ nsUTF8ConverterService::ConvertURISpecToUTF8(const nsACString &aSpec,
     return NS_OK;
   }
 
-  return ToUTF8(unescapedSpec, aCharset, aUTF8Spec);
+  return ToUTF8(unescapedSpec, aCharset, true, aUTF8Spec);
 }
 

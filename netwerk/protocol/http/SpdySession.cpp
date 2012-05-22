@@ -318,6 +318,14 @@ SpdySession::RegisterStreamID(SpdyStream *stream)
   if (mNextStreamID >= kMaxStreamID)
     mShouldGoAway = true;
 
+  // integrity check
+  if (mStreamIDHash.Get(result)) {
+    LOG3(("   New ID already present\n"));
+    NS_ABORT_IF_FALSE(false, "New ID already present in mStreamIDHash");
+    mShouldGoAway = true;
+    return kDeadStreamID;
+  }
+
   mStreamIDHash.Put(result, stream);
   return result;
 }
@@ -329,6 +337,13 @@ SpdySession::AddStream(nsAHttpTransaction *aHttpTransaction,
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
   NS_ABORT_IF_FALSE(!mStreamTransactionHash.Get(aHttpTransaction),
                     "AddStream duplicate transaction pointer");
+
+  // integrity check
+  if (mStreamTransactionHash.Get(aHttpTransaction)) {
+    LOG3(("   New transaction already present\n"));
+    NS_ABORT_IF_FALSE(false, "New transaction already present in hash");
+    return false;
+  }
 
   aHttpTransaction->SetConnection(this);
   SpdyStream *stream = new SpdyStream(aHttpTransaction,
@@ -822,6 +837,59 @@ SpdySession::GenerateGoAway()
   FlushOutputQueue();
 }
 
+// perform a bunch of integrity checks on the stream.
+// returns true if passed, false (plus LOG and ABORT) if failed.
+bool
+SpdySession::VerifyStream(SpdyStream *aStream, PRUint32 aOptionalID = 0)
+{
+  // This is annoying, but at least it is O(1)
+  NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+  if (!aStream)
+    return true;
+
+  PRUint32 test = 0;
+  
+  do {
+    if (aStream->StreamID() == kDeadStreamID)
+      break;
+
+    nsAHttpTransaction *trans = aStream->Transaction();
+
+    test++;  
+    if (!trans)
+      break;
+
+    test++;
+    if (mStreamTransactionHash.Get(trans) != aStream)
+      break;
+    
+    if (aStream->StreamID()) {
+      SpdyStream *idStream = mStreamIDHash.Get(aStream->StreamID());
+
+      test++;
+      if (idStream != aStream)
+        break;
+
+      if (aOptionalID) {
+        test++;
+        if (idStream->StreamID() != aOptionalID)
+          break;
+      }
+    }
+
+    // tests passed
+    return true;
+  } while (0);
+
+  LOG(("SpdySession %p VerifyStream Failure %p stream->id=0x%x "
+       "optionalID=0x%x trans=%p test=%d\n",
+       this, aStream, aStream->StreamID(),
+       aOptionalID, aStream->Transaction(), test));
+  NS_ABORT_IF_FALSE(false, "VerifyStream");
+  return false;
+}
+
 void
 SpdySession::CleanupStream(SpdyStream *aStream, nsresult aResult,
                            rstReason aResetCode)
@@ -829,6 +897,11 @@ SpdySession::CleanupStream(SpdyStream *aStream, nsresult aResult,
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
   LOG3(("SpdySession::CleanupStream %p %p 0x%x %X\n",
         this, aStream, aStream->StreamID(), aResult));
+
+  if (!VerifyStream(aStream)) {
+    LOG(("SpdySession::CleanupStream failed to verify stream\n"));
+    return;
+  }
 
   if (!aStream->RecvdFin() && aStream->StreamID()) {
     LOG3(("Stream had not processed recv FIN, sending RST code %X\n",
@@ -938,6 +1011,19 @@ SpdySession::HandleSynStream(SpdySession *self)
 }
 
 nsresult
+SpdySession::SetInputFrameDataStream(PRUint32 streamID)
+{
+  mInputFrameDataStream = mStreamIDHash.Get(streamID);
+  if (VerifyStream(mInputFrameDataStream, streamID))
+    return NS_OK;
+
+  LOG(("SpdySession::SetInputFrameDataStream failed to verify 0x%X\n",
+       streamID));
+  mInputFrameDataStream = nsnull;
+  return NS_ERROR_UNEXPECTED;
+}
+
+nsresult
 SpdySession::HandleSynReply(SpdySession *self)
 {
   NS_ABORT_IF_FALSE(self->mFrameControlType == CONTROL_TYPE_SYN_REPLY,
@@ -961,9 +1047,14 @@ SpdySession::HandleSynReply(SpdySession *self)
     return NS_ERROR_FAILURE;
   }
 
+  LOG3(("SpdySession::HandleSynReply %p lookup via streamID in syn_reply.\n",
+        self));
   PRUint32 streamID =
     PR_ntohl(reinterpret_cast<PRUint32 *>(self->mInputFrameBuffer.get())[2]);
-  self->mInputFrameDataStream = self->mStreamIDHash.Get(streamID);
+  nsresult rv = self->SetInputFrameDataStream(streamID);
+  if (NS_FAILED(rv))
+    return rv;
+
   if (!self->mInputFrameDataStream) {
     LOG3(("SpdySession::HandleSynReply %p lookup streamID in syn_reply "
           "0x%X failed. NextStreamID = 0x%x", self, streamID,
@@ -975,7 +1066,7 @@ SpdySession::HandleSynReply(SpdySession *self)
     return NS_OK;
   }
 
-  nsresult rv = self->HandleSynReplyForValidStream();
+  rv = self->HandleSynReplyForValidStream();
   if (rv == NS_ERROR_ILLEGAL_VALUE) {
     LOG3(("SpdySession::HandleSynReply %p PROTOCOL_ERROR detected 0x%X\n",
           self, streamID));
@@ -1085,10 +1176,17 @@ SpdySession::HandleRstStream(SpdySession *self)
     return NS_OK;
   }
 
-  self->mInputFrameDataStream = self->mStreamIDHash.Get(streamID);
+  nsresult rv = self->SetInputFrameDataStream(streamID);
+  
   if (!self->mInputFrameDataStream) {
+    if (NS_FAILED(rv))
+      LOG(("SpdySession::HandleRstStream %p lookup streamID for RST Frame "
+           "0x%X failed reason = %d :: VerifyStream Failed\n", self, streamID,
+           self->mDownstreamRstReason));
+
     LOG3(("SpdySession::HandleRstStream %p lookup streamID for RST Frame "
-          "0x%X failed", self, streamID));
+          "0x%X failed reason = %d", self, streamID,
+          self->mDownstreamRstReason));
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -1553,7 +1651,12 @@ SpdySession::WriteSegments(nsAHttpSegmentWriter *writer,
 
       PRUint32 streamID =
         PR_ntohl(reinterpret_cast<PRUint32 *>(mInputFrameBuffer.get())[0]);
-      mInputFrameDataStream = mStreamIDHash.Get(streamID);
+      rv = SetInputFrameDataStream(streamID);
+      if (NS_FAILED(rv)) {
+        LOG(("SpdySession::WriteSegments %p lookup streamID 0x%X failed. "
+              "probably due to verification.\n", this, streamID));
+        return rv;
+      }
       if (!mInputFrameDataStream) {
         LOG3(("SpdySession::WriteSegments %p lookup streamID 0x%X failed. "
               "Next = 0x%x", this, streamID, mNextStreamID));
@@ -1595,12 +1698,20 @@ SpdySession::WriteSegments(nsAHttpSegmentWriter *writer,
     // mInputFrameDataStream is reset by ChangeDownstreamState
     SpdyStream *stream = mInputFrameDataStream;
     ResetDownstreamState();
+    LOG3(("SpdySession::WriteSegments cleanup stream on recv of rst "
+          "session=%p stream=%p 0x%X\n", this, stream,
+          stream ? stream->StreamID() : 0));
     CleanupStream(stream, rv, RST_CANCEL);
     return NS_OK;
   }
 
   if (mDownstreamState == PROCESSING_DATA_FRAME ||
       mDownstreamState == PROCESSING_CONTROL_SYN_REPLY) {
+
+    // The cleanup stream should only be set while stream->WriteSegments is
+    // on the stack and then cleaned up in this code block afterwards.
+    NS_ABORT_IF_FALSE(!mNeedsCleanup, "cleanup stream set unexpectedly");
+    mNeedsCleanup = nsnull;                     /* just in case */
 
     mSegmentWriter = writer;
     rv = mInputFrameDataStream->WriteSegments(this, count, countWritten);
@@ -1614,12 +1725,21 @@ SpdySession::WriteSegments(nsAHttpSegmentWriter *writer,
       SpdyStream *stream = mInputFrameDataStream;
       if (mInputFrameDataRead == mInputFrameDataSize)
         ResetDownstreamState();
+      LOG3(("SpdySession::WriteSegments session=%p stream=%p 0x%X "
+            "needscleanup=%p. cleanup stream based on "
+            "stream->writeSegments returning BASE_STREAM_CLOSED\n",
+            this, stream, stream ? stream->StreamID() : 0,
+            mNeedsCleanup));
       CleanupStream(stream, NS_OK, RST_CANCEL);
       NS_ABORT_IF_FALSE(!mNeedsCleanup, "double cleanup out of data frame");
+      mNeedsCleanup = nsnull;                     /* just in case */
       return NS_OK;
     }
     
     if (mNeedsCleanup) {
+      LOG3(("SpdySession::WriteSegments session=%p stream=%p 0x%X "
+            "cleanup stream based on mNeedsCleanup.\n",
+            this, mNeedsCleanup, mNeedsCleanup ? mNeedsCleanup->StreamID() : 0));
       CleanupStream(mNeedsCleanup, NS_OK, RST_CANCEL);
       mNeedsCleanup = nsnull;
     }
@@ -1946,7 +2066,7 @@ SpdySession::TransactionHasDataToWrite(nsAHttpTransaction *caller)
   // it is no longer blocked on read.
 
   SpdyStream *stream = mStreamTransactionHash.Get(caller);
-  if (!stream) {
+  if (!stream || !VerifyStream(stream)) {
     LOG3(("SpdySession::TransactionHasDataToWrite %p caller %p not found",
           this, caller));
     return;

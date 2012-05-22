@@ -16,11 +16,7 @@ IS_COMPONENT = 1
 MODULE_NAME = nsBrowserCompsModule
 FORCE_SHARED_LIB = 1
 
-# Statically link the CRT on Windows if building against
-# a XULRunner SDK.
-ifdef LIBXUL_SDK
 USE_STATIC_LIBS = 1
-endif
 
 EXPORTS = nsBrowserCompsCID.h
 
@@ -56,7 +52,7 @@ endif
 
 EXTRA_DSO_LDOPTS += \
 	$(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
-	$(XPCOM_GLUE_LDOPTS) \
+	$(XPCOM_STATICRUNTIME_GLUE_LDOPTS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 

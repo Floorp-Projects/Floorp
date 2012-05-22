@@ -762,30 +762,58 @@ let RIL = {
    *        String containing the PIN.
    */
   enterICCPIN: function enterICCPIN(options) {
-    Buf.newParcel(REQUEST_ENTER_SIM_PIN);
+    Buf.newParcel(REQUEST_ENTER_SIM_PIN, options);
     Buf.writeUint32(1);
     Buf.writeString(options.pin);
     Buf.sendParcel();
   },
 
   /**
-   * Change the current ICC PIN number
+   * Enter a PIN2 to unlock the ICC.
    *
-   * @param oldPin
+   * @param pin
+   *        String containing the PIN2.
+   */
+  enterICCPIN2: function enterICCPIN2(options) {
+    Buf.newParcel(REQUEST_ENTER_SIM_PIN2, options);
+    Buf.writeUint32(1);
+    Buf.writeString(options.pin);
+    Buf.sendParcel();
+  },
+
+  /**
+   * Change the current ICC PIN number.
+   *
+   * @param pin
    *        String containing the old PIN value
    * @param newPin
    *        String containing the new PIN value
    */
   changeICCPIN: function changeICCPIN(options) {
-    Buf.newParcel(REQUEST_CHANGE_SIM_PIN);
+    Buf.newParcel(REQUEST_CHANGE_SIM_PIN, options);
     Buf.writeUint32(2);
-    Buf.writeString(options.oldPin);
+    Buf.writeString(options.pin);
     Buf.writeString(options.newPin);
     Buf.sendParcel();
   },
 
   /**
-   * Supplies SIM PUK and a new PIN to unlock the ICC
+   * Change the current ICC PIN2 number.
+   *
+   * @param pin
+   *        String containing the old PIN2 value
+   * @param newPin
+   *        String containing the new PIN2 value
+   */
+  changeICCPIN2: function changeICCPIN2(options) {
+    Buf.newParcel(REQUEST_CHANGE_SIM_PIN2, options);
+    Buf.writeUint32(2);
+    Buf.writeString(options.pin);
+    Buf.writeString(options.newPin);
+    Buf.sendParcel();
+  },
+  /**
+   * Supplies ICC PUK and a new PIN to unlock the ICC.
    *
    * @param puk
    *        String containing the PUK value.
@@ -794,12 +822,105 @@ let RIL = {
    *
    */
    enterICCPUK: function enterICCPUK(options) {
-     Buf.newParcel(REQUEST_ENTER_SIM_PUK);
+     Buf.newParcel(REQUEST_ENTER_SIM_PUK, options);
      Buf.writeUint32(2);
      Buf.writeString(options.puk);
      Buf.writeString(options.newPin);
      Buf.sendParcel();
    },
+
+  /**
+   * Supplies ICC PUK2 and a new PIN2 to unlock the ICC.
+   *
+   * @param puk
+   *        String containing the PUK2 value.
+   * @param newPin
+   *        String containing the new PIN2 value.
+   *
+   */
+   enterICCPUK2: function enterICCPUK2(options) {
+     Buf.newParcel(REQUEST_ENTER_SIM_PUK2, options);
+     Buf.writeUint32(2);
+     Buf.writeString(options.puk);
+     Buf.writeString(options.newPin);
+     Buf.sendParcel();
+   },
+
+  /**
+   * Get ICC Pin lock. A wrapper call to queryICCFacilityLock.
+   *
+   * @param requestId
+   *        Request Id from RadioInterfaceLayer.
+   */
+  getICCPinLock: function getICCPinLock(options) {
+    options.facility = ICC_CB_FACILITY_SIM;
+    options.password = ""; // For query no need to provide pin.
+    options.serviceClass = ICC_SERVICE_CLASS_VOICE |
+                           ICC_SERVICE_CLASS_DATA  |
+                           ICC_SERVICE_CLASS_FAX,
+    this.queryICCFacilityLock(options);
+  },
+
+  /**
+   *  Query ICC facility lock.
+   *
+   *  @param facility
+   *         One of ICC_CB_FACILITY_*.
+   *  @param password
+   *         Password for the facility, or "" if not required.
+   *  @param serviceClass
+   *         One of ICC_SERVICE_CLASS_*.
+   */
+  queryICCFacilityLock: function queryICCFacilityLock(options) {
+    Buf.newParcel(REQUEST_QUERY_FACILITY_LOCK, options);
+    Buf.writeUint32(3);
+    Buf.writeString(options.facility);
+    Buf.writeString(options.password);
+    Buf.writeString(options.serviceClass.toString());
+    Buf.sendParcel();
+  },
+
+  /**
+   * Set ICC Pin lock. A wrapper call to setICCFacilityLock.
+   *
+   * @param enabled
+   *        true to enable, false to disable.
+   * @param pin
+   *        Pin code.
+   * @param requestId
+   *        Request Id from RadioInterfaceLayer.
+   */
+  setICCPinLock: function setICCPinLock(options) {
+    options.facility = ICC_CB_FACILITY_SIM;
+    options.enabled = options.enabled;
+    options.password = options.pin;
+    options.serviceClass = ICC_SERVICE_CLASS_VOICE |
+                           ICC_SERVICE_CLASS_DATA  |
+                           ICC_SERVICE_CLASS_FAX,
+    this.setICCFacilityLock(options);
+  },
+
+  /**
+   * Set ICC facility lock.
+   *
+   * @param facility
+   *        One of ICC_CB_FACILITY_*.
+   * @param enabled
+   *        true to enable, false to disable.
+   * @param password
+   *        Password for the facility, or "" if not required.
+   * @param serviceClass
+   *        One of ICC_SERVICE_CLASS_*.
+   */
+  setICCFacilityLock: function setICCFacilityLock(options) {
+    Buf.newParcel(REQUEST_SET_FACILITY_LOCK, options);
+    Buf.writeUint32(4);
+    Buf.writeString(options.facility);
+    Buf.writeString(options.enabled ? "1" : "0");
+    Buf.writeString(options.password);
+    Buf.writeString(options.serviceClass.toString());
+    Buf.sendParcel();
+  },
 
   /**
    *  Request an ICC I/O operation.
@@ -2154,25 +2275,47 @@ RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS(length, options) {
   this._processICCStatus(iccStatus);
 };
 RIL[REQUEST_ENTER_SIM_PIN] = function REQUEST_ENTER_SIM_PIN(length, options) {
-  if (options.rilRequestError) {
-    return;
-  }
-
-  let response = Buf.readUint32List();
-  if (DEBUG) debug("REQUEST_ENTER_SIM_PIN returned " + response);
+  this.sendDOMMessage({type: "iccunlockcardlock",
+                       lockType: "pin",
+                       result: options.rilRequestError == 0 ? true : false,
+                       retryCount: length ? Buf.readUint32List()[0] : -1,
+                       requestId: options.requestId});
 };
 RIL[REQUEST_ENTER_SIM_PUK] = function REQUEST_ENTER_SIM_PUK(length, options) {
-  if (options.rilRequestError) {
-    return;
-  }
-
-  let response = Buf.readUint32List();
-  if (DEBUG) debug("REQUEST_ENTER_SIM_PUK returned " + response);
+  this.sendDOMMessage({type: "iccunlockcardlock",
+                       lockType: "puk",
+                       result: options.rilRequestError == 0 ? true : false,
+                       retryCount: length ? Buf.readUint32List()[0] : -1,
+                       requestId: options.requestId});
 };
-RIL[REQUEST_ENTER_SIM_PIN2] = null;
-RIL[REQUEST_ENTER_SIM_PUK2] = null;
-RIL[REQUEST_CHANGE_SIM_PIN] = null;
-RIL[REQUEST_CHANGE_SIM_PIN2] = null;
+RIL[REQUEST_ENTER_SIM_PIN2] = function REQUEST_ENTER_SIM_PIN2(length, options) {
+  this.sendDOMMessage({type: "iccunlockcardlock",
+                       lockType: "pin2",
+                       result: options.rilRequestError == 0 ? true : false,
+                       retryCount: length ? Buf.readUint32List()[0] : -1,
+                       requestId: options.requestId});
+};
+RIL[REQUEST_ENTER_SIM_PUK2] = function REQUEST_ENTER_SIM_PUK(length, options) {
+  this.sendDOMMessage({type: "iccunlockcardlock",
+                       lockType: "puk2",
+                       result: options.rilRequestError == 0 ? true : false,
+                       retryCount: length ? Buf.readUint32List()[0] : -1,
+                       requestId: options.requestId});
+};
+RIL[REQUEST_CHANGE_SIM_PIN] = function REQUEST_CHANGE_SIM_PIN(length, options) {
+  this.sendDOMMessage({type: "iccsetcardlock",
+                       lockType: "pin",
+                       result: options.rilRequestError == 0 ? true : false,
+                       retryCount: length ? Buf.readUint32List()[0] : -1,
+                       requestId: options.requestId});
+};
+RIL[REQUEST_CHANGE_SIM_PIN2] = function REQUEST_CHANGE_SIM_PIN2(length, options) {
+  this.sendDOMMessage({type: "iccsetcardlock",
+                       lockType: "pin2",
+                       result: options.rilRequestError == 0 ? true : false,
+                       retryCount: length ? Buf.readUint32List()[0] : -1,
+                       requestId: options.requestId});
+};
 RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
 RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, options) {
   if (options.rilRequestError) {
@@ -2534,8 +2677,24 @@ RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length
   this.sendDOMMessage({type: "datacallstatechange",
                        datacall: datacall});
 };
-RIL[REQUEST_QUERY_FACILITY_LOCK] = null;
-RIL[REQUEST_SET_FACILITY_LOCK] = null;
+RIL[REQUEST_QUERY_FACILITY_LOCK] = function REQUEST_QUERY_FACILITY_LOCK(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
+  let response = Buf.readUint32List()[0];
+  this.sendDOMMessage({type: "iccgetcardlock",
+                       lockType: "pin",
+                       enabled: response == 0 ? false : true,
+                       requestId: options.requestId});
+};
+RIL[REQUEST_SET_FACILITY_LOCK] = function REQUEST_SET_FACILITY_LOCK(length, options) {
+  this.sendDOMMessage({type: "iccsetcardlock",
+                       lockType: "pin",
+                       result: options.rilRequestError == 0 ? true : false,
+                       retryCount: length ? Buf.readUint32List()[0] : -1,
+                       requestId: options.requestId});
+};
 RIL[REQUEST_CHANGE_BARRING_PASSWORD] = null;
 RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELECTION_MODE(length, options) {
   if (options.rilRequestError) {

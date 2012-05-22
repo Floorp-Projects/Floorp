@@ -19,6 +19,10 @@ CPPSRCS = \
 
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
 
+LIBS += \
+  ../../../mozapps/update/common/$(LIB_PREFIX)updatecommon.$(LIB_SUFFIX) \
+  $(NULL)
+
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 LOCAL_INCLUDES += \
@@ -28,6 +32,7 @@ LOCAL_INCLUDES += \
   $(NULL)
 
 MOZ_WINCONSOLE = 1
+USE_STATIC_LIBS = 1
 
 include $(topsrcdir)/config/rules.mk
 

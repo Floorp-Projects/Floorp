@@ -30,6 +30,7 @@
 # define NS_tstrcmp wcscmp
 # define NS_ttoi _wtoi
 # define NS_tstat _wstat
+# define NS_tgetcwd _wgetcwd
 # define LOG_S "%S"
 
 #include "../common/updatehelper.h"
@@ -46,6 +47,7 @@
 # define NS_tstrcmp strcmp
 # define NS_ttoi atoi
 # define NS_tstat stat
+# define NS_tgetcwd getcwd
 # define LOG_S "%s"
 #endif
 
@@ -245,12 +247,13 @@ int NS_main(int argc, NS_tchar **argv)
 
   // File in use test helper section
   if (!NS_tstrcmp(argv[4], NS_T("-s"))) {
+    NS_tchar *cwd = NS_tgetcwd(NULL, 0);
     NS_tchar inFilePath[MAXPATHLEN];
     NS_tsnprintf(inFilePath, sizeof(inFilePath)/sizeof(inFilePath[0]),
-                 NS_T("%s"), argv[2]);
+                 NS_T("%s/%s"), cwd, argv[2]);
     NS_tchar outFilePath[MAXPATHLEN];
     NS_tsnprintf(outFilePath, sizeof(outFilePath)/sizeof(outFilePath[0]),
-                 NS_T("%s"), argv[3]);
+                 NS_T("%s/%s"), cwd, argv[3]);
 
     int seconds = NS_ttoi(argv[5]);
 #ifdef XP_WIN

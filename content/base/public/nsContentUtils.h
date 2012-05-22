@@ -593,6 +593,9 @@ public:
   // system principal, and true for a null principal.
   static bool IsSitePermDeny(nsIPrincipal* aPrincipal, const char* aType);
 
+  // Returns true if aDoc1 and aDoc2 have equal NodePrincipal()s.
+  static bool HaveEqualPrincipals(nsIDocument* aDoc1, nsIDocument* aDoc2);
+
   static nsILineBreaker* LineBreaker()
   {
     return sLineBreaker;

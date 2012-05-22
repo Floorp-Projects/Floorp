@@ -83,8 +83,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           document.mozCancelFullScreen();
         };
 
-        document.addEventListener("mozfullscreenchange", function() {
+        function fullscreenchange() {
           if (document.mozFullScreenElement === div) {
+            var screenX = window.screenX;
+            var screenY = window.screenY;
+            if (screenX != 0 || screenY != 0) {
+              todo(screenX == 0 && screenY == 0,
+                "We should only receive fullscreenchange once we've finished fullscreen transition");
+              setTimeout(fullscreenchange, 250);
+              return;
+            } 
             div.addEventListener("mousemove", moveMouse, false);
             synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
           }
@@ -92,7 +100,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
             runTests();
             SimpleTest.finish();
           }
-        }, false);
+        }
+        
+        document.addEventListener("mozfullscreenchange", fullscreenchange, false);
 
         function start() {
           div.mozRequestFullScreen();
