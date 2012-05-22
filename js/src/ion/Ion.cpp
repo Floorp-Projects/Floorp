@@ -325,7 +325,7 @@ IonCode::trace(JSTracer *trc)
         // executable code so the actual reference is okay, we just need to
         // make sure it says alive before we return.
         IonCompartment *ion = compartment()->ionCompartment();
-        MarkIonCodeRoot(trc, ion->getInvalidationThunkAddr(), "invalidator");
+        MarkIonCodeUnbarriered(trc, ion->getInvalidationThunkAddr(), "invalidator");
         return;
     }
 
