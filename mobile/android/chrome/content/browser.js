@@ -437,6 +437,9 @@ var BrowserApp = {
   },
 
   set selectedTab(aTab) {
+    if (this._selectedTab == aTab)
+      return;
+
     if (this._selectedTab)
       this._selectedTab.setActive(false);
 
