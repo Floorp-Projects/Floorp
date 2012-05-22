@@ -2478,6 +2478,10 @@ var tests = {
 		['abc\ndef', 'foo[]bar'],
 		['\x07', 'foo[]bar'],
 
+		['<b>hi</b>', 'foo[]bar'],
+		['<', 'foo[]bar'],
+		['&amp;', 'foo[]bar'],
+
 		// http://www.w3.org/Bugs/Public/show_bug.cgi?id=14254
 		['!\r', 'foo[]bar'],
 		['!\r\n', 'foo[]bar'],
