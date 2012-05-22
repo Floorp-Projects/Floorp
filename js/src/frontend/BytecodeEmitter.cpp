@@ -5890,18 +5890,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 if (!bce->noteClosedArg(pn2))
                     return JS_FALSE;
             }
-            if (pn2->pn_next == pnlast && bce->sc->fun()->hasRest()) {
-                /* Fill rest parameter. */
-                JS_ASSERT(!bce->sc->funArgumentsHasLocalBinding());
-                bce->switchToProlog();
-                if (Emit1(cx, bce, JSOP_REST) < 0)
-                    return false;
-                if (!EmitVarOp(cx, pn2, JSOP_SETARG, bce))
-                    return false;
-                if (Emit1(cx, bce, JSOP_POP) < 0)
-                    return false;
-                bce->switchToMain();
-            }
         }
         ok = EmitTree(cx, bce, pnlast);
         break;
