@@ -6322,6 +6322,28 @@ MOZ_ARG_DISABLE_BOOL(tests,
     ENABLE_TESTS=,
     ENABLE_TESTS=1 )
 
+# Currently GTest is linked into libxul. This means it must be off by default.
+# Follow up will be to generate libxul.so and libxul-test.so to let GTest
+# be compiled along with ENABLE_TESTS
+MOZ_ARG_ENABLE_BOOL(gtest,
+[  --enable-gtest
+                          Enable GTest libxul unit test.],
+    MOZ_ENABLE_GTEST=1,
+    MOZ_ENABLE_GTEST= )
+
+if test -n "$MOZ_ENABLE_GTEST"; then
+    if test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin" -o "${OS_TARGET}" = "Linux"; then
+        MOZ_ENABLE_GTEST=1
+        GTEST_HAS_RTTI=0
+        AC_DEFINE(MOZ_ENABLE_GTEST)
+        AC_DEFINE_UNQUOTED(GTEST_HAS_RTTI, 0)
+        AC_SUBST(MOZ_ENABLE_GTEST)
+        AC_SUBST(GTEST_HAS_RTTI)
+    else
+        AC_MSG_ERROR([Cannot build with --enable-gtest on this platform.])
+    fi
+fi
+
 dnl ========================================================
 dnl parental controls (for Windows Vista)
 dnl ========================================================

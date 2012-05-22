@@ -1,0 +1,70 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Avoid recursive make to avoid having to add files to the gtest/ subdirectory
+# (which is third-party code), and to make the build faster.
+
+DEPTH = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = \
+  $(srcdir) \
+	$(srcdir)/gtest/src \
+	$(srcdir)/mozilla \
+  $(NULL)
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = gtest
+MODULE_NAME = gtest
+LIBRARY_NAME = gtest
+EXPORT_LIBRARY = 1
+LIBXUL_LIBRARY = 1
+IS_COMPONENT = 1
+
+CPPSRCS = \
+  gtest-all.cc \
+  GTestRunner.cpp \
+  $(NULL)
+
+GTEST_CPPSRCS = \
+  SanityTest.cpp \
+  $(NULL)
+
+EXPORTS_NAMESPACES = gtest gtest/internal
+
+EXPORTS_gtest = \
+  gtest/include/gtest/gtest-death-test.h \
+  gtest/include/gtest/gtest-message.h \
+  gtest/include/gtest/gtest-param-test.h \
+  gtest/include/gtest/gtest-printers.h \
+  gtest/include/gtest/gtest-spi.h \
+  gtest/include/gtest/gtest-test-part.h \
+  gtest/include/gtest/gtest-typed-test.h \
+  gtest/include/gtest/gtest.h \
+  gtest/include/gtest/gtest_pred_impl.h \
+  gtest/include/gtest/gtest_prod.h \
+  $(NULL)
+
+# GTest internal are exposed in gtest.h. See comment in gtest.h
+EXPORTS_gtest/internal = \
+  gtest/include/gtest/internal/gtest-death-test-internal.h \
+  gtest/include/gtest/internal/gtest-filepath.h \
+  gtest/include/gtest/internal/gtest-internal.h \
+  gtest/include/gtest/internal/gtest-linked_ptr.h \
+  gtest/include/gtest/internal/gtest-param-util-generated.h \
+  gtest/include/gtest/internal/gtest-param-util.h \
+  gtest/include/gtest/internal/gtest-port.h \
+  gtest/include/gtest/internal/gtest-string.h \
+  gtest/include/gtest/internal/gtest-tuple.h \
+  gtest/include/gtest/internal/gtest-type-util.h \
+  $(NULL)
+
+LOCAL_INCLUDES += \
+  -I$(srcdir)/gtest \
+  -I$(srcdir)/gtest/include \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
