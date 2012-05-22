@@ -15,7 +15,7 @@ function test() {
   is(gBrowser.visibleTabs.length, 2, "2 tabs should be open");
   is(Disabled(), true, "Bookmark All Tabs should be disabled since there are two tabs with the same address");
 
-  let testTab2 = gBrowser.addTab("about:robots");
+  let testTab2 = gBrowser.addTab("about:mozilla");
   is(gBrowser.visibleTabs.length, 3, "3 tabs should be open");
   // Wait for tab load, the code checks for currentURI.
   testTab2.linkedBrowser.addEventListener("load", function () {
