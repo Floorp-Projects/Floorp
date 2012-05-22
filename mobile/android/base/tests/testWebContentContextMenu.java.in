@@ -35,7 +35,11 @@ public class testWebContentContextMenu extends BaseTest {
 
         // See tab count
         Element tabCount = mDriver.findElement(getActivity(), "tabs_count");
-        mAsserter.is(tabCount.getText(), "2", "Number of tabs has increased");
+        String tabCountText = null;
+        if (tabCount != null) {
+            tabCountText = tabCount.getText();
+        }
+        mAsserter.is(tabCountText, "2", "Number of tabs has increased");
 
         // Load the test page again and test for 'Share Link' and 'Bookmark Link'
         loadUrl(url);
