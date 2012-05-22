@@ -140,7 +140,7 @@ public:
   /* Returns true if the matrix is a rectilinear transformation (i.e.
    * grid-aligned rectangles are transformed to grid-aligned rectangles)
    */
-  bool IsRectilinear() {
+  bool IsRectilinear() const {
     if (FuzzyEqual(_12, 0) && FuzzyEqual(_21, 0)) {
       return true;
     } else if (FuzzyEqual(_22, 0) && FuzzyEqual(_11, 0)) {
