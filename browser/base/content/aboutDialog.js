@@ -116,15 +116,9 @@ function appUpdater()
     return;
   }
 
-  if (this.isPending) {
+  if (this.isPending || this.isApplied) {
     this.setupUpdateButton("update.restart." +
                            (this.isMajor ? "upgradeButton" : "updateButton"));
-    return;
-  }
-
-  if (this.isApplied) {
-    this.setupUpdateButton("update.restart." +
-                           (this.isMajor ? "upgradeButton" : "restartButton"));
     return;
   }
 
@@ -539,7 +533,7 @@ appUpdater.prototype =
           if (status == "applied" || status == "applied-service") {
             self.selectPanel("updateButtonBox");
             self.setupUpdateButton("update.restart." +
-                                   (self.isMajor ? "upgradeButton" : "restartButton"));
+                                   (self.isMajor ? "upgradeButton" : "updateButton"));
             timer.cancel();
             timer = null;
           } else if (status == "failed") {
