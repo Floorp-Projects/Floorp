@@ -78,7 +78,7 @@ public:
   void ScheduleResumeOnCompositorThread(int width, int height);
 
 protected:
-  virtual PLayersParent* AllocPLayers(const LayersBackend &backendType);
+  virtual PLayersParent* AllocPLayers(const LayersBackend& aBackendType, int* aMaxTextureSize);
   virtual bool DeallocPLayers(PLayersParent* aLayers);
   virtual void ScheduleTask(CancelableTask*, int);
   virtual void Composite();

@@ -121,6 +121,11 @@ public:
     return aSize <= gfxIntSize(maxSize, maxSize);
   }
 
+  virtual PRInt32 GetMaxTextureSize() const
+  {
+    return mDeviceManager->GetMaxTextureSize();
+  }
+
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
 
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();

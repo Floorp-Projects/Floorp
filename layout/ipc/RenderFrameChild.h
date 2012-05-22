@@ -23,7 +23,7 @@ public:
 
 protected:
   NS_OVERRIDE
-  virtual PLayersChild* AllocPLayers(LayerManager::LayersBackend* aBackendType);
+  virtual PLayersChild* AllocPLayers(LayerManager::LayersBackend* aBackendType, int* aMaxTextureSize);
   NS_OVERRIDE
   virtual bool DeallocPLayers(PLayersChild* aLayers);
 };
