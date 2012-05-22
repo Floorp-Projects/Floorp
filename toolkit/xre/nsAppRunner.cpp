@@ -3267,7 +3267,18 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
       return 1;
   }
 #endif
-
+#ifdef MOZ_X11
+  // Init X11 in thread-safe mode. Must be called prior to the first call to XOpenDisplay 
+  // (called inside gdk_display_open). This is a requirement for off main tread compositing.
+  // This is done only on X11 platforms if the environment variable MOZ_USE_OMTC is set so 
+  // as to avoid overhead when omtc is not used. 
+  // An environment variable is used instead of a pref on X11 platforms because we start having 
+  // access to prefs long after the first call to XOpenDisplay which is hard to change due to 
+  // interdependencies in the initialization.
+  if (PR_GetEnv("MOZ_USE_OMTC")) {
+    XInitThreads();
+  }
+#endif
 #if defined(MOZ_WIDGET_GTK2)
   mGdkDisplay = gdk_display_open(display_name);
   if (!mGdkDisplay) {
