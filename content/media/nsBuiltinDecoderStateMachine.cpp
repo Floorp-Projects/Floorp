@@ -1857,6 +1857,10 @@ void nsBuiltinDecoderStateMachine::DecodeSeek()
   PRInt64 mediaTime = GetMediaTime();
   if (mediaTime != seekTime) {
     currentTimeChanged = true;
+    // Stop playback now to ensure that while we're outside the monitor
+    // dispatching SeekingStarted, playback doesn't advance and mess with
+    // mCurrentFrameTime that we've setting to seekTime here.
+    StopPlayback();
     UpdatePlaybackPositionInternal(seekTime);
   }
 
@@ -1874,7 +1878,6 @@ void nsBuiltinDecoderStateMachine::DecodeSeek()
     // The seek target is different than the current playback position,
     // we'll need to seek the playback position, so shutdown our decode
     // and audio threads.
-    StopPlayback();
     StopAudioThread();
     ResetPlayback();
     nsresult res;
