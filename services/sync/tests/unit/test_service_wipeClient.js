@@ -1,3 +1,7 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
@@ -44,12 +48,12 @@ CannotDecryptEngine.prototype = {
 Engines.register(CannotDecryptEngine);
 
 
-function test_withEngineList() {
+add_test(function test_withEngineList() {
   try {
     _("Ensure initial scenario.");
     do_check_false(Engines.get("candecrypt").wasWiped);
     do_check_false(Engines.get("cannotdecrypt").wasWiped);
-    
+
     _("Wipe local engine data.");
     Service.wipeClient(["candecrypt", "cannotdecrypt"]);
 
@@ -61,16 +65,48 @@ function test_withEngineList() {
     Engines.get("cannotdecrypt").wasWiped = false;
     Service.startOver();
   }
-}
 
-function test_startOver_clears_keys() {
+  run_next_test();
+});
+
+add_test(function test_startOver_clears_keys() {
   generateNewKeys();
   do_check_true(!!CollectionKeys.keyForCollection());
   Service.startOver();
   do_check_false(!!CollectionKeys.keyForCollection());
-}
+
+  run_next_test();
+});
+
+add_test(function test_credentials_preserved() {
+  _("Ensure that credentials are preserved if client is wiped.");
+
+  // Required for wipeClient().
+  Service.clusterURL = TEST_CLUSTER_URL;
+
+  Identity.account = "testaccount";
+  Identity.basicPassword = "testpassword";
+  let key = Utils.generatePassphrase();
+  Identity.syncKey = key;
+  Identity.persistCredentials();
+
+  // Simulate passwords engine wipe without all the overhead. To do this
+  // properly would require extra test infrastructure.
+  Services.logins.removeAllLogins();
+  Service.wipeClient();
+
+  let id = new IdentityManager();
+  do_check_eq(id.account, "testaccount");
+  do_check_eq(id.basicPassword, "testpassword");
+  do_check_eq(id.syncKey, key);
+
+  Service.startOver();
+
+  run_next_test();
+});
 
 function run_test() {
-  test_withEngineList();
-  test_startOver_clears_keys();
+  initTestLogging();
+
+  run_next_test();
 }
