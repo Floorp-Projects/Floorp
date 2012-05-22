@@ -29,7 +29,7 @@ sync protocol PRenderFrame
 
 parent:
     sync PLayers()
-      returns (LayersBackend backend);
+      returns (LayersBackend backend, int maxTextureSize);
 
     async __delete__();
 
