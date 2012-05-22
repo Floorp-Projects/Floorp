@@ -24,6 +24,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
   const unsigned long STATE_DOWNLOADING = 5;
   const unsigned long STATE_ITEMSTARTED = 6;
   const unsigned long STATE_ITEMCOMPLETED = 7;
+  const unsigned long STATE_ITEMPROGRESS = 8;
   const unsigned long STATE_FINISHED = 10;
 
   /**
@@ -60,7 +61,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
  * load its items one by one, sending itemCompleted() to any registered
  * observers.
  */
-[scriptable, uuid(24605d81-8cf9-4021-8575-7f39aacbf31a)]
+[scriptable, uuid(2FA574B8-AE62-426b-BE95-08E6AA957455)]
 interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Fetch the status of the running update.  This will return a value
@@ -154,6 +155,11 @@ interface nsIOfflineCacheUpdate : nsISupports {
    *        the observer to remove.
    */
   void removeObserver(in nsIOfflineCacheUpdateObserver aObserver);
+
+  /**
+   * Return the number of bytes downloaded so far
+   */
+  readonly attribute PRUint64 byteProgress;
 };
 
 [scriptable, uuid(6fd2030f-7b00-4102-a0e3-d73078821eb1)]
