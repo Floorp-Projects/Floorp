@@ -14,8 +14,7 @@ public interface Driver {
      * 
      * @param activity The activity the element belongs to
      * @param name The name of the element
-     * @return The first matching element on the current context
-     * @throws RoboCopException If no matching elements are found
+     * @return The first matching element on the current context, or null if not found.
      */
     Element findElement(Activity activity, String name);
 

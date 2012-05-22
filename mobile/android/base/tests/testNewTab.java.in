@@ -9,34 +9,56 @@ public class testNewTab extends BaseTest {
         setTestType("mochitest");
         String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
         String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
+        String tabCountText = null;
+        String urlbarText = null;
+        Activity activity = null;
+        Element urlbar = null;
 
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
         // Add one tab
         Element tabs = mDriver.findElement(getActivity(), "tabs");
-        Activity activity = getActivityFromClick(tabs);
-        Element urlbar = mDriver.findElement(activity, "awesomebar_text");
-        mActions.sendKeys(url);
-        mAsserter.is(urlbar.getText(), url, "Awesomebar url is fine");
+        if (tabs != null) {
+            activity = getActivityFromClick(tabs);
+            urlbar = mDriver.findElement(activity, "awesomebar_text");
+            mActions.sendKeys(url);
+            if (urlbar != null) {
+                urlbarText = urlbar.getText();
+            }
+        }
+        mAsserter.is(urlbarText, url, "Awesomebar url is fine");
         hitEnterAndWait();
 
         // See tab count
         Element tabCount = mDriver.findElement(getActivity(), "tabs_count");
-        mAsserter.is(tabCount.getText(), "2", "Number of tabs has increased");
+        if (tabCount != null) {
+            tabCountText = tabCount.getText();
+        }
+        mAsserter.is(tabCountText, "2", "Number of tabs has increased");
 
         // Click tab list
         activity = getActivityFromClick(tabs);
         Element addTab = mDriver.findElement(activity, "add_tab");
-
+        
         // Add another tab. The new tab has its own awesome bar activity, so it
         // is important to use the new activity to fetch the awesome bar text.
-        activity = getActivityFromClick(addTab);
-        mActions.sendKeys(url2);
-        urlbar = mDriver.findElement(activity, "awesomebar_text");
-        mAsserter.is(urlbar.getText(), url2, "URL is still fine");
+        urlbarText = null;
+        if (addTab != null) {
+            activity = getActivityFromClick(addTab);
+            mActions.sendKeys(url2);
+            urlbar = mDriver.findElement(activity, "awesomebar_text");
+            if (urlbar != null) {
+                urlbarText = urlbar.getText();
+            }
+        }
+        mAsserter.is(urlbarText, url2, "URL is still fine");
 
         hitEnterAndWait();
         // Check tab count another time.
-        mAsserter.is(tabCount.getText(), "3", "Number of tabs has increased");
+        tabCountText = null;
+        if (tabCount != null) {
+            tabCountText = tabCount.getText();
+        }
+        mAsserter.is(tabCountText, "3", "Number of tabs has increased");
     }
 }
