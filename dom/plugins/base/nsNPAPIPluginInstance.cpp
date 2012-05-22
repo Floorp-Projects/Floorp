@@ -415,6 +415,19 @@ nsNPAPIPluginInstance::Start()
   // before returning. If the plugin returns failure, we'll clear it out below.
   mRunning = RUNNING;
 
+#if MOZ_WIDGET_ANDROID
+  // Flash creates some local JNI references during initialization (NPP_New). It does not
+  // remove these references later, so essentially they are leaked. AutoLocalJNIFrame
+  // prevents this by pushing a JNI frame. As a result, all local references created
+  // by Flash are contained in this frame. AutoLocalJNIFrame pops the frame once we
+  // go out of scope and the local references are deleted, preventing the leak.
+  JNIEnv* env = AndroidBridge::GetJNIEnv();
+  if (!env)
+    return NS_ERROR_FAILURE;
+
+  mozilla::AutoLocalJNIFrame frame(env);
+#endif
+
   nsresult newResult = library->NPP_New((char*)mimetype, &mNPP, (PRUint16)mode, count, (char**)names, (char**)values, NULL, &error);
   mInPluginInitCall = oldVal;
 
