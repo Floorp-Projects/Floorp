@@ -35,6 +35,7 @@
 #include "updater/progressui.h"
 #include "common/readstrings.h"
 #include "common/errors.h"
+#include "mozilla/Util.h"
 
 #ifndef MAXPATHLEN
 # ifdef PATH_MAX
@@ -51,6 +52,8 @@
 #endif
 
 #define TEST_NAME "Updater ReadStrings"
+
+using namespace mozilla;
 
 static int gFailCount = 0;
 
@@ -101,7 +104,7 @@ int NS_main(int argc, NS_tchar **argv)
   *(++slash) = '\0';
   // Test success when the ini file exists with both Title and Info in the
   // Strings section and the values for Title and Info.
-  NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStrings1.ini"), argv[0]);
+  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings1.ini"), argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval == OK) {
     if (strcmp(testStrings.title, "Title Test - \xD0\x98\xD1\x81\xD0\xBF\xD1\x8B" \
@@ -131,7 +134,7 @@ int NS_main(int argc, NS_tchar **argv)
 
   // Test failure when the ini file exists without Title and with Info in the
   // Strings section.
-  NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStrings2.ini"), argv[0]);
+  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings2.ini"), argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval != PARSE_ERROR) {
     rv = 24;
@@ -140,7 +143,7 @@ int NS_main(int argc, NS_tchar **argv)
 
   // Test failure when the ini file exists with Title and without Info in the
   // Strings section.
-  NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStrings3.ini"), argv[0]);
+  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings3.ini"), argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval != PARSE_ERROR) {
     rv = 25;
@@ -148,7 +151,7 @@ int NS_main(int argc, NS_tchar **argv)
   }
 
   // Test failure when the ini file doesn't exist
-  NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStringsBogus.ini"), argv[0]);
+  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStringsBogus.ini"), argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval != READ_ERROR) {
     rv = 26;
@@ -156,7 +159,7 @@ int NS_main(int argc, NS_tchar **argv)
   }
 
   // Test reading a non-default section name
-  NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStrings3.ini"), argv[0]);
+  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings3.ini"), argv[0]);
   retval = ReadStrings(inifile, "Title\0", 1, &testStrings.title, "BogusSection2");
   if (retval == OK) {
     if (strcmp(testStrings.title, "Bogus Title") != 0) {

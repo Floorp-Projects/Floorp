@@ -67,7 +67,55 @@ let DeveloperToolbarTest = {
       DeveloperToolbar.display.inputter.setInput("");
       DeveloperToolbar.hide();
     }
-  }
+  },
+
+  /**
+   * Quick wrapper around the things you need to do to run DeveloperToolbar
+   * command tests:
+   * - Set the pref 'devtools.toolbar.enabled' to true
+   * - Add a tab pointing at |uri|
+   * - Open the DeveloperToolbar
+   * - Register a cleanup function to undo the above
+   * - Run the tests
+   *
+   * @param uri The uri of a page to load. Can be 'about:blank' or 'data:...'
+   * @param testFunc A function containing the tests to run. This should
+   * arrange for 'finish()' to be called on completion.
+   */
+  test: function DTT_test(uri, testFunc) {
+    let menuItem = document.getElementById("menu_devToolbar");
+    let command = document.getElementById("Tools:DevToolbar");
+    let appMenuItem = document.getElementById("appmenu_devToolbar");
+
+    registerCleanupFunction(function() {
+      DeveloperToolbarTest.hide();
+
+      // a.k.a Services.prefs.clearUserPref("devtools.toolbar.enabled");
+      if (menuItem) menuItem.hidden = true;
+      if (command) command.setAttribute("disabled", "true");
+      if (appMenuItem) appMenuItem.hidden = true;
+    });
+
+    // a.k.a: Services.prefs.setBoolPref("devtools.toolbar.enabled", true);
+    if (menuItem) menuItem.hidden = false;
+    if (command) command.removeAttribute("disabled");
+    if (appMenuItem) appMenuItem.hidden = false;
+
+    addTab(uri, function(browser, tab) {
+      DeveloperToolbarTest.show(function() {
+
+        try {
+          testFunc(browser, tab);
+        }
+        catch (ex) {
+          ok(false, "" + ex);
+          console.error(ex);
+          finish();
+          throw ex;
+        }
+      });
+    });
+  },
 };
 
 function catchFail(func) {

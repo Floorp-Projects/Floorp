@@ -24,8 +24,11 @@
 
 #if defined(XP_WIN)
 # include <windows.h>
+# include <shlwapi.h>
 # include <direct.h>
 # include <io.h>
+# include <stdio.h>
+# include <stdarg.h>
 
 # define F_OK 00
 # define W_OK 02
@@ -42,24 +45,35 @@
 
 # define LOG_S "%S"
 # define NS_T(str) L ## str
+# define NS_SLASH NS_T('\\')
 // On Windows, _snprintf and _snwprintf don't guarantee null termination. These
 // macros always leave room in the buffer for null termination and set the end
 // of the buffer to null in case the string is larger than the buffer. Having
 // multiple nulls in a string is fine and this approach is simpler (possibly
 // faster) than calculating the string length to place the null terminator and
 // truncates the string as _snprintf and _snwprintf do on other platforms.
-# define snprintf(dest, count, fmt, ...) \
-  PR_BEGIN_MACRO \
-  int _count = count - 1; \
-  _snprintf(dest, _count, fmt, ##__VA_ARGS__); \
-  dest[_count] = '\0'; \
-  PR_END_MACRO
-#define NS_tsnprintf(dest, count, fmt, ...) \
-  PR_BEGIN_MACRO \
-  int _count = count - 1; \
-  _snwprintf(dest, _count, fmt, ##__VA_ARGS__); \
-  dest[_count] = L'\0'; \
-  PR_END_MACRO
+static int mysnprintf(char* dest, size_t count, const char* fmt, ...)
+{
+  size_t _count = count - 1;
+  va_list varargs;
+  va_start(varargs, fmt);
+  int result = _vsnprintf(dest, count - 1, fmt, varargs);
+  va_end(varargs);
+  dest[_count] = '\0';
+  return result;
+}
+#define snprintf mysnprintf
+static int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt, ...)
+{
+  size_t _count = count - 1;
+  va_list varargs;
+  va_start(varargs, fmt);
+  int result = _vsnwprintf(dest, count - 1, fmt, varargs);
+  va_end(varargs);
+  dest[_count] = L'\0';
+  return result;
+}
+#define NS_tsnprintf mywcsprintf
 # define NS_taccess _waccess
 # define NS_tchdir _wchdir
 # define NS_tchmod _wchmod
@@ -70,22 +84,32 @@
 # define NS_trename _wrename
 # define NS_trmdir _wrmdir
 # define NS_tstat _wstat
+# define NS_tlstat _wstat // No symlinks on Windows
 # define NS_tstrcat wcscat
 # define NS_tstrcmp wcscmp
+# define NS_tstricmp wcsicmp
 # define NS_tstrcpy wcscpy
+# define NS_tstrncpy wcsncpy
 # define NS_tstrlen wcslen
+# define NS_tstrchr wcschr
 # define NS_tstrrchr wcsrchr
 # define NS_tstrstr wcsstr
+# include "win_dirent.h"
+# define NS_tDIR DIR
+# define NS_tdirent dirent
+# define NS_topendir opendir
+# define NS_tclosedir closedir
+# define NS_treaddir readdir
 #else
 # include <sys/wait.h>
 # include <unistd.h>
 
 #ifdef SOLARIS
 # include <sys/stat.h>
-# include <dirent.h>
 #else
 # include <fts.h>
 #endif
+# include <dirent.h>
 
 #ifdef XP_MACOSX
 # include <sys/time.h>
@@ -93,6 +117,7 @@
 
 # define LOG_S "%s"
 # define NS_T(str) str
+# define NS_SLASH NS_T('/')
 # define NS_tsnprintf snprintf
 # define NS_taccess access
 # define NS_tchdir chdir
@@ -103,12 +128,20 @@
 # define NS_trename rename
 # define NS_trmdir rmdir
 # define NS_tstat stat
+# define NS_tlstat lstat
 # define NS_tstrcat strcat
 # define NS_tstrcmp strcmp
+# define NS_tstricmp strcasecmp
 # define NS_tstrcpy strcpy
+# define NS_tstrncpy strncpy
 # define NS_tstrlen strlen
 # define NS_tstrrchr strrchr
 # define NS_tstrstr strstr
+# define NS_tDIR DIR
+# define NS_tdirent dirent
+# define NS_topendir opendir
+# define NS_tclosedir closedir
+# define NS_treaddir readdir
 #endif
 
 #define BACKUP_EXT NS_T(".moz-backup")

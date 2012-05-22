@@ -287,7 +287,7 @@ function checkUpdateFinished() {
   do_check_eq(readFileBytes(file), "update_test/UpdateTestRemoveFile\n");
 
   let updatesDir = getUpdatesDir();
-  let log = updatesDir.clone();
+  log = updatesDir.clone();
   log.append("0");
   log.append(FILE_UPDATE_LOG);
   logTestInfo("testing " + log.path + " shouldn't exist");
@@ -307,5 +307,5 @@ function checkUpdateFinished() {
   logTestInfo("testing " + updatesDir.path + " should exist");
   do_check_true(updatesDir.exists());
 
-  do_timeout(CHECK_TIMEOUT_MILLI, do_test_finished);
+  removeCallbackCopy();
 }

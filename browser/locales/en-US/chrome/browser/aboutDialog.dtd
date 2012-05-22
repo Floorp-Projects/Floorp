@@ -69,6 +69,8 @@
 <!ENTITY update.downloading.start   "Downloading update — ">
 <!ENTITY update.downloading.end     "">
 
+<!ENTITY update.applying            "Applying update…">
+
 <!-- LOCALIZATION NOTE (channel.description.start,channel.description.end): channel.description.start and
      channel.description.end create one sentence, with the current channel label inserted in between.
      example: You are currently on the _Stable_ update channel. -->
