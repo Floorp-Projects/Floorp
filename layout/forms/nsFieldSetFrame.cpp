@@ -379,7 +379,7 @@ nsFieldSetFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
   // If we're a container for font size inflation, then shrink
   // wrapping inside of us should not apply font size inflation.
-  AutoMaybeNullInflationContainer an(this);
+  AutoMaybeDisableFontInflation an(this);
 
   nscoord minWidth = GetMinWidth(aRenderingContext);
   if (minWidth > result.width)

@@ -126,6 +126,10 @@ public:
   const static PRUint32 kDefaultMaxConcurrent = 100;
   const static PRUint32 kMaxStreamID = 0x7800000;
   
+  // This is a sentinel for a deleted stream. It is not a valid
+  // 31 bit stream ID.
+  const static PRUint32 kDeadStreamID = 0xffffdead;
+  
   static nsresult HandleSynStream(SpdySession *);
   static nsresult HandleSynReply(SpdySession *);
   static nsresult HandleRstStream(SpdySession *);
@@ -185,6 +189,8 @@ private:
   bool        RoomForMoreConcurrent();
   void        ActivateStream(SpdyStream *);
   void        ProcessPending();
+  nsresult    SetInputFrameDataStream(PRUint32);
+  bool        VerifyStream(SpdyStream *, PRUint32);
 
   // a wrapper for all calls to the nshttpconnection level segment writer. Used
   // to track network I/O for timeout purposes

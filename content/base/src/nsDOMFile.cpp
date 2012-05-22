@@ -129,6 +129,13 @@ nsDOMFileBase::GetName(nsAString &aFileName)
 }
 
 NS_IMETHODIMP
+nsDOMFileBase::GetLastModifiedDate(JSContext* cx, JS::Value *aLastModifiedDate)
+{
+  aLastModifiedDate->setNull();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMFileBase::GetMozFullPath(nsAString &aFileName)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
@@ -415,6 +422,22 @@ nsDOMFileFile::GetMozFullPathInternal(nsAString &aFilename)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
   return mFile->GetPath(aFilename);
+}
+
+NS_IMETHODIMP
+nsDOMFileFile::GetLastModifiedDate(JSContext* cx, JS::Value *aLastModifiedDate)
+{
+  PRInt64 msecs;
+  mFile->GetLastModifiedTime(&msecs);
+  JSObject* date = JS_NewDateObjectMsec(cx, msecs);
+  if (date) {
+    aLastModifiedDate->setObject(*date);
+  }
+  else {
+    aLastModifiedDate->setNull();
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

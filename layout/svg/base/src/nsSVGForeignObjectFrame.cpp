@@ -544,14 +544,6 @@ nsSVGForeignObjectFrame::DoReflow()
   if (!renderingContext)
     return;
 
-  AutoRestore<nsIFrame*> restoreCurrentInflationContainer(
-    presContext->mCurrentInflationContainer);
-  AutoRestore<nscoord> restoreCurrentInflationContainerWidth(
-    presContext->mCurrentInflationContainerWidth);
-
-  presContext->mCurrentInflationContainer = this;
-  presContext->mCurrentInflationContainerWidth = mRect.width;
-
   mInReflow = true;
 
   nsHTMLReflowState reflowState(presContext, kid,

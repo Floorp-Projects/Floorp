@@ -8,6 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
 var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
@@ -26,6 +27,12 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:EnumerateCalls",
   "RIL:CallStateChanged",
   "RIL:CallError",
+  "RIL:GetCardLock:Return:OK",
+  "RIL:GetCardLock:Return:KO",
+  "RIL:SetCardLock:Return:OK",
+  "RIL:SetCardLock:Return:KO",
+  "RIL:UnlockCardLock:Return:OK",
+  "RIL:UnlockCardLock:Return:KO",
 ];
 
 const kVoiceChangedTopic     = "mobile-connection-voice-changed";
@@ -63,9 +70,8 @@ function RILContentHelper() {
   this.voiceConnectionInfo = new MobileConnectionInfo();
   this.dataConnectionInfo = new MobileConnectionInfo();
 
-  for each (let msgname in RIL_IPC_MSG_NAMES) {
-    cpmm.addMessageListener(msgname, this);
-  }
+  this.initRequests();
+  this.initMessageListener(RIL_IPC_MSG_NAMES);
   Services.obs.addObserver(this, "xpcom-shutdown", false);
 
   // Request initial state.
@@ -84,6 +90,8 @@ function RILContentHelper() {
   }
 }
 RILContentHelper.prototype = {
+  __proto__: DOMRequestIpcHelper.prototype,
+
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionProvider,
                                          Ci.nsIRILContentHelper,
                                          Ci.nsIObserver]),
@@ -102,6 +110,39 @@ RILContentHelper.prototype = {
   getNetworks: function getNetworks(window) {
     //TODO bug 744344
     throw Components.Exception("Not implemented", Cr.NS_ERROR_NOT_IMPLEMENTED);
+  },
+
+  getCardLock: function getCardLock(window, lockType) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+    cpmm.sendAsyncMessage("RIL:GetCardLock", {lockType: lockType, requestId: requestId});
+    return request;
+  },
+
+  unlockCardLock: function unlockCardLock(window, info) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    info.requestId = this.getRequestId(request);
+    cpmm.sendAsyncMessage("RIL:UnlockCardLock", info);
+    return request;
+  },
+
+  setCardLock: function setCardLock(window, info) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    info.requestId = this.getRequestId(request);
+    cpmm.sendAsyncMessage("RIL:SetCardLock", info);
+    return request;
   },
 
   _telephonyCallbacks: null,
@@ -195,9 +236,7 @@ RILContentHelper.prototype = {
 
   observe: function observe(subject, topic, data) {
     if (topic == "xpcom-shutdown") {
-      for each (let msgname in RIL_IPC_MSG_NAMES) {
-        cpmm.removeMessageListener(msgname, this);
-      }
+      this.removeMessageListener();
       Services.obs.removeObserver(this, "xpcom-shutdown");
       cpmm = null;
     }
@@ -206,6 +245,7 @@ RILContentHelper.prototype = {
   // nsIFrameMessageListener
 
   receiveMessage: function receiveMessage(msg) {
+    let request;
     debug("Received message '" + msg.name + "': " + JSON.stringify(msg.json));
     switch (msg.name) {
       case "RIL:CardStateChanged":
@@ -239,6 +279,22 @@ RILContentHelper.prototype = {
                                         [msg.json.callIndex, 
                                          msg.json.error]);    	  
     	break;
+      case "RIL:GetCardLock:Return:OK":
+      case "RIL:SetCardLock:Return:OK":
+      case "RIL:UnlockCardLock:Return:OK":
+        request = this.getRequest(msg.json.requestId);
+        if (request) {
+          Services.DOMRequest.fireSuccess(request, msg.json);
+        }
+        break;
+      case "RIL:GetCardLock:Return:KO":
+      case "RIL:SetCardLock:Return:KO":
+      case "RIL:UnlockCardLock:Return:KO":
+        request = this.getRequest(msg.json.requestId);
+        if (request) {
+          Services.DOMRequest.fireError(request, msg.json.errorMsg);
+        }
+        break;
     }
   },
 
@@ -284,7 +340,6 @@ RILContentHelper.prototype = {
       }
     }
   },
-
 };
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([RILContentHelper]);

@@ -1,0 +1,89 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(srcdir)/../../objs.mk
+
+EXTRA_DEPS += $(srcdir)/../../objs.mk
+
+MODULE		= xpcom
+LIBRARY_NAME	= xpcomglue_staticruntime
+DIST_INSTALL	= 1
+
+LOCAL_INCLUDES	= \
+	-I$(srcdir)/../../../build \
+	$(NULL)
+
+ifeq (Darwin,$(OS_ARCH))
+ifeq (uikit,$(MOZ_WIDGET_TOOLKIT))
+LINKSRC = nsGlueLinkingDlopen.cpp
+else
+LINKSRC = nsGlueLinkingOSX.cpp
+endif
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+LINKSRC = nsGlueLinkingWin.cpp
+endif
+ifneq (,$(filter AIX DragonFly FreeBSD GNU GNU_% Linux NetBSD OpenBSD SunOS,$(OS_ARCH)))
+LINKSRC = nsGlueLinkingDlopen.cpp
+endif
+ifeq (OS2,$(OS_ARCH))
+LINKSRC = nsGlueLinkingOS2.cpp
+endif
+
+ifndef LINKSRC
+LINKSRC = nsGlueLinkingNull.cpp
+$(warning TinderboxPrint:<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=298044">Error: XPCOM Glue</a>)
+endif
+
+CPPSRCS		= \
+	$(XPCOM_GLUE_SRC_LCPPSRCS)   \
+	nsXPCOMGlue.cpp              \
+	nsStringAPI.cpp              \
+	$(LINKSRC)                   \
+	$(NULL)
+
+SDK_LIBRARY     	= \
+	$(LIB_PREFIX)xpcomglue_staticruntime.$(LIB_SUFFIX) \
+	$(NULL)
+
+# create a static lib
+FORCE_STATIC_LIB = 1
+
+# Statically link to the CRT on Windows
+USE_STATIC_LIBS = 1
+
+# Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
+STL_FLAGS	=
+
+GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
+
+SRCS_IN_OBJDIR	= 1
+
+include $(topsrcdir)/config/rules.mk
+
+ifdef _MSC_VER
+# Don't include directives in obj files about which CRT to use
+OS_COMPILE_CXXFLAGS += -Zl
+OS_COMPILE_CFLAGS += -Zl
+DEFINES += -D_USE_ANSI_CPP
+endif
+
+export:: $(XPCOM_GLUE_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp ../nsXPCOMGlue.cpp ../nsGlueLinking.h ../$(LINKSRC)
+	$(INSTALL) $^ .
+
+GARBAGE += nsStringAPI.cpp nsXPCOMGlue.cpp nsGlueLinking.h $(LINKSRC)
+
+DEFINES		+= -DXPCOM_GLUE
+
+ifdef TARGET_XPCOM_ABI
+DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
+endif
+
