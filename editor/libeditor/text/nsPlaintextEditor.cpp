@@ -393,23 +393,20 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
    to TypedText() to determine what action to take, but without passing
    an event.
    */
-NS_IMETHODIMP nsPlaintextEditor::TypedText(const nsAString& aString,
-                                      PRInt32 aAction)
+NS_IMETHODIMP
+nsPlaintextEditor::TypedText(const nsAString& aString, ETypingAction aAction)
 {
   nsAutoPlaceHolderBatch batch(this, nsGkAtoms::TypingTxnName);
 
-  switch (aAction)
-  {
+  switch (aAction) {
     case eTypedText:
-      {
-        return InsertText(aString);
-      }
+      return InsertText(aString);
     case eTypedBreak:
-      {
-        return InsertLineBreak();
-      } 
-  } 
-  return NS_ERROR_FAILURE; 
+      return InsertLineBreak();
+    default:
+      // eTypedBR is only for HTML
+      return NS_ERROR_FAILURE;
+  }
 }
 
 nsresult
