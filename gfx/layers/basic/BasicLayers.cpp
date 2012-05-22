@@ -2546,7 +2546,7 @@ public:
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
-    aAttrs = ImageLayerAttributes(mFilter);
+    aAttrs = ImageLayerAttributes(mFilter, mForceSingleTile);
   }
 
   virtual Layer* AsLayer() { return this; }

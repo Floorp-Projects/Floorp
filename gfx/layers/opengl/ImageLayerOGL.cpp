@@ -660,7 +660,10 @@ ShadowImageLayerOGL::Init(const SharedImage& aFront)
     mSize = surf->GetSize();
     mTexImage = gl()->CreateTextureImage(nsIntSize(mSize.width, mSize.height),
                                          surf->GetContentType(),
-                                         LOCAL_GL_CLAMP_TO_EDGE);
+                                         LOCAL_GL_CLAMP_TO_EDGE,
+                                         mForceSingleTile
+                                          ? TextureImage::ForceSingleTile
+                                          : TextureImage::NoFlags);
     return true;
   } else {
     YUVImage yuv = aFront.get_YUVImage();
