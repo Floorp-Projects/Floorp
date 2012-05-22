@@ -29,7 +29,7 @@ function onTabViewWindowLoaded(win) {
   let datatext = win.gBrowser.loadOneTab("data:text/plain,bug610242", bg);
   let datahtml = win.gBrowser.loadOneTab("data:text/html,<blink>don't blink!</blink>", bg);
   let mozilla  = win.gBrowser.loadOneTab("about:mozilla", bg);
-  let robots   = win.gBrowser.loadOneTab("about:robots", bg);
+  let synclog   = win.gBrowser.loadOneTab("about:sync-log", bg);
   let html     = win.gBrowser.loadOneTab("http://example.com", bg);
   let png      = win.gBrowser.loadOneTab("http://mochi.test:8888/browser/browser/base/content/test/moz.png", bg);
   let svg      = win.gBrowser.loadOneTab("http://mochi.test:8888/browser/browser/base/content/test/title_test.svg", bg);
@@ -79,7 +79,7 @@ function onTabViewWindowLoaded(win) {
           check(datatext, "datatext", false);
           check(datahtml, "datahtml", false);
           check(mozilla, "about:mozilla", false);
-          check(robots, "about:robots", true);
+          check(synclog, "about:sync-log", true);
           check(html, "html", true);
           check(png, "png", false);
           check(svg, "svg", true);
