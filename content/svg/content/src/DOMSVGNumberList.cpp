@@ -77,7 +77,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 DOMSVGNumberList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 {
-  return mozilla::dom::binding::SVGNumberList::create(cx, scope, this,
+  return mozilla::dom::oldproxybindings::SVGNumberList::create(cx, scope, this,
                                                       triedToWrap);
 }
 

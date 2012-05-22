@@ -76,7 +76,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 DOMSVGLengthList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 {
-  return mozilla::dom::binding::SVGLengthList::create(cx, scope, this,
+  return mozilla::dom::oldproxybindings::SVGLengthList::create(cx, scope, this,
                                                       triedToWrap);
 }
 

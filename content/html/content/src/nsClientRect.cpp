@@ -106,7 +106,7 @@ nsClientRectList::GetItemAt(uint32_t aIndex)
 JSObject*
 nsClientRectList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 {
-  return mozilla::dom::binding::ClientRectList::create(cx, scope, this,
+  return mozilla::dom::oldproxybindings::ClientRectList::create(cx, scope, this,
                                                        triedToWrap);
 }
 

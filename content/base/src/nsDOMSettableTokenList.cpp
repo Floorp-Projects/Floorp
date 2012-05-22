@@ -51,6 +51,6 @@ JSObject*
 nsDOMSettableTokenList::WrapObject(JSContext *cx, JSObject *scope,
                                    bool *triedToWrap)
 {
-  return mozilla::dom::binding::DOMSettableTokenList::create(cx, scope, this,
+  return mozilla::dom::oldproxybindings::DOMSettableTokenList::create(cx, scope, this,
                                                              triedToWrap);
 }
