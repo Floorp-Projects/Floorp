@@ -543,7 +543,17 @@ function myExecCommand(command, showUi, value, range) {
 
 		// "Take the action for command, passing value to the instructions as an
 		// argument."
-		commands[command].action(value);
+		var ret = commands[command].action(value);
+
+		// Check for bugs
+		if (ret !== true && ret !== false) {
+			throw "execCommand() didn't return true or false: " + ret;
+		}
+
+		// "If the previous step returned false, return false."
+		if (ret === false) {
+			return false;
+		}
 
 		// "Return true."
 		return true;
@@ -3072,7 +3082,7 @@ commands.backcolor = {
 		// "If value is not a valid CSS color, prepend "#" to it."
 		//
 		// "If value is still not a valid CSS color, or if it is currentColor,
-		// abort these steps and do nothing."
+		// return false."
 		//
 		// Cheap hack for testing, no attempt to be comprehensive.
 		if (/^([0-9a-fA-F]{3}){1,2}$/.test(value)) {
@@ -3081,11 +3091,14 @@ commands.backcolor = {
 		if (!/^(rgba?|hsla?)\(.*\)$/.test(value)
 		&& !parseSimpleColor(value)
 		&& value.toLowerCase() != "transparent") {
-			return;
+			return false;
 		}
 
 		// "Set the selection's value to value."
 		setSelectionValue("backcolor", value);
+
+		// "Return true."
+		return true;
 	}, standardInlineValueCommand: true, relevantCssProperty: "backgroundColor",
 	equivalentValues: function(val1, val2) {
 		// "Either both strings are valid CSS colors and have the same red,
@@ -3101,12 +3114,14 @@ commands.backcolor = {
 commands.bold = {
 	action: function() {
 		// "If queryCommandState("bold") returns true, set the selection's
-		// value to "normal". Otherwise set the selection's value to "bold"."
+		// value to "normal". Otherwise set the selection's value to "bold".
+		// Either way, return true."
 		if (myQueryCommandState("bold")) {
 			setSelectionValue("bold", "normal");
 		} else {
 			setSelectionValue("bold", "bold");
 		}
+		return true;
 	}, inlineCommandActivatedValues: ["bold", "600", "700", "800", "900"],
 	relevantCssProperty: "fontWeight",
 	equivalentValues: function(val1, val2) {
@@ -3125,9 +3140,9 @@ commands.bold = {
 //@{
 commands.createlink = {
 	action: function(value) {
-		// "If value is the empty string, abort these steps and do nothing."
+		// "If value is the empty string, return false."
 		if (value === "") {
-			return;
+			return false;
 		}
 
 		// "For each editable a element that has an href attribute and is an
@@ -3148,6 +3163,9 @@ commands.createlink = {
 
 		// "Set the selection's value to value."
 		setSelectionValue("createlink", value);
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -3156,8 +3174,9 @@ commands.createlink = {
 //@{
 commands.fontname = {
 	action: function(value) {
-		// "Set the selection's value to value."
+		// "Set the selection's value to value, then return true."
 		setSelectionValue("fontname", value);
+		return true;
 	}, standardInlineValueCommand: true, relevantCssProperty: "fontFamily"
 };
 
@@ -3176,7 +3195,7 @@ function normalizeFontSize(value) {
 
 	// "If value is not a valid floating point number, and would not be a valid
 	// floating point number if a single leading "+" character were stripped,
-	// abort these steps and do nothing."
+	// return false."
 	if (!/^[-+]?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$/.test(value)) {
 		return null;
 	}
@@ -3242,11 +3261,14 @@ commands.fontsize = {
 	action: function(value) {
 		value = normalizeFontSize(value);
 		if (value === null) {
-			return;
+			return false;
 		}
 
 		// "Set the selection's value to value."
 		setSelectionValue("fontsize", value);
+
+		// "Return true."
+		return true;
 	}, indeterm: function() {
 		// "True if among formattable nodes that are effectively contained in
 		// the active range, there are two that have distinct effective command
@@ -3357,7 +3379,7 @@ commands.forecolor = {
 		// "If value is not a valid CSS color, prepend "#" to it."
 		//
 		// "If value is still not a valid CSS color, or if it is currentColor,
-		// abort these steps and do nothing."
+		// return false."
 		//
 		// Cheap hack for testing, no attempt to be comprehensive.
 		if (/^([0-9a-fA-F]{3}){1,2}$/.test(value)) {
@@ -3366,11 +3388,14 @@ commands.forecolor = {
 		if (!/^(rgba?|hsla?)\(.*\)$/.test(value)
 		&& !parseSimpleColor(value)
 		&& value.toLowerCase() != "transparent") {
-			return;
+			return false;
 		}
 
 		// "Set the selection's value to value."
 		setSelectionValue("forecolor", value);
+
+		// "Return true."
+		return true;
 	}, standardInlineValueCommand: true, relevantCssProperty: "color",
 	equivalentValues: function(val1, val2) {
 		// "Either both strings are valid CSS colors and have the same red,
@@ -3391,7 +3416,7 @@ commands.hilitecolor = {
 		// "If value is not a valid CSS color, prepend "#" to it."
 		//
 		// "If value is still not a valid CSS color, or if it is currentColor,
-		// abort these steps and do nothing."
+		// return false."
 		//
 		// Cheap hack for testing, no attempt to be comprehensive.
 		if (/^([0-9a-fA-F]{3}){1,2}$/.test(value)) {
@@ -3400,11 +3425,14 @@ commands.hilitecolor = {
 		if (!/^(rgba?|hsla?)\(.*\)$/.test(value)
 		&& !parseSimpleColor(value)
 		&& value.toLowerCase() != "transparent") {
-			return;
+			return false;
 		}
 
 		// "Set the selection's value to value."
 		setSelectionValue("hilitecolor", value);
+
+		// "Return true."
+		return true;
 	}, indeterm: function() {
 		// "True if among editable Text nodes that are effectively contained in
 		// the active range, there are two that have distinct effective command
@@ -3431,12 +3459,14 @@ commands.hilitecolor = {
 commands.italic = {
 	action: function() {
 		// "If queryCommandState("italic") returns true, set the selection's
-		// value to "normal". Otherwise set the selection's value to "italic"."
+		// value to "normal". Otherwise set the selection's value to "italic".
+		// Either way, return true."
 		if (myQueryCommandState("italic")) {
 			setSelectionValue("italic", "normal");
 		} else {
 			setSelectionValue("italic", "italic");
 		}
+		return true;
 	}, inlineCommandActivatedValues: ["italic", "oblique"],
 	relevantCssProperty: "fontStyle"
 };
@@ -3545,6 +3575,9 @@ commands.removeformat = {
 		].forEach(function(command) {
 			setSelectionValue(command, null);
 		});
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -3555,12 +3588,13 @@ commands.strikethrough = {
 	action: function() {
 		// "If queryCommandState("strikethrough") returns true, set the
 		// selection's value to null. Otherwise set the selection's value to
-		// "line-through"."
+		// "line-through".  Either way, return true."
 		if (myQueryCommandState("strikethrough")) {
 			setSelectionValue("strikethrough", null);
 		} else {
 			setSelectionValue("strikethrough", "line-through");
 		}
+		return true;
 	}, inlineCommandActivatedValues: ["line-through"]
 };
 
@@ -3579,6 +3613,9 @@ commands.subscript = {
 		if (!state) {
 			setSelectionValue("subscript", "subscript");
 		}
+
+		// "Return true."
+		return true;
 	}, indeterm: function() {
 		// "True if either among formattable nodes that are effectively
 		// contained in the active range, there is at least one with effective
@@ -3609,6 +3646,9 @@ commands.superscript = {
 		if (!state) {
 			setSelectionValue("superscript", "superscript");
 		}
+
+		// "Return true."
+		return true;
 	}, indeterm: function() {
 		// "True if either among formattable nodes that are effectively
 		// contained in the active range, there is at least one with effective
@@ -3629,12 +3669,14 @@ commands.superscript = {
 commands.underline = {
 	action: function() {
 		// "If queryCommandState("underline") returns true, set the selection's
-		// value to null. Otherwise set the selection's value to "underline"."
+		// value to null. Otherwise set the selection's value to "underline".
+		// Either way, return true."
 		if (myQueryCommandState("underline")) {
 			setSelectionValue("underline", null);
 		} else {
 			setSelectionValue("underline", "underline");
 		}
+		return true;
 	}, inlineCommandActivatedValues: ["underline"]
 };
 
@@ -3679,6 +3721,9 @@ commands.unlink = {
 		for (var i = 0; i < hyperlinks.length; i++) {
 			clearValue(hyperlinks[i], "unlink");
 		}
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -6144,10 +6189,10 @@ commands["delete"] = {
 	preservesOverrides: true,
 	action: function() {
 		// "If the active range is not collapsed, delete the selection and
-		// abort these steps."
+		// return true."
 		if (!getActiveRange().collapsed) {
 			deleteSelection();
-			return;
+			return true;
 		}
 
 		// "Canonicalize whitespace at the active range's start."
@@ -6187,13 +6232,13 @@ commands["delete"] = {
 
 			// "Otherwise, if node has a child with index offset − 1 and that
 			// child is an editable a, remove that child from node, preserving
-			// its descendants. Then abort these steps."
+			// its descendants. Then return true."
 			} else if (0 <= offset - 1
 			&& offset - 1 < node.childNodes.length
 			&& isEditable(node.childNodes[offset - 1])
 			&& isHtmlElement(node.childNodes[offset - 1], "a")) {
 				removePreservingDescendants(node.childNodes[offset - 1]);
-				return;
+				return true;
 
 			// "Otherwise, if node has a child with index offset − 1 and that
 			// child is not a block node or a br or an img, set node to that
@@ -6232,13 +6277,13 @@ commands["delete"] = {
 			// "Delete the selection."
 			deleteSelection();
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
-		// "If node is an inline node, abort these steps."
+		// "If node is an inline node, return true."
 		if (isInlineNode(node)) {
-			return;
+			return true;
 		}
 
 		// "If node is an li or dt or dd and is the first child of its parent,
@@ -6286,8 +6331,8 @@ commands["delete"] = {
 			// "Fix disallowed ancestors of node."
 			fixDisallowedAncestors(node);
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
 		// "Let start node equal node and let start offset equal offset."
@@ -6348,14 +6393,14 @@ commands["delete"] = {
 				outdentNode(nodeList[i]);
 			}
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
 		// "If the child of start node with index start offset is a table,
-		// abort these steps."
+		// return true."
 		if (isHtmlElement(startNode.childNodes[startOffset], "table")) {
-			return;
+			return true;
 		}
 
 		// "If start node has a child with index start offset − 1, and that
@@ -6373,8 +6418,8 @@ commands["delete"] = {
 			getSelection().extend(startNode, startOffset);
 			getActiveRange().setEnd(startNode, startOffset);
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
 		// "If offset is zero; and either the child of start node with index
@@ -6408,8 +6453,8 @@ commands["delete"] = {
 			getActiveRange().setStart(node, offset);
 			getActiveRange().collapse(true);
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
 		// "If the child of start node with index start offset is an li or dt
@@ -6480,9 +6525,9 @@ commands["delete"] = {
 			getActiveRange().setStart(originalRange.startContainer, originalRange.startOffset);
 			getActiveRange().setEnd(originalRange.endContainer, originalRange.endOffset);
 
-			// "Abort these steps."
+			// "Return true."
 			extraRanges.pop();
-			return;
+			return true;
 		}
 
 		// "While start node has a child with index start offset minus one:"
@@ -6515,6 +6560,9 @@ commands["delete"] = {
 
 		// "Delete the selection, with direction "backward"."
 		deleteSelection({direction: "backward"});
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -6538,10 +6586,9 @@ commands.formatblock = {
 		// "Let value be converted to ASCII lowercase."
 		value = value.toLowerCase();
 
-		// "If value is not a formattable block name, abort these steps and do
-		// nothing."
+		// "If value is not a formattable block name, return false."
 		if (formattableBlockNames.indexOf(value) == -1) {
-			return;
+			return false;
 		}
 
 		// "Block-extend the active range, and let new range be the result."
@@ -6645,6 +6692,9 @@ commands.formatblock = {
 					: function() { return false },
 				function() { return document.createElement(value) }));
 		}
+
+		// "Return true."
+		return true;
 	}, indeterm: function() {
 		// "If the active range is null, return false."
 		if (!getActiveRange()) {
@@ -6761,10 +6811,10 @@ commands.forwarddelete = {
 	preservesOverrides: true,
 	action: function() {
 		// "If the active range is not collapsed, delete the selection and
-		// abort these steps."
+		// return true."
 		if (!getActiveRange().collapsed) {
 			deleteSelection();
-			return;
+			return true;
 		}
 
 		// "Canonicalize whitespace at the active range's start."
@@ -6847,13 +6897,13 @@ commands.forwarddelete = {
 			// "Delete the selection."
 			deleteSelection();
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
-		// "If node is an inline node, abort these steps."
+		// "If node is an inline node, return true."
 		if (isInlineNode(node)) {
-			return;
+			return true;
 		}
 
 		// "If node has a child with index offset and that child is a br or hr
@@ -6873,8 +6923,8 @@ commands.forwarddelete = {
 			// "Delete the selection."
 			deleteSelection();
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
 		// "Let end node equal node and let end offset equal offset."
@@ -6910,9 +6960,9 @@ commands.forwarddelete = {
 		}
 
 		// "If the child of end node with index end offset minus one is a
-		// table, abort these steps."
+		// table, return true."
 		if (isHtmlElement(endNode.childNodes[endOffset - 1], "table")) {
-			return;
+			return true;
 		}
 
 		// "If the child of end node with index end offset is a table:"
@@ -6927,8 +6977,8 @@ commands.forwarddelete = {
 			getSelection().extend(endNode, endOffset + 1);
 			getActiveRange().setEnd(endNode, endOffset + 1);
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
 		// "If offset is the length of node, and the child of end node with
@@ -6953,8 +7003,8 @@ commands.forwarddelete = {
 			getActiveRange().setStart(node, offset);
 			getActiveRange().collapse(true);
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
 		// "While end node has a child with index end offset:"
@@ -6984,6 +7034,9 @@ commands.forwarddelete = {
 
 		// "Delete the selection."
 		deleteSelection();
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -7073,6 +7126,9 @@ commands.indent = {
 			// "Indent sublist."
 			indentNodes(sublist);
 		}
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -7121,10 +7177,10 @@ commands.inserthorizontalrule = {
 		deleteSelection({blockMerging: false});
 
 		// "If the active range's start node is neither editable nor an editing
-		// host, abort these steps."
+		// host, return true."
 		if (!isEditable(getActiveRange().startContainer)
 		&& !isEditingHost(getActiveRange().startContainer)) {
-			return;
+			return true;
 		}
 
 		// "If the active range's start node is a Text node and its start
@@ -7170,6 +7226,9 @@ commands.inserthorizontalrule = {
 		getSelection().collapse(hr.parentNode, 1 + getNodeIndex(hr));
 		getActiveRange().setStart(hr.parentNode, 1 + getNodeIndex(hr));
 		getActiveRange().collapse(true);
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -7183,10 +7242,10 @@ commands.inserthtml = {
 		deleteSelection();
 
 		// "If the active range's start node is neither editable nor an editing
-		// host, abort these steps."
+		// host, return true."
 		if (!isEditable(getActiveRange().startContainer)
 		&& !isEditingHost(getActiveRange().startContainer)) {
-			return;
+			return true;
 		}
 
 		// "Let frag be the result of calling createContextualFragment(value)
@@ -7196,9 +7255,9 @@ commands.inserthtml = {
 		// "Let last child be the lastChild of frag."
 		var lastChild = frag.lastChild;
 
-		// "If last child is null, abort these steps."
+		// "If last child is null, return true."
 		if (!lastChild) {
-			return;
+			return true;
 		}
 
 		// "Let descendants be all descendants of frag."
@@ -7242,6 +7301,9 @@ commands.inserthtml = {
 		for (var i = 0; i < descendants.length; i++) {
 			fixDisallowedAncestors(descendants[i]);
 		}
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -7251,9 +7313,9 @@ commands.inserthtml = {
 commands.insertimage = {
 	preservesOverrides: true,
 	action: function(value) {
-		// "If value is the empty string, abort these steps and do nothing."
+		// "If value is the empty string, return false."
 		if (value === "") {
-			return;
+			return false;
 		}
 
 		// "Delete the selection, with strip wrappers false."
@@ -7263,10 +7325,10 @@ commands.insertimage = {
 		var range = getActiveRange();
 
 		// "If the active range's start node is neither editable nor an editing
-		// host, abort these steps."
+		// host, return true."
 		if (!isEditable(getActiveRange().startContainer)
 		&& !isEditingHost(getActiveRange().startContainer)) {
-			return;
+			return true;
 		}
 
 		// "If range's start node is a block node whose sole child is a br, and
@@ -7304,6 +7366,9 @@ commands.insertimage = {
 		// to actually do what the spec says.
 		img.removeAttribute("width");
 		img.removeAttribute("height");
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -7317,25 +7382,25 @@ commands.insertlinebreak = {
 		deleteSelection({stripWrappers: false});
 
 		// "If the active range's start node is neither editable nor an editing
-		// host, abort these steps."
+		// host, return true."
 		if (!isEditable(getActiveRange().startContainer)
 		&& !isEditingHost(getActiveRange().startContainer)) {
-			return;
+			return true;
 		}
 
 		// "If the active range's start node is an Element, and "br" is not an
-		// allowed child of it, abort these steps."
+		// allowed child of it, return true."
 		if (getActiveRange().startContainer.nodeType == Node.ELEMENT_NODE
 		&& !isAllowedChild("br", getActiveRange().startContainer)) {
-			return;
+			return true;
 		}
 
 		// "If the active range's start node is not an Element, and "br" is not
-		// an allowed child of the active range's start node's parent, abort
-		// these steps."
+		// an allowed child of the active range's start node's parent, return
+		// true."
 		if (getActiveRange().startContainer.nodeType != Node.ELEMENT_NODE
 		&& !isAllowedChild("br", getActiveRange().startContainer.parentNode)) {
-			return;
+			return true;
 		}
 
 		// "If the active range's start node is a Text node and its start
@@ -7390,6 +7455,9 @@ commands.insertlinebreak = {
 			getActiveRange().setStart(br.parentNode, 1 + getNodeIndex(br));
 			getActiveRange().setEnd(br.parentNode, 1 + getNodeIndex(br));
 		}
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -7398,8 +7466,8 @@ commands.insertlinebreak = {
 //@{
 commands.insertorderedlist = {
 	preservesOverrides: true,
-	// "Toggle lists with tag name "ol"."
-	action: function() { toggleLists("ol") },
+	// "Toggle lists with tag name "ol", then return true."
+	action: function() { toggleLists("ol"); return true },
 	// "True if the selection's list state is "mixed" or "mixed ol", false
 	// otherwise."
 	indeterm: function() { return /^mixed( ol)?$/.test(getSelectionListState()) },
@@ -7417,10 +7485,10 @@ commands.insertparagraph = {
 		deleteSelection();
 
 		// "If the active range's start node is neither editable nor an editing
-		// host, abort these steps."
+		// host, return true."
 		if (!isEditable(getActiveRange().startContainer)
 		&& !isEditingHost(getActiveRange().startContainer)) {
-			return;
+			return true;
 		}
 
 		// "Let node and offset be the active range's start node and offset."
@@ -7514,9 +7582,9 @@ commands.insertparagraph = {
 			// "If node list is empty:"
 			if (!nodeList.length) {
 				// "If tag is not an allowed child of the active range's start
-				// node, abort these steps."
+				// node, return true."
 				if (!isAllowedChild(tag, getActiveRange().startContainer)) {
-					return;
+					return true;
 				}
 
 				// "Set container to the result of calling createElement(tag)
@@ -7536,8 +7604,8 @@ commands.insertparagraph = {
 				getActiveRange().setStart(container, 0);
 				getActiveRange().setEnd(container, 0);
 
-				// "Abort these steps."
-				return;
+				// "Return true."
+				return true;
 			}
 
 			// "While the nextSibling of the last member of node list is not
@@ -7586,8 +7654,8 @@ commands.insertparagraph = {
 				getActiveRange().setEnd(node, offset + 1);
 			}
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
 		// "If container's local name is "li", "dt", or "dd"; and either it has
@@ -7621,8 +7689,8 @@ commands.insertparagraph = {
 			// "Fix disallowed ancestors of container."
 			fixDisallowedAncestors(container);
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
 		// "Let new line range be a new range whose start is the same as
@@ -7746,6 +7814,9 @@ commands.insertparagraph = {
 		getSelection().collapse(newContainer, 0);
 		getActiveRange().setStart(newContainer, 0);
 		getActiveRange().setEnd(newContainer, 0);
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -7758,10 +7829,10 @@ commands.inserttext = {
 		deleteSelection({stripWrappers: false});
 
 		// "If the active range's start node is neither editable nor an editing
-		// host, abort these steps."
+		// host, return true."
 		if (!isEditable(getActiveRange().startContainer)
 		&& !isEditingHost(getActiveRange().startContainer)) {
-			return;
+			return true;
 		}
 
 		// "If value's length is greater than one:"
@@ -7772,20 +7843,20 @@ commands.inserttext = {
 				commands.inserttext.action(value[i]);
 			}
 
-			// "Abort these steps."
-			return;
+			// "Return true."
+			return true;
 		}
 
-		// "If value is the empty string, abort these steps."
+		// "If value is the empty string, return true."
 		if (value == "") {
-			return;
+			return true;
 		}
 
 		// "If value is a newline (U+00A0), take the action for the
-		// insertParagraph command and abort these steps."
+		// insertParagraph command and return true."
 		if (value == "\n") {
 			commands.insertparagraph.action();
-			return;
+			return true;
 		}
 
 		// "Let node and offset be the active range's start node and offset."
@@ -7893,6 +7964,9 @@ commands.inserttext = {
 		// throws, which we don't want.
 		try { getSelection().collapseToEnd(); } catch(e) {}
 		getActiveRange().collapse(false);
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -7901,8 +7975,8 @@ commands.inserttext = {
 //@{
 commands.insertunorderedlist = {
 	preservesOverrides: true,
-	// "Toggle lists with tag name "ul"."
-	action: function() { toggleLists("ul") },
+	// "Toggle lists with tag name "ul", then return true."
+	action: function() { toggleLists("ul"); return true },
 	// "True if the selection's list state is "mixed" or "mixed ul", false
 	// otherwise."
 	indeterm: function() { return /^mixed( ul)?$/.test(getSelectionListState()) },
@@ -7915,8 +7989,8 @@ commands.insertunorderedlist = {
 //@{
 commands.justifycenter = {
 	preservesOverrides: true,
-	// "Justify the selection with alignment "center"."
-	action: function() { justifySelection("center") },
+	// "Justify the selection with alignment "center", then return true."
+	action: function() { justifySelection("center"); return true },
 	indeterm: function() {
 		// "Return false if the active range is null.  Otherwise, block-extend
 		// the active range. Return true if among visible editable nodes that
@@ -7969,8 +8043,8 @@ commands.justifycenter = {
 //@{
 commands.justifyfull = {
 	preservesOverrides: true,
-	// "Justify the selection with alignment "justify"."
-	action: function() { justifySelection("justify") },
+	// "Justify the selection with alignment "justify", then return true."
+	action: function() { justifySelection("justify"); return true },
 	indeterm: function() {
 		// "Return false if the active range is null.  Otherwise, block-extend
 		// the active range. Return true if among visible editable nodes that
@@ -8023,8 +8097,8 @@ commands.justifyfull = {
 //@{
 commands.justifyleft = {
 	preservesOverrides: true,
-	// "Justify the selection with alignment "left"."
-	action: function() { justifySelection("left") },
+	// "Justify the selection with alignment "left", then return true."
+	action: function() { justifySelection("left"); return true },
 	indeterm: function() {
 		// "Return false if the active range is null.  Otherwise, block-extend
 		// the active range. Return true if among visible editable nodes that
@@ -8077,8 +8151,8 @@ commands.justifyleft = {
 //@{
 commands.justifyright = {
 	preservesOverrides: true,
-	// "Justify the selection with alignment "right"."
-	action: function() { justifySelection("right") },
+	// "Justify the selection with alignment "right", then return true."
+	action: function() { justifySelection("right"); return true },
 	indeterm: function() {
 		// "Return false if the active range is null.  Otherwise, block-extend
 		// the active range. Return true if among visible editable nodes that
@@ -8223,6 +8297,9 @@ commands.outdent = {
 			// "Restore the values from values."
 			restoreValues(values);
 		}
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -8238,11 +8315,13 @@ commands.defaultparagraphseparator = {
 	action: function(value) {
 		// "Let value be converted to ASCII lowercase. If value is then equal
 		// to "p" or "div", set the context object's default single-line
-		// container name to value. Otherwise, do nothing."
+		// container name to value and return true. Otherwise, return false."
 		value = value.toLowerCase();
 		if (value == "p" || value == "div") {
 			defaultSingleLineContainerName = value;
+			return true;
 		}
+		return false;
 	}, value: function() {
 		// "Return the context object's default single-line container name."
 		return defaultSingleLineContainerName;
@@ -8275,6 +8354,9 @@ commands.selectall = {
 		} else {
 			getSelection().selectAllChildren(target);
 		}
+
+		// "Return true."
+		return true;
 	}
 };
 
@@ -8285,8 +8367,9 @@ commands.stylewithcss = {
 	action: function(value) {
 		// "If value is an ASCII case-insensitive match for the string
 		// "false", set the CSS styling flag to false. Otherwise, set the
-		// CSS styling flag to true."
+		// CSS styling flag to true.  Either way, return true."
 		cssStylingFlag = String(value).toLowerCase() != "false";
+		return true;
 	}, state: function() { return cssStylingFlag }
 };
 
@@ -8297,8 +8380,9 @@ commands.usecss = {
 	action: function(value) {
 		// "If value is an ASCII case-insensitive match for the string "false",
 		// set the CSS styling flag to true. Otherwise, set the CSS styling
-		// flag to false."
+		// flag to false.  Either way, return true."
 		cssStylingFlag = String(value).toLowerCase() == "false";
+		return true;
 	}
 };
 //@}
@@ -8423,10 +8507,11 @@ commandNames.forEach(function(command) {
 
 		commands[command].action = function(value) {
 			var overrides = recordCurrentOverrides();
-			oldAction(value);
+			var ret = oldAction(value);
 			if (getActiveRange().collapsed) {
 				restoreStatesAndValues(overrides);
 			}
+			return ret;
 		};
 	}
 });
