@@ -691,13 +691,10 @@ LoginManagerStorage_mozStorage.prototype = {
         this._removeOldSignonsFiles();
 
         // Disabled hosts kept, as one presumably doesn't want to erase those.
+        // TODO: Add these items to the deleted items table once we've sorted
+        //       out the issues from bug 756701
         query = "DELETE FROM moz_logins";
         try {
-            let logins = this.getAllLogins();
-            for each (let login in logins) {
-                let [id, storedLogin] = this._getIdForLogin(login);
-                this.storeDeletedLogin(storedLogin);
-            }
             stmt = this._dbCreateStatement(query);
             stmt.execute();
             transaction.commit();
