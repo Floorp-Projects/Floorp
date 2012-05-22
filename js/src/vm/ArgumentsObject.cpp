@@ -56,6 +56,7 @@ ArgumentsObject *
 ArgumentsObject::create(JSContext *cx, uint32_t argc, HandleObject callee)
 {
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
+    JS_ASSERT(!callee->toFunction()->hasRest());
 
     RootedVarObject proto(cx, callee->global().getOrCreateObjectPrototype(cx));
     if (!proto)
