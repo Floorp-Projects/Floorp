@@ -195,7 +195,9 @@ using mozilla::scache::StartupCache;
 #endif
 
 #include "base/command_line.h"
-
+#ifdef MOZ_ENABLE_GTEST
+#include "GTestRunner.h"
+#endif
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -3209,6 +3211,18 @@ XREMain::XRE_mainInit(const nsXREAppData* aAppData, bool* aExitFlag)
     }
     *aExitFlag = true;
     return 0;
+  }
+
+  ar = CheckArg("unittest", true);
+  if (ar == ARG_FOUND) {
+#if MOZ_ENABLE_GTEST
+    int result = mozilla::RunGTest();
+#else
+    int result = 1;
+    printf("TEST-UNEXPECTED-FAIL | Not compiled with GTest enabled\n");
+#endif
+    *aExitFlag = true;
+    return result;
   }
 
   return 0;
