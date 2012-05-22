@@ -118,7 +118,7 @@ case "$host" in
   mips-sgi-irix5.* | mips-sgi-irix6.*)
 	TARGET=MIPS; TARGETDIR=mips
 	;;
-  mips*-*-linux*)
+  mips*-*linux*)
 	# Support 128-bit long double for NewABI.
 	HAVE_LONG_DOUBLE='defined(__mips64)'
 	TARGET=MIPS; TARGETDIR=mips
