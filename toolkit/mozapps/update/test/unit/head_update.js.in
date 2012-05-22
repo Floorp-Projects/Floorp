@@ -31,11 +31,6 @@ const IS_SHARK = true;
 #else
 const IS_SHARK = false;
 #endif
-#ifdef MOZ_DEBUG
-const BUNDLE_NAME = "@MOZ_APP_DISPLAYNAME@Debug.app";
-#else
-const BUNDLE_NAME = "@MOZ_APP_DISPLAYNAME@.app";
-#endif
 #else
 const IS_MACOSX = false;
 #endif
