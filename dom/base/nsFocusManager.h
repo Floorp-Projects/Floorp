@@ -68,6 +68,11 @@ public:
   nsPIDOMWindow* GetFocusedWindow() const { return mFocusedWindow; }
 
   /**
+   * Return an active window. Version of nsIFocusManager::GetActiveWindow.
+   */
+  nsPIDOMWindow* GetActiveWindow() const { return mActiveWindow; }
+
+  /**
    * Called when content has been removed.
    */
   nsresult ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
