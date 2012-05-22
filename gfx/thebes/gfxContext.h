@@ -741,7 +741,7 @@ private:
   void FillAzure(mozilla::gfx::Float aOpacity);
   void PushClipsToDT(mozilla::gfx::DrawTarget *aDT);
   CompositionOp GetOp();
-  void ChangeTransform(mozilla::gfx::Matrix &aNewMatrix);
+  void ChangeTransform(const mozilla::gfx::Matrix &aNewMatrix);
 
   bool mPathIsRect;
   bool mTransformChanged;
