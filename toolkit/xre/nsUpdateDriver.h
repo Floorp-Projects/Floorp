@@ -8,8 +8,24 @@
 #define nsUpdateDriver_h__
 
 #include "nscore.h"
+#ifdef MOZ_UPDATER
+#include "nsIUpdateService.h"
+#include "nsIThread.h"
+#include "nsCOMPtr.h"
+#include "nsString.h"
+#endif
 
 class nsIFile;
+
+#if defined(XP_WIN)
+#include <windows.h>
+  typedef HANDLE     ProcessType;
+#elif defined(XP_MACOSX)
+  typedef pid_t      ProcessType;
+#else
+#include "prproces.h"
+  typedef PRProcess* ProcessType;
+#endif
 
 /**
  * This function processes any available updates.  As part of that process, it
@@ -26,11 +42,64 @@ class nsIFile;
  * version and is used to determine if an update's version is older than the
  * current application version.
  *
+ * If you want the update to be processed without restarting, set the restart
+ * parameter to false.
+ *
  * This function does not modify appDir.
  */
 NS_HIDDEN_(nsresult) ProcessUpdates(nsIFile *greDir, nsIFile *appDir,
                                     nsIFile *updRootDir,
                                     int argc, char **argv,
-                                    const char *appVersion);
+                                    const char *appVersion,
+                                    bool restart = true,
+                                    ProcessType *pid = nsnull);
+
+#ifdef MOZ_UPDATER
+// The implementation of the update processor handles the task of loading the
+// updater application in the background for applying an update.
+// XXX ehsan this is living in this file in order to make use of the existing
+// stuff here, we might want to move it elsewhere in the future.
+class nsUpdateProcessor : public nsIUpdateProcessor
+{
+public:
+  nsUpdateProcessor();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIUPDATEPROCESSOR
+
+private:
+  struct BackgroundUpdateInfo {
+    BackgroundUpdateInfo()
+      : mArgc(0),
+        mArgv(nsnull)
+    {}
+    ~BackgroundUpdateInfo() {
+      for (int i = 0; i < mArgc; ++i) {
+        delete[] mArgv[i];
+      }
+      delete[] mArgv;
+    }
+
+    nsCOMPtr<nsIFile> mGREDir;
+    nsCOMPtr<nsIFile> mAppDir;
+    nsCOMPtr<nsIFile> mUpdateRoot;
+    int mArgc;
+    char **mArgv;
+    nsCAutoString mAppVersion;
+  };
+
+private:
+  void StartBackgroundUpdate();
+  void WaitForProcess();
+  void UpdateDone();
+  void ShutdownWatcherThread();
+
+private:
+  ProcessType mUpdaterPID;
+  nsCOMPtr<nsIThread> mProcessWatcher;
+  nsCOMPtr<nsIUpdate> mUpdate;
+  BackgroundUpdateInfo mInfo;
+};
+#endif
 
 #endif  // nsUpdateDriver_h__

@@ -178,6 +178,8 @@ FreeAllocStrings(int argc, PRUnichar **argv)
   delete [] argv;
 }
 
+
+
 /**
  * Launch a child process with the specified arguments.
  * @note argv[0] is ignored
@@ -187,12 +189,14 @@ FreeAllocStrings(int argc, PRUnichar **argv)
 BOOL
 WinLaunchChild(const PRUnichar *exePath, 
                int argc, PRUnichar **argv, 
-               HANDLE userToken = NULL);
+               HANDLE userToken = NULL,
+               HANDLE *hProcess = NULL);
 
 BOOL
 WinLaunchChild(const PRUnichar *exePath, 
                int argc, char **argv, 
-               HANDLE userToken)
+               HANDLE userToken,
+               HANDLE *hProcess)
 {
   PRUnichar** argvConverted = new PRUnichar*[argc];
   if (!argvConverted)
@@ -206,7 +210,7 @@ WinLaunchChild(const PRUnichar *exePath,
     }
   }
 
-  BOOL ok = WinLaunchChild(exePath, argc, argvConverted, userToken);
+  BOOL ok = WinLaunchChild(exePath, argc, argvConverted, userToken, hProcess);
   FreeAllocStrings(argc, argvConverted);
   return ok;
 }
@@ -215,7 +219,8 @@ BOOL
 WinLaunchChild(const PRUnichar *exePath, 
                int argc, 
                PRUnichar **argv, 
-               HANDLE userToken)
+               HANDLE userToken,
+               HANDLE *hProcess)
 {
   PRUnichar *cl;
   BOOL ok;
@@ -267,7 +272,11 @@ WinLaunchChild(const PRUnichar *exePath,
   }
 
   if (ok) {
-    CloseHandle(pi.hProcess);
+    if (hProcess) {
+      *hProcess = pi.hProcess; // the caller now owns the HANDLE
+    } else {
+      CloseHandle(pi.hProcess);
+    }
     CloseHandle(pi.hThread);
   } else {
     LPVOID lpMsgBuf = NULL;
@@ -289,4 +298,3 @@ WinLaunchChild(const PRUnichar *exePath,
 
   return ok;
 }
-

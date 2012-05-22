@@ -34,12 +34,24 @@ interface nsILocalFileWin : nsILocalFile
 
     /**
      * Windows specific file attributes.
-     *
+     */
+
+    /*
      * WFA_SEARCH_INDEXED: Generally the default on files in Windows except
      * those created in temp locations. Valid on XP and up. When set the
      * file or directory is marked to be indexed by desktop search services.
      */
     const unsigned long WFA_SEARCH_INDEXED = 1;
+
+    /*
+     * WFA_READONLY: Whether the file is readonly or not.
+     */
+    const unsigned long WFA_READONLY = 2;
+
+    /*
+     * WFA_READWRITE: Used to clear the readonly attribute.
+     */
+    const unsigned long WFA_READWRITE = 4;
 
     /**
      * fileAttributesWin
