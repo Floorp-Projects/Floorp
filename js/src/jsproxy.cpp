@@ -753,6 +753,7 @@ class ScriptedProxyHandler : public IndirectProxyHandler {
     virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp);
 
     virtual JSType typeOf(JSContext *cx, JSObject *proxy);
+    virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
 
     static ScriptedProxyHandler singleton;
 };
@@ -963,7 +964,18 @@ ScriptedProxyHandler::typeOf(JSContext *cx, JSObject *proxy)
      * js1_8_5/extensions/scripted-proxies.js. It will be removed when the
      * direct proxy refactor is complete.
      */
-    return IsFunctionProxy(proxy) ? JSTYPE_FUNCTION : JSTYPE_OBJECT;
+    return BaseProxyHandler::typeOf(cx, proxy);
+}
+
+bool
+ScriptedProxyHandler::defaultValue(JSContext *cx, JSObject *proxy, JSType hint,
+                                   Value *vp)
+{
+    /*
+     * This function is only here to prevent bug 757063. It will be removed when
+     * the direct proxy refactor is complete.
+     */
+    return BaseProxyHandler::defaultValue(cx, proxy, hint, vp);
 }
 
 ScriptedProxyHandler ScriptedProxyHandler::singleton;
