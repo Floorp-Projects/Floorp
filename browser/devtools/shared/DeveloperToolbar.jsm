@@ -7,7 +7,6 @@
 const EXPORTED_SYMBOLS = [ "DeveloperToolbar" ];
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
-const URI_GCLIBLANK = "chrome://browser/content/devtools/gcliblank.xhtml";
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -79,7 +78,6 @@ DeveloperToolbar.prototype.toggle = function DT_toggle()
     this.hide();
   } else {
     this.show();
-    this._input.focus();
   }
 };
 
@@ -154,9 +152,11 @@ DeveloperToolbar.prototype._onload = function DT_onload()
   this.display.onOutput.add(this.outputPanel._outputChanged, this.outputPanel);
 
   this._chromeWindow.getBrowser().tabContainer.addEventListener("TabSelect", this, false);
-  this._chromeWindow.getBrowser().addEventListener("load", this, true); 
+  this._chromeWindow.getBrowser().addEventListener("load", this, true);
+  this._chromeWindow.addEventListener("resize", this, false);
 
   this._element.hidden = false;
+  this._input.focus();
 
   this._notify(NOTIFICATIONS.SHOW);
   if (this._pendingShowCallback) {
@@ -263,65 +263,10 @@ DeveloperToolbar.prototype.handleEvent = function DT_handleEvent(aEvent)
       });
     }
   }
-};
-
-/**
- * Add class="gcli-panel-inner-arrowcontent" to a panel's
- * |<xul:box class="panel-inner-arrowcontent">| so we can alter the styling
- * without complex CSS expressions.
- * @param aPanel The panel to affect
- */
-function getContentBox(aPanel)
-{
-  let container = aPanel.ownerDocument.getAnonymousElementByAttribute(
-          aPanel, "anonid", "container");
-  return container.querySelector(".panel-inner-arrowcontent");
-}
-
-/**
- * Helper function to calculate the sum of the vertical padding and margins
- * between a nested node |aNode| and an ancestor |aRoot|. Iff all of the
- * children of aRoot are 'only-childs' until you get to aNode then to avoid
- * scroll-bars, the 'correct' height of aRoot is verticalSpacing + aNode.height.
- * @param aNode The child node whose height is known.
- * @param aRoot The parent height whose height we can affect.
- * @return The sum of the vertical padding/margins in between aNode and aRoot.
- */
-function getVerticalSpacing(aNode, aRoot)
-{
-  let win = aNode.ownerDocument.defaultView;
-
-  function pxToNum(styles, property) {
-    return parseInt(styles.getPropertyValue(property).replace(/px$/, ''), 10);
+  else if (aEvent.type == "resize") {
+    this.outputPanel._resize();
   }
-
-  let vertSpacing = 0;
-  do {
-    let styles = win.getComputedStyle(aNode);
-    vertSpacing += pxToNum(styles, "padding-top");
-    vertSpacing += pxToNum(styles, "padding-bottom");
-    vertSpacing += pxToNum(styles, "margin-top");
-    vertSpacing += pxToNum(styles, "margin-bottom");
-    vertSpacing += pxToNum(styles, "border-top-width");
-    vertSpacing += pxToNum(styles, "border-bottom-width");
-
-    let prev = aNode.previousSibling;
-    while (prev != null) {
-      vertSpacing += prev.clientHeight;
-      prev = prev.previousSibling;
-    }
-
-    let next = aNode.nextSibling;
-    while (next != null) {
-      vertSpacing += next.clientHeight;
-      next = next.nextSibling;
-    }
-
-    aNode = aNode.parentNode;
-  } while (aNode !== aRoot);
-
-  return vertSpacing + 9;
-}
+};
 
 /**
  * Panel to handle command line output.
@@ -332,32 +277,31 @@ function getVerticalSpacing(aNode, aRoot)
 function OutputPanel(aChromeDoc, aInput, aLoadCallback)
 {
   this._input = aInput;
-  this._anchor = aChromeDoc.getElementById("developer-toolbar");
+  this._toolbar = aChromeDoc.getElementById("developer-toolbar");
 
   this._loadCallback = aLoadCallback;
 
   /*
   <panel id="gcli-output"
-         type="arrow"
          noautofocus="true"
          noautohide="true"
          class="gcli-panel">
-    <iframe id="gcli-output-frame"
-            src=URI_GCLIBLANK
-            flex="1"/>
+    <html:iframe xmlns:html="http://www.w3.org/1999/xhtml"
+                 id="gcli-output-frame"
+                 src="chrome://browser/content/devtools/gclioutput.xhtml"
+                 flex="1"/>
   </panel>
   */
   this._panel = aChromeDoc.createElement("panel");
   this._panel.id = "gcli-output";
   this._panel.classList.add("gcli-panel");
-  this._panel.setAttribute("type", "arrow");
   this._panel.setAttribute("noautofocus", "true");
   this._panel.setAttribute("noautohide", "true");
-  this._anchor.parentElement.insertBefore(this._panel, this._anchor);
+  this._toolbar.parentElement.insertBefore(this._panel, this._toolbar);
 
-  this._frame = aChromeDoc.createElement("iframe");
+  this._frame = aChromeDoc.createElementNS(NS_XHTML, "iframe");
   this._frame.id = "gcli-output-frame";
-  this._frame.setAttribute("src", URI_GCLIBLANK);
+  this._frame.setAttribute("src", "chrome://browser/content/devtools/gclioutput.xhtml");
   this._frame.setAttribute("flex", "1");
   this._panel.appendChild(this._frame);
 
@@ -377,13 +321,9 @@ OutputPanel.prototype._onload = function OP_onload()
   this._frame.removeEventListener("load", this._onload, true);
   delete this._onload;
 
-  this._content = getContentBox(this._panel);
-  this._content.classList.add("gcli-panel-inner-arrowcontent");
-
   this.document = this._frame.contentDocument;
-  this.document.body.classList.add("gclichrome-output");
 
-  this._div = this.document.querySelector("div");
+  this._div = this.document.getElementById("gcli-output-root");
   this._div.classList.add('gcli-row-out');
   this._div.setAttribute('aria-live', 'assertive');
 
@@ -399,12 +339,15 @@ OutputPanel.prototype._onload = function OP_onload()
  */
 OutputPanel.prototype.show = function OP_show()
 {
+  // This is nasty, but displaying the panel causes it to re-flow, which can
+  // change the size it should be, so we need to resize the iframe after the
+  // panel has displayed
   this._panel.ownerDocument.defaultView.setTimeout(function() {
     this._resize();
   }.bind(this), 0);
 
+  this._panel.openPopup(this._input, "before_start", 0, 0, false, false, null);
   this._resize();
-  this._panel.openPopup(this._anchor, "before_end", -300, 0, false, false, null);
 
   this._input.focus();
 };
@@ -415,9 +358,12 @@ OutputPanel.prototype.show = function OP_show()
  */
 OutputPanel.prototype._resize = function CLP_resize()
 {
-  let vertSpacing = getVerticalSpacing(this._content, this._panel);
-  let idealHeight = this.document.body.scrollHeight + vertSpacing;
-  this._panel.sizeTo(400, Math.min(idealHeight, 500));
+  if (this._panel == null || this.document == null || !this._panel.state == "closed") {
+    return
+  }
+
+  this._frame.height = this.document.body.scrollHeight;
+  this._frame.width = this._input.clientWidth + 2;
 };
 
 /**
@@ -476,10 +422,10 @@ OutputPanel.prototype.destroy = function OP_destroy()
   this.remove();
 
   this._panel.removeChild(this._frame);
-  this._anchor.parentElement.removeChild(this._panel);
+  this._toolbar.parentElement.removeChild(this._panel);
 
   delete this._input;
-  delete this._anchor;
+  delete this._toolbar;
   delete this._panel;
   delete this._frame;
   delete this._content;
@@ -510,7 +456,8 @@ OutputPanel.prototype._visibilityChanged = function OP_visibilityChanged(aEvent)
 function TooltipPanel(aChromeDoc, aInput, aLoadCallback)
 {
   this._input = aInput;
-  this._anchor = aChromeDoc.getElementById("developer-toolbar");
+  this._toolbar = aChromeDoc.getElementById("developer-toolbar");
+  this._dimensions = { start: 0, end: 0 };
 
   this._onload = this._onload.bind(this);
   this._loadCallback = aLoadCallback;
@@ -520,22 +467,22 @@ function TooltipPanel(aChromeDoc, aInput, aLoadCallback)
          noautofocus="true"
          noautohide="true"
          class="gcli-panel">
-    <iframe id="gcli-tooltip-frame"
-            src=URI_GCLIBLANK
-            flex="1"/>
+    <html:iframe xmlns:html="http://www.w3.org/1999/xhtml"
+                 id="gcli-tooltip-frame"
+                 src="chrome://browser/content/devtools/gclitooltip.xhtml"
+                 flex="1"/>
   </panel>
   */
   this._panel = aChromeDoc.createElement("panel");
   this._panel.id = "gcli-tooltip";
   this._panel.classList.add("gcli-panel");
-  this._panel.setAttribute("type", "arrow");
   this._panel.setAttribute("noautofocus", "true");
   this._panel.setAttribute("noautohide", "true");
-  this._anchor.parentElement.insertBefore(this._panel, this._anchor);
+  this._toolbar.parentElement.insertBefore(this._panel, this._toolbar);
 
-  this._frame = aChromeDoc.createElement("iframe");
+  this._frame = aChromeDoc.createElementNS(NS_XHTML, "iframe");
   this._frame.id = "gcli-tooltip-frame";
-  this._frame.setAttribute("src", URI_GCLIBLANK);
+  this._frame.setAttribute("src", "chrome://browser/content/devtools/gclitooltip.xhtml");
   this._frame.setAttribute("flex", "1");
   this._panel.appendChild(this._frame);
 
@@ -550,13 +497,9 @@ TooltipPanel.prototype._onload = function TP_onload()
 {
   this._frame.removeEventListener("load", this._onload, true);
 
-  this._content = getContentBox(this._panel);
-  this._content.classList.add("gcli-panel-inner-arrowcontent");
-
   this.document = this._frame.contentDocument;
-  this.document.body.classList.add("gclichrome-tooltip");
-
-  this.hintElement = this.document.querySelector("div");
+  this.hintElement = this.document.getElementById("gcli-tooltip-root");
+  this._connector = this.document.getElementById("gcli-tooltip-connector");
 
   this.loaded = true;
 
@@ -569,14 +512,56 @@ TooltipPanel.prototype._onload = function TP_onload()
 /**
  * Display the TooltipPanel.
  */
-TooltipPanel.prototype.show = function TP_show()
+TooltipPanel.prototype.show = function TP_show(aDimensions)
 {
-  let vertSpacing = getVerticalSpacing(this._content, this._panel);
-  let idealHeight = this.document.body.scrollHeight + vertSpacing;
-  this._panel.sizeTo(350, Math.min(idealHeight, 500));
-  this._panel.openPopup(this._anchor, "before_start", 0, 0, false, false, null);
+  if (!aDimensions) {
+    aDimensions = { start: 0, end: 0 };
+  }
+  this._dimensions = aDimensions;
 
+  // This is nasty, but displaying the panel causes it to re-flow, which can
+  // change the size it should be, so we need to resize the iframe after the
+  // panel has displayed
+  this._panel.ownerDocument.defaultView.setTimeout(function() {
+    this._resize();
+  }.bind(this), 0);
+
+  this._resize();
+  this._panel.openPopup(this._input, "before_start", aDimensions.start * 10, 0, false, false, null);
   this._input.focus();
+};
+
+/**
+ * One option is to spend lots of time taking an average width of characters
+ * in the current font, dynamically, and weighting for the frequency of use of
+ * various characters, or even to render the given string off screen, and then
+ * measure the width.
+ * Or we could do this...
+ */
+const AVE_CHAR_WIDTH = 4.5;
+
+/**
+ * Display the TooltipPanel.
+ */
+TooltipPanel.prototype._resize = function TP_resize()
+{
+  if (this._panel == null || this.document == null || !this._panel.state == "closed") {
+    return
+  }
+
+  let offset = 10 + Math.floor(this._dimensions.start * AVE_CHAR_WIDTH);
+  this._frame.style.marginLeft = offset + "px";
+
+  /*
+  // Bug 744906: UX review - Not sure if we want this code to fatten connector
+  // with param width
+  let width = Math.floor(this._dimensions.end * AVE_CHAR_WIDTH);
+  width = Math.min(width, 100);
+  width = Math.max(width, 10);
+  this._connector.style.width = width + "px";
+  */
+
+  this._frame.height = this.document.body.scrollHeight;
 };
 
 /**
@@ -595,13 +580,15 @@ TooltipPanel.prototype.destroy = function TP_destroy()
   this.remove();
 
   this._panel.removeChild(this._frame);
-  this._anchor.parentElement.removeChild(this._panel);
+  this._toolbar.parentElement.removeChild(this._panel);
 
+  delete this._connector;
+  delete this._dimensions;
   delete this._input;
   delete this._onload;
   delete this._panel;
   delete this._frame;
-  delete this._anchor;
+  delete this._toolbar;
   delete this._content;
   delete this.document;
   delete this.hintElement;
@@ -614,7 +601,7 @@ TooltipPanel.prototype.destroy = function TP_destroy()
 TooltipPanel.prototype._visibilityChanged = function TP_visibilityChanged(aEvent)
 {
   if (aEvent.tooltipVisible === true) {
-    this.show();
+    this.show(aEvent.dimensions);
   } else {
     this._panel.hidePopup();
   }
