@@ -440,8 +440,8 @@ ValueNumberer::setClass(MDefinition *def, MDefinition *rep)
     def->valueNumberData()->setClass(def, rep);
 }
 
-bool
-ValueNumberer::needsSplit(MDefinition *def)
+MDefinition *
+ValueNumberer::findSplit(MDefinition *def)
 {
     for (MDefinition *vncheck = def->valueNumberData()->classNext;
          vncheck != NULL;
@@ -449,10 +449,10 @@ ValueNumberer::needsSplit(MDefinition *def)
         if (!def->congruentTo(vncheck)) {
             IonSpew(IonSpew_GVN, "Proceeding with split because %d is not congruent to %d",
                     def->id(), vncheck->id());
-            return true;
+            return vncheck;
         }
     }
-    return false;
+    return NULL;
 }
 
 void
@@ -467,15 +467,42 @@ ValueNumberer::breakClass(MDefinition *def)
             return;
         // If upon closer inspection, we are still equivalent to this class
         // then there isn't anything for us to do.
-        if (!needsSplit(def))
+        MDefinition *newRep = findSplit(def);
+        if (!newRep)
             return;
+        ValueNumberData *newdata = newRep->valueNumberData();
 
-        // Get a new representative member
-        MDefinition *newRep = defdata->classNext;
+        // Right now, |defdata| is at the front of the list, and |newdata| is
+        // somewhere in the middle.
+        //
+        // We want to move |defdata| and everything up to but excluding
+        // |newdata| to a new list, with |defdata| still as the canonical
+        // element.
+        //
+        // We then want to take |newdata| and everything after, and
+        // mark them for processing (since |newdata| is now a new canonical
+        // element).
+        //
+        MDefinition *lastOld = newdata->classPrev;
 
-        // Chop off the head of the list (the old representative)
-        newRep->valueNumberData()->classPrev = NULL;
-        def->valueNumberData()->classNext = NULL;
+        JS_ASSERT(lastOld); // newRep is NOT the first element of the list.
+        JS_ASSERT(lastOld->valueNumberData()->classNext == newRep);
+
+        //lastOld is now the last element of the old list (congruent to
+        //|def|)
+        lastOld->valueNumberData()->classNext = NULL;
+
+#ifdef DEBUG
+        for (MDefinition *tmp = def; tmp != NULL; tmp = tmp->valueNumberData()->classNext) {
+            JS_ASSERT(tmp->valueNumber() == def->valueNumber());
+            JS_ASSERT(tmp->congruentTo(def));
+            JS_ASSERT(tmp != newRep);
+        }
+#endif
+        //|newRep| is now the first element of a new list, therefore it is the
+        //new canonical element. Mark the remaining elements in the list
+        //(including |newRep|)
+        newdata->classPrev = NULL;
         IonSpew(IonSpew_GVN, "Choosing a new representative: %d", newRep->id());
 
         // make the VN of every member in the class the VN of the new representative number.
