@@ -56,7 +56,7 @@ function testFrameParameters()
       is(localNodes[0].querySelector(".info").textContent, "[object Proxy]",
         "Should have the right property value for 'this'.");
 
-      // Expand the '__proto__', 'arguments' and 'a' tree nodes. This causes
+      // Expand the 'this', 'arguments' and 'c' tree nodes. This causes
       // their properties to be retrieved and displayed.
       localNodes[0].expand();
       localNodes[9].expand();
@@ -67,6 +67,7 @@ function testFrameParameters()
       // content window timers are disabled while the debuggee is paused.
       let count = 0;
       let intervalID = window.setInterval(function(){
+        dump("count: "+count+" ");
         if (++count > 50) {
           ok(false, "Timed out while polling for the properties.");
           resumeAndFinish();
@@ -96,17 +97,17 @@ function testFrameParameters()
                         .textContent, 1,
           "Should have the right value for 'c.a'.");
 
-        //is(localNodes[10].querySelector(".info").textContent,
-        //  "[object Arguments]",
-        //  "Should have the right property value for 'arguments'.");
+        is(localNodes[10].querySelector(".info").textContent,
+         "[object Arguments]",
+         "Should have the right property value for 'arguments'.");
 
-        //is(localNodes[10].querySelector(".property > .title > .key")
-        //                .textContent, "length",
-        //  "Should have the right property name for 'length'.");
+        is(localNodes[10].querySelectorAll(".property > .title > .key")[7]
+                       .textContent, "length",
+         "Should have the right property name for 'length'.");
 
-        //is(localNodes[10].querySelector(".property > .title > .value")
-        //                .textContent, 5,
-        //  "Should have the right argument length.");
+        is(localNodes[10].querySelectorAll(".property > .title > .value")[7]
+                       .textContent, 5,
+         "Should have the right argument length.");
 
         resumeAndFinish();
       }, 100);

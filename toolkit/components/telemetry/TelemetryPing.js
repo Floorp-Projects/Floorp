@@ -173,6 +173,7 @@ TelemetryPing.prototype = {
   _startupHistogramRegex: /SQLITE|HTTP|SPDY|CACHE|DNS/,
   _slowSQLStartup: {},
   _prevSession: null,
+  _hasWindowRestoredObserver : false,
   // Bug 756152
   _disablePersistentTelemetrySending: true,
 
@@ -628,6 +629,7 @@ TelemetryPing.prototype = {
     Services.obs.addObserver(this, "profile-before-change", false);
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
     Services.obs.addObserver(this, "quit-application-granted", false);
+    this._hasWindowRestoredObserver = true;
 
     // Delay full telemetry initialization to give the browser time to
     // run various late initializers. Otherwise our gathered memory
@@ -661,10 +663,9 @@ TelemetryPing.prototype = {
    */
   uninstall: function uninstall() {
     this.detachObservers()
-    try {
+    if (this._hasWindowRestoredObserver) {
       Services.obs.removeObserver(this, "sessionstore-windows-restored");
-    } catch (e) {
-      // Already observed this event.
+      this._hasWindowRestoredObserver = false;
     }
     Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "private-browsing");
@@ -706,6 +707,7 @@ TelemetryPing.prototype = {
       break;
     case "sessionstore-windows-restored":
       Services.obs.removeObserver(this, "sessionstore-windows-restored");
+      this._hasWindowRestoredObserver = false;
       // fall through
     case "test-gather-startup":
       this.gatherStartupInformation();

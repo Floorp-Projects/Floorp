@@ -34,6 +34,8 @@ def nsinstall(argv):
                help="Create link (ignored)")
   p.add_option('-L', action="store", metavar="linkprefix",
                help="Link prefix (ignored)")
+  p.add_option('-X', action="append", metavar="file",
+               help="Ignore a file when installing a directory recursively.")
 
   # The remaining arguments are not used in our tree, thus they're not
   # implented.
@@ -75,12 +77,18 @@ def nsinstall(argv):
       os.makedirs(args[0])
     return 0
 
+  if options.X:
+    options.X = [os.path.abspath(p) for p in options.X]
+
   # nsinstall arg1 [...] directory
   if len(args) < 2:
     p.error('not enough arguments')
 
   def copy_all_entries(entries, target):
     for e in entries:
+      if options.X and os.path.abspath(e) in options.X:
+        continue
+
       dest = os.path.join(target,
                           os.path.basename(os.path.normpath(e)))
       handleTarget(e, dest)

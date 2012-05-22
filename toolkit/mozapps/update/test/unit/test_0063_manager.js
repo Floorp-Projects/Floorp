@@ -38,8 +38,7 @@ function run_test() {
   do_check_eq(gUpdateManager.activeUpdate, null);
   // Verify that the active-update.xml file has had the update from the old
   // channel removed.
-  file = getCurrentProcessDir();
-  file.append(FILE_UPDATE_ACTIVE);
+  file = getUpdatesXMLFile(true);
   logTestInfo("verifying contents of " + FILE_UPDATE_ACTIVE);
   do_check_eq(readFile(file), getLocalUpdatesXMLString(""));
 

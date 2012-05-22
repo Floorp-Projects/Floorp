@@ -57,6 +57,8 @@ _CHROME_FILES = \
   test_0084_error_patchApplyFailure_verify_failed.xul \
   test_0091_installed.xul \
   test_0092_finishedBackground.xul \
+  test_0093_stagedBackground.xul \
+  test_0094_stagedServiceBackground.xul \
   test_0111_neverButton_basic.xul \
   test_0112_neverButton_billboard.xul \
   test_0113_showNeverForVersionRemovedWithPref.xul \

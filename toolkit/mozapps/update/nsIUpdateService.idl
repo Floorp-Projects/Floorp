@@ -217,6 +217,8 @@ interface nsIUpdate : nsISupports
    *   "pending"            The update is ready to be applied.
    *   "pending-service"    The update is ready to be applied with the service.
    *   "applying"           The update is being applied.
+   *   "applied"            The update is ready to be switched to.
+   *   "applied-service"    The update is ready to be switched to with the service.
    *   "succeeded"          The update was successfully applied.
    *   "download-failed"    The update failed to be downloaded.
    *   "failed"             The update failed to be applied.
@@ -350,7 +352,7 @@ interface nsIUpdateChecker : nsISupports
  * background update checks and provides utilities for selecting and
  * downloading update patches.
  */
-[scriptable, uuid(b5811144-ed30-4343-aff9-c514034aa19a)]
+[scriptable, uuid(7bd62f69-f604-484b-b97c-e7229d7a3ee8)]
 interface nsIApplicationUpdateService : nsISupports
 {
   /**
@@ -393,6 +395,11 @@ interface nsIApplicationUpdateService : nsISupports
   AString downloadUpdate(in nsIUpdate update, in boolean background);
 
   /**
+   * Apply an update in the background.
+   */
+  void applyUpdateInBackground(in nsIUpdate update);
+
+  /**
    * Pauses the active update download process
    */
   void pauseDownload();
@@ -418,10 +425,24 @@ interface nsIApplicationUpdateService : nsISupports
 };
 
 /**
+ * An interface describing a component which handles the job of processing
+ * an update after it's been downloaded.
+ */
+[scriptable, uuid(74439497-d796-4915-8cef-3dfe43027e4d)]
+interface nsIUpdateProcessor : nsISupports
+{
+  /**
+   * Processes the update which has been downloaded.
+   * This happens without restarting the application.
+   */
+  void processUpdate(in nsIUpdate update);
+};
+
+/**
  * An interface describing a global application service that maintains a list
  * of updates previously performed as well as the current active update.
  */
-[scriptable, uuid(fede66a9-9f96-4507-a22a-775ee885577e)]
+[scriptable, uuid(c5df56de-919d-406b-aaf9-106dfa9b685b)]
 interface nsIUpdateManager : nsISupports
 {
   /**
@@ -446,6 +467,11 @@ interface nsIUpdateManager : nsISupports
    * Saves all updates to disk.
    */
   void saveUpdates();
+
+  /**
+   * Refresh the update status based on the information in update.status.
+   */
+  void refreshUpdateStatus(in nsIUpdate update);
 };
 
 /**

@@ -76,18 +76,17 @@ function testFrameParameters()
       is(localNodes[6].querySelector(".info").textContent, "undefined",
         "Should have the right property value for 'fArg'.");
 
-      // FIXME bug TODO: reenable
-      //is(localNodes[7].querySelector(".info").textContent, "1",
-      //  "Should have the right property value for 'a'.");
+      is(localNodes[7].querySelector(".info").textContent, "1",
+       "Should have the right property value for 'a'.");
 
-      //is(localNodes[8].querySelector(".info").textContent, "[object Object]",
-      //  "Should have the right property value for 'b'.");
+      is(localNodes[8].querySelector(".info").textContent, "[object Object]",
+       "Should have the right property value for 'b'.");
 
-      //is(localNodes[9].querySelector(".info").textContent, "[object Object]",
-      //  "Should have the right property value for 'c'.");
+      is(localNodes[9].querySelector(".info").textContent, "[object Object]",
+       "Should have the right property value for 'c'.");
 
-      //is(localNodes[10].querySelector(".info").textContent, "[object Arguments]",
-      //  "Should have the right property value for 'arguments'.");
+      is(localNodes[10].querySelector(".info").textContent, "[object Arguments]",
+        "Should have the right property value for 'arguments'.");
 
       resumeAndFinish();
     }}, 0);
