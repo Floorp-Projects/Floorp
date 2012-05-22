@@ -63,6 +63,11 @@ public:
   nsIContent* GetFocusedContent() { return mFocusedContent; }
 
   /**
+   * Return a focused window. Version of nsIFocusManager::GetFocusedWindow.
+   */
+  nsPIDOMWindow* GetFocusedWindow() const { return mFocusedWindow; }
+
+  /**
    * Called when content has been removed.
    */
   nsresult ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
