@@ -217,23 +217,20 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal,
         native = aNative;
     } else {
         const JSClass *jsClass = js::GetObjectJSClass(aGlobal);
-        nsISupports *priv;
         if (!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
                                  JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
             // Our global has an nsISupports native pointer.  Let's
             // see whether it's what we want.
-            priv = static_cast<nsISupports*>(xpc_GetJSPrivate(aGlobal));
-        } else if (dom::IsDOMClass(jsClass) &&
-                   dom::DOMJSClass::FromJSClass(jsClass)->mDOMObjectIsISupports) {
-            priv = dom::UnwrapDOMObject<nsISupports>(aGlobal);
-        } else {
-            priv = nullptr;
+            nsISupports *priv =
+                static_cast<nsISupports*>(xpc_GetJSPrivate(aGlobal));
+            nsCOMPtr<nsIXPConnectWrappedNative> wn = do_QueryInterface(priv);
+            if (wn)
+                native = static_cast<XPCWrappedNative*>(wn.get())->GetIdentityObject();
+            else
+                native = nullptr;
+        } else if (!mozilla::dom::UnwrapDOMObjectToISupports(aGlobal, native)) {
+            native = nullptr;
         }
-        nsCOMPtr<nsIXPConnectWrappedNative> wn = do_QueryInterface(priv);
-        if (wn)
-            native = static_cast<XPCWrappedNative*>(wn.get())->GetIdentityObject();
-        else
-            native = priv;
     }
 
     // Now init our script object principal, if the new global has one.

@@ -162,7 +162,7 @@ JSObject*
 nsSimpleContentList::WrapObject(JSContext *cx, JSObject *scope,
                                 bool *triedToWrap)
 {
-  return mozilla::dom::binding::NodeList::create(cx, scope, this, triedToWrap);
+  return mozilla::dom::oldproxybindings::NodeList::create(cx, scope, this, triedToWrap);
 }
 
 // nsFormContentList
@@ -478,7 +478,7 @@ nsContentList::~nsContentList()
 JSObject*
 nsContentList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 {
-  return mozilla::dom::binding::HTMLCollection::create(cx, scope, this,
+  return mozilla::dom::oldproxybindings::HTMLCollection::create(cx, scope, this,
                                                        triedToWrap);
 }
 

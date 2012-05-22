@@ -45,6 +45,21 @@ struct NativePropertyHooks
   const NativePropertyHooks *mProtoHooks;
 };
 
+struct DOMClass
+{
+  // A list of interfaces that this object implements, in order of decreasing
+  // derivedness.
+  const prototypes::ID mInterfaceChain[prototypes::id::_ID_Count];
+
+  // We store the DOM object in reserved slot with index DOM_OBJECT_SLOT or in
+  // the proxy private if we use a proxy object.
+  // Sometimes it's an nsISupports and sometimes it's not; this class tells
+  // us which it is.
+  const bool mDOMObjectIsISupports;
+
+  const NativePropertyHooks* mNativeHooks;
+};
+
 // Special JSClass for reflected DOM objects.
 struct DOMJSClass
 {
@@ -53,22 +68,13 @@ struct DOMJSClass
   // only allows brace initialization for aggregate/POD types.
   JSClass mBase;
 
-  // A list of interfaces that this object implements, in order of decreasing
-  // derivedness.
-  const prototypes::ID mInterfaceChain[prototypes::id::_ID_Count];
+  DOMClass mClass;
 
   // We cache the VTable index of GetWrapperCache for objects that support it.
   //
   // -1 indicates that GetWrapperCache is not implemented on the underlying object.
   // XXXkhuey this is unused and needs to die.
   const int16_t mGetWrapperCacheVTableOffset;
-
-  // We store the DOM object in a reserved slot whose index is mNativeSlot.
-  // Sometimes it's an nsISupports and sometimes it's not; this class tells
-  // us which it is.
-  const bool mDOMObjectIsISupports;
-
-  const NativePropertyHooks* mNativeHooks;
 
   static DOMJSClass* FromJSClass(JSClass* base) {
     MOZ_ASSERT(base->flags & JSCLASS_IS_DOMJSCLASS);
