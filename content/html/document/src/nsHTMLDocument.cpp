@@ -3094,10 +3094,12 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
   nsIDOMWindow* window = GetWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  if ((cmdToDispatch.EqualsLiteral("cmd_paragraphState") ||
-       cmdToDispatch.EqualsLiteral("cmd_fontSize")) &&
+  if ((cmdToDispatch.EqualsLiteral("cmd_fontSize") ||
+       cmdToDispatch.EqualsLiteral("cmd_insertImageNoUI") ||
+       cmdToDispatch.EqualsLiteral("cmd_insertLinkNoUI") ||
+       cmdToDispatch.EqualsLiteral("cmd_paragraphState")) &&
       paramStr.IsEmpty()) {
-    // Invalid value
+    // Invalid value, return false
     return NS_OK;
   }
 
