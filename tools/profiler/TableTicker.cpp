@@ -69,8 +69,8 @@ using namespace mozilla;
 #endif
 
 
-mozilla::ThreadLocal<ProfileStack> tlsStack;
-mozilla::ThreadLocal<TableTicker> tlsTicker;
+mozilla::ThreadLocal<ProfileStack *> tlsStack;
+mozilla::ThreadLocal<TableTicker *> tlsTicker;
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
 // Because tlsStack is totally opaque to us we can't reuse

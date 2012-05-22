@@ -17,8 +17,8 @@ using mozilla::TimeDuration;
 struct ProfileStack;
 class TableTicker;
 
-extern mozilla::ThreadLocal<ProfileStack> tlsStack;
-extern mozilla::ThreadLocal<TableTicker> tlsTicker;
+extern mozilla::ThreadLocal<ProfileStack *> tlsStack;
+extern mozilla::ThreadLocal<TableTicker *> tlsTicker;
 extern bool stack_key_initialized;
 
 #ifndef SAMPLE_FUNCTION_NAME
