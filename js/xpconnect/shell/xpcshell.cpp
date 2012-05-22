@@ -45,11 +45,13 @@
 #include "nsIXPCSecurityManager.h"
 #include "nsJSPrincipals.h"
 #include "xpcpublic.h"
+#include "nsXULAppAPI.h"
 #ifdef XP_MACOSX
 #include "xpcshellMacUtils.h"
 #endif
 #ifdef XP_WIN
 #include <windows.h>
+#include <shlobj.h>
 #endif
 
 #ifdef ANDROID
@@ -89,9 +91,12 @@ public:
 
     bool SetGREDir(const char *dir);
     void ClearGREDir() { mGREDir = nsnull; }
+    void SetAppFile(nsILocalFile *appFile);
+    void ClearAppFile() { mAppFile = nsnull; }
 
 private:
     nsCOMPtr<nsILocalFile> mGREDir;
+    nsCOMPtr<nsILocalFile> mAppFile;
 };
 
 /***************************************************************************/
@@ -1714,6 +1719,8 @@ main(int argc, char **argv, char **envp)
 
     XPCShellDirProvider dirprovider;
 
+    dirprovider.SetAppFile(appFile);
+
     if (argc > 1 && !strcmp(argv[1], "-g")) {
         if (argc < 3)
             return usage();
@@ -1972,6 +1979,7 @@ main(int argc, char **argv, char **envp)
     appDir = nsnull;
     appFile = nsnull;
     dirprovider.ClearGREDir();
+    dirprovider.ClearAppFile();
 
 #ifdef MOZ_CRASHREPORTER
     // Shut down the crashreporter service to prevent leaking some strings it holds.
@@ -1997,6 +2005,12 @@ XPCShellDirProvider::SetGREDir(const char *dir)
     return NS_SUCCEEDED(rv);
 }
 
+void
+XPCShellDirProvider::SetAppFile(nsILocalFile* appFile)
+{
+    mAppFile = appFile;
+}
+
 NS_IMETHODIMP_(nsrefcnt)
 XPCShellDirProvider::AddRef()
 {
@@ -2020,6 +2034,9 @@ XPCShellDirProvider::GetFile(const char *prop, bool *persistent,
     if (mGREDir && !strcmp(prop, NS_GRE_DIR)) {
         *persistent = true;
         return mGREDir->Clone(result);
+    } else if (mAppFile && !strcmp(prop, XRE_EXECUTABLE_FILE)) {
+        *persistent = true;
+        return mAppFile->Clone(result);
     } else if (mGREDir && !strcmp(prop, NS_APP_PREF_DEFAULTS_50_DIR)) {
         nsCOMPtr<nsIFile> file;
         *persistent = true;
@@ -2029,6 +2046,37 @@ XPCShellDirProvider::GetFile(const char *prop, bool *persistent,
             return NS_ERROR_FAILURE;
         NS_ADDREF(*result = file);
         return NS_OK;
+    } else if (mAppFile && !strcmp(prop, XRE_UPDATE_ROOT_DIR)) {
+        // For xpcshell, we pretend that the update root directory is always
+        // the same as the GRE directory, except for Windows, where we immitate
+        // the algorithm defined in nsXREDirProvider::GetUpdateRootDir.
+        *persistent = true;
+#ifdef XP_WIN
+        char appData[MAX_PATH] = {'\0'};
+        char path[MAX_PATH] = {'\0'};
+        LPITEMIDLIST pItemIDList;
+        if (FAILED(SHGetSpecialFolderLocation(NULL, CSIDL_LOCAL_APPDATA, &pItemIDList)) ||
+            FAILED(SHGetPathFromIDListA(pItemIDList, appData))) {
+            return NS_ERROR_FAILURE;
+        }
+#ifdef MOZ_APP_PROFILE
+        sprintf(path, "%s\\%s", appData, MOZ_APP_PROFILE);
+#else
+        sprintf(path, "%s\\%s\\%s\\%s", appData, MOZ_APP_VENDOR, MOZ_APP_BASENAME, MOZ_APP_NAME);
+#endif
+        nsAutoString pathName;
+        pathName.AssignASCII(path);
+        nsCOMPtr<nsILocalFile> localFile;
+        nsresult rv = NS_NewLocalFile(pathName, true, getter_AddRefs(localFile));
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+        return localFile->Clone(result);
+#else
+        // Fail on non-Windows platforms, the caller is supposed to fal back on
+        // the app dir.
+        return NS_ERROR_FAILURE;
+#endif
     }
 
     return NS_ERROR_FAILURE;

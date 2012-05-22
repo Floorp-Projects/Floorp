@@ -47,6 +47,7 @@ browser/devtools/styleeditor/Makefile
 browser/devtools/styleinspector/Makefile
 browser/devtools/tilt/Makefile
 browser/devtools/webconsole/Makefile
+browser/extensions/Makefile
 browser/fuel/Makefile
 browser/fuel/public/Makefile
 browser/fuel/src/Makefile

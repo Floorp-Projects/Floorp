@@ -18,6 +18,7 @@ _BROWSER_TEST_FILES = \
   browser_require_basic.js \
   browser_templater_basic.js \
   browser_toolbar_basic.js \
+  browser_toolbar_tooltip.js \
   head.js \
   $(NULL)
 

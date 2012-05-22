@@ -42,17 +42,13 @@ function runTest() {
   removeUpdateDirsAndFiles();
   reloadUpdateManagerData();
 
-  let dir = getCurrentProcessDir();
-  let file = dir.clone();
-  file.append(FILE_UPDATE_ACTIVE);
+  let file = getUpdatesXMLFile(true);
   ok(!file.exists(), file.path + " should not exist");
 
-  file = dir.clone();
-  file.append(FILE_UPDATES_DB);
+  file = getUpdatesXMLFile(false);
   ok(!file.exists(), file.path + " should not exist");
 
-  dir.append("updates");
-  dir.append("0");
+  let dir = getUpdatesDir();
 
   file = dir.clone();
   file.append(FILE_UPDATE_STATUS);

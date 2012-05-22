@@ -38,7 +38,8 @@ cpu_type_t cpu_x64_86_types[2] = {
                                  CPU_TYPE_ANY };
 }
 
-void LaunchChildMac(int aArgc, char** aArgv, PRUint32 aRestartType)
+void LaunchChildMac(int aArgc, char** aArgv,
+                    PRUint32 aRestartType, pid_t *pid)
 {
   // "posix_spawnp" uses null termination for arguments rather than a count.
   // Note that we are not duplicating the argument strings themselves.
@@ -82,7 +83,7 @@ void LaunchChildMac(int aArgc, char** aArgv, PRUint32 aRestartType)
     envp = *cocoaEnvironment;
   }
 
-  int result = posix_spawnp(NULL, argv_copy[0], NULL, &spawnattr, argv_copy, envp);
+  int result = posix_spawnp(pid, argv_copy[0], NULL, &spawnattr, argv_copy, envp);
 
   posix_spawnattr_destroy(&spawnattr);
 
