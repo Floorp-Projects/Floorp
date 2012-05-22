@@ -3045,9 +3045,9 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
       sFirstCollectionTime = now;
     }
 
-    nsString gcmsg;
+    nsCString gcMsg;
     if (ccResults.mForcedGC) {
-      gcmsg.AssignLiteral(", forced a GC");
+      gcMsg.AssignLiteral(", forced a GC");
     }
 
     NS_NAMED_MULTILINE_LITERAL_STRING(kFmt,
@@ -3061,7 +3061,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
                                         (now - start) / PR_USEC_PER_MSEC, suspected,
                                         ccResults.mVisitedRefCounted, ccResults.mVisitedGCed,
                                         ccResults.mFreedRefCounted, ccResults.mFreedGCed,
-                                        sCCollectedWaitingForGC, gcmsg.get(),
+                                        sCCollectedWaitingForGC, gcMsg.get(),
                                         sForgetSkippableBeforeCC,
                                         sMinForgetSkippableTime / PR_USEC_PER_MSEC,
                                         sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
