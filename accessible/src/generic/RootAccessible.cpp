@@ -102,17 +102,10 @@ role
 RootAccessible::NativeRole()
 {
   // If it's a <dialog> or <wizard>, use roles::DIALOG instead
-  dom::Element *root = mDocument->GetRootElement();
-  if (root) {
-    nsCOMPtr<nsIDOMElement> rootElement(do_QueryInterface(root));
-    if (rootElement) {
-      nsAutoString name;
-      rootElement->GetLocalName(name);
-      if (name.EqualsLiteral("dialog") || name.EqualsLiteral("wizard")) {
-        return roles::DIALOG; // Always at the root
-      }
-    }
-  }
+  dom::Element* rootElm = mDocument->GetRootElement();
+  if (rootElm && (rootElm->Tag() == nsGkAtoms::dialog ||
+                  rootElm->Tag() == nsGkAtoms::wizard))
+    return roles::DIALOG;
 
   return nsDocAccessibleWrap::NativeRole();
 }
