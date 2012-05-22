@@ -1433,6 +1433,16 @@ BasicLayerManager::PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxCon
   }
 }
 
+PRInt32
+BasicShadowLayerManager::GetMaxTextureSize() const
+{
+  if (HasShadowManager()) {
+    return ShadowLayerForwarder::GetMaxTextureSize();
+  }
+
+  return PR_INT32_MAX;
+}
+
 void
 BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
