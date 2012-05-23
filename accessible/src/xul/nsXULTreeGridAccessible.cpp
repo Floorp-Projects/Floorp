@@ -298,29 +298,23 @@ nsXULTreeGridAccessible::GetSelectedRowIndices(PRUint32 *arowCount,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULTreeGridAccessible::GetCellAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
-                                   nsIAccessible **aCell)
-{
-  NS_ENSURE_ARG_POINTER(aCell);
-  *aCell = nsnull;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsAccessible *rowAccessible = GetTreeItemAccessible(aRowIndex);
-  if (!rowAccessible)
-    return NS_ERROR_INVALID_ARG;
+nsAccessible*
+nsXULTreeGridAccessible::CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex)
+{ 
+  nsAccessible* row = GetTreeItemAccessible(aRowIndex);
+  if (!row)
+    return nsnull;
 
   nsCOMPtr<nsITreeColumn> column =
-  nsCoreUtils::GetSensibleColumnAt(mTree, aColumnIndex);
+    nsCoreUtils::GetSensibleColumnAt(mTree, aColumnIndex);
   if (!column)
-    return NS_ERROR_INVALID_ARG;
+    return nsnull;
 
-  nsRefPtr<nsXULTreeItemAccessibleBase> rowAcc = do_QueryObject(rowAccessible);
+  nsRefPtr<nsXULTreeItemAccessibleBase> rowAcc = do_QueryObject(row);
+  if (!rowAcc)
+    return nsnull;
 
-  NS_IF_ADDREF(*aCell = rowAcc->GetCellAccessible(column));
-  return NS_OK;
+  return rowAcc->GetCellAccessible(column);
 }
 
 NS_IMETHODIMP

@@ -293,7 +293,7 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
       static_cast<RemoteBitmapImage*>(aImage);
       
     if (!aImage->GetBackendData(LayerManager::LAYERS_D3D9)) {
-      nsAutoPtr<TextureD3D9BackendData> dat = new TextureD3D9BackendData();
+      nsAutoPtr<TextureD3D9BackendData> dat(new TextureD3D9BackendData());
       dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize);
       if (dat->mTexture) {
         aImage->SetBackendData(LayerManager::LAYERS_D3D9, dat.forget());
@@ -310,7 +310,7 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
     }
 
     if (!aImage->GetBackendData(LayerManager::LAYERS_D3D9)) {
-      nsAutoPtr<TextureD3D9BackendData> dat = new TextureD3D9BackendData();
+      nsAutoPtr<TextureD3D9BackendData> dat(new TextureD3D9BackendData());
       dat->mTexture = SurfaceToTexture(device(), cairoImage->mSurface, cairoImage->mSize);
       if (dat->mTexture) {
         aImage->SetBackendData(LayerManager::LAYERS_D3D9, dat.forget());

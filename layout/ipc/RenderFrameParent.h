@@ -72,7 +72,8 @@ public:
 protected:
   NS_OVERRIDE void ActorDestroy(ActorDestroyReason why);
 
-  NS_OVERRIDE virtual PLayersParent* AllocPLayers(LayerManager::LayersBackend* aBackendType);
+  NS_OVERRIDE virtual PLayersParent* AllocPLayers(LayerManager::LayersBackend* aBackendType,
+                                                  int* aMaxTextureSize);
   NS_OVERRIDE virtual bool DeallocPLayers(PLayersParent* aLayers);
 
 private:

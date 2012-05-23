@@ -414,6 +414,10 @@
 // Storage includes
 #include "nsDOMStorage.h"
 
+// Device Storage
+#include "nsIDOMDeviceStorage.h"
+#include "nsIDOMDeviceStorageCursor.h"
+
 // Drag and drop
 #include "nsIDOMDataTransfer.h"
 
@@ -434,6 +438,7 @@
 
 #include "nsIDOMDesktopNotification.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
+#include "nsIDOMNavigatorDeviceStorage.h"
 #include "nsIDOMNavigatorGeolocation.h"
 #include "Navigator.h"
 
@@ -1394,6 +1399,12 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MessageEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
+  NS_DEFINE_CLASSINFO_DATA(DeviceStorage, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(DeviceStorageCursor, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
   NS_DEFINE_CLASSINFO_DATA(GeoGeolocation, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   
@@ -1596,7 +1607,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CustomEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MozMutationObserver, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(MutationObserver, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MutationRecord, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1646,7 +1657,7 @@ static const nsContractIDMapData kConstructorMap[] =
   NS_DEFINE_CONSTRUCTOR_DATA(XSLTProcessor,
                              "@mozilla.org/document-transformer;1?type=xslt")
   NS_DEFINE_CONSTRUCTOR_DATA(EventSource, NS_EVENTSOURCE_CONTRACTID)
-  NS_DEFINE_CONSTRUCTOR_DATA(MozMutationObserver, NS_DOMMUTATIONOBSERVER_CONTRACTID)
+  NS_DEFINE_CONSTRUCTOR_DATA(MutationObserver, NS_DOMMUTATIONOBSERVER_CONTRACTID)
 };
 
 #define NS_DEFINE_EVENT_CTOR(_class)                        \
@@ -2431,6 +2442,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorDeviceStorage)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocation)
     DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMNavigatorDesktopNotification,
                                         Navigator::HasDesktopNotificationSupport())
@@ -4034,6 +4046,16 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(DeviceStorage, nsIDOMDeviceStorage)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceStorage)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(DeviceStorageCursor, nsIDOMDeviceStorageCursor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceStorageCursor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(GeoGeolocation, nsIDOMGeoGeolocation)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeoGeolocation)
   DOM_CLASSINFO_MAP_END
@@ -4383,8 +4405,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(MozMutationObserver, nsIDOMMozMutationObserver)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozMutationObserver)
+  DOM_CLASSINFO_MAP_BEGIN(MutationObserver, nsIDOMMutationObserver)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMutationObserver)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MutationRecord, nsIDOMMutationRecord)

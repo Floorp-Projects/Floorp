@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+interface nsIDOMBlob;
+interface nsIDOMDOMRequest;
+interface nsIDOMDeviceStorageCursor;
+
+[scriptable, uuid(05C0D0C8-D698-4CCD-899C-7198A33BD7EC)]
+interface nsIDOMDeviceStorage : nsISupports
+{
+    /*
+     * Hint as to what kind of storage this object is.
+     * May be "external", "shared", or "default".
+     */
+    readonly attribute DOMString type;
+
+    nsIDOMDOMRequest add(in nsIDOMBlob aBlob);
+    nsIDOMDOMRequest addNamed(in nsIDOMBlob aBlob, in DOMString aName);
+
+    [implicit_jscontext]
+    nsIDOMDOMRequest get(in jsval aName);
+
+    [implicit_jscontext]
+    nsIDOMDOMRequest getEditable(in jsval aName);
+    
+    [implicit_jscontext]
+    nsIDOMDOMRequest delete(in jsval aName);
+
+    nsIDOMDeviceStorageCursor enumerate([optional] in DOMString directory);
+
+    nsIDOMDeviceStorageCursor enumerateEditable([optional] in DOMString directory);
+};
+

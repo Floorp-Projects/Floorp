@@ -15,6 +15,10 @@
 // solution.
 #include "mozilla/RefPtr.h"
 
+#ifdef MOZ_ENABLE_FREETYPE
+#include <string>
+#endif
+
 struct _cairo_surface;
 typedef _cairo_surface cairo_surface_t;
 
@@ -311,7 +315,7 @@ class DataSourceSurface : public SourceSurface
 public:
   virtual SurfaceType GetType() const { return SURFACE_DATA; }
   /* Get the raw bitmap data of the surface */
-  virtual unsigned char *GetData() = 0;
+  virtual uint8_t *GetData() = 0;
   /*
    * Stride of the surface, distance in bytes between the start of the image
    * data belonging to row y and row y+1. This may be negative.
@@ -463,6 +467,20 @@ public:
 protected:
   ScaledFont() {}
 };
+
+#ifdef MOZ_ENABLE_FREETYPE
+/**
+ * Describes a font
+ * Used to pass the key informatin from a gfxFont into Azure
+ * XXX Should be replaced by a more long term solution, perhaps Bug 738014
+ */
+struct FontOptions
+{
+  std::string mName;
+  FontStyle mStyle;
+};
+#endif
+
 
 /* This class is designed to allow passing additional glyph rendering
  * parameters to the glyph drawing functions. This is an empty wrapper class
@@ -810,7 +828,7 @@ public:
    */
   static TemporaryRef<DataSourceSurface>
     CreateDataSourceSurface(const IntSize &aSize, SurfaceFormat aFormat);
-  
+
   /*
    * This creates a simple data source surface for some existing data. It will
    * wrap this data and the data for this source surface. The caller is
@@ -818,7 +836,7 @@ public:
    * surface.
    */
   static TemporaryRef<DataSourceSurface>
-    CreateDataSourceSurfaceFromData(unsigned char *aData, int32_t aStride,
+    CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
                                     const IntSize &aSize, SurfaceFormat aFormat);
 
 #ifdef WIN32

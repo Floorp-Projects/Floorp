@@ -99,7 +99,7 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha)
       static_cast<RemoteBitmapImage*>(aImage);
       
     if (!aImage->GetBackendData(LayerManager::LAYERS_D3D10)) {
-      nsAutoPtr<TextureD3D10BackendData> dat = new TextureD3D10BackendData();
+      nsAutoPtr<TextureD3D10BackendData> dat(new TextureD3D10BackendData());
       dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize);
 
       if (dat->mTexture) {
@@ -118,7 +118,7 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha)
     }
 
     if (!aImage->GetBackendData(LayerManager::LAYERS_D3D10)) {
-      nsAutoPtr<TextureD3D10BackendData> dat = new TextureD3D10BackendData();
+      nsAutoPtr<TextureD3D10BackendData> dat(new TextureD3D10BackendData());
       dat->mTexture = SurfaceToTexture(device(), cairoImage->mSurface, cairoImage->mSize);
 
       if (dat->mTexture) {

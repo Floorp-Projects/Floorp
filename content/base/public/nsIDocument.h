@@ -92,8 +92,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x88d887da, 0xd228, 0x41c2, \
-  { 0xb8, 0x0a, 0x42, 0xec, 0xf0, 0xcb, 0xce, 0x37 } }
+{ 0x8c6a1e62, 0xd5ad, 0x4297, \
+  { 0xb9, 0x41, 0x64, 0x49, 0x22, 0x2e, 0xc4, 0xf0 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -674,6 +674,12 @@ public:
     return mWindow ? mWindow->GetOuterWindow() : GetWindowInternal();
   }
 
+  bool IsInBackgroundWindow() const
+  {
+    nsPIDOMWindow* outer = mWindow ? mWindow->GetOuterWindow() : nsnull;
+    return outer && outer->IsBackground();
+  }
+  
   /**
    * Return the inner window used as the script compilation scope for
    * this document. If you're not absolutely sure you need this, use

@@ -177,13 +177,13 @@ private:
 
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
 
-  TemporaryRef<ID3D10Texture1D> CreateGradientTexture(const GradientStopsD2D *aStops);
+  TemporaryRef<ID3D10Texture2D> CreateGradientTexture(const GradientStopsD2D *aStops);
   TemporaryRef<ID3D10Texture2D> CreateTextureForAnalysis(IDWriteGlyphRunAnalysis *aAnalysis, const IntRect &aBounds);
 
-  // This creates a partially uploaded bitmap for a SourceSurfaceD2D that is
-  // too big to fit in a bitmap. It adjusts the passed Matrix to accomodate the
-  // partial upload.
-  TemporaryRef<ID2D1Bitmap> CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix &aMatrix);
+  // This creates a (partially) uploaded bitmap for a DataSourceSurface. It
+  // uploads the minimum requirement and possibly downscales. It adjusts the
+  // input Matrix to compensate.
+  TemporaryRef<ID2D1Bitmap> CreatePartialBitmapForSurface(DataSourceSurface *aSurface, Matrix &aMatrix);
 
   void SetupEffectForRadialGradient(const RadialGradientPattern *aPattern);
   void SetupStateForRendering();

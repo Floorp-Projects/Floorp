@@ -154,10 +154,12 @@ public class testBookmark extends BaseTest  {
         mSolo.clickOnText("Bookmarks");
 
         Element bookmarkList = mDriver.findElement(awesomeBarActivity, "bookmarks_list");
-        ArrayList<ListView> lists = mSolo.getCurrentListViews();
-        for (ListView list : lists) {
-            if (list.getId() == bookmarkList.getId())
-                return list;
+        if (bookmarkList != null) {
+            ArrayList<ListView> lists = mSolo.getCurrentListViews();
+            for (ListView list : lists) {
+                if (list.getId() == bookmarkList.getId())
+                    return list;
+            }
         }
 
         // Just return null if we can't find the bookmarks list view

@@ -427,9 +427,9 @@ CompositorParent::ShadowLayersUpdated(bool isFirstPaint)
 }
 
 PLayersParent*
-CompositorParent::AllocPLayers(const LayersBackend &backendType)
+CompositorParent::AllocPLayers(const LayersBackend& aBackendType, int* aMaxTextureSize)
 {
-  if (backendType == LayerManager::LAYERS_OPENGL) {
+  if (aBackendType == LayerManager::LAYERS_OPENGL) {
     nsRefPtr<LayerManagerOGL> layerManager;
     layerManager =
       new LayerManagerOGL(mWidget, mEGLSurfaceSize.width, mEGLSurfaceSize.height, mRenderToEGLSurface);
@@ -445,8 +445,9 @@ CompositorParent::AllocPLayers(const LayersBackend &backendType)
     if (!slm) {
       return NULL;
     }
+    *aMaxTextureSize = layerManager->GetMaxTextureSize();
     return new ShadowLayersParent(slm, this);
-  } else if (backendType == LayerManager::LAYERS_BASIC) {
+  } else if (aBackendType == LayerManager::LAYERS_BASIC) {
     // This require Cairo to be thread-safe
     nsRefPtr<LayerManager> layerManager = new BasicShadowLayerManager(mWidget);
     mWidget = NULL;
@@ -455,6 +456,7 @@ CompositorParent::AllocPLayers(const LayersBackend &backendType)
     if (!slm) {
       return NULL;
     }
+    *aMaxTextureSize = layerManager->GetMaxTextureSize();
     return new ShadowLayersParent(slm, this);
   } else {
     NS_ERROR("Unsupported backend selected for Async Compositor");

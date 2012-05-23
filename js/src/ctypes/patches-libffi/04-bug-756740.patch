@@ -1,0 +1,44 @@
+diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
+--- a/js/src/ctypes/libffi/configure
++++ b/js/src/ctypes/libffi/configure
+@@ -11251,17 +11251,17 @@ case "$host" in
+ 
+   m68k-*-*)
+ 	TARGET=M68K; TARGETDIR=m68k
+ 	;;
+ 
+   mips-sgi-irix5.* | mips-sgi-irix6.*)
+ 	TARGET=MIPS; TARGETDIR=mips
+ 	;;
+-  mips*-*-linux*)
++  mips*-*linux*)
+ 	# Support 128-bit long double for NewABI.
+ 	HAVE_LONG_DOUBLE='defined(__mips64)'
+ 	TARGET=MIPS; TARGETDIR=mips
+ 	;;
+ 
+   moxie-*-*)
+         TARGET=MOXIE; TARGETDIR=moxie
+ 	;;
+diff --git a/js/src/ctypes/libffi/configure.ac b/js/src/ctypes/libffi/configure.ac
+--- a/js/src/ctypes/libffi/configure.ac
++++ b/js/src/ctypes/libffi/configure.ac
+@@ -113,17 +113,17 @@ case "$host" in
+ 
+   m68k-*-*)
+ 	TARGET=M68K; TARGETDIR=m68k
+ 	;;
+ 
+   mips-sgi-irix5.* | mips-sgi-irix6.*)
+ 	TARGET=MIPS; TARGETDIR=mips
+ 	;;
+-  mips*-*-linux*)
++  mips*-*linux*)
+ 	# Support 128-bit long double for NewABI.
+ 	HAVE_LONG_DOUBLE='defined(__mips64)'
+ 	TARGET=MIPS; TARGETDIR=mips
+ 	;;
+ 
+   moxie-*-*)
+         TARGET=MOXIE; TARGETDIR=moxie
+ 	;;

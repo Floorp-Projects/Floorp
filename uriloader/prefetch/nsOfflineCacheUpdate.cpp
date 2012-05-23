@@ -402,6 +402,9 @@ nsOfflineCacheUpdateItem::OnDataAvailable(nsIRequest *aRequest,
     mBytesRead += bytesRead;
     LOG(("loaded %u bytes into offline cache [offset=%u]\n",
          bytesRead, aOffset));
+
+    mUpdate->OnByteProgress(bytesRead);
+
     return NS_OK;
 }
 
@@ -419,6 +422,7 @@ nsOfflineCacheUpdateItem::OnStopRequest(nsIRequest *aRequest,
         // specified), but the object should report loadedSize as if it
         // did.
         mChannel->GetContentLength(&mBytesRead);
+        mUpdate->OnByteProgress(mBytesRead);
     }
 
     // We need to notify the update that the load is complete, but we
@@ -1548,6 +1552,7 @@ nsOfflineCacheUpdate::Begin()
     }
 
     mState = STATE_CHECKING;
+    mByteProgress = 0;
     NotifyState(nsIOfflineCacheUpdateObserver::STATE_CHECKING);
 
     nsresult rv = mManifestItem->OpenChannel();
@@ -1751,6 +1756,13 @@ nsOfflineCacheUpdate::UpdateFinished(nsOfflineCacheUpdate *aUpdate)
     Finish();
 
     return NS_OK;
+}
+
+void
+nsOfflineCacheUpdate::OnByteProgress(PRUint64 byteIncrement)
+{
+    mByteProgress += byteIncrement;
+    NotifyState(nsIOfflineCacheUpdateObserver::STATE_ITEMPROGRESS);
 }
 
 nsresult
@@ -2085,6 +2097,14 @@ nsOfflineCacheUpdate::RemoveObserver(nsIOfflineCacheUpdateObserver *aObserver)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOfflineCacheUpdate::GetByteProgress(PRUint64 * _result)
+{
+    NS_ENSURE_ARG(_result);
+
+    *_result = mByteProgress;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsOfflineCacheUpdate::Schedule()

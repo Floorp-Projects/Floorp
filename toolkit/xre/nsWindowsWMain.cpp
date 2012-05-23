@@ -16,13 +16,6 @@
 #include "nsSetDllDirectory.h"
 #endif
 
-#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64)) && defined(XRE_WANT_DLL_BLOCKLIST)
-#include "nsWindowsDllBlocklist.cpp"
-#else
-#undef XRE_WANT_DLL_BLOCKLIST
-#endif
-
-
 #ifdef __MINGW32__
 
 /* MingW currently does not implement a wide version of the
@@ -84,10 +77,6 @@ int wmain(int argc, WCHAR **argv)
   SetDllDirectoryW(L"");
 #endif
 
-#ifdef XRE_WANT_DLL_BLOCKLIST
-  SetupDllBlocklist();
-#endif
-  
   char **argvConverted = new char*[argc + 1];
   if (!argvConverted)
     return 127;

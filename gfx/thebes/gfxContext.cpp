@@ -210,6 +210,9 @@ gfxContext::Restore()
     mStateStack.RemoveElementAt(mStateStack.Length() - 1);
 
     if (mPathBuilder || mPath || mPathIsRect) {
+      // Support here isn't fully correct if the path is continued -after-
+      // the restore. We don't currently have users that do this and we should
+      // make sure there will not be any. Sadly we can't assert this easily.
       mTransformChanged = true;
       mPathTransform = mDT->GetTransform();
     }
@@ -532,6 +535,7 @@ gfxContext::DrawSurface(gfxASurface *surface, const gfxSize& size)
     cairo_fill(mCairo);
     cairo_restore(mCairo);
   } else {
+    // Lifetime needs to be limited here since we may wrap surface's data.
     RefPtr<SourceSurface> surf =
       gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
 
@@ -550,11 +554,9 @@ gfxContext::Translate(const gfxPoint& pt)
   if (mCairo) {
     cairo_translate(mCairo, pt.x, pt.y);
   } else {
-    MOZ_ASSERT(!mPathBuilder);
-
     Matrix newMatrix = mDT->GetTransform();
-    TransformWillChange();
-    mDT->SetTransform(newMatrix.Translate(Float(pt.x), Float(pt.y)));
+
+    ChangeTransform(newMatrix.Translate(Float(pt.x), Float(pt.y)));
   }
 }
 
@@ -564,11 +566,9 @@ gfxContext::Scale(gfxFloat x, gfxFloat y)
   if (mCairo) {
     cairo_scale(mCairo, x, y);
   } else {
-    MOZ_ASSERT(!mPathBuilder);
-
     Matrix newMatrix = mDT->GetTransform();
-    TransformWillChange();
-    mDT->SetTransform(newMatrix.Scale(Float(x), Float(y)));
+
+    ChangeTransform(newMatrix.Scale(Float(x), Float(y)));
   }
 }
 
@@ -578,11 +578,8 @@ gfxContext::Rotate(gfxFloat angle)
   if (mCairo) {
     cairo_rotate(mCairo, angle);
   } else {
-    MOZ_ASSERT(!mPathBuilder);
-
-    TransformWillChange();
     Matrix rotation = Matrix::Rotation(Float(angle));
-    mDT->SetTransform(rotation * mDT->GetTransform());
+    ChangeTransform(rotation * mDT->GetTransform());
   }
 }
 
@@ -593,10 +590,7 @@ gfxContext::Multiply(const gfxMatrix& matrix)
     const cairo_matrix_t& mat = reinterpret_cast<const cairo_matrix_t&>(matrix);
     cairo_transform(mCairo, &mat);
   } else {
-    MOZ_ASSERT(!mPathBuilder);
-
-    TransformWillChange();
-    mDT->SetTransform(ToMatrix(matrix) * mDT->GetTransform());
+    ChangeTransform(ToMatrix(matrix) * mDT->GetTransform());
   }
 }
 
@@ -607,10 +601,7 @@ gfxContext::SetMatrix(const gfxMatrix& matrix)
     const cairo_matrix_t& mat = reinterpret_cast<const cairo_matrix_t&>(matrix);
     cairo_set_matrix(mCairo, &mat);
   } else {
-    MOZ_ASSERT(!mPathBuilder);
-
-    TransformWillChange();
-    mDT->SetTransform(ToMatrix(matrix));
+    ChangeTransform(ToMatrix(matrix));
   }
 }
 
@@ -620,10 +611,7 @@ gfxContext::IdentityMatrix()
   if (mCairo) {
     cairo_identity_matrix(mCairo);
   } else {
-    MOZ_ASSERT(!mPathBuilder);
-
-    TransformWillChange();
-    mDT->SetTransform(Matrix());
+    ChangeTransform(Matrix());
   }
 }
 
@@ -1293,6 +1281,7 @@ gfxContext::SetColor(const gfxRGBA& c)
         cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
   } else {
     CurrentState().pattern = NULL;
+    CurrentState().sourceSurfCairo = NULL;
     CurrentState().sourceSurface = NULL;
 
     if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
@@ -1316,6 +1305,7 @@ gfxContext::SetDeviceColor(const gfxRGBA& c)
     cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
   } else {
     CurrentState().pattern = NULL;
+    CurrentState().sourceSurfCairo = NULL;
     CurrentState().sourceSurface = NULL;
     CurrentState().color = ToColor(c);
   }
@@ -1354,6 +1344,9 @@ gfxContext::SetSource(gfxASurface *surface, const gfxPoint& offset)
     CurrentState().surfTransform = Matrix(1.0f, 0, 0, 1.0f, Float(offset.x), Float(offset.y));
     CurrentState().pattern = NULL;
     CurrentState().patternTransformChanged = false;
+    // Keep the underlying cairo surface around while we keep the
+    // sourceSurface.
+    CurrentState().sourceSurfCairo = surface;
     CurrentState().sourceSurface =
       gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
   }
@@ -1365,6 +1358,7 @@ gfxContext::SetPattern(gfxPattern *pattern)
   if (mCairo) {
     cairo_set_source(mCairo, pattern->CairoPattern());
   } else {
+    CurrentState().sourceSurfCairo = NULL;
     CurrentState().sourceSurface = NULL;
     CurrentState().patternTransformChanged = false;
     CurrentState().pattern = pattern;
@@ -1421,6 +1415,7 @@ gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
   if (mCairo) {
     cairo_mask_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
   } else {
+    // Lifetime needs to be limited here as we may simply wrap surface's data.
     RefPtr<SourceSurface> sourceSurf =
       gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
 
@@ -1582,6 +1577,7 @@ gfxContext::PopGroupToSource()
   } else {
     RefPtr<SourceSurface> src = mDT->Snapshot();
     Restore();
+    CurrentState().sourceSurfCairo = NULL;
     CurrentState().sourceSurface = src;
     CurrentState().pattern = NULL;
     CurrentState().patternTransformChanged = false;
@@ -2066,7 +2062,7 @@ gfxContext::GetOp()
  * if the pattern is actually used.
  */
 void
-gfxContext::TransformWillChange()
+gfxContext::ChangeTransform(const Matrix &aNewMatrix)
 {
   AzureState &state = CurrentState();
 
@@ -2075,4 +2071,32 @@ gfxContext::TransformWillChange()
     state.patternTransform = mDT->GetTransform();
     state.patternTransformChanged = true;
   }
+
+  if (mPathBuilder || mPathIsRect) {
+    Matrix invMatrix = aNewMatrix;
+    
+    invMatrix.Invert();
+
+    Matrix toNewUS = mDT->GetTransform() * invMatrix;
+
+    if (toNewUS.IsRectilinear() && mPathIsRect) {
+      mRect = toNewUS.TransformBounds(mRect);
+    } else if (mPathIsRect) {
+      mPathBuilder = mDT->CreatePathBuilder(CurrentState().fillRule);
+      
+      mPathBuilder->MoveTo(toNewUS * mRect.TopLeft());
+      mPathBuilder->LineTo(toNewUS * mRect.TopRight());
+      mPathBuilder->LineTo(toNewUS * mRect.BottomRight());
+      mPathBuilder->LineTo(toNewUS * mRect.BottomLeft());
+      mPathBuilder->Close();
+    } else {
+      RefPtr<Path> path = mPathBuilder->Finish();
+      // Create path in device space.
+      mPathBuilder = path->TransformedCopyToBuilder(toNewUS);
+    }
+    // No need to consider the transform changed now!
+    mTransformChanged = false;
+  }
+
+  mDT->SetTransform(aNewMatrix);
 }

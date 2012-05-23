@@ -25,6 +25,7 @@ class nsIObjectOutputStream;
 template<class> class nsScriptObjectHolder;
 class nsIScriptObjectPrincipal;
 class nsIDOMWindow;
+class nsIURI;
 
 typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
 
@@ -44,8 +45,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xf1c8c13e, 0xc23b, 0x434e, \
-  { 0xa4, 0x77, 0xe0, 0x2f, 0xc3, 0x73, 0xf8, 0x71 } }
+  { 0xec47ccd4, 0x5f6a, 0x40d6, \
+    { 0xbc, 0x2f, 0x5a, 0x1e, 0xd3, 0xe4, 0xb4, 0xff } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -265,6 +266,7 @@ public:
    */
   virtual nsresult CreateNativeGlobalForInner(
                                       nsIScriptGlobalObject *aNewInner,
+                                      nsIURI *aURI,
                                       bool aIsChrome,
                                       nsIPrincipal *aPrincipal,
                                       JSObject** aNativeGlobal,

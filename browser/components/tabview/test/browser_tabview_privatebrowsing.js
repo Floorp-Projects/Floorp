@@ -52,7 +52,7 @@ function onTabViewLoadedAndShown() {
   contentWindow.gPrefBranch.setBoolPref("animate_zoom", false);
 
   // Create a second tab
-  gBrowser.addTab("about:robots");
+  gBrowser.addTab("about:mozilla");
   is(gBrowser.tabs.length, 2, "we now have 2 tabs");
 
   registerCleanupFunction(function() {

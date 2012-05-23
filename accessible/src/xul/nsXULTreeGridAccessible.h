@@ -30,6 +30,7 @@ public:
   // TableAccessible
   virtual PRUint32 ColCount();
   virtual PRUint32 RowCount();
+  virtual nsAccessible* CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex);
   virtual void UnselectRow(PRUint32 aRowIdx);
 
   // nsAccessNode

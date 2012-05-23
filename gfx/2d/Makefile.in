@@ -43,6 +43,7 @@ CPPSRCS	= \
         ScaledFontBase.cpp \
         DrawTargetDual.cpp \
         ImageScaling.cpp \
+        SourceSurfaceRawData.cpp \
         $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
@@ -60,7 +61,6 @@ CPPSRCS	+= \
         SourceSurfaceSkia.cpp \
         DrawTargetSkia.cpp \
         PathSkia.cpp \
-        ScaledFontFreetype.cpp
         $(NULL)
 
 DEFINES += -DUSE_SKIA
@@ -74,6 +74,13 @@ CPPSRCS += \
         $(NULL)
 
 endif
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gonk qt))
+CPPSRCS	+= \
+        ScaledFontFreetype.cpp \
+        $(NULL)
+DEFINES += -DMOZ_ENABLE_FREETYPE
 endif
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))

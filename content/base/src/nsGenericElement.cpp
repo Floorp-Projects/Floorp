@@ -2615,10 +2615,6 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 
   if (!slots->mAttributeMap) {
     slots->mAttributeMap = new nsDOMAttributeMap(this);
-    if (!slots->mAttributeMap->Init()) {
-      slots->mAttributeMap = nsnull;
-      return NS_ERROR_FAILURE;
-    }
   }
 
   NS_ADDREF(*aAttributes = slots->mAttributeMap);
