@@ -527,6 +527,7 @@ ion::ThunkToInterpreter(Value *vp)
         // out with a special return code, and resume interpreting in the
         // original Interpret activation.
         vp->setMagic(JS_ION_BAILOUT);
+        cx->delete_(br);
         return Interpret_Ok;
     }
 
@@ -552,6 +553,7 @@ ion::ThunkToInterpreter(Value *vp)
 
         fp->setRunningInIon();
         vp->setPrivate(fp);
+        cx->delete_(br);
         return Interpret_OSR;
     }
 
