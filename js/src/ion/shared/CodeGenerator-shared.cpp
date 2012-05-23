@@ -243,7 +243,8 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
         snapshots_.trackFrame(pcOpcode, mirOpcode, mirId, lirOpcode, lirId);
 #endif
 
-        encodeSlots(snapshot, mir, &startIndex);
+        if (!encodeSlots(snapshot, mir, &startIndex))
+            return false;
         snapshots_.endFrame();
     }
 
