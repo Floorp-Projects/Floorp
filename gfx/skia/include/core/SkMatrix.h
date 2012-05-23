@@ -336,7 +336,7 @@ public:
         set inverse to be the inverse of this matrix. If this matrix cannot be
         inverted, ignore inverse and return false
     */
-    bool invert(SkMatrix* inverse) const;
+    bool SK_WARN_UNUSED_RESULT invert(SkMatrix* inverse) const;
 
     /** Fills the passed array with affine identity values
         in column major order.
@@ -483,20 +483,28 @@ public:
     */
     bool fixedStepInX(SkScalar y, SkFixed* stepX, SkFixed* stepY) const;
 
-#ifdef SK_SCALAR_IS_FIXED
-    friend bool operator==(const SkMatrix& a, const SkMatrix& b) {
-        return memcmp(a.fMat, b.fMat, sizeof(a.fMat)) == 0;
+    /** Efficient comparison of two matrices. It distinguishes between zero and
+     *  negative zero. It will return false when the sign of zero values is the
+     *  only difference between the two matrices. It considers NaN values to be
+     *  equal to themselves. So a matrix full of NaNs is "cheap equal" to
+     *  another matrix full of NaNs iff the NaN values are bitwise identical
+     *  while according to strict the strict == test a matrix with a NaN value
+     *  is equal to nothing, including itself.
+     */
+    bool cheapEqualTo(const SkMatrix& m) const {
+        return 0 == memcmp(fMat, m.fMat, sizeof(fMat));
     }
 
-    friend bool operator!=(const SkMatrix& a, const SkMatrix& b) {
-        return memcmp(a.fMat, b.fMat, sizeof(a.fMat)) != 0;
+#ifdef SK_SCALAR_IS_FIXED
+    friend bool operator==(const SkMatrix& a, const SkMatrix& b) {
+        return a.cheapEqualTo(b);
     }
 #else
-    friend bool operator==(const SkMatrix& a, const SkMatrix& b);    
+    friend bool operator==(const SkMatrix& a, const SkMatrix& b);
+#endif
     friend bool operator!=(const SkMatrix& a, const SkMatrix& b) {
         return !(a == b);
     }
-#endif
 
     enum {
         // flatten/unflatten will never return a value larger than this
@@ -541,7 +549,7 @@ private:
     enum {
         /** Set if the matrix will map a rectangle to another rectangle. This
             can be true if the matrix is scale-only, or rotates a multiple of
-            90 degrees. This bit is not set if the matrix is identity.
+            90 degrees.
              
             This bit will be set on identity matrices
         */
@@ -566,8 +574,8 @@ private:
                     kRectStaysRect_Mask
     };
 
-    SkScalar        fMat[9];
-    mutable uint8_t fTypeMask;
+    SkScalar         fMat[9];
+    mutable uint32_t fTypeMask;
 
     uint8_t computeTypeMask() const;
     uint8_t computePerspectiveTypeMask() const;

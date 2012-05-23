@@ -16,9 +16,10 @@
 */
 
 #include "FontHostConfiguration_android.h"
-#include <expat_config.h>
-#include <expat.h>
+#include "SkString.h"
 #include "SkTDArray.h"
+#include <expat.h>
+#include <sys/system_properties.h>
 
 #define SYSTEM_FONTS_FILE "/system/etc/system_fonts.xml"
 #define FALLBACK_FONTS_FILE "/system/etc/fallback_fonts.xml"
@@ -129,6 +130,65 @@ void endElementHandler(void *data, const char *tag) {
 }
 
 /**
+ * Read the persistent locale.
+ */
+void getLocale(AndroidLocale &locale)
+{
+    char propLang[PROP_VALUE_MAX], propRegn[PROP_VALUE_MAX];
+    __system_property_get("persist.sys.language", propLang);
+    __system_property_get("persist.sys.country", propRegn);
+
+    if (*propLang == 0 && *propRegn == 0) {
+        /* Set to ro properties, default is en_US */
+        __system_property_get("ro.product.locale.language", propLang);
+        __system_property_get("ro.product.locale.region", propRegn);
+        if (*propLang == 0 && *propRegn == 0) {
+            strcpy(propLang, "en");
+            strcpy(propRegn, "US");
+        }
+    }
+    strncpy(locale.language, propLang, 2);
+    locale.language[2] = '\0';
+    strncpy(locale.region, propRegn, 2);
+    locale.region[2] = '\0';
+}
+
+/**
+ * Use the current system locale (language and region) to open the best matching
+ * customization. For example, when the language is Japanese, the sequence might be:
+ *      /system/etc/fallback_fonts-ja-JP.xml
+ *      /system/etc/fallback_fonts-ja.xml
+ *      /system/etc/fallback_fonts.xml
+ */
+FILE* openLocalizedFile(const char* origname) {
+    FILE* file = 0;
+    SkString basename;
+    SkString filename;
+    AndroidLocale locale;
+
+    basename.set(origname);
+    // Remove the .xml suffix. We'll add it back in a moment.
+    if (basename.endsWith(".xml")) {
+        basename.resize(basename.size()-4);
+    }
+    getLocale(locale);
+    // Try first with language and region
+    filename.printf("%s-%s-%s.xml", basename.c_str(), locale.language, locale.region);
+    file = fopen(filename.c_str(), "r");
+    if (!file) {
+        // If not found, try next with just language
+        filename.printf("%s-%s.xml", basename.c_str(), locale.language);
+        file = fopen(filename.c_str(), "r");
+
+        if (!file) {
+            // If still not found, try just the original name
+            file = fopen(origname, "r");
+        }
+    }
+    return file;
+}
+
+/**
  * This function parses the given filename and stores the results in the given
  * families array.
  */
@@ -137,7 +197,7 @@ void parseConfigFile(const char *filename, SkTDArray<FontFamily*> &families) {
     FamilyData *familyData = new FamilyData(&parser, families);
     XML_SetUserData(parser, familyData);
     XML_SetElementHandler(parser, startElementHandler, endElementHandler);
-    FILE *file = fopen(filename, "r");
+    FILE *file = openLocalizedFile(filename);
     // Some of the files we attempt to parse (in particular, /vendor/etc/fallback_fonts.xml)
     // are optional - failure here is okay because one of these optional files may not exist.
     if (file == NULL) {
@@ -155,15 +215,12 @@ void parseConfigFile(const char *filename, SkTDArray<FontFamily*> &families) {
     }
 }
 
-/**
- * Loads data on font families from various expected configuration files. The
- * resulting data is returned in the given fontFamilies array.
- */
-void getFontFamilies(SkTDArray<FontFamily*> &fontFamilies) {
-
-    SkTDArray<FontFamily*> fallbackFonts;
-    SkTDArray<FontFamily*> vendorFonts;
+void getSystemFontFamilies(SkTDArray<FontFamily*> &fontFamilies) {
     parseConfigFile(SYSTEM_FONTS_FILE, fontFamilies);
+}
+
+void getFallbackFontFamilies(SkTDArray<FontFamily*> &fallbackFonts) {
+    SkTDArray<FontFamily*> vendorFonts;
     parseConfigFile(FALLBACK_FONTS_FILE, fallbackFonts);
     parseConfigFile(VENDOR_FONTS_FILE, vendorFonts);
 
@@ -189,6 +246,18 @@ void getFontFamilies(SkTDArray<FontFamily*> &fontFamilies) {
             currentOrder = order + 1;
         }
     }
+}
+
+/**
+ * Loads data on font families from various expected configuration files. The
+ * resulting data is returned in the given fontFamilies array.
+ */
+void getFontFamilies(SkTDArray<FontFamily*> &fontFamilies) {
+    SkTDArray<FontFamily*> fallbackFonts;
+
+    getSystemFontFamilies(fontFamilies);
+    getFallbackFontFamilies(fallbackFonts);
+
     // Append all fallback fonts to system fonts
     for (int i = 0; i < fallbackFonts.count(); ++i) {
         *fontFamilies.append() = fallbackFonts[i];

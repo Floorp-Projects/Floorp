@@ -74,7 +74,7 @@ extern "C" {
 #endif
 
 static JSBool
-global_enumerate(JSContext *cx, JSHandleObject obj)
+global_enumerate(JSContext *cx, JSObject *obj)
 {
 #ifdef LAZY_STANDARD_CLASSES
     return JS_EnumerateStandardClasses(cx, obj);
@@ -84,7 +84,7 @@ global_enumerate(JSContext *cx, JSHandleObject obj)
 }
 
 static JSBool
-global_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags, JSObject **objp)
+global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
     if ((flags & JSRESOLVE_ASSIGNING) == 0) {
@@ -155,7 +155,7 @@ JSClass global_class = {
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
     global_enumerate, (JSResolveOp) global_resolve,
-    JS_ConvertStub
+    JS_ConvertStub,   JS_FinalizeStub
 };
 
 SkJS::SkJS(void* hwnd) : SkOSWindow(hwnd) {

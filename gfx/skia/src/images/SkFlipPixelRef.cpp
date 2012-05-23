@@ -77,11 +77,7 @@ SkFlipPixelRef::SkFlipPixelRef(SkFlattenableReadBuffer& buffer)
     buffer.read(fPage0, fSize);
 }
 
-SkPixelRef* SkFlipPixelRef::Create(SkFlattenableReadBuffer& buffer) {
-    return SkNEW_ARGS(SkFlipPixelRef, (buffer));
-}
-
-SK_DEFINE_PIXEL_REF_REGISTRAR(SkFlipPixelRef)
+SK_DEFINE_FLATTENABLE_REGISTRAR(SkFlipPixelRef)
 
 ///////////////////////////////////////////////////////////////////////////////
 

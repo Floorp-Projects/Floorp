@@ -9,15 +9,10 @@
 
 #include "GrTypes.h"
 
-// must be before GrGLConfig.h
-#if GR_WIN32_BUILD
-//    #include "GrGpuD3D9.h"
-#endif
-
-#include "GrGLConfig.h"
+#include "gl/GrGLConfig.h"
 
 #include "GrGpu.h"
-#include "GrGpuGLShaders.h"
+#include "gl/GrGpuGLShaders.h"
 
 GrGpu* GrGpu::Create(GrEngine engine, GrPlatform3DContext context3D) {
 
@@ -39,15 +34,10 @@ GrGpu* GrGpu::Create(GrEngine engine, GrPlatform3DContext context3D) {
 #endif
             return NULL;
         }
-        if (!glInterface->validate()) {
-#if GR_DEBUG
-            GrPrintf("Failed GL interface validation!\n");
-#endif
-            return NULL;
+        GrGLContextInfo ctxInfo(glInterface);
+        if (ctxInfo.isInitialized()) {
+            return new GrGpuGLShaders(ctxInfo);
         }
-
-        return new GrGpuGLShaders(glInterface);
-    } else {
-        return NULL;
     }
+    return NULL;
 }

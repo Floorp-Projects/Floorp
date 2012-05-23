@@ -11,6 +11,10 @@
 #include "SkPath.h"
 #include "SkBuffer.h"
 
+void SkPathEffect::computeFastBounds(SkRect* dst, const SkRect& src) {
+    *dst = src;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 SkPairPathEffect::SkPairPathEffect(SkPathEffect* pe0, SkPathEffect* pe1)
@@ -29,7 +33,8 @@ SkPairPathEffect::~SkPairPathEffect() {
 /*
     Format: [oe0-factory][pe1-factory][pe0-size][pe0-data][pe1-data]
 */
-void SkPairPathEffect::flatten(SkFlattenableWriteBuffer& buffer) {
+void SkPairPathEffect::flatten(SkFlattenableWriteBuffer& buffer) const {
+    this->INHERITED::flatten(buffer);
     buffer.writeFlattenable(fPE0);
     buffer.writeFlattenable(fPE1);
 }
@@ -70,6 +75,39 @@ bool SkSumPathEffect::filterPath(SkPath* dst, const SkPath& src,
 
 #include "SkStroke.h"
 
+/** \class SkStrokePathEffect
+ 
+ SkStrokePathEffect simulates stroking inside a patheffect, allowing the
+ caller to have explicit control of when to stroke a path. Typically this is
+ used if the caller wants to stroke before another patheffect is applied
+ (using SkComposePathEffect or SkSumPathEffect).
+ */
+class SkStrokePathEffect : public SkPathEffect {
+public:
+    SkStrokePathEffect(const SkPaint&);
+    SkStrokePathEffect(SkScalar width, SkPaint::Style, SkPaint::Join,
+                       SkPaint::Cap, SkScalar miterLimit = -1);
+    
+    // overrides
+    virtual bool filterPath(SkPath* dst, const SkPath& src, SkScalar* width);
+    
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkStrokePathEffect)
+    
+protected:
+    SkStrokePathEffect(SkFlattenableReadBuffer&);
+    virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
+    
+private:
+    SkScalar    fWidth, fMiter;
+    uint8_t     fStyle, fJoin, fCap;
+    
+    typedef SkPathEffect INHERITED;
+    
+    // illegal
+    SkStrokePathEffect(const SkStrokePathEffect&);
+    SkStrokePathEffect& operator=(const SkStrokePathEffect&);
+};
+
 SkStrokePathEffect::SkStrokePathEffect(const SkPaint& paint)
     : fWidth(paint.getStrokeWidth()), fMiter(paint.getStrokeMiter()),
       fStyle(SkToU8(paint.getStyle())), fJoin(SkToU8(paint.getStrokeJoin())),
@@ -81,7 +119,7 @@ SkStrokePathEffect::SkStrokePathEffect(SkScalar width, SkPaint::Style style,
         : fWidth(width), fMiter(miter), fStyle(SkToU8(style)),
           fJoin(SkToU8(join)), fCap(SkToU8(cap)) {
     if (miter < 0) {  // signal they want the default
-        fMiter = SK_DefaultMiterLimit;
+        fMiter = SkIntToScalar(4);
     }
 }
 
@@ -108,15 +146,8 @@ bool SkStrokePathEffect::filterPath(SkPath* dst, const SkPath& src,
     return true;
 }
 
-SkFlattenable::Factory SkStrokePathEffect::getFactory() {
-    return CreateProc;
-}
-
-SkFlattenable* SkStrokePathEffect::CreateProc(SkFlattenableReadBuffer& buffer) {
-    return SkNEW_ARGS(SkStrokePathEffect, (buffer));
-}
-
-void SkStrokePathEffect::flatten(SkFlattenableWriteBuffer& buffer) {
+void SkStrokePathEffect::flatten(SkFlattenableWriteBuffer& buffer) const {
+    this->INHERITED::flatten(buffer);
     buffer.writeScalar(fWidth);
     buffer.writeScalar(fMiter);
     buffer.write8(fStyle);
@@ -134,9 +165,7 @@ SkStrokePathEffect::SkStrokePathEffect(SkFlattenableReadBuffer& buffer) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_START(SkPathEffect)
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkComposePathEffect)
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkStrokePathEffect)
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkSumPathEffect)
-SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_END
+SK_DEFINE_FLATTENABLE_REGISTRAR(SkComposePathEffect)
+//SK_DEFINE_FLATTENABLE_REGISTRAR(SkStrokePathEffect)
+SK_DEFINE_FLATTENABLE_REGISTRAR(SkSumPathEffect)
 

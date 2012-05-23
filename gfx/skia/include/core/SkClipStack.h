@@ -18,7 +18,7 @@ class SK_API SkClipStack {
 public:
     SkClipStack();
     SkClipStack(const SkClipStack& b);
-    ~SkClipStack() {}
+    ~SkClipStack();
 
     SkClipStack& operator=(const SkClipStack& b);
     bool operator==(const SkClipStack& b) const;
@@ -30,8 +30,7 @@ public:
     void save();
     void restore();
 
-    void clipDevRect(const SkIRect& ir,
-                     SkRegion::Op op = SkRegion::kIntersect_Op) {
+    void clipDevRect(const SkIRect& ir, SkRegion::Op op) {
         SkRect r;
         r.set(ir);
         this->clipDevRect(r, op, false);
@@ -49,7 +48,8 @@ public:
         B2FIter(const SkClipStack& stack);
 
         struct Clip {
-            Clip() : fRect(NULL), fPath(NULL), fOp(SkRegion::kIntersect_Op) {}
+            Clip() : fRect(NULL), fPath(NULL), fOp(SkRegion::kIntersect_Op), 
+                     fDoAA(false) {}
             friend bool operator==(const Clip& a, const Clip& b);
             friend bool operator!=(const Clip& a, const Clip& b);
             const SkRect*   fRect;  // if non-null, this is a rect clip

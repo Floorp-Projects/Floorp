@@ -30,18 +30,13 @@ public:
 
     static bool CanDo(const SkBitmap&, TileMode tx, TileMode ty);
 
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer) {
-        return SkNEW_ARGS(SkBitmapProcShader, (buffer));
-    }
-
     // override from flattenable
     virtual bool toDumpString(SkString* str) const;
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkBitmapProcShader)
 
-    SK_DECLARE_FLATTENABLE_REGISTRAR()
 protected:
     SkBitmapProcShader(SkFlattenableReadBuffer& );
-    virtual void flatten(SkFlattenableWriteBuffer& );
-    virtual Factory getFactory() { return CreateProc; }
+    virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
 
     SkBitmap          fRawBitmap;   // experimental for RLE encoding
     SkBitmapProcState fState;

@@ -115,14 +115,6 @@ bool SkEmbossMaskFilter::filterMask(SkMask* dst, const SkMask& src,
     return true;
 }
 
-SkFlattenable* SkEmbossMaskFilter::CreateProc(SkFlattenableReadBuffer& buffer) {
-    return SkNEW_ARGS(SkEmbossMaskFilter, (buffer));
-}
-
-SkFlattenable::Factory SkEmbossMaskFilter::getFactory() {
-    return CreateProc;
-}
-
 SkEmbossMaskFilter::SkEmbossMaskFilter(SkFlattenableReadBuffer& buffer)
         : SkMaskFilter(buffer) {
     buffer.read(&fLight, sizeof(fLight));
@@ -130,11 +122,13 @@ SkEmbossMaskFilter::SkEmbossMaskFilter(SkFlattenableReadBuffer& buffer)
     fBlurRadius = buffer.readScalar();
 }
 
-void SkEmbossMaskFilter::flatten(SkFlattenableWriteBuffer& buffer) {
+void SkEmbossMaskFilter::flatten(SkFlattenableWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
 
-    fLight.fPad = 0;    // for the font-cache lookup to be clean
-    buffer.writeMul4(&fLight, sizeof(fLight));
+    Light tmpLight = fLight;
+    tmpLight.fPad = 0;    // for the font-cache lookup to be clean
+    buffer.writeMul4(&tmpLight, sizeof(tmpLight));
     buffer.writeScalar(fBlurRadius);
 }
 
+SK_DEFINE_FLATTENABLE_REGISTRAR(SkEmbossMaskFilter)

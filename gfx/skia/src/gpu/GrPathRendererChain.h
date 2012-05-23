@@ -20,7 +20,7 @@ class SkPath;
 class GrPathRenderer;
 
 /**
- * Keeps track of a ordered list of path renderers. When a path needs to be
+ * Keeps track of an ordered list of path renderers. When a path needs to be
  * drawn this list is scanned to find the most preferred renderer. To add your
  * path renderer to the list implement the GrPathRenderer::AddPathRenderers
  * function.
@@ -40,9 +40,9 @@ public:
     // takes a ref and unrefs in destructor
     GrPathRenderer* addPathRenderer(GrPathRenderer* pr);
 
-    GrPathRenderer* getPathRenderer(const GrDrawTarget::Caps& targetCaps,
-                                    const SkPath& path,
+    GrPathRenderer* getPathRenderer(const SkPath& path,
                                     GrPathFill fill,
+                                    const GrDrawTarget* target,
                                     bool antiAlias);
 
 private:

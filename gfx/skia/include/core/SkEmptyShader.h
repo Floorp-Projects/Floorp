@@ -30,11 +30,10 @@ public:
     virtual void shadeSpan16(int x, int y, uint16_t span[], int count) SK_OVERRIDE;
     virtual void shadeSpanAlpha(int x, int y, uint8_t alpha[], int count) SK_OVERRIDE;
 
-protected:
-    SkEmptyShader(SkFlattenableReadBuffer&);
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkEmptyShader)
 
-    virtual Factory getFactory() SK_OVERRIDE;
-    virtual void flatten(SkFlattenableWriteBuffer&) SK_OVERRIDE;
+protected:
+    SkEmptyShader(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {}
 
 private:
     typedef SkShader INHERITED;

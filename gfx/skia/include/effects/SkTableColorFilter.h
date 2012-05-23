@@ -4,7 +4,7 @@
 
 #include "SkColorFilter.h"
 
-class SkTableColorFilter {
+class SK_API SkTableColorFilter {
 public:
     /**
      *  Create a table colorfilter, copying the table into the filter, and
@@ -29,6 +29,8 @@ public:
                                      const uint8_t tableR[256],
                                      const uint8_t tableG[256],
                                      const uint8_t tableB[256]);
+
+    SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP()
 };
 
 #endif

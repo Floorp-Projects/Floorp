@@ -14,6 +14,7 @@
 #include "SkMaskFilter.h"
 #include "SkPaint.h"
 #include "SkPath.h"
+#include "SkPathEffect.h"
 #include "../core/SkRasterClip.h"
 #include "SkXfermode.h"
 #include <new>
@@ -74,7 +75,8 @@ static bool compute_bounds(const SkDeque& layers, const SkPath& path,
         SkMask  mask;
         if (!SkDraw::DrawToMask(devPath, clipBounds, paint.getMaskFilter(),
                                 &matrix, &mask,
-                                SkMask::kJustComputeBounds_CreateMode)) {
+                                SkMask::kJustComputeBounds_CreateMode,
+                                SkPaint::kFill_Style)) {
             return false;
         }
 
@@ -197,7 +199,7 @@ SkLayerRasterizer::SkLayerRasterizer(SkFlattenableReadBuffer& buffer)
     }
 }
 
-void SkLayerRasterizer::flatten(SkFlattenableWriteBuffer& buffer) {
+void SkLayerRasterizer::flatten(SkFlattenableWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
 
     buffer.write32(fLayers.count());
@@ -214,14 +216,6 @@ void SkLayerRasterizer::flatten(SkFlattenableWriteBuffer& buffer) {
         buffer.writeScalar(rec->fOffset.fX);
         buffer.writeScalar(rec->fOffset.fY);
     }
-}
-
-SkFlattenable* SkLayerRasterizer::CreateProc(SkFlattenableReadBuffer& buffer) {
-    return SkNEW_ARGS(SkLayerRasterizer, (buffer));
-}
-
-SkFlattenable::Factory SkLayerRasterizer::getFactory() {
-    return CreateProc;
 }
 
 SK_DEFINE_FLATTENABLE_REGISTRAR(SkLayerRasterizer)
