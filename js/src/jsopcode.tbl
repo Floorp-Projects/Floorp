@@ -305,9 +305,9 @@ OPDEF(JSOP_SETTER,    126,js_setter_str,NULL,         1,  0,  0,  0,  JOF_BYTE)
 /*
  * Prolog bytecodes for defining function, var, and const names.
  */
-OPDEF(JSOP_DEFFUN,    127,"deffun",     NULL,         5,  0,  0,  0,  JOF_OBJECT|JOF_DECLARING)
-OPDEF(JSOP_DEFCONST,  128,"defconst",   NULL,         5,  0,  0,  0,  JOF_ATOM|JOF_DECLARING)
-OPDEF(JSOP_DEFVAR,    129,"defvar",     NULL,         5,  0,  0,  0,  JOF_ATOM|JOF_DECLARING)
+OPDEF(JSOP_DEFFUN,    127,"deffun",     NULL,         5,  0,  0,  0,  JOF_OBJECT)
+OPDEF(JSOP_DEFCONST,  128,"defconst",   NULL,         5,  0,  0,  0,  JOF_ATOM)
+OPDEF(JSOP_DEFVAR,    129,"defvar",     NULL,         5,  0,  0,  0,  JOF_ATOM)
 
 /* Push a closure for a named or anonymous function expression. */
 OPDEF(JSOP_LAMBDA,    130, "lambda",    NULL,         5,  0,  1, 19,  JOF_OBJECT)
