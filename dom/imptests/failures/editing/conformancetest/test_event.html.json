@@ -45,7 +45,6 @@
   "Command fontName, value \"quasit\": beforeinput event, uncanceled":true,
   "Command fontName, value \"quasit\": input event, uncanceled":true,
   "Command fontName, value \"serif\": beforeinput event, canceled":true,
-  "Command fontName, value \"serif\": input event, canceled":true,
   "Command fontName, value \"serif\": beforeinput event, uncanceled":true,
   "Command fontName, value \"serif\": input event, uncanceled":true,
   "Command fontName, value \"Helvetica\": beforeinput event, canceled":true,
