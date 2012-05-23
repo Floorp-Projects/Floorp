@@ -279,7 +279,7 @@ struct TreeContext {                /* tree context for semantic checks */
     inline TreeContext(Parser *prs, SharedContext *sc);
     inline ~TreeContext();
 
-    inline bool init(JSContext *cx);
+    inline bool init();
 };
 
 /*

@@ -29,10 +29,10 @@ public:
   Create(JSContext* aCx, XMLHttpRequest* aXHR);
 
   virtual void
-  _Trace(JSTracer* aTrc) MOZ_OVERRIDE;
+  _trace(JSTracer* aTrc) MOZ_OVERRIDE;
 
   virtual void
-  _Finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
+  _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 };
 
 END_WORKERS_NAMESPACE

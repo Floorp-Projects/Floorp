@@ -603,6 +603,9 @@ gfxFT2Font::FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd)
     gfxFT2LockedFace faceLock(this);
     FT_Face face = faceLock.get();
 
+    if (!face->charmap || face->charmap->encoding != FT_ENCODING_UNICODE) {
+        FT_Select_Charmap(face, FT_ENCODING_UNICODE);
+    }
     FT_UInt gid = FT_Get_Char_Index(face, ch);
 
     if (gid == 0) {

@@ -437,6 +437,9 @@ var BrowserApp = {
   },
 
   set selectedTab(aTab) {
+    if (this._selectedTab == aTab)
+      return;
+
     if (this._selectedTab)
       this._selectedTab.setActive(false);
 
@@ -4978,19 +4981,21 @@ var ActivityObserver = {
 };
 
 var WebappsUI = {
-  init: function() {
+  init: function init() {
     Cu.import("resource://gre/modules/Webapps.jsm");
 
     Services.obs.addObserver(this, "webapps-ask-install", false);
     Services.obs.addObserver(this, "webapps-launch", false);
+    Services.obs.addObserver(this, "webapps-sync-install", false);
   },
   
-  uninit: function() {
+  uninit: function unint() {
     Services.obs.removeObserver(this, "webapps-ask-install");
     Services.obs.removeObserver(this, "webapps-launch");
+    Services.obs.removeObserver(this, "webapps-sync-install");
   },
   
-  observe: function(aSubject, aTopic, aData) {
+  observe: function observe(aSubject, aTopic, aData) {
     let data = JSON.parse(aData);
     switch (aTopic) {
       case "webapps-ask-install":
@@ -5004,23 +5009,67 @@ var WebappsUI = {
           this.openURL(manifest.fullLaunchPath(), data.origin);
         }).bind(this));
         break;
+      case "webapps-sync-install":
+        // Wait until we know the app install worked, then make a homescreen shortcut
+        DOMApplicationRegistry.getManifestFor(data.origin, (function(aManifest) {
+	   if (!aManifest)
+	     return;
+          let manifest = new DOMApplicationManifest(aManifest, data.origin);
+          this.createShortcut(manifest.name, manifest.fullLaunchPath(), manifest.iconURLForSize("64"), "webapp");
+        }).bind(this));
+        break;
     }
   },
   
-  doInstall: function(aData) {
+  doInstall: function doInstall(aData) {
     let manifest = new DOMApplicationManifest(aData.app.manifest, aData.app.origin);
     let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
     if (Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name))
       DOMApplicationRegistry.confirmInstall(aData);
+    else
+      DOMApplicationRegistry.denyInstall(aData);
   },
   
-  openURL: function(aURI, aOrigin) {
+  openURL: function openURL(aURI, aOrigin) {
     let uri = Services.io.newURI(aURI, null, null);
     if (!uri)
       return;
 
     let bwin = window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow;
     bwin.openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB, Ci.nsIBrowserDOMWindow.OPEN_NEW);
+  },
+
+  createShortcut: function createShortcut(aTitle, aURL, aIconURL, aType) {
+    // The images are 64px, but Android will resize as needed.
+    // Bigger is better than too small.
+    const kIconSize = 64;
+
+    let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+
+    function _createShortcut() {
+      let icon = canvas.toDataURL("image/png", "");
+      canvas = null;
+      try {
+        let shell = Cc["@mozilla.org/browser/shell-service;1"].createInstance(Ci.nsIShellService);
+        shell.createShortcut(aTitle, aURL, icon, aType);
+      } catch(e) {
+        Cu.reportError(e);
+      }
+    }
+
+    canvas.width = canvas.height = kIconSize;
+    let ctx = canvas.getContext("2d");
+
+    let favicon = new Image();
+    favicon.onload = function() {
+      ctx.drawImage(favicon, 0, 0, kIconSize, kIconSize);
+      _createShortcut();
+    }
+    favicon.onerror = function() {
+      Cu.reportError("CreateShortcut: favicon image load error");
+    }
+  
+    favicon.src = aIconURL;
   }
 }
 

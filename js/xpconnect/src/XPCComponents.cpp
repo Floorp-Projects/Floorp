@@ -3135,7 +3135,7 @@ xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext *cx,
 
 nsresult
 xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSObject *proto,
-                        bool wantXrays, const nsACString &sandboxName)
+                        bool wantXrays, bool wantComponents, const nsACString &sandboxName)
 {
     // Create the sandbox global object
     nsresult rv;
@@ -3218,12 +3218,28 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
         // Pass on ownership of sop to |sandbox|.
         JS_SetPrivate(sandbox, sop.forget().get());
 
-        rv = xpc->InitClasses(cx, sandbox);
-        if (NS_SUCCEEDED(rv) &&
-            !JS_DefineFunctions(cx, sandbox, SandboxFunctions)) {
-            rv = NS_ERROR_FAILURE;
+        XPCCallContext ccx(NATIVE_CALLER, cx);
+        if (!ccx.IsValid())
+            return NS_ERROR_XPC_UNEXPECTED;
+        
+        {
+          JSAutoEnterCompartment ac;
+          if (!ac.enter(ccx, sandbox))
+              return NS_ERROR_XPC_UNEXPECTED;
+          XPCWrappedNativeScope* scope =
+              XPCWrappedNativeScope::GetNewOrUsed(ccx, sandbox);
+
+          if (!scope)
+              return NS_ERROR_XPC_UNEXPECTED;
+
+          if (wantComponents && !nsXPCComponents::AttachComponentsObject(ccx, scope, sandbox))
+              return NS_ERROR_XPC_UNEXPECTED;
+
+          if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, sandbox))
+              return NS_ERROR_XPC_UNEXPECTED;
         }
-        if (NS_FAILED(rv))
+
+        if (!JS_DefineFunctions(cx, sandbox, SandboxFunctions))
             return NS_ERROR_XPC_UNEXPECTED;
     }
 
@@ -3234,9 +3250,9 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
         }
     }
 
-    xpc::CompartmentPrivate *compartmentPrivate =
-        static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment));
-    compartmentPrivate->location = sandboxName;
+    // Set the location information for the new global, so that tools like
+    // about:memory may use that information
+    xpc::SetLocationForGlobal(sandbox, sandboxName);
 
     return NS_OK;
 }
@@ -3349,6 +3365,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
     JSObject *proto = nsnull;
     bool wantXrays = true;
+    bool wantComponents = true;
     nsCString sandboxName;
 
     if (argc > 1) {
@@ -3381,6 +3398,18 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
             }
 
             wantXrays = option.toBoolean();
+        }
+
+        if (!JS_HasProperty(cx, optionsObject, "wantComponents", &found))
+            return NS_ERROR_INVALID_ARG;
+
+        if (found) {
+            if (!JS_GetProperty(cx, optionsObject, "wantComponents", &option) ||
+                !option.isBoolean()) {
+                return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
+            }
+
+            wantComponents = option.toBoolean();
         }
 
         if (!JS_HasProperty(cx, optionsObject, "sandboxName", &found))
@@ -3424,7 +3453,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
             frame->GetFilename(getter_Copies(sandboxName));
     }
 
-    rv = xpc_CreateSandboxObject(cx, vp, prinOrSop, proto, wantXrays, sandboxName);
+    rv = xpc_CreateSandboxObject(cx, vp, prinOrSop, proto, wantXrays, wantComponents, sandboxName);
 
     if (NS_FAILED(rv)) {
         return ThrowAndFail(rv, cx, _retval);

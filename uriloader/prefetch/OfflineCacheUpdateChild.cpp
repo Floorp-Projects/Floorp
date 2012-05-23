@@ -78,6 +78,7 @@ OfflineCacheUpdateChild::OfflineCacheUpdateChild(nsIDOMWindow* aWindow)
     , mIsUpgrade(false)
     , mIPCActivated(false)
     , mWindow(aWindow)
+    , mByteProgress(0)
 {
 }
 
@@ -341,6 +342,15 @@ OfflineCacheUpdateChild::RemoveObserver(nsIOfflineCacheUpdateObserver *aObserver
 }
 
 NS_IMETHODIMP
+OfflineCacheUpdateChild::GetByteProgress(PRUint64 * _result)
+{
+    NS_ENSURE_ARG(_result);
+
+    *_result = mByteProgress;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 OfflineCacheUpdateChild::Schedule()
 {
     LOG(("OfflineCacheUpdateChild::Schedule [%p]", this));
@@ -435,9 +445,12 @@ OfflineCacheUpdateChild::RecvAssociateDocuments(const nsCString &cacheGroupId,
 }
 
 bool
-OfflineCacheUpdateChild::RecvNotifyStateEvent(const PRUint32 &event)
+OfflineCacheUpdateChild::RecvNotifyStateEvent(const PRUint32 &event,
+                                              const PRUint64 &byteProgress)
 {
     LOG(("OfflineCacheUpdateChild::RecvNotifyStateEvent [%p]", this));
+
+    mByteProgress = byteProgress;
 
     // Convert the public observer state to our internal state
     switch (event) {

@@ -109,7 +109,9 @@ OfflineCacheUpdateParent::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate, PRU
 
     LOG(("OfflineCacheUpdateParent::StateEvent [%p]", this));
 
-    SendNotifyStateEvent(state);
+    PRUint64 byteProgress;
+    aUpdate->GetByteProgress(&byteProgress);
+    SendNotifyStateEvent(state, byteProgress);
 
     if (state == nsIOfflineCacheUpdateObserver::STATE_FINISHED) {
         // Tell the child the particulars after the update has finished.

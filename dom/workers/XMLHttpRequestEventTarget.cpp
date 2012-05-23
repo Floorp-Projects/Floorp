@@ -8,13 +8,13 @@
 USING_WORKERS_NAMESPACE
 
 void
-XMLHttpRequestEventTarget::_Trace(JSTracer* aTrc)
+XMLHttpRequestEventTarget::_trace(JSTracer* aTrc)
 {
-  EventTarget::_Trace(aTrc);
+  EventTarget::_trace(aTrc);
 }
 
 void
-XMLHttpRequestEventTarget::_Finalize(JSFreeOp* aFop)
+XMLHttpRequestEventTarget::_finalize(JSFreeOp* aFop)
 {
-  EventTarget::_Finalize(aFop);
+  EventTarget::_finalize(aFop);
 }

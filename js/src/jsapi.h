@@ -572,6 +572,14 @@ class Value
 #endif
     }
 
+    const uintptr_t *payloadUIntPtr() const {
+#if JS_BITS_PER_WORD == 32
+        return &data.s.payload.uintptr;
+#elif JS_BITS_PER_WORD == 64
+        return &data.asUIntPtr;
+#endif
+    }
+
 #if !defined(_MSC_VER) && !defined(__sparc)
   /* To make jsval binary compatible when linking across C and C++ with MSVC,
    * JS::Value needs to be POD. Otherwise, jsval will be passed in memory

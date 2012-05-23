@@ -158,7 +158,7 @@ MOZ_ARG_WITH_STRING(android-ndk,
 
 MOZ_ARG_WITH_STRING(android-toolchain,
 [  --with-android-toolchain=DIR
-                          location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
+                          location of the android toolchain],
     android_toolchain=$withval)
 
 
@@ -175,24 +175,18 @@ MOZ_ARG_WITH_STRING(android-sdk,
 
 MOZ_ARG_WITH_STRING(android-platform,
 [  --with-android-platform=DIR
-                           location of platform dir, default NDK/build/platforms/android-5/arch-arm],
+                           location of platform dir],
     android_platform=$withval)
-
-MOZ_ARG_ENABLE_BOOL(android-libstdcxx,
-[  --enable-android-libstdcxx
-                          use GNU libstdc++ instead of STLPort for NDK >= 5],
-    MOZ_ANDROID_LIBSTDCXX=1,
-    MOZ_ANDROID_LIBSTDCXX= )
 
 case "$target" in
 arm-linux*-android*|*-linuxandroid*)
     android_tool_prefix="arm-linux-androideabi"
     ;;
-arm-android-eabi)
-    android_tool_prefix="arm-eabi"
-    ;;
 i?86-*android*)
     android_tool_prefix="i686-android-linux"
+    ;;
+mipsel-*android*)
+    android_tool_prefix="mipsel-linux-android"
     ;;
 *)
     android_tool_prefix="$target_os"
@@ -308,20 +302,18 @@ case "$target" in
 
         kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
 
-        android_toolchain="$android_ndk"/build/prebuilt/$kernel_name-x86/arm-eabi-4.4.0
-
-        # With newer NDK, the toolchain path has changed.
-        if ! test -d "$android_toolchain" ; then
-            case "$target_cpu" in
-            arm)
-                target_name=arm-linux-androideabi-4.4.3
-                ;;
-            i?86)
-                target_name=x86-4.4.3
-                ;;
-            esac
-            android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86
-        fi
+        case "$target_cpu" in
+        arm)
+            target_name=arm-linux-androideabi-4.4.3
+            ;;
+        i?86)
+            target_name=x86-4.4.3
+            ;;
+        mipsel)
+            target_name=mipsel-linux-android-4.4.3
+            ;;
+        esac
+        android_toolchain="$android_ndk"/toolchains/$target_name/prebuilt/$kernel_name-x86
 
         if test -d "$android_toolchain" ; then
             AC_MSG_RESULT([$android_toolchain])
@@ -333,12 +325,19 @@ case "$target" in
     if test -z "$android_platform" ; then
         AC_MSG_CHECKING([for android platform directory])
 
-        android_platform="$android_ndk"/build/platforms/android-"$android_version"/arch-"$target_cpu"
+        case "$target_cpu" in
+        arm)
+            target_name=arm
+            ;;
+        i?86)
+            target_name=x86
+            ;;
+        mipsel)
+            target_name=mips
+            ;;
+        esac
 
-        # With newer NDK, the platform path has changed.
-        if ! test -d "$android_platform" ; then
-            android_platform="$android_ndk"/platforms/android-"$android_version"/arch-"$target_cpu"
-        fi
+        android_platform="$android_ndk"/platforms/android-"$android_version"/arch-"$target_name"
 
         if test -d "$android_platform" ; then
             AC_MSG_RESULT([$android_platform])
@@ -1483,19 +1482,15 @@ if test "$OS_TARGET" = "Android"; then
     x86-*)
       ANDROID_CPU_ARCH=x86
       ;;
+    mips-*) # When target_cpu is mipsel, CPU_ARCH is mips
+      ANDROID_CPU_ARCH=mips
+      ;;
     esac
 fi
 
 if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
     if test -z "$STLPORT_CPPFLAGS$STLPORT_LDFLAGS$STLPORT_LIBS"; then
-        if test -n "$MOZ_ANDROID_LIBSTDCXX" ; then
-            if test ! -e "$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/libstdc++.a" ; then
-                AC_MSG_ERROR([Cannot find path to libstdc++ (NDK version >= 5?)])
-            fi
-            STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/gnu-libstdc++/include -I$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
-            STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH"
-            STLPORT_LIBS="-lstdc++"
-        elif test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
+        if test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
             STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
             STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
             STLPORT_LIBS="-lstlport_static"
