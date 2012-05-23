@@ -17,38 +17,30 @@ public class ImmutableViewportMetrics {
 
     // We need to flatten the RectF and FloatSize structures
     // because Java doesn't have the concept of const classes
-    public final float pageRectLeft;
-    public final float pageRectTop;
-    public final float pageRectRight;
-    public final float pageRectBottom;
-    public final float cssPageRectLeft;
-    public final float cssPageRectTop;
-    public final float cssPageRectRight;
-    public final float cssPageRectBottom;
-    public final float viewportRectLeft;
-    public final float viewportRectTop;
-    public final float viewportRectRight;
+    public final float pageSizeWidth;
+    public final float pageSizeHeight;
+    public final float cssPageSizeWidth;
+    public final float cssPageSizeHeight;
     public final float viewportRectBottom;
+    public final float viewportRectLeft;
+    public final float viewportRectRight;
+    public final float viewportRectTop;
     public final float zoomFactor;
 
     public ImmutableViewportMetrics(ViewportMetrics m) {
         RectF viewportRect = m.getViewport();
-        viewportRectLeft = viewportRect.left;
-        viewportRectTop = viewportRect.top;
-        viewportRectRight = viewportRect.right;
         viewportRectBottom = viewportRect.bottom;
+        viewportRectLeft = viewportRect.left;
+        viewportRectRight = viewportRect.right;
+        viewportRectTop = viewportRect.top;
 
-        RectF pageRect = m.getPageRect();
-        pageRectLeft = pageRect.left;
-        pageRectTop = pageRect.top;
-        pageRectRight = pageRect.right;
-        pageRectBottom = pageRect.bottom;
+        FloatSize pageSize = m.getPageSize();
+        pageSizeWidth = pageSize.width;
+        pageSizeHeight = pageSize.height;
 
-        RectF cssPageRect = m.getCssPageRect();
-        cssPageRectLeft = cssPageRect.left;
-        cssPageRectTop = cssPageRect.top;
-        cssPageRectRight = cssPageRect.right;
-        cssPageRectBottom = cssPageRect.bottom;
+        FloatSize cssPageSize = m.getCssPageSize();
+        cssPageSizeWidth = cssPageSize.width;
+        cssPageSizeHeight = cssPageSize.height;
 
         zoomFactor = m.getZoomFactor();
     }
@@ -82,28 +74,18 @@ public class ImmutableViewportMetrics {
         return RectUtils.scale(getViewport(), 1/zoomFactor);
     }
 
-    public RectF getPageRect() {
-        return new RectF(pageRectLeft, pageRectTop, pageRectRight, pageRectBottom);
+    public FloatSize getPageSize() {
+        return new FloatSize(pageSizeWidth, pageSizeHeight);
     }
 
-    public float getPageWidth() {
-        return pageRectRight - pageRectLeft;
-    }
-
-    public float getPageHeight() {
-        return pageRectBottom - pageRectTop;
-    }
-
-    public RectF getCssPageRect() {
-        return new RectF(cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom);
+    public FloatSize getCssPageSize() {
+        return new FloatSize(cssPageSizeWidth, cssPageSizeHeight);
     }
 
     @Override
     public String toString() {
         return "ImmutableViewportMetrics v=(" + viewportRectLeft + "," + viewportRectTop + ","
-                + viewportRectRight + "," + viewportRectBottom + ") p=(" + pageRectLeft + ","
-                + pageRectTop + "," + pageRectRight + "," + pageRectBottom + ") c=("
-                + cssPageRectLeft + "," + cssPageRectTop + "," + cssPageRectRight + ","
-                + cssPageRectBottom + ") z=" + zoomFactor;
+                + viewportRectRight + "," + viewportRectBottom + ") p=(" + pageSizeWidth + ","
+                + pageSizeHeight + ") z=" + zoomFactor;
     }
 }
