@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsTextAccessibleWrap.h"
+#include "TextLeafAccessibleWrap.h"
 #include "ISimpleDOMText_i.c"
 
 #include "nsCoreUtils.h"
@@ -19,26 +19,29 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsTextAccessibleWrap Accessible
+// TextLeafAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-nsTextAccessibleWrap::
-  nsTextAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsTextAccessible(aContent, aDoc)
+TextLeafAccessibleWrap::
+  TextLeafAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  TextLeafAccessible(aContent, aDoc)
 {
 }
 
-STDMETHODIMP_(ULONG) nsTextAccessibleWrap::AddRef()
+STDMETHODIMP_(ULONG)
+TextLeafAccessibleWrap::AddRef()
 {
   return nsAccessNode::AddRef();
 }
 
-STDMETHODIMP_(ULONG) nsTextAccessibleWrap::Release()
+STDMETHODIMP_(ULONG)
+TextLeafAccessibleWrap::Release()
 {
   return nsAccessNode::Release();
 }
 
-STDMETHODIMP nsTextAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
+STDMETHODIMP
+TextLeafAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = nsnull;
 
@@ -55,7 +58,8 @@ STDMETHODIMP nsTextAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   return S_OK;
 }
 
-STDMETHODIMP nsTextAccessibleWrap::get_domText( 
+STDMETHODIMP
+TextLeafAccessibleWrap::get_domText( 
     /* [retval][out] */ BSTR __RPC_FAR *aDomText)
 {
 __try {
@@ -80,7 +84,8 @@ __try {
   return S_OK;
 }
 
-STDMETHODIMP nsTextAccessibleWrap::get_clippedSubstringBounds( 
+STDMETHODIMP
+TextLeafAccessibleWrap::get_clippedSubstringBounds( 
     /* [in] */ unsigned int aStartIndex,
     /* [in] */ unsigned int aEndIndex,
     /* [out] */ int __RPC_FAR *aX,
@@ -117,7 +122,8 @@ __try {
   return S_OK;
 }
 
-STDMETHODIMP nsTextAccessibleWrap::get_unclippedSubstringBounds( 
+STDMETHODIMP
+TextLeafAccessibleWrap::get_unclippedSubstringBounds( 
     /* [in] */ unsigned int aStartIndex,
     /* [in] */ unsigned int aEndIndex,
     /* [out] */ int __RPC_FAR *aX,
@@ -140,8 +146,8 @@ __try {
   return S_OK;
 }
 
-
-STDMETHODIMP nsTextAccessibleWrap::scrollToSubstring(
+STDMETHODIMP
+TextLeafAccessibleWrap::scrollToSubstring(
     /* [in] */ unsigned int aStartIndex,
     /* [in] */ unsigned int aEndIndex)
 {
@@ -160,10 +166,11 @@ __try {
   return S_OK;
 }
 
-nsIFrame* nsTextAccessibleWrap::GetPointFromOffset(nsIFrame *aContainingFrame, 
-                                                   PRInt32 aOffset, 
-                                                   bool aPreferNext, 
-                                                   nsPoint& aOutPoint)
+nsIFrame*
+TextLeafAccessibleWrap::GetPointFromOffset(nsIFrame* aContainingFrame, 
+                                           PRInt32 aOffset, 
+                                           bool aPreferNext, 
+                                           nsPoint& aOutPoint)
 {
   nsIFrame *textFrame = nsnull;
   PRInt32 outOffset;
@@ -179,9 +186,13 @@ nsIFrame* nsTextAccessibleWrap::GetPointFromOffset(nsIFrame *aContainingFrame,
 /*
  * Given an offset, the x, y, width, and height values are filled appropriately.
  */
-nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32 aEndOffset,
-                                                   PRInt32* aX, PRInt32* aY, 
-                                                   PRInt32* aWidth, PRInt32* aHeight) 
+nsresult
+TextLeafAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset,
+                                            PRInt32 aEndOffset,
+                                            PRInt32* aX,
+                                            PRInt32* aY,
+                                            PRInt32* aWidth,
+                                            PRInt32* aHeight)
 {
   *aX = *aY = *aWidth = *aHeight = 0;
 
@@ -221,7 +232,8 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   return NS_OK;
 }
 
-STDMETHODIMP nsTextAccessibleWrap::get_fontFamily(
+STDMETHODIMP
+TextLeafAccessibleWrap::get_fontFamily(
     /* [retval][out] */ BSTR __RPC_FAR *aFontFamily)
 {
 __try {

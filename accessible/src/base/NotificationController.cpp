@@ -11,9 +11,9 @@
 #include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
 #include "nsEventShell.h"
-#include "nsTextAccessible.h"
 #include "FocusManager.h"
 #include "Role.h"
+#include "TextLeafAccessible.h"
 #include "TextUpdater.h"
 
 #include "mozilla/dom/Element.h"
