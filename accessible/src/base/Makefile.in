@@ -44,6 +44,12 @@ CPPSRCS = \
   TextUpdater.cpp \
   $(NULL)
 
+ifdef MOZ_DEBUG
+CPPSRCS += \
+  Logging.cpp \
+  $(NULL)
+endif
+
 EXPORTS = \
   a11yGeneric.h \
   nsAccDocManager.h \
