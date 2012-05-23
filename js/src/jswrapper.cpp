@@ -784,13 +784,6 @@ CrossCompartmentWrapper::iteratorNext(JSContext *cx, JSObject *wrapper, Value *v
            call.origin->wrap(cx, vp));
 }
 
-void
-CrossCompartmentWrapper::trace(JSTracer *trc, JSObject *wrapper)
-{
-    MarkCrossCompartmentSlot(trc, &wrapper->getReservedSlotRef(JSSLOT_PROXY_PRIVATE),
-                             "targetObject");
-}
-
 CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
 
 /* Security wrappers. */
