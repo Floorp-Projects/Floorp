@@ -13,6 +13,7 @@
 #include "SkCanvas.h"
 #include "SkColorPriv.h"
 #include "SkDevice.h"
+#include "SkFixed.h"
 #include "SkMaskFilter.h"
 #include "SkPaint.h"
 #include "SkPathEffect.h"
@@ -707,9 +708,12 @@ SkDraw::RectType SkDraw::ComputeRectType(const SkPaint& paint,
     return rtype;
 }
 
-static SkPoint* rect_points(SkRect& r, int index) {
-    SkASSERT((unsigned)index < 2);
-    return &((SkPoint*)(void*)&r)[index];
+static const SkPoint* rect_points(const SkRect& r) {
+    return (const SkPoint*)(void*)&r;
+}
+
+static SkPoint* rect_points(SkRect& r) {
+    return (SkPoint*)(void*)&r;
 }
 
 void SkDraw::drawRect(const SkRect& rect, const SkPaint& paint) const {
@@ -741,18 +745,15 @@ void SkDraw::drawRect(const SkRect& rect, const SkPaint& paint) const {
     SkRect          devRect;
 
     // transform rect into devRect
-    {
-        matrix.mapXY(rect.fLeft, rect.fTop, rect_points(devRect, 0));
-        matrix.mapXY(rect.fRight, rect.fBottom, rect_points(devRect, 1));
-        devRect.sort();
-    }
+    matrix.mapPoints(rect_points(devRect), rect_points(rect), 2);
+    devRect.sort();
 
     if (fBounder && !fBounder->doRect(devRect, paint)) {
         return;
     }
 
     // look for the quick exit, before we build a blitter
-    {
+    if (true) {
         SkIRect ir;
         devRect.roundOut(&ir);
         if (paint.getStyle() != SkPaint::kFill_Style) {
@@ -859,14 +860,14 @@ static bool xfermodeSupportsCoverageAsAlpha(SkXfermode* xfer) {
 }
 
 bool SkDrawTreatAsHairline(const SkPaint& paint, const SkMatrix& matrix,
-                           SkAlpha* newAlpha) {
-    SkASSERT(newAlpha);
+                           SkScalar* coverage) {
+    SkASSERT(coverage);
     if (SkPaint::kStroke_Style != paint.getStyle()) {
         return false;
     }
     SkScalar strokeWidth = paint.getStrokeWidth();
     if (0 == strokeWidth) {
-        *newAlpha = paint.getAlpha();
+        *coverage = SK_Scalar1;
         return true;
     }
 
@@ -874,9 +875,6 @@ bool SkDrawTreatAsHairline(const SkPaint& paint, const SkMatrix& matrix,
     // hairline
 
     if (!paint.isAntiAlias()) {
-        return false;
-    }
-    if (!xfermodeSupportsCoverageAsAlpha(paint.getXfermode())) {
         return false;
     }
     if (matrix.hasPerspective()) {
@@ -890,16 +888,7 @@ bool SkDrawTreatAsHairline(const SkPaint& paint, const SkMatrix& matrix,
     SkScalar len0 = fast_len(dst[0]);
     SkScalar len1 = fast_len(dst[1]);
     if (len0 <= SK_Scalar1 && len1 <= SK_Scalar1) {
-        SkScalar modulate = SkScalarAve(len0, len1);
-#if 0
-        *newAlpha = SkToU8(SkScalarRoundToInt(modulate * paint.getAlpha()));
-#else
-        // this is the old technique, which we preserve for now so we don't
-        // change previous results (testing)
-        // the new way seems fine, its just (a tiny bit) different
-        int scale = (int)SkScalarMul(modulate, 256);
-        *newAlpha = paint.getAlpha() * scale >> 8;
-#endif
+        *coverage = SkScalarAve(len0, len1);
         return true;
     }
     return false;
@@ -946,12 +935,29 @@ void SkDraw::drawPath(const SkPath& origSrcPath, const SkPaint& origPaint,
     SkTLazy<SkPaint> lazyPaint;
 
     {
-        SkAlpha newAlpha;
-        if (SkDrawTreatAsHairline(origPaint, *matrix, &newAlpha)) {
-            lazyPaint.set(origPaint);
-            lazyPaint.get()->setAlpha(newAlpha);
-            lazyPaint.get()->setStrokeWidth(0);
-            paint = lazyPaint.get();
+        SkScalar coverage;
+        if (SkDrawTreatAsHairline(origPaint, *matrix, &coverage)) {
+            if (SK_Scalar1 == coverage) {
+                lazyPaint.set(origPaint);
+                lazyPaint.get()->setStrokeWidth(0);
+                paint = lazyPaint.get();
+            } else if (xfermodeSupportsCoverageAsAlpha(origPaint.getXfermode())) {
+                U8CPU newAlpha;
+#if 0
+                newAlpha = SkToU8(SkScalarRoundToInt(coverage *
+                                                     origPaint.getAlpha()));
+#else
+                // this is the old technique, which we preserve for now so
+                // we don't change previous results (testing)
+                // the new way seems fine, its just (a tiny bit) different
+                int scale = (int)SkScalarMul(coverage, 256);
+                newAlpha = origPaint.getAlpha() * scale >> 8;
+#endif
+                lazyPaint.set(origPaint);
+                lazyPaint.get()->setStrokeWidth(0);
+                lazyPaint.get()->setAlpha(newAlpha);
+                paint = lazyPaint.get();
+            }
         }
     }
 
@@ -979,11 +985,14 @@ void SkDraw::drawPath(const SkPath& origSrcPath, const SkPaint& origPaint,
 
     SkAutoBlitterChoose blitter(*fBitmap, *fMatrix, *paint);
 
-    // how does filterPath() know to fill or hairline the path??? <mrr>
-    if (paint->getMaskFilter() &&
-            paint->getMaskFilter()->filterPath(*devPathPtr, *fMatrix, *fRC,
-                                               fBounder, blitter.get())) {
-        return; // filterPath() called the blitter, so we're done
+    if (paint->getMaskFilter()) {
+        SkPaint::Style style = doFill ? SkPaint::kFill_Style : 
+            SkPaint::kStroke_Style;
+        if (paint->getMaskFilter()->filterPath(*devPathPtr, *fMatrix, *fRC,
+                                               fBounder, blitter.get(),
+                                               style)) {
+            return; // filterPath() called the blitter, so we're done
+        }
     }
 
     if (fBounder && !fBounder->doPath(*devPathPtr, *paint, doFill)) {
@@ -1302,7 +1311,7 @@ void SkDraw::drawText_asPaths(const char text[], size_t byteLength,
                               const SkPaint& paint) const {
     SkDEBUGCODE(this->validate();)
 
-    SkTextToPathIter iter(text, byteLength, paint, true, true);
+    SkTextToPathIter iter(text, byteLength, paint, true);
 
     SkMatrix    matrix;
     matrix.setScale(iter.getPathScale(), iter.getPathScale());
@@ -1477,9 +1486,9 @@ static bool needsRasterTextBlit(const SkDraw& draw) {
 SkDraw1Glyph::Proc SkDraw1Glyph::init(const SkDraw* draw, SkBlitter* blitter,
                                       SkGlyphCache* cache) {
     fDraw = draw;
-	fBounder = draw->fBounder;
-	fBlitter = blitter;
-	fCache = cache;
+    fBounder = draw->fBounder;
+    fBlitter = blitter;
+    fCache = cache;
 
     if (hasCustomD1GProc(*draw)) {
         // todo: fix this assumption about clips w/ custom
@@ -1577,17 +1586,21 @@ void SkDraw::drawText(const char text[], size_t byteLength,
 
     SkFixed fxMask = ~0;
     SkFixed fyMask = ~0;
-    if (paint.isSubpixelText()) {
+    if (cache->isSubpixel()) {
         SkAxisAlignment baseline = SkComputeAxisAlignmentForHText(*matrix);
         if (kX_SkAxisAlignment == baseline) {
             fyMask = 0;
         } else if (kY_SkAxisAlignment == baseline) {
             fxMask = 0;
         }
+    
+    // apply bias here to avoid adding 1/2 the sampling frequency in the loop
+        fx += SK_FixedHalf >> SkGlyph::kSubBits;
+        fy += SK_FixedHalf >> SkGlyph::kSubBits;
+    } else {
+        fx += SK_FixedHalf;
+        fy += SK_FixedHalf;
     }
-    // apply the bias here, so we don't have to add 1/2 in the loop
-    fx += SK_FixedHalf;
-    fy += SK_FixedHalf;
 
     SkAAClipBlitter     aaBlitter;
     SkAutoBlitterChoose blitterChooser;
@@ -1606,7 +1619,7 @@ void SkDraw::drawText(const char text[], size_t byteLength,
     SkDraw1Glyph::Proc  proc = d1g.init(this, blitter, cache);
 
     while (text < stop) {
-        const SkGlyph& glyph  = glyphCacheProc(cache, &text, fx & fxMask, fy & fyMask);
+        const SkGlyph& glyph = glyphCacheProc(cache, &text, fx & fxMask, fy & fyMask);
 
         fx += autokern.adjust(glyph);
 
@@ -1757,12 +1770,12 @@ void SkDraw::drawPosText(const char text[], size_t byteLength,
     
     const char*        stop = text + byteLength;
     AlignProc          alignProc = pick_align_proc(paint.getTextAlign());
-	SkDraw1Glyph	   d1g;
-	SkDraw1Glyph::Proc  proc = d1g.init(this, blitter, cache);
+    SkDraw1Glyph       d1g;
+    SkDraw1Glyph::Proc proc = d1g.init(this, blitter, cache);
     TextMapState       tms(*matrix, constY);
     TextMapState::Proc tmsProc = tms.pickProc(scalarsPerPosition);
 
-    if (paint.isSubpixelText()) {
+    if (cache->isSubpixel()) {
         // maybe we should skip the rounding if linearText is set
         SkAxisAlignment roundBaseline = SkComputeAxisAlignmentForHText(*matrix);
 
@@ -1771,8 +1784,13 @@ void SkDraw::drawPosText(const char text[], size_t byteLength,
 
                 tmsProc(tms, pos);
 
+#ifdef SK_DRAW_POS_TEXT_IGNORE_SUBPIXEL_LEFT_ALIGN_FIX
                 SkFixed fx = SkScalarToFixed(tms.fLoc.fX);
                 SkFixed fy = SkScalarToFixed(tms.fLoc.fY);
+#else
+                SkFixed fx = SkScalarToFixed(tms.fLoc.fX) + (SK_FixedHalf >> SkGlyph::kSubBits);
+                SkFixed fy = SkScalarToFixed(tms.fLoc.fY) + (SK_FixedHalf >> SkGlyph::kSubBits);
+#endif
                 SkFixed fxMask = ~0;
                 SkFixed fyMask = ~0;
 
@@ -1807,8 +1825,8 @@ void SkDraw::drawPosText(const char text[], size_t byteLength,
                     {
                         SkIPoint fixedLoc;
                         alignProc(tms.fLoc, *glyph, &fixedLoc);
-                        fx = fixedLoc.fX;
-                        fy = fixedLoc.fY;
+                        fx = fixedLoc.fX + (SK_FixedHalf >> SkGlyph::kSubBits);
+                        fy = fixedLoc.fY + (SK_FixedHalf >> SkGlyph::kSubBits);
 
                         if (kX_SkAxisAlignment == roundBaseline) {
                             fyMask = 0;
@@ -1830,20 +1848,39 @@ void SkDraw::drawPosText(const char text[], size_t byteLength,
             }
         }
     } else {    // not subpixel
-        while (text < stop) {
-            // the last 2 parameters are ignored
-            const SkGlyph& glyph = glyphCacheProc(cache, &text, 0, 0);
+        if (SkPaint::kLeft_Align == paint.getTextAlign()) {
+            while (text < stop) {
+                // the last 2 parameters are ignored
+                const SkGlyph& glyph = glyphCacheProc(cache, &text, 0, 0);
+                
+                if (glyph.fWidth) {
+                    tmsProc(tms, pos);
 
-            if (glyph.fWidth) {
-                tmsProc(tms, pos);
-
-                SkIPoint fixedLoc;
-                alignProc(tms.fLoc, glyph, &fixedLoc);
-
-                proc(d1g, fixedLoc.fX + SK_FixedHalf,
-                     fixedLoc.fY + SK_FixedHalf, glyph);
+                    proc(d1g,
+                         SkScalarToFixed(tms.fLoc.fX) + SK_FixedHalf,
+                         SkScalarToFixed(tms.fLoc.fY) + SK_FixedHalf,
+                         glyph);
+                }
+                pos += scalarsPerPosition;
             }
-            pos += scalarsPerPosition;
+        } else {
+            while (text < stop) {
+                // the last 2 parameters are ignored
+                const SkGlyph& glyph = glyphCacheProc(cache, &text, 0, 0);
+
+                if (glyph.fWidth) {
+                    tmsProc(tms, pos);
+
+                    SkIPoint fixedLoc;
+                    alignProc(tms.fLoc, glyph, &fixedLoc);
+
+                    proc(d1g,
+                         fixedLoc.fX + SK_FixedHalf,
+                         fixedLoc.fY + SK_FixedHalf,
+                         glyph);
+                }
+                pos += scalarsPerPosition;
+            }
         }
     }
 }
@@ -1868,7 +1905,10 @@ static void morphpoints(SkPoint dst[], const SkPoint src[], int count,
         SkScalar sx = pos.fX;
         SkScalar sy = pos.fY;
 
-        meas.getPosTan(sx, &pos, &tangent);
+        if (!meas.getPosTan(sx, &pos, &tangent)) {
+            // set to 0 if the measure failed, so that we just set dst == pos
+            tangent.set(0, 0);
+        }
 
         /*  This is the old way (that explains our approach but is way too slow
             SkMatrix    matrix;
@@ -1938,7 +1978,7 @@ void SkDraw::drawTextOnPath(const char text[], size_t byteLength,
         return;
     }
 
-    SkTextToPathIter    iter(text, byteLength, paint, true, true);
+    SkTextToPathIter    iter(text, byteLength, paint, true);
     SkPathMeasure       meas(follow, false);
     SkScalar            hOffset = 0;
 
@@ -2195,18 +2235,15 @@ public:
 
     virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
 
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkTriColorShader)
+
 protected:
     SkTriColorShader(SkFlattenableReadBuffer& buffer) : SkShader(buffer) {}
-
-    virtual Factory getFactory() { return CreateProc; }
 
 private:
     SkMatrix    fDstToUnit;
     SkPMColor   fColors[3];
 
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer) {
-        return SkNEW_ARGS(SkTriColorShader, (buffer));
-    }
     typedef SkShader INHERITED;
 };
 
@@ -2571,7 +2608,8 @@ static bool compute_bounds(const SkPath& devPath, const SkIRect* clipBounds,
     return true;
 }
 
-static void draw_into_mask(const SkMask& mask, const SkPath& devPath) {
+static void draw_into_mask(const SkMask& mask, const SkPath& devPath,
+                           SkPaint::Style style) {
     SkBitmap        bm;
     SkDraw          draw;
     SkRasterClip    clip;
@@ -2591,12 +2629,14 @@ static void draw_into_mask(const SkMask& mask, const SkPath& devPath) {
     draw.fMatrix    = &matrix;
     draw.fBounder   = NULL;
     paint.setAntiAlias(true);
+    paint.setStyle(style);
     draw.drawPath(devPath, paint);
 }
 
 bool SkDraw::DrawToMask(const SkPath& devPath, const SkIRect* clipBounds,
                         SkMaskFilter* filter, const SkMatrix* filterMatrix,
-                        SkMask* mask, SkMask::CreateMode mode) {
+                        SkMask* mask, SkMask::CreateMode mode,
+                        SkPaint::Style style) {
     if (SkMask::kJustRenderImage_CreateMode != mode) {
         if (!compute_bounds(devPath, clipBounds, filter, filterMatrix, &mask->fBounds))
             return false;
@@ -2615,7 +2655,7 @@ bool SkDraw::DrawToMask(const SkPath& devPath, const SkIRect* clipBounds,
     }
 
     if (SkMask::kJustComputeBounds_CreateMode != mode) {
-        draw_into_mask(*mask, devPath);
+        draw_into_mask(*mask, devPath, style);
     }
 
     return true;

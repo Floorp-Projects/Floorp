@@ -13,6 +13,22 @@
 #include "SkBitmap.h"
 #include "SkMatrix.h"
 
+#define FractionalInt_IS_64BIT
+
+#ifdef FractionalInt_IS_64BIT
+    typedef SkFixed48    SkFractionalInt;
+    #define SkScalarToFractionalInt(x)  SkScalarToFixed48(x)
+    #define SkFractionalIntToFixed(x)   SkFixed48ToFixed(x)
+    #define SkFixedToFractionalInt(x)   SkFixedToFixed48(x)
+    #define SkFractionalIntToInt(x)     SkFixed48ToInt(x)
+#else
+    typedef SkFixed    SkFractionalInt;
+    #define SkScalarToFractionalInt(x)  SkScalarToFixed(x)
+    #define SkFractionalIntToFixed(x)   (x)
+    #define SkFixedToFractionalInt(x)   (x)
+    #define SkFractionalIntToInt(x)     ((x) >> 16)
+#endif
+
 class SkPaint;
 
 struct SkBitmapProcState {
@@ -39,23 +55,20 @@ struct SkBitmapProcState {
                                  uint16_t colors[]);
     
     typedef U16CPU (*FixedTileProc)(SkFixed);   // returns 0..0xFFFF
+    typedef U16CPU (*FixedTileLowBitsProc)(SkFixed, int);   // returns 0..0xF
     typedef U16CPU (*IntTileProc)(int value, int count);   // returns 0..count-1
-
-    // If a shader proc is present, then the corresponding matrix/sample procs
-    // are ignored
-    ShaderProc32        fShaderProc32;      // chooseProcs
-    ShaderProc16        fShaderProc16;      // chooseProcs
-    // These are used if the shaderproc is NULL
-    MatrixProc          fMatrixProc;        // chooseProcs
-    SampleProc32        fSampleProc32;      // chooseProcs
-    SampleProc16        fSampleProc16;      // chooseProcs
 
     const SkBitmap*     fBitmap;            // chooseProcs - orig or mip
     const SkMatrix*     fInvMatrix;         // chooseProcs
     SkMatrix::MapXYProc fInvProc;           // chooseProcs
 
+    SkFractionalInt     fInvSxFractionalInt;
+    SkFractionalInt     fInvKyFractionalInt;
+    
     FixedTileProc       fTileProcX;         // chooseProcs
     FixedTileProc       fTileProcY;         // chooseProcs
+    FixedTileLowBitsProc fTileLowBitsProcX; // chooseProcs
+    FixedTileLowBitsProc fTileLowBitsProcY; // chooseProcs
     IntTileProc         fIntTileProcY;      // chooseProcs
     SkFixed             fFilterOneX;
     SkFixed             fFilterOneY;
@@ -95,15 +108,40 @@ struct SkBitmapProcState {
      */
     int maxCountForBufferSize(size_t bufferSize) const;
 
+    // If a shader proc is present, then the corresponding matrix/sample procs
+    // are ignored
+    ShaderProc32 getShaderProc32() const { return fShaderProc32; }
+    ShaderProc16 getShaderProc16() const { return fShaderProc16; }
+
+#ifdef SK_DEBUG
+    MatrixProc getMatrixProc() const;
+#else
+    MatrixProc getMatrixProc() const { return fMatrixProc; }
+#endif
+    SampleProc32 getSampleProc32() const { return fSampleProc32; }
+    SampleProc16 getSampleProc16() const { return fSampleProc16; }
+
 private:
     friend class SkBitmapProcShader;
 
+    ShaderProc32        fShaderProc32;      // chooseProcs
+    ShaderProc16        fShaderProc16;      // chooseProcs
+    // These are used if the shaderproc is NULL
+    MatrixProc          fMatrixProc;        // chooseProcs
+    SampleProc32        fSampleProc32;      // chooseProcs
+    SampleProc16        fSampleProc16;      // chooseProcs
+    
     SkMatrix            fUnitInvMatrix;     // chooseProcs
     SkBitmap            fOrigBitmap;        // CONSTRUCTOR
     SkBitmap            fMipBitmap;
 
     MatrixProc chooseMatrixProc(bool trivial_matrix);
     bool chooseProcs(const SkMatrix& inv, const SkPaint&);
+
+#ifdef SK_DEBUG
+    static void DebugMatrixProc(const SkBitmapProcState&,
+                                uint32_t[], int count, int x, int y);
+#endif
 };
 
 /*  Macros for packing and unpacking pairs of 16bit values in a 32bit uint.
@@ -136,5 +174,17 @@ void S32_opaque_D32_filter_DX(const SkBitmapProcState& s, const uint32_t xy[],
                               int count, SkPMColor colors[]);
 void S32_alpha_D32_filter_DX(const SkBitmapProcState& s, const uint32_t xy[],
                              int count, SkPMColor colors[]);
+void S32_opaque_D32_filter_DXDY(const SkBitmapProcState& s, 
+                           const uint32_t xy[], int count, SkPMColor colors[]);  
+void S32_alpha_D32_filter_DXDY(const SkBitmapProcState& s, 
+                           const uint32_t xy[], int count, SkPMColor colors[]);
+void ClampX_ClampY_filter_scale(const SkBitmapProcState& s, uint32_t xy[],
+                                int count, int x, int y);
+void ClampX_ClampY_nofilter_scale(const SkBitmapProcState& s, uint32_t xy[],
+                                  int count, int x, int y);
+void ClampX_ClampY_filter_affine(const SkBitmapProcState& s,
+                                 uint32_t xy[], int count, int x, int y);
+void ClampX_ClampY_nofilter_affine(const SkBitmapProcState& s,
+                                   uint32_t xy[], int count, int x, int y);
 
 #endif

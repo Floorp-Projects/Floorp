@@ -60,11 +60,7 @@ void SkRectShape::onDraw(SkCanvas* canvas) {
     }
 }
 
-SkFlattenable::Factory SkRectShape::getFactory() {
-    return CreateProc;
-}
-
-void SkRectShape::flatten(SkFlattenableWriteBuffer& buffer) {
+void SkRectShape::flatten(SkFlattenableWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
 
     buffer.writeRect(fBounds);
@@ -76,13 +72,9 @@ SkRectShape::SkRectShape(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {
     buffer.read(&fRadii, sizeof(fRadii));
 }
 
-SkFlattenable* SkRectShape::CreateProc(SkFlattenableReadBuffer& buffer) {
-    return SkNEW_ARGS(SkRectShape, (buffer));
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkPaintShape::flatten(SkFlattenableWriteBuffer& buffer) {
+void SkPaintShape::flatten(SkFlattenableWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
     
     fPaint.flatten(buffer);

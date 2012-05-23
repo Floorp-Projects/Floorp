@@ -30,13 +30,14 @@
         abbreviated with 'i' or 'I' in variable names
     - supersampled coordinates, scale equal to the output * SCALE
 
-    NEW_AA is a set of code-changes to try to make both paths produce identical
-    results. Its not quite there yet, though the remaining differences may be
-    in the subsequent blits, and not in the different masks/runs...
+    Enabling SK_USE_LEGACY_AA_COVERAGE keeps the aa coverage calculations as
+    they were before the fix that unified the output of the RLE and MASK
+    supersamplers.
  */
+
 //#define FORCE_SUPERMASK
 //#define FORCE_RLE
-#define SK_SUPPORT_NEW_AA
+//#define SK_USE_LEGACY_AA_COVERAGE
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -78,11 +79,13 @@ BaseSuperBlitter::BaseSuperBlitter(SkBlitter* realBlitter, const SkIRect& ir,
                                    const SkRegion& clip) {
     fRealBlitter = realBlitter;
 
-    // take the union of the ir bounds and clip, since we may be called with an
-    // inverse filltype
-    const int left = SkMin32(ir.fLeft, clip.getBounds().fLeft);
-    const int right = SkMax32(ir.fRight, clip.getBounds().fRight);
-
+    /*
+     *  We use the clip bounds instead of the ir, since we may be asked to
+     *  draw outside of the rect if we're a inverse filltype
+     */
+    const int left = clip.getBounds().fLeft;
+    const int right = clip.getBounds().fRight;
+    
     fLeft = left;
     fSuperLeft = left << SHIFT;
     fWidth = right - left;
@@ -150,12 +153,23 @@ void SuperBlitter::flush() {
     }
 }
 
-static inline int coverage_to_alpha(int aa) {
+/** coverage_to_partial_alpha() is being used by SkAlphaRuns, which
+    *accumulates* SCALE pixels worth of "alpha" in [0,(256/SCALE)]
+    to produce a final value in [0, 255] and handles clamping 256->255
+    itself, with the same (alpha - (alpha >> 8)) correction as
+    coverage_to_exact_alpha().
+*/
+static inline int coverage_to_partial_alpha(int aa) {
     aa <<= 8 - 2*SHIFT;
+#ifdef SK_USE_LEGACY_AA_COVERAGE
     aa -= aa >> (8 - SHIFT - 1);
+#endif
     return aa;
 }
 
+/** coverage_to_exact_alpha() is being used by our blitter, which wants
+    a final value in [0, 255].
+*/
 static inline int coverage_to_exact_alpha(int aa) {
     int alpha = (256 >> SHIFT) * aa;
     // clamp 256->255
@@ -210,9 +224,8 @@ void SuperBlitter::blitH(int x, int y, int width) {
         }
     }
 
-    // TODO - should this be using coverage_to_exact_alpha?
-    fOffsetX = fRuns.add(x >> SHIFT, coverage_to_alpha(fb),
-                         n, coverage_to_alpha(fe),
+    fOffsetX = fRuns.add(x >> SHIFT, coverage_to_partial_alpha(fb),
+                         n, coverage_to_partial_alpha(fe),
                          (1 << (8 - SHIFT)) - (((y & MASK) + 1) >> SHIFT),
                          fOffsetX);
 
@@ -372,10 +385,12 @@ public:
         return false;
 #endif
         int width = bounds.width();
-        int rb = SkAlign4(width);
+        int64_t rb = SkAlign4(width);
+        // use 64bits to detect overflow
+        int64_t storage = rb * bounds.height();
 
         return (width <= MaskSuperBlitter::kMAX_WIDTH) &&
-        (rb * bounds.height() <= MaskSuperBlitter::kMAX_STORAGE);
+               (storage <= MaskSuperBlitter::kMAX_STORAGE);
     }
 
 private:
@@ -405,7 +420,7 @@ MaskSuperBlitter::MaskSuperBlitter(SkBlitter* realBlitter, const SkIRect& ir,
     fMask.fBounds   = ir;
     fMask.fRowBytes = ir.width();
     fMask.fFormat   = SkMask::kA8_Format;
-
+            
     fClipRect = ir;
     fClipRect.intersect(clip.getBounds());
 
@@ -430,6 +445,17 @@ static inline uint32_t quadplicate_byte(U8CPU value) {
     return (pair << 16) | pair;
 }
 
+// Perform this tricky subtract, to avoid overflowing to 256. Our caller should
+// only ever call us with at most enough to hit 256 (never larger), so it is
+// enough to just subtract the high-bit. Actually clamping with a branch would
+// be slower (e.g. if (tmp > 255) tmp = 255;)
+//
+static inline void saturated_add(uint8_t* ptr, U8CPU add) {
+    unsigned tmp = *ptr + add;
+    SkASSERT(tmp <= 256);
+    *ptr = SkToU8(tmp - (tmp >> 8));
+}
+
 // minimum count before we want to setup an inner loop, adding 4-at-a-time
 #define MIN_COUNT_FOR_QUAD_LOOP  16
 
@@ -437,22 +463,8 @@ static void add_aa_span(uint8_t* alpha, U8CPU startAlpha, int middleCount,
                         U8CPU stopAlpha, U8CPU maxValue) {
     SkASSERT(middleCount >= 0);
 
-    /*  I should be able to just add alpha[x] + startAlpha.
-        However, if the trailing edge of the previous span and the leading
-        edge of the current span round to the same super-sampled x value,
-        I might overflow to 256 with this add, hence the funny subtract.
-    */
-#ifdef SK_SUPPORT_NEW_AA
-    if (startAlpha) {
-        unsigned tmp = *alpha + startAlpha;
-        SkASSERT(tmp <= 256);
-        *alpha++ = SkToU8(tmp - (tmp >> 8));
-    }
-#else
-    unsigned tmp = *alpha + startAlpha;
-    SkASSERT(tmp <= 256);
-    *alpha++ = SkToU8(tmp - (tmp >> 8));
-#endif
+    saturated_add(alpha, startAlpha);
+    alpha += 1;
 
     if (middleCount >= MIN_COUNT_FOR_QUAD_LOOP) {
         // loop until we're quad-byte aligned
@@ -483,7 +495,7 @@ static void add_aa_span(uint8_t* alpha, U8CPU startAlpha, int middleCount,
     // only happens if stopAlpha is also 0. Rather than test for stopAlpha != 0
     // every time (slow), we just do it, and ensure that we've allocated extra space
     // (see the + 1 comment in fStorage[]
-    *alpha = SkToU8(*alpha + stopAlpha);
+    saturated_add(alpha, stopAlpha);
 }
 
 void MaskSuperBlitter::blitH(int x, int y, int width) {
@@ -528,20 +540,13 @@ void MaskSuperBlitter::blitH(int x, int y, int width) {
     if (n < 0) {
         SkASSERT(row >= fMask.fImage);
         SkASSERT(row < fMask.fImage + kMAX_STORAGE + 1);
-        add_aa_span(row, coverage_to_alpha(fe - fb));
+        add_aa_span(row, coverage_to_partial_alpha(fe - fb));
     } else {
-#ifdef SK_SUPPORT_NEW_AA
-        if (0 == fb) {
-            n += 1;
-        } else {
-            fb = SCALE - fb;
-        }
-#else
         fb = SCALE - fb;
-#endif
         SkASSERT(row >= fMask.fImage);
         SkASSERT(row + n + 1 < fMask.fImage + kMAX_STORAGE + 1);
-        add_aa_span(row,  coverage_to_alpha(fb), n, coverage_to_alpha(fe),
+        add_aa_span(row,  coverage_to_partial_alpha(fb),
+                    n, coverage_to_partial_alpha(fe),
                     (1 << (8 - SHIFT)) - (((y & MASK) + 1) >> SHIFT));
     }
 
@@ -552,47 +557,115 @@ void MaskSuperBlitter::blitH(int x, int y, int width) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/*  Returns non-zero if (value << shift) overflows a short, which would mean
-    we could not shift it up and then convert to SkFixed.
-    i.e. is x expressible as signed (16-shift) bits?
- */
+static bool fitsInsideLimit(const SkRect& r, SkScalar max) {
+    const SkScalar min = -max;
+    return  r.fLeft > min && r.fTop > min &&
+            r.fRight < max && r.fBottom < max;
+}
+
 static int overflows_short_shift(int value, int shift) {
     const int s = 16 + shift;
     return (value << s >> s) - value;
 }
 
-void SkScan::AntiFillPath(const SkPath& path, const SkRegion& clip,
+/**
+  Would any of the coordinates of this rectangle not fit in a short,
+  when left-shifted by shift?
+*/
+static int rect_overflows_short_shift(SkIRect rect, int shift) {
+    SkASSERT(!overflows_short_shift(8191, SHIFT));
+    SkASSERT(overflows_short_shift(8192, SHIFT));
+    SkASSERT(!overflows_short_shift(32767, 0));
+    SkASSERT(overflows_short_shift(32768, 0));
+
+    // Since we expect these to succeed, we bit-or together
+    // for a tiny extra bit of speed.
+    return overflows_short_shift(rect.fLeft, SHIFT) |
+           overflows_short_shift(rect.fRight, SHIFT) |
+           overflows_short_shift(rect.fTop, SHIFT) |
+           overflows_short_shift(rect.fBottom, SHIFT);
+}
+
+static bool safeRoundOut(const SkRect& src, SkIRect* dst, int32_t maxInt) {
+#ifdef SK_SCALAR_IS_FIXED
+    // the max-int (shifted) is exactly what we want to compare against, to know
+    // if we can survive shifting our fixed-point coordinates
+    const SkFixed maxScalar = maxInt;
+#else
+    const SkScalar maxScalar = SkIntToScalar(maxInt);
+#endif
+    if (fitsInsideLimit(src, maxScalar)) {
+        src.roundOut(dst);
+        return true;
+    }
+    return false;
+}
+
+void SkScan::AntiFillPath(const SkPath& path, const SkRegion& origClip,
                           SkBlitter* blitter, bool forceRLE) {
-    if (clip.isEmpty()) {
+    if (origClip.isEmpty()) {
         return;
     }
 
     SkIRect ir;
-    path.getBounds().roundOut(&ir);
+
+    if (!safeRoundOut(path.getBounds(), &ir, SK_MaxS32 >> SHIFT)) {
+#if 0
+        const SkRect& r = path.getBounds();
+        SkDebugf("--- bounds can't fit in SkIRect\n", r.fLeft, r.fTop, r.fRight, r.fBottom);
+#endif
+        return;
+    }
     if (ir.isEmpty()) {
         if (path.isInverseFillType()) {
-            blitter->blitRegion(clip);
+            blitter->blitRegion(origClip);
         }
         return;
     }
 
-    // use bit-or since we expect all to pass, so no need to go slower with
-    // a short-circuiting logical-or
-    if (overflows_short_shift(ir.fLeft, SHIFT) |
-            overflows_short_shift(ir.fRight, SHIFT) |
-            overflows_short_shift(ir.fTop, SHIFT) |
-            overflows_short_shift(ir.fBottom, SHIFT)) {
-        // can't supersample, so draw w/o antialiasing
-        SkScan::FillPath(path, clip, blitter);
+    // If the intersection of the path bounds and the clip bounds
+    // will overflow 32767 when << by SHIFT, we can't supersample,
+    // so draw without antialiasing.
+    SkIRect clippedIR;
+    if (path.isInverseFillType()) {
+       // If the path is an inverse fill, it's going to fill the entire
+       // clip, and we care whether the entire clip exceeds our limits.
+       clippedIR = origClip.getBounds();
+    } else {
+       if (!clippedIR.intersect(ir, origClip.getBounds())) {
+           return;
+       }
+    }
+    if (rect_overflows_short_shift(clippedIR, SHIFT)) {
+        SkScan::FillPath(path, origClip, blitter);
         return;
     }
 
-    SkScanClipper   clipper(blitter, &clip, ir);
+    // Our antialiasing can't handle a clip larger than 32767, so we restrict
+    // the clip to that limit here. (the runs[] uses int16_t for its index).
+    //
+    // A more general solution (one that could also eliminate the need to
+    // disable aa based on ir bounds (see overflows_short_shift) would be
+    // to tile the clip/target...
+    SkRegion tmpClipStorage;
+    const SkRegion* clipRgn = &origClip;
+    {
+        static const int32_t kMaxClipCoord = 32767;
+        const SkIRect& bounds = origClip.getBounds();
+        if (bounds.fRight > kMaxClipCoord || bounds.fBottom > kMaxClipCoord) {
+            SkIRect limit = { 0, 0, kMaxClipCoord, kMaxClipCoord };
+            tmpClipStorage.op(origClip, limit, SkRegion::kIntersect_Op);
+            clipRgn = &tmpClipStorage;
+        }
+    }
+    // for here down, use clipRgn, not origClip
+
+    SkScanClipper   clipper(blitter, clipRgn, ir);
     const SkIRect*  clipRect = clipper.getClipRect();
 
     if (clipper.getBlitter() == NULL) { // clipped out
         if (path.isInverseFillType()) {
-            blitter->blitRegion(clip);
+            blitter->blitRegion(*clipRgn);
         }
         return;
     }
@@ -601,7 +674,7 @@ void SkScan::AntiFillPath(const SkPath& path, const SkRegion& clip,
     blitter = clipper.getBlitter();
 
     if (path.isInverseFillType()) {
-        sk_blit_above(blitter, ir, clip);
+        sk_blit_above(blitter, ir, *clipRgn);
     }
 
     SkIRect superRect, *superClipRect = NULL;
@@ -617,16 +690,16 @@ void SkScan::AntiFillPath(const SkPath& path, const SkRegion& clip,
     // MaskSuperBlitter can't handle drawing outside of ir, so we can't use it
     // if we're an inverse filltype
     if (!path.isInverseFillType() && MaskSuperBlitter::CanHandleRect(ir) && !forceRLE) {
-        MaskSuperBlitter    superBlit(blitter, ir, clip);
+        MaskSuperBlitter    superBlit(blitter, ir, *clipRgn);
         SkASSERT(SkIntToScalar(ir.fTop) <= path.getBounds().fTop);
-        sk_fill_path(path, superClipRect, &superBlit, ir.fTop, ir.fBottom, SHIFT, clip);
+        sk_fill_path(path, superClipRect, &superBlit, ir.fTop, ir.fBottom, SHIFT, *clipRgn);
     } else {
-        SuperBlitter    superBlit(blitter, ir, clip);
-        sk_fill_path(path, superClipRect, &superBlit, ir.fTop, ir.fBottom, SHIFT, clip);
+        SuperBlitter    superBlit(blitter, ir, *clipRgn);
+        sk_fill_path(path, superClipRect, &superBlit, ir.fTop, ir.fBottom, SHIFT, *clipRgn);
     }
 
     if (path.isInverseFillType()) {
-        sk_blit_below(blitter, ir, clip);
+        sk_blit_below(blitter, ir, *clipRgn);
     }
 }
 

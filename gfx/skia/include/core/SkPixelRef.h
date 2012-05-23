@@ -13,34 +13,14 @@
 #include "SkBitmap.h"
 #include "SkRefCnt.h"
 #include "SkString.h"
+#include "SkFlattenable.h"
 
 class SkColorTable;
 struct SkIRect;
 class SkMutex;
-class SkFlattenableReadBuffer;
-class SkFlattenableWriteBuffer;
 
 // this is an opaque class, not interpreted by skia
 class SkGpuTexture;
-
-#if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
-
-#define SK_DECLARE_PIXEL_REF_REGISTRAR() 
-
-#define SK_DEFINE_PIXEL_REF_REGISTRAR(pixelRef) \
-    static SkPixelRef::Registrar g##pixelRef##Reg(#pixelRef, \
-                                                  pixelRef::Create);
-                                                      
-#else
-
-#define SK_DECLARE_PIXEL_REF_REGISTRAR() static void Init();
-
-#define SK_DEFINE_PIXEL_REF_REGISTRAR(pixelRef) \
-    void pixelRef::Init() { \
-        SkPixelRef::Registrar(#pixelRef, Create); \
-    }
-
-#endif
 
 /** \class SkPixelRef
 
@@ -50,9 +30,9 @@ class SkGpuTexture;
 
     This class can be shared/accessed between multiple threads.
 */
-class SkPixelRef : public SkRefCnt {
+class SK_API SkPixelRef : public SkFlattenable {
 public:
-    explicit SkPixelRef(SkMutex* mutex = NULL);
+    explicit SkPixelRef(SkBaseMutex* mutex = NULL);
 
     /** Return the pixel memory returned from lockPixels, or null if the
         lockCount is 0.
@@ -63,9 +43,10 @@ public:
     */
     SkColorTable* colorTable() const { return fColorTable; }
 
-    /** Return the current lockcount (defaults to 0)
-    */
-    int getLockCount() const { return fLockCount; }
+    /**
+     *  Returns true if the lockcount > 0
+     */
+    bool isLocked() const { return fLockCount > 0; }
 
     /** Call to access the pixel memory, which is returned. Balance with a call
         to unlockPixels().
@@ -142,13 +123,6 @@ public:
         support deep copies.  */
     virtual SkPixelRef* deepCopy(SkBitmap::Config config) { return NULL; }
 
-    // serialization
-
-    typedef SkPixelRef* (*Factory)(SkFlattenableReadBuffer&);
-
-    virtual Factory getFactory() const { return NULL; }
-    virtual void flatten(SkFlattenableWriteBuffer&) const;
-
 #ifdef SK_BUILD_FOR_ANDROID
     /**
      *  Acquire a "global" ref on this object.
@@ -164,17 +138,6 @@ public:
      */
     virtual void globalUnref();
 #endif
-
-    static Factory NameToFactory(const char name[]);
-    static const char* FactoryToName(Factory);
-    static void Register(const char name[], Factory);
-
-    class Registrar {
-    public:
-        Registrar(const char name[], Factory factory) {
-            SkPixelRef::Register(name, factory);
-        }
-    };
 
 protected:
     /** Called when the lockCount goes from 0 to 1. The caller will have already
@@ -201,16 +164,27 @@ protected:
     /** Return the mutex associated with this pixelref. This value is assigned
         in the constructor, and cannot change during the lifetime of the object.
     */
-    SkMutex* mutex() const { return fMutex; }
+    SkBaseMutex* mutex() const { return fMutex; }
 
-    SkPixelRef(SkFlattenableReadBuffer&, SkMutex*);
+    // serialization
+    SkPixelRef(SkFlattenableReadBuffer&, SkBaseMutex*);
+    virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
+
+    // only call from constructor. Flags this to always be locked, removing
+    // the need to grab the mutex and call onLockPixels/onUnlockPixels.
+    // Performance tweak to avoid those calls (esp. in multi-thread use case).
+    void setPreLocked(void* pixels, SkColorTable* ctable);
+
+    /**
+     *  If a subclass passed a particular mutex to the base constructor, it can
+     *  override that to go back to the default mutex by calling this. However,
+     *  this should only be called from within the subclass' constructor.
+     */
+    void useDefaultMutex() { this->setMutex(NULL); }
 
 private:
-#if !SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
-    static void InitializeFlattenables();
-#endif
 
-    SkMutex*        fMutex; // must remain in scope for the life of this object
+    SkBaseMutex*    fMutex; // must remain in scope for the life of this object
     void*           fPixels;
     SkColorTable*   fColorTable;    // we do not track ownership, subclass does
     int             fLockCount;
@@ -221,8 +195,12 @@ private:
 
     // can go from false to true, but never from true to false
     bool    fIsImmutable;
+    // only ever set in constructor, const after that
+    bool    fPreLocked;
 
-    friend class SkGraphics;
+    void setMutex(SkBaseMutex* mutex);
+
+    typedef SkFlattenable INHERITED;
 };
 
 #endif

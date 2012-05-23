@@ -16,6 +16,7 @@
 #include "SkRefCnt.h"
 
 struct SkIRect;
+struct SkRect;
 class SkColorTable;
 class SkPaint;
 class SkPixelRef;
@@ -63,16 +64,21 @@ public:
         kConfigCount
     };
 
-    /** Default construct creates a bitmap with zero width and height, and no pixels.
-        Its config is set to kNo_Config.
-    */
+    /**
+     *  Default construct creates a bitmap with zero width and height, and no pixels.
+     *  Its config is set to kNo_Config.
+     */
     SkBitmap();
-    /** Constructor initializes the new bitmap by copying the src bitmap. All fields are copied,
-        but ownership of the pixels remains with the src bitmap.
-    */
+
+    /**
+     *  Copy the settings from the src into this bitmap. If the src has pixels
+     *  allocated, they will be shared, not copied, so that the two bitmaps will
+     *  reference the same memory for the pixels. If a deep copy is needed,
+     *  where the new bitmap has its own separate copy of the pixels, use
+     *  deepCopyTo().
+     */
     SkBitmap(const SkBitmap& src);
-    /** Decrements our (shared) pixel ownership if needed.
-    */
+
     ~SkBitmap();
 
     /** Copies the src bitmap into this bitmap. Ownership of the src bitmap's pixels remains
@@ -217,6 +223,12 @@ public:
 
     static Sk64 ComputeSize64(Config, int width, int height);
     static size_t ComputeSize(Config, int width, int height);
+
+    /**
+     *  Return the bitmap's bounds [0, 0, width, height] as an SkRect
+     */
+    void getBounds(SkRect* bounds) const;
+    void getBounds(SkIRect* bounds) const;
 
     /** Set the bitmap's config and dimensions. If rowBytes is 0, then
         ComputeRowBytes() is called to compute the optimal value. This resets
