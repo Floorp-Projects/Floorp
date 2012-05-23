@@ -69,7 +69,7 @@ WebGLProgram::UpdateInfo()
  */
 
 bool
-WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
+WebGLContext::ValidateBuffers(int32_t *maxAllowedCount, const char *info)
 {
 #ifdef DEBUG
     GLint currentProgram = 0;
@@ -83,8 +83,8 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
 
     *maxAllowedCount = -1;
 
-    PRUint32 attribs = mAttribBuffers.Length();
-    for (PRUint32 i = 0; i < attribs; ++i) {
+    uint32_t attribs = mAttribBuffers.Length();
+    for (uint32_t i = 0; i < attribs; ++i) {
         const WebGLVertexAttribData& vd = mAttribBuffers[i];
 
         // If the attrib array isn't enabled, there's nothing to check;
@@ -310,7 +310,7 @@ bool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
 
 bool WebGLContext::ValidateGLSLVariableName(const nsAString& name, const char *info)
 {
-    const PRUint32 maxSize = 256;
+    const uint32_t maxSize = 256;
     if (name.Length() > maxSize) {
         ErrorInvalidValue("%s: identifier is %d characters long, exceeds the maximum allowed length of %d characters",
                           info, name.Length(), maxSize);
@@ -326,7 +326,7 @@ bool WebGLContext::ValidateGLSLVariableName(const nsAString& name, const char *i
 
 bool WebGLContext::ValidateGLSLString(const nsAString& string, const char *info)
 {
-    for (PRUint32 i = 0; i < string.Length(); ++i) {
+    for (uint32_t i = 0; i < string.Length(); ++i) {
         if (!ValidateGLSLCharacter(string.CharAt(i))) {
              ErrorInvalidValue("%s: string contains the illegal character '%d'", info, string.CharAt(i));
              return false;
@@ -444,7 +444,7 @@ bool WebGLContext::ValidateLevelWidthHeightForTarget(WebGLenum target, WebGLint 
     return true;
 }
 
-PRUint32 WebGLContext::GetBitsPerTexel(WebGLenum format, WebGLenum type)
+uint32_t WebGLContext::GetBitsPerTexel(WebGLenum format, WebGLenum type)
 {
     if (type == LOCAL_GL_UNSIGNED_BYTE || type == LOCAL_GL_FLOAT) {
         int multiplier = type == LOCAL_GL_FLOAT ? 32 : 8;
@@ -479,7 +479,7 @@ PRUint32 WebGLContext::GetBitsPerTexel(WebGLenum format, WebGLenum type)
 }
 
 bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, int jsArrayType,
-                                              PRUint32 *texelSize, const char *info)
+                                              uint32_t *texelSize, const char *info)
 {
     if (type == LOCAL_GL_UNSIGNED_BYTE ||
         (IsExtensionEnabled(WebGL_OES_texture_float) && type == LOCAL_GL_FLOAT))
