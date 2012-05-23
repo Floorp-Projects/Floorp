@@ -106,9 +106,6 @@ const browserFrameHelpers = {
   'emptyPage2': 'http://example.org' +
                 window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) +
                 '/file_empty.html',
-  'focusPage': 'http://example.org' +
-                window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) +
-                '/file_focus.html',
 };
 
 browserFrameHelpers.origEnabledPref = browserFrameHelpers.getEnabledPref();
