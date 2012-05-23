@@ -7,7 +7,11 @@
  */
 #include "SkNWayCanvas.h"
 
-SkNWayCanvas::SkNWayCanvas() {}
+SkNWayCanvas::SkNWayCanvas(int width, int height) {
+    SkBitmap bm;
+    bm.setConfig(SkBitmap::kNo_Config, width, height);
+    this->setBitmapDevice(bm);
+}
 
 SkNWayCanvas::~SkNWayCanvas() {
     this->removeAll();
@@ -49,7 +53,7 @@ public:
         return false;
     }
     SkCanvas* operator->() { return fCanvas; }
-    
+
 private:
     const SkTDArray<SkCanvas*>& fList;
     int fIndex;

@@ -79,7 +79,7 @@ public:
      * @param height        height of rectangle to write in pixels.
      * @param config        the pixel config of the source buffer
      * @param buffer        memory to read pixels from
-     * @param rowBytes      number of bytes bewtween consecutive rows. Zero
+     * @param rowBytes      number of bytes between consecutive rows. Zero
      *                      means rows are tightly packed.
      */
     void writePixels(int left, int top, int width, int height,
@@ -94,6 +94,7 @@ public:
      *            render target
      */
     GrRenderTarget* asRenderTarget() { return fRenderTarget; }
+    const GrRenderTarget* asRenderTarget() const { return fRenderTarget; }
 
     /**
      * Removes the reference on the associated GrRenderTarget held by this

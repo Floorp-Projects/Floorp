@@ -153,7 +153,10 @@ static inline bool SkIsPow2(int value) {
     With this requirement, we can generate faster instructions on some
     architectures.
 */
-#ifdef SK_ARM_HAS_EDSP
+#if defined(__arm__) \
+  && !defined(__thumb__) \
+  && !defined(__ARM_ARCH_4T__) \
+  && !defined(__ARM_ARCH_5T__)
     static inline int32_t SkMulS16(S16CPU x, S16CPU y) {
         SkASSERT((int16_t)x == x);
         SkASSERT((int16_t)y == y);

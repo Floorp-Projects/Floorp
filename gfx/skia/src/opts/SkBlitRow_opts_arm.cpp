@@ -29,8 +29,9 @@ static void S32A_D565_Opaque_neon(uint16_t* SK_RESTRICT dst,
                       "vmov.u8    d31, #1<<7                  \n\t"
                       "vld1.16    {q12}, [%[dst]]             \n\t"
                       "vld4.8     {d0-d3}, [%[src]]           \n\t"
-                      // Thumb does not support the standard ARM conditional instructions but
-                      // instead requires the 'it' instruction to signal conditional execution.
+                      // Thumb does not support the standard ARM conditional
+                      // instructions but instead requires the 'it' instruction
+                      // to signal conditional execution
                       "it eq                                  \n\t"
                       "moveq      ip, #8                      \n\t"
                       "mov        %[keep_dst], %[dst]         \n\t"
@@ -553,7 +554,7 @@ static void S32A_Opaque_BlitRow32_neon(SkPMColor* SK_RESTRICT dst,
 #error The ARM asm version of S32A_Opaque_BlitRow32 does not support TEST_SRC_ALPHA
 #endif
 
-static void  __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Opaque_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
+static void S32A_Opaque_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
                                   const SkPMColor* SK_RESTRICT src,
                                   int count, U8CPU alpha) {
 
@@ -650,7 +651,7 @@ static void  __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Opaqu
 /*
  * ARM asm version of S32A_Blend_BlitRow32
  */
-static void __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Blend_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
+static void S32A_Blend_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
                                  const SkPMColor* SK_RESTRICT src,
                                  int count, U8CPU alpha) {
     asm volatile (
@@ -674,13 +675,8 @@ static void __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Blend_
                   /* dst1_scale and dst2_scale*/
                   "lsr    r9, r5, #24                \n\t" /* src >> 24 */
                   "lsr    r10, r6, #24               \n\t" /* src >> 24 */
-#ifdef SK_ARM_HAS_EDSP
                   "smulbb r9, r9, %[alpha]           \n\t" /* r9 = SkMulS16 r9 with src_scale */
                   "smulbb r10, r10, %[alpha]         \n\t" /* r10 = SkMulS16 r10 with src_scale */
-#else
-                  "mul    r9, r9, %[alpha]           \n\t" /* r9 = SkMulS16 r9 with src_scale */
-                  "mul    r10, r10, %[alpha]         \n\t" /* r10 = SkMulS16 r10 with src_scale */
-#endif
                   "lsr    r9, r9, #8                 \n\t" /* r9 >> 8 */
                   "lsr    r10, r10, #8               \n\t" /* r10 >> 8 */
                   "rsb    r9, r9, #256               \n\t" /* dst1_scale = r9 = 255 - r9 + 1 */
@@ -749,11 +745,7 @@ static void __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Blend_
 
                   "lsr    r6, r5, #24                \n\t" /* src >> 24 */
                   "and    r8, r12, r5, lsr #8        \n\t" /* ag = r8 = r5 masked by r12 lsr by #8 */
-#ifdef SK_ARM_HAS_EDSP
                   "smulbb r6, r6, %[alpha]           \n\t" /* r6 = SkMulS16 with src_scale */
-#else
-                  "mul    r6, r6, %[alpha]           \n\t" /* r6 = SkMulS16 with src_scale */
-#endif
                   "and    r9, r12, r5                \n\t" /* rb = r9 = r5 masked by r12 */
                   "lsr    r6, r6, #8                 \n\t" /* r6 >> 8 */
                   "mul    r8, r8, %[alpha]           \n\t" /* ag = r8 times scale */
@@ -1000,7 +992,7 @@ static void S32A_D565_Opaque_Dither_neon (uint16_t * SK_RESTRICT dst,
 
 	    /* calculate 'd', which will be 0..7 */
 	    /* dbase[] is 0..7; alpha is 0..256; 16 bits suffice */
-#if SK_BUILD_FOR_ANDROID
+#if defined(SK_BUILD_FOR_ANDROID)
 	    /* SkAlpha255To256() semantic a+1 vs a+a>>7 */
 	    alpha8 = vaddw_u8(vmovl_u8(sa), vdup_n_u8(1));
 #else
@@ -1322,6 +1314,10 @@ SkBlitRow::ColorProc SkBlitRow::PlatformColorProc() {
 SkBlitMask::ColorProc SkBlitMask::PlatformColorProcs(SkBitmap::Config dstConfig,
                                                      SkMask::Format maskFormat,
                                                      SkColor color) {
+    return NULL;
+}
+
+SkBlitMask::BlitLCD16RowProc SkBlitMask::PlatformBlitRowProcs16(bool isOpaque) {
     return NULL;
 }
 

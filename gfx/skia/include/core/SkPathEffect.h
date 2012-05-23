@@ -34,11 +34,21 @@ public:
     */
     virtual bool filterPath(SkPath* dst, const SkPath& src, SkScalar* width) = 0;
 
-    SK_DECLARE_FLATTENABLE_REGISTRAR()
+    /**
+     *  Compute a conservative bounds for its effect, given the src bounds.
+     *  The baseline implementation just assigns src to dst.
+     */
+    virtual void computeFastBounds(SkRect* dst, const SkRect& src);
+
+protected:
+    SkPathEffect(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {}
+
 private:
     // illegal
     SkPathEffect(const SkPathEffect&);
     SkPathEffect& operator=(const SkPathEffect&);
+
+    typedef SkFlattenable INHERITED;
 };
 
 /** \class SkPairPathEffect
@@ -54,7 +64,8 @@ public:
 
 protected:
     SkPairPathEffect(SkFlattenableReadBuffer&);
-    virtual void flatten(SkFlattenableWriteBuffer&) SK_OVERRIDE;
+    virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
+
     // these are visible to our subclasses
     SkPathEffect* fPE0, *fPE1;
     
@@ -81,16 +92,12 @@ public:
     
     virtual bool filterPath(SkPath* dst, const SkPath& src, SkScalar* width);
 
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer) {
-        return SkNEW_ARGS(SkComposePathEffect, (buffer));
-    }
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkComposePathEffect)
 
 protected:
-    virtual Factory getFactory() SK_OVERRIDE { return CreateProc; }
-
-private:
     SkComposePathEffect(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {}
 
+private:
     // illegal
     SkComposePathEffect(const SkComposePathEffect&);
     SkComposePathEffect& operator=(const SkComposePathEffect&);
@@ -116,16 +123,12 @@ public:
     // overrides
     virtual bool filterPath(SkPath* dst, const SkPath& src, SkScalar* width);
 
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer)  {
-        return SkNEW_ARGS(SkSumPathEffect, (buffer));
-    }
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkSumPathEffect)
 
 protected:
-    virtual Factory getFactory() SK_OVERRIDE { return CreateProc; }
-
-private:
     SkSumPathEffect(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {}
 
+private:
     // illegal
     SkSumPathEffect(const SkSumPathEffect&);
     SkSumPathEffect& operator=(const SkSumPathEffect&);

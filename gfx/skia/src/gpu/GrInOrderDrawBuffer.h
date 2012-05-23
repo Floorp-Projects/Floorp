@@ -53,13 +53,6 @@ public:
     virtual ~GrInOrderDrawBuffer();
 
     /**
-     * Copies the draw state and clip from target to this draw buffer.
-     *
-     * @param target    the target whose clip and state should be copied.
-     */
-    void initializeDrawStateAndClip(const GrDrawTarget& target);
-
-    /**
      * Provides the buffer with an index buffer that can be used for quad rendering.
      * The buffer may be able to batch consecutive drawRects if this is provided.
      * @param indexBuffer   index buffer with quad indices.
@@ -67,32 +60,65 @@ public:
     void setQuadIndexBuffer(const GrIndexBuffer* indexBuffer);
 
     /**
-     * Empties the draw buffer of any queued up draws.
+     * Empties the draw buffer of any queued up draws. This must not be called
+     * while inside an unbalanced pushGeometrySource().
      */
     void reset();
 
     /**
-     * plays the queued up draws to another target. Does not empty this buffer so
-     * that it can be played back multiple times.
+     * plays the queued up draws to another target. Does not empty this buffer
+     * so that it can be played back multiple times. This buffer must not have
+     * an active reserved vertex or index source. Any reserved geometry on
+     * the target will be finalized because it's geometry source will be pushed
+     * before playback and popped afterwards.
+     *
      * @param target    the target to receive the playback
      */
     void playback(GrDrawTarget* target);
-    
+
+    /**
+     * A convenience method to do a playback followed by a reset. All the
+     * constraints and side-effects or playback() and reset apply().
+     */
+    void flushTo(GrDrawTarget* target) {
+        this->playback(target);
+        this->reset();
+    }
+
+    /**
+     * This function allows the draw buffer to automatically flush itself to
+     * another target. This means the buffer may internally call 
+     * this->flushTo(target) when it is safe to do so.
+     * 
+     * When the auto flush target is set to NULL (as it initially is) the draw
+     * buffer will never automatically flush itself.
+     */
+    void setAutoFlushTarget(GrDrawTarget* target);
+
     // overrides from GrDrawTarget
     virtual void drawRect(const GrRect& rect, 
                           const GrMatrix* matrix = NULL,
                           StageMask stageEnableMask = 0,
                           const GrRect* srcRects[] = NULL,
-                          const GrMatrix* srcMatrices[] = NULL);
+                          const GrMatrix* srcMatrices[] = NULL) SK_OVERRIDE;
+
+    virtual void drawIndexedInstances(GrPrimitiveType type,
+                                      int instanceCount,
+                                      int verticesPerInstance,
+                                      int indicesPerInstance)
+                                      SK_OVERRIDE;
 
     virtual bool geometryHints(GrVertexLayout vertexLayout,
                                int* vertexCount,
-                               int* indexCount) const;
+                               int* indexCount) const SK_OVERRIDE;
 
-    virtual void clear(const GrIRect* rect, GrColor color);
+    virtual void clear(const GrIRect* rect, GrColor color) SK_OVERRIDE;
 
+protected:
+    virtual void willReserveVertexAndIndexSpace(GrVertexLayout vertexLayout,
+                                                int vertexCount,
+                                                int indexCount) SK_OVERRIDE;
 private:
-
     struct Draw {
         GrPrimitiveType         fPrimitiveType;
         int                     fStartVertex;
@@ -141,8 +167,12 @@ private:
     bool needsNewClip() const;
 
     void pushState();
-    void pushClip();
-    
+    void storeClip();
+
+    // call this to invalidate the tracking data that is used to concatenate 
+    // multiple draws into a single draw.
+    void resetDrawTracking();
+
     enum {
         kDrawPreallocCnt         = 8,
         kStatePreallocCnt        = 8,
@@ -151,23 +181,34 @@ private:
         kGeoPoolStatePreAllocCnt = 4,
     };
 
-    const GrGpu*                    fGpu;
-
     GrSTAllocator<kDrawPreallocCnt, Draw>               fDraws;
-    GrSTAllocator<kStatePreallocCnt, SavedDrawState>    fStates;
+    GrSTAllocator<kStatePreallocCnt, GrDrawState>       fStates;
     GrSTAllocator<kClearPreallocCnt, Clear>             fClears;
     GrSTAllocator<kClipPreallocCnt, GrClip>             fClips;
-    
+
+    GrDrawTarget*                   fAutoFlushTarget;
+
     bool                            fClipSet;
 
+    GrVertexBufferAllocPool&        fVertexPool;
+
+    GrIndexBufferAllocPool&         fIndexPool;
+
+    // these are used to attempt to concatenate drawRect calls
     GrVertexLayout                  fLastRectVertexLayout;
     const GrIndexBuffer*            fQuadIndexBuffer;
     int                             fMaxQuads;
     int                             fCurrQuad;
 
-    GrVertexBufferAllocPool&        fVertexPool;
-
-    GrIndexBufferAllocPool&         fIndexPool;
+    // bookkeeping to attempt to concantenate drawIndexedInstances calls
+    struct {
+        int            fVerticesPerInstance;
+        int            fIndicesPerInstance;
+        void reset() {
+            fVerticesPerInstance = 0;
+            fIndicesPerInstance = 0;
+        }
+    } fInstancedDrawTracker;
 
     struct GeometryPoolState {
         const GrVertexBuffer*           fPoolVertexBuffer;

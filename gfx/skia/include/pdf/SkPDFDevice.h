@@ -124,8 +124,12 @@ public:
 
     /** Get the list of resources (PDF objects) used on this page.
      *  @param resourceList A list to append the resources to.
+     *  @param recursive    If recursive is true, get the resources of the
+     *                      device's resources recursively. (Useful for adding
+     *                      objects to the catalog.)
      */
-    SK_API void getResources(SkTDArray<SkPDFObject*>* resourceList) const;
+    SK_API void getResources(SkTDArray<SkPDFObject*>* resourceList,
+                             bool recursive) const;
 
     /** Get the fonts used on this device.
      */
@@ -156,10 +160,12 @@ public:
     const SkPDFGlyphSetMap& getFontGlyphUsage() const {
         return *(fFontGlyphUsage.get());
     }
-    
+
 protected:
     virtual bool onReadPixels(const SkBitmap& bitmap, int x, int y,
                               SkCanvas::Config8888) SK_OVERRIDE;
+
+    virtual bool allowImageFilter(SkImageFilter*) SK_OVERRIDE;
 
 private:
     // TODO(vandebo): push most of SkPDFDevice's state into a core object in

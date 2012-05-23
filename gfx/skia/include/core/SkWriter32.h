@@ -15,20 +15,31 @@
 #include "SkScalar.h"
 #include "SkPoint.h"
 #include "SkRect.h"
+#include "SkMatrix.h"
+#include "SkRegion.h"
 
 class SkStream;
 class SkWStream;
 
 class SkWriter32 : SkNoncopyable {
 public:
+    /**
+     *  The caller can specify an initial block of storage, which the caller manages.
+     *  SkWriter32 will not attempt to free this in its destructor. It is up to the
+     *  implementation to decide if, and how much, of the storage to utilize, and it
+     *  is possible that it may be ignored entirely.
+     */
+    SkWriter32(size_t minSize, void* initialStorage, size_t storageSize);
+
     SkWriter32(size_t minSize)
         : fMinSize(minSize),
           fSize(0),
           fSingleBlock(NULL),
           fSingleBlockSize(0),
           fHead(NULL),
-          fTail(NULL) {
-    }
+          fTail(NULL),
+          fHeadIsExternalStorage(false) {}
+
     ~SkWriter32();
 
     /**
@@ -43,7 +54,7 @@ public:
      *  dynamic allocation (and resets).
      */
     void reset(void* block, size_t size);
-                    
+
     bool writeBool(bool value) {
         this->writeInt(value);
         return value;
@@ -76,7 +87,19 @@ public:
     void writeRect(const SkRect& rect) {
         *(SkRect*)this->reserve(sizeof(rect)) = rect;
     }
+
+    void writeMatrix(const SkMatrix& matrix) {
+        size_t size = matrix.flatten(NULL);
+        SkASSERT(SkAlign4(size) == size);
+        matrix.flatten(this->reserve(size));
+    }
     
+    void writeRegion(const SkRegion& rgn) {
+        size_t size = rgn.flatten(NULL);
+        SkASSERT(SkAlign4(size) == size);
+        rgn.flatten(this->reserve(size));
+    }
+
     // write count bytes (must be a multiple of 4)
     void writeMul4(const void* values, size_t size) {
         this->write(values, size);
@@ -136,10 +159,12 @@ private:
 
     char*       fSingleBlock;
     uint32_t    fSingleBlockSize;
-    
+
     struct Block;
     Block*  fHead;
     Block*  fTail;
+
+    bool fHeadIsExternalStorage;
 
     Block* newBlock(size_t bytes);
 };

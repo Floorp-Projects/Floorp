@@ -16,6 +16,8 @@
 // remove.
 #include "GrRenderTarget.h" 
 
+class GrAutoScratchTexture;
+class GrDrawState;
 class GrDrawTarget;
 class GrFontCache;
 class GrGpu;
@@ -30,6 +32,7 @@ class GrResourceCache;
 class GrStencilBuffer;
 class GrVertexBuffer;
 class GrVertexBufferAllocPool;
+class GrSoftwarePathRenderer;
 
 class GR_API GrContext : public GrRefCnt {
 public:
@@ -75,6 +78,11 @@ public:
      */
     void freeGpuResources();
 
+    /**
+     * Returns the number of bytes of GPU memory hosted by the texture cache.
+     */
+    size_t getGpuTextureCacheBytes() const;
+
     ///////////////////////////////////////////////////////////////////////////
     // Textures
 
@@ -82,7 +90,7 @@ public:
      * Token that refers to an entry in the texture cache. Returned by
      * functions that lock textures. Passed to unlockTexture.
      */
-    class TextureCacheEntry {
+    class SK_API TextureCacheEntry {
     public:
         TextureCacheEntry() : fEntry(NULL) {}
         TextureCacheEntry(const TextureCacheEntry& e) : fEntry(e.fEntry) {}
@@ -267,6 +275,11 @@ public:
     const GrRenderTarget* getRenderTarget() const;
     GrRenderTarget* getRenderTarget();
 
+    /**
+     * Can the provided configuration act as a color render target?
+     */
+    bool isConfigRenderable(GrPixelConfig config) const;
+
     ///////////////////////////////////////////////////////////////////////////
     // Platform Surfaces
 
@@ -294,26 +307,6 @@ public:
      */
      GrRenderTarget* createPlatformRenderTarget(
                                     const GrPlatformRenderTargetDesc& desc);
-
-    /**
-     * This interface is depracted and will be removed in a future revision.
-     * Callers should use createPlatformTexture or createPlatformRenderTarget
-     * instead.
-     *
-     * Wraps an existing 3D API surface in a GrObject. desc.fFlags determines
-     * the type of object returned. If kIsTexture is set the returned object
-     * will be a GrTexture*. Otherwise, it will be a GrRenderTarget*. If both 
-     * are set the render target object is accessible by
-     * GrTexture::asRenderTarget().
-     *
-     * GL: if the object is a texture Gr may change its GL texture parameters
-     *     when it is drawn.
-     *
-     * @param   desc    description of the object to create.
-     * @return either a GrTexture* or GrRenderTarget* depending on desc. NULL
-     *         on failure.
-     */
-    GrResource* createPlatformSurface(const GrPlatformSurfaceDesc& desc);
 
     ///////////////////////////////////////////////////////////////////////////
     // Matrix state
@@ -419,7 +412,7 @@ public:
      * @param translate     optional additional translation applied to the
      *                      path.
      */
-    void drawPath(const GrPaint& paint, const GrPath& path, GrPathFill fill,
+    void drawPath(const GrPaint& paint, const SkPath& path, GrPathFill fill,
                   const GrPoint* translate = NULL);
 
     /**
@@ -447,13 +440,22 @@ public:
                       const uint16_t indices[],
                       int indexCount);
 
+    /**
+     * Draws an oval.
+     *
+     * @param paint         describes how to color pixels.
+     * @param rect          the bounding rect of the oval.
+     * @param strokeWidth   if strokeWidth < 0, then the oval is filled, else
+     *                      the rect is stroked based on strokeWidth. If
+     *                      strokeWidth == 0, then the stroke is always a single
+     *                      pixel thick.
+     */
+    void drawOval(const GrPaint& paint,
+                  const GrRect& rect,
+                  SkScalar strokeWidth);
+
     ///////////////////////////////////////////////////////////////////////////
     // Misc.
-
-    /**
-     * Currently needed by SkGpuDevice. Ideally this shouldn't be exposed.
-     */
-    bool supportsShaders() const;
 
     /**
      * Flags that affect flush() behavior.
@@ -582,31 +584,57 @@ public:
      * @param dst           the render target to copy to.
      */
     void copyTexture(GrTexture* src, GrRenderTarget* dst);
+
     /**
-     * Applies a 1D convolution kernel in the X direction to a rectangle of
-     * pixels from a given texture.
-     * @param texture         the texture to read from
-     * @param rect            the destination rectangle
-     * @param kernel          the convolution kernel (kernelWidth elements)
-     * @param kernelWidth     the width of the convolution kernel
+     * Resolves a render target that has MSAA. The intermediate MSAA buffer is
+     * downsampled to the associated GrTexture (accessible via
+     * GrRenderTarget::asTexture()). Any pending draws to the render target will
+     * be executed before the resolve.
+     *
+     * This is only necessary when a client wants to access the object directly
+     * using the underlying graphics API. GrContext will detect when it must
+     * perform a resolve to a GrTexture used as the source of a draw or before
+     * reading pixels back from a GrTexture or GrRenderTarget.
      */
-    void convolveInX(GrTexture* texture,
-                     const SkRect& rect,
-                     const float* kernel,
-                     int kernelWidth);
+    void resolveRenderTarget(GrRenderTarget* target);
+
     /**
-     * Applies a 1D convolution kernel in the Y direction to a rectangle of
-     * pixels from a given texture.
-     * direction.
-     * @param texture         the texture to read from
-     * @param rect            the destination rectangle
-     * @param kernel          the convolution kernel (kernelWidth elements)
-     * @param kernelWidth     the width of the convolution kernel
+     * Applies a 2D Gaussian blur to a given texture.
+     * @param srcTexture      The source texture to be blurred.
+     * @param temp1           A scratch texture.  Must not be NULL.
+     * @param temp2           A scratch texture.  May be NULL, in which case
+     *                        srcTexture is overwritten with intermediate
+     *                        results.
+     * @param rect            The destination rectangle.
+     * @param sigmaX          The blur's standard deviation in X.
+     * @param sigmaY          The blur's standard deviation in Y.
+     * @return the blurred texture, which may be temp1, temp2 or srcTexture.
      */
-    void convolveInY(GrTexture* texture,
-                     const SkRect& rect,
-                     const float* kernel,
-                     int kernelWidth);
+     GrTexture* gaussianBlur(GrTexture* srcTexture,
+                             GrAutoScratchTexture* temp1,
+                             GrAutoScratchTexture* temp2,
+                             const SkRect& rect,
+                             float sigmaX, float sigmaY);
+
+    /**
+     * Applies a 2D morphology to a given texture.
+     * @param srcTexture      The source texture to be blurred.
+     * @param rect            The destination rectangle.
+     * @param temp1           A scratch texture.  Must not be NULL.
+     * @param temp2           A scratch texture.  Must not be NULL.
+     * @param filter          The morphology filter.  Must be kDilate_Filter or
+     *                        kErode_Filter.
+     * @param radius          The morphology radius in X and Y.  The filter is
+     *                        applied to a fWidth by fHeight rectangle of
+     *                        pixels.
+     * @return the morphed texture, which may be temp1, temp2 or srcTexture.
+     */
+    GrTexture* applyMorphology(GrTexture* srcTexture,
+                               const GrRect& rect,
+                               GrTexture* temp1, GrTexture* temp2,
+                               GrSamplerState::Filter filter,
+                               SkISize radius);
+    
     ///////////////////////////////////////////////////////////////////////////
     // Helpers
 
@@ -637,7 +665,6 @@ public:
     const GrGpu* getGpu() const { return fGpu; }
     GrFontCache* getFontCache() { return fFontCache; }
     GrDrawTarget* getTextTarget(const GrPaint& paint);
-    void flushText();
     const GrIndexBuffer* getQuadIndexBuffer() const;
     void resetStats();
     const GrGpuStats& getStats() const;
@@ -654,20 +681,40 @@ public:
     void unlockStencilBuffer(GrResourceEntry* sbEntry);
     GrStencilBuffer* findStencilBuffer(int width, int height, int sampleCnt);
 
+    /*
+     * postClipPush acts as a hint to this and lower-level classes (e.g.,
+     * GrGpu) that the clip stack has changed.
+     */
+    virtual void postClipPush();
+
+    /*
+     * preClipPop acts as a hint that the clip stack has been restored to an
+     * earlier state.
+     */
+    virtual void preClipPop();
+
+    GrPathRenderer* getPathRenderer(const SkPath& path,
+                                    GrPathFill fill,
+                                    const GrDrawTarget* target,
+                                    bool antiAlias,
+                                    bool allowSW);
+
 private:
     // used to keep track of when we need to flush the draw buffer
     enum DrawCategory {
         kBuffered_DrawCategory,      // last draw was inserted in draw buffer
         kUnbuffered_DrawCategory,    // last draw was not inserted in the draw buffer
-        kText_DrawCategory           // text context was last to draw
     };
     DrawCategory fLastDrawCategory;
 
     GrGpu*              fGpu;
+    GrDrawState*        fDrawState;
+
     GrResourceCache*    fTextureCache;
     GrFontCache*        fFontCache;
 
     GrPathRendererChain*        fPathRendererChain;
+    GrSoftwarePathRenderer*     fSoftwarePathRenderer;
 
     GrVertexBufferAllocPool*    fDrawBufferVBAllocPool;
     GrIndexBufferAllocPool*     fDrawBufferIBAllocPool;
@@ -675,7 +722,6 @@ private:
 
     GrIndexBuffer*              fAAFillRectIndexBuffer;
     GrIndexBuffer*              fAAStrokeRectIndexBuffer;
-    int                         fMaxOffscreenAASize;
 
     GrContext(GrGpu* gpu);
 
@@ -698,52 +744,12 @@ private:
 
     void flushDrawBuffer();
 
-    void setPaint(const GrPaint& paint, GrDrawTarget* target);
+    void setPaint(const GrPaint& paint);
 
     GrDrawTarget* prepareToDraw(const GrPaint& paint, DrawCategory drawType);
 
-    GrPathRenderer* getPathRenderer(const GrPath& path,
-                                    GrPathFill fill,
-                                    bool antiAlias);
-
-    struct OffscreenRecord;
-
-    // determines whether offscreen AA should be applied
-    bool doOffscreenAA(GrDrawTarget* target,
-                       bool isHairLines) const;
-
-    // attempts to setup offscreen AA. All paint state must be transferred to
-    // target by the time this is called.
-    bool prepareForOffscreenAA(GrDrawTarget* target,
-                               bool requireStencil,
-                               const GrIRect& boundRect,
-                               GrPathRenderer* pr,
-                               OffscreenRecord* record);
-
-    // sets up target to draw coverage to the supersampled render target
-    void setupOffscreenAAPass1(GrDrawTarget* target,
-                               const GrIRect& boundRect,
-                               int tileX, int tileY,
-                               OffscreenRecord* record);
-
-    // sets up target to sample coverage of supersampled render target back
-    // to the main render target using stage kOffscreenStage.
-    void doOffscreenAAPass2(GrDrawTarget* target,
-                            const GrPaint& paint,
-                            const GrIRect& boundRect,
-                            int tileX, int tileY,
-                            OffscreenRecord* record);
-
-    // restored the draw target state and releases offscreen target to cache
-    void cleanupOffscreenAA(GrDrawTarget* target,
-                            GrPathRenderer* pr,
-                            OffscreenRecord* record);
-
-    void convolve(GrTexture* texture,
-                  const SkRect& rect,
-                  float imageIncrement[2],
-                  const float* kernel,
-                  int kernelWidth);
+    void internalDrawPath(const GrPaint& paint, const SkPath& path,
+                          GrPathFill fill, const GrPoint* translate);
 
     /**
      * Flags to the internal read/write pixels funcs
@@ -862,6 +868,7 @@ public:
                         GrContext::kApprox_ScratchTexMatch) {
         if (NULL != fContext) {
             fContext->unlockTexture(fEntry);
+            fEntry.reset();
         }
         fContext = context;
         if (NULL != fContext) {
@@ -883,4 +890,3 @@ private:
 };
 
 #endif
-

@@ -14,6 +14,7 @@
 #include "SkMask.h"
 #include "SkMaskFilter.h"
 #include "SkTemplatesPriv.h"
+#include "SkTLazy.h"
 #include "SkUtils.h"
 #include "SkXfermode.h"
 
@@ -247,8 +248,6 @@ static int compute_anti_width(const int16_t runs[]) {
         }
         width += count;
         runs += count;
-
-        SkASSERT(width < 20000);
     }
     return width;
 }
@@ -658,29 +657,22 @@ public:
         this->INHERITED::endSession();
     }
 
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(Sk3DShader)
+
 protected:
-    Sk3DShader(SkFlattenableReadBuffer& buffer) :
-            INHERITED(buffer) {
+    Sk3DShader(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {
         fProxy = static_cast<SkShader*>(buffer.readFlattenable());
         fPMColor = buffer.readU32();
         fMask = NULL;
     }
 
-    virtual void flatten(SkFlattenableWriteBuffer& buffer) {
+    virtual void flatten(SkFlattenableWriteBuffer& buffer) const SK_OVERRIDE {
         this->INHERITED::flatten(buffer);
         buffer.writeFlattenable(fProxy);
         buffer.write32(fPMColor);
     }
 
-    virtual Factory getFactory() {
-        return CreateProc;
-    }
-
 private:
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer) {
-        return SkNEW_ARGS(Sk3DShader, (buffer));
-    }
-
     SkShader*       fProxy;
     SkPMColor       fPMColor;
     const SkMask*   fMask;
@@ -848,24 +840,33 @@ SkBlitter* SkBlitter::Choose(const SkBitmap& device,
         return blitter;
     }
 
-    SkPaint paint(origPaint);
-    SkShader* shader = paint.getShader();
-    SkColorFilter* cf = paint.getColorFilter();
-    SkXfermode* mode = paint.getXfermode();
-
+    SkShader* shader = origPaint.getShader();
+    SkColorFilter* cf = origPaint.getColorFilter();
+    SkXfermode* mode = origPaint.getXfermode();
     Sk3DShader* shader3D = NULL;
-    if (paint.getMaskFilter() != NULL &&
-            paint.getMaskFilter()->getFormat() == SkMask::k3D_Format) {
+
+    SkTLazy<SkPaint> lazyPaint;
+    // we promise not to mutate paint unless we know we've reassigned it from
+    // lazyPaint
+    SkPaint* paint = const_cast<SkPaint*>(&origPaint);
+    
+    if (origPaint.getMaskFilter() != NULL &&
+            origPaint.getMaskFilter()->getFormat() == SkMask::k3D_Format) {
         shader3D = SkNEW_ARGS(Sk3DShader, (shader));
-        paint.setShader(shader3D)->unref();
+        // we know we haven't initialized lazyPaint yet, so just do it
+        paint = lazyPaint.set(origPaint);
+        paint->setShader(shader3D)->unref();
         shader = shader3D;
     }
 
     if (NULL != mode) {
-        switch (interpret_xfermode(paint, mode, device.config())) {
+        switch (interpret_xfermode(*paint, mode, device.config())) {
             case kSrcOver_XferInterp:
                 mode = NULL;
-                paint.setXfermode(NULL);
+                if (!lazyPaint.isValid()) {
+                    paint = lazyPaint.set(origPaint);
+                }
+                paint->setXfermode(NULL);
                 break;
             case kSkipDrawing_XferInterp:
                 SK_PLACEMENT_NEW(blitter, SkNullBlitter, storage, storageSize);
@@ -883,12 +884,18 @@ SkBlitter* SkBlitter::Choose(const SkBitmap& device,
 #endif
             // xfermodes (and filters) require shaders for our current blitters
             shader = SkNEW(SkColorShader);
-            paint.setShader(shader)->unref();
+            if (!lazyPaint.isValid()) {
+                paint = lazyPaint.set(origPaint);
+            }
+            paint->setShader(shader)->unref();
         } else if (cf) {
             // if no shader && no xfermode, we just apply the colorfilter to
             // our color and move on.
-            paint.setColor(cf->filterColor(paint.getColor()));
-            paint.setColorFilter(NULL);
+            if (!lazyPaint.isValid()) {
+                paint = lazyPaint.set(origPaint);
+            }
+            paint->setColor(cf->filterColor(paint->getColor()));
+            paint->setColorFilter(NULL);
             cf = NULL;
         }
     }
@@ -896,52 +903,55 @@ SkBlitter* SkBlitter::Choose(const SkBitmap& device,
     if (cf) {
         SkASSERT(shader);
         shader = SkNEW_ARGS(SkFilterShader, (shader, cf));
-        paint.setShader(shader)->unref();
+        if (!lazyPaint.isValid()) {
+            paint = lazyPaint.set(origPaint);
+        }
+        paint->setShader(shader)->unref();
         // blitters should ignore the presence/absence of a filter, since
         // if there is one, the shader will take care of it.
     }
 
-    if (shader && !shader->setContext(device, paint, matrix)) {
+    if (shader && !shader->setContext(device, *paint, matrix)) {
         return SkNEW(SkNullBlitter);
     }
 
     switch (device.getConfig()) {
         case SkBitmap::kA1_Config:
             SK_PLACEMENT_NEW_ARGS(blitter, SkA1_Blitter,
-                                  storage, storageSize, (device, paint));
+                                  storage, storageSize, (device, *paint));
             break;
 
         case SkBitmap::kA8_Config:
             if (shader) {
                 SK_PLACEMENT_NEW_ARGS(blitter, SkA8_Shader_Blitter,
-                                      storage, storageSize, (device, paint));
+                                      storage, storageSize, (device, *paint));
             } else {
                 SK_PLACEMENT_NEW_ARGS(blitter, SkA8_Blitter,
-                                      storage, storageSize, (device, paint));
+                                      storage, storageSize, (device, *paint));
             }
             break;
 
         case SkBitmap::kARGB_4444_Config:
-            blitter = SkBlitter_ChooseD4444(device, paint, storage, storageSize);
+            blitter = SkBlitter_ChooseD4444(device, *paint, storage, storageSize);
             break;
 
         case SkBitmap::kRGB_565_Config:
-            blitter = SkBlitter_ChooseD565(device, paint, storage, storageSize);
+            blitter = SkBlitter_ChooseD565(device, *paint, storage, storageSize);
             break;
 
         case SkBitmap::kARGB_8888_Config:
             if (shader) {
                 SK_PLACEMENT_NEW_ARGS(blitter, SkARGB32_Shader_Blitter,
-                                      storage, storageSize, (device, paint));
-            } else if (paint.getColor() == SK_ColorBLACK) {
+                                      storage, storageSize, (device, *paint));
+            } else if (paint->getColor() == SK_ColorBLACK) {
                 SK_PLACEMENT_NEW_ARGS(blitter, SkARGB32_Black_Blitter,
-                                      storage, storageSize, (device, paint));
-            } else if (paint.getAlpha() == 0xFF) {
+                                      storage, storageSize, (device, *paint));
+            } else if (paint->getAlpha() == 0xFF) {
                 SK_PLACEMENT_NEW_ARGS(blitter, SkARGB32_Opaque_Blitter,
-                                      storage, storageSize, (device, paint));
+                                      storage, storageSize, (device, *paint));
             } else {
                 SK_PLACEMENT_NEW_ARGS(blitter, SkARGB32_Blitter,
-                                      storage, storageSize, (device, paint));
+                                      storage, storageSize, (device, *paint));
             }
             break;
 

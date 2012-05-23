@@ -182,7 +182,7 @@ typedef unsigned __int64 uint64_t;
 // debug -vs- release
 //
 
-extern GR_API void GrPrintf(const char format[], ...);
+#define GrPrintf SkDebugf
 
 /**
  *  GR_STRING makes a string of X where X is expanded before conversion to a string
@@ -363,23 +363,6 @@ inline void GrCrash(const char* msg) { GrPrintf(msg); GrAlwaysAssert(false); }
 #if !defined(GR_GEOM_BUFFER_LOCK_THRESHOLD)
     #define GR_GEOM_BUFFER_LOCK_THRESHOLD (1 << 15)
 #endif
-
-/**
- * Enables/disables use of offscreen AA
- */
-#if !defined(GR_USE_OFFSCREEN_AA)
-    #define GR_USE_OFFSCREEN_AA 1
-#endif
-
-/**
- * GR_MAX_OFFSCREEN_AA_SIZE controls the size at which offscreen AA will tile.
- * Tiling saves GPU memory by limiting the size of the offscreen buffer. The
- * max offscreen may be as large as (4*GR_MAX_OFFSCREEN_AA_SIZE)^2 pixels.
- */
-#if !defined(GR_MAX_OFFSCREEN_AA_SIZE)
-    #define GR_MAX_OFFSCREEN_AA_SIZE    256
-#endif
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // tail section:

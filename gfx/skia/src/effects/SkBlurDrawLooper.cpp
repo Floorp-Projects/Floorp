@@ -14,7 +14,7 @@
 
 SkBlurDrawLooper::SkBlurDrawLooper(SkScalar radius, SkScalar dx, SkScalar dy,
                                    SkColor color, uint32_t flags)
-    : fDx(dx), fDy(dy), fBlurColor(color), fBlurFlags(flags) {
+    : fDx(dx), fDy(dy), fBlurColor(color), fBlurFlags(flags), fState(kDone) {
 
     SkASSERT(flags <= kAll_BlurFlag);
     if (radius > 0) {
@@ -61,7 +61,8 @@ SkBlurDrawLooper::~SkBlurDrawLooper() {
     SkSafeUnref(fColorFilter);
 }
 
-void SkBlurDrawLooper::flatten(SkFlattenableWriteBuffer& buffer) {
+void SkBlurDrawLooper::flatten(SkFlattenableWriteBuffer& buffer) const {
+    this->INHERITED::flatten(buffer);
     buffer.writeScalar(fDx);
     buffer.writeScalar(fDy);
     buffer.write32(fBlurColor);
