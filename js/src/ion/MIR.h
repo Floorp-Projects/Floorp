@@ -3047,7 +3047,7 @@ class MStoreElementCommon
   protected:
     MStoreElementCommon()
       : needsBarrier_(false),
-        elementType_(MIRType_None)
+        elementType_(MIRType_Value)
     { }
 
   public:
