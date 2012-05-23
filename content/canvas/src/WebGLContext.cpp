@@ -80,7 +80,6 @@ WebGLContext::WebGLContext()
     mGeneration = 0;
     mInvalidated = false;
     mResetLayer = true;
-    mVerbose = false;
     mOptionsFrozen = false;
 
     mActiveTexture = 0;
@@ -375,15 +374,11 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         Preferences::GetBool("webgl.force-enabled", false);
     bool disabled =
         Preferences::GetBool("webgl.disabled", false);
-    bool verbose =
-        Preferences::GetBool("webgl.verbose", false);
 
     ScopedGfxFeatureReporter reporter("WebGL", forceEnabled);
 
     if (disabled)
         return NS_ERROR_FAILURE;
-
-    mVerbose = verbose;
 
     // We're going to create an entirely new context.  If our
     // generation is not 0 right now (that is, if this isn't the first
