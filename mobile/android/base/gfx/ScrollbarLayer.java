@@ -421,9 +421,9 @@ public class ScrollbarLayer extends TileLayer {
 
     private RectF getVerticalRect(RenderContext context) {
         RectF viewport = context.viewport;
-        FloatSize pageSize = context.pageSize;
-        float barStart = (viewport.height() * viewport.top / pageSize.height) + CAP_RADIUS;
-        float barEnd = (viewport.height() * viewport.bottom / pageSize.height) - CAP_RADIUS;
+        RectF pageRect = context.pageRect;
+        float barStart = ((viewport.top - pageRect.top) * (viewport.height() / pageRect.height())) + CAP_RADIUS;
+        float barEnd = ((viewport.bottom - pageRect.top) * (viewport.height() / pageRect.height())) - CAP_RADIUS;
         if (barStart > barEnd) {
             float middle = (barStart + barEnd) / 2.0f;
             barStart = barEnd = middle;
@@ -434,9 +434,9 @@ public class ScrollbarLayer extends TileLayer {
 
     private RectF getHorizontalRect(RenderContext context) {
         RectF viewport = context.viewport;
-        FloatSize pageSize = context.pageSize;
-        float barStart = (viewport.width() * viewport.left / pageSize.width) + CAP_RADIUS;
-        float barEnd = (viewport.width() * viewport.right / pageSize.width) - CAP_RADIUS;
+        RectF pageRect = context.pageRect;
+        float barStart = ((viewport.left - pageRect.left) * (viewport.width() / pageRect.width())) + CAP_RADIUS;
+        float barEnd = ((viewport.right - pageRect.left) * (viewport.width() / pageRect.width())) - CAP_RADIUS;
         if (barStart > barEnd) {
             float middle = (barStart + barEnd) / 2.0f;
             barStart = barEnd = middle;
