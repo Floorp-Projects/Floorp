@@ -69,31 +69,6 @@ WebGLContext::LogMessage(const char *fmt, va_list ap)
     }
 }
 
-void
-WebGLContext::LogMessageIfVerbose(const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-
-    LogMessageIfVerbose(fmt, ap);
-
-    va_end(ap);
-}
-
-void
-WebGLContext::LogMessageIfVerbose(const char *fmt, va_list ap)
-{
-    static bool firstTime = true;
-
-    if (mVerbose)
-        LogMessage(fmt, ap);
-    else if (firstTime)
-        LogMessage("There are WebGL warnings or messages in this page, but they are hidden. To see them, "
-                   "go to about:config, set the webgl.verbose preference, and reload this page.");
-
-    firstTime = false;
-}
-
 CheckedUint32
 WebGLContext::GetImageSize(WebGLsizei height, 
                            WebGLsizei width, 
@@ -133,7 +108,7 @@ WebGLContext::SynthesizeGLError(WebGLenum err, const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    LogMessage(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(err);
@@ -144,7 +119,7 @@ WebGLContext::ErrorInvalidEnum(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    LogMessage(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_ENUM);
@@ -155,7 +130,7 @@ WebGLContext::ErrorInvalidOperation(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    LogMessage(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_OPERATION);
@@ -166,7 +141,7 @@ WebGLContext::ErrorInvalidValue(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    LogMessage(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_VALUE);
@@ -177,7 +152,7 @@ WebGLContext::ErrorInvalidFramebufferOperation(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    LogMessage(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION);
@@ -188,7 +163,7 @@ WebGLContext::ErrorOutOfMemory(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    LogMessage(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY);
