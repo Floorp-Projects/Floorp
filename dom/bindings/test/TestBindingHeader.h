@@ -9,6 +9,8 @@
 
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -70,6 +72,18 @@ public:
   void SetWritableUnsignedLongLong(uint64_t, ErrorResult&);
   void PassUnsignedLongLong(uint64_t, ErrorResult&);
   uint64_t ReceiveUnsignedLongLong(ErrorResult&);
+
+  already_AddRefed<TestInterface> ReceiveSelf(ErrorResult&);
+  already_AddRefed<TestInterface> ReceiveNullableSelf(ErrorResult&);
+  TestInterface* ReceiveWeakSelf(ErrorResult&);
+  TestInterface* ReceiveWeakNullableSelf(ErrorResult&);
+  void PassSelf(TestInterface&, ErrorResult&);
+  void PassSelf2(NonNull<TestInterface>&, ErrorResult&);
+  void PassNullableSelf(TestInterface*, ErrorResult&);
+  already_AddRefed<TestInterface> GetNonNullSelf(ErrorResult&);
+  void SetNonNullSelf(TestInterface&, ErrorResult&);
+  already_AddRefed<TestInterface> GetNullableSelf(ErrorResult&);
+  void SetNullableSelf(TestInterface*, ErrorResult&);
  
 private:
   // We add signatures here that _could_ start matching if the codegen
