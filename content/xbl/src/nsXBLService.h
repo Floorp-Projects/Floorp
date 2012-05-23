@@ -5,7 +5,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#include "nsIXBLService.h"
+#include "nsString.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "jsapi.h"              // nsXBLJSClass derives from JSClass
@@ -17,49 +17,56 @@ class nsXBLBinding;
 class nsXBLDocumentInfo;
 class nsIContent;
 class nsIDocument;
-class nsIAtom;
 class nsString;
 class nsIURI;
+class nsIPrincipal;
 class nsSupportsHashtable;
 class nsHashtable;
+class nsIDOMEventTarget;
 
-class nsXBLService : public nsIXBLService,
-                     public nsIObserver,
+class nsXBLService : public nsIObserver,
                      public nsSupportsWeakReference
 {
   NS_DECL_ISUPPORTS
+
+  static nsXBLService* gInstance;
+
+  static void Init();
+
+  static void Shutdown() {
+    NS_IF_RELEASE(gInstance);
+  }
+
+  static nsXBLService* GetInstance() { return gInstance; }
 
   static bool IsChromeOrResourceURI(nsIURI* aURI);
 
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.  aOriginPrincipal must not be null here.
-  NS_IMETHOD LoadBindings(nsIContent* aContent, nsIURI* aURL,
-                          nsIPrincipal* aOriginPrincipal, bool aAugmentFlag,
-                          nsXBLBinding** aBinding, bool* aResolveStyle);
+  nsresult LoadBindings(nsIContent* aContent, nsIURI* aURL,
+                        nsIPrincipal* aOriginPrincipal, bool aAugmentFlag,
+                        nsXBLBinding** aBinding, bool* aResolveStyle);
 
   // Indicates whether or not a binding is fully loaded.
-  NS_IMETHOD BindingReady(nsIContent* aBoundElement, nsIURI* aURI, bool* aIsReady);
-
-  // Gets the object's base class type.
-  NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
+  nsresult BindingReady(nsIContent* aBoundElement, nsIURI* aURI, bool* aIsReady);
 
   // This method checks the hashtable and then calls FetchBindingDocument on a
   // miss.  aOriginPrincipal or aBoundDocument may be null to bypass security
   // checks.
-  NS_IMETHOD LoadBindingDocumentInfo(nsIContent* aBoundElement,
-                                     nsIDocument* aBoundDocument,
-                                     nsIURI* aBindingURI,
-                                     nsIPrincipal* aOriginPrincipal,
-                                     bool aForceSyncLoad,
-                                     nsXBLDocumentInfo** aResult);
+  nsresult LoadBindingDocumentInfo(nsIContent* aBoundElement,
+                                   nsIDocument* aBoundDocument,
+                                   nsIURI* aBindingURI,
+                                   nsIPrincipal* aOriginPrincipal,
+                                   bool aForceSyncLoad,
+                                   nsXBLDocumentInfo** aResult);
 
   // Used by XUL key bindings and for window XBL.
-  NS_IMETHOD AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget);
-  NS_IMETHOD DetachGlobalKeyHandler(nsIDOMEventTarget* aTarget);
+  static nsresult AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget);
+  static nsresult DetachGlobalKeyHandler(nsIDOMEventTarget* aTarget);
 
   NS_DECL_NSIOBSERVER
 
-public:
+private:
   nsXBLService();
   virtual ~nsXBLService();
 
@@ -106,8 +113,6 @@ protected:
 
 // MEMBER VARIABLES
 public:
-  static PRUint32 gRefCnt;                   // A count of XBLservice instances.
-
   static bool gDisableChromeCache;
 
   static nsHashtable* gClassTable;           // A table of nsXBLJSClass objects.

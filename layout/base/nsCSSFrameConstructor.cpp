@@ -102,7 +102,7 @@
 
 #include "nsIScrollableFrame.h"
 
-#include "nsIXBLService.h"
+#include "nsXBLService.h"
 
 #undef NOISY_FIRST_LETTER
 
@@ -193,9 +193,6 @@ NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsIServiceManager.h"
-
-// Global object maintenance
-nsIXBLService * nsCSSFrameConstructor::gXBLService = nsnull;
 
 #ifdef DEBUG
 // Set the environment variable GECKO_FRAMECTOR_DEBUG_FLAGS to one or
@@ -1415,17 +1412,6 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
 #endif
 }
 
-nsIXBLService * nsCSSFrameConstructor::GetXBLService()
-{
-  if (!gXBLService) {
-    nsresult rv = CallGetService("@mozilla.org/xbl;1", &gXBLService);
-    if (NS_FAILED(rv))
-      gXBLService = nsnull;
-  }
-  
-  return gXBLService;
-}
-
 void
 nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
@@ -2307,7 +2293,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     nsresult rv;
     bool resolveStyle;
     
-    nsIXBLService * xblService = GetXBLService();
+    nsXBLService* xblService = nsXBLService::GetInstance();
     if (!xblService)
       return NS_ERROR_FAILURE;
 
@@ -5044,7 +5030,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   {
     // Ensure that our XBL bindings are installed.
 
-    nsIXBLService * xblService = GetXBLService();
+    nsXBLService* xblService = nsXBLService::GetInstance();
     if (!xblService)
       return;
 
