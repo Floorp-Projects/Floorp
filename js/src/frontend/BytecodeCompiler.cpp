@@ -94,9 +94,9 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT_IF(callerFrame, compileAndGo);
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
-    bool foldConstants = true;
-    Parser parser(cx, principals, originPrincipals, callerFrame, foldConstants, compileAndGo);
-    if (!parser.init(chars, length, filename, lineno, version))
+    Parser parser(cx, principals, originPrincipals, chars, length, filename, lineno, version,
+                  callerFrame, /* foldConstants = */ true, compileAndGo);
+    if (!parser.init())
         return NULL;
 
     SharedContext sc(cx, /* inFunction = */ false);
@@ -266,8 +266,9 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
                               Bindings *bindings, const jschar *chars, size_t length,
                               const char *filename, unsigned lineno, JSVersion version)
 {
-    Parser parser(cx, principals, originPrincipals);
-    if (!parser.init(chars, length, filename, lineno, version))
+    Parser parser(cx, principals, originPrincipals, chars, length, filename, lineno, version,
+                  /* cfp = */ NULL, /* foldConstants = */ true, /* compileAndGo = */ false);
+    if (!parser.init())
         return false;
 
     TokenStream &tokenStream = parser.tokenStream;

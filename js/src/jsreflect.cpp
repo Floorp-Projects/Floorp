@@ -3164,9 +3164,10 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     if (!chars)
         return JS_FALSE;
 
-    Parser parser(cx, NULL, NULL, NULL, false);
-
-    if (!parser.init(chars, length, filename, lineno, cx->findVersion()))
+    Parser parser(cx, /* prin = */ NULL, /* originPrin = */ NULL,
+                  chars, length, filename, lineno, cx->findVersion(), 
+                  /* cfp = */ NULL, /* foldConstants = */ false, /* compileAndGo = */ false);
+    if (!parser.init())
         return JS_FALSE;
 
     serialize.setParser(&parser);

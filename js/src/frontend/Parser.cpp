@@ -77,10 +77,12 @@ using namespace js::frontend;
 #define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
 Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
+               const jschar *chars, size_t length, const char *fn, unsigned ln, JSVersion v,
                StackFrame *cfp, bool foldConstants, bool compileAndGo)
   : AutoGCRooter(cx, PARSER),
     context(cx),
-    tokenStream(cx, prin, originPrin),
+    tokenStream(cx, prin, originPrin, chars, length, fn, ln, v),
+    tempPoolMark(NULL),
     principals(NULL),
     originPrincipals(NULL),
     callerFrame(cfp),
@@ -97,19 +99,11 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
 }
 
 bool
-Parser::init(const jschar *base, size_t length, const char *filename, unsigned lineno,
-             JSVersion version)
+Parser::init()
 {
-    JSContext *cx = context;
-    if (!cx->ensureParseMapPool())
+    if (!context->ensureParseMapPool())
         return false;
-    tempPoolMark = cx->tempLifoAlloc().mark();
-    if (!tokenStream.init(base, length, filename, lineno, version)) {
-        cx->tempLifoAlloc().release(tempPoolMark);
-        return false;
-    }
-    if (context->hasRunOption(JSOPTION_STRICT_MODE))
-        tokenStream.setStrictMode();
+    tempPoolMark = context->tempLifoAlloc().mark();
     return true;
 }
 
