@@ -362,73 +362,59 @@ nsAccessibleWrap::GetAtkObject(nsIAccessible * acc)
 PRUint16
 nsAccessibleWrap::CreateMaiInterfaces(void)
 {
-    PRUint16 interfacesBits = 0;
+  PRUint16 interfacesBits = 0;
     
-    // Add Interfaces for each nsIAccessible.ext interfaces
-
-    // the Component interface are supported by all nsIAccessible
-    interfacesBits |= 1 << MAI_INTERFACE_COMPONENT;
+  // The Component interface is supported by all accessibles.
+  interfacesBits |= 1 << MAI_INTERFACE_COMPONENT;
 
   // Add Action interface if the action count is more than zero.
   if (ActionCount() > 0)
     interfacesBits |= 1 << MAI_INTERFACE_ACTION;
 
-    //nsIAccessibleText
-    nsCOMPtr<nsIAccessibleText> accessInterfaceText;
-    QueryInterface(NS_GET_IID(nsIAccessibleText),
-                   getter_AddRefs(accessInterfaceText));
-    if (accessInterfaceText) {
-        interfacesBits |= 1 << MAI_INTERFACE_TEXT;
-    }
+  // Text, Editabletext, and Hypertext interface.
+  nsHyperTextAccessible* hyperText = AsHyperText();
+  if (hyperText && hyperText->IsTextRole()) {
+    interfacesBits |= 1 << MAI_INTERFACE_TEXT;
+    interfacesBits |= 1 << MAI_INTERFACE_EDITABLE_TEXT;
+    if (!nsAccUtils::MustPrune(this))
+      interfacesBits |= 1 << MAI_INTERFACE_HYPERTEXT;
+  }
 
-    //nsIAccessibleEditableText
-    nsCOMPtr<nsIAccessibleEditableText> accessInterfaceEditableText;
-    QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
-                   getter_AddRefs(accessInterfaceEditableText));
-    if (accessInterfaceEditableText) {
-        interfacesBits |= 1 << MAI_INTERFACE_EDITABLE_TEXT;
-    }
+  // Value interface.
+  nsCOMPtr<nsIAccessibleValue> accessInterfaceValue;
+  QueryInterface(NS_GET_IID(nsIAccessibleValue),
+                 getter_AddRefs(accessInterfaceValue));
+  if (accessInterfaceValue) {
+    interfacesBits |= 1 << MAI_INTERFACE_VALUE; 
+  }
 
-    //nsIAccessibleValue
-    nsCOMPtr<nsIAccessibleValue> accessInterfaceValue;
-    QueryInterface(NS_GET_IID(nsIAccessibleValue),
-                   getter_AddRefs(accessInterfaceValue));
-    if (accessInterfaceValue) {
-       interfacesBits |= 1 << MAI_INTERFACE_VALUE; 
-    }
+  // Document interface.
+  if (IsDoc())
+    interfacesBits |= 1 << MAI_INTERFACE_DOCUMENT;
 
-    // document accessible
-    if (IsDoc())
-        interfacesBits |= 1 << MAI_INTERFACE_DOCUMENT;
+  if (IsImage())
+    interfacesBits |= 1 << MAI_INTERFACE_IMAGE;
 
-    if (IsImageAccessible())
-        interfacesBits |= 1 << MAI_INTERFACE_IMAGE;
-
-  // HyperLinkAccessible
+  // HyperLink interface.
   if (IsLink())
     interfacesBits |= 1 << MAI_INTERFACE_HYPERLINK_IMPL;
 
-    if (!nsAccUtils::MustPrune(this)) {  // These interfaces require children
-      //nsIAccessibleHypertext
-      if (IsHyperText()) {
-          interfacesBits |= 1 << MAI_INTERFACE_HYPERTEXT;
-      }
-
-      //nsIAccessibleTable
-      nsCOMPtr<nsIAccessibleTable> accessInterfaceTable;
-      QueryInterface(NS_GET_IID(nsIAccessibleTable),
-                     getter_AddRefs(accessInterfaceTable));
-      if (accessInterfaceTable) {
-          interfacesBits |= 1 << MAI_INTERFACE_TABLE;
-      }
-      
-      //nsIAccessibleSelection
-      if (IsSelect()) {
-          interfacesBits |= 1 << MAI_INTERFACE_SELECTION;
-      }
+  if (!nsAccUtils::MustPrune(this)) {  // These interfaces require children
+    // Table interface.
+    nsCOMPtr<nsIAccessibleTable> accessInterfaceTable;
+    QueryInterface(NS_GET_IID(nsIAccessibleTable),
+                   getter_AddRefs(accessInterfaceTable));
+    if (accessInterfaceTable) {
+      interfacesBits |= 1 << MAI_INTERFACE_TABLE;
     }
+      
+    // Selection interface.
+    if (IsSelect()) {
+      interfacesBits |= 1 << MAI_INTERFACE_SELECTION;
+    }
+  }
 
-    return interfacesBits;
+  return interfacesBits;
 }
 
 static GType

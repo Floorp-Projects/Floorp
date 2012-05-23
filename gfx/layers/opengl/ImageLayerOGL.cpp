@@ -660,7 +660,10 @@ ShadowImageLayerOGL::Init(const SharedImage& aFront)
     mSize = surf->GetSize();
     mTexImage = gl()->CreateTextureImage(nsIntSize(mSize.width, mSize.height),
                                          surf->GetContentType(),
-                                         LOCAL_GL_CLAMP_TO_EDGE);
+                                         LOCAL_GL_CLAMP_TO_EDGE,
+                                         mForceSingleTile
+                                          ? TextureImage::ForceSingleTile
+                                          : TextureImage::NoFlags);
     return true;
   } else {
     YUVImage yuv = aFront.get_YUVImage();
@@ -842,7 +845,10 @@ ShadowImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
 
   mTexImage->BindTextureAndApplyFilter(aTextureUnit);
 
-  *aSize = mTexImage->GetSize();
+  // We're assuming that the gl backend won't cheat and use NPOT
+  // textures when glContext says it can't (which seems to happen
+  // on a mac when you force POT textures)
+  *aSize = CalculatePOTSize(mTexImage->GetSize(), gl());
   return true;
 }
 

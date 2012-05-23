@@ -23,7 +23,7 @@ parent:
   __delete__();
 
 child:
-  NotifyStateEvent(PRUint32 stateEvent);
+  NotifyStateEvent(PRUint32 stateEvent, PRUint64 byteProgress);
   AssociateDocuments(nsCString cacheGroupId, nsCString cacheClientId);
   Finish(bool succeded, bool isUpgrate);
 };

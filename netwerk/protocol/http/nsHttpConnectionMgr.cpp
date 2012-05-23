@@ -1099,9 +1099,22 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
 
     // Add in the in-progress tcp connections, we will assume they are
     // keepalive enabled.
-    totalCount += ent->mHalfOpens.Length();
-    persistCount += ent->mHalfOpens.Length();
+    PRUint32 pendingHalfOpens = 0;
+    for (i = 0; i < ent->mHalfOpens.Length(); ++i) {
+        nsHalfOpenSocket *halfOpen = ent->mHalfOpens[i];
+
+        // Exclude half-open's that has already created a usable connection.
+        // This prevents the limit being stuck on ipv6 connections that 
+        // eventually time out after typical 21 seconds of no ACK+SYN reply.
+        if (halfOpen->HasConnected())
+            continue;
+
+        ++pendingHalfOpens;
+    }
     
+    totalCount += pendingHalfOpens;
+    persistCount += pendingHalfOpens;
+
     LOG(("   total=%d, persist=%d\n", totalCount, persistCount));
 
     PRUint16 maxConns;
@@ -1117,8 +1130,10 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
     }
 
     // use >= just to be safe
-    return (totalCount >= maxConns) || ( (caps & NS_HTTP_ALLOW_KEEPALIVE) &&
-                                         (persistCount >= maxPersistConns) );
+    bool result = (totalCount >= maxConns) || ( (caps & NS_HTTP_ALLOW_KEEPALIVE) &&
+                                              (persistCount >= maxPersistConns) );
+    LOG(("  result: %s", result ? "true" : "false"));
+    return result;
 }
 
 void
@@ -2299,7 +2314,8 @@ nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
     : mEnt(ent),
       mTransaction(trans),
       mCaps(caps),
-      mSpeculative(false)
+      mSpeculative(false),
+      mHasConnected(false)
 {
     NS_ABORT_IF_FALSE(ent && trans, "constructor with null arguments");
     LOG(("Creating nsHalfOpenSocket [this=%p trans=%p ent=%s]\n",
@@ -2470,8 +2486,12 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupTimer()
         mSynTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv)) {
             mSynTimer->InitWithCallback(this, timeout, nsITimer::TYPE_ONE_SHOT);
-            LOG(("nsHalfOpenSocket::SetupBackupTimer()"));
+            LOG(("nsHalfOpenSocket::SetupBackupTimer() [this=%p]", this));
         }
+    }
+    else if (timeout) {
+        LOG(("nsHalfOpenSocket::SetupBackupTimer() [this=%p],"
+             " transaction already done!", this));
     }
 }
 
@@ -2520,10 +2540,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::Notify(nsITimer *timer)
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     NS_ABORT_IF_FALSE(timer == mSynTimer, "wrong timer");
 
-    if (!gHttpHandler->ConnMgr()->
-        AtActiveConnectionLimit(mEnt, mCaps)) {
-        SetupBackupStreams();
-    }
+    SetupBackupStreams();
 
     mSynTimer = nsnull;
     return NS_OK;
@@ -2591,6 +2608,10 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
              "conn->init (%p) failed %x\n", conn.get(), rv));
         return rv;
     }
+
+    // This half-open socket has created a connection.  This flag excludes it
+    // from counter of actual connections used for checking limits.
+    mHasConnected = true;
 
     // if this is still in the pending list, remove it and dispatch it
     index = mEnt->mPendingQ.IndexOf(mTransaction);

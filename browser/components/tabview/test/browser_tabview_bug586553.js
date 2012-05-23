@@ -24,10 +24,10 @@ function onTabViewWindowLoaded() {
   contentWindow = document.getElementById("tab-view").contentWindow;
   
   originalTab = gBrowser.selectedTab;
-  newTabs = [gBrowser.addTab("about:robots"), gBrowser.addTab("about:mozilla"), gBrowser.addTab("about:license")];
+  newTabs = [gBrowser.addTab("about:rights"), gBrowser.addTab("about:mozilla"), gBrowser.addTab("about:license")];
 
   is(originalTab._tPos, 0, "Original tab is in position 0");
-  is(newTabs[0]._tPos, 1, "Robots is in position 1");
+  is(newTabs[0]._tPos, 1, "Rights is in position 1");
   is(newTabs[1]._tPos, 2, "Mozilla is in position 2");
   is(newTabs[2]._tPos, 3, "License is in position 3");
   
@@ -51,7 +51,7 @@ function onTabViewWindowHidden() {
 
   is(newTabs[2]._tPos, 0, "License is in position 0");
   is(originalTab._tPos, 1, "Original tab is in position 1");
-  is(newTabs[0]._tPos, 2, "Robots is in position 2");
+  is(newTabs[0]._tPos, 2, "Rights is in position 2");
   is(newTabs[1]._tPos, 3, "Mozilla is in position 3");
   
   gBrowser.removeTab(newTabs[0]);

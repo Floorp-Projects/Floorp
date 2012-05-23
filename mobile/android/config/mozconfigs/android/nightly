@@ -9,9 +9,7 @@ ac_add_options --target=arm-linux-androideabi
 ac_add_options --with-endian=little
 ac_add_options --with-android-ndk="/tools/android-ndk-r5c"
 ac_add_options --with-android-sdk="/tools/android-sdk-r15/platforms/android-14"
-ac_add_options --with-android-tools="/tools/android-sdk-r15/tools"
-ac_add_options --with-android-toolchain=/tools/android-ndk-r5c/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86
-ac_add_options --with-android-platform=/tools/android-ndk-r5c/platforms/android-5/arch-arm
+ac_add_options --with-android-version=5
 ac_add_options --with-system-zlib
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 

@@ -258,25 +258,7 @@ DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
       bitmap = srcSurf->GetBitmap();
 
       if (!bitmap) {
-        if (aSource.width > rt->GetMaximumBitmapSize() ||
-            aSource.height > rt->GetMaximumBitmapSize()) {
-          gfxDebug() << "Bitmap source larger than texture size specified. DrawBitmap will silently fail.";
-          // Don't know how to deal with this yet.
-          return;
-        }
-
-        int stride = srcSurf->GetSize().width * BytesPerPixel(srcSurf->GetFormat());
-
-        unsigned char *data = srcSurf->mRawData +
-                              (uint32_t)aSource.y * stride +
-                              (uint32_t)aSource.x * BytesPerPixel(srcSurf->GetFormat());
-
-        D2D1_BITMAP_PROPERTIES props =
-          D2D1::BitmapProperties(D2D1::PixelFormat(DXGIFormat(srcSurf->GetFormat()), AlphaMode(srcSurf->GetFormat())));
-        mRT->CreateBitmap(D2D1::SizeU(UINT32(aSource.width), UINT32(aSource.height)), data, stride, props, byRef(bitmap));
-
-        srcRect.x -= (uint32_t)aSource.x;
-        srcRect.y -= (uint32_t)aSource.y;
+        return;
       }
     }
     break;
@@ -285,6 +267,30 @@ DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
       SourceSurfaceD2DTarget *srcSurf = static_cast<SourceSurfaceD2DTarget*>(aSurface);
       bitmap = srcSurf->GetBitmap(mRT);
       AddDependencyOnSource(srcSurf);
+    }
+    break;
+  case SURFACE_DATA:
+    {
+      DataSourceSurface *srcSurf = static_cast<DataSourceSurface*>(aSurface);
+      if (aSource.width > rt->GetMaximumBitmapSize() ||
+          aSource.height > rt->GetMaximumBitmapSize()) {
+        gfxDebug() << "Bitmap source larger than texture size specified. DrawBitmap will silently fail.";
+        // Don't know how to deal with this yet.
+        return;
+      }
+
+      int stride = srcSurf->Stride();
+
+      unsigned char *data = srcSurf->GetData() +
+                            (uint32_t)aSource.y * stride +
+                            (uint32_t)aSource.x * BytesPerPixel(srcSurf->GetFormat());
+
+      D2D1_BITMAP_PROPERTIES props =
+        D2D1::BitmapProperties(D2D1::PixelFormat(DXGIFormat(srcSurf->GetFormat()), AlphaMode(srcSurf->GetFormat())));
+      mRT->CreateBitmap(D2D1::SizeU(UINT32(aSource.width), UINT32(aSource.height)), data, stride, props, byRef(bitmap));
+
+      srcRect.x -= (uint32_t)aSource.x;
+      srcRect.y -= (uint32_t)aSource.y;
     }
     break;
   }
@@ -1655,7 +1661,6 @@ DrawTargetD2D::PushClipsToRT(ID2D1RenderTarget *aRT)
 {
   for (std::vector<PushedClip>::iterator iter = mPushedClips.begin();
         iter != mPushedClips.end(); iter++) {
-    D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
     if (iter->mLayer) {
       D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
 
@@ -1888,6 +1893,7 @@ DrawTargetD2D::FillGlyphsManual(ScaledFontDWrite *aFont,
   mDevice->OMSetRenderTargets(1, &rtViews, NULL);
 
   mDevice->Draw(4, 0);
+  return true;
 }
 
 TemporaryRef<ID2D1Brush>
@@ -1980,11 +1986,7 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
         bitmap = surf->mBitmap;
 
         if (!bitmap) {
-          bitmap = CreatePartialBitmapForSurface(surf, mat);
-
-          if (!bitmap) {
-            return NULL;
-          }
+          return NULL;
         }
       }
       break;
@@ -1994,6 +1996,17 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
           static_cast<SourceSurfaceD2DTarget*>(pat->mSurface.get());
         bitmap = surf->GetBitmap(mRT);
         AddDependencyOnSource(surf);
+      }
+      break;
+    case SURFACE_DATA:
+      {
+        DataSourceSurface *dataSurf =
+          static_cast<DataSourceSurface*>(pat->mSurface.get());
+        bitmap = CreatePartialBitmapForSurface(dataSurf, mat);
+        
+        if (!bitmap) {
+          return NULL;
+        }
       }
       break;
     }
@@ -2086,10 +2099,10 @@ DrawTargetD2D::CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
   return style;
 }
 
-TemporaryRef<ID3D10Texture1D>
+TemporaryRef<ID3D10Texture2D>
 DrawTargetD2D::CreateGradientTexture(const GradientStopsD2D *aStops)
 {
-  CD3D10_TEXTURE1D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 4096, 1, 1);
+  CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 4096, 1, 1, 1);
 
   std::vector<D2D1_GRADIENT_STOP> rawStops;
   rawStops.resize(aStops->mStopCollection->GetGradientStopCount());
@@ -2144,9 +2157,10 @@ DrawTargetD2D::CreateGradientTexture(const GradientStopsD2D *aStops)
 
   D3D10_SUBRESOURCE_DATA data;
   data.pSysMem = &textureData.front();
+  data.SysMemPitch = 4096 * 4;
 
-  RefPtr<ID3D10Texture1D> tex;
-  mDevice->CreateTexture1D(&desc, &data, byRef(tex));
+  RefPtr<ID3D10Texture2D> tex;
+  mDevice->CreateTexture2D(&desc, &data, byRef(tex));
 
   return tex;
 }
@@ -2216,7 +2230,7 @@ DrawTargetD2D::CreateTextureForAnalysis(IDWriteGlyphRunAnalysis *aAnalysis, cons
   return tex;
 }
 TemporaryRef<ID2D1Bitmap>
-DrawTargetD2D::CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix &aMatrix)
+DrawTargetD2D::CreatePartialBitmapForSurface(DataSourceSurface *aSurface, Matrix &aMatrix)
 {
   RefPtr<ID2D1Bitmap> bitmap;
 
@@ -2238,7 +2252,9 @@ DrawTargetD2D::CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix 
   rect = invTransform.TransformBounds(rect);
   rect.RoundOut();
 
-  Rect uploadRect(0, 0, aSurface->mSize.width, aSurface->mSize.height);
+  IntSize size = aSurface->GetSize();
+
+  Rect uploadRect(0, 0, size.width, size.height);
 
   // Calculate the rectangle on the source bitmap that touches our
   // surface.
@@ -2250,24 +2266,25 @@ DrawTargetD2D::CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix 
     return NULL;
   }
 
+  int stride = aSurface->Stride();
+
   if (uploadRect.width <= mRT->GetMaximumBitmapSize() &&
       uploadRect.height <= mRT->GetMaximumBitmapSize()) {
             
-    int Bpp = BytesPerPixel(aSurface->mFormat);
-    int stride = Bpp * aSurface->mSize.width;
+    int Bpp = BytesPerPixel(aSurface->GetFormat());
 
     // A partial upload will suffice.
     mRT->CreateBitmap(D2D1::SizeU(uint32_t(uploadRect.width), uint32_t(uploadRect.height)),
-                      aSurface->mRawData + int(uploadRect.x) * 4 + int(uploadRect.y) * stride,
+                      aSurface->GetData() + int(uploadRect.x) * 4 + int(uploadRect.y) * stride,
                       stride,
-                      D2D1::BitmapProperties(D2DPixelFormat(aSurface->mFormat)),
+                      D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
                       byRef(bitmap));
 
     aMatrix.Translate(uploadRect.x, uploadRect.y);
 
     return bitmap;
   } else {
-    int Bpp = BytesPerPixel(aSurface->mFormat);
+    int Bpp = BytesPerPixel(aSurface->GetFormat());
 
     if (Bpp != 4) {
       // This shouldn't actually happen in practice!
@@ -2275,15 +2292,13 @@ DrawTargetD2D::CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix 
       return NULL;
     }
 
-    int stride = Bpp * aSurface->mSize.width;
-
-    ImageHalfScaler scaler(aSurface->mRawData, stride, IntSize(aSurface->mSize));
+    ImageHalfScaler scaler(aSurface->GetData(), stride, size);
 
     // Calculate the maximum width/height of the image post transform.
-    Point topRight = transform * Point(aSurface->mSize.width, 0);
+    Point topRight = transform * Point(size.width, 0);
     Point topLeft = transform * Point(0, 0);
-    Point bottomRight = transform * Point(aSurface->mSize.width, aSurface->mSize.height);
-    Point bottomLeft = transform * Point(0, aSurface->mSize.height);
+    Point bottomRight = transform * Point(size.width, size.height);
+    Point bottomLeft = transform * Point(0, size.height);
     
     IntSize scaleSize;
 
@@ -2306,10 +2321,10 @@ DrawTargetD2D::CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix 
     
     mRT->CreateBitmap(D2D1::SizeU(newSize.width, newSize.height),
                       scaler.GetScaledData(), scaler.GetStride(),
-                      D2D1::BitmapProperties(D2DPixelFormat(aSurface->mFormat)),
+                      D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
                       byRef(bitmap));
 
-    aMatrix.Scale(aSurface->mSize.width / newSize.width, aSurface->mSize.height / newSize.height);
+    aMatrix.Scale(size.width / newSize.width, size.height / newSize.height);
     return bitmap;
   }
 }
@@ -2328,7 +2343,7 @@ DrawTargetD2D::SetupEffectForRadialGradient(const RadialGradientPattern *aPatter
   const GradientStopsD2D *stops =
     static_cast<const GradientStopsD2D*>(aPattern->mStops.get());
 
-  RefPtr<ID3D10Texture1D> tex = CreateGradientTexture(stops);
+  RefPtr<ID3D10Texture2D> tex = CreateGradientTexture(stops);
 
   RefPtr<ID3D10ShaderResourceView> srView;
   mDevice->CreateShaderResourceView(tex, NULL, byRef(srView));
