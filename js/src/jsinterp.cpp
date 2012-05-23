@@ -1516,7 +1516,6 @@ ADD_EMPTY_CASE(JSOP_UNUSED12)
 ADD_EMPTY_CASE(JSOP_UNUSED13)
 ADD_EMPTY_CASE(JSOP_UNUSED14)
 ADD_EMPTY_CASE(JSOP_UNUSED15)
-ADD_EMPTY_CASE(JSOP_UNUSED16)
 ADD_EMPTY_CASE(JSOP_UNUSED17)
 ADD_EMPTY_CASE(JSOP_UNUSED18)
 ADD_EMPTY_CASE(JSOP_UNUSED19)
@@ -2814,6 +2813,7 @@ END_VARLEN_CASE
 }
 
 BEGIN_CASE(JSOP_ARGUMENTS)
+    JS_ASSERT(!regs.fp()->fun()->hasRest());
     if (script->needsArgsObj()) {
         ArgumentsObject *obj = ArgumentsObject::create(cx, regs.fp());
         if (!obj)
@@ -2823,6 +2823,17 @@ BEGIN_CASE(JSOP_ARGUMENTS)
         PUSH_COPY(MagicValue(JS_OPTIMIZED_ARGUMENTS));
     }
 END_CASE(JSOP_ARGUMENTS)
+
+BEGIN_CASE(JSOP_REST)
+{
+    JSObject *rest = regs.fp()->createRestParameter(cx);
+    if (!rest)
+        goto error;
+    PUSH_COPY(ObjectValue(*rest));
+    if (!SetInitializerObjectType(cx, script, regs.pc, rest))
+        goto error;
+}
+END_CASE(JSOP_REST)
 
 BEGIN_CASE(JSOP_CALLALIASEDVAR)
 BEGIN_CASE(JSOP_GETALIASEDVAR)

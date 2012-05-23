@@ -502,6 +502,8 @@ class StackFrame
 
     inline void initInlineFrame(JSFunction *fun, StackFrame *prevfp, jsbytecode *prevpc);
 
+    inline JSObject *createRestParameter(JSContext *cx);
+
     /*
      * Frame slots
      *
