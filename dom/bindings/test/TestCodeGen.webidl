@@ -6,6 +6,7 @@
 
 interface TestInterface {
   // Integer types
+  // XXXbz add tests for infallible versions of all the integer stuff
   readonly attribute byte readonlyByte;
   attribute byte writableByte;
   void passByte(byte arg);
@@ -46,6 +47,18 @@ interface TestInterface {
   void passUnsignedLongLong(unsigned long long arg);
   unsigned long long receiveUnsignedLongLong();
 
-  // Castable interface type
-  
+  // Castable interface types
+  // XXXbz add tests for infallible versions of all the castable interface stuff
+  TestInterface receiveSelf();
+  TestInterface? receiveNullableSelf();
+  TestInterface receiveWeakSelf();
+  TestInterface? receiveWeakNullableSelf();
+  // A verstion to test for casting to TestInterface&
+  void passSelf(TestInterface arg);
+  // A version we can use to test for the exact type passed in
+  void passSelf2(TestInterface arg);
+  void passNullableSelf(TestInterface? arg);
+
+  attribute TestInterface nonNullSelf;
+  attribute TestInterface? nullableSelf;
 };
