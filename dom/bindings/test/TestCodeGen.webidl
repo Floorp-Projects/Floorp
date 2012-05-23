@@ -5,4 +5,47 @@
  */
 
 interface TestInterface {
+  // Integer types
+  readonly attribute byte readonlyByte;
+  attribute byte writableByte;
+  void passByte(byte arg);
+  byte receiveByte();
+
+  readonly attribute short readonlyShort;
+  attribute short writableShort;
+  void passShort(short arg);
+  short receiveShort();
+
+  readonly attribute long readonlyLong;
+  attribute long writableLong;
+  void passLong(long arg);
+  long receiveLong();
+
+  readonly attribute long long readonlyLongLong;
+  attribute long long  writableLongLong;
+  void passLongLong(long long arg);
+  long long receiveLongLong();
+
+  readonly attribute octet readonlyOctet;
+  attribute octet writableOctet;
+  void passOctet(octet arg);
+  octet receiveOctet();
+
+  readonly attribute unsigned short readonlyUnsignedShort;
+  attribute unsigned short writableUnsignedShort;
+  void passUnsignedShort(unsigned short arg);
+  unsigned short receiveUnsignedShort();
+
+  readonly attribute unsigned long readonlyUnsignedLong;
+  attribute unsigned long writableUnsignedLong;
+  void passUnsignedLong(unsigned long arg);
+  unsigned long receiveUnsignedLong();
+
+  readonly attribute unsigned long long readonlyUnsignedLongLong;
+  attribute unsigned long long  writableUnsignedLongLong;
+  void passUnsignedLongLong(unsigned long long arg);
+  unsigned long long receiveUnsignedLongLong();
+
+  // Castable interface type
+  
 };
