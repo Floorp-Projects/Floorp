@@ -33,38 +33,24 @@
 #define NS_NO_INPUT_BUFFERING 1 // see http://bugzilla.mozilla.org/show_bug.cgi?id=41067
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsFileStream
+// nsFileStreamBase
 
-nsFileStream::nsFileStream()
+nsFileStreamBase::nsFileStreamBase()
     : mFD(nsnull)
     , mBehaviorFlags(0)
     , mDeferredOpen(false)
 {
 }
 
-nsFileStream::~nsFileStream()
+nsFileStreamBase::~nsFileStreamBase()
 {
     Close();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileStream, nsISeekableStream)
-
-nsresult
-nsFileStream::Close()
-{
-    CleanUpOpen();
-
-    nsresult rv = NS_OK;
-    if (mFD) {
-        if (PR_Close(mFD) == PR_FAILURE)
-            rv = NS_BASE_STREAM_OSERROR;
-        mFD = nsnull;
-    }
-    return rv;
-}
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileStreamBase, nsISeekableStream)
 
 NS_IMETHODIMP
-nsFileStream::Seek(PRInt32 whence, PRInt64 offset)
+nsFileStreamBase::Seek(PRInt32 whence, PRInt64 offset)
 {
     nsresult rv = DoPendingOpen();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -80,7 +66,7 @@ nsFileStream::Seek(PRInt32 whence, PRInt64 offset)
 }
 
 NS_IMETHODIMP
-nsFileStream::Tell(PRInt64 *result)
+nsFileStreamBase::Tell(PRInt64 *result)
 {
     nsresult rv = DoPendingOpen();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -97,15 +83,18 @@ nsFileStream::Tell(PRInt64 *result)
 }
 
 NS_IMETHODIMP
-nsFileStream::SetEOF()
+nsFileStreamBase::SetEOF()
 {
+    nsresult rv = DoPendingOpen();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     if (mFD == nsnull)
         return NS_BASE_STREAM_CLOSED;
 
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
     // Some system calls require an EOF offset.
     PRInt64 offset;
-    nsresult rv = Tell(&offset);
+    rv = Tell(&offset);
     if (NS_FAILED(rv)) return rv;
 #endif
 
@@ -132,8 +121,138 @@ nsFileStream::SetEOF()
 }
 
 nsresult
-nsFileStream::MaybeOpen(nsILocalFile* aFile, PRInt32 aIoFlags, PRInt32 aPerm,
-                        bool aDeferred)
+nsFileStreamBase::Close()
+{
+    CleanUpOpen();
+
+    nsresult rv = NS_OK;
+    if (mFD) {
+        if (PR_Close(mFD) == PR_FAILURE)
+            rv = NS_BASE_STREAM_OSERROR;
+        mFD = nsnull;
+    }
+    return rv;
+}
+
+nsresult
+nsFileStreamBase::Available(PRUint32* aResult)
+{
+    nsresult rv = DoPendingOpen();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!mFD) {
+        return NS_BASE_STREAM_CLOSED;
+    }
+
+    // PR_Available with files over 4GB returns an error, so we have to
+    // use the 64-bit version of PR_Available.
+    PRInt64 avail = PR_Available64(mFD);
+    if (avail == -1) {
+        return NS_ErrorAccordingToNSPR();
+    }
+
+    // If available is greater than 4GB, return 4GB
+    *aResult = avail > PR_UINT32_MAX ? PR_UINT32_MAX : (PRUint32)avail;
+    return NS_OK;
+}
+
+nsresult
+nsFileStreamBase::Read(char* aBuf, PRUint32 aCount, PRUint32* aResult)
+{
+    nsresult rv = DoPendingOpen();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!mFD) {
+        *aResult = 0;
+        return NS_OK;
+    }
+
+    PRInt32 bytesRead = PR_Read(mFD, aBuf, aCount);
+    if (bytesRead == -1) {
+        return NS_ErrorAccordingToNSPR();
+    }
+
+    *aResult = bytesRead;
+    return NS_OK;
+}
+
+nsresult
+nsFileStreamBase::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
+                               PRUint32 aCount, PRUint32* aResult)
+{
+    // ReadSegments is not implemented because it would be inefficient when
+    // the writer does not consume all data.  If you want to call ReadSegments,
+    // wrap a BufferedInputStream around the file stream.  That will call
+    // Read().
+
+    // If this is ever implemented you might need to modify
+    // nsPartialFileInputStream::ReadSegments
+
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsFileStreamBase::IsNonBlocking(bool *aNonBlocking)
+{
+    *aNonBlocking = false;
+    return NS_OK;
+}
+
+nsresult
+nsFileStreamBase::Flush(void)
+{
+    nsresult rv = DoPendingOpen();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mFD == nsnull)
+        return NS_BASE_STREAM_CLOSED;
+
+    PRInt32 cnt = PR_Sync(mFD);
+    if (cnt == -1) {
+        return NS_ErrorAccordingToNSPR();
+    }
+    return NS_OK;
+}
+
+nsresult
+nsFileStreamBase::Write(const char *buf, PRUint32 count, PRUint32 *result)
+{
+    nsresult rv = DoPendingOpen();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mFD == nsnull)
+        return NS_BASE_STREAM_CLOSED;
+
+    PRInt32 cnt = PR_Write(mFD, buf, count);
+    if (cnt == -1) {
+        return NS_ErrorAccordingToNSPR();
+    }
+    *result = cnt;
+    return NS_OK;
+}
+    
+nsresult
+nsFileStreamBase::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteFrom (see source comment)");
+    return NS_ERROR_NOT_IMPLEMENTED;
+    // File streams intentionally do not support this method.
+    // If you need something like this, then you should wrap
+    // the file stream using nsIBufferedOutputStream
+}
+
+nsresult
+nsFileStreamBase::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+    // File streams intentionally do not support this method.
+    // If you need something like this, then you should wrap
+    // the file stream using nsIBufferedOutputStream
+}
+
+nsresult
+nsFileStreamBase::MaybeOpen(nsILocalFile* aFile, PRInt32 aIoFlags,
+                            PRInt32 aPerm, bool aDeferred)
 {
     mOpenParams.ioFlags = aIoFlags;
     mOpenParams.perm = aPerm;
@@ -157,14 +276,14 @@ nsFileStream::MaybeOpen(nsILocalFile* aFile, PRInt32 aIoFlags, PRInt32 aPerm,
 }
 
 void
-nsFileStream::CleanUpOpen()
+nsFileStreamBase::CleanUpOpen()
 {
     mOpenParams.localFile = nsnull;
     mDeferredOpen = false;
 }
 
 nsresult
-nsFileStream::DoOpen()
+nsFileStreamBase::DoOpen()
 {
     NS_PRECONDITION(mOpenParams.localFile, "Must have a file to open");
 
@@ -178,7 +297,7 @@ nsFileStream::DoOpen()
 }
 
 nsresult
-nsFileStream::DoPendingOpen()
+nsFileStreamBase::DoPendingOpen()
 {
     if (!mDeferredOpen) {
         return NS_OK;
@@ -190,20 +309,19 @@ nsFileStream::DoPendingOpen()
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileInputStream
 
-NS_IMPL_ADDREF_INHERITED(nsFileInputStream, nsFileStream)
-NS_IMPL_RELEASE_INHERITED(nsFileInputStream, nsFileStream)
+NS_IMPL_ADDREF_INHERITED(nsFileInputStream, nsFileStreamBase)
+NS_IMPL_RELEASE_INHERITED(nsFileInputStream, nsFileStreamBase)
 
 NS_IMPL_CLASSINFO(nsFileInputStream, NULL, nsIClassInfo::THREADSAFE,
                   NS_LOCALFILEINPUTSTREAM_CID)
 
 NS_INTERFACE_MAP_BEGIN(nsFileInputStream)
-    NS_INTERFACE_MAP_ENTRY(nsFileStream)
     NS_INTERFACE_MAP_ENTRY(nsIInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIFileInputStream)
     NS_INTERFACE_MAP_ENTRY(nsILineInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIIPCSerializable)
     NS_IMPL_QUERY_CLASSINFO(nsFileInputStream)
-NS_INTERFACE_MAP_END_INHERITING(nsFileStream)
+NS_INTERFACE_MAP_END_INHERITING(nsFileStreamBase)
 
 NS_IMPL_CI_INTERFACE_GETTER5(nsFileInputStream,
                              nsIInputStream,
@@ -286,7 +404,7 @@ nsFileInputStream::Close()
 {
     // null out mLineBuffer in case Close() is called again after failing
     PR_FREEIF(mLineBuffer);
-    nsresult rv = nsFileStream::Close();
+    nsresult rv = nsFileStreamBase::Close();
     if (NS_FAILED(rv)) return rv;
     if (mFile && (mBehaviorFlags & DELETE_ON_CLOSE)) {
         rv = mFile->Remove(false);
@@ -300,50 +418,16 @@ nsFileInputStream::Close()
 }
 
 NS_IMETHODIMP
-nsFileInputStream::Available(PRUint32* aResult)
+nsFileInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32* _retval)
 {
-    nsresult rv = DoPendingOpen();
+    nsresult rv = nsFileStreamBase::Read(aBuf, aCount, _retval);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!mFD) {
-        return NS_BASE_STREAM_CLOSED;
-    }
-
-    // PR_Available with files over 4GB returns an error, so we have to
-    // use the 64-bit version of PR_Available.
-    PRInt64 avail = PR_Available64(mFD);
-    if (avail == -1) {
-        return NS_ErrorAccordingToNSPR();
-    }
-
-    // If available is greater than 4GB, return 4GB
-    *aResult = avail > PR_UINT32_MAX ? PR_UINT32_MAX : (PRUint32)avail;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aResult)
-{
-    nsresult rv = DoPendingOpen();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!mFD) {
-        *aResult = 0;
-        return NS_OK;
-    }
-
-    PRInt32 bytesRead = PR_Read(mFD, aBuf, aCount);
-    if (bytesRead == -1) {
-        return NS_ErrorAccordingToNSPR();
-    }
     // Check if we're at the end of file and need to close
-    if (mBehaviorFlags & CLOSE_ON_EOF) {
-        if (bytesRead == 0) {
-            Close();
-        }
+    if (mBehaviorFlags & CLOSE_ON_EOF && *_retval == 0) {
+        Close();
     }
 
-    *aResult = bytesRead;
     return NS_OK;
 }
 
@@ -358,28 +442,6 @@ nsFileInputStream::ReadLine(nsACString& aLine, bool* aResult)
         if (NS_FAILED(rv)) return rv;
     }
     return NS_ReadLine(this, mLineBuffer, aLine, aResult);
-}
-
-NS_IMETHODIMP
-nsFileInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
-                                PRUint32 aCount, PRUint32* aResult)
-{
-    // ReadSegments is not implemented because it would be inefficient when
-    // the writer does not consume all data.  If you want to call ReadSegments,
-    // wrap a BufferedInputStream around the file stream.  That will call
-    // Read().
-
-    // If this is ever implemented you might need to modify
-    // nsPartialFileInputStream::ReadSegments
-
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFileInputStream::IsNonBlocking(bool *aNonBlocking)
-{
-    *aNonBlocking = false;
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -400,7 +462,7 @@ nsFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
         }
     }
 
-    return nsFileStream::Seek(aWhence, aOffset);
+    return nsFileStreamBase::Seek(aWhence, aOffset);
 }
 
 bool
@@ -451,7 +513,7 @@ nsFileInputStream::Write(IPC::Message *aMsg)
 // Don't forward to nsFileInputStream as we don't want to QI to
 // nsIFileInputStream
 NS_IMPL_ISUPPORTS_INHERITED3(nsPartialFileInputStream,
-                             nsFileStream,
+                             nsFileStreamBase,
                              nsIInputStream,
                              nsIPartialFileInputStream,
                              nsILineInputStream)
@@ -557,8 +619,8 @@ nsPartialFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileOutputStream
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsFileOutputStream, 
-                             nsFileStream,
+NS_IMPL_ISUPPORTS_INHERITED2(nsFileOutputStream,
+                             nsFileStreamBase,
                              nsIOutputStream,
                              nsIFileOutputStream)
  
@@ -597,75 +659,10 @@ nsFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
                      mBehaviorFlags & nsIFileOutputStream::DEFER_OPEN);
 }
 
-NS_IMETHODIMP
-nsFileOutputStream::Close()
-{
-    return nsFileStream::Close();
-}
-
-NS_IMETHODIMP
-nsFileOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *result)
-{
-    nsresult rv = DoPendingOpen();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (mFD == nsnull)
-        return NS_BASE_STREAM_CLOSED;
-
-    PRInt32 cnt = PR_Write(mFD, buf, count);
-    if (cnt == -1) {
-        return NS_ErrorAccordingToNSPR();
-    }
-    *result = cnt;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileOutputStream::Flush(void)
-{
-    nsresult rv = DoPendingOpen();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (mFD == nsnull)
-        return NS_BASE_STREAM_CLOSED;
-
-    PRInt32 cnt = PR_Sync(mFD);
-    if (cnt == -1) {
-        return NS_ErrorAccordingToNSPR();
-    }
-    return NS_OK;
-}
-    
-NS_IMETHODIMP
-nsFileOutputStream::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
-{
-    NS_NOTREACHED("WriteFrom (see source comment)");
-    return NS_ERROR_NOT_IMPLEMENTED;
-    // File streams intentionally do not support this method.
-    // If you need something like this, then you should wrap
-    // the file stream using nsIBufferedOutputStream
-}
-
-NS_IMETHODIMP
-nsFileOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-    // File streams intentionally do not support this method.
-    // If you need something like this, then you should wrap
-    // the file stream using nsIBufferedOutputStream
-}
-
-NS_IMETHODIMP
-nsFileOutputStream::IsNonBlocking(bool *aNonBlocking)
-{
-    *aNonBlocking = false;
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsSafeFileOutputStream
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsSafeFileOutputStream, 
+NS_IMPL_ISUPPORTS_INHERITED3(nsSafeFileOutputStream,
                              nsFileOutputStream,
                              nsISafeOutputStream,
                              nsIOutputStream,
@@ -807,6 +804,83 @@ nsSafeFileOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *result)
             NS_WARNING("writing to output stream failed! data may be lost");
     } 
     return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsFileStream
+
+NS_IMPL_ISUPPORTS_INHERITED4(nsFileStream, 
+                             nsFileStreamBase,
+                             nsIInputStream,
+                             nsIOutputStream,
+                             nsIFileStream,
+                             nsIFileMetadata)
+ 
+NS_IMETHODIMP
+nsFileStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
+                   PRInt32 behaviorFlags)
+{
+    NS_ENSURE_TRUE(mFD == nsnull, NS_ERROR_ALREADY_INITIALIZED);
+    NS_ENSURE_TRUE(!mDeferredOpen, NS_ERROR_ALREADY_INITIALIZED);
+
+    mBehaviorFlags = behaviorFlags;
+
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
+    if (NS_FAILED(rv)) return rv;
+    if (ioFlags == -1)
+        ioFlags = PR_RDWR;
+    if (perm <= 0)
+        perm = 0;
+
+    return MaybeOpen(localFile, ioFlags, perm,
+                     mBehaviorFlags & nsIFileStream::DEFER_OPEN);
+}
+
+NS_IMETHODIMP
+nsFileStream::GetSize(PRInt64* _retval)
+{
+    nsresult rv = DoPendingOpen();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!mFD) {
+        return NS_BASE_STREAM_CLOSED;
+    }
+
+    PRFileInfo64 info;
+    if (PR_GetOpenFileInfo64(mFD, &info) == PR_FAILURE) {
+        return NS_BASE_STREAM_OSERROR;
+    }
+
+    *_retval = PRInt64(info.size);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileStream::GetLastModified(PRInt64* _retval)
+{
+    nsresult rv = DoPendingOpen();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!mFD) {
+        return NS_BASE_STREAM_CLOSED;
+    }
+
+    PRFileInfo64 info;
+    if (PR_GetOpenFileInfo64(mFD, &info) == PR_FAILURE) {
+        return NS_BASE_STREAM_OSERROR;
+    }
+
+    PRInt64 modTime = PRInt64(info.modifyTime);
+    if (modTime == 0) {
+        *_retval = 0;
+    }
+    else {
+        *_retval = modTime / PRInt64(PR_USEC_PER_MSEC);
+    }
+
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
