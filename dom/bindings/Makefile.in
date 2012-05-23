@@ -30,8 +30,16 @@ include $(topsrcdir)/dom/dom-config.mk
 include $(topsrcdir)/dom/webidl/WebIDL.mk
 
 binding_include_path := mozilla/dom
-binding_header_files := $(subst .webidl,Binding.h,$(webidl_files))
-binding_cpp_files := $(subst .webidl,Binding.cpp,$(webidl_files))
+all_webidl_files = $(webidl_files)
+# Set exported_binding_headers before adding the test IDL to the mix
+exported_binding_headers := $(subst .webidl,Binding.h,$(all_webidl_files))
+# Set linked_binding_cpp_files before adding the test IDL to the mix
+linked_binding_cpp_files := $(subst .webidl,Binding.cpp,$(all_webidl_files))
+
+all_webidl_files += $(test_webidl_files)
+
+binding_header_files := $(subst .webidl,Binding.h,$(all_webidl_files))
+binding_cpp_files := $(subst .webidl,Binding.cpp,$(all_webidl_files))
 
 globalgen_targets := \
   PrototypeList.h \
@@ -40,7 +48,7 @@ globalgen_targets := \
   $(NULL)
 
 CPPSRCS = \
-  $(binding_cpp_files) \
+  $(linked_binding_cpp_files) \
   $(filter %.cpp, $(globalgen_targets)) \
   BindingUtils.cpp \
   $(NULL)
@@ -59,16 +67,16 @@ EXPORTS_$(binding_include_path) = \
   PrimitiveConversions.h \
   TypedArray.h \
   BindingUtils.h \
-  $(binding_header_files) \
+  $(exported_binding_headers) \
   $(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/js/xpconnect/wrappers
 
-TEST_DIRS += test
-
 include $(topsrcdir)/config/rules.mk
 
+# If you change bindinggen_dependencies here, change it in
+# dom/bindings/test/Makefile.in too.
 bindinggen_dependencies := \
   BindingGen.py \
   Bindings.conf \
@@ -78,23 +86,29 @@ bindinggen_dependencies := \
   $(GLOBAL_DEPS) \
   $(NULL)
 
+$(webidl_files): %: $(webidl_base)/%
+	$(INSTALL) $(IFLAGS1) $(webidl_base)/$* .
+
+$(test_webidl_files): %: $(srcdir)/test/%
+	$(INSTALL) $(IFLAGS1) $(srcdir)/test/$* .
+
 $(binding_header_files): %Binding.h: $(bindinggen_dependencies) \
-                                     $(webidl_base)/%.webidl \
+                                     %.webidl \
                                      $(NULL)
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) -I$(srcdir)/parser \
-    	  $(srcdir)/BindingGen.py $(ACCESSOR_OPT) header \
+	  $(srcdir)/BindingGen.py $(ACCESSOR_OPT) header \
 	  $(srcdir)/Bindings.conf $*Binding \
-	  $(webidl_base)/$*.webidl
+	  $*.webidl
 
 $(binding_cpp_files): %Binding.cpp: $(bindinggen_dependencies) \
-                                    $(webidl_base)/%.webidl \
+                                    %.webidl \
                                     $(NULL)
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) -I$(srcdir)/parser \
 	  $(srcdir)/BindingGen.py $(ACCESSOR_OPT) cpp \
 	  $(srcdir)/Bindings.conf $*Binding \
-	  $(webidl_base)/$*.webidl
+	  $*.webidl
 
 $(globalgen_targets): ParserResults.pkl
 
@@ -114,16 +128,17 @@ $(CACHE_DIR)/.done:
 	@$(TOUCH) $@
 
 ParserResults.pkl: $(globalgen_dependencies) \
-                   $(addprefix $(webidl_base)/, $(webidl_files))
+                   $(all_webidl_files)
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
     $(PLY_INCLUDE) -I$(srcdir)/parser \
-    $(srcdir)/GlobalGen.py $(ACCESSOR_OPT) $(srcdir)/Bindings.conf $(webidl_base) \
+    $(srcdir)/GlobalGen.py $(ACCESSOR_OPT) $(srcdir)/Bindings.conf . \
     --cachedir=$(CACHE_DIR) \
-    $(webidl_files)
+    $(all_webidl_files)
 
 GARBAGE += \
   $(binding_header_files) \
   $(binding_cpp_files) \
+  $(all_webidl_files) \
   $(globalgen_targets) \
   ParserResults.pkl \
   webidlyacc.py \
