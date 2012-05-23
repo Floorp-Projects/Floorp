@@ -83,8 +83,9 @@ protected:
   virtual void ScheduleTask(CancelableTask*, int);
   virtual void Composite();
   virtual void ScheduleComposition();
-  virtual void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
-  virtual void SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
+  virtual void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight,
+                                     float aCssPageWidth, float aCssPageHeight);
+  virtual void SetPageSize(float aZoom, float aPageWidth, float aPageHeight, float aCssPageWidth, float aCssPageHeight);
   virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                 nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
   void SetEGLSurfaceSize(int width, int height);
@@ -124,7 +125,7 @@ private:
   float mXScale;
   float mYScale;
   nsIntPoint mScrollOffset;
-  nsIntRect mContentRect;
+  nsIntSize mContentSize;
   nsIntSize mWidgetSize;
 
   // When this flag is set, the next composition will be the first for a

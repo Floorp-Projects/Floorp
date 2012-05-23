@@ -103,12 +103,12 @@ public class LayerController {
         return mViewportMetrics.getSize();
     }
 
-    public RectF getPageRect() {
-        return mViewportMetrics.getPageRect();
+    public FloatSize getPageSize() {
+        return mViewportMetrics.getPageSize();
     }
 
-    public RectF getCssPageRect() {
-        return mViewportMetrics.getCssPageRect();
+    public FloatSize getCssPageSize() {
+        return mViewportMetrics.getCssPageSize();
     }
 
     public PointF getOrigin() {
@@ -167,16 +167,13 @@ public class LayerController {
         mView.requestRender();
     }
 
-    /** Sets the current page rect. You must hold the monitor while calling this. */
-    public void setPageRect(RectF rect, RectF cssRect) {
-        // Since the "rect" is always just a multiple of "cssRect" we don't need to
-        // check both; this function assumes that both "rect" and "cssRect" are relative
-        // the zoom factor in mViewportMetrics.
-        if (mViewportMetrics.getCssPageRect().equals(cssRect))
+    /** Sets the current page size. You must hold the monitor while calling this. */
+    public void setPageSize(FloatSize size, FloatSize cssSize) {
+        if (mViewportMetrics.getCssPageSize().equals(cssSize))
             return;
 
         ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
-        viewportMetrics.setPageRect(rect, cssRect);
+        viewportMetrics.setPageSize(size, cssSize);
         mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
 
         // Page size is owned by the layer client, so no need to notify it of
@@ -184,7 +181,7 @@ public class LayerController {
 
         mView.post(new Runnable() {
             public void run() {
-                mPanZoomController.pageRectUpdated();
+                mPanZoomController.pageSizeUpdated();
                 mView.requestRender();
             }
         });

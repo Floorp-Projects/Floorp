@@ -199,25 +199,21 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     scrollableFrame = aScrollFrame->GetScrollTargetFrame();
 
   if (scrollableFrame) {
-    nsRect contentBounds = scrollableFrame->GetScrollRange();
-    contentBounds.width += scrollableFrame->GetScrollPortRect().width;
-    contentBounds.height += scrollableFrame->GetScrollPortRect().height;
-    metrics.mCSSContentRect = gfx::Rect(nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.x),
-                                        nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.y),
-                                        nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.width),
-                                        nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.height));
-    metrics.mContentRect = contentBounds.ScaleToNearestPixels(
+    nsSize contentSize =
+      scrollableFrame->GetScrollRange().Size() +
+      scrollableFrame->GetScrollPortRect().Size();
+    metrics.mCSSContentSize = gfx::Size(nsPresContext::AppUnitsToFloatCSSPixels(contentSize.width),
+                                        nsPresContext::AppUnitsToFloatCSSPixels(contentSize.height));
+    metrics.mContentSize = contentSize.ScaleToNearestPixels(
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
     metrics.mViewportScrollOffset = scrollableFrame->GetScrollPosition().ScaleToNearestPixels(
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   }
   else {
-    nsRect contentBounds = aForFrame->GetRect();
-    metrics.mCSSContentRect = gfx::Rect(nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.x),
-                                        nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.y),
-                                        nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.width),
-                                        nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.height));
-    metrics.mContentRect = contentBounds.ScaleToNearestPixels(
+    nsSize contentSize = aForFrame->GetSize();
+    metrics.mCSSContentSize = gfx::Size(nsPresContext::AppUnitsToFloatCSSPixels(contentSize.width),
+                                        nsPresContext::AppUnitsToFloatCSSPixels(contentSize.height));
+    metrics.mContentSize = contentSize.ScaleToNearestPixels(
       aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   }
 

@@ -355,15 +355,21 @@ CompositorParent::TransformShadowTree()
   float rootScaleY = rootTransform.GetYScale();
 
   if (mIsFirstPaint && metrics) {
-    mContentRect = metrics->mContentRect;
-    SetFirstPaintViewport(metrics->mViewportScrollOffset,
+    nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
+    mContentSize = metrics->mContentSize;
+    SetFirstPaintViewport(scrollOffset.x, scrollOffset.y,
                           1/rootScaleX,
-                          mContentRect,
-                          metrics->mCSSContentRect);
+                          mContentSize.width,
+                          mContentSize.height,
+                          metrics->mCSSContentSize.width,
+                          metrics->mCSSContentSize.height);
     mIsFirstPaint = false;
-  } else if (metrics && !metrics->mContentRect.IsEqualEdges(mContentRect)) {
-    mContentRect = metrics->mContentRect;
-    SetPageRect(1/rootScaleX, mContentRect, metrics->mCSSContentRect);
+  } else if (metrics && (metrics->mContentSize != mContentSize)) {
+    mContentSize = metrics->mContentSize;
+    SetPageSize(1/rootScaleX, mContentSize.width,
+                mContentSize.height,
+                metrics->mCSSContentSize.width,
+                metrics->mCSSContentSize.height);
   }
 
   // We synchronise the viewport information with Java after sending the above
@@ -415,19 +421,24 @@ CompositorParent::TransformShadowTree()
 }
 
 void
-CompositorParent::SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom,
-                                        const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
+CompositorParent::SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom,
+                                        float aPageWidth, float aPageHeight,
+                                        float aCssPageWidth, float aCssPageHeight)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  mozilla::AndroidBridge::Bridge()->SetFirstPaintViewport(aOffset, aZoom, aPageRect, aCssPageRect);
+  mozilla::AndroidBridge::Bridge()->SetFirstPaintViewport(aOffsetX, aOffsetY,
+                                                          aZoom, aPageWidth, aPageHeight,
+                                                          aCssPageWidth, aCssPageHeight);
 #endif
 }
 
 void
-CompositorParent::SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
+CompositorParent::SetPageSize(float aZoom, float aPageWidth, float aPageHeight,
+                              float aCssPageWidth, float aCssPageHeight)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  mozilla::AndroidBridge::Bridge()->SetPageRect(aZoom, aPageRect, aCssPageRect);
+  mozilla::AndroidBridge::Bridge()->SetPageSize(aZoom, aPageWidth, aPageHeight,
+                                                aCssPageWidth, aCssPageHeight);
 #endif
 }
 
