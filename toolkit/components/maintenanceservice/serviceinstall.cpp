@@ -233,6 +233,11 @@ SvcInstall(SvcInstallAction action)
     QUERY_SERVICE_CONFIGW &serviceConfig = 
       *reinterpret_cast<QUERY_SERVICE_CONFIGW*>(serviceConfigBuffer.get());
 
+    // Ensure the service path is not quoted. We own this memory and know it to
+    // be large enough for the quoted path, so it is large enough for the
+    // unquoted path.  This function cannot fail.
+    PathUnquoteSpacesW(serviceConfig.lpBinaryPathName);
+
     // Obtain the existing maintenanceservice file's version number and
     // the new file's version number.  Versions are in the format of
     // A.B.C.D.
@@ -372,7 +377,7 @@ SvcInstall(SvcInstallAction action)
   }
 
   // Quote the path only if it contains spaces.
-  PathQuoteSpaces(newServiceBinaryPath);
+  PathQuoteSpacesW(newServiceBinaryPath);
   // The service does not already exist so create the service as on demand
   schService.own(CreateServiceW(schSCManager, SVC_NAME, SVC_DISPLAY_NAME,
                                 SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
