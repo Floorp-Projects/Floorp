@@ -640,6 +640,10 @@ class PropertyDefiner:
     def __init__(self, descriptor, name):
         self.descriptor = descriptor
         self.name = name
+        # self.prefCacheData will store an array of (prefname, bool*)
+        # pairs for our bool var caches.  generateArray will fill it
+        # in as needed.
+        self.prefCacheData = []
     def hasChromeOnly(self):
         return len(self.chrome) > len(self.regular)
     def hasNonChromeOnly(self):
@@ -650,11 +654,114 @@ class PropertyDefiner:
         if self.hasNonChromeOnly():
             return "s" + self.name
         return "NULL"
+    def usedForXrays(self, chrome):
+        # We only need Xrays for methods and attributes.  And we only need them
+        # for the non-chrome ones if we have no chromeonly things or if we're a
+        # worker descriptor.  Otherwise (we're non-worker and have chromeonly
+        # attributes) we need Xrays for the chrome methods/attributes.
+        return ((self.name is "Methods" or self.name is "Attributes") and
+                # XXXbz workers init the normal array but then use the chrome
+                # one, for Xrays, so we need to treat both as relevant.  See
+                # bug 753642.
+                (self.descriptor.workers or chrome == self.hasChromeOnly()))
+
     def __str__(self):
-        str = self.generateArray(self.regular, self.variableName(False))
+        # We only need to generate id arrays for things that will end
+        # up used via ResolveProperty or EnumerateProperties.
+        str = self.generateArray(self.regular, self.variableName(False),
+                                 self.usedForXrays(False))
         if self.hasChromeOnly():
-            str += self.generateArray(self.chrome, self.variableName(True))
+            str += self.generateArray(self.chrome, self.variableName(True),
+                                      self.usedForXrays(True))
         return str
+
+    @staticmethod
+    def getControllingPref(interfaceMember):
+        prefName = interfaceMember.getExtendedAttribute("Pref")
+        if prefName is None:
+            return None
+        # It's a list of strings
+        assert(len(prefName) is 1)
+        assert(prefName[0] is not None)
+        return prefName[0]
+
+    def generatePrefableArray(self, array, name, specTemplate, specTerminator,
+                              specType, getPref, getDataTuple, doIdArrays):
+        """
+        This method generates our various arrays.
+
+        array is an array of interface members as passed to generateArray
+
+        name is the name as passed to generateArray
+
+        specTemplate is a template for each entry of the spec array
+
+        specTerminator is a terminator for the spec array (inserted every time
+          our controlling pref changes and at the end of the array)
+
+        specType is the actual typename of our spec
+
+        getPref is a callback function that takes an array entry and returns
+          the corresponding pref value.
+
+        getDataTuple is a callback function that takes an array entry and
+          returns a tuple suitable for substitution into specTemplate.
+        """
+
+        # We want to generate a single list of specs, but with specTerminator
+        # inserted at every point where the pref name controlling the member
+        # changes.  That will make sure the order of the properties as exposed
+        # on the interface and interface prototype objects does not change when
+        # pref control is added to members while still allowing us to define all
+        # the members in the smallest number of JSAPI calls.
+        assert(len(array) is not 0)
+        lastPref = getPref(array[0]) # So we won't put a specTerminator
+                                     # at the very front of the list.
+        specs = []
+        prefableSpecs = []
+        if doIdArrays:
+            prefableIds = []
+
+        prefableTemplate = '  { true, &%s[%d] }'
+        prefCacheTemplate = '&%s[%d].enabled'
+        def switchToPref(props, pref):
+            # Remember the info about where our pref-controlled
+            # booleans live.
+            if pref is not None:
+                props.prefCacheData.append(
+                    (pref, prefCacheTemplate % (name, len(prefableSpecs)))
+                    )
+            # Set up pointers to the new sets of specs and ids
+            # inside prefableSpecs and prefableIds
+            prefableSpecs.append(prefableTemplate %
+                                 (name + "_specs", len(specs)))
+
+        switchToPref(self, lastPref)
+
+        for member in array:
+            curPref = getPref(member)
+            if lastPref != curPref:
+                # Terminate previous list
+                specs.append(specTerminator)
+                # And switch to our new pref
+                switchToPref(self, curPref)
+                lastPref = curPref
+            # And the actual spec
+            specs.append(specTemplate % getDataTuple(member))
+        specs.append(specTerminator)
+        prefableSpecs.append("  { false, NULL }");
+
+        arrays = (("static %s %s_specs[] = {\n" +
+                   ',\n'.join(specs) + "\n" +
+                   "};\n\n" +
+                   "static Prefable<%s> %s[] = {\n" +
+                   ',\n'.join(prefableSpecs) + "\n" +
+                   "};\n\n") % (specType, name, specType, name))
+        if doIdArrays:
+            arrays += ("static jsid %s_ids[%i] = { JSID_VOID };\n\n" %
+                       (name, len(specs)))
+        return arrays
+
 
 # The length of a method is the maximum of the lengths of the
 # argument lists of all its overloads.
@@ -673,18 +780,23 @@ class MethodDefiner(PropertyDefiner):
                    m.isMethod() and m.isStatic() == static]
         self.chrome = [{"name": m.identifier.name,
                         "length": methodLength(m),
-                        "flags": "JSPROP_ENUMERATE"} for m in methods]
+                        "flags": "JSPROP_ENUMERATE",
+                        "pref": PropertyDefiner.getControllingPref(m) }
+                       for m in methods]
         self.regular = [{"name": m.identifier.name,
                          "length": methodLength(m),
-                         "flags": "JSPROP_ENUMERATE"}
+                         "flags": "JSPROP_ENUMERATE",
+                         "pref": PropertyDefiner.getControllingPref(m) }
                         for m in methods if not isChromeOnly(m)]
         if not descriptor.interface.parent and not static and not descriptor.workers:
             self.chrome.append({"name": 'QueryInterface',
                                 "length": 1,
-                                "flags": "0"})
+                                "flags": "0",
+                                "pref": None })
             self.regular.append({"name": 'QueryInterface',
                                  "length": 1,
-                                 "flags": "0"})
+                                 "flags": "0",
+                                 "pref": None })
 
         if static:
             if not descriptor.interface.hasInterfaceObject():
@@ -695,21 +807,22 @@ class MethodDefiner(PropertyDefiner):
                 # non-static methods go on the interface prototype object
                 assert not self.hasChromeOnly() and not self.hasNonChromeOnly()
 
-    @staticmethod
-    def generateArray(array, name):
+    def generateArray(self, array, name, doIdArrays):
         if len(array) == 0:
             return ""
 
-        funcdecls = ['  JS_FN("%s", %s, %s, %s)' %
-                     (m["name"], m["name"], m["length"], m["flags"])
-                     for m in array]
-        # And add our JS_FS_END
-        funcdecls.append('  JS_FS_END')
+        def pref(m):
+            return m["pref"]
 
-        return ("static JSFunctionSpec %s[] = {\n" +
-                ',\n'.join(funcdecls) + "\n" +
-                "};\n\n" +
-                "static jsid %s_ids[%i] = { JSID_VOID };\n\n") % (name, name, len(array))
+        def specData(m):
+            return (m["name"], m["name"], m["length"], m["flags"])
+
+        return self.generatePrefableArray(
+            array, name,
+            '  JS_FN("%s", %s, %s, %s)',
+            '  JS_FS_END',
+            'JSFunctionSpec',
+            pref, specData, doIdArrays)
 
 class AttrDefiner(PropertyDefiner):
     def __init__(self, descriptor, name):
@@ -718,8 +831,7 @@ class AttrDefiner(PropertyDefiner):
         self.chrome = [m for m in descriptor.interface.members if m.isAttr()]
         self.regular = [m for m in self.chrome if not isChromeOnly(m)]
 
-    @staticmethod
-    def generateArray(array, name):
+    def generateArray(self, array, name, doIdArrays):
         if len(array) == 0:
             return ""
 
@@ -739,15 +851,16 @@ class AttrDefiner(PropertyDefiner):
                 return "NULL"
             return "set_" + attr.identifier.name
 
-        attrdecls = ['  { "%s", 0, %s, (JSPropertyOp)%s, (JSStrictPropertyOp)%s }' %
-                     (attr.identifier.name, flags(attr), getter(attr),
-                      setter(attr)) for attr in array]
-        attrdecls.append('  { 0, 0, 0, 0, 0 }')
+        def specData(attr):
+            return (attr.identifier.name, flags(attr), getter(attr),
+                    setter(attr))
 
-        return ("static JSPropertySpec %s[] = {\n" +
-                ',\n'.join(attrdecls) + "\n" +
-                "};\n\n" +
-                "static jsid %s_ids[%i] = { JSID_VOID };\n\n") % (name, name, len(array))
+        return self.generatePrefableArray(
+            array, name,
+            '  { "%s", 0, %s, (JSPropertyOp)%s, (JSStrictPropertyOp)%s }',
+            '  { 0, 0, 0, 0, 0 }',
+            'JSPropertySpec',
+            PropertyDefiner.getControllingPref, specData, doIdArrays)
 
 class ConstDefiner(PropertyDefiner):
     """
@@ -759,21 +872,20 @@ class ConstDefiner(PropertyDefiner):
         self.chrome = [m for m in descriptor.interface.members if m.isConst()]
         self.regular = [m for m in self.chrome if not isChromeOnly(m)]
 
-    @staticmethod
-    def generateArray(array, name):
+    def generateArray(self, array, name, doIdArrays):
         if len(array) == 0:
             return ""
 
-        constdecls = ['  { "%s", %s }' %
-                      (const.identifier.name,
-                       convertConstIDLValueToJSVal(const.value))
-                      for const in array]
-        constdecls.append('  { 0, JSVAL_VOID }')
+        def specData(const):
+            return (const.identifier.name,
+                    convertConstIDLValueToJSVal(const.value))
 
-        return ("static ConstantSpec %s[] = {\n" +
-                ',\n'.join(constdecls) + "\n" +
-                "};\n\n" +
-                "static jsid %s_ids[%i] = { JSID_VOID };\n\n") % (name, name, len(array))
+        return self.generatePrefableArray(
+            array, name,
+            '  { "%s", %s }',
+            '  { 0, JSVAL_VOID }',
+            'ConstantSpec',
+            PropertyDefiner.getControllingPref, specData, doIdArrays)
 
 class PropertyArrays():
     def __init__(self, descriptor):
@@ -785,6 +897,10 @@ class PropertyArrays():
     @staticmethod
     def arrayNames():
         return [ "staticMethods", "methods", "attrs", "consts" ]
+
+    @staticmethod
+    def xrayRelevantArrayNames():
+        return [ "methods", "attrs" ]
 
     def hasChromeOnly(self):
         return reduce(lambda b, a: b or getattr(self, a).hasChromeOnly(),
@@ -827,9 +943,14 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         assert needInterfaceObject or needInterfacePrototypeObject
 
         idsToInit = []
-        for var in self.properties.arrayNames():
+        for var in self.properties.xrayRelevantArrayNames():
             props = getattr(self.properties, var)
-            if props.hasNonChromeOnly():
+            # We only have non-chrome ids to init if we're workers or if we
+            # have no chrome ids.
+            # XXXbz workers init the normal array but then use the chrome
+            # one, for Xrays.  See bug 753642.  Hence the weird worker check.
+            if (props.hasNonChromeOnly() and
+                (self.descriptor.workers or not props.hasChromeOnly())):
                 idsToInit.append(props.variableName(False))
             if props.hasChromeOnly() and not self.descriptor.workers:
                 idsToInit.append(props.variableName(True))
@@ -851,6 +972,22 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                 "\n")
         else:
             initIds = None
+
+        prefCacheData = []
+        for var in self.properties.arrayNames():
+            props = getattr(self.properties, var)
+            prefCacheData.extend(props.prefCacheData)
+        if len(prefCacheData) is not 0:
+            prefCacheData = [
+                CGGeneric('Preferences::AddBoolVarCache(%s, "%s");' % (ptr, pref)) for
+                (pref, ptr) in prefCacheData]
+            prefCache = CGWrapper(CGIndenter(CGList(prefCacheData, "\n")),
+                                  pre=("static bool sPrefCachesInited = false;\n"
+                                       "if (!sPrefCachesInited) {\n"
+                                       "  sPrefCachesInited = true;\n"),
+                                  post="\n}")
+        else:
+            prefCache = None
             
         getParentProto = ("JSObject* parentProto = %s;\n"
                           "if (!parentProto) {\n"
@@ -890,7 +1027,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             chrome = None
 
         functionBody = CGList(
-            [CGGeneric(getParentProto), initIds, chrome,
+            [CGGeneric(getParentProto), initIds, prefCache, chrome,
              CGGeneric(call.define() % self.properties.variableNames(False))],
             "\n\n")
         return CGIndenter(functionBody).define()
@@ -2839,18 +2976,27 @@ class CGResolveProperty(CGAbstractMethod):
 
         methods = self.properties.methods
         if methods.hasNonChromeOnly() or methods.hasChromeOnly():
-            str += """  for (size_t i = 0; i < ArrayLength(%(methods)s_ids); ++i) {
-    if (id == %(methods)s_ids[i]) {
-      JSFunction *fun = JS_NewFunctionById(cx, %(methods)s[i].call, %(methods)s[i].nargs, 0, wrapper, id);
-      if (!fun)
-          return false;
-      JSObject *funobj = JS_GetFunctionObject(fun);
-      desc->value.setObject(*funobj);
-      desc->attrs = %(methods)s[i].flags;
-      desc->obj = wrapper;
-      desc->setter = nsnull;
-      desc->getter = nsnull;
-      return true;
+            str += """  // %(methods)s has an end-of-list marker at the end that we ignore
+  for (size_t prefIdx = 0; prefIdx < ArrayLength(%(methods)s)-1; ++prefIdx) {
+    MOZ_ASSERT(%(methods)s[prefIdx].specs);
+    if (%(methods)s[prefIdx].enabled) {
+      // Set i to be the index into our full list of ids/specs that we're
+      // looking at now.
+      size_t i = %(methods)s[prefIdx].specs - %(methods)s_specs;
+      for ( ; %(methods)s_ids[i] != JSID_VOID; ++i) {
+        if (id == %(methods)s_ids[i]) {
+          JSFunction *fun = JS_NewFunctionById(cx, %(methods)s_specs[i].call, %(methods)s_specs[i].nargs, 0, wrapper, id);
+          if (!fun)
+              return false;
+          JSObject *funobj = JS_GetFunctionObject(fun);
+          desc->value.setObject(*funobj);
+          desc->attrs = %(methods)s_specs[i].flags;
+          desc->obj = wrapper;
+          desc->setter = nsnull;
+          desc->getter = nsnull;
+          return true;
+        }
+      }
     }
   }
 
@@ -2858,13 +3004,22 @@ class CGResolveProperty(CGAbstractMethod):
 
         attrs = self.properties.attrs
         if attrs.hasNonChromeOnly() or attrs.hasChromeOnly():
-            str += """  for (size_t i = 0; i < ArrayLength(%(attrs)s_ids); ++i) {
-    if (id == %(attrs)s_ids[i]) {
-      desc->attrs = %(attrs)s[i].flags;
-      desc->obj = wrapper;
-      desc->setter = %(attrs)s[i].setter;
-      desc->getter = %(attrs)s[i].getter;
-      return true;
+            str += """  // %(attrs)s has an end-of-list marker at the end that we ignore
+  for (size_t prefIdx = 0; prefIdx < ArrayLength(%(attrs)s)-1; ++prefIdx) {
+    MOZ_ASSERT(%(attrs)s[prefIdx].specs);
+    if (%(attrs)s[prefIdx].enabled) {
+      // Set i to be the index into our full list of ids/specs that we're
+      // looking at now.
+      size_t i = %(attrs)s[prefIdx].specs - %(attrs)s_specs;;
+      for ( ; %(attrs)s_ids[i] != JSID_VOID; ++i) {
+        if (id == %(attrs)s_ids[i]) {
+          desc->attrs = %(attrs)s_specs[i].flags;
+          desc->obj = wrapper;
+          desc->setter = %(attrs)s_specs[i].setter;
+          desc->getter = %(attrs)s_specs[i].getter;
+          return true;
+        }
+      }
     }
   }
 
@@ -2884,10 +3039,19 @@ class CGEnumerateProperties(CGAbstractMethod):
 
         methods = self.properties.methods
         if methods.hasNonChromeOnly() or methods.hasChromeOnly():
-            str += """  for (size_t i = 0; i < sizeof(%(methods)s_ids); ++i) {
-    if ((%(methods)s[i].flags & JSPROP_ENUMERATE) &&
-        !props.append(%(methods)s_ids[i])) {
-      return false;
+            str += """  // %(methods)s has an end-of-list marker at the end that we ignore
+  for (size_t prefIdx = 0; prefIdx < ArrayLength(%(methods)s)-1; ++prefIdx) {
+    MOZ_ASSERT(%(methods)s[prefIdx].specs);
+    if (%(methods)s[prefIdx].enabled) {
+      // Set i to be the index into our full list of ids/specs that we're
+      // looking at now.
+      size_t i = %(methods)s[prefIdx].specs - %(methods)s_specs;
+      for ( ; %(methods)s_ids[i] != JSID_VOID; ++i) {
+        if ((%(methods)s_specs[i].flags & JSPROP_ENUMERATE) &&
+            !props.append(%(methods)s_ids[i])) {
+          return false;
+        }
+      }
     }
   }
 
@@ -2895,10 +3059,19 @@ class CGEnumerateProperties(CGAbstractMethod):
 
         attrs = self.properties.attrs
         if attrs.hasNonChromeOnly() or attrs.hasChromeOnly():
-            str += """  for (size_t i = 0; i < sizeof(%(attrs)s_ids); ++i) {
-    if ((%(attrs)s[i].flags & JSPROP_ENUMERATE) &&
-        !props.append(%(attrs)s_ids[i])) {
-      return false;
+            str += """  // %(attrs)s has an end-of-list marker at the end that we ignore
+  for (size_t prefIdx = 0; prefIdx < ArrayLength(%(attrs)s)-1; ++prefIdx) {
+    MOZ_ASSERT(%(attrs)s[prefIdx].specs);
+    if (%(attrs)s[prefIdx].enabled) {
+      // Set i to be the index into our full list of ids/specs that we're
+      // looking at now.
+      size_t i = %(attrs)s[prefIdx].specs - %(attrs)s_specs;;
+      for ( ; %(attrs)s_ids[i] != JSID_VOID; ++i) {
+        if ((%(attrs)s_specs[i].flags & JSPROP_ENUMERATE) &&
+            !props.append(%(attrs)s_ids[i])) {
+          return false;
+        }
+      }
     }
   }
 
@@ -3156,7 +3329,9 @@ class CGBindingRoot(CGThing):
                           'XPCQuickStubs.h',
                           'AccessCheck.h',
                           'WorkerPrivate.h',
-                          'nsContentUtils.h'],
+                          'nsContentUtils.h',
+                          'mozilla/Preferences.h'
+                          ],
                          curr)
 
         # Add include guards.
