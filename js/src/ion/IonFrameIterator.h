@@ -231,6 +231,7 @@ class SnapshotIterator : public SnapshotReader
 
     Value slotValue(const Slot &slot);
     bool slotReadable(const Slot &slot);
+    void warnUnreadableSlot();
 
   public:
     SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
@@ -246,7 +247,7 @@ class SnapshotIterator : public SnapshotReader
         Slot s = readSlot();
         if (slotReadable(s))
             return slotValue(s);
-        JS_NOT_REACHED("Crossing fingers: Unable to read snapshot slot.");
+        warnUnreadableSlot();
         return UndefinedValue();
     }
 };
