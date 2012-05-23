@@ -645,51 +645,6 @@ GetScopeOfObject(JSObject* obj)
     return ((XPCWrappedNative*)supports)->GetScope();
 }
 
-
-#ifdef DEBUG
-void DEBUG_CheckForComponentsInScope(JSContext* cx, JSObject* obj,
-                                     JSObject* startingObj,
-                                     JSBool OKIfNotInitialized,
-                                     XPCJSRuntime* runtime)
-{
-    if (OKIfNotInitialized)
-        return;
-
-    if (!(JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS))
-        return;
-
-    const char* name = runtime->GetStringName(XPCJSRuntime::IDX_COMPONENTS);
-    jsval prop;
-    if (JS_LookupProperty(cx, obj, name, &prop) && !JSVAL_IS_PRIMITIVE(prop))
-        return;
-
-    // This is pretty much always bad. It usually means that native code is
-    // making a callback to an interface implemented in JavaScript, but the
-    // document where the JS object was created has already been cleared and the
-    // global properties of that document's window are *gone*. Generally this
-    // indicates a problem that should be addressed in the design and use of the
-    // callback code.
-    NS_ERROR("XPConnect is being called on a scope without a 'Components' property!  (stack and details follow)");
-    printf("The current JS stack is:\n");
-    xpc_DumpJSStack(cx, true, true, true);
-
-    printf("And the object whose scope lacks a 'Components' property is:\n");
-    js_DumpObject(startingObj);
-
-    JSObject *p = startingObj;
-    while (js::IsWrapper(p)) {
-        p = js::GetProxyPrivate(p).toObjectOrNull();
-        if (!p)
-            break;
-        printf("which is a wrapper for:\n");
-        js_DumpObject(p);
-    }
-}
-#else
-#define DEBUG_CheckForComponentsInScope(ccx, obj, startingObj, OKIfNotInitialized, runtime) \
-    ((void)0)
-#endif
-
 // static
 XPCWrappedNativeScope*
 XPCWrappedNativeScope::FindInJSObjectScope(JSContext* cx, JSObject* obj,
@@ -748,8 +703,6 @@ XPCWrappedNativeScope::FindInJSObjectScope(JSContext* cx, JSObject* obj,
 
     if (found) {
         // This cannot be called within the map lock!
-        DEBUG_CheckForComponentsInScope(cx, obj, startingObj,
-                                        OKIfNotInitialized, runtime);
         return found;
     }
 
