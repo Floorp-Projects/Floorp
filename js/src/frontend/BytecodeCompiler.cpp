@@ -84,7 +84,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
             Probes::compileScriptBegin(filename, lineno);
         }
         ~ProbesManager() { Probes::compileScriptEnd(filename, lineno); }
-    }; 
+    };
     ProbesManager probesManager(filename, lineno);
 
     /*
@@ -230,6 +230,9 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         return NULL;
     }
 #endif
+
+    if (!parser.checkForArgumentsAndRest())
+        return NULL;
 
     /*
      * Nowadays the threaded interpreter needs a stop instruction, so we
