@@ -56,6 +56,7 @@ interface nsIFileInputStream : nsIInputStream
      * or more specifically, when one of the following is called:
      *   - Seek
      *   - Tell
+     *   - SetEOF
      *   - Available
      *   - Read
      *   - ReadLine
@@ -98,6 +99,7 @@ interface nsIFileOutputStream : nsIOutputStream
      * be performed when one of the following is called:
      *   - Seek
      *   - Tell
+     *   - SetEOF
      *   - Write
      *   - Flush
      *
@@ -139,4 +141,67 @@ interface nsIPartialFileInputStream : nsISupports
     void init(in nsIFile file, in unsigned long long start,
               in unsigned long long length,
               in long ioFlags, in long perm, in long behaviorFlags);
+};
+
+/**
+ * A stream that allows you to read from a file or stream to a file.
+ */
+[scriptable, uuid(82cf605a-8393-4550-83ab-43cd5578e006)]
+interface nsIFileStream : nsISupports
+{
+    /**
+     * @param file          file to read from or stream to (must QI to
+     *                      nsILocalFile)
+     * @param ioFlags       file open flags listed in prio.h (see
+     *                      PR_Open documentation) or -1 to open the
+     *                      file in default mode (PR_RDWR).
+     * @param perm          file mode bits listed in prio.h or -1 to
+     *                      use the default value (0)
+     * @param behaviorFlags flags specifying various behaviors of the class
+     *        (see enumerations in the class)
+     */
+    void init(in nsIFile file, in long ioFlags, in long perm,
+              in long behaviorFlags);
+
+    /**
+     * See the same constant in nsIFileInputStream. The deferred open will
+     * be performed when one of the following is called:
+     *   - Seek
+     *   - Tell
+     *   - SetEOF
+     *   - Available
+     *   - Read
+     *   - Flush
+     *   - Write
+     *   - GetSize
+     *   - GetLastModified
+     *
+     * @note Using this flag results in the file not being opened
+     *       during the call to Init.  This means that any errors that might
+     *       happen when this flag is not set would happen during the
+     *       first read or write. The file is not locked when Init is called,
+     *       so it might be deleted before we try to read from it and if the
+     *       file is to be created, then it will not appear on the disk until
+     *       the first write.
+     */
+    const long DEFER_OPEN = 1<<0;
+};
+
+/**
+ * An interface that allows you to get some metadata like file size and
+ * file last modified time.
+ */
+[scriptable, uuid(07f679e4-9601-4bd1-b510-cd3852edb881)]
+interface nsIFileMetadata : nsISupports
+{
+    /**
+     * File size in bytes;
+     */
+    readonly attribute long long size;
+
+    /**
+     * File last modified time in milliseconds from midnight (00:00:00),
+     * January 1, 1970 Greenwich Mean Time (GMT).
+     */
+    readonly attribute long long lastModified;
 };
