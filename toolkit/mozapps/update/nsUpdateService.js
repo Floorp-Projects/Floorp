@@ -2340,8 +2340,12 @@ UpdateManager.prototype = {
              getService(Ci.nsIUpdateManager);
     um.saveUpdates();
 
-    // Destroy the updates directory, since we're done with it.
-    cleanUpUpdatesDir(updateSucceeded);
+    if (update.state != STATE_PENDING && update.state != STATE_PENDING_SVC) {
+      // Destroy the updates directory, since we're done with it.
+      // Make sure to not do this when the updater has fallen back to
+      // non-staged updates.
+      cleanUpUpdatesDir(updateSucceeded);
+    }
 
     // Send an observer notification which the update wizard uses in
     // order to update its UI.
