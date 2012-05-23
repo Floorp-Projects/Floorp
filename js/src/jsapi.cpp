@@ -4970,8 +4970,10 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8, JSObject *obj, c
     result = JS_TRUE;
     exnState = JS_SaveExceptionState(cx);
     {
-        Parser parser(cx);
-        if (parser.init(chars, length, NULL, 1, cx->findVersion())) {
+        Parser parser(cx, /* prin = */ NULL, /* originPrin = */ NULL,
+                      chars, length, /* filename = */ NULL, /* lineno = */ 1, cx->findVersion(), 
+                      /* cfp = */ NULL, /* foldConstants = */ true, /* compileAndGo = */ false);
+        if (parser.init()) {
             older = JS_SetErrorReporter(cx, NULL);
             if (!parser.parse(obj) &&
                 parser.tokenStream.isUnexpectedEOF()) {
