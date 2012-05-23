@@ -183,7 +183,7 @@
 #include "nsIDOMXULCommandDispatcher.h"
 
 #include "nsBindingManager.h"
-#include "nsIXBLService.h"
+#include "nsXBLService.h"
 
 // used for popup blocking, needs to be converted to something
 // belonging to the back-end like nsIContentPolicy
@@ -1718,10 +1718,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     nsIDOMWindow* privateRoot = nsGlobalWindow::GetPrivateRoot();
 
     if (privateRoot == static_cast<nsIDOMWindow*>(this)) {
-      nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
-      if (xblService) {
-        xblService->AttachGlobalKeyHandler(mChromeEventHandler);
-      }
+      nsXBLService::AttachGlobalKeyHandler(mChromeEventHandler);
     }
   }
 

@@ -10,7 +10,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PARALLEL_DIRS	= public src builtin
+PARALLEL_DIRS	= src builtin
 
 TEST_DIRS += test
 
