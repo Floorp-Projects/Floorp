@@ -680,10 +680,6 @@ SimpleTest.executeSoon = function(aFunc) {
  * SimpleTest.waitForExplicitFinish() has been invoked.
 **/
 SimpleTest.finish = function () {
-    // Cancel element fullscreen mode due to Bug 728893
-    if (document && document.mozFullScreenElement) {
-        document.mozCancelFullScreen();
-    }
     if (SimpleTest._expectingUncaughtException) {
         SimpleTest.ok(false, "expectUncaughtException was called but no uncaught exception was detected!");
     }
