@@ -47,7 +47,10 @@ String.prototype.startsWith =
 // undone are prefixed with "unsafe"; the rest are prefixed with "safe".
 function flipBackslashes(aUnsafeStr)
 {
-  return aUnsafeStr.replace(/\\/g, '/');
+  // Save memory by only doing the replacement if it's necessary.
+  return (aUnsafeStr.indexOf('\\') === -1)
+         ? aUnsafeStr
+         : aUnsafeStr.replace(/\\/g, '/');
 }
 
 const gAssertionFailureMsgPrefix = "aboutMemory.js assertion failed: ";
