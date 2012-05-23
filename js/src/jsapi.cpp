@@ -1666,8 +1666,8 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     AssertNoGC(cx);
     JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
     JS_ASSERT(!IsCrossCompartmentWrapper(origwrapper));
-    JS_ASSERT(!IsCrossCompartmentWrapper(origwrapper));
-    JS_ASSERT(!IsCrossCompartmentWrapper(origwrapper));
+    JS_ASSERT(!IsCrossCompartmentWrapper(targetobj));
+    JS_ASSERT(!IsCrossCompartmentWrapper(targetwrapper));
 
     JSObject *newWrapper;
     JSCompartment *destination = targetobj->compartment();
