@@ -141,10 +141,10 @@ WebGLMemoryMultiReporterWrapper::~WebGLMemoryMultiReporterWrapper()
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(WebGLBufferMallocSizeOfFun, "webgl-buffer")
 
-PRInt64 
+int64_t 
 WebGLMemoryMultiReporterWrapper::GetBufferCacheMemoryUsed() {
     const ContextsArrayType & contexts = Contexts();
-    PRInt64 result = 0;
+    int64_t result = 0;
     for (size_t i = 0; i < contexts.Length(); ++i) {
         for (size_t j = 0; j < contexts[i]->mBuffers.Length(); ++j) 
             if (contexts[i]->mBuffers[j]->Target() == LOCAL_GL_ELEMENT_ARRAY_BUFFER)
@@ -155,10 +155,10 @@ WebGLMemoryMultiReporterWrapper::GetBufferCacheMemoryUsed() {
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(WebGLShaderMallocSizeOfFun, "webgl-shader")
 
-PRInt64 
+int64_t 
 WebGLMemoryMultiReporterWrapper::GetShaderSize() {
     const ContextsArrayType & contexts = Contexts();
-    PRInt64 result = 0;
+    int64_t result = 0;
     for (size_t i = 0; i < contexts.Length(); ++i) {
         for (size_t j = 0; j < contexts[i]->mShaders.Length(); ++j) 
             result += contexts[i]->mShaders[j]->SizeOfIncludingThis(WebGLShaderMallocSizeOfFun);
