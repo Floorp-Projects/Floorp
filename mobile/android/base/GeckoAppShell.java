@@ -2170,17 +2170,7 @@ public class GeckoAppShell
             }
 
             Tab tab = Tabs.getInstance().getSelectedTab();
-            ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
-            /*
-            if (FloatUtils.fuzzyEquals(sCheckerboardPageWidth, viewport.pageSizeWidth) &&
-                FloatUtils.fuzzyEquals(sCheckerboardPageHeight, viewport.pageSizeHeight)) {
-                float width = right - left;
-                float height = bottom - top;
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), (int)top, (int)left, (int)width, (int)height, 0, 0, (int)(sLastCheckerboardWidthRatio * width), (int)(sLastCheckerboardHeightRatio * height), GeckoAppShell.SCREENSHOT_UPDATE));
-            } else {
-            */
-                GeckoAppShell.screenshotWholePage(tab);
-            //}
+            GeckoAppShell.screenshotWholePage(tab);
         }
 
         void addRectToRepaint(float top, float left, float bottom, float right) {
@@ -2228,8 +2218,8 @@ public class GeckoAppShell
         ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
         Log.i(LOGTAG, "Taking whole-screen screenshot, viewport: " + viewport);
         // source width and height to screenshot
-        float sw = viewport.pageSizeWidth / viewport.zoomFactor;
-        float sh = viewport.pageSizeHeight / viewport.zoomFactor;
+        float sw = viewport.getPageWidth() / viewport.zoomFactor;
+        float sh = viewport.getPageHeight() / viewport.zoomFactor;
         int maxPixels = Math.min(ScreenshotLayer.getMaxNumPixels(), sMaxTextureSize * sMaxTextureSize);
         // 2Mb of 16bit image data
         // may be bumped by up to 4x for power of 2 alignment
@@ -2247,6 +2237,9 @@ public class GeckoAppShell
         sCheckerboardPageWidth = sw;
         sCheckerboardPageHeight = sh;
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, (int)sw, (int)sh, 0, 0,  dw, dh, GeckoAppShell.SCREENSHOT_WHOLE_PAGE));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(),
+                (int)FloatMath.ceil(viewport.pageRectLeft), (int)FloatMath.ceil(viewport.pageRectTop),
+                (int)FloatMath.floor(viewport.getPageWidth()), (int)FloatMath.floor(viewport.getPageHeight()),
+                0, 0,  dw, dh, GeckoAppShell.SCREENSHOT_WHOLE_PAGE));
     }
 }
