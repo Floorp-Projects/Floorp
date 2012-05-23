@@ -2914,7 +2914,8 @@ RIL[UNSOLICITED_RESPONSE_CALL_STATE_CHANGED] = function UNSOLICITED_RESPONSE_CAL
   this.getCurrentCalls();
 };
 RIL[UNSOLICITED_RESPONSE_VOICE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RESPONSE_VOICE_NETWORK_STATE_CHANGED() {
-  if (DEBUG) debug("Network state changed, re-requesting phone state.");
+  if (DEBUG) debug("Network state changed, re-requesting phone state and ICC status");
+  this.getICCStatus();
   this.requestNetworkInfo();
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length) {
