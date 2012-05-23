@@ -8,8 +8,51 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 relativesrcdir = dom/bindings/test
 
+MODULE           = dom
+LIBRARY_NAME     = dombindings_test_s
+LIBXUL_LIBRARY   = 1
+FORCE_STATIC_LIB = 1
+# Do NOT export this library.  We don't actually want our test code
+# being added to libxul or anything.
+
 include $(DEPTH)/config/autoconf.mk
+
+# Need this to find all our DOM source files.
+include $(topsrcdir)/dom/dom-config.mk
+
+# And need this for $(test_webidl_files)
+include $(topsrcdir)/dom/webidl/WebIDL.mk
+
+# But the webidl actually lives in our parent dir
+test_webidl_files := $(addprefix ../,$(test_webidl_files))
+
+CPPSRCS := $(subst .webidl,Binding.cpp,$(test_webidl_files))
+
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/js/xpconnect/src \
+  -I$(topsrcdir)/js/xpconnect/wrappers \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
+
+# If you change bindinggen_dependencies here, change it in
+# dom/bindings/Makefile.in too.  But note that we include ../Makefile
+# here manually, since $(GLOBAL_DEPS) won't cover it.
+bindinggen_dependencies := \
+  ../BindingGen.py \
+  ../Bindings.conf \
+  ../Configuration.py \
+  ../Codegen.py \
+  ../ParserResults.pkl \
+  ../Makefile \
+  $(GLOBAL_DEPS) \
+  $(NULL)
+
+$(CPPSRCS): ../%Binding.cpp: $(bindinggen_dependencies) \
+                             ../%.webidl \
+                             $(NULL)
+	$(MAKE) -C .. $*Binding.h
+	$(MAKE) -C .. $*Binding.cpp
 
 _TEST_FILES = \
   test_interfaceToString.html \
@@ -17,6 +60,7 @@ _TEST_FILES = \
   test_InstanceOf.html \
   test_traceProtos.html \
   $(NULL)
+
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
