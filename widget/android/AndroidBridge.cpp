@@ -1631,14 +1631,6 @@ AndroidBridge::HandleGeckoMessage(const nsAString &aMessage, nsAString &aRet)
     ALOG_BRIDGE("leaving %s", __PRETTY_FUNCTION__);
 }
 
-static nsCOMPtr<nsIAndroidDrawMetadataProvider> gDrawMetadataProvider = NULL;
-
-nsCOMPtr<nsIAndroidDrawMetadataProvider>
-AndroidBridge::GetDrawMetadataProvider()
-{
-    return gDrawMetadataProvider;
-}
-
 void
 AndroidBridge::CheckURIVisited(const nsAString& aURI)
 {
@@ -2095,13 +2087,6 @@ nsAndroidBridge::~nsAndroidBridge()
 NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(const nsAString & message, nsAString &aRet NS_OUTPARAM)
 {
     AndroidBridge::Bridge()->HandleGeckoMessage(message, aRet);
-    return NS_OK;
-}
-
-/* void SetDrawMetadataProvider (in nsIAndroidDrawMetadataProvider message); */
-NS_IMETHODIMP nsAndroidBridge::SetDrawMetadataProvider(nsIAndroidDrawMetadataProvider *aProvider)
-{
-    gDrawMetadataProvider = aProvider;
     return NS_OK;
 }
 
