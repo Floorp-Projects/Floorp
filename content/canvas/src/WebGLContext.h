@@ -1355,6 +1355,8 @@ protected:
     ContextStatus mContextStatus;
     bool mContextLostErrorSet;
 
+    int mAlreadyReportedMessages;
+
 #ifdef XP_MACOSX
     // see bug 713305. This RAII helper guarantees that we're on the discrete GPU, during its lifetime
     // Debouncing note: we don't want to switch GPUs too frequently, so try to not create and destroy
@@ -1368,8 +1370,8 @@ protected:
 
 public:
     // console logging helpers
-    static void LogMessage(const char *fmt, ...);
-    static void LogMessage(const char *fmt, va_list ap);
+    void LogMessage(const char *fmt, ...);
+    void LogMessage(const char *fmt, va_list ap);
     void LogMessageIfVerbose(const char *fmt, ...);
     void LogMessageIfVerbose(const char *fmt, va_list ap);
 

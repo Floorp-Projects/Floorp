@@ -153,6 +153,8 @@ WebGLContext::WebGLContext()
     mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
     mContextStatus = ContextStable;
     mContextLostErrorSet = false;
+
+    mAlreadyReportedMessages = 0;
 }
 
 WebGLContext::~WebGLContext()
