@@ -70,14 +70,14 @@ public class ViewportMetrics {
         float y = (float)json.getDouble("y");
         float width = (float)json.getDouble("width");
         float height = (float)json.getDouble("height");
-        float pageLeft = 0.0f;
-        float pageTop = 0.0f;
-        float pageRight = (float)json.getDouble("pageWidth");
-        float pageBottom = (float)json.getDouble("pageHeight");
-        float cssPageLeft = 0.0f;
-        float cssPageTop = 0.0f;
-        float cssPageRight = (float)json.getDouble("cssPageWidth");
-        float cssPageBottom = (float)json.getDouble("cssPageHeight");
+        float pageLeft = (float)json.getDouble("pageLeft");
+        float pageTop = (float)json.getDouble("pageTop");
+        float pageRight = (float)json.getDouble("pageRight");
+        float pageBottom = (float)json.getDouble("pageBottom");
+        float cssPageLeft = (float)json.getDouble("cssPageLeft");
+        float cssPageTop = (float)json.getDouble("cssPageTop");
+        float cssPageRight = (float)json.getDouble("cssPageRight");
+        float cssPageBottom = (float)json.getDouble("cssPageBottom");
         float zoom = (float)json.getDouble("zoom");
 
         mPageRect = new RectF(pageLeft, pageTop, pageRight, pageBottom);
