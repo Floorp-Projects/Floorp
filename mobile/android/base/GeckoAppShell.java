@@ -380,6 +380,9 @@ public class GeckoAppShell
         f = Environment.getDownloadCacheDirectory();
         GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
 
+        // Enable fixed position layers
+        GeckoAppShell.putenv("MOZ_ENABLE_FIXED_POSITION_LAYERS=1");
+
         putLocaleEnv();
     }
 

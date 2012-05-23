@@ -153,6 +153,8 @@ CompositorParent::SetEGLSurfaceSize(int width, int height)
 void
 CompositorParent::ResumeCompositionAndResize(int width, int height)
 {
+  mWidgetSize.width = width;
+  mWidgetSize.height = height;
   SetEGLSurfaceSize(width, height);
   ResumeComposition();
 }
@@ -289,6 +291,38 @@ CompositorParent::GetPrimaryScrollableLayer()
   return root;
 }
 
+static void
+Translate2D(gfx3DMatrix& aTransform, const gfxPoint& aOffset)
+{
+  aTransform._41 += aOffset.x;
+  aTransform._42 += aOffset.y;
+}
+
+void
+CompositorParent::TranslateFixedLayers(Layer* aLayer,
+                                       const gfxPoint& aTranslation)
+{
+  if (aLayer->GetIsFixedPosition() &&
+      !aLayer->GetParent()->GetIsFixedPosition()) {
+    gfx3DMatrix layerTransform = aLayer->GetTransform();
+    Translate2D(layerTransform, aTranslation);
+    ShadowLayer* shadow = aLayer->AsShadowLayer();
+    shadow->SetShadowTransform(layerTransform);
+
+    const nsIntRect* clipRect = aLayer->GetClipRect();
+    if (clipRect) {
+      nsIntRect transformedClipRect(*clipRect);
+      transformedClipRect.MoveBy(aTranslation.x, aTranslation.y);
+      shadow->SetShadowClipRect(&transformedClipRect);
+    }
+  }
+
+  for (Layer* child = aLayer->GetFirstChild();
+       child; child = child->GetNextSibling()) {
+    TranslateFixedLayers(child, aTranslation);
+  }
+}
+
 // Go down shadow layer tree, setting properties to match their non-shadow
 // counterparts.
 static void
@@ -371,6 +405,15 @@ CompositorParent::TransformShadowTree()
       (mScrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * mYScale);
     ViewTransform treeTransform(-scrollCompensation, mXScale, mYScale);
     shadow->SetShadowTransform(gfx3DMatrix(treeTransform) * currentTransform);
+
+    // Alter the scroll offset so that fixed position layers remain within
+    // the page area.
+    int offsetX = NS_MAX(0, NS_MIN(mScrollOffset.x, mContentSize.width - mWidgetSize.width));
+    int offsetY = NS_MAX(0, NS_MIN(mScrollOffset.y, mContentSize.height - mWidgetSize.height));
+    gfxPoint reverseViewTranslation(offsetX / tempScaleDiffX - metricsScrollOffset.x,
+                                    offsetY / tempScaleDiffY - metricsScrollOffset.y);
+
+    TranslateFixedLayers(layer, reverseViewTranslation);
   } else {
     ViewTransform treeTransform(nsIntPoint(0,0), mXScale, mYScale);
     shadow->SetShadowTransform(gfx3DMatrix(treeTransform) * currentTransform);
@@ -429,6 +472,13 @@ CompositorParent::ShadowLayersUpdated(bool isFirstPaint)
 PLayersParent*
 CompositorParent::AllocPLayers(const LayersBackend& aBackendType, int* aMaxTextureSize)
 {
+  // mWidget doesn't belong to the compositor thread, so it should be set to
+  // NULL before returning from this method, to avoid accessing it elsewhere.
+  nsIntRect rect;
+  mWidget->GetBounds(rect);
+  mWidgetSize.width = rect.width;
+  mWidgetSize.height = rect.height;
+
   if (aBackendType == LayerManager::LAYERS_OPENGL) {
     nsRefPtr<LayerManagerOGL> layerManager;
     layerManager =
