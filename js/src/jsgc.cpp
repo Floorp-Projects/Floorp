@@ -2879,8 +2879,8 @@ BeginMarkPhase(JSRuntime *rt)
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         if (!c->isCollecting())
             rt->gcIsFull = false;
-        if (ShouldPreserveJITCode(c, currentTime))
-            c->setPreservingCode(true);
+
+        c->setPreservingCode(ShouldPreserveJITCode(c, currentTime));
     }
 
     rt->gcMarker.start(rt);
@@ -3290,10 +3290,8 @@ AutoGCSession::AutoGCSession(JSRuntime *rt)
 
 AutoGCSession::~AutoGCSession()
 {
-    for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
+    for (GCCompartmentsIter c(runtime); !c.done(); c.next())
         c->setCollecting(false);
-        c->setPreservingCode(false);
-    }
 
     runtime->gcNextFullGCTime = PRMJ_Now() + GC_IDLE_FULL_SPAN;
     runtime->gcChunkAllocationSinceLastGC = false;
