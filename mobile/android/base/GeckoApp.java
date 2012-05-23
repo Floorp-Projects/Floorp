@@ -961,13 +961,12 @@ abstract public class GeckoApp
             } else if (event.equals("CharEncoding:State")) {
                 final boolean visible = message.getString("visible").equals("true");
                 GeckoPreferences.setCharEncodingState(visible);
-                if (sMenu != null) {
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        if (sMenu != null)
                             sMenu.findItem(R.id.char_encoding).setVisible(visible);
-                        }
-                    });
-                }
+                    }
+                });
             } else if (event.equals("Update:Restart")) {
                 doRestart("org.mozilla.gecko.restart_update");
             } else if (event.equals("Tab:ViewportMetadata")) {
@@ -989,23 +988,21 @@ abstract public class GeckoApp
                 }
             } else if (event.equals("Tab:HasTouchListener")) {
                 int tabId = message.getInt("tabID");
-                Tab tab = Tabs.getInstance().getTab(tabId);
+                final Tab tab = Tabs.getInstance().getTab(tabId);
                 tab.setHasTouchListeners(true);
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        if (Tabs.getInstance().isSelectedTab(tab))
                             mLayerController.getView().getTouchEventHandler().setWaitForTouchListeners(true);
-                        }
-                    });
-                }
+                    }
+                });
             } else if (event.equals("Session:StatePurged")) {
-                if (mAboutHomeContent != null) {
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        if (mAboutHomeContent != null)
                             mAboutHomeContent.setLastTabsVisibility(false);
-                        }
-                    });
-                }
+                    }
+                });
             } else if (event.equals("Bookmark:Insert")) {
                 final String url = message.getString("url");
                 final String title = message.getString("title");
