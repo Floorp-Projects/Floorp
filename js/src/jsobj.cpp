@@ -3146,8 +3146,6 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags)
         if (pc < script->code + script->length && Detecting(cx, pc))
             flags |= JSRESOLVE_DETECTING;
     }
-    if (format & JOF_DECLARING)
-        flags |= JSRESOLVE_DECLARING;
     return flags;
 }
 

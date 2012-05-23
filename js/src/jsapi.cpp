@@ -3710,7 +3710,7 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
                             ? JS_FUNC_TO_DATA_PTR(JSObject *, setter)
                             : NULL);
 
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
     if (flags != 0 && obj->isNative()) {
         return !!DefineNativeProperty(cx, obj, id, value, getter, setter,
                                       attrs, flags, tinyid);
