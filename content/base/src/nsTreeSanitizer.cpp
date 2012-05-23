@@ -896,19 +896,11 @@ nsIAtom** const kAttributesMathML[] = {
    &nsGkAtoms::mathsize_, // mathsize
    &nsGkAtoms::mathvariant_, // mathvariant
    &nsGkAtoms::maxsize_, // maxsize
-   &nsGkAtoms::mediummathspace_, // mediummathspace
    &nsGkAtoms::minlabelspacing_, // minlabelspacing
    &nsGkAtoms::minsize_, // minsize
    &nsGkAtoms::movablelimits_, // movablelimits
    &nsGkAtoms::msgroup_, // msgroup
    &nsGkAtoms::name, // name
-   &nsGkAtoms::negativemediummathspace_, // negativemediummathspace
-   &nsGkAtoms::negativethickmathspace_, // negativethickmathspace
-   &nsGkAtoms::negativethinmathspace_, // negativethinmathspace
-   &nsGkAtoms::negativeverythickmathspace_, // negativeverythickmathspace
-   &nsGkAtoms::negativeverythinmathspace_, // negativeverythinmathspace
-   &nsGkAtoms::negativeveryverythickmathspace_, // negativeveryverythickmathspace
-   &nsGkAtoms::negativeveryverythinmathspace_, // negativeveryverythinmathspace
    &nsGkAtoms::newline, // newline
    &nsGkAtoms::notation_, // notation
    &nsGkAtoms::numalign_, // numalign
@@ -941,13 +933,7 @@ nsIAtom** const kAttributesMathML[] = {
    &nsGkAtoms::subscriptshift_, // subscriptshift
    &nsGkAtoms::superscriptshift_, // superscriptshift
    &nsGkAtoms::symmetric_, // symmetric
-   &nsGkAtoms::thickmathspace_, // thickmathspace
-   &nsGkAtoms::thinmathspace_, // thinmathspace
    &nsGkAtoms::type, // type
-   &nsGkAtoms::verythickmathspace_, // verythickmathspace
-   &nsGkAtoms::verythinmathspace_, // verythinmathspace
-   &nsGkAtoms::veryverythickmathspace_, // veryverythickmathspace
-   &nsGkAtoms::veryverythinmathspace_, // veryverythinmathspace
    &nsGkAtoms::voffset_, // voffset
    &nsGkAtoms::width, // width
    &nsGkAtoms::xref_, // xref
