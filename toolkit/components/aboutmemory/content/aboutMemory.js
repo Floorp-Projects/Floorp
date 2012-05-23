@@ -553,7 +553,6 @@ function TreeNode(aUnsafeName)
 {
   // Nb: _units is not needed, it's always UNITS_BYTES.
   this._unsafeName = aUnsafeName;
-  this._kids = [];
   // Leaf TreeNodes have these properties added immediately after construction:
   // - _amount
   // - _description
@@ -561,6 +560,7 @@ function TreeNode(aUnsafeName)
   // - _nMerged (only defined if > 1)
   //
   // Non-leaf TreeNodes have these properties added later:
+  // - _kids
   // - _amount
   // - _description
   // - _hideKids (only defined if true)
@@ -568,9 +568,11 @@ function TreeNode(aUnsafeName)
 
 TreeNode.prototype = {
   findKid: function(aUnsafeName) {
-    for (let i = 0; i < this._kids.length; i++) {
-      if (this._kids[i]._unsafeName === aUnsafeName) {
-        return this._kids[i];
+    if (this._kids) {
+      for (let i = 0; i < this._kids.length; i++) {
+        if (this._kids[i]._unsafeName === aUnsafeName) {
+          return this._kids[i];
+        }
       }
     }
     return undefined;
@@ -620,6 +622,9 @@ function buildTree(aReports, aTreePrefix)
           u = uMatch;
         } else {
           let v = new TreeNode(unsafeName);
+          if (!u._kids) {
+            u._kids = [];
+          }
           u._kids.push(v);
           u = v;
         }
@@ -650,7 +655,7 @@ function buildTree(aReports, aTreePrefix)
   // Next, fill in the remaining properties bottom-up.
   function fillInNonLeafNodes(aT, aCannotMerge)
   {
-    if (aT._kids.length === 0) {
+    if (!aT._kids) {
       // Leaf node.  Has already been filled in.
       assert(aT._kind !== undefined, "aT._kind is undefined for leaf node");
 
@@ -661,13 +666,20 @@ function buildTree(aReports, aTreePrefix)
       let kid = aT._kids[0];
       let kidBytes = fillInNonLeafNodes(kid);
       aT._unsafeName += '/' + kid._unsafeName;
-      aT._kids = kid._kids;
+      if (kid._kids) {
+        aT._kids = kid._kids;
+      } else {
+        delete aT._kids;
+      }
       aT._amount = kid._amount;
       aT._description = kid._description;
-      aT._kind = kid._kind;
-      if (kid._nMerged) {
+      if (kid._kind !== undefined) {
+        aT._kind = kid._kind;
+      }
+      if (kid._nMerged !== undefined) {
         aT._nMerged = kid._nMerged
       }
+      assert(!aT._hideKids && !kid._hideKids, "_hideKids set when merging");
 
     } else {
       // Non-leaf node with multiple children.  Derive its _amount and
@@ -725,7 +737,7 @@ function fixUpExplicitTree(aT, aReports)
   function getKnownHeapUsedBytes(aT)
   {
     let n = 0;
-    if (aT._kids.length === 0) {
+    if (!aT._kids) {
       // Leaf node.
       assert(aT._kind !== undefined, "aT._kind is undefined for leaf node");
       n = aT._kind === KIND_HEAP ? aT._amount : 0;
@@ -778,7 +790,7 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT)
            (100 * aT._amount / aTotalBytes) < kSignificanceThresholdPerc;
   }
 
-  if (aT._kids.length === 0) {
+  if (!aT._kids) {
     return;
   }
 
@@ -805,6 +817,7 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT)
       let nAgg = aT._kids.length - i0;
       // Create an aggregate node.
       let aggT = new TreeNode("(" + nAgg + " tiny)");
+      aggT._kids = [];
       let aggBytes = 0;
       for ( ; i < aT._kids.length; i++) {
         aggBytes += aT._kids[i]._amount;
@@ -1274,10 +1287,9 @@ function appendTreeElements(aPOuter, aT, aProcess)
     // For non-leaf nodes, the entire sub-tree is put within a span so it can
     // be collapsed if the node is clicked on.
     let d;
-    let hasKids = aT._kids.length > 0;
     let sep;
     let showSubtrees;
-    if (hasKids) {
+    if (aT._kids) {
       // Determine if we should show the sub-tree below this entry;  this
       // involves reinstating any previous toggling of the sub-tree.
       let safeTreeId = flipBackslashes(aProcess + ":" + unsafePath);
@@ -1311,7 +1323,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
       expandPathToThisElement(d);
     }
 
-    if (hasKids) {
+    if (aT._kids) {
       // The 'kids' class is just used for sanity checking in toggle().
       d = appendElement(aP, "span", showSubtrees ? "kids" : "kids hidden");
 
