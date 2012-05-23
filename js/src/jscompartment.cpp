@@ -59,7 +59,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerMallocAndFreeBytes(0),
     gcMallocBytes(0),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
-	watchpointMap(NULL),
+    watchpointMap(NULL),
     scriptCountsMap(NULL),
     sourceMapMap(NULL),
     debugScriptMap(NULL)
@@ -102,8 +102,12 @@ void
 JSCompartment::setNeedsBarrier(bool needs)
 {
 #ifdef JS_METHODJIT
-    if (needsBarrier_ != needs)
+    if (needsBarrier_ != needs) {
         mjit::ClearAllFrames(this);
+# if defined(JS_ION)
+        ReleaseAllJITCode(rt->defaultFreeOp(), this, true, true);
+# endif
+    }
 #endif
     needsBarrier_ = needs;
 }
@@ -454,7 +458,7 @@ JSCompartment::discardJitCode(FreeOp *fop)
                 }
             }
         }
-		ReleaseAllJITCode(fop, this, true, true);
+        ReleaseAllJITCode(fop, this, true, true);
     } else {
         ReleaseAllJITCode(fop, this, true);
     }
