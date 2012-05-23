@@ -35,6 +35,7 @@
 #ifdef XP_WIN
 #include "nsHTMLWin32ObjectAccessible.h"
 #endif
+#include "TextLeafAccessible.h"
 
 #ifdef DEBUG
 #include "Logging.h"
@@ -409,11 +410,11 @@ nsAccessibilityService::CreateHTMLTableRowAccessible(nsIContent* aContent,
 }
 
 already_AddRefed<nsAccessible>
-nsAccessibilityService::CreateHTMLTextAccessible(nsIContent* aContent,
+nsAccessibilityService::CreateTextLeafAccessible(nsIContent* aContent,
                                                  nsIPresShell* aPresShell)
 {
   nsAccessible* accessible = 
-    new nsHTMLTextAccessible(aContent, GetDocAccessible(aPresShell));
+    new TextLeafAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }

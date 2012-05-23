@@ -20,6 +20,7 @@ CPPSRCS = \
   FormControlAccessible.cpp \
   OuterDocAccessible.cpp \
   RootAccessible.cpp \
+  TextLeafAccessible.cpp \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

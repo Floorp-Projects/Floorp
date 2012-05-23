@@ -3754,7 +3754,7 @@ nsTextFrame::CreateAccessible()
 
   nsAccessibilityService* accService = nsIPresShell::AccService();
   if (accService) {
-    return accService->CreateHTMLTextAccessible(mContent,
+    return accService->CreateTextLeafAccessible(mContent,
                                                 PresContext()->PresShell());
   }
   return nsnull;
