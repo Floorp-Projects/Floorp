@@ -72,10 +72,10 @@ static void Scale(gfx3DMatrix& aTransform, double aXScale, double aYScale)
   aTransform._22 *= aYScale;
 }
 
-static void ReverseTranslate(gfx3DMatrix& aTransform, ViewTransform& aViewTransform)
+static void ReverseTranslate(gfx3DMatrix& aTransform, const gfxPoint& aOffset)
 {
-  aTransform._41 -= aViewTransform.mTranslation.x / aViewTransform.mXScale;
-  aTransform._42 -= aViewTransform.mTranslation.y / aViewTransform.mYScale;
+  aTransform._41 -= aOffset.x;
+  aTransform._42 -= aOffset.y;
 }
 
 
@@ -278,11 +278,16 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
 
   if (aLayer->GetIsFixedPosition() &&
       !aLayer->GetParent()->GetIsFixedPosition()) {
-    ReverseTranslate(shadowTransform, layerTransform);
+    // Alter the shadow transform of fixed position layers in the situation
+    // that the view transform's scroll position doesn't match the actual
+    // scroll position, due to asynchronous layer scrolling.
+    float offsetX = layerTransform.mTranslation.x / layerTransform.mXScale;
+    float offsetY = layerTransform.mTranslation.y / layerTransform.mYScale;
+    ReverseTranslate(shadowTransform, gfxPoint(offsetX, offsetY));
     const nsIntRect* clipRect = shadow->GetShadowClipRect();
     if (clipRect) {
       nsIntRect transformedClipRect(*clipRect);
-      transformedClipRect.MoveBy(shadowTransform._41, shadowTransform._42);
+      transformedClipRect.MoveBy(-offsetX, -offsetY);
       shadow->SetShadowClipRect(&transformedClipRect);
     }
   }
