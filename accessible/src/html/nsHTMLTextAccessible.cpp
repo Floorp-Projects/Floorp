@@ -16,51 +16,6 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLTextAccessible
-////////////////////////////////////////////////////////////////////////////////
-
-nsHTMLTextAccessible::
-  nsHTMLTextAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsTextAccessibleWrap(aContent, aDoc)
-{
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTextAccessible, nsTextAccessible)
-
-ENameValueFlag
-nsHTMLTextAccessible::Name(nsString& aName)
-{
-  // Text node, ARIA can't be used.
-  aName = mText;
-  return eNameOK;
-}
-
-role
-nsHTMLTextAccessible::NativeRole()
-{
-  nsIFrame *frame = GetFrame();
-  // Don't return on null frame -- we still return a role
-  // after accessible is shutdown/DEFUNCT
-  if (frame && frame->IsGeneratedContentFrame()) 
-    return roles::STATICTEXT;
-
-  return nsTextAccessible::NativeRole();
-}
-
-nsresult
-nsHTMLTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
-{
-  if (NativeRole() == roles::STATICTEXT) {
-    nsAutoString oldValueUnused;
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("auto-generated"),
-                                  NS_LITERAL_STRING("true"), oldValueUnused);
-  }
-
-  return NS_OK;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 // nsHTMLHRAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
