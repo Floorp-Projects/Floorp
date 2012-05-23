@@ -304,6 +304,8 @@ public:
     
     void HandleGeckoMessage(const nsAString& message, nsAString &aRet);
 
+    nsCOMPtr<nsIAndroidDrawMetadataProvider> GetDrawMetadataProvider();
+
     void CheckURIVisited(const nsAString& uri);
     void MarkURIVisited(const nsAString& uri);
 
@@ -330,8 +332,9 @@ public:
     void EnableNetworkNotifications();
     void DisableNetworkNotifications();
 
-    void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
-    void SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
+    void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight,
+                               float aCssPageWidth, float aCssPageHeight);
+    void SetPageSize(float aZoom, float aPageWidth, float aPageHeight, float aCssPageWidth, float aCssPageHeight);
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
 

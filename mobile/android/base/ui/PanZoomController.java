@@ -165,16 +165,16 @@ public class PanZoomController
                     }
                 });
             } else if (MESSAGE_ZOOM_PAGE.equals(event)) {
-                RectF cssPageRect = mController.getCssPageRect();
+                FloatSize pageSize = mController.getCssPageSize();
 
                 RectF viewableRect = mController.getCssViewport();
                 float y = viewableRect.top;
                 // attempt to keep zoom keep focused on the center of the viewport
-                float newHeight = viewableRect.height() * cssPageRect.width() / viewableRect.width();
+                float newHeight = viewableRect.height() * pageSize.width / viewableRect.width();
                 float dh = viewableRect.height() - newHeight; // increase in the height
                 final RectF r = new RectF(0.0f,
                                     y + dh/2,
-                                    cssPageRect.width(),
+                                    pageSize.width,
                                     y + dh/2 + newHeight);
                 mController.post(new Runnable() {
                     public void run() {
@@ -294,7 +294,7 @@ public class PanZoomController
     }
 
     /** This must be called on the UI thread. */
-    public void pageRectUpdated() {
+    public void pageSizeUpdated() {
         if (mState == PanZoomState.NOTHING) {
             synchronized (mController) {
                 ViewportMetrics validated = getValidViewportMetrics();
@@ -775,7 +775,7 @@ public class PanZoomController
 
         /* First, we adjust the zoom factor so that we can make no overscrolled area visible. */
         float zoomFactor = viewportMetrics.getZoomFactor();
-        RectF pageRect = viewportMetrics.getPageRect();
+        FloatSize pageSize = viewportMetrics.getPageSize();
         RectF viewport = viewportMetrics.getViewport();
 
         float focusX = viewport.width() / 2.0f;
@@ -795,16 +795,16 @@ public class PanZoomController
         }
 
         // Ensure minZoomFactor keeps the page at least as big as the viewport.
-        if (pageRect.width() > 0) {
-            float scaleFactor = viewport.width() / pageRect.width();
+        if (pageSize.width > 0) {
+            float scaleFactor = viewport.width() / pageSize.width;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
-            if (viewport.width() > pageRect.width())
+            if (viewport.width() > pageSize.width)
                 focusX = 0.0f;
         }
-        if (pageRect.height() > 0) {
-            float scaleFactor = viewport.height() / pageRect.height();
+        if (pageSize.height > 0) {
+            float scaleFactor = viewport.height() / pageSize.height;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
-            if (viewport.height() > pageRect.height())
+            if (viewport.height() > pageSize.height)
                 focusY = 0.0f;
         }
 
@@ -837,9 +837,7 @@ public class PanZoomController
         @Override
         protected float getViewportLength() { return mController.getViewportSize().width; }
         @Override
-        protected float getPageStart() { return mController.getPageRect().left; }
-        @Override
-        protected float getPageLength() { return mController.getPageRect().width(); }
+        protected float getPageLength() { return mController.getPageSize().width; }
     }
 
     private class AxisY extends Axis {
@@ -849,9 +847,7 @@ public class PanZoomController
         @Override
         protected float getViewportLength() { return mController.getViewportSize().height; }
         @Override
-        protected float getPageStart() { return mController.getPageRect().top; }
-        @Override
-        protected float getPageLength() { return mController.getPageRect().height(); }
+        protected float getPageLength() { return mController.getPageSize().height; }
     }
 
     /*
