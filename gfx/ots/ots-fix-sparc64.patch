@@ -1,11 +1,11 @@
 diff --git a/gfx/ots/include/opentype-sanitiser.h b/gfx/ots/include/opentype-sanitiser.h
 --- a/gfx/ots/include/opentype-sanitiser.h
 +++ b/gfx/ots/include/opentype-sanitiser.h
-@@ -57,18 +57,20 @@ class OTSStream {
- 
+@@ -83,18 +83,20 @@ class OTSStream {
      if (chksum_buffer_offset_ == 4) {
-       // TODO(yusukes): This cast breaks the strict-aliasing rule.
-       chksum_ += ntohl(*reinterpret_cast<const uint32_t*>(chksum_buffer_));
+       uint32_t chksum;
+       std::memcpy(&chksum, chksum_buffer_, 4);
+       chksum_ += ntohl(chksum);
        chksum_buffer_offset_ = 0;
      }
  
