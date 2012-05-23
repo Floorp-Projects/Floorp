@@ -384,8 +384,8 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
       NSIntPixelsToAppUnits(metrics.mViewport.width, auPerDevPixel) * aXScale,
       NSIntPixelsToAppUnits(metrics.mViewport.height, auPerDevPixel) * aYScale);
     view->mContentSize = nsSize(
-      nsPresContext::CSSPixelsToAppUnits(metrics.mCSSContentSize.width) * aXScale,
-      nsPresContext::CSSPixelsToAppUnits(metrics.mCSSContentSize.height) * aYScale);
+      nsPresContext::CSSPixelsToAppUnits(metrics.mCSSContentRect.width) * aXScale,
+      nsPresContext::CSSPixelsToAppUnits(metrics.mCSSContentRect.height) * aYScale);
 
     newContentViews[scrollId] = view;
   }
