@@ -141,7 +141,7 @@ public:
   }
   
 protected:
-  nsMutationReceiverBase(nsINode* aTarget, nsIDOMMozMutationObserver* aObserver)
+  nsMutationReceiverBase(nsINode* aTarget, nsIDOMMutationObserver* aObserver)
   : mTarget(aTarget), mObserver(aObserver), mRegisterTarget(aTarget)
   {
     mRegisterTarget->AddMutationObserver(this);
@@ -189,7 +189,7 @@ protected:
 
   // The target for the MutationObserver.observe() method.
   nsINode*                           mTarget;
-  nsIDOMMozMutationObserver*         mObserver;
+  nsIDOMMutationObserver*            mObserver;
   nsRefPtr<nsMutationReceiverBase>   mParent; // Cleared after microtask.
   // The node to which Gecko-internal nsIMutationObserver was registered to.
   // This is different than mTarget when dealing with transient observers.
@@ -218,7 +218,7 @@ private:
 class nsMutationReceiver : public nsMutationReceiverBase
 {
 public:
-  nsMutationReceiver(nsINode* aTarget, nsIDOMMozMutationObserver* aObserver)
+  nsMutationReceiver(nsINode* aTarget, nsIDOMMutationObserver* aObserver)
   : nsMutationReceiverBase(aTarget, aObserver)
   {
     mTarget->BindObject(aObserver);
@@ -278,7 +278,7 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsMutationReceiver, NS_MUTATION_OBSERVER_IID)
 
-class nsDOMMutationObserver : public nsIDOMMozMutationObserver,
+class nsDOMMutationObserver : public nsIDOMMutationObserver,
                               public nsIJSNativeInitializer
 {
 public:
@@ -289,8 +289,8 @@ public:
   virtual ~nsDOMMutationObserver();
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMMutationObserver,
-                                           nsIDOMMozMutationObserver)
-  NS_DECL_NSIDOMMOZMUTATIONOBSERVER
+                                           nsIDOMMutationObserver)
+  NS_DECL_NSIDOMMUTATIONOBSERVER
 
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
                         PRUint32 argc, jsval* argv);
@@ -308,7 +308,7 @@ public:
   static void EnterMutationHandling();
   static void LeaveMutationHandling();
 
-  static nsIDOMMozMutationObserver* CurrentObserver()
+  static nsIDOMMutationObserver* CurrentObserver()
   {
     return sCurrentObserver;
   }
@@ -361,11 +361,11 @@ protected:
   PRUint64                                           mId;
 
   static PRUint64                                    sCount;
-  static nsCOMArray<nsIDOMMozMutationObserver>*      sScheduledMutationObservers;
-  static nsIDOMMozMutationObserver*                  sCurrentObserver;
+  static nsCOMArray<nsIDOMMutationObserver>*         sScheduledMutationObservers;
+  static nsIDOMMutationObserver*                     sCurrentObserver;
 
   static PRUint32                                    sMutationLevel;
-  static nsAutoTArray<nsCOMArray<nsIDOMMozMutationObserver>, 4>*
+  static nsAutoTArray<nsCOMArray<nsIDOMMutationObserver>, 4>*
                                                      sCurrentlyHandlingObservers;
 };
 

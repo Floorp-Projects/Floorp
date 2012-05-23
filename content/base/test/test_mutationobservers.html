@@ -299,7 +299,7 @@ function testChildList4() {
   m.observe(div, { childList: true });
   
   // Make sure transient observers aren't leaked.
-  var leakTest = new MozMutationObserver(function(){});
+  var leakTest = new M(function(){});
   leakTest.observe(div, { characterData: true, subtree: true });
   
   div.insertBefore(df, s2);

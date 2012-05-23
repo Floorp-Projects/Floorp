@@ -74,6 +74,8 @@ endif
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/signing.mk
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.mk
 
+PACKAGE_BASE_DIR = $(_ABS_DIST)/l10n-stage
+
 $(STAGEDIST): AB_CD:=en-US
 $(STAGEDIST): UNPACKAGE=$(call ESCAPE_SPACE,$(ZIP_IN))
 $(STAGEDIST): $(call ESCAPE_SPACE,$(ZIP_IN))
