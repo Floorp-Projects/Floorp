@@ -508,7 +508,7 @@ DOMCI_CLASS(MozCSSKeyframesRule)
 DOMCI_CLASS(MediaQueryList)
 DOMCI_CLASS(CustomEvent)
 
-DOMCI_CLASS(MozMutationObserver)
+DOMCI_CLASS(MutationObserver)
 DOMCI_CLASS(MutationRecord)
 
 DOMCI_CLASS(MozSettingsEvent)
