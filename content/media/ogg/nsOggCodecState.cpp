@@ -818,13 +818,21 @@ bool nsOpusState::DecodeHeader(ogg_packet* aPacket)
   }
 
   // Otherwise, parse as the id header.
-  if (aPacket->bytes < 19 || memcmp(aPacket->packet, "OpusHead\0", 9)) {
+  if (aPacket->bytes < 19 || memcmp(aPacket->packet, "OpusHead", 8)) {
     LOG(PR_LOG_DEBUG, ("Invalid Opus file: unrecognized header"));
     mActive = false;
     return true;
   }
 
   mRate = 48000; // The Opus decoder runs at 48 kHz regardless.
+
+  int version = aPacket->packet[8];
+  // Accept file format versions 0.x.
+  if ((version & 0xf0) != 0) {
+    LOG(PR_LOG_DEBUG, ("Rejecting unknown Opus file version %d", version));
+    mActive = false;
+    return true;
+  }
 
   mChannels= aPacket->packet[9];
   mPreSkip = LEUint16(aPacket->packet + 10);
@@ -860,7 +868,7 @@ PRInt64 nsOpusState::Time(PRInt64 granulepos)
 bool nsOpusState::IsHeader(ogg_packet* aPacket)
 {
   return aPacket->bytes >= 16 &&
-         (!memcmp(aPacket->packet, "OpusHead\0", 9) ||
+         (!memcmp(aPacket->packet, "OpusHead", 8) ||
           !memcmp(aPacket->packet, "OpusTags", 8));
 }
 
