@@ -904,3 +904,10 @@ IonFrameIterator::numActualArgs() const
     JS_ASSERT(parent.done());
     return activation_->entryfp()->numActualArgs();
 }
+
+void
+SnapshotIterator::warnUnreadableSlot()
+{
+    fprintf(stderr, "Warning! Tried to access unreadable IonMonkey slot (possible f.arguments).\n");
+}
+
