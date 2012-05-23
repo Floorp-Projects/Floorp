@@ -71,10 +71,8 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
     return;
   mInitialized = true;
 
-  nsresult rv;
-  nsCOMPtr<nsIXBLService> xblService = 
-           do_GetService("@mozilla.org/xbl;1", &rv);
-  if (NS_FAILED(rv) || !xblService)
+  nsXBLService* xblService = nsXBLService::GetInstance();
+  if (!xblService)
     return;
 
   // Obtain the platform doc info
