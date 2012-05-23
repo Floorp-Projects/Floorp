@@ -575,8 +575,6 @@ MacNativeApp.prototype = {
     <string>' + escapeXML(this.appName) + '</string>\n\
     <key>CFBundlePackageType</key>\n\
     <string>APPL</string>\n\
-    <key>CFBundleSignature</key>\n\
-    <string>MOZB</string>\n\
     <key>CFBundleVersion</key>\n\
     <string>0</string>\n\
     <key>FirefoxBinary</key>\n\

@@ -1007,6 +1007,23 @@ DeadObjectProxy::getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *rec
 DeadObjectProxy DeadObjectProxy::singleton;
 int DeadObjectProxy::sDeadObjectFamily;
 
+void
+js::NukeCrossCompartmentWrapper(JSObject *wrapper)
+{
+    JS_ASSERT(IsCrossCompartmentWrapper(wrapper));
+
+    SetProxyPrivate(wrapper, NullValue());
+    SetProxyHandler(wrapper, &DeadObjectProxy::singleton);
+
+    if (IsFunctionProxy(wrapper)) {
+        wrapper->setReservedSlot(JSSLOT_PROXY_CALL, NullValue());
+        wrapper->setReservedSlot(JSSLOT_PROXY_CONSTRUCT, NullValue());
+    }
+
+    wrapper->setReservedSlot(JSSLOT_PROXY_EXTRA + 0, NullValue());
+    wrapper->setReservedSlot(JSSLOT_PROXY_EXTRA + 1, NullValue());
+}
+
 /*
  * NukeChromeCrossCompartmentWrappersForGlobal reaches into chrome and cuts
  * all of the cross-compartment wrappers that point to objects parented to
@@ -1053,17 +1070,7 @@ js::NukeChromeCrossCompartmentWrappersForGlobal(JSContext *cx, JSObject *obj,
             if (&wrapped->global() == global) {
                 // We found a wrapper to nuke.
                 e.removeFront();
-
-                SetProxyPrivate(wobj, JSVAL_NULL);
-                SetProxyHandler(wobj, &DeadObjectProxy::singleton);
-
-                if (IsFunctionProxy(wobj)) {
-                    wobj->setReservedSlot(JSSLOT_PROXY_CALL, JSVAL_NULL);
-                    wobj->setReservedSlot(JSSLOT_PROXY_CONSTRUCT, JSVAL_NULL);
-                }
-
-                wobj->setReservedSlot(JSSLOT_PROXY_EXTRA + 0, JSVAL_NULL);
-                wobj->setReservedSlot(JSSLOT_PROXY_EXTRA + 1, JSVAL_NULL);
+                NukeCrossCompartmentWrapper(wobj);
             }
         }
     }

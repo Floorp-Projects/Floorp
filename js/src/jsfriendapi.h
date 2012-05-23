@@ -700,6 +700,9 @@ IncrementalReferenceBarrier(void *ptr);
 extern JS_FRIEND_API(void)
 IncrementalValueBarrier(const Value &v);
 
+extern JS_FRIEND_API(void)
+PokeGC(JSRuntime *rt);
+
 class ObjectPtr
 {
     JSObject *value;

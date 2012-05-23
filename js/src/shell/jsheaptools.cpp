@@ -148,10 +148,16 @@ class HeapReverser : public JSTracer {
 
   private:
     /*
-     * Conservative scanning can, on a whim, decide that a root is no longer a
-     * root, and cause bits of our graph to disappear. The 'roots' vector holds
-     * all the roots we find alive, and 'rooter' keeps them alive until we're
-     * destroyed.
+     * Once we've produced a reversed map of the heap, we need to keep the
+     * engine from freeing the objects we've found in it, until we're done using
+     * the map. Even if we're only using the map to construct a result object,
+     * and not rearranging the heap ourselves, any allocation could cause a
+     * garbage collection, which could free objects held internally by the
+     * engine (for example, JaegerMonkey object templates, used by jit scripts).
+     *
+     * So, each time reverseHeap reaches any object, we add it to 'roots', which
+     * is cited by 'rooter', so the object will stay alive long enough for us to
+     * include it in the results, if needed.
      *
      * Note that AutoArrayRooters must be constructed and destroyed in a
      * stack-like order, so the same rule applies to this HeapReverser. The
@@ -218,7 +224,8 @@ class HeapReverser : public JSTracer {
     /* Static member function wrapping 'traverseEdge'. */
     static void traverseEdgeWithThis(JSTracer *tracer, void **thingp, JSGCTraceKind kind) {
         HeapReverser *reverser = static_cast<HeapReverser *>(tracer);
-        reverser->traversalStatus = reverser->traverseEdge(*thingp, kind);
+        if (!reverser->traverseEdge(*thingp, kind))
+            reverser->traversalStatus = false;
     }
 
     /* Return a jsval representing a node, if possible; otherwise, return JSVAL_VOID. */
@@ -231,10 +238,11 @@ class HeapReverser : public JSTracer {
 };
 
 bool
-HeapReverser::traverseEdge(void *cell, JSGCTraceKind kind) {
-    /* If this is a root, make our own root for it as well. */
-    if (!parent) {
-        if (!roots.append(nodeToValue(cell, kind)))
+HeapReverser::traverseEdge(void *cell, JSGCTraceKind kind)
+{
+    jsval v = nodeToValue(cell, kind);
+    if (v.isObject()) {
+        if (!roots.append(v))
             return false;
         rooter.changeArray(roots.begin(), roots.length());
     }
@@ -267,7 +275,10 @@ HeapReverser::traverseEdge(void *cell, JSGCTraceKind kind) {
 }
 
 bool
-HeapReverser::reverseHeap() {
+HeapReverser::reverseHeap()
+{
+    traversalStatus = true;
+
     /* Prime the work stack with the roots of collection. */
     JS_TraceRuntime(this);
     if (!traversalStatus)

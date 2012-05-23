@@ -177,9 +177,9 @@ public:
     return GetOwner();
   }
 
-  // The WebIDL parser converts constructors into methods called _Constructor.
+  // The WebIDL constructor.
   static already_AddRefed<nsXMLHttpRequest>
-  _Constructor(nsISupports* aGlobal, ErrorResult& aRv)
+  Constructor(nsISupports* aGlobal, ErrorResult& aRv)
   {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
     nsCOMPtr<nsIScriptObjectPrincipal> principal = do_QueryInterface(aGlobal);

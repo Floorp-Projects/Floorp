@@ -40,7 +40,7 @@ function test3() {
   whenTabViewIsHidden(function() { 
     is(gBrowser.tabs.length, 2, "There are two tabs after cmd/ctrl + t is pressed");
 
-    gBrowser.tabs[0].linkedBrowser.loadURI("about:robots");
+    gBrowser.tabs[0].linkedBrowser.loadURI("about:mozilla");
     gBrowser.tabs[1].linkedBrowser.loadURI("http://example.com/");
 
     afterAllTabsLoaded(function () {

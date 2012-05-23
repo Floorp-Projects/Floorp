@@ -723,6 +723,7 @@ JSRuntime::JSRuntime()
     gcNextFullGCTime(0),
     gcJitReleaseTime(0),
     gcMode(JSGC_MODE_GLOBAL),
+    gcShouldCleanUpEverything(false),
     gcIsNeeded(0),
     gcWeakMapList(NULL),
     gcStats(thisFromCtor()),
@@ -1554,6 +1555,8 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
 {
     AssertNoGC(cx);
     JS_ASSERT(origobj != target);
+    JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
+    JS_ASSERT(!IsCrossCompartmentWrapper(target));
 
     JSCompartment *destination = target->compartment();
     WrapperMap &map = destination->crossCompartmentWrappers;
@@ -1562,7 +1565,7 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
 
     if (origobj->compartment() == destination) {
         // If the original object is in the same compartment as the
-        // destination, then we know that we won't find wrapper in the
+        // destination, then we know that we won't find a wrapper in the
         // destination's cross compartment map and that the same
         // object will continue to work.
         if (!origobj->swap(cx, target))
@@ -1573,7 +1576,12 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
         // the new compartment. If there is, we use its identity and swap
         // in the contents of |target|.
         newIdentity = &p->value.toObject();
+
+        // When we remove origv from the wrapper map, its wrapper, newIdentity,
+        // must immediately cease to be a cross-compartment wrapper. Neuter it.
         map.remove(p);
+        NukeCrossCompartmentWrapper(newIdentity);
+
         if (!newIdentity->swap(cx, target))
             return NULL;
     } else {
@@ -1594,8 +1602,7 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
             return NULL;
         if (!origobj->swap(cx, newIdentityWrapper))
             return NULL;
-        origobj->compartment()->crossCompartmentWrappers.put(ObjectValue(*newIdentity),
-                                                             origv);
+        origobj->compartment()->crossCompartmentWrappers.put(ObjectValue(*newIdentity), origv);
     }
 
     // The new identity object might be one of several things. Return it to avoid
@@ -1630,8 +1637,12 @@ RemapWrappers(JSContext *cx, JSObject *orig, JSObject *target)
         JSObject *wobj = &begin->toObject();
         JSCompartment *wcompartment = wobj->compartment();
         WrapperMap &pmap = wcompartment->crossCompartmentWrappers;
+
+        // When we remove origv from the wrapper map, its wrapper, wobj, must
+        // immediately cease to be a cross-compartment wrapper. Neuter it.
         JS_ASSERT(pmap.lookup(origv));
         pmap.remove(origv);
+        NukeCrossCompartmentWrapper(wobj);
 
         // First, we wrap it in the new compartment. This will return
         // a new wrapper.
@@ -1669,6 +1680,10 @@ js_TransplantObjectWithWrapper(JSContext *cx,
                                JSObject *targetwrapper)
 {
     AssertNoGC(cx);
+    JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
+    JS_ASSERT(!IsCrossCompartmentWrapper(origwrapper));
+    JS_ASSERT(!IsCrossCompartmentWrapper(origwrapper));
+    JS_ASSERT(!IsCrossCompartmentWrapper(origwrapper));
 
     JSObject *newWrapper;
     JSCompartment *destination = targetobj->compartment();
@@ -1684,7 +1699,12 @@ js_TransplantObjectWithWrapper(JSContext *cx,
         // There is. Make the existing cross-compartment wrapper a same-
         // compartment wrapper.
         newWrapper = &p->value.toObject();
+
+        // When we remove origv from the wrapper map, its wrapper, newWrapper,
+        // must immediately cease to be a cross-compartment wrapper. Neuter it.
         map.remove(p);
+        NukeCrossCompartmentWrapper(newWrapper);
+
         if (!newWrapper->swap(cx, targetwrapper))
             return NULL;
     } else {

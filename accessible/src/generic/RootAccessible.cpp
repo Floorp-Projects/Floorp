@@ -102,17 +102,10 @@ role
 RootAccessible::NativeRole()
 {
   // If it's a <dialog> or <wizard>, use roles::DIALOG instead
-  dom::Element *root = mDocument->GetRootElement();
-  if (root) {
-    nsCOMPtr<nsIDOMElement> rootElement(do_QueryInterface(root));
-    if (rootElement) {
-      nsAutoString name;
-      rootElement->GetLocalName(name);
-      if (name.EqualsLiteral("dialog") || name.EqualsLiteral("wizard")) {
-        return roles::DIALOG; // Always at the root
-      }
-    }
-  }
+  dom::Element* rootElm = mDocument->GetRootElement();
+  if (rootElm && (rootElm->Tag() == nsGkAtoms::dialog ||
+                  rootElm->Tag() == nsGkAtoms::wizard))
+    return roles::DIALOG;
 
   return nsDocAccessibleWrap::NativeRole();
 }
@@ -144,33 +137,28 @@ RootAccessible::GetChromeFlags()
 PRUint64
 RootAccessible::NativeState()
 {
-  PRUint64 states = nsDocAccessibleWrap::NativeState();
+  PRUint64 state = nsDocAccessibleWrap::NativeState();
+  if (state & states::DEFUNCT)
+    return state;
 
 #ifdef MOZ_XUL
   PRUint32 chromeFlags = GetChromeFlags();
   if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE)
-    states |= states::SIZEABLE;
+    state |= states::SIZEABLE;
     // If it has a titlebar it's movable
     // XXX unless it's minimized or maximized, but not sure
     //     how to detect that
   if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR)
-    states |= states::MOVEABLE;
+    state |= states::MOVEABLE;
   if (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL)
-    states |= states::MODAL;
+    state |= states::MODAL;
 #endif
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    nsCOMPtr<nsIDOMWindow> rootWindow;
-    GetWindow(getter_AddRefs(rootWindow));
+  if (fm && fm->GetActiveWindow() == mDocument->GetWindow())
+    state |= states::ACTIVE;
 
-    nsCOMPtr<nsIDOMWindow> activeWindow;
-    fm->GetActiveWindow(getter_AddRefs(activeWindow));
-    if (activeWindow == rootWindow)
-      states |= states::ACTIVE;
-  }
-
-  return states;
+  return state;
 }
 
 const char* const docEvents[] = {

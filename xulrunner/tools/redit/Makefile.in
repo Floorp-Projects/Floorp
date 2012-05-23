@@ -28,6 +28,11 @@ DEFINES += -DWIN32_LEAN_AND_MEAN \
 LIBS = \
   $(XPCOM_STANDALONE_GLUE_LDOPTS) \
   $(NULL)
+
+ifdef GNU_CC
+WIN32_EXE_LDFLAGS = -municode
+endif
+
 endif
 
 include $(topsrcdir)/config/rules.mk

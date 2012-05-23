@@ -229,6 +229,9 @@ nsIPrincipal *GetCompartmentPrincipal(JSCompartment *compartment);
 void DumpJSHeap(FILE* file);
 #endif
 
+void SetLocationForGlobal(JSObject *global, const nsACString& location);
+void SetLocationForGlobal(JSObject *global, nsIURI *locationURI);
+
 /**
  * Define quick stubs on the given object, @a proto.
  *

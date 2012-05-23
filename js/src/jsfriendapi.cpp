@@ -785,6 +785,12 @@ IncrementalValueBarrier(const Value &v)
     HeapValue::writeBarrierPre(v);
 }
 
+extern JS_FRIEND_API(void)
+PokeGC(JSRuntime *rt)
+{
+    rt->gcPoke = true;
+}
+
 JS_FRIEND_API(JSObject *)
 GetTestingFunctions(JSContext *cx)
 {

@@ -387,6 +387,9 @@ DOMCI_CLASS(DataContainerEvent)
 // HTML5
 DOMCI_CLASS(MessageEvent)
 
+DOMCI_CLASS(DeviceStorage)
+DOMCI_CLASS(DeviceStorageCursor)
+
 // Geolocation
 DOMCI_CLASS(GeoGeolocation)
 DOMCI_CLASS(GeoPosition)
@@ -505,7 +508,7 @@ DOMCI_CLASS(MozCSSKeyframesRule)
 DOMCI_CLASS(MediaQueryList)
 DOMCI_CLASS(CustomEvent)
 
-DOMCI_CLASS(MozMutationObserver)
+DOMCI_CLASS(MutationObserver)
 DOMCI_CLASS(MutationRecord)
 
 DOMCI_CLASS(MozSettingsEvent)

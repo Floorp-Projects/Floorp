@@ -244,6 +244,7 @@ typedef union jsval_layout
             void           *ptr;
             JSWhyMagic     why;
             size_t         word;
+            uintptr_t      uintptr;
         } payload;
         JSValueTag tag;
     } s;
@@ -271,6 +272,7 @@ typedef union jsval_layout
     double asDouble;
     void *asPtr;
     size_t asWord;
+    uintptr_t asUIntPtr;
 } JSVAL_ALIGNMENT jsval_layout;
 # endif  /* JS_BITS_PER_WORD */
 #else   /* defined(IS_LITTLE_ENDIAN) */
@@ -289,6 +291,7 @@ typedef union jsval_layout
             void           *ptr;
             JSWhyMagic     why;
             size_t         word;
+            uintptr_t      uintptr;
         } payload;
     } s;
     double asDouble;
@@ -313,6 +316,7 @@ typedef union jsval_layout
     double asDouble;
     void *asPtr;
     size_t asWord;
+    uintptr_t asUIntPtr;
 } JSVAL_ALIGNMENT jsval_layout;
 # endif /* JS_BITS_PER_WORD */
 #endif  /* defined(IS_LITTLE_ENDIAN) */

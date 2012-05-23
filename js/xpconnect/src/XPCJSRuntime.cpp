@@ -1175,11 +1175,12 @@ GetCompartmentName(JSCompartment *c, nsCString &name)
         // (e.g. components owned by the system or null principal).
         xpc::CompartmentPrivate *compartmentPrivate =
             static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(c));
-        if (compartmentPrivate &&
-            !compartmentPrivate->location.IsEmpty() &&
-            !compartmentPrivate->location.Equals(name)) {
-            name.AppendLiteral(", ");
-            name.Append(compartmentPrivate->location);
+        if (compartmentPrivate) {
+            const nsACString& location = compartmentPrivate->GetLocation();
+            if (!location.IsEmpty() && !location.Equals(name)) {
+                name.AppendLiteral(", ");
+                name.Append(location);
+            }
         }
         
         // A hack: replace forward slashes with '\\' so they aren't
@@ -2270,6 +2271,9 @@ XPCRootSetElem::AddToRootSet(XPCLock *lock, XPCRootSetElem **listHead)
 void
 XPCRootSetElem::RemoveFromRootSet(XPCLock *lock)
 {
+    if (nsXPConnect *xpc = nsXPConnect::GetXPConnect())
+        js::PokeGC(xpc->GetRuntime()->GetJSRuntime());
+
     NS_ASSERTION(mSelfp, "Must be linked");
 
     XPCAutoLock autoLock(lock);

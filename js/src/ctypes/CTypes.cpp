@@ -2173,8 +2173,16 @@ ImplicitConvert(JSContext* cx,
         break;
       }
       default:
-        return TypeError(cx, "pointer", val);
+        return TypeError(cx, "string pointer", val);
       }
+      break;
+    } else if (!JSVAL_IS_PRIMITIVE(val) &&
+               JS_IsArrayBufferObject(JSVAL_TO_OBJECT(val), cx)) {
+      // Convert ArrayBuffer to pointer without any copy.
+      // Just as with C arrays, we make no effort to
+      // keep the ArrayBuffer alive.
+      JSObject *sourceBuffer = JSVAL_TO_OBJECT(val);
+      *static_cast<void**>(buffer) = JS_GetArrayBufferData(sourceBuffer, cx);
       break;
     }
     return TypeError(cx, "pointer", val);
@@ -2264,6 +2272,23 @@ ImplicitConvert(JSContext* cx,
 
       memcpy(buffer, intermediate.get(), arraySize);
 
+    } else if (!JSVAL_IS_PRIMITIVE(val) &&
+               JS_IsArrayBufferObject(JSVAL_TO_OBJECT(val), cx)) {
+      // Check that array is consistent with type, then
+      // copy the array. As with C arrays, data is *not*
+      // copied back to the ArrayBuffer at the end of a
+      // function call, so do not expect this to work
+      // as an inout argument.
+      JSObject *sourceArrayBuffer = JSVAL_TO_OBJECT(val);
+      uint32_t sourceLength = JS_GetArrayBufferByteLength(sourceArrayBuffer, cx);
+      size_t elementSize = CType::GetSize(baseType);
+      size_t arraySize = elementSize * targetLength;
+      if (arraySize != size_t(sourceLength)) {
+        JS_ReportError(cx, "ArrayType length does not match source array length");
+        return false;
+      }
+      memcpy(buffer, JS_GetArrayBufferData(sourceArrayBuffer, cx), sourceLength);
+      break;
     } else {
       // Don't implicitly convert to string. Users can implicitly convert
       // with `String(x)` or `""+x`.
@@ -6257,9 +6282,7 @@ CData::ReadString(JSContext* cx, unsigned argc, jsval* vp)
   }
 
   JSObject* obj = CDataFinalizer::GetCData(cx, JS_THIS_OBJECT(cx, vp));
-  if (!obj)
-    return JS_FALSE;
-  if (!IsCData(obj)) {
+  if (!obj || !IsCData(obj)) {
     JS_ReportError(cx, "not a CData");
     return JS_FALSE;
   }

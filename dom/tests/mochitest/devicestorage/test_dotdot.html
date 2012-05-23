@@ -1,0 +1,71 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717103
+-->
+<head>
+  <title>Test for the device storage API </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup();
+
+function profileStorage() {
+  return navigator.getDeviceStorage("profile")[0];
+}
+
+var tests = [
+  function () { return profileStorage().addNamed(createRandomBlob(), gFileName); },
+  function () { return profileStorage().delete(gFileName); },
+  function () { return profileStorage().get(gFileName); },
+  function () { var r = profileStorage().enumerate("../"); return r; }
+];
+
+var gFileName = "../owned";
+
+function fail(e) {
+  ok(false, "addSuccess was called");
+  dump(request);
+  devicestorage_cleanup();
+}
+
+function next(e) {
+
+  if (e != undefined)
+    ok(true, "addError was called");
+  
+  var f = tests.pop();
+
+  if (f == undefined) {
+    devicestorage_cleanup();
+    return;
+  }
+
+  request = f();
+  request.onsuccess = fail;
+  request.onerror = next;
+}
+
+next();
+
+
+
+</script>
+</pre>
+</body>
+</html>
+

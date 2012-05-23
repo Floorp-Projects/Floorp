@@ -48,8 +48,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x7a6238d4, 0x7cbc, 0x43b2, \
-  { 0x86, 0x68, 0x92, 0xeb, 0x9e, 0xb0, 0x49, 0xaf } }
+{ 0xf0bafbe6, 0xe45c, 0x490e, \
+  { 0xa2, 0x1c, 0xfe, 0x14, 0x2f, 0xb6, 0x34, 0xba } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -163,6 +163,10 @@ public:
   nsIDOMDocument* GetExtantDocument() const
   {
     return mDocument;
+  }
+  nsIDocument* GetExtantDoc() const
+  {
+    return mDoc;
   }
 
   // Internal getter/setter for the frame element, this version of the
@@ -596,6 +600,7 @@ protected:
   // sure you keep them in sync!
   nsCOMPtr<nsIDOMEventTarget> mChromeEventHandler; // strong
   nsCOMPtr<nsIDOMDocument> mDocument; // strong
+  nsCOMPtr<nsIDocument> mDoc; // strong, for fast access
 
   nsCOMPtr<nsIDOMEventTarget> mParentTarget; // strong
 

@@ -44,6 +44,7 @@ private:
   nsCOMPtr<nsIEventTarget> mEventTarget;
   nsRefPtr<nsHttpConnectionInfo> mConnectionInfo;
   nsHttpRequestHead *mRequestHead;
+  bool mIsDone;
 };
 
 }} // namespace mozilla::net
