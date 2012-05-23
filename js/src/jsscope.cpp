@@ -1253,6 +1253,24 @@ Bindings::setParent(JSContext *cx, JSObject *obj)
     return true;
 }
 
+inline
+InitialShapeEntry::InitialShapeEntry() : shape(NULL), proto(NULL)
+{
+}
+
+inline
+InitialShapeEntry::InitialShapeEntry(const ReadBarriered<Shape> &shape, JSObject *proto)
+  : shape(shape), proto(proto)
+{
+}
+
+inline InitialShapeEntry::Lookup
+InitialShapeEntry::getLookup()
+{
+    return Lookup(shape->getObjectClass(), proto, shape->getObjectParent(),
+                  shape->numFixedSlots(), shape->getObjectFlags());
+}
+
 /* static */ inline HashNumber
 InitialShapeEntry::hash(const Lookup &lookup)
 {
@@ -1304,11 +1322,7 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObje
         return NULL;
     new (shape) EmptyShape(nbase, nfixed);
 
-    InitialShapeEntry entry;
-    entry.shape = shape;
-    entry.proto = lookup.proto;
-
-    if (!table.relookupOrAdd(p, lookup, entry))
+    if (!table.relookupOrAdd(p, lookup, InitialShapeEntry(shape, lookup.proto)))
         return NULL;
 
     return shape;
@@ -1374,8 +1388,17 @@ JSCompartment::sweepInitialShapeTable()
     if (initialShapes.initialized()) {
         for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
             const InitialShapeEntry &entry = e.front();
-            if (!entry.shape->isMarked() || (entry.proto && !entry.proto->isMarked()))
+            Shape *shape = entry.shape;
+            JSObject *proto = entry.proto;
+            if (!IsShapeMarked(&shape) || (proto && !IsObjectMarked(&proto))) {
                 e.removeFront();
+            } else {
+                JSObject *parent = shape->getObjectParent();
+                JS_ASSERT(!parent || IsObjectMarked(&parent));
+                JS_ASSERT(parent == shape->getObjectParent());
+                InitialShapeEntry newKey(shape, proto);
+                e.rekeyFront(newKey.getLookup(), newKey);
+            }
         }
     }
 }

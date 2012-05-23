@@ -4822,7 +4822,10 @@ static inline bool
 IsAboutToBeFinalized(TypeObjectKey *key)
 {
     /* Mask out the low bit indicating whether this is a type or JS object. */
-    return !reinterpret_cast<const gc::Cell *>(uintptr_t(key) & ~1)->isMarked();
+    gc::Cell *tmp = reinterpret_cast<gc::Cell *>(uintptr_t(key) & ~1);
+    bool isMarked = IsCellMarked(&tmp);
+    JS_ASSERT(tmp == reinterpret_cast<gc::Cell *>(uintptr_t(key) & ~1));
+    return !isMarked;
 }
 
 void
@@ -5925,17 +5928,18 @@ TypeCompartment::sweep(FreeOp *fop)
     if (objectTypeTable) {
         for (ObjectTypeTable::Enum e(*objectTypeTable); !e.empty(); e.popFront()) {
             const ObjectTableKey &key = e.front().key;
-            const ObjectTableEntry &entry = e.front().value;
+            ObjectTableEntry &entry = e.front().value;
             JS_ASSERT(entry.object->proto == key.proto);
 
             bool remove = false;
-            if (!entry.object->isMarked())
+            if (!IsTypeObjectMarked(entry.object.unsafeGet()))
                 remove = true;
             for (unsigned i = 0; !remove && i < key.nslots; i++) {
                 if (JSID_IS_STRING(key.ids[i])) {
                     JSString *str = JSID_TO_STRING(key.ids[i]);
-                    if (!str->isMarked())
+                    if (!IsStringMarked(&str))
                         remove = true;
+                    JS_ASSERT(AtomToId((JSAtom *)str) == key.ids[i]);
                 }
                 JS_ASSERT(!entry.types[i].isSingleObject());
                 if (entry.types[i].isTypeObject() && !entry.types[i].typeObject()->isMarked())
@@ -5952,11 +5956,13 @@ TypeCompartment::sweep(FreeOp *fop)
 
     if (allocationSiteTable) {
         for (AllocationSiteTable::Enum e(*allocationSiteTable); !e.empty(); e.popFront()) {
-            const AllocationSiteKey &key = e.front().key;
-            TypeObject *object = e.front().value;
-
-            if (IsAboutToBeFinalized(key.script) || !object->isMarked())
+            AllocationSiteKey key = e.front().key;
+            bool keyMarked = IsScriptMarked(&key.script);
+            bool valMarked = IsTypeObjectMarked(e.front().value.unsafeGet());
+            if (!keyMarked || !valMarked)
                 e.removeFront();
+            else
+                e.rekeyFront(key);
         }
     }
 
@@ -6017,7 +6023,8 @@ TypeScript::Sweep(FreeOp *fop, JSScript *script)
         Type type = result->type;
 
         if (!type.isUnknown() && !type.isAnyObject() && type.isObject() &&
-            IsAboutToBeFinalized(type.objectKey())) {
+            IsAboutToBeFinalized(type.objectKey()))
+        {
             *presult = result->next;
             fop->delete_(result);
         } else {
