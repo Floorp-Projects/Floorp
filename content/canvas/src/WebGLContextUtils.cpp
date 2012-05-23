@@ -86,8 +86,8 @@ WebGLContext::LogMessageIfVerbose(const char *fmt, va_list ap)
 CheckedUint32
 WebGLContext::GetImageSize(WebGLsizei height, 
                            WebGLsizei width, 
-                           PRUint32 pixelSize,
-                           PRUint32 packOrUnpackAlignment)
+                           uint32_t pixelSize,
+                           uint32_t packOrUnpackAlignment)
 {
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * pixelSize;
 
