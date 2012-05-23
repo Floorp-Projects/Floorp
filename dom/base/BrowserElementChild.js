@@ -61,7 +61,7 @@ BrowserElementChild.prototype = {
 
     if (!!appManifestURL) {
       windowUtils.setIsApp(true);
-      windowUtils.setApp(mozApp);
+      windowUtils.setApp(appManifestURL);
     } else {
       windowUtils.setIsApp(false);
     }

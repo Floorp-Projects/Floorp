@@ -18,6 +18,9 @@ import java.io.IOException;
 
 import java.util.HashMap;
 
+/**
+ *  A convenient base class suitable for most Robocop tests.
+ */
 abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
     private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
@@ -93,10 +96,18 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         super.tearDown();
     }
 
+    /**
+     * Click on the specified element and return the resulting activity.
+     * @return The created activity, or null if the element cannot be clicked.
+     */
     protected final Activity getActivityFromClick(Element element) {
         Instrumentation inst = getInstrumentation();
         Instrumentation.ActivityMonitor monitor = inst.addMonitor((String)null, null, false);
-        element.click();
+        boolean clicked = element.click();
+        if (!clicked) {
+            mAsserter.ok(clicked != false, "checking that awesome bar clicked", "awesome bar was clicked");
+            return null;
+        }
         // wait for click to take effect before waiting for activity
         // (otherwise we sometimes get the previous activity)
         getInstrumentation().waitForIdleSync();
@@ -108,16 +119,31 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         return activity;
     }
 
+    /**
+     * Click on the awesome bar element and return the resulting activity.
+     * @return The created activity, or null if the awesome bar cannot be clicked.
+     */
     protected final Activity clickOnAwesomeBar() {
+        Activity activity = null;
         Element awesomebar = mDriver.findElement(mActivity, "awesome_bar");
-        return getActivityFromClick(awesomebar);
+        if (awesomebar != null) {
+            activity = getActivityFromClick(awesomebar);
+            if (activity == null) {
+                mAsserter.dumpLog("failed to click on awesome bar!");
+            }
+        }
+        return activity;
     }
 
     protected final void enterUrl(String url) {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
         mActions.sendKeys(url);
-        mAsserter.is(urlbar.getText(), url, "Awesomebar URL typed properly");
+        String urlbarText = null;
+        if (urlbar != null) {
+            urlbarText = urlbar.getText();
+        }
+        mAsserter.is(urlbarText, url, "Awesomebar URL typed properly");
     }
 
     protected final void hitEnterAndWait() {
@@ -135,7 +161,11 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected final void verifyUrl(String url) {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
-        mAsserter.is(urlbar.getText(), url, "Awesomebar URL stayed the same");
+        String urlbarText = null;
+        if (urlbar != null) {
+            urlbarText = urlbar.getText();
+        }
+        mAsserter.is(urlbarText, url, "Awesomebar URL stayed the same");
     }
 
     protected final String getAbsoluteUrl(String url) {

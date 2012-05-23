@@ -1914,7 +1914,7 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
     jsval rval = JSVAL_VOID;
     AUTO_MARK_JSVAL(ccx, &rval);
 
-    nsresult rv = xpc_CreateSandboxObject(cx, &rval, principal, NULL, false,
+    nsresult rv = xpc_CreateSandboxObject(cx, &rval, principal, NULL, false, true,
                                           EmptyCString());
     NS_ASSERTION(NS_FAILED(rv) || !JSVAL_IS_PRIMITIVE(rval),
                  "Bad return value from xpc_CreateSandboxObject()!");
@@ -2609,6 +2609,36 @@ DumpJSHeap(FILE* file)
     js::DumpHeapComplete(xpc->GetRuntime()->GetJSRuntime(), file);
 }
 #endif
+
+void
+SetLocationForGlobal(JSObject *global, const nsACString& location)
+{
+    MOZ_ASSERT(global);
+
+    JSCompartment *compartment = js::GetObjectCompartment(global);
+    MOZ_ASSERT(compartment, "No compartment for global");
+
+    xpc::CompartmentPrivate *priv =
+        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
+    MOZ_ASSERT(priv, "No compartment private");
+
+    priv->SetLocation(location);
+}
+
+void
+SetLocationForGlobal(JSObject *global, nsIURI *locationURI)
+{
+    MOZ_ASSERT(global);
+
+    JSCompartment *compartment = js::GetObjectCompartment(global);
+    MOZ_ASSERT(compartment, "No compartment for global");
+
+    xpc::CompartmentPrivate *priv =
+        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
+    MOZ_ASSERT(priv, "No compartment private");
+
+    priv->SetLocation(locationURI);
+}
 
 } // namespace xpc
 

@@ -603,10 +603,11 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
 }
 
 PLayersParent*
-RenderFrameParent::AllocPLayers(LayerManager::LayersBackend* aBackendType)
+RenderFrameParent::AllocPLayers(LayerManager::LayersBackend* aBackendType, int* aMaxTextureSize)
 {
   if (!mFrameLoader || mFrameLoaderDestroyed) {
     *aBackendType = LayerManager::LAYERS_NONE;
+    *aMaxTextureSize = 0;
     return nsnull;
   }
 
@@ -615,9 +616,11 @@ RenderFrameParent::AllocPLayers(LayerManager::LayersBackend* aBackendType)
   ShadowLayerManager* slm = lm->AsShadowManager();
   if (!slm) {
     *aBackendType = LayerManager::LAYERS_NONE;
+    *aMaxTextureSize = 0;
      return nsnull;
   }
   *aBackendType = lm->GetBackendType();
+  *aMaxTextureSize = lm->GetMaxTextureSize();
   return new ShadowLayersParent(slm, this);
 }
 

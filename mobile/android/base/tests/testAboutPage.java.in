@@ -15,7 +15,7 @@ public class testAboutPage extends BaseTest {
         loadUrl(url);
 
         Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar");
-        mAsserter.ok(awesomebar.getText().matches("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)"), "page title match", "about: page title is correct");
+        mAsserter.ok(awesomebar != null && awesomebar.getText() != null && awesomebar.getText().matches("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)"), "page title match", "about: page title is correct");
 
         // Open a new page to remove the about: page from the current tab
         url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
@@ -46,6 +46,6 @@ public class testAboutPage extends BaseTest {
 
         // Grab the title to make sure the about: page was loaded
         awesomebar = mDriver.findElement(getActivity(), "awesome_bar");
-        mAsserter.ok(awesomebar.getText().matches("About (Fennec|Nightly|Aurora|Firefox)"), "page title match", "about: page title is correct");
+        mAsserter.ok(awesomebar != null && awesomebar.getText() != null && awesomebar.getText().matches("About (Fennec|Nightly|Aurora|Firefox)"), "page title match", "about: page title is correct");
     }
 }

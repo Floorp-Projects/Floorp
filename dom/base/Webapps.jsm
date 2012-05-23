@@ -187,7 +187,7 @@ let DOMApplicationRegistry = {
 
     let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
     let manFile = dir.clone();
-    manFile.append("manifest.json");
+    manFile.append("manifest.webapp");
     this._writeFile(manFile, JSON.stringify(app.manifest));
     this.webapps[id] = appObject;
 
@@ -229,7 +229,13 @@ let DOMApplicationRegistry = {
 
     let index = aIndex || 0;
     let id = aData[index].id;
-    let file = FileUtils.getFile(DIRECTORY_NAME, ["webapps", id, "manifest.json"], true);
+
+    // the manifest file used to be named manifest.json, so fallback on this.
+    let file = FileUtils.getFile(DIRECTORY_NAME, ["webapps", id, "manifest.webapp"], true);
+    if (!file.exists()) {
+      file = FileUtils.getFile(DIRECTORY_NAME, ["webapps", id, "manifest.json"], true);
+    }
+
     this._loadJSONAsync(file, (function(aJSON) {
       aData[index].manifest = aJSON;
       if (index == aData.length - 1)

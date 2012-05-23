@@ -18,6 +18,7 @@ DIRS	+= \
 	ajax \
 	bugs \
 	chrome \
+	devicestorage \
 	general \
 	whatwg \
 	geolocation \
