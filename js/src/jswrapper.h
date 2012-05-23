@@ -159,7 +159,6 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, unsigned indent) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp) MOZ_OVERRIDE;
     virtual bool iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp);
-    virtual void trace(JSTracer *trc, JSObject *wrapper) MOZ_OVERRIDE;
 
     static CrossCompartmentWrapper singleton;
 };
