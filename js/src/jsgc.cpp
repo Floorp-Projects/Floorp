@@ -3504,7 +3504,7 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
 
     bool reset = false;
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (c->gcBytes > c->gcTriggerBytes) {
+        if (c->gcBytes >= c->gcTriggerBytes) {
             *budget = SliceBudget::Unlimited;
             rt->gcStats.nonincremental("allocation trigger");
         }
