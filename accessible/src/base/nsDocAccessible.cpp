@@ -43,6 +43,11 @@
 #include "nsIWebNavigation.h"
 #include "nsFocusManager.h"
 #include "mozilla/dom/Element.h"
+
+#ifdef DEBUG
+#include "Logging.h"
+#endif
+
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
 #endif
@@ -581,7 +586,10 @@ nsDocAccessible::GetAccessible(nsINode* aNode) const
 bool
 nsDocAccessible::Init()
 {
-  NS_LOG_ACCDOCCREATE_FOR("document initialize", mDocument, this)
+#ifdef DEBUG
+  if (logging::IsEnabled(logging::eDocCreate))
+    logging::DocCreate("document initialize", mDocument, this);
+#endif
 
   // Initialize notification controller.
   mNotificationController = new NotificationController(this, mPresShell);
@@ -604,7 +612,10 @@ nsDocAccessible::Shutdown()
   if (!mPresShell) // already shutdown
     return;
 
-  NS_LOG_ACCDOCDESTROY_FOR("document shutdown", mDocument, this)
+#ifdef DEBUG
+  if (logging::IsEnabled(logging::eDocDestroy))
+    logging::DocDestroy("document shutdown", mDocument, this);
+#endif
 
   if (mNotificationController) {
     mNotificationController->Shutdown();
@@ -818,7 +829,10 @@ void nsDocAccessible::AddScrollListener()
   nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollableExternal();
   if (sf) {
     sf->AddScrollPositionListener(this);
-    NS_LOG_ACCDOCCREATE_TEXT("add scroll listener")
+#ifdef DEBUG
+    if (logging::IsEnabled(logging::eDocCreate))
+      logging::Text("add scroll listener");
+#endif
   }
 }
 
@@ -1264,14 +1278,14 @@ nsDocAccessible::ParentChainChanged(nsIContent *aContent)
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible
 
-#ifdef DEBUG_ACCDOCMGR
+#ifdef DEBUG
 nsresult
-nsDocAccessible::HandleAccEvent(AccEvent* aAccEvent)
+nsDocAccessible::HandleAccEvent(AccEvent* aEvent)
 {
-  NS_LOG_ACCDOCLOAD_HANDLEEVENT(aAccEvent)
+  if (logging::IsEnabled(logging::eDocLoad))
+    logging::DocLoadEventHandled(aEvent);
 
-  return nsHyperTextAccessible::HandleAccEvent(aAccEvent);
-
+  return nsHyperTextAccessible::HandleAccEvent(aEvent);
 }
 #endif
 
@@ -1711,7 +1725,11 @@ nsresult
 nsDocAccessible::FireDelayedAccessibleEvent(AccEvent* aEvent)
 {
   NS_ENSURE_ARG(aEvent);
-  NS_LOG_ACCDOCLOAD_FIREEVENT(aEvent)
+
+#ifdef DEBUG
+  if (logging::IsEnabled(logging::eDocLoad))
+    logging::DocLoadEventFired(aEvent);
+#endif
 
   if (mNotificationController)
     mNotificationController->QueueEvent(aEvent);
