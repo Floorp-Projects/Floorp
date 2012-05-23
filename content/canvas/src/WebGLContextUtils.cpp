@@ -45,7 +45,12 @@ WebGLContext::LogMessage(const char *fmt, ...)
 void
 WebGLContext::LogMessage(const char *fmt, va_list ap)
 {
-    if (!fmt) return;
+    const int MaxReportedMessages = 32;
+
+    if (mAlreadyReportedMessages >= MaxReportedMessages)
+        return;
+
+    mAlreadyReportedMessages++;
 
     char buf[1024];
     PR_vsnprintf(buf, 1024, fmt, ap);
@@ -54,8 +59,14 @@ WebGLContext::LogMessage(const char *fmt, va_list ap)
 
     nsCOMPtr<nsIJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
     JSContext* ccx = nsnull;
-    if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx)
+    if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
         JS_ReportWarning(ccx, "WebGL: %s", buf);
+        if (mAlreadyReportedMessages == MaxReportedMessages) {
+            JS_ReportWarning(ccx,
+                "WebGL: no further warnings will be reported for this WebGL context "
+                "(already reported %d warnings)", mAlreadyReportedMessages);
+        }
+    }
 }
 
 void
