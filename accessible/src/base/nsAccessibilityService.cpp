@@ -36,6 +36,10 @@
 #include "nsHTMLWin32ObjectAccessible.h"
 #endif
 
+#ifdef DEBUG
+#include "Logging.h"
+#endif
+
 #include "nsCURILoader.h"
 #include "nsEventStates.h"
 #include "nsIContentViewer.h"
@@ -611,7 +615,10 @@ nsAccessibilityService::PresShellDestroyed(nsIPresShell *aPresShell)
   if (!doc)
     return;
 
-  NS_LOG_ACCDOCDESTROY("presshell destroyed", doc)
+#ifdef DEBUG
+  if (logging::IsEnabled(logging::eDocDestroy))
+    logging::DocDestroy("presshell destroyed", doc);
+#endif
 
   nsDocAccessible* docAccessible = GetDocAccessibleFromCache(doc);
   if (docAccessible)
@@ -881,6 +888,15 @@ nsAccessibilityService::CreateAccessiblePivot(nsIAccessible* aRoot,
   nsAccessiblePivot* pivot = new nsAccessiblePivot(accessibleRoot);
   NS_ADDREF(*aPivot = pivot);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::SetLogging(const nsACString& aModules)
+{
+#ifdef DEBUG
+  logging::Enable(PromiseFlatCString(aModules));
+#endif
   return NS_OK;
 }
 
@@ -1241,6 +1257,10 @@ nsAccessibilityService::Init()
 
   static const PRUnichar kInitIndicator[] = { '1', 0 };
   observerService->NotifyObservers(nsnull, "a11y-init-or-shutdown", kInitIndicator);
+
+#ifdef DEBUG
+  logging::CheckEnv();
+#endif
 
   // Initialize accessibility.
   nsAccessNodeWrap::InitAccessibility();
