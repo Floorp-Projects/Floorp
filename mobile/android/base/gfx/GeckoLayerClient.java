@@ -204,7 +204,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
                 // and our zoom level (which may have diverged).
                 float scaleFactor = oldMetrics.zoomFactor / messageMetrics.getZoomFactor();
                 newMetrics = new ViewportMetrics(oldMetrics);
-                newMetrics.setPageSize(messageMetrics.getPageSize().scale(scaleFactor), messageMetrics.getCssPageSize());
+                newMetrics.setPageRect(RectUtils.scale(messageMetrics.getPageRect(), scaleFactor), messageMetrics.getCssPageRect());
                 break;
             }
 
@@ -306,7 +306,8 @@ public class GeckoLayerClient implements GeckoEventResponder,
             final ViewportMetrics currentMetrics = new ViewportMetrics(mLayerController.getViewportMetrics());
             currentMetrics.setOrigin(new PointF(offsetX, offsetY));
             currentMetrics.setZoomFactor(zoom);
-            currentMetrics.setPageSize(new FloatSize(pageWidth, pageHeight), new FloatSize(cssPageWidth, cssPageHeight));
+            currentMetrics.setPageRect(new RectF(0.0f, 0.0f, pageWidth, pageHeight),
+                                       new RectF(0.0f, 0.0f, cssPageWidth, cssPageHeight));
             // Since we have switched to displaying a different document, we need to update any
             // viewport-related state we have lying around. This includes mGeckoViewport and the
             // viewport in mLayerController. Usually this information is updated via handleViewportMessage
@@ -350,10 +351,10 @@ public class GeckoLayerClient implements GeckoEventResponder,
             // adjust the page dimensions to account for differences in zoom
             // between the rendered content (which is what the compositor tells us)
             // and our zoom level (which may have diverged).
+            RectF pageRect = new RectF(0.0f, 0.0f, pageWidth, pageHeight);
+            RectF cssPageRect = new RectF(0.0f, 0.0f, cssPageWidth, cssPageHeight);
             float ourZoom = mLayerController.getZoomFactor();
-            pageWidth = pageWidth * ourZoom / zoom;
-            pageHeight = pageHeight * ourZoom /zoom;
-            mLayerController.setPageSize(new FloatSize(pageWidth, pageHeight), new FloatSize(cssPageWidth, cssPageHeight));
+            mLayerController.setPageRect(RectUtils.scale(pageRect, ourZoom / zoom), cssPageRect);
             // Here the page size of the document has changed, but the document being displayed
             // is still the same. Therefore, we don't need to send anything to browser.js; any
             // changes we need to make to the display port will get sent the next time we call
