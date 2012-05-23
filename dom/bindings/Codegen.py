@@ -365,9 +365,10 @@ class CGHeaders(CGWrapper):
                                                            implementationIncludes)))
     @staticmethod
     def getInterfaceFilename(interface):
+        # Use our local version of the header, not the exported one, so that
+        # test bindings, which don't export, will work correctly.
         basename = os.path.basename(interface.filename())
-        return 'mozilla/dom/' + \
-               basename.replace('.webidl', 'Binding.h')
+        return basename.replace('.webidl', 'Binding.h')
 
 class Argument():
     """
@@ -3250,7 +3251,8 @@ class CGRegisterProtos(CGAbstractMethod):
         lines = ["REGISTER_PROTO(%s);" % desc.name
                  for desc in self.config.getDescriptors(hasInterfaceObject=True,
                                                         isExternal=False,
-                                                        workers=False)]
+                                                        workers=False,
+                                                        register=True)]
         return '\n'.join(lines) + '\n'
     def definition_body(self):
         return self._defineMacro() + self._registerProtos() + self._undefineMacro()
@@ -3422,7 +3424,8 @@ struct PrototypeIDMap;
         # Add the includes
         defineIncludes = [CGHeaders.getInterfaceFilename(desc.interface)
                           for desc in config.getDescriptors(hasInterfaceObject=True,
-                                                            workers=False)]
+                                                            workers=False,
+                                                            register=True)]
         defineIncludes.append('nsScriptNameSpaceManager.h')
         curr = CGHeaders([], [], defineIncludes, curr)
 

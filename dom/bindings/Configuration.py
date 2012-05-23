@@ -93,6 +93,7 @@ class Descriptor:
         self.castable = desc.get('castable', castableDefault)
 
         self.notflattened = desc.get('notflattened', False)
+        self.register = desc.get('register', True)
 
         # If we're concrete, we need to crawl our ancestor interfaces and mark
         # them as having a concrete descendant.
