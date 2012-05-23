@@ -476,6 +476,22 @@ var steps = [
     };
     req.onerror = onFailure;
   },
+  function () {
+    ok(true, "Test set after lock closed");
+    var lockx = mozSettings.getLock();
+    var cb = function() {
+      var reqx = null;
+      try {
+        reqx = lockx.set(wifiNetworks0);
+        ok(false, "should have thrown");
+      } catch (ex) {
+        ok(reqx == null, "request is still null");
+        ok(true, "Caught Exception");
+        next();
+      }
+    }
+    SimpleTest.executeSoon(cb);
+  },
   function() {
     ok(true, "Clear DB");
     var lock = mozSettings.getLock();
