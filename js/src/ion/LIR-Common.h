@@ -296,7 +296,7 @@ class LCheckOverRecursed : public LInstructionHelper<0, 0, 1>
     }
 };
 
-class LDefVar : public LInstructionHelper<0, 1, 1>
+class LDefVar : public LCallInstructionHelper<0, 1, 1>
 {
   public:
     LIR_HEADER(DefVar);
