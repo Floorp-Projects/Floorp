@@ -432,6 +432,19 @@
     {0x94, 0xdb, 0xd4, 0xf8, 0x59, 0x05, 0x82, 0x15} \
 }
 
+// component implementing nsIFileStream
+#define NS_LOCALFILESTREAM_CLASSNAME \
+    "nsFileStream"
+#define NS_LOCALFILESTREAM_CONTRACTID \
+    "@mozilla.org/network/file-stream;1"
+#define NS_LOCALFILESTREAM_CID                       \
+{ /* f8a69bd7-176c-4a60-9a05-b6d92f8f229a */         \
+    0xf8a69bd7,                                      \
+    0x176c,                                          \
+    0x4a60,                                          \
+    {0x9a, 0x05, 0xb6, 0xd9, 0x2f, 0x8f, 0x22, 0x9a} \
+}
+
 // component implementing nsIPrivateBrowsingService
 #define NS_PRIVATE_BROWSING_SERVICE_CONTRACTID \
     "@mozilla.org/privatebrowsing-wrapper;1"
