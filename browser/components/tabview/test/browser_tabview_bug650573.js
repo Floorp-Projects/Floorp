@@ -79,9 +79,9 @@ function createBrowserState() {
     "2nd-group-id": {bounds: bounds, title: "new group 2", id: "2nd-group-id"}
   };
 
-  let tab1Data = {bounds: bounds, url: "about:robots", groupID: "2nd-group-id"};
+  let tab1Data = {bounds: bounds, url: "about:rights", groupID: "2nd-group-id"};
   let tab1 = {
-    entries: [{url: "about:robots"}],
+    entries: [{url: "about:rights"}],
     extData: {"tabview-tab": JSON.stringify(tab1Data)}
   };
 

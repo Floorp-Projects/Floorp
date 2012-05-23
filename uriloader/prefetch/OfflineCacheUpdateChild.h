@@ -23,14 +23,15 @@ namespace mozilla {
 namespace docshell {
 
 class OfflineCacheUpdateChild : public nsIOfflineCacheUpdate
-                                , public POfflineCacheUpdateChild
+                              , public POfflineCacheUpdateChild
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOFFLINECACHEUPDATE
 
     virtual bool
-    RecvNotifyStateEvent(const PRUint32& stateEvent);
+    RecvNotifyStateEvent(const PRUint32& stateEvent,
+                         const PRUint64& byteProgress);
 
     virtual bool
     RecvAssociateDocuments(
@@ -85,6 +86,8 @@ private:
     /* Keep reference to the window that owns this update to call the
        parent offline cache update construcor */
     nsCOMPtr<nsIDOMWindow> mWindow;
+
+    PRUint64 mByteProgress;
 };
 
 }

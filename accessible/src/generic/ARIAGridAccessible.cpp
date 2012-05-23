@@ -80,24 +80,14 @@ ARIAGridAccessible::RowCount()
   return rowCount;
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::GetCellAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
-                              nsIAccessible** aCell)
-{
-  NS_ENSURE_ARG_POINTER(aCell);
-  *aCell = nsnull;
+nsAccessible*
+ARIAGridAccessible::CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex)
+{ 
+  nsAccessible* row = GetRowAt(aRowIndex);
+  if (!row)
+    return nsnull;
 
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsAccessible *row = GetRowAt(aRowIndex);
-  NS_ENSURE_ARG(row);
-
-  nsAccessible *cell = GetCellInRowAt(row, aColumnIndex);
-  NS_ENSURE_ARG(cell);
-
-  NS_ADDREF(*aCell = cell);
-  return NS_OK;
+  return GetCellInRowAt(row, aColumnIndex);
 }
 
 NS_IMETHODIMP

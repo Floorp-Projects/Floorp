@@ -52,6 +52,19 @@ Distance(Point aA, Point aB)
   return hypotf(aB.x - aA.x, aB.y - aA.y);
 }
 
+static inline int
+BytesPerPixel(SurfaceFormat aFormat)
+{
+  switch (aFormat) {
+  case FORMAT_A8:
+    return 1;
+  case FORMAT_R5G6B5:
+    return 2;
+  default:
+    return 4;
+  }
+}
+
 }
 }
 

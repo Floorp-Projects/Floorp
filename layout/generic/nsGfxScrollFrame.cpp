@@ -1407,8 +1407,8 @@ nsPoint
 nsGfxScrollFrameInner::AsyncScroll::PositionAt(TimeStamp aTime) {
   double progressX = mTimingFunctionX.GetSplineValue(ProgressAt(aTime));
   double progressY = mTimingFunctionY.GetSplineValue(ProgressAt(aTime));
-  return nsPoint((1 - progressX) * mStartPos.x + progressX * mDestination.x,
-                 (1 - progressY) * mStartPos.y + progressY * mDestination.y);
+  return nsPoint(NSToCoordRound((1 - progressX) * mStartPos.x + progressX * mDestination.x),
+                 NSToCoordRound((1 - progressY) * mStartPos.y + progressY * mDestination.y));
 }
 
 nsSize
@@ -1525,7 +1525,7 @@ nsGfxScrollFrameInner::AsyncScroll::VelocityComponent(double aTimeProgress,
 
   const TimeDuration oneSecond = TimeDuration::FromSeconds(1);
   double slope = dxy / dt;
-  return (slope * (aDestination - aStart) / (mDuration / oneSecond));
+  return NSToCoordRound(slope * (aDestination - aStart) / (mDuration / oneSecond));
 }
 
 void
@@ -1633,12 +1633,15 @@ nsGfxScrollFrameInner::AsyncScrollCallback(void* anInstance, mozilla::TimeStamp 
   if (!self || !self->mAsyncScroll)
     return;
 
+  nsRect range = self->mAsyncScroll->mRange;
   if (self->mAsyncScroll->mIsSmoothScroll) {
     if (!self->mAsyncScroll->IsFinished(aTime)) {
       nsPoint destination = self->mAsyncScroll->PositionAt(aTime);
       nsPoint start = self->mAsyncScroll->mStartPos;
       // Allow this scroll operation to land on any pixel boundary in the
-      // right direction.
+      // right direction (as well as anywhere in the final allowed range,
+      // since we don't want intermediate steps to be more constrained than the
+      // final step!).
       static const int veryLargeDistance = nscoord_MAX/4;
       nsRect unlimitedRange(0, 0, veryLargeDistance, veryLargeDistance);
       if (destination.x < start.x) {
@@ -1651,13 +1654,13 @@ nsGfxScrollFrameInner::AsyncScrollCallback(void* anInstance, mozilla::TimeStamp 
       } else if (destination.y == start.y) {
         unlimitedRange.height = 0;
       }
-      self->ScrollToImpl(destination, unlimitedRange + destination);
+      self->ScrollToImpl(destination,
+                         (unlimitedRange + destination).UnionEdges(range));
       return;
     }
   }
 
   // Apply desired destination range since this is the last step of scrolling.
-  nsRect range = self->mAsyncScroll->mRange;
   self->mAsyncScroll = nsnull;
   self->ScrollToImpl(self->mDestination, range);
 }

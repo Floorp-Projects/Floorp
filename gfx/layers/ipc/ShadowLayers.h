@@ -297,6 +297,9 @@ public:
    */
   void SetIsFirstPaint() { mIsFirstPaint = true; }
 
+  virtual PRInt32 GetMaxTextureSize() const { return mMaxTextureSize; }
+  void SetMaxTextureSize(PRInt32 aMaxTextureSize) { mMaxTextureSize = aMaxTextureSize; }
+
 protected:
   ShadowLayerForwarder();
 
@@ -320,6 +323,7 @@ private:
   static void PlatformSyncBeforeUpdate();
 
   Transaction* mTxn;
+  PRInt32 mMaxTextureSize;
   LayersBackend mParentBackend;
 
   bool mIsFirstPaint;

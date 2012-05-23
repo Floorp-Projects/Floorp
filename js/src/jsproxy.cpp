@@ -374,12 +374,15 @@ IndirectProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
 }
 
 static bool
-GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSPropertyDescriptor *desc)
+GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
+                         JSPropertyDescriptor *desc)
 {
     // If obj is a proxy, we can do better than just guessing. This is
     // important for certain types of wrappers that wrap other wrappers.
     if (obj->isProxy())
-        return Proxy::getOwnPropertyDescriptor(cx, obj, id, flags & JSRESOLVE_ASSIGNING, desc);
+        return Proxy::getOwnPropertyDescriptor(cx, obj, id,
+                                               flags & JSRESOLVE_ASSIGNING,
+                                               desc);
 
     if (!JS_GetPropertyDescriptorById(cx, obj, id, flags, desc))
         return false;
@@ -538,6 +541,66 @@ IndirectProxyHandler::trace(JSTracer *trc, JSObject *proxy)
     MarkSlot(trc, &proxy->getReservedSlotRef(JSSLOT_PROXY_PRIVATE), "targetObject");
 }
 
+DirectProxyHandler::DirectProxyHandler(void *family) :
+        IndirectProxyHandler(family)
+{
+}
+
+bool
+DirectProxyHandler::has(JSContext *cx, JSObject *proxy, jsid id,
+                        bool *bp)
+{
+    JSBool found;
+    if (!JS_HasPropertyById(cx, GetProxyTargetObject(proxy), id, &found))
+        return false;
+    *bp = !!found;
+    return true;
+}
+
+bool
+DirectProxyHandler::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+{
+    JSObject *target = GetProxyTargetObject(proxy);
+    PropertyDescriptor desc;
+    if (!JS_GetPropertyDescriptorById(cx, target, id, JSRESOLVE_QUALIFIED,
+                                      &desc))
+        return false;
+    *bp = (desc.obj == target);
+    return true;
+}
+
+bool
+DirectProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver_,
+                        jsid id_, Value *vp)
+{
+    RootedVarObject receiver(cx, receiver_);
+    RootedVarId id(cx, id_);
+    return GetProxyTargetObject(proxy)->getGeneric(cx, receiver, id, vp);
+}
+
+bool
+DirectProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver,
+                        jsid id_, bool strict, Value *vp)
+{
+    RootedVarId id(cx, id_);
+    return GetProxyTargetObject(proxy)->setGeneric(cx, id, vp, strict);
+}
+
+bool
+DirectProxyHandler::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+{
+    return GetPropertyNames(cx, GetProxyTargetObject(proxy), JSITER_OWNONLY,
+                            &props);
+}
+
+bool
+DirectProxyHandler::iterate(JSContext *cx, JSObject *proxy, unsigned flags,
+                            Value *vp)
+{
+    return GetIterator(cx, RootedVarObject(cx, GetProxyTargetObject(proxy)),
+                       flags, vp);
+}
+
 static bool
 GetTrap(JSContext *cx, JSObject *handler, PropertyName *name, Value *fvalp)
 {
@@ -690,6 +753,7 @@ class ScriptedProxyHandler : public IndirectProxyHandler {
     virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp);
 
     virtual JSType typeOf(JSContext *cx, JSObject *proxy);
+    virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
 
     static ScriptedProxyHandler singleton;
 };
@@ -900,7 +964,18 @@ ScriptedProxyHandler::typeOf(JSContext *cx, JSObject *proxy)
      * js1_8_5/extensions/scripted-proxies.js. It will be removed when the
      * direct proxy refactor is complete.
      */
-    return IsFunctionProxy(proxy) ? JSTYPE_FUNCTION : JSTYPE_OBJECT;
+    return BaseProxyHandler::typeOf(cx, proxy);
+}
+
+bool
+ScriptedProxyHandler::defaultValue(JSContext *cx, JSObject *proxy, JSType hint,
+                                   Value *vp)
+{
+    /*
+     * This function is only here to prevent bug 757063. It will be removed when
+     * the direct proxy refactor is complete.
+     */
+    return BaseProxyHandler::defaultValue(cx, proxy, hint, vp);
 }
 
 ScriptedProxyHandler ScriptedProxyHandler::singleton;

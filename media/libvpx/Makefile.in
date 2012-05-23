@@ -472,9 +472,13 @@ endif
 HOST_CSRCS = obj_int_extract.c
 HOST_PROGRAM = host_obj_int_extract$(HOST_BIN_SUFFIX)
 
+CSRCS += asm_com_offsets.c
+
 GARBAGE += asm_com_offsets.$(OBJ_SUFFIX) asm_com_offsets.asm
 
 ifdef MOZ_VP8_ENCODER
+CSRCS += asm_enc_offsets.c
+
 GARBAGE += asm_enc_offsets.$(OBJ_SUFFIX) asm_enc_offsets.asm
 endif
 
@@ -517,11 +521,19 @@ asm_com_offsets.asm: asm_com_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \
 	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
 
+# Filter out this object, because we don't want to link against it.
+# It was generated solely so it could be parsed by obj_int_extract.
+OBJS := $(filter-out asm_com_offsets.$(OBJ_SUFFIX),$(OBJS))
+
 ifdef MOZ_VP8_ENCODER
 
 asm_enc_offsets.asm: asm_enc_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \
 	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
+
+# Filter out this object, because we don't want to link against it.
+# It was generated solely so it could be parsed by obj_int_extract.
+OBJS := $(filter-out asm_enc_offsets.$(OBJ_SUFFIX),$(OBJS))
 
 endif
 endif

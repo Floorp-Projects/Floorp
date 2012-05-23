@@ -234,6 +234,9 @@ AndroidPresenter.prototype = {
   ANDROID_WINDOW_STATE_CHANGED: 0x20,
 
   pivotChanged: function AndroidPresenter_pivotChanged(aContext) {
+    if (!aContext.accessible)
+      return;
+
     let output = [];
     for (let i in aContext.newAncestry)
       output.push.apply(
@@ -337,7 +340,8 @@ DummyAndroidPresenter.prototype = {
  */
 function PresenterContext(aAccessible, aOldAccessible) {
   this._accessible = aAccessible;
-  this._oldAccessible = aOldAccessible;
+  this._oldAccessible =
+    this._isDefunct(aOldAccessible) ? null : aOldAccessible;
 }
 
 PresenterContext.prototype = {
@@ -387,5 +391,15 @@ PresenterContext.prototype = {
     }
 
     return this._newAncestry;
+  },
+
+  _isDefunct: function _isDefunct(aAccessible) {
+    try {
+      let extstate = {};
+      aAccessible.getState({}, extstate);
+      return !!(aAccessible.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT);
+    } catch (x) {
+      return true;
+    }
   }
 };

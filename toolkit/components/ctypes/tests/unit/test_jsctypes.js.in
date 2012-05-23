@@ -246,6 +246,7 @@ function run_abstract_class_tests()
   do_check_throws(function() { ctypes.CType.prototype.ptr; }, Error);
   do_check_throws(function() { ctypes.CType.prototype.array(); }, Error);
 
+
   // toString and toSource are called by the web console during inspection,
   // so we don't want them to throw.
   do_check_eq(typeof ctypes.CType.prototype.toString(), 'string');
@@ -278,7 +279,6 @@ function run_abstract_class_tests()
   do_check_throws(function() { ctypes.CData.prototype.value = null; }, Error);
   do_check_throws(function() { ctypes.CData.prototype.address(); }, Error);
   do_check_throws(function() { ctypes.CData.prototype.readString(); }, Error);
-
 
   // toString and toSource are called by the web console during inspection,
   // so we don't want them to throw.
@@ -1739,6 +1739,19 @@ function run_PointerType_tests() {
   do_check_eq(ptrValue(z_t()), 0);
   let z = ctypes.int32_t.array(0)().address();
   do_check_eq(z.contents.length, 0);
+
+  // Check that you can use an ArrayBuffer as a pointer
+  let c_arraybuffer = new ArrayBuffer(24);
+  let c_int32 = new Int32Array(c_arraybuffer);
+  for (let i = 0; i < 6; ++i) {
+    c_int32[i] = i;
+  }
+  let c_ptr = ctypes.int32_t.ptr(c_arraybuffer);
+  do_check_eq(c_ptr.contents, 0);
+  let c_array = ctypes.cast(c_ptr, ctypes.ArrayType(ctypes.int32_t, 6).ptr).contents;
+  for (let i = 0; i < 6; ++i) {
+    do_check_eq(c_array[i], c_int32[i]);
+  }
 }
 
 function run_FunctionType_tests() {
@@ -1985,6 +1998,25 @@ function run_ArrayType_tests() {
   do_check_throws(function() { c.value = [1, 2, 3, 4, 5, 6, 7]; }, Error);
   do_check_throws(function() { c.value = [1, 2, 7.4, 4, 5, 6]; }, TypeError);
   do_check_throws(function() { c.value = []; }, Error);
+
+  // Check that you can use an ArrayBuffer with the right size for an array
+  let c_arraybuffer = new ArrayBuffer(24);
+  let c_int32 = new Int32Array(c_arraybuffer);
+  for (let i = 0; i < 6; ++i) {
+    c_int32[i] = i + 101;
+  }
+  c.value = c_arraybuffer;
+  do_check_eq(c[3], 104);
+  do_check_eq(c.toSource(), "ctypes.int32_t.array(6)([101, 102, 103, 104, 105, 106])");
+  do_check_eq(c.toSource(), c.toString());
+  eval("let c2 = " + c.toSource());
+  do_check_eq(c2.constructor.name, "int32_t[6]");
+  do_check_eq(c2.length, 6);
+  do_check_eq(c2[3], c[3]);
+
+  // Check that you cannot use an ArrayBuffer with the wrong size for an array
+  c_arraybuffer = new ArrayBuffer(20);
+  do_check_throws(function () { c.value = c_arraybuffer; }, Error);
 }
 
 function run_type_toString_tests() {

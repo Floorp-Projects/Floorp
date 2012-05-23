@@ -591,7 +591,7 @@ static int ensure_copy(const NS_tchar *path, const NS_tchar *dest)
   size_t left = ss.st_size;
   while (left) {
     size_t read = fread(buffer, 1, left, infile);
-    if (ferror(infile)) {
+    if (ferror(infile.get())) {
       LOG(("ensure_copy: failed to read the file: " LOG_S ", err: %d\n",
            path, errno));
       free(buffer);

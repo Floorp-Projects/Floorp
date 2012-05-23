@@ -128,7 +128,7 @@ nsWindow::nsWindow()
             NS_RUNTIMEABORT("Failed to create framebufferWatcherThread, aborting...");
         }
 
-        sUsingOMTC = Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
+        sUsingOMTC = UseOffMainThreadCompositing();
 
         // We (apparently) don't have a way to tell if allocating the
         // fbs succeeded or failed.
