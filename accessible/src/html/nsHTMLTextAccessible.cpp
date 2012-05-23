@@ -47,22 +47,6 @@ nsHTMLTextAccessible::NativeRole()
   return nsTextAccessible::NativeRole();
 }
 
-PRUint64
-nsHTMLTextAccessible::NativeState()
-{
-  PRUint64 state = nsTextAccessible::NativeState();
-
-  nsDocAccessible* docAccessible = Document();
-  if (docAccessible) {
-     PRUint64 docState = docAccessible->State();
-     if (0 == (docState & states::EDITABLE)) {
-       state |= states::READONLY; // Links not focusable in editor
-     }
-  }
-
-  return state;
-}
-
 nsresult
 nsHTMLTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
