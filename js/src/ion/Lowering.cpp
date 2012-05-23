@@ -117,8 +117,8 @@ LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
 bool
 LIRGenerator::visitDefVar(MDefVar *ins)
 {
-    LAllocation scopeChain = useRegister(ins->scopeChain());
-    LDefVar *lir = new LDefVar(scopeChain, temp());
+    LDefVar *lir = new LDefVar(useFixed(ins->scopeChain(), CallTempReg0),
+                               tempFixed(CallTempReg1));
 
     if (!add(lir, ins))
         return false;
