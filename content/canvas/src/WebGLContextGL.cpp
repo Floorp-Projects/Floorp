@@ -2393,8 +2393,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
         {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);
-            // Unsigned 32-bit values don't fit in Int32Value
-            return JS::DoubleValue(uint32_t(i));
+            return JS::NumberValue(uint32_t(i));
         }
         // int
         case LOCAL_GL_STENCIL_CLEAR_VALUE:
@@ -2514,8 +2513,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
 
 // uint, WebGL-specific
         case UNPACK_COLORSPACE_CONVERSION_WEBGL:
-            // uint doesn't fit in Int32Value
-            return JS::DoubleValue(uint32_t(mPixelStoreColorspaceConversion));
+            return JS::NumberValue(uint32_t(mPixelStoreColorspaceConversion));
 
         //
         // Complex values
@@ -2698,8 +2696,7 @@ WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname)
             }
 
             MOZ_ASSERT(pname == LOCAL_GL_BUFFER_USAGE);
-            // 32-bit unsigned ints don't fit in Int32 values in JS
-            return JS::DoubleValue(uint32_t(i));
+            return JS::NumberValue(uint32_t(i));
         }
             break;
 
@@ -2760,7 +2757,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
     if (fba.Renderbuffer()) {
         switch (pname) {
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-                return JS::DoubleValue(uint32_t(LOCAL_GL_RENDERBUFFER));
+                return JS::NumberValue(uint32_t(LOCAL_GL_RENDERBUFFER));
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
             {
@@ -2781,7 +2778,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
     } else if (fba.Texture()) {
         switch (pname) {
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-                return JS::DoubleValue(uint32_t(LOCAL_GL_TEXTURE));
+                return JS::NumberValue(uint32_t(LOCAL_GL_TEXTURE));
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
             {
@@ -2808,7 +2805,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
     } else {
         switch (pname) {
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-                return JS::DoubleValue(uint32_t(LOCAL_GL_NONE));
+                return JS::NumberValue(uint32_t(LOCAL_GL_NONE));
 
             default:
                 ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
@@ -2861,8 +2858,7 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname)
             {
                 i = LOCAL_GL_DEPTH_STENCIL;
             }
-            // unsigned 32-bit ints need to become double jsvals
-            return JS::DoubleValue(uint32_t(i));
+            return JS::NumberValue(uint32_t(i));
         }
         default:
             ErrorInvalidEnumInfo("getRenderbufferParameter: parameter", pname);
@@ -3190,8 +3186,7 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname)
         {
             GLint i = 0;
             gl->fGetTexParameteriv(target, pname, &i);
-            // Unsigned values don't fit in JS Int32 values
-            return JS::DoubleValue(uint32_t(i));
+            return JS::NumberValue(uint32_t(i));
         }
         case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
             if (mEnabledExtensions[WebGL_EXT_texture_filter_anisotropic]) {
@@ -3444,8 +3439,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
             if (pname == LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE)
                 return JS::Int32Value(i);
             MOZ_ASSERT(pname == LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE);
-            // Unsigned long doesn't fit in Int32Value
-            return JS::DoubleValue(uint32_t(i));
+            return JS::NumberValue(uint32_t(i));
         }
 
         case LOCAL_GL_CURRENT_VERTEX_ATTRIB:
@@ -3475,7 +3469,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
         }
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_POINTER:
-            return JS::DoubleValue(uint32_t(mAttribBuffers[index].byteOffset));
+            return JS::NumberValue(uint32_t(mAttribBuffers[index].byteOffset));
 
         default:
             ErrorInvalidEnumInfo("getVertexAttrib: parameter", pname);
@@ -5207,8 +5201,7 @@ WebGLContext::GetShaderParameter(WebGLShader *shader, WebGLenum pname)
         {
             GLint i = 0;
             gl->fGetShaderiv(shadername, pname, &i);
-            // uint32_t doesn't fit in Int32Value
-            return JS::DoubleValue(uint32_t(i));
+            return JS::NumberValue(uint32_t(i));
         }
             break;
         case LOCAL_GL_DELETE_STATUS:
