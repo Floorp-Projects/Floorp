@@ -2070,7 +2070,30 @@ class Debugger::ScriptQuery {
         /* Search each compartment for debuggee scripts. */
         for (CompartmentSet::Range r = compartments.all(); !r.empty(); r.popFront()) {
             for (gc::CellIter i(r.front(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-                if (!consider(i.get<JSScript>(), vector))
+                JSScript *script = i.get<JSScript>();
+                GlobalObject *global = script->getGlobalObjectOrNull();
+                if (global && !consider(script, global, vector))
+                    return false;
+            }
+        }
+
+        /*
+         * Since eval scripts have no global, we need to find them via the call
+         * stack, where frame's scope tells us the global in use.
+         */
+        for (ScriptFrameIter fri(cx); !fri.done(); ++fri) {
+            if (fri.isEvalFrame()) {
+                JSScript *script = fri.script();
+
+                /*
+                 * If eval scripts never have global objects set, then we don't need
+                 * to check the existing script vector for duplicates, since we only
+                 * include scripts with globals above.
+                 */
+                JS_ASSERT(!script->getGlobalObjectOrNull());
+
+                GlobalObject *global = &fri.fp()->global();
+                if (!consider(script, global, vector))
                     return false;
             }
         }
@@ -2190,14 +2213,9 @@ class Debugger::ScriptQuery {
      * |vector| or place it in |innermostForGlobal|, as appropriate. Return true
      * if no error occurs, false if an error occurs.
      */
-    bool consider(JSScript *script, AutoScriptVector *vector) {
-        // Non-compile-and-go scripts aren't associated with any global. In
-        // Gecko, this includes scripts loaded using C.u.import. Rather than
-        // ignore them, we include them all.
-        GlobalObject *global = script->getGlobalObjectOrNull();
-        if (global && !globals.has(global))
+    bool consider(JSScript *script, GlobalObject *global, AutoScriptVector *vector) {
+        if (!globals.has(global))
             return true;
-
         if (urlCString.ptr()) {
             if (!script->filename || strcmp(script->filename, urlCString.ptr()) != 0)
                 return true;
