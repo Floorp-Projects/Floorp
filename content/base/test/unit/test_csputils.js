@@ -599,6 +599,29 @@ test(
 
     });
 
+test(
+    function test_bug634773_noneAndStarAreDifferent() {
+      /**
+       * Bug 634773 is that allow * and allow 'none' end up "equal" via
+       * CSPSourceList.prototype.equals(), which is wrong.  This tests that
+       * doesn't happen.
+       */
+
+      var p_none = CSPSourceList.fromString("'none'", "http://foo.com", false);
+      var p_all = CSPSourceList.fromString("*", "http://foo.com", false);
+      var p_one = CSPSourceList.fromString("bar.com", "http://foo.com", false);
+
+      do_check_false(p_none.equals(p_all));
+      do_check_false(p_none.equals(p_one));
+      do_check_false(p_all.equals(p_none));
+      do_check_false(p_all.equals(p_one));
+
+      do_check_true(p_all.permits("http://bar.com"));
+      do_check_true(p_one.permits("http://bar.com"));
+      do_check_false(p_none.permits("http://bar.com"));
+    });
+
+
 /*
 
 test(function test_CSPRep_fromPolicyURI_failswhenmixed() {

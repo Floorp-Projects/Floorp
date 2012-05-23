@@ -626,6 +626,11 @@ CSPSourceList.prototype = {
    */
   equals:
   function(that) {
+    // special case to default-src * and 'none' to look different
+    // (both have a ._sources.length of 0).
+    if (that._permitAllSources != this._permitAllSources) {
+      return false;
+    }
     if (that._sources.length != this._sources.length) {
       return false;
     }
