@@ -242,15 +242,16 @@ js::SweepAtomState(JSRuntime *rt)
 
     for (AtomSet::Enum e(state->atoms); !e.empty(); e.popFront()) {
         AtomStateEntry entry = e.front();
+        JSAtom *atom = entry.asPtr();
+        bool isMarked = IsStringMarked(&atom);
 
-        if (entry.isTagged()) {
-            /* Pinned or interned key cannot be finalized. */
-            JS_ASSERT(!IsAboutToBeFinalized(entry.asPtr()));
-            continue;
-        }
+        /* Pinned or interned key cannot be finalized. */
+        JS_ASSERT_IF(entry.isTagged(), isMarked);
 
-        if (IsAboutToBeFinalized(entry.asPtr()))
+        if (!isMarked)
             e.removeFront();
+        else
+            e.rekeyFront(AtomHasher::Lookup(atom), AtomStateEntry(atom, entry.isTagged()));
     }
 }
 
