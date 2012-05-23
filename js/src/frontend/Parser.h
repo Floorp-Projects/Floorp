@@ -54,22 +54,21 @@ struct Parser : private AutoGCRooter
     /* Script can optimize name references based on scope chain. */
     const bool          compileAndGo:1;
 
-    Parser(JSContext *cx, JSPrincipals *prin = NULL, JSPrincipals *originPrin = NULL,
-           StackFrame *cfp = NULL, bool fold = true, bool compileAndGo = false);
+    Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
+           const jschar *chars, size_t length, const char *fn, unsigned ln, JSVersion version,
+           StackFrame *cfp, bool foldConstants, bool compileAndGo);
     ~Parser();
 
     friend void AutoGCRooter::trace(JSTracer *trc);
     friend struct TreeContext;
 
     /*
-     * Initialize a parser. Parameters are passed on to init tokenStream. The
-     * compiler owns the arena pool "tops-of-stack" space above the current
-     * JSContext.tempLifoAlloc mark. This means you cannot allocate from
-     * tempLifoAlloc and save the pointer beyond the next Parser destructor
-     * invocation.
+     * Initialize a parser. The compiler owns the arena pool "tops-of-stack"
+     * space above the current JSContext.tempLifoAlloc mark. This means you
+     * cannot allocate from tempLifoAlloc and save the pointer beyond the next
+     * Parser destructor invocation.
      */
-    bool init(const jschar *base, size_t length, const char *filename, unsigned lineno,
-              JSVersion version);
+    bool init();
 
     void setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin);
 
