@@ -363,6 +363,16 @@ public:
     return FromSupports(wrapper->Native());
   }
 
+  /**
+   * Wrap nsIDOMWindow::GetTop so we can overload the inline GetTop()
+   * implementation below.  (nsIDOMWindow::GetTop simply calls
+   * nsIDOMWindow::GetRealTop().)
+   */
+  nsresult GetTop(nsIDOMWindow **aWindow)
+  {
+    return nsIDOMWindow::GetTop(aWindow);
+  }
+
   inline nsGlobalWindow *GetTop()
   {
     nsCOMPtr<nsIDOMWindow> top;
@@ -791,6 +801,9 @@ protected:
 
   void SetIsApp(bool aValue);
   nsresult SetApp(const nsAString& aManifestURL);
+
+  // Implements Get{Real,Scriptable}Top.
+  nsresult GetTopImpl(nsIDOMWindow **aWindow, bool aScriptable);
 
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
