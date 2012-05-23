@@ -821,22 +821,6 @@ PickChunk(JSCompartment *comp)
     return chunk;
 }
 
-JS_FRIEND_API(bool)
-IsAboutToBeFinalized(const Cell *thing)
-{
-    JSCompartment *thingCompartment = reinterpret_cast<const Cell *>(thing)->compartment();
-    if (!thingCompartment->isCollecting())
-        return false;
-    return !reinterpret_cast<const Cell *>(thing)->isMarked();
-}
-
-bool
-IsAboutToBeFinalized(const Value &v)
-{
-    JS_ASSERT(v.isMarkable());
-    return IsAboutToBeFinalized((Cell *)v.toGCThing());
-}
-
 /* Lifetime for type sets attached to scripts containing observed types. */
 static const int64_t JIT_SCRIPT_RELEASE_TYPES_INTERVAL = 60 * 1000 * 1000;
 

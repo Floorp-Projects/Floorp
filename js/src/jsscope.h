@@ -931,6 +931,11 @@ struct InitialShapeEntry
         {}
     };
 
+    inline InitialShapeEntry();
+    inline InitialShapeEntry(const ReadBarriered<Shape> &shape, JSObject *proto);
+
+    inline Lookup getLookup();
+
     static inline HashNumber hash(const Lookup &lookup);
     static inline bool match(const InitialShapeEntry &key, const Lookup &lookup);
 };
