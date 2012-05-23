@@ -355,11 +355,6 @@ BaseProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy)
 {
 }
 
-void
-BaseProxyHandler::trace(JSTracer *trc, JSObject *proxy)
-{
-}
-
 IndirectProxyHandler::IndirectProxyHandler(void *family) : BaseProxyHandler(family)
 {
 }
@@ -533,12 +528,6 @@ IndirectProxyHandler::iteratorNext(JSContext *cx, JSObject *proxy, Value *vp)
     } else
         vp->setMagic(JS_NO_ITER_VALUE);
     return true;
-}
-
-void
-IndirectProxyHandler::trace(JSTracer *trc, JSObject *proxy)
-{
-    MarkSlot(trc, &proxy->getReservedSlotRef(JSSLOT_PROXY_PRIVATE), "targetObject");
 }
 
 DirectProxyHandler::DirectProxyHandler(void *family) :
@@ -1491,10 +1480,9 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
 
     // NB: If you add new slots here, make sure to change
     // js::NukeChromeCrossCompartmentWrappers to cope.
-    GetProxyHandler(obj)->trace(trc, obj);
     MarkCrossCompartmentSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_PRIVATE), "private");
-    MarkCrossCompartmentSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_EXTRA + 0), "extra0");
-    MarkCrossCompartmentSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_EXTRA + 1), "extra1");
+    MarkSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_EXTRA + 0), "extra0");
+    MarkSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_EXTRA + 1), "extra1");
 }
 
 static void
@@ -1503,7 +1491,7 @@ proxy_TraceFunction(JSTracer *trc, JSObject *obj)
     // NB: If you add new slots here, make sure to change
     // js::NukeChromeCrossCompartmentWrappers to cope.
     MarkCrossCompartmentSlot(trc, &GetCall(obj), "call");
-    MarkCrossCompartmentSlot(trc, &GetFunctionProxyConstruct(obj), "construct");
+    MarkSlot(trc, &GetFunctionProxyConstruct(obj), "construct");
     proxy_TraceObject(trc, obj);
 }
 
@@ -1730,6 +1718,7 @@ js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_,
 
     JS_ASSERT_IF(proto, cx->compartment == proto->compartment());
     JS_ASSERT_IF(parent, cx->compartment == parent->compartment());
+    JS_ASSERT_IF(construct, cx->compartment == construct->compartment());
     bool fun = call || construct;
     Class *clasp;
     if (fun)
