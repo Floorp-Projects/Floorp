@@ -504,7 +504,15 @@ protected:
     *                   May be null.  Ignored if aAttribute is null.
     * @param aIsSet     [OUT] true if <aProperty aAttribute=aValue> effects aNode.
     * @param outValue   [OUT] the value of the attribute, if aIsSet is true
+    *
+    * The nsIContent variant returns aIsSet instead of using an out parameter.
     */
+  bool IsTextPropertySetByContent(nsIContent*      aContent,
+                                  nsIAtom*         aProperty,
+                                  const nsAString* aAttribute,
+                                  const nsAString* aValue,
+                                  nsAString*       outValue = nsnull);
+
   void IsTextPropertySetByContent(nsIDOMNode*      aNode,
                                   nsIAtom*         aProperty,
                                   const nsAString* aAttribute,

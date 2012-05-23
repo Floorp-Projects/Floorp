@@ -435,6 +435,18 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
     return NS_OK;
   }
 
+  // don't need to do anything if property already set on node
+  if (mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty,
+                                           aAttribute, aValue)) {
+    if (mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
+          aNode, aProperty, aAttribute, *aValue, COMPUTED_STYLE_TYPE)) {
+      return NS_OK;
+    }
+  } else if (IsTextPropertySetByContent(aNode, aProperty,
+                                        aAttribute, aValue)) {
+    return NS_OK;
+  }
+
   bool useCSS = (IsCSSEnabled() &&
                  mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty,
                                                       aAttribute, aValue)) ||
