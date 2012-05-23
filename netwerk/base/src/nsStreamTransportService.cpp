@@ -501,6 +501,35 @@ nsStreamTransportService::CreateOutputTransport(nsIOutputStream *stream,
 }
 
 NS_IMETHODIMP
+nsStreamTransportService::RaiseThreadLimit()
+{
+    NS_ENSURE_TRUE(mPool, NS_ERROR_NOT_INITIALIZED);
+
+    PRUint32 threadLimit;
+    nsresult rv = mPool->GetThreadLimit(&threadLimit);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return mPool->SetThreadLimit(threadLimit + 1);
+}
+
+NS_IMETHODIMP
+nsStreamTransportService::LowerThreadLimit()
+{
+    NS_ENSURE_TRUE(mPool, NS_ERROR_NOT_INITIALIZED);
+
+    PRUint32 threadLimit;
+    nsresult rv = mPool->GetThreadLimit(&threadLimit);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (threadLimit == 4) {
+      NS_WARNING("Badly nested raise/lower thread limit!");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    return mPool->SetThreadLimit(threadLimit - 1);
+}
+
+NS_IMETHODIMP
 nsStreamTransportService::Observe(nsISupports *subject, const char *topic,
                                   const PRUnichar *data)
 {

@@ -919,7 +919,7 @@ NS_NewLocalFileInputStream(nsIInputStream **result,
     if (NS_SUCCEEDED(rv)) {
         rv = in->Init(file, ioFlags, perm, behaviorFlags);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = in);  // cannot use nsCOMPtr::swap
+            in.forget(result);
     }
     return rv;
 }
@@ -957,7 +957,7 @@ NS_NewLocalFileOutputStream(nsIOutputStream **result,
     if (NS_SUCCEEDED(rv)) {
         rv = out->Init(file, ioFlags, perm, behaviorFlags);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = out);  // cannot use nsCOMPtr::swap
+            out.forget(result);
     }
     return rv;
 }
@@ -976,7 +976,25 @@ NS_NewSafeLocalFileOutputStream(nsIOutputStream **result,
     if (NS_SUCCEEDED(rv)) {
         rv = out->Init(file, ioFlags, perm, behaviorFlags);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = out);  // cannot use nsCOMPtr::swap
+            out.forget(result);
+    }
+    return rv;
+}
+
+inline nsresult
+NS_NewLocalFileStream(nsIFileStream **result,
+                      nsIFile        *file,
+                      PRInt32         ioFlags       = -1,
+                      PRInt32         perm          = -1,
+                      PRInt32         behaviorFlags = 0)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFileStream> stream =
+        do_CreateInstance(NS_LOCALFILESTREAM_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = stream->Init(file, ioFlags, perm, behaviorFlags);
+        if (NS_SUCCEEDED(rv))
+            stream.forget(result);
     }
     return rv;
 }
