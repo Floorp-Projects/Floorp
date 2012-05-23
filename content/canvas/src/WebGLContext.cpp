@@ -299,7 +299,7 @@ WebGLContext::SetContextOptions(nsIPropertyBag *aOptions)
     newOpts.depth |= newOpts.stencil;
 
 #if 0
-    LogMessage("aaHint: %d stencil: %d depth: %d alpha: %d premult: %d preserve: %d\n",
+    GenerateWarning("aaHint: %d stencil: %d depth: %d alpha: %d premult: %d preserve: %d\n",
                newOpts.antialias ? 1 : 0,
                newOpts.stencil ? 1 : 0,
                newOpts.depth ? 1 : 0,
@@ -493,7 +493,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         if (renderer == gl::GLContext::RendererAdreno200 ||
             renderer == gl::GLContext::RendererAdreno205)
         {
-            LogMessage("WebGL blocked on this Adreno driver!");
+            GenerateWarning("WebGL blocked on this Adreno driver!");
             return NS_ERROR_FAILURE;
         }
     }
@@ -503,10 +503,10 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (forceOSMesa) {
         gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
         if (!gl || !InitAndValidateGL()) {
-            LogMessage("OSMesa forced, but creating context failed -- aborting!");
+            GenerateWarning("OSMesa forced, but creating context failed -- aborting!");
             return NS_ERROR_FAILURE;
         }
-        LogMessage("Using software rendering via OSMesa (THIS WILL BE SLOW)");
+        GenerateWarning("Using software rendering via OSMesa (THIS WILL BE SLOW)");
     }
 
 #ifdef XP_WIN
@@ -514,7 +514,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
         gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
         if (!gl || !InitAndValidateGL()) {
-            LogMessage("Error during ANGLE OpenGL ES initialization");
+            GenerateWarning("Error during ANGLE OpenGL ES initialization");
             return NS_ERROR_FAILURE;
         }
     }
@@ -524,7 +524,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (!gl && useOpenGL) {
         gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
         if (gl && !InitAndValidateGL()) {
-            LogMessage("Error during OpenGL initialization");
+            GenerateWarning("Error during OpenGL initialization");
             return NS_ERROR_FAILURE;
         }
     }
@@ -534,16 +534,16 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
         if (gl) {
             if (!InitAndValidateGL()) {
-                LogMessage("Error during OSMesa initialization");
+                GenerateWarning("Error during OSMesa initialization");
                 return NS_ERROR_FAILURE;
             } else {
-                LogMessage("Using software rendering via OSMesa (THIS WILL BE SLOW)");
+                GenerateWarning("Using software rendering via OSMesa (THIS WILL BE SLOW)");
             }
         }
     }
 
     if (!gl) {
-        LogMessage("Can't get a usable WebGL context");
+        GenerateWarning("Can't get a usable WebGL context");
         return NS_ERROR_FAILURE;
     }
 

@@ -32,18 +32,18 @@
 using namespace mozilla;
 
 void
-WebGLContext::LogMessage(const char *fmt, ...)
+WebGLContext::GenerateWarning(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
 
-    LogMessage(fmt, ap);
+    GenerateWarning(fmt, ap);
 
     va_end(ap);
 }
 
 void
-WebGLContext::LogMessage(const char *fmt, va_list ap)
+WebGLContext::GenerateWarning(const char *fmt, va_list ap)
 {
     const int MaxReportedMessages = 32;
 
@@ -108,7 +108,7 @@ WebGLContext::SynthesizeGLError(WebGLenum err, const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessage(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(err);
@@ -119,7 +119,7 @@ WebGLContext::ErrorInvalidEnum(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessage(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_ENUM);
@@ -130,7 +130,7 @@ WebGLContext::ErrorInvalidOperation(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessage(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_OPERATION);
@@ -141,7 +141,7 @@ WebGLContext::ErrorInvalidValue(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessage(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_VALUE);
@@ -152,7 +152,7 @@ WebGLContext::ErrorInvalidFramebufferOperation(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessage(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION);
@@ -163,7 +163,7 @@ WebGLContext::ErrorOutOfMemory(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessage(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY);

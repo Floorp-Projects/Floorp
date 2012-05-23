@@ -504,7 +504,7 @@ WebGLContext::BufferData(WebGLenum target, WebGLsizeiptr size,
     
     GLenum error = CheckedBufferData(target, size, 0, usage);
     if (error) {
-        LogMessage("bufferData generated error %s", ErrorName(error));
+        GenerateWarning("bufferData generated error %s", ErrorName(error));
         return;
     }
 
@@ -546,7 +546,7 @@ WebGLContext::BufferData(WebGLenum target, ArrayBuffer *data, WebGLenum usage)
     GLenum error = CheckedBufferData(target, data->mLength, data->mData, usage);
 
     if (error) {
-        LogMessage("bufferData generated error %s", ErrorName(error));
+        GenerateWarning("bufferData generated error %s", ErrorName(error));
         return;
     }
 
@@ -582,7 +582,7 @@ WebGLContext::BufferData(WebGLenum target, ArrayBufferView& data, WebGLenum usag
 
     GLenum error = CheckedBufferData(target, data.mLength, data.mData, usage);
     if (error) {
-        LogMessage("bufferData generated error %s", ErrorName(error));
+        GenerateWarning("bufferData generated error %s", ErrorName(error));
         return;
     }
 
@@ -1063,7 +1063,7 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
         GLenum error = LOCAL_GL_NO_ERROR;
         UpdateWebGLErrorAndClearGLError(&error);
         if (error) {
-            LogMessage("copyTexImage2D generated error %s", ErrorName(error));
+            GenerateWarning("copyTexImage2D generated error %s", ErrorName(error));
             return;
         }          
     } else {
@@ -3784,7 +3784,7 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
     }
 
     if (HTMLCanvasElement()->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
-        LogMessage("ReadPixels: Not allowed");
+        GenerateWarning("ReadPixels: Not allowed");
         return rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     }
 
@@ -4065,7 +4065,7 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
         GLenum error = LOCAL_GL_NO_ERROR;
         UpdateWebGLErrorAndClearGLError(&error);
         if (error) {
-            LogMessage("renderbufferStorage generated error %s", ErrorName(error));
+            GenerateWarning("renderbufferStorage generated error %s", ErrorName(error));
             return;
         }
     } else {
@@ -4302,7 +4302,7 @@ WebGLContext::DOMElementToImageSurface(Element* imageOrCanvas,
         bool subsumes;
         nsresult rv = HTMLCanvasElement()->NodePrincipal()->Subsumes(res.mPrincipal, &subsumes);
         if (NS_FAILED(rv) || !subsumes) {
-            LogMessage("It is forbidden to load a WebGL texture from a cross-domain element that has not been validated with CORS. "
+            GenerateWarning("It is forbidden to load a WebGL texture from a cross-domain element that has not been validated with CORS. "
                                 "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
             return NS_ERROR_DOM_SECURITY_ERR;
         }
@@ -4313,7 +4313,7 @@ WebGLContext::DOMElementToImageSurface(Element* imageOrCanvas,
     // cross-domain image data.
     if (nsHTMLCanvasElement* canvas = nsHTMLCanvasElement::FromContent(imageOrCanvas)) {
         if (canvas->IsWriteOnly()) {
-            LogMessage("The canvas used as source for texImage2D here is tainted (write-only). It is forbidden "
+            GenerateWarning("The canvas used as source for texImage2D here is tainted (write-only). It is forbidden "
                                 "to load a WebGL texture from a tainted canvas. A Canvas becomes tainted for example "
                                 "when a cross-domain image is drawn on it. "
                                 "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
@@ -4779,7 +4779,7 @@ WebGLContext::ValidateProgram(WebGLProgram *prog)
 #ifdef XP_MACOSX
     // see bug 593867 for NVIDIA and bug 657201 for ATI. The latter is confirmed with Mac OS 10.6.7
     if (gl->WorkAroundDriverBugs()) {
-        LogMessage("validateProgram: implemented as a no-operation on Mac to work around crashes");
+        GenerateWarning("validateProgram: implemented as a no-operation on Mac to work around crashes");
         return;
     }
 #endif
@@ -5630,7 +5630,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     }
     
     if (error) {
-        LogMessage("texImage2D generated error %s", ErrorName(error));
+        GenerateWarning("texImage2D generated error %s", ErrorName(error));
         return;
     }
 
