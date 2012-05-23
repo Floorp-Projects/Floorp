@@ -77,10 +77,10 @@ PKG_STAGE = $(DIST)/test-package-stage
 # stage harness and tests for packaging
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/reftest && $(NSINSTALL) -D $(PKG_STAGE)/reftest/tests
-	@(cd $(DEPTH)/_tests/reftest/ && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/reftest && tar -xf -)
+	(cd $(DEPTH)/_tests/reftest/ && tar $(TAR_CREATE_FLAGS_QUIET) - *) | (cd $(PKG_STAGE)/reftest && tar -xf -)
 	$(PYTHON) $(topsrcdir)/layout/tools/reftest/print-manifest-dirs.py \
           $(topsrcdir) \
           $(topsrcdir)/layout/reftests/reftest.list \
           $(topsrcdir)/testing/crashtest/crashtests.list \
-          | (cd $(topsrcdir) && xargs tar $(TAR_CREATE_FLAGS) -) \
+          | (cd $(topsrcdir) && xargs tar $(TAR_CREATE_FLAGS_QUIET) -) \
           | (cd $(PKG_STAGE)/reftest/tests && tar -xf -)
