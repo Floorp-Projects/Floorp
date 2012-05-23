@@ -135,14 +135,15 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
 class MarionetteTestRunner(object):
 
     def __init__(self, address=None, emulator=None, emulatorBinary=None, homedir=None,
-                 b2gbin=None, autolog=False, revision=None, es_server=None,
+                 bin=None, profile=None, autolog=False, revision=None, es_server=None,
                  rest_server=None, logger=None, testgroup="marionette",
                  noWindow=False, logcat_dir=None):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
         self.homedir = homedir
-        self.b2gbin = b2gbin
+        self.bin = bin
+        self.profile = profile
         self.autolog = autolog
         self.testgroup = testgroup
         self.revision = revision
@@ -187,7 +188,16 @@ class MarionetteTestRunner(object):
 
     def start_marionette(self):
         assert(self.baseurl is not None)
-        if self.address:
+        if self.bin:
+            if self.address:
+                host, port = self.address.split(':')
+            else:
+                host = 'localhost'
+                port = 2828
+            self.marionette = Marionette(host=host, port=int(port),
+                                         bin=self.bin, profile=self.profile,
+                                         baseurl=self.baseurl)
+        elif self.address:
             host, port = self.address.split(':')
             if self.emulator:
                 self.marionette = Marionette(host=host, port=int(port),
@@ -195,11 +205,6 @@ class MarionetteTestRunner(object):
                                              homedir=self.homedir,
                                              baseurl=self.baseurl,
                                              logcat_dir=self.logcat_dir)
-            if self.b2gbin:
-                self.marionette = Marionette(host=host,
-                                             port=int(port),
-                                             b2gbin=self.b2gbin,
-                                             baseurl=self.baseurl)
             else:
                 self.marionette = Marionette(host=host,
                                              port=int(port),
@@ -212,7 +217,7 @@ class MarionetteTestRunner(object):
                                          noWindow=self.noWindow,
                                          logcat_dir=self.logcat_dir)
         else:
-            raise Exception("must specify address or emulator")
+            raise Exception("must specify binary, address or emulator")
 
     def post_to_autolog(self, elapsedtime):
         self.logger.info('posting results to autolog')
@@ -267,7 +272,9 @@ class MarionetteTestRunner(object):
 
     def run_test(self, test, testtype):
         if not self.httpd:
+            print "starting httpd"
             self.start_httpd()
+        
         if not self.marionette:
             self.start_marionette()
 
@@ -390,8 +397,11 @@ if __name__ == "__main__":
                       "tests from .ini files.")
     parser.add_option('--homedir', dest='homedir', action='store',
                       help='home directory of emulator files')
-    parser.add_option('--b2gbin', dest='b2gbin', action='store',
-                      help='b2g executable')
+    parser.add_option('--binary', dest='bin', action='store',
+                      help='gecko executable to launch before running the test')
+    parser.add_option('--profile', dest='profile', action='store',
+                      help='profile to use when launching the gecko process. If not '
+                      'passed, then a profile will be constructed and used.')
 
     options, tests = parser.parse_args()
 
@@ -399,9 +409,9 @@ if __name__ == "__main__":
         parser.print_usage()
         parser.exit()
 
-    if not options.emulator and not options.address:
+    if not options.emulator and not options.address and not options.bin:
         parser.print_usage()
-        print "must specify --emulator or --address"
+        print "must specify --binary, --emulator or --address"
         parser.exit()
 
     # default to storing logcat output for emulator runs
@@ -413,7 +423,8 @@ if __name__ == "__main__":
                                   emulatorBinary=options.emulatorBinary,
                                   homedir=options.homedir,
                                   logcat_dir=options.logcat_dir,
-                                  b2gbin=options.b2gbin,
+                                  bin=options.bin,
+                                  profile=options.profile,
                                   noWindow=options.noWindow,
                                   revision=options.revision,
                                   testgroup=options.testgroup,
