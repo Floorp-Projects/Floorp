@@ -1547,8 +1547,9 @@ nsContentSink::WillParseImpl(void)
     vm->GetLastUserEventTime(lastEventTime);
 
     bool newDynLower =
-      (currentTime - mBeginLoadTime) > PRUint32(sInitialPerfTime) &&
-      (currentTime - lastEventTime) < PRUint32(sInteractiveTime);
+      mDocument->IsInBackgroundWindow() ||
+      ((currentTime - mBeginLoadTime) > PRUint32(sInitialPerfTime) &&
+       (currentTime - lastEventTime) < PRUint32(sInteractiveTime));
     
     if (mDynamicLowerValue != newDynLower) {
       FavorPerformanceHint(!newDynLower, 0);

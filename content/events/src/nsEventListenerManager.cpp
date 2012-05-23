@@ -250,6 +250,10 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     // Go from our target to the nearest enclosing DOM window.
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window) {
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(window->GetExtantDocument());
+      if (doc) {
+        doc->WarnOnceAbout(nsIDocument::eMutationEvent);
+      }
       // If aType is NS_MUTATION_SUBTREEMODIFIED, we need to listen all
       // mutations. nsContentUtils::HasMutationListeners relies on this.
       window->SetMutationListeners((aType == NS_MUTATION_SUBTREEMODIFIED) ?

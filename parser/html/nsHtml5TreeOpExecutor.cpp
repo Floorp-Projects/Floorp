@@ -99,6 +99,9 @@ class nsHtml5ExecutorReflusher : public nsRunnable
     }
 };
 
+static mozilla::LinkedList<nsHtml5TreeOpExecutor>* gBackgroundFlushList = nsnull;
+static nsITimer* gFlushTimer = nsnull;
+
 nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor(bool aRunsToCompletion)
 {
   mRunsToCompletion = aRunsToCompletion;
@@ -109,6 +112,18 @@ nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor(bool aRunsToCompletion)
 nsHtml5TreeOpExecutor::~nsHtml5TreeOpExecutor()
 {
   NS_ASSERTION(mOpQueue.IsEmpty(), "Somehow there's stuff in the op queue.");
+  
+  if (gBackgroundFlushList && isInList()) {
+    remove();
+    if (gBackgroundFlushList->isEmpty()) {
+      delete gBackgroundFlushList;
+      gBackgroundFlushList = nsnull;
+      if (gFlushTimer) {
+        gFlushTimer->Cancel();
+        NS_RELEASE(gFlushTimer);
+      }
+    }
+  }
 }
 
 // nsIContentSink
@@ -322,12 +337,45 @@ nsHtml5TreeOpExecutor::FlushTags()
 }
 
 void
+FlushTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  nsRefPtr<nsHtml5TreeOpExecutor> ex = gBackgroundFlushList->popFirst();
+  if (ex) {
+    ex->RunFlushLoop();
+  }
+  if (gBackgroundFlushList && gBackgroundFlushList->isEmpty()) {
+    delete gBackgroundFlushList;
+    gBackgroundFlushList = nsnull;
+    gFlushTimer->Cancel();
+    NS_RELEASE(gFlushTimer);
+  }
+}
+
+void
 nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync()
 {
-  nsCOMPtr<nsIRunnable> flusher = new nsHtml5ExecutorReflusher(this);  
-  if (NS_FAILED(NS_DispatchToMainThread(flusher))) {
-    NS_WARNING("failed to dispatch executor flush event");
-  }          
+  if (!mDocument || !mDocument->IsInBackgroundWindow()) {
+    nsCOMPtr<nsIRunnable> flusher = new nsHtml5ExecutorReflusher(this);  
+    if (NS_FAILED(NS_DispatchToMainThread(flusher))) {
+      NS_WARNING("failed to dispatch executor flush event");
+    }
+  } else {
+    if (!gBackgroundFlushList) {
+      gBackgroundFlushList = new mozilla::LinkedList<nsHtml5TreeOpExecutor>();
+    }
+    if (!isInList()) {
+      gBackgroundFlushList->insertBack(this);
+    }
+    if (!gFlushTimer) {
+      nsCOMPtr<nsITimer> t = do_CreateInstance("@mozilla.org/timer;1");
+      t.swap(gFlushTimer);
+      // The timer value 50 should not hopefully slow down background pages too
+      // much, yet lets event loop to process enough between ticks.
+      // See bug 734015.
+      gFlushTimer->InitWithFuncCallback(FlushTimerCallback, nsnull,
+                                        50, nsITimer::TYPE_REPEATING_SLACK);
+    }
+  }
 }
 
 void
