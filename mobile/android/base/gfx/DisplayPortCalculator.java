@@ -129,15 +129,15 @@ final class DisplayPortCalculator {
      */
     private static FloatSize reshapeForPage(float width, float height, ImmutableViewportMetrics metrics) {
         // figure out how much of the desired buffer amount we can actually use on the horizontal axis
-        float usableWidth = Math.min(width, metrics.pageSizeWidth);
+        float usableWidth = Math.min(width, metrics.getPageWidth());
         // if we reduced the buffer amount on the horizontal axis, we should take that saved memory and
         // use it on the vertical axis
         float extraUsableHeight = (float)Math.floor(((width - usableWidth) * height) / usableWidth);
-        float usableHeight = Math.min(height + extraUsableHeight, metrics.pageSizeHeight);
+        float usableHeight = Math.min(height + extraUsableHeight, metrics.getPageHeight());
         if (usableHeight < height && usableWidth == width) {
             // and the reverse - if we shrunk the buffer on the vertical axis we can add it to the horizontal
             float extraUsableWidth = (float)Math.floor(((height - usableHeight) * width) / usableHeight);
-            usableWidth = Math.min(width + extraUsableWidth, metrics.pageSizeWidth);
+            usableWidth = Math.min(width + extraUsableWidth, metrics.getPageWidth());
         }
         return new FloatSize(usableWidth, usableHeight);
     }
@@ -153,11 +153,7 @@ final class DisplayPortCalculator {
         float dangerZoneY = metrics.getHeight() * dangerZoneYMultiplier;
         rect = RectUtils.expand(rect, dangerZoneX, dangerZoneY);
         // clamp to page bounds
-        if (rect.top < 0) rect.top = 0;
-        if (rect.left < 0) rect.left = 0;
-        if (rect.right > metrics.pageSizeWidth) rect.right = metrics.pageSizeWidth;
-        if (rect.bottom > metrics.pageSizeHeight) rect.bottom = metrics.pageSizeHeight;
-        return rect;
+        return clampToPageBounds(rect, metrics);
     }
 
     /**
@@ -171,10 +167,10 @@ final class DisplayPortCalculator {
         float top = metrics.viewportRectTop - margins.top;
         float right = metrics.viewportRectRight + margins.right;
         float bottom = metrics.viewportRectBottom + margins.bottom;
-        left = Math.max(0.0f, TILE_SIZE * FloatMath.floor(left / TILE_SIZE));
-        top = Math.max(0.0f, TILE_SIZE * FloatMath.floor(top / TILE_SIZE));
-        right = Math.min(metrics.pageSizeWidth, TILE_SIZE * FloatMath.ceil(right / TILE_SIZE));
-        bottom = Math.min(metrics.pageSizeHeight, TILE_SIZE * FloatMath.ceil(bottom / TILE_SIZE));
+        left = Math.max(metrics.pageRectLeft, TILE_SIZE * FloatMath.floor(left / TILE_SIZE));
+        top = Math.max(metrics.pageRectTop, TILE_SIZE * FloatMath.floor(top / TILE_SIZE));
+        right = Math.min(metrics.pageRectRight, TILE_SIZE * FloatMath.ceil(right / TILE_SIZE));
+        bottom = Math.min(metrics.pageRectBottom, TILE_SIZE * FloatMath.ceil(bottom / TILE_SIZE));
         return new DisplayPortMetrics(left, top, right, bottom, zoom);
     }
 
@@ -182,16 +178,16 @@ final class DisplayPortCalculator {
      * Adjust the given margins so if they are applied on the viewport in the metrics, the resulting rect
      * does not exceed the page bounds. This code will maintain the total margin amount for a given axis;
      * it assumes that margins.left + metrics.getWidth() + margins.right is less than or equal to
-     * metrics.pageSizeWidth; and the same for the y axis.
+     * metrics.getPageWidth(); and the same for the y axis.
      */
     private static RectF shiftMarginsForPageBounds(RectF margins, ImmutableViewportMetrics metrics) {
         // check how much we're overflowing in each direction. note that at most one of leftOverflow
         // and rightOverflow can be greater than zero, and at most one of topOverflow and bottomOverflow
         // can be greater than zero, because of the assumption described in the method javadoc.
-        float leftOverflow = margins.left - metrics.viewportRectLeft;
-        float rightOverflow = margins.right - (metrics.pageSizeWidth - metrics.viewportRectRight);
-        float topOverflow = margins.top - metrics.viewportRectTop;
-        float bottomOverflow = margins.bottom - (metrics.pageSizeHeight - metrics.viewportRectBottom);
+        float leftOverflow = metrics.pageRectLeft - (metrics.viewportRectLeft - margins.left);
+        float rightOverflow = (metrics.viewportRectRight + margins.right) - metrics.pageRectRight;
+        float topOverflow = metrics.pageRectTop - (metrics.viewportRectTop - margins.top);
+        float bottomOverflow = (metrics.viewportRectBottom + margins.bottom) - metrics.pageRectBottom;
 
         // if the margins overflow the page bounds, shift them to other side on the same axis
         if (leftOverflow > 0) {
@@ -215,10 +211,10 @@ final class DisplayPortCalculator {
      * Clamp the given rect to the page bounds and return it.
      */
     private static RectF clampToPageBounds(RectF rect, ImmutableViewportMetrics metrics) {
-        rect.left = Math.max(rect.left, 0);
-        rect.top = Math.max(rect.top, 0);
-        rect.right = Math.min(rect.right, metrics.pageSizeWidth);
-        rect.bottom = Math.min(rect.bottom, metrics.pageSizeHeight);
+        if (rect.top < metrics.pageRectTop) rect.top = metrics.pageRectTop;
+        if (rect.left < metrics.pageRectLeft) rect.left = metrics.pageRectLeft;
+        if (rect.right > metrics.pageRectRight) rect.right = metrics.pageRectRight;
+        if (rect.bottom > metrics.pageRectBottom) rect.bottom = metrics.pageRectBottom;
         return rect;
     }
 
@@ -395,8 +391,8 @@ final class DisplayPortCalculator {
 
             // we need to avoid having a display port that is larger than the page, or we will end up
             // painting things outside the page bounds (bug 729169).
-            displayPortWidth = Math.min(displayPortWidth, metrics.pageSizeWidth);
-            displayPortHeight = Math.min(displayPortHeight, metrics.pageSizeHeight);
+            displayPortWidth = Math.min(displayPortWidth, metrics.getPageWidth());
+            displayPortHeight = Math.min(displayPortHeight, metrics.getPageHeight());
             float horizontalBuffer = displayPortWidth - metrics.getWidth();
             float verticalBuffer = displayPortHeight - metrics.getHeight();
 
@@ -414,8 +410,8 @@ final class DisplayPortCalculator {
             float dangerZoneY = metrics.getHeight() * (DANGER_ZONE_BASE_Y_MULTIPLIER + (velocity.y * DANGER_ZONE_INCR_Y_MULTIPLIER));
             // clamp it such that when added to the viewport, they don't exceed page size.
             // this is a prerequisite to calling shiftMarginsForPageBounds as we do below.
-            dangerZoneX = Math.min(dangerZoneX, metrics.pageSizeWidth - metrics.getWidth());
-            dangerZoneY = Math.min(dangerZoneY, metrics.pageSizeHeight - metrics.getHeight());
+            dangerZoneX = Math.min(dangerZoneX, metrics.getPageWidth() - metrics.getWidth());
+            dangerZoneY = Math.min(dangerZoneY, metrics.getPageHeight() - metrics.getHeight());
 
             // split the danger zone into margins based on velocity, and ensure it doesn't exceed
             // page bounds.
