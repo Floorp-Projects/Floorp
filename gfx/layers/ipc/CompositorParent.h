@@ -107,6 +107,12 @@ private:
    */
   Layer* GetPrimaryScrollableLayer();
 
+  /**
+   * Recursively applies the given translation to all fixed position layers
+   * that aren't children of other fixed position layers.
+   */
+  void TranslateFixedLayers(Layer* aLayer, const gfxPoint& aTranslation);
+
   nsRefPtr<LayerManager> mLayerManager;
   nsIWidget* mWidget;
   CancelableTask *mCurrentCompositeTask;
@@ -120,6 +126,7 @@ private:
   float mYScale;
   nsIntPoint mScrollOffset;
   nsIntSize mContentSize;
+  nsIntSize mWidgetSize;
 
   // When this flag is set, the next composition will be the first for a
   // particular document (i.e. the document displayed on the screen will change).
