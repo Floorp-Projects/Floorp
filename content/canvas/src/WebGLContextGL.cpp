@@ -127,10 +127,10 @@ WebGLContext::AttachShader(WebGLProgram *program, WebGLShader *shader)
     // attached.  This renders the next test somewhat moot, but we'll
     // leave it for when we support more than one shader of each type.
     if (program->HasAttachedShaderOfType(shader->ShaderType()))
-        return ErrorInvalidOperation("AttachShader: only one of each type of shader may be attached to a program");
+        return ErrorInvalidOperation("attachShader: only one of each type of shader may be attached to a program");
 
     if (!program->AttachShader(shader))
-        return ErrorInvalidOperation("AttachShader: shader is already attached");
+        return ErrorInvalidOperation("attachShader: shader is already attached");
 }
 
 
@@ -197,7 +197,7 @@ WebGLContext::BindBuffer(WebGLenum target, WebGLBuffer *buf)
 
     if (buf) {
         if ((buf->Target() != LOCAL_GL_NONE) && (target != buf->Target()))
-            return ErrorInvalidOperation("BindBuffer: buffer already bound to a different target");
+            return ErrorInvalidOperation("bindBuffer: buffer already bound to a different target");
         buf->SetTarget(target);
         buf->SetHasEverBeenBound(true);
     }
@@ -229,7 +229,7 @@ WebGLContext::BindFramebuffer(WebGLenum target, WebGLFramebuffer *wfb)
         return;
 
     if (target != LOCAL_GL_FRAMEBUFFER)
-        return ErrorInvalidEnum("BindFramebuffer: target must be GL_FRAMEBUFFER");
+        return ErrorInvalidEnum("bindFramebuffer: target must be GL_FRAMEBUFFER");
 
     if (!ValidateObjectAllowDeletedOrNull("bindFramebuffer", wfb))
         return;
@@ -498,7 +498,7 @@ WebGLContext::BufferData(WebGLenum target, WebGLsizeiptr size,
         return;
 
     if (!boundBuffer)
-        return ErrorInvalidOperation("BufferData: no buffer bound!");
+        return ErrorInvalidOperation("bufferData: no buffer bound!");
 
     MakeContextCurrent();
     
@@ -539,7 +539,7 @@ WebGLContext::BufferData(WebGLenum target, ArrayBuffer *data, WebGLenum usage)
         return;
 
     if (!boundBuffer)
-        return ErrorInvalidOperation("BufferData: no buffer bound!");
+        return ErrorInvalidOperation("bufferData: no buffer bound!");
 
     MakeContextCurrent();
 
@@ -576,7 +576,7 @@ WebGLContext::BufferData(WebGLenum target, ArrayBufferView& data, WebGLenum usag
         return;
 
     if (!boundBuffer)
-        return ErrorInvalidOperation("BufferData: no buffer bound!");
+        return ErrorInvalidOperation("bufferData: no buffer bound!");
 
     MakeContextCurrent();
 
@@ -649,14 +649,14 @@ WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
         return ErrorInvalidValue("bufferSubData: negative offset");
 
     if (!boundBuffer)
-        return ErrorInvalidOperation("BufferData: no buffer bound!");
+        return ErrorInvalidOperation("bufferData: no buffer bound!");
 
     CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data->mLength;
     if (!checked_neededByteLength.isValid())
         return ErrorInvalidOperation("bufferSubData: integer overflow computing the needed byte length");
 
     if (checked_neededByteLength.value() > boundBuffer->ByteLength())
-        return ErrorInvalidOperation("BufferSubData: not enough data - operation requires %d bytes, but buffer only has %d bytes",
+        return ErrorInvalidOperation("bufferSubData: not enough data - operation requires %d bytes, but buffer only has %d bytes",
                                      checked_neededByteLength.value(), boundBuffer->ByteLength());
 
     MakeContextCurrent();
@@ -688,14 +688,14 @@ WebGLContext::BufferSubData(WebGLenum target, WebGLsizeiptr byteOffset,
         return ErrorInvalidValue("bufferSubData: negative offset");
 
     if (!boundBuffer)
-        return ErrorInvalidOperation("BufferSubData: no buffer bound!");
+        return ErrorInvalidOperation("bufferSubData: no buffer bound!");
 
     CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data.mLength;
     if (!checked_neededByteLength.isValid())
         return ErrorInvalidOperation("bufferSubData: integer overflow computing the needed byte length");
 
     if (checked_neededByteLength.value() > boundBuffer->ByteLength())
-        return ErrorInvalidOperation("BufferSubData: not enough data -- operation requires %d bytes, but buffer only has %d bytes",
+        return ErrorInvalidOperation("bufferSubData: not enough data -- operation requires %d bytes, but buffer only has %d bytes",
                                      checked_neededByteLength.value(), boundBuffer->ByteLength());
 
     MakeContextCurrent();
@@ -1003,7 +1003,7 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
         case LOCAL_GL_LUMINANCE_ALPHA:
             break;
         default:
-            return ErrorInvalidEnumInfo("CopyTexImage2D: internal format", internalformat);
+            return ErrorInvalidEnumInfo("copyTexImage2D: internal format", internalformat);
     }
 
     if (border != 0)
@@ -1110,7 +1110,7 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
         case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
             break;
         default:
-            return ErrorInvalidEnumInfo("CopyTexSubImage2D: target", target);
+            return ErrorInvalidEnumInfo("copyTexSubImage2D: target", target);
     }
 
     if (level < 0)
@@ -1412,7 +1412,7 @@ WebGLContext::DetachShader(WebGLProgram *program, WebGLShader *shader)
         return;
 
     if (!program->DetachShader(shader))
-        return ErrorInvalidOperation("DetachShader: shader is not attached");
+        return ErrorInvalidOperation("detachShader: shader is not attached");
 }
 
 NS_IMETHODIMP
@@ -1724,7 +1724,7 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
         return;
 
     if (first < 0 || count < 0)
-        return ErrorInvalidValue("DrawArrays: negative first or count");
+        return ErrorInvalidValue("drawArrays: negative first or count");
 
     if (!ValidateStencilParamsForDrawCall())
         return;
@@ -1791,7 +1791,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
         return;
 
     if (count < 0 || byteOffset < 0)
-        return ErrorInvalidValue("DrawElements: negative count or offset");
+        return ErrorInvalidValue("drawElements: negative count or offset");
 
     if (!ValidateStencilParamsForDrawCall())
         return;
@@ -1805,15 +1805,15 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
     if (type == LOCAL_GL_UNSIGNED_SHORT) {
         checked_byteCount = 2 * CheckedUint32(count);
         if (byteOffset % 2 != 0)
-            return ErrorInvalidOperation("DrawElements: invalid byteOffset for UNSIGNED_SHORT (must be a multiple of 2)");
+            return ErrorInvalidOperation("drawElements: invalid byteOffset for UNSIGNED_SHORT (must be a multiple of 2)");
     } else if (type == LOCAL_GL_UNSIGNED_BYTE) {
         checked_byteCount = count;
     } else {
-        return ErrorInvalidEnum("DrawElements: type must be UNSIGNED_SHORT or UNSIGNED_BYTE");
+        return ErrorInvalidEnum("drawElements: type must be UNSIGNED_SHORT or UNSIGNED_BYTE");
     }
 
     if (!checked_byteCount.isValid())
-        return ErrorInvalidValue("DrawElements: overflow in byteCount");
+        return ErrorInvalidValue("drawElements: overflow in byteCount");
 
     // If there is no current program, this is silently ignored.
     // Any checks below this depend on a program being available.
@@ -1821,7 +1821,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
         return;
 
     if (!mBoundElementArrayBuffer)
-        return ErrorInvalidOperation("DrawElements: must have element array buffer binding");
+        return ErrorInvalidOperation("drawElements: must have element array buffer binding");
 
     if (!mBoundElementArrayBuffer->Data())
         return ErrorInvalidOperation("drawElements: bound element array buffer doesn't have any data");
@@ -1829,10 +1829,10 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
     CheckedUint32 checked_neededByteCount = checked_byteCount + byteOffset;
 
     if (!checked_neededByteCount.isValid())
-        return ErrorInvalidOperation("DrawElements: overflow in byteOffset+byteCount");
+        return ErrorInvalidOperation("drawElements: overflow in byteOffset+byteCount");
 
     if (checked_neededByteCount.value() > mBoundElementArrayBuffer->ByteLength())
-        return ErrorInvalidOperation("DrawElements: bound element array buffer is too small for given count and offset");
+        return ErrorInvalidOperation("drawElements: bound element array buffer is too small for given count and offset");
 
     int32_t maxAllowedCount = 0;
     if (!ValidateBuffers(&maxAllowedCount, "drawElements"))
@@ -2744,12 +2744,12 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
             break;
         default:
-            ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: attachment", attachment);
+            ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: attachment", attachment);
             return JS::NullValue();
     }
 
     if (!mBoundFramebuffer) {
-        ErrorInvalidOperation("GetFramebufferAttachmentParameter: cannot query framebuffer 0");
+        ErrorInvalidOperation("getFramebufferAttachmentParameter: cannot query framebuffer 0");
         return JS::NullValue();
     }
 
@@ -2775,7 +2775,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
             }
 
             default:
-                ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: pname", pname);
+                ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
                 return JS::NullValue();
         }
     } else if (fba.Texture()) {
@@ -2802,7 +2802,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                 return JS::Int32Value(fba.TextureCubeMapFace());
 
             default:
-                ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: pname", pname);
+                ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
                 return JS::NullValue();
         }
     } else {
@@ -2811,7 +2811,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                 return JS::DoubleValue(uint32_t(LOCAL_GL_NONE));
 
             default:
-                ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: pname", pname);
+                ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
                 return JS::NullValue();
         }
     }
@@ -2833,7 +2833,7 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname)
         return JS::NullValue();
 
     if (target != LOCAL_GL_RENDERBUFFER) {
-        ErrorInvalidEnumInfo("GetRenderbufferParameter: target", target);
+        ErrorInvalidEnumInfo("getRenderbufferParameter: target", target);
         return JS::NullValue();
     }
 
@@ -2865,7 +2865,7 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname)
             return JS::DoubleValue(uint32_t(i));
         }
         default:
-            ErrorInvalidEnumInfo("GetRenderbufferParameter: parameter", pname);
+            ErrorInvalidEnumInfo("getRenderbufferParameter: parameter", pname);
     }
 
     return JS::NullValue();
@@ -2980,7 +2980,7 @@ WebGLContext::GetProgramParameter(WebGLProgram *prog, WebGLenum pname)
             break;
 
         default:
-            ErrorInvalidEnumInfo("GetProgramParameter: parameter", pname);
+            ErrorInvalidEnumInfo("getProgramParameter: parameter", pname);
     }
 
     return JS::NullValue();
@@ -3239,12 +3239,12 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
         return JS::NullValue();
 
     if (location->Program() != prog) {
-        ErrorInvalidValue("GetUniform: this uniform location corresponds to another program");
+        ErrorInvalidValue("getUniform: this uniform location corresponds to another program");
         return JS::NullValue();
     }
 
     if (location->ProgramGeneration() != prog->Generation()) {
-        ErrorInvalidOperation("GetUniform: this uniform location is obsolete since the program has been relinked");
+        ErrorInvalidOperation("getUniform: this uniform location is obsolete since the program has been relinked");
         return JS::NullValue();
     }
 
@@ -3740,7 +3740,7 @@ WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
                 param != 2 &&
                 param != 4 &&
                 param != 8)
-                return ErrorInvalidValue("PixelStorei: invalid pack/unpack alignment value");
+                return ErrorInvalidValue("pixelStorei: invalid pack/unpack alignment value");
             if (pname == LOCAL_GL_PACK_ALIGNMENT)
                 mPixelStorePackAlignment = param;
             else if (pname == LOCAL_GL_UNPACK_ALIGNMENT)
@@ -3749,7 +3749,7 @@ WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
             gl->fPixelStorei(pname, param);
             break;
         default:
-            return ErrorInvalidEnumInfo("PixelStorei: parameter", pname);
+            return ErrorInvalidEnumInfo("pixelStorei: parameter", pname);
     }
 }
 
@@ -3784,12 +3784,12 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
     }
 
     if (HTMLCanvasElement()->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
-        GenerateWarning("ReadPixels: Not allowed");
+        GenerateWarning("readPixels: Not allowed");
         return rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     }
 
     if (width < 0 || height < 0)
-        return ErrorInvalidValue("ReadPixels: negative size passed");
+        return ErrorInvalidValue("readPixels: negative size passed");
 
     const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
     WebGLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
@@ -3849,10 +3849,10 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
         RoundedToNextMultipleOf(checked_plainRowSize, mPixelStorePackAlignment);
 
     if (!checked_neededByteLength.isValid())
-        return ErrorInvalidOperation("ReadPixels: integer overflow computing the needed buffer size");
+        return ErrorInvalidOperation("readPixels: integer overflow computing the needed buffer size");
 
     if (checked_neededByteLength.value() > dataByteLen)
-        return ErrorInvalidOperation("ReadPixels: buffer too small");
+        return ErrorInvalidOperation("readPixels: buffer too small");
 
     // Check the format and type params to assure they are an acceptable pair (as per spec)
     switch (format) {
@@ -3919,7 +3919,7 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
 
         if (subrect_width < 0 || subrect_height < 0 ||
             subrect_width > width || subrect_height > height)
-            return ErrorInvalidOperation("ReadPixels: integer overflow computing clipped rect size");
+            return ErrorInvalidOperation("readPixels: integer overflow computing clipped rect size");
 
         // now we know that subrect_width is in the [0..width] interval, and same for heights.
 
@@ -4094,7 +4094,7 @@ WebGLContext::Scissor(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei heigh
         return;
 
     if (width < 0 || height < 0)
-        return ErrorInvalidValue("Scissor: negative size");
+        return ErrorInvalidValue("scissor: negative size");
 
     MakeContextCurrent();
     gl->fScissor(x, y, width, height);
@@ -4751,7 +4751,7 @@ WebGLContext::UseProgram(WebGLProgram *prog)
     MakeContextCurrent();
 
     if (prog && !prog->LinkStatus())
-        return ErrorInvalidOperation("UseProgram: program was not linked successfully");
+        return ErrorInvalidOperation("useProgram: program was not linked successfully");
 
     gl->fUseProgram(progname);
 
@@ -4834,7 +4834,7 @@ WebGLContext::Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei heig
         return;
 
     if (width < 0 || height < 0)
-        return ErrorInvalidValue("Viewport: negative size");
+        return ErrorInvalidValue("viewport: negative size");
 
     MakeContextCurrent();
     gl->fViewport(x, y, width, height);
@@ -5222,7 +5222,7 @@ WebGLContext::GetShaderParameter(WebGLShader *shader, WebGLenum pname)
         }
             break;
         default:
-            ErrorInvalidEnumInfo("GetShaderParameter: parameter", pname);
+            ErrorInvalidEnumInfo("getShaderParameter: parameter", pname);
     }
 
     return JS::NullValue();
@@ -5397,7 +5397,7 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
         return;
 
     if (mBoundArrayBuffer == nsnull)
-        return ErrorInvalidOperation("VertexAttribPointer: must have valid GL_ARRAY_BUFFER binding");
+        return ErrorInvalidOperation("vertexAttribPointer: must have valid GL_ARRAY_BUFFER binding");
 
     WebGLsizei requiredAlignment = 1;
     switch (type) {
@@ -5414,7 +5414,7 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
           requiredAlignment = 4;
           break;
       default:
-          return ErrorInvalidEnumInfo("VertexAttribPointer: type", type);
+          return ErrorInvalidEnumInfo("vertexAttribPointer: type", type);
     }
 
     // requiredAlignment should always be a power of two.
@@ -5424,28 +5424,28 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
         return;
 
     if (size < 1 || size > 4)
-        return ErrorInvalidValue("VertexAttribPointer: invalid element size");
+        return ErrorInvalidValue("vertexAttribPointer: invalid element size");
 
     if (stride < 0 || stride > 255) // see WebGL spec section 6.6 "Vertex Attribute Data Stride"
-        return ErrorInvalidValue("VertexAttribPointer: negative or too large stride");
+        return ErrorInvalidValue("vertexAttribPointer: negative or too large stride");
 
     if (byteOffset < 0)
-        return ErrorInvalidValue("VertexAttribPointer: negative offset");
+        return ErrorInvalidValue("vertexAttribPointer: negative offset");
 
     if (stride & requiredAlignmentMask) {
-        return ErrorInvalidOperation("VertexAttribPointer: stride doesn't satisfy the alignment "
+        return ErrorInvalidOperation("vertexAttribPointer: stride doesn't satisfy the alignment "
                                      "requirement of given type");
     }
 
     if (byteOffset & requiredAlignmentMask) {
-        return ErrorInvalidOperation("VertexAttribPointer: byteOffset doesn't satisfy the alignment "
+        return ErrorInvalidOperation("vertexAttribPointer: byteOffset doesn't satisfy the alignment "
                                      "requirement of given type");
 
     }
     
     /* XXX make work with bufferSubData & heterogeneous types 
     if (type != mBoundArrayBuffer->GLType())
-        return ErrorInvalidOperation("VertexAttribPointer: type must match bound VBO type: %d != %d", type, mBoundArrayBuffer->GLType());
+        return ErrorInvalidOperation("vertexAttribPointer: type must match bound VBO type: %d != %d", type, mBoundArrayBuffer->GLType());
     */
 
     WebGLVertexAttribData &vd = mAttribBuffers[index];
@@ -5547,7 +5547,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     }
 
     if (border != 0)
-        return ErrorInvalidValue("TexImage2D: border must be 0");
+        return ErrorInvalidValue("texImage2D: border must be 0");
 
     uint32_t dstTexelSize = 0;
     if (!ValidateTexFormatAndType(format, type, jsArrayType, &dstTexelSize, "texImage2D"))
@@ -5572,7 +5572,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     uint32_t bytesNeeded = checked_neededByteLength.value();
 
     if (byteLength && byteLength < bytesNeeded)
-        return ErrorInvalidOperation("TexImage2D: not enough data for operation (need %d, have %d)",
+        return ErrorInvalidOperation("texImage2D: not enough data for operation (need %d, have %d)",
                                  bytesNeeded, byteLength);
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
@@ -5893,7 +5893,7 @@ WebGLContext::TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
         return;
 
     if (!pixels)
-        return ErrorInvalidValue("TexSubImage2D: pixels must not be null!");
+        return ErrorInvalidValue("texSubImage2D: pixels must not be null!");
 
     return TexSubImage2D_base(target, level, xoffset, yoffset,
                               width, height, 0, format, type,
@@ -5913,7 +5913,7 @@ WebGLContext::TexSubImage2D_imageData(WebGLenum target, WebGLint level,
         return NS_OK;
 
     if (!pixels) {
-        ErrorInvalidValue("TexSubImage2D: pixels must not be null!");
+        ErrorInvalidValue("texSubImage2D: pixels must not be null!");
         return NS_OK;
     }
 
@@ -5937,7 +5937,7 @@ WebGLContext::TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
         return;
 
     if (!pixels)
-        return ErrorInvalidValue("TexSubImage2D: pixels must not be null!");
+        return ErrorInvalidValue("texSubImage2D: pixels must not be null!");
 
     Uint8ClampedArray arr(cx, pixels->GetDataObject());
     return TexSubImage2D_base(target, level, xoffset, yoffset,
