@@ -3248,6 +3248,8 @@ MBasicBlock *
 IonBuilder::newBlockAfter(MBasicBlock *at, MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::New(graph(), info(), predecessor, pc, MBasicBlock::NORMAL);
+    if (!block)
+        return NULL;
     graph_.insertBlockAfter(at, block);
     return block;
 }
@@ -3271,6 +3273,8 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopHead, jsby
     // OSR block is always the second block (with id 1).
     MBasicBlock *osrBlock  = newBlockAfter(*graph_.begin(), loopEntry);
     MBasicBlock *preheader = newBlock(predecessor, loopEntry);
+    if (!osrBlock || !preheader)
+        return NULL;
 
     MOsrEntry *entry = MOsrEntry::New();
     osrBlock->add(entry);
