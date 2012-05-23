@@ -355,21 +355,15 @@ CompositorParent::TransformShadowTree()
   float rootScaleY = rootTransform.GetYScale();
 
   if (mIsFirstPaint && metrics) {
-    nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
-    mContentSize = metrics->mContentSize;
-    SetFirstPaintViewport(scrollOffset.x, scrollOffset.y,
+    mContentRect = metrics->mContentRect;
+    SetFirstPaintViewport(metrics->mViewportScrollOffset,
                           1/rootScaleX,
-                          mContentSize.width,
-                          mContentSize.height,
-                          metrics->mCSSContentSize.width,
-                          metrics->mCSSContentSize.height);
+                          mContentRect,
+                          metrics->mCSSContentRect);
     mIsFirstPaint = false;
-  } else if (metrics && (metrics->mContentSize != mContentSize)) {
-    mContentSize = metrics->mContentSize;
-    SetPageSize(1/rootScaleX, mContentSize.width,
-                mContentSize.height,
-                metrics->mCSSContentSize.width,
-                metrics->mCSSContentSize.height);
+  } else if (metrics && !metrics->mContentRect.IsEqualEdges(mContentRect)) {
+    mContentRect = metrics->mContentRect;
+    SetPageRect(1/rootScaleX, mContentRect, metrics->mCSSContentRect);
   }
 
   // We synchronise the viewport information with Java after sending the above
@@ -408,8 +402,8 @@ CompositorParent::TransformShadowTree()
 
     // Alter the scroll offset so that fixed position layers remain within
     // the page area.
-    int offsetX = NS_MAX(0, NS_MIN(mScrollOffset.x, mContentSize.width - mWidgetSize.width));
-    int offsetY = NS_MAX(0, NS_MIN(mScrollOffset.y, mContentSize.height - mWidgetSize.height));
+    int offsetX = NS_MAX(0, NS_MIN(mScrollOffset.x, mContentRect.width - mWidgetSize.width));
+    int offsetY = NS_MAX(0, NS_MIN(mScrollOffset.y, mContentRect.height - mWidgetSize.height));
     gfxPoint reverseViewTranslation(offsetX / tempScaleDiffX - metricsScrollOffset.x,
                                     offsetY / tempScaleDiffY - metricsScrollOffset.y);
 
@@ -421,24 +415,19 @@ CompositorParent::TransformShadowTree()
 }
 
 void
-CompositorParent::SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom,
-                                        float aPageWidth, float aPageHeight,
-                                        float aCssPageWidth, float aCssPageHeight)
+CompositorParent::SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom,
+                                        const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  mozilla::AndroidBridge::Bridge()->SetFirstPaintViewport(aOffsetX, aOffsetY,
-                                                          aZoom, aPageWidth, aPageHeight,
-                                                          aCssPageWidth, aCssPageHeight);
+  mozilla::AndroidBridge::Bridge()->SetFirstPaintViewport(aOffset, aZoom, aPageRect, aCssPageRect);
 #endif
 }
 
 void
-CompositorParent::SetPageSize(float aZoom, float aPageWidth, float aPageHeight,
-                              float aCssPageWidth, float aCssPageHeight)
+CompositorParent::SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  mozilla::AndroidBridge::Bridge()->SetPageSize(aZoom, aPageWidth, aPageHeight,
-                                                aCssPageWidth, aCssPageHeight);
+  mozilla::AndroidBridge::Bridge()->SetPageRect(aZoom, aPageRect, aCssPageRect);
 #endif
 }
 
