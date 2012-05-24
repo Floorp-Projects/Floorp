@@ -2268,6 +2268,22 @@ case "$target" in
 
         LDFLAGS=$_SAVE_LDFLAGS
     fi
+
+    dnl With newer linkers we need to pass -allow_heap_execute because of
+    dnl Microsoft Silverlight (5.1.10411.0 at least).
+    AC_MSG_CHECKING([for -allow_heap_execute option to ld])
+    _SAVE_LDFLAGS=$LDFLAGS
+    LDFLAGS="$LDFLAGS -Wl,-allow_heap_execute"
+    AC_TRY_LINK(,[return 0;],_HAVE_ALLOW_HEAP_EXECUTE=1,
+                _HAVE_ALLOW_HEAP_EXECUTE=)
+    if test -n "$_HAVE_ALLOW_HEAP_EXECUTE" ; then
+        AC_MSG_RESULT([yes])
+        MOZ_ALLOW_HEAP_EXECUTE_FLAGS="-Wl,-allow_heap_execute"
+    else
+        AC_MSG_RESULT([no])
+    fi
+    LDFLAGS=$_SAVE_LDFLAGS
+
     MOZ_FIX_LINK_PATHS='-Wl,-executable_path,$(LIBXUL_DIST)/bin'
     ;;
 
@@ -7015,6 +7031,7 @@ AC_SUBST(MOZ_OPTIMIZE)
 AC_SUBST(MOZ_FRAMEPTR_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
+AC_SUBST(MOZ_ALLOW_HEAP_EXECUTE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
 
