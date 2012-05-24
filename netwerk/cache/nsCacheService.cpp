@@ -1941,6 +1941,9 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
                                  request->StoragePolicy());
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        if (request->IsPrivate())
+            entry->MarkPrivate();
         
         entry->Fetched();
         ++mTotalEntries;
