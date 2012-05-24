@@ -112,6 +112,9 @@ nsConverterOutputStream::Flush()
                  "1024 bytes ought to be enough for everyone");
     if (NS_FAILED(rv))
         return rv;
+    if (size == 0)
+        return NS_OK;
+
     PRUint32 written;
     rv = mOutStream->Write(buf, size, &written);
     if (NS_FAILED(rv)) {
