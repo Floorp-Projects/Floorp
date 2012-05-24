@@ -50,13 +50,14 @@ public:
     static FT2FontEntry*
     CreateFontEntry(const FontListEntry& aFLE);
 
-    // create a font entry for a given freetype face; if it is an installed font,
+    // Create a font entry for a given freetype face; if it is an installed font,
     // also record the filename and index
+    // aFontData (if non-NULL) is NS_Malloc'ed data that aFace depends on,
+    // to be freed after the face is destroyed
     static FT2FontEntry* 
     CreateFontEntry(FT_Face aFace, const char *aFilename, PRUint8 aIndex,
+                    const nsAString& aName,
                     const PRUint8 *aFontData = nsnull);
-        // aFontData is NS_Malloc'ed data that aFace depends on, to be freed
-        // after the face is destroyed; null if there is no such buffer
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
                                         bool aNeedsBold);
