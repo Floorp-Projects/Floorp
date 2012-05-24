@@ -29,9 +29,6 @@ function run_test() {
   // import the importer
   Cu.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
 
-  // avoid creating the places smart folder during tests
-  Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
-
   // file pointer to legacy bookmarks file
   //var bookmarksFileOld = do_get_file("bookmarks.large.html");
   var bookmarksFileOld = do_get_file("bookmarks.preplaces.html");
@@ -136,12 +133,15 @@ function testCanonicalBookmarks() {
   var rootNode = result.root;
   rootNode.containerOpen = true;
 
-  // 6-2: the toolbar contents are imported to the places-toolbar folder,
-  // the separator above it is removed.
-  do_check_eq(rootNode.childCount, DEFAULT_BOOKMARKS_ON_MENU + 1);
+  // Count expected bookmarks in the menu root.
+  do_check_eq(rootNode.childCount, 3);
+
+  // check separator
+  var testSeparator = rootNode.getChild(1);
+  do_check_eq(testSeparator.type, testSeparator.RESULT_TYPE_SEPARATOR);
 
   // get test folder
-  var testFolder = rootNode.getChild(DEFAULT_BOOKMARKS_ON_MENU);
+  var testFolder = rootNode.getChild(2);
   do_check_eq(testFolder.type, testFolder.RESULT_TYPE_FOLDER);
   do_check_eq(testFolder.title, "test");
 

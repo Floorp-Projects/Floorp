@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
+const DESCRIPTION_ANNO = "bookmarkProperties/description";
+
 // An object representing the contents of bookmarks.preplaces.html.
 let test_bookmarks = {
   menu: [
@@ -26,6 +29,9 @@ let test_bookmarks = {
           icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg=="
         }
       ]
+    },
+    {
+      type: Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR
     },
     { title: "test",
       description: "folder test comment",
@@ -385,12 +391,15 @@ function checkItem(aExpected, aNode)
   let id = aNode.itemId;
   for (prop in aExpected) {
     switch (prop) {
+      case "type":
+        do_check_eq(aNode.type, aExpected.type);
+        break;
       case "title":
         do_check_eq(aNode.title, aExpected.title);
         break;
       case "description":
         do_check_eq(PlacesUtils.annotations
-                               .getItemAnnotation(id, PlacesUIUtils.DESCRIPTION_ANNO),
+                               .getItemAnnotation(id, DESCRIPTION_ANNO),
                     aExpected.description);
         break;
       case "dateAdded":
@@ -423,7 +432,7 @@ function checkItem(aExpected, aNode)
         break;
       case "sidebar":
         do_check_eq(PlacesUtils.annotations
-                               .itemHasAnnotation(id, PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO),
+                               .itemHasAnnotation(id, LOAD_IN_SIDEBAR_ANNO),
                     aExpected.sidebar);
         break;
       case "postData":
