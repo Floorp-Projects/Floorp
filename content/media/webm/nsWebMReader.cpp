@@ -11,7 +11,6 @@
 #include "nsWebMBufferedParser.h"
 #include "VideoUtils.h"
 #include "nsTimeRanges.h"
-#include "mozilla/Preferences.h"
 
 #define VPX_DONT_DEFINE_STDINT_TYPES
 #include "vpx/vp8dx.h"
@@ -108,17 +107,10 @@ nsWebMReader::nsWebMReader(nsBuiltinDecoder* aDecoder)
   mAudioTrack(0),
   mAudioStartUsec(-1),
   mAudioFrames(0),
-  mForceStereoMode(0),
   mHasVideo(false),
-  mHasAudio(false),
-  mStereoModeForced(false)
+  mHasAudio(false)
 {
   MOZ_COUNT_CTOR(nsWebMReader);
-
-  mStereoModeForced =
-    NS_SUCCEEDED(Preferences::GetInt(
-          "media.webm.force_stereo_mode",
-          &mForceStereoMode));
 }
 
 nsWebMReader::~nsWebMReader()
@@ -283,26 +275,6 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
       case NESTEGG_VIDEO_STEREO_RIGHT_LEFT:
         mInfo.mStereoMode = STEREO_MODE_RIGHT_LEFT;
         break;
-      }
-
-      // Switch only when stereo mode is explicitly set.
-      if (mStereoModeForced) {
-        switch (mForceStereoMode) {
-        case 1:
-          mInfo.mStereoMode = STEREO_MODE_LEFT_RIGHT;
-          break;
-        case 2:
-          mInfo.mStereoMode = STEREO_MODE_RIGHT_LEFT;
-          break;
-        case 3:
-          mInfo.mStereoMode = STEREO_MODE_TOP_BOTTOM;
-          break;
-        case 4:
-          mInfo.mStereoMode = STEREO_MODE_BOTTOM_TOP;
-          break;
-        default:
-          mInfo.mStereoMode = STEREO_MODE_MONO;
-        }
       }
     }
     else if (!mHasAudio && type == NESTEGG_TRACK_AUDIO) {
