@@ -46,7 +46,6 @@ STAGEPATH = universal/
 endif
 endif
 
-PACKAGE_BASE_DIR = $(_ABS_DIST)
 PACKAGE       = $(PKG_PATH)$(PKG_BASENAME)$(PKG_SUFFIX)
 
 # By default, the SDK uses the same packaging type as the main bundle,
@@ -554,15 +553,8 @@ MOZ_SIGN_PACKAGE_CMD=$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),
 endif
 
 ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
-ifeq (Darwin, $(OS_ARCH)) 
-MAKE_PACKAGE    = $(PREPARE_PACKAGE) \
-				  && cd ./$(PKG_DMG_SOURCE) && $(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(MOZ_MACBUNDLE_NAME)  && cd $(PACKAGE_BASE_DIR) \
-				  && $(INNER_MAKE_PACKAGE)
-else
 MAKE_PACKAGE    = $(PREPARE_PACKAGE) && $(MOZ_SIGN_PREPARED_PACKAGE_CMD) \
 		  $(MOZ_PKG_DIR) && $(INNER_MAKE_PACKAGE)
-endif #Darwin
-
 else
 MAKE_PACKAGE    = $(PREPARE_PACKAGE) && $(INNER_MAKE_PACKAGE)
 endif
