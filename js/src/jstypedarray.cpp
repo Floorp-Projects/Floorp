@@ -401,7 +401,7 @@ ArrayBufferObject::obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId i
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom))
         return true;
 
-    RootGetterSetter gsRoot(cx, attrs, &getter, &setter);
+    AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
     RootedVarObject delegate(cx, DelegateObject(cx, obj));
     if (!delegate)
@@ -421,7 +421,7 @@ JSBool
 ArrayBufferObject::obj_defineElement(JSContext *cx, HandleObject obj, uint32_t index, const Value *v,
                                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    RootGetterSetter gsRoot(cx, attrs, &getter, &setter);
+    AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
     RootedVarObject delegate(cx, DelegateObject(cx, obj));
     if (!delegate)
@@ -724,10 +724,9 @@ static JSObject *
 GetProtoForClass(JSContext *cx, Class *clasp)
 {
     // Pass in the proto from this compartment
-    GlobalObject *parent = GetCurrentGlobal(cx);
-    Root<GlobalObject*> parentRoot(cx, &parent);
+    RootedVar<GlobalObject*> parent(cx, GetCurrentGlobal(cx));
     JSObject *proto;
-    if (!FindProto(cx, clasp, parentRoot, &proto))
+    if (!FindProto(cx, clasp, parent, &proto))
         return NULL;
     return proto;
 }

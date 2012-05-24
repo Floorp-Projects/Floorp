@@ -73,6 +73,7 @@
 #include "jsxml.h"
 #endif
 
+#include "builtin/MapObject.h"
 #include "frontend/Parser.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
@@ -2181,6 +2182,75 @@ AutoGCRooter::trace(JSTracer *trc)
             MarkScriptRoot(trc, &vector[i], "AutoScriptVector element");
         return;
       }
+
+      case PROPDESC: {
+        PropDesc::AutoRooter *rooter = static_cast<PropDesc::AutoRooter *>(this);
+        MarkValueRoot(trc, &rooter->pd->pd_, "PropDesc::AutoRooter pd");
+        MarkValueRoot(trc, &rooter->pd->value_, "PropDesc::AutoRooter value");
+        MarkValueRoot(trc, &rooter->pd->get_, "PropDesc::AutoRooter get");
+        MarkValueRoot(trc, &rooter->pd->set_, "PropDesc::AutoRooter set");
+        return;
+      }
+
+      case SHAPERANGE: {
+        Shape::Range::AutoRooter *rooter = static_cast<Shape::Range::AutoRooter *>(this);
+        rooter->trace(trc);
+        return;
+      }
+
+      case STACKSHAPE: {
+        StackShape::AutoRooter *rooter = static_cast<StackShape::AutoRooter *>(this);
+        if (rooter->shape->base)
+            MarkBaseShapeRoot(trc, (BaseShape**) &rooter->shape->base, "StackShape::AutoRooter base");
+        MarkIdRoot(trc, (jsid*) &rooter->shape->propid, "StackShape::AutoRooter id");
+        return;
+      }
+
+      case STACKBASESHAPE: {
+        StackBaseShape::AutoRooter *rooter = static_cast<StackBaseShape::AutoRooter *>(this);
+        if (rooter->base->parent)
+            MarkObjectRoot(trc, (JSObject**) &rooter->base->parent, "StackBaseShape::AutoRooter parent");
+        if ((rooter->base->flags & BaseShape::HAS_GETTER_OBJECT) && rooter->base->rawGetter) {
+            MarkObjectRoot(trc, (JSObject**) &rooter->base->rawGetter,
+                           "StackBaseShape::AutoRooter getter");
+        }
+        if ((rooter->base->flags & BaseShape::HAS_SETTER_OBJECT) && rooter->base->rawSetter) {
+            MarkObjectRoot(trc, (JSObject**) &rooter->base->rawSetter,
+                           "StackBaseShape::AutoRooter setter");
+        }
+        return;
+      }
+
+      case BINDINGS: {
+        Bindings::AutoRooter *rooter = static_cast<Bindings::AutoRooter *>(this);
+        rooter->trace(trc);
+        return;
+      }
+
+      case GETTERSETTER: {
+        AutoRooterGetterSetter::Inner *rooter = static_cast<AutoRooterGetterSetter::Inner *>(this);
+        if ((rooter->attrs & JSPROP_GETTER) && *rooter->pgetter)
+            MarkObjectRoot(trc, (JSObject**) rooter->pgetter, "AutoRooterGetterSetter getter");
+        if ((rooter->attrs & JSPROP_SETTER) && *rooter->psetter)
+            MarkObjectRoot(trc, (JSObject**) rooter->psetter, "AutoRooterGetterSetter setter");
+        return;
+      }
+
+      case REGEXPSTATICS: {
+          /*
+        RegExpStatics::AutoRooter *rooter = static_cast<RegExpStatics::AutoRooter *>(this);
+        rooter->trace(trc);
+          */
+        return;
+      }
+
+      case HASHABLEVALUE: {
+          /*
+        HashableValue::AutoRooter *rooter = static_cast<HashableValue::AutoRooter *>(this);
+        rooter->trace(trc);
+          */
+        return;
+      }
     }
 
     JS_ASSERT(tag >= 0);
@@ -2193,6 +2263,38 @@ AutoGCRooter::traceAll(JSTracer *trc)
 {
     for (js::AutoGCRooter *gcr = trc->runtime->autoGCRooters; gcr; gcr = gcr->down)
         gcr->trace(trc);
+}
+
+void
+Shape::Range::AutoRooter::trace(JSTracer *trc)
+{
+    if (r->cursor)
+        MarkShapeRoot(trc, const_cast<Shape**>(&r->cursor), "Shape::Range::AutoRooter");
+}
+
+void
+Bindings::AutoRooter::trace(JSTracer *trc)
+{
+    if (bindings->lastBinding)
+        MarkShapeRoot(trc, reinterpret_cast<Shape**>(&bindings->lastBinding),
+                      "Bindings::AutoRooter lastBinding");
+}
+
+void
+RegExpStatics::AutoRooter::trace(JSTracer *trc)
+{
+    if (statics->matchPairsInput)
+        MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->matchPairsInput),
+                       "RegExpStatics::AutoRooter matchPairsInput");
+    if (statics->pendingInput)
+        MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->pendingInput),
+                       "RegExpStatics::AutoRooter pendingInput");
+}
+
+void
+HashableValue::AutoRooter::trace(JSTracer *trc)
+{
+    MarkValueRoot(trc, reinterpret_cast<Value*>(&v->value), "HashableValue::AutoRooter");
 }
 
 namespace js {
@@ -3959,7 +4061,7 @@ CheckStackRoot(JSTracer *trc, uintptr_t *w)
         JSRuntime *rt = trc->runtime;
         for (ContextIter cx(rt); !cx.done(); cx.next()) {
             for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
-                Root<void*> *rooter = cx->thingGCRooters[i];
+                RootedVar<void*> *rooter = cx->thingGCRooters[i];
                 while (rooter) {
                     if (rooter->address() == static_cast<void*>(w))
                         matched = true;

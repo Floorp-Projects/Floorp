@@ -1877,9 +1877,9 @@ TypeCompartment::init(JSContext *cx)
 
 TypeObject *
 TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
-                               JSProtoKey key, JSObject *proto, bool unknown)
+                               JSProtoKey key, JSObject *proto_, bool unknown)
 {
-    RootObject root(cx, &proto);
+    RootedVarObject proto(cx, proto_);
 
     TypeObject *object = gc::NewGCThing<TypeObject>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
     if (!object)
@@ -4958,12 +4958,12 @@ TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Val
 }
 
 bool
-TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
+TypeScript::SetScope(JSContext *cx, JSScript *script_, JSObject *scope_)
 {
-    JS_ASSERT(script->types && !script->types->hasScope());
+    RootedVar<JSScript*> script(cx, script_);
+    RootedVarObject scope(cx, scope_);
 
-    Root<JSScript*> scriptRoot(cx, &script);
-    RootObject scopeRoot(cx, &scope);
+    JS_ASSERT(script->types && !script->types->hasScope());
 
     JSFunction *fun = script->function();
     bool nullClosure = fun && fun->isNullClosure();

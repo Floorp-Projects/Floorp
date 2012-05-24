@@ -227,13 +227,23 @@ struct PropDesc {
     bool wrapInto(JSContext *cx, JSObject *obj, const jsid &id, jsid *wrappedId,
                   PropDesc *wrappedDesc) const;
 
-    struct StackRoot {
-        StackRoot(JSContext *cx, PropDesc *pd)
-          : pdRoot(cx, &pd->pd_), valueRoot(cx, &pd->value_),
-            getRoot(cx, &pd->get_), setRoot(cx, &pd->set_)
-        {}
-        RootValue pdRoot, valueRoot, getRoot, setRoot;
-    };
+    class AutoRooter : private AutoGCRooter
+    {
+      public:
+        explicit AutoRooter(JSContext *cx, PropDesc *pd_
+                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
+          : AutoGCRooter(cx, PROPDESC), pd(pd_), skip(cx, pd_)
+        {
+            JS_GUARD_OBJECT_NOTIFIER_INIT;
+        }
+
+        friend void AutoGCRooter::trace(JSTracer *trc);
+
+      private:
+        PropDesc *pd;
+        SkipRoot skip;
+        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+     };
 };
 
 class DenseElementsHeader;

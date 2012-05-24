@@ -750,7 +750,7 @@ Debugger::resultToCompletion(JSContext *cx, bool ok, const Value &rv,
 }
 
 bool
-Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Value *result)
+Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_, Value *result)
 {
     /*
      * We must be in the debugger's compartment, since that's where we want
@@ -759,7 +759,7 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Va
     assertSameCompartment(cx, object.get());
 
     RootedVarId key(cx);
-    RootValue valueRoot(cx, &value);
+    RootedVarValue value(cx, value_);
 
     switch (status) {
       case JSTRAP_RETURN:
@@ -781,7 +781,7 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Va
     /* Common tail for JSTRAP_RETURN and JSTRAP_THROW. */
     RootedVarObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
     if (!obj ||
-        !wrapDebuggeeValue(cx, &value) ||
+        !wrapDebuggeeValue(cx, value.address()) ||
         !DefineNativeProperty(cx, obj, key, value, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_ENUMERATE, 0, 0))
     {
@@ -4439,9 +4439,9 @@ static JSFunctionSpec DebuggerEnv_methods[] = {
 /*** Glue ****************************************************************************************/
 
 extern JS_PUBLIC_API(JSBool)
-JS_DefineDebuggerObject(JSContext *cx, JSObject *obj)
+JS_DefineDebuggerObject(JSContext *cx, JSObject *obj_)
 {
-    RootObject objRoot(cx, &obj);
+    RootedVarObject obj(cx, obj_);
 
     RootedVarObject
         objProto(cx),
@@ -4456,7 +4456,7 @@ JS_DefineDebuggerObject(JSContext *cx, JSObject *obj)
         return false;
 
 
-    debugProto = js_InitClass(cx, objRoot,
+    debugProto = js_InitClass(cx, obj,
                               objProto, &Debugger::jsclass, Debugger::construct,
                               1, Debugger::properties, Debugger::methods, NULL, NULL,
                               debugCtor.address());

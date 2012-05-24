@@ -919,7 +919,15 @@ class JS_PUBLIC_API(AutoGCRooter) {
         STRING =      -14, /* js::AutoStringRooter */
         IDVECTOR =    -15, /* js::AutoIdVector */
         OBJVECTOR =   -16, /* js::AutoObjectVector */
-        SCRIPTVECTOR =-17  /* js::AutoScriptVector */
+        SCRIPTVECTOR =-17, /* js::AutoScriptVector */
+        PROPDESC =    -18, /* js::PropDesc::AutoRooter */
+        SHAPERANGE =  -19, /* js::Shape::Range::AutoRooter */
+        STACKSHAPE =  -20, /* js::StackShape::AutoRooter */
+        STACKBASESHAPE=-21,/* js::StackBaseShape::AutoRooter */
+        BINDINGS =    -22, /* js::Bindings::AutoRooter */
+        GETTERSETTER =-23, /* js::AutoRooterGetterSetter */
+        REGEXPSTATICS=-24, /* js::RegExpStatics::AutoRooter */
+        HASHABLEVALUE=-25
     };
 
   private:

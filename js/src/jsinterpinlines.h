@@ -206,14 +206,14 @@ GetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, Value *vp
         }
     }
 
-    JSObject *obj = ValueToObject(cx, lval);
+    RootedVarObject obj(cx, ValueToObject(cx, lval));
     if (!obj)
         return false;
 
     PropertyCacheEntry *entry;
     JSObject *obj2;
     PropertyName *name;
-    JS_PROPERTY_CACHE(cx).test(cx, pc, obj, obj2, entry, name);
+    JS_PROPERTY_CACHE(cx).test(cx, pc, obj.reference(), obj2, entry, name);
     if (!name) {
         AssertValidPropertyCacheHit(cx, obj, obj2, entry);
         if (!NativeGet(cx, obj, obj2, entry->prop, JSGET_CACHE_RESULT, vp))
@@ -221,14 +221,13 @@ GetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, Value *vp
         return true;
     }
 
-    RootObject objRoot(cx, &obj);
     RootedVarId id(cx, NameToId(name));
 
     if (obj->getOps()->getProperty) {
-        if (!GetPropertyGenericMaybeCallXML(cx, op, objRoot, id, vp))
+        if (!GetPropertyGenericMaybeCallXML(cx, op, obj, id, vp))
             return false;
     } else {
-        if (!GetPropertyHelper(cx, objRoot, id, JSGET_CACHE_RESULT, vp))
+        if (!GetPropertyHelper(cx, obj, id, JSGET_CACHE_RESULT, vp))
             return false;
     }
 
@@ -237,7 +236,7 @@ GetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, Value *vp
         JS_UNLIKELY(vp->isPrimitive()) &&
         lval.isObject())
     {
-        if (!OnUnknownMethod(cx, objRoot, IdToValue(id), vp))
+        if (!OnUnknownMethod(cx, obj, IdToValue(id), vp))
             return false;
     }
 #endif
@@ -248,7 +247,7 @@ GetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, Value *vp
 inline bool
 SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Value &rval)
 {
-    JSObject *obj = ValueToObject(cx, lval);
+    RootedVarObject obj(cx, ValueToObject(cx, lval));
     if (!obj)
         return false;
 
@@ -304,14 +303,12 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
 
     JSOp op = JSOp(*pc);
 
-    RootObject objRoot(cx, &obj);
-
     RootedVarId id(cx, NameToId(name));
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
         unsigned defineHow = (op == JSOP_SETNAME)
                              ? DNP_CACHE_RESULT | DNP_UNQUALIFIED
                              : DNP_CACHE_RESULT;
-        if (!baseops::SetPropertyHelper(cx, objRoot, id, defineHow, rref.address(), strict))
+        if (!baseops::SetPropertyHelper(cx, obj, id, defineHow, rref.address(), strict))
             return false;
     } else {
         if (!obj->setGeneric(cx, id, rref.address(), strict))
@@ -324,7 +321,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
 inline bool
 NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
 {
-    JSObject *obj = cx->stack.currentScriptedScopeChain();
+    RootedVarObject obj(cx, cx->stack.currentScriptedScopeChain());
 
     /*
      * Skip along the scope chain to the enclosing global object. This is
@@ -340,8 +337,8 @@ NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
 
     PropertyCacheEntry *entry;
     JSObject *obj2;
-    PropertyName *name;
-    JS_PROPERTY_CACHE(cx).test(cx, pc, obj, obj2, entry, name);
+    RootedVarPropertyName name(cx);
+    JS_PROPERTY_CACHE(cx).test(cx, pc, obj.reference(), obj2, entry, name.reference());
     if (!name) {
         AssertValidPropertyCacheHit(cx, obj, obj2, entry);
         if (!NativeGet(cx, obj, obj2, entry->prop, 0, vp))
@@ -349,13 +346,8 @@ NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
         return true;
     }
 
-    jsid id = NameToId(name);
-
-    RootPropertyName nameRoot(cx, &name);
-    RootObject objRoot(cx, &obj);
-
     JSProperty *prop;
-    if (!FindPropertyHelper(cx, nameRoot, true, objRoot, &obj, &obj2, &prop))
+    if (!FindPropertyHelper(cx, name, true, obj, obj.address(), &obj2, &prop))
         return false;
     if (!prop) {
         /* Kludge to allow (typeof foo == "undefined") tests. */
@@ -372,7 +364,7 @@ NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
 
     /* Take the slow path if prop was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
-        if (!obj->getGeneric(cx, RootedVarId(cx, id), vp))
+        if (!obj->getGeneric(cx, RootedVarId(cx, NameToId(name)), vp))
             return false;
     } else {
         Shape *shape = (Shape *)prop;
@@ -839,13 +831,13 @@ SetObjectElementOperation(JSContext *cx, JSObject *obj, HandleId id, const Value
 
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
-        Value lval = lhs;                                                     \
-        Value rval = rhs;                                                     \
+        RootedVarValue lvalRoot(cx, lhs), rvalRoot(cx, rhs);                  \
+        Value &lval = lvalRoot.reference();                                   \
+        Value &rval = rvalRoot.reference();                                   \
         /* Optimize for two int-tagged operands (typical loop control). */    \
         if (lval.isInt32() && rval.isInt32()) {                               \
             *res = lval.toInt32() OP rval.toInt32();                          \
         } else {                                                              \
-            RootValue lvalRoot(cx, &lval), rvalRoot(cx, &rval);               \
             if (!ToPrimitive(cx, JSTYPE_NUMBER, &lval))                       \
                 return false;                                                 \
             if (!ToPrimitive(cx, JSTYPE_NUMBER, &rval))                       \

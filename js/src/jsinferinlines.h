@@ -1432,9 +1432,10 @@ JSScript::ensureRanAnalysis(JSContext *cx, JSObject *scope)
     if (!self->ensureHasTypes(cx))
         return false;
     if (!self->types->hasScope()) {
-        js::RootObject objRoot(cx, &scope);
+        js::RootedVarObject scopeRoot(cx, scope);
         if (!js::types::TypeScript::SetScope(cx, self, scope))
             return false;
+        scope = scopeRoot;
     }
     if (!self->hasAnalysis() && !self->makeAnalysis(cx))
         return false;
