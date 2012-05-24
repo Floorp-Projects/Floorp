@@ -1041,7 +1041,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
                 mPriority, mRedirectionLimit, mAllowPipelining,
                 mForceAllowThirdPartyCookie, mSendResumeAt,
                 mStartPos, mEntityID, mChooseApplicationCache, 
-                appCacheClientId, mAllowSpdy, UsingPrivateBrowsing());
+                appCacheClientId, mAllowSpdy, UsePrivateBrowsing());
 
   return NS_OK;
 }
