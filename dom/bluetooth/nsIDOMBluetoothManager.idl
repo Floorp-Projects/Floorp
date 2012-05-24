@@ -6,7 +6,14 @@
 
 #include "nsIDOMEventTarget.idl"
 
-[scriptable, builtinclass, uuid(fe6602d2-f32f-4b95-bf66-028452bbe6d2)]
-interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
+interface nsIDOMDOMRequest;
+interface nsIDOMBluetoothAdapter;
+
+[scriptable, builtinclass, uuid(9d4bcbad-8904-4985-b366-036d32959312)]
+interface nsIDOMBluetoothManager : nsIDOMEventTarget
 {
+  readonly attribute bool enabled;
+  readonly attribute nsIDOMBluetoothAdapter defaultAdapter;
+
+  nsIDOMDOMRequest setEnabled(in boolean enabled);
 };
