@@ -121,8 +121,13 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         "    vTexCoord.y = 1.0 - aTexCoord.y;\n" +
         "}\n";
 
+    // We use highp because the screenshot textures
+    // we use are large and we stretch them alot
+    // so we need all the precision we can get.
+    // Unfortunately, highp is not required by ES 2.0
+    // so on GPU's like Mali we end up getting mediump
     public static final String DEFAULT_FRAGMENT_SHADER =
-        "precision mediump float;\n" +
+        "precision highp float;\n" +
         "varying vec2 vTexCoord;\n" +
         "uniform sampler2D sTexture;\n" +
         "void main() {\n" +
