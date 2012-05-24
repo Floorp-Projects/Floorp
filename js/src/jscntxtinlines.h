@@ -119,8 +119,6 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
     js_memcpy(&stackObject, &entry->templateObject, nbytes);
 
     JSObject *baseobj = (JSObject *) stackObject;
-    RootShape shapeRoot(cx, (Shape **) baseobj->addressOfShape());
-    RootTypeObject typeRoot(cx, (types::TypeObject **) baseobj->addressOfType());
 
     obj = js_NewGCObject(cx, entry->kind);
     if (obj) {

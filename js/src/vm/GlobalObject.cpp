@@ -397,10 +397,9 @@ GlobalObject::createBlankPrototypeInheriting(JSContext *cx, Class *clasp, JSObje
 }
 
 bool
-LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
+LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor_, JSObject *proto_)
 {
-    RootObject ctorRoot(cx, &ctor);
-    RootObject protoRoot(cx, &proto);
+    RootedVarObject ctor(cx, ctor_), proto(cx, proto_);
 
     return ctor->defineProperty(cx, cx->runtime->atomState.classPrototypeAtom,
                                 ObjectValue(*proto), JS_PropertyStub, JS_StrictPropertyStub,
@@ -410,9 +409,9 @@ LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
 }
 
 bool
-DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFunctionSpec *fs)
+DefinePropertiesAndBrand(JSContext *cx, JSObject *obj_, JSPropertySpec *ps, JSFunctionSpec *fs)
 {
-    RootObject root(cx, &obj);
+    RootedVarObject obj(cx, obj_);
 
     if ((ps && !JS_DefineProperties(cx, obj, ps)) || (fs && !JS_DefineFunctions(cx, obj, fs)))
         return false;

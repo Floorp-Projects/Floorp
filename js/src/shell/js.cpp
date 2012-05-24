@@ -388,7 +388,7 @@ SkipUTF8BOM(FILE* file)
 }
 
 static void
-Process(JSContext *cx, JSObject *obj, const char *filename, bool forceTTY)
+Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
 {
     JSBool ok, hitEOF;
     JSScript *script;
@@ -403,7 +403,7 @@ Process(JSContext *cx, JSObject *obj, const char *filename, bool forceTTY)
     FILE *file;
     uint32_t oldopts;
 
-    RootObject root(cx, &obj);
+    RootedVarObject obj(cx, obj_);
 
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
@@ -1731,9 +1731,11 @@ TryNotes(JSContext *cx, JSScript *script, Sprinter *sp)
 }
 
 static bool
-DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, bool recursive,
+DisassembleScript(JSContext *cx, JSScript *script_, JSFunction *fun, bool lines, bool recursive,
                   Sprinter *sp)
 {
+    RootedVar<JSScript*> script(cx, script_);
+
     if (fun && (fun->flags & ~7U)) {
         uint16_t flags = fun->flags;
         Sprint(sp, "flags:");
@@ -1751,8 +1753,6 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
 
         Sprint(sp, "\n");
     }
-
-    Root<JSScript*> scriptRoot(cx, &script);
 
     if (!js_Disassemble(cx, script, lines, sp))
         return false;
@@ -4660,9 +4660,9 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
 }
 
 static bool
-BindScriptArgs(JSContext *cx, JSObject *obj, OptionParser *op)
+BindScriptArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 {
-    RootObject root(cx, &obj);
+    RootedVarObject obj(cx, obj_);
 
     MultiStringRange msr = op->getMultiStringArg("scriptArgs");
     RootedVarObject scriptArgs(cx);
@@ -4693,9 +4693,9 @@ BindScriptArgs(JSContext *cx, JSObject *obj, OptionParser *op)
 }
 
 static int
-ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
+ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 {
-    RootObject root(cx, &obj);
+    RootedVarObject obj(cx, obj_);
 
     if (op->getBoolOption('a'))
         JS_ToggleOptions(cx, JSOPTION_METHODJIT_ALWAYS);

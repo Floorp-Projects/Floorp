@@ -159,7 +159,7 @@ struct SharedContext {
 
     Bindings        bindings;       /* bindings in this code, including
                                        arguments if we're compiling a function */
-    Bindings::StackRoot bindingsRoot; /* root for stack allocated bindings. */
+    Bindings::AutoRooter bindingsRoot; /* root for stack allocated bindings. */
 
     const bool      inFunction:1;   /* parsing/emitting inside function body */
 

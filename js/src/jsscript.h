@@ -226,12 +226,23 @@ class Bindings
 
     void trace(JSTracer *trc);
 
-    /* Rooter for stack allocated Bindings. */
-    struct StackRoot {
-        RootShape root;
-        StackRoot(JSContext *cx, Bindings *bindings)
-            : root(cx, (Shape **) &bindings->lastBinding)
-        {}
+    class AutoRooter : private AutoGCRooter
+    {
+      public:
+        explicit AutoRooter(JSContext *cx, Bindings *bindings_
+                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
+          : AutoGCRooter(cx, BINDINGS), bindings(bindings_), skip(cx, bindings_)
+        {
+            JS_GUARD_OBJECT_NOTIFIER_INIT;
+        }
+
+        friend void AutoGCRooter::trace(JSTracer *trc);
+        void trace(JSTracer *trc);
+
+      private:
+        Bindings *bindings;
+        SkipRoot skip;
+        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
     };
 };
 

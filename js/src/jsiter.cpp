@@ -202,17 +202,16 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
 }
 
 static bool
-EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, unsigned flags, IdSet &ht,
+EnumerateNativeProperties(JSContext *cx, JSObject *obj_, JSObject *pobj_, unsigned flags, IdSet &ht,
                           AutoIdVector *props)
 {
-    RootObject objRoot(cx, &obj);
-    RootObject pobjRoot(cx, &pobj);
+    RootedVarObject obj(cx, obj_), pobj(cx, pobj_);
 
     size_t initialLength = props->length();
 
     /* Collect all unique properties from this object's scope. */
     Shape::Range r = pobj->lastProperty()->all();
-    Shape::Range::Root root(cx, &r);
+    Shape::Range::AutoRooter root(cx, &r);
     for (; !r.empty(); r.popFront()) {
         const Shape &shape = r.front();
 
@@ -282,14 +281,13 @@ struct SortComparatorIds
 #endif /* JS_MORE_DETERMINISTIC */
 
 static bool
-Snapshot(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector *props)
+Snapshot(JSContext *cx, JSObject *obj_, unsigned flags, AutoIdVector *props)
 {
     IdSet ht(cx);
     if (!ht.init(32))
         return NULL;
 
-    RootObject objRoot(cx, &obj);
-    RootedVarObject pobj(cx);
+    RootedVarObject obj(cx, obj_), pobj(cx);
     pobj = obj;
 
     do {
