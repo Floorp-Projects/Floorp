@@ -879,6 +879,57 @@ function readStringFromFile(file) {
   return readStringFromInputStream(fis);
 }
 
+function handleUpdateFailure(update, errorCode) {
+  update.errorCode = parseInt(errorCode);
+  if (update.errorCode == WRITE_ERROR) {
+    Cc["@mozilla.org/updates/update-prompt;1"].
+      createInstance(Ci.nsIUpdatePrompt).
+      showUpdateError(update);
+    writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+    return true;
+  }
+
+  if (update.errorCode == ELEVATION_CANCELED) {
+    writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+    return true;
+  }
+
+  if (update.errorCode == SERVICE_UPDATER_COULD_NOT_BE_STARTED ||
+      update.errorCode == SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS ||
+      update.errorCode == SERVICE_UPDATER_SIGN_ERROR ||
+      update.errorCode == SERVICE_UPDATER_COMPARE_ERROR ||
+      update.errorCode == SERVICE_UPDATER_IDENTITY_ERROR ||
+      update.errorCode == SERVICE_STILL_APPLYING_ON_SUCCESS ||
+      update.errorCode == SERVICE_STILL_APPLYING_ON_FAILURE ||
+      update.errorCode == SERVICE_UPDATER_NOT_FIXED_DRIVE ||
+      update.errorCode == SERVICE_COULD_NOT_LOCK_UPDATER ||
+      update.errorCode == SERVICE_INSTALLDIR_ERROR) {
+
+    var failCount = getPref("getIntPref", 
+                            PREF_APP_UPDATE_SERVICE_ERRORS, 0);
+    var maxFail = getPref("getIntPref", 
+                          PREF_APP_UPDATE_SERVICE_MAX_ERRORS, 
+                          DEFAULT_SERVICE_MAX_ERRORS);
+
+    // As a safety, when the service reaches maximum failures, it will
+    // disable itself and fallback to using the normal update mechanism
+    // without the service.
+    if (failCount >= maxFail) {
+      Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, false);
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_SERVICE_ERRORS);
+    } else {
+      failCount++;
+      Services.prefs.setIntPref(PREF_APP_UPDATE_SERVICE_ERRORS, 
+                                failCount);
+    }
+
+    writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+    return true;
+  }
+  
+  return false;
+}
+
 /**
  * Update Patch
  * @param   patch
@@ -1454,48 +1505,7 @@ UpdateService.prototype = {
       var ary = status.split(":");
       update.state = ary[0];
       if (update.state == STATE_FAILED && ary[1]) {
-        update.errorCode = parseInt(ary[1]);
-        if (update.errorCode == WRITE_ERROR) {
-          prompter.showUpdateError(update);
-          writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
-          return;
-        }
-
-        if (update.errorCode == ELEVATION_CANCELED) {
-          writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
-          return;
-        }
-
-        if (update.errorCode == SERVICE_UPDATER_COULD_NOT_BE_STARTED ||
-            update.errorCode == SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS ||
-            update.errorCode == SERVICE_UPDATER_SIGN_ERROR ||
-            update.errorCode == SERVICE_UPDATER_COMPARE_ERROR ||
-            update.errorCode == SERVICE_UPDATER_IDENTITY_ERROR ||
-            update.errorCode == SERVICE_STILL_APPLYING_ON_SUCCESS ||
-            update.errorCode == SERVICE_STILL_APPLYING_ON_FAILURE ||
-            update.errorCode == SERVICE_UPDATER_NOT_FIXED_DRIVE ||
-            update.errorCode == SERVICE_COULD_NOT_LOCK_UPDATER ||
-            update.errorCode == SERVICE_INSTALLDIR_ERROR) {
-
-          var failCount = getPref("getIntPref", 
-                                  PREF_APP_UPDATE_SERVICE_ERRORS, 0);
-          var maxFail = getPref("getIntPref", 
-                                PREF_APP_UPDATE_SERVICE_MAX_ERRORS, 
-                                DEFAULT_SERVICE_MAX_ERRORS);
-
-          // As a safety, when the service reaches maximum failures, it will
-          // disable itself and fallback to using the normal update mechanism
-          // without the service.
-          if (failCount >= maxFail) {
-            Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, false);
-            Services.prefs.clearUserPref(PREF_APP_UPDATE_SERVICE_ERRORS);
-          } else {
-            failCount++;
-            Services.prefs.setIntPref(PREF_APP_UPDATE_SERVICE_ERRORS, 
-                                      failCount);
-          }
-
-          writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+        if (handleUpdateFailure(update, ary[1])) {
           return;
         }
       }
@@ -2315,11 +2325,13 @@ UpdateManager.prototype = {
   },
 
   refreshUpdateStatus: function UM_refreshUpdateStatus(update) {
+    var updateSucceeded = true;
     var status = readStatusFile(getUpdatesDir());
     var ary = status.split(":");
     update.state = ary[0];
     if (update.state == STATE_FAILED && ary[1]) {
-      update.errorCode = parseInt(ary[1]);
+      updateSucceeded = false;
+      handleUpdateFailure(update, ary[1]);
     }
     if (update.state == STATE_APPLIED && shouldUseService()) {
       writeStatusFile(getUpdatesDir(), update.state = STATE_APPLIED_SVC);
@@ -2328,8 +2340,12 @@ UpdateManager.prototype = {
              getService(Ci.nsIUpdateManager);
     um.saveUpdates();
 
-    // Destroy the updates directory, since we're done with it.
-    cleanUpUpdatesDir(true);
+    if (update.state != STATE_PENDING && update.state != STATE_PENDING_SVC) {
+      // Destroy the updates directory, since we're done with it.
+      // Make sure to not do this when the updater has fallen back to
+      // non-staged updates.
+      cleanUpUpdatesDir(updateSucceeded);
+    }
 
     // Send an observer notification which the update wizard uses in
     // order to update its UI.
