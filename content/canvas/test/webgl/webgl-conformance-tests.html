@@ -385,12 +385,32 @@ function start() {
       tx += "Tests TIMED OUT: " + totalTimeouts + "\n";
       tx += "\n";
       tx += "-------------------\n\n";
-      tx += "Individual Test Results (pass / total / timeout):\n\n";
+      if (totalSuccessful < totalTests) {
+        tx += "Failures:\n\n";
+        for (var url in this.pagesByURL) {
+            var page = this.pagesByURL[url];
+            var pageTotalFail = page.totalTests - page.totalSuccessful;
+            if (!(page.totalTests == 0 && page.totalTimeouts == 0) &&
+                pageTotalFail > 0)
+            {
+            tx += url + ": " + pageTotalFail + " tests failed";
+            if (page.totalTimeouts)
+                tx += " (" + page.totalTimeouts + " timed out)";
+            tx += "\n";
+            }
+        }
+      } else {
+        tx += "All tests PASSED\n\n";
+      }
+      tx += "\n";
+      tx += "-------------------\n\n";
+      tx += "Complete Test Results (total / pass / fail / timeout):\n\n";
       for (var url in this.pagesByURL) {
         var page = this.pagesByURL[url];
+        var pageTotalFail = page.totalTests - page.totalSuccessful;
         if (!(page.totalTests == 0 && page.totalTimeouts == 0)) {
-          tx += url + ": " + page.totalSuccessful + " / " +
-              page.totalTests + " / " + page.totalTimeouts + "\n";
+          tx += url + ": " + page.totalTests + " / " +
+              page.totalSuccessful + " / " + pageTotalFail + " / " + page.totalTimeouts + "\n";
         }
       }
       tx += "\n";
