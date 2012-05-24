@@ -4,6 +4,8 @@ var gExpectedCharset;
 var gOldPref;
 var gDetectorList;
 var gTestIndex;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 function CharsetDetectionTests(aTestFile, aExpectedCharset, aDetectorList)
 {
@@ -12,22 +14,35 @@ function CharsetDetectionTests(aTestFile, aExpectedCharset, aDetectorList)
 
     InitDetectorTests();
 
-    $("testframe").src = aTestFile;
+    // convert aTestFile to a file:// URI
+    var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+        .getService(Ci.mozIJSSubScriptLoader);
+    var ioService = Cc['@mozilla.org/network/io-service;1']
+        .getService(Ci.nsIIOService);
+
+    loader.loadSubScript("chrome://mochikit/content/chrome-harness.js");
+    var jar = getJar(getRootDirectory(window.location.href));
+    var dir = jar ?
+                extractJarToTmp(jar) :
+                getChromeDir(getResolvedURI(window.location.href));
+    var fileURI = ioService.newFileURI(dir).spec + aTestFile;
+
+    $("testframe").src = fileURI;
 
     SimpleTest.waitForExplicitFinish();
 }
 
 function InitDetectorTests()
 {
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-        .getService(Components.interfaces.nsIPrefBranch);
-    var str = Components.classes["@mozilla.org/supports-string;1"]
-        .createInstance(Components.interfaces.nsISupportsString);
+    var prefService = Cc["@mozilla.org/preferences-service;1"]
+        .getService(Ci.nsIPrefBranch);
+    var str = Cc["@mozilla.org/supports-string;1"]
+        .createInstance(Ci.nsISupportsString);
 
     try {
         gOldPref = prefService
             .getComplexValue("intl.charset.detector",
-                             Components.interfaces.nsIPrefLocalizedString).data;
+                             Ci.nsIPrefLocalizedString).data;
     } catch (e) {
         gOldPref = "";
     }
@@ -39,7 +54,7 @@ function InitDetectorTests()
         try {
             gExpectedCharset = prefService
                 .getComplexValue("intl.charset.default",
-                                 Components.interfaces.nsIPrefLocalizedString)
+                                 Ci.nsIPrefLocalizedString)
                 .data;
         } catch (e) {
             gExpectedCharset = "ISO-8859-8";
@@ -49,13 +64,13 @@ function InitDetectorTests()
 
 function SetDetectorPref(aPrefValue)
 {
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                      .getService(Components.interfaces.nsIPrefBranch);
-    var str = Components.classes["@mozilla.org/supports-string;1"]
-              .createInstance(Components.interfaces.nsISupportsString);
+    var prefService = Cc["@mozilla.org/preferences-service;1"]
+                      .getService(Ci.nsIPrefBranch);
+    var str = Cc["@mozilla.org/supports-string;1"]
+              .createInstance(Ci.nsISupportsString);
     str.data = aPrefValue;
     prefService.setComplexValue("intl.charset.detector",
-                                Components.interfaces.nsISupportsString, str);
+                                Ci.nsISupportsString, str);
     gCurrentDetector = aPrefValue;
 }
 
