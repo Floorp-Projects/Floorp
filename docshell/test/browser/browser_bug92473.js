@@ -41,11 +41,13 @@ function afterChangeCharset() {
 function test() {
   waitForExplicitFinish();
 
+  // Get the local directory. This needs to be a file: URI because chrome: URIs
+  // are always UTF-8 (bug 617339) and we are testing decoding from other
+  // charsets.
   var jar = getJar(getRootDirectory(gTestPath));
   var dir = jar ?
               extractJarToTmp(jar) :
               getChromeDir(getResolvedURI(gTestPath));
-
   var rootDir = Services.io.newFileURI(dir).spec;
 
   gBrowser.selectedTab = gBrowser.addTab(rootDir + "test-form_sjis.html");

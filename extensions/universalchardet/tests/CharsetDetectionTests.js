@@ -4,6 +4,7 @@ var gExpectedCharset;
 var gOldPref;
 var gDetectorList;
 var gTestIndex;
+var gLocalDir;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -14,19 +15,7 @@ function CharsetDetectionTests(aTestFile, aExpectedCharset, aDetectorList)
 
     InitDetectorTests();
 
-    // convert aTestFile to a file:// URI
-    var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-        .getService(Ci.mozIJSSubScriptLoader);
-    var ioService = Cc['@mozilla.org/network/io-service;1']
-        .getService(Ci.nsIIOService);
-
-    loader.loadSubScript("chrome://mochikit/content/chrome-harness.js");
-    var jar = getJar(getRootDirectory(window.location.href));
-    var dir = jar ?
-                extractJarToTmp(jar) :
-                getChromeDir(getResolvedURI(window.location.href));
-    var fileURI = ioService.newFileURI(dir).spec + aTestFile;
-
+    var fileURI = gLocalDir + aTestFile;
     $("testframe").src = fileURI;
 
     SimpleTest.waitForExplicitFinish();
@@ -38,6 +27,11 @@ function InitDetectorTests()
         .getService(Ci.nsIPrefBranch);
     var str = Cc["@mozilla.org/supports-string;1"]
         .createInstance(Ci.nsISupportsString);
+    var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+        .getService(Ci.mozIJSSubScriptLoader);
+    var ioService = Cc['@mozilla.org/network/io-service;1']
+        .getService(Ci.nsIIOService);
+    loader.loadSubScript("chrome://mochikit/content/chrome-harness.js");
 
     try {
         gOldPref = prefService
@@ -60,6 +54,15 @@ function InitDetectorTests()
             gExpectedCharset = "ISO-8859-8";
         }
     }
+
+    // Get the local directory. This needs to be a file: URI because chrome:
+    // URIs are always UTF-8 (bug 617339) and we are testing decoding from other
+    // charsets.
+    var jar = getJar(getRootDirectory(window.location.href));
+    var dir = jar ?
+                extractJarToTmp(jar) :
+                getChromeDir(getResolvedURI(window.location.href));
+    gLocalDir = ioService.newFileURI(dir).spec;
 }
 
 function SetDetectorPref(aPrefValue)
