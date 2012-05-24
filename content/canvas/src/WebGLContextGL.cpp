@@ -5383,9 +5383,6 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
                                   WebGLboolean normalized, WebGLsizei stride,
                                   WebGLintptr byteOffset)
 {
-    // XXXbz Preserving the old (buggy) behavior for now.  See bug 749497.
-    byteOffset = int32_t(byteOffset);
-
     if (!IsContextStable())
         return;
 
