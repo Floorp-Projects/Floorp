@@ -545,6 +545,32 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/tabs_button_tail.9.png \
   $(NULL)
 
+RES_DRAWABLE_XLARGE_MDPI = \
+  res/drawable-xlarge-mdpi/address_bar_bg.xml \
+  res/drawable-xlarge-mdpi/address_bar_texture_tablet.png \
+  $(NULL)
+
+RES_DRAWABLE_XLARGE_HDPI = \
+  res/drawable-xlarge-hdpi/address_bar_texture_tablet.png \
+  $(NULL)
+
+RES_DRAWABLE_XLARGE_XHDPI = \
+  res/drawable-xlarge-xhdpi/address_bar_texture_tablet.png \
+  $(NULL)
+
+RES_DRAWABLE_SW600DP_MDPI = \
+  res/drawable-sw600dp-mdpi/address_bar_bg.xml \
+  res/drawable-sw600dp-mdpi/address_bar_texture_tablet.png \
+  $(NULL)
+
+RES_DRAWABLE_SW600DP_HDPI = \
+  res/drawable-sw600dp-hdpi/address_bar_texture_tablet.png \
+  $(NULL)
+
+RES_DRAWABLE_SW600DP_XHDPI = \
+  res/drawable-sw600dp-xhdpi/address_bar_texture_tablet.png \
+  $(NULL)
+
 RES_COLOR = \
   res/color/awesomebar_tab_text.xml
 
@@ -607,7 +633,7 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_LAYOUT_LAND_V14) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_LAYOUT_LAND_V14) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_XLARGE_MDPI) $(RES_DRAWABLE_XLARGE_HDPI) $(RES_DRAWABLE_XLARGE_XHDPI) $(RES_DRAWABLE_SW600DP_MDPI) $(RES_DRAWABLE_SW600DP_HDPI) $(RES_DRAWABLE_SW600DP_XHDPI) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout              \
@@ -631,6 +657,12 @@ RES_DIRS= \
   res/drawable-land-mdpi-v14  \
   res/drawable-land-hdpi-v14  \
   res/drawable-land-xhdpi-v14 \
+  res/drawable-xlarge-mdpi    \
+  res/drawable-xlarge-hdpi    \
+  res/drawable-xlarge-xhdpi   \
+  res/drawable-sw600dp-mdpi   \
+  res/drawable-sw600dp-hdpi   \
+  res/drawable-sw600dp-xhdpi  \
   res/color                   \
   res/menu                    \
   res/menu-v11                \
