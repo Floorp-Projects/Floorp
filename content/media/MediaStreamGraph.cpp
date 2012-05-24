@@ -1762,6 +1762,17 @@ MediaStream::ChangeExplicitBlockerCount(PRInt32 aDelta)
 }
 
 void
+MediaStream::AddListenerImpl(already_AddRefed<MediaStreamListener> aListener)
+{
+  MediaStreamListener* listener = *mListeners.AppendElement() = aListener;
+  listener->NotifyBlockingChanged(GraphImpl(),
+    mBlocked.GetAt(GraphImpl()->mCurrentTime) ? MediaStreamListener::BLOCKED : MediaStreamListener::UNBLOCKED);
+  if (mNotifiedFinished) {
+    listener->NotifyFinished(GraphImpl());
+  }
+}
+
+void
 MediaStream::AddListener(MediaStreamListener* aListener)
 {
   class Message : public ControlMessage {
