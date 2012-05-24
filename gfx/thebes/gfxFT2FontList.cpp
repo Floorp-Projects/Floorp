@@ -369,15 +369,16 @@ FT2FontEntry::GetFontTable(PRUint32 aTableTag,
     FT_Error status;
     FT_ULong len = 0;
     status = FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, nsnull, &len);
-    NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(len != 0, NS_ERROR_FAILURE);
+    if (status != FT_Err_Ok || len == 0) {
+        return NS_ERROR_FAILURE;
+    }
 
     if (!aBuffer.SetLength(len)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
     PRUint8 *buf = aBuffer.Elements();
     status = FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, buf, &len);
-    NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(status == FT_Err_Ok, NS_ERROR_FAILURE);
 
     return NS_OK;
 }
