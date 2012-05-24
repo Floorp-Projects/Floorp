@@ -91,9 +91,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private int mSampleHandle;
     private int mTMatrixHandle;
 
-    private int mSurfaceWidth;
-    private int mSurfaceHeight;
-
     // column-major matrix applied to each vertex to shift the viewport from
     // one ranging from (-1, -1),(1,1) to (0,0),(1,1) and to scale all sizes by
     // a factor of 2 to fill up the screen
@@ -323,14 +320,11 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     }
 
     private RenderContext createContext(RectF viewport, RectF pageRect, float zoomFactor) {
-        return new RenderContext(viewport, pageRect, new IntSize(mSurfaceWidth, mSurfaceHeight), zoomFactor, mPositionHandle, mTextureHandle,
+        return new RenderContext(viewport, pageRect, zoomFactor, mPositionHandle, mTextureHandle,
                                  mCoordBuffer);
     }
 
     public void onSurfaceChanged(GL10 gl, final int width, final int height) {
-        mSurfaceWidth = width;
-        mSurfaceHeight = height;
-
         GLES20.glViewport(0, 0, width, height);
 
         if (mFrameRateLayer != null) {
