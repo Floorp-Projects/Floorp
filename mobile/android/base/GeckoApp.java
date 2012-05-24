@@ -515,6 +515,12 @@ abstract public class GeckoApp
             outState.putString(SAVED_STATE_TITLE, tab.getDisplayTitle());
     }
 
+    public DisplayMetrics getDisplayMetrics() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        return metrics;
+    }
+
     void getAndProcessThumbnailForTab(final Tab tab) {
         boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
         final Bitmap bitmap = isSelectedTab ? mLayerClient.getBitmap() : null;
