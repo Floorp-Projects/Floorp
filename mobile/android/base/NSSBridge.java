@@ -15,37 +15,49 @@ public class NSSBridge {
     private static native String nativeEncrypt(String aDb, String aValue);
     private static native String nativeDecrypt(String aDb, String aValue);
 
-    static public String encrypt(Context context, String aValue)
-      throws Exception {
+    static public String encrypt(Context context, String aValue) {
         String resourcePath = context.getPackageResourcePath();
         GeckoAppShell.loadNSSLibs(context, resourcePath);
 
-        String path = GeckoProfile.get(context).getDir().toString();
-        return nativeEncrypt(path, aValue);
+        String res = "";
+        try {
+            String path = GeckoProfile.get(context).getDir().toString();
+            res = nativeEncrypt(path, aValue);
+        } catch(Exception ex) { }
+        return res;
     }
 
-    static public String encrypt(Context context, String profilePath, String aValue)
-      throws Exception {
+    static public String encrypt(Context context, String profilePath, String aValue) {
         String resourcePath = context.getPackageResourcePath();
         GeckoAppShell.loadNSSLibs(context, resourcePath);
 
-        return nativeEncrypt(profilePath, aValue);
+        String res = "";
+        try {
+            res = nativeEncrypt(profilePath, aValue);
+        } catch(Exception ex) { }
+        return res;
     }
 
-    static public String decrypt(Context context, String aValue)
-      throws Exception {
+    static public String decrypt(Context context, String aValue) {
         String resourcePath = context.getPackageResourcePath();
         GeckoAppShell.loadNSSLibs(context, resourcePath);
 
-        String path = GeckoProfile.get(context).getDir().toString();
-        return nativeDecrypt(path, aValue);
+        String res = "";
+        try {
+            String path = GeckoProfile.get(context).getDir().toString();
+            res = nativeDecrypt(path, aValue);
+        } catch(Exception ex) { }
+        return res;
     }
 
-    static public String decrypt(Context context, String profilePath, String aValue)
-      throws Exception {
+    static public String decrypt(Context context, String profilePath, String aValue) {
         String resourcePath = context.getPackageResourcePath();
         GeckoAppShell.loadNSSLibs(context, resourcePath);
 
-        return nativeDecrypt(profilePath, aValue);
+        String res = "";
+        try {
+            res = nativeDecrypt(profilePath, aValue);
+        } catch(Exception ex) { }
+        return res;
     }
 }
