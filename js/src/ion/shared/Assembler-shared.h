@@ -256,7 +256,9 @@ class Label : public LabelBase
     { }
     ~Label()
     {
-        JS_ASSERT(!used());
+        // Note: the condition is a hack to avoid this assert when OOM testing,
+        // see bug 756614.
+        JS_ASSERT_IF(OOM_counter < OOM_maxAllocations, !used());
     }
 };
 
