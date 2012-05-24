@@ -4315,6 +4315,19 @@ CheckEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 }
 
 static void
+AssertMarkedOrAllocated(const EdgeValue &edge)
+{
+    if (!edge.thing || IsMarkedOrAllocated(static_cast<Cell *>(edge.thing)))
+        return;
+
+    char msgbuf[1024];
+    const char *label = edge.label ? edge.label : "<unknown>";
+
+    JS_snprintf(msgbuf, sizeof(msgbuf), "[barrier verifier] Unmarked edge: %s", label);
+    MOZ_Assert(msgbuf, __FILE__, __LINE__);
+}
+
+static void
 EndVerifyBarriers(JSRuntime *rt)
 {
     AutoLockGC lock(rt);
@@ -4364,10 +4377,8 @@ EndVerifyBarriers(JSRuntime *rt)
             JS_TraceChildren(trc, node->thing, node->kind);
 
             if (node->count <= MAX_VERIFIER_EDGES) {
-                for (uint32_t i = 0; i < node->count; i++) {
-                    void *thing = node->edges[i].thing;
-                    JS_ASSERT_IF(thing, IsMarkedOrAllocated(static_cast<Cell *>(thing)));
-                }
+                for (uint32_t i = 0; i < node->count; i++)
+                    AssertMarkedOrAllocated(node->edges[i]);
             }
 
             node = NextNode(node);
