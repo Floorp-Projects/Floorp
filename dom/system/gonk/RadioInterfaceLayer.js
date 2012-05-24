@@ -65,6 +65,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIFrameMessageManager");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
+                                   "@mozilla.org/settingsService;1",
+                                   "nsISettingsService");
+
 function convertRILCallState(state) {
   switch (state) {
     case RIL.CALL_STATE_ACTIVE:
@@ -155,6 +159,11 @@ function RadioInterfaceLayer() {
                      signalStrength: null,
                      relSignalStrength: null},
   };
+
+  // Read the 'ril.radio.disabled' setting in order to start with a known value at
+  // booting time.
+  gSettingsService.getLock().get("ril.radio.disabled", this);
+
   for each (let msgname in RIL_IPC_MSG_NAMES) {
     ppmm.addMessageListener(msgname, this);
   }
@@ -174,7 +183,8 @@ RadioInterfaceLayer.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder,
                                          Ci.nsIRadioInterfaceLayer,
-                                         Ci.nsIObserver]),
+                                         Ci.nsIObserver,
+                                         Ci.nsISettingsServiceCallback]),
 
   /**
    * Process a message from the content process.
@@ -281,7 +291,7 @@ RadioInterfaceLayer.prototype = {
         this.handleOperatorChange(message);
         break;
       case "radiostatechange":
-        this.radioState.radioState = message.radioState;
+        this.handleRadioStateChange(message);
         break;
       case "cardstatechange":
         this.radioState.cardState = message.cardState;
@@ -421,6 +431,24 @@ RadioInterfaceLayer.prototype = {
     if (operator != this.radioState.data.operator) {
       this.radioState.data.operator = operator;
       ppmm.sendAsyncMessage("RIL:DataInfoChanged", this.radioState.data);
+    }
+  },
+
+  handleRadioStateChange: function handleRadioStateChange(message) {
+    let newState = message.radioState;
+    if (this.radioState.radioState == newState) {
+      return;
+    }
+    this.radioState.radioState = newState;
+    //TODO Should we notify this change as a card state change?
+
+    if (this.radioState.radioState == RIL.GECKO_RADIOSTATE_OFF &&
+        this._radioEnabled) {
+      this.setRadioEnabled(true);
+    }
+    if (this.radioState.radioState == RIL.GECKO_RADIOSTATE_READY &&
+        !this._radioEnabled) {
+      this.setRadioEnabled(false);
     }
   },
 
@@ -637,21 +665,26 @@ RadioInterfaceLayer.prototype = {
    * Handle setting changes.
    */
   handleMozSettingsChanged: function handleMozSettingsChanged(setting) {
-    // We only watch at "ril.data.enabled" flag changes for connecting or
-    // disconnecting the data call. If the value of "ril.data.enabled" is
-    // true and any of the remaining flags change the setting application
-    // should turn this flag to false and then to true in order to reload
-    // the new values and reconnect the data call.
-    if (setting.key != "ril.data.enabled") {
-      return;
-    }
-    if (!setting.value && RILNetworkInterface.connected) {
-      debug("Data call settings: disconnect data call.");
-      RILNetworkInterface.disconnect();
-    }
-    if (setting.value && !RILNetworkInterface.connected) {
-      debug("Data call settings connect data call.");
-      RILNetworkInterface.connect();
+    switch (setting.key) {
+      case "ril.radio.disabled":
+        this._radioEnabled = !setting.value;
+        this.setRadioEnabled(this._radioEnabled);
+        break;
+      case "ril.data.enabled":
+        // We only watch at "ril.data.enabled" flag changes for connecting or
+        // disconnecting the data call. If the value of "ril.data.enabled" is
+        // true and any of the remaining flags change the setting application
+        // should turn this flag to false and then to true in order to reload
+        // the new values and reconnect the data call.
+        if (!setting.value && RILNetworkInterface.connected) {
+          debug("Data call settings: disconnect data call.");
+          RILNetworkInterface.disconnect();
+        }
+        if (setting.value && !RILNetworkInterface.connected) {
+          debug("Data call settings connect data call.");
+          RILNetworkInterface.connect();
+        }
+        break;
     }
   },
 
@@ -686,11 +719,32 @@ RadioInterfaceLayer.prototype = {
     }
   },
 
+  // nsISettingsServiceCallback
+
+  // Flag to determine the radio state to start with when we boot up. It
+  // corresponds to the 'ril.radio.disabled' setting from the UI.
+  _radioEnabled: null,
+
+  handle: function handle(aName, aResult) {
+    if (aName == "ril.radio.disabled") {
+      this._radioEnabled = !aResult;
+    }
+  },
+
+  handleError: function handleError(aErrorMessage) {
+    this._radioEnabled = true;
+  },
+
   // nsIRadioWorker
 
   worker: null,
 
   // nsIRadioInterfaceLayer
+
+  setRadioEnabled: function setRadioEnabled(value) {
+    debug("Setting radio power to " + value);
+    this.worker.postMessage({type: "setRadioPower", on: value});
+  },
 
   radioState: null,
 
