@@ -8967,7 +8967,7 @@ dnl Create a virtualenv where we can install local Python packages
 AC_MSG_RESULT([Creating Python virtualenv])
 rm -rf _virtualenv
 mkdir -p _virtualenv
-$PYTHON $_topsrcdir/other-licenses/virtualenv/virtualenv.py ./_virtualenv
+PYTHONDONTWRITEBYTECODE= $PYTHON $_topsrcdir/other-licenses/virtualenv/virtualenv.py ./_virtualenv
 case "$host_os" in
 mingw*)
     PYTHON=`pwd`/_virtualenv/Scripts/python.exe
