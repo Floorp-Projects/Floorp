@@ -1031,13 +1031,10 @@
     <handlers>
       <handler event="dialogaccept">
       <![CDATA[
-        dump("dialog accept\n");
         if (!this._fireEvent("beforeaccept", this)) 
           return;
-        dump("after dialog accept\n");
         
         if (this.type == "child" && window.opener) {
-          dump("child\n");
           var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefBranch);
           var instantApply = psvc.getBoolPref("browser.preferences.instantApply");
@@ -1091,7 +1088,6 @@
           }
         }
         else {
-          dump("parent\n");
           var panes = this.preferencePanes;
           for (var i = 0; i < panes.length; ++i)
             panes[i].writePreferences(false);
@@ -1099,7 +1095,6 @@
           var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefService);
           psvc.savePrefFile(null);
-          dump("after parent\n");
         }
       ]]>
       </handler>
