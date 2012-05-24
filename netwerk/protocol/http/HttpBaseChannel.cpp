@@ -17,6 +17,7 @@
 #include "nsIEncodedChannel.h"
 #include "nsIResumableChannel.h"
 #include "nsIApplicationCacheChannel.h"
+#include "nsILoadContext.h"
 #include "nsEscape.h"
 #include "nsStreamListenerWrapper.h"
 
@@ -1663,6 +1664,19 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   }
 
   return NS_OK;
+}
+
+bool
+HttpBaseChannel::UsingPrivateBrowsing()
+{
+  nsCOMPtr<nsILoadContext> loadContext;
+  GetCallback(loadContext);
+  if (!loadContext) {
+    return false;
+  }
+  bool pb;
+  loadContext->GetUsePrivateBrowsing(&pb);
+  return pb;
 }
 
 //------------------------------------------------------------------------------

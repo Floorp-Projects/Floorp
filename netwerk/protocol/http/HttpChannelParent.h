@@ -63,7 +63,8 @@ protected:
                              const nsCString&           entityID,
                              const bool&                chooseApplicationCache,
                              const nsCString&           appCacheClientID,
-                             const bool&                allowSpdy);
+                             const bool&                allowSpdy,
+                             const bool&                usingPrivateBrowsing);
 
   virtual bool RecvConnectChannel(const PRUint32& channelId);
   virtual bool RecvSetPriority(const PRUint16& priority);
