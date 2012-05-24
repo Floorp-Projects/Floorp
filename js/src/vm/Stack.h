@@ -54,6 +54,10 @@ namespace mjit {
 }
 #endif
 
+namespace ion {
+    class IonBailoutIterator;
+}
+
 namespace detail {
     struct OOMCheck;
 }
@@ -1644,10 +1648,16 @@ class ContextStack
     /*
      * pushInvokeArgs allocates |argc + 2| rooted values that will be passed as
      * the arguments to Invoke. A single allocation can be used for multiple
-     * Invoke calls. The InvokeArgumentsGuard passed to Invoke must come from
+     * Invoke calls. The InvokeArgsGuard passed to Invoke must come from
      * an immediately-enclosing (stack-wise) call to pushInvokeArgs.
      */
-    bool pushInvokeArgs(JSContext *cx, unsigned argc, InvokeArgsGuard *ag);
+    bool pushInvokeArgs(JSContext *cx, unsigned argc, InvokeArgsGuard *ag,
+                        MaybeReportError report = REPORT_ERROR);
+
+    /* Factor common code between pushInvokeFrame and pushBailoutFrame */
+    StackFrame *pushInvokeFrame(JSContext *cx, MaybeReportError report,
+                                const CallArgs &args, JSFunction *fun,
+                                InitialFrameFlags initial, FrameGuard *fg);
 
     /* Called by Invoke for a scripted function call. */
     bool pushInvokeFrame(JSContext *cx, const CallArgs &args,
@@ -1658,9 +1668,13 @@ class ContextStack
                           JSObject &scopeChain, ExecuteType type,
                           StackFrame *evalInFrame, ExecuteFrameGuard *efg);
 
+    /* Allocate actual argument space for the bailed frame */
+    bool pushBailoutArgs(JSContext *cx, const ion::IonBailoutIterator &it,
+                         InvokeArgsGuard *iag);
+
     /* Bailout for normal functions. */
-    StackFrame *pushBailoutFrame(JSContext *cx, JSFunction &fun, JSScript *script,
-                                 BailoutFrameGuard *bfg);
+    StackFrame *pushBailoutFrame(JSContext *cx, const ion::IonBailoutIterator &it,
+                                 const CallArgs &args, BailoutFrameGuard *bfg);
 
     /*
      * Called by SendToGenerator to resume a yielded generator. In addition to
