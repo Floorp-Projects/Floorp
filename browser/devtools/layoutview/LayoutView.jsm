@@ -40,13 +40,15 @@ LayoutView.prototype = {
     // We update the values when:
     //  a node is locked
     //  we get the MozAfterPaint event and the node is locked
-    function onLock() {
-      this.undim();
-      this.update();
-      // We make sure we never add 2 listeners.
-      if (!this.trackingPaint) {
-        this.browser.addEventListener("MozAfterPaint", this.update, true);
-        this.trackingPaint = true;
+    function onSelect() {
+      if (this.inspector.locked) {
+        this.undim();
+        this.update();
+        // We make sure we never add 2 listeners.
+        if (!this.trackingPaint) {
+          this.browser.addEventListener("MozAfterPaint", this.update, true);
+          this.trackingPaint = true;
+        }
       }
     }
 
@@ -56,9 +58,9 @@ LayoutView.prototype = {
       this.dim();
     }
 
-    this.onLock = onLock.bind(this);
+    this.onSelect= onSelect.bind(this);
     this.onUnlock = onUnlock.bind(this);
-    this.inspector.on("locked", this.onLock);
+    this.inspector.on("select", this.onSelect);
     this.inspector.on("unlocked", this.onUnlock);
 
     // Build the layout view in the sidebar.
@@ -118,7 +120,7 @@ LayoutView.prototype = {
    * Destroy the nodes. Remove listeners.
    */
   destroy: function LV_destroy() {
-    this.inspector.removeListener("locked", this.onLock);
+    this.inspector.removeListener("select", this.onSelect);
     this.inspector.removeListener("unlocked", this.onUnlock);
     this.browser.removeEventListener("MozAfterPaint", this.update, true);
     this.iframe.removeEventListener("keypress", this.bound_handleKeypress, true);
@@ -158,7 +160,7 @@ LayoutView.prototype = {
     // inside the iframe.
 
     if (this.inspector.locked)
-      this.onLock();
+      this.onSelect();
     else
       this.onUnlock();
 
