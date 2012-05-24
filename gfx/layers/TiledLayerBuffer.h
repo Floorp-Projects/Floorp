@@ -28,6 +28,9 @@ namespace layers {
 // avoid the overhead of virtual dispatch, we employ the curiously recurring
 // template pattern.
 //
+// Tiles are aligned to a grid with one of the grid points at (0,0) and other
+// grid points spaced evenly in the x- and y-directions by GetTileLength().
+//
 // This tile buffer stores a valid region, which defines the areas that have
 // up-to-date content. The contents of tiles within this region will be reused
 // from paint to paint. It also stores the region that was modified in the last

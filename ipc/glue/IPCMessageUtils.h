@@ -760,6 +760,27 @@ struct ParamTraits<mozilla::gfx::Size>
   }
 };
 
+template<>
+struct ParamTraits<mozilla::gfx::Rect>
+{
+  typedef mozilla::gfx::Rect paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.x);
+    WriteParam(msg, param.y);
+    WriteParam(msg, param.width);
+    WriteParam(msg, param.height);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->x) &&
+            ReadParam(msg, iter, &result->y) &&
+            ReadParam(msg, iter, &result->width) &&
+            ReadParam(msg, iter, &result->height));
+  }
+};
 
 template<>
 struct ParamTraits<nsRect>

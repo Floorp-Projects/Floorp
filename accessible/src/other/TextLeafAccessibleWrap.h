@@ -3,11 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsTextAccessibleWrap_H_
-#define _nsTextAccessibleWrap_H_
+#ifndef mozilla_a11y_TextLeafAccessibleWrap_h__
+#define mozilla_a11y_TextLeafAccessibleWrap_h__
 
-#include "nsTextAccessible.h"
+#include "TextLeafAccessible.h"
 
-typedef class nsTextAccessible nsTextAccessibleWrap;
+namespace mozilla {
+namespace a11y {
+ 
+typedef class TextLeafAccessible TextLeafAccessibleWrap;
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

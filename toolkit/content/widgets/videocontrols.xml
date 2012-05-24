@@ -880,6 +880,9 @@
 
                     var isMouseOver = (event.type == "mouseover");
 
+                    var isMouseInControls = event.clientY > this.controlBar.getBoundingClientRect().top &&
+                                            event.clientY < this.controlBar.getBoundingClientRect().bottom;
+
                     // Suppress fading out the controls until the video has rendered
                     // its first frame. But since autoplay videos start off with no
                     // controls, let them fade-out so the controls don't get stuck on.
@@ -887,7 +890,7 @@
                         !(this.video.autoplay && this.video.mozAutoplayEnabled))
                         return;
 
-                    if (!isMouseOver) {
+                    if (!isMouseOver && !isMouseInControls) {
                         this.adjustControlSize();
 
                         // Keep the controls visible if the click-to-play is visible.

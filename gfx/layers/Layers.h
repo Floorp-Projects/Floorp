@@ -77,10 +77,10 @@ public:
 
   FrameMetrics()
     : mViewport(0, 0, 0, 0)
-    , mContentSize(0, 0)
+    , mContentRect(0, 0, 0, 0)
     , mViewportScrollOffset(0, 0)
     , mScrollId(NULL_SCROLL_ID)
-    , mCSSContentSize(0, 0)
+    , mCSSContentRect(0, 0, 0, 0)
     , mResolution(1, 1)
   {}
 
@@ -115,14 +115,14 @@ public:
 
   // These are all in layer coordinate space.
   nsIntRect mViewport;
-  nsIntSize mContentSize;
+  nsIntRect mContentRect;
   nsIntPoint mViewportScrollOffset;
   nsIntRect mDisplayPort;
   ViewID mScrollId;
 
-  // Consumers often want to know the size before scaling to pixels
-  // so we record this size as well.
-  gfx::Size mCSSContentSize;
+  // Consumers often want to know the origin/size before scaling to pixels
+  // so we record this as well.
+  gfx::Rect mCSSContentRect;
 
   // This represents the resolution at which the associated layer
   // will been rendered.
@@ -723,6 +723,12 @@ public:
     Mutated();
   }
 
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * A layer is "fixed position" when it draws content from a content
+   * (not chrome) document, the topmost content document has a root scrollframe
+   * with a displayport, but the layer does not move when that displayport scrolls.
+   */
   void SetIsFixedPosition(bool aFixedPosition) { mIsFixedPosition = aFixedPosition; }
 
   // These getters can be used anytime.

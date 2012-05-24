@@ -311,19 +311,19 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     private RenderContext createScreenContext(ImmutableViewportMetrics metrics) {
         RectF viewport = new RectF(0.0f, 0.0f, metrics.getWidth(), metrics.getHeight());
-        FloatSize pageSize = new FloatSize(metrics.getPageSize());
-        return createContext(viewport, pageSize, 1.0f);
+        RectF pageRect = new RectF(metrics.getPageRect());
+        return createContext(viewport, pageRect, 1.0f);
     }
 
     private RenderContext createPageContext(ImmutableViewportMetrics metrics) {
         Rect viewport = RectUtils.round(metrics.getViewport());
-        FloatSize pageSize = metrics.getPageSize();
+        RectF pageRect = metrics.getPageRect();
         float zoomFactor = metrics.zoomFactor;
-        return createContext(new RectF(viewport), pageSize, zoomFactor);
+        return createContext(new RectF(viewport), pageRect, zoomFactor);
     }
 
-    private RenderContext createContext(RectF viewport, FloatSize pageSize, float zoomFactor) {
-        return new RenderContext(viewport, pageSize, new IntSize(mSurfaceWidth, mSurfaceHeight), zoomFactor, mPositionHandle, mTextureHandle,
+    private RenderContext createContext(RectF viewport, RectF pageRect, float zoomFactor) {
+        return new RenderContext(viewport, pageRect, new IntSize(mSurfaceWidth, mSurfaceHeight), zoomFactor, mPositionHandle, mTextureHandle,
                                  mCoordBuffer);
     }
 
@@ -490,12 +490,9 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         private Rect getPageRect() {
             Point origin = PointUtils.round(mFrameMetrics.getOrigin());
-            IntSize pageSize = new IntSize(mFrameMetrics.getPageSize());
-
-            origin.negate();
-
-            return new Rect(origin.x, origin.y,
-                            origin.x + pageSize.width, origin.y + pageSize.height);
+            Rect pageRect = RectUtils.round(mFrameMetrics.getPageRect());
+            pageRect.offset(-origin.x, -origin.y);
+            return pageRect;
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */

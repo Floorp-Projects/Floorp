@@ -461,11 +461,19 @@ UnregisterSensorObserver(SensorType aSensor, ISensorObserver *aObserver) {
   AssertMainThread();
   
   observers.RemoveObserver(aObserver);
-  if(observers.Length() == 0) {
-    DisableSensorNotifications(aSensor);
-    delete [] gSensorObservers;
-    gSensorObservers = nsnull;
+  if (observers.Length() > 0) {
+    return;
   }
+  DisableSensorNotifications(aSensor);
+
+  // Destroy sSensorObservers only if all observer lists are empty.
+  for (int i = 0; i < NUM_SENSOR_TYPE; i++) {
+    if (gSensorObservers[i].Length() > 0) {
+      return;
+    }
+  }
+  delete [] gSensorObservers;
+  gSensorObservers = nsnull;
 }
 
 void

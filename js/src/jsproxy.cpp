@@ -1467,6 +1467,28 @@ proxy_DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value 
 static void
 proxy_TraceObject(JSTracer *trc, JSObject *obj)
 {
+#ifdef DEBUG
+    if (obj->isWrapper()) {
+        JSObject *referent = &GetProxyPrivate(obj).toObject();
+        if (referent->compartment() != obj->compartment()) {
+            /*
+             * Assert that this proxy is tracked in the wrapper map. Normally,
+             * the wrapped object will be the key in the wrapper map. However,
+             * sometimes when wrapping Location objects, the wrapped object is
+             * not the key. In that case, we unwrap to find the key.
+             */
+            Value key = ObjectValue(*referent);
+            WrapperMap::Ptr p = obj->compartment()->crossCompartmentWrappers.lookup(key);
+            if (!p) {
+                key = ObjectValue(*UnwrapObject(referent));
+                p = obj->compartment()->crossCompartmentWrappers.lookup(key);
+                JS_ASSERT(p.found());
+            }
+            JS_ASSERT(p->value.get() == ObjectValue(*obj));
+        }
+    }
+#endif
+
     // NB: If you add new slots here, make sure to change
     // js::NukeChromeCrossCompartmentWrappers to cope.
     GetProxyHandler(obj)->trace(trc, obj);

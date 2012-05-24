@@ -423,11 +423,14 @@ nsHyperTextAccessible::GetText(PRInt32 aStartOffset, PRInt32 aEndOffset,
     return NS_ERROR_FAILURE;
 
   PRInt32 startOffset = ConvertMagicOffset(aStartOffset);
-  PRInt32 startChildIdx = GetChildIndexAtOffset(startOffset);
-  if (startChildIdx == -1)
-    return NS_ERROR_INVALID_ARG;
-
   PRInt32 endOffset = ConvertMagicOffset(aEndOffset);
+
+  PRInt32 startChildIdx = GetChildIndexAtOffset(startOffset);
+  if (startChildIdx == -1) {
+    // 0 offsets are considered valid for empty text.
+    return (startOffset == 0 && endOffset == 0) ? NS_OK : NS_ERROR_INVALID_ARG;
+  }
+
   PRInt32 endChildIdx = GetChildIndexAtOffset(endOffset);
   if (endChildIdx == -1)
     return NS_ERROR_INVALID_ARG;

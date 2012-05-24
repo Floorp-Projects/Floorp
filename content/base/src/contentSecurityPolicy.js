@@ -253,7 +253,8 @@ ContentSecurityPolicy.prototype = {
       if (aLineNum)
         report["csp-report"]["line-number"] = aLineNum;
 
-      CSPdebug("Constructed violation report:\n" + JSON.stringify(report));
+      var reportString = JSON.stringify(report);
+      CSPdebug("Constructed violation report:\n" + reportString);
 
       CSPWarning("Directive \"" + violatedDirective + "\" violated"
                + (blockedUri['asciiSpec'] ? " by " + blockedUri.asciiSpec : ""),
@@ -269,30 +270,56 @@ ContentSecurityPolicy.prototype = {
         if (uris[i] === "")
           continue;
 
-        var failure = function(aEvt) {  
-          if (req.readyState == 4 && req.status != 200) {
-            CSPError("Failed to send report to " + uris[i]);
-          }  
-        };  
-        var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]  
-                    .createInstance(Ci.nsIXMLHttpRequest);  
-
         try {
-          req.open("POST", uris[i], true);
-          req.setRequestHeader('Content-Type', 'application/json');
-          req.upload.addEventListener("error", failure, false);
-          req.upload.addEventListener("abort", failure, false);
+          var chan = Services.io.newChannel(uris[i], null, null);
+          if(!chan) {
+            CSPdebug("Error creating channel for " + uris[i]);
+            continue;
+          }
 
-          // we need to set an nsIChannelEventSink on the XHR object
+          var content = Cc["@mozilla.org/io/string-input-stream;1"]
+                          .createInstance(Ci.nsIStringInputStream);
+          content.data = reportString + "\n\n";
+
+          // make sure this is an anonymous request (no cookies) so in case the
+          // policy URI is injected, it can't be abused for CSRF.
+          chan.loadFlags |= Ci.nsIChannel.LOAD_ANONYMOUS;
+
+          // we need to set an nsIChannelEventSink on the channel object
           // so we can tell it to not follow redirects when posting the reports
-          req.channel.notificationCallbacks = new CSPReportRedirectSink();
+          chan.notificationCallbacks = new CSPReportRedirectSink();
 
-          req.send(JSON.stringify(report));
+          chan.QueryInterface(Ci.nsIUploadChannel)
+              .setUploadStream(content, "application/json", content.available());
+
+          try {
+            // if this is an HTTP channel, set the request method to post
+            chan.QueryInterface(Ci.nsIHttpChannel);
+            chan.requestMethod = "POST";
+          } catch(e) {} // throws only if chan is not an nsIHttpChannel.
+
+          // check with the content policy service to see if we're allowed to
+          // send this request.
+          try {
+            var contentPolicy = Cc["@mozilla.org/layout/content-policy;1"]
+                                  .getService(Ci.nsIContentPolicy);
+            if (contentPolicy.shouldLoad(Ci.nsIContentPolicy.TYPE_OTHER,
+                                         chan.URI, null, null, null, null)
+                != Ci.nsIContentPolicy.ACCEPT) {
+              continue; // skip unauthorized URIs
+            }
+          } catch(e) {
+            continue; // refuse to load if we can't do a security check.
+          }
+
+          //send data (and set up error notifications)
+          chan.asyncOpen(new CSPViolationReportListener(uris[i]), null);
           CSPdebug("Sent violation report to " + uris[i]);
         } catch(e) {
           // it's possible that the URI was invalid, just log a
           // warning and skip over that.
           CSPWarning("Tried to send report to invalid URI: \"" + uris[i] + "\"");
+          CSPWarning("error was: \"" + e + "\"");
         }
       }
     }

@@ -119,33 +119,35 @@ js::IsIdentifier(JSLinearString *str)
 #endif
 
 /* Initialize members that aren't initialized in |init|. */
-TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin)
-  : tokens(), tokensRoot(cx, &tokens),
-    cursor(), lookahead(), flags(),
-    linebaseRoot(cx, &linebase), prevLinebaseRoot(cx, &prevLinebase), userbufRoot(cx, &userbuf),
-    listenerTSData(), tokenbuf(cx),
-    cx(cx), originPrincipals(JSScript::normalizeOriginPrincipals(prin, originPrin))
+TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
+                         const jschar *base, size_t length, const char *fn, unsigned ln,
+                         JSVersion v)
+  : tokens(),
+    tokensRoot(cx, &tokens),
+    cursor(),
+    lookahead(),
+    lineno(ln),
+    flags(),
+    linebase(base),
+    prevLinebase(NULL),
+    linebaseRoot(cx, &linebase),
+    prevLinebaseRoot(cx, &prevLinebase),
+    userbuf(base, length),
+    userbufRoot(cx, &userbuf),
+    filename(fn),
+    sourceMap(NULL),
+    listenerTSData(),
+    tokenbuf(cx),
+    version(v),
+    xml(VersionHasXML(v)),
+    cx(cx),
+    originPrincipals(JSScript::normalizeOriginPrincipals(prin, originPrin))
 {
     if (originPrincipals)
         JS_HoldPrincipals(originPrincipals);
-}
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
-bool
-TokenStream::init(const jschar *base, size_t length, const char *fn, unsigned ln, JSVersion v)
-{
-    filename = fn;
-    lineno = ln;
-    version = v;
-    xml = VersionHasXML(v);
-
-    userbuf.init(base, length);
-    linebase = base;
-    prevLinebase = NULL;
-    sourceMap = NULL;
+    if (cx->hasRunOption(JSOPTION_STRICT_MODE))
+        setStrictMode();
 
     JSSourceHandler listener = cx->runtime->debugHooks.sourceHandler;
     void *listenerData = cx->runtime->debugHooks.sourceHandlerData;
@@ -207,8 +209,11 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, unsigned ln
      * way to address the dependency from statements on the current token.
      */
     tokens[0].pos.begin.lineno = tokens[0].pos.end.lineno = ln;
-    return true;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 TokenStream::~TokenStream()
 {
@@ -264,8 +269,8 @@ TokenStream::getChar()
          * are by the far the most common) this gives false positives for '('
          * (0x0028) and ')' (0x0029).  We could avoid those by incorporating
          * the 13th bit of d into the lookup, but that requires extra shifting
-         * and masking and isn't worthwhile.  See TokenStream::init() for the
-         * initialization of the relevant entries in the table.
+         * and masking and isn't worthwhile.  See TokenStream::TokenStream()
+         * for the initialization of the relevant entries in the table.
          */
         if (JS_UNLIKELY(maybeEOL[c & 0xff])) {
             if (c == '\n')
@@ -1520,12 +1525,18 @@ TokenStream::getTokenInternal()
             numStart = userbuf.addressOfNextRawChar() - 2;
             goto decimal_dot;
         }
-#if JS_HAS_XML_SUPPORT
         if (c == '.') {
+            qc = getCharIgnoreEOL();
+            if (qc == '.') {
+                tt = TOK_TRIPLEDOT;
+                goto out;
+            }
+            ungetCharIgnoreEOL(qc);
+#if JS_HAS_XML_SUPPORT
             tt = TOK_DBLDOT;
             goto out;
-        }
 #endif
+        }
         ungetCharIgnoreEOL(c);
         tt = TOK_DOT;
         goto out;
@@ -2158,6 +2169,7 @@ TokenKindToString(TokenKind tt)
       case TOK_INC:             return "TOK_INC";
       case TOK_DEC:             return "TOK_DEC";
       case TOK_DOT:             return "TOK_DOT";
+      case TOK_TRIPLEDOT:       return "TOK_TRIPLEDOT";
       case TOK_LB:              return "TOK_LB";
       case TOK_RB:              return "TOK_RB";
       case TOK_LC:              return "TOK_LC";

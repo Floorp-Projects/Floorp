@@ -77,10 +77,12 @@ using namespace js::frontend;
 #define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
 Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
+               const jschar *chars, size_t length, const char *fn, unsigned ln, JSVersion v,
                StackFrame *cfp, bool foldConstants, bool compileAndGo)
   : AutoGCRooter(cx, PARSER),
     context(cx),
-    tokenStream(cx, prin, originPrin),
+    tokenStream(cx, prin, originPrin, chars, length, fn, ln, v),
+    tempPoolMark(NULL),
     principals(NULL),
     originPrincipals(NULL),
     callerFrame(cfp),
@@ -97,19 +99,11 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
 }
 
 bool
-Parser::init(const jschar *base, size_t length, const char *filename, unsigned lineno,
-             JSVersion version)
+Parser::init()
 {
-    JSContext *cx = context;
-    if (!cx->ensureParseMapPool())
+    if (!context->ensureParseMapPool())
         return false;
-    tempPoolMark = cx->tempLifoAlloc().mark();
-    if (!tokenStream.init(base, length, filename, lineno, version)) {
-        cx->tempLifoAlloc().release(tempPoolMark);
-        return false;
-    }
-    if (context->hasRunOption(JSOPTION_STRICT_MODE))
-        tokenStream.setStrictMode();
+    tempPoolMark = context->tempLifoAlloc().mark();
     return true;
 }
 
@@ -669,22 +663,36 @@ Parser::functionBody(FunctionBodyType type)
         }
     }
 
-    /*
-     * Even if 'arguments' isn't explicitly mentioned, dynamic name lookup
-     * forces an 'arguments' binding.
-     */
-    if (tc->sc->bindingsAccessedDynamically() && !tc->sc->bindings.hasBinding(context, arguments)) {
+    bool hasRest = tc->sc->fun()->hasRest();
+    BindingKind bindKind = tc->sc->bindings.lookup(context, arguments, NULL);
+    switch (bindKind) {
+      case NONE:
+        /* Functions with rest parameters are free from arguments. */
+        if (hasRest)
+            break;
+
+        /*
+         * Even if 'arguments' isn't explicitly mentioned, dynamic name lookup
+         * forces an 'arguments' binding.
+         */
+        if (!tc->sc->bindingsAccessedDynamically())
+            break;
         if (!tc->sc->bindings.addVariable(context, arguments))
             return NULL;
-    }
 
-    /*
-     * Now that all possible 'arguments' bindings have been added, note whether
-     * 'arguments' has a local binding and whether it unconditionally needs an
-     * arguments object.
-     */
-    BindingKind bindKind = tc->sc->bindings.lookup(context, arguments, NULL);
-    if (bindKind == VARIABLE || bindKind == CONSTANT) {
+        /* 'arguments' is now bound, so fall through. */
+      case VARIABLE:
+      case CONSTANT:        
+        if (hasRest) {
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARGUMENTS_AND_REST);
+            return NULL;
+        }
+
+        /*
+         * Now that all possible 'arguments' bindings have been added, note whether
+         * 'arguments' has a local binding and whether it unconditionally needs an
+         * arguments object.
+         */
         tc->sc->setFunArgumentsHasLocalBinding();
 
         /* Dynamic scope access destroys all hope of optimization. */
@@ -705,11 +713,32 @@ Parser::functionBody(FunctionBodyType type)
                     tc->sc->setFunDefinitelyNeedsArgsObj();
                     break;
                 }
-             }
+            }
         }
+        break;
+      case ARGUMENT:
+        break;
     }
 
     return pn;
+}
+
+bool
+Parser::checkForArgumentsAndRest()
+{
+    JS_ASSERT(!tc->sc->inFunction);
+    if (callerFrame && callerFrame->isFunctionFrame() && callerFrame->fun()->hasRest()) {
+        PropertyName *arguments = context->runtime->atomState.argumentsAtom;
+        for (AtomDefnRange r = tc->lexdeps->all(); !r.empty(); r.popFront()) {
+            if (r.front().key() == arguments) {
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARGUMENTS_AND_REST);
+                return false;
+            }
+        }
+        /* We're not in a function context, so we don't expect any bindings. */
+        JS_ASSERT(tc->sc->bindings.lookup(context, arguments, NULL) == NONE);
+    }
+    return true;
 }
 
 // Create a placeholder Definition node for |atom|.
@@ -1250,12 +1279,14 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 }
 
 bool
-Parser::functionArguments(ParseNode **listp)
+Parser::functionArguments(ParseNode **listp, bool &hasRest)
 {
     if (tokenStream.getToken() != TOK_LP) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_BEFORE_FORMAL);
         return false;
     }
+
+    hasRest = false;
 
     if (!tokenStream.matchToken(TOK_RP)) {
 #if JS_HAS_DESTRUCTURING
@@ -1265,6 +1296,10 @@ Parser::functionArguments(ParseNode **listp)
 #endif
 
         do {
+            if (hasRest) {
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PARAMETER_AFTER_REST);
+                return false;
+            }
             switch (TokenKind tt = tokenStream.getToken()) {
 #if JS_HAS_DESTRUCTURING
               case TOK_LB:
@@ -1325,6 +1360,18 @@ Parser::functionArguments(ParseNode **listp)
                 break;
               }
 #endif /* JS_HAS_DESTRUCTURING */
+
+              case TOK_TRIPLEDOT:
+              {
+                hasRest = true;
+                tt = tokenStream.getToken();
+                if (tt != TOK_NAME) {
+                    if (tt != TOK_ERROR)
+                        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NO_REST_NAME);
+                    return false;
+                }
+                /* Fall through */
+              }
 
               case TOK_NAME:
               {
@@ -1519,10 +1566,13 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
 
     /* Now parse formal argument list and compute fun->nargs. */
     ParseNode *prelude = NULL;
-    if (!functionArguments(&prelude))
+    bool hasRest;
+    if (!functionArguments(&prelude, hasRest))
         return NULL;
 
     fun->setArgCount(funsc.bindings.numArgs());
+    if (hasRest)
+        fun->setHasRest();
 
 #if JS_HAS_DESTRUCTURING
     /*

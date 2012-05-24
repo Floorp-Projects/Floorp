@@ -36,13 +36,18 @@ CPPSRCS = \
   nsBaseWidgetAccessible.cpp \
   nsEventShell.cpp \
   nsCaretAccessible.cpp \
-  nsTextAccessible.cpp \
   nsTextEquivUtils.cpp \
   RoleAsserts.cpp \
   StyleInfo.cpp \
   TextAttrs.cpp \
   TextUpdater.cpp \
   $(NULL)
+
+ifdef MOZ_DEBUG
+CPPSRCS += \
+  Logging.cpp \
+  $(NULL)
+endif
 
 EXPORTS = \
   a11yGeneric.h \

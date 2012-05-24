@@ -506,7 +506,8 @@ OPDEF(JSOP_UNUSED24,      220,"unused24",      NULL,  1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED25,      221,"unused25",      NULL,  1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED29,      222,"unused29",      NULL,  1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED30,      223,"unused30",      NULL,  1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED16,      224,"unused16",      NULL,  1,  0,  0,  0,  JOF_BYTE)
+
+OPDEF(JSOP_REST,          224, "rest",         NULL,  1,  0,  1,  0,  JOF_BYTE|JOF_TYPESET)
 
 /* Pop the stack, convert to a jsid (int or string), and push back. */
 OPDEF(JSOP_TOID,          225, "toid",         NULL,  1,  1,  1,  0,  JOF_BYTE)

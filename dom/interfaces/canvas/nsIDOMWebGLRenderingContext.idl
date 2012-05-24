@@ -612,9 +612,9 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void blendFuncSeparate(in WebGLenum srcRGB, in WebGLenum dstRGB, in WebGLenum srcAlpha, in WebGLenum dstAlpha);
 
   // Modified: void glBufferData(WebGLenum target, long size, const void* data, WebGLenum usage);
-  [implicit_jscontext] void bufferData(in long target, in jsval data, in long usage);
+  [implicit_jscontext] void bufferData(in WebGLenum target, in jsval data, in WebGLenum usage);
 
-  [implicit_jscontext] void bufferSubData(in long target, in long offset, in jsval data);
+  [implicit_jscontext] void bufferSubData(in WebGLenum target, in WebGLintptr offset, in jsval data);
 
   WebGLenum checkFramebufferStatus(in WebGLenum target);
 

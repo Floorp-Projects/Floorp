@@ -449,12 +449,6 @@ js_LockGCThingRT(JSRuntime *rt, void *thing);
 extern void
 js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
-extern JS_FRIEND_API(bool)
-IsAboutToBeFinalized(const js::gc::Cell *thing);
-
-extern bool
-IsAboutToBeFinalized(const js::Value &value);
-
 extern bool
 js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, js::gc::AllocKind *thingKind, void **thing);
 

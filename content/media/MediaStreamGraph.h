@@ -371,10 +371,13 @@ class SourceMediaStream : public MediaStream {
 public:
   SourceMediaStream(nsDOMMediaStream* aWrapper) :
     MediaStream(aWrapper), mMutex("mozilla::media::SourceMediaStream"),
-    mUpdateKnownTracksTime(0), mUpdateFinished(false)
+    mUpdateKnownTracksTime(0), mUpdateFinished(false), mDestroyed(false)
   {}
 
   virtual SourceMediaStream* AsSourceStream() { return this; }
+
+  // Media graph thread only
+  virtual void DestroyImpl();
 
   // Call these on any thread.
   /**
@@ -467,11 +470,14 @@ protected:
     return nsnull;
   }
 
+  // This must be acquired *before* MediaStreamGraphImpl's lock, if they are
+  // held together.
   Mutex mMutex;
   // protected by mMutex
   StreamTime mUpdateKnownTracksTime;
   nsTArray<TrackData> mUpdateTracks;
   bool mUpdateFinished;
+  bool mDestroyed;
 };
 
 /**

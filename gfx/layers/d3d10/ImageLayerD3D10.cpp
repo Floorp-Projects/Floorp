@@ -261,8 +261,8 @@ ImageLayerD3D10::RenderLayer()
 
       if (yuvImage->mData.mStereoMode != STEREO_MODE_MONO) {
         // Dst resource is optional
-        GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->mSize.width, 
-                                           (unsigned int)yuvImage->mSize.height, (HANDLE)(data->mYTexture), (HANDLE)(NULL));
+        GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->mData.mYSize.width, 
+                                           (unsigned int)yuvImage->mData.mYSize.height, (HANDLE)(data->mYTexture), (HANDLE)(NULL));
       }
     }
 

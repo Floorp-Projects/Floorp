@@ -497,71 +497,21 @@ NS_NewTelephony(nsPIDOMWindow* aWindow, nsIDOMTelephony** aTelephony)
 {
   NS_ASSERTION(aWindow, "Null pointer!");
 
-  // Make sure we're dealing with an inner window.
   nsPIDOMWindow* innerWindow = aWindow->IsInnerWindow() ?
-                               aWindow :
-                               aWindow->GetCurrentInnerWindow();
-  NS_ENSURE_TRUE(innerWindow, NS_ERROR_FAILURE);
+    aWindow :
+    aWindow->GetCurrentInnerWindow();
 
-  // Make sure we're being called from a window that we have permission to
-  // access.
-  if (!nsContentUtils::CanCallerAccess(innerWindow)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
 
-  // Need the document in order to make security decisions.
-  nsCOMPtr<nsIDocument> document =
-    do_QueryInterface(innerWindow->GetExtantDocument());
-  NS_ENSURE_TRUE(document, NS_NOINTERFACE);
-
-  // Do security checks. We assume that chrome is always allowed and we also
-  // allow a single page specified by preferences.
-  if (!nsContentUtils::IsSystemPrincipal(document->NodePrincipal())) {
-    nsCOMPtr<nsIURI> originalURI;
-    nsresult rv =
-      document->NodePrincipal()->GetURI(getter_AddRefs(originalURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIURI> documentURI;
-    rv = originalURI->Clone(getter_AddRefs(documentURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Strip the query string (if there is one) before comparing.
-    nsCOMPtr<nsIURL> documentURL = do_QueryInterface(documentURI);
-    if (documentURL) {
-      rv = documentURL->SetQuery(EmptyCString());
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    bool allowed = false;
-
-    // The pref may not exist but in that case we deny access just as we do if
-    // the url doesn't match.
-    nsCString whitelist;
-    if (NS_SUCCEEDED(Preferences::GetCString(DOM_TELEPHONY_APP_PHONE_URL_PREF,
-                                             &whitelist))) {
-      nsCOMPtr<nsIIOService> ios = do_GetIOService();
-      NS_ENSURE_TRUE(ios, NS_ERROR_FAILURE);
-
-      nsCCharSeparatedTokenizer tokenizer(whitelist, ',');
-      while (tokenizer.hasMoreTokens()) {
-        nsCOMPtr<nsIURI> uri;
-        if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), tokenizer.nextToken(),
-                                   nsnull, nsnull, ios))) {
-          rv = documentURI->EqualsExceptRef(uri, &allowed);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          if (allowed) {
-            break;
-          }
-        }
-      }
-    }
-
-    if (!allowed) {
-      *aTelephony = nsnull;
-      return NS_OK;
-    }
+  bool allowed;
+  nsresult rv =
+    nsContentUtils::IsOnPrefWhitelist(innerWindow,
+                                      DOM_TELEPHONY_APP_PHONE_URL_PREF,
+                                      &allowed);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (!allowed) {
+    *aTelephony = nsnull;
+    return NS_OK;
   }
 
   nsCOMPtr<nsIRILContentHelper> ril =
