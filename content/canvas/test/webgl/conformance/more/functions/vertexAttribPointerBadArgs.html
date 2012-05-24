@@ -71,7 +71,7 @@ Tests.testVertexAttribPointerVBO = function(gl, prog, v,n,t) {
   gl.bufferData(gl.ARRAY_BUFFER, vertsArr, gl.STATIC_DRAW);
   gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, 0);
   assertFail("negative offset",
-      function(){gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, -1);});
+      function(){gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, -4);});
   assertOk("out of range offset (OK because we can change the buffer later)",
       function(){gl.vertexAttribPointer(v, 3, gl.FLOAT, false, 0, 1200);});
   assertFail("Offset that is incompatible with type",
