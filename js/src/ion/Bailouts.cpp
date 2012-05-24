@@ -223,7 +223,11 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     // Forbid OSR in the future: bailouts are now expected.
     it.ionScript()->forbidOsr();
 
-    BailoutClosure *br = cx->new_<BailoutClosure>();
+    // We use OffTheBooks instead of cx because at this time we cannot iterate
+    // on the stack safely and the reported error attempts to walk the IonMonkey
+    // frames. We cannot iterate on the stack because we have no exit frame to
+    // start Ion frames iteratons.
+    BailoutClosure *br = OffTheBooks::new_<BailoutClosure>();
     if (!br)
         return BAILOUT_RETURN_FATAL_ERROR;
     activation->setBailout(br);
@@ -342,6 +346,8 @@ uint32
 ion::Bailout(BailoutStack *sp)
 {
     JSContext *cx = GetIonContext()->cx;
+    // We don't have an exit frame.
+    cx->runtime->ionTop = NULL;
     IonActivationIterator ionActivations(cx);
     IonBailoutIterator iter(ionActivations, sp);
     IonActivation *activation = ionActivations.activation();
@@ -369,6 +375,8 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
     sp->checkInvariants();
 
     JSContext *cx = GetIonContext()->cx;
+    // We don't have an exit frame.
+    cx->runtime->ionTop = NULL;
     IonActivationIterator ionActivations(cx);
     IonBailoutIterator iter(ionActivations, sp);
     IonActivation *activation = ionActivations.activation();
