@@ -693,8 +693,7 @@ function buildTree(aReports, aTreePrefix)
         kidsBytes += fillInNonLeafNodes(aT._kids[i]);
       }
       aT._amount = kidsBytes;
-      aT._description = "The sum of all entries below '" +
-                        flipBackslashes(aT._unsafeName) + "'.";
+      aT._description = "The sum of all entries below this one.";
     }
     return aT._amount;
   }
