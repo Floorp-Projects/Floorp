@@ -18,12 +18,14 @@ FORCE_STATIC_LIB = 1
 include $(topsrcdir)/dom/dom-config.mk
 
 CPPSRCS = \
+  BluetoothManager.cpp \
   BluetoothAdapter.cpp \
   BluetoothFirmware.cpp \
   $(NULL)
 
 XPIDLSRCS = \
   nsIDOMNavigatorBluetooth.idl \
+  nsIDOMBluetoothManager.idl \
   nsIDOMBluetoothAdapter.idl \
   $(NULL)
 
