@@ -37,8 +37,12 @@ function bindDOMWindowUtils(aWindow) {
   // apply to call them from this privileged scope. This way we don't
   // have to explicitly stub out new methods that appear on
   // nsIDOMWindowUtils.
+  //
+  // Note that this will be a chrome object that is (possibly) exposed to
+  // content. Make sure to define __exposedProps__ for each property to make
+  // sure that it gets through the security membrane.
   var proto = Object.getPrototypeOf(util);
-  var target = {};
+  var target = { __exposedProps__: {} };
   function rebind(desc, prop) {
     if (prop in desc && typeof(desc[prop]) == "function") {
       var oldval = desc[prop];
@@ -57,6 +61,7 @@ function bindDOMWindowUtils(aWindow) {
     rebind(desc, "set");
     rebind(desc, "value");
     Object.defineProperty(target, i, desc);
+    target.__exposedProps__[i] = 'rw';
   }
   return target;
 }
