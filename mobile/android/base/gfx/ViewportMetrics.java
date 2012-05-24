@@ -32,8 +32,7 @@ public class ViewportMetrics {
     private float mZoomFactor;
 
     public ViewportMetrics() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        DisplayMetrics metrics = GeckoApp.mAppContext.getDisplayMetrics();
 
         mPageRect = new RectF(0, 0, metrics.widthPixels, metrics.heightPixels);
         mCssPageRect = new RectF(0, 0, metrics.widthPixels, metrics.heightPixels);
