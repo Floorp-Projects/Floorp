@@ -83,9 +83,8 @@ protected:
   virtual void ScheduleTask(CancelableTask*, int);
   virtual void Composite();
   virtual void ScheduleComposition();
-  virtual void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight,
-                                     float aCssPageWidth, float aCssPageHeight);
-  virtual void SetPageSize(float aZoom, float aPageWidth, float aPageHeight, float aCssPageWidth, float aCssPageHeight);
+  virtual void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
+  virtual void SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
   virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                 nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
   void SetEGLSurfaceSize(int width, int height);
@@ -107,6 +106,12 @@ private:
    */
   Layer* GetPrimaryScrollableLayer();
 
+  /**
+   * Recursively applies the given translation to all fixed position layers
+   * that aren't children of other fixed position layers.
+   */
+  void TranslateFixedLayers(Layer* aLayer, const gfxPoint& aTranslation);
+
   nsRefPtr<LayerManager> mLayerManager;
   nsIWidget* mWidget;
   CancelableTask *mCurrentCompositeTask;
@@ -119,7 +124,8 @@ private:
   float mXScale;
   float mYScale;
   nsIntPoint mScrollOffset;
-  nsIntSize mContentSize;
+  nsIntRect mContentRect;
+  nsIntSize mWidgetSize;
 
   // When this flag is set, the next composition will be the first for a
   // particular document (i.e. the document displayed on the screen will change).

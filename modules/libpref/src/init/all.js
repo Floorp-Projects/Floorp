@@ -3410,7 +3410,6 @@ pref("webgl.disabled", false);
 pref("webgl.shader_validator", true);
 pref("webgl.force_osmesa", false);
 pref("webgl.osmesalib", "");
-pref("webgl.verbose", false);
 pref("webgl.prefer-native-gl", false);
 pref("webgl.min_capability_mode", false);
 pref("webgl.disable-extensions", false);

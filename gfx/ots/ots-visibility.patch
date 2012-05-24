@@ -1,0 +1,60 @@
+diff --git a/gfx/ots/include/opentype-sanitiser.h b/gfx/ots/include/opentype-sanitiser.h
+--- a/gfx/ots/include/opentype-sanitiser.h
++++ b/gfx/ots/include/opentype-sanitiser.h
+@@ -1,15 +1,35 @@
+ // Copyright (c) 2009 The Chromium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #ifndef OPENTYPE_SANITISER_H_
+ #define OPENTYPE_SANITISER_H_
+ 
++#if defined(_WIN32) || defined(__CYGWIN__)
++  #define OTS_DLL_IMPORT __declspec(dllimport)
++  #define OTS_DLL_EXPORT __declspec(dllexport)
++#else
++  #if __GNUC__ >= 4
++    #define OTS_DLL_IMPORT __attribute__((visibility ("default")))
++    #define OTS_DLL_EXPORT __attribute__((visibility ("default")))
++  #endif
++#endif
++
++#ifdef OTS_DLL
++  #ifdef OTS_DLL_EXPORTS
++    #define OTS_API OTS_DLL_EXPORT
++  #else
++    #define OTS_API OTS_DLL_IMPORT
++  #endif
++#else
++  #define OTS_API
++#endif
++
+ #if defined(_WIN32)
+ #include <stdlib.h>
+ typedef signed char int8_t;
+ typedef unsigned char uint8_t;
+ typedef short int16_t;
+ typedef unsigned short uint16_t;
+ typedef int int32_t;
+ typedef unsigned int uint32_t;
+@@ -178,18 +198,18 @@ class OTSStream {
+ // Process a given OpenType file and write out a sanitised version
+ //   output: a pointer to an object implementing the OTSStream interface. The
+ //     sanitisied output will be written to this. In the even of a failure,
+ //     partial output may have been written.
+ //   input: the OpenType file
+ //   length: the size, in bytes, of |input|
+ //   preserve_graphite_tables: whether to preserve Graphite Layout tables
+ // -----------------------------------------------------------------------------
+-bool Process(OTSStream *output, const uint8_t *input, size_t length,
+-             bool preserve_graphite_tables = false);
++bool OTS_API Process(OTSStream *output, const uint8_t *input, size_t length,
++                     bool preserve_graphite_tables = false);
+ 
+ // Force to disable debug output even when the library is compiled with
+ // -DOTS_DEBUG.
+ void DisableDebugOutput();
+ 
+ }  // namespace ots
+ 
+ #endif  // OPENTYPE_SANITISER_H_

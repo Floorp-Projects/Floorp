@@ -170,6 +170,18 @@ public:
   nsIPresShell* GetPresShell() const { return mShell; }
 
   /**
+   * Returns the parent prescontext for this one. Returns null if this is a
+   * root.
+   */
+  nsPresContext* GetParentPresContext();
+
+  /**
+   * Returns the prescontext of the toplevel content document that contains
+   * this presentation, or null if there isn't one.
+   */
+  nsPresContext* GetToplevelContentDocumentPresContext();
+
+  /**
    * Return the presentation context for the root of the view manager
    * hierarchy that contains this presentation context, or nsnull if it can't
    * be found (e.g. it's detached).

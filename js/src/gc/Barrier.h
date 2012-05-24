@@ -562,7 +562,7 @@ class ReadBarriered
     T &operator*() const { return *get(); }
     T *operator->() const { return get(); }
 
-    T *unsafeGet() { return value; }
+    T **unsafeGet() { return &value; }
 
     void set(T *v) { value = v; }
 
@@ -578,6 +578,7 @@ class ReadBarrieredValue
     ReadBarrieredValue(const Value &value) : value(value) {}
 
     inline const Value &get() const;
+    Value *unsafeGet() { return &value; }
     inline operator const Value &() const;
 
     inline JSObject &toObject() const;

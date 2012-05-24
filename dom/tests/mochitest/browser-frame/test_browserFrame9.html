@@ -22,6 +22,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753595
 
 SimpleTest.waitForExplicitFinish();
 
+var iframeScript = function() {
+  const Ci = Components.interfaces;
+  function painted() {
+    sendAsyncMessage('test:mozpainted');
+  }
+  var utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIDOMWindowUtils);
+  if (!utils.isMozAfterPaintPending) {
+    sendAsyncMessage('test:mozpainted');
+  } else {
+    content.addEventListener("MozAfterPaint", painted, false);
+  }
+}
+
 function runTest() {
 
   browserFrameHelpers.setEnabledPref(true);
@@ -41,27 +55,28 @@ function runTest() {
         '<body style="background:blue">hello</body></html>';
     }
     else if (screenshots.length === 2) {
-      ok(screenshots[0] !== 'data:,', 'First Screenshot is not blank');
       ok(screenshots[0] !== screenshots[1], 'Screenshots differ');
       SimpleTest.finish();
     }
   }
 
+  function recvMozPainted() {
+    iframe1.getScreenshot().onsuccess = screenshotLoaded;
+  }
+
   function iframeLoadedHandler() {
     numLoaded++;
-    // Ignore the first loaded event, that is fired on creation of
-    // the iframe
-    if (numLoaded === 2) {
-      iframe1.getScreenshot().onsuccess = screenshotLoaded;
-    } else if (numLoaded === 3) {
-      iframe1.getScreenshot().onsuccess = screenshotLoaded;
+    if (numLoaded === 1) {
+      iframe1.src = 'data:text/html,<html>' +
+        '<body style="background:green">hello</body></html>';
+    } else if (numLoaded === 2 || numLoaded === 3) {
+      var mm = SpecialPowers.getBrowserFrameMessageManager(iframe1);
+      mm.addMessageListener('test:mozpainted', recvMozPainted);
+      mm.loadFrameScript('data:,(' + iframeScript.toString() + ')();', false);
     }
   }
 
   iframe1.addEventListener('mozbrowserloadend', iframeLoadedHandler);
-
-  iframe1.src = 'data:text/html,<html>' +
-      '<body style="background:green">hello</body></html>';
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });

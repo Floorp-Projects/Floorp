@@ -6,7 +6,6 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
-#include "nsIXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsXBLResourceLoader.h"
 #include "nsXBLPrototypeResources.h"
