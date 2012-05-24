@@ -481,7 +481,7 @@ Loop::tryHoistBoundsCheck(MBoundsCheck *ins, MTest *test, BranchDirection direct
 
     // Ensure the rhs is a loop invariant term.
     if (rhs && !isLoopInvariant(rhs)) {
-        if (!isLoopInvariant(lhs.term))
+        if (lhs.term && !isLoopInvariant(lhs.term))
             return;
         MDefinition *temp = lhs.term;
         lhs.term = rhs;
@@ -490,6 +490,8 @@ Loop::tryHoistBoundsCheck(MBoundsCheck *ins, MTest *test, BranchDirection direct
             return;
         lessEqual = !lessEqual;
     }
+
+    JS_ASSERT_IF(rhs, isLoopInvariant(rhs));
 
     // Ensure the lhs is a phi node from the start of the loop body.
     if (!lhs.term || !lhs.term->isPhi() || lhs.term->block() != header_)
