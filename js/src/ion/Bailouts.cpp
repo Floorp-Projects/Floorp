@@ -210,20 +210,6 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     return fp;
 }
 
-static inline bool
-IsInitialFrame(const IonBailoutIterator &jsFrame)
-{
-    IonFrameIterator iter(jsFrame);
-    ++iter;
-
-    for (; !iter.done(); ++iter) {
-        if (iter.isScripted())
-            return false;
-    }
-
-    return true;
-}
-
 static uint32
 ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 {
@@ -243,7 +229,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     activation->setBailout(br);
 
     StackFrame *fp;
-    if (IsInitialFrame(it)) {
+    if (it.isEntryJSFrame()) {
         // Avoid creating duplicate interpreter frames. This is necessary to
         // avoid blowing out the interpreter stack, and must be used in
         // conjunction with inline-OSR from within bailouts (since each Ion
@@ -254,7 +240,12 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     } else {
         // This is necessary a function frame because only the initial frame
         // can be a script.
-        fp = cx->stack.pushBailoutFrame(cx, *it.callee(), it.script(), br->frameGuard());
+
+        br->constructFrame();
+        if (!cx->stack.pushBailoutArgs(cx, it, br->argsGuard()))
+            return BAILOUT_RETURN_FATAL_ERROR;
+
+        fp = cx->stack.pushBailoutFrame(cx, it, *br->argsGuard(), br->frameGuard());
     }
 
     if (!fp)

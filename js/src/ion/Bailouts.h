@@ -144,7 +144,17 @@ static const uint32 BAILOUT_RETURN_RECOMPILE_CHECK = 5;
 // ::ThunkToInterpreter.
 class BailoutClosure
 {
-    BailoutFrameGuard bfg_;
+    // These class are used to control the stack usage and the order of
+    // declaration is used by the destructor to restore the stack in the
+    // expected order when classes are created. This class is only created
+    // when we need a new stack frame.
+    struct Guards {
+        InvokeArgsGuard iag;
+        BailoutFrameGuard bfg;
+    };
+
+    Maybe<Guards> guards_;
+
     StackFrame *entryfp_;
     jsbytecode *bailoutPc_;
 
@@ -152,8 +162,15 @@ class BailoutClosure
     BailoutClosure()
       : bailoutPc_(NULL)
     { }
+
+    void constructFrame() {
+        guards_.construct();
+    };
+    InvokeArgsGuard *argsGuard() {
+        return &guards_.ref().iag;
+    }
     BailoutFrameGuard *frameGuard() {
-        return &bfg_;
+        return &guards_.ref().bfg;
     }
     StackFrame *entryfp() const {
         return entryfp_;

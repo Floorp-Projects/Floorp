@@ -48,6 +48,42 @@ namespace ion {
 
 template <class Op>
 inline bool
+SnapshotIterator::readFrameArgs(Op op, const Value *argv, Value *scopeChain, Value *thisv,
+                                unsigned start, unsigned formalEnd, unsigned iterEnd)
+{
+    if (scopeChain)
+        *scopeChain = read();
+    else
+        skip();
+
+    if (thisv)
+        *thisv = read();
+    else
+        skip();
+
+    unsigned i = 0;
+    for (; i < start; i++)
+        skip();
+    for (; i < formalEnd; i++) {
+        // We are not always able to read values from the snapshots, some values
+        // such as non-gc things may still be live in registers and cause an
+        // error while reading the machine state.
+        Value v = maybeRead();
+        if (!op(i, &v))
+            return false;
+    }
+    if (iterEnd >= formalEnd) {
+        for (; i < iterEnd; i++) {
+            Value v = argv[i];
+            if (!op(i, &v))
+                return false;
+        }
+    }
+    return true;
+}
+
+template <class Op>
+inline bool
 InlineFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned count)
 {
     unsigned nactual = numActualArgs();
@@ -70,29 +106,8 @@ InlineFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned c
     }
 
     SnapshotIterator s(si_);
-
-    s.skip(); // scopeChain
-    s.skip(); // this
-
-    unsigned i = 0;
-    for (; i < start; i++)
-        s.skip();
-    for (; i < formalEnd; i++) {
-        // We are not always able to read values from the snapshots, some values
-        // such as non-gc things may still be live in registers and cause an
-        // error while reading the machine state.
-        Value v = s.maybeRead();
-        if (!op(i, &v))
-            return false;
-    }
-    if (formalEnd != end) {
-        Value *argv = frame_->argv() + 1;
-        for (; i < end; i++) {
-            if (!op(i, &argv[i]))
-                return false;
-        }
-    }
-    return true;
+    Value *argv = frame_->actualArgs();
+    return s.readFrameArgs(op, argv, NULL, NULL, start, formalEnd, end);
 }
 
 } // namespace ion
