@@ -631,6 +631,18 @@ StackFrames.prototype = {
       return aFrame["calleeName"] ? aFrame["calleeName"] : "(anonymous)";
     }
     return "(" + aFrame.type + ")";
+  },
+
+  /**
+   * Evaluate an expression in the context of the selected frame. This is used
+   * for modifying the value of variables in scope.
+   *
+   * @param string aExpression
+   *        The expression to evaluate.
+   */
+  evaluate: function SF_evaluate(aExpression) {
+    let frame = this.activeThread.cachedFrames[this.selectedFrame];
+    this.activeThread.eval(frame.actor, aExpression);
   }
 };
 
@@ -709,6 +721,11 @@ SourceScripts.prototype = {
    * Handler for the debugger client's unsolicited newScript notification.
    */
   _onNewScript: function SS__onNewScript(aNotification, aPacket) {
+    // Ignore scripts generated from 'clientEvaluate' packets.
+    if (aPacket.url == "debugger eval code") {
+      return;
+    }
+
     this._addScript({ url: aPacket.url, startLine: aPacket.startLine }, true);
   },
 

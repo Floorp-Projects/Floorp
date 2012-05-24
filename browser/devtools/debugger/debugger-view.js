@@ -862,6 +862,14 @@ PropertiesView.prototype = {
         value: value
       }));
 
+      // Maintain the symbolic name of the variable.
+      Object.defineProperty(element, "token", {
+        value: aName,
+        writable: false,
+        enumerable: true,
+        configurable: true
+      });
+
       title.appendChild(separator);
       title.appendChild(value);
 
@@ -1078,6 +1086,14 @@ PropertiesView.prototype = {
         value: value
       }));
 
+      // Maintain the symbolic name of the property.
+      Object.defineProperty(element, "token", {
+        value: aVar.token + "['" + pKey + "']",
+        writable: false,
+        enumerable: true,
+        configurable: true
+      });
+
       // Save the property to the variable for easier access.
       Object.defineProperty(aVar, pKey, { value: element,
                                           writable: false,
@@ -1160,35 +1176,8 @@ PropertiesView.prototype = {
     // The actual save mechanism for the new variable/property value.
     function DVP_element_textbox_save() {
       if (textbox.value !== value.textContent) {
-        // TODO: use the debugger client API to send the value to the debuggee,
-        // after bug 724862 lands.
-        let result = eval(textbox.value);
-        let grip;
-
-        // Construct the grip based on the evaluated expression in the textbox.
-        switch (typeof result) {
-          case "number":
-          case "boolean":
-          case "string":
-            grip = result;
-            break;
-          case "object":
-            if (result === null) {
-              grip = {
-                "type": "null"
-              };
-            } else {
-              grip = {
-                "type": "object",
-                "class": result.constructor.name || "Object"
-              };
-            }
-            break;
-          case "undefined":
-            grip = { type: "undefined" };
-        }
-
-        self._applyGrip(value, grip);
+        let expr = "(" + element.token + "=" + textbox.value + ")";
+        DebuggerController.StackFrames.evaluate(expr);
       }
       DVP_element_textbox_clear();
     }
