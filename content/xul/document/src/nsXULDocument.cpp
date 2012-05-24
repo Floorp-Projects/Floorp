@@ -2374,9 +2374,10 @@ nsXULDocument::PrepareToWalk()
 
     PRUint32 piInsertionPoint = 0;
     if (mState != eState_Master) {
-        piInsertionPoint = IndexOf(GetRootElement());
-        NS_ASSERTION(piInsertionPoint >= 0,
+        PRInt32 indexOfRoot = IndexOf(GetRootElement());
+        NS_ASSERTION(indexOfRoot >= 0,
                      "No root content when preparing to walk overlay!");
+        piInsertionPoint = indexOfRoot;
     }
 
     const nsTArray<nsRefPtr<nsXULPrototypePI> >& processingInstructions =
