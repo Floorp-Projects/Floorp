@@ -356,17 +356,9 @@
           var button = this.getButton(aDlgType);
           if (!button.disabled) {
             var noCancel = this._fireButtonEvent(aDlgType);
-            dump("not disabled\n");
             if (noCancel) {
-              dump("not canceled\n");
               if (aDlgType == "accept" || aDlgType == "cancel")
-                dump("closing\n");
-                dump("window: " + window + "\n");
-                dump("href: " + window.location.href + "\n");
-                dump("opener: " + window.opener + "\n");
-                dump("rv: " + window.close() + "\n");
-                dump("after close\n");
-                dump("closed: " + window.closed + "\n");
+                window.close();
             }
             return noCancel;
           }
