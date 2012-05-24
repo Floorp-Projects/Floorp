@@ -1753,7 +1753,7 @@ gfxFontUtils::DecodeFontName(const PRUint8 *aNameData, PRInt32 aByteLen,
     }
 
     nsCOMPtr<nsIUnicodeDecoder> decoder;
-    rv = ccm->GetUnicodeDecoderRawInternal(csName, getter_AddRefs(decoder));
+    rv = ccm->GetUnicodeDecoderRaw(csName, getter_AddRefs(decoder));
     if (NS_FAILED(rv)) {
         NS_WARNING("failed to get the decoder for a font name string");
         return false;
