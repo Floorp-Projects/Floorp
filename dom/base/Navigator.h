@@ -34,7 +34,6 @@ class nsIDOMTelephony;
 #include "nsIDOMNavigatorBluetooth.h"
 #endif
 
-class nsIDOMAdapter;
 //*****************************************************************************
 // Navigator: Script "navigator" object
 //*****************************************************************************
@@ -128,7 +127,7 @@ private:
   nsRefPtr<network::Connection> mConnection;
   nsRefPtr<network::MobileConnection> mMobileConnection;
 #ifdef MOZ_B2G_BT
-  nsCOMPtr<nsIDOMBluetoothAdapter> mBluetooth;
+  nsCOMPtr<nsIDOMBluetoothManager> mBluetooth;
 #endif
   nsWeakPtr mWindow;
 };

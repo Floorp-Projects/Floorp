@@ -6,10 +6,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMBluetoothAdapter;
+interface nsIDOMBluetoothManager;
 
-[scriptable, uuid(677f2c2d-c4d1-41ea-addc-21d30d0d3858)]
+[scriptable, uuid(3d6741c7-f0c4-4925-a606-38415f660f34)]
 interface nsIDOMNavigatorBluetooth : nsISupports
 {
-  readonly attribute nsIDOMBluetoothAdapter mozBluetooth;
+  readonly attribute nsIDOMBluetoothManager mozBluetooth;
 };
