@@ -658,11 +658,8 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() {
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    mBrowserToolbar.setTitle(uri);
-                    mBrowserToolbar.setFavicon(null);
-                    mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
+                    mBrowserToolbar.refresh();
                     mDoorHangerPopup.updatePopup();
-                    mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
 
                     if (tab != null)
                         hidePlugins(tab);
@@ -695,10 +692,7 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() {
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    mBrowserToolbar.setTitle(tab.getDisplayTitle());
-                    mBrowserToolbar.setFavicon(tab.getFavicon());
-                    mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
-                    mBrowserToolbar.setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
+                    mBrowserToolbar.refresh();
                 }
             }
         });
@@ -1229,6 +1223,8 @@ abstract public class GeckoApp
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
+                    mBrowserToolbar.updateBackButton(tab.canDoBack());
+                    mBrowserToolbar.updateForwardButton(tab.canDoForward());
                     if (showProgress && tab.getState() == Tab.STATE_LOADING)
                         mBrowserToolbar.setProgressVisibility(true);
                 }
@@ -1246,8 +1242,11 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() {
             public void run() {
-                if (Tabs.getInstance().isSelectedTab(tab))
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    mBrowserToolbar.updateBackButton(tab.canDoBack());
+                    mBrowserToolbar.updateForwardButton(tab.canDoForward());
                     mBrowserToolbar.setProgressVisibility(false);
+                }
                 Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.STOP);
             }
         });
@@ -1597,6 +1596,9 @@ abstract public class GeckoApp
         // Refresh it to avoid corruption.
         if (Build.VERSION.SDK_INT == 11 || Build.VERSION.SDK_INT == 12)
             refreshActionBar();
+
+        mBrowserToolbar.updateBackButton(false);
+        mBrowserToolbar.updateForwardButton(false);
 
         Intent intent = getIntent();
         String action = intent.getAction();
