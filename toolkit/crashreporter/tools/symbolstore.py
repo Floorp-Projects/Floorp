@@ -26,6 +26,7 @@ import os
 import re
 import shutil
 import textwrap
+import fnmatch
 from subprocess import call, Popen, PIPE, STDOUT
 from optparse import OptionParser
 
@@ -390,7 +391,12 @@ class Dumper:
     ProcessDir.  Instead, call GetPlatformSpecificDumper to
     get an instance of a subclass."""
     def __init__(self, dump_syms, symbol_path,
-                 archs=None, srcdirs=None, copy_debug=False, vcsinfo=False, srcsrv=False):
+                 archs=None,
+                 srcdirs=None,
+                 copy_debug=False,
+                 vcsinfo=False,
+                 srcsrv=False,
+                 exclude=[]):
         # popen likes absolute paths, at least on windows
         self.dump_syms = os.path.abspath(dump_syms)
         self.symbol_path = symbol_path
@@ -406,10 +412,11 @@ class Dumper:
         self.copy_debug = copy_debug
         self.vcsinfo = vcsinfo
         self.srcsrv = srcsrv
+        self.exclude = exclude[:]
 
     # subclasses override this
     def ShouldProcess(self, file):
-        return False
+        return not any(fnmatch.fnmatch(os.path.basename(file), exclude) for exclude in self.exclude)
 
     # and can override this
     def ShouldSkipDir(self, dir):
@@ -545,6 +552,8 @@ class Dumper_Win32(Dumper):
     def ShouldProcess(self, file):
         """This function will allow processing of pdb files that have dll
         or exe files with the same base name next to them."""
+        if not Dumper.ShouldProcess(self, file):
+            return False
         if file.endswith(".pdb"):
             (path,ext) = os.path.splitext(file)
             if os.path.isfile(path + ".exe") or os.path.isfile(path + ".dll"):
@@ -616,6 +625,8 @@ class Dumper_Linux(Dumper):
         executable, or end with the .so extension, and additionally
         file(1) reports as being ELF files.  It expects to find the file
         command in PATH."""
+        if not Dumper.ShouldProcess(self, file):
+            return False
         if file.endswith(".so") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("ELF")
         return False
@@ -654,6 +665,8 @@ class Dumper_Solaris(Dumper):
         executable, or end with the .so extension, and additionally
         file(1) reports as being ELF files.  It expects to find the file
         command in PATH."""
+        if not Dumper.ShouldProcess(self, file):
+            return False
         if file.endswith(".so") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("ELF")
         return False
@@ -664,6 +677,8 @@ class Dumper_Mac(Dumper):
         executable, or end with the .dylib extension, and additionally
         file(1) reports as being Mach-O files.  It expects to find the file
         command in PATH."""
+        if not Dumper.ShouldProcess(self, file):
+            return False
         if file.endswith(".dylib") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("Mach-O")
         return False
@@ -736,6 +751,9 @@ def main():
     parser.add_option("-i", "--source-index",
                       action="store_true", dest="srcsrv", default=False,
                       help="Add source index information to debug files, making them suitable for use in a source server.")
+    parser.add_option("-x", "--exclude",
+                      action="append", dest="exclude", default=[], metavar="PATTERN",
+                      help="Skip processing files matching PATTERN.")
     (options, args) = parser.parse_args()
     
     #check to see if the pdbstr.exe exists
@@ -755,7 +773,8 @@ def main():
                                        archs=options.archs,
                                        srcdirs=options.srcdir,
                                        vcsinfo=options.vcsinfo,
-                                       srcsrv=options.srcsrv)
+                                       srcsrv=options.srcsrv,
+                                       exclude=options.exclude)
     for arg in args[2:]:
         dumper.Process(arg)
 
