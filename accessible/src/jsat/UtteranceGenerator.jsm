@@ -79,7 +79,12 @@ var UtteranceGenerator = {
     if (aForceName)
       flags |= INCLUDE_NAME;
 
-    return func.apply(this, [aAccessible, roleString, flags]);
+    let state = {};
+    let extState = {};
+    aAccessible.getState(state, extState);
+    let states = {base: state.value, ext: extState.value};
+
+    return func.apply(this, [aAccessible, roleString, states, flags]);
   },
 
   /**
@@ -175,40 +180,25 @@ var UtteranceGenerator = {
     'listbox': INCLUDE_DESC},
 
   objectUtteranceFunctions: {
-    defaultFunc: function defaultFunc(aAccessible, aRoleStr, aFlags) {
-      let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
-      let desc = (aFlags & INCLUDE_DESC) ?
-        this._getLocalizedRole(aRoleStr) : '';
-
+    defaultFunc: function defaultFunc(aAccessible, aRoleStr, aStates, aFlags) {
       let utterance = [];
 
-      if (desc) {
-        let state = {};
-        let extState = {};
-        aAccessible.getState(state, extState);
-
-        if (state.value & Ci.nsIAccessibleStates.STATE_CHECKABLE) {
-          let stateStr = (state.value & Ci.nsIAccessibleStates.STATE_CHECKED) ?
-            'objChecked' : 'objNotChecked';
-          desc = gStringBundle.formatStringFromName(stateStr, [desc], 1);
-        }
-
-        if (extState.value & Ci.nsIAccessibleStates.EXT_STATE_EXPANDABLE) {
-          let stateStr = (state.value & Ci.nsIAccessibleStates.STATE_EXPANDED) ?
-            'objExpanded' : 'objCollapsed';
-          desc = gStringBundle.formatStringFromName(stateStr, [desc], 1);
-        }
-
-        utterance.push(desc);
+      if (aFlags & INCLUDE_DESC) {
+        let desc = this._getLocalizedStates(aStates);
+        let roleStr = this._getLocalizedRole(aRoleStr);
+        if (roleStr)
+          desc.push(roleStr);
+        utterance.push(desc.join(' '));
       }
 
+      let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
       if (name)
         utterance.push(name);
 
       return utterance;
     },
 
-    heading: function heading(aAccessible, aRoleStr, aFlags) {
+    heading: function heading(aAccessible, aRoleStr, aStates, aFlags) {
       let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
       let level = {};
       aAccessible.groupPosition(level, {}, {});
@@ -221,7 +211,7 @@ var UtteranceGenerator = {
       return utterance;
     },
 
-    listitem: function listitem(aAccessible, aRoleStr, aFlags) {
+    listitem: function listitem(aAccessible, aRoleStr, aStates, aFlags) {
       let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
       let localizedRole = this._getLocalizedRole(aRoleStr);
       let itemno = {};
@@ -244,5 +234,35 @@ var UtteranceGenerator = {
     } catch (x) {
       return '';
     }
+  },
+
+  _getLocalizedStates: function _getLocalizedStates(aStates) {
+    let stateUtterances = [];
+
+    if (aStates.base & Ci.nsIAccessibleStates.STATE_UNAVAILABLE) {
+      stateUtterances.push(gStringBundle.GetStringFromName('stateUnavailable'));
+    }
+
+    if (aStates.base & Ci.nsIAccessibleStates.STATE_CHECKABLE) {
+      let stateStr = (aStates.base & Ci.nsIAccessibleStates.STATE_CHECKED) ?
+        'stateChecked' : 'stateNotChecked';
+      stateUtterances.push(gStringBundle.GetStringFromName(stateStr));
+    }
+
+    if (aStates.ext & Ci.nsIAccessibleStates.EXT_STATE_EXPANDABLE) {
+      let stateStr = (aStates.base & Ci.nsIAccessibleStates.STATE_EXPANDED) ?
+        'stateExpanded' : 'stateCollapsed';
+      stateUtterances.push(gStringBundle.GetStringFromName(stateStr));
+    }
+
+    if (aStates.base & Ci.nsIAccessibleStates.STATE_REQUIRED) {
+      stateUtterances.push(gStringBundle.GetStringFromName('stateRequired'));
+    }
+
+    if (aStates.base & Ci.nsIAccessibleStates.STATE_TRAVERSED) {
+      stateUtterances.push(gStringBundle.GetStringFromName('stateTraversed'));
+    }
+
+    return stateUtterances;
   }
 };
