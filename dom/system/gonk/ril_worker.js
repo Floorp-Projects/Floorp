@@ -1119,10 +1119,10 @@ let RIL = {
    * @param on
    *        Boolean indicating the desired power state.
    */
-  setRadioPower: function setRadioPower(on) {
+  setRadioPower: function setRadioPower(options) {
     Buf.newParcel(REQUEST_RADIO_POWER);
     Buf.writeUint32(1);
-    Buf.writeUint32(on ? 1 : 0);
+    Buf.writeUint32(options.on ? 1 : 0);
     Buf.sendParcel();
   },
 
@@ -2877,8 +2877,9 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
   // TODO hardcoded for now (see bug 726098)
   let cdma = false;
 
-  if (this.radioState == GECKO_RADIOSTATE_UNAVAILABLE &&
-      newState != GECKO_RADIOSTATE_UNAVAILABLE) {
+  if ((this.radioState == GECKO_RADIOSTATE_UNAVAILABLE ||
+       this.radioState == GECKO_RADIOSTATE_OFF) &&
+       newState == GECKO_RADIOSTATE_READY) {
     // The radio became available, let's get its info.
     if (cdma) {
       this.getDeviceIdentity();
@@ -2887,13 +2888,6 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
       this.getIMEISV();
     }
     this.getBasebandVersion();
-
-    //XXX TODO For now, just turn the radio on if it's off. for the real
-    // deal we probably want to do the opposite: start with a known state
-    // when we boot up and let the UI layer control the radio power.
-    if (newState == GECKO_RADIOSTATE_OFF) {
-      this.setRadioPower(true);
-    }
   }
 
   this.radioState = newState;
