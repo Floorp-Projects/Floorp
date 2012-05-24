@@ -361,6 +361,10 @@ public final class Tab {
         return true;
     }
 
+    public boolean canDoBack() {
+        return (mHistoryIndex < 1 ? false : true);
+    }
+
     public boolean doBack() {
         if (mHistoryIndex < 1) {
             return false;
