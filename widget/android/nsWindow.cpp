@@ -2084,7 +2084,16 @@ nsWindow::SetInputContext(const InputContext& aContext,
         return;
     }
 
-    AndroidBridge::NotifyIMEEnabled(int(aContext.mIMEState.mEnabled),
+    int enabled = int(aContext.mIMEState.mEnabled);
+
+    // Only show the virtual keyboard for plugins if mOpen is set appropriately.
+    // This avoids showing it whenever a plugin is focused. Bug 747492
+    if (aContext.mIMEState.mEnabled == IMEState::PLUGIN &&
+        aContext.mIMEState.mOpen != IMEState::OPEN) {
+        enabled = int(IMEState::DISABLED);
+    }
+
+    AndroidBridge::NotifyIMEEnabled(enabled,
                                     aContext.mHTMLInputType,
                                     aContext.mActionHint);
 }
