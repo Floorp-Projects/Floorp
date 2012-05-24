@@ -207,7 +207,14 @@ public:
   }
 
   void BroadcastInformation(const InfoType& aInfo) {
-    MOZ_ASSERT(mObservers);
+    // It is possible for mObservers to be NULL here on some platforms,
+    // because a call to BroadcastInformation gets queued up asynchronously
+    // while RemoveObserver is running (and before the notifications are
+    // disabled). The queued call can then get run after mObservers has
+    // been nulled out. See bug 757025.
+    if (!mObservers) {
+      return;
+    }
     mObservers->Broadcast(aInfo);
   }
 
