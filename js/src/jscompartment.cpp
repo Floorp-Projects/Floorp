@@ -372,18 +372,6 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
                 MarkValueRoot(trc, &call, "cross-compartment wrapper");
                 JS_ASSERT(call == GetProxyCall(wrapper));
             }
-        } else {
-            /*
-             * Strings don't have a private pointer to mark, so we use the
-             * wrapper map key. (This does not work for wrappers because, in the
-             * case of Location objects, the wrapper map key is not the same as
-             * the proxy private slot. If we only marked the wrapper map key, we
-             * would miss same-compartment wrappers for Location objects.)
-             */
-            JS_ASSERT(v.isString());
-            Value v = e.front().key;
-            MarkValueRoot(trc, &v, "cross-compartment wrapper");
-            JS_ASSERT(v == e.front().key);
         }
     }
 }
@@ -463,17 +451,7 @@ JSCompartment::discardJitCode(FreeOp *fop)
 void
 JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 {
-    /* Remove dead wrappers from the table. */
-    for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        Value key = e.front().key;
-        bool keyMarked = IsValueMarked(&key);
-        bool valMarked = IsValueMarked(e.front().value.unsafeGet());
-        JS_ASSERT_IF(!keyMarked && valMarked, key.isString());
-        if (!keyMarked || !valMarked)
-            e.removeFront();
-        else if (key != e.front().key)
-            e.rekeyFront(key);
-    }
+    sweepCrossCompartmentWrappers();
 
     /* Remove dead references held weakly by the compartment. */
 
@@ -549,6 +527,27 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
     }
 
     active = false;
+}
+
+/*
+ * Remove dead wrappers from the table. We must sweep all compartments, since
+ * string entries in the crossCompartmentWrappers table are not marked during
+ * markCrossCompartmentWrappers.
+ */
+void
+JSCompartment::sweepCrossCompartmentWrappers()
+{
+    /* Remove dead wrappers from the table. */
+    for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
+        Value key = e.front().key;
+        bool keyMarked = IsValueMarked(&key);
+        bool valMarked = IsValueMarked(e.front().value.unsafeGet());
+        JS_ASSERT_IF(!keyMarked && valMarked, key.isString());
+        if (!keyMarked || !valMarked)
+            e.removeFront();
+        else if (key != e.front().key)
+            e.rekeyFront(key);
+    }
 }
 
 void
