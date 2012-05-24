@@ -188,7 +188,7 @@ class GlobalObject : public JSObject
     JSObject *getOrCreateObjectPrototype(JSContext *cx) {
         if (functionObjectClassesInitialized())
             return &getPrototype(JSProto_Object).toObject();
-        RootedVar<GlobalObject*> self(cx, this);
+        Rooted<GlobalObject*> self(cx, this);
         if (!initFunctionAndObjectClasses(cx))
             return NULL;
         return &self->getPrototype(JSProto_Object).toObject();
@@ -197,7 +197,7 @@ class GlobalObject : public JSObject
     JSObject *getOrCreateFunctionPrototype(JSContext *cx) {
         if (functionObjectClassesInitialized())
             return &getPrototype(JSProto_Function).toObject();
-        RootedVar<GlobalObject*> self(cx, this);
+        Rooted<GlobalObject*> self(cx, this);
         if (!initFunctionAndObjectClasses(cx))
             return NULL;
         return &self->getPrototype(JSProto_Function).toObject();
@@ -206,7 +206,7 @@ class GlobalObject : public JSObject
     JSObject *getOrCreateArrayPrototype(JSContext *cx) {
         if (arrayClassInitialized())
             return &getPrototype(JSProto_Array).toObject();
-        RootedVar<GlobalObject*> self(cx, this);
+        Rooted<GlobalObject*> self(cx, this);
         if (!js_InitArrayClass(cx, this))
             return NULL;
         return &self->getPrototype(JSProto_Array).toObject();
@@ -215,7 +215,7 @@ class GlobalObject : public JSObject
     JSObject *getOrCreateBooleanPrototype(JSContext *cx) {
         if (booleanClassInitialized())
             return &getPrototype(JSProto_Boolean).toObject();
-        RootedVar<GlobalObject*> self(cx, this);
+        Rooted<GlobalObject*> self(cx, this);
         if (!js_InitBooleanClass(cx, this))
             return NULL;
         return &self->getPrototype(JSProto_Boolean).toObject();
@@ -224,7 +224,7 @@ class GlobalObject : public JSObject
     JSObject *getOrCreateNumberPrototype(JSContext *cx) {
         if (numberClassInitialized())
             return &getPrototype(JSProto_Number).toObject();
-        RootedVar<GlobalObject*> self(cx, this);
+        Rooted<GlobalObject*> self(cx, this);
         if (!js_InitNumberClass(cx, this))
             return NULL;
         return &self->getPrototype(JSProto_Number).toObject();
@@ -233,7 +233,7 @@ class GlobalObject : public JSObject
     JSObject *getOrCreateStringPrototype(JSContext *cx) {
         if (stringClassInitialized())
             return &getPrototype(JSProto_String).toObject();
-        RootedVar<GlobalObject*> self(cx, this);
+        Rooted<GlobalObject*> self(cx, this);
         if (!js_InitStringClass(cx, this))
             return NULL;
         return &self->getPrototype(JSProto_String).toObject();
@@ -242,7 +242,7 @@ class GlobalObject : public JSObject
     JSObject *getOrCreateRegExpPrototype(JSContext *cx) {
         if (regexpClassInitialized())
             return &getPrototype(JSProto_RegExp).toObject();
-        RootedVar<GlobalObject*> self(cx, this);
+        Rooted<GlobalObject*> self(cx, this);
         if (!js_InitRegExpClass(cx, this))
             return NULL;
         return &self->getPrototype(JSProto_RegExp).toObject();
@@ -251,7 +251,7 @@ class GlobalObject : public JSObject
     JSObject *getOrCreateArrayBufferPrototype(JSContext *cx) {
         if (arrayBufferClassInitialized())
             return &getPrototype(JSProto_ArrayBuffer).toObject();
-        RootedVar<GlobalObject*> self(cx, this);
+        Rooted<GlobalObject*> self(cx, this);
         if (!js_InitTypedArrayClasses(cx, this))
             return NULL;
         return &self->getPrototype(JSProto_ArrayBuffer).toObject();
@@ -261,7 +261,7 @@ class GlobalObject : public JSObject
         JSProtoKey key = GetExceptionProtoKey(exnType);
         if (errorClassesInitialized())
             return &getPrototype(key).toObject();
-        RootedVar<GlobalObject*> self(cx, this);
+        Rooted<GlobalObject*> self(cx, this);
         if (!js_InitExceptionClasses(cx, this))
             return NULL;
         return &self->getPrototype(key).toObject();
@@ -271,7 +271,7 @@ class GlobalObject : public JSObject
         Value v = getSlotRef(GENERATOR_PROTO);
         if (v.isObject())
             return &v.toObject();
-        RootedVar<GlobalObject*> self(cx, this);
+        Rooted<GlobalObject*> self(cx, this);
         if (!js_InitIteratorClasses(cx, this))
             return NULL;
         return &self->getSlot(GENERATOR_PROTO).toObject();

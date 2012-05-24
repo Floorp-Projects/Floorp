@@ -105,7 +105,7 @@ inline bool
 LookupProperty(JSContext *cx, HandleObject obj, PropertyName *name,
                JSObject **objp, JSProperty **propp)
 {
-    return LookupProperty(cx, obj, RootedVarId(cx, NameToId(name)), objp, propp);
+    return LookupProperty(cx, obj, RootedId(cx, NameToId(name)), objp, propp);
 }
 
 extern JS_FRIEND_API(JSBool)
@@ -149,7 +149,7 @@ inline bool
 SetPropertyHelper(JSContext *cx, HandleObject obj, PropertyName *name, unsigned defineHow,
                   Value *vp, JSBool strict)
 {
-    return SetPropertyHelper(cx, obj, RootedVarId(cx, NameToId(name)), defineHow, vp, strict);
+    return SetPropertyHelper(cx, obj, RootedId(cx, NameToId(name)), defineHow, vp, strict);
 }
 
 extern JSBool
@@ -1140,7 +1140,7 @@ DefineNativeProperty(JSContext *cx, HandleObject obj, PropertyName *name, const 
                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
                      unsigned flags, int shortid, unsigned defineHow = 0)
 {
-    return DefineNativeProperty(cx, obj, RootedVarId(cx, NameToId(name)),
+    return DefineNativeProperty(cx, obj, RootedId(cx, NameToId(name)),
                                 value, getter, setter, attrs, flags,
                                 shortid, defineHow);
 }
@@ -1156,7 +1156,7 @@ inline bool
 LookupPropertyWithFlags(JSContext *cx, HandleObject obj, PropertyName *name, unsigned flags,
                         JSObject **objp, JSProperty **propp)
 {
-    return LookupPropertyWithFlags(cx, obj, RootedVarId(cx, NameToId(name)), flags, objp, propp);
+    return LookupPropertyWithFlags(cx, obj, RootedId(cx, NameToId(name)), flags, objp, propp);
 }
 
 /*
@@ -1253,7 +1253,7 @@ GetMethod(JSContext *cx, HandleObject obj, HandleId id, unsigned getHow, Value *
 inline bool
 GetMethod(JSContext *cx, HandleObject obj, PropertyName *name, unsigned getHow, Value *vp)
 {
-    return GetMethod(cx, obj, RootedVarId(cx, NameToId(name)), getHow, vp);
+    return GetMethod(cx, obj, RootedId(cx, NameToId(name)), getHow, vp);
 }
 
 /*

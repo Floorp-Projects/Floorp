@@ -25,8 +25,8 @@ class AutoEntryHolder {
     Map &map;
     Map::Ptr p;
     uint32_t gen;
-    RootedVarObject obj;
-    RootedVarId id;
+    RootedObject obj;
+    RootedId id;
 
   public:
     AutoEntryHolder(JSContext *cx, Map &map, Map::Ptr p)
@@ -109,7 +109,7 @@ WatchpointMap::triggerWatchpoint(JSContext *cx, HandleObject obj, HandleId id, V
 
     /* Copy the entry, since GC would invalidate p. */
     JSWatchPointHandler handler = p->value.handler;
-    RootedVarObject closure(cx, p->value.closure);
+    RootedObject closure(cx, p->value.closure);
 
     /* Determine the property's old value. */
     Value old;

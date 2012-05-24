@@ -1103,8 +1103,8 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
 
     if (start->numLinearSearches() == LINEAR_SEARCHES_MAX) {
         if (start->isBigEnoughForAShapeTable()) {
-            RootedVarShape startRoot(cx, start);
-            RootedVarId idRoot(cx, id);
+            RootedShape startRoot(cx, start);
+            RootedId idRoot(cx, id);
             if (start->hashify(cx)) {
                 Shape **spp = start->table().search(id, adding);
                 return SHAPE_FETCH(spp);

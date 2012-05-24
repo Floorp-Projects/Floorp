@@ -274,7 +274,7 @@ Shape::get(JSContext* cx, HandleObject receiver, JSObject* obj, JSObject *pobj, 
         return InvokeGetterOrSetter(cx, receiver, fval, 0, 0, vp);
     }
 
-    RootedVarId id(cx);
+    RootedId id(cx);
     if (!getUserId(cx, id.address()))
         return false;
 
@@ -294,7 +294,7 @@ Shape::set(JSContext* cx, HandleObject obj, bool strict, Value* vp) const
     if (attrs & JSPROP_GETTER)
         return js_ReportGetterOnlyAssignment(cx);
 
-    RootedVarId id(cx);
+    RootedId id(cx);
     if (!getUserId(cx, id.address()))
         return false;
 
@@ -303,7 +303,7 @@ Shape::set(JSContext* cx, HandleObject obj, bool strict, Value* vp) const
      * Avoid exposing the With object to native setters.
      */
     if (obj->isWith()) {
-        RootedVarObject nobj(cx, &obj->asWith().object());
+        RootedObject nobj(cx, &obj->asWith().object());
         return CallJSPropertyOpSetter(cx, setterOp(), nobj, id, strict, vp);
     }
 

@@ -403,7 +403,7 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
     FILE *file;
     uint32_t oldopts;
 
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
@@ -707,7 +707,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 Load(JSContext *cx, unsigned argc, jsval *vp)
 {
-    RootedVarObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
+    RootedObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
     if (!thisobj)
         return JS_FALSE;
 
@@ -767,7 +767,7 @@ class AutoNewContext
 
     ~AutoNewContext() {
         if (newcx) {
-            RootedVarValue exc(oldcx);
+            RootedValue exc(oldcx);
             bool throwing = JS_IsExceptionPending(newcx);
             if (throwing)
                 JS_GetPendingException(newcx, exc.address());
@@ -797,7 +797,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     bool newContext;
-    RootedVarObject global(cx, NULL);
+    RootedObject global(cx, NULL);
     bool compileAndGo = true;
     const char *fileName = "@evaluate";
     JSAutoByteString fileNameBytes;
@@ -808,7 +808,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
     if (argc == 2) {
-        RootedVarObject options(cx, JSVAL_TO_OBJECT(argv[1]));
+        RootedObject options(cx, JSVAL_TO_OBJECT(argv[1]));
         jsval v;
 
         if (!JS_GetProperty(cx, options, "newContext", &v))
@@ -868,7 +868,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    RootedVarString code(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+    RootedString code(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
 
     size_t codeLength;
     const jschar *codeChars = JS_GetStringCharsAndLength(cx, code, &codeLength);
@@ -1734,7 +1734,7 @@ static bool
 DisassembleScript(JSContext *cx, JSScript *script_, JSFunction *fun, bool lines, bool recursive,
                   Sprinter *sp)
 {
-    RootedVar<JSScript*> script(cx, script_);
+    Rooted<JSScript*> script(cx, script_);
 
     if (fun && (fun->flags & ~7U)) {
         uint16_t flags = fun->flags;
@@ -2145,15 +2145,15 @@ DumpObject(JSContext *cx, unsigned argc, jsval *vp)
 JSBool
 DumpStack(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedVarObject arr(cx, JS_NewArrayObject(cx, 0, NULL));
+    RootedObject arr(cx, JS_NewArrayObject(cx, 0, NULL));
     if (!arr)
         return false;
 
-    RootedVarString evalStr(cx, JS_NewStringCopyZ(cx, "eval-code"));
+    RootedString evalStr(cx, JS_NewStringCopyZ(cx, "eval-code"));
     if (!evalStr)
         return false;
 
-    RootedVarString globalStr(cx, JS_NewStringCopyZ(cx, "global-code"));
+    RootedString globalStr(cx, JS_NewStringCopyZ(cx, "global-code"));
     if (!globalStr)
         return false;
 
@@ -2577,7 +2577,7 @@ static JSClass sandbox_class = {
 static JSObject *
 NewSandbox(JSContext *cx, bool lazy)
 {
-    RootedVarObject obj(cx, JS_NewCompartmentAndGlobalObject(cx, &sandbox_class, NULL));
+    RootedObject obj(cx, JS_NewCompartmentAndGlobalObject(cx, &sandbox_class, NULL));
     if (!obj)
         return NULL;
 
@@ -2589,7 +2589,7 @@ NewSandbox(JSContext *cx, bool lazy)
         if (!lazy && !JS_InitStandardClasses(cx, obj))
             return NULL;
 
-        RootedVarValue value(cx, BooleanValue(lazy));
+        RootedValue value(cx, BooleanValue(lazy));
         if (!JS_SetProperty(cx, obj, "lazy", value.address()))
             return NULL;
     }
@@ -2603,7 +2603,7 @@ static JSBool
 EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSString *str;
-    RootedVarObject sobj(cx);
+    RootedObject sobj(cx);
     if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S / o", &str, sobj.address()))
         return false;
 
@@ -2802,20 +2802,20 @@ static JSBool
 resolver_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags, JSObject **objp)
 {
     jsval v = JS_GetReservedSlot(obj, 0);
-    return CopyProperty(cx, obj, RootedVarObject(cx, JSVAL_TO_OBJECT(v)), id, flags, objp);
+    return CopyProperty(cx, obj, RootedObject(cx, JSVAL_TO_OBJECT(v)), id, flags, objp);
 }
 
 static JSBool
 resolver_enumerate(JSContext *cx, HandleObject obj)
 {
     jsval v = JS_GetReservedSlot(obj, 0);
-    RootedVarObject referent(cx, JSVAL_TO_OBJECT(v));
+    RootedObject referent(cx, JSVAL_TO_OBJECT(v));
 
     AutoIdArray ida(cx, JS_Enumerate(cx, referent));
     bool ok = !!ida;
     JSObject *ignore;
     for (size_t i = 0; ok && i < ida.length(); i++)
-        ok = CopyProperty(cx, obj, referent, RootedVarId(cx, ida[i]), JSRESOLVE_QUALIFIED, &ignore);
+        ok = CopyProperty(cx, obj, referent, RootedId(cx, ida[i]), JSRESOLVE_QUALIFIED, &ignore);
     return ok;
 }
 
@@ -3171,7 +3171,7 @@ Parent(JSContext *cx, unsigned argc, jsval *vp)
     /* Outerize if necessary.  Embrace the ugliness! */
     if (parent) {
         if (JSObjectOp op = parent->getClass()->ext.outerObject)
-            *vp = OBJECT_TO_JSVAL(op(cx, RootedVarObject(cx, parent)));
+            *vp = OBJECT_TO_JSVAL(op(cx, RootedObject(cx, parent)));
     }
 
     return JS_TRUE;
@@ -3415,7 +3415,7 @@ Serialize(JSContext *cx, unsigned argc, jsval *vp)
 JSBool
 Deserialize(JSContext *cx, unsigned argc, jsval *vp)
 {
-    RootedVar<jsval> v(cx, argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
+    Rooted<jsval> v(cx, argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
     JSObject *obj;
     if (JSVAL_IS_PRIMITIVE(v) || !(obj = JSVAL_TO_OBJECT(v))->isTypedArray()) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "deserialize");
@@ -4604,7 +4604,7 @@ DestroyContext(JSContext *cx, bool withGC)
 static JSObject *
 NewGlobalObject(JSContext *cx, CompartmentKind compartment)
 {
-    RootedVarObject glob(cx);
+    RootedObject glob(cx);
 
     glob = (compartment == NEW_COMPARTMENT)
            ? JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL)
@@ -4662,10 +4662,10 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
 static bool
 BindScriptArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     MultiStringRange msr = op->getMultiStringArg("scriptArgs");
-    RootedVarObject scriptArgs(cx);
+    RootedObject scriptArgs(cx);
     scriptArgs = JS_NewArrayObject(cx, 0, NULL);
     if (!scriptArgs)
         return false;
@@ -4695,7 +4695,7 @@ BindScriptArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 static int
 ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     if (op->getBoolOption('a'))
         JS_ToggleOptions(cx, JSOPTION_METHODJIT_ALWAYS);
@@ -4776,7 +4776,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     }
 
-    RootedVarObject glob(cx);
+    RootedObject glob(cx);
     glob = NewGlobalObject(cx, NEW_COMPARTMENT);
     if (!glob)
         return 1;

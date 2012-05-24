@@ -172,7 +172,7 @@ PropertyTree::getChild(JSContext *cx, Shape *parent_, uint32_t nfixed, const Sta
     }
 
     StackShape::AutoRooter childRoot(cx, &child);
-    RootedVarShape parent(cx, parent_);
+    RootedShape parent(cx, parent_);
 
     shape = newShape(cx);
     if (!shape)

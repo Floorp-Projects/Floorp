@@ -44,12 +44,12 @@ namespace JS {
  * on the type T of the value being rooted, for which RootMethods<T> must
  * have an instantiation.
  *
- * - RootedVar<T> declares a variable of type T, whose value is always rooted.
- *   RootedVar<T> may be automatically coerced to a Handle<T>, below.
- *   RootedVar<T> should be used whenever a local variable's value may be held
- *   live across a call which can allocate GC things or otherwise trigger a GC.
+ * - Rooted<T> declares a variable of type T, whose value is always rooted.
+ *   Rooted<T> may be automatically coerced to a Handle<T>, below. Rooted<T>
+ *   should be used whenever a local variable's value may be held live across a
+ *   call which can allocate GC things or otherwise trigger a GC.
  *
- * - Handle<T> is a const reference to a RootedVar<T>. Functions which take GC
+ * - Handle<T> is a const reference to a Rooted<T>. Functions which take GC
  *   things or values as arguments and need to root those arguments should
  *   generally use handles for those arguments and avoid any explicit rooting.
  *   This has two benefits. First, when several such functions call each other
@@ -59,7 +59,7 @@ namespace JS {
  *   separate rooting analysis.
  */
 
-template <typename T> class RootedVar;
+template <typename T> class Rooted;
 
 template <typename T>
 struct RootMethods { };
@@ -81,7 +81,7 @@ class Handle
 
     /*
      * This may be called only if the location of the T is guaranteed
-     * to be marked (for some reason other than being a RootedVar),
+     * to be marked (for some reason other than being a Rooted),
      * e.g., if it is guaranteed to be reachable from an implicit root.
      *
      * Create a Handle from a raw location of a T.
@@ -96,7 +96,7 @@ class Handle
      * Construct a handle from an explicitly rooted location. This is the
      * normal way to create a handle, and normally happens implicitly.
      */
-    template <typename S> inline Handle(const RootedVar<S> &root);
+    template <typename S> inline Handle(const Rooted<S> &root);
 
     const T *address() const { return ptr; }
     T value() const { return *ptr; }
@@ -140,7 +140,7 @@ struct RootMethods<T *>
  * function that requires a handle, e.g. Foo(Root<T>(cx, x)).
  */
 template <typename T>
-class RootedVar
+class Rooted
 {
     void init(JSContext *cx_, T initial)
     {
@@ -148,7 +148,7 @@ class RootedVar
         ContextFriendFields *cx = ContextFriendFields::get(cx_);
 
         ThingRootKind kind = RootMethods<T>::kind();
-        this->stack = reinterpret_cast<RootedVar<T>**>(&cx->thingGCRooters[kind]);
+        this->stack = reinterpret_cast<Rooted<T>**>(&cx->thingGCRooters[kind]);
         this->prev = *stack;
         *stack = this;
 
@@ -159,8 +159,8 @@ class RootedVar
     }
 
   public:
-    RootedVar(JSContext *cx) { init(cx, RootMethods<T>::initial()); }
-    RootedVar(JSContext *cx, T initial) { init(cx, initial); }
+    Rooted(JSContext *cx) { init(cx, RootMethods<T>::initial()); }
+    Rooted(JSContext *cx, T initial) { init(cx, initial); }
 
     /*
      * This method is only necessary due to an obscure C++98 requirement (that
@@ -171,7 +171,7 @@ class RootedVar
      */
     operator Handle<T> () const { return Handle<T>(*this); }
 
-    ~RootedVar()
+    ~Rooted()
     {
 #ifdef JSGC_ROOT_ANALYSIS
         JS_ASSERT(*stack == this);
@@ -180,7 +180,7 @@ class RootedVar
     }
 
 #ifdef JSGC_ROOT_ANALYSIS
-    RootedVar<T> *previous() { return prev; }
+    Rooted<T> *previous() { return prev; }
 #endif
 
     operator T () const { return ptr; }
@@ -197,7 +197,7 @@ class RootedVar
         return ptr;
     }
 
-    T & operator =(const RootedVar &value)
+    T & operator =(const Rooted &value)
     {
         ptr = value;
         return ptr;
@@ -206,27 +206,27 @@ class RootedVar
   private:
 
 #ifdef JSGC_ROOT_ANALYSIS
-    RootedVar<T> **stack, *prev;
+    Rooted<T> **stack, *prev;
 #endif
     T ptr;
 
-    RootedVar() MOZ_DELETE;
-    RootedVar(const RootedVar &) MOZ_DELETE;
+    Rooted() MOZ_DELETE;
+    Rooted(const Rooted &) MOZ_DELETE;
 };
 
 template<typename T> template <typename S>
 inline
-Handle<T>::Handle(const RootedVar<S> &root)
+Handle<T>::Handle(const Rooted<S> &root)
 {
     testAssign<S>();
     ptr = reinterpret_cast<const T *>(root.address());
 }
 
-typedef RootedVar<JSObject*>    RootedVarObject;
-typedef RootedVar<JSFunction*>  RootedVarFunction;
-typedef RootedVar<JSString*>    RootedVarString;
-typedef RootedVar<jsid>         RootedVarId;
-typedef RootedVar<Value>        RootedVarValue;
+typedef Rooted<JSObject*>    RootedObject;
+typedef Rooted<JSFunction*>  RootedFunction;
+typedef Rooted<JSString*>    RootedString;
+typedef Rooted<jsid>         RootedId;
+typedef Rooted<Value>        RootedValue;
 
 /*
  * Mark a stack location as a root for the rooting analysis, without actually

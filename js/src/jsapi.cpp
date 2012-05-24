@@ -539,7 +539,7 @@ JS_ValueToECMAInt32(JSContext *cx, jsval v, int32_t *ip)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v);
 
-    RootedVarValue value(cx, v);
+    RootedValue value(cx, v);
     return ToInt32(cx, value, ip);
 }
 
@@ -1766,7 +1766,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 
     assertSameCompartment(cx, obj);
 
-    return GlobalObject::initStandardClasses(cx, RootedVar<GlobalObject*>(cx, &obj->global()));
+    return GlobalObject::initStandardClasses(cx, Rooted<GlobalObject*>(cx, &obj->global()));
 }
 
 #define CLASP(name)                 (&name##Class)
@@ -1919,7 +1919,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj_, jsid id, JSBool *resolved
     JSStdName *stdnm;
     unsigned i;
 
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -2014,7 +2014,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj_)
     assertSameCompartment(cx, obj_);
     rt = cx->runtime;
 
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     /*
      * Check whether we need to bind 'undefined' and define it if so.
@@ -3116,7 +3116,7 @@ JS_ConvertStub(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp)
 {
     JS_ASSERT(type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION);
     JS_ASSERT(obj);
-    return DefaultValue(cx, RootedVarObject(cx, obj), type, vp);
+    return DefaultValue(cx, RootedObject(cx, obj), type, vp);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -3125,7 +3125,7 @@ JS_InitClass(JSContext *cx, JSObject *obj_, JSObject *parent_proto,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -3168,7 +3168,7 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 JS_PUBLIC_API(JSBool)
 JS_HasInstance(JSContext *cx, JSObject *obj_, jsval v, JSBool *bp)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     AssertNoGC(cx);
     assertSameCompartment(cx, obj, v);
@@ -3209,7 +3209,7 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, proto);
-    return SetProto(cx, RootedVarObject(cx, obj), RootedVarObject(cx, proto), JS_FALSE);
+    return SetProto(cx, RootedObject(cx, obj), RootedObject(cx, proto), JS_FALSE);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -3227,7 +3227,7 @@ JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
     JS_ASSERT(!obj->isScope());
     JS_ASSERT(parent || !obj->getParent());
     assertSameCompartment(cx, obj, parent);
-    return JSObject::setParent(cx, RootedVarObject(cx, obj), RootedVarObject(cx, parent));
+    return JSObject::setParent(cx, RootedObject(cx, obj), RootedObject(cx, parent));
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -3444,7 +3444,7 @@ JS_ConstructObjectWithArguments(JSContext *cx, JSClass *jsclasp, JSObject *paren
     JSProtoKey protoKey = GetClassProtoKey(clasp);
 
     /* Protect constructor in case a crazy getter for .prototype uproots it. */
-    RootedVarValue value(cx);
+    RootedValue value(cx);
     if (!js_FindClassObject(cx, parent, protoKey, value.address(), clasp))
         return NULL;
 
@@ -3518,7 +3518,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
 JS_PUBLIC_API(JSBool)
 JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id_, jsval *vp)
 {
-    RootedVarId id(cx, id_);
+    RootedId id(cx, id_);
 
     JSObject *obj2;
     JSProperty *prop;
@@ -3554,8 +3554,8 @@ JS_PUBLIC_API(JSBool)
 JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj_, jsid id_, unsigned flags,
                                JSObject **objp, jsval *vp)
 {
-    RootedVarObject obj(cx, obj_);
-    RootedVarId id(cx, id_);
+    RootedObject obj(cx, obj_);
+    RootedId id(cx, id_);
 
     JSBool ok;
     JSProperty *prop;
@@ -3580,7 +3580,7 @@ JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name, unsig
 JS_PUBLIC_API(JSBool)
 JS_HasPropertyById(JSContext *cx, JSObject *obj, jsid id_, JSBool *foundp)
 {
-    RootedVarId id(cx, id_);
+    RootedId id(cx, id_);
 
     JSObject *obj2;
     JSProperty *prop;
@@ -3618,7 +3618,7 @@ JS_HasUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namele
 JS_PUBLIC_API(JSBool)
 JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *obj, jsid id_, JSBool *foundp)
 {
-    RootedVarId id(cx, id_);
+    RootedId id(cx, id_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -3730,9 +3730,9 @@ JS_PUBLIC_API(JSBool)
 JS_DefinePropertyById(JSContext *cx, JSObject *obj_, jsid id_, jsval value_,
                       JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
 {
-    RootedVarObject obj(cx, obj_);
-    RootedVarId id(cx, id_);
-    RootedVarValue value(cx, value_);
+    RootedObject obj(cx, obj_);
+    RootedId id(cx, id_);
+    RootedValue value(cx, value_);
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, 0, 0);
 }
 
@@ -3740,12 +3740,12 @@ JS_PUBLIC_API(JSBool)
 JS_DefineElement(JSContext *cx, JSObject *obj_, uint32_t index, jsval value_,
                  JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
 {
-    RootedVarObject obj(cx, obj_);
-    RootedVarValue value(cx, value_);
+    RootedObject obj(cx, obj_);
+    RootedValue value(cx, value_);
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    RootedVarId id(cx);
+    RootedId id(cx);
     if (!IndexToId(cx, index, id.address()))
         return false;
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, 0, 0);
@@ -3756,10 +3756,10 @@ DefineProperty(JSContext *cx, JSObject *obj_, const char *name, const Value &val
                PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
                unsigned flags, int tinyid)
 {
-    RootedVarObject obj(cx, obj_);
-    RootedVarValue value(cx, value_);
+    RootedObject obj(cx, obj_);
+    RootedValue value(cx, value_);
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
-    RootedVarId id(cx);
+    RootedId id(cx);
 
     if (attrs & JSPROP_INDEX) {
         id = INT_TO_JSID(intptr_t(name));
@@ -3793,13 +3793,13 @@ DefineUCProperty(JSContext *cx, JSObject *obj_, const jschar *name, size_t namel
                  const Value &value_, PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
                  unsigned flags, int tinyid)
 {
-    RootedVarObject obj(cx, obj_);
-    RootedVarValue value(cx, value_);
+    RootedObject obj(cx, obj_);
+    RootedValue value(cx, value_);
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
     if (!atom)
         return false;
-    RootedVarId id(cx, AtomToId(atom));
+    RootedId id(cx, AtomToId(atom));
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, flags, tinyid);
 }
 
@@ -3825,14 +3825,14 @@ JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JS
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id, descriptor);
-    return js_DefineOwnProperty(cx, RootedVarObject(cx, obj), RootedVarId(cx, id), descriptor, bp);
+    return js_DefineOwnProperty(cx, RootedObject(cx, obj), RootedId(cx, id), descriptor, bp);
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_DefineObject(JSContext *cx, JSObject *obj_, const char *name, JSClass *jsclasp,
                 JSObject *proto, unsigned attrs)
 {
-    RootedVarObject obj(cx, obj_), nobj(cx);
+    RootedObject obj(cx, obj_), nobj(cx);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -3855,7 +3855,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj_, const char *name, JSClass *jsclas
 JS_PUBLIC_API(JSBool)
 JS_DefineConstDoubles(JSContext *cx, JSObject *obj_, JSConstDoubleSpec *cds)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     JSBool ok;
     unsigned attrs;
@@ -3878,7 +3878,7 @@ JS_PUBLIC_API(JSBool)
 JS_DefineProperties(JSContext *cx, JSObject *obj_, JSPropertySpec *ps)
 {
     JSBool ok;
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     for (ok = true; ps->name; ps++) {
         ok = DefineProperty(cx, obj, ps->name, UndefinedValue(), ps->getter, ps->setter,
@@ -3938,7 +3938,7 @@ JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id_, unsigned flags,
                              JSPropertyDescriptor *desc)
 {
-    RootedVarId id(cx, id_);
+    RootedId id(cx, id_);
     return GetPropertyDescriptorById(cx, obj, id, flags, JS_FALSE, desc);
 }
 
@@ -3947,7 +3947,7 @@ JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj, jsid id_,
                                        unsigned *attrsp, JSBool *foundp,
                                        JSPropertyOp *getterp, JSStrictPropertyOp *setterp)
 {
-    RootedVarId id(cx, id_);
+    RootedId id(cx, id_);
     PropertyDescriptor desc;
     if (!GetPropertyDescriptorById(cx, obj, id, JSRESOLVE_QUALIFIED, JS_FALSE, &desc))
         return false;
@@ -4005,7 +4005,7 @@ JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    return GetOwnPropertyDescriptor(cx, RootedVarObject(cx, obj), RootedVarId(cx, id), vp);
+    return GetOwnPropertyDescriptor(cx, RootedObject(cx, obj), RootedId(cx, id), vp);
 }
 
 static JSBool
@@ -4034,7 +4034,7 @@ JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
                          unsigned attrs, JSBool *foundp)
 {
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && SetPropertyAttributesById(cx, obj, RootedVarId(cx, AtomToId(atom)), attrs, foundp);
+    return atom && SetPropertyAttributesById(cx, obj, RootedId(cx, AtomToId(atom)), attrs, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4042,7 +4042,7 @@ JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj, const jschar *name, siz
                            unsigned attrs, JSBool *foundp)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && SetPropertyAttributesById(cx, obj, RootedVarId(cx, AtomToId(atom)), attrs, foundp);
+    return atom && SetPropertyAttributesById(cx, obj, RootedId(cx, AtomToId(atom)), attrs, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4054,8 +4054,8 @@ JS_GetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 JS_PUBLIC_API(JSBool)
 JS_ForwardGetPropertyTo(JSContext *cx, JSObject *obj, jsid id_, JSObject *onBehalfOf_, jsval *vp)
 {
-    RootedVarId id(cx, id_);
-    RootedVarObject onBehalfOf(cx, onBehalfOf_);
+    RootedId id(cx, id_);
+    RootedObject onBehalfOf(cx, onBehalfOf_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4068,7 +4068,7 @@ JS_ForwardGetPropertyTo(JSContext *cx, JSObject *obj, jsid id_, JSObject *onBeha
 JS_PUBLIC_API(JSBool)
 JS_GetPropertyByIdDefault(JSContext *cx, JSObject *obj, jsid id, jsval def, jsval *vp)
 {
-    return baseops::GetPropertyDefault(cx, RootedVarObject(cx, obj), RootedVarId(cx, id), def, vp);
+    return baseops::GetPropertyDefault(cx, RootedObject(cx, obj), RootedId(cx, id), def, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4080,7 +4080,7 @@ JS_GetElement(JSContext *cx, JSObject *obj, uint32_t index, jsval *vp)
 JS_PUBLIC_API(JSBool)
 JS_ForwardGetElementTo(JSContext *cx, JSObject *obj, uint32_t index, JSObject *onBehalfOf_, jsval *vp)
 {
-    RootedVarObject onBehalfOf(cx, onBehalfOf_);
+    RootedObject onBehalfOf(cx, onBehalfOf_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4092,7 +4092,7 @@ JS_ForwardGetElementTo(JSContext *cx, JSObject *obj, uint32_t index, JSObject *o
 JS_PUBLIC_API(JSBool)
 JS_GetElementIfPresent(JSContext *cx, JSObject *obj, uint32_t index, JSObject *onBehalfOf_, jsval *vp, JSBool* present)
 {
-    RootedVarObject onBehalfOf(cx, onBehalfOf_);
+    RootedObject onBehalfOf(cx, onBehalfOf_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4108,7 +4108,7 @@ JS_GetElementIfPresent(JSContext *cx, JSObject *obj, uint32_t index, JSObject *o
 JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj_, const char *name, jsval *vp)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     return atom && JS_GetPropertyById(cx, obj, AtomToId(atom), vp);
 }
@@ -4116,7 +4116,7 @@ JS_GetProperty(JSContext *cx, JSObject *obj_, const char *name, jsval *vp)
 JS_PUBLIC_API(JSBool)
 JS_GetPropertyDefault(JSContext *cx, JSObject *obj_, const char *name, jsval def, jsval *vp)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     return atom && JS_GetPropertyByIdDefault(cx, obj, AtomToId(atom), def, vp);
 }
@@ -4124,7 +4124,7 @@ JS_GetPropertyDefault(JSContext *cx, JSObject *obj_, const char *name, jsval def
 JS_PUBLIC_API(JSBool)
 JS_GetUCProperty(JSContext *cx, JSObject *obj_, const jschar *name, size_t namelen, jsval *vp)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
     return atom && JS_GetPropertyById(cx, obj, AtomToId(atom), vp);
 }
@@ -4132,8 +4132,8 @@ JS_GetUCProperty(JSContext *cx, JSObject *obj_, const jschar *name, size_t namel
 JS_PUBLIC_API(JSBool)
 JS_GetMethodById(JSContext *cx, JSObject *obj_, jsid id_, JSObject **objp, jsval *vp)
 {
-    RootedVarObject obj(cx, obj_);
-    RootedVarId id(cx, id_);
+    RootedObject obj(cx, obj_);
+    RootedId id(cx, id_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4155,7 +4155,7 @@ JS_GetMethod(JSContext *cx, JSObject *obj, const char *name, JSObject **objp, js
 JS_PUBLIC_API(JSBool)
 JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id_, jsval *vp)
 {
-    RootedVarId id(cx, id_);
+    RootedId id(cx, id_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4167,7 +4167,7 @@ JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id_, jsval *vp)
 JS_PUBLIC_API(JSBool)
 JS_SetElement(JSContext *cx, JSObject *obj_, uint32_t index, jsval *vp)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4179,7 +4179,7 @@ JS_SetElement(JSContext *cx, JSObject *obj_, uint32_t index, jsval *vp)
 JS_PUBLIC_API(JSBool)
 JS_SetProperty(JSContext *cx, JSObject *obj_, const char *name, jsval *vp)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     return atom && JS_SetPropertyById(cx, obj, AtomToId(atom), vp);
@@ -4201,7 +4201,7 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
 
     if (JSID_IS_SPECIAL(id))
-        return obj->deleteSpecial(cx, RootedVar<SpecialId>(cx, JSID_TO_SPECIALID(id)), rval, false);
+        return obj->deleteSpecial(cx, Rooted<SpecialId>(cx, JSID_TO_SPECIALID(id)), rval, false);
 
     return obj->deleteByValue(cx, IdToValue(id), rval, false);
 }
@@ -4268,7 +4268,7 @@ JS_DeleteProperty(JSContext *cx, JSObject *obj, const char *name)
 JS_PUBLIC_API(void)
 JS_ClearScope(JSContext *cx, JSObject *obj_)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4452,7 +4452,7 @@ JS_NewElementIterator(JSContext *cx, JSObject *obj)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    return ElementIteratorObject::create(cx, RootedVarObject(cx, obj));
+    return ElementIteratorObject::create(cx, RootedObject(cx, obj));
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4514,7 +4514,7 @@ JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id_, JSAccessMode mode,
                jsval *vp, unsigned *attrsp)
 {
-    RootedVarId id(cx, id_);
+    RootedId id(cx, id_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4570,7 +4570,7 @@ JS_NewFunction(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     JSAtom *atom;
 
-    RootedVarObject parent(cx, parent_);
+    RootedObject parent(cx, parent_);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4591,7 +4591,7 @@ JS_PUBLIC_API(JSFunction *)
 JS_NewFunctionById(JSContext *cx, JSNative native, unsigned nargs, unsigned flags, JSObject *parent_,
                    jsid id)
 {
-    RootedVarObject parent(cx, parent_);
+    RootedObject parent(cx, parent_);
 
     JS_ASSERT(JSID_IS_STRING(id));
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
@@ -4609,7 +4609,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent_)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent_);  // XXX no funobj for now
 
-    RootedVarObject parent(cx, parent_);
+    RootedObject parent(cx, parent_);
 
     if (!parent) {
         if (cx->hasfp())
@@ -4629,7 +4629,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent_)
         return NULL;
     }
 
-    RootedVarFunction fun(cx, funobj->toFunction());
+    RootedFunction fun(cx, funobj->toFunction());
     if (fun->isInterpreted() && fun->script()->compileAndGo) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
@@ -4693,8 +4693,8 @@ JS_IsNativeFunction(JSObject *funobj, JSNative call)
 JS_PUBLIC_API(JSObject*)
 JS_BindCallable(JSContext *cx, JSObject *callable, JSObject *newThis)
 {
-    RootedVarObject target(cx, callable);
-    RootedVarValue thisArg(cx, ObjectValue(*newThis));
+    RootedObject target(cx, callable);
+    RootedValue thisArg(cx, ObjectValue(*newThis));
     return js_fun_bind(cx, target, thisArg, NULL, 0);
 }
 
@@ -4727,11 +4727,11 @@ js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
 JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj_, JSFunctionSpec *fs)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     unsigned flags;
-    RootedVarObject ctor(cx);
+    RootedObject ctor(cx);
     JSFunction *fun;
 
     AssertNoGC(cx);
@@ -4740,7 +4740,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj_, JSFunctionSpec *fs)
     for (; fs->name; fs++) {
         flags = fs->flags;
 
-        RootedVarAtom atom(cx, js_Atomize(cx, fs->name, strlen(fs->name)));
+        RootedAtom atom(cx, js_Atomize(cx, fs->name, strlen(fs->name)));
         if (!atom)
             return JS_FALSE;
 
@@ -4756,7 +4756,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj_, JSFunctionSpec *fs)
             }
 
             flags &= ~JSFUN_GENERIC_NATIVE;
-            fun = js_DefineFunction(cx, ctor, RootedVarId(cx, AtomToId(atom)),
+            fun = js_DefineFunction(cx, ctor, RootedId(cx, AtomToId(atom)),
                                     js_generic_native_method_dispatcher,
                                     fs->nargs + 1,
                                     flags,
@@ -4772,7 +4772,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj_, JSFunctionSpec *fs)
         }
 
         fun = js_DefineFunction(cx, obj,
-                                RootedVarId(cx, AtomToId(atom)), fs->call, fs->nargs, flags);
+                                RootedId(cx, AtomToId(atom)), fs->call, fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
     }
@@ -4783,7 +4783,7 @@ JS_PUBLIC_API(JSFunction *)
 JS_DefineFunction(JSContext *cx, JSObject *obj_, const char *name, JSNative call,
                   unsigned nargs, unsigned attrs)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);
@@ -4792,7 +4792,7 @@ JS_DefineFunction(JSContext *cx, JSObject *obj_, const char *name, JSNative call
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, obj, RootedVarId(cx, AtomToId(atom)), call, nargs, attrs);
+    return js_DefineFunction(cx, obj, RootedId(cx, AtomToId(atom)), call, nargs, attrs);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4800,7 +4800,7 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj_,
                     const jschar *name, size_t namelen, JSNative call,
                     unsigned nargs, unsigned attrs)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);
@@ -4809,15 +4809,15 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj_,
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, obj, RootedVarId(cx, AtomToId(atom)), call, nargs, attrs);
+    return js_DefineFunction(cx, obj, RootedId(cx, AtomToId(atom)), call, nargs, attrs);
 }
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_DefineFunctionById(JSContext *cx, JSObject *obj_, jsid id_, JSNative call,
                     unsigned nargs, unsigned attrs)
 {
-    RootedVarObject obj(cx, obj_);
-    RootedVarId id(cx, id_);
+    RootedObject obj(cx, obj_);
+    RootedId id(cx, id_);
 
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);
@@ -5143,7 +5143,7 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj_,
                                      const jschar *chars, size_t length,
                                      const char *filename, unsigned lineno, JSVersion version)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);
@@ -5151,7 +5151,7 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj_,
     assertSameCompartment(cx, obj, principals);
     AutoLastFrameCheck lfc(cx);
 
-    RootedVarAtom funAtom(cx);
+    RootedAtom funAtom(cx);
     if (name) {
         funAtom = js_Atomize(cx, name, strlen(name));
         if (!funAtom)
@@ -5161,7 +5161,7 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj_,
     Bindings bindings(cx);
     for (unsigned i = 0; i < nargs; i++) {
         uint16_t dummy;
-        RootedVarAtom argAtom(cx, js_Atomize(cx, argnames[i], strlen(argnames[i])));
+        RootedAtom argAtom(cx, js_Atomize(cx, argnames[i], strlen(argnames[i])));
         if (!argAtom || !bindings.addArgument(cx, argAtom, &dummy))
             return NULL;
     }
@@ -5177,7 +5177,7 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj_,
     }
 
     if (obj && funAtom &&
-        !obj->defineGeneric(cx, RootedVarId(cx, AtomToId(funAtom)), ObjectValue(*fun), NULL, NULL,
+        !obj->defineGeneric(cx, RootedId(cx, AtomToId(funAtom)), ObjectValue(*fun), NULL, NULL,
                             JSPROP_ENUMERATE))
     {
         return NULL;
@@ -5352,7 +5352,7 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj_,
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
 
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     bool compileAndGo = true;
     bool noScriptRval = !rval;
@@ -5474,12 +5474,12 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj_, const char *name, unsigned ar
     assertSameCompartment(cx, obj_, JSValueArray(argv, argc));
     AutoLastFrameCheck lfc(cx);
 
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     Value v;
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     return atom &&
-           GetMethod(cx, obj, RootedVarId(cx, AtomToId(atom)), 0, &v) &&
+           GetMethod(cx, obj, RootedId(cx, AtomToId(atom)), 0, &v) &&
            Invoke(cx, ObjectOrNullValue(obj), v, argc, argv, rval);
 }
 
@@ -5858,7 +5858,7 @@ JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    return js_ConcatStrings(cx, RootedVarString(cx, left), RootedVarString(cx, right));
+    return js_ConcatStrings(cx, RootedString(cx, left), RootedString(cx, right));
 }
 
 JS_PUBLIC_API(const jschar *)
