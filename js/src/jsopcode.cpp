@@ -5620,6 +5620,15 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
               spindex == JSDVG_IGNORE_STACK ||
               spindex == JSDVG_SEARCH_STACK);
 
+#ifdef JS_MORE_DETERMINISTIC
+    /*
+     * Always execute the fallback code if we need determistic behavior for
+     * differential testing. IonMonkey does not use StackFrames and this ensures
+     * we get the same error messages.
+     */
+    goto do_fallback;
+#endif
+
     if (!cx->hasfp() || !cx->fp()->isScriptFrame())
         goto do_fallback;
 
