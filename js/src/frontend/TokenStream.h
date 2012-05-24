@@ -47,6 +47,7 @@ enum TokenKind {
     TOK_MOD,                       /* modulus */
     TOK_INC, TOK_DEC,              /* increment/decrement (++ --) */
     TOK_DOT,                       /* member operator (.) */
+    TOK_TRIPLEDOT,                 /* for rest arguments (...) */
     TOK_LB, TOK_RB,                /* left and right brackets */
     TOK_LC, TOK_RC,                /* left and right curlies (braces) */
     TOK_LP, TOK_RP,                /* left and right parentheses */
@@ -426,24 +427,9 @@ class TokenStream
   public:
     typedef Vector<jschar, 32> CharBuffer;
 
-    /*
-     * To construct a TokenStream, first call the constructor, which is
-     * infallible, then call |init|, which can fail. To destroy a TokenStream,
-     * first call |close| then call the destructor. If |init| fails, do not call
-     * |close|.
-     *
-     * This class uses JSContext.tempLifoAlloc to allocate internal buffers. The
-     * caller should JS_ARENA_MARK before calling |init| and JS_ARENA_RELEASE
-     * after calling |close|.
-     */
-    TokenStream(JSContext *, JSPrincipals *principals, JSPrincipals *originPrincipals);
-
-    /*
-     * Create a new token stream from an input buffer.
-     * Return false on memory-allocation failure.
-     */
-    bool init(const jschar *base, size_t length, const char *filename, unsigned lineno,
-              JSVersion version);
+    TokenStream(JSContext *, JSPrincipals *principals, JSPrincipals *originPrincipals,
+                const jschar *base, size_t length, const char *filename, unsigned lineno,
+                JSVersion version);
     ~TokenStream();
 
     /* Accessors. */
@@ -651,12 +637,8 @@ class TokenStream
      */
     class TokenBuf {
       public:
-        TokenBuf() : base(NULL), limit(NULL), ptr(NULL) { }
-
-        void init(const jschar *buf, size_t length) {
-            base = ptr = buf;
-            limit = base + length;
-        }
+        TokenBuf(const jschar *buf, size_t length)
+          : base(buf), limit(buf + length), ptr(buf), ptrWhenPoisoned(NULL) { }
 
         bool hasRawChars() const {
             return ptr < limit;

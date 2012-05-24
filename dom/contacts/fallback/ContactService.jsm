@@ -66,17 +66,49 @@ let DOMContactManager = {
   },
 
   receiveMessage: function(aMessage) {
-    function sortfunction(a, b){
-      let x, y;
-      if (a.properties[msg.findOptions.sortBy])
-        x = a.properties[msg.findOptions.sortBy][0].toLowerCase();
-      if (b.properties[msg.findOptions.sortBy])
-        y = b.properties[msg.findOptions.sortBy][0].toLowerCase();
-      let result = x.localeCompare(y);
-      return msg.findOptions.sortOrder == 'ascending' ? result : -result;
-    }
     debug("Fallback DOMContactManager::receiveMessage " + aMessage.name);
     let msg = aMessage.json;
+
+    /*
+     * Sorting the contacts by sortBy field. sortBy can either be familyName or givenName.
+     * If 2 entries have the same sortyBy field or no sortBy field is present, we continue 
+     * sorting with the other sortyBy field.
+     */
+    function sortfunction(a, b){
+      let x, y;
+      let sortByNameSet = true;
+      let result = 0;
+      let sortBy = msg.findOptions.sortBy;
+      let sortOrder = msg.findOptions.sortOrder;
+      if (!a.properties[sortBy] || !(x = a.properties[sortBy][0].toLowerCase())) {
+        sortByNameSet = false;
+      }
+
+      if (!b.properties[sortBy] || !(y = b.properties[sortBy][0].toLowerCase())) {
+        if (sortByNameSet) {
+          return sortOrder == 'ascending' ? 1 : -1;
+        }
+      }
+
+      if (sortByNameSet) {
+        result = x.localeCompare(y);
+      }
+
+      if (result == 0) {
+        // If 2 entries have the same sortBy (familyName or givenName) field,
+        // we have to continue sorting.
+        let otherSortBy = sortBy == "familyName" ? "givenName" : "familyName";
+        if (!a.properties[otherSortBy] || !(x = a.properties[otherSortBy][0].toLowerCase())) {
+          return sortOrder == 'ascending' ? 1 : -1;
+        }
+        if (!b.properties[otherSortBy] || !(y = b.properties[otherSortBy][0].toLowerCase())) {
+          return sortOrder == 'ascending' ? 1 : -1;
+        }
+        result = x.localeCompare(y);
+      }
+      return sortOrder == 'ascending' ? result : -result;
+    }
+
     switch (aMessage.name) {
       case "Contacts:Find":
         let result = new Array();

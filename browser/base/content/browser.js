@@ -4299,6 +4299,12 @@ var FullScreen = {
       // Add a listener to clean up state after the warning is hidden.
       this.warningBox.addEventListener("transitionend", this);
       this.warningBox.removeAttribute("hidden");
+    } else {
+      if (this.warningFadeOutTimeout) {
+        clearTimeout(this.warningFadeOutTimeout);
+        this.warningFadeOutTimeout = null;
+      }
+      this.warningBox.removeAttribute("fade-warning-out");
     }
 
     // If fullscreen mode has not yet been approved for the fullscreen
@@ -4308,9 +4314,10 @@ var FullScreen = {
     // showing a local file or a local data URI, and we require explicit
     // approval every time.
     let authUI = document.getElementById("full-screen-approval-pane");
-    if (isApproved)
+    if (isApproved) {
       authUI.setAttribute("hidden", "true");
-    else {
+      this.warningBox.removeAttribute("obscure-browser");
+    } else {
       // Partially obscure the <browser> element underneath the approval UI.
       this.warningBox.setAttribute("obscure-browser", "true");
       authUI.removeAttribute("hidden");
@@ -5430,6 +5437,12 @@ function setToolbarVisibility(toolbar, isVisible) {
 var TabsOnTop = {
   init: function TabsOnTop_init() {
     Services.prefs.addObserver(this._prefName, this, false);
+
+    // Only show the toggle UI if the user disabled tabs on top.
+    if (Services.prefs.getBoolPref(this._prefName)) {
+      for (let item of document.querySelectorAll("menuitem[command=cmd_ToggleTabsOnTop]"))
+        item.parentNode.removeChild(item);
+    }
   },
 
   uninit: function TabsOnTop_uninit() {

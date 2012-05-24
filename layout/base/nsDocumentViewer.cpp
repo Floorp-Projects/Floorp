@@ -2536,10 +2536,15 @@ NS_IMETHODIMP DocumentViewerImpl::CopyLinkLocation()
   // make noise if we're not in a link
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
-  nsAutoString locationText;
-  nsresult rv = mPresShell->GetLinkLocation(node, locationText);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<dom::Element> elm(do_QueryInterface(node));
+  NS_ENSURE_TRUE(elm, NS_ERROR_FAILURE);
 
+  nsAutoString locationText;
+  nsContentUtils::GetLinkLocation(elm, locationText);
+  if (locationText.IsEmpty())
+    return NS_ERROR_FAILURE;
+
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 

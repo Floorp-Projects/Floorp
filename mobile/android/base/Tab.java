@@ -12,7 +12,6 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
@@ -139,9 +138,7 @@ public final class Tab {
 
     float getDensity() {
         if (sDensity == 0.0f) {
-            DisplayMetrics metrics = new DisplayMetrics();
-            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-            sDensity = metrics.density;
+            sDensity = GeckoApp.mAppContext.getDisplayMetrics().density;
         }
         return sDensity;
     }

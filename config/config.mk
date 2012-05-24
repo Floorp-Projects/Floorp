@@ -340,13 +340,16 @@ MAKE_JARS_FLAGS += --both-manifests
 endif
 
 TAR_CREATE_FLAGS = -cvhf
+TAR_CREATE_FLAGS_QUIET = -chf
 
 ifeq ($(OS_ARCH),BSD_OS)
 TAR_CREATE_FLAGS = -cvLf
+TAR_CREATE_FLAGS_QUIET = -cLf
 endif
 
 ifeq ($(OS_ARCH),OS2)
 TAR_CREATE_FLAGS = -cvf
+TAR_CREATE_FLAGS_QUIET = -cf
 endif
 
 #

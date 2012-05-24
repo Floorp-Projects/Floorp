@@ -6,10 +6,11 @@
 #include "nsHTMLLinkAccessible.h"
 
 #include "nsCoreUtils.h"
+#include "nsDocAccessible.h"
 #include "Role.h"
 #include "States.h"
 
-#include "nsDocAccessible.h"
+#include "nsContentUtils.h"
 #include "nsEventStates.h"
 #include "mozilla/dom/Element.h"
 
@@ -77,12 +78,8 @@ nsHTMLLinkAccessible::Value(nsString& aValue)
   aValue.Truncate();
 
   nsHyperTextAccessible::Value(aValue);
-  if (!aValue.IsEmpty())
-    return;
-  
-  nsIPresShell* presShell(mDoc->PresShell());
-  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
-  presShell->GetLinkLocation(DOMNode, aValue);
+  if (aValue.IsEmpty())
+    nsContentUtils::GetLinkLocation(mContent->AsElement(), aValue);
 }
 
 PRUint8

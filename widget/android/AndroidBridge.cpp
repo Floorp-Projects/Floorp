@@ -1631,14 +1631,6 @@ AndroidBridge::HandleGeckoMessage(const nsAString &aMessage, nsAString &aRet)
     ALOG_BRIDGE("leaving %s", __PRETTY_FUNCTION__);
 }
 
-static nsCOMPtr<nsIAndroidDrawMetadataProvider> gDrawMetadataProvider = NULL;
-
-nsCOMPtr<nsIAndroidDrawMetadataProvider>
-AndroidBridge::GetDrawMetadataProvider()
-{
-    return gDrawMetadataProvider;
-}
-
 void
 AndroidBridge::CheckURIVisited(const nsAString& aURI)
 {
@@ -2040,24 +2032,23 @@ AndroidBridge::IsTablet()
 }
 
 void
-AndroidBridge::SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight,
-                                     float aCssPageWidth, float aCssPageHeight)
+AndroidBridge::SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
         return;
 
-    client->SetFirstPaintViewport(aOffsetX, aOffsetY, aZoom, aPageWidth, aPageHeight, aCssPageWidth, aCssPageHeight);
+    client->SetFirstPaintViewport(aOffset, aZoom, aPageRect, aCssPageRect);
 }
 
 void
-AndroidBridge::SetPageSize(float aZoom, float aPageWidth, float aPageHeight, float aCssPageWidth, float aCssPageHeight)
+AndroidBridge::SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
         return;
 
-    client->SetPageSize(aZoom, aPageWidth, aPageHeight, aCssPageWidth, aCssPageHeight);
+    client->SetPageRect(aZoom, aPageRect, aCssPageRect);
 }
 
 void
@@ -2095,13 +2086,6 @@ nsAndroidBridge::~nsAndroidBridge()
 NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(const nsAString & message, nsAString &aRet NS_OUTPARAM)
 {
     AndroidBridge::Bridge()->HandleGeckoMessage(message, aRet);
-    return NS_OK;
-}
-
-/* void SetDrawMetadataProvider (in nsIAndroidDrawMetadataProvider message); */
-NS_IMETHODIMP nsAndroidBridge::SetDrawMetadataProvider(nsIAndroidDrawMetadataProvider *aProvider)
-{
-    gDrawMetadataProvider = aProvider;
     return NS_OK;
 }
 

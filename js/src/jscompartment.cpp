@@ -457,13 +457,14 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 {
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        JS_ASSERT_IF(IsAboutToBeFinalized(e.front().key) &&
-                     !IsAboutToBeFinalized(e.front().value),
-                     e.front().key.isString());
-        if (IsAboutToBeFinalized(e.front().key) ||
-            IsAboutToBeFinalized(e.front().value)) {
+        Value key = e.front().key;
+        bool keyMarked = IsValueMarked(&key);
+        bool valMarked = IsValueMarked(e.front().value.unsafeGet());
+        JS_ASSERT_IF(!keyMarked && valMarked, key.isString());
+        if (!keyMarked || !valMarked)
             e.removeFront();
-        }
+        else if (key != e.front().key)
+            e.rekeyFront(key);
     }
 
     /* Remove dead references held weakly by the compartment. */
@@ -473,7 +474,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
     sweepNewTypeObjectTable(newTypeObjects);
     sweepNewTypeObjectTable(lazyTypeObjects);
 
-    if (emptyTypeObject && IsAboutToBeFinalized(emptyTypeObject))
+    if (emptyTypeObject && !IsTypeObjectMarked(emptyTypeObject.unsafeGet()))
         emptyTypeObject = NULL;
 
     sweepBreakpoints(fop);
@@ -722,7 +723,8 @@ JSCompartment::sweepBreakpoints(FreeOp *fop)
         JSScript *script = i.get<JSScript>();
         if (!script->hasAnyBreakpointsOrStepMode())
             continue;
-        bool scriptGone = IsAboutToBeFinalized(script);
+        bool scriptGone = !IsScriptMarked(&script);
+        JS_ASSERT(script == i.get<JSScript>());
         for (unsigned i = 0; i < script->length; i++) {
             BreakpointSite *site = script->getBreakpointSite(script->code + i);
             if (!site)
@@ -732,7 +734,7 @@ JSCompartment::sweepBreakpoints(FreeOp *fop)
             Breakpoint *nextbp;
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
                 nextbp = bp->nextInSite();
-                if (scriptGone || IsAboutToBeFinalized(bp->debugger->toJSObject()))
+                if (scriptGone || !IsObjectMarked(&bp->debugger->toJSObjectRef()))
                     bp->destroy(fop);
             }
         }

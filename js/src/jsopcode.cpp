@@ -5537,6 +5537,8 @@ js_DecompileFunction(JSPrinter *jp)
             if (i > 0)
                 js_puts(jp, ", ");
 
+            if (i == unsigned(fun->nargs) - 1 && fun->hasRest())
+                js_puts(jp, "...");
             JSAtom *param = GetArgOrVarAtom(jp, i);
 
 #if JS_HAS_DESTRUCTURING

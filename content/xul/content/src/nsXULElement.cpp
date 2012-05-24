@@ -59,7 +59,6 @@
 #include "nsIWidget.h"
 #include "nsIXULDocument.h"
 #include "nsIXULTemplateBuilder.h"
-#include "nsIXBLService.h"
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "nsRDFCID.h"
@@ -104,9 +103,6 @@
 #include "nsCCUncollectableMarker.h"
 
 namespace css = mozilla::css;
-
-// Global object maintenance
-nsIXBLService * nsXULElement::gXBLService = nsnull;
 
 /**
  * A tearoff class for nsXULElement to implement nsIScriptEventHandlerOwner.

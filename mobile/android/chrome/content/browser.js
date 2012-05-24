@@ -119,14 +119,6 @@ var Strings = {};
   });
 });
 
-var MetadataProvider = {
-  getDrawMetadata: function getDrawMetadata() {
-    let viewport = BrowserApp.selectedTab.getViewport();
-    viewport.zoom = BrowserApp.selectedTab._drawZoom;
-    return JSON.stringify(viewport);
-  },
-};
-
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
@@ -140,8 +132,6 @@ var BrowserApp = {
     this.deck = document.getElementById("browsers");
     BrowserEventHandler.init();
     ViewportHandler.init();
-
-    getBridge().setDrawMetadataProvider(MetadataProvider);
 
     getBridge().browserApp = this;
 
@@ -1881,11 +1871,15 @@ Tab.prototype = {
       height: gScreenHeight,
       cssWidth: gScreenWidth / this._zoom,
       cssHeight: gScreenHeight / this._zoom,
-      pageWidth: gScreenWidth,
-      pageHeight: gScreenHeight,
+      pageLeft: 0,
+      pageTop: 0,
+      pageRight: gScreenWidth,
+      pageBottom: gScreenHeight,
       // We make up matching css page dimensions
-      cssPageWidth: gScreenWidth / this._zoom,
-      cssPageHeight: gScreenHeight / this._zoom,
+      cssPageLeft: 0,
+      cssPageTop: 0,
+      cssPageRight: gScreenWidth / this._zoom,
+      cssPageBottom: gScreenHeight / this._zoom,
       zoom: this._zoom,
     };
 
@@ -1899,30 +1893,31 @@ Tab.prototype = {
 
     let doc = this.browser.contentDocument;
     if (doc != null) {
-      let [pageWidth, pageHeight] = this.getPageSize(doc, viewport.cssWidth, viewport.cssHeight);
-
-      let cssPageWidth = pageWidth;
-      let cssPageHeight = pageHeight;
-
-      /* Transform the page width and height based on the zoom factor. */
-      pageWidth *= viewport.zoom;
-      pageHeight *= viewport.zoom;
+      let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let cssPageRect = cwu.getRootBounds();
 
       /*
        * Avoid sending page sizes of less than screen size before we hit DOMContentLoaded, because
        * this causes the page size to jump around wildly during page load. After the page is loaded,
        * send updates regardless of page size; we'll zoom to fit the content as needed.
        *
-       * Also, we need to compare the page size returned from getPageSize (in CSS pixels) to the floored
-       * screen size in CSS pixels because the page size returned from getPageSize may also be floored.
+       * In the check below, we floor the viewport size because there might be slight rounding errors
+       * introduced in the CSS page size due to the conversion to and from app units in Gecko. The
+       * error should be no more than one app unit so doing the floor is overkill, but safe in the
+       * sense that the extra page size updates that get sent as a result will be mostly harmless.
        */
-      let pageLargerThanScreen = (cssPageWidth >= Math.floor(viewport.cssWidth))
-                              && (cssPageHeight >= Math.floor(viewport.cssHeight));
+      let pageLargerThanScreen = (cssPageRect.width >= Math.floor(viewport.cssWidth))
+                              && (cssPageRect.height >= Math.floor(viewport.cssHeight));
       if (doc.readyState === 'complete' || pageLargerThanScreen) {
-        viewport.cssPageWidth = cssPageWidth;
-        viewport.cssPageHeight = cssPageHeight;
-        viewport.pageWidth = pageWidth;
-        viewport.pageHeight = pageHeight;
+        viewport.cssPageLeft = cssPageRect.left;
+        viewport.cssPageTop = cssPageRect.top;
+        viewport.cssPageRight = cssPageRect.right;
+        viewport.cssPageBottom = cssPageRect.bottom;
+        /* Transform the page width and height based on the zoom factor. */
+        viewport.pageLeft = (viewport.cssPageLeft * viewport.zoom);
+        viewport.pageTop = (viewport.cssPageTop * viewport.zoom);
+        viewport.pageRight = (viewport.cssPageRight * viewport.zoom);
+        viewport.pageBottom = (viewport.cssPageBottom * viewport.zoom);
       }
     }
 
@@ -2705,13 +2700,13 @@ var BrowserEventHandler = {
 
       let viewport = BrowserApp.selectedTab.getViewport();
       let vRect = new Rect(viewport.cssX, viewport.cssY, viewport.cssWidth, viewport.cssHeight);
-      let bRect = new Rect(Math.max(0,rect.x - margin),
+      let bRect = new Rect(Math.max(viewport.cssPageLeft, rect.x - margin),
                            rect.y,
                            rect.w + 2*margin,
                            rect.h);
 
-      // constrict the rect to the screen width
-      bRect.width = Math.min(bRect.width, viewport.cssPageWidth - bRect.x);
+      // constrict the rect to the screen's right edge
+      bRect.width = Math.min(bRect.width, viewport.cssPageRight - bRect.x);
 
       let overlap = vRect.intersect(bRect);
       let overlapArea = overlap.width*overlap.height;
@@ -2964,10 +2959,11 @@ const ElementTouchHelper = {
       return target;
 
     target = null;
-    let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.top * dpiRatio,
-                                                   this.radius.right * dpiRatio,
-                                                   this.radius.bottom * dpiRatio,
-                                                   this.radius.left * dpiRatio, true, false);
+    let zoom = BrowserApp.selectedTab._zoom;
+    let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.top * dpiRatio / zoom,
+                                                   this.radius.right * dpiRatio / zoom,
+                                                   this.radius.bottom * dpiRatio / zoom,
+                                                   this.radius.left * dpiRatio / zoom, true, false);
 
     let threshold = Number.POSITIVE_INFINITY;
     for (let i = 0; i < nodes.length; i++) {

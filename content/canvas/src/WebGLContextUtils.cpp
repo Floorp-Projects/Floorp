@@ -32,20 +32,25 @@
 using namespace mozilla;
 
 void
-WebGLContext::LogMessage(const char *fmt, ...)
+WebGLContext::GenerateWarning(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
 
-    LogMessage(fmt, ap);
+    GenerateWarning(fmt, ap);
 
     va_end(ap);
 }
 
 void
-WebGLContext::LogMessage(const char *fmt, va_list ap)
+WebGLContext::GenerateWarning(const char *fmt, va_list ap)
 {
-    if (!fmt) return;
+    const int MaxReportedMessages = 32;
+
+    if (mAlreadyReportedMessages >= MaxReportedMessages)
+        return;
+
+    mAlreadyReportedMessages++;
 
     char buf[1024];
     PR_vsnprintf(buf, 1024, fmt, ap);
@@ -54,40 +59,21 @@ WebGLContext::LogMessage(const char *fmt, va_list ap)
 
     nsCOMPtr<nsIJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
     JSContext* ccx = nsnull;
-    if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx)
+    if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
         JS_ReportWarning(ccx, "WebGL: %s", buf);
-}
-
-void
-WebGLContext::LogMessageIfVerbose(const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-
-    LogMessageIfVerbose(fmt, ap);
-
-    va_end(ap);
-}
-
-void
-WebGLContext::LogMessageIfVerbose(const char *fmt, va_list ap)
-{
-    static bool firstTime = true;
-
-    if (mVerbose)
-        LogMessage(fmt, ap);
-    else if (firstTime)
-        LogMessage("There are WebGL warnings or messages in this page, but they are hidden. To see them, "
-                   "go to about:config, set the webgl.verbose preference, and reload this page.");
-
-    firstTime = false;
+        if (mAlreadyReportedMessages == MaxReportedMessages) {
+            JS_ReportWarning(ccx,
+                "WebGL: no further warnings will be reported for this WebGL context "
+                "(already reported %d warnings)", mAlreadyReportedMessages);
+        }
+    }
 }
 
 CheckedUint32
 WebGLContext::GetImageSize(WebGLsizei height, 
                            WebGLsizei width, 
-                           PRUint32 pixelSize,
-                           PRUint32 packOrUnpackAlignment)
+                           uint32_t pixelSize,
+                           uint32_t packOrUnpackAlignment)
 {
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * pixelSize;
 
@@ -122,7 +108,7 @@ WebGLContext::SynthesizeGLError(WebGLenum err, const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(err);
@@ -133,7 +119,7 @@ WebGLContext::ErrorInvalidEnum(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_ENUM);
@@ -144,7 +130,7 @@ WebGLContext::ErrorInvalidOperation(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_OPERATION);
@@ -155,7 +141,7 @@ WebGLContext::ErrorInvalidValue(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_VALUE);
@@ -166,7 +152,7 @@ WebGLContext::ErrorInvalidFramebufferOperation(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION);
@@ -177,7 +163,7 @@ WebGLContext::ErrorOutOfMemory(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    LogMessageIfVerbose(fmt, va);
+    GenerateWarning(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY);

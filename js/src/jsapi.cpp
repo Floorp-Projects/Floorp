@@ -1666,8 +1666,8 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     AssertNoGC(cx);
     JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
     JS_ASSERT(!IsCrossCompartmentWrapper(origwrapper));
-    JS_ASSERT(!IsCrossCompartmentWrapper(origwrapper));
-    JS_ASSERT(!IsCrossCompartmentWrapper(origwrapper));
+    JS_ASSERT(!IsCrossCompartmentWrapper(targetobj));
+    JS_ASSERT(!IsCrossCompartmentWrapper(targetwrapper));
 
     JSObject *newWrapper;
     JSCompartment *destination = targetobj->compartment();
@@ -2918,7 +2918,9 @@ JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(void *thing)
 {
     gc::Cell *t = static_cast<gc::Cell *>(thing);
-    return IsAboutToBeFinalized(t);
+    bool isMarked = IsCellMarked(&t);
+    JS_ASSERT(t == thing);
+    return !isMarked;
 }
 
 JS_PUBLIC_API(void)
@@ -4968,8 +4970,10 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8, JSObject *obj, c
     result = JS_TRUE;
     exnState = JS_SaveExceptionState(cx);
     {
-        Parser parser(cx);
-        if (parser.init(chars, length, NULL, 1, cx->findVersion())) {
+        Parser parser(cx, /* prin = */ NULL, /* originPrin = */ NULL,
+                      chars, length, /* filename = */ NULL, /* lineno = */ 1, cx->findVersion(), 
+                      /* cfp = */ NULL, /* foldConstants = */ true, /* compileAndGo = */ false);
+        if (parser.init()) {
             older = JS_SetErrorReporter(cx, NULL);
             if (!parser.parse(obj) &&
                 parser.tokenStream.isUnexpectedEOF()) {

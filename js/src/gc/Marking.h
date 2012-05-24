@@ -67,11 +67,14 @@ void Mark##base(JSTracer *trc, HeapPtr<type> *thing, const char *name);         
 void Mark##base##Root(JSTracer *trc, type **thingp, const char *name);                            \
 void Mark##base##Unbarriered(JSTracer *trc, type **thingp, const char *name);                     \
 void Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type> *thing, const char *name);        \
-void Mark##base##RootRange(JSTracer *trc, size_t len, type **thing, const char *name);
+void Mark##base##RootRange(JSTracer *trc, size_t len, type **thing, const char *name);            \
+bool Is##base##Marked(type **thingp);                                                             \
+bool Is##base##Marked(HeapPtr<type> *thingp);
 
 DeclMarker(BaseShape, BaseShape)
 DeclMarker(BaseShape, UnownedBaseShape)
 DeclMarker(Object, ArgumentsObject)
+DeclMarker(Object, DebugScopeObject)
 DeclMarker(Object, GlobalObject)
 DeclMarker(Object, JSObject)
 DeclMarker(Object, JSFunction)
@@ -110,6 +113,9 @@ void
 MarkIdRoot(JSTracer *trc, jsid *id, const char *name);
 
 void
+MarkIdUnbarriered(JSTracer *trc, jsid *id, const char *name);
+
+void
 MarkIdRange(JSTracer *trc, size_t len, HeapId *vec, const char *name);
 
 void
@@ -134,6 +140,9 @@ MarkValueRootRange(JSTracer *trc, Value *begin, Value *end, const char *name)
 {
     MarkValueRootRange(trc, end - begin, begin, name);
 }
+
+bool
+IsValueMarked(Value *v);
 
 /*** Slot Marking ***/
 
@@ -224,18 +233,27 @@ Mark(JSTracer *trc, HeapPtr<JSXML> *xml, const char *name)
 }
 #endif
 
+bool
+IsCellMarked(Cell **thingp);
+
 inline bool
-IsMarked(const Value &v)
+IsMarked(EncapsulatedValue *v)
 {
-    if (v.isMarkable())
-        return !IsAboutToBeFinalized(v);
-    return true;
+    if (!v->isMarkable())
+        return true;
+    return IsValueMarked(v->unsafeGet());
 }
 
 inline bool
-IsMarked(Cell *cell)
+IsMarked(HeapPtrObject *objp)
 {
-    return !IsAboutToBeFinalized(cell);
+    return IsObjectMarked(objp);
+}
+
+inline bool
+IsMarked(HeapPtrScript *scriptp)
+{
+    return IsScriptMarked(scriptp);
 }
 
 inline Cell *

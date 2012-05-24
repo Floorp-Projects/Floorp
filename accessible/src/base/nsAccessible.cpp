@@ -23,6 +23,7 @@
 #include "States.h"
 #include "StyleInfo.h"
 
+#include "nsContentUtils.h"
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMElement.h"
@@ -787,7 +788,7 @@ nsAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
   nsPoint offset(presContext->DevPixelsToAppUnits(aX) - screenRect.x,
                  presContext->DevPixelsToAppUnits(aY) - screenRect.y);
 
-  nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+  nsIPresShell* presShell = presContext->PresShell();
   nsIFrame *foundFrame = presShell->GetFrameForPoint(frame, offset);
 
   nsIContent* content = nsnull;
@@ -1679,13 +1680,8 @@ nsAccessible::Value(nsString& aValue)
     return;
 
   // Check if it's a simple xlink.
-  if (nsCoreUtils::IsXLink(mContent)) {
-    nsIPresShell* presShell = mDoc->PresShell();
-    if (presShell) {
-      nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
-      presShell->GetLinkLocation(DOMNode, aValue);
-    }
-  }
+  if (nsCoreUtils::IsXLink(mContent))
+    nsContentUtils::GetLinkLocation(mContent->AsElement(), aValue);
 }
 
 // nsIAccessibleValue
