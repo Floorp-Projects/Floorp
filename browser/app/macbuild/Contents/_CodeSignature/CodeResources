@@ -36,6 +36,10 @@
                 <key>omit</key>
                 <true/>
             </dict>
+            <key>^MacOS/removed-files$</key><dict>
+                <key>omit</key>
+                <true/>
+            </dict>
             <key>^MacOS/updates.xml$</key><dict>
                 <key>omit</key>
                 <true/>
