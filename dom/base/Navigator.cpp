@@ -42,8 +42,8 @@
 #include "TelephonyFactory.h"
 #endif
 #ifdef MOZ_B2G_BT
-#include "nsIDOMBluetoothManager.h"
-#include "BluetoothManager.h"
+#include "nsIDOMBluetoothAdapter.h"
+#include "BluetoothAdapter.h"
 #endif
 
 // This should not be in the namespace.
@@ -1161,16 +1161,15 @@ Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
 //*****************************************************************************
 
 NS_IMETHODIMP
-Navigator::GetMozBluetooth(nsIDOMBluetoothManager** aBluetooth)
+Navigator::GetMozBluetooth(nsIDOMBluetoothAdapter** aBluetooth)
 {
-  nsCOMPtr<nsIDOMBluetoothManager> bluetooth = mBluetooth;
+  nsCOMPtr<nsIDOMBluetoothAdapter> bluetooth = mBluetooth;
 
   if (!bluetooth) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-    nsresult rv = NS_NewBluetoothManager(window, getter_AddRefs(mBluetooth));
-    NS_ENSURE_SUCCESS(rv, rv);
+    mBluetooth = new bluetooth::BluetoothAdapter(window);
 
     bluetooth = mBluetooth;
   }
