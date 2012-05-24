@@ -509,7 +509,7 @@ function testTakeRecords() {
 
       is(m.takeRecords().length, 0, "Shouldn't have any records");
       observer.disconnect();
-      then();
+      then(testMutationObserverAndEvents);
       m = null;
     });
   m.observe(div, { childList: true, attributes: true });
@@ -520,6 +520,31 @@ function testTakeRecords() {
   div.setAttribute("foo", "bar");
   div.innerHTML = s;
   div.removeAttribute("foo");
+}
+
+function testTakeRecords() {
+  m = new M(function(records, observer) {
+      is(records.length, 2, "Should have got 2 records");
+      is(records[0].type, "attributes", "Should have got attributes");
+      is(records[0].attributeName, "foo", "");
+      is(records[0].oldValue, null, "");
+      is(records[1].type, "attributes", "Should have got attributes");
+      is(records[1].attributeName, "foo", "");
+      is(records[1].oldValue, "bar", "");
+      observer.disconnect();
+      then();
+      m = null;
+    });
+  m.observe(div, { attributes: true, attributeOldValue: true });
+  var mutationEventCount = 0;
+  div.addEventListener("DOMAttrModified",
+                       function(e) {
+                         ++mutationEventCount;
+                         is(e.attrChange, MutationEvent.ADDITION, "unexpected change");
+                       });
+  div.setAttribute("foo", "bar");
+  div.setAttribute("foo", "bar");
+  is(mutationEventCount, 1, "Should have got only one mutation event!");
 }
 
 SimpleTest.waitForExplicitFinish();
