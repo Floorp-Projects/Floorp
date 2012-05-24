@@ -31,6 +31,7 @@ GLSLGenerator.runFeatureTest({
             "  return t * t * (3.0 - 2.0 * t);",
             "}"].join("\n"),
   gridRes: 8,
+  tolerance: 1,
   tests: [
     ["$(output) = vec4(",
      "    $(func)(0.3, 0.7, $(input).x),",
