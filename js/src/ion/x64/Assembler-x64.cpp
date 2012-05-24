@@ -155,7 +155,7 @@ Assembler::executableCopy(uint8 *buffer)
             // An extended jump table must exist, and its offset must be in
             // range.
             JS_ASSERT(extendedJumpTable_);
-            JS_ASSERT((extendedJumpTable_ + i * SizeOfJumpTableEntry) < size() - SizeOfJumpTableEntry);
+            JS_ASSERT((extendedJumpTable_ + i * SizeOfJumpTableEntry) <= size() - SizeOfJumpTableEntry);
 
             // Patch the jump to go to the extended jump entry.
             uint8 *entry = buffer + extendedJumpTable_ + i * SizeOfJumpTableEntry;
@@ -205,7 +205,7 @@ Assembler::CodeFromJump(IonCode *code, uint8 *jump)
     if (target >= code->raw() && target < code->raw() + code->instructionsSize()) {
         // This jump is within the code buffer, so it has been redirected to
         // the extended jump table.
-        JS_ASSERT(target + SizeOfJumpTableEntry < code->raw() + code->instructionsSize());
+        JS_ASSERT(target + SizeOfJumpTableEntry <= code->raw() + code->instructionsSize());
 
         target = (uint8 *)JSC::X86Assembler::getPointer(target + SizeOfExtendedJump);
     }
