@@ -198,7 +198,7 @@ class AddToMap {
         if (!hkey.setValue(cx, key))
             return false;
 
-        HashableValue::StackRoot hkeyRoot(cx, &hkey);
+        HashableValue::AutoRooter hkeyRoot(cx, &hkey);
 
         Value val;
         if (!pairobj->getElement(cx, 1, &val))

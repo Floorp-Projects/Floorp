@@ -41,9 +41,23 @@ class HashableValue {
     bool equals(const HashableValue &other) const;
     HashableValue mark(JSTracer *trc) const;
 
-    struct StackRoot {
-        StackRoot(JSContext *cx, HashableValue *pv) : valueRoot(cx, (Value*) &pv->value) {}
-        RootValue valueRoot;
+    class AutoRooter : private AutoGCRooter
+    {
+      public:
+        explicit AutoRooter(JSContext *cx, HashableValue *v_
+                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
+          : AutoGCRooter(cx, HASHABLEVALUE), v(v_), skip(cx, v_)
+        {
+            JS_GUARD_OBJECT_NOTIFIER_INIT;
+        }
+
+        friend void AutoGCRooter::trace(JSTracer *trc);
+        void trace(JSTracer *trc);
+
+      private:
+        HashableValue *v;
+        SkipRoot skip;
+        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
     };
 };
 

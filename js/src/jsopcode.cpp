@@ -420,7 +420,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
                 return false;
 
             Shape::Range r = obj->lastProperty()->all();
-            Shape::Range::Root root(cx, &r);
+            Shape::Range::AutoRooter root(cx, &r);
 
             while (!r.empty()) {
                 RootedVar<const Shape*> shape(cx, &r.front());
