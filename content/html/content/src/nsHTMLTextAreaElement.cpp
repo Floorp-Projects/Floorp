@@ -1146,6 +1146,7 @@ nsHTMLTextAreaElement::IntrinsicState() const
   }
 
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
+      !nsContentUtils::IsFocusedContent((nsIContent*)(this)) &&
       IsValueEmpty()) {
     state |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
   }
@@ -1514,7 +1515,8 @@ nsHTMLTextAreaElement::OnValueChanged(bool aNotify)
   UpdateValueMissingValidityState();
 
   if (validBefore != IsValid() ||
-      HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
+      (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)
+       && !nsContentUtils::IsFocusedContent((nsIContent*)(this)))) {
     UpdateState(aNotify);
   }
 }

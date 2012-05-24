@@ -1,7 +1,7 @@
 textarea:-moz-placeholder,
 textarea.ref {
   -moz-appearance: none;
-  color: -moz-FieldText;
+  color: black;
   background-color: green;
 }
 
