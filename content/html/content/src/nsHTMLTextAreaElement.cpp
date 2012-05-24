@@ -713,7 +713,7 @@ nsHTMLTextAreaElement::FireChangeEventIfNeeded()
   mFocusedValue = value;
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                        static_cast<nsIContent*>(this),
-                                       NS_LITERAL_STRING("change"), true, 
+                                       NS_LITERAL_STRING("change"), true,
                                        false);
 }
 
