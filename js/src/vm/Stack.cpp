@@ -9,6 +9,7 @@
 #include "gc/Marking.h"
 #include "methodjit/MethodJIT.h"
 #include "ion/IonFrames.h"
+#include "ion/Bailouts.h"
 #include "Stack.h"
 
 #include "jsgcinlines.h"
@@ -761,12 +762,13 @@ ContextStack::popSegment()
 }
 
 bool
-ContextStack::pushInvokeArgs(JSContext *cx, unsigned argc, InvokeArgsGuard *iag)
+ContextStack::pushInvokeArgs(JSContext *cx, unsigned argc, InvokeArgsGuard *iag,
+                             MaybeReportError report)
 {
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
     unsigned nvars = 2 + argc;
-    Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &iag->pushedSeg_);
+    Value *firstUnused = ensureOnTop(cx, report, nvars, CAN_EXTEND, &iag->pushedSeg_);
     if (!firstUnused)
         return false;
 
@@ -792,28 +794,38 @@ ContextStack::popInvokeArgs(const InvokeArgsGuard &iag)
         popSegment();
 }
 
-bool
-ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
-                              InitialFrameFlags initial, InvokeFrameGuard *ifg)
+StackFrame *
+ContextStack::pushInvokeFrame(JSContext *cx, MaybeReportError report,
+                              const CallArgs &args, JSFunction *fun,
+                              InitialFrameFlags initial, FrameGuard *fg)
 {
     JS_ASSERT(onTop());
     JS_ASSERT(space().firstUnused() == args.end());
 
-    JSObject &callee = args.callee();
-    JSFunction *fun = callee.toFunction();
     JSScript *script = fun->script();
 
     StackFrame::Flags flags = ToFrameFlags(initial);
-    StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, fun, script, &flags);
+    StackFrame *fp = getCallFrame(cx, report, args, fun, script, &flags);
     if (!fp)
-        return false;
+        return NULL;
 
     fp->initCallFrame(cx, *fun, script, args.length(), flags);
-    ifg->regs_.prepareToRun(*fp, script);
+    fg->regs_.prepareToRun(*fp, script);
 
-    ifg->prevRegs_ = seg_->pushRegs(ifg->regs_);
-    JS_ASSERT(space().firstUnused() == ifg->regs_.sp);
-    ifg->setPushed(*this);
+    fg->prevRegs_ = seg_->pushRegs(fg->regs_);
+    JS_ASSERT(space().firstUnused() == fg->regs_.sp);
+    fg->setPushed(*this);
+    return fp;
+}
+
+bool
+ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
+                              InitialFrameFlags initial, InvokeFrameGuard *ifg)
+{
+    JSObject &callee = args.callee();
+    JSFunction *fun = callee.toFunction();
+    if (!pushInvokeFrame(cx, REPORT_ERROR, args, fun, initial, ifg))
+        return false;
     return true;
 }
 
@@ -869,26 +881,29 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
     return true;
 }
 
-StackFrame *
-ContextStack::pushBailoutFrame(JSContext *cx, JSFunction &fun,
-                               JSScript *script, BailoutFrameGuard *bfg)
+bool
+ContextStack::pushBailoutArgs(JSContext *cx, const ion::IonBailoutIterator &it, InvokeArgsGuard *iag)
 {
-    unsigned formalArgs = fun.nargs + 2;
-    unsigned nvars = formalArgs + VALUES_PER_STACK_FRAME + script->nslots;
-    Value *firstUnused = ensureOnTop(cx, DONT_REPORT_ERROR, nvars, CAN_EXTEND, &bfg->pushedSeg_);
-    if (!firstUnused)
-        return NULL;
-    
-    StackFrame *fp = reinterpret_cast<StackFrame *>(firstUnused + formalArgs);
-    fp->initCallFrame(cx, fun, script, fun.nargs, ToFrameFlags(INITIAL_NONE));
+    unsigned argc = it.numActualArgs();
+    ion::SnapshotIterator s(it);
 
-    SetValueRangeToUndefined(fp->slots(), script->nfixed);
-    bfg->regs_.prepareToRun(*fp, script);
+    if (!pushInvokeArgs(cx, argc, iag, DONT_REPORT_ERROR))
+        return false;
 
-    bfg->prevRegs_ = seg_->pushRegs(bfg->regs_);
-    JS_ASSERT(space().firstUnused() == bfg->regs_.sp);
-    bfg->setPushed(*this);
-    return fp;
+    JSFunction *fun = it.callee();
+    iag->setCallee(ObjectValue(*fun));
+
+    CopyTo dst(iag->array());
+    Value *src = it.actualArgs();
+    return s.readFrameArgs(dst, src, NULL, &iag->thisv(), 0, fun->nargs, argc);
+}
+
+StackFrame *
+ContextStack::pushBailoutFrame(JSContext *cx, const ion::IonBailoutIterator &it,
+                               const CallArgs &args, BailoutFrameGuard *bfg)
+{
+    JSFunction *fun = it.callee();
+    return pushInvokeFrame(cx, DONT_REPORT_ERROR, args, fun, INITIAL_NONE, bfg);
 }
 
 bool

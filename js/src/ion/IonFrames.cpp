@@ -156,6 +156,24 @@ IonFrameIterator::isFunctionFrame() const
     return js::ion::CalleeTokenIsFunction(calleeToken());
 }
 
+bool
+IonFrameIterator::isEntryJSFrame() const
+{
+    if (prevType() == IonFrame_JS)
+        return false;
+
+    if (prevType() == IonFrame_Entry)
+        return true;
+
+    IonFrameIterator iter(*this);
+    ++iter;
+    for (; !iter.done(); ++iter) {
+        if (iter.isScripted())
+            return false;
+    }
+    return true;
+}
+
 JSScript *
 IonFrameIterator::script() const
 {
@@ -173,9 +191,9 @@ IonFrameIterator::nativeVp() const
 }
 
 Value *
-IonFrameIterator::argv() const
+IonFrameIterator::actualArgs() const
 {
-    return jsFrame()->argv();
+    return jsFrame()->argv() + 1;
 }
 
 uint8 *
@@ -405,7 +423,9 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
     }
 
     if (CalleeTokenIsFunction(layout->calleeToken())) {
-        size_t nargs = CalleeTokenToFunction(layout->calleeToken())->nargs;
+        // (NBP) We do not need to mark formal arguments since they are covered
+        // by the safepoint.
+        size_t nargs = frame.numActualArgs();
 
         // Trace function arguments. Note + 1 for thisv.
         Value *argv = layout->argv();
@@ -502,9 +522,9 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 }
 
 static void
-MarkIonActivation(JSTracer *trc, uint8 *top, IonActivation *activation)
+MarkIonActivation(JSTracer *trc, const IonActivationIterator &activations)
 {
-    for (IonFrameIterator frames(top); !frames.done(); ++frames) {
+    for (IonFrameIterator frames(activations); !frames.done(); ++frames) {
         switch (frames.type()) {
           case IonFrame_Exit:
             MarkIonExitFrame(trc, frames);
@@ -513,9 +533,11 @@ MarkIonActivation(JSTracer *trc, uint8 *top, IonActivation *activation)
             MarkIonJSFrame(trc, frames);
             break;
           case IonFrame_Rectifier:
-          case IonFrame_Bailed_Rectifier:
-            MarkIonCodeRoot(trc, activation->compartment()->ionCompartment()->getArgumentsRectifierAddr(), "Arguments Rectifier");
+          case IonFrame_Bailed_Rectifier: {
+            IonCompartment *ionCompartment = activations.activation()->compartment()->ionCompartment();
+            MarkIonCodeRoot(trc, ionCompartment->getArgumentsRectifierAddr(), "Arguments Rectifier");
             break;
+          }
           case IonFrame_Osr:
             // The callee token will be marked by the callee JS frame;
             // otherwise, it does not need to be marked, since the frame is
@@ -532,7 +554,7 @@ void
 ion::MarkIonActivations(JSRuntime *rt, JSTracer *trc)
 {
     for (IonActivationIterator activations(rt); activations.more(); ++activations)
-        MarkIonActivation(trc, activations.top(), activations.activation());
+        MarkIonActivation(trc, activations);
 }
 
 void
