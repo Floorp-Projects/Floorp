@@ -142,6 +142,13 @@ public: /* internal necko use only */
 
     OfflineCacheEntryAsForeignMarker* GetOfflineCacheEntryAsForeignMarker();
 
+    /**
+     * Returns true if this channel is operating in private browsing mode,
+     * false otherwise.
+     */
+    virtual bool UsingPrivateBrowsing();
+    void OverridePrivateBrowsing(bool usingPrivateBrowsing);
+
 private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 
@@ -331,6 +338,12 @@ private:
     // True if mRequestTime has been set. In such a case it is safe to update
     // the cache entry's expiration time. Otherwise, it is not(see bug 567360).
     PRUint32                          mRequestTimeInitialized : 1;
+
+    // Private browsing capabilities can only be determined in content
+    // processes, so when networking occurs these values are used in
+    // lieu of UsingPrivateBrowsing().
+    PRUint32                          mOverridePrivateBrowsing : 1;
+    PRUint32                          mUsingPrivateBrowsing : 1;
 
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 

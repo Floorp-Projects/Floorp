@@ -202,6 +202,12 @@ protected:
                                            bool preserveMethod,
                                            bool forProxy);
 
+  /**
+   * Returns true if this channel is operating in private browsing mode,
+   * false otherwise.
+   */
+  virtual bool UsingPrivateBrowsing();
+
   // Helper function to simplify getting notification callbacks.
   template <class T>
   void GetCallback(nsCOMPtr<T> &aResult)
