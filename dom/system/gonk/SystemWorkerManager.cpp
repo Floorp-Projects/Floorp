@@ -211,14 +211,23 @@ SystemWorkerManager::Init()
   }
 
   nsresult rv = InitRIL(cx);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to initialize RIL/Telephony!");
+    return rv;
+  }
 
   rv = InitWifi(cx);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to initialize WiFi Networking!");
+    return rv;
+  }
 
 #ifdef MOZ_B2G_BT
   rv = InitBluetooth(cx);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to initialize Bluetooth!");
+    return rv;
+  }
 #endif
 
   nsCOMPtr<nsIObserverService> obs =
@@ -229,7 +238,10 @@ SystemWorkerManager::Init()
   }
 
   rv = obs->AddObserver(this, WORKERS_SHUTDOWN_TOPIC, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to initialize worker shutdown event!");
+    return rv;
+  }
 
   return NS_OK;
 }
