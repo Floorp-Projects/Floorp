@@ -922,7 +922,7 @@ js::AssertValidPropertyCacheHit(JSContext *cx,
     uint64_t sample = cx->runtime->gcNumber;
     PropertyCacheEntry savedEntry = *entry;
 
-    RootedPropertyName name(cx, GetNameFromBytecode(cx, pc, JSOp(*pc), js_CodeSpec[*pc]));
+    RootedPropertyName name(cx, GetNameFromBytecode(cx, pc, JSOp(*pc)));
     RootedObject start(cx, start_);
 
     JSObject *obj, *pobj;

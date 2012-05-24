@@ -1067,7 +1067,7 @@ JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(uint32_t, jsbytecode));
 JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(jsbytecode, jssrcnote));
 
 static inline size_t
-ScriptDataSize(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
+ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
                uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
                uint16_t nClosedArgs, uint16_t nClosedVars)
 {
@@ -1108,7 +1108,7 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
                     uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
                     uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets, JSVersion version)
 {
-    size_t size = ScriptDataSize(cx, length, nsrcnotes, natoms, nobjects, nregexps,
+    size_t size = ScriptDataSize(length, nsrcnotes, natoms, nobjects, nregexps,
                                  ntrynotes, nconsts, nClosedArgs, nClosedVars);
 
     uint8_t *data = AllocScriptData(cx, size);
@@ -1713,7 +1713,7 @@ js::CloneScript(JSContext *cx, HandleScript src)
 
     /* Script data */
 
-    size_t size = ScriptDataSize(cx, src->length, src->numNotes(), src->natoms,
+    size_t size = ScriptDataSize(src->length, src->numNotes(), src->natoms,
                                  nobjects, nregexps, ntrynotes, nconsts, nClosedArgs, nClosedVars);
 
     uint8_t *data = AllocScriptData(cx, size);
