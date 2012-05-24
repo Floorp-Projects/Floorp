@@ -130,6 +130,8 @@ function run_test()
                             ctypes.UInt64, "ctypes.UInt64", ulimits);
   run_wrapped_integer_tests(library, ctypes.intptr_t, "intptr_t", ctypes.size_t.size, true,
                             ctypes.Int64, "ctypes.Int64", slimits);
+  run_wrapped_integer_tests(library, ctypes.off_t, "off_t", ctypes.off_t.size, true,
+                            ctypes.Int64, "ctypes.Int64", slimits);
 
   // Test the character types.
   run_char_tests(library, ctypes.char, "char", 1, true, [-0x80, 0x7f]);
