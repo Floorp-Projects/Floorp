@@ -9,7 +9,7 @@ function run_test()
     while (decoderList.hasMore()) {
 	var decoder = decoderList.getNext();
 	try {
-	    var langGroup = ccManager.getCharsetLangGroup(decoder);
+	    var langGroup = ccManager.getCharsetLangGroupRaw(decoder);
 	} catch(e) {
 	    dump("no langGroup for " + decoder + "\n");
 	    failures = true;

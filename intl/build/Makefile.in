@@ -39,6 +39,7 @@ LOCAL_INCLUDES = \
 			-I$(srcdir)/../strres/src \
 			-I$(srcdir)/../locale/src \
 			-I$(srcdir)/../locale/src/$(LOCALE_DIR) \
+			-I$(srcdir)/../uconv/src \
 			$(NULL)
 
 SHARED_LIBRARY_LIBS = \
