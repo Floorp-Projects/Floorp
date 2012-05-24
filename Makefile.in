@@ -166,6 +166,7 @@ endif
 	OBJCOPY="$(OBJCOPY)" \
 	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \
 	  $(MAKE_SYM_STORE_ARGS)                                          \
+	  --exclude="*test*" --exclude="*Test*"                           \
 	  $(foreach dir,$(SYM_STORE_SOURCE_DIRS),-s $(dir))               \
 	  $(DUMP_SYMS_BIN)                                                \
 	  $(DIST)/crashreporter-symbols                                   \
