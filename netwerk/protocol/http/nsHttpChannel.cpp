@@ -100,8 +100,6 @@ nsHttpChannel::nsHttpChannel()
     , mFallingBack(false)
     , mWaitingForRedirectCallback(false)
     , mRequestTimeInitialized(false)
-    , mOverridePrivateBrowsing(false)
-    , mUsingPrivateBrowsing(false)
     , mDidReval(false)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
@@ -5407,20 +5405,4 @@ nsHttpChannel::AsyncOnExamineCachedResponse()
 {
     gHttpHandler->OnExamineCachedResponse(this);
 
-}
-
-bool
-nsHttpChannel::UsingPrivateBrowsing()
-{
-    if (mOverridePrivateBrowsing)
-        return mUsingPrivateBrowsing;
-    return HttpBaseChannel::UsingPrivateBrowsing();
-}
-
-void
-nsHttpChannel::OverridePrivateBrowsing(bool usingPrivateBrowsing)
-{
-    MOZ_ASSERT(!mWasOpened);
-    mOverridePrivateBrowsing = true;
-    mUsingPrivateBrowsing = usingPrivateBrowsing;
 }

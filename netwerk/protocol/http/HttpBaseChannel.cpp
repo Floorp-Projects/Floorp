@@ -27,7 +27,8 @@ namespace mozilla {
 namespace net {
 
 HttpBaseChannel::HttpBaseChannel()
-  : mStartPos(LL_MAXUINT)
+  : PrivateBrowsingConsumer(this)
+  , mStartPos(LL_MAXUINT)
   , mStatus(NS_OK)
   , mLoadFlags(LOAD_NORMAL)
   , mPriority(PRIORITY_NORMAL)
@@ -140,17 +141,18 @@ HttpBaseChannel::Init(nsIURI *aURI,
 // HttpBaseChannel::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED9(HttpBaseChannel,
-                             nsHashPropertyBag, 
-                             nsIRequest,
-                             nsIChannel,
-                             nsIEncodedChannel,
-                             nsIHttpChannel,
-                             nsIHttpChannelInternal,
-                             nsIUploadChannel,
-                             nsIUploadChannel2,
-                             nsISupportsPriority,
-                             nsITraceableChannel)
+NS_IMPL_ISUPPORTS_INHERITED10(HttpBaseChannel,
+                              nsHashPropertyBag, 
+                              nsIRequest,
+                              nsIChannel,
+                              nsIEncodedChannel,
+                              nsIHttpChannel,
+                              nsIHttpChannelInternal,
+                              nsIUploadChannel,
+                              nsIUploadChannel2,
+                              nsISupportsPriority,
+                              nsITraceableChannel,
+                              nsIPrivateBrowsingConsumer)
 
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsIRequest
@@ -1664,19 +1666,6 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   }
 
   return NS_OK;
-}
-
-bool
-HttpBaseChannel::UsingPrivateBrowsing()
-{
-  nsCOMPtr<nsILoadContext> loadContext;
-  GetCallback(loadContext);
-  if (!loadContext) {
-    return false;
-  }
-  bool pb;
-  loadContext->GetUsePrivateBrowsing(&pb);
-  return pb;
 }
 
 //------------------------------------------------------------------------------
