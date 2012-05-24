@@ -83,6 +83,10 @@ class MediaStreamGraph;
  * reentry into media graph methods is possible, although very much discouraged!
  * You should do something non-blocking and non-reentrant (e.g. dispatch an
  * event to some thread) and return.
+ *
+ * When a listener is first attached, we guarantee to send a NotifyBlockingChanged
+ * callback to notify of the initial blocking state. Also, if a listener is
+ * attached to a stream that has already finished, we'll call NotifyFinished.
  */
 class MediaStreamListener {
 public:
@@ -263,10 +267,7 @@ public:
   {
     mExplicitBlockerCount.SetAtAndAfter(aTime, mExplicitBlockerCount.GetAt(aTime) + aDelta);
   }
-  void AddListenerImpl(already_AddRefed<MediaStreamListener> aListener)
-  {
-    *mListeners.AppendElement() = aListener;
-  }
+  void AddListenerImpl(already_AddRefed<MediaStreamListener> aListener);
   void RemoveListenerImpl(MediaStreamListener* aListener)
   {
     mListeners.RemoveElement(aListener);
