@@ -24,8 +24,6 @@
 @APPNAME@/Contents/Info.plist
 @APPNAME@/Contents/PkgInfo
 @APPNAME@/Contents/Resources/
-@APPNAME@/Contents/CodeResources
-@APPNAME@/Contents/_CodeSignature/CodeResources
 #endif
 
 [@AB_CD@]
