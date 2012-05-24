@@ -268,8 +268,8 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
              */
             if (checkAccess && i.isNonEvalFunctionFrame()) {
                 Value v = NullValue();
-                RootedVarId callerid(cx, NameToId(cx->runtime->atomState.callerAtom));
-                if (!checkAccess(cx, RootedVarObject(cx, i.callee()), callerid, JSACC_READ, &v))
+                RootedId callerid(cx, NameToId(cx->runtime->atomState.callerAtom));
+                if (!checkAccess(cx, RootedObject(cx, i.callee()), callerid, JSACC_READ, &v))
                     break;
             }
 
@@ -537,12 +537,12 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     }
 
     JSObject *errProto = &protov.toObject();
-    RootedVarObject obj(cx, NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL));
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL));
     if (!obj)
         return false;
 
     /* Set the 'message' property. */
-    RootedVarString message(cx);
+    RootedString message(cx);
     if (args.hasDefined(0)) {
         message = ToString(cx, args[0]);
         if (!message)
@@ -556,7 +556,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     ScriptFrameIter iter(cx);
 
     /* Set the 'fileName' property. */
-    RootedVarString filename(cx);
+    RootedString filename(cx);
     if (args.length() > 1) {
         filename = ToString(cx, args[1]);
         if (!filename)
@@ -611,7 +611,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Step 4. */
-    RootedVarString name(cx);
+    RootedString name(cx);
     if (nameVal.isUndefined()) {
         name = CLASS_NAME(cx, Error);
     } else {
@@ -767,16 +767,16 @@ static JSObject *
 InitErrorClass(JSContext *cx, Handle<GlobalObject*> global, int type, HandleObject proto)
 {
     JSProtoKey key = GetExceptionProtoKey(type);
-    RootedVarAtom name(cx, cx->runtime->atomState.classAtoms[key]);
-    RootedVarObject errorProto(cx, global->createBlankPrototypeInheriting(cx, &ErrorClass, *proto));
+    RootedAtom name(cx, cx->runtime->atomState.classAtoms[key]);
+    RootedObject errorProto(cx, global->createBlankPrototypeInheriting(cx, &ErrorClass, *proto));
     if (!errorProto)
         return NULL;
 
-    RootedVarValue empty(cx, StringValue(cx->runtime->emptyString));
-    RootedVarId nameId(cx, NameToId(cx->runtime->atomState.nameAtom));
-    RootedVarId messageId(cx, NameToId(cx->runtime->atomState.messageAtom));
-    RootedVarId fileNameId(cx, NameToId(cx->runtime->atomState.fileNameAtom));
-    RootedVarId lineNumberId(cx, NameToId(cx->runtime->atomState.lineNumberAtom));
+    RootedValue empty(cx, StringValue(cx->runtime->emptyString));
+    RootedId nameId(cx, NameToId(cx->runtime->atomState.nameAtom));
+    RootedId messageId(cx, NameToId(cx->runtime->atomState.messageAtom));
+    RootedId fileNameId(cx, NameToId(cx->runtime->atomState.fileNameAtom));
+    RootedId lineNumberId(cx, NameToId(cx->runtime->atomState.lineNumberAtom));
     if (!DefineNativeProperty(cx, errorProto, nameId, StringValue(name),
                               JS_PropertyStub, JS_StrictPropertyStub, 0, 0, 0) ||
         !DefineNativeProperty(cx, errorProto, messageId, empty,
@@ -790,7 +790,7 @@ InitErrorClass(JSContext *cx, Handle<GlobalObject*> global, int type, HandleObje
     }
 
     /* Create the corresponding constructor. */
-    RootedVarFunction ctor(cx);
+    RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, Exception, name, 1,
                                      JSFunction::ExtendedFinalizeKind);
     if (!ctor)
@@ -814,14 +814,14 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     JS_ASSERT(obj->isGlobal());
     JS_ASSERT(obj->isNative());
 
-    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
 
-    RootedVarObject objectProto(cx, global->getOrCreateObjectPrototype(cx));
+    RootedObject objectProto(cx, global->getOrCreateObjectPrototype(cx));
     if (!objectProto)
         return NULL;
 
     /* Initialize the base Error class first. */
-    RootedVarObject errorProto(cx);
+    RootedObject errorProto(cx);
     errorProto = InitErrorClass(cx, global, JSEXN_ERR, objectProto);
     if (!errorProto)
         return NULL;
@@ -961,17 +961,17 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
         return false;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    RootedVarObject errObject(cx, NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL));
+    RootedObject errObject(cx, NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL));
     if (!errObject)
         return false;
     tv[1] = OBJECT_TO_JSVAL(errObject);
 
-    RootedVarString messageStr(cx, JS_NewStringCopyZ(cx, message));
+    RootedString messageStr(cx, JS_NewStringCopyZ(cx, message));
     if (!messageStr)
         return false;
     tv[2] = STRING_TO_JSVAL(messageStr);
 
-    RootedVarString filenameStr(cx, JS_NewStringCopyZ(cx, reportp->filename));
+    RootedString filenameStr(cx, JS_NewStringCopyZ(cx, reportp->filename));
     if (!filenameStr)
         return false;
     tv[3] = STRING_TO_JSVAL(filenameStr);
@@ -1015,12 +1015,12 @@ js_ReportUncaughtException(JSContext *cx)
 {
     jsval roots[6];
     JSErrorReport *reportp, report;
-    RootedVarString str(cx);
+    RootedString str(cx);
 
     if (!JS_IsExceptionPending(cx))
         return true;
 
-    RootedVarValue exn(cx);
+    RootedValue exn(cx);
     if (!JS_GetPendingException(cx, exn.address()))
         return false;
 
@@ -1033,7 +1033,7 @@ js_ReportUncaughtException(JSContext *cx)
      * need to root other intermediates, so allocate an operand stack segment
      * to protect all of these values.
      */
-    RootedVarObject exnObject(cx);
+    RootedObject exnObject(cx);
     if (JSVAL_IS_PRIMITIVE(exn)) {
         exnObject = NULL;
     } else {
@@ -1055,14 +1055,14 @@ js_ReportUncaughtException(JSContext *cx)
         (exnObject->isError() ||
          IsDuckTypedErrorObject(cx, exnObject, &filename_str)))
     {
-        RootedVarString name(cx);
+        RootedString name(cx);
         if (JS_GetProperty(cx, exnObject, js_name_str, &roots[2]) &&
             JSVAL_IS_STRING(roots[2]))
         {
             name = JSVAL_TO_STRING(roots[2]);
         }
 
-        RootedVarString msg(cx);
+        RootedString msg(cx);
         if (JS_GetProperty(cx, exnObject, js_message_str, &roots[3]) &&
             JSVAL_IS_STRING(roots[3]))
         {

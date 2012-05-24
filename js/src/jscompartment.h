@@ -474,7 +474,7 @@ class AutoCompartment
 class ErrorCopier
 {
     AutoCompartment &ac;
-    RootedVarObject scope;
+    RootedObject scope;
 
   public:
     ErrorCopier(AutoCompartment &ac, JSObject *scope) : ac(ac), scope(ac.context, scope) {

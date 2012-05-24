@@ -1677,7 +1677,7 @@ TypeSet::isOwnProperty(JSContext *cx, TypeObject *object, bool configurable)
      */
     if (object->flags & OBJECT_FLAG_NEW_SCRIPT_REGENERATE) {
         if (object->newScript) {
-            CheckNewScriptProperties(cx, RootedVarTypeObject(cx, object),
+            CheckNewScriptProperties(cx, RootedTypeObject(cx, object),
                                      object->newScript->fun);
         } else {
             JS_ASSERT(object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED);
@@ -1879,7 +1879,7 @@ TypeObject *
 TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
                                JSProtoKey key, JSObject *proto_, bool unknown)
 {
-    RootedVarObject proto(cx, proto_);
+    RootedObject proto(cx, proto_);
 
     TypeObject *object = gc::NewGCThing<TypeObject>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
     if (!object)
@@ -4367,7 +4367,7 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
         pc = script->code + uses->offset;
         op = JSOp(*pc);
 
-        RootedVarObject obj(cx, *pbaseobj);
+        RootedObject obj(cx, *pbaseobj);
 
         if (op == JSOP_SETPROP && uses->u.which == 1) {
             /*
@@ -4375,7 +4375,7 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
              * integer properties and bail out. We can't mark the aggregate
              * JSID_VOID type property as being in a definite slot.
              */
-            RootedVarId id(cx, NameToId(script->getName(GET_UINT32_INDEX(pc))));
+            RootedId id(cx, NameToId(script->getName(GET_UINT32_INDEX(pc))));
             if (MakeTypeId(cx, id) != id)
                 return false;
             if (id_prototype(cx) == id || id___proto__(cx) == id || id_constructor(cx) == id)
@@ -4523,7 +4523,7 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, JSFunction *fun)
         return;
 
     /* Strawman object to add properties to and watch for duplicates. */
-    RootedVarObject baseobj(cx);
+    RootedObject baseobj(cx);
     baseobj = NewBuiltinClassInstance(cx, &ObjectClass, gc::FINALIZE_OBJECT16);
     if (!baseobj) {
         if (type->newScript)
@@ -4960,8 +4960,8 @@ TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Val
 bool
 TypeScript::SetScope(JSContext *cx, JSScript *script_, JSObject *scope_)
 {
-    RootedVar<JSScript*> script(cx, script_);
-    RootedVarObject scope(cx, scope_);
+    Rooted<JSScript*> script(cx, script_);
+    RootedObject scope(cx, scope_);
 
     JS_ASSERT(script->types && !script->types->hasScope());
 
@@ -5354,7 +5354,7 @@ JSScript::makeAnalysis(JSContext *cx)
     if (!types->analysis)
         return false;
 
-    RootedVar<JSScript*> self(cx, this);
+    Rooted<JSScript*> self(cx, this);
 
     types->analysis->analyzeBytecode(cx);
 
@@ -5638,14 +5638,14 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
         return type;
     }
 
-    RootedVarObject self(cx, this);
+    RootedObject self(cx, this);
 
     if (!setDelegate(cx))
         return NULL;
 
     bool markUnknown = self->lastProperty()->hasObjectFlag(BaseShape::NEW_TYPE_UNKNOWN);
 
-    RootedVarTypeObject type(cx);
+    RootedTypeObject type(cx);
     type = cx->compartment->types.newTypeObject(cx, NULL, JSProto_Object, self, markUnknown);
     if (!type)
         return NULL;

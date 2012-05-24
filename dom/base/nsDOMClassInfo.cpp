@@ -6944,7 +6944,7 @@ static JSBool
 LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBool strict,
                         jsval *vp)
 {
-  JS::RootedVarObject obj(cx, obj_);
+  JS::RootedObject obj(cx, obj_);
 
   JSObject *wrapped = XPCWrapper::UnsafeUnwrapSecurityWrapper(obj);
   if (wrapped) {
@@ -6959,8 +6959,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj_, jsid id_, PRUint32 flags,
                        JSObject **objp, bool *_retval)
 {
-  JS::RootedVarObject obj(cx, obj_);
-  JS::RootedVarId id(cx, id_);
+  JS::RootedObject obj(cx, obj_);
+  JS::RootedId id(cx, id_);
 
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
 

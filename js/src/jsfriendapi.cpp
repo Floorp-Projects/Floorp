@@ -39,7 +39,7 @@ JS_GetAnonymousString(JSRuntime *rt)
 JS_FRIEND_API(JSObject *)
 JS_FindCompilationScope(JSContext *cx, JSObject *obj_)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     /*
      * We unwrap wrappers here. This is a little weird, but it's what's being
@@ -188,7 +188,7 @@ DefineHelpProperty(JSContext *cx, HandleObject obj, const char *prop, const char
 JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj_, const JSFunctionSpecWithHelp *fs)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     JS_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
 
@@ -199,8 +199,8 @@ JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj_, const JSFunctionSpecWi
         if (!atom)
             return false;
 
-        RootedVarFunction fun(cx);
-        fun = js_DefineFunction(cx, obj, RootedVarId(cx, AtomToId(atom)),
+        RootedFunction fun(cx);
+        fun = js_DefineFunction(cx, obj, RootedId(cx, AtomToId(atom)),
                                 fs->call, fs->nargs, fs->flags);
         if (!fun)
             return false;
@@ -299,7 +299,7 @@ JS_FRIEND_API(JSFunction *)
 js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj_, const char *name, JSNative call,
                                unsigned nargs, unsigned attrs)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
@@ -307,7 +307,7 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj_, const char *name, 
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, obj, RootedVarId(cx, AtomToId(atom)),
+    return js_DefineFunction(cx, obj, RootedId(cx, AtomToId(atom)),
                              call, nargs, attrs,
                              JSFunction::ExtendedFinalizeKind);
 }
@@ -316,7 +316,7 @@ JS_FRIEND_API(JSFunction *)
 js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
                             JSObject *parent_, const char *name)
 {
-    RootedVarObject parent(cx, parent_);
+    RootedObject parent(cx, parent_);
 
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     JSAtom *atom;
@@ -340,7 +340,7 @@ JS_FRIEND_API(JSFunction *)
 js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsigned flags, JSObject *parent_,
                                 jsid id)
 {
-    RootedVarObject parent(cx, parent_);
+    RootedObject parent(cx, parent_);
 
     JS_ASSERT(JSID_IS_STRING(id));
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
@@ -357,7 +357,7 @@ js::InitClassWithReserved(JSContext *cx, JSObject *obj_, JSObject *parent_proto,
                           JSPropertySpec *ps, JSFunctionSpec *fs,
                           JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, parent_proto);
