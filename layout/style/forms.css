@@ -145,6 +145,11 @@ textarea:-moz-placeholder {
   color: GrayText;
 }
 
+input:-moz-placeholder > .anonymous-div:not(.placeholder),
+textarea:-moz-placeholder > .anonymous-div:not(.placeholder) {
+  color: -moz-FieldText;
+}
+
 input > .placeholder,
 textarea > .placeholder {
   overflow: hidden;
