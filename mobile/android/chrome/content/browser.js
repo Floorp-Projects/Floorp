@@ -2959,10 +2959,11 @@ const ElementTouchHelper = {
       return target;
 
     target = null;
-    let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.top * dpiRatio,
-                                                   this.radius.right * dpiRatio,
-                                                   this.radius.bottom * dpiRatio,
-                                                   this.radius.left * dpiRatio, true, false);
+    let zoom = BrowserApp.selectedTab._zoom;
+    let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.top * dpiRatio / zoom,
+                                                   this.radius.right * dpiRatio / zoom,
+                                                   this.radius.bottom * dpiRatio / zoom,
+                                                   this.radius.left * dpiRatio / zoom, true, false);
 
     let threshold = Number.POSITIVE_INFINITY;
     for (let i = 0; i < nodes.length; i++) {
