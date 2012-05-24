@@ -6286,19 +6286,23 @@ nsGlobalWindow::CanClose()
 NS_IMETHODIMP
 nsGlobalWindow::Close()
 {
+  printf("start of close\n");
   FORWARD_TO_OUTER(Close, (), NS_ERROR_NOT_INITIALIZED);
-
+  
   if (IsFrame() || !mDocShell || IsInModalState()) {
     // window.close() is called on a frame in a frameset, on a window
     // that's already closed, or on a window for which there's
     // currently a modal dialog open. Ignore such calls.
-
+    printf("IsFrame: %s, mDocShell: %s, IsInModalState: %s\n",
+      (IsFrame() ? "true" : "false"), (mDocShell ? "true" : "false"),
+      (IsInModalState() ? "true" : "false"));
     return NS_OK;
   }
 
   if (mHavePendingClose) {
     // We're going to be closed anyway; do nothing since we don't want
     // to double-close
+    printf("mhavependingclose\n");
     return NS_OK;
   }
 
@@ -6313,6 +6317,7 @@ nsGlobalWindow::Close()
   // Don't allow scripts from content to close windows
   // that were not opened by script
   if (!mHadOriginalOpener && !nsContentUtils::IsCallerTrustedForWrite()) {
+    printf("disallow scripts from content\n");
     bool allowClose =
       Preferences::GetBool("dom.allow_scripts_to_close_windows", true);
     if (!allowClose) {
@@ -6344,11 +6349,12 @@ nsGlobalWindow::Close()
   if (!DispatchCustomEvent("DOMWindowClose")) {
     // Someone chose to prevent the default action for this event, if
     // so, let's not close this window after all...
-
+    printf("prevetn default on close\n");
     mInClose = wasInClose;
     return NS_OK;
   }
 
+  printf("calling finalclose\n");
   return FinalClose();
 }
 
@@ -6599,6 +6605,7 @@ private:
 void
 nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
 {
+  printf("LeaveModalState\n");
   nsGlobalWindow *topWin = GetTop();
 
   if (!topWin) {

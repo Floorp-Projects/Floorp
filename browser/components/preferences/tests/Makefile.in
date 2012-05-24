@@ -26,6 +26,7 @@ _BROWSER_FILES = \
     browser_privacypane_8.js \
     browser_permissions.js \
     browser_chunk_permissions.js \
+    browser_prefs_simple.js \
     $(NULL)
 
 libs::	$(_BROWSER_FILES)
