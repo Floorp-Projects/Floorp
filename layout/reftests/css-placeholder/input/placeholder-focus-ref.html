@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html class='reftest-wait'>
+  <link rel='stylesheet' type='text/css' href='style.css'>
   <script>
     function loadHandler()
     {
@@ -11,6 +12,6 @@
     }
   </script>
   <body onload='loadHandler();'>
-    <input id='i' onfocus='focusHandler();'>
+    <input id='i' class='ref' value='foo' onfocus='focusHandler();'>
   </body>
 </html>
