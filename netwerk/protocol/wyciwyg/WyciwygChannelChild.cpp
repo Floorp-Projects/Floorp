@@ -24,7 +24,8 @@ NS_IMPL_ISUPPORTS3(WyciwygChannelChild,
 
 
 WyciwygChannelChild::WyciwygChannelChild()
-  : mStatus(NS_OK)
+  : PrivateBrowsingConsumer(this)
+  , mStatus(NS_OK)
   , mIsPending(false)
   , mCanceled(false)
   , mLoadFlags(LOAD_NORMAL)
@@ -32,7 +33,7 @@ WyciwygChannelChild::WyciwygChannelChild()
   , mCharsetSource(kCharsetUninitialized)
   , mState(WCC_NEW)
   , mIPCOpen(false)
-  , mEventQ(this)
+  , mEventQ(NS_ISUPPORTS_CAST(nsIWyciwygChannel*, this))
 {
   LOG(("Creating WyciwygChannelChild @%x\n", this));
 }
@@ -561,7 +562,7 @@ WyciwygChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aConte
   if (mLoadGroup)
     mLoadGroup->AddRequest(this, nsnull);
 
-  SendAsyncOpen(IPC::URI(mOriginalURI), mLoadFlags);
+  SendAsyncOpen(IPC::URI(mOriginalURI), mLoadFlags, UsePrivateBrowsing());
 
   mState = WCC_OPENED;
 

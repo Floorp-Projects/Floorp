@@ -161,7 +161,7 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
     mLoadGroup->AddRequest(this, nsnull);
 
   SendAsyncOpen(nsBaseChannel::URI(), mStartPos, mEntityID,
-                IPC::InputStream(mUploadStream), UsingPrivateBrowsing());
+                IPC::InputStream(mUploadStream), UsePrivateBrowsing());
 
   // The socket transport layer in the chrome process now has a logical ref to
   // us until OnStopRequest is called.
