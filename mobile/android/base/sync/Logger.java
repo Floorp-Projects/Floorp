@@ -38,7 +38,7 @@ public class Logger {
   /**
    * Empty the caches of log levels.
    */
-  public synchronized void refreshLogLevels() {
+  public static synchronized void refreshLogLevels() {
     isErrorLoggable   = new IdentityHashMap<String, Boolean>();
     isWarnLoggable    = new IdentityHashMap<String, Boolean>();
     isInfoLoggable    = new IdentityHashMap<String, Boolean>();
