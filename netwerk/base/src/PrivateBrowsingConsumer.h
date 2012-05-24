@@ -53,7 +53,7 @@ class PrivateBrowsingConsumer : public nsIPrivateBrowsingConsumer
 
   NS_IMETHOD GetUsingPrivateBrowsing(bool *aUsingPB)
   {
-    *aUsingPB = (mOverride ? mUsingPB : UsingPrivateBrowsing());
+    *aUsingPB = (mOverride ? mUsingPB : UsingPrivateBrowsingInternal());
     return NS_OK;
   }
   
@@ -66,7 +66,7 @@ class PrivateBrowsingConsumer : public nsIPrivateBrowsingConsumer
   }
 
  protected:
-  bool UsingPrivateBrowsing()
+  bool UsingPrivateBrowsingInternal()
   {
     nsCOMPtr<nsILoadContext> loadContext;
     NS_QueryNotificationCallbacks(mSelf, loadContext);

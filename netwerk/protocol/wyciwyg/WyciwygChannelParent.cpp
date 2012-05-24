@@ -78,7 +78,8 @@ WyciwygChannelParent::RecvInit(const IPC::URI& aURI)
 
 bool
 WyciwygChannelParent::RecvAsyncOpen(const IPC::URI& aOriginal,
-                                    const PRUint32& aLoadFlags)
+                                    const PRUint32& aLoadFlags,
+                                    const bool& aUsingPrivateBrowsing)
 {
   nsCOMPtr<nsIURI> original(aOriginal);
 
@@ -96,6 +97,9 @@ WyciwygChannelParent::RecvAsyncOpen(const IPC::URI& aOriginal,
   rv = mChannel->SetLoadFlags(aLoadFlags);
   if (NS_FAILED(rv))
     return SendCancelEarly(rv);
+
+  static_cast<nsWyciwygChannel*>(mChannel.get())->
+    OverridePrivateBrowsing(aUsingPrivateBrowsing);
 
   rv = mChannel->AsyncOpen(this, nsnull);
   if (NS_FAILED(rv))
