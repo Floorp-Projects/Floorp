@@ -3261,7 +3261,7 @@ Compile(JSContext *cx, unsigned argc, jsval *vp)
     unsigned oldopts = JS_GetOptions(cx);
     JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
     bool ok = JS_CompileUCScript(cx, fakeGlobal, JS_GetStringCharsZ(cx, scriptContents),
-                                 JS_GetStringLength(scriptContents), "<string>", 0);
+                                 JS_GetStringLength(scriptContents), "<string>", 1);
     JS_SetOptions(cx, oldopts);
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -3286,7 +3286,7 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
     JSString *scriptContents = JSVAL_TO_STRING(arg0);
     js::Parser parser(cx, /* prin = */ NULL, /* originPrin = */ NULL,
                       JS_GetStringCharsZ(cx, scriptContents), JS_GetStringLength(scriptContents),
-                      "<string>", /* lineno = */ 0, cx->findVersion(),
+                      "<string>", /* lineno = */ 1, cx->findVersion(),
                       /* cfp = */ NULL, /* foldConstants = */ true, /* compileAndGo = */ false);
     if (!parser.init())
         return JS_FALSE;
