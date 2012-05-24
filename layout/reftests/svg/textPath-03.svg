@@ -1,0 +1,18 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Test effect on startOffset in em units</title>
+
+  <defs>
+    <path id="p" d="M100,100 h200" stroke="red"/>
+  </defs>
+
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <text font-size="50" fill="red">
+      <textPath xlink:href="#p" startOffset="2em">abc</textPath>
+  </text>
+  <text x="100" y="100" dx="2em" font-size="50" stroke-width="4" fill="lime" stroke="lime">abc</text>
+</svg>
