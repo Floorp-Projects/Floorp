@@ -1077,7 +1077,7 @@ private:
                 // Assume IEEE 754 precision
                 range[0] = 127;
                 range[1] = 127;
-                *precision = 0;
+                *precision = 23;
                 break;
             case LOCAL_GL_LOW_INT:
             case LOCAL_GL_MEDIUM_INT:
