@@ -6,11 +6,12 @@
 #include "nsISupports.idl"
 
 interface nsISimpleEnumerator;
+interface nsIFile;
 interface nsILocalFile;
 interface nsIToolkitProfile;
 interface nsIProfileLock;
 
-[scriptable, uuid(9b434f48-438c-4f85-89de-b7f321a45341)]
+[scriptable, uuid(b619f83d-8317-473c-b342-67905993fdc7)]
 interface nsIToolkitProfileService : nsISupports
 {
     attribute boolean startWithLastProfile;
@@ -51,6 +52,35 @@ interface nsIToolkitProfileService : nsISupports
     nsIToolkitProfile createProfile(in nsILocalFile aRootDir,
                                     in nsILocalFile aTempDir,
                                     in AUTF8String aName);
+
+    /**
+     * Create the default profile for an application.
+     *
+     * The profile will be typically in
+     * {Application Data}/.profilename/{salt}.default or
+     * {Application Data}/.appname/{salt}.default
+     * or if aVendorName is provided
+     * {Application Data}/.vendor/appname/{salt}.default
+     *
+     * @note Either aProfileName or aAppName must be non-empty
+     *
+     * The contents of aProfileDefaultsDir will be copied to the
+     * new profile directory.
+     * 
+     * @param  aProfileName
+     *         The name of the profile
+     * @param  aAppName
+     *         The name of the application
+     * @param  aVendorName
+     *         The name of the vendor
+     * @param  aProfileDefaultsDir
+     *         The location where the profile defaults are.
+     * @return The created profile.
+     */                                    
+    nsIToolkitProfile createDefaultProfileForApp(in AUTF8String aProfileName,
+                                                 in AUTF8String aAppName,
+                                                 in AUTF8String aVendorName,
+                                                 [optional] in nsIFile aProfileDefaultsDir);
 
     /**
      * Returns the number of profiles.
