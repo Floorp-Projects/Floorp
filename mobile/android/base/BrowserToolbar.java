@@ -35,6 +35,8 @@ public class BrowserToolbar {
     private LinearLayout mLayout;
     private Button mAwesomeBar;
     private ImageButton mTabs;
+    private ImageView mBack;
+    private ImageView mForward;
     public ImageButton mFavicon;
     public ImageButton mStop;
     public ImageButton mSiteSecurity;
@@ -119,13 +121,19 @@ public class BrowserToolbar {
                 TextView text = new TextView(mContext);
                 text.setGravity(Gravity.CENTER);
 
-                if (Build.VERSION.SDK_INT >= 11) {
-                    if (GeckoApp.mOrientation == Configuration.ORIENTATION_PORTRAIT)
-                        text.setTextSize(24);
-                    else
-                        text.setTextSize(20);
+                if (Build.VERSION.SDK_INT >= 14) {
+                    if (!GeckoApp.mAppContext.isTablet()) {
+                        if (GeckoApp.mOrientation == Configuration.ORIENTATION_PORTRAIT)
+                            text.setTextSize(24);
+                        else
+                            text.setTextSize(20);
+                    } else {
+                        text.setTextSize(26);
+                    }
+                } else if (Build.VERSION.SDK_INT >= 11) {
+                    text.setTextSize(24);
                 } else {
-                    text.setTextSize(22);
+                    text.setTextSize(24);
                 }
 
                 text.setTextColor(mCounterColor);
@@ -135,6 +143,20 @@ public class BrowserToolbar {
         }); 
         mTabsCount.setText("0");
         mCount = 0;
+
+        mBack = (ImageButton) mLayout.findViewById(R.id.back);
+        mBack.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View view) {
+                Tabs.getInstance().getSelectedTab().doBack();
+            }
+        });
+
+        mForward = (ImageButton) mLayout.findViewById(R.id.forward);
+        mForward.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View view) {
+                Tabs.getInstance().getSelectedTab().doForward();
+            }
+        });
 
         mFavicon = (ImageButton) mLayout.findViewById(R.id.favicon);
         mSiteSecurity = (ImageButton) mLayout.findViewById(R.id.site_security);
@@ -324,6 +346,16 @@ public class BrowserToolbar {
         mLayout.requestFocusFromTouch();
     }
 
+    public void updateBackButton(boolean enabled) {
+         mBack.setColorFilter(enabled ? 0 : 0xFF999999);
+         mBack.setEnabled(enabled);
+    }
+
+    public void updateForwardButton(boolean enabled) {
+         mForward.setColorFilter(enabled ? 0 : 0xFF999999);
+         mForward.setEnabled(enabled);
+    }
+
     public void show() {
         if (Build.VERSION.SDK_INT >= 11)
             GeckoActionBar.show(GeckoApp.mAppContext);
@@ -348,6 +380,8 @@ public class BrowserToolbar {
             setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
             setShadowVisibility((url == null) || !url.startsWith("about:"));
             updateTabCount(Tabs.getInstance().getCount());
+            updateBackButton(tab.canDoBack());
+            updateForwardButton(tab.canDoForward());
         }
     }
 }
