@@ -364,10 +364,6 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
             Value referent = GetProxyPrivate(&v.toObject());
             MarkValueRoot(trc, &referent, "cross-compartment wrapper");
             JS_ASSERT(referent == GetProxyPrivate(&v.toObject()));
-
-            Value call = GetProxyCall(&v.toObject());
-            MarkValueRoot(trc, &call, "cross-compartment wrapper");
-            JS_ASSERT(call == GetProxyCall(&v.toObject()));
         } else {
             /*
              * Strings don't have a private pointer to mark, so we use the
