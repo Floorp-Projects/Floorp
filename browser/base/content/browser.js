@@ -5430,6 +5430,12 @@ function setToolbarVisibility(toolbar, isVisible) {
 var TabsOnTop = {
   init: function TabsOnTop_init() {
     Services.prefs.addObserver(this._prefName, this, false);
+
+    // Only show the toggle UI if the user disabled tabs on top.
+    if (Services.prefs.getBoolPref(this._prefName)) {
+      for (let item of document.querySelectorAll("menuitem[command=cmd_ToggleTabsOnTop]"))
+        item.parentNode.removeChild(item);
+    }
   },
 
   uninit: function TabsOnTop_uninit() {
