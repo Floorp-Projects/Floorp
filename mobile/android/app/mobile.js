@@ -419,10 +419,10 @@ pref("browser.ui.zoom.force-user-scalable", false);
 
 // Touch radius (area around the touch location to look for target elements),
 // in 1/240-inch pixels:
-pref("browser.ui.touch.left", 8);
-pref("browser.ui.touch.right", 8);
-pref("browser.ui.touch.top", 12);
-pref("browser.ui.touch.bottom", 4);
+pref("browser.ui.touch.left", 32);
+pref("browser.ui.touch.right", 32);
+pref("browser.ui.touch.top", 48);
+pref("browser.ui.touch.bottom", 16);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
 // plugins
