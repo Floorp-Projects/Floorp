@@ -1105,24 +1105,30 @@ function kindToString(aKind)
   }
 }
 
-function appendMrNameSpan(aP, aKind, aSep, aDescription, aUnsafeName,
+function appendMrNameSpan(aP, aKind, aDescription, aUnsafeName,
                           aIsInvalid, aNMerged)
 {
-  appendElementWithText(aP, "span", "mrSep", aSep);
-
-  let nameSpan = appendElementWithText(aP, "span", "mrName",
-                                       flipBackslashes(aUnsafeName));
+  let safeName = flipBackslashes(aUnsafeName);
+  if (!aIsInvalid && !aNMerged) {
+    safeName += "\n";
+  }
+  let nameSpan = appendElementWithText(aP, "span", "mrName", safeName);
   nameSpan.title = kindToString(aKind) + aDescription;
 
   if (aIsInvalid) {
-    let noteSpan = appendElementWithText(aP, "span", "mrNote", " [?!]");
+    let noteText = " [?!]";
+    if (!aNMerged) {
+      noteText += "\n";
+    }
+    let noteSpan = appendElementWithText(aP, "span", "mrNote", noteText);
     noteSpan.title =
       "Warning: this value is invalid and indicates a bug in one or more " +
       "memory reporters. ";
   }
+
   if (aNMerged) {
     let noteSpan = appendElementWithText(aP, "span", "mrNote",
-                                         " [" + aNMerged + "]");
+                                         " [" + aNMerged + "]\n");
     noteSpan.title =
       "This value is the sum of " + aNMerged +
       " memory reporters that all have the same path.";
@@ -1151,7 +1157,7 @@ function toggle(aEvent)
   // right nodes.  And the span containing the children of this line must
   // immediately follow.  Assertions check this.
 
-  // |aEvent.target| will be one of the five spans.  Get the outer span.
+  // |aEvent.target| will be one of the spans.  Get the outer span.
   let outerSpan = aEvent.target.parentNode;
   assertClassListContains(outerSpan, "hasKids");
 
@@ -1311,13 +1317,13 @@ function appendTreeElements(aPOuter, aT, aProcess)
 
     appendMrValueSpan(d, tString, tIsInvalid);
     appendElementWithText(d, "span", "mrPerc", percText);
+    appendElementWithText(d, "span", "mrSep", sep);
 
     // We don't want to show '(nonheap)' on a tree like 'vsize/', since
     // the whole tree is non-heap.
     let kind = isExplicitTree ? aT._kind : undefined;
-    appendMrNameSpan(d, kind, sep, aT._description, aT._unsafeName,
+    appendMrNameSpan(d, kind, aT._description, aT._unsafeName,
                      tIsInvalid, aT._nMerged);
-    appendTextNode(d, "\n");
 
     // In non-verbose mode, invalid nodes can be hidden in collapsed sub-trees.
     // But it's good to always see them, so force this.
@@ -1451,9 +1457,9 @@ function appendOtherElements(aP, aReportsByProcess)
                              flipBackslashes(o._unsafePath));
     }
     appendMrValueSpan(pre, pad(o._asString, maxStringLength, ' '), oIsInvalid);
-    appendMrNameSpan(pre, KIND_OTHER, kNoKidsSep, o._description, o._unsafePath,
+    appendElementWithText(pre, "span", "mrSep", kNoKidsSep);
+    appendMrNameSpan(pre, KIND_OTHER, o._description, o._unsafePath,
                      oIsInvalid);
-    appendTextNode(pre, "\n");
   }
 
   appendTextNode(aP, "\n");  // gives nice spacing when we cut and paste
