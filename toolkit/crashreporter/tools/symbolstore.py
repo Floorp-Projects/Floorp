@@ -286,9 +286,9 @@ class HGFileInfo(VCSFileInfo):
         if self.revision and self.clean_root:
             if self.srcdir:
                 # strip the base path off
-                file = os.path.normpath(file)
-                if IsInDir(file, self.srcdir):
-                    file = file[len(self.srcdir):]
+                abs_file = os.path.abspath(file)
+                if IsInDir(abs_file, self.srcdir):
+                    file = abs_file[len(self.srcdir):]
                 if file.startswith('/') or file.startswith('\\'):
                     file = file[1:]
             return "hg:%s:%s:%s" % (self.clean_root, file, self.revision)
