@@ -484,12 +484,12 @@ StackFramesView.prototype = {
 
      // If we're paused, show a pause label and a resume label on the button.
      if (aState == "paused") {
-       resume.setAttribute("tooltiptext", L10N.getStr("resumeTooltip"));
+       resume.label = L10N.getStr("resumeLabel");
        resume.setAttribute("checked", true);
      }
      // If we're attached, do the opposite.
      else if (aState == "attached") {
-       resume.setAttribute("tooltiptext", L10N.getStr("pauseTooltip"));
+       resume.label = L10N.getStr("pauseLabel");
        resume.removeAttribute("checked");
      }
 
