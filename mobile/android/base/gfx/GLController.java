@@ -137,6 +137,11 @@ public class GLController {
         }
 
         mGL = mEGLContext.getGL();
+
+        if (mView.getRenderer() != null) {
+            mView.getRenderer().onSurfaceCreated((GL10)mGL, mEGLConfig);
+            mView.getRenderer().onSurfaceChanged((GL10)mGL, mWidth, mHeight);
+        }
     }
 
     private EGLConfig chooseConfig() {
