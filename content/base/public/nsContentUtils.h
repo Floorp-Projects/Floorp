@@ -1389,6 +1389,12 @@ public:
                           bool aIsTrusted);
 
   /**
+   * Get the link location.
+   */
+  static void GetLinkLocation(mozilla::dom::Element* aElement,
+                              nsString& aLocationString);
+
+  /**
    * Return top-level widget in the parent chain.
    */
   static nsIWidget* GetTopLevelWidget(nsIWidget* aWidget);

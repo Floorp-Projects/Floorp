@@ -4490,6 +4490,19 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
 }
 
 /* static */
+void
+nsContentUtils::GetLinkLocation(Element* aElement, nsString& aLocationString)
+{
+  nsCOMPtr<nsIURI> hrefURI = aElement->GetHrefURI();
+  if (hrefURI) {
+    nsCAutoString specUTF8;
+    nsresult rv = hrefURI->GetSpec(specUTF8);
+    if (NS_SUCCEEDED(rv))
+      CopyUTF8toUTF16(specUTF8, aLocationString);
+  }
+}
+
+/* static */
 nsIWidget*
 nsContentUtils::GetTopLevelWidget(nsIWidget* aWidget)
 {
