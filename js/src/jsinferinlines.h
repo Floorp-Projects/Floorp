@@ -1329,7 +1329,8 @@ TypeObject::setFlagsFromKey(JSContext *cx, JSProtoKey key)
                   key == JSProto_Uint32Array ||
                   key == JSProto_Float32Array ||
                   key == JSProto_Float64Array ||
-                  key == JSProto_Uint8ClampedArray);
+                  key == JSProto_Uint8ClampedArray ||
+                  key == JSProto_DataView);
         flags = OBJECT_FLAG_NON_DENSE_ARRAY
               | OBJECT_FLAG_NON_PACKED_ARRAY;
         break;
