@@ -407,7 +407,7 @@ JS_ALWAYS_INLINE bool
 CallJSNativeConstructor(JSContext *cx, Native native, const CallArgs &args)
 {
 #ifdef DEBUG
-    RootedVarObject callee(cx, &args.callee());
+    RootedObject callee(cx, &args.callee());
 #endif
 
     JS_ASSERT(args.thisv().isMagic());
@@ -468,7 +468,7 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
     if (!(attrs & JSPROP_SHORTID))
         return CallJSPropertyOpSetter(cx, op, obj, id, strict, vp);
 
-    RootedVarId nid(cx, INT_TO_JSID(shortid));
+    RootedId nid(cx, INT_TO_JSID(shortid));
 
     return CallJSPropertyOpSetter(cx, op, obj, nid, strict, vp);
 }

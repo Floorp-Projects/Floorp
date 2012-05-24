@@ -225,7 +225,7 @@ StackFrame::pushBlock(JSContext *cx, StaticBlockObject &block)
     JS_ASSERT_IF(hasBlockChain(), blockChain_ == block.enclosingBlock());
 
     if (block.needsClone()) {
-        RootedVar<StaticBlockObject *> blockHandle(cx, &block);
+        Rooted<StaticBlockObject *> blockHandle(cx, &block);
         ClonedBlockObject *clone = ClonedBlockObject::create(cx, blockHandle, this);
         if (!clone)
             return false;

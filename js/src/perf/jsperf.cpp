@@ -168,7 +168,7 @@ pm_construct(JSContext* cx, unsigned argc, jsval* vp)
     if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "u", &mask))
         return JS_FALSE;
 
-    js::RootedVarObject obj(cx, JS_NewObjectForConstructor(cx, &pm_class, vp));
+    js::RootedObject obj(cx, JS_NewObjectForConstructor(cx, &pm_class, vp));
     if (!obj)
         return JS_FALSE;
 
@@ -224,14 +224,14 @@ namespace JS {
 JSObject*
 RegisterPerfMeasurement(JSContext *cx, JSObject *global)
 {
-    js::RootedVarObject prototype(cx);
+    js::RootedObject prototype(cx);
     prototype = JS_InitClass(cx, global, 0 /* parent */,
                              &pm_class, pm_construct, 1,
                              pm_props, pm_fns, 0, 0);
     if (!prototype)
         return 0;
 
-    js::RootedVarObject ctor(cx);
+    js::RootedObject ctor(cx);
     ctor = JS_GetConstructor(cx, prototype);
     if (!ctor)
         return 0;

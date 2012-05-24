@@ -53,8 +53,8 @@ enum RegExpRunStatus
 
 class RegExpObjectBuilder
 {
-    JSContext               *cx;
-    RootedVar<RegExpObject*> reobj_;
+    JSContext             *cx;
+    Rooted<RegExpObject*> reobj_;
 
     bool getOrCreate();
     bool getOrCreateClone(RegExpObject *proto);

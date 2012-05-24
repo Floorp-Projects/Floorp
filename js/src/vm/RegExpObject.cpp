@@ -97,14 +97,14 @@ RegExpObjectBuilder::clone(Handle<RegExpObject *> other, Handle<RegExpObject *> 
     RegExpFlag staticsFlags = res->getFlags();
     if ((origFlags & staticsFlags) != staticsFlags) {
         RegExpFlag newFlags = RegExpFlag(origFlags | staticsFlags);
-        return build(RootedVar<JSAtom *>(cx, other->getSource()), newFlags);
+        return build(Rooted<JSAtom *>(cx, other->getSource()), newFlags);
     }
 
     RegExpGuard g;
     if (!other->getShared(cx, &g))
         return NULL;
 
-    return build(RootedVarAtom(cx, other->getSource()), *g);
+    return build(RootedAtom(cx, other->getSource()), *g);
 }
 
 /* MatchPairs */
@@ -283,7 +283,7 @@ RegExpObject *
 RegExpObject::createNoStatics(JSContext *cx, const jschar *chars, size_t length, RegExpFlag flags,
                               TokenStream *tokenStream)
 {
-    RootedVarAtom source(cx, js_AtomizeChars(cx, chars, length));
+    RootedAtom source(cx, js_AtomizeChars(cx, chars, length));
     if (!source)
         return NULL;
 
@@ -304,7 +304,7 @@ RegExpObject::createNoStatics(JSContext *cx, HandleAtom source, RegExpFlag flags
 bool
 RegExpObject::createShared(JSContext *cx, RegExpGuard *g)
 {
-    RootedVar<RegExpObject*> self(cx, this);
+    Rooted<RegExpObject*> self(cx, this);
 
     JS_ASSERT(!maybeShared());
     if (!cx->compartment->regExps.get(cx, getSource(), getFlags(), g))
@@ -327,7 +327,7 @@ RegExpObject::assignInitialShape(JSContext *cx)
     JS_STATIC_ASSERT(MULTILINE_FLAG_SLOT == IGNORE_CASE_FLAG_SLOT + 1);
     JS_STATIC_ASSERT(STICKY_FLAG_SLOT == MULTILINE_FLAG_SLOT + 1);
 
-    RootedVarObject self(cx, this);
+    RootedObject self(cx, this);
 
     /* The lastIndex property alone is writable but non-configurable. */
     if (!addDataProperty(cx, NameToId(cx->runtime->atomState.lastIndexAtom),
@@ -356,7 +356,7 @@ RegExpObject::assignInitialShape(JSContext *cx)
 inline bool
 RegExpObject::init(JSContext *cx, HandleAtom source, RegExpFlag flags)
 {
-    RootedVar<RegExpObject *> self(cx, this);
+    Rooted<RegExpObject *> self(cx, this);
 
     if (nativeEmpty()) {
         if (isDelegate()) {
@@ -627,8 +627,8 @@ js::CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     JS_ASSERT(proto->isRegExp());
 
     RegExpObjectBuilder builder(cx);
-    return builder.clone(RootedVar<RegExpObject*>(cx, &obj->asRegExp()),
-                         RootedVar<RegExpObject*>(cx, &proto->asRegExp()));
+    return builder.clone(Rooted<RegExpObject*>(cx, &obj->asRegExp()),
+                         Rooted<RegExpObject*>(cx, &proto->asRegExp()));
 }
 
 bool
@@ -674,7 +674,7 @@ js::XDRScriptRegExpObject(XDRState<mode> *xdr, HeapPtrObject *objp)
 {
     /* NB: Keep this in sync with CloneScriptRegExpObject. */
 
-    RootedVarAtom source(xdr->cx());
+    RootedAtom source(xdr->cx());
     uint32_t flagsword = 0;
 
     if (mode == XDR_ENCODE) {
@@ -711,7 +711,7 @@ js::CloneScriptRegExpObject(JSContext *cx, RegExpObject &reobj)
 {
     /* NB: Keep this in sync with XDRScriptRegExpObject. */
 
-    RootedVarAtom source(cx, reobj.getSource());
+    RootedAtom source(cx, reobj.getSource());
     RegExpObject *clone = RegExpObject::createNoStatics(cx, source, reobj.getFlags(), NULL);
     if (!clone)
         return NULL;

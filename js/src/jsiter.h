@@ -230,7 +230,7 @@ ForOf(JSContext *cx, const Value &iterable, Op op)
     Value iterv(iterable);
     if (!ValueToIterator(cx, JSITER_FOR_OF, &iterv))
         return false;
-    RootedVarObject iter(cx, &iterv.toObject());
+    RootedObject iter(cx, &iterv.toObject());
 
     bool ok = true;
     while (ok) {

@@ -126,14 +126,14 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
 
-    RootedVarObject booleanProto (cx, global->createBlankPrototype(cx, &BooleanClass));
+    RootedObject booleanProto (cx, global->createBlankPrototype(cx, &BooleanClass));
     if (!booleanProto)
         return NULL;
     booleanProto->setFixedSlot(BooleanObject::PRIMITIVE_VALUE_SLOT, BooleanValue(false));
 
-    RootedVarFunction ctor(cx);
+    RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, Boolean, CLASS_NAME(cx, Boolean), 1);
     if (!ctor)
         return NULL;

@@ -159,10 +159,10 @@ Class js_NoSuchMethodClass = {
 bool
 js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, Value *vp)
 {
-    RootedVarValue idval(cx, idval_);
+    RootedValue idval(cx, idval_);
 
-    RootedVarId id(cx, NameToId(cx->runtime->atomState.noSuchMethodAtom));
-    RootedVarValue value(cx);
+    RootedId id(cx, NameToId(cx->runtime->atomState.noSuchMethodAtom));
+    RootedValue value(cx);
     if (!GetMethod(cx, obj, id, 0, value.address()))
         return false;
     TypeScript::MonitorUnknown(cx, cx->fp()->script(), cx->regs().pc);
@@ -241,7 +241,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
     struct CheckStackBalance {
         JSContext *cx;
         StackFrame *fp;
-        RootedVarObject enumerators;
+        RootedObject enumerators;
         CheckStackBalance(JSContext *cx)
           : cx(cx), fp(cx->fp()), enumerators(cx, cx->enumerators)
         {}
@@ -304,7 +304,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     }
 
     /* Invoke native functions. */
-    RootedVarFunction fun(cx, callee.toFunction());
+    RootedFunction fun(cx, callee.toFunction());
     JS_ASSERT_IF(construct, !fun->isNativeConstructor());
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
@@ -439,7 +439,7 @@ js::ExecuteKernel(JSContext *cx, JSScript *script_, JSObject &scopeChain, const 
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
     JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChain.isScope());
 
-    JS::RootedVar<JSScript*> script(cx, script_);
+    JS::Rooted<JSScript*> script(cx, script_);
 
     if (script->isEmpty()) {
         if (result)
@@ -480,7 +480,7 @@ bool
 js::Execute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rval)
 {
     /* The scope chain could be anything, so innerize just in case. */
-    RootedVarObject scopeChain(cx, &scopeChainArg);
+    RootedObject scopeChain(cx, &scopeChainArg);
     scopeChain = GetInnerObject(cx, scopeChain);
     if (!scopeChain)
         return false;
@@ -552,7 +552,7 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
 
             if (JSEqualityOp eq = l->getClass()->ext.equality) {
                 JSBool res;
-                if (!eq(cx, RootedVarObject(cx, l), &rval, &res))
+                if (!eq(cx, RootedObject(cx, l), &rval, &res))
                     return false;
                 *result = !!res;
                 return true;
@@ -576,8 +576,8 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
         return true;
     }
 
-    RootedVarValue lvalue(cx, lval);
-    RootedVarValue rvalue(cx, rval);
+    RootedValue lvalue(cx, lval);
+    RootedValue rvalue(cx, rval);
 
     if (!ToPrimitive(cx, lvalue.address()))
         return false;
@@ -697,7 +697,7 @@ EnterWith(JSContext *cx, int stackIndex)
     JS_ASSERT(stackIndex < 0);
     JS_ASSERT(fp->base() <= sp + stackIndex);
 
-    RootedVarObject obj(cx);
+    RootedObject obj(cx);
     if (sp[-1].isObject()) {
         obj = &sp[-1].toObject();
     } else {
@@ -987,8 +987,8 @@ js::AssertValidPropertyCacheHit(JSContext *cx,
     uint64_t sample = cx->runtime->gcNumber;
     PropertyCacheEntry savedEntry = *entry;
 
-    RootedVarPropertyName name(cx, GetNameFromBytecode(cx, pc, JSOp(*pc), js_CodeSpec[*pc]));
-    RootedVarObject start(cx, start_);
+    RootedPropertyName name(cx, GetNameFromBytecode(cx, pc, JSOp(*pc), js_CodeSpec[*pc]));
+    RootedObject start(cx, start_);
 
     JSObject *obj, *pobj;
     JSProperty *prop;
@@ -1048,7 +1048,7 @@ IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
             return true;
         }
     }
-    if (!js_IteratorMore(cx, RootedVarObject(cx, iterobj), rval))
+    if (!js_IteratorMore(cx, RootedObject(cx, iterobj), rval))
         return false;
     *cond = rval->isTrue();
     return true;
@@ -1298,7 +1298,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     /* Copy in hot values that change infrequently. */
     JSRuntime *const rt = cx->runtime;
-    RootedVar<JSScript*> script(cx);
+    Rooted<JSScript*> script(cx);
     SET_SCRIPT(regs.fp()->script());
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
@@ -1310,13 +1310,13 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
      * correctness pitfalls due to incorrect compilation of destructor calls
      * around computed gotos.
      */
-    RootedVarValue rootValue0(cx), rootValue1(cx);
-    RootedVarString rootString0(cx), rootString1(cx);
-    RootedVarObject rootObject0(cx), rootObject1(cx);
-    RootedVarFunction rootFunction0(cx);
-    RootedVarTypeObject rootType0(cx);
-    RootedVarPropertyName rootName0(cx);
-    RootedVarId rootId0(cx);
+    RootedValue rootValue0(cx), rootValue1(cx);
+    RootedString rootString0(cx), rootString1(cx);
+    RootedObject rootObject0(cx), rootObject1(cx);
+    RootedFunction rootFunction0(cx);
+    RootedTypeObject rootType0(cx);
+    RootedPropertyName rootName0(cx);
+    RootedId rootId0(cx);
 
     if (rt->profilingScripts)
         ENABLE_INTERRUPTS();
@@ -1794,9 +1794,9 @@ BEGIN_CASE(JSOP_IN)
         js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, NULL);
         goto error;
     }
-    RootedVarObject &obj = rootObject0;
+    RootedObject &obj = rootObject0;
     obj = &rref.toObject();
-    RootedVarId &id = rootId0;
+    RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
     JSObject *obj2;
     JSProperty *prop;
@@ -1911,7 +1911,7 @@ BEGIN_CASE(JSOP_ENUMCONSTELEM)
     const Value &ref = regs.sp[-3];
     JSObject *obj;
     FETCH_OBJECT(cx, -2, obj);
-    RootedVarId &id = rootId0;
+    RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -1, id);
     if (!obj->defineGeneric(cx, id, ref,
                             JS_PropertyStub, JS_StrictPropertyStub,
@@ -1951,10 +1951,10 @@ BEGIN_CASE(JSOP_BINDNAME)
         if (obj->isGlobal())
             break;
 
-        RootedVarPropertyName &name = rootName0;
+        RootedPropertyName &name = rootName0;
         LOAD_NAME(0, name);
 
-        RootedVarObject &scopeChain = rootObject0;
+        RootedObject &scopeChain = rootObject0;
         scopeChain = regs.fp()->scopeChain();
 
         obj = FindIdentifierBase(cx, scopeChain, name);
@@ -2158,7 +2158,7 @@ END_CASE(JSOP_ADD)
 
 BEGIN_CASE(JSOP_SUB)
 {
-    RootedVarValue &lval = rootValue0, &rval = rootValue1;
+    RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
     if (!SubOperation(cx, lval, rval, &regs.sp[-2]))
@@ -2169,7 +2169,7 @@ END_CASE(JSOP_SUB)
 
 BEGIN_CASE(JSOP_MUL)
 {
-    RootedVarValue &lval = rootValue0, &rval = rootValue1;
+    RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
     if (!MulOperation(cx, lval, rval, &regs.sp[-2]))
@@ -2180,7 +2180,7 @@ END_CASE(JSOP_MUL)
 
 BEGIN_CASE(JSOP_DIV)
 {
-    RootedVarValue &lval = rootValue0, &rval = rootValue1;
+    RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
     if (!DivOperation(cx, lval, rval, &regs.sp[-2]))
@@ -2191,7 +2191,7 @@ END_CASE(JSOP_DIV)
 
 BEGIN_CASE(JSOP_MOD)
 {
-    RootedVarValue &lval = rootValue0, &rval = rootValue1;
+    RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
     if (!ModOperation(cx, lval, rval, &regs.sp[-2]))
@@ -2251,10 +2251,10 @@ END_CASE(JSOP_POS)
 
 BEGIN_CASE(JSOP_DELNAME)
 {
-    RootedVarPropertyName &name = rootName0;
+    RootedPropertyName &name = rootName0;
     LOAD_NAME(0, name);
 
-    RootedVarObject &scopeObj = rootObject0;
+    RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
 
     JSObject *obj, *obj2;
@@ -2276,13 +2276,13 @@ END_CASE(JSOP_DELNAME)
 
 BEGIN_CASE(JSOP_DELPROP)
 {
-    RootedVarPropertyName &name = rootName0;
+    RootedPropertyName &name = rootName0;
     LOAD_NAME(0, name);
 
     JSObject *obj;
     FETCH_OBJECT(cx, -1, obj);
 
-    RootedVarValue &rval = rootValue0;
+    RootedValue &rval = rootValue0;
     if (!obj->deleteProperty(cx, name, rval.address(), script->strictModeCode))
         goto error;
 
@@ -2296,7 +2296,7 @@ BEGIN_CASE(JSOP_DELELEM)
     JSObject *obj;
     FETCH_OBJECT(cx, -2, obj);
 
-    RootedVarValue &propval = rootValue0;
+    RootedValue &propval = rootValue0;
     propval = regs.sp[-1];
     Value &rval = regs.sp[-2];
 
@@ -2443,9 +2443,9 @@ END_CASE(JSOP_GETELEM)
 
 BEGIN_CASE(JSOP_SETELEM)
 {
-    RootedVarObject &obj = rootObject0;
+    RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -3, obj);
-    RootedVarId &id = rootId0;
+    RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
     Value &value = regs.sp[-1];
     if (!SetObjectElementOperation(cx, obj, id, value, script->strictModeCode))
@@ -2457,12 +2457,12 @@ END_CASE(JSOP_SETELEM)
 
 BEGIN_CASE(JSOP_ENUMELEM)
 {
-    RootedVarObject &obj = rootObject0;
-    RootedVarValue &rval = rootValue0;
+    RootedObject &obj = rootObject0;
+    RootedValue &rval = rootValue0;
 
     /* Funky: the value to set is under the [obj, id] pair. */
     FETCH_OBJECT(cx, -2, obj);
-    RootedVarId &id = rootId0;
+    RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -1, id);
     rval = regs.sp[-3];
     if (!obj->setGeneric(cx, id, rval.address(), script->strictModeCode))
@@ -2501,7 +2501,7 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     bool construct = (*regs.pc == JSOP_NEW);
 
-    RootedVarFunction &fun = rootFunction0;
+    RootedFunction &fun = rootFunction0;
 
     /* Don't bother trying to fast-path calls to scripted non-constructors. */
     if (!IsFunctionObject(args.calleev(), fun.address()) || !fun->isInterpretedConstructor()) {
@@ -2598,10 +2598,10 @@ END_CASE(JSOP_SETCALL)
 
 BEGIN_CASE(JSOP_IMPLICITTHIS)
 {
-    RootedVarPropertyName &name = rootName0;
+    RootedPropertyName &name = rootName0;
     LOAD_NAME(0, name);
 
-    RootedVarObject &scopeObj = rootObject0;
+    RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
 
     JSObject *obj, *obj2;
@@ -2621,7 +2621,7 @@ BEGIN_CASE(JSOP_CALLGNAME)
 BEGIN_CASE(JSOP_NAME)
 BEGIN_CASE(JSOP_CALLNAME)
 {
-    RootedVarValue &rval = rootValue0;
+    RootedValue &rval = rootValue0;
 
     if (!NameOperation(cx, regs.pc, rval.address()))
         goto error;
@@ -2908,7 +2908,7 @@ BEGIN_CASE(JSOP_DEFVAR)
         attrs |= JSPROP_READONLY;
 
     /* Step 8b. */
-    RootedVarObject &obj = rootObject0;
+    RootedObject &obj = rootObject0;
     obj = &regs.fp()->varObj();
 
     if (!DefVarOrConstOperation(cx, obj, dn, attrs))
@@ -2924,7 +2924,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * a compound statement (not at the top statement level of global code, or
      * at the top level of a function body).
      */
-    RootedVarFunction &fun = rootFunction0;
+    RootedFunction &fun = rootFunction0;
     fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
 
     /*
@@ -2959,18 +2959,18 @@ BEGIN_CASE(JSOP_DEFFUN)
      * current scope chain even for the case of function expression statements
      * and functions defined by eval inside let or with blocks.
      */
-    RootedVarObject &parent = rootObject0;
+    RootedObject &parent = rootObject0;
     parent = &regs.fp()->varObj();
 
     /* ES5 10.5 (NB: with subsequent errata). */
-    RootedVarPropertyName &name = rootName0;
+    RootedPropertyName &name = rootName0;
     name = fun->atom->asPropertyName();
     JSProperty *prop = NULL;
     JSObject *pobj;
     if (!parent->lookupProperty(cx, name, &pobj, &prop))
         goto error;
 
-    RootedVarValue &rval = rootValue0;
+    RootedValue &rval = rootValue0;
     rval = ObjectValue(*fun);
 
     do {
@@ -3024,7 +3024,7 @@ END_CASE(JSOP_DEFFUN)
 BEGIN_CASE(JSOP_LAMBDA)
 {
     /* Load the specified function object literal. */
-    RootedVarFunction &fun = rootFunction0;
+    RootedFunction &fun = rootFunction0;
     fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
 
     JSFunction *obj = CloneFunctionObjectIfNotSingleton(cx, fun, regs.fp()->scopeChain());
@@ -3045,7 +3045,7 @@ BEGIN_CASE(JSOP_GETTER)
 BEGIN_CASE(JSOP_SETTER)
 {
     JSOp op2 = JSOp(*++regs.pc);
-    RootedVarId &id = rootId0;
+    RootedId &id = rootId0;
     Value rval;
     int i;
     JSObject *obj;
@@ -3181,10 +3181,10 @@ END_CASE(JSOP_NEWARRAY)
 
 BEGIN_CASE(JSOP_NEWOBJECT)
 {
-    RootedVarObject &baseobj = rootObject0;
+    RootedObject &baseobj = rootObject0;
     baseobj = script->getObject(GET_UINT32_INDEX(regs.pc));
 
-    RootedVarObject &obj = rootObject1;
+    RootedObject &obj = rootObject1;
     obj = CopyInitializerObject(cx, baseobj);
     if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
         goto error;
@@ -3211,11 +3211,11 @@ BEGIN_CASE(JSOP_INITPROP)
     Value rval = regs.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
-    RootedVarObject &obj = rootObject0;
+    RootedObject &obj = rootObject0;
     obj = &regs.sp[-2].toObject();
     JS_ASSERT(obj->isObject());
 
-    RootedVarId &id = rootId0;
+    RootedId &id = rootId0;
 
     PropertyName *name;
     LOAD_NAME(0, name);
@@ -3238,7 +3238,7 @@ BEGIN_CASE(JSOP_INITELEM)
     JS_ASSERT(regs.sp - regs.fp()->base() >= 3);
     const Value &rref = regs.sp[-1];
 
-    RootedVarObject &obj = rootObject0;
+    RootedObject &obj = rootObject0;
 
     /* Find the object being initialized at top of stack. */
     const Value &lref = regs.sp[-3];
@@ -3246,7 +3246,7 @@ BEGIN_CASE(JSOP_INITELEM)
     obj = &lref.toObject();
 
     /* Fetch id now that we have obj. */
-    RootedVarId &id = rootId0;
+    RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
 
     /*
@@ -3339,7 +3339,7 @@ BEGIN_CASE(JSOP_INSTANCEOF)
         js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, NULL);
         goto error;
     }
-    RootedVarObject &obj = rootObject0;
+    RootedObject &obj = rootObject0;
     obj = &rref.toObject();
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
@@ -3509,7 +3509,7 @@ BEGIN_CASE(JSOP_SETXMLNAME)
 
     JSObject *obj = &regs.sp[-3].toObject();
     Value rval = regs.sp[-1];
-    RootedVarId &id = rootId0;
+    RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
     if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
         goto error;
@@ -3526,7 +3526,7 @@ BEGIN_CASE(JSOP_XMLNAME)
 
     Value lval = regs.sp[-1];
     JSObject *obj;
-    RootedVarId &id = rootId0;
+    RootedId &id = rootId0;
     if (!js_FindXMLProperty(cx, lval, &obj, id.address()))
         goto error;
     Value rval;
@@ -3803,7 +3803,7 @@ BEGIN_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(script->nfixed <= slot);
     JS_ASSERT(slot < script->nslots);
     CheckLocalAccess(regs.fp(), slot);
-    RootedVarObject &obj = rootObject0;
+    RootedObject &obj = rootObject0;
     obj = &regs.fp()->slots()[slot].toObject();
     if (!js_NewbornArrayPush(cx, obj, regs.sp[-1]))
         goto error;

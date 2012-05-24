@@ -24,7 +24,7 @@ using namespace js::frontend;
 bool
 MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script_)
 {
-    RootedVar<JSScript*> script(cx, script_);
+    Rooted<JSScript*> script(cx, script_);
 
     Vector<JSScript *, 16> worklist(cx);
     if (!worklist.append(script.reference()))
@@ -243,7 +243,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     JS_ASSERT(bce.version() == version);
 
-    RootedVar<JSScript*> script(cx);
+    Rooted<JSScript*> script(cx);
     script = JSScript::NewScriptFromEmitter(cx, &bce);
     if (!script)
         return NULL;

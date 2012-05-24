@@ -35,7 +35,7 @@ ScopeObject::enclosingScope() const
 inline bool
 ScopeObject::setEnclosingScope(JSContext *cx, HandleObject obj)
 {
-    RootedVarObject self(cx, this);
+    RootedObject self(cx, this);
     if (!obj->setDelegate(cx))
         return false;
     self->setFixedSlot(SCOPE_CHAIN_SLOT, ObjectValue(*obj));

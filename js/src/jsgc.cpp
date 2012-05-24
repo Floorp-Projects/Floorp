@@ -4061,7 +4061,7 @@ CheckStackRoot(JSTracer *trc, uintptr_t *w)
         JSRuntime *rt = trc->runtime;
         for (ContextIter cx(rt); !cx.done(); cx.next()) {
             for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
-                RootedVar<void*> *rooter = cx->thingGCRooters[i];
+                Rooted<void*> *rooter = cx->thingGCRooters[i];
                 while (rooter) {
                     if (rooter->address() == static_cast<void*>(w))
                         matched = true;
