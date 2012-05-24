@@ -195,6 +195,23 @@ BookmarkImporter.prototype = {
   },
 
   /**
+   * Handles <hr> as a separator.
+   *
+   * @note Separators may have a title in old html files, though Places dropped
+   *       support for them.
+   *       We also don't import ADD_DATE or LAST_MODIFIED for separators because
+   *       pre-Places bookmarks did not support them.
+   */
+  _handleSeparator: function handleSeparator(aElt) {
+    let frame = this._curFrame;
+    try {
+      frame.previousId =
+        PlacesUtils.bookmarks.insertSeparator(frame.containerId,
+                                              PlacesUtils.bookmarks.DEFAULT_INDEX);
+    } catch(e) {}
+  },
+
+  /**
    * Handles <H1>. We check for the attribute PLACES_ROOT and reset the
    * container id if it's found. Otherwise, the default bookmark menu
    * root is assumed and imported things will go into the bookmarks menu.
@@ -516,6 +533,9 @@ BookmarkImporter.prototype = {
         break;
       case "dd":
         this._curFrame.inDescription = true;
+        break;
+      case "hr":
+        this._handleSeparator(aElt);
         break;
     }
   },

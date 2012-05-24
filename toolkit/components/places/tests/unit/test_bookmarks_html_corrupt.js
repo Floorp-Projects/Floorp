@@ -104,10 +104,10 @@ function database_check(aCallback) {
   var result = hs.executeQuery(query, options);
   var rootNode = result.root;
   rootNode.containerOpen = true;
-  do_check_eq(rootNode.childCount, DEFAULT_BOOKMARKS_ON_MENU + 1);
+  do_check_eq(rootNode.childCount, 2);
 
   // get test folder
-  var testFolder = rootNode.getChild(DEFAULT_BOOKMARKS_ON_MENU);
+  var testFolder = rootNode.getChild(1);
   do_check_eq(testFolder.type, testFolder.RESULT_TYPE_FOLDER);
   do_check_eq(testFolder.title, "test");
   // add date
