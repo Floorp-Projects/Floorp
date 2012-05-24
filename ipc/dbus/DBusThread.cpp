@@ -531,10 +531,8 @@ DBusThread::IsEventLoopRunning()
 static void
 ConnectDBus(Monitor* aMonitor, bool* aSuccess)
 {
-  if(sDBusThread) {
-    NS_WARNING("Trying to start DBus Thread that is already currently running, skipping.");
-    return;
-  }
+  MOZ_ASSERT(!sDBusThread);
+
   sDBusThread = new DBusThread();
   *aSuccess = true;
   if(!sDBusThread->StartEventLoop())
@@ -550,10 +548,8 @@ ConnectDBus(Monitor* aMonitor, bool* aSuccess)
 static void
 DisconnectDBus(Monitor* aMonitor, bool* aSuccess)
 {
-  if(!sDBusThread) {
-    NS_WARNING("Trying to shutdown DBus Thread that is not currently running, skipping.");
-    return;
-  }
+  MOZ_ASSERT(sDBusThread);
+
   *aSuccess = true;
   sDBusThread->StopEventLoop();
   sDBusThread = NULL;
