@@ -80,7 +80,7 @@ function registerMockPromptService()
                      checkState: aCheckState
       };
 
-      aCheckState.value = true;
+      SpecialPowers.wrap(aCheckState).value = true;
     },
 
     confirm: function(aDialogTitle, aText)
@@ -106,7 +106,7 @@ function registerMockPromptService()
                      checkState: aCheckState
       };
 
-      aCheckState.value = true;
+      SpecialPowers.wrap(aCheckState).value = true;
 
       return true;
     },
@@ -125,7 +125,7 @@ function registerMockPromptService()
       };
 
       if (aCheckMsg != null)
-        aCheckState.value = true;
+        SpecialPowers.wrap(aCheckState).value = true;
 
       return 0;
     },
@@ -143,7 +143,7 @@ function registerMockPromptService()
       };
 
       if (aCheckMsg != null)
-        aCheckState.value = true;
+        SpecialPowers.wrap(aCheckState).value = true;
 
       return true;
     },
