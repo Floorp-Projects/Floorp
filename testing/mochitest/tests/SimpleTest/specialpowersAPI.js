@@ -159,6 +159,26 @@ function crawlProtoChain(obj, fn) {
     return crawlProtoChain(Object.getPrototypeOf(obj), fn);
 };
 
+/*
+ * We want to waive the __exposedProps__ security check for SpecialPowers-wrapped
+ * objects. We do this by creating a proxy singleton that just always returns 'rw'
+ * for any property name.
+ */
+function ExposedPropsWaiverHandler() {
+  // NB: XPConnect denies access if the relevant member of __exposedProps__ is not
+  // enumerable.
+  var _permit = { value: 'rw', writable: false, configurable: false, enumerable: true };
+  return {
+    getOwnPropertyDescriptor: function(name) { return _permit; },
+    getPropertyDescriptor: function(name) { return _permit; },
+    getOwnPropertyNames: function() { throw Error("Can't enumerate ExposedPropsWaiver"); },
+    getPropertyNames: function() { throw Error("Can't enumerate ExposedPropsWaiver"); },
+    enumerate: function() { throw Error("Can't enumerate ExposedPropsWaiver"); },
+    defineProperty: function(name) { throw Error("Can't define props on ExposedPropsWaiver"); },
+    delete: function(name) { throw Error("Can't delete props from ExposedPropsWaiver"); }
+  };
+};
+ExposedPropsWaiver = Proxy.create(ExposedPropsWaiverHandler());
 
 function SpecialPowersHandler(obj) {
   this.wrappedObject = obj;
@@ -171,6 +191,10 @@ SpecialPowersHandler.prototype.doGetPropertyDescriptor = function(name, own) {
   // Handle our special API.
   if (name == "SpecialPowers_wrappedObject")
     return { value: this.wrappedObject, writeable: false, configurable: false, enumerable: false };
+
+  // Handle __exposedProps__.
+  if (name == "__exposedProps__")
+    return { value: ExposedPropsWaiver, writable: false, configurable: false, enumerable: false };
 
   // In general, we want Xray wrappers for content DOM objects, because waiving
   // Xray gives us Xray waiver wrappers that clamp the principal when we cross
