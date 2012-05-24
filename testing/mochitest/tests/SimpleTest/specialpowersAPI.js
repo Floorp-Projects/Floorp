@@ -347,8 +347,9 @@ SpecialPowersAPI.prototype = {
    *    properties. This is explained in a comment in the wrapper code above,
    *    and shouldn't be a problem.
    */
-  wrap: wrapPrivileged,
-  unwrap: unwrapPrivileged,
+  wrap: function(obj) { return isWrapper(obj) ? obj : wrapPrivileged(obj); },
+  unwrap: unwrapIfWrapped,
+  isWrapper: isWrapper,
 
   get MockFilePicker() {
     return MockFilePicker
