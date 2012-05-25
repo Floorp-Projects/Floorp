@@ -32,18 +32,8 @@ try {
   threw = true;
 }
 
-is(threw, false, "Should be able to pass in custom imagedata objects with array data");
-
-threw = false;
-try {
-  c.putImageData({ width: 1, height: 1, data: null }, 0, 0);
-  threw = false;
-} catch(e) {
-  threw = e.name;
-}
-
-is(threw, "TypeMismatchError",
-   "Should throw TypeMismatchError when data is not an array");
+ok(threw,
+   "Should not be able to pass in custom imagedata objects with array data");
 
 </script>
 </pre>
