@@ -3212,6 +3212,16 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
      */
     gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP);
 
+    /*
+     * Although there is a runtime-wide gcIsFull flag, it is set in
+     * BeginMarkPhase. More compartments may have been created since then.
+     */
+    bool isFull = true;
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        if (!c->isCollecting())
+            isFull = false;
+    }
+
 #ifdef JS_THREADSAFE
     *startBackgroundSweep = (rt->hasContexts() && rt->gcHelperThread.prepareForBackgroundSweep());
 #else
@@ -3226,7 +3236,7 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_START);
         if (rt->gcFinalizeCallback)
-            rt->gcFinalizeCallback(&fop, JSFINALIZE_START);
+            rt->gcFinalizeCallback(&fop, JSFINALIZE_START, !isFull);
     }
 
     /* Finalize unreachable (key,value) pairs in all weak maps. */
@@ -3313,7 +3323,7 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_END);
         if (rt->gcFinalizeCallback)
-            rt->gcFinalizeCallback(&fop, JSFINALIZE_END);
+            rt->gcFinalizeCallback(&fop, JSFINALIZE_END, !isFull);
     }
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
