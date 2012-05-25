@@ -4402,7 +4402,7 @@ WebGLContext::name(nsIWebGLUniformLocation *aLocation, const JS::Value& aValue, 
 }                                                                               \
 void                                                                            \
 WebGLContext::name##_base(WebGLUniformLocation *location_object,                \
-                        uint32_t arrayLength, ptrType* data) {                  \
+                        uint32_t arrayLength, const ptrType* data) {            \
     if (!IsContextStable()) {                                                   \
         return;                                                                 \
     }                                                                           \
@@ -4456,7 +4456,7 @@ WebGLContext::name(nsIWebGLUniformLocation* aLocation, bool aTranspose,         
 void                                                                            \
 WebGLContext::name##_base(WebGLUniformLocation* location_object,                \
                           WebGLboolean aTranspose, uint32_t arrayLength,        \
-                          float* data)                                          \
+                          const float* data)                                    \
 {                                                                               \
     uint32_t expectedElemSize = (dim)*(dim);                                                     \
     if (!IsContextStable()) {                                                   \
@@ -4697,7 +4697,7 @@ WebGLContext::name(WebGLuint idx, const JS::Value& aValue, JSContext* aCx)      
 }                                                                               \
 void                                                                            \
 WebGLContext::name##_base(WebGLuint idx, uint32_t arrayLength,                  \
-                          WebGLfloat* ptr)                                      \
+                          const WebGLfloat* ptr)                                \
 {                                                                               \
     if (!IsContextStable()) {                                                   \
         return;                                                                 \
