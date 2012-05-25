@@ -35,7 +35,7 @@
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsSocketTransportService2.h"
 #include "nsAlgorithm.h"
-#include "SpdySession.h"
+#include "ASpdySession.h"
 
 #include "nsIXULAppInfo.h"
 
@@ -171,7 +171,7 @@ nsHttpHandler::nsHttpHandler()
     , mEnableSpdy(false)
     , mCoalesceSpdy(true)
     , mUseAlternateProtocol(false)
-    , mSpdySendingChunkSize(SpdySession::kSendingChunkSize)
+    , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
     , mSpdyPingThreshold(PR_SecondsToInterval(44))
     , mSpdyPingTimeout(PR_SecondsToInterval(8))
 {

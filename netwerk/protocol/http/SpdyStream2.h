@@ -4,22 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_SpdyStream_h
-#define mozilla_net_SpdyStream_h
+#ifndef mozilla_net_SpdyStream2_h
+#define mozilla_net_SpdyStream2_h
 
 #include "nsAHttpTransaction.h"
 
 namespace mozilla { namespace net {
 
-class SpdyStream : public nsAHttpSegmentReader
-                 , public nsAHttpSegmentWriter
+class SpdyStream2 : public nsAHttpSegmentReader
+                  , public nsAHttpSegmentWriter
 {
 public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  SpdyStream(nsAHttpTransaction *,
-             SpdySession *, nsISocketTransport *,
+  SpdyStream2(nsAHttpTransaction *,
+             SpdySession2 *, nsISocketTransport *,
              PRUint32, z_stream *, PRInt32);
 
   PRUint32 StreamID() { return mStreamID; }
@@ -61,11 +61,11 @@ public:
 
 private:
 
-  // a SpdyStream object is only destroyed by being removed from the
-  // SpdySession mStreamTransactionHash - make the dtor private to
+  // a SpdyStream2 object is only destroyed by being removed from the
+  // SpdySession2 mStreamTransactionHash - make the dtor private to
   // just the AutoPtr implementation needed for that hash.
-  friend class nsAutoPtr<SpdyStream>;
-  ~SpdyStream();
+  friend class nsAutoPtr<SpdyStream2>;
+  ~SpdyStream2();
 
   enum stateType {
     GENERATING_SYN_STREAM,
@@ -98,13 +98,13 @@ private:
   enum stateType mUpstreamState;
 
   // The underlying HTTP transaction. This pointer is used as the key
-  // in the SpdySession mStreamTransactionHash so it is important to
+  // in the SpdySession2 mStreamTransactionHash so it is important to
   // keep a reference to it as long as this stream is a member of that hash.
   // (i.e. don't change it or release it after it is set in the ctor).
   nsRefPtr<nsAHttpTransaction> mTransaction;
 
   // The session that this stream is a subset of
-  SpdySession                *mSession;
+  SpdySession2                *mSession;
 
   // The underlying socket transport object is needed to propogate some events
   nsISocketTransport         *mSocketTransport;
@@ -154,7 +154,7 @@ private:
   PRUint32                     mTxStreamFrameSize;
 
   // Compression context and buffer for request header compression.
-  // This is a copy of SpdySession::mUpstreamZlib because it needs
+  // This is a copy of SpdySession2::mUpstreamZlib because it needs
   //  to remain the same in all streams of a session.
   z_stream                     *mZlib;
   nsCString                    mFlatHttpRequestHeaders;
@@ -176,4 +176,4 @@ private:
 
 }} // namespace mozilla::net
 
-#endif // mozilla_net_SpdyStream_h
+#endif // mozilla_net_SpdyStream2_h
