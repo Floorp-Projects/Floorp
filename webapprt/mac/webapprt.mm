@@ -271,7 +271,7 @@ main(int argc, char **argv)
         directory.forget(&webShellAppData->directory);
 
         // There is only XUL.
-        result = XRE_main(argc, argv, webShellAppData);
+        result = XRE_main(argc, argv, webShellAppData, 0);
 
         XRE_FreeAppData(webShellAppData);
       }
