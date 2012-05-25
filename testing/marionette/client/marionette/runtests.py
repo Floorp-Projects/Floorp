@@ -336,7 +336,6 @@ class MarionetteTestRunner(object):
         if suite.countTestCases():
             results = MarionetteTextTestRunner(verbosity=3).run(suite)
             self.failed += len(results.failures) + len(results.errors)
-            self.todo = 0
             if hasattr(results, 'skipped'):
                 self.todo += len(results.skipped) + len(results.expectedFailures)
             self.passed += results.passed
