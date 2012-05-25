@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync;
 
@@ -38,7 +38,7 @@ public class Logger {
   /**
    * Empty the caches of log levels.
    */
-  public synchronized void refreshLogLevels() {
+  public static synchronized void refreshLogLevels() {
     isErrorLoggable   = new IdentityHashMap<String, Boolean>();
     isWarnLoggable    = new IdentityHashMap<String, Boolean>();
     isInfoLoggable    = new IdentityHashMap<String, Boolean>();

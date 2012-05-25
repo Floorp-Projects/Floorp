@@ -139,15 +139,15 @@ struct SharedContext {
 
     StmtInfo        *topStmt;       /* top of statement info stack */
     StmtInfo        *topScopeStmt;  /* top lexical scope statement */
-    RootedVar<StaticBlockObject *> blockChain;
+    Rooted<StaticBlockObject *> blockChain;
                                     /* compile time block scope chain (NB: one
                                        deeper than the topScopeStmt/downScope
                                        chain when in head of let block/expr) */
 
   private:
-    RootedVarFunction fun_;         /* function to store argument and variable
+    RootedFunction  fun_;           /* function to store argument and variable
                                        names when inFunction is set */
-    RootedVarObject   scopeChain_;  /* scope chain object for the script */
+    RootedObject    scopeChain_;    /* scope chain object for the script */
 
   public:
     unsigned        staticLevel;    /* static compilation unit nesting level */
@@ -159,7 +159,7 @@ struct SharedContext {
 
     Bindings        bindings;       /* bindings in this code, including
                                        arguments if we're compiling a function */
-    Bindings::StackRoot bindingsRoot; /* root for stack allocated bindings. */
+    Bindings::AutoRooter bindingsRoot; /* root for stack allocated bindings. */
 
     const bool      inFunction:1;   /* parsing/emitting inside function body */
 
@@ -360,8 +360,8 @@ struct StmtInfo {
     ptrdiff_t       update;         /* loop update offset (top if none) */
     ptrdiff_t       breaks;         /* offset of last break in loop */
     ptrdiff_t       continues;      /* offset of last continue in loop */
-    RootedVarAtom   label;          /* name of LABEL */
-    RootedVar<StaticBlockObject *> blockObj; /* block scope object */
+    RootedAtom      label;          /* name of LABEL */
+    Rooted<StaticBlockObject *> blockObj; /* block scope object */
     StmtInfo        *down;          /* info for enclosing statement */
     StmtInfo        *downScope;     /* next enclosing lexical scope */
 

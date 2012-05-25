@@ -55,7 +55,7 @@ void JS_FASTCALL
 stubs::BindName(VMFrame &f, PropertyName *name)
 {
     JSObject *obj = FindIdentifierBase(f.cx, f.fp()->scopeChain(),
-                                       RootedVarPropertyName(f.cx, name));
+                                       RootedPropertyName(f.cx, name));
     if (!obj)
         THROW();
     f.regs.sp[0].setObject(*obj);
@@ -126,7 +126,7 @@ stubs::SetElem(VMFrame &f)
     Value rval    = regs.sp[-1];
 
     JSObject *obj;
-    RootedVarId id(cx);
+    RootedId id(cx);
 
     obj = ValueToObject(cx, objval);
     if (!obj)
@@ -179,7 +179,7 @@ stubs::ToId(VMFrame &f)
     if (!obj)
         THROW();
 
-    RootedVarId id(f.cx);
+    RootedId id(f.cx);
     if (!FetchElementId(f.cx, obj, idval, id.address(), &idval))
         THROW();
 
@@ -190,8 +190,8 @@ stubs::ToId(VMFrame &f)
 void JS_FASTCALL
 stubs::ImplicitThis(VMFrame &f, PropertyName *name_)
 {
-    RootedVarObject scopeObj(f.cx, f.cx->stack.currentScriptedScopeChain());
-    RootedVarPropertyName name(f.cx, name_);
+    RootedObject scopeObj(f.cx, f.cx->stack.currentScriptedScopeChain());
+    RootedPropertyName name(f.cx, name_);
 
     JSObject *obj, *obj2;
     JSProperty *prop;
@@ -301,7 +301,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
      */
     JSContext *cx = f.cx;
     StackFrame *fp = f.fp();
-    RootedVarFunction fun(f.cx, fun_);
+    RootedFunction fun(f.cx, fun_);
 
     /*
      * If static link is not current scope, clone fun's object to link to the
@@ -505,7 +505,7 @@ StubEqualityOp(VMFrame &f)
             JSObject *l = &lval.toObject(), *r = &rval.toObject();
             if (JSEqualityOp eq = l->getClass()->ext.equality) {
                 JSBool equal;
-                if (!eq(cx, RootedVarObject(cx, l), &rval, &equal))
+                if (!eq(cx, RootedObject(cx, l), &rval, &equal))
                     return false;
                 cond = !!equal == EQ;
             } else {
@@ -582,7 +582,7 @@ stubs::Add(VMFrame &f)
     /* The string + string case is easily the hottest;  try it first. */
     bool lIsString = lval.isString();
     bool rIsString = rval.isString();
-    RootedVarString lstr(cx), rstr(cx);
+    RootedString lstr(cx), rstr(cx);
     if (lIsString && rIsString) {
         lstr = lval.toString();
         rstr = rval.toString();
@@ -886,7 +886,7 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     JSObject *obj;
 
     if (baseobj) {
-        obj = CopyInitializerObject(cx, RootedVarObject(cx, baseobj));
+        obj = CopyInitializerObject(cx, RootedObject(cx, baseobj));
     } else {
         gc::AllocKind kind = GuessObjectGCKind(0);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
@@ -921,7 +921,7 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     JSObject *obj = &lref.toObject();
 
     /* Fetch id now that we have obj. */
-    RootedVarId id(cx);
+    RootedId id(cx);
     const Value &idval = regs.sp[-2];
     if (!FetchElementId(f.cx, obj, idval, id.address(), &regs.sp[-2]))
         THROW();
@@ -963,7 +963,7 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
 JSObject * JS_FASTCALL
 stubs::Lambda(VMFrame &f, JSFunction *fun_)
 {
-    RootedVarFunction fun(f.cx, fun_);
+    RootedFunction fun(f.cx, fun_);
     fun = CloneFunctionObjectIfNotSingleton(f.cx, fun, f.fp()->scopeChain());
     if (!fun)
         THROWV(NULL);
@@ -1025,11 +1025,11 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     rval = regs.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
-    RootedVarObject obj(cx, &regs.sp[-2].toObject());
+    RootedObject obj(cx, &regs.sp[-2].toObject());
     JS_ASSERT(obj->isNative());
 
     /* Get the immediate property name into id. */
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
         ? !baseops::SetPropertyHelper(cx, obj, id, 0, &rval, false)
@@ -1066,7 +1066,7 @@ stubs::IterMore(VMFrame &f)
 
     Value v;
     JSObject *iterobj = &f.regs.sp[-1].toObject();
-    if (!js_IteratorMore(f.cx, RootedVarObject(f.cx, iterobj), &v))
+    if (!js_IteratorMore(f.cx, RootedObject(f.cx, iterobj), &v))
         THROWV(JS_FALSE);
 
     return v.toBoolean();
@@ -1143,7 +1143,7 @@ stubs::InstanceOf(VMFrame &f)
                             -1, rref, NULL);
         THROWV(JS_FALSE);
     }
-    RootedVarObject obj(cx, &rref.toObject());
+    RootedObject obj(cx, &rref.toObject());
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
     if (!HasInstance(cx, obj, &lref, &cond))
@@ -1339,8 +1339,8 @@ stubs::Pos(VMFrame &f)
 void JS_FASTCALL
 stubs::DelName(VMFrame &f, PropertyName *name_)
 {
-    RootedVarObject scopeObj(f.cx, f.cx->stack.currentScriptedScopeChain());
-    RootedVarPropertyName name(f.cx, name_);
+    RootedObject scopeObj(f.cx, f.cx->stack.currentScriptedScopeChain());
+    RootedPropertyName name(f.cx, name_);
 
     JSObject *obj, *obj2;
     JSProperty *prop;
@@ -1364,7 +1364,7 @@ void JS_FASTCALL
 stubs::DelProp(VMFrame &f, PropertyName *name_)
 {
     JSContext *cx = f.cx;
-    RootedVarPropertyName name(cx, name_);
+    RootedPropertyName name(cx, name_);
 
     JSObject *obj = ValueToObject(cx, f.regs.sp[-1]);
     if (!obj)
@@ -1408,7 +1408,7 @@ stubs::DefVarOrConst(VMFrame &f, PropertyName *dn)
 
     JSObject &obj = f.fp()->varObj();
 
-    if (!DefVarOrConstOperation(f.cx, RootedVarObject(f.cx, &obj), dn, attrs))
+    if (!DefVarOrConstOperation(f.cx, RootedObject(f.cx, &obj), dn, attrs))
         THROW();
 }
 
@@ -1439,7 +1439,7 @@ stubs::In(VMFrame &f)
     }
 
     JSObject *obj = &rref.toObject();
-    RootedVarId id(cx);
+    RootedId id(cx);
     if (!FetchElementId(f.cx, obj, f.regs.sp[-2], id.address(), &f.regs.sp[-2]))
         THROWV(JS_FALSE);
 

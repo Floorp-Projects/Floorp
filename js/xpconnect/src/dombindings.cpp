@@ -922,8 +922,8 @@ template<class LC>
 bool
 ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy_, JSObject *proto, jsid id_, bool *found, Value *vp)
 {
-    JS::RootedVarObject proxy(cx, proxy_);
-    JS::RootedVarId id(cx, id_);
+    JS::RootedObject proxy(cx, proxy_);
+    JS::RootedId id(cx, id_);
 
     uint32_t cache = js::GetReservedSlot(proto, 0).toPrivateUint32();
     if (cache == CHECK_CACHE) {

@@ -405,6 +405,10 @@ function shutdownPlaces(aKeepAliveConnection)
   hs.observe(null, "profile-before-change", null);
 }
 
+const FILENAME_BOOKMARKS_HTML = "bookmarks.html";
+let (backup_date = new Date().toLocaleFormat("%Y-%m-%d")) {
+  const FILENAME_BOOKMARKS_JSON = "bookmarks-" + backup_date + ".json";
+}
 
 /**
  * Creates a bookmarks.html file in the profile folder from a given source file.
