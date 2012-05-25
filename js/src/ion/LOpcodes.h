@@ -173,7 +173,8 @@
     _(TypeOfV)                      \
     _(ToIdV)                        \
     _(Floor)                        \
-    _(Round)
+    _(Round)                        \
+    _(InterruptCheck)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

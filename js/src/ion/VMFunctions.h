@@ -430,6 +430,8 @@ bool ArrayShiftDense(JSContext *cx, JSObject *obj, Value *rval);
 bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
                  bool strict, bool isSetName);
 
+bool InterruptCheck(JSContext *cx);
+
 } // namespace ion
 } // namespace js
 

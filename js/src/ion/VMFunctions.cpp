@@ -87,6 +87,11 @@ InvokeConstructorFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *ar
 bool
 ReportOverRecursed(JSContext *cx)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
+    if (cx->runtime->interrupt)
+        return InterruptCheck(cx);
+
     js_ReportOverRecursed(cx);
 
     // Cause an InternalError.
@@ -309,6 +314,14 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
     }
 
     return obj->setGeneric(cx, id, &v, strict);
+}
+
+bool
+InterruptCheck(JSContext *cx)
+{
+    gc::MaybeVerifyBarriers(cx);
+
+    return !!js_HandleExecutionInterrupt(cx);
 }
 
 } // namespace ion

@@ -2475,6 +2475,24 @@ class MRecompileCheck : public MNullaryInstruction
     }
 };
 
+// Check whether we need to fire the interrupt handler.
+class MInterruptCheck : public MNullaryInstruction
+{
+    MInterruptCheck() {
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(InterruptCheck);
+
+    static MInterruptCheck *New() {
+        return new MInterruptCheck();
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 // If not defined, set a global variable to |undefined|.
 class MDefVar : public MUnaryInstruction
 {
