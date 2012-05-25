@@ -423,6 +423,7 @@ StackSpace::init()
     trustedEnd_ = base_ + CAPACITY_VALS;
     conservativeEnd_ = defaultEnd_ = trustedEnd_ - BUFFER_VALS;
 #endif
+    Debug_SetValueRangeToCrashOnTouch(base_, trustedEnd_);
     assertInvariants();
     return true;
 }
@@ -780,9 +781,13 @@ ContextStack::popInvokeArgs(const InvokeArgsGuard &iag)
     JS_ASSERT(onTop());
     JS_ASSERT(space().firstUnused() == seg_->calls().end());
 
+    Value *oldend = seg_->end();
+
     seg_->popCall();
     if (iag.pushedSeg_)
         popSegment();
+
+    Debug_SetValueRangeToCrashOnTouch(space().firstUnused(), oldend);
 }
 
 bool
@@ -894,9 +899,13 @@ ContextStack::popFrame(const FrameGuard &fg)
     if (fg.regs_.fp()->isNonEvalFunctionFrame())
         fg.regs_.fp()->functionEpilogue(cx_);
 
+    Value *oldend = seg_->end();
+
     seg_->popRegs(fg.prevRegs_);
     if (fg.pushedSeg_)
         popSegment();
+
+    Debug_SetValueRangeToCrashOnTouch(space().firstUnused(), oldend);
 
     /*
      * NB: this code can call out and observe the stack (e.g., through GC), so
