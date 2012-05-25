@@ -8967,7 +8967,7 @@ dnl Create a virtualenv where we can install local Python packages
 AC_MSG_RESULT([Creating Python virtualenv])
 rm -rf _virtualenv
 mkdir -p _virtualenv
-PYTHONDONTWRITEBYTECODE= $PYTHON $_topsrcdir/other-licenses/virtualenv/virtualenv.py ./_virtualenv
+MACOSX_DEPLOYMENT_TARGET= PYTHONDONTWRITEBYTECODE= $PYTHON $_topsrcdir/other-licenses/virtualenv/virtualenv.py ./_virtualenv
 case "$host_os" in
 mingw*)
     PYTHON=`pwd`/_virtualenv/Scripts/python.exe
@@ -9004,7 +9004,7 @@ AC_OUTPUT($MAKEFILES)
 
 # Populate the virtualenv
 AC_MSG_RESULT([Populating Python virtualenv])
-$MAKE -C build/virtualenv || exit 1
+$MAKE -C build/virtualenv MACOSX_DEPLOYMENT_TARGET=  || exit 1
 
 # Generate a JSON config file for unittest harnesses etc to read
 # build configuration details from in a standardized way.
