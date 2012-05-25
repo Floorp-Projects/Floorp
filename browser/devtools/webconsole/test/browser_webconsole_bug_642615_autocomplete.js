@@ -8,7 +8,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                    "@mozilla.org/widget/clipboardhelper;1",
                                    "nsIClipboardHelper");
 
-function consoleOpened(HUD) {
+function tabLoad(aEvent) {
+  browser.removeEventListener(aEvent.type, arguments.callee, true);
+
+  openConsole();
+
+  let hudId = HUDService.getHudIdByWindow(content);
+  let HUD = HUDService.hudReferences[hudId];
   let jsterm = HUD.jsterm;
   let stringToCopy = "foobazbarBug642615";
 
@@ -18,11 +24,41 @@ function consoleOpened(HUD) {
 
   jsterm.setInputValue("doc");
 
-  let completionValue;
-
   // wait for key "u"
-  function onCompletionValue() {
-    completionValue = jsterm.completeNode.value;
+  jsterm.inputNode.addEventListener("keyup", function() {
+    jsterm.inputNode.removeEventListener("keyup", arguments.callee, false);
+
+    let completionValue = jsterm.completeNode.value;
+    ok(completionValue, "we have a completeNode.value");
+
+    // wait for paste
+    jsterm.inputNode.addEventListener("input", function() {
+      jsterm.inputNode.removeEventListener("input", arguments.callee, false);
+
+      ok(!jsterm.completeNode.value, "no completeNode.value after clipboard paste");
+
+      // wait for undo
+      jsterm.inputNode.addEventListener("input", function() {
+        jsterm.inputNode.removeEventListener("input", arguments.callee, false);
+
+        is(jsterm.completeNode.value, completionValue,
+           "same completeNode.value after undo");
+
+        // wait for paste (via keyboard event)
+        jsterm.inputNode.addEventListener("keyup", function() {
+          jsterm.inputNode.removeEventListener("keyup", arguments.callee, false);
+
+          ok(!jsterm.completeNode.value,
+             "no completeNode.value after clipboard paste (via keyboard event)");
+
+          executeSoon(finishTest);
+        }, false);
+
+        EventUtils.synthesizeKey("v", {accelKey: true});
+      }, false);
+
+      goDoCommand("cmd_undo");
+    }, false);
 
     // Arguments: expected, setup, success, failure.
     waitForClipboard(
@@ -30,73 +66,17 @@ function consoleOpened(HUD) {
       function() {
         clipboardHelper.copyString(stringToCopy);
       },
-      onClipboardCopy,
-      finishTest);
-  }
-
-  function onClipboardCopy() {
-    updateEditUIVisibility();
-    goDoCommand("cmd_paste");
-
-    waitForSuccess(waitForPaste);
-  }
-
-  let waitForPaste = {
-    name: "no completion value after paste",
-    validatorFn: function()
-    {
-      return !jsterm.completeNode.value;
-    },
-    successFn: onClipboardPaste,
-    failureFn: finishTest,
-  };
-
-  function onClipboardPaste() {
-    goDoCommand("cmd_undo");
-    waitForSuccess({
-      name: "completion value for 'docu' after undo",
-      validatorFn: function()
-      {
-        return !!jsterm.completeNode.value;
+      function() {
+        updateEditUIVisibility();
+        goDoCommand("cmd_paste");
       },
-      successFn: onCompletionValueAfterUndo,
-      failureFn: finishTest,
-    });
-  }
-
-  function onCompletionValueAfterUndo() {
-    is(jsterm.completeNode.value, completionValue,
-       "same completeNode.value after undo");
-
-    EventUtils.synthesizeKey("v", {accelKey: true});
-    waitForSuccess({
-      name: "no completion after ctrl-v (paste)",
-      validatorFn: function()
-      {
-        return !jsterm.completeNode.value;
-      },
-      successFn: finishTest,
-      failureFn: finishTest,
-    });
-  }
+      finish);
+  }, false);
 
   EventUtils.synthesizeKey("u", {});
-
-  waitForSuccess({
-    name: "completion value for 'docu'",
-    validatorFn: function()
-    {
-      return !!jsterm.completeNode.value;
-    },
-    successFn: onCompletionValue,
-    failureFn: finishTest,
-  });
 }
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  browser.addEventListener("load", tabLoad, true);
 }
