@@ -2051,18 +2051,6 @@ SpdySession2::SetNeedsCleanup()
 // Modified methods of nsAHttpConnection
 //-----------------------------------------------------------------------------
 
-nsresult
-SpdySession2::ResumeSend()
-{
-  NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-  LOG3(("SpdySession2::ResumeSend %p", this));
-
-  if (!mConnection)
-    return NS_ERROR_FAILURE;
-
-  return mConnection->ResumeSend();
-}
-
 void
 SpdySession2::TransactionHasDataToWrite(nsAHttpTransaction *caller)
 {
@@ -2096,15 +2084,6 @@ SpdySession2::TransactionHasDataToWrite(SpdyStream2 *stream)
   SetWriteCallbacks();
 }
 
-nsresult
-SpdySession2::ResumeRecv()
-{
-  if (!mConnection)
-    return NS_ERROR_FAILURE;
-
-  return mConnection->ResumeRecv();
-}
-
 bool
 SpdySession2::IsPersistent()
 {
@@ -2127,14 +2106,6 @@ SpdySession2::TakeHttpConnection()
   return nsnull;
 }
 
-nsISocketTransport *
-SpdySession2::Transport()
-{
-  if (!mConnection)
-    return nsnull;
-  return mConnection->Transport();
-}
-
 PRUint32
 SpdySession2::CancelPipeline(nsresult reason)
 {
@@ -2148,15 +2119,6 @@ SpdySession2::Classification()
   if (!mConnection)
     return nsAHttpTransaction::CLASS_GENERAL;
   return mConnection->Classification();
-}
-
-void
-SpdySession2::Classify(nsAHttpTransaction::Classifier newclass)
-{
-  if (!mConnection)
-    return;
-  
-  mConnection->Classify(newclass);
 }
 
 //-----------------------------------------------------------------------------
@@ -2322,18 +2284,6 @@ SpdySession2::OnHeadersAvailable(nsAHttpTransaction *transaction,
                                          reset);
 }
 
-void
-SpdySession2::GetConnectionInfo(nsHttpConnectionInfo **connInfo)
-{
-  mConnection->GetConnectionInfo(connInfo);
-}
-
-void
-SpdySession2::GetSecurityInfo(nsISupports **supports)
-{
-  mConnection->GetSecurityInfo(supports);
-}
-
 bool
 SpdySession2::IsReused()
 {
@@ -2344,25 +2294,6 @@ nsresult
 SpdySession2::PushBack(const char *buf, PRUint32 len)
 {
   return mConnection->PushBack(buf, len);
-}
-
-bool
-SpdySession2::IsProxyConnectInProgress()
-{
-    NS_ABORT_IF_FALSE(mConnection, "no connection");
-    return mConnection->IsProxyConnectInProgress();
-}
-
-bool
-SpdySession2::LastTransactionExpectedNoContent()
-{
-  return mConnection->LastTransactionExpectedNoContent();
-}
-
-void
-SpdySession2::SetLastTransactionExpectedNoContent(bool val)
-{
-  mConnection->SetLastTransactionExpectedNoContent(val);
 }
 
 } // namespace mozilla::net
