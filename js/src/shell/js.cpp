@@ -4781,6 +4781,15 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
             return OptionFailure("ion-osr", str);
     }
 
+    if (const char *str = op->getStringOption("ion-limit-script-size")) {
+        if (strcmp(str, "on") == 0)
+            ion::js_IonOptions.limitScriptSize = true;
+        else if (strcmp(str, "off") == 0)
+            ion::js_IonOptions.limitScriptSize = false;
+        else
+            return OptionFailure("ion-limit-script-size", str);
+    }
+
     if (const char *str = op->getStringOption("ion-regalloc")) {
         if (strcmp(str, "lsra") == 0)
             ion::js_IonOptions.lsra = true;
@@ -5059,6 +5068,8 @@ main(int argc, char **argv, char **envp)
                                "Inline methods where possible (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-osr", "on/off",
                                "On-Stack Replacement (default: on, off to disable)")
+        || !op.addStringOption('\0', "ion-limit-script-size", "on/off",
+                               "Don't compile very large scripts (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-regalloc", "[mode]",
                                "Specify Ion register allocation:\n"
                                "  greedy: Greedy register allocation\n"

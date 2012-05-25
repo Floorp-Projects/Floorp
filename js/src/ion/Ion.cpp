@@ -841,6 +841,29 @@ CheckFrame(StackFrame *fp)
     return true;
 }
 
+static bool
+CheckScriptSize(JSScript *script)
+{
+    if (!js_IonOptions.limitScriptSize)
+        return true;
+
+    static const uint32_t MAX_SCRIPT_SIZE = 1500;
+    static const uint32_t MAX_LOCALS_AND_ARGS = 256;
+
+    if (script->length > MAX_SCRIPT_SIZE) {
+        IonSpew(IonSpew_Abort, "Script too large (%u bytes)", script->length);
+        return false;
+    }
+
+    uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
+    if (numLocalsAndArgs > MAX_LOCALS_AND_ARGS) {
+        IonSpew(IonSpew_Abort, "Too many locals and arguments (%u)", numLocalsAndArgs);
+        return false;
+    }
+
+    return true;
+}
+
 static MethodStatus
 Compile(JSContext *cx, JSScript *script, js::StackFrame *fp, jsbytecode *osrPc)
 {
@@ -852,8 +875,10 @@ Compile(JSContext *cx, JSScript *script, js::StackFrame *fp, jsbytecode *osrPc)
         return Method_CantCompile;
     }
 
-    if (!CheckFrame(fp))
+    if (!CheckFrame(fp) || !CheckScriptSize(script)) {
+        IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename, script->lineno);
         return Method_CantCompile;
+    }
 
     if (script->ion) {
         if (!script->ion->method())
