@@ -486,7 +486,8 @@ JSBool
 ArrayBufferObject::obj_getElement(JSContext *cx, HandleObject obj,
                                   HandleObject receiver, uint32_t index, Value *vp)
 {
-    RootedObject delegate(cx, DelegateObject(cx, RootedObject(cx, getArrayBuffer(obj))));
+    RootedObject buffer(cx, getArrayBuffer(obj));
+    RootedObject delegate(cx, DelegateObject(cx, buffer));
     if (!delegate)
         return false;
     return baseops::GetElement(cx, delegate, receiver, index, vp);
@@ -496,7 +497,8 @@ JSBool
 ArrayBufferObject::obj_getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
                                            uint32_t index, Value *vp, bool *present)
 {
-    JSObject *delegate = DelegateObject(cx, RootedObject(cx, getArrayBuffer(obj)));
+    RootedObject buffer(cx, getArrayBuffer(obj));
+    RootedObject delegate(cx, DelegateObject(cx, buffer));
     if (!delegate)
         return false;
     return delegate->getElementIfPresent(cx, receiver, index, vp, present);
@@ -1454,6 +1456,13 @@ class TypedArrayTemplate
         return obj;
     }
 
+    static JSObject *
+    makeInstance(JSContext *cx, HandleObject bufobj, uint32_t byteOffset, uint32_t len)
+    {
+        RootedObject nullproto(cx, NULL);
+        return makeInstance(cx, bufobj, byteOffset, len, nullproto);
+    }
+
     /*
      * new [Type]Array(length)
      * new [Type]Array(otherTypedArray)
@@ -1475,8 +1484,9 @@ class TypedArrayTemplate
     fromBuffer(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
-        JSObject *obj = fromBuffer(cx, RootedObject(cx, &args[0].toObject()),
-                                   args[1].toInt32(), args[2].toInt32(), RootedObject(cx, &args[3].toObject()));
+        RootedObject buffer(cx, &args[0].toObject());
+        RootedObject proto(cx, &args[3].toObject());
+        JSObject *obj = fromBuffer(cx, buffer, args[1].toInt32(), args[2].toInt32(), proto);
         if (!obj)
             return false;
         vp->setObject(*obj);
@@ -1746,7 +1756,7 @@ class TypedArrayTemplate
         RootedObject buffer(cx, createBufferWithSizeAndCount(cx, nelements));
         if (!buffer)
             return NULL;
-        return makeInstance(cx, buffer, 0, nelements, RootedObject(cx, NULL));
+        return makeInstance(cx, buffer, 0, nelements);
     }
 
     static JSObject *
@@ -1760,7 +1770,7 @@ class TypedArrayTemplate
         if (!bufobj)
             return NULL;
 
-        RootedObject obj(cx, makeInstance(cx, bufobj, 0, len, RootedObject(cx)));
+        RootedObject obj(cx, makeInstance(cx, bufobj, 0, len));
         if (!obj || !copyFromArray(cx, obj, other, len))
             return NULL;
         return obj;
@@ -1798,7 +1808,7 @@ class TypedArrayTemplate
         JS_ASSERT(UINT32_MAX - begin * sizeof(NativeType) >= getByteOffset(tarray));
         uint32_t byteOffset = getByteOffset(tarray) + begin * sizeof(NativeType);
 
-        return makeInstance(cx, bufobj, byteOffset, length, RootedObject(cx));
+        return makeInstance(cx, bufobj, byteOffset, length);
     }
 
   protected:
