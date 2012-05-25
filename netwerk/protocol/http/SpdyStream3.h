@@ -83,14 +83,36 @@ public:
   void SetRecvdFin(bool aStatus) { mRecvdFin = aStatus ? 1 : 0; }
   bool RecvdFin() { return mRecvdFin; }
 
+  void SetRecvdData(bool aStatus) { mReceivedData = aStatus ? 1 : 0; }
+  bool RecvdData() { return mReceivedData; }
+
   void UpdateTransportSendEvents(PRUint32 count);
   void UpdateTransportReadEvents(PRUint32 count);
 
   // The zlib header compression dictionary defined by SPDY,
   // and hooks to the mozilla allocator for zlib to use.
-  static const char *kDictionary;
+  static const unsigned char kDictionary[1423];
   static void *zlib_allocator(void *, uInt, uInt);
   static void zlib_destructor(void *, void *);
+
+  nsresult Uncompress(z_stream *, char *, PRUint32);
+  nsresult ConvertHeaders(nsACString &);
+
+  void UpdateRemoteWindow(PRInt32 delta) { mRemoteWindow += delta; }
+  PRInt64 RemoteWindow() { return mRemoteWindow; }
+
+  void DecrementLocalWindow(PRUint32 delta) {
+    mLocalWindow -= delta;
+    mLocalUnacked += delta;
+  }
+
+  void IncrementLocalWindow(PRUint32 delta) {
+    mLocalWindow += delta;
+    mLocalUnacked -= delta;
+  }
+
+  PRUint64 LocalUnAcked() { return mLocalUnacked; }
+  bool     BlockedOnRwin() { return mBlockedOnRwin; }
 
 private:
 
@@ -121,9 +143,10 @@ private:
   void     CompressToFrame(const nsACString &);
   void     CompressToFrame(const nsACString *);
   void     CompressToFrame(const char *, PRUint32);
-  void     CompressToFrame(PRUint16);
+  void     CompressToFrame(PRUint32);
   void     CompressFlushFrame();
   void     ExecuteCompress(PRUint32);
+  nsresult FindHeader(nsCString, nsDependentCSubstring &);
   
   // Each stream goes from syn_stream to upstream_complete, perhaps
   // looping on multiple instances of generating_request_body and
@@ -175,6 +198,10 @@ private:
   // Flag is set after the WAITING_FOR Transport event has been generated
   PRUint32                     mSentWaitingFor       : 1;
 
+  // Flag is set after 1st DATA frame has been passed to stream, after
+  // which additional HEADERS data is invalid
+  PRUint32                     mReceivedData         : 1;
+
   // The InlineFrame and associated data is used for composing control
   // frames and data frame headers.
   nsAutoArrayPtr<char>         mTxInlineFrame;
@@ -192,6 +219,12 @@ private:
   z_stream                     *mZlib;
   nsCString                    mFlatHttpRequestHeaders;
 
+  // These are used for decompressing downstream spdy response headers
+  PRUint32             mDecompressBufferSize;
+  PRUint32             mDecompressBufferUsed;
+  PRUint32             mDecompressedBytes;
+  nsAutoArrayPtr<char> mDecompressBuffer;
+
   // Track the content-length of a request body so that we can
   // place the fin flag on the last data packet instead of waiting
   // for a stream closed indication. Relying on stream close results
@@ -201,6 +234,27 @@ private:
 
   // based on nsISupportsPriority definitions
   PRInt32                      mPriority;
+
+  // mLocalWindow, mRemoteWindow, and mLocalUnacked are for flow control.
+  // *window are signed because they race conditions in asynchronous SETTINGS
+  // messages can force them temporarily negative.
+
+  // LocalWindow is how much data the server will send without getting a
+  //   window update
+  PRInt64                      mLocalWindow;
+
+  // RemoteWindow is how much data the client is allowed to send without
+  //   getting a window update
+  PRInt64                      mRemoteWindow;
+
+  // LocalUnacked is the number of bytes received by the client but not
+  //   yet reflected in a window update. Sending that update will increment
+  //   LocalWindow
+  PRUint64                     mLocalUnacked;
+
+  // True when sending is suspended becuase the remote flow control window is
+  //   <= 0
+  bool                         mBlockedOnRwin;
 
   // For Progress Events
   PRUint64                     mTotalSent;
