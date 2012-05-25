@@ -9,7 +9,7 @@ function test() {
   tab.linkedBrowser.stop();
   let tabState = JSON.parse(ss.getTabState(tab));
   is(tabState.disallow || "", "", "Everything is allowed per default");
-  
+
   // collect all permissions that can be set on a docShell (i.e. all
   // attributes starting with "allow" such as "allowJavascript") and
   // disallow them all, as SessionStore only remembers disallowed ones
@@ -21,7 +21,7 @@ function test() {
       docShell[attribute] = false;
     }
   }
-  
+
   // make sure that all available permissions have been remembered
   tabState = JSON.parse(ss.getTabState(tab));
   let disallow = tabState.disallow.split(",");
@@ -30,6 +30,6 @@ function test() {
   });
   // IF A TEST FAILS, please add the missing permission's name (without the
   // leading "allow") to nsSessionStore.js's CAPABILITIES array. Thanks.
-  
+
   gBrowser.removeTab(tab);
 }

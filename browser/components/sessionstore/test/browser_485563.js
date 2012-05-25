@@ -4,11 +4,11 @@
 
 function test() {
   /** Test for Bug 485563 **/
-  
+
   waitForExplicitFinish();
-  
+
   let uniqueValue = Math.random() + "\u2028Second line\u2029Second paragraph\u2027";
-  
+
   let tab = gBrowser.addTab();
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
@@ -20,7 +20,7 @@ function test() {
     ss.setTabState(tab, JSON.stringify(tabState));
     is(ss.getTabValue(tab, "bug485563"), uniqueValue,
        "unicode line separator was correctly preserved");
-    
+
     gBrowser.removeTab(tab);
     finish();
   }, true);

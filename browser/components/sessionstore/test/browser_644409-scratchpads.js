@@ -36,7 +36,7 @@ function test() {
 }
 
 function windowObserver(aSubject, aTopic, aData) {
-  if (aTopic == "domwindowopened") {     
+  if (aTopic == "domwindowopened") {
     let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
     win.addEventListener("load", function onLoad() {
       win.removeEventListener("load", onLoad, false);
