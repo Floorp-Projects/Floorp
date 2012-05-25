@@ -33,8 +33,8 @@ class ContextFlags {
 
     // This function/global/eval code body contained a Use Strict Directive.
     // Treat certain strict warnings as errors, and forbid the use of 'with'.
-    // See also StrictModeGetter, JSScript::strictModeCode,
-    // JSREPORT_STRICT_ERROR, and JSOPTION_STRICT_MODE.
+    // See also TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and
+    // JSREPORT_STRICT_ERROR.
     //
     bool            inStrictMode:1;
 
