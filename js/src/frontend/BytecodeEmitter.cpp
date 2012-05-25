@@ -1201,8 +1201,8 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (bce->sc->needStrictChecks()) {
                 JSAutoByteString name;
                 if (!js_AtomToPrintableString(cx, atom, &name) ||
-                    !ReportStrictModeError(cx, bce->tokenStream(), pn, JSMSG_READ_ONLY, name.ptr()))
-                {
+                    !ReportStrictModeError(cx, bce->tokenStream(), bce->sc, pn, JSMSG_READ_ONLY,
+                                           name.ptr())) {
                     return JS_FALSE;
                 }
             }

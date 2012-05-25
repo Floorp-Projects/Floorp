@@ -76,19 +76,12 @@ using namespace js::frontend;
     JS_END_MACRO
 #define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
-bool
-PartialTokenizingContext::inStrictMode() const
-{
-    return parser->tc->sc->inStrictMode();
-}
-
 Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
                const jschar *chars, size_t length, const char *fn, unsigned ln, JSVersion v,
                StackFrame *cfp, bool foldConstants, bool compileAndGo)
   : AutoGCRooter(cx, PARSER),
     context(cx),
-    partialTokenizingContext(this),
-    tokenStream(cx, prin, originPrin, chars, length, fn, ln, v, &partialTokenizingContext),
+    tokenStream(cx, prin, originPrin, chars, length, fn, ln, v),
     tempPoolMark(NULL),
     principals(NULL),
     originPrincipals(NULL),
@@ -110,7 +103,6 @@ Parser::init()
 {
     if (!context->ensureParseMapPool())
         return false;
-
     tempPoolMark = context->tempLifoAlloc().mark();
     return true;
 }
@@ -450,8 +442,8 @@ CheckStrictAssignment(JSContext *cx, Parser *parser, ParseNode *lhs)
         if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
             JSAutoByteString name;
             if (!js_AtomToPrintableString(cx, atom, &name) ||
-                !ReportStrictModeError(cx, TS(parser), lhs, JSMSG_DEPRECATED_ASSIGN, name.ptr()))
-            {
+                !ReportStrictModeError(cx, TS(parser), parser->tc->sc, lhs, JSMSG_DEPRECATED_ASSIGN,
+                                       name.ptr())) {
                 return false;
             }
         }
@@ -479,7 +471,8 @@ CheckStrictBinding(JSContext *cx, Parser *parser, PropertyName *name, ParseNode 
         JSAutoByteString bytes;
         if (!js_AtomToPrintableString(cx, name, &bytes))
             return false;
-        return ReportStrictModeError(cx, TS(parser), pn, JSMSG_BAD_BINDING, bytes.ptr());
+        return ReportStrictModeError(cx, TS(parser), parser->tc->sc, pn, JSMSG_BAD_BINDING,
+                                     bytes.ptr());
     }
 
     return true;
@@ -491,7 +484,7 @@ ReportBadParameter(JSContext *cx, Parser *parser, JSAtom *name, unsigned errorNu
     Definition *dn = parser->tc->decls.lookupFirst(name);
     JSAutoByteString bytes;
     return js_AtomToPrintableString(cx, name, &bytes) &&
-           ReportStrictModeError(cx, TS(parser), dn, errorNumber, bytes.ptr());
+           ReportStrictModeError(cx, TS(parser), parser->tc->sc, dn, errorNumber, bytes.ptr());
 }
 
 /*
@@ -1749,6 +1742,10 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
     if (!LeaveFunction(pn, this, funName, kind))
         return NULL;
 
+    /* If the surrounding function is not strict code, reset the lexer. */
+    if (!outertc->sc->inStrictMode())
+        tokenStream.setStrictMode(false);
+
     return pn;
 }
 
@@ -1848,6 +1845,7 @@ Parser::recognizeDirectivePrologue(ParseNode *pn, bool *isDirectivePrologueMembe
             }
 
             tc->sc->setInStrictMode();
+            tokenStream.setStrictMode();
         }
     }
     return true;
@@ -2288,7 +2286,7 @@ MakeSetCall(JSContext *cx, ParseNode *pn, Parser *parser, unsigned msg)
     JS_ASSERT(pn->isArity(PN_LIST));
     JS_ASSERT(pn->isOp(JSOP_CALL) || pn->isOp(JSOP_EVAL) ||
               pn->isOp(JSOP_FUNCALL) || pn->isOp(JSOP_FUNAPPLY));
-    if (!ReportStrictModeError(cx, TS(parser), pn, msg))
+    if (!ReportStrictModeError(cx, TS(parser), parser->tc->sc, pn, msg))
         return false;
 
     ParseNode *pn2 = pn->pn_head;
@@ -2849,8 +2847,10 @@ Parser::letBlock(LetContext letContext)
          *
          * See bug 569464.
          */
-        if (!ReportStrictModeError(context, &tokenStream, pnlet, JSMSG_STRICT_CODE_LET_EXPR_STMT))
+        if (!ReportStrictModeError(context, &tokenStream, tc->sc, pnlet,
+                                   JSMSG_STRICT_CODE_LET_EXPR_STMT)) {
             return NULL;
+        }
 
         /*
          * If this is really an expression in let statement guise, then we
@@ -4826,7 +4826,7 @@ Parser::unaryExpr()
             }
             break;
           case PNK_NAME:
-            if (!ReportStrictModeError(context, &tokenStream, pn,
+            if (!ReportStrictModeError(context, &tokenStream, tc->sc, pn,
                                        JSMSG_DEPRECATED_DELETE_OPERAND)) {
                 return NULL;
             }

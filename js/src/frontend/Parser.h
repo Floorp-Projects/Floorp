@@ -35,8 +35,6 @@ enum VarContext { HoistVars, DontHoistVars };
 struct Parser : private AutoGCRooter
 {
     JSContext           *const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
-    PartialTokenizingContext partialTokenizingContext; /* used by tokenStream to test for
-                                                          strict mode */
     TokenStream         tokenStream;
     void                *tempPoolMark;  /* initial JSContext.tempLifoAlloc mark */
     JSPrincipals        *principals;    /* principals associated with source */
