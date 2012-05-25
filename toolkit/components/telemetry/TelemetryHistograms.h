@@ -345,6 +345,12 @@ HISTOGRAM(FX_THUMBNAILS_CAPTURE_TIME_MS, 1, 500, 15, EXPONENTIAL, "THUMBNAILS: T
 HISTOGRAM(FX_THUMBNAILS_STORE_TIME_MS, 1, 500, 15, EXPONENTIAL, "THUMBNAILS: Time (ms) it takes to store a thumbnail in the cache")
 HISTOGRAM(FX_THUMBNAILS_HIT_OR_MISS, 0, 1, 2, BOOLEAN, "THUMBNAILS: Thumbnail found")
 
+
+/*
+ * Widget telemetry.
+ */
+HISTOGRAM(EVENTLOOP_UI_LAG, 50, 30000, 200, LINEAR, "Widget: Time (ms) it takes for the message before a UI message")
+
 /**
  * Session restore telemetry
  */
