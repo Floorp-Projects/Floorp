@@ -346,6 +346,9 @@ RES_DRAWABLE_BASE = \
   res/drawable/abouthome_sync_bg.9.png \
   res/drawable/abouthome_sync_pressed_bg.9.png \
   res/drawable/abouthome_thumbnail.png \
+  res/drawable/alert_addon.png \
+  res/drawable/alert_app.png \
+  res/drawable/alert_download.png \
   res/drawable/awesomebar_tab.9.png \
   res/drawable/awesomebar_tab_pressed.9.png \
   res/drawable/ic_addons_empty.png \
@@ -410,6 +413,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/abouthome_sync_pressed_bg.9.png \
   res/drawable-hdpi/abouthome_thumbnail.png \
   res/drawable-hdpi/address_bar_bg_shadow.png \
+  res/drawable-hdpi/alert_addon.png \
+  res/drawable-hdpi/alert_app.png \
+  res/drawable-hdpi/alert_download.png \
   res/drawable-hdpi/awesomebar_tab.9.png \
   res/drawable-hdpi/awesomebar_tab_pressed.9.png \
   res/drawable-hdpi/ic_addons_empty.png \
@@ -452,6 +458,9 @@ RES_DRAWABLE_HDPI = \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V11 = \
+  res/drawable-mdpi-v11/alert_addon.png \
+  res/drawable-mdpi-v11/alert_app.png \
+  res/drawable-mdpi-v11/alert_download.png \
   res/drawable-mdpi-v11/ic_menu_back.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_remove.png \
@@ -464,6 +473,9 @@ RES_DRAWABLE_MDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V11 = \
+  res/drawable-hdpi-v11/alert_addon.png \
+  res/drawable-hdpi-v11/alert_app.png \
+  res/drawable-hdpi-v11/alert_download.png \
   res/drawable-hdpi-v11/ic_menu_back.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_remove.png \
@@ -486,6 +498,9 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/abouthome_sync_pressed_bg.9.png \
   res/drawable-xhdpi-v11/abouthome_thumbnail.png \
   res/drawable-xhdpi-v11/address_bar_bg_shadow.png \
+  res/drawable-xhdpi-v11/alert_addon.png \
+  res/drawable-xhdpi-v11/alert_app.png \
+  res/drawable-xhdpi-v11/alert_download.png \
   res/drawable-xhdpi-v11/awesomebar_tab.9.png \
   res/drawable-xhdpi-v11/awesomebar_tab_pressed.9.png \
   res/drawable-xhdpi-v11/ic_addons_empty.png \
