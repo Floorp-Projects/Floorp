@@ -352,8 +352,9 @@ class CGHeaders(CGWrapper):
 
             for t in types:
                 if t.unroll().isInterface():
-                    if t.unroll().isArrayBuffer():
+                    if t.unroll().isSpiderMonkeyInterface():
                         bindingHeaders.add("jsfriendapi.h")
+                        bindingHeaders.add("mozilla/dom/TypedArray.h")
                     else:
                         typeDesc = d.getDescriptor(t.unroll().inner.identifier.name)
                         if typeDesc is not None:
@@ -1439,7 +1440,7 @@ ${declName}.SwapElements(arr);
                                           descriptorProvider.workers)
         return (templateBody, typeName, None)
 
-    if type.isInterface() and not type.isArrayBuffer():
+    if type.isGeckoInterface():
         descriptor = descriptorProvider.getDescriptor(
             type.unroll().inner.identifier.name)
         # This is an interface that we implement as a concrete class
@@ -1536,34 +1537,47 @@ ${declName}.SwapElements(arr);
 
         templateBody = wrapObjectTemplate(templateBody, isDefinitelyObject,
                                           type, "${declName} = NULL",
-                                          descriptor.workers)
+                                          descriptor.workers, failureCode)
 
         declType = CGGeneric(declType)
         if holderType is not None:
             holderType = CGGeneric(holderType)
         return (templateBody, declType, holderType)
 
-    if type.isArrayBuffer():
+    if type.isSpiderMonkeyInterface():
         if isSequenceMember:
-            raise TypeError("Can't handle sequences of arraybuffers")
-        declType = "JSObject*"
-        template = (
-            "if (${val}.isObject() && JS_IsArrayBufferObject(&${val}.toObject(), cx)) {\n"
-            "  ${declName} = &${val}.toObject();\n"
-            "}")
+            raise TypeError("Can't handle sequences of arraybuffers or "
+                            "arraybuffer views because making sure all the "
+                            "objects are properly rooted is hard")
+        name = type.name
+        if type.isArrayBuffer():
+            jsname = "ArrayBufferObject"
+        elif type.isArrayBufferView():
+            jsname = "TypedArrayObject"
+        else:
+            jsname = type.name
+
+        holderType = "Maybe<%s>" % name
         if type.nullable():
-            template += (
-                " else if (${val}.isNullOrUndefined()) {\n"
-                "  ${declName} = NULL;\n"
-                "}")
+            declType = name + "*"
+        else:
+            declType = "NonNull<" + name + ">"
+        template = (
+            "if (!JS_Is%s(&${val}.toObject(), cx)) {\n"
+            "  %s" # No newline here because onFailure() handles that
+            "}\n"
+            "${holderName}.construct(cx, &${val}.toObject());\n" %
+            (jsname, onFailure(failureCode, descriptorProvider.workers).define()))
+        if type.nullable:
+            template += "${declName} = ${holderName}.addr();"
+        else:
+            template += "${declName} = ${holderName}.ref();"
+        template = wrapObjectTemplate(template, isDefinitelyObject, type,
+                                      "${declName} = NULL",
+                                      descriptorProvider.workers,
+                                      failureCode)
 
-        template += (
-            " else {\n" +
-            CGIndenter(onFailure(failureCode,
-                                 descriptorProvider.workers)).define() +
-            "}")
-
-        return (template, CGGeneric(declType), None)
+        return (template, CGGeneric(declType), CGGeneric(holderType))
 
     if type.isString():
         if isSequenceMember:
@@ -1829,7 +1843,7 @@ for (uint32_t i = 0; i < length; ++i) {
 %s
 }\n""" % (result, innerTemplate)) + setValue("JS::ObjectValue(*returnArray)")
 
-    if type.isInterface() and not type.isArrayBuffer():
+    if type.isGeckoInterface():
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
         if type.nullable():
             wrappingCode = ("if (!%s) {\n" % (result) +
@@ -1976,7 +1990,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         if returnType.nullable():
             raise TypeError("We don't support nullable enum return values")
         return CGGeneric(returnType.inner.identifier.name), False
-    if returnType.isInterface() and not returnType.isArrayBuffer():
+    if returnType.isGeckoInterface():
         result = CGGeneric(descriptorProvider.getDescriptor(
             returnType.unroll().inner.identifier.name).nativeType)
         if resultAlreadyAddRefed:
@@ -2351,29 +2365,31 @@ class CGMethodCall(CGThing):
             pickFirstSignature("%s.isNullOrUndefined()" % distinguishingArg,
                                lambda s: s[1][distinguishingIndex].type.nullable())
 
-            # Now check for distinguishingArg being a platform object.
-            # We can actually check separately for array buffers and
-            # other things.
-            # XXXbz Do we need to worry about security
-            # wrappers around the array buffer?
-            pickFirstSignature("%s.isObject() && JS_IsArrayBufferObject(&%s.toObject(), cx)" %
-                               (distinguishingArg, distinguishingArg),
-                               lambda s: (s[1][distinguishingIndex].type.isArrayBuffer() or
-                                          s[1][distinguishingIndex].type.isObject()))
-            
+            # Now check for distinguishingArg being an object that implements a
+            # non-callback interface.  That includes typed arrays and
+            # arraybuffers.
             interfacesSigs = [
                 s for s in possibleSignatures
                 if (s[1][distinguishingIndex].type.isObject() or
                     (s[1][distinguishingIndex].type.isInterface() and
-                     not s[1][distinguishingIndex].type.isArrayBuffer() and
                      not s[1][distinguishingIndex].type.isCallback())) ]
             # There might be more than one of these; we need to check
             # which ones we unwrap to.
             
             if len(interfacesSigs) > 0:
-                caseBody.append(CGGeneric("if (%s.isObject() &&\n"
-                                          "    IsPlatformObject(cx, &%s.toObject())) {" %
-                                          (distinguishingArg, distinguishingArg)))
+                # The spec says that we should check for "platform objects
+                # implementing an interface", but it's enough to guard on these
+                # being an object.  The code for unwrapping non-callback
+                # interfaces and typed arrays will just bail out and move on to
+                # the next overload if the object fails to unwrap correctly.  We
+                # could even not do the isObject() check up front here, but in
+                # cases where we have multiple object overloads it makes sense
+                # to do it only once instead of for each overload.  That will
+                # also allow the unwrapping test to skip having to do codegen
+                # for the null-or-undefined case, which we already handled
+                # above.
+                caseBody.append(CGGeneric("if (%s.isObject()) {" %
+                                          (distinguishingArg)))
                 for sig in interfacesSigs:
                     caseBody.append(CGIndenter(CGGeneric("do {")));
                     type = sig[1][distinguishingIndex].type
