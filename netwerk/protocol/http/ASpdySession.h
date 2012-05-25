@@ -49,8 +49,12 @@ class nsISocketTransport;
 
 namespace mozilla { namespace net {
 
-// This is designed to handle 1 or 2 concrete protocol levels
+// This is designed to handle up to 2 concrete protocol levels
 // simultaneously
+//
+// Currently supported are v3 (preferred), and v2
+// network.protocol.http.spdy.enabled.v2 (and v3) prefs can enable/disable
+// them.
 
 class ASpdySession : public nsAHttpTransaction
 {
@@ -93,7 +97,8 @@ public:
                                             PRUint8 *result);
 
   enum {
-    SPDY_VERSION_2 = 2
+    SPDY_VERSION_2 = 2,
+    SPDY_VERSION_3 = 3
   };
 
   PRUint8   Version[2];
