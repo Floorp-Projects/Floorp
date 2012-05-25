@@ -81,6 +81,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitLoadElementT(LLoadElementT *load);
     bool visitImplicitThis(LImplicitThis *lir);
     bool visitRecompileCheck(LRecompileCheck *lir);
+    bool visitInterruptCheck(LInterruptCheck *lir);
 };
 
 typedef CodeGeneratorX64 CodeGeneratorSpecific;

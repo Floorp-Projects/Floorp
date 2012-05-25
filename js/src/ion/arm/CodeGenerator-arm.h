@@ -169,6 +169,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool visitImplicitThis(LImplicitThis *lir);
 
     bool visitRecompileCheck(LRecompileCheck *lir);
+    bool visitInterruptCheck(LInterruptCheck *lir);
     bool generateInvalidateEpilogue();
 };
 
