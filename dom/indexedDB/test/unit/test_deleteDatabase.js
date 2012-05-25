@@ -52,7 +52,7 @@ function testSteps()
     onversionchangecalled = true;
     ok(event instanceof IDBVersionChangeEvent, "expect a versionchange event");
     is(event.oldVersion, 10, "oldVersion should be 10");
-    todo(event.newVersion, null, "newVersion should be null");
+    ise(event.newVersion, null, "newVersion should be null");
     db.close();
     db2.close();
     db.onversionchange = errorHandler;
