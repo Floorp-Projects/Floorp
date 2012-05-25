@@ -169,6 +169,8 @@ nsHttpHandler::nsHttpHandler()
     , mTelemetryEnabled(false)
     , mAllowExperiments(true)
     , mEnableSpdy(false)
+    , mSpdyV2(true)
+    , mSpdyV3(true)
     , mCoalesceSpdy(true)
     , mUseAlternateProtocol(false)
     , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
@@ -1130,6 +1132,18 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled"), &cVar);
         if (NS_SUCCEEDED(rv))
             mEnableSpdy = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.enabled.v2"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.v2"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mSpdyV2 = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.enabled.v3"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.v3"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mSpdyV3 = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.coalesce-hostnames"))) {

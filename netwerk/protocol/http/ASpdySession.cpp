@@ -38,8 +38,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHttp.h"
+#include "nsHttpHandler.h"
+
 #include "ASpdySession.h"
 #include "SpdySession2.h"
+#include "SpdySession3.h"
 
 #include "mozilla/Telemetry.h"
 
@@ -54,38 +57,44 @@ ASpdySession::NewSpdySession(PRUint32 version,
 {
   // This is a necko only interface, so we can enforce version
   // requests as a precondition
-  NS_ABORT_IF_FALSE(version == SpdyInformation::SPDY_VERSION_2,
-                    "Only version 2 implemented");
+  NS_ABORT_IF_FALSE(version == SpdyInformation::SPDY_VERSION_2 ||
+                    version == SpdyInformation::SPDY_VERSION_3,
+                    "Unsupported spdy version");
+
+  // Don't do a runtime check of IsSpdyV?Enabled() here because pref value
+  // may have changed since starting negotiation. The selected protocol comes
+  // from a list provided in the SERVER HELLO filtered by our acceptable
+  // versions, so there is no risk of the server ignoring our prefs.
 
   Telemetry::Accumulate(Telemetry::SPDY_VERSION, version);
     
-  return new SpdySession2(aTransaction,
-                          aTransport,
-                          aPriority);
+  if (version == SpdyInformation::SPDY_VERSION_2)
+    return new SpdySession2(aTransaction, aTransport, aPriority);
+
+  return new SpdySession3(aTransaction, aTransport, aPriority);
 }
 
 SpdyInformation::SpdyInformation()
 {
-  Version[0] = SPDY_VERSION_2;
-  VersionString[0] = NS_LITERAL_CSTRING("spdy/2");
-  AlternateProtocolString[0] = NS_LITERAL_CSTRING("443:npn-spdy/2");
+  // list the preferred version first
+  Version[0] = SPDY_VERSION_3;
+  VersionString[0] = NS_LITERAL_CSTRING("spdy/3");
+  AlternateProtocolString[0] = NS_LITERAL_CSTRING("443:npn-spdy/3");
 
-  Version[1] = 0;
-  VersionString[1] = EmptyCString();
-  AlternateProtocolString[1] = EmptyCString();
+  Version[1] = SPDY_VERSION_2;
+  VersionString[1] = NS_LITERAL_CSTRING("spdy/2");
+  AlternateProtocolString[1] = NS_LITERAL_CSTRING("443:npn-spdy/2");
 }
 
 bool
 SpdyInformation::ProtocolEnabled(PRUint32 index)
 {
-  // A future patch will make a spdy v2 specific pref
   if (index == 0)
-    return true;
+    return gHttpHandler->IsSpdyV3Enabled();
 
-  // Right now there is no second protocol version
   if (index == 1)
-    return false;
-  
+    return gHttpHandler->IsSpdyV2Enabled();
+
   NS_ABORT_IF_FALSE(false, "index out of range");
   return false;
 }
