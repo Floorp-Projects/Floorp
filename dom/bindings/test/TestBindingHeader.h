@@ -84,7 +84,39 @@ public:
   void SetNonNullSelf(TestInterface&, ErrorResult&);
   already_AddRefed<TestInterface> GetNullableSelf(ErrorResult&);
   void SetNullableSelf(TestInterface*, ErrorResult&);
- 
+
+  void ReceiveSequence(nsTArray<int32_t>&, ErrorResult&);
+  void ReceiveNullableSequence(Nullable< nsTArray<int32_t> >&, ErrorResult&);
+  void PassSequence(const Sequence<int32_t> &, ErrorResult&);
+  void PassNullableSequence(const Nullable< Sequence<int32_t> >&, ErrorResult&);
+  // XXXbz is this the right signature????  For all the sequence
+  // "receive" methods here!  Shouldn't we take strong refs?
+  void ReceiveCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &,
+                                     ErrorResult&);
+  void ReceiveNullableCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &,
+                                             ErrorResult&);
+  void ReceiveCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&,
+                                             ErrorResult&);
+  void ReceiveWeakNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&,
+                                                         ErrorResult&);
+  void ReceiveNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&,
+                                             ErrorResult&);
+  void ReceiveWeakCastableObjectSequence(nsTArray<TestInterface*> &,
+                                         ErrorResult&);
+  void ReceiveWeakNullableCastableObjectSequence(nsTArray<TestInterface*> &,
+                                                 ErrorResult&);
+  void ReceiveWeakCastableObjectNullableSequence(Nullable< nsTArray<TestInterface*> >&,
+                                                 ErrorResult&);
+  void ReceiveWeakNullableCastableObjectNullableSequence(Nullable< nsTArray<TestInterface*> >&,
+                                                         ErrorResult&);
+  void PassCastableObjectSequence(const Sequence< OwningNonNull<TestInterface> >&,
+                                  ErrorResult&);
+  void PassNullableCastableObjectSequence(const Sequence< nsRefPtr<TestInterface> > &,
+                                          ErrorResult&);
+  void PassCastableObjectNullableSequence(const Nullable< Sequence< OwningNonNull<TestInterface> > >&,
+                                          ErrorResult&);
+  void PassNullableCastableObjectNullableSequence(const Nullable< Sequence< nsRefPtr<TestInterface> > >&,
+                                                  ErrorResult&);
 private:
   // We add signatures here that _could_ start matching if the codegen
   // got data types wrong.  That way if it ever does we'll have a call
@@ -136,6 +168,9 @@ private:
   void SetWritableUnsignedLongLong(T, ErrorResult&) MOZ_DELETE;
   template<typename T>
   void PassUnsignedLongLong(T, ErrorResult&) MOZ_DELETE;
+
+  void PassSequence(Sequence<int32_t> &, ErrorResult&) MOZ_DELETE;
+  void PassNullableSequence(Nullable< Sequence<int32_t> >&, ErrorResult&) MOZ_DELETE;
 };
 
 } // namespace dom

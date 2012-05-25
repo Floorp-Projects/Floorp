@@ -1237,7 +1237,7 @@ class CastableObjectUnwrapper():
     def __str__(self):
         return string.Template(
 """{
-  nsresult rv = UnwrapObject<${protoID}>(cx, ${source}, ${target});
+  nsresult rv = UnwrapObject<${protoID}, ${type}>(cx, ${source}, ${target});
   if (NS_FAILED(rv)) {
     ${codeOnFailure}
   }
@@ -1459,7 +1459,6 @@ for (uint32_t i = 0; i < length; ++i) {
         #    tuple.
         #  - holderType is the type we want to return as the third element
         #    of our tuple.
-        #  - target is where a pointer to the object is being stored
 
         # Set up some sensible defaults for these things insofar as we can.
         holderType = None
@@ -1468,13 +1467,11 @@ for (uint32_t i = 0; i < length; ++i) {
                 declType = "nsRefPtr<" + typeName + ">"
             else:
                 declType = typePtr
-            target = "&${declName}"
         else:
             if forceOwningType:
                 declType = "OwningNonNull<" + typeName + ">"
             else:
                 declType = "NonNull<" + typeName + ">"
-            target = "${declName}.Slot()"
 
         templateBody = ""
         if descriptor.castable:
@@ -1482,13 +1479,13 @@ for (uint32_t i = 0; i < length; ++i) {
                 templateBody += str(CastableObjectUnwrapper(
                         descriptor,
                         "&${val}.toObject()",
-                        target,
+                        "${declName}",
                         failureCode))
             else:
                 templateBody += str(FailureFatalCastableObjectUnwrapper(
                         descriptor,
                         "&${val}.toObject()",
-                        target))
+                        "${declName}"))
         elif descriptor.interface.isCallback():
             templateBody += str(CallbackObjectUnwrapper(
                     descriptor,
@@ -2006,10 +2003,11 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         nullable = returnType.nullable()
         if nullable:
             returnType = returnType.inner
-        # Assume no need to addref for now
+        # If our result is already addrefed, use the right type in the
+        # sequence argument here.
         (result, needsCx) = getRetvalDeclarationForType(returnType.inner,
                                                         descriptorProvider,
-                                                        False)
+                                                        resultAlreadyAddRefed)
         result = CGWrapper(result, pre="nsTArray< ", post=" >")
         if nullable:
             result = CGWrapper(result, pre="Nullable< ", post=" >")
@@ -2561,7 +2559,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     def definition_body(self):
         unwrapThis = CGIndenter(CGGeneric(
             str(FailureFatalCastableObjectUnwrapper(self.descriptor,
-                                                    "obj", "&self"))))
+                                                    "obj", "self"))))
         return CGList([ self.getThis(), unwrapThis,
                         self.generate_code() ], "\n").define()
 
