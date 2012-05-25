@@ -46,6 +46,9 @@ function tabLoaded() {
   let networkLink = networkMessage.querySelector(".webconsole-msg-link");
   ok(networkLink, "found network message link");
 
+  let jstermMessage = HUD.outputNode.querySelector(".webconsole-msg-output");
+  ok(jstermMessage, "found output message");
+
   let popupset = document.getElementById("mainPopupSet");
   ok(popupset, "found #mainPopupSet");
 
@@ -109,20 +112,8 @@ function tabLoaded() {
   });
 
   // Show the network and object inspector panels.
-  waitForSuccess({
-    name: "jsterm output message",
-    validatorFn: function()
-    {
-      return HUD.outputNode.querySelector(".webconsole-msg-output");
-    },
-    successFn: function()
-    {
-      let jstermMessage = HUD.outputNode.querySelector(".webconsole-msg-output");
-      EventUtils.synthesizeMouse(networkLink, 2, 2, {});
-      EventUtils.synthesizeMouse(jstermMessage, 2, 2, {});
-    },
-    failureFn: finishTest,
-  });
+  EventUtils.synthesizeMouse(networkLink, 2, 2, {});
+  EventUtils.synthesizeMouse(jstermMessage, 2, 2, {});
 }
 
 function togglePBAndThen(callback) {

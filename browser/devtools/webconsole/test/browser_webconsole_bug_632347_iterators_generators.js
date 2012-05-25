@@ -7,25 +7,27 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  browser.addEventListener("load", tabLoaded, true);
 }
 
-function consoleOpened(HUD) {
+function tabLoaded() {
+  browser.removeEventListener("load", tabLoaded, true);
+
   let tmp = {};
   Cu.import("resource:///modules/WebConsoleUtils.jsm", tmp);
   let WCU = tmp.WebConsoleUtils;
-  let JSPropertyProvider = tmp.JSPropertyProvider;
-  tmp = null;
 
+  openConsole();
+
+  let hudId = HUDService.getHudIdByWindow(content);
+  let HUD = HUDService.hudReferences[hudId];
   let jsterm = HUD.jsterm;
+
   let win = content.wrappedJSObject;
 
   // Make sure autocomplete does not walk through iterators and generators.
   let result = win.gen1.next();
-  let completion = JSPropertyProvider(win, "gen1.");
+  let completion = jsterm.propertyProvider(win, "gen1.");
   is(completion, null, "no matchees for gen1");
   ok(!WCU.isObjectInspectable(win.gen1),
      "gen1 is not inspectable");
@@ -34,7 +36,7 @@ function consoleOpened(HUD) {
 
   result = win.gen2.next();
 
-  completion = JSPropertyProvider(win, "gen2.");
+  completion = jsterm.propertyProvider(win, "gen2.");
   is(completion, null, "no matchees for gen2");
   ok(!WCU.isObjectInspectable(win.gen2),
      "gen2 is not inspectable");
@@ -46,7 +48,7 @@ function consoleOpened(HUD) {
   is(result[0], "foo", "iter1.next() [0] is correct");
   is(result[1], "bar", "iter1.next() [1] is correct");
 
-  completion = JSPropertyProvider(win, "iter1.");
+  completion = jsterm.propertyProvider(win, "iter1.");
   is(completion, null, "no matchees for iter1");
   ok(!WCU.isObjectInspectable(win.iter1),
      "iter1 is not inspectable");
@@ -55,57 +57,27 @@ function consoleOpened(HUD) {
   is(result[0], "baz", "iter1.next() [0] is correct");
   is(result[1], "baaz", "iter1.next() [1] is correct");
 
-  completion = JSPropertyProvider(content, "iter2.");
+  completion = jsterm.propertyProvider(content, "iter2.");
   is(completion, null, "no matchees for iter2");
   ok(!WCU.isObjectInspectable(win.iter2),
      "iter2 is not inspectable");
 
-  completion = JSPropertyProvider(win, "window.");
+  completion = jsterm.propertyProvider(win, "window.");
   ok(completion, "matches available for window");
   ok(completion.matches.length, "matches available for window (length)");
   ok(WCU.isObjectInspectable(win),
      "window is inspectable");
 
-  jsterm.clearOutput();
-
-  jsterm.setInputValue("window");
-  jsterm.execute();
-
-  waitForSuccess({
-    name: "jsterm window object output",
-    validatorFn: function()
-    {
-      return HUD.outputNode.querySelector(".webconsole-msg-output");
-    },
-    successFn: function()
-    {
-      document.addEventListener("popupshown", function onShown(aEvent) {
-        document.removeEventListener("popupshown", onShown, false);
-        executeSoon(testPropertyPanel.bind(null, aEvent.target));
-      }, false);
-
-      let node = HUD.outputNode.querySelector(".webconsole-msg-output");
-      EventUtils.synthesizeMouse(node, 2, 2, {});
-    },
-    failureFn: finishTest,
-  });
-}
-
-function testPropertyPanel(aPanel) {
-  let tree = aPanel.querySelector("tree");
-  let view = tree.view;
-  let col = tree.columns[0];
-  ok(view.rowCount, "Property Panel rowCount");
+  let panel = jsterm.openPropertyPanel("Test", win);
+  ok(panel, "opened the Property Panel");
+  let rows = panel.treeView._rows;
+  ok(rows.length, "Property Panel rows are available");
 
   let find = function(display, children) {
-    for (let i = 0; i < view.rowCount; i++) {
-      if (view.isContainer(i) == children &&
-          view.getCellText(i, col) == display) {
-        return true;
-      }
-    }
-
-    return false;
+    return rows.some(function(row) {
+      return row.display == display &&
+             row.children == children;
+    });
   };
 
   ok(find("gen1: Generator", false),
@@ -120,5 +92,13 @@ function testPropertyPanel(aPanel) {
   ok(find("iter2: Iterator", false),
      "iter2 is correctly displayed in the Property Panel");
 
-  executeSoon(finishTest);
+  /*
+   * - disabled, see bug 632347, c#9
+   * ok(find("parent: Window", true),
+   *   "window.parent is correctly displayed in the Property Panel");
+   */
+
+  panel.destroy();
+
+  finishTest();
 }

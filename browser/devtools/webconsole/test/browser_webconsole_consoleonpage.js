@@ -14,15 +14,17 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 function test()
 {
   addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, testOpenWebConsole);
+  browser.addEventListener("load", function() {
+    browser.removeEventListener("load", arguments.callee, true);
+    testOpenWebConsole();
   }, true);
 }
 
-function testOpenWebConsole(aHud)
+function testOpenWebConsole()
 {
-  hud = aHud;
+  openConsole();
+
+  hud = HUDService.getHudByWindow(content);
   ok(hud, "WebConsole was opened");
 
   testOwnConsole();
@@ -40,8 +42,8 @@ function testOwnConsole()
   // overwritten by the WebConsole's console.
   testConsoleOnPage(console);
 
-  // Check that the console object is set on the HUD object although there
+  // Check that the console object is set on the jsterm object although there
   // is no console object added to the page.
-  ok(hud.console, "HUD console is defined");
+  ok(hud.jsterm.console, "JSTerm console is defined");
   finishTest();
 }

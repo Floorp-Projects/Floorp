@@ -487,11 +487,11 @@ var Scratchpad = {
                GetStringFromName("propertyPanel.updateButton.label"),
         accesskey: this.strings.
                    GetStringFromName("propertyPanel.updateButton.accesskey"),
-        oncommand: function _SP_PP_Update_onCommand() {
+        oncommand: function () {
           let [error, result] = self.evalForContext(aEvalString);
 
           if (!error) {
-            propPanel.treeView.data = { object: result };
+            propPanel.treeView.data = result;
           }
         }
       });
@@ -499,9 +499,8 @@ var Scratchpad = {
 
     let doc = this.browserWindow.document;
     let parent = doc.getElementById("mainPopupSet");
-    let title = String(aOutputObject);
-    propPanel = new PropertyPanel(parent, title, { object: aOutputObject },
-                                  buttons);
+    let title = aOutputObject.toString();
+    propPanel = new PropertyPanel(parent, doc, title, aOutputObject, buttons);
 
     let panel = propPanel.panel;
     panel.setAttribute("class", "scratchpad_propertyPanel");

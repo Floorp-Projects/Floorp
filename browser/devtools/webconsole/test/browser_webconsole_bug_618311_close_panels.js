@@ -7,13 +7,12 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
+  browser.addEventListener("load", function() {
+    browser.removeEventListener("load", arguments.callee, true);
 
-    openConsole(null, function() {
-      content.location.reload();
-      browser.addEventListener("load", tabLoaded, true);
-    });
+    openConsole();
+    content.location.reload();
+    browser.addEventListener("load", tabLoaded, true);
   }, true);
 }
 
@@ -30,6 +29,9 @@ function tabLoaded() {
 
   let networkLink = networkMessage.querySelector(".webconsole-msg-link");
   ok(networkLink, "found network message link");
+
+  let jstermMessage = HUD.outputNode.querySelector(".webconsole-msg-output");
+  ok(jstermMessage, "found output message");
 
   let popupset = document.getElementById("mainPopupSet");
   ok(popupset, "found #mainPopupSet");
@@ -83,18 +85,6 @@ function tabLoaded() {
     }
   });
 
-  waitForSuccess({
-    name: "jsterm output message",
-    validatorFn: function()
-    {
-      return HUD.outputNode.querySelector(".webconsole-msg-output");
-    },
-    successFn: function()
-    {
-      let jstermMessage = HUD.outputNode.querySelector(".webconsole-msg-output");
-      EventUtils.synthesizeMouse(networkLink, 2, 2, {});
-      EventUtils.synthesizeMouse(jstermMessage, 2, 2, {});
-    },
-    failureFn: finishTest,
-  });
+  EventUtils.synthesizeMouse(networkLink, 2, 2, {});
+  EventUtils.synthesizeMouse(jstermMessage, 2, 2, {});
 }
