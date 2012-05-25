@@ -58,7 +58,24 @@ interface TestInterface {
   // A version we can use to test for the exact type passed in
   void passSelf2(TestInterface arg);
   void passNullableSelf(TestInterface? arg);
-
   attribute TestInterface nonNullSelf;
   attribute TestInterface? nullableSelf;
+
+  // Sequence types
+  sequence<long> receiveSequence();
+  sequence<long>? receiveNullableSequence();
+  void passSequence(sequence<long> arg);
+  void passNullableSequence(sequence<long>? arg);
+  sequence<TestInterface> receiveCastableObjectSequence();
+  sequence<TestInterface?> receiveNullableCastableObjectSequence();
+  sequence<TestInterface>? receiveCastableObjectNullableSequence();
+  sequence<TestInterface?>? receiveNullableCastableObjectNullableSequence();
+  sequence<TestInterface> receiveWeakCastableObjectSequence();
+  sequence<TestInterface?> receiveWeakNullableCastableObjectSequence();
+  sequence<TestInterface>? receiveWeakCastableObjectNullableSequence();
+  sequence<TestInterface?>? receiveWeakNullableCastableObjectNullableSequence();
+  void passCastableObjectSequence(sequence<TestInterface> arg);
+  void passNullableCastableObjectSequence(sequence<TestInterface?> arg);
+  void passCastableObjectNullableSequence(sequence<TestInterface>? arg);
+  void passNullableCastableObjectNullableSequence(sequence<TestInterface?>? arg);
 };
