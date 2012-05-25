@@ -31,3 +31,11 @@
 .details[open] {
   display: -moz-box;
 }
+
+/**
+ * Toolbar
+ */
+
+.devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
+  display: none;
+}
