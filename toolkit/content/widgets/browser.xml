@@ -710,8 +710,8 @@
               this.webNavigation.sessionHistory =
                       Components.classes["@mozilla.org/browser/shistory;1"]
                                 .createInstance(Components.interfaces.nsISHistory);
-              // enable global history
-              if (this.docShell)
+              // enable global history if we weren't told otherwise
+              if (this.docShell && !this.hasAttribute("disableglobalhistory"))
                 this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
             }
           }
