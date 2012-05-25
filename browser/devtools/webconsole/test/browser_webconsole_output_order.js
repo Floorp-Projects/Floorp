@@ -36,8 +36,7 @@ function testOutputOrder(hud) {
         /console\.log\('foo', 'bar'\);/.test(nodes[0].textContent);
       let outputSecond = /foo bar/.test(nodes[2].textContent);
       ok(executedStringFirst && outputSecond, "executed string comes first");
-      jsterm.clearOutput();
-      jsterm.history.splice(0, jsterm.history.length);   // workaround for bug 592552
+
       finishTest();
     },
     failureFn: finishTest,

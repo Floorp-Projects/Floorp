@@ -5,26 +5,27 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", tabLoaded, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, consoleOpened);
+  }, true);
 }
 
-function tabLoaded() {
-  browser.removeEventListener("load", tabLoaded, true);
-  openConsole();
-
-  let hudId = HUDService.getHudIdByWindow(content);
-  let HUD = HUDService.hudReferences[hudId];
+function consoleOpened(HUD) {
   let jsterm = HUD.jsterm;
 
   let doc = content.wrappedJSObject.document;
 
-  let panel = jsterm.openPropertyPanel("Test1", doc);
+  let panel = jsterm.openPropertyPanel({ data: { object: doc }});
 
-  let rows = panel.treeView._rows;
+  let view = panel.treeView;
   let find = function(regex) {
-    return rows.some(function(row) {
-      return regex.test(row.display);
-    });
+    for (let i = 0; i < view.rowCount; i++) {
+      if (regex.test(view.getCellText(i))) {
+        return true;
+      }
+    }
+    return false;
   };
 
   ok(!find(/^(width|height):/), "no document.width/height");
@@ -33,8 +34,8 @@ function tabLoaded() {
 
   let getterValue = doc.foobar._val;
 
-  panel = jsterm.openPropertyPanel("Test2", doc.foobar);
-  rows = panel.treeView._rows;
+  panel = jsterm.openPropertyPanel({ data: { object: doc.foobar }});
+  view = panel.treeView;
 
   is(getterValue, doc.foobar._val, "getter did not execute");
   is(getterValue+1, doc.foobar.val, "getter executed");
