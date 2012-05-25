@@ -7,8 +7,6 @@
 #include "CheckPermissionsHelper.h"
 
 #include "nsIDOMWindow.h"
-#include "nsILoadContext.h"
-#include "nsIWebNavigation.h"
 #include "nsIObserverService.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
@@ -58,9 +56,7 @@ GetIndexedDBPermissions(const nsACString& aASCIIOrigin,
     return nsIPermissionManager::ALLOW_ACTION;
   }
 
-  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(aWindow);
-  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
-  if (loadContext && loadContext->UsePrivateBrowsing()) {
+  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode()) {
     // TODO Support private browsing indexedDB?
     return nsIPermissionManager::DENY_ACTION;
   }

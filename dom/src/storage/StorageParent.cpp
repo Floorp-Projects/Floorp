@@ -30,23 +30,15 @@ bool
 StorageParent::RecvInit(const bool& aUseDB,
                         const bool& aCanUseChromePersist,
                         const bool& aSessionOnly,
-                        const bool& aPrivate,
                         const nsCString& aDomain,
                         const nsCString& aScopeDBKey,
                         const nsCString& aQuotaDomainDBKey,
                         const nsCString& aQuotaETLDplus1DomainDBKey,
                         const PRUint32& aStorageType)
 {
-  mStorage->InitFromChild(aUseDB, aCanUseChromePersist, aSessionOnly, aPrivate, aDomain,
+  mStorage->InitFromChild(aUseDB, aCanUseChromePersist, aSessionOnly, aDomain,
                           aScopeDBKey, aQuotaDomainDBKey, aQuotaETLDplus1DomainDBKey,
                           aStorageType);
-  return true;
-}
-
-bool
-StorageParent::RecvUpdatePrivateState(const bool& aEnabled)
-{
-  mStorage->PrivateModeChanged(aEnabled);
   return true;
 }
 
