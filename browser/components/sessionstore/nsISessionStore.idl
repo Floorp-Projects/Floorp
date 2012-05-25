@@ -68,7 +68,7 @@ interface nsISessionStore : nsISupports
 
   /**
    * @param aWindow is the browser window whose state is to be returned.
-   * 
+   *
    * @returns a JSON string representing a session state with only one window.
    */
   AString getWindowState(in nsIDOMWindow aWindow);
@@ -82,7 +82,7 @@ interface nsISessionStore : nsISupports
 
   /**
    * @param aTab is the tabbrowser tab whose state is to be returned.
-   * 
+   *
    * @returns a JSON string representing the state of the tab
    *         (note: doesn't contain cookies - if you need them, use getWindowState instead).
    */
@@ -160,7 +160,7 @@ interface nsISessionStore : nsISupports
   /**
    * @param aWindow is the window to get the value for.
    * @param aKey    is the value's name.
-   * 
+   *
    * @returns A string value or an empty string if none is set.
    */
   AString getWindowValue(in nsIDOMWindow aWindow, in AString aKey);
@@ -171,7 +171,7 @@ interface nsISessionStore : nsISupports
    * @param aStringValue is the value itself (use JSON.stringify/parse before setting JS objects).
    */
   void setWindowValue(in nsIDOMWindow aWindow, in AString aKey, in AString aStringValue);
-  
+
   /**
    * @param aWindow is the browser window to get the value for.
    * @param aKey    is the value's name.
@@ -181,7 +181,7 @@ interface nsISessionStore : nsISupports
   /**
    * @param aTab is the tabbrowser tab to get the value for.
    * @param aKey is the value's name.
-   * 
+   *
    * @returns A string value or an empty string if none is set.
    */
   AString getTabValue(in nsIDOMNode aTab, in AString aKey);
