@@ -145,6 +145,12 @@ public:
                bool aIncludeSubDomains, bool aMatch);
 
   /**
+   * Removes all keys from storage. Used when clearing storage.
+   */
+  nsresult
+  RemoveAll();
+
+  /**
     * Returns usage for a storage using its GetQuotaDomainDBKey() as a key.
     */
   nsresult
@@ -154,7 +160,7 @@ public:
     * Returns usage of the domain and optionaly by any subdomain.
     */
   nsresult
-  GetUsage(const nsACString& aDomain, bool aIncludeSubDomains, PRInt32 *aUsage, bool aPrivate);
+  GetUsage(const nsACString& aDomain, bool aIncludeSubDomains, PRInt32 *aUsage);
 
   /**
    * Marks the storage as "cached" after the DOMStorageImpl object has loaded
