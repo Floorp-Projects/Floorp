@@ -133,7 +133,7 @@ public class BrowserToolbar {
                 } else if (Build.VERSION.SDK_INT >= 11) {
                     text.setTextSize(24);
                 } else {
-                    text.setTextSize(24);
+                    text.setTextSize(22);
                 }
 
                 text.setTextColor(mCounterColor);
