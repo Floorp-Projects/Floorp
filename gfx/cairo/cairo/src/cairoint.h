@@ -933,7 +933,13 @@ typedef struct _cairo_traps {
 #endif
 
 #define CAIRO_GSTATE_OPERATOR_DEFAULT	CAIRO_OPERATOR_OVER
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+// Skia uses a tolerance of 0.5 we'll use something more
+// tolerant for now
+#define CAIRO_GSTATE_TOLERANCE_DEFAULT	0.3
+#else
 #define CAIRO_GSTATE_TOLERANCE_DEFAULT	0.1
+#endif
 #define CAIRO_GSTATE_FILL_RULE_DEFAULT	CAIRO_FILL_RULE_WINDING
 #define CAIRO_GSTATE_LINE_WIDTH_DEFAULT	2.0
 #define CAIRO_GSTATE_LINE_CAP_DEFAULT	CAIRO_LINE_CAP_BUTT
