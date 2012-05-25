@@ -6,14 +6,14 @@
 
 "use strict";
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["WebConsoleUtils"];
+var EXPORTED_SYMBOLS = ["WebConsoleUtils", "JSPropertyProvider"];
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 
@@ -403,7 +403,7 @@ var WebConsoleUtils = {
         let m = /^\[object (\S+)\]/.exec(presentable);
 
         try {
-          if (type == "object" && typeof aObject.next == "function" &&
+          if (typeof aObject == "object" && typeof aObject.next == "function" &&
               m && m[1] == "Generator") {
             return {
               type: TYPES.GENERATOR,
@@ -419,7 +419,8 @@ var WebConsoleUtils = {
           };
         }
 
-        if (type == "object" && typeof aObject.__iterator__ == "function") {
+        if (typeof aObject == "object" &&
+            typeof aObject.__iterator__ == "function") {
           return {
             type: TYPES.ITERATOR,
             display: "Iterator"
@@ -514,10 +515,11 @@ var WebConsoleUtils = {
     let value, presentable;
 
     let isDOMDocument = aObject instanceof Ci.nsIDOMDocument;
+    let deprecated = ["width", "height", "inputEncoding"];
 
     for (let propName in aObject) {
-      // See bug 632275: skip deprecated width and height properties.
-      if (isDOMDocument && (propName == "width" || propName == "height")) {
+      // See bug 632275: skip deprecated properties.
+      if (isDOMDocument && deprecated.indexOf(propName) > -1) {
         continue;
       }
 
@@ -527,8 +529,13 @@ var WebConsoleUtils = {
         presentable = {type: TYPES.GETTER, display: "Getter"};
       }
       else {
-        value = aObject[propName];
-        presentable = this.presentableValueFor(value);
+        try {
+          value = aObject[propName];
+          presentable = this.presentableValueFor(value);
+        }
+	      catch (ex) {
+          continue;
+        }
       }
 
       let pair = {};
@@ -704,3 +711,228 @@ WebConsoleUtils.l10n = {
 XPCOMUtils.defineLazyGetter(WebConsoleUtils.l10n, "stringBundle", function() {
   return Services.strings.createBundle(STRINGS_URI);
 });
+
+
+//////////////////////////////////////////////////////////////////////////
+// JS Completer
+//////////////////////////////////////////////////////////////////////////
+
+var JSPropertyProvider = (function _JSPP(WCU) {
+const STATE_NORMAL = 0;
+const STATE_QUOTE = 2;
+const STATE_DQUOTE = 3;
+
+const OPEN_BODY = "{[(".split("");
+const CLOSE_BODY = "}])".split("");
+const OPEN_CLOSE_BODY = {
+  "{": "}",
+  "[": "]",
+  "(": ")",
+};
+
+/**
+ * Analyses a given string to find the last statement that is interesting for
+ * later completion.
+ *
+ * @param   string aStr
+ *          A string to analyse.
+ *
+ * @returns object
+ *          If there was an error in the string detected, then a object like
+ *
+ *            { err: "ErrorMesssage" }
+ *
+ *          is returned, otherwise a object like
+ *
+ *            {
+ *              state: STATE_NORMAL|STATE_QUOTE|STATE_DQUOTE,
+ *              startPos: index of where the last statement begins
+ *            }
+ */
+function findCompletionBeginning(aStr)
+{
+  let bodyStack = [];
+
+  let state = STATE_NORMAL;
+  let start = 0;
+  let c;
+  for (let i = 0; i < aStr.length; i++) {
+    c = aStr[i];
+
+    switch (state) {
+      // Normal JS state.
+      case STATE_NORMAL:
+        if (c == '"') {
+          state = STATE_DQUOTE;
+        }
+        else if (c == "'") {
+          state = STATE_QUOTE;
+        }
+        else if (c == ";") {
+          start = i + 1;
+        }
+        else if (c == " ") {
+          start = i + 1;
+        }
+        else if (OPEN_BODY.indexOf(c) != -1) {
+          bodyStack.push({
+            token: c,
+            start: start
+          });
+          start = i + 1;
+        }
+        else if (CLOSE_BODY.indexOf(c) != -1) {
+          var last = bodyStack.pop();
+          if (!last || OPEN_CLOSE_BODY[last.token] != c) {
+            return {
+              err: "syntax error"
+            };
+          }
+          if (c == "}") {
+            start = i + 1;
+          }
+          else {
+            start = last.start;
+          }
+        }
+        break;
+
+      // Double quote state > " <
+      case STATE_DQUOTE:
+        if (c == "\\") {
+          i++;
+        }
+        else if (c == "\n") {
+          return {
+            err: "unterminated string literal"
+          };
+        }
+        else if (c == '"') {
+          state = STATE_NORMAL;
+        }
+        break;
+
+      // Single quote state > ' <
+      case STATE_QUOTE:
+        if (c == "\\") {
+          i++;
+        }
+        else if (c == "\n") {
+          return {
+            err: "unterminated string literal"
+          };
+        }
+        else if (c == "'") {
+          state = STATE_NORMAL;
+        }
+        break;
+    }
+  }
+
+  return {
+    state: state,
+    startPos: start
+  };
+}
+
+/**
+ * Provides a list of properties, that are possible matches based on the passed
+ * scope and inputValue.
+ *
+ * @param object aScope
+ *        Scope to use for the completion.
+ *
+ * @param string aInputValue
+ *        Value that should be completed.
+ *
+ * @returns null or object
+ *          If no completion valued could be computed, null is returned,
+ *          otherwise a object with the following form is returned:
+ *            {
+ *              matches: [ string, string, string ],
+ *              matchProp: Last part of the inputValue that was used to find
+ *                         the matches-strings.
+ *            }
+ */
+function JSPropertyProvider(aScope, aInputValue)
+{
+  let obj = WCU.unwrap(aScope);
+
+  // Analyse the aInputValue and find the beginning of the last part that
+  // should be completed.
+  let beginning = findCompletionBeginning(aInputValue);
+
+  // There was an error analysing the string.
+  if (beginning.err) {
+    return null;
+  }
+
+  // If the current state is not STATE_NORMAL, then we are inside of an string
+  // which means that no completion is possible.
+  if (beginning.state != STATE_NORMAL) {
+    return null;
+  }
+
+  let completionPart = aInputValue.substring(beginning.startPos);
+
+  // Don't complete on just an empty string.
+  if (completionPart.trim() == "") {
+    return null;
+  }
+
+  let properties = completionPart.split(".");
+  let matchProp;
+  if (properties.length > 1) {
+    matchProp = properties.pop().trimLeft();
+    for (let i = 0; i < properties.length; i++) {
+      let prop = properties[i].trim();
+
+      // If obj is undefined or null, then there is no chance to run completion
+      // on it. Exit here.
+      if (typeof obj === "undefined" || obj === null) {
+        return null;
+      }
+
+      // Check if prop is a getter function on obj. Functions can change other
+      // stuff so we can't execute them to get the next object. Stop here.
+      if (WCU.isNonNativeGetter(obj, prop)) {
+        return null;
+      }
+      try {
+        obj = obj[prop];
+      }
+      catch (ex) {
+        return null;
+      }
+    }
+  }
+  else {
+    matchProp = properties[0].trimLeft();
+  }
+
+  // If obj is undefined or null, then there is no chance to run
+  // completion on it. Exit here.
+  if (typeof obj === "undefined" || obj === null) {
+    return null;
+  }
+
+  // Skip Iterators and Generators.
+  if (WCU.isIteratorOrGenerator(obj)) {
+    return null;
+  }
+
+  let matches = [];
+  for (let prop in obj) {
+    if (prop.indexOf(matchProp) == 0) {
+      matches.push(prop);
+    }
+  }
+
+  return {
+    matchProp: matchProp,
+    matches: matches.sort(),
+  };
+}
+
+return JSPropertyProvider;
+})(WebConsoleUtils);
