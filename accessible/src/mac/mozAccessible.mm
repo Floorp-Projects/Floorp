@@ -420,6 +420,9 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 
 - (NSString*)role
 {
+  if (mIsExpired)
+    return nil;
+
 #ifdef DEBUG
   NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(mGeckoAccessible),
                "Does not support nsIAccessibleText when it should");
@@ -633,8 +636,14 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [self invalidateChildren];
-  mIsExpired = YES;
+  id parent = [self parent];
+  
+  if ([parent isKindOfClass:[mozAccessible class]])
+    [parent invalidateChildren];
 
+  mIsExpired = YES;
+  mGeckoAccessible = nsnull;
+  
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
