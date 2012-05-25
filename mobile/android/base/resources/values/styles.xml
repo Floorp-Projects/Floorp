@@ -59,6 +59,13 @@
         <item name="android:background">@android:color/transparent</item>
     </style>
 
+    <!-- Address bar - Image Button - Unused -->
+    <style name="AddressBar.ImageButton.Unused">
+        <item name="android:layout_width">0dip</item>
+        <item name="android:layout_height">0dip</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
     <!-- AwesomeBar -->
     <style name="AwesomeBar">
         <item name="android:layout_width">fill_parent</item>

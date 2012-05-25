@@ -1,0 +1,44 @@
+Author
+------
+
+Ian Bicking
+
+Maintainers
+-----------
+
+Brian Rosner
+Carl Meyer
+Jannis Leidel
+
+Contributors
+------------
+
+Alex Grönholm
+Anatoly Techtonik
+Antonio Cuni
+Armin Ronacher
+Cap Petschulat
+CBWhiz
+Chris McDonough
+Christian Stefanescu
+Christopher Nilsson
+Cliff Xuan
+Curt Micol
+Doug Hellmann
+Doug Napoleone
+Douglas Creager
+Ethan Jucovy
+Gunnlaugur Thor Briem
+Greg Haskins
+Jason R. Coombs
+Jeff Hammel
+Jonathan Griffin
+Jorge Vargas
+Josh Bronson
+Kumar McMillan
+Lars Francke
+Philip Jenvey
+Ronny Pfannschmidt
+Stefano Rivera
+Tarek Ziadé
+Vinay Sajip

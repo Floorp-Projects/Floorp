@@ -1653,6 +1653,10 @@ Engine.prototype = {
         aElement.getAttribute("height") == "16") {
       this._setIcon(aElement.textContent, true);
     }
+    else {
+      LOG("OpenSearch image must have explicit width=16 height=16: " +
+          aElement.textContent);
+    }
   },
 
   _parseAsMozSearch: function SRCH_ENG_parseAsMoz() {
@@ -2251,7 +2255,9 @@ Engine.prototype = {
   },
 
   get iconURI() {
-    return this._iconURI;
+    if (this._iconURI)
+      return this._iconURI;
+    return null;
   },
 
   get _iconURL() {
@@ -2622,7 +2628,7 @@ SearchService.prototype = {
     let toLoad = chromeFiles.concat(loadDirs);
 
     function modifiedDir(aDir) {
-      return (!cache.directories[aDir.path] ||
+      return (!cache.directories || !cache.directories[aDir.path] ||
               cache.directories[aDir.path].lastModifiedTime != aDir.lastModifiedTime);
     }
 
@@ -3579,7 +3585,10 @@ var engineMetadataService = {
     }
 
     // attr names must be lower case
-    return record[name.toLowerCase()];
+    let aName = name.toLowerCase();
+    if (!record[aName])
+      return null;
+    return record[aName];
   },
 
   _setAttr: function epsSetAttr(engine, name, value) {
@@ -3590,7 +3599,7 @@ var engineMetadataService = {
     if (!record) {
       record = db[engine._id] = {};
     }
-    if (record[name] != value) {
+    if (!record[name] || (record[name] != value)) {
       record[name] = value;
       return true;
     }

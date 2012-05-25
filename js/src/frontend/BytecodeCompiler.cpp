@@ -22,12 +22,12 @@ using namespace js;
 using namespace js::frontend;
 
 bool
-MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script)
+MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script_)
 {
-    Root<JSScript*> root(cx, &script);
+    Rooted<JSScript*> script(cx, script_);
 
     Vector<JSScript *, 16> worklist(cx);
-    if (!worklist.append(script))
+    if (!worklist.append(script.reference()))
         return false;
 
     while (worklist.length()) {
@@ -243,7 +243,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     JS_ASSERT(bce.version() == version);
 
-    RootedVar<JSScript*> script(cx);
+    Rooted<JSScript*> script(cx);
     script = JSScript::NewScriptFromEmitter(cx, &bce);
     if (!script)
         return NULL;

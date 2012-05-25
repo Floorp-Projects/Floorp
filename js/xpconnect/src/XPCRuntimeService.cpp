@@ -39,8 +39,8 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
                           jsid id_, PRUint32 flags,
                           JSObject * *objp, bool *_retval)
 {
-    JS::RootedVarObject obj(cx, obj_);
-    JS::RootedVarId id(cx, id_);
+    JS::RootedObject obj(cx, obj_);
+    JS::RootedId id(cx, id_);
 
     JSBool resolved;
 

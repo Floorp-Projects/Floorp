@@ -324,6 +324,8 @@ public class GeckoLayerClient implements GeckoEventResponder,
             mLayerController.setCheckerboardColor(tab.getCheckerboardColor());
             mLayerController.setAllowZoom(tab.getAllowZoom());
             mLayerController.setDefaultZoom(tab.getDefaultZoom());
+            mLayerController.setMinZoom(tab.getMinZoom());
+            mLayerController.setMaxZoom(tab.getMaxZoom());
 
             // At this point, we have just switched to displaying a different document than we
             // we previously displaying. This means we need to abort any panning/zooming animations

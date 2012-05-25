@@ -180,14 +180,14 @@ bool
 Wrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp)
 {
     vp->setUndefined(); // default result if we refuse to perform this action
-    GET(wrappedObject(wrapper)->getGeneric(cx, RootedVarObject(cx, receiver), RootedVarId(cx, id), vp));
+    GET(wrappedObject(wrapper)->getGeneric(cx, RootedObject(cx, receiver), RootedId(cx, id), vp));
 }
 
 bool
 Wrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
                Value *vp)
 {
-    SET(wrappedObject(wrapper)->setGeneric(cx, RootedVarId(cx, id), vp, strict));
+    SET(wrappedObject(wrapper)->setGeneric(cx, RootedId(cx, id), vp, strict));
 }
 
 bool
@@ -203,7 +203,7 @@ Wrapper::iterate(JSContext *cx, JSObject *wrapper, unsigned flags, Value *vp)
 {
     vp->setUndefined(); // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
-    GET(GetIterator(cx, RootedVarObject(cx, wrappedObject(wrapper)), flags, vp));
+    GET(GetIterator(cx, RootedObject(cx, wrappedObject(wrapper)), flags, vp));
 }
 
 bool
@@ -414,7 +414,7 @@ ErrorCopier::~ErrorCopier()
         if (exc.isObject() && exc.toObject().isError() && exc.toObject().getPrivate()) {
             cx->clearPendingException();
             ac.leave();
-            JSObject *copyobj = js_CopyErrorObject(cx, RootedVarObject(cx, &exc.toObject()), scope);
+            JSObject *copyobj = js_CopyErrorObject(cx, RootedObject(cx, &exc.toObject()), scope);
             if (copyobj)
                 cx->setPendingException(ObjectValue(*copyobj));
         }
@@ -532,9 +532,9 @@ bool
 CrossCompartmentWrapper::set(JSContext *cx, JSObject *wrapper_, JSObject *receiver_, jsid id_,
                              bool strict, Value *vp)
 {
-    RootedVarObject wrapper(cx, wrapper_), receiver(cx, receiver_);
-    RootedVarId id(cx, id_);
-    RootedVarValue value(cx, *vp);
+    RootedObject wrapper(cx, wrapper_), receiver(cx, receiver_);
+    RootedId id(cx, id_);
+    RootedValue value(cx, *vp);
     PIERCE(cx, wrapper, SET,
            call.destination->wrap(cx, receiver.address()) &&
            call.destination->wrapId(cx, id.address()) &&
@@ -587,7 +587,7 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
     AutoCloseIterator close(cx, iterObj);
 
     /* Wrap the iteratee. */
-    RootedVarObject obj(cx, ni->obj);
+    RootedObject obj(cx, ni->obj);
     if (!origin->wrap(cx, obj.address()))
         return false;
 
@@ -633,7 +633,7 @@ CrossCompartmentWrapper::iterate(JSContext *cx, JSObject *wrapper, unsigned flag
 bool
 CrossCompartmentWrapper::call(JSContext *cx, JSObject *wrapper_, unsigned argc, Value *vp)
 {
-    RootedVarObject wrapper(cx, wrapper_);
+    RootedObject wrapper(cx, wrapper_);
 
     AutoCompartment call(cx, wrappedObject(wrapper));
     if (!call.enter())
@@ -658,7 +658,7 @@ bool
 CrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper_, unsigned argc, Value *argv,
                                    Value *rval)
 {
-    RootedVarObject wrapper(cx, wrapper_);
+    RootedObject wrapper(cx, wrapper_);
 
     AutoCompartment call(cx, wrappedObject(wrapper));
     if (!call.enter())
@@ -782,13 +782,6 @@ CrossCompartmentWrapper::iteratorNext(JSContext *cx, JSObject *wrapper, Value *v
            NOTHING,
            IndirectProxyHandler::iteratorNext(cx, wrapper, vp),
            call.origin->wrap(cx, vp));
-}
-
-void
-CrossCompartmentWrapper::trace(JSTracer *trc, JSObject *wrapper)
-{
-    MarkCrossCompartmentSlot(trc, &wrapper->getReservedSlotRef(JSSLOT_PROXY_PRIVATE),
-                             "targetObject");
 }
 
 CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);

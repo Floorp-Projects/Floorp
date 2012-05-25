@@ -187,7 +187,7 @@ CompositorParent::ScheduleResumeOnCompositorThread(int width, int height)
 void
 CompositorParent::ScheduleTask(CancelableTask* task, int time)
 {
-  if (time) {
+  if (time == 0) {
     MessageLoop::current()->PostTask(FROM_HERE, task);
   } else {
     MessageLoop::current()->PostDelayedTask(FROM_HERE, task, time);

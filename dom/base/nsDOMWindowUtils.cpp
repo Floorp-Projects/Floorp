@@ -1822,7 +1822,7 @@ nsDOMWindowUtils::GetParent(const JS::Value& aObject,
   // Outerize if necessary.
   if (parent) {
     if (JSObjectOp outerize = js::GetObjectClass(parent)->ext.outerObject) {
-      *aParent = OBJECT_TO_JSVAL(outerize(aCx, JS::RootedVarObject(aCx, parent)));
+      *aParent = OBJECT_TO_JSVAL(outerize(aCx, JS::RootedObject(aCx, parent)));
     }
   }
 

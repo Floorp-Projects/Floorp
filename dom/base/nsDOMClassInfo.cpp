@@ -5306,11 +5306,10 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
                                           JSObject **objp)
 {
   if (flags & (JSRESOLVE_ASSIGNING | JSRESOLVE_DECLARING |
-               JSRESOLVE_CLASSNAME | JSRESOLVE_QUALIFIED) ||
+               JSRESOLVE_QUALIFIED) ||
       !JSID_IS_STRING(id)) {
     // Nothing to do here if we're either assigning or declaring,
-    // resolving a class name, doing a qualified resolve, or
-    // resolving a number.
+    // doing a qualified resolve, or resolving a number.
 
     return JS_TRUE;
   }
@@ -6944,7 +6943,7 @@ static JSBool
 LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBool strict,
                         jsval *vp)
 {
-  JS::RootedVarObject obj(cx, obj_);
+  JS::RootedObject obj(cx, obj_);
 
   JSObject *wrapped = XPCWrapper::UnsafeUnwrapSecurityWrapper(obj);
   if (wrapped) {
@@ -6959,8 +6958,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj_, jsid id_, PRUint32 flags,
                        JSObject **objp, bool *_retval)
 {
-  JS::RootedVarObject obj(cx, obj_);
-  JS::RootedVarId id(cx, id_);
+  JS::RootedObject obj(cx, obj_);
+  JS::RootedId id(cx, id_);
 
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
 
