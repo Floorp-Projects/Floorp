@@ -1984,15 +1984,8 @@ SpdySession::OnWriteSegment(char *buf,
 
     if (mInputFrameDataLast &&
         mInputFrameDataRead == mInputFrameDataSize) {
-      // This will result in Close() being called
-      NS_ABORT_IF_FALSE(!mNeedsCleanup, "mNeedsCleanup unexpectedly set");
-      mNeedsCleanup = mInputFrameDataStream;
-
-      LOG3(("SpdySession::OnWriteSegment %p - recorded downstream fin of "
-            "stream %p 0x%X", this, mInputFrameDataStream,
-            mInputFrameDataStream->StreamID()));
       *countWritten = 0;
-      ResetDownstreamState();
+      SetNeedsCleanup();
       return NS_BASE_STREAM_CLOSED;
     }
     
@@ -2018,7 +2011,7 @@ SpdySession::OnWriteSegment(char *buf,
     if (mFlatHTTPResponseHeaders.Length() == mFlatHTTPResponseHeadersOut &&
         mInputFrameDataLast) {
       *countWritten = 0;
-      ResetDownstreamState();
+      SetNeedsCleanup();
       return NS_BASE_STREAM_CLOSED;
     }
       
@@ -2038,6 +2031,19 @@ SpdySession::OnWriteSegment(char *buf,
   }
 
   return NS_ERROR_UNEXPECTED;
+}
+
+void
+SpdySession::SetNeedsCleanup()
+{
+  LOG3(("SpdySession::SetNeedsCleanup %p - recorded downstream fin of "
+        "stream %p 0x%X", this, mInputFrameDataStream,
+        mInputFrameDataStream->StreamID()));
+
+  // This will result in Close() being called
+  NS_ABORT_IF_FALSE(!mNeedsCleanup, "mNeedsCleanup unexpectedly set");
+  mNeedsCleanup = mInputFrameDataStream;
+  ResetDownstreamState();
 }
 
 //-----------------------------------------------------------------------------
