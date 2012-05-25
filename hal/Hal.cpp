@@ -85,13 +85,13 @@ void InitLastIDToVibrate()
 } // anonymous namespace
 
 void
-Vibrate(const nsTArray<uint32>& pattern, nsIDOMWindow* window)
+Vibrate(const nsTArray<uint32_t>& pattern, nsIDOMWindow* window)
 {
   Vibrate(pattern, WindowIdentifier(window));
 }
 
 void
-Vibrate(const nsTArray<uint32>& pattern, const WindowIdentifier &id)
+Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier &id)
 {
   AssertMainThread();
 
