@@ -75,6 +75,11 @@ struct IonOptions
     // Default: true
     bool osr;
 
+    // Toggles whether large scripts are rejected.
+    //
+    // Default: true
+    bool limitScriptSize;
+
     // Toggles whether Linear Scan Register Allocation is used. If LSRA is not
     // used, then Greedy Register Allocation is used instead.
     //
@@ -115,6 +120,7 @@ struct IonOptions
         gvnIsOptimistic(true),
         licm(true),
         osr(true),
+        limitScriptSize(true),
         lsra(true),
         inlining(true),
         rangeAnalysis(true),
