@@ -45,11 +45,14 @@ private:
   bool RecvInit(const bool& aUseDB,
                 const bool& aCanUseChromePersist,
                 const bool& aSessionOnly,
+                const bool& aPrivate,
                 const nsCString& aDomain,
                 const nsCString& aScopeDBKey,
                 const nsCString& aQuotaDomainDBKey,
                 const nsCString& aQuotaETLDplus1DomainDBKey,
                 const PRUint32& aStorageType);
+
+  bool RecvUpdatePrivateState(const bool& aEnabled);
 
   nsRefPtr<DOMStorageImpl> mStorage;
 };
