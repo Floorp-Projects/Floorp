@@ -53,30 +53,24 @@ public:
   static nsDownloadManager *GetSingleton();
 
   virtual ~nsDownloadManager();
-  nsDownloadManager() :
-      mDBType(DATABASE_DISK)
-    , mInPrivateBrowsing(false)
+  nsDownloadManager()
 #ifdef DOWNLOAD_SCANNER
-    , mScanner(nullptr)
+    : mScanner(nullptr)
 #endif
   {
   }
 
 protected:
-  enum DatabaseType
-  {
-    DATABASE_DISK = 0, // default
-    DATABASE_MEMORY
-  };
-
   nsresult InitDB();
   nsresult InitFileDB();
-  void CloseDB();
-  nsresult InitMemoryDB();
+  void CloseAllDBs();
+  void CloseDB(mozIStorageConnection* aDBConn,
+               mozIStorageStatement* aUpdateStmt,
+               mozIStorageStatement* aGetIdsStmt);
+  nsresult InitPrivateDB();
   already_AddRefed<mozIStorageConnection> GetFileDBConnection(nsIFile *dbFile) const;
-  already_AddRefed<mozIStorageConnection> GetMemoryDBConnection() const;
-  nsresult SwitchDatabaseTypeTo(enum DatabaseType aType);
-  nsresult CreateTable();
+  already_AddRefed<mozIStorageConnection> GetPrivateDBConnection() const;
+  nsresult CreateTable(mozIStorageConnection* aDBConn);
 
   /**
    * Fix up the database after a crash such as dealing with previously-active
@@ -93,7 +87,9 @@ protected:
 
   nsresult GetDownloadFromDB(const nsACString& aGUID, nsDownload **retVal);
   nsresult GetDownloadFromDB(uint32_t aID, nsDownload **retVal);
-  nsresult GetDownloadFromDB(mozIStorageStatement* stmt, nsDownload **retVal);
+  nsresult GetDownloadFromDB(mozIStorageConnection* aDBConn,
+                             mozIStorageStatement* stmt,
+                             nsDownload **retVal);
 
   /**
    * Specially track the active downloads so that we don't need to check
@@ -117,22 +113,23 @@ protected:
                           const nsACString &aMimeType,
                           const nsACString &aPreferredApp,
                           nsHandlerInfoAction aPreferredAction,
+                          bool aPrivate,
                           nsACString &aNewGUID);
 
   void NotifyListenersOnDownloadStateChange(int16_t aOldState,
-                                            nsIDownload *aDownload);
+                                            nsDownload *aDownload);
   void NotifyListenersOnProgressChange(nsIWebProgress *aProgress,
                                        nsIRequest *aRequest,
                                        int64_t aCurSelfProgress,
                                        int64_t aMaxSelfProgress,
                                        int64_t aCurTotalProgress,
                                        int64_t aMaxTotalProgress,
-                                       nsIDownload *aDownload);
+                                       nsDownload *aDownload);
   void NotifyListenersOnStateChange(nsIWebProgress *aProgress,
                                     nsIRequest *aRequest,
                                     uint32_t aStateFlags,
                                     nsresult aStatus,
-                                    nsIDownload *aDownload);
+                                    nsDownload *aDownload);
 
   nsDownload *FindDownload(const nsACString& aGUID);
   nsDownload *FindDownload(uint32_t aID);
@@ -227,6 +224,8 @@ protected:
 
   nsresult RemoveDownload(const nsACString& aGUID);
 
+  nsresult NotifyDownloadRemoval(nsDownload* aRemoved);
+
   // Virus scanner for windows
 #ifdef DOWNLOAD_SCANNER
 private:
@@ -234,17 +233,30 @@ private:
 #endif
 
 private:
+  nsresult CleanUp(mozIStorageConnection* aDBConn);
+  nsresult InitStatements(mozIStorageConnection* aDBConn,
+                          mozIStorageStatement** aUpdateStatement,
+                          mozIStorageStatement** aGetIdsStatement);
+  nsresult RemoveAllDownloads(nsCOMArray<nsDownload>& aDownloads);
+  nsresult PauseAllDownloads(nsCOMArray<nsDownload>& aDownloads, bool aSetResume);
+  nsresult ResumeAllDownloads(nsCOMArray<nsDownload>& aDownloads, bool aResumeAll);
+  nsresult RemoveDownloadsForURI(mozIStorageStatement* aStatement, nsIURI *aURI);
+
+  bool IsInGlobalPrivateBrowsing();
+
   nsCOMArray<nsIDownloadProgressListener> mListeners;
+  nsCOMArray<nsIDownloadProgressListener> mPrivacyAwareListeners;
   nsCOMPtr<nsIStringBundle> mBundle;
   nsCOMPtr<mozIStorageConnection> mDBConn;
+  nsCOMPtr<mozIStorageConnection> mPrivateDBConn;
   nsCOMArray<nsDownload> mCurrentDownloads;
+  nsCOMArray<nsDownload> mCurrentPrivateDownloads;
   nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<mozIStorageStatement> mUpdateDownloadStatement;
+  nsCOMPtr<mozIStorageStatement> mUpdatePrivateDownloadStatement;
   nsCOMPtr<mozIStorageStatement> mGetIdsForURIStatement;
+  nsCOMPtr<mozIStorageStatement> mGetPrivateIdsForURIStatement;
   nsAutoPtr<mozStorageTransaction> mHistoryTransaction;
-
-  enum DatabaseType mDBType;
-  bool mInPrivateBrowsing;
 
   static nsDownloadManager *gDownloadManagerService;
 
