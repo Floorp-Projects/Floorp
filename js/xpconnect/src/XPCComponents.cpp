@@ -31,6 +31,7 @@
 
 using namespace mozilla;
 using namespace js;
+using namespace xpc;
 
 using mozilla::dom::DestroyProtoOrIfaceCache;
 
@@ -3734,9 +3735,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                 v = STRING_TO_JSVAL(str);
             }
 
-            xpc::CompartmentPrivate *sandboxdata =
-                static_cast<xpc::CompartmentPrivate *>
-                           (JS_GetCompartmentPrivate(js::GetObjectCompartment(sandbox)));
+            CompartmentPrivate *sandboxdata = GetCompartmentPrivate(sandbox);
             if (!ac.enter(cx, callingScope) ||
                 !WrapForSandbox(cx, sandboxdata->wantXrays, &v)) {
                 rv = NS_ERROR_FAILURE;
