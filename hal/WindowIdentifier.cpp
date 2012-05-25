@@ -24,7 +24,7 @@ WindowIdentifier::WindowIdentifier(nsIDOMWindow *window)
   mID.AppendElement(GetWindowID());
 }
 
-WindowIdentifier::WindowIdentifier(const nsTArray<uint64> &id, nsIDOMWindow *window)
+WindowIdentifier::WindowIdentifier(const nsTArray<uint64_t> &id, nsIDOMWindow *window)
   : mID(id)
   , mWindow(window)
   , mIsEmpty(false)
@@ -39,7 +39,7 @@ WindowIdentifier::WindowIdentifier(const WindowIdentifier &other)
 {
 }
 
-const InfallibleTArray<uint64>&
+const InfallibleTArray<uint64_t>&
 WindowIdentifier::AsArray() const
 {
   MOZ_ASSERT(!mIsEmpty);
@@ -60,13 +60,13 @@ WindowIdentifier::AppendProcessID()
   mID.AppendElement(dom::ContentChild::GetSingleton()->GetID());
 }
 
-uint64
+uint64_t
 WindowIdentifier::GetWindowID() const
 {
   MOZ_ASSERT(!mIsEmpty);
   nsCOMPtr<nsPIDOMWindow> pidomWindow = do_QueryInterface(mWindow);
   if (!pidomWindow) {
-    return uint64(-1);
+    return UINT64_MAX;
   }
   return pidomWindow->WindowID();
 }
