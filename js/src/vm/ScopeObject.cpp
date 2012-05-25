@@ -332,12 +332,6 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
 static JSBool
 with_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp, JSProperty **propp)
 {
-    /* Fixes bug 463997 */
-    unsigned flags = cx->resolveFlags;
-    if (flags == RESOLVE_INFER)
-        flags = js_InferFlags(cx, flags);
-    flags |= JSRESOLVE_WITH;
-    JSAutoResolveFlags rf(cx, flags);
     return obj->asWith().object().lookupGeneric(cx, id, objp, propp);
 }
 
