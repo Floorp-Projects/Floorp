@@ -1375,10 +1375,11 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         if failureCode is not None:
             raise TypeError("Can't handle sequences when failureCode is not None")
         nullable = type.nullable();
+        # Be very careful not to change "type": we need it later
         if nullable:
-            type = type.inner;
-
-        elementType = type.inner;
+            elementType = type.inner.inner
+        else:
+            elementType = type.inner
         # We don't know anything about the object-ness of the things
         # we wrap, so don't pass through isDefinitelyObject
         (elementTemplate, elementDeclType,
@@ -1387,11 +1388,12 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         if elementHolderType is not None:
             raise TypeError("Shouldn't need holders for sequences")
 
-        # Have to make sure to use a fallible array, because it's trivial for
-        # page JS to create things with very large lengths.
-        typeName = CGWrapper(elementDeclType, pre="nsTArray< ", post=" >")
+        typeName = CGWrapper(elementDeclType, pre="Sequence< ", post=" >")
         if nullable:
             typeName = CGWrapper(typeName, pre="Nullable< ", post=" >")
+            arrayRef = "${holderName}.Value()"
+        else:
+            arrayRef = "${holderName}"
         templateBody = ("""JSObject* seq = &${val}.toObject();\n
 if (!IsArrayLike(cx, seq)) {
   return Throw<%s>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
@@ -1401,9 +1403,7 @@ uint32_t length;
 if (!JS_GetArrayLength(cx, seq, &length)) {
   return false;
 }
-// Jump through a hoop to do a fallible allocation but later end up with
-// an infallible array.
-FallibleTArray< %s > arr;
+Sequence< %s > &arr = %s;
 if (!arr.SetCapacity(length)) {
   return Throw<%s>(cx, NS_ERROR_OUT_OF_MEMORY);
 }
@@ -1414,31 +1414,28 @@ for (uint32_t i = 0; i < length; ++i) {
   }
 """ % (toStringBool(descriptorProvider.workers),
        elementDeclType.define(),
+       arrayRef,
        toStringBool(descriptorProvider.workers)))
 
         templateBody += CGIndenter(CGGeneric(
                 string.Template(elementTemplate).substitute(
                     {
                         "val" : "temp",
-                        "declName" : "*arr.AppendElement()"
+                        "declName" : "(*arr.AppendElement())"
                         }
                     ))).define()
 
-        templateBody += """
-}
-// And the other half of the hoop-jump"""
-        if nullable:
-            templateBody += """
-${declName}.SetValue().SwapElements(arr);
-"""
-        else:
-            templateBody += """
-${declName}.SwapElements(arr);
-"""
+        templateBody += "\n}"
         templateBody = wrapObjectTemplate(templateBody, isDefinitelyObject,
-                                          type, "${declName}.SetNull()",
+                                          type, "${holderName}.SetNull()",
                                           descriptorProvider.workers)
-        return (templateBody, typeName, None)
+        # And now at the very end (so we make sure it happens in the
+        # null case too, set our declName.
+        templateBody += ("\n" + "${declName} = &${holderName};")
+        # This is a bit of a hack: we're using NonNull with a const type inside
+        # to effectively produce a const ref from a non-const object.
+        return (templateBody, CGWrapper(typeName, pre="NonNull<const ", post=" >"),
+                typeName)
 
     if type.isGeckoInterface():
         descriptor = descriptorProvider.getDescriptor(
@@ -1462,7 +1459,6 @@ ${declName}.SwapElements(arr);
         #    tuple.
         #  - holderType is the type we want to return as the third element
         #    of our tuple.
-        #  - declInit is the initializer expression for our decl, if any.
         #  - target is where a pointer to the object is being stored
 
         # Set up some sensible defaults for these things insofar as we can.

@@ -743,6 +743,15 @@ ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
   return true;
 }
 
+// Class for representing sequences in arguments.  We use an auto array that can
+// hold 16 elements, to avoid having to allocate in common cases.  This needs to
+// be fallible because web content controls the length of the array, and can
+// easily try to create very large lengths.
+template<typename T>
+class Sequence : public AutoFallibleTArray<T, 16>
+{
+};
+
 } // namespace dom
 } // namespace mozilla
 
