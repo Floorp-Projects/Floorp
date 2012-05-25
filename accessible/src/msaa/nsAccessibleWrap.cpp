@@ -187,7 +187,7 @@ __try {
   if (nsAccUtils::MustPrune(this))
     return S_OK;
 
-  *pcountChildren = GetChildCount();
+  *pcountChildren = ChildCount();
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -1048,10 +1048,10 @@ __try {
 
   mEnumVARIANTPosition += aNumElements;
 
-  PRInt32 numChildren = GetChildCount();
-  if (mEnumVARIANTPosition > numChildren)
+  PRUint32 childCount = ChildCount();
+  if (mEnumVARIANTPosition > static_cast<PRInt32>(childCount))
   {
-    mEnumVARIANTPosition = numChildren;
+    mEnumVARIANTPosition = childCount;
     return S_FALSE;
   }
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
