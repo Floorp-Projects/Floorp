@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Cross-Compartment DOM WeakMaps</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<script type="application/javascript">
+
+var my_map = WeakMap();
+
+function setup() {
+  var item = window.frames[0].document.querySelector("body");
+
+  my_map.set(item, "success_string");
+
+  var navi_fail = false;
+  try {
+    my_map.set(window.frames[0].navigator, 1);
+  } catch (e) {
+    navi_fail = true;
+  }
+  ok(navi_fail, "Using window.navigator as a weak map key across compartments should produce an exception because it can't be wrapper preserved.");
+}
+
+function runTest() {
+  setup();
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+  var item = window.frames[0].document.querySelector("body");
+  is(my_map.get(item), "success_string", "Preserve reflectors used cross-compartment as weak map keys.");
+}
+
+</script>
+<iframe src="file_crosscompartment_weakmap.html" onload="runTest()"></iframe>
+
+
+</pre>
+</body>
+</html>
