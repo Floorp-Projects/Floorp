@@ -88,7 +88,13 @@ interface nsIDownload : nsITransfer {
     readonly attribute nsIMIMEInfo MIMEInfo;
 
     /**
-     * The id of the download that is stored in the database.
+     * The id of the download that is stored in the database - not globally unique.
+     * For example, a private download and a public one might have identical ids.
+     * Can only be safely used for direct database manipulation in the database that
+     * contains this download. Use the guid property instead for safe, database-agnostic
+     * searching and manipulation.
+     *
+     * @deprecated
      */
     readonly attribute unsigned long id;
 
