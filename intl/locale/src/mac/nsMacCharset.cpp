@@ -55,12 +55,6 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
 }
 
 nsresult
-nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsACString& locale, nsACString& oResult)
-{
-  return NS_OK;
-}
-
-nsresult
 nsPlatformCharset::VerifyCharset(nsCString &aCharset)
 {
   return NS_OK;

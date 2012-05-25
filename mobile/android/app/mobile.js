@@ -462,10 +462,8 @@ pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/au
 pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 #endif
 #if MOZ_UPDATE_CHANNEL == beta
-pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/faq/");
 #else
-pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
 #endif
 pref("app.marketplaceURL", "https://marketplace.mozilla.org/");

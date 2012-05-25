@@ -21,7 +21,8 @@ parent:
 
   Init(URI uri);
   AsyncOpen(URI      originalURI,
-            PRUint32 loadFlags);
+            PRUint32 loadFlags,
+            bool     usingPrivateBrowsing);
 
   // methods corresponding to those of nsIWyciwygChannel
   WriteToCacheEntry(nsString data);
