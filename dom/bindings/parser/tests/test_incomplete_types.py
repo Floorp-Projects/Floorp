@@ -32,13 +32,13 @@ def WebIDLTest(parser, harness):
 
     harness.check(attr.identifier.QName(), "::TestIncompleteTypes::attr1",
                   "Attribute has the right QName")
-    harness.check(attr.type.name.QName(), "::FooInterface",
+    harness.check(attr.type.name, "FooInterface",
                   "Previously unresolved type has the right name")
 
     harness.check(method.identifier.QName(), "::TestIncompleteTypes::method1",
                   "Attribute has the right QName")
     (returnType, args) = method.signatures()[0]
-    harness.check(returnType.name.QName(), "::FooInterface",
+    harness.check(returnType.name, "FooInterface",
                   "Previously unresolved type has the right name")
-    harness.check(args[0].type.name.QName(), "::FooInterface",
+    harness.check(args[0].type.name, "FooInterface",
                   "Previously unresolved type has the right name")
