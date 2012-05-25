@@ -3199,11 +3199,11 @@ EOF
                 "$ac_cv_have_visibility_class_bug" = "no"; then
           VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
           WRAP_SYSTEM_INCLUDES=1
-          STL_FLAGS='-I$(DIST)/stl_wrappers'
-          WRAP_STL_INCLUDES=1
         else
           VISIBILITY_FLAGS='-fvisibility=hidden'
         fi # have visibility pragma bug
+        STL_FLAGS='-I$(DIST)/stl_wrappers'
+        WRAP_STL_INCLUDES=1
       fi   # have visibility pragma
     fi     # have visibility(default) attribute
   fi       # have visibility(hidden) attribute
