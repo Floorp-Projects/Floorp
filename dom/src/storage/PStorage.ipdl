@@ -35,8 +35,8 @@ sync protocol PStorage
 parent:
   __delete__();
 
-  Init(bool useDB, bool canUseChromePersist, bool sessionOnly, nsCString domain,
-       nsCString scopeDBKey, nsCString quotaDomainDBKey,
+  Init(bool useDB, bool canUseChromePersist, bool sessionOnly, bool isPrivate,
+       nsCString domain, nsCString scopeDBKey, nsCString quotaDomainDBKey,
        nsCString quotaETLDplus1DomainDBKey, PRUint32 storageType);
   
   sync GetKeys(bool callerSecure)
@@ -60,6 +60,8 @@ parent:
       returns (nsresult rv);
   sync SetSecure(nsString key, bool secure)
       returns (nsresult rv);
+
+  UpdatePrivateState(bool enabled);
 };
 
 }
