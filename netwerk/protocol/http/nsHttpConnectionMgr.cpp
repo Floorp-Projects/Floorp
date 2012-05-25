@@ -677,10 +677,22 @@ nsHttpConnectionMgr::GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry)
         return nsnull;
     }
 
-    rv = sslSocketControl->JoinConnection(NS_LITERAL_CSTRING("spdy/2"),
-                                          aOriginalEntry->mConnInfo->GetHost(),
-                                          aOriginalEntry->mConnInfo->Port(),
-                                          &isJoined);
+    if (gHttpHandler->SpdyInfo()->ProtocolEnabled(0))
+        rv = sslSocketControl->JoinConnection(gHttpHandler->SpdyInfo()->VersionString[0],
+                                              aOriginalEntry->mConnInfo->GetHost(),
+                                              aOriginalEntry->mConnInfo->Port(),
+                                              &isJoined);
+    else
+        rv = NS_OK;                               /* simulate failed join */
+
+    // JoinConnection() may have failed due to spdy version level. Try the other
+    // level we support (if any)
+    if (NS_SUCCEEDED(rv) && !isJoined && gHttpHandler->SpdyInfo()->ProtocolEnabled(1)) {
+        rv = sslSocketControl->JoinConnection(gHttpHandler->SpdyInfo()->VersionString[1],
+                                              aOriginalEntry->mConnInfo->GetHost(),
+                                              aOriginalEntry->mConnInfo->Port(),
+                                              &isJoined);
+    }
 
     if (NS_FAILED(rv) || !isJoined) {
         LOG(("nsHttpConnectionMgr::GetSpdyPreferredConnection "
