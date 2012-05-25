@@ -3521,7 +3521,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.drawImage(null, 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "TypeMismatchError" && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TypeMismatchError");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 
 }
@@ -3693,23 +3693,21 @@ isPixel(ctx, 50,25, 0,255,0,255, 2);
 
 function test_2d_drawImage_wrongtype() {
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 var canvas = document.getElementById('c127');
 var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.drawImage(undefined, 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "TypeMismatchError" && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TypeMismatchError");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 var _thrown = undefined; try {
   ctx.drawImage(0, 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.result == Components.results.NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL, "should throw NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 var _thrown = undefined; try {
   ctx.drawImage("", 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.result == Components.results.NS_ERROR_XPC_BAD_CONVERT_JS, "should throw NS_ERROR_XPC_BAD_CONVERT_JS");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 var _thrown = undefined; try {
   ctx.drawImage(document.createElement('p'), 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeMismatchError" && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TypeMismatchError");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 
 }
@@ -9192,7 +9190,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.putImageData(null, 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "TypeMismatchError" && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TypeMismatchError");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 
 }
@@ -9304,13 +9302,13 @@ var ctx = canvas.getContext('2d');
 var imgdata = { width: 1, height: 1, data: [255, 0, 0, 255] };
 var _thrown = undefined; try {
   ctx.putImageData(imgdata, 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeMismatchError" && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TypeMismatchError");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 var _thrown = undefined; try {
   ctx.putImageData("cheese", 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "TypeMismatchError" && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TypeMismatchError");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 var _thrown = undefined; try {
   ctx.putImageData(42, 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "TypeMismatchError" && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TypeMismatchError");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 
 }
@@ -15097,7 +15095,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createPattern(null, 'repeat');
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "TypeMismatchError" && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TypeMismatchError");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 
 }
@@ -15116,7 +15114,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createPattern('image_red.png', 'repeat');
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeMismatchError" && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TypeMismatchError");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 
 }
@@ -15135,7 +15133,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createPattern(undefined, 'repeat');
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "TypeMismatchError" && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TypeMismatchError");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 
 }
@@ -15977,17 +15975,9 @@ function test_2d_pattern_repeat_null() {
 var canvas = document.getElementById('c494');
 var ctx = canvas.getContext('2d');
 
-ctx.fillStyle = '#f00';
-ctx.fillRect(0, 0, 100, 50);
-var img = document.getElementById('green-1x1_2.png');
-var pattern = ctx.createPattern(img, null);
-ctx.fillStyle = pattern;
-ctx.fillRect(0, 0, 100, 50);
-
-isPixel(ctx, 1,1, 0,255,0,255, 0);
-isPixel(ctx, 98,1, 0,255,0,255, 0);
-isPixel(ctx, 1,48, 0,255,0,255, 0);
-isPixel(ctx, 98,48, 0,255,0,255, 0);
+var _thrown = undefined; try {
+  ctx.createPattern(canvas, null);
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "SyntaxError" && _thrown.code == DOMException.SYNTAX_ERR, "should throw SyntaxError");
 
 
 }
@@ -19548,6 +19538,7 @@ function test_2d_type_prototype() {
 var canvas = document.getElementById('c611');
 var ctx = canvas.getContext('2d');
 
+var fill = window.CanvasRenderingContext2D.prototype.fill;
 ok(window.CanvasRenderingContext2D.prototype, "window.CanvasRenderingContext2D.prototype");
 ok(window.CanvasRenderingContext2D.prototype.fill, "window.CanvasRenderingContext2D.prototype.fill");
 window.CanvasRenderingContext2D.prototype = null;
@@ -19559,7 +19550,8 @@ ok(window.CanvasRenderingContext2D.prototype.fill === 1, "window.CanvasRendering
 delete window.CanvasRenderingContext2D.prototype.fill;
 todo(window.CanvasRenderingContext2D.prototype.fill === undefined, "window.CanvasRenderingContext2D.prototype.fill === undefined");
 
-
+//restore the original method to ensure that other tests can run successfully
+window.CanvasRenderingContext2D.prototype.fill = fill;
 }
 </script>
 
