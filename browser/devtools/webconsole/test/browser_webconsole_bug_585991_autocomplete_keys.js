@@ -8,14 +8,12 @@ let HUD;
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  browser.addEventListener("load", tabLoaded, true);
 }
 
-function consoleOpened(aHud) {
-  HUD = aHud;
+function tabLoaded() {
+  browser.removeEventListener("load", tabLoaded, true);
+  openConsole();
 
   content.wrappedJSObject.foobarBug585991 = {
     "item0": "value0",
@@ -24,14 +22,16 @@ function consoleOpened(aHud) {
     "item3": "value3",
   };
 
+  let hudId = HUDService.getHudIdByWindow(content);
+  HUD = HUDService.hudReferences[hudId];
   let jsterm = HUD.jsterm;
   let popup = jsterm.autocompletePopup;
   let completeNode = jsterm.completeNode;
 
   ok(!popup.isOpen, "popup is not open");
 
-  popup._panel.addEventListener("popupshown", function onShown() {
-    popup._panel.removeEventListener("popupshown", onShown, false);
+  popup._panel.addEventListener("popupshown", function() {
+    popup._panel.removeEventListener("popupshown", arguments.callee, false);
 
     ok(popup.isOpen, "popup is open");
 
@@ -79,7 +79,7 @@ function autocompletePopupHidden()
   let completeNode = jsterm.completeNode;
   let inputNode = jsterm.inputNode;
 
-  popup._panel.removeEventListener("popuphidden", autocompletePopupHidden, false);
+  popup._panel.removeEventListener("popuphidden", arguments.callee, false);
 
   ok(!popup.isOpen, "popup is not open");
 
@@ -88,8 +88,8 @@ function autocompletePopupHidden()
 
   ok(!completeNode.value, "completeNode is empty");
 
-  popup._panel.addEventListener("popupshown", function onShown() {
-    popup._panel.removeEventListener("popupshown", onShown, false);
+  popup._panel.addEventListener("popupshown", function() {
+    popup._panel.removeEventListener("popupshown", arguments.callee, false);
 
     ok(popup.isOpen, "popup is open");
 
@@ -104,8 +104,8 @@ function autocompletePopupHidden()
     is(popup.selectedItem.label, "item0", "item0 is selected");
     is(completeNode.value, prefix + "item0", "completeNode.value holds item0");
 
-    popup._panel.addEventListener("popuphidden", function onHidden() {
-      popup._panel.removeEventListener("popuphidden", onHidden, false);
+    popup._panel.addEventListener("popuphidden", function() {
+      popup._panel.removeEventListener("popuphidden", arguments.callee, false);
 
       ok(!popup.isOpen, "popup is not open after VK_ESCAPE");
 
@@ -135,8 +135,8 @@ function testReturnKey()
   let completeNode = jsterm.completeNode;
   let inputNode = jsterm.inputNode;
 
-  popup._panel.addEventListener("popupshown", function onShown() {
-    popup._panel.removeEventListener("popupshown", onShown, false);
+  popup._panel.addEventListener("popupshown", function() {
+    popup._panel.removeEventListener("popupshown", arguments.callee, false);
 
     ok(popup.isOpen, "popup is open");
 
@@ -157,8 +157,8 @@ function testReturnKey()
     is(popup.selectedItem.label, "item1", "item1 is selected");
     is(completeNode.value, prefix + "item1", "completeNode.value holds item1");
 
-    popup._panel.addEventListener("popuphidden", function onHidden() {
-      popup._panel.removeEventListener("popuphidden", onHidden, false);
+    popup._panel.addEventListener("popuphidden", function() {
+      popup._panel.removeEventListener("popuphidden", arguments.callee, false);
 
       ok(!popup.isOpen, "popup is not open after VK_RETURN");
 

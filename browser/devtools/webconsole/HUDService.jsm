@@ -16,6 +16,10 @@ Cu.import("resource:///modules/NetworkHelper.jsm");
 
 var EXPORTED_SYMBOLS = ["HUDService", "ConsoleUtils"];
 
+XPCOMUtils.defineLazyServiceGetter(this, "scriptError",
+                                   "@mozilla.org/scripterror;1",
+                                   "nsIScriptError");
+
 XPCOMUtils.defineLazyServiceGetter(this, "activityDistributor",
                                    "@mozilla.org/network/http-activity-distributor;1",
                                    "nsIHttpActivityDistributor");
@@ -53,14 +57,24 @@ XPCOMUtils.defineLazyGetter(this, "template", function () {
 });
 
 XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
-  let obj = {};
-  Cu.import("resource:///modules/PropertyPanel.jsm", obj);
+  var obj = {};
+  try {
+    Cu.import("resource:///modules/PropertyPanel.jsm", obj);
+  } catch (err) {
+    Cu.reportError(err);
+  }
   return obj.PropertyPanel;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PropertyTreeView", function () {
+XPCOMUtils.defineLazyGetter(this, "PropertyPanelAsync", function () {
   let obj = {};
-  Cu.import("resource:///modules/PropertyPanel.jsm", obj);
+  Cu.import("resource:///modules/PropertyPanelAsync.jsm", obj);
+  return obj.PropertyPanel;
+});
+
+XPCOMUtils.defineLazyGetter(this, "PropertyTreeViewAsync", function () {
+  let obj = {};
+  Cu.import("resource:///modules/PropertyPanelAsync.jsm", obj);
   return obj.PropertyTreeView;
 });
 
@@ -84,6 +98,12 @@ XPCOMUtils.defineLazyGetter(this, "ScratchpadManager", function () {
     Cu.reportError(err);
   }
   return obj.ScratchpadManager;
+});
+
+XPCOMUtils.defineLazyGetter(this, "namesAndValuesOf", function () {
+  var obj = {};
+  Cu.import("resource:///modules/PropertyPanel.jsm", obj);
+  return obj.namesAndValuesOf;
 });
 
 XPCOMUtils.defineLazyGetter(this, "WebConsoleUtils", function () {
@@ -150,7 +170,6 @@ const LEVELS = {
   info: SEVERITY_INFO,
   log: SEVERITY_LOG,
   trace: SEVERITY_LOG,
-  debug: SEVERITY_LOG,
   dir: SEVERITY_LOG,
   group: SEVERITY_LOG,
   groupCollapsed: SEVERITY_LOG,
@@ -1723,6 +1742,9 @@ HUD_SERVICE.prototype =
     // Remove children from the output. If the output is not cleared, there can
     // be leaks as some nodes has node.onclick = function; set and GC can't
     // remove the nodes then.
+    if (hud.jsterm) {
+      hud.jsterm.clearOutput();
+    }
     if (hud.gcliterm) {
       hud.gcliterm.clearOutput();
     }
@@ -1746,6 +1768,10 @@ HUD_SERVICE.prototype =
 
     if (hud.splitter.parentNode) {
       hud.splitter.parentNode.removeChild(hud.splitter);
+    }
+
+    if (hud.jsterm) {
+      hud.jsterm.autocompletePopup.destroy();
     }
 
     delete this.hudReferences[aHUDId];
@@ -1790,7 +1816,7 @@ HUD_SERVICE.prototype =
     // begin observing HTTP traffic
     this.startHTTPObservation();
 
-    WebConsoleObserver.init();
+    HUDWindowObserver.init();
   },
 
   /**
@@ -1814,7 +1840,7 @@ HUD_SERVICE.prototype =
 
     delete this.lastFinishedRequestCallback;
 
-    WebConsoleObserver.uninit();
+    HUDWindowObserver.uninit();
   },
 
   /**
@@ -2382,6 +2408,29 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * Initialize the JSTerm object to create a JS Workspace by attaching the UI
+   * into the given parent node, using the mixin.
+   *
+   * @param nsIDOMWindow aContext the context used for evaluating user input
+   * @param nsIDOMNode aParentNode where to attach the JSTerm
+   * @param object aConsole
+   *        Console object used within the JSTerm instance to report errors
+   *        and log data (by calling console.error(), console.log(), etc).
+   */
+  initializeJSTerm: function HS_initializeJSTerm(aContext, aParentNode, aConsole)
+  {
+    // create Initial JS Workspace:
+    var context = Cu.getWeakReference(aContext);
+
+    // Attach the UI into the target parent node using the mixin.
+    var firefoxMixin = new JSTermFirefoxMixin(context, aParentNode);
+    var jsTerm = new JSTerm(context, aParentNode, firefoxMixin, aConsole);
+
+    // TODO: injection of additional functionality needs re-thinking/api
+    // see bug 559748
+  },
+
+  /**
    * Creates a generator that always returns a unique number for use in the
    * indexes
    *
@@ -2397,6 +2446,31 @@ HUD_SERVICE.prototype =
       }
     }
     return sequencer(aInt);
+  },
+
+  // See jsapi.h (JSErrorReport flags):
+  // http://mxr.mozilla.org/mozilla-central/source/js/src/jsapi.h#3429
+  scriptErrorFlags: {
+    0: "error", // JSREPORT_ERROR
+    1: "warn", // JSREPORT_WARNING
+    2: "exception", // JSREPORT_EXCEPTION
+    4: "error", // JSREPORT_STRICT | JSREPORT_ERROR
+    5: "warn", // JSREPORT_STRICT | JSREPORT_WARNING
+    8: "error", // JSREPORT_STRICT_MODE_ERROR
+    13: "warn", // JSREPORT_STRICT_MODE_ERROR | JSREPORT_WARNING | JSREPORT_ERROR
+  },
+
+  /**
+   * replacement strings (L10N)
+   */
+  scriptMsgLogLevel: {
+    0: "typeError", // JSREPORT_ERROR
+    1: "typeWarning", // JSREPORT_WARNING
+    2: "typeException", // JSREPORT_EXCEPTION
+    4: "typeError", // JSREPORT_STRICT | JSREPORT_ERROR
+    5: "typeStrict", // JSREPORT_STRICT | JSREPORT_WARNING
+    8: "typeError", // JSREPORT_STRICT_MODE_ERROR
+    13: "typeWarning", // JSREPORT_STRICT_MODE_ERROR | JSREPORT_WARNING | JSREPORT_ERROR
   },
 
   /**
@@ -2817,15 +2891,20 @@ function HeadsUpDisplay(aConfig)
 
   // create a panel dynamically and attach to the parentNode
   this.createHUD();
-  this.HUDBox.lastTimestamp = 0;
 
+  this.HUDBox.lastTimestamp = 0;
   // create the JSTerm input element
-  this.createConsoleInput(this.contentWindow, this.consoleWrap, this.outputNode);
-  if (this.jsterm) {
-    this.jsterm.inputNode.focus();
+  try {
+    this.createConsoleInput(this.contentWindow, this.consoleWrap, this.outputNode);
+    if (this.jsterm) {
+      this.jsterm.inputNode.focus();
+    }
+    if (this.gcliterm) {
+      this.gcliterm.inputNode.focus();
+    }
   }
-  else if (this.gcliterm) {
-    this.gcliterm.inputNode.focus();
+  catch (ex) {
+    Cu.reportError(ex);
   }
 
   // A cache for tracking repeated CSS Nodes.
@@ -2843,9 +2922,7 @@ HeadsUpDisplay.prototype = {
    * @type array
    */
   _messageListeners: ["JSTerm:EvalObject", "WebConsole:ConsoleAPI",
-    "WebConsole:CachedMessages", "WebConsole:PageError", "JSTerm:EvalResult",
-    "JSTerm:AutocompleteProperties", "JSTerm:ClearOutput",
-    "JSTerm:InspectObject"],
+                      "WebConsole:CachedMessages", "WebConsole:PageError"],
 
   consolePanel: null,
 
@@ -3169,8 +3246,10 @@ HeadsUpDisplay.prototype = {
 
     if (appName() == "FIREFOX") {
       if (!usegcli) {
-        let mixin = new JSTermFirefoxMixin(aParentNode, aExistingConsole);
-        this.jsterm = new JSTerm(this, mixin);
+        let context = Cu.getWeakReference(aWindow);
+        let mixin = new JSTermFirefoxMixin(context, aParentNode,
+                                           aExistingConsole);
+        this.jsterm = new JSTerm(context, aParentNode, mixin, this.console);
       }
       else {
         this.gcliterm = new GcliTerm(aWindow, this.hudId, this.chromeDocument,
@@ -3242,10 +3321,15 @@ HeadsUpDisplay.prototype = {
       this.consolePanel.label = this.getPanelTitle();
     }
 
-    if (this.gcliterm) {
+    if (this.jsterm) {
+      this.jsterm.context = Cu.getWeakReference(this.contentWindow);
+      this.jsterm.console = this.console;
+      this.jsterm.createSandbox();
+    }
+    else if (this.gcliterm) {
       this.gcliterm.reattachConsole(this.contentWindow, this.console);
     }
-    else if (!this.jsterm) {
+    else {
       this.createConsoleInput(this.contentWindow, this.consoleWrap, this.outputNode);
     }
   },
@@ -3849,7 +3933,7 @@ HeadsUpDisplay.prototype = {
           data: { object: node._stacktrace },
         };
 
-        let propPanel = this.jsterm.openPropertyPanel(options);
+        let propPanel = this.jsterm.openPropertyPanelAsync(options);
         propPanel.panel.setAttribute("hudId", this.hudId);
       }.bind(this));
     }
@@ -3972,16 +4056,8 @@ HeadsUpDisplay.prototype = {
     }
 
     switch (aMessage.name) {
-      case "JSTerm:EvalResult":
       case "JSTerm:EvalObject":
-      case "JSTerm:AutocompleteProperties":
         this._receiveMessageWithCallback(aMessage.json);
-        break;
-      case "JSTerm:ClearOutput":
-        this.jsterm.clearOutput();
-        break;
-      case "JSTerm:InspectObject":
-        this.jsterm.handleInspectObject(aMessage.json);
         break;
       case "WebConsole:ConsoleAPI":
         this.logConsoleAPIMessage(aMessage.json);
@@ -4113,7 +4189,7 @@ HeadsUpDisplay.prototype = {
    */
   destroy: function HUD_destroy()
   {
-    this.sendMessageToContent("WebConsole:Destroy", {});
+    this.sendMessageToContent("WebConsole:Destroy", {hudId: this.hudId});
 
     this._messageListeners.forEach(function(aName) {
       this.messageManager.removeMessageListener(aName, this);
@@ -4170,34 +4246,532 @@ function NodeFactory(aFactoryType, ignored, aDocument)
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+// JS Completer
+//////////////////////////////////////////////////////////////////////////
+
+const STATE_NORMAL = 0;
+const STATE_QUOTE = 2;
+const STATE_DQUOTE = 3;
+
+const OPEN_BODY = '{[('.split('');
+const CLOSE_BODY = '}])'.split('');
+const OPEN_CLOSE_BODY = {
+  '{': '}',
+  '[': ']',
+  '(': ')'
+};
 
 /**
- * Create a JSTerminal (a JavaScript command line). This is attached to an
- * existing HeadsUpDisplay (a Web Console instance). This code is responsible
- * with handling command line input, code evaluation and result output.
+ * Analyses a given string to find the last statement that is interesting for
+ * later completion.
  *
- * @constructor
- * @param object aHud
- *        The HeadsUpDisplay object that owns this JSTerm instance.
+ * @param   string aStr
+ *          A string to analyse.
+ *
+ * @returns object
+ *          If there was an error in the string detected, then a object like
+ *
+ *            { err: "ErrorMesssage" }
+ *
+ *          is returned, otherwise a object like
+ *
+ *            {
+ *              state: STATE_NORMAL|STATE_QUOTE|STATE_DQUOTE,
+ *              startPos: index of where the last statement begins
+ *            }
+ */
+function findCompletionBeginning(aStr)
+{
+  let bodyStack = [];
+
+  let state = STATE_NORMAL;
+  let start = 0;
+  let c;
+  for (let i = 0; i < aStr.length; i++) {
+    c = aStr[i];
+
+    switch (state) {
+      // Normal JS state.
+      case STATE_NORMAL:
+        if (c == '"') {
+          state = STATE_DQUOTE;
+        }
+        else if (c == '\'') {
+          state = STATE_QUOTE;
+        }
+        else if (c == ';') {
+          start = i + 1;
+        }
+        else if (c == ' ') {
+          start = i + 1;
+        }
+        else if (OPEN_BODY.indexOf(c) != -1) {
+          bodyStack.push({
+            token: c,
+            start: start
+          });
+          start = i + 1;
+        }
+        else if (CLOSE_BODY.indexOf(c) != -1) {
+          var last = bodyStack.pop();
+          if (!last || OPEN_CLOSE_BODY[last.token] != c) {
+            return {
+              err: "syntax error"
+            };
+          }
+          if (c == '}') {
+            start = i + 1;
+          }
+          else {
+            start = last.start;
+          }
+        }
+        break;
+
+      // Double quote state > " <
+      case STATE_DQUOTE:
+        if (c == '\\') {
+          i ++;
+        }
+        else if (c == '\n') {
+          return {
+            err: "unterminated string literal"
+          };
+        }
+        else if (c == '"') {
+          state = STATE_NORMAL;
+        }
+        break;
+
+      // Single quoate state > ' <
+      case STATE_QUOTE:
+        if (c == '\\') {
+          i ++;
+        }
+        else if (c == '\n') {
+          return {
+            err: "unterminated string literal"
+          };
+          return;
+        }
+        else if (c == '\'') {
+          state = STATE_NORMAL;
+        }
+        break;
+    }
+  }
+
+  return {
+    state: state,
+    startPos: start
+  };
+}
+
+/**
+ * Provides a list of properties, that are possible matches based on the passed
+ * scope and inputValue.
+ *
+ * @param object aScope
+ *        Scope to use for the completion.
+ *
+ * @param string aInputValue
+ *        Value that should be completed.
+ *
+ * @returns null or object
+ *          If no completion valued could be computed, null is returned,
+ *          otherwise a object with the following form is returned:
+ *            {
+ *              matches: [ string, string, string ],
+ *              matchProp: Last part of the inputValue that was used to find
+ *                         the matches-strings.
+ *            }
+ */
+function JSPropertyProvider(aScope, aInputValue)
+{
+  let obj = WebConsoleUtils.unwrap(aScope);
+
+  // Analyse the aInputValue and find the beginning of the last part that
+  // should be completed.
+  let beginning = findCompletionBeginning(aInputValue);
+
+  // There was an error analysing the string.
+  if (beginning.err) {
+    return null;
+  }
+
+  // If the current state is not STATE_NORMAL, then we are inside of an string
+  // which means that no completion is possible.
+  if (beginning.state != STATE_NORMAL) {
+    return null;
+  }
+
+  let completionPart = aInputValue.substring(beginning.startPos);
+
+  // Don't complete on just an empty string.
+  if (completionPart.trim() == "") {
+    return null;
+  }
+
+  let properties = completionPart.split('.');
+  let matchProp;
+  if (properties.length > 1) {
+    matchProp = properties.pop().trimLeft();
+    for (let i = 0; i < properties.length; i++) {
+      let prop = properties[i].trim();
+
+      // If obj is undefined or null, then there is no chance to run completion
+      // on it. Exit here.
+      if (typeof obj === "undefined" || obj === null) {
+        return null;
+      }
+
+      // Check if prop is a getter function on obj. Functions can change other
+      // stuff so we can't execute them to get the next object. Stop here.
+      if (WebConsoleUtils.isNonNativeGetter(obj, prop)) {
+        return null;
+      }
+      try {
+        obj = obj[prop];
+      }
+      catch (ex) {
+        return null;
+      }
+    }
+  }
+  else {
+    matchProp = properties[0].trimLeft();
+  }
+
+  // If obj is undefined or null, then there is no chance to run
+  // completion on it. Exit here.
+  if (typeof obj === "undefined" || obj === null) {
+    return null;
+  }
+
+  // Skip Iterators and Generators.
+  if (WebConsoleUtils.isIteratorOrGenerator(obj)) {
+    return null;
+  }
+
+  let matches = [];
+  for (let prop in obj) {
+    if (prop.indexOf(matchProp) == 0) {
+      matches.push(prop);
+    }
+  }
+
+  return {
+    matchProp: matchProp,
+    matches: matches.sort(),
+  };
+}
+
+//////////////////////////////////////////////////////////////////////////
+// JSTerm
+//////////////////////////////////////////////////////////////////////////
+
+/**
+ * JSTermHelper
+ *
+ * Defines a set of functions ("helper functions") that are available from the
+ * WebConsole but not from the webpage.
+ * A list of helper functions used by Firebug can be found here:
+ *   http://getfirebug.com/wiki/index.php/Command_Line_API
+ */
+function JSTermHelper(aJSTerm)
+{
+  /**
+   * Returns the result of document.getElementById(aId).
+   *
+   * @param string aId
+   *        A string that is passed to window.document.getElementById.
+   * @returns nsIDOMNode or null
+   */
+  aJSTerm.sandbox.$ = function JSTH_$(aId)
+  {
+    try {
+      return aJSTerm._window.document.getElementById(aId);
+    }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+  };
+
+  /**
+   * Returns the result of document.querySelectorAll(aSelector).
+   *
+   * @param string aSelector
+   *        A string that is passed to window.document.querySelectorAll.
+   * @returns array of nsIDOMNode
+   */
+  aJSTerm.sandbox.$$ = function JSTH_$$(aSelector)
+  {
+    try {
+      return aJSTerm._window.document.querySelectorAll(aSelector);
+    }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+  };
+
+  /**
+   * Runs a xPath query and returns all matched nodes.
+   *
+   * @param string aXPath
+   *        xPath search query to execute.
+   * @param [optional] nsIDOMNode aContext
+   *        Context to run the xPath query on. Uses window.document if not set.
+   * @returns array of nsIDOMNode
+   */
+  aJSTerm.sandbox.$x = function JSTH_$x(aXPath, aContext)
+  {
+    let nodes = [];
+    let doc = aJSTerm._window.document;
+    let aContext = aContext || doc;
+
+    try {
+      let results = doc.evaluate(aXPath, aContext, null,
+                                  Ci.nsIDOMXPathResult.ANY_TYPE, null);
+
+      let node;
+      while (node = results.iterateNext()) {
+        nodes.push(node);
+      }
+    }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+
+    return nodes;
+  };
+
+  /**
+   * Returns the currently selected object in the highlighter.
+   *
+   * @returns nsIDOMNode or null
+   */
+  Object.defineProperty(aJSTerm.sandbox, "$0", {
+    get: function() {
+      let mw = HUDService.currentContext();
+      try {
+        return mw.InspectorUI.selection;
+      }
+      catch (ex) {
+        aJSTerm.console.error(ex.message);
+      }
+    },
+    enumerable: true,
+    configurable: false
+  });
+
+  /**
+   * Clears the output of the JSTerm.
+   */
+  aJSTerm.sandbox.clear = function JSTH_clear()
+  {
+    aJSTerm.helperEvaluated = true;
+    aJSTerm.clearOutput(true);
+  };
+
+  /**
+   * Returns the result of Object.keys(aObject).
+   *
+   * @param object aObject
+   *        Object to return the property names from.
+   * @returns array of string
+   */
+  aJSTerm.sandbox.keys = function JSTH_keys(aObject)
+  {
+    try {
+      return Object.keys(WebConsoleUtils.unwrap(aObject));
+    }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+  };
+
+  /**
+   * Returns the values of all properties on aObject.
+   *
+   * @param object aObject
+   *        Object to display the values from.
+   * @returns array of string
+   */
+  aJSTerm.sandbox.values = function JSTH_values(aObject)
+  {
+    let arrValues = [];
+    let obj = WebConsoleUtils.unwrap(aObject);
+
+    try {
+      for (let prop in obj) {
+        arrValues.push(obj[prop]);
+      }
+    }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+    return arrValues;
+  };
+
+  /**
+   * Opens a help window in MDC
+   */
+  aJSTerm.sandbox.help = function JSTH_help()
+  {
+    aJSTerm.helperEvaluated = true;
+    aJSTerm._window.open(
+        "https://developer.mozilla.org/AppLinks/WebConsoleHelp?locale=" +
+        aJSTerm._window.navigator.language, "help", "");
+  };
+
+  /**
+   * Inspects the passed aObject. This is done by opening the PropertyPanel.
+   *
+   * @param object aObject
+   *        Object to inspect.
+   * @returns void
+   */
+  aJSTerm.sandbox.inspect = function JSTH_inspect(aObject)
+  {
+    aJSTerm.helperEvaluated = true;
+    let propPanel = aJSTerm.openPropertyPanel(null,
+                                              WebConsoleUtils.unwrap(aObject));
+    propPanel.panel.setAttribute("hudId", aJSTerm.hudId);
+  };
+
+  aJSTerm.sandbox.inspectrules = function JSTH_inspectrules(aNode)
+  {
+    aJSTerm.helperEvaluated = true;
+    let doc = aJSTerm.inputNode.ownerDocument;
+    let win = doc.defaultView;
+    let panel = createElement(doc, "panel", {
+      label: "CSS Rules",
+      titlebar: "normal",
+      noautofocus: "true",
+      noautohide: "true",
+      close: "true",
+      width: 350,
+      height: (win.screen.height / 2)
+    });
+
+    let iframe = createAndAppendElement(panel, "iframe", {
+      src: "chrome://browser/content/devtools/cssruleview.xul",
+      flex: "1",
+    });
+
+    panel.addEventListener("load", function onLoad() {
+      panel.removeEventListener("load", onLoad, true);
+      let doc = iframe.contentDocument;
+      let view = new CssRuleView(doc);
+      doc.documentElement.appendChild(view.element);
+      view.highlight(aNode);
+    }, true);
+
+    let parent = doc.getElementById("mainPopupSet");
+    parent.appendChild(panel);
+
+    panel.addEventListener("popuphidden", function onHide() {
+      panel.removeEventListener("popuphidden", onHide);
+      parent.removeChild(panel);
+    });
+
+    let footer = createElement(doc, "hbox", { align: "end" });
+    createAndAppendElement(footer, "spacer", { flex: 1});
+    createAndAppendElement(footer, "resizer", { dir: "bottomend" });
+    panel.appendChild(footer);
+
+    let anchor = win.gBrowser.selectedBrowser;
+    panel.openPopup(anchor, "end_before", 0, 0, false, false);
+
+  }
+
+  /**
+   * Prints aObject to the output.
+   *
+   * @param object aObject
+   *        Object to print to the output.
+   * @returns void
+   */
+  aJSTerm.sandbox.pprint = function JSTH_pprint(aObject)
+  {
+    aJSTerm.helperEvaluated = true;
+    if (aObject === null || aObject === undefined || aObject === true || aObject === false) {
+      aJSTerm.console.error(l10n.getStr("helperFuncUnsupportedTypeError"));
+      return;
+    }
+    else if (typeof aObject === TYPEOF_FUNCTION) {
+      aJSTerm.writeOutput(aObject + "\n", CATEGORY_OUTPUT, SEVERITY_LOG);
+      return;
+    }
+
+    let output = [];
+    let pairs = namesAndValuesOf(WebConsoleUtils.unwrap(aObject));
+
+    pairs.forEach(function(pair) {
+      output.push("  " + pair.display);
+    });
+
+    aJSTerm.writeOutput(output.join("\n"), CATEGORY_OUTPUT, SEVERITY_LOG);
+  };
+
+  /**
+   * Print a string to the output, as-is.
+   *
+   * @param string aString
+   *        A string you want to output.
+   * @returns void
+   */
+  aJSTerm.sandbox.print = function JSTH_print(aString)
+  {
+    aJSTerm.helperEvaluated = true;
+    aJSTerm.writeOutput("" + aString, CATEGORY_OUTPUT, SEVERITY_LOG);
+  };
+}
+
+/**
+ * JSTerm
+ *
+ * JavaScript Terminal: creates input nodes for console code interpretation
+ * and 'JS Workspaces'
+ */
+
+/**
+ * Create a JSTerminal or attach a JSTerm input node to an existing output node,
+ * given by the parent node.
+ *
+ * @param object aContext
+ *        Usually nsIDOMWindow, but doesn't have to be
+ * @param nsIDOMNode aParentNode where to attach the JSTerm
  * @param object aMixin
  *        Gecko-app (or Jetpack) specific utility object
+ * @param object aConsole
+ *        Console object to use within the JSTerm.
  */
-function JSTerm(aHud, aMixin)
+function JSTerm(aContext, aParentNode, aMixin, aConsole)
 {
-  // attach the UI by appending to aParentNode
+  // set the context, attach the UI by appending to aParentNode
 
   this.application = appName();
-  this.hud = aHud;
+  this.context = aContext;
+  this.parentNode = aParentNode;
   this.mixins = aMixin;
-  this.document = this.hud.chromeDocument;
+  this.console = aConsole;
+  this.document = aParentNode.ownerDocument
 
-  this.hudId = this.hud.hudId;
+  this.setTimeout = aParentNode.ownerDocument.defaultView.setTimeout;
 
-  this.lastCompletion = {};
+  let node = aParentNode;
+  while (!node.hasAttribute("id")) {
+    node = node.parentNode;
+  }
+  this.hudId = node.getAttribute("id");
+
   this.history = [];
   this.historyIndex = 0;
   this.historyPlaceHolder = 0;  // this.history.length;
-  this.autocompletePopup = new AutocompletePopup(this.document);
+  this.log = LogFactory("*** JSTerm:");
+  this.autocompletePopup = new AutocompletePopup(aParentNode.ownerDocument);
   this.autocompletePopup.onSelect = this.onAutocompleteSelect.bind(this);
   this.autocompletePopup.onClick = this.acceptProposedCompletion.bind(this);
   this.init();
@@ -4205,12 +4779,16 @@ function JSTerm(aHud, aMixin)
 
 JSTerm.prototype = {
   lastInputValue: "",
+  propertyProvider: JSPropertyProvider,
+
   COMPLETE_FORWARD: 0,
   COMPLETE_BACKWARD: 1,
   COMPLETE_HINT_ONLY: 2,
 
   init: function JST_init()
   {
+    this.createSandbox();
+
     this.inputNode = this.mixins.inputNode;
     this.outputNode = this.mixins.outputNode;
     this.completeNode = this.mixins.completeNode;
@@ -4241,82 +4819,62 @@ JSTerm.prototype = {
     this.mixins.attachUI();
   },
 
+  createSandbox: function JST_setupSandbox()
+  {
+    // create a JS Sandbox out of this.context
+    this.sandbox = new Cu.Sandbox(this._window,
+      { sandboxPrototype: this._window, wantXrays: false });
+    this.sandbox.console = this.console;
+    JSTermHelper(this);
+  },
+
+  get _window()
+  {
+    return this.context.get().QueryInterface(Ci.nsIDOMWindow);
+  },
 
   /**
-   * Asynchronously evaluate a string in the content process sandbox.
+   * Evaluates a string in the sandbox.
    *
    * @param string aString
-   *        String to evaluate in the content process JavaScript sandbox.
-   * @param function [aCallback]
-   *        Optional function to be invoked when the evaluation result is
-   *        received.
+   *        String to evaluate in the sandbox.
+   * @returns something
+   *          The result of the evaluation.
    */
-  evalInContentSandbox: function JST_evalInContentSandbox(aString, aCallback)
+  evalInSandbox: function JST_evalInSandbox(aString)
   {
-    let message = {
-      str: aString,
-      resultCacheId: "HUDEval-" + HUDService.sequenceId(),
-    };
+    // The help function needs to be easy to guess, so we make the () optional
+    if (aString.trim() === "help" || aString.trim() === "?") {
+      aString = "help()";
+    }
 
-    this.hud.sendMessageToContent("JSTerm:EvalRequest", message, aCallback);
+    let window = WebConsoleUtils.unwrap(this.sandbox.window);
+    let $ = null, $$ = null;
 
-    return message;
+    // We prefer to execute the page-provided implementations for the $() and
+    // $$() functions.
+    if (typeof window.$ == "function") {
+      $ = this.sandbox.$;
+      delete this.sandbox.$;
+    }
+    if (typeof window.$$ == "function") {
+      $$ = this.sandbox.$$;
+      delete this.sandbox.$$;
+    }
+
+    let result = Cu.evalInSandbox(aString, this.sandbox, "1.8", "Web Console", 1);
+
+    if ($) {
+      this.sandbox.$ = $;
+    }
+    if ($$) {
+      this.sandbox.$$ = $$;
+    }
+
+    return result;
   },
 
-  /**
-   * The "JSTerm:EvalResult" message handler. This is the JSTerm execution
-   * result callback which is invoked whenever JavaScript code evaluation
-   * results come from the content process.
-   *
-   * @private
-   * @param object aResponse
-   *        The JSTerm:EvalResult message received from the content process. See
-   *        JSTerm.handleEvalRequest() in HUDService-content.js for further
-   *        details.
-   * @param object aRequest
-   *        The JSTerm:EvalRequest message we sent to the content process.
-   * @see JSTerm.handleEvalRequest() in HUDService-content.js
-   */
-  _executeResultCallback:
-  function JST__executeResultCallback(aResponse, aRequest)
-  {
-    let errorMessage = aResponse.errorMessage;
-    let resultString = aResponse.resultString;
 
-    // Hide undefined results coming from JSTerm helper functions.
-    if (!errorMessage &&
-        resultString == "undefined" &&
-        aResponse.helperResult &&
-        !aResponse.inspectable &&
-        !aResponse.helperRawOutput) {
-      return;
-    }
-
-    let afterNode = aRequest.outputNode;
-
-    if (aResponse.errorMessage) {
-      this.writeOutput(aResponse.errorMessage, CATEGORY_OUTPUT, SEVERITY_ERROR,
-                       afterNode, aResponse.timestamp);
-    }
-    else if (aResponse.inspectable) {
-      let node = this.writeOutputJS(aResponse.resultString,
-                                    this._evalOutputClick.bind(this, aResponse),
-                                    afterNode, aResponse.timestamp);
-      node._evalCacheId = aResponse.childrenCacheId;
-    }
-    else {
-      this.writeOutput(aResponse.resultString, CATEGORY_OUTPUT, SEVERITY_LOG,
-                       afterNode, aResponse.timestamp);
-    }
-  },
-
-  /**
-   * Execute a string. Execution happens asynchronously in the content process.
-   *
-   * @param string [aExecuteString]
-   *        The string you want to execute. If this is not provided, the current
-   *        user input is used - taken from |this.inputNode.value|.
-   */
   execute: function JST_execute(aExecuteString)
   {
     // attempt to execute the content of the inputNode
@@ -4326,18 +4884,99 @@ JSTerm.prototype = {
       return;
     }
 
-    let node = this.writeOutput(aExecuteString, CATEGORY_INPUT, SEVERITY_LOG);
+    this.writeOutput(aExecuteString, CATEGORY_INPUT, SEVERITY_LOG);
 
-    let messageToContent =
-      this.evalInContentSandbox(aExecuteString,
-                                this._executeResultCallback.bind(this));
-    messageToContent.outputNode = node;
+    try {
+      this.helperEvaluated = false;
+      let result = this.evalInSandbox(aExecuteString);
+
+      // Hide undefined results coming from helpers.
+      let shouldShow = !(result === undefined && this.helperEvaluated);
+      if (shouldShow) {
+        let inspectable = WebConsoleUtils.isObjectInspectable(result);
+        let resultString = WebConsoleUtils.formatResult(result);
+
+        if (inspectable) {
+          this.writeOutputJS(aExecuteString, result, resultString);
+        }
+        else {
+          this.writeOutput(resultString, CATEGORY_OUTPUT, SEVERITY_LOG);
+        }
+      }
+    }
+    catch (ex) {
+      this.writeOutput("" + ex, CATEGORY_OUTPUT, SEVERITY_ERROR);
+    }
 
     this.history.push(aExecuteString);
     this.historyIndex++;
     this.historyPlaceHolder = this.history.length;
     this.setInputValue("");
     this.clearCompletion();
+  },
+
+  /**
+   * Opens a new PropertyPanel. The panel has two buttons: "Update" reexecutes
+   * the passed aEvalString and places the result inside of the tree. The other
+   * button closes the panel.
+   *
+   * @param string aEvalString
+   *        String that was used to eval the aOutputObject. Used as title
+   *        and to update the tree content.
+   * @param object aOutputObject
+   *        Object to display/inspect inside of the tree.
+   * @param nsIDOMNode aAnchor
+   *        A node to popup the panel next to (using "after_pointer").
+   * @returns object the created and opened propertyPanel.
+   */
+  openPropertyPanel: function JST_openPropertyPanel(aEvalString, aOutputObject,
+                                                    aAnchor)
+  {
+    let self = this;
+    let propPanel;
+    // The property panel has one button:
+    //    `Update`: reexecutes the string executed on the command line. The
+    //    result will be inspected by this panel.
+    let buttons = [];
+
+    // If there is a evalString passed to this function, then add a `Update`
+    // button to the panel so that the evalString can be reexecuted to update
+    // the content of the panel.
+    if (aEvalString !== null) {
+      buttons.push({
+        label: l10n.getStr("update.button"),
+        accesskey: l10n.getStr("update.accesskey"),
+        oncommand: function () {
+          try {
+            var result = self.evalInSandbox(aEvalString);
+
+            if (result !== undefined) {
+              // TODO: This updates the value of the tree.
+              // However, the states of opened nodes is not saved.
+              // See bug 586246.
+              propPanel.treeView.data = result;
+            }
+          }
+          catch (ex) {
+            self.console.error(ex);
+          }
+        }
+      });
+    }
+
+    let doc = self.document;
+    let parent = doc.getElementById("mainPopupSet");
+    let title = (aEvalString
+        ? l10n.getFormatStr("jsPropertyInspectTitle", [aEvalString])
+        : l10n.getStr("jsPropertyTitle"));
+
+    propPanel = new PropertyPanel(parent, doc, title, aOutputObject, buttons);
+    propPanel.linkNode = aAnchor;
+
+    let panel = propPanel.panel;
+    panel.openPopup(aAnchor, "after_pointer", 0, 0, false, false);
+    panel.sizeTo(350, 450);
+    return propPanel;
   },
 
   /**
@@ -4357,12 +4996,16 @@ JSTerm.prototype = {
    *        not shown.
    *        - data:
    *        An object that represents the object you want to inspect. Please see
-   *        the PropertyPanel documentation - this object is passed to the
-   *        PropertyPanel constructor
+   *        the PropertyPanelAsync documentation - this object is passed to the
+   *        PropertyPanelAsync constructor
+   * @param object aResponse
+   *        The response object to display/inspect inside of the tree.
+   * @param nsIDOMNode aAnchor
+   *        A node to popup the panel next to (using "after_pointer").
    * @return object
-   *         The new instance of PropertyPanel.
+   *         The new instance of PropertyPanelAsync.
    */
-  openPropertyPanel: function JST_openPropertyPanel(aOptions)
+  openPropertyPanelAsync: function JST_openPropertyPanelAsync(aOptions)
   {
     // The property panel has one button:
     //    `Update`: reexecutes the string executed on the command line. The
@@ -4382,7 +5025,7 @@ JSTerm.prototype = {
                 l10n.getFormatStr("jsPropertyInspectTitle", [aOptions.title]) :
                 l10n.getStr("jsPropertyTitle");
 
-    let propPanel = new PropertyPanel(parent, title, aOptions.data, buttons);
+    let propPanel = new PropertyPanelAsync(parent, title, aOptions.data, buttons);
 
     propPanel.panel.openPopup(aOptions.anchor, "after_pointer", 0, 0, false, false);
     propPanel.panel.sizeTo(350, 450);
@@ -4399,32 +5042,52 @@ JSTerm.prototype = {
   },
 
   /**
-   * Writes a JS object to the JSTerm outputNode.
+   * Writes a JS object to the JSTerm outputNode. If the user clicks on the
+   * written object, openPropertyPanel is called to open up a panel to inspect
+   * the object.
    *
-   * @param string aOutputMessage
-   *        The message to display.
-   * @param function [aCallback]
-   *        Optional function to invoke when users click the message.
-   * @param nsIDOMNode [aNodeAfter]
-   *        Optional DOM node after which you want to insert the new message.
-   *        This is used when execution results need to be inserted immediately
-   *        after the user input.
-   * @param number [aTimestamp]
-   *        Optional timestamp to show for the output message (millisconds since
-   *        the UNIX epoch). If no timestamp is provided then Date.now() is
-   *        used.
-   * @return nsIDOMNode
-   *         The new message node.
+   * @param string aEvalString
+   *        String that was evaluated to get the aOutputObject.
+   * @param object aResultObject
+   *        The evaluation result object.
+   * @param object aOutputString
+   *        The output string to be written to the outputNode.
    */
-  writeOutputJS:
-  function JST_writeOutputJS(aOutputMessage, aCallback, aNodeAfter, aTimestamp)
+  writeOutputJS: function JST_writeOutputJS(aEvalString, aOutputObject, aOutputString)
   {
-    let node = this.writeOutput(aOutputMessage, CATEGORY_OUTPUT, SEVERITY_LOG,
-                                aNodeAfter, aTimestamp);
-    if (aCallback) {
-      this.hud.makeOutputMessageLink(node, aCallback);
-    }
-    return node;
+    let node = ConsoleUtils.createMessageNode(this.document,
+                                              CATEGORY_OUTPUT,
+                                              SEVERITY_LOG,
+                                              aOutputString,
+                                              this.hudId);
+
+    let linkNode = node.querySelector(".webconsole-msg-body");
+
+    linkNode.classList.add("hud-clickable");
+    linkNode.setAttribute("aria-haspopup", "true");
+
+    // Make the object bring up the property panel.
+    node.addEventListener("mousedown", function(aEvent) {
+      this._startX = aEvent.clientX;
+      this._startY = aEvent.clientY;
+    }, false);
+
+    let self = this;
+    node.addEventListener("click", function(aEvent) {
+      if (aEvent.detail != 1 || aEvent.button != 0 ||
+          (this._startX != aEvent.clientX &&
+           this._startY != aEvent.clientY)) {
+        return;
+      }
+
+      if (!this._panelOpen) {
+        let propPanel = self.openPropertyPanel(aEvalString, aOutputObject, this);
+        propPanel.panel.setAttribute("hudId", self.hudId);
+        this._panelOpen = true;
+      }
+    }, false);
+
+    ConsoleUtils.outputMessageNode(node, this.hudId);
   },
 
   /**
@@ -4437,28 +5100,15 @@ JSTerm.prototype = {
    *        The category of message: one of the CATEGORY_ constants.
    * @param number aSeverity
    *        The severity of message: one of the SEVERITY_ constants.
-   * @param nsIDOMNode [aNodeAfter]
-   *        Optional DOM node after which you want to insert the new message.
-   *        This is used when execution results need to be inserted immediately
-   *        after the user input.
-   * @param number [aTimestamp]
-   *        Optional timestamp to show for the output message (millisconds since
-   *        the UNIX epoch). If no timestamp is provided then Date.now() is
-   *        used.
-   * @return nsIDOMNode
-   *         The new message node.
+   * @returns void
    */
-  writeOutput:
-  function JST_writeOutput(aOutputMessage, aCategory, aSeverity, aNodeAfter,
-                           aTimestamp)
+  writeOutput: function JST_writeOutput(aOutputMessage, aCategory, aSeverity)
   {
-    let node = ConsoleUtils.createMessageNode(this.document, aCategory,
-                                              aSeverity, aOutputMessage,
-                                              this.hudId, null, null, null,
-                                              null, aTimestamp);
+    let node = ConsoleUtils.createMessageNode(this.document,
+                                              aCategory, aSeverity,
+                                              aOutputMessage, this.hudId);
 
-    ConsoleUtils.outputMessageNode(node, this.hudId, aNodeAfter);
-    return node;
+    ConsoleUtils.outputMessageNode(node, this.hudId);
   },
 
   /**
@@ -4749,7 +5399,7 @@ JSTerm.prototype = {
    * only if the selection/cursor is at the end of the string. If no completion
    * is found, the current inputNode value and cursor/selection stay.
    *
-   * @param int aType possible values are
+   * @param int type possible values are
    *    - this.COMPLETE_FORWARD: If there is more than one possible completion
    *          and the input value stayed the same compared to the last time this
    *          function was called, then the next completion of all possible
@@ -4767,13 +5417,11 @@ JSTerm.prototype = {
    *          used again. If there is only one possible completion, then
    *          the inputNode.value is set to this value and the selection is set
    *          from the current cursor position to the end of the completed text.
-   * @param function aCallback
-   *        Optional function invoked when the autocomplete properties are
-   *        updated.
+   *
    * @returns boolean true if there existed a completion for the current input,
    *          or false otherwise.
    */
-  complete: function JSTF_complete(aType, aCallback)
+  complete: function JSTF_complete(type)
   {
     let inputNode = this.inputNode;
     let inputValue = inputNode.value;
@@ -4790,128 +5438,55 @@ JSTerm.prototype = {
       return false;
     }
 
-    // Update the completion results.
-    if (this.lastCompletion.value != inputValue) {
-      this._updateCompletionResult(aType, aCallback);
-      return false;
+    let popup = this.autocompletePopup;
+
+    if (!this.lastCompletion || this.lastCompletion.value != inputValue) {
+      let properties = this.propertyProvider(this.sandbox.window, inputValue);
+      if (!properties || !properties.matches.length) {
+        this.clearCompletion();
+        return false;
+      }
+
+      let items = properties.matches.map(function(aMatch) {
+        return {label: aMatch};
+      });
+      popup.setItems(items);
+      this.lastCompletion = {value: inputValue,
+                             matchProp: properties.matchProp};
+
+      if (items.length > 1 && !popup.isOpen) {
+        popup.openPopup(this.inputNode);
+      }
+      else if (items.length < 2 && popup.isOpen) {
+        popup.hidePopup();
+      }
+
+      if (items.length == 1) {
+          popup.selectedIndex = 0;
+      }
+      this.onAutocompleteSelect();
     }
 
-    let popup = this.autocompletePopup;
     let accepted = false;
 
-    if (aType != this.COMPLETE_HINT_ONLY && popup.itemCount == 1) {
+    if (type != this.COMPLETE_HINT_ONLY && popup.itemCount == 1) {
       this.acceptProposedCompletion();
       accepted = true;
     }
-    else if (aType == this.COMPLETE_BACKWARD) {
-      popup.selectPreviousItem();
+    else if (type == this.COMPLETE_BACKWARD) {
+      this.autocompletePopup.selectPreviousItem();
     }
-    else if (aType == this.COMPLETE_FORWARD) {
-      popup.selectNextItem();
+    else if (type == this.COMPLETE_FORWARD) {
+      this.autocompletePopup.selectNextItem();
     }
 
-    aCallback && aCallback(this);
     return accepted || popup.itemCount > 0;
-  },
-
-  /**
-   * Update the completion result. This operation is performed asynchronously by
-   * fetching updated results from the content process.
-   *
-   * @private
-   * @param int aType
-   *        Completion type. See this.complete() for details.
-   * @param function [aCallback]
-   *        Optional, function to invoke when completion results are received.
-   */
-  _updateCompletionResult:
-  function JST__updateCompletionResult(aType, aCallback)
-  {
-    if (this.lastCompletion.value == this.inputNode.value) {
-      return;
-    }
-
-    let message = {
-      id: "HUDComplete-" + HUDService.sequenceId(),
-      input: this.inputNode.value,
-    };
-
-    this.lastCompletion = {requestId: message.id, completionType: aType};
-    let callback = this._receiveAutocompleteProperties.bind(this, aCallback);
-    this.hud.sendMessageToContent("JSTerm:Autocomplete", message, callback);
-  },
-
-  /**
-   * Handler for the "JSTerm:AutocompleteProperties" message. This method takes
-   * the completion result received from the content process and updates the UI
-   * accordingly.
-   *
-   * @param function [aCallback=null]
-   *        Optional, function to invoke when the completion result is received.
-   * @param object aMessage
-   *        The JSON message which holds the completion results received from
-   *        the content process.
-   */
-  _receiveAutocompleteProperties:
-  function JST__receiveAutocompleteProperties(aCallback, aMessage)
-  {
-    let inputNode = this.inputNode;
-    let inputValue = inputNode.value;
-    if (aMessage.input != inputValue ||
-        this.lastCompletion.value == inputValue ||
-        aMessage.id != this.lastCompletion.requestId) {
-      return;
-    }
-
-    let matches = aMessage.matches;
-    if (!matches.length) {
-      this.clearCompletion();
-      return;
-    }
-
-    let items = matches.map(function(aMatch) {
-      return { label: aMatch };
-    });
-
-    let popup = this.autocompletePopup;
-    popup.setItems(items);
-
-    let completionType = this.lastCompletion.completionType;
-    this.lastCompletion = {
-      value: inputValue,
-      matchProp: aMessage.matchProp,
-    };
-
-    if (items.length > 1 && !popup.isOpen) {
-      popup.openPopup(inputNode);
-    }
-    else if (items.length < 2 && popup.isOpen) {
-      popup.hidePopup();
-    }
-
-    if (items.length == 1) {
-      popup.selectedIndex = 0;
-    }
-
-    this.onAutocompleteSelect();
-
-    if (completionType != this.COMPLETE_HINT_ONLY && popup.itemCount == 1) {
-      this.acceptProposedCompletion();
-    }
-    else if (completionType == this.COMPLETE_BACKWARD) {
-      popup.selectPreviousItem();
-    }
-    else if (completionType == this.COMPLETE_FORWARD) {
-      popup.selectNextItem();
-    }
-
-    aCallback && aCallback(this);
   },
 
   onAutocompleteSelect: function JSTF_onAutocompleteSelect()
   {
     let currentItem = this.autocompletePopup.selectedItem;
-    if (currentItem && this.lastCompletion.value) {
+    if (currentItem && this.lastCompletion) {
       let suffix = currentItem.label.substring(this.lastCompletion.
                                                matchProp.length);
       this.updateCompleteNode(suffix);
@@ -4928,7 +5503,7 @@ JSTerm.prototype = {
   clearCompletion: function JSTF_clearCompletion()
   {
     this.autocompletePopup.clearItems();
-    this.lastCompletion = {};
+    this.lastCompletion = null;
     this.updateCompleteNode("");
     if (this.autocompletePopup.isOpen) {
       this.autocompletePopup.hidePopup();
@@ -4947,7 +5522,7 @@ JSTerm.prototype = {
     let updated = false;
 
     let currentItem = this.autocompletePopup.selectedItem;
-    if (currentItem && this.lastCompletion.value) {
+    if (currentItem && this.lastCompletion) {
       let suffix = currentItem.label.substring(this.lastCompletion.
                                                matchProp.length);
       this.setInputValue(this.inputNode.value + suffix);
@@ -4981,7 +5556,8 @@ JSTerm.prototype = {
    */
   clearObjectCache: function JST_clearObjectCache(aCacheId)
   {
-    this.hud.sendMessageToContent("JSTerm:ClearObjectCache", {cacheId: aCacheId});
+    let hud = HUDService.getHudReferenceById(this.hudId);
+    hud.sendMessageToContent("JSTerm:ClearObjectCache", {cacheId: aCacheId});
   },
 
   /**
@@ -5008,147 +5584,8 @@ JSTerm.prototype = {
       resultCacheId: aResultCacheId,
     };
 
-    this.hud.sendMessageToContent("JSTerm:GetEvalObject", message, aCallback);
-  },
-
-  /**
-   * The "JSTerm:InspectObject" remote message handler. This allows the content
-   * process to open the Property Panel for a given object.
-   *
-   * @param object aRequest
-   *        The request message from the content process. This message includes
-   *        the user input string that was evaluated to inspect an object and
-   *        the result object which is to be inspected.
-   */
-  handleInspectObject: function JST_handleInspectObject(aRequest)
-  {
-    let options = {
-      title: aRequest.input,
-
-      data: {
-        rootCacheId: aRequest.objectCacheId,
-        panelCacheId: aRequest.objectCacheId,
-        remoteObject: aRequest.resultObject,
-        remoteObjectProvider: this.remoteObjectProvider.bind(this),
-      },
-    };
-
-    let propPanel = this.openPropertyPanel(options);
-    propPanel.panel.setAttribute("hudId", this.hudId);
-
-    let onPopupHide = function JST__onPopupHide() {
-      propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
-
-      this.clearObjectCache(options.data.panelCacheId);
-    }.bind(this);
-
-    propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
-  },
-
-  /**
-   * The click event handler for evaluation results in the output.
-   *
-   * @private
-   * @param object aResponse
-   *        The JSTerm:EvalResult message received from the content process.
-   * @param nsIDOMNode aLink
-   *        The message node for which we are handling events.
-   */
-  _evalOutputClick: function JST__evalOutputClick(aResponse, aLinkNode)
-  {
-    if (aLinkNode._panelOpen) {
-      return;
-    }
-
-    let options = {
-      title: aResponse.input,
-      anchor: aLinkNode,
-
-      // Data to inspect.
-      data: {
-        // This is where the resultObject children are cached.
-        rootCacheId: aResponse.childrenCacheId,
-        remoteObject: aResponse.resultObject,
-        // This is where all objects retrieved by the panel will be cached.
-        panelCacheId: "HUDPanel-" + HUDService.sequenceId(),
-        remoteObjectProvider: this.remoteObjectProvider.bind(this),
-      },
-    };
-
-    options.updateButtonCallback = function JST__evalUpdateButton() {
-      this.evalInContentSandbox(aResponse.input,
-        this._evalOutputUpdatePanelCallback.bind(this, options, propPanel,
-                                                 aResponse));
-    }.bind(this);
-
-    let propPanel = this.openPropertyPanel(options);
-    propPanel.panel.setAttribute("hudId", this.hudId);
-
-    let onPopupHide = function JST__evalInspectPopupHide() {
-      propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
-
-      this.clearObjectCache(options.data.panelCacheId);
-
-      if (!aLinkNode.parentNode && aLinkNode._evalCacheId) {
-        this.clearObjectCache(aLinkNode._evalCacheId);
-      }
-    }.bind(this);
-
-    propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
-  },
-
-  /**
-   * The callback used for updating the Property Panel when the user clicks the
-   * Update button.
-   *
-   * @private
-   * @param object aOptions
-   *        The options object used for opening the initial Property Panel.
-   * @param object aPropPanel
-   *        The Property Panel instance.
-   * @param object aOldResponse
-   *        The previous JSTerm:EvalResult message received from the content
-   *        process.
-   * @param object aNewResponse
-   *        The new JSTerm:EvalResult message received after the user clicked
-   *        the Update button.
-   */
-  _evalOutputUpdatePanelCallback:
-  function JST__updatePanelCallback(aOptions, aPropPanel, aOldResponse,
-                                    aNewResponse)
-  {
-    if (aNewResponse.errorMessage) {
-      this.writeOutput(aNewResponse.errorMessage, CATEGORY_OUTPUT,
-                       SEVERITY_ERROR);
-      return;
-    }
-
-    if (!aNewResponse.inspectable) {
-      this.writeOutput(l10n.getStr("JSTerm.updateNotInspectable"), CATEGORY_OUTPUT, SEVERITY_ERROR);
-      return;
-    }
-
-    this.clearObjectCache(aOptions.data.panelCacheId);
-    this.clearObjectCache(aOptions.data.rootCacheId);
-
-    if (aOptions.anchor && aOptions.anchor._evalCacheId) {
-      aOptions.anchor._evalCacheId = aNewResponse.childrenCacheId;
-    }
-
-    // Update the old response object such that when the panel is reopen, the
-    // user sees the new response.
-    aOldResponse.id = aNewResponse.id;
-    aOldResponse.childrenCacheId = aNewResponse.childrenCacheId;
-    aOldResponse.resultObject = aNewResponse.resultObject;
-    aOldResponse.resultString = aNewResponse.resultString;
-
-    aOptions.data.rootCacheId = aNewResponse.childrenCacheId;
-    aOptions.data.remoteObject = aNewResponse.resultObject;
-
-    // TODO: This updates the value of the tree.
-    // However, the states of open nodes is not saved.
-    // See bug 586246.
-    aPropPanel.treeView.data = aOptions.data;
+    let hud = HUDService.getHudReferenceById(this.hudId);
+    hud.sendMessageToContent("JSTerm:GetEvalObject", message, aCallback);
   },
 
   /**
@@ -5156,20 +5593,9 @@ JSTerm.prototype = {
    */
   destroy: function JST_destroy()
   {
-    this.clearCompletion();
-    this.clearOutput();
-
-    this.autocompletePopup.destroy();
-
     this.inputNode.removeEventListener("keypress", this._keyPress, false);
     this.inputNode.removeEventListener("input", this._inputEventHandler, false);
     this.inputNode.removeEventListener("keyup", this._inputEventHandler, false);
-
-    delete this.history;
-    delete this.hud;
-    delete this.autocompletePopup;
-    delete this.document;
-    delete this.mixins;
   },
 };
 
@@ -5177,19 +5603,26 @@ JSTerm.prototype = {
  * Generates and attaches the JS Terminal part of the Web Console, which
  * essentially consists of the interactive JavaScript input facility.
  *
+ * @param nsWeakPtr<nsIDOMWindow> aContext
+ *        A weak pointer to the DOM window that contains the Web Console.
  * @param nsIDOMNode aParentNode
  *        The Web Console wrapper node.
  * @param nsIDOMNode aExistingConsole
  *        The Web Console output node.
  * @return void
  */
-function JSTermFirefoxMixin(aParentNode, aExistingConsole)
+function
+JSTermFirefoxMixin(aContext,
+                   aParentNode,
+                   aExistingConsole)
 {
   // aExisting Console is the existing outputNode to use in favor of
   // creating a new outputNode - this is so we can just attach the inputNode to
   // a normal HeadsUpDisplay console output, and re-use code.
+  this.context = aContext;
   this.parentNode = aParentNode;
   this.existingConsoleNode = aExistingConsole;
+  this.setTimeout = aParentNode.ownerDocument.defaultView.setTimeout;
 
   if (aParentNode.ownerDocument) {
     this.xulElementFactory =
@@ -5462,7 +5895,7 @@ ConsoleUtils = {
       node.appendChild(bodyContainer);
       node.classList.add("webconsole-msg-inspector");
       // Create the treeView object.
-      let treeView = node.propertyTreeView = new PropertyTreeView();
+      let treeView = node.propertyTreeView = new PropertyTreeViewAsync();
 
       treeView.data = {
         rootCacheId: body.cacheId,
@@ -5699,11 +6132,8 @@ ConsoleUtils = {
    *        The message node to send to the output.
    * @param string aHUDId
    *        The ID of the HUD in which to insert this node.
-   * @param nsIDOMNode [aNodeAfter]
-   *        Insert the node after the given aNodeAfter (optional).
    */
-  outputMessageNode:
-  function ConsoleUtils_outputMessageNode(aNode, aHUDId, aNodeAfter) {
+  outputMessageNode: function ConsoleUtils_outputMessageNode(aNode, aHUDId) {
     ConsoleUtils.filterMessageNode(aNode, aHUDId);
     let outputNode = HUDService.hudReferences[aHUDId].outputNode;
 
@@ -5722,7 +6152,7 @@ ConsoleUtils = {
     }
 
     if (!isRepeated) {
-      outputNode.insertBefore(aNode, aNodeAfter ? aNodeAfter.nextSibling : null);
+      outputNode.appendChild(aNode);
     }
 
     HUDService.regroupOutput(outputNode);
@@ -5924,22 +6354,61 @@ HeadsUpDisplayUICommands = {
       }
     }
   },
+
+};
+
+/**
+ * A Console log entry
+ *
+ * @param JSObject aConfig, object literal with ConsolEntry properties
+ * @param integer aId
+ * @returns void
+ */
+
+function ConsoleEntry(aConfig, id)
+{
+  if (!aConfig.logLevel && aConfig.message) {
+    throw new Error("Missing Arguments when creating a console entry");
+  }
+
+  this.config = aConfig;
+  this.id = id;
+  for (var prop in aConfig) {
+    if (!(typeof aConfig[prop] == "function")){
+      this[prop] = aConfig[prop];
+    }
+  }
+
+  if (aConfig.logLevel == "network") {
+    this.transactions = { };
+    if (aConfig.activity) {
+      this.transactions[aConfig.activity.stage] = aConfig.activity;
+    }
+  }
+
+}
+
+ConsoleEntry.prototype = {
+
+  updateTransaction: function CE_updateTransaction(aActivity) {
+    this.transactions[aActivity.stage] = aActivity;
+  }
 };
 
 //////////////////////////////////////////////////////////////////////////
-// WebConsoleObserver
+// HUDWindowObserver
 //////////////////////////////////////////////////////////////////////////
 
-let WebConsoleObserver = {
+HUDWindowObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  init: function WCO_init()
+  init: function HWO_init()
   {
     Services.obs.addObserver(this, "content-document-global-created", false);
     Services.obs.addObserver(this, "quit-application-granted", false);
   },
 
-  observe: function WCO_observe(aSubject, aTopic)
+  observe: function HWO_observe(aSubject, aTopic, aData)
   {
     if (aTopic == "content-document-global-created") {
       HUDService.windowInitializer(aSubject);
@@ -5949,11 +6418,12 @@ let WebConsoleObserver = {
     }
   },
 
-  uninit: function WCO_uninit()
+  uninit: function HWO_uninit()
   {
     Services.obs.removeObserver(this, "content-document-global-created");
     Services.obs.removeObserver(this, "quit-application-granted");
   },
+
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -13,8 +13,12 @@ let HUD;
 
 let outputItem;
 
-function consoleOpened(aHud) {
-  HUD = aHud;
+function tabLoad1(aEvent) {
+  browser.removeEventListener(aEvent.type, arguments.callee, true);
+
+  openConsole();
+
+  HUD = HUDService.getHudByWindow(content);
 
   outputNode = HUD.outputNode;
 
@@ -22,10 +26,11 @@ function consoleOpened(aHud) {
 
   // Reload so we get some output in the console.
   browser.contentWindow.location.reload();
+  log(document);
 }
 
 function tabLoad2(aEvent) {
-  browser.removeEventListener(aEvent.type, tabLoad2, true);
+  browser.removeEventListener(aEvent.type, arguments.callee, true);
 
   outputItem = outputNode.querySelector(".hud-networkinfo .hud-clickable");
   ok(outputItem, "found a network message");
@@ -37,7 +42,7 @@ function tabLoad2(aEvent) {
 }
 
 function networkPanelShown(aEvent) {
-  document.removeEventListener(aEvent.type, networkPanelShown, false);
+  document.removeEventListener(aEvent.type, arguments.callee, false);
 
   document.addEventListener("popupshown", networkPanelShowFailure, false);
 
@@ -52,13 +57,13 @@ function networkPanelShown(aEvent) {
 }
 
 function networkPanelShowFailure(aEvent) {
-  document.removeEventListener(aEvent.type, networkPanelShowFailure, false);
+  document.removeEventListener(aEvent.type, arguments.callee, false);
 
   ok(false, "the network panel should not show");
 }
 
 function networkPanelHidden(aEvent) {
-  this.removeEventListener(aEvent.type, networkPanelHidden, false);
+  this.removeEventListener(aEvent.type, arguments.callee, false);
 
   // The network panel should not show because this is a mouse event that starts
   // in a position and ends in another.
@@ -87,27 +92,20 @@ function networkPanelHidden(aEvent) {
     HUD.jsterm.setInputValue("document");
     HUD.jsterm.execute();
 
-    waitForSuccess({
-      name: "jsterm output message",
-      validatorFn: function()
-      {
-        return outputNode.querySelector(".webconsole-msg-output .hud-clickable");
-      },
-      successFn: function()
-      {
-        document.addEventListener("popupshown", propertyPanelShown, false);
+    outputItem = outputNode.querySelector(".webconsole-msg-output " +
+                                          ".hud-clickable");
+    ok(outputItem, "found a jsterm output message");
 
-        // Send the mousedown and click events such that the property panel opens.
-        EventUtils.sendMouseEvent({type: "mousedown"}, outputItem);
-        EventUtils.sendMouseEvent({type: "click"}, outputItem);
-      },
-      failureFn: finishTest,
-    });
+    document.addEventListener("popupshown", properyPanelShown, false);
+
+    // Send the mousedown and click events such that the property panel opens.
+    EventUtils.sendMouseEvent({type: "mousedown"}, outputItem);
+    EventUtils.sendMouseEvent({type: "click"}, outputItem);
   });
 }
 
-function propertyPanelShown(aEvent) {
-  document.removeEventListener(aEvent.type, propertyPanelShown, false);
+function properyPanelShown(aEvent) {
+  document.removeEventListener(aEvent.type, arguments.callee, false);
 
   document.addEventListener("popupshown", propertyPanelShowFailure, false);
 
@@ -122,13 +120,13 @@ function propertyPanelShown(aEvent) {
 }
 
 function propertyPanelShowFailure(aEvent) {
-  document.removeEventListener(aEvent.type, propertyPanelShowFailure, false);
+  document.removeEventListener(aEvent.type, arguments.callee, false);
 
   ok(false, "the property panel should not show");
 }
 
 function propertyPanelHidden(aEvent) {
-  this.removeEventListener(aEvent.type, propertyPanelHidden, false);
+  this.removeEventListener(aEvent.type, arguments.callee, false);
 
   // The property panel should not show because this is a mouse event that
   // starts in a position and ends in another.
@@ -151,16 +149,13 @@ function propertyPanelHidden(aEvent) {
 
   executeSoon(function() {
     document.removeEventListener("popupshown", propertyPanelShowFailure, false);
-    HUD = outputItem = null;
-    executeSoon(finishTest);
+    outputItem = null;
+    finishTest();
   });
 }
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  browser.addEventListener("load", tabLoad1, true);
 }
 

@@ -7,29 +7,22 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, testForOf);
-  }, true);
+  browser.addEventListener("DOMContentLoaded", testForOf, false);
 }
 
-function testForOf(hud) {
+function testForOf() {
+  browser.removeEventListener("DOMContentLoaded", testForOf, false);
+
+  openConsole();
+  var hud = HUDService.getHudByWindow(content);
   var jsterm = hud.jsterm;
   jsterm.execute("{ [x.tagName for (x of document.body.childNodes) if (x.nodeType === 1)].join(' '); }");
 
-  waitForSuccess({
-    name: "jsterm output displayed",
-    validatorFn: function()
-    {
-      return hud.outputNode.querySelector(".webconsole-msg-output");
-    },
-    successFn: function()
-    {
-      let node = hud.outputNode.querySelector(".webconsole-msg-output");
-      ok(/H1 DIV H2 P/.test(node.textContent),
-        "for-of loop should find all top-level nodes");
-      finishTest();
-    },
-    failureFn: finishTest,
-  });
+  let node = hud.outputNode.querySelector(".webconsole-msg-output");
+  ok(/H1 DIV H2 P/.test(node.textContent),
+    "for-of loop should find all top-level nodes");
+
+  jsterm.clearOutput();
+  jsterm.history.splice(0, jsterm.history.length);   // workaround for bug 592552
+  finishTest();
 }
