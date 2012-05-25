@@ -90,7 +90,7 @@ nsDOMStorageDBWrapper::FlushAndDeleteTemporaryTables(bool force)
   PR_BEGIN_MACRO                                                      \
   if (aStorage->CanUseChromePersist())                                \
     _return mChromePersistentDB._code;                                \
-  if (aStorage->IsPrivate())                                          \
+  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())  \
     _return mPrivateBrowsingDB._code;                                 \
   if (aStorage->SessionOnly())                                        \
     _return mSessionOnlyDB._code;                                     \
@@ -188,6 +188,9 @@ nsDOMStorageDBWrapper::RemoveOwner(const nsACString& aOwner,
   rv = mPrivateBrowsingDB.RemoveOwner(aOwner, aIncludeSubDomains);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
+    return NS_OK;
+
   rv = mSessionOnlyDB.RemoveOwner(aOwner, aIncludeSubDomains);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -207,10 +210,33 @@ nsDOMStorageDBWrapper::RemoveOwners(const nsTArray<nsString> &aOwners,
   rv = mPrivateBrowsingDB.RemoveOwners(aOwners, aIncludeSubDomains, aMatch);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
+    return NS_OK;
+
   rv = mSessionOnlyDB.RemoveOwners(aOwners, aIncludeSubDomains, aMatch);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mPersistentDB.RemoveOwners(aOwners, aIncludeSubDomains, aMatch);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return rv;
+}
+
+nsresult
+nsDOMStorageDBWrapper::RemoveAll()
+{
+  nsresult rv;
+
+  rv = mPrivateBrowsingDB.RemoveAll();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
+    return NS_OK;
+
+  rv = mSessionOnlyDB.RemoveAll();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mPersistentDB.RemoveAll();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
@@ -225,9 +251,9 @@ nsDOMStorageDBWrapper::GetUsage(DOMStorageImpl* aStorage,
 
 nsresult
 nsDOMStorageDBWrapper::GetUsage(const nsACString& aDomain,
-                                bool aIncludeSubDomains, PRInt32 *aUsage, bool aPrivate)
+                                bool aIncludeSubDomains, PRInt32 *aUsage)
 {
-  if (aPrivate)
+  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
     return mPrivateBrowsingDB.GetUsage(aDomain, aIncludeSubDomains, aUsage);
 
 #if 0
