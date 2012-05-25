@@ -45,6 +45,7 @@ private:
         SetStoragePolicy(session->StoragePolicy());
         if (session->IsStreamBased())             MarkStreamBased();
         if (session->WillDoomEntriesIfExpired())  MarkDoomEntriesIfExpired();
+        if (session->IsPrivate())                 MarkPrivate();
         if (blockingMode == nsICache::BLOCKING)    MarkBlockingMode();
         MarkWaitingForValidation();
         NS_IF_ADDREF(mListener);
@@ -66,6 +67,7 @@ private:
     enum CacheRequestInfo {
         eStoragePolicyMask         = 0x000000FF,
         eStreamBasedMask           = 0x00000100,
+        ePrivateMask               = 0x00000200,
         eDoomEntriesIfExpiredMask  = 0x00001000,
         eBlockingModeMask          = 0x00010000,
         eWaitingForValidationMask  = 0x00100000,
@@ -104,8 +106,12 @@ private:
 
     nsCacheStoragePolicy StoragePolicy()
     {
-        return (nsCacheStoragePolicy)(mInfo & 0xFF);
+        return (nsCacheStoragePolicy)(mInfo & eStoragePolicyMask);
     }
+
+    void   MarkPrivate() { mInfo |= ePrivateMask; }
+    void   MarkPublic() { mInfo &= ~ePrivateMask; }
+    bool   IsPrivate() { return (mInfo & ePrivateMask) != 0; }
 
     void   MarkWaitingForValidation() { mInfo |=  eWaitingForValidationMask; }
     void   DoneWaitingForValidation() { mInfo &= ~eWaitingForValidationMask; }

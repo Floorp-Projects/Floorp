@@ -198,7 +198,7 @@ class StringifyContext
 
     StringBuffer &sb;
     const StringBuffer &gap;
-    RootedVarObject replacer;
+    RootedObject replacer;
     const AutoIdVector &propertyList;
     uint32_t depth;
     HashSet<JSObject *> objectStack;
@@ -243,7 +243,7 @@ class CycleDetector
 
   private:
     HashSet<JSObject *> &objectStack;
-    RootedVarObject obj;
+    RootedObject obj;
 };
 
 template<typename KeyType>
@@ -279,8 +279,8 @@ PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, Stringi
     /* Step 2. */
     if (vp->isObject()) {
         Value toJSON;
-        RootedVarId id(cx, NameToId(cx->runtime->atomState.toJSONAtom));
-        if (!GetMethod(cx, RootedVarObject(cx, &vp->toObject()), id, 0, &toJSON))
+        RootedId id(cx, NameToId(cx->runtime->atomState.toJSONAtom));
+        if (!GetMethod(cx, RootedObject(cx, &vp->toObject()), id, 0, &toJSON))
             return false;
 
         if (js_IsCallable(toJSON)) {
@@ -401,7 +401,7 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
 
     /* Steps 8-10, 13. */
     bool wroteMember = false;
-    RootedVarId id(cx);
+    RootedId id(cx);
     for (size_t i = 0, len = propertyList.length(); i < len; i++) {
         /*
          * Steps 8a-8b.  Note that the call to Str is broken up into 1) getting
@@ -566,7 +566,7 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 
     /* Step 10. */
     JS_ASSERT(v.isObject());
-    RootedVarObject obj(cx, &v.toObject());
+    RootedObject obj(cx, &v.toObject());
 
     scx->depth++;
     JSBool ok;
@@ -581,10 +581,11 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 
 /* ES5 15.12.3. */
 JSBool
-js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space, StringBuffer &sb)
+js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space_, StringBuffer &sb)
 {
-    RootedVarObject replacer(cx, replacer_);
-    RootValue spaceRoot(cx, &space);
+    RootedObject replacer(cx, replacer_);
+    RootedValue spaceRoot(cx, space_);
+    Value &space = spaceRoot.reference();
 
     /* Step 4. */
     AutoIdVector propertyList(cx);
@@ -715,12 +716,12 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space, StringB
     }
 
     /* Step 9. */
-    RootedVarObject wrapper(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+    RootedObject wrapper(cx, NewBuiltinClassInstance(cx, &ObjectClass));
     if (!wrapper)
         return false;
 
     /* Step 10. */
-    RootedVarId emptyId(cx, NameToId(cx->runtime->atomState.emptyAtom));
+    RootedId emptyId(cx, NameToId(cx->runtime->atomState.emptyAtom));
     if (!DefineNativeProperty(cx, wrapper, emptyId, *vp, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_ENUMERATE, 0, 0))
     {
@@ -753,7 +754,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, const Value &reviver, Va
 
     /* Step 2. */
     if (val.isObject()) {
-        RootedVarObject obj(cx, &val.toObject());
+        RootedObject obj(cx, &val.toObject());
 
         /* 'val' must have been produced by the JSON parser, so not a proxy. */
         JS_ASSERT(!obj->isProxy());
@@ -762,7 +763,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, const Value &reviver, Va
             uint32_t length = obj->getArrayLength();
 
             /* Step 2a(i), 2a(iii-iv). */
-            RootedVarId id(cx);
+            RootedId id(cx);
             for (uint32_t i = 0; i < length; i++) {
                 if (!IndexToId(cx, i, id.address()))
                     return false;
@@ -799,7 +800,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, const Value &reviver, Va
                 return false;
 
             /* Step 2b(ii). */
-            RootedVarId id(cx);
+            RootedId id(cx);
             for (size_t i = 0, len = keys.length(); i < len; i++) {
                 /* Step 2b(ii)(1). */
                 Value newElement;
@@ -847,14 +848,14 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, const Value &reviver, Va
 static bool
 Revive(JSContext *cx, const Value &reviver, Value *vp)
 {
-    RootedVarObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass));
     if (!obj)
         return false;
 
     if (!obj->defineProperty(cx, cx->runtime->atomState.emptyAtom, *vp))
         return false;
 
-    return Walk(cx, obj, RootedVarId(cx, NameToId(cx->runtime->atomState.emptyAtom)), reviver, vp);
+    return Walk(cx, obj, RootedId(cx, NameToId(cx->runtime->atomState.emptyAtom)), reviver, vp);
 }
 
 namespace js {
@@ -898,9 +899,9 @@ static JSFunctionSpec json_static_methods[] = {
 JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj_)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
-    RootedVarObject JSON(cx, NewObjectWithClassProto(cx, &JSONClass, NULL, obj));
+    RootedObject JSON(cx, NewObjectWithClassProto(cx, &JSONClass, NULL, obj));
     if (!JSON || !JSON->setSingletonType(cx))
         return NULL;
 

@@ -639,6 +639,7 @@ nsHttpChannel::SetupTransaction()
         mCaps |= NS_HTTP_TIMING_ENABLED;
 
     mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
+    mConnectionInfo->SetPrivate(UsingPrivateBrowsing());
 
     if (mUpgradeProtocolCallback) {
         mRequestHead.SetHeader(nsHttp::Upgrade, mUpgradeProtocol, false);
@@ -2268,6 +2269,8 @@ nsHttpChannel::OpenCacheEntry()
                                  getter_AddRefs(session));
         NS_ENSURE_SUCCESS(rv, rv);
 
+        session->SetIsPrivate(UsingPrivateBrowsing());
+
         mOnCacheEntryAvailableCallback =
             &nsHttpChannel::OnOfflineCacheEntryAvailable;
         // We open with ACCESS_READ only, because we don't want to overwrite
@@ -2371,6 +2374,7 @@ nsHttpChannel::OpenNormalCacheEntry()
 
     nsCOMPtr<nsICacheSession> session;
     rv = gHttpHandler->GetCacheSession(storagePolicy,
+                                       UsingPrivateBrowsing(),
                                        getter_AddRefs(session));
     if (NS_FAILED(rv))
         return rv;
@@ -5354,6 +5358,7 @@ nsHttpChannel::DoInvalidateCacheEntry(nsACString &key)
     nsCacheStoragePolicy storagePolicy = DetermineStoragePolicy();
 
     nsresult rv = gHttpHandler->GetCacheSession(storagePolicy,
+                                                UsingPrivateBrowsing(),
                                                 getter_AddRefs(session));
 
     if (NS_FAILED(rv))
@@ -5366,7 +5371,9 @@ nsCacheStoragePolicy
 nsHttpChannel::DetermineStoragePolicy()
 {
     nsCacheStoragePolicy policy = nsICache::STORE_ANYWHERE;
-    if (mLoadFlags & INHIBIT_PERSISTENT_CACHING)
+    if (UsingPrivateBrowsing())
+        policy = nsICache::STORE_IN_MEMORY;
+    else if (mLoadFlags & INHIBIT_PERSISTENT_CACHING)
         policy = nsICache::STORE_IN_MEMORY;
 
     return policy;
@@ -5397,4 +5404,5 @@ void
 nsHttpChannel::AsyncOnExamineCachedResponse()
 {
     gHttpHandler->OnExamineCachedResponse(this);
+
 }
