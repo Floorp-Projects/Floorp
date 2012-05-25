@@ -792,7 +792,7 @@ PropertiesView.prototype = {
     }
 
     // Generate a unique id for the element, if not specified.
-    aId = aId || aName.toLowerCase().trim().replace(" ", "-") + this._idCount++;
+    aId = aId || aName.toLowerCase().trim().replace(/\s+/g, "-") + this._idCount++;
 
     // Contains generic nodes and functionality.
     let element = this._createPropertyElement(aName, aId, "scope", this._vars);
@@ -801,11 +801,17 @@ PropertiesView.prototype = {
     if (!element) {
       return null;
     }
+    element._identifier = aName;
 
     /**
      * @see DebuggerView.Properties._addVar
      */
     element.addVar = this._addVar.bind(this, element);
+
+    /**
+     * @see DebuggerView.Properties.addScopeToHierarchy
+     */
+    element.addToHierarchy = this.addScopeToHierarchy.bind(this, element);
 
     // Return the element for later use if necessary.
     return element;
@@ -868,6 +874,7 @@ PropertiesView.prototype = {
     if (!element) {
       return null;
     }
+    element._identifier = aName;
 
     /**
      * @see DebuggerView.Properties._setGrip
@@ -1081,6 +1088,7 @@ PropertiesView.prototype = {
     if (!element) {
       return null;
     }
+    element._identifier = aName;
 
     /**
      * @see DebuggerView.Properties._setGrip
@@ -1413,16 +1421,22 @@ PropertiesView.prototype = {
 
     /**
      * Expands the element, showing all the added details.
+     *
+     * @param boolean aSkipAnimationFlag
+     *        Pass true to not show an opening animation.
      * @return object
      *         The same element.
      */
-    element.expand = function DVP_element_expand() {
+    element.expand = function DVP_element_expand(aSkipAnimationFlag) {
       if (element._preventExpand) {
         return;
       }
       arrow.setAttribute("open", "");
       details.setAttribute("open", "");
 
+      if (!aSkipAnimationFlag) {
+        details.setAttribute("animated", "");
+      }
       if ("function" === typeof element.onexpand) {
         element.onexpand(element);
       }
@@ -1440,6 +1454,7 @@ PropertiesView.prototype = {
       }
       arrow.removeAttribute("open");
       details.removeAttribute("open");
+      details.removeAttribute("animated");
 
       if ("function" === typeof element.oncollapse) {
         element.oncollapse(element);
@@ -1652,7 +1667,7 @@ PropertiesView.prototype = {
       children: {}
     };
 
-    store[element.id] = relation;
+    store[element._identifier] = relation;
     element._root = relation.root;
     element._children = relation.children;
   },
@@ -1664,11 +1679,16 @@ PropertiesView.prototype = {
   createHierarchyStore: function DVP_createHierarchyStore() {
     this._prevHierarchy = this._currHierarchy;
     this._currHierarchy = {};
+  },
 
-    this._saveHierarchy({ element: this._globalScope, store: this._currHierarchy });
-    this._saveHierarchy({ element: this._localScope, store: this._currHierarchy });
-    this._saveHierarchy({ element: this._withScope, store: this._currHierarchy });
-    this._saveHierarchy({ element: this._closureScope, store: this._currHierarchy });
+  /**
+   * Creates a hierarchy holder for a scope.
+   *
+   * @param object aScope
+   *        The designated scope to track.
+   */
+  addScopeToHierarchy: function DVP_addScopeToHierarchy(aScope) {
+    this._saveHierarchy({ element: aScope, store: this._currHierarchy });
   },
 
   /**
@@ -1681,7 +1701,7 @@ PropertiesView.prototype = {
 
       for (let v in currScope.children) {
         let currVar = currScope.children[v];
-        let prevVar = prevScope.children[v];
+        let prevVar = prevScope && prevScope.children[v];
 
         let action = "";
 
@@ -1703,7 +1723,7 @@ PropertiesView.prototype = {
 
           window.setTimeout(function() {
            currVar.element.removeAttribute(action);
-         }, PROPERTY_VIEW_FLASH_DURATION);
+          }, PROPERTY_VIEW_FLASH_DURATION);
         }
       }
     }
