@@ -373,3 +373,15 @@ LIRGeneratorARM::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
     LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
     return add(new LStoreTypedArrayElement(elements, index, value), ins);
 }
+
+bool
+LIRGeneratorARM::visitInterruptCheck(MInterruptCheck *ins)
+{
+    LInterruptCheck *lir = new LInterruptCheck();
+    if (!add(lir))
+        return false;
+    if (!assignSafepoint(lir, ins))
+        return false;
+    return true;
+}
+

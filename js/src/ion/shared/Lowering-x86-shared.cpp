@@ -84,6 +84,17 @@ LIRGeneratorX86Shared::visitRecompileCheck(MRecompileCheck *ins)
 }
 
 bool
+LIRGeneratorX86Shared::visitInterruptCheck(MInterruptCheck *ins)
+{
+    LInterruptCheck *lir = new LInterruptCheck();
+    if (!add(lir))
+        return false;
+    if (!assignSafepoint(lir, ins))
+        return false;
+    return true;
+}
+
+bool
 LIRGeneratorX86Shared::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
 {
     // Note: lhs is used twice, so that we can restore the original value for the

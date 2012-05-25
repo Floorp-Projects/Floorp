@@ -321,3 +321,21 @@ CodeGeneratorX86::visitRecompileCheck(LRecompileCheck *lir)
         return false;
     return true;
 }
+
+bool
+CodeGeneratorX86::visitInterruptCheck(LInterruptCheck *lir)
+{
+    typedef bool (*pf)(JSContext *);
+    static const VMFunction interruptCheckInfo = FunctionInfo<pf>(InterruptCheck);
+
+    OutOfLineCode *ool = oolCallVM(interruptCheckInfo, lir, (ArgList()), StoreNothing());
+    if (!ool)
+        return false;
+
+    void *interrupt = (void*)&gen->cx->runtime->interrupt;
+    masm.cmpl(Operand(interrupt), Imm32(0));
+    masm.j(Assembler::NonZero, ool->entry());
+    masm.bind(ool->rejoin());
+    return true;
+}
+

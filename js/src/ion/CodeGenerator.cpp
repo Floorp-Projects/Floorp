@@ -756,9 +756,7 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
     // C functions may then violate the limit without any checking.
 
     JSRuntime *rt = gen->cx->runtime;
-
-    const LAllocation *limit = lir->limitTemp();
-    Register limitReg = ToRegister(limit);
+    Register limitReg = ToRegister(lir->limitTemp());
 
     // Since Ion frames exist on the C stack, the stack limit may be
     // dynamically set by JS_SetThreadStackLimit() and JS_SetNativeStackQuota().
@@ -771,6 +769,7 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
 
     // Conditional forward (unlikely) branch to failure.
     masm.branchPtr(Assembler::BelowOrEqual, StackPointer, limitReg, ool->entry());
+    masm.bind(ool->rejoin());
 
     return true;
 }
@@ -814,10 +813,8 @@ CodeGenerator::visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool)
     if (!callVM(ReportOverRecursedInfo, ool->lir()))
         return false;
 
-#ifdef DEBUG
-    // Do not restore live registers and rejoin: the above call causes failure.
-    masm.breakpoint();
-#endif
+    restoreLive(ool->lir());
+    masm.jump(ool->rejoin());
     return true;
 }
 

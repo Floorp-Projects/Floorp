@@ -253,6 +253,12 @@ class LRecompileCheck : public LInstructionHelper<0, 0, 1>
     }
 };
 
+class LInterruptCheck : public LInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(InterruptCheck);
+};
+
 class LMulI : public LBinaryMath<0>
 {
   public:

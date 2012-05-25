@@ -2314,6 +2314,9 @@ IonBuilder::jsop_loophead(jsbytecode *pc)
 {
     assertValidLoopHeadOp(pc);
     insertRecompileCheck();
+
+    current->add(MInterruptCheck::New());
+
     return true;
 }
 
