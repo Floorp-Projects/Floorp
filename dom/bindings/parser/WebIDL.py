@@ -583,6 +583,9 @@ class IDLType(IDLObject):
     def __eq__(self, other):
         return other and self.name == other.name and self.builtin == other.builtin
 
+    def __ne__(self, other):
+        return not self == other
+
     def __str__(self):
         return str(self.name)
 
@@ -1000,7 +1003,8 @@ class IDLWrapperType(IDLType):
         self.builtin = False
 
     def __eq__(self, other):
-        return other and self._identifier == other._identifier and \
+        return isinstance(other, IDLWrapperType) and \
+               self._identifier == other._identifier and \
                self.builtin == other.builtin
 
     def __str__(self):
