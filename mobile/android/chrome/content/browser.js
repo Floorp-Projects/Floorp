@@ -5024,7 +5024,21 @@ var WebappsUI = {
 	   if (!aManifest)
 	     return;
           let manifest = new DOMApplicationManifest(aManifest, data.origin);
+
+          // Add a homescreen shortcut
           this.createShortcut(manifest.name, manifest.fullLaunchPath(), manifest.iconURLForSize("64"), "webapp");
+
+          // Create a system notification allowing the user to launch the app
+          let observer = {
+            observe: function (aSubject, aTopic) {
+              if (aTopic == "alertclickcallback")
+                WebappsUI.openURL(manifest.fullLaunchPath(), aData.origin);
+            }
+          };
+    
+          let message = Strings.browser.GetStringFromName("webapps.alertSuccess");
+          let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+          alerts.showAlertNotification("drawable://alert_app", manifest.name, message, true, "", observer, "webapp");
         }).bind(this));
         break;
     }
