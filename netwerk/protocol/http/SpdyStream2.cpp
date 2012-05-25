@@ -295,7 +295,7 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
   // Priority flags are the C0 mask of byte 16.
   //
   // The other 6 bits of 16 are unused. Spdy/3 will expand
-  // priority to 4 bits.
+  // priority to 3 bits.
   //
   // When Spdy/3 implements WINDOW_UPDATE the lowest priority
   // streams over a threshold (32?) should be given tiny
