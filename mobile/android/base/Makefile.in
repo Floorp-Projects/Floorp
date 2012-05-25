@@ -266,6 +266,7 @@ RES_LAYOUT = \
   res/layout/remote_tabs.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
+  res/layout/tabs_counter.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
@@ -299,11 +300,13 @@ RES_VALUES = \
   res/values/attrs.xml \
   res/values/arrays.xml \
   res/values/colors.xml \
+  res/values/dimens.xml \
   res/values/styles.xml \
   res/values/themes.xml \
   $(NULL)
 
 RES_VALUES_V11 = \
+  res/values-v11/dimens.xml \
   res/values-v11/styles.xml \
   res/values-v11/themes.xml \
   $(NULL)
@@ -316,6 +319,14 @@ RES_VALUES_XLARGE = \
 RES_VALUES_SW600DP = \
   res/values-sw600dp/styles.xml \
   res/values-sw600dp/themes.xml \
+  $(NULL)
+
+RES_VALUES_LAND_V14 = \
+  res/values-land-v14/dimens.xml \
+  $(NULL)
+
+RES_VALUES_SW600DP_V14 = \
+  res/values-sw600dp-v14/dimens.xml \
   $(NULL)
 
 RES_XML = \
@@ -736,7 +747,7 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_XLARGE) $(RES_LAYOUT_SW600DP) $(RES_VALUES) $(RES_VALUES_V11) $(RES_VALUES_XLARGE) $(RES_VALUES_SW600DP) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_XLARGE_MDPI) $(RES_DRAWABLE_XLARGE_HDPI) $(RES_DRAWABLE_XLARGE_XHDPI) $(RES_DRAWABLE_SW600DP_MDPI) $(RES_DRAWABLE_SW600DP_HDPI) $(RES_DRAWABLE_SW600DP_XHDPI) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_XLARGE) $(RES_LAYOUT_SW600DP) $(RES_VALUES) $(RES_VALUES_V11) $(RES_VALUES_XLARGE) $(RES_VALUES_SW600DP) $(RES_VALUES_LAND_V14) $(RES_VALUES_SW600DP_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_XLARGE_MDPI) $(RES_DRAWABLE_XLARGE_HDPI) $(RES_DRAWABLE_XLARGE_XHDPI) $(RES_DRAWABLE_SW600DP_MDPI) $(RES_DRAWABLE_SW600DP_HDPI) $(RES_DRAWABLE_SW600DP_XHDPI) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout              \
@@ -748,6 +759,8 @@ RES_DIRS= \
   res/values-v11          \
   res/values-xlarge       \
   res/values-sw600dp      \
+  res/values-land-v14     \
+  res/values-sw600dp-v14  \
   res/xml                 \
   res/anim                \
   res/drawable-nodpi      \
