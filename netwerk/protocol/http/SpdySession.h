@@ -191,6 +191,7 @@ private:
   void        ProcessPending();
   nsresult    SetInputFrameDataStream(PRUint32);
   bool        VerifyStream(SpdyStream *, PRUint32);
+  void        SetNeedsCleanup();
 
   // a wrapper for all calls to the nshttpconnection level segment writer. Used
   // to track network I/O for timeout purposes
