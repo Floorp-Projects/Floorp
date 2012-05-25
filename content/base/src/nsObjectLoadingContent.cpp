@@ -2206,13 +2206,10 @@ nsObjectLoadingContent::StopPluginInstance()
   }
 #endif
 
-  // DoStopPlugin can process events and there may be pending InDocCheckEvent
-  // events which can drop in underneath us and destroy the instance we are
-  // about to destroy. Make sure this doesn't happen via this temp ref ptr and
-  // the !mInstanceOwner check above.
-  nsRefPtr<nsPluginInstanceOwner> instOwner = mInstanceOwner;
+  DoStopPlugin(mInstanceOwner, delayedStop);
+
   mInstanceOwner = nsnull;
-  DoStopPlugin(instOwner, delayedStop);
+
   return NS_OK;
 }
 
