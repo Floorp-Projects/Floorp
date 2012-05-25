@@ -192,6 +192,10 @@ let libnetutils = (function () {
                                   serverbuf,
                                   lease.address());
 
+      if (ret && DEBUG) {
+        let error = iface.dhcp_get_errmsg();
+        dump("dhcp_do_request failed - " + error.readString());
+      }
       let obj = {
         ret: ret | 0,
         ipaddr_str: ipaddrbuf.readString(),
@@ -246,6 +250,10 @@ let libnetutils = (function () {
                        ints.addressOfElement(4),
                        ints.addressOfElement(5),
                        ints.addressOfElement(6));
+        if (ret && DEBUG) {
+          let error = iface.dhcp_get_errmsg();
+          dump("dhcp_do_request_* failed - " + error.readString());
+        }
         return {ret: ret | 0,
                 ipaddr: ints[0] | 0,
                 gateway: ints[1] | 0,
