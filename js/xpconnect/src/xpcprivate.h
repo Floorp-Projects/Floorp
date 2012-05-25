@@ -4432,6 +4432,24 @@ private:
     nsCOMPtr<nsIURI> locationURI;
 };
 
+inline CompartmentPrivate*
+GetCompartmentPrivate(JSCompartment *compartment)
+{
+    MOZ_ASSERT(compartment);
+    void *priv = JS_GetCompartmentPrivate(compartment);
+    return static_cast<CompartmentPrivate*>(priv);
+}
+
+inline CompartmentPrivate*
+GetCompartmentPrivate(JSObject *object)
+{
+    MOZ_ASSERT(object);
+    JSCompartment *compartment = js::GetObjectCompartment(object);
+
+    MOZ_ASSERT(compartment);
+    return GetCompartmentPrivate(compartment);
+}
+
 }
 
 /***************************************************************************/
