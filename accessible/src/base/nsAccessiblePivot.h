@@ -60,16 +60,16 @@ private:
    */
   nsAccessible* SearchForward(nsAccessible* aAccessible,
                               nsIAccessibleTraversalRule* aRule,
-                              bool searchCurrent,
-                              nsresult* rv);
+                              bool aSearchCurrent,
+                              nsresult* aResult);
 
   /*
    * Reverse search in preorder for the first accessible to match the rule.
    */
   nsAccessible* SearchBackward(nsAccessible* aAccessible,
                                nsIAccessibleTraversalRule* aRule,
-                               bool searchCurrent,
-                               nsresult* rv);
+                               bool aSearchCurrent,
+                               nsresult* aResult);
 
   /*
    * Update the pivot, and notify observers.

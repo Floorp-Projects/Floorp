@@ -53,7 +53,6 @@ class JS_FRIEND_API(BaseProxyHandler) {
     virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
     virtual bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
     virtual void finalize(JSFreeOp *fop, JSObject *proxy);
-    virtual void trace(JSTracer *trc, JSObject *proxy);
     virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
                                      uint32_t index, Value *vp, bool *present);
 
@@ -109,7 +108,6 @@ class JS_PUBLIC_API(IndirectProxyHandler) : public BaseProxyHandler {
                               Value *vp) MOZ_OVERRIDE;
     virtual bool iteratorNext(JSContext *cx, JSObject *proxy,
                               Value *vp) MOZ_OVERRIDE;
-    virtual void trace(JSTracer *trc, JSObject *proxy) MOZ_OVERRIDE;
 };
 
 class JS_PUBLIC_API(DirectProxyHandler) : public IndirectProxyHandler {
@@ -226,6 +224,13 @@ GetProxyTargetObject(const JSObject *obj)
 {
     JS_ASSERT(IsProxy(obj));
     return GetProxyPrivate(obj).toObjectOrNull();
+}
+
+inline const Value &
+GetProxyCall(const JSObject *obj)
+{
+    JS_ASSERT(IsFunctionProxy(obj));
+    return GetReservedSlot(obj, JSSLOT_PROXY_CALL);
 }
 
 inline const Value &

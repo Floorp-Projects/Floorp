@@ -39,7 +39,7 @@ JS_GetAnonymousString(JSRuntime *rt)
 JS_FRIEND_API(JSObject *)
 JS_FindCompilationScope(JSContext *cx, JSObject *obj_)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     /*
      * We unwrap wrappers here. This is a little weird, but it's what's being
@@ -186,9 +186,9 @@ DefineHelpProperty(JSContext *cx, HandleObject obj, const char *prop, const char
 }
 
 JS_FRIEND_API(bool)
-JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWithHelp *fs)
+JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj_, const JSFunctionSpecWithHelp *fs)
 {
-    RootObject objRoot(cx, &obj);
+    RootedObject obj(cx, obj_);
 
     JS_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
 
@@ -199,8 +199,8 @@ JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWit
         if (!atom)
             return false;
 
-        RootedVarFunction fun(cx);
-        fun = js_DefineFunction(cx, objRoot, RootedVarId(cx, AtomToId(atom)),
+        RootedFunction fun(cx);
+        fun = js_DefineFunction(cx, obj, RootedId(cx, AtomToId(atom)),
                                 fs->call, fs->nargs, fs->flags);
         if (!fun)
             return false;
@@ -296,10 +296,10 @@ js::IsOriginalScriptFunction(JSFunction *fun)
 }
 
 JS_FRIEND_API(JSFunction *)
-js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, JSNative call,
+js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj_, const char *name, JSNative call,
                                unsigned nargs, unsigned attrs)
 {
-    RootObject objRoot(cx, &obj);
+    RootedObject obj(cx, obj_);
 
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
@@ -307,16 +307,16 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, J
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, objRoot, RootedVarId(cx, AtomToId(atom)),
+    return js_DefineFunction(cx, obj, RootedId(cx, AtomToId(atom)),
                              call, nargs, attrs,
                              JSFunction::ExtendedFinalizeKind);
 }
 
 JS_FRIEND_API(JSFunction *)
 js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
-                            JSObject *parent, const char *name)
+                            JSObject *parent_, const char *name)
 {
-    RootObject parentRoot(cx, &parent);
+    RootedObject parent(cx, parent_);
 
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     JSAtom *atom;
@@ -332,35 +332,36 @@ js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsi
             return NULL;
     }
 
-    return js_NewFunction(cx, NULL, native, nargs, flags, parentRoot, atom,
+    return js_NewFunction(cx, NULL, native, nargs, flags, parent, atom,
                           JSFunction::ExtendedFinalizeKind);
 }
 
 JS_FRIEND_API(JSFunction *)
-js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsigned flags, JSObject *parent,
+js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsigned flags, JSObject *parent_,
                                 jsid id)
 {
-    RootObject parentRoot(cx, &parent);
+    RootedObject parent(cx, parent_);
 
     JS_ASSERT(JSID_IS_STRING(id));
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
 
-    return js_NewFunction(cx, NULL, native, nargs, flags, parentRoot, JSID_TO_ATOM(id),
+    return js_NewFunction(cx, NULL, native, nargs, flags, parent, JSID_TO_ATOM(id),
                           JSFunction::ExtendedFinalizeKind);
 }
 
 JS_FRIEND_API(JSObject *)
-js::InitClassWithReserved(JSContext *cx, JSObject *obj, JSObject *parent_proto,
+js::InitClassWithReserved(JSContext *cx, JSObject *obj_, JSObject *parent_proto,
                           JSClass *clasp, JSNative constructor, unsigned nargs,
                           JSPropertySpec *ps, JSFunctionSpec *fs,
                           JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
+    RootedObject obj(cx, obj_);
+
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, parent_proto);
-    RootObject objRoot(cx, &obj);
-    return js_InitClass(cx, objRoot, parent_proto, Valueify(clasp), constructor,
+    return js_InitClass(cx, obj, parent_proto, Valueify(clasp), constructor,
                         nargs, ps, fs, static_ps, static_fs, NULL,
                         JSFunction::ExtendedFinalizeKind);
 }

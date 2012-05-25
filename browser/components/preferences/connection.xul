@@ -139,17 +139,9 @@
                 <radio id="networkProxySOCKSVersion5" value="5" label="&socks5.label;" accesskey="&socks5.accesskey;" />
               </radiogroup>
             </row>
-
-            <row align="center"> 
-              <hbox align="center" pack="end">
-                <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
-              </hbox>
-              <textbox id="networkProxyNone" preference="network.proxy.no_proxies_on"/>
-            </row>
-            <row>
-              <spacer/>
-              <label value="&noproxyExplain.label;" control="networkProxyNone"/>
-            </row>
+            <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
+            <textbox id="networkProxyNone" preference="network.proxy.no_proxies_on" multiline="true" rows="2"/>
+            <label value="&noproxyExplain.label;" control="networkProxyNone"/>
           </rows>
         </grid>
         <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"/>

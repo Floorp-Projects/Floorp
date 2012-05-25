@@ -163,8 +163,8 @@ public class PluginLayer extends TileLayer
             
             // Attempt to figure out if this is a full page plugin or near to it. If so, we don't show the placeholder because
             // it just performs badly (flickering).
-            boolean fullPagePlugin = (mLayoutParams.width >= (context.screenSize.width * 0.90f) ||
-                                      mLayoutParams.height >= (context.screenSize.height * 0.90f));
+            boolean fullPagePlugin = (mLayoutParams.width >= (context.viewport.width() * 0.90f) ||
+                                      mLayoutParams.height >= (context.viewport.height() * 0.90f));
 
             if (!fullPagePlugin && mLastViewport != null && mSurfaceView != null && !mShowPlaceholder && sUsePlaceholder) {
                 // We have a SurfaceView that we can snapshot for a placeholder, and we are

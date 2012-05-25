@@ -555,7 +555,7 @@ BindLocalVariable(JSContext *cx, SharedContext *sc, ParseNode *pn, BindingKind k
     JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
 
     unsigned index = sc->bindings.numVars();
-    if (!sc->bindings.add(cx, RootedVarAtom(cx, pn->pn_atom), kind))
+    if (!sc->bindings.add(cx, RootedAtom(cx, pn->pn_atom), kind))
         return false;
 
     pn->pn_cookie.set(sc->staticLevel, index);
@@ -618,7 +618,7 @@ Parser::functionBody(FunctionBodyType type)
     if (!CheckStrictParameters(context, this))
         return NULL;
 
-    RootedVar<PropertyName*> const arguments(context, context->runtime->atomState.argumentsAtom);
+    Rooted<PropertyName*> const arguments(context, context->runtime->atomState.argumentsAtom);
 
     /*
      * Non-top-level functions use JSOP_DEFFUN which is a dynamic scope
@@ -966,7 +966,7 @@ struct BindData {
     struct LetData {
         LetData(JSContext *cx) : blockObj(cx) {}
         VarContext varContext;
-        RootedVar<StaticBlockObject*> blockObj;
+        Rooted<StaticBlockObject*> blockObj;
         unsigned   overflow;
     } let;
 
@@ -1047,10 +1047,10 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
     while (tc->parent)
         tc = tc->parent;
 
-    RootedVarObject parent(context);
+    RootedObject parent(context);
     parent = tc->sc->inFunction ? NULL : tc->sc->scopeChain();
 
-    RootedVarFunction fun(context);
+    RootedFunction fun(context);
     fun = js_NewFunction(context, NULL, NULL, 0,
                          JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0),
                          parent, atom);
@@ -1375,7 +1375,7 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
 
               case TOK_NAME:
               {
-                RootedVar<PropertyName*> name(context, tokenStream.currentToken().name());
+                Rooted<PropertyName*> name(context, tokenStream.currentToken().name());
 
 #ifdef JS_HAS_DESTRUCTURING
                 /*
@@ -1562,7 +1562,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
     if (outertc->sc->inStrictMode())
         funsc.setInStrictMode();    // inherit strict mode from parent
 
-    RootedVarFunction fun(context, funbox->function());
+    RootedFunction fun(context, funbox->function());
 
     /* Now parse formal argument list and compute fun->nargs. */
     ParseNode *prelude = NULL;
@@ -1752,7 +1752,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
 ParseNode *
 Parser::functionStmt()
 {
-    RootedVarPropertyName name(context);
+    RootedPropertyName name(context);
     if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME) {
         name = tokenStream.currentToken().name();
     } else {
@@ -1773,7 +1773,7 @@ Parser::functionStmt()
 ParseNode *
 Parser::functionExpr()
 {
-    RootedVarPropertyName name(context);
+    RootedPropertyName name(context);
     if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME)
         name = tokenStream.currentToken().name();
     else
@@ -1997,7 +1997,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
     if (!CheckStrictBinding(cx, parser, atom->asPropertyName(), pn))
         return false;
 
-    RootedVar<StaticBlockObject *> blockObj(cx, data->let.blockObj);
+    Rooted<StaticBlockObject *> blockObj(cx, data->let.blockObj);
     unsigned blockCount = blockObj->slotCount();
     if (blockCount == JS_BIT(16)) {
         ReportCompileErrorNumber(cx, TS(parser), pn,
@@ -2514,7 +2514,7 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, Parser *parse
         return false;
     }
 
-    RootedVar<StaticBlockObject *> blockObj(cx);
+    Rooted<StaticBlockObject *> blockObj(cx);
     blockObj = data && data->binder == BindLet ? data->let.blockObj.reference() : NULL;
     uint32_t blockCountBefore = blockObj ? blockObj->slotCount() : 0;
 
@@ -2817,7 +2817,7 @@ Parser::letBlock(LetContext letContext)
     if (!pnlet)
         return NULL;
 
-    RootedVar<StaticBlockObject*> blockObj(context, StaticBlockObject::create(context));
+    Rooted<StaticBlockObject*> blockObj(context, StaticBlockObject::create(context));
     if (!blockObj)
         return NULL;
 
@@ -3109,7 +3109,7 @@ Parser::forStatement()
     bool forDecl = false;
 
     /* Non-null when forDecl is true for a 'for (let ...)' statement. */
-    RootedVar<StaticBlockObject*> blockObj(context);
+    Rooted<StaticBlockObject*> blockObj(context);
 
     /* Set to 'x' in 'for (x ;... ;...)' or 'for (x in ...)'. */
     ParseNode *pn1;
@@ -5291,7 +5291,7 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
 
         GenexpGuard guard(this);
 
-        RootedVarPropertyName name(context);
+        RootedPropertyName name(context);
         tt = tokenStream.getToken();
         switch (tt) {
 #if JS_HAS_DESTRUCTURING
@@ -6279,7 +6279,7 @@ Parser::xmlElementOrList(JSBool allowList)
 
     ParseNode *pn, *pn2, *list;
     TokenKind tt;
-    RootedVarAtom startAtom(context), endAtom(context);
+    RootedAtom startAtom(context), endAtom(context);
 
     JS_CHECK_RECURSION(context, return NULL);
 
@@ -6818,7 +6818,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                     pn->pn_xflags |= PNX_NONCONST;
 
                     /* NB: Getter function in { get x(){} } is unnamed. */
-                    pn2 = functionDef(RootedVarPropertyName(context, NULL),
+                    pn2 = functionDef(RootedPropertyName(context, NULL),
                                       op == JSOP_GETTER ? Getter : Setter, Expression);
                     if (!pn2)
                         return NULL;
@@ -7035,7 +7035,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
         RegExpFlag flags = tokenStream.currentToken().regExpFlags();
         RegExpStatics *res = context->regExpStatics();
 
-        RootedVar<RegExpObject*> reobj(context);
+        Rooted<RegExpObject*> reobj(context);
         if (context->hasfp())
             reobj = RegExpObject::create(context, res, chars, length, flags, &tokenStream);
         else

@@ -246,7 +246,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id,
 {
     assertSameCompartment(cx, obj_);
 
-    RootedVarObject obj(cx, obj_), closure(cx, closure_);
+    RootedObject obj(cx, obj_), closure(cx, closure_);
 
     JSObject *origobj = obj;
     obj = GetInnerObject(cx, obj);
@@ -256,7 +256,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id,
     Value v;
     unsigned attrs;
 
-    RootedVarId propid(cx);
+    RootedId propid(cx);
 
     if (JSID_IS_INT(id)) {
         propid = id;
@@ -732,7 +732,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
 
     SkipRoot skip(cx, &chars);
 
-    RootedVar<Env*> env(cx, JS_GetFrameScopeChain(cx, fpArg));
+    Rooted<Env*> env(cx, JS_GetFrameScopeChain(cx, fpArg));
     if (!env)
         return false;
 
@@ -778,7 +778,7 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, Shape *shape, JSPropertyDesc *pd)
     assertSameCompartment(cx, obj_);
     pd->id = IdToJsval(shape->propid());
 
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     JSBool wasThrowing = cx->isExceptionPending();
     Value lastException = UndefinedValue();
@@ -786,7 +786,7 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, Shape *shape, JSPropertyDesc *pd)
         lastException = cx->getPendingException();
     cx->clearPendingException();
 
-    if (!baseops::GetProperty(cx, obj, RootedVarId(cx, shape->propid()), &pd->value)) {
+    if (!baseops::GetProperty(cx, obj, RootedId(cx, shape->propid()), &pd->value)) {
         if (!cx->isExceptionPending()) {
             pd->flags = JSPD_ERROR;
             pd->value = JSVAL_VOID;
@@ -822,7 +822,7 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, Shape *shape, JSPropertyDesc *pd)
 JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
 {
-    RootedVarObject obj(cx, obj_);
+    RootedObject obj(cx, obj_);
 
     assertSameCompartment(cx, obj);
     uint32_t i = 0;
