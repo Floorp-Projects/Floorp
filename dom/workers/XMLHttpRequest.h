@@ -12,6 +12,8 @@
 // Need this for XMLHttpRequestResponseType.
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 
+#include "mozilla/dom/TypedArray.h"
+
 BEGIN_WORKERS_NAMESPACE
 
 class Proxy;
@@ -154,6 +156,11 @@ public:
 
   void
   Send(JSObject* aBody, ErrorResult& aRv);
+
+  void
+  Send(ArrayBuffer& aBody, ErrorResult& aRv) {
+    return Send(aBody.mObj, aRv);
+  }
 
   void
   SendAsBinary(const nsAString& aBody, ErrorResult& aRv);
