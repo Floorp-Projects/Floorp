@@ -1267,6 +1267,10 @@ if test "$GMAKE" = ":"; then
 fi
 AC_SUBST(GMAKE)
 
+if test -z "$MAKE"; then
+  MAKE=$GMAKE
+fi
+
 if test "$COMPILE_ENVIRONMENT"; then
 
 AC_PATH_XTRA
