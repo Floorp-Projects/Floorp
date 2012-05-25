@@ -4,7 +4,7 @@
 
 function test() {
   /** Test for Bug 526613 **/
-  
+
   // test setup
   waitForExplicitFinish();
 
