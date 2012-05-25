@@ -522,10 +522,11 @@ StackFrames.prototype = {
     // Start recording any added variables or properties in any scope.
     DebuggerView.Properties.createHierarchyStore();
 
+    // Clear existing scopes and create each one dynamically.
     DebuggerView.Properties.empty();
+
     if (frame.environment) {
       let env = frame.environment;
-
       do {
         // Construct the scope name.
         let name = env.type.charAt(0).toUpperCase() + env.type.slice(1);
@@ -559,7 +560,8 @@ StackFrames.prototype = {
           });
           this._addExpander(thisVar, frame.this);
           // Expand the innermost scope by default.
-          scope.expand();
+          scope.expand(true);
+          scope.addToHierarchy();
         }
 
         switch (env.type) {
@@ -583,7 +585,6 @@ StackFrames.prototype = {
               paramVar.setGrip(paramVal);
               this._addExpander(paramVar, paramVal);
             }
-
             // Add nodes for every other variable in scope.
             this._addScopeVariables(env.bindings.variables, scope);
             break;
