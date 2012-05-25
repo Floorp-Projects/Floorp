@@ -265,6 +265,7 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,3) == text-layout-06.svg text-layou
 == stroke-linecap-square-w-zero-length-segs-02.svg pass.svg
 == textPath-01.svg textPath-01-ref.svg
 == textPath-02.svg pass.svg
+== textPath-03.svg pass.svg
 == text-style-01a.svg text-style-01-ref.svg
 == text-style-01b.svg text-style-01-ref.svg
 == text-style-01c.svg text-style-01-ref.svg

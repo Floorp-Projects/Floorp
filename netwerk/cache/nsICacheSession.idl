@@ -69,4 +69,10 @@ interface nsICacheSession : nsISupports
      * doesn't care about the result.
      */
     void doomEntry(in ACString key, in nsICacheListener listener);
+
+    /**
+     * Private entries will be doomed when the last private browsing session
+     * finishes.
+     */
+    attribute boolean isPrivate;
 };

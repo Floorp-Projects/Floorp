@@ -571,7 +571,7 @@ JSStructuredCloneWriter::write(const Value &v)
         return false;
 
     while (!counts.empty()) {
-        RootedVarObject obj(context(), &objs.back().toObject());
+        RootedObject obj(context(), &objs.back().toObject());
 
         // The objects in |obj| can live in other compartments.
         AutoEnterCompartmentAndPushPrincipal ac;
@@ -580,7 +580,7 @@ JSStructuredCloneWriter::write(const Value &v)
 
         if (counts.back()) {
             counts.back()--;
-            RootedVarId id(context(), ids.back());
+            RootedId id(context(), ids.back());
             ids.popBack();
             checkStack();
             if (JSID_IS_STRING(id) || JSID_IS_INT(id)) {
@@ -929,9 +929,9 @@ JSStructuredCloneReader::read(Value *vp)
         return false;
 
     while (objs.length() != 0) {
-        RootedVarObject obj(context(), &objs.back().toObject());
+        RootedObject obj(context(), &objs.back().toObject());
 
-        RootedVarId id(context());
+        RootedId id(context());
         if (!readId(id.address()))
             return false;
 

@@ -62,6 +62,8 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+LDFLAGS += $(MOZ_ALLOW_HEAP_EXECUTE_FLAGS)
+
 ifeq ($(OS_ARCH),WINNT) #{
 #
 # Control the default heap size.
