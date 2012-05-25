@@ -2218,8 +2218,7 @@ nsGlobalWindow::DetachFromDocShell()
   if (currentInner) {
     JSObject* obj = currentInner->FastGetGlobalJSObject();
     if (obj) {
-      JSContext* cx;
-      nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+      JSContext* cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
 
       JSAutoRequest ar(cx);
 
