@@ -171,7 +171,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, Element)
 DOMCI_NODE_DATA(HTMLButtonElement, nsHTMLButtonElement)
 
 // QueryInterface implementation for nsHTMLButtonElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLButtonElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLButtonElement)
   NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLButtonElement,
                                    nsIDOMHTMLButtonElement,
                                    nsIConstraintValidation)
