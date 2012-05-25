@@ -81,6 +81,8 @@ CPPSRCS = \
   ASpdySession.cpp \
   SpdySession2.cpp \
   SpdyStream2.cpp \
+  SpdySession3.cpp \
+  SpdyStream3.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
