@@ -91,7 +91,7 @@ enum CanvasMultiGetterType {
 
   nsIDOMCanvasGradient createLinearGradient (in float x0, in float y0, in float x1, in float y1);
   nsIDOMCanvasGradient createRadialGradient(in float x0, in float y0, in float r0, in float x1, in float y1, in float r1);
-  nsIDOMCanvasPattern createPattern(in nsIDOMHTMLElement image, in DOMString repetition);
+  nsIDOMCanvasPattern createPattern(in nsIDOMHTMLElement image, [Null(Stringify)] in DOMString repetition);
   attribute float lineWidth; /* default 1 */
   attribute DOMString lineCap; /* "butt", "round", "square" (default) */
   attribute DOMString lineJoin; /* "round", "bevel", "miter" (default) */
