@@ -146,9 +146,8 @@ private:
   }
 
   SwitchDevice ProcessEvent(const NetlinkEvent& event, const char** name, const char** state) {
-    bool rv = GetEventInfo(event, name, state);
-    NS_ENSURE_TRUE(rv, SWITCH_DEVICE_UNKNOWN);
-    return NameToDevice(*name);
+    return GetEventInfo(event, name, state) ?
+      NameToDevice(*name) : SWITCH_DEVICE_UNKNOWN;
   }
 };
 
