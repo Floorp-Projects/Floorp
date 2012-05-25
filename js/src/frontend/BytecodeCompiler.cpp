@@ -124,8 +124,13 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         return NULL;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
-    if (callerFrame && callerFrame->isScriptFrame() && callerFrame->script()->strictModeCode)
+    if (callerFrame &&
+        callerFrame->isScriptFrame() &&
+        callerFrame->script()->strictModeCode)
+    {
         bce.sc->setInStrictMode();
+        parser.tokenStream.setStrictMode();
+    }
 
 #ifdef DEBUG
     bool savedCallerFun;
@@ -266,6 +271,8 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!parser.init())
         return false;
 
+    TokenStream &tokenStream = parser.tokenStream;
+
     SharedContext funsc(cx, /* inFunction = */ true);
 
     TreeContext funtc(&parser, &funsc);
@@ -316,7 +323,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
      */
     ParseNode *pn = fn ? parser.functionBody(Parser::StatementListBody) : NULL;
     if (pn) {
-        if (!parser.tokenStream.matchToken(TOK_EOF)) {
+        if (!tokenStream.matchToken(TOK_EOF)) {
             parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else if (!FoldConstants(cx, pn, &parser)) {
