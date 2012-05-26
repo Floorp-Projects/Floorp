@@ -396,6 +396,15 @@ CompositorParent::TransformShadowTree()
     (mScrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * mYScale);
   ViewTransform treeTransform(-scrollCompensation, mXScale, mYScale);
   shadow->SetShadowTransform(gfx3DMatrix(treeTransform) * currentTransform);
+
+  // Alter the scroll offset so that fixed position layers remain within
+  // the page area.
+  int offsetX = NS_MAX(0, NS_MIN(mScrollOffset.x, mContentSize.width - mWidgetSize.width));
+  int offsetY = NS_MAX(0, NS_MIN(mScrollOffset.y, mContentSize.height - mWidgetSize.height));
+  gfxPoint reverseViewTranslation(offsetX / tempScaleDiffX - metricsScrollOffset.x,
+                                  offsetY / tempScaleDiffY - metricsScrollOffset.y);
+
+  TranslateFixedLayers(layer, reverseViewTranslation);
 }
 
 void
