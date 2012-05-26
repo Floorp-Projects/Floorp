@@ -722,6 +722,35 @@ AppendToFaceList(nsCString& aFaceList,
 }
 
 void
+FT2FontEntry::CheckForBrokenFont()
+{
+    NS_ASSERTION(mFamily != nsnull, "font entry must belong to a family");
+
+    // note if the family is in the "bad underline" blacklist
+    if (mFamily->IsBadUnderlineFamily()) {
+        mIsBadUnderlineFont = true;
+    }
+
+    // bug 721719 - set the IgnoreGSUB flag on entries for Roboto
+    // because of unwanted on-by-default "ae" ligature.
+    // (See also AppendFaceFromFontListEntry.)
+    if (mFamily->Name().EqualsLiteral("roboto")) {
+        mIgnoreGSUB = true;
+    }
+
+    // bug 706888 - set the IgnoreGSUB flag on the broken version of
+    // Droid Sans Arabic from certain phones, as identified by the
+    // font checksum in the 'head' table
+    else if (mFamily->Name().EqualsLiteral("droid sans arabic")) {
+        const TT_Header *head = static_cast<const TT_Header*>
+            (FT_Get_Sfnt_Table(mFTFace, ft_sfnt_head));
+        if (head && head->CheckSum_Adjust == 0xe445242) {
+            mIgnoreGSUB = true;
+        }
+    }
+}
+
+void
 gfxFT2FontList::AppendFacesFromFontFile(nsCString& aFileName,
                                         bool aStdFile,
                                         FontNameCache *aCache)
@@ -777,27 +806,9 @@ gfxFT2FontList::AppendFacesFromFontFile(nsCString& aFileName,
                 }
                 fe->mStandardFace = aStdFile;
                 family->AddFontEntry(fe);
-                if (family->IsBadUnderlineFamily()) {
-                    fe->mIsBadUnderlineFont = true;
-                }
 
-                // bug 721719 - set the IgnoreGSUB flag on entries for Roboto
-                // because of unwanted on-by-default "ae" ligature.
-                // (See also AppendFaceFromFontListEntry.)
-                if (name.EqualsLiteral("roboto")) {
-                    fe->mIgnoreGSUB = true;
-                }
-
-                // bug 706888 - set the IgnoreGSUB flag on the broken version of
-                // Droid Sans Arabic from certain phones, as identified by the
-                // font checksum in the 'head' table
-                else if (name.EqualsLiteral("droid sans arabic")) {
-                    const TT_Header *head = static_cast<const TT_Header*>
-                        (FT_Get_Sfnt_Table(face, ft_sfnt_head));
-                    if (head && head->CheckSum_Adjust == 0xe445242) {
-                        fe->mIgnoreGSUB = true;
-                    }
-                }
+                // this depends on the entry having been added to its family
+                fe->CheckForBrokenFont();
 
                 AppendToFaceList(faceList, name, fe);
 #ifdef PR_LOGGING
@@ -1005,20 +1016,9 @@ gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
             }
         }
         family->AddFontEntry(fe);
-        if (family->IsBadUnderlineFamily()) {
-            fe->mIsBadUnderlineFont = true;
-        }
 
-        // bug 721719 - set the IgnoreGSUB flag on entries for Roboto
-        // because of unwanted on-by-default "ae" ligature.
-        // This totally sucks, but if we don't hack around these broken fonts
-        // we get really bad text rendering, which we can't inflict on users. :(
-        // If we accumulate a few more examples of this stuff, it'll be time
-        // to create some prefs for the list of fonts where we need to ignore
-        // layout tables. Sigh.
-        if (name.EqualsLiteral("roboto")) {
-            fe->mIgnoreGSUB = true;
-        }
+        // this depends on the entry having been added to its family
+        fe->CheckForBrokenFont();
     }
 }
 

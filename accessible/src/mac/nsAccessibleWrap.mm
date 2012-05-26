@@ -233,8 +233,8 @@ nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsAccessible*>* aChildrenArray)
   if (nsAccUtils::MustPrune(this))
     return;
 
-  PRInt32 childCount = GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+  PRUint32 childCount = ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsAccessibleWrap *childAcc =
       static_cast<nsAccessibleWrap*>(GetChildAt(childIdx));
 

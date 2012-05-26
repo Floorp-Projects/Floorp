@@ -35,7 +35,7 @@
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsSocketTransportService2.h"
 #include "nsAlgorithm.h"
-#include "SpdySession.h"
+#include "ASpdySession.h"
 
 #include "nsIXULAppInfo.h"
 
@@ -169,9 +169,11 @@ nsHttpHandler::nsHttpHandler()
     , mTelemetryEnabled(false)
     , mAllowExperiments(true)
     , mEnableSpdy(false)
+    , mSpdyV2(true)
+    , mSpdyV3(true)
     , mCoalesceSpdy(true)
     , mUseAlternateProtocol(false)
-    , mSpdySendingChunkSize(SpdySession::kSendingChunkSize)
+    , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
     , mSpdyPingThreshold(PR_SecondsToInterval(44))
     , mSpdyPingTimeout(PR_SecondsToInterval(8))
 {
@@ -1130,6 +1132,18 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled"), &cVar);
         if (NS_SUCCEEDED(rv))
             mEnableSpdy = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.enabled.v2"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.v2"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mSpdyV2 = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.enabled.v3"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.v3"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mSpdyV3 = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.coalesce-hostnames"))) {

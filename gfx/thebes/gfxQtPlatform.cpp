@@ -213,11 +213,7 @@ gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 {
     nsRefPtr<gfxASurface> newSurface = nsnull;
 
-    // try to optimize it for 16bpp screen
-    gfxASurface::gfxImageFormat imageFormat = gfxASurface::FormatFromContent(contentType);
-    if (gfxASurface::CONTENT_COLOR == contentType) {
-      imageFormat = GetOffscreenFormat();
-    }
+    gfxASurface::gfxImageFormat imageFormat = OptimalFormatForContent(contentType);
 
 #ifdef CAIRO_HAS_QT_SURFACE
     if (mRenderMode == RENDER_QPAINTER) {

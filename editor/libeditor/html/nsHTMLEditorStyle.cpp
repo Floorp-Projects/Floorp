@@ -88,11 +88,8 @@ nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   }
   ForceCompositionEnd();
 
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
   if (selection->Collapsed()) {
     // manipulating text attributes on a collapsed selection only sets state
@@ -108,12 +105,12 @@ nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
 
   bool cancel, handled;
   nsTextRulesInfo ruleInfo(kOpSetTextProperty);
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(res, res);
   if (!cancel && !handled) {
     // get selection range enumerator
     nsCOMPtr<nsIEnumerator> enumerator;
-    res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
+    res = selection->GetEnumerator(getter_AddRefs(enumerator));
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(enumerator, NS_ERROR_FAILURE);
 
@@ -1295,11 +1292,8 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
   ForceCompositionEnd();
 
   nsresult res;
-  nsCOMPtr<nsISelection>selection;
-  res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
   bool useCSS = IsCSSEnabled();
   if (selection->Collapsed()) {
@@ -1331,7 +1325,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
   {
     // get selection range enumerator
     nsCOMPtr<nsIEnumerator> enumerator;
-    res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
+    res = selection->GetEnumerator(getter_AddRefs(enumerator));
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(enumerator, NS_ERROR_FAILURE);
 

@@ -514,7 +514,7 @@ else
     case "$target" in
     *-mingw*)
       # Work around the conftest.exe access problem on Windows
-      sleep 1
+      sleep 2
     esac
     AC_PROG_CXX
     AC_PROG_RANLIB
@@ -1266,6 +1266,10 @@ if test "$GMAKE" = ":"; then
    AC_MSG_ERROR([GNU make not found])
 fi
 AC_SUBST(GMAKE)
+
+if test -z "$MAKE"; then
+  MAKE=$GMAKE
+fi
 
 if test "$COMPILE_ENVIRONMENT"; then
 
@@ -4798,8 +4802,8 @@ cairo-qt)
 cairo-os2)
     MOZ_WIDGET_TOOLKIT=os2
     USE_FC_FREETYPE=1
-    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
-    TK_LIBS='$(MOZ_CAIRO_LIBS)'
+    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)'
+    TK_LIBS='$(MOZ_CAIRO_LIBS) $(MOZ_PIXMAN_LIBS)'
     MOZ_PDF_PRINTING=1
     ;;
 
@@ -4834,8 +4838,8 @@ cairo-uikit)
 cairo-android)
     AC_DEFINE(MOZ_WIDGET_ANDROID)
     MOZ_WIDGET_TOOLKIT=android
-    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
-    TK_LIBS='$(MOZ_CAIRO_LIBS)'
+    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)'
+    TK_LIBS='$(MOZ_CAIRO_LIBS) $(MOZ_PIXMAN_LIBS)'
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
@@ -4848,8 +4852,8 @@ cairo-gonk)
     AC_DEFINE(MOZ_WIDGET_GONK)
     AC_DEFINE(MOZ_TOUCH)
     MOZ_WIDGET_TOOLKIT=gonk
-    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
-    TK_LIBS='$(MOZ_CAIRO_LIBS)'
+    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)'
+    TK_LIBS='$(MOZ_CAIRO_LIBS) $(MOZ_PIXMAN_LIBS)'
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_TOUCH=1
@@ -8028,9 +8032,8 @@ MOZ_ENABLE_SKIA=1,
 MOZ_ENABLE_SKIA=)
 
 dnl ========================================================
-dnl Check for cairo
+dnl Check for pixman and cairo
 dnl ========================================================
-MOZ_CAIRO_CFLAGS='-I$(LIBXUL_DIST)/include/cairo'
 
 MOZ_TREE_CAIRO=1
 MOZ_ARG_ENABLE_BOOL(system-cairo,
@@ -8042,12 +8045,37 @@ MOZ_TREE_PIXMAN=1
 MOZ_ARG_ENABLE_BOOL(system-pixman,
 [ --enable-system-pixman Use system pixman (located with pkgconfig)],
 MOZ_TREE_PIXMAN=,
+MOZ_TREE_PIXMAN=force,
 MOZ_TREE_PIXMAN=1 )
+
+# System cairo depends on system pixman
+if test "$MOZ_TREE_PIXMAN" = "force"; then
+    if test -z "$MOZ_TREE_CAIRO"; then
+        AC_MSG_ERROR([--disable-system-pixman is incompatible with --enable-system-cairo.])
+    else
+        MOZ_TREE_PIXMAN=1
+    fi
+elif test -z "$MOZ_TREE_CAIRO"; then
+    MOZ_TREE_PIXMAN=
+fi
+
+if test "$MOZ_TREE_PIXMAN"; then
+    AC_DEFINE(MOZ_TREE_PIXMAN)
+    MOZ_PIXMAN_CFLAGS=""
+    MOZ_PIXMAN_LIBS='$(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'
+else
+    PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.19.2)
+    MOZ_PIXMAN_CFLAGS="$PIXMAN_CFLAGS"
+    MOZ_PIXMAN_LIBS="$PIXMAN_LIBS"
+fi
+AC_SUBST(MOZ_PIXMAN_CFLAGS)
+AC_SUBST(MOZ_PIXMAN_LIBS)
 
 # Check for headers defining standard int types.
 MOZ_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
 
 if test "$MOZ_TREE_CAIRO"; then
+    MOZ_CAIRO_CFLAGS='-I$(LIBXUL_DIST)/include/cairo'
     AC_DEFINE(MOZ_TREE_CAIRO)
 
     # For now we assume that we will have a uint64_t available through
@@ -8135,15 +8163,6 @@ if test "$MOZ_TREE_CAIRO"; then
     MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src)'" $CAIRO_FT_LIBS"
     MOZ_CAIRO_OSLIBS='${CAIRO_FT_OSLIBS}'
 
-    if test "$MOZ_TREE_PIXMAN"; then
-        AC_DEFINE(MOZ_TREE_PIXMAN)
-        MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS"' $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'
-    else
-        PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.19.2)
-        MOZ_CAIRO_CFLAGS="$MOZ_CAIRO_CFLAGS $PIXMAN_CFLAGS"
-        MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $PIXMAN_LIBS"
-    fi
-
     if test "$MOZ_X11"; then
         MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
     fi
@@ -8152,15 +8171,16 @@ if test "$MOZ_TREE_CAIRO"; then
     mv -f $CAIRO_FEATURES_H "$CAIRO_FEATURES_H".orig 2> /dev/null
 
 else
-   PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION pixman-1 freetype2 fontconfig)
-   MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
-   MOZ_CAIRO_LIBS=$CAIRO_LIBS
-   PKG_CHECK_MODULES(CAIRO_TEE, cairo-tee >= $CAIRO_VERSION)
-   if test "$MOZ_X11"; then
+    PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION)
+    MOZ_CAIRO_CFLAGS="$CAIRO_CFLAGS"
+    MOZ_CAIRO_LIBS="$CAIRO_LIBS"
+    PKG_CHECK_MODULES(CAIRO_TEE, cairo-tee >= $CAIRO_VERSION)
+    if test "$MOZ_X11"; then
         PKG_CHECK_MODULES(CAIRO_XRENDER, cairo-xlib-xrender >= $CAIRO_VERSION)
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS $CAIRO_XRENDER_LIBS"
+        MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_LIBS"
         MOZ_CAIRO_CFLAGS="$MOZ_CAIRO_CFLAGS $CAIRO_XRENDER_CFLAGS"
-   fi
+    fi
 fi
 
 AC_SUBST(MOZ_TREE_CAIRO)
@@ -8967,7 +8987,7 @@ dnl Create a virtualenv where we can install local Python packages
 AC_MSG_RESULT([Creating Python virtualenv])
 rm -rf _virtualenv
 mkdir -p _virtualenv
-MACOSX_DEPLOYMENT_TARGET= PYTHONDONTWRITEBYTECODE= $PYTHON $_topsrcdir/other-licenses/virtualenv/virtualenv.py ./_virtualenv
+MACOSX_DEPLOYMENT_TARGET= PYTHONDONTWRITEBYTECODE= $PYTHON $_topsrcdir/other-licenses/virtualenv/virtualenv.py --system-site-packages ./_virtualenv
 case "$host_os" in
 mingw*)
     PYTHON=`pwd`/_virtualenv/Scripts/python.exe
