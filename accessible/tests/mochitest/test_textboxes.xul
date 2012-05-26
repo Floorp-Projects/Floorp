@@ -30,7 +30,7 @@
                "", // value
                "", // description
                ROLE_ENTRY, // role
-               1, // numActions
+               1, // actionCount
                "activate",  // ActionName
                "Activate"); // ActionDescription
 
@@ -41,7 +41,7 @@
                "", // value
                "", // description
                ROLE_ENTRY, // role
-               1, // numActions
+               1, // actionCount
                "activate",  // ActionName
                "Activate"); // ActionDescription
 
@@ -52,7 +52,7 @@
                "I have some text", // value
                "", // description
                ROLE_ENTRY, // role
-               1, // numActions
+               1, // actionCount
                "activate",  // ActionName
                "Activate"); // ActionDescription
 
@@ -63,7 +63,7 @@
                "", // value
                "", // description
                ROLE_PASSWORD_TEXT, // role
-               1, // numActions
+               1, // actionCount
                "activate",  // ActionName
                "Activate"); // ActionDescription
 
@@ -74,7 +74,7 @@
                "", // value
                "", // description
                ROLE_ENTRY, // role
-               1, // numActions
+               1, // actionCount
                "activate",  // ActionName
                "Activate"); // ActionDescription
 
@@ -85,7 +85,7 @@
                "", // value
                "", // description
                ROLE_ENTRY, // role
-               1, // numActions
+               1, // actionCount
                "activate",  // ActionName
                "Activate"); // ActionDescription
 
@@ -96,7 +96,7 @@
                "I also have some text.", // value
                "", // description
                ROLE_ENTRY, // role
-               1, // numActions
+               1, // actionCount
                "activate",  // ActionName
                "Activate"); // ActionDescription
 
@@ -107,7 +107,7 @@
                "You cannot change me.", // value
                "", // description
                ROLE_ENTRY, // role
-               1, // numActions
+               1, // actionCount
                "activate",  // ActionName
                "Activate"); // ActionDescription
 
@@ -118,7 +118,7 @@
                "You cannot change me, either.", // value
                "", // description
                ROLE_ENTRY, // role
-               1, // numActions
+               1, // actionCount
                "activate",  // ActionName
                "Activate"); // ActionDescription
 
@@ -130,7 +130,7 @@
                "", // value
                "", // description
                ROLE_ENTRY, // role
-               1, // numActions
+               1, // actionCount
                "activate",  // ActionName
                "Activate"); // ActionDescription
 
@@ -141,7 +141,7 @@
                "", // value
                "", // description
                ROLE_ENTRY, // role
-               1, // numActions
+               1, // actionCount
                "activate",  // ActionName
                "Activate"); // ActionDescription
       testStates("searchfield", 0, 0, 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);

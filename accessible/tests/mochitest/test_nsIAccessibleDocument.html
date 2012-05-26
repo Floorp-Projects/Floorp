@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
         testStates(docAcc, (STATE_READONLY | STATE_FOCUSABLE));
 
         // No actions wanted on doc
-        is(docAcc.numActions, 0, "Wrong number of actions for document!");
+        is(docAcc.actionCount, 0, "Wrong number of actions for document!");
 
         // attributes should contain tag:body
         attributes = docAcc.attributes;
