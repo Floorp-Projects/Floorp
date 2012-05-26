@@ -5,6 +5,9 @@ import @ANDROID_PACKAGE_NAME@.*;
 
 import android.content.ContentValues;
 import android.content.ContentUris;
+import android.content.ContentProviderResult;
+import android.content.ContentProviderOperation;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -13,6 +16,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Random;
 
 /*
@@ -297,6 +301,8 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestUpdateHistoryImages());
         mTests.add(new TestUpdateOrInsertHistory());
 
+        mTests.add(new TestBatchOperations());
+
         mTests.add(new TestCombinedView());
     }
 
@@ -329,6 +335,180 @@ public class testBrowserProvider extends ContentProviderTest {
         }
 
         public abstract void test() throws Exception;
+    }
+
+    class TestBatchOperations extends Test {
+        static final int TESTCOUNT = 100;
+
+        public void testApplyBatch() throws Exception {
+            ArrayList<ContentProviderOperation> mOperations
+                = new ArrayList<ContentProviderOperation>();
+
+            // Test a bunch of inserts with applyBatch
+            ContentValues values = new ContentValues();
+            ContentProviderOperation.Builder builder = null;
+
+            for (int i = 0; i < TESTCOUNT; i++) {
+                values.clear();
+                values.put(mHistoryVisitsCol, i);
+                values.put(mHistoryTitleCol, "Test" + i);
+                values.put(mHistoryUrlCol, "http://www.test.org/" + i);
+
+                // Insert
+                builder = ContentProviderOperation.newInsert(mHistoryUri);
+                builder.withValues(values);
+                // Queue the operation
+                mOperations.add(builder.build());
+            }
+
+            ContentProviderResult[] applyResult =
+                mProvider.applyBatch(mOperations);
+
+            boolean allFound = true;
+            for (int i = 0; i < TESTCOUNT; i++) {
+                Cursor cursor = mProvider.query(mHistoryUri,
+                                                null,
+                                                mHistoryUrlCol + " = ?",
+                                                new String[] { "http://www.test.org/" + i },
+                                                null);
+
+                if (!cursor.moveToFirst())
+                    allFound = false;
+                cursor.close();
+            }
+            mAsserter.is(allFound, true, "Found all batchApply entries");
+            mOperations.clear();
+
+            // Update all visits to 1
+            values.clear();
+            values.put(mHistoryVisitsCol, 1);
+            for (int i = 0; i < TESTCOUNT; i++) {
+                builder = ContentProviderOperation.newUpdate(mHistoryUri);
+                builder.withSelection(mHistoryUrlCol  + " = ?",
+                                      new String[] {"http://www.test.org/" + i});
+                builder.withValues(values);
+                builder.withExpectedCount(1);
+                // Queue the operation
+                mOperations.add(builder.build());
+            }
+
+            boolean seenException = false;
+            try {
+                applyResult = mProvider.applyBatch(mOperations);
+            } catch (OperationApplicationException ex) {
+                seenException = true;
+            }
+            mAsserter.is(seenException, false, "Batch updating succeded");
+            mOperations.clear();
+
+            // Delte all visits
+            for (int i = 0; i < TESTCOUNT; i++) {
+                builder = ContentProviderOperation.newDelete(mHistoryUri);
+                builder.withSelection(mHistoryUrlCol  + " = ?",
+                                      new String[] {"http://www.test.org/" + i});
+                builder.withExpectedCount(1);
+                // Queue the operation
+                mOperations.add(builder.build());
+            }
+            try {
+                applyResult = mProvider.applyBatch(mOperations);
+            } catch (OperationApplicationException ex) {
+                seenException = true;
+            }
+            mAsserter.is(seenException, false, "Batch deletion succeded");
+        }
+
+        // Force a Constraint error, see if later operations still apply correctly
+        public void testApplyBatchErrors() {
+            ArrayList<ContentProviderOperation> mOperations
+                = new ArrayList<ContentProviderOperation>();
+
+            // Test a bunch of inserts with applyBatch
+            ContentValues values = new ContentValues();
+            ContentProviderOperation.Builder builder = null;
+
+            values.clear();
+            values.put(mImagesUrlCol, "http://www.test.org");
+            values.put(mImagesFaviconCol, "http://www.test.org/favicon.ico");
+            builder = ContentProviderOperation.newInsert(mImagesUri);
+            builder.withValues(values);
+            mOperations.add(builder.build());
+
+            // Make a duplicate, this will fail because of a UNIQUE constraint
+            builder = ContentProviderOperation.newInsert(mImagesUri);
+            builder.withValues(values);
+            mOperations.add(builder.build());
+
+            // This is valid and should be in the table afterwards
+            values.put(mImagesUrlCol, "http://www.test.org/valid");
+            builder = ContentProviderOperation.newInsert(mImagesUri);
+            builder.withValues(values);
+            mOperations.add(builder.build());
+
+            boolean seenException = false;
+
+            try {
+                ContentProviderResult[] applyResult =
+                    mProvider.applyBatch(mOperations);
+            } catch (OperationApplicationException ex) {
+                seenException = true;
+            }
+
+            // This test may need to go away if Bug 717428 is fixed.
+            mAsserter.is(seenException, true, "Expected failure in images table");
+
+            boolean allFound = true;
+            Cursor cursor = mProvider.query(mImagesUri,
+                                            null,
+                                            mImagesUrlCol + " = ?",
+                                            new String[] { "http://www.test.org/valid" },
+                                            null);
+
+            if (!cursor.moveToFirst())
+                allFound = false;
+            cursor.close();
+
+            mAsserter.is(allFound, true, "Found all applyBatch (with error) entries");
+        }
+
+        public void testBulkInsert() throws Exception {
+            // Test a bunch of inserts with bulkInsert
+            ContentValues allVals[] = new ContentValues[TESTCOUNT];
+            for (int i = 0; i < TESTCOUNT; i++) {
+                allVals[i] = new ContentValues();
+                allVals[i].put(mHistoryUrlCol, i);
+                allVals[i].put(mHistoryTitleCol, "Test" + i);
+                allVals[i].put(mHistoryUrlCol, "http://www.test.org/" + i);
+            }
+
+            int inserts = mProvider.bulkInsert(mHistoryUri, allVals);
+            mAsserter.is(inserts, TESTCOUNT, "Excepted number of inserts matches");
+
+            boolean allFound = true;
+            for (int i = 0; i < TESTCOUNT; i++) {
+                Cursor cursor = mProvider.query(mHistoryUri,
+                                                null,
+                                                mHistoryUrlCol + " = ?",
+                                                new String[] { "http://www.test.org/" + i },
+                                                null);
+
+                if (!cursor.moveToFirst())
+                    allFound = false;
+                cursor.close();
+            }
+            mAsserter.is(allFound, true, "Found all bulkInsert entries");
+        }
+
+        public void test() throws Exception {
+            testApplyBatch();
+            // Clean up
+            ensureEmptyDatabase();
+
+            testBulkInsert();
+            ensureEmptyDatabase();
+
+            testApplyBatchErrors();
+        }
     }
 
     class TestSpecialFolders extends Test {
