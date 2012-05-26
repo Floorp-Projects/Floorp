@@ -16,6 +16,8 @@ _BROWSER_TEST_FILES =  \
 		browser_console_clear.js \
 		browser_privatebrowsing_certexceptionsui.js \
 		browser_privatebrowsing_commandline_toggle.js \
+		browser_privatebrowsing_concurrent.js \
+		browser_privatebrowsing_concurrent_page.html \
 		browser_privatebrowsing_crh.js \
 		browser_privatebrowsing_fastswitch.js \
 		browser_privatebrowsing_findbar.js \
@@ -25,6 +27,9 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_import.js \
 		browser_privatebrowsing_lastpbcontextexited.js \
 		browser_privatebrowsing_localStorage.js \
+		browser_privatebrowsing_localStorage_before_after.js \
+		browser_privatebrowsing_localStorage_before_after_page.html \
+		browser_privatebrowsing_localStorage_before_after_page2.html \
 		browser_privatebrowsing_localStorage_page1.html \
 		browser_privatebrowsing_localStorage_page2.html \
 		browser_privatebrowsing_newwindow_stopcmd.js \
