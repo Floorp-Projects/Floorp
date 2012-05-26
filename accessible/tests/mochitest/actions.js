@@ -100,7 +100,7 @@ function actionInvoker(aAccOrElmOrId, aActionIndex, aActionName, aEventSeq)
     if (!acc)
       return INVOKER_ACTION_FAILED;
 
-    var isThereActions = acc.numActions > 0;
+    var isThereActions = acc.actionCount > 0;
     ok(isThereActions,
        "No actions on the accessible for " + prettyName(aAccOrElmOrId));
 
