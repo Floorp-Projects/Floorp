@@ -295,8 +295,8 @@ class MarionetteTestRunner(object):
         suite = unittest.TestSuite()
 
         if file_ext == '.ini':
+            testargs = { 'skip': 'false' }
             if testtype is not None:
-                testargs = {}
                 testtypes = testtype.replace('+', ' +').replace('-', ' -').split()
                 for atype in testtypes:
                     if atype.startswith('+'):
@@ -305,13 +305,10 @@ class MarionetteTestRunner(object):
                         testargs.update({ atype[1:]: 'false' })
                     else:
                         testargs.update({ atype: 'true' })
+
             manifest = TestManifest()
             manifest.read(filepath)
-
-            if testtype is None:
-                manifest_tests = manifest.get()
-            else:
-                manifest_tests = manifest.get(**testargs)
+            manifest_tests = manifest.get(**testargs)
 
             for i in manifest_tests:
                 self.run_test(i["path"], testtype)

@@ -1033,6 +1033,7 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
         /* Beware the empty destructuring dummy. */
         if (!dn) {
             JS_ASSERT(i + 1 <= blockObj->slotCount());
+            blockObj->setAliased(i, bce->sc->bindingsAccessedDynamically());
             continue;
         }
 

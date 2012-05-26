@@ -1,25 +1,58 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set sw=2 ts=8 et tw=80 : */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Patrick McManus <mcmanus@ducksong.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_net_SpdyStream_h
-#define mozilla_net_SpdyStream_h
+#ifndef mozilla_net_SpdyStream3_h
+#define mozilla_net_SpdyStream3_h
 
 #include "nsAHttpTransaction.h"
 
 namespace mozilla { namespace net {
 
-class SpdyStream : public nsAHttpSegmentReader
-                 , public nsAHttpSegmentWriter
+class SpdyStream3 : public nsAHttpSegmentReader
+                  , public nsAHttpSegmentWriter
 {
 public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  SpdyStream(nsAHttpTransaction *,
-             SpdySession *, nsISocketTransport *,
+  SpdyStream3(nsAHttpTransaction *,
+             SpdySession3 *, nsISocketTransport *,
              PRUint32, z_stream *, PRInt32);
 
   PRUint32 StreamID() { return mStreamID; }
@@ -50,22 +83,44 @@ public:
   void SetRecvdFin(bool aStatus) { mRecvdFin = aStatus ? 1 : 0; }
   bool RecvdFin() { return mRecvdFin; }
 
+  void SetRecvdData(bool aStatus) { mReceivedData = aStatus ? 1 : 0; }
+  bool RecvdData() { return mReceivedData; }
+
   void UpdateTransportSendEvents(PRUint32 count);
   void UpdateTransportReadEvents(PRUint32 count);
 
   // The zlib header compression dictionary defined by SPDY,
   // and hooks to the mozilla allocator for zlib to use.
-  static const char *kDictionary;
+  static const unsigned char kDictionary[1423];
   static void *zlib_allocator(void *, uInt, uInt);
   static void zlib_destructor(void *, void *);
 
+  nsresult Uncompress(z_stream *, char *, PRUint32);
+  nsresult ConvertHeaders(nsACString &);
+
+  void UpdateRemoteWindow(PRInt32 delta) { mRemoteWindow += delta; }
+  PRInt64 RemoteWindow() { return mRemoteWindow; }
+
+  void DecrementLocalWindow(PRUint32 delta) {
+    mLocalWindow -= delta;
+    mLocalUnacked += delta;
+  }
+
+  void IncrementLocalWindow(PRUint32 delta) {
+    mLocalWindow += delta;
+    mLocalUnacked -= delta;
+  }
+
+  PRUint64 LocalUnAcked() { return mLocalUnacked; }
+  bool     BlockedOnRwin() { return mBlockedOnRwin; }
+
 private:
 
-  // a SpdyStream object is only destroyed by being removed from the
-  // SpdySession mStreamTransactionHash - make the dtor private to
+  // a SpdyStream3 object is only destroyed by being removed from the
+  // SpdySession3 mStreamTransactionHash - make the dtor private to
   // just the AutoPtr implementation needed for that hash.
-  friend class nsAutoPtr<SpdyStream>;
-  ~SpdyStream();
+  friend class nsAutoPtr<SpdyStream3>;
+  ~SpdyStream3();
 
   enum stateType {
     GENERATING_SYN_STREAM,
@@ -88,9 +143,10 @@ private:
   void     CompressToFrame(const nsACString &);
   void     CompressToFrame(const nsACString *);
   void     CompressToFrame(const char *, PRUint32);
-  void     CompressToFrame(PRUint16);
+  void     CompressToFrame(PRUint32);
   void     CompressFlushFrame();
   void     ExecuteCompress(PRUint32);
+  nsresult FindHeader(nsCString, nsDependentCSubstring &);
   
   // Each stream goes from syn_stream to upstream_complete, perhaps
   // looping on multiple instances of generating_request_body and
@@ -98,13 +154,13 @@ private:
   enum stateType mUpstreamState;
 
   // The underlying HTTP transaction. This pointer is used as the key
-  // in the SpdySession mStreamTransactionHash so it is important to
+  // in the SpdySession3 mStreamTransactionHash so it is important to
   // keep a reference to it as long as this stream is a member of that hash.
   // (i.e. don't change it or release it after it is set in the ctor).
   nsRefPtr<nsAHttpTransaction> mTransaction;
 
   // The session that this stream is a subset of
-  SpdySession                *mSession;
+  SpdySession3                *mSession;
 
   // The underlying socket transport object is needed to propogate some events
   nsISocketTransport         *mSocketTransport;
@@ -142,6 +198,10 @@ private:
   // Flag is set after the WAITING_FOR Transport event has been generated
   PRUint32                     mSentWaitingFor       : 1;
 
+  // Flag is set after 1st DATA frame has been passed to stream, after
+  // which additional HEADERS data is invalid
+  PRUint32                     mReceivedData         : 1;
+
   // The InlineFrame and associated data is used for composing control
   // frames and data frame headers.
   nsAutoArrayPtr<char>         mTxInlineFrame;
@@ -154,10 +214,16 @@ private:
   PRUint32                     mTxStreamFrameSize;
 
   // Compression context and buffer for request header compression.
-  // This is a copy of SpdySession::mUpstreamZlib because it needs
+  // This is a copy of SpdySession3::mUpstreamZlib because it needs
   //  to remain the same in all streams of a session.
   z_stream                     *mZlib;
   nsCString                    mFlatHttpRequestHeaders;
+
+  // These are used for decompressing downstream spdy response headers
+  PRUint32             mDecompressBufferSize;
+  PRUint32             mDecompressBufferUsed;
+  PRUint32             mDecompressedBytes;
+  nsAutoArrayPtr<char> mDecompressBuffer;
 
   // Track the content-length of a request body so that we can
   // place the fin flag on the last data packet instead of waiting
@@ -169,6 +235,27 @@ private:
   // based on nsISupportsPriority definitions
   PRInt32                      mPriority;
 
+  // mLocalWindow, mRemoteWindow, and mLocalUnacked are for flow control.
+  // *window are signed because they race conditions in asynchronous SETTINGS
+  // messages can force them temporarily negative.
+
+  // LocalWindow is how much data the server will send without getting a
+  //   window update
+  PRInt64                      mLocalWindow;
+
+  // RemoteWindow is how much data the client is allowed to send without
+  //   getting a window update
+  PRInt64                      mRemoteWindow;
+
+  // LocalUnacked is the number of bytes received by the client but not
+  //   yet reflected in a window update. Sending that update will increment
+  //   LocalWindow
+  PRUint64                     mLocalUnacked;
+
+  // True when sending is suspended becuase the remote flow control window is
+  //   <= 0
+  bool                         mBlockedOnRwin;
+
   // For Progress Events
   PRUint64                     mTotalSent;
   PRUint64                     mTotalRead;
@@ -176,4 +263,4 @@ private:
 
 }} // namespace mozilla::net
 
-#endif // mozilla_net_SpdyStream_h
+#endif // mozilla_net_SpdyStream3_h

@@ -106,6 +106,7 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/gfx/skia/include/core \
   -I$(topsrcdir)/gfx/skia/include/config \
   $(MOZ_CAIRO_CFLAGS) \
+  $(MOZ_PIXMAN_CFLAGS) \
   $(NULL)
 
 include $(topsrcdir)/dom/dom-config.mk

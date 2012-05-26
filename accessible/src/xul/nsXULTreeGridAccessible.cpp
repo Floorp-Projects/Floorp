@@ -667,12 +667,9 @@ nsXULTreeGridRowAccessible::GetChildAt(PRUint32 aIndex)
   return GetCellAccessible(column);
 }
 
-PRInt32
-nsXULTreeGridRowAccessible::GetChildCount()
+PRUint32
+nsXULTreeGridRowAccessible::ChildCount() const
 {
-  if (IsDefunct())
-    return -1;
-
   return nsCoreUtils::GetSensibleColumnCount(mTree);
 }
 

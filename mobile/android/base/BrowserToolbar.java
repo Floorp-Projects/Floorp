@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.animation.TranslateAnimation;
 import android.view.Gravity;
 import android.view.ContextThemeWrapper;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -28,9 +29,9 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.TextSwitcher;
-import android.widget.ViewSwitcher.ViewFactory;
+import android.widget.ViewSwitcher;
 
-public class BrowserToolbar {
+public class BrowserToolbar implements ViewSwitcher.ViewFactory {
     private static final String LOGTAG = "GeckoToolbar";
     private LinearLayout mLayout;
     private Button mAwesomeBar;
@@ -43,11 +44,11 @@ public class BrowserToolbar {
     private AnimationDrawable mProgressSpinner;
     private TextSwitcher mTabsCount;
     private ImageView mShadow;
+    private LayoutInflater mInflater;
 
     final private Context mContext;
     private Handler mHandler;
     private int mColor;
-    private int mCounterColor;
     private int[] mPadding;
     private boolean mTitleCanExpand;
 
@@ -61,6 +62,7 @@ public class BrowserToolbar {
 
     public BrowserToolbar(Context context) {
         mContext = context;
+        mInflater = LayoutInflater.from(context);
     }
 
     public void from(LinearLayout layout) {
@@ -112,35 +114,9 @@ public class BrowserToolbar {
         });
         mTabs.setImageLevel(0);
 
-        mCounterColor = 0xFFC7D1DB;
-
         mTabsCount = (TextSwitcher) mLayout.findViewById(R.id.tabs_count);
         mTabsCount.removeAllViews();
-        mTabsCount.setFactory(new ViewFactory() {
-            public View makeView() {
-                TextView text = new TextView(mContext);
-                text.setGravity(Gravity.CENTER);
-
-                if (Build.VERSION.SDK_INT >= 14) {
-                    if (!GeckoApp.mAppContext.isTablet()) {
-                        if (GeckoApp.mOrientation == Configuration.ORIENTATION_PORTRAIT)
-                            text.setTextSize(24);
-                        else
-                            text.setTextSize(20);
-                    } else {
-                        text.setTextSize(26);
-                    }
-                } else if (Build.VERSION.SDK_INT >= 11) {
-                    text.setTextSize(24);
-                } else {
-                    text.setTextSize(22);
-                }
-
-                text.setTextColor(mCounterColor);
-                text.setShadowLayer(1.0f, 0f, 1.0f, Color.BLACK);
-                return text;
-            }
-        }); 
+        mTabsCount.setFactory(this);
         mTabsCount.setText("0");
         mCount = 0;
 
@@ -198,6 +174,12 @@ public class BrowserToolbar {
         mSlideDownOut.setDuration(mDuration);
     }
 
+    @Override
+    public View makeView() {
+        // This returns a TextView for the TextSwitcher.
+        return mInflater.inflate(R.layout.tabs_counter, null);
+    }
+
     private void onAwesomeBarSearch() {
         GeckoApp.mAppContext.onSearchRequested();
     }
@@ -253,7 +235,7 @@ public class BrowserToolbar {
                     mTabsCount.setVisibility(View.GONE);
                     mTabs.setContentDescription(mContext.getString(R.string.new_tab));
                 }
-                ((TextView) mTabsCount.getCurrentView()).setTextColor(mCounterColor);
+                ((TextView) mTabsCount.getCurrentView()).setTextColor(mContext.getResources().getColor(R.color.tabs_counter_color));
             }
         }, 2 * mDuration);
     }

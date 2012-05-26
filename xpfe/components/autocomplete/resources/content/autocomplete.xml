@@ -1625,21 +1625,6 @@
         </body>
       </method>
 
-      <method name="selectBy">
-        <parameter name="aReverse"/>
-        <parameter name="aPage"/>
-        <body><![CDATA[
-          try {
-            return this.selectedIndex = this.getNextIndex(aReverse, aPage, this.selectedIndex, this.view.rowCount - 1);
-          } catch (ex) {
-            // do nothing - occasionally timer-related js errors happen here
-            // e.g. "this.selectedIndex has no properties", when you type fast and hit a
-            // navigation key before this popup has opened
-            return -1;
-          }
-        ]]></body>
-      </method>
-
       <method name="getNextIndex">
         <parameter name="aReverse"/>
         <parameter name="aPage"/>
@@ -1748,6 +1733,21 @@
             this.adjustHeight();
           this.tree.treeBoxObject.invalidate();
         </body>
+      </method>
+
+      <method name="selectBy">
+        <parameter name="aReverse"/>
+        <parameter name="aPage"/>
+        <body><![CDATA[
+          try {
+            return this.selectedIndex = this.getNextIndex(aReverse, aPage, this.selectedIndex, this.view.rowCount - 1);
+          } catch (ex) {
+            // do nothing - occasionally timer-related js errors happen here
+            // e.g. "this.selectedIndex has no properties", when you type fast and hit a
+            // navigation key before this popup has opened
+            return -1;
+          }
+        ]]></body>
       </method>
     </implementation>
 

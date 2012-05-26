@@ -175,9 +175,9 @@ nsTextEquivUtils::AppendFromAccessibleChildren(nsAccessible *aAccessible,
 {
   nsresult rv = NS_OK_NO_NAME_CLAUSE_HANDLED;
 
-  PRInt32 childCount = aAccessible->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible *child = aAccessible->GetChildAt(childIdx);
+  PRUint32 childCount = aAccessible->ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible* child = aAccessible->GetChildAt(childIdx);
     rv = AppendFromAccessible(child, aString);
     NS_ENSURE_SUCCESS(rv, rv);
   }

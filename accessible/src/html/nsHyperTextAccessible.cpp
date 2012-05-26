@@ -140,7 +140,7 @@ nsHyperTextAccessible::NativeState()
     states |= states::READONLY;
   }
 
-  if (GetChildCount() > 0)
+  if (HasChildren())
     states |= states::SELECTABLE_TEXT;
 
   return states;
@@ -271,8 +271,8 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
 
   // Loop through children and collect valid offsets, text and bounds
   // depending on what we need for out parameters.
-  PRInt32 childCount = GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+  PRUint32 childCount = ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsAccessible *childAcc = mChildren[childIdx];
     lastAccessible = childAcc;
 
@@ -609,9 +609,9 @@ nsHyperTextAccessible::DOMPointToHypertextOffset(nsINode *aNode,
   // If childAccessible is null we will end up adding up the entire length of
   // the hypertext, which is good -- it just means our offset node
   // came after the last accessible child's node
-  PRInt32 childCount = GetChildCount();
+  PRUint32 childCount = ChildCount();
 
-  PRInt32 childIdx = 0;
+  PRUint32 childIdx = 0;
   nsAccessible *childAcc = nsnull;
   for (; childIdx < childCount; childIdx++) {
     childAcc = mChildren[childIdx];
@@ -1290,8 +1290,8 @@ nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
   // We have an point in an accessible child of this, now we need to add up the
   // offsets before it to what we already have
   PRInt32 offset = 0;
-  PRInt32 childCount = GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+  PRUint32 childCount = ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsAccessible *childAcc = mChildren[childIdx];
 
     nsIFrame *primaryFrame = childAcc->GetFrame();
@@ -2195,7 +2195,7 @@ nsHyperTextAccessible::GetChildIndexAtOffset(PRUint32 aOffset)
     }
   }
 
-  PRUint32 childCount = GetChildCount();
+  PRUint32 childCount = ChildCount();
   while (mOffsets.Length() < childCount) {
     nsAccessible* child = GetChildAt(mOffsets.Length());
     lastOffset += nsAccUtils::TextLength(child);

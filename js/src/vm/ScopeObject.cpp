@@ -1151,12 +1151,15 @@ ScopeIter::settle()
      * frame, the scope chain (pointed to by cur_) continues into the scopes of
      * enclosing frames. Thus, it is important not to look at cur_ until it is
      * certain that cur_ points to a scope object in the current frame. In
-     * particular, there are two tricky corner cases:
-     *  - nested non-heavyweight functions;
+     * particular, there are three tricky corner cases:
+     *  - non-heavyweight functions;
      *  - non-strict direct eval.
-     * In both cases, cur_ can already be pointing into an enclosing frame's
-     * scope chain. As a final twist: even if cur_ points into an enclosing
-     * frame's scope chain, the current frame may still have uncloned blocks.
+     *  - heavyweight functions observed before the prologue has finished;
+     * In all cases, cur_ can already be pointing into an enclosing frame's
+     * scope chain. Furthermore, in the first two cases: even if cur_ points
+     * into an enclosing frame's scope chain, the current frame may still have
+     * uncloned blocks. In the last case, since we haven't entered the
+     * function, we simply return a ScopeIter where done() == true.
      *
      * Note: DebugScopeObject falls nicely into this plan: since they are only
      * ever introduced as the *enclosing* scope of a frame, they should never
@@ -1178,6 +1181,9 @@ ScopeIter::settle()
         } else {
             fp_ = NULL;
         }
+    } else if (fp_->isNonEvalFunctionFrame() && !fp_->hasCallObj()) {
+        JS_ASSERT(cur_ == fp_->fun()->environment());
+        fp_ = NULL;
     } else if (cur_->isWith()) {
         JS_ASSERT_IF(fp_->isFunctionFrame(), fp_->fun()->isHeavyweight());
         JS_ASSERT_IF(block_, block_->needsClone());

@@ -65,6 +65,7 @@ public class Tabs implements GeckoEventListener {
                     GeckoApp.mBrowserToolbar.updateTabCountAndAnimate(getCount());
                     GeckoApp.mBrowserToolbar.updateBackButton(false);
                     GeckoApp.mBrowserToolbar.updateForwardButton(false);
+                    GeckoApp.mAppContext.invalidateOptionsMenu();
                 }
             });
         }
@@ -104,6 +105,7 @@ public class Tabs implements GeckoEventListener {
                 if (isSelectedTab(tab)) {
                     String url = tab.getURL();
                     GeckoApp.mBrowserToolbar.refresh();
+                    GeckoApp.mAppContext.invalidateOptionsMenu();
                     GeckoApp.mDoorHangerPopup.updatePopup();
                     notifyListeners(tab, TabEvents.SELECTED);
 

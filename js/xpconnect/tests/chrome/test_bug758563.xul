@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=758563
+-->
+<window title="Mozilla Bug 758563"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=758563"
+     target="_blank">Mozilla Bug 758563</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for deprecation warnings for non-__exposedProps__ COWs. **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  // Set up our console listener.
+  var gWarnings = 0;
+  function onWarning(consoleMessage) {
+    if (/__exposedProps__/.test(consoleMessage.message))
+      gWarnings++;
+  }
+  var gListener = {
+    observe: onWarning,
+    QueryInterface: function (iid) {
+      if (!iid.equals(Components.interfaces.nsIConsoleListener) &&
+          !iid.equals(Components.interfaces.nsISupports)) {
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+      }
+      return this;
+    }
+  };
+  var gConsoleService = Components.classes["@mozilla.org/consoleservice;1"]
+                                  .getService(Components.interfaces.nsIConsoleService);
+  gConsoleService.registerListener(gListener);
+
+  // Wait for both child frame to load.
+  var gLoadCount = 0;
+  function frameLoaded() {
+    if (++gLoadCount == 2)
+      go();
+  }
+
+  function go() {
+    testFor('frame1');
+    testFor('frame2');
+
+    // Warnings are dispatched async, so stick ourselves at the end of the event
+    // queue.
+    setTimeout(done, 0);
+  }
+
+  function testFor(id) {
+    var win = document.getElementById(id).contentWindow.wrappedJSObject;
+    win.chromeObj = {a: 42};
+    win.ok = ok;
+    win.is = is;
+    win.doAccess();
+  }
+
+  function done() {
+    gConsoleService.unregisterListener(gListener);
+    is(gWarnings, 2, "Got the right number of warnings");
+    SimpleTest.finish();
+  }
+
+  ]]>
+
+  </script>
+  <iframe id="frame1" onload="frameLoaded();" type="content" src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug758563.html" />
+  <iframe id="frame2" onload="frameLoaded();" type="content" src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug758563.html" />
+</window>

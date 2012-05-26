@@ -28,7 +28,7 @@ function testSimpleCall() {
 
       testVar.setGrip(1.618);
 
-      is(testVar.querySelector(".info").textContent, "1.618",
+      is(testVar.querySelector(".value").getAttribute("value"), "1.618",
         "The grip information for the variable wasn't set correctly.");
 
       is(testVar.querySelector(".details").childNodes.length, 0,
@@ -40,7 +40,7 @@ function testSimpleCall() {
       is(testVar.querySelector(".details").childNodes.length, 0,
         "Adding type and class properties shouldn't add any new tree nodes.");
 
-      is(testVar.querySelector(".info").textContent, "[object Window]",
+      is(testVar.querySelector(".value").getAttribute("value"), "[object Window]",
         "The information for the variable wasn't set correctly.");
 
 
