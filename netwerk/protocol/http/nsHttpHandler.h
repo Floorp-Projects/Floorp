@@ -10,6 +10,7 @@
 #include "nsHttpAuthCache.h"
 #include "nsHttpConnection.h"
 #include "nsHttpConnectionMgr.h"
+#include "ASpdySession.h"
 
 #include "nsXPIDLString.h"
 #include "nsString.h"
@@ -86,6 +87,8 @@ public:
     bool           AllowExperiments() { return mTelemetryEnabled && mAllowExperiments; }
 
     bool           IsSpdyEnabled() { return mEnableSpdy; }
+    bool           IsSpdyV2Enabled() { return mSpdyV2; }
+    bool           IsSpdyV3Enabled() { return mSpdyV3; }
     bool           CoalesceSpdy() { return mCoalesceSpdy; }
     bool           UseAlternateProtocol() { return mUseAlternateProtocol; }
     PRUint32       SpdySendingChunkSize() { return mSpdySendingChunkSize; }
@@ -228,6 +231,8 @@ public:
     
     PRIntervalTime GetPipelineTimeout()   { return mPipelineReadTimeout; }
 
+    mozilla::net::SpdyInformation *SpdyInfo() { return &mSpdyInfo; }
+
 private:
 
     //
@@ -352,7 +357,10 @@ private:
     bool           mAllowExperiments;
 
     // Try to use SPDY features instead of HTTP/1.1 over SSL
+    mozilla::net::SpdyInformation mSpdyInfo;
     bool           mEnableSpdy;
+    bool           mSpdyV2;
+    bool           mSpdyV3;
     bool           mCoalesceSpdy;
     bool           mUseAlternateProtocol;
     PRUint32       mSpdySendingChunkSize;

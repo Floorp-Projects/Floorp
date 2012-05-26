@@ -28,4 +28,4 @@ LOCAL_INCLUDES  = \
                 -I$(srcdir)/../../content/events/src/ \
                 $(NULL)
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)

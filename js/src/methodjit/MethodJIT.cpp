@@ -1366,7 +1366,10 @@ JSScript::JITScriptHandle::staticAsserts()
 size_t
 JSScript::sizeOfJitScripts(JSMallocSizeOfFun mallocSizeOf)
 {
-    size_t n = 0;
+    if (!hasJITInfo())
+        return 0;
+
+    size_t n = mallocSizeOf(jitInfo);
     for (int constructing = 0; constructing <= 1; constructing++) {
         for (int barriers = 0; barriers <= 1; barriers++) {
             JITScript *jit = getJIT((bool) constructing, (bool) barriers);

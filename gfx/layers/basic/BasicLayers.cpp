@@ -1825,7 +1825,7 @@ Transform3D(gfxASurface* aSource, gfxContext* aDest,
 {
   nsRefPtr<gfxImageSurface> sourceImage = aSource->GetAsImageSurface();
   if (!sourceImage) {
-    sourceImage = new gfxImageSurface(gfxIntSize(aBounds.width, aBounds.height), gfxASurface::FormatFromContent(aSource->GetContentType()));
+    sourceImage = new gfxImageSurface(gfxIntSize(aBounds.width, aBounds.height), gfxPlatform::GetPlatform()->OptimalFormatForContent(aSource->GetContentType()));
     nsRefPtr<gfxContext> ctx = new gfxContext(sourceImage);
 
     aSource->SetDeviceOffset(gfxPoint(0, 0));

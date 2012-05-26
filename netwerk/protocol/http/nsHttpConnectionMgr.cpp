@@ -677,10 +677,22 @@ nsHttpConnectionMgr::GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry)
         return nsnull;
     }
 
-    rv = sslSocketControl->JoinConnection(NS_LITERAL_CSTRING("spdy/2"),
-                                          aOriginalEntry->mConnInfo->GetHost(),
-                                          aOriginalEntry->mConnInfo->Port(),
-                                          &isJoined);
+    if (gHttpHandler->SpdyInfo()->ProtocolEnabled(0))
+        rv = sslSocketControl->JoinConnection(gHttpHandler->SpdyInfo()->VersionString[0],
+                                              aOriginalEntry->mConnInfo->GetHost(),
+                                              aOriginalEntry->mConnInfo->Port(),
+                                              &isJoined);
+    else
+        rv = NS_OK;                               /* simulate failed join */
+
+    // JoinConnection() may have failed due to spdy version level. Try the other
+    // level we support (if any)
+    if (NS_SUCCEEDED(rv) && !isJoined && gHttpHandler->SpdyInfo()->ProtocolEnabled(1)) {
+        rv = sslSocketControl->JoinConnection(gHttpHandler->SpdyInfo()->VersionString[1],
+                                              aOriginalEntry->mConnInfo->GetHost(),
+                                              aOriginalEntry->mConnInfo->Port(),
+                                              &isJoined);
+    }
 
     if (NS_FAILED(rv) || !isJoined) {
         LOG(("nsHttpConnectionMgr::GetSpdyPreferredConnection "
@@ -2219,28 +2231,10 @@ nsHttpConnectionMgr::nsConnectionHandle::OnHeadersAvailable(nsAHttpTransaction *
     return mConn->OnHeadersAvailable(trans, req, resp, reset);
 }
 
-nsresult
-nsHttpConnectionMgr::nsConnectionHandle::ResumeSend()
-{
-    return mConn->ResumeSend();
-}
-
-nsresult
-nsHttpConnectionMgr::nsConnectionHandle::ResumeRecv()
-{
-    return mConn->ResumeRecv();
-}
-
 void
 nsHttpConnectionMgr::nsConnectionHandle::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
 {
     mConn->CloseTransaction(trans, reason);
-}
-
-void
-nsHttpConnectionMgr::nsConnectionHandle::GetConnectionInfo(nsHttpConnectionInfo **result)
-{
-    mConn->GetConnectionInfo(result);
 }
 
 nsresult
@@ -2277,12 +2271,6 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(PRInt32, void *param)
         !AtActiveConnectionLimit(ent, trans->Caps())) {
         CreateTransport(ent, trans, trans->Caps(), true);
     }
-}
-
-void
-nsHttpConnectionMgr::nsConnectionHandle::GetSecurityInfo(nsISupports **result)
-{
-    mConn->GetSecurityInfo(result);
 }
 
 bool
@@ -2787,12 +2775,6 @@ nsHttpConnectionMgr::nsConnectionHandle::TakeHttpConnection()
     return conn;
 }
 
-bool
-nsHttpConnectionMgr::nsConnectionHandle::IsProxyConnectInProgress()
-{
-    return mConn->IsProxyConnectInProgress();
-}
-
 PRUint32
 nsHttpConnectionMgr::nsConnectionHandle::CancelPipeline(nsresult reason)
 {
@@ -2809,14 +2791,6 @@ nsHttpConnectionMgr::nsConnectionHandle::Classification()
     LOG(("nsConnectionHandle::Classification this=%p "
          "has null mConn using CLASS_SOLO default", this));
     return nsAHttpTransaction::CLASS_SOLO;
-}
-
-void
-nsHttpConnectionMgr::
-nsConnectionHandle::Classify(nsAHttpTransaction::Classifier newclass)
-{
-    if (mConn)
-        mConn->Classify(newclass);
 }
 
 // nsConnectionEntry
@@ -3070,25 +3044,4 @@ nsConnectionEntry::MaxPipelineDepth(nsAHttpTransaction::Classifier aClass)
         return kPipelineRestricted;
 
     return mGreenDepth;
-}
-
-bool
-nsHttpConnectionMgr::nsConnectionHandle::LastTransactionExpectedNoContent()
-{
-    return mConn->LastTransactionExpectedNoContent();
-}
-
-void
-nsHttpConnectionMgr::
-nsConnectionHandle::SetLastTransactionExpectedNoContent(bool val)
-{
-     mConn->SetLastTransactionExpectedNoContent(val);
-}
-
-nsISocketTransport *
-nsHttpConnectionMgr::nsConnectionHandle::Transport()
-{
-    if (!mConn)
-        return nsnull;
-    return mConn->Transport();
 }
