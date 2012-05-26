@@ -6,6 +6,7 @@
 #include "nsAccessibleWrap.h"
 
 #include "Compatibility.h"
+#include "EnumVariant.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsWinUtils.h"
@@ -64,22 +65,6 @@ static const PRInt32 kIEnumVariantDisconnected = -1;
 
 ITypeInfo* nsAccessibleWrap::gTypeInfo = NULL;
 
-//-----------------------------------------------------
-// construction
-//-----------------------------------------------------
-nsAccessibleWrap::
-  nsAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessible(aContent, aDoc), mEnumVARIANTPosition(0)
-{
-}
-
-//-----------------------------------------------------
-// destruction
-//-----------------------------------------------------
-nsAccessibleWrap::~nsAccessibleWrap()
-{
-}
-
 NS_IMPL_ISUPPORTS_INHERITED0(nsAccessibleWrap, nsAccessible);
 
 //-----------------------------------------------------
@@ -95,10 +80,11 @@ __try {
   if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
     *ppv = static_cast<IAccessible*>(this);
   else if (IID_IEnumVARIANT == iid) {
-    long numChildren;
-    get_accChildCount(&numChildren);
-    if (numChildren > 0)  // Don't support this interface for leaf elements
-      *ppv = static_cast<IEnumVARIANT*>(this);
+    // Don't support this interface for leaf elements.
+    if (!HasChildren() || nsAccUtils::MustPrune(this))
+      return E_NOINTERFACE;
+
+    *ppv = static_cast<IEnumVARIANT*>(new ChildrenEnumVariant(this));
   } else if (IID_IServiceProvider == iid)
     *ppv = static_cast<IServiceProvider*>(this);
   else if (IID_IAccessible2 == iid && !Compatibility::IsIA2Off())
@@ -127,6 +113,7 @@ __try {
 
   (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
   return S_OK;
 }
 
@@ -998,91 +985,6 @@ STDMETHODIMP nsAccessibleWrap::put_accValue(
   return E_NOTIMPL;
 }
 
-#include "mshtml.h"
-
-////////////////////////////////////////////////////////////////////////////////
-// nsAccessibleWrap. IEnumVariant
-
-STDMETHODIMP
-nsAccessibleWrap::Next(ULONG aNumElementsRequested, VARIANT FAR* aPVar,
-                       ULONG FAR* aNumElementsFetched)
-{
-  // Children already cached via QI to IEnumVARIANT
-__try {
-  *aNumElementsFetched = 0;
-
-  if (aNumElementsRequested <= 0 || !aPVar)
-    return E_INVALIDARG;
-
-  if (mEnumVARIANTPosition == kIEnumVariantDisconnected)
-    return CO_E_OBJNOTCONNECTED;
-
-  PRUint32 numElementsFetched = 0;
-  for (; numElementsFetched < aNumElementsRequested;
-       numElementsFetched++, mEnumVARIANTPosition++) {
-
-    nsAccessible* accessible = GetChildAt(mEnumVARIANTPosition);
-    if (!accessible)
-      break;
-
-    VariantInit(&aPVar[numElementsFetched]);
-
-    aPVar[numElementsFetched].pdispVal = NativeAccessible(accessible);
-    aPVar[numElementsFetched].vt = VT_DISPATCH;
-  }
-
-  (*aNumElementsFetched) = numElementsFetched;
-
-  return numElementsFetched < aNumElementsRequested ? S_FALSE : S_OK;
-
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
-}
-
-STDMETHODIMP
-nsAccessibleWrap::Skip(ULONG aNumElements)
-{
-__try {
-  if (mEnumVARIANTPosition == kIEnumVariantDisconnected)
-    return CO_E_OBJNOTCONNECTED;
-
-  mEnumVARIANTPosition += aNumElements;
-
-  PRUint32 childCount = ChildCount();
-  if (mEnumVARIANTPosition > static_cast<PRInt32>(childCount))
-  {
-    mEnumVARIANTPosition = childCount;
-    return S_FALSE;
-  }
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return NOERROR;
-}
-
-STDMETHODIMP
-nsAccessibleWrap::Reset(void)
-{
-  mEnumVARIANTPosition = 0;
-  return NOERROR;
-}
-
-STDMETHODIMP
-nsAccessibleWrap::Clone(IEnumVARIANT FAR* FAR* ppenum)
-{
-__try {
-  *ppenum = nsnull;
-  
-  nsCOMPtr<nsIArray> childArray;
-  nsresult rv = GetChildren(getter_AddRefs(childArray));
-
-  *ppenum = new AccessibleEnumerator(childArray);
-  if (!*ppenum)
-    return E_OUTOFMEMORY;
-  NS_ADDREF(*ppenum);
-
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return NOERROR;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibleWrap. IAccessible2
 
@@ -1610,11 +1512,6 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED ||
       eventType == nsIAccessibleEvent::EVENT_FOCUS) {
     UpdateSystemCaret();
-
-  } else if (eventType == nsIAccessibleEvent::EVENT_REORDER) {
-    // If the accessible children are changed then drop the IEnumVariant current
-    // position of the accessible.
-    UnattachIEnumVariant();
   }
 
   PRInt32 childID = GetChildIDFor(accessible); // get the id for the accessible
@@ -1780,13 +1677,6 @@ nsAccessibleWrap::NativeAccessible(nsIAccessible* aAccessible)
   IAccessible* msaaAccessible = nsnull;
   aAccessible->GetNativeInterface(reinterpret_cast<void**>(&msaaAccessible));
   return static_cast<IDispatch*>(msaaAccessible);
-}
-
-void
-nsAccessibleWrap::UnattachIEnumVariant()
-{
-  if (mEnumVARIANTPosition > 0)
-    mEnumVARIANTPosition = kIEnumVariantDisconnected;
 }
 
 nsAccessible*
