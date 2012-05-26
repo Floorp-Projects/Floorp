@@ -517,3 +517,5 @@ OPDEF(JSOP_IMPLICITTHIS,  226, "implicitthis", "",    5,  0,  1,  0,  JOF_ATOM)
 
 /* This opcode is the target of the entry jump for some loop. */
 OPDEF(JSOP_LOOPENTRY,     227, "loopentry",    NULL,  1,  0,  0,  0,  JOF_BYTE)
+
+OPDEF(JSOP_ACTUALSFILLED, 228, "actualsfilled", NULL,  3,  0,  1,  0,  JOF_UINT16)

@@ -3388,6 +3388,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_RSH:
       case JSOP_LSH:
       case JSOP_URSH:
+      case JSOP_ACTUALSFILLED:
         pushed[0].addType(cx, Type::Int32Type());
         break;
       case JSOP_FALSE:
