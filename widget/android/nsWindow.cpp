@@ -132,7 +132,7 @@ nsWindow::LogWindow(nsWindow *win, int index, int indent)
 {
     char spaces[] = "                    ";
     spaces[indent < 20 ? indent : 20] = 0;
-    ALOG("%s [% 2d] 0x%08x [parent 0x%08x] [% 3d,% 3d % 3dx% 3d] vis %d type %d",
+    ALOG("%s [% 2d] 0x%08x [parent 0x%08x] [% 3d,% 3dx% 3d,% 3d] vis %d type %d",
          spaces, index, (intptr_t)win, (intptr_t)win->mParent,
          win->mBounds.x, win->mBounds.y,
          win->mBounds.width, win->mBounds.height,
@@ -288,9 +288,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
         return NS_OK;
 
     // If we had a parent before, remove ourselves from its list of
-    // children.  If we didn't have a parent, then remove ourselves
-    // from the list of toplevel windows if we're about to get a
-    // parent.
+    // children.
     if (mParent)
         mParent->mChildren.RemoveElement(this);
 
