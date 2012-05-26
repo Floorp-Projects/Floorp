@@ -2,3 +2,9 @@ textarea.placeholder,
 input.placeholder {
   color: GrayText;
 }
+
+/* workaround until :-moz-placeholder is re-implemented as a pseudo-element */
+textarea:focus,
+input:focus {
+  color: -moz-FieldText;
+}

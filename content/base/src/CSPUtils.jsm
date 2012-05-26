@@ -11,8 +11,9 @@
  */
 
 // Module stuff
-var EXPORTED_SYMBOLS = ["CSPRep", "CSPSourceList", "CSPSource", 
-                        "CSPHost", "CSPWarning", "CSPError", "CSPdebug"];
+var EXPORTED_SYMBOLS = ["CSPRep", "CSPSourceList", "CSPSource", "CSPHost",
+                        "CSPWarning", "CSPError", "CSPdebug",
+                        "CSPViolationReportListener"];
 
 
 // these are not exported
@@ -1442,3 +1443,41 @@ CSPHost.prototype = {
     return true;
   }
 };
+
+
+//////////////////////////////////////////////////////////////////////
+/**
+ * Class that listens to violation report transmission and logs errors.
+ */
+function CSPViolationReportListener(reportURI) {
+  this._reportURI = reportURI;
+}
+
+CSPViolationReportListener.prototype = {
+  _reportURI:   null,
+
+  QueryInterface: function(iid) {
+    if(iid.equals(Ci.nsIStreamListener) ||
+        iid.equals(Ci.nsIRequestObserver) ||
+        iid.equals(Ci.nsISupports))
+      return this;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  onStopRequest:
+  function(request, context, status) {
+    if (!Components.isSuccessCode(status)) {
+      CSPdebug("error " + status.toString(16) +
+                " while sending violation report to " +
+                this._reportURI);
+    }
+  },
+
+  onStartRequest:
+  function(request, context) { },
+
+  onDataAvailable:
+  function(request, context, inputStream, offset, count) { },
+
+};
+

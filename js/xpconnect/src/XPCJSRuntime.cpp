@@ -33,6 +33,7 @@
 #endif
 
 using namespace mozilla;
+using namespace xpc;
 
 /***************************************************************************/
 
@@ -87,6 +88,9 @@ struct CX_AND_XPCRT_Data
     XPCJSRuntime* rt;
 };
 
+static void * const UNMARK_ONLY = nsnull;
+static void * const UNMARK_AND_SWEEP = (void *)1;
+
 static JSDHashOperator
 NativeInterfaceSweeper(JSDHashTable *table, JSDHashEntryHdr *hdr,
                        uint32_t number, void *arg)
@@ -96,6 +100,9 @@ NativeInterfaceSweeper(JSDHashTable *table, JSDHashEntryHdr *hdr,
         iface->Unmark();
         return JS_DHASH_NEXT;
     }
+
+    if (arg == UNMARK_ONLY)
+        return JS_DHASH_NEXT;
 
 #ifdef XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
     fputs("- Destroying XPCNativeInterface for ", stdout);
@@ -132,6 +139,9 @@ NativeSetSweeper(JSDHashTable *table, JSDHashEntryHdr *hdr,
         return JS_DHASH_NEXT;
     }
 
+    if (arg == UNMARK_ONLY)
+        return JS_DHASH_NEXT;
+
 #ifdef XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
     printf("- Destroying XPCNativeSet for:\n");
     PRUint16 count = set->GetInterfaceCount();
@@ -162,6 +172,9 @@ JSClassSweeper(JSDHashTable *table, JSDHashEntryHdr *hdr,
         shared->Unmark();
         return JS_DHASH_NEXT;
     }
+
+    if (arg == UNMARK_ONLY)
+        return JS_DHASH_NEXT;
 
 #ifdef XPC_REPORT_JSCLASS_FLUSHING
     printf("- Destroying XPCNativeScriptableShared for: %s @ %x\n",
@@ -225,8 +238,7 @@ CompartmentDestroyedCallback(JSFreeOp *fop, JSCompartment *compartment)
 
     // Get the current compartment private into an AutoPtr (which will do the
     // cleanup for us), and null out the private (which may already be null).
-    nsAutoPtr<xpc::CompartmentPrivate>
-      priv(static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment)));
+    nsAutoPtr<CompartmentPrivate> priv(GetCompartmentPrivate(compartment));
     JS_SetCompartmentPrivate(compartment, nsnull);
 
     // JSD creates compartments in our runtime without going through our creation
@@ -387,8 +399,7 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
     // Trace compartments.
     XPCCompartmentSet &set = GetCompartmentSet();
     for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
-        xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
-            JS_GetCompartmentPrivate(r.front());
+        CompartmentPrivate *priv = GetCompartmentPrivate(r.front());
         if (priv->expandoMap)
             priv->expandoMap->Enumerate(TraceExpandos, trc);
         if (priv->domExpandoMap)
@@ -538,8 +549,7 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
     // Suspect wrapped natives with expando objects.
     XPCCompartmentSet &set = GetCompartmentSet();
     for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
-        xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
-            JS_GetCompartmentPrivate(r.front());
+        CompartmentPrivate *priv = GetCompartmentPrivate(r.front());
         if (priv->expandoMap)
             priv->expandoMap->EnumerateRead(SuspectExpandos, &closure);
         if (priv->domExpandoMap)
@@ -639,7 +649,7 @@ XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
 }
 
 /* static */ void
-XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status)
+XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool isCompartmentGC)
 {
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if (!self)
@@ -675,8 +685,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status)
             // Sweep compartments.
             XPCCompartmentSet &set = self->GetCompartmentSet();
             for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
-                xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
-                    JS_GetCompartmentPrivate(r.front());
+                CompartmentPrivate *priv = GetCompartmentPrivate(r.front());
                 if (priv->waiverWrapperMap)
                     priv->waiverWrapperMap->Sweep();
                 if (priv->expandoMap)
@@ -757,24 +766,37 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status)
                 }
             }
 
-            // Do the sweeping...
+            // Do the sweeping. During a compartment GC, only
+            // WrappedNativeProtos in collected compartments will be
+            // marked. Therefore, some reachable NativeInterfaces will not be
+            // marked, so it is not safe to sweep them. We still need to unmark
+            // them, since the ones pointed to by WrappedNativeProtos in a
+            // compartment being collected will be marked.
+            //
+            // Ideally, if NativeInterfaces from different compartments were
+            // kept separate, we could sweep only the ones belonging to
+            // compartments being collected. Currently, though, NativeInterfaces
+            // are shared between compartments. This ought to be fixed.
+            void *sweepArg = isCompartmentGC ? UNMARK_ONLY : UNMARK_AND_SWEEP;
 
             // We don't want to sweep the JSClasses at shutdown time.
             // At this point there may be JSObjects using them that have
             // been removed from the other maps.
             if (!self->GetXPConnect()->IsShuttingDown()) {
                 self->mNativeScriptableSharedMap->
-                    Enumerate(JSClassSweeper, nsnull);
+                    Enumerate(JSClassSweeper, sweepArg);
             }
 
-            self->mClassInfo2NativeSetMap->
-                Enumerate(NativeUnMarkedSetRemover, nsnull);
+            if (!isCompartmentGC) {
+                self->mClassInfo2NativeSetMap->
+                    Enumerate(NativeUnMarkedSetRemover, nsnull);
+            }
 
             self->mNativeSetMap->
-                Enumerate(NativeSetSweeper, nsnull);
+                Enumerate(NativeSetSweeper, sweepArg);
 
             self->mIID2NativeInterfaceMap->
-                Enumerate(NativeInterfaceSweeper, nsnull);
+                Enumerate(NativeInterfaceSweeper, sweepArg);
 
 #ifdef DEBUG
             XPCWrappedNativeScope::ASSERT_NoInterfaceSetsAreMarked();
@@ -1173,8 +1195,7 @@ GetCompartmentName(JSCompartment *c, nsCString &name)
         // script location, append the compartment's location to allow
         // differentiation of multiple compartments owned by the same principal
         // (e.g. components owned by the system or null principal).
-        xpc::CompartmentPrivate *compartmentPrivate =
-            static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(c));
+        CompartmentPrivate *compartmentPrivate = GetCompartmentPrivate(c);
         if (compartmentPrivate) {
             const nsACString& location = compartmentPrivate->GetLocation();
             if (!location.IsEmpty() && !location.Equals(name)) {

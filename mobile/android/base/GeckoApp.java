@@ -343,6 +343,17 @@ abstract public class GeckoApp
     }
 
     @Override
+    public void invalidateOptionsMenu() {
+        if (sMenu == null)
+            return;
+
+        onPrepareOptionsMenu(sMenu);
+
+        if (Build.VERSION.SDK_INT >= 11)
+            super.invalidateOptionsMenu();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
         sMenu = menu;
@@ -515,6 +526,12 @@ abstract public class GeckoApp
             outState.putString(SAVED_STATE_TITLE, tab.getDisplayTitle());
     }
 
+    public DisplayMetrics getDisplayMetrics() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        return metrics;
+    }
+
     void getAndProcessThumbnailForTab(final Tab tab) {
         boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
         final Bitmap bitmap = isSelectedTab ? mLayerClient.getBitmap() : null;
@@ -652,11 +669,9 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() {
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    mBrowserToolbar.setTitle(uri);
-                    mBrowserToolbar.setFavicon(null);
-                    mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
+                    mBrowserToolbar.refresh();
+                    invalidateOptionsMenu();
                     mDoorHangerPopup.updatePopup();
-                    mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
 
                     if (tab != null)
                         hidePlugins(tab);
@@ -689,10 +704,8 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() {
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    mBrowserToolbar.setTitle(tab.getDisplayTitle());
-                    mBrowserToolbar.setFavicon(tab.getFavicon());
-                    mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
-                    mBrowserToolbar.setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
+                    mBrowserToolbar.refresh();
+                    invalidateOptionsMenu();
                 }
             }
         });
@@ -1223,6 +1236,9 @@ abstract public class GeckoApp
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
+                    mBrowserToolbar.updateBackButton(tab.canDoBack());
+                    mBrowserToolbar.updateForwardButton(tab.canDoForward());
+                    invalidateOptionsMenu();
                     if (showProgress && tab.getState() == Tab.STATE_LOADING)
                         mBrowserToolbar.setProgressVisibility(true);
                 }
@@ -1240,8 +1256,12 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() {
             public void run() {
-                if (Tabs.getInstance().isSelectedTab(tab))
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    mBrowserToolbar.updateBackButton(tab.canDoBack());
+                    mBrowserToolbar.updateForwardButton(tab.canDoForward());
+                    invalidateOptionsMenu();
                     mBrowserToolbar.setProgressVisibility(false);
+                }
                 Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.STOP);
             }
         });
@@ -1492,13 +1512,40 @@ abstract public class GeckoApp
         });
     }
 
+    public boolean isTablet() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+        // Checking for sw600dp for 7" tablet.
+        if (((metrics.widthPixels / metrics.density) >= 600) &&
+            ((metrics.heightPixels / metrics.density) >= 600))
+            return true;
+        else
+            return false;
+    }
+
     // The ActionBar needs to be refreshed on rotation as different orientation uses different resources
     public void refreshActionBar() {
         if (Build.VERSION.SDK_INT >= 11) {
             LinearLayout actionBar = (LinearLayout) getLayoutInflater().inflate(R.layout.browser_toolbar, null);
             mBrowserToolbar.from(actionBar);
             mBrowserToolbar.refresh();
-            GeckoActionBar.setBackgroundDrawable(this, getResources().getDrawable(R.drawable.gecko_actionbar_bg));
+            invalidateOptionsMenu();
+
+            Drawable background;
+
+            // Version 11 and 12 doesn't support tiling of bitmap in action bar.
+            if (Build.VERSION.SDK_INT == 11 || Build.VERSION.SDK_INT == 12) {
+                BitmapDrawable bitmap = new BitmapDrawable(BitmapFactory.decodeResource(getResources(), R.drawable.address_bar_texture_tablet));
+                bitmap.setTileModeX(android.graphics.Shader.TileMode.REPEAT);
+                background = bitmap;
+            } else if (isTablet()) {
+                background = getResources().getDrawable(R.drawable.address_bar_bg);
+            } else {
+                background = getResources().getDrawable(R.drawable.gecko_actionbar_bg);
+            }
+
+            GeckoActionBar.setBackgroundDrawable(this, background);
             GeckoActionBar.setCustomView(this, actionBar);
         }
     }
@@ -1560,6 +1607,15 @@ abstract public class GeckoApp
 
     private void initialize() {
         mInitialized = true;
+
+        // Version 11 & 12 doesn't support tiling of bitmaps in action bar.
+        // Refresh it to avoid corruption.
+        if (Build.VERSION.SDK_INT == 11 || Build.VERSION.SDK_INT == 12)
+            refreshActionBar();
+
+        mBrowserToolbar.updateBackButton(false);
+        mBrowserToolbar.updateForwardButton(false);
+        invalidateOptionsMenu();
 
         Intent intent = getIntent();
         String action = intent.getAction();

@@ -85,13 +85,13 @@ void InitLastIDToVibrate()
 } // anonymous namespace
 
 void
-Vibrate(const nsTArray<uint32>& pattern, nsIDOMWindow* window)
+Vibrate(const nsTArray<uint32_t>& pattern, nsIDOMWindow* window)
 {
   Vibrate(pattern, WindowIdentifier(window));
 }
 
 void
-Vibrate(const nsTArray<uint32>& pattern, const WindowIdentifier &id)
+Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier &id)
 {
   AssertMainThread();
 
@@ -207,7 +207,14 @@ public:
   }
 
   void BroadcastInformation(const InfoType& aInfo) {
-    MOZ_ASSERT(mObservers);
+    // It is possible for mObservers to be NULL here on some platforms,
+    // because a call to BroadcastInformation gets queued up asynchronously
+    // while RemoveObserver is running (and before the notifications are
+    // disabled). The queued call can then get run after mObservers has
+    // been nulled out. See bug 757025.
+    if (!mObservers) {
+      return;
+    }
     mObservers->Broadcast(aInfo);
   }
 
@@ -461,11 +468,19 @@ UnregisterSensorObserver(SensorType aSensor, ISensorObserver *aObserver) {
   AssertMainThread();
   
   observers.RemoveObserver(aObserver);
-  if(observers.Length() == 0) {
-    DisableSensorNotifications(aSensor);
-    delete [] gSensorObservers;
-    gSensorObservers = nsnull;
+  if (observers.Length() > 0) {
+    return;
   }
+  DisableSensorNotifications(aSensor);
+
+  // Destroy sSensorObservers only if all observer lists are empty.
+  for (int i = 0; i < NUM_SENSOR_TYPE; i++) {
+    if (gSensorObservers[i].Length() > 0) {
+      return;
+    }
+  }
+  delete [] gSensorObservers;
+  gSensorObservers = nsnull;
 }
 
 void

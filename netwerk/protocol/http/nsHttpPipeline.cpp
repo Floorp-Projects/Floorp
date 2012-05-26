@@ -203,22 +203,6 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
     return rv;
 }
 
-nsresult
-nsHttpPipeline::ResumeSend()
-{
-    if (mConnection)
-        return mConnection->ResumeSend();
-    return NS_ERROR_UNEXPECTED;
-}
-
-nsresult
-nsHttpPipeline::ResumeRecv()
-{
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-    NS_ASSERTION(mConnection, "no connection");
-    return mConnection->ResumeRecv();
-}
-
 void
 nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
 {
@@ -267,30 +251,12 @@ nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
     }
 }
 
-void
-nsHttpPipeline::GetConnectionInfo(nsHttpConnectionInfo **result)
-{
-    if (!mConnection) {
-        *result = nsnull;
-        return;
-    }
-
-    mConnection->GetConnectionInfo(result);
-}
-
 nsresult
 nsHttpPipeline::TakeTransport(nsISocketTransport  **aTransport,
                               nsIAsyncInputStream **aInputStream,
                               nsIAsyncOutputStream **aOutputStream)
 {
     return mConnection->TakeTransport(aTransport, aInputStream, aOutputStream);
-}
-
-void
-nsHttpPipeline::GetSecurityInfo(nsISupports **result)
-{
-    NS_ASSERTION(mConnection, "no connection");
-    mConnection->GetSecurityInfo(result);
 }
 
 bool
@@ -359,41 +325,12 @@ nsHttpPipeline::PushBack(const char *data, PRUint32 length)
     return NS_OK;
 }
 
-bool
-nsHttpPipeline::IsProxyConnectInProgress()
-{
-    NS_ABORT_IF_FALSE(mConnection, "no connection");
-    return mConnection->IsProxyConnectInProgress();
-}
-
-bool
-nsHttpPipeline::LastTransactionExpectedNoContent()
-{
-    NS_ABORT_IF_FALSE(mConnection, "no connection");
-    return mConnection->LastTransactionExpectedNoContent();
-}
-
-void
-nsHttpPipeline::SetLastTransactionExpectedNoContent(bool val)
-{
-    NS_ABORT_IF_FALSE(mConnection, "no connection");
-     mConnection->SetLastTransactionExpectedNoContent(val);
-}
-
 nsHttpConnection *
 nsHttpPipeline::TakeHttpConnection()
 {
     if (mConnection)
         return mConnection->TakeHttpConnection();
     return nsnull;
-}
-
-nsISocketTransport *
-nsHttpPipeline::Transport()
-{
-    if (!mConnection)
-        return nsnull;
-    return mConnection->Transport();
 }
 
 nsAHttpTransaction::Classifier
@@ -405,13 +342,6 @@ nsHttpPipeline::Classification()
     LOG(("nsHttpPipeline::Classification this=%p "
          "has null mConnection using CLASS_SOLO default", this));
     return nsAHttpTransaction::CLASS_SOLO;
-}
-
-void
-nsHttpPipeline::Classify(nsAHttpTransaction::Classifier newclass)
-{
-    if (mConnection)
-        mConnection->Classify(newclass);
 }
 
 void

@@ -68,7 +68,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
     data.SetLength(renderSize.width * renderSize.height * 4);
 
     nsRefPtr<gfxImageSurface> surf =
-        new gfxImageSurface(reinterpret_cast<uint8*>(data.BeginWriting()),
+        new gfxImageSurface(reinterpret_cast<uint8_t*>(data.BeginWriting()),
                             gfxIntSize(renderSize.width, renderSize.height),
                             4 * renderSize.width,
                             gfxASurface::ImageFormatARGB32);

@@ -274,7 +274,7 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret)
         *ret = NULL;
         return true;
     }
-    RootedVarObject arr(cx, NewDenseEmptyArray(cx));
+    RootedObject arr(cx, NewDenseEmptyArray(cx));
     if (!arr)
         return false;
     ObjectValueMap *map = GetObjectMap(obj);
@@ -358,13 +358,13 @@ js_InitWeakMapClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
 
-    RootedVarObject weakMapProto(cx, global->createBlankPrototype(cx, &WeakMapClass));
+    RootedObject weakMapProto(cx, global->createBlankPrototype(cx, &WeakMapClass));
     if (!weakMapProto)
         return NULL;
 
-    RootedVarFunction ctor(cx);
+    RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, WeakMap_construct,
                                      CLASS_NAME(cx, WeakMap), 0);
     if (!ctor)

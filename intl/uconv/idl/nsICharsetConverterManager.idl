@@ -33,20 +33,16 @@ interface nsIUTF8StringEnumerator;
  * @created         21/Feb/2000
  * @author  Catalin Rotaru [CATA]
  */
-[scriptable, uuid(bf733b00-198f-4553-a061-637a21793330)]
+[scriptable, uuid(a0550d46-8d9c-47dd-acc7-c083620dff12)]
 interface nsICharsetConverterManager : nsISupports
 {
     /**
      * Get the Unicode decoder for the given charset.
      * The "Raw" version skips charset alias resolution
-     * The "Internal" version will return a decoder for any charset; the others
-     *  will return NS_ERROR_UCONV_NOCONV if the requested charsets is
-     *  vulnerable to XSS attacks and should not be used with untrusted input
      */
     [noscript] nsIUnicodeDecoder getUnicodeDecoder(in string charset);
     [noscript] nsIUnicodeDecoder getUnicodeDecoderRaw(in string charset);
     [noscript] nsIUnicodeDecoder getUnicodeDecoderInternal(in string charset);
-    [noscript] nsIUnicodeDecoder getUnicodeDecoderRawInternal(in string charset);
 
     /**
      * Get the Unicode encoder for the given charset.

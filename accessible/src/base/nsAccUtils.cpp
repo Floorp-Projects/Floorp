@@ -12,9 +12,9 @@
 #include "nsDocAccessible.h"
 #include "nsHyperTextAccessible.h"
 #include "nsIAccessibleTypes.h"
-#include "nsTextAccessible.h"
 #include "Role.h"
 #include "States.h"
+#include "TextLeafAccessible.h"
 
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
@@ -421,8 +421,8 @@ nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible* aAccessible)
     return true;
 
   bool foundText = false;
-  PRInt32 childCount = aAccessible->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+  PRUint32 childCount = aAccessible->ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsAccessible* child = aAccessible->GetChildAt(childIdx);
     if (IsText(child)) {
       foundText = true;
@@ -447,7 +447,7 @@ nsAccUtils::TextLength(nsAccessible *aAccessible)
   if (!IsText(aAccessible))
     return 1;
 
-  nsTextAccessible* textLeaf = aAccessible->AsTextLeaf();
+  TextLeafAccessible* textLeaf = aAccessible->AsTextLeaf();
   if (textLeaf)
     return textLeaf->Text().Length();
 

@@ -10,7 +10,7 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
-#include "nsIXBLService.h"
+#include "nsXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsXBLResourceLoader.h"
 #include "nsXBLPrototypeResources.h"
@@ -202,7 +202,10 @@ nsXBLResourceLoader::AddResourceListener(nsIContent* aBoundElement)
 void
 nsXBLResourceLoader::NotifyBoundElements()
 {
-  nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
+  nsXBLService* xblService = nsXBLService::GetInstance();
+  if (!xblService)
+    return;
+
   nsIURI* bindingURI = mBinding->BindingURI();
 
   PRUint32 eltCount = mBoundElements.Count();

@@ -624,6 +624,13 @@ nsWindow::Destroy(void)
     }
     mLayerManager = nsnull;
 
+    // It is safe to call DestroyeCompositor several times (here and 
+    // in the parent class) since it will take effect only once.
+    // The reason we call it here is because on gtk platforms we need 
+    // to destroy the compositor before we destroy the gdk window (which
+    // destroys the the gl context attached to it).
+    DestroyCompositor();
+
     ClearCachedResources();
 
     g_signal_handlers_disconnect_by_func(gtk_settings_get_default(),

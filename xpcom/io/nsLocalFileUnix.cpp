@@ -1256,8 +1256,15 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
     }
 
     struct dqblk dq;
-    if(!quotactl(QCMD(Q_GETQUOTA, USRQUOTA), deviceName.get(), getuid(), (caddr_t)&dq)) {
-        PRInt64 QuotaSpaceAvailable = PRInt64(fs_buf.f_bsize * dq.dqb_bhardlimit);
+    if(!quotactl(QCMD(Q_GETQUOTA, USRQUOTA), deviceName.get(), getuid(), (caddr_t)&dq)
+#ifdef QIF_BLIMITS
+       && dq.dqb_valid & QIF_BLIMITS
+#endif
+       && dq.dqb_bhardlimit)
+    {
+        PRInt64 QuotaSpaceAvailable = 0;
+        if (dq.dqb_bhardlimit > dq.dqb_curspace)
+            QuotaSpaceAvailable = PRInt64(fs_buf.f_bsize * (dq.dqb_bhardlimit - dq.dqb_curspace));
         if(QuotaSpaceAvailable < *aDiskSpaceAvailable) {
             *aDiskSpaceAvailable = QuotaSpaceAvailable;
         }

@@ -69,7 +69,7 @@ WebGLProgram::UpdateInfo()
  */
 
 bool
-WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
+WebGLContext::ValidateBuffers(int32_t *maxAllowedCount, const char *info)
 {
 #ifdef DEBUG
     GLint currentProgram = 0;
@@ -83,8 +83,8 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
 
     *maxAllowedCount = -1;
 
-    PRUint32 attribs = mAttribBuffers.Length();
-    for (PRUint32 i = 0; i < attribs; ++i) {
+    uint32_t attribs = mAttribBuffers.Length();
+    for (uint32_t i = 0; i < attribs; ++i) {
         const WebGLVertexAttribData& vd = mAttribBuffers[i];
 
         // If the attrib array isn't enabled, there's nothing to check;
@@ -310,7 +310,7 @@ bool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
 
 bool WebGLContext::ValidateGLSLVariableName(const nsAString& name, const char *info)
 {
-    const PRUint32 maxSize = 256;
+    const uint32_t maxSize = 256;
     if (name.Length() > maxSize) {
         ErrorInvalidValue("%s: identifier is %d characters long, exceeds the maximum allowed length of %d characters",
                           info, name.Length(), maxSize);
@@ -326,7 +326,7 @@ bool WebGLContext::ValidateGLSLVariableName(const nsAString& name, const char *i
 
 bool WebGLContext::ValidateGLSLString(const nsAString& string, const char *info)
 {
-    for (PRUint32 i = 0; i < string.Length(); ++i) {
+    for (uint32_t i = 0; i < string.Length(); ++i) {
         if (!ValidateGLSLCharacter(string.CharAt(i))) {
              ErrorInvalidValue("%s: string contains the illegal character '%d'", info, string.CharAt(i));
              return false;
@@ -427,24 +427,24 @@ bool WebGLContext::ValidateLevelWidthHeightForTarget(WebGLenum target, WebGLint 
     }
 
     if (!(maxTextureSize >> level)) {
-        ErrorInvalidValue("%s: 2^level exceeds maximum texture size");
+        ErrorInvalidValue("%s: 2^level exceeds maximum texture size", info);
         return false;
     }
 
     if (width < 0 || height < 0) {
-        ErrorInvalidValue("%s: width and height must be >= 0");
+        ErrorInvalidValue("%s: width and height must be >= 0", info);
         return false;
     }
 
     if (width > maxTextureSize || height > maxTextureSize) {
-        ErrorInvalidValue("%s: width or height exceeds maximum texture size");
+        ErrorInvalidValue("%s: width or height exceeds maximum texture size", info);
         return false;
     }
 
     return true;
 }
 
-PRUint32 WebGLContext::GetBitsPerTexel(WebGLenum format, WebGLenum type)
+uint32_t WebGLContext::GetBitsPerTexel(WebGLenum format, WebGLenum type)
 {
     if (type == LOCAL_GL_UNSIGNED_BYTE || type == LOCAL_GL_FLOAT) {
         int multiplier = type == LOCAL_GL_FLOAT ? 32 : 8;
@@ -479,7 +479,7 @@ PRUint32 WebGLContext::GetBitsPerTexel(WebGLenum format, WebGLenum type)
 }
 
 bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, int jsArrayType,
-                                              PRUint32 *texelSize, const char *info)
+                                              uint32_t *texelSize, const char *info)
 {
     if (type == LOCAL_GL_UNSIGNED_BYTE ||
         (IsExtensionEnabled(WebGL_OES_texture_float) && type == LOCAL_GL_FLOAT))
@@ -593,7 +593,7 @@ WebGLContext::InitAndValidateGL()
 
     GLenum error = gl->fGetError();
     if (error != LOCAL_GL_NO_ERROR) {
-        LogMessage("GL error 0x%x occurred during OpenGL context initialization, before WebGL initialization!", error);
+        GenerateWarning("GL error 0x%x occurred during OpenGL context initialization, before WebGL initialization!", error);
         return false;
     }
 
@@ -628,7 +628,7 @@ WebGLContext::InitAndValidateGL()
         gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &mGLMaxVertexAttribs);
     }
     if (mGLMaxVertexAttribs < 8) {
-        LogMessage("GL_MAX_VERTEX_ATTRIBS: %d is < 8!", mGLMaxVertexAttribs);
+        GenerateWarning("GL_MAX_VERTEX_ATTRIBS: %d is < 8!", mGLMaxVertexAttribs);
         return false;
     }
 
@@ -643,7 +643,7 @@ WebGLContext::InitAndValidateGL()
         gl->fGetIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &mGLMaxTextureUnits);
     }
     if (mGLMaxTextureUnits < 8) {
-        LogMessage("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: %d is < 8!", mGLMaxTextureUnits);
+        GenerateWarning("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: %d is < 8!", mGLMaxTextureUnits);
         return false;
     }
 
@@ -684,7 +684,7 @@ WebGLContext::InitAndValidateGL()
             // before we start, we check that no error already occurred, to prevent hiding it in our subsequent error handling
             error = gl->GetAndClearError();
             if (error != LOCAL_GL_NO_ERROR) {
-                LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
+                GenerateWarning("GL error 0x%x occurred during WebGL context initialization!", error);
                 return false;
             }
 
@@ -704,7 +704,7 @@ WebGLContext::InitAndValidateGL()
                     mGLMaxVaryingVectors = 16; // = 64/4, 64 is the min value for maxVertexOutputComponents in OpenGL 3.2 spec
                     break;
                 default:
-                    LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
+                    GenerateWarning("GL error 0x%x occurred during WebGL context initialization!", error);
                     return false;
             }   
         }
@@ -746,7 +746,7 @@ WebGLContext::InitAndValidateGL()
     // initialize shader translator
     if (mShaderValidation) {
         if (!ShInitialize()) {
-            LogMessage("GLSL translator initialization failed!");
+            GenerateWarning("GLSL translator initialization failed!");
             return false;
         }
     }
@@ -756,7 +756,7 @@ WebGLContext::InitAndValidateGL()
     // it is also to reset the error flags so that a subsequent WebGL getError call will give the correct result.
     error = gl->GetAndClearError();
     if (error != LOCAL_GL_NO_ERROR) {
-        LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
+        GenerateWarning("GL error 0x%x occurred during WebGL context initialization!", error);
         return false;
     }
 

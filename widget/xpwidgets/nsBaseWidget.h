@@ -266,6 +266,17 @@ protected:
   BasicLayerManager* CreateBasicLayerManager();
 
 protected:
+  /**
+   * Starts the OMTC compositor destruction sequence.
+   *
+   * When this function returns, the compositor should not be 
+   * able to access the opengl context anymore.
+   * It is safe to call it several times if platform implementations
+   * require the compositor to be destroyed before ~nsBaseWidget is
+   * reached (This is the case with gtk2 for instance).
+   */
+  void DestroyCompositor();
+
   void*             mClientData;
   ViewWrapper*      mViewWrapperPtr;
   EVENT_CALLBACK    mEventCallback;

@@ -44,27 +44,22 @@ namespace JS {
  * on the type T of the value being rooted, for which RootMethods<T> must
  * have an instantiation.
  *
- * - Root<T> roots an existing stack allocated variable or other location of
- *   type T. This is typically used either when a variable only needs to be
- *   rooted on certain rare paths, or when a function takes a bare GC thing
- *   pointer as an argument and needs to root it. In the latter case a
- *   Handle<T> is generally preferred, see below.
+ * - Rooted<T> declares a variable of type T, whose value is always rooted.
+ *   Rooted<T> may be automatically coerced to a Handle<T>, below. Rooted<T>
+ *   should be used whenever a local variable's value may be held live across a
+ *   call which can allocate GC things or otherwise trigger a GC.
  *
- * - RootedVar<T> declares a variable of type T, whose value is always rooted.
- *
- * - Handle<T> is a const reference to a Root<T> or RootedVar<T>. Handles are
- *   coerced automatically from such a Root<T> or RootedVar<T>. Functions which
- *   take GC things or values as arguments and need to root those arguments
- *   should generally replace those arguments with handles and avoid any
- *   explicit rooting. This has two benefits. First, when several such
- *   functions call each other then redundant rooting of multiple copies of the
- *   GC thing can be avoided. Second, if the caller does not pass a rooted
- *   value a compile error will be generated, which is quicker and easier to
- *   fix than when relying on a separate rooting analysis.
+ * - Handle<T> is a const reference to a Rooted<T>. Functions which take GC
+ *   things or values as arguments and need to root those arguments should
+ *   generally use handles for those arguments and avoid any explicit rooting.
+ *   This has two benefits. First, when several such functions call each other
+ *   then redundant rooting of multiple copies of the GC thing can be avoided.
+ *   Second, if the caller does not pass a rooted value a compile error will be
+ *   generated, which is quicker and easier to fix than when relying on a
+ *   separate rooting analysis.
  */
 
-template <typename T> class Root;
-template <typename T> class RootedVar;
+template <typename T> class Rooted;
 
 template <typename T>
 struct RootMethods { };
@@ -86,7 +81,7 @@ class Handle
 
     /*
      * This may be called only if the location of the T is guaranteed
-     * to be marked (for some reason other than being a Root or RootedVar),
+     * to be marked (for some reason other than being a Rooted),
      * e.g., if it is guaranteed to be reachable from an implicit root.
      *
      * Create a Handle from a raw location of a T.
@@ -99,10 +94,9 @@ class Handle
 
     /*
      * Construct a handle from an explicitly rooted location. This is the
-     * normal way to create a handle.
+     * normal way to create a handle, and normally happens implicitly.
      */
-    template <typename S> inline Handle(const Root<S> &root);
-    template <typename S> inline Handle(const RootedVar<S> &root);
+    template <typename S> inline Handle(const Rooted<S> &root);
 
     const T *address() const { return ptr; }
     T value() const { return *ptr; }
@@ -141,39 +135,43 @@ struct RootMethods<T *>
 };
 
 /*
- * Root a stack location holding a GC thing. This takes a stack pointer
- * and ensures that throughout its lifetime the referenced variable
- * will remain pinned against a moving GC.
- *
- * It is important to ensure that the location referenced by a Root is
- * initialized, as otherwise the GC may try to use the the uninitialized value.
- * It is generally preferable to use either RootedVar for local variables, or
- * Handle for arguments.
+ * Local variable of type T whose value is always rooted. This is typically
+ * used for local variables, or for non-rooted values being passed to a
+ * function that requires a handle, e.g. Foo(Root<T>(cx, x)).
  */
 template <typename T>
-class Root
+class Rooted
 {
-  public:
-    Root(JSContext *cx_, const T *ptr
-         JS_GUARD_OBJECT_NOTIFIER_PARAM)
+    void init(JSContext *cx_, T initial)
     {
 #ifdef JSGC_ROOT_ANALYSIS
         ContextFriendFields *cx = ContextFriendFields::get(cx_);
 
         ThingRootKind kind = RootMethods<T>::kind();
-        this->stack = reinterpret_cast<Root<T>**>(&cx->thingGCRooters[kind]);
+        this->stack = reinterpret_cast<Rooted<T>**>(&cx->thingGCRooters[kind]);
         this->prev = *stack;
         *stack = this;
 
-        JS_ASSERT(!RootMethods<T>::poisoned(*ptr));
+        JS_ASSERT(!RootMethods<T>::poisoned(initial));
 #endif
 
-        this->ptr = ptr;
-
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        ptr = initial;
     }
 
-    ~Root()
+  public:
+    Rooted(JSContext *cx) { init(cx, RootMethods<T>::initial()); }
+    Rooted(JSContext *cx, T initial) { init(cx, initial); }
+
+    /*
+     * This method is only necessary due to an obscure C++98 requirement (that
+     * there be an accessible, usable copy constructor when passing a temporary
+     * to an implicitly-called constructor for use with a const-ref parameter).
+     * (Head spinning yet?)  We can remove this when we build the JS engine
+     * with -std=c++11.
+     */
+    operator Handle<T> () const { return Handle<T>(*this); }
+
+    ~Rooted()
     {
 #ifdef JSGC_ROOT_ANALYSIS
         JS_ASSERT(*stack == this);
@@ -182,34 +180,53 @@ class Root
     }
 
 #ifdef JSGC_ROOT_ANALYSIS
-    Root<T> *previous() { return prev; }
+    Rooted<T> *previous() { return prev; }
 #endif
 
-    const T *address() const { return ptr; }
+    operator T () const { return ptr; }
+    T operator ->() const { return ptr; }
+    T * address() { return &ptr; }
+    const T * address() const { return &ptr; }
+    T & reference() { return ptr; }
+    T raw() const { return ptr; }
+
+    T & operator =(T value)
+    {
+        JS_ASSERT(!RootMethods<T>::poisoned(value));
+        ptr = value;
+        return ptr;
+    }
+
+    T & operator =(const Rooted &value)
+    {
+        ptr = value;
+        return ptr;
+    }
 
   private:
 
 #ifdef JSGC_ROOT_ANALYSIS
-    Root<T> **stack, *prev;
+    Rooted<T> **stack, *prev;
 #endif
-    const T *ptr;
+    T ptr;
 
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    Rooted() MOZ_DELETE;
+    Rooted(const Rooted &) MOZ_DELETE;
 };
 
 template<typename T> template <typename S>
 inline
-Handle<T>::Handle(const Root<S> &root)
+Handle<T>::Handle(const Rooted<S> &root)
 {
     testAssign<S>();
     ptr = reinterpret_cast<const T *>(root.address());
 }
 
-typedef Root<JSObject*>    RootObject;
-typedef Root<JSFunction*>  RootFunction;
-typedef Root<JSString*>    RootString;
-typedef Root<jsid>         RootId;
-typedef Root<Value>        RootValue;
+typedef Rooted<JSObject*>    RootedObject;
+typedef Rooted<JSFunction*>  RootedFunction;
+typedef Rooted<JSString*>    RootedString;
+typedef Rooted<jsid>         RootedId;
+typedef Rooted<Value>        RootedValue;
 
 /*
  * Mark a stack location as a root for the rooting analysis, without actually
@@ -238,7 +255,7 @@ class SkipRoot
   public:
     template <typename T>
     SkipRoot(JSContext *cx, const T *ptr
-              JS_GUARD_OBJECT_NOTIFIER_PARAM)
+             JS_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         init(ContextFriendFields::get(cx), ptr, 1);
         JS_GUARD_OBJECT_NOTIFIER_INIT;
@@ -246,7 +263,7 @@ class SkipRoot
 
     template <typename T>
     SkipRoot(JSContext *cx, const T *ptr, size_t count
-              JS_GUARD_OBJECT_NOTIFIER_PARAM)
+             JS_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         init(ContextFriendFields::get(cx), ptr, count);
         JS_GUARD_OBJECT_NOTIFIER_INIT;
@@ -285,70 +302,6 @@ class SkipRoot
 
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
-
-/* Make a local variable which stays rooted throughout its lifetime. */
-template <typename T>
-class RootedVar
-{
-  public:
-    RootedVar(JSContext *cx)
-      : ptr(RootMethods<T>::initial()), root(cx, &ptr)
-    {}
-
-    RootedVar(JSContext *cx, T initial)
-      : ptr(initial), root(cx, &ptr)
-    {}
-
-    operator T () const { return ptr; }
-    T operator ->() const { return ptr; }
-    T * address() { return &ptr; }
-    const T * address() const { return &ptr; }
-    T & reference() { return ptr; }
-    T raw() { return ptr; }
-
-    /*
-     * This method is only necessary due to an obscure C++98 requirement (that
-     * there be an accessible, usable copy constructor when passing a temporary
-     * to an implicitly-called constructor for use with a const-ref parameter).
-     * (Head spinning yet?)  We can remove this when we build the JS engine
-     * with -std=c++11.
-     */
-    operator Handle<T> () const { return Handle<T>(*this); }
-
-    T & operator =(T value)
-    {
-        JS_ASSERT(!RootMethods<T>::poisoned(value));
-        ptr = value;
-        return ptr;
-    }
-
-    T & operator =(const RootedVar &value)
-    {
-        ptr = value;
-        return ptr;
-    }
-
-  private:
-    T ptr;
-    Root<T> root;
-
-    RootedVar() MOZ_DELETE;
-    RootedVar(const RootedVar &) MOZ_DELETE;
-};
-
-template <typename T> template <typename S>
-inline
-Handle<T>::Handle(const RootedVar<S> &root)
-{
-    testAssign<S>();
-    ptr = reinterpret_cast<const T *>(root.address());
-}
-
-typedef RootedVar<JSObject*>    RootedVarObject;
-typedef RootedVar<JSFunction*>  RootedVarFunction;
-typedef RootedVar<JSString*>    RootedVarString;
-typedef RootedVar<jsid>         RootedVarId;
-typedef RootedVar<Value>        RootedVarValue;
 
 /*
  * Hook for dynamic root analysis. Checks the native stack and poisons

@@ -13,7 +13,6 @@ import android.util.DisplayMetrics;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.gfx.FloatSize;
-import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.RectUtils;
 import org.json.JSONException;
@@ -27,35 +26,40 @@ import android.util.Log;
 public class ViewportMetrics {
     private static final String LOGTAG = "GeckoViewportMetrics";
 
-    private FloatSize mPageSize;
-    private FloatSize mCssPageSize;
+    private RectF mPageRect;
+    private RectF mCssPageRect;
     private RectF mViewportRect;
     private float mZoomFactor;
 
     public ViewportMetrics() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        DisplayMetrics metrics = GeckoApp.mAppContext.getDisplayMetrics();
 
-        mPageSize = new FloatSize(metrics.widthPixels, metrics.heightPixels);
-        mCssPageSize = new FloatSize(metrics.widthPixels, metrics.heightPixels);
+        mPageRect = new RectF(0, 0, metrics.widthPixels, metrics.heightPixels);
+        mCssPageRect = new RectF(0, 0, metrics.widthPixels, metrics.heightPixels);
         mViewportRect = new RectF(0, 0, metrics.widthPixels, metrics.heightPixels);
         mZoomFactor = 1.0f;
     }
 
     public ViewportMetrics(ViewportMetrics viewport) {
-        mPageSize = new FloatSize(viewport.getPageSize());
-        mCssPageSize = new FloatSize(viewport.getCssPageSize());
+        mPageRect = new RectF(viewport.getPageRect());
+        mCssPageRect = new RectF(viewport.getCssPageRect());
         mViewportRect = new RectF(viewport.getViewport());
         mZoomFactor = viewport.getZoomFactor();
     }
 
     public ViewportMetrics(ImmutableViewportMetrics viewport) {
-        mPageSize = new FloatSize(viewport.pageSizeWidth, viewport.pageSizeHeight);
-        mCssPageSize = new FloatSize(viewport.cssPageSizeWidth, viewport.cssPageSizeHeight);
+        mPageRect = new RectF(viewport.pageRectLeft,
+                viewport.pageRectTop,
+                viewport.pageRectRight,
+                viewport.pageRectBottom);
+        mCssPageRect = new RectF(viewport.cssPageRectLeft,
+                viewport.cssPageRectTop,
+                viewport.cssPageRectRight,
+                viewport.cssPageRectBottom);
         mViewportRect = new RectF(viewport.viewportRectLeft,
-                                  viewport.viewportRectTop,
-                                  viewport.viewportRectRight,
-                                  viewport.viewportRectBottom);
+                viewport.viewportRectTop,
+                viewport.viewportRectRight,
+                viewport.viewportRectBottom);
         mZoomFactor = viewport.zoomFactor;
     }
 
@@ -65,14 +69,18 @@ public class ViewportMetrics {
         float y = (float)json.getDouble("y");
         float width = (float)json.getDouble("width");
         float height = (float)json.getDouble("height");
-        float pageWidth = (float)json.getDouble("pageWidth");
-        float pageHeight = (float)json.getDouble("pageHeight");
-        float cssPageWidth = (float)json.getDouble("cssPageWidth");
-        float cssPageHeight = (float)json.getDouble("cssPageHeight");
+        float pageLeft = (float)json.getDouble("pageLeft");
+        float pageTop = (float)json.getDouble("pageTop");
+        float pageRight = (float)json.getDouble("pageRight");
+        float pageBottom = (float)json.getDouble("pageBottom");
+        float cssPageLeft = (float)json.getDouble("cssPageLeft");
+        float cssPageTop = (float)json.getDouble("cssPageTop");
+        float cssPageRight = (float)json.getDouble("cssPageRight");
+        float cssPageBottom = (float)json.getDouble("cssPageBottom");
         float zoom = (float)json.getDouble("zoom");
 
-        mPageSize = new FloatSize(pageWidth, pageHeight);
-        mCssPageSize = new FloatSize(cssPageWidth, cssPageHeight);
+        mPageRect = new RectF(pageLeft, pageTop, pageRight, pageBottom);
+        mCssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
         mViewportRect = new RectF(x, y, x + width, y + height);
         mZoomFactor = zoom;
     }
@@ -97,38 +105,35 @@ public class ViewportMetrics {
     public RectF getClampedViewport() {
         RectF clampedViewport = new RectF(mViewportRect);
 
-        // While the viewport size ought to never exceed the page size, we
-        // do the clamping in this order to make sure that the origin is
-        // never negative.
-        if (clampedViewport.right > mPageSize.width)
-            clampedViewport.offset(mPageSize.width - clampedViewport.right, 0);
-        if (clampedViewport.left < 0)
-            clampedViewport.offset(-clampedViewport.left, 0);
+        // The viewport bounds ought to never exceed the page bounds.
+        if (clampedViewport.right > mPageRect.right)
+            clampedViewport.offset(mPageRect.right - clampedViewport.right, 0);
+        if (clampedViewport.left < mPageRect.left)
+            clampedViewport.offset(mPageRect.left - clampedViewport.left, 0);
 
-        if (clampedViewport.bottom > mPageSize.height)
-            clampedViewport.offset(0, mPageSize.height - clampedViewport.bottom);
-        if (clampedViewport.top < 0)
-            clampedViewport.offset(0, -clampedViewport.top);
+        if (clampedViewport.bottom > mPageRect.bottom)
+            clampedViewport.offset(0, mPageRect.bottom - clampedViewport.bottom);
+        if (clampedViewport.top < mPageRect.top)
+            clampedViewport.offset(0, mPageRect.top - clampedViewport.top);
 
         return clampedViewport;
     }
 
-    public FloatSize getPageSize() {
-        return mPageSize;
+    public RectF getPageRect() {
+        return mPageRect;
     }
 
-    public FloatSize getCssPageSize() {
-        return mCssPageSize;
+    public RectF getCssPageRect() {
+        return mCssPageRect;
     }
-
 
     public float getZoomFactor() {
         return mZoomFactor;
     }
 
-    public void setPageSize(FloatSize pageSize, FloatSize cssPageSize) {
-        mPageSize = pageSize;
-        mCssPageSize = cssPageSize;
+    public void setPageRect(RectF pageRect, RectF cssPageRect) {
+        mPageRect = pageRect;
+        mCssPageRect = cssPageRect;
     }
 
     public void setViewport(RectF viewport) {
@@ -155,9 +160,9 @@ public class ViewportMetrics {
      * after scaling.
      */
     public void scaleTo(float newZoomFactor, PointF focus) {
-        // mCssPageSize is invariant, since we're setting the scale factor
-        // here. The page size is based on the CSS page size.
-        mPageSize = mCssPageSize.scale(newZoomFactor);
+        // mCssPageRect is invariant, since we're setting the scale factor
+        // here. The page rect is based on the CSS page rect.
+        mPageRect = RectUtils.scale(mCssPageRect, newZoomFactor);
 
         float scaleFactor = newZoomFactor / mZoomFactor;
         PointF origin = getOrigin();
@@ -178,16 +183,16 @@ public class ViewportMetrics {
      */
     public ViewportMetrics interpolate(ViewportMetrics to, float t) {
         ViewportMetrics result = new ViewportMetrics();
-        result.mPageSize = mPageSize.interpolate(to.mPageSize, t);
-        result.mCssPageSize = mCssPageSize.interpolate(to.mCssPageSize, t);
+        result.mPageRect = RectUtils.interpolate(mPageRect, to.mPageRect, t);
+        result.mCssPageRect = RectUtils.interpolate(mCssPageRect, to.mCssPageRect, t);
         result.mZoomFactor = FloatUtils.interpolate(mZoomFactor, to.mZoomFactor, t);
         result.mViewportRect = RectUtils.interpolate(mViewportRect, to.mViewportRect, t);
         return result;
     }
 
     public boolean fuzzyEquals(ViewportMetrics other) {
-        return mPageSize.fuzzyEquals(other.mPageSize)
-            && mCssPageSize.fuzzyEquals(other.mCssPageSize)
+        return RectUtils.fuzzyEquals(mPageRect, other.mPageRect)
+            && RectUtils.fuzzyEquals(mCssPageRect, other.mCssPageRect)
             && RectUtils.fuzzyEquals(mViewportRect, other.mViewportRect)
             && FloatUtils.fuzzyEquals(mZoomFactor, other.mZoomFactor);
     }
@@ -198,15 +203,19 @@ public class ViewportMetrics {
         int height = Math.round(mViewportRect.height());
         int width = Math.round(mViewportRect.width());
 
-        StringBuffer sb = new StringBuffer(256);
+        StringBuffer sb = new StringBuffer(512);
         sb.append("{ \"x\" : ").append(mViewportRect.left)
           .append(", \"y\" : ").append(mViewportRect.top)
           .append(", \"width\" : ").append(width)
           .append(", \"height\" : ").append(height)
-          .append(", \"pageWidth\" : ").append(mPageSize.width)
-          .append(", \"pageHeight\" : ").append(mPageSize.height)
-          .append(", \"cssPageWidth\" : ").append(mCssPageSize.width)
-          .append(", \"cssPageHeight\" : ").append(mCssPageSize.height)
+          .append(", \"pageLeft\" : ").append(mPageRect.left)
+          .append(", \"pageTop\" : ").append(mPageRect.top)
+          .append(", \"pageRight\" : ").append(mPageRect.right)
+          .append(", \"pageBottom\" : ").append(mPageRect.bottom)
+          .append(", \"cssPageLeft\" : ").append(mCssPageRect.left)
+          .append(", \"cssPageTop\" : ").append(mCssPageRect.top)
+          .append(", \"cssPageRight\" : ").append(mCssPageRect.right)
+          .append(", \"cssPageBottom\" : ").append(mCssPageRect.bottom)
           .append(", \"zoom\" : ").append(mZoomFactor)
           .append(" }");
         return sb.toString();
@@ -214,10 +223,10 @@ public class ViewportMetrics {
 
     @Override
     public String toString() {
-        StringBuffer buff = new StringBuffer(128);
+        StringBuffer buff = new StringBuffer(256);
         buff.append("v=").append(mViewportRect.toString())
-            .append(" p=").append(mPageSize.toString())
-            .append(" c=").append(mCssPageSize.toString())
+            .append(" p=").append(mPageRect.toString())
+            .append(" c=").append(mCssPageRect.toString())
             .append(" z=").append(mZoomFactor);
         return buff.toString();
     }

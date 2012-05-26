@@ -22,15 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=725796
 browserFrameHelpers.setEnabledPref(true);
 browserFrameHelpers.addToWhitelist();
 
-// This test works only with OOP browser frames.  If browserFramesHelpers
-// didn't decide to enable OOP browser frames, just skip this test.
-if (browserFrameHelpers.getOOPDisabledPref()) {
-  ok(true, "Skipping test because OOP browser frames are disabled.");
-}
-else {
-  runTest();
-}
-
 var iframe;
 function runTest() {
   iframe = document.createElement('iframe');
@@ -97,6 +88,8 @@ function waitForMessages(num) {
   
   SimpleTest.finish();
 }
+
+runTest();
 
 </script>
 </body>

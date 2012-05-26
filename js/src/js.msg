@@ -345,3 +345,7 @@ MSG_DEF(JSMSG_NOT_ITERABLE,           291, 1, JSEXN_TYPEERR, "{0} is not iterabl
 MSG_DEF(JSMSG_QUERY_LINE_WITHOUT_URL, 292, 0, JSEXN_TYPEERR, "findScripts query object has 'line' property, but no 'url' property")
 MSG_DEF(JSMSG_QUERY_INNERMOST_WITHOUT_LINE_URL, 293, 0, JSEXN_TYPEERR, "findScripts query object has 'innermost' property without both 'url' and 'line' properties")
 MSG_DEF(JSMSG_DEBUG_VARIABLE_NOT_FOUND, 294, 0, JSEXN_TYPEERR, "variable not found in environment")
+MSG_DEF(JSMSG_PARAMETER_AFTER_REST,   295, 0, JSEXN_SYNTAXERR, "parameter after rest parameter")
+MSG_DEF(JSMSG_NO_REST_NAME,           296, 0, JSEXN_SYNTAXERR, "no parameter name after ...")
+MSG_DEF(JSMSG_ARGUMENTS_AND_REST,     297, 0, JSEXN_SYNTAXERR, "'arguments' object may not be used in conjunction with a rest parameter")
+MSG_DEF(JSMSG_FUNCTION_ARGUMENTS_AND_REST, 298, 0, JSEXN_ERR, "the 'arguments' property of a function with a rest parameter may not be used")

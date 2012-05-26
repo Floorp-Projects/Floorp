@@ -131,6 +131,14 @@ class ResultsSink:
                 self.print_tinderbox_result(self.LABELS[
                     (result.result, result.test.expect, result.test.random)][0],
                     result.test.path, time=output.dt)
+                return
+
+            if dev_label:
+                if self.pb:
+                    self.fp.write("\n")
+                def singular(label):
+                    return "FIXED" if label == "FIXES" else label[:-1]
+                print >> self.fp, "%s - %s" % (singular(dev_label), output.test.path)
 
         if self.pb:
             self.pb.label = '[%4d|%4d|%4d]'%tuple(self.counts)

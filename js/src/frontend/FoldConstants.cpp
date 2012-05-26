@@ -200,8 +200,8 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
     ParseNodeKind kind = pn->getKind();
     ParseNode **pnp = &pn->pn_head;
     ParseNode *pn1 = *pnp;
-    RootedVarString accum(cx);
-    RootedVarString str(cx);
+    RootedString accum(cx);
+    RootedString str(cx);
     if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
         if (kind == PNK_XMLETAGO)
             accum = cx->runtime->atomState.etagoAtom;
@@ -709,9 +709,9 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGenexpLam
                 return false;
             if (!pn1->isKind(PNK_STRING) || !pn2->isKind(PNK_STRING))
                 return true;
-            RootedVarString left(cx, pn1->pn_atom);
-            RootedVarString right(cx, pn2->pn_atom);
-            RootedVarString str(cx, js_ConcatStrings(cx, left, right));
+            RootedString left(cx, pn1->pn_atom);
+            RootedString right(cx, pn2->pn_atom);
+            RootedString str(cx, js_ConcatStrings(cx, left, right));
             if (!str)
                 return false;
             pn->pn_atom = js_AtomizeString(cx, str);

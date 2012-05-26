@@ -12,5 +12,6 @@
   <color name="validation_message_text">#ffffff</color>
   <color name="identity_verified">#77BAFF</color>
   <color name="identity_identified">#B7D46A</color>
+  <color name="tabs_counter_color">#C7D1DB</color>
 </resources>
 

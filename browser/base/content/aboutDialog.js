@@ -116,15 +116,9 @@ function appUpdater()
     return;
   }
 
-  if (this.isPending) {
+  if (this.isPending || this.isApplied) {
     this.setupUpdateButton("update.restart." +
                            (this.isMajor ? "upgradeButton" : "updateButton"));
-    return;
-  }
-
-  if (this.isApplied) {
-    this.setupUpdateButton("update.restart." +
-                           (this.isMajor ? "upgradeButton" : "restartButton"));
     return;
   }
 
@@ -531,25 +525,24 @@ appUpdater.prototype =
         this.selectPanel("applying");
         let update = this.um.activeUpdate;
         let self = this;
-        let timer = Components.classes["@mozilla.org/timer;1"]
-                              .createInstance(Components.interfaces.nsITimer);
-        timer.initWithCallback(function () {
+        Services.obs.addObserver(function (aSubject, aTopic, aData) {
           // Update the UI when the background updater is finished
           let status = update.state;
-          if (status == "applied" || status == "applied-service") {
+          if (status == "applied" || status == "applied-service" ||
+              status == "pending" || status == "pending-service") {
+            // If the update is successfully applied, or if the updater has
+            // fallen back to non-staged updates, show the Restart to Update
+            // button.
             self.selectPanel("updateButtonBox");
             self.setupUpdateButton("update.restart." +
-                                   (self.isMajor ? "upgradeButton" : "restartButton"));
-            timer.cancel();
-            timer = null;
+                                   (self.isMajor ? "upgradeButton" : "updateButton"));
           } else if (status == "failed") {
             // Background update has failed, let's show the UI responsible for
             // prompting the user to update manually.
             self.selectPanel("downloadFailed");
-            timer.cancel();
-            timer = null;
           }
-        }, 500, timer.TYPE_REPEATING_SLACK);
+          Services.obs.removeObserver(arguments.callee, "update-staged");
+        }, "update-staged", false);
       } else {
         this.selectPanel("updateButtonBox");
         this.setupUpdateButton("update.restart." +

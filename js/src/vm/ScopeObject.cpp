@@ -118,14 +118,14 @@ js_PutCallObject(StackFrame *fp, CallObject &callobj)
 CallObject *
 CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleObject callee)
 {
-    RootedVarShape shape(cx);
+    RootedShape shape(cx);
     shape = script->bindings.callObjectShape(cx);
     if (shape == NULL)
         return NULL;
 
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots() + 1);
 
-    RootedVarTypeObject type(cx);
+    RootedTypeObject type(cx);
     type = cx->compartment->getEmptyType(cx);
     if (!type)
         return NULL;
@@ -134,7 +134,7 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
     if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
         return NULL;
 
-    RootedVarObject obj(cx, JSObject::create(cx, kind, shape, type, slots));
+    RootedObject obj(cx, JSObject::create(cx, kind, shape, type, slots));
     if (!obj)
         return NULL;
 
@@ -145,7 +145,7 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
      */
     if (&enclosing->global() != obj->getParent()) {
         JS_ASSERT(obj->getParent() == NULL);
-        if (!JSObject::setParent(cx, obj, RootedVarObject(cx, &enclosing->global())))
+        if (!JSObject::setParent(cx, obj, RootedObject(cx, &enclosing->global())))
             return NULL;
     }
 
@@ -184,7 +184,7 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
     JS_ASSERT(fp->isNonEvalFunctionFrame());
     JS_ASSERT(!fp->hasCallObj());
 
-    RootedVarObject scopeChain(cx, fp->scopeChain());
+    RootedObject scopeChain(cx, fp->scopeChain());
 
     /*
      * For a named function expression Call's parent points to an environment
@@ -196,7 +196,7 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
             return NULL;
     }
 
-    CallObject *callobj = create(cx, fp->script(), scopeChain, RootedVarObject(cx, &fp->callee()));
+    CallObject *callobj = create(cx, fp->script(), scopeChain, RootedObject(cx, &fp->callee()));
     if (!callobj)
         return NULL;
 
@@ -207,7 +207,7 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
 CallObject *
 CallObject::createForStrictEval(JSContext *cx, StackFrame *fp)
 {
-    CallObject *callobj = create(cx, fp->script(), fp->scopeChain(), RootedVarObject(cx));
+    CallObject *callobj = create(cx, fp->script(), fp->scopeChain(), RootedObject(cx));
     if (!callobj)
         return NULL;
 
@@ -313,7 +313,7 @@ CallObject::containsVarOrArg(PropertyName *name, Value *vp, JSContext *cx)
     if (op != getVarOp && op != getArgOp)
         return false;
 
-    JS_ALWAYS_TRUE(op(cx, RootedVarObject(cx, this), RootedVarId(cx, INT_TO_JSID(shape->shortid())), vp));
+    JS_ALWAYS_TRUE(op(cx, RootedObject(cx, this), RootedId(cx, INT_TO_JSID(shape->shortid())), vp));
     return true;
 }
 
@@ -366,18 +366,18 @@ Class js::DeclEnvClass = {
 DeclEnvObject *
 DeclEnvObject::create(JSContext *cx, StackFrame *fp)
 {
-    RootedVarTypeObject type(cx);
+    RootedTypeObject type(cx);
     type = cx->compartment->getEmptyType(cx);
     if (!type)
         return NULL;
 
-    RootedVarShape emptyDeclEnvShape(cx);
+    RootedShape emptyDeclEnvShape(cx);
     emptyDeclEnvShape = EmptyShape::getInitialShape(cx, &DeclEnvClass, NULL,
                                                     &fp->global(), FINALIZE_KIND);
     if (!emptyDeclEnvShape)
         return NULL;
 
-    RootedVarObject obj(cx, JSObject::create(cx, FINALIZE_KIND, emptyDeclEnvShape, type, NULL));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, emptyDeclEnvShape, type, NULL));
     if (!obj)
         return NULL;
 
@@ -386,7 +386,7 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
         return NULL;
 
 
-    if (!DefineNativeProperty(cx, obj, RootedVarId(cx, AtomToId(fp->fun()->atom)),
+    if (!DefineNativeProperty(cx, obj, RootedId(cx, AtomToId(fp->fun()->atom)),
                               ObjectValue(fp->callee()), NULL, NULL,
                               JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
                               0, 0)) {
@@ -399,18 +399,18 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
 WithObject *
 WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, uint32_t depth)
 {
-    RootedVarTypeObject type(cx);
+    RootedTypeObject type(cx);
     type = proto->getNewType(cx);
     if (!type)
         return NULL;
 
-    RootedVarShape emptyWithShape(cx);
+    RootedShape emptyWithShape(cx);
     emptyWithShape = EmptyShape::getInitialShape(cx, &WithClass, proto,
                                                  &enclosing->global(), FINALIZE_KIND);
     if (!emptyWithShape)
         return NULL;
 
-    RootedVarObject obj(cx, JSObject::create(cx, FINALIZE_KIND, emptyWithShape, type, NULL));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, emptyWithShape, type, NULL));
     if (!obj)
         return NULL;
 
@@ -443,14 +443,14 @@ with_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp
 static JSBool
 with_LookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp, JSProperty **propp)
 {
-    return with_LookupGeneric(cx, obj, RootedVarId(cx, NameToId(name)), objp, propp);
+    return with_LookupGeneric(cx, obj, RootedId(cx, NameToId(name)), objp, propp);
 }
 
 static JSBool
 with_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **objp,
                    JSProperty **propp)
 {
-    RootedVarId id(cx);
+    RootedId id(cx);
     if (!IndexToId(cx, index, id.address()))
         return false;
     return with_LookupGeneric(cx, obj, id, objp, propp);
@@ -459,7 +459,7 @@ with_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **o
 static JSBool
 with_LookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp, JSProperty **propp)
 {
-    return with_LookupGeneric(cx, obj, RootedVarId(cx, SPECIALID_TO_JSID(sid)), objp, propp);
+    return with_LookupGeneric(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), objp, propp);
 }
 
 static JSBool
@@ -471,13 +471,13 @@ with_GetGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId
 static JSBool
 with_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name, Value *vp)
 {
-    return with_GetGeneric(cx, obj, receiver, RootedVarId(cx, NameToId(name)), vp);
+    return with_GetGeneric(cx, obj, receiver, RootedId(cx, NameToId(name)), vp);
 }
 
 static JSBool
 with_GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index, Value *vp)
 {
-    RootedVarId id(cx);
+    RootedId id(cx);
     if (!IndexToId(cx, index, id.address()))
         return false;
     return with_GetGeneric(cx, obj, receiver, id, vp);
@@ -486,7 +486,7 @@ with_GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t
 static JSBool
 with_GetSpecial(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSpecialId sid, Value *vp)
 {
-    return with_GetGeneric(cx, obj, receiver, RootedVarId(cx, SPECIALID_TO_JSID(sid)), vp);
+    return with_GetGeneric(cx, obj, receiver, RootedId(cx, SPECIALID_TO_JSID(sid)), vp);
 }
 
 static JSBool
@@ -657,7 +657,7 @@ Class js::WithClass = {
 ClonedBlockObject *
 ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, StackFrame *fp)
 {
-    RootedVarTypeObject type(cx);
+    RootedTypeObject type(cx);
     type = block->getNewType(cx);
     if (!type)
         return NULL;
@@ -666,17 +666,17 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Stac
     if (!PreallocateObjectDynamicSlots(cx, block->lastProperty(), &slots))
         return NULL;
 
-    RootedVarShape shape(cx);
+    RootedShape shape(cx);
     shape = block->lastProperty();
 
-    RootedVarObject obj(cx, JSObject::create(cx, FINALIZE_KIND, shape, type, slots));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, shape, type, slots));
     if (!obj)
         return NULL;
 
     /* Set the parent if necessary, as for call objects. */
     if (&fp->global() != obj->getParent()) {
         JS_ASSERT(obj->getParent() == NULL);
-        if (!JSObject::setParent(cx, obj, RootedVarObject(cx, &fp->global())))
+        if (!JSObject::setParent(cx, obj, RootedObject(cx, &fp->global())))
             return NULL;
     }
 
@@ -760,26 +760,26 @@ block_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, V
 bool
 ClonedBlockObject::containsVar(PropertyName *name, Value *vp, JSContext *cx)
 {
-    RootedVarObject self(cx, this);
+    RootedObject self(cx, this);
 
     const Shape *shape = nativeLookup(cx, NameToId(name));
     if (!shape)
         return false;
 
     JS_ASSERT(shape->getterOp() == block_getProperty);
-    JS_ALWAYS_TRUE(block_getProperty(cx, self, RootedVarId(cx, INT_TO_JSID(shape->shortid())), vp));
+    JS_ALWAYS_TRUE(block_getProperty(cx, self, RootedId(cx, INT_TO_JSID(shape->shortid())), vp));
     return true;
 }
 
 StaticBlockObject *
 StaticBlockObject::create(JSContext *cx)
 {
-    RootedVarTypeObject type(cx);
+    RootedTypeObject type(cx);
     type = cx->compartment->getEmptyType(cx);
     if (!type)
         return NULL;
 
-    RootedVarShape emptyBlockShape(cx);
+    RootedShape emptyBlockShape(cx);
     emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockClass, NULL, NULL, FINALIZE_KIND);
     if (!emptyBlockShape)
         return NULL;
@@ -1151,12 +1151,15 @@ ScopeIter::settle()
      * frame, the scope chain (pointed to by cur_) continues into the scopes of
      * enclosing frames. Thus, it is important not to look at cur_ until it is
      * certain that cur_ points to a scope object in the current frame. In
-     * particular, there are two tricky corner cases:
-     *  - nested non-heavyweight functions;
+     * particular, there are three tricky corner cases:
+     *  - non-heavyweight functions;
      *  - non-strict direct eval.
-     * In both cases, cur_ can already be pointing into an enclosing frame's
-     * scope chain. As a final twist: even if cur_ points into an enclosing
-     * frame's scope chain, the current frame may still have uncloned blocks.
+     *  - heavyweight functions observed before the prologue has finished;
+     * In all cases, cur_ can already be pointing into an enclosing frame's
+     * scope chain. Furthermore, in the first two cases: even if cur_ points
+     * into an enclosing frame's scope chain, the current frame may still have
+     * uncloned blocks. In the last case, since we haven't entered the
+     * function, we simply return a ScopeIter where done() == true.
      *
      * Note: DebugScopeObject falls nicely into this plan: since they are only
      * ever introduced as the *enclosing* scope of a frame, they should never
@@ -1178,6 +1181,9 @@ ScopeIter::settle()
         } else {
             fp_ = NULL;
         }
+    } else if (fp_->isNonEvalFunctionFrame() && !fp_->hasCallObj()) {
+        JS_ASSERT(cur_ == fp_->fun()->environment());
+        fp_ = NULL;
     } else if (cur_->isWith()) {
         JS_ASSERT_IF(fp_->isFunctionFrame(), fp_->fun()->isHeavyweight());
         JS_ASSERT_IF(block_, block_->needsClone());
@@ -1337,7 +1343,7 @@ class DebugScopeProxy : public BaseProxyHandler
         }
 
         AutoAllowUnaliasedVarAccess a(cx);
-        return scope.getGeneric(cx, RootedVarObject(cx, &scope), RootedVarId(cx, id), vp);
+        return scope.getGeneric(cx, RootedObject(cx, &scope), RootedId(cx, id), vp);
     }
 
     bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
@@ -1345,7 +1351,7 @@ class DebugScopeProxy : public BaseProxyHandler
     {
         AutoAllowUnaliasedVarAccess a(cx);
         ScopeObject &scope = proxy->asDebugScope().scope();
-        return scope.setGeneric(cx, RootedVarId(cx, id), vp, strict);
+        return scope.setGeneric(cx, RootedId(cx, id), vp, strict);
     }
 
     bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc) MOZ_OVERRIDE
@@ -1488,7 +1494,7 @@ DebugScopes::sweep()
      * creating an uncollectable cycle with suspended generator frames.
      */
     for (MissingScopeMap::Enum e(missingScopes); !e.empty(); e.popFront()) {
-        if (IsAboutToBeFinalized(e.front().value))
+        if (!IsObjectMarked(&e.front().value))
             e.removeFront();
     }
 }
@@ -1690,7 +1696,7 @@ GetDebugScopeForMissing(JSContext *cx, ScopeIter si)
         break;
       }
       case ScopeIter::Block: {
-        RootedVar<StaticBlockObject *> staticBlock(cx, &si.staticBlock());
+        Rooted<StaticBlockObject *> staticBlock(cx, &si.staticBlock());
         ClonedBlockObject *block = ClonedBlockObject::create(cx, staticBlock, si.fp());
         if (!block)
             return NULL;

@@ -365,6 +365,8 @@ gfxPlatform::Shutdown()
 
 gfxPlatform::~gfxPlatform()
 {
+    mScreenReferenceSurface = nsnull;
+
     // The cairo folks think we should only clean up in debug builds,
     // but we're generally in the habit of trying to shut down as
     // cleanly as possible even in production code, so call this
@@ -479,7 +481,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     }
 
     if (!imgSurface) {
-      imgSurface = new gfxImageSurface(aSurface->GetSize(), gfxASurface::FormatFromContent(aSurface->GetContentType()));
+      imgSurface = new gfxImageSurface(aSurface->GetSize(), OptimalFormatForContent(aSurface->GetContentType()));
       nsRefPtr<gfxContext> ctx = new gfxContext(imgSurface);
       ctx->SetSource(aSurface);
       ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
@@ -600,7 +602,7 @@ gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
     }
 
     IntSize size = data->GetSize();
-    gfxASurface::gfxImageFormat format = gfxASurface::FormatFromContent(ContentForFormat(data->GetFormat()));
+    gfxASurface::gfxImageFormat format = OptimalFormatForContent(ContentForFormat(data->GetFormat()));
 
     surf =
       new gfxImageSurface(data->GetData(), gfxIntSize(size.width, size.height),
@@ -1437,4 +1439,36 @@ gfxPlatform::GetScreenDepth() const
 {
     MOZ_ASSERT(false, "Not implemented on this platform");
     return 0;
+}
+
+mozilla::gfx::SurfaceFormat
+gfxPlatform::Optimal2DFormatForContent(gfxASurface::gfxContentType aContent)
+{
+  switch (aContent) {
+  case gfxASurface::CONTENT_COLOR:
+    return mozilla::gfx::FORMAT_B8G8R8X8;
+  case gfxASurface::CONTENT_ALPHA:
+    return mozilla::gfx::FORMAT_A8;
+  case gfxASurface::CONTENT_COLOR_ALPHA:
+    return mozilla::gfx::FORMAT_B8G8R8A8;
+  default:
+    NS_NOTREACHED("unknown gfxContentType");
+    return mozilla::gfx::FORMAT_B8G8R8A8;
+  }
+}
+
+gfxImageFormat
+gfxPlatform::OptimalFormatForContent(gfxASurface::gfxContentType aContent)
+{
+  switch (aContent) {
+  case gfxASurface::CONTENT_COLOR:
+    return GetOffscreenFormat();
+  case gfxASurface::CONTENT_ALPHA:
+    return gfxASurface::ImageFormatA8;
+  case gfxASurface::CONTENT_COLOR_ALPHA:
+    return gfxASurface::ImageFormatARGB32;
+  default:
+    NS_NOTREACHED("unknown gfxContentType");
+    return gfxASurface::ImageFormatARGB32;
+  }
 }

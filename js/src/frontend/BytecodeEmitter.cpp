@@ -1015,7 +1015,7 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
     if (!EmitObjectOp(cx, pn->pn_objbox, op, bce))
         return false;
 
-    RootedVar<StaticBlockObject*> blockObj(cx, &pn->pn_objbox->object->asStaticBlock());
+    Rooted<StaticBlockObject*> blockObj(cx, &pn->pn_objbox->object->asStaticBlock());
 
     int depth = bce->stackDepth -
                 (blockObj->slotCount() + ((op == JSOP_ENTERLET1) ? 1 : 0));
@@ -1033,6 +1033,7 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
         /* Beware the empty destructuring dummy. */
         if (!dn) {
             JS_ASSERT(i + 1 <= blockObj->slotCount());
+            blockObj->setAliased(i, bce->sc->bindingsAccessedDynamically());
             continue;
         }
 
@@ -1169,7 +1170,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return JS_TRUE;
 
     JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
-    RootedVarAtom atom(cx, pn->pn_atom);
+    RootedAtom atom(cx, pn->pn_atom);
     UpvarCookie cookie = dn->pn_cookie;
     dn_kind = dn->kind();
 
@@ -3684,12 +3685,12 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
       case PNK_RB: {
         JS_ASSERT(isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
 
-        RootedVarObject obj(cx, NewDenseAllocatedArray(cx, pn_count));
+        RootedObject obj(cx, NewDenseAllocatedArray(cx, pn_count));
         if (!obj)
             return false;
 
         unsigned idx = 0;
-        RootedVarId id(cx);
+        RootedId id(cx);
         for (ParseNode *pn = pn_head; pn; idx++, pn = pn->pn_next) {
             Value value;
             if (!pn->getConstantValue(cx, strictChecks, &value))
@@ -3708,7 +3709,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         JS_ASSERT(isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
 
         gc::AllocKind kind = GuessObjectGCKind(pn_count);
-        RootedVarObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass, kind));
+        RootedObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass, kind));
         if (!obj)
             return false;
 
@@ -3720,7 +3721,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             ParseNode *pnid = pn->pn_left;
             if (pnid->isKind(PNK_NUMBER)) {
                 Value idvalue = NumberValue(pnid->pn_dval);
-                RootedVarId id(cx);
+                RootedId id(cx);
                 if (idvalue.isInt32() && INT_FITS_IN_JSID(idvalue.toInt32()))
                     id = INT_TO_JSID(idvalue.toInt32());
                 else if (!InternNonIntElementId(cx, obj, idvalue, id.address()))
@@ -3730,7 +3731,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             } else {
                 JS_ASSERT(pnid->isKind(PNK_NAME) || pnid->isKind(PNK_STRING));
                 JS_ASSERT(pnid->pn_atom != cx->runtime->atomState.protoAtom);
-                RootedVarId id(cx, AtomToId(pnid->pn_atom));
+                RootedId id(cx, AtomToId(pnid->pn_atom));
                 if (!DefineNativeProperty(cx, obj, id, value, NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0)) {
                     return false;
@@ -4236,7 +4237,7 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     JS_ASSERT(varList->isArity(PN_LIST));
     ParseNode *letBody = pnLet->pn_right;
     JS_ASSERT(letBody->isLet() && letBody->isKind(PNK_LEXICALSCOPE));
-    RootedVar<StaticBlockObject*> blockObj(cx, &letBody->pn_objbox->object->asStaticBlock());
+    Rooted<StaticBlockObject*> blockObj(cx, &letBody->pn_objbox->object->asStaticBlock());
 
     ptrdiff_t letHeadOffset = bce->offset();
     int letHeadDepth = bce->stackDepth;
@@ -4459,7 +4460,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     bool letDecl = pn1 && pn1->isKind(PNK_LEXICALSCOPE);
     JS_ASSERT_IF(letDecl, pn1->isLet());
 
-    RootedVar<StaticBlockObject*> blockObj(cx, letDecl ? &pn1->pn_objbox->object->asStaticBlock() : NULL);
+    Rooted<StaticBlockObject*> blockObj(cx, letDecl ? &pn1->pn_objbox->object->asStaticBlock() : NULL);
     uint32_t blockObjCount = blockObj ? blockObj->slotCount() : 0;
 
     if (letDecl) {
@@ -4782,7 +4783,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return Emit1(cx, bce, JSOP_GETFUNNS) >= 0;
 #endif
 
-    RootedVarFunction fun(cx, pn->pn_funbox->function());
+    RootedFunction fun(cx, pn->pn_funbox->function());
     JS_ASSERT(fun->isInterpreted());
     if (fun->script()) {
         /*
@@ -5683,7 +5684,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * Try to construct the shape of the object as we go, so we can emit a
      * JSOP_NEWOBJECT with the final shape instead.
      */
-    RootedVarObject obj(cx);
+    RootedObject obj(cx);
     if (bce->parser->compileAndGo) {
         gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
@@ -5733,7 +5734,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());
-                if (!DefineNativeProperty(cx, obj, RootedVarId(cx, AtomToId(pn3->pn_atom)),
+                if (!DefineNativeProperty(cx, obj, RootedId(cx, AtomToId(pn3->pn_atom)),
                                           UndefinedValue(), NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0))
                 {
@@ -5889,6 +5890,19 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (JOF_OPTYPE(pn2->getOp()) == JOF_QARG && bce->shouldNoteClosedName(pn2)) {
                 if (!bce->noteClosedArg(pn2))
                     return JS_FALSE;
+            }
+            if (pn2->pn_next == pnlast && bce->sc->fun()->hasRest()) {
+                /* Fill rest parameter. */
+                JS_ASSERT(!bce->sc->funArgumentsHasLocalBinding());
+                bce->switchToProlog();
+                if (Emit1(cx, bce, JSOP_REST) < 0)
+                    return false;
+                CheckTypeSet(cx, bce, JSOP_REST);
+                if (!EmitVarOp(cx, pn2, JSOP_SETARG, bce))
+                    return false;
+                if (Emit1(cx, bce, JSOP_POP) < 0)
+                    return false;
+                bce->switchToMain();
             }
         }
         ok = EmitTree(cx, bce, pnlast);

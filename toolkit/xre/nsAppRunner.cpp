@@ -3912,7 +3912,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 }
 
 int
-XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
+XRE_main(int argc, char* argv[], const nsXREAppData* aAppData, PRUint32 aFlags)
 {
   XREMain main;
   return main.XRE_main(argc, argv, aAppData);

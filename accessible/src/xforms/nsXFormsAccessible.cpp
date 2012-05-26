@@ -475,8 +475,8 @@ nsXFormsSelectableAccessible::GetItemByIndex(PRUint32* aIndex,
                                              nsAccessible* aAccessible)
 {
   nsAccessible* accessible = aAccessible ? aAccessible : this;
-  PRInt32 childCount = accessible->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+  PRUint32 childCount = accessible->ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsAccessible *child = accessible->GetChildAt(childIdx);
     nsIContent* childContent = child->GetContent();
     nsINodeInfo *nodeInfo = childContent->NodeInfo();

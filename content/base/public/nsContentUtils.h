@@ -1389,6 +1389,12 @@ public:
                           bool aIsTrusted);
 
   /**
+   * Get the link location.
+   */
+  static void GetLinkLocation(mozilla::dom::Element* aElement,
+                              nsString& aLocationString);
+
+  /**
    * Return top-level widget in the parent chain.
    */
   static nsIWidget* GetTopLevelWidget(nsIWidget* aWidget);
@@ -2002,6 +2008,24 @@ public:
   static void SplitMimeType(const nsAString& aValue, nsString& aType,
                             nsString& aParams);
 
+  /** 
+   * Takes a window and a string to check prefs against. Assumes that
+   * the window is an app window, and that the pref is a comma
+   * seperated list of app urls that have permission to use whatever
+   * the preference refers to (for example, does the current window
+   * have access to mozTelephony). Chrome is always given permissions
+   * for the requested preference. Sets aAllowed based on preference.
+   *
+   * @param aWindow Current window asking for preference permission
+   * @param aPrefURL Preference name
+   * @param aAllowed [out] outparam on whether or not window is allowed
+   *                       to access pref
+   *
+   * @return NS_OK on successful preference lookup, error code otherwise
+   */
+  static nsresult IsOnPrefWhitelist(nsPIDOMWindow* aWindow,
+                                    const char* aPrefURL, bool *aAllowed);
+  
 private:
   static bool InitializeEventTable();
 
