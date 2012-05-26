@@ -5,8 +5,12 @@ import @ANDROID_PACKAGE_NAME@.*;
 import java.lang.reflect.Method;
 
 public class testCheck3 extends PixelTest {
+    @Override
+    protected int getTestType() {
+        return TEST_TALOS;
+    }
+
     public void testCheck3() {
-        setTestType("talos");
         String url = getAbsoluteUrl("/startup_test/fennecmark/cnn/cnn.com/index.html");
         // Disable Fennec's low-res screenshot for the duration of this test;
         // this distinguishes this test from testCheck2, which is otherwise
