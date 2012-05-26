@@ -36,11 +36,15 @@ function testSimpleCall() {
       is(testVar.id, "test-scope->something-variable",
         "The newly created scope should have the default id set.");
 
-      is(testVar.querySelector(".name").textContent, "something",
+      is(testVar.querySelector(".name").getAttribute("value"), "something",
         "Any new variable should have the designated title.");
 
       is(testVar.querySelector(".details").childNodes.length, 0,
         "Any new variable should have a details container with no child nodes.");
+
+
+      let properties = testVar.addProperties({ "child": { "value": { "type": "object",
+                                                                     "class": "Object" } } });
 
 
       ok(!testVar.expanded,
@@ -84,18 +88,87 @@ function testSimpleCall() {
         "The testVar should remember it is collapsed even if it is hidden.");
 
       EventUtils.sendMouseEvent({ type: "click" },
-        testVar.querySelector(".title"),
+        testVar.querySelector(".name"),
         gDebugger);
 
       ok(testVar.expanded,
-        "Clicking the testScope tilte should expand it.");
+        "Clicking the testVar name should expand it.");
+
+      EventUtils.sendMouseEvent({ type: "click" },
+        testVar.querySelector(".name"),
+        gDebugger);
+
+      ok(!testVar.expanded,
+        "Clicking again the testVar name should collapse it.");
+
+
+      EventUtils.sendMouseEvent({ type: "click" },
+        testVar.querySelector(".arrow"),
+        gDebugger);
+
+      ok(testVar.expanded,
+        "Clicking the testVar arrow should expand it.");
+
+      EventUtils.sendMouseEvent({ type: "click" },
+        testVar.querySelector(".arrow"),
+        gDebugger);
+
+      ok(!testVar.expanded,
+        "Clicking again the testVar arrow should collapse it.");
+
 
       EventUtils.sendMouseEvent({ type: "click" },
         testVar.querySelector(".title"),
         gDebugger);
 
       ok(!testVar.expanded,
-        "Clicking again the testScope tilte should collapse it.");
+        "Clicking the testVar title div shouldn't expand it.");
+
+
+      testScope.show();
+      testScope.expand();
+      testVar.show();
+      testVar.expand();
+
+      ok(!testVar.child.expanded,
+        "The testVar child property should remember it is collapsed even if it is hidden.");
+
+      EventUtils.sendMouseEvent({ type: "click" },
+        testVar.child.querySelector(".key"),
+        gDebugger);
+
+      ok(testVar.child.expanded,
+        "Clicking the testVar child property name should expand it.");
+
+      EventUtils.sendMouseEvent({ type: "click" },
+        testVar.child.querySelector(".key"),
+        gDebugger);
+
+      ok(!testVar.child.expanded,
+        "Clicking again the testVar child property name should collapse it.");
+
+
+      EventUtils.sendMouseEvent({ type: "click" },
+        testVar.child.querySelector(".arrow"),
+        gDebugger);
+
+      ok(testVar.child.expanded,
+        "Clicking the testVar child property arrow should expand it.");
+
+      EventUtils.sendMouseEvent({ type: "click" },
+        testVar.child.querySelector(".arrow"),
+        gDebugger);
+
+      ok(!testVar.child.expanded,
+        "Clicking again the testVar child property arrow should collapse it.");
+
+
+      EventUtils.sendMouseEvent({ type: "click" },
+        testVar.child.querySelector(".title"),
+        gDebugger);
+
+      ok(!testVar.child.expanded,
+        "Clicking the testVar child property title div shouldn't expand it.");
 
 
       let emptyCallbackSender = null;

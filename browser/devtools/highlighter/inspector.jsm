@@ -448,15 +448,16 @@ InspectorUI.prototype = {
     this.win = this.browser.contentWindow;
     this.winID = this.getWindowID(this.win);
     this.toolbar = this.chromeDoc.getElementById("inspector-toolbar");
-    this.inspectMenuitem = this.chromeDoc.getElementById("Tools:Inspect");
-    this.inspectToolbutton =
-      this.chromeDoc.getElementById("inspector-inspect-toolbutton");
+    this.inspectCommand = this.chromeDoc.getElementById("Inspector:Inspect");
+
+    // Update menus:
+    this.inspectorUICommand = this.chromeDoc.getElementById("Tools:Inspect");
+    this.inspectorUICommand.setAttribute("checked", "true");
 
     this.chromeWin.Tilt.setup();
 
     this.treePanel = new TreePanel(this.chromeWin, this);
     this.toolbar.hidden = false;
-    this.inspectMenuitem.setAttribute("checked", true);
 
     // initialize the HTML Breadcrumbs
     this.breadcrumbs = new HTMLBreadcrumbs(this);
@@ -649,7 +650,8 @@ InspectorUI.prototype = {
     if (!aKeepInspector)
       this.store.deleteInspector(this.winID);
 
-    this.inspectMenuitem.removeAttribute("checked");
+    this.inspectorUICommand.setAttribute("checked", "false");
+
     this.browser = this.win = null; // null out references to browser and window
     this.winID = null;
     this.selection = null;
@@ -658,6 +660,8 @@ InspectorUI.prototype = {
 
     delete this.treePanel;
     delete this.stylePanel;
+    delete this.inspectorUICommand;
+    delete this.inspectCommand;
     delete this.toolbar;
 
     Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.CLOSED, null);
@@ -677,7 +681,7 @@ InspectorUI.prototype = {
     if (this.treePanel && this.treePanel.editingContext)
       this.treePanel.closeEditor();
 
-    this.inspectToolbutton.checked = true;
+    this.inspectCommand.setAttribute("checked", "true");
 
     this.inspecting = true;
     this.highlighter.unlock();
@@ -702,7 +706,7 @@ InspectorUI.prototype = {
       return;
     }
 
-    this.inspectToolbutton.checked = false;
+    this.inspectCommand.setAttribute("checked", "false");
 
     this.inspecting = false;
     if (this.highlighter.getNode()) {

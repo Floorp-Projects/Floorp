@@ -31,7 +31,7 @@ function testSimpleCall() {
       is(testScope.id, "test-scope",
         "The newly created scope should have the default id set.");
 
-      is(testScope.querySelector(".name").textContent, "test",
+      is(testScope.querySelector(".name").getAttribute("value"), "test",
         "Any new scope should have the designated title.");
 
       is(testScope.querySelector(".details").childNodes.length, 0,

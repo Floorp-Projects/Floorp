@@ -179,7 +179,7 @@ browser.jar:
   skin/classic/browser/devtools/breadcrumbs/rtl-start-selected.png           (devtools/breadcrumbs/rtl-start-selected.png)
   skin/classic/browser/devtools/splitview.css               (devtools/splitview.css)
   skin/classic/browser/devtools/styleeditor.css             (devtools/styleeditor.css)
-  skin/classic/browser/devtools/debugger.css                (devtools/debugger.css)
+* skin/classic/browser/devtools/debugger.css                (devtools/debugger.css)
   skin/classic/browser/devtools/magnifying-glass.png        (devtools/magnifying-glass.png)
   skin/classic/browser/devtools/itemToggle.png              (devtools/itemToggle.png)
   skin/classic/browser/devtools/itemArrow-rtl.png           (devtools/itemArrow-rtl.png)
@@ -191,6 +191,10 @@ browser.jar:
   skin/classic/browser/devtools/layout-background.png       (devtools/layout-background.png)
   skin/classic/browser/devtools/layoutview.css              (devtools/layoutview.css)
   skin/classic/browser/devtools/layout-buttons.png          (devtools/layout-buttons.png)
+  skin/classic/browser/devtools/debugger-pause.png          (devtools/debugger-pause.png)
+  skin/classic/browser/devtools/debugger-step-in.png        (devtools/debugger-step-in.png)
+  skin/classic/browser/devtools/debugger-step-out.png       (devtools/debugger-step-out.png)
+  skin/classic/browser/devtools/debugger-step-over.png      (devtools/debugger-step-over.png)
   skin/classic/browser/devtools/inspector-option-icon.png     (devtools/inspector-option-icon.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-throbber.png

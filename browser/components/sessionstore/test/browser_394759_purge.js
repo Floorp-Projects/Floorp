@@ -74,7 +74,7 @@ function test() {
       }
     ]
   };
-  
+
   // set browser to test state
   ss.setBrowserState(JSON.stringify(testState));
 
@@ -93,7 +93,7 @@ function test() {
   is(win.selected, 1, "Selected tab has changed");
   is(win.title, REMEMBER, "The window title was correctly updated");
 
-  // Test more complicated case 
+  // Test more complicated case
   win = closedWindowData[1];
   is(win.tabs.length, 3, "2 tabs were removed");
   is(countOpenTabsByTitle(win.tabs, FORGET), 0,

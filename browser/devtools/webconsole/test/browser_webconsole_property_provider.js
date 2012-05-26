@@ -6,43 +6,37 @@
 // Tests the property provider, which is part of the code completion
 // infrastructure.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+const TEST_URI = "data:text/html;charset=utf8,<p>test the JS property provider";
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testPropertyProvider, false);
+  browser.addEventListener("load", testPropertyProvider, true);
 }
 
 function testPropertyProvider() {
-  browser.removeEventListener("DOMContentLoaded", testPropertyProvider,
-                              false);
+  browser.removeEventListener("load", testPropertyProvider, true);
 
-  openConsole();
+  let tmp = {};
+  Cu.import("resource:///modules/WebConsoleUtils.jsm", tmp);
+  let JSPropertyProvider = tmp.JSPropertyProvider;
+  tmp = null;
 
-  var HUD = HUDService.getHudByWindow(content);
-  var jsterm = HUD.jsterm;
-  var context = jsterm.sandbox.window;
-  var completion;
-
-  // Test if the propertyProvider can be accessed from the jsterm object.
-  ok (jsterm.propertyProvider !== undefined, "JSPropertyProvider is defined");
-
-  completion = jsterm.propertyProvider(context, "thisIsNotDefined");
+  let completion = JSPropertyProvider(content, "thisIsNotDefined");
   is (completion.matches.length, 0, "no match for 'thisIsNotDefined");
 
   // This is a case the PropertyProvider can't handle. Should return null.
-  completion = jsterm.propertyProvider(context, "window[1].acb");
+  completion = JSPropertyProvider(content, "window[1].acb");
   is (completion, null, "no match for 'window[1].acb");
 
   // A very advanced completion case.
   var strComplete =
     'function a() { }document;document.getElementById(window.locatio';
-  completion = jsterm.propertyProvider(context, strComplete);
+  completion = JSPropertyProvider(content, strComplete);
   ok(completion.matches.length == 2, "two matches found");
   ok(completion.matchProp == "locatio", "matching part is 'test'");
   ok(completion.matches[0] == "location", "the first match is 'location'");
   ok(completion.matches[1] == "locationbar", "the second match is 'locationbar'");
-  context = completion = null;
+
   finishTest();
 }
 
