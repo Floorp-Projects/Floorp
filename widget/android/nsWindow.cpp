@@ -1310,6 +1310,8 @@ nsWindow::OnMotionEvent(AndroidGeckoEvent *ae)
             return;
     }
 
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+
 send_again:
 
     nsMouseEvent event(true,
@@ -1343,6 +1345,8 @@ getDistance(const nsIntPoint &p1, const nsIntPoint &p2)
 
 bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 {
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+
     // This is set to true once we have called SetPreventPanning() exactly
     // once for a given sequence of touch events. It is reset on the start
     // of the next sequence.
