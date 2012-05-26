@@ -16,16 +16,18 @@ namespace dom {
 
 class StorageChild : public PStorageChild
                    , public DOMStorageBase
+                   , public nsSupportsWeakReference
 {
 public:
-  NS_DECL_CYCLE_COLLECTION_CLASS(StorageChild)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(StorageChild, nsIPrivacyTransitionObserver)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_NSIPRIVACYTRANSITIONOBSERVER
   
   StorageChild(nsDOMStorage* aOwner);
   StorageChild(nsDOMStorage* aOwner, StorageChild& aOther);
 
-  virtual void InitAsSessionStorage(nsIURI* aDomainURI);
-  virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist);
+  virtual void InitAsSessionStorage(nsIURI* aDomainURI, bool aPrivate);
+  virtual void InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist, bool aPrivate);
 
   virtual bool CacheStoragePermissions();
   
