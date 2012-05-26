@@ -453,8 +453,8 @@ StackFrames.prototype = {
       DebuggerView.StackFrames.emptyText();
       DebuggerView.Properties.localScope.empty();
       DebuggerView.Properties.globalScope.empty();
+      DebuggerController.dispatchEvent("Debugger:AfterFramesCleared");
     }
-    DebuggerController.dispatchEvent("Debugger:AfterFramesCleared");
   },
 
   /**
