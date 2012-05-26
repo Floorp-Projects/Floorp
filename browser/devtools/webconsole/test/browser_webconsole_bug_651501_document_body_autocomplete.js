@@ -6,38 +6,36 @@
 
 // Tests that document.body autocompletes in the web console.
 
-let tempScope = {};
-Cu.import("resource:///modules/PropertyPanel.jsm", tempScope);
-let PropertyPanel = tempScope.PropertyPanel;
-let PropertyTreeView = tempScope.PropertyTreeView;
-let namesAndValuesOf = tempScope.namesAndValuesOf;
-let isNonNativeGetter = tempScope.isNonNativeGetter;
-
 function test() {
   addTab("data:text/html;charset=utf-8,Web Console autocompletion bug in document.body");
-  browser.addEventListener("load", onLoad, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, consoleOpened);
+  }, true);
 }
 
 var gHUD;
 
-function onLoad(aEvent) {
-  browser.removeEventListener(aEvent.type, arguments.callee, true);
-  openConsole();
-  let hudId = HUDService.getHudIdByWindow(content);
-  gHUD = HUDService.hudReferences[hudId];
+function consoleOpened(aHud) {
+  gHUD = aHud;
   let jsterm = gHUD.jsterm;
   let popup = jsterm.autocompletePopup;
   let completeNode = jsterm.completeNode;
 
+  let tmp = {};
+  Cu.import("resource:///modules/WebConsoleUtils.jsm", tmp);
+  let WCU = tmp.WebConsoleUtils;
+  tmp = null;
+
   ok(!popup.isOpen, "popup is not open");
 
-  popup._panel.addEventListener("popupshown", function() {
-    popup._panel.removeEventListener("popupshown", arguments.callee, false);
+  popup._panel.addEventListener("popupshown", function onShown() {
+    popup._panel.removeEventListener("popupshown", onShown, false);
 
     ok(popup.isOpen, "popup is open");
 
-    let props = namesAndValuesOf(content.wrappedJSObject.document.body).length;
-    is(popup.itemCount, props, "popup.itemCount is correct");
+    let props = WCU.namesAndValuesOf(content.wrappedJSObject.document.body);
+    is(popup.itemCount, props.length, "popup.itemCount is correct");
 
     popup._panel.addEventListener("popuphidden", autocompletePopupHidden, false);
 
@@ -55,32 +53,80 @@ function autocompletePopupHidden()
   let completeNode = jsterm.completeNode;
   let inputNode = jsterm.inputNode;
 
-  popup._panel.removeEventListener("popuphidden", arguments.callee, false);
+  popup._panel.removeEventListener("popuphidden", autocompletePopupHidden, false);
 
   ok(!popup.isOpen, "popup is not open");
   let inputStr = "document.b";
   jsterm.setInputValue(inputStr);
   EventUtils.synthesizeKey("o", {});
   let testStr = inputStr.replace(/./g, " ") + " ";
-  is(completeNode.value, testStr + "dy", "completeNode is empty");
-  jsterm.setInputValue("");
 
-  // Check the property panel as well. It's a bit gross to parse the properties
-  // out of the treeView cell text, but nsITreeView doesn't give us a good
-  // structured way to get at the data. :-(
-  let propPanel = jsterm.openPropertyPanel("Test", content.document);
+  waitForSuccess({
+    name: "autocomplete shows document.body",
+    validatorFn: function()
+    {
+      return completeNode.value == testStr + "dy";
+    },
+    successFn: testPropertyPanel,
+    failureFn: finishTest,
+  });
+}
+
+function testPropertyPanel()
+{
+  let jsterm = gHUD.jsterm;
+  jsterm.clearOutput();
+  jsterm.setInputValue("document");
+  jsterm.execute();
+
+  waitForSuccess({
+    name: "jsterm document object output",
+    validatorFn: function()
+    {
+      return gHUD.outputNode.querySelector(".webconsole-msg-output");
+    },
+    successFn: function()
+    {
+      document.addEventListener("popupshown", function onShown(aEvent) {
+        document.removeEventListener("popupshown", onShown, false);
+        executeSoon(propertyPanelShown.bind(null, aEvent.target));
+      }, false);
+
+      let node = gHUD.outputNode.querySelector(".webconsole-msg-output");
+      EventUtils.synthesizeMouse(node, 2, 2, {});
+    },
+    failureFn: finishTest,
+  });
+}
+
+function propertyPanelShown(aPanel)
+{
+  let tree = aPanel.querySelector("tree");
+  let view = tree.view;
+  let col = tree.columns[0];
+  ok(view.rowCount, "Property Panel rowCount");
+
+  let foundBody = false;
   let propPanelProps = [];
-  for (let idx = 0; idx < propPanel.treeView.rowCount; ++idx)
-    propPanelProps.push(propPanel.treeView.getCellText(idx, null).split(':')[0]);
+  for (let idx = 0; idx < view.rowCount; ++idx) {
+    let text = view.getCellText(idx, col);
+    if (text == "body: HTMLBodyElement" || text == "body: Object")
+      foundBody = true;
+    propPanelProps.push(text.split(":")[0]);
+  }
+
   // NB: We pull the properties off the prototype, rather than off object itself,
   // so that expandos like |constructor|, which the propPanel can't see, are not
   // included.
-  for (let prop in Object.getPrototypeOf(content.document))
+  for (let prop in Object.getPrototypeOf(content.document)) {
+    if (prop == "inputEncoding") {
+      continue;
+    }
     ok(propPanelProps.indexOf(prop) != -1, "Property |" + prop + "| should be reflected in propertyPanel");
+  }
 
-  let treeRows = propPanel.treeView._rows;
-  is (treeRows[30].display, "body: Object",  "found document.body");
-  propPanel.destroy();
+  ok(foundBody, "found document.body");
+
   executeSoon(finishTest);
 }
 

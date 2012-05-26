@@ -5,7 +5,7 @@
 function test() {
   /** Test for Bug 477657 **/
   waitForExplicitFinish();
-  
+
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no");
   newWin.addEventListener("load", function(aEvent) {
     newWin.removeEventListener("load", arguments.callee, false);

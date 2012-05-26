@@ -11,7 +11,7 @@
 <script type="application/javascript">
   frames[2].addEventListener("DOMContentLoaded", function() {
     frames[2].removeEventListener("DOMContentLoaded", arguments.callee, false);
-    
+
     if (frames[2].document.location.href == "data:text/html,mark1") {
       frames[2].document.location = "data:text/html,mark2";
     }

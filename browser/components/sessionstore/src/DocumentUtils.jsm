@@ -35,7 +35,7 @@ let DocumentUtils = {
 
     let node;
     let ret = {id: {}, xpath: {}};
-    
+
     // Limit the number of XPath expressions for performance reasons. See
     // bug 477564.
     const MAX_TRAVERSED_XPATHS = 100;
@@ -121,7 +121,7 @@ let DocumentUtils = {
     if ("xpath" in aData) {
       for each (let [xpath, value] in Iterator(aData.xpath)) {
         let node = XPathGenerator.resolve(aDocument, xpath);
-  
+
         if (node) {
           this.restoreFormValue(node, value, aDocument);
         }
@@ -131,7 +131,7 @@ let DocumentUtils = {
     if ("id" in aData) {
       for each (let [id, value] in Iterator(aData.id)) {
         let node = aDocument.getElementById(id);
-  
+
         if (node) {
           this.restoreFormValue(node, value, aDocument);
         }
@@ -159,7 +159,7 @@ let DocumentUtils = {
     aDocument = aDocument || aNode.ownerDocument;
 
     let eventType;
-    
+
     if (typeof aValue == "string" && aNode.type != "file") {
       // Don't dispatch an input event if there is no change.
       if (aNode.value == aValue) {
@@ -173,7 +173,7 @@ let DocumentUtils = {
       if (aNode.checked == aValue) {
         return;
       }
-      
+
       aNode.checked = aValue;
       eventType = "change";
     } else if (typeof aValue == "number") {
@@ -183,11 +183,11 @@ let DocumentUtils = {
       if (aNode.selectedIndex == aValue) {
         return;
       }
-      
+
       if (aValue < aNode.options.length) {
         aNode.selectedIndex = aValue;
         eventType = "change";
-      } 
+      }
     } else if (aValue && aValue.selectedIndex >= 0 && aValue.value) {
       // handle select new format
 
@@ -212,7 +212,7 @@ let DocumentUtils = {
       Array.forEach(aNode.options, function(opt, index) {
         // don't worry about malformed options with same values
         opt.selected = aValue.indexOf(opt.value) > -1;
-        
+
         // Only fire the event here if this wasn't selected by default
         if (!opt.defaultSelected) {
           eventType = "change";
