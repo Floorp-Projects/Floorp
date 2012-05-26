@@ -1,9 +1,5 @@
 <?xml version="1.0"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1337190282000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1337963207000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -160,6 +156,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i7" id="{2224e955-00e9-4613-a844-ce69fccaae91}">
+                        </emItem>
       <emItem  blockID="i90" id="videoplugin@player.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -284,8 +282,10 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i7" id="{2224e955-00e9-4613-a844-ce69fccaae91}">
-                        </emItem>
+      <emItem  blockID="i96" id="youtubeee@youtuber3.com">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i77" id="{fa277cfc-1d75-4949-a1f9-4ac8e41b2dfd}">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -364,6 +364,9 @@
       <pluginItem  os="Darwin" blockID="p89">
                   <match name="filename" exp="AdobePDFViewerNPAPI\.plugin" />                      <versionRange  minVersion="0" maxVersion="10.1.3" severity="1"></versionRange>
                   </pluginItem>
+      <pluginItem  blockID="p94">
+                  <match name="filename" exp="(NPSWF32\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="0" maxVersion="10.2.159.1" severity="0"></versionRange>
+                  </pluginItem>
     </pluginItems>
 
   <gfxItems>
@@ -386,6 +389,16 @@
                       <device>0x9807</device>
                   </devices>
             <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>      <driverVersion>1.0.0.0</driverVersion>      <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g95">      <os>WINNT 6.1</os>      <vendor>0x1002</vendor>              <devices>
+                      <device>0x9802</device>
+                      <device>0x9803</device>
+                      <device>0x9803</device>
+                      <device>0x9804</device>
+                      <device>0x9805</device>
+                      <device>0x9806</device>
+                      <device>0x9807</device>
+                  </devices>
+            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>      <driverVersion>1.0.0.0</driverVersion>      <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
 
 
