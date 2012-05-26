@@ -268,6 +268,7 @@ MOZ_XML_SetUnparsedEntityDeclHandler
 MOZ_XML_SetUserData
 MOZ_XML_SetXmlDeclHandler
 MOZ_XML_StopParser
+#ifdef MOZ_TREE_CAIRO
 _moz_cairo_append_path
 _moz_cairo_arc
 _moz_cairo_arc_negative
@@ -434,12 +435,14 @@ _moz_cairo_win32_surface_create_with_ddb
 _moz_cairo_win32_surface_create_with_dib
 _moz_cairo_win32_surface_get_dc
 _moz_cairo_win32_surface_get_image
+#ifdef MOZ_TREE_PIXMAN
 _moz_pixman_image_composite32
 _moz_pixman_image_create_bits
 _moz_pixman_image_set_transform
 _moz_pixman_image_unref
 _moz_pixman_transform_from_pixman_f_transform
 _moz_pixman_transform_invert
+#endif
 cairo_d2d_create_device
 cairo_d2d_create_device_from_d3d10device
 cairo_d2d_device_get_device
@@ -471,6 +474,7 @@ cairo_win32_surface_create_with_alpha
 cairo_win32_surface_get_height
 cairo_win32_surface_get_width
 cairo_win32_surface_set_can_convert_to_dib
+#endif
 hb_blob_create
 hb_blob_destroy
 hb_blob_get_data
