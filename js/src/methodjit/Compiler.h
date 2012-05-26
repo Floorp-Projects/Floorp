@@ -372,7 +372,7 @@ class Compiler : public BaseCompiler
     /* SSA information for the outer script and all frames we will be inlining. */
     analyze::CrossScriptSSA ssa;
 
-    RootedVar<GlobalObject*> globalObj;
+    Rooted<GlobalObject*> globalObj;
     const HeapSlot *globalSlots;  /* Original slots pointer. */
 
     Assembler masm;

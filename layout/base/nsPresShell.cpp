@@ -3335,38 +3335,6 @@ PresShell::GetRectVisibility(nsIFrame* aFrame,
   return nsRectVisibility_kVisible;
 }
 
-// GetLinkLocation: copy link location to clipboard
-nsresult PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString) const
-{
-#ifdef DEBUG_dr
-  printf("dr :: PresShell::GetLinkLocation\n");
-#endif
-
-  NS_ENSURE_ARG_POINTER(aNode);
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  if (content) {
-    nsCOMPtr<nsIURI> hrefURI = content->GetHrefURI();
-    if (hrefURI) {
-      nsCAutoString specUTF8;
-      nsresult rv = hrefURI->GetSpec(specUTF8);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsAutoString anchorText;
-      CopyUTF8toUTF16(specUTF8, anchorText);
-
-      // Remove all the '\t', '\r' and '\n' from 'anchorText'
-      static const char strippedChars[] = "\t\r\n";
-      anchorText.StripChars(strippedChars);
-      aLocationString = anchorText;
-      return NS_OK;
-    }
-  }
-
-  // if no link, fail.
-  return NS_ERROR_FAILURE;
-}
-
 void
 PresShell::ScheduleViewManagerFlush()
 {

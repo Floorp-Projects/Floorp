@@ -175,6 +175,17 @@ MarkRootRange(JSTracer *trc, size_t len, T **vec, const char *name)
     }
 }
 
+template <typename T>
+static bool
+IsMarked(T **thingp)
+{
+    JS_ASSERT(thingp);
+    JS_ASSERT(*thingp);
+    if (!(*thingp)->compartment()->isCollecting())
+        return true;
+    return (*thingp)->isMarked();
+}
+
 #define DeclMarkerImpl(base, type)                                                                \
 void                                                                                              \
 Mark##base(JSTracer *trc, HeapPtr<type> *thing, const char *name)                                 \
@@ -203,10 +214,21 @@ void Mark##base##RootRange(JSTracer *trc, size_t len, type **vec, const char *na
 {                                                                                                 \
     MarkRootRange<type>(trc, len, vec, name);                                                     \
 }                                                                                                 \
+                                                                                                  \
+bool Is##base##Marked(type **thingp)                                                              \
+{                                                                                                 \
+    return IsMarked<type>(thingp);                                                                \
+}                                                                                                 \
+                                                                                                  \
+bool Is##base##Marked(HeapPtr<type> *thingp)                                                      \
+{                                                                                                 \
+    return IsMarked<type>(thingp->unsafeGet());                                                   \
+}
 
 DeclMarkerImpl(BaseShape, BaseShape)
 DeclMarkerImpl(BaseShape, UnownedBaseShape)
 DeclMarkerImpl(Object, ArgumentsObject)
+DeclMarkerImpl(Object, DebugScopeObject)
 DeclMarkerImpl(Object, GlobalObject)
 DeclMarkerImpl(Object, JSObject)
 DeclMarkerImpl(Object, JSFunction)
@@ -300,6 +322,13 @@ MarkIdRoot(JSTracer *trc, jsid *id, const char *name)
 }
 
 void
+MarkIdUnbarriered(JSTracer *trc, jsid *id, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+    MarkIdInternal(trc, id);
+}
+
+void
 MarkIdRange(JSTracer *trc, size_t len, HeapId *vec, const char *name)
 {
     for (size_t i = 0; i < len; ++i) {
@@ -369,6 +398,23 @@ MarkValueRootRange(JSTracer *trc, size_t len, Value *vec, const char *name)
         JS_SET_TRACING_INDEX(trc, name, i);
         MarkValueInternal(trc, &vec[i]);
     }
+}
+
+bool
+IsValueMarked(Value *v)
+{
+    JS_ASSERT(v->isMarkable());
+    bool rv;
+    if (v->isString()) {
+        JSString *str = (JSString *)v->toGCThing();
+        rv = IsMarked<JSString>(&str);
+        v->setString(str);
+    } else {
+        JSObject *obj = (JSObject *)v->toGCThing();
+        rv = IsMarked<JSObject>(&obj);
+        v->setObject(*obj);
+    }
+    return rv;
 }
 
 /*** Slot Marking ***/
@@ -443,6 +489,12 @@ MarkValueUnbarriered(JSTracer *trc, Value *v, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
     MarkValueInternal(trc, v);
+}
+
+bool
+IsCellMarked(Cell **thingp)
+{
+    return IsMarked<Cell>(thingp);
 }
 
 /*** Push Mark Stack ***/

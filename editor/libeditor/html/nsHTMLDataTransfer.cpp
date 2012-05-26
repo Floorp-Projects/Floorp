@@ -153,13 +153,12 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
   nsAutoRules beginRulesSniffing(this, kOpLoadHTML, nsIEditor::eNext);
 
   // Get selection
-  nsCOMPtr<nsISelection>selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  NS_ENSURE_STATE(selection);
 
   nsTextRulesInfo ruleInfo(kOpLoadHTML);
   bool cancel, handled;
-  rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (cancel) {
     return NS_OK; // rules canceled the operation
@@ -1725,15 +1724,13 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAString & aCitation,
   nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
 
   // get selection
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // give rules a chance to handle or cancel
   nsTextRulesInfo ruleInfo(kOpInsertElement);
   bool cancel, handled;
-  rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (cancel || handled) {
     return NS_OK; // rules canceled the operation
@@ -1924,9 +1921,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
 
   nsCOMPtr<nsIDOMNode> newNode;
   // get selection
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);
@@ -1935,7 +1930,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
   // give rules a chance to handle or cancel
   nsTextRulesInfo ruleInfo(kOpInsertElement);
   bool cancel, handled;
-  rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (cancel || handled) {
     return NS_OK; // rules canceled the operation
@@ -2018,9 +2013,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
   nsCOMPtr<nsIDOMNode> newNode;
 
   // get selection
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);
@@ -2029,7 +2022,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
   // give rules a chance to handle or cancel
   nsTextRulesInfo ruleInfo(kOpInsertElement);
   bool cancel, handled;
-  rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (cancel || handled) {
     return NS_OK; // rules canceled the operation

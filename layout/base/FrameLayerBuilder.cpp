@@ -1664,7 +1664,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         ownLayer->SetTransform(transform);
       }
 
-      ownLayer->SetIsFixedPosition(!nsLayoutUtils::ScrolledByViewportScrolling(
+      ownLayer->SetIsFixedPosition(
+        !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(
                                       activeScrolledRoot, mBuilder));
 
       // Update that layer's clip and visible rects.
@@ -1716,8 +1717,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         FindThebesLayerFor(item, itemVisibleRect, itemDrawRect, aClip,
                            activeScrolledRoot);
 
-      data->mLayer->SetIsFixedPosition(!nsLayoutUtils::ScrolledByViewportScrolling(
-                                         activeScrolledRoot, mBuilder));
+      data->mLayer->SetIsFixedPosition(
+        !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(
+                                       activeScrolledRoot, mBuilder));
 
       InvalidateForLayerChange(item, data->mLayer);
 

@@ -32,8 +32,7 @@ var gConnectionsDialog = {
       }
     }
     
-    var noProxiesPref = document.getElementById("network.proxy.no_proxies_on");
-    noProxiesPref.value = noProxiesPref.value.replace(/[;]/g,',');
+    this.sanitizeNoProxiesPref();
     
     return true;
   },
@@ -158,6 +157,16 @@ var gConnectionsDialog = {
     try {
       autoURLPref.value = autoURL.value = URIFixup.createFixupURI(autoURL.value, 0).spec;
     } catch(ex) {}
+  },
+
+  sanitizeNoProxiesPref: function()
+  {
+    var noProxiesPref = document.getElementById("network.proxy.no_proxies_on");
+    // replace substrings of ; and \n with commas if they're neither immediately
+    // preceded nor followed by a valid separator character
+    noProxiesPref.value = noProxiesPref.value.replace(/([^, \n;])[;\n]+(?![,\n;])/g, '$1,');
+    // replace any remaining ; and \n since some may follow commas, etc. 
+    noProxiesPref.value = noProxiesPref.value.replace(/[;\n]/g, '');
   },
   
   readHTTPProxyServer: function ()

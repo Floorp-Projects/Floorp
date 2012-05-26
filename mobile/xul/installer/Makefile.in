@@ -132,7 +132,8 @@ DEFINES += \
 
 DEBDESTDIR=debian/$(MOZ_APP_NAME)
 
-PP_DEB_FILES =	debian/control \
+PP_DEB_FILES = \
+		debian/control \
 		debian/changelog \
 		debian/$(MOZ_APP_NAME).desktop \
 		debian/$(MOZ_APP_NAME).links \
@@ -140,20 +141,24 @@ PP_DEB_FILES =	debian/control \
 		debian/compat \
 		debian/files \
 		debian/menu \
-		debian/fennec.preinst \
-		debian/fennec.prerm \
 		debian/fennec.postinst \
 		$(NULL)
 
 ifeq ($(MOZ_PLATFORM_MAEMO),6)
-PP_DEB_FILES += debian/fennec.aegis \
+PP_DEB_FILES += \
+		debian/fennec.aegis \
 		debian/backup \
 		debian/restore \
 		debian/fennec.conf \
 		debian/fennec-cud.sh \
 		debian/fennec-rfs.sh \
-		 debian/fennec.policy \
-                $(NULL)
+		debian/fennec.policy \
+		$(NULL)
+else
+PP_DEB_FILES += \
+		debian/fennec.preinst \
+		debian/fennec.prerm \
+		$(NULL)
 endif
 
 $(PP_DEB_FILES):

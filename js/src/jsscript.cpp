@@ -116,7 +116,7 @@ Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
         slot += nargs + nvars;
     }
 
-    RootedVarId id(cx);
+    RootedId id(cx);
     if (!name) {
         JS_ASSERT(kind == ARGUMENT); /* destructuring */
         id = INT_TO_JSID(nargs);
@@ -173,7 +173,7 @@ Bindings::callObjectShape(JSContext *cx) const
     /*
      * Now build the Shape without duplicate properties.
      */
-    RootedVarShape shape(cx);
+    RootedShape shape(cx);
     shape = initialShape(cx);
     for (int i = shapes.length() - 1; i >= 0; --i) {
         shape = shape->getChildBinding(cx, shapes[i]);
@@ -417,7 +417,7 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
     JS_ASSERT(nvars != Bindings::BINDING_COUNT_LIMIT);
 
     Bindings bindings(cx);
-    Bindings::StackRoot bindingsRoot(cx, &bindings);
+    Bindings::AutoRooter bindingsRoot(cx, &bindings);
 
     uint32_t nameCount = nargs + nvars;
     if (nameCount > 0) {
@@ -467,7 +467,7 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
                 continue;
             }
 
-            RootedVarAtom name(cx);
+            RootedAtom name(cx);
             if (mode == XDR_ENCODE)
                 name = names[i].maybeAtom;
             if (!XDRAtom(xdr, name.address()))
@@ -1213,7 +1213,7 @@ JSScript *
 JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
 {
     uint32_t mainLength, prologLength, nfixed;
-    RootedVar<JSScript*> script(cx);
+    Rooted<JSScript*> script(cx);
     const char *filename;
     JSFunction *fun;
 
@@ -1720,7 +1720,7 @@ js::CloneScript(JSContext *cx, JSScript *src)
 
     for (unsigned i = 0; i < names.length(); ++i) {
         if (JSAtom *atom = names[i].maybeAtom) {
-            if (!bindings.add(cx, RootedVarAtom(cx, atom), names[i].kind))
+            if (!bindings.add(cx, RootedAtom(cx, atom), names[i].kind))
                 return NULL;
         } else {
             uint16_t _;
@@ -1942,7 +1942,7 @@ void
 JSScript::recompileForStepMode(FreeOp *fop)
 {
 #ifdef JS_METHODJIT
-    if (hasJITCode()) {
+    if (hasJITInfo()) {
         mjit::Recompiler::clearStackReferences(fop, this);
         mjit::ReleaseScriptCode(fop, this);
     }
@@ -2153,7 +2153,7 @@ JSScript::setNeedsArgsObj(bool needsArgsObj)
 /* static */ bool
 JSScript::applySpeculationFailed(JSContext *cx, JSScript *script_)
 {
-    RootedVar<JSScript*> script(cx, script_);
+    Rooted<JSScript*> script(cx, script_);
 
     JS_ASSERT(script->analyzedArgsUsage());
     JS_ASSERT(script->argumentsHasLocalBinding());
@@ -2206,7 +2206,7 @@ JSScript::applySpeculationFailed(JSContext *cx, JSScript *script_)
     }
 
 #ifdef JS_METHODJIT
-    if (script->hasJITCode()) {
+    if (script->hasJITInfo()) {
         mjit::Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), script);
         mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
     }

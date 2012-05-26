@@ -97,7 +97,7 @@ GetGSNCache(JSContext *cx);
 
 struct PendingProxyOperation {
     PendingProxyOperation   *next;
-    RootedVarObject         object;
+    RootedObject            object;
     PendingProxyOperation(JSContext *cx, JSObject *object) : next(NULL), object(cx, object) {}
 };
 

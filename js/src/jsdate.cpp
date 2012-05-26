@@ -1700,7 +1700,7 @@ date_setTime(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    RootedVarObject obj(cx, NonGenericMethodGuard(cx, args, date_setTime, &DateClass, &ok));
+    RootedObject obj(cx, NonGenericMethodGuard(cx, args, date_setTime, &DateClass, &ok));
     if (!obj)
         return ok;
 
@@ -1722,7 +1722,7 @@ date_makeTime(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    RootedVarObject obj(cx, NonGenericMethodGuard(cx, args, native, &DateClass, &ok));
+    RootedObject obj(cx, NonGenericMethodGuard(cx, args, native, &DateClass, &ok));
     if (!obj)
         return ok;
 
@@ -1866,7 +1866,7 @@ date_makeDate(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsi
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    RootedVarObject obj(cx, NonGenericMethodGuard(cx, args, native, &DateClass, &ok));
+    RootedObject obj(cx, NonGenericMethodGuard(cx, args, native, &DateClass, &ok));
     if (!obj)
         return ok;
 
@@ -1984,7 +1984,7 @@ date_setYear(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    RootedVarObject obj(cx, NonGenericMethodGuard(cx, args, date_setYear, &DateClass, &ok));
+    RootedObject obj(cx, NonGenericMethodGuard(cx, args, date_setYear, &DateClass, &ok));
     if (!obj)
         return ok;
 
@@ -2633,14 +2633,14 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     /* Set the static LocalTZA. */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
 
-    RootedVar<GlobalObject*> global(cx, &obj->asGlobal());
+    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
 
-    RootedVarObject dateProto(cx, global->createBlankPrototype(cx, &DateClass));
+    RootedObject dateProto(cx, global->createBlankPrototype(cx, &DateClass));
     if (!dateProto)
         return NULL;
     SetDateToNaN(cx, dateProto);
 
-    RootedVarFunction ctor(cx);
+    RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, js_Date, CLASS_NAME(cx, Date), MAXARGS);
     if (!ctor)
         return NULL;
@@ -2659,8 +2659,8 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, dateProto, date_methods))
         return NULL;
     Value toUTCStringFun;
-    RootedVarId toUTCStringId(cx, NameToId(cx->runtime->atomState.toUTCStringAtom));
-    RootedVarId toGMTStringId(cx, NameToId(cx->runtime->atomState.toGMTStringAtom));
+    RootedId toUTCStringId(cx, NameToId(cx->runtime->atomState.toUTCStringAtom));
+    RootedId toGMTStringId(cx, NameToId(cx->runtime->atomState.toGMTStringAtom));
     if (!baseops::GetProperty(cx, dateProto, toUTCStringId, &toUTCStringFun) ||
         !baseops::DefineProperty(cx, dateProto, toGMTStringId, &toUTCStringFun,
                                  JS_PropertyStub, JS_StrictPropertyStub, 0))

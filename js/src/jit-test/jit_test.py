@@ -248,7 +248,7 @@ def check_output(out, err, rc, test):
     if rc != test.expect_status:
         # Allow a non-zero exit code if we want to allow OOM, but only if we
         # actually got OOM.
-        return test.allow_oom and ': out of memory' in err
+        return test.allow_oom and ': out of memory' in err and 'Assertion failure' not in err
 
     return True
 

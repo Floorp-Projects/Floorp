@@ -718,7 +718,7 @@ public:
     void UnmarkSkippableJSHolders();
 
     static void GCCallback(JSRuntime *rt, JSGCStatus status);
-    static void FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status);
+    static void FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool isCompartmentGC);
 
     inline void AddVariantRoot(XPCTraceableVariant* variant);
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
@@ -4431,6 +4431,24 @@ private:
     nsCString location;
     nsCOMPtr<nsIURI> locationURI;
 };
+
+inline CompartmentPrivate*
+GetCompartmentPrivate(JSCompartment *compartment)
+{
+    MOZ_ASSERT(compartment);
+    void *priv = JS_GetCompartmentPrivate(compartment);
+    return static_cast<CompartmentPrivate*>(priv);
+}
+
+inline CompartmentPrivate*
+GetCompartmentPrivate(JSObject *object)
+{
+    MOZ_ASSERT(object);
+    JSCompartment *compartment = js::GetObjectCompartment(object);
+
+    MOZ_ASSERT(compartment);
+    return GetCompartmentPrivate(compartment);
+}
 
 }
 

@@ -919,7 +919,15 @@ class JS_PUBLIC_API(AutoGCRooter) {
         STRING =      -14, /* js::AutoStringRooter */
         IDVECTOR =    -15, /* js::AutoIdVector */
         OBJVECTOR =   -16, /* js::AutoObjectVector */
-        SCRIPTVECTOR =-17  /* js::AutoScriptVector */
+        SCRIPTVECTOR =-17, /* js::AutoScriptVector */
+        PROPDESC =    -18, /* js::PropDesc::AutoRooter */
+        SHAPERANGE =  -19, /* js::Shape::Range::AutoRooter */
+        STACKSHAPE =  -20, /* js::StackShape::AutoRooter */
+        STACKBASESHAPE=-21,/* js::StackBaseShape::AutoRooter */
+        BINDINGS =    -22, /* js::Bindings::AutoRooter */
+        GETTERSETTER =-23, /* js::AutoRooterGetterSetter */
+        REGEXPSTATICS=-24, /* js::RegExpStatics::AutoRooter */
+        HASHABLEVALUE=-25
     };
 
   private:
@@ -1389,7 +1397,6 @@ typedef JSBool
  *  JSRESOLVE_ASSIGNING   obj[id] is on the left-hand side of an assignment
  *  JSRESOLVE_DETECTING   'if (o.p)...' or similar detection opcode sequence
  *  JSRESOLVE_DECLARING   var, const, or function prolog declaration opcode
- *  JSRESOLVE_CLASSNAME   class name used when constructing
  *
  * The *objp out parameter, on success, should be null to indicate that id
  * was not resolved; and non-null, referring to obj or one of its prototypes,
@@ -1559,7 +1566,7 @@ typedef enum JSFinalizeStatus {
 } JSFinalizeStatus;
 
 typedef void
-(* JSFinalizeCallback)(JSFreeOp *fop, JSFinalizeStatus status);
+(* JSFinalizeCallback)(JSFreeOp *fop, JSFinalizeStatus status, JSBool isCompartment);
 
 /*
  * Generic trace operation that calls JS_CallTracer on each traceable thing
@@ -2192,7 +2199,7 @@ class AutoIdRooter : private AutoGCRooter
 
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
-/* 0x0100 is unused */
+#define JSFUN_HAS_REST          0x0100  /* function has a rest (...) parameter */
 #define JSFUN_CONSTRUCTOR     0x0200    /* native that can be called as a ctor
                                            without creating a this object */
 
@@ -3803,8 +3810,7 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 #define JSRESOLVE_ASSIGNING     0x02    /* resolve on the left of assignment */
 #define JSRESOLVE_DETECTING     0x04    /* 'if (o.p)...' or '(o.p) ?...:...' */
 #define JSRESOLVE_DECLARING     0x08    /* var, const, or function prolog op */
-#define JSRESOLVE_CLASSNAME     0x10    /* class name used when constructing */
-#define JSRESOLVE_WITH          0x20    /* resolve inside a with statement */
+#define JSRESOLVE_WITH          0x10    /* resolve inside a with statement */
 
 /*
  * Invoke the [[DefaultValue]] hook (see ES5 8.6.2) with the provided hint on

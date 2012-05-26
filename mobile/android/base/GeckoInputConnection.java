@@ -21,6 +21,7 @@ import android.text.style.BackgroundColorSpan;
 import android.text.style.CharacterStyle;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.UnderlineSpan;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.LogPrinter;
 import android.view.KeyCharacterMap;
@@ -58,6 +59,8 @@ public class GeckoInputConnection
     private static final int NOTIFY_IME_FOCUSCHANGE = 3;
 
     private static final int NO_COMPOSITION_STRING = -1;
+
+    private static final int INLINE_IME_MIN_DISPLAY_SIZE = 480;
 
     private static final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
     private static int mIMEState;
@@ -771,8 +774,13 @@ public class GeckoInputConnection
         else if (mIMEActionHint != null && mIMEActionHint.length() != 0)
             outAttrs.actionLabel = mIMEActionHint;
 
-        outAttrs.imeOptions |= EditorInfo.IME_FLAG_NO_EXTRACT_UI
-                               | EditorInfo.IME_FLAG_NO_FULLSCREEN;
+        DisplayMetrics metrics = GeckoApp.mAppContext.getDisplayMetrics();
+        if (Math.min(metrics.widthPixels, metrics.heightPixels) > INLINE_IME_MIN_DISPLAY_SIZE) {
+            // prevent showing full-screen keyboard only when the screen is tall enough
+            // to show some reasonable amount of the page (see bug 752709)
+            outAttrs.imeOptions |= EditorInfo.IME_FLAG_NO_EXTRACT_UI
+                                   | EditorInfo.IME_FLAG_NO_FULLSCREEN;
+        }
 
         reset();
         return this;

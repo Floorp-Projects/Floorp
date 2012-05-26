@@ -1762,6 +1762,17 @@ MediaStream::ChangeExplicitBlockerCount(PRInt32 aDelta)
 }
 
 void
+MediaStream::AddListenerImpl(already_AddRefed<MediaStreamListener> aListener)
+{
+  MediaStreamListener* listener = *mListeners.AppendElement() = aListener;
+  listener->NotifyBlockingChanged(GraphImpl(),
+    mBlocked.GetAt(GraphImpl()->mCurrentTime) ? MediaStreamListener::BLOCKED : MediaStreamListener::UNBLOCKED);
+  if (mNotifiedFinished) {
+    listener->NotifyFinished(GraphImpl());
+  }
+}
+
+void
 MediaStream::AddListener(MediaStreamListener* aListener)
 {
   class Message : public ControlMessage {
@@ -1794,35 +1805,45 @@ MediaStream::RemoveListener(MediaStreamListener* aListener)
 }
 
 void
-SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
-                            MediaSegment* aSegment)
+SourceMediaStream::DestroyImpl()
 {
   {
     MutexAutoLock lock(mMutex);
-    TrackData* data = mUpdateTracks.AppendElement();
-    data->mID = aID;
-    data->mRate = aRate;
-    data->mStart = aStart;
-    data->mCommands = TRACK_CREATE;
-    data->mData = aSegment;
-    data->mHaveEnough = false;
+    mDestroyed = true;
   }
-  GraphImpl()->EnsureNextIteration();
+  MediaStream::DestroyImpl();
+}
+
+void
+SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
+                            MediaSegment* aSegment)
+{
+  MutexAutoLock lock(mMutex);
+  TrackData* data = mUpdateTracks.AppendElement();
+  data->mID = aID;
+  data->mRate = aRate;
+  data->mStart = aStart;
+  data->mCommands = TRACK_CREATE;
+  data->mData = aSegment;
+  data->mHaveEnough = false;
+  if (!mDestroyed) {
+    GraphImpl()->EnsureNextIteration();
+  }
 }
 
 void
 SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment)
 {
-  {
-    MutexAutoLock lock(mMutex);
-    TrackData *track = FindDataForTrack(aID);
-    if (track) {
-      track->mData->AppendFrom(aSegment);
-    } else {
-      NS_ERROR("Append to non-existant track!");
-    }
+  MutexAutoLock lock(mMutex);
+  TrackData *track = FindDataForTrack(aID);
+  if (track) {
+    track->mData->AppendFrom(aSegment);
+  } else {
+    NS_ERROR("Append to non-existent track!");
   }
-  GraphImpl()->EnsureNextIteration();
+  if (!mDestroyed) {
+    GraphImpl()->EnsureNextIteration();
+  }
 }
 
 bool
@@ -1858,36 +1879,36 @@ SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
 void
 SourceMediaStream::EndTrack(TrackID aID)
 {
-  {
-    MutexAutoLock lock(mMutex);
-    TrackData *track = FindDataForTrack(aID);
-    if (track) {
-      track->mCommands |= TRACK_END;
-    } else {
-      NS_ERROR("End of non-existant track");
-    }
+  MutexAutoLock lock(mMutex);
+  TrackData *track = FindDataForTrack(aID);
+  if (track) {
+    track->mCommands |= TRACK_END;
+  } else {
+    NS_ERROR("End of non-existant track");
   }
-  GraphImpl()->EnsureNextIteration();
+  if (!mDestroyed) {
+    GraphImpl()->EnsureNextIteration();
+  }
 }
 
 void
 SourceMediaStream::AdvanceKnownTracksTime(StreamTime aKnownTime)
 {
-  {
-    MutexAutoLock lock(mMutex);
-    mUpdateKnownTracksTime = aKnownTime;
+  MutexAutoLock lock(mMutex);
+  mUpdateKnownTracksTime = aKnownTime;
+  if (!mDestroyed) {
+    GraphImpl()->EnsureNextIteration();
   }
-  GraphImpl()->EnsureNextIteration();
 }
 
 void
 SourceMediaStream::Finish()
 {
-  {
-    MutexAutoLock lock(mMutex);
-    mUpdateFinished = true;
+  MutexAutoLock lock(mMutex);
+  mUpdateFinished = true;
+  if (!mDestroyed) {
+    GraphImpl()->EnsureNextIteration();
   }
-  GraphImpl()->EnsureNextIteration();
 }
 
 static const PRUint32 kThreadLimit = 4;

@@ -419,10 +419,10 @@ pref("browser.ui.zoom.force-user-scalable", false);
 
 // Touch radius (area around the touch location to look for target elements),
 // in 1/240-inch pixels:
-pref("browser.ui.touch.left", 8);
-pref("browser.ui.touch.right", 8);
-pref("browser.ui.touch.top", 12);
-pref("browser.ui.touch.bottom", 4);
+pref("browser.ui.touch.left", 32);
+pref("browser.ui.touch.right", 32);
+pref("browser.ui.touch.top", 48);
+pref("browser.ui.touch.bottom", 16);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
 // plugins
@@ -462,10 +462,8 @@ pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/au
 pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 #endif
 #if MOZ_UPDATE_CHANNEL == beta
-pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/faq/");
 #else
-pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
 #endif
 pref("app.marketplaceURL", "https://marketplace.mozilla.org/");

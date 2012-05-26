@@ -42,7 +42,12 @@ LOCAL_INCLUDES = \
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
   AudioManager.cpp \
+  AutoMounter.cpp \
+  AutoMounterSetting.cpp \
   GonkGPSGeolocationProvider.cpp \
+  Volume.cpp \
+  VolumeCommand.cpp \
+  VolumeManager.cpp \
   $(NULL)
 # for our local copy of AudioSystem.h
 LOCAL_INCLUDES += -I$(topsrcdir)/media/libsydneyaudio/src

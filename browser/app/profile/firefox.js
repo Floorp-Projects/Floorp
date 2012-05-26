@@ -147,7 +147,7 @@ pref("app.update.silent", false);
 
 // If set to true, the Update Service will apply updates in the background
 // when it finishes downloading them.
-pref("app.update.stage.enabled", false);
+pref("app.update.stage.enabled", true);
 
 // Update service URL:
 pref("app.update.url", "https://aus3.mozilla.org/update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
@@ -961,7 +961,6 @@ pref("services.sync.prefs.sync.browser.tabs.closeButtons", true);
 pref("services.sync.prefs.sync.browser.tabs.loadInBackground", true);
 pref("services.sync.prefs.sync.browser.tabs.warnOnClose", true);
 pref("services.sync.prefs.sync.browser.tabs.warnOnOpen", true);
-pref("services.sync.prefs.sync.browser.tabs.onTop", true);
 pref("services.sync.prefs.sync.browser.urlbar.autocomplete.enabled", true);
 pref("services.sync.prefs.sync.browser.urlbar.default.behavior", true);
 pref("services.sync.prefs.sync.browser.urlbar.maxRichResults", true);

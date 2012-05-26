@@ -56,12 +56,13 @@ ArgumentsObject *
 ArgumentsObject::create(JSContext *cx, uint32_t argc, HandleObject callee)
 {
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
+    JS_ASSERT(!callee->toFunction()->hasRest());
 
-    RootedVarObject proto(cx, callee->global().getOrCreateObjectPrototype(cx));
+    RootedObject proto(cx, callee->global().getOrCreateObjectPrototype(cx));
     if (!proto)
         return NULL;
 
-    RootedVarTypeObject type(cx);
+    RootedTypeObject type(cx);
 
     type = proto->getNewType(cx);
     if (!type)
@@ -70,7 +71,7 @@ ArgumentsObject::create(JSContext *cx, uint32_t argc, HandleObject callee)
     bool strict = callee->toFunction()->inStrictMode();
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
 
-    RootedVarShape emptyArgumentsShape(cx);
+    RootedShape emptyArgumentsShape(cx);
     emptyArgumentsShape =
         EmptyShape::getInitialShape(cx, clasp, proto,
                                     proto->getParent(), FINALIZE_KIND,
@@ -117,7 +118,7 @@ ArgumentsObject::create(JSContext *cx, StackFrame *fp)
     JS_ASSERT(fp->script()->needsArgsObj());
 
     ArgumentsObject *argsobj = ArgumentsObject::create(cx, fp->numActualArgs(),
-                                                       RootedVarObject(cx, &fp->callee()));
+                                                       RootedObject(cx, &fp->callee()));
     if (!argsobj)
         return NULL;
 
@@ -138,7 +139,7 @@ ArgumentsObject::create(JSContext *cx, StackFrame *fp)
 ArgumentsObject *
 ArgumentsObject::createUnexpected(JSContext *cx, StackFrame *fp)
 {
-    ArgumentsObject *argsobj = create(cx, fp->numActualArgs(), RootedVarObject(cx, &fp->callee()));
+    ArgumentsObject *argsobj = create(cx, fp->numActualArgs(), RootedObject(cx, &fp->callee()));
     if (!argsobj)
         return NULL;
 
@@ -232,7 +233,7 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp
      * of setting it in case the user has changed the prototype to an object
      * that has a setter for this id.
      */
-    RootedVarValue value(cx);
+    RootedValue value(cx);
     return baseops::DeleteGeneric(cx, obj, id, value.address(), false) &&
            baseops::DefineProperty(cx, obj, id, vp, NULL, NULL, JSPROP_ENUMERATE);
 }
@@ -243,7 +244,7 @@ args_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 {
     *objp = NULL;
 
-    RootedVar<NormalArgumentsObject*> argsobj(cx, &obj->asNormalArguments());
+    Rooted<NormalArgumentsObject*> argsobj(cx, &obj->asNormalArguments());
 
     unsigned attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
     if (JSID_IS_INT(id)) {
@@ -313,14 +314,14 @@ NormalArgumentsObject::optimizedGetElem(JSContext *cx, StackFrame *fp, const Val
     if (!proto)
         return false;
 
-    return proto->getGeneric(cx, RootedVarId(cx, id), vp);
+    return proto->getGeneric(cx, RootedId(cx, id), vp);
 }
 
 static JSBool
 args_enumerate(JSContext *cx, HandleObject obj)
 {
-    RootedVar<NormalArgumentsObject*> argsobj(cx, &obj->asNormalArguments());
-    RootedVarId id(cx);
+    Rooted<NormalArgumentsObject*> argsobj(cx, &obj->asNormalArguments());
+    RootedId id(cx);
 
     /*
      * Trigger reflection in args_resolve using a series of js_LookupProperty
@@ -372,7 +373,7 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Val
     if (!obj->isStrictArguments())
         return true;
 
-    RootedVar<StrictArgumentsObject*> argsobj(cx, &obj->asStrictArguments());
+    Rooted<StrictArgumentsObject*> argsobj(cx, &obj->asStrictArguments());
 
     if (JSID_IS_INT(id)) {
         unsigned arg = unsigned(JSID_TO_INT(id));
@@ -390,7 +391,7 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Val
      * args_delProperty to clear the corresponding reserved slot so the GC can
      * collect its value.
      */
-    RootedVarValue value(cx);
+    RootedValue value(cx);
     return baseops::DeleteGeneric(cx, argsobj, id, value.address(), strict) &&
            baseops::SetPropertyHelper(cx, argsobj, id, 0, vp, strict);
 }
@@ -400,7 +401,7 @@ strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 {
     *objp = NULL;
 
-    RootedVar<StrictArgumentsObject*> argsobj(cx, &obj->asStrictArguments());
+    Rooted<StrictArgumentsObject*> argsobj(cx, &obj->asStrictArguments());
 
     unsigned attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
     PropertyOp getter = StrictArgGetter;
@@ -437,7 +438,7 @@ strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 static JSBool
 strictargs_enumerate(JSContext *cx, HandleObject obj)
 {
-    RootedVar<StrictArgumentsObject*> argsobj(cx, &obj->asStrictArguments());
+    Rooted<StrictArgumentsObject*> argsobj(cx, &obj->asStrictArguments());
 
     /*
      * Trigger reflection in strictargs_resolve using a series of
@@ -445,7 +446,7 @@ strictargs_enumerate(JSContext *cx, HandleObject obj)
      */
     JSObject *pobj;
     JSProperty *prop;
-    RootedVarId id(cx);
+    RootedId id(cx);
 
     // length
     id = NameToId(cx->runtime->atomState.lengthAtom);

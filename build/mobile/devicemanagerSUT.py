@@ -272,7 +272,7 @@ class DeviceManagerSUT(DeviceManager):
     if lastline:
       m = re.search('return code \[([0-9]+)\]', lastline)
       if m:
-        return m.group(1)
+        return int(m.group(1))
 
     # woops, we couldn't find an end of line/return value
     return None

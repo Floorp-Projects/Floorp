@@ -128,27 +128,73 @@ public:
 
 #define NS_DECL_NSAHTTPCONNECTION(fwdObject)                    \
     nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, bool *reset); \
-    nsresult ResumeSend(); \
-    nsresult ResumeRecv(); \
     void CloseTransaction(nsAHttpTransaction *, nsresult); \
-    void GetConnectionInfo(nsHttpConnectionInfo **); \
     nsresult TakeTransport(nsISocketTransport **,    \
                            nsIAsyncInputStream **,   \
                            nsIAsyncOutputStream **); \
-    void GetSecurityInfo(nsISupports **); \
     bool IsPersistent(); \
     bool IsReused(); \
     void DontReuse();  \
     nsresult PushBack(const char *, PRUint32); \
-    bool IsProxyConnectInProgress(); \
-    bool LastTransactionExpectedNoContent(); \
-    void SetLastTransactionExpectedNoContent(bool); \
     nsHttpConnection *TakeHttpConnection(); \
-    nsISocketTransport *Transport();        \
     PRUint32 CancelPipeline(nsresult originalReason);   \
-    nsAHttpTransaction::Classifier Classification();    \
-    void Classify(nsAHttpTransaction::Classifier);      \
-    PRInt64 BytesWritten() \
+    nsAHttpTransaction::Classifier Classification();      \
+    /*                                                    \
+       Thes methods below have automatic definitions that just forward the \
+       function to a lower level connection object        \
+    */                                                    \
+    void GetConnectionInfo(nsHttpConnectionInfo **result) \
+    {                                                     \
+      if (!(fwdObject)) {                                 \
+          *result = nsnull;                               \
+          return;                                         \
+      }                                                   \
+        return (fwdObject)->GetConnectionInfo(result);    \
+    }                                                     \
+    void GetSecurityInfo(nsISupports **result)            \
+    {                                                     \
+      if (!(fwdObject)) {                                 \
+          *result = nsnull;                               \
+          return;                                         \
+      }                                                   \
+      return (fwdObject)->GetSecurityInfo(result);        \
+    }                                                     \
+    nsresult ResumeSend()                  \
+    {                                      \
+        if (!(fwdObject))                  \
+            return NS_ERROR_FAILURE;       \
+        return (fwdObject)->ResumeSend();  \
+    }                                      \
+    nsresult ResumeRecv()                  \
+    {                                      \
+        if (!(fwdObject))                  \
+            return NS_ERROR_FAILURE;       \
+        return (fwdObject)->ResumeRecv();  \
+    }                                      \
+    nsISocketTransport *Transport()        \
+    {                                      \
+        if (!(fwdObject))                  \
+            return nsnull;                 \
+        return (fwdObject)->Transport();   \
+    }                                      \
+    bool IsProxyConnectInProgress()                         \
+    {                                                       \
+        return (fwdObject)->IsProxyConnectInProgress();     \
+    }                                                       \
+    bool LastTransactionExpectedNoContent()                 \
+    {                                                       \
+        return (fwdObject)->LastTransactionExpectedNoContent(); \
+    }                                                       \
+    void SetLastTransactionExpectedNoContent(bool val)      \
+    {                                                       \
+        return (fwdObject)->SetLastTransactionExpectedNoContent(val); \
+    }                                                       \
+    void Classify(nsAHttpTransaction::Classifier newclass)  \
+    {                                                       \
+    if (fwdObject)                                          \
+        return (fwdObject)->Classify(newclass);             \
+    }                                                       \
+    PRInt64 BytesWritten()                                  \
     {     return fwdObject ? (fwdObject)->BytesWritten() : 0; }
 
 #endif // nsAHttpConnection_h__

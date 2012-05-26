@@ -42,6 +42,7 @@ class SwitchEvent;
 enum SwitchDevice {
   SWITCH_DEVICE_UNKNOWN = -1,
   SWITCH_HEADPHONES,
+  SWITCH_USB,
   NUM_SWITCH_DEVICE
 };
 

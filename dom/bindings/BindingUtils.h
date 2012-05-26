@@ -95,9 +95,10 @@ UnwrapDOMObject(JSObject* obj, const js::Class* clasp)
 // Some callers don't want to set an exception when unwrappin fails
 // (for example, overload resolution uses unwrapping to tell what sort
 // of thing it's looking at).
-template <prototypes::ID PrototypeID, class T>
+// U must be something that a T* can be assigned to (e.g. T* or an nsRefPtr<T>).
+template <prototypes::ID PrototypeID, class T, typename U>
 inline nsresult
-UnwrapObject(JSContext* cx, JSObject* obj, T** value)
+UnwrapObject(JSContext* cx, JSObject* obj, U& value)
 {
   /* First check to see whether we have a DOM object */
   JSClass* clasp = js::GetObjectJSClass(obj);
@@ -128,7 +129,7 @@ UnwrapObject(JSContext* cx, JSObject* obj, T** value)
   DOMJSClass* domClass = DOMJSClass::FromJSClass(clasp);
   if (domClass->mInterfaceChain[PrototypeTraits<PrototypeID>::Depth] ==
       PrototypeID) {
-    *value = UnwrapDOMObject<T>(obj, clasp);
+    value = UnwrapDOMObject<T>(obj, clasp);
     return NS_OK;
   }
 
@@ -188,9 +189,10 @@ IsPlatformObject(JSContext* cx, JSObject* obj)
     JS_IsArrayBufferObject(obj, cx);
 }
 
-template <class T>
+// U must be something that a T* can be assigned to (e.g. T* or an nsRefPtr<T>).
+template <class T, typename U>
 inline nsresult
-UnwrapObject(JSContext* cx, JSObject* obj, T* *value)
+UnwrapObject(JSContext* cx, JSObject* obj, U& value)
 {
   return UnwrapObject<static_cast<prototypes::ID>(
            PrototypeIDMap<T>::PrototypeID)>(cx, obj, value);
@@ -248,6 +250,16 @@ struct ConstantSpec
 bool
 DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs);
 
+template<typename T>
+struct Prefable {
+  // A boolean indicating whether this set of specs is enabled
+  bool enabled;
+  // Array of specs, terminated in whatever way is customary for T.
+  // Null to indicate a end-of-array for Prefable, when such an
+  // indicator is needed.
+  T* specs;
+};
+
 /*
  * Create a DOM interface object (if constructorClass is non-null) and/or a
  * DOM interface prototype object (if protoClass is non-null).
@@ -289,9 +301,10 @@ JSObject*
 CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* receiver,
                        JSObject* protoProto, JSClass* protoClass,
                        JSClass* constructorClass, JSNative constructor,
-                       unsigned ctorNargs, JSFunctionSpec* methods,
-                       JSPropertySpec* properties, ConstantSpec* constants,
-                       JSFunctionSpec* staticMethods, const char* name);
+                       unsigned ctorNargs, Prefable<JSFunctionSpec>* methods,
+                       Prefable<JSPropertySpec>* properties,
+                       Prefable<ConstantSpec>* constants,
+                       Prefable<JSFunctionSpec>* staticMethods, const char* name);
 
 template <class T>
 inline bool
@@ -569,17 +582,28 @@ WrapNativeParent(JSContext* cx, JSObject* scope, const T& p)
 // Spec needs a name property
 template <typename Spec>
 static bool
-InitIds(JSContext* cx, Spec* specs, jsid* ids)
+InitIds(JSContext* cx, Prefable<Spec>* prefableSpecs, jsid* ids)
 {
-  Spec* spec = specs;
+  MOZ_ASSERT(prefableSpecs);
+  MOZ_ASSERT(prefableSpecs->specs);
   do {
-    JSString *str = ::JS_InternString(cx, spec->name);
-    if (!str) {
-      return false;
-    }
+    // We ignore whether the set of ids is enabled and just intern all the IDs,
+    // because this is only done once per application runtime.
+    Spec* spec = prefableSpecs->specs;
+    do {
+      JSString *str = ::JS_InternString(cx, spec->name);
+      if (!str) {
+        return false;
+      }
 
-    *ids = INTERNED_STRING_TO_JSID(cx, str);
-  } while (++ids, (++spec)->name);
+      *ids = INTERNED_STRING_TO_JSID(cx, str);
+    } while (++ids, (++spec)->name);
+
+    // We ran out of ids for that pref.  Put a JSID_VOID in on the id
+    // corresponding to the list terminator for the pref.
+    *ids = JSID_VOID;
+    ++ids;
+  } while ((++prefableSpecs)->specs);
 
   return true;
 }
@@ -720,6 +744,15 @@ ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
   result.Rebind(chars, len);
   return true;
 }
+
+// Class for representing sequences in arguments.  We use an auto array that can
+// hold 16 elements, to avoid having to allocate in common cases.  This needs to
+// be fallible because web content controls the length of the array, and can
+// easily try to create very large lengths.
+template<typename T>
+class Sequence : public AutoFallibleTArray<T, 16>
+{
+};
 
 } // namespace dom
 } // namespace mozilla

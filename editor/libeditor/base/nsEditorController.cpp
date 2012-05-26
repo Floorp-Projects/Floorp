@@ -58,6 +58,7 @@ nsresult nsEditorController::RegisterEditingCommands(nsIControllerCommandTable *
   NS_REGISTER_ONE_COMMAND(nsSwitchTextDirectionCommand, "cmd_switchTextDirection");
 
   NS_REGISTER_FIRST_COMMAND(nsDeleteCommand, "cmd_delete");
+  NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_forwardDelete");
   NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteCharBackward");
   NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteCharForward");
   NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteWordBackward");

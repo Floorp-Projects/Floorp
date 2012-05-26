@@ -13,10 +13,13 @@
  *  contrib: <jmathies@mozilla.com>
  */
 
+#define INITGUID
+
 #include <windows.h>
 #include <shlobj.h>
 #include <propvarutil.h>
 #include <propkey.h>
+#include <stdio.h>
 
 #pragma comment (lib, "shlwapi.lib")
 
@@ -30,6 +33,9 @@ typedef struct _stack_t {
 stack_t **g_stacktop;
 unsigned int g_stringsize;
 TCHAR *g_variables;
+
+// Indicates that an application supports dual desktop and immersive modes. In Windows 8, this property is only applicable for web browsers.
+DEFINE_PROPERTYKEY(PKEY_AppUserModel_IsDualMode, 0x9F4C2855, 0x9F79, 0x4B39, 0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3, 11);
 
 int popstring(TCHAR *str, int len);
 void pushstring(const TCHAR *str, int len);
@@ -46,41 +52,49 @@ extern "C" void __declspec(dllexport) Set(HWND hwndParent, int string_size, TCHA
     WCHAR wszAppID[MAX_PATH];
     TCHAR szPath[MAX_PATH];
     TCHAR szAppID[MAX_PATH];
+    TCHAR szDualMode[MAX_PATH];
     bool success = false;
 
     ZeroMemory(wszPath, sizeof(wszPath));
     ZeroMemory(wszAppID, sizeof(wszAppID));
     ZeroMemory(szPath, sizeof(szPath));
     ZeroMemory(szAppID, sizeof(szAppID));
+    ZeroMemory(szDualMode, sizeof(szDualMode));
 
     popstring(szPath, MAX_PATH);
     popstring(szAppID, MAX_PATH);
-
+    bool dualMode = (popstring(szDualMode, MAX_PATH) == 0); // optional
 #if !defined(UNICODE)
     MultiByteToWideChar(CP_ACP, 0, szPath, -1, wszPath, MAX_PATH);
     MultiByteToWideChar(CP_ACP, 0, szAppID, -1, wszAppID, MAX_PATH);
+    if (dualMode && stricmp(szDualMode, "true") != 0) {
+      dualMode = false;
+    }
 #else
-    wcscpy(wszPath, szPath);
-    wcscpy(wszAppID, szAppID);
+    wcscpy_s(wszPath, szPath);
+    wcscpy_s(wszAppID, szAppID);
+    if (dualMode && _wcsicmp(szDualMode, L"true") != 0) {
+      dualMode = false;
+    }
 #endif
 
-    ::CoInitialize(NULL);
+    CoInitialize(NULL);
 
     if (SUCCEEDED(SHGetPropertyStoreFromParsingName(wszPath, NULL, GPS_READWRITE, IID_PPV_ARGS(&m_pps))))
     {
       PROPVARIANT propvar;
-      if (SUCCEEDED(InitPropVariantFromString(wszAppID, &propvar)))
-      {
-        if (SUCCEEDED(m_pps->SetValue(PKEY_AppUserModel_ID, propvar)))
-        {
-          if (SUCCEEDED(m_pps->Commit()))
-          {
+      if (SUCCEEDED(InitPropVariantFromString(wszAppID, &propvar))) {
+        if (SUCCEEDED(m_pps->SetValue(PKEY_AppUserModel_ID, propvar))) {
+          if (dualMode) {
+            InitPropVariantFromBoolean(true, &propvar);
+            m_pps->SetValue(PKEY_AppUserModel_IsDualMode, propvar);
+          }
+          if (SUCCEEDED(m_pps->Commit())) {
             success = true;
           }
         }
       }
-    }
-
+    }    
     if (m_pps != NULL)
       m_pps->Release();
 
@@ -109,7 +123,7 @@ extern "C" void __declspec(dllexport) UninstallJumpLists(HWND hwndParent, int st
 #if !defined(UNICODE)
   MultiByteToWideChar(CP_ACP, 0, szAppID, -1, wszAppID, MAX_PATH);
 #else
-  wcscpy(wszAppID, szAppID);
+  wcscpy_s(wszAppID, szAppID);
 #endif
 
   CoInitialize(NULL);
@@ -151,7 +165,7 @@ extern "C" void __declspec(dllexport) UninstallPinnedItem(HWND hwndParent, int s
 #if !defined(UNICODE)
   MultiByteToWideChar(CP_ACP, 0, szPath, -1, wszPath, MAX_PATH);
 #else
-  wcscpy(wszPath, szPath);
+  wcscpy_s(wszPath, szPath);
 #endif
 
   CoInitialize(NULL);
@@ -178,11 +192,6 @@ extern "C" void __declspec(dllexport) UninstallPinnedItem(HWND hwndParent, int s
   CoUninitialize();
 
   pushstring(success == true ? TEXT("0") : TEXT("-1"), MAX_PATH);
-}
-
-BOOL WINAPI DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
-{
-  return TRUE;
 }
 
 //Function: Removes the element from the top of the NSIS stack and puts it in the buffer
