@@ -2130,8 +2130,7 @@ TypeCompartment::nukeTypes(FreeOp *fop)
 
     for (gc::CellIter i(compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        if (script->hasJITCode())
-            mjit::ReleaseScriptCode(fop, script);
+        mjit::ReleaseScriptCode(fop, script);
     }
 #endif /* JS_METHODJIT */
 

@@ -20,7 +20,8 @@ var md5s = ['f1b708bba17f1ce948dc979f4d7092bc',
 
 function checkIsSpdy(request) {
   try {
-    if (request.getResponseHeader("X-Firefox-Spdy") == "1") {
+    if (request.getResponseHeader("X-Firefox-Spdy") == "2" ||
+	request.getResponseHeader("X-Firefox-Spdy") == "3") {
       if (request.getResponseHeader("X-Connection-Spdy") == "yes") {
         return true;
       }

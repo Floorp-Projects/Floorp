@@ -528,9 +528,9 @@ nsXULListboxAccessible::GetSelectedCells(nsIArray **aCells)
     nsAccessible *item = mDoc->GetAccessible(itemContent);
 
     if (item) {
-      PRInt32 cellCount = item->GetChildCount();
-      for (PRInt32 cellIdx = 0; cellIdx < cellCount; cellIdx++) {
-        nsAccessible *cell = mChildren[cellIdx];
+      PRUint32 cellCount = item->ChildCount();
+      for (PRUint32 cellIdx = 0; cellIdx < cellCount; cellIdx++) {
+        nsAccessible* cell = mChildren[cellIdx];
         if (cell->Role() == roles::CELL)
           selCells->AppendElement(static_cast<nsIAccessible*>(cell), false);
       }
@@ -1080,8 +1080,8 @@ nsXULListCellAccessible::GetColumnHeaderCells(nsIArray **aHeaderCells)
   nsAccessible *list = nsnull;
 
   nsRefPtr<nsAccessible> tableAcc(do_QueryObject(table));
-  PRInt32 tableChildCount = tableAcc->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < tableChildCount; childIdx++) {
+  PRUint32 tableChildCount = tableAcc->ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < tableChildCount; childIdx++) {
     nsAccessible *child = tableAcc->GetChildAt(childIdx);
     if (child->Role() == roles::LIST) {
       list = child;

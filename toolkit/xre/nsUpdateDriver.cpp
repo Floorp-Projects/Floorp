@@ -880,6 +880,7 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
 
   NS_ENSURE_ARG_POINTER(aUpdate);
 
+  nsCAutoString binPath;
   nsXREDirProvider* dirProvider = nsXREDirProvider::GetSingleton();
   if (dirProvider) { // Normal code path
     // Check for and process any available updates
@@ -929,14 +930,11 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
     // the entries in this array will be ignored if argc<2.  Therefore, for
     // xpcshell, we only fill out that item, and leave the rest empty.
     argc = 1;
-    nsCAutoString binPath;
     nsCOMPtr<nsIFile> binary;
     rv = ds->Get(XRE_EXECUTABLE_FILE, NS_GET_IID(nsIFile),
                  getter_AddRefs(binary));
     NS_ASSERTION(NS_SUCCEEDED(rv), "Can't get the binary path");
     binary->GetNativePath(binPath);
-    char* binPathCString = const_cast<char*> (nsPromiseFlatCString(binPath).get());
-    argv = &binPathCString;
   }
 
   // Copy the parameters to the BackgroundUpdateInfo structure shared with the
@@ -946,10 +944,17 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
   mInfo.mUpdateRoot = updRoot;
   mInfo.mArgc = argc;
   mInfo.mArgv = new char*[argc];
-  for (int i = 0; i < argc; ++i) {
-    const size_t length = strlen(argv[i]);
-    mInfo.mArgv[i] = new char[length + 1];
-    strcpy(mInfo.mArgv[i], argv[i]);
+  if (dirProvider) {
+    for (int i = 0; i < argc; ++i) {
+      const size_t length = strlen(argv[i]);
+      mInfo.mArgv[i] = new char[length + 1];
+      strcpy(mInfo.mArgv[i], argv[i]);
+    }
+  } else {
+    MOZ_ASSERT(argc == 1); // see above
+    const size_t length = binPath.Length();
+    mInfo.mArgv[0] = new char[length + 1];
+    strcpy(mInfo.mArgv[0], binPath.get());
   }
   mInfo.mAppVersion = appVersion;
 
@@ -970,7 +975,7 @@ nsUpdateProcessor::StartBackgroundUpdate()
                                mInfo.mUpdateRoot,
                                mInfo.mArgc,
                                mInfo.mArgv,
-                               PromiseFlatCString(mInfo.mAppVersion).get(),
+                               mInfo.mAppVersion.get(),
                                false,
                                &mUpdaterPID);
   NS_ENSURE_SUCCESS(rv, );

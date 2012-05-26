@@ -1116,17 +1116,6 @@ Engine.prototype = {
   _iconUpdateURL: null,
   // A reference to the timer used for lazily serializing the engine to file
   _serializeTimer: null,
-  // Whether this engine has been used since the cache was last recreated.
-  __used: null,
-  get _used() {
-    if (!this.__used)
-      this.__used = !!engineMetadataService.getAttr(this, "used");
-    return this.__used;
-  },
-  set _used(aValue) {
-    this.__used = aValue
-    engineMetadataService.setAttr(this, "used", aValue);
-  },
 
   /**
    * Retrieves the data from the engine's file. If the engine's dataType is
@@ -2414,12 +2403,6 @@ Engine.prototype = {
     if (!aResponseType)
       aResponseType = URLTYPE_SEARCH_HTML;
 
-    // Check for updates on the first use of an app-shipped engine
-    if (this._isInAppDir && aResponseType == URLTYPE_SEARCH_HTML && !this._used) {
-      this._used = true;
-      engineUpdateService.update(this);
-    }
-
     var url = this._getURLOfType(aResponseType);
 
     if (!url)
@@ -2825,8 +2808,6 @@ SearchService.prototype = {
       try {
         addedEngine = new Engine(file, dataType, !isWritable);
         addedEngine._initFromFile();
-        if (addedEngine._used)
-          addedEngine._used = false;
       } catch (ex) {
         LOG("_loadEnginesFromDir: Failed to load " + file.path + "!\n" + ex);
         continue;

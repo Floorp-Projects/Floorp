@@ -1,0 +1,19 @@
+<html>
+<head>
+<script type="application/javascript">
+  function doAccess() {
+    // Access the variable twice.
+    oneAccess();
+    oneAccess();
+  }
+
+  function oneAccess() {
+    try {
+      is(window.chromeObj.a, 42, "Successfully read chrome property");
+    } catch (e) { ok(false, "Threw while trying to access chrome property"); };
+  }
+</script>
+</head>
+<body>
+</body>
+</html>

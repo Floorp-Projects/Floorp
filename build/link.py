@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import with_statement
-import os, platform, subprocess, sys, threading, time
+import os, subprocess, sys, threading, time
 from win32 import procmem
 
 def measure_vsize_threadfunc(proc, output_file):
@@ -36,7 +36,7 @@ def measure_link_vsize(output_file, args):
     return exitcode
 
 if __name__ == "__main__":
-    if platform.system() != "Windows":
+    if sys.platform != "win32":
         print >>sys.stderr, "link.py is only for use on Windows!"
         sys.exit(1)
     if len(sys.argv) < 3:

@@ -1,0 +1,25 @@
+# L10n
+ac_add_options --with-l10n-base=..
+
+# Global options
+ac_add_options --disable-tests
+
+# Build Fennec
+ac_add_options --enable-application=mobile/android
+
+# Android
+ac_add_options --target=arm-linux-androideabi
+ac_add_options --with-arch=armv6
+ac_add_options --with-endian=little
+ac_add_options --with-android-ndk="/tools/android-ndk-r5c"
+ac_add_options --with-android-sdk="/tools/android-sdk-r15/platforms/android-14"
+ac_add_options --with-android-version=5
+ac_add_options --with-system-zlib
+ac_add_options --enable-updater
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+
+export JAVA_HOME=/tools/jdk6
+export MOZILLA_OFFICIAL=1
+
+ac_add_options --enable-official-branding
+ac_add_options --with-branding=mobile/android/branding/beta

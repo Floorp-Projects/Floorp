@@ -701,21 +701,23 @@ let _emu_cb_id = 0;
 let _emu_cbs = {};
 
 function runEmulatorCmd(cmd, callback) {
-  if (typeof callback != "function") {
-    throw "Need to provide callback function!";
+  if (callback) {
+    _emu_cbs[_emu_cb_id] = callback;
   }
-  _emu_cbs[_emu_cb_id] = callback;
   sendAsyncMessage("Marionette:runEmulatorCmd", {emulator_cmd: cmd, id: _emu_cb_id});
   _emu_cb_id += 1;
 }
 
 function emulatorCmdResult(msg) {
   let message = msg.json;
-  if (!sandbox || !_emu_cbs[message.id]) {
+  if (!sandbox) {
     return;
   }
   let cb = _emu_cbs[message.id];
   delete _emu_cbs[message.id];
+  if (!cb) {
+    return;
+  }
   try {
     cb(message.result);
   }
