@@ -32,11 +32,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected Assert mAsserter;
     protected Actions mActions;
     protected String mBaseUrl;
+    private String mTestType;
     private String mLogFile;
     protected String mProfile;
-
-    protected static final int TEST_MOCHITEST = 0;
-    protected static final int TEST_TALOS = 1;
 
     static {
         try {
@@ -49,9 +47,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     public BaseTest() {
         super(TARGET_PACKAGE_ID, mLauncherActivityClass);
     }
-
-    // Must return either TEST_MOCHITEST or TEST_TALOS
-    protected abstract int getTestType();
 
     @Override
     protected void setUp() throws Exception {
@@ -75,9 +70,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
         mLogFile = (String)config.get("logfile");
         mBaseUrl = ((String)config.get("host")).replaceAll("(/$)", "");
+    }
 
-        // Initialize the asserter
-        if (getTestType() == TEST_TALOS) {
+    public void setTestType(String type) {
+        mTestType = type;
+
+        if (mTestType.equals("talos")) {
             mAsserter = new FennecTalosAssert();
         } else {
             mAsserter = new FennecMochitestAssert();
