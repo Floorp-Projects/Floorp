@@ -23,6 +23,9 @@
   <preference id="browser.tabs.warnOnOpen"
               name="browser.tabs.warnOnOpen"
               type="bool"/>
+  <preference id="browser.sessionstore.restore_on_demand"
+              name="browser.sessionstore.restore_on_demand"
+              type="bool"/>
 #ifdef XP_WIN
   <preference id="browser.taskbar.previews.enable"
               name="browser.taskbar.previews.enable"
@@ -59,6 +62,12 @@
           data-category="paneTabs" hidden="true"
           accesskey="&showTabBar.accesskey;"
           preference="browser.tabs.autoHide"
+          class="indent"/>
+
+<checkbox id="restoreOnDemand" label="&restoreTabsOnDemand.label;"
+          data-category="paneTabs" hidden="true"
+          accesskey="&restoreTabsOnDemand.accesskey;"
+          preference="browser.sessionstore.restore_on_demand"
           class="indent"/>
 
 <checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
