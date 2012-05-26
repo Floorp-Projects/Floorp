@@ -10,13 +10,17 @@ import android.net.Uri;
 import android.provider.Browser;
 
 public class testBookmarklets extends BaseTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testBookmarklets() {
         final String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
         final String title = "alertBookmarklet";
         final String js = "javascript:alert(12 + .34)";
         boolean alerted;
 
-        setTestType("mochitest");
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
         // load a standard page so bookmarklets work

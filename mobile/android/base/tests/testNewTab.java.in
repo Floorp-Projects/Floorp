@@ -5,8 +5,12 @@ import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Activity;
 
 public class testNewTab extends BaseTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testNewTab() {
-        setTestType("mochitest");
         String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
         String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
         String tabCountText = null;
