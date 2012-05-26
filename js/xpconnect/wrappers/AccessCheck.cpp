@@ -13,6 +13,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsContentUtils.h"
+#include "nsJSUtils.h"
 
 #include "XPCWrapper.h"
 #include "XrayWrapper.h"
@@ -489,6 +490,21 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     if (!found) {
         // For now, only do this on functions.
         if (!JS_ObjectIsFunction(cx, wrappedObject)) {
+
+            // This little loop hole will go away soon! See bug 553102.
+            JSAutoEnterCompartment innerAc;
+            if (!innerAc.enter(cx, wrapper))
+                return false;
+            nsCOMPtr<nsPIDOMWindow> win =
+                do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, wrapper));
+            if (win) {
+                nsCOMPtr<nsIDocument> doc =
+                    do_QueryInterface(win->GetExtantDocument());
+                if (doc) {
+                    doc->WarnOnceAbout(nsIDocument::eNoExposedProps);
+                }
+            }
+
             perm = PermitPropertyAccess;
             return true;
         }

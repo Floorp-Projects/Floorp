@@ -829,6 +829,8 @@ pref("network.http.fast-fallback-to-IPv4", true);
 
 // Try and use SPDY when using SSL
 pref("network.http.spdy.enabled", true);
+pref("network.http.spdy.enabled.v2", true);
+pref("network.http.spdy.enabled.v3", false);
 pref("network.http.spdy.chunk-size", 4096);
 pref("network.http.spdy.timeout", 180);
 pref("network.http.spdy.coalesce-hostnames", true);
@@ -3410,7 +3412,6 @@ pref("webgl.disabled", false);
 pref("webgl.shader_validator", true);
 pref("webgl.force_osmesa", false);
 pref("webgl.osmesalib", "");
-pref("webgl.verbose", false);
 pref("webgl.prefer-native-gl", false);
 pref("webgl.min_capability_mode", false);
 pref("webgl.disable-extensions", false);

@@ -1589,7 +1589,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
                               *aSubmitReports ?  NS_LITERAL_CSTRING("1") :
                                                  NS_LITERAL_CSTRING("0"));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = iniWriter->WriteFile(NULL);
+    rv = iniWriter->WriteFile(NULL, 0);
     return rv;
   }
   

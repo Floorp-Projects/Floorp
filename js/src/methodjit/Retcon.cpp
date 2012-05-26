@@ -394,7 +394,7 @@ ClearAllFrames(JSCompartment *compartment)
 void
 Recompiler::clearStackReferences(FreeOp *fop, JSScript *script)
 {
-    JS_ASSERT(script->hasJITCode());
+    JS_ASSERT(script->hasJITInfo());
 
     JaegerSpew(JSpew_Recompile, "recompiling script (file \"%s\") (line \"%d\") (length \"%d\")\n",
                script->filename, script->lineno, script->length);

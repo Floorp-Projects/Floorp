@@ -90,20 +90,93 @@ let testdata = [
     { filename: "data/iniparser15.ini", reference: 
                     { section1: { name1: "newValue1" },
                       section2: { name1: "foopy"     }} },
+    { filename: "data/iniparser16.ini", reference: 
+                    { "☺♫": { "♫": "☻", "♪": "♥"  },
+                       "☼": { "♣": "♠", "♦": "♥"  }} },
+
     ];
+
+    testdata.push( { filename: "data/iniparser01-utf8BOM.ini",
+                     reference: testdata[0].reference } );
+    testdata.push( { filename: "data/iniparser02-utf8BOM.ini",
+                     reference: testdata[1].reference } );
+    testdata.push( { filename: "data/iniparser03-utf8BOM.ini",
+                     reference: testdata[2].reference } );
+    testdata.push( { filename: "data/iniparser04-utf8BOM.ini",
+                     reference: testdata[3].reference } );
+    testdata.push( { filename: "data/iniparser05-utf8BOM.ini",
+                     reference: testdata[4].reference } );
+    testdata.push( { filename: "data/iniparser06-utf8BOM.ini",
+                     reference: testdata[5].reference } );
+    testdata.push( { filename: "data/iniparser07-utf8BOM.ini",
+                     reference: testdata[6].reference } );
+    testdata.push( { filename: "data/iniparser08-utf8BOM.ini",
+                     reference: testdata[7].reference } );
+    testdata.push( { filename: "data/iniparser09-utf8BOM.ini",
+                     reference: testdata[8].reference } );
+    testdata.push( { filename: "data/iniparser10-utf8BOM.ini",
+                     reference: testdata[9].reference } );
+    testdata.push( { filename: "data/iniparser11-utf8BOM.ini",
+                     reference: testdata[10].reference } );
+    testdata.push( { filename: "data/iniparser12-utf8BOM.ini",
+                     reference: testdata[11].reference } );
+    testdata.push( { filename: "data/iniparser13-utf8BOM.ini",
+                     reference: testdata[12].reference } );
+    testdata.push( { filename: "data/iniparser14-utf8BOM.ini",
+                     reference: testdata[13].reference } );
+    testdata.push( { filename: "data/iniparser15-utf8BOM.ini",
+                     reference: testdata[14].reference } );
+    testdata.push( { filename: "data/iniparser16-utf8BOM.ini",
+                     reference: testdata[15].reference } );
+
+    let os = Cc["@mozilla.org/xre/app-info;1"]
+             .getService(Ci.nsIXULRuntime).OS;
+    if("WINNT" === os) {
+        testdata.push( { filename: "data/iniparser01-utf16leBOM.ini",
+                         reference: testdata[0].reference } );
+        testdata.push( { filename: "data/iniparser02-utf16leBOM.ini",
+                         reference: testdata[1].reference } );
+        testdata.push( { filename: "data/iniparser03-utf16leBOM.ini",
+                         reference: testdata[2].reference } );
+        testdata.push( { filename: "data/iniparser04-utf16leBOM.ini",
+                         reference: testdata[3].reference } );
+        testdata.push( { filename: "data/iniparser05-utf16leBOM.ini",
+                         reference: testdata[4].reference } );
+        testdata.push( { filename: "data/iniparser06-utf16leBOM.ini",
+                         reference: testdata[5].reference } );
+        testdata.push( { filename: "data/iniparser07-utf16leBOM.ini",
+                         reference: testdata[6].reference } );
+        testdata.push( { filename: "data/iniparser08-utf16leBOM.ini",
+                         reference: testdata[7].reference } );
+        testdata.push( { filename: "data/iniparser09-utf16leBOM.ini",
+                         reference: testdata[8].reference } );
+        testdata.push( { filename: "data/iniparser10-utf16leBOM.ini",
+                         reference: testdata[9].reference } );
+        testdata.push( { filename: "data/iniparser11-utf16leBOM.ini",
+                         reference: testdata[10].reference } );
+        testdata.push( { filename: "data/iniparser12-utf16leBOM.ini",
+                         reference: testdata[11].reference } );
+        testdata.push( { filename: "data/iniparser13-utf16leBOM.ini",
+                         reference: testdata[12].reference } );
+        testdata.push( { filename: "data/iniparser14-utf16leBOM.ini",
+                         reference: testdata[13].reference } );
+        testdata.push( { filename: "data/iniparser15-utf16leBOM.ini",
+                         reference: testdata[14].reference } );
+        testdata.push( { filename: "data/iniparser16-utf16leBOM.ini",
+                         reference: testdata[15].reference } );
+    }
 
 /* ========== 0 ========== */
 factory = Cc["@mozilla.org/xpcom/ini-processor-factory;1"].
           getService(Ci.nsIINIParserFactory);
 do_check_true(!!factory);
 
-/* ========== 1 - 15 ========== */
-
 // Test reading from a variety of files. While we're at it, write out each one
 // and read it back to ensure that nothing changed.
-for (testnum = 1; testnum <= 15; testnum++) {
+while (testnum < testdata.length) {
+    dump("\nINFO | test #" + ++testnum);
     let filename = testdata[testnum -1].filename;
-    dump("INFO | test #" + testnum + ", filename " + filename + "\n");
+    dump(", filename " + filename + "\n");
     let parser = parserForFile(filename);
     checkParserOutput(parser, testdata[testnum - 1].reference);
     if (!parser)
@@ -121,7 +194,7 @@ for (testnum = 1; testnum <= 15; testnum++) {
     newfile.remove(false);
 }
 
-/* ========== 16 ========== */
+dump("INFO | test #" + ++testnum + "\n");
 
 // test writing to a new file.
 let newfile = do_get_file("data/");
@@ -148,7 +221,7 @@ checkParserOutput(parser, {section: {key: "value"} });
 // cleanup after the test
 newfile.remove(false);
 
-/* ========== 17 ========== */
+dump("INFO | test #" + ++testnum + "\n");
 
 // test modifying a existing key's value (in an existing section)
 parser = parserForFile("data/iniparser09.ini");
@@ -158,7 +231,7 @@ do_check_true(parser instanceof Ci.nsIINIParserWriter);
 parser.setString("section1", "name1", "value2");
 checkParserOutput(parser, {section1: {name1: "value2"} });
 
-/* ========== 18 ========== */
+dump("INFO | test #" + ++testnum + "\n");
 
 // test trying to set illegal characters
 let caughtError;

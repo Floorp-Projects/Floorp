@@ -209,16 +209,23 @@ class RegExpStatics
     void getLeftContext(JSSubString *out) const;
     void getRightContext(JSSubString *out) const;
 
-    class StackRoot
+    class AutoRooter : private AutoGCRooter
     {
-        Root<JSLinearString*> matchPairsInputRoot;
-        RootString pendingInputRoot;
-
       public:
-        StackRoot(JSContext *cx, RegExpStatics *buffer)
-          : matchPairsInputRoot(cx, (JSLinearString**) &buffer->matchPairsInput),
-            pendingInputRoot(cx, (JSString**) &buffer->pendingInput)
-        {}
+        explicit AutoRooter(JSContext *cx, RegExpStatics *statics_
+                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
+          : AutoGCRooter(cx, REGEXPSTATICS), statics(statics_), skip(cx, statics_)
+        {
+            JS_GUARD_OBJECT_NOTIFIER_INIT;
+        }
+
+        friend void AutoGCRooter::trace(JSTracer *trc);
+        void trace(JSTracer *trc);
+
+      private:
+        RegExpStatics *statics;
+        SkipRoot skip;
+        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
     };
 };
 
@@ -226,7 +233,7 @@ class PreserveRegExpStatics
 {
     RegExpStatics * const original;
     RegExpStatics buffer;
-    RegExpStatics::StackRoot bufferRoot;
+    RegExpStatics::AutoRooter bufferRoot;
 
   public:
     explicit PreserveRegExpStatics(JSContext *cx, RegExpStatics *original)

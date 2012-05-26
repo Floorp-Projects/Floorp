@@ -17,6 +17,8 @@ var gl = null;
 var textureLoc = null;
 var successfullyParsed = false;
 var imgCanvas;
+var red = [255, 0, 0];
+var green = [0, 255, 0];
 
 function init()
 {
@@ -85,8 +87,6 @@ function runOneIteration(image, useTexSubImage2D, flipY, topColor, bottomColor)
 }
 
 function runTestOnImage(image) {
-    var red = [255, 0, 0];
-    var green = [0, 255, 0];
     runOneIteration(image, false, true, red, green);
     runOneIteration(image, false, false, green, red);
     runOneIteration(image, true, true, red, green);
@@ -101,7 +101,16 @@ function runTest(image)
     imgCanvas.width = 1;
     imgCanvas.height = 2;
     var imgCtx = imgCanvas.getContext("2d");
-    imgCtx.drawImage(image, 0, 0);
+    var imgData = imgCtx.createImageData(1, 2);
+    imgData.data[0] = red[0];
+    imgData.data[1] = red[1];
+    imgData.data[2] = red[2];
+    imgData.data[3] = 255;
+    imgData.data[4] = green[0];
+    imgData.data[5] = green[1];
+    imgData.data[6] = green[2];
+    imgData.data[7] = 255;
+    imgCtx.putImageData(imgData, 0, 0);
 
     // apparently Image is different than <img>.
     var newImage =  new Image();

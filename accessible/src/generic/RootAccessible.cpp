@@ -589,8 +589,8 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
     if (!popupContainer)
       return;
 
-    PRInt32 childCount = popupContainer->GetChildCount();
-    for (PRInt32 idx = 0; idx < childCount; idx++) {
+    PRUint32 childCount = popupContainer->ChildCount();
+    for (PRUint32 idx = 0; idx < childCount; idx++) {
       nsAccessible* child = popupContainer->GetChildAt(idx);
       if (child->IsAutoCompletePopup()) {
         popup = child;

@@ -2645,7 +2645,11 @@ void nsHTMLMediaElement::ResourceLoaded()
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
   AddRemoveSelfReference();
   if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA) {
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+    // MediaStream sources are put into HAVE_CURRENT_DATA state here on setup. If the
+    // stream is not blocked, we will receive a notification that will put it
+    // into HAVE_ENOUGH_DATA state.
+    ChangeReadyState(mStream ? nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA
+                     : nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
   }
   // Ensure a progress event is dispatched at the end of download.
   DispatchAsyncEvent(NS_LITERAL_STRING("progress"));

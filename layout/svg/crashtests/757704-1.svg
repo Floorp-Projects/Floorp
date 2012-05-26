@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<svg xmlns="http://www.w3.org/2000/svg"><script>
+<![CDATA[
+
+function boom()
+{
+  var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  document.documentElement.appendChild(rect);
+  document.removeChild(document.documentElement);
+  rect.getScreenCTM();
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script></svg>

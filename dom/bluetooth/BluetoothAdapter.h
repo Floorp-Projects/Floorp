@@ -20,7 +20,7 @@ class BluetoothAdapter : public nsDOMEventTargetHelper
                        , public nsIDOMBluetoothAdapter
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMBLUETOOTHADAPTER
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
@@ -28,17 +28,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BluetoothAdapter,
                                            nsDOMEventTargetHelper)
 
-  BluetoothAdapter(nsPIDOMWindow*);
-
-  inline void SetEnabledInternal(bool aEnabled) {mEnabled = aEnabled;}
-
-protected:
-  bool mEnabled;
-
-  NS_DECL_EVENT_HANDLER(enabled)
-
-private:
-  nsCOMPtr<nsIEventTarget> mToggleBtThread;
 };
 
 END_BLUETOOTH_NAMESPACE

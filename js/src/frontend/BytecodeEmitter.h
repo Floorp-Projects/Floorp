@@ -67,7 +67,7 @@ struct GlobalScope {
       : globalObj(cx, globalObj)
     { }
 
-    RootedVarObject globalObj;
+    RootedObject globalObj;
 };
 
 struct BytecodeEmitter

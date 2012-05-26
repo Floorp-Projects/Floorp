@@ -78,18 +78,18 @@ public:
   NS_DECL_NSIOBSERVER
 
   // Run on the main thread, not the vibrator thread.
-  void Vibrate(const nsTArray<uint32> &pattern);
+  void Vibrate(const nsTArray<uint32_t> &pattern);
   void CancelVibrate();
 
 private:
   Monitor mMonitor;
 
   // The currently-playing pattern.
-  nsTArray<uint32> mPattern;
+  nsTArray<uint32_t> mPattern;
 
   // The index we're at in the currently-playing pattern.  If mIndex >=
   // mPattern.Length(), then we're not currently playing anything.
-  uint32 mIndex;
+  uint32_t mIndex;
 
   // Set to true in our shutdown observer.  When this is true, we kill the
   // vibrator thread.
@@ -114,7 +114,7 @@ VibratorRunnable::Run()
 
   while (!mShuttingDown) {
     if (mIndex < mPattern.Length()) {
-      uint32 duration = mPattern[mIndex];
+      uint32_t duration = mPattern[mIndex];
       if (mIndex % 2 == 0) {
         vibrator_on(duration);
       }
@@ -141,7 +141,7 @@ VibratorRunnable::Observe(nsISupports *subject, const char *topic,
 }
 
 void
-VibratorRunnable::Vibrate(const nsTArray<uint32> &pattern)
+VibratorRunnable::Vibrate(const nsTArray<uint32_t> &pattern)
 {
   MonitorAutoLock lock(mMonitor);
   mPattern = pattern;
@@ -177,7 +177,7 @@ EnsureVibratorThreadInitialized()
 } // anonymous namespace
 
 void
-Vibrate(const nsTArray<uint32> &pattern, const hal::WindowIdentifier &)
+Vibrate(const nsTArray<uint32_t> &pattern, const hal::WindowIdentifier &)
 {
   EnsureVibratorThreadInitialized();
   sVibratorRunnable->Vibrate(pattern);

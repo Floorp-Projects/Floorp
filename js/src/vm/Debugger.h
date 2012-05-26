@@ -351,7 +351,7 @@ class BreakpointSite {
     friend class Debugger;
 
   public:
-    JSScript * const script;
+    JSScript *script;
     jsbytecode * const pc;
 
   private:

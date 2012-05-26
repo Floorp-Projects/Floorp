@@ -35,7 +35,7 @@
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsSocketTransportService2.h"
 #include "nsAlgorithm.h"
-#include "SpdySession.h"
+#include "ASpdySession.h"
 
 #include "nsIXULAppInfo.h"
 
@@ -155,7 +155,6 @@ nsHttpHandler::nsHttpHandler()
     , mQoSBits(0x00)
     , mPipeliningOverSSL(false)
     , mEnforceAssocReq(false)
-    , mInPrivateBrowsingMode(PRIVATE_BROWSING_UNKNOWN)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
     , mLegacyAppName("Mozilla")
@@ -170,9 +169,11 @@ nsHttpHandler::nsHttpHandler()
     , mTelemetryEnabled(false)
     , mAllowExperiments(true)
     , mEnableSpdy(false)
+    , mSpdyV2(true)
+    , mSpdyV3(true)
     , mCoalesceSpdy(true)
     , mUseAlternateProtocol(false)
-    , mSpdySendingChunkSize(SpdySession::kSendingChunkSize)
+    , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
     , mSpdyPingThreshold(PR_SecondsToInterval(44))
     , mSpdyPingTimeout(PR_SecondsToInterval(8))
 {
@@ -297,7 +298,6 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "profile-change-net-restore", true);
         mObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
         mObserverService->AddObserver(this, "net:clear-active-logins", true);
-        mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
         mObserverService->AddObserver(this, "net:prune-dead-connections", true);
         mObserverService->AddObserver(this, "net:failed-to-process-uri-content", true);
     }
@@ -408,6 +408,7 @@ nsHttpHandler::IsAcceptableEncoding(const char *enc)
 
 nsresult
 nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
+                               bool isPrivate,
                                nsICacheSession **result)
 {
     nsresult rv;
@@ -427,7 +428,7 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
     const char *sessionName = "HTTP";
     switch (storagePolicy) {
     case nsICache::STORE_IN_MEMORY:
-        sessionName = "HTTP-memory-only";
+        sessionName = isPrivate ? "HTTP-memory-only-PB" : "HTTP-memory-only";
         break;
     case nsICache::STORE_OFFLINE:
         sessionName = "HTTP-offline";
@@ -449,23 +450,6 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
     NS_ADDREF(*result = cacheSession);
 
     return NS_OK;
-}
-
-bool
-nsHttpHandler::InPrivateBrowsingMode()
-{
-    if (PRIVATE_BROWSING_UNKNOWN == mInPrivateBrowsingMode) {
-        // figure out if we're starting in private browsing mode
-        nsCOMPtr<nsIPrivateBrowsingService> pbs =
-            do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-        if (!pbs)
-            return PRIVATE_BROWSING_OFF;
-
-        bool p = false;
-        pbs->GetPrivateBrowsingEnabled(&p);
-        mInPrivateBrowsingMode = p ? PRIVATE_BROWSING_ON : PRIVATE_BROWSING_OFF;
-    }
-    return PRIVATE_BROWSING_ON == mInPrivateBrowsingMode;
 }
 
 nsresult
@@ -1150,6 +1134,18 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             mEnableSpdy = cVar;
     }
 
+    if (PREF_CHANGED(HTTP_PREF("spdy.enabled.v2"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.v2"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mSpdyV2 = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.enabled.v3"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.v3"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mSpdyV3 = cVar;
+    }
+
     if (PREF_CHANGED(HTTP_PREF("spdy.coalesce-hostnames"))) {
         rv = prefs->GetBoolPref(HTTP_PREF("spdy.coalesce-hostnames"), &cVar);
         if (NS_SUCCEEDED(rv))
@@ -1601,14 +1597,6 @@ nsHttpHandler::Observe(nsISupports *subject,
     }
     else if (strcmp(topic, "net:clear-active-logins") == 0) {
         mAuthCache.ClearAll();
-    }
-    else if (strcmp(topic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
-        if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(data))
-            mInPrivateBrowsingMode = PRIVATE_BROWSING_ON;
-        else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(data))
-            mInPrivateBrowsingMode = PRIVATE_BROWSING_OFF;
-        if (mConnMgr)
-            mConnMgr->ClosePersistentConnections();
     }
     else if (strcmp(topic, "net:prune-dead-connections") == 0) {
         if (mConnMgr) {

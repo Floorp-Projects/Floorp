@@ -26,6 +26,36 @@ DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs)
   return true;
 }
 
+static inline bool
+Define(JSContext* cx, JSObject* obj, JSFunctionSpec* spec) {
+  return JS_DefineFunctions(cx, obj, spec);
+}
+static inline bool
+Define(JSContext* cx, JSObject* obj, JSPropertySpec* spec) {
+  return JS_DefineProperties(cx, obj, spec);
+}
+static inline bool
+Define(JSContext* cx, JSObject* obj, ConstantSpec* spec) {
+  return DefineConstants(cx, obj, spec);
+}
+
+template<typename T>
+bool
+DefinePrefable(JSContext* cx, JSObject* obj, Prefable<T>* props)
+{
+  MOZ_ASSERT(props);
+  MOZ_ASSERT(props->specs);
+  do {
+    // Define if enabled
+    if (props->enabled) {
+      if (!Define(cx, obj, props->specs)) {
+        return false;
+      }
+    }
+  } while ((++props)->specs);
+  return true;
+}
+
 // We should use JSFunction objects for interface objects, but we need a custom
 // hasInstance hook because we have new interface objects on prototype chains of
 // old (XPConnect-based) bindings. Because Function.prototype.toString throws if
@@ -93,7 +123,8 @@ static JSObject*
 CreateInterfaceObject(JSContext* cx, JSObject* global, JSObject* receiver,
                       JSClass* constructorClass, JSNative constructorNative,
                       unsigned ctorNargs, JSObject* proto,
-                      JSFunctionSpec* staticMethods, ConstantSpec* constants,
+                      Prefable<JSFunctionSpec>* staticMethods,
+                      Prefable<ConstantSpec>* constants,
                       const char* name)
 {
   JSObject* constructor;
@@ -116,7 +147,7 @@ CreateInterfaceObject(JSContext* cx, JSObject* global, JSObject* receiver,
     return NULL;
   }
 
-  if (staticMethods && !JS_DefineFunctions(cx, constructor, staticMethods)) {
+  if (staticMethods && !DefinePrefable(cx, constructor, staticMethods)) {
     return NULL;
   }
 
@@ -141,7 +172,7 @@ CreateInterfaceObject(JSContext* cx, JSObject* global, JSObject* receiver,
                                   STRING_TO_JSVAL(str));
   }
 
-  if (constants && !DefineConstants(cx, constructor, constants)) {
+  if (constants && !DefinePrefable(cx, constructor, constants)) {
     return NULL;
   }
 
@@ -167,9 +198,9 @@ CreateInterfaceObject(JSContext* cx, JSObject* global, JSObject* receiver,
 static JSObject*
 CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
                                JSObject* parentProto, JSClass* protoClass,
-                               JSFunctionSpec* methods,
-                               JSPropertySpec* properties,
-                               ConstantSpec* constants)
+                               Prefable<JSFunctionSpec>* methods,
+                               Prefable<JSPropertySpec>* properties,
+                               Prefable<ConstantSpec>* constants)
 {
   JSObject* ourProto = JS_NewObjectWithUniqueType(cx, protoClass, parentProto,
                                                   global);
@@ -177,15 +208,15 @@ CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
     return NULL;
   }
 
-  if (methods && !JS_DefineFunctions(cx, ourProto, methods)) {
+  if (methods && !DefinePrefable(cx, ourProto, methods)) {
     return NULL;
   }
 
-  if (properties && !JS_DefineProperties(cx, ourProto, properties)) {
+  if (properties && !DefinePrefable(cx, ourProto, properties)) {
     return NULL;
   }
 
-  if (constants && !DefineConstants(cx, ourProto, constants)) {
+  if (constants && !DefinePrefable(cx, ourProto, constants)) {
     return NULL;
   }
 
@@ -196,9 +227,10 @@ JSObject*
 CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject *receiver,
                        JSObject* protoProto, JSClass* protoClass,
                        JSClass* constructorClass, JSNative constructor,
-                       unsigned ctorNargs, JSFunctionSpec* methods,
-                       JSPropertySpec* properties, ConstantSpec* constants,
-                       JSFunctionSpec* staticMethods, const char* name)
+                       unsigned ctorNargs, Prefable<JSFunctionSpec>* methods,
+                       Prefable<JSPropertySpec>* properties,
+                       Prefable<ConstantSpec>* constants,
+                       Prefable<JSFunctionSpec>* staticMethods, const char* name)
 {
   MOZ_ASSERT(protoClass || constructorClass || constructor,
              "Need at least one class or a constructor!");

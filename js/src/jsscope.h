@@ -422,6 +422,24 @@ struct StackBaseShape
 
     static inline HashNumber hash(const StackBaseShape *lookup);
     static inline bool match(UnownedBaseShape *key, const StackBaseShape *lookup);
+
+    class AutoRooter : private AutoGCRooter
+    {
+      public:
+        explicit AutoRooter(JSContext *cx, const StackBaseShape *base_
+                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
+          : AutoGCRooter(cx, STACKBASESHAPE), base(base_), skip(cx, base_)
+        {
+            JS_GUARD_OBJECT_NOTIFIER_INIT;
+        }
+
+        friend void AutoGCRooter::trace(JSTracer *trc);
+
+      private:
+        const StackBaseShape *base;
+        SkipRoot skip;
+        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    };
 };
 
 typedef HashSet<ReadBarriered<UnownedBaseShape>,
@@ -560,12 +578,23 @@ struct Shape : public js::gc::Cell
             cursor = cursor->parent;
         }
 
-        class Root {
-            js::Root<const Shape*> cursorRoot;
+        class AutoRooter : private AutoGCRooter
+        {
           public:
-            Root(JSContext *cx, Range *range)
-              : cursorRoot(cx, &range->cursor)
-            {}
+            explicit AutoRooter(JSContext *cx, Range *r_
+                                JS_GUARD_OBJECT_NOTIFIER_PARAM)
+              : AutoGCRooter(cx, SHAPERANGE), r(r_), skip(cx, r_)
+            {
+                JS_GUARD_OBJECT_NOTIFIER_INIT;
+            }
+
+            friend void AutoGCRooter::trace(JSTracer *trc);
+            void trace(JSTracer *trc);
+
+          private:
+            Range *r;
+            SkipRoot skip;
+            JS_DECL_USE_GUARD_OBJECT_NOTIFIER
         };
     };
 
@@ -864,19 +893,42 @@ struct Shape : public js::gc::Cell
     }
 };
 
-class RootGetterSetter
+class AutoRooterGetterSetter
 {
-    mozilla::Maybe<RootObject> getterRoot;
-    mozilla::Maybe<RootObject> setterRoot;
+    class Inner : private AutoGCRooter
+    {
+      public:
+        Inner(JSContext *cx, uint8_t attrs,
+              PropertyOp *pgetter_, StrictPropertyOp *psetter_)
+            : AutoGCRooter(cx, GETTERSETTER), attrs(attrs),
+              pgetter(pgetter_), psetter(psetter_),
+              getterRoot(cx, pgetter_), setterRoot(cx, psetter_)
+        {}
+
+        friend void AutoGCRooter::trace(JSTracer *trc);
+
+      private:
+        uint8_t attrs;
+        PropertyOp *pgetter;
+        StrictPropertyOp *psetter;
+        SkipRoot getterRoot, setterRoot;
+    };
 
   public:
-    RootGetterSetter(JSContext *cx, uint8_t attrs, PropertyOp *pgetter, StrictPropertyOp *psetter)
+    explicit AutoRooterGetterSetter(JSContext *cx, uint8_t attrs,
+                                    PropertyOp *pgetter, StrictPropertyOp *psetter
+                                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
     {
-        if (attrs & JSPROP_GETTER)
-            getterRoot.construct(cx, (JSObject **) pgetter);
-        if (attrs & JSPROP_SETTER)
-            setterRoot.construct(cx, (JSObject **) psetter);
+        if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
+            inner.construct(cx, attrs, pgetter, psetter);
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    Maybe<Inner> inner;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 struct EmptyShape : public js::Shape
@@ -930,6 +982,11 @@ struct InitialShapeEntry
               nfixed(nfixed), baseFlags(baseFlags)
         {}
     };
+
+    inline InitialShapeEntry();
+    inline InitialShapeEntry(const ReadBarriered<Shape> &shape, JSObject *proto);
+
+    inline Lookup getLookup();
 
     static inline HashNumber hash(const Lookup &lookup);
     static inline bool match(const InitialShapeEntry &key, const Lookup &lookup);
@@ -986,20 +1043,25 @@ struct StackShape
     }
 
     inline HashNumber hash() const;
-};
 
-/* Rooter for stack allocated shapes. */
-class RootStackShape
-{
-    Root<const UnownedBaseShape*> baseShapeRoot;
-    Root<const jsid> propidRoot;
+    class AutoRooter : private AutoGCRooter
+    {
+      public:
+        explicit AutoRooter(JSContext *cx, const StackShape *shape_
+                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
+          : AutoGCRooter(cx, STACKSHAPE), shape(shape_), skip(cx, shape_)
+        {
+            JS_GUARD_OBJECT_NOTIFIER_INIT;
+        }
 
-  public:
-    RootStackShape(JSContext *cx, const StackShape *shape)
-      : baseShapeRoot(cx, &shape->base),
-        propidRoot(cx, &shape->propid)
-    {}
-};
+        friend void AutoGCRooter::trace(JSTracer *trc);
+
+      private:
+        const StackShape *shape;
+        SkipRoot skip;
+        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    };
+ };
 
 } /* namespace js */
 
@@ -1041,12 +1103,14 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
 
     if (start->numLinearSearches() == LINEAR_SEARCHES_MAX) {
         if (start->isBigEnoughForAShapeTable()) {
-            RootShape startRoot(cx, &start);
-            RootId idRoot(cx, &id);
+            RootedShape startRoot(cx, start);
+            RootedId idRoot(cx, id);
             if (start->hashify(cx)) {
                 Shape **spp = start->table().search(id, adding);
                 return SHAPE_FETCH(spp);
             }
+            start = startRoot;
+            id = idRoot;
         }
         /*
          * No table built -- there weren't enough entries, or OOM occurred.

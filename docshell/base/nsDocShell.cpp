@@ -8595,7 +8595,18 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // (bug#331040)
     nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
 
-    rv = MaybeInitTiming();
+    // Don't init timing for javascript:, since it generally doesn't
+    // actually start a load or anything.  If it does, we'll init
+    // timing then, from OnStateChange.
+
+    // XXXbz mTiming should know what channel it's for, so we don't
+    // need this hackery.  Note that this is still broken in cases
+    // when we're loading something that's not javascript: and the
+    // beforeunload handler denies the load.  That will screw up
+    // timing for the next load!
+    if (!bIsJavascript) {
+        MaybeInitTiming();
+    }
     if (mTiming) {
       mTiming->NotifyBeforeUnload();
     }
@@ -8783,6 +8794,10 @@ nsDocShell::GetInheritedPrincipal(bool aConsiderCurrentDocument)
 bool
 nsDocShell::ShouldCheckAppCache(nsIURI *aURI)
 {
+    if (mInPrivateBrowsing) {
+        return false;
+    }
+
     nsCOMPtr<nsIOfflineCacheUpdateService> offlineService =
         do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
     if (!offlineService) {

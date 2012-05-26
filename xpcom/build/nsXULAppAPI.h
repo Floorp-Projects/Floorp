@@ -125,6 +125,14 @@
 #define XRE_UPDATE_ROOT_DIR "UpdRootD"
 
 /**
+ * Platform flag values for XRE_main.
+ *
+ * XRE_MAIN_FLAG_USE_METRO - On Windows, use the winrt backend. Defaults
+ * to win32 backend.
+ */
+#define XRE_MAIN_FLAG_USE_METRO 0x01
+
+/**
  * Begin an XUL application. Does not return until the user exits the
  * application.
  *
@@ -134,14 +142,16 @@
  *
  * @param aAppData  Information about the application to be run.
  *
+ * @param aFlags    Platform specific flags.
+ *
  * @return         A native result code suitable for returning from main().
  *
  * @note           If the binary is linked against the standalone XPCOM glue,
  *                 XPCOMGlueStartup() should be called before this method.
- *
  */
 XRE_API(int,
-        XRE_main, (int argc, char* argv[], const nsXREAppData* sAppData))
+        XRE_main, (int argc, char* argv[], const nsXREAppData* aAppData,
+                   PRUint32 aFlags))
 
 /**
  * Given a path relative to the current working directory (or an absolute
@@ -429,8 +439,25 @@ XRE_API(void,
 XRE_API(void,
         XRE_TelemetryAccumulate, (int aID, PRUint32 aSample))
 
-
 XRE_API(void,
         XRE_InitOmnijar, (nsILocalFile* greOmni,
                           nsILocalFile* appOmni))
+
+#ifdef XP_WIN
+/**
+ * Valid environment types for XRE_GetWindowsEnvironment.
+ */
+enum WindowsEnvironmentType {
+  WindowsEnvironmentType_Desktop = 0,
+  WindowsEnvironmentType_Metro = 1
+};
+
+/**
+ * Retrieve the Windows desktop environment libXUL is running
+ * under. Valid after a call to XRE_main.
+ */
+XRE_API(WindowsEnvironmentType,
+        XRE_GetWindowsEnvironment, ())
+#endif // XP_WIN
+
 #endif // _nsXULAppAPI_h__

@@ -201,6 +201,15 @@ WebappsApplication.prototype = {
   _receipts: [],
   _installOrigin: null,
   _installTime: 0,
+  __exposedProps__: {
+                      origin: 'r',
+                      manifest: 'r',
+                      manifestURL: 'r',
+                      installOrigin: 'r',
+                      installTime: 'r',
+                      launch: 'r',
+                      uninstall: 'r'
+                     },
 
   get origin() {
     return this._origin;

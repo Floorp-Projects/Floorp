@@ -49,6 +49,7 @@
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
+#include "nsClientRect.h"
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
@@ -1261,6 +1262,39 @@ nsDOMWindowUtils::GetScrollXY(bool aFlushLayout, PRInt32* aScrollX, PRInt32* aSc
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
+{
+  // Weak ref, since we addref it below
+  nsClientRect* rect = new nsClientRect();
+  NS_ADDREF(*aResult = rect);
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  NS_ENSURE_STATE(doc);
+
+  nsRect bounds(0, 0, 0, 0);
+  nsIPresShell* presShell = doc->GetShell();
+  if (presShell) {
+    nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+    if (sf) {
+      bounds = sf->GetScrollRange();
+      bounds.width += sf->GetScrollPortRect().width;
+      bounds.height += sf->GetScrollPortRect().height;
+    } else if (presShell->GetRootFrame()) {
+      bounds = presShell->GetRootFrame()->GetRect();
+    }
+  }
+
+  rect->SetRect(nsPresContext::AppUnitsToFloatCSSPixels(bounds.x),
+                nsPresContext::AppUnitsToFloatCSSPixels(bounds.y),
+                nsPresContext::AppUnitsToFloatCSSPixels(bounds.width),
+                nsPresContext::AppUnitsToFloatCSSPixels(bounds.height));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetIMEIsOpen(bool *aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
@@ -1788,7 +1822,7 @@ nsDOMWindowUtils::GetParent(const JS::Value& aObject,
   // Outerize if necessary.
   if (parent) {
     if (JSObjectOp outerize = js::GetObjectClass(parent)->ext.outerObject) {
-      *aParent = OBJECT_TO_JSVAL(outerize(aCx, JS::RootedVarObject(aCx, parent)));
+      *aParent = OBJECT_TO_JSVAL(outerize(aCx, JS::RootedObject(aCx, parent)));
     }
   }
 

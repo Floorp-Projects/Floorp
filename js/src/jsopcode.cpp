@@ -323,7 +323,7 @@ js_DumpPCCounts(JSContext *cx, JSScript *script, js::Sprinter *sp)
 JS_FRIEND_API(JSBool)
 js_DisassembleAtPC(JSContext *cx, JSScript *script_, JSBool lines, jsbytecode *pc, Sprinter *sp)
 {
-    RootedVar<JSScript*> script(cx, script_);
+    Rooted<JSScript*> script(cx, script_);
 
     jsbytecode *next, *end;
     unsigned len;
@@ -420,10 +420,10 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
                 return false;
 
             Shape::Range r = obj->lastProperty()->all();
-            Shape::Range::Root root(cx, &r);
+            Shape::Range::AutoRooter root(cx, &r);
 
             while (!r.empty()) {
-                RootedVar<const Shape*> shape(cx, &r.front());
+                Rooted<const Shape*> shape(cx, &r.front());
                 JSAtom *atom = JSID_IS_INT(shape->propid())
                                ? cx->runtime->atomState.emptyAtom
                                : JSID_TO_ATOM(shape->propid());
@@ -5490,7 +5490,7 @@ js_DecompileFunction(JSPrinter *jp)
 {
     JSContext *cx = jp->sprinter.context;
 
-    RootedVarFunction fun(cx, jp->fun);
+    RootedFunction fun(cx, jp->fun);
     JS_ASSERT(fun);
     JS_ASSERT(!jp->script);
 
@@ -5537,6 +5537,8 @@ js_DecompileFunction(JSPrinter *jp)
             if (i > 0)
                 js_puts(jp, ", ");
 
+            if (i == unsigned(fun->nargs) - 1 && fun->hasRest())
+                js_puts(jp, "...");
             JSAtom *param = GetArgOrVarAtom(jp, i);
 
 #if JS_HAS_DESTRUCTURING

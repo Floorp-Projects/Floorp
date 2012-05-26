@@ -60,7 +60,7 @@
 #include "rdf.h"
 #include "nsIFrame.h"
 #include "mozilla/FunctionTimer.h"
-#include "nsIXBLService.h"
+#include "nsXBLService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsMimeTypes.h"
 #include "nsIObjectInputStream.h"
@@ -1699,10 +1699,7 @@ nsXULDocument::AddElementToDocumentPost(Element* aElement)
     // We need to pay special attention to the keyset tag to set up a listener
     if (aElement->NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
         // Create our XUL key listener and hook it up.
-        nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
-        if (xblService) {
-            xblService->AttachGlobalKeyHandler(aElement);
-        }
+        nsXBLService::AttachGlobalKeyHandler(aElement);
     }
 
     // See if we need to attach a XUL template to this node
@@ -1775,10 +1772,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
     nsresult rv;
 
     if (aElement->NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
-        nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
-        if (xblService) {
-            xblService->DetachGlobalKeyHandler(aElement);
-        }
+        nsXBLService::DetachGlobalKeyHandler(aElement);
     }
 
     // 1. Remove any children from the document.
@@ -2380,9 +2374,10 @@ nsXULDocument::PrepareToWalk()
 
     PRUint32 piInsertionPoint = 0;
     if (mState != eState_Master) {
-        piInsertionPoint = IndexOf(GetRootElement());
-        NS_ASSERTION(piInsertionPoint >= 0,
+        PRInt32 indexOfRoot = IndexOf(GetRootElement());
+        NS_ASSERTION(indexOfRoot >= 0,
                      "No root content when preparing to walk overlay!");
+        piInsertionPoint = indexOfRoot;
     }
 
     const nsTArray<nsRefPtr<nsXULPrototypePI> >& processingInstructions =

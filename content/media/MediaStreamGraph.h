@@ -83,6 +83,10 @@ class MediaStreamGraph;
  * reentry into media graph methods is possible, although very much discouraged!
  * You should do something non-blocking and non-reentrant (e.g. dispatch an
  * event to some thread) and return.
+ *
+ * When a listener is first attached, we guarantee to send a NotifyBlockingChanged
+ * callback to notify of the initial blocking state. Also, if a listener is
+ * attached to a stream that has already finished, we'll call NotifyFinished.
  */
 class MediaStreamListener {
 public:
@@ -263,10 +267,7 @@ public:
   {
     mExplicitBlockerCount.SetAtAndAfter(aTime, mExplicitBlockerCount.GetAt(aTime) + aDelta);
   }
-  void AddListenerImpl(already_AddRefed<MediaStreamListener> aListener)
-  {
-    *mListeners.AppendElement() = aListener;
-  }
+  void AddListenerImpl(already_AddRefed<MediaStreamListener> aListener);
   void RemoveListenerImpl(MediaStreamListener* aListener)
   {
     mListeners.RemoveElement(aListener);
@@ -371,10 +372,13 @@ class SourceMediaStream : public MediaStream {
 public:
   SourceMediaStream(nsDOMMediaStream* aWrapper) :
     MediaStream(aWrapper), mMutex("mozilla::media::SourceMediaStream"),
-    mUpdateKnownTracksTime(0), mUpdateFinished(false)
+    mUpdateKnownTracksTime(0), mUpdateFinished(false), mDestroyed(false)
   {}
 
   virtual SourceMediaStream* AsSourceStream() { return this; }
+
+  // Media graph thread only
+  virtual void DestroyImpl();
 
   // Call these on any thread.
   /**
@@ -467,11 +471,14 @@ protected:
     return nsnull;
   }
 
+  // This must be acquired *before* MediaStreamGraphImpl's lock, if they are
+  // held together.
   Mutex mMutex;
   // protected by mMutex
   StreamTime mUpdateKnownTracksTime;
   nsTArray<TrackData> mUpdateTracks;
   bool mUpdateFinished;
+  bool mDestroyed;
 };
 
 /**

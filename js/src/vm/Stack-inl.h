@@ -171,6 +171,15 @@ StackFrame::initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncod
     u.nactual = nactual;
 }
 
+inline JSObject *
+StackFrame::createRestParameter(JSContext *cx)
+{
+    JS_ASSERT(fun()->hasRest());
+    unsigned nformal = fun()->nargs - 1, nactual = numActualArgs();
+    unsigned nrest = (nactual > nformal) ? nactual - nformal : 0;
+    return NewDenseCopiedArray(cx, nrest, actualArgs() + nformal);
+}
+
 inline Value &
 StackFrame::canonicalActualArg(unsigned i) const
 {

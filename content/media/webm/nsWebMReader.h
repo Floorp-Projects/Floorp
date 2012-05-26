@@ -207,17 +207,9 @@ private:
   // Picture region, as relative to the initial frame size.
   nsIntRect mPicture;
 
-  // Value of the "media.webm.force_stereo_mode" pref, which we need off the
-  // main thread.
-  PRInt32 mForceStereoMode;
-
   // Booleans to indicate if we have audio and/or video data
   bool mHasVideo;
   bool mHasAudio;
-
-  // Boolean which is set to true when the "media.webm.force_stereo_mode"
-  // pref is explicitly set.
-  bool mStereoModeForced;
 };
 
 #endif

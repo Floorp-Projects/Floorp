@@ -169,6 +169,7 @@ HISTOGRAM(HTTP_KBREAD_PER_CONN, 1, 3000, 50, EXPONENTIAL, "HTTP: KB read per con
 HTTP_HISTOGRAMS(PAGE, "page: ")
 HTTP_HISTOGRAMS(SUB, "subitem: ")
 
+HISTOGRAM(SPDY_VERSION, 1, 16, 16, LINEAR, "SPDY: Protocol Version Used")
 HISTOGRAM(SPDY_PARALLEL_STREAMS, 1, 1000, 50, EXPONENTIAL, "SPDY: Streams concurrent active per connection")
 HISTOGRAM(SPDY_REQUEST_PER_CONN, 1, 1000, 50, EXPONENTIAL,  "SPDY: Streams created per connection")
 HISTOGRAM(SPDY_SERVER_INITIATED_STREAMS, 1, 100000, 250, EXPONENTIAL,  "SPDY: Streams recevied per connection")
@@ -344,6 +345,12 @@ HISTOGRAM(FX_NEW_WINDOW_MS, 1, 10000, 20, EXPONENTIAL, "Firefox: Time taken to o
 HISTOGRAM(FX_THUMBNAILS_CAPTURE_TIME_MS, 1, 500, 15, EXPONENTIAL, "THUMBNAILS: Time (ms) it takes to capture a thumbnail")
 HISTOGRAM(FX_THUMBNAILS_STORE_TIME_MS, 1, 500, 15, EXPONENTIAL, "THUMBNAILS: Time (ms) it takes to store a thumbnail in the cache")
 HISTOGRAM(FX_THUMBNAILS_HIT_OR_MISS, 0, 1, 2, BOOLEAN, "THUMBNAILS: Thumbnail found")
+
+
+/*
+ * Widget telemetry.
+ */
+HISTOGRAM(EVENTLOOP_UI_LAG, 50, 30000, 200, LINEAR, "Widget: Time (ms) it takes for the message before a UI message")
 
 /**
  * Session restore telemetry
