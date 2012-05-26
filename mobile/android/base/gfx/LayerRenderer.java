@@ -331,14 +331,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             moveFrameRateLayer(width, height);
         }
 
-        // updating the state in the view/controller/client should be
-        // done on the main UI thread, not the GL renderer thread
-        mView.post(new Runnable() {
-            public void run() {
-                mView.setViewportSize(new IntSize(width, height));
-            }
-        });
-
         /* TODO: Throw away tile images? */
     }
 
