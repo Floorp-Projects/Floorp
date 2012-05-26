@@ -241,10 +241,10 @@ nsWindow::Destroy(void)
 {
     nsBaseWidget::mOnDestroyCalled = true;
 
-    for (PRUint32 i = 0; i < mChildren.Length(); ++i) {
+    while (mChildren.Length()) {
         // why do we still have children?
-        ALOG("### Warning: Destroying window %p and reparenting child %p to null!", (void*)this, (void*)mChildren[i]);
-        mChildren[i]->SetParent(nsnull);
+        ALOG("### Warning: Destroying window %p and reparenting child %p to null!", (void*)this, (void*)mChildren[0]);
+        mChildren[0]->SetParent(nsnull);
     }
 
     if (IsTopLevel())
