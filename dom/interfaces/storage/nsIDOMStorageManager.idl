@@ -8,7 +8,7 @@
 interface nsIDOMStorage;
 interface nsIPrincipal;
 
-[scriptable, uuid(fd91ec36-7da8-43bb-b8f2-4b57a862a467)]
+[scriptable, uuid(1541da6c-a9fb-4a8f-af9d-4493c981491d)]
 interface nsIDOMStorageManager : nsISupports
 {
   /**
@@ -33,5 +33,6 @@ interface nsIDOMStorageManager : nsISupports
    * for a single origin.
    */
   nsIDOMStorage getLocalStorageForPrincipal(in nsIPrincipal aPrincipal,
-                                            in DOMString aDocumentURI);
+                                            in DOMString aDocumentURI,
+                                            [optional] in bool aPrivate);
 };
