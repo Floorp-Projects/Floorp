@@ -5102,6 +5102,11 @@ EmitStatementList(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t 
     PushStatement(bce->sc, &stmtInfo, STMT_BLOCK, top);
 
     ParseNode *pnchild = pn->pn_head;
+
+    // Destructuring is handled in args body for functions with default
+    // arguments.
+    if (pn->pn_xflags & PNX_DESTRUCT && bce->sc->fun()->hasDefaults())
+        pnchild = pnchild->pn_next;
     if (pn->pn_xflags & PNX_FUNCDEFS) {
         /*
          * This block contains top-level function definitions. To ensure
@@ -5115,7 +5120,7 @@ EmitStatementList(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t 
          * mode for scripts does not allow separate emitter passes.
          */
         JS_ASSERT(bce->sc->inFunction);
-        if (pn->pn_xflags & PNX_DESTRUCT) {
+        if (pn->pn_xflags & PNX_DESTRUCT && !bce->sc->fun()->hasDefaults()) {
             /*
              * Assign the destructuring arguments before defining any
              * functions, see bug 419662.
@@ -5860,6 +5865,50 @@ EmitUnary(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return Emit1(cx, bce, op) >= 0;
 }
 
+static bool
+EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    JS_ASSERT(pn->isKind(PNK_ARGSBODY));
+    ParseNode *pnlast = pn->last();
+    unsigned ndefaults = 0;
+    for (ParseNode *arg = pn->pn_head; arg != pnlast; arg = arg->pn_next) {
+        if (arg->pn_expr)
+            ndefaults++;
+    }
+    JSFunction *fun = bce->sc->fun();
+    unsigned nformal = fun->nargs - fun->hasRest();
+    EMIT_UINT16_IMM_OP(JSOP_ACTUALSFILLED, nformal - ndefaults);
+    ptrdiff_t top = bce->offset();
+    size_t tableSize = (size_t)(JUMP_OFFSET_LEN * (3 + ndefaults));
+    if (EmitN(cx, bce, JSOP_TABLESWITCH, tableSize) < 0)
+        return false;
+    jsbytecode *pc = bce->code(top + JUMP_OFFSET_LEN);
+    JS_ASSERT(nformal >= ndefaults);
+    SET_JUMP_OFFSET(pc, nformal - ndefaults);
+    pc += JUMP_OFFSET_LEN;
+    SET_JUMP_OFFSET(pc, nformal - 1);
+    pc += JUMP_OFFSET_LEN;
+
+    // Fill body of switch, which sets defaults where needed.
+    for (ParseNode *arg = pn->pn_head; arg != pnlast; arg = arg->pn_next) {
+        if (!arg->pn_expr)
+            continue;
+        SET_JUMP_OFFSET(pc, bce->offset() - top);
+        pc += JUMP_OFFSET_LEN;
+        if (!EmitTree(cx, bce, arg->pn_expr))
+            return false;
+        if (!BindNameToSlot(cx, bce, arg))
+            return false;
+        if (!EmitVarOp(cx, arg, JSOP_SETARG, bce))
+            return false;
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
+    }
+    JS_ASSERT(pc == bce->code(top + tableSize));
+    SET_JUMP_OFFSET(bce->code(top), bce->offset() - top);
+    return true;
+}
+
 JSBool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
@@ -5881,7 +5930,50 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_ARGSBODY:
       {
+        JSFunction *fun = bce->sc->fun();
         ParseNode *pnlast = pn->last();
+        if (fun->hasDefaults()) {
+            if (pnlast->pn_xflags & PNX_DESTRUCT) {
+                JS_ASSERT(pnlast->pn_head->isKind(PNK_SEMI));
+
+                // Defaults must be able to access destructured arguments, so do
+                // that now.
+                if (!EmitTree(cx, bce, pnlast->pn_head))
+                    return false;
+            }
+
+            ParseNode *rest = NULL;
+            if (fun->hasRest()) {
+                JS_ASSERT(!bce->sc->funArgumentsHasLocalBinding());
+
+                // Defaults and rest also need special handling. The rest
+                // parameter needs to be undefined while defaults are being
+                // processed. To do this, we create the rest argument and let it
+                // sit on the stack while processing defaults. The rest
+                // parameter's slot is set to undefined for the course of
+                // default processing.
+                rest = pn->pn_head;
+                while (rest->pn_next != pnlast)
+                    rest = rest->pn_next;
+                if (Emit1(cx, bce, JSOP_REST) < 0)
+                    return false;
+                CheckTypeSet(cx, bce, JSOP_REST);
+                if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+                    return false;
+                if (!EmitVarOp(cx, rest, JSOP_SETARG, bce))
+                    return false;
+                if (Emit1(cx, bce, JSOP_POP) < 0)
+                    return false;
+            }
+            if (!EmitDefaults(cx, bce, pn))
+                return false;
+            if (fun->hasRest()) {
+                if (!EmitVarOp(cx, rest, JSOP_SETARG, bce))
+                    return false;
+                if (Emit1(cx, bce, JSOP_POP) < 0)
+                    return false;
+            }
+        }
         for (ParseNode *pn2 = pn->pn_head; pn2 != pnlast; pn2 = pn2->pn_next) {
             if (!pn2->isDefn())
                 continue;
@@ -5891,8 +5983,9 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 if (!bce->noteClosedArg(pn2))
                     return JS_FALSE;
             }
-            if (pn2->pn_next == pnlast && bce->sc->fun()->hasRest()) {
-                /* Fill rest parameter. */
+            if (pn2->pn_next == pnlast && fun->hasRest() && !fun->hasDefaults()) {
+
+                // Fill rest parameter. We handled the case with defaults above.
                 JS_ASSERT(!bce->sc->funArgumentsHasLocalBinding());
                 bce->switchToProlog();
                 if (Emit1(cx, bce, JSOP_REST) < 0)
