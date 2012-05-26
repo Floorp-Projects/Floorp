@@ -528,7 +528,7 @@ AssertValidFunctionScopeChainAtExit(StackFrame *fp)
     JS_ASSERT(!fp->hasBlockChain());
     JSObject &scope = *fp->scopeChain();
 
-    if (fp->fun()->isHeavyweight())
+    if (fp->fun()->isHeavyweight() && fp->hasCallObj())
         JS_ASSERT(scope.asCall().maybeStackFrame() == fp);
     else if (scope.isCall() || scope.isBlock())
         JS_ASSERT(scope.asScope().maybeStackFrame() != fp);

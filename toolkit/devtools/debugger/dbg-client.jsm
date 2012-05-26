@@ -180,6 +180,7 @@ const UnsolicitedNotifications = {
  * sent to the server.
  */
 const DebugProtocolTypes = {
+  "assign": "assign",
   "attach": "attach",
   "clientEvaluate": "clientEvaluate",
   "delete": "delete",
@@ -584,6 +585,14 @@ ThreadClient.prototype = {
   /**
    * Send a clientEvaluate packet to the debuggee. Response
    * will be a resume packet.
+   *
+   * @param string aFrame
+   *        The actor ID of the frame where the evaluation should take place.
+   * @param string aExpression
+   *        The expression that will be evaluated in the scope of the frame
+   *        above.
+   * @param function aOnResponse
+   *        Called with the response packet.
    */
   eval: function TC_eval(aFrame, aExpression, aOnResponse) {
     this._assertPaused("eval");
@@ -630,9 +639,9 @@ ThreadClient.prototype = {
   /**
    * Request to set a breakpoint in the specified location.
    *
-   * @param aLocation object
+   * @param object aLocation
    *        The source location object where the breakpoint will be set.
-   * @param aOnResponse integer
+   * @param function aOnResponse
    *        Called with the thread's response.
    */
   setBreakpoint: function TC_setBreakpoint(aLocation, aOnResponse) {

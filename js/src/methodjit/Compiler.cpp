@@ -111,6 +111,8 @@ mjit::Compiler::compile()
 
     CompileStatus status = performCompilation();
     if (status != Compile_Okay && status != Compile_Retry) {
+        if (!outerScript->ensureHasJITInfo(cx))
+            return Compile_Error;
         JSScript::JITScriptHandle *jith = outerScript->jitHandle(isConstructing, cx->compartment->needsBarrier());
         JSScript::ReleaseCode(cx->runtime->defaultFreeOp(), jith);
         jith->setUnjittable();
@@ -909,9 +911,11 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (!cx->methodJitEnabled)
         return Compile_Abort;
 
-    JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->needsBarrier());
-    if (jith->isUnjittable())
-        return Compile_Abort;
+    if (script->hasJITInfo()) {
+        JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->needsBarrier());
+        if (jith->isUnjittable())
+            return Compile_Abort;
+    }
 
     if (request == CompileRequest_Interpreter &&
         !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
@@ -930,6 +934,11 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
         script->nslots++;
 
     uint64_t gcNumber = cx->runtime->gcNumber;
+
+    if (!script->ensureHasJITInfo(cx))
+        return Compile_Error;
+
+    JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->needsBarrier());
 
     JITScript *jit;
     if (jith->isEmpty()) {

@@ -1473,13 +1473,15 @@ EnvironmentActor.prototype = {
    *        The protocol request object.
    */
   onAssign: function EA_onAssign(aRequest) {
-    let desc = this.obj.getVariableDescriptor(aRequest.name);
+    // TODO: enable the commented-out part when getVariableDescriptor lands
+    // (bug 725815).
+    /*let desc = this.obj.getVariableDescriptor(aRequest.name);
 
     if (!desc.writable) {
       return { error: "immutableBinding",
                message: "Changing the value of an immutable binding is not " +
                         "allowed" };
-    }
+    }*/
 
     try {
       this.obj.setVariable(aRequest.name, aRequest.value);

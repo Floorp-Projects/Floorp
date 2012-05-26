@@ -68,6 +68,8 @@ function runSelectionTests(subject)
   is(subject.wrappedJSObject, InspectorUI,
      "InspectorUI accessible in the observer");
 
+  InspectorUI.highlighter.veilContainer.setAttribute("disable-transitions", "true");
+
   executeSoon(function() {
     InspectorUI.highlighter.addListener("nodeselected", performTestComparisons);
     EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);

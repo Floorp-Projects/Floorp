@@ -8,39 +8,12 @@
   background: -moz-dialog;
 }
 
-div,
-span,
-a {
-  font: inherit;
-}
-
 /**
  * Debugger content
  */
 
 #dbg-content {
   padding: 6px;
-}
-
-#dbg-content > * > .vbox {
-  background-color: #fff;
-  border: 1px solid #bbb;
-  box-shadow: 0 -5px 10px -3px #ccc;
-  -moz-margin-end: -1px;
-}
-
-#dbg-content > * > .title {
-  text-shadow: 0 1px #fff;
-}
-
-/**
- * Debugger statusbar
- */
-
-#dbg-statusbar {
-  font: -moz-list;
-  padding: 2px;
-  -moz-padding-start: 5px;
 }
 
 /**
@@ -132,12 +105,28 @@ a {
 .variable {
   -moz-margin-start: 1px;
   -moz-margin-end: 1px;
+  margin-top: 2px;
   border-bottom: 1px dotted #aaa;
+  border-radius: 8px;
+  -moz-transition: background 1s ease-in-out;
+  background: #fff;
+}
+
+.variable[changed] {
+  -moz-transition-duration: 0.4s;
+  background: rgba(255, 255, 0, 0.65);
+}
+
+.variable[added] {
+  -moz-transition-duration: 0.4s;
+  background: rgba(0, 255, 0, 0.15);
+}
+
+.variable > .title > .arrow {
+  margin-top: -2px;
 }
 
 .variable > .title > .name {
-  padding-top: 2px;
-  padding-bottom: 2px;
   color: #048;
   font-weight: 600;
 }
@@ -146,15 +135,12 @@ a {
  * Property element
  */
 
-.property > .title > .key {
-  padding-top: 2px;
-  padding-bottom: 2px;
-  color: #881090;
+.property > .title > .arrow {
+  margin-top: -2px;
 }
 
-.property > .title > .value {
-  padding-top: 2px;
-  padding-bottom: 2px;
+.property > .title > .key {
+  color: #881090;
 }
 
 /**
@@ -229,15 +215,50 @@ a {
 }
 
 /**
- * Display helpers
+ * Toolbar Controls
  */
 
-.unselectable {
-  padding-top: 2px;
-  padding-bottom: 2px;
+#resume {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-pause.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-.info {
-  padding-top: 2px;
-  padding-bottom: 2px;
+#resume[checked=true] {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+#step-over {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-step-over.png");
+}
+
+#step-in {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-step-in.png");
+}
+
+#step-out {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-step-out.png");
+}
+
+#step-over {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-step-over.png");
+}
+
+#debugger-controls > toolbarbutton {
+  border-width: 0;
+  -moz-border-end-width: 1px;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  outline-offset: -3px;
+}
+
+#debugger-controls > toolbarbutton:last-of-type {
+  -moz-border-end-width: 0;
+}
+
+#debugger-controls {
+  border: 1px solid hsla(210,8%,5%,.45);
+  border-radius: 3px;
+  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
+  margin: 0 3px;
 }

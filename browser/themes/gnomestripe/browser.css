@@ -1966,7 +1966,7 @@ panel[dimmed="true"] {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-#inspector-inspect-toolbutton[checked] {
+#inspector-inspect-toolbutton[checked=true] {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 

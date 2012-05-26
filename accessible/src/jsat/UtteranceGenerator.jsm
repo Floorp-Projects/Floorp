@@ -198,6 +198,22 @@ var UtteranceGenerator = {
       return utterance;
     },
 
+    entry: function entry(aAccessible, aRoleStr, aStates, aFlags) {
+      let utterance = [];
+      let desc = this._getLocalizedStates(aStates);
+      desc.push(this._getLocalizedRole(
+                  (aStates.ext & Ci.nsIAccessibleStates.EXT_STATE_MULTI_LINE) ?
+                    'textarea' : 'entry'));
+
+      utterance.push(desc.join(' '));
+
+      let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
+      if (name)
+        utterance.push(name);
+
+      return utterance;
+    },
+
     heading: function heading(aAccessible, aRoleStr, aStates, aFlags) {
       let name = (aFlags & INCLUDE_NAME) ? (aAccessible.name || '') : '';
       let level = {};

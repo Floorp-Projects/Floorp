@@ -51,8 +51,8 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
       (*aStartHTOffset)--;
     }
 
-    PRInt32 childCount = mHyperTextAcc->GetChildCount();
-    for (PRInt32 childIdx = mOffsetAccIdx + 1; childIdx < childCount;
+    PRUint32 childCount = mHyperTextAcc->ChildCount();
+    for (PRUint32 childIdx = mOffsetAccIdx + 1; childIdx < childCount;
          childIdx++) {
       nsAccessible *currAcc = mHyperTextAcc->GetChildAt(childIdx);
       if (!nsAccUtils::IsEmbeddedObject(currAcc))
@@ -164,8 +164,8 @@ TextAttrsMgr::GetRange(TextAttr* aAttrArray[], PRUint32 aAttrArrayLen,
   }
 
   // Navigate forward from anchor accessible to find end offset.
-  PRInt32 childLen = mHyperTextAcc->GetChildCount();
-  for (PRInt32 childIdx = mOffsetAccIdx + 1; childIdx < childLen; childIdx++) {
+  PRUint32 childLen = mHyperTextAcc->ChildCount();
+  for (PRUint32 childIdx = mOffsetAccIdx + 1; childIdx < childLen; childIdx++) {
     nsAccessible *currAcc = mHyperTextAcc->GetChildAt(childIdx);
     if (nsAccUtils::IsEmbeddedObject(currAcc))
       break;

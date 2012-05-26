@@ -421,8 +421,8 @@ nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible* aAccessible)
     return true;
 
   bool foundText = false;
-  PRInt32 childCount = aAccessible->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+  PRUint32 childCount = aAccessible->ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsAccessible* child = aAccessible->GetChildAt(childIdx);
     if (IsText(child)) {
       foundText = true;

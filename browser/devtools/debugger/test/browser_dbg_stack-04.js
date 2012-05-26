@@ -37,7 +37,8 @@ function testEvalCallResume() {
         "All children should be frames.");
 
 
-      gDebugger.DebuggerController.activeThread.addOneTimeListener("framescleared", function() {
+      gDebugger.addEventListener("Debugger:AfterFramesCleared", function listener() {
+        gDebugger.removeEventListener("Debugger:AfterFramesCleared", listener, true);
 
         is(frames.querySelectorAll(".dbg-stackframe").length, 0,
           "Should have no frames after resume");
@@ -49,7 +50,7 @@ function testEvalCallResume() {
            "Should have the empty list explanation.");
 
         closeDebuggerAndFinish(gTab);
-      });
+      }, true);
 
       gDebugger.DebuggerController.activeThread.resume();
     }}, 0);
