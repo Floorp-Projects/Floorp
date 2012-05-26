@@ -45,8 +45,8 @@
       testActions(actionsArray);
 
       getAccessible("onclick_img").takeFocus();
-is(getAccessible("link1").numActions, 1, "links should have one action");
-is(getAccessible("link2").numActions, 1, "link with onclick handler should have 1 action");
+      is(getAccessible("link1").actionCount, 1, "links should have one action");
+      is(getAccessible("link2").actionCount, 1, "link with onclick handler should have 1 action");
     }
 
     SimpleTest.waitForExplicitFinish();

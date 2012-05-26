@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441519
           is(outerDocAcc.name, null, "Wrong name for internal frame!");
 
           // see bug 440770, no actions wanted on outer doc
-          is(outerDocAcc.numActions, 0,
+          is(outerDocAcc.actionCount, 0,
              "Wrong number of actions for internal frame!");
           var actionTempStr; // not really used, just needs to receive a value
           try {
