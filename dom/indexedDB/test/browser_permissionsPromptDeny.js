@@ -53,6 +53,43 @@ function test2()
 {
   info("creating tab");
   gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedBrowser.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing = true;
+
+  gBrowser.selectedBrowser.addEventListener("load", function () {
+    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+
+    setFinishedCallback(function(result, exception) {
+      ok(!result, "No database created");
+      is(exception, "InvalidStateError", "Correct exception");
+      is(getPermission(testPageURL, "indexedDB"),
+         Components.interfaces.nsIPermissionManager.DENY_ACTION,
+         "Correct permission set");
+      gBrowser.selectedBrowser.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing = false;
+      unregisterAllPopupEventHandlers();
+      gBrowser.removeCurrentTab();
+      executeSoon(test3);
+    });
+
+    registerPopupEventHandler("popupshowing", function () {
+      ok(false, "prompt showing");
+    });
+    registerPopupEventHandler("popupshown", function () {
+      ok(false, "prompt shown");
+    });
+    registerPopupEventHandler("popuphidden", function () {
+      ok(false, "prompt hidden");
+    });
+
+  }, true);
+
+  info("loading test page: " + testPageURL);
+  content.location = testPageURL;
+}
+
+function test3()
+{
+  info("creating tab");
+  gBrowser.selectedTab = gBrowser.addTab();
 
   gBrowser.selectedBrowser.addEventListener("load", function () {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
