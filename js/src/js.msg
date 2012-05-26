@@ -349,3 +349,6 @@ MSG_DEF(JSMSG_PARAMETER_AFTER_REST,   295, 0, JSEXN_SYNTAXERR, "parameter after 
 MSG_DEF(JSMSG_NO_REST_NAME,           296, 0, JSEXN_SYNTAXERR, "no parameter name after ...")
 MSG_DEF(JSMSG_ARGUMENTS_AND_REST,     297, 0, JSEXN_SYNTAXERR, "'arguments' object may not be used in conjunction with a rest parameter")
 MSG_DEF(JSMSG_FUNCTION_ARGUMENTS_AND_REST, 298, 0, JSEXN_ERR, "the 'arguments' property of a function with a rest parameter may not be used")
+MSG_DEF(JSMSG_REST_WITH_DEFAULT,      299, 0, JSEXN_SYNTAXERR, "rest parameter may not have a default")
+MSG_DEF(JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT, 300, 0, JSEXN_SYNTAXERR, "parameter(s) with default followed by parameter without default")
+MSG_DEF(JSMSG_YIELD_IN_DEFAULT,       301, 0, JSEXN_SYNTAXERR, "yield in default expression")
