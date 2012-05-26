@@ -446,8 +446,8 @@ XULGroupboxAccessible::RelationByType(PRUint32 aType)
   // The label for xul:groupbox is generated from xul:label that is
   // inside the anonymous content of the xul:caption.
   // The xul:label has an accessible object but the xul:caption does not
-  PRInt32 childCount = GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+  PRUint32 childCount = ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsAccessible *childAcc = GetChildAt(childIdx);
     if (childAcc->Role() == roles::LABEL) {
       // Ensure that it's our label
@@ -601,8 +601,8 @@ XULToolbarButtonAccessible::GetPositionAndSizeInternal(PRInt32* aPosInSet,
   if (!parent)
     return;
 
-  PRInt32 childCount = parent->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+  PRUint32 childCount = parent->ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsAccessible* child = parent->GetChildAt(childIdx);
     if (IsSeparator(child)) { // end of a group of buttons
       if (posInSet)

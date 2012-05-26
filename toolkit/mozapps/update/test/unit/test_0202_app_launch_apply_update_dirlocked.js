@@ -35,6 +35,12 @@ let gAppTimer;
 let gProcess;
 let gActiveUpdate;
 
+// Debugging code: try to get the verbose output after 1100 seconds,
+// to try to figure out bug 757632
+do_timeout(1100 * 1000, function() {
+  do_throw("timed out");
+});
+
 // Override getUpdatesRootDir on Mac because we need to apply the update
 // inside the bundle directory.
 function symlinkUpdateFilesIntoBundleDirectory() {

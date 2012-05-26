@@ -1040,9 +1040,9 @@ ARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
     return NS_OK;
 
   PRInt32 colIdx = 0, colCount = 0;
-  PRInt32 childCount = thisRow->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible *child = thisRow->GetChildAt(childIdx);
+  PRUint32 childCount = thisRow->ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible* child = thisRow->GetChildAt(childIdx);
     if (child == this)
       colIdx = colCount;
 
@@ -1061,9 +1061,9 @@ ARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
     return NS_OK;
 
   PRInt32 rowIdx = 0;
-  childCount = table->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible *child = table->GetChildAt(childIdx);
+  childCount = table->ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible* child = table->GetChildAt(childIdx);
     if (child == thisRow)
       break;
 

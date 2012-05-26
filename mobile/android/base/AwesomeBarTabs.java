@@ -67,7 +67,6 @@ public class AwesomeBarTabs extends TabHost {
     private boolean mInflated;
     private LayoutInflater mInflater;
     private OnUrlOpenListener mUrlOpenListener;
-    private View.OnTouchListener mListTouchListener;
     private JSONArray mSearchEngines;
     private ContentResolver mContentResolver;
     private ContentObserver mContentObserver;
@@ -738,13 +737,6 @@ public class AwesomeBarTabs extends TabHost {
         // to the TabHost.
         setup();
 
-        mListTouchListener = new View.OnTouchListener() {
-            public boolean onTouch(View view, MotionEvent event) {
-                hideSoftInput(view);
-                return false;
-            }
-        };
-
         addAllPagesTab();
         addBookmarksTab();
         addHistoryTab();
@@ -833,7 +825,6 @@ public class AwesomeBarTabs extends TabHost {
         });
 
         allPagesList.setAdapter(mAllPagesCursorAdapter);
-        allPagesList.setOnTouchListener(mListTouchListener);
     }
 
     private void addBookmarksTab() {
@@ -844,7 +835,6 @@ public class AwesomeBarTabs extends TabHost {
                       R.id.bookmarks_list);
 
         ListView bookmarksList = (ListView) findViewById(R.id.bookmarks_list);
-        bookmarksList.setOnTouchListener(mListTouchListener);
 
         // Only load bookmark list when tab is actually used.
         // See OnTabChangeListener above.
@@ -858,7 +848,6 @@ public class AwesomeBarTabs extends TabHost {
                       R.id.history_list);
 
         ListView historyList = (ListView) findViewById(R.id.history_list);
-        historyList.setOnTouchListener(mListTouchListener);
 
         // Only load history list when tab is actually used.
         // See OnTabChangeListener above.
@@ -1012,5 +1001,14 @@ public class AwesomeBarTabs extends TabHost {
                 mAllPagesCursorAdapter.notifyDataSetChanged();
             }
         });
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        hideSoftInput(this);
+
+        // the android docs make no sense, but returning false will cause this and other
+        // motion events to be sent to the view the user tapped on
+        return false;
     }
 }

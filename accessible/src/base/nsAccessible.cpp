@@ -486,12 +486,7 @@ nsAccessible::GetFirstChild(nsIAccessible **aFirstChild)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  PRInt32 childCount = GetChildCount();
-  NS_ENSURE_TRUE(childCount != -1, NS_ERROR_FAILURE);
-
-  if (childCount > 0)
-    NS_ADDREF(*aFirstChild = GetChildAt(0));
-
+  NS_IF_ADDREF(*aFirstChild = FirstChild());
   return NS_OK;
 }
 
@@ -505,10 +500,7 @@ nsAccessible::GetLastChild(nsIAccessible **aLastChild)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  PRInt32 childCount = GetChildCount();
-  NS_ENSURE_TRUE(childCount != -1, NS_ERROR_FAILURE);
-
-  NS_IF_ADDREF(*aLastChild = GetChildAt(childCount - 1));
+  NS_IF_ADDREF(*aLastChild = LastChild());
   return NS_OK;
 }
 
@@ -521,13 +513,10 @@ nsAccessible::GetChildAt(PRInt32 aChildIndex, nsIAccessible **aChild)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  PRInt32 childCount = GetChildCount();
-  NS_ENSURE_TRUE(childCount != -1, NS_ERROR_FAILURE);
-
   // If child index is negative, then return last child.
   // XXX: do we really need this?
   if (aChildIndex < 0)
-    aChildIndex = childCount - 1;
+    aChildIndex = ChildCount() - 1;
 
   nsAccessible* child = GetChildAt(aChildIndex);
   if (!child)
@@ -547,15 +536,13 @@ nsAccessible::GetChildren(nsIArray **aOutChildren)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  PRInt32 childCount = GetChildCount();
-  NS_ENSURE_TRUE(childCount != -1, NS_ERROR_FAILURE);
-
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMutableArray> children =
     do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+  PRUint32 childCount = ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
     nsIAccessible* child = GetChildAt(childIdx);
     children->AppendElement(child, false);
   }
@@ -579,8 +566,8 @@ nsAccessible::GetChildCount(PRInt32 *aChildCount)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  *aChildCount = GetChildCount();
-  return *aChildCount != -1 ? NS_OK : NS_ERROR_FAILURE;  
+  *aChildCount = ChildCount();
+  return NS_OK;
 }
 
 /* readonly attribute long indexInParent; */
@@ -815,9 +802,9 @@ nsAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
     // where layout won't walk into things for us, such as image map areas and
     // sub documents (XXX: subdocuments should be handled by methods of
     // OuterDocAccessibles).
-    PRInt32 childCount = GetChildCount();
-    for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-      nsAccessible *child = GetChildAt(childIdx);
+    PRUint32 childCount = ChildCount();
+    for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
+      nsAccessible* child = GetChildAt(childIdx);
 
       PRInt32 childX, childY, childWidth, childHeight;
       child->GetBounds(&childX, &childY, &childWidth, &childHeight);
@@ -2670,8 +2657,8 @@ nsAccessible::GetChildAt(PRUint32 aIndex)
   return child;
 }
 
-PRInt32
-nsAccessible::GetChildCount()
+PRUint32
+nsAccessible::ChildCount() const
 {
   return mChildren.Length();
 }
@@ -2688,16 +2675,16 @@ nsAccessible::IndexInParent() const
   return mIndexInParent;
 }
 
-PRInt32
-nsAccessible::GetEmbeddedChildCount()
+PRUint32
+nsAccessible::EmbeddedChildCount()
 {
   if (IsChildrenFlag(eMixedChildren)) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
-    return mEmbeddedObjCollector ? mEmbeddedObjCollector->Count() : -1;
+    return mEmbeddedObjCollector->Count();
   }
 
-  return GetChildCount();
+  return ChildCount();
 }
 
 nsAccessible*
@@ -3074,7 +3061,8 @@ nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError) const
     return nsnull;
   }
 
-  if (aError && mIndexInParent + aOffset >= mParent->GetChildCount()) {
+  if (aError &&
+      mIndexInParent + aOffset >= static_cast<PRInt32>(mParent->ChildCount())) {
     *aError = NS_OK; // fail peacefully
     return nsnull;
   }
@@ -3249,8 +3237,8 @@ nsAccessible::GetLevelInternal()
       // If this listitem is on top of nested lists then expose 'level'
       // attribute.
       parent = Parent();
-      PRInt32 siblingCount = parent->GetChildCount();
-      for (PRInt32 siblingIdx = 0; siblingIdx < siblingCount; siblingIdx++) {
+      PRUint32 siblingCount = parent->ChildCount();
+      for (PRUint32 siblingIdx = 0; siblingIdx < siblingCount; siblingIdx++) {
         nsAccessible* sibling = parent->GetChildAt(siblingIdx);
 
         nsAccessible* siblingChild = sibling->LastChild();

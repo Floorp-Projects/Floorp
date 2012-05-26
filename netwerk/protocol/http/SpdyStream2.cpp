@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHttp.h"
-#include "SpdySession.h"
-#include "SpdyStream.h"
+#include "SpdySession2.h"
+#include "SpdyStream2.h"
 #include "nsAlgorithm.h"
 #include "prnetdb.h"
 #include "nsHttpRequestHead.h"
@@ -22,8 +22,8 @@ extern PRThread *gSocketThread;
 namespace mozilla {
 namespace net {
 
-SpdyStream::SpdyStream(nsAHttpTransaction *httpTransaction,
-                       SpdySession *spdySession,
+SpdyStream2::SpdyStream2(nsAHttpTransaction *httpTransaction,
+                       SpdySession2 *spdySession,
                        nsISocketTransport *socketTransport,
                        PRUint32 chunkSize,
                        z_stream *compressionContext,
@@ -42,7 +42,7 @@ SpdyStream::SpdyStream(nsAHttpTransaction *httpTransaction,
     mRecvdFin(0),
     mFullyOpen(0),
     mSentWaitingFor(0),
-    mTxInlineFrameSize(SpdySession::kDefaultBufferSize),
+    mTxInlineFrameSize(SpdySession2::kDefaultBufferSize),
     mTxInlineFrameUsed(0),
     mTxStreamFrameSize(0),
     mZlib(compressionContext),
@@ -53,14 +53,14 @@ SpdyStream::SpdyStream(nsAHttpTransaction *httpTransaction,
 {
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
-  LOG3(("SpdyStream::SpdyStream %p", this));
+  LOG3(("SpdyStream2::SpdyStream2 %p", this));
 
   mTxInlineFrame = new char[mTxInlineFrameSize];
 }
 
-SpdyStream::~SpdyStream()
+SpdyStream2::~SpdyStream2()
 {
-  mStreamID = SpdySession::kDeadStreamID;
+  mStreamID = SpdySession2::kDeadStreamID;
 }
 
 // ReadSegments() is used to write data down the socket. Generally, HTTP
@@ -69,11 +69,11 @@ SpdyStream::~SpdyStream()
 // generated instead.
 
 nsresult
-SpdyStream::ReadSegments(nsAHttpSegmentReader *reader,
+SpdyStream2::ReadSegments(nsAHttpSegmentReader *reader,
                          PRUint32 count,
                          PRUint32 *countRead)
 {
-  LOG3(("SpdyStream %p ReadSegments reader=%p count=%d state=%x",
+  LOG3(("SpdyStream2 %p ReadSegments reader=%p count=%d state=%x",
         this, reader, count, mUpstreamState));
 
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
@@ -178,7 +178,7 @@ SpdyStream::ReadSegments(nsAHttpSegmentReader *reader,
     break;
 
   default:
-    NS_ABORT_IF_FALSE(false, "SpdyStream::ReadSegments unknown state");
+    NS_ABORT_IF_FALSE(false, "SpdyStream2::ReadSegments unknown state");
     break;
   }
 
@@ -191,11 +191,11 @@ SpdyStream::ReadSegments(nsAHttpSegmentReader *reader,
 // that read then pulls in the data directly.
 
 nsresult
-SpdyStream::WriteSegments(nsAHttpSegmentWriter *writer,
+SpdyStream2::WriteSegments(nsAHttpSegmentWriter *writer,
                           PRUint32 count,
                           PRUint32 *countWritten)
 {
-  LOG3(("SpdyStream::WriteSegments %p count=%d state=%x",
+  LOG3(("SpdyStream2::WriteSegments %p count=%d state=%x",
         this, count, mUpstreamState));
   
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
@@ -208,11 +208,11 @@ SpdyStream::WriteSegments(nsAHttpSegmentWriter *writer,
 }
 
 PLDHashOperator
-SpdyStream::hdrHashEnumerate(const nsACString &key,
+SpdyStream2::hdrHashEnumerate(const nsACString &key,
                              nsAutoPtr<nsCString> &value,
                              void *closure)
 {
-  SpdyStream *self = static_cast<SpdyStream *>(closure);
+  SpdyStream2 *self = static_cast<SpdyStream2 *>(closure);
 
   self->CompressToFrame(key);
   self->CompressToFrame(value.get());
@@ -220,7 +220,7 @@ SpdyStream::hdrHashEnumerate(const nsACString &key,
 }
 
 nsresult
-SpdyStream::ParseHttpRequestHeaders(const char *buf,
+SpdyStream2::ParseHttpRequestHeaders(const char *buf,
                                     PRUint32 avail,
                                     PRUint32 *countUsed)
 {
@@ -230,7 +230,7 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
   NS_ABORT_IF_FALSE(mUpstreamState == GENERATING_SYN_STREAM, "wrong state");
 
-  LOG3(("SpdyStream::ParseHttpRequestHeaders %p avail=%d state=%x",
+  LOG3(("SpdyStream2::ParseHttpRequestHeaders %p avail=%d state=%x",
         this, avail, mUpstreamState));
 
   mFlatHttpRequestHeaders.Append(buf, avail);
@@ -241,7 +241,7 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
   
   if (endHeader == kNotFound) {
     // We don't have all the headers yet
-    LOG3(("SpdyStream::ParseHttpRequestHeaders %p "
+    LOG3(("SpdyStream2::ParseHttpRequestHeaders %p "
           "Need more header bytes. Len = %d",
           this, mFlatHttpRequestHeaders.Length()));
     *countUsed = avail;
@@ -279,10 +279,10 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
   // Now we need to convert the flat http headers into a set
   // of SPDY headers..  writing to mTxInlineFrame{sz}
 
-  mTxInlineFrame[0] = SpdySession::kFlag_Control;
+  mTxInlineFrame[0] = SpdySession2::kFlag_Control;
   mTxInlineFrame[1] = 2;                          /* version */
   mTxInlineFrame[2] = 0;
-  mTxInlineFrame[3] = SpdySession::CONTROL_TYPE_SYN_STREAM;
+  mTxInlineFrame[3] = SpdySession2::CONTROL_TYPE_SYN_STREAM;
   // 4 to 7 are length and flags, we'll fill that in later
   
   PRUint32 networkOrderID = PR_htonl(mStreamID);
@@ -295,20 +295,20 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
   // Priority flags are the C0 mask of byte 16.
   //
   // The other 6 bits of 16 are unused. Spdy/3 will expand
-  // priority to 4 bits.
+  // priority to 3 bits.
   //
   // When Spdy/3 implements WINDOW_UPDATE the lowest priority
   // streams over a threshold (32?) should be given tiny
   // receive windows, separate from their spdy priority
   //
   if (mPriority >= nsISupportsPriority::PRIORITY_LOW)
-    mTxInlineFrame[16] = SpdySession::kPri03;
+    mTxInlineFrame[16] = SpdySession2::kPri03;
   else if (mPriority >= nsISupportsPriority::PRIORITY_NORMAL)
-    mTxInlineFrame[16] = SpdySession::kPri02;
+    mTxInlineFrame[16] = SpdySession2::kPri02;
   else if (mPriority >= nsISupportsPriority::PRIORITY_HIGH)
-    mTxInlineFrame[16] = SpdySession::kPri01;
+    mTxInlineFrame[16] = SpdySession2::kPri01;
   else
-    mTxInlineFrame[16] = SpdySession::kPri00;
+    mTxInlineFrame[16] = SpdySession2::kPri00;
 
   mTxInlineFrame[17] = 0;                         /* unused */
   
@@ -428,7 +428,7 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
     // syn stream packet
 
     mSentFinOnData = 1;
-    mTxInlineFrame[4] = SpdySession::kFlag_Data_FIN;
+    mTxInlineFrame[4] = SpdySession2::kFlag_Data_FIN;
   }
   else if (mTransaction->RequestHead()->Method() == nsHttp::Post ||
            mTransaction->RequestHead()->Method() == nsHttp::Put ||
@@ -440,7 +440,7 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
     // for other HTTP extension methods, rely on the content-length
     // to determine whether or not to put fin on syn
     mSentFinOnData = 1;
-    mTxInlineFrame[4] = SpdySession::kFlag_Data_FIN;
+    mTxInlineFrame[4] = SpdySession2::kFlag_Data_FIN;
   }
   
   Telemetry::Accumulate(Telemetry::SPDY_SYN_SIZE, mTxInlineFrameUsed - 18);
@@ -456,7 +456,7 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
 }
 
 void
-SpdyStream::UpdateTransportReadEvents(PRUint32 count)
+SpdyStream2::UpdateTransportReadEvents(PRUint32 count)
 {
   mTotalRead += count;
 
@@ -466,7 +466,7 @@ SpdyStream::UpdateTransportReadEvents(PRUint32 count)
 }
 
 void
-SpdyStream::UpdateTransportSendEvents(PRUint32 count)
+SpdyStream2::UpdateTransportSendEvents(PRUint32 count)
 {
   mTotalSent += count;
 
@@ -484,7 +484,7 @@ SpdyStream::UpdateTransportSendEvents(PRUint32 count)
 }
 
 nsresult
-SpdyStream::TransmitFrame(const char *buf,
+SpdyStream2::TransmitFrame(const char *buf,
                           PRUint32 *countUsed)
 {
   // If TransmitFrame returns SUCCESS than all the data is sent (or at least
@@ -503,7 +503,7 @@ SpdyStream::TransmitFrame(const char *buf,
   PRUint32 transmittedCount;
   nsresult rv;
   
-  LOG3(("SpdyStream::TransmitFrame %p inline=%d stream=%d",
+  LOG3(("SpdyStream2::TransmitFrame %p inline=%d stream=%d",
         this, mTxInlineFrameUsed, mTxStreamFrameSize));
   if (countUsed)
     *countUsed = 0;
@@ -513,7 +513,7 @@ SpdyStream::TransmitFrame(const char *buf,
   // data into the inlineframe via copy in order to coalesce into one write.
   // Given the interaction with ssl this is worth the small copy cost.
   if (mTxStreamFrameSize && mTxInlineFrameUsed &&
-      mTxStreamFrameSize < SpdySession::kDefaultBufferSize &&
+      mTxStreamFrameSize < SpdySession2::kDefaultBufferSize &&
       mTxInlineFrameUsed + mTxStreamFrameSize < mTxInlineFrameSize) {
     LOG3(("Coalesce Transmit"));
     memcpy (mTxInlineFrame + mTxInlineFrameUsed,
@@ -532,13 +532,13 @@ SpdyStream::TransmitFrame(const char *buf,
     return rv;
 
   // This function calls mSegmentReader->OnReadSegment to report the actual SPDY
-  // bytes through to the SpdySession and then the HttpConnection which calls
+  // bytes through to the SpdySession2 and then the HttpConnection which calls
   // the socket write function. It will accept all of the inline and stream
   // data because of the above 'commitment' even if it has to buffer
   
   rv = mSegmentReader->OnReadSegment(mTxInlineFrame, mTxInlineFrameUsed,
                                      &transmittedCount);
-  LOG3(("SpdyStream::TransmitFrame for inline session=%p "
+  LOG3(("SpdyStream2::TransmitFrame for inline session=%p "
         "stream=%p result %x len=%d",
         mSession, this, rv, transmittedCount));
 
@@ -551,7 +551,7 @@ SpdyStream::TransmitFrame(const char *buf,
   NS_ABORT_IF_FALSE(transmittedCount == mTxInlineFrameUsed,
                     "inconsistent inline commitment count");
     
-  SpdySession::LogIO(mSession, this, "Writing from Inline Buffer",
+  SpdySession2::LogIO(mSession, this, "Writing from Inline Buffer",
                      mTxInlineFrame, transmittedCount);
 
   if (mTxStreamFrameSize) {
@@ -566,7 +566,7 @@ SpdyStream::TransmitFrame(const char *buf,
     rv = mSegmentReader->OnReadSegment(buf, mTxStreamFrameSize,
                                        &transmittedCount);
 
-    LOG3(("SpdyStream::TransmitFrame for regular session=%p "
+    LOG3(("SpdyStream2::TransmitFrame for regular session=%p "
           "stream=%p result %x len=%d",
           mSession, this, rv, transmittedCount));
   
@@ -579,7 +579,7 @@ SpdyStream::TransmitFrame(const char *buf,
     NS_ABORT_IF_FALSE(transmittedCount == mTxStreamFrameSize,
                       "inconsistent stream commitment count");
     
-    SpdySession::LogIO(mSession, this, "Writing from Transaction Buffer",
+    SpdySession2::LogIO(mSession, this, "Writing from Transaction Buffer",
                        buf, transmittedCount);
 
     *countUsed += mTxStreamFrameSize;
@@ -595,18 +595,18 @@ SpdyStream::TransmitFrame(const char *buf,
 }
 
 void
-SpdyStream::ChangeState(enum stateType newState)
+SpdyStream2::ChangeState(enum stateType newState)
 {
-  LOG3(("SpdyStream::ChangeState() %p from %X to %X",
+  LOG3(("SpdyStream2::ChangeState() %p from %X to %X",
         this, mUpstreamState, newState));
   mUpstreamState = newState;
   return;
 }
 
 void
-SpdyStream::GenerateDataFrameHeader(PRUint32 dataLength, bool lastFrame)
+SpdyStream2::GenerateDataFrameHeader(PRUint32 dataLength, bool lastFrame)
 {
-  LOG3(("SpdyStream::GenerateDataFrameHeader %p len=%d last=%d",
+  LOG3(("SpdyStream2::GenerateDataFrameHeader %p len=%d last=%d",
         this, dataLength, lastFrame));
 
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
@@ -626,20 +626,20 @@ SpdyStream::GenerateDataFrameHeader(PRUint32 dataLength, bool lastFrame)
   mTxStreamFrameSize = dataLength;
 
   if (lastFrame) {
-    mTxInlineFrame[4] |= SpdySession::kFlag_Data_FIN;
+    mTxInlineFrame[4] |= SpdySession2::kFlag_Data_FIN;
     if (dataLength)
       mSentFinOnData = 1;
   }
 }
 
 void
-SpdyStream::CompressToFrame(const nsACString &str)
+SpdyStream2::CompressToFrame(const nsACString &str)
 {
   CompressToFrame(str.BeginReading(), str.Length());
 }
 
 void
-SpdyStream::CompressToFrame(const nsACString *str)
+SpdyStream2::CompressToFrame(const nsACString *str)
 {
   CompressToFrame(str->BeginReading(), str->Length());
 }
@@ -651,7 +651,7 @@ SpdyStream::CompressToFrame(const nsACString *str)
 // but in reality it is. see:
 // https://groups.google.com/forum/#!topic/spdy-dev/2pWxxOZEIcs
 
-const char *SpdyStream::kDictionary =
+const char *SpdyStream2::kDictionary =
   "optionsgetheadpostputdeletetraceacceptaccept-charsetaccept-encodingaccept-"
   "languageauthorizationexpectfromhostif-modified-sinceif-matchif-none-matchi"
   "f-rangeif-unmodifiedsincemax-forwardsproxy-authorizationrangerefererteuser"
@@ -668,20 +668,20 @@ const char *SpdyStream::kDictionary =
 
 // use for zlib data types
 void *
-SpdyStream::zlib_allocator(void *opaque, uInt items, uInt size)
+SpdyStream2::zlib_allocator(void *opaque, uInt items, uInt size)
 {
   return moz_xmalloc(items * size);
 }
 
 // use for zlib data types
 void
-SpdyStream::zlib_destructor(void *opaque, void *addr)
+SpdyStream2::zlib_destructor(void *opaque, void *addr)
 {
   moz_free(addr);
 }
 
 void
-SpdyStream::ExecuteCompress(PRUint32 flushMode)
+SpdyStream2::ExecuteCompress(PRUint32 flushMode)
 {
   // Expect mZlib->avail_in and mZlib->next_in to be set.
   // Append the compressed version of next_in to mTxInlineFrame
@@ -690,7 +690,7 @@ SpdyStream::ExecuteCompress(PRUint32 flushMode)
   {
     PRUint32 avail = mTxInlineFrameSize - mTxInlineFrameUsed;
     if (avail < 1) {
-      SpdySession::EnsureBuffer(mTxInlineFrame,
+      SpdySession2::EnsureBuffer(mTxInlineFrame,
                                 mTxInlineFrameSize + 2000,
                                 mTxInlineFrameUsed,
                                 mTxInlineFrameSize);
@@ -706,7 +706,7 @@ SpdyStream::ExecuteCompress(PRUint32 flushMode)
 }
 
 void
-SpdyStream::CompressToFrame(PRUint16 data)
+SpdyStream2::CompressToFrame(PRUint16 data)
 {
   // convert the data to network byte order and write that
   // to the compressed stream
@@ -720,7 +720,7 @@ SpdyStream::CompressToFrame(PRUint16 data)
 
 
 void
-SpdyStream::CompressToFrame(const char *data, PRUint32 len)
+SpdyStream2::CompressToFrame(const char *data, PRUint32 len)
 {
   // Format calls for a network ordered 16 bit length
   // followed by the utf8 string
@@ -744,7 +744,7 @@ SpdyStream::CompressToFrame(const char *data, PRUint32 len)
 }
 
 void
-SpdyStream::CompressFlushFrame()
+SpdyStream2::CompressFlushFrame()
 {
   mZlib->next_in = (unsigned char *) "";
   mZlib->avail_in = 0;
@@ -752,7 +752,7 @@ SpdyStream::CompressFlushFrame()
 }
 
 void
-SpdyStream::Close(nsresult reason)
+SpdyStream2::Close(nsresult reason)
 {
   mTransaction->Close(reason);
 }
@@ -762,11 +762,11 @@ SpdyStream::Close(nsresult reason)
 //-----------------------------------------------------------------------------
 
 nsresult
-SpdyStream::OnReadSegment(const char *buf,
+SpdyStream2::OnReadSegment(const char *buf,
                           PRUint32 count,
                           PRUint32 *countRead)
 {
-  LOG3(("SpdyStream::OnReadSegment %p count=%d state=%x",
+  LOG3(("SpdyStream2::OnReadSegment %p count=%d state=%x",
         this, count, mUpstreamState));
 
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
@@ -822,7 +822,7 @@ SpdyStream::OnReadSegment(const char *buf,
 
   case GENERATING_REQUEST_BODY:
     dataLength = NS_MIN(count, mChunkSize);
-    LOG3(("SpdyStream %p id %x request len remaining %d, "
+    LOG3(("SpdyStream2 %p id %x request len remaining %d, "
           "count avail %d, chunk used %d",
           this, mStreamID, mRequestBodyLenRemaining, count, dataLength));
     if (dataLength > mRequestBodyLenRemaining)
@@ -863,7 +863,7 @@ SpdyStream::OnReadSegment(const char *buf,
     break;
     
   default:
-    NS_ABORT_IF_FALSE(false, "SpdyStream::OnReadSegment non-write state");
+    NS_ABORT_IF_FALSE(false, "SpdyStream2::OnReadSegment non-write state");
     break;
   }
   
@@ -875,11 +875,11 @@ SpdyStream::OnReadSegment(const char *buf,
 //-----------------------------------------------------------------------------
 
 nsresult
-SpdyStream::OnWriteSegment(char *buf,
+SpdyStream2::OnWriteSegment(char *buf,
                            PRUint32 count,
                            PRUint32 *countWritten)
 {
-  LOG3(("SpdyStream::OnWriteSegment %p count=%d state=%x",
+  LOG3(("SpdyStream2::OnWriteSegment %p count=%d state=%x",
         this, count, mUpstreamState));
 
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
