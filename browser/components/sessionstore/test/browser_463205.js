@@ -4,9 +4,9 @@
 
 function test() {
   /** Test for Bug 463205 **/
-  
+
   waitForExplicitFinish();
-  
+
   let rootDir = "http://mochi.test:8888/browser/browser/components/sessionstore/test/";
   let testURL = rootDir + "browser_463205_sample.html";
 
@@ -18,7 +18,7 @@ function test() {
   let frame3URL = "data:text/html,mark2";
 
   let frameCount = 0;
-  
+
   let tab = gBrowser.addTab(testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
     // wait for all frames to load completely
@@ -50,15 +50,15 @@ function test() {
       return;
     }
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    
+
     function typeText(aTextField, aValue) {
       aTextField.value = aValue;
-      
+
       let event = aTextField.ownerDocument.createEvent("UIEvents");
       event.initUIEvent("input", true, true, aTextField.ownerDocument.defaultView, 0);
       aTextField.dispatchEvent(event);
     }
-    
+
     let uniqueValue = "Unique: " + Math.random();
     let win = tab.linkedBrowser.contentWindow;
     typeText(win.frames[0].document.getElementById("original"), uniqueValue);
@@ -112,11 +112,11 @@ function test() {
          "subframes must match URL to get text restored");
       is(win.frames[1].document.getElementById("original").value, uniqueValue,
          "text still gets restored for all other subframes");
-      
+
       // clean up
       gBrowser.removeTab(tab2);
       gBrowser.removeTab(tab);
-      
+
       finish();
     }, true);
   }, true);

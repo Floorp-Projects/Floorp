@@ -23,6 +23,7 @@ let Services = tempScope.Services;
 let gConsoleStorage = tempScope.ConsoleAPIStorage;
 let WebConsoleUtils = tempScope.WebConsoleUtils;
 let l10n = WebConsoleUtils.l10n;
+let JSPropertyProvider = tempScope.JSPropertyProvider;
 tempScope = null;
 
 let _alive = true; // Track if this content script should still be alive.
@@ -32,7 +33,6 @@ let _alive = true; // Track if this content script should still be alive.
  */
 let Manager = {
   get window() content,
-  get console() this.window.console,
   sandbox: null,
   hudId: null,
   _sequence: 0,
@@ -60,11 +60,7 @@ let Manager = {
 
     // Need to track the owner XUL window to listen to the unload and TabClose
     // events, to avoid memory leaks.
-    let xulWindow = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShell)
-                    .chromeEventHandler.ownerDocument.defaultView;
-
+    let xulWindow = this._xulWindow();
     xulWindow.addEventListener("unload", this._onXULWindowClose, false);
 
     let tabContainer = xulWindow.gBrowser.tabContainer;
@@ -358,6 +354,19 @@ let Manager = {
   },
 
   /**
+   * Find the XUL window that owns the content script.
+   * @private
+   * @return Window
+   *         The XUL window that owns the content script.
+   */
+  _xulWindow: function Manager__xulWindow()
+  {
+    return this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+           .getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell)
+           .chromeEventHandler.ownerDocument.defaultView;
+  },
+
+  /**
    * Destroy the Web Console content script instance.
    */
   destroy: function Manager_destroy()
@@ -366,11 +375,7 @@ let Manager = {
     Services.obs.removeObserver(this, "quit-application-granted");
 
     _alive = false;
-    let xulWindow = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShell)
-                    .chromeEventHandler.ownerDocument.defaultView;
-
+    let xulWindow = this._xulWindow();
     xulWindow.removeEventListener("unload", this._onXULWindowClose, false);
     let tabContainer = xulWindow.gBrowser.tabContainer;
     tabContainer.removeEventListener("TabClose", this._onTabClose, false);
@@ -390,10 +395,237 @@ let Manager = {
 };
 
 /**
+ * JSTerm helper functions.
+ *
+ * Defines a set of functions ("helper functions") that are available from the
+ * Web Console but not from the web page.
+ *
+ * A list of helper functions used by Firebug can be found here:
+ *   http://getfirebug.com/wiki/index.php/Command_Line_API
+ */
+function JSTermHelper(aJSTerm)
+{
+  /**
+   * Find a node by ID.
+   *
+   * @param string aId
+   *        The ID of the element you want.
+   * @return nsIDOMNode or null
+   *         The result of calling document.getElementById(aId).
+   */
+  aJSTerm.sandbox.$ = function JSTH_$(aId)
+  {
+    return aJSTerm.window.document.getElementById(aId);
+  };
+
+  /**
+   * Find the nodes matching a CSS selector.
+   *
+   * @param string aSelector
+   *        A string that is passed to window.document.querySelectorAll.
+   * @return nsIDOMNodeList
+   *         Returns the result of document.querySelectorAll(aSelector).
+   */
+  aJSTerm.sandbox.$$ = function JSTH_$$(aSelector)
+  {
+    return aJSTerm.window.document.querySelectorAll(aSelector);
+  };
+
+  /**
+   * Runs an xPath query and returns all matched nodes.
+   *
+   * @param string aXPath
+   *        xPath search query to execute.
+   * @param [optional] nsIDOMNode aContext
+   *        Context to run the xPath query on. Uses window.document if not set.
+   * @returns array of nsIDOMNode
+   */
+  aJSTerm.sandbox.$x = function JSTH_$x(aXPath, aContext)
+  {
+    let nodes = [];
+    let doc = aJSTerm.window.document;
+    let aContext = aContext || doc;
+
+    try {
+      let results = doc.evaluate(aXPath, aContext, null,
+                                 Ci.nsIDOMXPathResult.ANY_TYPE, null);
+      let node;
+      while (node = results.iterateNext()) {
+        nodes.push(node);
+      }
+    }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+
+    return nodes;
+  };
+
+  /**
+   * Returns the currently selected object in the highlighter.
+   *
+   * Warning: this implementation crosses the process boundaries! This is not
+   * usable within a remote browser. To implement this feature correctly we need
+   * support for remote inspection capabilities within the Inspector as well.
+   *
+   * @return nsIDOMElement|null
+   *         The DOM element currently selected in the highlighter.
+   */
+  Object.defineProperty(aJSTerm.sandbox, "$0", {
+    get: function() {
+      try {
+        return Manager._xulWindow().InspectorUI.selection;
+      }
+      catch (ex) {
+        aJSTerm.console.error(ex.message);
+      }
+    },
+    enumerable: true,
+    configurable: false
+  });
+
+  /**
+   * Clears the output of the JSTerm.
+   */
+  aJSTerm.sandbox.clear = function JSTH_clear()
+  {
+    aJSTerm.helperEvaluated = true;
+    Manager.sendMessage("JSTerm:ClearOutput", {});
+  };
+
+  /**
+   * Returns the result of Object.keys(aObject).
+   *
+   * @param object aObject
+   *        Object to return the property names from.
+   * @returns array of string
+   */
+  aJSTerm.sandbox.keys = function JSTH_keys(aObject)
+  {
+    return Object.keys(WebConsoleUtils.unwrap(aObject));
+  };
+
+  /**
+   * Returns the values of all properties on aObject.
+   *
+   * @param object aObject
+   *        Object to display the values from.
+   * @returns array of string
+   */
+  aJSTerm.sandbox.values = function JSTH_values(aObject)
+  {
+    let arrValues = [];
+    let obj = WebConsoleUtils.unwrap(aObject);
+
+    try {
+      for (let prop in obj) {
+        arrValues.push(obj[prop]);
+      }
+    }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+    return arrValues;
+  };
+
+  /**
+   * Opens a help window in MDN.
+   */
+  aJSTerm.sandbox.help = function JSTH_help()
+  {
+    aJSTerm.helperEvaluated = true;
+    aJSTerm.window.open(
+        "https://developer.mozilla.org/AppLinks/WebConsoleHelp?locale=" +
+        aJSTerm.window.navigator.language, "help", "");
+  };
+
+  /**
+   * Inspects the passed aObject. This is done by opening the PropertyPanel.
+   *
+   * @param object aObject
+   *        Object to inspect.
+   */
+  aJSTerm.sandbox.inspect = function JSTH_inspect(aObject)
+  {
+    if (!WebConsoleUtils.isObjectInspectable(aObject)) {
+      return aObject;
+    }
+
+    aJSTerm.helperEvaluated = true;
+
+    let message = {
+      input: aJSTerm._evalInput,
+      objectCacheId: Manager.sequenceId,
+    };
+
+    message.resultObject =
+      aJSTerm.prepareObjectForRemote(WebConsoleUtils.unwrap(aObject),
+                                     message.objectCacheId);
+
+    Manager.sendMessage("JSTerm:InspectObject", message);
+  };
+
+  /**
+   * Prints aObject to the output.
+   *
+   * @param object aObject
+   *        Object to print to the output.
+   * @return string
+   */
+  aJSTerm.sandbox.pprint = function JSTH_pprint(aObject)
+  {
+    aJSTerm.helperEvaluated = true;
+    if (aObject === null || aObject === undefined || aObject === true ||
+        aObject === false) {
+      aJSTerm.console.error(l10n.getStr("helperFuncUnsupportedTypeError"));
+      return;
+    }
+    else if (typeof aObject == "function") {
+      aJSTerm.helperRawOutput = true;
+      return aObject + "\n";
+    }
+
+    aJSTerm.helperRawOutput = true;
+
+    let output = [];
+    let pairs = WebConsoleUtils.namesAndValuesOf(WebConsoleUtils.unwrap(aObject));
+    pairs.forEach(function(aPair) {
+      output.push(aPair.name + ": " + aPair.value);
+    });
+
+    return "  " + output.join("\n  ");
+  };
+
+  /**
+   * Print a string to the output, as-is.
+   *
+   * @param string aString
+   *        A string you want to output.
+   * @returns void
+   */
+  aJSTerm.sandbox.print = function JSTH_print(aString)
+  {
+    aJSTerm.helperEvaluated = true;
+    aJSTerm.helperRawOutput = true;
+    return String(aString);
+  };
+}
+
+/**
  * The JavaScript terminal is meant to allow remote code execution for the Web
  * Console.
  */
 let JSTerm = {
+  get window() Manager.window,
+  get console() this.window.console,
+
+  /**
+   * The Cu.Sandbox() object where code is evaluated.
+   */
+  sandbox: null,
+
+  _messageHandlers: {},
+
   /**
    * Evaluation result objects are cached in this object. The chrome process can
    * request any object based on its ID.
@@ -406,16 +638,112 @@ let JSTerm = {
   init: function JST_init()
   {
     this._objectCache = {};
+    this._messageHandlers = {
+      "JSTerm:EvalRequest": this.handleEvalRequest,
+      "JSTerm:GetEvalObject": this.handleGetEvalObject,
+      "JSTerm:Autocomplete": this.handleAutocomplete,
+      "JSTerm:ClearObjectCache": this.handleClearObjectCache,
+    };
 
-    Manager.addMessageHandler("JSTerm:GetEvalObject",
-                              this.handleGetEvalObject.bind(this));
-    Manager.addMessageHandler("JSTerm:ClearObjectCache",
-                              this.handleClearObjectCache.bind(this));
+    for (let name in this._messageHandlers) {
+      let handler = this._messageHandlers[name].bind(this);
+      Manager.addMessageHandler(name, handler);
+    }
+
+    this._createSandbox();
+  },
+
+  /**
+   * Handler for the "JSTerm:EvalRequest" remote message. This method evaluates
+   * user input in the JavaScript sandbox and sends the result back to the
+   * remote process. The "JSTerm:EvalResult" message includes the following
+   * data:
+   *   - id - the same ID as the EvalRequest (for tracking purposes).
+   *   - input - the JS string that was evaluated.
+   *   - resultString - the evaluation result converted to a string formatted
+   *   for display.
+   *   - timestamp - timestamp when evaluation occurred (Date.now(),
+   *   milliseconds since the UNIX epoch).
+   *   - inspectable - boolean that tells if the evaluation result object can be
+   *   inspected or not.
+   *   - error - the evaluation exception object (if any).
+   *   - errorMessage - the exception object converted to a string (if any error
+   *   occurred).
+   *   - helperResult - boolean that tells if a JSTerm helper was evaluated.
+   *   - helperRawOutput - boolean that tells if the helper evaluation result
+   *   should be displayed as raw output.
+   *
+   *   If the result object is inspectable then two additional properties are
+   *   included:
+   *     - childrenCacheId - tells where child objects are cached. This is the
+   *     same as aRequest.resultCacheId.
+   *     - resultObject - the result object prepared for the remote process. See
+   *     this.prepareObjectForRemote().
+   *
+   * @param object aRequest
+   *        The code evaluation request object:
+   *          - id - request ID.
+   *          - str - string to evaluate.
+   *          - resultCacheId - where to cache the evaluation child objects.
+   */
+  handleEvalRequest: function JST_handleEvalRequest(aRequest)
+  {
+    let id = aRequest.id;
+    let input = aRequest.str;
+    let result, error = null;
+    let timestamp;
+
+    this.helperEvaluated = false;
+    this.helperRawOutput = false;
+    this._evalInput = input;
+    try {
+      timestamp = Date.now();
+      result = this.evalInSandbox(input);
+    }
+    catch (ex) {
+      error = ex;
+    }
+    delete this._evalInput;
+
+    let inspectable = !error && WebConsoleUtils.isObjectInspectable(result);
+    let resultString = undefined;
+    if (!error) {
+      resultString = this.helperRawOutput ? result :
+                     WebConsoleUtils.formatResult(result);
+    }
+
+    let message = {
+      id: id,
+      input: input,
+      resultString: resultString,
+      timestamp: timestamp,
+      error: error,
+      errorMessage: error ? String(error) : null,
+      inspectable: inspectable,
+      helperResult: this.helperEvaluated,
+      helperRawOutput: this.helperRawOutput,
+    };
+
+    if (inspectable) {
+      message.childrenCacheId = aRequest.resultCacheId;
+      message.resultObject =
+        this.prepareObjectForRemote(result, message.childrenCacheId);
+    }
+
+    Manager.sendMessage("JSTerm:EvalResult", message);
   },
 
   /**
    * Handler for the remote "JSTerm:GetEvalObject" message. This allows the
    * remote Web Console instance to retrieve an object from the content process.
+   * The "JSTerm:EvalObject" message is sent back to the remote process:
+   *   - id - the request ID, used to trace back to the initial request.
+   *   - cacheId - the cache ID where the requested object is stored.
+   *   - objectId - the ID of the object being sent.
+   *   - object - the object representation prepared for remote inspection. See
+   *   this.prepareObjectForRemote().
+   *   - childrenCacheId - the cache ID where any child object of |object| are
+   *   stored.
    *
    * @param object aRequest
    *        The message that requests the content object. Properties: cacheId,
@@ -481,8 +809,7 @@ let JSTerm = {
    *         method in aObject. Each element describes the property. For details
    *         see WebConsoleUtils.namesAndValuesOf().
    */
-  prepareObjectForRemote:
-  function JST_prepareObjectForRemote(aObject, aCacheId)
+  prepareObjectForRemote: function JST_prepareObjectForRemote(aObject, aCacheId)
   {
     // Cache the properties that have inspectable values.
     let propCache = this._objectCache[aCacheId] || {};
@@ -495,13 +822,102 @@ let JSTerm = {
   },
 
   /**
+   * Handler for the "JSTerm:Autocomplete" remote message. This handler provides
+   * completion results for user input. The "JSterm:AutocompleteProperties"
+   * message is sent to the remote process:
+   *   - id - the same as request ID.
+   *   - input - the user input (same as in the request message).
+   *   - matches - an array of matched properties (strings).
+   *   - matchProp - the part that was used from the user input for finding the
+   *   matches. For details see the JSPropertyProvider description and
+   *   implementation.
+   *
+   *
+   * @param object aRequest
+   *        The remote request object which holds two properties: an |id| and
+   *        the user |input|.
+   */
+  handleAutocomplete: function JST_handleAutocomplete(aRequest)
+  {
+    let result = JSPropertyProvider(this.window, aRequest.input) || {};
+    let message = {
+      id: aRequest.id,
+      input: aRequest.input,
+      matches: result.matches || [],
+      matchProp: result.matchProp,
+    };
+    Manager.sendMessage("JSTerm:AutocompleteProperties", message);
+  },
+
+  /**
+   * Create the JavaScript sandbox where user input is evaluated.
+   * @private
+   */
+  _createSandbox: function JST__createSandbox()
+  {
+    this.sandbox = new Cu.Sandbox(this.window, {
+      sandboxPrototype: this.window,
+      wantXrays: false,
+    });
+
+    this.sandbox.console = this.console;
+
+    JSTermHelper(this);
+  },
+
+  /**
+   * Evaluates a string in the sandbox.
+   *
+   * @param string aString
+   *        String to evaluate in the sandbox.
+   * @returns something
+   *          The result of the evaluation.
+   */
+  evalInSandbox: function JST_evalInSandbox(aString)
+  {
+    // The help function needs to be easy to guess, so we make the () optional
+    if (aString.trim() == "help" || aString.trim() == "?") {
+      aString = "help()";
+    }
+
+    let window = WebConsoleUtils.unwrap(this.sandbox.window);
+    let $ = null, $$ = null;
+
+    // We prefer to execute the page-provided implementations for the $() and
+    // $$() functions.
+    if (typeof window.$ == "function") {
+      $ = this.sandbox.$;
+      delete this.sandbox.$;
+    }
+    if (typeof window.$$ == "function") {
+      $$ = this.sandbox.$$;
+      delete this.sandbox.$$;
+    }
+
+    let result = Cu.evalInSandbox(aString, this.sandbox, "1.8",
+                                  "Web Console", 1);
+
+    if ($) {
+      this.sandbox.$ = $;
+    }
+    if ($$) {
+      this.sandbox.$$ = $$;
+    }
+
+    return result;
+  },
+
+  /**
    * Destroy the JSTerm instance.
    */
   destroy: function JST_destroy()
   {
-    Manager.removeMessageHandler("JSTerm:GetEvalObject");
-    Manager.removeMessageHandler("JSTerm:ClearObjectCache");
+    for (let name in this._messageHandlers) {
+      Manager.removeMessageHandler(name);
+    }
 
+    delete this.sandbox;
+    delete this._messageHandlers;
     delete this._objectCache;
   },
 };

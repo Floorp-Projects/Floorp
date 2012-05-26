@@ -6,11 +6,10 @@
 // Tests that code completion works properly.
 
 function test() {
-  addTab(getBrowserURL());
-  browser.addEventListener("DOMContentLoaded", function onLoad() {
-    browser.removeEventListener("DOMContentLoaded", onLoad, true);
-    openConsole();
-    testChrome(HUDService.getHudByWindow(content));
+  addTab("about:addons");
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, testChrome);
   }, true);
 }
 
@@ -28,10 +27,9 @@ function testChrome(hud) {
   // Test typing 'docu'.
   input.value = "docu";
   input.setSelectionRange(4, 4);
-  jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
-  is(jsterm.completeNode.value, "    ment", "'docu' completion");
-
-  gBrowser.removeCurrentTab();
-  executeSoon(finishTest);
+  jsterm.complete(jsterm.COMPLETE_HINT_ONLY, function() {
+    is(jsterm.completeNode.value, "    ment", "'docu' completion");
+    executeSoon(finishTest);
+  });
 }
 

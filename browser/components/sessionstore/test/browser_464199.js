@@ -46,7 +46,7 @@ function test() {
     gPrefService.setIntPref("browser.sessionstore.max_tabs_undo",
                             test_state.windows[0]._closedTabs.length);
     ss.setWindowState(newWin, JSON.stringify(test_state), true);
-    
+
     let closedTabs = JSON.parse(ss.getClosedTabData(newWin));
     is(closedTabs.length, test_state.windows[0]._closedTabs.length,
        "Closed tab list has the expected length");

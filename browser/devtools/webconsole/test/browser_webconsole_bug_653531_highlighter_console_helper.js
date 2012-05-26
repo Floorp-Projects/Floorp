@@ -5,11 +5,9 @@
 
 // Tests that the $0 console helper works as intended.
 
-let doc;
-let h1;
-
 function createDocument()
 {
+  let doc = content.document;
   let div = doc.createElement("div");
   let h1 = doc.createElement("h1");
   let p1 = doc.createElement("p");
@@ -44,7 +42,7 @@ function createDocument()
 
 function setupHighlighterTests()
 {
-  h1 = doc.querySelectorAll("h1")[0];
+  let h1 = content.document.querySelector("h1");
   ok(h1, "we have the header node");
   Services.obs.addObserver(runSelectionTests,
     InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
@@ -58,6 +56,7 @@ function runSelectionTests()
 
   executeSoon(function() {
     InspectorUI.highlighter.addListener("nodeselected", performTestComparisons);
+    let h1 = content.document.querySelector("h1");
     EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
   });
 }
@@ -67,6 +66,8 @@ function performTestComparisons()
   InspectorUI.highlighter.removeListener("nodeselected", performTestComparisons);
 
   InspectorUI.stopInspecting();
+
+  let h1 = content.document.querySelector("h1");
   is(InspectorUI.highlighter.node, h1, "node selected");
   is(InspectorUI.selection, h1, "selection matches node");
 
@@ -80,16 +81,44 @@ function performWebConsoleTests(hud)
 
   jsterm.clearOutput();
   jsterm.execute("$0");
-  findLogEntry("[object HTMLHeadingElement");
 
-  jsterm.clearOutput();
-  let msg = "foo";
-  jsterm.execute("$0.textContent = '" + msg + "'");
-  findLogEntry(msg);
-  is(InspectorUI.selection.textContent, msg, "node successfully updated");
+  waitForSuccess({
+    name: "$0 output",
+    validatorFn: function()
+    {
+      return outputNode.querySelector(".webconsole-msg-output");
+    },
+    successFn: function()
+    {
+      let node = outputNode.querySelector(".webconsole-msg-output");
+      isnot(node.textContent.indexOf("[object HTMLHeadingElement"), -1,
+            "correct output for $0");
 
-  doc = h1 = null;
-  executeSoon(finishUp);
+      jsterm.clearOutput();
+      jsterm.execute("$0.textContent = 'bug653531'");
+      waitForSuccess(waitForNodeUpdate);
+    },
+    failureFn: finishUp,
+  });
+
+  let waitForNodeUpdate = {
+    name: "$0.textContent update",
+    validatorFn: function()
+    {
+      return outputNode.querySelector(".webconsole-msg-output");
+    },
+    successFn: function()
+    {
+      let node = outputNode.querySelector(".webconsole-msg-output");
+      isnot(node.textContent.indexOf("bug653531"), -1,
+            "correct output for $0.textContent");
+      is(InspectorUI.selection.textContent, "bug653531",
+         "node successfully updated");
+
+      executeSoon(finishUp);
+    },
+    failureFn: finishUp,
+  };
 }
 
 function finishUp() {
@@ -103,7 +132,6 @@ function test()
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function() {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    doc = content.document;
     waitForFocus(createDocument, content);
   }, true);
 

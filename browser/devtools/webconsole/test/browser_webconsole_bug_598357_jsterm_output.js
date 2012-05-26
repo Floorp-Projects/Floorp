@@ -169,6 +169,18 @@ function testGen() {
   HUD.jsterm.setInputValue("print(" + inputValue + ")");
   HUD.jsterm.execute();
 
+  waitForSuccess({
+    name: "jsterm print() output for test #" + cpos,
+    validatorFn: function()
+    {
+      return HUD.outputNode.querySelector(".webconsole-msg-output:last-child");
+    },
+    successFn: subtestNext,
+    failureFn: testNext,
+  });
+
+  yield;
+
   outputItem = HUD.outputNode.querySelector(".webconsole-msg-output:" +
                                             "last-child");
   ok(outputItem,
@@ -178,6 +190,32 @@ function testGen() {
 
   // Test jsterm execution output.
 
+  HUD.jsterm.clearOutput();
+  HUD.jsterm.setInputValue(inputValue);
+  HUD.jsterm.execute();
+
+  waitForSuccess({
+    name: "jsterm output for test #" + cpos,
+    validatorFn: function()
+    {
+      return HUD.outputNode.querySelector(".webconsole-msg-output:last-child");
+    },
+    successFn: subtestNext,
+    failureFn: testNext,
+  });
+
+  yield;
+
+  outputItem = HUD.outputNode.querySelector(".webconsole-msg-output:" +
+                                            "last-child");
+  ok(outputItem, "found the jsterm output line for inputValues[" + cpos + "]");
+  ok(outputItem.textContent.indexOf(expectedOutput) > -1,
+    "jsterm output is correct for inputValues[" + cpos + "]");
+
+  let messageBody = outputItem.querySelector(".webconsole-msg-body");
+  ok(messageBody, "we have the message body for inputValues[" + cpos + "]");
+
+  // Test click on output.
   let eventHandlerID = eventHandlers.length + 1;
 
   let propertyPanelShown = function(aEvent) {
@@ -204,19 +242,6 @@ function testGen() {
   document.addEventListener("popupshown", propertyPanelShown, false);
 
   eventHandlers.push(propertyPanelShown);
-
-  HUD.jsterm.clearOutput();
-  HUD.jsterm.setInputValue(inputValue);
-  HUD.jsterm.execute();
-
-  outputItem = HUD.outputNode.querySelector(".webconsole-msg-output:" +
-                                            "last-child");
-  ok(outputItem, "found the jsterm output line for inputValues[" + cpos + "]");
-  ok(outputItem.textContent.indexOf(expectedOutput) > -1,
-    "jsterm output is correct for inputValues[" + cpos + "]");
-
-  let messageBody = outputItem.querySelector(".webconsole-msg-body");
-  ok(messageBody, "we have the message body for inputValues[" + cpos + "]");
 
   // Send the mousedown, mouseup and click events to check if the property
   // panel opens.
@@ -251,7 +276,7 @@ function testEnd() {
     }
   }
 
-  testDriver = null;
+  HUD = inputValues = testDriver = null;
   executeSoon(finishTest);
 }
 

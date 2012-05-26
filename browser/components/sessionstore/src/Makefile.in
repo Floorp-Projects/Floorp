@@ -21,4 +21,21 @@ EXTRA_PP_COMPONENTS = \
 libs::
 	$(NSINSTALL) $(srcdir)/*.jsm $(FINAL_TARGET)/modules/sessionstore
 
+SS_EXTRA_PP_JS_MODULES = \
+	SessionStore.jsm \
+	$(NULL)
+
+ifdef SS_EXTRA_PP_JS_MODULES
+libs:: $(SS_EXTRA_PP_JS_MODULES)
+ifndef NO_DIST_INSTALL
+	$(EXIT_ON_ERROR) \
+	$(NSINSTALL) -D $(FINAL_TARGET)/modules/sessionstore; \
+	for i in $^; do \
+	  dest=$(FINAL_TARGET)/modules/sessionstore/`basename $$i`; \
+	  $(RM) -f $$dest; \
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
+	done
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
