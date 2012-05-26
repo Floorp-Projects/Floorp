@@ -46,6 +46,9 @@ abstract class ContentProviderTest extends AndroidTestCase {
     protected IsolatedContext mProviderContext;
     protected String mLogFile;
 
+    protected static final int TEST_MOCHITEST = 0;
+    protected static final int TEST_TALOS = 1;
+
     private class ContentProviderMockContext extends MockContext {
         @Override
         public Resources getResources() {
@@ -188,16 +191,8 @@ abstract class ContentProviderTest extends AndroidTestCase {
         mAsserter.setTestName(this.getClass().getName() + " - " + testName);
     }
 
-    public void setTestType(String type) {
-        if (type.equals("talos")) {
-            mAsserter = new FennecTalosAssert();
-        } else {
-            mAsserter = new FennecMochitestAssert();
-        }
-
-        mAsserter.setLogFile(mLogFile);
-        mAsserter.setTestName(this.getClass().getName());
-    }
+    // Must return either TEST_MOCHITEST or TEST_TALOS
+    protected abstract int getTestType();
 
     public void setUp() throws Exception {
         throw new Exception("You should call setUp(providerClassName, authorityUriField) instead");
@@ -212,6 +207,16 @@ abstract class ContentProviderTest extends AndroidTestCase {
         loadRobotiumConfig();
         setUpProviderClassAndAuthority(providerClassName, authorityUriField);
         setUpContentProvider();
+
+        // Initialize the asserter
+        if (getTestType() == TEST_TALOS) {
+            mAsserter = new FennecTalosAssert();
+        } else {
+            mAsserter = new FennecMochitestAssert();
+        }
+
+        mAsserter.setLogFile(mLogFile);
+        mAsserter.setTestName(this.getClass().getName());
     }
 
     public void tearDown() throws Exception {

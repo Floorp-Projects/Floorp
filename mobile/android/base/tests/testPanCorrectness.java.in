@@ -11,8 +11,12 @@ import android.app.Instrumentation;
  * - drags page leftwards by 100 pixels and verifies it draws
  */
 public class testPanCorrectness extends PixelTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testPanCorrectness() {
-        setTestType("mochitest");
         String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
 
         MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());

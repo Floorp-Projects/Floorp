@@ -80,6 +80,11 @@ public class testBrowserProvider extends ContentProviderTest {
     private String mCombinedFaviconCol;
     private String mCombinedThumbnailCol;
 
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     private void loadContractInfo() throws Exception {
         mBookmarksUri = getContentUri("Bookmarks");
         mHistoryUri = getContentUri("History");
@@ -301,8 +306,6 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     public void testBrowserProvider() throws Exception {
-        setTestType("mochitest");
-
         loadMobileFolderId();
 
         for (int i = 0; i < mTests.size(); i++) {
