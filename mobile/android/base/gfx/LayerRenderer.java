@@ -42,7 +42,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * The layer renderer implements the rendering logic for a layer view.
  */
-public class LayerRenderer implements GLSurfaceView.Renderer {
+public class LayerRenderer {
     private static final String LOGTAG = "GeckoLayerRenderer";
     private static final String PROFTAG = "GeckoLayerRendererProf";
 
@@ -196,7 +196,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         }
     }
 
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    void onSurfaceCreated(GL10 gl, EGLConfig config) {
         checkMonitoringEnabled();
         createDefaultProgram();
         activateDefaultProgram();
@@ -268,23 +268,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         }
     }
 
-    /**
-     * Called whenever a new frame is about to be drawn.
-     */
-    public void onDrawFrame(GL10 gl) {
-	/* This code is causing crashes when the surface changes. (bug 738188)
-	 * I'm not sure if it actually works, so I'm disabling it now to avoid the crash.
-        Frame frame = createFrame(mView.getController().getViewportMetrics());
-        synchronized (mView.getController()) {
-            frame.beginDrawing();
-            frame.drawBackground();
-            frame.drawRootLayer();
-            frame.drawForeground();
-            frame.endDrawing();
-        }
-	*/
-    }
-
     private void printCheckerboardStats() {
         Log.d(PROFTAG, "Frames rendered over last 1000ms: " + mCompleteFramesRendered + "/" + mFramesRendered);
         mFramesRendered = 0;
@@ -324,7 +307,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
                                  mCoordBuffer);
     }
 
-    public void onSurfaceChanged(GL10 gl, final int width, final int height) {
+    void onSurfaceChanged(GL10 gl, final int width, final int height) {
         GLES20.glViewport(0, 0, width, height);
 
         if (mFrameRateLayer != null) {
