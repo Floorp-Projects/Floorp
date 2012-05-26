@@ -101,6 +101,10 @@
         document.getAnonymousElementByAttribute(this, "anonid", "popup");
       ]]></field>
 
+      <property name="popupOpen"
+                onget="return this.mMenuOpen;"
+                onset="if (val) this.openPopup(); else this.closePopup(); return val;"/>
+
       <!-- option to turn off autocomplete -->
       <property name="disableAutoComplete"
                 onset="this.setAttribute('disableautocomplete', val); return val;"
