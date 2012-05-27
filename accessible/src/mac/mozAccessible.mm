@@ -599,7 +599,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 
   // Get a pointer to the native window (NSWindow) we reside in.
   NSWindow *nativeWindow = nil;
-  nsDocAccessible* docAcc = accWrap->Document();
+  DocAccessible* docAcc = accWrap->Document();
   if (docAcc)
     nativeWindow = static_cast<NSWindow*>(docAcc->GetNativeWindow());
 

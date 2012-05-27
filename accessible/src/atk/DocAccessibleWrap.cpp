@@ -5,20 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMai.h"
-#include "nsDocAccessibleWrap.h"
+#include "DocAccessibleWrap.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsDocAccessibleWrap
+// DocAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-nsDocAccessibleWrap::
-  nsDocAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
-                      nsIPresShell* aPresShell) :
-  nsDocAccessible(aDocument, aRootContent, aPresShell), mActivated(false)
+DocAccessibleWrap::
+  DocAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
+                    nsIPresShell* aPresShell) :
+  DocAccessible(aDocument, aRootContent, aPresShell), mActivated(false)
 {
 }
 
-nsDocAccessibleWrap::~nsDocAccessibleWrap()
+DocAccessibleWrap::~DocAccessibleWrap()
 {
 }
 

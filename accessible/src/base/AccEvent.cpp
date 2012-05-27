@@ -8,7 +8,7 @@
 #include "ApplicationAccessibleWrap.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "nsIAccessibleText.h"
 #include "nsAccEvent.h"
 #include "States.h"
@@ -64,7 +64,7 @@ AccEvent::GetNode()
   return mNode;
 }
 
-nsDocAccessible*
+DocAccessible*
 AccEvent::GetDocAccessible()
 {
   if (mAccessible)
@@ -109,7 +109,7 @@ nsAccessible*
 AccEvent::GetAccessibleForNode() const
 {
   if (mNode) {
-    nsDocAccessible* document =
+    DocAccessible* document =
       GetAccService()->GetDocAccessible(mNode->OwnerDoc());
     if (document)
       return document->GetAccessible(mNode);
@@ -211,7 +211,7 @@ AccStateChangeEvent::CreateXPCOMObject()
 ////////////////////////////////////////////////////////////////////////////////
 
 // Note: we pass in eAllowDupes to the base class because we don't support text
-// events coalescence. We fire delayed text change events in nsDocAccessible but
+// events coalescence. We fire delayed text change events in DocAccessible but
 // we continue to base the event off the accessible object rather than just the
 // node. This means we won't try to create an accessible based on the node when
 // we are ready to fire the event and so we will no longer assert at that point

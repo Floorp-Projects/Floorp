@@ -37,7 +37,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccDocManager public
 
-nsDocAccessible*
+DocAccessible*
 nsAccDocManager::GetDocAccessible(nsIDocument *aDocument)
 {
   if (!aDocument)
@@ -46,7 +46,7 @@ nsAccDocManager::GetDocAccessible(nsIDocument *aDocument)
   // Ensure CacheChildren is called before we query cache.
   nsAccessNode::GetApplicationAccessible()->EnsureChildren();
 
-  nsDocAccessible* docAcc = mDocAccessibleCache.GetWeak(aDocument);
+  DocAccessible* docAcc = mDocAccessibleCache.GetWeak(aDocument);
   if (docAcc)
     return docAcc;
 
@@ -178,7 +178,7 @@ nsAccDocManager::OnStateChange(nsIWebProgress *aWebProgress,
     logging::DocLoad("start document loading", aWebProgress, aRequest, aStateFlags);
 #endif
 
-  nsDocAccessible* docAcc = mDocAccessibleCache.GetWeak(document);
+  DocAccessible* docAcc = mDocAccessibleCache.GetWeak(document);
   if (!docAcc)
     return NS_OK;
 
@@ -277,7 +277,7 @@ nsAccDocManager::HandleEvent(nsIDOMEvent *aEvent)
     // We're allowed to not remove listeners when accessible document is
     // shutdown since we don't keep strong reference on chrome event target and
     // listeners are removed automatically when chrome event target goes away.
-    nsDocAccessible* docAccessible = mDocAccessibleCache.GetWeak(document);
+    DocAccessible* docAccessible = mDocAccessibleCache.GetWeak(document);
     if (docAccessible)
       docAccessible->Shutdown();
 
@@ -309,7 +309,7 @@ nsAccDocManager::HandleDOMDocumentLoad(nsIDocument *aDocument,
 {
   // Document accessible can be created before we were notified the DOM document
   // was loaded completely. However if it's not created yet then create it.
-  nsDocAccessible* docAcc = mDocAccessibleCache.GetWeak(aDocument);
+  DocAccessible* docAcc = mDocAccessibleCache.GetWeak(aDocument);
   if (!docAcc) {
     docAcc = CreateDocOrRootAccessible(aDocument);
     if (!docAcc)
@@ -344,7 +344,7 @@ nsAccDocManager::AddListeners(nsIDocument *aDocument,
   }
 }
 
-nsDocAccessible*
+DocAccessible*
 nsAccDocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
 {
   // Ignore temporary, hiding, resource documents and documents without
@@ -366,7 +366,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
 
   bool isRootDoc = nsCoreUtils::IsRootDocument(aDocument);
 
-  nsDocAccessible* parentDocAcc = nsnull;
+  DocAccessible* parentDocAcc = nsnull;
   if (!isRootDoc) {
     // XXXaaronl: ideally we would traverse the presshell chain. Since there's
     // no easy way to do that, we cheat and use the document hierarchy.
@@ -379,9 +379,9 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
 
   // We only create root accessibles for the true root, otherwise create a
   // doc accessible.
-  nsRefPtr<nsDocAccessible> docAcc = isRootDoc ?
+  nsRefPtr<DocAccessible> docAcc = isRootDoc ?
     new RootAccessibleWrap(aDocument, rootElm, presShell) :
-    new nsDocAccessibleWrap(aDocument, rootElm, presShell);
+    new DocAccessibleWrap(aDocument, rootElm, presShell);
 
   // Cache the document accessible into document cache.
   mDocAccessibleCache.Put(aDocument, docAcc);
@@ -430,12 +430,12 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
 
 PLDHashOperator
 nsAccDocManager::GetFirstEntryInDocCache(const nsIDocument* aKey,
-                                         nsDocAccessible* aDocAccessible,
+                                         DocAccessible* aDocAccessible,
                                          void* aUserArg)
 {
   NS_ASSERTION(aDocAccessible,
                "No doc accessible for the object in doc accessible cache!");
-  *reinterpret_cast<nsDocAccessible**>(aUserArg) = aDocAccessible;
+  *reinterpret_cast<DocAccessible**>(aUserArg) = aDocAccessible;
 
   return PL_DHASH_STOP;
 }
@@ -443,7 +443,7 @@ nsAccDocManager::GetFirstEntryInDocCache(const nsIDocument* aKey,
 void
 nsAccDocManager::ClearDocCache()
 {
-  nsDocAccessible* docAcc = nsnull;
+  DocAccessible* docAcc = nsnull;
   while (mDocAccessibleCache.EnumerateRead(GetFirstEntryInDocCache, static_cast<void*>(&docAcc))) {
     if (docAcc)
       docAcc->Shutdown();
@@ -452,7 +452,7 @@ nsAccDocManager::ClearDocCache()
 
 PLDHashOperator
 nsAccDocManager::SearchAccessibleInDocCache(const nsIDocument* aKey,
-                                            nsDocAccessible* aDocAccessible,
+                                            DocAccessible* aDocAccessible,
                                             void* aUserArg)
 {
   NS_ASSERTION(aDocAccessible,
@@ -472,7 +472,7 @@ nsAccDocManager::SearchAccessibleInDocCache(const nsIDocument* aKey,
 #ifdef DEBUG
 PLDHashOperator
 nsAccDocManager::SearchIfDocIsRefreshing(const nsIDocument* aKey,
-                                         nsDocAccessible* aDocAccessible,
+                                         DocAccessible* aDocAccessible,
                                          void* aUserArg)
 {
   NS_ASSERTION(aDocAccessible,

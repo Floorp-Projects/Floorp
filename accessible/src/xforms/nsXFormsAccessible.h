@@ -37,7 +37,7 @@ class nsXFormsAccessible : public nsHyperTextAccessibleWrap,
                            public nsXFormsAccessibleBase
 {
 public:
-  nsXFormsAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessible
   // Returns value of child xforms 'hint' element.
@@ -89,7 +89,7 @@ protected:
 class nsXFormsContainerAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsContainerAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsContainerAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -107,7 +107,7 @@ public:
 class nsXFormsEditableAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsEditableAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsEditableAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsHyperTextAccessible
   virtual already_AddRefed<nsIEditor> GetEditor() const;
@@ -124,7 +124,7 @@ public:
 class nsXFormsSelectableAccessible : public nsXFormsEditableAccessible
 {
 public:
-  nsXFormsSelectableAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsSelectableAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // SelectAccessible
   virtual bool IsSelect();
@@ -152,7 +152,7 @@ class nsXFormsSelectableItemAccessible : public nsXFormsAccessible
 {
 public:
   nsXFormsSelectableItemAccessible(nsIContent* aContent,
-                                   nsDocAccessible* aDoc);
+                                   DocAccessible* aDoc);
 
   NS_IMETHOD DoAction(PRUint8 aIndex);
 

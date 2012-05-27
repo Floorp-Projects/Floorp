@@ -19,7 +19,7 @@ class nsXULTreeGridAccessible : public nsXULTreeAccessible,
                                 public mozilla::a11y::TableAccessible
 {
 public:
-  nsXULTreeGridAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULTreeGridAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -56,7 +56,7 @@ class nsXULTreeGridRowAccessible : public nsXULTreeItemAccessibleBase
 public:
   using nsAccessible::GetChildAt;
 
-  nsXULTreeGridRowAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+  nsXULTreeGridRowAccessible(nsIContent* aContent, DocAccessible* aDoc,
                              nsAccessible* aParent, nsITreeBoxObject* aTree,
                              nsITreeView* aTreeView, PRInt32 aRow);
 
@@ -110,7 +110,7 @@ class nsXULTreeGridCellAccessible : public nsLeafAccessible,
 public:
   using nsAccessible::GetParent;
 
-  nsXULTreeGridCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+  nsXULTreeGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc,
                               nsXULTreeGridRowAccessible* aRowAcc,
                               nsITreeBoxObject* aTree, nsITreeView* aTreeView,
                               PRInt32 aRow, nsITreeColumn* aColumn);

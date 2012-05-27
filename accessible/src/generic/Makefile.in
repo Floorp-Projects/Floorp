@@ -17,6 +17,7 @@ LIBXUL_LIBRARY = 1
 CPPSRCS = \
   ApplicationAccessible.cpp \
   ARIAGridAccessible.cpp \
+  DocAccessible.cpp \
   FormControlAccessible.cpp \
   OuterDocAccessible.cpp \
   RootAccessible.cpp \
