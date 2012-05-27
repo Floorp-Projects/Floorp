@@ -678,9 +678,9 @@ ensure_tree_header_cell_widget()
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), lastTreeViewColumn);
 
         /* Use the middle column's header for our button */
-        /* TODO */
-        gTreeHeaderCellWidget = NULL;
-        gTreeHeaderSortArrowWidget = NULL;
+        /* TODO, but they can't be NULL */
+        gTreeHeaderCellWidget = gtk_button_new_with_label("M");
+        gTreeHeaderSortArrowWidget = gtk_button_new();
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -2259,9 +2259,9 @@ moz_gtk_tabpanels_paint(cairo_t *cr, GdkRectangle* rect,
      */
     /* left side */
     cairo_save(cr);
-    cairo_rectangle(rect->x, rect->y,
+    cairo_rectangle(cr, rect->x, rect->y,
                     rect->x + rect->width / 2,
-                    rect->y + rect->height)
+                    rect->y + rect->height);
     cairo_clip(cr);
     gtk_render_frame_gap(style, cr,
                          rect->x, rect->y,
@@ -2271,9 +2271,9 @@ moz_gtk_tabpanels_paint(cairo_t *cr, GdkRectangle* rect,
     
     /* right side */
     cairo_save(cr);
-    cairo_rectangle(rect->x + rect->width / 2, rect->y,
+    cairo_rectangle(cr, rect->x + rect->width / 2, rect->y,
                     rect->x + rect->width,
-                    rect->y + rect->height)
+                    rect->y + rect->height);
     cairo_clip(cr);
     gtk_render_frame_gap(style, cr,
                          rect->x, rect->y,
@@ -2428,19 +2428,21 @@ moz_gtk_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
     GtkStyleContext* style;
     GtkWidget* item_widget;
 
-    if (state->inHover && !state->disabled) {
-        gtk_style_context_save(style);
-        style = gtk_widget_get_style_context(item_widget);
-    
+    if (state->inHover && !state->disabled) {   
         if (flags & MOZ_TOPLEVEL_MENU_ITEM) {
             ensure_menu_bar_item_widget();
             item_widget = gMenuBarItemWidget;
-            gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUBAR);
         } else {
             ensure_menu_item_widget();
             item_widget = gMenuItemWidget;
         }
-      
+        style = gtk_widget_get_style_context(item_widget);
+        gtk_style_context_save(style);
+
+        if (flags & MOZ_TOPLEVEL_MENU_ITEM) {
+            gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUBAR);
+        }
+
         gtk_widget_set_direction(item_widget, direction);
         gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUITEM);
         gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
@@ -3246,6 +3248,12 @@ moz_gtk_shutdown()
     /* This will destroy all of our widgets */
     if (gProtoWindow)
         gtk_widget_destroy(gProtoWindow);
+
+    /* TODO - replace it with appropriate widgets */
+    if (gTreeHeaderCellWidget)
+        gtk_widget_destroy(gTreeHeaderCellWidget);
+    if (gTreeHeaderSortArrowWidget)
+        gtk_widget_destroy(gTreeHeaderSortArrowWidget);
 
     gProtoWindow = NULL;
     gProtoLayout = NULL;
