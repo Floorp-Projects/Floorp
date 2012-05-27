@@ -654,7 +654,7 @@ void nsBuiltinDecoder::NotifySuspendedStatusChanged()
       mElement->NotifyAutoplayDataReady();
     }
     mElement->NotifySuspendedByCache(suspended);
-    mElement->UpdateReadyStateForData();
+    UpdateReadyStateForData();
   } 
 }
 
