@@ -7,11 +7,11 @@
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-#ifndef _nsDocAccessibleWrap_H_
-#define _nsDocAccessibleWrap_H_
+#ifndef mozilla_a11y_DocAccessibleWrap_h__
+#define mozilla_a11y_DocAccessibleWrap_h__
 
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 
-typedef nsDocAccessible nsDocAccessibleWrap;
+typedef DocAccessible DocAccessibleWrap;
 
 #endif

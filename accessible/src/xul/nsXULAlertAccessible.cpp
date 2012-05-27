@@ -15,7 +15,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULAlertAccessible::
-  nsXULAlertAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULAlertAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
 }

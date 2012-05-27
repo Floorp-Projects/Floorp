@@ -21,7 +21,7 @@ class nsHTMLTableCellAccessible : public nsHyperTextAccessibleWrap,
                                   public nsIAccessibleTableCell
 {
 public:
-  nsHTMLTableCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLTableCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -65,7 +65,7 @@ class nsHTMLTableHeaderCellAccessible : public nsHTMLTableCellAccessible
 {
 public:
   nsHTMLTableHeaderCellAccessible(nsIContent* aContent,
-                                  nsDocAccessible* aDoc);
+                                  DocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -87,7 +87,7 @@ class nsHTMLTableAccessible : public nsAccessibleWrap,
                               public mozilla::a11y::TableAccessible
 {
 public:
-  nsHTMLTableAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLTableAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -179,7 +179,7 @@ protected:
 class nsHTMLCaptionAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLCaptionAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHTMLCaptionAccessible(nsIContent* aContent, DocAccessible* aDoc) :
     nsHyperTextAccessibleWrap(aContent, aDoc) { }
   virtual ~nsHTMLCaptionAccessible() { }
 

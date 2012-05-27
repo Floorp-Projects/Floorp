@@ -9,7 +9,7 @@
 #include "AccEvent.h"
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 
 #include "nsDocShellLoadTypes.h"
 #include "nsIChannel.h"
@@ -179,7 +179,7 @@ LogDocParent(nsIDocument* aDocumentNode)
 }
 
 static void
-LogDocInfo(nsIDocument* aDocumentNode, nsDocAccessible* aDocument)
+LogDocInfo(nsIDocument* aDocumentNode, DocAccessible* aDocument)
 {
   printf("  {\n");
 
@@ -350,7 +350,7 @@ logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
     return;
 
   nsCOMPtr<nsIDocument> documentNode(do_QueryInterface(DOMDocument));
-  nsDocAccessible* document =
+  DocAccessible* document =
     GetAccService()->GetDocAccessibleFromCache(documentNode);
 
   LogDocInfo(documentNode, document);
@@ -375,7 +375,7 @@ logging::DocLoad(const char* aMsg, nsIDocument* aDocumentNode)
 {
   printf("\nA11Y DOCLOAD: %s\n", aMsg);
 
-  nsDocAccessible* document =
+  DocAccessible* document =
     GetAccService()->GetDocAccessibleFromCache(aDocumentNode);
   LogDocInfo(aDocumentNode, document);
 }
@@ -400,7 +400,7 @@ logging::DocLoadEventHandled(AccEvent* aEvent)
     nsINode* node = aEvent->GetNode();
     if (node->IsNodeOfType(nsINode::eDOCUMENT)) {
       nsIDocument* documentNode = static_cast<nsIDocument*>(node);
-      nsDocAccessible* document = aEvent->GetDocAccessible();
+      DocAccessible* document = aEvent->GetDocAccessible();
       LogDocInfo(documentNode, document);
     }
 
@@ -410,9 +410,9 @@ logging::DocLoadEventHandled(AccEvent* aEvent)
 
 void
 logging::DocCreate(const char* aMsg, nsIDocument* aDocumentNode,
-                   nsDocAccessible* aDocument)
+                   DocAccessible* aDocument)
 {
-  nsDocAccessible* document = aDocument ?
+  DocAccessible* document = aDocument ?
     aDocument : GetAccService()->GetDocAccessibleFromCache(aDocumentNode);
 
   printf("\nA11Y DOCCREATE: %s\n", aMsg);
@@ -421,9 +421,9 @@ logging::DocCreate(const char* aMsg, nsIDocument* aDocumentNode,
 
 void
 logging::DocDestroy(const char* aMsg, nsIDocument* aDocumentNode,
-                    nsDocAccessible* aDocument)
+                    DocAccessible* aDocument)
 {
-  nsDocAccessible* document = aDocument ?
+  DocAccessible* document = aDocument ?
     aDocument : GetAccService()->GetDocAccessibleFromCache(aDocumentNode);
 
   printf("\nA11Y DOCDESTROY: %s\n", aMsg);
@@ -435,7 +435,7 @@ logging::Address(const char* aDescr, nsAccessible* aAcc)
 {
   nsINode* node = aAcc->GetNode();
   nsIDocument* docNode = aAcc->GetDocumentNode();
-  nsDocAccessible* doc = GetAccService()->GetDocAccessibleFromCache(docNode);
+  DocAccessible* doc = GetAccService()->GetDocAccessibleFromCache(docNode);
   printf("  %s accessible: %p, node: %p\n", aDescr,
          static_cast<void*>(aAcc), static_cast<void*>(node));
   printf("  docacc for %s accessible: %p, node: %p\n", aDescr,

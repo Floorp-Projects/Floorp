@@ -6,7 +6,7 @@
 #include "TextLeafAccessible.h"
 
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "Role.h"
 
 using namespace mozilla::a11y;
@@ -16,7 +16,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 TextLeafAccessible::
-  TextLeafAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  TextLeafAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLinkableAccessible(aContent, aDoc)
 {
   mFlags |= eTextLeafAccessible;

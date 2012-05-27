@@ -28,7 +28,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTextAccessible::
-  nsXULTextAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULTextAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
@@ -79,7 +79,7 @@ nsXULTextAccessible::RelationByType(PRUint32 aType)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTooltipAccessible::
-  nsXULTooltipAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULTooltipAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLeafAccessible(aContent, aDoc)
 {
 }
@@ -106,7 +106,7 @@ nsXULTooltipAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULLinkAccessible::
-  nsXULLinkAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULLinkAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }

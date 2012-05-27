@@ -16,7 +16,7 @@ class nsXULComboboxAccessible : public nsAccessibleWrap
 public:
   enum { eAction_Click = 0 };
 
-  nsXULComboboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULComboboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD DoAction(PRUint8 aIndex);

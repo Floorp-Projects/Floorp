@@ -25,7 +25,7 @@ class nsAccessNode;
 class nsAccessible;
 class nsHyperTextAccessible;
 class nsHTMLTableAccessible;
-class nsDocAccessible;
+class DocAccessible;
 struct nsRoleMapEntry;
 #ifdef MOZ_XUL
 class nsXULTreeAccessible;
@@ -107,7 +107,7 @@ public:
   /**
    * Return document accessible for the given DOM node.
    */
-  static nsDocAccessible *GetDocAccessibleFor(nsINode *aNode)
+  static DocAccessible* GetDocAccessibleFor(nsINode* aNode)
   {
     nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(aNode);
     return GetAccService()->GetDocAccessible(presShell);
@@ -116,7 +116,7 @@ public:
   /**
    * Return document accessible for the given docshell.
    */
-  static nsDocAccessible *GetDocAccessibleFor(nsIDocShellTreeItem *aContainer)
+  static DocAccessible* GetDocAccessibleFor(nsIDocShellTreeItem* aContainer)
   {
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
     nsCOMPtr<nsIPresShell> presShell;

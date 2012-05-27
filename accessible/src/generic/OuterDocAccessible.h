@@ -15,7 +15,7 @@ namespace a11y {
  * Used for <browser>, <frame>, <iframe>, <page> or editor> elements.
  * 
  * In these variable names, "outer" relates to the OuterDocAccessible as
- * opposed to the nsDocAccessibleWrap which is "inner". The outer node is
+ * opposed to the DocAccessibleWrap which is "inner". The outer node is
  * a something like tags listed above, whereas the inner node corresponds to
  * the inner document root.
  */
@@ -23,7 +23,7 @@ namespace a11y {
 class OuterDocAccessible : public nsAccessibleWrap
 {
 public:
-  OuterDocAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  OuterDocAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~OuterDocAccessible();
 
   NS_DECL_ISUPPORTS_INHERITED

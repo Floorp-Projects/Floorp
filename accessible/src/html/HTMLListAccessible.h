@@ -21,7 +21,7 @@ class HTMLListBulletAccessible;
 class HTMLListAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  HTMLListAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  HTMLListAccessible(nsIContent* aContent, DocAccessible* aDoc) :
     nsHyperTextAccessibleWrap(aContent, aDoc) { }
   virtual ~HTMLListAccessible() { }
 
@@ -40,7 +40,7 @@ public:
 class HTMLLIAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  HTMLLIAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~HTMLLIAccessible() { }
 
   // nsISupports
@@ -75,7 +75,7 @@ private:
 class HTMLListBulletAccessible : public nsLeafAccessible
 {
 public:
-  HTMLListBulletAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  HTMLListBulletAccessible(nsIContent* aContent, DocAccessible* aDoc) :
     nsLeafAccessible(aContent, aDoc) { }
   virtual ~HTMLListBulletAccessible() { }
 
