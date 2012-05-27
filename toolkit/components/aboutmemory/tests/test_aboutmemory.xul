@@ -188,6 +188,7 @@
     // Check that we can handle "heap-allocated" not being present.
     f("3rd", "explicit/a/b",    HEAP,    333 * MB),
     f("3rd", "explicit/a/c",    HEAP,    444 * MB),
+    f2("3rd", "other1",         OTHER,   BYTES, 1 * MB),
 
     // Invalid values (negative, too-big) should be identified.
     f("4th", "heap-allocated",   OTHER,   100 * MB),
@@ -290,6 +291,7 @@ Explicit Allocations\n\
    └──333.00 MB (42.86%) ── b\n\
 \n\
 Other Measurements\n\
+1.00 MB ── other1\n\
 \n\
 4th Process\n\
 \n\
@@ -432,6 +434,7 @@ Explicit Allocations\n\
    └──349,175,808 B (42.86%) ── b\n\
 \n\
 Other Measurements\n\
+1,048,576 B ── other1\n\
 \n\
 4th Process\n\
 \n\

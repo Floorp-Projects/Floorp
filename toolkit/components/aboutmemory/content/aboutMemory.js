@@ -411,16 +411,20 @@ function updateAboutMemory()
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
       getService(Ci.nsIMemoryReporterManager);
 
+  let treesByProcess = {}, othersByProcess = {};
+  getTreesAndOthersByProcess(mgr, treesByProcess, othersByProcess);
+
   // Generate output for one process at a time.  Always start with the
   // Main process.
-  let reportsByProcess = getReportsByProcess(mgr);
   let hasMozMallocUsableSize = mgr.hasMozMallocUsableSize;
-  appendProcessReportsElements(body, "Main", reportsByProcess["Main"],
-                               hasMozMallocUsableSize);
-  for (let process in reportsByProcess) {
-    if (process !== "Main") {
-      appendProcessReportsElements(body, process, reportsByProcess[process],
+  appendProcessAboutMemoryElements(body, "Main", treesByProcess["Main"],
+                                   othersByProcess["Main"],
                                    hasMozMallocUsableSize);
+  for (let process in treesByProcess) {
+    if (process !== "Main") {
+      appendProcessAboutMemoryElements(body, process, treesByProcess[process],
+                                       othersByProcess[process],
+                                       hasMozMallocUsableSize);
     }
   }
 
@@ -478,28 +482,19 @@ function updateAboutMemory()
 
 //---------------------------------------------------------------------------
 
-function Report(aUnsafePath, aKind, aUnits, aAmount, aDescription)
-{
-  this._unsafePath  = aUnsafePath;
-  this._kind        = aKind;
-  this._units       = aUnits;
-  this._amount      = aAmount;
-  this._description = aDescription;
-  // this._nMerged is only defined if > 1
-  // this._done is defined and set to true when the Report's amount is read
-}
-
-Report.prototype = {
-  // Sum the values and mark |this| as a dup.  We mark dups because it's useful
-  // to know when a report is duplicated;  it might be worth investigating and
-  // splitting up to have non-duplicated names.
-  merge: function(r) {
-    this._amount += r._amount;
-    this._nMerged = this._nMerged ? this._nMerged + 1 : 2;
-  },
-};
-
-function getReportsByProcess(aMgr)
+/**
+ * This function reads all the memory reports, and puts that data in structures
+ * that will be used to generate the page.
+ *
+ * @param aMgr
+ *        The memory reporter manager.
+ * @param aTreesByProcess
+ *        Table of trees, indexed by process, which this function appends to.
+ * @param aOthersByProcess
+ *        Table of other lists, indexed by process, which this function appends
+ *        to.
+ */
+function getTreesAndOthersByProcess(aMgr, aTreesByProcess, aOthersByProcess)
 {
   // Ignore the "smaps" multi-reporter in non-verbose mode, and the
   // "compartments" and "ghost-windows" multi-reporters all the time.  (Note
@@ -520,36 +515,72 @@ function getReportsByProcess(aMgr)
            aMRName === "ghost-windows";
   }
 
-  let reportsByProcess = {};
-
   function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
                         aDescription)
   {
     let process = aProcess === "" ? "Main" : aProcess;
-    let r = new Report(aUnsafePath, aKind, aUnits, aAmount, aDescription);
-    if (!reportsByProcess[process]) {
-      reportsByProcess[process] = {};
-    }
-    let reports = reportsByProcess[process];
-    let rOld = reports[r._unsafePath];
-    if (rOld) {
-      // Already an entry;  must be a duplicated report.  This can happen
-      // legitimately.  Merge them.
-      rOld.merge(r);
+
+    if (aUnsafePath.indexOf('/') !== -1) {
+      // Tree report.  Get the tree for the process, creating it if necessary.
+      // All the trees for each process ("explicit", "vsize", etc) are stored
+      // in a "tree-of-trees".  This makes things simple later.
+      if (!aTreesByProcess[process]) {
+        aTreesByProcess[process] = new TreeNode("tree-of-trees");
+      }
+      let t = aTreesByProcess[process]; 
+
+      // Add any missing nodes in the tree implied by aUnsafePath, and fill in
+      // the properties that we can with a top-down traversal.
+      let unsafeNames = aUnsafePath.split('/');
+      let u = t;
+      for (let i = 0; i < unsafeNames.length; i++) {
+        let unsafeName = unsafeNames[i];
+        let uMatch = u.findKid(unsafeName);
+        if (uMatch) {
+          u = uMatch;
+        } else {
+          let v = new TreeNode(unsafeName);
+          if (!u._kids) {
+            u._kids = [];
+          }
+          u._kids.push(v);
+          u = v;
+        }
+      }
+    
+      if (u._amount) {
+        // Duplicate!  Sum the values and mark it as a dup.
+        u._amount += aAmount;
+        u._nMerged = u._nMerged ? u._nMerged + 1 : 2;
+      } else {
+        // New leaf node.  Fill in extra details node from the report.
+        u._amount = aAmount;
+        u._description = aDescription;
+        u._kind = aKind;
+      }
+
     } else {
-      reports[r._unsafePath] = r;
+      // "Other" (non-tree) report.  Get the "others" for the process, creating
+      // it if necessary.
+      if (!aOthersByProcess[process]) {
+        aOthersByProcess[process] = {};
+      }
+      let others = aOthersByProcess[process]; 
+
+      // Record the report.
+      assert(!others[aUnsafePath], "dup'd OTHER report");
+      others[aUnsafePath] =
+        new OtherReport(aUnsafePath, aUnits, aAmount, aDescription);
     }
   }
 
   processMemoryReporters(aMgr, ignoreSingle, ignoreMulti, handleReport);
-
-  return reportsByProcess;
 }
 
 //---------------------------------------------------------------------------
 
 // There are two kinds of TreeNode.
-// - Leaf TreeNodes correspond to Reports and have more properties.
+// - Leaf TreeNodes correspond to reports.
 // - Non-leaf TreeNodes are just scaffolding nodes for the tree;  their values
 //   are derived from their children.
 function TreeNode(aUnsafeName)
@@ -591,69 +622,27 @@ TreeNode.compare = function(a, b) {
 };
 
 /**
- * From a table of Reports, builds a tree that mirrors the tree structure that
- * will be shown as output.
+ * Fill in the remaining properties for the specified tree in a bottom-up
+ * fashion.
  *
- * @param aReports
- *        The table of Reports, indexed by _unsafePath.
+ * @param aTreeOfTrees
+ *        The tree-of-trees.
  * @param aTreePrefix
  *        The prefix (name) of the tree being built.  Must have '/' on the end.
  * @return The built tree.
  */
-function buildTree(aReports, aTreePrefix)
+function fillInTree(aTreeOfTrees, aTreePrefix)
 {
   assert(aTreePrefix.indexOf('/') == aTreePrefix.length - 1,
          "aTreePrefix doesn't end in '/'");
 
-  // We want to process all reports that begin with |aTreePrefix|.  First we
-  // build the tree but only fill the properties that we can with a top-down
-  // traversal.
-
-  let foundReport = false;
-  let t = new TreeNode("falseRoot");
-  for (let unsafePath in aReports) {
-    // Add any missing nodes in the tree implied by the unsafePath.
-    if (unsafePath.startsWith(aTreePrefix)) {
-      foundReport = true;
-      let r = aReports[unsafePath];
-      let unsafeNames = r._unsafePath.split('/');
-      let u = t;
-      for (let i = 0; i < unsafeNames.length; i++) {
-        let unsafeName = unsafeNames[i];
-        let uMatch = u.findKid(unsafeName);
-        if (uMatch) {
-          u = uMatch;
-        } else {
-          let v = new TreeNode(unsafeName);
-          if (!u._kids) {
-            u._kids = [];
-          }
-          u._kids.push(v);
-          u = v;
-        }
-      }
-      // Fill in extra details in the leaf node from the Report object.
-      u._amount = r._amount;
-      u._description = r._description;
-      u._kind = r._kind;
-      if (r._nMerged) {
-        u._nMerged = r._nMerged;
-      }
-      r._done = true;
-    }
-  }
-
-  // There should always be at least one matching Report object when
-  // |aTreePrefix| is "explicit/".  But there may be zero for smaps trees;  if
-  // that happens, bail.
-  if (!foundReport) {
-    assert(aTreePrefix !== 'explicit/', "aTreePrefix !== 'explicit/'");
+  // There should always be an "explicit/" tree.  But smaps trees might not be
+  // present;  if that happens, return early.
+  let t = aTreeOfTrees.findKid(aTreePrefix.replace(/\//g, ''));
+  if (!t) {
+    assert(aTreePrefix !== 'explicit/', "missing explicit tree");
     return null;
   }
-
-  // Using falseRoot makes the above code simpler.  Now discard it, leaving
-  // aTreePrefix at the root.
-  t = t._kids[0];
 
   // Next, fill in the remaining properties bottom-up.
   function fillInNonLeafNodes(aT, aCannotMerge)
@@ -708,32 +697,15 @@ function buildTree(aReports, aTreePrefix)
 }
 
 /**
- * Ignore all the memory reports that belong to a smaps tree;  this involves
- * explicitly marking them as done.
- *
- * @param aReports
- *        The table of Reports, indexed by _unsafePath.
- */
-function ignoreSmapsTrees(aReports)
-{
-  for (let unsafePath in aReports) {
-    let r = aReports[unsafePath];
-    if (isSmapsPath(r._unsafePath)) {
-      r._done = true;
-    }
-  }
-}
-
-/**
  * Do some work which only makes sense for the 'explicit' tree.
  *
  * @param aT
  *        The tree.
- * @param aReports
- *        Table of Reports for this process, indexed by _unsafePath.
+ * @param aOthers
+ *        "Other measurements" for this process, indexed by _unsafePath.
  * @return A boolean indicating if "heap-allocated" is known for the process.
  */
-function fixUpExplicitTree(aT, aReports)
+function fixUpExplicitTree(aT, aOthers)
 {
   // Determine how many bytes are in heap reports.
   function getKnownHeapUsedBytes(aT)
@@ -754,20 +726,18 @@ function fixUpExplicitTree(aT, aReports)
   // A special case:  compute the derived "heap-unclassified" value.  Don't
   // mark "heap-allocated" when we get its size because we want it to appear
   // in the "Other Measurements" list.
-  let heapAllocatedReport = aReports["heap-allocated"];
+  let heapAllocatedReport = aOthers["heap-allocated"];
   if (heapAllocatedReport === undefined)
     return false;
 
   let heapAllocatedBytes = heapAllocatedReport._amount;
   let heapUnclassifiedT = new TreeNode("heap-unclassified");
   heapUnclassifiedT._amount = heapAllocatedBytes - getKnownHeapUsedBytes(aT);
-  // This kindToString() ensures the "(Heap)" prefix is set without having to
-  // set the _kind property, which would mean that there is a corresponding
-  // Report object for this TreeNode object (which isn't true)
-  heapUnclassifiedT._description = kindToString(KIND_HEAP) +
+  heapUnclassifiedT._description =
       "Memory not classified by a more specific reporter. This includes " +
       "slop bytes due to internal fragmentation in the heap allocator " +
       "(caused when the allocator rounds up request sizes).";
+  heapUnclassifiedT._kind = KIND_HEAP;
   aT._kids.push(heapUnclassifiedT);
   aT._amount += heapUnclassifiedT._amount;
   return true;
@@ -901,37 +871,39 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
 }
 
 /**
- * Appends the elements for a single process's Reports.
+ * Appends the about:memory elements for a single process.
  *
  * @param aP
  *        The parent DOM node.
  * @param aProcess
  *        The name of the process.
- * @param aReports
- *        Table of Reports for this process, indexed by _unsafePath.
+ * @param aTreeOfTrees
+ *        The tree-of-trees for this process.
+ * @param aOthers
+ *        The "other measurements" for this process.
  * @param aHasMozMallocUsableSize
  *        Boolean indicating if moz_malloc_usable_size works.
  * @return The generated text.
  */
-function appendProcessReportsElements(aP, aProcess, aReports,
-                                      aHasMozMallocUsableSize)
+function appendProcessAboutMemoryElements(aP, aProcess, aTreeOfTrees, aOthers,
+                                          aHasMozMallocUsableSize)
 {
   appendElementWithText(aP, "h1", "", aProcess + " Process\n\n");
 
   // We'll fill this in later.
   let warningsDiv = appendElement(aP, "div", "accuracyWarning");
 
-  let explicitTree = buildTree(aReports, 'explicit/');
-  let hasKnownHeapAllocated = fixUpExplicitTree(explicitTree, aReports);
+  let explicitTree = fillInTree(aTreeOfTrees, "explicit/");
+  let hasKnownHeapAllocated = fixUpExplicitTree(explicitTree, aOthers);
   sortTreeAndInsertAggregateNodes(explicitTree._amount, explicitTree);
   appendTreeElements(aP, explicitTree, aProcess);
 
   // We only show these breakdown trees in verbose mode.
   if (gVerbose) {
     kSmapsTreePrefixes.forEach(function(aTreePrefix) {
-      let t = buildTree(aReports, aTreePrefix);
+      let t = fillInTree(aTreeOfTrees, aTreePrefix);
 
-      // |t| will be null if we don't have any reports for the given
+      // |t| will be undefined if we don't have any reports for the given
       // unsafePath.
       if (t) {
         sortTreeAndInsertAggregateNodes(t._amount, t);
@@ -939,16 +911,11 @@ function appendProcessReportsElements(aP, aProcess, aReports,
         appendTreeElements(aP, t, aProcess);
       }
     });
-  } else {
-    // Although we skip the "smaps" multi-reporter in getReportsByProcess(),
-    // we might get some smaps reports from a child process, and they must be
-    // explicitly ignored.
-    ignoreSmapsTrees(aReports);
   }
 
   // We have to call appendOtherElements after we process all the trees,
   // because it looks at all the reports which aren't part of a tree.
-  appendOtherElements(aP, aReports);
+  appendOtherElements(aP, aOthers);
 
   // Add any warnings about inaccuracies due to platform limitations.
   // These must be computed after generating all the text.  The newlines give
@@ -1217,7 +1184,6 @@ function expandPathToThisElement(aElement)
  *        The tree.
  * @param aProcess
  *        The process the tree corresponds to.
- * @return The generated text.
  */
 function appendTreeElements(aPOuter, aT, aProcess)
 {
@@ -1244,7 +1210,6 @@ function appendTreeElements(aPOuter, aT, aProcess)
    *        ._depth records how many chars of indentation are required.
    * @param aParentStringLength
    *        The length of the formatted byte count of the top node in the tree.
-   * @return The generated text.
    */
   function appendTreeElements2(aP, aUnsafePrePath, aT, aIndentGuide,
                                aBaseIndentText, aParentStringLength)
@@ -1415,33 +1380,24 @@ OtherReport.compare = function(a, b) {
  *
  * @param aP
  *        The parent DOM node.
- * @param aReportsByProcess
- *        Table of Reports for this process, indexed by _unsafePath.
- * @param aProcess
- *        The process these Reports correspond to.
- * @return The generated text.
+ * @param aOthers
+ *        The "other measurements" for this process.
  */
-function appendOtherElements(aP, aReportsByProcess)
+function appendOtherElements(aP, aOthers)
 {
   appendSectionHeader(aP, kSectionNames['other']);
 
   let pre = appendElement(aP, "pre", "entries");
 
-  // Generate an array of Report-like elements, stripping out all the
-  // Reports that have already been handled.  Also find the width of the
+  // Convert the table of OtherReports to an array.  Also find the width of the
   // widest element, so we can format things nicely.
   let maxStringLength = 0;
   let otherReports = [];
-  for (let unsafePath in aReportsByProcess) {
-    let r = aReportsByProcess[unsafePath];
-    if (!r._done) {
-      assert(r._nMerged === undefined, "dup'd OTHER report");
-      let o = new OtherReport(r._unsafePath, r._units, r._amount,
-                              r._description);
-      otherReports.push(o);
-      if (o._asString.length > maxStringLength) {
-        maxStringLength = o._asString.length;
-      }
+  for (let unsafePath in aOthers) {
+    let o = aOthers[unsafePath];
+    otherReports.push(o);
+    if (o._asString.length > maxStringLength) {
+      maxStringLength = o._asString.length;
     }
   }
   otherReports.sort(OtherReport.compare);
@@ -1708,8 +1664,6 @@ function appendProcessAboutCompartmentsElementsHelper(aP, aEntries, aKindString)
  *        Table of Compartments for this process, indexed by _unsafeName.
  * @param aGhostWindows
  *        Array of window URLs of ghost windows.
- *
- * @return The generated text.
  */
 function appendProcessAboutCompartmentsElements(aP, aProcess, aCompartments, aGhostWindows)
 {
