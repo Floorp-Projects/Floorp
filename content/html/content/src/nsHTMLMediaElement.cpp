@@ -593,7 +593,8 @@ void nsHTMLMediaElement::AbortExistingLoads()
   mSuspendedAfterFirstFrame = false;
   mAllowSuspendAfterFirstFrame = true;
   mHaveQueuedSelectResource = false;
-  mLoadIsSuspended = false;
+  mSuspendedForPreloadNone = false;
+  mDownloadSuspendedByCache = false;
   mSourcePointer = nsnull;
 
   // TODO: The playback rate must be set to the default playback rate.
@@ -905,7 +906,7 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
 
 void nsHTMLMediaElement::SuspendLoad()
 {
-  mLoadIsSuspended = true;
+  mSuspendedForPreloadNone = true;
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
   DispatchAsyncEvent(NS_LITERAL_STRING("suspend"));
   ChangeDelayLoadStatus(false);
@@ -913,8 +914,9 @@ void nsHTMLMediaElement::SuspendLoad()
 
 void nsHTMLMediaElement::ResumeLoad(PreloadAction aAction)
 {
-  NS_ASSERTION(mLoadIsSuspended, "Can only resume preload if halted for one");
-  mLoadIsSuspended = false;
+  NS_ASSERTION(mSuspendedForPreloadNone,
+    "Must be halted for preload:none to resume from preload:none suspended load.");
+  mSuspendedForPreloadNone = false;
   mPreloadAction = aAction;
   ChangeDelayLoadStatus(true);
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
@@ -987,7 +989,7 @@ void nsHTMLMediaElement::UpdatePreloadAction()
 
   mPreloadAction = nextAction;
   if (nextAction == nsHTMLMediaElement::PRELOAD_ENOUGH) {
-    if (mLoadIsSuspended) {
+    if (mSuspendedForPreloadNone) {
       // Our load was previouly suspended due to the media having preload
       // value "none". The preload value has changed to preload:auto, so
       // resume the load.
@@ -1001,7 +1003,7 @@ void nsHTMLMediaElement::UpdatePreloadAction()
   } else if (nextAction == nsHTMLMediaElement::PRELOAD_METADATA) {
     // Ensure that the video can be suspended after first frame.
     mAllowSuspendAfterFirstFrame = true;
-    if (mLoadIsSuspended) {
+    if (mSuspendedForPreloadNone) {
       // Our load was previouly suspended due to the media having preload
       // value "none". The preload value has changed to preload:metadata, so
       // resume the load. We'll pause the load again after we've read the
@@ -1650,10 +1652,11 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mHasPlayedOrSeeked(false),
     mHasSelfReference(false),
     mShuttingDown(false),
-    mLoadIsSuspended(false),
+    mSuspendedForPreloadNone(false),
     mMediaSecurityVerified(false),
     mCORSMode(CORS_NONE),
-    mHasAudio(false)
+    mHasAudio(false),
+    mDownloadSuspendedByCache(false)
 {
 #ifdef PR_LOGGING
   if (!gMediaElementLog) {
@@ -1733,7 +1736,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
     nsresult rv = Load();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  if (mLoadIsSuspended) {
+  if (mSuspendedForPreloadNone) {
     ResumeLoad(PRELOAD_ENOUGH);
   }
   // Even if we just did Load() or ResumeLoad(), we could already have a decoder
@@ -2636,6 +2639,20 @@ void nsHTMLMediaElement::FirstFrameLoaded(bool aResourceFullyLoaded)
       mPreloadAction == nsHTMLMediaElement::PRELOAD_METADATA) {
     mSuspendedAfterFirstFrame = true;
     mDecoder->Suspend();
+  } else if (mLoadedFirstFrame &&
+             mDownloadSuspendedByCache && 
+             mDecoder &&
+             !mDecoder->IsEnded()) {
+    // We've already loaded the first frame, and the decoder has signalled
+    // that the download has been suspended by the media cache. So move
+    // readyState into HAVE_ENOUGH_DATA, in case there's script waiting
+    // for a "canplaythrough" event; without this forced transition, we will
+    // never fire the "canplaythrough" event if the media cache is so small
+    // that the download was suspended before the first frame was loaded.
+    // Don't force this transition if the decoder is in ended state; the
+    // readyState should remain at HAVE_CURRENT_DATA in this case.
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+    return;
   }
 }
 
@@ -2734,6 +2751,7 @@ void nsHTMLMediaElement::PlaybackEnded()
 void nsHTMLMediaElement::SeekStarted()
 {
   DispatchAsyncEvent(NS_LITERAL_STRING("seeking"));
+  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   FireTimeUpdate(false);
 }
 
@@ -2744,6 +2762,11 @@ void nsHTMLMediaElement::SeekCompleted()
   DispatchAsyncEvent(NS_LITERAL_STRING("seeked"));
   // We changed whether we're seeking so we need to AddRemoveSelfReference
   AddRemoveSelfReference();
+}
+
+void nsHTMLMediaElement::NotifySuspendedByCache(bool aIsSuspended)
+{
+  mDownloadSuspendedByCache = aIsSuspended;
 }
 
 void nsHTMLMediaElement::DownloadSuspended()
@@ -2783,6 +2806,21 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
     // on its own thread before ResourceLoaded or MetadataLoaded gets
     // a chance to run.
     // The arrival of more data can't change us out of this readyState.
+    return;
+  }
+
+  if (mReadyState > nsIDOMHTMLMediaElement::HAVE_METADATA &&
+      mDownloadSuspendedByCache &&
+      mDecoder &&
+      !mDecoder->IsEnded()) {
+    // The decoder has signalled that the download has been suspended by the
+    // media cache. So move readyState into HAVE_ENOUGH_DATA, in case there's
+    // script waiting for a "canplaythrough" event; without this forced
+    // transition, we will never fire the "canplaythrough" event if the
+    // media cache is too small, and scripts are bound to fail. Don't force
+    // this transition if the decoder is in ended state; the readyState
+    // should remain at HAVE_CURRENT_DATA in this case.
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
     return;
   }
 
