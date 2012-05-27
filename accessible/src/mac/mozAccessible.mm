@@ -636,10 +636,6 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [self invalidateChildren];
-  id parent = [self parent];
-  
-  if ([parent isKindOfClass:[mozAccessible class]])
-    [parent invalidateChildren];
 
   mIsExpired = YES;
   mGeckoAccessible = nsnull;
