@@ -6,7 +6,7 @@
 #include "mozilla/dom/TabChild.h"
 
 #include "Compatibility.h"
-#include "nsDocAccessibleWrap.h"
+#include "DocAccessibleWrap.h"
 #include "ISimpleDOMDocument_i.c"
 #include "nsIAccessibilityService.h"
 #include "nsWinUtils.h"
@@ -32,35 +32,37 @@ using namespace mozilla::a11y;
  */
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsDocAccessibleWrap
+// DocAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-nsDocAccessibleWrap::
-  nsDocAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
-                      nsIPresShell* aPresShell) :
-  nsDocAccessible(aDocument, aRootContent, aPresShell), mHWND(NULL)
+DocAccessibleWrap::
+  DocAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
+                    nsIPresShell* aPresShell) :
+  DocAccessible(aDocument, aRootContent, aPresShell), mHWND(NULL)
 {
 }
 
-nsDocAccessibleWrap::~nsDocAccessibleWrap()
+DocAccessibleWrap::~DocAccessibleWrap()
 {
 }
 
 //-----------------------------------------------------
 // IUnknown interface methods - see iunknown.h for documentation
 //-----------------------------------------------------
-STDMETHODIMP_(ULONG) nsDocAccessibleWrap::AddRef()
+STDMETHODIMP_(ULONG)
+DocAccessibleWrap::AddRef()
 {
   return nsAccessNode::AddRef();
 }
 
-STDMETHODIMP_(ULONG) nsDocAccessibleWrap::Release()
+STDMETHODIMP_(ULONG) DocAccessibleWrap::Release()
 {
   return nsAccessNode::Release();
 }
 
 // Microsoft COM QueryInterface
-STDMETHODIMP nsDocAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
+STDMETHODIMP
+DocAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
 
@@ -73,7 +75,8 @@ STDMETHODIMP nsDocAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   return S_OK;
 }
 
-STDMETHODIMP nsDocAccessibleWrap::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
+STDMETHODIMP
+DocAccessibleWrap::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
 {
 __try {
   *aURL = NULL;
@@ -93,7 +96,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsDocAccessibleWrap::get_title( /* [out] */ BSTR __RPC_FAR *aTitle)
+STDMETHODIMP
+DocAccessibleWrap::get_title( /* [out] */ BSTR __RPC_FAR *aTitle)
 {
 __try {
   *aTitle = NULL;
@@ -110,7 +114,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsDocAccessibleWrap::get_mimeType(/* [out] */ BSTR __RPC_FAR *aMimeType)
+STDMETHODIMP
+DocAccessibleWrap::get_mimeType(/* [out] */ BSTR __RPC_FAR *aMimeType)
 {
 __try {
   *aMimeType = NULL;
@@ -130,7 +135,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsDocAccessibleWrap::get_docType(/* [out] */ BSTR __RPC_FAR *aDocType)
+STDMETHODIMP
+DocAccessibleWrap::get_docType(/* [out] */ BSTR __RPC_FAR *aDocType)
 {
 __try {
   *aDocType = NULL;
@@ -150,7 +156,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsDocAccessibleWrap::get_nameSpaceURIForID(/* [in] */  short aNameSpaceID,
+STDMETHODIMP
+DocAccessibleWrap::get_nameSpaceURIForID(/* [in] */  short aNameSpaceID,
   /* [out] */ BSTR __RPC_FAR *aNameSpaceURI)
 {
 __try {
@@ -177,7 +184,7 @@ __try {
 }
 
 STDMETHODIMP
-nsDocAccessibleWrap::put_alternateViewMediaTypes( /* [in] */ BSTR __RPC_FAR *aCommaSeparatedMediaTypes)
+DocAccessibleWrap::put_alternateViewMediaTypes( /* [in] */ BSTR __RPC_FAR *aCommaSeparatedMediaTypes)
 {
 __try {
   *aCommaSeparatedMediaTypes = NULL;
@@ -186,7 +193,8 @@ __try {
   return E_NOTIMPL;
 }
 
-STDMETHODIMP nsDocAccessibleWrap::get_accValue(
+STDMETHODIMP
+DocAccessibleWrap::get_accValue(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszValue)
 {
@@ -209,7 +217,7 @@ STDMETHODIMP nsDocAccessibleWrap::get_accValue(
 // nsAccessNode
 
 void
-nsDocAccessibleWrap::Shutdown()
+DocAccessibleWrap::Shutdown()
 {
   // Do window emulation specific shutdown if emulation was started.
   if (nsWinUtils::IsWindowEmulationStarted()) {
@@ -222,25 +230,25 @@ nsDocAccessibleWrap::Shutdown()
     mHWND = nsnull;
   }
 
-  nsDocAccessible::Shutdown();
+  DocAccessible::Shutdown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsDocAccessible public
+// DocAccessible public
 
 void*
-nsDocAccessibleWrap::GetNativeWindow() const
+DocAccessibleWrap::GetNativeWindow() const
 {
-  return mHWND ? mHWND : nsDocAccessible::GetNativeWindow();
+  return mHWND ? mHWND : DocAccessible::GetNativeWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsDocAccessible protected
+// DocAccessible protected
 
 void
-nsDocAccessibleWrap::DoInitialUpdate()
+DocAccessibleWrap::DoInitialUpdate()
 {
-  nsDocAccessible::DoInitialUpdate();
+  DocAccessible::DoInitialUpdate();
 
   if (nsWinUtils::IsWindowEmulationStarted()) {
     // Create window for tab document.
@@ -278,7 +286,7 @@ nsDocAccessibleWrap::DoInitialUpdate()
       sHWNDCache.Put(mHWND, this);
 
     } else {
-      nsDocAccessible* parentDocument = ParentDocument();
+      DocAccessible* parentDocument = ParentDocument();
       if (parentDocument)
         mHWND = parentDocument->GetNativeWindow();
     }

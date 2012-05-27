@@ -11,7 +11,7 @@
 class nsHTMLLinkAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLLinkAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLLinkAccessible(nsIContent* aContent, DocAccessible* aDoc);
  
   NS_DECL_ISUPPORTS_INHERITED
 

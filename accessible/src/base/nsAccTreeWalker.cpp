@@ -7,7 +7,7 @@
 
 #include "nsAccessible.h"
 #include "nsAccessibilityService.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 
 #include "nsINodeList.h"
 
@@ -31,7 +31,7 @@ struct WalkState
 ////////////////////////////////////////////////////////////////////////////////
 
 nsAccTreeWalker::
-  nsAccTreeWalker(nsDocAccessible* aDoc, nsIContent* aContent,
+  nsAccTreeWalker(DocAccessible* aDoc, nsIContent* aContent,
                   bool aWalkAnonContent, bool aWalkCache) :
   mDoc(aDoc), mWalkCache(aWalkCache), mState(nsnull)
 {

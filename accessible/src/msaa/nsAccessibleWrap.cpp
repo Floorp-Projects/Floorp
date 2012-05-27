@@ -129,7 +129,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsDocAccessible* doc = AsDoc();
+  DocAccessible* doc = AsDoc();
   if (doc) {
     // Return window system accessible object for root document and tab document
     // accessibles.
@@ -1569,7 +1569,7 @@ HWND
 nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
 {
   if (aAccessible) {
-    nsDocAccessible* document = aAccessible->Document();
+    DocAccessible* document = aAccessible->Document();
     if(!document)
       return nsnull;
 
@@ -1706,7 +1706,7 @@ nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 
     // ARIA document.
     if (ARIARole() == roles::DOCUMENT) {
-      nsDocAccessible* document = Document();
+      DocAccessible* document = Document();
       nsAccessible* child =
         document->GetAccessibleByUniqueIDInSubtree(uniqueID);
 

@@ -31,13 +31,13 @@ RootAccessibleWrap::~RootAccessibleWrap()
 // RootAccessible
 
 void
-RootAccessibleWrap::DocumentActivated(nsDocAccessible* aDocument)
+RootAccessibleWrap::DocumentActivated(DocAccessible* aDocument)
 {
   if (Compatibility::IsDolphin() &&
       nsCoreUtils::IsTabDocument(aDocument->GetDocumentNode())) {
     PRUint32 count = mChildDocuments.Length();
     for (PRUint32 idx = 0; idx < count; idx++) {
-      nsDocAccessible* childDoc = mChildDocuments[idx];
+      DocAccessible* childDoc = mChildDocuments[idx];
       HWND childDocHWND = static_cast<HWND>(childDoc->GetNativeWindow());
       if (childDoc != aDocument)
         nsWinUtils::HideNativeWindow(childDocHWND);

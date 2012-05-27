@@ -15,7 +15,7 @@
 class nsXFormsLabelAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsLabelAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsLabelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessible
   virtual void Description(nsString& aDescription);
@@ -30,7 +30,7 @@ public:
 class nsXFormsOutputAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsOutputAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsOutputAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -43,7 +43,7 @@ public:
 class nsXFormsTriggerAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsTriggerAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsTriggerAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
@@ -64,7 +64,7 @@ public:
 class nsXFormsInputAccessible : public nsXFormsEditableAccessible
 {
 public:
-  nsXFormsInputAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsInputAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -86,7 +86,7 @@ public:
 class nsXFormsInputBooleanAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsInputBooleanAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsInputBooleanAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
@@ -107,7 +107,7 @@ public:
 class nsXFormsInputDateAccessible : public nsXFormsContainerAccessible
 {
 public:
-  nsXFormsInputDateAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsInputDateAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -120,7 +120,7 @@ public:
 class nsXFormsSecretAccessible : public nsXFormsInputAccessible
 {
 public:
-  nsXFormsSecretAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsSecretAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessible
   virtual void Value(nsString& aValue);
@@ -136,7 +136,7 @@ public:
 class nsXFormsRangeAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsRangeAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsRangeAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessibleValue
   NS_IMETHOD GetMaximumValue(double *aMaximumValue);
@@ -158,7 +158,7 @@ public:
 class nsXFormsSelectAccessible : public nsXFormsContainerAccessible
 {
 public:
-  nsXFormsSelectAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsSelectAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessible
   virtual PRUint64 NativeState();
@@ -172,7 +172,7 @@ public:
 class nsXFormsChoicesAccessible : public nsXFormsAccessible
 {
 public:
-  nsXFormsChoicesAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsChoicesAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessible
 
@@ -194,7 +194,7 @@ protected:
 class nsXFormsSelectFullAccessible : public nsXFormsSelectableAccessible
 {
 public:
-  nsXFormsSelectFullAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXFormsSelectFullAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -215,7 +215,7 @@ class nsXFormsItemCheckgroupAccessible : public nsXFormsSelectableItemAccessible
 {
 public:
   nsXFormsItemCheckgroupAccessible(nsIContent* aContent,
-                                   nsDocAccessible* aDoc);
+                                   DocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
@@ -236,7 +236,7 @@ class nsXFormsItemRadiogroupAccessible : public nsXFormsSelectableItemAccessible
 {
 public:
   nsXFormsItemRadiogroupAccessible(nsIContent* aContent,
-                                   nsDocAccessible* aDoc);
+                                   DocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
@@ -256,7 +256,7 @@ class nsXFormsSelectComboboxAccessible : public nsXFormsSelectableAccessible
 {
 public:
   nsXFormsSelectComboboxAccessible(nsIContent* aContent,
-                                   nsDocAccessible* aDoc);
+                                   DocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -275,7 +275,7 @@ class nsXFormsItemComboboxAccessible : public nsXFormsSelectableItemAccessible
 {
 public:
   nsXFormsItemComboboxAccessible(nsIContent* aContent,
-                                 nsDocAccessible* aDoc);
+                                 DocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);

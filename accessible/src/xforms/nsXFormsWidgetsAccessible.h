@@ -19,7 +19,7 @@ class nsXFormsDropmarkerWidgetAccessible : public nsLeafAccessible,
 {
 public:
   nsXFormsDropmarkerWidgetAccessible(nsIContent* aContent,
-                                     nsDocAccessible* aDoc);
+                                     DocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
@@ -41,7 +41,7 @@ class nsXFormsCalendarWidgetAccessible : public nsAccessibleWrap
 {
 public:
   nsXFormsCalendarWidgetAccessible(nsIContent* aContent,
-                                   nsDocAccessible* aDoc);
+                                   DocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -56,7 +56,7 @@ class nsXFormsComboboxPopupWidgetAccessible : public nsXFormsAccessible
 {
 public:
   nsXFormsComboboxPopupWidgetAccessible(nsIContent* aContent,
-                                        nsDocAccessible* aDoc);
+                                        DocAccessible* aDoc);
 
   // nsAccessible
   virtual void Description(nsString& aDescription);

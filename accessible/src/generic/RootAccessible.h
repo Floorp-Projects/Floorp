@@ -7,7 +7,7 @@
 #define mozilla_a11y_RootAccessible_h__
 
 #include "nsCaretAccessible.h"
-#include "nsDocAccessibleWrap.h"
+#include "DocAccessibleWrap.h"
 
 
 #include "nsHashtable.h"
@@ -21,7 +21,7 @@ class Relation;
 namespace mozilla {
 namespace a11y {
 
-class RootAccessible : public nsDocAccessibleWrap,
+class RootAccessible : public DocAccessibleWrap,
                        public nsIDOMEventListener
 {
   NS_DECL_ISUPPORTS_INHERITED
@@ -49,7 +49,7 @@ public:
   /**
    * Notify that the sub document presshell was activated.
    */
-  virtual void DocumentActivated(nsDocAccessible* aDocument);
+  virtual void DocumentActivated(DocAccessible* aDocument);
 
 protected:
 

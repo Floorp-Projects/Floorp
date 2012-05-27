@@ -10,7 +10,7 @@
 #include "nsAccUtils.h"
 #include "nsAccTreeWalker.h"
 #include "nsCoreUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "nsIAccessibleRelation.h"
 #include "nsXULMenuAccessible.h"
 #include "Relation.h"
@@ -37,7 +37,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 XULButtonAccessible::
-  XULButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULButtonAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
   if (ContainsMenu())
@@ -248,7 +248,7 @@ XULButtonAccessible::ContainsMenu()
 ////////////////////////////////////////////////////////////////////////////////
 
 XULDropmarkerAccessible::
-  XULDropmarkerAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULDropmarkerAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLeafAccessible(aContent, aDoc)
 {
 }
@@ -332,7 +332,7 @@ XULDropmarkerAccessible::NativeState()
 ////////////////////////////////////////////////////////////////////////////////
 
 XULCheckboxAccessible::
-  XULCheckboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULCheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLeafAccessible(aContent, aDoc)
 {
 }
@@ -413,7 +413,7 @@ XULCheckboxAccessible::NativeState()
 ////////////////////////////////////////////////////////////////////////////////
 
 XULGroupboxAccessible::
-  XULGroupboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULGroupboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
 }
@@ -470,7 +470,7 @@ XULGroupboxAccessible::RelationByType(PRUint32 aType)
 ////////////////////////////////////////////////////////////////////////////////
 
 XULRadioButtonAccessible::
-  XULRadioButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULRadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   RadioButtonAccessible(aContent, aDoc)
 {
 }
@@ -521,7 +521,7 @@ XULRadioButtonAccessible::ContainerWidget() const
   */
 
 XULRadioGroupAccessible::
-  XULRadioGroupAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULRadioGroupAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   XULSelectControlAccessible(aContent, aDoc)
 { 
 }
@@ -568,7 +568,7 @@ XULRadioGroupAccessible::AreItemsOperable() const
 ////////////////////////////////////////////////////////////////////////////////
 
 XULStatusBarAccessible::
-  XULStatusBarAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULStatusBarAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
 }
@@ -585,7 +585,7 @@ XULStatusBarAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 XULToolbarButtonAccessible::
-  XULToolbarButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULToolbarButtonAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   XULButtonAccessible(aContent, aDoc)
 {
 }
@@ -636,7 +636,7 @@ XULToolbarButtonAccessible::IsSeparator(nsAccessible* aAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 
 XULToolbarAccessible::
-  XULToolbarAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULToolbarAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
 }
@@ -665,7 +665,7 @@ XULToolbarAccessible::GetNameInternal(nsAString& aName)
 ////////////////////////////////////////////////////////////////////////////////
 
 XULToolbarSeparatorAccessible::
-  XULToolbarSeparatorAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULToolbarSeparatorAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLeafAccessible(aContent, aDoc)
 {
 }
@@ -687,7 +687,7 @@ XULToolbarSeparatorAccessible::NativeState()
 ////////////////////////////////////////////////////////////////////////////////
 
 XULTextFieldAccessible::
- XULTextFieldAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+ XULTextFieldAccessible(nsIContent* aContent, DocAccessible* aDoc) :
  nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }

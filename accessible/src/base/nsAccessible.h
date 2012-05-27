@@ -95,7 +95,7 @@ class nsAccessible : public nsAccessNodeWrap,
                      public nsIAccessibleValue
 {
 public:
-  nsAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~nsAccessible();
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -452,7 +452,7 @@ public:
   inline bool IsCombobox() const { return mFlags & eComboboxAccessible; }
 
   inline bool IsDoc() const { return mFlags & eDocAccessible; }
-  nsDocAccessible* AsDoc();
+  DocAccessible* AsDoc();
 
   inline bool IsHyperText() const { return mFlags & eHyperTextAccessible; }
   nsHyperTextAccessible* AsHyperText();

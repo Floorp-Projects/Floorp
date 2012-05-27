@@ -8,17 +8,17 @@
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-#ifndef _nsDocAccessibleWrap_H_
-#define _nsDocAccessibleWrap_H_
+#ifndef mozilla_a11y_DocAccessibleWrap_h__
+#define mozilla_a11y_DocAccessibleWrap_h__
 
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 
-class nsDocAccessibleWrap: public nsDocAccessible
+class DocAccessibleWrap : public DocAccessible
 {
 public:
-  nsDocAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
-                      nsIPresShell* aPresShell);
-  virtual ~nsDocAccessibleWrap();
+  DocAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
+                    nsIPresShell* aPresShell);
+  virtual ~DocAccessibleWrap();
 
   bool mActivated;
 };

@@ -18,7 +18,7 @@ class nsHyperTextAccessibleWrap : public nsHyperTextAccessible,
                                   public CAccessibleEditableText
 {
 public:
-  nsHyperTextAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHyperTextAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
     nsHyperTextAccessible(aContent, aDoc) {}
 
   // IUnknown

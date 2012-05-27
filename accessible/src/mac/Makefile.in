@@ -17,8 +17,9 @@ LIBXUL_LIBRARY = 1
 
   
   
-CMMSRCS = nsAccessNodeWrap.mm \
-          nsDocAccessibleWrap.mm \
+CMMSRCS = \
+          DocAccessibleWrap.mm \
+          nsAccessNodeWrap.mm \
           nsAccessibleWrap.mm \
           mozAccessible.mm \
           mozDocAccessible.mm \

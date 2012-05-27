@@ -7,7 +7,7 @@
 
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "nsCoreUtils.h"
 #include "Role.h"
 #include "States.h"
@@ -23,7 +23,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULComboboxAccessible::
-  nsXULComboboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULComboboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,

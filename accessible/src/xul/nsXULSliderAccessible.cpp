@@ -20,7 +20,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULSliderAccessible::
-  nsXULSliderAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULSliderAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
 }
@@ -256,7 +256,7 @@ nsXULSliderAccessible::SetSliderAttr(nsIAtom *aName, double aValue)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULThumbAccessible::
-  nsXULThumbAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULThumbAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
 }
