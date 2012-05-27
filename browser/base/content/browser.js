@@ -8398,10 +8398,10 @@ var gIdentityHandler = {
          event.keyCode != KeyEvent.DOM_VK_RETURN))
       return; // Left click, space or enter only
 
-    // Revert the contents of the location bar, see bug 406779
-    gURLBar.handleRevert();
-
-    if (this._mode == this.IDENTITY_MODE_CHROMEUI)
+    // Don't allow left click, space or enter if the location
+    // is chrome UI or the location has been modified.
+    if (this._mode == this.IDENTITY_MODE_CHROMEUI ||
+        gURLBar.getAttribute("pageproxystate") != "valid")
       return;
 
     // Make sure that the display:none style we set in xul is removed now that
