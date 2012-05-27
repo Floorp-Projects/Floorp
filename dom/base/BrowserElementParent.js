@@ -113,6 +113,9 @@ BrowserElementParent.prototype = {
     XPCNativeWrapper.unwrap(frameElement).getScreenshot =
       this._getScreenshot.bind(this, mm, frameElement);
 
+    XPCNativeWrapper.unwrap(frameElement).setVisible =
+      this._setVisible.bind(this, mm, frameElement);
+
     mm.loadFrameScript("chrome://global/content/BrowserElementChild.js",
                        /* allowDelayedLoad = */ true);
   },
@@ -164,6 +167,10 @@ BrowserElementParent.prototype = {
     mm.sendAsyncMessage('browser-element-api:get-screenshot', {id: id});
     return req;
   },
+
+   _setVisible: function(mm, frameElement, visible) {
+     mm.sendAsyncMessage('browser-element-api:set-visible', {visible: visible});
+   },
 
   _fireKeyEvent: function(frameElement, data) {
     let win = frameElement.ownerDocument.defaultView;

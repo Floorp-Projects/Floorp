@@ -25,6 +25,7 @@ _TEST_FILES = \
 		test_browserFrame7.html \
 		test_browserFrame8.html \
 		test_browserFrame9.html \
+		test_browserFrame10.html \
 		test_browserFrame_keyEvents.html \
 		$(NULL)
 
