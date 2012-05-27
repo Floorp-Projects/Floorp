@@ -159,6 +159,10 @@ public:
   // (no data has arrived for a while).
   void DownloadStalled();
 
+  // Called by the media decoder to indicate whether the media cache has
+  // suspended the channel.
+  void NotifySuspendedByCache(bool aIsSuspended);
+
   // Called when a "MozAudioAvailable" event listener is added. The media
   // element will then notify its decoder that it needs to make a copy of
   // the audio data sent to hardware and dispatch it in "mozaudioavailable"
@@ -833,7 +837,7 @@ protected:
   // due to loading a preload:none media. When true, the resource we'll
   // load when the user initiates either playback or an explicit load is
   // stored in mPreloadURI.
-  bool mLoadIsSuspended;
+  bool mSuspendedForPreloadNone;
 
   // True if a same-origin check has been done for the media element and resource.
   bool mMediaSecurityVerified;
@@ -843,6 +847,9 @@ protected:
 
   // True if the media has an audio track
   bool mHasAudio;
+
+  // True if the media's channel's download has been suspended.
+  bool mDownloadSuspendedByCache;
 };
 
 #endif
