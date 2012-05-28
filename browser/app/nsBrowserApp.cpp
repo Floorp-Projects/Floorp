@@ -214,6 +214,12 @@ int main(int argc, char* argv[])
   struct rusage initialRUsage;
   gotCounters = !getrusage(RUSAGE_SELF, &initialRUsage);
 #elif defined(XP_WIN)
+  // Don't change the order of these enumeration constants, the order matters
+  // for reporting telemetry data.  If new values are added adjust the
+  // STARTUP_USING_PRELOAD histogram.
+  enum PreloadReason { PRELOAD_NONE, PRELOAD_SERVICE, PRELOAD_IOCOUNT };
+  PreloadReason preloadReason = PRELOAD_NONE;
+
   // GetProcessIoCounters().ReadOperationCount seems to have little to
   // do with actual read operations. It reports 0 or 1 at this stage
   // in the program. Luckily 1 coincides with when prefetch is
@@ -224,13 +230,18 @@ int main(int argc, char* argv[])
   // files.
   IO_COUNTERS ioCounters;
   gotCounters = GetProcessIoCounters(GetCurrentProcess(), &ioCounters);
-  if ((gotCounters && !ioCounters.ReadOperationCount) || 
-      IsPrefetchDisabledViaService())
+
+  if (IsPrefetchDisabledViaService()) {
+    preloadReason = PRELOAD_SERVICE;
+  } else if ((gotCounters && !ioCounters.ReadOperationCount)) {
+    preloadReason = PRELOAD_IOCOUNT;
+  }
+
+  if (preloadReason != PRELOAD_NONE)
 #endif
   {
       XPCOMGlueEnablePreload();
   }
-
 
   rv = XPCOMGlueStartup(exePath);
   if (NS_FAILED(rv)) {
@@ -248,6 +259,11 @@ int main(int argc, char* argv[])
 
 #ifdef XRE_HAS_DLL_BLOCKLIST
   XRE_SetupDllBlocklist();
+#endif
+
+#if defined(XP_WIN)
+  XRE_TelemetryAccumulate(mozilla::Telemetry::STARTUP_USING_PRELOAD,
+                          preloadReason);
 #endif
 
   if (gotCounters) {
