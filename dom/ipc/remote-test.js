@@ -28,7 +28,9 @@ addEventListener("click",
     dump(e.target + "\n");
     if (e.target instanceof Components.interfaces.nsIDOMHTMLAnchorElement &&
         dshell == docShell) {
-      var retval = sendSyncMessage("linkclick", { href: e.target.href });
+      var retval = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                            getInterface(Components.interfaces.nsIContentFrameMessageManager).
+                            sendSyncMessage("linkclick", { href: e.target.href });
       dump(uneval(retval[0]) + "\n");
       // Test here also that both retvals are the same
       sendAsyncMessage("linkclick-reply-object", uneval(retval[0]) == uneval(retval[1]) ? retval[0] : "");
