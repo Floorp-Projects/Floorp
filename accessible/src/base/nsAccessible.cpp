@@ -24,13 +24,8 @@
 #include "StyleInfo.h"
 
 #include "nsContentUtils.h"
-#include "nsIDOMCSSValue.h"
-#include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentXBL.h"
-#include "nsIDOMHTMLDocument.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMTreeWalker.h"
@@ -2096,20 +2091,12 @@ nsAccessible::RelationByType(PRUint32 aType)
             }
           }
           if (!buttonEl) { // Check for anonymous accept button in <dialog>
-            nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(xulDoc));
-            if (xblDoc) {
-              nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(xulDoc);
-              NS_ASSERTION(domDoc, "No DOM document");
-              nsCOMPtr<nsIDOMElement> rootEl;
-              domDoc->GetDocumentElement(getter_AddRefs(rootEl));
-              if (rootEl) {
-                nsCOMPtr<nsIDOMElement> possibleButtonEl;
-                xblDoc->GetAnonymousElementByAttribute(rootEl,
-                                                      NS_LITERAL_STRING("default"),
-                                                      NS_LITERAL_STRING("true"),
-                                                      getter_AddRefs(possibleButtonEl));
-                buttonEl = do_QueryInterface(possibleButtonEl);
-              }
+            dom::Element* rootElm = mContent->OwnerDoc()->GetRootElement();
+            if (rootElm) {
+              nsIContent* possibleButtonEl = rootElm->OwnerDoc()->
+                GetAnonymousElementByAttribute(rootElm, nsGkAtoms::_default,
+                                               NS_LITERAL_STRING("true"));
+              buttonEl = do_QueryInterface(possibleButtonEl);
             }
           }
           nsCOMPtr<nsIContent> relatedContent(do_QueryInterface(buttonEl));

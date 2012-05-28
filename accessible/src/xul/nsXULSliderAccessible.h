@@ -38,7 +38,10 @@ public:
   virtual PRUint8 ActionCount();
 
 protected:
-  already_AddRefed<nsIContent> GetSliderNode();
+  /**
+   * Return anonymous slider element.
+   */
+  nsIContent* GetSliderElement();
 
   nsresult GetSliderAttr(nsIAtom *aName, nsAString& aValue);
   nsresult SetSliderAttr(nsIAtom *aName, const nsAString& aValue);
@@ -47,7 +50,7 @@ protected:
   nsresult SetSliderAttr(nsIAtom *aName, double aValue);
 
 private:
-  nsCOMPtr<nsIDOMElement> mSliderNode;
+  nsCOMPtr<nsIContent> mSliderNode;
 };
 
 

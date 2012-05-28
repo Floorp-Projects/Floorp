@@ -76,6 +76,7 @@ public:
   
   void SetHandshakeInProgress(bool aIsIn);
   bool GetHandshakeInProgress() { return mHandshakeInProgress; }
+  void SetFirstServerHelloReceived() { mFirstServerHelloReceived = true; }
   bool HandshakeTimeout();
 
   void SetAllowTLSIntoleranceTimeout(bool aAllow);
@@ -115,8 +116,6 @@ private:
   PRFileDesc* mFd;
 
   CertVerificationState mCertVerificationState;
-  PRIntervalTime mCertVerificationStarted;
-  PRIntervalTime mCertVerificationEnded;
 
   bool mForSTARTTLS;
   bool mSSL3Enabled;
@@ -127,6 +126,7 @@ private:
   bool mAllowTLSIntoleranceTimeout;
   bool mRememberClientAuthCertificate;
   PRIntervalTime mHandshakeStartTime;
+  bool mFirstServerHelloReceived;
 
   nsresult ActivateSSL();
 

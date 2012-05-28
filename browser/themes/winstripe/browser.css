@@ -1363,7 +1363,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   padding-right: 5.01px;
 }
 
-#identity-box.verifiedIdentity {
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
   color: hsl(92,100%,30%);
   -moz-margin-end: 4px;
   background-image: -moz-linear-gradient(hsla(92,81%,16%,0),
@@ -1430,15 +1430,15 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.verifiedDomain > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+.verifiedDomain > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://browser/skin/identity-icons-https.png);
 }
 
-.verifiedIdentity > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+.verifiedIdentity > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
 }
 
-.mixedContent > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+.mixedContent > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://browser/skin/identity-icons-https-mixed.png);
 }
 
@@ -1452,7 +1452,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 }
 
 #page-proxy-favicon[pageproxystate="invalid"] {
-  opacity: 0.5;
+  opacity: 0.3;
 }
 
 /* autocomplete */
