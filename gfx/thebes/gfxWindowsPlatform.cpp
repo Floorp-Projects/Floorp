@@ -808,6 +808,7 @@ static const char kFontEuphemia[] = "Euphemia";
 static const char kFontGabriola[] = "Gabriola";
 static const char kFontKhmerUI[] = "Khmer UI";
 static const char kFontLaoUI[] = "Lao UI";
+static const char kFontLucidaSansUnicode[] = "Lucida Sans Unicode";
 static const char kFontMVBoli[] = "MV Boli";
 static const char kFontMalgunGothic[] = "Malgun Gothic";
 static const char kFontMicrosoftJhengHei[] = "Microsoft JhengHei";
@@ -837,9 +838,9 @@ gfxWindowsPlatform::GetCommonFallbackFonts(const PRUint32 aCh,
     if (!IS_IN_BMP(aCh)) {
         PRUint32 p = aCh >> 16;
         if (p == 1) { // SMP plane
-            aFontList.AppendElement(kFontCambriaMath);
             aFontList.AppendElement(kFontSegoeUISymbol);
             aFontList.AppendElement(kFontEbrima);
+            aFontList.AppendElement(kFontCambriaMath);
         }
     } else {
         PRUint32 b = (aCh >> 8) & 0xff;
@@ -898,9 +899,9 @@ gfxWindowsPlatform::GetCommonFallbackFonts(const PRUint32 aCh,
             aFontList.AppendElement(kFontSegoeUI);
             aFontList.AppendElement(kFontSegoeUISymbol);
             aFontList.AppendElement(kFontCambria);
-            aFontList.AppendElement(kFontCambriaMath);
             aFontList.AppendElement(kFontMeiryo);
             aFontList.AppendElement(kFontArial);
+            aFontList.AppendElement(kFontLucidaSansUnicode);
             aFontList.AppendElement(kFontEbrima);
             break;
         case 0x2d:
