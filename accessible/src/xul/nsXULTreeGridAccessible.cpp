@@ -8,7 +8,7 @@
 #include "nsAccCache.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "nsEventShell.h"
 #include "Relation.h"
 #include "Role.h"
@@ -24,7 +24,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridAccessible::
-  nsXULTreeGridAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULTreeGridAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsXULTreeAccessible(aContent, aDoc), xpcAccessibleTable(this)
 {
 }
@@ -549,7 +549,7 @@ nsXULTreeGridAccessible::CreateTreeItemAccessible(PRInt32 aRow)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridRowAccessible::
-  nsXULTreeGridRowAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+  nsXULTreeGridRowAccessible(nsIContent* aContent, DocAccessible* aDoc,
                              nsAccessible* aTreeAcc, nsITreeBoxObject* aTree,
                              nsITreeView* aTreeView, PRInt32 aRow) :
   nsXULTreeItemAccessibleBase(aContent, aDoc, aTreeAcc, aTree, aTreeView, aRow)
@@ -736,7 +736,7 @@ nsXULTreeGridRowAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridCellAccessible::
-  nsXULTreeGridCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+  nsXULTreeGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc,
                               nsXULTreeGridRowAccessible* aRowAcc,
                               nsITreeBoxObject* aTree, nsITreeView* aTreeView,
                               PRInt32 aRow, nsITreeColumn* aColumn) :

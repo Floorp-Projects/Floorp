@@ -237,7 +237,7 @@ PRInt32 nsAccessibleWrap::mAccWrapDeleted = 0;
 #endif
 
 nsAccessibleWrap::
-  nsAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessible(aContent, aDoc), mAtkObject(nsnull)
 {
 #ifdef MAI_LOGGING

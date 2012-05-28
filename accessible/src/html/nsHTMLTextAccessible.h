@@ -15,7 +15,7 @@
 class nsHTMLHRAccessible : public nsLeafAccessible
 {
 public:
-  nsHTMLHRAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLHRAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -27,7 +27,7 @@ public:
 class nsHTMLBRAccessible : public nsLeafAccessible
 {
 public:
-  nsHTMLBRAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLBRAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -41,7 +41,7 @@ public:
 class nsHTMLLabelAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLLabelAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLLabelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -56,7 +56,7 @@ public:
 class nsHTMLOutputAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLOutputAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLOutputAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 

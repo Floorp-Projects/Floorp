@@ -180,6 +180,7 @@ struct Parser : private AutoGCRooter
                          VarContext varContext = HoistVars);
     ParseNode *expr();
     ParseNode *assignExpr();
+    ParseNode *assignExprWithoutYield(unsigned err);
     ParseNode *condExpr1();
     ParseNode *orExpr1();
     ParseNode *andExpr1i();
@@ -209,7 +210,7 @@ struct Parser : private AutoGCRooter
      * Additional JS parsers.
      */
     enum FunctionType { Getter, Setter, Normal };
-    bool functionArguments(ParseNode **list, bool &hasRest);
+    bool functionArguments(ParseNode **list, bool &hasDefaults, bool &hasRest);
 
     ParseNode *functionDef(HandlePropertyName name, FunctionType type, FunctionSyntaxKind kind);
 

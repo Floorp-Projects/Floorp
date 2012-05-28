@@ -6,7 +6,7 @@
 #include "nsHTMLLinkAccessible.h"
 
 #include "nsCoreUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
 
@@ -21,7 +21,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLLinkAccessible::
-  nsHTMLLinkAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHTMLLinkAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }

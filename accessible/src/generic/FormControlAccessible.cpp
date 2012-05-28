@@ -180,7 +180,7 @@ ProgressMeterAccessible<Max>::SetCurrentValue(double aValue)
 ////////////////////////////////////////////////////////////////////////////////
 
 RadioButtonAccessible::
-  RadioButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  RadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLeafAccessible(aContent, aDoc)
 {
 }

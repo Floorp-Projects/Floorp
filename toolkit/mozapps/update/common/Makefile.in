@@ -34,6 +34,7 @@ CPPSRCS += updatehelper.cpp \
   $(NULL)
 
 EXPORTS = updatehelper.h \
+  updatehelper.cpp \
   uachelper.h \
   pathhash.h \
   $(NULL)

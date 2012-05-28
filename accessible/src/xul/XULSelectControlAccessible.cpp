@@ -7,7 +7,7 @@
 #include "XULSelectControlAccessible.h"
 
 #include "nsAccessibilityService.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
@@ -28,7 +28,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 XULSelectControlAccessible::
-  XULSelectControlAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULSelectControlAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
   mSelectControl = do_QueryInterface(aContent);
@@ -248,7 +248,7 @@ XULSelectControlAccessible::CurrentItem()
     DOMNode = do_QueryInterface(currentItemElm);
 
   if (DOMNode) {
-    nsDocAccessible* document = Document();
+    DocAccessible* document = Document();
     if (document)
       return document->GetAccessible(DOMNode);
   }

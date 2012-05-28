@@ -16,7 +16,7 @@ using namespace mozilla::a11y;
 
 nsHTMLWin32ObjectOwnerAccessible::
   nsHTMLWin32ObjectOwnerAccessible(nsIContent* aContent,
-                                   nsDocAccessible* aDoc, void* aHwnd) :
+                                   DocAccessible* aDoc, void* aHwnd) :
   nsAccessibleWrap(aContent, aDoc), mHwnd(aHwnd)
 {
   // Our only child is a nsHTMLWin32ObjectAccessible object.

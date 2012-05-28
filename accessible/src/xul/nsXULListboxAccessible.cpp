@@ -8,7 +8,7 @@
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
 
@@ -28,7 +28,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULColumnsAccessible::
-  nsXULColumnsAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULColumnsAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
 }
@@ -51,7 +51,7 @@ nsXULColumnsAccessible::NativeState()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULColumnItemAccessible::
-  nsXULColumnItemAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULColumnItemAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLeafAccessible(aContent, aDoc)
 {
 }
@@ -99,7 +99,7 @@ nsXULColumnItemAccessible::DoAction(PRUint8 aIndex)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListboxAccessible::
-  nsXULListboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULListboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   XULSelectControlAccessible(aContent, aDoc), xpcAccessibleTable(this)
 {
   nsIContent* parentContent = mContent->GetParent();
@@ -800,7 +800,7 @@ nsXULListboxAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListitemAccessible::
-  nsXULListitemAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULListitemAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsXULMenuitemAccessible(aContent, aDoc)
 {
   mIsCheckbox = mContent->AttrValueIs(kNameSpaceID_None,
@@ -945,7 +945,7 @@ nsXULListitemAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListCellAccessible::
-  nsXULListCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULListCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }

@@ -113,7 +113,7 @@ mai_atk_component_iface_init(AtkComponentIface* aIface)
 }
 
 AtkSocketAccessible::AtkSocketAccessible(nsIContent* aContent,
-                                         nsDocAccessible* aDoc,
+                                         DocAccessible* aDoc,
                                          const nsCString& aPlugId) :
   nsAccessibleWrap(aContent, aDoc)
 {

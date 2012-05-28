@@ -29,11 +29,7 @@
       <!-- Startup -->
       <preference id="browser.startup.page"
                   name="browser.startup.page"
-                  type="int"
-                  onchange="gMainPane.startupPagePrefChanged();"/>
-      <preference id="browser.sessionstore.restore_on_demand"
-                  name="browser.sessionstore.restore_on_demand"
-                  type="bool"/>
+                  type="int"/>
       <preference id="browser.startup.homepage"
                   name="browser.startup.homepage"
                   type="wstring"/>
@@ -88,13 +84,6 @@
             <menuitem label="&startupLastSession.label;"  value="3" id="browserStartupLastSession"/>
           </menupopup>
         </menulist>
-      </hbox>
-      <hbox align="center">
-        <checkbox id="restoreOnDemand"
-                  label="&restoreOnDemand.label;"
-                  accesskey="&restoreOnDemand.accesskey;"
-                  class="indent"
-                  preference="browser.sessionstore.restore_on_demand"/>
       </hbox>
       <separator class="thin"/>
       <hbox align="center">

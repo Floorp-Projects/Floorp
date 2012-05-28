@@ -22,7 +22,7 @@ class nsIWeakReference;
 class nsXULColumnsAccessible : public nsAccessibleWrap
 {
 public:
-  nsXULColumnsAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULColumnsAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -36,7 +36,7 @@ public:
 class nsXULColumnItemAccessible : public nsLeafAccessible
 {
 public:
-  nsXULColumnItemAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULColumnItemAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
@@ -61,7 +61,7 @@ class nsXULListboxAccessible : public XULSelectControlAccessible,
                                public mozilla::a11y::TableAccessible
 {
 public:
-  nsXULListboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULListboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~nsXULListboxAccessible() {}
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -105,7 +105,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   
-  nsXULListitemAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULListitemAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~nsXULListitemAccessible() {}
 
   // nsIAccessible
@@ -139,7 +139,7 @@ class nsXULListCellAccessible : public nsHyperTextAccessibleWrap,
                                 public nsIAccessibleTableCell
 {
 public:
-  nsXULListCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULListCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

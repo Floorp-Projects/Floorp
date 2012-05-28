@@ -104,6 +104,7 @@
 #include "nsIHttpProtocolHandler.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
+#include "nsILoadContext.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
@@ -2269,6 +2270,19 @@ nsGlobalWindow::DetachFromDocShell()
 
   MaybeForgiveSpamCount();
   CleanUp(false);
+
+    if (mLocalStorage) {
+      nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mLocalStorage);
+      if (obs) {
+        mDocShell->AddWeakPrivacyTransitionObserver(obs);
+      }
+    }
+    if (mSessionStorage) {
+      nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mSessionStorage);
+      if (obs) {
+        mDocShell->AddWeakPrivacyTransitionObserver(obs);
+      }
+    }
 }
 
 void
@@ -8109,6 +8123,11 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     if (!mSessionStorage) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
+
+    nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mSessionStorage);
+    if (obs) {
+      docShell->AddWeakPrivacyTransitionObserver(obs);
+    }
   }
 
 #ifdef PR_LOGGING
@@ -8138,8 +8157,7 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
 
     nsresult rv;
 
-    bool unused;
-    if (!nsDOMStorage::CanUseStorage(&unused))
+    if (!nsDOMStorage::CanUseStorage())
       return NS_ERROR_DOM_SECURITY_ERR;
 
     nsIPrincipal *principal = GetPrincipal();
@@ -8155,10 +8173,19 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
       mDocument->GetDocumentURI(documentURI);
     }
 
+    nsIDocShell* docShell = GetDocShell();
+    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+
     rv = storageManager->GetLocalStorageForPrincipal(principal,
                                                      documentURI,
+                                                     loadContext && loadContext->UsePrivateBrowsing(),
                                                      getter_AddRefs(mLocalStorage));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_GetInterface(mLocalStorage);
+    if (obs && docShell) {
+      docShell->AddWeakPrivacyTransitionObserver(obs);
+    }
   }
 
   NS_ADDREF(*aLocalStorage = mLocalStorage);

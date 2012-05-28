@@ -67,12 +67,12 @@ class nsAccessibleWrap : public nsAccessible,
                          public ia2AccessibleComponent,
                          public CAccessibleHyperlink,
                          public CAccessibleValue,
-                         public IAccessible2,
-                         public IEnumVARIANT
+                         public IAccessible2
 {
 public: // construction, destruction
-  nsAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc);
-  virtual ~nsAccessibleWrap();
+  nsAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
+    nsAccessible(aContent, aDoc) { }
+  virtual ~nsAccessibleWrap() { }
 
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
@@ -235,25 +235,6 @@ public: // construction, destruction
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_attributes(
         /* [retval][out] */ BSTR *attributes);
 
-  public: // IEnumVariant
-    // If there are two clients using this at the same time, and they are
-    // each using a different mEnumVariant position it would be bad, because
-    // we have only 1 object and can only keep of mEnumVARIANT position once.
-
-    virtual /* [local] */ HRESULT STDMETHODCALLTYPE Next( 
-        /* [in] */ ULONG celt,
-        /* [length_is][size_is][out] */ VARIANT __RPC_FAR *rgVar,
-        /* [out] */ ULONG __RPC_FAR *pCeltFetched);
-  
-    virtual HRESULT STDMETHODCALLTYPE Skip( 
-        /* [in] */ ULONG celt);
-  
-    virtual HRESULT STDMETHODCALLTYPE Reset( void);
-  
-    virtual HRESULT STDMETHODCALLTYPE Clone( 
-        /* [out] */ IEnumVARIANT __RPC_FAR *__RPC_FAR *ppEnum);
-
-        
   // IDispatch (support of scripting languages like VB)
   virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
 
@@ -300,20 +281,8 @@ public: // construction, destruction
 
   static IDispatch *NativeAccessible(nsIAccessible *aXPAccessible);
 
-  /**
-   * Drops the IEnumVariant current position so that navigation methods
-   * Next() and Skip() doesn't work until Reset() method is called. The method
-   * is used when children of the accessible are changed.
-   */
-  void UnattachIEnumVariant();
-
 protected:
   virtual nsresult FirePlatformEvent(AccEvent* aEvent);
-
-  // mEnumVARIANTPosition not the current accessible's position, but a "cursor" of 
-  // where we are in the current list of children, with respect to
-  // nsIEnumVariant::Reset(), Skip() and Next().
-  PRInt32 mEnumVARIANTPosition;
 
   /**
    * Creates ITypeInfo for LIBID_Accessibility if it's needed and returns it.

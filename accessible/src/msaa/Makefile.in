@@ -18,9 +18,9 @@ LIBXUL_LIBRARY = 1
 CPPSRCS = \
   ApplicationAccessibleWrap.cpp \
   ARIAGridAccessibleWrap.cpp \
+  DocAccessibleWrap.cpp \
   nsAccessNodeWrap.cpp \
   nsAccessibleWrap.cpp \
-  nsDocAccessibleWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
   nsXULMenuAccessibleWrap.cpp \
   nsXULListboxAccessibleWrap.cpp \
@@ -29,18 +29,19 @@ CPPSRCS = \
   nsHTMLImageAccessibleWrap.cpp \
   nsHTMLTableAccessibleWrap.cpp \
   nsWinUtils.cpp \
-  ia2AccessibleAction.cpp \
-  ia2AccessibleComponent.cpp \
-  ia2AccessibleImage.cpp \
   CAccessibleText.cpp \
   CAccessibleEditableText.cpp \
   CAccessibleHyperlink.cpp \
-  ia2AccessibleHypertext.cpp \
-  ia2AccessibleRelation.cpp \
   CAccessibleTable.cpp \
   CAccessibleTableCell.cpp \
   CAccessibleValue.cpp \
   Compatibility.cpp \
+  EnumVariant.cpp \
+  ia2AccessibleAction.cpp \
+  ia2AccessibleComponent.cpp \
+  ia2AccessibleImage.cpp \
+  ia2AccessibleHypertext.cpp \
+  ia2AccessibleRelation.cpp \
   RootAccessibleWrap.cpp \
   TextLeafAccessibleWrap.cpp \
   $(NULL)

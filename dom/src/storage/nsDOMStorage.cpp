@@ -5,8 +5,10 @@
 
 #include "StorageChild.h"
 #include "StorageParent.h"
+#include "mozilla/dom/ContentChild.h"
 #include "nsXULAppAPI.h"
 using mozilla::dom::StorageChild;
+using mozilla::dom::ContentChild;
 
 #include "prnetdb.h"
 #include "nsCOMPtr.h"
@@ -219,7 +221,6 @@ nsSessionStorageEntry::~nsSessionStorageEntry()
 nsDOMStorageManager* nsDOMStorageManager::gStorageManager;
 
 nsDOMStorageManager::nsDOMStorageManager()
-  : mInPrivateBrowsing(false)
 {
 }
 
@@ -252,8 +253,6 @@ nsDOMStorageManager::Initialize()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = os->AddObserver(gStorageManager, "offline-app-removed", true);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = os->AddObserver(gStorageManager, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
-  NS_ENSURE_SUCCESS(rv, rv);
   rv = os->AddObserver(gStorageManager, "profile-after-change", true);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = os->AddObserver(gStorageManager, "perm-changed", true);
@@ -264,6 +263,8 @@ nsDOMStorageManager::Initialize()
   rv = os->AddObserver(gStorageManager, "profile-before-change", true);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = os->AddObserver(gStorageManager, NS_DOMSTORAGE_FLUSH_TIMER_TOPIC, true);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = os->AddObserver(gStorageManager, "last-pb-context-exited", true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -361,10 +362,6 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
                              const PRUnichar *aData)
 {
   if (!strcmp(aTopic, "profile-after-change")) {
-    nsCOMPtr<nsIPrivateBrowsingService> pbs =
-      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-    if (pbs)
-      pbs->GetPrivateBrowsingEnabled(&gStorageManager->mInPrivateBrowsing);
   }
   else if (!strcmp(aTopic, "offline-app-removed")) {
     nsresult rv = DOMStorageImpl::InitDB();
@@ -383,16 +380,6 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     rv = GetOfflineDomains(domains);
     NS_ENSURE_SUCCESS(rv, rv);
     return DOMStorageImpl::gStorageDB->RemoveOwners(domains, true, false);
-  } else if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
-    mStorages.EnumerateEntries(ClearStorage, nsnull);
-    if (!nsCRT::strcmp(aData, NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).get()))
-      mInPrivateBrowsing = true;
-    else if (!nsCRT::strcmp(aData, NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).get()))
-      mInPrivateBrowsing = false;
-    nsresult rv = DOMStorageImpl::InitDB();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return DOMStorageImpl::gStorageDB->DropPrivateBrowsingStorages();
   } else if (!strcmp(aTopic, "perm-changed")) {
     // Check for cookie permission change
     nsCOMPtr<nsIPermission> perm(do_QueryInterface(aSubject));
@@ -471,6 +458,10 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                        "DOMStorage: temporary table commit failed");
     }
+  } else if (!strcmp(aTopic, "last-pb-context-exited")) {
+    if (DOMStorageImpl::gStorageDB) {
+      return DOMStorageImpl::gStorageDB->DropPrivateBrowsingStorages();
+    }
   }
 
   return NS_OK;
@@ -484,7 +475,7 @@ nsDOMStorageManager::GetUsage(const nsAString& aDomain,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DOMStorageImpl::gStorageDB->GetUsage(NS_ConvertUTF16toUTF8(aDomain),
-                                              false, aUsage);
+                                              false, aUsage, false);
 }
 
 NS_IMETHODIMP
@@ -502,6 +493,7 @@ nsDOMStorageManager::ClearOfflineApps()
 NS_IMETHODIMP
 nsDOMStorageManager::GetLocalStorageForPrincipal(nsIPrincipal *aPrincipal,
                                                  const nsSubstring &aDocumentURI,
+                                                 bool aPrivate,
                                                  nsIDOMStorage **aResult)
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
@@ -513,7 +505,7 @@ nsDOMStorageManager::GetLocalStorageForPrincipal(nsIPrincipal *aPrincipal,
   if (!storage)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = storage->InitAsLocalStorage(aPrincipal, aDocumentURI);
+  rv = storage->InitAsLocalStorage(aPrincipal, aDocumentURI, aPrivate);
   if (NS_FAILED(rv))
     return rv;
 
@@ -570,8 +562,18 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorageObsolete)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageObsolete)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMStorage)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StorageObsolete)
 NS_INTERFACE_MAP_END
+
+NS_IMETHODIMP
+nsDOMStorage::GetInterface(const nsIID & aIID, void **result)
+{
+  nsresult rv = mStorageImpl->QueryInterface(aIID, result);
+  if (NS_SUCCEEDED(rv))
+    return rv;
+  return QueryInterface(aIID, result);;
+}
 
 nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -585,6 +587,7 @@ DOMStorageBase::DOMStorageBase()
   , mUseDB(false)
   , mSessionOnly(true)
   , mCanUseChromePersist(false)
+  , mInPrivateBrowsing(false)
 {
 }
 
@@ -597,11 +600,12 @@ DOMStorageBase::DOMStorageBase(DOMStorageBase& aThat)
   , mQuotaETLDplus1DomainDBKey(aThat.mQuotaETLDplus1DomainDBKey)
   , mQuotaDomainDBKey(aThat.mQuotaDomainDBKey)
   , mCanUseChromePersist(aThat.mCanUseChromePersist)
+  , mInPrivateBrowsing(aThat.mInPrivateBrowsing)
 {
 }
 
 void
-DOMStorageBase::InitAsSessionStorage(nsIURI* aDomainURI)
+DOMStorageBase::InitAsSessionStorage(nsIURI* aDomainURI, bool aPrivate)
 {
   // No need to check for a return value. If this would fail we would not get
   // here as we call GetPrincipalURIAndHost (nsDOMStorage.cpp:88) from
@@ -614,11 +618,13 @@ DOMStorageBase::InitAsSessionStorage(nsIURI* aDomainURI)
   mScopeDBKey.Truncate();
   mQuotaDomainDBKey.Truncate();
   mStorageType = nsPIDOMStorage::SessionStorage;
+  mInPrivateBrowsing = aPrivate;
 }
 
 void
 DOMStorageBase::InitAsLocalStorage(nsIURI* aDomainURI,
-                                   bool aCanUseChromePersist)
+                                   bool aCanUseChromePersist,
+                                   bool aPrivate)
 {
   // No need to check for a return value. If this would fail we would not get
   // here as we call GetPrincipalURIAndHost (nsDOMStorage.cpp:88) from
@@ -642,6 +648,7 @@ DOMStorageBase::InitAsLocalStorage(nsIURI* aDomainURI,
                                                 true, true, mQuotaETLDplus1DomainDBKey);
   mCanUseChromePersist = aCanUseChromePersist;
   mStorageType = nsPIDOMStorage::LocalStorage;
+  mInPrivateBrowsing = aPrivate;
 }
 
 PLDHashOperator
@@ -667,7 +674,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMStorageImpl)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMStorageImpl)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMStorageImpl)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIPrivacyTransitionObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrivacyTransitionObserver)
 NS_INTERFACE_MAP_END
 
 DOMStorageImpl::DOMStorageImpl(nsDOMStorage* aStorage)
@@ -723,7 +732,8 @@ DOMStorageImpl::InitDB()
 
 void
 DOMStorageImpl::InitFromChild(bool aUseDB, bool aCanUseChromePersist,
-                              bool aSessionOnly, const nsACString& aDomain,
+                              bool aSessionOnly, bool aPrivate,
+                              const nsACString& aDomain,
                               const nsACString& aScopeDBKey,
                               const nsACString& aQuotaDomainDBKey,
                               const nsACString& aQuotaETLDplus1DomainDBKey,
@@ -732,6 +742,7 @@ DOMStorageImpl::InitFromChild(bool aUseDB, bool aCanUseChromePersist,
   mUseDB = aUseDB;
   mCanUseChromePersist = aCanUseChromePersist;
   mSessionOnly = aSessionOnly;
+  mInPrivateBrowsing = aPrivate;
   mDomain = aDomain;
   mScopeDBKey = aScopeDBKey;
   mQuotaDomainDBKey = aQuotaDomainDBKey;
@@ -746,16 +757,17 @@ DOMStorageImpl::SetSessionOnly(bool aSessionOnly)
 }
 
 void
-DOMStorageImpl::InitAsSessionStorage(nsIURI* aDomainURI)
+DOMStorageImpl::InitAsSessionStorage(nsIURI* aDomainURI, bool aPrivate)
 {
-  DOMStorageBase::InitAsSessionStorage(aDomainURI);
+  DOMStorageBase::InitAsSessionStorage(aDomainURI, aPrivate);
 }
 
 void
 DOMStorageImpl::InitAsLocalStorage(nsIURI* aDomainURI,
-                                   bool aCanUseChromePersist)
+                                   bool aCanUseChromePersist,
+                                   bool aPrivate)
 {
-  DOMStorageBase::InitAsLocalStorage(aDomainURI, aCanUseChromePersist);
+  DOMStorageBase::InitAsLocalStorage(aDomainURI, aCanUseChromePersist, aPrivate);
 }
 
 bool
@@ -765,7 +777,7 @@ DOMStorageImpl::CacheStoragePermissions()
   // All the correct checks have been done on the child, so we just need to
   // make sure that our session-only status is correctly updated.
   if (!mOwner)
-    return nsDOMStorage::CanUseStorage(&mSessionOnly);
+    return CanUseStorage();
   
   return mOwner->CacheStoragePermissions();
 }
@@ -1255,6 +1267,16 @@ DOMStorageImpl::Clear(bool aCallerSecure, PRInt32* aOldCount)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DOMStorageImpl::PrivateModeChanged(bool enabled)
+{
+  mInPrivateBrowsing = enabled;
+  CanUseStorage(); // cause mSessionOnly to update as well
+  mItems.Clear();
+  mItemsCachedVersion = 0;
+  return NS_OK;
+}
+
 nsDOMStorage::nsDOMStorage()
   : mStorageType(nsPIDOMStorage::Unknown)
   , mEventBroadcaster(nsnull)
@@ -1313,7 +1335,8 @@ GetDomainURI(nsIPrincipal *aPrincipal, bool aIncludeDomain, nsIURI **_domain)
 }
 
 nsresult
-nsDOMStorage::InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI)
+nsDOMStorage::InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI,
+                                   bool aPrivate)
 {
   nsCOMPtr<nsIURI> domainURI;
   nsresult rv = GetDomainURI(aPrincipal, true, getter_AddRefs(domainURI));
@@ -1324,12 +1347,13 @@ nsDOMStorage::InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &
 
   mStorageType = SessionStorage;
 
-  mStorageImpl->InitAsSessionStorage(domainURI);
+  mStorageImpl->InitAsSessionStorage(domainURI, aPrivate);
   return NS_OK;
 }
 
 nsresult
-nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI)
+nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI,
+                                 bool aPrivate)
 {
   nsCOMPtr<nsIURI> domainURI;
   nsresult rv = GetDomainURI(aPrincipal, false, getter_AddRefs(domainURI));
@@ -1346,18 +1370,25 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aD
     canUseChromePersist = URICanUseChromePersist(URI);
   }
   
-  mStorageImpl->InitAsLocalStorage(domainURI, canUseChromePersist);
+  mStorageImpl->InitAsLocalStorage(domainURI, canUseChromePersist, aPrivate);
   return NS_OK;
+}
+
+bool
+DOMStorageBase::CanUseStorage()
+{
+  return nsDOMStorage::CanUseStorage(this);
 }
 
 //static
 bool
-nsDOMStorage::CanUseStorage(bool* aSessionOnly)
+nsDOMStorage::CanUseStorage(DOMStorageBase* aStorage /* = NULL */)
 {
-  // check if the calling domain can use storage. Downgrade to session
-  // only if only session storage may be used.
-  NS_ASSERTION(aSessionOnly, "null session flag");
-  *aSessionOnly = false;
+  if (aStorage) {
+    // check if the calling domain can use storage. Downgrade to session
+    // only if only session storage may be used.
+    aStorage->mSessionOnly = false;
+  }
 
   if (!Preferences::GetBool(kStorageEnabled)) {
     return false;
@@ -1398,8 +1429,9 @@ nsDOMStorage::CanUseStorage(bool* aSessionOnly)
   // mode to prevent detection of being in private browsing mode and ensuring
   // that there will be no traces left.
   if (perm == nsICookiePermission::ACCESS_SESSION ||
-      nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode()) {
-    *aSessionOnly = true;
+      (aStorage && aStorage->IsPrivate())) {
+    if (aStorage)
+      aStorage->mSessionOnly = true;
   }
   else if (perm != nsIPermissionManager::ALLOW_ACTION) {
     PRUint32 cookieBehavior = Preferences::GetUint(kCookiesBehavior);
@@ -1411,8 +1443,8 @@ nsDOMStorage::CanUseStorage(bool* aSessionOnly)
         !URICanUseChromePersist(subjectURI))
       return false;
 
-    if (lifetimePolicy == ACCEPT_SESSION)
-      *aSessionOnly = true;
+    if (lifetimePolicy == ACCEPT_SESSION && aStorage)
+      aStorage->mSessionOnly = true;
   }
 
   return true;
@@ -1424,7 +1456,7 @@ nsDOMStorage::CacheStoragePermissions()
   // Bug 488446, disallowing storage use when in session only mode.
   // This is temporary fix before we find complete solution for storage
   // behavior in private browsing mode or session-only cookies mode.
-  if (!CanUseStorage(&mStorageImpl->mSessionOnly))
+  if (!mStorageImpl->CanUseStorage())
     return false;
 
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
@@ -1701,8 +1733,18 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage2)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorage)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMStorage)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Storage)
 NS_INTERFACE_MAP_END
+
+NS_IMETHODIMP
+nsDOMStorage2::GetInterface(const nsIID & aIID, void **result)
+{
+  nsresult rv = mStorage->GetInterface(aIID, result);
+  if (NS_SUCCEEDED(rv))
+    return rv;
+  return QueryInterface(aIID, result);;
+}
 
 nsDOMStorage2::nsDOMStorage2()
 {
@@ -1715,7 +1757,8 @@ nsDOMStorage2::nsDOMStorage2(nsDOMStorage2& aThat)
 }
 
 nsresult
-nsDOMStorage2::InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI)
+nsDOMStorage2::InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI,
+                                    bool aPrivate)
 {
   mStorage = new nsDOMStorage();
   if (!mStorage)
@@ -1724,11 +1767,12 @@ nsDOMStorage2::InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring 
   mPrincipal = aPrincipal;
   mDocumentURI = aDocumentURI;
 
-  return mStorage->InitAsSessionStorage(aPrincipal, aDocumentURI);
+  return mStorage->InitAsSessionStorage(aPrincipal, aDocumentURI, aPrivate);
 }
 
 nsresult
-nsDOMStorage2::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI)
+nsDOMStorage2::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI,
+                                  bool aPrivate)
 {
   mStorage = new nsDOMStorage();
   if (!mStorage)
@@ -1737,7 +1781,7 @@ nsDOMStorage2::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &a
   mPrincipal = aPrincipal;
   mDocumentURI = aDocumentURI;
 
-  return mStorage->InitAsLocalStorage(aPrincipal, aDocumentURI);
+  return mStorage->InitAsLocalStorage(aPrincipal, aDocumentURI, aPrivate);
 }
 
 already_AddRefed<nsIDOMStorage>
@@ -1907,7 +1951,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMStorageItem)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorageItem)
   {
-    cb.NoteXPCOMChild((nsISupports*) tmp->mStorage);
+    cb.NoteXPCOMChild(tmp->mStorage);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 

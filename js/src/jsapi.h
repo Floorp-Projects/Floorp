@@ -2200,8 +2200,10 @@ class AutoIdRooter : private AutoGCRooter
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
 #define JSFUN_HAS_REST          0x0100  /* function has a rest (...) parameter */
-#define JSFUN_CONSTRUCTOR     0x0200    /* native that can be called as a ctor
+#define JSFUN_CONSTRUCTOR       0x0200  /* native that can be called as a ctor
                                            without creating a this object */
+#define JSFUN_HAS_DEFAULTS      0x0400  /* function has at least one default
+                                           parameter */
 
 #define JSFUN_FLAGS_MASK      0x07f8    /* overlay JSFUN_* attributes --
                                            bits 12-15 are used internally to
