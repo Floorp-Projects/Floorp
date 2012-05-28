@@ -32,11 +32,6 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class FileInfo;
 
-enum FactoryPrivilege {
-  Content,
-  Chrome
-};
-
 struct StructuredCloneReadInfo {
   void Swap(StructuredCloneReadInfo& aCloneReadInfo) {
     mCloneBuffer.swap(aCloneReadInfo.mCloneBuffer);
