@@ -105,6 +105,11 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     // The shaders run on the GPU directly, the vertex shader is only applying the
     // matrix transform detailed above
+
+    // Note we flip the y-coordinate in the vertex shader from a
+    // coordinate system with (0,0) in the top left to one with (0,0) in
+    // the bottom left.
+
     public static final String DEFAULT_VERTEX_SHADER =
         "uniform mat4 uTMatrix;\n" +
         "attribute vec4 vPosition;\n" +
@@ -112,18 +117,16 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         "varying vec2 vTexCoord;\n" +
         "void main() {\n" +
         "    gl_Position = uTMatrix * vPosition;\n" +
-        "    vTexCoord = aTexCoord;\n" +
+        "    vTexCoord.x = aTexCoord.x;\n" +
+        "    vTexCoord.y = 1.0 - aTexCoord.y;\n" +
         "}\n";
 
-    // Note we flip the y-coordinate in the fragment shader from a
-    // coordinate system with (0,0) in the top left to one with (0,0) in
-    // the bottom left.
     public static final String DEFAULT_FRAGMENT_SHADER =
         "precision mediump float;\n" +
         "varying vec2 vTexCoord;\n" +
         "uniform sampler2D sTexture;\n" +
         "void main() {\n" +
-        "    gl_FragColor = texture2D(sTexture, vec2(vTexCoord.x, 1.0 - vTexCoord.y));\n" +
+        "    gl_FragColor = texture2D(sTexture, vTexCoord);\n" +
         "}\n";
 
     public void setCheckerboardBitmap(Bitmap bitmap, float pageWidth, float pageHeight) {
