@@ -13,7 +13,7 @@
 //    1) Compose a frame within 15ms of receiving a ScheduleCompositeCall
 //    2) Unless a frame was composited within the throttle threshold in
 //       which the deadline will be 15ms + throttle threshold
-#define COMPOSITOR_PERFORMANCE_WARNING
+//#define COMPOSITOR_PERFORMANCE_WARNING
 
 #include "mozilla/layers/PCompositorParent.h"
 #include "mozilla/layers/PLayersParent.h"
