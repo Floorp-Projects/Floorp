@@ -614,8 +614,8 @@ struct ParseNode {
                 ObjectBox     *objbox;  /* block or regexp object */
             };
             union {
-                ParseNode    *expr;     /* function body, var initializer, or
-                                           base object of PNK_DOT */
+                ParseNode    *expr;     /* function body, var initializer, argument default,
+                                           or base object of PNK_DOT */
                 Definition   *lexdef;   /* lexical definition for this use */
             };
             UpvarCookie cookie;         /* upvar cookie with absolute frame

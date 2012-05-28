@@ -71,6 +71,7 @@ browser.jar:
 #endif
 *       content/browser/openLocation.js               (content/openLocation.js)
 *       content/browser/openLocation.xul              (content/openLocation.xul)
+*       content/browser/safeMode.css                  (content/safeMode.css)
 *       content/browser/safeMode.js                   (content/safeMode.js)
 *       content/browser/safeMode.xul                  (content/safeMode.xul)
 *       content/browser/sanitize.js                   (content/sanitize.js)

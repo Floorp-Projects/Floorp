@@ -54,6 +54,7 @@ nsContextMenu.prototype = {
     this.initSaveItems();
     this.initClipboardItems();
     this.initMediaPlayerItems();
+    this.initLeaveDOMFullScreenItems();
   },
 
   initPageMenuSeparator: function CM_initPageMenuSeparator() {
@@ -153,6 +154,16 @@ nsContextMenu.prototype = {
 
     // XXX: Stop is determined in browser.js; the canStop broadcaster is broken
     //this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
+  },
+
+  initLeaveDOMFullScreenItems: function CM_initLeaveFullScreenItem() {
+    // only show the option if the user is in DOM fullscreen
+    var shouldShow = (this.target.ownerDocument.mozFullScreenElement != null);
+    this.showItem("context-leave-dom-fullscreen", shouldShow);
+
+    // Explicitly show if in DOM fullscreen, but do not hide it has already been shown
+    if (shouldShow)
+        this.showItem("context-media-sep-commands", true);
   },
 
   initSaveItems: function CM_initSaveItems() {
@@ -817,6 +828,10 @@ nsContextMenu.prototype = {
     let video = this.target;
     if (document.mozFullScreenEnabled)
       video.mozRequestFullScreen();
+  },
+
+  leaveDOMFullScreen: function() {
+    document.mozCancelFullScreen();
   },
 
   // Change current window to the URL of the background image.

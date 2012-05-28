@@ -131,6 +131,18 @@ function run_test()
   run_wrapped_integer_tests(library, ctypes.intptr_t, "intptr_t", ctypes.size_t.size, true,
                             ctypes.Int64, "ctypes.Int64", slimits);
 
+  if (ctypes.off_t.size == 8) {
+    slimits = s64limits;
+    ulimits = u64limits;
+  } else if (ctypes.off_t.size == 4) {
+    slimits = s32limits;
+    ulimits = u32limits;
+  } else {
+    do_throw("ctypes.off_t is not 4 or 8 bytes");
+  }
+  run_wrapped_integer_tests(library, ctypes.off_t, "off_t", ctypes.off_t.size, true,
+                            ctypes.Int64, "ctypes.Int64", slimits);
+
   // Test the character types.
   run_char_tests(library, ctypes.char, "char", 1, true, [-0x80, 0x7f]);
   run_char_tests(library, ctypes.signed_char, "signed_char", 1, true, [-0x80, 0x7f]);

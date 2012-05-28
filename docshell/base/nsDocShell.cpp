@@ -2400,7 +2400,7 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
         if (!pistorage)
             return NS_ERROR_FAILURE;
 
-        rv = pistorage->InitAsSessionStorage(aPrincipal, aDocumentURI);
+        rv = pistorage->InitAsSessionStorage(aPrincipal, aDocumentURI, mInPrivateBrowsing);
         if (NS_FAILED(rv))
             return rv;
 

@@ -74,7 +74,7 @@ AccIterator::IteratorState::IteratorState(nsAccessible *aParent,
 ////////////////////////////////////////////////////////////////////////////////
 
 RelatedAccIterator::
-  RelatedAccIterator(nsDocAccessible* aDocument, nsIContent* aDependentContent,
+  RelatedAccIterator(DocAccessible* aDocument, nsIContent* aDependentContent,
                      nsIAtom* aRelAttr) :
   mDocument(aDocument), mRelAttr(aRelAttr), mProviders(nsnull),
   mBindingParent(nsnull), mIndex(0)
@@ -95,7 +95,7 @@ RelatedAccIterator::Next()
     return nsnull;
 
   while (mIndex < mProviders->Length()) {
-    nsDocAccessible::AttrRelProvider* provider = (*mProviders)[mIndex++];
+    DocAccessible::AttrRelProvider* provider = (*mProviders)[mIndex++];
 
     // Return related accessible for the given attribute and if the provider
     // content is in the same binding in the case of XBL usage.
@@ -126,7 +126,7 @@ RelatedAccIterator::Next()
 ////////////////////////////////////////////////////////////////////////////////
 
 HTMLLabelIterator::
-  HTMLLabelIterator(nsDocAccessible* aDocument, const nsAccessible* aAccessible,
+  HTMLLabelIterator(DocAccessible* aDocument, const nsAccessible* aAccessible,
                     LabelFilter aFilter) :
   mRelIter(aDocument, aAccessible->GetContent(), nsGkAtoms::_for),
   mAcc(aAccessible), mLabelFilter(aFilter)
@@ -177,7 +177,7 @@ HTMLLabelIterator::Next()
 ////////////////////////////////////////////////////////////////////////////////
 
 HTMLOutputIterator::
-HTMLOutputIterator(nsDocAccessible* aDocument, nsIContent* aElement) :
+HTMLOutputIterator(DocAccessible* aDocument, nsIContent* aElement) :
   mRelIter(aDocument, aElement, nsGkAtoms::_for)
 {
 }
@@ -200,7 +200,7 @@ HTMLOutputIterator::Next()
 ////////////////////////////////////////////////////////////////////////////////
 
 XULLabelIterator::
-  XULLabelIterator(nsDocAccessible* aDocument, nsIContent* aElement) :
+  XULLabelIterator(DocAccessible* aDocument, nsIContent* aElement) :
   mRelIter(aDocument, aElement, nsGkAtoms::control)
 {
 }
@@ -223,7 +223,7 @@ XULLabelIterator::Next()
 ////////////////////////////////////////////////////////////////////////////////
 
 XULDescriptionIterator::
-  XULDescriptionIterator(nsDocAccessible* aDocument, nsIContent* aElement) :
+  XULDescriptionIterator(DocAccessible* aDocument, nsIContent* aElement) :
   mRelIter(aDocument, aElement, nsGkAtoms::control)
 {
 }
@@ -245,7 +245,7 @@ XULDescriptionIterator::Next()
 ////////////////////////////////////////////////////////////////////////////////
 
 IDRefsIterator::
-  IDRefsIterator(nsDocAccessible* aDoc, nsIContent* aContent,
+  IDRefsIterator(DocAccessible* aDoc, nsIContent* aContent,
                  nsIAtom* aIDRefsAttr) :
   mContent(aContent), mDoc(aDoc), mCurrIdx(0)
 {

@@ -8,7 +8,7 @@
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
 #include "XULFormControlAccessible.h"
@@ -39,7 +39,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenuitemAccessible::
-  nsXULMenuitemAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULMenuitemAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
 }
@@ -368,7 +368,7 @@ nsXULMenuitemAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenuSeparatorAccessible::
-  nsXULMenuSeparatorAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULMenuSeparatorAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsXULMenuitemAccessible(aContent, aDoc)
 {
 }
@@ -414,7 +414,7 @@ nsXULMenuSeparatorAccessible::ActionCount()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenupopupAccessible::
-  nsXULMenupopupAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULMenupopupAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   XULSelectControlAccessible(aContent, aDoc)
 {
   nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetFrame());
@@ -512,7 +512,7 @@ nsXULMenupopupAccessible::AreItemsOperable() const
 nsAccessible*
 nsXULMenupopupAccessible::ContainerWidget() const
 {
-  nsDocAccessible* document = Document();
+  DocAccessible* document = Document();
 
   nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetFrame());
   while (menuPopupFrame) {
@@ -550,7 +550,7 @@ nsXULMenupopupAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenubarAccessible::
-  nsXULMenubarAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULMenubarAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
 }

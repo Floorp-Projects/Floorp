@@ -23,7 +23,7 @@ class nsLeafAccessible : public nsAccessibleWrap
 {
 public:
 
-  nsLeafAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsLeafAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -49,7 +49,7 @@ class nsLinkableAccessible : public nsAccessibleWrap
 public:
   enum { eAction_Jump = 0 };
 
-  nsLinkableAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsLinkableAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -91,7 +91,7 @@ protected:
 class nsEnumRoleAccessible : public nsAccessibleWrap
 {
 public:
-  nsEnumRoleAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+  nsEnumRoleAccessible(nsIContent* aContent, DocAccessible* aDoc,
                        mozilla::a11y::role aRole);
   virtual ~nsEnumRoleAccessible() { }
 

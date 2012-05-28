@@ -86,8 +86,8 @@ child:
     NotifySwitchChange(SwitchEvent aEvent);
 
 parent:
-    Vibrate(uint32[] pattern, uint64[] id, PBrowser browser);
-    CancelVibrate(uint64[] id, PBrowser browser);
+    Vibrate(uint32_t[] pattern, uint64_t[] id, PBrowser browser);
+    CancelVibrate(uint64_t[] id, PBrowser browser);
 
     EnableBatteryNotifications();
     DisableBatteryNotifications();

@@ -61,7 +61,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED1(RootAccessible, nsDocAccessible, nsIAccessibleDocument)
+NS_IMPL_ISUPPORTS_INHERITED1(RootAccessible, DocAccessible, nsIAccessibleDocument)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/destructor
@@ -69,7 +69,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(RootAccessible, nsDocAccessible, nsIAccessibleDocum
 RootAccessible::
   RootAccessible(nsIDocument* aDocument, nsIContent* aRootContent,
                  nsIPresShell* aPresShell) :
-  nsDocAccessibleWrap(aDocument, aRootContent, aPresShell)
+  DocAccessibleWrap(aDocument, aRootContent, aPresShell)
 {
   mFlags |= eRootAccessible;
 }
@@ -107,7 +107,7 @@ RootAccessible::NativeRole()
                   rootElm->Tag() == nsGkAtoms::wizard))
     return roles::DIALOG;
 
-  return nsDocAccessibleWrap::NativeRole();
+  return DocAccessibleWrap::NativeRole();
 }
 
 // RootAccessible protected member
@@ -137,7 +137,7 @@ RootAccessible::GetChromeFlags()
 PRUint64
 RootAccessible::NativeState()
 {
-  PRUint64 state = nsDocAccessibleWrap::NativeState();
+  PRUint64 state = DocAccessibleWrap::NativeState();
   if (state & states::DEFUNCT)
     return state;
 
@@ -213,7 +213,7 @@ RootAccessible::AddEventListeners()
     mCaretAccessible = new nsCaretAccessible(this);
   }
 
-  return nsDocAccessible::AddEventListeners();
+  return DocAccessible::AddEventListeners();
 }
 
 nsresult
@@ -231,7 +231,7 @@ RootAccessible::RemoveEventListeners()
 
   // Do this before removing clearing caret accessible, so that it can use
   // shutdown the caret accessible's selection listener
-  nsDocAccessible::RemoveEventListeners();
+  DocAccessible::RemoveEventListeners();
 
   if (mCaretAccessible) {
     mCaretAccessible->Shutdown();
@@ -251,7 +251,7 @@ RootAccessible::GetCaretAccessible()
 }
 
 void
-RootAccessible::DocumentActivated(nsDocAccessible* aDocument)
+RootAccessible::DocumentActivated(DocAccessible* aDocument)
 {
 }
 
@@ -268,7 +268,7 @@ RootAccessible::HandleEvent(nsIDOMEvent* aDOMEvent)
   if (!origTargetNode)
     return NS_OK;
 
-  nsDocAccessible* document =
+  DocAccessible* document =
     GetAccService()->GetDocAccessible(origTargetNode->OwnerDoc());
 
   if (document) {
@@ -320,7 +320,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     return;
   }
 
-  nsDocAccessible* targetDocument = GetAccService()->
+  DocAccessible* targetDocument = GetAccService()->
     GetDocAccessible(origTargetNode->OwnerDoc());
   NS_ASSERTION(targetDocument, "No document while accessible is in document?!");
 
@@ -501,7 +501,7 @@ RootAccessible::Shutdown()
   if (!PresShell())
     return;  // Already shutdown
 
-  nsDocAccessibleWrap::Shutdown();
+  DocAccessibleWrap::Shutdown();
 }
 
 // nsIAccessible method
@@ -509,7 +509,7 @@ Relation
 RootAccessible::RelationByType(PRUint32 aType)
 {
   if (!mDocument || aType != nsIAccessibleRelation::RELATION_EMBEDS)
-    return nsDocAccessibleWrap::RelationByType(aType);
+    return DocAccessibleWrap::RelationByType(aType);
 
   nsIDOMWindow* rootWindow = mDocument->GetWindow();
   if (rootWindow) {
@@ -521,7 +521,7 @@ RootAccessible::RelationByType(PRUint32 aType)
       nsCOMPtr<nsIDocument> contentDocumentNode =
         do_QueryInterface(contentDOMDocument);
       if (contentDocumentNode) {
-        nsDocAccessible* contentDocument =
+        DocAccessible* contentDocument =
           GetAccService()->GetDocAccessible(contentDocumentNode);
         if (contentDocument)
           return Relation(contentDocument);
@@ -579,7 +579,7 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
   // Get popup accessible. There are cases when popup element isn't accessible
   // but an underlying widget is and behaves like popup, an example is
   // autocomplete popups.
-  nsDocAccessible* document = nsAccUtils::GetDocAccessibleFor(aPopupNode);
+  DocAccessible* document = nsAccUtils::GetDocAccessibleFor(aPopupNode);
   if (!document)
     return;
 

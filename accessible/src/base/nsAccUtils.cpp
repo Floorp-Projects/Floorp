@@ -9,7 +9,7 @@
 #include "nsAccessibilityService.h"
 #include "nsARIAMap.h"
 #include "nsCoreUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "nsHyperTextAccessible.h"
 #include "nsIAccessibleTypes.h"
 #include "Role.h"
@@ -273,7 +273,7 @@ nsAccUtils::GetTextAccessibleFromSelection(nsISelection* aSelection)
     nsCoreUtils::GetDOMNodeFromDOMPoint(focusNode, focusOffset);
 
   // Get text accessible containing the result node.
-  nsDocAccessible* doc = 
+  DocAccessible* doc = 
     GetAccService()->GetDocAccessible(resultNode->OwnerDoc());
   nsAccessible* accessible = doc ? 
     doc->GetAccessibleOrContainer(resultNode) : nsnull;
@@ -372,7 +372,7 @@ nsAccUtils::GetScreenCoordsForWindow(nsAccessNode *aAccessNode)
 nsIntPoint
 nsAccUtils::GetScreenCoordsForParent(nsAccessNode *aAccessNode)
 {
-  nsDocAccessible* document = aAccessNode->Document();
+  DocAccessible* document = aAccessNode->Document();
   nsAccessible* parent = document->GetContainerAccessible(aAccessNode->GetNode());
   if (!parent)
     return nsIntPoint(0, 0);

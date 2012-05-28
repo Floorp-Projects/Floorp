@@ -8,7 +8,7 @@
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
 #include "TextAttrs.h"
@@ -41,7 +41,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHyperTextAccessible::
-  nsHyperTextAccessible(nsIContent* aNode, nsDocAccessible* aDoc) :
+  nsHyperTextAccessible(nsIContent* aNode, DocAccessible* aDoc) :
   nsAccessibleWrap(aNode, aDoc)
 {
   mFlags |= eHyperTextAccessible;
