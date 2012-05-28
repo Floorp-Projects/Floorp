@@ -9,8 +9,6 @@
 #include "Role.h"
 #include "States.h"
 
-#include "nsIDOMDocument.h"
-#include "nsIDOMDocumentXBL.h"
 #include "nsIFrame.h"
 
 using namespace mozilla::a11y;
@@ -42,19 +40,20 @@ nsXULSliderAccessible::NativeRole()
 PRUint64
 nsXULSliderAccessible::NativeState()
 {
-  PRUint64 states = nsAccessibleWrap::NativeState();
+  PRUint64 state = nsAccessibleWrap::NativeState();
 
-  nsCOMPtr<nsIContent> sliderContent(GetSliderNode());
-  NS_ENSURE_STATE(sliderContent);
+  nsIContent* sliderElm = GetSliderElement();
+  if (!sliderElm)
+    return state;
 
-  nsIFrame *frame = sliderContent->GetPrimaryFrame();
+  nsIFrame *frame = sliderElm->GetPrimaryFrame();
   if (frame && frame->IsFocusable())
-    states |= states::FOCUSABLE;
+    state |= states::FOCUSABLE;
 
   if (FocusMgr()->IsFocused(this))
-    states |= states::FOCUSED;
+    state |= states::FOCUSED;
 
-  return states;
+  return state;
 }
 
 // nsIAccessible
@@ -87,10 +86,10 @@ nsXULSliderAccessible::DoAction(PRUint8 aIndex)
 {
   NS_ENSURE_ARG(aIndex == 0);
 
-  nsCOMPtr<nsIContent> sliderContent(GetSliderNode());
-  NS_ENSURE_STATE(sliderContent);
+  nsIContent* sliderElm = GetSliderElement();
+  if (sliderElm)
+    DoCommand(sliderElm);
 
-  DoCommand(sliderContent);
   return NS_OK;
 }
 
@@ -165,30 +164,17 @@ nsXULSliderAccessible::CanHaveAnonChildren()
 
 // Utils
 
-already_AddRefed<nsIContent>
-nsXULSliderAccessible::GetSliderNode()
+nsIContent*
+nsXULSliderAccessible::GetSliderElement()
 {
-  if (IsDefunct())
-    return nsnull;
-
   if (!mSliderNode) {
-    nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(mContent->OwnerDoc()));
-    if (!xblDoc)
-      return nsnull;
-
     // XXX: we depend on anonymous content.
-    nsCOMPtr<nsIDOMElement> domElm(do_QueryInterface(mContent));
-    if (!domElm)
-      return nsnull;
-
-    xblDoc->GetAnonymousElementByAttribute(domElm, NS_LITERAL_STRING("anonid"),
-                                           NS_LITERAL_STRING("slider"),
-                                           getter_AddRefs(mSliderNode));
+    mSliderNode = mContent->OwnerDoc()->
+      GetAnonymousElementByAttribute(mContent, nsGkAtoms::anonid,
+                                     NS_LITERAL_STRING("slider"));
   }
 
-  nsIContent *sliderNode = nsnull;
-  nsresult rv = CallQueryInterface(mSliderNode, &sliderNode);
-  return NS_FAILED(rv) ? nsnull : sliderNode;
+  return mSliderNode;
 }
 
 nsresult
@@ -199,10 +185,10 @@ nsXULSliderAccessible::GetSliderAttr(nsIAtom *aName, nsAString& aValue)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> sliderNode(GetSliderNode());
-  NS_ENSURE_STATE(sliderNode);
+  nsIContent* sliderElm = GetSliderElement();
+  if (sliderElm)
+    sliderElm->GetAttr(kNameSpaceID_None, aName, aValue);
 
-  sliderNode->GetAttr(kNameSpaceID_None, aName, aValue);
   return NS_OK;
 }
 
@@ -212,10 +198,10 @@ nsXULSliderAccessible::SetSliderAttr(nsIAtom *aName, const nsAString& aValue)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> sliderNode(GetSliderNode());
-  NS_ENSURE_STATE(sliderNode);
+  nsIContent* sliderElm = GetSliderElement();
+  if (sliderElm)
+    sliderElm->SetAttr(kNameSpaceID_None, aName, aValue, true);
 
-  sliderNode->SetAttr(kNameSpaceID_None, aName, aValue, true);
   return NS_OK;
 }
 

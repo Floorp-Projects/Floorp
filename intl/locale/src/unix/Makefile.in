@@ -22,7 +22,7 @@ CPPSRCS		= \
 		nsPosixLocale.cpp \
 		$(NULL)
 
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
+ifeq (Android,$(OS_TARGET))
 CPPSRCS		+= nsAndroidCharset.cpp
 else
 CPPSRCS		+= nsUNIXCharset.cpp

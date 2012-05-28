@@ -92,8 +92,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x88d887da, 0xd228, 0x41c2, \
-  { 0xb8, 0x0a, 0x42, 0xec, 0xf0, 0xcb, 0xce, 0x37 } }
+{ 0x7bac702d, 0xca67, 0x4ce1, \
+ { 0x80, 0x3c, 0x35, 0xde, 0x81, 0x26, 0x04, 0x97 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1112,6 +1112,14 @@ public:
    */
   virtual nsresult GetContentListFor(nsIContent* aContent,
                                      nsIDOMNodeList** aResult) = 0;
+
+  /**
+   * See GetAnonymousElementByAttribute on nsIDOMDocumentXBL.
+   */
+  virtual nsIContent*
+    GetAnonymousElementByAttribute(nsIContent* aElement,
+                                   nsIAtom* aAttrName,
+                                   const nsAString& aAttrValue) const = 0;
 
   /**
    * Helper for nsIDOMDocument::elementFromPoint implementation that allows
