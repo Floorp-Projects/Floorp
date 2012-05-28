@@ -120,7 +120,6 @@ public:
   GetIndexedDBQuotaMB();
 
   nsresult EnsureOriginIsInitialized(const nsACString& aOrigin,
-                                     FactoryPrivilege aPrivilege,
                                      nsIFile** aDirectory);
 
   // Determine if the quota is lifted for the Window the current thread is
