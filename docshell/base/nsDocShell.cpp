@@ -4676,7 +4676,7 @@ nsDocShell::Destroy()
 
     if (mScriptGlobal) {
         nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
-        win->SetDocShell(nsnull);
+        win->DetachFromDocShell();
 
         mScriptGlobal = nsnull;
     }
