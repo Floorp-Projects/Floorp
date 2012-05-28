@@ -14,6 +14,7 @@
 #include "nsISVGChildFrame.h"
 #include "nsQueryFrame.h"
 #include "nsRect.h"
+#include "nsSVGUtils.h"
 
 class nsFrameList;
 class nsIContent;

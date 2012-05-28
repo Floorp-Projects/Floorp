@@ -259,6 +259,14 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
   visibility: collapse;
 }
 
+#urlbar[pageproxystate="invalid"] > #identity-box > #identity-box-inner > #identity-icon-labels {
+  visibility: collapse;
+}
+
+#urlbar[pageproxystate="invalid"] > #identity-box {
+  pointer-events: none;
+}
+
 #identity-icon-labels {
   max-width: 18em;
 }

@@ -131,7 +131,7 @@ GfxInfo::GetData()
 
     // only useful for Linux kernel version check for FGLRX driver.
     // assumes X client == X server, which is sad.
-    utsname unameobj;
+    struct utsname unameobj;
     if (!uname(&unameobj))
     {
       mOS.Assign(unameobj.sysname);

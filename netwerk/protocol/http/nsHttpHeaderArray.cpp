@@ -89,17 +89,17 @@ nsHttpHeaderArray::ClearHeader(nsHttpAtom header)
 }
 
 const char *
-nsHttpHeaderArray::PeekHeader(nsHttpAtom header)
+nsHttpHeaderArray::PeekHeader(nsHttpAtom header) const
 {
-    nsEntry *entry = nsnull;
+    const nsEntry *entry = nsnull;
     LookupEntry(header, &entry);
     return entry ? entry->value.get() : nsnull;
 }
 
 nsresult
-nsHttpHeaderArray::GetHeader(nsHttpAtom header, nsACString &result)
+nsHttpHeaderArray::GetHeader(nsHttpAtom header, nsACString &result) const
 {
-    nsEntry *entry = nsnull;
+    const nsEntry *entry = nsnull;
     LookupEntry(header, &entry);
     if (!entry)
         return NS_ERROR_NOT_AVAILABLE;
@@ -196,7 +196,7 @@ nsHttpHeaderArray::Flatten(nsACString &buf, bool pruneProxyHeaders)
 }
 
 const char *
-nsHttpHeaderArray::PeekHeaderAt(PRUint32 index, nsHttpAtom &header)
+nsHttpHeaderArray::PeekHeaderAt(PRUint32 index, nsHttpAtom &header) const
 {
     const nsEntry &entry = mHeaders[index];
 
