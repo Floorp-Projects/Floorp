@@ -1067,6 +1067,19 @@ struct JSPrinter
     }
 };
 
+static bool
+SetPrinterLocalNames(JSContext *cx, JSScript *script, JSPrinter *jp)
+{
+    BindingNames *localNames = NULL;
+    if (script->bindings.count() > 0) {
+        localNames = cx->new_<BindingNames>(cx);
+        if (!localNames || !script->bindings.getLocalNameArray(cx, localNames))
+            return false;
+    }
+    jp->localNames = localNames;
+    return true;
+}
+
 JSPrinter *
 js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
               unsigned indent, JSBool pretty, JSBool grouped, JSBool strict)
@@ -1088,9 +1101,8 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->fun = fun;
     jp->localNames = NULL;
     jp->decompiledOpcodes = NULL;
-    if (fun && fun->isInterpreted() && fun->script()->bindings.count() > 0) {
-        jp->localNames = cx->new_<BindingNames>(cx);
-        if (!jp->localNames || !fun->script()->bindings.getLocalNameArray(cx, jp->localNames)) {
+    if (fun && fun->isInterpreted()) {
+        if (!SetPrinterLocalNames(cx, fun->script(), jp)) {
             js_DestroyPrinter(jp);
             return NULL;
         }
@@ -1741,7 +1753,8 @@ static JSAtom *
 GetArgOrVarAtom(JSPrinter *jp, unsigned slot)
 {
     LOCAL_ASSERT_RV(jp->fun, NULL);
-    LOCAL_ASSERT_RV(slot < jp->fun->script()->bindings.count(), NULL);
+    LOCAL_ASSERT_RV(slot < jp->script->bindings.count(), NULL);
+    LOCAL_ASSERT_RV(jp->script == jp->fun->script(), NULL);
     JSAtom *name = (*jp->localNames)[slot].maybeAtom;
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -4640,7 +4653,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 #if JS_HAS_GENERATOR_EXPRS
                 sn = js_GetSrcNote(jp->script, pc);
                 if (sn && SN_TYPE(sn) == SRC_GENEXP) {
-                    BindingNames *innerLocalNames;
                     BindingNames *outerLocalNames;
                     JSScript *inner, *outer;
                     Vector<DecompiledOpcode> *decompiledOpcodes;
@@ -4656,19 +4668,16 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * to mark before returning.
                      */
                     LifoAllocScope las(&cx->tempLifoAlloc());
-                    if (fun->script()->bindings.count() > 0) {
-                        innerLocalNames = cx->new_<BindingNames>(cx);
-                        if (!innerLocalNames ||
-                            !fun->script()->bindings.getLocalNameArray(cx, innerLocalNames))
-                        {
+                    outerLocalNames = jp->localNames;
+                    if (!SetPrinterLocalNames(cx, fun->script(), jp))
                             return NULL;
-                        }
-                    } else {
-                        innerLocalNames = NULL;
-                    }
+
                     inner = fun->script();
-                    if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner)))
+                    if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner))) {
+                        Foreground::delete_(jp->localNames);
+                        jp->localNames = outerLocalNames;
                         return NULL;
+                    }
                     ss2.inGenExp = JS_TRUE;
 
                     /*
@@ -4680,12 +4689,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      */
                     outer = jp->script;
                     outerfun = jp->fun;
-                    outerLocalNames = jp->localNames;
                     decompiledOpcodes = jp->decompiledOpcodes;
                     LOCAL_ASSERT(UnsignedPtrDiff(pc, outer->code) <= outer->length);
                     jp->script = inner;
                     jp->fun = fun;
-                    jp->localNames = innerLocalNames;
                     jp->decompiledOpcodes = NULL;
 
                     /*
@@ -4696,6 +4703,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                          != NULL;
                     jp->script = outer;
                     jp->fun = outerfun;
+                    Foreground::delete_(jp->localNames);
                     jp->localNames = outerLocalNames;
                     jp->decompiledOpcodes = decompiledOpcodes;
                     if (!ok)
@@ -5400,11 +5408,18 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, unsigned len,
         }
     }
 
-    /* Call recursive subroutine to do the hard work. */
     JSScript *oldscript = jp->script;
+    BindingNames *oldLocalNames = jp->localNames;
+    if (!SetPrinterLocalNames(cx, script, jp))
+        return false;
     jp->script = script;
+
+    /* Call recursive subroutine to do the hard work. */
     bool ok = Decompile(&ss, pc, len) != NULL;
+
     jp->script = oldscript;
+    Foreground::delete_(jp->localNames);
+    jp->localNames = oldLocalNames;
 
     /* If the given code didn't empty the stack, do it now. */
     if (ok && ss.top) {
@@ -5612,7 +5627,6 @@ char *
 js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
                            JSString *fallback)
 {
-    StackFrame *fp;
     JSScript *script;
     jsbytecode *pc;
 
@@ -5629,11 +5643,13 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
     goto do_fallback;
 #endif
 
-    if (!cx->hasfp() || !cx->fp()->isScriptFrame())
+    ScriptFrameIter frameIter(cx);
+    if (frameIter.done())
         goto do_fallback;
 
-    fp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
-    script = cx->stack.currentScript(&pc);
+    script = frameIter.script();
+    pc = frameIter.pc();
+
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
     if (pc < script->main())
@@ -5662,6 +5678,13 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
                 goto release_pcstack;
             pc = pcstack[pcdepth];
         } else {
+            // If this is an ion frame, the fp frame doesn't correspond to the
+            // script and pc we retreived.  Do fallback instead.
+            if (frameIter.isIon())
+                goto release_pcstack;
+
+            StackFrame *fp = frameIter.fp();
+
             /*
              * We search from fp->sp to base to find the most recently
              * calculated value matching v under assumption that it is
@@ -5708,7 +5731,7 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
     }
 
     {
-        char *name = DecompileExpression(cx, script, fp->maybeFun(), pc);
+        char *name = DecompileExpression(cx, script, script->function(), pc);
         if (name != FAILED_EXPRESSION_DECOMPILER)
             return name;
     }
