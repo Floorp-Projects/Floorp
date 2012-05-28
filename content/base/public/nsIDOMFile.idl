@@ -28,7 +28,7 @@ interface nsIURI;
 interface nsIPrincipal;
 interface nsIDOMBlob;
 
-[scriptable, builtinclass, uuid(f62c6887-e3bc-495a-802c-287e12e969a0)]
+[scriptable, builtinclass, uuid(16e3f8d1-7f31-48cc-93f5-9c931a977cf6)]
 interface nsIDOMBlob : nsISupports
 {
   readonly attribute unsigned long long size;
@@ -43,6 +43,11 @@ interface nsIDOMBlob : nsISupports
                                    [optional] in long long end,
                                    [optional] in DOMString contentType);
 
+  [optional_argc,implicit_jscontext]
+  nsIDOMBlob mozSlice([optional] in long long start,
+                      [optional] in long long end,
+                      [optional] in DOMString contentType);
+
   // Get internal id of stored file. Returns -1 if it is not a stored file.
   // Intended only for testing. It can be called on any thread.
   [notxpcom] long long getFileId();
@@ -56,7 +61,7 @@ interface nsIDOMBlob : nsISupports
   [notxpcom] FileInfo getFileInfo(in FileManager aFileManager);
 };
 
-[scriptable, builtinclass, uuid(eee028d1-8ce9-4c6c-b9ce-d89b656e1e17)]
+[scriptable, builtinclass, uuid(cddf6087-0e83-4e1f-91b3-4861d5d4c53f)]
 interface nsIDOMFile : nsIDOMBlob
 {
   readonly attribute DOMString name;

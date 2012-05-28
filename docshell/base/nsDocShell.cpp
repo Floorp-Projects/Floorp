@@ -190,6 +190,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsITimedChannel.h"
 #include "mozilla/StartupTimeline.h"
+#include "nsIFrameMessageManager.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -1056,6 +1057,22 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         if (ir)
           return ir->GetInterface(aIID, aSink);
       }
+    }
+    else if (aIID.Equals(NS_GET_IID(nsIContentFrameMessageManager))) {
+      nsCOMPtr<nsITabChild> tabChild =
+        do_GetInterface(static_cast<nsIDocShell*>(this));
+      nsCOMPtr<nsIContentFrameMessageManager> mm;
+      if (tabChild) {
+        tabChild->
+          GetMessageManager(getter_AddRefs(mm));
+      } else {
+        nsCOMPtr<nsPIDOMWindow> win =
+          do_GetInterface(static_cast<nsIDocShell*>(this));
+        if (win) {
+          mm = do_QueryInterface(win->GetParentTarget());
+        }
+      }
+      *aSink = mm.get();
     }
     else {
       return nsDocLoader::GetInterface(aIID, aSink);
@@ -4676,7 +4693,7 @@ nsDocShell::Destroy()
 
     if (mScriptGlobal) {
         nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
-        win->SetDocShell(nsnull);
+        win->DetachFromDocShell();
 
         mScriptGlobal = nsnull;
     }
