@@ -157,6 +157,38 @@ static int do_main(int argc, char* argv[])
   return XRE_main(argc, argv, &sAppData, 0);
 }
 
+#ifdef XP_WIN
+/**
+ * Determines if the registry is disabled via the service or not.
+ * 
+ * @return true if prefetch is disabled
+ *         false if prefetch is not disabled or an error occurred.
+*/
+bool IsPrefetchDisabledViaService()
+{
+  // We don't need to return false when we don't have MOZ_MAINTENANCE_SERVICE
+  // defined.  The reason is because another product installed that has it
+  // defined may have cleared our prefetch for us.  There is no known way
+  // to figure out which prefetch files are associated with which apps
+  // because of the prefetch hash.  So we disable all of them that start
+  // with FIREFOX.
+  HKEY baseKey;
+  LONG retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+                               L"SOFTWARE\\Mozilla\\MaintenanceService", 0,
+                               KEY_READ | KEY_WOW64_64KEY, &baseKey);
+  if (retCode != ERROR_SUCCESS) {
+    return false;
+  }
+  DWORD disabledValue = 0;
+  DWORD disabledValueSize = sizeof(DWORD);
+  RegQueryValueExW(baseKey, L"FFPrefetchDisabled", 0, NULL,
+                   reinterpret_cast<LPBYTE>(&disabledValue),
+                   &disabledValueSize);
+  RegCloseKey(baseKey);
+  return disabledValue == 1;
+}
+#endif
+
 int main(int argc, char* argv[])
 {
   char exePath[MAXPATHLEN];
@@ -187,9 +219,13 @@ int main(int argc, char* argv[])
   // in the program. Luckily 1 coincides with when prefetch is
   // enabled. If Windows prefetch didn't happen we can do our own
   // faster dll preloading.
+  // The MozillaMaintenance service issues a command to disable the
+  // prefetch by replacing all found .pf files with 0 byte read only
+  // files.
   IO_COUNTERS ioCounters;
   gotCounters = GetProcessIoCounters(GetCurrentProcess(), &ioCounters);
-  if (gotCounters && !ioCounters.ReadOperationCount)
+  if ((gotCounters && !ioCounters.ReadOperationCount) || 
+      IsPrefetchDisabledViaService())
 #endif
   {
       XPCOMGlueEnablePreload();
