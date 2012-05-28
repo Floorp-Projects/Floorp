@@ -1234,10 +1234,10 @@ function appendTreeElements(aPOuter, aT, aProcess)
 
     // Generate the percentage;  detect and record invalid values at the same
     // time.
-    let percText = "";
+    let percText;
     let tIsInvalid = false;
     if (aT._amount === treeBytes) {
-      percText = "100.0";
+      percText = " (100.0%)";
     } else {
       if (!(0 <= aT._amount && aT._amount <= treeBytes)) {
         tIsInvalid = true;
@@ -1246,10 +1246,10 @@ function appendTreeElements(aPOuter, aT, aProcess)
         reportAssertionFailure("Invalid value for " +
                                flipBackslashes(unsafePath));
       }
-      percText = (100 * aT._amount / treeBytes).toFixed(2);
-      percText = pad(percText, 5, '0');
+      let num = 100 * aT._amount / treeBytes;
+      let numText = num.toFixed(2);
+      percText = (0 <= num && num < 10 ? " (0" : " (") + numText + "%)";
     }
-    percText = " (" + percText + "%)";
 
     // For non-leaf nodes, the entire sub-tree is put within a span so it can
     // be collapsed if the node is clicked on.
