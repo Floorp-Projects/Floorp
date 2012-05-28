@@ -32,7 +32,7 @@ BOOL GetLogDirectoryPath(WCHAR *path);
  * and upgrade.
 */
 void
-RunCommandsForEachInstallAndUpgrade()
+RunCommandsForEachUpgrade()
 {
   LOG(("Running install/upgrade commands...\n"));
   ClearKnownPrefetch();
@@ -66,7 +66,6 @@ wmain(int argc, WCHAR **argv)
     LOG(("...\n"));
 
     bool ret = SvcInstall(action);
-    RunCommandsForEachInstallAndUpgrade();
     if (!ret) {
       LOG(("Could not install service (%d)\n", GetLastError()));
       LogFinish();
@@ -86,7 +85,7 @@ wmain(int argc, WCHAR **argv)
     LOG(("Upgrading service if installed...\n"));
 
     bool ret = SvcInstall(UpgradeSvc);
-    RunCommandsForEachInstallAndUpgrade();
+    RunCommandsForEachUpgrade();
     if (!ret) {
       LOG(("Could not upgrade service (%d)\n", GetLastError()));
       LogFinish();
