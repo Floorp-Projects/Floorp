@@ -10,16 +10,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= TestLineBreak$(BIN_SUFFIX)
-
-
-CPPSRCS		= TestLineBreak.cpp
-
-LIBS		= \
-		  $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-		  $(XPCOM_LIBS) \
-		  $(NSPR_LIBS) \
-		  $(NULL)
+CPP_UNIT_TESTS	= TestLineBreak.cpp
 
 include $(topsrcdir)/config/rules.mk
 
