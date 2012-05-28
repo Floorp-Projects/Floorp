@@ -70,6 +70,22 @@ WritePrefetchClearedReg()
   return TRUE;
 }
 
+static BOOL
+PrefetchFileAlreadyCleared(LPCWSTR prefetchPath)
+{
+  DWORD attributes = GetFileAttributes(prefetchPath);
+  BOOL alreadyCleared = attributes != INVALID_FILE_ATTRIBUTES &&
+                        attributes & FILE_ATTRIBUTE_READONLY;
+
+  nsAutoHandle prefetchFile(CreateFile(prefetchPath, GENERIC_READ, 0, NULL,
+                                       OPEN_EXISTING, 0, NULL));
+  LARGE_INTEGER fileSize = { 0, 0 };
+  alreadyCleared &= prefetchFile != INVALID_HANDLE_VALUE &&
+                    GetFileSizeEx(prefetchFile, &fileSize) &&
+                    fileSize.QuadPart == 0;
+  return alreadyCleared;
+}
+
 /** 
   * We found that prefetch actually causes large applications like Firefox
   * to startup slower.  This will get rid of the Windows prefetch files for
@@ -154,6 +170,7 @@ ClearPrefetch(LPCWSTR prefetchProcessName)
   }
   
   BOOL deletedAllFFPrefetch = TRUE;
+  size_t deletedCount = 0;
   do {
     // Reset back to the prefetch directory, we know from an above check that
     // we aren't exceeding MAX_PATH + 1 characters with prefetchDirLen + 1.
@@ -172,6 +189,12 @@ ClearPrefetch(LPCWSTR prefetchProcessName)
       LOG(("Error appending prefetch path %ls. (%d)\n", findFileData.cFileName,
            GetLastError()));
       deletedAllFFPrefetch = FALSE;
+      continue;
+    }
+
+    if (PrefetchFileAlreadyCleared(prefetchPath)) {
+      ++deletedCount;
+      LOG(("Prefetch file already cleared: %ls\n", prefetchPath));
       continue;
     }
 
@@ -201,6 +224,7 @@ ClearPrefetch(LPCWSTR prefetchProcessName)
       continue;
     } 
 
+    ++deletedCount;
     LOG(("Prefetch file cleared and set to read-only successfully: %ls\n", 
          prefetchPath));
   } while (FindNextFileW(findHandle, &findFileData));
@@ -209,7 +233,7 @@ ClearPrefetch(LPCWSTR prefetchProcessName)
   // Cleanup after ourselves.
   FindClose(findHandle);
 
-  if (deletedAllFFPrefetch) {
+  if (deletedAllFFPrefetch && deletedCount > 0) {
     WritePrefetchClearedReg();
   }
 
