@@ -54,9 +54,9 @@
 #define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 
 // We clear the prefetch files one time after the browser is started after
-// 60 seconds.  After this is done once we set a pref so this will never happen
+// 3 minutes.  After this is done once we set a pref so this will never happen
 // again except in updater code.
-#define CLEAR_PREFETCH_TIMEOUT_MS 60000
+#define CLEAR_PREFETCH_TIMEOUT_MS 180000
 
 NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellService)
 
