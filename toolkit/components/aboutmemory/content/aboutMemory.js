@@ -1038,18 +1038,21 @@ function pad(aS, aN, aC)
   return padding + aS;
 }
 
-// There's a subset of the Unicode "light" box-drawing chars that are widely
+// There's a subset of the Unicode "light" box-drawing chars that is widely
 // implemented in terminals, and this code sticks to that subset to maximize
 // the chance that cutting and pasting about:memory output to a terminal will
-// work correctly:
-const kHorizontal       = "\u2500",
-      kVertical         = "\u2502",
-      kUpAndRight       = "\u2514",
-      kVerticalAndRight = "\u251c",
-      kNoKidsSep        = " \u2500\u2500 ",
-      kHideKidsSep      = " ++ ",
-      kShowKidsSep      = " -- ";
+// work correctly.
+const kHorizontal                   = "\u2500",
+      kVertical                     = "\u2502",
+      kUpAndRight                   = "\u2514",
+      kUpAndRight_Right_Right       = "\u2514\u2500\u2500",
+      kVerticalAndRight             = "\u251c",
+      kVerticalAndRight_Right_Right = "\u251c\u2500\u2500",
+      kVertical_Space_Space         = "\u2502  ";
 
+const kNoKidsSep                    = " \u2500\u2500 ",
+      kHideKidsSep                  = " ++ ",
+      kShowKidsSep                  = " -- ";
 
 function appendMrValueSpan(aP, aValue, aIsInvalid)
 {
@@ -1195,42 +1198,40 @@ function appendTreeElements(aPOuter, aT, aProcess)
    *        An array of the names forming the path to aT.
    * @param aT
    *        The tree.
-   * @param aBaseIndentText
-   *        The base text of the indent, which may be augmented within the
-   *        function.
-   * @param aIndentGuide
-   *        Records what indentation is required for this tree.  It has one
-   *        entry per level of indentation.  For each entry, ._isLastKid
-   *        records whether the node in question is the last child, and
-   *        ._depth records how many chars of indentation are required.
+   * @param aTreelineText1
+   *        The first part of the treeline for this entry and this entry's
+   *        children.
+   * @param aTreelineText2a
+   *        The second part of the treeline for this entry.
+   * @param aTreelineText2b
+   *        The second part of the treeline for this entry's children.
    * @param aParentStringLength
    *        The length of the formatted byte count of the top node in the tree.
    */
-  function appendTreeElements2(aP, aUnsafeNames, aT, aIndentGuide,
-                               aBaseIndentText, aParentStringLength)
+  function appendTreeElements2(aP, aUnsafeNames, aT, aTreelineText1,
+                               aTreelineText2a, aTreelineText2b,
+                               aParentStringLength)
   {
-    function repeatStr(aA, aC, aN)
+    function appendN(aS, aC, aN)
     {
       for (let i = 0; i < aN; i++) {
-        aA.push(aC);
+        aS += aC;
       }
+      return aS;
     }
 
-    // Indent more if this entry is narrower than its parent, and update
-    // aIndentGuide accordingly.
-    let tString = aT.toString();
-    let extraIndentLength = Math.max(aParentStringLength - tString.length, 0);
-    let indentText;
-    if (extraIndentLength > 0) {
-      let extraIndentArray = [];
-      repeatStr(extraIndentArray, kHorizontal, extraIndentLength);
-      aIndentGuide[aIndentGuide.length - 1]._depth += extraIndentLength;
-      indentText = aBaseIndentText + extraIndentArray.join("");
+    // Indent more if this entry is narrower than its parent.
+    let valueText = aT.toString();
+    let extraTreelineLength =
+      Math.max(aParentStringLength - valueText.length, 0);
+    if (extraTreelineLength > 0) {
+      aTreelineText2a =
+        appendN(aTreelineText2a, kHorizontal, extraTreelineLength);
+      aTreelineText2b =
+        appendN(aTreelineText2b, " ",         extraTreelineLength);
     }
-    else {
-      indentText = aBaseIndentText;
-    }
-    appendElementWithText(aP, "span", "treeLine", indentText);
+    let treelineText = aTreelineText1 + aTreelineText2a;
+    appendElementWithText(aP, "span", "treeline", treelineText);
 
     // Generate the percentage;  detect and record invalid values at the same
     // time.
@@ -1275,7 +1276,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
       d = aP;
     }
 
-    appendMrValueSpan(d, tString, tIsInvalid);
+    appendMrValueSpan(d, valueText, tIsInvalid);
     appendElementWithText(d, "span", "mrPerc", percText);
     appendElementWithText(d, "span", "mrSep", sep);
 
@@ -1292,29 +1293,21 @@ function appendTreeElements(aPOuter, aT, aProcess)
       // The 'kids' class is just used for sanity checking in toggle().
       d = appendElement(aP, "span", showSubtrees ? "kids" : "kids hidden");
 
+      let kidTreelineText1 = aTreelineText1 + aTreelineText2b;
       for (let i = 0; i < aT._kids.length; i++) {
-        // 3 is the standard depth, the callee adjusts it if necessary.
-        aIndentGuide.push({ _isLastKid: (i === aT._kids.length - 1), _depth: 3 });
-
-        // Generate the base indent.
-        let baseIndentArray = [];
-        if (aIndentGuide.length > 0) {
-          let j;
-          for (j = 0; j < aIndentGuide.length - 1; j++) {
-            baseIndentArray.push(aIndentGuide[j]._isLastKid ? " " : kVertical);
-            repeatStr(baseIndentArray, " ", aIndentGuide[j]._depth - 1);
-          }
-          baseIndentArray.push(aIndentGuide[j]._isLastKid ?
-                               kUpAndRight : kVerticalAndRight);
-          repeatStr(baseIndentArray, kHorizontal, aIndentGuide[j]._depth - 1);
+        let kidTreelineText2a, kidTreelineText2b;
+        if (i < aT._kids.length - 1) {
+          kidTreelineText2a = kVerticalAndRight_Right_Right;
+          kidTreelineText2b = kVertical_Space_Space;
+        } else {
+          kidTreelineText2a = kUpAndRight_Right_Right;
+          kidTreelineText2b = "   ";
         }
-
-        let baseIndentText = baseIndentArray.join("");
         aUnsafeNames.push(aT._kids[i]._unsafeName);
-        appendTreeElements2(d, aUnsafeNames, aT._kids[i], aIndentGuide,
-                            baseIndentText, tString.length);
+        appendTreeElements2(d, aUnsafeNames, aT._kids[i], kidTreelineText1,
+                            kidTreelineText2a, kidTreelineText2b,
+                            valueText.length);
         aUnsafeNames.pop();
-        aIndentGuide.pop();
       }
     }
   }
@@ -1322,7 +1315,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
   appendSectionHeader(aPOuter, kSectionNames[aT._unsafeName]);
  
   let pre = appendElement(aPOuter, "pre", "entries");
-  appendTreeElements2(pre, [aT._unsafeName], aT, [], "", rootStringLength);
+  appendTreeElements2(pre, [aT._unsafeName], aT, "", "", "", rootStringLength);
   appendTextNode(aPOuter, "\n");  // gives nice spacing when we cut and paste
 }
 
