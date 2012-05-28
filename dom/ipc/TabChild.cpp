@@ -939,6 +939,17 @@ TabChild::SetBackgroundColor(const nscolor& aColor)
   }
 }
 
+NS_IMETHODIMP
+TabChild::GetMessageManager(nsIContentFrameMessageManager** aResult)
+{
+  if (mTabChildGlobal) {
+    NS_ADDREF(*aResult = mTabChildGlobal);
+    return NS_OK;
+  }
+  *aResult = nsnull;
+  return NS_ERROR_FAILURE;
+}
+
 static bool
 SendSyncMessageToParent(void* aCallbackData,
                         const nsAString& aMessage,
