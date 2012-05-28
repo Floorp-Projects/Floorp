@@ -1,7 +1,3 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 import logging, re, os
 import data, parser, functions, util
 from cStringIO import StringIO
@@ -469,6 +465,9 @@ class UnexportDirective(Statement):
         vlist = list(self.exp.resolvesplit(makefile, makefile.variables))
         for v in vlist:
             makefile.exportedvars[v] = False
+
+    def dump(self, fd, indent):
+        print >>fd, "%sUnexport %s" % (indent, self.exp)
 
 class EmptyDirective(Statement):
     __slots__ = ('exp',)
