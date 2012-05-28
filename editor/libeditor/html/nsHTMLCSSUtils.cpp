@@ -1162,22 +1162,32 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
         if (NS_ColorNameToRGB(htmlValueString, &rgba) ||
             NS_HexToRGB(subStr, &rgba)) {
           nsAutoString htmlColor, tmpStr;
-          htmlColor.AppendLiteral("rgb(");
 
-          NS_NAMED_LITERAL_STRING(comma, ", ");
+          if (NS_GET_A(rgba) != 255) {
+            // This should only be hit by the "transparent" keyword, which
+            // currently serializes to "transparent" (not "rgba(0, 0, 0, 0)").
+            MOZ_ASSERT(NS_GET_R(rgba) == 0 && NS_GET_G(rgba) == 0 &&
+                       NS_GET_B(rgba) == 0 && NS_GET_A(rgba) == 0);
+            htmlColor.AppendLiteral("transparent");
+          } else {
+            htmlColor.AppendLiteral("rgb(");
 
-          tmpStr.AppendInt(NS_GET_R(rgba), 10);
-          htmlColor.Append(tmpStr + comma);
+            NS_NAMED_LITERAL_STRING(comma, ", ");
 
-          tmpStr.Truncate();
-          tmpStr.AppendInt(NS_GET_G(rgba), 10);
-          htmlColor.Append(tmpStr + comma);
+            tmpStr.AppendInt(NS_GET_R(rgba), 10);
+            htmlColor.Append(tmpStr + comma);
 
-          tmpStr.Truncate();
-          tmpStr.AppendInt(NS_GET_B(rgba), 10);
-          htmlColor.Append(tmpStr);
+            tmpStr.Truncate();
+            tmpStr.AppendInt(NS_GET_G(rgba), 10);
+            htmlColor.Append(tmpStr + comma);
 
-          htmlColor.Append(PRUnichar(')'));
+            tmpStr.Truncate();
+            tmpStr.AppendInt(NS_GET_B(rgba), 10);
+            htmlColor.Append(tmpStr);
+
+            htmlColor.Append(PRUnichar(')'));
+          }
+
           aIsSet = htmlColor.Equals(valueString,
                                     nsCaseInsensitiveStringComparator());
         } else {
@@ -1229,6 +1239,10 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
         htmlValueString.Equals(valueString,
                                nsCaseInsensitiveStringComparator())) {
       aIsSet = true;
+    }
+
+    if (htmlValueString.EqualsLiteral("-moz-editor-invert-value")) {
+      aIsSet = !aIsSet;
     }
 
     if (nsEditProperty::u == aHTMLProperty || nsEditProperty::strike == aHTMLProperty) {
