@@ -32,12 +32,16 @@
     <description id="importBookmarks" control="importSourceGroup" hidden="true">&importFromBookmarks.label;</description>
 
     <radiogroup id="importSourceGroup" align="start">
-      <!-- If you are adding a migrator, please add the appropriate
-           hooks to GetDefaultBrowserMigratorKey in
-           browser/components/migration/src/nsProfileMigrator.cpp -->
-      <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
+#ifdef XP_WIN
       <radio id="ie"        label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
       <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
+      <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
+#elifdef XP_MACOSX
+      <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
+      <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
+#elifdef XP_UNIX
+      <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
+#endif
       <radio id="firefox"   label="&importFromFirefox.label;"   accesskey="&importFromFirefox.accesskey;"/>
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>
     </radiogroup>
