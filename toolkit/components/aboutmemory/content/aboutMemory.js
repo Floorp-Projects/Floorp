@@ -562,13 +562,7 @@ function getTreesAndOthersByProcess(aMgr, aTreesByProcess, aOthersByProcess,
       } else {
         // New leaf node.  Fill in extra details node from the report.
         u._amount = aAmount;
-        if (unsafeNames[0] === "explicit") {
-          u._description = kindToString(aKind) + aDescription;
-        } else {
-          // We don't want to show '(Non-heap)' on an smaps tree because
-          // the whole tree is non-heap.
-          u._description = aDescription;
-        }
+        u._description = aDescription;
       }
 
       if (unsafeNames[0] === "explicit" && aKind == KIND_HEAP) {
@@ -729,7 +723,7 @@ function addHeapUnclassifiedNode(aT, aOthers, aHeapTotal)
   let heapAllocatedBytes = heapAllocatedReport._amount;
   let heapUnclassifiedT = new TreeNode("heap-unclassified");
   heapUnclassifiedT._amount = heapAllocatedBytes - aHeapTotal;
-  heapUnclassifiedT._description = kindToString(KIND_HEAP) +
+  heapUnclassifiedT._description =
       "Memory not classified by a more specific reporter. This includes " +
       "slop bytes due to internal fragmentation in the heap allocator " +
       "(caused when the allocator rounds up request sizes).";
@@ -1058,17 +1052,6 @@ function appendMrValueSpan(aP, aValue, aIsInvalid)
 {
   appendElementWithText(aP, "span", "mrValue" + (aIsInvalid ? " invalid" : ""),
                         aValue);
-}
-
-function kindToString(aKind)
-{
-  switch (aKind) {
-   case KIND_NONHEAP: return "(Non-heap) ";
-   case KIND_HEAP:    return "(Heap) ";
-   case KIND_OTHER:
-   case undefined:
-   default:           assert(false, "bad kind in kindToString");
-  }
 }
 
 function appendMrNameSpan(aP, aDescription, aUnsafeName, aIsInvalid, aNMerged)
