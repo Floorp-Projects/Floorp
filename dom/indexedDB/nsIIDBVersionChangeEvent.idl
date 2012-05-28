@@ -10,5 +10,5 @@
 interface nsIIDBVersionChangeEvent : nsIDOMEvent
 {
   readonly attribute unsigned long long oldVersion;
-  readonly attribute unsigned long long newVersion;
+  readonly attribute jsval newVersion;
 };
