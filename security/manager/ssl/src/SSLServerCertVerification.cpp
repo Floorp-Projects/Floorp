@@ -1113,6 +1113,12 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
   NS_ASSERTION(!isServer, "AuthCertificateHook: isServer unexpectedly true");
 
   nsNSSSocketInfo *socketInfo = static_cast<nsNSSSocketInfo*>(arg);
+  
+  if (socketInfo) {
+    // This is the first callback during full handshakes.
+    socketInfo->SetFirstServerHelloReceived();
+  }
+
   CERTCertificate *serverCert = SSL_PeerCertificate(fd);
   CERTCertificateCleaner serverCertCleaner(serverCert);
 

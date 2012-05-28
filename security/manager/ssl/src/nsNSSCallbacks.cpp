@@ -831,6 +831,11 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
   nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
 
+  if (infoObject) {
+    // This is the first callback on resumption handshakes
+    infoObject->SetFirstServerHelloReceived();
+  }
+
   // If the handshake completed, then we know the site is TLS tolerant (if this
   // was a TLS connection).
   nsSSLIOLayerHelpers::rememberTolerantSite(infoObject);
