@@ -302,32 +302,21 @@ IDRefsIterator::GetElem(const nsDependentSubstring& aID)
 
   // If content is in anonymous subtree or an element having anonymous subtree
   // then use "anonid" attribute to get elements in anonymous subtree.
-  nsCOMPtr<nsIDOMElement> refDOMElm;
-  nsCOMPtr<nsIDOMDocumentXBL> xblDocument =
-    do_QueryInterface(mContent->OwnerDoc());
 
   // Check inside the binding the element is contained in.
   nsIContent* bindingParent = mContent->GetBindingParent();
   if (bindingParent) {
-    nsCOMPtr<nsIDOMElement> bindingParentElm = do_QueryInterface(bindingParent);
-    xblDocument->GetAnonymousElementByAttribute(bindingParentElm,
-                                                NS_LITERAL_STRING("anonid"),
-                                                aID,
-                                                getter_AddRefs(refDOMElm));
-    nsCOMPtr<dom::Element> refElm = do_QueryInterface(refDOMElm);
+    nsIContent* refElm = bindingParent->OwnerDoc()->
+      GetAnonymousElementByAttribute(bindingParent, nsGkAtoms::anonid, aID);
+
     if (refElm)
       return refElm;
   }
 
   // Check inside the binding of the element.
   if (mContent->OwnerDoc()->BindingManager()->GetBinding(mContent)) {
-    nsCOMPtr<nsIDOMElement> elm = do_QueryInterface(mContent);
-    xblDocument->GetAnonymousElementByAttribute(elm,
-                                                NS_LITERAL_STRING("anonid"),
-                                                aID,
-                                                getter_AddRefs(refDOMElm));
-    nsCOMPtr<dom::Element> refElm = do_QueryInterface(refDOMElm);
-    return refElm;
+    return mContent->OwnerDoc()->
+      GetAnonymousElementByAttribute(mContent, nsGkAtoms::anonid, aID);
   }
 
   return nsnull;
