@@ -28,9 +28,7 @@ EXTRA_JS_MODULES =   \
   SettingsChangeNotifier.jsm \
   $(NULL)
 
-ifdef ENABLE_TESTS
-DIRS += tests
-endif
+TEST_DIRS += tests
 
 # Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
 # subdirectory (and the ipc one).
