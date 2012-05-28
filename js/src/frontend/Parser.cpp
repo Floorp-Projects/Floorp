@@ -1279,13 +1279,14 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 }
 
 bool
-Parser::functionArguments(ParseNode **listp, bool &hasRest)
+Parser::functionArguments(ParseNode **listp, bool &hasDefaults, bool &hasRest)
 {
     if (tokenStream.getToken() != TOK_LP) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_BEFORE_FORMAL);
         return false;
     }
 
+    hasDefaults = false;
     hasRest = false;
 
     if (!tokenStream.matchToken(TOK_RP)) {
@@ -1308,6 +1309,11 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
                 /* See comment below in the TOK_NAME case. */
                 if (duplicatedArg)
                     goto report_dup_and_destructuring;
+                if (hasDefaults) {
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT);
+                    return false;
+                }
+
                 destructuringArg = true;
 
                 /*
@@ -1407,6 +1413,22 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
                     return false;
                 if (!DefineArg(tc->sc->funbox->node, name, slot, this))
                     return false;
+
+                if (tokenStream.matchToken(TOK_ASSIGN)) {
+                    if (hasRest) {
+                        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_REST_WITH_DEFAULT);
+                        return false;
+                    }
+                    hasDefaults = true;
+                    ParseNode *def_expr = assignExprWithoutYield(JSMSG_YIELD_IN_DEFAULT);
+                    if (!def_expr)
+                        return false;
+                    tc->sc->funbox->node->pn_body->last()->pn_expr = def_expr;
+                } else if (!hasRest && hasDefaults) {
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT);
+                    return false;
+                }
+
                 break;
               }
 
@@ -1566,11 +1588,13 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
 
     /* Now parse formal argument list and compute fun->nargs. */
     ParseNode *prelude = NULL;
-    bool hasRest;
-    if (!functionArguments(&prelude, hasRest))
+    bool hasRest, hasDefaults;
+    if (!functionArguments(&prelude, hasDefaults, hasRest))
         return NULL;
 
     fun->setArgCount(funsc.bindings.numArgs());
+    if (hasDefaults)
+        fun->setHasDefaults();
     if (hasRest)
         fun->setHasRest();
 
@@ -4939,7 +4963,7 @@ class GenexpGuard {
     }
 
     void endBody();
-    bool checkValidBody(ParseNode *pn);
+    bool checkValidBody(ParseNode *pn, unsigned err);
     bool maybeNoteGenerator(ParseNode *pn);
 };
 
@@ -4957,14 +4981,14 @@ GenexpGuard::endBody()
  * generator expression.
  */
 bool
-GenexpGuard::checkValidBody(ParseNode *pn)
+GenexpGuard::checkValidBody(ParseNode *pn, unsigned err = JSMSG_BAD_GENEXP_BODY)
 {
     TreeContext *tc = parser->tc;
     if (tc->yieldCount > startYieldCount) {
         ParseNode *errorNode = tc->yieldNode;
         if (!errorNode)
             errorNode = pn;
-        parser->reportErrorNumber(errorNode, JSREPORT_ERROR, JSMSG_BAD_GENEXP_BODY, js_yield_str);
+        parser->reportErrorNumber(errorNode, JSREPORT_ERROR, err, js_yield_str);
         return false;
     }
 
@@ -5535,6 +5559,24 @@ static const char js_generator_str[] = "generator";
 
 #endif /* JS_HAS_GENERATOR_EXPRS */
 #endif /* JS_HAS_GENERATORS */
+
+ParseNode *
+Parser::assignExprWithoutYield(unsigned msg)
+{
+#ifdef JS_HAS_GENERATORS
+    GenexpGuard yieldGuard(this);
+#endif
+    ParseNode *res = assignExpr();
+    if (res) {
+#ifdef JS_HAS_GENERATORS
+        if (!yieldGuard.checkValidBody(res, msg)) {
+            freeTree(res);
+            res = NULL;
+        }
+#endif
+    }
+    return res;
+}
 
 JSBool
 Parser::argumentList(ParseNode *listNode)

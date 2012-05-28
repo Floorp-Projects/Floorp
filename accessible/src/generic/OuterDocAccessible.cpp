@@ -6,7 +6,7 @@
 #include "OuterDocAccessible.h"
 
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
 
@@ -22,7 +22,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 OuterDocAccessible::
-  OuterDocAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  OuterDocAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
 }

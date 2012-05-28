@@ -17,9 +17,9 @@ LIBXUL_LIBRARY = 1
 
 CPPSRCS = \
   AtkSocketAccessible.cpp \
+  DocAccessibleWrap.cpp \
   nsAccessNodeWrap.cpp \
   nsAccessibleWrap.cpp \
-  nsDocAccessibleWrap.cpp \
   ApplicationAccessibleWrap.cpp \
   nsMaiInterfaceComponent.cpp \
   nsMaiInterfaceAction.cpp \

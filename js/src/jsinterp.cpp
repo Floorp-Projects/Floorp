@@ -2812,6 +2812,12 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
 END_VARLEN_CASE
 }
 
+BEGIN_CASE(JSOP_ACTUALSFILLED)
+{
+    PUSH_INT32(JS_MAX(regs.fp()->numActualArgs(), GET_UINT16(regs.pc)));
+}
+END_CASE(JSOP_ACTUALSFILLED)
+
 BEGIN_CASE(JSOP_ARGUMENTS)
     JS_ASSERT(!regs.fp()->fun()->hasRest());
     if (script->needsArgsObj()) {

@@ -3,6 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <windows.h>
+
+// Needed for CreateToolhelp32Snapshot
+#include <tlhelp32.h>
+#ifndef ONLY_SERVICE_LAUNCHING
+
 #include <stdio.h>
 #include "shlobj.h"
 #include "updatehelper.h"
@@ -10,8 +15,6 @@
 
 // Needed for PathAppendW
 #include <shlwapi.h>
-// Needed for CreateToolhelp32Snapshot
-#include <tlhelp32.h>
 #pragma comment(lib, "shlwapi.lib") 
 
 WCHAR* MakeCommandLine(int argc, WCHAR **argv);
@@ -236,6 +239,8 @@ StartServiceUpdate(int argc, LPWSTR *argv)
   return svcUpdateProcessStarted;
 }
 
+#endif 
+
 /**
  * Executes a maintenance service command
  * 
@@ -293,6 +298,8 @@ StartServiceCommand(int argc, LPCWSTR* argv)
   CloseServiceHandle(serviceManager);
   return lastError;
 }
+
+#ifndef ONLY_SERVICE_LAUNCHING
 
 /**
  * Launch a service initiated action for a software update with the 
@@ -402,6 +409,8 @@ WriteStatusFailure(LPCWSTR updateDirPath, int errorCode)
   CloseHandle(statusFile);
   return ok && wrote == toWrite;
 }
+
+#endif
 
 /**
  * Waits for a service to enter a stopped state.
@@ -535,6 +544,8 @@ WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds)
   return lastServiceState;
 }
 
+#ifndef ONLY_SERVICE_LAUNCHING
+
 /**
  * Determines if there is at least one process running for the specified
  * application. A match will be found across any session for any user.
@@ -619,6 +630,8 @@ DoesFallbackKeyExist()
   RegCloseKey(testOnlyFallbackKey);
   return TRUE;
 }
+
+#endif
 
 /**
  * Determines if the file system for the specified file handle is local

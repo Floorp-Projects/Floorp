@@ -26,7 +26,6 @@ CPPSRCS = \
   nsAccDocManager.cpp \
   nsAccessNode.cpp \
   nsARIAMap.cpp \
-  nsDocAccessible.cpp \
   nsCoreUtils.cpp \
   nsAccUtils.cpp \
   nsAccessibilityService.cpp \

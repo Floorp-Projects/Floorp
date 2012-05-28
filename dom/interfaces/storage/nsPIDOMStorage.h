@@ -29,8 +29,10 @@ public:
     SessionStorage = 2
   } nsDOMStorageType;
 
-  virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI) = 0;
-  virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI) = 0;
+  virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI,
+                                        bool aPrivate) = 0;
+  virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI,
+                                      bool aPrivate) = 0;
 
   virtual already_AddRefed<nsIDOMStorage> Clone() = 0;
   virtual already_AddRefed<nsIDOMStorage> Fork(const nsSubstring &aDocumentURI) = 0;

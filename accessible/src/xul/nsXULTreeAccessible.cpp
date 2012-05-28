@@ -9,7 +9,7 @@
 #include "nsAccCache.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"
@@ -32,7 +32,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeAccessible::
-  nsXULTreeAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULTreeAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessibleWrap(aContent, aDoc)
 {
   mFlags |= eXULTreeAccessible;
@@ -558,7 +558,7 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
   if (aCount > 0)
     return;
 
-  nsDocAccessible* document = Document();
+  DocAccessible* document = Document();
 
   // Fire destroy event for removed tree items and delete them from caches.
   for (PRInt32 rowIdx = aRow; rowIdx < aRow - aCount; rowIdx++) {
@@ -687,7 +687,7 @@ nsXULTreeAccessible::CreateTreeItemAccessible(PRInt32 aRow)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeItemAccessibleBase::
-  nsXULTreeItemAccessibleBase(nsIContent* aContent, nsDocAccessible* aDoc,
+  nsXULTreeItemAccessibleBase(nsIContent* aContent, DocAccessible* aDoc,
                               nsAccessible* aParent, nsITreeBoxObject* aTree,
                               nsITreeView* aTreeView, PRInt32 aRow) :
   nsAccessibleWrap(aContent, aDoc),
@@ -1108,7 +1108,7 @@ nsXULTreeItemAccessibleBase::GetCellName(nsITreeColumn* aColumn,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeItemAccessible::
-  nsXULTreeItemAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+  nsXULTreeItemAccessible(nsIContent* aContent, DocAccessible* aDoc,
                           nsAccessible* aParent, nsITreeBoxObject* aTree,
                           nsITreeView* aTreeView, PRInt32 aRow) :
   nsXULTreeItemAccessibleBase(aContent, aDoc, aParent, aTree, aTreeView, aRow)
@@ -1217,7 +1217,7 @@ nsXULTreeItemAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeColumnsAccessible::
-  nsXULTreeColumnsAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULTreeColumnsAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsXULColumnsAccessible(aContent, aDoc)
 {
 }

@@ -5,6 +5,7 @@
 #include "nsRegion.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
+#include "mozilla/ThreadLocal.h"
 
 /*
  * The SENTINEL values below guaranties that a < or >
@@ -183,47 +184,43 @@ void RgnRectMemoryAllocator::Free (nsRegion::RgnRect* aRect)
 
 
 // Global pool for nsRegion::RgnRect allocation
-static PRUintn gRectPoolTlsIndex;
+mozilla::ThreadLocal<RgnRectMemoryAllocator*> gRectPoolTlsIndex;
 
 void RgnRectMemoryAllocatorDTOR(void *priv)
 {
-  RgnRectMemoryAllocator* allocator = (static_cast<RgnRectMemoryAllocator*>(
-                                       PR_GetThreadPrivate(gRectPoolTlsIndex)));
+  RgnRectMemoryAllocator* allocator = gRectPoolTlsIndex.get();
   delete allocator;
 }
 
 nsresult nsRegion::InitStatic()
 {
-  return PR_NewThreadPrivateIndex(&gRectPoolTlsIndex, RgnRectMemoryAllocatorDTOR);
+  return gRectPoolTlsIndex.init() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 void nsRegion::ShutdownStatic()
 {
-  RgnRectMemoryAllocator* allocator = (static_cast<RgnRectMemoryAllocator*>(
-                                       PR_GetThreadPrivate(gRectPoolTlsIndex)));
+  RgnRectMemoryAllocator* allocator = gRectPoolTlsIndex.get();
   if (!allocator)
     return;
 
   delete allocator;
 
-  PR_SetThreadPrivate(gRectPoolTlsIndex, nsnull);
+  gRectPoolTlsIndex.set(nsnull);
 }
 
 void* nsRegion::RgnRect::operator new (size_t) CPP_THROW_NEW
 {
-  RgnRectMemoryAllocator* allocator = (static_cast<RgnRectMemoryAllocator*>(
-                                       PR_GetThreadPrivate(gRectPoolTlsIndex)));
+  RgnRectMemoryAllocator* allocator = gRectPoolTlsIndex.get();
   if (!allocator) {
     allocator = new RgnRectMemoryAllocator(INIT_MEM_CHUNK_ENTRIES);
-    PR_SetThreadPrivate(gRectPoolTlsIndex, allocator);
+    gRectPoolTlsIndex.set(allocator);
   }
   return allocator->Alloc ();
 }
 
 void nsRegion::RgnRect::operator delete (void* aRect, size_t)
 {
-  RgnRectMemoryAllocator* allocator = (static_cast<RgnRectMemoryAllocator*>(
-                                       PR_GetThreadPrivate(gRectPoolTlsIndex)));
+  RgnRectMemoryAllocator* allocator = gRectPoolTlsIndex.get();
   if (!allocator) {
     NS_ERROR("Invalid nsRegion::RgnRect delete");
     return;

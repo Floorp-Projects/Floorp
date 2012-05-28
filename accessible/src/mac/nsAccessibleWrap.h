@@ -29,7 +29,7 @@
 class nsAccessibleWrap : public nsAccessible
 {
 public: // construction, destruction
-  nsAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~nsAccessibleWrap();
     
   /**

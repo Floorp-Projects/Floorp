@@ -15,7 +15,7 @@
 class nsXULAlertAccessible : public nsAccessibleWrap
 {
 public:
-  nsXULAlertAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULAlertAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 

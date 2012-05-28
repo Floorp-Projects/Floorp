@@ -128,7 +128,7 @@ nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent* aTargetNode)
 {
   nsIDocument* documentNode = aTargetNode->GetCurrentDoc();
   if (documentNode) {
-    nsDocAccessible* document = GetDocAccessible(documentNode);
+    DocAccessible* document = GetDocAccessible(documentNode);
     if (document)
       document->SetAnchorJump(aTargetNode);
   }
@@ -499,7 +499,7 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
          NS_ConvertUTF16toUTF8(ctag).get(), cid.get(), aEndChild);
 #endif
 
-  nsDocAccessible* docAccessible = GetDocAccessible(aPresShell);
+  DocAccessible* docAccessible = GetDocAccessible(aPresShell);
   if (docAccessible)
     docAccessible->ContentInserted(aContainer, aStartChild, aEndChild);
 }
@@ -533,7 +533,7 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
            NS_ConvertUTF16toUTF8(ctag).get(), cid.get());
 #endif
 
-  nsDocAccessible* docAccessible = GetDocAccessible(aPresShell);
+  DocAccessible* docAccessible = GetDocAccessible(aPresShell);
   if (docAccessible)
     docAccessible->ContentRemoved(aContainer, aChild);
 }
@@ -542,7 +542,7 @@ void
 nsAccessibilityService::UpdateText(nsIPresShell* aPresShell,
                                    nsIContent* aContent)
 {
-  nsDocAccessible* document = GetDocAccessible(aPresShell);
+  DocAccessible* document = GetDocAccessible(aPresShell);
   if (document)
     document->UpdateText(aContent);
 }
@@ -552,7 +552,7 @@ nsAccessibilityService::TreeViewChanged(nsIPresShell* aPresShell,
                                         nsIContent* aContent,
                                         nsITreeView* aView)
 {
-  nsDocAccessible* document = GetDocAccessible(aPresShell);
+  DocAccessible* document = GetDocAccessible(aPresShell);
   if (document) {
     nsAccessible* accessible = document->GetAccessible(aContent);
     if (accessible) {
@@ -568,7 +568,7 @@ nsAccessibilityService::UpdateListBullet(nsIPresShell* aPresShell,
                                          nsIContent* aHTMLListItemContent,
                                          bool aHasBullet)
 {
-  nsDocAccessible* document = GetDocAccessible(aPresShell);
+  DocAccessible* document = GetDocAccessible(aPresShell);
   if (document) {
     nsAccessible* accessible = document->GetAccessible(aHTMLListItemContent);
     if (accessible) {
@@ -583,7 +583,7 @@ void
 nsAccessibilityService::UpdateImageMap(nsImageFrame* aImageFrame)
 {
   nsIPresShell* presShell = aImageFrame->PresContext()->PresShell();
-  nsDocAccessible* document = GetDocAccessible(presShell);
+  DocAccessible* document = GetDocAccessible(presShell);
   if (document) {
     nsAccessible* accessible =
       document->GetAccessible(aImageFrame->GetContent());
@@ -621,7 +621,7 @@ nsAccessibilityService::PresShellDestroyed(nsIPresShell *aPresShell)
     logging::DocDestroy("presshell destroyed", doc);
 #endif
 
-  nsDocAccessible* docAccessible = GetDocAccessibleFromCache(doc);
+  DocAccessible* docAccessible = GetDocAccessibleFromCache(doc);
   if (docAccessible)
     docAccessible->Shutdown();
 }
@@ -631,7 +631,7 @@ nsAccessibilityService::PresShellActivated(nsIPresShell* aPresShell)
 {
   nsIDocument* DOMDoc = aPresShell->GetDocument();
   if (DOMDoc) {
-    nsDocAccessible* document = GetDocAccessibleFromCache(DOMDoc);
+    DocAccessible* document = GetDocAccessibleFromCache(DOMDoc);
     if (document) {
       RootAccessible* rootDocument = document->RootAccessible();
       NS_ASSERTION(rootDocument, "Entirely broken tree: no root document!");
@@ -645,7 +645,7 @@ void
 nsAccessibilityService::RecreateAccessible(nsIPresShell* aPresShell,
                                            nsIContent* aContent)
 {
-  nsDocAccessible* document = GetDocAccessible(aPresShell);
+  DocAccessible* document = GetDocAccessible(aPresShell);
   if (document)
     document->RecreateAccessible(aContent);
 }
@@ -910,7 +910,7 @@ nsAccessibilityService::GetAccessible(nsINode* aNode, nsIPresShell* aPresShell)
   NS_PRECONDITION(aNode, "Getting an accessible for null node! Crash.");
 
   // XXX handle the presshell
-  nsDocAccessible* document = GetDocAccessible(aNode->OwnerDoc());
+  DocAccessible* document = GetDocAccessible(aNode->OwnerDoc());
   return document ? document->GetAccessible(aNode) : nsnull;
 }
 
@@ -929,7 +929,7 @@ static bool HasRelatedContent(nsIContent *aContent)
 
 nsAccessible*
 nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
-                                              nsDocAccessible* aDoc,
+                                              DocAccessible* aDoc,
                                               bool* aIsSubtreeHidden)
 {
   if (!aDoc || !aNode || gIsShutdown)
@@ -1004,7 +1004,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
                "Image map manages the area accessible creation!");
 #endif
 
-  nsDocAccessible* docAcc =
+  DocAccessible* docAcc =
     GetAccService()->GetDocAccessible(aNode->OwnerDoc());
   if (!docAcc) {
     NS_NOTREACHED("Node has no host document accessible!");
@@ -1323,7 +1323,7 @@ nsAccessibilityService::HasUniversalAriaProperty(nsIContent *aContent)
 
 already_AddRefed<nsAccessible>
 nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
-                                               nsDocAccessible* aDoc)
+                                               DocAccessible* aDoc)
 {
   nsCOMPtr<nsIAccessibleProvider> accessibleProvider(do_QueryInterface(aContent));
   if (!accessibleProvider)
@@ -1610,7 +1610,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 already_AddRefed<nsAccessible>
 nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
                                                      nsIContent* aContent,
-                                                     nsDocAccessible* aDoc)
+                                                     DocAccessible* aDoc)
 {
   // This method assumes we're in an HTML namespace.
   nsIAtom* tag = aContent->Tag();
@@ -1795,7 +1795,7 @@ NS_GetAccessibilityService(nsIAccessibilityService** aResult)
 already_AddRefed<nsAccessible>
 nsAccessibilityService::CreateAccessibleForDeckChild(nsIFrame* aFrame,
                                                      nsIContent* aContent,
-                                                     nsDocAccessible* aDoc)
+                                                     DocAccessible* aDoc)
 {
   if (aFrame->GetType() == nsGkAtoms::boxFrame ||
       aFrame->GetType() == nsGkAtoms::scrollFrame) {
@@ -1826,7 +1826,7 @@ nsAccessibilityService::CreateAccessibleForDeckChild(nsIFrame* aFrame,
 #ifdef MOZ_XUL
 already_AddRefed<nsAccessible>
 nsAccessibilityService::CreateAccessibleForXULTree(nsIContent* aContent,
-                                                   nsDocAccessible* aDoc)
+                                                   DocAccessible* aDoc)
 {
   nsCOMPtr<nsITreeBoxObject> treeBoxObj = nsCoreUtils::GetTreeBoxObject(aContent);
   if (!treeBoxObj)

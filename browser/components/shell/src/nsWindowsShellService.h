@@ -9,6 +9,7 @@
 #include "nscore.h"
 #include "nsStringAPI.h"
 #include "nsIWindowsShellService.h"
+#include "nsITimer.h"
 
 #include <windows.h>
 #include <ole2.h>
@@ -16,8 +17,8 @@
 class nsWindowsShellService : public nsIWindowsShellService
 {
 public:
-  nsWindowsShellService() : mCheckedThisSession(false) {}; 
-  virtual ~nsWindowsShellService() {};
+  nsWindowsShellService();
+  virtual ~nsWindowsShellService();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHELLSERVICE
@@ -27,6 +28,10 @@ protected:
   bool      IsDefaultBrowserVista(bool* aIsDefaultBrowser);
 
 private:
+#if defined(MOZ_MAINTENANCE_SERVICE)
+  static void LaunchPrefetchClearCommand(nsITimer *aTimer, void*);
+  nsCOMPtr<nsITimer> mTimer;
+#endif
   bool      mCheckedThisSession;
 };
 
