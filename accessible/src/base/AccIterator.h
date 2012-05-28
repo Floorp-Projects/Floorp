@@ -12,8 +12,6 @@
 #include "nscore.h"
 #include "DocAccessible.h"
 
-#include "nsIDOMDocumentXBL.h"
-
 /**
  * AccIterable is a basic interface for iterators over accessibles.
  */
