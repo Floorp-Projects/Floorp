@@ -292,34 +292,39 @@ mozTXTToHTMLConv::FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLengt
       end = PRUint32(i);
       return end > pos;
     }
-    else
-      return false;
+    return false;
   }
   case freetext:
   case abbreviated:
   {
     PRUint32 i = pos + 1;
     bool isEmail = aInString[pos] == (PRUnichar)'@';
-    bool haveOpeningBracket = false;
+    bool seenOpeningParenthesis = false; // there is a '(' earlier in the URL
+    bool seenOpeningSquareBracket = false; // there is a '[' earlier in the URL
     for (; PRInt32(i) < aInStringLength; i++)
     {
       // These chars mark the end of the URL
       if (aInString[i] == '>' || aInString[i] == '<' ||
           aInString[i] == '"' || aInString[i] == '`' ||
-          aInString[i] == '}' || aInString[i] == ']' ||
-          aInString[i] == '{' || aInString[i] == '[' ||
+          aInString[i] == '}' || aInString[i] == '{' ||
           aInString[i] == '|' ||
-          (aInString[i] == ')' && !haveOpeningBracket) ||
-          IsSpace(aInString[i])    )
+          (aInString[i] == ')' && !seenOpeningParenthesis) ||
+          (aInString[i] == ']' && !seenOpeningSquareBracket) ||
+          // Allow IPv6 adresses like http://[1080::8:800:200C:417A]/foo.
+          (aInString[i] == '[' && i > 2 &&
+           (aInString[i - 1] != '/' || aInString[i - 2] != '/')) ||
+          IsSpace(aInString[i]))
           break;
       // Disallow non-ascii-characters for email.
       // Currently correct, but revisit later after standards changed.
       if (isEmail && (
             aInString[i] == '(' || aInString[i] == '\'' ||
-            !nsCRT::IsAscii(aInString[i])       ))
+            !nsCRT::IsAscii(aInString[i])))
           break;
       if (aInString[i] == '(')
-        haveOpeningBracket = true;
+        seenOpeningParenthesis = true;
+      if (aInString[i] == '[')
+        seenOpeningSquareBracket = true;
     }
     // These chars are allowed in the middle of the URL, but not at end.
     // Technically they are, but are used in normal text after the URL.
@@ -334,8 +339,7 @@ mozTXTToHTMLConv::FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLengt
       end = i;
       return true;
     }
-    else
-      return false;
+    return false;
   }
   default:
     return false;
