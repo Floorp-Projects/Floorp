@@ -199,6 +199,13 @@ class OTSStream {
   unsigned chksum_buffer_offset_;
 };
 
+#ifdef MOZ_OTS_REPORT_ERRORS
+// Signature of the function to be provided by the client in order to report errors.
+// The return type is a boolean so that it can be used within an expression,
+// but the actual value is ignored. (Suggested convention is to always return 'false'.)
+typedef bool (*MessageFunc)(void *user_data, const char *format, ...);
+#endif
+
 // -----------------------------------------------------------------------------
 // Process a given OpenType file and write out a sanitised version
 //   output: a pointer to an object implementing the OTSStream interface. The
@@ -209,6 +216,9 @@ class OTSStream {
 //   preserve_graphite_tables: whether to preserve Graphite Layout tables
 // -----------------------------------------------------------------------------
 bool OTS_API Process(OTSStream *output, const uint8_t *input, size_t length,
+#ifdef MOZ_OTS_REPORT_ERRORS
+                     MessageFunc message_func, void *user_data,
+#endif
                      bool preserve_graphite_tables = false);
 
 // Force to disable debug output even when the library is compiled with

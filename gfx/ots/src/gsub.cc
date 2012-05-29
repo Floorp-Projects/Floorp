@@ -15,6 +15,8 @@
 // GSUB - The Glyph Substitution Table
 // http://www.microsoft.com/typography/otspec/gsub.htm
 
+#define TABLE_NAME "GSUB"
+
 namespace {
 
 // The GSUB header size
@@ -529,7 +531,11 @@ bool ParseReverseChainingContextSingleSubstitution(
 }  // namespace
 
 #define DROP_THIS_TABLE \
-  do { file->gsub->data = 0; file->gsub->length = 0; } while (0)
+  do { \
+    file->gsub->data = 0; \
+    file->gsub->length = 0; \
+    OTS_FAILURE_MSG("OpenType layout data discarded"); \
+  } while (0)
 
 namespace ots {
 
