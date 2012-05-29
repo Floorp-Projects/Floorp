@@ -38,6 +38,40 @@ void Warning(const char *f, int l, const char *format, ...)
 #endif
 #endif
 
+#ifdef MOZ_OTS_REPORT_ERRORS
+
+// All OTS_FAILURE_* macros ultimately evaluate to 'false', just like the original
+// message-less OTS_FAILURE(), so that the current parser will return 'false' as
+// its result (indicating a failure).
+// If the message-callback feature is enabled, and a message_func pointer has been
+// provided, this will be called before returning the 'false' status.
+
+// Generate a simple message
+#define OTS_FAILURE_MSG_(otf_,msg_) \
+  ((otf_)->message_func && \
+    (*(otf_)->message_func)((otf_)->user_data, "%s", msg_) && \
+    false)
+
+// Generate a message with an associated table tag
+#define OTS_FAILURE_MSG_TAG_(otf_,msg_,tag_) \
+  ((otf_)->message_func && \
+    (*(otf_)->message_func)((otf_)->user_data, "table '%4.4s': %s", tag_, msg_) && \
+    false)
+
+// Convenience macro for use in files that only handle a single table tag,
+// defined as TABLE_NAME at the top of the file; the 'file' variable is
+// expected to be the current OpenTypeFile pointer.
+#define OTS_FAILURE_MSG(msg_) OTS_FAILURE_MSG_TAG_(file, msg_, TABLE_NAME)
+
+#else
+
+// If the message-callback feature is not enabled, error messages are just dropped.
+#define OTS_FAILURE_MSG_(otf_,msg_)          OTS_FAILURE()
+#define OTS_FAILURE_MSG_TAG_(otf_,msg_,tag_) OTS_FAILURE()
+#define OTS_FAILURE_MSG(msg_)                OTS_FAILURE()
+
+#endif
+
 // Define OTS_NO_TRANSCODE_HINTS (i.e., g++ -DOTS_NO_TRANSCODE_HINTS) if you
 // want to omit TrueType hinting instructions and variables in glyf, fpgm, prep,
 // and cvt tables.
@@ -206,6 +240,11 @@ struct OpenTypeFile {
   uint16_t search_range;
   uint16_t entry_selector;
   uint16_t range_shift;
+
+#ifdef MOZ_OTS_REPORT_ERRORS
+  MessageFunc message_func;
+  void        *user_data;
+#endif
 
   // This is used to tell the relevant parsers whether to preserve the
   // Graphite layout tables (currently _without_ any checking)
