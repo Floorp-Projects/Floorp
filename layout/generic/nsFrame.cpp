@@ -3416,10 +3416,10 @@ static nsIFrame* AdjustFrameForSelectionStyles(nsIFrame* aFrame) {
   
 
 nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(nsPoint aPoint,
-                                                              bool aIgnoreSelectionStyle)
+                                                              PRUint32 aFlags)
 {
   nsIFrame *adjustedFrame;
-  if (aIgnoreSelectionStyle) {
+  if (aFlags & IGNORE_SELECTION_STYLE) {
     adjustedFrame = this;
   }
   else {

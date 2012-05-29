@@ -1310,7 +1310,8 @@ nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
       if (pointInFrame.x < frameSize.width && pointInFrame.y < frameSize.height) {
         // Finished
         if (frame->GetType() == nsGkAtoms::textFrame) {
-          nsIFrame::ContentOffsets contentOffsets = frame->GetContentOffsetsFromPointExternal(pointInFrame, true);
+          nsIFrame::ContentOffsets contentOffsets =
+            frame->GetContentOffsetsFromPointExternal(pointInFrame, nsIFrame::IGNORE_SELECTION_STYLE);
           if (contentOffsets.IsNull() || contentOffsets.content != content) {
             return NS_OK; // Not found, will return -1
           }
