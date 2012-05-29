@@ -23,12 +23,12 @@ public:
   // nsISupports and cycle collector
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
 
   // HyperLinkAccessible
   virtual PRUint32 AnchorCount();
-  virtual nsAccessible* AnchorAt(PRUint32 aAnchorIndex);
+  virtual Accessible* AnchorAt(PRUint32 aAnchorIndex);
   virtual already_AddRefed<nsIURI> AnchorURIAt(PRUint32 aAnchorIndex);
 
   /**
@@ -38,15 +38,15 @@ public:
 
 protected:
 
-  // nsAccessible
+  // Accessible
   virtual void CacheChildren();
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible downcasting method
+// Accessible downcasting method
 
 inline nsHTMLImageMapAccessible*
-nsAccessible::AsImageMap()
+Accessible::AsImageMap()
 {
   return IsImageMapAccessible() ?
     static_cast<nsHTMLImageMapAccessible*>(this) : nsnull;
@@ -65,11 +65,11 @@ public:
   // nsAccessNode
   virtual bool IsPrimaryForNode() const;
 
-  // nsAccessible
+  // Accessible
   virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
-  virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                     EWhichChildAtPoint aWhichChild);
+  virtual Accessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                   EWhichChildAtPoint aWhichChild);
   virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
 
   // HyperLinkAccessible
@@ -78,7 +78,7 @@ public:
 
 protected:
 
-  // nsAccessible
+  // Accessible
   virtual void CacheChildren();
 };
 

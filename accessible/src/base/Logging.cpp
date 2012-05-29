@@ -431,7 +431,7 @@ logging::DocDestroy(const char* aMsg, nsIDocument* aDocumentNode,
 }
 
 void
-logging::Address(const char* aDescr, nsAccessible* aAcc)
+logging::Address(const char* aDescr, Accessible* aAcc)
 {
   nsINode* node = aAcc->GetNode();
   nsIDocument* docNode = aAcc->GetDocumentNode();

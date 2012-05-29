@@ -5,7 +5,7 @@
 #ifndef a11yFilters_h_
 #define a11yFilters_h_
 
-class nsAccessible;
+class Accessible;
 
 /**
  * Predefined filters used for nsAccIterator and nsAccCollector.
@@ -15,13 +15,13 @@ namespace filters {
   /**
    * Return true if the traversed accessible complies with filter.
    */
-  typedef bool (*FilterFuncPtr) (nsAccessible*);
+  typedef bool (*FilterFuncPtr) (Accessible*);
 
-  bool GetSelected(nsAccessible* aAccessible);
-  bool GetSelectable(nsAccessible* aAccessible);
-  bool GetRow(nsAccessible* aAccessible);
-  bool GetCell(nsAccessible* aAccessible);
-  bool GetEmbeddedObject(nsAccessible* aAccessible);
+  bool GetSelected(Accessible* aAccessible);
+  bool GetSelectable(Accessible* aAccessible);
+  bool GetRow(Accessible* aAccessible);
+  bool GetCell(Accessible* aAccessible);
+  bool GetEmbeddedObject(Accessible* aAccessible);
 }
 
 #endif

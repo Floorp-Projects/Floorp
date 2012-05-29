@@ -135,7 +135,7 @@ HTMLRadioButtonAccessible::
 PRUint64
 HTMLRadioButtonAccessible::NativeState()
 {
-  PRUint64 state = nsAccessibleWrap::NativeState();
+  PRUint64 state = AccessibleWrap::NativeState();
 
   state |= states::CHECKABLE;
   
@@ -287,7 +287,7 @@ HTMLButtonAccessible::NativeRole()
 nsresult
 HTMLButtonAccessible::GetNameInternal(nsAString& aName)
 {
-  nsAccessible::GetNameInternal(aName);
+  Accessible::GetNameInternal(aName);
   if (!aName.IsEmpty() || mContent->Tag() != nsGkAtoms::input)
     return NS_OK;
 
@@ -338,7 +338,7 @@ HTMLTextFieldAccessible::
 }
 
 NS_IMPL_ISUPPORTS_INHERITED3(HTMLTextFieldAccessible,
-                             nsAccessible,
+                             Accessible,
                              nsHyperTextAccessible,
                              nsIAccessibleText,
                              nsIAccessibleEditableText)
@@ -357,7 +357,7 @@ HTMLTextFieldAccessible::NativeRole()
 nsresult
 HTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
 {
-  nsresult rv = nsAccessible::GetNameInternal(aName);
+  nsresult rv = Accessible::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aName.IsEmpty())
@@ -370,7 +370,7 @@ HTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
     // This means we're part of another control, so use parent accessible for name.
     // This ensures that a textbox inside of a XUL widget gets
     // an accessible name.
-    nsAccessible* parent = Parent();
+    Accessible* parent = Parent();
     if (parent)
       parent->GetName(aName);
   }
@@ -454,7 +454,7 @@ HTMLTextFieldAccessible::NativeState()
     return state;
 
   // Expose autocomplete states if this input is part of autocomplete widget.
-  nsAccessible* widget = ContainerWidget();
+  Accessible* widget = ContainerWidget();
   if (widget && widget-IsAutoComplete()) {
     state |= states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION;
     return state;
@@ -557,7 +557,7 @@ HTMLTextFieldAccessible::IsWidget() const
   return true;
 }
 
-nsAccessible*
+Accessible*
 HTMLTextFieldAccessible::ContainerWidget() const
 {
   return mParent && mParent->Role() == roles::AUTOCOMPLETE ? mParent : nsnull;
@@ -598,7 +598,7 @@ HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
        event->GetState() == states::REQUIRED ||
        event->GetState() == states::HASPOPUP ||
        event->GetState() == states::INVALID)) {
-    nsAccessible* input = GetChildAt(0);
+    Accessible* input = GetChildAt(0);
     if (input && input->Role() == roles::ENTRY) {
       nsRefPtr<AccStateChangeEvent> childEvent =
         new AccStateChangeEvent(input, event->GetState(),
@@ -607,7 +607,7 @@ HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
       nsEventShell::FireEvent(childEvent);
     }
 
-    nsAccessible* button = GetChildAt(1);
+    Accessible* button = GetChildAt(1);
     if (button && button->Role() == roles::PUSHBUTTON) {
       nsRefPtr<AccStateChangeEvent> childEvent =
         new AccStateChangeEvent(button, event->GetState(),
@@ -653,7 +653,7 @@ HTMLGroupboxAccessible::GetLegend()
 nsresult
 HTMLGroupboxAccessible::GetNameInternal(nsAString& aName)
 {
-  nsresult rv = nsAccessible::GetNameInternal(aName);
+  nsresult rv = Accessible::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aName.IsEmpty())
@@ -696,7 +696,7 @@ HTMLLegendAccessible::RelationByType(PRUint32 aType)
   if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
     return rel;
 
-  nsAccessible* groupbox = Parent();
+  Accessible* groupbox = Parent();
   if (groupbox && groupbox->Role() == roles::GROUPING)
     rel.AppendTarget(groupbox);
 
@@ -802,7 +802,7 @@ HTMLFigcaptionAccessible::RelationByType(PRUint32 aType)
   if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
     return rel;
 
-  nsAccessible* figure = Parent();
+  Accessible* figure = Parent();
   if (figure &&
       figure->GetContent()->NodeInfo()->Equals(nsGkAtoms::figure,
                                                mContent->GetNameSpaceID())) {

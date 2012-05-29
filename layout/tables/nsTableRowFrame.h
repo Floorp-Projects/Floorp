@@ -224,7 +224,7 @@ public:
                                   BCPixelSize aPixelValue);
 
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<nsAccessible> CreateAccessible();
+  virtual already_AddRefed<Accessible> CreateAccessible();
 #endif
 
 protected:

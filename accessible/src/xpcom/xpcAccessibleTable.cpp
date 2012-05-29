@@ -6,7 +6,7 @@
 
 #include "xpcAccessibleTable.h"
 
-#include "nsAccessible.h"
+#include "Accessible.h"
 #include "TableAccessible.h"
 
 nsresult

@@ -128,7 +128,7 @@ NotificationController::ScheduleChildDocBinding(DocAccessible* aDocument)
 }
 
 void
-NotificationController::ScheduleContentInsertion(nsAccessible* aContainer,
+NotificationController::ScheduleContentInsertion(Accessible* aContainer,
                                                  nsIContent* aStartChildNode,
                                                  nsIContent* aEndChildNode)
 {
@@ -235,7 +235,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     nsIContent* ownerContent = mDocument->GetDocumentNode()->
       FindContentForSubDocument(childDoc->GetDocumentNode());
     if (ownerContent) {
-      nsAccessible* outerDocAcc = mDocument->GetAccessible(ownerContent);
+      Accessible* outerDocAcc = mDocument->GetAccessible(ownerContent);
       if (outerDocAcc && outerDocAcc->AppendChild(childDoc)) {
         if (mDocument->AppendChildDocument(childDoc))
           continue;
@@ -295,7 +295,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   for (PRUint32 idx = 0; idx < eventCount; idx++) {
     AccEvent* accEvent = events[idx];
     if (accEvent->mEventRule != AccEvent::eDoNotEmit) {
-      nsAccessible* target = accEvent->GetAccessible();
+      Accessible* target = accEvent->GetAccessible();
       if (!target || target->IsDefunct())
         continue;
 
@@ -642,7 +642,7 @@ void
 NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
 {
   DocAccessible* document = aEvent->GetDocAccessible();
-  nsAccessible* container = document->GetContainerAccessible(aEvent->mNode);
+  Accessible* container = document->GetContainerAccessible(aEvent->mNode);
   if (!container)
     return;
 
@@ -682,7 +682,7 @@ NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
 {
   DocAccessible* document = static_cast<DocAccessible*>(aUserArg);
   nsIContent* textNode = aEntry->GetKey();
-  nsAccessible* textAcc = document->GetAccessible(textNode);
+  Accessible* textAcc = document->GetAccessible(textNode);
 
   // If the text node is not in tree or doesn't have frame then this case should
   // have been handled already by content removal notifications.
@@ -771,7 +771,7 @@ NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
 #endif
 
     // Make sure the text node is in accessible document still.
-    nsAccessible* container = document->GetAccessibleOrContainer(containerNode);
+    Accessible* container = document->GetAccessibleOrContainer(containerNode);
     NS_ASSERTION(container,
                  "Text node having rendered text hasn't accessible document!");
     if (container) {
@@ -789,7 +789,7 @@ NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
 // NotificationController: content inserted notification
 
 NotificationController::ContentInsertion::
-  ContentInsertion(DocAccessible* aDocument, nsAccessible* aContainer) :
+  ContentInsertion(DocAccessible* aDocument, Accessible* aContainer) :
   mDocument(aDocument), mContainer(aContainer)
 {
 }

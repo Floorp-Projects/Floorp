@@ -5823,7 +5823,7 @@ nsWindow::CreateRootAccessible()
 {
     if (mIsTopLevel && !mRootAccessible) {
         LOG(("nsWindow:: Create Toplevel Accessibility\n"));
-        nsAccessible *acc = DispatchAccessibleEvent();
+        Accessible* acc = DispatchAccessibleEvent();
 
         if (acc) {
             mRootAccessible = acc;
@@ -5831,7 +5831,7 @@ nsWindow::CreateRootAccessible()
     }
 }
 
-nsAccessible*
+Accessible*
 nsWindow::DispatchAccessibleEvent()
 {
     nsAccessibleEvent event(true, NS_GETACCESSIBLE, this);
@@ -5856,7 +5856,7 @@ nsWindow::DispatchEventToRootAccessible(PRUint32 aEventType)
     }
 
     // Get the root document accessible and fire event to it.
-    nsAccessible *acc = DispatchAccessibleEvent();
+    Accessible* acc = DispatchAccessibleEvent();
     if (acc) {
         accService->FireAccessibleEvent(aEventType, acc);
     }

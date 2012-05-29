@@ -10,7 +10,7 @@
 
 struct IAccessible;
 
-class nsHTMLWin32ObjectOwnerAccessible : public nsAccessibleWrap
+class nsHTMLWin32ObjectOwnerAccessible : public AccessibleWrap
 {
 public:
   // This will own the nsHTMLWin32ObjectAccessible. We create this where the
@@ -26,23 +26,23 @@ public:
   // nsAccessNode
   virtual void Shutdown();
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
 protected:
 
-  // nsAccessible
+  // Accessible
   virtual void CacheChildren();
 
   void* mHwnd;
-  nsRefPtr<nsAccessible> mNativeAccessible;
+  nsRefPtr<Accessible> mNativeAccessible;
 };
 
 /**
   * This class is used only internally, we never! send out an IAccessible linked
   *   back to this object. This class is used to represent a plugin object when
-  *   referenced as a child or sibling of another nsAccessible node. We need only
+  *   referenced as a child or sibling of another Accessible node. We need only
   *   a limited portion of the nsIAccessible interface implemented here. The
   *   in depth accessible information will be returned by the actual IAccessible
   *   object returned by us in Accessible::NewAccessible() that gets the IAccessible
