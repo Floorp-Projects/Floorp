@@ -2458,9 +2458,12 @@ Accessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
   if (!frame)
     return;
 
+  NS_ASSERTION(mParent,
+               "Called on accessible unbound from tree. Result can be wrong.");
+
   if (frame->GetType() == nsGkAtoms::brFrame) {
     aText += kForcedNewLineChar;
-  } else if (nsAccUtils::MustPrune(Parent())) {
+  } else if (mParent && nsAccUtils::MustPrune(mParent)) {
     // Expose the embedded object accessible as imaginary embedded object
     // character if its parent hypertext accessible doesn't expose children to
     // AT.
