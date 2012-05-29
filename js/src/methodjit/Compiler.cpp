@@ -917,8 +917,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
             return Compile_Abort;
     }
 
-    if (request == CompileRequest_Interpreter &&
-        !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
+    if (!cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
         (cx->typeInferenceEnabled()
          ? script->incUseCount() <= INFER_USES_BEFORE_COMPILE
          : script->incUseCount() <= USES_BEFORE_COMPILE))
@@ -960,8 +959,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (desc.chunk)
         return Compile_Okay;
 
-    if (request == CompileRequest_Interpreter &&
-        !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
+    if (!cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
         ++desc.counter <= INFER_USES_BEFORE_COMPILE)
     {
         return Compile_Skipped;
