@@ -2815,16 +2815,17 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
                                PRUint32 aRoundedRectClipCount) 
 {
 #ifdef MOZ_ENABLE_MASK_LAYERS
+  nsIntRect boundingRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
   // don't build an unnecessary mask
   if (aClip.mRoundedClipRects.IsEmpty() ||
-      aRoundedRectClipCount <= 0) {
+      aRoundedRectClipCount <= 0 ||
+      boundingRect.IsEmpty()) {
     return;
   }
 
   const gfx3DMatrix& layerTransform = aLayer->GetTransform();
   NS_ASSERTION(layerTransform.CanDraw2D() || aLayer->AsContainerLayer(),
                "Only container layers may have 3D transforms.");
-  nsIntRect boundingRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
 
   // check if we can re-use the mask layer
   nsRefPtr<ImageLayer> maskLayer =  CreateOrRecycleMaskImageLayerFor(aLayer);

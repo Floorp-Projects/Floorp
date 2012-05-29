@@ -3,21 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-nsAccessibleWrap::
-  nsAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-  nsAccessible(aContent, aDoc)
+AccessibleWrap::
+  AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
+  Accessible(aContent, aDoc)
 {
 }
 
 //-----------------------------------------------------
 // destruction
 //-----------------------------------------------------
-nsAccessibleWrap::~nsAccessibleWrap()
+AccessibleWrap::~AccessibleWrap()
 {
 }
 

@@ -7,17 +7,17 @@
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-#ifndef _nsAccessibleWrap_H_
-#define _nsAccessibleWrap_H_
+#ifndef _AccessibleWrap_H_
+#define _AccessibleWrap_H_
 
 #include "nsCOMPtr.h"
-#include "nsAccessible.h"
+#include "Accessible.h"
 
-class nsAccessibleWrap : public nsAccessible
+class AccessibleWrap : public Accessible
 {
 public: // construction, destruction
-  nsAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~nsAccessibleWrap();
+  AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
+  virtual ~AccessibleWrap();
 
   protected:
     virtual nsresult FirePlatformEvent(AccEvent* aEvent)

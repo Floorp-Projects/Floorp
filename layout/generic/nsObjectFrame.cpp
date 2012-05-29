@@ -263,7 +263,7 @@ NS_QUERYFRAME_HEAD(nsObjectFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsObjectFrameSuper)
 
 #ifdef ACCESSIBILITY
-already_AddRefed<nsAccessible>
+already_AddRefed<Accessible>
 nsObjectFrame::CreateAccessible()
 {
   nsAccessibilityService* accService = nsIPresShell::AccService();

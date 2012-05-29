@@ -1,4 +1,5 @@
 
+
 /*
  * Copyright 2006 The Android Open Source Project
  *
@@ -11,6 +12,7 @@
 #define SkPaint_DEFINED
 
 #include "SkColor.h"
+#include "SkDrawLooper.h"
 #include "SkXfermode.h"
 
 class SkAutoGlyphCache;
@@ -28,7 +30,6 @@ class SkPath;
 class SkPathEffect;
 class SkRasterizer;
 class SkShader;
-class SkDrawLooper;
 class SkTypeface;
 
 typedef const SkGlyph& (*SkDrawCacheProc)(SkGlyphCache*, const char**,
@@ -100,11 +101,12 @@ public:
         kEmbeddedBitmapText_Flag = 0x400, //!< mask to enable embedded bitmap strikes
         kAutoHinting_Flag     = 0x800,  //!< mask to force Freetype's autohinter
         kVerticalText_Flag    = 0x1000,
+        kGenA8FromLCD_Flag    = 0x2000, // hack for GDI -- do not use if you can help it
 
         // when adding extra flags, note that the fFlags member is specified
         // with a bit-width and you'll have to expand it.
 
-        kAllFlags = 0x1FFF
+        kAllFlags = 0x3FFF
     };
 
     /** Return the paint's flags. Use the Flag enum to test flag values.
@@ -432,44 +434,6 @@ public:
     */
     bool getFillPath(const SkPath& src, SkPath* dst) const;
 
-    /** Returns true if the current paint settings allow for fast computation of
-        bounds (i.e. there is nothing complex like a patheffect that would make
-        the bounds computation expensive.
-    */
-    bool canComputeFastBounds() const {
-        // use bit-or since no need for early exit
-        return (reinterpret_cast<uintptr_t>(this->getMaskFilter()) |
-                reinterpret_cast<uintptr_t>(this->getLooper()) |
-                reinterpret_cast<uintptr_t>(this->getRasterizer()) |
-                reinterpret_cast<uintptr_t>(this->getPathEffect())) == 0;
-    }
-
-    /** Only call this if canComputeFastBounds() returned true. This takes a
-        raw rectangle (the raw bounds of a shape), and adjusts it for stylistic
-        effects in the paint (e.g. stroking). If needed, it uses the storage
-        rect parameter. It returns the adjusted bounds that can then be used
-        for quickReject tests.
-
-        The returned rect will either be orig or storage, thus the caller
-        should not rely on storage being set to the result, but should always
-        use the retured value. It is legal for orig and storage to be the same
-        rect.
-
-        e.g.
-        if (paint.canComputeFastBounds()) {
-            SkRect r, storage;
-            path.computeBounds(&r, SkPath::kFast_BoundsType);
-            const SkRect& fastR = paint.computeFastBounds(r, &storage);
-            if (canvas->quickReject(fastR, ...)) {
-                // don't draw the path
-            }
-        }
-    */
-    const SkRect& computeFastBounds(const SkRect& orig, SkRect* storage) const {
-        return this->getStyle() == kFill_Style ? orig :
-                    this->computeStrokeFastBounds(orig, storage);
-    }
-
     /** Get the paint's shader object.
         <p />
       The shader's reference count is not affected.
@@ -478,14 +442,21 @@ public:
     SkShader* getShader() const { return fShader; }
 
     /** Set or clear the shader object.
-        <p />
-        Pass NULL to clear any previous shader.
-        As a convenience, the parameter passed is also returned.
-        If a previous shader exists, its reference count is decremented.
-        If shader is not NULL, its reference count is incremented.
-        @param shader   May be NULL. The shader to be installed in the paint
-        @return         shader
-    */
+     *  Shaders specify the source color(s) for what is being drawn. If a paint
+     *  has no shader, then the paint's color is used. If the paint has a
+     *  shader, then the shader's color(s) are use instead, but they are
+     *  modulated by the paint's alpha. This makes it easy to create a shader
+     *  once (e.g. bitmap tiling or gradient) and then change its transparency
+     *  w/o having to modify the original shader... only the paint's alpha needs
+     *  to be modified.
+     *  <p />
+     *  Pass NULL to clear any previous shader.
+     *  As a convenience, the parameter passed is also returned.
+     *  If a previous shader exists, its reference count is decremented.
+     *  If shader is not NULL, its reference count is incremented.
+     *  @param shader   May be NULL. The shader to be installed in the paint
+     *  @return         shader
+     */
     SkShader* setShader(SkShader* shader);
 
     /** Get the paint's colorfilter. If there is a colorfilter, its reference
@@ -690,6 +661,7 @@ public:
     enum TextEncoding {
         kUTF8_TextEncoding,     //!< the text parameters are UTF8
         kUTF16_TextEncoding,    //!< the text parameters are UTF16
+        kUTF32_TextEncoding,    //!< the text parameters are UTF32
         kGlyphID_TextEncoding   //!< the text parameters are glyph indices
     };
 
@@ -780,7 +752,7 @@ public:
      *
      *  @param text     Address of the text
      *  @param length   Number of bytes of text to measure
-     *  @return         The width of the text
+     *  @return         The advance width of the text
      */
     SkScalar measureText(const void* text, size_t length) const {
         return this->measureText(text, length, NULL, 0);
@@ -846,15 +818,80 @@ public:
 
 #ifdef SK_BUILD_FOR_ANDROID
     const SkGlyph& getUnicharMetrics(SkUnichar);
+    const SkGlyph& getGlyphMetrics(uint16_t);
     const void* findImage(const SkGlyph&);
 
     uint32_t getGenerationID() const;
+
+    /** Returns the base glyph count for the strike associated with this paint
+    */
+    unsigned getBaseGlyphCount(SkUnichar text) const;
 #endif
 
     // returns true if the paint's settings (e.g. xfermode + alpha) resolve to
     // mean that we need not draw at all (e.g. SrcOver + 0-alpha)
     bool nothingToDraw() const;
 
+    ///////////////////////////////////////////////////////////////////////////
+    // would prefer to make these private...
+
+    /** Returns true if the current paint settings allow for fast computation of
+     bounds (i.e. there is nothing complex like a patheffect that would make
+     the bounds computation expensive.
+     */
+    bool canComputeFastBounds() const {
+        if (this->getLooper()) {
+            return this->getLooper()->canComputeFastBounds(*this);
+        }
+        return !this->getRasterizer();
+    }
+    
+    /** Only call this if canComputeFastBounds() returned true. This takes a
+     raw rectangle (the raw bounds of a shape), and adjusts it for stylistic
+     effects in the paint (e.g. stroking). If needed, it uses the storage
+     rect parameter. It returns the adjusted bounds that can then be used
+     for quickReject tests.
+     
+     The returned rect will either be orig or storage, thus the caller
+     should not rely on storage being set to the result, but should always
+     use the retured value. It is legal for orig and storage to be the same
+     rect.
+     
+     e.g.
+     if (paint.canComputeFastBounds()) {
+     SkRect r, storage;
+     path.computeBounds(&r, SkPath::kFast_BoundsType);
+     const SkRect& fastR = paint.computeFastBounds(r, &storage);
+     if (canvas->quickReject(fastR, ...)) {
+     // don't draw the path
+     }
+     }
+     */
+    const SkRect& computeFastBounds(const SkRect& orig, SkRect* storage) const {
+        SkPaint::Style style = this->getStyle();
+        // ultra fast-case: filling with no effects that affect geometry
+        if (kFill_Style == style) {
+            uintptr_t effects = reinterpret_cast<uintptr_t>(this->getLooper());
+            effects |= reinterpret_cast<uintptr_t>(this->getMaskFilter());
+            effects |= reinterpret_cast<uintptr_t>(this->getPathEffect());
+            if (!effects) {
+                return orig;
+            }
+        }
+        
+        return this->doComputeFastBounds(orig, storage, style);
+    }
+    
+    const SkRect& computeFastStrokeBounds(const SkRect& orig,
+                                          SkRect* storage) const {
+        return this->doComputeFastBounds(orig, storage, kStroke_Style);
+    }
+    
+    // Take the style explicitly, so the caller can force us to be stroked
+    // without having to make a copy of the paint just to change that field.
+    const SkRect& doComputeFastBounds(const SkRect& orig, SkRect* storage,
+                                      Style) const;
+    
 private:
     SkTypeface*     fTypeface;
     SkScalar        fTextSize;
@@ -873,7 +910,7 @@ private:
     SkColor         fColor;
     SkScalar        fWidth;
     SkScalar        fMiterLimit;
-    unsigned        fFlags : 14;
+    unsigned        fFlags : 15;
     unsigned        fTextAlign : 2;
     unsigned        fCapType : 2;
     unsigned        fJoinType : 2;
@@ -894,9 +931,6 @@ private:
                         void (*proc)(const SkDescriptor*, void*),
                         void* context, bool ignoreGamma = false) const;
 
-    const SkRect& computeStrokeFastBounds(const SkRect& orig,
-                                          SkRect* storage) const;
-
     enum {
         kCanonicalTextSizeForPaths = 64
     };
@@ -911,45 +945,6 @@ private:
     // in the struct so that we can do a memcmp to this field's offset.
     uint32_t        fGenerationID;
 #endif
-};
-
-///////////////////////////////////////////////////////////////////////////////
-
-#include "SkPathEffect.h"
-
-/** \class SkStrokePathEffect
-
-    SkStrokePathEffect simulates stroking inside a patheffect, allowing the
-    caller to have explicit control of when to stroke a path. Typically this is
-    used if the caller wants to stroke before another patheffect is applied
-    (using SkComposePathEffect or SkSumPathEffect).
-*/
-class SkStrokePathEffect : public SkPathEffect {
-public:
-    SkStrokePathEffect(const SkPaint&);
-    SkStrokePathEffect(SkScalar width, SkPaint::Style, SkPaint::Join,
-                       SkPaint::Cap, SkScalar miterLimit = -1);
-
-    // overrides
-    virtual bool filterPath(SkPath* dst, const SkPath& src, SkScalar* width);
-
-    // overrides for SkFlattenable
-    virtual void flatten(SkFlattenableWriteBuffer&);
-    virtual Factory getFactory();
-
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer&);
-
-private:
-    SkScalar    fWidth, fMiter;
-    uint8_t     fStyle, fJoin, fCap;
-
-    SkStrokePathEffect(SkFlattenableReadBuffer&);
-
-    typedef SkPathEffect INHERITED;
-
-    // illegal
-    SkStrokePathEffect(const SkStrokePathEffect&);
-    SkStrokePathEffect& operator=(const SkStrokePathEffect&);
 };
 
 #endif

@@ -8,7 +8,7 @@
 
 #include "nsIAccessibleEvent.h"
 
-#include "nsAccessible.h"
+#include "Accessible.h"
 
 class nsAccEvent;
 class DocAccessible;
@@ -59,7 +59,7 @@ public:
   };
 
   // Initialize with an nsIAccessible
-  AccEvent(PRUint32 aEventType, nsAccessible* aAccessible,
+  AccEvent(PRUint32 aEventType, Accessible* aAccessible,
            EIsFromUserInput aIsFromUserInput = eAutoDetect,
            EEventRule aEventRule = eRemoveDupes);
   // Initialize with an nsIDOMNode
@@ -73,7 +73,7 @@ public:
   EEventRule GetEventRule() const { return mEventRule; }
   bool IsFromUserInput() const { return mIsFromUserInput; }
 
-  nsAccessible *GetAccessible();
+  Accessible* GetAccessible();
   DocAccessible* GetDocAccessible();
   nsINode* GetNode();
 
@@ -114,7 +114,7 @@ protected:
   /**
    * Get an accessible from event target node.
    */
-  nsAccessible *GetAccessibleForNode() const;
+  Accessible* GetAccessibleForNode() const;
 
   /**
    * Determine whether the event is from user input by event state manager if
@@ -125,7 +125,7 @@ protected:
   bool mIsFromUserInput;
   PRUint32 mEventType;
   EEventRule mEventRule;
-  nsRefPtr<nsAccessible> mAccessible;
+  nsRefPtr<Accessible> mAccessible;
   nsCOMPtr<nsINode> mNode;
 
   friend class NotificationController;
@@ -138,7 +138,7 @@ protected:
 class AccStateChangeEvent: public AccEvent
 {
 public:
-  AccStateChangeEvent(nsAccessible* aAccessible, PRUint64 aState,
+  AccStateChangeEvent(Accessible* aAccessible, PRUint64 aState,
                       bool aIsEnabled,
                       EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
@@ -171,7 +171,7 @@ private:
 class AccTextChangeEvent: public AccEvent
 {
 public:
-  AccTextChangeEvent(nsAccessible* aAccessible, PRInt32 aStart,
+  AccTextChangeEvent(Accessible* aAccessible, PRInt32 aStart,
                      const nsAString& aModifiedText, bool aIsInserted,
                      EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
@@ -206,7 +206,7 @@ private:
 class AccMutationEvent: public AccEvent
 {
 public:
-  AccMutationEvent(PRUint32 aEventType, nsAccessible* aTarget,
+  AccMutationEvent(PRUint32 aEventType, Accessible* aTarget,
                    nsINode* aTargetNode);
 
   // Event
@@ -233,7 +233,7 @@ protected:
 class AccHideEvent: public AccMutationEvent
 {
 public:
-  AccHideEvent(nsAccessible* aTarget, nsINode* aTargetNode);
+  AccHideEvent(Accessible* aTarget, nsINode* aTargetNode);
 
   // Event
   virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
@@ -245,14 +245,14 @@ public:
   }
 
   // AccHideEvent
-  nsAccessible* TargetParent() const { return mParent; }
-  nsAccessible* TargetNextSibling() const { return mNextSibling; }
-  nsAccessible* TargetPrevSibling() const { return mPrevSibling; }
+  Accessible* TargetParent() const { return mParent; }
+  Accessible* TargetNextSibling() const { return mNextSibling; }
+  Accessible* TargetPrevSibling() const { return mPrevSibling; }
 
 protected:
-  nsRefPtr<nsAccessible> mParent;
-  nsRefPtr<nsAccessible> mNextSibling;
-  nsRefPtr<nsAccessible> mPrevSibling;
+  nsRefPtr<Accessible> mParent;
+  nsRefPtr<Accessible> mNextSibling;
+  nsRefPtr<Accessible> mPrevSibling;
 
   friend class NotificationController;
 };
@@ -264,7 +264,7 @@ protected:
 class AccShowEvent: public AccMutationEvent
 {
 public:
-  AccShowEvent(nsAccessible* aTarget, nsINode* aTargetNode);
+  AccShowEvent(Accessible* aTarget, nsINode* aTargetNode);
 
   // Event
   static const EventGroup kEventGroup = eShowEvent;
@@ -281,7 +281,7 @@ public:
 class AccCaretMoveEvent: public AccEvent
 {
 public:
-  AccCaretMoveEvent(nsAccessible* aAccessible, PRInt32 aCaretOffset);
+  AccCaretMoveEvent(Accessible* aAccessible, PRInt32 aCaretOffset);
   AccCaretMoveEvent(nsINode* aNode);
 
   // AccEvent
@@ -312,7 +312,7 @@ public:
     eSelectionRemove
   };
 
-  AccSelChangeEvent(nsAccessible* aWidget, nsAccessible* aItem,
+  AccSelChangeEvent(Accessible* aWidget, Accessible* aItem,
                     SelChangeType aSelChangeType);
 
   virtual ~AccSelChangeEvent() { }
@@ -325,11 +325,11 @@ public:
   }
 
   // AccSelChangeEvent
-  nsAccessible* Widget() const { return mWidget; }
+  Accessible* Widget() const { return mWidget; }
 
 private:
-  nsRefPtr<nsAccessible> mWidget;
-  nsRefPtr<nsAccessible> mItem;
+  nsRefPtr<Accessible> mWidget;
+  nsRefPtr<Accessible> mItem;
   SelChangeType mSelChangeType;
   PRUint32 mPreceedingCount;
   AccSelChangeEvent* mPackedEvent;
@@ -344,7 +344,7 @@ private:
 class AccTableChangeEvent : public AccEvent
 {
 public:
-  AccTableChangeEvent(nsAccessible* aAccessible, PRUint32 aEventType,
+  AccTableChangeEvent(Accessible* aAccessible, PRUint32 aEventType,
                       PRInt32 aRowOrColIndex, PRInt32 aNumRowsOrCols);
 
   // AccEvent
@@ -371,7 +371,7 @@ private:
 class AccVCChangeEvent : public AccEvent
 {
 public:
-  AccVCChangeEvent(nsAccessible* aAccessible,
+  AccVCChangeEvent(Accessible* aAccessible,
                    nsIAccessible* aOldAccessible,
                    PRInt32 aOldStart, PRInt32 aOldEnd);
 

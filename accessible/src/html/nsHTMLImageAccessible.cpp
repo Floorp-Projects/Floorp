@@ -35,11 +35,11 @@ nsHTMLImageAccessible::
   mFlags |= eImageAccessible;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, nsAccessible,
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, Accessible,
                              nsIAccessibleImage)
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible public
+// Accessible public
 
 PRUint64
 nsHTMLImageAccessible::NativeState()
@@ -78,7 +78,7 @@ nsHTMLImageAccessible::GetNameInternal(nsAString& aName)
   if (!aName.IsEmpty())
     return NS_OK;
 
-  nsresult rv = nsAccessible::GetNameInternal(aName);
+  nsresult rv = Accessible::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aName.IsEmpty() && hasAltAttrib) {
@@ -174,7 +174,7 @@ nsHTMLImageAccessible::GetImageSize(PRInt32 *aWidth, PRInt32 *aHeight)
   return GetBounds(&x, &y, aWidth, aHeight);
 }
 
-// nsAccessible
+// Accessible
 nsresult
 nsHTMLImageAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {

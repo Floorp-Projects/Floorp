@@ -9,7 +9,7 @@
 #include "mozilla/dom/Element.h"
 
 class AccEvent;
-class nsAccessible;
+class Accessible;
 class DocAccessible;
 
 namespace mozilla {
@@ -26,18 +26,18 @@ public:
   /**
    * Return a focused accessible.
    */
-  nsAccessible* FocusedAccessible() const;
+  Accessible* FocusedAccessible() const;
 
   /**
    * Return true if given accessible is focused.
    */
-  bool IsFocused(const nsAccessible* aAccessible) const;
+  bool IsFocused(const Accessible* aAccessible) const;
 
   /**
    * Return true if the given accessible is an active item, i.e. an item that
    * is current within the active widget.
    */
-  inline bool IsActiveItem(const nsAccessible* aAccessible)
+  inline bool IsActiveItem(const Accessible* aAccessible)
     { return aAccessible == mActiveItem; }
 
   /**
@@ -49,7 +49,7 @@ public:
   /**
    * Return true if focused accessible is within the given container.
    */
-  bool IsFocusWithin(const nsAccessible* aContainer) const;
+  bool IsFocusWithin(const Accessible* aContainer) const;
 
   /**
    * Return whether the given accessible is focused or contains the focus or
@@ -61,7 +61,7 @@ public:
     eContainsFocus,
     eContainedByFocus
   };
-  FocusDisposition IsInOrContainsFocus(const nsAccessible* aAccessible) const;
+  FocusDisposition IsInOrContainsFocus(const Accessible* aAccessible) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Focus notifications and processing (don't use until you know what you do).
@@ -80,7 +80,7 @@ public:
    * Called when active item is changed. Note: must be called when accessible
    * tree is up to date.
    */
-  void ActiveItemChanged(nsAccessible* aItem, bool aCheckIfActive = true);
+  void ActiveItemChanged(Accessible* aItem, bool aCheckIfActive = true);
 
   /**
    * Dispatch delayed focus event for the current focus accessible.
@@ -90,7 +90,7 @@ public:
   /**
    * Dispatch delayed focus event for the given target.
    */
-  void DispatchFocusEvent(DocAccessible* aDocument, nsAccessible* aTarget);
+  void DispatchFocusEvent(DocAccessible* aDocument, Accessible* aTarget);
 
   /**
    * Process DOM focus notification.
@@ -121,8 +121,8 @@ private:
   nsIDocument* FocusedDOMDocument() const;
 
 private:
-  nsRefPtr<nsAccessible> mActiveItem;
-  nsRefPtr<nsAccessible> mActiveARIAMenubar;
+  nsRefPtr<Accessible> mActiveItem;
+  nsRefPtr<Accessible> mActiveARIAMenubar;
 };
 
 } // namespace a11y

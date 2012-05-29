@@ -17,8 +17,6 @@ class SkDescriptor;
 class SkStream;
 class SkWStream;
 
-typedef uint32_t SkFontTableTag;
-
 /** \class SkFontHost
 
     This class is ported to each environment. It is responsible for bridging
@@ -52,15 +50,13 @@ class SK_API SkFontHost {
 public:
     /** Return a new, closest matching typeface given either an existing family
         (specified by a typeface in that family) or by a familyName and a
-        requested style, or by a set of Unicode codepoitns to cover in a given
-        style.
+        requested style.
         1) If familyFace is null, use familyName.
         2) If familyName is null, use data (UTF-16 to cover).
         3) If all are null, return the default font that best matches style
      */
     static SkTypeface* CreateTypeface(const SkTypeface* familyFace,
                                       const char familyName[],
-                                      const void* data, size_t bytelength,
                                       SkTypeface::Style style);
 
     /** Return a new typeface given the data buffer. If the data does not
@@ -83,12 +79,6 @@ public:
     static SkTypeface* CreateTypefaceFromFile(const char path[]);
 
     ///////////////////////////////////////////////////////////////////////////
-
-    /** Returns true if the specified unique ID matches an existing font.
-        Returning false is similar to calling OpenStream with an invalid ID,
-        which will return NULL in that case.
-    */
-    static bool ValidFontID(SkFontID uniqueID);
 
     /** Return a new stream to read the font data, or null if the uniqueID does
         not match an existing typeface. .The caller must call stream->unref()

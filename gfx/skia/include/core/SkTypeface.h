@@ -11,13 +11,14 @@
 #define SkTypeface_DEFINED
 
 #include "SkAdvancedTypefaceMetrics.h"
-#include "SkRefCnt.h"
+#include "SkWeakRefCnt.h"
 
 class SkStream;
 class SkAdvancedTypefaceMetrics;
 class SkWStream;
 
 typedef uint32_t SkFontID;
+typedef uint32_t SkFontTableTag;
 
 /** \class SkTypeface
 
@@ -28,7 +29,7 @@ typedef uint32_t SkFontID;
 
     Typeface objects are immutable, and so they can be shared between threads.
 */
-class SK_API SkTypeface : public SkRefCnt {
+class SK_API SkTypeface : public SkWeakRefCnt {
 public:
     /** Style specifies the intrinsic style attributes of a given typeface
     */
@@ -61,7 +62,7 @@ public:
         data. Will never return 0.
      */
     SkFontID uniqueID() const { return fUniqueID; }
-
+    
     /** Return the uniqueID for the specified typeface. If the face is null,
         resolve it to the default font and return its uniqueID. Will never
         return 0.
@@ -83,18 +84,6 @@ public:
                 unref() when they are done.
     */
     static SkTypeface* CreateFromName(const char familyName[], Style style);
-
-    /** Return a new reference to the typeface that covers a set of Unicode
-        code points with the specified Style. Use this call if you want to
-        pick any font that covers a given string of text.
-
-        @param data        UTF-16 characters
-        @param bytelength  length of data, in bytes
-        @return reference to the closest-matching typeface. Call must call
-                unref() when they are done.
-    */
-    static SkTypeface* CreateForChars(const void* data, size_t bytelength,
-                                      Style s);
 
     /** Return a new reference to the typeface that most closely matches the
         requested typeface and specified Style. Use this call if you want to
@@ -146,6 +135,46 @@ public:
             const uint32_t* glyphIDs = NULL,
             uint32_t glyphIDsCount = 0) const;
 
+    // Table getters -- may fail if the underlying font format is not organized
+    // as 4-byte tables.
+
+    /** Return the number of tables in the font. */
+    int countTables() const;
+    
+    /** Copy into tags[] (allocated by the caller) the list of table tags in
+     *  the font, and return the number. This will be the same as CountTables()
+     *  or 0 if an error occured. If tags == NULL, this only returns the count
+     *  (the same as calling countTables()).
+     */
+    int getTableTags(SkFontTableTag tags[]) const;
+    
+    /** Given a table tag, return the size of its contents, or 0 if not present
+     */
+    size_t getTableSize(SkFontTableTag) const;
+    
+    /** Copy the contents of a table into data (allocated by the caller). Note
+     *  that the contents of the table will be in their native endian order
+     *  (which for most truetype tables is big endian). If the table tag is
+     *  not found, or there is an error copying the data, then 0 is returned.
+     *  If this happens, it is possible that some or all of the memory pointed
+     *  to by data may have been written to, even though an error has occured.
+     *  
+     *  @param fontID the font to copy the table from
+     *  @param tag  The table tag whose contents are to be copied
+     *  @param offset The offset in bytes into the table's contents where the
+     *  copy should start from.
+     *  @param length The number of bytes, starting at offset, of table data
+     *  to copy.
+     *  @param data storage address where the table contents are copied to
+     *  @return the number of bytes actually copied into data. If offset+length
+     *  exceeds the table's size, then only the bytes up to the table's
+     *  size are actually copied, and this is the value returned. If
+     *  offset > the table's size, or tag is not a valid table,
+     *  then 0 is returned.
+     */
+    size_t getTableData(SkFontTableTag tag, size_t offset, size_t length,
+                        void* data) const;
+    
 protected:
     /** uniqueID must be unique (please!) and non-zero
     */
@@ -157,7 +186,7 @@ private:
     Style       fStyle;
     bool        fIsFixedWidth;
 
-    typedef SkRefCnt INHERITED;
+    typedef SkWeakRefCnt INHERITED;
 };
 
 #endif

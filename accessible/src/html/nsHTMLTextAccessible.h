@@ -17,7 +17,7 @@ class nsHTMLHRAccessible : public nsLeafAccessible
 public:
   nsHTMLHRAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
 };
 
@@ -29,7 +29,7 @@ class nsHTMLBRAccessible : public nsLeafAccessible
 public:
   nsHTMLBRAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
@@ -45,7 +45,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsAccessible
+  // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
 };
@@ -60,7 +60,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties* aAttributes);
   virtual Relation RelationByType(PRUint32 aType);

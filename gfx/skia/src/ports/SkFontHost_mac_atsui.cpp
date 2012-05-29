@@ -16,7 +16,7 @@
 #include "SkPoint.h"
 
 const char* gDefaultfont = "Arial"; // hard code for now
-static SkMutex      gFTMutex;
+SK_DECLARE_STATIC_MUTEX(gFTMutex);
 
 static inline SkPoint F32PtToSkPoint(const Float32Point p) {
     SkPoint sp = { SkFloatToScalar(p.x), SkFloatToScalar(p.y) };
@@ -494,7 +494,6 @@ SkFontID SkFontHost::NextLogicalFont(SkFontID currFontID, SkFontID origFontID) {
 
 SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
                             const char familyName[],
-                            const void* data, size_t bytelength,
                             SkTypeface::Style style) {
     // todo: we don't know how to respect style bits
     if (NULL == familyName && NULL != familyFace) {

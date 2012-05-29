@@ -8,6 +8,8 @@
 #include "SkPicturePlayback.h"
 #include "SkPictureRecord.h"
 #include "SkTypeface.h"
+#include "SkOrderedReadBuffer.h"
+#include "SkOrderedWriteBuffer.h"
 #include <new>
 
 /*  Define this to spew out a debug statement whenever we skip the remainder of
@@ -73,10 +75,7 @@ SkPicturePlayback::SkPicturePlayback(const SkPictureRecord& record) {
     // copy over the refcnt dictionary to our reader
     //
     fRCPlayback.reset(&record.fRCSet);
-    fRCPlayback.setupBuffer(fReader);
-
     fTFPlayback.reset(&record.fTFSet);
-    fTFPlayback.setupBuffer(fReader);
 
     const SkTDArray<const SkFlatBitmap* >& bitmaps = record.getBitmaps();
     fBitmapCount = bitmaps.count();
@@ -171,11 +170,9 @@ SkPicturePlayback::SkPicturePlayback(const SkPicturePlayback& src) {
         fReader.setMemory(buffer, size);
     }
 
-    int i;
-
     fBitmapCount = src.fBitmapCount;
     fBitmaps = SkNEW_ARRAY(SkBitmap, fBitmapCount);
-    for (i = 0; i < fBitmapCount; i++) {
+    for (int i = 0; i < fBitmapCount; i++) {
         fBitmaps[i] = src.fBitmaps[i];
     }
 
@@ -185,7 +182,7 @@ SkPicturePlayback::SkPicturePlayback(const SkPicturePlayback& src) {
 
     fPaintCount = src.fPaintCount;
     fPaints = SkNEW_ARRAY(SkPaint, fPaintCount);
-    for (i = 0; i < fPaintCount; i++) {
+    for (int i = 0; i < fPaintCount; i++) {
         fPaints[i] = src.fPaints[i];
     }
 
@@ -201,7 +198,7 @@ SkPicturePlayback::SkPicturePlayback(const SkPicturePlayback& src) {
 
     fRegionCount = src.fRegionCount;
     fRegions = SkNEW_ARRAY(SkRegion, fRegionCount);
-    for (i = 0; i < fRegionCount; i++) {
+    for (int i = 0; i < fRegionCount; i++) {
         fRegions[i] = src.fRegions[i];
     }
 }
@@ -321,7 +318,7 @@ void SkPicturePlayback::serialize(SkWStream* stream) const {
     SkRefCntSet  typefaceSet;
     SkFactorySet factSet;
 
-    SkFlattenableWriteBuffer buffer(1024);
+    SkOrderedWriteBuffer buffer(1024);
 
     buffer.setFlags(SkFlattenableWriteBuffer::kCrossProcess_Flag);
     buffer.setTypefaceRecorder(&typefaceSet);
@@ -429,11 +426,11 @@ SkPicturePlayback::SkPicturePlayback(SkStream* stream) {
     /*
         Now read the arrays chunk, and parse using a read buffer
     */
-    uint32_t size = readTagSize(stream, PICT_ARRAYS_TAG);
-    SkAutoMalloc storage(size);
-    stream->read(storage.get(), size);
+    uint32_t tagSize = readTagSize(stream, PICT_ARRAYS_TAG);
+    SkAutoMalloc storage(tagSize);
+    stream->read(storage.get(), tagSize);
 
-    SkFlattenableReadBuffer buffer(storage.get(), size);
+    SkOrderedReadBuffer buffer(storage.get(), tagSize);
     fFactoryPlayback->setupBuffer(buffer);
     fTFPlayback.setupBuffer(buffer);
 
@@ -463,9 +460,10 @@ SkPicturePlayback::SkPicturePlayback(SkStream* stream) {
     fRegionCount = readTagSize(buffer, PICT_REGION_TAG);
     fRegions = SkNEW_ARRAY(SkRegion, fRegionCount);
     for (i = 0; i < fRegionCount; i++) {
-        uint32_t size = buffer.readU32();
-        SkDEBUGCODE(uint32_t bytes =) fRegions[i].unflatten(buffer.skip(size));
-        SkASSERT(size == bytes);
+        uint32_t bufferSize = buffer.readU32();
+        SkDEBUGCODE(uint32_t bytes =)
+            fRegions[i].unflatten(buffer.skip(bufferSize));
+        SkASSERT(bufferSize == bytes);
     }
 }
 
@@ -605,6 +603,17 @@ void SkPicturePlayback::draw(SkCanvas& canvas) {
                 size_t points = getInt();
                 const SkPoint* pos = (const SkPoint*)fReader.skip(points * sizeof(SkPoint));
                 canvas.drawPosText(text.text(), text.length(), pos, paint);
+            } break;
+            case DRAW_POS_TEXT_TOP_BOTTOM: {
+                const SkPaint& paint = *getPaint();
+                getText(&text);
+                size_t points = getInt();
+                const SkPoint* pos = (const SkPoint*)fReader.skip(points * sizeof(SkPoint));
+                const SkScalar top = fReader.readScalar();
+                const SkScalar bottom = fReader.readScalar();
+                if (!canvas.quickRejectY(top, bottom, SkCanvas::kAA_EdgeType)) {
+                    canvas.drawPosText(text.text(), text.length(), pos, paint);
+                }
             } break;
             case DRAW_POS_TEXT_H: {
                 const SkPaint& paint = *getPaint();

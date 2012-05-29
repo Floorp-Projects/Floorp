@@ -10,8 +10,9 @@
 #include "SkPDFCatalog.h"
 #include "SkPDFDevice.h"
 #include "SkPDFDocument.h"
-#include "SkPDFPage.h"
 #include "SkPDFFont.h"
+#include "SkPDFPage.h"
+#include "SkPDFTypes.h"
 #include "SkStream.h"
 
 // Add the resources, starting at firstIndex to the catalog, removing any dupes.
@@ -222,8 +223,23 @@ bool SkPDFDocument::appendPage(SkPDFDevice* pdfDevice) {
     return true;
 }
 
-const SkTDArray<SkPDFPage*>& SkPDFDocument::getPages() {
-    return fPages;
+void SkPDFDocument::getCountOfFontTypes(
+        int counts[SkAdvancedTypefaceMetrics::kNotEmbeddable_Font + 1]) const {
+    sk_bzero(counts, sizeof(int) *
+                     (SkAdvancedTypefaceMetrics::kNotEmbeddable_Font + 1));
+    SkTDArray<SkFontID> seenFonts;
+
+    for (int pageNumber = 0; pageNumber < fPages.count(); pageNumber++) {
+        const SkTDArray<SkPDFFont*>& fontResources =
+                fPages[pageNumber]->getFontResources();
+        for (int font = 0; font < fontResources.count(); font++) {
+            SkFontID fontID = fontResources[font]->typeface()->uniqueID();
+            if (seenFonts.find(fontID) == -1) {
+                counts[fontResources[font]->getType()]++;
+                seenFonts.push(fontID);
+            }
+        }
+    }
 }
 
 void SkPDFDocument::emitHeader(SkWStream* stream) {
@@ -247,7 +263,7 @@ void SkPDFDocument::emitFooter(SkWStream* stream, int64_t objCount) {
 
         // TODO(vandebo): Linearized format will take a Prev entry too.
         // TODO(vandebo): PDF/A requires an ID entry.
-        fTrailerDict->insertInt("Size", objCount);
+        fTrailerDict->insertInt("Size", int(objCount));
         fTrailerDict->insert("Root",
                              new SkPDFObjRef(fDocCatalog.get()))->unref();
     }

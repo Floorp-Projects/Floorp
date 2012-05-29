@@ -56,7 +56,7 @@ bool SkCornerPathEffect::filterPath(SkPath* dst, const SkPath& src,
     lastCorner.set(0, 0);
 
     for (;;) {
-        switch (verb = iter.next(pts)) {
+        switch (verb = iter.next(pts, false)) {
             case SkPath::kMove_Verb:
                     // close out the previous (open) contour
                 if (SkPath::kLine_Verb == prevVerb) {
@@ -129,16 +129,9 @@ DONE:
     return true;
 }
 
-SkFlattenable::Factory SkCornerPathEffect::getFactory() {
-    return CreateProc;
-}
-
-void SkCornerPathEffect::flatten(SkFlattenableWriteBuffer& buffer) {
+void SkCornerPathEffect::flatten(SkFlattenableWriteBuffer& buffer) const {
+    this->INHERITED::flatten(buffer);
     buffer.writeScalar(fRadius);
-}
-
-SkFlattenable* SkCornerPathEffect::CreateProc(SkFlattenableReadBuffer& buffer) {
-    return SkNEW_ARGS(SkCornerPathEffect, (buffer));
 }
 
 SkCornerPathEffect::SkCornerPathEffect(SkFlattenableReadBuffer& buffer) {

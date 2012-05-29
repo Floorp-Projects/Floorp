@@ -5,7 +5,7 @@
 #include "AccIterator.h"
 
 #include "nsAccessibilityService.h"
-#include "nsAccessible.h"
+#include "Accessible.h"
 
 #include "mozilla/dom/Element.h"
 #include "nsBindingManager.h"
@@ -16,7 +16,7 @@ using namespace mozilla;
 // AccIterator
 ////////////////////////////////////////////////////////////////////////////////
 
-AccIterator::AccIterator(nsAccessible *aAccessible,
+AccIterator::AccIterator(Accessible* aAccessible,
                          filters::FilterFuncPtr aFilterFunc,
                          IterationType aIterationType) :
   mFilterFunc(aFilterFunc), mIsDeep(aIterationType != eFlatNav)
@@ -33,11 +33,11 @@ AccIterator::~AccIterator()
   }
 }
 
-nsAccessible*
+Accessible*
 AccIterator::Next()
 {
   while (mState) {
-    nsAccessible *child = mState->mParent->GetChildAt(mState->mIndex++);
+    Accessible* child = mState->mParent->GetChildAt(mState->mIndex++);
     if (!child) {
       IteratorState *tmp = mState;
       mState = mState->mParentState;
@@ -62,7 +62,7 @@ AccIterator::Next()
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccIterator::IteratorState
 
-AccIterator::IteratorState::IteratorState(nsAccessible *aParent,
+AccIterator::IteratorState::IteratorState(Accessible* aParent,
                                           IteratorState *mParentState) :
   mParent(aParent), mIndex(0), mParentState(mParentState)
 {
@@ -88,7 +88,7 @@ RelatedAccIterator::
     mProviders = mDocument->mDependentIDsHash.Get(id);
 }
 
-nsAccessible*
+Accessible*
 RelatedAccIterator::Next()
 {
   if (!mProviders)
@@ -105,7 +105,7 @@ RelatedAccIterator::Next()
         mBindingParent == provider->mContent;
 
       if (inScope) {
-        nsAccessible* related = mDocument->GetAccessible(provider->mContent);
+        Accessible* related = mDocument->GetAccessible(provider->mContent);
         if (related)
           return related;
 
@@ -126,19 +126,19 @@ RelatedAccIterator::Next()
 ////////////////////////////////////////////////////////////////////////////////
 
 HTMLLabelIterator::
-  HTMLLabelIterator(DocAccessible* aDocument, const nsAccessible* aAccessible,
+  HTMLLabelIterator(DocAccessible* aDocument, const Accessible* aAccessible,
                     LabelFilter aFilter) :
   mRelIter(aDocument, aAccessible->GetContent(), nsGkAtoms::_for),
   mAcc(aAccessible), mLabelFilter(aFilter)
 {
 }
 
-nsAccessible*
+Accessible*
 HTMLLabelIterator::Next()
 {
   // Get either <label for="[id]"> element which explicitly points to given
   // element, or <label> ancestor which implicitly point to it.
-  nsAccessible* label = nsnull;
+  Accessible* label = nsnull;
   while ((label = mRelIter.Next())) {
     if (label->GetContent()->Tag() == nsGkAtoms::label)
       return label;
@@ -151,7 +151,7 @@ HTMLLabelIterator::Next()
   // Go up tree to get a name of ancestor label if there is one (an ancestor
   // <label> implicitly points to us). Don't go up farther than form or
   // document.
-  nsAccessible* walkUp = mAcc->Parent();
+  Accessible* walkUp = mAcc->Parent();
   while (walkUp && !walkUp->IsDoc()) {
     nsIContent* walkUpElm = walkUp->GetContent();
     if (walkUpElm->IsHTML()) {
@@ -182,10 +182,10 @@ HTMLOutputIterator(DocAccessible* aDocument, nsIContent* aElement) :
 {
 }
 
-nsAccessible*
+Accessible*
 HTMLOutputIterator::Next()
 {
-  nsAccessible* output = nsnull;
+  Accessible* output = nsnull;
   while ((output = mRelIter.Next())) {
     if (output->GetContent()->Tag() == nsGkAtoms::output)
       return output;
@@ -205,10 +205,10 @@ XULLabelIterator::
 {
 }
 
-nsAccessible*
+Accessible*
 XULLabelIterator::Next()
 {
-  nsAccessible* label = nsnull;
+  Accessible* label = nsnull;
   while ((label = mRelIter.Next())) {
     if (label->GetContent()->Tag() == nsGkAtoms::label)
       return label;
@@ -228,10 +228,10 @@ XULDescriptionIterator::
 {
 }
 
-nsAccessible*
+Accessible*
 XULDescriptionIterator::Next()
 {
-  nsAccessible* descr = nsnull;
+  Accessible* descr = nsnull;
   while ((descr = mRelIter.Next())) {
     if (descr->GetContent()->Tag() == nsGkAtoms::description)
       return descr;
@@ -322,17 +322,17 @@ IDRefsIterator::GetElem(const nsDependentSubstring& aID)
   return nsnull;
 }
 
-nsAccessible*
+Accessible*
 IDRefsIterator::Next()
 {
   nsIContent* nextElm = NextElem();
   return nextElm ? mDoc->GetAccessible(nextElm) : nsnull;
 }
 
-nsAccessible*
+Accessible*
 SingleAccIterator::Next()
 {
-  nsRefPtr<nsAccessible> nextAcc;
+  nsRefPtr<Accessible> nextAcc;
   mAcc.swap(nextAcc);
   return (nextAcc && !nextAcc->IsDefunct()) ? nextAcc : nsnull;
 }

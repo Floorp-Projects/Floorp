@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsAccessible_H_
-#define _nsAccessible_H_
+#ifndef _Accessible_H_
+#define _Accessible_H_
 
 #include "mozilla/a11y/Role.h"
 #include "mozilla/a11y/States.h"
@@ -25,7 +25,7 @@ class AccEvent;
 class AccGroupInfo;
 class EmbeddedObjCollector;
 class KeyBinding;
-class nsAccessible;
+class Accessible;
 class nsHyperTextAccessible;
 class nsHTMLImageAccessible;
 class nsHTMLImageMapAccessible;
@@ -53,8 +53,8 @@ enum ENameValueFlag {
  eNameFromTooltip // Tooltip was used as a name
 };
 
-}
-}
+} // namespace a11y
+} // namespace mozilla
 
 class nsXULTreeAccessible;
 
@@ -64,18 +64,18 @@ class nsIFrame;
 class nsIAtom;
 class nsIView;
 
-typedef nsRefPtrHashtable<nsPtrHashKey<const void>, nsAccessible>
-  nsAccessibleHashtable;
+typedef nsRefPtrHashtable<nsPtrHashKey<const void>, Accessible>
+  AccessibleHashtable;
 
-// see nsAccessible::GetAttrValue
+// see Accessible::GetAttrValue
 #define NS_OK_NO_ARIA_VALUE \
 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x21)
 
-// see nsAccessible::GetNameInternal
+// see Accessible::GetNameInternal
 #define NS_OK_EMPTY_NAME \
 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x23)
 
-// see nsAccessible::GetNameInternal
+// see Accessible::GetNameInternal
 #define NS_OK_NAME_FROM_TOOLTIP \
 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x25)
 
@@ -88,18 +88,18 @@ NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x25)
   { 0xbd, 0x50, 0x42, 0x6b, 0xd1, 0xd6, 0xe1, 0xad }    \
 }
 
-class nsAccessible : public nsAccessNodeWrap, 
-                     public nsIAccessible, 
-                     public nsIAccessibleHyperLink,
-                     public nsIAccessibleSelectable,
-                     public nsIAccessibleValue
+class Accessible : public nsAccessNodeWrap, 
+                   public nsIAccessible, 
+                   public nsIAccessibleHyperLink,
+                   public nsIAccessibleSelectable,
+                   public nsIAccessibleValue
 {
 public:
-  nsAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~nsAccessible();
+  Accessible(nsIContent* aContent, DocAccessible* aDoc);
+  virtual ~Accessible();
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsAccessible, nsAccessNode)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Accessible, nsAccessNode)
 
   NS_DECL_NSIACCESSIBLE
   NS_DECL_NSIACCESSIBLEHYPERLINK
@@ -243,13 +243,13 @@ public:
    * @param  aWhichChild  [in] flag points if deepest or direct child
    *                        should be returned
    */
-  virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                     EWhichChildAtPoint aWhichChild);
+  virtual Accessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                   EWhichChildAtPoint aWhichChild);
 
   /**
    * Return the focused child if any.
    */
-  virtual nsAccessible* FocusedChild();
+  virtual Accessible* FocusedChild();
 
   /**
    * Return calculated group level based on accessible hierarchy.
@@ -308,9 +308,9 @@ public:
   /**
    * Append/insert/remove a child. Return true if operation was successful.
    */
-  virtual bool AppendChild(nsAccessible* aChild);
-  virtual bool InsertChildAt(PRUint32 aIndex, nsAccessible* aChild);
-  virtual bool RemoveChild(nsAccessible* aChild);
+  virtual bool AppendChild(Accessible* aChild);
+  virtual bool InsertChildAt(PRUint32 aIndex, Accessible* aChild);
+  virtual bool RemoveChild(Accessible* aChild);
 
   //////////////////////////////////////////////////////////////////////////////
   // Accessible tree traverse methods
@@ -318,12 +318,12 @@ public:
   /**
    * Return parent accessible.
    */
-  nsAccessible* Parent() const { return mParent; }
+  Accessible* Parent() const { return mParent; }
 
   /**
    * Return child accessible at the given index.
    */
-  virtual nsAccessible* GetChildAt(PRUint32 aIndex);
+  virtual Accessible* GetChildAt(PRUint32 aIndex);
 
   /**
    * Return child accessible count.
@@ -333,7 +333,7 @@ public:
   /**
    * Return index of the given child accessible.
    */
-  virtual PRInt32 GetIndexOf(nsAccessible* aChild);
+  virtual PRInt32 GetIndexOf(Accessible* aChild);
 
   /**
    * Return index in parent accessible.
@@ -348,13 +348,13 @@ public:
   /**
    * Return first/last/next/previous sibling of the accessible.
    */
-  inline nsAccessible* NextSibling() const
+  inline Accessible* NextSibling() const
     {  return GetSiblingAtOffset(1); }
-  inline nsAccessible* PrevSibling() const
+  inline Accessible* PrevSibling() const
     { return GetSiblingAtOffset(-1); }
-  inline nsAccessible* FirstChild()
+  inline Accessible* FirstChild()
     { return GetChildAt(0); }
-  inline nsAccessible* LastChild()
+  inline Accessible* LastChild()
   {
     PRUint32 childCount = ChildCount();
     return childCount != 0 ? GetChildAt(childCount - 1) : nsnull;
@@ -369,12 +369,12 @@ public:
   /**
    * Return embedded accessible child at the given index.
    */
-  nsAccessible* GetEmbeddedChildAt(PRUint32 aIndex);
+  Accessible* GetEmbeddedChildAt(PRUint32 aIndex);
 
   /**
    * Return index of the given embedded accessible child.
    */
-  PRInt32 GetIndexOfEmbeddedChild(nsAccessible* aChild);
+  PRInt32 GetIndexOfEmbeddedChild(Accessible* aChild);
 
   /**
    * Return number of content children/content child at index. The content
@@ -382,7 +382,7 @@ public:
    * parent accessible (like treeitem accessibles for XUL trees).
    */
   PRUint32 ContentChildCount() const { return mChildren.Length(); }
-  nsAccessible* ContentChildAt(PRUint32 aIndex) const
+  Accessible* ContentChildAt(PRUint32 aIndex) const
     { return mChildren.ElementAt(aIndex); }
 
   /**
@@ -427,7 +427,7 @@ public:
    * Assert if child not in parent's cache if the cache was initialized at this
    * point.
    */
-  void TestChildCache(nsAccessible* aCachedChild) const;
+  void TestChildCache(Accessible* aCachedChild) const;
 
   /**
    * Return boundaries rect relative the bounding frame.
@@ -549,7 +549,7 @@ public:
   /**
    * Returns an anchor accessible at the given index.
    */
-  virtual nsAccessible* AnchorAt(PRUint32 aAnchorIndex);
+  virtual Accessible* AnchorAt(PRUint32 aAnchorIndex);
 
   /**
    * Returns an anchor URI at the given index.
@@ -578,7 +578,7 @@ public:
   /**
    * Return selected item at the given index.
    */
-  virtual nsAccessible* GetSelectedItem(PRUint32 aIndex);
+  virtual Accessible* GetSelectedItem(PRUint32 aIndex);
 
   /**
    * Determine if item at the given index is selected.
@@ -630,17 +630,17 @@ public:
    * Return the current item of the widget, i.e. an item that has or will have
    * keyboard focus when widget gets active.
    */
-  virtual nsAccessible* CurrentItem();
+  virtual Accessible* CurrentItem();
 
   /**
    * Set the current item of the widget.
    */
-  virtual void SetCurrentItem(nsAccessible* aItem);
+  virtual void SetCurrentItem(Accessible* aItem);
 
   /**
    * Return container widget this accessible belongs to.
    */
-  virtual nsAccessible* ContainerWidget() const;
+  virtual Accessible* ContainerWidget() const;
 
   /**
    * Return the localized string for the given key.
@@ -665,14 +665,14 @@ protected:
   /**
    * Set accessible parent and index in parent.
    */
-  virtual void BindToParent(nsAccessible* aParent, PRUint32 aIndexInParent);
+  virtual void BindToParent(Accessible* aParent, PRUint32 aIndexInParent);
   virtual void UnbindFromParent();
 
   /**
    * Return sibling accessible at the given offset.
    */
-  virtual nsAccessible* GetSiblingAtOffset(PRInt32 aOffset,
-                                           nsresult *aError = nsnull) const;
+  virtual Accessible* GetSiblingAtOffset(PRInt32 aOffset,
+                                         nsresult *aError = nsnull) const;
 
   /**
    * Flags used to describe the state and type of children.
@@ -758,7 +758,7 @@ protected:
    * @param  aStartNode  [in] the DOM node to start from
    * @return              the resulting accessible
    */
-  nsAccessible *GetFirstAvailableAccessible(nsINode *aStartNode) const;
+  Accessible* GetFirstAvailableAccessible(nsINode* aStartNode) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Action helpers
@@ -782,7 +782,7 @@ protected:
    */
   virtual void DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex);
 
-  NS_DECL_RUNNABLEMETHOD_ARG2(nsAccessible, DispatchClickEvent,
+  NS_DECL_RUNNABLEMETHOD_ARG2(Accessible, DispatchClickEvent,
                               nsCOMPtr<nsIContent>, PRUint32)
 
   //////////////////////////////////////////////////////////////////////////////
@@ -828,8 +828,8 @@ protected:
   virtual nsresult FirePlatformEvent(AccEvent* aEvent) = 0;
 
   // Data Members
-  nsRefPtr<nsAccessible> mParent;
-  nsTArray<nsRefPtr<nsAccessible> > mChildren;
+  nsRefPtr<Accessible> mParent;
+  nsTArray<nsRefPtr<Accessible> > mChildren;
   PRInt32 mIndexInParent;
 
   static const PRUint32 kChildrenFlagsMask =
@@ -850,7 +850,7 @@ protected:
   nsRoleMapEntry* mRoleMapEntry;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsAccessible,
+NS_DEFINE_STATIC_IID_ACCESSOR(Accessible,
                               NS_ACCESSIBLE_IMPL_IID)
 
 

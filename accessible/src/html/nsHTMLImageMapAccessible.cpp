@@ -37,7 +37,7 @@ nsHTMLImageMapAccessible::
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLImageMapAccessible, nsHTMLImageAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageMapAccessible: nsAccessible public
+// nsHTMLImageMapAccessible: Accessible public
 
 role
 nsHTMLImageMapAccessible::NativeRole()
@@ -54,7 +54,7 @@ nsHTMLImageMapAccessible::AnchorCount()
   return ChildCount();
 }
 
-nsAccessible*
+Accessible*
 nsHTMLImageMapAccessible::AnchorAt(PRUint32 aAnchorIndex)
 {
   return GetChildAt(aAnchorIndex);
@@ -63,7 +63,7 @@ nsHTMLImageMapAccessible::AnchorAt(PRUint32 aAnchorIndex)
 already_AddRefed<nsIURI>
 nsHTMLImageMapAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
-  nsAccessible* area = GetChildAt(aAnchorIndex);
+  Accessible* area = GetChildAt(aAnchorIndex);
   if (!area)
     return nsnull;
 
@@ -88,7 +88,7 @@ nsHTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
 
   // Remove areas that are not a valid part of the image map anymore.
   for (PRInt32 childIdx = mChildren.Length() - 1; childIdx >= 0; childIdx--) {
-    nsAccessible* area = mChildren.ElementAt(childIdx);
+    Accessible* area = mChildren.ElementAt(childIdx);
     if (area->GetContent()->GetPrimaryFrame())
       continue;
 
@@ -106,9 +106,9 @@ nsHTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
   for (PRUint32 idx = 0; idx < areaElmCount; idx++) {
     nsIContent* areaContent = imageMapObj->GetAreaAt(idx);
 
-    nsAccessible* area = mChildren.SafeElementAt(idx);
+    Accessible* area = mChildren.SafeElementAt(idx);
     if (!area || area->GetContent() != areaContent) {
-      nsRefPtr<nsAccessible> area = new nsHTMLAreaAccessible(areaContent, mDoc);
+      nsRefPtr<Accessible> area = new nsHTMLAreaAccessible(areaContent, mDoc);
       if (!mDoc->BindToDocument(area, aria::GetRoleMap(areaContent)))
         break;
 
@@ -135,7 +135,7 @@ nsHTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageMapAccessible: nsAccessible protected
+// nsHTMLImageMapAccessible: Accessible protected
 
 void
 nsHTMLImageMapAccessible::CacheChildren()
@@ -160,7 +160,7 @@ nsHTMLAreaAccessible::
 nsresult
 nsHTMLAreaAccessible::GetNameInternal(nsAString & aName)
 {
-  nsresult rv = nsAccessible::GetNameInternal(aName);
+  nsresult rv = Accessible::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aName.IsEmpty())
@@ -195,9 +195,9 @@ nsHTMLAreaAccessible::IsPrimaryForNode() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLAreaAccessible: nsAccessible public
+// nsHTMLAreaAccessible: Accessible public
 
-nsAccessible*
+Accessible*
 nsHTMLAreaAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                    EWhichChildAtPoint aWhichChild)
 {
@@ -212,7 +212,7 @@ PRUint32
 nsHTMLAreaAccessible::StartOffset()
 {
   // Image map accessible is not hypertext accessible therefore
-  // StartOffset/EndOffset implementations of nsAccessible doesn't work here.
+  // StartOffset/EndOffset implementations of Accessible doesn't work here.
   // We return index in parent because image map contains area links only which
   // are embedded objects.
   // XXX: image map should be a hypertext accessible.
@@ -226,7 +226,7 @@ nsHTMLAreaAccessible::EndOffset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLAreaAccessible: nsAccessible protected
+// nsHTMLAreaAccessible: Accessible protected
 
 void
 nsHTMLAreaAccessible::CacheChildren()

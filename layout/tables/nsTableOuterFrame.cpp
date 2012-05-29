@@ -114,7 +114,7 @@ nsTableCaptionFrame::GetParentStyleContextFrame() const
 }
 
 #ifdef ACCESSIBILITY
-already_AddRefed<nsAccessible>
+already_AddRefed<Accessible>
 nsTableCaptionFrame::CreateAccessible()
 {
   if (!GetRect().IsEmpty()) {
@@ -161,7 +161,7 @@ NS_QUERYFRAME_HEAD(nsTableOuterFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef ACCESSIBILITY
-already_AddRefed<nsAccessible>
+already_AddRefed<Accessible>
 nsTableOuterFrame::CreateAccessible()
 {
   nsAccessibilityService* accService = nsIPresShell::AccService();

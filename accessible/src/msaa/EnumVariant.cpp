@@ -75,7 +75,7 @@ __try {
   ULONG countFetched = 0;
   for (; mCurAcc && countFetched < aCount; countFetched++) {
     VariantInit(aItems + countFetched);
-    aItems[countFetched].pdispVal = nsAccessibleWrap::NativeAccessible(mCurAcc);
+    aItems[countFetched].pdispVal = AccessibleWrap::NativeAccessible(mCurAcc);
     aItems[countFetched].vt = VT_DISPATCH;
 
     mCurIndex++;

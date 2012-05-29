@@ -20,7 +20,7 @@ public:
   TextLeafAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~TextLeafAccessible();
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual void AppendTextTo(nsAString& aText, PRUint32 aStartOffset = 0,
                             PRUint32 aLength = PR_UINT32_MAX);
@@ -32,7 +32,7 @@ public:
   const nsString& Text() const { return mText; }
 
 protected:
-  // nsAccessible
+  // Accessible
   virtual void CacheChildren();
 
 protected:
@@ -43,10 +43,10 @@ protected:
 } // namespace mozilla
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible downcast method
+// Accessible downcast method
 
 inline mozilla::a11y::TextLeafAccessible*
-nsAccessible::AsTextLeaf()
+Accessible::AsTextLeaf()
 {
   return mFlags & eTextLeafAccessible ?
     static_cast<mozilla::a11y::TextLeafAccessible*>(this) : nsnull;

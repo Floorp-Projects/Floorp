@@ -11,7 +11,7 @@
 #define _nsAccessNodeWrap_H_
 
 // Avoid warning C4509:
-// nonstandard extension used: 'nsAccessibleWrap::[methodname]' 
+// nonstandard extension used: 'AccessibleWrap::[methodname]' 
 // uses SEH and 'xpAccessible' has destructor
 // At this point we're catching a crash which is of much greater
 // importance than the missing dereference for the nsCOMPtr<>
