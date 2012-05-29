@@ -8,7 +8,7 @@
 #ifndef _NS_ACCESSIBLE_RELATION_WRAP_H
 #define _NS_ACCESSIBLE_RELATION_WRAP_H
 
-#include "nsAccessible.h"
+#include "Accessible.h"
 
 #include "nsTArray.h"
 
@@ -53,7 +53,7 @@ private:
   ia2AccessibleRelation& operator = (const ia2AccessibleRelation&);
 
   PRUint32 mType;
-  nsTArray<nsRefPtr<nsAccessible> > mTargets;
+  nsTArray<nsRefPtr<Accessible> > mTargets;
   ULONG mReferences;
 };
 

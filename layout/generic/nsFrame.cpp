@@ -6594,7 +6594,7 @@ nsFrame::ChildIsDirty(nsIFrame* aChild)
 
 
 #ifdef ACCESSIBILITY
-already_AddRefed<nsAccessible>
+already_AddRefed<Accessible>
 nsFrame::CreateAccessible()
 {
   return nsnull;

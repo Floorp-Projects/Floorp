@@ -11,7 +11,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 
 extern PRLogModuleInfo *gMaiLog;
 
@@ -46,6 +46,6 @@ PR_END_MACRO
                                          MAI_TYPE_ATK_OBJECT, \
                                          MaiAtkObjectClass))
 GType mai_atk_object_get_type(void);
-nsAccessibleWrap *GetAccessibleWrap(AtkObject *aAtkObj);
+AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj);
 
 #endif /* __NS_MAI_H__ */

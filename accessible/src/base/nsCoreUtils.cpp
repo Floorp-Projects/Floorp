@@ -722,7 +722,7 @@ nsAccessibleDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
 }
 
 NS_IMETHODIMP
-nsAccessibleDOMStringList::GetLength(PRUint32 *aLength)
+nsAccessibleDOMStringList::GetLength(PRUint32* aLength)
 {
   *aLength = mNames.Length();
 
@@ -730,7 +730,7 @@ nsAccessibleDOMStringList::GetLength(PRUint32 *aLength)
 }
 
 NS_IMETHODIMP
-nsAccessibleDOMStringList::Contains(const nsAString& aString, bool *aResult)
+nsAccessibleDOMStringList::Contains(const nsAString& aString, bool* aResult)
 {
   *aResult = mNames.Contains(aString);
 

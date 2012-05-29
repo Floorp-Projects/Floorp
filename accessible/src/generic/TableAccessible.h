@@ -11,7 +11,7 @@
 #include "nsTArray.h"
 #include "prtypes.h"
 
-class nsAccessible;
+class Accessible;
 
 namespace mozilla {
 namespace a11y {
@@ -26,7 +26,7 @@ public:
   /**
    * Return the caption accessible if any for this table.
    */
-  virtual nsAccessible* Caption() { return nsnull; }
+  virtual Accessible* Caption() { return nsnull; }
 
   /**
    * Get the summary for this table.
@@ -46,7 +46,7 @@ public:
   /**
    * Return the accessible for the cell at the given row and column indices.
    */
-  virtual nsAccessible* CellAt(PRUint32 aRowIdx, PRUint32 aColIdx) { return nsnull; }
+  virtual Accessible* CellAt(PRUint32 aRowIdx, PRUint32 aColIdx) { return nsnull; }
 
   /**
    * Return the index of the cell at the given row and column.
@@ -127,7 +127,7 @@ public:
   /**
    * Get the set of selected cells.
    */
-  virtual void SelectedCells(nsTArray<nsAccessible*>* aCells) {}
+  virtual void SelectedCells(nsTArray<Accessible*>* aCells) {}
 
   /**
    * Get the set of selected column indices.

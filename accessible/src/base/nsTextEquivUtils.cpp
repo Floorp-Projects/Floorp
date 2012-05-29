@@ -25,7 +25,7 @@ NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x24)
 // nsTextEquivUtils. Public.
 
 nsresult
-nsTextEquivUtils::GetNameFromSubtree(nsAccessible *aAccessible,
+nsTextEquivUtils::GetNameFromSubtree(Accessible* aAccessible,
                                      nsAString& aName)
 {
   aName.Truncate();
@@ -53,7 +53,7 @@ nsTextEquivUtils::GetNameFromSubtree(nsAccessible *aAccessible,
 }
 
 nsresult
-nsTextEquivUtils::GetTextEquivFromIDRefs(nsAccessible *aAccessible,
+nsTextEquivUtils::GetTextEquivFromIDRefs(Accessible* aAccessible,
                                          nsIAtom *aIDRefsAttr,
                                          nsAString& aTextEquiv)
 {
@@ -78,7 +78,7 @@ nsTextEquivUtils::GetTextEquivFromIDRefs(nsAccessible *aAccessible,
 }
 
 nsresult
-nsTextEquivUtils::AppendTextEquivFromContent(nsAccessible *aInitiatorAcc,
+nsTextEquivUtils::AppendTextEquivFromContent(Accessible* aInitiatorAcc,
                                              nsIContent *aContent,
                                              nsAString *aString)
 {
@@ -98,7 +98,7 @@ nsTextEquivUtils::AppendTextEquivFromContent(nsAccessible *aInitiatorAcc,
   bool goThroughDOMSubtree = true;
 
   if (isVisible) {
-    nsAccessible* accessible =
+    Accessible* accessible =
       gInitiatorAcc->Document()->GetAccessible(aContent);
     if (accessible) {
       rv = AppendFromAccessible(accessible, aString);
@@ -167,17 +167,17 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
 ////////////////////////////////////////////////////////////////////////////////
 // nsTextEquivUtils. Private.
 
-nsRefPtr<nsAccessible> nsTextEquivUtils::gInitiatorAcc;
+nsRefPtr<Accessible> nsTextEquivUtils::gInitiatorAcc;
 
 nsresult
-nsTextEquivUtils::AppendFromAccessibleChildren(nsAccessible *aAccessible,
+nsTextEquivUtils::AppendFromAccessibleChildren(Accessible* aAccessible,
                                                nsAString *aString)
 {
   nsresult rv = NS_OK_NO_NAME_CLAUSE_HANDLED;
 
   PRUint32 childCount = aAccessible->ChildCount();
   for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible* child = aAccessible->GetChildAt(childIdx);
+    Accessible* child = aAccessible->GetChildAt(childIdx);
     rv = AppendFromAccessible(child, aString);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -186,7 +186,7 @@ nsTextEquivUtils::AppendFromAccessibleChildren(nsAccessible *aAccessible,
 }
 
 nsresult
-nsTextEquivUtils::AppendFromAccessible(nsAccessible *aAccessible,
+nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
                                        nsAString *aString)
 {
   //XXX: is it necessary to care the accessible is not a document?
@@ -236,7 +236,7 @@ nsTextEquivUtils::AppendFromAccessible(nsAccessible *aAccessible,
 }
 
 nsresult
-nsTextEquivUtils::AppendFromValue(nsAccessible *aAccessible,
+nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
                                   nsAString *aString)
 {
   PRUint32 nameRule = gRoleToNameRulesMap[aAccessible->Role()];

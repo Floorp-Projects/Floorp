@@ -79,7 +79,7 @@ public:
   virtual bool SupportsVisibilityHidden() { return false; }
 
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<nsAccessible> CreateAccessible();
+  virtual already_AddRefed<Accessible> CreateAccessible();
 #endif
 
   nsresult GetDocShell(nsIDocShell **aDocShell);

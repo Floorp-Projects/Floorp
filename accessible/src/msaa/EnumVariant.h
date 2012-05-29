@@ -7,7 +7,7 @@
 #ifndef mozilla_a11y_EnumVariant_h__
 #define mozilla_a11y_EnumVariant_h__
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 
 namespace mozilla {
 namespace a11y {
@@ -18,7 +18,7 @@ namespace a11y {
 class ChildrenEnumVariant MOZ_FINAL : public IEnumVARIANT
 {
 public:
-  ChildrenEnumVariant(nsAccessibleWrap* aAnchor) : mAnchorAcc(aAnchor),
+  ChildrenEnumVariant(AccessibleWrap* aAnchor) : mAnchorAcc(aAnchor),
     mCurAcc(mAnchorAcc->GetChildAt(0)), mCurIndex(0), mRefCnt(0) { }
 
   // IUnknown
@@ -53,8 +53,8 @@ private:
   virtual ~ChildrenEnumVariant() { }
 
 protected:
-  nsRefPtr<nsAccessibleWrap> mAnchorAcc;
-  nsAccessible* mCurAcc;
+  nsRefPtr<AccessibleWrap> mAnchorAcc;
+  Accessible* mCurAcc;
   PRUint32 mCurIndex;
 
 private:

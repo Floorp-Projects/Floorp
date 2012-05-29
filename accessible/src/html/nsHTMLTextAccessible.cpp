@@ -100,7 +100,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLOutputAccessible, nsHyperTextAccessible)
 Relation
 nsHTMLOutputAccessible::RelationByType(PRUint32 aType)
 {
-  Relation rel = nsAccessibleWrap::RelationByType(aType);
+  Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType == nsIAccessibleRelation::RELATION_CONTROLLED_BY)
     rel.AppendIter(new IDRefsIterator(mDoc, mContent, nsGkAtoms::_for));
 
@@ -116,7 +116,7 @@ nsHTMLOutputAccessible::NativeRole()
 nsresult
 nsHTMLOutputAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
 {
-  nsresult rv = nsAccessibleWrap::GetAttributesInternal(aAttributes);
+  nsresult rv = AccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::live,

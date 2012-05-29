@@ -56,7 +56,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableCellAccessible,
                              nsIAccessibleTableCell)
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLTableCellAccessible: nsAccessible implementation
+// nsHTMLTableCellAccessible: Accessible implementation
 
 role
 nsHTMLTableCellAccessible::NativeRole()
@@ -113,7 +113,7 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
   // from abbr DOM attribute.
   nsAutoString abbrText;
   if (ChildCount() == 1) {
-    nsAccessible* abbr = FirstChild();
+    Accessible* abbr = FirstChild();
     if (abbr->IsAbbreviation()) {
       nsTextEquivUtils::
         AppendTextEquivFromTextContent(abbr->GetContent()->GetFirstChild(),
@@ -261,7 +261,7 @@ nsHTMLTableCellAccessible::IsSelected(bool *aIsSelected)
 already_AddRefed<nsIAccessibleTable>
 nsHTMLTableCellAccessible::GetTableAccessible()
 {
-  nsAccessible* parent = this;
+  Accessible* parent = this;
   while ((parent = parent->Parent())) {
     roles::Role role = parent->Role();
     if (role == roles::TABLE || role == roles::TREE_TABLE) {
@@ -315,7 +315,7 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
       desiredRole = roles::COLUMNHEADER;
 
     do {
-      nsAccessible* headerCell = mDoc->GetAccessible(headerCellElm);
+      Accessible* headerCell = mDoc->GetAccessible(headerCellElm);
 
       if (headerCell && headerCell->Role() == desiredRole)
         headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell),
@@ -349,7 +349,7 @@ nsHTMLTableHeaderCellAccessible::
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLTableHeaderAccessible: nsAccessible implementation
+// nsHTMLTableHeaderAccessible: Accessible implementation
 
 role
 nsHTMLTableHeaderCellAccessible::NativeRole()
@@ -403,14 +403,14 @@ nsHTMLTableHeaderCellAccessible::NativeRole()
 
 nsHTMLTableAccessible::
   nsHTMLTableAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc), xpcAccessibleTable(this)
+  AccessibleWrap(aContent, aDoc), xpcAccessibleTable(this)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLTableAccessible: nsISupports implementation
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableAccessible, nsAccessible,
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableAccessible, Accessible,
                              nsIAccessibleTable)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -420,12 +420,12 @@ void
 nsHTMLTableAccessible::Shutdown()
 {
   mTable = nsnull;
-  nsAccessibleWrap::Shutdown();
+  AccessibleWrap::Shutdown();
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLTableAccessible: nsAccessible implementation
+// nsHTMLTableAccessible: Accessible implementation
 
 void
 nsHTMLTableAccessible::CacheChildren()
@@ -436,7 +436,7 @@ nsHTMLTableAccessible::CacheChildren()
   // visible.
   nsAccTreeWalker walker(mDoc, mContent, CanHaveAnonChildren());
 
-  nsAccessible* child = nsnull;
+  Accessible* child = nsnull;
   while ((child = walker.NextChild())) {
     if (child->Role() == roles::CAPTION) {
       InsertChildAt(0, child);
@@ -456,18 +456,18 @@ nsHTMLTableAccessible::NativeRole()
 PRUint64
 nsHTMLTableAccessible::NativeState()
 {
-  return nsAccessible::NativeState() | states::READONLY;
+  return Accessible::NativeState() | states::READONLY;
 }
 
 nsresult
 nsHTMLTableAccessible::GetNameInternal(nsAString& aName)
 {
-  nsAccessible::GetNameInternal(aName);
+  Accessible::GetNameInternal(aName);
   if (!aName.IsEmpty())
     return NS_OK;
 
   // Use table caption as a name.
-  nsAccessible* caption = Caption();
+  Accessible* caption = Caption();
   if (caption) {
     nsIContent* captionContent = caption->GetContent();
     if (captionContent) {
@@ -485,7 +485,7 @@ nsHTMLTableAccessible::GetNameInternal(nsAString& aName)
 nsresult
 nsHTMLTableAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
-  nsresult rv = nsAccessibleWrap::GetAttributesInternal(aAttributes);
+  nsresult rv = AccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsProbablyLayoutTable()) {
@@ -503,7 +503,7 @@ nsHTMLTableAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
 Relation
 nsHTMLTableAccessible::RelationByType(PRUint32 aType)
 {
-  Relation rel = nsAccessibleWrap::RelationByType(aType);
+  Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType == nsIAccessibleRelation::RELATION_LABELLED_BY)
     rel.AppendTarget(Caption());
 
@@ -513,10 +513,10 @@ nsHTMLTableAccessible::RelationByType(PRUint32 aType)
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLTableAccessible: nsIAccessibleTable implementation
 
-nsAccessible*
+Accessible*
 nsHTMLTableAccessible::Caption()
 {
-  nsAccessible* child = mChildren.SafeElementAt(0, nsnull);
+  Accessible* child = mChildren.SafeElementAt(0, nsnull);
   return child && child->Role() == roles::CAPTION ? child : nsnull;
 }
 
@@ -682,7 +682,7 @@ nsHTMLTableAccessible::GetSelectedCells(nsIArray **aCells)
       if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
           startColIndex == columnIndex && isSelected) {
         nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElement));
-        nsAccessible *cell = mDoc->GetAccessible(cellContent);
+        Accessible* cell = mDoc->GetAccessible(cellContent);
         selCells->AppendElement(static_cast<nsIAccessible*>(cell), false);
       }
     }
@@ -846,7 +846,7 @@ nsHTMLTableAccessible::GetSelectedRowIndices(PRUint32 *aNumRows,
   return rv;
 }
 
-nsAccessible*
+Accessible*
 nsHTMLTableAccessible::CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex)
 { 
   nsCOMPtr<nsIDOMElement> cellElement;
@@ -858,7 +858,7 @@ nsHTMLTableAccessible::CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex)
   if (!cellContent)
     return nsnull;
 
-  nsAccessible* cell = mDoc->GetAccessible(cellContent);
+  Accessible* cell = mDoc->GetAccessible(cellContent);
 
   // XXX bug 576838: crazy tables (like table6 in tables/test_table2.html) may
   // return itself as a cell what makes Orca hang.
@@ -1230,13 +1230,13 @@ nsHTMLTableAccessible::Description(nsString& aDescription)
 {
   // Helpful for debugging layout vs. data tables
   aDescription.Truncate();
-  nsAccessible::Description(aDescription);
+  Accessible::Description(aDescription);
   if (!aDescription.IsEmpty())
     return;
 
   // Use summary as description if it weren't used as a name.
   // XXX: get rid code duplication with NameInternal().
-  nsAccessible* caption = Caption();
+  Accessible* caption = Caption();
   if (caption) {
     nsIContent* captionContent = caption->GetContent();
     if (captionContent) {
@@ -1359,7 +1359,7 @@ nsHTMLTableAccessible::IsProbablyLayoutTable()
     RETURN_LAYOUT_ANSWER(false, "Has summary -- legitimate table structures");
 
   // Check for legitimate data table elements.
-  nsAccessible* caption = FirstChild();
+  Accessible* caption = FirstChild();
   if (caption && caption->Role() == roles::CAPTION && caption->HasChildren()) 
     RETURN_LAYOUT_ANSWER(false, "Not empty caption -- legitimate table structures");
 
@@ -1396,7 +1396,7 @@ nsHTMLTableAccessible::IsProbablyLayoutTable()
                                      "Has headers, scope, or abbr attribute -- legitimate table structures");
               }
 
-              nsAccessible* cell = mDoc->GetAccessible(cellElm);
+              Accessible* cell = mDoc->GetAccessible(cellElm);
               if (cell && cell->ChildCount() == 1 &&
                   cell->FirstChild()->IsAbbreviation()) {
                 RETURN_LAYOUT_ANSWER(false,
@@ -1457,7 +1457,7 @@ nsHTMLTableAccessible::IsProbablyLayoutTable()
   PRUint32 childCount = ChildCount();
   nscolor rowColor, prevRowColor;
   for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible* child = GetChildAt(childIdx);
+    Accessible* child = GetChildAt(childIdx);
     if (child->Role() == roles::ROW) {
       prevRowColor = rowColor;
       nsIFrame* rowFrame = child->GetFrame();

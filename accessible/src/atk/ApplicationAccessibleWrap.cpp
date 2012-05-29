@@ -520,8 +520,8 @@ ApplicationAccessibleWrap::ApplicationAccessibleWrap():
 
 ApplicationAccessibleWrap::~ApplicationAccessibleWrap()
 {
-    MAI_LOG_DEBUG(("======Destory AppRootAcc=%p\n", (void*)this));
-    nsAccessibleWrap::ShutdownAtkObject();
+  MAI_LOG_DEBUG(("======Destory AppRootAcc=%p\n", (void*)this));
+  AccessibleWrap::ShutdownAtkObject();
 }
 
 static gboolean
@@ -551,15 +551,15 @@ toplevel_event_watcher(GSignalInvocationHint* ihint,
     if (data == reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_SHOW)) {
 
       // Attach the dialog accessible to app accessible tree
-      nsAccessible* windowAcc = GetAccService()->AddNativeRootAccessible(child);
+      Accessible* windowAcc = GetAccService()->AddNativeRootAccessible(child);
       g_object_set_qdata(G_OBJECT(child), sQuark_gecko_acc_obj,
                          reinterpret_cast<gpointer>(windowAcc));
 
     } else {
 
       // Deattach the dialog accessible
-      nsAccessible* windowAcc =
-        reinterpret_cast<nsAccessible*>
+      Accessible* windowAcc =
+        reinterpret_cast<Accessible*>
                         (g_object_get_qdata(G_OBJECT(child), sQuark_gecko_acc_obj));
       if (windowAcc) {
         GetAccService()->RemoveNativeRootAccessible(windowAcc);
@@ -706,13 +706,13 @@ gboolean fireRootAccessibleAddedCB(gpointer data)
 }
 
 bool
-ApplicationAccessibleWrap::AppendChild(nsAccessible* aChild)
+ApplicationAccessibleWrap::AppendChild(Accessible* aChild)
 {
-    if (!ApplicationAccessible::AppendChild(aChild))
-      return false;
+  if (!ApplicationAccessible::AppendChild(aChild))
+    return false;
 
-    AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aChild);
-    atk_object_set_parent(atkAccessible, mAtkObject);
+  AtkObject* atkAccessible = AccessibleWrap::GetAtkObject(aChild);
+  atk_object_set_parent(atkAccessible, mAtkObject);
 
     PRUint32 count = mChildren.Length();
 
@@ -733,16 +733,16 @@ ApplicationAccessibleWrap::AppendChild(nsAccessible* aChild)
 }
 
 bool
-ApplicationAccessibleWrap::RemoveChild(nsAccessible* aChild)
+ApplicationAccessibleWrap::RemoveChild(Accessible* aChild)
 {
-    PRInt32 index = aChild->IndexInParent();
+  PRInt32 index = aChild->IndexInParent();
 
-    AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aChild);
-    atk_object_set_parent(atkAccessible, NULL);
-    g_signal_emit_by_name(mAtkObject, "children_changed::remove", index,
-                          atkAccessible, NULL);
+  AtkObject* atkAccessible = AccessibleWrap::GetAtkObject(aChild);
+  atk_object_set_parent(atkAccessible, NULL);
+  g_signal_emit_by_name(mAtkObject, "children_changed::remove", index,
+                        atkAccessible, NULL);
 
-    return ApplicationAccessible::RemoveChild(aChild);
+  return ApplicationAccessible::RemoveChild(aChild);
 }
 
 void

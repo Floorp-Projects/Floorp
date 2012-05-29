@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 
 #include "Compatibility.h"
 #include "EnumVariant.h"
@@ -60,19 +60,20 @@ EXTERN_C GUID CDECL CLSID_Accessible =
 static const PRInt32 kIEnumVariantDisconnected = -1;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessibleWrap
+// AccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-ITypeInfo* nsAccessibleWrap::gTypeInfo = NULL;
+ITypeInfo* AccessibleWrap::gTypeInfo = NULL;
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsAccessibleWrap, nsAccessible);
+NS_IMPL_ISUPPORTS_INHERITED0(AccessibleWrap, Accessible);
 
 //-----------------------------------------------------
 // IUnknown interface methods - see iunknown.h for documentation
 //-----------------------------------------------------
 
 // Microsoft COM QueryInterface
-STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
+STDMETHODIMP
+AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
 __try {
   *ppv = NULL;
@@ -121,7 +122,8 @@ __try {
 // IAccessible methods
 //-----------------------------------------------------
 
-STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
+STDMETHODIMP
+AccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
 {
 __try {
   *ppdispParent = NULL;
@@ -145,7 +147,7 @@ __try {
     }
   }
 
-  nsAccessible* xpParentAcc = Parent();
+  Accessible* xpParentAcc = Parent();
   if (!xpParentAcc) {
     if (IsApplication())
       return S_OK;
@@ -160,7 +162,8 @@ __try {
   return S_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accChildCount( long __RPC_FAR *pcountChildren)
+STDMETHODIMP
+AccessibleWrap::get_accChildCount( long __RPC_FAR *pcountChildren)
 {
 __try {
   if (!pcountChildren)
@@ -180,7 +183,8 @@ __try {
   return S_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accChild(
+STDMETHODIMP
+AccessibleWrap::get_accChild(
       /* [in] */ VARIANT varChild,
       /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild)
 {
@@ -194,7 +198,7 @@ __try {
   // document accessible (it's handled by overriden GetXPAccessibleFor method
   // on the document accessible). The getting an accessible by child ID is used
   // by AccessibleObjectFromEvent() called by AT when AT handles our MSAA event.
-  nsAccessible* child = GetXPAccessibleFor(varChild);
+  Accessible* child = GetXPAccessibleFor(varChild);
   if (!child)
     return E_INVALIDARG;
 
@@ -208,7 +212,8 @@ __try {
   return S_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accName(
+STDMETHODIMP
+AccessibleWrap::get_accName(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszName)
 {
@@ -218,7 +223,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_INVALIDARG;
 
@@ -244,7 +249,8 @@ __try {
 }
 
 
-STDMETHODIMP nsAccessibleWrap::get_accValue(
+STDMETHODIMP
+AccessibleWrap::get_accValue(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszValue)
 {
@@ -254,7 +260,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_INVALIDARG;
 
@@ -282,8 +288,8 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_accDescription(VARIANT varChild,
-                                     BSTR __RPC_FAR *pszDescription)
+AccessibleWrap::get_accDescription(VARIANT varChild,
+                                   BSTR __RPC_FAR *pszDescription)
 {
 __try {
   *pszDescription = NULL;
@@ -291,7 +297,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_INVALIDARG;
 
@@ -309,7 +315,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accRole(
+STDMETHODIMP
+AccessibleWrap::get_accRole(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarRole)
 {
@@ -319,7 +326,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_INVALIDARG;
 
@@ -351,7 +358,7 @@ __try {
   // a ROLE_OUTLINEITEM for consistency and compatibility.
   // We need this because ARIA has a role of "row" for both grid and treegrid
   if (geckoRole == roles::ROW) {
-    nsAccessible* xpParent = Parent();
+    Accessible* xpParent = Parent();
     if (xpParent && xpParent->Role() == roles::TREE_TABLE)
       msaaRole = ROLE_SYSTEM_OUTLINEITEM;
   }
@@ -399,7 +406,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accState(
+STDMETHODIMP
+AccessibleWrap::get_accState(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarState)
 {
@@ -411,7 +419,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_INVALIDARG;
 
@@ -434,7 +442,8 @@ __try {
 }
 
 
-STDMETHODIMP nsAccessibleWrap::get_accHelp(
+STDMETHODIMP
+AccessibleWrap::get_accHelp(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszHelp)
 {
@@ -447,7 +456,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accHelpTopic(
+STDMETHODIMP
+AccessibleWrap::get_accHelpTopic(
       /* [out] */ BSTR __RPC_FAR *pszHelpFile,
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ long __RPC_FAR *pidTopic)
@@ -462,7 +472,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accKeyboardShortcut(
+STDMETHODIMP
+AccessibleWrap::get_accKeyboardShortcut(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszKeyboardShortcut)
 {
@@ -474,7 +485,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* acc = GetXPAccessibleFor(varChild);
+  Accessible* acc = GetXPAccessibleFor(varChild);
   if (!acc)
     return E_INVALIDARG;
 
@@ -495,7 +506,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accFocus(
+STDMETHODIMP
+AccessibleWrap::get_accFocus(
       /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
 {
   // VT_EMPTY:    None. This object does not have the keyboard focus itself
@@ -511,7 +523,7 @@ __try {
   VariantInit(pvarChild);
 
   // Return the current IAccessible child that has focus
-  nsAccessible* focusedAccessible = FocusedChild();
+  Accessible* focusedAccessible = FocusedChild();
   if (focusedAccessible == this) {
     pvarChild->vt = VT_I4;
     pvarChild->lVal = CHILDID_SELF;
@@ -616,7 +628,7 @@ __try {
 
     if (accel) {
       rgvar[i].vt = VT_DISPATCH;
-      rgvar[i].pdispVal = nsAccessibleWrap::NativeAccessible(accel);
+      rgvar[i].pdispVal = AccessibleWrap::NativeAccessible(accel);
     }
   }
 
@@ -674,7 +686,8 @@ __try {
   *  - there are no selected children for this object
   *  - the object is not the type that can have children selected
   */
-STDMETHODIMP nsAccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
+STDMETHODIMP
+AccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
 {
 __try {
   VariantInit(pvarChildren);
@@ -701,7 +714,8 @@ __try {
   return S_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accDefaultAction(
+STDMETHODIMP
+AccessibleWrap::get_accDefaultAction(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszDefaultAction)
 {
@@ -711,7 +725,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_INVALIDARG;
 
@@ -730,7 +744,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::accSelect(
+STDMETHODIMP
+AccessibleWrap::accSelect(
       /* [in] */ long flagsSelect,
       /* [optional][in] */ VARIANT varChild)
 {
@@ -739,7 +754,7 @@ __try {
     return CO_E_OBJNOTCONNECTED;
 
   // currently only handle focus and selection
-  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_INVALIDARG;
 
@@ -770,7 +785,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::accLocation(
+STDMETHODIMP
+AccessibleWrap::accLocation(
       /* [out] */ long __RPC_FAR *pxLeft,
       /* [out] */ long __RPC_FAR *pyTop,
       /* [out] */ long __RPC_FAR *pcxWidth,
@@ -781,7 +797,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_INVALIDARG;
 
@@ -803,7 +819,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::accNavigate(
+STDMETHODIMP
+AccessibleWrap::accNavigate(
       /* [in] */ long navDir,
       /* [optional][in] */ VARIANT varStart,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt)
@@ -815,7 +832,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* accessible = GetXPAccessibleFor(varStart);
+  Accessible* accessible = GetXPAccessibleFor(varStart);
   if (!accessible)
     return E_INVALIDARG;
 
@@ -824,7 +841,7 @@ __try {
 
   VariantInit(pvarEndUpAt);
 
-  nsAccessible* navAccessible = nsnull;
+  Accessible* navAccessible = nsnull;
   PRUint32 xpRelation = 0;
 
   switch(navDir) {
@@ -918,7 +935,8 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::accHitTest(
+STDMETHODIMP
+AccessibleWrap::accHitTest(
       /* [in] */ long xLeft,
       /* [in] */ long yTop,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
@@ -929,7 +947,7 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* accessible = ChildAtPoint(xLeft, yTop, eDirectChild);
+  Accessible* accessible = ChildAtPoint(xLeft, yTop, eDirectChild);
 
   // if we got a child
   if (accessible) {
@@ -951,14 +969,15 @@ __try {
   return S_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::accDoDefaultAction(
+STDMETHODIMP
+AccessibleWrap::accDoDefaultAction(
       /* [optional][in] */ VARIANT varChild)
 {
 __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* xpAccessible = GetXPAccessibleFor(varChild);
+  Accessible* xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_INVALIDARG;
 
@@ -971,14 +990,16 @@ __try {
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::put_accName(
+STDMETHODIMP
+AccessibleWrap::put_accName(
       /* [optional][in] */ VARIANT varChild,
       /* [in] */ BSTR szName)
 {
   return E_NOTIMPL;
 }
 
-STDMETHODIMP nsAccessibleWrap::put_accValue(
+STDMETHODIMP
+AccessibleWrap::put_accValue(
       /* [optional][in] */ VARIANT varChild,
       /* [in] */ BSTR szValue)
 {
@@ -986,10 +1007,10 @@ STDMETHODIMP nsAccessibleWrap::put_accValue(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessibleWrap. IAccessible2
+// AccessibleWrap. IAccessible2
 
 STDMETHODIMP
-nsAccessibleWrap::get_nRelations(long *aNRelations)
+AccessibleWrap::get_nRelations(long *aNRelations)
 {
 __try {
   if (!aNRelations)
@@ -1012,8 +1033,8 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_relation(long aRelationIndex,
-                               IAccessibleRelation **aRelation)
+AccessibleWrap::get_relation(long aRelationIndex,
+                             IAccessibleRelation** aRelation)
 {
 __try {
   if (!aRelation)
@@ -1046,7 +1067,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_relations(long aMaxRelations,
+AccessibleWrap::get_relations(long aMaxRelations,
                                 IAccessibleRelation **aRelation,
                                 long *aNRelations)
 {
@@ -1077,7 +1098,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::role(long *aRole)
+AccessibleWrap::role(long *aRole)
 {
 __try {
   *aRole = 0;
@@ -1102,7 +1123,7 @@ __try {
   // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call
   // the IA2 role a ROLE_OUTLINEITEM.
   if (geckoRole == roles::ROW) {
-    nsAccessible* xpParent = Parent();
+    Accessible* xpParent = Parent();
     if (xpParent && xpParent->Role() == roles::TREE_TABLE)
       *aRole = ROLE_SYSTEM_OUTLINEITEM;
   }
@@ -1114,7 +1135,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::scrollTo(enum IA2ScrollType aScrollType)
+AccessibleWrap::scrollTo(enum IA2ScrollType aScrollType)
 {
 __try {
   if (IsDefunct())
@@ -1128,8 +1149,8 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::scrollToPoint(enum IA2CoordinateType aCoordType,
-                                long aX, long aY)
+AccessibleWrap::scrollToPoint(enum IA2CoordinateType aCoordType,
+                              long aX, long aY)
 {
 __try {
   if (IsDefunct())
@@ -1147,9 +1168,9 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_groupPosition(long *aGroupLevel,
-                                    long *aSimilarItemsInGroup,
-                                    long *aPositionInGroup)
+AccessibleWrap::get_groupPosition(long *aGroupLevel,
+                                  long *aSimilarItemsInGroup,
+                                  long *aPositionInGroup)
 {
 __try {
   if (IsDefunct())
@@ -1181,7 +1202,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_states(AccessibleStates *aStates)
+AccessibleWrap::get_states(AccessibleStates *aStates)
 {
 __try {
   *aStates = 0;
@@ -1235,7 +1256,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_extendedRole(BSTR *aExtendedRole)
+AccessibleWrap::get_extendedRole(BSTR *aExtendedRole)
 {
 __try {
   *aExtendedRole = NULL;
@@ -1245,7 +1266,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_localizedExtendedRole(BSTR *aLocalizedExtendedRole)
+AccessibleWrap::get_localizedExtendedRole(BSTR *aLocalizedExtendedRole)
 {
 __try {
   *aLocalizedExtendedRole = NULL;
@@ -1255,7 +1276,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_nExtendedStates(long *aNExtendedStates)
+AccessibleWrap::get_nExtendedStates(long *aNExtendedStates)
 {
 __try {
   *aNExtendedStates = 0;
@@ -1265,9 +1286,9 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_extendedStates(long aMaxExtendedStates,
-                                     BSTR **aExtendedStates,
-                                     long *aNExtendedStates)
+AccessibleWrap::get_extendedStates(long aMaxExtendedStates,
+                                   BSTR **aExtendedStates,
+                                   long *aNExtendedStates)
 {
 __try {
   *aExtendedStates = NULL;
@@ -1278,9 +1299,9 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_localizedExtendedStates(long aMaxLocalizedExtendedStates,
-                                              BSTR **aLocalizedExtendedStates,
-                                              long *aNLocalizedExtendedStates)
+AccessibleWrap::get_localizedExtendedStates(long aMaxLocalizedExtendedStates,
+                                            BSTR** aLocalizedExtendedStates,
+                                            long* aNLocalizedExtendedStates)
 {
 __try {
   *aLocalizedExtendedStates = NULL;
@@ -1291,7 +1312,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_uniqueID(long *uniqueID)
+AccessibleWrap::get_uniqueID(long *uniqueID)
 {
 __try {
   *uniqueID = - reinterpret_cast<long>(UniqueID());
@@ -1302,7 +1323,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_windowHandle(HWND *aWindowHandle)
+AccessibleWrap::get_windowHandle(HWND *aWindowHandle)
 {
 __try {
   *aWindowHandle = 0;
@@ -1318,7 +1339,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_indexInParent(long *aIndexInParent)
+AccessibleWrap::get_indexInParent(long *aIndexInParent)
 {
 __try {
   if (!aIndexInParent)
@@ -1338,7 +1359,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_locale(IA2Locale *aLocale)
+AccessibleWrap::get_locale(IA2Locale *aLocale)
 {
 __try {
   // Language codes consist of a primary code and a possibly empty series of
@@ -1385,7 +1406,7 @@ __try {
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_attributes(BSTR *aAttributes)
+AccessibleWrap::get_attributes(BSTR *aAttributes)
 {
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
@@ -1410,14 +1431,14 @@ __try {
 // IDispatch
 
 STDMETHODIMP
-nsAccessibleWrap::GetTypeInfoCount(UINT *pctinfo)
+AccessibleWrap::GetTypeInfoCount(UINT *pctinfo)
 {
   *pctinfo = 1;
   return S_OK;
 }
 
 STDMETHODIMP
-nsAccessibleWrap::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
+AccessibleWrap::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
 {
   *ppTInfo = NULL;
 
@@ -1435,8 +1456,8 @@ nsAccessibleWrap::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
 }
 
 STDMETHODIMP
-nsAccessibleWrap::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames,
-                                UINT cNames, LCID lcid, DISPID *rgDispId)
+AccessibleWrap::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames,
+                              UINT cNames, LCID lcid, DISPID *rgDispId)
 {
   ITypeInfo *typeInfo = GetTI(lcid);
   if (!typeInfo)
@@ -1447,10 +1468,10 @@ nsAccessibleWrap::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames,
 }
 
 STDMETHODIMP
-nsAccessibleWrap::Invoke(DISPID dispIdMember, REFIID riid,
-                         LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
-                         VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
-                         UINT *puArgErr)
+AccessibleWrap::Invoke(DISPID dispIdMember, REFIID riid,
+                       LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
+                       VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
+                       UINT *puArgErr)
 {
   ITypeInfo *typeInfo = GetTI(lcid);
   if (!typeInfo)
@@ -1463,7 +1484,8 @@ nsAccessibleWrap::Invoke(DISPID dispIdMember, REFIID riid,
 
 
 // nsIAccessible method
-NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
+NS_IMETHODIMP
+AccessibleWrap::GetNativeInterface(void **aOutAccessible)
 {
   *aOutAccessible = static_cast<IAccessible*>(this);
   NS_ADDREF_THIS();
@@ -1471,22 +1493,22 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible
+// Accessible
 
 nsresult
-nsAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
+AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 {
-  nsresult rv = nsAccessible::HandleAccEvent(aEvent);
+  nsresult rv = Accessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return FirePlatformEvent(aEvent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessibleWrap
+// AccessibleWrap
 
 nsresult
-nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
+AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 {
   PRUint32 eventType = aEvent->GetEventType();
 
@@ -1505,7 +1527,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
   // Means we're not active.
   NS_ENSURE_TRUE(!IsDefunct(), NS_ERROR_FAILURE);
 
-  nsAccessible *accessible = aEvent->GetAccessible();
+  Accessible* accessible = aEvent->GetAccessible();
   if (!accessible)
     return NS_OK;
 
@@ -1553,7 +1575,8 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 
 //------- Helper methods ---------
 
-PRInt32 nsAccessibleWrap::GetChildIDFor(nsAccessible* aAccessible)
+PRInt32
+AccessibleWrap::GetChildIDFor(Accessible* aAccessible)
 {
   // A child ID of the window is required, when we use NotifyWinEvent,
   // so that the 3rd party application can call back and get the IAccessible
@@ -1566,7 +1589,7 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsAccessible* aAccessible)
 }
 
 HWND
-nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
+AccessibleWrap::GetHWNDFor(Accessible* aAccessible)
 {
   if (aAccessible) {
     DocAccessible* document = aAccessible->Document();
@@ -1604,8 +1627,8 @@ nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
 }
 
 HRESULT
-nsAccessibleWrap::ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
-                                         BSTR *aIA2Attributes)
+AccessibleWrap::ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
+                                       BSTR *aIA2Attributes)
 {
   *aIA2Attributes = NULL;
 
@@ -1667,7 +1690,7 @@ nsAccessibleWrap::ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
 }
 
 IDispatch*
-nsAccessibleWrap::NativeAccessible(nsIAccessible* aAccessible)
+AccessibleWrap::NativeAccessible(nsIAccessible* aAccessible)
 {
   if (!aAccessible) {
    NS_WARNING("Not passing in an aAccessible");
@@ -1679,8 +1702,8 @@ nsAccessibleWrap::NativeAccessible(nsIAccessible* aAccessible)
   return static_cast<IDispatch*>(msaaAccessible);
 }
 
-nsAccessible*
-nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
+Accessible*
+AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 {
   if (aVarChild.vt != VT_I4)
     return nsnull;
@@ -1707,12 +1730,12 @@ nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
     // ARIA document.
     if (ARIARole() == roles::DOCUMENT) {
       DocAccessible* document = Document();
-      nsAccessible* child =
+      Accessible* child =
         document->GetAccessibleByUniqueIDInSubtree(uniqueID);
 
       // Check whether the accessible for the given ID is a child of ARIA
       // document.
-      nsAccessible* parent = child ? child->Parent() : nsnull;
+      Accessible* parent = child ? child->Parent() : nsnull;
       while (parent && parent != document) {
         if (parent == this)
           return child;
@@ -1728,7 +1751,8 @@ nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
   return GetChildAt(aVarChild.lVal - 1);
 }
 
-void nsAccessibleWrap::UpdateSystemCaret()
+void
+AccessibleWrap::UpdateSystemCaret()
 {
   // Move the system caret so that Windows Tablet Edition and tradional ATs with 
   // off-screen model can follow the caret
@@ -1764,7 +1788,7 @@ void nsAccessibleWrap::UpdateSystemCaret()
 }
 
 ITypeInfo*
-nsAccessibleWrap::GetTI(LCID lcid)
+AccessibleWrap::GetTI(LCID lcid)
 {
   if (gTypeInfo)
     return gTypeInfo;

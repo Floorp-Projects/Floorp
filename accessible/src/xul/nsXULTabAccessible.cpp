@@ -27,7 +27,7 @@ using namespace mozilla::a11y;
 
 nsXULTabAccessible::
   nsXULTabAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  AccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -66,7 +66,7 @@ NS_IMETHODIMP nsXULTabAccessible::DoAction(PRUint8 index)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULTabAccessible: nsAccessible
+// nsXULTabAccessible: Accessible
 
 role
 nsXULTabAccessible::NativeRole()
@@ -80,7 +80,7 @@ nsXULTabAccessible::NativeState()
   // Possible states: focused, focusable, unavailable(disabled), offscreen.
 
   // get focus and disable status from base class
-  PRUint64 state = nsAccessibleWrap::NativeState();
+  PRUint64 state = AccessibleWrap::NativeState();
 
   // In the past, tabs have been focusable in classic theme
   // They may be again in the future
@@ -110,7 +110,7 @@ nsXULTabAccessible::NativeState()
 Relation
 nsXULTabAccessible::RelationByType(PRUint32 aType)
 {
-  Relation rel = nsAccessibleWrap::RelationByType(aType);
+  Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
     return rel;
 
@@ -174,7 +174,7 @@ nsXULTabsAccessible::GetNameInternal(nsAString& aName)
 
 nsXULTabpanelsAccessible::
   nsXULTabpanelsAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  AccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -191,7 +191,7 @@ nsXULTabpanelsAccessible::NativeRole()
 
 nsXULTabpanelAccessible::
   nsXULTabpanelAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  AccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -204,7 +204,7 @@ nsXULTabpanelAccessible::NativeRole()
 Relation
 nsXULTabpanelAccessible::RelationByType(PRUint32 aType)
 {
-  Relation rel = nsAccessibleWrap::RelationByType(aType);
+  Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType != nsIAccessibleRelation::RELATION_LABELLED_BY)
     return rel;
 

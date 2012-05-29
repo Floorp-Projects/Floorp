@@ -25,7 +25,7 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
@@ -37,13 +37,13 @@ public:
 /**
  * Accessible object for calendar widget. It is used by xforms:input[xsd:date].
  */
-class nsXFormsCalendarWidgetAccessible : public nsAccessibleWrap
+class nsXFormsCalendarWidgetAccessible : public AccessibleWrap
 {
 public:
   nsXFormsCalendarWidgetAccessible(nsIContent* aContent,
                                    DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
 };
 
@@ -58,7 +58,7 @@ public:
   nsXFormsComboboxPopupWidgetAccessible(nsIContent* aContent,
                                         DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual void Description(nsString& aDescription);
   virtual void Value(nsString& aValue);
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -66,7 +66,7 @@ public:
   virtual PRUint64 NativeState();
 
 protected:
-  // nsAccessible
+  // Accessible
   virtual void CacheChildren();
 };
 

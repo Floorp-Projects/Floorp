@@ -12,7 +12,7 @@
 
 #include "nsAutoPtr.h"
 
-class nsAccessible;
+class Accessible;
 class nsINode;
 class nsIContent;
 class nsIDocument;
@@ -37,8 +37,8 @@ public:
    * @param  aPresShell [in] the presentation shell which contains layout info
    *                         for the DOM node
    */
-  virtual nsAccessible* GetAccessible(nsINode* aNode,
-                                      nsIPresShell* aPresShell) = 0;
+  virtual Accessible* GetAccessible(nsINode* aNode,
+                                    nsIPresShell* aPresShell) = 0;
 
   /**
    * Return root document accessible that is or contains a document accessible
@@ -48,15 +48,15 @@ public:
    * @param aCanCreate  [in] points whether the root document accessible
    *                        should be returned from the cache or can be created
    */
-  virtual nsAccessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
-                                                  bool aCanCreate) = 0;
+  virtual Accessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
+                                                bool aCanCreate) = 0;
 
    /**
    * Adds/remove ATK root accessible for gtk+ native window to/from children
    * of the application accessible.
    */
-  virtual nsAccessible* AddNativeRootAccessible(void* aAtkAccessible) = 0;
-  virtual void RemoveNativeRootAccessible(nsAccessible* aRootAccessible) = 0;
+  virtual Accessible* AddNativeRootAccessible(void* aAtkAccessible) = 0;
+  virtual void RemoveNativeRootAccessible(Accessible* aRootAccessible) = 0;
 
   /**
    * Notification used to update the accessible tree when new content is
@@ -91,7 +91,7 @@ public:
    * @param aEvent   [in] accessible event type
    * @param aTarget  [in] target of accessible event
    */
-  virtual void FireAccessibleEvent(PRUint32 aEvent, nsAccessible* aTarget) = 0;
+  virtual void FireAccessibleEvent(PRUint32 aEvent, Accessible* aTarget) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAccessibilityService,

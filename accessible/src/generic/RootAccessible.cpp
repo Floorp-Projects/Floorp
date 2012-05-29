@@ -79,7 +79,7 @@ RootAccessible::~RootAccessible()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible
+// Accessible
 
 ENameValueFlag
 RootAccessible::Name(nsString& aName)
@@ -87,7 +87,7 @@ RootAccessible::Name(nsString& aName)
   aName.Truncate();
 
   if (mRoleMapEntry) {
-    nsAccessible::Name(aName);
+    Accessible::Name(aName);
     if (!aName.IsEmpty())
       return eNameOK;
   }
@@ -324,7 +324,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     GetDocAccessible(origTargetNode->OwnerDoc());
   NS_ASSERTION(targetDocument, "No document while accessible is in document?!");
 
-  nsAccessible* accessible = 
+  Accessible* accessible = 
     targetDocument->GetAccessibleOrContainer(origTargetNode);
   if (!accessible)
     return;
@@ -379,7 +379,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     return;
   }
 
-  nsAccessible* treeItemAcc = nsnull;
+  Accessible* treeItemAcc = nsnull;
 #ifdef MOZ_XUL
   // If it's a tree element, need the currently selected item.
   if (treeAcc) {
@@ -447,7 +447,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     // unique widget that may acquire focus from autocomplete popup while popup
     // stays open and has no active item. In case of XUL tree autocomplete
     // popup this event is fired for tree accessible.
-    nsAccessible* widget =
+    Accessible* widget =
       accessible->IsWidget() ? accessible : accessible->ContainerWidget();
     if (widget && widget->IsAutoCompletePopup()) {
       FocusMgr()->ActiveItemChanged(nsnull);
@@ -464,7 +464,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     // (can be a case of menubar activation from keyboard) then ignore this
     // notification because later we'll receive DOMMenuItemActive event after
     // current menuitem is set.
-    nsAccessible* activeItem = accessible->CurrentItem();
+    Accessible* activeItem = accessible->CurrentItem();
     if (activeItem) {
       FocusMgr()->ActiveItemChanged(activeItem);
       A11YDEBUG_FOCUS_ACTIVEITEMCHANGE_CAUSE("DOMMenuBarActive", accessible)
@@ -536,7 +536,7 @@ RootAccessible::RelationByType(PRUint32 aType)
 // Protected members
 
 void
-RootAccessible::HandlePopupShownEvent(nsAccessible* aAccessible)
+RootAccessible::HandlePopupShownEvent(Accessible* aAccessible)
 {
   roles::Role role = aAccessible->Role();
 
@@ -558,7 +558,7 @@ RootAccessible::HandlePopupShownEvent(nsAccessible* aAccessible)
 
   if (role == roles::COMBOBOX_LIST) {
     // Fire expanded state change event for comboboxes and autocompeletes.
-    nsAccessible* combobox = aAccessible->Parent();
+    Accessible* combobox = aAccessible->Parent();
     if (!combobox)
       return;
 
@@ -583,15 +583,15 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
   if (!document)
     return;
 
-  nsAccessible* popup = document->GetAccessible(aPopupNode);
+  Accessible* popup = document->GetAccessible(aPopupNode);
   if (!popup) {
-    nsAccessible* popupContainer = document->GetContainerAccessible(aPopupNode);
+    Accessible* popupContainer = document->GetContainerAccessible(aPopupNode);
     if (!popupContainer)
       return;
 
     PRUint32 childCount = popupContainer->ChildCount();
     for (PRUint32 idx = 0; idx < childCount; idx++) {
-      nsAccessible* child = popupContainer->GetChildAt(idx);
+      Accessible* child = popupContainer->GetChildAt(idx);
       if (child->IsAutoCompletePopup()) {
         popup = child;
         break;
@@ -617,7 +617,7 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
   // HTML select is target of popuphidding event. Otherwise get container
   // widget. No container widget means this is either tooltip or menupopup.
   // No events in the former case.
-  nsAccessible* widget = nsnull;
+  Accessible* widget = nsnull;
   if (popup->IsCombobox()) {
     widget = popup;
   } else {
@@ -645,7 +645,7 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
 
   } else if (widget->IsMenuButton()) {
     // Can be a part of autocomplete.
-    nsAccessible* compositeWidget = widget->ContainerWidget();
+    Accessible* compositeWidget = widget->ContainerWidget();
     if (compositeWidget && compositeWidget->IsAutoComplete()) {
       widget = compositeWidget;
       notifyOf = kNotifyOfState;
