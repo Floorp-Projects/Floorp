@@ -12,7 +12,7 @@ HTTP(..) == quirks-decorations.html quirks-decorations-ref.html
 HTTP(..) == quirks-line-height.html quirks-line-height-ref.html
 HTTP(..) == standards-decorations.html standards-decorations-ref.html
 HTTP(..) == standards-line-height.html standards-line-height-ref.html
-HTTP(..) == selection.html selection-ref.html
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == selection.html selection-ref.html # bug 668849
 HTTP(..) == marker-shadow.html marker-shadow-ref.html
 == aligned-baseline.html aligned-baseline-ref.html
 skip-if(Android) == clipped-elements.html clipped-elements-ref.html
