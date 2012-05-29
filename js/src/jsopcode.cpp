@@ -5629,6 +5629,7 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
 {
     JSScript *script;
     jsbytecode *pc;
+    ScriptFrameIter frameIter(cx);
 
     JS_ASSERT(spindex < 0 ||
               spindex == JSDVG_IGNORE_STACK ||
@@ -5642,8 +5643,6 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
      */
     goto do_fallback;
 #endif
-
-    ScriptFrameIter frameIter(cx);
     if (frameIter.done())
         goto do_fallback;
 
