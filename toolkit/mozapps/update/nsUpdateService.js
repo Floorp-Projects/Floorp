@@ -1007,6 +1007,36 @@ function handleUpdateFailure(update, errorCode) {
 }
 
 /**
+ * Fall back to downloading a complete update in case an update has failed.
+ *
+ * @param update the update object that has failed to apply.
+ */
+function handleFallbackToCompleteUpdate(update) {
+  cleanupActiveUpdate();
+
+  update.statusText = gUpdateBundle.GetStringFromName("patchApplyFailure");
+  var oldType = update.selectedPatch ? update.selectedPatch.type
+                                     : "complete";
+  if (update.selectedPatch && oldType == "partial" && update.patchCount == 2) {
+    // Partial patch application failed, try downloading the complete
+    // update in the background instead.
+    LOG("UpdateService:_postUpdateProcessing - install of partial patch " +
+        "failed, downloading complete patch");
+    var status = Cc["@mozilla.org/updates/update-service;1"].
+                 getService(Ci.nsIApplicationUpdateService).
+                 downloadUpdate(update, true);
+    if (status == STATE_NONE)
+      cleanupActiveUpdate();
+  }
+  else {
+    LOG("handleFallbackToCompleteUpdate - install of complete or " +
+        "only one patch offered failed.");
+  }
+  update.QueryInterface(Ci.nsIWritablePropertyBag);
+  update.setProperty("patchingFailed", oldType);
+}
+
+/**
  * Update Patch
  * @param   patch
  *          A <patch> element to initialize this object with
@@ -1587,26 +1617,8 @@ UpdateService.prototype = {
       }
 
       // Something went wrong with the patch application process.
-      cleanupActiveUpdate();
+      handleFallbackToCompleteUpdate(update);
 
-      update.statusText = gUpdateBundle.GetStringFromName("patchApplyFailure");
-      var oldType = update.selectedPatch ? update.selectedPatch.type
-                                         : "complete";
-      if (update.selectedPatch && oldType == "partial" && update.patchCount == 2) {
-        // Partial patch application failed, try downloading the complete
-        // update in the background instead.
-        LOG("UpdateService:_postUpdateProcessing - install of partial patch " +
-            "failed, downloading complete patch");
-        var status = this.downloadUpdate(update, true);
-        if (status == STATE_NONE)
-          cleanupActiveUpdate();
-      }
-      else {
-        LOG("UpdateService:_postUpdateProcessing - install of complete or " +
-            "only one patch offered failed... showing error.");
-      }
-      update.QueryInterface(Ci.nsIWritablePropertyBag);
-      update.setProperty("patchingFailed", oldType);
       prompter.showUpdateError(update);
     }
   },
@@ -2407,7 +2419,9 @@ UpdateManager.prototype = {
     update.state = ary[0];
     if (update.state == STATE_FAILED && ary[1]) {
       updateSucceeded = false;
-      handleUpdateFailure(update, ary[1]);
+      if (!handleUpdateFailure(update, ary[1])) {
+        handleFallbackToCompleteUpdate(update);
+      }
     }
     if (update.state == STATE_APPLIED && shouldUseService()) {
       writeStatusFile(getUpdatesDir(), update.state = STATE_APPLIED_SVC);
@@ -2425,6 +2439,8 @@ UpdateManager.prototype = {
 
     // Send an observer notification which the update wizard uses in
     // order to update its UI.
+    LOG("UpdateManager:refreshUpdateStatus - Notifying observers that " +
+        "the update was staged. state: " + update.state + ", status: " + status);
     Services.obs.notifyObservers(null, "update-staged", update.state);
 
     // Do this after *everything* else, since it will likely cause the app
